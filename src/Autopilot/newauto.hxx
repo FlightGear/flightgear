@@ -54,10 +54,10 @@ public:
         FG_ALTITUDE_GS1 = 2,      // follow glide slope 1
         FG_ALTITUDE_GS2 = 3,      // follow glide slope 2
         FG_ALTITUDE_ARM = 4,      // ascend to selected altitude
-        FG_TRUE_ALTITUDE_LOCK = 5 // lock to a specific true altitude
-                                  // (i.e. a perfect world)
+        FG_TRUE_ALTITUDE_LOCK = 5, // lock to a specific true altitude
+                                   // (i.e. a perfect world)
+        FG_VERT_SPEED = 6  // ascend or descend at selected fpm
     };
-
 
 private:
 
@@ -78,10 +78,14 @@ private:
     double TargetAltitude;      // altitude to hold
     double TargetAGL;           // the terrain separation
 
+    double TargetVertSpeed;         // vertical speed to shoot for
+
     double TargetSpeed;         // speed to shoot for
     double alt_error_accum;     // altitude error accumulator
     double climb_error_accum;   // climb error accumulator (for GS)
     double speed_error_accum;   // speed error accumulator
+
+    double previous_speed;  // used to detect acceleration rate
 
     double TargetSlope;         // the glide slope hold value
 
@@ -124,9 +128,10 @@ private:
     SGPropertyNode *altitude_agl_node;
     SGPropertyNode *vertical_speed_node;
     SGPropertyNode *heading_node;
-    SGPropertyNode *dg_heading_node;
+    SGPropertyNode *indicated_heading_node;
     SGPropertyNode *roll_node;
     SGPropertyNode *pitch_node;
+    SGPropertyNode *airspeed_node;
 
     SGPropertyNode *min_climb;           // minimum climb speed
     SGPropertyNode *best_climb;          // best climb speed
@@ -139,6 +144,10 @@ private:
     SGPropertyNode *max_roll_node; // maximum roll setting in degrees
     SGPropertyNode *roll_out_node; // start rollout offset from desired heading in degrees
     SGPropertyNode *roll_out_smooth_node; // rollout smoothing offset in degrees
+    SGPropertyNode *throttle_adj_factor; // factor to optimize autothrottle adjustments
+    SGPropertyNode *throttle_integral;    // amount of contribution of the integral
+                                // component of the pid
+    SGPropertyNode *speed_change_node;    // anticipated speed change
 
     SGPropertyNode *TargetClimbRate;    // target climb rate
     SGPropertyNode *TargetDescentRate;  // target decent rate
@@ -207,6 +216,8 @@ public:
     inline void set_TargetDistance( double val ) { TargetDistance = val; }
     inline double get_TargetAltitude() const { return TargetAltitude; }
     inline void set_TargetAltitude( double val ) { TargetAltitude = val; }
+    inline double get_TargetSpeed() const { return TargetSpeed; }
+    inline void set_TargetSpeed( double val ) { TargetSpeed = val; }
     inline double get_TargetAGL() const { return TargetAGL; }
     inline void set_TargetAGL( double val ) { TargetAGL = val; }
     inline double get_TargetClimbRate() const {
@@ -266,6 +277,8 @@ private:
     void setAPAltitude (double altitude);
     bool getAPGSLock () const;
     void setAPGSLock (bool lock);
+    bool getAPVertSpeedLock () const;
+    void setAPVertSpeedLock (bool lock);
     bool getAPTerrainLock () const;
     void setAPTerrainLock (bool lock);
     double getAPClimb () const;
@@ -282,12 +295,16 @@ private:
     void setAPNAV1Lock (bool lock);
     bool getAPAutoThrottleLock () const;
     void setAPAutoThrottleLock (bool lock);
+    double getAPAutoThrottle () const;
+    void setAPAutoThrottle (double altitude);
     double getAPRudderControl () const;
     void setAPRudderControl (double value);
     double getAPElevatorControl () const;
     void setAPElevatorControl (double value);
     double getAPThrottleControl () const;
     void setAPThrottleControl (double value);
+    double getAPVertSpeed () const;
+    void setAPVertSpeed (double speed);
 
 };
 

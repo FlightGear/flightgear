@@ -98,10 +98,6 @@ void FGAutopilot::MakeTargetHeadingStr( double bearing ) {
 }
 
 
-static inline double get_speed( void ) {
-    return( cur_fdm_state->get_V_equiv_kts() );
-}
-
 static inline double get_ground_speed() {
     // starts in ft/s so we convert to kts
     static const SGPropertyNode * speedup_node = fgGetNode("/sim/speed-up");
@@ -213,10 +209,22 @@ void FGAutopilot::init ()
     altitude_node = fgGetNode("/position/altitude-ft", true);
     altitude_agl_node = fgGetNode("/position/altitude-agl-ft", true);
     vertical_speed_node = fgGetNode("/velocities/vertical-speed-fps", true);
+    airspeed_node = fgGetNode("/velocities/airspeed-kt", true);
     heading_node = fgGetNode("/orientation/heading-deg", true);
-    dg_heading_node
+
+    // support non-dg systems that indicate magnetic heading (e.g. 747-400)
+    if (fgGetBool("autopilot/config/indicated-heading-magnetic")) {
+       // use magnetic heading indicated
+       indicated_heading_node
+        = fgGetNode("/orientation/heading-magnetic-deg",
+                    true);
+    } else {
+       // use dg heading indicated
+       indicated_heading_node
         = fgGetNode("/instrumentation/heading-indicator/indicated-heading-deg",
                     true);
+    }
+
     roll_node = fgGetNode("/orientation/roll-deg", true);
     pitch_node = fgGetNode("/orientation/pitch-deg", true);
 
@@ -241,6 +249,13 @@ void FGAutopilot::init ()
     max_roll_node = fgGetNode("/autopilot/config/max-roll-deg", true);
     roll_out_node = fgGetNode("/autopilot/config/roll-out-deg", true);
     roll_out_smooth_node = fgGetNode("/autopilot/config/roll-out-smooth-deg", true);
+    throttle_adj_factor
+        = fgGetNode("/autopilot/config/throttle-adj-factor", true);
+    throttle_integral
+        = fgGetNode("/autopilot/config/throttle-integral", true);
+    speed_change_node
+        = fgGetNode("/autopilot/output/speed_change_anticipated_kt", true);
+         
     terrain_follow_factor = fgGetNode("/autopilot/config/terrain-follow-factor", true);
 
     current_throttle = fgGetNode("/controls/engines/engine/throttle");
@@ -270,6 +285,10 @@ void FGAutopilot::init ()
         fgSetFloat( "/autopilot/config/roll-out-deg", 20 );
     if ( roll_out_smooth_node->getFloatValue() < 0.0000001 )
         fgSetFloat( "/autopilot/config/roll-out-smooth-deg", 10 );
+    if (throttle_adj_factor->getFloatValue() < 1)
+        fgSetFloat( "/autopilot/config/throttle-adj-factor", 5000 );
+    if ( throttle_integral->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/throttle-integral", 0.001 );
     if (terrain_follow_factor->getFloatValue() < 1)
         fgSetFloat( "/autopilot/config/terrain-follow-factor", 16 );
 
@@ -283,6 +302,7 @@ void FGAutopilot::init ()
     DGTargetHeading = fgGetDouble("/autopilot/settings/heading-bug-deg");
     TargetHeading = fgGetDouble("/autopilot/settings/heading-bug-deg");
     TargetAltitude = fgGetDouble("/autopilot/settings/altitude-ft") * SG_FEET_TO_METER;
+    TargetSpeed = fgGetDouble("/autopilot/settings/speed-kt");
 
     // Initialize target location to startup location
     old_lat = latitude_node->getDoubleValue();
@@ -314,6 +334,9 @@ void FGAutopilot::init ()
 
     // set default aileron max deflection
     MaxAileron = 0.5;
+
+    // used to calculate acceleration
+    previous_speed = 0;
 
 #if !defined( USING_SLIDER_CLASS )
     MaxRollAdjust = 2 * MaxRoll;
@@ -349,6 +372,11 @@ FGAutopilot::bind ()
 	  &FGAutopilot::getAPHeadingLock, &FGAutopilot::setAPHeadingLock);
     fgSetArchivable("/autopilot/locks/heading");
 
+    fgTie("/autopilot/locks/vert-speed", this,
+	  &FGAutopilot::getAPVertSpeedLock, &FGAutopilot::setAPVertSpeedLock);
+    fgSetArchivable("/autopilot/locks/vert-speed");
+
+
     fgTie("/autopilot/settings/heading-bug-deg", this,
 	  &FGAutopilot::getAPHeadingBug, &FGAutopilot::setAPHeadingBug);
     fgSetArchivable("/autopilot/settings/heading-bug-deg");
@@ -369,6 +397,9 @@ FGAutopilot::bind ()
 	  &FGAutopilot::getAPAutoThrottleLock,
 	  &FGAutopilot::setAPAutoThrottleLock);
     fgSetArchivable("/autopilot/locks/auto-throttle");
+    fgTie("/autopilot/settings/speed-kt", this,
+	  &FGAutopilot::getAPAutoThrottle, &FGAutopilot::setAPAutoThrottle);
+    fgSetArchivable("/autopilot/settings/altitude-ft");
     fgTie("/autopilot/control-overrides/rudder", this,
 	  &FGAutopilot::getAPRudderControl,
 	  &FGAutopilot::setAPRudderControl);
@@ -381,6 +412,12 @@ FGAutopilot::bind ()
 	  &FGAutopilot::getAPThrottleControl,
 	  &FGAutopilot::setAPThrottleControl);
     fgSetArchivable("/autopilot/control-overrides/throttle");
+
+    fgTie("/autopilot/settings/vertical-speed-fpm", this,
+	  &FGAutopilot::getAPVertSpeed, &FGAutopilot::setAPVertSpeed);
+    fgSetArchivable("/autopilot/settings/vertical-speed-fpm");
+    fgSetDouble("/autopilot/settings/vertical-speed-fpm", 0.0f);
+
 }
 
 void
@@ -452,11 +489,8 @@ static double LinearExtrapolate( double x, double x1, double y1, double x2, doub
 void
 FGAutopilot::update (double dt)
 {
-    // Remove the following lines when the calling funcitons start
-    // passing in the data pointer
 
     // get control settings 
-	
     double lat = latitude_node->getDoubleValue();
     double lon = longitude_node->getDoubleValue();
     double alt = altitude_node->getDoubleValue() * SG_FEET_TO_METER;
@@ -499,7 +533,7 @@ FGAutopilot::update (double dt)
     if ( heading_hold == true ) {
 	if ( heading_mode == FG_DG_HEADING_LOCK ) {
             double dg_error = heading_node->getDoubleValue()
-                - dg_heading_node->getDoubleValue();
+                - indicated_heading_node->getDoubleValue();
 	    TargetHeading = DGTargetHeading + dg_error;
             // cout << "dg_error = " << dg_error << endl;
 	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
@@ -712,9 +746,9 @@ FGAutopilot::update (double dt)
 	if ( altitude_mode == FG_ALTITUDE_LOCK ) {
 	    climb_rate =
 		( TargetAltitude -
-		  fgGetDouble("/instrumentation/altimeter/indicated-altitude-ft") * SG_FEET_TO_METER ) * 8.0;
+		  fgGetDouble("/instrumentation/altimeter/indicated-altitude-ft") * SG_FEET_TO_METER ) * (TargetClimbRate->getDoubleValue() * 0.016);
         } else if ( altitude_mode == FG_TRUE_ALTITUDE_LOCK ) {
-            climb_rate = ( TargetAltitude - alt ) * 8.0;
+            climb_rate = ( TargetAltitude - alt ) * (TargetClimbRate->getDoubleValue() * 0.016);
 	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
 	    double x = current_radiostack->get_navcom1()->get_nav_gs_dist();
 	    double y = (altitude_node->getDoubleValue()
@@ -740,12 +774,18 @@ FGAutopilot::update (double dt)
 		( TargetAGL - altitude_agl_node->getDoubleValue()
                   * SG_FEET_TO_METER )
                   * terrain_follow_factor->getFloatValue();
+                      } else if ( altitude_mode == FG_VERT_SPEED  ) {
+                          climb_rate = TargetVertSpeed * SG_FEET_TO_METER;
+                          // switch to altitude hold, if set, within 500ft of target
+                          if (fabs(TargetAltitude * SG_METER_TO_FEET - altitude_node->getDoubleValue()) < 500) {
+                            set_AltitudeMode( FG_ALTITUDE_LOCK );
+                          }
 	} else {
 	    // just try to zero out rate of climb ...
 	    climb_rate = 0.0;
 	}
 
-	speed = get_speed();
+	speed =  airspeed_node->getFloatValue();
 
 	if ( speed < min_climb->getFloatValue() ) {
 	    max_climb = 0.0;
@@ -760,24 +800,28 @@ FGAutopilot::update (double dt)
                 + fabs(TargetClimbRate->getFloatValue() * SG_FEET_TO_METER);
 	}
 
-	// this first one could be optional if we wanted to allow
-	// better climb performance assuming we have the airspeed to
-	// support it.
-	if ( climb_rate >
+                     if (altitude_mode != FG_VERT_SPEED) {
+
+  	  // this first one could be optional if we wanted to allow
+	  // better climb performance assuming we have the airspeed to
+	  // support it.
+	  if ( climb_rate >
              fabs(TargetClimbRate->getFloatValue() * SG_FEET_TO_METER) ) {
-	    climb_rate
+	      climb_rate
                 = fabs(TargetClimbRate->getFloatValue() * SG_FEET_TO_METER);
-	}
+	  }
 
-	if ( climb_rate > max_climb ) {
-	    climb_rate = max_climb;
-	}
+	  if ( climb_rate > max_climb ) {
+	      climb_rate = max_climb;
+	  }
 
-	if ( climb_rate <
+	  if ( climb_rate <
              -fabs(TargetDescentRate->getFloatValue() * SG_FEET_TO_METER) ) {
-	    climb_rate
+	      climb_rate
                 = -fabs(TargetDescentRate->getFloatValue() * SG_FEET_TO_METER);
-	}
+	  }
+
+                      }
 
 	error = vertical_speed_node->getDoubleValue() * 60
             - climb_rate * SG_METER_TO_FEET;
@@ -824,8 +868,17 @@ FGAutopilot::update (double dt)
 	double error;
 	double prop_error, int_error;
 	double prop_adj, int_adj, total_adj;
+                      double lookahead;
 
-	error = TargetSpeed - get_speed();
+                       // estimate speed in 10 seconds
+                      lookahead =  airspeed_node->getFloatValue() + ( airspeed_node->getFloatValue() - previous_speed) * (10/dt);
+	previous_speed =  airspeed_node->getFloatValue();
+
+                      // compare targetspeed to anticipated airspeed
+	error = TargetSpeed - lookahead;
+
+                      // output anticipated speed change...
+                      speed_change_node->setDoubleValue(lookahead - airspeed_node->getFloatValue());
 
 	// accumulate the error under the curve ... this really should
 	// be *= delta t
@@ -841,13 +894,17 @@ FGAutopilot::update (double dt)
 	int_error = speed_error_accum;
 
 	// printf("error = %.2f  int_error = %.2f\n", error, int_error);
-	int_adj = int_error / 200.0;
+	int_adj = int_error / throttle_adj_factor->getFloatValue();
 
 	// caclulate proportional error
 	prop_error = error;
-	prop_adj = 0.5 + prop_error / 50.0;
+	prop_adj = prop_error / throttle_adj_factor->getFloatValue();
 
-	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
+	total_adj = (1.0 - throttle_integral->getFloatValue()) * prop_adj + 
+                                     throttle_integral->getFloatValue() * int_adj;
+
+                      total_adj = current_throttle->getFloatValue() + total_adj;
+
 	if ( total_adj > 1.0 ) {
 	    total_adj = 1.0;
 	}
@@ -956,8 +1013,11 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     altitude_mode = mode;
 
-    alt_error_accum = 0.0;
-
+    // only reset accum error if not in altitude mode for smooth transitions
+    // from one altitude mode to another until pitch control damping added.
+    if (!altitude_hold) {
+      alt_error_accum = 0.0;
+    }
 
     if ( altitude_mode == DEFAULT_AP_ALTITUDE_LOCK ) {
 	if ( TargetAltitude < altitude_agl_node->getDoubleValue()
@@ -1098,15 +1158,34 @@ void FGAutopilot::HeadingSet( double new_heading ) {
 void FGAutopilot::AutoThrottleAdjust( double inc ) {
     double target = ( int ) ( TargetSpeed / inc ) * inc + inc;
 
-    TargetSpeed = target;
+    set_TargetSpeed( target );
 }
 
+/**
+ * Set the autothrottle speed
+ */
+void
+FGAutopilot::setAPAutoThrottle (double speed_kt)
+{
+  set_TargetSpeed( speed_kt );
+}
+
+/**
+ * Get the autothrottle speed
+ */
+double
+FGAutopilot::getAPAutoThrottle () const
+{
+  return get_TargetSpeed();
+}
 
 void FGAutopilot::set_AutoThrottleEnabled( bool value ) {
     auto_throttle = value;
 
     if ( auto_throttle == true ) {
-        TargetSpeed = fgGetDouble("/velocities/airspeed-kt");
+        if (TargetSpeed < 0.0001) {
+          TargetSpeed = fgGetDouble("/velocities/airspeed-kt");
+        }
 	speed_error_accum = 0.0;
     }
 
@@ -1218,6 +1297,30 @@ FGAutopilot::setAPTerrainLock (bool lock)
 		  SG_FEET_TO_METER);
   }
   if (get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_TERRAIN)
+    set_AltitudeEnabled(lock);
+}
+
+/**
+ * Get the autopilot vertical speed lock (true=on).
+ */
+bool
+FGAutopilot::getAPVertSpeedLock () const
+{
+    return (get_AltitudeEnabled() &&
+	    (get_AltitudeMode()
+	     == FGAutopilot::FG_VERT_SPEED));
+}
+
+
+/**
+ * Set the autopilot vert speed lock (true=on).
+ */
+void
+FGAutopilot::setAPVertSpeedLock (bool lock)
+{
+  if (lock)
+    set_AltitudeMode(FGAutopilot::FG_VERT_SPEED);
+  if (get_AltitudeMode() == FGAutopilot::FG_VERT_SPEED)
     set_AltitudeEnabled(lock);
 }
 
@@ -1467,6 +1570,25 @@ FGAutopilot::setAPThrottleControl (double value)
     AutoThrottleAdjust(value < 0.0 ? -0.01 : 0.01);
   else
     globals->get_controls()->set_throttle(FGControls::ALL_ENGINES, value);
+}
+
+/**
+ * Get the vertical speed selected
+ */
+double
+FGAutopilot::getAPVertSpeed () const
+{
+  return TargetVertSpeed;
+}
+
+
+/**
+ * Set the selected vertical speed
+ */
+void
+FGAutopilot::setAPVertSpeed (double speed)
+{
+  TargetVertSpeed = speed;
 }
 
 // end of newauto.cxx
