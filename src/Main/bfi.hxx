@@ -95,6 +95,7 @@ public:
   static void setRPM ( double rpm );
   static double getEGT ();
   static double getCHT ();
+  static double getMP ();
 
 				// Velocities
   static double getAirspeed ();
