@@ -360,16 +360,6 @@ bool FGFDMExec::RunIC(FGInitialCondition *fgic)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGFDMExec::TransferState(int idxFDM)
-{
-  SlaveFDMList[idxFDM]->exec->GetRotation()->SetEuler(Rotation->GetEuler());
-  SlaveFDMList[idxFDM]->exec->GetRotation()->SetAeroPQR(Rotation->GetAeroPQR());
-  SlaveFDMList[idxFDM]->exec->GetTranslation()->SetAeroUVW(Translation->GetAeroUVW());
-  SlaveFDMList[idxFDM]->exec->GetRotation()->SetEuler(Rotation->GetEuler());
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 vector <string> FGFDMExec::EnumerateFDMs(void)
 {
   vector <string> FDMList;

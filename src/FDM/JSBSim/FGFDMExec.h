@@ -271,7 +271,6 @@ private:
   bool ReadPrologue(FGConfigFile*);
   bool ReadOutput(FGConfigFile*);
 
-  void TransferState(int idx);
   bool Allocate(void);
   bool DeAllocate(void);
   void Debug(int from);

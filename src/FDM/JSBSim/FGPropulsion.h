@@ -183,7 +183,7 @@ public:
   inline FGColumnVector3& GetMoments(void) {return vMoments;}
   inline double GetMoments(int n) const {return vMoments(n);}
   
-  FGColumnVector3& GetTanksCG(void);
+  FGColumnVector3& GetTanksMoment(void);
   double GetTanksWeight(void);
 
   double GetTanksIxx(const FGColumnVector3& vXYZcg);

@@ -158,28 +158,12 @@ public:
   inline FGColumnVector3& GetXYZep(void) { return vXYZep; }
   inline double GetXYZrp(int idx) const { return vXYZrp(idx); }
   inline double GetXYZep(int idx) const { return vXYZep(idx); }
-  inline double GetAlphaCLMax(void) const { return alphaclmax; }
-  inline double GetAlphaCLMin(void) const { return alphaclmin; }
-  
-  inline double GetAlphaHystMax(void) const { return alphahystmax; }
-  inline double GetAlphaHystMin(void) const { return alphahystmin; }
-  inline double GetHysteresisParm(void) const { return stall_hyst; }
-  
-
-  inline void SetAlphaCLMax(double tt) { alphaclmax=tt; }
-  inline void SetAlphaCLMin(double tt) { alphaclmin=tt; }
   inline void SetAircraftName(string name) {AircraftName = name;}
-  
-  inline double GetStallWarn(void) const { return impending_stall; }
-  
-  double GetBI2Vel(void) const { return bi2vel; }
-  double GetCI2Vel(void) const { return ci2vel; }
-  double GetAlphaW(void) const { return alphaw; }
-                                                           
+
   float GetNlf(void);
-  
+
   inline FGColumnVector3& GetNwcg(void) { return vNwcg; }
-  
+
   void bind(void);
   void unbind(void);
 
@@ -197,10 +181,6 @@ private:
   double WingArea, WingSpan, cbar, WingIncidence;
   double HTailArea, VTailArea, HTailArm, VTailArm;
   double lbarh,lbarv,vbarh,vbarv;
-  double alphaclmax,alphaclmin;
-  double alphahystmax, alphahystmin;
-  double impending_stall, stall_hyst;
-  double bi2vel, ci2vel,alphaw;
   string AircraftName;
 
   void Debug(int from);

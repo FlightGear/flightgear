@@ -466,7 +466,7 @@ string FGPropulsion::GetPropulsionValues(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector3& FGPropulsion::GetTanksCG(void)
+FGColumnVector3& FGPropulsion::GetTanksMoment(void)
 {
   iTank = Tanks.begin();
   vXYZtank.InitMatrix();

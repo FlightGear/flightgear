@@ -104,8 +104,6 @@ public:
   bool Load(FGConfigFile *AC_cfg);
   double TotalValue(void);
   inline double GetValue(void) const { return totalValue; }
-  //string GetCoefficientStrings(void);
-  //string GetCoefficientValues(void);
   inline double GetSD(void) { return SDtotal; }
   inline double GetFactorSD(void) { return FGCoefficient::GetSD(); }
   

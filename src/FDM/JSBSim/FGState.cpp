@@ -60,9 +60,6 @@ static const char *IdHdr = ID_STATE;
 MACROS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-//#define RegisterVariable(ID,DEF) coeffdef[#ID] = ID; paramdef[ID] = DEF
-#define RegisterVariable(ID,DEF) coeffdef[#ID] = ID;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -501,6 +498,8 @@ void FGState::InitPropertyMaps(void)
 {
   ParamNameToProp[  "FG_TIME" ]="sim-time-sec";
   ParamNameToProp[  "FG_QBAR" ]="aero/qbar-psf";
+  ParamNameToProp[  "FG_QBARUW" ]="aero/qbarUW-psf";
+  ParamNameToProp[  "FG_QBARUV" ]="aero/qbarUV-psf";
   ParamNameToProp[  "FG_WINGAREA" ]="metrics/Sw-sqft";
   ParamNameToProp[  "FG_WINGSPAN" ]="metrics/bw-ft";
   ParamNameToProp[  "FG_CBAR" ]="metrics/cbarw-ft";

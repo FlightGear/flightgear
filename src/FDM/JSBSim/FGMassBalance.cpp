@@ -77,8 +77,8 @@ bool FGMassBalance::Run(void)
 
 // Calculate new CG here.
 
-    vXYZcg = (Propulsion->GetTanksCG() + EmptyWeight*vbaseXYZcg
-                                       + GetPointMassCG()       ) / Weight;
+    vXYZcg = (Propulsion->GetTanksMoment() + EmptyWeight*vbaseXYZcg
+                                       + GetPointMassMoment() ) / Weight;
 
 // Calculate new moments of inertia here
 
@@ -118,7 +118,7 @@ double FGMassBalance::GetPointMassWeight(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector3& FGMassBalance::GetPointMassCG(void)
+FGColumnVector3& FGMassBalance::GetPointMassMoment(void)
 {
   PointMassCG.InitMatrix();
 

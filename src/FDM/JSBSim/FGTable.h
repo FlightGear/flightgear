@@ -100,8 +100,6 @@ public:
   FGTable& operator<<(const int n);
   inline double GetElement(int r, int c) {return Data[r][c];}
   void Print(void);
-  template <class T> T Clamp(T lower, T value, T upper)
-    {return value < lower ? lower : (value > upper ? upper : value);}
 
 private:
   enum type {tt1D, tt2D} Type;
@@ -109,6 +107,7 @@ private:
   int nRows, nCols;
   int colCounter;
   int rowCounter;
+  int lastRowIndex, lastColumnIndex;
   double** Allocate(void);
   void Debug(int from);
 };

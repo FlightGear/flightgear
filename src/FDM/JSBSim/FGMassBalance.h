@@ -81,7 +81,7 @@ public:
   
   void AddPointMass(double weight, double X, double Y, double Z);
   double GetPointMassWeight(void);
-  FGColumnVector3& GetPointMassCG(void);
+  FGColumnVector3& GetPointMassMoment(void);
   double GetPMIxx(void);
   double GetPMIyy(void);
   double GetPMIzz(void);
