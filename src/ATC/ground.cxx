@@ -30,6 +30,8 @@
 
 #include "ground.hxx"
 
+SG_USING_STD(ifstream);
+
 FGGround::FGGround() {
 	display = false;
 	networkLoadOK = false;
