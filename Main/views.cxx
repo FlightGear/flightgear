@@ -101,8 +101,8 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l) {
     LOCAL[2][3] = 0.0;
     LOCAL[3][0] = LOCAL[3][1] = LOCAL[3][2] = LOCAL[3][3] = 0.0;
     LOCAL[3][3] = 1.0;
-    printf("LaRCsim LOCAL matrix\n");
-    MAT3print(LOCAL, stdout);
+    // printf("LaRCsim LOCAL matrix\n");
+    // MAT3print(LOCAL, stdout);
 
 #ifdef OLD_LOCAL_TO_BODY_CODE
         // old code to calculate LOCAL matrix calculated from Phi,
@@ -127,8 +127,8 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l) {
 	/* printf("Yaw matrix\n");
 	   MAT3print(TMP, stdout); */
 	MAT3mult(LOCAL, R, TMP);
-	printf("FG derived LOCAL matrix\n");
-	MAT3print(LOCAL, stdout);
+	// printf("FG derived LOCAL matrix\n");
+	// MAT3print(LOCAL, stdout);
 #endif // OLD_LOCAL_TO_BODY_CODE
 
     // Derive the local UP transformation matrix based on *geodetic*
@@ -200,6 +200,9 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l) {
 
 
 // $Log$
+// Revision 1.5  1998/04/26 05:10:04  curt
+// "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+//
 // Revision 1.4  1998/04/25 22:04:53  curt
 // Use already calculated LaRCsim values to create the roll/pitch/yaw
 // transformation matrix (we call it LOCAL)

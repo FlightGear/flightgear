@@ -2,6 +2,10 @@
 | Todo 
 --------------------------------------------------------------------------
 
+4/25/98 -  Physically check if airport list overruns array size when loading.
+
+4/25/98 -  Do a better job of translating scenery tiles towards (0,0,0)
+
 4/25/98 -  Roll all of Time/sunpos.cxx into Astro/sun.cxx
 
 4/25/98 -  Overhaul view parameter generation ... see if we can piggy

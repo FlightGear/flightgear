@@ -113,7 +113,7 @@ void fgSkyVerticesInit( void ) {
 
 /* (Re)calculate the sky colors at each vertex */
 void fgSkyColorsInit( void ) {
-    struct fgLIGHT *l;
+    fgLIGHT *l;
     float sun_angle, diff;
     float outer_param[3], outer_amt[3], outer_diff[3];
     float middle_param[3], middle_amt[3], middle_diff[3];
@@ -260,7 +260,7 @@ void fgSkyInit( void ) {
 /* Draw the Sky */
 void fgSkyRender( void ) {
     fgFLIGHT *f;
-    struct fgLIGHT *l;
+    fgLIGHT *l;
     struct fgVIEW *v;
     float /* inner_color[4], middle_color[4], diff, */ east_dot, dot, angle;
     int i;
@@ -373,9 +373,12 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/04/25 22:06:25  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.4  1998/04/26 05:10:01  curt
+/* "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
 /*
+ * Revision 1.3  1998/04/25 22:06:25  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.2  1998/04/24 00:45:03  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Fixed a bug when generating sky colors.

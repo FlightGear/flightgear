@@ -189,7 +189,7 @@ int fgInitSubsystems( void ) {
     double cur_elev;
 
     fgFLIGHT *f;
-    struct fgLIGHT *l;
+    fgLIGHT *l;
     struct fgTIME *t;
     struct fgVIEW *v;
 
@@ -369,6 +369,9 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/04/26 05:10:03  curt
+// "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+//
 // Revision 1.5  1998/04/25 22:06:30  curt
 // Edited cvs log messages in source files ... bad bad bad!
 //

@@ -224,7 +224,7 @@ int fgStarsInit( void ) {
 void fgStarsRender( void ) {
     fgFLIGHT *f;
     struct fgVIEW *v;
-    struct fgLIGHT *l;
+    fgLIGHT *l;
     struct fgTIME *t;
     int i;
 
@@ -260,9 +260,12 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/04/25 22:06:26  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.4  1998/04/26 05:10:02  curt
+/* "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
 /*
+ * Revision 1.3  1998/04/25 22:06:26  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.2  1998/04/24 00:45:03  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Fixed a bug when generating sky colors.

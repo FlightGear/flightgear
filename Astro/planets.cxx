@@ -143,7 +143,7 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 
 void fgPlanetsInit( void )
 {
-  struct fgLIGHT *l;
+  fgLIGHT *l;
   int i;
   struct CelestialCoord pltPos;
   double magnitude;
@@ -210,9 +210,12 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/04/25 22:06:25  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.4  1998/04/26 05:10:01  curt
+/* "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
 /*
+ * Revision 1.3  1998/04/25 22:06:25  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.2  1998/04/24 00:45:02  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Fixed a bug when generating sky colors.

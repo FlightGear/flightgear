@@ -94,7 +94,7 @@ void fgLightInit( void ) {
 
 // update lighting parameters based on current sun position
 void fgLightUpdate( void ) {
-    struct fgLIGHT *l;
+    fgLIGHT *l;
     struct fgTIME *t;
     struct fgVIEW *v;
     /* if the 4th field is 0.0, this specifies a direction ... */
@@ -158,6 +158,9 @@ void fgLightUpdate( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/04/26 05:10:04  curt
+// "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+//
 // Revision 1.2  1998/04/24 00:52:30  curt
 // Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
 // Fog color fixes.

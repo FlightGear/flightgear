@@ -183,7 +183,7 @@ const int   DefaultViewMode = HUD_VIEW;
 
 // fgInitVisuals() -- Initialize various GL/view parameters
 static void fgInitVisuals( void ) {
-    struct fgLIGHT *l;
+    fgLIGHT *l;
     struct fgWEATHER *w;
 
     l = &cur_light_params;
@@ -213,7 +213,7 @@ static void fgInitVisuals( void ) {
 // Update the view volume, position, and orientation
 static void fgUpdateViewParams( void ) {
     fgFLIGHT *f;
-    struct fgLIGHT *l;
+    fgLIGHT *l;
     // struct fgTIME *t;
     struct fgVIEW *v;
 
@@ -316,7 +316,7 @@ static void fgUpdateInstrViewParams( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 static void fgRenderFrame( void ) {
-    struct fgLIGHT *l;
+    fgLIGHT *l;
     fgOPTIONS *o;
     struct fgTIME *t;
     struct fgVIEW *v;
@@ -693,6 +693,9 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.7  1998/04/26 05:10:02  curt
+// "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+//
 // Revision 1.6  1998/04/25 22:06:30  curt
 // Edited cvs log messages in source files ... bad bad bad!
 //
