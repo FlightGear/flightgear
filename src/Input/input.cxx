@@ -459,19 +459,19 @@ FGInput::_init_joystick ()
     for (j = 0; j < nb_axes; j++) {
       const SGPropertyNode * axis_node = axes[j];
       const SGPropertyNode * num_node = axis_node->getChild("number");
-      size_t n_axe = axis_node->getIndex();
+      size_t n_axis = axis_node->getIndex();
       if (num_node != 0) {
-          n_axe = num_node->getIntValue(TGT_PLATFORM,n_axe);
+          n_axis = num_node->getIntValue(TGT_PLATFORM,n_axis);
       }
 
-      axis &a = _joystick_bindings[i].axes[n_axe];
+      axis &a = _joystick_bindings[i].axes[n_axis];
 
-      js->setDeadBand(n_axe, axis_node->getDoubleValue("dead-band", 0.0));
+      js->setDeadBand(n_axis, axis_node->getDoubleValue("dead-band", 0.0));
 
       a.tolerance = axis_node->getDoubleValue("tolerance", 0.002);
-      minRange[n_axe] = axis_node->getDoubleValue("min-range", minRange[n_axe]);
-      maxRange[n_axe] = axis_node->getDoubleValue("max-range", maxRange[n_axe]);
-      center[n_axe] = axis_node->getDoubleValue("center", center[n_axe]);
+      minRange[n_axis] = axis_node->getDoubleValue("min-range", minRange[n_axis]);
+      maxRange[n_axis] = axis_node->getDoubleValue("max-range", maxRange[n_axis]);
+      center[n_axis] = axis_node->getDoubleValue("center", center[n_axis]);
 
       _read_bindings(axis_node, a.bindings, KEYMOD_NONE);
 
@@ -490,7 +490,7 @@ FGInput::_init_joystick ()
     //
     vector<SGPropertyNode_ptr> buttons = js_node->getChildren("button");
     char buf[32];
-    for (j = 0; j < nbuttons; j++) {
+    for (j = 0; (j < buttons.size()) && (j < nbuttons); j++) {
       const SGPropertyNode * button_node = buttons[j];
       const SGPropertyNode * num_node = button_node->getChild("number");
       size_t n_but = button_node->getIndex();
