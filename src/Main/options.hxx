@@ -36,6 +36,11 @@ extern void fgParseOptions (int argc, char ** argv);
 extern void fgParseOptions (const string &file_path);
 extern void fgUsage ();
 
+
+/* normans fix */
+#if defined(FX) && defined(XMESA)
+extern bool global_fullscreen;
+#endif
+
+
 #endif /* _OPTIONS_HXX */
-
-

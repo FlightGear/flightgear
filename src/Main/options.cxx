@@ -27,6 +27,11 @@
 
 #include <simgear/compiler.h>
 
+/* normans fix */
+#if defined(FX) && defined(XMESA)
+bool global_fullscreen = true;
+#endif
+
 #include <math.h>            // rint()
 #include <stdio.h>
 #include <stdlib.h>          // atof(), atoi()
@@ -993,7 +998,7 @@ fgParseOptions (const string& path) {
 void 
 fgUsage ()
 {
-    cout << "Usage: fg [ options ... ]" << endl;
+    cout << "Usage: fgfs [ options ... ]" << endl;
     cout << endl;
 
     cout << "General Options:" << endl;

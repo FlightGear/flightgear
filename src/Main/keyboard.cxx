@@ -71,7 +71,7 @@
 #include "globals.hxx"
 #include "keyboard.hxx"
 #include "fg_props.hxx"
-
+#include "options.hxx"
 				// From main.cxx
 extern void fgReshape( int width, int height );
 
