@@ -31,13 +31,14 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include <list>
-#include <Include/fg_stl_config.h>
+// #include <list>
+// #include <Include/fg_stl_config.h>
+
 #include <Scenery/scenery.hxx>
 
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
+// #ifdef NEEDNAMESPACESTD
+// using namespace std;
+// #endif
 
 #include "autopilot.hxx"
 
@@ -45,7 +46,7 @@ using namespace std;
 #include <Debug/fg_debug.h>
 
 
-static list < double > alt_error_queue;
+// static list < double > alt_error_queue;
 
 
 // The below routines were copied right from hud.c ( I hate reinventing
@@ -300,12 +301,14 @@ int fgAPRun( void )
 	double prop_adj, int_adj, total_adj;
 
 	// normal altitude hold
-	// APData->TargetClimbRate = 
-	//    (APData->TargetAltitude - fgAPget_altitude()) * 8.0;
+	APData->TargetClimbRate = 
+	    (APData->TargetAltitude - fgAPget_altitude()) * 12.0;
 
 	// brain dead ground hugging with no look ahead
-	APData->TargetClimbRate = 
-	    ( 500 - fgAPget_agl() ) * 8.0;
+	// APData->TargetClimbRate = ( 500 - fgAPget_agl() ) * 12.0;
+
+	// just try to zero out rate of climb ...
+	// APData->TargetClimbRate = 0.0;
 
 	if ( APData->TargetClimbRate > 200.0 ) {
 	    APData->TargetClimbRate = 200.0;
@@ -317,30 +320,30 @@ int fgAPRun( void )
 	error = fgAPget_climb() - APData->TargetClimbRate;
 
 	// push current error onto queue and add into accumulator
-	alt_error_queue.push_back(error);
+	// alt_error_queue.push_back(error);
 	APData->alt_error_accum += error;
 
 	// if queue size larger than 60 ... pop front and subtract
 	// from accumulator
-	size = alt_error_queue.size();
-	if ( size > 300 ) {
-	    APData->alt_error_accum -= alt_error_queue.front();
-	    alt_error_queue.pop_front();
-	    size--;
-	}
+	// size = alt_error_queue.size();
+	// if ( size > 300 ) {
+	    // APData->alt_error_accum -= alt_error_queue.front();
+	    // alt_error_queue.pop_front();
+	    // size--;
+	// }
 
 	// calculate integral error, and adjustment amount
-	int_error = APData->alt_error_accum / 10;
+	int_error = APData->alt_error_accum;
 	printf("error = %.2f  int_error = %.2f\n", error, int_error);
-	int_adj = int_error / 2000.0;
+	int_adj = int_error / 1500.0;
 	
 	// caclulate proportional error
 	prop_error = error;
-	prop_adj = prop_error / 1000.0;
+	prop_adj = prop_error / 2000.0;
 
 	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
 	if ( total_adj >  0.5 ) { total_adj =  0.5; }
-	if ( total_adj < -0.5 ) { total_adj = -0.5; }
+	if ( total_adj < -0.3 ) { total_adj = -0.3; }
 
 	fgElevSet( total_adj );
     }
@@ -431,7 +434,8 @@ void fgAPToggleAltitude( void )
 	APData->altitude_hold = 1;
 	APData->TargetAltitude = fgAPget_altitude();
 	APData->alt_error_accum = 0.0;
-	alt_error_queue.erase( alt_error_queue.begin(), alt_error_queue.end() );
+	// alt_error_queue.erase( alt_error_queue.begin(), 
+	//                        alt_error_queue.end() );
     }
 
     fgPrintf( FG_COCKPIT, FG_INFO, " fgAPSetAltitude: (%d) %.2f\n",
