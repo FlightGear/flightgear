@@ -28,6 +28,12 @@ public:
     // Sets the thrust vector control (0-1)
     void setRotation(float rot);
 
+    // Thrust reverser control.
+    void setReverse(bool reverse) { _reverseThrust = reverse; }
+
+    // Thrust reverser effectiveness.
+    void setReverseThrust(float eff) { _reverseEff = eff; }
+
     float getN1();
     float getN2();
     float getEPR();
@@ -45,6 +51,7 @@ public:
 
 private:
     float _reheat;
+    bool _reverseThrust;
 
     float _maxThrust; // Max dry thrust at sea level
     float _abFactor;  // Afterburner thrust multiplier
@@ -61,6 +68,7 @@ private:
     float _n1Max;  // N1 at takeoff thrust
     float _n2Min;  // N2 at ground idle
     float _n2Max;  // N2 at takeoff thrust
+    float _reverseEff; // Thrust reverser effectiveness (fraction)
 
     bool _running;   // Is the engine running?
     bool _cranking;  // Is the engine cranking?

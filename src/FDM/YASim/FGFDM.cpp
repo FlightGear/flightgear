@@ -159,6 +159,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	j->setMaxThrust(attrf(a, "thrust") * LBS2N,
 			attrf(a, "afterburner", 0) * LBS2N);
 	j->setVectorAngle(attrf(a, "rotate", 0) * DEG2RAD);
+        j->setReverseThrust(attrf(a, "reverse", 0.2));
 
  	float n1min = attrf(a, "n1-idle", 55);
 	float n1max = attrf(a, "n1-max", 102);
@@ -680,6 +681,7 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "CYCLICAIL")) return ControlMap::CYCLICAIL;
     if(eq(name, "CYCLICELE")) return ControlMap::CYCLICELE;
     if(eq(name, "ROTORENGINEON")) return ControlMap::ROTORENGINEON;
+    if(eq(name, "REVERSE_THRUST")) return ControlMap::REVERSE_THRUST;
     SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '"
            << name << "' in YASim aircraft description.");
     exit(1);

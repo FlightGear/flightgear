@@ -200,10 +200,11 @@ void ControlMap::applyControls(float dt)
 	case FLAP0:    ((Wing*)obj)->setFlap0(lval, rval);         break;
 	case FLAP1:    ((Wing*)obj)->setFlap1(lval, rval);         break;
 	case SPOILER:  ((Wing*)obj)->setSpoiler(lval, rval);       break;
-        case COLLECTIVE:   ((Rotor*)obj)->setCollective(lval);        break;
-        case CYCLICAIL:    ((Rotor*)obj)->setCyclicail(lval,rval);         break;
-        case CYCLICELE:    ((Rotor*)obj)->setCyclicele(lval,rval);         break;
+        case COLLECTIVE:   ((Rotor*)obj)->setCollective(lval);     break;
+        case CYCLICAIL:    ((Rotor*)obj)->setCyclicail(lval,rval); break;
+        case CYCLICELE:    ((Rotor*)obj)->setCyclicele(lval,rval); break;
         case ROTORENGINEON: ((Rotor*)obj)->setEngineOn((int)lval); break;
+	case REVERSE_THRUST: ((Jet*)obj)->setReverse(lval != 0);   break;
 	case BOOST:
 	    ((Thruster*)obj)->getPistonEngine()->setBoost(lval);
 	    break;

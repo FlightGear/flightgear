@@ -10,6 +10,7 @@ Jet::Jet()
     _reheat = 0;
     _rotControl = 0;
     _maxRot = 0;
+    _reverseThrust = false;
 
     // Initialize parameters for an early-ish subsonic turbojet.  More
     // recent turbofans will typically have a lower vMax, epr0, and
@@ -193,6 +194,9 @@ void Jet::integrate(float dt)
 						  // 3.5 times as much
 						  // fuel per thrust unit
     _egt = T0 + beta*ibeta0 * (_egt0 - T0);
+
+    // Thrust reverse handling:
+    if(_reverseThrust) _thrust *= -_reverseEff;
 }
 
 bool Jet::isRunning()
