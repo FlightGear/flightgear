@@ -32,7 +32,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 11;
+const int FG_NET_FDM_VERSION = 12;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -58,59 +58,67 @@ public:
     double longitude;		// geodetic (radians)
     double latitude;		// geodetic (radians)
     double altitude;		// above sea level (meters)
-    double agl;			// above ground level (meters)
-    double phi;			// roll (radians)
-    double theta;		// pitch (radians)
-    double psi;			// yaw or true heading (radians)
+    float agl;			// above ground level (meters)
+    float phi;			// roll (radians)
+    float theta;		// pitch (radians)
+    float psi;			// yaw or true heading (radians)
 
     // Velocities
-    double phidot;		// roll rate (radians/sec)
-    double thetadot;		// pitch rate (radians/sec)
-    double psidot;		// yaw rate (radians/sec)
-    double vcas;		// calibrated airspeed
-    double climb_rate;		// feet per second
-    double v_north;             // north velocity in local/body frame, fps
-    double v_east;              // east velocity in local/body frame, fps
-    double v_down;              // down/vertical velocity in local/body frame, fps
-    double v_wind_body_north;   // north velocity in local/body frame
+    float phidot;		// roll rate (radians/sec)
+    float thetadot;		// pitch rate (radians/sec)
+    float psidot;		// yaw rate (radians/sec)
+    float vcas;		        // calibrated airspeed
+    float climb_rate;		// feet per second
+    float v_north;              // north velocity in local/body frame, fps
+    float v_east;               // east velocity in local/body frame, fps
+    float v_down;               // down/vertical velocity in local/body frame, fps
+    float v_wind_body_north;    // north velocity in local/body frame
                                 // relative to local airmass, fps
-    double v_wind_body_east;    // east velocity in local/body frame
+    float v_wind_body_east;     // east velocity in local/body frame
                                 // relative to local airmass, fps
-    double v_wind_body_down;    // down/vertical velocity in local/body
+    float v_wind_body_down;     // down/vertical velocity in local/body
                                 // frame relative to local airmass, fps
 
     // Stall
-    double stall_warning;        // 0.0 - 1.0 indicating the amount of stall
+    float stall_warning;        // 0.0 - 1.0 indicating the amount of stall
 
     // Accelerations
-    double A_X_pilot;		// X accel in body frame ft/sec^2
-    double A_Y_pilot;		// Y accel in body frame ft/sec^2
-    double A_Z_pilot;		// Z accel in body frame ft/sec^2
+    float A_X_pilot;		// X accel in body frame ft/sec^2
+    float A_Y_pilot;		// Y accel in body frame ft/sec^2
+    float A_Z_pilot;		// Z accel in body frame ft/sec^2
 
     // Pressure
     
     // Engine status
     int num_engines;		// Number of valid engines
     int eng_state[FG_MAX_ENGINES]; // Engine state (off, cranking, running)
-    double rpm[FG_MAX_ENGINES];	// Engine RPM rev/min
-    double fuel_flow[FG_MAX_ENGINES]; // Fuel flow gallons/hr
-    double EGT[FG_MAX_ENGINES];	// Exhuast gas temp deg F
-    double oil_temp[FG_MAX_ENGINES]; // Oil temp deg F
-    double oil_px[FG_MAX_ENGINES]; // Oil pressure psi
+    float rpm[FG_MAX_ENGINES];	// Engine RPM rev/min
+    float fuel_flow[FG_MAX_ENGINES]; // Fuel flow gallons/hr
+    float EGT[FG_MAX_ENGINES];	// Exhuast gas temp deg F
+    float oil_temp[FG_MAX_ENGINES]; // Oil temp deg F
+    float oil_px[FG_MAX_ENGINES]; // Oil pressure psi
 
     // Consumables
     int num_tanks;		// Max number of fuel tanks
-    double fuel_quantity[FG_MAX_TANKS];
+    float fuel_quantity[FG_MAX_TANKS];
 
-    // Gear and flaps status
+    // Gear status
     int num_wheels;
     bool wow[FG_MAX_WHEELS];
-    double flap_deflection;     // normalized from 0 = up to 1 = full deflection
 
     // Environment
     time_t cur_time;            // current unix time
     long int warp;              // offset in seconds to unix time
-    double visibility;          // visibility in meters (for env. effects)
+    float visibility;          // visibility in meters (for env. effects)
+
+    // Control surface positions (normalized values)
+    float elevator;
+    float flaps;
+    float left_aileron;
+    float right_aileron;
+    float rudder;
+    float speedbrake;
+    float spoilers;
 };
 
 

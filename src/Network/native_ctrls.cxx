@@ -152,7 +152,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
     tempnode = fgGetNode("/controls/gear", true);
     for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
         node = fgGetNode("/controls/gear/wheel", i);
-        if ( node->getChild("brake") != 0 ) {
+        if ( node->getChild("brake") != NULL ) {
             if ( tempnode->getChild("parking-brake")->getDoubleValue() > 0.0 ) {
                 net->brake[i] = 1.0;
            } else {
@@ -165,9 +165,18 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
     }
 
     node = fgGetNode("/controls/switches", true);
-    net->master_bat = node->getChild("master-bat")->getBoolValue();
-    net->master_alt = node->getChild("master-alt")->getBoolValue();
-    net->master_avionics = node->getChild("master-avionics")->getBoolValue();
+    tempnode = node->getChild("master-bat");
+    if ( tempnode != NULL ) {
+        net->master_bat = tempnode->getBoolValue();
+    }
+    tempnode = node->getChild("master-alt");
+    if ( tempnode != NULL ) {
+        net->master_alt = tempnode->getBoolValue();
+    }
+    tempnode = node->getChild("master-avionics");
+    if ( tempnode != NULL ) {
+        net->master_avionics = tempnode->getBoolValue();
+    }
 
     net->wind_speed_kt = fgGetDouble("/environment/wind-speed-kt");
     net->wind_dir_deg = fgGetDouble("/environment/wind-from-heading-deg");

@@ -70,6 +70,22 @@ static void htond (double &x)
     }
 }
 
+// Float version
+static void htonf (float &x)	
+{
+    if ( sgIsLittleEndian() ) {
+        int    *Float_Overlay;
+        int     Holding_Buffer;
+    
+        Float_Overlay = (int *) &x;
+        Holding_Buffer = Float_Overlay [0];
+    
+        Float_Overlay [0] = htonl (Holding_Buffer);
+    } else {
+        return;
+    }
+}
+
 
 FGNativeFDM::FGNativeFDM() {
 }
@@ -168,13 +184,20 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         net->wow[i] = node->getDoubleValue("wow");
     }
 
-    // cout << "Flap deflection = " << aero->dflap << endl;
-    net->flap_deflection = fgGetDouble("/surface-positions/flap-pos-norm" );
-
     // the following really aren't used in this context
     net->cur_time = globals->get_time_params()->get_cur_time();
     net->warp = globals->get_warp();
     net->visibility = fgGetDouble("/environment/visibility-m");
+
+    // Control surface positions
+    SGPropertyNode *node = fgGetNode("/surface-positions", true);
+    net->elevator = node->getDoubleValue( "elevator-pos-norm" );
+    net->flaps = node->getDoubleValue( "flap-pos-norm" );
+    net->left_aileron = node->getDoubleValue( "left-aileron-pos-norm" );
+    net->right_aileron = node->getDoubleValue( "right-aileron-pos-norm" );
+    net->rudder = node->getDoubleValue( "rudder-pos-norm" );
+    net->speedbrake = node->getDoubleValue( "speedbrake-pos-norm" );
+    net->spoilers = node->getDoubleValue( "spoilers-pos-norm" );
 
     if ( net_byte_order ) {
         // Convert the net buffer to network format
@@ -183,39 +206,40 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         htond(net->longitude);
         htond(net->latitude);
         htond(net->altitude);
-        htond(net->phi);
-        htond(net->theta);
-        htond(net->psi);
+        htonf(net->agl);
+        htonf(net->phi);
+        htonf(net->theta);
+        htonf(net->psi);
 
-        htond(net->phidot);
-        htond(net->thetadot);
-        htond(net->psidot);
-        htond(net->vcas);
-        htond(net->climb_rate);
-        htond(net->v_north);
-        htond(net->v_east);
-        htond(net->v_down);
-        htond(net->v_wind_body_north);
-        htond(net->v_wind_body_east);
-        htond(net->v_wind_body_down);
-        htond(net->stall_warning);
+        htonf(net->phidot);
+        htonf(net->thetadot);
+        htonf(net->psidot);
+        htonf(net->vcas);
+        htonf(net->climb_rate);
+        htonf(net->v_north);
+        htonf(net->v_east);
+        htonf(net->v_down);
+        htonf(net->v_wind_body_north);
+        htonf(net->v_wind_body_east);
+        htonf(net->v_wind_body_down);
+        htonf(net->stall_warning);
 
-        htond(net->A_X_pilot);
-        htond(net->A_Y_pilot);
-        htond(net->A_Z_pilot);
+        htonf(net->A_X_pilot);
+        htonf(net->A_Y_pilot);
+        htonf(net->A_Z_pilot);
 
         for ( i = 0; i < net->num_engines; ++i ) {
             htonl(net->eng_state[i]);
-            htond(net->rpm[i]);
-            htond(net->fuel_flow[i]);
-            htond(net->EGT[i]);
-            htond(net->oil_temp[i]);
-            htond(net->oil_px[i]);
+            htonf(net->rpm[i]);
+            htonf(net->fuel_flow[i]);
+            htonf(net->EGT[i]);
+            htonf(net->oil_temp[i]);
+            htonf(net->oil_px[i]);
         }
         net->num_engines = htonl(net->num_engines);
 
         for ( i = 0; i < net->num_tanks; ++i ) {
-            htond(net->fuel_quantity[i]);
+            htonf(net->fuel_quantity[i]);
         }
         net->num_tanks = htonl(net->num_tanks);
 
@@ -223,11 +247,18 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
             net->wow[i] = htonl(net->wow[i]);
         }
         net->num_wheels = htonl(net->num_wheels);
-        htond(net->flap_deflection);
 
         net->cur_time = htonl( net->cur_time );
         net->warp = htonl( net->warp );
-        htond(net->visibility);
+        htonf(net->visibility);
+
+        htonf(net->elevator);
+        htonf(net->flaps);
+        htonf(net->left_aileron);
+        htonf(net->right_aileron);
+        htonf(net->rudder);
+        htonf(net->speedbrake);
+        htonf(net->spoilers);
     }
 }
 
@@ -242,50 +273,58 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         htond(net->longitude);
         htond(net->latitude);
         htond(net->altitude);
-        htond(net->phi);
-        htond(net->theta);
-        htond(net->psi);
+        htonf(net->agl);
+        htonf(net->phi);
+        htonf(net->theta);
+        htonf(net->psi);
 
-        htond(net->phidot);
-        htond(net->thetadot);
-        htond(net->psidot);
-        htond(net->vcas);
-        htond(net->climb_rate);
-        htond(net->v_north);
-        htond(net->v_east);
-        htond(net->v_down);
-        htond(net->v_wind_body_north);
-        htond(net->v_wind_body_east);
-        htond(net->v_wind_body_down);
-        htond(net->stall_warning);
+        htonf(net->phidot);
+        htonf(net->thetadot);
+        htonf(net->psidot);
+        htonf(net->vcas);
+        htonf(net->climb_rate);
+        htonf(net->v_north);
+        htonf(net->v_east);
+        htonf(net->v_down);
+        htonf(net->v_wind_body_north);
+        htonf(net->v_wind_body_east);
+        htonf(net->v_wind_body_down);
+        htonf(net->stall_warning);
 
-        htond(net->A_X_pilot);
-        htond(net->A_Y_pilot);
-        htond(net->A_Z_pilot);
+        htonf(net->A_X_pilot);
+        htonf(net->A_Y_pilot);
+        htonf(net->A_Z_pilot);
 
         net->num_engines = htonl(net->num_engines);
         for ( i = 0; i < net->num_engines; ++i ) {
             htonl(net->eng_state[i]);
-            htond(net->rpm[i]);
-            htond(net->fuel_flow[i]);
-            htond(net->EGT[i]);
-            htond(net->oil_temp[i]);
-            htond(net->oil_px[i]);
+            htonf(net->rpm[i]);
+            htonf(net->fuel_flow[i]);
+            htonf(net->EGT[i]);
+            htonf(net->oil_temp[i]);
+            htonf(net->oil_px[i]);
         }
 
         net->num_tanks = htonl(net->num_tanks);
         for ( i = 0; i < net->num_tanks; ++i ) {
-            htond(net->fuel_quantity[i]);
+            htonf(net->fuel_quantity[i]);
         }
 
         net->num_wheels = htonl(net->num_wheels);
         // I don't need to convert the Wow flags, since they are one
         // byte in size
-        htond(net->flap_deflection);
 
         net->cur_time = ntohl(net->cur_time);
         net->warp = ntohl(net->warp);
-        htond(net->visibility);
+        htonf(net->visibility);
+
+        htonf(net->elevator);
+        htonf(net->flaps);
+        htonf(net->left_aileron);
+        htonf(net->right_aileron);
+        htonf(net->rudder);
+        htonf(net->speedbrake);
+        htonf(net->spoilers);
     }
 
     if ( net->version == FG_NET_FDM_VERSION ) {
@@ -353,17 +392,6 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 	    node->setDoubleValue("wow", net->wow[i] );
 	}
 
-        fgSetDouble("/surface-positions/flap-pos-norm", net->flap_deflection);
-	SGPropertyNode * node = fgGetNode("/controls", true);
-        fgSetDouble("/surface-positions/elevator-pos-norm", 
-		    node->getDoubleValue( "elevator" ));
-        fgSetDouble("/surface-positions/rudder-pos-norm", 
-		    node->getDoubleValue( "rudder" ));
-        fgSetDouble("/surface-positions/left-aileron-pos-norm", 
-		    node->getDoubleValue( "aileron" ));
-        fgSetDouble("/surface-positions/right-aileron-pos-norm", 
-		    -node->getDoubleValue( "aileron" ));
-
 	/* these are ignored for now  ... */
 	/*
 	if ( net->cur_time ) {
@@ -373,6 +401,15 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         globals->set_warp( net->warp );
         last_warp = net->warp;
 	*/
+
+        SGPropertyNode *node = fgGetNode("/surface-positions", true);
+        node->setDoubleValue("elevator-pos-norm", net->elevator);
+        node->setDoubleValue("flap-pos-norm", net->flaps);
+        node->setDoubleValue("left-aileron-pos-norm", net->left_aileron);
+        node->setDoubleValue("right-aileron-pos-norm", net->right_aileron);
+        node->setDoubleValue("rudder-pos-norm", net->rudder);
+        node->setDoubleValue("speedbrake-pos-norm", net->speedbrake);
+        node->setDoubleValue("spoilers-pos-norm", net->spoilers);
     } else {
 	SG_LOG( SG_IO, SG_ALERT,
                 "Error: version mismatch in FGNetFDM2Props()" );
