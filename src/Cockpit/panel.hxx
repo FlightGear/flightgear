@@ -40,12 +40,12 @@
 #include <plib/ssg.h>
 
 #include <simgear/misc/props.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <vector>
 #include <map>
 #include <plib/fnt.h>
 
-#include <Time/timestamp.hxx>
 
 FG_USING_STD(vector);
 FG_USING_STD(map);
@@ -540,8 +540,8 @@ private:
   float _pointSize;
 
   mutable string _value;
-  mutable FGTimeStamp _then;
-  mutable FGTimeStamp _now;
+  mutable SGTimeStamp _then;
+  mutable SGTimeStamp _now;
 };
 
 

@@ -36,8 +36,9 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
+#include <simgear/timing/timestamp.hxx>
+
 #include "fg_timer.hxx"
-#include "timestamp.hxx"
 
 
 unsigned long int fgSimTime;
@@ -99,8 +100,8 @@ void fgTimerInit(float dt, void (*f)( int )) {
 int fgGetTimeInterval( void ) {
     int interval;
     static int inited = 0;
-    static FGTimeStamp last;
-    FGTimeStamp current;
+    static SGTimeStamp last;
+    SGTimeStamp current;
 
     
     if ( ! inited ) {

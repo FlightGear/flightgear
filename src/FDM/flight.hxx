@@ -88,7 +88,7 @@
 #include <list>
 #include <vector>
 
-#include <Time/timestamp.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 FG_USING_STD(list);
 FG_USING_STD(vector);
@@ -252,8 +252,8 @@ private:
     // Engine list
     engine_list engines;
 
-    FGTimeStamp valid_stamp;          // time this record is valid
-    FGTimeStamp next_stamp;           // time this record is valid
+    SGTimeStamp valid_stamp;          // time this record is valid
+    SGTimeStamp next_stamp;           // time this record is valid
 
 protected:
     void _busdump(void);
@@ -974,7 +974,7 @@ public:
 
     inline double get_Climb_Rate() const { return climb_rate; }
 
-    inline FGTimeStamp get_time_stamp() const { return valid_stamp; }
+    inline SGTimeStamp get_time_stamp() const { return valid_stamp; }
     inline void stamp_time() { valid_stamp = next_stamp; next_stamp.stamp(); }
 
     // Extrapolate FDM based on time_offset (in usec)

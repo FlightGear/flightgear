@@ -253,7 +253,7 @@ fgEVENT_MGR::PrintStats()
 // the queue
 void fgEVENT_MGR::Process( void ) {
     fgEVENT *e_ptr;
-    FGTimeStamp cur_time;
+    SGTimeStamp cur_time;
     unsigned int i, size;
 
     FG_LOG( FG_EVENT, FG_DEBUG, "Processing events" );

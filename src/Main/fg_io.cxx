@@ -31,6 +31,7 @@
 #include <simgear/io/sg_serial.hxx>
 #include <simgear/io/sg_socket.hxx>
 #include <simgear/math/sg_types.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <Network/protocol.hxx>
 #include <Network/native.hxx>
@@ -41,8 +42,6 @@
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
 #include <Network/joyclient.hxx>
-
-#include <Time/timestamp.hxx>
 
 #include "globals.hxx"
 
@@ -228,8 +227,8 @@ void fgIOProcess() {
 
     static int inited = 0;
     int interval;
-    static FGTimeStamp last;
-    FGTimeStamp current;
+    static SGTimeStamp last;
+    SGTimeStamp current;
 
     if ( ! inited ) {
 	inited = 1;

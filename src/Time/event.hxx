@@ -31,6 +31,7 @@
 
 
 #include <simgear/compiler.h>
+#include <simgear/timing/timestamp.hxx>
 
 #include <Include/fg_callback.hxx>
 
@@ -38,7 +39,6 @@
 #include <list>         // STL list
 #include STL_STRING
 
-#include "timestamp.hxx"
 
 FG_USING_STD(deque);
 FG_USING_STD(list);
@@ -87,9 +87,9 @@ private:
 
     long interval;    // interval in ms between each iteration of this event
 
-    FGTimeStamp last_run;
-    FGTimeStamp current;
-    FGTimeStamp next_run;
+    SGTimeStamp last_run;
+    SGTimeStamp current;
+    SGTimeStamp next_run;
 
     long cum_time;    // cumulative processor time of this event
     long min_time;    // time of quickest execution

@@ -6,7 +6,6 @@ libTime_a_SOURCES = \
 	light.cxx light.hxx \
 	moonpos.cxx moonpos.hxx \
 	sunpos.cxx sunpos.hxx \
-	timestamp.hxx \
 	tmp.cxx tmp.hxx
 	# fg_time.cxx fg_time.hxx \
 	# geocoord.cxx geocoord.h \

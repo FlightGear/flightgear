@@ -26,11 +26,11 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <Scenery/scenery.hxx>
 #include <FDM/LaRCsim/ls_interface.h>
 #include <Main/globals.hxx>
-#include <Time/timestamp.hxx>
 
 #include "External.hxx"
 #include "flight.hxx"
