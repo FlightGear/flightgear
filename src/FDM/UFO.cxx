@@ -31,9 +31,9 @@
 
 #include "UFO.hxx"
 
-const double throttle_damp = 0.05;
-const double aileron_damp = 0.01;
-const double elevator_damp = 0.01;
+const double throttle_damp = 0.2;
+const double aileron_damp = 0.05;
+const double elevator_damp = 0.05;
 
 FGUFO::FGUFO( double dt )
   : Throttle(0.0),
