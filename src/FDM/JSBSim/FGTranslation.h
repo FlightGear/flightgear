@@ -89,93 +89,35 @@ public:
   FGTranslation(FGFDMExec*);
   ~FGTranslation();
   
-    /** Bound Properties
-        GetUVW(1): velocities/u-fps
-        GetUVW(2): velocities/v-fps
-        GetUVW(3): velocities/w-fps
-    */
   inline double           GetUVW   (int idx) const { return vUVW(idx); }
   inline FGColumnVector3& GetUVW   (void)    { return vUVW; }
   inline FGColumnVector3& GetUVWdot(void)    { return vUVWdot; }
-    /** Bound Properties
-        GetUVWdot(1): accelerations/udot-fps
-        GetUVWdot(2): accelerations/vdot-fps
-        GetUVWdot(3): accelerations/wdot-fps
-    */
   inline double           GetUVWdot(int idx) const { return vUVWdot(idx); }
   inline FGColumnVector3& GetAeroUVW (void)    { return vAeroUVW; }
-    /** Bound Properties
-        GetAeroUVW(1): velocities/u-aero-fps
-        GetAeroUVW(2): velocities/v-aero-fps
-        GetAeroUVW(3): velocities/w-aero-fps
-    */
   inline double           GetAeroUVW (int idx) const { return vAeroUVW(idx); }
 
-    /** Bound Property:  aero/alpha-rad
-    */
   double Getalpha(void) const { return alpha; }
-    /** Bound Property:  aero/beta-rad
-    */
   double Getbeta (void) const { return beta; }
-    /** Bound Property:  aero/mag-beta-rad
-    */
   inline double GetMagBeta(void) const { return fabs(beta); }
-    /** Bound Property:  aero/qbar-psf
-    */
   double Getqbar (void) const { return qbar; }
-    /** Bound Property:  aero/qbarUW-psf
-    */
   double GetqbarUW (void) const { return qbarUW; }
-    /** Bound Property:  aero/qbarUV-psf
-    */
   double GetqbarUV (void) const { return qbarUV; }
-    /** Bound Property:  velocities/vt-fps
-    */
   inline double GetVt   (void) const { return Vt; }
-    /** Bound Property:  velocities/mach-norm
-    */
   double GetMach (void) const { return Mach; }
-    /** Bound Property:  aero/alphadot-rad_sec
-    */
   double Getadot (void) const { return adot; }
-    /** Bound Property:  aero/betadot-rad_sec
-    */
   double Getbdot (void) const { return bdot; }
 
-    /** Bound Properties
-        SetUVW(1): velocities/u-fps
-        SetUVW(2): velocities/v-fps
-        SetUVW(3): velocities/w-fps
-    */
   void SetUVW(FGColumnVector3 tt) { vUVW = tt; }
   void SetAeroUVW(FGColumnVector3 tt) { vAeroUVW = tt; }
 
-    /** Bound Property:  aero/alpha-rad
-    */
   inline void Setalpha(double tt) { alpha = tt; }
-    /** Bound Property:  aero/beta-rad
-    */
   inline void Setbeta (double tt) { beta  = tt; }
-    /** Bound Property:  aero/qbar-psf
-    */
   inline void Setqbar (double tt) { qbar = tt; }
-    /** Bound Property:  aero/qbarUW-psf
-    */
   inline void SetqbarUW (double tt) { qbarUW = tt; }
-    /** Bound Property:  aero/qbarUV-psf
-    */
   inline void SetqbarUV (double tt) { qbarUV = tt; }
-    /** Bound Property:  velocities/vt-fps
-    */
   inline void SetVt   (double tt) { Vt = tt; }
-    /** Bound Property:  velocities/mach-norm
-    */
   inline void SetMach (double tt) { Mach=tt; }
-    /** Bound Property:  aero/alphadot-rad_sec
-    */
   inline void Setadot (double tt) { adot = tt; }
-    /** Bound Property:  aero/betadot-rad_sec
-    */
   inline void Setbdot (double tt) { bdot = tt; }
 
   inline void SetAB(double t1, double t2) { alpha=t1; beta=t2; }

@@ -304,7 +304,7 @@ void FGCoefficient::bind(FGPropertyManager *parent)
   string mult;
   unsigned i;
   
-  node=parent->GetNode(name,true);
+  node = parent->GetNode(name,true);
   
   node->SetString("description",description);
   if (LookupR) node->SetString("row-parm",LookupR->getName() );
@@ -343,14 +343,16 @@ void FGCoefficient::unbind(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGPropertyManager* FGCoefficient::resolveSymbol(string name){
-        FGPropertyManager* tmpn;
-        tmpn = PropertyManager->GetNode(name,false);
-        if( !tmpn ) {
-          cerr << "Coefficient multipliers cannot create properties, check spelling?" << endl;
-          exit(1);
-        } 
-        return tmpn; 
+FGPropertyManager* FGCoefficient::resolveSymbol(string name)
+{
+  FGPropertyManager* tmpn;
+
+  tmpn = PropertyManager->GetNode(name,false);
+  if ( !tmpn ) {
+    cerr << "Coefficient multipliers cannot create properties, check spelling?" << endl;
+    exit(1);
+  } 
+  return tmpn; 
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -223,6 +223,12 @@ string FGConfigFile::GetLine(void)
       }
     }
   }
+
+  int index = scratch.find_last_not_of(" ");
+  if (index != string::npos && index < (scratch.size()-1)) {
+    scratch = scratch.substr(0,index+1);
+  }
+
   if (cfgfile.eof() && scratch.empty()) return string("EOF");
   return scratch;
 }

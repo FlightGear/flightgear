@@ -97,6 +97,10 @@ bool FGAuxiliary::Run()
 
   if (!FGModel::Run()) {
     GetState();
+    
+    //caculate total temperature assuming isentropic flow
+    tat=sat*(1 + 0.2*mach*mach);
+    
     if (mach < 1) {   //calculate total pressure assuming isentropic flow
       pt=p*pow((1 + 0.2*mach*mach),3.5);
     } else {
@@ -218,6 +222,11 @@ void FGAuxiliary::bind(void)
                        &FGAuxiliary::GetVequivalentFPS);
   PropertyManager->Tie("velocities/ve-kts", this,
                        &FGAuxiliary::GetVequivalentKTS);
+  PropertyManager->Tie("velocities/tat-r", this,
+                       &FGAuxiliary::GetTotalTemperature);
+  PropertyManager->Tie("velocities/pt-lbs_sqft", this,
+                       &FGAuxiliary::GetTotalPressure);
+                     
   PropertyManager->Tie("accelerations/a-pilot-x-ft_sec2", this,1,
                        (PMF)&FGAuxiliary::GetPilotAccel);
   PropertyManager->Tie("accelerations/a-pilot-y-ft_sec2", this,2,
@@ -269,6 +278,7 @@ void FGAuxiliary::GetState(void)
   p = Atmosphere->GetPressure();
   rhosl = Atmosphere->GetDensitySL();
   psl = Atmosphere->GetPressureSL();
+  sat = Atmosphere->GetTemperature();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

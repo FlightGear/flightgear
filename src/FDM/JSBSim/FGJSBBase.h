@@ -47,6 +47,11 @@ INCLUDES
 SG_USING_STD(string);
 SG_USING_STD(queue);
 
+# ifndef M_PI
+#  include <simgear/constants.h>
+#  define M_PI SG_PI
+# endif
+
 #else
 
 #  include <queue>
@@ -59,12 +64,15 @@ SG_USING_STD(queue);
 
 using std::string;
 using std::queue;
+
+# ifndef M_PI
+#  define M_PI 3.14159265358979323846
+# endif
+
 #endif
 
-#ifndef M_PI 
-#  include <simgear/constants.h>
-#  define M_PI SG_PI
-#endif
+
+using std::max;
 
 #ifdef __FreeBSD__ // define gcvt on FreeBSD
 

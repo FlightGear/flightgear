@@ -103,10 +103,11 @@ public:
 private:
   bool sFirstPass, dFirstPass, enabled;
   int SubSystems;
-  string Filename;
+  string Filename, outputInFileName;
   enum {otNone, otCSV, otTab, otSocket, otTerminal, otUnknown} Type;
   ofstream datafile;
   FGfdmSocket* socket;
+  vector <FGPropertyManager*> OutputProperties;
   void Debug(int from);
 };
 }

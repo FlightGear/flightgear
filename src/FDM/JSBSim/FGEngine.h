@@ -112,7 +112,7 @@ public:
   FGEngine(FGFDMExec* exec);
   virtual ~FGEngine();
 
-  enum EngineType {etUnknown, etRocket, etPiston, etTurbine};
+  enum EngineType {etUnknown, etRocket, etPiston, etTurbine, etSimTurbine};
 
   virtual double  GetThrottleMin(void) { return MinThrottle; }
   virtual double  GetThrottleMax(void) { return MaxThrottle; }
@@ -127,6 +127,16 @@ public:
   virtual bool    GetCranking(void) { return Cranking; }
   virtual int     GetType(void) { return Type; }
   virtual string  GetName(void) { return Name; }
+  virtual double  GetN1(void) { return N1; }
+  virtual double  GetN2(void) { return N2; }
+  virtual double  GetEGT(void) { return EGT_degC; }
+  virtual double  GetEPR(void) { return EPR; }
+  virtual double  GetInlet(void) { return InletPosition; }
+  virtual double  GetNozzle(void) { return NozzlePosition; } 
+  virtual bool    GetAugmentation(void) { return Augmentation; } 
+  virtual bool    GetInjection(void) { return Injection; }
+  virtual bool    GetIgnition(void) { return Ignition; }
+  virtual bool    GetReversed(void) { return Reversed; }
 
   virtual double getFuelFlow_gph () const {
     return FuelFlow_gph;
@@ -146,6 +156,10 @@ public:
   }
   virtual double getOilTemp_degF () const {
     return (OilTemp_degK - 273.0) * (9.0 / 5.0) + 32.0;
+  }
+
+  virtual double getFuelFlow_pph () const {
+    return FuelFlow_pph;
   }
 
   virtual void SetStarved(bool tt) {Starved = tt;}
@@ -226,6 +240,19 @@ protected:
   double CylinderHeadTemp_degK;
   double OilPressure_psi;
   double OilTemp_degK;
+
+  double FuelFlow_pph;
+  double N1;
+  double N2;
+  double EGT_degC;
+  double EPR;
+  double BleedDemand;
+  double InletPosition;
+  double NozzlePosition;
+  bool Augmentation;
+  bool Injection;
+  bool Ignition;
+  bool Reversed;
 
   FGFDMExec*      FDMExec;
   FGState*        State;

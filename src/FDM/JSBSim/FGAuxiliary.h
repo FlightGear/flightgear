@@ -95,6 +95,12 @@ public:
   inline double GetVequivalentFPS(void) const { return veas; }
   inline double GetVequivalentKTS(void) const { return veas*fpstokts; }
   
+  inline double GetTotalTemperature(void) const { return tat; }
+
+  // total pressure above is freestream total pressure for subsonic only
+  // for supersonic it is the 1D total pressure behind a normal shock
+  inline double GetTotalPressure(void) const { return pt; }
+  
   inline FGColumnVector3& GetPilotAccel(void) { return vPilotAccel; }
   inline double GetPilotAccel(int idx) const { return vPilotAccel(idx); }
   FGColumnVector3 GetNpilot(void) const { return vPilotAccelN; }
@@ -112,14 +118,9 @@ private:
   double vcas;
   double veas;
   double mach;
-  double qbar,rhosl,rho,p,psl,pt;
+  double qbar,rhosl,rho,p,psl,pt,tat,sat;
 
   // Don't add a getter for pt!
-  // pt above is freestream total pressure for subsonic only
-  // for supersonic it is the 1D total pressure behind a normal shock
-  // if a general freestream total is needed, e-mail Tony Peden
-  // (apeden@earthlink.net) or you can add it your self using the
-  // isentropic flow equations
 
   FGColumnVector3 vPilotAccel;
   FGColumnVector3 vPilotAccelN;

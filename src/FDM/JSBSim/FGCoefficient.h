@@ -131,7 +131,7 @@ public:
       @return the current value of the coefficient represented by this instance of
       FGCoefficient. */
   virtual double TotalValue(void);
-  
+
   /** Returns the value for this coefficient.
       TotalValue is stored each time TotalValue() is called. This function returns
       the stored value but does not calculate it anew. This is valuable for merely
@@ -139,25 +139,24 @@ public:
       @return the most recently calculated and stored value of the coefficient
       represented by this instance of FGCoefficient. */
   virtual inline double GetValue(void) const { return totalValue; }
-  
+
   /// Returns the name of this coefficient.
   virtual inline string Getname(void) const {return name;}
-  
+
   /// Returns the value of the coefficient only - before it is re-dimensionalized.
   virtual inline double GetSD(void) const { return SD;}
-  
+
   /** Outputs coefficient information.
       Non-dimensionalizing parameter descriptions are output
       for each aero coefficient defined.
       @param multipliers the list of multipliers for this coefficient.*/
   virtual void DisplayCoeffFactors(void);
-  
+
   /// Returns the name of the coefficient.
   virtual inline string GetCoefficientName(void) { return name; }
   /// Returns the stability derivative or coefficient value as a string.
   virtual string GetSDstring(void);
-  
-  
+
   inline void setBias(double b) { bias=b; }
   inline void setGain(double g) { gain=g; };
   inline double getBias(void) const { return bias; }
