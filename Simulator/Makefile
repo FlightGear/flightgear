@@ -96,13 +96,13 @@ bin-tar: all
 	FlightGear/Thanks)
 
 bin-zip: 
-	cp Main/fg$(FG_VERSION_MAJOR).exe Main/cygwin.dll README Thanks \
-	runfg.bat ..
+	cp Main/fg$(FG_VERSION_MAJOR).exe README Thanks \
+	runfg.bat ../Win32/glut.dll ../Win32/cygwinb19.dll ..
 	(cd ../..; \
 	zip -r bin-$(FG_VERSION).zip FlightGear/fgtop \
 	FlightGear/fg$(FG_VERSION_MAJOR).exe FlightGear/runfg.bat \
-	FlightGear/cygwin.dll FlightGear/COPYING FlightGear/Docs \
-	FlightGear/README FlightGear/Thanks)
+	FlightGear/cygwinb19.dll FlightGear/glut.dll FlightGear/COPYING \
+	FlightGear/Docs FlightGear/README FlightGear/Thanks )
 
 bin-exp-zip: 
 	cp Main/fg$(FG_VERSION_MAJOR).exe Main/cygwin.dll README Thanks \
@@ -117,6 +117,9 @@ bin-exp-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.45  1998/03/14 00:32:35  curt
+# Version 0.38
+#
 # Revision 1.44  1998/03/09 22:52:53  curt
 # Misc. configuration tweaks.
 #

@@ -5,7 +5,7 @@
 #---------------------------------------------------------------------------
 
 FG_VERSION_MAJOR = 0
-FG_VERSION_MINOR = 37
+FG_VERSION_MINOR = 38
 FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 
@@ -125,11 +125,6 @@ EXT =
 #---------------------------------------------------------------------------
 # Cygnus Win32 (gcc based) compiled against SGI's opengl and a dynamic GLUT
 #
-#   -*- Experimental -*-
-#
-# Currently builds without fatal error, but can't seem to run correctly.
-# Eventually may also work for compiling against IHV OpenGL drivers
-#
 # INTERFACE_LIBS = -lglut
 # GRAPHICS_LIBS = -lglu -lopengl -luser32 -lgdi32
 # FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS) -I$(FG_ROOT)/Win32/include \
@@ -140,8 +135,8 @@ EXT =
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
-# Cygnus Win32 (gcc based) with a static version of the GLUT toolkit
-#                          with MSOpenGL95.exe ...
+# [OLD] Cygnus Win32 (gcc based) with a static version of the GLUT toolkit
+#       with MSOpenGL95.exe ...
 #
 # INTERFACE_LIBS = ../Win32/libglut.a
 # GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
