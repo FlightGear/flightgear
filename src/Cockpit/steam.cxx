@@ -200,7 +200,7 @@ void FGSteam::_CatchUp()
   {	double dt = _UpdatesPending * 1.0 / 
 	    fgGetInt("/sim/model-hz"); // FIXME: inefficient
         double AccN, AccE, AccU;
-	int i /*,j*/;
+	/* int i, j; */
 	double d, the_ENGINE_rpm;
 
 #if 0
@@ -484,18 +484,18 @@ double FGSteam::get_HackOBS2_deg () {
 
 
 double FGSteam::get_HackADF_deg () {
+    static double last_r = 0;
     double r;
 
     if ( current_radiostack->get_adf_inrange() ) {
-	r = current_radiostack->get_adf_heading() - FGBFI::getHeading();
-
+	double r = current_radiostack->get_adf_heading() - FGBFI::getHeading();
+	last_r = r;
 	// cout << "Radial = " << current_radiostack->get_adf_heading() 
 	//      << "  Heading = " << FGBFI::getHeading() << endl;
+	return r;
     } else {
-	r = 0.0;
+	return last_r;
     }
-
-    return r;
 }
 
 
