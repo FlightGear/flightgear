@@ -73,7 +73,7 @@ ConvertUint(unsigned *array, unsigned int length) {
     }
 }
 
-static ImageRec *ImageOpen(char *fileName)
+static ImageRec *ImageOpen(const char *fileName)
 {
      union {
        int testWord;
@@ -182,7 +182,7 @@ ImageGetRow(ImageRec *image, unsigned char *buf, int y, int z) {
 }
 
 GLubyte *
-read_alpha_texture(char *name, int *width, int *height)
+read_alpha_texture(const char *name, int *width, int *height)
 {
     unsigned char *base, *lptr;
     ImageRec *image;
@@ -215,7 +215,7 @@ read_alpha_texture(char *name, int *width, int *height)
 }
 
 GLubyte *
-read_rgb_texture(char *name, int *width, int *height)
+read_rgb_texture(const char *name, int *width, int *height)
 {
     unsigned char *base, *ptr;
     unsigned char *rbuf, *gbuf, *bbuf, *abuf;

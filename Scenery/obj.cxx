@@ -231,7 +231,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 			  "Ack! unknown usemtl name = %s in %s\n",
 			  material, path);
 	    } else {
-		fragment.material_ptr = &(*myfind).second;
+		fragment.material_ptr = &((*myfind).second);
 	    }
 
 	    // initialize the fragment transformation matrix
@@ -490,6 +490,10 @@ int fgObjLoad(char *path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.23  1998/08/20 15:16:43  curt
+// obj.cxx: use more explicit parenthases.
+// texload.[ch]: use const in function definitions where appropriate.
+//
 // Revision 1.22  1998/08/20 15:12:03  curt
 // Used a forward declaration of classes fgTILE and fgMATERIAL to eliminate
 // the need for "void" pointers and casts.

@@ -18,8 +18,8 @@ extern "C" {
 #endif                                   
 
 
-extern GLubyte *read_alpha_texture(char *name, int *width, int *height);
-extern GLubyte * read_rgb_texture(char *name, int *width, int *height);
+extern GLubyte *read_alpha_texture(const char *name, int *width, int *height);
+extern GLubyte * read_rgb_texture(const char *name, int *width, int *height);
 
 
 #ifdef __cplusplus
