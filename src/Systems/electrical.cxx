@@ -335,7 +335,9 @@ void FGElectricalSystem::update (double dt) {
     // make this more generic
     double amps = 0.0;
     if ( fgGetBool("/controls/switches/master-bat") ) {
-        if ( fgGetBool("/controls/switches/master-alt") ) {
+        if ( fgGetBool("/controls/switches/master-alt") &&
+             fgGetDouble("/engines/engine[0]/rpm") > 800 )
+        {
             amps += 40.0 * alt_norm;
         }
         amps -= 15.0;            // normal load
