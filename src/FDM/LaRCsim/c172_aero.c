@@ -207,7 +207,7 @@ static SCALAR interp(SCALAR *y_table, SCALAR *x_table, int Ntable, SCALAR x)
 void c172_aero( SCALAR dt, int Initialize ) {
   
   
-  static int init = 0;
+  // static int init = 0;
   static int fi=0;
   static SCALAR lastFlapHandle=0;
   static SCALAR Ai;

@@ -49,8 +49,8 @@ adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
 
 
 ADF::ADF ()
-    : _last_frequency_khz(-1),
-      _time_before_search_sec(0),
+    : _time_before_search_sec(0),
+      _last_frequency_khz(-1),
       _transmitter_valid(false),
       _transmitter_elevation_ft(0),
       _transmitter_range_nm(0)

@@ -217,8 +217,8 @@ FGInput::makeDefault (bool status)
 void
 FGInput::doKey (int k, int modifiers, int x, int y)
 {
-    static SGPropertyNode *heading_enabled
-        = fgGetNode("/autopilot/locks/heading", true);
+  // static SGPropertyNode *heading_enabled
+  //     = fgGetNode("/autopilot/locks/heading", true);
 
                                 // Sanity check.
   if (k < 0 || k >= MAX_KEYS) {

@@ -227,6 +227,11 @@ do_reinit (const SGPropertyNode * arg)
     return result;
 }
 
+#if 0
+  //
+  // these routines look useful ??? but are never used in the code ???
+  //
+
 /**
  * Built-in command: suspend one or more subsystems.
  *
@@ -274,6 +279,8 @@ do_resume (const SGPropertyNode * arg)
     }
     return result;
 }
+
+#endif
 
 
 /**

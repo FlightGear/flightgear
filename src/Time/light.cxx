@@ -70,8 +70,8 @@ FGLight::FGLight ()
       _diffuse_tbl( NULL ),
       _specular_tbl( NULL ),
       _sky_tbl( NULL ),
-      _sun_rotation( 0.0 ),
       _prev_sun_angle(-9999.0),
+      _sun_rotation( 0.0 ),
       _dt_total( 0.0 )
 {
 }
@@ -163,7 +163,7 @@ void FGLight::update( double dt ) {
 
 void FGLight::update_sky_color () {
     // if the 4th field is 0.0, this specifies a direction ...
-    const GLfloat white[4]          = { 1.0,  1.0,  1.0,  1.0 };
+    // const GLfloat white[4]          = { 1.0,  1.0,  1.0,  1.0 };
     const GLfloat base_sky_color[4] = { 0.31, 0.43, 0.69, 1.0 };
     const GLfloat base_fog_color[4] = { 0.84, 0.87, 1.0,  1.0 };
 

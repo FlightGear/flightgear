@@ -44,6 +44,9 @@ private:
     FGNetFDM fdm;
     char *buf;
 
+    double last_weight;
+    double last_cg_offset;
+
 public:
 
     // Constructor

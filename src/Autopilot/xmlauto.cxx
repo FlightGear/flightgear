@@ -34,6 +34,8 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
     debug( false ),
     y_n( 0.0 ),
     r_n( 0.0 ),
+    y_scale( 1.0 ),
+    r_scale( 1.0 ),
     Kp( 0.0 ),
     alpha( 0.1 ),
     beta( 1.0 ),
@@ -45,9 +47,7 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
     ep_n_1( 0.0 ),
     edf_n_1( 0.0 ),
     edf_n_2( 0.0 ),
-    u_n_1( 0.0 ),
-    r_scale( 1.0 ),
-    y_scale( 1.0 )
+    u_n_1( 0.0 )
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
@@ -344,10 +344,10 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
     debug( false ),
     y_n( 0.0 ),
     r_n( 0.0 ),
-    u_min( 0.0 ),
-    u_max( 0.0 ),
     y_scale( 1.0 ),
-    r_scale ( 1.0 )
+    r_scale ( 1.0 ),
+    u_min( 0.0 ),
+    u_max( 0.0 )
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
@@ -512,12 +512,12 @@ void FGPISimpleController::update( double dt ) {
 
 
 FGPredictor::FGPredictor ( SGPropertyNode *node ):
-    debug( false ),
-    ivalue( 0.0 ),
     last_value ( 999999999.9 ),
     average ( 0.0 ),
     seconds( 0.0 ),
-    filter_gain( 0.0 )
+    filter_gain( 0.0 ),
+    debug( false ),
+    ivalue( 0.0 )
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {

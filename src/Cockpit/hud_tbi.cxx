@@ -149,7 +149,7 @@ operator = (const fgTBI_instr & rhs )
 
 	 else //if tsi enabled
 	 {
-		 float factor = My_box.right / 6.0;
+                 // float factor = My_box.right / 6.0;
 
 		 drawOneLine(cen_x-1.0, My_box.top,      cen_x+1.0, My_box.top);
 		 drawOneLine(cen_x-1.0, My_box.top,      cen_x-1.0, My_box.top+10.0);

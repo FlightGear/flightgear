@@ -233,7 +233,7 @@ void FGMultiplayRxMgr::ProcessData(void) {
 
             // Data received
             if (iBytes > 0) {
-                if (iBytes >= sizeof(MsgHdr)) {
+                if (iBytes >= (int)sizeof(MsgHdr)) {
 
                     // Read header
                     MsgHdr = (T_MsgHdr *)sMsg;

@@ -818,8 +818,8 @@ void fgUpdateTimeDepCalcs() {
         = fgGetNode( "/sim/freeze/replay", true );
     static SGPropertyNode *replay_time
         = fgGetNode( "/sim/replay/time", true );
-    static const SGPropertyNode *replay_end_time
-        = fgGetNode( "/sim/replay/end-time", true );
+    // static const SGPropertyNode *replay_end_time
+    //     = fgGetNode( "/sim/replay/end-time", true );
 
     //SG_LOG(SG_FLIGHT,SG_INFO, "Updating time dep calcs()");
 
@@ -902,8 +902,8 @@ static void fgMainLoop( void ) {
         = fgGetNode("/sim/freeze/clock", true);
     static const SGPropertyNode *cur_time_override
         = fgGetNode("/sim/time/cur-time-override", true);
-    static const SGPropertyNode *replay_master
-        = fgGetNode("/sim/freeze/replay", true);
+    // static const SGPropertyNode *replay_master
+    //     = fgGetNode("/sim/freeze/replay", true);
 
     // Update the elapsed time.
     static bool first_time = true;

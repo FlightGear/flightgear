@@ -51,7 +51,8 @@ FGViewMgr::init ()
   bool at_model = false;
   int from_model_index = 0;
   int at_model_index = 0;
-  double damp_alt, damp_roll, damp_pitch, damp_heading;
+  // double damp_alt;
+  double damp_roll = 0.0, damp_pitch = 0.0, damp_heading = 0.0;
   double x_offset_m, y_offset_m, z_offset_m, fov_deg;
   double heading_offset_deg, pitch_offset_deg, roll_offset_deg;
   double target_x_offset_m, target_y_offset_m, target_z_offset_m;

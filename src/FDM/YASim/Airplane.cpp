@@ -212,7 +212,7 @@ float Airplane::getFuel(int tank)
 
 float Airplane::setFuel(int tank, float fuel)
 {
-    ((Tank*)_tanks.get(tank))->fill = fuel;
+    return ((Tank*)_tanks.get(tank))->fill = fuel;
 }
 
 float Airplane::getFuelDensity(int tank)

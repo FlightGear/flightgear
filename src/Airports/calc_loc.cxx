@@ -30,7 +30,7 @@ int main( int argc, char **argv ) {
     double rwy_lon = atof( argv[5] );
     double rwy_hdg = atof( argv[6] );
     double rwy_len = atof( argv[7] ) * SG_DEGREES_TO_RADIANS;
-    double rwy_wid = atof( argv[8] );
+    // double rwy_wid = atof( argv[8] );
 
     if ( dir == "FOR" ) {
         rwy_hdg += 180.0;

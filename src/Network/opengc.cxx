@@ -48,15 +48,6 @@ FGOpenGC::FGOpenGC() :
 	wind_dir_node(fgGetNode("/environment/wind-from-heading-deg", true)),
 	wind_speed_node(fgGetNode("/environment/wind-speed-kt", true)),
 	mag_var_node(fgGetNode("/environment/magnetic-variation-deg", true)),
-	p_left_aileron(fgGetNode("surface-positions/left-aileron-pos-norm", true)),
-	p_right_aileron(fgGetNode("surface-positions/right-aileron-pos-norm", true)),
-	p_elevator(fgGetNode("surface-positions/elevator-pos-norm", true)),
-	p_elevator_trim(fgGetNode("surface-positions/elevator_trim-pos-norm", true)),
-	p_rudder(fgGetNode("surface-positions/rudder-pos-norm", true)),
-	p_flaps(fgGetNode("surface-positions/flap-pos-norm", true)),
-	p_flaps_cmd(fgGetNode("/controls/flaps", true)),
-	p_alphadot(fgGetNode("/fdm/jsbsim/aero/alphadot-radsec", true)),
-	p_betadot(fgGetNode("/fdm/jsbsim/aero/betadot-radsec", true)),
 	p_latitude(fgGetNode("/position/latitude-deg", true)),
 	p_longitude(fgGetNode("/position/longitude-deg", true)),
 	p_alt_node(fgGetNode("/position/altitude-ft", true)),
@@ -65,7 +56,16 @@ FGOpenGC::FGOpenGC() :
 	egt0_node(fgGetNode("/engines/engine/egt-degf", true)),
 	egt1_node(fgGetNode("/engines/engine[1]/egt-degf", true)),
 	egt2_node(fgGetNode("/engines/engine[2]/egt-degf", true)),
-	egt3_node(fgGetNode("/engines/engine[3]/egt-degf", true))
+	egt3_node(fgGetNode("/engines/engine[3]/egt-degf", true)),
+	p_left_aileron(fgGetNode("surface-positions/left-aileron-pos-norm", true)),
+	p_right_aileron(fgGetNode("surface-positions/right-aileron-pos-norm", true)),
+	p_elevator(fgGetNode("surface-positions/elevator-pos-norm", true)),
+	p_elevator_trim(fgGetNode("surface-positions/elevator_trim-pos-norm", true)),
+	p_rudder(fgGetNode("surface-positions/rudder-pos-norm", true)),
+	p_flaps(fgGetNode("surface-positions/flap-pos-norm", true)),
+	p_flaps_cmd(fgGetNode("/controls/flaps", true)),
+	p_alphadot(fgGetNode("/fdm/jsbsim/aero/alphadot-radsec", true)),
+	p_betadot(fgGetNode("/fdm/jsbsim/aero/betadot-radsec", true))
 	
 {
 }

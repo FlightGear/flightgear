@@ -515,7 +515,7 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
 {
     Rotor* w = new Rotor();
 
-    float defDihed = 0;
+    // float defDihed = 0;
 
     float pos[3];
     pos[0] = attrf(a, "x");

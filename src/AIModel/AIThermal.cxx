@@ -84,7 +84,7 @@ void FGAIThermal::Run(double dt) {
    ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()/SG_RADIANS_TO_DEGREES);
    ft_per_deg_lon = 365228.16 * cos(pos.lat() / SG_RADIANS_TO_DEGREES);
 
-   double altitude_ft = altitude * SG_METER_TO_FEET;
+   // double altitude_ft = altitude * SG_METER_TO_FEET;
 
    //###########################//
    // do calculations for range //
@@ -93,7 +93,7 @@ void FGAIThermal::Run(double dt) {
    // copy values from the AIManager
    double user_latitude  = manager->get_user_latitude();
    double user_longitude = manager->get_user_longitude();
-   double user_altitude  = manager->get_user_altitude();
+   // double user_altitude  = manager->get_user_altitude();
 
    // calculate range to target in feet and nautical miles
    double lat_range = fabs(pos.lat() - user_latitude) * ft_per_deg_lat;

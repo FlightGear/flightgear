@@ -41,7 +41,7 @@ StaticSystem::update (double dt)
         
         double target = _pressure_in_node->getDoubleValue();
         double current = _pressure_out_node->getDoubleValue();
-        double delta = target - current;
+        // double delta = target - current;
         _pressure_out_node->setDoubleValue(fgGetLowPass(current, target, dt));
     }
 }

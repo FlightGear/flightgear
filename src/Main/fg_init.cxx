@@ -660,6 +660,11 @@ static double fgGetAirportElev( const string& id ) {
 }
 
 
+#if 0 
+  // 
+  // This function is never used, but maybe useful in the future ???
+  //
+
 // Preset lon/lat given an airport id
 static bool fgSetPosFromAirportID( const string& id ) {
     FGAirport a;
@@ -687,6 +692,7 @@ static bool fgSetPosFromAirportID( const string& id ) {
         return false;
     }
 }
+#endif
 
 
 // Set current tower position lon/lat given an airport id
@@ -1438,8 +1444,6 @@ bool fgInitSubsystems() {
     // static const SGPropertyNode *altitude
     //     = fgGetNode("/sim/presets/altitude-ft");
 
-    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
-
     SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
 
@@ -1568,8 +1572,8 @@ bool fgInitSubsystems() {
            = fgGetNode("/sim/presets/longitude-deg");
         static const SGPropertyNode *latitude
            = fgGetNode("/sim/presets/latitude-deg");
-        static const SGPropertyNode *altitude
-           = fgGetNode("/sim/presets/altitude-ft");
+        // static const SGPropertyNode *altitude
+        //    = fgGetNode("/sim/presets/altitude-ft");
 
         SGPath cloud_path(globals->get_fg_root());
 #if 0

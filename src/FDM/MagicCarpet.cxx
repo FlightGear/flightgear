@@ -55,7 +55,7 @@ void FGMagicCarpet::update( double dt ) {
     if (is_suspended())
       return;
 
-    int multiloop = _calc_multiloop(dt);
+    // int multiloop = _calc_multiloop(dt);
 
     double time_step = dt;
 

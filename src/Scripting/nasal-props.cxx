@@ -177,7 +177,7 @@ static naRef f_getChildren(naContext c, naRef args)
         if(!naIsString(name)) return naNil();
         vector<SGPropertyNode_ptr> children
             = (*node)->getChildren(naStr_data(name));
-        for(int i=0; i<children.size(); i++)
+        for(unsigned int i=0; i<children.size(); i++)
             naVec_append(result, propNodeGhostCreate(c, children[i]));
     }
     return result;

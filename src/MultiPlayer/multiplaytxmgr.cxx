@@ -64,7 +64,7 @@ const char sMULTIPLAYTXMGR_HID[] = MULTIPLAYTXMGR_HID;
 ******************************************************************/
 FGMultiplayTxMgr::FGMultiplayTxMgr() {
 
-    int iPlayerCnt;         // Count of players in player array
+    // int iPlayerCnt;         // Count of players in player array
 
     // Initialise private members
     m_bInitialised = false;
@@ -216,10 +216,10 @@ void FGMultiplayTxMgr::SendMyPosition(const sgMat4 PlayerPosMat4) {
 ******************************************************************/
 void FGMultiplayTxMgr::SendTextMessage(const string &sMsgText) const {
 
-    bool bResult = false;
+    // bool bResult = false;
     T_MsgHdr MsgHdr;
     T_ChatMsg ChatMsg;
-    int iNextBlockPosition = 0;
+    unsigned int iNextBlockPosition = 0;
     char sMsg[sizeof(T_MsgHdr) + sizeof(T_ChatMsg)];
 
     if (m_bInitialised) {

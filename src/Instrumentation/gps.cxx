@@ -172,8 +172,9 @@ GPS::update (double delta_time_sec)
         double wp_latitude_deg = _wp_latitude_node->getDoubleValue();
         double wp_course_deg = 
           _wp_course_node->getDoubleValue();
-        double wp_distance, wp_bearing_deg, wp_actual_radial_deg,
-          wp_course_deviation_deg, wp_course_error_m, wp_TTW;
+        double wp_distance, wp_bearing_deg, wp_course_deviation_deg,
+            wp_course_error_m, wp_TTW;
+        // double wp_actual_radial_deg;
         string wp_ID = _wp_ID_node->getStringValue();
 
         // If the get-nearest-airport-node is true.

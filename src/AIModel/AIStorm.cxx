@@ -105,7 +105,7 @@ void FGAIStorm::Run(double dt) {
    double user_heading   = manager->get_user_heading();
    double user_pitch     = manager->get_user_pitch();
    double user_yaw       = manager->get_user_yaw();
-   double user_speed     = manager->get_user_speed();
+   // double user_speed     = manager->get_user_speed();
 
    // calculate range to target in feet and nautical miles
    double lat_range = fabs(pos.lat() - user_latitude) * ft_per_deg_lat;

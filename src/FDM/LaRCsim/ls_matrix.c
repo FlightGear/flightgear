@@ -46,8 +46,12 @@
 
 $Header$
 $Log$
-Revision 1.1  2002/09/10 01:14:02  curt
-Initial revision
+Revision 1.2  2004/04/01 15:27:55  curt
+Clean up various compiler warnings that have crept into the code.  This
+by no means get's them all, but it's a start.
+
+Revision 1.1.1.1  2002/09/10 01:14:02  curt
+Initial revision of FlightGear-0.9.0
 
 Revision 1.1.1.1  1999/06/17 18:07:34  curt
 Start of 0.7.x branch
@@ -176,7 +180,7 @@ int nr_gaussj(double **a, int n, double **b, int m)
 
 {
     int		*indxc, *indxr, *ipiv;
-    int 	i, icol, irow, j, k, l, ll;
+    int 	i, icol = 0, irow = 0, j, k, l, ll;
     double       big, dum, pivinv, temp;
 
     int		bexists = ((m != 0) || (b == 0));

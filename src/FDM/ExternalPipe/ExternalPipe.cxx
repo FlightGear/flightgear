@@ -43,6 +43,8 @@
 
 FGExternalPipe::FGExternalPipe( double dt, string name ) {
     valid = true;
+    last_weight = 0.0;
+    last_cg_offset = -9999.9;
 
     buf = new char[sizeof(char) + sizeof(int) + sizeof(ctrls)];
 
@@ -168,6 +170,7 @@ void FGExternalPipe::init() {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
       }
     }
+    last_weight = weight;
 
     if ( cg_offset > -5.0 || cg_offset < 5.0 ) {
       sprintf( cmd, "1aircraft-cg-offset-inches=%.2f", cg_offset );
@@ -176,6 +179,7 @@ void FGExternalPipe::init() {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
       }
     }
+    last_cg_offset = cg_offset;
 
     SG_LOG( SG_IO, SG_INFO, "before sending reset command." );
 
@@ -221,7 +225,6 @@ void FGExternalPipe::update( double dt ) {
     last_weight = weight;
 
     double cg_offset = fgGetDouble( "/sim/aircraft-cg-offset-inches" );
-    static double last_cg_offset = -9999.9;
     if ( fabs( cg_offset - last_cg_offset ) > 0.01 ) {
       char cmd[256];
       sprintf( cmd, "1aircraft-cg-offset-inches=%.2f", cg_offset );
@@ -241,18 +244,24 @@ void FGExternalPipe::update( double dt ) {
     *((int *)ptr) = iterations;
     ptr += sizeof(int);
     memcpy( ptr, (char *)(&ctrls), length );
+    cout << "writing control structure to remote fdm." << endl;
     result = write( pd1, buf, length + 1 );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: "
                 << fifo_name_1 );
+    } else {
+        cout << "  write successful = " << length + 1 << endl;
     }
 
     // Read fdm values
     length = sizeof(fdm);
+    cout << "about to read fdm data from remote fdm." << endl;
     result = read( pd2, (char *)(& fdm), length );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Read error from named pipe: "
                 << fifo_name_2 );
+    } else {
+        cout << "  read successful." << endl;
     }
     FGNetFDM2Props( &fdm, false );
 #endif

@@ -665,7 +665,7 @@ void Rotor::compile()
     //_delta=omega*_delta;
     _delta*=maxpitchforce/(_max_pitch*omega*lentocenter*2*_weight_per_blade*.453);
     float phi=Math::atan2(2*omega*_delta,omega0*omega0-omega*omega);
-    float phi2=Math::abs(omega0-omega)<.000000001?pi/2:Math::atan(2*omega*_delta/(omega0*omega0-omega*omega));
+    // float phi2=Math::abs(omega0-omega)<.000000001?pi/2:Math::atan(2*omega*_delta/(omega0*omega0-omega*omega));
     float relamp=omega*omega/(2*_delta*Math::sqrt(sqr(omega0*omega0-omega*omega)+4*_delta*_delta*omega*omega));
     if (!_no_torque)
     {
@@ -699,7 +699,8 @@ void Rotor::compile()
            << " relamp: " << relamp
            << " delta: " <<_delta);
 
-    float lspeed[3],dirzentforce[3];
+    // float lspeed[3];
+    float dirzentforce[3];
 
     float f=(!_ccw)?1:-1;
     //Math::mul3(f*speed,directions[1],lspeed);

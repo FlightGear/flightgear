@@ -133,8 +133,7 @@ bool FGGeneric::gen_message() {
     string generic_sentence;
     char tmp[255];
 
-    int v;
-    double d;
+    double val;
 
     for (unsigned int i = 0; i < _message.size(); i++) {
 
@@ -143,9 +142,9 @@ bool FGGeneric::gen_message() {
 
         switch (_message[i].type) {
         case FG_INT:
-            v = _message[i].offset +
+            val = _message[i].offset +
                     _message[i].prop->getIntValue() * _message[i].factor;
-            snprintf(tmp, 255, _message[i].format.c_str(), v);
+            snprintf(tmp, 255, _message[i].format.c_str(), (int)val);
             break;
 
         case FG_BOOL:
@@ -154,9 +153,9 @@ bool FGGeneric::gen_message() {
             break;
 
         case FG_DOUBLE:
-            d = _message[i].offset +
+            val = _message[i].offset +
                        _message[i].prop->getDoubleValue() * _message[i].factor;
-            snprintf(tmp, 255, _message[i].format.c_str(), d);
+            snprintf(tmp, 255, _message[i].format.c_str(), val);
             break;
 
         default: // SG_STRING

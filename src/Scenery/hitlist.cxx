@@ -507,7 +507,7 @@ void FGHitList::Intersect( ssgBranch *scene, sgdMat4 m, sgdVec3 orig, sgdVec3 di
 
 // Determine scenery altitude via ssg.
 // returned results are in meters
-static double hitlist1_time = 0.0;
+// static double hitlist1_time = 0.0;
 
 bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
                     sgdVec3 scenery_center,
@@ -590,7 +590,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
 }
 
 
-static double hitlist2_time = 0.0;
+// static double hitlist2_time = 0.0;
 
 // Determine scenery altitude via ssg.
 // returned results are in meters
