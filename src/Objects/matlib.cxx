@@ -111,42 +111,53 @@ bool FGMaterialLib::load( const string& mpath ) {
 	// after a failed >> operation.
 	char token = 0;
 
-	in >> material_name >> token;
+	in >> material_name;
 
-	if ( token == '{' ) {
-	    FGNewMat m;
-	    in >> m;
+	if ( material_name == "alias" ) {
+	    string src_mat, dst_mat;
+	    in >> dst_mat >> src_mat;
+	    FG_LOG( FG_GENERAL, FG_INFO, "  Material alias: " << dst_mat <<
+		    " mapped to " << src_mat );
+	    FGNewMat m = matlib[src_mat];
+	    matlib[dst_mat] = m;
+	} else {
+	    in >> token;
 
-	    // build the ssgSimpleState
-	    FGPath tex_path( globals->get_options()->get_fg_root() );
-	    tex_path.append( "Textures.high" );
+	    if ( token == '{' ) {
+		FGNewMat m;
+		in >> m;
 
-	    FGPath tmp_path = tex_path;
-	    tmp_path.append( m.get_texture_name() );
-	    if ( ! local_file_exists(tmp_path.str())
-		 || general.get_glMaxTexSize() < 512 ) {
-		tex_path = FGPath( globals->get_options()->get_fg_root() );
-		tex_path.append( "Textures" );
-	    }
+		// build the ssgSimpleState
+		FGPath tex_path( globals->get_options()->get_fg_root() );
+		tex_path.append( "Textures.high" );
+
+		FGPath tmp_path = tex_path;
+		tmp_path.append( m.get_texture_name() );
+		if ( ! local_file_exists(tmp_path.str())
+		     || general.get_glMaxTexSize() < 512 ) {
+		    tex_path = FGPath( globals->get_options()->get_fg_root() );
+		    tex_path.append( "Textures" );
+		}
 	    
-	    FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material " 
-		    << material_name << " (" << tex_path.c_str() << ")");
+		FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material " 
+			<< material_name << " (" << tex_path.c_str() << ")");
 
-	    GLenum shade_model = GL_SMOOTH;
-	    if ( globals->get_options()->get_shading() == 1 ) {
-		shade_model = GL_SMOOTH;
-	    } else {
-		shade_model = GL_FLAT;
-	    }
+		GLenum shade_model = GL_SMOOTH;
+		if ( globals->get_options()->get_shading() == 1 ) {
+		    shade_model = GL_SMOOTH;
+		} else {
+		    shade_model = GL_FLAT;
+		}
 
-	    m.build_ssg_state( tex_path.str(), shade_model,
-			       globals->get_options()->get_textures() );
+		m.build_ssg_state( tex_path.str(), shade_model,
+				   globals->get_options()->get_textures() );
 
 #if EXTRA_DEBUG
-	    m.dump_info();
+		m.dump_info();
 #endif
 	    
-	    matlib[material_name] = m;
+		matlib[material_name] = m;
+	    }
 	}
     }
 
