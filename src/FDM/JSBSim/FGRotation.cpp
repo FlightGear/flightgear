@@ -81,7 +81,8 @@ FGRotation::FGRotation(FGFDMExec* fdmex) : FGModel(fdmex),
         vPQRdot(3),
         vMoments(3),
         vEuler(3),
-        vEulerRates(3)
+        vEulerRates(3),
+	vlastPQRdot(3)
 {
   Name = "FGRotation";
   cTht=cPhi=cPsi=1.0;
@@ -103,7 +104,6 @@ bool FGRotation::Run(void)
 {
     float L2, N1;
     float tTheta;
-    static FGColumnVector vlastPQRdot(3);
 
     if (!FGModel::Run()) {
         GetState();

@@ -84,7 +84,9 @@ FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex),
     vNcg(3),
     vPQR(3),
     vForces(3),
-    vEuler(3)
+    vEuler(3),
+    vlastUVWdot(3),
+    mVel(3,3)
 {
   Name = "FGTranslation";
   qbar = 0;
@@ -107,8 +109,6 @@ FGTranslation::~FGTranslation()
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGTranslation::Run(void) {
-  static FGColumnVector vlastUVWdot(3);
-  static FGMatrix       mVel(3,3);
 
   if (!FGModel::Run()) {
 

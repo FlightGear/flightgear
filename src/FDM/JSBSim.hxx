@@ -202,6 +202,16 @@ private:
     FGInitialCondition *fgic;
     bool needTrim;
 
+    FGState*       State;
+    FGAtmosphere*  Atmosphere;
+    FGFCS*         FCS;
+    FGPropulsion*  Propulsion;
+    FGAircraft*    Aircraft;
+    FGTranslation* Translation;
+    FGRotation*    Rotation;
+    FGPosition*    Position;
+    FGAuxiliary*   Auxiliary;
+
     int runcount;
     float trim_elev;
     float trim_throttle;

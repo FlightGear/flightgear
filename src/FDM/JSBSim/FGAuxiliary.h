@@ -89,8 +89,10 @@ public:
   inline float GetVequivalentKTS(void) { return veas*FPSTOKTS; }
   
   inline FGColumnVector GetPilotAccel(void) { return vPilotAccel; }
+  inline float GetPilotAccel(int idx) { return vPilotAccel(idx); }
   inline FGColumnVector GetNpilot(void) { return vPilotAccel*INVGRAVITY; }
-  
+  inline float GetNpilot(int idx) { return (vPilotAccel*INVGRAVITY)(idx); }
+
   inline float GetEarthPositionAngle(void) { return earthPosAngle; }
   
   float GetHeadWind(void);

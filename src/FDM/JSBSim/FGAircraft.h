@@ -58,9 +58,9 @@ INCLUDES
 #include "FGModel.h"
 #include "FGCoefficient.h"
 #include "FGPropulsion.h"
-#include "FGLGear.h"
 #include "FGConfigFile.h"
 #include "FGMatrix.h"
+#include "FGLGear.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -161,7 +161,12 @@ public:
   inline float GetMass(void) { return Mass; }
   inline FGColumnVector GetMoments(void) { return vMoments; }
   inline FGColumnVector GetForces(void) { return vForces; }
+  inline FGColumnVector GetAeroBodyForces(void) { return vAeroBodyForces; }
+  inline float GetAeroBodyForces(int axis) { return vAeroBodyForces(axis); }
   inline FGColumnVector GetvFs(void) { return vFs; }
+  inline float GetvFs(int axis) { return vFs(axis); }
+  inline FGColumnVector GetvLastFs(void) { return vLastFs; }
+  inline float GetvLastFs(int axis) { return vLastFs(axis); }
   inline float GetIxx(void) { return Ixx; }
   inline float GetIyy(void) { return Iyy; }
   inline float GetIzz(void) { return Izz; }
@@ -169,6 +174,9 @@ public:
   inline FGColumnVector GetXYZcg(void) { return vXYZcg; }
   inline FGColumnVector GetXYZrp(void) { return vXYZrp; }
   inline FGColumnVector GetXYZep(void) { return vXYZep; }
+  inline float GetXYZcg(int idx) { return vXYZcg(idx); }
+  inline float GetXYZrp(int idx) { return vXYZrp(idx); }
+  inline float GetXYZep(int idx) { return vXYZep(idx); }
   inline float GetNlf(void) { return nlf; }
   inline float GetAlphaCLMax(void) { return alphaclmax; }
   inline float GetAlphaCLMin(void) { return alphaclmin; }
@@ -182,6 +190,8 @@ public:
   string GetCoefficientValues(void);
   string GetGroundReactionStrings(void);
   string GetGroundReactionValues(void);
+
+  float GetLoD(void);
 
   /// Subsystem types for specifying which will be output in the FDM data logging
   enum  SubSystems {
@@ -210,11 +220,15 @@ private:
   FGColumnVector vMoments;
   FGColumnVector vForces;
   FGColumnVector vFs;
+  FGColumnVector vLastFs;
   FGColumnVector vXYZrp;
   FGColumnVector vbaseXYZcg;
   FGColumnVector vXYZcg;
   FGColumnVector vXYZep;
   FGColumnVector vEuler;
+  FGColumnVector vXYZtank;
+  FGColumnVector vDXYZcg;
+  FGColumnVector vAeroBodyForces;
   float baseIxx, baseIyy, baseIzz, baseIxz, EmptyMass, Mass;
   float Ixx, Iyy, Izz, Ixz;
   float alpha, beta;

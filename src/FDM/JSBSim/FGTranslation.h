@@ -81,9 +81,12 @@ public:
   FGTranslation(FGFDMExec*);
   ~FGTranslation();
 
-  inline FGColumnVector GetUVW(void) { return vUVW; }
-  inline FGColumnVector GetUVWdot(void) { return vUVWdot; }
-  inline FGColumnVector GetNcg(void) { return vNcg; }
+  inline FGColumnVector GetUVW   (void)    { return vUVW; }
+  inline float          GetUVW   (int idx) { return vUVW(idx); }
+  inline FGColumnVector GetUVWdot(void)    { return vUVWdot; }
+  inline float          GetUVWdot(int idx) { return vUVWdot(idx); }
+  inline FGColumnVector GetNcg   (void)    { return vNcg; }
+  inline float          GetNcg   (int idx) { return vNcg(idx); }
 
   inline float Getalpha(void) { return alpha; }
   inline float Getbeta (void) { return beta; }
@@ -116,6 +119,8 @@ private:
   FGColumnVector vPQR;
   FGColumnVector vForces;
   FGColumnVector vEuler;
+  FGColumnVector vlastUVWdot;
+  FGMatrix       mVel;
 
   float Vt, qbar, Mach;
   float Mass, dt;

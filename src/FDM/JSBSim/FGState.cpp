@@ -53,15 +53,6 @@ INCLUDES
 #endif
 
 #include "FGState.h"
-#include "FGFDMExec.h"
-#include "FGAtmosphere.h"
-#include "FGFCS.h"
-#include "FGAircraft.h"
-#include "FGTranslation.h"
-#include "FGRotation.h"
-#include "FGPosition.h"
-#include "FGAuxiliary.h"
-#include "FGOutput.h"
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_STATE;
@@ -89,7 +80,10 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
     mTl2b(3,3),
     mTs2b(3,3),
     vQtrn(4),
-    vlastQdot(4)
+    vlastQdot(4),
+    vQdot(4),
+    vTmp(4),
+    vEuler(3)
 {
   FDMExec = fdex;
 
@@ -97,7 +91,15 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
   sim_time = 0.0;
   dt = 1.0/120.0;
   ActiveEngine = -1;
-  
+
+  Aircraft    = FDMExec->GetAircraft();
+  Translation = FDMExec->GetTranslation();
+  Rotation    = FDMExec->GetRotation();
+  Position    = FDMExec->GetPosition();
+  FCS         = FDMExec->GetFCS();
+  Output      = FDMExec->GetOutput();
+  Atmosphere  = FDMExec->GetAtmosphere();
+
   RegisterVariable(FG_TIME,           " time "           );
   RegisterVariable(FG_QBAR,           " qbar "           );
   RegisterVariable(FG_WINGAREA,       " wing_area "      );
@@ -107,9 +109,13 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
   RegisterVariable(FG_ALPHADOT,       " alphadot "       );
   RegisterVariable(FG_BETA,           " beta "           );
   RegisterVariable(FG_BETADOT,        " betadot "        );
+  RegisterVariable(FG_PHI,            " roll_angle "     );
+  RegisterVariable(FG_THT,            " pitch_angle "    );
+  RegisterVariable(FG_PSI,            " heading_angle "  );
   RegisterVariable(FG_PITCHRATE,      " pitch_rate "     );
   RegisterVariable(FG_ROLLRATE,       " roll_rate "      );
   RegisterVariable(FG_YAWRATE,        " yaw_rate "       );
+  RegisterVariable(FG_CL_SQRD,        " Clift_sqrd "     );
   RegisterVariable(FG_MACH,           " mach "           );
   RegisterVariable(FG_ALTITUDE,       " altitude "       );
   RegisterVariable(FG_BI2VEL,         " BI2Vel "         );
@@ -149,77 +155,93 @@ FGState::~FGState()
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 float FGState::GetParameter(eParam val_idx) {
+  float scratch;
+  
   switch(val_idx) {
   case FG_TIME:
     return sim_time;
   case FG_QBAR:
-    return FDMExec->GetTranslation()->Getqbar();
+    return Translation->Getqbar();
   case FG_WINGAREA:
-    return FDMExec->GetAircraft()->GetWingArea();
+    return Aircraft->GetWingArea();
   case FG_WINGSPAN:
-    return FDMExec->GetAircraft()->GetWingSpan();
+    return Aircraft->GetWingSpan();
   case FG_CBAR:
-    return FDMExec->GetAircraft()->Getcbar();
+    return Aircraft->Getcbar();
   case FG_ALPHA:
-    return FDMExec->GetTranslation()->Getalpha();
+    return Translation->Getalpha();
   case FG_ALPHADOT:
-    return FDMExec->GetTranslation()->Getadot();
+    return Translation->Getadot();
   case FG_BETA:
-    return FDMExec->GetTranslation()->Getbeta();
+    return Translation->Getbeta();
   case FG_BETADOT:
-    return FDMExec->GetTranslation()->Getbdot();
+    return Translation->Getbdot();
+  case FG_PHI:
+    return Rotation->Getphi();
+  case FG_THT:
+    return Rotation->Gettht();
+  case FG_PSI:
+    return Rotation->Getpsi();
   case FG_PITCHRATE:
-    return (FDMExec->GetRotation()->GetPQR())(2);
+    return Rotation->GetPQR(eQ);
   case FG_ROLLRATE:
-    return (FDMExec->GetRotation()->GetPQR())(1);
+    return Rotation->GetPQR(eP);
   case FG_YAWRATE:
-    return (FDMExec->GetRotation()->GetPQR())(3);
+    return Rotation->GetPQR(eR);
+  case FG_CL_SQRD:
+    if (Translation->Getqbar() > 0.00)
+      scratch = Aircraft->GetvLastFs(eLift)/(Aircraft->GetWingArea()*Translation->Getqbar());
+    else
+      scratch = 0.0;
+    return scratch*scratch;					   
   case FG_ELEVATOR_POS:
-    return FDMExec->GetFCS()->GetDePos();
+    return FCS->GetDePos();
   case FG_AILERON_POS:
-    return FDMExec->GetFCS()->GetDaPos();
+    return FCS->GetDaPos();
   case FG_RUDDER_POS:
-    return FDMExec->GetFCS()->GetDrPos();
+    return FCS->GetDrPos();
   case FG_SPDBRAKE_POS:
-    return FDMExec->GetFCS()->GetDsbPos();
+    return FCS->GetDsbPos();
   case FG_SPOILERS_POS:
-    return FDMExec->GetFCS()->GetDspPos();
+    return FCS->GetDspPos();
   case FG_FLAPS_POS:
-    return FDMExec->GetFCS()->GetDfPos();
+    return FCS->GetDfPos();
   case FG_ELEVATOR_CMD:
-    return FDMExec->GetFCS()->GetDeCmd();
+    return FCS->GetDeCmd();
   case FG_AILERON_CMD:
-    return FDMExec->GetFCS()->GetDaCmd();
+    return FCS->GetDaCmd();
   case FG_RUDDER_CMD:
-    return FDMExec->GetFCS()->GetDrCmd();
+    return FCS->GetDrCmd();
   case FG_SPDBRAKE_CMD:
-    return FDMExec->GetFCS()->GetDsbCmd();
+    return FCS->GetDsbCmd();
   case FG_SPOILERS_CMD:
-    return FDMExec->GetFCS()->GetDspCmd();
+    return FCS->GetDspCmd();
   case FG_FLAPS_CMD:
-    return FDMExec->GetFCS()->GetDfCmd();
+    return FCS->GetDfCmd();
   case FG_MACH:
-    return FDMExec->GetTranslation()->GetMach();
+    return Translation->GetMach();
   case FG_ALTITUDE:
-    return FDMExec->GetPosition()->Geth();
+    return Position->Geth();
   case FG_BI2VEL:
-    if(FDMExec->GetTranslation()->GetVt() > 0)
-        return FDMExec->GetAircraft()->GetWingSpan()/(2.0 * FDMExec->GetTranslation()->GetVt());
+    if(Translation->GetVt() > 0)
+        return Aircraft->GetWingSpan()/(2.0 * Translation->GetVt());
     else
         return 0;
   case FG_CI2VEL:
-    if(FDMExec->GetTranslation()->GetVt() > 0)
-        return FDMExec->GetAircraft()->Getcbar()/(2.0 * FDMExec->GetTranslation()->GetVt());
+    if(Translation->GetVt() > 0)
+        return Aircraft->Getcbar()/(2.0 * Translation->GetVt());
     else
         return 0;
   case FG_THROTTLE_CMD:
-    return FDMExec->GetFCS()->GetThrottleCmd(0);
+    if (ActiveEngine < 0) return FCS->GetThrottleCmd(0);
+    else return FCS->GetThrottleCmd(ActiveEngine);
   case FG_THROTTLE_POS:
-    return FDMExec->GetFCS()->GetThrottlePos(0);
+    if (ActiveEngine < 0) return FCS->GetThrottlePos(0);
+    else return FCS->GetThrottlePos(ActiveEngine);
   case FG_HOVERB:
-    return FDMExec->GetPosition()->GetHOverB();
+    return Position->GetHOverB();
   case FG_PITCH_TRIM_CMD:
-    return FDMExec->GetFCS()->GetPitchTrimCmd();
+    return FCS->GetPitchTrimCmd();
   default:
     cerr << "FGState::GetParameter() - No handler for parameter " << val_idx << endl;
     return 0.0;
@@ -244,47 +266,47 @@ eParam FGState::GetParameterIndex(string val_string) {
 void FGState::SetParameter(eParam val_idx, float val) {
   switch(val_idx) {
   case FG_ELEVATOR_POS:
-    FDMExec->GetFCS()->SetDePos(val);
+    FCS->SetDePos(val);
     break;
   case FG_AILERON_POS:
-    FDMExec->GetFCS()->SetDaPos(val);
+    FCS->SetDaPos(val);
     break;
   case FG_RUDDER_POS:
-    FDMExec->GetFCS()->SetDrPos(val);
+    FCS->SetDrPos(val);
     break;
   case FG_SPDBRAKE_POS:
-    FDMExec->GetFCS()->SetDsbPos(val);
+    FCS->SetDsbPos(val);
     break;
   case FG_SPOILERS_POS:
-    FDMExec->GetFCS()->SetDspPos(val);
+    FCS->SetDspPos(val);
     break;
   case FG_FLAPS_POS:
-    FDMExec->GetFCS()->SetDfPos(val);
+    FCS->SetDfPos(val);
     break;
   case FG_THROTTLE_POS:
-    FDMExec->GetFCS()->SetThrottlePos(ActiveEngine,val);
+    FCS->SetThrottlePos(ActiveEngine,val);
     break;
 
   case FG_ELEVATOR_CMD:
-    FDMExec->GetFCS()->SetDeCmd(val);
+    FCS->SetDeCmd(val);
     break;
   case FG_AILERON_CMD:
-    FDMExec->GetFCS()->SetDaCmd(val);
+    FCS->SetDaCmd(val);
     break;
   case FG_RUDDER_CMD:
-    FDMExec->GetFCS()->SetDrCmd(val);
+    FCS->SetDrCmd(val);
     break;
   case FG_SPDBRAKE_CMD:
-    FDMExec->GetFCS()->SetDsbCmd(val);
+    FCS->SetDsbCmd(val);
     break;
   case FG_SPOILERS_CMD:
-    FDMExec->GetFCS()->SetDspCmd(val);
+    FCS->SetDspCmd(val);
     break;
   case FG_FLAPS_CMD:
-    FDMExec->GetFCS()->SetDfCmd(val);
+    FCS->SetDfCmd(val);
     break;
   case FG_THROTTLE_CMD:
-    FDMExec->GetFCS()->SetThrottleCmd(ActiveEngine,val);
+    FCS->SetThrottleCmd(ActiveEngine,val);
     break;
 
   case FG_ACTIVE_ENGINE:
@@ -292,19 +314,19 @@ void FGState::SetParameter(eParam val_idx, float val) {
     break;
 
   case FG_LEFT_BRAKE_CMD:
-    FDMExec->GetFCS()->SetLBrake(val);
+    FCS->SetLBrake(val);
     break;
   case FG_CENTER_BRAKE_CMD:
-    FDMExec->GetFCS()->SetCBrake(val);
+    FCS->SetCBrake(val);
     break;
   case FG_RIGHT_BRAKE_CMD:
-    FDMExec->GetFCS()->SetRBrake(val);
+    FCS->SetRBrake(val);
     break;
 
   case FG_SET_LOGGING:
-    if      (val < -0.01) FDMExec->GetOutput()->Disable();
-    else if (val >  0.01) FDMExec->GetOutput()->Enable();
-    else                  FDMExec->GetOutput()->Toggle();
+    if      (val < -0.01) Output->Disable();
+    else if (val >  0.01) Output->Enable();
+    else                  Output->Toggle();
     break;
 
   default:
@@ -325,7 +347,7 @@ bool FGState::Reset(string path, string acname, string fname) {
 
   resetDef = path + "/" + acname + "/" + fname + ".xml";
 
-  ifstream resetfile(resetDef.c_str());
+  ifstream resetfile(resetDef.c_str(), ios::in | ios::binary );
 
   if (resetfile) {
     resetfile >> U;
@@ -339,9 +361,9 @@ bool FGState::Reset(string path, string acname, string fname) {
     resetfile >> h;
     resetfile.close();
 
-    FDMExec->GetPosition()->SetLatitude(latitude*DEGTORAD);
-    FDMExec->GetPosition()->SetLongitude(longitude*DEGTORAD);
-    FDMExec->GetPosition()->Seth(h);
+    Position->SetLatitude(latitude*DEGTORAD);
+    Position->SetLongitude(longitude*DEGTORAD);
+    Position->Seth(h);
 
     Initialize(U, V, W, phi*DEGTORAD, tht*DEGTORAD, psi*DEGTORAD,
                latitude*DEGTORAD, longitude*DEGTORAD, h);
@@ -363,15 +385,15 @@ void FGState::Initialize(float U, float V, float W,
                          float Latitude, float Longitude, float H) {
   FGColumnVector vUVW(3);
   FGColumnVector vLocalVelNED(3);
-  FGColumnVector vEuler(3);
+  FGColumnVector vLocalEuler(3);
   float alpha, beta;
   float qbar, Vt;
 
-  FDMExec->GetPosition()->SetLatitude(Latitude);
-  FDMExec->GetPosition()->SetLongitude(Longitude);
-  FDMExec->GetPosition()->Seth(H);
+  Position->SetLatitude(Latitude);
+  Position->SetLongitude(Longitude);
+  Position->Seth(H);
 
-  FDMExec->GetAtmosphere()->Run();
+  Atmosphere->Run();
 
   if (W != 0.0)
     alpha = U*U > 0.0 ? atan2(W, U) : 0.0;
@@ -383,25 +405,25 @@ void FGState::Initialize(float U, float V, float W,
     beta = 0.0;
 
   vUVW << U << V << W;
-  FDMExec->GetTranslation()->SetUVW(vUVW);
+  Translation->SetUVW(vUVW);
 
-  vEuler << phi << tht << psi;
-  FDMExec->GetRotation()->SetEuler(vEuler);
+  vLocalEuler << phi << tht << psi;
+  Rotation->SetEuler(vLocalEuler);
 
-  FDMExec->GetTranslation()->SetAB(alpha, beta);
+  Translation->SetAB(alpha, beta);
 
   Vt = sqrt(U*U + V*V + W*W);
-  FDMExec->GetTranslation()->SetVt(Vt);
+  Translation->SetVt(Vt);
 
-  FDMExec->GetTranslation()->SetMach(Vt/FDMExec->GetAtmosphere()->GetSoundSpeed());
+  Translation->SetMach(Vt/Atmosphere->GetSoundSpeed());
 
-  qbar = 0.5*(U*U + V*V + W*W)*FDMExec->GetAtmosphere()->GetDensity();
-  FDMExec->GetTranslation()->Setqbar(qbar);
+  qbar = 0.5*(U*U + V*V + W*W)*Atmosphere->GetDensity();
+  Translation->Setqbar(qbar);
 
   InitMatrices(phi, tht, psi);
 
   vLocalVelNED = mTb2l*vUVW;
-  FDMExec->GetPosition()->SetvVel(vLocalVelNED);
+  Position->SetvVel(vLocalVelNED);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -424,8 +446,8 @@ void FGState::Initialize(FGInitialCondition *FGIC) {
 
   Initialize(U, V, W, phi, tht, psi, latitude, longitude, h);
   
-  FDMExec->GetPosition()->SetSeaLevelRadius( FGIC->GetSeaLevelRadiusFtIC() );
-  FDMExec->GetPosition()->SetRunwayRadius( FGIC->GetSeaLevelRadiusFtIC() + 
+  Position->SetSeaLevelRadius( FGIC->GetSeaLevelRadiusFtIC() );
+  Position->SetRunwayRadius( FGIC->GetSeaLevelRadiusFtIC() + 
                                              FGIC->GetTerrainAltitudeFtIC() );
 
 }
@@ -436,15 +458,15 @@ bool FGState::StoreData(string fname) {
   ofstream datafile(fname.c_str());
 
   if (datafile) {
-    datafile << (FDMExec->GetTranslation()->GetUVW())(1);
-    datafile << (FDMExec->GetTranslation()->GetUVW())(2);
-    datafile << (FDMExec->GetTranslation()->GetUVW())(3);
-    datafile << FDMExec->GetPosition()->GetLatitude();
-    datafile << FDMExec->GetPosition()->GetLongitude();
-    datafile << (FDMExec->GetRotation()->GetEuler())(1);
-    datafile << (FDMExec->GetRotation()->GetEuler())(2);
-    datafile << (FDMExec->GetRotation()->GetEuler())(3);
-    datafile << FDMExec->GetPosition()->Geth();
+    datafile << Translation->GetUVW(eU);
+    datafile << Translation->GetUVW(eV);
+    datafile << Translation->GetUVW(eW);
+    datafile << Position->GetLatitude();
+    datafile << Position->GetLongitude();
+    datafile << Rotation->GetEuler(ePhi);
+    datafile << Rotation->GetEuler(eTht);
+    datafile << Rotation->GetEuler(ePsi);
+    datafile << Position->Geth();
     datafile.close();
     return true;
   } else {
@@ -524,9 +546,6 @@ void FGState::CalcMatrices(void) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGState::IntegrateQuat(FGColumnVector vPQR, int rate) {
-  static FGColumnVector vQdot(4);
-  static FGColumnVector vTmp(4);
-
   vQdot(1) = -0.5*(vQtrn(2)*vPQR(eP) + vQtrn(3)*vPQR(eQ) + vQtrn(4)*vPQR(eR));
   vQdot(2) =  0.5*(vQtrn(1)*vPQR(eP) + vQtrn(3)*vPQR(eR) - vQtrn(4)*vPQR(eQ));
   vQdot(3) =  0.5*(vQtrn(1)*vPQR(eQ) + vQtrn(4)*vPQR(eP) - vQtrn(2)*vPQR(eR));
@@ -541,8 +560,6 @@ void FGState::IntegrateQuat(FGColumnVector vPQR, int rate) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGColumnVector FGState::CalcEuler(void) {
-  static FGColumnVector vEuler(3);
-
   if (mTl2b(3,3) == 0.0) mTl2b(3,3) = 0.0000001;
   if (mTl2b(1,1) == 0.0) mTl2b(1,1) = 0.0000001;
 

@@ -96,6 +96,9 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
     }
   }
 
+  Type = ttPropeller;
+  RPM = 0;
+
   if (debug_lvl & 2) cout << "Instantiated: FGPropeller" << endl;
 }
 
@@ -146,7 +149,7 @@ float FGPropeller::Calculate(float PowerAvailable)
   vFn(1) = Thrust;
   omega = RPS*2.0*M_PI;
 
-  if (omega <= 500) omega = 1.0;
+  if (omega <= 5) omega = 1.0;
 
   Torque = PowerAvailable / omega;
   RPM = (RPS + ((Torque / Ixx) / (2.0 * M_PI)) * deltaT) * 60.0;

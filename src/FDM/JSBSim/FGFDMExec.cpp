@@ -177,7 +177,9 @@ bool FGFDMExec::Allocate(void) {
   Auxiliary   = new FGAuxiliary(this);
   Output      = new FGOutput(this);
 
-  State       = new FGState(this);
+  State       = new FGState(this); // This must be done here, as the FGState
+                                   // class needs valid pointers to the above
+				   // model classes
 
   // Initialize models so they can communicate with each other
 

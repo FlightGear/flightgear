@@ -46,7 +46,6 @@ INCLUDES
 #include "FGConfigFile.h"
 #include "FGMatrix.h"
 #include "FGFDMExec.h"
-#include "FGState.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -62,6 +61,7 @@ class FGAircraft;
 class FGPosition;
 class FGRotation;
 class FGFCS;
+class FGState;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
@@ -163,6 +163,8 @@ CLASS DOCUMENTATION
 	   NASA-Ames", NASA CR-2497, January 1975
     @see Barnes W. McCormick, "Aerodynamics, Aeronautics, and Flight Mechanics",
 	   Wiley & Sons, 1979 ISBN 0-471-03032-5
+    @see W. A. Ragsdale, "A Generic Landing Gear Dynamics Model for LASRS++",
+     AIAA-2000-4303
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -194,8 +196,10 @@ public:
 
   /// Gets the location of the gear in Body axes
   FGColumnVector GetBodyLocation(void) { return vWhlBodyVec; }
-  
+  float GetBodyLocation(int idx) { return vWhlBodyVec(idx); }
+
   FGColumnVector GetLocalGear(void) { return vLocalGear; }
+  float GetLocalGear(int idx) { return vLocalGear(idx); }
 
   /// Gets the name of the gear
   inline string GetName(void)      {return name;          }
@@ -264,4 +268,7 @@ private:
 #include "FGFCS.h"
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+#include "FGState.h"
+
 #endif

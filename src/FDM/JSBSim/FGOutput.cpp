@@ -161,7 +161,8 @@ void FGOutput::DelimitedOutput(void)
     }
     if (SubSystems & FGAircraft::ssForces) {
       cout << ", ";
-      cout << "XsForce, YsForce, ZsForce, ";
+      cout << "Drag, Side, Lift, ";
+      cout << "L/D, ";
       cout << "Xforce, Yforce, Zforce";
     }
     if (SubSystems & FGAircraft::ssMoments) {
@@ -235,6 +236,7 @@ void FGOutput::DelimitedOutput(void)
   if (SubSystems & FGAircraft::ssForces) {
     cout << ", ";
     cout << Aircraft->GetvFs() << ", ";
+    cout << Aircraft->GetLoD() << ", ";
     cout << Aircraft->GetForces();
   }
   if (SubSystems & FGAircraft::ssMoments) {
@@ -313,7 +315,8 @@ void FGOutput::DelimitedOutput(string fname)
     }
     if (SubSystems & FGAircraft::ssForces) {
       datafile << ", ";
-      datafile << "XsForce, YsForce, ZsForce, ";
+      datafile << "Drag, Side, Lift, ";
+      datafile << "L/D, ";
       datafile << "Xforce, Yforce, Zforce";
     }
     if (SubSystems & FGAircraft::ssMoments) {
@@ -390,6 +393,7 @@ void FGOutput::DelimitedOutput(string fname)
   if (SubSystems & FGAircraft::ssForces) {
     datafile << ", ";
     datafile << Aircraft->GetvFs() << ", ";
+    datafile << Aircraft->GetLoD() << ", ";
     datafile << Aircraft->GetForces();
   }
   if (SubSystems & FGAircraft::ssMoments) {

@@ -90,9 +90,13 @@ public:
   bool Run(void);
 
   inline FGColumnVector GetPQR(void) {return vPQR;}
+  inline float GetPQR(int axis) {return vPQR(axis);}
   inline FGColumnVector GetPQRdot(void) {return vPQRdot;}
+  inline float GetPQRdot(int idx) {return vPQRdot(idx);}
   inline FGColumnVector GetEuler(void) {return vEuler;}
+  inline float GetEuler(int axis) {return vEuler(axis);}
   inline FGColumnVector GetEulerRates(void) { return vEulerRates; }
+  inline float GetEulerRates(int axis) { return vEulerRates(axis); }
   inline void SetPQR(FGColumnVector tt) {vPQR = tt;}
   inline void SetEuler(FGColumnVector tt) {vEuler = tt;}
   
@@ -114,6 +118,7 @@ private:
   FGColumnVector vMoments;
   FGColumnVector vEuler;
   FGColumnVector vEulerRates;
+  FGColumnVector vlastPQRdot;
   
   float cTht,sTht;
   float cPhi,sPhi;

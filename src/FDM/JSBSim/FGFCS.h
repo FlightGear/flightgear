@@ -289,7 +289,7 @@ public:
   /** Sets the throttle command for the specified engine
       @param engine engine ID number
       @param cmd throttle command in percent (0 - 100)*/
-  inline void SetThrottleCmd(int engine, float cmd);
+  void SetThrottleCmd(int engine, float cmd);
   //@}
 
   /// @name Aerosurface position setting
@@ -321,7 +321,7 @@ public:
   /** Sets the actual throttle setting for the specified engine
       @param engine engine ID number
       @param cmd throttle setting in percent (0 - 100)*/
-  inline void SetThrottlePos(int engine, float cmd);
+  void SetThrottlePos(int engine, float cmd);
   //@}
 
   /// @name Landing Gear brakes

@@ -603,9 +603,9 @@ FGColumnVector FGColumnVector::Normalize(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector& FGColumnVector::operator*(const FGColumnVector& V)
+FGColumnVector FGColumnVector::operator*(const FGColumnVector& V)
 {
-  static FGColumnVector Product(3);
+  FGColumnVector Product(3);
 
   if (Rows() != 3 || V.Rows() != 3) {
     MatrixException mE;
@@ -622,9 +622,9 @@ FGColumnVector& FGColumnVector::operator*(const FGColumnVector& V)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector& FGColumnVector::multElementWise(const FGColumnVector& V)
+FGColumnVector FGColumnVector::multElementWise(const FGColumnVector& V)
 {
-  static FGColumnVector Product(3);
+  FGColumnVector Product(3);
 
   if (Rows() != 3 || V.Rows() != 3) {
     MatrixException mE;

@@ -49,7 +49,7 @@ INCLUDES
 #include "FGFDMExec.h"
 
 #ifndef FGFS
-#  include <iomanip.h>
+#  include <iomanip>
 #else
 #  include STL_IOMANIP
 #endif

@@ -84,6 +84,7 @@ FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec)
     }
   }
 
+  Type = etPiston;
   EngineNumber = 0;
 
   if (debug_lvl & 2) cout << "Instantiated: FGPiston" << endl;

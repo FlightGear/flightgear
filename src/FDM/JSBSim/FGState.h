@@ -62,10 +62,29 @@ INCLUDES
 #include "FGMatrix.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DEFINES
+DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_STATE "$Id$"
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FORWARD DECLARATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+class FGAircraft;
+class FGTranslation;
+class FGRotation;
+class FGAtmosphere;
+class FGOutput;
+class FGPosition;
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -77,6 +96,11 @@ class FGState {
 public:
   FGState(FGFDMExec*);
   ~FGState();
+
+  enum {ePhi=1, eTht, ePsi};
+  enum {eP=1, eQ, eR};
+  enum {eU=1, eV, eW};
+  enum {eDrag=1, eSide, eLift};
 
   bool Reset(string, string, string);
   void Initialize(float, float, float, float, float, float, float, float, float);
@@ -115,7 +139,9 @@ public:
   FGColumnVector CalcEuler(void);
   FGMatrix GetTs2b(float alpha, float beta);
   FGMatrix GetTl2b(void) { return mTl2b; }
+  float GetTl2b(int i, int j) { return mTl2b(i,j);}
   FGMatrix GetTb2l(void) { return mTb2l; }
+  float GetTb2l(int i, int j) { return mTb2l(i,j);}
   typedef map<eParam, string> ParamMap;
   ParamMap paramdef;
 
@@ -132,16 +158,35 @@ private:
   FGColumnVector vQtrn;
   FGColumnVector vlastQdot;
 
+  FGAircraft* Aircraft;
+  FGPosition* Position;
+  FGTranslation* Translation;
+  FGRotation* Rotation;
+  FGOutput* Output;
+  FGAtmosphere* Atmosphere;
+  FGFCS* FCS;
+
   typedef map<string, eParam> CoeffMap;
   CoeffMap coeffdef;
   void Debug(void);
   int ActiveEngine;
 
-protected:
-  enum {ePhi=1, eTht, ePsi};
-  enum {eP=1, eQ, eR};
+  FGColumnVector vQdot;
+  FGColumnVector vTmp;
+  FGColumnVector vEuler;
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+#include "FGFDMExec.h"
+#include "FGAtmosphere.h"
+#include "FGFCS.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGPosition.h"
+//#include "FGAuxiliary.h"
+#include "FGOutput.h"
+#include "FGAircraft.h"
+
 #endif
 

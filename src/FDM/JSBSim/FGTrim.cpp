@@ -165,9 +165,9 @@ void FGTrim::ReportState(void) {
   cout << endl << "  JSBSim State" << endl;
   sprintf(out,"    Weight: %7.0f lbs.  CG: %5.1f, %5.1f, %5.1f inches\n",
                    fdmex->GetAircraft()->GetWeight(),
-                   fdmex->GetAircraft()->GetXYZcg()(1),
-                   fdmex->GetAircraft()->GetXYZcg()(2),
-                   fdmex->GetAircraft()->GetXYZcg()(3) );
+                   fdmex->GetAircraft()->GetXYZcg(1),
+                   fdmex->GetAircraft()->GetXYZcg(2),
+                   fdmex->GetAircraft()->GetXYZcg(3));
   cout << out;             
   if( fdmex->GetFCS()->GetDfPos() <= 0.01)
     sprintf(flap,"Up");

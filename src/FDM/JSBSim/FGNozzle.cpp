@@ -74,6 +74,7 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, FGConfigFile* Nzl_cfg) : FGThruster(FDMEx
   }
 
   Thrust = 0;
+  Type = ttNozzle;
 
   if (debug_lvl & 2) cout << "Instantiated: FGNozzle" << endl;
 }

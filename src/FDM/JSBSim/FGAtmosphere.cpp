@@ -70,7 +70,7 @@ CLASS IMPLEMENTATION
 
 
 FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex),
-                                                    vWindNED(3)
+                                               vWindNED(3)
 {
   Name = "FGAtmosphere";
   h = 0;
@@ -80,7 +80,6 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex),
   SLdensity     = density;
   SLsoundspeed  = sqrt(SHRATIO*Reng*temperature);
   useExternal=false;
-  vWindNED(1)=0;vWindNED(2)=0;vWindNED(3)=0;
 
   if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
@@ -110,7 +109,7 @@ bool FGAtmosphere::Run(void)
       temperature = exTemperature;
     }
 
-    psiw = atan2( vWindNED(2), vWindNED(1) );
+    if (vWindNED(1) != 0.0) psiw = atan2( vWindNED(2), vWindNED(1) );
 
     if (psiw < 0) psiw += 2*M_PI;
 

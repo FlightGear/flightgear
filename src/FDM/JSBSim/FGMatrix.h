@@ -142,7 +142,7 @@ public:
   ~FGColumnVector(void);
 
   FGColumnVector operator*(const double scalar);
-  FGColumnVector& operator*(const FGColumnVector& V);   // Cross product operator
+  FGColumnVector operator*(const FGColumnVector& V);   // Cross product operator
   FGColumnVector operator/(const double scalar);
   FGColumnVector operator+(const FGColumnVector& B); // must not return reference
   FGColumnVector operator-(const FGColumnVector& B);
@@ -154,7 +154,7 @@ public:
 
   double& operator()(int m) const;
 
-  FGColumnVector& multElementWise(const FGColumnVector& V);
+  FGColumnVector multElementWise(const FGColumnVector& V);
 
 private:
   void Debug(void);

@@ -32,7 +32,7 @@ CLASS IMPLEMENTATION
 
 FGConfigFile::FGConfigFile(string cfgFileName)
 {
-  cfgfile.open(cfgFileName.c_str());
+  cfgfile.open(cfgFileName.c_str(), ios::in | ios::binary );
   CommentsOn = false;
   CurrentIndex = 0;
   Opened = true;

@@ -66,6 +66,7 @@ public:
   float GetThrust(void) {return Thrust;}
   eType GetType(void) {return Type;}
   string GetName(void) {return Name;}
+  virtual float GetRPM(void) { return 0.0; };
 
 protected:
   eType Type;

@@ -162,12 +162,15 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
     vMoments(3),
     vForces(3),
     vFs(3),
+    vLastFs(3),
     vXYZrp(3),
     vbaseXYZcg(3),
     vXYZcg(3),
     vXYZep(3),
-    vEuler(3)
-
+    vEuler(3),
+    vXYZtank(3),
+    vDXYZcg(3),
+    vAeroBodyForces(3)
 {
   Name = "FGAircraft";
 
@@ -262,8 +265,8 @@ bool FGAircraft::Run(void) {
     MassChange();
     FMProp();
     FMAero();
-    FMGear();
     FMMass();
+    FMGear();
 
     nlf = 0;
     if (fabs(Position->GetGamma()) < 1.57) {
@@ -280,7 +283,6 @@ bool FGAircraft::Run(void) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGAircraft::MassChange() {
-  static FGColumnVector vXYZtank(3);
   float Tw;
   float IXXt, IYYt, IZZt, IXZt;
 //  unsigned int t;
@@ -368,16 +370,14 @@ void FGAircraft::MassChange() {
   Iyy = baseIyy + IYYt;
   Izz = baseIzz + IZZt;
   Ixz = baseIxz + IXZt;
-
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGAircraft::FMAero(void) {
-  static FGColumnVector vDXYZcg(3);
-  static FGColumnVector vAeroBodyForces(3);
   unsigned int axis_ctr,ctr;
 
+  vLastFs = vFs;
   for (axis_ctr=1; axis_ctr<=3; axis_ctr++) vFs(axis_ctr) = 0.0;
 
   for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
@@ -749,3 +749,14 @@ void FGAircraft::Debug(void)
     //TODO: Add your source code here
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGAircraft::GetLoD(void) {
+  float LoD;
+  if (vFs(1) != 0.00)
+    LoD = vFs(3)/vFs(1);
+  else
+    LoD = 0.00;
+
+  return LoD;
+}
