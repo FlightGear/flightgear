@@ -434,10 +434,10 @@ bool fgInitSubsystems( void ) {
     FG_LOG(FG_GENERAL, FG_INFO, "Creating LocalWeatherDatabase");
     FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
 	new FGLocalWeatherDatabase(
-	      Point3D( current_aircraft.fdm_state->get_Latitude(),
+	               current_aircraft.fdm_state->get_Latitude(),
 		       current_aircraft.fdm_state->get_Longitude(),
 		       current_aircraft.fdm_state->get_Altitude() 
-		          * FEET_TO_METER) );
+		          * FEET_TO_METER );
 
     WeatherDatabase = FGLocalWeatherDatabase::theFGLocalWeatherDatabase;
 

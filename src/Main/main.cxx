@@ -343,7 +343,18 @@ void fgRenderFrame( void ) {
 	xglLightfv( GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
 	xglLightfv( GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
 	// xglLightfv(GL_LIGHT0, GL_SPECULAR, white );
-	
+
+	// texture parameters
+	xglEnable( GL_TEXTURE_2D );
+	xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
+	xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
+	// set base color (I don't think this is doing anything here)
+	// xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
+	//  (GL_FRONT, GL_DIFFUSE, white);
+	// xglMaterialfv (GL_FRONT, GL_SPECULAR, white);
+	// xglMaterialfv (GL_FRONT, GL_SHININESS, mat_shininess);
+
+#if 0	
 	if ( current_options.get_textures() ) {
 	    // texture parameters
 	    xglEnable( GL_TEXTURE_2D );
@@ -361,6 +372,7 @@ void fgRenderFrame( void ) {
 	    // xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
 	    // xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
 	}
+#endif
 
 	sgVec3 sunpos;
 	sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );

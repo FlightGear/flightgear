@@ -64,5 +64,4 @@ fgfs_LDADD = \
 INCLUDES += \
 	-I$(top_builddir) \
 	-I$(top_builddir)/Lib \
-	-I$(top_builddir)/Lib/plib/include \
 	-I$(top_builddir)/Simulator
