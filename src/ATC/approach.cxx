@@ -286,7 +286,7 @@ void FGApproach::Update(double dt) {
 			else if ( !planes[i].on_crs ) {
 				wpn = planes[i].wpn-1;
 				adif = angle_diff_deg( planes[i].hdg, planes[i].wpts[wpn][4] ) 
-				* SGD_DEGREES_TO_RADIANS;
+				       * SGD_DEGREES_TO_RADIANS;
 				datp = 2*sin(fabs(adif)/2.0)*sin(fabs(adif)/2.0) *
 				planes[i].spd/3600. * planes[i].turn_rate + 
 				planes[i].spd/3600. * 3.0;
@@ -319,7 +319,7 @@ void FGApproach::Update(double dt) {
 			// ===================================================================
 			if ( planes[i].wpn == 2 && planes[i].dnwp < planes[i].spd/60.*2.0 ) {
 				
-				double freq = 121.95;
+				double freq = 121.95;	// Hardwired - FIXME
 				// generate message
 				code.c1 = 1;
 				code.c2 = 5;
@@ -386,13 +386,13 @@ void FGApproach::calc_wp( const int &i ) {
 	int wpn = planes[i].wpn;
 	// waypoint 0: Threshold of active runway
 	calc_gc_course_dist(Point3D(lon*SGD_DEGREES_TO_RADIANS, lat*SGD_DEGREES_TO_RADIANS, 0.0),
-	Point3D(active_rw_lon*SGD_DEGREES_TO_RADIANS,active_rw_lat*SGD_DEGREES_TO_RADIANS, 0.0 ),
-	&course, &d);
+	                    Point3D(active_rw_lon*SGD_DEGREES_TO_RADIANS,active_rw_lat*SGD_DEGREES_TO_RADIANS, 0.0 ),
+	                    &course, &d);
 	double d1 = active_rw_hdg+180.0;
 	if ( d1 > 360.0 ) d1 -=360.0;
 	calc_cd_head_dist(360.0-course*SGD_RADIANS_TO_DEGREES, d/SG_NM_TO_METER, 
-	d1, active_rw_len/SG_NM_TO_METER/2., 
-	&planes[i].wpts[wpn][0], &planes[i].wpts[wpn][1]);
+	                  d1, active_rw_len/SG_NM_TO_METER/2.0, 
+	                  &planes[i].wpts[wpn][0], &planes[i].wpts[wpn][1]);
 	planes[i].wpts[wpn][2] = elev;
 	planes[i].wpts[wpn][4] = 0.0;
 	planes[i].wpts[wpn][5] = 0.0;
@@ -402,20 +402,18 @@ void FGApproach::calc_wp( const int &i ) {
 	// horizontal navigation
 	// ======================
 	// waypoint 1: point for turning onto final
-	calc_cd_head_dist(planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1] , 
-	d1, lfl,
-	&planes[i].wpts[wpn][0], &planes[i].wpts[wpn][1]);
+	calc_cd_head_dist(planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1], d1, lfl,
+	                  &planes[i].wpts[wpn][0], &planes[i].wpts[wpn][1]);
 	calc_hd_course_dist(planes[i].wpts[wpn][0],   planes[i].wpts[wpn][1],
-	planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1],
-	&course, &d);
+	                    planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1],
+	                    &course, &d);
 	planes[i].wpts[wpn][4] = course;
 	planes[i].wpts[wpn][5] = d;
 	wpn += 1;
 	
 	// calculate course and distance from plane position to waypoint 1
-	calc_hd_course_dist(planes[i].brg, planes[i].dist,
-	planes[i].wpts[1][0], planes[i].wpts[1][1],
-	&course, &d);
+	calc_hd_course_dist(planes[i].brg, planes[i].dist, planes[i].wpts[1][0], 
+	                    planes[i].wpts[1][1], &course, &d);
 	// check if airport is not between plane and waypoint 1 and
 	// DCA to airport on course to waypoint 1 is larger than 10 miles
 	double zero = 0.0;
@@ -424,23 +422,22 @@ void FGApproach::calc_wp( const int &i ) {
 		// check if turning angle at waypoint 1 would be > max_ta
 		if ( fabs(angle_diff_deg( planes[i].wpts[1][4], course )) > max_ta ) {
 			cd = calc_psl_dist(planes[i].brg, planes[i].dist,
-			planes[i].wpts[1][0], planes[i].wpts[1][1],
-			planes[i].wpts[1][4]);
+			     planes[i].wpts[1][0], planes[i].wpts[1][1],
+			     planes[i].wpts[1][4]);
 			a1 = atan2(cd,planes[i].wpts[1][1]);
 			planes[i].wpts[wpn][0] = planes[i].wpts[1][0] - a1/SGD_DEGREES_TO_RADIANS;
 			if ( planes[i].wpts[wpn][0] < 0.0)   planes[i].wpts[wpn][0] += 360.0;   
 			if ( planes[i].wpts[wpn][0] > 360.0) planes[i].wpts[wpn][0] -= 360.0;   
 			planes[i].wpts[wpn][1] = fabs(cd) / sin(fabs(a1));
 			calc_hd_course_dist(planes[i].wpts[wpn][0],   planes[i].wpts[wpn][1],
-			planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1],
-			&course, &d);
+			                    planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1],
+			                    &course, &d);
 			planes[i].wpts[wpn][4] = course;
 			planes[i].wpts[wpn][5] = d;
 			wpn += 1;
 			
-			calc_hd_course_dist(planes[i].brg, planes[i].dist,
-			planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1],
-			&course, &d);
+			calc_hd_course_dist(planes[i].brg, planes[i].dist, planes[i].wpts[wpn-1][0], 
+			                    planes[i].wpts[wpn-1][1], &course, &d);
 		}
 	} else {
 		double leg = 10.0;
@@ -452,15 +449,15 @@ void FGApproach::calc_wp( const int &i ) {
 		
 		planes[i].wpts[wpn][1] = sqrt( planes[i].wpts[1][1]*planes[i].wpts[1][1] + leg*leg );
 		calc_hd_course_dist(planes[i].wpts[wpn][0],   planes[i].wpts[wpn][1],
-		planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1],
-		&course, &d);
+		                    planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1],
+		                    &course, &d);
 		planes[i].wpts[wpn][4] = course;
 		planes[i].wpts[wpn][5] = d;
 		wpn += 1;
 		
 		calc_hd_course_dist(planes[i].brg, planes[i].dist,
-		planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1],
-		&course, &d);
+		                    planes[i].wpts[wpn-1][0], planes[i].wpts[wpn-1][1],
+		                    &course, &d);
 	}
 	
 	planes[i].wpts[wpn][0] = planes[i].brg;
@@ -489,7 +486,7 @@ void FGApproach::calc_wp( const int &i ) {
 		double dalt = planes[i].alt - planes[i].wpts[j-1][2];
 		if ( dalt > 0 ) {
 			alt = planes[i].wpts[j-1][2] + 
-			(planes[i].wpts[j][5] / planes[i].spd) * 60.0 * planes[i].desc_rate;
+			      (planes[i].wpts[j][5] / planes[i].spd) * 60.0 * planes[i].desc_rate;
 			planes[i].wpts[j][2] = round_alt( false, alt );
 			if ( planes[i].wpts[j][2] > planes[i].alt ) 
 				planes[i].wpts[j][2] = round_alt( false, planes[i].alt );
@@ -504,7 +501,7 @@ void FGApproach::calc_wp( const int &i ) {
 		cout << "Waypoint " << j << endl;
 		cout << "------------------" << endl;
 		cout << planes[i].wpts[j][0] << "   " << planes[i].wpts[j][1]
-		<< "   " << planes[i].wpts[j][2] << "   " << planes[i].wpts[j][5]; 
+		     << "   " << planes[i].wpts[j][2] << "   " << planes[i].wpts[j][5]; 
 		cout << endl << endl;
 	}
 	
@@ -699,7 +696,7 @@ void FGApproach::calc_cd_head_dist(const double &h1, const double &d1,
   *d2 = sqrt((x1+x2)*(x1+x2) + (y1+y2)*(y1+y2));
   *h2 = atan2( (y1+y2), (x1+x2) ) * SGD_RADIANS_TO_DEGREES;
   if ( *h2 < 0 ) *h2 = *h2+360;
-  }
+}
 
 
 
