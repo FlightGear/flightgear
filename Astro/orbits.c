@@ -108,7 +108,7 @@ int fgReadOrbElements(struct OrbElements *dest, FILE *src)
 
 int fgSolarSystemInit(struct fgTIME t)
 {
-    struct fgGENERAL *g;
+    fgGENERAL *g;
     char path[80];
     int i;
     FILE *data;
@@ -165,11 +165,14 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.8  1998/02/23 19:07:55  curt
-/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
-/* calculation code between sun display, and other FG sections that use this
-/* for things like lighting.
+/* Revision 1.9  1998/03/14 00:27:12  curt
+/* Updated fgGENERAL to a "type" of struct.
 /*
+ * Revision 1.8  1998/02/23 19:07:55  curt
+ * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+ * calculation code between sun display, and other FG sections that use this
+ * for things like lighting.
+ *
  * Revision 1.7  1998/02/12 21:59:33  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

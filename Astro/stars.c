@@ -58,7 +58,7 @@
 /* Initialize the Star Management Subsystem */
 int fgStarsInit( void ) {
     FILE *fd;
-    struct fgGENERAL *g;
+    fgGENERAL *g;
     /* struct CelestialCoord pltPos; */
     char path[1024];
     char line[256], name[256];
@@ -255,10 +255,13 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/02/12 21:59:38  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.9  1998/03/14 00:27:12  curt
+/* Updated fgGENERAL to a "type" of struct.
 /*
+ * Revision 1.8  1998/02/12 21:59:38  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.7  1998/02/09 15:07:48  curt
  * Minor tweaks.
  *
