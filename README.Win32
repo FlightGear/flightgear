@@ -4,6 +4,7 @@ April 8, 1998
 Here is a quick outline of *one* way you can build FG for Win32 using
 a completely free development environment.
 
+
 1.  Install and configure the Cygnus Gnu-Win32  development
     environment. The latest version is Beta 19. The main 
     Cygnus Gnu-Win32 page is at: 
@@ -22,10 +23,12 @@ a completely free development environment.
     After installing the cygnus compiler and the usertools you should
     find a program group "Cygnus" in your start menu.
 
+
 2.  Install the Silicon Graphics OpenGL dynamic link libraries. For
     this purpose, get the file sgi-opengl2.exe from the flight gear
     project site. This is a win95/winnt self extracting installation 
     program. Install it by double-clicking in windows explorer.
+
 
 3.  Fetch the Flight Gear code and special Win32 libraries.  These can
     be found at:
@@ -35,6 +38,7 @@ a completely free development environment.
     Grab the latest "FlightGear-X.XX.zip" and "win32-libs-X.XX.zip"
     files.
 
+
 4.  Unpack the FG source code.  Run:
 
         pkunzip -d FlightGear-X.XX.zip
@@ -42,11 +46,13 @@ a completely free development environment.
     Be sure to use the -d option.  This will create all the needed
     subdirectories.  Otherwise you will have one big mess!  Trust me!
 
+
 5.  Change to the newly created FlightGear-X.XX directory and unpack
     the Win32 libraries.  Run:
 
 	cd FlightGear-X.XX	
         pkunzip -d win32-libs-X.XX.zip
+
 
 6.  --> IMPORTANT <--
 
@@ -68,44 +74,61 @@ Side Note: we need to make a distinction between the "build tree" and
     executables, the scenery, the textures, and any other run-time
     files will be located.
 
+
 7.  Configure the make system for your environment and your "install
     tree".  Tell the configure script where you would like to install
     the exectuables and all the scenery and textures by using the
     "--prefix" option.  In the following example the base of the
-    "install tree" is "/FlightGear".  Run:
+    "install tree" is "\FlightGear".  Run:
 
-        ./configure --prefix=/FlightGear
+        ./configure --prefix=\FlightGear
+
+Side Note: the make procedure is designed to link against opengl.dll,
+    glu.dll, and glut.dll.  However, some accelerated video cards
+    require you to link against opengl32.exe, glu32.exe, and
+    glut32.exe.  If this is the case for your video card, you can edit
+    .../Simulator/Main/Makefile and rename these three libraries to
+    their version "32" counterparts.  There is only one place in this
+    make file where these files are listed.
+
 
 8.  Build the executable.  Run:
 
         make
 
-9.  Create and populate the install tree.  Run:
+
+9.  Assuming you have installed the updated version of install.exe (see
+    earlier instructions) you can now create and populate the install 
+    tree.  Run:
 
         make install
 
-    currently this step fails, but I hope to find a solution soon.
-    You can probably install everything by hand for now ... for example:
+    You can save a significant amount of space by stripping all the 
+    debuging symbols off of the executables.  To do this run:
 
-        cp Simulator/Main/fg.exe /FlightGear/bin/fg.exe
-	cp Simulator/Main/runfg.bat /FlightGear/bin/runfg.bat
+        strip file.exe
 
 Important Note: so far you've built and installed the simulator and
     related tools.  Before you can actually try it out, you need to
     make sure you have the appropriate scenery and texture downloaded
     and unzip'ed in your "install tree".
 
+
 10. Download and install the scenery and texture files.
+
 
 11. Set the runtime environment variable to point to the base of your
     "install tree".  Run:
 
-        export FG_ROOT=/FlightGear
+        export FG_ROOT=/FlightGear    (bash)
+        set FG_ROOT=\FlightGear       (command shell)
+
 
 12. Try it out!  There are several ways to run flight gear once it has
     been installed. The simplest is as follows.  Run:
 
-        /FlightGear/bin/runfg.bat
+        \FlightGear\bin\runfg.bat     (command shell)
+
 
 13. I appreciate feedback.  Tell me if it works!  If it doesn't, tell me 
     what went wrong.  My email is curt@me.umn.edu
