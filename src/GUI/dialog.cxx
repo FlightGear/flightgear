@@ -1,5 +1,7 @@
 // dialog.cxx: implementation of an XML-configurable dialog box.
 
+#include <stdlib.h>		// atof()
+
 #include <Input/input.hxx>
 
 #include "dialog.hxx"
@@ -91,6 +93,71 @@ action_callback (puObject * object)
             break;
     }
     gui->setActiveDialog(0);
+}
+
+
+static void
+format_callback(puObject *obj, int dx, int dy, void *n)
+{
+    SGPropertyNode *node = (SGPropertyNode *)n;
+    const char *format = node->getStringValue("format"), *f = format;
+    bool number;
+    // make sure the format matches '[ -+#]?\d*(\.\d*)?l?[fs]'
+    for (; *f; f++) {
+        if (*f == '%') {
+            if (f[1] == '%')
+                f++;
+            else
+                break;
+        }
+    }
+    if (*f++ != '%')
+        return;
+    if (*f == ' ' || *f == '+' || *f == '-' || *f == '#')
+        f++;
+    while (*f && isdigit(*f))
+        f++;
+    if (*f == '.') {
+        f++;
+        while (*f && isdigit(*f))
+            f++;
+    }
+    if (*f == 'l')
+        f++;
+
+    if (*f == 'f')
+        number = true;
+    else if (*f == 's')
+        number = false;
+    else
+        return;
+
+    for (++f; *f; f++) {
+        if (*f == '%') {
+            if (f[1] == '%')
+                f++;
+            else
+                return;
+        }
+    }
+
+    char buf[256], *end;
+    const char *src = obj->getLabel();
+
+    if (number) {
+        float value = atof(src);
+        if (end == src)
+            return;    // not a number
+        snprintf(buf, 256, format, value);
+    } else {
+        snprintf(buf, 256, format, src);
+    }
+
+    buf[255] = '\0';
+
+    SGPropertyNode *result = node->getNode("formatted", true);
+    result->setStringValue(buf);
+    obj->setLabel(result->getStringValue());
 }
 
 
@@ -354,6 +421,9 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     } else if (type == "text") {
         puText * text = new puText(x, y);
         setupObject(text, props);
+
+        if (props->getNode("format"))
+            text->setRenderCallback(format_callback, props);
         // Layed-out objects need their size set, and non-layout ones
         // get a different placement.
         if(presetSize) text->setSize(width, height);
