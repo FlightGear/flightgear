@@ -27,7 +27,7 @@
 include make.inc
 
 
-SUBDIRS = Dem2node Tri2obj Triangle
+SUBDIRS = Dem2node FixNode Tri2obj Triangle
 
 
 all: 
@@ -86,6 +86,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/11/27 00:18:26  curt
+# Added FixNode
+#
 # Revision 1.2  1997/11/14 00:31:06  curt
 # Abandon Tri2terrain ... replace with Tri2obj so we can use an existing
 # tri-stripper.
