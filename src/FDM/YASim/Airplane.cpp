@@ -1033,6 +1033,9 @@ void Airplane::solve()
 
 void Airplane::solveHelicopter()
 {
+    _solutionIterations = 0;
+    _failureMsg = 0;
+
     applyDragFactor(Math::pow(15.7/1000, 1/SOLVE_TWEAK));
     applyLiftRatio(Math::pow(104, 1/SOLVE_TWEAK));
     setupState(0,0, &_cruiseState);
