@@ -22,6 +22,7 @@
 
 
 #include "globals.hxx"
+#include "fg_props.hxx"
 
 
 // global global :-)
@@ -34,10 +35,19 @@ FGGlobals::FGGlobals() :
     warp( 0 ),
     warp_delta( 0 )
 {
+				// TODO: move to a proper bind method
+//   fgTie("/sim/freeze", &freeze);
+//   fgTie("/sim/warp", &warp);
+//   fgTie("/sim/warp-delta", &warp_delta);
 }
 
 
 // Destructor
-FGGlobals::~FGGlobals() {
+FGGlobals::~FGGlobals() 
+{
+				// TODO: move to a proper unbind method
+//   fgUntie("/sim/freeze");
+//   fgUntie("/sim/warp");
+//   fgUntie("/sim/warp-delta");
 }
 

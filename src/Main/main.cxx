@@ -1323,43 +1323,7 @@ int fgGlutInit( int *argc, char **argv ) {
     general.set_glDepthBits( tmp );
     FG_LOG ( FG_GENERAL, FG_INFO, "Depth buffer bits = " << tmp );
 
-#if 0
-    // try to determine if we should adjust the initial default
-    // display resolution.  The options class defaults (is
-    // initialized) to 640x480.
-    string renderer = general.glRenderer;
-
-    // currently we only know how to deal with Mesa/Glide/Voodoo cards
-    if ( renderer.find( "Glide" ) != string::npos ) {
-	FG_LOG( FG_GENERAL, FG_INFO, "Detected a Glide driver" );
-	if ( renderer.find( "FB/8" ) != string::npos ) {
-	    // probably a voodoo-2
-	    if ( renderer.find( "TMU/SLI" ) != string::npos ) {
-		// probably two SLI'd Voodoo-2's
-		globals->get_options()->set_xsize( 1024 );
-		globals->get_options()->set_ysize( 768 );
-		FG_LOG( FG_GENERAL, FG_INFO,
-			"It looks like you have two sli'd voodoo-2's." << endl
-			<< "upgrading your win resolution to 1024 x 768" );
-		glutReshapeWindow(1024, 768);
-	    } else {
-		// probably a single non-SLI'd Voodoo-2
-		globals->get_options()->set_xsize( 800 );
-		globals->get_options()->set_ysize( 600 );
-		FG_LOG( FG_GENERAL, FG_INFO,
-			"It looks like you have a voodoo-2." << endl
-			<< "upgrading your win resolution to 800 x 600" );
-		glutReshapeWindow(800, 600);
-	    }
-	} else if ( renderer.find( "FB/2" ) != string::npos ) {
-	    // probably a voodoo-1, stick with the default
-	}
-    } else {
-	// we have no special knowledge of this card, stick with the default
-    }
-#endif
-
-    return(1);
+    return 1;
 }
 
 
@@ -1418,13 +1382,17 @@ int main( int argc, char **argv ) {
 
     // Allocate global data structures.  This needs to happen before
     // we parse command line options
+
+    SGPropertyNode *props = new SGPropertyNode;
     globals = new FGGlobals;
+    globals->set_props( props );
 
     SGRoute *route = new SGRoute;
     globals->set_route( route );
 
     FGOptions *options = new FGOptions;
     globals->set_options( options );
+    options->init();
 
     FGViewMgr *viewmgr = new FGViewMgr;
     globals->set_viewmgr( viewmgr );
@@ -1438,27 +1406,9 @@ int main( int argc, char **argv ) {
     // set current view to 0 (first) which is our main pilot view
     globals->set_current_view( globals->get_viewmgr()->get_view( 0 ) );
 
-    SGPropertyNode *props = new SGPropertyNode;
-    globals->set_props( props );
-
     // Scan the config file(s) and command line options to see if
     // fg_root was specified (ignore all other options for now)
     fgInitFGRoot(argc, argv);
-
-    // cout << "1. airport_id = " << globals->get_options()->get_airport_id() << endl;
-
-    // Read global preferences from $FG_ROOT/preferences.xml
-    FGPath props_path(globals->get_options()->get_fg_root());
-    props_path.append("preferences.xml");
-    FG_LOG(FG_INPUT, FG_INFO, "Reading global preferences");
-    if (!readProperties(props_path.str(), globals->get_props())) {
-      FG_LOG(FG_INPUT, FG_ALERT, "Failed to read global preferences from "
-	     << props_path.str());
-    } else {
-      FG_LOG(FG_INPUT, FG_INFO, "Finished Reading global preferences");
-    }
-
-    // cout << "2. airport_id = " << globals->get_options()->get_airport_id() << endl;
 
     // Initialize the Aircraft directory to "" (UIUC)
     aircraft_dir = "";

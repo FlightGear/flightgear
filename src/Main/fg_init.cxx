@@ -130,6 +130,21 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv ) {
+
+				// First, set some sane default values
+    globals->get_options()->set_default_props();
+
+    // Read global preferences from $FG_ROOT/preferences.xml
+    FGPath props_path(globals->get_options()->get_fg_root());
+    props_path.append("preferences.xml");
+    FG_LOG(FG_INPUT, FG_INFO, "Reading global preferences");
+    if (!readProperties(props_path.str(), globals->get_props())) {
+      FG_LOG(FG_INPUT, FG_ALERT, "Failed to read global preferences from "
+	     << props_path.str());
+    } else {
+      FG_LOG(FG_INPUT, FG_INFO, "Finished Reading global preferences");
+    }
+
     // Attempt to locate and parse a config file
     // First check fg_root
     FGPath config( globals->get_options()->get_fg_root() );

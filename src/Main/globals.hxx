@@ -39,6 +39,12 @@ class FGGlobals {
 
 private:
 
+    // Root of FlightGear data tree
+    string fg_root;
+
+    // Root of FlightGear scenery tree
+    string fg_scenery;
+
     // Freeze sim
     bool freeze;
 
@@ -63,7 +69,7 @@ private:
     SGRoute *route;
 
     // options
-    FGOptions *options;
+    class FGOptions *options;
 
     // viewer maneger
     FGViewMgr *viewmgr;
@@ -72,10 +78,21 @@ private:
     // properties
     SGPropertyNode *props;
 
+    // list of serial port-like configurations
+    string_list channel_options_list;
+
 public:
 
     FGGlobals();
     ~FGGlobals();
+
+    inline const string &get_fg_root () const { return fg_root; }
+    inline void set_fg_root (const string &root) { fg_root = root; }
+
+    inline const string &get_fg_scenery () const { return fg_scenery; }
+    inline void set_fg_scenery (const string &scenery) {
+      fg_scenery = scenery;
+    }
 
     inline bool get_freeze() const { return freeze; }
     inline void set_freeze( bool f ) { freeze = f; }
@@ -110,7 +127,10 @@ public:
 
     inline SGPropertyNode *get_props () { return props; }
     inline void set_props( SGPropertyNode *n ) { props = n; }
-    // inline const SGPropertyNode &get_props () const { return props; }
+
+    inline string_list get_channel_options_list () {
+      return channel_options_list;
+    }
     
 };
 

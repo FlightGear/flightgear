@@ -98,12 +98,12 @@ FGControls::bind ()
     fgTie(name, this, index,
 	 &FGControls::get_prop_advance, &FGControls::set_prop_advance);
   }
-  fgTie("/controls/throttle/all", this, ALL_ENGINES,
-	&FGControls::get_throttle, &FGControls::set_throttle);
-  fgTie("/controls/mixture/all", this, ALL_ENGINES,
-	&FGControls::get_mixture, &FGControls::set_mixture);
-  fgTie("/controls/propellor-pitch/all", this, ALL_ENGINES,
-	&FGControls::get_prop_advance, &FGControls::set_prop_advance);
+//   fgTie("/controls/throttle/all", this, ALL_ENGINES,
+// 	&FGControls::get_throttle, &FGControls::set_throttle);
+//   fgTie("/controls/mixture/all", this, ALL_ENGINES,
+// 	&FGControls::get_mixture, &FGControls::set_mixture);
+//   fgTie("/controls/propellor-pitch/all", this, ALL_ENGINES,
+// 	&FGControls::get_prop_advance, &FGControls::set_prop_advance);
   for (index = 0; index < MAX_WHEELS; index++) {
     char name[32];
     sprintf(name, "/controls/brakes[%d]", index);

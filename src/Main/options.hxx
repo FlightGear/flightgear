@@ -49,6 +49,10 @@ extern bool global_fullscreen;
 #include <simgear/math/sg_types.hxx>
 #include <simgear/timing/sg_time.hxx>
 
+#include <FDM/flight.hxx>
+
+#include "globals.hxx"
+
 #include STL_STRING
 #include <vector>
 
@@ -133,90 +137,104 @@ public:
 private:
 
     // The flight gear "root" directory
-    string fg_root;
+//     string fg_root;
 
     // The scenery "root" directory
-    string fg_scenery;
+//     string fg_scenery;
 
     // Starting position and orientation
-    string airport_id;  // ID of initial starting airport
-    double lon;         // starting longitude in degrees (west = -)
-    double lat;         // starting latitude in degrees (south = -)
-    double altitude;    // starting altitude in meters
-    double heading;     // heading (yaw) angle in degress (Psi)
-    double roll;        // roll angle in degrees (Phi)
-    double pitch;       // pitch angle in degrees (Theta)
-    fgSpeedSet speedset; // which speed does the user want
-    double uBody;       // Body axis X velocity (U)
-    double vBody;       // Body axis Y velocity (V)
-    double wBody;       // Body axis Z velocity (W)
-    double vNorth;      // North component of vt
-    double vEast;       // East component of vt
-    double vDown;       // Down component of vt
-    double vkcas;       // Calibrated airspeed, knots
-    double mach;        // Mach number
+
+    // These are now all SGValue pointers, but they won't stay
+    // that way forever -- it's just to ease the transition to the
+    // property manager.  Gradually, references to the methods that
+    // use these variables will be culled out, and the variables
+    // and methods will be removed.
+
+    SGValue * airport_id;	// ID of initial starting airport
+    SGValue * lon;		// starting longitude in degrees (west = -)
+    SGValue * lat;		// starting latitude in degrees (south = -)
+    SGValue * altitude;		// starting altitude in meters
+    SGValue * heading;		// heading (yaw) angle in degress (Psi)
+    SGValue * roll;		// roll angle in degrees (Phi)
+    SGValue * pitch;		// pitch angle in degrees (Theta)
+    SGValue * speedset;		// which speed does the user want
+    SGValue * uBody;		// Body axis X velocity (U)
+    SGValue * vBody;		// Body axis Y velocity (V)
+    SGValue * wBody;		// Body axis Z velocity (W)
+    SGValue * vNorth;		// North component of vt
+    SGValue * vEast;		// East component of vt
+    SGValue * vDown;		// Down component of vt
+    SGValue * vkcas;		// Calibrated airspeed, knots
+    SGValue * mach;		// Mach number
 
     // Miscellaneous
-    bool game_mode;     // Game mode enabled/disabled
-    bool splash_screen; // show splash screen
-    bool intro_music;   // play introductory music
-    int mouse_pointer;  // show mouse pointer
-    fgControlMode control_mode; // primary control mode
-    fgAutoCoordMode auto_coordination;	// enable auto coordination
+    SGValue * game_mode;	// Game mode enabled/disabled
+    SGValue * splash_screen;	// show splash screen
+    SGValue * intro_music;	// play introductory music
+    SGValue * mouse_pointer;	// show mouse pointer
+    SGValue * control_mode;	// primary control mode
+    SGValue * auto_coordination; // enable auto coordination
 
     // Features
-    bool hud_status;    // HUD on/off
-    bool panel_status;  // Panel on/off
-    bool sound;         // play sound effects
-    bool anti_alias_hud;
+    SGValue * hud_status;	// HUD on/off
+    SGValue * panel_status;	// Panel on/off
+    SGValue * sound;		// play sound effects
+    SGValue * anti_alias_hud;
 
     // Flight Model options
-    int flight_model;   // Core flight model code:  jsb, larcsim, magic, etc.
-    string aircraft;    // Aircraft to model
-    int model_hz;       // number of FDM iterations per second
-    int speed_up;       // Sim mechanics run this much faster than normal speed
-    int trim;           // use the FDM trimming routine during init
-                        // <0 --notrim set, 0 no trim, >0 trim
-                        // default behavior is to enable trimming for jsbsim
-                        // disable for all other fdm's
+    SGValue * flight_model;	// Core flight model code
+    SGValue * aircraft;		// Aircraft to model
+    SGValue * model_hz;		// number of FDM iterations per second
+    SGValue * speed_up;		// Sim mechanics run this much faster than 
+				// normal speed
+    SGValue * trim;		// use the FDM trimming routine during init
+				// <0 --notrim set, 0 no trim, >0 trim
+				// default behavior is to enable trimming for 
+				// jsbsim and disable for all other fdm's
 
     // Rendering options
-    fgFogKind fog;      // Fog nicest/fastest/disabled
-    bool clouds;        // Enable clouds
-    double clouds_asl;  // Cloud layer height above sea level
-    bool fullscreen;    // Full screen mode enabled/disabled
-    int shading;        // shading method, 0 = Flat, 1 = Smooth
-    bool skyblend;      // Blend sky to haze (using polygons) or just clear
-    bool textures;      // Textures enabled/disabled
-    bool wireframe;     // Wireframe mode enabled/disabled
-    int xsize, ysize;   // window size derived from geometry string
-    int bpp;            // bits per pixel
-    fgViewMode view_mode; // view mode
-    double default_view_offset;	// default forward view offset (for use by
+    SGValue * fog;		// Fog nicest/fastest/disabled
+    SGValue * clouds;		// Enable clouds
+    SGValue * clouds_asl;	// Cloud layer height above sea level
+    SGValue * fullscreen;	// Full screen mode enabled/disabled
+    SGValue * shading;		// shading method, 0 = Flat, 1 = Smooth
+    SGValue * skyblend;		// Blend sky to haze (using polygons) or 
+				// just clear
+    SGValue * textures;		// Textures enabled/disabled
+    SGValue * wireframe;	// Wireframe mode enabled/disabled
+    SGValue * xsize;		// window size derived from geometry string
+    SGValue * ysize;
+    SGValue * bpp;		// bits per pixel
+    SGValue * view_mode;	// view mode
+    SGValue * default_view_offset; // default forward view offset (for use by
 				// multi-display configuration
-    double visibility;	// visibilty in meters
+    SGValue * visibility;	// visibilty in meters
 
     // HUD options
-    int units;         // feet or meters
-    int tris_or_culled;
+    SGValue * units;         // feet or meters
+    SGValue * tris_or_culled;
 
     // Time options
-    int time_offset;		// Use this value to change time.
-    fgTimingOffsetType time_offset_type; // Will be set to one of the
+    SGValue * time_offset;	// Use this value to change time.
+    SGValue * time_offset_type; // Will be set to one of the
 				// FG_TIME_* enums, to deterine how
 				// time_offset should be used 
 
     // Serial port configuration strings
-    string_list channel_options_list;
+//     string_list channel_options_list;
 
     // Network options
-    bool network_olk;
-    string net_id;
-    
+    SGValue * network_olk;
+    SGValue * net_id;
+
 public:
 
     FGOptions();
     ~FGOptions();
+
+    void init ();
+
+    void set_default_props ();
 
     // Parse a single option
     int parse_option( const string& arg );
@@ -239,146 +257,227 @@ public:
     void usage ( void );
 
     // Query functions
-    inline string get_fg_root() const { return fg_root; }
-    inline string get_fg_scenery() const { return fg_scenery; }
-    inline string get_airport_id() const { return airport_id; }
-    inline double get_lon() const { return lon; }
-    inline double get_lat() const { return lat; }
-    inline double get_altitude() const { return altitude; }
-    inline double get_heading() const { return heading; }
-    inline double get_roll() const { return roll; }
-    inline double get_pitch() const { return pitch; }
-    inline fgSpeedSet get_speedset() const { return speedset; }
-    inline double get_uBody() const {return uBody;}
-    inline double get_vBody() const {return vBody;}
-    inline double get_wBody() const {return wBody;}
-    inline double get_vNorth() const {return vNorth;}
-    inline double get_vEast() const {return vEast;}
-    inline double get_vDown() const {return vDown;}
-    inline double get_vc() const {return vkcas;}
-    inline double get_mach() const {return mach;}
+    string get_fg_root() const;
+    string get_fg_scenery() const;
+    inline string get_airport_id() const {
+      return airport_id->getStringValue();
+    }
+    inline double get_lon() const { return lon->getDoubleValue(); }
+    inline double get_lat() const { return lat->getDoubleValue(); }
+    inline double get_altitude() const { return altitude->getDoubleValue(); }
+    inline double get_heading() const { return heading->getDoubleValue(); }
+    inline double get_roll() const { return roll->getDoubleValue(); }
+    inline double get_pitch() const { return pitch->getDoubleValue(); }
+    inline fgSpeedSet get_speedset() const { 
+      const string &s = speedset->getStringValue();
+      if (s == "UVW" || s == "uvw")
+	return FG_VTUVW;
+      else if (s == "NED" || s == "ned")
+	return FG_VTNED;
+      else if (s == "knots" || s == "KNOTS")
+	return FG_VC;
+      else if (s == "mach" || s == "MACH")
+	return FG_MACH;
+      else
+	return FG_VC;
+    }
+    inline double get_uBody() const {return uBody->getDoubleValue();}
+    inline double get_vBody() const {return vBody->getDoubleValue();}
+    inline double get_wBody() const {return wBody->getDoubleValue();}
+    inline double get_vNorth() const {return vNorth->getDoubleValue();}
+    inline double get_vEast() const {return vEast->getDoubleValue();}
+    inline double get_vDown() const {return vDown->getDoubleValue();}
+    inline double get_vc() const {return vkcas->getDoubleValue();}
+    inline double get_mach() const {return mach->getDoubleValue();}
 	
-    inline bool get_game_mode() const { return game_mode; }
-    inline bool get_splash_screen() const { return splash_screen; }
-    inline bool get_intro_music() const { return intro_music; }
-    inline int get_mouse_pointer() const { return mouse_pointer; }
-    inline bool get_anti_alias_hud() const { return anti_alias_hud; }
-    inline fgControlMode get_control_mode() const { return control_mode; }
-    inline void set_control_mode( fgControlMode mode ) { control_mode = mode; }
+    inline bool get_game_mode() const { return game_mode->getBoolValue(); }
+    inline bool get_splash_screen() const {
+      return splash_screen->getBoolValue();
+    }
+    inline bool get_intro_music() const {
+      return intro_music->getBoolValue();
+    }
+    inline int get_mouse_pointer() const {
+      return mouse_pointer->getBoolValue();
+    }
+    inline bool get_anti_alias_hud() const {
+      return anti_alias_hud->getBoolValue();
+    }
+    inline fgControlMode get_control_mode() const {
+      const string &s = control_mode->getStringValue();
+      if (s == "joystick")
+	return FG_JOYSTICK;
+      else if (s == "keyboard")
+	return FG_KEYBOARD;
+      else if (s == "mouse")
+	return FG_MOUSE;
+      else
+	return FG_JOYSTICK;
+    }
+    inline void set_control_mode( fgControlMode mode ) {
+      if(mode == FG_JOYSTICK)
+	control_mode->setStringValue("joystick");
+      else if (mode == FG_KEYBOARD)
+	control_mode->setStringValue("keyboard");
+      else if (mode == FG_MOUSE)
+	control_mode->setStringValue("mouse");
+      else
+	control_mode->setStringValue("joystick");
+    }
     inline fgAutoCoordMode get_auto_coordination() const { 
-	return auto_coordination;
+        if (auto_coordination->getBoolValue())
+	  return FG_AUTO_COORD_ENABLED;
+	else
+	  return FG_AUTO_COORD_DISABLED;
     }
     inline void set_auto_coordination(fgAutoCoordMode m) { 
-	auto_coordination = m;
+        if (m == FG_AUTO_COORD_ENABLED)
+	  auto_coordination->setBoolValue(true);
+	else if (m == FG_AUTO_COORD_DISABLED)
+	  auto_coordination->setBoolValue(false);
     }
-    inline bool get_hud_status() const { return hud_status; }
-    inline bool get_panel_status() const { return panel_status; }
-    inline bool get_sound() const { return sound; }
-    inline int get_flight_model() const { return flight_model; }
-    inline string get_aircraft() const { return aircraft; }
-    inline int get_model_hz() const { return model_hz; }
-    inline int get_speed_up() const { return speed_up; }
-    inline void set_speed_up( int speed ) { speed_up = speed; }
-    inline int get_trim_mode(void) { return trim; }
+    inline bool get_hud_status() const { return hud_status->getBoolValue(); }
+    inline bool get_panel_status() const {
+      return panel_status->getBoolValue();
+    }
+    inline bool get_sound() const { return sound->getBoolValue(); }
+    inline int get_flight_model() const {
+      return parse_fdm(flight_model->getStringValue());
+    }
+    inline string get_aircraft() const { return aircraft->getStringValue(); }
+    inline int get_model_hz() const { return model_hz->getIntValue(); }
+    inline int get_speed_up() const { return speed_up->getIntValue(); }
+    inline void set_speed_up( int speed ) { speed_up->setIntValue(speed); }
+    inline int get_trim_mode(void) { return trim->getIntValue(); }
 	
-    inline bool fog_enabled() const { return fog != FG_FOG_DISABLED; }
-    inline fgFogKind get_fog() const { return fog; }
-    inline bool get_clouds() const { return clouds; }
-    inline double get_clouds_asl() const { return clouds_asl; }
-    inline bool get_fullscreen() const { return fullscreen; }
-    inline int get_shading() const { return shading; }
-    inline bool get_skyblend() const { return skyblend; }
-    inline bool get_textures() const { return textures; }
-    inline bool get_wireframe() const { return wireframe; }
-    inline int get_xsize() const { return xsize; }
-    inline int get_ysize() const { return ysize; }
-    inline int get_bpp() const { return bpp; }
-    inline fgViewMode get_view_mode() const { return view_mode; }
-    inline double get_default_view_offset() const {
-	return default_view_offset;
+    inline bool fog_enabled() const { 
+      return fog->getStringValue() != "disabled";
     }
-    inline double get_default_visibility() const { return visibility; }
+    inline fgFogKind get_fog() const {
+      const string &s = fog->getStringValue();
+      if (s == "disabled")
+	return FG_FOG_DISABLED;
+      else if (s == "fastest")
+	return FG_FOG_FASTEST;
+      else if (s == "nicest")
+	return FG_FOG_NICEST;
+      else
+	return FG_FOG_DISABLED;
+    }
+    inline bool get_clouds() const { return clouds->getBoolValue(); }
+    inline double get_clouds_asl() const {
+      return clouds_asl->getDoubleValue() * FEET_TO_METER;
+    }
+    inline bool get_fullscreen() const { return fullscreen->getBoolValue(); }
+    inline int get_shading() const { return shading->getIntValue(); }
+    inline bool get_skyblend() const { return skyblend->getBoolValue(); }
+    inline bool get_textures() const { return textures->getBoolValue(); }
+    inline bool get_wireframe() const { return wireframe->getBoolValue(); }
+    inline int get_xsize() const { return xsize->getIntValue(); }
+    inline int get_ysize() const { return ysize->getIntValue(); }
+    inline int get_bpp() const { return bpp->getIntValue(); }
+    inline fgViewMode get_view_mode() const {
+      return (fgViewMode)(view_mode->getIntValue()); // FIXME!!
+    }
+    inline double get_default_view_offset() const {
+	return default_view_offset->getDoubleValue();;
+    }
+    inline double get_default_visibility() const {
+      return visibility->getDoubleValue();
+    }
 
-    inline int get_units() const { return units; }
-    inline int get_tris_or_culled() const { return tris_or_culled; }
+    inline int get_units() const { 
+      if (units->getStringValue() == "meters")
+	return FG_UNITS_METERS;
+      else
+	return FG_UNITS_FEET;
+    }
+    inline int get_tris_or_culled() const { 
+      if (tris_or_culled->getStringValue() == "tris")
+	return 1;		// FIXME: check this!!!
+      else
+	return 2;
+    }
 
-    inline int get_time_offset() const { return time_offset; }
+    inline int get_time_offset() const { return time_offset->getIntValue(); }
     inline fgTimingOffsetType  get_time_offset_type() const {
-	return time_offset_type;
+      const string &s = time_offset_type->getStringValue();
+      if (s == "system-offset")
+	return FG_TIME_SYS_OFFSET;
+      else if (s == "gmt-offset")
+	return FG_TIME_GMT_OFFSET;
+      else if (s == "latitude-offset")
+	return FG_TIME_LAT_OFFSET;
+      else if (s == "system")
+	return FG_TIME_SYS_ABSOLUTE;
+      else if (s == "gmt")
+        return FG_TIME_GMT_ABSOLUTE;
+      else if (s == "latitude")
+	return FG_TIME_LAT_ABSOLUTE;
+      else
+	return FG_TIME_SYS_OFFSET;
     };
 
-    inline string_list get_channel_options_list() const { 
-	return channel_options_list;
-    }
+    string_list get_channel_options_list () const;
 
-    inline bool get_network_olk() const { return network_olk; }
-    inline string get_net_id() const { return net_id; }
+    inline bool get_network_olk() const { return network_olk->getBoolValue(); }
+    inline string get_net_id() const { return net_id->getStringValue(); }
 
     // Update functions
-    inline void set_fg_root (const string value) { fg_root = value; }
-    inline void set_fg_scenery (const string value) { fg_scenery = value; }
-    inline void set_airport_id( const string id ) { airport_id = id; }
-    inline void set_lon (double value) { lon = value; }
-    inline void set_lat (double value) { lat = value; }
-    inline void set_altitude (double value) { altitude = value; }
-    inline void set_heading (double value) { heading = value; }
-    inline void set_roll (double value) { roll = value; }
-    inline void set_pitch (double value) { pitch = value; }
-    inline void set_uBody (double value) { uBody = value; }
-    inline void set_vBody (double value) { vBody = value; }
-    inline void set_wBody (double value) { wBody = value; }
-    inline void set_vc (double value) { vkcas = value; }
-    inline void set_mach(double value) { mach = value; }
-    inline void set_game_mode (bool value) { game_mode = value; }
-    inline void set_splash_screen (bool value) { splash_screen = value; }
-    inline void set_intro_music (bool value) { intro_music = value; }
-    inline void set_mouse_pointer (int value) { mouse_pointer = value; }
-    inline void set_anti_alias_hud (bool value) { anti_alias_hud = value; }
-    inline void set_hud_status( bool status ) { hud_status = status; }
-    inline void set_sound (bool value) { sound = value; }
-    inline void set_flight_model (int value) { flight_model = value; }
-    inline void set_aircraft (const string &ac) { aircraft = ac; }
-    inline void set_model_hz (int value) { model_hz = value; }
-    inline void set_trim_mode(int value) { trim = value; }
-    inline void set_fog (fgFogKind value) { fog = value; }
-    inline void set_clouds( bool value ) { clouds = value; }
-    inline void set_clouds_asl( double value ) { clouds_asl = value; }
-    inline void set_fullscreen (bool value) { fullscreen = value; }
-    inline void set_shading (int value) { shading = value; }
-    inline void set_skyblend (bool value) { skyblend = value; }
-    inline void set_textures( bool status ) { textures = status; }
-    inline void set_wireframe (bool status) { wireframe = status; }
+    inline void set_airport_id( const string id ) {
+      airport_id->setStringValue(id);
+    }
+    inline void set_lon (double value) { lon->setDoubleValue(value); }
+    inline void set_lat (double value) { lat->setDoubleValue(value); }
+    inline void set_altitude (double value) {
+      altitude->setDoubleValue(value);
+    }
+    inline void set_heading (double value) { heading->setDoubleValue(value); }
+    inline void set_roll (double value) { roll->setDoubleValue(value); }
+    inline void set_pitch (double value) { pitch->setDoubleValue(value); }
+    inline void set_anti_alias_hud (bool value) {
+      anti_alias_hud->setBoolValue(value);
+    }
+    inline void set_hud_status( bool status ) {
+      hud_status->setBoolValue(status);
+    }
+    inline void set_flight_model (int value) {
+      if (value == FGInterface::FG_ADA)
+	flight_model->setStringValue("ada");
+      else if (value == FGInterface::FG_BALLOONSIM)
+	flight_model->setStringValue("balloon");
+      else if (value == FGInterface::FG_EXTERNAL)
+	flight_model->setStringValue("external");
+      else if (value == FGInterface::FG_JSBSIM)
+	flight_model->setStringValue("jsb");
+      else if (value == FGInterface::FG_LARCSIM)
+	flight_model->setStringValue("larcsim");
+      else if (value == FGInterface::FG_MAGICCARPET)
+	flight_model->setStringValue("magic");
+      else
+	flight_model->setStringValue("larcsim");
+    }
+    inline void set_aircraft (const string &ac) {
+      aircraft->setStringValue(ac);
+    }
+    inline void set_textures( bool status ) { textures->setBoolValue(status); }
     inline void cycle_fog( void ) { 
-	if ( fog == FG_FOG_DISABLED ) {
-	    fog = FG_FOG_FASTEST;
-	} else if ( fog == FG_FOG_FASTEST ) {
-	    fog = FG_FOG_NICEST;
-	    xglHint ( GL_FOG_HINT, GL_NICEST );
-	} else if ( fog == FG_FOG_NICEST ) {
-	    fog = FG_FOG_DISABLED;
-	    xglHint ( GL_FOG_HINT, GL_FASTEST );
+        const string &s = fog->getStringValue();
+	if ( s == "disabled" ) {
+	    fog->setStringValue("fastest");
+	} else if ( s == "fastest" ) {
+	    fog->setStringValue("nicest");
+	    glHint ( GL_FOG_HINT, GL_NICEST );
+	} else if ( s == "nicest" ) {
+	    fog->setStringValue("disabled");
+	    glHint ( GL_FOG_HINT, GL_FASTEST );
 	}
     }
     void toggle_panel();
-    inline void set_xsize( int x ) { xsize = x; }
-    inline void set_ysize( int y ) { ysize = y; }
-    inline void set_view_mode (fgViewMode value) { view_mode = value; }
-    inline void set_units (int value) { units = value; }
-    inline void set_tris_or_culled (int value) { tris_or_culled = value; }
-    inline void set_time_offset (int value) { time_offset = value; }
-    inline void set_time_offset_type (fgTimingOffsetType value) {
-	time_offset_type = value;
-    }
-    inline void cycle_view_mode() { 
-	if ( view_mode == FG_VIEW_PILOT ) {
-	    view_mode = FG_VIEW_FOLLOW;
-	} else if ( view_mode == FG_VIEW_FOLLOW ) {
-	    view_mode = FG_VIEW_PILOT;
-	}
-    }
+    inline void set_xsize( int x ) { xsize->setIntValue(x); }
+    inline void set_ysize( int y ) { ysize->setIntValue(y); }
 
-    inline void set_network_olk( bool net ) { network_olk = net; }
-    inline void set_net_id( const string id ) { net_id = id; }
+    inline void set_net_id( const string id ) { net_id->setStringValue(id); }
 
 private:
 
@@ -387,7 +486,7 @@ private:
     long int parse_date( const string& date_str );
     double parse_degree( const string& degree_str );
     int parse_time_offset( const string& time_str );
-    int parse_fdm( const string& fm );
+    int parse_fdm( const string& fm ) const;
     double parse_fov( const string& arg );
     bool parse_channel( const string& type, const string& channel_str );
     bool parse_wp( const string& arg );

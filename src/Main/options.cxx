@@ -90,136 +90,29 @@ atoi( const string& str )
 // Defined the shared options class here
 // FGOptions current_options;
 
+#define PROP(name) (globals->get_props()->getValue(name, true))
+
 
 // Constructor
-FGOptions::FGOptions() :
-    // starting longitude in degrees (west = -)
-    // starting latitude in degrees (south = -)
-
-    // Default initial position is Globe, AZ (P13)
-    lon(-110.6642444),
-    lat(  33.3528917),
-
-    // North of the city of Globe
-    // lon(-110.7),
-    // lat(  33.4),
-
-    // North of the city of Globe
-    // lon(-110.742578),
-    // lat(  33.507122),
-
-    // Near where I used to live in Globe, AZ
-    // lon(-110.766000),
-    // lat(  33.377778),
-
-    // 10125 Jewell St. NE
-    // lon(-93.15),
-    // lat( 45.15),
-
-    // Near KHSP (Hot Springs, VA)
-    // lon(-79.8338964 + 0.01),
-    // lat( 37.9514564 + 0.008),
-
-    // (SEZ) SEDONA airport
-    // lon(-111.7884614 + 0.01),
-    // lat(  34.8486289 - 0.015),
-
-    // Jim Brennon's Kingmont Observatory
-    // lon(-121.1131667),
-    // lat(  38.8293917),
-
-    // Huaras, Peru (S09d 31.871'  W077d 31.498')
-    // lon(-77.5249667),
-    // lat( -9.5311833),
- 
-    // Eclipse Watching w73.5 n10 (approx) 18:00 UT
-    // lon(-73.5),
-    // lat( 10.0),
-
-    // Timms Hill (WI)
-    // lon(-90.1953055556),
-    // lat( 45.4511388889),
-
-    // starting altitude in meters (this will be reset to ground level
-    // if it is lower than the terrain
-    altitude(-9999.0),
-
-    // Initial Orientation
-    heading(270.0),      // heading (yaw) angle in degress (Psi)
-    roll(0.0),           // roll angle in degrees (Phi)
-    pitch(0.424),        // pitch angle in degrees (Theta)
-
-    // Initialize current options velocities to 0.0
-    speedset(FG_VC),
-    uBody(0.0), vBody(0.0), wBody(0.0), 
-    vNorth(0.0),vEast(0.0), vDown(0.0),
-    vkcas(0.0), mach(0.0),
-
-    // Miscellaneous
-    game_mode(0),
-    splash_screen(1),
-    intro_music(1),
-    mouse_pointer(0),
-    control_mode(FG_JOYSTICK),
-    auto_coordination(FG_AUTO_COORD_NOT_SPECIFIED),
-
-    // Features
-    hud_status(0),
-    panel_status(1),
-    sound(1),
-    anti_alias_hud(0),
-
-    // Flight Model options
-    flight_model( FGInterface::FG_LARCSIM ),
-    aircraft( "c172" ),
-    model_hz( NEW_DEFAULT_MODEL_HZ ),
-    speed_up( 1 ),
-    trim(0),
-
-    // Rendering options
-    fog(FG_FOG_NICEST),  // nicest
-    clouds(true),
-    clouds_asl(5000*FEET_TO_METER),
-    fullscreen(0),
-    shading(1),
-    skyblend(1),
-    textures(1),
-    wireframe(0),
-    xsize(800),
-    ysize(600),
-    bpp(16),
-    view_mode(FG_VIEW_PILOT),
-    default_view_offset(0),
-    visibility(-1.0),
-
-    // HUD options
-    units(FG_UNITS_FEET),
-    tris_or_culled(0),
-	
-    // Time options
-    time_offset(0),
-
-    network_olk(false)
+FGOptions::FGOptions() 
 {
-    // set initial values/defaults
-    time_offset_type = FG_TIME_SYS_OFFSET;
     char* envp = ::getenv( "FG_ROOT" );
 
     if ( envp != NULL ) {
 	// fg_root could be anywhere, so default to environmental
 	// variable $FG_ROOT if it is set.
-	fg_root = envp;
+        globals->set_fg_root(envp);
     } else {
 	// Otherwise, default to a random compiled-in location if
 	// $FG_ROOT is not set.  This can still be overridden from the
 	// command line or a config file.
 
 #if defined( WIN32 )
-	fg_root = "\\FlightGear";
+	globals->set_fg_root("\\FlightGear");
 #elif defined( macintosh )
-	fg_root = "";
+	globals->set_fg_root("");
 #else
-	fg_root = PKGLIBDIR;
+	globals->set_fg_root(PKGLIBDIR);
 #endif
     }
 
@@ -229,38 +122,168 @@ FGOptions::FGOptions() :
     if ( envp != NULL ) {
 	// fg_root could be anywhere, so default to environmental
 	// variable $FG_ROOT if it is set.
-	fg_scenery = envp;
+        globals->set_fg_scenery(envp);
     } else {
 	// Otherwise, default to Scenery being in $FG_ROOT/Scenery
-	fg_scenery = "";
+	globals->set_fg_scenery("");
     }
+}
 
-    airport_id = "KPAO";	// default airport id
-    net_id = "Johnney";		// default pilot's name
+void
+FGOptions::init ()
+{
+				// These are all deprecated, and will
+				// be removed gradually.
+  airport_id = PROP("/sim/startup/airport-id");
+  lon = PROP("/position/longitude");
+  lat = PROP("/position/latitude");
+  altitude = PROP("/position/altitude");
+  heading = PROP("/orientation/heading");
+  roll = PROP("/orientation/roll");
+  pitch = PROP("/orientation/pitch");
+  speedset = PROP("/sim/startup/speed-set");
+  uBody = PROP("/velocities/uBody");
+  vBody = PROP("/velocities/vBody");
+  wBody = PROP("/velocities/wBody");
+  vNorth = PROP("/velocities/speed-north");
+  vEast = PROP("/velocities/speed-east");
+  vDown = PROP("/velocities/speed-down");
+  vkcas = PROP("/velocities/knots");
+  mach = PROP("/velocities/mach");
+  game_mode = PROP("/sim/startup/game-mode");
+  splash_screen = PROP("/sim/startup/splash-screen");
+  intro_music = PROP("/sim/startup/intro-music");
+  mouse_pointer = PROP("/sim/startup/mouse-pointer");
+  control_mode = PROP("/sim/control-mode");
+  auto_coordination = PROP("/sim/auto-coordination");
+  hud_status = PROP("/sim/hud/visibility");
+  panel_status = PROP("/sim/panel/visibility");
+  sound = PROP("/sim/sound");
+  anti_alias_hud = PROP("/sim/hud/antialiased");
+  flight_model = PROP("/sim/flight-model");
+  aircraft = PROP("/sim/aircraft");
+  model_hz = PROP("/sim/model-hz");
+  speed_up = PROP("/sim/speed-up");
+  trim = PROP("/sim/startup/trim");
+  fog = PROP("/sim/rendering/fog");
+  clouds = PROP("/environment/clouds/enabled");
+  clouds_asl = PROP("/environments/clouds/altitude");
+  fullscreen = PROP("/sim/startup/fullscreen");
+  shading = PROP("/sim/rendering/shading");
+  skyblend = PROP("/sim/rendering/skyblend");
+  textures = PROP("/sim/rendering/textures");
+  wireframe = PROP("/sim/rendering/wireframe");
+  xsize = PROP("/sim/startup/xsize");
+  ysize = PROP("/sim/startup/ysize");
+  bpp = PROP("/sim/rendering/bits-per-pixel");
+  view_mode = PROP("/sim/view-mode");
+  default_view_offset = PROP("/sim/startup/view-offset");
+  visibility = PROP("/environment/visibility");
+  units = PROP("/sim/startup/units");
+  tris_or_culled = PROP("/sim/hud/frame-stat-type");
+  time_offset = PROP("/sim/startup/time-offset");
+  time_offset_type = PROP("/sim/startup/time-offset-type");
+  network_olk = PROP("/sim/networking/network-olk");
+  net_id = PROP("/sim/networking/call-sign");
+}
 
-    // initialize port config string list
-    channel_options_list.clear();
+
+/**
+ * Set a few fail-safe default property values.
+ *
+ * These should all be set in $FG_ROOT/preferences.xml, but just
+ * in case, we provide some initial sane values here. This method 
+ * should be invoked *before* reading any init files.
+ */
+void
+FGOptions::set_default_props ()
+{
+  SGPropertyNode * props = globals->get_props();
+
+				// Position (Globe, AZ)
+  props->setDoubleValue("/position/longitude", -110.6642444);
+  props->setDoubleValue("/position/latitude", 33.3528917);
+  props->setDoubleValue("/position/altitude", -9999.0);
+
+				// Orientation
+  props->setDoubleValue("/orientation/heading", 270);
+  props->setDoubleValue("/orientation/roll", 0);
+  props->setDoubleValue("/orientation/pitch", 0.424);
+
+				// Velocities
+  props->setStringValue("/sim/startup/speed-set", "knots");
+  props->setDoubleValue("/velocities/uBody", 0.0);
+  props->setDoubleValue("/velocities/vBody", 0.0);
+  props->setDoubleValue("/velocities/wBody", 0.0);
+  props->setDoubleValue("/velocities/speed-north", 0.0);
+  props->setDoubleValue("/velocities/speed-east", 0.0);
+  props->setDoubleValue("/velocities/speed-down", 0.0);
+  props->setDoubleValue("/velocities/airspeed", 0.0);
+  props->setDoubleValue("/velocities/mach", 0.0);
+
+				// Miscellaneous
+  props->setBoolValue("/sim/startup/game-mode", false);
+  props->setBoolValue("/sim/startup/splash-screen", true);
+  props->setBoolValue("/sim/startup/intro-music", true);
+  props->setStringValue("/sim/startup/mouse-pointer", "disabled");
+  props->setStringValue("/sim/control-mode", "joystick");
+  props->setBoolValue("/sim/auto-coordination", false);
+
+				// Features
+  props->setBoolValue("/sim/hud/visibility", false);
+  props->setBoolValue("/sim/panel/visibility", true);
+  props->setBoolValue("/sim/sound", true);
+  props->setBoolValue("/sim/hud/antialiased", false);
+
+				// Flight Model options
+  props->setStringValue("/sim/flight-model", "larcsim");
+  props->setStringValue("/sim/aircraft", "c172");
+  props->setIntValue("/sim/model-hz", NEW_DEFAULT_MODEL_HZ);
+  props->setIntValue("/sim/speed-up", 1);
+  props->setBoolValue("/sim/startup/trim", false);
+
+				// Rendering options
+  props->setStringValue("/sim/rendering/fog", "nicest");
+  props->setBoolValue("/environment/clouds/enabled", true);
+  props->setDoubleValue("/environment/clouds/altitude", 5000);
+  props->setBoolValue("/sim/startup/fullscreen", false);
+  props->setBoolValue("/sim/rendering/shading", true);
+  props->setBoolValue("/sim/rendering/skyblend", true);
+  props->setBoolValue("/sim/rendering/textures", true);
+  props->setBoolValue("/sim/rendering/wireframe", false);
+  props->setIntValue("/sim/startup/xsize", 800);
+  props->setIntValue("/sim/startup/ysize", 600);
+  props->setIntValue("/sim/rendering/bits-per-pixel", 16);
+  props->setIntValue("/sim/view-mode", (int)FG_VIEW_PILOT);
+  props->setDoubleValue("/sim/startup/view-offset", 0);
+  props->setDoubleValue("/environment/visibility", 20000);
+
+				// HUD options
+  props->setStringValue("/sim/startup/units", "feet");
+  props->setStringValue("/sim/hud/frame-stat-type", "tris");
+	
+				// Time options
+  props->setIntValue("/sim/startup/time-offset", 0);
+
+  props->setBoolValue("/sim/networking/network-olk", false);
+  props->setStringValue("/sim/networking/call-sign", "Johnny");
 }
 
 void 
 FGOptions::toggle_panel() {
-    
+    SGPropertyNode * props = globals->get_props();
     bool freeze = globals->get_freeze();
 
     if( !freeze )
         globals->set_freeze(true);
     
-    if( panel_status ) {
-	panel_status = false;
-	if ( current_panel != NULL )
-	  current_panel->setVisibility(false);
-    } else {
-	panel_status = true;
-	if ( current_panel != NULL )
-	  current_panel->setVisibility(true);
-    }
+    if(props->getBoolValue("/sim/panel/visibility"))
+        props->setBoolValue("/sim/panel/visibility", false);
+    else
+      props->setBoolValue("/sim/panel/visibility", true);
 
-    fgReshape( xsize, ysize);
+    fgReshape(props->getIntValue("/sim/startup/xsize"),
+	      props->getIntValue("/sim/startup/ysize"));
 
     if( !freeze )
         globals->set_freeze( false );
@@ -452,18 +475,6 @@ long int FGOptions::parse_date( const string& date)
 }
 
 
-// parse degree in the form of [+/-]hhh:mm:ss
-void FGOptions::parse_control( const string& mode ) {
-    if ( mode == "joystick" ) {
-	control_mode = FG_JOYSTICK;
-    } else if ( mode == "mouse" ) {
-	control_mode = FG_MOUSE;
-    } else {
-	control_mode = FG_KEYBOARD;
-    }
-}
-
-
 /// parse degree in the form of [+/-]hhh:mm:ss
 double
 FGOptions::parse_degree( const string& degree_str) {
@@ -496,7 +507,7 @@ FGOptions::parse_time_offset( const string& time_str) {
 
 // Parse --fdm=abcdefg type option 
 int
-FGOptions::parse_fdm( const string& fm ) {
+FGOptions::parse_fdm( const string& fm ) const {
     // cout << "fdm = " << fm << endl;
 
     if ( fm == "ada" ) {
@@ -529,7 +540,7 @@ FGOptions::parse_fov( const string& arg ) {
     if ( fov < FG_FOV_MIN ) { fov = FG_FOV_MIN; }
     if ( fov > FG_FOV_MAX ) { fov = FG_FOV_MAX; }
 
-    globals->get_current_view()->set_fov( fov );
+    globals->get_props()->setDoubleValue("/sim/field-of-view", fov);
 
     // printf("parse_fov(): result = %.4f\n", fov);
 
@@ -566,7 +577,7 @@ bool
 FGOptions::parse_channel( const string& type, const string& channel_str ) {
     // cout << "Channel string = " << channel_str << endl;
 
-    channel_options_list.push_back( type + "," + channel_str );
+    globals->get_channel_options_list().push_back( type + "," + channel_str );
 
     return true;
 }
@@ -583,7 +594,8 @@ bool FGOptions::parse_wp( const string& arg ) {
 	alt_str = arg.substr( pos + 1 );
 	// cout << "id str = " << id << "  alt str = " << alt_str << endl;
 	alt = atof( alt_str.c_str() );
-	if ( units == FG_UNITS_FEET ) {
+	if ( globals->get_props()->getStringValue("/sim/startup/units")
+	     == "feet" ) {
 	    alt *= FEET_TO_METER;
 	}
     } else {
@@ -630,211 +642,201 @@ bool FGOptions::parse_flightplan(const string& arg)
 
 // Parse a single option
 int FGOptions::parse_option( const string& arg ) {
+    SGPropertyNode * props = globals->get_props();
     // General Options
     if ( (arg == "--help") || (arg == "-h") ) {
 	// help/usage request
 	return(FG_OPTIONS_HELP);
     } else if ( arg == "--disable-game-mode") {
-	game_mode = false;
+	props->setBoolValue("/sim/startup/game-mode", false);
     } else if ( arg == "--enable-game-mode" ) {
-	game_mode = true;
+	props->setBoolValue("/sim/startup/game-mode", true);
     } else if ( arg == "--disable-splash-screen" ) {
-	splash_screen = false;
+	props->setBoolValue("/sim/startup/splash-screen", false); 
     } else if ( arg == "--enable-splash-screen" ) {
-	splash_screen = true;
+        props->setBoolValue("/sim/startup/splash-screen", true);
     } else if ( arg == "--disable-intro-music" ) {
-	intro_music = false;
+	props->setBoolValue("/sim/startup/intro-music", false);
     } else if ( arg == "--enable-intro-music" ) {
-	intro_music = true;
+	props->setBoolValue("/sim/startup/intro-music", true);
     } else if ( arg == "--disable-mouse-pointer" ) {
-	mouse_pointer = 1;
+	props->setStringValue("/sim/startup/mouse-pointer", "disabled");
     } else if ( arg == "--enable-mouse-pointer" ) {
-	mouse_pointer = 2;
+	props->setStringValue("/sim/startup/mouse-pointer", "enabled");
     } else if ( arg == "--disable-freeze" ) {
-	globals->set_freeze( false );
+	props->setBoolValue("/sim/freeze", false);
     } else if ( arg == "--enable-freeze" ) {
-	globals->set_freeze( true );
+	props->setBoolValue("/sim/freeze", true);
     } else if ( arg == "--disable-anti-alias-hud" ) {
-	anti_alias_hud = false;	
+	props->setBoolValue("/sim/hud/antialiased", false);
     } else if ( arg == "--enable-anti-alias-hud" ) {
-	anti_alias_hud = true;	
+        props->setBoolValue("/sim/hud/antialiased", true);
     } else if ( arg.find( "--control=") != string::npos ) {
-	parse_control( arg.substr(10) );
+        props->setStringValue("/sim/control-mode", arg.substr(10));
     } else if ( arg == "--disable-auto-coordination" ) {
-	auto_coordination = FG_AUTO_COORD_DISABLED;	
+        props->setBoolValue("/sim/auto-coordination", false);
     } else if ( arg == "--enable-auto-coordination" ) {
-	auto_coordination = FG_AUTO_COORD_ENABLED;	
+	props->setBoolValue("/sim/auto-coordination", true);
     } else if ( arg == "--disable-hud" ) {
-	hud_status = false;	
-	globals->get_props()->setBoolValue("/sim/hud/visibility", false);
+	props->setBoolValue("/sim/hud/visibility", false);
     } else if ( arg == "--enable-hud" ) {
-	hud_status = true;
-	globals->get_props()->setBoolValue("/sim/hud/visibility", true);
+	props->setBoolValue("/sim/hud/visibility", true);
     } else if ( arg == "--disable-panel" ) {
-	panel_status = false;
-	globals->get_props()->setBoolValue("/sim/panel/visibility", false);
-	if ( current_panel != NULL )
-	  current_panel->setVisibility(false);
+	props->setBoolValue("/sim/panel/visibility", false);
     } else if ( arg == "--enable-panel" ) {
-	panel_status = true;
-	globals->get_props()->setBoolValue("/sim/panel/visibility", true);
-	if ( current_panel != NULL )
-	    current_panel->setVisibility(true);
+	props->setBoolValue("/sim/panel/visibility", true);
     } else if ( arg == "--disable-sound" ) {
-	sound = false;
+	props->setBoolValue("/sim/sound", false);
     } else if ( arg == "--enable-sound" ) {
-	sound = true;
+	props->setBoolValue("/sim/sound", true);
     } else if ( arg.find( "--airport-id=") != string::npos ) {
-	airport_id = arg.substr( 13 );
-	globals->get_props()->setStringValue("/position/airport-id", airport_id);
+				// NB: changed property name!!!
+	props->setStringValue("/sim/startup/airport-id", arg.substr(13));
     } else if ( arg.find( "--lon=" ) != string::npos ) {
-	lon = parse_degree( arg.substr(6) );
-	airport_id = "";
-	globals->get_props()->setDoubleValue("/position/longitude", lon);
-	globals->get_props()->setStringValue("/position/airport-id", airport_id);
+	props->setDoubleValue("/position/longitude",
+			      parse_degree(arg.substr(6)));
+	props->setStringValue("/position/airport-id", "");
     } else if ( arg.find( "--lat=" ) != string::npos ) {
-	lat = parse_degree( arg.substr(6) );
-	airport_id = "";
-	globals->get_props()->setDoubleValue("/position/latitude", lat);
-	globals->get_props()->setStringValue("/position/airport-id", airport_id);
+	props->setDoubleValue("/position/latitude",
+			      parse_degree(arg.substr(6)));
+	props->setStringValue("/position/airport-id", "");
     } else if ( arg.find( "--altitude=" ) != string::npos ) {
-	if ( units == FG_UNITS_FEET ) {
-	    altitude = atof( arg.substr(11) ) * FEET_TO_METER;
-	} else {
-	    altitude = atof( arg.substr(11) );
-	}
-	globals->get_props()->setDoubleValue("/position/altitude", altitude);
+	if ( props->getStringValue("/sim/startup/units") == "feet" )
+	    props->setDoubleValue(atof(arg.substr(11)));
+	else
+	    props->setDoubleValue(atof(arg.substr(11)) * METER_TO_FEET);
     } else if ( arg.find( "--uBody=" ) != string::npos ) {
-	speedset = FG_VTUVW;
-	if ( units == FG_UNITS_FEET ) {
-	    uBody = atof( arg.substr(8) );
-	} else {
-	    uBody = atof( arg.substr(8) ) * FEET_TO_METER;
-	}
-	//globals->get_props()->setDoubleValue("/velocities/speed-north", uBody);
+        props->setStringValue("/sim/startup/speed-set", "UVW");
+				// FIXME: the units are totally confused here
+	if ( props->getStringValue("/sim/startup/units") == "feet" )
+	  props->setDoubleValue("/velocities/uBody", atof(arg.substr(8)));
+	else
+	  props->setDoubleValue("/velocities/uBody",
+			       atof(arg.substr(8)) * FEET_TO_METER);
     } else if ( arg.find( "--vBody=" ) != string::npos ) {
-	speedset = FG_VTUVW;
-	if ( units == FG_UNITS_FEET ) {
-	    vBody = atof( arg.substr(8) );
-	} else {
-	    vBody = atof( arg.substr(8) ) * FEET_TO_METER;
-	}
-	//globals->get_props()->setDoubleValue("/velocities/speed-east", vBody);
+        props->setStringValue("/sim/startup/speed-set", "UVW");
+				// FIXME: the units are totally confused here
+	if ( props->getStringValue("/sim/startup/units") == "feet" )
+	  props->setDoubleValue("/velocities/vBody", atof(arg.substr(8)));
+	else
+	  props->setDoubleValue("/velocities/vBody",
+			       atof(arg.substr(8)) * FEET_TO_METER);
     } else if ( arg.find( "--wBody=" ) != string::npos ) {
-	speedset = FG_VTUVW;
-	if ( units == FG_UNITS_FEET ) {
-	    wBody = atof( arg.substr(8) );
-	} else {
-	    wBody = atof( arg.substr(8) ) * FEET_TO_METER;
-	}
+        props->setStringValue("/sim/startup/speed-set", "UVW");
+				// FIXME: the units are totally confused here
+	if ( props->getStringValue("/sim/startup/units") == "feet" )
+	  props->setDoubleValue("/velocities/wBody", atof(arg.substr(8)));
+	else
+	  props->setDoubleValue("/velocities/wBody",
+			       atof(arg.substr(8)) * FEET_TO_METER);
     } else if ( arg.find( "--vNorth=" ) != string::npos ) {
-	speedset = FG_VTNED;
-	if ( units == FG_UNITS_FEET ) {
-	    vNorth = atof( arg.substr(9) );
-	} else {
-	    vNorth = atof( arg.substr(9) ) * FEET_TO_METER;
-	}
+        props->setStringValue("/sim/startup/speed-set", "NED");
+				// FIXME: the units are totally confused here
+	if ( props->getStringValue("/sim/startup/units") == "feet" )
+	  props->setDoubleValue("/velocities/speed-north", atof(arg.substr(8)));
+	else
+	  props->setDoubleValue("/velocities/speed-north",
+			       atof(arg.substr(8)) * FEET_TO_METER);
     } else if ( arg.find( "--vEast=" ) != string::npos ) {
-	speedset = FG_VTNED;
-	if ( units == FG_UNITS_FEET ) {
-	    vEast = atof( arg.substr(8) );
-	} else {
-	    vEast = atof( arg.substr(8) ) * FEET_TO_METER;
-	}
+        props->setStringValue("/sim/startup/speed-set", "NED");
+				// FIXME: the units are totally confused here
+	if ( props->getStringValue("/sim/startup/units") == "feet" )
+	  props->setDoubleValue("/velocities/speed-east", atof(arg.substr(8)));
+	else
+	  props->setDoubleValue("/velocities/speed-east",
+			       atof(arg.substr(8)) * FEET_TO_METER);
     } else if ( arg.find( "--vDown=" ) != string::npos ) {
-	speedset = FG_VTNED;
-	if ( units == FG_UNITS_FEET ) {
-	    vDown = atof( arg.substr(8) );
-	} else {
-	    vDown = atof( arg.substr(8) ) * FEET_TO_METER;
-	}
+        props->setStringValue("/sim/startup/speed-set", "NED");
+				// FIXME: the units are totally confused here
+	if ( props->getStringValue("/sim/startup/units") == "feet" )
+	  props->setDoubleValue("/velocities/speed-down", atof(arg.substr(8)));
+	else
+	  props->setDoubleValue("/velocities/speed-down",
+			       atof(arg.substr(8)) * FEET_TO_METER);
     } else if ( arg.find( "--vc=" ) != string::npos) {
-	speedset = FG_VC;
-	vkcas=atof( arg.substr(5) );
-	cout << "Got vc: " << vkcas << endl;
-	globals->get_props()->setDoubleValue("/velocities/airspeed", vkcas);
+        props->setStringValue("/sim/startup/speed-set", "knots");
+	props->setDoubleValue("/velocities/airspeed", atof(arg.substr(5)));
     } else if ( arg.find( "--mach=" ) != string::npos) {
-	speedset = FG_MACH;
-	mach=atof( arg.substr(7) );
+        props->setStringValue("/sim/startup/speed-set", "mach");
+	props->setDoubleValue("/velocities/mach", atof(arg.substr(7)));
     } else if ( arg.find( "--heading=" ) != string::npos ) {
-	heading = atof( arg.substr(10) );
-	globals->get_props()->setDoubleValue("/orientation/heading", heading);
+	props->setDoubleValue("/orientation/heading", atof(arg.substr(10)));
     } else if ( arg.find( "--roll=" ) != string::npos ) {
-	roll = atof( arg.substr(7) );
-	globals->get_props()->setDoubleValue("/orientation/roll", roll);
+	props->setDoubleValue("/orientation/roll", atof(arg.substr(7)));
     } else if ( arg.find( "--pitch=" ) != string::npos ) {
-	pitch = atof( arg.substr(8) );
-	globals->get_props()->setDoubleValue("/orientation/pitch", pitch);
+	props->setDoubleValue("/orientation/pitch", atof(arg.substr(8)));
     } else if ( arg.find( "--fg-root=" ) != string::npos ) {
-	fg_root = arg.substr( 10 );
+	globals->set_fg_root(arg.substr( 10 ));
     } else if ( arg.find( "--fg-scenery=" ) != string::npos ) {
-	fg_scenery = arg.substr( 13 );
+        globals->set_fg_scenery(arg.substr( 13 ));
     } else if ( arg.find( "--fdm=" ) != string::npos ) {
-	flight_model = parse_fdm( arg.substr(6) );
-	globals->get_props()->setIntValue("/sim/flight-model", flight_model);
-    if((flight_model == FGInterface::FG_JSBSIM) && (get_trim_mode() == 0)) {
-	set_trim_mode(1);
-    } else {
-	set_trim_mode(0);
-    }        
+	props->setStringValue("/sim/flight-model", arg.substr(6));
+				// FIXME: reimplement this logic, somehow
+//     if((flight_model == FGInterface::FG_JSBSIM) && (get_trim_mode() == 0)) {
+//         props->
+// 	set_trim_mode(1);
+//     } else {
+// 	set_trim_mode(0);
+//     }        
     } else if ( arg.find( "--aircraft=" ) != string::npos ) {
-	aircraft = arg.substr(11);
-	globals->get_props()->setStringValue("/sim/aircraft", aircraft);
+	props->setStringValue("/sim/aircraft", arg.substr(11));
     } else if ( arg.find( "--aircraft-dir=" ) != string::npos ) {
-	aircraft_dir =  arg.substr(15); //  (UIUC)
+        props->setStringValue("/sim/aircraft-dir", arg.substr(15));
     } else if ( arg.find( "--model-hz=" ) != string::npos ) {
-	model_hz = atoi( arg.substr(11) );
+	props->setIntValue("/sim/model-hz", atoi(arg.substr(11)));
     } else if ( arg.find( "--speed=" ) != string::npos ) {
-	speed_up = atoi( arg.substr(8) );
+	props->setIntValue("/sim/speed-up", atoi(arg.substr(8)));
     } else if ( arg.find( "--notrim") != string::npos) {
-	trim=-1;
+        props->setIntValue("/sim/startup/trim", -1);
     } else if ( arg == "--fog-disable" ) {
-	fog = FG_FOG_DISABLED;	
+	props->setStringValue("/sim/rendering/fog", "disabled");
     } else if ( arg == "--fog-fastest" ) {
-	fog = FG_FOG_FASTEST;	
+	props->setStringValue("/sim/rendering/fog", "fastest");
     } else if ( arg == "--fog-nicest" ) {
-	fog = FG_FOG_NICEST;	
+	props->setStringValue("/sim/fog", "nicest");
     } else if ( arg == "--disable-clouds" ) {
-	clouds = false;	
+        props->setBoolValue("/environment/clouds/enabled", false);
     } else if ( arg == "--enable-clouds" ) {
-	clouds = true;	
+        props->setBoolValue("/environment/clouds/enabled", true);
     } else if ( arg.find( "--clouds-asl=" ) != string::npos ) {
-	if ( units == FG_UNITS_FEET ) {
-	    clouds_asl = atof( arg.substr(13) ) * FEET_TO_METER;
-	} else {
-	    clouds_asl = atof( arg.substr(13) );
-	}
+				// FIXME: check units
+        if ( props->getStringValue("/sim/startup/units") == "feet" )
+	  props->setDoubleValue("/environment/clouds/altitude",
+				atof(arg.substr(13)) * FEET_TO_METER);
+	else
+	  props->setDoubleValue("/environment/clouds/altitude",
+				atof(arg.substr(13)));
     } else if ( arg.find( "--fov=" ) != string::npos ) {
 	parse_fov( arg.substr(6) );
     } else if ( arg == "--disable-fullscreen" ) {
-	fullscreen = false;	
+        props->setBoolValue("/sim/startup/fullscreen", false);
     } else if ( arg== "--enable-fullscreen") {
-	fullscreen = true;	
+        props->setBoolValue("/sim/startup/fullscreen", true);
     } else if ( arg == "--shading-flat") {
-	shading = 0;	
+	props->setBoolValue("/sim/rendering/shading", false);
     } else if ( arg == "--shading-smooth") {
-	shading = 1;	
+	props->setBoolValue("/sim/rendering/shading", true);
     } else if ( arg == "--disable-skyblend") {
-	skyblend = false;	
+	props->setBoolValue("/sim/rendering/skyblend", false);
     } else if ( arg== "--enable-skyblend" ) {
-	skyblend = true;	
+	props->setBoolValue("/sim/rendering/skyblend", true);
     } else if ( arg == "--disable-textures" ) {
-	textures = false;	
+        props->setBoolValue("/sim/rendering/textures", false);
     } else if ( arg == "--enable-textures" ) {
-	textures = true;
+        props->setBoolValue("/sim/rendering/textures", true);
     } else if ( arg == "--disable-wireframe" ) {
-	wireframe = false;	
+        props->setBoolValue("/sim/rendering/wireframe", false);
     } else if ( arg == "--enable-wireframe" ) {
-	wireframe = true;
+        props->setBoolValue("/sim/rendering/wireframe", true);
     } else if ( arg.find( "--geometry=" ) != string::npos ) {
 	bool geometry_ok = true;
+	int xsize = 0, ysize = 0;
 	string geometry = arg.substr( 11 );
 	string::size_type i = geometry.find('x');
 
  	if (i != string::npos) {
 	    xsize = atoi(geometry.substr(0, i));
 	    ysize = atoi(geometry.substr(i+1));
-	    // cout << "Geometry is " << xsize << 'x' << ysize << '\n';
   	} else {
 	    geometry_ok = false;
  	}
@@ -849,43 +851,53 @@ int FGOptions::parse_option( const string& arg ) {
   	    FG_LOG( FG_GENERAL, FG_ALERT, "Unknown geometry: " << geometry );
  	    FG_LOG( FG_GENERAL, FG_ALERT,
  		    "Setting geometry to " << xsize << 'x' << ysize << '\n');
-  	}
+  	} else {
+	  FG_LOG( FG_GENERAL, FG_INFO,
+		  "Setting geometry to " << xsize << 'x' << ysize << '\n');
+	  props->setIntValue("/sim/startup/xsize", xsize);
+	  props->setIntValue("/sim/startup/ysize", ysize);
+	}
     } else if ( arg.find( "--bpp=" ) != string::npos ) {
 	string bits_per_pix = arg.substr( 6 );
 	if ( bits_per_pix == "16" ) {
-	    bpp = 16;
+	    props->setIntValue("/sim/rendering/bits-per-pixel", 16);
 	} else if ( bits_per_pix == "24" ) {
-	    bpp = 24;
+	    props->setIntValue("/sim/rendering/bits-per-pixel", 24);
 	} else if ( bits_per_pix == "32" ) {
-	    bpp = 32;
+	    props->setIntValue("/sim/rendering/bits-per-pixel", 32);
+	} else {
+	  FG_LOG(FG_GENERAL, FG_ALERT, "Unsupported bpp " << bits_per_pix);
 	}
     } else if ( arg == "--units-feet" ) {
-	units = FG_UNITS_FEET;	
+	props->setStringValue("/sim/startup/units", "feet");
     } else if ( arg == "--units-meters" ) {
-	units = FG_UNITS_METERS;	
+	props->setStringValue("/sim/startup/units", "meters");
     } else if ( arg.find( "--time-offset" ) != string::npos ) {
-	time_offset = parse_time_offset( (arg.substr(14)) );
-	//time_offset_type = FG_TIME_SYS_OFFSET;
+        props->setIntValue("/sim/startup/time-offset",
+			   parse_time_offset( (arg.substr(14)) ));
     } else if ( arg.find( "--time-match-real") != string::npos ) {
-      //time_offset = parse_time_offset(arg.substr(18));
-	time_offset_type = FG_TIME_SYS_OFFSET;
+        props->setStringValue("/sim/startup/time-offset_type",
+			      "system-offset");
     } else if ( arg.find( "--time-match-local") != string::npos ) {
-      //time_offset = parse_time_offset(arg.substr(18));
-	time_offset_type = FG_TIME_LAT_OFFSET;
+        props->setStringValue("/sim/startup/time-offset_type",
+			      "latitude-offset");
     } else if ( arg.find( "--start-date-sys=") != string::npos ) {
-        time_offset = parse_date( (arg.substr(17)) );
-	time_offset_type = FG_TIME_SYS_ABSOLUTE;
+        props->setIntValue("/sim/startup/time-offset",
+			   parse_date((arg.substr(17))));
+	props->setStringValue("/sim/startup/time-offset-type", "system");
     } else if ( arg.find( "--start-date-lat=") != string::npos ) {
-        time_offset = parse_date( (arg.substr(17)) );
-	time_offset_type = FG_TIME_LAT_ABSOLUTE;
+        props->setIntValue("/sim/startup/time-offset",
+			   parse_date((arg.substr(17))));
+	props->setStringValue("/sim/startup/time-offset-type",
+			   "latitude");
     } else if ( arg.find( "--start-date-gmt=") != string::npos ) {
-        time_offset = parse_date( (arg.substr(17)) );
-	time_offset_type = FG_TIME_GMT_ABSOLUTE;
-
+        props->setIntValue("/sim/startup/time-offset",
+			   parse_date((arg.substr(17))));
+	props->setStringValue("/sim/startup/time-offset-type", "gmt");
     } else if ( arg == "--hud-tris" ) {
-	tris_or_culled = 0;	
+        props->setStringValue("/sim/hud/frame-stat-type", "tris");
     } else if ( arg == "--hud-culled" ) {
-	tris_or_culled = 1;
+        props->setStringValue("/sim/hud/frame-stat-type", "culled");
     } else if ( arg.find( "--native=" ) != string::npos ) {
 	parse_channel( "native", arg.substr(9) );
     } else if ( arg.find( "--garmin=" ) != string::npos ) {
@@ -904,13 +916,14 @@ int FGOptions::parse_option( const string& arg ) {
 	parse_channel( "joyclient", arg.substr(12) );
 #ifdef FG_NETWORK_OLK
     } else if ( arg == "--disable-network-olk" ) {
-	network_olk = false;	
+        props->setBoolValue("/sim/networking/olk", false);
     } else if ( arg== "--enable-network-olk") {
-	network_olk = true;	
+        props->setBoolValue("/sim/networking/olk", true);
     } else if ( arg == "--net-hud" ) {
-	net_hud_display = 1;	
+        props->setBoolValue("/sim/hud/net-display", true);
+	net_hud_display = 1;	// FIXME
     } else if ( arg.find( "--net-id=") != string::npos ) {
-	net_id = arg.substr( 9 );
+        props->setStringValue("sim/networking/call-sign", arg.substr(9));
 #endif
     } else if ( arg.find( "--prop:" ) == 0 ) {
         string assign = arg.substr(7);
@@ -921,13 +934,14 @@ int FGOptions::parse_option( const string& arg ) {
 	}
 	string name = assign.substr(0, pos);
 	string value = assign.substr(pos + 1);
-	globals->get_props()->setStringValue(name.c_str(), value);
+	props->setStringValue(name.c_str(), value);
 	FG_LOG(FG_GENERAL, FG_INFO, "Setting default value of property "
 	       << name << " to \"" << value << '"');
     // $$$ begin - added VS Renganathan, 14 Oct 2K
     // for multi-window outside window imagery
     } else if ( arg.find( "--view-offset=" ) != string::npos ) {
 	string woffset = arg.substr( 14 );
+	double default_view_offset = 0.0;
 	if ( woffset == "LEFT" ) {
 	       default_view_offset = FG_PI * 0.25;
 	} else if ( woffset == "RIGHT" ) {
@@ -941,15 +955,13 @@ int FGOptions::parse_option( const string& arg ) {
 	    (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
 	pilot_view->set_view_offset( default_view_offset );
 	pilot_view->set_goal_view_offset( default_view_offset );
+	props->setDoubleValue("/sim/startup/view-offset", default_view_offset);
     // $$$ end - added VS Renganathan, 14 Oct 2K
     } else if ( arg.find( "--visibility=" ) != string::npos ) {
-	visibility = atof( arg.substr( 13 ) );
-	globals->get_props()->setDoubleValue("/environment/visibility",
-					     visibility);
+	props->setDoubleValue("/environment/visibility", atof(arg.substr(13)));
     } else if ( arg.find( "--visibility-miles=" ) != string::npos ) {
-	visibility = atof( arg.substr( 19 ) ) * 5280.0 * FEET_TO_METER;
-	globals->get_props()->setDoubleValue("/environment/visibility",
-					     visibility);
+        double visibility = atof(arg.substr(19)) * 5280.0 * FEET_TO_METER;
+	props->setDoubleValue("/environment/visibility", visibility);
     } else if ( arg.find( "--wind=" ) == 0 ) {
         string val = arg.substr(7);
 	int pos = val.find('@');
@@ -967,9 +979,9 @@ int FGOptions::parse_option( const string& arg ) {
 	if (dir >= 360)
 	  dir -= 360;
 	dir *= DEG_TO_RAD;
-	globals->get_props()->setDoubleValue("/environment/wind-north",
+	props->setDoubleValue("/environment/wind-north",
 					     speed * cos(dir));
-	globals->get_props()->setDoubleValue("/environment/wind-east",
+	props->setDoubleValue("/environment/wind-east",
 					     speed * sin(dir));
     } else if ( arg.find( "--wp=" ) != string::npos ) {
 	parse_wp( arg.substr( 5 ) );
@@ -996,7 +1008,7 @@ int FGOptions::scan_command_line_for_root( int argc, char **argv ) {
 
 	string arg = argv[i];
 	if ( arg.find( "--fg-root=" ) != string::npos ) {
-	    fg_root = arg.substr( 10 );
+	    globals->set_fg_root(arg.substr( 10 ));
 	}
 
 	i++;
@@ -1012,7 +1024,7 @@ int FGOptions::scan_config_file_for_root( const string& path ) {
     if ( !in.is_open() )
 	return(FG_OPTIONS_ERROR);
 
-    FG_LOG( FG_GENERAL, FG_INFO, "Processing config file: " << path );
+    FG_LOG( FG_GENERAL, FG_INFO, "Scanning for root: " << path );
 
     in >> skipcomment;
 #ifndef __MWERKS__
@@ -1033,7 +1045,7 @@ int FGOptions::scan_config_file_for_root( const string& path ) {
 #endif
 
 	if ( line.find( "--fg-root=" ) != string::npos ) {
-	    fg_root = line.substr( 10 );
+	    globals->set_fg_root(line.substr( 10 ));
 	}
 
 	in >> skipcomment;
@@ -1261,4 +1273,27 @@ void FGOptions::usage ( void ) {
 
 // Destructor
 FGOptions::~FGOptions( void ) {
+}
+
+
+//
+// Temporary methods...
+//
+
+string
+FGOptions::get_fg_root() const
+{
+  return globals->get_fg_root();
+}
+
+string
+FGOptions::get_fg_scenery () const
+{
+  return globals->get_fg_scenery();
+}
+
+string_list
+FGOptions::get_channel_options_list () const
+{
+  return globals->get_channel_options_list();
 }

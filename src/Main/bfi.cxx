@@ -211,15 +211,15 @@ FGBFI::init ()
 {
   FG_LOG(FG_GENERAL, FG_INFO, "Starting BFI init");
 				// Simulation
-  fgTie("/sim/flight-model", getFlightModel, setFlightModel);
-  fgTie("/sim/aircraft", getAircraft, setAircraft);
+//   fgTie("/sim/flight-model", getFlightModel, setFlightModel);
+//   fgTie("/sim/aircraft", getAircraft, setAircraft);
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgTie("/sim/time/gmt-string", getGMTString);
-  fgTie("/sim/hud/visibility", getHUDVisible, setHUDVisible);
+//   fgTie("/sim/hud/visibility", getHUDVisible, setHUDVisible);
 
 				// Position
-  fgTie("/position/airport-id", getTargetAirport, setTargetAirport);
+//   fgTie("/position/airport-id", getTargetAirport, setTargetAirport);
   fgTie("/position/latitude", getLatitude, setLatitude);
   fgTie("/position/longitude", getLongitude, setLongitude);
   fgTie("/position/altitude", getAltitude, setAltitude);
@@ -265,6 +265,7 @@ FGBFI::init ()
   fgTie("/sim/view/axes/lat", (double(*)())0, setViewAxisLat);
 
   _altitude_countdown = 0;
+  globals->set_freeze(_saved_freeze);
   _needReinit = false;
 
   FG_LOG(FG_GENERAL, FG_INFO, "Ending BFI init");
