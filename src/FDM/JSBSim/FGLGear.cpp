@@ -403,6 +403,11 @@ FGColumnVector3& FGLGear::Force(void)
         FCoeff = dynamicFCoeff*fabs(WheelSlip)/WheelSlip;
       }
 
+      // A negative force coefficient will result in a force pulling the wheel(s)
+      // back instead of trying to stop them from moving.
+      if (FCoeff < 0.0)
+          FCoeff = 0.0;
+
 // Compute the vertical force on the wheel using square-law damping (per comment
 // in paper AIAA-2000-4303 - see header prologue comments). We might consider
 // allowing for both square and linear damping force calculation. Also need to
