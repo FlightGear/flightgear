@@ -29,6 +29,14 @@
 #include "tile.hxx"
 
 
+// return the sign of a value
+#define FG_SIGN( x )  ((x) >= 0 ? 1 : -1)
+
+// return min or max of two values
+#define FG_MIN(A,B)	((A) < (B) ? (A) :  (B))
+#define FG_MAX(A,B)	((A) > (B) ? (A) :  (B))
+
+
 // Constructor
 fgFRAGMENT::fgFRAGMENT ( void ) {
 }
@@ -46,6 +54,7 @@ void fgFRAGMENT::add_face(int n1, int n2, int n3) {
 }
 
 
+/*
 // return the sign of a value
 static int fg_sign( double x ) {
     if ( x >= 0 ) {
@@ -75,6 +84,21 @@ static double fg_max( double a, double b, double c ) {
     if (result < c) result = c;
 
     return(result);
+}
+*/
+
+
+// return the minimum of the three values
+static double fg_min3 (double a, double b, double c)
+{
+    return (a > b ? FG_MIN (b, c) : FG_MIN (a, c));
+}
+
+
+// return the maximum of the three values
+static double fg_max3 (double a, double b, double c)
+{
+  return (a < b ? FG_MAX (b, c) : FG_MAX (a, c));
 }
 
 
@@ -151,20 +175,26 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	y0 = end0->y;  y1 = end1->y;
 	z0 = end0->z;  z1 = end1->z;
 
-	a1 = x1 - x0;
+	if ( fabs(x1 - x0) > FG_EPSILON ) {
+	    a1 = 1.0 / (x1 - x0);
+	} else {
+	    // we got a big divide by zero problem here
+	    a1 = 0.0;
+	}
 	b1 = y1 - y0;
 	c1 = z1 - z0;
 
 	// intersect the specified line with this plane
-	t1 = b * b1 / a1;
-	t2 = c * c1 / a1;
+	t1 = b * b1 * a1;
+	t2 = c * c1 * a1;
 
 	// printf("a = %.2f  t1 = %.2f  t2 = %.2f\n", a, t1, t2);
 
 	if ( fabs(a + t1 + t2) > FG_EPSILON ) {
 	    result->x = (t1*x0 - b*y0 + t2*x0 - c*z0 + d) / (a + t1 + t2);
-	    result->y = (b1/a1) * (result->x - x0) + y0;
-	    result->z = (c1/a1) * (result->x - x0) + z0;	    
+	    t3 = a1 * (result->x - x0);
+	    result->y = b1 * t3 + y0;
+	    result->z = c1 * t3 + z0;	    
 	    // printf("result(d) = %.2f\n", 
 	    //        a * result->x + b * result->y + c * result->z);
 	} else {
@@ -187,7 +217,9 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 		// as any
 		return(1);
 	    }
-	    if ( fg_sign(t1 - t2) == fg_sign(t1 - t3) ) {
+	    side1 = FG_SIGN (t1 - t2);
+	    side2 = FG_SIGN (t1 - t3);
+	    if ( side1 == side2 ) {
 		// same side, punt
 		continue;
 	    }
@@ -195,12 +227,12 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 
 	// check to see if intersection point is in the bounding
 	// cube of the face
-	xmin = fg_min(p1[0], p2[0], p3[0]);
-	xmax = fg_max(p1[0], p2[0], p3[0]);
-	ymin = fg_min(p1[1], p2[1], p3[1]);
-	ymax = fg_max(p1[1], p2[1], p3[1]);
-	zmin = fg_min(p1[2], p2[2], p3[2]);
-	zmax = fg_max(p1[2], p2[2], p3[2]);
+	xmin = fg_min3 (p1[0], p2[0], p3[0]);
+	xmax = fg_max3 (p1[0], p2[0], p3[0]);
+	ymin = fg_min3 (p1[1], p2[1], p3[1]);
+	ymax = fg_max3 (p1[1], p2[1], p3[1]);
+	zmin = fg_min3 (p1[2], p2[2], p3[2]);
+	zmax = fg_max3 (p1[2], p2[2], p3[2]);
 	// printf("bounding cube = %.2f,%.2f,%.2f  %.2f,%.2f,%.2f\n",
 	//        xmin, ymin, zmin, xmax, ymax, zmax);
 	// punt if outside bouding cube
@@ -226,7 +258,7 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	dx = xmax - xmin;
 	dy = ymax - ymin;
 	dz = zmax - zmin;
-	min_dim = fg_min(dx, dy, dz);
+	min_dim = fg_min3 (dx, dy, dz);
 	if ( fabs(min_dim - dx) <= FG_EPSILON ) {
 	    // x is the smallest dimension
 	    x1 = p1[1]; y1 = p1[2];
@@ -245,27 +277,31 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	    x2 = p2[0]; y2 = p2[1];
 	    x3 = p3[0]; y3 = p3[1];
 	    rx = result->x; ry = result->y;
+	} else {
+	    // all dimensions are really small so lets call it close
+	    // enough and return a successful match
+	    return(1);
 	}
 
 	// check if intersection point is on the same side of p1 <-> p2 as p3
-	side1 = fg_sign((y1 - y2) * ((x3) - x2) / (x1 - x2) + y2 - (y3));
-	side2 = fg_sign((y1 - y2) * ((rx) - x2) / (x1 - x2) + y2 - (ry));
+	side1 = FG_SIGN ((y1 - y2) * ((x3) - x2) / (x1 - x2) + y2 - (y3));
+	side2 = FG_SIGN ((y1 - y2) * ((rx) - x2) / (x1 - x2) + y2 - (ry));
 	if ( side1 != side2 ) {
 	    // printf("failed side 1 check\n");
 	    continue;
 	}
 
 	// check if intersection point is on correct side of p2 <-> p3 as p1
-	side1 = fg_sign((y2 - y3) * ((x1) - x3) / (x2 - x3) + y3 - (y1));
-	side2 = fg_sign((y2 - y3) * ((rx) - x3) / (x2 - x3) + y3 - (ry));
+	side1 = FG_SIGN ((y2 - y3) * ((x1) - x3) / (x2 - x3) + y3 - (y1));
+	side2 = FG_SIGN ((y2 - y3) * ((rx) - x3) / (x2 - x3) + y3 - (ry));
 	if ( side1 != side2 ) {
 	    // printf("failed side 2 check\n");
 	    continue;
 	}
 
 	// check if intersection point is on correct side of p1 <-> p3 as p2
-	side1 = fg_sign((y1 - y3) * ((x2) - x3) / (x1 - x3) + y3 - (y2));
-	side2 = fg_sign((y1 - y3) * ((rx) - x3) / (x1 - x3) + y3 - (ry));
+	side1 = FG_SIGN ((y1 - y3) * ((x2) - x3) / (x1 - x3) + y3 - (y2));
+	side2 = FG_SIGN ((y1 - y3) * ((rx) - x3) / (x1 - x3) + y3 - (ry));
 	if ( side1 != side2 ) {
 	    // printf("failed side 3  check\n");
 	    continue;
@@ -309,6 +345,9 @@ fgTILE::~fgTILE ( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/07/16 17:34:24  curt
+// Ground collision detection optimizations contributed by Norman Vine.
+//
 // Revision 1.2  1998/07/12 03:18:28  curt
 // Added ground collision detection.  This involved:
 // - saving the entire vertex list for each tile with the tile records.
