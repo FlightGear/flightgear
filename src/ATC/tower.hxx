@@ -45,12 +45,15 @@ SG_USING_STD(ios);
 
 enum tower_traffic_type {
 	CIRCUIT,
-	INBOUND,
+	INBOUND,	// CIRCUIT traffic gets changed to INBOUND when on final of the full-stop circuit.
 	OUTBOUND,
 	TTT_UNKNOWN,	// departure, but we don't know if for circuits or leaving properly
 	STRAIGHT_IN
-	// Umm - what's the difference between INBOUND and STRAIGHT_IN ?
-};	// TODO - need some differentiation of IFR and VFR traffic in order to give the former priority.
+};
+
+ostream& operator << (ostream& os, tower_traffic_type ttt);
+
+// TODO - need some differentiation of IFR and VFR traffic in order to give the former priority.
 
 // Structure for holding details of a plane under tower control.
 // Not fixed yet - may include more stuff later.
@@ -88,6 +91,8 @@ public:
 	
 	// Whereabouts in circuit if doing circuits
 	PatternLeg leg;
+	
+	LandingType landingType;
 	
 	bool isUser;	// true if this plane is the user
 };
@@ -165,7 +170,7 @@ private:
 	// Calculate the eta of a plane to the threshold.
 	// For ground traffic this is the fastest they can get there.
 	// For air traffic this is the middle approximation.
-	void CalcETA(TowerPlaneRec* tpr);
+	void CalcETA(TowerPlaneRec* tpr, bool printout = false);
 	
 	// Iterate through all the lists and call CalcETA for all the planes.
 	void doThresholdETACalc();
@@ -179,16 +184,24 @@ private:
 	// Calculate the crow-flys distance of a plane to the threshold in miles
 	double CalcDistOutMiles(TowerPlaneRec* tpr);
 	
+	/*
 	void doCommunication();
+	*/
 	
 	void IssueLandingClearance(TowerPlaneRec* tpr);
 	void IssueGoAround(TowerPlaneRec* tpr);
 	void IssueDepartureClearance(TowerPlaneRec* tpr);
 	
+	unsigned int update_count;	// Convienince counter for speading computational load over several updates
+	unsigned int update_count_max;	// ditto.
+	
 	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
 	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
 	
 	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog
+	
+	double timeSinceLastDeparture;	// Time in seconds since last departure from active rwy.
+	bool departed;	// set true when the above needs incrementing with time, false when it doesn't.
 	
 	// environment - need to make sure we're getting the surface winds and not winds aloft.
 	SGPropertyNode* wind_from_hdg;	//degrees
@@ -247,7 +260,7 @@ private:
 	
 	// Return the ETA of plane no. list_pos (1-based) in the traffic list.
 	// i.e. list_pos = 1 implies next to use runway.
-	double GetTrafficETA(unsigned int list_pos);
+	double GetTrafficETA(unsigned int list_pos, bool printout = false);
 	
 	// Add a tower plane rec with ETA to the traffic list in the correct position ETA-wise.
 	// Returns true if this could cause a threshold ETA conflict with other traffic, false otherwise.
