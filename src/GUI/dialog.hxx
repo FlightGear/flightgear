@@ -135,4 +135,23 @@ private:
     vector<char **> _char_arrays;
 };
 
+//
+// Custom subclass of puPopup to implement "draggable" windows in the
+// interface.  Note that this is a subclass of puPopup, not
+// puDialogBox.  Sadly, PUI (mis)uses subclassing to implement a
+// boolean property: modality.  That means that we can't implement
+// dragging of both puPopup windows and puDialogBoxes with the same
+// code.  Rather than duplicate code, I've chosen to implement only
+// "non-modal dragability" here.  Modal dialog boxes (like the exit
+// confirmation) are not draggable.
+//
+class fgPopup : public puPopup {
+public:
+    fgPopup(int x, int y) : puPopup(x, y) { _dragging = false; }
+    int checkHit(int b, int up, int x, int y);
+private:
+    bool _dragging;
+    int _dX, _dY;
+};
+
 #endif // __DIALOG_HXX

@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include "gui.h"
+#include "dialog.hxx"
 #include <simgear/props/props.hxx>
 
 void prop_pickerInit();
@@ -19,7 +20,7 @@ class fgPropPicker       ;
 class fgPropEdit       ;
 
 class fgPropPicker : 
-    public puDialogBox,
+    public fgPopup,
     public SGPropertyChangeListener
 {
 
@@ -76,7 +77,7 @@ public:
   virtual void valueChanged (SGPropertyNode * node);
 } ;
 
-class fgPropEdit : public puDialogBox
+class fgPropEdit : public fgPopup
 {
 
   static void fgPropEditHandleCancel ( puObject *b ) ;

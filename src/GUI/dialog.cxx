@@ -8,6 +8,42 @@
 #include "puList.hxx"
 #include "AirportList.hxx"
 
+int fgPopup::checkHit(int button, int updown, int x, int y)
+{
+    int result = puPopup::checkHit(button, updown, x, y);
+
+    // This is annoying.  We would really want a true result from the
+    // superclass to indicate "handled by child object", but all it
+    // tells us is that the pointer is inside the dialog.  So do the
+    // intersection test (again) to make sure we don't start a drag
+    // when inside controls.  A further weirdness: plib inserts a
+    // "ghost" child which covers the whole control. (?)  Skip it.
+    if(!result) return result;
+    puObject* child = getFirstChild();
+    if(child) child = child->getNextObject();
+    while(child) {
+        int cx, cy, cw, ch;
+        child->getAbsolutePosition(&cx, &cy);
+        child->getSize(&cw, &ch);
+        if(x >= cx && x < cx + cw && y >= cy && y < cy + ch)
+            return result;
+        child = child->getNextObject();
+    }
+
+    // Finally, handle the mouse event
+    if(updown == PU_DOWN) {
+        int px, py;
+        getPosition(&px, &py);
+        _dragging = true;
+        _dX = px - x;
+        _dY = py - y;
+    } else if(updown == PU_DRAG && _dragging) {
+        setPosition(x + _dX, y + _dY);
+    } else {
+        _dragging = false;
+    }
+    return 1;
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -230,7 +266,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         if (props->getBoolValue("modal", false))
             dialog = new puDialogBox(x, y);
         else
-            dialog = new puPopup(x, y);
+            dialog = new fgPopup(x, y);
         setupGroup(dialog, props, width, height, true);
         return dialog;
     } else if (type == "group") {

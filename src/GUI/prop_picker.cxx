@@ -346,7 +346,7 @@ fgPropPicker::~fgPropPicker ()
 */
 
 fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
-                                      const char *dir, const char *title ) : puDialogBox ( x,y )
+                                      const char *dir, const char *title ) : fgPopup ( x,y )
 {
   puFont LegendFont, LabelFont;
   puGetDefaultFonts ( &LegendFont, &LabelFont );
@@ -570,7 +570,7 @@ void fgPropEdit::fgPropEditHandleOK ( puObject* b )
   FG_POP_PUI_DIALOG( prop_edit );
 }
 
-fgPropEdit::fgPropEdit ( const char *name, const char *value, char *proppath ) : puDialogBox ( 0, 0 )
+fgPropEdit::fgPropEdit ( const char *name, const char *value, char *proppath ) : fgPopup ( 0, 0 )
 
 {
     puFont LegendFont, LabelFont;
