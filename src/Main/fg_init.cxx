@@ -142,19 +142,21 @@ extern const char *default_root;
 SkySceneLoader *sgCloud3d;
 
 
-// Scan the command line options for an fg_root definition and set
-// just that.
-static string fgScanForRoot (int argc, char **argv) {
+// Scan the command line options for the specified option and return
+// the value.
+static string fgScanForOption( const string& option, int argc, char **argv ) {
     int i = 1;
 
-    SG_LOG(SG_GENERAL, SG_INFO, "Scanning for root: command line");
+    SG_LOG(SG_GENERAL, SG_INFO, "Scanning command line for: " << option );
+
+    int len = option.length();
 
     while ( i < argc ) {
 	SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
 
 	string arg = argv[i];
-	if ( arg.find( "--fg-root=" ) == 0 ) {
-	    return arg.substr( 10 );
+	if ( arg.find( option ) == 0 ) {
+	    return arg.substr( len );
 	}
 
 	i++;
@@ -164,14 +166,17 @@ static string fgScanForRoot (int argc, char **argv) {
 }
 
 
-// Scan the user config files for an fg_root definition and set just
-// that.
-static string fgScanForRoot (const string& path) {
+// Scan the user config files for the specified option and return
+// the value.
+static string fgScanForOption( const string& option, const string& path ) {
     sg_gzifstream in( path );
-    if ( !in.is_open() )
-      return "";
+    if ( !in.is_open() ) {
+        return "";
+    }
 
-    SG_LOG( SG_GENERAL, SG_INFO, "Scanning for root: " << path );
+    SG_LOG( SG_GENERAL, SG_INFO, "Scanning " << path << " for: " << option );
+
+    int len = option.length();
 
     in >> skipcomment;
 #ifndef __MWERKS__
@@ -194,8 +199,8 @@ static string fgScanForRoot (const string& path) {
             line = line.substr( 0, line.length()-1 );
         }
 
-	if ( line.find( "--fg-root=" ) == 0 ) {
-	    return line.substr( 10 );
+	if ( line.find( option ) == 0 ) {
+	    return line.substr( len );
 	}
 
 	in >> skipcomment;
@@ -211,9 +216,9 @@ bool fgInitFGRoot ( int argc, char **argv ) {
     string root;
     char* envp;
 
-    // First parse command line options looking for fg-root, this will
-    // override anything specified in a config file
-    root = fgScanForRoot(argc, argv);
+    // First parse command line options looking for --fg-root=, this
+    // will override anything specified in a config file
+    root = fgScanForOption( "--fg-root=", argc, argv);
 
 #if defined( unix ) || defined( __CYGWIN__ )
     // Next check home directory for .fgfsrc.hostname file
@@ -226,7 +231,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
             gethostname( name, 256 );
             config.concat( "." );
             config.concat( name );
-            root = fgScanForRoot(config.str());
+            root = fgScanForOption( "--fg-root=", config.str() );
         }
     }
 #endif
@@ -237,7 +242,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
         if ( envp != NULL ) {
             SGPath config( envp );
             config.append( ".fgfsrc" );
-            root = fgScanForRoot(config.str());
+            root = fgScanForOption( "--fg-root=", config.str() );
         }
     }
     
@@ -270,70 +275,6 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 }
 
 
-// Scan the command line options for an aircraft definition and set
-// just that.
-static string fgScanForAircraft (int argc, char **argv) {
-    int i = 1;
-
-    SG_LOG(SG_GENERAL, SG_INFO, "Scanning for aircraft: command line");
-
-    while ( i < argc ) {
-	SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
-
-	string arg = argv[i];
-	if ( arg.find( "--aircraft=" ) == 0 ) {
-	    return arg.substr( 11 );
-	}
-
-	i++;
-    }
-
-    return "";
-}
-
-
-// Scan the user config files for an aircrafg definition and set just
-// that.
-static string fgScanForAircraft (const string& path) {
-    sg_gzifstream in( path );
-    if ( !in.is_open() ) {
-        return "";
-    }
-
-    SG_LOG( SG_GENERAL, SG_INFO, "Scanning for aircraft: " << path );
-
-    in >> skipcomment;
-#ifndef __MWERKS__
-    while ( ! in.eof() ) {
-#else
-    char c = '\0';
-    while ( in.get(c) && c != '\0' ) {
-	in.putback(c);
-#endif
-	string line;
-
-#if defined( macintosh )
-        getline( in, line, '\r' );
-#else
-	getline( in, line, '\n' );
-#endif
-
-        // catch extraneous (DOS) line ending character
-        if ( line[line.length() - 1] < 32 ) {
-            line = line.substr( 0, line.length()-1 );
-        }
-
-	if ( line.find( "--aircraft=" ) == 0 ) {
-	    return line.substr( 11 );
-	}
-
-	in >> skipcomment;
-    }
-
-    return "";
-}
-
-
 // Read in configuration (files and command line options) but only set
 // aircraft
 bool fgInitFGAircraft ( int argc, char **argv ) {
@@ -342,7 +283,7 @@ bool fgInitFGAircraft ( int argc, char **argv ) {
 
     // First parse command line options looking for --aircraft=, this
     // will override anything specified in a config file
-    aircraft = fgScanForAircraft(argc, argv);
+    aircraft = fgScanForOption( "--aircraft=", argc, argv );
 
 #if defined( unix ) || defined( __CYGWIN__ )
     // Next check home directory for .fgfsrc.hostname file
@@ -355,7 +296,7 @@ bool fgInitFGAircraft ( int argc, char **argv ) {
             gethostname( name, 256 );
             config.concat( "." );
             config.concat( name );
-            aircraft = fgScanForRoot(config.str());
+            aircraft = fgScanForOption( "--aircraft=", config.str() );
         }
     }
 #endif
@@ -366,7 +307,7 @@ bool fgInitFGAircraft ( int argc, char **argv ) {
         if ( envp != NULL ) {
             SGPath config( envp );
             config.append( ".fgfsrc" );
-            aircraft = fgScanForRoot(config.str());
+            aircraft = fgScanForOption( "--aircraft=", config.str() );
         }
     }
 
