@@ -468,6 +468,12 @@ bool FGATC610x::open() {
     xpdr_sby_ann = fgGetNode( "/radios/kt-70/annunciators/sby", true );
     xpdr_reply_ann = fgGetNode( "/radios/kt-70/annunciators/reply", true );
 
+    ati_bird
+      = fgGetNode( "/instrumentation/attitude-indicator/horizon-offset-deg",
+		   true );
+    alt_press = fgGetNode( "/instrumentation/altimeter/setting-inhg", true );
+    adf_hdg = fgGetNode( "/radios/kr-87/inputs/rotation-deg", true );
+
     elevator_center = fgGetNode( "/input/atc610x/elevator/center", true );
     elevator_min = fgGetNode( "/input/atc610x/elevator/min", true );
     elevator_max = fgGetNode( "/input/atc610x/elevator/max", true );
@@ -479,6 +485,12 @@ bool FGATC610x::open() {
     rudder_center = fgGetNode( "/input/atc610x/rudder/center", true );
     rudder_min = fgGetNode( "/input/atc610x/rudder/min", true );
     rudder_max = fgGetNode( "/input/atc610x/rudder/max", true );
+
+    brake_left_min = fgGetNode( "/input/atc610x/brake-left/min", true );
+    brake_left_max = fgGetNode( "/input/atc610x/brake-left/max", true );
+
+    brake_right_min = fgGetNode( "/input/atc610x/brake-right/min", true );
+    brake_right_max = fgGetNode( "/input/atc610x/brake-right/max", true );
 
     throttle_min = fgGetNode( "/input/atc610x/throttle/min", true );
     throttle_max = fgGetNode( "/input/atc610x/throttle/max", true );
@@ -564,6 +576,115 @@ static double scale( int min, int max, int value ) {
 }
 
 
+static int tony_magic( int raw, int obs[3] ) {
+    int result = 0;
+
+    obs[0] = raw;
+
+    if ( obs[1] < 30 ) {
+        if ( obs[2] >= 68 && obs[2] < 480 ) {
+            result = -6;
+        } else if ( obs[2] >= 480 ) {
+            result = 6;
+        }
+        obs[2] = obs[1];
+        obs[1] = obs[0];
+    } else if ( obs[1] < 68 ) {
+        // do nothing
+        obs[1] = obs[0];
+    } else if ( obs[2] < 30 ) {
+        if ( obs[1] >= 68 && obs[1] < 480 ) {
+            result = 6;
+	    obs[2] = obs[1];
+	    obs[1] = obs[0];
+        } else if ( obs[1] >= 480 ) {
+	    result = -6;
+            if ( obs[0] < obs[1] ) {
+		obs[2] = obs[1];
+		obs[1] = obs[0];
+	    } else {
+	        obs[2] = obs[0];
+		obs[1] = obs[0];
+	    }
+        }
+    } else if ( obs[1] > 980 ) {
+        if ( obs[2] <= 956 && obs[2] > 480 ) {
+            result = 6;
+        } else if ( obs[2] <= 480 ) {
+            result = -6;
+        }
+        obs[2] = obs[1];
+        obs[1] = obs[0];
+    } else if ( obs[1] > 956 ) {
+        // do nothing
+        obs[1] = obs[0];
+    } else if ( obs[2] > 980 ) {
+        if ( obs[1] <= 956 && obs[1] > 480 ) {
+            result = -6;
+	    obs[2] = obs[1];
+	    obs[1] = obs[0];
+        } else if ( obs[1] <= 480 ) {
+	    result = 6;
+            if ( obs[0] > obs[1] ) {
+		obs[2] = obs[1];
+		obs[1] = obs[0];
+	    } else {
+		obs[2] = obs[0];
+		obs[1] = obs[0];
+	    }
+        }
+    } else {
+        if ( obs[1] < 480 && obs[2] > 480 ) {
+	    // crossed gap going up
+	    if ( obs[0] < obs[1] ) {
+	        // caught a bogus intermediate value coming out of the gap
+	        obs[1] = obs[0];
+	    }
+	} else if ( obs[1] > 480 && obs[2] < 480 ) {
+	    // crossed gap going down
+	    if ( obs[0] > obs[1] ) {
+	        // caught a bogus intermediate value coming out of the gap
+	      obs[1] = obs[0];
+	    }
+	} else if ( obs[0] > 480 && obs[1] < 480 && obs[2] < 480 ) {
+            // crossed the gap going down
+	    if ( obs[1] > obs[2] ) {
+	        // caught a bogus intermediate value coming out of the gap
+	        obs[1] = obs[2];
+	    }
+	} else if ( obs[0] < 480 && obs[1] > 480 && obs[2] > 480 ) {
+            // crossed the gap going up
+	    if ( obs[1] < obs[2] ) {
+	        // caught a bogus intermediate value coming out of the gap
+	        obs[1] = obs[2];
+	    }
+	}
+        result = obs[1] - obs[2];
+        if ( abs(result) > 200 ) {
+            // ignore
+            result = 0;
+        }
+        obs[2] = obs[1];
+        obs[1] = obs[0];
+    }
+
+    // cout << " result = " << result << endl;
+    if ( result < -500 ) { result += 1024; }
+    if ( result > 500 ) { result -= 1024; }
+
+    return result;
+}
+
+
+static double instr_pot_filter( double ave, double val ) {
+    if ( fabs(ave - val) < 200 || fabs(val) < fabs(ave) ) {
+        return 0.66 * ave + 0.34 * val;
+    } else {
+        return ave;
+    }
+}
+
+
 bool FGATC610x::do_analog_in() {
     // Read raw data in byte form
     ATC610xReadAnalogInputs( analog_in_fd, analog_in_bytes );
@@ -585,7 +706,6 @@ bool FGATC610x::do_analog_in() {
                  ailerons_max->getIntValue(), analog_in_data[0] );
     fgSetFloat( "/controls/aileron", tmp );
     // cout << "aileron = " << analog_in_data[0] << " = " << tmp;
-
     // elevator
     tmp = -scale( elevator_center->getIntValue(), elevator_min->getIntValue(),
                   elevator_max->getIntValue(), analog_in_data[5] );
@@ -612,11 +732,17 @@ bool FGATC610x::do_analog_in() {
     // cout << "throttle = " << tmp << endl;
 
     // rudder
-    /*
     tmp = scale( rudder_center->getIntValue(), rudder_min->getIntValue(),
                  rudder_max->getIntValue(), analog_in_data[10] );
     fgSetFloat( "/controls/rudder", -tmp );
-    */
+
+    // toe brakes
+    tmp = scale( brake_left_min->getIntValue(), brake_left_max->getIntValue(),
+                 analog_in_data[20] );
+    fgSetFloat( "/controls/brakes[0]", tmp );
+    tmp = scale( brake_right_min->getIntValue(), brake_right_max->getIntValue(),
+                 analog_in_data[21] );
+    fgSetFloat( "/controls/brakes[1]", tmp );
 
     // nav1 volume
     tmp = (float)analog_in_data[25] / 1024.0f;
@@ -630,173 +756,63 @@ bool FGATC610x::do_analog_in() {
     tmp = (float)analog_in_data[26] / 1024.0f;
     fgSetFloat( "/radios/kr-87/inputs/volume", tmp );
 
-#define FG_SECOND_TRY
-
-    // nav1 obs tuner
-    static int last_obs1 = analog_in_data[29];
+    // instrument panel pots
+    static bool first = true;
+    static int obs1[3], obs2[3], obs3[3], obs4[3], obs5[3];
     static double diff1_ave = 0.0;
-    int diff1 = 0;
+    static double diff2_ave = 0.0;
+    static double diff3_ave = 0.0;
+    static double diff4_ave = 0.0;
+    static double diff5_ave = 0.0;
 
-#if defined( FG_FIRST_TRY )
-    if ( analog_in_data[29] < 150 || analog_in_data[29] > 990 ) {
-        if ( last_obs1 > 512 && last_obs1 <= 990 ) {
-            diff1 = 1;
-        } else if ( last_obs1 >= 150 && last_obs1 <= 990 ) {
-            diff1 = -1;
-        }
-    } else if ( last_obs1 < 150 || last_obs1 > 990 ) {
-        if ( analog_in_data[29] > 512 && analog_in_data[29] <= 990 ) {
-            diff1 = -1;
-        } else if ( analog_in_data[29] >= 150 && analog_in_data[29] <= 990 ) {
-            diff1 = 1;
-        }
-    } else {
-        diff1 = analog_in_data[29] - last_obs1;
-    }
-#elif defined( FG_SECOND_TRY )
-    if ( analog_in_data[29] < 20 ) {
-        if ( last_obs1 >= 110 && last_obs1 < 512 ) {
-            diff1 = -6;
-        } else if ( last_obs1 >= 512 ) {
-            diff1 = 6;
-        }
-        last_obs1 = analog_in_data[29];
-    } else if ( analog_in_data[29] < 110 ) {
-        // do nothing
-    } else if ( last_obs1 < 20 ) {
-        if ( analog_in_data[29] >= 110 && analog_in_data[29] < 512 ) {
-            diff1 = 6;
-        } else if ( analog_in_data[29] >= 512 ) {
-            diff1 = -6;
-        }
-        last_obs1 = analog_in_data[29];
-    } else {
-        diff1 = analog_in_data[29] - last_obs1;
-        if ( abs(diff1) > 200 ) {
-            // ignore
-            diff1 = 0;
-        }
-        last_obs1 = analog_in_data[29];
-    }
-#elif defined( FG_FOURTH_TRY )
-    static bool ignore_next = false;
-    diff1 = analog_in_data[29] - last_obs1;
-    if ( abs(diff1) > 200 ) {
-        // ignore
-        diff1 = 0;
-        ignore_next = true;
-    } else if ( ignore_next ) {
-        diff1 = 0;
-        ignore_next = false;
-    }
-    last_obs1 = analog_in_data[29];
-#endif
-
-    // cout << " diff1 = " << diff1 << endl;
-    if ( diff1 < -500 ) { diff1 += 1024; }
-    if ( diff1 > 500 ) { diff1 -= 1024; }
-
-    if ( fabs(diff1_ave - diff1) < 200 || fabs(diff1) < fabs(diff1_ave) ) {
-        diff1_ave = (2.0/3.0) * diff1_ave + (1.0/3.0) * diff1;
+    if ( first ) {
+        first = false;
+        obs1[0] = obs1[1] = obs1[2] = analog_in_data[11];
+        obs2[0] = obs2[1] = obs2[2] = analog_in_data[28];
+        obs3[0] = obs3[1] = obs3[2] = analog_in_data[29];
+        obs4[0] = obs4[1] = obs4[2] = analog_in_data[30];
+        obs5[0] = obs5[1] = obs5[2] = analog_in_data[31];
     }
 
-    tmp = nav1_obs->getDoubleValue() + (diff1_ave * (72.0/914.0) );
+    int diff1 = tony_magic( analog_in_data[11], obs1 );
+    int diff2 = tony_magic( analog_in_data[28], obs2 );
+    int diff3 = tony_magic( analog_in_data[39], obs3 );
+    int diff4 = tony_magic( analog_in_data[30], obs4 );
+    int diff5 = tony_magic( analog_in_data[31], obs5 );
+
+    diff1_ave = instr_pot_filter( diff1_ave, diff1 );
+    diff2_ave = instr_pot_filter( diff2_ave, diff2 );
+    diff3_ave = instr_pot_filter( diff3_ave, diff3 );
+    diff4_ave = instr_pot_filter( diff4_ave, diff4 );
+    diff5_ave = instr_pot_filter( diff5_ave, diff5 );
+
+    tmp = ati_bird->getDoubleValue() + (diff1_ave * (20.0/880.0) );
+    if ( tmp < -10.0 ) { tmp = -10.0; }
+    if ( tmp > 10.0 ) { tmp = 10.0; }
+    fgSetFloat( "/instrumentation/attitude-indicator/horizon-offset-deg", tmp );
+
+    tmp = alt_press->getDoubleValue() + (diff2_ave * (1.125/880.0) );
+    if ( tmp < 27.9 ) { tmp = 27.9; }
+    if ( tmp > 31.4 ) { tmp = 31.4; }
+    fgSetFloat( "/instrumentation/altimeter/setting-inhg", tmp );
+
+    tmp = nav1_obs->getDoubleValue() + (diff3_ave * (72.0/880.0) );
     while ( tmp >= 360.0 ) { tmp -= 360.0; }
     while ( tmp < 0.0 ) { tmp += 360.0; }
-
+    // cout << " obs = " << tmp << endl;
     fgSetFloat( "/radios/nav[0]/radials/selected-deg", tmp );
 
-    // nav2 obs tuner
-    static int last_obs2 = analog_in_data[30];
-    static double diff2_ave = 0.0;
-    int diff2 = 0;
-
-    // cout << "obs2 = " << analog_in_data[30] << " last obs2 = " << last_obs2;
-
-#if defined( FG_FIRST_TRY )
-    if ( analog_in_data[30] < 150 || analog_in_data[30] > 990 ) {
-        if ( last_obs2 > 512 && last_obs2 <= 990 ) {
-            diff2 = 1;
-        } else if ( last_obs2 >= 150 && last_obs2 <= 990 ) {
-            diff2 = -1;
-        }
-    } else if ( last_obs2 < 150 || last_obs2 > 990 ) {
-        if ( analog_in_data[30] > 512 && analog_in_data[30] <= 990 ) {
-            diff2 = -1;
-        } else if ( analog_in_data[30] >= 150 && analog_in_data[30] <= 990 ) {
-            diff2 = 1;
-        }
-    } else {
-        diff2 = analog_in_data[30] - last_obs2;
-    }
-#elif defined( FG_SECOND_TRY )
-    if ( analog_in_data[30] < 30 ) {
-        if ( last_obs2 >= 43 && last_obs2 < 480 ) {
-            diff2 = -6;
-        } else if ( last_obs2 >= 480 ) {
-            diff2 = 6;
-        }
-        last_obs2 = analog_in_data[30];
-    } else if ( analog_in_data[30] < 43 ) {
-        // do nothing
-    } else if ( last_obs2 < 30 ) {
-        if ( analog_in_data[30] >= 23 && analog_in_data[30] < 480 ) {
-            diff2 = 6;
-        } else if ( analog_in_data[30] >= 480 ) {
-            diff2 = -6;
-        }
-        last_obs2 = analog_in_data[30];
-    } else if ( analog_in_data[30] > 930 ) {
-        if ( last_obs2 <= 924 && last_obs2 > 480 ) {
-            diff2 = 6;
-        } else if ( last_obs2 <= 480 ) {
-            diff2 = -6;
-        }
-        last_obs2 = analog_in_data[30];
-    } else if ( analog_in_data[30] > 924 ) {
-        // do nothing
-    } else if ( last_obs2 > 930 ) {
-        if ( analog_in_data[30] <= 924 && analog_in_data[30] > 480 ) {
-            diff2 = -6;
-        } else if ( analog_in_data[30] <= 480 ) {
-            diff2 = 6;
-        }
-        last_obs2 = analog_in_data[30];
-    } else {
-        diff2 = analog_in_data[30] - last_obs2;
-        if ( abs(diff2) > 200 ) {
-            // ignore
-            diff2 = 0;
-        }
-        last_obs2 = analog_in_data[30];
-    }
-#elif defined( FG_FOURTH_TRY )
-    static bool ignore_next = false;
-    diff2 = analog_in_data[30] - last_obs2;
-    if ( abs(diff2) > 200 ) {
-        // ignore
-        diff2 = 0;
-        ignore_next = true;
-    } else if ( ignore_next ) {
-        diff2 = 0;
-        ignore_next = false;
-    }
-    last_obs2 = analog_in_data[30];
-#endif
-
-    // cout << " diff2 = " << diff2 << endl;
-    if ( diff2 < -500 ) { diff2 += 1024; }
-    if ( diff2 > 500 ) { diff2 -= 1024; }
-
-    if ( fabs(diff2_ave - diff2) < 200 || fabs(diff2) < fabs(diff2_ave) ) {
-        diff2_ave = (2.0/3.0) * diff2_ave + (1.0/3.0) * diff2;
-    }
-
-    tmp = nav2_obs->getDoubleValue() + (diff2_ave * (72.0/880.0) );
+    tmp = nav2_obs->getDoubleValue() + (diff4_ave * (72.0/880.0) );
     while ( tmp >= 360.0 ) { tmp -= 360.0; }
     while ( tmp < 0.0 ) { tmp += 360.0; }
     // cout << " obs = " << tmp << endl;
     fgSetFloat( "/radios/nav[1]/radials/selected-deg", tmp );
+
+    tmp = adf_hdg->getDoubleValue() + (diff5_ave * (72.0/880.0) );
+    while ( tmp >= 360.0 ) { tmp -= 360.0; }
+    while ( tmp < 0.0 ) { tmp += 360.0; }
+    // cout << " obs = " << tmp << endl;
+    fgSetFloat( "/radios/kr-87/inputs/rotation-deg", tmp );
 
     return true;
 }
@@ -1803,6 +1819,7 @@ bool FGATC610x::do_switches() {
     }
 
     // circuit breakers
+#ifdef ATC_SUPPORT_CIRCUIT_BREAKERS_NOT_THE_DEFAULT
     fgSetBool( "/controls/circuit-breakers/cabin-lights-pwr",
                switch_matrix[board][0][0] );
     fgSetBool( "/controls/circuit-breakers/instr-ignition-switch",
@@ -1819,6 +1836,16 @@ bool FGATC610x::do_switches() {
                switch_matrix[board][6][0] );
     fgSetBool( "/controls/circuit-breakers/annunciators",
                switch_matrix[board][7][0] );
+#else
+    fgSetBool( "/controls/circuit-breakers/cabin-lights-pwr", true );
+    fgSetBool( "/controls/circuit-breakers/instr-ignition-switch", true );
+    fgSetBool( "/controls/circuit-breakers/flaps", true );
+    fgSetBool( "/controls/circuit-breakers/avn-bus-1", true );
+    fgSetBool( "/controls/circuit-breakers/avn-bus-2", true );
+    fgSetBool( "/controls/circuit-breakers/turn-coordinator", true );
+    fgSetBool( "/controls/circuit-breakers/instrument-lights", true );
+    fgSetBool( "/controls/circuit-breakers/annunciators", true );
+#endif
 
     fgSetDouble( "/controls/parking-brake",
                  switch_matrix[board][7][3] );

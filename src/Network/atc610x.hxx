@@ -89,13 +89,14 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *adf_stby_mode, *adf_timer_mode;
     SGPropertyNode *adf_count_mode, *adf_flight_timer, *adf_elapsed_timer;
     SGPropertyNode *adf_ant_ann, *adf_adf_ann, *adf_bfo_ann, *adf_frq_ann;
-    SGPropertyNode *adf_flt_ann, *adf_et_ann;
+    SGPropertyNode *adf_flt_ann, *adf_et_ann, *adf_hdg;
     SGPropertyNode *inner, *middle, *outer;
     SGPropertyNode *xpdr_ident_btn;
     SGPropertyNode *xpdr_digit1, *xpdr_digit2, *xpdr_digit3, *xpdr_digit4;
     SGPropertyNode *xpdr_func_knob, *xpdr_id_code, *xpdr_flight_level;
     SGPropertyNode *xpdr_fl_ann, *xpdr_alt_ann, *xpdr_gnd_ann, *xpdr_on_ann;
     SGPropertyNode *xpdr_sby_ann, *xpdr_reply_ann;
+  SGPropertyNode *ati_bird, *alt_press;
 
     // Faults
     SGPropertyNode *comm1_servicable, *comm2_servicable;
@@ -106,6 +107,8 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *elevator_center, *elevator_min, *elevator_max;
     SGPropertyNode *ailerons_center, *ailerons_min, *ailerons_max;
     SGPropertyNode *rudder_center, *rudder_min, *rudder_max;
+    SGPropertyNode *brake_left_min, *brake_left_max;
+    SGPropertyNode *brake_right_min, *brake_right_max;
     SGPropertyNode *throttle_min, *throttle_max;
     SGPropertyNode *mixture_min, *mixture_max;
     SGPropertyNode *trim_center, *trim_min, *trim_max;
