@@ -120,10 +120,10 @@ FGEnvironmentMgr::bind ()
 	  &FGEnvironmentMgr::get_cloud_layer_transition_ft,
 	  &FGEnvironmentMgr::set_cloud_layer_transition_ft);
     fgSetArchivable(buf);
-    sprintf(buf, "/environment/clouds/layer[%d]/type", i);
+    sprintf(buf, "/environment/clouds/layer[%d]/coverage", i);
     fgTie(buf, this, i,
-	  &FGEnvironmentMgr::get_cloud_layer_type,
-	  &FGEnvironmentMgr::set_cloud_layer_type);
+	  &FGEnvironmentMgr::get_cloud_layer_coverage,
+	  &FGEnvironmentMgr::set_cloud_layer_coverage);
     fgSetArchivable(buf);
   }
 }
@@ -262,15 +262,17 @@ FGEnvironmentMgr::set_cloud_layer_transition_ft (int index,
 }
 
 const char *
-FGEnvironmentMgr::get_cloud_layer_type (int index) const
+FGEnvironmentMgr::get_cloud_layer_coverage (int index) const
 {
-  switch (thesky->get_cloud_layer(index)->getType()) {
+  switch (thesky->get_cloud_layer(index)->getCoverage()) {
   case SGCloudLayer::SG_CLOUD_OVERCAST:
     return "overcast";
-  case SGCloudLayer::SG_CLOUD_MOSTLY_CLOUDY:
-    return "mostly-cloudy";
-  case SGCloudLayer::SG_CLOUD_MOSTLY_SUNNY:
-    return "mostly-sunny";
+  case SGCloudLayer::SG_CLOUD_BROKEN:
+    return "broken";
+  case SGCloudLayer::SG_CLOUD_SCATTERED:
+    return "scattered";
+  case SGCloudLayer::SG_CLOUD_FEW:
+    return "few";
   case SGCloudLayer::SG_CLOUD_CIRRUS:
     return "cirrus";
   case SGCloudLayer::SG_CLOUD_CLEAR:
@@ -281,24 +283,27 @@ FGEnvironmentMgr::get_cloud_layer_type (int index) const
 }
 
 void
-FGEnvironmentMgr::set_cloud_layer_type (int index, const char * type_name)
+FGEnvironmentMgr::set_cloud_layer_coverage (int index,
+                                            const char * coverage_name)
 {
-  SGCloudLayer::Type type;
-  if (!strcmp(type_name, "overcast"))
-    type = SGCloudLayer::SG_CLOUD_OVERCAST;
-  else if (!strcmp(type_name, "mostly-cloudy"))
-    type = SGCloudLayer::SG_CLOUD_MOSTLY_CLOUDY;
-  else if (!strcmp(type_name, "mostly-sunny"))
-    type = SGCloudLayer::SG_CLOUD_MOSTLY_SUNNY;
-  else if (!strcmp(type_name, "cirrus"))
-    type = SGCloudLayer::SG_CLOUD_CIRRUS;
-  else if (!strcmp(type_name, "clear"))
-    type = SGCloudLayer::SG_CLOUD_CLEAR;
+  SGCloudLayer::Coverage coverage;
+  if (!strcmp(coverage_name, "overcast"))
+    coverage = SGCloudLayer::SG_CLOUD_OVERCAST;
+  else if (!strcmp(coverage_name, "broken"))
+    coverage = SGCloudLayer::SG_CLOUD_BROKEN;
+  else if (!strcmp(coverage_name, "scattered"))
+    coverage = SGCloudLayer::SG_CLOUD_SCATTERED;
+  else if (!strcmp(coverage_name, "few"))
+    coverage = SGCloudLayer::SG_CLOUD_FEW;
+  else if (!strcmp(coverage_name, "cirrus"))
+    coverage = SGCloudLayer::SG_CLOUD_CIRRUS;
+  else if (!strcmp(coverage_name, "clear"))
+    coverage = SGCloudLayer::SG_CLOUD_CLEAR;
   else {
-    SG_LOG(SG_INPUT, SG_WARN, "Unknown cloud type " << type_name);
-    type = SGCloudLayer::SG_CLOUD_CLEAR;
+    SG_LOG(SG_INPUT, SG_WARN, "Unknown cloud type " << coverage_name);
+    coverage = SGCloudLayer::SG_CLOUD_CLEAR;
   }
-  thesky->get_cloud_layer(index)->setType(type);
+  thesky->get_cloud_layer(index)->setCoverage(coverage);
 }
 
 
