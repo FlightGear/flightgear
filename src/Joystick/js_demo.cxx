@@ -38,7 +38,7 @@ int main ( int, char ** )
 
   for ( i = 0 ; i < Z ; i++ )
     if ( useful[i] )
-       printf ( "+---------------JS.%d-----------------", i ) ;
+       printf ( "+--------------------JS.%d----------------------", i ) ;
 
   printf ( "+\n" ) ;
 
@@ -46,15 +46,15 @@ int main ( int, char ** )
    if ( useful[i] )
    {
     if ( js[i]->notWorking () )
-      printf ( "|       ~~~ Not Detected ~~~         " ) ;
+      printf ( "|           ~~~ Not Detected ~~~             " ) ;
     else
     {
       printf ( "| Btns " ) ;
 
       for ( j = 0 ; j < js[i]->getNumAxes () ; j++ )
-        printf ( "Ax:%d ", j ) ;
+        printf ( "Ax:%1d ", j ) ;
 
-      for ( ; j < 6 ; j++ )
+      for ( ; j < 8 ; j++ )
         printf ( "     " ) ;
     }
    }
@@ -63,7 +63,7 @@ int main ( int, char ** )
 
   for ( i = 0 ; i < Z ; i++ )
     if ( useful[i] )
-      printf ( "+------------------------------------" ) ;
+      printf ( "+----------------------------------------------" ) ;
 
   printf ( "+\n" ) ;
 
@@ -73,7 +73,7 @@ int main ( int, char ** )
     if ( useful[i] )
      {
       if ( js[i]->notWorking () )
-        printf ( "|  .   .   .   .   .   .   .   .   . " ) ;
+        printf ( "|  .   .   .   .   .   .   .   .   .   .   . " ) ;
       else
       {
         int b ;
@@ -85,7 +85,7 @@ int main ( int, char ** )
 	for ( j = 0 ; j < js[i]->getNumAxes () ; j++ )
 	  printf ( "%+.1f ", ax[i][j] ) ;
 
-	for ( ; j < 6 ; j++ )
+	for ( ; j < 8 ; j++ )
 	  printf ( "  .  " ) ;
       }
      }
