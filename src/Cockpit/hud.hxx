@@ -46,6 +46,7 @@
 //#  include <values.h>  // for MAXINT
 //#endif
 
+#include <algorithm>    // for_each()
 #include <vector>       // STL vector
 #include <deque>        // STL double ended queue
 #include STL_FSTREAM
@@ -64,6 +65,7 @@
 
 SG_USING_STD(deque);
 SG_USING_STD(vector);
+SG_USING_STD(for_each);
 SG_USING_NAMESPACE(std);
 
 
