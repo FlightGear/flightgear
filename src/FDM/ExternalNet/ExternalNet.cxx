@@ -256,7 +256,7 @@ static void net2global( FGNetFDM *net ) {
                                                   net->v_wind_body_east,
                                                   net->v_wind_body_down );
 
-        fgSetDouble( "/sim/aero/alarms/stall-warning", net->stall_warning );
+        fgSetDouble( "/sim/alarms/stall-warning", net->stall_warning );
         cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
 					       net->A_Y_pilot,
 					       net->A_Z_pilot );

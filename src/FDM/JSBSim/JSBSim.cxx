@@ -151,8 +151,7 @@ FGJSBsim::FGJSBsim( double dt )
     aileron_trim = fgGetNode("/fdm/trim/aileron", true );
     rudder_trim = fgGetNode("/fdm/trim/rudder", true );
     
-    
-    stall_warning = fgGetNode("/sim/aero/alarms/stall-warning",true);
+    stall_warning = fgGetNode("/sim/alarms/stall-warning",true);
     stall_warning->setDoubleValue(0);
     
 
