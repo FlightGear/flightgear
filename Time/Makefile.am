@@ -6,11 +6,9 @@ if HAVE_TIMEZONE
 DEFS += -DHAVE_TIMEZONE
 endif
 
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libTime.a
 
-lib_LTLIBRARIES = libTime.la
-
-libTime_la_SOURCES = \
+libTime_a_SOURCES = \
 	event.cxx event.hxx \
 	fg_time.cxx fg_time.hxx \
 	fg_timer.cxx fg_timer.hxx \

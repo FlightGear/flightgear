@@ -53,6 +53,9 @@
 #define DEGHR(x)        ((x)/15.)
 #define RADHR(x)        DEGHR(x*RAD_TO_DEG)
 
+// #define MK_TIME_IS_GMT 0         // default value
+// #define TIME_ZONE_OFFSET_WORK 0  // default value
+
 
 fgTIME cur_time_params;
 
@@ -210,108 +213,112 @@ double sidereal_precise (double mjd, double lng) {
 }
 
 
-// return a courser but cheaper estimate of sidereal time
-double sidereal_course(struct tm *gmt, time_t now, double lng) {
-    time_t start, start_gmt;
+// Fix up timezone if using ftime()
+long int fix_up_timezone( long int timezone_orig ) {
+#if !defined( HAVE_GETTIMEOFDAY ) && defined( HAVE_FTIME )
+    // ftime() needs a little extra help finding the current timezone
+    struct timeb current;
+    ftime(&current);
+    return( current.timezone * 60 );
+#else
+    return( timezone_orig );
+#endif
+}
+
+
+// Return time_t for Sat Mar 21 12:00:00 GMT
+//
+// I believe the mktime() has a SYSV vs. BSD behavior difference.
+//
+// The BSD style mktime() is nice because it returns its result
+// assuming you have specified the input time in GMT
+//
+// The SYSV style mktime() is a pain because it returns its result
+// assuming you have specified the input time in your local timezone.
+// Therefore you have to go to extra trouble to convert back to GMT.
+//
+// If you are having problems with incorrectly positioned astronomical
+// bodies, this is a really good place to start looking.
+
+time_t get_start_gmt(int year) {
     struct tm mt;
-    long int offset;
-    double diff, part, days, hours, lst;
 
-    // I believe the mktime() has a SYSV vs. BSD behavior difference.
-
-    // The BSD style mktime() is nice because it returns its result
-    // assuming you have specified the input time in GMT
-
-    // The SYSV style mktime() is a pain because it returns its result
-    // assuming you have specified the input time in your local
-    // timezone.  Therefore you have to go to extra trouble to convert
-    // back to GMT.
-
-    // If you are having problems with incorrectly positioned
-    // astronomical bodies, this is a really good place to start
-    // looking.
-
-#if !defined(HAVE_DAYLIGHT)
     // For now we assume that if daylight is not defined in
     // /usr/include/time.h that we have a machine with a BSD behaving
     // mktime()
-    int mktime_is_gmt = 1;
+#   if !defined(HAVE_DAYLIGHT)
+#       define MK_TIME_IS_GMT 1
+#   endif
 
-    // only used for systems with SYSV style mktime() to compensate
-    // for mktime() assuming local timezone but we need to define this
-    // to keep the compiler happy
-    int daylight;
-#else
-    int mktime_is_gmt = 0;
-#endif
-
-#if !defined(HAVE_TIMEZONE)
-    // only used for systems with SYSV style mktime() to compensate
-    // for mktime() assuming local timezone but we need to define this
-    // to keep the compiler happy
-    long int timezone;
-#endif
-
-    // ftime() needs a little extra help finding the current timezone
-#if defined( HAVE_GETTIMEOFDAY )
-#elif defined( HAVE_FTIME )
-    struct timeb current;
-#else
-# error Port me
-#endif
-
-    fgPrintf(FG_EVENT, FG_DEBUG, 
-	     "  COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
-	     gmt->tm_mon, gmt->tm_mday, gmt->tm_year,
-	     gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
+    // timezone seems to work as a proper offset for Linux & Solaris
+#   if defined( __linux__ ) || defined( __sun__ ) 
+#       define TIMEZONE_OFFSET_WORKS 1
+#   endif
 
     mt.tm_mon = 2;
     mt.tm_mday = 21;
-    mt.tm_year = gmt->tm_year;
+    mt.tm_year = year;
     mt.tm_hour = 12;
     mt.tm_min = 0;
     mt.tm_sec = 0;
     mt.tm_isdst = -1; // let the system determine the proper time zone
 
-    if ( mktime_is_gmt ) {
-	start_gmt = mktime(&mt);
-    } else {
-	start = mktime(&mt);
-	daylight = mt.tm_isdst;
+#   if defined( MK_TIME_IS_GMT )
+    return ( mktime(&mt) );
+#   else // ! defined ( MK_TIME_IS_GMT )
 
-	fgPrintf( FG_EVENT, FG_DEBUG, "start1 = %ld\n", start);
-	fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s (tm_isdst = %d)", 
-		  ctime(&start), mt.tm_isdst);
+    long int start = mktime(&mt);
 
-	// ftime() needs a little extra help finding the current timezone
-#if defined( HAVE_GETTIMEOFDAY )
-#elif defined( HAVE_FTIME )
-	ftime(&current);
-	timezone = current.timezone * 60;
-#else
-# error Port me
-#endif
+    fgPrintf( FG_EVENT, FG_DEBUG, "start1 = %ld\n", start);
+    fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s", ctime(&start));
+    fgPrintf( FG_EVENT, FG_DEBUG, "(tm_isdst = %d)\n", mt.tm_isdst);
 
-	if ( daylight > 0 ) {
-	    daylight = 1;
-	} else if ( daylight < 0 ) {
-	    fgPrintf( FG_EVENT, FG_WARN, 
-		      "OOOPS, big time problem in fg_time.c, no daylight savings info.\n");
-	}
+    timezone = fix_up_timezone( timezone );
 
-	offset = -(timezone / 3600 - daylight);
+#   if defined( TIMEZONE_OFFSET_WORKS )
+    fgPrintf( FG_EVENT, FG_DEBUG, 
+	      "start = %ld, timezone = %ld\n", start, timezone );
+    return( start - timezone );
+#   else // ! defined( TIMEZONE_OFFSET_WORKS )
 
-	fgPrintf( FG_EVENT, FG_DEBUG,
-		  "  Raw time zone offset = %ld\n", timezone);
-	fgPrintf( FG_EVENT, FG_DEBUG,
-		  "  Daylight Savings = %d\n", daylight);
-	fgPrintf( FG_EVENT, FG_DEBUG,
-		  "  Local hours from GMT = %ld\n", offset);
-
-	start_gmt = start - timezone + (daylight * 3600);
-
-	fgPrintf( FG_EVENT, FG_DEBUG, "  March 21 noon (CST) = %ld\n", start);
+    daylight = mt.tm_isdst;
+    if ( daylight > 0 ) {
+	daylight = 1;
+    } else if ( daylight < 0 ) {
+	fgPrintf( FG_EVENT, FG_WARN, 
+		  "OOOPS, problem in fg_time.cxx, no daylight savings info.\n");
     }
+
+    long int offset = -(timezone / 3600 - daylight);
+
+    fgPrintf( FG_EVENT, FG_DEBUG,
+	      "  Raw time zone offset = %ld\n", timezone);
+    fgPrintf( FG_EVENT, FG_DEBUG,
+	      "  Daylight Savings = %d\n", daylight);
+    fgPrintf( FG_EVENT, FG_DEBUG,
+	      "  Local hours from GMT = %ld\n", offset);
+    
+    long int start_gmt = start - timezone + (daylight * 3600);
+    
+    fgPrintf( FG_EVENT, FG_DEBUG, "  March 21 noon (CST) = %ld\n", start);
+
+    return ( start_gmt );
+#   endif // ! defined( TIMEZONE_OFFSET_WORKS )
+#   endif // ! defined ( MK_TIME_IS_GMT )
+}
+
+
+// return a courser but cheaper estimate of sidereal time
+double sidereal_course(struct tm *gmt, time_t now, double lng) {
+    time_t start_gmt;
+    double diff, part, days, hours, lst;
+
+    start_gmt = get_start_gmt(gmt->tm_year);
+
+    fgPrintf(FG_EVENT, FG_DEBUG, 
+	     "  COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
+	     gmt->tm_mon, gmt->tm_mday, gmt->tm_year,
+	     gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
 
     fgPrintf( FG_EVENT, FG_DEBUG, "  March 21 noon (GMT) = %ld\n", start_gmt);
 
@@ -402,6 +409,13 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.9  1998/06/12 00:59:53  curt
+// Build only static libraries.
+// Declare memmove/memset for Sloaris.
+// Rewrote fg_time.c routine to get LST start seconds to better handle
+//   Solaris, and be easier to port, and understand the GMT vs. local
+//   timezone issues.
+//
 // Revision 1.8  1998/06/05 18:18:13  curt
 // Incorporated some automake conditionals to try to support mktime() correctly
 // on a wider variety of platforms.

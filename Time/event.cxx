@@ -44,13 +44,6 @@
 #include "event.hxx"
 
 
-#ifdef __sun__
-extern "C" {
-  extern void *memmove(void *, const void *, size_t);
-}
-#endif
-
-
 fgEVENT_MGR global_events;
 
 
@@ -242,6 +235,13 @@ void fgEventPrintStats( void ) {
 
 
 // $Log$
+// Revision 1.5  1998/06/12 00:59:52  curt
+// Build only static libraries.
+// Declare memmove/memset for Sloaris.
+// Rewrote fg_time.c routine to get LST start seconds to better handle
+//   Solaris, and be easier to port, and understand the GMT vs. local
+//   timezone issues.
+//
 // Revision 1.4  1998/06/05 18:18:12  curt
 // Incorporated some automake conditionals to try to support mktime() correctly
 // on a wider variety of platforms.
