@@ -159,7 +159,7 @@ fgLoadAircraft (const SGPropertyNode * arg)
     globals->restoreInitialState();
 
     fgSetString("/sim/aircraft", aircraft.c_str());
-    fgSetString("/sim/panel/path", "Aircraft/c172/Panels/c172-vfr-panel.xml");
+    fgSetString("/sim/panel/path", "Aircraft/c172p/Panels/c172-vfr-panel.xml");
 
     if ( aircraft.size() > 0 ) {
         SGPath aircraft_path(globals->get_fg_root());
@@ -183,7 +183,7 @@ fgLoadAircraft (const SGPropertyNode * arg)
     // Initialize the (new) 2D panel.
     //
     string panel_path = fgGetString("/sim/panel/path",
-                                    "Aircraft/c172/Panels/c172-vfr-panel.xml");
+                                    "Aircraft/c172p/Panels/c172-vfr-panel.xml");
 
     FGPanel *panel = fgReadPanel(panel_path);
     if (panel == 0) {

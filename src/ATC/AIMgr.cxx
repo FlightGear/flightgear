@@ -75,7 +75,7 @@ void FGAIMgr::init() {
 	
 	// Load up models at the start to avoid pausing later
 	// Hack alert - Hardwired paths!!
-	string planepath = "Aircraft/c172/Models/c172-dpm.ac";
+	string planepath = "Aircraft/c172r/Models/c172-dpm.ac";
 	bool _loadedDefaultOK = true;
 	try {
 		_defaultModel = sgLoad3DModel( globals->get_fg_root(),
