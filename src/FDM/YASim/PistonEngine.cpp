@@ -125,7 +125,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
 {
     if (_magnetos == 0) {
       _running = false;
-      _mp = _rho0;
+      _mp = pressure;
       _torque = 0;
       _fuelFlow = 0;
       _egt = 80;		// FIXME: totally made-up
