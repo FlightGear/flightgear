@@ -2,10 +2,10 @@
 *                                              * 
 *  FGFS Reconfigurable Aircraft Flight Model   *
 *  Input File Documentation                    * 
-*  Version 0.63, March 17, 2000                *
+*  Version 0.64, March 28, 2000                *
 *                                              *
 *  Authors:                                    *
-*  Jeff Scott (jscott@uiuc.edu)                *
+*  Jeff Scott (jscott@mail.com)                *
 *  Bipin Sehgal (bsehgal@uiuc.edu)             *
 *  Michael Selig (m-selig@uiuc.edu)            *
 *  Dept of Aero and Astro Engineering          *
@@ -15,14 +15,14 @@
 *                                              *
 ************************************************ 
 
- 
+
 **********************************************************************
 This documentation includes:
  - Required and optional input lines.
  - Input line formats and conventions.
 
-Viewing this file in emacs makefile-mode with color makes this file
-easier to read.
+  Viewing this file in emacs makefile-mode with color makes this file
+  easier to read.
 **********************************************************************
 
 **********************************************************************
@@ -33,6 +33,7 @@ I. Conventions and Notations and Reading this Document:
  |         Optional data
  |         Sometimes indicates a feature not yet used,
            but proposed convention is indicated nevertheless.
+ <...>	   Value or file name to be placed here
  ||        Input line disabled
  ||        Option disabled
  ...       Repeat similar data
@@ -73,8 +74,8 @@ CY              Aerodynamic y-force quantities (lateral)
 Cl              Aerodynamic l-moment quantities (lateral)
 Cn              Aerodynamic n-moment quantities (lateral)
 |gear           Landing gear model quantities
-ice             Aircraft icing model parameters
-record          Record desired quantities to the file: uiuc_record.dat
+ice             Icing model parameters
+record          Record desired quantites to file
 
 As each line of the input file is read, the code recognizes the
 keyword, enters the appropriate switch statement in the code, and
@@ -103,7 +104,7 @@ The conventions used for naming the variables are provided below.
 Several of these variable names are not currently used.
 
 1) variable class
-_       denotes stability derivative to be multiple by something
+_       denotes stability derivative to be multiplied by something
 f       "function of" (indicates an m*n matrix data table is given)
 
 2) timing data (global simulator variables)
@@ -140,7 +141,7 @@ M          Mach number                   []
 Re         Reynolds number               []
 
 4) atmosphere properties
-Density          air density             [slug/ft^3]
+Density    air density                   [slug/ft^3]
 
 5) geometric variables
 bw        wingspan                       [ft]
@@ -231,7 +232,7 @@ M_n_rp      total yaw-moment                    [ft-lb]
 |muGear gear rolling friction coef       [?]
 |strutLength  gear strut length          [ft]
 
-12) icing model paramters
+12) icing model parameters
 iceTime       time when icing begins                         [s]
 transientTime time period over which eta increases to final  [s]
 eta_final     icing severity factor at end of transient time [-]
@@ -259,7 +260,7 @@ df      flap deflection
 max     maximum
 min     minimum
 
-(3) | (OPTIONAL DATA)
+(3) | [OPTIONAL DATA]
 =====================
 
 An input line may also be used to provide optional data that
@@ -268,7 +269,7 @@ operate.  As with the variable data described in section (2), multiple
 values or data files may be provided if the code is written to use 
 them.
 
-(4) # (COMMENTS)
+(4) # [COMMENTS]
 ================
 
 Appended comments should be provided with each input line to indicate 
@@ -300,11 +301,11 @@ CD CDfCL                # CD(CL), drag calculated in code based on CL
 **********************************************************************
 
 **********************************************************************
-IV. Definitions of Input Lines Currently Available:
+IV. Input Line Definitions:
 
-Of all the possible permutation of variable names described above in
-section II, only some are currently implemented in the code.  These
-are described below.  Comments, denoted by '#,' are used to define the
+Of all the possible permutations of variable names described above in
+section II, only some are curently implemented in the code.  These are
+described below.  Comments, denoted by '#,' are used to define the
 lines and to indicate examples of the data if additional clarity is
 needed for unique situations.  Again, those lines beginning with '|'
 are not currently implemented in the code, but indicate planned
@@ -366,9 +367,15 @@ mass I_yy <I_yy>        # [slug-ft^2] pitch inertia                     ls_gener
 mass I_zz <I_zz>        # [slug-ft^2] yaw inertia                       ls_generic.h
 mass I_xz <I_xz>        # [slug-ft^2] lateral cross inertia             ls_generic.h
 
-|engine thrust <thrustMax> <thrustMin> # [lb]  max/min engine thrust    uiuc_aircraft.h
-engine simpleSingle <sSMaxThrust> # [lb] simple single engine           uiuc_aircraft.h
-engine c172             # use Cessna 172 engine model of Tony Peden      
+
+# maximum and minimum engine thrust				[lb]	uiuc_aircraft.h
+|engine thrust <thrustMax> <thrustMin>
+
+# simple single engine maximum thrust				[lb]	uiuc_aircraft.h
+engine simpleSingle <simpleSingleMaxThrust>
+
+engine c172             # use Cessna 172 engine model of Tony Peden
+
 
 CL CLo <CLo>            # []          lift coef for all angles = 0      uiuc_aircraft.h
 CL CL_a <CL_a>          # [/rad]      lift curve slope, d(CL)/d(alpha)  uiuc_aircraft.h
@@ -385,7 +392,8 @@ CL CLfade <CLfade.dat> <conversion1> <conversion2> <conversion3>
 |CL CLfCT <CLfCT.dat>   #             CL(thrust coef)                   uiuc_aircraft.h
 |CL CLfRe               #             CL(Reynolds #), equation          uiuc_aircraft.h
 |CL CL_afaM <CL_afaM.dat> #           CL_alpha(alpha,Mach #)            uiuc_aircraft.h
-# there are examples that might later be included in the code
+   # these are sample examples that might be used in later versions of the code
+
 
 # note that CD terms must come after CL for induced drag to be computed
 CD CDo <CDo>            # []          drag coef for all angles = 0      uiuc_aircraft.h
@@ -407,8 +415,10 @@ Cm Cm_q <Cm_q>          # [/rad]      d(Cm)/d(q)                        uiuc_air
 Cm Cm_de <Cm_de>        # [/rad]      d(Cm)/d(de)                       uiuc_aircraft.h
 |Cm Cmfa <Cmfa.dat>     # []          Cm(alpha)                         uiuc_aircraft.h
 Cm Cmfade <Cmfade.dat>  # []          Cm(alpha,delta_e)                 uiuc_aircraft.h
+
 # Cm(alpha,delta_e), conversion for Cm, for alpha, for delta_e      []  uiuc_aircraft.h
 Cm Cmfade <Cmfade.dat> <conversion1> <conversion2> <conversion3>
+
 
 CY CYo <CYo>            # []          side-force coef for all angles=0  uiuc_aircraft.h
 CY CY_beta <CY_beta>    # [/rad]      d(CY)/d(beta)                     uiuc_aircraft.h
