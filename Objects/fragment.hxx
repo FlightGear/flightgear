@@ -41,17 +41,20 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <Include/compiler.h>
+
 #include <vector>
 
 #include <Bucket/bucketutils.h>
-// #include <Include/fg_types.h>
-#include "Include/fg_constants.h"
+#include <Include/fg_constants.h>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 
-#include <Include/compiler.h>
-//FG_USING_NAMESPACE(std);
 FG_USING_STD(vector);
+
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_NAMESPACE(std);
+#endif
 
 // Maximum nodes per tile
 #define MAX_NODES 2000
@@ -179,6 +182,9 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.8  1999/02/26 22:09:57  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.7  1998/11/02 18:29:00  curt
 // Portability changes for the Borland compiler.
 //

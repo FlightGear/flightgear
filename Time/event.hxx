@@ -31,20 +31,23 @@
 #endif                                   
 
 
-#include "Include/compiler.h"
-#include "Include/fg_callback.hxx"
+#include <Include/compiler.h>
+#include <Include/fg_callback.hxx>
 
 #include <deque>        // STL double ended queue
 #include <list>         // STL list
-#include <string>
+#include STL_STRING
+
+#include "fg_time.hxx"
+#include "timestamp.hxx"
 
 FG_USING_STD(deque);
 FG_USING_STD(list);
 FG_USING_STD(string);
 
-#include "fg_time.hxx"
-#include "timestamp.hxx"
-
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_NAMESPACE(std);
+#endif
 
 class fgEVENT
 {
@@ -166,6 +169,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.17  1999/02/26 22:10:08  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.16  1999/01/09 13:37:43  curt
 // Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
 //

@@ -33,12 +33,9 @@
 #include STL_STRING
 #include STL_IOSTREAM                                           
 #include <vector>                                                               
-#include "Include/fg_stl_config.h"                                              
 
-FG_USING_NAMESPACE(std);
-
-#include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
+#include <Aircraft/aircraft.hxx>
 #include <Include/fg_constants.h>
 #include <Serial/serial.hxx>
 #include <Time/fg_time.hxx>
@@ -47,6 +44,7 @@ FG_USING_NAMESPACE(std);
 
 #include "fg_serial.hxx"
 
+FG_USING_NAMESPACE(std);
 
 // support an arbitrary number of serial channels.  Each channel can
 // be assigned to an arbitrary port.  Bi-directional communication is
@@ -468,6 +466,9 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.12  1999/02/26 22:09:50  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.11  1999/02/05 21:29:11  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

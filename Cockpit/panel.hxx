@@ -106,7 +106,7 @@ void CreatePointer(Pointer *pointer);
 void UpdatePointer(Pointer *pointer);
 void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,
 		 GLfloat texYPos, GLfloat XPos, GLfloat YPos,
-		 int Texid, float ScaleFactor = 1);
+		 int Texid, float ScaleFactor);
 void fgUpdateTurnCoordinator(TurnCoordinator *turn); 
 void fgInitTurnCoordinator(TurnCoordinator *turn);
 void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,
@@ -120,6 +120,9 @@ void PrintMatrix( void);
 
 
 // $Log$
+// Revision 1.7  1999/02/26 22:08:47  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.6  1999/02/12 01:46:30  curt
 // Updates and fixes from Friedemann.
 //

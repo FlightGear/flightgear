@@ -1,5 +1,5 @@
 //
-// airports.hxx -- a really simplistic class to manage airport ID,
+// simple.hxx -- a really simplistic class to manage airport ID,
 //                 lat, lon of the center of one of it's runways, and 
 //                 elevation in feet.
 //
@@ -34,13 +34,12 @@
 #endif                                   
 
 
-#include <string>        // Standard C++ string library
-#include <set>
-#include "Include/fg_stl_config.h"
+#include <Include/compiler.h>
 
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
+#include STL_STRING
+#include <set>
+
+FG_USING_NAMESPACE(std);
 
 
 class fgAIRPORT {
@@ -105,6 +104,9 @@ public:
 
 
 // $Log$
+// Revision 1.6  1999/02/26 22:08:36  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.5  1998/11/02 18:25:34  curt
 // Check for __CYGWIN__ (b20) as well as __CYGWIN32__ (pre b20 compilers)
 // Other misc. tweaks.

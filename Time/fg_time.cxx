@@ -27,7 +27,7 @@
 #  include <config.h>
 #endif
 
-#include "Include/compiler.h"
+#include <Include/compiler.h>
 
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <cmath>
@@ -51,9 +51,9 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
+#include <Debug/logstream.hxx>
 #include <Astro/sky.hxx>
 #include <Astro/solarsystem.hxx>
-#include <Debug/logstream.hxx>
 #include <FDM/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
@@ -399,6 +399,9 @@ void fgTimeUpdate(FGInterface *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.32  1999/02/26 22:10:10  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.31  1999/02/05 21:29:18  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

@@ -35,12 +35,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <Debug/logstream.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Astro/solarsystem.hxx>
 #include <Astro/sky.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/hud.hxx>
-#include <Debug/logstream.hxx>
 #include <GUI/gui.h>
 #include <Include/fg_constants.h>
 #include <Objects/material.hxx>
@@ -434,6 +434,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.42  1999/02/26 22:09:46  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.41  1999/02/12 23:22:43  curt
 // Allow auto-throttle adjustment while active.
 //

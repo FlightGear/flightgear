@@ -23,7 +23,6 @@
 
 
 #include <Include/fg_constants.h>
-// #include <Include/fg_types.h>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Scenery/tile.hxx>
@@ -324,6 +323,9 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 }
 
 // $Log$
+// Revision 1.7  1999/02/26 22:09:56  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.6  1998/10/18 01:17:20  curt
 // Point3D tweaks.
 //

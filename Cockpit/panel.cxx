@@ -557,7 +557,7 @@ void fgPanelUpdate ( void ) {
     var[0] = get_speed() * 1.4; // We have to multiply the airspeed by a 
                                 // factor, to simulate flying a Bonanza 
     var[1] = get_altitude();
-    var[2] = get_climb_rate(); 
+    var[2] = get_climb_rate() / 1000.0; 
     var[3] = get_throttleval();
     // v = &current_view;
     xglMatrixMode(GL_PROJECTION);
@@ -580,7 +580,7 @@ void fgPanelUpdate ( void ) {
     xglLoadIdentity();
     xglTranslatef(pointer[i].XPos, pointer[i].YPos, 0.0);
     xglRotatef(-pointer[i].tape[0], 0.0, 0.0, 1.0);
-    fgEraseArea(pointer[i].vertices, 20, (GLfloat)(pointer[i].teXpos),                          (GLfloat)(pointer[i].texYpos), (GLfloat)(pointer[i].XPos),                      (GLfloat)(pointer[i].YPos), 0);
+    fgEraseArea(pointer[i].vertices, 20, (GLfloat)(pointer[i].teXpos),                          (GLfloat)(pointer[i].texYpos), (GLfloat)(pointer[i].XPos),                      (GLfloat)(pointer[i].YPos), 0, 1);
     xglLoadIdentity();
     }
 
@@ -1112,6 +1112,9 @@ printf("         %f %f %f %f \n", mvmatrix[12], mvmatrix[13], mvmatrix[14], mvma
 }
 
 // $Log$
+// Revision 1.16  1999/02/26 22:08:46  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.15  1999/02/12 01:46:29  curt
 // Updates and fixes from Friedemann.
 //

@@ -1,5 +1,5 @@
 //
-// airports.cxx -- a really simplistic class to manage airport ID,
+// simple.cxx -- a really simplistic class to manage airport ID,
 //                 lat, lon of the center of one of it's runways, and 
 //                 elevation in feet.
 //
@@ -25,17 +25,17 @@
 // (Log is kept at end of this file)
 
 
-#include <string>
+#include <Include/compiler.h>
 
 #include <Debug/logstream.hxx>
-#include <Main/options.hxx>
 #include <Misc/fgstream.hxx>
+#include <Main/options.hxx>
 
-#include "simple.hxx"
-
-#include "Include/fg_stl_config.h"
+#include STL_STRING
 #include STL_FUNCTIONAL
 #include STL_ALGORITHM
+
+#include "simple.hxx"
 
 
 fgAIRPORTS::fgAIRPORTS() {
@@ -110,6 +110,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.10  1999/02/26 22:08:35  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.9  1998/11/06 21:17:34  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

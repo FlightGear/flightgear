@@ -33,10 +33,10 @@
 #include <string>
 
 #include <Debug/logstream.hxx>
+#include <Misc/fgstream.hxx>
 #include <FDM/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
-#include <Misc/fgstream.hxx>
 
 #include "fg_serial.hxx"
 
@@ -631,6 +631,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.40  1999/02/26 22:09:51  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.39  1999/02/05 21:29:12  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

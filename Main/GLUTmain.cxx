@@ -53,6 +53,7 @@
 #include <Include/fg_constants.h>  // for VERSION
 #include <Include/general.hxx>
 
+#include <Debug/logstream.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
@@ -65,7 +66,6 @@
 
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
-#include <Debug/logstream.hxx>
 #include <GUI/gui.h>
 #include <Joystick/joystick.hxx>
 #include <Math/fg_geodesy.hxx>
@@ -1007,6 +1007,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.86  1999/02/26 22:09:47  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.85  1999/02/05 21:29:08  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

@@ -39,7 +39,8 @@
 #  include <config.h>
 #endif
 
-#include "Include/compiler.h"
+#include <Include/compiler.h>
+
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <cmath>
 #  include <cstdio>
@@ -50,10 +51,8 @@
 #  include <time.h>
 #endif
 
-
-//#include <Astro/orbits.hxx>
-#include <Astro/solarsystem.hxx>
 #include <Debug/logstream.hxx>
+#include <Astro/solarsystem.hxx>
 #include <Include/fg_constants.h>
 #include <Main/views.hxx>
 #include <Math/fg_geodesy.hxx>
@@ -435,6 +434,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.20  1999/02/26 22:10:11  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.19  1999/01/07 20:25:37  curt
 // Portability changes and updates from Bernie Bright.
 //

@@ -35,34 +35,35 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#if defined ( __sun__ )
-extern "C" void *memmove(void *, const void *, size_t);
-extern "C" void *memset(void *, int, size_t);
-#endif
+// #if defined ( __sun__ )
+// extern "C" void *memmove(void *, const void *, size_t);
+// extern "C" void *memset(void *, int, size_t);
+// #endif
 
-#include <string>       // Standard C++ library
+#include <Include/compiler.h>
+
+#include STL_STRING
 #include <map>          // STL
 #include <ctype.h>      // isdigit()
 
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
-
 #include <Debug/logstream.hxx>
+#include <Misc/fgstream.hxx>
 #include <Include/fg_constants.h>
-#include <Include/fg_zlib.h>
 #include <Main/options.hxx>
 #include <Math/mat3.h>
 #include <Math/fg_random.h>
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Misc/stopwatch.hxx>
-#include <Misc/fgstream.hxx>
 #include <Scenery/tile.hxx>
 
 #include "material.hxx"
 #include "obj.hxx"
 
+FG_USING_STD(string);
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_NAMESPACE(std);
+#endif
 
 static double normals[MAX_NODES][3];
 
@@ -555,6 +556,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.11  1999/02/26 22:09:59  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.10  1998/11/06 21:18:18  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

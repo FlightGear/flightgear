@@ -44,14 +44,14 @@
 #include <XGL/xgl.h>
 
 #include STL_STRING
-FG_USING_STD(string);
-
 #include <vector>
-#include "Include/compiler.h"
+
 FG_USING_STD(vector);
 FG_USING_STD(string);
-// #include "fg_serial.hxx"
 
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_NAMESPACE(std);
+#endif
 
 typedef vector < string > str_container;
 typedef str_container::iterator str_iterator;
@@ -245,6 +245,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.28  1999/02/26 22:09:52  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.27  1999/02/05 21:29:13  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

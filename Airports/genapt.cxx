@@ -23,18 +23,19 @@
 // (Log is kept at end of this file)
 
 
-#include <string>        // Standard C++ string library
-#include <vector>
-#include "Include/fg_stl_config.h"
+#include <Include/compiler.h>
 
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
+#include STL_STRING
+#include <vector>
 
 #ifdef __BORLANDC__
 #  define exception c_exception
 #endif
 #include <math.h>
+
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+#  include <strings.h>
+#endif
 
 #include <Debug/logstream.hxx>
 // #include <Include/fg_types.h>
@@ -48,6 +49,8 @@ using namespace std;
 // #include <gpc/gpc.h>
 
 #include "genapt.hxx"
+
+FG_USING_NAMESPACE(std);
 
 
 typedef vector < Point3D > container;
@@ -235,7 +238,7 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	if ( token == "a" ) {
 	    // airport info record (start of airport)
 
-	    if ( apt_id != "" ) {
+	    if ( apt_id.length() > 0 ) {
 		// we have just finished reading and airport record.
 		// process the info
 		gen_base(average, perimeter, tile);
@@ -274,7 +277,7 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	in >> skipcomment;
     }
 
-    if ( apt_id != "" ) {
+    if ( apt_id.length() > 0 ) {
 	// we have just finished reading and airport record.
 	// process the info
 	size = perimeter.size();
@@ -290,6 +293,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.13  1999/02/26 22:08:34  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.12  1999/02/01 21:08:33  curt
 // Optimizations from Norman Vine.
 //

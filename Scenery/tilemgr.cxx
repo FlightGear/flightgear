@@ -35,8 +35,8 @@
 
 #include <Aircraft/aircraft.hxx>
 
-#include <Bucket/bucketutils.hxx>
 #include <Debug/logstream.hxx>
+#include <Bucket/bucketutils.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
@@ -758,6 +758,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.54  1999/02/26 22:10:05  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.53  1999/02/05 21:29:16  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

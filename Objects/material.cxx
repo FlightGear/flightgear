@@ -33,19 +33,26 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <string.h>
-#include <string>
+#include <Include/compiler.h>
 
-#include "Include/fg_stl_config.h"
+#include <string.h>
+#include STL_STRING
+
 #include <Debug/logstream.hxx>
-#include <Main/options.hxx>
 #include <Misc/fgstream.hxx>
+#include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Scenery/tile.hxx>
 
 #include "material.hxx"
 #include "fragment.hxx"
 #include "texload.h"
+
+FG_USING_STD(string);
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_NAMESPACE(std);
+#endif
+
 
 
 // global material management class
@@ -361,6 +368,9 @@ fgMATERIAL_MGR::render_fragments()
 
 
 // $Log$
+// Revision 1.13  1999/02/26 22:09:58  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.12  1998/12/09 18:50:30  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.

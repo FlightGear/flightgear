@@ -23,18 +23,18 @@
  * (Log is kept at end of this file)
  **************************************************************************/
 
-#include <FDM/flight.hxx>
-
 #include <string.h>
-#include "moon.hxx"
+
 #include <Debug/logstream.hxx>
 #include <Objects/texload.h>
-
+#include <FDM/flight.hxx>
 
 #ifdef __BORLANDC__
 #  define exception c_exception
 #endif
 #include <math.h>
+
+#include "moon.hxx"
 
 static GLuint moon_texid;
 static GLubyte *moon_texbuf;

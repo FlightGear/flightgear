@@ -53,9 +53,7 @@
 
 #include <deque>        // STL double ended queue
 
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
+FG_USING_NAMESPACE(std);
 
 #ifndef WIN32
   typedef struct {
@@ -524,6 +522,9 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 // $Log$
+// Revision 1.18  1999/02/26 22:08:45  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.17  1999/02/01 21:33:28  curt
 // Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
 // Jon accepted my offer to do this and thought it was a good idea.

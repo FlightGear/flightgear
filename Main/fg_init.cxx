@@ -37,10 +37,13 @@
 #  define _G_NO_EXTERN_TEMPLATES
 #endif
 
-#include <string>
+#include <Include/compiler.h>
+
+#include STL_STRING
 
 #include <Include/fg_constants.h>
 
+#include <Debug/logstream.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
 #include <Astro/sky.hxx>
@@ -48,7 +51,6 @@
 #include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
-#include <Debug/logstream.hxx>
 #include <Joystick/joystick.hxx>
 #include <Math/fg_geodesy.hxx>
 #include <Math/fg_random.h>
@@ -67,6 +69,10 @@
 #include "views.hxx"
 #include "fg_serial.hxx"
 
+FG_USING_STD(string);
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_NAMESPACE(std);
+#endif
 
 extern const char *default_root;
 
@@ -392,6 +398,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.67  1999/02/26 22:09:48  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.66  1999/02/05 21:29:10  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

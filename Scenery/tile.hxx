@@ -41,18 +41,23 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <vector>
-#include <string>
+#include <Include/compiler.h>
 
-#include "Include/compiler.h"
-FG_USING_STD(string);
-FG_USING_STD(vector);
+#include <vector>
+#include STL_STRING
 
 #include <Bucket/bucketutils.h>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Objects/fragment.hxx>
 
+FG_USING_STD(string);
+FG_USING_STD(vector);
+
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+#include <strings.h>
+FG_USING_NAMESPACE(std);
+#endif
 
 // Scenery tile class
 class fgTILE {
@@ -157,6 +162,9 @@ private:
 
 
 // $Log$
+// Revision 1.24  1999/02/26 22:10:02  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.23  1999/02/02 20:13:41  curt
 // MSVC++ portability changes by Bernie Bright:
 //

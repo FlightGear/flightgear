@@ -33,9 +33,9 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <Debug/logstream.hxx>
 #include <Airports/genapt.hxx>
 #include <Bucket/bucketutils.hxx>
-#include <Debug/logstream.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Objects/obj.hxx>
@@ -181,6 +181,9 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.22  1999/02/26 22:10:04  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.21  1998/12/09 18:50:32  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.
