@@ -80,9 +80,9 @@ static void raw2global( const FGRawFDM *raw, FGInterface *global ) {
 	// cout << "pos = " << raw->longitude << " " << raw->latitude << endl;
 	// cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius() << endl;
 	cur_fdm_state->_updateGeodeticPosition( raw->latitude,
-						  raw->longitude,
-						  raw->altitude
-						    * SG_METER_TO_FEET );
+						raw->longitude,
+						raw->altitude
+						  * SG_METER_TO_FEET );
 	cur_fdm_state->_set_Euler_Angles( raw->phi,
 					  raw->theta,
 					  raw->psi );

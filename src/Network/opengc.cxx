@@ -1,4 +1,8 @@
-// opengc.cxx -- 
+// opengc.cxx - Network interface program to send sim data onto a LAN
+//
+// Created by: 	J. Wojnaroski  -- castle@mminternet.com
+// Date:		21 Nov 2001 
+//
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -60,6 +64,9 @@ static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
     FGEngInterface 	*p_engine[4];  // four is enough unless you're a BUF
 
     p_engine[0] = cur_fdm_state->get_engine(0);
+    p_engine[1] = cur_fdm_state->get_engine(1);
+
+    data->version_id = 0x0011;
 
     data->latitude = fdm->get_Longitude_deg();   
     data->longitude = cur_fdm_state->get_Latitude_deg();
@@ -73,25 +80,23 @@ static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
 
     data->magvar = globals->get_mag()->get_magvar();
 
-// engine data, for now set the 2nd engine equal to the first
-
     data->rpm[0] = p_engine[0]->get_RPM();
-    data->rpm[1] = p_engine[0]->get_RPM();
+    data->rpm[1] = p_engine[1]->get_RPM();
 
     data->epr[0] = p_engine[0]->get_Manifold_Pressure();
-    data->epr[1] = p_engine[0]->get_Manifold_Pressure();
+    data->epr[1] = p_engine[1]->get_Manifold_Pressure();
 
     data->egt[0] = p_engine[0]->get_EGT();
-    data->egt[1] = p_engine[0]->get_EGT();
+    data->egt[1] = p_engine[1]->get_EGT();
 
     data->oil_pressure[0] = p_engine[0]->get_Oil_Pressure();
-    data->oil_pressure[1] = p_engine[0]->get_Oil_Pressure();
+    data->oil_pressure[1] = p_engine[1]->get_Oil_Pressure();
 
 
 // navigation data
 // Once OPenGC develops a comparable navaids database some of this will not be required
 
-//data->nav1_ident = current_radiostack->get_nav1_ident();
+    //data->nav1_ident = current_radiostack->get_nav1_ident();
     data->nav1_freq = current_radiostack->get_nav1_freq();
     data->nav1_radial = current_radiostack->get_nav1_sel_radial();
     data->nav1_course_dev = current_radiostack->get_nav1_heading_needle_deflection(); 
@@ -150,3 +155,4 @@ bool FGOpenGC::close() {
 
     return true;
 }
+
