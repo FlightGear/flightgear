@@ -34,6 +34,8 @@ genapts_SOURCES = \
 
 genapts_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
+	$(top_builddir)/Lib/Debug/libDebug.a \
+	$(top_builddir)/Lib/Misc/libMisc.a \
 	$(top_builddir)/Lib/zlib/libz.a \
 	$(base_LIBS)
 
@@ -42,6 +44,9 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1999/02/11 01:10:50  curt
+# Start of scenery revamp project.
+#
 # Revision 1.3  1998/11/04 23:01:54  curt
 # Changes to the automake/autoconf system to reduce the number of libraries
 # that are unnecessarily linked into the various executables.
