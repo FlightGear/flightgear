@@ -30,8 +30,7 @@
 #include <simgear/io/sg_file.hxx>
 #include <simgear/io/sg_serial.hxx>
 #include <simgear/io/sg_socket.hxx>
-
-#include <simgear/math/fg_types.hxx>
+#include <simgear/math/sg_types.hxx>
 
 #include <Main/options.hxx>
 

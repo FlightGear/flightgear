@@ -31,11 +31,11 @@
 #include <FDM/LaRCsim/ls_generic.h>
 #include <FDM/LaRCsim/ls_interface.h>
 
-#include "10520d.hxx"
+#include "IO360.hxx"
 #include "LaRCsim.hxx"
 
 
-// #define USE_NEW_ENGINE_CODE 1
+#define USE_NEW_ENGINE_CODE 1
 FGEngine eng;
 
 
@@ -89,12 +89,24 @@ int FGLaRCsim::update( int multiloop ) {
     // update simple engine model
     eng.set_IAS( V_calibrated_kts );
     eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
-    eng.set_Propeller_Lever_Pos( 95 );
-    eng.set_Mixture_Lever_Pos( 100 );
+    eng.set_Propeller_Lever_Pos( 100 );
+    eng.set_Mixture_Lever_Pos( 80 );
     eng.update();
-    cout << "  Thrust = " << eng.get_FGProp1_Thrust() << endl;
-    F_X_engine = eng.get_FGProp1_Thrust() * 1.5;
-#endif
+
+#if 0
+    cout << "Throttle = " << controls.get_throttle( 0 ) * 100.0;
+    cout << " Mixture = " << 80;
+    cout << " RPM = " << eng.get_RPM();
+    cout << " MP = " << eng.get_Manifold_Pressure();
+    cout << " HP = " << ( eng.get_MaxHP() * eng.get_Percentage_Power()
+			  / 100.0 );
+    cout << " EGT = " << eng.get_EGT();
+    cout << " Thrust (N) " << eng.get_prop_thrust_SI();	// Thrust in Newtons
+    cout << '\n';
+#endif // 0
+    
+    F_X_engine = eng.get_prop_thrust_SI() * 0.07;
+#endif // USE_NEW_ENGINE_CODE
 
     double save_alt = 0.0;
     double time_step = (1.0 / current_options.get_model_hz()) * multiloop;

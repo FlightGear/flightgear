@@ -30,8 +30,8 @@
 #endif
 
 #include <simgear/constants.h>
+#include <simgear/math/sg_types.hxx>
 #include <simgear/misc/props.hxx>
-#include <simgear/math/fg_types.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>
 #include <Main/bfi.hxx>

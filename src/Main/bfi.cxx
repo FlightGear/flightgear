@@ -34,7 +34,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/math/fg_types.hxx>
+#include <simgear/math/sg_types.hxx>
 #include <simgear/misc/props.hxx>
 #include <simgear/timing/sg_time.hxx>
 

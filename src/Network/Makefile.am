@@ -5,6 +5,7 @@ libNetwork_a_SOURCES = \
 	native.cxx native.hxx \
 	garmin.cxx garmin.hxx \
 	nmea.cxx nmea.hxx \
+	props.cxx props.hxx \
 	pve.cxx pve.hxx \
 	ray.cxx ray.hxx \
 	rul.cxx rul.hxx \

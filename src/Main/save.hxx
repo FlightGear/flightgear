@@ -31,7 +31,7 @@
 #  include <config.h>
 #endif
 
-#include <simgear/math/fg_types.hxx>
+#include <simgear/math/sg_types.hxx>
 #include <iostream>
 
 FG_USING_NAMESPACE(std);

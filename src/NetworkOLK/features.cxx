@@ -29,7 +29,7 @@
 #  include <iostream>
 #endif
 
-#include <simgear/math/fg_types.hxx>
+#include <simgear/math/sg_types.hxx>
 
 FG_USING_NAMESPACE(std);
 
