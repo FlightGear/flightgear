@@ -222,7 +222,7 @@ void FGLaRCsim::update( double dt ) {
     // if flying uiuc, set some properties and over-ride some previous ones
     if ( !strcmp(aero->getStringValue(), "uiuc")) {
 
-      // surface positions
+      // surface positions and other general properties
       fgSetDouble("/surface-positions/flight/rudder-pos-norm",             fgGetDouble("/controls/flight/rudder"));
       fgSetDouble("/surface-positions/flight/elevator-pos-norm",           fgGetDouble("/controls/flight/elevator")); // FIXME: ignoring trim
       fgSetDouble("/surface-positions/flight/right-aileron-pos-norm", -1 * fgGetDouble("/controls/flight/aileron")); // FIXME: ignoring trim
@@ -281,8 +281,11 @@ void FGLaRCsim::update( double dt ) {
       }
       else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-jet")) {
 	// uiuc jet aircraft, e.g. a4d
+	// used for setting the sound
 	fgSetDouble("/engines/engine/n1", (75 + (globals->get_controls()->get_throttle( 0 ) * 100.0 )/400));
 	fgSetDouble("/engines/engine/prop-thrust", (4000 + F_X_engine/2));
+	// used for setting the instruments
+	fgSetDouble("/engines/engine[0]/n1", (50 + (globals->get_controls()->get_throttle( 0 ) * 50)));
       }
       else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-sailplane")) {
 	// uiuc sailplane, e.g. asw20
