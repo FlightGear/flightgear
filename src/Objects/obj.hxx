@@ -36,15 +36,9 @@
 
 #include <simgear/compiler.h>
 
-// #ifdef HAVE_WINDOWS_H
-// #  include <windows.h>
-// #endif
-
-// #include <GL/glut.h>
-
 #include STL_STRING
 
-#include <plib/ssg.h>		// plib include
+#include <plib/ssg.h>           // plib include
 
 #include <simgear/math/sg_types.hxx>
 
@@ -57,34 +51,34 @@ SG_USING_STD(string);
 #define FG_MAX_NODES 4000
 
 
-// Load an Binary obj file
+// Load a Binary obj file
 bool fgBinObjLoad( const string& path, const bool is_base,
-		   Point3D *center,
-		   double *bounding_radius,
-		   ssgBranch* geometry,
-		   ssgBranch* rwy_lights,
-		   ssgVertexArray *ground_lights );
+                   Point3D *center,
+                   double *bounding_radius,
+                   ssgBranch* geometry,
+                   ssgBranch* rwy_lights,
+                   ssgVertexArray *ground_lights );
 
 // Load an ascii object file
 ssgBranch *fgAsciiObjLoad(const string& path, FGTileEntry *tile,
-			  ssgVertexArray *lights, const bool is_base);
+                          ssgVertexArray *lights, const bool is_base);
 
 // Generate an ocean tile
 bool fgGenTile( const string& path, SGBucket b,
-		Point3D *center,
-		double *bounding_radius,
-		ssgBranch* geometry );
+                Point3D *center,
+                double *bounding_radius,
+                ssgBranch* geometry );
 
 
-// Create an ssg leaf
+// Create a ssg leaf
 ssgLeaf *gen_leaf( const string& path,
-		   const GLenum ty, const string& material,
-		   const point_list& nodes, const point_list& normals,
-		   const point_list& texcoords,
-		   const int_list node_index,
-		   const int_list normal_index,
-		   const int_list& tex_index,
-		   const bool calc_lights, ssgVertexArray *lights );
+                   const GLenum ty, const string& material,
+                   const point_list& nodes, const point_list& normals,
+                   const point_list& texcoords,
+                   const int_list& node_index,
+                   const int_list& normal_index,
+                   const int_list& tex_index,
+                   const bool calc_lights, ssgVertexArray *lights );
 
 
 #endif // _OBJ_HXX

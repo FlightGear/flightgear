@@ -47,6 +47,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/math/vector.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/stopwatch.hxx>
 #include <simgear/misc/texcoord.hxx>
@@ -253,8 +254,6 @@ bool fgGenTile( const string& path, SGBucket b,
 static void random_pt_inside_tri( float *res,
                                   float *n1, float *n2, float *n3 )
 {
-    sgVec3 p1, p2, p3;
-
     double a = sg_random();
     double b = sg_random();
     if ( a + b > 1.0 ) {
@@ -263,12 +262,9 @@ static void random_pt_inside_tri( float *res,
     }
     double c = 1 - a - b;
 
-    sgScaleVec3( p1, n1, a );
-    sgScaleVec3( p2, n2, b );
-    sgScaleVec3( p3, n3, c );
-
-    sgAddVec3( res, p1, p2 );
-    sgAddVec3( res, p3 );
+    res[0] = n1[0]*a + n2[0]*b + n3[0]*c;
+    res[1] = n1[1]*a + n2[1]*b + n3[1]*c;
+    res[2] = n1[2]*a + n2[2]*b + n3[2]*c;
 }
 
 
@@ -282,7 +278,7 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 
         // generate a repeatable random seed
         p1 = leaf->getVertex( 0 );
-        unsigned int seed = (unsigned int)p1[0];
+        unsigned int seed = (unsigned int)(fabs(p1[0]*100));
         sg_srandom( seed );
 
         for ( int i = 0; i < num; ++i ) {
@@ -315,92 +311,22 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 
 
 /**
- * Create a rotation matrix to align an object for the current lat/lon.
- *
- * By default, objects are aligned for the north pole.  This code
- * calculates a matrix to rotate them for the surface of the earth in
- * the current location.
- *
- * TODO: there should be a single version of this method somewhere
- * for all of SimGear.
- *
- * @param ROT The resulting rotation matrix.
- * @param hdg_deg The object heading in degrees.
- * @param lon_deg The longitude in degrees.
- * @param lat_deg The latitude in degrees.
+ * User data for populating leaves when they come in range.
  */
-static void
-makeWorldUpRotationMatrix (sgMat4 ROT, double hdg_deg,
-                           double lon_deg, double lat_deg)
+class LeafUserData : public ssgBase
 {
-        SGfloat sin_lat = sin( lat_deg * SGD_DEGREES_TO_RADIANS );
-        SGfloat cos_lat = cos( lat_deg * SGD_DEGREES_TO_RADIANS );
-        SGfloat sin_lon = sin( lon_deg * SGD_DEGREES_TO_RADIANS );
-        SGfloat cos_lon = cos( lon_deg * SGD_DEGREES_TO_RADIANS );
-        SGfloat sin_hdg = sin( hdg_deg * SGD_DEGREES_TO_RADIANS ) ;
-        SGfloat cos_hdg = cos( hdg_deg * SGD_DEGREES_TO_RADIANS ) ;
+public:
+    bool is_filled_in;
+    ssgLeaf * leaf;
+    FGNewMat * mat;
+    ssgBranch * branch;
+    float sin_lat;
+    float cos_lat;
+    float sin_lon;
+    float cos_lon;
 
-        ROT[0][0] =  cos_hdg * sin_lat * cos_lon - sin_hdg * sin_lon;
-        ROT[0][1] =  cos_hdg * sin_lat * sin_lon + sin_hdg * cos_lon;
-        ROT[0][2] = -cos_hdg * cos_lat;
-        ROT[0][3] =  SG_ZERO;
-
-        ROT[1][0] = -sin_hdg * sin_lat * cos_lon - cos_hdg * sin_lon;
-        ROT[1][1] = -sin_hdg * sin_lat * sin_lon + cos_hdg * cos_lon;
-        ROT[1][2] =  sin_hdg * cos_lat;
-        ROT[1][3] =  SG_ZERO;
-
-        ROT[2][0] = cos_lat * cos_lon;
-        ROT[2][1] = cos_lat * sin_lon;
-        ROT[2][2] = sin_lat;
-        ROT[2][3] = SG_ZERO;
-
-        ROT[3][0] = SG_ZERO;
-        ROT[3][1] = SG_ZERO;
-        ROT[3][2] = SG_ZERO;
-        ROT[3][3] = SG_ONE ;
-}
-
-
-/**
- * Add an object to a random location inside a triangle.
- *
- * @param p1 The first vertex of the triangle.
- * @param p2 The second vertex of the triangle.
- * @param p3 The third vertex of the triangle.
- * @param center The center of the triangle.
- * @param lon_deg The longitude of the surface center, in degrees.
- * @param lat_deg The latitude of the surface center, in degrees.
- * @param object The randomly-placed object.
- * @param branch The branch where the object should be added to the
- *        scene graph.
- */
-static void
-add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
-                        double lon_deg, double lat_deg,
-                        FGNewMat::Object * object, ssgBranch * branch)
-{
-                                // Set up the random heading if required.
-    double hdg_deg = 0;
-    if (object->get_heading_type() == FGNewMat::Object::HEADING_RANDOM)
-      hdg_deg = sg_random() * 360;
-
-    sgVec3 result;
-
-    sgMat4 ROT;
-    makeWorldUpRotationMatrix(ROT, hdg_deg, lon_deg, lat_deg);
-
-    random_pt_inside_tri(result, p1, p2, p3);
-    sgSubVec3(result, center);
-    sgMat4 OBJ_pos, OBJ;
-    sgMakeTransMat4(OBJ_pos, result);
-    sgCopyMat4(OBJ, ROT);
-    sgPostMultMat4(OBJ, OBJ_pos);
-    ssgTransform * pos = new ssgTransform;
-    pos->setTransform(OBJ);
-    pos->addKid(object->get_random_model());
-    branch->addKid(pos);
-}
+    void setup_triangle( int i );
+};
 
 
 /**
@@ -413,11 +339,16 @@ public:
   float * p1;
   float * p2;
   float * p3;
+    sgVec3 center;
+    double area;
   FGNewMat::ObjectGroup * object_group;
   ssgBranch * branch;
-  double lon_deg;
-  double lat_deg;
+    LeafUserData * leafData;
   unsigned int seed;
+
+    void fill_in_triangle();
+    void add_object_to_triangle(FGNewMat::Object * object);
+    void makeWorldMatrix (sgMat4 ROT, double hdg_deg );
 };
 
 
@@ -427,38 +358,22 @@ public:
  * This method is invoked by a callback when the triangle is in range
  * but not yet populated.
  *
- * @param p1 The first vertex of the triangle.
- * @param p2 The second vertex of the triangle.
- * @param p3 The third vertex of the triangle.
- * @param mat The triangle's material.
- * @param object_index The index of the random object in the triangle.
- * @param branch The branch where the objects should be added.
- * @param lon_deg The longitude of the surface center, in degrees.
- * @param lat_deg The latitude of the surface center, in degrees.
  */
-static void
-fill_in_triangle (float * p1, float * p2, float * p3,
-                  FGNewMat::ObjectGroup * object_group, ssgBranch * branch,
-                  double lon_deg, double lat_deg, unsigned int seed)
+
+void TriUserData::fill_in_triangle ()
 {
                                 // generate a repeatable random seed
     sg_srandom(seed);
 
     int nObjects = object_group->get_object_count();
+
     for (int i = 0; i < nObjects; i++) {
       FGNewMat::Object * object = object_group->get_object(i);
-      sgVec3 center;
-      sgSetVec3(center,
-                (p1[0] + p2[0] + p3[0]) / 3.0,
-                (p1[1] + p2[1] + p3[1]) / 3.0,
-                (p1[2] + p2[2] + p3[2]) / 3.0);
-      double area = sgTriArea(p1, p2, p3);
       double num = area / object->get_coverage_m2();
 
       // place an object each unit of area
       while ( num > 1.0 ) {
-        add_object_to_triangle(p1, p2, p3, center, lon_deg, lat_deg,
-                               object, branch);
+            add_object_to_triangle(object);
         num -= 1.0;
       }
       // for partial units of area, use a zombie door method to
@@ -467,11 +382,65 @@ fill_in_triangle (float * p1, float * p2, float * p3,
       if ( num > 0.0 ) {
         if ( sg_random() <= num ) {
           // a zombie made it through our door
-          add_object_to_triangle(p1, p2, p3, center, lon_deg, lat_deg,
-                                 object, branch);
+                add_object_to_triangle(object);
         }
       }
     }
+}
+
+void TriUserData::add_object_to_triangle (FGNewMat::Object * object)
+{
+    // Set up the random heading if required.
+    double hdg_deg = 0;
+    if (object->get_heading_type() == FGNewMat::Object::HEADING_RANDOM)
+        hdg_deg = sg_random() * 360;
+
+    sgMat4 mat;
+    makeWorldMatrix(mat, hdg_deg);
+
+    ssgTransform * pos = new ssgTransform;
+    pos->setTransform(mat);
+    pos->addKid(object->get_random_model());
+    branch->addKid(pos);
+}
+
+void TriUserData::makeWorldMatrix (sgMat4 mat, double hdg_deg )
+{
+    if (hdg_deg == 0) {
+        mat[0][0] =  leafData->sin_lat * leafData->cos_lon;
+        mat[0][1] =  leafData->sin_lat * leafData->sin_lon;
+        mat[0][2] = -leafData->cos_lat;
+        mat[0][3] =  SG_ZERO;
+
+        mat[1][0] =  -leafData->sin_lon;
+        mat[1][1] =  leafData->cos_lon;
+        mat[1][2] =  SG_ZERO;
+        mat[1][3] =  SG_ZERO;
+    } else {
+        float sin_hdg = sin( hdg_deg * SGD_DEGREES_TO_RADIANS ) ;
+        float cos_hdg = cos( hdg_deg * SGD_DEGREES_TO_RADIANS ) ;
+        mat[0][0] =  cos_hdg * leafData->sin_lat * leafData->cos_lon - sin_hdg * leafData->sin_lon;
+        mat[0][1] =  cos_hdg * leafData->sin_lat * leafData->sin_lon + sin_hdg * leafData->cos_lon;
+        mat[0][2] = -cos_hdg * leafData->cos_lat;
+        mat[0][3] =  SG_ZERO;
+
+        mat[1][0] = -sin_hdg * leafData->sin_lat * leafData->cos_lon - cos_hdg * leafData->sin_lon;
+        mat[1][1] = -sin_hdg * leafData->sin_lat * leafData->sin_lon + cos_hdg * leafData->cos_lon;
+        mat[1][2] =  sin_hdg * leafData->cos_lat;
+        mat[1][3] =  SG_ZERO;
+    }
+
+    mat[2][0] = leafData->cos_lat * leafData->cos_lon;
+    mat[2][1] = leafData->cos_lat * leafData->sin_lon;
+    mat[2][2] = leafData->sin_lat;
+    mat[2][3] = SG_ZERO;
+
+    // translate to random point in triangle
+    sgVec3 result;
+    random_pt_inside_tri(result, p1, p2, p3);
+    sgSubVec3(mat[3], result, center);
+
+    mat[3][3] = SG_ONE ;
 }
 
 /**
@@ -491,9 +460,7 @@ tri_in_range_callback (ssgEntity * entity, int mask)
 {
   TriUserData * data = (TriUserData *)entity->getUserData();
   if (!data->is_filled_in) {
-    fill_in_triangle(data->p1, data->p2, data->p3, data->object_group,
-                     data->branch, data->lon_deg, data->lat_deg,
-                     data->seed);
+        data->fill_in_triangle();
     data->is_filled_in = true;
   }
   return 1;
@@ -572,25 +539,24 @@ get_bounding_radius( sgVec3 center, float *p1, float *p2, float *p3)
  *
  * No objects will be added unless the triangle comes into range.
  *
- * @param leaf The leaf containing the data for the terrain surface.
- * @param tri_index The index of the triangle in the leaf.
- * @param mat The material data for the triangle.
- * @param branch The branch to which the randomly-placed objects
- *        should be added.
- * @param lon_deg The longitude of the surface center, in degrees.
- * @param lat_deg The latitude of the surface center, in degrees.
  */
-static void
-setup_triangle (float * p1, float * p2, float * p3,
-                FGNewMat * mat, ssgBranch * branch,
-                double lon_deg, double lat_deg)
+
+void LeafUserData::setup_triangle (int i )
 {
+    short n1, n2, n3;
+    leaf->getTriangle(i, &n1, &n2, &n3);
+
+    float * p1 = leaf->getVertex(n1);
+    float * p2 = leaf->getVertex(n2);
+    float * p3 = leaf->getVertex(n3);
+
                                 // Set up a single center point for LOD
     sgVec3 center;
     sgSetVec3(center,
               (p1[0] + p2[0] + p3[0]) / 3.0,
               (p1[1] + p2[1] + p3[1]) / 3.0,
               (p1[2] + p2[2] + p3[2]) / 3.0);
+    double area = sgTriArea(p1, p2, p3);
       
                                 // maximum radius of an object from center.
     double bounding_radius = get_bounding_radius(center, p1, p2, p3);
@@ -606,17 +572,17 @@ setup_triangle (float * p1, float * p2, float * p3,
 
                                 // Iterate through all the object types.
     int num_groups = mat->get_object_group_count();
-    for (int i = 0; i < num_groups; i++) {
+    for (int j = 0; j < num_groups; j++) {
                                 // Look up the random object.
-        FGNewMat::ObjectGroup * group = mat->get_object_group(i);
+        FGNewMat::ObjectGroup * group = mat->get_object_group(j);
 
                                 // Set up the range selector for the entire
                                 // triangle; note that we use the object
                                 // range plus the bounding radius here, to
                                 // allow for objects far from the center.
-        float ranges[] = {0,
+        float ranges[] = { 0,
                           group->get_range_m() + bounding_radius,
-                          SG_MAX};
+                SG_MAX };
         ssgRangeSelector * lod = new ssgRangeSelector;
         lod->setRanges(ranges, 3);
         location->addKid(lod);
@@ -634,11 +600,12 @@ setup_triangle (float * p1, float * p2, float * p3,
         data->p1 = p1;
         data->p2 = p2;
         data->p3 = p3;
+        sgCopyVec3 (data->center, center);
+        data->area = area;
         data->object_group = group;
         data->branch = in_range;
-        data->lon_deg = lon_deg;
-        data->lat_deg = lat_deg;
-        data->seed = (unsigned int)((p1[0] + lon_deg + lat_deg) * i * 128);
+        data->leafData = this;
+        data->seed = (unsigned int)(p1[0] * j);
 
                                 // Set up the in-range node.
         in_range->setUserData(data);
@@ -654,22 +621,6 @@ setup_triangle (float * p1, float * p2, float * p3,
         lod->addKid(out_of_range);
     }
 }
-
-
-/**
- * User data for populating leaves when they come in range.
- */
-class LeafUserData : public ssgBase
-{
-public:
-  bool is_filled_in;
-  ssgLeaf * leaf;
-  FGNewMat * mat;
-  ssgBranch * branch;
-  double lon_deg;
-  double lat_deg;
-};
-
 
 /**
  * SSG callback for an in-range leaf of randomly-placed objects.
@@ -694,12 +645,7 @@ leaf_in_range_callback (ssgEntity * entity, int mask)
                                 // and populate them.
     int num_tris = data->leaf->getNumTriangles();
     for ( int i = 0; i < num_tris; ++i ) {
-      short n1, n2, n3;
-      data->leaf->getTriangle(i, &n1, &n2, &n3);
-      setup_triangle(data->leaf->getVertex(n1),
-                     data->leaf->getVertex(n2),
-                     data->leaf->getVertex(n3),
-                     data->mat, data->branch, data->lon_deg, data->lat_deg);
+            data->setup_triangle(i);
     }
     data->is_filled_in = true;
   }
@@ -744,8 +690,6 @@ leaf_out_of_range_callback (ssgEntity * entity, int mask)
  * @param leaf The surface where the objects should be placed.
  * @param branch The branch that will hold the randomly-placed objects.
  * @param center The center of the leaf in FlightGear coordinates.
- * @param lon_deg The longitude of the surface center, in degrees.
- * @param lat_deg The latitude of the surface center, in degrees.
  * @param material_name The name of the surface's material.
  */
 static void
@@ -784,7 +728,7 @@ gen_random_surface_objects (ssgLeaf *leaf,
 
                                 // LOD for the leaf
                                 // max random object range: 20000m
-    float ranges[] = {0, 20000, 1000000};
+    float ranges[] = { 0, 20000, 1000000 };
     ssgRangeSelector * lod = new ssgRangeSelector;
     lod->setRanges(ranges, 3);
     branch->addKid(lod);
@@ -801,8 +745,10 @@ gen_random_surface_objects (ssgLeaf *leaf,
     data->leaf = leaf;
     data->mat = mat;
     data->branch = in_range;
-    data->lon_deg = lon_deg;
-    data->lat_deg = lat_deg;
+    data->sin_lat = sin(lat_deg * SGD_DEGREES_TO_RADIANS);
+    data->cos_lat = cos(lat_deg * SGD_DEGREES_TO_RADIANS);
+    data->sin_lon = sin(lon_deg * SGD_DEGREES_TO_RADIANS);
+    data->cos_lon = cos(lon_deg * SGD_DEGREES_TO_RADIANS);
 
     in_range->setUserData(data);
     in_range->setTravCallback(SSG_CALLBACK_PRETRAV, leaf_in_range_callback);
@@ -896,7 +842,6 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 #else
     while ( ! in.eof() ) {
 #endif
-
         in >> ::skipws;
 
         if ( in.get( c ) && c == '#' ) {
@@ -1269,8 +1214,8 @@ ssgLeaf *gen_leaf( const string& path,
                    const GLenum ty, const string& material,
                    const point_list& nodes, const point_list& normals,
                    const point_list& texcoords,
-                   const int_list node_index,
-                   const int_list normal_index,
+                   const int_list& node_index,
+                   const int_list& normal_index,
                    const int_list& tex_index,
                    const bool calc_lights, ssgVertexArray *lights )
 {
@@ -1470,7 +1415,10 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                                   false, ground_lights );
 
         if ( is_lighting ) {
-            float ranges[] = { 0, 12000 };
+            float ranges[] = {
+                0,
+                12000
+            };
             leaf->setCallback(SSG_CALLBACK_PREDRAW, runway_lights_predraw);
             ssgRangeSelector * lod = new ssgRangeSelector;
             lod->setRanges(ranges, 2);
@@ -1485,7 +1433,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     // (actually an ssgRangeSelector) named "random-models".
     ssgBranch * random_object_branch = 0;
     if (use_random_objects) {
-      float ranges[] = {0, 20000}; // Maximum 20km range for random objects
+        float ranges[] = { 0, 20000 }; // Maximum 20km range for random objects
       ssgRangeSelector * object_lod = new ssgRangeSelector;
       object_lod->setRanges(ranges, 2);
       object_lod->setName("random-models");
