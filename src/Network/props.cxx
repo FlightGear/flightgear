@@ -206,6 +206,8 @@ bool FGProps::process_command( const char *cmd ) {
 	}
     } else if ( command == "quit" ) {
 	close();
+	path = "/";
+	return true;
     } else {
 	io->writestring( "\n" );
 	io->writestring( "Valid commands are:\n" );
@@ -257,8 +259,6 @@ bool FGProps::process() {
 // close the channel
 bool FGProps::close() {
     SGIOChannel *io = get_io_channel();
-
-    set_enabled( false );
 
     if ( ! io->close() ) {
 	return false;
