@@ -4,6 +4,8 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Model/acmodel.hxx>
+#include <Model/model.hxx>
+#include <Main/location.hxx>
 
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"

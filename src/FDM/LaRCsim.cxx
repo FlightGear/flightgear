@@ -25,9 +25,12 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 
+
 #include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
+#include <Model/model.hxx>
+#include <Main/location.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/LaRCsim/ls_cockpit.h>
 #include <FDM/LaRCsim/ls_generic.h>
@@ -38,6 +41,7 @@
 
 #include "IO360.hxx"
 #include "LaRCsim.hxx"
+
 
 FGLaRCsim::FGLaRCsim( double dt ) {
 //     set_delta_t( dt );

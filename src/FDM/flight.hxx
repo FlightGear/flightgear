@@ -90,11 +90,7 @@
 #include <string>
 
 #include <simgear/constants.h>
-// #include <simgear/timing/timestamp.hxx>
-
 #include <Main/fgfs.hxx>
-#include <Model/model.hxx>
-#include <Main/location.hxx>
 
 SG_USING_STD(list);
 SG_USING_STD(vector);
