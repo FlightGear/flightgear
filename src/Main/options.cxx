@@ -870,6 +870,32 @@ fgOptStartDateGmt( const char *arg )
 }
 
 static int
+fgSetupProxy( const char *arg )
+{
+    string options = arg;
+    string host, port, auth;
+    int pos;
+
+    host = port = auth = "";
+    if ((pos = options.find("@")) != string::npos) 
+        auth = options.substr(0, pos++);
+    else
+        pos = 0;
+
+    host = options.substr(pos, options.size());
+    if ((pos = host.find(":")) != string::npos) {
+        port = host.substr(++pos, host.size());
+        host.erase(--pos, host.size());
+    }
+
+    fgSetString("/sim/presets/proxy/host", host.c_str());
+    fgSetString("/sim/presets/proxy/port", port.c_str());
+    fgSetString("/sim/presets/proxy/authentication", auth.c_str());
+
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptTraceRead( const char *arg )
 {
     string name = arg;
@@ -1291,6 +1317,7 @@ struct OptionDesc {
     {"rul",                          true,  OPTION_CHANNEL, "", false, "", 0 },
     {"joyclient",                    true,  OPTION_CHANNEL, "", false, "", 0 },
     {"jsclient",                     true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"proxy",                        true,  OPTION_FUNC,    "", false, "", fgSetupProxy },
 #ifdef FG_MPLAYER_AS
     {"callsign",                     true, OPTION_STRING,  "sim/multiplay/callsign", false, "", 0 },
     {"multiplay",                    true,  OPTION_CHANNEL, "", false, "", 0 },
