@@ -1,23 +1,24 @@
-// panel.hxx -- instrument panel defines and prototypes
+//  panel.hxx -- instrument panel defines and prototypes
+// 
+//  Written by Friedemann Reinhard, started June 1998.
+// 
+//  This program is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU General Public License as
+//  published by the Free Software Foundation; either version 2 of the
+//  License, or (at your option) any later version.
+// 
+//  This program is distributed in the hope that it will be useful, but
+//  WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  General Public License for more details.
+// 
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
-// Written by Friedemann Reinhard, started June 1998.
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-//
-// $Id$
-// (Log is kept at end of this file)
+//  $Id$
+//  (Log is kept at end of this file)
+ 
  
 
 #ifndef _PANEL_HXX
@@ -33,11 +34,12 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
+#ifdef HAVE_WINDOWS_H          
 #  include <windows.h>
 #endif
 
 #include <GL/glut.h>
+#include <XGL/xgl.h>
 
 
 typedef struct {
@@ -50,8 +52,8 @@ typedef struct {
 } IMAGE;
 
 typedef struct {
-    int XPos;
-    int YPos;
+    float XPos;
+    float YPos;
     float radius;
     float length;
     float width;
@@ -67,23 +69,55 @@ typedef struct {
     GLfloat vertices[20];
 } Pointer;
 
+typedef struct{
+    float XPos;
+    float YPos;
+    float texXPos;
+    float texYPos;
+    float radius;
+    float bottom;   // tell the program the offset between midpoint and bottom 
+    float top;      // guess what ;-)
+} arthor;
+
+typedef struct{
+    float PlaneXPos;
+    float PlaneYPos;
+    float PlaneTexXPos;
+    float PlaneTexYPos;
+    float alpha;
+    float PlaneAlpha;
+    float PlaneAlphaHist;
+    float alphahist;
+    float rollhist;
+    float BallXPos;
+    float BallYPos;
+    float BallTexXPos;
+    float BallTexYPos;
+    float BallRadius;
+  GLfloat vertices[72];
+} TurnCoordinator;
 
 void fgPanelInit( void);
 void fgPanelReInit( int x, int y, int finx, int finy );
 void fgPanelUpdate( void);
-void horizont( void);
+void horizon( arthor hor);
+void fgHorizonInit( arthor hor);
 void CreatePointer(Pointer *pointer);
 float UpdatePointer(Pointer pointer);
-void ErasePointer(Pointer pointer);
+void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor = 1);
+void fgUpdateTurnCoordinator(TurnCoordinator *turn); 
+void fgInitTurnCoordinator(TurnCoordinator *turn);
 
 void PrintMatrix( void);
 
-extern int panel_hist;
+#endif // _PANEL_HXX 
 
-#endif // _PANEL_HXX
 
 
 // $Log$
+// Revision 1.5  1999/01/07 19:25:55  curt
+// Updates from Friedemann Reinhard.
+//
 // Revision 1.4  1998/11/11 00:19:29  curt
 // Updated comment delimeter to C++ style.
 //

@@ -78,19 +78,29 @@ IMAGE *imag;
 IMAGE *img2;
 IMAGE *img;
 
-static GLuint panel_tex_id;
+static float value[4];
+static GLuint panel_tex_id[2];
 static GLubyte tex[32][128][3];
 static float alphahist;
 static float Xzoom, Yzoom;
 static Pointer pointer[20];
-static int NumGyro = 1;
-static int NumPoint = 4;
+static TurnCoordinator Turny;
+static int NumPoint = 5;
 static int i = 0;
 static GLdouble mvmatrix[16];
 static GLdouble matrix[16];
 static double var[20];
 static double offset;
 static float alpha;
+static float vertices[180][2];
+static float normals[180][3];
+static float texCoord[180][2];
+static arthor myarthor;
+static int n1;
+static int n2;
+static GLfloat Wings[] = {-1.25, -28.125, 1.255, -28.125, 1.255, 28.125,                                  -1.25, 28.125};
+static GLfloat Elevator[] = { 3.0, -10.9375, 4.5, -10.9375, 4.5, 10.9375,                                  3.0, 10.9375};
+static GLfloat Rudder[] = {2.0, -0.45, 10.625, -0.45, 10.625, 0.55,                                           2.0, 0.55};
 
 // image.c THIS FILE WAS COPIED FROM THE MESA GRAPHICS LIBRARY
 
@@ -297,15 +307,23 @@ static IMAGE *ImageLoad(char *fileName)
   return final;
 }
 
-// Beginning of the "panel-code"
+// Beginning of the "panel-code" 
+
+// fgPanelInit() - routine to initialize a panel.                 
 void fgPanelInit ( void ) {
+    // fgVIEW *v;
     string tpath;
     int x, y;
+    FILE *f;
+    char line[256];
+    GLint test;
 
-    Xzoom = (float)((float)(current_view.get_winWidth())/1024.0);
-    Yzoom = (float)((float)(current_view.get_winHeight())/768.0);
+    // v = &current_view;
 
-pointer[1].XPos = 357;
+    Xzoom = (float)((float)(current_view.get_winWidth())/1024);
+    Yzoom = (float)((float)(current_view.get_winHeight())/768);
+
+pointer[1].XPos = 357.5;
 pointer[1].YPos = 167;
 pointer[1].radius = 5;
 pointer[1].length = 32;
@@ -316,10 +334,10 @@ pointer[1].value2 = 3000;
 pointer[1].alpha1 = 0;
 pointer[1].alpha2 = 1080;
 pointer[1].variable = 1;
-pointer[1].teXpos = 193;
+pointer[1].teXpos = 194;
 pointer[1].texYpos = 191;
 
-pointer[0].XPos = 357;
+pointer[0].XPos = 357.5;
 pointer[0].YPos = 167;
 pointer[0].radius = 5;
 pointer[0].length = 25;
@@ -330,7 +348,7 @@ pointer[0].value2 = 10000;
 pointer[0].alpha1 = 0;
 pointer[0].alpha2 = 360;
 pointer[0].variable = 1;
-pointer[0].teXpos = 193;
+pointer[0].teXpos = 194;
 pointer[0].texYpos = 191;
 
 pointer[2].XPos = 358;
@@ -359,28 +377,72 @@ pointer[3].value2 = 1.0;
 pointer[3].alpha1 = 280;
 pointer[3].alpha2 = 540;
 pointer[3].variable = 3;
-pointer[3].teXpos = 173.8;
+pointer[3].teXpos = 173.6;
 pointer[3].texYpos = 83;
 
+
+// These values define the airspeed pointer. Please note: 
+// As we have a Bonanza panel, but a navion airplane, this gauge 
+// doesn't show the true values !!!    
+
+pointer[4].XPos = 144.375;
+pointer[4].YPos = 166.875;
+pointer[4].radius = 4;
+pointer[4].length = 32;
+pointer[4].width = 3;
+pointer[4].angle = 30;
+pointer[4].value1 = 15.0;
+pointer[4].value2 = 260.0;
+pointer[4].alpha1 = -20.0;
+pointer[4].alpha2 = 360.0;
+pointer[4].variable = 0;
+pointer[4].teXpos = 64;
+pointer[4].texYpos = 193;
+
+
+myarthor.XPos = 251;
+myarthor.YPos = 168;
+myarthor.radius = 29;
+myarthor.texXPos = 56;
+myarthor.texYPos = 174;
+myarthor.bottom = 36.5;
+myarthor.top = 36.5;
+
+Turny.PlaneXPos = 143.75;
+Turny.PlaneYPos = 51.75;
+Turny.PlaneTexXPos = 49;
+Turny.PlaneTexYPos = 59.75;
+Turny.BallXPos = 145;
+Turny.BallYPos = 24;
+Turny.BallTexXPos = 49;
+Turny.BallTexYPos = 16;
+Turny.BallRadius = 3.5;
+Turny.alphahist = 0;
+Turny.PlaneAlphaHist = 0;
 
 for(i=0;i<NumPoint;i++){
 CreatePointer(&pointer[i]);
 }
 
+fgHorizonInit(myarthor);
+
+fgInitTurnCoordinator(&Turny);
+
 #ifdef GL_VERSION_1_1
-    xglGenTextures(1, &panel_tex_id);
-    xglBindTexture(GL_TEXTURE_2D, panel_tex_id);
+    xglGenTextures(2, panel_tex_id);
+    xglBindTexture(GL_TEXTURE_2D, panel_tex_id[1]);
 #elif GL_EXT_texture_object
-    xglGenTexturesEXT(1, &panel_tex_id);
-    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id);
+    xglGenTexturesEXT(2, panel_tex_id);
+    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id[1]);
 #else
 #  error port me
 #endif
+
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
     xglViewport(0, 0, 640, 480);
-    gluOrtho2D(0, 640, 0, 480);
+    glOrtho(0, 640, 0, 480, 1, -1);
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();
@@ -390,11 +452,16 @@ CreatePointer(&pointer[i]);
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // load in the texture data
+    // load in the texture data 
     
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
     tpath = current_options.get_fg_root() + "/Textures/gauges.rgb";
     if((img = ImageLoad( (char *)tpath.c_str() ))==NULL){
+    }
+
+    xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
+    tpath = current_options.get_fg_root() + "/Textures/gauges2.rgb";
+    if((imag = ImageLoad( (char *)tpath.c_str() ))==NULL){
     }
 
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 1024);
@@ -406,35 +473,56 @@ CreatePointer(&pointer[i]);
     xglPixelZoom(Xzoom, Yzoom);
     xglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 1024);
-    xglPixelStorei(GL_UNPACK_ROW_LENGTH, 1024);
+      xglPixelStorei(GL_UNPACK_ROW_LENGTH, 1024);
     xglRasterPos2i(0,0);
     xglPixelZoom(Xzoom, Yzoom);
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
-    xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB, 
-		  GL_UNSIGNED_BYTE, (GLvoid *)(img->data));
+    xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB,                                  GL_UNSIGNED_BYTE, (GLvoid *)(imag->data));
+		  
+#ifdef GL_VERSION_1_1
+    xglBindTexture(GL_TEXTURE_2D, panel_tex_id[0]);
+#elif GL_EXT_texture_object
+    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id[0]);
+#else
+#  error port me
+#endif
+    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);   
+    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB,                                  GL_UNSIGNED_BYTE, (GLvoid *)(img->data)); 
+		  
     xglMatrixMode(GL_MODELVIEW);
     xglPopMatrix();
 }
 
 void fgPanelReInit( int x, int y, int finx, int finy){
+    // fgVIEW *v;
     fgOPTIONS *o;
     int i;
+    GLint buffer;
     
     o = &current_options;
+    // v = &current_view;
     
     Xzoom = (float)((float)(current_view.get_winWidth())/1024);
     Yzoom = (float)((float)(current_view.get_winHeight())/768);
+    
+    // save the current buffer state
+    glGetIntegerv(GL_DRAW_BUFFER, &buffer);
+    
+    // and enable both buffers for writing
+    glDrawBuffer(GL_FRONT_AND_BACK);
     
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
     xglViewport(0, 0, 640, 480);
-    gluOrtho2D(0, 640, 0, 480);
+    glOrtho(0, 640, 0, 480, 1, -1);
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();
      xglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
     xglPixelZoom(Xzoom, Yzoom);
     xglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 1024);
@@ -443,37 +531,37 @@ void fgPanelReInit( int x, int y, int finx, int finy){
     xglRasterPos2i(x, y);
     xglPixelZoom(Xzoom, Yzoom);
     xglDrawPixels(finx - x, finy - y, GL_RGB, GL_UNSIGNED_BYTE,                     (GLvoid *)(img2->data));
+    
+    // restore original buffer state
+    glDrawBuffer(buffer);
 }
 
 void fgPanelUpdate ( void ) {
+    // fgVIEW *v;
     float alpha;
     double pitch;
     double roll;
     float alpharad;
     double speed;
     int i;
-    var[0] = get_speed();
+                          
+    var[0] = get_speed() * 1.4; // We have to multiply the airspeed by a 
+                                // factor, to simulate flying a Bonanza 
     var[1] = get_altitude();
-    var[2] = get_aoa(); // A placeholder. It should be the vertical speed once. 
+    var[2] = get_climb_rate(); 
     var[3] = get_throttleval();
+    // v = &current_view;
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
-    glOrtho(0, 640, 0, 480, 1, -1);
+    glOrtho(0, 640, 0, 480, 10, -10);
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();
     xglDisable(GL_DEPTH_TEST);
-    xglDisable(GL_LIGHTING);
+    xglEnable(GL_LIGHTING);
     xglEnable(GL_TEXTURE_2D);
-
-#ifdef GL_VERSION_1_1
-    xglBindTexture(GL_TEXTURE_2D, panel_tex_id);
-#elif GL_EXT_texture_object
-    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id);
-#else
-#  error port me
-#endif
+    xglDisable(GL_BLEND);
 
     xglMatrixMode(GL_MODELVIEW);
     xglPopMatrix();
@@ -483,68 +571,280 @@ void fgPanelUpdate ( void ) {
     xglLoadIdentity();
     xglTranslatef(pointer[i].XPos, pointer[i].YPos, 0.0);
     xglRotatef(-pointer[i].hist, 0.0, 0.0, 1.0);
-    ErasePointer(pointer[i]);
+    fgEraseArea(pointer[i].vertices, 20, (GLfloat)(pointer[i].teXpos),                          (GLfloat)(pointer[i].texYpos), (GLfloat)(pointer[i].XPos),                      (GLfloat)(pointer[i].YPos), 0);
     xglLoadIdentity();
     }
 
+    glDisable(GL_LIGHTING);
     for(i=0;i<NumPoint;i++){
     pointer[i].hist = UpdatePointer( pointer[i]);
     xglPopMatrix();
     xglPushMatrix();
     }
+    
+    fgUpdateTurnCoordinator(&Turny);
+    
+    glEnable(GL_LIGHTING);
+            
+    horizon(myarthor);  
 
     xglDisable(GL_TEXTURE_2D);
-    xglLoadIdentity();
     xglPopMatrix();   
-   // xglRasterPos2i(0, 0);
-  //  horizont();  
     xglEnable(GL_DEPTH_TEST);
     xglEnable(GL_LIGHTING);
     xglDisable(GL_TEXTURE_2D);
     xglDisable(GL_BLEND);
-    xglDisable(GL_ALPHA_TEST);
     xglMatrixMode(GL_PROJECTION);
     xglPopMatrix();
     xglMatrixMode(GL_MODELVIEW);
     xglPopMatrix();
 }
 
-void horizont(void){ 
+// horizon - Let's draw an artificial horizon using both texture mapping and 
+//           primitive drawing
+ 
+void horizon(arthor hor){ 
     double pitch;
     double roll;
+    float shifted, alpha, theta;
+    float epsi = 360 / 180;
+    GLboolean Light;
+    GLfloat normal[2];
+    
+   static int n, dn, rot, tmp1, tmp2;
+   float a;
+    
+    GLfloat material[] = { 0.714844, 0.265625, 0.056875 ,1.0};
+    GLfloat material2[] = {0.6640625, 0.921875, 0.984375, 1.0};
+    GLfloat material3[] = {0.2, 0.2, 0.2, 1.0};
+    GLfloat material4[] = {0.8, 0.8, 0.8, 1.0};
+    GLfloat material5[] = {0.0, 0.0, 0.0, 1.0};
+    GLfloat direction[] = {0.0, 0.0, 0.0};
+    GLfloat light_position[4];
+    GLfloat light_ambient[] = {0.7, 0.7, 0.7, 1.0};
+    GLfloat light_ambient2[] = {0.7, 0.7, 0.7, 1.0};
+    GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+    GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+    
     pitch = get_pitch() * RAD_TO_DEG;
+    if(pitch > 45)
+    pitch = 45;
+    
+    if(pitch < -45)
+    pitch = -45;
+    
     roll = get_roll() * RAD_TO_DEG;
+    
+    glEnable(GL_NORMALIZE);
+    xglEnable(GL_LIGHTING);
     xglEnable(GL_TEXTURE_2D);
+    xglEnable(GL_LIGHT1);
+    xglDisable(GL_LIGHT2);
+    xglDisable(GL_LIGHT0);
     xglMatrixMode(GL_MODELVIEW);
     xglLoadIdentity();
-    xglTranslatef(200, 130, 0);
-    xglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);    
+    xglTranslatef(hor.XPos, hor.YPos, 0);
+    xglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    xglMatrixMode(GL_TEXTURE);
+    glPushMatrix();
+        
+    // computations for the non-textured parts of the AH
+    
+    shifted = -((pitch / 10) * 7.0588235);
+        
+    if(shifted > (hor.bottom - hor.radius)){
+    theta = (180 - (acos((hor.bottom - shifted) / hor.radius)*RAD_TO_DEG));
+    n = (int)(theta / epsi) - 1;
+    n1 = n;
+    n2 = (180 - n1) + 2;
+    dn = n2 - n1;
+    rot = (int)(roll / epsi);
+    n1 += rot + 45;
+    n2 += rot + 45;
+    }
+    
+    if(shifted < (-hor.top + hor.radius)){
+    theta = ((acos((-hor.top - shifted) / hor.radius)*RAD_TO_DEG));
+    n = (int)(theta / epsi) + 1;
+    n1 = n;
+    n2 = (180 - n1) + 2;
+    dn = n2 - n1;
+    rot = (int)(roll / epsi);
+    n1 += rot - 45;
+    n2 += rot - 45;
+    if(n1 < 0){ n1 += 180; n2 +=180;}
+    }
+    
+    // end of computations  
+       
+    light_position[0] = 0.0;
+    light_position[1] = 0.0; 
+    light_position[2] = 1.5;
+    light_position[3] = 0.0;
+    glLightfv(GL_LIGHT1, GL_POSITION, light_position);
+    glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);  
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, light_specular);
+    glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direction);
+
     #ifdef GL_VERSION_1_1
-    xglBindTexture(GL_TEXTURE_2D, panel_tex_id);
+    xglBindTexture(GL_TEXTURE_2D, panel_tex_id[1]);
     #elif GL_EXT_texture_object
-    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id);
+    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id[1]);
     #else
     #  error port me
     #endif
-    xglMatrixMode(GL_TEXTURE);
+
     xglLoadIdentity();
-    //xglTranslatef(0.0, 0.33, 0.0);
-    xglScalef(0.5, 0.5, 0.0);
-    xglTranslatef(0.0, (pitch / 45), 0.0);
-    xglTranslatef(1.0, 1.0, 0.0);
+    xglTranslatef(0.0, ((pitch / 10) * 0.046875), 0.0);
+    xglTranslatef((hor.texXPos/256), (hor.texYPos/256), 0.0);
     xglRotatef(-roll, 0.0, 0.0, 1.0);
-    xglTranslatef(-0.5, -0.5, 0.0);
-    xglBegin(GL_POLYGON);
-    xglTexCoord2f(0.0, 0.1); xglVertex2f(0.0, 0.0);
-    xglTexCoord2f(1.0, 0.1); xglVertex2f(70.0, 0.0);
-    xglTexCoord2f(1.0, 0.9); xglVertex2f(70.0, 70.0);
-    xglTexCoord2f(0.0, 0.9); xglVertex2f(0.0, 70.0);
-    xglEnd();
+    xglScalef(1.7, 1.7, 0.0);
+
+    // the following loop draws the textured part of the AH
+    
+   glMaterialf(GL_FRONT, GL_SHININESS, 85.0);
+    
+   glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material4);
+   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, material5);
+   glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, material3);
+   
+    glMatrixMode(GL_MODELVIEW);
+    xglBegin(GL_TRIANGLES);
+	   for(i=45;i<225;i++){
+                     glTexCoord2f(0.0, 0.0);
+                     glNormal3f(0.0, 0.0, 0.6);
+                     glVertex3f(0.0, 0.0, 0.0);
+	       	     glTexCoord2f(texCoord[i % 180][0], texCoord[i % 180][1]);
+	             glNormal3f(normals[i % 180][0], normals[i % 180][1], 0.6);
+		     glVertex3f(vertices[i % 180][0], vertices[i % 180][1], 0.0);
+		     n = (i + 1) % 180;
+		     glTexCoord2f(texCoord[n][0], texCoord[n][1]);
+		     glNormal3f(normals[n][0], normals[n][1], 0.6);
+		     glVertex3f(vertices[n][0], vertices[n][1], 0.0);
+      		}
+     xglEnd();
+    
+            
+    if((shifted > (hor.bottom - hor.radius)) && (n1 < 1000) && (n1 > 0)){
+    
+    a = sin(theta * DEG_TO_RAD) * sin(theta * DEG_TO_RAD);
+light_ambient2[0] = a;
+light_ambient2[1] = a;
+light_ambient2[2] = a;
+    
+ glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient2);
+ glLightfv(GL_LIGHT1, GL_DIFFUSE, light_ambient2); 
+ glLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient2);
+        
+    xglBegin(GL_TRIANGLES);
+    
+    tmp1 = n1; tmp2 = n2;
+        
+	    for(i = tmp1; i < tmp2 + 1; i++){
+	             n = i % 180;
+            glNormal3f(0.0, 0.0, 1.5);
+              glTexCoord2f((56 / 256), (140 / 256));
+            glVertex3f(((vertices[n1 % 180][0] + vertices[n2 % 180][0]) / 2),                            ((vertices[n1 % 180][1] + vertices[n2 % 180][1]) / 2),                             0.0);
+                                                
+             glTexCoord2f((57 / 256), (139 / 256));        
+	     glNormal3f(normals[n][0], normals[n][1], normals[n][3]);
+		     glVertex3f(vertices[n][0], vertices[n][1], 0.0);
+		     
+		     n = (i + 1) % 180;
+	glTexCoord2f((57 / 256), (139 / 256));	     
+	glNormal3f(normals[n][0], normals[n][1], normals[n][3]);
+		     glVertex3f(vertices[n][0], vertices[n][1], 0.0);	     
+      		}
+     xglEnd();
+    }
+            
+    if((shifted < (-hor.top + hor.radius)) && (n1 < 1000) && (n1 > 0)){
+    a = sin(theta * DEG_TO_RAD) * sin(theta * DEG_TO_RAD);
+light_ambient2[0] = a;
+light_ambient2[1] = a;
+light_ambient2[2] = a;
+     
+ glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient2);
+ glLightfv(GL_LIGHT1, GL_DIFFUSE, light_ambient2); 
+ glLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient2);
+ glMaterialf(GL_FRONT, GL_SHININESS, a * 85);
+    xglBegin(GL_TRIANGLES);
+    tmp1 = n1; tmp2 = n2;
+	    for(i = tmp1; i <= tmp2; i++){
+	             n = i % 180;
+          glNormal3f(0.0, 0.0, 1.5);
+          glTexCoord2f((73 / 256), (237 / 256));
+          glVertex3f(((vertices[n1 % 180][0] + vertices[n2 % 180][0]) / 2),                            ((vertices[n1 % 180][1] + vertices[n2 % 180][1]) / 2),                             0.0); 
+                      
+                     glTexCoord2f((73 / 256), (236 / 256));
+		     glNormal3f(normals[n][0], normals[n][1], normals[n][2]);
+		     glVertex3f(vertices[n][0], vertices[n][1], 0.0);
+		     
+		     n = (i + 1) % 180;
+		    glTexCoord2f((73 / 256), (236 / 256)); 
+		    glNormal3f(normals[n][0], normals[n][1], normals[n][2]);
+		    glVertex3f(vertices[n][0], vertices[n][1], 0.0); 
+      		}
+     xglEnd();
+    }
+    
+    // Now we will have to draw the small triangle indicating the roll value
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    
+    glRotatef(roll, 0.0, 0.0, 1.0);
+    
+    glBegin(GL_TRIANGLES);
+    glColor3f(1.0, 1.0, 1.0);
+    glVertex3f(0.0, hor.radius, 0.0);
+    glVertex3f(-3.0, (hor.radius - 7.0), 0.0);
+    glVertex3f(3.0, (hor.radius - 7.0), 0.0);    
+    glEnd();
+    
+    glLoadIdentity();
+
+    glBegin(GL_POLYGON);
+    glColor3f(0.2109375, 0.23046875, 0.203125);
+    glVertex2f(275.625, 135.0);
+    glVertex2f(275.625, 148.125);
+    glVertex2f(258.125, 151.25);
+    glVertex2f(246.875, 151.25);
+    glVertex2f(226.875, 147.5);
+    glVertex2f(226.875, 135.0);
+    glVertex2f(275.625, 135.0);
+    glEnd();
+
+    glLoadIdentity();
+    
+    xglMatrixMode(GL_TEXTURE);
     xglPopMatrix();
     xglMatrixMode(GL_PROJECTION);
     xglPopMatrix();
     xglDisable(GL_TEXTURE_2D);
+    xglDisable(GL_NORMALIZE);
+    xglDisable(GL_LIGHTING);
+    xglDisable(GL_LIGHT1);
+    xglEnable(GL_LIGHT0);
     }
+
+// fgHorizonInit - initialize values for the AH
+
+void fgHorizonInit( arthor hor){
+int n;
+float step = (360*DEG_TO_RAD)/180;
+
+for(n=0;n<180;n++){
+	   vertices[n][0] = cos(n * step) * hor.radius;
+	   vertices[n][1] = sin(n * step) * hor.radius;
+           texCoord[n][0] = (cos(n * step) * hor.radius)/256;
+           texCoord[n][1] = (sin(n * step) * hor.radius)/256;
+         normals[n][0] = cos(n * step) * hor.radius + sin(n * step) * 50;
+         normals[n][1] = sin(n * step) * hor.radius + cos(n * step) * 50;
+           normals[n][2] = 0.1;
+           }
+}
 
 float UpdatePointer(Pointer pointer){
     double pitch;
@@ -553,7 +853,9 @@ float UpdatePointer(Pointer pointer){
     double speed;    
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, pointer.vertices);
-    alpha=((((float)((var[pointer.variable]) - (pointer.value1)))/(pointer.value2 - pointer.value1))*(pointer.alpha2 - pointer.alpha1) + pointer.alpha1);
+
+    alpha=((((float)((var[pointer.variable]) - (pointer.value1))) /                       (pointer.value2 - pointer.value1))*(pointer.alpha2 - pointer.alpha1)            + pointer.alpha1);
+    
     	if (alpha < pointer.alpha1)
        		alpha = pointer.alpha1;
     	if (alpha > pointer.alpha2)
@@ -571,8 +873,12 @@ float UpdatePointer(Pointer pointer){
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-void ErasePointer(Pointer pointer){
+// fgEraseArea - 'Erases' a drawn Polygon by overlaying it with a textured 
+//                 area. Shall be a method of a panel class once.
+
+void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor = 1){
 int i, j;
+int n;
 float a;
 float ififth;
 
@@ -580,36 +886,31 @@ xglEnable(GL_TEXTURE_2D);
 xglEnable(GL_TEXTURE_GEN_S);
 xglEnable(GL_TEXTURE_GEN_T);
 glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-//glTexGenfv(GL_S, GL_EYE_PLANE, currentCoeff);
 glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-//glTexGenfv(GL_T, GL_EYE_PLANE, currentCoeff);
 xglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 xglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 xglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 xglMatrixMode(GL_TEXTURE);
 xglLoadIdentity();
-    
+        
     #ifdef GL_VERSION_1_1
-    xglBindTexture(GL_TEXTURE_2D, panel_tex_id);
+    xglBindTexture(GL_TEXTURE_2D, panel_tex_id[Texid]);
     #elif GL_EXT_texture_object
-    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id);
+    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id[Texid]);
     #else
     #  error port me
     #endif
 
 xglMatrixMode(GL_TEXTURE);
 xglLoadIdentity();
-xglTranslatef(-((float)(((float)(pointer.XPos)/0.625)/256)) /* - 0.057143*/, -((float)(((float)(pointer.YPos)/0.625)/256)), 0.0);
-xglTranslatef(pointer.teXpos/256 , pointer.texYpos/256, 0.0);
+xglTranslatef(-((float)((XPos/0.625)/256)),                                                   -((float)((YPos/0.625)/256)), 0.0);
+xglTranslatef(texXPos/256 , texYPos/256, 0.0);
 xglScalef(0.00625, 0.00625, 1.0);
-//xglTranslatef(-pointer.teXpos , -pointer.texYpos, 0.0);
-	
+			
 	xglBegin(GL_POLYGON);
-xglVertex2f(pointer.vertices[0], pointer.vertices[1]);
-xglVertex2f(pointer.vertices[2], pointer.vertices[3]);
-xglVertex2f(pointer.vertices[4], pointer.vertices[5]);
-xglVertex2f(pointer.vertices[16], pointer.vertices[17]);
-xglVertex2f(pointer.vertices[18], pointer.vertices[19]); 
+for(n=0;n<NumVerti;n += 2){	
+xglVertex2f(array[n] * ScaleFactor, array[n + 1] * ScaleFactor);
+} 
 	xglEnd();
  
         xglLoadIdentity();
@@ -621,6 +922,8 @@ xglVertex2f(pointer.vertices[18], pointer.vertices[19]);
 	xglDisable(GL_TEXTURE_GEN_T);
         
 }
+
+// CreatePointer - calculate the vertices of a pointer 
 
 void CreatePointer(Pointer *pointer){
 int i;
@@ -654,6 +957,105 @@ pointer->vertices[18] = - pointer->vertices[2];
 pointer->vertices[19] = pointer->vertices[3];
 }
 
+// fgUpdateTurnCoordinator - draws turn coordinator related stuff
+
+void fgUpdateTurnCoordinator(TurnCoordinator *turn){
+int n;
+
+glDisable(GL_LIGHTING);
+glDisable(GL_BLEND);
+glEnable(GL_TEXTURE_2D);
+
+ turn->alpha = (get_sideslip() / 1.5) * 56;
+ turn->PlaneAlpha = get_roll();
+
+    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+glMatrixMode(GL_MODELVIEW);
+glLoadIdentity();
+glTranslatef(turn->BallXPos, turn->BallYPos, 0.0);
+glTranslatef(0.75 * sin(turn->alphahist * DEG_TO_RAD) * 31,                                  0.3 * (39 - (cos(turn->alphahist * DEG_TO_RAD) * 39)),                          0.0);
+fgEraseArea(turn->vertices, 72,                                                 turn->BallTexXPos + ((0.75 * sin(turn->alphahist * DEG_TO_RAD) * 31) / 0.625),  turn->BallTexYPos + ((0.3 * (39 - (cos(turn->alphahist * DEG_TO_RAD)                                  * 39))) / 0.625),                                                   turn->BallXPos + (0.75 * sin(turn->alphahist * DEG_TO_RAD) * 31),               turn->BallYPos + (0.3 * (39 - (cos(turn->alphahist * DEG_TO_RAD)                                  * 39))), 1);
+glDisable(GL_TEXTURE_2D);
+glEnable(GL_BLEND);
+glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
+glMatrixMode(GL_MODELVIEW);
+glLoadIdentity();
+glTranslatef(turn->BallXPos, turn->BallYPos, 0.0);
+glTranslatef(0.75 * sin(turn->alpha * DEG_TO_RAD) * 31,                                      0.3 * (39 - (cos(turn->alpha * DEG_TO_RAD) * 39)), 0.0);
+glBegin(GL_POLYGON);
+glColor3f(0.8, 0.8, 0.8);
+for(i=0;i<36;i++){
+glVertex2f(turn->vertices[2 * i],                                                          turn->vertices[(2 * i) + 1]);
+}
+glEnd(); 
+
+glDisable(GL_TEXTURE_2D);
+glDisable(GL_BLEND);
+
+glMatrixMode(GL_MODELVIEW);
+glLoadIdentity();
+glTranslatef(turn->PlaneXPos, turn->PlaneYPos, 0.0);
+glRotatef(turn->rollhist * RAD_TO_DEG + 90, 0.0, 0.0, 1.0);
+
+fgEraseArea(Wings, 8, turn->PlaneTexXPos, turn->PlaneTexYPos,                                         turn->PlaneXPos, turn->PlaneYPos, 1); 
+fgEraseArea(Elevator, 8, turn->PlaneTexXPos, turn->PlaneTexYPos,                                         turn->PlaneXPos, turn->PlaneYPos, 1); 
+fgEraseArea(Rudder, 8, turn->PlaneTexXPos, turn->PlaneTexYPos,                                         turn->PlaneXPos, turn->PlaneYPos, 1); 
+
+glLoadIdentity();
+glTranslatef(turn->PlaneXPos, turn->PlaneYPos, 0.0);
+glRotatef(-get_roll() * RAD_TO_DEG + 90, 0.0, 0.0, 1.0);
+
+glBegin(GL_POLYGON);
+glColor3f(1.0, 1.0, 1.0);
+for(i=0;i<90;i++){
+glVertex2f(cos(i * 4 * DEG_TO_RAD) * 5, sin(i * 4 * DEG_TO_RAD) * 5);
+}
+glEnd();
+
+glBegin(GL_POLYGON);
+glVertex2f(Wings[0], Wings[1]);
+glVertex2f(Wings[2], Wings[3]);
+glVertex2f(Wings[4], Wings[5]);
+glVertex2f(Wings[6], Wings[7]);
+glVertex2f(Wings[0], Wings[1]);
+glEnd();
+
+glBegin(GL_POLYGON);
+glVertex2f(Elevator[0], Elevator[1]);
+glVertex2f(Elevator[2], Elevator[3]);
+glVertex2f(Elevator[4], Elevator[5]);
+glVertex2f(Elevator[6], Elevator[7]);
+glVertex2f(Elevator[0], Elevator[1]);
+glEnd();
+
+glBegin(GL_POLYGON);
+glVertex2f(Rudder[0], Rudder[1]);
+glVertex2f(Rudder[2], Rudder[3]);
+glVertex2f(Rudder[4], Rudder[5]);
+glVertex2f(Rudder[6], Rudder[7]);
+glVertex2f(Rudder[0], Rudder[1]);
+glEnd();
+
+
+turn->alphahist = turn->alpha;
+turn->PlaneAlphaHist = turn->PlaneAlpha;
+turn->rollhist = -get_roll();
+
+glDisable(GL_BLEND);
+}
+
+void fgInitTurnCoordinator(TurnCoordinator *turn){
+int n;
+
+for(n=0;n<36;n++){
+turn->vertices[2 * n] = cos(10 * n * DEG_TO_RAD) * turn->BallRadius;
+turn->vertices[(2 * n) + 1] = sin(10 * n * DEG_TO_RAD) * turn->BallRadius;
+	}	
+}
+
+// PrintMatrix - routine to print the current modelview matrix.                 
 
 void PrintMatrix( void){
 glGetDoublev(GL_MODELVIEW_MATRIX, mvmatrix);
@@ -664,9 +1066,8 @@ printf("         %f %f %f %f \n", mvmatrix[12], mvmatrix[13], mvmatrix[14], mvma
 }
 
 // $Log$
-// Revision 1.12  1998/12/09 18:50:20  curt
-// Converted "class fgVIEW" to "class FGView" and updated to make data
-// members private and make required accessor functions.
+// Revision 1.13  1999/01/07 19:25:53  curt
+// Updates from Friedemann Reinhard.
 //
 // Revision 1.11  1998/11/11 00:19:27  curt
 // Updated comment delimeter to C++ style.
