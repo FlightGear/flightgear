@@ -28,6 +28,7 @@ static const float MPS2KTS = 3600.0/1852.0;
 static const float CM2GALS = 264.172037284; // gallons/cubic meter
 static const float KG2LBS = 2.20462262185;
 static const float W2HP = 1.3416e-3;
+static const float INHG2PA = 3386.389;
 
 void YASim::printDEBUG()
 {
@@ -235,15 +236,9 @@ void YASim::copyToYASim(bool copyState)
     // from the scenery and set it for others to find.
     double ground = globals->get_scenery()->get_cur_elev();
     _set_Runway_altitude(ground * FT2M);
-    // cout << "YASIM: ground = " << ground << endl;
 
-    // You'd this this would work, but it doesn't.  These values are
-    // always zero.  Use a "standard" pressure intstead.
-    //
-    // float pressure = get_Static_pressure();
-    // float temp = get_Static_temperature();
-    float pressure = Atmosphere::getStdPressure(alt);
-    float temp = Atmosphere::getStdTemperature(alt);
+    float pressure = fgGetDouble("/environment/pressure-inhg") * INHG2PA;
+    float temp = fgGetDouble("/environment/temperature-degC") + 273.15;
 
     // Convert and set:
     Model* model = _fdm->getAirplane()->getModel();
@@ -373,11 +368,8 @@ void YASim::copyFromYASim()
     _set_V_rel_wind(Math::mag3(v)*M2FT); // units?
 
 
-    // These don't work, use a dummy based on altitude
-    // float P = get_Static_pressure();
-    // float T = get_Static_temperature();
-    float P = Atmosphere::getStdPressure(alt);
-    float T = Atmosphere::getStdTemperature(alt);
+    float P = fgGetDouble("/environment/pressure-inhg") * INHG2PA;
+    float T = fgGetDouble("/environment/temperature-degC") + 273.15;
     _set_V_equiv_kts(Atmosphere::calcVEAS(v[0], P, T)*MPS2KTS);
     _set_V_calibrated_kts(Atmosphere::calcVCAS(v[0], P, T)*MPS2KTS);
     _set_Mach_number(Atmosphere::calcMach(v[0], T));

@@ -1,5 +1,3 @@
-#include <Main/fg_props.hxx>
-
 #include "Math.hpp"
 #include "Atmosphere.hpp"
 namespace yasim {
@@ -42,26 +40,17 @@ const float GAMMA = 1.4f;
 
 float Atmosphere::getStdTemperature(float alt)
 {
-    if (fgGetBool("/environment/params/control-fdm-atmosphere"))
-        return fgGetDouble("/environment/temperature-degC") + 273.15;
-    else
-        return getRecord(alt, 1);
+    return getRecord(alt, 1);
 }
 
 float Atmosphere::getStdPressure(float alt)
 {
-    if (fgGetBool("/environment/params/control-fdm-atmosphere"))
-        return fgGetDouble("/environment/pressure-inhg") * 3386.39;
-    else
-        return getRecord(alt, 2);
+    return getRecord(alt, 2);
 }
 
 float Atmosphere::getStdDensity(float alt)
 {
-    if (fgGetBool("/environment/params/control-fdm-atmosphere"))
-        return fgGetDouble("/environment/density-slugft3") * 515.378;
-    else
-        return getRecord(alt, 3);
+    return getRecord(alt, 3);
 }
 
 float Atmosphere::calcVEAS(float spd, float pressure, float temp)
