@@ -254,7 +254,7 @@ void fgSkyInit( void ) {
 
     /* regester fgSkyColorsInit() as an event to be run periodically */
     global_events.Register( "fgSkyColorsInit()", fgSkyColorsInit, 
-		            FG_EVENT_READY, 30000);
+		            fgEVENT::FG_EVENT_READY, 30000);
 }
 
 
@@ -368,9 +368,12 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/08/22 01:18:59  curt
-/* Minor tweaks to avoid using unitialized memory.
+/* Revision 1.10  1998/08/29 13:07:16  curt
+/* Rewrite of event manager thanks to Bernie Bright.
 /*
+ * Revision 1.9  1998/08/22 01:18:59  curt
+ * Minor tweaks to avoid using unitialized memory.
+ *
  * Revision 1.8  1998/08/12 21:40:44  curt
  * Sky now tracks adjusted fog color so it blends well with terrain.
  *
