@@ -22,6 +22,58 @@
 
 #include "tower.hxx"
 #include "ATCdisplay.hxx"
+#include "ATCmgr.hxx"
+
+// TowerPlaneRec
+
+TowerPlaneRec::TowerPlaneRec() :
+id("UNKNOWN"),
+clearedToLand(false),
+clearedToDepart(false),
+longFinalReported(false),
+longFinalAcknowledged(false),
+finalReported(false),
+finalAcknowledged(false)
+{
+}
+
+TowerPlaneRec::TowerPlaneRec(string ID) :
+clearedToLand(false),
+clearedToDepart(false),
+longFinalReported(false),
+longFinalAcknowledged(false),
+finalReported(false),
+finalAcknowledged(false)
+{
+	id = ID;
+}
+
+TowerPlaneRec::TowerPlaneRec(Point3D pt) :
+id("UNKNOWN"),
+clearedToLand(false),
+clearedToDepart(false),
+longFinalReported(false),
+longFinalAcknowledged(false),
+finalReported(false),
+finalAcknowledged(false)
+{
+	pos = pt;
+}
+
+TowerPlaneRec::TowerPlaneRec(string ID, Point3D pt) :
+clearedToLand(false),
+clearedToDepart(false),
+longFinalReported(false),
+longFinalAcknowledged(false),
+finalReported(false),
+finalAcknowledged(false)
+{
+	id = ID;
+	pos = pt;
+}
+
+
+// FGTower
 
 FGTower::FGTower() {
 }
