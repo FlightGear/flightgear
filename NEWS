@@ -6,6 +6,14 @@ New in 0.56
   Windoze and other platforms.
 * Also added a fall back to the GLUT joystick routines for windows (until
   we can find better joystick support.)
+* Added some initial serial port support for acting like gps and outputing 
+  nmea data such that could be fed into a flight map software package.
+* Miscellaneous code clean ups, portability improvements, and optimizations.
+* Switched to a streams based error/debug logging system that can be
+  completely stripped out for a release build (./configure --without-logging)
+* Support for cygwin32 b20 compiler (latest release)
+* Continued progress on instrument panel
+* Support for starting fgfs at higher resolutions.
 
 New in 0.55
 * New version of gpc (generic polygon clipping library) from 
