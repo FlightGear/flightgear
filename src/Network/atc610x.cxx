@@ -46,6 +46,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 
+#include <Scripting/NasalSys.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
@@ -102,18 +103,6 @@ static int ATC610xSetRadios( int fd,
     return result;
 }
 
-
-// Read status of last radios written to
-static void ATC610xReadRadios( int fd, unsigned char *switch_data ) {
-    // rewind
-    lseek( fd, 0, SEEK_SET );
-
-    int result = read( fd, switch_data, ATC_RADIO_SWITCH_BYTES );
-    if ( result != ATC_RADIO_SWITCH_BYTES ) {
-	SG_LOG( SG_IO, SG_ALERT, "Read failed" );
-	exit( -1 );
-    }
-}
 
 // Write a stepper command
 static int ATC610xSetStepper( int fd, unsigned char channel,
@@ -487,6 +476,9 @@ bool FGATC610x::open() {
                                  true );
     dme_serviceable = fgGetNode( "/instrumentation/dme/serviceable", true );
 
+    dme_selector
+        = fgGetNode( "/input/atc-board/radio-switches/raw/dme-switch-position");
+
     // default to having everything serviceable
     comm1_serviceable->setBoolValue( true );
     comm2_serviceable->setBoolValue( true );
@@ -526,495 +518,6 @@ bool FGATC610x::do_lights() {
     ATC610xSetLamp( lamps_fd, 20, xpdr_on_ann->getBoolValue() ); // ON
     ATC610xSetLamp( lamps_fd, 21, xpdr_sby_ann->getBoolValue() ); // SBY
     ATC610xSetLamp( lamps_fd, 22, xpdr_reply_ann->getBoolValue() ); // R
-
-    return true;
-}
-
-
-/////////////////////////////////////////////////////////////////////
-// Read radio switches 
-/////////////////////////////////////////////////////////////////////
-
-bool FGATC610x::do_radio_switches() {
-    double freq, coarse_freq, fine_freq, value;
-    int diff;
-
-    ATC610xReadRadios( radios_fd, radio_switch_data );
-
-    // DME Switch
-    dme_switch = (radio_switch_data[7] >> 4) & 0x03;
-    if ( dme_switch == 0 ) {
-	// off
-	fgSetInt( "/instrumentation/dme/switch-position", 0 );
-    } else if ( dme_switch == 2 ) {
-	// nav1
-	fgSetInt( "/instrumentation/dme/switch-position", 1 );
-        fgSetString( "/instrumentation/dme/frequencies/source",
-                     "/radios/nav[0]/frequencies/selected-mhz" );
-	freq = fgGetFloat( "/radios/nav[0]/frequencies/selected-mhz", true );
-        fgSetFloat( "/instrumentation/dme/frequencies/selected-mhz", freq );
-    } else if ( dme_switch == 1 ) {
-	// nav2
-	fgSetInt( "/instrumentation/dme/switch-position", 3 );
-        fgSetString( "/instrumentation/dme/frequencies/source",
-                     "/radios/nav[1]/frequencies/selected-mhz" );
-	freq = fgGetFloat( "/radios/nav[1]/frequencies/selected-mhz", true );
-        fgSetFloat( "/instrumentation/dme/frequencies/selected-mhz", freq );
-    }
-
-    // NavCom1 Power
-    fgSetBool( "/radios/comm[0]/inputs/power-btn",
-               radio_switch_data[7] & 0x01 );
-
-    if ( navcom1_has_power() && comm1_serviceable->getBoolValue() ) {
-        // Com1 Swap
-        int com1_swap = ((radio_switch_data[7] >> 1) & 0x01);
-        static int last_com1_swap;
-        if ( com1_swap && (last_com1_swap != com1_swap) ) {
-            float tmp = com1_freq->getFloatValue();
-            fgSetFloat( "/radios/comm[0]/frequencies/selected-mhz",
-                        com1_stby_freq->getFloatValue() );
-            fgSetFloat( "/radios/comm[0]/frequencies/standby-mhz", tmp );
-        }
-        last_com1_swap = com1_swap;
-    }
-
-    // NavCom2 Power
-    fgSetBool( "/radios/comm[1]/inputs/power-btn",
-               radio_switch_data[15] & 0x01 );
-
-    if ( navcom2_has_power() && comm2_serviceable->getBoolValue() ) {
-        // Com2 Swap
-        int com2_swap = ((radio_switch_data[15] >> 1) & 0x01);
-        static int last_com2_swap;
-        if ( com2_swap && (last_com2_swap != com2_swap) ) {
-            float tmp = com2_freq->getFloatValue();
-            fgSetFloat( "/radios/comm[1]/frequencies/selected-mhz",
-                        com2_stby_freq->getFloatValue() );
-            fgSetFloat( "/radios/comm[1]/frequencies/standby-mhz", tmp );
-        }
-        last_com2_swap = com2_swap;
-    }
-
-    if ( navcom1_has_power() && nav1_serviceable->getBoolValue() ) {
-        // Nav1 Swap
-        int nav1_swap = radio_switch_data[11] & 0x01;
-        static int last_nav1_swap;
-        if ( nav1_swap && (last_nav1_swap != nav1_swap) ) {
-            float tmp = nav1_freq->getFloatValue();
-            fgSetFloat( "/radios/nav[0]/frequencies/selected-mhz",
-                        nav1_stby_freq->getFloatValue() );
-            fgSetFloat( "/radios/nav[0]/frequencies/standby-mhz", tmp );
-        }
-        last_nav1_swap = nav1_swap;
-    }
-
-    if ( navcom2_has_power() && nav2_serviceable->getBoolValue() ) {
-        // Nav2 Swap
-        int nav2_swap = (radio_switch_data[19] & 0x01);
-        static int last_nav2_swap;
-        if ( nav2_swap && (last_nav2_swap != nav2_swap) ) {
-            float tmp = nav2_freq->getFloatValue();
-            fgSetFloat( "/radios/nav[1]/frequencies/selected-mhz",
-                        nav2_stby_freq->getFloatValue() );
-            fgSetFloat( "/radios/nav[1]/frequencies/standby-mhz", tmp );
-        }
-        last_nav2_swap = nav2_swap;
-    }
-
-    if ( navcom1_has_power() && comm1_serviceable->getBoolValue() ) {
-        // Com1 Tuner
-        int com1_tuner_fine = ((radio_switch_data[5] >> 4) & 0x0f) - 1;
-        int com1_tuner_coarse = (radio_switch_data[5] & 0x0f) - 1;
-        static int last_com1_tuner_fine = com1_tuner_fine;
-        static int last_com1_tuner_coarse = com1_tuner_coarse;
-
-        freq = com1_stby_freq->getFloatValue();
-        coarse_freq = (int)freq;
-        fine_freq = (int)((freq - coarse_freq) * 40 + 0.5);
-
-        if ( com1_tuner_fine != last_com1_tuner_fine ) {
-            diff = com1_tuner_fine - last_com1_tuner_fine;
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( com1_tuner_fine < last_com1_tuner_fine ) {
-                    // going up
-                    diff = 12 - last_com1_tuner_fine + com1_tuner_fine;
-                } else {
-                    // going down
-                    diff = com1_tuner_fine - 12 - last_com1_tuner_fine;
-                }
-            }
-            fine_freq += diff;
-        }
-        while ( fine_freq >= 40.0 ) { fine_freq -= 40.0; }
-        while ( fine_freq < 0.0 )  { fine_freq += 40.0; }
-
-        if ( com1_tuner_coarse != last_com1_tuner_coarse ) {
-            diff = com1_tuner_coarse - last_com1_tuner_coarse;
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( com1_tuner_coarse < last_com1_tuner_coarse ) {
-                    // going up
-                    diff = 12 - last_com1_tuner_coarse + com1_tuner_coarse;
-                } else {
-                    // going down
-                    diff = com1_tuner_coarse - 12 - last_com1_tuner_coarse;
-                }
-            }
-            coarse_freq += diff;
-        }
-        if ( coarse_freq < 118.0 ) { coarse_freq += 19.0; }
-        if ( coarse_freq > 136.0 ) { coarse_freq -= 19.0; }
-
-        last_com1_tuner_fine = com1_tuner_fine;
-        last_com1_tuner_coarse = com1_tuner_coarse;
-
-        fgSetFloat( "/radios/comm[0]/frequencies/standby-mhz", 
-                    coarse_freq + fine_freq / 40.0 );
-    }
-
-    if ( navcom2_has_power() && comm2_serviceable->getBoolValue() ) {
-        // Com2 Tuner
-        int com2_tuner_fine = ((radio_switch_data[13] >> 4) & 0x0f) - 1;
-        int com2_tuner_coarse = (radio_switch_data[13] & 0x0f) - 1;
-        static int last_com2_tuner_fine = com2_tuner_fine;
-        static int last_com2_tuner_coarse = com2_tuner_coarse;
-
-        freq = com2_stby_freq->getFloatValue();
-        coarse_freq = (int)freq;
-        fine_freq = (int)((freq - coarse_freq) * 40 + 0.5);
-
-        if ( com2_tuner_fine != last_com2_tuner_fine ) {
-            diff = com2_tuner_fine - last_com2_tuner_fine;
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( com2_tuner_fine < last_com2_tuner_fine ) {
-                    // going up
-                    diff = 12 - last_com2_tuner_fine + com2_tuner_fine;
-                } else {
-                    // going down
-                    diff = com2_tuner_fine - 12 - last_com2_tuner_fine;
-                }
-            }
-            fine_freq += diff;
-        }
-        while ( fine_freq >= 40.0 ) { fine_freq -= 40.0; }
-        while ( fine_freq < 0.0 )  { fine_freq += 40.0; }
-
-        if ( com2_tuner_coarse != last_com2_tuner_coarse ) {
-            diff = com2_tuner_coarse - last_com2_tuner_coarse;
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( com2_tuner_coarse < last_com2_tuner_coarse ) {
-                    // going up
-                    diff = 12 - last_com2_tuner_coarse + com2_tuner_coarse;
-                } else {
-                    // going down
-                    diff = com2_tuner_coarse - 12 - last_com2_tuner_coarse;
-                }
-            }
-            coarse_freq += diff;
-        }
-        if ( coarse_freq < 118.0 ) { coarse_freq += 19.0; }
-        if ( coarse_freq > 136.0 ) { coarse_freq -= 19.0; }
-
-        last_com2_tuner_fine = com2_tuner_fine;
-        last_com2_tuner_coarse = com2_tuner_coarse;
-
-        fgSetFloat( "/radios/comm[1]/frequencies/standby-mhz",
-                    coarse_freq + fine_freq / 40.0 );
-    }
-
-    if ( navcom1_has_power() && nav1_serviceable->getBoolValue() ) {
-        // Nav1 Tuner
-        int nav1_tuner_fine = ((radio_switch_data[9] >> 4) & 0x0f) - 1;
-        int nav1_tuner_coarse = (radio_switch_data[9] & 0x0f) - 1;
-        static int last_nav1_tuner_fine = nav1_tuner_fine;
-        static int last_nav1_tuner_coarse = nav1_tuner_coarse;
-
-        freq = nav1_stby_freq->getFloatValue();
-        coarse_freq = (int)freq;
-        fine_freq = (int)((freq - coarse_freq) * 20 + 0.5);
-
-        if ( nav1_tuner_fine != last_nav1_tuner_fine ) {
-            diff = nav1_tuner_fine - last_nav1_tuner_fine;
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( nav1_tuner_fine < last_nav1_tuner_fine ) {
-                    // going up
-                    diff = 12 - last_nav1_tuner_fine + nav1_tuner_fine;
-                } else {
-                    // going down
-                    diff = nav1_tuner_fine - 12 - last_nav1_tuner_fine;
-                }
-            }
-            fine_freq += diff;
-        }
-        while ( fine_freq >= 20.0 ) { fine_freq -= 20.0; }
-        while ( fine_freq < 0.0 )  { fine_freq += 20.0; }
-
-        if ( nav1_tuner_coarse != last_nav1_tuner_coarse ) {
-            diff = nav1_tuner_coarse - last_nav1_tuner_coarse;
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( nav1_tuner_coarse < last_nav1_tuner_coarse ) {
-                    // going up
-                    diff = 12 - last_nav1_tuner_coarse + nav1_tuner_coarse;
-                } else {
-                    // going down
-                    diff = nav1_tuner_coarse - 12 - last_nav1_tuner_coarse;
-                }
-            }
-            coarse_freq += diff;
-        }
-        if ( coarse_freq < 108.0 ) { coarse_freq += 10.0; }
-        if ( coarse_freq > 117.0 ) { coarse_freq -= 10.0; }
-
-        last_nav1_tuner_fine = nav1_tuner_fine;
-        last_nav1_tuner_coarse = nav1_tuner_coarse;
-
-        fgSetFloat( "/radios/nav[0]/frequencies/standby-mhz",
-                    coarse_freq + fine_freq / 20.0 );
-    }
-
-    if ( navcom2_has_power() && nav2_serviceable->getBoolValue() ) {
-        // Nav2 Tuner
-        int nav2_tuner_fine = ((radio_switch_data[17] >> 4) & 0x0f) - 1;
-        int nav2_tuner_coarse = (radio_switch_data[17] & 0x0f) - 1;
-        static int last_nav2_tuner_fine = nav2_tuner_fine;
-        static int last_nav2_tuner_coarse = nav2_tuner_coarse;
-
-        freq = nav2_stby_freq->getFloatValue();
-        coarse_freq = (int)freq;
-        fine_freq = (int)((freq - coarse_freq) * 20 + 0.5);
-
-        if ( nav2_tuner_fine != last_nav2_tuner_fine ) {
-            diff = nav2_tuner_fine - last_nav2_tuner_fine;
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( nav2_tuner_fine < last_nav2_tuner_fine ) {
-                    // going up
-                    diff = 12 - last_nav2_tuner_fine + nav2_tuner_fine;
-                } else {
-                    // going down
-                    diff = nav2_tuner_fine - 12 - last_nav2_tuner_fine;
-                }
-            }
-            fine_freq += diff;
-        }
-        while ( fine_freq >= 20.0 ) { fine_freq -= 20.0; }
-        while ( fine_freq < 0.0 )  { fine_freq += 20.0; }
-
-        if ( nav2_tuner_coarse != last_nav2_tuner_coarse ) {
-            diff = nav2_tuner_coarse - last_nav2_tuner_coarse;
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( nav2_tuner_coarse < last_nav2_tuner_coarse ) {
-                    // going up
-                    diff = 12 - last_nav2_tuner_coarse + nav2_tuner_coarse;
-                } else {
-                    // going down
-                    diff = nav2_tuner_coarse - 12 - last_nav2_tuner_coarse;
-                }
-            }
-            coarse_freq += diff;
-        }
-        if ( coarse_freq < 108.0 ) { coarse_freq += 10.0; }
-        if ( coarse_freq > 117.0 ) { coarse_freq -= 10.0; }
-
-        last_nav2_tuner_fine = nav2_tuner_fine;
-        last_nav2_tuner_coarse = nav2_tuner_coarse;
-
-        fgSetFloat( "/radios/nav[1]/frequencies/standby-mhz", 
-                    coarse_freq + fine_freq / 20.0);
-    }
-
-    // ADF Tuner
-    
-    int adf_tuner_fine = ((radio_switch_data[21] >> 4) & 0x0f) - 1;
-    int adf_tuner_coarse = (radio_switch_data[21] & 0x0f) - 1;
-    static int last_adf_tuner_fine = adf_tuner_fine;
-    static int last_adf_tuner_coarse = adf_tuner_coarse;
-
-    if ( adf_has_power() && adf_serviceable->getBoolValue() ) {
-        // cout << "adf_stby_mode = " << adf_stby_mode->getIntValue() << endl;
-        if ( adf_count_mode->getIntValue() == 2 ) {
-            // tune count down timer
-            value = adf_elapsed_timer->getDoubleValue();
-        } else {
-            // tune frequency
-            if ( adf_stby_mode->getIntValue() == 1 ) {
-                value = adf_freq->getFloatValue();
-            } else {
-                value = adf_stby_freq->getFloatValue();
-            }
-        }
-
-        if ( adf_tuner_fine != last_adf_tuner_fine ) {
-            diff = adf_tuner_fine - last_adf_tuner_fine;
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( adf_tuner_fine < last_adf_tuner_fine ) {
-                    // going up
-                    diff = 12 - last_adf_tuner_fine + adf_tuner_fine;
-                } else {
-                    // going down
-                    diff = adf_tuner_fine - 12 - last_adf_tuner_fine;
-                }
-            }
-            value += diff;
-        }
-
-        if ( adf_tuner_coarse != last_adf_tuner_coarse ) {
-            diff = adf_tuner_coarse - last_adf_tuner_coarse;
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( adf_tuner_coarse < last_adf_tuner_coarse ) {
-                    // going up
-                    diff = 12 - last_adf_tuner_coarse + adf_tuner_coarse;
-                } else {
-                    // going down
-                    diff = adf_tuner_coarse - 12 - last_adf_tuner_coarse;
-                }
-            }
-            if ( adf_count_mode->getIntValue() == 2 ) {
-                value += 60 * diff;
-            } else {
-                value += 25 * diff;
-            }
-        }
-        if ( adf_count_mode->getIntValue() == 2 ) {
-            if ( value < 0 ) { value += 3600; }
-            if ( value > 3599 ) { value -= 3600; }
-        } else {
-            if ( value < 200 ) { value += 1600; }
-            if ( value > 1799 ) { value -= 1600; }
-        }
- 
-        if ( adf_count_mode->getIntValue() == 2 ) {
-            fgSetFloat( "/radios/kr-87/outputs/elapsed-timer", value );
-        } else {
-            if ( adf_stby_mode->getIntValue() == 1 ) {
-                fgSetFloat( "/radios/kr-87/outputs/selected-khz", value );
-            } else {
-                fgSetFloat( "/radios/kr-87/outputs/standby-khz", value );
-            }
-        }
-    }
-    last_adf_tuner_fine = adf_tuner_fine;
-    last_adf_tuner_coarse = adf_tuner_coarse;
-
-
-    // ADF buttons 
-#define CURT_HARDWARE
-    fgSetInt( "/radios/kr-87/inputs/adf-btn",
-              (radio_switch_data[23] & 0x01) );
-    fgSetInt( "/radios/kr-87/inputs/bfo-btn",
-              (radio_switch_data[23] >> 1 & 0x01) );
-
-    fgSetInt( "/radios/kr-87/inputs/frq-btn",
-              (radio_switch_data[23] >> 2 & 0x01) );
-
-#ifdef CURT_HARDWARE
-    fgSetInt( "/radios/kr-87/inputs/flt-et-btn",
-              !(radio_switch_data[23] >> 3 & 0x01) );
-#else
-    fgSetInt( "/radios/kr-87/inputs/flt-et-btn",
-              (radio_switch_data[23] >> 3 & 0x01) );
-#endif
-
-#ifdef CURT_HARDWARE
-    fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
-              !(radio_switch_data[23] >> 4 & 0x01) );
-#else
-    fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
-              (radio_switch_data[23] >> 4 & 0x01) );
-#endif
-
-    fgSetInt( "/radios/kr-87/inputs/power-btn",
-              radio_switch_data[23] >> 5 & 0x01 );
-    /* cout << "adf = " << !(radio_switch_data[23] & 0x01)
-         << " bfo = " << !(radio_switch_data[23] >> 1 & 0x01)
-         << " frq = " << !(radio_switch_data[23] >> 2 & 0x01)
-         << " flt/et = " << !(radio_switch_data[23] >> 3 & 0x01)
-         << " set/rst = " << !(radio_switch_data[23] >> 4 & 0x01)
-         << endl; */
-
-    // Transponder Tuner
-    int i;
-    int digit_tuner[4];
-    digit_tuner[0] = radio_switch_data[25] & 0x0f;
-    digit_tuner[1] = ( radio_switch_data[25] >> 4 ) & 0x0f;
-    digit_tuner[2] = radio_switch_data[29] & 0x0f;
-    digit_tuner[3] = ( radio_switch_data[29] >> 4 ) & 0x0f;
-
-    static int last_digit_tuner[4];
-    static bool first_time = true;
-    if ( first_time ) {
-        first_time = false;
-        for ( i = 0; i < 4; ++i ) {
-            last_digit_tuner[i] = digit_tuner[i];
-        }
-    }
-
-    if ( xpdr_has_power() && xpdr_serviceable->getBoolValue() ) {
-        int id_code = xpdr_id_code->getIntValue();
-        int digit[4];
-        int place = 1000;
-        for ( i = 0; i < 4; ++i ) {
-            digit[i] = id_code / place;
-            id_code -= digit[i] * place;
-            place /= 10;
-        }
-
-        for ( i = 0; i < 4; ++i ) {
-            if ( digit_tuner[i] != last_digit_tuner[i] ) {
-                diff = digit_tuner[i] - last_digit_tuner[i];
-                if ( abs(diff) > 4 ) {
-                    // roll over
-                    if ( digit_tuner[i] < last_digit_tuner[i] ) {
-                        // going up
-                        diff = 16 - last_digit_tuner[i] + digit_tuner[i];
-                    } else {
-                        // going down
-                        diff = digit_tuner[i] - 16 - last_digit_tuner[i];
-                    }
-                }
-                digit[i] += diff;
-            }
-            while ( digit[i] >= 8 ) { digit[i] -= 8; }
-            while ( digit[i] < 0 )  { digit[i] += 8; }
-        }
-
-        fgSetInt( "/radios/kt-70/inputs/digit1", digit[0] );
-        fgSetInt( "/radios/kt-70/inputs/digit2", digit[1] );
-        fgSetInt( "/radios/kt-70/inputs/digit3", digit[2] );
-        fgSetInt( "/radios/kt-70/inputs/digit4", digit[3] );
-    }
-    for ( i = 0; i < 4; ++i ) {
-        last_digit_tuner[i] = digit_tuner[i];
-    }
-
-    int tmp = 0;
-    for ( i = 0; i < 5; ++i ) {
-        if ( radio_switch_data[27] >> i & 0x01 ) {
-            tmp = i + 1;
-        }
-    }
-    fgSetInt( "/radios/kt-70/inputs/func-knob", tmp );
-    fgSetInt( "/radios/kt-70/inputs/ident-btn",
-              !(radio_switch_data[27] >> 5 & 0x01) );
-
-    // Audio panel switches
-    fgSetInt( "/radios/nav[0]/audio-btn",
-              (radio_switch_data[3] & 0x01) );
-    fgSetInt( "/radios/nav[1]/audio-btn",
-              (radio_switch_data[3] >> 2 & 0x01) );
-    fgSetInt( "/radios/kr-87/inputs/audio-btn",
-              (radio_switch_data[3] >> 4 & 0x01) );
-    fgSetInt( "/radios/marker-beacon/audio-btn",
-              (radio_switch_data[3] >> 6 & 0x01) );
 
     return true;
 }
@@ -1410,6 +913,7 @@ bool FGATC610x::process() {
     // Lock the hardware, skip if it's not ready yet
     if ( ATC610xLock( lock_fd ) > 0 ) {
 
+        // process the ATC inputs
         if ( input0 != NULL ) {
             input0->process();
         }
@@ -1417,8 +921,21 @@ bool FGATC610x::process() {
             input1->process();
         }
 
+        // run our custom nasal script.  This is a layer above the raw
+        // hardware inputs.  It handles situations where there isn't a
+        // direct 1-1 linear mapping between ATC functionality and FG
+        // functionality, and handles situations where FG expects more
+        // functionality from the interface than the ATC hardware can
+        // directly provide.
+
+        FGNasalSys *n = (FGNasalSys*)globals->get_subsystem("nasal");
+        bool result = n->parseAndRun( "atcsim.do_hardware()" );
+        if ( !result ) {
+            SG_LOG( SG_GENERAL, SG_ALERT,
+                    "do_atcflightsim_hardware() failed!" );
+        }
+
 	do_lights();
-	do_radio_switches();
 	do_radio_display();
 	do_steppers();
 	

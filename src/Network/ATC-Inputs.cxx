@@ -27,6 +27,12 @@
 
 #include <simgear/compiler.h>
 
+#if defined( unix ) || defined( __CYGWIN__ )
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#  include <fcntl.h>
+#endif
+
 #include STL_STRING
 
 #include <simgear/debug/logstream.hxx>
@@ -131,6 +137,8 @@ bool FGATCInput::open() {
     snprintf( radios_file, 256, "/proc/atc610x/board%d/radios", board );
     snprintf( switches_file, 256, "/proc/atc610x/board%d/switches", board );
 
+#if defined( unix ) || defined( __CYGWIN__ )
+
     /////////////////////////////////////////////////////////////////////
     // Open the /proc files
     /////////////////////////////////////////////////////////////////////
@@ -170,6 +178,8 @@ bool FGATCInput::open() {
 	perror( msg );
 	exit( -1 );
     }
+
+#endif
 
     /////////////////////////////////////////////////////////////////////
     // Finished initing hardware
@@ -761,12 +771,12 @@ bool FGATCInput::do_radio_switches() {
                 string type = "";
                 vector <SGPropertyNode *> output_nodes; output_nodes.clear();
                 int byte_num = -1;
-                int right_shift = -1;
+                int right_shift = 0;
                 int mask = 0xff;
                 int factor = 1;
                 int offset = 0;
+                bool invert = false;
                 int scaled_value = 0;
-
                 // get common options
 
                 SGPropertyNode *prop;
@@ -805,12 +815,19 @@ bool FGATCInput::do_radio_switches() {
                 if ( prop != NULL ) {
                     offset = prop->getIntValue();
                 }
+                prop = child->getChild( "invert" );
+                if ( prop != NULL ) {
+                    invert = prop->getBoolValue();
+                }
 
                 // Fetch the raw value
                 int raw_value
                     = (radio_switch_data[byte_num] >> right_shift) & mask;
 
                 // Cook the value
+                if ( invert ) {
+                    raw_value = !raw_value;
+                }
                 scaled_value = raw_value * factor + offset;
 
                 // update the property tree values
@@ -843,6 +860,9 @@ bool FGATCInput::process() {
 
 
 bool FGATCInput::close() {
+
+#if defined( unix ) || defined( __CYGWIN__ )
+
     int result;
 
     result = ::close( lock_fd );
@@ -880,6 +900,8 @@ bool FGATCInput::close() {
 	perror( msg );
 	exit( -1 );
     }
+
+#endif
 
     return true;
 }

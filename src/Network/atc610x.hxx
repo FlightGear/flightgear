@@ -114,12 +114,13 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *nav1vol_min, *nav1vol_max;
     SGPropertyNode *nav2vol_min, *nav2vol_max;
 
+    // raw switch positions
+    SGPropertyNode *dme_selector;
     SGPropertyNode *ignore_flight_controls;
 
     int dme_switch;
 
     bool do_lights();
-    bool do_radio_switches();
     bool do_radio_display();
     bool do_steppers();
 
