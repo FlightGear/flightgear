@@ -638,7 +638,7 @@ setup_triangle (float * p1, float * p2, float * p3,
 	data->branch = in_range;
 	data->lon_deg = lon_deg;
 	data->lat_deg = lat_deg;
-	data->seed = (unsigned int)(p1[0] * i);
+	data->seed = (unsigned int)((p1[0] + lon_deg + lat_deg) * i * 128);
 
 				// Set up the in-range node.
 	in_range->setUserData(data);
