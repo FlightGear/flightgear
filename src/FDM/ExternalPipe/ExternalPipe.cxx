@@ -118,6 +118,7 @@ void FGExternalPipe::init() {
     double heading = fgGetDouble("/sim/presets/heading-deg");
     double speed = fgGetDouble( "/sim/presets/airspeed-kt" );
     double weight = fgGetDouble( "/sim/aircraft-weight-lbs" );
+    double cg_offset = fgGetDouble( "/sim/aircraft-cg-offset-inches" );
 
 #ifdef HAVE_MKFIFO
 
@@ -168,6 +169,14 @@ void FGExternalPipe::init() {
       }
     }
 
+    if ( cg_offset > -5.0 || cg_offset < 5.0 ) {
+      sprintf( cmd, "1aircraft-cg-offset-inches=%.2f", cg_offset );
+      result = write( pd1, cmd, strlen(cmd) );
+      if ( result == -1 ) {
+        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
+      }
+    }
+
     SG_LOG( SG_IO, SG_INFO, "before sending reset command." );
 
     if( fgGetBool("/sim/presets/onground") ) {
@@ -210,6 +219,18 @@ void FGExternalPipe::update( double dt ) {
       }
     }
     last_weight = weight;
+
+    double cg_offset = fgGetDouble( "/sim/aircraft-cg-offset-inches" );
+    static double last_cg_offset = -9999.9;
+    if ( fabs( cg_offset - last_cg_offset ) > 0.01 ) {
+      char cmd[256];
+      sprintf( cmd, "1aircraft-cg-offset-inches=%.2f", cg_offset );
+      result = write( pd1, cmd, strlen(cmd) );
+      if ( result == -1 ) {
+        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
+      }
+    }
+    last_cg_offset = cg_offset;
 
     // Send control positions to remote fdm
     length = sizeof(ctrls);
