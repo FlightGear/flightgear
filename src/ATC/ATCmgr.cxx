@@ -451,6 +451,7 @@ void FGATCMgr::FreqSearch(int channel) {
 				t->SetData(&data);
 				comm_atc_ptr[chan] = t;
 				t->SetDisplay();
+				t->Init();
 				atc_list.push_back(t);
 			}
 		} else if (comm_type[chan] == APPROACH) {
