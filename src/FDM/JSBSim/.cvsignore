@@ -2,4 +2,5 @@
 .deps
 Makefile
 Makefile.in
+config.h
 testJSBsim
