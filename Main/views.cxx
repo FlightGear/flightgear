@@ -72,23 +72,23 @@ void fgVIEW::Update( fgFLIGHT *f ) {
     scenery.center.y = scenery.next_center.y;
     scenery.center.z = scenery.next_center.z;
 
-    printf("win_ratio = %.2f\n", win_ratio);
+    // printf("win_ratio = %.2f\n", win_ratio);
 
     // calculate sin() and cos() of fov / 2 in X direction;
-    theta_x = FG_PI_2 - (o->fov * win_ratio * DEG_TO_RAD) / 2.0;
-    printf("theta_x = %.2f\n", theta_x);
+    theta_x = (o->fov * win_ratio * DEG_TO_RAD) / 2.0;
+    // printf("theta_x = %.2f\n", theta_x);
     sin_fov_x = sin(theta_x);
     cos_fov_x = cos(theta_x);
     slope_x = sin_fov_x / cos_fov_x;
-    printf("slope_x = %.2f\n", slope_x);
+    // printf("slope_x = %.2f\n", slope_x);
 
     // calculate sin() and cos() of fov / 2 in Y direction;
-    theta_y = FG_PI_2 - (o->fov * DEG_TO_RAD) / 2.0;
-    printf("theta_y = %.2f\n", theta_y);
+    theta_y = (o->fov * DEG_TO_RAD) / 2.0;
+    // printf("theta_y = %.2f\n", theta_y);
     sin_fov_y = sin(theta_y);
     cos_fov_y = cos(theta_y);
     slope_y = sin_fov_y / cos_fov_y;
-    printf("slope_y = %.2f\n", slope_y);
+    // printf("slope_y = %.2f\n", slope_y);
 
     // calculate the cartesion coords of the current lat/lon/0 elev
     p.lon = FG_Longitude;
@@ -318,6 +318,9 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.10  1998/05/17 16:59:03  curt
+// First pass at view frustum culling now operational.
+//
 // Revision 1.9  1998/05/16 13:08:37  curt
 // C++ - ified views.[ch]xx
 // Shuffled some additional view parameters into the fgVIEW class.

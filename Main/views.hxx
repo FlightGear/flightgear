@@ -69,6 +69,10 @@ public:
     // slope of view frustum edge in eye space X axis
     double slope_x;
 
+    // View frustum cull ratio (% of tiles culled ... used for
+    // reporting purposes)
+    double vfc_ratio;
+
     // absolute view position
     fgCartesianPoint3d abs_view_pos;
 
@@ -142,6 +146,9 @@ extern fgVIEW current_view;
 
 
 // $Log$
+// Revision 1.7  1998/05/17 16:59:04  curt
+// First pass at view frustum culling now operational.
+//
 // Revision 1.6  1998/05/16 13:08:37  curt
 // C++ - ified views.[ch]xx
 // Shuffled some additional view parameters into the fgVIEW class.
