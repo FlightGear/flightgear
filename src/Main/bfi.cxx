@@ -96,6 +96,8 @@ FGBFI::init ()
 //   current_properties.tieString("/sim/aircraft",
 // 			       getAircraft, setAircraft);
   // TODO: timeGMT
+  current_properties.tieString("/sim/time/gmt-string",
+			       getGMTString, 0);
   current_properties.tieBool("/sim/hud/visibility",
 			     getHUDVisible, setHUDVisible);
   current_properties.tieBool("/sim/panel/visibility",
@@ -190,6 +192,10 @@ FGBFI::init ()
 			       getNAV1SelRadial, setNAV1SelRadial);
   current_properties.tieDouble("/radios/nav1/dme/distance",
 			       getNAV1DistDME, 0);
+  current_properties.tieBool("/radios/nav1/to-flag",
+			     getNAV1TO, 0);
+  current_properties.tieBool("/radios/nav1/from-flag",
+			     getNAV1FROM, 0);
   current_properties.tieBool("/radios/nav1/in-range",
 			     getNAV1InRange, 0);
   current_properties.tieBool("/radios/nav1/dme/in-range",
@@ -205,6 +211,10 @@ FGBFI::init ()
 			       getNAV2SelRadial, setNAV2SelRadial);
   current_properties.tieDouble("/radios/nav2/dme/distance",
 			       getNAV2DistDME, 0);
+  current_properties.tieBool("/radios/nav2/to-flag",
+			     getNAV2TO, 0);
+  current_properties.tieBool("/radios/nav2/from-flag",
+			     getNAV2FROM, 0);
   current_properties.tieBool("/radios/nav2/in-range",
 			     getNAV2InRange, 0);
   current_properties.tieBool("/radios/nav2/dme/in-range",
@@ -413,6 +423,22 @@ FGBFI::setTimeGMT (time_t time)
 				      cur_fdm_state->get_Latitude(),
 				      globals->get_warp() );
   needReinit();
+}
+
+
+/**
+ * Return the GMT as a string.
+ */
+const string &
+FGBFI::getGMTString ()
+{
+  static string out;		// FIXME: not thread-safe
+  char buf[16];
+  struct tm * t = globals->get_time_params()->getGmt();
+  sprintf(buf, " %.2d:%.2d:%.2d",
+	  t->tm_hour, t->tm_min, t->tm_sec);
+  out = buf;
+  return out;
 }
 
 
@@ -1147,6 +1173,46 @@ FGBFI::getNAV1DistDME ()
   return current_radiostack->get_nav1_dme_dist();
 }
 
+bool 
+FGBFI::getNAV1TO ()
+{
+  if (current_radiostack->get_nav1_inrange()) {
+    double heading = current_radiostack->get_nav1_heading();
+    double radial = current_radiostack->get_nav1_radial();
+    double var = FGBFI::getMagVar();
+    if (current_radiostack->get_nav1_loc()) {
+      double offset = fabs(heading - radial);
+      return (offset<= 8.0 || offset >= 352.0);
+    } else {
+      double offset =
+	fabs(heading - var - radial);
+      return (offset <= 20.0 || offset >= 340.0);
+    }
+  } else {
+    return false;
+  }
+}
+
+bool
+FGBFI::getNAV1FROM ()
+{
+  if (current_radiostack->get_nav1_inrange()) {
+    double heading = current_radiostack->get_nav1_heading();
+    double radial = current_radiostack->get_nav1_radial();
+    double var = FGBFI::getMagVar();
+    if (current_radiostack->get_nav1_loc()) {
+      double offset = fabs(heading - radial);
+      return (offset >= 172.0 && offset<= 188.0);
+    } else {
+      double offset =
+	fabs(heading - var - radial);
+      return (offset >= 160.0 && offset <= 200.0);
+    }
+  } else {
+    return false;
+  }
+}
+
 bool
 FGBFI::getNAV1InRange ()
 {
@@ -1189,6 +1255,47 @@ FGBFI::getNAV2DistDME ()
 {
   return current_radiostack->get_nav2_dme_dist();
 }
+
+bool 
+FGBFI::getNAV2TO ()
+{
+  if (current_radiostack->get_nav2_inrange()) {
+    double heading = current_radiostack->get_nav2_heading();
+    double radial = current_radiostack->get_nav2_radial();
+    double var = FGBFI::getMagVar();
+    if (current_radiostack->get_nav2_loc()) {
+      double offset = fabs(heading - radial);
+      return (offset<= 8.0 || offset >= 352.0);
+    } else {
+      double offset =
+	fabs(heading - var - radial);
+      return (offset <= 20.0 || offset >= 340.0);
+    }
+  } else {
+    return false;
+  }
+}
+
+bool 
+FGBFI::getNAV2FROM ()
+{
+  if (current_radiostack->get_nav2_inrange()) {
+    double heading = current_radiostack->get_nav2_heading();
+    double radial = current_radiostack->get_nav2_radial();
+    double var = FGBFI::getMagVar();
+    if (current_radiostack->get_nav2_loc()) {
+      double offset = fabs(heading - radial);
+      return (offset >= 172.0 && offset<= 188.0);
+    } else {
+      double offset =
+	fabs(heading - var - radial);
+      return (offset >= 160.0 && offset <= 200.0);
+    }
+  } else {
+    return false;
+  }
+}
+
 
 bool
 FGBFI::getNAV2InRange ()

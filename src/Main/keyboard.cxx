@@ -55,7 +55,6 @@
 #include <Cockpit/hud.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-#include <Cockpit/sp_panel.hxx>
 #include <GUI/gui.h>
 #include <Scenery/tilemgr.hxx>
 #include <Objects/matlib.hxx>

@@ -10,7 +10,6 @@ libCockpit_a_SOURCES = \
 	panel.cxx panel.hxx \
         panel_io.cxx panel_io.hxx \
 	radiostack.cxx radiostack.hxx \
-	sp_panel.cxx sp_panel.hxx \
 	steam.cxx steam.hxx
 
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

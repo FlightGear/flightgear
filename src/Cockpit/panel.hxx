@@ -30,6 +30,8 @@
 #  include <config.h>
 #endif
 
+#include <simgear/compiler.h>
+
 #ifdef HAVE_WINDOWS_H          
 #  include <windows.h>
 #endif
@@ -72,17 +74,36 @@ private:
 // This structure wraps an SSG texture with cropping information.
 ////////////////////////////////////////////////////////////////////////
 
-struct CroppedTexture
+class FGCroppedTexture
 {
-  CroppedTexture () {}
-  CroppedTexture (const string &path,
-		  float _minX = 0.0, float _minY = 0.0,
-		  float _maxX = 1.0, float _maxY = 1.0)
-    : texture(FGTextureManager::createTexture(path)),
-      minX(_minX), minY(_minY), maxX(_maxX), maxY(_maxY) {}
+public:
 
-  ssgTexture * texture;
-  float minX, minY, maxX, maxY;
+  FGCroppedTexture ();
+  FGCroppedTexture (const string &path,
+		  float _minX = 0.0, float _minY = 0.0,
+		  float _maxX = 1.0, float _maxY = 1.0);
+  virtual ~FGCroppedTexture ();
+
+  virtual void setPath (const string &path) { _path = path; }
+
+  virtual const string &getPath () const { return _path; }
+
+  virtual ssgTexture * getTexture ();
+
+  virtual void setCrop (float minX, float minY, float maxX, float maxY) {
+    _minX = minX; _minY = minY; _maxX = maxX; _maxY = maxY;
+  }
+
+  virtual float getMinX () const { return _minX; }
+  virtual float getMinY () const { return _minY; }
+  virtual float getMaxX () const { return _maxX; }
+  virtual float getMaxY () const { return _maxY; }
+
+
+private:
+  string _path;
+  ssgTexture * _texture;
+  float _minX, _minY, _maxX, _maxY;
 };
 
 
@@ -400,7 +421,7 @@ public:
 
 				// Transfer pointer ownership!!
   virtual int addLayer (FGInstrumentLayer *layer);
-  virtual int addLayer (CroppedTexture &texture, int w = -1, int h = -1);
+  virtual int addLayer (FGCroppedTexture &texture, int w = -1, int h = -1);
 
 				// Transfer pointer ownership!!
   virtual void addTransformation (FGPanelTransformation * transformation);
@@ -423,19 +444,19 @@ class FGTexturedLayer : public FGInstrumentLayer
 {
 public:
   FGTexturedLayer (int w = -1, int h = -1) : FGInstrumentLayer(w, h) {}
-  FGTexturedLayer (const CroppedTexture &texture, int w = -1, int h = -1);
+  FGTexturedLayer (const FGCroppedTexture &texture, int w = -1, int h = -1);
   virtual ~FGTexturedLayer ();
 
   virtual void draw ();
 
-  virtual void setTexture (const CroppedTexture &texture) {
+  virtual void setTexture (const FGCroppedTexture &texture) {
     _texture = texture;
   }
-  virtual CroppedTexture &getTexture () { return _texture; }
-  virtual const CroppedTexture &getTexture () const { return _texture; }
+  virtual FGCroppedTexture &getTexture () { return _texture; }
+  virtual const FGCroppedTexture &getTexture () const { return _texture; }
 
 private:
-  mutable CroppedTexture _texture;
+  mutable FGCroppedTexture _texture;
 };
 
 
@@ -451,7 +472,7 @@ class FGWindowLayer : public FGTexturedLayer
 {
 public:
   FGWindowLayer (int w = -1, int h = -1);
-  FGWindowLayer (const CroppedTexture &texture, int w = -1, int h = -1);
+  FGWindowLayer (const FGCroppedTexture &texture, int w = -1, int h = -1);
   virtual ~FGWindowLayer ();
 
   virtual void draw ();

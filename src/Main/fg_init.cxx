@@ -63,7 +63,7 @@
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/radiostack.hxx>
 #include <Cockpit/panel.hxx>
-#include <Cockpit/sp_panel.hxx>
+#include <Cockpit/panel_io.hxx>
 #include <FDM/Balloon.h>
 #include <FDM/External.hxx>
 #include <FDM/JSBSim.hxx>
@@ -700,7 +700,16 @@ bool fgInitSubsystems( void ) {
 #endif
 
     // Initialize the 2D panel.
-    current_panel = fgCreateSmallSinglePropPanel(0, 0, 1024, 768);
+    string panel_path =
+	current_properties.getStringValue("/sim/panel",
+					  "Panels/Default/default.xml");
+    current_panel = fgReadPanel(panel_path);
+    if (current_panel == 0) {
+	FG_LOG(FG_INPUT, FG_ALERT,
+	       "Error reading new panel from " << panel_path);
+    }
+    FG_LOG(FG_INPUT, FG_INFO, "Loaded new panel from " << panel_path);
+    // current_panel = fgCreateSmallSinglePropPanel(0, 0, 1024, 768);
 
     // Initialize the BFI
     FGBFI::init();

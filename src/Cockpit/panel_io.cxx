@@ -41,9 +41,9 @@
 #include "steam.hxx"
 #include "panel_io.hxx"
 
-using std::istream;
-using std::ifstream;
-using std::string;
+FG_USING_STD(istream);
+FG_USING_STD(ifstream);
+FG_USING_STD(string);
 
 
 
@@ -66,7 +66,7 @@ public:
 FGMagRibbon::FGMagRibbon (int w, int h)
   : FGTexturedLayer(w, h)
 {
-  CroppedTexture texture("Instruments/Default/Textures/compass-ribbon.rgb");
+  FGCroppedTexture texture("Instruments/Default/Textures/compass-ribbon.rgb");
   setTexture(texture);
 }
 
@@ -103,11 +103,8 @@ FGMagRibbon::draw ()
 				// Adjust to put the number in the centre
   xoffset -= 0.25;
 
-  CroppedTexture &t = getTexture();
-  t.minX = xoffset;
-  t.minY = yoffset;
-  t.maxX = xoffset + 0.5;
-  t.maxY = yoffset + 0.25;
+  FGCroppedTexture &t = getTexture();
+  t.setCrop(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
   FGTexturedLayer::draw();
 }
 
@@ -167,10 +164,10 @@ FGMagRibbon::draw ()
  * ending position.  For example, to use the bottom-left quarter of a
  * texture, x1=0.0, y1=0.0, x2=0.5, y2=0.5.
  */
-static CroppedTexture
+static FGCroppedTexture
 readTexture (SGPropertyNode node)
 {
-  CroppedTexture texture(node.getStringValue("path"),
+  FGCroppedTexture texture(node.getStringValue("path"),
 			 node.getFloatValue("x1"),
 			 node.getFloatValue("y1"),
 			 node.getFloatValue("x2", 1.0),
@@ -440,7 +437,7 @@ readTextChunk (SGPropertyNode node)
 static FGInstrumentLayer *
 readLayer (SGPropertyNode node, float hscale, float vscale)
 {
-  FGInstrumentLayer * layer;
+  FGInstrumentLayer * layer = NULL;
   string name = node.getStringValue("name");
   string type = node.getStringValue("type");
   int w = node.getIntValue("w", -1);
@@ -461,7 +458,7 @@ readLayer (SGPropertyNode node, float hscale, float vscale)
 
 				// A textured instrument layer.
   if (type == "texture") {
-    CroppedTexture texture = readTexture(node.getSubNode("texture"));
+    FGCroppedTexture texture = readTexture(node.getSubNode("texture"));
     layer = new FGTexturedLayer(texture, w, h);
   }
 
@@ -499,7 +496,7 @@ readLayer (SGPropertyNode node, float hscale, float vscale)
 				// A switch instrument layer.
   else if (type == "switch") {
     SGValue * value =
-      current_properties.getValue(node.getStringValue("property"));
+      current_properties.getValue(node.getStringValue("property"), true);
     FGInstrumentLayer * layer1 =
       readLayer(node.getSubNode("layer1"), hscale, vscale);
     FGInstrumentLayer * layer2 =

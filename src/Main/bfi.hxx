@@ -57,6 +57,7 @@ public:
   static const string getAircraft ();
   static const string getAircraftDir ();
   static time_t getTimeGMT ();
+  static const string &getGMTString ();
   static bool getHUDVisible ();
   static bool getPanelVisible ();
 
@@ -149,6 +150,8 @@ public:
   static double getNAV1Radial ();
   static double getNAV1SelRadial ();
   static double getNAV1DistDME ();
+  static bool getNAV1TO ();
+  static bool getNAV1FROM ();
   static bool getNAV1InRange ();
   static bool getNAV1DMEInRange ();
 
@@ -157,6 +160,8 @@ public:
   static double getNAV2Radial ();
   static double getNAV2SelRadial ();
   static double getNAV2DistDME ();
+  static bool getNAV2TO ();
+  static bool getNAV2FROM ();
   static bool getNAV2InRange ();
   static bool getNAV2DMEInRange ();
 

@@ -68,6 +68,44 @@ FGTextureManager::createTexture (const string &relativePath)
 }
 
 
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGCropped Texture.
+////////////////////////////////////////////////////////////////////////
+
+
+FGCroppedTexture::FGCroppedTexture ()
+  : _path(""), _texture(0),
+    _minX(0.0), _minY(0.0), _maxX(1.0), _maxY(1.0)
+{
+}
+
+
+FGCroppedTexture::FGCroppedTexture (const string &path,
+				    float minX, float minY,
+				    float maxX, float maxY)
+  : _path(path), _texture(0),
+    _minX(minX), _minY(minY), _maxX(maxX), _maxY(maxY)
+{
+}
+
+
+FGCroppedTexture::~FGCroppedTexture ()
+{
+}
+
+
+ssgTexture *
+FGCroppedTexture::getTexture ()
+{
+  if (_texture == 0) {
+    _texture = FGTextureManager::createTexture(_path);
+  }
+  return _texture;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGPanel.
@@ -473,7 +511,7 @@ FGLayeredInstrument::addLayer (FGInstrumentLayer *layer)
 }
 
 int
-FGLayeredInstrument::addLayer (CroppedTexture &texture,
+FGLayeredInstrument::addLayer (FGCroppedTexture &texture,
 			       int w, int h)
 {
   return addLayer(new FGTexturedLayer(texture, w, h));
@@ -551,7 +589,7 @@ FGInstrumentLayer::addTransformation (FGPanelTransformation * transformation)
 ////////////////////////////////////////////////////////////////////////
 
 
-FGTexturedLayer::FGTexturedLayer (const CroppedTexture &texture, int w, int h)
+FGTexturedLayer::FGTexturedLayer (const FGCroppedTexture &texture, int w, int h)
   : FGInstrumentLayer(w, h)
 {
   setTexture(texture);
@@ -570,17 +608,22 @@ FGTexturedLayer::draw ()
   int h2 = _h / 2;
 
   transform();
-  glBindTexture(GL_TEXTURE_2D, _texture.texture->getHandle());
+  glBindTexture(GL_TEXTURE_2D, _texture.getTexture()->getHandle());
   glBegin(GL_POLYGON);
+
+				// From Curt: turn on the panel
+				// lights after sundown.
   if ( cur_light_params.sun_angle * RAD_TO_DEG < 95.0 ) {
       glColor4fv( cur_light_params.scene_diffuse );
   } else {
       glColor4f(0.7, 0.2, 0.2, 1.0);
   }
-  glTexCoord2f(_texture.minX, _texture.minY); glVertex2f(-w2, -h2);
-  glTexCoord2f(_texture.maxX, _texture.minY); glVertex2f(w2, -h2);
-  glTexCoord2f(_texture.maxX, _texture.maxY); glVertex2f(w2, h2);
-  glTexCoord2f(_texture.minX, _texture.maxY); glVertex2f(-w2, h2);
+
+
+  glTexCoord2f(_texture.getMinX(), _texture.getMinY()); glVertex2f(-w2, -h2);
+  glTexCoord2f(_texture.getMaxX(), _texture.getMinY()); glVertex2f(w2, -h2);
+  glTexCoord2f(_texture.getMaxX(), _texture.getMaxY()); glVertex2f(w2, h2);
+  glTexCoord2f(_texture.getMinX(), _texture.getMaxY()); glVertex2f(-w2, h2);
   glEnd();
 }
 
@@ -595,7 +638,7 @@ FGWindowLayer::FGWindowLayer (int w, int h)
 {
 }
 
-FGWindowLayer::FGWindowLayer (const CroppedTexture &texture, int w, int h)
+FGWindowLayer::FGWindowLayer (const FGCroppedTexture &texture, int w, int h)
   : FGTexturedLayer(texture, w, h)
 {
 }
