@@ -330,7 +330,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 
 	    in >> token;
 
-	    if ( token == "version" ) {
+	    if ( token == "Version" ) {
 		// read scenery versions number
 		in >> scenery_version;
 		// cout << "scenery_version = " << scenery_version << endl;
