@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/sg_random.h>
 
 #include <Main/fg_props.hxx>
 
@@ -63,6 +64,7 @@ static const struct {
 
 FGSound::FGSound()
   : _sample(NULL),
+    _active(false),
     _condition(NULL),
     _property(NULL),
     _dt_play(0.0),
@@ -135,6 +137,8 @@ FGSound::init(SGPropertyNode *node)
          volume.intern = &_dt_play;
       else if (!strcmp(intern_str, "dt_stop"))
          volume.intern = &_dt_stop;
+      else if (!strcmp(intern_str, "random"))
+         volume.intern = &_random;
 
       if ((volume.factor = kids[i]->getDoubleValue("factor")) != 0.0)
          if (volume.factor < 0.0) {
@@ -259,7 +263,7 @@ FGSound::update (double dt)
 
    if (							// Lisp, anyone?
          (_condition && !_condition->test()) ||
-         (_property && !_condition &&
+         (!_condition && _property &&
             (
                !curr_value ||
                ( (_mode == FGSound::IN_TRANSIT) && (curr_value == _prev_value) )
@@ -268,12 +272,14 @@ FGSound::update (double dt)
       )
    {
 
+      _active = false;
       _dt_stop += dt;
+      _dt_play = 0.0;
+
       if (_sample->is_playing()) {
          SG_LOG(SG_GENERAL, SG_INFO, "Stopping audio after " << _dt_play
                                       << " sec: " << _name );
          _sample->stop( _mgr->get_scheduler() );
-         _dt_play = 0.0;
       }
 
       return;
@@ -284,14 +290,24 @@ FGSound::update (double dt)
    // If the mode is ONCE and the sound is still playing,
    //  we have nothing to do anymore.
    //
-   if (_dt_play && (_mode == FGSound::ONCE))
+   if (_active && (_mode == FGSound::ONCE)) {
+
+      if (!_sample->is_playing()) {
+         _dt_stop += dt;
+         _dt_play = 0.0;
+
+      } else
+         _dt_play += dt;
+
       return;
+   }
 
    //
-   // Cache current value and Update playing time
+   // Update playtime, cache the current value and feed the random number
    //
+    _dt_play += dt;
    _prev_value = curr_value;
-   _dt_play += dt;
+   _random = sg_random();
 
    //
    // Update the volume
@@ -376,9 +392,7 @@ FGSound::update (double dt)
    //
    // Do we need to start playing the sample?
    //
-   if (_dt_stop) {
-
-      _dt_stop = 0.0;
+   if (!_active) {
 
       if (_mode == FGSound::ONCE)
          _sample->play(_mgr->get_scheduler(), false);
@@ -386,8 +400,12 @@ FGSound::update (double dt)
       else
          _sample->play(_mgr->get_scheduler(), true);
 
-      SG_LOG(SG_GENERAL, SG_INFO, "Starting audio playback for: " << _name);
+      SG_LOG(SG_GENERAL, SG_INFO, "Playing audio after " << _dt_stop 
+                                   << " sec: " << _name);
       SG_LOG(SG_GENERAL, SG_BULK,
                          "Playing " << ((_mode == ONCE) ? "once" : "looped"));
+
+      _active = true;
+      _dt_stop = 0.0;
    }
 }
