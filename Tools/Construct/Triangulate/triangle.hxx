@@ -86,6 +86,7 @@ public:
     inline FGTriNodes get_out_nodes() const { return out_nodes; }
     inline size_t get_out_nodes_size() const { return out_nodes.size(); }
     inline triele_list get_elelist() const { return elelist; }
+    inline FGTriSegments get_out_segs() const { return out_segs; }
 };
 
 

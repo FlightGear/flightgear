@@ -48,11 +48,6 @@ FG_USING_STD(string);
 FG_USING_STD(vector);
 
 
-typedef vector < int_list > belongs_to_list;
-typedef belongs_to_list::iterator belongs_to_list_iterator;
-typedef belongs_to_list::const_iterator belongs_to_list_tripoly_iterator;
-
-
 class FGGenOutput {
 
 private:
@@ -60,39 +55,15 @@ private:
     // node list in geodetic coordinates
     point_list geod_nodes;
 
-    // face normal list (for flat shading)
-    point_list face_normals;
-
-    // normal list (for each point) in cart coords (for smooth
-    // shading)
-    point_list point_normals;
-
     // triangles (by index into point list)
     triele_list tri_elements;
 
     // fan list
     fan_list fans[FG_MAX_AREA_TYPES];
 
-    // for each node, a list of triangle indices that contain this node
-    belongs_to_list reverse_ele_lookup;
-
     // global bounding sphere
     Point3D gbs_center;
     double gbs_radius;
-
-    // build the node -> element (triangle) reverse lookup table.
-    // there is an entry for each point containing a list of all the
-    // triangles that share that point.
-    void gen_node_ele_lookup_table( FGConstruct& c );
-
-    // calculate the normals for each point in wgs84_nodes
-    void gen_normals( FGConstruct& c );
-
-    // build the face normal list
-    void gen_face_normals( FGConstruct& c );
-
-    // caclulate the normal for the specified triangle face
-    Point3D calc_normal( FGConstruct& c, int i );
 
     // calculate the global bounding sphere.  Center is the average of
     // the points.
@@ -114,7 +85,7 @@ public:
 
     // build the necessary output structures based on the
     // triangulation data
-    int build( FGConstruct& c, const FGArray& array );
+    int build( FGConstruct& c );
 
     // write out the fgfs scenery file
     int write( FGConstruct &c );

@@ -105,7 +105,7 @@ public:
     void unique_divide_and_add( const point_list& node_list, 
 				const FGTriSeg& s );
 
-    // return the master node list
+    // return the master segment list
     inline triseg_list get_seg_list() const { return seg_list; }
 
     // return the ith segment
