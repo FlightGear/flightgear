@@ -76,7 +76,7 @@ void dump_nodes( void ) {
     int i;
 
     fprintf(out, "\n");
-    for ( i = 0; i < ncount; i++ ) {
+    for ( i = 1; i <= ncount; i++ ) {
 	fprintf(out, "v %.4lf %.4lf %.4lf\n",
 		nodes[i][0] - refx, nodes[i][1] - refy, nodes[i][2] - refz);
     }
@@ -88,7 +88,7 @@ void dump_normals( void ) {
     int i;
 
     fprintf(out, "\n");
-    for ( i = 0; i < vncount; i++ ) {
+    for ( i = 1; i <= vncount; i++ ) {
 	fprintf(out, "vn %.4lf %.4lf %.4lf\n", 
 		normals[i][0], normals[i][1], normals[i][2]);
     }
@@ -100,7 +100,7 @@ void dump_faces( void ) {
     int i;
 
     fprintf(out, "\n");
-    for ( i = 0; i < fcount; i++ ) {
+    for ( i = 1; i <= fcount; i++ ) {
 	fprintf(out, "f %d %d %d\n", 
 		faces[i][0], faces[i][1], faces[i][2]);
     }
@@ -199,10 +199,12 @@ void obj_fix(char *infile, char *outfile) {
     list_init(&ccw_list_ptr);
     list_init(&cw_list_ptr);
 
+    /* I start counting at one because that is how the triangle
+       program refers to nodes and normals */
     first = 1;
-    ncount = 0;
-    vncount = 0;
-    fcount = 0;
+    ncount = 1;
+    vncount = 1;
+    fcount = 1;
 
     printf("Reading file:  %s\n", infile);
 
@@ -378,11 +380,14 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.10  1998/04/27 03:33:11  curt
-/* Code now calculates a center reference points and outputs everything
-/* relative to that.  This is useful in the rendering engine to keep everything
-/* close to (0, 0, 0) where we can avoid many GLfloat precision problems.
+/* Revision 1.11  1998/04/27 15:59:24  curt
+/* Fixed an off by one error.
 /*
+ * Revision 1.10  1998/04/27 03:33:11  curt
+ * Code now calculates a center reference points and outputs everything
+ * relative to that.  This is useful in the rendering engine to keep everything
+ * close to (0, 0, 0) where we can avoid many GLfloat precision problems.
+ *
  * Revision 1.9  1998/04/18 04:01:03  curt
  * Now use libMath rather than having local copies of math routines.
  *
