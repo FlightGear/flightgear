@@ -97,61 +97,6 @@ void fgTimeInit(fgTIME *t) {
 }
 
 
-/*
-// Portability wrap to get current time.
-void timestamp(fg_timestamp *timestamp) {
-#if defined( WIN32 )
-    unsigned int t;
-    t = timeGetTime();
-    timestamp->seconds = 0;
-    timestamp->millis =  t;
-#elif defined( HAVE_GETTIMEOFDAY )
-    struct timeval current;
-    struct timezone tz;
-    // fg_timestamp currtime;
-    gettimeofday(&current, &tz);
-    timestamp->seconds = current.tv_sec;
-    timestamp->millis = current.tv_usec / 1000;
-#elif defined( HAVE_GETLOCALTIME )
-    SYSTEMTIME current;
-    GetLocalTime(&current);
-    timestamp->seconds = current.wSecond;
-    timestamp->millis = current.wMilliseconds;
-#elif defined( HAVE_FTIME )
-    struct timeb current;
-    ftime(&current);
-    timestamp->seconds = current.time;
-    timestamp->millis = current.millitm;
-#else
-# error Port me
-#endif
-}
-
-
-// Return duration in millis from first to last
-long timediff(fg_timestamp *first, fg_timestamp *last) {
-#if defined( WIN32 )
-    return (last->millis - first->millis);
-#else
-    return ( 1000 * (last->seconds - first->seconds) + 
-	     (last->millis - first->millis) );
-#endif
-}
-
-
-// Return new timestamp given a time stamp and an interval to add in
-void timesum(fg_timestamp *res, fg_timestamp *start, long millis) {
-#ifdef WIN32
-    res->seconds = 0;
-    res->millis = ( start->millis + millis );
-#else
-    res->seconds = start->seconds + 
-	( start->millis + millis ) / 1000;
-    res->millis = ( start->millis + millis ) % 1000;
-#endif
-}
-*/
-
 // given a date in months, mn, days, dy, years, yr, return the
 // modified Julian date (number of days elapsed since 1900 jan 0.5),
 // mjd.  Adapted from Xephem.
@@ -453,6 +398,10 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.25  1998/12/05 14:21:30  curt
+// Moved struct fg_timestamp to class fgTIMESTAMP and moved it's definition
+// to it's own file, timestamp.hxx.
+//
 // Revision 1.24  1998/12/04 01:32:49  curt
 // Converted "struct fg_timestamp" to "class fgTIMESTAMP" and added some
 // convenience inline operators.

@@ -43,16 +43,6 @@
 #include <GL/glut.h>
 #include <time.h>
 
-#ifdef HAVE_SYS_TIMEB_H
-#  include <sys/timeb.h> // for ftime() and struct timeb
-#endif
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>    // for gettimeofday()
-#endif
-#ifdef HAVE_SYS_TIME_H
-#  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
-#endif
-
 #include <Flight/flight.hxx>
 
 
@@ -97,109 +87,6 @@ typedef struct {
 extern fgTIME cur_time_params;
 
 
-class fgTIMESTAMP {
-
-private:
-
-    long seconds;
-    long millis;
-
-public:
-
-    fgTIMESTAMP();
-    fgTIMESTAMP( const long s, const long m );
-    ~fgTIMESTAMP();
-
-    // Set time to current time
-    void stamp();
-
-    fgTIMESTAMP& operator = ( const fgTIMESTAMP& t );
-
-    friend fgTIMESTAMP operator + (const fgTIMESTAMP& t, const long& m);
-    friend long operator - (const fgTIMESTAMP& a, const fgTIMESTAMP& b);
-
-    inline long get_seconds() const { return seconds; }
-    inline long get_millis() const { return millis; }
-};
-
-inline fgTIMESTAMP::fgTIMESTAMP() {
-}
-
-inline fgTIMESTAMP::fgTIMESTAMP( const long s, const long m ) {
-    seconds = s;
-    millis = m;
-}
-
-inline fgTIMESTAMP::~fgTIMESTAMP() {
-}
-
-inline fgTIMESTAMP& fgTIMESTAMP::operator = (const fgTIMESTAMP& t)
-{
-    seconds = t.seconds;
-    millis = t.millis;
-    return *this;
-}
-
-inline void fgTIMESTAMP::stamp() {
-#if defined( WIN32 )
-    unsigned int t;
-    t = timeGetTime();
-    seconds = 0;
-    millis =  t;
-#elif defined( HAVE_GETTIMEOFDAY )
-    struct timeval current;
-    struct timezone tz;
-    // fg_timestamp currtime;
-    gettimeofday(&current, &tz);
-    seconds = current.tv_sec;
-    millis = current.tv_usec / 1000;
-#elif defined( HAVE_GETLOCALTIME )
-    SYSTEMTIME current;
-    GetLocalTime(&current);
-    seconds = current.wSecond;
-    millis = current.wMilliseconds;
-#elif defined( HAVE_FTIME )
-    struct timeb current;
-    ftime(&current);
-    seconds = current.time;
-    millis = current.millitm;
-#else
-# error Port me
-#endif
-}
-
-// difference between time stamps in milliseconds
-inline fgTIMESTAMP operator + (const fgTIMESTAMP& t, const long& m) {
-#ifdef WIN32
-    return fgTIMESTAMP( 0, t.millis + m );
-#else
-    return fgTIMESTAMP( t.seconds + ( t.millis + m ) / 1000,
-			( t.millis + m ) % 1000 );
-#endif
-}
-
-// difference between time stamps in milliseconds
-inline long operator - (const fgTIMESTAMP& a, const fgTIMESTAMP& b)
-{
-#if defined( WIN32 )
-    return a.millis - b.millis;
-#else
-    return 1000 * (a.seconds - b.seconds) + (a.millis - b.millis);
-#endif
-}
-
-// Portability wrap to get current time.
-// void timestamp(fg_timestamp *timestamp);
-
-
-// Return duration in millis from first to last
-// long timediff(fg_timestamp *first, fg_timestamp *last);
-
-
-// Return new timestamp given a time stamp and an interval to add in
-// void timesum(fg_timestamp *res, fg_timestamp *start, long millis);
-
-
 // Update time variables such as gmt, julian date, and sidereal time
 void fgTimeInit(fgTIME *t);
 
@@ -212,6 +99,10 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t);
 
 
 // $Log$
+// Revision 1.10  1998/12/05 14:21:31  curt
+// Moved struct fg_timestamp to class fgTIMESTAMP and moved it's definition
+// to it's own file, timestamp.hxx.
+//
 // Revision 1.9  1998/12/04 01:32:50  curt
 // Converted "struct fg_timestamp" to "class fgTIMESTAMP" and added some
 // convenience inline operators.

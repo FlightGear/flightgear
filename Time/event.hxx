@@ -56,6 +56,7 @@ using namespace std;
 #endif
 
 #include "fg_time.hxx"
+#include "timestamp.hxx"
 
 
 class fgEVENT
@@ -169,6 +170,10 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.14  1998/12/05 14:21:28  curt
+// Moved struct fg_timestamp to class fgTIMESTAMP and moved it's definition
+// to it's own file, timestamp.hxx.
+//
 // Revision 1.13  1998/12/04 01:32:47  curt
 // Converted "struct fg_timestamp" to "class fgTIMESTAMP" and added some
 // convenience inline operators.
