@@ -232,6 +232,7 @@ David Megginson <david@megginson.com>
   Generalized input module
   3D model animation module
   initial take of sound-effects module
+  Random ground cover objects
 
 
 Eric Mitchell <mitchell@mars.ark.com>
@@ -316,6 +317,7 @@ Petter Reinholdtsen <pere@games.no>
 William Riley <riley@technologist.com>
   Contributed code to add "brakes". 
   Patch to support a first joystick with more than two axes.
+  World scenery based on vmap0 data.
 
 
 Andy Ross <andy@plausible.org>

@@ -12,7 +12,7 @@ AC_CONFIG_SRCDIR([src/Aircraft/aircraft.cxx])
 AC_PREREQ(2.52)
 
 # Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.7.11pre2)
+AM_INIT_AUTOMAKE(FlightGear, 0.8.0)
 
 # Checks for programs.
 AC_PROG_MAKE_SET
@@ -411,7 +411,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for simgear 0.0.19 or newer])
+AC_MSG_CHECKING([for simgear 0.2.0 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
@@ -421,8 +421,8 @@ AC_TRY_RUN([
 #define XSTRINGIFY(X) #X
 
 #define MIN_MAJOR 0
-#define MIN_MINOR 0
-#define MIN_MICRO 19
+#define MIN_MINOR 2
+#define MIN_MICRO 0
 
 int main() {
     int major, minor, micro;

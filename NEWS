@@ -1,25 +1,5 @@
-New in 0.7.11pre2
-* Septemeber 3, 2002
-
-* automake/conf script enhancemnts and fixes.
-* Updated the UIUCModel code.
-* Removed some dos line endings that crept in.
-* Spelling fixes.
-* Removed some depricated code related to the old view management system.
-* Fix a problem with VOR station lookups where we wouldn't always find
-  the closest station of a given frequency.
-* Changed the default Nav radio frequencies to be more appropriate for SFO.
-* Retrimmed the C172
-* Added seats and other interior stuff to the J3 Cub, and retrimmed.  Also
-  fixed wing incidence in the 3d visual model.
-* Fixed C310u3a-3d.  3d cockpit instruments can now be seen.
-* Fixes to the DC-3 such as tank location; other surface and wheel position
-  adjustments.  Increase effectiveness of rudder, vstab, and hstab.
-* Updated some of the preconfigured joystick files.
-
-
-New in 0.7.11pre1
-* August 31, 2002
+New in 0.8.0
+* September 7, 2002
 
 * The world is now populated with random ground objects with
   appropriate type and density for the local ground cover type
@@ -98,6 +78,32 @@ New in 0.7.11pre1
 * Mac OS X fixes.
 * MSVC fixes.
 * IA-64 w/ Intel compiler fixes.
+
+* automake/conf script enhancemnts and fixes.
+* Updated the UIUCModel code.
+* Removed some dos line endings that crept in.
+* Spelling fixes.
+* Removed some depricated code related to the old view management system.
+* Fix a problem with VOR station lookups where we wouldn't always find
+  the closest station of a given frequency.
+* Changed the default Nav radio frequencies to be more appropriate for SFO.
+* Retrimmed the C172
+* Added seats and other interior stuff to the J3 Cub, and retrimmed.  Also
+  fixed wing incidence in the 3d visual model.
+* Fixed C310u3a-3d.  3d cockpit instruments can now be seen.
+* Fixes to the DC-3 such as tank location; other surface and wheel position
+  adjustments.  Increase effectiveness of rudder, vstab, and hstab.
+* Updated some of the preconfigured joystick files.
+* Updated man pages
+* Fixed problem with pressure/altitude getting botched up after a reset
+* Use a nicer helvetica font for the menus.
+* Various fixes to the internal pui property browser.
+* Fixed a typo in the scenery file loader that could cause a crash on
+  some platforms.
+* More joystick configuration defaults. (Saitek Cyborg Gold 3D USB,
+  non FF sidewinder precision 2 usb)
+* More texture tweaks.
+* Additional fixes and panel work for the J3 Cub.
 
 
 New in 0.7.10
