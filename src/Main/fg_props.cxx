@@ -284,7 +284,7 @@ setFreeze (bool freeze)
     if ( freeze ) {
         // BusyCursor( 0 );
         current_atcdisplay->CancelRepeatingMessage();
-        current_atcdisplay->RegisterRepeatingMessage("****    SIM IS PAUSED    ****    SIM IS PAUSED    ****");
+        current_atcdisplay->RegisterRepeatingMessage("****    SIM IS FROZEN    ****    SIM IS FROZEN    ****");
     } else {
         // BusyCursor( 1 );
         current_atcdisplay->CancelRepeatingMessage();
