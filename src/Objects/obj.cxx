@@ -805,42 +805,6 @@ static ssgLeaf *gen_leaf( const string& path,
     ssgSimpleState *state = NULL;
     float coverage = -1;
 
-    int size = node_index.size();
-    ssgVertexArray   *vl = new ssgVertexArray( size );
-    ssgNormalArray   *nl = new ssgNormalArray( size );
-    ssgTexCoordArray *tl = new ssgTexCoordArray( size );
-    ssgColourArray   *cl = new ssgColourArray( 1 );
-
-    sgVec4 color;
-    sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
-    cl->add( color );
-
-    sgVec2 tmp2;
-    sgVec3 tmp3;
-    int i;
-    for ( i = 0; i < size; ++i ) {
-	Point3D node = nodes[ node_index[i] ];
-	sgSetVec3( tmp3, node[0], node[1], node[2] );
-	vl -> add( tmp3 );
-
-	Point3D normal = normals[ node_index[i] ];
-	sgSetVec3( tmp3, normal[0], normal[1], normal[2] );
-	nl -> add( tmp3 );
-
-	Point3D texcoord = texcoords[ tex_index[i] ];
-	sgSetVec2( tmp2, texcoord[0], texcoord[1] );
-	tl -> add( tmp2 );
-    }
-
-    // cout << "before leaf create" << endl;
-    ssgLeaf *leaf = new ssgVtxTable ( ty, vl, nl, tl, cl );
-    // cout << "after leaf create" << endl;
-
-    // lookup the state record
-    // cout << "looking up material = " << endl;
-    // cout << material << endl;
-    // cout << "'" << endl;
-
     FGNewMat *newmat = material_lib.find( material );
     if ( newmat == NULL ) {
 	// see if this is an on the fly texture
@@ -878,6 +842,48 @@ static ssgLeaf *gen_leaf( const string& path,
     } else {
 	coverage = -1;
     }
+
+    int size = node_index.size();
+    ssgVertexArray   *vl = new ssgVertexArray( size );
+    ssgNormalArray   *nl = new ssgNormalArray( size );
+    ssgTexCoordArray *tl = new ssgTexCoordArray( size );
+    ssgColourArray   *cl = new ssgColourArray( 1 );
+
+    sgVec4 color;
+    sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
+    cl->add( color );
+
+    sgVec2 tmp2;
+    sgVec3 tmp3;
+    int i;
+    for ( i = 0; i < size; ++i ) {
+	Point3D node = nodes[ node_index[i] ];
+	sgSetVec3( tmp3, node[0], node[1], node[2] );
+	vl -> add( tmp3 );
+
+	Point3D normal = normals[ node_index[i] ];
+	sgSetVec3( tmp3, normal[0], normal[1], normal[2] );
+	nl -> add( tmp3 );
+
+	Point3D texcoord = texcoords[ tex_index[i] ];
+	sgSetVec2( tmp2, texcoord[0], texcoord[1] );
+	if ( tex_width > 0 ) {
+	    tmp2[0] *= (1000.0 / tex_width);
+	}
+	if ( tex_height > 0 ) {
+	    tmp2[1] *= (1000.0 / tex_height);
+	}
+	tl -> add( tmp2 );
+    }
+
+    // cout << "before leaf create" << endl;
+    ssgLeaf *leaf = new ssgVtxTable ( ty, vl, nl, tl, cl );
+    // cout << "after leaf create" << endl;
+
+    // lookup the state record
+    // cout << "looking up material = " << endl;
+    // cout << material << endl;
+    // cout << "'" << endl;
 
     leaf->setState( state );
 
