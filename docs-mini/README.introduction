@@ -1,0 +1,54 @@
+
+Internals
+---------
+
+The core of FlightGear is the property system. This is a tree like internal
+representation of global variables. The property system is explained more
+in detail later on.
+
+FlightGear' way of doing things is breaking it up into small pieces. There is
+(for example) animation code that reacts on property changes. There is also a
+Flight Dynamics model (FDM) that (amongst other things) updates properties.
+There is a menu system that can display and alter properties. Then we have
+sound code that plays sound based on ... properties.
+
+Maybe you see a pattern evolve by now.
+
+All subsystems are almost self containing. Most of the time they only read the
+values of some properties, and sometimes they alter other properties. This is
+the basic way of communicating between subsystems.
+
+
+Property System
+---------------
+
+The property system is best described as an in-memory LDAP database which holds
+the state of global variables. The system has a tree like hierarchy (like a
+file system) and has a root node, sub nodes (like subdirectories) and end-nodes
+(variables).
+
+All variables are kept internally as raw values and can be converted to any
+other supported type (boolean, int, float double and string).
+
+Like a file system, every node can be accessed relative to the current node, or
+absolute to the root node.
+
+The property system also allows aliasing nodes to other nodes (like symbolic
+linking files or directories to other files or directories) and may be assigned
+read-only or read-write.
+
+If necessary it would be possible for parts of the program to hold it's own
+property tree, which is inaccessible from the global property tree, by keeping
+track of it's own root-node.
+
+Property I/O code allows one to easily read the tree from, or write the tree to
+an XML file.
+
+
+Scripting
+---------
+
+The scripting langage Nasal can also read and modify properties but it can also
+be incorporated into the menu system. The documentation for Nasal can be found
+here:  http://www.plausible.org/nasal/flightgear.html
+
