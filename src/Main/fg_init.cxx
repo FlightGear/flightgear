@@ -192,8 +192,8 @@ bool fgInitPosition( void ) {
     f->set_Longitude( current_options.get_lon() * DEG_TO_RAD );
     f->set_Latitude( current_options.get_lat() * DEG_TO_RAD );
 
-    if ( scenery.cur_elev > current_options.get_altitude() - 2 ) {
-	current_options.set_altitude( scenery.cur_elev + 2 );
+    if ( scenery.cur_elev > current_options.get_altitude() - 1) {
+	current_options.set_altitude( scenery.cur_elev + 1 );
     }
 
     FG_LOG( FG_GENERAL, FG_INFO,
@@ -201,7 +201,7 @@ bool fgInitPosition( void ) {
 
     f->set_Altitude( current_options.get_altitude() * METER_TO_FEET );
     fgFDMSetGroundElevation( current_options.get_flight_model(),
-			     (f->get_Altitude() - 3.758099) * FEET_TO_METER );
+			     f->get_Altitude() * FEET_TO_METER );
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Initial position is: ("
