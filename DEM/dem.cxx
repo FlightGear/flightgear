@@ -207,7 +207,7 @@ static int next_exp(gzFile fd) {
 int fgDEM::read_a_record( void ) {
     int i, inum;
     double dnum;
-    char name[144];
+    char name[256];
     char token[80];
     char *ptr;
 
@@ -819,12 +819,16 @@ void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
 
 fgDEM::~fgDEM( void ) {
     // printf("class fgDEM DEstructor called.\n");
-    free(dem_data);
-    free(output_data);
+    delete(dem_data);
+    delete(output_data);
 }
 
 
 // $Log$
+// Revision 1.12  1998/08/24 20:03:31  curt
+// Eliminated a possible memory overrun error.
+// Use the proper free() rather than the incorrect delete().
+//
 // Revision 1.11  1998/07/20 12:46:11  curt
 // When outputing to a .node file, first check for an optional
 // "index.node.ex" file in case there is a .poly file to go along with this
