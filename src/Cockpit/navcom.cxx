@@ -550,9 +550,6 @@ void FGNavCom::search()
 double FGNavCom::get_nav_heading_needle_deflection() const {
     double r;
 
-    std::cout << "Nav heading is " << nav_heading << std::endl;
-    std::cout << "Nav radial is " << nav_radial << std::endl;
-
     if ( nav_inrange ) {
         r = nav_heading - nav_radial;
 	// cout << "Radial = " << nav_radial 
