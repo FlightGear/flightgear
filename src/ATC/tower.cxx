@@ -483,6 +483,18 @@ void FGTower::Update(double dt) {
 	if(ii >= ii_max) {
 		ii = 0;
 	}
+
+	if(ident == "KEMT") {	
+		// For AI debugging convienience - may be removed
+		Point3D user_pos;
+		user_pos.setlon(user_lon_node->getDoubleValue());
+		user_pos.setlat(user_lat_node->getDoubleValue());
+		user_pos.setelev(user_elev_node->getDoubleValue());
+		Point3D user_ortho_pos = ortho.ConvertToLocal(user_pos);
+		fgSetDouble("/AI/user/ortho-x", user_ortho_pos.x());
+		fgSetDouble("/AI/user/ortho-y", user_ortho_pos.y());
+		fgSetDouble("/AI/user/elev", user_elev_node->getDoubleValue());
+	}
 }
 
 
