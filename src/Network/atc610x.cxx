@@ -1340,6 +1340,24 @@ bool FGATC610x::do_switches() {
 	starter = false;
     }
 
+    // do a bit of filtering on the magneto/starter switch and the
+    // flap lever because these are not well debounced in hardware
+    static int mag1, mag2, mag3;
+    mag3 = mag2;
+    mag2 = mag1;
+    mag1 = magnetos;
+    if ( mag1 == mag2 && mag2 == mag3 ) {
+        fgSetInt( "/controls/magnetos[0]", magnetos );
+    }
+    static bool start1, start2, start3;
+    start3 = start2;
+    start2 = start1;
+    start1 = starter;
+    if ( start1 == start2 && start2 == start3 ) {
+        fgSetBool( "/controls/starter[0]", starter );
+    }
+
+
     // flaps
     float flaps = 0.0;
     if ( switch_matrix[board][6][3] == 1 ) {
@@ -1354,28 +1372,31 @@ bool FGATC610x::do_switches() {
 
     // do a bit of filtering on the magneto/starter switch and the
     // flap lever because these are not well debounced in hardware
-    static int mag1, mag2, mag3;
-    mag3 = mag2;
-    mag2 = mag1;
-    mag1 = magnetos;
-    if ( mag1 == mag2 && mag2 == mag3 ) {
-        fgSetInt( "/controls/magnetos[0]", magnetos );
-    }
-
-    static bool start1, start2, start3;
-    start3 = start2;
-    start2 = start1;
-    start1 = starter;
-    if ( start1 == start2 && start2 == start3 ) {
-        fgSetBool( "/controls/starter[0]", starter );
-    }
-
     static float flap1, flap2, flap3;
     flap3 = flap2;
     flap2 = flap1;
     flap1 = flaps;
     if ( flap1 == flap2 && flap2 == flap3 ) {
         fgSetFloat( "/controls/flaps", flaps );
+    }
+
+    // fuel selector (not finished)
+    if ( true ) {
+        // both
+        fgSetFloat( "/controls/fuel-selector[0]", true );
+        fgSetFloat( "/controls/fuel-selector[1]", true );
+    } else if ( true ) {
+        // left
+        fgSetFloat( "/controls/fuel-selector[0]", true );
+        fgSetFloat( "/controls/fuel-selector[1]", false );
+    } else if ( true ) {
+        // right
+        fgSetFloat( "/controls/fuel-selector[0]", false );
+        fgSetFloat( "/controls/fuel-selector[1]", true );
+    } else {
+        // fuel cutoff
+        fgSetFloat( "/controls/fuel-selector[0]", false );
+        fgSetFloat( "/controls/fuel-selector[1]", false );
     }
 
     return true;

@@ -87,6 +87,9 @@ static void global2raw( FGRawCtrls *raw ) {
 	  //      << endl;
 	}
     }
+    for ( i = 0; i < FGRawCtrls::FG_MAX_TANKS; ++i ) {
+        raw->fuel_selector[i] = node->getDoubleValue( "fuel-selector", true );
+    }
     for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
 	raw->brake[i] = node->getDoubleValue( "brakes", 0.0 );
     }
@@ -105,8 +108,11 @@ static void global2raw( FGRawCtrls *raw ) {
 	htond(raw->throttle[i]);
 	htond(raw->mixture[i]);
 	htond(raw->prop_advance[i]);
-	htonl(raw->magnetos[i]);
-	htonl(raw->starter[i]);
+	raw->magnetos[i] = htonl(raw->magnetos[i]);
+	raw->starter[i] = htonl(raw->starter[i]);
+    }
+    for ( i = 0; i < FGRawCtrls::FG_MAX_TANKS; ++i ) {
+        raw->fuel_selector[i] = htonl(raw->fuel_selector[i]);
     }
     for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
 	htond(raw->brake[i]);

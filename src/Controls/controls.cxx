@@ -62,7 +62,6 @@ FGControls::FGControls() :
     flaps( 0.0 ),
     parking_brake( 0.0 ),
     throttle_idle( true ),
-    fuel_selector( FUEL_BOTH ),
     gear_down( false )
 {
 }
@@ -80,7 +79,7 @@ void FGControls::reset_all()
     set_starter( ALL_ENGINES, false );
     set_magnetos( ALL_ENGINES, 0 );
     throttle_idle = true;
-    fuel_selector = FUEL_BOTH;
+    set_fuel_selector( ALL_TANKS, true );
     gear_down = true;
 }
 
@@ -161,15 +160,19 @@ FGControls::bind ()
 	&FGControls::get_parking_brake, &FGControls::set_parking_brake);
   fgSetArchivable("/controls/parking-brake");
   for (index = 0; index < MAX_WHEELS; index++) {
-    char name[32];
-    sprintf(name, "/controls/brakes[%d]", index);
-    fgTie(name, this, index,
-	 &FGControls::get_brake, &FGControls::set_brake);
-    fgSetArchivable(name);
+      char name[32];
+      sprintf(name, "/controls/brakes[%d]", index);
+      fgTie(name, this, index,
+            &FGControls::get_brake, &FGControls::set_brake);
+      fgSetArchivable(name);
   }
-  fgTie("/controls/fuel-selector", this,
-	&FGControls::get_fuel_selector, &FGControls::set_fuel_selector);
-  fgSetArchivable("/controls/fuel-selector");
+  for (index = 0; index < MAX_TANKS; index++) {
+      char name[32];
+      sprintf(name, "/controls/fuel-selector[%d]", index);
+      fgTie(name, this, index,
+            &FGControls::get_fuel_selector, &FGControls::set_fuel_selector);
+      fgSetArchivable(name);
+  }
   fgTie("/controls/gear-down", this,
 	&FGControls::get_gear_down, &FGControls::set_gear_down);
   fgSetArchivable("/controls/gear-down");
@@ -471,6 +474,21 @@ FGControls::set_starter( int engine, bool flag )
 	}
     }
 }
+
+void
+FGControls::set_fuel_selector( int tank, bool pos )
+{
+    if ( tank == ALL_TANKS ) {
+	for ( int i = 0; i < MAX_TANKS; i++ ) {
+	    fuel_selector[i] = pos;
+	}
+    } else {
+	if ( (tank >= 0) && (tank < MAX_TANKS) ) {
+	    fuel_selector[tank] = pos;
+	}
+    }
+}
+
 
 void
 FGControls::set_parking_brake( double pos )

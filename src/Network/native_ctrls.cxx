@@ -71,6 +71,9 @@ static void global2raw( const FGControls *global, FGRawCtrls *raw ) {
 	raw->mixture[i] = globals->get_controls()->get_mixture(i);
 	raw->prop_advance[i] = globals->get_controls()->get_prop_advance(i);
     }
+    for ( i = 0; i < FGRawCtrls::FG_MAX_TANKS; ++i ) {
+        raw->fuel_selector[i] = globals->get_controls()->get_fuel_selector(i);
+    }
     for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
 	raw->brake[i] =  globals->get_controls()->get_brake(i);
     }
@@ -92,6 +95,9 @@ static void raw2global( const FGRawCtrls *raw, FGControls *global ) {
 	    globals->get_controls()->set_throttle( i, raw->throttle[i] );
 	    globals->get_controls()->set_mixture( i, raw->mixture[i] );
 	    globals->get_controls()->set_prop_advance( i, raw->prop_advance[i]);
+	}
+	for ( i = 0; i < FGRawCtrls::FG_MAX_TANKS; ++i ) {
+	    globals->get_controls()->set_fuel_selector( i, raw->fuel_selector[i] );
 	}
 	for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
 	    globals->get_controls()->set_brake( i, raw->brake[i] );

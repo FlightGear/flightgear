@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_CTRLS_VERSION = 6;
+const int FG_RAW_CTRLS_VERSION = 7;
 
 
 // Define a structure containing the control parameters
@@ -43,7 +43,8 @@ public:
 
     enum {
         FG_MAX_ENGINES = 4,
-        FG_MAX_WHEELS = 3
+        FG_MAX_WHEELS = 3,
+        FG_MAX_TANKS = 4
     };
 
     // Aero controls
@@ -60,6 +61,10 @@ public:
     double throttle[FG_MAX_ENGINES];     //  0 ... 1
     double mixture[FG_MAX_ENGINES];      //  0 ... 1
     double prop_advance[FG_MAX_ENGINES]; //  0 ... 1
+
+    // Fuel management
+    int num_tanks;                       // number of valid tanks
+    bool fuel_selector[FG_MAX_TANKS];    // false = off, true = on
 
     // Brake controls
     int num_wheels;		         // number of valid wheels

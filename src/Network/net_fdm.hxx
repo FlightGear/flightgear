@@ -32,7 +32,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 7;
+const int FG_NET_FDM_VERSION = 8;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -51,7 +51,7 @@ public:
     enum {
         FG_MAX_ENGINES = 4,
         FG_MAX_WHEELS = 3,
-        FG_MAX_TANKS = 2
+        FG_MAX_TANKS = 4
     };
 
     // Positions
