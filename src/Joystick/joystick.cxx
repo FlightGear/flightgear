@@ -142,20 +142,20 @@ setupDefaults ()
 	props.setFloatValue("/input/js0/axis1/factor", -1.0);
     }
 
-    // Default axis 2 to throttle
-    // We need to fiddle with the offset
-    // and factor to make it work
+    // Default axis 2 to rudder
     if (!props.getValue("/input/js0/axis2/control")) {
-	props.setStringValue("/input/js0/axis2/control", "/controls/throttle");
-	props.setFloatValue("/input/js0/axis2/dead-band", 0.0);
-	props.setFloatValue("/input/js0/axis2/offset", -1.0);
-	props.setFloatValue("/input/js0/axis2/factor", -0.5);
+	props.setStringValue("/input/js0/axis2/control", "/controls/rudder");
+	props.setFloatValue("/input/js0/axis2/dead-band", 0.1);
     }
 
-    // Default axis 3 to rudder
+    // Default axis 3 to throttle
+    // We need to fiddle with the offset
+    // and factor to make it work
     if (!props.getValue("/input/js0/axis3/control")) {
-	props.setStringValue("/input/js0/axis3/control", "/controls/rudder");
-	props.setFloatValue("/input/js0/axis3/dead-band", 0.3);
+	props.setStringValue("/input/js0/axis3/control", "/controls/throttle");
+	props.setFloatValue("/input/js0/axis3/dead-band", 0.0);
+	props.setFloatValue("/input/js0/axis3/offset", -1.0);
+	props.setFloatValue("/input/js0/axis3/factor", -0.5);
     }
 
     // Default button 0 to all brakes
