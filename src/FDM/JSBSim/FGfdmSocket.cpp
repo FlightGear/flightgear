@@ -53,7 +53,7 @@ FGfdmSocket::FGfdmSocket(string address, int port)
 
 #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
     WSADATA wsaData;
-    int PASCAL FAR wsaReturnCode;
+    int wsaReturnCode;
     wsaReturnCode = WSAStartup(MAKEWORD(1,1), &wsaData);
     if (wsaReturnCode == 0) cout << "Winsock DLL loaded ..." << endl;
     else cout << "Winsock DLL not initialized ..." << endl;

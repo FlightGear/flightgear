@@ -194,7 +194,6 @@ draw( void ) //  (HUD_scale * pscale )
     if(type=="gauge") {
         float x,y;
         float i;
-        int  decimal, sign;
         y=(float)(scrn_rect.top);
         x=(float)(scrn_rect.left);
         glEnable(GL_POINT_SMOOTH);
@@ -381,7 +380,7 @@ draw( void ) //  (HUD_scale * pscale )
                             //type-fixed & zoom=1, behaviour to be defined
                             // Code for Moving Type Pointer included by suma.
                             float ycentre, ypoint,xpoint;
-                            int range,wth;
+                            int range;
 							
                             if(cur_value > maxValue)
                                 cur_value = maxValue;

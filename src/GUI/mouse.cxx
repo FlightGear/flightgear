@@ -518,9 +518,6 @@ void guiMouseFunc(int button, int updown, int x, int y)
     static float _quat[4];
     static double _view_offset;
     
-    // general purpose variables
-    double offset;
-            
     glutModifiers = glutGetModifiers();
     glut_active_shift = glutModifiers & GLUT_ACTIVE_SHIFT;
     glut_active_ctrl  = glutModifiers & GLUT_ACTIVE_CTRL; 

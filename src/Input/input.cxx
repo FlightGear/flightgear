@@ -381,7 +381,7 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
     return;
   }
 
-  _update_button(m.modes[m.current_mode].buttons[b], modifiers, updown, x, y);
+  _update_button(m.modes[m.current_mode].buttons[b], modifiers, 0 != updown, x, y);
 }
 
 void

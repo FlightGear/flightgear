@@ -174,7 +174,7 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     // edge.  Convert to local (i.e. airplane) coordiantes and store
     // into "torque".
     torque[0] = 0;
-    torque[1] = 0.1667 * _chord * (flapLift - (_cz*_cz0 + stallLift));
+    torque[1] = 0.1667f * _chord * (flapLift - (_cz*_cz0 + stallLift));
     torque[2] = 0;
     Math::tmul33(_orient, torque, torque);
 
@@ -190,7 +190,7 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     Math::tmul33(_orient, out, out);
 
     // Add in the units to make a real force:
-    float scale = 0.5*rho*vel*vel*_c0;
+    float scale = 0.5f*rho*vel*vel*_c0;
     Math::mul3(scale, out, out);
     Math::mul3(scale, torque, torque);
 }
@@ -221,7 +221,7 @@ float Surface::stallFunc(float* v)
 	return 1;
 
     // (note mask: we want to use the "positive" stall angle here)
-    float scale = 0.5*_peaks[fwdBak]/_stalls[i&2];
+    float scale = 0.5f*_peaks[fwdBak]/_stalls[i&2];
 
     // Before the stall
     if(alpha <= stallAlpha)

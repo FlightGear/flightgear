@@ -41,6 +41,15 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_GROUNDREACTIONS;
 
+#if defined (__APPLE__)
+/* Not all systems have the gcvt function */
+inline char* gcvt (double value, int ndigits, char *buf) {
+    /* note that this is not exactly what gcvt is supposed to do! */
+    snprintf (buf, ndigits+1, "%f", value);
+    return buf;
+}
+#endif
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/

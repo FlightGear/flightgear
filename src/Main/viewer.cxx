@@ -484,7 +484,7 @@ FGViewer::recalcOurOwnLocation (double lon_deg, double lat_deg, double alt_ft,
 void
 FGViewer::recalc ()
 {
-  sgVec3 minus_z, right, forward, tilt;
+  sgVec3 right, forward;
   sgMat4 tmpROT;  // temp rotation work matrices
   sgVec3 eye_pos, at_pos;
   sgVec3 position_offset; // eye position offsets (xyz)
@@ -696,6 +696,7 @@ FGViewer::get_h_fov()
     default:
 	assert(false);
     }
+    return 0.0;
 }
 
 double
@@ -717,6 +718,7 @@ FGViewer::get_v_fov()
     default:
 	assert(false);
     }
+    return 0.0;
 }
 
 void

@@ -257,7 +257,6 @@ FGViewMgr::update (int dt)
   			        // Update the current view
   do_axes();
   view->update(dt);
-  double tmp;
 }
 
 void

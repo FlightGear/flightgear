@@ -264,7 +264,7 @@ void Wing::compile()
 
     // Calculate a "nominal" segment length equal to an average chord,
     // normalized to lie within 0-1 over the length of the wing.
-    float segLen = _chord * (0.5*(_taper+1)) / _length;
+    float segLen = _chord * (0.5f*(_taper+1)) / _length;
 
     // Generating a unit vector pointing out the left wing.
     float left[3];
@@ -327,7 +327,7 @@ void Wing::compile()
 
         int j;
         for(j=0; j<nSegs; j++) {
-            float frac = start + (j+0.5) * (end-start)/nSegs;
+            float frac = start + (j+0.5f) * (end-start)/nSegs;
             float pos[3];
             interp(root, tip, frac, pos);
 
@@ -405,8 +405,8 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
     // The negative AoA stall is the same if we're using an uncambered
     // airfoil, otherwise a "little badder".
     if(_camber > 0) {
-        s->setStall(1, stallAoA * 0.8);
-        s->setStallWidth(1, _stallWidth * 0.5);
+        s->setStall(1, stallAoA * 0.8f);
+        s->setStallWidth(1, _stallWidth * 0.5f);
     } else {
         s->setStall(1, stallAoA);
         s->setStall(1, _stallWidth);
@@ -417,7 +417,7 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
     s->setStallPeak(1, 1);
     int i;
     for(i=2; i<4; i++) {
-        s->setStall(i, 0.2267);
+        s->setStall(i, 0.2267f);
         s->setStallWidth(i, 1);
     }
     

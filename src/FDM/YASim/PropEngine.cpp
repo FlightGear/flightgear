@@ -7,7 +7,7 @@ namespace yasim {
 PropEngine::PropEngine(Propeller* prop, PistonEngine* eng, float moment)
 {
     // Start off at 500rpm, because the start code doesn't exist yet
-    _omega = 52.3;
+    _omega = 52.3f;
     _dir[0] = 1; _dir[1] = 0; _dir[2] = 0;
 
     _variable = false;
@@ -107,15 +107,15 @@ void PropEngine::stabilize()
 	    break;
 
 	if(tdiff > 0) {
-	    if(!goingUp) step *= 0.5;
+	    if(!goingUp) step *= 0.5f;
 	    goingUp = true;
  	    if(!_variable)  _omega += step;
-	    else            _prop->modPitch(1+(step*0.005));
+	    else            _prop->modPitch(1+(step*0.005f));
 	} else {
-	    if(goingUp) step *= 0.5;
+	    if(goingUp) step *= 0.5f;
 	    goingUp = false;
  	    if(!_variable)  _omega -= step;
-	    else            _prop->modPitch(1-(step*0.005));
+	    else            _prop->modPitch(1-(step*0.005f));
 	}
     }
 
@@ -125,7 +125,7 @@ void PropEngine::stabilize()
 
 void PropEngine::init()
 {
-    _omega = 0.01;
+    _omega = 0.01f;
     _eng->setStarter(false);
     _eng->setMagnetos(0);
 }
@@ -177,12 +177,12 @@ void PropEngine::integrate(float dt)
 	float ratio2 = (_omega*_omega)/(targetOmega*targetOmega);
 	float targetTorque = engTorque * ratio2;
 
-	float mod = propTorque < targetTorque ? 1.04 : (1/1.04);
+	float mod = propTorque < targetTorque ? 1.04f : (1.0f/1.04f);
 
 	// Convert to an acceleration here, so that big propellers
 	// don't seek faster than small ones.
 	float diff = Math::abs((propTorque - targetTorque) / _moment);
-	if(diff < 10) mod = 1 + (mod-1)*(0.1*diff);
+	if(diff < 10) mod = 1 + (mod-1)*(0.1f*diff);
 
 	_prop->modPitch(mod);
     }

@@ -26,4 +26,5 @@
 
 // Generate a directional light
 ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir ) {
+return NULL;
 }

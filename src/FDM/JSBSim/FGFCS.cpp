@@ -60,6 +60,10 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FCS;
 
+#if defined(WIN32) && !defined(__CYGWIN__)
+#define snprintf _snprintf
+#endif
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/

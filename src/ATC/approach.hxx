@@ -38,7 +38,7 @@
 #include <iomanip>
 #elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 #  include <iostream.h>
-#elif defined( __BORLANDC__ )
+#elif defined( __BORLANDC__ ) || (__APPLE__)
 #  include <iostream>
 #else
 #  include <istream.h>

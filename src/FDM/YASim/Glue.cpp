@@ -124,10 +124,10 @@ void Glue::xyz2nedMat(double lat, double lon, float* out)
     // Shorthand for our output vectors:
     float *north = out, *east = out+3, *down = out+6;
 
-    float slat = Math::sin(lat);
-    float clat = Math::cos(lat);
-    float slon = Math::sin(lon);
-    float clon = Math::cos(lon);
+    float slat = (float) Math::sin(lat);
+    float clat = (float)Math::cos(lat);
+    float slon = (float)Math::sin(lon);
+    float clon = (float)Math::cos(lon);
 
     north[0] = -clon * slat;
     north[1] = -slon * slat;
@@ -157,7 +157,7 @@ void Glue::euler2orient(float roll, float pitch, float hdg, float* out)
     int i, j;
     for(i=0; i<3; i++)
         for(j=0; j<3; j++)
-            out[3*i+j] = (i==j) ? 1 : 0;
+            out[3*i+j] = (i==j) ? 1.0f : 0.0f;
 
     // Negate Y and Z
     out[4] = out[8] = -1;
@@ -233,10 +233,10 @@ void Glue::geodUp(double* pos, float* out)
     double lat, lon, alt;
     xyz2geod(pos, &lat, &lon, &alt);
 	
-    float slat = Math::sin(lat);
-    float clat = Math::cos(lat);
-    float slon = Math::sin(lon);
-    float clon = Math::cos(lon);
+    float slat = (float)Math::sin(lat);
+    float clat = (float)Math::cos(lat);
+    float slon = (float)Math::sin(lon);
+    float clon = (float)Math::cos(lon);
     out[0] = clon * clat;
     out[1] = slon * clat;
     out[2] = slat;    

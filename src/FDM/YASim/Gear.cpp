@@ -11,8 +11,8 @@ Gear::Gear()
 	_pos[i] = _cmpr[i] = 0;
     _spring = 1;
     _damp = 0;
-    _sfric = 0.8;
-    _dfric = 0.7;
+    _sfric = 0.8f;
+    _dfric = 0.7f;
     _brake = 0;
     _rot = 0;
     _extension = 1;
@@ -253,8 +253,8 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
 float Gear::calcFriction(float wgt, float v)
 {
     // How slow is stopped?  10 cm/second?
-    const float STOP = 0.1;
-    const float iSTOP = 1/STOP;
+    const float STOP = 0.1f;
+    const float iSTOP = 1.0f/STOP;
     v = Math::abs(v);
     if(v < STOP) return v*iSTOP * wgt * _sfric;
     else         return wgt * _dfric;

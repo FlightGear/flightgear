@@ -198,6 +198,8 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
     }
 
     cout << "ERROR IN FGATCMgr - reached end of GetATCPointer\n";
+
+    return NULL;
 }
 
 

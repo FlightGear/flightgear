@@ -12,37 +12,37 @@ float Math::clamp(float val, float min, float max)
 
 float Math::abs(float f)
 {
-    return ::fabs(f);
+    return (float)::fabs(f);
 }
 
 float Math::sqrt(float f)
 {
-    return ::sqrt(f);
+    return (float)::sqrt(f);
 }
 
 float Math::ceil(float f)
 {
-    return ::ceil(f);
+    return (float)::ceil(f);
 }
 
 float Math::cos(float f)
 {
-    return ::cos(f);
+    return (float)::cos(f);
 }
 
 float Math::sin(float f)
 {
-    return ::sin(f);
+    return (float)::sin(f);
 }
 
 float Math::tan(float f)
 {
-    return ::tan(f);
+    return (float)::tan(f);
 }
 
 float Math::atan2(float y, float x)
 {
-    return ::atan2(y, x);
+    return (float)::atan2(y, x);
 }
 
 double Math::abs(double f)
@@ -57,7 +57,7 @@ double Math::sqrt(double f)
 
 float Math::pow(double base, double exp)
 {
-    return ::pow(base, exp);
+    return (float)::pow(base, exp);
 }
 
 double Math::ceil(double f)

@@ -16,7 +16,7 @@ Jet::Jet()
     // tsfc.
     _vMax = 800;
     _epr0 = 3.0;
-    _tsfc = 0.8;
+    _tsfc = 0.8f;
     _egt0 = 1050;
     _n1Min = 55;
     _n1Max = 102;
@@ -85,7 +85,7 @@ void Jet::setSpooling(float time)
     // 2.3 = -ln(0.1), i.e. x=2.3 is the 90% point we're defining
     // The extra fudge factor is there because the N1 speed (which
     // determines thrust) lags the N2 speed.
-    _decay = 1.5 * 2.3 / time;
+    _decay = 1.5f * 2.3f / time;
 }
 
 void Jet::setVectorAngle(float angle)
@@ -173,16 +173,16 @@ void Jet::integrate(float dt)
     // The actual thrust produced is keyed to the N1 speed.  Add the
     // afterburners in at the end.
     float betaN1 =  (_epr0-1) * (_n1 - _n1Min) / (_n1Max - _n1Min);
-    _thrust *= betaN1/(betaTarget+.00001); // blowup protection
+    _thrust *= betaN1/(betaTarget+0.00001f); // blowup protection
     _thrust *= 1 + _reheat*(_abFactor-1);
 
     // Finally, calculate the output variables.   Use a 80/20 mix of
     // the N2/N1 speeds as the key.
-    float beta = 0.8*betaN2 + 0.2*betaN1;
+    float beta = 0.8f*betaN2 + 0.2f*betaN1;
     _epr = beta + 1;
-    float ff0 = _maxThrust*_tsfc*(1/(3600*9.8)); // takeoff fuel flow, kg/s
+    float ff0 = _maxThrust*_tsfc*(1/(3600.0f*9.8f)); // takeoff fuel flow, kg/s
     _fuelFlow = ff0 * beta*ibeta0;
-    _fuelFlow *= 1 + (3.5 * _reheat * _abFactor); // Afterburners take
+    _fuelFlow *= 1 + (3.5f * _reheat * _abFactor); // Afterburners take
 						  // 3.5 times as much
 						  // fuel per thrust unit
     _egt = T0 + beta*ibeta0 * (_egt0 - T0);

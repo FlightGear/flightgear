@@ -265,8 +265,8 @@ bool fgInitConfig ( int argc, char **argv ) {
     config.append( "system.fgfsrc" );
     fgParseOptions(config.str());
 
-    char name[256];
 #if defined( unix ) || defined( __CYGWIN__ )
+    char name[256];
     // Check for $fg_root/system.fgfsrc.hostname
     gethostname( name, 256 );
     config.concat( "." );

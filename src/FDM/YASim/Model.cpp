@@ -46,7 +46,7 @@ Model::Model()
     _integrator.setEnvironment(this);
 
     // Default value of 30 Hz
-    _integrator.setInterval(1.0/30.0);
+    _integrator.setInterval(1.0f/30.0f);
 
     _agl = 0;
     _crashed = false;
@@ -224,7 +224,7 @@ void Model::calcForces(State* s)
     // Gravity, convert to a force, then to local coordinates
     float grav[3];
     Glue::geodUp(s->pos, grav);
-    Math::mul3(-9.8 * _body.getTotalMass(), grav, grav);
+    Math::mul3(-9.8f * _body.getTotalMass(), grav, grav);
     Math::vmul33(s->orient, grav, grav);
     _body.addForce(grav);
 

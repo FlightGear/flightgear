@@ -124,7 +124,7 @@ FGJSBBase::Message* FGJSBBase::PutMessage(string text, int iVal)
   msg->messageId = messageId++;
   msg->subsystem = "FDM";
   msg->type = Message::eInteger;
-  msg->bVal = iVal;
+  msg->bVal = (iVal != 0);
   Messages.push(msg);
   return msg;
 }
@@ -138,7 +138,7 @@ FGJSBBase::Message* FGJSBBase::PutMessage(string text, double dVal)
   msg->messageId = messageId++;
   msg->subsystem = "FDM";
   msg->type = Message::eDouble;
-  msg->bVal = dVal;
+  msg->bVal = (dVal != 0.0);
   Messages.push(msg);
   return msg;
 }

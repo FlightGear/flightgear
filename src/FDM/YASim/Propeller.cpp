@@ -10,10 +10,10 @@ Propeller::Propeller(float radius, float v, float omega,
 {
     // Initialize numeric constants:
     _lambdaPeak = Math::pow(5.0, -1.0/4.0);
-    _beta = 1.0/(Math::pow(5.0, -1.0/4.0) - Math::pow(5.0, -5.0/4.0));
+    _beta = 1.0f/(Math::pow(5.0f, -1.0f/4.0f) - Math::pow(5.0f, -5.0f/4.0f));
 
     _r = radius;
-    _etaC = 0.85; // make this settable?
+    _etaC = 0.85f; // make this settable?
 
     _j0 = v/(omega*_lambdaPeak);
     _baseJ0 = _j0;
@@ -32,14 +32,14 @@ void Propeller::setTakeoff(float omega0, float power0)
     float gamma = _etaC * _beta / _j0;
     float torque = power0 / omega0;
     float density = Atmosphere::getStdDensity(0);
-    _tc0 = (torque * gamma) / (0.5 * density * V2 * _f0);
+    _tc0 = (torque * gamma) / (0.5f * density * V2 * _f0);
 }
     
 void Propeller::modPitch(float mod)
 {
     _j0 *= mod;
-    if(_j0 < 0.25*_baseJ0) _j0 = 0.25*_baseJ0;
-    if(_j0 > 4*_baseJ0)    _j0 = 4*_baseJ0;
+    if(_j0 < 0.25f*_baseJ0) _j0 = 0.25f*_baseJ0;
+    if(_j0 > 4*_baseJ0)     _j0 = 4*_baseJ0;
 }
 
 
@@ -58,7 +58,7 @@ void Propeller::calc(float density, float v, float omega,
 
     float torque = 0;
     if(lambda > 1) {
-	lambda = 1.0/lambda;
+	lambda = 1.0f/lambda;
 	torque = (density*V2*_f0*_j0)/(4*_etaC*_beta*(1-_lambdaPeak));
     }
 
@@ -66,7 +66,7 @@ void Propeller::calc(float density, float v, float omega,
     // fix (note: the discontinuity is at EXACTLY one, this is about
     // the only time in history you'll see me use == on a floating
     // point number!)
-    if(lambda == 1) lambda = 0.9999;
+    if(lambda == 1.0) lambda = 0.9999f;
 
     // Calculate lambda^4
     float l4 = lambda*lambda; l4 = l4*l4;
@@ -79,7 +79,7 @@ void Propeller::calc(float density, float v, float omega,
     float tc = (1 - lambda) / (1 - _lambdaPeak);
     if(_matchTakeoff && tc > _tc0) tc = _tc0;
 
-    float thrust = 0.5 * density * V2 * _f0 * tc;
+    float thrust = 0.5f * density * V2 * _f0 * tc;
 
     if(torque > 0) {
 	torque -= thrust/gamma;

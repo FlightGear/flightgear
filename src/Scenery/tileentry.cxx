@@ -353,9 +353,9 @@ ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray
 {
 
     //************** HARD CODED RUNWAY LIGHT TEXTURES BEGIN ************************    
-    GLuint texEdge, texTaxi, texCenter, texTouchdown;
-    GLuint texThreshold, texCrossbar, texUndershoot, texApproach;
-    GLuint texRabbit, texVasi, texWhite, texRed, texGreen, texYellow;
+    GLuint texEdge, texTaxi, texTouchdown;
+    GLuint texThreshold;
+    GLuint texVasi, texWhite, texRed, texGreen, texYellow;
 
     //VASI lights
     setColor(0.0,0.0,1.0,360.0, 0, 0, 0, 0);
@@ -1052,7 +1052,7 @@ bool FGTileEntry::obj_load( const std::string& path,
 	// updated, but hopefully we can can the ascii format soon.
 	ssgBranch *tmp = fgAsciiObjLoad( path, this, ground_lights, is_base );
 	if ( tmp ) {
-	    return tmp;
+	    return (NULL != tmp);
 	} else {
 	    // default to an ocean tile
 	    if ( fgGenTile( path, tile_bucket, &c, &br, geometry ) ) {
@@ -1065,7 +1065,7 @@ bool FGTileEntry::obj_load( const std::string& path,
 	}
     }
 
-    return geometry;
+    return (NULL != geometry);
 }
 
 

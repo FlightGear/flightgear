@@ -813,8 +813,7 @@ drawNadir(float xfirst, float xlast, float yvalue)
 
 
 		float r = 7.5;
-		float ang,temp;
-		float x1,y1,x2,y2,xcent,ycent;
+		float x1,y1,x2,y2;
 
 	
         // to draw a circle

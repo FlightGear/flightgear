@@ -425,7 +425,7 @@ do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
     if (hasStep)
       value = step->getBoolValue();
     else
-      value = amount;
+      value = (0.0 != amount);
     if (value)
       return prop->setBoolValue(!prop->getBoolValue());
     else

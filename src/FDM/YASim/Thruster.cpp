@@ -65,7 +65,7 @@ void Thruster::setAir(float pressure, float temp)
 {
     _pressure = pressure;
     _temp = temp;
-    _rho = _pressure / (287.1 * _temp);
+    _rho = _pressure / (287.1f * _temp);
 }
 
 }; // namespace yasim

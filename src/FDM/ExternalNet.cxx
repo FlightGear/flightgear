@@ -74,14 +74,14 @@ static void global2raw( FGRawCtrls *raw ) {
     raw->rudder = node->getDoubleValue( "rudder" );
     raw->flaps = node->getDoubleValue( "flaps" );
     for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {
-	raw->throttle[i] = node->getDoubleValue( "throttle", i );
-	raw->mixture[i] = node->getDoubleValue( "mixture", i );
-	raw->prop_advance[i] = node->getDoubleValue( "propeller-pitch", i );
-	raw->magnetos[i] = node->getIntValue( "magnetos", i );
-	raw->starter[i] = node->getBoolValue( "starter", i );
+	raw->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
+	raw->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
+	raw->prop_advance[i] = node->getDoubleValue( "propeller-pitch", 0.0 );
+	raw->magnetos[i] = node->getIntValue( "magnetos", 0 );
+	raw->starter[i] = node->getBoolValue( "starter", false );
     }
     for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
-	raw->brake[i] = node->getDoubleValue( "brakes", i );
+	raw->brake[i] = node->getDoubleValue( "brakes", 0.0 );
     }
     raw->hground = fgGetDouble( "/environment/ground-elevation-m" );
     raw->magvar = fgGetDouble("/environment/magnetic-variation-deg");
@@ -149,9 +149,8 @@ static void net2global( FGNetFDM *net ) {
     }
 
     net->num_wheels = htonl(net->num_wheels);
-    for ( i = 0; i < net->num_wheels; ++i ) {
-	net->wow[i] = htonl(net->wow[i]);
-    }
+
+    // I don't need to convert the Wow flags, since they are one byte in size
 
     net->cur_time = ntohl(net->cur_time);
     net->warp = ntohl(net->warp);

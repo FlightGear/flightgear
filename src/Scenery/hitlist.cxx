@@ -291,7 +291,7 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
         sgdVec4 plane;
         sgdMakePlane( plane, tri[0], tri[1], tri[2] );
 
-        sgdVec3 point, test;
+        sgdVec3 point;
 
         // find point of intersection of line from point org
         // in direction dir with triangle's plane
@@ -535,7 +535,6 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
         *terrain_elev = result;
         *radius = geoc.radius();
         sgVec3 tmp;
-        sgMat4 TMP;
         sgSetVec3(tmp, hit_list->get_normal(this_hit));
         // cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "  << tmp[2] << endl;
         sgdSetVec3( normal, tmp );
@@ -600,7 +599,6 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
         *terrain_elev = result;
         *radius = geoc.radius();
         sgVec3 tmp;
-        sgMat4 TMP;
         sgSetVec3(tmp, hit_list->get_normal(this_hit));
         // cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "  << tmp[2] << endl;
         sgdSetVec3( normal, tmp );

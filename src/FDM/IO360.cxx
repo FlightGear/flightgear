@@ -637,10 +637,8 @@ float FGNewEngine::Calc_Oil_Press (float Oil_Temp, float Engine_RPM)
 void FGNewEngine::Do_Prop_Calcs()
 {
     float Gear_Ratio = 1.0;
-    float blade_length; 	// meters
     float forward_velocity;             // m/s
     float prop_power_consumed_SI;       // Watts
-    float prop_power_consumed_HP;       // HP
     double J;      			// advance ratio - dimensionless
     double Cp_20;                   // coefficient of power for 20 degree blade angle
     double Cp_25;                   // coefficient of power for 25 degree blade angle

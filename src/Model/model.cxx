@@ -270,7 +270,7 @@ FG3DModel::update (int dt)
 bool
 FG3DModel::getVisible () const
 {
-  return _selector->getSelect();
+  return (_selector->getSelect() != 0);
 }
 
 void

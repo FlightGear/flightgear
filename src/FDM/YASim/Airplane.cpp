@@ -76,7 +76,7 @@ void Airplane::getPilotAccel(float* out)
 
     // Gravity
     Glue::geodUp(s->pos, out);
-    Math::mul3(-9.8, out, out);
+    Math::mul3(-9.8f, out, out);
 
     // The regular acceleration
     float tmp[3];
@@ -399,7 +399,7 @@ float Airplane::compileFuselage(Fuselage* f)
     float segWgt = len*wid/segs;
     int j;
     for(j=0; j<segs; j++) {
-        float frac = (j+0.5) / segs;
+        float frac = (j+0.5f) / segs;
 
         float scale = 1;
         if(frac < f->mid)
@@ -473,13 +473,13 @@ void Airplane::compileContactPoints()
 {
     // Figure it will compress by 20cm
     float comp[3];
-    float DIST = 0.2;
+    float DIST = 0.2f;
     comp[0] = 0; comp[1] = 0; comp[2] = DIST;
 
     // Give it a spring constant such that at full compression it will
     // hold up 10 times the planes mass.  That's about right.  Yeah.
     float mass = _model.getBody()->getTotalMass();
-    float spring = (1/DIST) * 9.8 * 10 * mass;
+    float spring = (1/DIST) * 9.8f * 10.0f * mass;
     float damp = 2 * Math::sqrt(spring * mass);
 
     int i;
@@ -495,8 +495,8 @@ void Airplane::compileContactPoints()
         g->setBrake(1);
 
         // I made these up
-        g->setStaticFriction(0.6);
-        g->setDynamicFriction(0.5);
+        g->setStaticFriction(0.6f);
+        g->setDynamicFriction(0.5f);
 
         _model.addGear(g);
     }
@@ -552,8 +552,8 @@ void Airplane::compile()
         t->handle = body->addMass(0, t->pos);
         totalFuel += t->cap;
     }
-    _cruiseWeight = _emptyWeight + totalFuel*0.5;
-    _approachWeight = _emptyWeight + totalFuel*0.2;
+    _cruiseWeight = _emptyWeight + totalFuel*0.5f;
+    _approachWeight = _emptyWeight + totalFuel*0.2f;
 
     body->recalc();
 
@@ -570,7 +570,7 @@ void Airplane::compile()
     // Ground effect
     float gepos[3];
     float gespan = _wing->getGroundEffect(gepos);
-    _model.setGroundEffect(gepos, gespan, .3);
+    _model.setGroundEffect(gepos, gespan, 0.3f);
 
     solveGear();
     solve();
@@ -597,7 +597,7 @@ void Airplane::solveGear()
         Gear* g = gr->gear;
         g->getPosition(pos);
 	Math::sub3(cg, pos, pos);
-        gr->wgt = 1/(0.5+Math::sqrt(pos[0]*pos[0] + pos[1]*pos[1]));
+        gr->wgt = 1.0f/(0.5f+Math::sqrt(pos[0]*pos[0] + pos[1]*pos[1]));
         total += gr->wgt;
     }
 
@@ -608,12 +608,12 @@ void Airplane::solveGear()
     // The force at max compression should be sufficient to stop a
     // plane moving downwards at 3x the approach descent rate.  Assume
     // a 3 degree approach.
-    float descentRate = 3*_approachSpeed/19.1;
+    float descentRate = 3.0f*_approachSpeed/19.1f;
 
     // Spread the kinetic energy according to the gear weights.  This
     // will results in an equal compression fraction (not distance) of
     // each gear.
-    float energy = 0.5*_approachWeight*descentRate*descentRate;
+    float energy = 0.5f*_approachWeight*descentRate*descentRate;
 
     for(i=0; i<_gears.size(); i++) {
         GearRec* gr = (GearRec*)_gears.get(i);
@@ -631,8 +631,8 @@ void Airplane::solveGear()
         gr->gear->setDamping(2*Math::sqrt(k*_approachWeight*gr->wgt));
 
         // These are pretty generic
-        gr->gear->setStaticFriction(0.8);
-        gr->gear->setDynamicFriction(0.7);
+        gr->gear->setStaticFriction(0.8f);
+        gr->gear->setDynamicFriction(0.7f);
     }
 }
 
@@ -712,7 +712,7 @@ void Airplane::runApproach()
     Math::vmul33(_approachState.orient, wind, wind);
     
     // Approach is by convention at 20% tank capacity
-    setFuelFraction(0.2);
+    setFuelFraction(0.2f);
 
     // Run the thrusters until they get to a stable setting.  FIXME:
     // this is lots of wasted work.
@@ -777,7 +777,7 @@ float Airplane::normFactor(float f)
 
 void Airplane::solve()
 {
-    static const float ARCMIN = 0.0002909;
+    static const float ARCMIN = 0.0002909f;
 
     float tmp[3];
     _solutionIterations = 0;
@@ -824,7 +824,7 @@ void Airplane::solve()
 	float pitch1 = tmp[1];
 
 	// Now calculate:
-	float awgt = 9.8 * _approachWeight;
+	float awgt = 9.8f * _approachWeight;
 
 	float dragFactor = thrust / (thrust-xforce);
 	float liftFactor = awgt / (awgt+alift);
@@ -852,11 +852,11 @@ void Airplane::solve()
 	}
 
 	// OK, now we can adjust the minor variables
-	_cruiseAoA += 0.5*aoaDelta;
-	_tailIncidence += 0.5*tailDelta;
+	_cruiseAoA += 0.5f*aoaDelta;
+	_tailIncidence += 0.5f*tailDelta;
 	
-	_cruiseAoA = clamp(_cruiseAoA, -.174, .174);
-	_tailIncidence = clamp(_tailIncidence, -.174, .174);
+	_cruiseAoA = clamp(_cruiseAoA, -0.174f, 0.174f);
+	_tailIncidence = clamp(_tailIncidence, -0.174f, 0.174f);
 
         if(dragFactor < 1.00001 && liftFactor < 1.00001 &&
            aoaDelta < .000017   && tailDelta < .000017)

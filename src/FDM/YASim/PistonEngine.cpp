@@ -3,9 +3,9 @@
 #include "PistonEngine.hpp"
 namespace yasim {
 
-const static float HP2W = 745.7;
-const static float CIN2CM = 1.6387064e-5;
-const static float RPM2RADPS = 0.1047198;
+const static float HP2W = 745.7f;
+const static float CIN2CM = 1.6387064e-5f;
+const static float RPM2RADPS = 0.1047198f;
 
 PistonEngine::PistonEngine(float power, float speed)
 {
@@ -15,7 +15,7 @@ PistonEngine::PistonEngine(float power, float speed)
 
     // Presume a BSFC (in lb/hour per HP) of 0.45.  In SI that becomes
     // (2.2 lb/kg, 745.7 W/hp, 3600 sec/hour) 7.62e-08 kg/Ws.
-    _f0 = power * 7.62e-08;
+    _f0 = power * 7.62e-08f;
 
     _power0 = power;
     _omega0 = speed;
@@ -26,8 +26,8 @@ PistonEngine::PistonEngine(float power, float speed)
     // Further presume that takeoff is (duh) full throttle and
     // peak-power, that means that by our efficiency function, we are
     // at 11/8 of "ideal" fuel flow.
-    float realFlow = _f0 * (11.0/8.0);
-    _mixCoeff = realFlow * 1.1 / _omega0;
+    float realFlow = _f0 * (11.0f/8.0f);
+    _mixCoeff = realFlow * 1.1f / _omega0;
 
     _turbo = 1;
     _maxMP = 1e6; // No waste gate on non-turbo engines.
@@ -49,7 +49,7 @@ void PistonEngine::setTurboParams(float turbo, float maxMP)
     float P = P0 * (1 + _boost * (_turbo - 1));
     if(P > _maxMP) P = _maxMP;
     float T = Atmosphere::getStdTemperature(0) * Math::pow(P/P0, 2./7.);
-    _rho0 = P / (287.1 * T);
+    _rho0 = P / (287.1f * T);
 }
 
 void PistonEngine::setDisplacement(float d)
@@ -143,7 +143,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // thrust at that setting, so hold onto the "output" value
     // separately.  Ick.
     _mp = pressure * (1 + _boost*(_turbo-1)); // turbocharger
-    float mp = _mp * (0.1 + 0.9 * _throttle); // throttle
+    float mp = _mp * (0.1f + 0.9f * _throttle); // throttle
     _mp *= _throttle;
     if(mp > _maxMP) mp = _maxMP;              // wastegate
 
@@ -151,7 +151,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // pressure change can be assumed to be adiabatic.  Calculate a
     // temperature change, and use that to get the density.
     float T = temp * Math::pow(mp/pressure, 2.0/7.0);
-    float rho = mp / (287.1 * T);
+    float rho = mp / (287.1f * T);
 
     // The actual fuel flow is determined only by engine RPM and the
     // mixture setting.  Not all of this will burn with the same
@@ -174,13 +174,13 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     else if(r < .625)      burned = _fuelFlow;
     else if(r > 1.375)     burned = burnable;
     else
-        burned = _fuelFlow + (burnable-_fuelFlow)*(r-.625)*(4.0/3.0);
+        burned = _fuelFlow + (burnable-_fuelFlow)*(r-0.625f)*(4.0f/3.0f);
 
     // Correct for engine control state
     if(!_running)
 	burned = 0;
     if(_magnetos < 3)
-	burned *= 0.9;
+	burned *= 0.9f;
 
     // And finally the power is just the reference power scaled by the
     // amount of fuel burned, and torque is that divided by RPM.
@@ -190,7 +190,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // Figure that the starter motor produces 20% of the engine's
     // cruise torque.
     if(_cranking && !_running)
-	_torque += 0.20 * _power0/_omega0;
+	_torque += 0.20f * _power0/_omega0;
 
     // Also, add a negative torque of 10% of cruise, to represent
     // internal friction.  Propeller aerodynamic friction is too low
@@ -198,7 +198,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // away as we approach cruise RPMs, though, to prevent interaction
     // with the power computations.  Ugly.
     if(speed > 0 && speed < _omega0)
-	_torque -= 0.05 * (_power0/_omega0) * (1 - speed/_omega0);
+	_torque -= 0.05f * (_power0/_omega0) * (1 - speed/_omega0);
 
     // Now EGT.  This one gets a little goofy.  We can calculate the
     // work done by an isentropically expanding exhaust gas as the
@@ -217,10 +217,10 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // account for non-thermodynamic losses like internal friction;
     // 10% should do it.
 
-    float massFlow = _fuelFlow + (rho * 0.5 * _displacement * speed);
+    float massFlow = _fuelFlow + (rho * 0.5f * _displacement * speed);
     float specHeat = 1300;
-    float corr = 1.0/(Math::pow(_compression, 0.4) - 1);
-    _egt = corr * (power * 1.1) / (massFlow * specHeat);
+    float corr = 1.0f/(Math::pow(_compression, 0.4f) - 1.0f);
+    _egt = corr * (power * 1.1f) / (massFlow * specHeat);
     if(_egt < temp) _egt = temp;
 }
 

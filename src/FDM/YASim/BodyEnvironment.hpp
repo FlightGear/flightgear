@@ -26,7 +26,7 @@ struct State {
             pos[i] = v[i] = rot[i] = acc[i] = racc[i] = 0;
             int j;
             for(j=0; j<3; j++)
-                orient[3*i+j] = i==j ? 1 : 0;
+                orient[3*i+j] = i==j ? 1.0f : 0.0f;
         }
     }
 };
