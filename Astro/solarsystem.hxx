@@ -91,16 +91,3 @@ inline void SolarSystem::draw()
 extern void solarSystemRebuild();
 
 #endif // _SOLARSYSTEM_H_
-
-
-
-
-
-
-
-
-
-
-
-
-

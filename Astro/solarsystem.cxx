@@ -31,7 +31,6 @@
 #  include <windows.h>
 #endif
 
-
 #ifdef __BORLANDC__
 #  define exception c_exception
 #endif
@@ -100,8 +99,9 @@ void SolarSystem::rebuild()
 {
   fgLIGHT *l = &cur_light_params;
   fgTIME  *t = &cur_time_params;  
-  float x, y, z,
-    xx, yy,zz;
+  float x, y, z;
+  // float xx, yy,zz;
+  double sun_angle;
   double ra, dec;
   double x_2, x_4, x_8, x_10;
   double magnitude;
@@ -144,12 +144,6 @@ void SolarSystem::rebuild()
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
     earthsMoon->getPos(&ra, &dec);
-    x = 60000.0 * cos(ra) * cos (dec);
-    y = 60000.0 * sin(ra) * cos (dec);
-    z = 60000.0 * sin(dec);
-    xx = cos(ra) * cos(dec);
-    yy = sin(ra) * cos(dec);
-    zz = sin(dec);
     xglMaterialfv(GL_FRONT, GL_AMBIENT, black);
     xglMaterialfv(GL_FRONT, GL_DIFFUSE, moonColor); 
     xglPushMatrix();
@@ -161,7 +155,8 @@ void SolarSystem::rebuild()
     xglDisable(GL_LIGHTING);
  
     // Step 2b:  Add the sun
-    x_2 = l -> sun_angle * l->sun_angle;
+    sun_angle = l->sun_angle;
+    x_2 = sun_angle * sun_angle;
     x_4 = x_2 * x_2;
     x_8 = x_4 * x_4;
     x_10 = x_8 * x_2;
@@ -169,27 +164,39 @@ void SolarSystem::rebuild()
     if (ambient < 0.3) ambient = 0.3;
     if (ambient > 1.0) ambient = 1.0;
 
-    amb[0] = 0.00 + ((ambient * 6.0)  - 1.0); // minimum value = 0.8
-    amb[1] = 0.00 + ((ambient * 11.0) - 3.0); // minimum value = 0.3
-    amb[2] = 0.00 + ((ambient * 12.0) - 3.6); // minimum value = 0.0
+    amb[0] = ((ambient * 6.0)  - 1.0); // minimum value = 0.8
+    amb[1] = ((ambient * 11.0) - 3.0); // minimum value = 0.3
+    amb[2] = ((ambient * 12.0) - 3.6); // minimum value = 0.0
     amb[3] = 1.00;
 
     if (amb[0] > 1.0) amb[0] = 1.0;
     if (amb[1] > 1.0) amb[1] = 1.0;
     if (amb[2] > 1.0) amb[2] = 1.0;
 
-    ourSun->getPos(&ra, &dec);
-    x = 60000.0 * cos(ra) * cos(dec);
-    y = 60000.0 * sin(ra) * cos(dec);
-    z = 60000.0 * sin(dec);
-    xglPushMatrix();
-    {
-      // xglPushMatrix();
-      xglTranslatef(x,y,z);
-      xglColor3f(amb[0], amb[1], amb[2]);
-      glutSolidSphere(1400.0, 10, 10);
+    sun_angle = l->sun_angle * RAD_TO_DEG;
+    if ( sun_angle < 100 ) {
+	ourSun->getPos(&ra, &dec);
+	double cos_dec = cos(dec) * 60000.0;
+	x = cos(ra) * cos_dec;
+	y = sin(ra) * cos_dec;
+	z = sin(dec) * 60000.0;
+	xglPushMatrix();
+	{
+	    double sun_size = 1400.0;
+	    // daily variation sun gets larger near horizon
+	    if ( sun_angle > 84.0 ) {
+		double sun_grow = 9.0 * fabs(94.0 - sun_angle);
+		sun_size += 0.5 * sun_size * cos( sun_grow * DEG_TO_RAD);
+	    }
+	    xglTranslatef(x,y,z);
+	    xglColor3fv(amb);
+	    glutSolidSphere(sun_size, 10, 10);
+	}
+	glPopMatrix();
+
+    } else {
+	// sun angle > 100, no need to draw sun
     }
-    glPopMatrix();
     // Step 2c: Add the planets
     xglBegin(GL_POINTS);
     mercury->getPos(&ra, &dec, &magnitude);addPlanetToList(ra, dec, magnitude);
@@ -263,10 +270,3 @@ void solarSystemRebuild()
 {
   SolarSystem::theSolarSystem->rebuild();
 }
-
-
-
-
-
-
-
