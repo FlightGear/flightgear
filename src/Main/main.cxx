@@ -964,9 +964,7 @@ void fgUpdateTimeDepCalcs() {
 
     // conceptually, the following block could be done for each fdm
     // instance ...
-    if ( !cur_fdm_state->get_inited() ) {
-        // do nothing, fdm isn't inited yet
-    } else {
+    if ( cur_fdm_state->get_inited() ) {
         // we have been inited, and  we are good to go ...
 
         if ( !inited ) {
@@ -982,6 +980,8 @@ void fgUpdateTimeDepCalcs() {
             replay_time->setDoubleValue( replay_time->getDoubleValue()
                                          + replay_dt_sec );
         }
+    } else {
+        // do nothing, fdm isn't inited yet
     }
 
     globals->get_model_mgr()->update(delta_time_sec);

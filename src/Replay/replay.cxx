@@ -23,6 +23,7 @@
 
 #include <simgear/constants.h>
 
+#include <FDM/flight.hxx>
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
 #include <Network/net_ctrls.hxx>
@@ -105,6 +106,11 @@ void FGReplay::update( double dt ) {
     // build the replay record
     FGNetFDM f;
     FGProps2NetFDM( &f, false );
+
+    // sanity check, don't collect data if FDM data isn't good
+    if ( !cur_fdm_state->get_inited() ) {
+        return;
+    }
 
     FGNetCtrls c;
     FGProps2NetCtrls( &c, false, false );
