@@ -3,6 +3,10 @@ New in 0.45:
 * Added an option to enable/disable fog/haze.
 * Added an option to enable/disable sky blending.
 * Added an option to select smooth/flat polygon shading.
+* Added an option to enable full-screen mode.
+* Added a visual frame rate counter on the HUD.  (Contributed by Durk Talsma)
+* Autopilot updates (Jeff Goeke-Smith)
+* Added an option to control the number of neighboring tiles that are drawn
 
 New in 0.44: 
 * Fixed a horible bug that cause the time to be *WAY* off when

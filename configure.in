@@ -5,7 +5,7 @@ dnl
 AC_INIT(Simulator/Aircraft/aircraft.c)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.45)
+AM_INIT_AUTOMAKE(FlightGear, 0.46)
 
 dnl Checks for programs.
 
