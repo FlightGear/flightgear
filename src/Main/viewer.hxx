@@ -84,20 +84,6 @@ protected:
     // Distances in meters of course.
     sgVec3 pilot_offset;
 
-    // vector in cartesian coordinates from current position to the
-    // postion on the earth's surface the sun is directly over
-    sgVec3 to_sun;
-
-    // surface direction to go to head towards sun
-    sgVec3 surface_to_sun;
-
-    // vector in cartesian coordinates from current position to the
-    // postion on the earth's surface the moon is directly over
-    sgVec3 to_moon;
-  
-    // surface direction to go to head towards moon
-    sgVec3 surface_to_moon;
-
     // surface vector heading south
     sgVec3 surface_south;
 
@@ -208,26 +194,6 @@ public:
     inline const sgVec4 *get_UP() {
 	if ( dirty ) { update(); }
 	return UP;
-    }
-
-    //////////////////////////////////////////////////////////////////////
-    // need to fix these
-    //////////////////////////////////////////////////////////////////////
-    inline float *get_to_sun() { return to_sun; }
-    inline void set_to_sun( float x, float y, float z ) {
-	sgSetVec3( to_sun, x, y, z );
-    }
-    inline float *get_surface_to_sun() { return surface_to_sun; }
-    inline void set_surface_to_sun( float x, float y, float z) {
-	sgSetVec3( surface_to_sun, x, y, z );
-    }
-    inline float *get_to_moon() { return to_moon; }
-    inline void set_to_moon( float x, float y, float z) {
-	sgSetVec3( to_moon, x, y, z );
-    }
-    inline float *get_surface_to_moon() { return surface_to_moon; }
-    inline void set_surface_to_moon( float x, float y, float z) {
-	sgSetVec3( surface_to_moon, x, y, z );
     }
 };
 

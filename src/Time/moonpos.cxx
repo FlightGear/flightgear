@@ -336,10 +336,17 @@ static void fgMoonPositionGST(double gst, double *lon, double *lat) {
 void fgUpdateMoonPos( void ) {
     fgLIGHT *l;
     FGViewerRPH *v;
-    sgVec3 nup, nmoon, surface_to_moon;
+    sgVec3 nup, nmoon;
     Point3D p, rel_moonpos;
     double dot, east_dot;
     double moon_gd_lat, sl_radius;
+
+    // vector in cartesian coordinates from current position to the
+    // postion on the earth's surface the moon is directly over
+    sgVec3 to_moon;
+  
+    // surface direction to go to head towards moon
+    sgVec3 surface_to_moon;
 
     l = &cur_light_params;
     SGTime *t = globals->get_time_params();
@@ -390,21 +397,19 @@ void fgUpdateMoonPos( void ) {
     // calculate vector to moon's position on the earth's surface
     Point3D vp( v->get_view_pos()[0],
 		v->get_view_pos()[1],
-		v->get_view_pos()[1] );
+		v->get_view_pos()[2] );
     rel_moonpos = l->fg_moonpos - ( vp + scenery.center );
-    v->set_to_moon( rel_moonpos.x(), rel_moonpos.y(), rel_moonpos.z() );
+    sgSetVec3( to_moon, rel_moonpos.x(), rel_moonpos.y(), rel_moonpos.z() );
     // printf( "Vector to moon = %.2f %.2f %.2f\n",
-    //         v->to_moon[0], v->to_moon[1], v->to_moon[2]);
+    //         to_moon[0], to_moon[1], to_moon[2]);
 
     // Given a vector from the view position to the point on the
     // earth's surface the moon is directly over, map into onto the
     // local plane representing "horizontal".
 
     sgmap_vec_onto_cur_surface_plane( v->get_world_up(), v->get_view_pos(), 
-				      v->get_to_moon(), surface_to_moon );
+				      to_moon, surface_to_moon );
     sgNormalizeVec3(surface_to_moon);
-    v->set_surface_to_moon( surface_to_moon[0], surface_to_moon[1], 
-			    surface_to_moon[2] );
     // cout << "(sg) Surface direction to moon is "
     //   << surface_to_moon[0] << "," 
     //   << surface_to_moon[1] << ","

@@ -244,10 +244,17 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
 void fgUpdateSunPos( void ) {
     fgLIGHT *l;
     FGViewerRPH *v;
-    sgVec3 nup, nsun, surface_to_sun;
+    sgVec3 nup, nsun;
     Point3D p, rel_sunpos;
     double dot, east_dot;
     double sun_gd_lat, sl_radius;
+
+    // vector in cartesian coordinates from current position to the
+    // postion on the earth's surface the sun is directly over
+    sgVec3 to_sun;
+
+    // surface direction to go to head towards sun
+    sgVec3 surface_to_sun;
 
     l = &cur_light_params;
     SGTime *t = globals->get_time_params();
@@ -296,9 +303,9 @@ void fgUpdateSunPos( void ) {
     // calculate vector to sun's position on the earth's surface
     Point3D vp( v->get_view_pos()[0],
 		v->get_view_pos()[1],
-		v->get_view_pos()[1] );
+		v->get_view_pos()[2] );
     rel_sunpos = l->fg_sunpos - ( vp + scenery.center );
-    v->set_to_sun( rel_sunpos.x(), rel_sunpos.y(), rel_sunpos.z() );
+    sgSetVec3( to_sun, rel_sunpos.x(), rel_sunpos.y(), rel_sunpos.z() );
     // printf( "Vector to sun = %.2f %.2f %.2f\n",
     //         v->to_sun[0], v->to_sun[1], v->to_sun[2]);
 
@@ -307,10 +314,8 @@ void fgUpdateSunPos( void ) {
     // local plane representing "horizontal".
 
     sgmap_vec_onto_cur_surface_plane( v->get_world_up(), v->get_view_pos(),
-				      v->get_to_sun(), surface_to_sun );
+				      to_sun, surface_to_sun );
     sgNormalizeVec3(surface_to_sun);
-    v->set_surface_to_sun( surface_to_sun[0], surface_to_sun[1], 
-			   surface_to_sun[2] );
     // cout << "(sg) Surface direction to sun is "
     //   << surface_to_sun[0] << "," 
     //   << surface_to_sun[1] << ","
@@ -318,9 +323,10 @@ void fgUpdateSunPos( void ) {
     // cout << "Should be close to zero = " 
     //   << sgScalarProductVec3(nup, surface_to_sun) << endl;
 
-    // calculate the angle between v->surface_to_sun and
-    // v->surface_east.  We do this so we can sort out the acos()
-    // ambiguity.  I wish I could think of a more efficient way ... :-(
+    // calculate the angle between surface_to_sun and
+    // v->get_surface_east().  We do this so we can sort out the
+    // acos() ambiguity.  I wish I could think of a more efficient
+    // way. :-(
     east_dot = sgScalarProductVec3( surface_to_sun, v->get_surface_east() );
     // cout << "  East dot product = " << east_dot << endl;
 

@@ -263,13 +263,6 @@ FGOptions::toggle_panel() {
 	  current_panel->setVisibility(true);
     }
 
-    // new rule .. "fov" shouldn't get messed with like this.
-    /* if ( panel_status ) {
-	fov *= 0.4232;
-    } else {
-	fov *= (1.0 / 0.4232);
-    } */
-
     fgReshape( xsize, ysize);
 
     if( !freeze )
