@@ -5,9 +5,11 @@ EXTRA_DIST = \
 	c172_init.c \
 	ls_trim.c \
         navion_init.h \
+	basic_init.c basic_init.h basic_aero.c basic_aero.h basic_engine.c basic_gear.c \
 	uiuc_aero.c
 
 AIRCRAFT_MODEL =  c172_aero.c c172_engine.c c172_gear.c c172_init.c \
+                  basic_init.c basic_init.h basic_aero.c basic_aero.h basic_engine.c basic_gear.c \
                   navion_init.h  navion_aero.c navion_engine.c \
                   navion_gear.c navion_init.c uiuc_aero.c \
                   cherokee_aero.c cherokee_engine.c cherokee_gear.c \
