@@ -9,6 +9,7 @@
 
 #include <plib/pu.h>
 
+#include "fg_props.hxx"
 #include "fg_os.hxx"
 
 //
@@ -176,14 +177,21 @@ void fgRequestRedraw()
     glutPostRedisplay();
 }
 
-void fgOSOpenWindow(int w, int h, bool alpha)
+void fgOSOpenWindow(int w, int h, int bpp, bool alpha)
 {
     int mode = GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE;
     if(alpha) mode |= GLUT_ALPHA;
 
     glutInitDisplayMode(mode);
     glutInitWindowSize(w, h);
-    glutCreateWindow("FlightGear");
+    if(!fgGetBool("/sim/startup/game-mode")) {
+        glutCreateWindow("FlightGear");
+    } else {
+        char game_mode_str[256];
+        sprintf(game_mode_str, "width=%d height=%d bpp=%d", w, h, bpp);
+        glutGameModeString( game_mode_str );
+        glutEnterGameMode();
+    }
 
     // Register these here.  Calling them before the window is open
     // crashes.
@@ -197,4 +205,5 @@ void fgOSOpenWindow(int w, int h, bool alpha)
     glutIdleFunc(GLUTidle);
     glutDisplayFunc(GLUTdraw);
     glutReshapeFunc(GLUTreshape);
+
 }

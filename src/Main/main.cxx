@@ -1412,6 +1412,7 @@ bool fgMainInit( int argc, char **argv ) {
     // Clouds3D requires an alpha channel
     fgOSOpenWindow( fgGetInt("/sim/startup/xsize"),
                     fgGetInt("/sim/startup/ysize"),
+                    fgGetInt("/sim/rendering/bits-per-pixel"),
                     fgGetBool("/sim/rendering/clouds3d") );
 
     // This seems to be the absolute earliest in the init sequence
