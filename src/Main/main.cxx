@@ -417,7 +417,7 @@ static void fgRenderFrame( void ) {
 	    // select view matrix from front of view matrix queue
 	    FGMat4Wrapper tmp = current_view.follow.front();
 	    sgCopyMat4( sgVIEW, tmp.m );
-	    while ( current_view.follow.size() > 10 ) {
+	    while ( current_view.follow.size() > 40 ) {
 		current_view.follow.pop_front();
 	    }
 
@@ -430,11 +430,16 @@ static void fgRenderFrame( void ) {
 			     current_view.view_pos.y(),
 			     current_view.view_pos.z() );
 
-	    // sgMat4 sgTMP;
+	    sgVec3 ownship_up;
+	    sgSetVec3( ownship_up, 0.0, 0.0, 1.0);
+
+	    sgMat4 sgROT;
+	    sgMakeRotMat4( sgROT, -90.0, ownship_up );
+
+	    sgMat4 sgTMP;
 	    sgMat4 sgTUX;
-	    // sgMultMat4( sgTMP, current_view.sgUP, sgTRANS );
-	    // sgMultMat4( sgTUX, current_view.sgLARC_TO_SSG, sgTMP );
-	    sgMultMat4( sgTUX, current_view.sgVIEW_ROT, sgTRANS );
+	    sgMultMat4( sgTMP, sgROT, current_view.sgVIEW_ROT );
+	    sgMultMat4( sgTUX, sgTMP, sgTRANS );
 	
 	    sgCoord tuxpos;
 	    sgSetCoord( &tuxpos, sgTUX );
@@ -1107,10 +1112,16 @@ int main( int argc, char **argv ) {
     // distribution) specifically from the ssg tux example
     //
 
-    // ssgModelPath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    // ssgTexturePath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    ssgModelPath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    ssgTexturePath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    FGPath modelpath( current_options.get_fg_root() );
+    modelpath.append( "Models" );
+    modelpath.append( "Geometry" );
+  
+    FGPath texturepath( current_options.get_fg_root() );
+    texturepath.append( "Models" );
+    texturepath.append( "Textures" );
+  
+    ssgModelPath( (char *)modelpath.c_str() );
+    ssgTexturePath( (char *)texturepath.c_str() );
 
     scene = new ssgRoot;
     terrain = new ssgBranch;
@@ -1118,7 +1129,7 @@ int main( int argc, char **argv ) {
     penguin_sel = new ssgSelector;
     penguin_pos = new ssgTransform;
 
-    ssgEntity *tux_obj = ssgLoadAC( "tuxedo.ac" );
+    ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
     penguin_pos->addKid( tux_obj );
     penguin_sel->addKid( penguin_pos );
     ssgFlatten( tux_obj );
