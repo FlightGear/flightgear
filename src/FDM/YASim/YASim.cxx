@@ -167,23 +167,23 @@ void YASim::init()
 	node->setDoubleValue("yoffset-in", pos[1]);
 	node->setDoubleValue("zoffset-in", pos[2]);
     }
-    for(i=0; i<m->numThrusters(); i++) {
-	// Sanify the initial input conditions
-	char buf[64];
- 	sprintf(buf, "/controls/throttle[%d]", i);        fgSetFloat(buf, 0);
-	sprintf(buf, "/controls/mixture[%d]", i);         fgSetFloat(buf, 1);
-	sprintf(buf, "/controls/propeller-pitch[%d]", i); fgSetFloat(buf, 1);
-	sprintf(buf, "/controls/afterburner[%d]", i);     fgSetFloat(buf, 0);
-    }
+//     for(i=0; i<m->numThrusters(); i++) {
+// 	// Sanify the initial input conditions
+// 	char buf[64];
+//  	sprintf(buf, "/controls/throttle[%d]", i);        fgSetFloat(buf, 0);
+// 	sprintf(buf, "/controls/mixture[%d]", i);         fgSetFloat(buf, 1);
+// 	sprintf(buf, "/controls/propeller-pitch[%d]", i); fgSetFloat(buf, 1);
+// 	sprintf(buf, "/controls/afterburner[%d]", i);     fgSetFloat(buf, 0);
+//     }
 
-    fgSetFloat("/controls/slats", 0);
-    fgSetFloat("/controls/spoilers", 0);
+//     fgSetFloat("/controls/slats", 0);
+//     fgSetFloat("/controls/spoilers", 0);
 
     // Are we at ground level?  If so, lift the plane up so the gear
     // clear the ground.
     double runway_altitude = get_Runway_altitude();
-    fgSetBool("/controls/gear-down", false);
     if(get_Altitude() - runway_altitude < 50) {
+        fgSetBool("/controls/gear-down", false);
 	float minGearZ = 1e18;
 	for(i=0; i<a->numGear(); i++) {
 	    Gear* g = a->getGear(i);
