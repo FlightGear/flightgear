@@ -39,15 +39,20 @@ static bool pointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     // punt if outside bouding cube
     if ( point[0] < (xmin = SG_MIN3 (tri[0][0], tri[1][0], tri[2][0])) ) {
         return false;
-    } else if ( point[0] > (xmax = SG_MAX3 (tri[0][0], tri[1][0], tri[2][0])) ) {
+    } else if ( point[0] > (xmax = SG_MAX3 (tri[0][0], tri[1][0], tri[2][0])) )
+    {
         return false;
-    } else if ( point[1] < (ymin = SG_MIN3 (tri[0][1], tri[1][1], tri[2][1])) ) {
+    } else if ( point[1] < (ymin = SG_MIN3 (tri[0][1], tri[1][1], tri[2][1])) )
+    {
         return false;
-    } else if ( point[1] > (ymax = SG_MAX3 (tri[0][1], tri[1][1], tri[2][1])) ) {
+    } else if ( point[1] > (ymax = SG_MAX3 (tri[0][1], tri[1][1], tri[2][1])) )
+    {
         return false;
-    } else if ( point[2] < (zmin = SG_MIN3 (tri[0][2], tri[1][2], tri[2][2])) ) {
+    } else if ( point[2] < (zmin = SG_MIN3 (tri[0][2], tri[1][2], tri[2][2])) )
+    {
         return false;
-    } else if ( point[2] > (zmax = SG_MAX3 (tri[0][2], tri[1][2], tri[2][2])) ) {
+    } else if ( point[2] > (zmax = SG_MAX3 (tri[0][2], tri[1][2], tri[2][2])) )
+    {
         return false;
     }
 
@@ -190,7 +195,7 @@ int sgdIsectInfLinePlane( sgdVec3 dst, sgdVec3 l_org,
     return FALSE ;
 
   sgdScaleVec3 ( dst, l_vec, -( sgdScalarProductVec3 ( l_org, plane )
-                                                + plane[3] ) / tmp ) ;
+                                + plane[3] ) / tmp ) ;
   sgdAddVec3  ( dst, l_org ) ;
 
   return TRUE ;
@@ -203,85 +208,92 @@ int sgdIsectInfLinePlane( sgdVec3 dst, sgdVec3 l_org,
  */
 bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
 {
-	sgdVec3 dif;
+    sgdVec3 dif;
 
-	int i;
-	for( i=0; i<3; i++ ) {
-		SGDfloat min, max;
-		SG_MIN_MAX3 ( min, max, tri[0][i], tri[1][i], tri[2][i] );
-		// punt if outside bouding cube
-		if( (point[i] < min) || (point[i] > max) )
-			return false;
-		dif[i] = max - min;
-	}
+    SGDfloat min, max;
+    // punt if outside bouding cube
+    SG_MIN_MAX3 ( min, max, tri[0][0], tri[1][0], tri[2][0] );
+    if( (point[0] < min) || (point[0] > max) )
+        return false;
+    dif[0] = max - min;
 
-	// drop the smallest dimension so we only have to work in 2d.
-	SGDfloat min_dim = SG_MIN3 (dif[0], dif[1], dif[2]);
-	SGDfloat x1, y1, x2, y2, x3, y3, rx, ry;
-	if ( fabs(min_dim-dif[0]) <= DBL_EPSILON ) {
-		// x is the smallest dimension
-		x1 = point[1];
-		y1 = point[2];
-		x2 = tri[0][1];
-		y2 = tri[0][2];
-		x3 = tri[1][1];
-		y3 = tri[1][2];
-		rx = tri[2][1];
-		ry = tri[2][2];
-	} else if ( fabs(min_dim-dif[1]) <= DBL_EPSILON ) {
-		// y is the smallest dimension
-		x1 = point[0];
-		y1 = point[2];
-		x2 = tri[0][0];
-		y2 = tri[0][2];
-		x3 = tri[1][0];
-		y3 = tri[1][2];
-		rx = tri[2][0];
-		ry = tri[2][2];
-	} else if ( fabs(min_dim-dif[2]) <= DBL_EPSILON ) {
-		// z is the smallest dimension
-		x1 = point[0];
-		y1 = point[1];
-		x2 = tri[0][0];
-		y2 = tri[0][1];
-		x3 = tri[1][0];
-		y3 = tri[1][1];
-		rx = tri[2][0];
-		ry = tri[2][1];
-	} else {
-		// all dimensions are really small so lets call it close
-		// enough and return a successful match
-		return true;
-	}
+    SG_MIN_MAX3 ( min, max, tri[0][1], tri[1][1], tri[2][1] );
+    if( (point[1] < min) || (point[1] > max) )
+        return false;
+    dif[1] = max - min;
 
-	// check if intersection point is on the same side of p1 <-> p2 as p3  
-	SGDfloat tmp = (y2 - y3) / (x2 - x3);
-	int side1 = SG_SIGN (tmp * (rx - x3) + y3 - ry);
-	int side2 = SG_SIGN (tmp * (x1 - x3) + y3 - y1);
-	if ( side1 != side2 ) {
-		// printf("failed side 1 check\n");
-		return false;
-	}
+    SG_MIN_MAX3 ( min, max, tri[0][2], tri[1][2], tri[2][2] );
+    if( (point[2] < min) || (point[2] > max) )
+        return false;
+    dif[2] = max - min;
+	
+    // drop the smallest dimension so we only have to work in 2d.
+    SGDfloat min_dim = SG_MIN3 (dif[0], dif[1], dif[2]);
+    SGDfloat x1, y1, x2, y2, x3, y3, rx, ry;
+    if ( fabs(min_dim-dif[0]) <= DBL_EPSILON ) {
+        // x is the smallest dimension
+        x1 = point[1];
+        y1 = point[2];
+        x2 = tri[0][1];
+        y2 = tri[0][2];
+        x3 = tri[1][1];
+        y3 = tri[1][2];
+        rx = tri[2][1];
+        ry = tri[2][2];
+    } else if ( fabs(min_dim-dif[1]) <= DBL_EPSILON ) {
+        // y is the smallest dimension
+        x1 = point[0];
+        y1 = point[2];
+        x2 = tri[0][0];
+        y2 = tri[0][2];
+        x3 = tri[1][0];
+        y3 = tri[1][2];
+        rx = tri[2][0];
+        ry = tri[2][2];
+    } else if ( fabs(min_dim-dif[2]) <= DBL_EPSILON ) {
+        // z is the smallest dimension
+        x1 = point[0];
+        y1 = point[1];
+        x2 = tri[0][0];
+        y2 = tri[0][1];
+        x3 = tri[1][0];
+        y3 = tri[1][1];
+        rx = tri[2][0];
+        ry = tri[2][1];
+    } else {
+        // all dimensions are really small so lets call it close
+        // enough and return a successful match
+        return true;
+    }
 
-	// check if intersection point is on correct side of p2 <-> p3 as p1
-	tmp = (y3 - ry) / (x3 - rx);
-	side1 = SG_SIGN (tmp * (x2 - rx) + ry - y2);
-	side2 = SG_SIGN (tmp * (x1 - rx) + ry - y1);
-	if ( side1 != side2 ) {
-		// printf("failed side 2 check\n");
-		return false;
-	}
+    // check if intersection point is on the same side of p1 <-> p2 as p3  
+    SGDfloat tmp = (y2 - y3) / (x2 - x3);
+    int side1 = SG_SIGN (tmp * (rx - x3) + y3 - ry);
+    int side2 = SG_SIGN (tmp * (x1 - x3) + y3 - y1);
+    if ( side1 != side2 ) {
+        // printf("failed side 1 check\n");
+        return false;
+    }
 
-	// check if intersection point is on correct side of p1 <-> p3 as p2
-	tmp = (y2 - ry) / (x2 - rx);
-	side1 = SG_SIGN (tmp * (x3 - rx) + ry - y3);
-	side2 = SG_SIGN (tmp * (x1 - rx) + ry - y1);
-	if ( side1 != side2 ) {
-		// printf("failed side 3  check\n");
-		return false;
-	}
+    // check if intersection point is on correct side of p2 <-> p3 as p1
+    tmp = (y3 - ry) / (x3 - rx);
+    side1 = SG_SIGN (tmp * (x2 - rx) + ry - y2);
+    side2 = SG_SIGN (tmp * (x1 - rx) + ry - y1);
+    if ( side1 != side2 ) {
+        // printf("failed side 2 check\n");
+        return false;
+    }
 
-	return true;
+    // check if intersection point is on correct side of p1 <-> p3 as p2
+    tmp = (y2 - ry) / (x2 - rx);
+    side1 = SG_SIGN (tmp * (x3 - rx) + ry - y3);
+    side2 = SG_SIGN (tmp * (x1 - rx) + ry - y1);
+    if ( side1 != side2 ) {
+        // printf("failed side 3  check\n");
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -327,35 +339,50 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
 	sgdMakePlane( plane, tri[0], tri[1], tri[2] );
 
         sgdVec3 point;
-        if( sgdIsectInfLinePlane( point, orig, dir, plane ) ) {
-#if 0
-            if( pointInTriangle( point, tri ) ) {
-                add(leaf,i,point,plane);
-                num_hits++;
-            }
+		
+        //inlined IsectInfLinePlane( point dst, orig, dir, plane )
+        SGDfloat tmp = sgdScalarProductVec3 ( dir, plane ) ;
+		
+        /* Is line parallel to plane? */
+        if ( sgdAbs ( tmp ) < DBL_EPSILON )
+            continue ;
+
+        sgdScaleVec3 ( point, dir,
+                       -( sgdScalarProductVec3 ( orig, plane ) + plane[3] )
+                       / tmp ) ;
+		
+        sgdAddVec3  ( point, orig ) ;
+        // end of inlined intersection
+#if 0	
+        if( pointInTriangle( point, tri ) ) {
+            add(leaf,i,point,plane);
+            num_hits++;
+        }
 #endif // 0
-            if( sgdPointInTriangle( point, tri ) ) {
-                // transform point into passed into desired coordinate frame
-                sgdXformPnt3( point, point, m );
-                add(leaf,i,point,plane);
-                num_hits++;
-            }
+        if( sgdPointInTriangle( point, tri ) ) {
+            // transform point into passed into desired coordinate frame
+            sgdXformPnt3( point, point, m );
+            add(leaf,i,point,plane);
+            num_hits++;
         }
     }
     return num_hits;
 }
+
 
 void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m, 
 				 sgdVec3 orig, sgdVec3 dir )
 {
     sgSphere *bsphere;
 
-    // lookat vector in branch's coordinate frame
+    /* the lookat vector and matrix in branch's coordinate frame
+     * but we won't determine these unless needed to,
+     * This 'lazy evaluation' is a result of profiling data */
     sgdVec3 _orig, _dir;
     sgdMat4 _m;
-    sgdTransposeNegateMat4( _m, m);
-    sgdXformPnt3( _orig, orig, _m );
-    sgdXformPnt3( _dir,  dir,  _m );
+
+    // 'lazy evaluation' flag
+    int first_time = 1;
 	
     for ( ssgEntity *kid = branch->getKid( 0 );
 	  kid != NULL; 
@@ -363,36 +390,54 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
     {
 	if ( kid->getTraversalMask() & SSGTRAV_HOT ) {
             bsphere = kid->getBSphere();
-	    sgVec3 fcenter;
-	    sgCopyVec3( fcenter, bsphere->getCenter() );
-	    sgdVec3 center;
-	    sgdSetVec3( center, fcenter ); 
-	    sgdXformPnt3( center, m ) ;
-            // watch out for overflow
-	    if ( sgdClosestPointToLineDistSquared( center, orig, dir ) <
-		 double(bsphere->getRadius() * bsphere->getRadius()) )
-	    {
-		// possible intersections
-		if ( kid->isAKindOf ( ssgTypeBranch() ) ) {
-		    sgdMat4 m_new;
-		    sgdCopyMat4(m_new, m);
-		    if ( kid->isA( ssgTypeTransform() ) ) {
+            sgdVec3         center;
+            sgdSetVec3( center,
+                        bsphere->getCenter()[0],
+                        bsphere->getCenter()[1],
+                        bsphere->getCenter()[2] ); 
+            sgdXformPnt3( center, m ) ;
+
+            // sgdClosestPointToLineDistSquared( center, orig, dir ) 
+            // inlined here because because of profiling results
+            sgdVec3 u, u1, v;
+            sgdSubVec3(u, center, orig);
+            sgdScaleVec3( u1, dir, sgdScalarProductVec3(u,dir)
+                          / sgdScalarProductVec3(dir,dir) );
+            sgdSubVec3(v, u, u1);
+
+            // doubles because of possible overflow
+#define SQUARE(x) (x*x)
+            if( sgdScalarProductVec3(v, v)
+                < SQUARE( double(bsphere->getRadius()) ) )
+            {
+                // possible intersections
+                if ( kid->isAKindOf ( ssgTypeBranch() ) ) {
+                    sgdMat4 m_new;
+                    sgdCopyMat4(m_new, m);
+                    if ( kid->isA( ssgTypeTransform() ) ) {
                         sgMat4 fxform;
                         ((ssgTransform *)kid)->getTransform( fxform );
                         sgdMat4 xform;
                         sgdSetMat4( xform, fxform );
                         sgdPreMultMat4( m_new, xform );
-		    }
-		    IntersectBranch( (ssgBranch *)kid, m_new, orig, dir );
-		} else if ( kid->isAKindOf( ssgTypeLeaf() ) ) {
-		    IntersectLeaf( (ssgLeaf *)kid, m, _orig, _dir );
-		}
-	    } else {
-		// end of the line for this branch
-	    }
-	} else {
-	    // branch requested not to be traversed
-	}
+                    }
+                    IntersectBranch( (ssgBranch *)kid, m_new, orig, dir );
+                } else if ( kid->isAKindOf( ssgTypeLeaf() ) ) {
+                    if( first_time) {
+                        // OK we need these
+                        sgdTransposeNegateMat4( _m, m);
+                        sgdXformPnt3( _orig, orig, _m );
+                        sgdXformPnt3( _dir,  dir,  _m );
+                        first_time = 0;
+                    }
+                    IntersectLeaf( (ssgLeaf *)kid, m, _orig, _dir );
+                }
+            } else {
+                // end of the line for this branch
+            }
+        } else {
+            // branch requested not to be traversed
+        }
     }
 }
 
