@@ -230,7 +230,7 @@ class FGPanelAction : public FGConditional
 {
 public:
   FGPanelAction ();
-  FGPanelAction (int button, int x, int y, int w, int h);
+  FGPanelAction (int button, int x, int y, int w, int h, bool repeatable);
   virtual ~FGPanelAction ();
 
 				// Getters.
@@ -243,7 +243,7 @@ public:
 				// Setters.
 
 				// transfer pointer ownership
-  virtual void addBinding (FGBinding * binding);
+  virtual void addBinding (FGBinding * binding, int updown);
   virtual void setButton (int button) { _button = button; }
   virtual void setX (int x) { _x = x; }
   virtual void setY (int y) { _y = y; }
@@ -261,7 +261,7 @@ public:
   }
 
 				// Perform the action.
-  virtual void doAction ();
+  virtual bool doAction (int updown);
 
 private:
   typedef vector<FGBinding *> binding_list_t;
@@ -271,7 +271,9 @@ private:
   int _y;
   int _w;
   int _h;
-  binding_list_t _bindings;
+  bool _repeatable;
+  int _last_state;
+  binding_list_t _bindings[2];
 };
 
 
@@ -386,7 +388,7 @@ public:
   virtual void addAction (FGPanelAction * action);
 
 				// Coordinates relative to centre.
-  virtual bool doMouseAction (int button, int x, int y);
+  virtual bool doMouseAction (int button, int updown, int x, int y);
 
 protected:
   int _x, _y, _w, _h;

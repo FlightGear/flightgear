@@ -300,7 +300,7 @@ void FGPanel::updateMouseDelay()
     if (_mouseDown) {
         _mouseDelay--;
         if (_mouseDelay < 0) {
-            _mouseInstrument->doMouseAction(_mouseButton, _mouseX, _mouseY);
+            _mouseInstrument->doMouseAction(_mouseButton, 0, _mouseX, _mouseY);
             _mouseDelay = 2;
         }
     }
@@ -527,6 +527,8 @@ FGPanel::doLocalMouseAction(int button, int updown, int x, int y)
 {
   // Note a released button and return
   if (updown == 1) {
+    if (_mouseInstrument != 0)
+        _mouseInstrument->doMouseAction(_mouseButton, 1, _mouseX, _mouseY);
     _mouseDown = false;
     _mouseInstrument = 0;
     return false;
@@ -547,7 +549,8 @@ FGPanel::doLocalMouseAction(int button, int updown, int x, int y)
       _mouseX = x - ix;
       _mouseY = y - iy;
       // Always do the action once.
-      return _mouseInstrument->doMouseAction(_mouseButton, _mouseX, _mouseY);
+      return _mouseInstrument->doMouseAction(_mouseButton, 0,
+                                             _mouseX, _mouseY);
     }
   }
   return false;
@@ -592,11 +595,14 @@ FGPanelAction::FGPanelAction ()
 {
 }
 
-FGPanelAction::FGPanelAction (int button, int x, int y, int w, int h)
-  : _button(button), _x(x), _y(y), _w(w), _h(h)
+FGPanelAction::FGPanelAction (int button, int x, int y, int w, int h,
+                              bool repeatable)
+    : _button(button), _x(x), _y(y), _w(w), _h(h), _repeatable(repeatable)
 {
-  for (unsigned int i = 0; i < _bindings.size(); i++)
-    delete _bindings[i];
+  for (unsigned int i = 0; i < 2; i++) {
+      for (unsigned int j = 0; j < _bindings[i].size(); j++)
+          delete _bindings[i][j];
+  }
 }
 
 FGPanelAction::~FGPanelAction ()
@@ -604,19 +610,24 @@ FGPanelAction::~FGPanelAction ()
 }
 
 void
-FGPanelAction::addBinding (FGBinding * binding)
+FGPanelAction::addBinding (FGBinding * binding, int updown)
 {
-  _bindings.push_back(binding);
+  _bindings[updown].push_back(binding);
 }
 
-void
-FGPanelAction::doAction ()
+bool
+FGPanelAction::doAction (int updown)
 {
   if (test()) {
-    int nBindings = _bindings.size();
-    for (int i = 0; i < nBindings; i++) {
-      _bindings[i]->fire();
+    if ((updown != _last_state) || (updown == 0 && _repeatable)) {
+        int nBindings = _bindings[updown].size();
+        for (int i = 0; i < nBindings; i++)
+            _bindings[updown][i]->fire();
     }
+    _last_state = updown;
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -730,16 +741,15 @@ FGPanelInstrument::addAction (FGPanelAction * action)
 
 				// Coordinates relative to centre.
 bool
-FGPanelInstrument::doMouseAction (int button, int x, int y)
+FGPanelInstrument::doMouseAction (int button, int updown, int x, int y)
 {
   if (test()) {
     action_list_type::iterator it = _actions.begin();
     action_list_type::iterator last = _actions.end();
     for ( ; it != last; it++) {
-      if ((*it)->inArea(button, x, y)) {
-	(*it)->doAction();
-	return true;
-      }
+      if ((*it)->inArea(button, x, y) &&
+          (*it)->doAction(updown))
+        return true;
     }
   }
   return false;
