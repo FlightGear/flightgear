@@ -121,13 +121,13 @@ FGEnvironment::FGEnvironment()
     dewpoint_degc(5),
     pressure_sea_level_inhg(29.92),
     pressure_inhg(29.92),
+    turbulence_magnitude_norm(0),
+    turbulence_rate_hz(1),
     wind_from_heading_deg(0),
     wind_speed_kt(0),
     wind_from_north_fps(0),
     wind_from_east_fps(0),
-    wind_from_down_fps(0),
-    turbulence_magnitude_norm(0),
-    turbulence_rate_hz(1)
+    wind_from_down_fps(0)
 {
   _setup_tables();
   _recalc_density();

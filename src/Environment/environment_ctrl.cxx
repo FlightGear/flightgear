@@ -172,7 +172,7 @@ FGInterpolateEnvironmentCtrl::FGInterpolateEnvironmentCtrl ()
 
 FGInterpolateEnvironmentCtrl::~FGInterpolateEnvironmentCtrl ()
 {
-    int i;
+    unsigned int i;
     for (i = 0; i < _boundary_table.size(); i++)
         delete _boundary_table[i];
     for (i = 0; i < _aloft_table.size(); i++)
@@ -193,7 +193,7 @@ FGInterpolateEnvironmentCtrl::init ()
 void
 FGInterpolateEnvironmentCtrl::reinit ()
 {
-    int i;
+    unsigned int i;
     for (i = 0; i < _boundary_table.size(); i++)
         delete _boundary_table[i];
     for (i = 0; i < _aloft_table.size(); i++)
@@ -233,7 +233,7 @@ FGInterpolateEnvironmentCtrl::update (double delta_time_sec)
     double boundary_transition =
         fgGetDouble("/environment/config/boundary-transition-ft", 500);
 
-    double ground_elevation_ft = altitude_ft - altitude_agl_ft;
+    // double ground_elevation_ft = altitude_ft - altitude_agl_ft;
 
     int length = _boundary_table.size();
 
