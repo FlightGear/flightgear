@@ -24,9 +24,7 @@
  **************************************************************************/
 
 
-#include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #ifdef WIN32
 #  include <windows.h>                     
@@ -49,20 +47,8 @@
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
 #include "../Timer/fg_timer.h"
+#include "../Utils/fg_random.h"
 
-
-#ifndef M_PI
-#define M_PI        3.14159265358979323846	/* pi */
-#endif
-
-#ifndef PI2                                     
-#define PI2  (M_PI + M_PI)
-#endif                                                           
-
-
-#ifndef M_PI_2
-#define M_PI_2      1.57079632679489661923	/* pi/2 */
-#endif
 
 /* This is a record containing all the info for the aircraft currently
    being operated */
@@ -174,8 +160,8 @@ static void fgUpdateViewParams() {
 
     MAT3_SET_VEC(vec, 0.0, 0.0, -1.0);
     /* MAT3mult_vec(vec, vec, R); */
-    /* MAT3rotate(TMP, vec, M_PI + M_PI_2 + FG_Psi + view_offset); */
-    MAT3rotate(TMP, vec, FG_Psi - M_PI_2);
+    /* MAT3rotate(TMP, vec, FG_PI + FG_PI_2 + FG_Psi + view_offset); */
+    MAT3rotate(TMP, vec, FG_Psi - FG_PI_2);
  /* printf("Yaw matrix\n");
     MAT3print(TMP, stdout); */
     MAT3mult(R, R, TMP);
@@ -255,22 +241,22 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 	} else {
 	    /* move view_offset towards goal_view_offset */
 	    if ( goal_view_offset > view_offset ) {
-		if ( goal_view_offset - view_offset < M_PI ) {
+		if ( goal_view_offset - view_offset < FG_PI ) {
 		    view_offset += 0.01;
 		} else {
 		    view_offset -= 0.01;
 		}
 	    } else {
-		if ( view_offset - goal_view_offset < M_PI ) {
+		if ( view_offset - goal_view_offset < FG_PI ) {
 		    view_offset -= 0.01;
 		} else {
 		    view_offset += 0.01;
 		}
 	    }
-	    if ( view_offset > PI2 ) {
-		view_offset -= PI2;
+	    if ( view_offset > FG_2PI ) {
+		view_offset -= FG_2PI;
 	    } else if ( view_offset < 0 ) {
-		view_offset += PI2;
+		view_offset += FG_2PI;
 	    }
 	}
     }
@@ -417,24 +403,9 @@ static void fgMainLoop( void ) {
 	       FG_Altitude * FEET_TO_METER);
     }
 
-
-#ifndef USE_RAND
-#  ifdef sgi
-#    undef RAND_MAX
-#    define RAND_MAX 2147483647
-#  endif
-#endif
-
-#ifdef USE_RAND
-    FG_U_gust = rand() * 3.0 / RAND_MAX - 1.0;
-    FG_V_gust = rand() * 3.0 / RAND_MAX - 1.0;
-    FG_W_gust = rand() * 3.0 / RAND_MAX - 1.0;
-#else
-    FG_U_gust = random() * 3.0 / RAND_MAX - 1.0;
-    FG_V_gust = random() * 3.0 / RAND_MAX - 1.0;
-    FG_W_gust = random() * 3.0 / RAND_MAX - 1.0;
-#endif
-
+    FG_U_gust = fg_random() * 1.0 - 0.5;
+    FG_V_gust = fg_random() * 1.0 - 0.5;
+    FG_W_gust = fg_random() * 1.0 - 0.5;
 }
 
 
@@ -468,7 +439,10 @@ int main( int argc, char *argv[] ) {
 
     f = &current_aircraft.flight;
 
-    /* printf("Flight Gear: prototype code to test OpenGL, LaRCsim, and VRML\n\n");*/
+    /* might as well do this first thing ... seed the random number generater */
+    fg_srandom();
+
+    printf("Flight Gear: prototype code to test OpenGL, LaRCsim, and VRML\n\n");
 
 
     /**********************************************************************
@@ -645,9 +619,13 @@ int printf (const char *format, ...) {
 
 
 /* $Log$
-/* Revision 1.36  1997/07/18 23:41:25  curt
-/* Tweaks for building with Cygnus Win32 compiler.
+/* Revision 1.37  1997/07/19 22:34:02  curt
+/* Moved PI definitions to ../constants.h
+/* Moved random() stuff to ../Utils/ and renamed fg_random()
 /*
+ * Revision 1.36  1997/07/18 23:41:25  curt
+ * Tweaks for building with Cygnus Win32 compiler.
+ *
  * Revision 1.35  1997/07/18 14:28:34  curt
  * Hacked in some support for wind/turbulence.
  *

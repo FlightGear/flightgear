@@ -30,22 +30,12 @@
 
 #include <GL/glut.h>
 
-#include <stdlib.h>         /* for random(), srandom() */
-#include <time.h>           /* for time() to seed srandom() */
-
 #include "../constants.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
-
-
-#ifndef USE_RAND
-#  ifdef sgi
-#    undef RAND_MAX
-#    define RAND_MAX 2147483647
-#  endif
-#endif
+#include "../Utils/fg_random.h"
 
 
 /* The following routine is a real hack used for testing puposes only
@@ -95,7 +85,6 @@ GLint mesh2GL(struct mesh *m) {
     /* static GLfloat color[4] = { 0.5, 0.4, 0.25, 1.0 }; */ /* dark desert */
     static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
     double randx, randy;
-    int t;
 
     float x1, y1, x2, y2, z11, z12, z21, z22;
     struct fgCartesianPoint p11, p12, p21, p22;
@@ -196,22 +185,9 @@ GLint mesh2GL(struct mesh *m) {
     }
     */
 
-/* 
-#ifdef USE_RAND
-    srand(time(&t));
-#else
-    srandom(time(&t));
-#endif
-*/
-
     for ( i = 0; i < 200; i++ ) {
-#ifdef USE_RAND
-	randx = rand() * 3600.0 / RAND_MAX;
-	randy = rand() * 3600.0 / RAND_MAX;
-#else
-	randx = random() * 3600.0 / RAND_MAX;
-	randy = random() * 3600.0 / RAND_MAX;
-#endif
+	randx = fg_random() * 3600.0;
+	randy = fg_random() * 3600.0;
 
 	mesh_make_test_object(m->originx + randx, m->originy + randy);
     }
@@ -224,9 +200,13 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.36  1997/07/18 23:41:25  curt
-/* Tweaks for building with Cygnus Win32 compiler.
+/* Revision 1.37  1997/07/19 22:34:03  curt
+/* Moved PI definitions to ../constants.h
+/* Moved random() stuff to ../Utils/ and renamed fg_random()
 /*
+ * Revision 1.36  1997/07/18 23:41:25  curt
+ * Tweaks for building with Cygnus Win32 compiler.
+ *
  * Revision 1.35  1997/07/18 14:28:35  curt
  * Hacked in some support for wind/turbulence.
  *

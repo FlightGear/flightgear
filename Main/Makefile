@@ -32,7 +32,7 @@ AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
 	../Flight/Slew/libSlew.a ../Math/libMath.a \
 	../Scenery/libScenery.a \
-	../Timer/libTimer.a
+	../Timer/libTimer.a ../Utils/libUtils.a
 
 
 include ../make.inc
@@ -76,6 +76,10 @@ mesh2GL.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.23  1997/07/19 22:34:03  curt
+# Moved PI definitions to ../constants.h
+# Moved random() stuff to ../Utils/ and renamed fg_random()
+#
 # Revision 1.22  1997/07/18 23:41:25  curt
 # Tweaks for building with Cygnus Win32 compiler.
 #

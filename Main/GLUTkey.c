@@ -24,7 +24,6 @@
  **************************************************************************/
 
 
-#include <math.h>
 #include <stdio.h>
 
 #ifdef WIN32
@@ -35,10 +34,7 @@
 
 #include "GLUTkey.h"
 #include "../Aircraft/aircraft.h"
-
-#ifndef M_PI
-#define M_PI        3.14159265358979323846	/* pi */
-#endif
+#include "../constants.h"
 
 extern double fogDensity;
 extern double goal_view_offset;
@@ -51,32 +47,32 @@ void GLUTkey(unsigned char k, int x, int y) {
 
     printf("Key hit = %d", k);
 
-    if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
+    if ( GLUT_ACTIVE_ALT && glutGetModifiers() ) {
 	printf(" SHIFTED\n");
 	switch (k) {
 	case 49: /* numeric keypad 1 */
-	    goal_view_offset = M_PI * 0.75;
+	    goal_view_offset = FG_PI * 0.75;
 	    return;
 	case 50: /* numeric keypad 2 */
-	    goal_view_offset = M_PI;
+	    goal_view_offset = FG_PI;
 	    return;
 	case 51: /* numeric keypad 3 */
-	    goal_view_offset = M_PI * 1.25;
+	    goal_view_offset = FG_PI * 1.25;
 	    return;
 	case 52: /* numeric keypad 4 */
-	    goal_view_offset = M_PI * 0.50;
+	    goal_view_offset = FG_PI * 0.50;
 	    return;
 	case 54: /* numeric keypad 6 */
-	    goal_view_offset = M_PI * 1.50;
+	    goal_view_offset = FG_PI * 1.50;
 	    return;
 	case 55: /* numeric keypad 7 */
-	    goal_view_offset = M_PI * 0.25;
+	    goal_view_offset = FG_PI * 0.25;
 	    return;
 	case 56: /* numeric keypad 8 */
 	    goal_view_offset = 0.00;
 	    return;
 	case 57: /* numeric keypad 9 */
-	    goal_view_offset = M_PI * 1.75;
+	    goal_view_offset = FG_PI * 1.75;
 	    return;
 	}
     } else {
@@ -147,28 +143,28 @@ void GLUTspecialkey(int k, int x, int y) {
 	printf(" SHIFTED\n");
 	switch (k) {
 	case GLUT_KEY_END: /* numeric keypad 1 */
-	    goal_view_offset = M_PI * 0.75;
+	    goal_view_offset = FG_PI * 0.75;
 	    return;
 	case GLUT_KEY_DOWN: /* numeric keypad 2 */
-	    goal_view_offset = M_PI;
+	    goal_view_offset = FG_PI;
 	    return;
 	case GLUT_KEY_PAGE_DOWN: /* numeric keypad 3 */
-	    goal_view_offset = M_PI * 1.25;
+	    goal_view_offset = FG_PI * 1.25;
 	    return;
 	case GLUT_KEY_LEFT: /* numeric keypad 4 */
-	    goal_view_offset = M_PI * 0.50;
+	    goal_view_offset = FG_PI * 0.50;
 	    return;
 	case GLUT_KEY_RIGHT: /* numeric keypad 6 */
-	    goal_view_offset = M_PI * 1.50;
+	    goal_view_offset = FG_PI * 1.50;
 	    return;
 	case GLUT_KEY_HOME: /* numeric keypad 7 */
-	    goal_view_offset = M_PI * 0.25;
+	    goal_view_offset = FG_PI * 0.25;
 	    return;
 	case GLUT_KEY_UP: /* numeric keypad 8 */
 	    goal_view_offset = 0.00;
 	    return;
 	case GLUT_KEY_PAGE_UP: /* numeric keypad 9 */
-	    goal_view_offset = M_PI * 1.75;
+	    goal_view_offset = FG_PI * 1.75;
 	    return;
 	}
     } else {
@@ -215,9 +211,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.16  1997/07/18 23:41:24  curt
-/* Tweaks for building with Cygnus Win32 compiler.
+/* Revision 1.17  1997/07/19 22:34:02  curt
+/* Moved PI definitions to ../constants.h
+/* Moved random() stuff to ../Utils/ and renamed fg_random()
 /*
+ * Revision 1.16  1997/07/18 23:41:24  curt
+ * Tweaks for building with Cygnus Win32 compiler.
+ *
  * Revision 1.15  1997/07/16 20:04:47  curt
  * Minor tweaks to aid Win32 port.
  *
