@@ -48,6 +48,8 @@ public:
     virtual void bind();
     virtual void unbind();
 
+    inline bool isValid() { return (_self != 0); }
+
     void setPath( const char* model );
     void setSpeed( double speed_KTAS );
     void setAltitude( double altitude_ft );
@@ -172,65 +174,6 @@ inline void FGAIBase::setLatitude ( double latitude ) {
 
 inline void FGAIBase::setDie( bool die ) { delete_me = die; }
 inline bool FGAIBase::getDie() { return delete_me; }
-
-inline void FGAIBase::_setLongitude( double longitude ) {
-    if (_self) _self->pos.setlon(longitude);
-}
-inline void FGAIBase::_setLatitude ( double latitude )  {
-    if (_self) _self->pos.setlat(latitude);
-}
-
-inline double FGAIBase::_getLongitude() {
-    return (!_self) ? 0.0 :_self->pos.lon();
-}
-inline double FGAIBase::_getLatitude () {
-    return (!_self) ? 0.0 :_self->pos.lat();
-}
-inline double FGAIBase::_getBearing()   {
-    return (!_self) ? 0.0 :_self->bearing;
-}
-inline double FGAIBase::_getElevation() {
-    return (!_self) ? 0.0 :_self->elevation;
-}
-inline double FGAIBase::_getRange()     {
-    return (!_self) ? 0.0 :_self->range;
-}
-inline double FGAIBase::_getRdot()      {
-    return (!_self) ? 0.0 :_self->rdot;
-}
-inline double FGAIBase::_getH_offset()  {
-    return (!_self) ? 0.0 :_self->horiz_offset;
-}
-inline double FGAIBase::_getV_offset()  {
-    return (!_self) ? 0.0 :_self->vert_offset;
-}
-inline double FGAIBase::_getX_shift()   {
-    return (!_self) ? 0.0 :_self->x_shift;
-}
-inline double FGAIBase::_getY_shift()   {
-    return (!_self) ? 0.0 :_self->y_shift;
-}
-inline double FGAIBase::_getRotation()  {
-    return (!_self) ? 0.0 :_self->rotation;
-}
-
-inline double FGAIBase::_getVS_fps() {
-    return (!_self) ? 0.0 :_self->vs*60.0;
-}
-inline void FGAIBase::_setVS_fps( double _vs ) {
-    if (_self) _self->vs = _vs/60.0;
-}
-
-inline double FGAIBase::_getAltitude() {
-    return (!_self) ? 0.0 :_self->altitude;
-}
-inline void FGAIBase::_setAltitude( double _alt ) {
-    if (_self) _self->setAltitude( _alt );
-}
-
-inline bool FGAIBase::_isNight() {
-    return (fgGetFloat("/sim/time/sun-angle-rad") > 1.57);
-}
 
 inline void FGAIBase::setID( int ID ) { id = ID; }
 inline int  FGAIBase::getID() { return id; }

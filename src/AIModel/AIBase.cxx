@@ -178,3 +178,66 @@ void FGAIBase::unbind() {
     props->untie("controls/lighting/nav-lights");
 }
 
+
+/*
+ * getters and Setters
+ */
+void FGAIBase::_setLongitude( double longitude ) {
+    if (_self) _self->pos.setlon(longitude);
+}
+void FGAIBase::_setLatitude ( double latitude )  {
+    if (_self) _self->pos.setlat(latitude);
+}
+
+double FGAIBase::_getLongitude() {
+    return (!_self) ? 0.0 :_self->pos.lon();
+}
+double FGAIBase::_getLatitude () {
+    return (!_self) ? 0.0 :_self->pos.lat();
+}
+double FGAIBase::_getBearing()   {
+    return (!_self) ? 0.0 :_self->bearing;
+}
+double FGAIBase::_getElevation() {
+    return (!_self) ? 0.0 :_self->elevation;
+}
+double FGAIBase::_getRange()     {
+    return (!_self) ? 0.0 :_self->range;
+}
+double FGAIBase::_getRdot()      {
+    return (!_self) ? 0.0 :_self->rdot;
+}
+double FGAIBase::_getH_offset()  {
+    return (!_self) ? 0.0 :_self->horiz_offset;
+}
+double FGAIBase::_getV_offset()  {
+    return (!_self) ? 0.0 :_self->vert_offset;
+}
+double FGAIBase::_getX_shift()   {
+    return (!_self) ? 0.0 :_self->x_shift;
+}
+double FGAIBase::_getY_shift()   {
+    return (!_self) ? 0.0 :_self->y_shift;
+}
+double FGAIBase::_getRotation()  {
+    return (!_self) ? 0.0 :_self->rotation;
+}
+
+double FGAIBase::_getVS_fps() {
+    return (!_self) ? 0.0 :_self->vs*60.0;
+}
+void FGAIBase::_setVS_fps( double _vs ) {
+    if (_self) _self->vs = _vs/60.0;
+}
+
+double FGAIBase::_getAltitude() {
+    return (!_self) ? 0.0 :_self->altitude;
+}
+void FGAIBase::_setAltitude( double _alt ) {
+    if (_self) _self->setAltitude( _alt );
+}
+
+bool FGAIBase::_isNight() {
+    return (fgGetFloat("/sim/time/sun-angle-rad") > 1.57);
+}
+
