@@ -210,7 +210,7 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
 	nav1_radial = nav1_sel_radial;
 	nav1_x = nav1_dme_x = nav.get_x();
 	nav1_y = nav1_dme_y = nav.get_y();
-	nav1_z = nav1_dme_y = nav.get_z();
+	nav1_z = nav1_dme_z = nav.get_z();
 	// cout << "Found a vor station in range" << endl;
 	// cout << " id = " << nav.get_ident() << endl;
     } else {

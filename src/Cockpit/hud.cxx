@@ -1151,7 +1151,7 @@ void fgHUDReshape(void) {
 		delete HUDtext;
 
 	HUD_TextSize = current_options.get_xsize() / 60;
-//    HUD_TextSize = 10;
+        HUD_TextSize = 10;
 	HUDtext = new fntRenderer();
 	HUDtext -> setFont      ( guiFntHandle ) ;
 	HUDtext -> setPointSize ( HUD_TextSize ) ;
