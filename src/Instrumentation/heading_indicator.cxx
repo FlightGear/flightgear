@@ -83,6 +83,15 @@ HeadingIndicator::update (double dt)
                                 // introducing errors.
     double factor = 0.01 / (spin * spin * spin * spin * spin * spin);
     double heading = _heading_in_node->getDoubleValue();
+
+                                // Now, we have to get the current
+                                // heading and the last heading into
+                                // the same range.
+    while ((heading - _last_heading_deg) > 180)
+        _last_heading_deg += 360;
+    while ((heading - _last_heading_deg) < -180)
+        _last_heading_deg -= 360;
+
     heading = fgGetLowPass(_last_heading_deg, heading, dt/factor);
     _last_heading_deg = heading;
 
