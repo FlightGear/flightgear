@@ -234,7 +234,9 @@ FG3DModel::init (const string &path)
 void
 FG3DModel::update (int dt)
 {
-  for (unsigned int i = 0; i < _animations.size(); i++)
+  unsigned int i;
+
+  for (i = 0; i < _animations.size(); i++)
     _animations[i]->update(dt);
 
   _location->setPosition( _lon_deg, _lat_deg, _elev_ft );
@@ -246,7 +248,7 @@ FG3DModel::update (int dt)
   sgVec3 trans;
   sgCopyVec3(trans, _location->get_view_pos());
 
-  for( int i=0; i<4; i++) {
+  for(i = 0; i < 4; i++) {
     float tmp = POS[i][3];
     for( int j=0; j<3; j++ ) {
       POS[i][j] += (tmp * trans[j]);
