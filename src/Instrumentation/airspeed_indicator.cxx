@@ -59,7 +59,9 @@ AirspeedIndicator::update (double dt)
         double p = _static_pressure_node->getDoubleValue();
         double q = ( pt - p ) * INHGTOPSF;      // dynamic pressure
 
-                                // Now, reverse the equation
+        // Now, reverse the equation (normalize dynamic pressure to
+        // avoid "nan" results from sqrt)
+        if ( q < 0 ) { q = 0.0; }
         double v_fps = sqrt((2 * q) / SEA_LEVEL_DENSITY_SLUGFT3);
 
                                 // Publish the indicated airspeed
