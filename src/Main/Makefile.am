@@ -59,6 +59,8 @@ fgfs_LDADD = \
 	$(top_builddir)/src/FDM/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/src/FDM/UIUCModel/libUIUCModel.a \
 	$(top_builddir)/src/GUI/libGUI.a \
+	$(top_builddir)/src/Input/libInput.a \
+	$(top_builddir)/src/Instrumentation/libInstrumentation.a \
 	$(top_builddir)/src/Model/libModel.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
@@ -69,8 +71,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \
-	$(top_builddir)/src/Input/libInput.a \
-	$(top_builddir)/src/Instrumentation/libInstrumentation.a \
 	-lsgroute -lsgsky -lsgclouds3d -lsgephem -lsgtiming -lsgio -lsgscreen \
 	-lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
 	-lsgserial \
