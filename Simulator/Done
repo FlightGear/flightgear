@@ -2,6 +2,16 @@
 | Done
 --------------------------------------------------------------------------
 
+5/26/98 -  Impose a maximum triangle area during scenery generation so
+           even very flat areas will get split into a few smaller sub
+           triangles.
+
+5/26/98 -  Overhaul view parameter generation ... see if we can piggy
+           back off of larcsim calcs, and consolate potentially
+           redundant code -- Norman Vine
+
+5/24/98 -  Fine grain view frustum culling
+
 5/20/98 -  fix winding problem with tri-strips in obj.c (wait for next
            version of stripe)
 

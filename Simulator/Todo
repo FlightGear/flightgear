@@ -2,13 +2,9 @@
 | Todo 
 --------------------------------------------------------------------------
 
+5/26/98 -  Add version checking to scenery files
+
 4/25/98 -  Roll all of Time/sunpos.cxx into Astro/sun.cxx
-
-4/25/98 -  Overhaul view parameter generation ... see if we can piggy
-           back off of larcsim calcs, and consolate potentially
-           redundant code
-
-12/29/97 - Fine grain view frustum culling
 
 4/21/98 -  Tweak lighting parameter interpolation tables to better fit
            "perceived" reality
