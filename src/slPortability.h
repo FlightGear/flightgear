@@ -31,7 +31,7 @@
 #include <string.h>
 #include <math.h>
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__FreeBSD__)
 #define SL_USING_OSS_AUDIO 1
 #endif
 

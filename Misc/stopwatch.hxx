@@ -25,6 +25,9 @@
  *
  ***************************************************************************
  * $Log$
+ * Revision 1.3  1998/11/20 01:01:03  curt
+ * FreeBSD support.
+ *
  * Revision 1.2  1998/11/02 18:28:31  curt
  * Additional win32 support.
  *
@@ -66,7 +69,12 @@
 #endif // WIN32
 
 #if defined( HAVE_GETRUSAGE )
+#  if defined( __FreeBSD__ )
+#    include <sys/types.h>
+#  endif 
+#  include <sys/time.h>
 #  include <sys/resource.h>
+#  include <unistd.h>
 #elif defined( WIN32 )
 #  include <windows.h>
 #else
