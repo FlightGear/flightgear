@@ -113,7 +113,7 @@ public:
 FGMagRibbon::FGMagRibbon (int w, int h)
   : FGTexturedLayer(w, h)
 {
-  FGCroppedTexture texture("Instruments/Default/Textures/compass-ribbon.rgb");
+  FGCroppedTexture texture("Aircraft/c172/Instruments/Textures/compass-ribbon.rgb");
   setTexture(texture);
 }
 

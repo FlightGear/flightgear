@@ -1560,15 +1560,25 @@ int main( int argc, char **argv ) {
     // align the model properly for FGFS
     ssgTransform *tux_align = new ssgTransform;
     tux_align->addKid(tux_obj);
-    sgMat4 tux_matrix;
+    sgMat4 rot_matrix;
+    sgMat4 off_matrix;
+    sgMat4 res_matrix;
     float h_rot =
       current_properties.getFloatValue("/sim/model/h-rotation", 0.0);
-    /* float p_rot =
-      current_properties.getFloatValue("/sim/model/p-rotation", 0.0); */
+    float p_rot =
+      current_properties.getFloatValue("/sim/model/p-rotation", 0.0);
     float r_rot =
       current_properties.getFloatValue("/sim/model/r-rotation", 0.0);
-    sgMakeRotMat4(tux_matrix, h_rot, h_rot, r_rot);
-    tux_align->setTransform(tux_matrix);
+    float x_off =
+      current_properties.getFloatValue("/sim/model/x-offset", 0.0);
+    float y_off =
+      current_properties.getFloatValue("/sim/model/y-offset", 0.0);
+    float z_off =
+      current_properties.getFloatValue("/sim/model/z-offset", 0.0);
+    sgMakeRotMat4(rot_matrix, h_rot, p_rot, r_rot);
+    sgMakeTransMat4(off_matrix, x_off, y_off, z_off);
+    sgMultMat4(res_matrix, off_matrix, rot_matrix);
+    tux_align->setTransform(res_matrix);
 
     penguin_pos->addKid( tux_align );
     penguin_sel->addKid( penguin_pos );
