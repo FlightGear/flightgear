@@ -29,7 +29,8 @@
 #include <Bucket/newbucket.hxx>
 #include <Debug/logstream.hxx>
 
-#include "names.hxx"
+#include <Polygon/index.hxx>
+#include <Polygon/names.hxx>
 #include "shape.hxx"
 
 
@@ -43,14 +44,14 @@ public:
 };
 
 
-static void clip_and_write_poly( string root, AreaType area, 
+static void clip_and_write_poly( string root, int p_index, AreaType area, 
 				 FGBucket b, gpc_polygon *shape ) {
     point2d c, min, max;
     c.x = b.get_center_lon();
     c.y = b.get_center_lat();
     double span = bucket_span(c.y);
     gpc_polygon base, result;
-    char tmp[256];
+    char tile_name[256], poly_index[256];
 
     // calculate bucket dimensions
     if ( (c.y >= -89.0) && (c.y < 89.0) ) {
@@ -106,42 +107,28 @@ static void clip_and_write_poly( string root, AreaType area,
     gpc_polygon_clip(GPC_INT, &base, shape, &result);
 
     if ( result.num_contours > 0 ) {
-	long int index = b.gen_index();
+	long int t_index = b.gen_index();
 	string path = root + "/Scenery/" + b.gen_base_path();
 	string command = "mkdir -p " + path;
 	system( command.c_str() );
 
-	sprintf(tmp, "%ld", index);
-	string polyfile = path + "/" + tmp;
+	sprintf( tile_name, "%ld", t_index );
+	string polyfile = path + "/" + tile_name;
 
-	if ( area == MarshArea ) {
-	    polyfile += ".marsh";
-	} else if ( area == OceanArea ) {
-	    polyfile += ".ocean";
-	} else if ( area == LakeArea ) {
-	    polyfile += ".lake";
-	} else if ( area == DryLakeArea ) {
-	    polyfile += ".drylake";
-	} else if ( area == IntLakeArea ) {
-	    polyfile += ".intlake";
-	} else if ( area == ReservoirArea ) {
-	    polyfile += ".reservoir";
-	} else if ( area == IntReservoirArea ) {
-	    polyfile += ".intreservoir";
-	} else if ( area == StreamArea ) {
-	    polyfile += ".stream";
-	} else if ( area == CanalArea ) {
-	    polyfile += ".canal";
-	} else if ( area == GlacierArea ) {
-	    polyfile += ".glacier";
-	} else {
+	sprintf( poly_index, "%d", p_index );
+	polyfile += ".";
+	polyfile += poly_index;
+
+	string poly_type = get_area_name( area );
+	if ( poly_type == "Unknown" ) {
 	    cout << "unknown area type in clip_and_write_poly()!" << endl;
 	    exit(-1);
 	}
 	
-	FILE *rfp= fopen(polyfile.c_str(), "w");
-	gpc_write_polygon(rfp, &result);
-	fclose(rfp);
+	FILE *rfp= fopen( polyfile.c_str(), "w" );
+	fprintf( rfp, "%s\n", poly_type.c_str() );
+	gpc_write_polygon( rfp, &result );
+	fclose( rfp );
     }
 
     gpc_free_polygon(&base);
@@ -181,6 +168,7 @@ void add_to_shape(int count, double *coords, gpc_polygon *shape) {
 // process shape (write polygon to all intersecting tiles)
 void process_shape(string path, AreaType area, gpc_polygon *gpc_shape) {
     point2d min, max;
+    int index;
     int i, j;
 
     min.x = min.y = 200.0;
@@ -206,6 +194,9 @@ void process_shape(string path, AreaType area, gpc_polygon *gpc_shape) {
     exit(-1);
     */
 	
+    // get next polygon index
+    index = poly_index_next();
+
     FG_LOG( FG_GENERAL, FG_INFO, "  min = " << min.x << "," << min.y
 	    << " max = " << max.x << "," << max.y );
 
@@ -218,7 +209,7 @@ void process_shape(string path, AreaType area, gpc_polygon *gpc_shape) {
     FG_LOG( FG_GENERAL, FG_INFO, "  Bucket max = " << b_max );
 	    
     if ( b_min == b_max ) {
-	clip_and_write_poly( path, area, b_min, gpc_shape );
+	clip_and_write_poly( path, index, area, b_min, gpc_shape );
     } else {
 	FGBucket b_cur;
 	int dx, dy, i, j;
@@ -238,7 +229,7 @@ void process_shape(string path, AreaType area, gpc_polygon *gpc_shape) {
 	for ( j = 0; j <= dy; j++ ) {
 	    for ( i = 0; i <= dx; i++ ) {
 		b_cur = fgBucketOffset(min.x, min.y, i, j);
-		clip_and_write_poly( path, area, b_cur, gpc_shape );
+		clip_and_write_poly( path, index, area, b_cur, gpc_shape );
 	    }
 	}
 	// string answer; cin >> answer;
@@ -253,6 +244,9 @@ void free_shape(gpc_polygon *shape) {
 
 
 // $Log$
+// Revision 1.2  1999/02/25 21:31:08  curt
+// First working version???
+//
 // Revision 1.1  1999/02/23 01:29:06  curt
 // Additional progress.
 //

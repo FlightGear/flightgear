@@ -31,7 +31,7 @@ extern "C" {
 #include <gpc.h>
 }
 
-#include "names.hxx"
+#include <Polygon/names.hxx>
 
 
 // Initialize structure we use to create polygons for the gpc library
@@ -56,6 +56,9 @@ void free_shape(gpc_polygon *shape);
 
 
 // $Log$
+// Revision 1.2  1999/02/25 21:31:09  curt
+// First working version???
+//
 // Revision 1.1  1999/02/23 01:29:06  curt
 // Additional progress.
 //

@@ -48,7 +48,8 @@ extern "C" {
 
 #include <Debug/logstream.hxx>
 
-#include "names.hxx"
+#include <Polygon/index.hxx>
+#include <Polygon/names.hxx>
 #include "shape.hxx"
 
 
@@ -60,11 +61,16 @@ int main( int argc, char **argv ) {
 
     if ( argc != 3 ) {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Usage: " << argv[0] 
-		<< " <shapefile> <workdir>" );
+		<< " <shape_file> <work_dir>" );
 	exit(-1);
     }
 
     FG_LOG( FG_GENERAL, FG_DEBUG, "Opening " << argv[1] << " for reading." );
+
+    // initialize persistant polygon counter
+    string counter_file = argv[2];
+    counter_file += "/polygon.counter";
+    poly_index_init( counter_file );
 
     // initialize structure for building gpc polygons
     shape_utils_init();
@@ -85,14 +91,15 @@ int main( int argc, char **argv ) {
 	exit(-1);
     }
 
-    for ( i = 16473; i < sf->numRecords(); i++ ) {
+    for ( i = 0; i < sf->numRecords(); i++ ) {
 	//fetch i-th record (shape)
 	sf->getShapeRec(i, &shape); 
 	FG_LOG( FG_GENERAL, FG_DEBUG, "Record = " << i << "  rings = " 
 		<< shape.numRings() );
 
 	AreaType area = get_area_type(dbf, i);
-	FG_LOG( FG_GENERAL, FG_DEBUG, "area type = " << (int)area );
+	FG_LOG( FG_GENERAL, FG_DEBUG, "area type = " << get_area_name(area) 
+		<< " (" << (int)area << ")" );
 
 	FG_LOG( FG_GENERAL, FG_INFO, "  record = " << i 
 		<< " ring = " << 0 );
@@ -254,6 +261,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.4  1999/02/25 21:31:05  curt
+// First working version???
+//
 // Revision 1.3  1999/02/23 01:29:04  curt
 // Additional progress.
 //
