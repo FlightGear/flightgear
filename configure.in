@@ -274,6 +274,7 @@ AC_OUTPUT( \
 	Tools/DemRaw2ascii/Makefile \
 	Tools/FixNode/Makefile \
 	Tools/FixObj/Makefile \
+	Tools/GenAirports/Makefile \
 	Tools/SplitTris/Makefile \
 	Tools/Stripe_w/Makefile \
 	Tools/Tri2obj/Makefile \
