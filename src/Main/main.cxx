@@ -203,6 +203,7 @@ void fgBuildRenderStates( void ) {
     default_state->disable( GL_BLEND );
     default_state->disable( GL_ALPHA_TEST );
     default_state->disable( GL_LIGHTING );
+    default_state->setMaterial( GL_AMBIENT_AND_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
 
     hud_and_panel = new ssgSimpleState;
     hud_and_panel->disable( GL_CULL_FACE );
@@ -376,9 +377,14 @@ void fgRenderFrame( void ) {
 
 	// draw the sun
 	current_sun.repaint( cur_light_params.sun_angle );
-	cout << "ra = " << ephem.getSunRightAscension() << " dec = " 
-	     << ephem.getSunDeclination() << endl;
-	current_sun.reposition( ephem.getSunRightAscension(),
+        sgVec3 view_pos;
+	sgSetVec3( view_pos,
+		   current_view.get_view_pos().x(),
+		   current_view.get_view_pos().y(),
+		   current_view.get_view_pos().z() );
+	current_sun.reposition( view_pos,
+			        t->getGst() * 15.041085,
+				ephem.getSunRightAscension(),
 				ephem.getSunDeclination() );
 	current_sun.draw();
 
