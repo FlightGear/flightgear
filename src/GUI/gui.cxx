@@ -68,7 +68,7 @@
 #include <Main/fg_init.hxx>
 #include <Main/fg_io.hxx>
 #include <Main/globals.hxx>
-#include <Main/save.hxx>
+#include <Main/fg_props.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif

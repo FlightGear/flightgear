@@ -24,6 +24,7 @@
 #ifndef _CONTROLS_HXX
 #define _CONTROLS_HXX
 
+#include <Main/fgfs.hxx>
 #include <Main/globals.hxx>
 
 #ifndef __cplusplus                                                          
@@ -33,7 +34,8 @@
 
 // Define a structure containing the control parameters
 
-class FGControls {
+class FGControls : public FGSubsystem
+{
 
 public:
 
@@ -71,6 +73,12 @@ public:
 
     FGControls();
     ~FGControls();
+
+    // Implementation of FGSubsystem.
+    void init ();
+    void bind ();
+    void unbind ();
+    void update ();
 
     // Reset function
     void reset_all(void);

@@ -70,7 +70,7 @@
 #include "bfi.hxx"
 #include "globals.hxx"
 #include "keyboard.hxx"
-#include "save.hxx"
+#include "fg_props.hxx"
 
 				// From main.cxx
 extern void fgReshape( int width, int height );
@@ -434,7 +434,9 @@ void GLUTspecialkey(int k, int x, int y) {
  	}
  	case GLUT_KEY_F2: {
  	    FG_LOG(FG_INPUT, FG_INFO, "Saving flight");
+	    cerr << "Opening output stream" << endl;
  	    ofstream output("fgfs.sav");
+	    cerr << "output stream opened" << endl;
  	    if (output.good() && fgSaveFlight(output)) {
  		output.close();
  		FG_LOG(FG_INPUT, FG_INFO, "Saved flight to fgfs.sav");

@@ -751,6 +751,9 @@ bool fgInitSubsystems( void ) {
     // Initialize the BFI
     FGBFI::init();
 
+    controls.init();
+    controls.bind();
+
     FG_LOG( FG_GENERAL, FG_INFO, endl);
 
     return true;

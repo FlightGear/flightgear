@@ -259,6 +259,13 @@ public:
 				// Weather
   static double getVisibility ();
   static void setVisibility (double visiblity);
+  static double getWindNorth ();
+  static double getWindEast ();
+  static double getWindDown ();
+
+				// View
+  static void setViewAxisLong (double axis);
+  static void setViewAxisLat (double axis);
 
 
                                 // Time (this varies with time) huh, huh

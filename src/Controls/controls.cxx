@@ -23,6 +23,9 @@
 
 #include "controls.hxx"
 
+#include <simgear/debug/logstream.hxx>
+#include <Main/fg_props.hxx>
+
 
 FGControls controls;
 
@@ -37,6 +40,8 @@ FGControls::FGControls() :
 {
     for ( int engine = 0; engine < MAX_ENGINES; engine++ ) {
 	throttle[engine] = 0.0;
+	mixture[engine] = 1.0;
+	prop_advance[engine] = 1.0;
     }
 
     for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {
@@ -60,4 +65,83 @@ void FGControls::reset_all()
 FGControls::~FGControls() {
 }
 
+
+void
+FGControls::init ()
+{
+}
+
+
+void
+FGControls::bind ()
+{
+  fgTie("/controls/aileron", this,
+		    &FGControls::get_aileron, &FGControls::set_aileron);
+  fgTie("/controls/elevator", this,
+       &FGControls::get_elevator, &FGControls::set_elevator);
+  fgTie("/controls/elevator-trim", this,
+       &FGControls::get_elevator_trim, &FGControls::set_elevator_trim);
+  fgTie("/controls/rudder", this,
+       &FGControls::get_rudder, &FGControls::set_rudder);
+  fgTie("/controls/flaps", this,
+       &FGControls::get_flaps, &FGControls::set_flaps);
+  for (int index = 0; index < MAX_ENGINES; index++) {
+    char name[32];
+    sprintf(name, "/controls/throttle[%d]", index);
+    fgTie(name, this, index,
+	  &FGControls::get_throttle, &FGControls::set_throttle);
+    sprintf(name, "/controls/mixture[%d]", index);
+    fgTie(name, this, index,
+	 &FGControls::get_mixture, &FGControls::set_mixture);
+    sprintf(name, "/controls/propellor-pitch[%d]", index);
+    fgTie(name, this, index,
+	 &FGControls::get_prop_advance, &FGControls::set_prop_advance);
+  }
+  fgTie("/controls/throttle/all", this, ALL_ENGINES,
+	&FGControls::get_throttle, &FGControls::set_throttle);
+  fgTie("/controls/mixture/all", this, ALL_ENGINES,
+	&FGControls::get_mixture, &FGControls::set_mixture);
+  fgTie("/controls/propellor-pitch/all", this, ALL_ENGINES,
+	&FGControls::get_prop_advance, &FGControls::set_prop_advance);
+  for (int index = 0; index < MAX_WHEELS; index++) {
+    char name[32];
+    sprintf(name, "/controls/brakes[%d]", index);
+    fgTie(name, this, index,
+	 &FGControls::get_brake, &FGControls::set_brake);
+  }
+  fgTie("/controls/brakes/all", this, ALL_WHEELS,
+	&FGControls::get_brake, &FGControls::set_brake);
+}
+
+
+void
+FGControls::unbind ()
+{
+				// Tie control properties.
+  fgUntie("/controls/aileron");
+  fgUntie("/controls/elevator");
+  fgUntie("/controls/elevator-trim");
+  fgUntie("/controls/rudder");
+  fgUntie("/controls/flaps");
+  for (int index = 0; index < MAX_ENGINES; index++) {
+    char name[32];
+    sprintf(name, "/controls/throttle[%d]", index);
+    fgUntie(name);
+    sprintf(name, "/controls/mixture[%d]", index);
+    fgUntie(name);
+    sprintf(name, "/controls/propellor-pitch[%d]", index);
+    fgUntie(name);
+  }
+  for (int index = 0; index < MAX_WHEELS; index++) {
+    char name[32];
+    sprintf(name, "/controls/brakes[%d]", index);
+    fgUntie(name);
+  }
+}
+
+
+void
+FGControls::update ()
+{
+}
 

@@ -66,6 +66,7 @@ class FGRadioStack {
     double nav1_effective_range;
     double nav1_heading;
     double nav1_target_gs;
+    int nav1_offset;
 
     bool nav2_valid;
     bool nav2_inrange;
@@ -98,6 +99,7 @@ class FGRadioStack {
     double nav2_effective_range;
     double nav2_heading;
     double nav2_target_gs;
+    int nav2_offset;
 
     bool adf_valid;
     bool adf_inrange;

@@ -20,16 +20,7 @@
 //
 // $Id$
 
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#if defined( FG_HAVE_NATIVE_SGI_COMPILERS )
-#  include <iostream.h>
-#else
-#  include <iostream>
-#endif
+#include "fgfs.hxx"
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -56,9 +47,8 @@
 #endif
 
 #include "globals.hxx"
-#include "save.hxx"
 #include "fg_init.hxx"
-#include <simgear/misc/props.hxx>
+#include "fg_props.hxx"
 
 FG_USING_NAMESPACE(std);
 
@@ -91,7 +81,7 @@ reinit ()
 				// that's going to get clobbered
 				// when we reinit the subsystems.
 
-  cout << "BFI: start reinit\n";
+  FG_LOG(FG_GENERAL, FG_INFO, "Starting BFI reinit");
 
 				// TODO: add more AP stuff
   double elevator = FGBFI::getElevator();
@@ -111,7 +101,6 @@ reinit ()
   // double gpsLongitude = FGBFI::getGPSTargetLongitude();
 
   FGBFI::setTargetAirport("");
-  cout << "Target airport is " << globals->get_options()->get_airport_id() << endl;
 
   fgReInitSubsystems();
 
@@ -143,7 +132,7 @@ reinit ()
 
   _needReinit = false;
 
-  cout << "BFI: end reinit\n";
+  FG_LOG(FG_GENERAL, FG_INFO, "Ending BFI reinit");
 }
 
 // BEGIN: kludge 2000-12-07
@@ -175,30 +164,53 @@ static inline void _check_lighting ()
 // END: kludge
 
 
+// BEGIN: kludge
+// Allow the view to be set from two axes (i.e. a joystick hat)
+// This needs to be in FGViewer itself, somehow.
+static double axisLong = 0.0;
+static double axisLat = 0.0;
+
+static inline void
+_set_view_from_axes ()
+{
+				// Take no action when hat is centered
+  if (axisLong == 0 && axisLat == 0)
+    return;
+
+  double viewDir = 0;
+
+  if (axisLong < 0) {		// Longitudinal axis forward
+    if (axisLat < 0)
+      viewDir = 45;
+    else if (axisLat > 0)
+      viewDir = 315;
+    else
+      viewDir = 0;
+  } else if (axisLong > 0) {	// Longitudinal axis backward
+    if (axisLat < 0)
+      viewDir = 135;
+    else if (axisLat > 0)
+      viewDir = 225;
+    else
+      viewDir = 180;
+  } else {			// Longitudinal axis neutral
+    if (axisLat < 0)
+      viewDir = 90;
+    else
+      viewDir = 270;
+  }
+
+  globals->get_current_view()->set_goal_view_offset(viewDir*DEG_TO_RAD);
+//   globals->get_current_view()->set_view_offset(viewDir*DEG_TO_RAD);
+}
+
+// END: kludge
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Local functions
 ////////////////////////////////////////////////////////////////////////
-
-static inline void 
-TIE_BOOL(const char * name, bool (*getter)(), void (*setter)(bool)) {
-  globals->get_props()->tie(name, SGRawValueFunctions<bool>(getter, setter));
-}
-
-static inline void 
-TIE_INT(const char * name, int (*getter)(), void (*setter)(int)) {
-  globals->get_props()->tie(name, SGRawValueFunctions<int>(getter, setter));
-}
-
-static inline void 
-TIE_DOUBLE(const char * name, double (*getter)(), void (*setter)(double)) {
-  globals->get_props()->tie(name, SGRawValueFunctions<double>(getter, setter));
-}
-
-static inline void 
-TIE_STRING(const char * name, string (*getter)(), void (*setter)(string)) {
-  globals->get_props()->tie(name, SGRawValueFunctions<string>(getter, setter));
-}
 
 /**
  * Initialize the BFI by binding its functions to properties.
@@ -211,95 +223,105 @@ FGBFI::init ()
 {
   FG_LOG(FG_GENERAL, FG_INFO, "Starting BFI init");
 				// Simulation
-  TIE_INT("/sim/flight-model", getFlightModel, setFlightModel);
-  TIE_STRING("/sim/aircraft", getAircraft, setAircraft);
-  TIE_STRING("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
-  TIE_STRING("/sim/time/gmt", getDateString, setDateString);
-  TIE_STRING("/sim/time/gmt-string", getGMTString, 0);
-  TIE_BOOL("/sim/hud/visibility", getHUDVisible, setHUDVisible);
-  TIE_BOOL("/sim/panel/visibility", getPanelVisible, setPanelVisible);
-  TIE_INT("/sim/panel/x-offset", getPanelXOffset, setPanelXOffset);
-  TIE_INT("/sim/panel/y-offset", getPanelYOffset, setPanelYOffset);
+  fgTie("/sim/flight-model", getFlightModel, setFlightModel);
+  fgTie("/sim/aircraft", getAircraft, setAircraft);
+  fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
+  fgTie("/sim/time/gmt", getDateString, setDateString);
+  fgTie("/sim/time/gmt-string", getGMTString);
+  fgTie("/sim/hud/visibility", getHUDVisible, setHUDVisible);
+  fgTie("/sim/panel/visibility", getPanelVisible, setPanelVisible);
+  fgTie("/sim/panel/x-offset", getPanelXOffset, setPanelXOffset);
+  fgTie("/sim/panel/y-offset", getPanelYOffset, setPanelYOffset);
 
 				// Position
-  TIE_STRING("/position/airport-id", getTargetAirport, setTargetAirport);
-  TIE_DOUBLE("/position/latitude", getLatitude, setLatitude);
-  TIE_DOUBLE("/position/longitude", getLongitude, setLongitude);
-  TIE_DOUBLE("/position/altitude", getAltitude, setAltitude);
-  TIE_DOUBLE("/position/altitude-agl", getAGL, 0);
+  fgTie("/position/airport-id", getTargetAirport, setTargetAirport);
+  fgTie("/position/latitude", getLatitude, setLatitude);
+  fgTie("/position/longitude", getLongitude, setLongitude);
+  fgTie("/position/altitude", getAltitude, setAltitude);
+  fgTie("/position/altitude-agl", getAGL);
 
 				// Orientation
-  TIE_DOUBLE("/orientation/heading", getHeading, setHeading);
-  TIE_DOUBLE("/orientation/heading-magnetic", getHeadingMag, 0);
-  TIE_DOUBLE("/orientation/pitch", getPitch, setPitch);
-  TIE_DOUBLE("/orientation/roll", getRoll, setRoll);
+  fgTie("/orientation/heading", getHeading, setHeading);
+  fgTie("/orientation/heading-magnetic", getHeadingMag);
+  fgTie("/orientation/pitch", getPitch, setPitch);
+  fgTie("/orientation/roll", getRoll, setRoll);
 
 				// Engine
-  TIE_DOUBLE("/engines/engine0/rpm", getRPM, 0);
-  TIE_DOUBLE("/engines/engine0/egt", getEGT, 0);
-  TIE_DOUBLE("/engines/engine0/cht", getCHT, 0);
-  TIE_DOUBLE("/engines/engine0/mp", getMP, 0);
+  fgTie("/engines/engine0/rpm", getRPM);
+  fgTie("/engines/engine0/egt", getEGT);
+  fgTie("/engines/engine0/cht", getCHT);
+  fgTie("/engines/engine0/mp", getMP);
 
 				// Velocities
-  TIE_DOUBLE("/velocities/airspeed", getAirspeed, setAirspeed);
-  TIE_DOUBLE("/velocities/side-slip", getSideSlip, 0);
-  TIE_DOUBLE("/velocities/vertical-speed", getVerticalSpeed, 0);
-  TIE_DOUBLE("/velocities/speed-north", getSpeedNorth, 0);
-  TIE_DOUBLE("/velocities/speed-east", getSpeedEast, 0);
-  TIE_DOUBLE("/velocities/speed-down", getSpeedDown, 0);
+  fgTie("/velocities/airspeed", getAirspeed, setAirspeed);
+  fgTie("/velocities/side-slip", getSideSlip);
+  fgTie("/velocities/vertical-speed", getVerticalSpeed);
+  fgTie("/velocities/speed-north", getSpeedNorth);
+  fgTie("/velocities/speed-east", getSpeedEast);
+  fgTie("/velocities/speed-down", getSpeedDown);
 
 				// Controls
-  TIE_DOUBLE("/controls/throttle", getThrottle, setThrottle);
-  TIE_DOUBLE("/controls/mixture", getMixture, setMixture);
-  TIE_DOUBLE("/controls/propellor-pitch", getPropAdvance, setPropAdvance);
-  TIE_DOUBLE("/controls/flaps", getFlaps, setFlaps);
-  TIE_DOUBLE("/controls/aileron", getAileron, setAileron);
-  TIE_DOUBLE("/controls/rudder", getRudder, setRudder);
-  TIE_DOUBLE("/controls/elevator", getElevator, setElevator);
-  TIE_DOUBLE("/controls/elevator-trim", getElevatorTrim, setElevatorTrim);
-  TIE_DOUBLE("/controls/brakes/all", getBrakes, setBrakes);
-  TIE_DOUBLE("/controls/brakes/left", getLeftBrake, setLeftBrake);
-  TIE_DOUBLE("/controls/brakes/right", getRightBrake, setRightBrake);
-  TIE_DOUBLE("/controls/brakes/center", getRightBrake, setCenterBrake);
+#if 0
+  fgTie("/controls/throttle", getThrottle, setThrottle);
+  fgTie("/controls/mixture", getMixture, setMixture);
+  fgTie("/controls/propellor-pitch", getPropAdvance, setPropAdvance);
+  fgTie("/controls/flaps", getFlaps, setFlaps);
+  fgTie("/controls/aileron", getAileron, setAileron);
+  fgTie("/controls/rudder", getRudder, setRudder);
+  fgTie("/controls/elevator", getElevator, setElevator);
+  fgTie("/controls/elevator-trim", getElevatorTrim, setElevatorTrim);
+  fgTie("/controls/brakes/all", getBrakes, setBrakes);
+  fgTie("/controls/brakes/left", getLeftBrake, setLeftBrake);
+  fgTie("/controls/brakes/right", getRightBrake, setRightBrake);
+  fgTie("/controls/brakes/center", getRightBrake, setCenterBrake);
+#endif
 
 				// Autopilot
-  TIE_BOOL("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
-  TIE_DOUBLE("/autopilot/settings/altitude", getAPAltitude, setAPAltitude);
-  TIE_BOOL("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
-  TIE_DOUBLE("/autopilot/settings/heading", getAPHeading, setAPHeading);
-  TIE_DOUBLE("/autopilot/settings/heading-magnetic",
+  fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
+  fgTie("/autopilot/settings/altitude", getAPAltitude, setAPAltitude);
+  fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
+  fgTie("/autopilot/settings/heading", getAPHeading, setAPHeading);
+  fgTie("/autopilot/settings/heading-magnetic",
              getAPHeadingMag, setAPHeadingMag);
-  TIE_BOOL("/autopilot/locks/nav1", getAPNAV1Lock, setAPNAV1Lock);
+  fgTie("/autopilot/locks/nav1", getAPNAV1Lock, setAPNAV1Lock);
 
 				// Radio navigation
-  TIE_DOUBLE("/radios/nav1/frequencies/selected", getNAV1Freq, setNAV1Freq);
-  TIE_DOUBLE("/radios/nav1/frequencies/standby", getNAV1AltFreq, setNAV1AltFreq);
-  TIE_DOUBLE("/radios/nav1/radials/actual", getNAV1Radial, 0);
-  TIE_DOUBLE("/radios/nav1/radials/selected",
+  fgTie("/radios/nav1/frequencies/selected", getNAV1Freq, setNAV1Freq);
+  fgTie("/radios/nav1/frequencies/standby", getNAV1AltFreq, setNAV1AltFreq);
+  fgTie("/radios/nav1/radials/actual", getNAV1Radial);
+  fgTie("/radios/nav1/radials/selected",
              getNAV1SelRadial, setNAV1SelRadial);
-  TIE_DOUBLE("/radios/nav1/dme/distance", getNAV1DistDME, 0);
-  TIE_BOOL("/radios/nav1/to-flag", getNAV1TO, 0);
-  TIE_BOOL("/radios/nav1/from-flag", getNAV1FROM, 0);
-  TIE_BOOL("/radios/nav1/in-range", getNAV1InRange, 0);
-  TIE_BOOL("/radios/nav1/dme/in-range", getNAV1DMEInRange, 0);
+  fgTie("/radios/nav1/dme/distance", getNAV1DistDME);
+  fgTie("/radios/nav1/to-flag", getNAV1TO);
+  fgTie("/radios/nav1/from-flag", getNAV1FROM);
+  fgTie("/radios/nav1/in-range", getNAV1InRange);
+  fgTie("/radios/nav1/dme/in-range", getNAV1DMEInRange);
 			       
-  TIE_DOUBLE("/radios/nav2/frequencies/selected", getNAV2Freq, setNAV2Freq);
-  TIE_DOUBLE("/radios/nav2/frequencies/standby",
+  fgTie("/radios/nav2/frequencies/selected", getNAV2Freq, setNAV2Freq);
+  fgTie("/radios/nav2/frequencies/standby",
              getNAV2AltFreq, setNAV2AltFreq);
-  TIE_DOUBLE("/radios/nav2/radials/actual", getNAV2Radial, 0);
-  TIE_DOUBLE("/radios/nav2/radials/selected",
+  fgTie("/radios/nav2/radials/actual", getNAV2Radial);
+  fgTie("/radios/nav2/radials/selected",
              getNAV2SelRadial, setNAV2SelRadial);
-  TIE_DOUBLE("/radios/nav2/dme/distance", getNAV2DistDME, 0);
-  TIE_BOOL("/radios/nav2/to-flag", getNAV2TO, 0);
-  TIE_BOOL("/radios/nav2/from-flag", getNAV2FROM, 0);
-  TIE_BOOL("/radios/nav2/in-range", getNAV2InRange, 0);
-  TIE_BOOL("/radios/nav2/dme/in-range", getNAV2DMEInRange, 0);
+  fgTie("/radios/nav2/dme/distance", getNAV2DistDME);
+  fgTie("/radios/nav2/to-flag", getNAV2TO);
+  fgTie("/radios/nav2/from-flag", getNAV2FROM);
+  fgTie("/radios/nav2/in-range", getNAV2InRange);
+  fgTie("/radios/nav2/dme/in-range", getNAV2DMEInRange);
 
-  TIE_DOUBLE("/radios/adf/frequencies/selected", getADFFreq, setADFFreq);
-  TIE_DOUBLE("/radios/adf/frequencies/standby", getADFAltFreq, setADFAltFreq);
-  TIE_DOUBLE("/radios/adf/rotation", getADFRotation, setADFRotation);
+  fgTie("/radios/adf/frequencies/selected", getADFFreq, setADFFreq);
+  fgTie("/radios/adf/frequencies/standby", getADFAltFreq, setADFAltFreq);
+  fgTie("/radios/adf/rotation", getADFRotation, setADFRotation);
 
-  TIE_DOUBLE("/environment/visibility", getVisibility, setVisibility);
+				// Weather
+  fgTie("/environment/visibility", getVisibility, setVisibility);
+  fgTie("/environment/wind-north", getWindNorth);
+  fgTie("/environment/wind-east", getWindEast);
+  fgTie("/environment/wind-down", getWindDown);
+
+				// View
+  fgTie("/sim/view/axes/long", (double(*)())0, setViewAxisLong);
+  fgTie("/sim/view/axes/lat", (double(*)())0, setViewAxisLat);
 
   _needReinit = false;
 
@@ -320,6 +342,7 @@ FGBFI::update ()
 {
   _check_altitude();
   _check_lighting();
+  _set_view_from_axes();
   if (_needReinit) {
     reinit();
   }
@@ -1394,13 +1417,14 @@ FGBFI::getNAV1TO ()
   if (current_radiostack->get_nav1_inrange()) {
     double heading = current_radiostack->get_nav1_heading();
     double radial = current_radiostack->get_nav1_radial();
-    double var = FGBFI::getMagVar();
+//     double var = FGBFI::getMagVar();
     if (current_radiostack->get_nav1_loc()) {
       double offset = fabs(heading - radial);
       return (offset<= 8.0 || offset >= 352.0);
     } else {
-      double offset =
-	fabs(heading - var - radial);
+//       double offset =
+// 	fabs(heading - var - radial);
+      double offset = fabs(heading - radial);
       return (offset <= 20.0 || offset >= 340.0);
     }
   } else {
@@ -1414,13 +1438,14 @@ FGBFI::getNAV1FROM ()
   if (current_radiostack->get_nav1_inrange()) {
     double heading = current_radiostack->get_nav1_heading();
     double radial = current_radiostack->get_nav1_radial();
-    double var = FGBFI::getMagVar();
+//     double var = FGBFI::getMagVar();
     if (current_radiostack->get_nav1_loc()) {
       double offset = fabs(heading - radial);
       return (offset >= 172.0 && offset<= 188.0);
     } else {
-      double offset =
-	fabs(heading - var - radial);
+//       double offset =
+// 	fabs(heading - var - radial);
+      double offset = fabs(heading - radial);
       return (offset >= 160.0 && offset <= 200.0);
     }
   } else {
@@ -1477,13 +1502,14 @@ FGBFI::getNAV2TO ()
   if (current_radiostack->get_nav2_inrange()) {
     double heading = current_radiostack->get_nav2_heading();
     double radial = current_radiostack->get_nav2_radial();
-    double var = FGBFI::getMagVar();
+//     double var = FGBFI::getMagVar();
     if (current_radiostack->get_nav2_loc()) {
       double offset = fabs(heading - radial);
       return (offset<= 8.0 || offset >= 352.0);
     } else {
-      double offset =
-	fabs(heading - var - radial);
+//       double offset =
+// 	fabs(heading - var - radial);
+      double offset = fabs(heading - radial);
       return (offset <= 20.0 || offset >= 340.0);
     }
   } else {
@@ -1497,13 +1523,14 @@ FGBFI::getNAV2FROM ()
   if (current_radiostack->get_nav2_inrange()) {
     double heading = current_radiostack->get_nav2_heading();
     double radial = current_radiostack->get_nav2_radial();
-    double var = FGBFI::getMagVar();
+//     double var = FGBFI::getMagVar();
     if (current_radiostack->get_nav2_loc()) {
       double offset = fabs(heading - radial);
       return (offset >= 172.0 && offset<= 188.0);
     } else {
-      double offset =
-	fabs(heading - var - radial);
+//       double offset =
+// 	fabs(heading - var - radial);
+      double offset = fabs(heading - radial);
       return (offset >= 160.0 && offset <= 200.0);
     }
   } else {
@@ -1652,7 +1679,6 @@ FGBFI::getTargetAirport ()
 void
 FGBFI::setTargetAirport (string airportId)
 {
-  // cout << "setting target airport id = " << airportId << endl;
   globals->get_options()->set_airport_id(airportId);
 }
 
@@ -1721,6 +1747,53 @@ FGBFI::setVisibility (double visibility)
 #endif
 }
 
+
+/**
+ * Get the current wind north velocity.
+ */
+double
+FGBFI::getWindNorth ()
+{
+  return current_aircraft.fdm_state->get_V_north_airmass();
+}
+
+
+/**
+ * Get the current wind east velocity.
+ */
+double
+FGBFI::getWindEast ()
+{
+  return current_aircraft.fdm_state->get_V_east_airmass();
+}
+
+
+/**
+ * Get the current wind down velocity.
+ */
+double
+FGBFI::getWindDown ()
+{
+  return current_aircraft.fdm_state->get_V_down_airmass();
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// View.
+////////////////////////////////////////////////////////////////////////
+
+void
+FGBFI::setViewAxisLong (double axis)
+{
+  axisLong = axis;
+}
+
+void
+FGBFI::setViewAxisLat (double axis)
+{
+  axisLat = axis;
+}
 
 
 ////////////////////////////////////////////////////////////////////////
