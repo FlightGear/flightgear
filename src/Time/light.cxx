@@ -56,6 +56,7 @@ SG_USING_STD(string);
 #include <simgear/screen/colors.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/viewer.hxx>
 
 #include "light.hxx"
@@ -229,12 +230,19 @@ void fgLIGHT::UpdateAdjFog( void ) {
     float s_blue =  (fog_color[2] + 2 * sun_color[2]) / 3;
 
     // interpolate beween the sunrise/sunset color and the color
-    // at the opposite direction of this effect.
+    // at the opposite direction of this effect. Take in account
+    // the current visibility.
     //
+    float av = thesky->get_visibility();
+    if (av > 45000)
+       av = 45000;
+
+    float avf = 0.87 - (45000 - av) / 83333.33;
     float sif = 0.5 - cos(sun_angle*2)/2;
+
     float rf1 = fabs((rotation - SGD_PI) / SGD_PI);             // 0.0 .. 1.0
-    float rf2 = 0.87 * pow(rf1 * rf1, 1/sif);
-    float rf3 = 1.0 - rf2;
+    float rf2 = avf * pow(rf1 * rf1, 1/sif);
+    float rf3 = 0.94 - rf2;
 
     adj_fog_color[0] = rf3 * fog_color[0] + rf2 * s_red;
     adj_fog_color[1] = rf3 * fog_color[1] + rf2 * s_green;
