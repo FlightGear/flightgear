@@ -125,12 +125,13 @@ void fgSkyColorsInit( void ) {
 
     if ( (sun_angle > 80.0) && (sun_angle < 100.0) ) {
 	// 0.0 - 0.4
-	outer_param[0] = (10.0 - fabs(90.0 - sun_angle)) / 25.0;
-	outer_param[1] = (10.0 - fabs(90.0 - sun_angle)) / 35.0;
-	outer_param[2] = 0.0;
+	outer_param[0] = (10.0 - fabs(90.0 - sun_angle)) / 20.0;
+	outer_param[1] = (10.0 - fabs(90.0 - sun_angle)) / 40.0;
+	outer_param[2] = -(10.0 - fabs(90.0 - sun_angle)) / 30.0;
+	// outer_param[2] = 0.0;
 
-	middle_param[0] = (10.0 - fabs(90.0 - sun_angle)) / 20.0;
-	middle_param[1] = (10.0 - fabs(90.0 - sun_angle)) / 40.0;
+	middle_param[0] = (10.0 - fabs(90.0 - sun_angle)) / 40.0;
+	middle_param[1] = (10.0 - fabs(90.0 - sun_angle)) / 80.0;
 	middle_param[2] = 0.0;
 
 	outer_diff[0] = outer_param[0] / 6.0;
@@ -364,6 +365,9 @@ void fgSkyRender( void ) {
 
 
 // $Log$
+// Revision 1.13  1998/10/20 18:28:30  curt
+// Tweaked sunset/sunrise colors.
+//
 // Revision 1.12  1998/10/16 23:27:18  curt
 // C++-ifying.
 //
