@@ -698,11 +698,7 @@ FGInput::_update_joystick (double dt)
   // float js_val, diff;
   float axis_values[MAX_JOYSTICK_AXES];
 
-  // update the joystick 20 times per second.
-  if ((_last_dt += dt) > 50)
-    _last_dt = 0.0;
-  else
-    return;
+  _last_dt += dt;
 
   for ( i = 0; i < MAX_JOYSTICKS; i++) {
 
@@ -745,12 +741,19 @@ FGInput::_update_joystick (double dt)
     }
 
                                 // Fire bindings for the buttons.
-    for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
-      _update_button(_joystick_bindings[i].buttons[j],
-                     modifiers,
-                     (buttons & (1 << j)) > 0,
-                     -1, -1);
+    if (_last_dt > 0.05) {
+      for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
+        _update_button(_joystick_bindings[i].buttons[j],
+                       modifiers,
+                       (buttons & (1 << j)) > 0,
+                       -1, -1);
+      }
     }
+  }
+
+  if (_last_dt > 0.05) {
+    while(_last_dt >= 0.05)
+      _last_dt -= 0.05;
   }
 }
 
