@@ -58,6 +58,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #ifdef FG_USE_CLOUDS_3D
 #  include <simgear/scene/sky/clouds3d/SkySceneLoader.hpp>
@@ -103,9 +104,6 @@
 #include <Replay/replay.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
-#if defined(HAVE_PLIB_PSL)
-#include <Scripting/scriptmgr.hxx>
-#endif
 #include <Scripting/NasalSys.hxx>
 #include <Sound/fg_fx.hxx>
 #include <Systems/system_mgr.hxx>
@@ -1453,6 +1451,11 @@ bool fgInitSubsystems() {
      globals->get_event_mgr()->setFreezeProperty(fgGetNode("/sim/freeze/clock"));
 
     ////////////////////////////////////////////////////////////////////
+    // Initialize the property interpolator subsystem
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("interpolator", new SGInterpolator());
+
+    ////////////////////////////////////////////////////////////////////
     // Initialize the material property subsystem.
     ////////////////////////////////////////////////////////////////////
 
@@ -1512,16 +1515,6 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     
     globals->add_subsystem("logger", new FGLogger);
-
-
-#if defined(HAVE_PLIB_PSL)
-    ////////////////////////////////////////////////////////////////////
-    // Create and register the script manager.
-    ////////////////////////////////////////////////////////////////////
-
-    globals->add_subsystem("scripting", new FGScriptMgr);
-#endif // HAVE_PLIB_PSL
-
 
     ////////////////////////////////////////////////////////////////////
     // Create and register the XML GUI.
