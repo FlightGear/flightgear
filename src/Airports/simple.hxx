@@ -124,7 +124,7 @@ public:
 
 class FGAirportsUtil {
 public:
-#ifdef FG_NO_DEFAULT_TEMPLATE_ARGS
+#ifdef SG_NO_DEFAULT_TEMPLATE_ARGS
     typedef set< FGAirport, less< FGAirport > > container;
 #else
     typedef set< FGAirport > container;

@@ -29,7 +29,7 @@
 #  include <config.h>
 #endif
 
-#ifdef FG_MATH_EXCEPTION_CLASH
+#ifdef SG_MATH_EXCEPTION_CLASH
 #  include <math.h>
 #endif
 

@@ -27,7 +27,7 @@
 #endif
 
 // For BC 5.01 this must be included before OpenGL includes.
-#ifdef FG_MATH_EXCEPTION_CLASH
+#ifdef SG_MATH_EXCEPTION_CLASH
 #  include <math.h>
 #endif
 
