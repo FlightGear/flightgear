@@ -135,7 +135,7 @@ static void fgUpdateViewParams() {
     /* Tell GL we are about to modify the projection parameters */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, 1.0/win_ratio, 0.1, 200000.0);
+    gluPerspective(45.0, 1.0/win_ratio, 0.001, 2000.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -183,7 +183,7 @@ static void fgUpdateViewParams() {
 
     printf("View pos = %.4f, %.4f, %.4f\n", view_pos.y, view_pos.z,  
 	   FG_Altitude * FEET_TO_METER);
-    gluLookAt(view_pos.y, view_pos.z,  FG_Altitude*FEET_TO_METER * 0.0011,
+    gluLookAt(view_pos.y, view_pos.z,  FG_Altitude*FEET_TO_METER * 0.001,
 	      view_pos.y + fwrd_view[0], view_pos.z + fwrd_view[1], 
 	      FG_Altitude*FEET_TO_METER * 0.001 + fwrd_view[2],
 	      up[0], up[1], up[2]);
@@ -390,10 +390,10 @@ static void fgMainLoop( void ) {
      * eventually */
     rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC, 
 			       FG_Latitude  * RAD_TO_ARCSEC);
-    printf("Ground elevation is about %.2f meters here.\n", rough_elev);
+    printf("Ground elevation is %.2f meters here.\n", rough_elev);
     /* FG_Runway_altitude = rough_elev * METER_TO_FEET; */
 
-    if ( FG_Altitude * FEET_TO_METER < rough_elev ) {
+    if ( FG_Altitude * FEET_TO_METER < rough_elev + 3.758099) {
 	/* set this here, otherwise if we set runway height above our
 	   current height we get a really nasty bounce. */
 	FG_Runway_altitude = FG_Altitude - 3.758099;
@@ -621,9 +621,12 @@ int printf (const char *format, ...) {
 
 
 /* $Log$
-/* Revision 1.38  1997/07/19 23:04:47  curt
-/* Added an initial weather section.
+/* Revision 1.39  1997/07/21 14:45:01  curt
+/* Minor tweaks.
 /*
+ * Revision 1.38  1997/07/19 23:04:47  curt
+ * Added an initial weather section.
+ *
  * Revision 1.37  1997/07/19 22:34:02  curt
  * Moved PI definitions to ../constants.h
  * Moved random() stuff to ../Utils/ and renamed fg_random()

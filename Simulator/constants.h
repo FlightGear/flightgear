@@ -62,7 +62,7 @@
 #define ARCSEC_TO_RAD 4.84813681109535993589e-06 
 
 /* Radians to arc seconds */                  /* (rad*3600*180)/pi = arcsec */
-#define RAD_TO_ARCSEC 2035752.03952618601852
+#define RAD_TO_ARCSEC 206264.806247096355156
 
 /* Feet to Meters */
 #define FEET_TO_METER    0.3048
@@ -79,9 +79,12 @@
 
 
 /* $Log$
-/* Revision 1.5  1997/07/19 23:04:46  curt
-/* Added an initial weather section.
+/* Revision 1.6  1997/07/21 14:45:01  curt
+/* Minor tweaks.
 /*
+ * Revision 1.5  1997/07/19 23:04:46  curt
+ * Added an initial weather section.
+ *
  * Revision 1.4  1997/07/19 22:37:03  curt
  * Added various PI definitions.
  *
