@@ -18,6 +18,7 @@
 #include <FDM/flight.hxx>
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
+#include <GUI/dialog.hxx>
 #include <Scenery/tilemgr.hxx>
 #if defined(HAVE_PLIB_PSL)
 #include <Scripting/scriptmgr.hxx>
@@ -552,7 +553,7 @@ do_dialog_close (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
         ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
-    GUIWidget * widget = gui->getCurrentWidget();
+    FGDialog * widget = gui->getCurrentWidget();
     if (widget != 0) {
         delete widget;
         gui->setCurrentWidget(0);
@@ -573,7 +574,7 @@ do_dialog_update (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
         ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
-    GUIWidget * widget = gui->getCurrentWidget();
+    FGDialog * widget = gui->getCurrentWidget();
     if (widget != 0) {
         if (arg->hasValue("object-name")) {
             gui->getCurrentWidget()
@@ -598,7 +599,7 @@ do_dialog_apply (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
         ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
-    GUIWidget * widget = gui->getCurrentWidget();
+    FGDialog * widget = gui->getCurrentWidget();
     if (widget != 0) {
         if (arg->hasValue("object-name")) {
             gui->getCurrentWidget()
