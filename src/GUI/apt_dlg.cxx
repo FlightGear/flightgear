@@ -79,10 +79,11 @@ void AptDialog_OK (puObject *)
 		if ( airports.search( AptId, &a ) )
 		{
 			fgSetString("/sim/startup/airport-id",  AptId.c_str() );
-			fgSetDouble("/position/altitude", -9999.0 );
-		// fgSetPosFromAirportID( AptId );
+			// fgSetDouble("/position/altitude", -9999.0 );
+			// fgSetPosFromAirportID( AptId );
 			fgSetPosFromAirportIDandHdg( AptId, 
-										 cur_fdm_state->get_Psi() * RAD_TO_DEG);
+						     cur_fdm_state->get_Psi() *
+						     RAD_TO_DEG);
 			BusyCursor(0);
 			fgReInitSubsystems();
 			BusyCursor(1);

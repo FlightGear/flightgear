@@ -358,10 +358,18 @@ bool fgInitPosition( void ) {
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "scenery.cur_elev = " << scenery.cur_elev );
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "/position/altitude = " << fgGetDouble("/position/altitude") );
 
-    // if ( scenery.cur_elev > fgGetDouble("/position/altitude") - 1) {
-    fgSetDouble("/position/altitude", scenery.cur_elev + 1 );
-    // }
+    // if we requested on ground startups
+    if ( fgGetBool( "/sim/startup/onground" ) ) {
+	fgSetDouble("/position/altitude", scenery.cur_elev + 1 );
+    }
+
+    // if requested altitude is below ground level
+    if ( scenery.cur_elev > fgGetDouble("/position/altitude") - 1) {
+	fgSetDouble("/position/altitude", scenery.cur_elev + 1 );
+    }
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "starting altitude is = " <<
@@ -776,6 +784,9 @@ bool fgInitSubsystems( void ) {
 
 void fgReInitSubsystems( void )
 {
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "/position/altitude = " << fgGetDouble("/position/altitude") );
+
     bool freeze = globals->get_freeze();
     if( !freeze )
         globals->set_freeze( true );

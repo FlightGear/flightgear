@@ -135,7 +135,7 @@ FGGeneral general;
 // our initializations out of the glutIdleLoop() so that we can get a
 // splash screen up and running right away.
 static int idle_state = 0;
-static int global_multi_loop;
+static long global_multi_loop;
 
 // attempt to avoid a large bounce at startup
 static bool initial_freeze = true;
@@ -731,13 +731,21 @@ void fgRenderFrame( void ) {
 
 // Update internal time dependent calculations (i.e. flight model)
 void fgUpdateTimeDepCalcs() {
+    static bool inited = false;
+
     fgLIGHT *l = &cur_light_params;
     int i;
 
-    int multi_loop = 1;
+    long multi_loop = 1;
 
     if ( !globals->get_freeze() && !initial_freeze ) {
 	// conceptually, this could be done for each fdm instance ...
+
+	if ( !inited ) {
+	    cur_fdm_state->stamp();
+	    inited = true;
+	}
+
 	SGTimeStamp current;
 	current.stamp();
 	long elapsed = current - cur_fdm_state->get_time_stamp();
@@ -745,12 +753,20 @@ void fgUpdateTimeDepCalcs() {
 	elapsed += cur_fdm_state->get_remainder();
 	// cout << "elapsed = " << elapsed << endl;
 	// cout << "dt = " << cur_fdm_state->get_delta_t() << endl;
-	multi_loop = (int)(((double)elapsed * 0.000001) /
+	multi_loop = (long)(((double)elapsed * 0.000001) /
 			       cur_fdm_state->get_delta_t() );
 	cur_fdm_state->set_multi_loop( multi_loop );
 	long remainder = elapsed - ( (multi_loop*1000000) *
 				     cur_fdm_state->get_delta_t() );
 	cur_fdm_state->set_remainder( remainder );
+	// cout << "remainder = " << remainder << endl;
+
+	// chop max interations to something reasonable if the sim was
+	// delayed for an excesive amount of time
+	if ( multi_loop > 2.0 / cur_fdm_state->get_delta_t() ) {
+	    multi_loop = (int)(2.0 / cur_fdm_state->get_delta_t());
+	    cur_fdm_state->set_remainder( 0 );
+	}
 
 	// cout << "multi_loop = " << multi_loop << endl;
 	for ( i = 0; i < multi_loop; ++i ) {
@@ -979,7 +995,7 @@ static void fgMainLoop( void ) {
     // Calculate model iterations needed for next frame
     elapsed += remainder;
 
-    global_multi_loop = (int)(((double)elapsed * 0.000001) * 
+    global_multi_loop = (long)(((double)elapsed * 0.000001) * 
 			      fgGetInt("/sim/model-hz"));
     remainder = elapsed - ( (global_multi_loop*1000000) / 
 			    fgGetInt("/sim/model-hz") );
@@ -987,6 +1003,13 @@ static void fgMainLoop( void ) {
 	    "Model iterations needed = " << global_multi_loop
 	    << ", new remainder = " << remainder );
 	
+    // chop max interations to something reasonable if the sim was
+    // delayed for an excesive amount of time
+    if ( global_multi_loop > 2.0 * fgGetInt("/sim/model-hz") ) {
+	global_multi_loop = (int)(2.0 * fgGetInt("/sim/model-hz") );
+	remainder = 0;
+    }
+
     // flight model
     if ( global_multi_loop > 0 ) {
 	fgUpdateTimeDepCalcs();

@@ -149,6 +149,7 @@ fgSetDefaults ()
     fgSetInt("/sim/model-hz", NEW_DEFAULT_MODEL_HZ);
     fgSetInt("/sim/speed-up", 1);
     fgSetBool("/sim/startup/trim", false);
+    fgSetBool("/sim/startup/onground", true);
 
 				// Rendering options
     fgSetString("/sim/rendering/fog", "nicest");
@@ -566,6 +567,7 @@ parse_option (const string& arg)
 			      parse_degree(arg.substr(6)));
 	fgSetString("/position/airport-id", "");
     } else if ( arg.find( "--altitude=" ) != string::npos ) {
+	fgSetBool("/sim/startup/onground", false);
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	    fgSetDouble("/position/altitude", atof(arg.substr(11)));
 	else
@@ -646,9 +648,13 @@ parse_option (const string& arg)
     } else if ( arg.find( "--speed=" ) != string::npos ) {
 	fgSetInt("/sim/speed-up", atoi(arg.substr(8)));
     } else if ( arg.find( "--trim") != string::npos) {
-        fgSetInt("/sim/startup/trim", true);
+        fgSetBool("/sim/startup/trim", true);
     } else if ( arg.find( "--notrim") != string::npos) {
-        fgSetInt("/sim/startup/trim", false);
+        fgSetBool("/sim/startup/trim", false);
+    } else if ( arg.find( "--on-ground") != string::npos) {
+        fgSetBool("/sim/startup/onground", true);
+    } else if ( arg.find( "--in-air") != string::npos) {
+        fgSetBool("/sim/startup/onground", false);
     } else if ( arg == "--fog-disable" ) {
 	fgSetString("/sim/rendering/fog", "disabled");
     } else if ( arg == "--fog-fastest" ) {
@@ -1031,6 +1037,9 @@ fgUsage ()
 	 << endl;
     cout << "\t--speed=n:  run the FDM this much faster than real time" << endl;
     cout << "\t--notrim:  Do NOT attempt to trim the model when initializing JSBsim" << endl;
+    cout << "\t--on-ground:  Start up at ground level (default)" << endl;
+    cout << "\t--in-air:  Start up in air (implied by specifying an initial"
+	 << " altitude above ground level." << endl;
     cout << "\t--wind=DIR@SPEED: specify wind coming from DIR (degrees) at SPEED (knots)" << endl;
     cout << endl;
 

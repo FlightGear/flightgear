@@ -228,11 +228,32 @@ void FGTileMgr::schedule_needed() {
 
     global_tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) );
 
+    SGBucket b;
+
+    // schedule center tile first so it can be loaded first
+    b = sgBucketOffset( longitude, latitude, 0, 0 );
+    sched_tile( b );
+
+    // schedule next ring of 8 tiles
+    for ( int x = -1; x <= 1; ++x ) {
+	for ( int y = -1; y <= 1; ++y ) {
+	    if ( x != 0 || y != 0 ) {
+		b = sgBucketOffset( longitude, latitude, x, y );
+		if ( ! global_tile_cache.exists( b ) ) {
+		    sched_tile( b );
+		}
+	    }
+	}
+    }
+    
+    // schedule remaining tiles
     for ( int x = -xrange; x <= xrange; ++x ) {
 	for ( int y = -yrange; y <= yrange; ++y ) {
-	    SGBucket b = sgBucketOffset( longitude, latitude, x, y );
-	    if ( ! global_tile_cache.exists( b ) ) {
-		sched_tile( b );
+	    if ( x < -1 || x > 1 || y < -1 || y > 1 ) {
+		SGBucket b = sgBucketOffset( longitude, latitude, x, y );
+		if ( ! global_tile_cache.exists( b ) ) {
+		    sched_tile( b );
+		}
 	    }
 	}
     }
