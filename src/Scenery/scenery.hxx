@@ -29,6 +29,7 @@
 # error This library requires C++
 #endif                                   
 
+
 #include <plib/sg.h>
 
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -37,6 +38,7 @@
 
 class ssgRoot;
 class ssgBranch;
+
 
 // Define a structure containing global scenery parameters
 class FGScenery : public SGSubsystem {

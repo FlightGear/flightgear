@@ -102,7 +102,6 @@ extern void fgLatLonFormatToggle( puObject *);
 
 #if defined( TR_HIRES_SNAP)
 #include <simgear/screen/tr.h>
-extern void trRenderFrame( void );
 extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
                          GLfloat x_end, GLfloat y_end );
 #endif
@@ -376,8 +375,8 @@ void guiTogglePanel(puObject *cb)
   else
     fgSetBool("/sim/panel/visibility", true);
 
-  fgReshape(fgGetInt("/sim/startup/xsize"),
-	    fgGetInt("/sim/startup/ysize"));
+  globals->get_renderer()->resize(fgGetInt("/sim/startup/xsize"),
+                                  fgGetInt("/sim/startup/ysize"));
 }
 
 void goodBye(puObject *)
@@ -534,15 +533,16 @@ void fgHiResDump()
         puHideCursor();
     }
 
-    fgInitVisuals();
-    fgReshape( fgGetInt("/sim/startup/xsize"),
-               fgGetInt("/sim/startup/ysize") );
+    FGRenderer *renderer = globals->get_renderer();
+    renderer->init();
+    renderer->resize( fgGetInt("/sim/startup/xsize"),
+                      fgGetInt("/sim/startup/ysize") );
 
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgRenderFrame() shouldn't
     // hurt anything
-    fgRenderFrame();
-    fgRenderFrame();
+    renderer->update();
+    renderer->update();
 
     // Make sure we have SSG projection primed for current view
     glMatrixMode(GL_MODELVIEW);
@@ -633,7 +633,7 @@ void fgHiResDump()
         trBeginTile(tr);
         int curColumn = trGet(tr, TR_CURRENT_COLUMN);
         int curRow =  trGet(tr, TR_CURRENT_ROW);
-        trRenderFrame();
+        globals->get_renderer()->screendump();
         if ( do_hud )
             fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,
                          (curColumn+1)*hud_col_step, (curRow+1)*hud_row_step );
@@ -670,7 +670,7 @@ void fgHiResDump()
 
     }
 
-    fgReshape( width, height );
+    globals->get_renderer()->resize( width, height );
 
     trDelete(tr);
 
@@ -714,7 +714,7 @@ GLubyte *hiResScreenCapture( int multiplier )
     float fov = oldfov / multiplier;
     FGViewer *v = globals->get_current_view();
     fgSetDouble("/sim/current-view/field-of-view", fov);
-    fgInitVisuals();
+    globals->get_renderer()->init();
     int cur_width = fgGetInt("/sim/startup/xsize");
     int cur_height = fgGetInt("/sim/startup/ysize");
     if (b1) delete( b1 );
@@ -723,10 +723,10 @@ GLubyte *hiResScreenCapture( int multiplier )
     int x,y;
     for ( y = 0; y < multiplier; y++ ) {
 	for ( x = 0; x < multiplier; x++ ) {
-	    fgReshape( cur_width, cur_height );
+	    globals->get_renderer()->resize( cur_width, cur_height );
 	    // pan to tile
 	    rotateView( 0, (y*fov)-((multiplier-1)*fov/2), (x*fov)-((multiplier-1)*fov/2) );
-	    fgRenderFrame();
+	    globals->get_renderer()->update();
 	    // restore view
 	    GlBitmap b2;
 	    b1->copyBitmap( &b2, cur_width*x, cur_height*y );
@@ -794,15 +794,15 @@ void fgDumpSnapShot () {
 	puHideCursor();
     }
 
-    fgInitVisuals();
-    fgReshape( fgGetInt("/sim/startup/xsize"),
-	       fgGetInt("/sim/startup/ysize") );
+    globals->get_renderer()->init();
+    globals->get_renderer()->resize( fgGetInt("/sim/startup/xsize"),
+                                     fgGetInt("/sim/startup/ysize") );
 
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgRenderFrame() shouldn't
     // hurt anything
-    fgRenderFrame();
-    fgRenderFrame();
+    globals->get_renderer()->update();
+    globals->get_renderer()->update();
 
     while (count < 1000) {
         FILE *fp;

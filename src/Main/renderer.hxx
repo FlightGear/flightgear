@@ -14,8 +14,6 @@ extern glPointParameterfProc glPointParameterfPtr;
 extern glPointParameterfvProc glPointParameterfvPtr;
 extern bool glPointParameterIsSupported;
 
-void fgRenderFrame();
-void fgReshape(int width, int height);
 
 class FGRenderer {
 
@@ -24,8 +22,8 @@ public:
     ~FGRenderer() {}
 
     void init();
-    void update(double dt);
-    void resize(int width, int height );
+    static void update();
+    static void resize(int width, int height );
 
     void screendump();
     void build_states();

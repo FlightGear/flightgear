@@ -81,7 +81,7 @@ void reInit(puObject *cb)
 
     globals->get_tile_mgr()->update( fgGetDouble("/environment/visibility-m") );
 
-    fgReshape( xsize, ysize );
+    globals->get_renderer()->resize( xsize, ysize );
 
     // BusyCursor(1);
     

@@ -52,6 +52,7 @@ SG_USING_STD(string);
 // Number of seconds before a player is consider to be lost
 #define TIME_TO_LIVE 10
 
+
 class ssgEntity;
 class ssgTransform;
 

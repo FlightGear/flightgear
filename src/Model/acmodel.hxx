@@ -12,8 +12,6 @@
 
 #include <vector>
 
-#include <plib/ssg.h>
-
 SG_USING_STD(string);
 SG_USING_STD(vector);
 

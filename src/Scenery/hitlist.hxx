@@ -16,6 +16,7 @@
 SG_USING_STD(vector);
 
 class ssgEntity;
+class ssgBranch;
 
 class FGHitRec {
 

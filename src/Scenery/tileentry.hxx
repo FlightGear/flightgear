@@ -54,13 +54,13 @@ typedef vector < Point3D > point_list;
 typedef point_list::iterator point_list_iterator;
 typedef point_list::const_iterator const_point_list_iterator;
 
+
 class ssgLeaf;
 class ssgBranch;
 class ssgTransform;
 class ssgSelector;
 class ssgRangeSelector;
 class ssgVertexArray;
-
 class FGTileEntry;
 
 

@@ -68,11 +68,6 @@
 #include <Replay/replay.hxx>
 #include <GUI/new_gui.hxx>
 
-#ifdef FG_MPLAYER_AS
-#include <MultiPlayer/multiplaytxmgr.hxx>
-#include <MultiPlayer/multiplayrxmgr.hxx>
-#endif
-
 #include "splash.hxx"
 #include "renderer.hxx"
 #include "main.hxx"
@@ -126,18 +121,6 @@ ssgSimpleState *default_state;
 ssgSimpleState *hud_and_panel;
 ssgSimpleState *menus;
 
-
-void fgRenderFrame() {
-#ifdef FG_MPLAYER_AS
-    // Update any multiplayer models
-    globals->get_multiplayer_rx_mgr()->Update();
-#endif
-    globals->get_renderer()->update(delta_time_sec);
-}
-
-void fgReshape(int width, int height) {
-    globals->get_renderer()->resize(width,height);
-}
 
 void
 FGRenderer::build_states( void ) {
@@ -354,7 +337,7 @@ FGRenderer::screendump( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 void
-FGRenderer::update(double dt) {
+FGRenderer::update() {
     bool scenery_loaded = fgGetBool("sim/sceneryloaded") || fgGetBool("sim/sceneryloaded-override");
     bool draw_otw = fgGetBool("/sim/rendering/draw-otw");
     bool skyblend = fgGetBool("/sim/rendering/skyblend");
@@ -430,7 +413,7 @@ FGRenderer::update(double dt) {
         globals->get_scenery()->set_center( globals->get_scenery()->get_next_center() );
 
         // update view port
-        fgReshape( fgGetInt("/sim/startup/xsize"),
+        resize( fgGetInt("/sim/startup/xsize"),
                    fgGetInt("/sim/startup/ysize") );
 
         if ( fgGetBool("/sim/rendering/clouds3d") ) {

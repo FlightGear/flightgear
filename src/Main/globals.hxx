@@ -42,6 +42,8 @@ SG_USING_STD( string );
 typedef vector<string> string_list;
 
 
+#include "renderer.hxx"
+
 // Forward declarations
 
 // This file is included, directly or indirectly, almost everywhere in
@@ -97,6 +99,7 @@ class FGGlobals
 
 private:
 
+    FGRenderer *renderer;
     SGSubsystemMgr *subsystem_mgr;
     SGEventMgr *event_mgr;
 
@@ -216,6 +219,8 @@ public:
 
     FGGlobals();
     virtual ~FGGlobals();
+
+    virtual FGRenderer *get_renderer () const;
 
     virtual SGSubsystemMgr *get_subsystem_mgr () const;
 
