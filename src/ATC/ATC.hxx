@@ -169,10 +169,10 @@ public:
 	inline void set_freq(const int fq) {freq = fq;}
 	inline int get_range() const { return range; }
 	inline void set_range(const int rg) {range = rg;}
-	inline const char* get_ident() { return ident.c_str(); }
-	inline void set_ident(const string id) {ident = id;}
-	inline const char* get_name() {return name.c_str();}
-	inline void set_name(const string nm) {name = nm;}
+	inline string get_ident() { return ident; }
+	inline void set_ident(const string id) { ident = id; }
+	inline string get_name() { return name; }
+	inline void set_name(const string nm) { name = nm; }
 	
 protected:
 	

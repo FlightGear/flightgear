@@ -373,7 +373,7 @@ void FGATCMgr::RemoveFromList(string id, atc_type tp) {
 	while(it != atc_list.end()) {
 		//cout << "type = " << (*it)->GetType() << '\n';
 		//cout << "Ident = " << (*it)->get_ident() << '\n';
-		if( (!strcmp((*it)->get_ident(), id.c_str()))
+		if( ((*it)->get_ident() == id)
 			&& ((*it)->GetType() == tp) ) {
 			//Before removing it stop it transmitting!!
 			//cout << "OBLITERATING FROM LIST!!!\n";
@@ -396,7 +396,7 @@ FGATC* FGATCMgr::FindInList(string id, atc_type tp) {
 	//cout << "Entering FindInList for " << id << ' ' << tp << endl;
 	atc_list_iterator it = atc_list.begin();
 	while(it != atc_list.end()) {
-		if( (!strcmp((*it)->get_ident(), id.c_str()))
+		if( ((*it)->get_ident() == id)
 		    && ((*it)->GetType() == tp) ) {
 			return(*it);
 		}

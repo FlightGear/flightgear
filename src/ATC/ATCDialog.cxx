@@ -399,7 +399,7 @@ void FGATCDialog::PopupCallback() {
 		} else if(atcptr->GetType() == TOWER) {
 			//cout << "TOWER " << endl;
 			//cout << "ident is " << atcptr->get_ident() << endl;
-			atcmentry_vec_type atcmlist = (available_dialog[TOWER])[(string)atcptr->get_ident()];
+			atcmentry_vec_type atcmlist = (available_dialog[TOWER])[atcptr->get_ident()];
 			if(atcmlist.size()) {
 				//cout << "Doing callback...\n";
 				ATCMenuEntry a = atcmlist[atcDialogCommunicationOptions->getValue()];
