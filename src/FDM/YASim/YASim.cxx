@@ -237,7 +237,7 @@ void YASim::copyToYASim(bool copyState)
     // cout << "YASIM: ground = " << ground << endl;
 
     float pressure = fgGetDouble("/environment/pressure-inhg") * INHG2PA;
-    float temp = fgGetDouble("/environment/temperature-degC") + 273.15;
+    float temp = fgGetDouble("/environment/temperature-degc") + 273.15;
 
     // Convert and set:
     Model* model = _fdm->getAirplane()->getModel();
