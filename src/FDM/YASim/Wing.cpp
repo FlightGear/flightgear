@@ -349,7 +349,7 @@ void Wing::compile()
             sr->surface = s;
             sr->weight = chord * segWid;
             s->setTotalDrag(sr->weight);
-            s->setTwist(_twist * frac);
+            s->setTwist(_twist * Math::sqrt(frac));
             _surfs.add(sr);
 
             if(_mirror) {
@@ -360,7 +360,7 @@ void Wing::compile()
                 sr->surface = s;
                 sr->weight = chord * segWid;
                 s->setTotalDrag(sr->weight);
-                s->setTwist(_twist * frac);
+                s->setTwist(_twist * Math::sqrt(frac));
                 _surfs.add(sr);
             }
         }
