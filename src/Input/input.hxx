@@ -36,6 +36,7 @@
 #include <simgear/misc/props.hxx>
 
 #include <Main/fgfs.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 #include <map>
@@ -43,6 +44,8 @@
 
 SG_USING_STD(map);
 SG_USING_STD(vector);
+
+
 
 
 
