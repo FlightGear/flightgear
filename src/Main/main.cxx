@@ -1259,17 +1259,9 @@ int fgGlutInitEvents( void ) {
     // call fgReshape() on window resizes
     glutReshapeFunc( fgReshape );
 
-    // call GLUTkey() on keyboard event
-    glutKeyboardFunc(GLUTkey);
-    glutKeyboardUpFunc(GLUTkeyup);
-    glutSpecialFunc(GLUTspecialkey);
-    glutSpecialUpFunc(GLUTspecialkeyup);
+    // keyboard and mouse callbacks are set in FGInput::init
 
-#if FG_NEW_MOUSE
-    glutMouseFunc (GLUTmouse);
-    glutMotionFunc (GLUTmotion);
-    glutPassiveMotionFunc (GLUTmotion);
-#else
+#ifndef FG_NEW_MOUSE
     // call guiMouseFunc() whenever our little rodent is used
     glutMouseFunc ( guiMouseFunc );
     glutMotionFunc (guiMotionFunc );

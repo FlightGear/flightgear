@@ -143,13 +143,10 @@ FGBinding::fire () const
 }
 
 void
-FGBinding::fire (int x, int y) const
+FGBinding::fire (double offset, double max) const
 {
   if (test()) {
-    if (x >= 0)
-      _arg->setIntValue("x-pos", x);
-    if (y >= 0)
-      _arg->setIntValue("y-pos", y);
+    _arg->setDoubleValue("offset", offset/max);
     fire();
   }
 }
@@ -180,8 +177,6 @@ FGInput current_input;
 
 
 FGInput::FGInput ()
-  : _current_mouse_mode(-1),
-    _last_mouse_mode(-1)
 {
   // no op
 }
@@ -197,6 +192,16 @@ FGInput::init ()
   _init_keyboard();
   _init_joystick();
   _init_mouse();
+
+  glutKeyboardFunc(GLUTkey);
+  glutKeyboardUpFunc(GLUTkeyup);
+  glutSpecialFunc(GLUTspecialkey);
+  glutSpecialUpFunc(GLUTspecialkeyup);
+#ifdef FG_NEW_MOUSE
+  glutMouseFunc (GLUTmouse);
+  glutMotionFunc (GLUTmotion);
+  glutPassiveMotionFunc (GLUTmotion);
+#endif
 }
 
 void
@@ -349,8 +354,9 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 void
 FGInput::doMouseClick (int b, int updown, int x, int y)
 {
-  std::cout << "Mouse click " << b << ',' << updown << std::endl;
   int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
+
+  mouse &m = _mouse_bindings[0];
 
   if (b >= MAX_MOUSE_BUTTONS) {
     SG_LOG(SG_INPUT, SG_ALERT, "Mouse button " << b
@@ -358,13 +364,55 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
     return;
   }
 
-  _update_button(_mouse_bindings[0].buttons[b], modifiers, updown, x, y);
+  _update_button(m.modes[m.current_mode].buttons[b], modifiers, updown, x, y);
 }
 
 void
 FGInput::doMouseMotion (int x, int y)
 {
-  // TODO
+  int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
+
+  int xsize = fgGetInt("/sim/startup/xsize", 800);
+  int ysize = fgGetInt("/sim/startup/ysize", 600);
+  mouse &m = _mouse_bindings[0];
+  if (m.current_mode < 0 || m.current_mode >= m.nModes)
+    return;
+  mouse_mode &mode = m.modes[m.current_mode];
+  if (x != m.x) {
+    int delta = x - m.x;
+    for (int i = 0; i < mode.x_bindings[modifiers].size(); i++)
+      mode.x_bindings[modifiers][i]->fire(double(delta), double(xsize));
+  }
+  if (y != m.y) {
+    int delta = y - m.y;
+    for (int i = 0; i < mode.y_bindings[modifiers].size(); i++)
+      mode.y_bindings[modifiers][i]->fire(double(delta), double(ysize));
+  }
+
+				// Constrain the mouse if requested
+  if (mode.constrained) {
+    bool need_warp = false;
+    if (x < 0) {
+      x = xsize - 1;
+      need_warp = true;
+    } else if (x >= xsize) {
+      x = 0;
+      need_warp = true;
+    }
+
+    if (y < 0) {
+      y = ysize - 1;
+      need_warp = true;
+    } else if (y >= ysize) {
+      y = 0;
+      need_warp = true;
+    }
+
+    if (need_warp)
+      glutWarpPointer(x, y);
+  }
+  m.x = x;
+  m.y = y;
 }
 
 void
@@ -539,40 +587,49 @@ FGInput::_init_mouse ()
 
   int j;
   for (int i = 0; i < MAX_MICE; i++) {
-    SGPropertyNode * mouse_node = mouse_nodes->getChild("mouse", i);
+    SGPropertyNode * mouse_node = mouse_nodes->getChild("mouse", i, true);
+    mouse &m = _mouse_bindings[i];
 
-				// Read the cursor type for each mode.
-    _mouse_bindings[i].nModes = mouse_node->getIntValue("mode-count", 1);
-    _mouse_bindings[i].cursors = new int[_mouse_bindings[i].nModes];
-    SGPropertyNode * cursor_nodes =
-      mouse_node->getChild("mode-cursors", 0, true);
-    for (j = 0; j < _mouse_bindings[i].nModes; j++) {
-      const char * name = cursor_nodes->getChild("cursor", j, true)
-	->getStringValue();
-      if (name[0] == '\0')
-	name = "inherit";
-      _mouse_bindings[i].cursors[j] = GLUT_CURSOR_INHERIT;
-      for (int k = 0; mouse_cursor_map[k].name != 0; k++) {
-	if (!strcmp(mouse_cursor_map[k].name, name)) {
-	  _mouse_bindings[i].cursors[j] = mouse_cursor_map[k].cursor;
+				// Read all the modes
+    m.nModes = mouse_node->getIntValue("mode-count", 1);
+    m.modes = new mouse_mode[m.nModes];
+
+    for (int j = 0; j < m.nModes; j++) {
+      int k;
+
+				// Read the mouse cursor for this mode
+      SGPropertyNode * mode_node = mouse_node->getChild("mode", j, true);
+      const char * cursor_name =
+	mode_node->getStringValue("cursor", "inherit");
+      m.modes[j].cursor = GLUT_CURSOR_INHERIT;
+      for (k = 0; mouse_cursor_map[k].name != 0; k++) {
+	if (!strcmp(mouse_cursor_map[k].name, cursor_name)) {
+	  m.modes[j].cursor = mouse_cursor_map[k].cursor;
 	  break;
 	}
       }
-    }
 
-				// Read the binding for each button
-    _mouse_bindings[i].buttons = new button[MAX_MOUSE_BUTTONS];
-    if (mouse_node == 0) {
-      SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for mouse " << i);
-      mouse_node = mouse_nodes->getChild("mouse", i, true);
-    }
-    char buf[8];
-    for (j = 0; j < MAX_MOUSE_BUTTONS; j++) {
-      sprintf(buf, "%d", j);
-      SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse button " << j);
-      _init_button(mouse_node->getChild("button", j),
-		   _mouse_bindings[i].buttons[j],
-		   buf);
+				// Read other properties for this mode
+      m.modes[j].constrained = mode_node->getBoolValue("constrained", false);
+
+				// Read the button bindings for this mode
+      m.modes[j].buttons = new button[MAX_MOUSE_BUTTONS];
+      char buf[8];
+      for (k = 0; k < MAX_MOUSE_BUTTONS; k++) {
+	sprintf(buf, "mouse button %d", k);
+	SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse button " << k);
+	_init_button(mode_node->getChild("button", k),
+		     m.modes[j].buttons[k],
+		     buf);
+      }
+
+				// Read the axis bindings for this mode
+      _read_bindings(mode_node->getChild("x-axis", 0, true),
+		     m.modes[j].x_bindings,
+		     FG_MOD_NONE);
+      _read_bindings(mode_node->getChild("y-axis", 0, true),
+		     m.modes[j].y_bindings,
+		     FG_MOD_NONE);
     }
   }
 }
@@ -665,15 +722,14 @@ FGInput::_update_joystick ()
 void
 FGInput::_update_mouse ()
 {
-  _current_mouse_mode = fgGetInt("/input/mice/mouse[0]/mode");
-  if (_current_mouse_mode != _last_mouse_mode) {
-    _last_mouse_mode = _current_mouse_mode;
-    if (_current_mouse_mode >= 0
-	&& _current_mouse_mode < _mouse_bindings[0].nModes) {
-      glutSetCursor(_mouse_bindings[0].cursors[_current_mouse_mode]);
+  mouse &m = _mouse_bindings[0];
+  int mode =  fgGetInt("/input/mice/mouse[0]/mode");
+  if (mode != m.current_mode) {
+    m.current_mode = mode;
+    if (mode >= 0 && mode < m.nModes) {
+      glutSetCursor(m.modes[mode].cursor);
     } else {
-      SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode "
-	     << _current_mouse_mode << " out of range");
+      SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode " << mode << " out of range");
       glutSetCursor(GLUT_CURSOR_INHERIT);
     }
   }
@@ -827,20 +883,47 @@ FGInput::joystick::~joystick ()
 
 
 ////////////////////////////////////////////////////////////////////////
+// Implementation of FGInput::mouse_mode
+////////////////////////////////////////////////////////////////////////
+
+FGInput::mouse_mode::mouse_mode ()
+  : cursor(GLUT_CURSOR_INHERIT),
+    constrained(false),
+    buttons(0)
+{
+}
+
+FGInput::mouse_mode::~mouse_mode ()
+{
+				// FIXME: memory leak
+//   for (int i = 0; i < FG_MOD_MAX; i++) {
+//     int j;
+//     for (j = 0; i < x_bindings[i].size(); j++)
+//       delete bindings[i][j];
+//     for (j = 0; j < y_bindings[i].size(); j++)
+//       delete bindings[i][j];
+//   }
+  delete [] buttons;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
 // Implementation of FGInput::mouse
 ////////////////////////////////////////////////////////////////////////
 
 FGInput::mouse::mouse ()
-  : nModes(0),
-    cursors(0),
-    buttons(0)
+  : nModes(1),
+    current_mode(0),
+    x(-1),
+    y(-1),
+    modes(0)
 {
 }
 
 FGInput::mouse::~mouse ()
 {
-  delete [] cursors;
-  delete [] buttons;
+  delete [] modes;
 }
 
 
@@ -911,7 +994,7 @@ GLUTmouse (int button, int updown, int x, int y)
 void
 GLUTmotion (int x, int y)
 {
-  puMouse(x, y);
+//   puMouse(x, y);
 //   glutPostRedisplay();
   current_input.doMouseMotion(x, y);
 }

@@ -123,9 +123,9 @@ public:
 
 
   /**
-   * Fire a binding with x and y positions.
+   * Fire a binding with a scaled movement (rather than absolute position).
    */
-  virtual void fire (int x, int y) const;
+  virtual void fire (double offset, double max) const;
 
 
   /**
@@ -246,7 +246,7 @@ private:
     MAX_JOYSTICK_BUTTONS = 32,
 
     MAX_MICE = 1,
-    MAX_MOUSE_BUTTONS = 3
+    MAX_MOUSE_BUTTONS = 8
   };
 
   typedef vector<FGBinding *> binding_list_t;
@@ -295,14 +295,30 @@ private:
 
 
   /**
+   * Settings for a mouse mode.
+   */
+  struct mouse_mode {
+    mouse_mode ();
+    virtual ~mouse_mode ();
+    int cursor;
+    bool constrained;
+    button * buttons;
+    binding_list_t x_bindings[FG_MOD_MAX];
+    binding_list_t y_bindings[FG_MOD_MAX];
+  };
+
+
+  /**
    * Settings for a mouse.
    */
   struct mouse {
     mouse ();
     virtual ~mouse ();
+    int x;
+    int y;
     int nModes;
-    int * cursors;
-    button * buttons;
+    int current_mode;
+    mouse_mode * modes;
   };
 
 
@@ -373,9 +389,6 @@ private:
   button _key_bindings[MAX_KEYS];
   joystick _joystick_bindings[MAX_JOYSTICKS];
   mouse _mouse_bindings[MAX_MICE];
-
-  int _current_mouse_mode;
-  int _last_mouse_mode;
 
 };
 
