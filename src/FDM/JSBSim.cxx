@@ -62,7 +62,7 @@
 
 int FGJSBsim::init( double dt ) {
 
-
+  bool result;
 
   FG_LOG( FG_FLIGHT, FG_INFO, "Starting and initializing JSBsim" );
   FG_LOG( FG_FLIGHT, FG_INFO, "  created FDMExec" );
@@ -75,12 +75,17 @@ int FGJSBsim::init( double dt ) {
 
   FDMExec.GetState()->Setdt( dt );
 
-  FDMExec.GetAircraft()->LoadAircraft( aircraft_path.str(),
+  result = FDMExec.GetAircraft()->LoadAircraft( aircraft_path.str(),
                                        engine_path.str(),
                                        current_options.get_aircraft() );
 
-  FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" <<
-          current_options.get_aircraft() );
+  if (result) {
+    FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" << current_options.get_aircraft() );
+  } else {
+    FG_LOG( FG_FLIGHT, FG_INFO, "  aircraft" << current_options.get_aircraft()
+                                << " does not exist");
+    return 0;
+  }
 
   FDMExec.GetAtmosphere()->UseInternal();
 
@@ -109,10 +114,12 @@ int FGJSBsim::init( double dt ) {
   fgic->SetRollAngleRadIC(get_Phi());
   fgic->SetPitchAngleRadIC(get_Theta());
   fgic->SetHeadingRadIC(get_Psi());
-  fgic->SetLatitudeRadIC(get_Latitude());
+//  fgic->SetLatitudeRadIC(get_Latitude());
+  fgic->SetLatitudeRadIC(get_Lat_geocentric());
   fgic->SetLongitudeRadIC(get_Longitude());
 
-  FDMExec.GetPosition()->SetRunwayRadius(scenery.cur_radius);
+  FDMExec.GetPosition()->SetRunwayRadius(scenery.cur_radius*METER_TO_FEET);
+  FDMExec.GetPosition()->SetSeaLevelRadius(get_Sea_level_radius());
 
   FG_LOG( FG_FLIGHT, FG_INFO, "  phi: " <<  get_Phi());
   FG_LOG( FG_FLIGHT, FG_INFO, "  theta: " <<  get_Theta() );
@@ -120,9 +127,9 @@ int FGJSBsim::init( double dt ) {
   FG_LOG( FG_FLIGHT, FG_INFO, "  lat: " <<  get_Latitude() );
   FG_LOG( FG_FLIGHT, FG_INFO, "  lon: " <<  get_Longitude() );
   FG_LOG( FG_FLIGHT, FG_INFO, "  alt: " <<  get_Altitude() );
-  
+
   //must check > 0, != 0 will give bad result if --notrim set
-  if(current_options.get_trim_mode() == true) {
+  if(current_options.get_trim_mode() > 0) {
     FG_LOG( FG_FLIGHT, FG_INFO, "  Starting trim..." );
     FGTrimLong *fgtrim=new FGTrimLong(&FDMExec,fgic);
     fgtrim->DoTrim();
@@ -130,8 +137,10 @@ int FGJSBsim::init( double dt ) {
     fgtrim->TrimStats();
     fgtrim->ReportState();
 
-    controls.set_elevator_trim(FDMExec.GetFCS()->GetPitchTrimCmd());
+    controls.set_elevator_trim(FDMExec.GetFCS()->GetDeCmd());
     controls.set_throttle(FGControls::ALL_ENGINES,FDMExec.GetFCS()->GetThrottleCmd(0)/100);
+    //the trimming routine only knows how to get 1 value for throttle
+
     
     delete fgtrim;
     FG_LOG( FG_FLIGHT, FG_INFO, "  Trim complete." );
@@ -185,7 +194,8 @@ int FGJSBsim::update( int multiloop ) {
 
   // Inform JSBsim of the local terrain altitude; uncommented 5/3/00
   //  FDMExec.GetPosition()->SetRunwayElevation(get_Runway_altitude()); // seems to work
-  FDMExec.GetPosition()->SetRunwayRadius(scenery.cur_radius);
+  FDMExec.GetPosition()->SetRunwayRadius(scenery.cur_radius*METER_TO_FEET);
+  FDMExec.GetPosition()->SetSeaLevelRadius(get_Sea_level_radius());
 
   FDMExec.GetAtmosphere()->SetExTemperature(get_Static_temperature());
   FDMExec.GetAtmosphere()->SetExPressure(get_Static_pressure());

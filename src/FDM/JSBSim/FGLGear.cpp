@@ -55,7 +55,7 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
   Aircraft    = Exec->GetAircraft();
   Position    = Exec->GetPosition();
   Rotation    = Exec->GetRotation();
-  
+
   WOW = false;
 }
 
@@ -72,14 +72,13 @@ FGColumnVector FGLGear::Force(void)
 {
   static FGColumnVector vForce(3);
   static FGColumnVector vLocalForce(3);
-  static FGColumnVector vLocalGear(3);
-  static FGColumnVector vWhlBodyVec(3);
-  static FGColumnVector vWhlVelVec(3);
+  static FGColumnVector vLocalGear(3);     // Vector: CG to this wheel (Local)
+  static FGColumnVector vWhlBodyVec(3);    // Vector: CG to this wheel (Body)
+  static FGColumnVector vWhlVelVec(3);     // Velocity of this wheel (Local)
 
-  vWhlBodyVec     = vXYZ - Aircraft->GetXYZcg();
+  vWhlBodyVec     = (vXYZ - Aircraft->GetXYZcg()) / 12.0;
   vWhlBodyVec(eX) = -vWhlBodyVec(eX);
   vWhlBodyVec(eZ) = -vWhlBodyVec(eZ);
-  vWhlBodyVec     = vWhlBodyVec/12.0;
 
   vLocalGear = State->GetTb2l() * vWhlBodyVec;
 
@@ -89,17 +88,19 @@ FGColumnVector FGLGear::Force(void)
 
     WOW = true;
 
-    vWhlVelVec = State->GetTb2l() * (Rotation->GetPQR() * vWhlBodyVec);
-    compressSpeed = vWhlVelVec(eZ) + Position->GetVd();
+    vWhlVelVec      =  State->GetTb2l() * (Rotation->GetPQR() * vWhlBodyVec);
+    vWhlVelVec     +=  Position->GetVel();
+    compressSpeed   =  vWhlVelVec(eZ);
 
-    vLocalForce(eZ) = min(-compressLength * kSpring - compressSpeed * bDamp, (float)0.0);
+    vWhlVelVec      = -1.0 * vWhlVelVec.Normalize();
+    vWhlVelVec(eZ)  =  0.00;
 
-    vForce = State->GetTl2b() * vLocalForce ;
+    vLocalForce(eZ) =  min(-compressLength * kSpring - compressSpeed * bDamp, (float)0.0);
+    vLocalForce(eX) =  fabs(vLocalForce(eZ) * statFCoeff) * vWhlVelVec(eX);
+    vLocalForce(eY) =  fabs(vLocalForce(eZ) * statFCoeff) * vWhlVelVec(eY);
 
-    // currently only aircraft body axis Z-force modeled
-    vMoment(eX) = vForce(eZ) * vWhlBodyVec(eY);
-    vMoment(eY) = -vForce(eZ) * vWhlBodyVec(eX);
-    vMoment(eZ) = 0.0;
+    vForce  = State->GetTl2b() * vLocalForce ;
+    vMoment = vWhlBodyVec * vForce;
 
   } else {
 

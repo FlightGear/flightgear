@@ -175,8 +175,9 @@ extern FGControls controls;
 
 
 // $Log$
-// Revision 1.10  2000/05/27 03:48:15  curt
-// 5/26/2000 updated from Jon and Tony.
+// Revision 1.11  2000/05/30 14:48:53  curt
+// 05/30/2000 updates from Jon Berdnt.  Landing gear code now is beginning to
+// work.
 //
 // Revision 1.5  2000/05/12 22:45:35  jsb
 // Removed extraneous namespace identifiers and header files
