@@ -24,6 +24,8 @@
 #include "ATCdisplay.hxx"
 #include "ATCmgr.hxx"
 
+SG_USING_STD(cout);
+
 // TowerPlaneRec
 
 TowerPlaneRec::TowerPlaneRec() :
@@ -123,7 +125,16 @@ void FGTower::Init() {
 			}
 		}
 	} else {
-		//cout << "Unable to find airport details in FGTower::Init()\n";
+		cout << "Unable to find airport details for " << ident << " in FGTower::Init()\n";
+		// Initialise ground anyway to avoid segfault later
+		ground = new FGGround(ident);
+		separateGround = false;
+		ground->Init();
+		if(display) {
+			ground->SetDisplay();
+		} else {
+			ground->SetNoDisplay();
+		}
 	}
 }
 
