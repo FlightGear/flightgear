@@ -23,7 +23,6 @@
 
 #include "AIManager.hxx"
 #include "AIBase.hxx"
-#include "AIFlightPlan.hxx"
 
 #include <string>
 SG_USING_STD(string);
@@ -67,13 +66,11 @@ public:
         void ClimbTo(double altitude);
         void TurnTo(double heading);
         void ProcessFlightPlan( double dt );
-        //double getHeading(double lat1, double lon1, double lat2, double lon2);
 
 private:
 
         bool hdg_lock;
         bool alt_lock;
-        FGAIFlightPlan *fp;
         double dt_count;  
         double dt; 
 

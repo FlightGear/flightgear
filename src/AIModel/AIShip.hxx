@@ -35,6 +35,8 @@ public:
         virtual void bind();
         virtual void unbind();
 	void update(double dt);
+        void setFlightPlan(FGAIFlightPlan* f);
+        void ProcessFlightPlan( double dt );
 
         void AccelTo(double speed);
         void PitchTo(double angle);

@@ -54,75 +54,15 @@ FGAIManager::~FGAIManager() {
 
 
 void FGAIManager::init() {
-  int rval;
   root = fgGetNode("sim/ai", true);
 
   enabled = root->getNode("enabled", true)->getBoolValue();
   if (!enabled)
       return;
 
-
   wind_from_down = fgGetNode("/environment/wind-from-down-fps", true);
-
-  for (int i = 0; i < root->nChildren(); i++) {
-    const SGPropertyNode * entry = root->getChild(i);
-
-    if (!strcmp(entry->getName(), "scenario")){
-      scenario_filename = entry->getStringValue();
-    }
-
-    if (!strcmp(entry->getName(), "entry")) {
-      if (!strcmp(entry->getStringValue("type", ""), "aircraft")) { 
-
-        rval = createAircraft( entry->getStringValue("class", ""),
-                               entry->getStringValue("path"),
-                               entry->getDoubleValue("latitude"),
-                               entry->getDoubleValue("longitude"),
-                               entry->getDoubleValue("altitude-ft"),
-                               entry->getDoubleValue("heading"),
-                               entry->getDoubleValue("speed-KTAS"),
-                               0.0, 
-                               entry->getDoubleValue("bank") );
-
-      } else if (!strcmp(entry->getStringValue("type", ""), "ship")) {
-
-        rval = createShip( entry->getStringValue("path"),
-                           entry->getDoubleValue("latitude"),
-                           entry->getDoubleValue("longitude"),
-                           entry->getDoubleValue("altitude-ft"),
-                           entry->getDoubleValue("heading"),
-                           entry->getDoubleValue("speed-KTAS"),
-                           entry->getDoubleValue("rudder") );
-
-      } else if (!strcmp(entry->getStringValue("type", ""), "ballistic")) {
-
-        rval = createBallistic( entry->getStringValue("path"),
-                                entry->getDoubleValue("latitude"),
-                                entry->getDoubleValue("longitude"),
-                                entry->getDoubleValue("altitude-ft"),
-                                entry->getDoubleValue("azimuth"),
-                                entry->getDoubleValue("elevation"),
-                                entry->getDoubleValue("speed") );
-
-      } else if (!strcmp(entry->getStringValue("type", ""), "storm")) {
-
-        rval = createStorm( entry->getStringValue("path"),
-                            entry->getDoubleValue("latitude"),
-                            entry->getDoubleValue("longitude"),
-                            entry->getDoubleValue("altitude-ft"),
-                            entry->getDoubleValue("heading"),
-                            entry->getDoubleValue("speed-KTAS") );
-
-      } else if (!strcmp(entry->getStringValue("type", ""), "thermal")) {
-
-        rval = createThermal( entry->getDoubleValue("latitude"),
-                              entry->getDoubleValue("longitude"),
-                              entry->getDoubleValue("strength-fps"),
-                              entry->getDoubleValue("diameter-ft") );
-
-      }       
-    }
-  }
+ 
+  scenario_filename = root->getNode("scenario", true)->getStringValue();
 
   if (scenario_filename != "") processScenario( scenario_filename );
   initDone = true;
@@ -214,7 +154,7 @@ void FGAIManager::freeID( int ID ) {
 
 int FGAIManager::createAircraft( string model_class, string path,
               double latitude, double longitude, double altitude,
-              double heading, double speed, double pitch, double roll ) {
+              double heading, double speed, double roll ) {
      
         FGAIAircraft* ai_plane = new FGAIAircraft(this);
         ai_list.push_back(ai_plane);
@@ -285,6 +225,19 @@ int FGAIManager::createShip( string path, double latitude, double longitude,
         ai_ship->setLongitude(longitude);
         ai_ship->setLatitude(latitude);
         ai_ship->setBank(rudder);
+        ai_ship->init();
+        ai_ship->bind();
+        return ai_ship->getID();
+}
+
+int FGAIManager::createShip( string path, FGAIFlightPlan* flightplan ) {
+
+        FGAIShip* ai_ship = new FGAIShip(this);
+        ai_list.push_back(ai_ship);
+        ai_ship->setID( assignID() );
+        ++numObjects;
+        ai_ship->setPath(path.c_str());
+        ai_ship->setFlightPlan(flightplan); 
         ai_ship->init();
         ai_ship->bind();
         return ai_ship->getID();
@@ -387,17 +340,46 @@ void FGAIManager::processThermal( FGAIThermal* thermal ) {
 
 
 void FGAIManager::processScenario( string filename ) {
-  //cout << "AIManager: creating a scenario." << endl;
   FGAIScenario* s = new FGAIScenario( filename );
+  FGAIFlightPlan* f;
+
   for (int i=0;i<s->nEntries();i++) {
     FGAIScenario::entry* en = s->getNextEntry();
+    f = 0;
     if (en) {
-      FGAIFlightPlan* f = new FGAIFlightPlan( en->flightplan );
+      if (en->flightplan != ""){
+        f = new FGAIFlightPlan( en->flightplan );
+      }  
       if (en->aitype == "aircraft"){
-        createAircraft( en->aircraft_class, en->model_path, f);
-      }
+         if (f){
+           createAircraft( en->aircraft_class, en->model_path, f );
+         } else {
+           createAircraft( en->aircraft_class, en->model_path, en->latitude,
+                           en->longitude, en->altitude, en->heading,
+                           en->speed, en->roll );
+         } 
+      } else if (en->aitype == "ship"){
+         if (f){
+           createShip( en->model_path, f );
+         } else {
+           createShip( en->model_path, en->latitude,
+                           en->longitude, en->altitude, en->heading,
+                           en->speed, en->rudder );
+         } 
+
+      } else if (en->aitype == "storm"){
+        createStorm( en->model_path, en->latitude, en->longitude,
+                     en->altitude, en->heading, en->speed ); 
+      } else if (en->aitype == "thermal"){
+        createThermal( en->latitude, en->longitude, en->strength, 
+                       en->diameter );
+      } else if (en->aitype == "ballistic"){
+        createBallistic( en->model_path, en->latitude, en->longitude,
+                         en->altitude, en->azimuth, en->elevation, en->speed );
+      }      
     }
   }
+
   delete s;
 }
 

@@ -27,6 +27,7 @@
 #include <simgear/scene/model/placement.hxx>
 
 #include <Main/fg_props.hxx>
+#include "AIFlightPlan.hxx"
 
 SG_USING_STD(string);
 
@@ -103,6 +104,7 @@ protected:
     int id;
     bool invisible;
     bool no_roll;
+    FGAIFlightPlan *fp;
 
     void Transform();
 

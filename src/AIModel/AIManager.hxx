@@ -74,7 +74,6 @@ public:
                         double altitude,    // in feet
                         double heading,     // true heading in degrees
                         double speed,       // in knots true airspeed (KTAS)    
-                        double pitch = 0,   // in degrees
                         double roll = 0 );  // in degrees
 
     int createAircraft( string model_class, // see FGAIAircraft.hxx for possible classes
@@ -87,8 +86,10 @@ public:
                         double altitude,    // in feet  (ex. for a lake!)
                         double heading,     // true heading in degrees
                         double speed,       // in knots true
-                        double rudder );    // in degrees (between 0 and 5 works best)
+                        double rudder );    // in degrees (right is positive)(0 to 5 works best)
 
+    int createShip(     string path,        // path to exterior model
+                        FGAIFlightPlan *flightplan );
 
     int createBallistic( string path,       // path to exterior model
                          double latitude,   // in degrees -90 to 90

@@ -37,6 +37,17 @@ public:
    string model_path;
    string flightplan;
    double repeat;       // in seconds
+   double latitude;     // used if no flightplan defined
+   double longitude;    // used if no flightplan defined
+   double altitude;     // used if no flightplan defined
+   double speed;        // used if no flightplan defined
+   double heading;      // used if no flightplan defined
+   double roll;         // used if no flightplan defined
+   double azimuth;      // used by ballistic objects
+   double elevation;    // used by ballistic objects
+   double rudder;       // used by ship objects 
+   double strength;     // used by thermal objects
+   double diameter;     // used by thermal objects
   } entry;
 
    FGAIScenario(string filename);

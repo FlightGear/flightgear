@@ -66,6 +66,8 @@ void FGAIShip::update(double dt) {
 
 void FGAIShip::Run(double dt) {
 
+   if (fp) ProcessFlightPlan(dt);
+
    double turn_radius_ft;
    double turn_circum_ft;
    double speed_north_deg_sec;
@@ -167,3 +169,12 @@ double FGAIShip::sign(double x) {
   if ( x < 0.0 ) { return -1.0; }
   else { return 1.0; }
 }
+
+void FGAIShip::setFlightPlan(FGAIFlightPlan* f) {
+  fp = f;
+}
+
+void FGAIShip::ProcessFlightPlan(double dt) {
+  // not implemented yet
+}
+

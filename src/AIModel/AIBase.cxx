@@ -61,6 +61,7 @@ FGAIBase::~FGAIBase() {
     // unbind();
     SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
     root->removeChild(_type_str.c_str(), index);
+    if (fp) delete fp;
 }
 
 void FGAIBase::update(double dt) {

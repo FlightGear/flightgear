@@ -64,7 +64,6 @@ FGAIAircraft::FGAIAircraft(FGAIManager* mgr) {
 
 
 FGAIAircraft::~FGAIAircraft() {
-    if (fp) delete fp;
 }
 
 
