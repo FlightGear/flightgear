@@ -49,7 +49,7 @@
 typedef double FG_VECTOR_3[3];
 
 /* This is based heavily on LaRCsim/ls_generic.h */
-struct fgFLIGHT {
+typedef struct {
 
 /*================== Mass properties and geometry values ==================*/
 
@@ -382,25 +382,32 @@ struct fgFLIGHT {
 #define FG_Y_pilot_rwy             f->d_pilot_rwy_rwy_v[1]
 #define FG_H_pilot_rwy             f->d_pilot_rwy_rwy_v[2]
 
-};
+} fgFLIGHT, *pfgFlight;
+
+
+extern fgFLIGHT cur_flight_params;
 
 
 /* General interface to the flight model routines */
 
 /* Initialize the flight model parameters */
-int fgFlightModelInit(int model, struct fgFLIGHT *f, double dt);
+int fgFlightModelInit(int model, fgFLIGHT *f, double dt);
 
 /* Run multiloop iterations of the flight model */
-int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop);
+int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop);
 
 
 #endif /* _FLIGHT_H */
 
 
 /* $Log$
-/* Revision 1.13  1998/01/24 00:04:59  curt
-/* misc. tweaks.
+/* Revision 1.14  1998/02/07 15:29:37  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.13  1998/01/24 00:04:59  curt
+ * misc. tweaks.
+ *
  * Revision 1.12  1998/01/22 02:59:32  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

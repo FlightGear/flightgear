@@ -34,15 +34,15 @@
 // And in the future (near future i hope).
 // #include <Cockpit/panel.h>
 
-struct fgCOCKPIT {
+typedef struct  {
 	int code;
 	Hptr hud;
 	// As above.
 	// PANEL *panel;
 	int status;
-};
+}fgCOCKPIT, *pfgCockpit;
 
-struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft );
+fgCOCKPIT *fgCockpitInit( fgAIRCRAFT *cur_aircraft );
 void fgCockpitUpdate( void );
 
 
@@ -50,9 +50,13 @@ void fgCockpitUpdate( void );
 
 
 /* $Log$
-/* Revision 1.5  1998/01/22 02:59:29  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.6  1998/02/07 15:29:33  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.5  1998/01/22 02:59:29  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.4  1998/01/19 19:27:01  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

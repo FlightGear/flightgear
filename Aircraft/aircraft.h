@@ -32,28 +32,36 @@
 
 
 /* Define a structure containing all the parameters for an aircraft */
-struct fgAIRCRAFT {
-    struct fgFLIGHT flight;
-    struct fgCONTROLS controls;
-};
+typedef struct{
+    fgFLIGHT   *flight;
+    fgCONTROLS *controls;
+} fgAIRCRAFT ;
 
 
 /* current_aircraft contains all the parameters of the aircraft
    currently being operated. */
-extern struct fgAIRCRAFT current_aircraft;
+extern fgAIRCRAFT current_aircraft;
+
+
+/* Initialize an Aircraft structure */
+void fgAircraftInit( void );
 
 
 /* Display various parameters to stdout */
-void fgAircraftOutputCurrent(struct fgAIRCRAFT *a);
+void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
 #endif /* _AIRCRAFT_H */
 
 
 /* $Log$
-/* Revision 1.9  1998/01/22 02:59:23  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.10  1998/02/07 15:29:32  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.9  1998/01/22 02:59:23  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.8  1998/01/19 19:26:57  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.
@@ -63,9 +71,13 @@ void fgAircraftOutputCurrent(struct fgAIRCRAFT *a);
 
 
 /* $Log$
-/* Revision 1.9  1998/01/22 02:59:23  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.10  1998/02/07 15:29:32  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.9  1998/01/22 02:59:23  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.8  1998/01/19 19:26:57  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

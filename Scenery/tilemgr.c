@@ -76,12 +76,12 @@ void fgTileMgrLoadTile( struct fgBUCKET *p, int *index) {
 /* given the current lon/lat, fill in the array of local chunks.  If
  * the chunk isn't already in the cache, then read it from disk. */
 void fgTileMgrUpdate( void ) {
-    struct fgFLIGHT *f;
+    fgFLIGHT *f;
     struct fgBUCKET p1, p2;
     static struct fgBUCKET p_last = {-1000, 0, 0, 0};
     int i, j, dw, dh;
 
-    f = &current_aircraft.flight;
+    f = current_aircraft.flight;
 
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p1);
     dw = FG_LOCAL_X / 2;
@@ -211,9 +211,13 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.12  1998/02/01 03:39:55  curt
-/* Minor tweaks.
+/* Revision 1.13  1998/02/07 15:29:46  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.12  1998/02/01 03:39:55  curt
+ * Minor tweaks.
+ *
  * Revision 1.11  1998/01/31 00:43:27  curt
  * Added MetroWorks patches from Carmen Volpe.
  *

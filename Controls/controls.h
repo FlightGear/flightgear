@@ -33,13 +33,13 @@
 
 /* Define a structure containing the control parameters */
 
-struct fgCONTROLS {
+typedef struct {
     double aileron;
     double elevator;
     double elevator_trim;
     double rudder;
     double throttle[FG_MAX_ENGINES];
-};
+} fgCONTROLS, *pfgControls;
 
 
 #define FG_Elevator     c->elevator
@@ -62,6 +62,8 @@ struct fgCONTROLS {
 */
 
 
+extern fgCONTROLS cur_control_params;
+
 void fgControlsInit( void );
 
 void fgElevMove(double amt);
@@ -80,10 +82,14 @@ void fgThrottleSet(int engine, double pos);
 
 
 /* $Log$
-/* Revision 1.10  1998/01/27 00:47:52  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.11  1998/02/07 15:29:36  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.10  1998/01/27 00:47:52  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.9  1998/01/22 02:59:31  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

@@ -86,12 +86,11 @@ void fgInitGeneral( void ) {
 void fgInitSubsystems( void ) {
     double cur_elev;
 
-    struct fgFLIGHT *f;
+    fgFLIGHT *f;
     struct fgLIGHT *l;
     struct fgTIME *t;
     struct fgVIEW *v;
 
-    f = &current_aircraft.flight;
     l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
@@ -103,6 +102,11 @@ void fgInitSubsystems( void ) {
      * The following section sets up the flight model EOM parameters and 
      * should really be read in from one or more files.
      ****************************************************************/
+
+    /* Must happen before any of the flight model or control
+     * parameters are set */
+    fgAircraftInit();
+    f = current_aircraft.flight;
 
     /* Globe Aiport, AZ */
     FG_Runway_longitude = -398391.28;
@@ -251,7 +255,7 @@ void fgInitSubsystems( void ) {
 		     FG_EVENT_READY, 120000 );
 
     /* Initialize the Cockpit subsystem */
-    if( fgCockpitInit( current_aircraft ) == NULL ) {
+    if( fgCockpitInit( &current_aircraft ) == NULL ) {
     	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Cockpit initialization!\n" );
     }
 
@@ -324,12 +328,16 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.39  1998/02/03 23:20:25  curt
-/* Lots of little tweaks to fix various consistency problems discovered by
-/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-/* passed arguments along to the real printf().  Also incorporated HUD changes
-/* by Michele America.
+/* Revision 1.40  1998/02/07 15:29:44  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.39  1998/02/03 23:20:25  curt
+ * Lots of little tweaks to fix various consistency problems discovered by
+ * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+ * passed arguments along to the real printf().  Also incorporated HUD changes
+ * by Michele America.
+ *
  * Revision 1.38  1998/02/02 20:53:58  curt
  * Incorporated Durk's changes.
  *

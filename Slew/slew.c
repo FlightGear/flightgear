@@ -44,9 +44,9 @@
 
 /* reset flight params to a specific position */
 void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
-    struct fgFLIGHT *f;
+    fgFLIGHT *f;
 
-    f = &current_aircraft.flight;
+    f = current_aircraft.flight;
 
     /*
     f->pos_x = pos_x;
@@ -72,11 +72,11 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
 
 /* update position based on inputs, positions, velocities, etc. */
 void fgSlewUpdate( void ) {
-    struct fgFLIGHT *f;
-    struct fgCONTROLS *c;
+    fgFLIGHT *f;
+    fgCONTROLS *c;
 
-    f = &current_aircraft.flight;
-    c = &current_aircraft.controls;
+    f = current_aircraft.flight;
+    c = current_aircraft.controls;
 
     /* f->Psi += ( c->aileron / 8 );
     if ( f->Psi > FG_2PI ) {
@@ -93,10 +93,14 @@ void fgSlewUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.10  1998/01/27 00:47:53  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.11  1998/02/07 15:29:39  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.10  1998/01/27 00:47:53  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.9  1998/01/19 19:27:06  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

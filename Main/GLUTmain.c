@@ -123,12 +123,12 @@ static void fgInitVisuals( void ) {
  **************************************************************************/
 
 static void fgUpdateViewParams( void ) {
-    struct fgFLIGHT *f;
+    fgFLIGHT *f;
     struct fgLIGHT *l;
     struct fgTIME *t;
     struct fgVIEW *v;
 
-    f = &current_aircraft.flight;
+    f = current_aircraft.flight;
     l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
@@ -317,12 +317,12 @@ static void fgRenderFrame( void ) {
  **************************************************************************/
 
 void fgUpdateTimeDepCalcs(int multi_loop) {
-    struct fgFLIGHT *f;
+    fgFLIGHT *f;
     struct fgTIME *t;
     struct fgVIEW *v;
     int i;
 
-    f = &current_aircraft.flight;
+    f = current_aircraft.flight;
     t = &cur_time_params;
     v = &current_view;
 
@@ -467,15 +467,15 @@ static void fgMainLoop( void ) {
     double cur_elev;
     /* double joy_x, joy_y; */
     /* int joy_b1, joy_b2; */
-    struct fgAIRCRAFT *a;
-    struct fgFLIGHT *f;
+    fgAIRCRAFT *a;
+    fgFLIGHT *f;
     struct fgTIME *t;
 
     fgPrintf( FG_ALL, FG_DEBUG, "Running Main Loop\n");
     fgPrintf( FG_ALL, FG_DEBUG, "======= ==== ====\n");
 
     a = &current_aircraft;
-    f = &a->flight;
+    f = a->flight;
     t = &cur_time_params;
 
     /* update "time" */
@@ -571,9 +571,9 @@ static void fgReshape( int width, int height ) {
  **************************************************************************/
 
 int main( int argc, char *argv[] ) {
-    struct fgFLIGHT *f;
+    fgFLIGHT *f;
 
-    f = &current_aircraft.flight;
+    f = current_aircraft.flight;
 
     printf("Flight Gear:  Version %s\n\n", VERSION);
 
@@ -647,12 +647,16 @@ int main( int argc, char *argv[] ) {
 #endif
 
 /* $Log$
-/* Revision 1.56  1998/02/03 23:20:23  curt
-/* Lots of little tweaks to fix various consistency problems discovered by
-/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-/* passed arguments along to the real printf().  Also incorporated HUD changes
-/* by Michele America.
+/* Revision 1.57  1998/02/07 15:29:40  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.56  1998/02/03 23:20:23  curt
+ * Lots of little tweaks to fix various consistency problems discovered by
+ * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+ * passed arguments along to the real printf().  Also incorporated HUD changes
+ * by Michele America.
+ *
  * Revision 1.55  1998/02/02 20:53:58  curt
  * Incorporated Durk's changes.
  *

@@ -250,7 +250,7 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 
 /* Update the time dependent variables */
 
-void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
+void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
     double gst_precise, gst_course;
 
     fgPrintf( FG_EVENT, FG_BULK, "Updating time\n");
@@ -311,9 +311,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.33  1998/02/02 20:54:04  curt
-/* Incorporated Durk's changes.
+/* Revision 1.34  1998/02/07 15:29:47  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.33  1998/02/02 20:54:04  curt
+ * Incorporated Durk's changes.
+ *
  * Revision 1.32  1998/02/01 03:39:56  curt
  * Minor tweaks.
  *

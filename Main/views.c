@@ -50,7 +50,7 @@ void fgViewInit(struct fgVIEW *v) {
 
 
 /* Update the view parameters */
-void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
+void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
@@ -69,9 +69,9 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     v->view_pos.y = v->abs_view_pos.y - scenery.center.y;
     v->view_pos.z = v->abs_view_pos.z - scenery.center.z;
 
-    printf( "View pos = %.4f, %.4f, %.4f\n", 
+    fgPrintf( FG_VIEW, FG_DEBUG, "Absolute view pos = %.4f, %.4f, %.4f\n", 
 	   v->abs_view_pos.x, v->abs_view_pos.y, v->abs_view_pos.z);
-    fgPrintf( FG_VIEW, FG_DEBUG, "View pos = %.4f, %.4f, %.4f\n", 
+    fgPrintf( FG_VIEW, FG_DEBUG, "Relative view pos = %.4f, %.4f, %.4f\n", 
 	   v->view_pos.x, v->view_pos.y, v->view_pos.z);
 
     /* make a vector to the current view position */
@@ -184,9 +184,13 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
 
 
 /* $Log$
-/* Revision 1.12  1998/01/29 00:50:28  curt
-/* Added a view record field for absolute x, y, z position.
+/* Revision 1.13  1998/02/07 15:29:45  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.12  1998/01/29 00:50:28  curt
+ * Added a view record field for absolute x, y, z position.
+ *
  * Revision 1.11  1998/01/27 00:47:58  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

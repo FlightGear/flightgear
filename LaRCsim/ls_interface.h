@@ -39,10 +39,10 @@ int fgLaRCsimInit(double dt);
 int fgLaRCsimUpdate(int multiloop);
 
 /* Convert from the fgFLIGHT struct to the LaRCsim generic_ struct */
-int fgFlight_2_LaRCsim (struct fgFLIGHT *f);
+int fgFlight_2_LaRCsim (fgFLIGHT *f);
 
 /* Convert from the LaRCsim generic_ struct to the fgFLIGHT struct */
-int fgLaRCsim_2_Flight (struct fgFLIGHT *f);
+int fgLaRCsim_2_Flight (fgFLIGHT *f);
 
 void ls_loop( SCALAR dt, int initialize );
 
@@ -51,12 +51,16 @@ void ls_loop( SCALAR dt, int initialize );
 
 
 /* $Log$
-/* Revision 1.6  1998/02/03 23:20:17  curt
-/* Lots of little tweaks to fix various consistency problems discovered by
-/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-/* passed arguments along to the real printf().  Also incorporated HUD changes
-/* by Michele America.
+/* Revision 1.7  1998/02/07 15:29:39  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.6  1998/02/03 23:20:17  curt
+ * Lots of little tweaks to fix various consistency problems discovered by
+ * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+ * passed arguments along to the real printf().  Also incorporated HUD changes
+ * by Michele America.
+ *
  * Revision 1.5  1998/01/19 19:27:05  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

@@ -58,11 +58,11 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
     xv, yv, v, r, xh, yh, zh, xg, yg, zg, xe, ye, ze,
     Ls, Lm, D, F, mpar, gclat, rho, HA, g;
   
-  struct fgAIRCRAFT *a;
-  struct fgFLIGHT *f;
+  fgAIRCRAFT *a;
+  fgFLIGHT *f;
 
   a = &current_aircraft;
-  f = &a->flight;
+  f = a->flight;
   
   /* calculate the angle between ecliptic and equatorial coordinate
    * system, in Radians */
@@ -226,9 +226,13 @@ void fgMoonRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/02/02 20:53:21  curt
-/* To version 0.29
+/* Revision 1.6  1998/02/07 15:29:32  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.5  1998/02/02 20:53:21  curt
+ * To version 0.29
+ *
  * Revision 1.4  1998/01/27 00:47:46  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

@@ -496,11 +496,11 @@ void ls_loop( SCALAR dt, int initialize ) {
 
 
 int ls_cockpit( void ) {
-    struct fgCONTROLS *c;
+    fgCONTROLS *c;
 
     sim_control_.paused = 0;
 
-    c = &current_aircraft.controls;
+    c = current_aircraft.controls;
 
     Lat_control = FG_Aileron;
     Long_control = FG_Elevator;
@@ -562,7 +562,7 @@ int fgLaRCsimUpdate(int multiloop) {
 
 
 /* Convert from the fgFLIGHT struct to the LaRCsim generic_ struct */
-int fgFlight_2_LaRCsim (struct fgFLIGHT *f) {
+int fgFlight_2_LaRCsim (fgFLIGHT *f) {
     Mass =      FG_Mass;
     I_xx =      FG_I_xx;
     I_yy =      FG_I_yy;
@@ -738,7 +738,7 @@ int fgFlight_2_LaRCsim (struct fgFLIGHT *f) {
 
 
 /* Convert from the LaRCsim generic_ struct to the fgFLIGHT struct */
-int fgLaRCsim_2_Flight (struct fgFLIGHT *f) {
+int fgLaRCsim_2_Flight (fgFLIGHT *f) {
     FG_Mass =   Mass;
     FG_I_xx =   I_xx;
     FG_I_yy =   I_yy;
@@ -915,6 +915,10 @@ int fgLaRCsim_2_Flight (struct fgFLIGHT *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.16  1998/02/07 15:29:38  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.15  1998/01/22 22:03:47  curt
  * Removed #include <sys/stat.h>
  *

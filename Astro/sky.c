@@ -248,13 +248,13 @@ void fgSkyInit( void ) {
 
 /* Draw the Sky */
 void fgSkyRender( void ) {
-    struct fgFLIGHT *f;
+    fgFLIGHT *f;
     struct fgLIGHT *l;
     struct fgVIEW *v;
     float /* inner_color[4], middle_color[4], diff, */ east_dot, dot, angle;
     int i;
 
-    f = &current_aircraft.flight;
+    f = current_aircraft.flight;
     l = &cur_light_params;
     v = &current_view;
 
@@ -353,10 +353,14 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/01/27 00:47:48  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.6  1998/02/07 15:29:32  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.5  1998/01/27 00:47:48  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.4  1998/01/26 15:54:28  curt
  * Added a "skirt" to try to help hide gaps between scenery and sky.  This will
  * have to be revisited in the future.

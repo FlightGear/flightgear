@@ -28,10 +28,13 @@
 #include <Aircraft/aircraft.h>
 
 
+fgCONTROLS cur_control_params;
+
+
 void fgControlsInit( void ) {
     int i;
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     FG_Elevator = 0.0;
     FG_Elev_Trim = 1.969572E-03;
@@ -46,8 +49,8 @@ void fgControlsInit( void ) {
 
 
 void fgElevMove(double amt) {
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     FG_Elevator += amt;
 
@@ -56,8 +59,8 @@ void fgElevMove(double amt) {
 }
 
 void fgElevSet(double pos) {
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     FG_Elevator = pos;
 
@@ -66,8 +69,8 @@ void fgElevSet(double pos) {
 }
 
 void fgElevTrimMove(double amt) {
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     FG_Elev_Trim += amt;
 
@@ -76,8 +79,8 @@ void fgElevTrimMove(double amt) {
 }
 
 void fgElevTrimSet(double pos) {
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     FG_Elev_Trim = pos;
 
@@ -86,8 +89,8 @@ void fgElevTrimSet(double pos) {
 }
 
 void fgAileronMove(double amt) {
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     FG_Aileron += amt;
 
@@ -96,8 +99,8 @@ void fgAileronMove(double amt) {
 }
 
 void fgAileronSet(double pos) {
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     FG_Aileron = pos;
 
@@ -106,8 +109,8 @@ void fgAileronSet(double pos) {
 }
 
 void fgRudderMove(double amt) {
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     FG_Rudder += amt;
 
@@ -116,8 +119,8 @@ void fgRudderMove(double amt) {
 }
 
 void fgRudderSet(double pos) {
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     FG_Rudder = pos;
 
@@ -127,8 +130,8 @@ void fgRudderSet(double pos) {
 
 void fgThrottleMove(int engine, double amt) {
     int i;
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     if ( engine == FG_Throttle_All ) {
 	for ( i = 0; i < FG_MAX_ENGINES; i++ ) {
@@ -147,8 +150,8 @@ void fgThrottleMove(int engine, double amt) {
 
 void fgThrottleSet(int engine, double pos) {
     int i;
-    struct fgCONTROLS *c;
-    c = &current_aircraft.controls;
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
 
     if ( engine == FG_Throttle_All ) {
 	for ( i = 0; i < FG_MAX_ENGINES; i++ ) {
@@ -167,10 +170,14 @@ void fgThrottleSet(int engine, double pos) {
 
 
 /* $Log$
-/* Revision 1.6  1998/01/19 19:27:02  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.7  1998/02/07 15:29:36  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.6  1998/01/19 19:27:02  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.5  1998/01/19 18:40:22  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

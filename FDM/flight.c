@@ -28,8 +28,12 @@
 #include <Flight/LaRCsim/ls_interface.h>
 #include <Main/fg_debug.h>
 
+
+fgFLIGHT cur_flight_params;
+
+
 /* Initialize the flight model parameters */
-int fgFlightModelInit(int model, struct fgFLIGHT *f, double dt) {
+int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
     int result;
 
     fgPrintf(FG_FLIGHT,FG_INFO,"Initializing flight model\n");
@@ -50,7 +54,7 @@ int fgFlightModelInit(int model, struct fgFLIGHT *f, double dt) {
 
 
 /* Run multiloop iterations of the flight model */
-int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop) {
+int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
     int result;
 
     if ( model == FG_LARCSIM ) {
@@ -68,10 +72,14 @@ int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop) {
 
 
 /* $Log$
-/* Revision 1.9  1998/01/27 00:47:53  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.10  1998/02/07 15:29:37  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.9  1998/01/27 00:47:53  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.8  1998/01/19 19:27:03  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

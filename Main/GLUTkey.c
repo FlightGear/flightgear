@@ -49,12 +49,12 @@ extern int displayInstruments;
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
-    struct fgCONTROLS *c;
+    fgCONTROLS *c;
     struct fgTIME *t;
     struct fgVIEW *v;
     struct fgWEATHER *w;
 
-    c = &current_aircraft.controls;
+    c = current_aircraft.controls;
     t = &cur_time_params;
     v = &current_view;
     w = &current_weather;
@@ -165,10 +165,10 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 /* Handle "special" keyboard events */
 void GLUTspecialkey(int k, int x, int y) {
-    struct fgCONTROLS *c;
+    fgCONTROLS *c;
     struct fgVIEW *v;
 
-    c = &current_aircraft.controls;
+    c = current_aircraft.controls;
     v = &current_view;
 
     fgPrintf( FG_INPUT, FG_DEBUG, "Special key hit = %d", k);
@@ -245,12 +245,16 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.28  1998/02/03 23:20:23  curt
-/* Lots of little tweaks to fix various consistency problems discovered by
-/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-/* passed arguments along to the real printf().  Also incorporated HUD changes
-/* by Michele America.
+/* Revision 1.29  1998/02/07 15:29:40  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.28  1998/02/03 23:20:23  curt
+ * Lots of little tweaks to fix various consistency problems discovered by
+ * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+ * passed arguments along to the real printf().  Also incorporated HUD changes
+ * by Michele America.
+ *
  * Revision 1.27  1998/01/27 00:47:55  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

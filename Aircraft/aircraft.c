@@ -32,16 +32,25 @@
 
 /* This is a record containing all the info for the aircraft currently
    being operated */
-struct fgAIRCRAFT current_aircraft;
+fgAIRCRAFT current_aircraft;
+
+
+/* Initialize an Aircraft structure */
+void fgAircraftInit( void ) {
+    fgPrintf( FG_AIRCRAFT, FG_INFO, "Initializing Aircraft structure\n" );
+
+    current_aircraft.flight = &cur_flight_params;
+    current_aircraft.controls = &cur_control_params;
+}
 
 
 /* Display various parameters to stdout */
-void fgAircraftOutputCurrent(struct fgAIRCRAFT *a) {
-    struct fgFLIGHT *f;
-    struct fgCONTROLS *c;
+void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
+    fgFLIGHT *f;
+    fgCONTROLS *c;
 
-    f = &a->flight;
-    c = &a->controls;
+    f = a->flight;
+    c = a->controls;
 
     fgPrintf( FG_FLIGHT, FG_DEBUG,
 	      "Pos = (%.2f,%.2f,%.2f)  (Phi,Theta,Psi)=(%.2f,%.2f,%.2f)\n",
@@ -55,10 +64,14 @@ void fgAircraftOutputCurrent(struct fgAIRCRAFT *a) {
 
 
 /* $Log$
-/* Revision 1.15  1998/01/27 00:47:46  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.16  1998/02/07 15:29:31  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.15  1998/01/27 00:47:46  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.14  1998/01/19 19:26:56  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

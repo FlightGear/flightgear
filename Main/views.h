@@ -85,16 +85,20 @@ extern struct fgVIEW current_view;
 void fgViewInit(struct fgVIEW *v);
 
 /* Update the view parameters */
-void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l);
+void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l);
 
 
 #endif /* _VIEWS_H */
 
 
 /* $Log$
-/* Revision 1.9  1998/01/29 00:50:29  curt
-/* Added a view record field for absolute x, y, z position.
+/* Revision 1.10  1998/02/07 15:29:45  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.9  1998/01/29 00:50:29  curt
+ * Added a view record field for absolute x, y, z position.
+ *
  * Revision 1.8  1998/01/27 00:47:58  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

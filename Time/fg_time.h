@@ -92,17 +92,21 @@ extern struct fgLIGHT cur_light_params;
 void fgTimeInit(struct fgTIME *t);
 
 /* Update the time dependent variables */
-void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t);
+void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t);
 
 
 #endif /* _FG_TIME_H */
 
 
 /* $Log$
-/* Revision 1.15  1998/01/27 00:48:06  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.16  1998/02/07 15:29:47  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.15  1998/01/27 00:48:06  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.14  1998/01/22 02:59:43  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

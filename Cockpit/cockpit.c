@@ -22,7 +22,7 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
- 
+
 
 #include <GL/glut.h>
 
@@ -41,41 +41,42 @@
 
 #include <Main/fg_debug.h>
 
-// #define DEBUG
+// This is a structure that contains all data related to
+// cockpit/panel/hud system
 
-/* This is a structure that contains all data related to cockpit/panel/hud system */
-static struct fgCOCKPIT *aircraft_cockpit;
+static fgCOCKPIT *aircraft_cockpit;
 
-struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft )
+fgCOCKPIT *fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 {
-	struct fgCOCKPIT *cockpit;
+	fgCOCKPIT *cockpit;
 	Hptr hud;
-	
+
 	fgPrintf( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem\n");
 
-	cockpit = (struct fgCOCKPIT *)calloc(sizeof(struct fgCOCKPIT),1);
+	cockpit = (fgCOCKPIT *)calloc(sizeof(fgCOCKPIT),1);
 	if( cockpit == NULL )
 		return( NULL );
-		
+
 	cockpit->code = 1;	/* It will be aircraft dependent */
 	cockpit->status = 0;
-	
-	/* If aircraft has HUD */
-	hud = fgHUDInit( cur_aircraft, 3 );
+
+	// If aircraft has HUD
+	hud = fgHUDInit( cur_aircraft );  // Color no longer in parameter list
 	if( hud == NULL )
 		return( NULL );
-	
+
 	cockpit->hud = hud;
-	
+
 	aircraft_cockpit = cockpit;
-	
+
 	fgPrintf( FG_COCKPIT, FG_INFO,
-		  "  Code %d  Status %d\n", cockpit->hud->code, cockpit->hud->status );
-		
+		  "  Code %d  Status %d\n", 
+		  cockpit->hud->code, cockpit->hud->status );
+
 	return( cockpit );
 }
 
-struct fgCOCKPIT *fgCockpitAddHUD( struct fgCOCKPIT *cockpit, struct HUD *hud )
+fgCOCKPIT *fgCockpitAddHUD( fgCOCKPIT *cockpit, HUD *hud )
 {
 	cockpit->hud = hud;
 	return(cockpit);
@@ -94,12 +95,16 @@ void fgCockpitUpdate( void )
 
 
 /* $Log$
-/* Revision 1.9  1998/02/03 23:20:14  curt
-/* Lots of little tweaks to fix various consistency problems discovered by
-/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-/* passed arguments along to the real printf().  Also incorporated HUD changes
-/* by Michele America.
+/* Revision 1.10  1998/02/07 15:29:33  curt
+/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.9  1998/02/03 23:20:14  curt
+ * Lots of little tweaks to fix various consistency problems discovered by
+ * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+ * passed arguments along to the real printf().  Also incorporated HUD changes
+ * by Michele America.
+ *
  * Revision 1.8  1998/01/31 00:43:03  curt
  * Added MetroWorks patches from Carmen Volpe.
  *

@@ -65,6 +65,7 @@ static struct {
   { "FG_GENERAL", 0x00000080 },
   { "FG_MATH",    0x00000100 },
   { "FG_EVENT",   0x00000200 },
+  { "FG_AIRCRAFT",0x00000400 },
 
   /* Do not edit below here, last entry should be null */
   { "FG_ALL",     0xFFFFFFFF },
