@@ -64,14 +64,14 @@ static const struct {
 
 FGSound::FGSound()
   : _sample(NULL),
-    _active(false),
     _condition(NULL),
     _property(NULL),
-    _dt_play(0.0),
-    _dt_stop(0.0),
-    _prev_value(0),
+    _active(false),
     _name(""),
-    _mode(FGSound::ONCE)    
+    _mode(FGSound::ONCE),
+    _prev_value(0),
+    _dt_play(0.0),
+    _dt_stop(0.0)
 {
 }
 
