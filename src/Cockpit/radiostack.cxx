@@ -85,6 +85,8 @@ FGRadioStack::~FGRadioStack()
 void
 FGRadioStack::init ()
 {
+    morse.init();
+
     search();
     update();
 
@@ -104,6 +106,12 @@ FGRadioStack::bind ()
     fgTie("/radios/nav1/radials/selected", this,
 	  &FGRadioStack::get_nav1_sel_radial,
 	  &FGRadioStack::set_nav1_sel_radial);
+    fgTie("/radios/nav1/on", this,
+	  &FGRadioStack::get_nav1_on_btn,
+	  &FGRadioStack::set_nav1_on_btn);
+    fgTie("/radios/nav1/ident", this,
+	  &FGRadioStack::get_nav1_ident_btn,
+	  &FGRadioStack::set_nav1_ident_btn);
 
 				// Radio outputs
     fgTie("/radios/nav1/radials/actual", this, &FGRadioStack::get_nav1_radial);
@@ -126,6 +134,12 @@ FGRadioStack::bind ()
     fgTie("/radios/nav2/radials/selected", this,
 	  &FGRadioStack::get_nav2_sel_radial,
 	  &FGRadioStack::set_nav2_sel_radial);
+    fgTie("/radios/nav2/on", this,
+	  &FGRadioStack::get_nav2_on_btn,
+	  &FGRadioStack::set_nav2_on_btn);
+    fgTie("/radios/nav2/ident", this,
+	  &FGRadioStack::get_nav2_ident_btn,
+	  &FGRadioStack::set_nav2_ident_btn);
 
 				// Radio outputs
     fgTie("/radios/nav2/radials/actual", this, &FGRadioStack::get_nav2_radial);
@@ -156,6 +170,8 @@ FGRadioStack::unbind ()
     fgUntie("/radios/nav1/frequencies/standby");
     fgUntie("/radios/nav1/radials/actual");
     fgUntie("/radios/nav1/radials/selected");
+    fgUntie("/radios/nav1/on");
+    fgUntie("/radios/nav1/ident");
     fgUntie("/radios/nav1/to-flag");
     fgUntie("/radios/nav1/from-flag");
     fgUntie("/radios/nav1/in-range");
@@ -168,6 +184,8 @@ FGRadioStack::unbind ()
     fgUntie("/radios/nav2/frequencies/standby");
     fgUntie("/radios/nav2/radials/actual");
     fgUntie("/radios/nav2/radials/selected");
+    fgUntie("/radios/nav2/on");
+    fgUntie("/radios/nav2/ident");
     fgUntie("/radios/nav2/to-flag");
     fgUntie("/radios/nav2/from-flag");
     fgUntie("/radios/nav2/in-range");
@@ -181,7 +199,7 @@ FGRadioStack::unbind ()
     fgUntie("/radios/adf/rotation");
 }
 
-// Search the database for the current frequencies given current location
+// Update the various nav values based on position and valid tuned in navs
 void 
 FGRadioStack::update() 
 {
@@ -235,9 +253,20 @@ FGRadioStack::update()
 	} else {
 	    nav1_radial = nav1_sel_radial;
 	}
+
+	// play station ident via audio system if on + ident,
+	// otherwise turn it off
+	if ( nav1_on_btn && nav1_ident_btn ) {
+	    if ( ! globals->get_soundmgr()->is_playing( "nav1-ident" ) ) {
+		globals->get_soundmgr()->play_once( "nav1-ident" );
+	    }
+	} else {
+	    globals->get_soundmgr()->stop( "nav1-ident" );
+	}
     } else {
 	nav1_inrange = false;
 	nav1_dme_dist = 0.0;
+	globals->get_soundmgr()->stop( "nav1-ident" );
 	// cout << "not picking up vor. :-(" << endl;
     }
 
@@ -311,7 +340,7 @@ FGRadioStack::update()
 
 
 // Update current nav/adf radio stations based on current postition
-void FGRadioStack::search () 
+void FGRadioStack::search() 
 {
     double lon = longitudeVal->getDoubleValue() * DEG_TO_RAD;
     double lat = latitudeVal->getDoubleValue() * DEG_TO_RAD;
@@ -321,105 +350,145 @@ void FGRadioStack::search ()
     FGILS ils;
     FGNav nav;
 
-    if ( current_ilslist->query( lon, lat, elev, nav1_freq, &ils ) ) {
-	nav1_valid = true;
-	nav1_loc = true;
-	nav1_has_dme = ils.get_has_dme();
-	nav1_has_gs = ils.get_has_gs();
+    static string last_nav1_ident = "";
+    static string last_nav2_ident = "";
 
-	nav1_loclon = ils.get_loclon();
-	nav1_loclat = ils.get_loclat();
-	nav1_gslon = ils.get_gslon();
-	nav1_gslat = ils.get_gslat();
-	nav1_dmelon = ils.get_dmelon();
-	nav1_dmelat = ils.get_dmelat();
-	nav1_elev = ils.get_gselev();
-	nav1_magvar = 0;
-	nav1_effective_range = FG_ILS_DEFAULT_RANGE;
-	nav1_target_gs = ils.get_gsangle();
-	nav1_radial = ils.get_locheading();
-	while ( nav1_radial <   0.0 ) { nav1_radial += 360.0; }
-	while ( nav1_radial > 360.0 ) { nav1_radial -= 360.0; }
-	nav1_x = ils.get_x();
-	nav1_y = ils.get_y();
-	nav1_z = ils.get_z();
-	nav1_gs_x = ils.get_gs_x();
-	nav1_gs_y = ils.get_gs_y();
-	nav1_gs_z = ils.get_gs_z();
-	nav1_dme_x = ils.get_dme_x();
-	nav1_dme_y = ils.get_dme_y();
-	nav1_dme_z = ils.get_dme_z();
-	// cout << "Found an ils station in range" << endl;
-	// cout << " id = " << ils.get_locident() << endl;
+    if ( current_ilslist->query( lon, lat, elev, nav1_freq, &ils ) ) {
+	nav1_ident = ils.get_locident();
+	if ( last_nav1_ident != nav1_ident ) {
+	    last_nav1_ident = nav1_ident;
+	    nav1_valid = true;
+	    nav1_loc = true;
+	    nav1_has_dme = ils.get_has_dme();
+	    nav1_has_gs = ils.get_has_gs();
+
+	    nav1_loclon = ils.get_loclon();
+	    nav1_loclat = ils.get_loclat();
+	    nav1_gslon = ils.get_gslon();
+	    nav1_gslat = ils.get_gslat();
+	    nav1_dmelon = ils.get_dmelon();
+	    nav1_dmelat = ils.get_dmelat();
+	    nav1_elev = ils.get_gselev();
+	    nav1_magvar = 0;
+	    nav1_effective_range = FG_ILS_DEFAULT_RANGE;
+	    nav1_target_gs = ils.get_gsangle();
+	    nav1_radial = ils.get_locheading();
+	    while ( nav1_radial <   0.0 ) { nav1_radial += 360.0; }
+	    while ( nav1_radial > 360.0 ) { nav1_radial -= 360.0; }
+	    nav1_x = ils.get_x();
+	    nav1_y = ils.get_y();
+	    nav1_z = ils.get_z();
+	    nav1_gs_x = ils.get_gs_x();
+	    nav1_gs_y = ils.get_gs_y();
+	    nav1_gs_z = ils.get_gs_z();
+	    nav1_dme_x = ils.get_dme_x();
+	    nav1_dme_y = ils.get_dme_y();
+	    nav1_dme_z = ils.get_dme_z();
+
+	    if ( globals->get_soundmgr()->exists( "nav1-ident" ) ) {
+		globals->get_soundmgr()->remove( "nav1-ident" );
+	    }
+	    FGSimpleSound *sound = morse.make_ident( nav1_ident );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, "nav1-ident" );
+
+	    // cout << "Found an ils station in range" << endl;
+	    // cout << " id = " << ils.get_locident() << endl;
+	}
     } else if ( current_navlist->query( lon, lat, elev, nav1_freq, &nav ) ) {
-	nav1_valid = true;
-	nav1_loc = false;
-	nav1_has_dme = nav.get_has_dme();
-	nav1_has_gs = false;
-	nav1_loclon = nav.get_lon();
-	nav1_loclat = nav.get_lat();
-	nav1_elev = nav.get_elev();
-	nav1_magvar = nav.get_magvar();
-	nav1_effective_range = kludgeRange(nav1_elev, elev, nav.get_range());
-	nav1_target_gs = 0.0;
-	nav1_radial = nav1_sel_radial;
-	nav1_x = nav1_dme_x = nav.get_x();
-	nav1_y = nav1_dme_y = nav.get_y();
-	nav1_z = nav1_dme_z = nav.get_z();
-	// cout << "Found a vor station in range" << endl;
-	// cout << " id = " << nav.get_ident() << endl;
+	nav1_ident = nav.get_ident();
+	if ( last_nav1_ident != nav1_ident ) {
+	    last_nav1_ident = nav1_ident;
+	    nav1_valid = true;
+	    nav1_loc = false;
+	    nav1_has_dme = nav.get_has_dme();
+	    nav1_has_gs = false;
+	    nav1_loclon = nav.get_lon();
+	    nav1_loclat = nav.get_lat();
+	    nav1_elev = nav.get_elev();
+	    nav1_magvar = nav.get_magvar();
+	    nav1_effective_range
+		= kludgeRange(nav1_elev, elev, nav.get_range());
+	    nav1_target_gs = 0.0;
+	    nav1_radial = nav1_sel_radial;
+	    nav1_x = nav1_dme_x = nav.get_x();
+	    nav1_y = nav1_dme_y = nav.get_y();
+	    nav1_z = nav1_dme_z = nav.get_z();
+
+	    if ( globals->get_soundmgr()->exists( "nav1-ident" ) ) {
+		globals->get_soundmgr()->remove( "nav1-ident" );
+	    }
+	    FGSimpleSound *sound = morse.make_ident( nav1_ident );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, "nav1-ident" );
+
+	    // cout << "Found a vor station in range" << endl;
+	    // cout << " id = " << nav.get_ident() << endl;
+	}
     } else {
 	nav1_valid = false;
+	nav1_ident = "";
 	nav1_radial = 0;
 	nav1_dme_dist = 0;
+	globals->get_soundmgr()->remove( "nav1-ident" );
 	// cout << "not picking up vor1. :-(" << endl;
     }
 
     if ( current_ilslist->query( lon, lat, elev, nav2_freq, &ils ) ) {
-	nav2_valid = true;
-	nav2_loc = true;
-	nav2_has_dme = ils.get_has_dme();
-	nav2_has_gs = ils.get_has_gs();
+	nav2_ident = ils.get_locident();
+	if ( last_nav2_ident != nav2_ident ) {
+	    last_nav2_ident = nav2_ident;
+	    nav2_valid = true;
+	    nav2_loc = true;
+	    nav2_has_dme = ils.get_has_dme();
+	    nav2_has_gs = ils.get_has_gs();
 
-	nav2_loclon = ils.get_loclon();
-	nav2_loclat = ils.get_loclat();
-	nav2_elev = ils.get_gselev();
-	nav2_magvar = 0;
-	nav2_effective_range = FG_ILS_DEFAULT_RANGE;
-	nav2_target_gs = ils.get_gsangle();
-	nav2_radial = ils.get_locheading();
-	while ( nav2_radial <   0.0 ) { nav2_radial += 360.0; }
-	while ( nav2_radial > 360.0 ) { nav2_radial -= 360.0; }
-	nav2_x = ils.get_x();
-	nav2_y = ils.get_y();
-	nav2_z = ils.get_z();
-	nav2_gs_x = ils.get_gs_x();
-	nav2_gs_y = ils.get_gs_y();
-	nav2_gs_z = ils.get_gs_z();
-	nav2_dme_x = ils.get_dme_x();
-	nav2_dme_y = ils.get_dme_y();
-	nav2_dme_z = ils.get_dme_z();
-	// cout << "Found an ils station in range" << endl;
-	// cout << " id = " << ils.get_locident() << endl;
+	    nav2_loclon = ils.get_loclon();
+	    nav2_loclat = ils.get_loclat();
+	    nav2_elev = ils.get_gselev();
+	    nav2_magvar = 0;
+	    nav2_effective_range = FG_ILS_DEFAULT_RANGE;
+	    nav2_target_gs = ils.get_gsangle();
+	    nav2_radial = ils.get_locheading();
+	    while ( nav2_radial <   0.0 ) { nav2_radial += 360.0; }
+	    while ( nav2_radial > 360.0 ) { nav2_radial -= 360.0; }
+	    nav2_x = ils.get_x();
+	    nav2_y = ils.get_y();
+	    nav2_z = ils.get_z();
+	    nav2_gs_x = ils.get_gs_x();
+	    nav2_gs_y = ils.get_gs_y();
+	    nav2_gs_z = ils.get_gs_z();
+	    nav2_dme_x = ils.get_dme_x();
+	    nav2_dme_y = ils.get_dme_y();
+	    nav2_dme_z = ils.get_dme_z();
+	    // cout << "Found an ils station in range" << endl;
+	    // cout << " id = " << ils.get_locident() << endl;
+	}
     } else if ( current_navlist->query( lon, lat, elev, nav2_freq, &nav ) ) {
-	nav2_valid = true;
-	nav2_loc = false;
-	nav2_has_dme = nav.get_has_dme();
-	nav2_has_dme = false;
-	nav2_loclon = nav.get_lon();
-	nav2_loclat = nav.get_lat();
-	nav2_elev = nav.get_elev();
-	nav2_magvar = nav.get_magvar();
-	nav2_effective_range = kludgeRange(nav2_elev, elev, nav.get_range());
-	nav2_target_gs = 0.0;
-	nav2_radial = nav2_sel_radial;
-	nav2_x = nav2_dme_x = nav.get_x();
-	nav2_y = nav2_dme_y = nav.get_y();
-	nav2_z = nav2_dme_z = nav.get_z();
-	// cout << "Found a vor station in range" << endl;
-	// cout << " id = " << nav.get_ident() << endl;
+	nav2_ident = nav.get_ident();
+	if ( last_nav2_ident != nav2_ident ) {
+	    last_nav2_ident = nav2_ident;
+	    nav2_valid = true;
+	    nav2_loc = false;
+	    nav2_has_dme = nav.get_has_dme();
+	    nav2_has_dme = false;
+	    nav2_loclon = nav.get_lon();
+	    nav2_loclat = nav.get_lat();
+	    nav2_elev = nav.get_elev();
+	    nav2_magvar = nav.get_magvar();
+	    nav2_effective_range
+		= kludgeRange(nav2_elev, elev, nav.get_range());
+	    nav2_target_gs = 0.0;
+	    nav2_radial = nav2_sel_radial;
+	    nav2_x = nav2_dme_x = nav.get_x();
+	    nav2_y = nav2_dme_y = nav.get_y();
+	    nav2_z = nav2_dme_z = nav.get_z();
+	    // cout << "Found a vor station in range" << endl;
+	    // cout << " id = " << nav.get_ident() << endl;
+	}
     } else {
 	nav2_valid = false;
+	nav2_ident = "";
 	nav2_radial = 0;
 	nav2_dme_dist = 0;
 	// cout << "not picking up vor2. :-(" << endl;

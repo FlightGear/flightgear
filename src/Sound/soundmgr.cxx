@@ -118,11 +118,57 @@ bool FGSoundMgr::update() {
 }
 
 
-// add a sound effect
+// add a sound effect, return true if successful
 bool FGSoundMgr::add( FGSimpleSound *sound, const string& refname  ) {
     sounds[refname] = sound;
 
     return true;
+}
+
+
+// remove a sound effect, return true if successful
+bool FGSoundMgr::remove( const string& refname ) {
+    sound_map_iterator it = sounds.find( refname );
+    if ( it != sounds.end() ) {
+	// first stop the sound from playing (so we don't bomb the
+	// audio scheduler)
+	FGSimpleSound *sample = it->second;
+
+	cout << "Playing "
+	     << sample->get_sample()->getPlayCount() << " instances!" << endl;
+
+	audio_sched->stopSample( sample->get_sample() );
+	audio_sched->addSampleEnvelope( sample->get_sample(), 0, 0, 
+					NULL,
+					SL_PITCH_ENVELOPE );
+	audio_sched->addSampleEnvelope( sample->get_sample(), 0, 1, 
+					NULL,
+					SL_VOLUME_ENVELOPE );
+
+	// must call audio_sched->update() after stopping the sound
+	// but before deleting it.
+	audio_sched -> update();
+	cout << "Still playing "
+	     << sample->get_sample()->getPlayCount() << " instances!" << endl;
+
+	delete sample;
+        sounds.erase( it );
+
+	return true;
+   } else {
+	return false;
+    }
+}
+
+
+// return true of the specified sound exists in the sound manager system
+bool FGSoundMgr::exists( const string& refname ) {
+    sound_map_iterator it = sounds.find( refname );
+    if ( it != sounds.end() ) {
+	return true;
+   } else {
+	return false;
+    }
 }
 
 
@@ -152,6 +198,7 @@ bool FGSoundMgr::FGSoundMgr::play_once( const string& refname ) {
     sound_map_iterator it = sounds.find( refname );
     if ( it != sounds.end() ) {
 	FGSimpleSound *sample = it->second;
+	audio_sched->stopSample( sample->get_sample() );
 	audio_sched->playSample( sample->get_sample() );
 	audio_sched->addSampleEnvelope( sample->get_sample(), 0, 0, 
 					sample->get_pitch_envelope(),
@@ -160,6 +207,32 @@ bool FGSoundMgr::FGSoundMgr::play_once( const string& refname ) {
 					sample->get_volume_envelope(),
 					SL_VOLUME_ENVELOPE );
 	
+	return true;
+    } else {
+	return false;
+    }
+}
+
+
+// return true of the specified sound is currently being played
+bool FGSoundMgr::is_playing( const string& refname ) {
+    sound_map_iterator it = sounds.find( refname );
+    if ( it != sounds.end() ) {
+	FGSimpleSound *sample = it->second;
+	return (sample->get_sample()->getPlayCount() > 0 );
+	return true;
+    } else {
+	return false;
+    }
+}
+
+
+// immediate stop playing the sound
+bool FGSoundMgr::stop( const string& refname ) {
+    sound_map_iterator it = sounds.find( refname );
+    if ( it != sounds.end() ) {
+	FGSimpleSound *sample = it->second;
+	audio_sched->stopSample( sample->get_sample() );
 	return true;
     } else {
 	return false;

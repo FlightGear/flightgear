@@ -100,8 +100,14 @@ public:
     // is audio working?
     inline bool is_working() const { return !audio_sched->not_working(); }
 
-    // add a sound effect, return the index of the sound
+    // add a sound effect, return true if successful
     bool add( FGSimpleSound *sound, const string& refname );
+
+    // remove a sound effect, return true if successful
+    bool remove( const string& refname );
+
+    // return true of the specified sound exists in the sound manager system
+    bool exists( const string& refname );
 
     // tell the scheduler to play the indexed sample in a continuous
     // loop
@@ -109,6 +115,12 @@ public:
 
     // tell the scheduler to play the indexed sample once
     bool play_once( const string& refname );
+
+    // return true of the specified sound is currently being played
+    bool is_playing( const string& refname );
+
+    // immediate stop playing the sound
+    bool stop( const string& refname );
 };
 
 

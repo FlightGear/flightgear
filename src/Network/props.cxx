@@ -155,7 +155,8 @@ bool FGProps::process_command( const char *cmd ) {
 	} else {
 	    SGPropertyNode *child = node->getNode(tokens[1]);
 	    if ( child ) {
-		path = child->getPath();
+		node = child;
+		path = node->getPath();
 	    } else {
 		tokens[1] += " Not Found\n";
 		io->writestring( tokens[1].c_str() );

@@ -97,14 +97,24 @@ static const int COUNT_SIZE = BYTES_PER_SECOND * BEAT_LENGTH / 1000;
 static const int DIT_SIZE = 2 * COUNT_SIZE;   // 2 counts
 static const int DAH_SIZE = 4 * COUNT_SIZE;   // 4 counts
 static const int SPACE_SIZE = 3 * COUNT_SIZE; // 3 counts
-static const int FREQUENCY = 1020;	 // AIM 1-1-7 (f) specified in Hz
+static const int LO_FREQUENCY = 1020;	 // AIM 1-1-7 (f) specified in Hz
+static const int HI_FREQUENCY = 1350;	 // AIM 1-1-7 (f) specified in Hz
 
 // manages everything we need to know for an individual sound sample
 class FGMorse {
 
-    unsigned char dit[ DIT_SIZE ] ;
-    unsigned char dah[ DAH_SIZE ] ;
+private:
+
+    unsigned char hi_dit[ DIT_SIZE ] ;
+    unsigned char lo_dit[ DIT_SIZE ] ;
+    unsigned char hi_dah[ DAH_SIZE ] ;
+    unsigned char lo_dah[ DAH_SIZE ] ;
     unsigned char space[ SPACE_SIZE ] ;
+
+    unsigned char cust_dit[ DIT_SIZE ] ;
+    unsigned char cust_dah[ DAH_SIZE ] ;
+
+    bool cust_init( const int freq );
 
 public:
 
@@ -115,7 +125,8 @@ public:
     bool init();
 
     // make a FGSimpleSound morse code transmission for the specified string
-    FGSimpleSound *make_ident( const string& id );
+    FGSimpleSound *make_ident( const string& id,
+			       const int freq = LO_FREQUENCY );
 };
 
 

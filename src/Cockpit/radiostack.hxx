@@ -32,11 +32,12 @@
 
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
-
+#include <Sound/morse.hxx>
 
 
 class FGRadioStack : public FGSubsystem
 {
+    FGMorse morse;
 
     SGValue * latitudeVal;
     SGValue * longitudeVal;
@@ -44,6 +45,7 @@ class FGRadioStack : public FGSubsystem
 
     bool need_update;
 
+    string nav1_ident;
     bool nav1_valid;
     bool nav1_inrange;
     bool nav1_has_dme;
@@ -76,7 +78,10 @@ class FGRadioStack : public FGSubsystem
     double nav1_heading;
     double nav1_target_gs;
     double nav1_magvar;
+    bool nav1_on_btn;
+    bool nav1_ident_btn;
 
+    string nav2_ident;
     bool nav2_valid;
     bool nav2_inrange;
     bool nav2_has_dme;
@@ -109,6 +114,8 @@ class FGRadioStack : public FGSubsystem
     double nav2_heading;
     double nav2_target_gs;
     double nav2_magvar;
+    bool nav2_on_btn;
+    bool nav2_ident_btn;
 
     bool adf_valid;
     bool adf_inrange;
@@ -146,6 +153,8 @@ public:
     inline void set_nav1_sel_radial( double radial ) {
 	nav1_sel_radial = radial; need_update = true;
     }
+    inline void set_nav1_on_btn( bool val ) { nav1_on_btn = val; }
+    inline void set_nav1_ident_btn( bool val ) { nav1_ident_btn = val; }
 
     // NAV2 Setters
     inline void set_nav2_freq( double freq ) {
@@ -155,6 +164,8 @@ public:
     inline void set_nav2_sel_radial( double radial ) {
 	nav2_sel_radial = radial; need_update = true;
     }
+    inline void set_nav2_on_btn( bool val ) { nav2_on_btn = val; }
+    inline void set_nav2_ident_btn( bool val ) { nav2_ident_btn = val; }
 
     // ADF Setters
     inline void set_adf_freq( double freq ) {
@@ -205,6 +216,8 @@ public:
     inline double get_nav1_magvar() const { return nav1_magvar; }
     double get_nav1_heading_needle_deflection() const;
     double get_nav1_gs_needle_deflection() const;
+    inline bool get_nav1_on_btn() const { return nav1_on_btn; }
+    inline bool get_nav1_ident_btn() const { return nav1_ident_btn; }
 
     inline bool get_nav2_inrange() const { return nav2_inrange; }
     bool get_nav2_to_flag () const;
@@ -231,6 +244,8 @@ public:
     inline double get_nav2_magvar() const { return nav2_magvar; }
     double get_nav2_heading_needle_deflection() const;
     double get_nav2_gs_needle_deflection() const;
+    inline bool get_nav2_on_btn() const { return nav2_on_btn; }
+    inline bool get_nav2_ident_btn() const { return nav2_ident_btn; }
 
     inline bool get_adf_inrange() const { return adf_inrange; }
     inline double get_adf_lon() const { return adf_lon; }

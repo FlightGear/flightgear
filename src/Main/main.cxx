@@ -1067,10 +1067,10 @@ static void fgMainLoop( void ) {
 	         << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
 	         << endl; */
 
-	    double volume = 0.3 + mp_factor;
+	    double volume = 0.15 + mp_factor / 2.0;
 
-	    if ( volume < 0.3 ) { volume = 0.3; }
-	    if ( volume > 1.0 ) { volume = 1.0; }
+	    if ( volume < 0.15 ) { volume = 0.15; }
+	    if ( volume > 0.5 ) { volume = 0.5; }
 	    // cout << "volume = " << volume << endl;
 
 	    s1->set_pitch( pitch );
@@ -1183,7 +1183,8 @@ static void fgIdleFunction ( void ) {
 	if ( fgGetBool("/sim/sound") ) {
 	    globals->get_soundmgr()->init();
 
-	    s1 = new FGSimpleSound( "Sounds/wasp.wav" );
+	    s1 = new FGSimpleSound( fgGetString("/sim/sounds/engine",
+						"Sounds/wasp.wav") );
 	    globals->get_soundmgr()->add( s1, "engine loop" );
 	    globals->get_soundmgr()->play_looped( "engine loop" );
 	    FG_LOG( FG_GENERAL, FG_INFO,
@@ -1192,11 +1193,11 @@ static void fgIdleFunction ( void ) {
 		    << "  Stereo = " << s1->get_sample()->getStereo() );
 
 	    // s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
-	    // s2->set_volume( 2.0 );
-	    // FGMorse mmm;
-	    // mmm.init();
-	    // s2 = mmm.make_ident( "JLI" );
-	    // globals->get_soundmgr()->add( s2, "flaps" );
+	    FGMorse mmm;
+	    mmm.init();
+	    s2 = mmm.make_ident( "JLI" );
+	    s2->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( s2, "flaps" );
 	}
 #endif
 

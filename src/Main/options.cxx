@@ -490,7 +490,7 @@ static bool
 parse_flightplan(const string& arg)
 {
     fg_gzifstream infile(arg.c_str());
-    if (!infile) {
+    if ( !infile.is_open() ) {
 	return false;
     }
     while ( true ) {
@@ -867,8 +867,8 @@ parse_option (const string& arg)
 	parse_wp( arg.substr( 5 ) );
     } else if ( arg.find( "--flight-plan=") == 0) {
 	parse_flightplan ( arg.substr (14) );
-    } else if ( arg.find( "--file=" ) == 0 ) {
-        string file = arg.substr(7);
+    } else if ( arg.find( "--config=" ) == 0 ) {
+        string file = arg.substr(9);
         if (!readProperties(file, globals->get_props())) {
 	  FG_LOG(FG_IO, FG_ALERT,
 		 "--config: failed to read properties from " << file);
