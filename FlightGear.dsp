@@ -377,6 +377,66 @@ SOURCE=.\src\ATC\approachlist.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\ATC\ground.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_ATC"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_ATC"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\ATC\ground.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_ATC"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_ATC"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\ATC\groundlist.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_ATC"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_ATC"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\ATC\groundlist.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_ATC"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_ATC"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\ATC\ATCdisplay.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -393,6 +453,36 @@ SOURCE=.\src\ATC\ATCdisplay.hxx
 # Begin Source File
 
 SOURCE=.\src\ATC\ATCdisplay.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_ATC"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_ATC"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\ATC\ATCVoice.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_ATC"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_ATC"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\ATC\ATCVoice.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -3658,6 +3748,21 @@ SOURCE=.\src\FDM\LaRCsim\ls_interface.h
 # Begin Source File
 
 SOURCE=.\src\FDM\LaRCsim\uiuc_getwind.c
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\uiuc_getwind.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
