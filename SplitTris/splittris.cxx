@@ -36,7 +36,6 @@
 
 #include <Include/fg_constants.h>
 #include <Bucket/bucketutils.h>
-
 #include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
@@ -612,6 +611,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.5  1998/10/20 15:50:33  curt
+// whitespace tweak.
+//
 // Revision 1.4  1998/10/18 01:17:27  curt
 // Point3D tweaks.
 //
