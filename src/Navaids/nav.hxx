@@ -47,7 +47,7 @@ class FGNav {
 
     char type;
     double lon, lat;
-    double elev;
+    double elev_ft;
     double x, y, z;
     int freq;
     int range;
@@ -68,7 +68,7 @@ public:
     inline char get_type() const { return type; }
     inline double get_lon() const { return lon; }
     inline double get_lat() const { return lat; }
-    inline double get_elev() const { return elev; }
+    inline double get_elev_ft() const { return elev_ft; }
     inline double get_x() const { return x; }
     inline double get_y() const { return y; }
     inline double get_z() const { return z; }
@@ -87,7 +87,7 @@ inline
 FGNav::FGNav(void) :
     type(0),
     lon(0.0), lat(0.0),
-    elev(0.0),
+    elev_ft(0.0),
     x(0.0), y(0.0), z(0.0),
     freq(0),
     range(0),
@@ -121,7 +121,7 @@ operator >> ( istream& in, FGNav& n )
     if ( n.type == '[' )
       return in >> skipeol;
 
-    in >> n.lat >> n.lon >> n.elev >> f >> n.range 
+    in >> n.lat >> n.lon >> n.elev_ft >> f >> n.range 
        >> c >> n.ident >> magvar_s;
 
     n.freq = (int)(f*100.0 + 0.5);
@@ -135,12 +135,12 @@ operator >> ( istream& in, FGNav& n )
     // cout << "Calculating magvar for navaid " << n.ident << endl;
     if (magvar_s == "XXX") {
 	// default to mag var as of 1990-01-01 (Julian 2447892.5)
-	// cout << "lat = " << n.lat << " lon = " << n.lon << " elev = " 
-	//      << n.elev << " JD = " 
+	// cout << "lat = " << n.lat << " lon = " << n.lon << " elev_ft = " 
+	//      << n.elev_ft << " JD = " 
 	//      << julian_date << endl;
 	n.magvar = sgGetMagVar( n.lon * SGD_DEGREES_TO_RADIANS,
                                 n.lat * SGD_DEGREES_TO_RADIANS,
-                                n.elev * SG_FEET_TO_METER,
+                                n.elev_ft * SG_FEET_TO_METER,
                                 julian_date )
             * SGD_RADIANS_TO_DEGREES;
 	// cout << "Default variation at " << n.lon << ',' << n.lat
@@ -167,7 +167,7 @@ operator >> ( istream& in, FGNav& n )
     // cout << n.ident << " " << n.magvar << endl;
 
     // generate cartesian coordinates
-    Point3D geod( n.lon * SGD_DEGREES_TO_RADIANS, n.lat * SGD_DEGREES_TO_RADIANS, n.elev );
+    Point3D geod( n.lon * SGD_DEGREES_TO_RADIANS, n.lat * SGD_DEGREES_TO_RADIANS, n.elev_ft * SG_FEET_TO_METER );
     Point3D cart = sgGeodToCart( geod );
     n.x = cart.x();
     n.y = cart.y();
