@@ -8,8 +8,9 @@ New in 0.7.10
 * Added a new environment (as in weather) subsystem.
 * Added a new logging module
 * Aded a new ATC subsystem.
-* Virtual 3d Cessna cockpit (work in progress) but many things are
+* Virtual 3d Cessna 172 cockpit (work in progress) but many things are
   animated and working.
+* Virtual 3d Cessna 310 cockpit.
 * Instrument panel background can now be a set of tiled textures so we can
   achieve *much* higher resolution.
 
