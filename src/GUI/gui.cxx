@@ -49,7 +49,7 @@
 #include "gui.h"
 #include "gui_local.hxx"
 #include "preset_dlg.hxx"
-
+#include "layout.hxx"
 
 extern void initDialog (void);
 extern void mkDialogInit (void);
@@ -71,8 +71,8 @@ void guiInit()
 
     // Initialize PUI
     puInit();
-    puSetDefaultStyle         ( PUSTYLE_SMALL_BEVELLED ); //PUSTYLE_DEFAULT
-    puSetDefaultColourScheme  (0.8, 0.8, 0.9, 0.8);
+    puSetDefaultStyle         ( PUSTYLE_SMALL_SHADED ); //PUSTYLE_DEFAULT
+    puSetDefaultColourScheme  (0.8, 0.8, 0.9, 1);
 
     initDialog();
 
@@ -94,6 +94,8 @@ void guiInit()
     puFont GuiFont ( guiFntHandle, 15 ) ;
     puSetDefaultFonts( GuiFont, GuiFont ) ;
     guiFnt = puGetDefaultLabelFont();
+
+    LayoutWidget::setDefaultFont(&GuiFont, 15);
   
     if (!fgHasNode("/sim/startup/mouse-pointer")) {
         // no preference specified for mouse pointer, attempt to autodetect...

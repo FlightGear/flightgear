@@ -7,6 +7,7 @@
 
 #include "puList.hxx"
 #include "AirportList.hxx"
+#include "layout.hxx"
 
 int fgPopup::checkHit(int button, int updown, int x, int y)
 {
@@ -235,9 +236,20 @@ FGDialog::display (SGPropertyNode * props)
         return;
     }
 
-    _object = makeObject(props,
-                      globals->get_props()->getIntValue("/sim/startup/xsize"),
-                      globals->get_props()->getIntValue("/sim/startup/ysize"));
+    int screenw = globals->get_props()->getIntValue("/sim/startup/xsize");
+    int screenh = globals->get_props()->getIntValue("/sim/startup/ysize");
+
+    LayoutWidget wid(props);
+    int pw=0, ph=0;
+    if(!props->hasValue("width") || !props->hasValue("height"))
+        wid.calcPrefSize(&pw, &ph);
+    pw = props->getIntValue("width", pw);
+    ph = props->getIntValue("height", ph);
+    int px = props->getIntValue("x", (screenw - pw) / 2);
+    int py = props->getIntValue("y", (screenh - ph) / 2);
+    wid.layout(px, py, pw, ph);
+
+    _object = makeObject(props, screenw, screenh);
 
     if (_object != 0) {
         _object->reveal();
@@ -251,9 +263,9 @@ FGDialog::display (SGPropertyNode * props)
 puObject *
 FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 {
+    bool presetSize = props->hasValue("width") && props->hasValue("height");
     int width = props->getIntValue("width", parentWidth);
     int height = props->getIntValue("height", parentHeight);
-
     int x = props->getIntValue("x", (parentWidth - width) / 2);
     int y = props->getIntValue("y", (parentHeight - height) / 2);
 
@@ -288,10 +300,21 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     } else if (type == "text") {
         puText * text = new puText(x, y);
         setupObject(text, props);
+        // Layed-out objects need their size set, and non-layout ones
+        // get a different placement.
+        if(presetSize) text->setSize(width, height);
+        else text->setLabelPlace(PUPLACE_LABEL_DEFAULT);
         return text;
     } else if (type == "checkbox") {
         puButton * b;
+        b = new puButton(x, y, x + width, y + height, PUBUTTON_XCHECK);
+        b->setColourScheme(.8, .7, .7); // matches "PUI input pink"
+        setupObject(b, props);
+        return b;
+    } else if (type == "radio") {
+        puButton * b;
         b = new puButton(x, y, x + width, y + height, PUBUTTON_CIRCLE);
+        b->setColourScheme(.8, .7, .7); // matches "PUI input pink"
         setupObject(b, props);
         return b;
     } else if (type == "button") {
@@ -301,6 +324,8 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
             b = new puOneShot(x, y, legend);
         else
             b = new puButton(x, y, legend);
+        if(presetSize)
+            b->setSize(width, height);
         setupObject(b, props);
         return b;
     } else if (type == "combo") {
@@ -354,6 +379,8 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 void
 FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 {
+    object->setLabelPlace(PUPLACE_CENTERED_RIGHT);
+
     if (props->hasValue("legend"))
         object->setLegend(props->getStringValue("legend"));
 
@@ -391,8 +418,10 @@ FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
 {
     setupObject(group, props);
 
-    if (makeFrame)
-        new puFrame(0, 0, width, height);
+    if (makeFrame) {
+        puFrame* f = new puFrame(0, 0, width, height);
+        f->setColorScheme(0.8, 0.8, 0.9, 0.85);
+    }
 
     int nChildren = props->nChildren();
     for (int i = 0; i < nChildren; i++)
