@@ -15,11 +15,13 @@
 SG_USING_STD(string);
 SG_USING_STD(vector);
 
-#include <simgear/misc/props.hxx>
+#include <Main/fgfs.hxx>	// for FGSubsystem
 
-#include <Main/fgfs.hxx>
 
-#include "model.hxx"
+// Don't pull in the headers, since we don't need them here.
+class ssgRoot;
+class ssgSelector;
+class FG3DModel;
 
 
 class FGAircraftModel : public FGSubsystem
@@ -47,5 +49,3 @@ private:
 };
 
 #endif // __ACMODEL_HXX
-
-

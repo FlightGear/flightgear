@@ -12,16 +12,16 @@
 
 #include <vector>
 
-#include <plib/ssg.h>
+#include <simgear/compiler.h>	// for SG_USING_STD
 
-#include <simgear/compiler.h>
-#include <simgear/misc/props.hxx>
-
-#include <Main/fgfs.hxx>
-
-#include "model.hxx"
+#include <Main/fgfs.hxx>	// for FGSubsystem
 
 SG_USING_STD(vector);
+
+// Don't pull in headers, since we don't need them here.
+class ssgSelector;
+class SGPropertyNode;
+class FG3DModel;
 
 
 /**
@@ -62,6 +62,3 @@ private:
 };
 
 #endif // __MODELMGR_HXX
-
-
-

@@ -20,7 +20,9 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
+
 #include "acmodel.hxx"
+#include "model.hxx"
 
 
 

@@ -3,9 +3,12 @@
 //
 // This file is in the Public Domain, and comes with no warranty.
 
-#include "modelmgr.hxx"
+#include <plib/ssg.h>
 
 #include <Main/fg_props.hxx>
+
+#include "modelmgr.hxx"
+#include "model.hxx"
 
 
 FGModelMgr::FGModelMgr ()
