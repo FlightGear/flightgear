@@ -507,10 +507,9 @@ TimedAnimation::update ()
     float sim_time_sec = globals->get_sim_time_sec();
     if ((sim_time_sec - _last_time_sec) >= _duration_sec) {
         _last_time_sec = sim_time_sec;
+        _step++;
         if (_step >= getBranch()->getNumKids())
             _step = 0;
-        else
-            _step++;
         ((ssgSelector *)getBranch())->selectStep(_step);
     }
 }
