@@ -1,4 +1,8 @@
+New in 0.50
+
 New in 0.49
+* Managment of multiple textures
+* Incorporated Friedemann Reinhard's initial panel code.
 * Fog mode is now GL_FOG_EXP2 instead of GL_FOG_LINEAR
 * Build the non-shared pieces of the FG sim as static libs.
 

@@ -124,6 +124,10 @@ U.S. Geological Survey - http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
   Provided geographic data used by this project
 
 
+Friedemann Reinhard <mpt218@faupt212.physik.uni-erlangen.de>
+  Contributed beginnings of a textured instrument panel.
+
+
 Petter Reinholdtsen <pere@games.no>
   Incorporated the Gnu automake/autoconf system (with libtool).
   This should streamline and standardize the build process for all
