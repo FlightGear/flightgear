@@ -57,6 +57,7 @@ private:
     double rudder;
     double flaps;
     double throttle[MAX_ENGINES];
+    double trimmed_throttle[MAX_ENGINES];
     double brake[MAX_WHEELS];
 
     inline void CLAMP(double *x, double min, double max ) {
@@ -80,6 +81,9 @@ public:
     inline double get_flaps() const { return flaps; }
     inline double get_throttle(int engine) const { return throttle[engine]; }
     inline double get_brake(int wheel) const { return brake[wheel]; }
+    inline double get_trimmed_throttle(int engine) const {
+	return trimmed_throttle[engine];
+    }
 
     // Update functions
     inline void set_aileron( double pos ) {
@@ -146,6 +150,19 @@ public:
 	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
 		throttle[engine] = pos;
 		CLAMP( &throttle[engine], 0.0, 1.0 );
+	    }
+	}
+    }
+    inline void set_trimmed_throttle( int engine, double pos ) {
+	if ( engine == ALL_ENGINES ) {
+	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
+		trimmed_throttle[i] = pos;
+		CLAMP( &trimmed_throttle[i], 0.0, 1.0 );
+	    }
+	} else {
+	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+		trimmed_throttle[engine] = pos;
+		CLAMP( &trimmed_throttle[engine], 0.0, 1.0 );
 	    }
 	}
     }

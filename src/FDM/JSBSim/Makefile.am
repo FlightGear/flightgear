@@ -22,6 +22,7 @@ libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
 	FGRotation.cpp FGRotation.h \
 	FGState.cpp FGState.h \
 	FGTranslation.cpp FGTranslation.h \
+	FGTrimLong.cpp FGTrimLong.h \
 	FGUtility.cpp FGUtility.h \
 	FGEngine.cpp FGEngine.h \
 	FGTank.cpp FGTank.h \

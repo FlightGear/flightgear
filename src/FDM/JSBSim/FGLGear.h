@@ -56,39 +56,48 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  include STL_STRING
-   FG_USING_STD(string);
-#else
-#  include <string>
 #endif
 
+#include <string>
 #include "FGConfigFile.h"
+#include "FGMatrix.h"
+#include "FGFDMExec.h"
+#include "FGState.h"
 
 /*******************************************************************************
 DEFINITIONS
 *******************************************************************************/
 
-using namespace std;
-
 /*******************************************************************************
 CLASS DECLARATION
 *******************************************************************************/
 
+class FGAircraft;
+class FGPosition;
+
 class FGLGear
 {
 public:
-  FGLGear(FGConfigFile*);
+  FGLGear(FGConfigFile*, FGFDMExec*);
   ~FGLGear(void);
 
-  float Force(void);
+  FGColumnVector Force(void);
+
 private:
-  float X, Y, Z;
+  FGColumnVector vXYZ;
   float kSpring, bDamp, compressLength;
   float statFCoeff, rollFCoeff, skidFCoeff;
   float frictionForce, compForce;
   float brakePct, brakeForce, brakeCoeff;
   string name;
+  FGState* State;
+  FGAircraft* Aircraft;
+  FGPosition* Position;
+  FGFDMExec* Exec;
 };
+
+#include "FGAircraft.h"
+#include "FGPosition.h"
 
 /******************************************************************************/
 #endif

@@ -23,17 +23,16 @@ INCLUDES
 #include <stdlib.h>
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  include STL_STRING
 #  ifdef FG_HAVE_STD_INCLUDES
 #    include <fstream>
 #  else
 #    include <fstream.h>
 #  endif
-   FG_USING_STD(string);
 #else
-#  include <string>
 #  include <fstream>
 #endif
+
+#include <string>
 
 /*******************************************************************************
 FORWARD DECLARATIONS
@@ -45,7 +44,9 @@ class FGColumnVector;
 DECLARATION: MatrixException
 *******************************************************************************/
 
-using namespace std;
+using std::string;
+using std::ostream;
+using std::istream;
 
 class MatrixException /* :  public exception */  
 {
@@ -122,10 +123,12 @@ public:
   FGColumnVector operator*(const double scalar);
   FGColumnVector operator/(const double scalar);
   FGColumnVector operator+(const FGColumnVector& B);
-  float Magnitude(void); 
+  FGColumnVector operator-(const FGColumnVector& B);
+  float Magnitude(void);
   FGColumnVector Normalize(void);
 
   friend FGColumnVector operator*(const double scalar, const FGColumnVector& A);
+  friend FGColumnVector operator*(const FGMatrix& M, const FGColumnVector& V);
 
   double& operator()(int m) const;
 };

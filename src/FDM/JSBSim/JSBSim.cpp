@@ -71,6 +71,8 @@ USEUNIT("filtersjb\FGGain.cpp");
 USEUNIT("filtersjb\FGGradient.cpp");
 USEUNIT("filtersjb\FGSummer.cpp");
 USEUNIT("filtersjb\FGDeadBand.cpp");
+USEUNIT("FGTrimLong.cpp");
+USEUNIT("filtersjb\FGFlaps.cpp");
 //---------------------------------------------------------------------------
 #pragma argsused
 #endif

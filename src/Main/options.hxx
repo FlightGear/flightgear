@@ -139,6 +139,8 @@ private:
     double uBody;       // Body axis X velocity (U)
     double vBody;       // Body axis Y velocity (V)
     double wBody;       // Body axis Z velocity (W)
+    double vkcas;       // Calibrated airspeed, knots
+    double mach;        // Mach number
 
     // Miscellaneous
     bool game_mode;     // Game mode enabled/disabled
@@ -160,6 +162,7 @@ private:
     string aircraft;    // Aircraft to model
     int model_hz;       // number of FDM iterations per second
     int speed_up;       // Sim mechanics run this much faster than normal speed
+    bool trim;          // use the FDM trimming routine during init
 
     // Rendering options
     fgFogKind fog;      // Fog nicest/fastest/disabled
@@ -228,6 +231,9 @@ public:
     inline double get_uBody() const {return uBody;}
     inline double get_vBody() const {return vBody;}
     inline double get_wBody() const {return wBody;}
+    inline double get_vc() const {return vkcas;}
+    inline double get_mach() const {return mach;}
+	
     inline bool get_game_mode() const { return game_mode; }
     inline bool get_splash_screen() const { return splash_screen; }
     inline bool get_intro_music() const { return intro_music; }
@@ -250,6 +256,8 @@ public:
     inline int get_model_hz() const { return model_hz; }
     inline int get_speed_up() const { return speed_up; }
     inline void set_speed_up( int speed ) { speed_up = speed; }
+    inline bool get_trim_mode(void) { return trim; }
+	
     inline bool fog_enabled() const { return fog != FG_FOG_DISABLED; }
     inline fgFogKind get_fog() const { return fog; }
     inline bool get_clouds() const { return clouds; }
@@ -292,6 +300,8 @@ public:
     inline void set_uBody (double value) { uBody = value; }
     inline void set_vBody (double value) { vBody = value; }
     inline void set_wBody (double value) { wBody = value; }
+    inline void set_vc (double value) { vkcas = value; }
+    inline void set_mach(double value) { mach = value; }
     inline void set_game_mode (bool value) { game_mode = value; }
     inline void set_splash_screen (bool value) { splash_screen = value; }
     inline void set_intro_music (bool value) { intro_music = value; }
@@ -303,6 +313,7 @@ public:
     inline void set_flight_model (int value) { flight_model = value; }
     inline void set_aircraft (const string &ac) { aircraft = ac; }
     inline void set_model_hz (int value) { model_hz = value; }
+    inline void set_trim_mode(bool bb) { trim=bb; }
     inline void set_fog (fgFogKind value) { fog = value; }
     inline void set_clouds( bool value ) { clouds = value; }
     inline void set_clouds_asl( double value ) { clouds_asl = value; }

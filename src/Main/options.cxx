@@ -147,7 +147,7 @@ fgOPTIONS::fgOPTIONS() :
     pitch(0.424),        // pitch angle in degrees (Theta)
 
     // Initialize current options velocities to 0.0
-    uBody(0.0), vBody(0.0), wBody(0.0),
+    uBody(0.0), vBody(0.0), wBody(0.0), vkcas(0.0), mach(0.0),
 
     // Miscellaneous
     game_mode(0),
@@ -169,6 +169,7 @@ fgOPTIONS::fgOPTIONS() :
     aircraft( "c172" ),
     model_hz( NEW_DEFAULT_MODEL_HZ ),
     speed_up( 1 ),
+    trim(true),
 
     // Rendering options
     fog(FG_FOG_NICEST),  // nicest
@@ -643,23 +644,33 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	    altitude = atof( arg.substr(11) );
 	}
     } else if ( arg.find( "--uBody=" ) != string::npos ) {
+	vkcas=mach=-1;
 	if ( units == FG_UNITS_FEET ) {
 	    uBody = atof( arg.substr(8) );
 	} else {
 	    uBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
     } else if ( arg.find( "--vBody=" ) != string::npos ) {
+	vkcas=mach=-1;
 	if ( units == FG_UNITS_FEET ) {
 	    vBody = atof( arg.substr(8) );
 	} else {
 	    vBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
     } else if ( arg.find( "--wBody=" ) != string::npos ) {
+	vkcas=mach=-1;
 	if ( units == FG_UNITS_FEET ) {
 	    wBody = atof( arg.substr(8) );
 	} else {
 	    wBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
+    } else if ( arg.find( "--vc=" ) != string::npos) {
+	mach=-1;
+	vkcas=atof( arg.substr(5) );
+	cout << "Got vc: " << vkcas << endl;
+    } else if ( arg.find( "--mach=" ) != string::npos) {
+	vkcas=-1;
+	mach=atof( arg.substr(7) );
     } else if ( arg.find( "--heading=" ) != string::npos ) {
 	heading = atof( arg.substr(10) );
     } else if ( arg.find( "--roll=" ) != string::npos ) {
@@ -678,6 +689,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	model_hz = atoi( arg.substr(11) );
     } else if ( arg.find( "--speed=" ) != string::npos ) {
 	speed_up = atoi( arg.substr(8) );
+    } else if ( arg.find( "--notrim") != string::npos) {
+	trim=false;
     } else if ( arg == "--fog-disable" ) {
 	fog = FG_FOG_DISABLED;	
     } else if ( arg == "--fog-fastest" ) {
@@ -914,6 +927,7 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--model-hz=n:  run the FDM this rate (iterations per second)" 
 	 << endl;
     cout << "\t--speed=n:  run the FDM this much faster than real time" << endl;
+    cout << "\t--notrim:  Do NOT attempt to trim the model when initializing JSBsim" << endl;
     cout << endl;
     //(UIUC)
     cout <<"Aircraft model directory" << endl;
@@ -940,6 +954,8 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--wBody=feet per second:  velocity along the body Z axis"
 	 << endl;
     cout << "\t\t(unless --units-meters specified" << endl;
+    cout << "\t--vc= initial airspeed in knots (--fdm=jsb only)" << endl;
+    cout << "\t--mach= initial mach number (--fdm=jsb only)" << endl;
     cout << endl;
 
     cout << "Rendering Options:" << endl;

@@ -85,7 +85,7 @@
 // #defines in uiuc_aircraft.h
 #include "bfi.hxx"
 
-// #include <FDM/UIUCModel/uiuc_aircraft.h>
+q#include <FDM/UIUCModel/uiuc_aircraft.h>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
 #include <Joystick/joystick.hxx>
