@@ -52,20 +52,23 @@ static SGTexture splash;
 
 
 // Initialize the splash screen
-void fgSplashInit ( void ) {
+void fgSplashInit ( const char *splash_texture ) {
     SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
 
     splash.bind();
 
-    // load in the texture data
-    int num = (int)(sg_random() * 5.0 + 1.0);
-    char num_str[256];
-    sprintf(num_str, "%d", num);
-
     SGPath tpath( globals->get_fg_root() );
-    tpath.append( "Textures/Splash" );
-    tpath.concat( num_str );
-    tpath.concat( ".rgb" );
+    if (splash_texture == NULL) {
+        // load in the texture data
+        int num = (int)(sg_random() * 5.0 + 1.0);
+        char num_str[256];
+        sprintf(num_str, "%d", num);
+
+        tpath.append( "Textures/Splash" );
+        tpath.concat( num_str );
+        tpath.concat( ".rgb" );
+    } else
+        tpath.append( splash_texture );
 
     splash.read_rgb_texture(tpath.c_str());
     if (!splash.usable())

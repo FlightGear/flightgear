@@ -1237,7 +1237,7 @@ static void fgIdleFunction ( void ) {
     if ( idle_state == 0 ) {
         // Initialize the splash screen right away
         if ( fgGetBool("/sim/startup/splash-screen") ) {
-            fgSplashInit();
+            fgSplashInit(fgGetString("/sim/startup/splash-texture"));
         }
         
         idle_state++;
