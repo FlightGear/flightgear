@@ -78,8 +78,8 @@ FGTileEntry::~FGTileEntry () {
 
 
 #if 0
-// This is the current method cut and pasted from 
-//  FGTileEntry::load( const SGPath& base, bool is_base )
+// Please keep this for reference.  We use Norman's optimized routine,
+// but here is what the routine really is doing.
 void
 FGTileEntry::WorldCoordinate( sgCoord *obj_pos, Point3D center,
                               double lat, double lon, double elev, double hdg)
