@@ -179,7 +179,504 @@ static void my_remove_branch( ssgBranch * branch ) {
     }
 }
 
+// ADA
+#define TEXRES_X 256
+#define TEXRES_Y 256
+unsigned char env_map[TEXRES_X][TEXRES_Y][4];
+// SetColor & SetColor2 functions were provided by Christian Mayer (26 April 2001) - used without change
+void setColor(float x, float y, float z, float angular_size, float r,
+float g, float b, float a)
+{
+    //normalize
+    float inv_length = 1.0 / sqrt(x*x + y*y + z*z);
+    x *= inv_length; y *= inv_length; z *= inv_length;
+  
+    float cos_angular_size = cos(angular_size*(22.0/7.0)/180.0);
 
+    for( int s = 0; s < TEXRES_X; s++) {
+        for( int t = 0; t < TEXRES_Y; t++) {
+
+            float s_2 = (float)s/TEXRES_X - 0.5; // centre of texture 0,0
+            float t_2 = (float)t/TEXRES_Y - 0.5; // elev
+
+            float rx, ry, rz;
+
+            if ((1.0 - 4.0*s_2*s_2 - 4.0*t_2*t_2) >= 0.0) {
+                // sphere
+                float m = 4.0 * sqrt(1.0 - 4.0*s_2*s_2 - 4.0*t_2*t_2);
+                rx = m * s_2;
+                ry = m * t_2;
+                rz = m*m / 8.0 - 1.0;
+            } else {
+                // singularity
+                rx = 0.0;
+                ry = 0.0;
+                rz = -1.0;
+            }
+
+            float tx = rx;  //mirroring on the z=0 plane
+            float ty = ry;  //assumes that the normal is allways
+            float tz = -rz; //n(0.0, 0.0, 1.0)
+         
+            if ( cos_angular_size < (x*tx + y*ty + z*tz) ) {
+                env_map[s][t][0] = (unsigned char) r * 255;  
+                env_map[s][t][1] = (unsigned char) g * 255;
+                env_map[s][t][2] = (unsigned char) b * 255;
+                env_map[s][t][3] = (unsigned char) a * 255;
+            }
+        }
+    }
+}
+
+// elevation_size, float azimuth_size are the *total* angular size of the light
+void setColor2(float elevation_size,float azimuth_size, float r, float g, float b, float a)
+{
+    for( int s = 0; s < TEXRES_X; s++) {
+        for( int t = 0; t < TEXRES_Y; t++) {
+            float s_2 = (float)s/TEXRES_X - 0.5;
+            float t_2 = (float)t/TEXRES_Y - 0.5;
+
+            float rx, ry, rz;
+
+            if ((1.0 - 4.0*s_2*s_2 - 4.0*t_2*t_2) >= 0.0) {
+
+                float m = 4.0 * sqrt(1.0 - 4.0*s_2*s_2 - 4.0*t_2*t_2);
+                rx = m * s_2;
+                ry = m * t_2;
+                rz = m*m / 8.0 - 1.0;
+            } else {
+                rx = 0.0;
+                ry = 0.0;
+                rz = -1.0;
+            }
+
+            float tx = rx;  //mirroring on the z=0 plane to reverse
+            float ty = ry;  //OpenGLs automatic mirroring
+            float tz = -rz; 
+
+            //get elevation => project t onto the x-z-plane
+            float tz_proj1 = tz / sqrt(tx*tx + tz*tz);
+            float televation = acos( -tz_proj1 ) * 180.0 / 3.1415;
+
+            //get azi => project t onto the y-z-plane
+            float tz_proj2 = tz / sqrt(ty*ty + tz*tz);
+            float tazimuth = acos( -tz_proj2 ) * 180.0 / 3.1415;
+
+            //note televation and tazimuth are the angles *between* the
+            //temporary vector and the normal (0,0,-1). They are *NOT*
+            //the elevation and azimuth angles
+
+            //square:
+            //if (((elevation_size > televation) || (elevation_size < -televation)) &&
+            //    ((azimuth_size   > tazimuth  ) || (azimuth_size   < -tazimuth  ))) 
+            //elliptical
+            if (((televation*televation) / (elevation_size*elevation_size / 4.0) +
+                 (tazimuth  *tazimuth  ) / (azimuth_size  *azimuth_size   / 4.0)) <= 1.0)
+            {
+                env_map[s][t][0] = (unsigned char) r * 255;  
+                env_map[s][t][1] = (unsigned char) g * 255;
+                env_map[s][t][2] = (unsigned char) b * 255;
+                env_map[s][t][3] = (unsigned char) a * 255;
+            }
+        }
+    }
+}
+
+// 23 March 2001
+// This function performs billboarding of polygons drawn using the UP and RIGHT vectors obtained
+// from the transpose of the MODEL_VIEW_MATRIX of the ssg_current_context. Each polygon is drawn
+// at the coordinate array and material state as passed thro arguments.
+void *fgBillboard( ssgBranch *lightmaps, ssgVertexArray *light_maps, ssgSimpleState *lightmap_state, float size) {
+    sgMat4 tmat;
+    sgVec3 rt, up, nrt, nup, pt, quads[4], lmaps[4];
+
+    ssgGetModelviewMatrix ( tmat );
+    sgSetVec3 (rt, tmat[0][0], tmat[1][0], tmat[2][0]);
+    sgSetVec3 (up, tmat[0][1], tmat[1][1], tmat[2][1]);
+    sgSetVec3 (nrt, tmat[0][0], tmat[1][0], tmat[2][0]);
+    sgSetVec3 (nup, tmat[0][1], tmat[1][1], tmat[2][1]);
+    sgNegateVec3 (nrt);
+    sgNegateVec3 (nup);
+
+    sgAddVec3 (quads[0], nrt, nup);
+    sgAddVec3 (quads[1],  rt, nup);
+    sgAddVec3 (quads[2],  rt,  up);
+    sgAddVec3 (quads[3], nrt,  up);
+
+    sgScaleVec3 (quads[0], size);
+    sgScaleVec3 (quads[1], size);
+    sgScaleVec3 (quads[2], size);
+    sgScaleVec3 (quads[3], size);
+
+    sgVec4 color;
+    sgSetVec4( color, 1.0, 1.0, 0.0, 1.0 );
+
+    sgVec2 texcoords[4];
+    sgSetVec2( texcoords[0], 1.0, 1.0 );
+    sgSetVec2( texcoords[1], 0.0, 1.0 );
+    sgSetVec2( texcoords[2], 0.0, 0.0 );
+    sgSetVec2( texcoords[3], 1.0, 0.0 );
+    
+    for (int j = 0; j < 4; j++ ) {
+        sgCopyVec3(lmaps[j]	,quads[j]);
+    }
+
+    for ( int i = 0; i < light_maps->getNum(); ++i ) {
+        // Allocate ssg structure
+        ssgVertexArray   *vl = new ssgVertexArray( 1 );
+        ssgTexCoordArray *tl = new ssgTexCoordArray( 1 );
+        ssgColourArray   *cl = new ssgColourArray( 1 );
+
+        float *temp = light_maps->get(i);
+        sgSetVec3(pt,temp[0],temp[1],temp[2]);
+
+        for (int k=0; k<4; k++) {
+            sgAddVec3( quads[k],lmaps[k], pt );			
+            vl->add(quads[k]);
+            tl->add(texcoords[k]);
+            cl->add(color);
+        }
+
+        ssgLeaf *leaf = NULL;
+        leaf = new ssgVtxTable ( GL_TRIANGLE_FAN, vl, NULL, tl, cl );
+        leaf->setState( lightmap_state );
+        lightmaps->addKid( leaf );
+    }
+}
+
+ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray *normal,
+                                           ssgVertexArray *dir, int type[]) 
+{
+
+    //************** HARD CODED RUNWAY LIGHT TEXTURES BEGIN ************************    
+    GLuint texEdge, texTaxi, texCenter, texTouchdown;
+    GLuint texThreshold, texCrossbar, texUndershoot, texApproach;
+    GLuint texRabbit, texVasi, texWhite, texRed, texGreen, texYellow;
+
+    //VASI lights
+    setColor(0.0,0.0,1.0,360.0, 0, 0, 0, 0);
+    setColor2(10.0, 40.0, 1, 1, 1, 1);
+    setColor2(6.0, 40.0, 1, 0.5, 0.5, 1);
+    setColor2(5.0, 40.0, 1, 0, 0, 1);
+    glGenTextures(1, &texVasi);
+    glBindTexture(GL_TEXTURE_2D, texVasi);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXRES_X, TEXRES_Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+    ssgSimpleState *vasi_state;
+    vasi_state = new ssgSimpleState();
+    vasi_state->ref();
+    vasi_state->setTexture( texVasi );
+    vasi_state->disable( GL_LIGHTING );
+    vasi_state->enable( GL_TEXTURE_2D );
+    vasi_state->setShadeModel( GL_SMOOTH );
+
+    //EDGE
+    setColor(0.0,0.0,-1.0,180.0, 1, 1, 0.5, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &texEdge);
+    glBindTexture(GL_TEXTURE_2D, texEdge);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXRES_X, TEXRES_Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+    ssgSimpleState *edge_state;
+    edge_state = new ssgSimpleState();
+    edge_state->ref();
+    edge_state->setTexture( texEdge );
+    edge_state->disable( GL_LIGHTING );
+    edge_state->enable( GL_TEXTURE_2D );
+    edge_state->setShadeModel( GL_SMOOTH );
+
+    //TOUCHDOWN
+    setColor(0.0,0.0,-1.0,180.0, 0, 1, 0, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &texTouchdown);
+    glBindTexture(GL_TEXTURE_2D, texTouchdown);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXRES_X, TEXRES_Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+    ssgSimpleState *touchdown_state;
+    touchdown_state = new ssgSimpleState();
+    touchdown_state->ref();
+    touchdown_state->setTexture( texTouchdown );
+    touchdown_state->disable( GL_LIGHTING );
+    touchdown_state->enable( GL_TEXTURE_2D );
+    touchdown_state->setShadeModel( GL_SMOOTH );
+	
+    //THRESHOLD
+    setColor(0.0,0.0,-1.0,180.0, 1, 0, 0, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &texThreshold);
+    glBindTexture(GL_TEXTURE_2D, texThreshold);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXRES_X, TEXRES_Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+    ssgSimpleState *threshold_state;
+    threshold_state = new ssgSimpleState();
+    threshold_state->ref();
+    threshold_state->setTexture( texThreshold );
+    threshold_state->disable( GL_LIGHTING );
+    threshold_state->enable( GL_TEXTURE_2D );
+    threshold_state->setShadeModel( GL_SMOOTH );
+
+    //TAXI
+    setColor(0.0,0.0,-1.0,180.0, 0, 0, 1, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &texTaxi);
+    glBindTexture(GL_TEXTURE_2D, texTaxi);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXRES_X, TEXRES_Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+    ssgSimpleState *taxi_state;
+    taxi_state = new ssgSimpleState();
+    taxi_state->ref();
+    taxi_state->setTexture( texTaxi );
+    taxi_state->disable( GL_LIGHTING );
+    taxi_state->enable( GL_TEXTURE_2D );
+    taxi_state->setShadeModel( GL_SMOOTH );
+
+    //WHITE
+    setColor(0.0,0.0,-1.0,180.0, 1, 1, 1, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &texWhite);
+    glBindTexture(GL_TEXTURE_2D, texWhite);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXRES_X, TEXRES_Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+    ssgSimpleState *white_state;
+    white_state = new ssgSimpleState();
+    white_state->ref();
+    white_state->setTexture( texWhite );
+    white_state->disable( GL_LIGHTING );
+    white_state->enable( GL_TEXTURE_2D );
+    white_state->setShadeModel( GL_SMOOTH );
+
+    //RED
+    setColor(0.0,0.0,-1.0,180.0, 1, 0, 0, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &texRed);
+    glBindTexture(GL_TEXTURE_2D, texRed);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXRES_X, TEXRES_Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+    ssgSimpleState *red_state;
+    red_state = new ssgSimpleState();
+    red_state->ref();
+    red_state->setTexture( texRed );
+    red_state->disable( GL_LIGHTING );
+    red_state->enable( GL_TEXTURE_2D );
+    red_state->setShadeModel( GL_SMOOTH );
+
+    //GREEN
+    setColor(0.0,0.0,-1.0,180.0, 0, 1, 0, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &texGreen);
+    glBindTexture(GL_TEXTURE_2D, texGreen);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXRES_X, TEXRES_Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+    ssgSimpleState *green_state;
+    green_state = new ssgSimpleState();
+    green_state->ref();
+    green_state->setTexture( texGreen );
+    green_state->disable( GL_LIGHTING );
+    green_state->enable( GL_TEXTURE_2D );
+    green_state->setShadeModel( GL_SMOOTH );
+
+    //YELLOW
+    setColor(0.0,0.0,-1.0,180.0, 1, 1, 0, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &texYellow);
+    glBindTexture(GL_TEXTURE_2D, texYellow);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXRES_X, TEXRES_Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+    ssgSimpleState *yellow_state;
+    yellow_state = new ssgSimpleState();
+    yellow_state->ref();
+    yellow_state->setTexture( texYellow );
+    yellow_state->disable( GL_LIGHTING );
+    yellow_state->enable( GL_TEXTURE_2D );
+    yellow_state->setShadeModel( GL_SMOOTH );
+//************** HARD CODED RUNWAY LIGHT TEXTURES END ************************    
+
+    ssgBranch *runway_lights = new ssgBranch;
+    sgVec3 v2,v3,inf,side;
+
+    ssgLeaf *leaf1 = NULL;
+    ssgLeaf *leaf2 = NULL;
+    ssgLeaf *leaf7 = NULL;
+    ssgLeaf *leaf8 = NULL;
+    ssgLeaf *leaf9 = NULL;
+
+    ssgVertexArray   *vlw = new ssgVertexArray( 1 );
+    ssgNormalArray   *nlw = new ssgNormalArray( 1 );
+    ssgVertexArray   *vlt = new ssgVertexArray( 1 );
+    ssgNormalArray   *nlt = new ssgNormalArray( 1 );
+    ssgVertexArray   *vlr = new ssgVertexArray( 1 );
+    ssgNormalArray   *nlr = new ssgNormalArray( 1 );
+    ssgVertexArray   *vlg = new ssgVertexArray( 1 );
+    ssgNormalArray   *nlg = new ssgNormalArray( 1 );
+    ssgVertexArray   *vly = new ssgVertexArray( 1 );
+    ssgNormalArray   *nly = new ssgNormalArray( 1 );
+
+    for ( int i = 0; i < points->getNum()-1; i=i++ ) {
+
+        // Allocate ssg structure
+        ssgVertexArray   *vl = new ssgVertexArray( 1 );
+        ssgNormalArray   *nl = new ssgNormalArray( 1 );
+        ssgVertexArray   *vl1 = new ssgVertexArray( 1 );
+        ssgNormalArray   *nl1 = new ssgNormalArray( 1 );
+
+        float *n1 = normal->get(i);
+        float *d1 = dir->get(i);
+
+        /* TEMPORARY CODE BEGIN 
+           // calculate normal using 1st, 2nd & last vertices of the group
+           sgVec3 n1;
+           sgMakeNormal (n1, points->get(0), points->get(1), points->get(points->getNum()-1) );
+           sgVec3 d1;
+           sgSubVec3(d1,points->get(1),points->get(0));
+           printf("%f %f %f\n",n1[0],n1[1],n1[2]);
+           printf("%f %f %f\n",d1[0],d1[1],d1[2]);
+           type[i] = 2;
+           ----TEMPORARY CODE END */
+
+
+        sgNormaliseVec3 ( n1 );
+        sgNormaliseVec3 ( d1 );
+        sgVec3 d2;
+        d2[0] = -d1[0];
+        d2[1] = -d1[1];
+        d2[2] = -d1[2];
+
+        sgVectorProductVec3(side,n1,d1);
+        sgScaleVec3 (inf,n1,-50);
+        sgScaleVec3 (side,5);
+
+        float *v1 = points->get(i);
+        sgAddVec3(v2,v1,inf);
+        sgAddVec3(v3,v2,side);
+
+        if ( type[i] == 1) {        //POINT,WHITE
+
+            vlw->add(v1);
+            nlw->add(d1);
+
+        } else if (type[i] == 2) {  //POINT,TAXI
+
+            vlt->add(v1);
+            nlt->add(d1);
+
+        } else if (type[i] == 3) {  //SINGLE POLYGON,VASI
+
+            vl->add(v1);
+            nl->add(d1);
+            vl->add(v3);
+            nl->add(d1);
+            vl->add(v2);
+            nl->add(d1);
+
+            ssgLeaf *leaf3 = NULL;
+            leaf3 = new ssgVtxTable ( GL_POLYGON, vl, nl, NULL, NULL );
+            leaf3->setState( vasi_state );
+            runway_lights->addKid( leaf3 );
+
+        } else if (type[i] == 4) {  //BACK-TO-BACK POLYGONS,TOUCHDOWN/THRESHOLD
+	        
+            vl->add(v1);
+            nl->add(d1);
+            vl->add(v3);
+            nl->add(d1);
+            vl->add(v2);
+            nl->add(d1);
+
+            vl1->add(v3);
+            nl1->add(d2);
+            vl1->add(v1);
+            nl1->add(d2);
+            vl1->add(v2);
+            nl1->add(d2);
+
+            ssgLeaf *leaf41 = NULL;
+            leaf41 = new ssgVtxTable ( GL_POLYGON, vl, nl, NULL, NULL );
+            leaf41->setState( touchdown_state );
+            runway_lights->addKid( leaf41 );
+
+            ssgLeaf *leaf42 = NULL;
+            leaf42 = new ssgVtxTable ( GL_POLYGON, vl1, nl1, NULL, NULL );
+            leaf42->setState( threshold_state );
+            runway_lights->addKid( leaf42 );
+
+        } else if ( type[i] == 5) {        //POINT,WHITE, SEQUENCE LIGHTS (RABBIT)
+
+            vl->add(v1);
+            nl->add(d1);
+            ssgLeaf *leaf5 = NULL;
+            leaf5 = new ssgVtxTable ( GL_POINTS, vl, nl, NULL, NULL );
+            leaf5->setState( white_state );
+            lightmaps_sequence->addKid (leaf5);
+
+        } else if ( type[i] == 6) {        //POINT,WHITE, SEQUENCE LIGHTS (RABBIT)
+
+            vl->add(v1);
+            nl->add(d1);
+            ssgLeaf *leaf6 = NULL;
+            leaf6 = new ssgVtxTable ( GL_POINTS, vl, nl, NULL, NULL );
+            leaf6->setState( yellow_state );
+            ols_transform->addKid (leaf6);
+            // DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
+            //			lightmaps_sequence->addKid (leaf6);
+            // DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
+
+        } else if (type[i] == 7) {  //POINT,RED
+
+            vlr->add(v1);
+            nlr->add(d1);
+
+        } else if (type[i] == 8) {  //POINT,GREEN
+
+            vlg->add(v1);
+            nlg->add(d1);
+
+        } else if (type[i] == 9) {  //POINT,YELLOW
+
+            vly->add(v1);
+            nly->add(d1);
+
+        }
+
+    }
+
+    leaf1 = new ssgVtxTable ( GL_POINTS, vlw, nlw, NULL, NULL );
+    leaf1->setState( white_state );
+    runway_lights->addKid( leaf1 );
+
+    leaf2 = new ssgVtxTable ( GL_POINTS, vlt, nlt, NULL, NULL );
+    leaf2->setState( taxi_state );
+    runway_lights->addKid( leaf2 );
+	
+    leaf7 = new ssgVtxTable ( GL_POINTS, vlr, nlr, NULL, NULL );
+    leaf7->setState( red_state );
+    runway_lights->addKid( leaf7 );
+
+    leaf8 = new ssgVtxTable ( GL_POINTS, vlg, nlg, NULL, NULL );
+    leaf8->setState( green_state );
+    // DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
+    ols_transform->ref();
+    lightmaps_sequence->addKid (ols_transform);
+    // DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
+    lightmaps_sequence->addKid (leaf8);
+
+    leaf9 = new ssgVtxTable ( GL_POINTS, vly, nly, NULL, NULL );
+    leaf9->setState( yellow_state );
+    runway_lights->addKid( leaf9 );
+
+    lightmaps_sequence->select(0xFFFFFF);	
+    return runway_lights;
+}
+// ADA
+	
 #ifdef WISH_PLIB_WAS_THREADED // but it isn't
 
 // Schedule tile to be freed/removed
@@ -230,6 +727,14 @@ void FGTileEntry::free_tile() {
     // disconnected from the scene graph)
 	ssgDeRefDelete( lights_transform );
     }
+
+    // ADA
+    if ( lightmaps_transform ) {
+	// delete the terrain lighting branch (this should already have been
+        // disconnected from the scene graph)
+	ssgDeRefDelete( lightmaps_transform );
+    }
+    // ADA
 }
 
 
@@ -303,6 +808,61 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 	    lights_brightness->select(0x00);
 	}
     }
+
+    // ADA
+    // Transform & Render runway lights - 23 Mar 2001
+    sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
+    if ( lightmaps_transform ) {
+        static unsigned int selectnode = 0;
+	// Run-time extension check.
+	if (!glutExtensionSupported("GL_EXT_point_parameters")) {
+            //use lightmaps on billboarded polygons
+        } else {
+            // using GL_EXT_point_parameters
+		
+            // This part is same as ground-lights code above by Curt
+            sgVec3 up1;
+            sgCopyVec3( up1, globals->get_current_view()->get_world_up() );
+            
+            double agl1;
+            if ( current_aircraft.fdm_state ) {
+                agl1 = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
+                    - scenery.cur_elev;
+            } else {
+                agl1 = 0.0;
+            }
+
+            // sgTrans just happens to be the
+            // vector from scenery center to the center of this tile which
+            // is what we want to calculate the distance of
+            sgVec3 to1;
+            sgCopyVec3( to1, sgTrans );
+            double dist1 = sgLengthVec3( to1 );
+
+            if ( general.get_glDepthBits() > 16 ) {
+                sgScaleVec3( up1, 0.0 + agl1 / 2000.0 + dist1 / 10000 );
+            } else {
+                sgScaleVec3( up1, 0.0 + agl1 / 20.0 + dist1 / 5000 );
+            }
+            sgAddVec3( sgTrans, up1 );
+            lightmaps_transform->setTransform( sgTrans );
+
+            float sun_angle1 = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+            if ( (sun_angle1 > 89) ) {
+                lightmaps_brightness->select(0x01);
+                selectnode *=2;
+                selectnode = selectnode | 0x000001;
+                if (selectnode > 0xFFFFFF) selectnode = 1;
+                lightmaps_sequence->select(selectnode);
+            } else {
+                lightmaps_brightness->select(0x00);
+                lightmaps_sequence->select(0x000000);
+            } 
+	} // end of GL_EXT_point_parameters section
+
+    } // end of runway lights section
+    // ADA
+
 }
 
 
@@ -401,9 +961,18 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 
     SG_LOG( SG_TERRAIN, SG_INFO, "Loading tile " << basename.str() );
 
+#define FG_MAX_LIGHTS 1000
 
     // obj_load() will generate ground lighting for us ...
     ssgVertexArray *light_pts = new ssgVertexArray( 100 );
+
+    // ADA
+    ssgVertexArray *lights_rway = new ssgVertexArray( 100 );
+    ssgVertexArray *lights_dir = new ssgVertexArray( 100 );
+    ssgVertexArray *lights_normal = new ssgVertexArray( 100 );
+    int lights_type[FG_MAX_LIGHTS];
+    // ADA
+
     ssgBranch* new_tile = new ssgBranch;
 
     // Check for master .stg (scene terra gear) file
@@ -723,6 +1292,37 @@ FGTileEntry::load( const SGPath& base, bool is_base )
         // ground->addKid( lights_transform );
     }
     /* end of ground light section */
+
+    // ADA
+    // Create runway lights - 23 Mar 2001
+    lightmaps_transform = NULL;
+    lightmaps_sequence = NULL;
+    ols_transform = NULL;
+    //    lightmaps_range = NULL;
+
+    if ( lights_rway->getNum() ) {
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "generating airport lights" );
+	lightmaps_transform = new ssgTransform;
+        //	lightmaps_range = new ssgRangeSelector;
+	lightmaps_brightness = new ssgSelector;
+	lightmaps_sequence = new ssgSelector;
+	ols_transform = new ssgTransform;
+        ssgBranch *lightmaps_branch;
+
+        // call function to generate the runway lights
+        lightmaps_branch = gen_runway_lights( lights_rway, 
+                                              lights_normal, lights_dir, lights_type);
+	lightmaps_brightness->addKid( lightmaps_branch );
+	
+	// build the runway lights' scene
+        //    lightmaps_range->addKid( lightmaps_brightness ); //dont know why this doesnt work !!
+        //	lightmaps_transform->addKid( lightmaps_range );    //dont know why this doesnt work !!
+	lightmaps_transform->addKid( lightmaps_brightness );
+        lightmaps_sequence->setTraversalMaskBits( SSGTRAV_HOT );
+	lightmaps_transform->addKid( lightmaps_sequence );
+	lightmaps_transform->setTransform( &sgcoord );
+    }
+    // ADA
 }
 
 
@@ -746,6 +1346,15 @@ FGTileEntry::add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground )
 	lights_transform->ref();
 	ground->addKid( lights_transform );
     }
+
+    // ADA
+    if ( lightmaps_transform != 0 ) {
+	// bump up the ref count so we can remove this later without
+	// having ssg try to free the memory.
+	lightmaps_transform->ref();
+	ground->addKid( lightmaps_transform );
+    }
+    // ADA
 
     loaded = true;
 }
@@ -803,4 +1412,29 @@ FGTileEntry::disconnect_ssg_nodes()
 	    exit(-1);
 	}
     }
+
+    // ADA
+    //runway lights - 23 Mar 2001
+    // Delete runway lights and free memory
+    if ( lightmaps_transform ) {
+	// delete the runway lighting branch
+	pcount = lightmaps_transform->getNumParents();
+	if ( pcount > 0 ) {
+	    // find the first parent (should only be one)
+	    ssgBranch *parent = lightmaps_transform->getParent( 0 ) ;
+	    if( parent ) {
+		parent->removeKid( lightmaps_transform );
+		lightmaps_transform = NULL;
+	    } else {
+		SG_LOG( SG_TERRAIN, SG_ALERT,
+			"lightmaps parent pointer is NULL!  Dying" );
+		exit(-1);
+	    }
+	} else {
+	    SG_LOG( SG_TERRAIN, SG_ALERT,
+		    "Parent count is zero for an ssg lightmap tile!  Dying" );
+	    exit(-1);
+	}
+    }
+    // ADA
 }

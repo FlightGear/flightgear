@@ -151,6 +151,18 @@ private:
     // want based on lighting conditions.
     ssgSelector *lights_brightness;
 
+    // ADA --->
+    // Runway centre coords.
+    Point3D rway_center; // Reqd. for switching as function of distance from runway center
+    //pointers for Runway lights    
+    ssgTransform *lightmaps_transform; // branch for runway lights
+    ssgRangeSelector *lightmaps_range; // tried to maintain same structure as Curt's ground
+    ssgSelector *lightmaps_brightness; // selector node for points/ lightmaps
+
+    ssgSimpleState *lightmap_state; // OpenGL state of the polygons that make up runway lights
+    ssgVertexArray *light_points; // array of runway light coords.
+    // <--- ADA
+
     /**
      * Indicates this tile has been loaded from a file and connected
      * into the scene graph.  Note that this may be set asynchronously
@@ -171,6 +183,12 @@ private:
     ssgLeaf* gen_lights( ssgVertexArray *lights, int inc, float bright );
 
 public:
+
+    // ADA --->
+    ssgTransform *ols_transform; // transform node for flols simulation
+    ssgSelector *lightmaps_sequence; // selector node for points/ lightmaps
+    ssgBranch* gen_runway_lights(ssgVertexArray *points,ssgVertexArray *normal, ssgVertexArray *dir, int *type);
+    // <--- ADA
 
     // Constructor
     FGTileEntry( const SGBucket& b );
