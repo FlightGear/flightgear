@@ -86,7 +86,7 @@ bool FGMaterialLib::load( const string& mpath ) {
       FGNewMat * m = new FGNewMat(node);
 
       vector<const SGPropertyNode *>names = node->getChildren("name");
-      for (int j = 0; j < names.size(); j++) {
+      for (unsigned int j = 0; j < names.size(); j++) {
 	m->ref();
 	matlib[names[j]->getStringValue()] = m;
 	SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material "

@@ -31,8 +31,8 @@
 class FGMagicCarpet: public FGInterface {
 
 public:
-    FGMagicCarpet::FGMagicCarpet( double dt );
-    FGMagicCarpet::~FGMagicCarpet();
+    FGMagicCarpet( double dt );
+    ~FGMagicCarpet();
 
     // reset flight params to a specific position 
     void init();

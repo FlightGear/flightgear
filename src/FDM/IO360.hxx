@@ -158,16 +158,16 @@ private:
     float Calculate_Delta_T_Exhaust(void);
 
     // Calculate cylinder head temperature
-    void FGNewEngine::Calc_CHT(void);
+    void Calc_CHT(void);
 
     // Calculate exhaust gas temperature
-    void FGNewEngine::Calc_EGT(void);
+    void Calc_EGT(void);
 
     // Calculate fuel flow in gals/hr
-    void FGNewEngine::Calc_Fuel_Flow_Gals_Hr(void);
+    void Calc_Fuel_Flow_Gals_Hr(void);
 
     // Calculate current percentage power
-    void FGNewEngine::Calc_Percentage_Power(bool mag_left, bool mag_right);
+    void Calc_Percentage_Power(bool mag_left, bool mag_right);
 
     // Calculate Oil Temperature
     float Calc_Oil_Temp (float oil_temp);
@@ -176,7 +176,7 @@ private:
     float Calc_Oil_Press (float Oil_Temp, float Engine_RPM);
 
     // Propeller calculations.
-    void FGNewEngine::Do_Prop_Calcs(void);
+    void Do_Prop_Calcs(void);
 
 public:
 

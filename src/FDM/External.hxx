@@ -31,8 +31,8 @@
 class FGExternal: public FGInterface {
 
 public:
-    FGExternal::FGExternal( double dt );
-    FGExternal::~FGExternal();
+    FGExternal( double dt );
+    ~FGExternal();
 
     // reset flight params to a specific position 
     void init();

@@ -130,7 +130,7 @@ public:
     bool search( const string& aptid, const int hdg, FGRunway* runway );
 
     // Return the runway number of the runway closest to a given heading
-    string FGRunways::search( const string& aptid, const int tgt_hdg );
+    string search( const string& aptid, const int tgt_hdg );
 
     FGRunway search( const string& aptid );
     bool next( FGRunway* runway );

@@ -99,9 +99,9 @@ class FGJSBsim: public FGInterface {
 
 public:
     /// Constructor
-    FGJSBsim::FGJSBsim( double dt );
+    FGJSBsim( double dt );
     /// Destructor
-    FGJSBsim::~FGJSBsim();
+    ~FGJSBsim();
 
     /// copy FDM state to LaRCsim structures
     bool copy_to_JSBsim();

@@ -90,8 +90,7 @@ class FGMarkerBeacons {
     beacon_map_type beacon_map;
 
     // real add a marker beacon
-    bool FGMarkerBeacons::real_add( const int master_index,
-				    const FGMkrBeacon& b );
+    bool real_add( const int master_index, const FGMkrBeacon& b );
 
 public:
 

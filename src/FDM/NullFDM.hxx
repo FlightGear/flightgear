@@ -32,8 +32,8 @@
 class FGNullFDM: public FGInterface {
 
 public:
-    FGNullFDM::FGNullFDM( double dt );
-    FGNullFDM::~FGNullFDM();
+    FGNullFDM( double dt );
+    ~FGNullFDM();
 
     // reset flight params to a specific position 
     void init();

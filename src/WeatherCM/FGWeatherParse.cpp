@@ -112,7 +112,7 @@ void FGWeatherParse::input(const char *file)
 	    in >> temp.airpressure_history[2]; 
 	    in >> temp.airpressure_history[3]; 
 	    
-	    for (int i = 0; i < weather_station.size(); i++)
+	    for (unsigned int i = 0; i < weather_station.size(); i++)
 	    {
 		if ((weather_station[i].lat == temp.lat) && (weather_station[i].lon == temp.lon))
 		{
