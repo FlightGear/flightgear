@@ -122,6 +122,7 @@ FGGeneral general;
 // our initializations out of the glutIdleLoop() so that we can get a
 // splash screen up and running right away.
 static int idle_state = 0;
+static int global_multi_loop;
 
 // Another hack
 int use_signals = 0;
@@ -231,6 +232,11 @@ void fgRenderFrame( void ) {
     FGTime *t = FGTime::cur_time_params;
     // FGView *v = &current_view;
     static double last_visibility = -9999;
+    static bool in_puff = false;
+    static double puff_length = 0;
+    static double puff_progression = 0;
+    const double ramp_up = 0.15;
+    const double ramp_down = 0.15;
 
     double angle;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
@@ -353,8 +359,60 @@ void fgRenderFrame( void ) {
 	    double diff = fabs( cur_fdm_state->get_Altitude() * FEET_TO_METER -
 				current_options.get_clouds_asl() );
 	    // cout << "altitude diff = " << diff << endl;
-	    if ( diff < 125 ) {
-		actual_visibility = cur_visibility * (diff - 25) / 100.0;
+	    if ( diff < 75 ) {
+		if ( ! in_puff ) {
+		    // calc chance of entering cloud puff
+		    double rnd = fg_random();
+		    double chance = rnd * rnd * rnd;
+		    if ( chance > 0.95 /* * (diff - 25) / 50.0 */ ) {
+			in_puff = true;
+			do {
+			    puff_length = fg_random() * 2.0; // up to 2 seconds
+			} while ( puff_length <= 0.0 );
+			puff_progression = 0.0;
+		    }
+		}
+
+		actual_visibility = cur_visibility * (diff - 25) / 50.0;
+
+		if ( in_puff ) {
+		    // modify actual_visibility based on puff envelope
+
+		    if ( puff_progression <= ramp_up ) {
+			double x = FG_PI_2 * puff_progression / ramp_up;
+			double factor = 1.0 - sin( x );
+			actual_visibility = actual_visibility * factor;
+		    } else if ( puff_progression >= ramp_up + puff_length ) {
+			double x = FG_PI_2 * 
+			    (puff_progression - (ramp_up + puff_length)) /
+			    ramp_down;
+			double factor = sin( x );
+			actual_visibility = actual_visibility * factor;
+		    } else {
+			actual_visibility = 0.0;
+		    }
+
+		    /* cout << "len = " << puff_length
+			 << "  x = " << x 
+			 << "  factor = " << factor
+			 << "  actual_visibility = " << actual_visibility 
+			 << endl; */
+
+		    puff_progression += ( global_multi_loop * 
+					  current_options.get_speed_up() ) /
+			(double)current_options.get_model_hz();
+
+		    /* cout << "gml = " << global_multi_loop 
+			 << "  speed up = " << current_options.get_speed_up()
+			 << "  hz = " << current_options.get_model_hz() << endl;
+			 */ 
+
+		    if ( puff_progression > puff_length + ramp_up + ramp_down) {
+			in_puff = false; 
+		    }
+		}
+
+		// never let visibility drop below zero
 		if ( actual_visibility < 0 ) {
 		    actual_visibility = 0;
 		}
@@ -622,7 +680,7 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 static void fgMainLoop( void ) {
     FGTime *t;
     static long remainder = 0;
-    long elapsed, multi_loop;
+    long elapsed;
 #ifdef FANCY_FRAME_COUNTER
     int i;
     double accum;
@@ -727,17 +785,17 @@ static void fgMainLoop( void ) {
 	// Calculate model iterations needed for next frame
 	elapsed += remainder;
 
-	multi_loop = (int)(((double)elapsed * 0.000001) * 
+	global_multi_loop = (int)(((double)elapsed * 0.000001) * 
 			   current_options.get_model_hz());
-	remainder = elapsed - ( (multi_loop*1000000) / 
+	remainder = elapsed - ( (global_multi_loop*1000000) / 
 				current_options.get_model_hz() );
 	FG_LOG( FG_ALL, FG_DEBUG, 
-		"Model iterations needed = " << multi_loop
+		"Model iterations needed = " << global_multi_loop
 		<< ", new remainder = " << remainder );
 	
 	// flight model
-	if ( multi_loop > 0 ) {
-	    fgUpdateTimeDepCalcs(multi_loop, remainder);
+	if ( global_multi_loop > 0 ) {
+	    fgUpdateTimeDepCalcs(global_multi_loop, remainder);
 	} else {
 	    FG_LOG( FG_ALL, FG_DEBUG, 
 		    "Elapsed time is zero ... we're zinging" );
