@@ -1,9 +1,13 @@
 #ifndef _2D_DATA_FILE_READER_H_
 #define _2D_DATA_FILE_READER_H_
 
-#include <strstream.h>
+#include <simgear/compiler.h>
+
+#include STL_STRSTREAM
 #include "uiuc_parsefile.h"
 #include "uiuc_aircraft.h"
+
+FG_USING_NAMESPACE(std);
 
 int 
 uiuc_2DdataFileReader( string file_name, double convert_x, double convert_y, double convert_z,

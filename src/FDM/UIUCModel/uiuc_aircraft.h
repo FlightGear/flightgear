@@ -97,7 +97,7 @@
 
 FG_USING_STD(map);
 FG_USING_STD(iostream);
-#ifdef MACOS
+#if defined ( MACOS ) || defined ( _MSC_VER )
 FG_USING_STD(ofstream);
 #endif
 

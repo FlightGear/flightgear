@@ -65,8 +65,11 @@
  USA or view http://www.gnu.org/copyleft/gpl.html.
 
 **********************************************************************/
+#include <simgear/compiler.h>
 
 #include "uiuc_engine.h"
+
+FG_USING_STD(cerr);
 
 void uiuc_engine() 
 {

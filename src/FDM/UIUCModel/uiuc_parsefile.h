@@ -9,7 +9,7 @@
 
 FG_USING_STD(string);
 FG_USING_STD(list);
-#ifdef MACOS
+#if defined ( MACOS ) || defined ( _MSC_VER )
 FG_USING_STD(ifstream);
 FG_USING_STD(iostream);
 FG_USING_STD(endl);
