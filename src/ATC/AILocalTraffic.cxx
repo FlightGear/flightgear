@@ -200,6 +200,7 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	operatingState = initialState;
 	switch(operatingState) {
 	case PARKED:
+		tuned_station = ground;
 		ourGate = ground->GetGateNode();
 		if(ourGate == NULL) {
 			// Implies no available gates - what shall we do?
@@ -223,6 +224,7 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 		Transform();
 		break;
 	case TAXIING:
+		tuned_station = ground;
 		// FIXME - implement this case properly
 		return(false);	// remove this line when fixed!
 		break;
@@ -230,6 +232,8 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 		// For now we'll always start the in_pattern case on the threshold ready to take-off
 		// since we've got the implementation for this case already.
 		// TODO - implement proper generic in_pattern startup.
+		
+		tuned_station = tower;
 		
 		// Get the active runway details (and copy them into rwy)
 		GetRwyDetails();
@@ -315,12 +319,12 @@ void FGAILocalTraffic::Update(double dt) {
 		string trns = "Tower ";
 		double f = globals->get_ATC_mgr()->GetFrequency(airportID, TOWER) / 100.0;	
 		char buf[10];
-		sprintf(buf, "%f", f);
+		sprintf(buf, "%.2f", f);
 		trns += buf;
 		trns += " ";
 		trns += plane.callsign;
 		pending_transmission = trns;
-		Transmit(30.0);
+		ConditionalTransmit(30.0);
 		responseCounter = 0.0;
 		contactTower = false;
 		changeFreq = true;
@@ -330,6 +334,7 @@ void FGAILocalTraffic::Update(double dt) {
 	if((changeFreq) && (responseCounter > 8.0)) {
 		switch(changeFreqType) {
 		case TOWER:
+			tuned_station = tower;
 			freq = (double)tower->get_freq() / 100.0;
 			//Transmit("DING!");
 			// Contact the tower, even if only virtually
@@ -337,19 +342,15 @@ void FGAILocalTraffic::Update(double dt) {
 			tower->ContactAtHoldShort(plane, this, CIRCUIT);
 			break;
 		case GROUND:
+			tuned_station = ground;
 			freq = (double)ground->get_freq() / 100.0;
 			break;
 		// And to avoid compiler warnings...
-		case APPROACH:
-			break;
-		case ATIS:
-			break;
-		case ENROUTE:
-			break;
-		case DEPARTURE:
-			break;
-		case INVALID:
-			break;
+		case APPROACH:  break;
+		case ATIS:      break;
+		case ENROUTE:   break;
+		case DEPARTURE: break;
+		case INVALID:   break;
 		}
 	}
 	
@@ -469,7 +470,6 @@ void FGAILocalTraffic::Update(double dt) {
 				StartTaxi();
 			} else if(!taxiRequestPending) {
 				//cout << "(" << flush;
-				ground->RequestDeparture(plane, this);
 				// Do some communication
 				// airport name + tower + airplane callsign + location + request taxi for + operation type + ?
 				string trns = "";
@@ -479,7 +479,7 @@ void FGAILocalTraffic::Update(double dt) {
 				trns += " on apron parking request taxi for traffic pattern";
 				//cout << "trns = " << trns << endl;
 				pending_transmission = trns;
-				Transmit();
+				Transmit(1);
 				taxiRequestCleared = false;
 				taxiRequestPending = true;
 			}
@@ -892,7 +892,7 @@ void FGAILocalTraffic::CalculateSoD(double base_leg_pos, double downwind_leg_pos
 	//double turn_allowance = 150.0;	// Approximate distance in meters that a 90deg corner is shortened by turned in a light plane.
 	
 	double stod = pa / tan(ga * DCL_DEGREES_TO_RADIANS);	// distance in meters from touchdown point to start descent
-	cout << "Descent to start = " << stod << " meters out\n";
+	//cout << "Descent to start = " << stod << " meters out\n";
 	if(stod < blp) {	// Start descending on final
 		SoD.leg = FINAL;
 		SoD.y = stod * -1.0;
@@ -911,6 +911,7 @@ void FGAILocalTraffic::CalculateSoD(double base_leg_pos, double downwind_leg_pos
 void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 	// airport name + "traffic" + airplane callsign + pattern direction + pattern leg + rwy + ?
 	string trns = "";
+	int code = 0;
 	
 	trns += tower->get_name();
 	trns += " Traffic ";
@@ -932,6 +933,7 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 		// Fall through to DOWNWIND
 	case DOWNWIND:
 		trns += "downwind ";
+		code = 11;
 		break;
 	case TURN3:
 		// Fall through to BASE
@@ -954,7 +956,21 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 	trns += tower->get_name();
 	
 	pending_transmission = trns;	// FIXME - make up pending_transmission natively	
-	Transmit(90.0);		// Assume a report of this leg will be invalid if we can't transmit within a minute and a half.
+	ConditionalTransmit(90.0, code);		// Assume a report of this leg will be invalid if we can't transmit within a minute and a half.
+}
+
+// Callback handler
+void FGAILocalTraffic::ProcessCallback(int code) {
+	// 1 - Request Departure from ground
+	// 10 - report crosswind
+	// 11 - report downwind
+	// 12 - report base
+	// 13 - report final
+	if(code == 1) {
+		ground->RequestDeparture(plane, this);
+	} else if(code == 11) {
+		tower->ReportDownwind(plane.callsign);
+	}
 }
 
 void FGAILocalTraffic::ExitRunway(Point3D orthopos) {

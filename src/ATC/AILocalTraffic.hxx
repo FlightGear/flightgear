@@ -80,7 +80,11 @@ public:
 	
 	inline void DenyTaxiRequest() {taxiRequestCleared = false;}
 	
-	void RegisterTransmission(int code); 
+	void RegisterTransmission(int code);
+	
+	// Process callbacks sent by base class
+	// (These codes are not related to the codes above)
+	void ProcessCallback(int code);
 	
 	// This is a hack and will probably go eventually
 	inline bool AtHoldShort() {return holdingShort;}
