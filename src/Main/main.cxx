@@ -737,6 +737,7 @@ void fgUpdateTimeDepCalcs() {
     int multi_loop = 1;
 
     if ( !globals->get_freeze() && !initial_freeze ) {
+	// conceptually, this could be done for each fdm instance ...
 	SGTimeStamp current;
 	current.stamp();
 	long elapsed = current - cur_fdm_state->get_time_stamp();

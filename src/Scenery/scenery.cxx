@@ -48,6 +48,7 @@ struct fgSCENERY scenery;
 int fgSceneryInit( void ) {
     FG_LOG( FG_TERRAIN, FG_INFO, "Initializing scenery subsystem" );
 
+    scenery.center = Point3D(0.0);
     scenery.cur_elev = -9999;
 
     return 1;

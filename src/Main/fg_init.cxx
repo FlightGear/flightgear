@@ -356,14 +356,18 @@ bool fgInitPosition( void ) {
     f->set_Longitude( fgGetDouble("/position/longitude") * DEG_TO_RAD );
     f->set_Latitude( fgGetDouble("/position/latitude") * DEG_TO_RAD );
 
-    if ( scenery.cur_elev > fgGetDouble("/position/altitude") - 1) {
-        fgSetDouble("/position/altitude", scenery.cur_elev + 1 );
-    }
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "scenery.cur_elev = " << scenery.cur_elev );
+
+    // if ( scenery.cur_elev > fgGetDouble("/position/altitude") - 1) {
+    fgSetDouble("/position/altitude", scenery.cur_elev + 1 );
+    // }
 
     FG_LOG( FG_GENERAL, FG_INFO,
-	    "starting altitude is = " << fgGetDouble("/position/altitude") );
+	    "starting altitude is = " <<
+	    fgGetDouble("/position/altitude") );
 
-    f->set_Altitude( fgGetDouble("/position/altitude") * METER_TO_FEET );
+    f->set_Altitude( fgGetDouble("/position/altitude") );
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Initial position is: ("
 	    << (f->get_Longitude() * RAD_TO_DEG) << ", "
@@ -776,6 +780,12 @@ void fgReInitSubsystems( void )
     if( !freeze )
         globals->set_freeze( true );
     
+    // Initialize the Scenery Management subsystem
+    if ( ! fgSceneryInit() ) {
+    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Scenery initialization!" );
+	exit(-1);
+    }
+
     if( global_tile_mgr.init() ) {
 	// Load the local scenery data
 	global_tile_mgr.update( fgGetDouble("/position/longitude"),
@@ -787,9 +797,9 @@ void fgReInitSubsystems( void )
 
     // cout << "current scenery elev = " << scenery.cur_elev << endl;
 
-    fgInitPosition();
     fgFDMSetGroundElevation( fgGetString("/sim/flight-model"), 
 			     scenery.cur_elev );
+    fgInitPosition();
 
     // Reset our altitude if we are below ground
     FG_LOG( FG_GENERAL, FG_DEBUG, "Current altitude = "

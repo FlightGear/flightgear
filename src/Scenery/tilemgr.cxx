@@ -245,8 +245,6 @@ void FGTileMgr::initialize_queue()
     // system and load all relavant tiles
 
     FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << current_bucket );
-    FG_LOG( FG_TERRAIN, FG_INFO, "  Loading " 
-            << xrange * yrange << " tiles" );
     cout << "tile cache size = " << global_tile_cache.get_size() << endl;
 
     int i;
@@ -334,7 +332,7 @@ int FGTileMgr::update( double lon, double lat ) {
 
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
-	// cout << "initializing ... " << endl;
+	cout << "initializing scenery current elevation  ... " << endl;
 	sgdVec3 tmp_abs_view_pos;
 	sgVec3 tmp_view_pos;
 
@@ -354,6 +352,7 @@ int FGTileMgr::update( double lon, double lat ) {
 	} else {
 	    scenery.cur_elev = 0.0;
 	}
+	cout << "result = " << scenery.cur_elev << endl;
     } else {
 	// cout << "abs view pos = " << current_view.abs_view_pos
 	//      << " view pos = " << current_view.view_pos << endl;
