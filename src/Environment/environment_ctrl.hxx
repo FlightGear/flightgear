@@ -153,9 +153,12 @@ public:
 private:
     FGInterpolateEnvironmentCtrl *env;
 
-    char *_icao;
+    string _icao;
     float station_elevation_ft;
-    void fetch_data (const char *icao);
+    float update_interval_sec;
+    float elapsed;
+    bool fetch_data (const string &icao);
+    void update_env_config();
 };
 
 #endif // _ENVIRONMENT_CTRL_HXX

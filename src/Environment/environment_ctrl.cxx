@@ -319,17 +319,14 @@ FGInterpolateEnvironmentCtrl::bucket::operator< (const bucket &b) const
 
 FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
     : env( new FGInterpolateEnvironmentCtrl ),
-      _icao( strdup( fgGetString("/sim/presets/airport-id") ) )
+      _icao( fgGetString("/sim/presets/airport-id") ),
+      update_interval_sec( 60.0 ),
+      elapsed( 60.0 )
 {
 }
 
 FGMetarEnvironmentCtrl::~FGMetarEnvironmentCtrl ()
 {
-    if (_icao) {
-      free(_icao);
-      _icao = NULL;
-    }
-
    delete env;
    env = NULL;
 }
@@ -357,14 +354,8 @@ static void set_dewpoint_at_altitude( float dewpoint_degc, float altitude_ft ) {
 
 
 void
-FGMetarEnvironmentCtrl::init ()
+FGMetarEnvironmentCtrl::update_env_config ()
 {
-    if (_icao != NULL) {
-        free(_icao);
-        _icao = NULL;
-    }
-
-    fetch_data(_icao);
     fgSetupWind( fgGetDouble("/environment/metar/base-wind-range-from"),
                  fgGetDouble("/environment/metar/base-wind-range-to"),
                  fgGetDouble("/environment/metar/base-wind-speed-kt"),
@@ -378,33 +369,43 @@ FGMetarEnvironmentCtrl::init ()
                               station_elevation_ft );
     fgDefaultWeatherValue( "pressure-sea-level-inhg",
                            fgGetDouble("/environment/metar/pressure-inhg") );
+}
 
-    env->init();
+void
+FGMetarEnvironmentCtrl::init ()
+{
+    const SGPropertyNode *longitude
+        = fgGetNode( "/position/longitude-deg", true );
+    const SGPropertyNode *latitude
+        = fgGetNode( "/position/latitude-deg", true );
+
+    bool found_metar = false;
+    while ( !found_metar ) {
+        FGAirport a = globals->get_airports()
+            ->search( longitude->getDoubleValue(),
+                      latitude->getDoubleValue(),
+                      true );
+        if ( fetch_data( a.id ) ) {
+            cout << "closest station w/ metar = " << a.id << endl;
+            _icao = a.id;
+            elapsed = 0.0;
+            update_env_config();
+            env->init();
+            found_metar = true;
+        } else {
+            // mark as no metar so it doesn't show up in subsequent
+            // searches.
+            cout << "no metar at metar = " << a.id << endl;
+            globals->get_airports()->no_metar( a.id );
+        }
+    }
 }
 
 void
 FGMetarEnvironmentCtrl::reinit ()
 {
 #if 0
-    if (_icao != NULL) {
-        free(_icao);
-        _icao = NULL;
-    }
-
-    fetch_data(_icao);
-    fgSetupWind( fgGetDouble("/environment/metar/base-wind-range-from"),
-                 fgGetDouble("/environment/metar/base-wind-range-to"),
-                 fgGetDouble("/environment/metar/base-wind-speed-kt"),
-                 fgGetDouble("/environment/metar/gust-wind-speed-kt") );
-
-    fgDefaultWeatherValue( "visibility-m",
-                           fgGetDouble("/environment/metar/min-visibility-m") );
-    set_temp_at_altitude( fgGetDouble("/environment/metar/temperature-degc"),
-                          station_elevation_ft );
-    set_dewpoint_at_altitude( fgGetDouble("/environment/metar/dewpoint-degc"),
-                              station_elevation_ft );
-    fgDefaultWeatherValue( "pressure-sea-level-inhg",
-                           fgGetDouble("/environment/metar/pressure-inhg") );
+    update_env_config();
 #endif
 
     env->reinit();
@@ -413,6 +414,29 @@ FGMetarEnvironmentCtrl::reinit ()
 void
 FGMetarEnvironmentCtrl::update(double delta_time_sec)
 {
+    const SGPropertyNode *longitude
+        = fgGetNode( "/position/longitude-deg", true );
+    const SGPropertyNode *latitude
+        = fgGetNode( "/position/latitude-deg", true );
+    elapsed += delta_time_sec;
+    if ( elapsed > update_interval_sec ) {
+        FGAirport a = globals->get_airports()
+            ->search( longitude->getDoubleValue(),
+                      latitude->getDoubleValue(),
+                      true );
+        if ( fetch_data( a.id ) ) {
+            cout << "closest station w/ metar = " << a.id << endl;
+           _icao = a.id;
+            elapsed = 0.0;
+            update_env_config();
+            env->init();
+        } else {
+            // mark as no metar so it doesn't show up in subsequent
+            // searches.
+            cout << "no metar at metar = " << a.id << endl;
+            globals->get_airports()->no_metar( a.id );
+        }
+    }
     env->update(delta_time_sec);
 }
 
@@ -422,21 +446,18 @@ FGMetarEnvironmentCtrl::setEnvironment (FGEnvironment * environment)
     env->setEnvironment(environment);
 }
 
-void
-FGMetarEnvironmentCtrl::fetch_data (const char *icao)
+bool
+FGMetarEnvironmentCtrl::fetch_data (const string &icao)
 {
     char s[128];
     double d, dt;
     int i;
 
-    if ((icao == NULL) && (_icao == NULL)) {
-        _icao = strdup( fgGetString("/sim/presets/airport-id") );
+    if ((icao == "") && (_icao == "")) {
+        _icao = fgGetString("/sim/presets/airport-id");
 
-    } else if (icao != NULL) {
-        if (_icao != NULL)
-            free(_icao);
-
-        _icao = strdup(icao);
+    } else if (icao != "") {
+        _icao = icao;
     }
 
     // fetch station elevation if exists
@@ -446,11 +467,11 @@ FGMetarEnvironmentCtrl::fetch_data (const char *icao)
     // fetch current metar data
     SGMetar *m;
     try {
-        m = new SGMetar(_icao);
+        m = new SGMetar( _icao.c_str() );
     } catch (const sg_io_exception& e) {
         SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "
                                       << e.getFormattedMessage().c_str() );
-        return;
+        return false;
     }
 
     d = m->getMinVisibility().getVisibility_m();
@@ -557,6 +578,8 @@ FGMetarEnvironmentCtrl::fetch_data (const char *icao)
     }
 
     delete m;
+
+    return true;
 }
 
 
