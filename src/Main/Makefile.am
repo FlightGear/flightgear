@@ -5,13 +5,13 @@ WEATHER_LIBS = $(top_builddir)/src/Environment/libEnvironment.a
 endif
 
 if ENABLE_MPLAYER_AS
-MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a $(network_LIBS)
+MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a
 else
 MPLAYER_LIBS = 
 endif
 
 if ENABLE_NETWORK_OLK
-NETWORK_LIBS = $(top_builddir)/src/NetworkOLK/libNetworkOLK.a $(network_LIBS)
+NETWORK_LIBS = $(top_builddir)/src/NetworkOLK/libNetworkOLK.a
 else
 NETWORK_LIBS =
 endif
@@ -93,6 +93,7 @@ fgfs_LDADD = \
 	-lsgmagvar -lsgmisc -lsgxml -lsgsound -lsgserial \
 	$(THREAD_LIBS) \
 	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
+	$(network_LIBS) \
         $(PSL_LIBS) \
 	-lmk4 -lz \
 	$(opengl_LIBS) \
