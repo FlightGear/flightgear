@@ -88,7 +88,7 @@ int fgTileMgrInit( void ) {
 
 
 // load a tile
-void fgTileMgrLoadTile( const FGBucket& p, int *index) {
+void fgTileMgrLoadTile( FGBucket& p, int *index) {
     fgTILECACHE *c;
 
     c = &global_tile_cache;

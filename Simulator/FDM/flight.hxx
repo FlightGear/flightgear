@@ -81,6 +81,8 @@
  */
 
 
+#include <math.h>
+
 #include <Time/timestamp.hxx>
 
 #ifndef __cplusplus                                                          

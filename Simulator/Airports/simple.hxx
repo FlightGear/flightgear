@@ -36,6 +36,8 @@
 #include <Include/compiler.h>
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <istream>
+#elif defined( FG_HAVE_NATIVE_SGI_COMPILERS )
+#  include <iostream.h>
 #else
 #  include <istream.h>
 #endif
@@ -45,7 +47,10 @@
 
 FG_USING_STD(string);
 FG_USING_STD(set);
+
+#if ! defined( FG_HAVE_NATIVE_SGI_COMPILERS )
 FG_USING_STD(istream);
+#endif
 
 
 class fgAIRPORT {

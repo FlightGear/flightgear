@@ -39,7 +39,10 @@
 #endif
 
 FG_USING_STD(string);
+
+#if ! defined( FG_HAVE_NATIVE_SGI_COMPILERS )
 FG_USING_STD(ostream);
+#endif
 
 #include <Include/fg_constants.h>
 
