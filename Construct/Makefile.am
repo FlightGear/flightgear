@@ -1,0 +1,4 @@
+SUBDIRS = \
+	Array \
+	Clipper \
+	Main
