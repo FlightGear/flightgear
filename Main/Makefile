@@ -67,7 +67,8 @@ LIBS =  $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
 CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
 OFILES = $(CFILES:.c=.o)
 AFILES = ../flight/libflight.a ../flight/slew/libslew.a \
-	../aircraft/libaircraft.a ../scenery/libscenery.a
+	../flight/LaRCsim/libLaRCsim.a ../aircraft/libaircraft.a \
+	../scenery/libscenery.a
 
 
 
@@ -103,6 +104,9 @@ mesh2GL.o: mesh2GL.c ../scenery/mesh.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1997/05/29 22:39:50  curt
+# Working on incorporating the LaRCsim flight model.
+#
 # Revision 1.6  1997/05/29 02:33:23  curt
 # Updated to reflect changing interfaces in other "modules."
 #

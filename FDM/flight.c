@@ -23,20 +23,48 @@
  * (Log is kept at end of this file)
  **************************************************************************/
 
-
+#include <stdio.h>
 #include "flight.h"
 
 
 /* Initialize the flight model parameters */
-int fgFlightModelInit(int model);
+int fgFlightModelInit(int model, struct flight_params *f, double dt) {
+    int result;
+
+    if ( model == FG_LARCSIM ) {
+	fgFlight_2_LaRCsim(f);  /* translate FG to LaRCsim structure */
+	fgLaRCsimInit(dt);
+	printf("FG pos = %.2f\n", FG_Latitude);
+	fgLaRCsim_2_Flight(f);  /* translate LaRCsim back to FG	structure */
+    } else {
+	printf("Unimplemented flight model == %d\n", model);
+    }
+
+    return(result);
+}
 
 
-/* Run an iteration of the flight model */
-int fgFlightModelUpdate(int model);
+/* Run multiloop iterations of the flight model */
+int fgFlightModelUpdate(int model, struct flight_params *f, int multiloop) {
+    int result;
+
+    if ( model == FG_LARCSIM ) {
+	fgFlight_2_LaRCsim(f);  /* translate FG to LaRCsim structure */
+	fgLaRCsimUpdate(multiloop);
+	fgLaRCsim_2_Flight(f);  /* translate LaRCsim back to FG	structure */
+    } else {
+	printf("Unimplemented flight model == %d\n", model);
+    }
+
+    return(result);
+}
 
 
 /* $Log$
-/* Revision 1.1  1997/05/29 02:35:04  curt
-/* Initial revision.
+/* Revision 1.2  1997/05/29 22:39:57  curt
+/* Working on incorporating the LaRCsim flight model.
 /*
+ * Revision 1.1  1997/05/29 02:35:04  curt
+ * Initial revision.
+ *
  */

@@ -28,18 +28,24 @@
 #define LS_INTERFACE_H
 
 
+#include "../flight.h"
+
+
 /* reset flight params to a specific position */ 
 int fgLaRCsimInit(double dt);
 
 /* update position based on inputs, positions, velocities, etc. */
-int fgLaRCsimUpdate();
+int fgLaRCsimUpdate(int multiloop);
 
 
 #endif LS_INTERFACE_H
 
 
 /* $Log$
-/* Revision 1.1  1997/05/29 00:09:58  curt
-/* Initial Flight Gear revision.
+/* Revision 1.2  1997/05/29 22:39:59  curt
+/* Working on incorporating the LaRCsim flight model.
 /*
+ * Revision 1.1  1997/05/29 00:09:58  curt
+ * Initial Flight Gear revision.
+ *
  */

@@ -34,6 +34,9 @@
 
 $Header$
 $Log$
+Revision 1.2  1997/05/29 22:39:58  curt
+Working on incorporating the LaRCsim flight model.
+
 Revision 1.1  1997/05/29 00:09:57  curt
 Initial Flight Gear revision.
 
@@ -84,6 +87,9 @@ static char rcsid[] = "$Id$";
 #include <stdio.h>
 #include "ls_types.h"
 #include "ls_sym.h"
+
+/* temp */
+#include "ls_generic.h"
 
 #define MAX_NUMBER_OF_CONTINUOUS_STATES 100
 #define MAX_NUMBER_OF_DISCRETE_STATES  20
@@ -175,7 +181,11 @@ void ls_init()
 
     Simtime = 0;
 
+    printf("LS in init() pos = %.2f\n", Latitude);
+
     ls_init_init();
+
+    printf("LS after init_init() pos = %.2f\n", Latitude);
     /* move the states to proper values */
 
     /* commented out by CLO
@@ -192,7 +202,11 @@ void ls_init()
   
     model_init();
 
+    printf("LS after model_init() pos = %.2f\n", Latitude);
+
     ls_step(0.0, -1);
+
+    printf("LS after ls_step() pos = %.2f\n", Latitude);
 }
 
 

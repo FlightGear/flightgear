@@ -28,7 +28,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>    /* for timer routines */
-#include <sys/time.h>  /* for timer routines */
+
+#if defined(__WATCOMC__) || defined(__MSC__)
+#  include <time.h>
+#else
+#  include <sys/time.h>
+#endif
 
 #ifdef GLUT
     #include <GL/glut.h>
@@ -41,6 +46,12 @@
 
 #include "../aircraft/aircraft.h"
 #include "../scenery/scenery.h"
+
+#define FG_LON_2_DEG(RAD) ((RAD) * 180.0 / M_PI)
+#define FG_LAT_2_DEG(RAD) (-1.0 * (RAD) * 180.0 / M_PI)
+
+#define FG_DEG_2_LON(DEG) ((DEG) * M_PI / 180.0)
+#define FG_DEG_2_LAT(DEG) (-1.0 * (DEG) * M_PI / 180.0)
 
 /* This is a record containing all the info for the aircraft currently
    being operated */
@@ -62,9 +73,8 @@ double fogDensity = 2000.0;
 
 /* Another hack */
 #define DEFAULT_MODEL_HZ 20
+#define DEFAULT_MULTILOOP 6
 double Simtime;
-int Overrun;
-int model_dt;
 
 
 /**************************************************************************
@@ -109,6 +119,7 @@ static void fgInitVisuals() {
  **************************************************************************/
 
 static void fgUpdateViewParams() {
+    double pos_x, pos_y, pos_z;
     struct flight_params *f;
 
     f = &current_aircraft.flight;
@@ -120,8 +131,13 @@ static void fgUpdateViewParams() {
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(f->pos_x, f->pos_y, f->pos_z,
-	      f->pos_x + cos(f->Psi), f->pos_y + sin(f->Psi), f->pos_z,
+    
+    pos_x = FG_LAT_2_DEG(FG_Latitude) * 3600.0;
+    pos_y = FG_LON_2_DEG(FG_Longitude) * 3600.0;
+    pos_z = FG_Altitude;
+
+    gluLookAt(pos_x, pos_y, pos_z,
+	      pos_x + cos(FG_Psi), pos_y + sin(FG_Psi), pos_z,
 	      0.0, 0.0, 1.0);
 }
 
@@ -159,7 +175,11 @@ static struct itimerval t, ot;
 
 /* This routine catches the SIGALRM */
 void fgTimerCatch() {
+    struct flight_params *f;
     static double lastSimtime = -99.9;
+    int Overrun;
+
+    f = &current_aircraft.flight;
 
     /* printf("In fgTimerCatch()\n"); */
 
@@ -171,7 +191,7 @@ void fgTimerCatch() {
     } */
 
     /* update the flight model */
-    fgSlewUpdate();
+    fgFlightModelUpdate(FG_LARCSIM, f, DEFAULT_MULTILOOP);
 
     lastSimtime = Simtime;
     signal(SIGALRM, fgTimerCatch);
@@ -260,6 +280,10 @@ static void fgReshape( int width, int height ) {
  **************************************************************************/
 
 int main( int argc, char *argv[] ) {
+    struct flight_params *f;
+
+    f = &current_aircraft.flight;
+
     /* parse the scenery file */
     parse_scenery(argv[1]);
 
@@ -271,13 +295,13 @@ int main( int argc, char *argv[] ) {
       glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
 
       /* Define initial window size */
-      glutInitWindowSize(640, 400);
+      glutInitWindowSize(640, 480);
 
       /* Initialize the main window */
       glutCreateWindow("Terrain Demo");
     #elif MESA_TK
       /* Define initial window size */
-      tkInitPosition(0, 0, 640, 400);
+      tkInitPosition(0, 0, 640, 480);
 
       /* Define Display Parameters */
       tkInitDisplayMode( TK_RGB | TK_DEPTH | TK_DOUBLE | TK_DIRECT );
@@ -291,10 +315,51 @@ int main( int argc, char *argv[] ) {
     /* setup view parameters, only makes GL calls */
     fgInitVisuals();
 
+    /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
+
+    /* Initial Position */
+    FG_Latitude  = FG_DEG_2_LAT( -398673.28 / 3600.0 );
+    FG_Longitude = FG_DEG_2_LON(  120625.64 / 3600.0 );
+    FG_Altitude  = 3.758099E+00;
+
+    printf("Initial position is: (%.4f, %.4f, %.2f)\n", FG_Latitude, 
+	   FG_Longitude, FG_Altitude);
+
+    /* Initial Velocity */
+    FG_V_north = 0.0 /*  7.287719E+00 */;
+    FG_V_east  = 0.0 /*  1.521770E+03 */;
+    FG_V_down  = 0.0 /* -1.265722E-05 */;
+
+    /* Initial Orientation */
+    FG_Phi   = -2.658474E-06;
+    FG_Theta =  7.401790E-03;
+    FG_Psi   =  1.391358E-03;
+
+    /* Initial Angular B rates */
+    FG_P_body = 7.206685E-05;
+    FG_Q_body = 0.000000E+00;
+    FG_R_body = 9.492658E-05;
+
+    FG_Earth_position_angle = 0.000000E+00;
+
+    /* Mass properties and geometry values */
+    FG_Mass = 8.547270E+01;
+    FG_I_xx = 1.048000E+03;
+    FG_I_yy = 3.000000E+03;
+    FG_I_zz = 3.530000E+03;
+    FG_I_xz = 0.000000E+00;
+
+    /* CG position w.r.t. ref. point */
+    FG_Dx_cg = 0.000000E+00;
+    FG_Dy_cg = 0.000000E+00;
+    FG_Dz_cg = 0.000000E+00;
+
     /* Set initial position and slew parameters */
     /* fgSlewInit(-398391.3, 120070.4, 244, 3.1415); */ /* GLOBE Airport */
     /* fgSlewInit(-335340,162540, 15, 4.38); */
-    fgSlewInit(-398673.28,120625.64, 53, 4.38);
+    /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
+
+    fgFlightModelInit(FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ);
 
     /* build all objects */
     fgSceneryInit();
@@ -343,9 +408,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.6  1997/05/29 12:31:39  curt
-/* Minor tweaks, moving towards general flight model integration.
+/* Revision 1.7  1997/05/29 22:39:49  curt
+/* Working on incorporating the LaRCsim flight model.
 /*
+ * Revision 1.6  1997/05/29 12:31:39  curt
+ * Minor tweaks, moving towards general flight model integration.
+ *
  * Revision 1.5  1997/05/29 02:33:23  curt
  * Updated to reflect changing interfaces in other "modules."
  *

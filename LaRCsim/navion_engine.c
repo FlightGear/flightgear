@@ -71,8 +71,10 @@ void engine( SCALAR dt, int init )
     if (init || sim_control_.sim_type != cockpit) 
 	Throttle[3] = Throttle_pct;
 
-    F_X_engine = Throttle[3]*813.4/0.2;
-    F_Z_engine = Throttle[3]*11.36/0.2;
+    /* F_X_engine = Throttle[3]*813.4/0.2; */  /* original code */
+    /* F_Z_engine = Throttle[3]*11.36/0.2; */  /* original code */
+    F_X_engine = Throttle[3]*813.4/0.85;
+    F_Z_engine = Throttle[3]*11.36/0.85;
 
     Throttle_pct = Throttle[3];
 }

@@ -32,6 +32,10 @@
 #include "../../controls/controls.h"
 
 
+#ifndef M_PI                                    
+#define M_PI        3.14159265358979323846      /* pi */
+#endif                                                           
+
 #ifndef PI2                                               
 #define PI2  (M_PI + M_PI)                      
 #endif        
@@ -43,7 +47,7 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
 
     f = &current_aircraft.flight;
 
-    f->pos_x = pos_x;
+    /*    f->pos_x = pos_x;
     f->pos_y = pos_y;
     f->pos_z = pos_z;
 
@@ -59,7 +63,7 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
     f->vel_Theta = 0.0;
     f->vel_Psi = 0.0;
 
-    f->Psi = heading;
+    f->Psi = heading; */
 }
 
 
@@ -71,7 +75,7 @@ void fgSlewUpdate() {
     f = &current_aircraft.flight;
     c = &current_aircraft.controls;
 
-    f->Psi += ( c->aileron / 8 );
+    /* f->Psi += ( c->aileron / 8 );
     if ( f->Psi > PI2 ) {
 	f->Psi -= PI2;
     } else if ( f->Psi < 0 ) {
@@ -81,14 +85,17 @@ void fgSlewUpdate() {
     f->vel_x = -c->elev;
 
     f->pos_x = f->pos_x + (cos(f->Psi) * f->vel_x);
-    f->pos_y = f->pos_y + (sin(f->Psi) * f->vel_x);
+    f->pos_y = f->pos_y + (sin(f->Psi) * f->vel_x); */
 }
 
 
 /* $Log$
-/* Revision 1.2  1997/05/29 12:30:19  curt
-/* Some initial mods to work better in a timer environment.
+/* Revision 1.3  1997/05/29 22:40:00  curt
+/* Working on incorporating the LaRCsim flight model.
 /*
+ * Revision 1.2  1997/05/29 12:30:19  curt
+ * Some initial mods to work better in a timer environment.
+ *
  * Revision 1.1  1997/05/29 02:29:42  curt
  * Moved to their own directory.
  *

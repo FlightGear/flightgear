@@ -24,10 +24,13 @@
  **************************************************************************/
 
 
+#include <math.h>
 #include <stdio.h>
 
 #include "aircraft.h"
 
+#define FG_LON_2_DEG(RAD) ((RAD) * 180.0 / M_PI)
+#define FG_LAT_2_DEG(RAD) (-1.0 * (RAD) * 180.0 / M_PI)
 
 /* Display various parameters to stdout */
 void aircraft_debug(int type) {
@@ -37,17 +40,22 @@ void aircraft_debug(int type) {
     f = &current_aircraft.flight;
     c = &current_aircraft.controls;
 
-    printf("Pos = (%.2f,%.2f,%.2f)  Dir = %.2f\n", 
-           f->pos_x, f->pos_y, f->pos_z, f->Psi);
+    printf("Pos = (%.2f,%.2f,%.2f)  Dir = %.2f  Mach = %.2f\n", 
+           FG_LAT_2_DEG(FG_Latitude) * 3600.0, 
+	   FG_LON_2_DEG(FG_Longitude) * 3600.0, 
+	   FG_Altitude, FG_Psi, FG_Mach_number);
     printf("Elev = %.2f, Aileron = %.2f, Rudder = %.2f\n", 
 	   c->elev, c->aileron, c->rudder);
 }
 
 
 /* $Log$
-/* Revision 1.2  1997/05/23 15:40:29  curt
-/* Added GNU copyright headers.
+/* Revision 1.3  1997/05/29 22:39:56  curt
+/* Working on incorporating the LaRCsim flight model.
 /*
+ * Revision 1.2  1997/05/23 15:40:29  curt
+ * Added GNU copyright headers.
+ *
  * Revision 1.1  1997/05/16 15:58:24  curt
  * Initial revision.
  *
