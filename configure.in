@@ -244,3 +244,5 @@ AC_OUTPUT( \
 	Tools/Triangle/Makefile \
 	Tests/Makefile \
 )
+
+AC_OUTPUT_COMMANDS([chmod 755 Simulator/Main/runfg])

@@ -1,10 +1,13 @@
 New in 0.52
+* Fixed a small problem with moon rendering.
 * Fog color tries to track the sky color at the center of view in sunrise
   and sunset situations.
 * Optimizations from Norman Vine
 * Code fixes and tweaks from Charlie Hotchkiss.
 * Added an --enable/disable-sound option.
 * Added a pause key "p"
+* Added command line options to specify initial position and orientation.
+* Added command line option to start in paused or unpaused state.
 
 New in 0.51
 * Translucent menus
