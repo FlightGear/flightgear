@@ -141,22 +141,16 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
     // Attempt to open "path.gz" or "path"
     fg_gzifstream in( path );
-    if ( ! in )
-    {
-	// Attempt to open "path.obj" or "path.obj.gz"
-	in.open( path + ".obj" );
-	if ( ! in )
-	{
-	    FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << path );
-	    return 0;
-	}
+    if ( ! in ) {
+	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << path );
+	return 0;
     }
 
     shading = current_options.get_shading();
 
     in_fragment = 0;
-    t->ncount = 1;
-    vncount = 1;
+    t->ncount = 0;
+    vncount = 0;
     t->bounding_radius = 0.0;
     nodes = t->nodes;
     center = t->center;
@@ -165,353 +159,354 @@ int fgObjLoad( const string& path, fgTILE *t) {
     stopwatch.start();
 
     // ignore initial comments and blank lines. (priming the pump)
-    in >> skipcomment;
+    // in >> skipcomment;
+    string line;
 
-    while ( ! in.eof() )
-    {
-
+    while ( ! in.eof() ) {
 	string token;
-	in >> token;
+	char c;
 
-	// printf("token = %s\n", token.c_str() );
+	in >> skipws;
 
-	if ( token == "gbs" )
-	{
-	    // reference point (center offset)
-	    in >> t->center >> t->bounding_radius;
-	    center = t->center;
-	}
-	else if ( token == "bs" )
-	{
-	    // reference point (center offset)
-	    in >> fragment.center;
-	    in >> fragment.bounding_radius;
-	}
-	else if ( token == "vn" )
-	{
-	    // vertex normal
-	    if ( vncount < MAX_NODES ) {
-		in >> normals[vncount][0]
-		   >> normals[vncount][1]
-		   >> normals[vncount][2];
-		vncount++;
-	    } else {
-		FG_LOG( FG_TERRAIN, FG_ALERT, 
-			"Read too many vertex normals ... dying :-(" );
-		exit(-1);
-	    }
-	}
-	else if ( token[0] == 'v' )
-	{
-	    // node (vertex)
-	    if ( t->ncount < MAX_NODES ) {
-		in >> t->nodes[t->ncount][0]
-		   >> t->nodes[t->ncount][1]
-		   >> t->nodes[t->ncount][2];
-		t->ncount++;
-	    } else {
-		FG_LOG( FG_TERRAIN, FG_ALERT, 
-			"Read too many nodes ... dying :-(");
-		exit(-1);
-	    }
-	}
-	else if ( token == "usemtl" )
-	{
-	    // material property specification
+	if ( in.get( c ) && c == '#' ) {
+	    // process a comment line
 
-	    // this also signals the start of a new fragment
-	    if ( in_fragment ) {
-		// close out the previous structure and start the next
-		xglEnd();
-		xglEndList();
-		// printf("xglEnd(); xglEndList();\n");
+	    // getline( in, line );
+	    // cout << "comment = " << line << endl;
 
-		// update fragment
-		fragment.display_list = display_list;
+	    in >> token;
 
-		// push this fragment onto the tile's object list
-		t->fragment_list.push_back(fragment);
-	    } else {
-		in_fragment = 1;
-	    }
+	    if ( token == "gbs" ) {
+		// reference point (center offset)
+		in >> t->center >> t->bounding_radius;
+		center = t->center;
+		// cout << "center = " << center 
+		//      << " radius = " << t->bounding_radius << endl;
+	    } else if ( token == "bs" )	{
+		// reference point (center offset)
+		in >> fragment.center;
+		in >> fragment.bounding_radius;
 
-	    // printf("start of fragment (usemtl)\n");
+		// cout << "center = " << fragment.center 
+		//      << " radius = " << fragment.bounding_radius << endl;
+	    } else if ( token == "usemtl" ) {
+		// material property specification
 
-	    display_list = xglGenLists(1);
-	    xglNewList(display_list, GL_COMPILE);
-	    // printf("xglGenLists(); xglNewList();\n");
-	    in_faces = 0;
+		// this also signals the start of a new fragment
+		if ( in_fragment ) {
+		    // close out the previous structure and start the next
+		    xglEnd();
+		    xglEndList();
+		    // printf("xglEnd(); xglEndList();\n");
 
-	    // reset the existing face list
-	    // printf("cleaning a fragment with %d faces\n", 
-	    //        fragment.faces.size());
-	    fragment.init();
+		    // update fragment
+		    fragment.display_list = display_list;
 
-	    // scan the material line
-	    string material;
-	    in >> material;
-	    fragment.tile_ptr = t;
-
-	    // find this material in the properties list
-	    if ( ! material_mgr.find( material, fragment.material_ptr )) {
-		FG_LOG( FG_TERRAIN, FG_ALERT, 
-			"Ack! unknown usemtl name = " << material 
-			<< " in " << path );
-	    }
-
-	    // initialize the fragment transformation matrix
-	    /*
-	    for ( i = 0; i < 16; i++ ) {
-		fragment.matrix[i] = 0.0;
-	    }
-	    fragment.matrix[0] = fragment.matrix[5] =
-		fragment.matrix[10] = fragment.matrix[15] = 1.0;
-	    */
-	} else if ( token[0] == 't' ) {
-	    // start a new triangle strip
-
-	    n1 = n2 = n3 = n4 = 0;
-
-	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "    new tri strip = %s", line);
-	    in >> n1 >> n2 >> n3;
-	    fragment.add_face(n1, n2, n3);
-
-	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "(t) = ");
-
-	    xglBegin(GL_TRIANGLE_STRIP);
-	    // printf("xglBegin(tristrip) %d %d %d\n", n1, n2, n3);
-
-	    odd = 1; 
-	    scale = 1.0;
-
-	    if ( shading ) {
-		// Shading model is "GL_SMOOTH" so use precalculated
-		// (averaged) normals
-		MAT3_SCALE_VEC(normal, normals[n1], scale);
-		xglNormal3dv(normal);
-		pp = calc_tex_coords(nodes[n1], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3d(t->nodes[n1][0],t->nodes[n1][1],t->nodes[n1][2]);
-		xglVertex3dv(nodes[n1]);		
-
-		MAT3_SCALE_VEC(normal, normals[n2], scale);
-		xglNormal3dv(normal);
-		pp = calc_tex_coords(nodes[n2], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
-		//xglVertex3d(t->nodes[n2][0],t->nodes[n2][1],t->nodes[n2][2]);
-		xglVertex3dv(nodes[n2]);				
-
-		MAT3_SCALE_VEC(normal, normals[n3], scale);
-		xglNormal3dv(normal);
-                pp = calc_tex_coords(nodes[n3], center);
-                xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3d(t->nodes[n3][0],t->nodes[n3][1],t->nodes[n3][2]);
-		xglVertex3dv(nodes[n3]);
-	    } else {
-		// Shading model is "GL_FLAT" so calculate per face
-		// normals on the fly.
-		if ( odd ) {
-		    calc_normal(nodes[n1], nodes[n2], 
-				nodes[n3], approx_normal);
+		    // push this fragment onto the tile's object list
+		    t->fragment_list.push_back(fragment);
 		} else {
-		    calc_normal(nodes[n2], nodes[n1], 
-				nodes[n3], approx_normal);
+		    in_fragment = 1;
 		}
-		MAT3_SCALE_VEC(normal, approx_normal, scale);
-		xglNormal3dv(normal);
 
-		pp = calc_tex_coords(nodes[n1], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3d(t->nodes[n1][0],t->nodes[n1][1],t->nodes[n1][2]);
-		xglVertex3dv(nodes[n1]);		
+		// printf("start of fragment (usemtl)\n");
 
-		pp = calc_tex_coords(nodes[n2], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3d(t->nodes[n2][0],t->nodes[n2][1],t->nodes[n2][2]);
-		xglVertex3dv(nodes[n2]);		
+		display_list = xglGenLists(1);
+		xglNewList(display_list, GL_COMPILE);
+		// printf("xglGenLists(); xglNewList();\n");
+		in_faces = 0;
 
-		pp = calc_tex_coords(nodes[n3], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3d(t->nodes[n3][0],t->nodes[n3][1],t->nodes[n3][2]);
-		xglVertex3dv(nodes[n3]);		
-	    }
-	    // printf("some normals, texcoords, and vertices\n");
-
-	    odd = 1 - odd;
-	    last1 = n2;
-	    last2 = n3;
-
-	    // There can be three or four values 
-	    char c;
-	    while ( in.get(c) )
-	    {
-		if ( c == '\n' )
-		    break; // only the one
-
-		if ( isdigit(c) )
-		{
-		    in.putback(c);
-		    in >> n4;
-		    break;
+		// reset the existing face list
+		// printf("cleaning a fragment with %d faces\n", 
+		//        fragment.faces.size());
+		fragment.init();
+		
+		// scan the material line
+		string material;
+		in >> material;
+		fragment.tile_ptr = t;
+		
+		// find this material in the properties list
+		if ( ! material_mgr.find( material, fragment.material_ptr )) {
+		    FG_LOG( FG_TERRAIN, FG_ALERT, 
+			    "Ack! unknown usemtl name = " << material 
+			    << " in " << path );
 		}
-	    }
+		
+		// initialize the fragment transformation matrix
+		/*
+		 for ( i = 0; i < 16; i++ ) {
+	           fragment.matrix[i] = 0.0;
+	         }
+	         fragment.matrix[0] = fragment.matrix[5] =
+		 fragment.matrix[10] = fragment.matrix[15] = 1.0;
+	        */
+	    } else {
+		// unknown comment, just gobble the input untill the
+		// end of line
 
-	    if ( n4 > 0 ) {
-		fragment.add_face(n3, n2, n4);
+		in >> skipeol;
+	    }
+	} else {
+	    in.putback( c );
+	
+	    in >> token;
+
+	    // cout << "token = " << token << endl;
+
+	    if ( token == "vn" ) {
+		// vertex normal
+		if ( vncount < MAX_NODES ) {
+		    in >> normals[vncount][0]
+		       >> normals[vncount][1]
+		       >> normals[vncount][2];
+		    vncount++;
+		} else {
+		    FG_LOG( FG_TERRAIN, FG_ALERT, 
+			    "Read too many vertex normals ... dying :-(" );
+		    exit(-1);
+		}
+	    } else if ( token[0] == 'v' ) {
+		// node (vertex)
+		if ( t->ncount < MAX_NODES ) {
+		    in >> t->nodes[t->ncount][0]
+		       >> t->nodes[t->ncount][1]
+		       >> t->nodes[t->ncount][2];
+		    t->ncount++;
+		} else {
+		    FG_LOG( FG_TERRAIN, FG_ALERT, 
+			    "Read too many nodes ... dying :-(");
+		    exit(-1);
+		}
+	    } else if ( token[0] == 't' ) {
+		// start a new triangle strip
+
+		n1 = n2 = n3 = n4 = 0;
+
+		// fgPrintf( FG_TERRAIN, FG_DEBUG, 
+		//           "    new tri strip = %s", line);
+		in >> n1 >> n2 >> n3;
+		fragment.add_face(n1, n2, n3);
+
+		// fgPrintf( FG_TERRAIN, FG_DEBUG, "(t) = ");
+
+		xglBegin(GL_TRIANGLE_STRIP);
+		// printf("xglBegin(tristrip) %d %d %d\n", n1, n2, n3);
+
+		odd = 1; 
+		scale = 1.0;
 
 		if ( shading ) {
-		    // Shading model is "GL_SMOOTH"
-		    MAT3_SCALE_VEC(normal, normals[n4], scale);
+		    // Shading model is "GL_SMOOTH" so use precalculated
+		    // (averaged) normals
+		    MAT3_SCALE_VEC(normal, normals[n1], scale);
+		    xglNormal3dv(normal);
+		    pp = calc_tex_coords(nodes[n1], center);
+		    xglTexCoord2f(pp.lon(), pp.lat());
+		    xglVertex3dv(nodes[n1]);		
+
+		    MAT3_SCALE_VEC(normal, normals[n2], scale);
+		    xglNormal3dv(normal);
+		    pp = calc_tex_coords(nodes[n2], center);
+		    xglTexCoord2f(pp.lon(), pp.lat());
+		    xglVertex3dv(nodes[n2]);				
+
+		    MAT3_SCALE_VEC(normal, normals[n3], scale);
+		    xglNormal3dv(normal);
+		    pp = calc_tex_coords(nodes[n3], center);
+		    xglTexCoord2f(pp.lon(), pp.lat());
+		    xglVertex3dv(nodes[n3]);
 		} else {
-		    // Shading model is "GL_FLAT"
-		    calc_normal(nodes[n3], nodes[n2], nodes[n4], 
-				approx_normal);
+		    // Shading model is "GL_FLAT" so calculate per face
+		    // normals on the fly.
+		    if ( odd ) {
+			calc_normal(nodes[n1], nodes[n2], 
+				    nodes[n3], approx_normal);
+		    } else {
+			calc_normal(nodes[n2], nodes[n1], 
+				    nodes[n3], approx_normal);
+		    }
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
+		    xglNormal3dv(normal);
+
+		    pp = calc_tex_coords(nodes[n1], center);
+		    xglTexCoord2f(pp.lon(), pp.lat());
+		    xglVertex3dv(nodes[n1]);		
+
+		    pp = calc_tex_coords(nodes[n2], center);
+		    xglTexCoord2f(pp.lon(), pp.lat());
+		    xglVertex3dv(nodes[n2]);		
+		    
+		    pp = calc_tex_coords(nodes[n3], center);
+		    xglTexCoord2f(pp.lon(), pp.lat());
+		    xglVertex3dv(nodes[n3]);		
 		}
-		xglNormal3dv(normal);
-		pp = calc_tex_coords(nodes[n4], center);
-                xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3d(t->nodes[n4][0],t->nodes[n4][1],t->nodes[n4][2]);
-		xglVertex3dv(nodes[n4]);		
+		// printf("some normals, texcoords, and vertices\n");
 
 		odd = 1 - odd;
-		last1 = n3;
-		last2 = n4;
-		// printf("a normal, texcoord, and vertex (4th)\n");
-	    }
-	} else if ( token[0] == 'f' ) {
-	    // unoptimized face
+		last1 = n2;
+		last2 = n3;
 
-	    if ( !in_faces ) {
-		xglBegin(GL_TRIANGLES);
-		// printf("xglBegin(triangles)\n");
-		in_faces = 1;
-	    }
+		// There can be three or four values 
+		char c;
+		while ( in.get(c) ) {
+		    if ( c == '\n' ) {
+			break; // only the one
+		    }
+		    if ( isdigit(c) ){
+			in.putback(c);
+			in >> n4;
+			break;
+		    }
+		}
 
-	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "new triangle = %s", line);*/
-	    in >> n1 >> n2 >> n3;
-	    fragment.add_face(n1, n2, n3);
+		if ( n4 > 0 ) {
+		    fragment.add_face(n3, n2, n4);
 
-            // xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-	    xglNormal3dv(normals[n1]);
-	    pp = calc_tex_coords(nodes[n1], center);
-	    xglTexCoord2f(pp.lon(), pp.lat());
- 	    // xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
- 	    xglVertex3dv(nodes[n1]);
+		    if ( shading ) {
+			// Shading model is "GL_SMOOTH"
+			MAT3_SCALE_VEC(normal, normals[n4], scale);
+		    } else {
+			// Shading model is "GL_FLAT"
+			calc_normal(nodes[n3], nodes[n2], nodes[n4], 
+				    approx_normal);
+			MAT3_SCALE_VEC(normal, approx_normal, scale);
+		    }
+		    xglNormal3dv(normal);
+		    pp = calc_tex_coords(nodes[n4], center);
+		    xglTexCoord2f(pp.lon(), pp.lat());
+		    xglVertex3dv(nodes[n4]);		
+		    
+		    odd = 1 - odd;
+		    last1 = n3;
+		    last2 = n4;
+		    // printf("a normal, texcoord, and vertex (4th)\n");
+		}
+	    } else if ( token[0] == 'f' ) {
+		// unoptimized face
 
-            // xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-	    xglNormal3dv(normals[n2]);
-            pp = calc_tex_coords(nodes[n2], center);
-            xglTexCoord2f(pp.lon(), pp.lat());
-	    // xglVertex3d(t->nodes[n2][0], t->nodes[n2][1], t->nodes[n2][2]);
-	    xglVertex3dv(nodes[n2]);
+		if ( !in_faces ) {
+		    xglBegin(GL_TRIANGLES);
+		    // printf("xglBegin(triangles)\n");
+		    in_faces = 1;
+		}
+
+		// fgPrintf( FG_TERRAIN, FG_DEBUG, "new triangle = %s", line);*/
+		in >> n1 >> n2 >> n3;
+		fragment.add_face(n1, n2, n3);
+
+		// xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
+		xglNormal3dv(normals[n1]);
+		pp = calc_tex_coords(nodes[n1], center);
+		xglTexCoord2f(pp.lon(), pp.lat());
+		xglVertex3dv(nodes[n1]);
+
+		xglNormal3dv(normals[n2]);
+		pp = calc_tex_coords(nodes[n2], center);
+		xglTexCoord2f(pp.lon(), pp.lat());
+		xglVertex3dv(nodes[n2]);
 		
-            // xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
-	    xglNormal3dv(normals[n3]);
-            pp = calc_tex_coords(nodes[n3], center);
-            xglTexCoord2f(pp.lon(), pp.lat());
-	    // xglVertex3d(t->nodes[n3][0], t->nodes[n3][1], t->nodes[n3][2]);
-	    xglVertex3dv(nodes[n3]);
-	    // printf("some normals, texcoords, and vertices (tris)\n");
-	} else if ( token[0] == 'q' ) {
-	    // continue a triangle strip
-	    n1 = n2 = 0;
+		xglNormal3dv(normals[n3]);
+		pp = calc_tex_coords(nodes[n3], center);
+		xglTexCoord2f(pp.lon(), pp.lat());
+		xglVertex3dv(nodes[n3]);
+		// printf("some normals, texcoords, and vertices (tris)\n");
+	    } else if ( token[0] == 'q' ) {
+		// continue a triangle strip
+		n1 = n2 = 0;
 
-	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "continued tri strip = %s ", 
-	    //           line);
-	    in >> n1;
+		// fgPrintf( FG_TERRAIN, FG_DEBUG, "continued tri strip = %s ", 
+		//           line);
+		in >> n1;
 
-	    // There can be one or two values 
-	    char c;
-	    while ( in.get(c) )
-	    {
-		if ( c == '\n' )
-		    break; // only the one
+		// There can be one or two values 
+		char c;
+		while ( in.get(c) ) {
+		    if ( c == '\n' ) {
+			break; // only the one
+		    }
 
-		if ( isdigit(c) )
-		{
-		    in.putback(c);
-		    in >> n2;
-		    break;
+		    if ( isdigit(c) ) {
+			in.putback(c);
+			in >> n2;
+			break;
+		    }
 		}
-	    }
-	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "read %d %d\n", n1, n2);
-
-	    if ( odd ) {
-		fragment.add_face(last1, last2, n1);
-	    } else {
-		fragment.add_face(last2, last1, n1);
-	    }
-
-	    if ( shading ) {
-		// Shading model is "GL_SMOOTH"
-		MAT3_SCALE_VEC(normal, normals[n1], scale);
-	    } else {
-		// Shading model is "GL_FLAT"
-		if ( odd ) {
-		    calc_normal(nodes[last1], nodes[last2], nodes[n1], 
-				approx_normal);
-		} else {
-		    calc_normal(nodes[last2], nodes[last1], nodes[n1], 
-				approx_normal);
-		}
-		MAT3_SCALE_VEC(normal, approx_normal, scale);
-	    }
-	    xglNormal3dv(normal);
-
-            pp = calc_tex_coords(nodes[n1], center);
-            xglTexCoord2f(pp.lon(), pp.lat());
-	    // xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
-	    xglVertex3dv(nodes[n1]);
-	    // printf("a normal, texcoord, and vertex (4th)\n");
-   
-	    odd = 1 - odd;
-	    last1 = last2;
-	    last2 = n1;
-
-	    if ( n2 > 0 ) {
-		// fgPrintf( FG_TERRAIN, FG_DEBUG, " (cont)\n");
+		// fgPrintf( FG_TERRAIN, FG_DEBUG, "read %d %d\n", n1, n2);
 
 		if ( odd ) {
-		    fragment.add_face(last1, last2, n2);
+		    fragment.add_face(last1, last2, n1);
 		} else {
-		    fragment.add_face(last2, last1, n2);
+		    fragment.add_face(last2, last1, n1);
 		}
 
 		if ( shading ) {
 		    // Shading model is "GL_SMOOTH"
-		    MAT3_SCALE_VEC(normal, normals[n2], scale);
+		    MAT3_SCALE_VEC(normal, normals[n1], scale);
 		} else {
 		    // Shading model is "GL_FLAT"
 		    if ( odd ) {
-			calc_normal(nodes[last1], nodes[last2], 
-				    nodes[n2], approx_normal);
+			calc_normal(nodes[last1], nodes[last2], nodes[n1], 
+				    approx_normal);
 		    } else {
-			calc_normal(nodes[last2], nodes[last1], 
-				    nodes[n2], approx_normal);
+			calc_normal(nodes[last2], nodes[last1], nodes[n1], 
+				    approx_normal);
 		    }
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
 		xglNormal3dv(normal);
-		
-		pp = calc_tex_coords(nodes[n2], center);
+
+		pp = calc_tex_coords(nodes[n1], center);
 		xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3d(t->nodes[n2][0],t->nodes[n2][1],t->nodes[n2][2]);
-		xglVertex3dv(nodes[n2]);		
+		xglVertex3dv(nodes[n1]);
 		// printf("a normal, texcoord, and vertex (4th)\n");
-
-		odd = 1 -odd;
+   
+		odd = 1 - odd;
 		last1 = last2;
-		last2 = n2;
-	    }
-	} else {
-	    FG_LOG( FG_TERRAIN, FG_WARN, "Unknown token in " 
-		    << path << " = " << token );
-	}
+		last2 = n1;
 
-	// eat comments and blank lines before start of while loop so
-	// if we are done with useful input it is noticed before hand.
-	in >> skipcomment;
+		if ( n2 > 0 ) {
+		    // fgPrintf( FG_TERRAIN, FG_DEBUG, " (cont)\n");
+
+		    if ( odd ) {
+			fragment.add_face(last1, last2, n2);
+		    } else {
+			fragment.add_face(last2, last1, n2);
+		    }
+
+		    if ( shading ) {
+			// Shading model is "GL_SMOOTH"
+			MAT3_SCALE_VEC(normal, normals[n2], scale);
+		    } else {
+			// Shading model is "GL_FLAT"
+			if ( odd ) {
+			    calc_normal(nodes[last1], nodes[last2], 
+					nodes[n2], approx_normal);
+			} else {
+			    calc_normal(nodes[last2], nodes[last1], 
+					nodes[n2], approx_normal);
+			}
+			MAT3_SCALE_VEC(normal, approx_normal, scale);
+		    }
+		    xglNormal3dv(normal);
+		
+		    pp = calc_tex_coords(nodes[n2], center);
+		    xglTexCoord2f(pp.lon(), pp.lat());
+		    xglVertex3dv(nodes[n2]);		
+		    // printf("a normal, texcoord, and vertex (4th)\n");
+
+		    odd = 1 -odd;
+		    last1 = last2;
+		    last2 = n2;
+		}
+	    } else {
+		FG_LOG( FG_TERRAIN, FG_WARN, "Unknown token in " 
+			<< path << " = " << token );
+	    }
+
+	    // eat white space before start of while loop so if we are
+	    // done with useful input it is noticed before hand.
+	    in >> skipws;
+	}
     }
 
     if ( in_fragment ) {
@@ -519,7 +514,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	xglEnd();
 	xglEndList();
 	// printf("xglEnd(); xglEndList();\n");
-
+	
 	// update fragment
 	fragment.display_list = display_list;
 	
@@ -527,33 +522,37 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	t->fragment_list.push_back(fragment);
     }
 
+#if 0
     // Draw normal vectors (for visually verifying normals)
-    /*
     xglBegin(GL_LINES);
     xglColor3f(0.0, 0.0, 0.0);
     for ( i = 0; i < t->ncount; i++ ) {
-        xglVertex3d(t->nodes[i][0],
- 		    t->nodes[i][1] ,
+	xglVertex3d(t->nodes[i][0],
+		    t->nodes[i][1] ,
  		    t->nodes[i][2]);
- 	xglVertex3d(t->nodes[i][0] + 500*normals[i][0],
+	xglVertex3d(t->nodes[i][0] + 500*normals[i][0],
  		    t->nodes[i][1] + 500*normals[i][1],
  		    t->nodes[i][2] + 500*normals[i][2]);
     } 
     xglEnd();
-    */   
+#endif
 
     stopwatch.stop();
     FG_LOG( FG_TERRAIN, FG_INFO, 
 	    "Loaded " << path << " in " 
 	    << stopwatch.elapsedSeconds() << " seconds" );
-
-    // printf("end of tile\n");
-
-    return(1);
+    
+    return 1;
 }
 
 
 // $Log$
+// Revision 1.13  1999/03/27 05:36:03  curt
+// Alas, I have made non-backwardsly compatible changes to the scenery file
+//   format.  Thus I have had to make the corresponding changes here in the
+//   file loader.
+// Things that do not correspond the the .obj format are placed in comments.
+//
 // Revision 1.12  1999/03/02 01:03:25  curt
 // Tweaks for building with native SGI compilers.
 //
