@@ -151,14 +151,19 @@ DME::search (double frequency_mhz, double longitude_rad,
                                               longitude_rad,
                                               latitude_rad,
                                               altitude_m);
-    if (ils != 0 && ils->get_has_dme()) {
-        _transmitter_valid = true;
-        _transmitter = Point3D(ils->get_dme_x(),
-                               ils->get_dme_y(),
-                               ils->get_dme_z());
-        _transmitter_elevation_ft = ils->get_gselev() * SG_METER_TO_FEET;
-        _transmitter_range_nm = 50; // arbitrary
-        return;
+    if (ils !=0) {
+        if (ils->get_has_dme()) {
+            _transmitter_valid = true;
+            _transmitter = Point3D(ils->get_dme_x(),
+                                   ils->get_dme_y(),
+                                   ils->get_dme_z());
+            _transmitter_elevation_ft = ils->get_gselev() * SG_METER_TO_FEET;
+            _transmitter_range_nm = 50; // arbitrary
+            return;
+        } else {
+           _transmitter_valid = false;
+           return;
+        }
     }
 
                                 // try the VORs next
@@ -166,14 +171,18 @@ DME::search (double frequency_mhz, double longitude_rad,
                                               longitude_rad,
                                               latitude_rad,
                                               altitude_m);
-    if (nav != 0)
-    if (nav != 0 && nav->get_has_dme()) {
-        _transmitter_valid = true;
-        _transmitter = Point3D(nav->get_x(),
-                               nav->get_y(),
-                               nav->get_z());
-        _transmitter_elevation_ft = nav->get_elev() * SG_METER_TO_FEET;
-        _transmitter_range_nm = nav->get_range(); // fixme
+    if (nav != 0) {
+        if (nav->get_has_dme()) {
+            _transmitter_valid = true;
+            _transmitter = Point3D(nav->get_x(),
+                                   nav->get_y(),
+                                   nav->get_z());
+            _transmitter_elevation_ft = nav->get_elev() * SG_METER_TO_FEET;
+            _transmitter_range_nm = nav->get_range(); // fixme
+            return;
+        }
+    } else {
+        _transmitter_valid = false;
         return;
     }
 
