@@ -225,7 +225,7 @@ bool FGOpenGC::process() {
         collect_data( cur_fdm_state, &buf );
 	//collect_data( &buf );
 	if ( ! io->write( (char *)(& buf), length ) ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+	    SG_LOG( SG_IO, SG_WARN, "Error writing data." );
 	    return false;
 	}
     } else if ( get_direction() == SG_IO_IN ) {

@@ -165,7 +165,7 @@ bool FGNMEA::gen_message() {
     nmea_sentence += gsa;
     nmea_sentence += "\r\n";
 
-    cout << nmea_sentence;
+//     cout << nmea_sentence;
 
     length = nmea_sentence.length();
     strncpy( buf, nmea_sentence.c_str(), length );
@@ -496,20 +496,20 @@ bool FGNMEA::process() {
     if ( get_direction() == SG_IO_OUT ) {
 	gen_message();
 	if ( ! io->write( buf, length ) ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+	    SG_LOG( SG_IO, SG_WARN, "Error writing data." );
 	    return false;
 	}
     } else if ( get_direction() == SG_IO_IN ) {
 	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    parse_message();
 	} else {
-	    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
+	    SG_LOG( SG_IO, SG_WARN, "Error reading data." );
 	    return false;
 	}
 	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    parse_message();
 	} else {
-	    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
+	    SG_LOG( SG_IO, SG_WARN, "Error reading data." );
 	    return false;
 	}
     }

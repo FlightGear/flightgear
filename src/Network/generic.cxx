@@ -211,7 +211,7 @@ bool FGGeneric::process() {
     if ( get_direction() == SG_IO_OUT ) {
         gen_message();
         if ( ! io->write( buf, length ) ) {
-            SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+            SG_LOG( SG_IO, SG_WARN, "Error writing data." );
             return false;
         }
     } else if ( get_direction() == SG_IO_IN ) {

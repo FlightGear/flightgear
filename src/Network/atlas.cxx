@@ -163,7 +163,7 @@ bool FGAtlas::gen_message() {
     atlas_sentence += patla_sum;
     atlas_sentence += "\n";
 
-    cout << atlas_sentence;
+    //    cout << atlas_sentence;
 
     length = atlas_sentence.length();
     strncpy( buf, atlas_sentence.c_str(), length );
@@ -544,20 +544,20 @@ bool FGAtlas::process() {
     if ( get_direction() == SG_IO_OUT ) {
 	gen_message();
 	if ( ! io->write( buf, length ) ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+	    SG_LOG( SG_IO, SG_WARN, "Error writing data." );
 	    return false;
 	}
     } else if ( get_direction() == SG_IO_IN ) {
 	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    parse_message();
 	} else {
-	    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
+	    SG_LOG( SG_IO, SG_WARN, "Error reading data." );
 	    return false;
 	}
 	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    parse_message();
 	} else {
-	    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
+	    SG_LOG( SG_IO, SG_WARN, "Error reading data." );
 	    return false;
 	}
     }
