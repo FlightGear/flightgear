@@ -370,8 +370,10 @@ int FGTileMgr::update( double lon, double lat ) {
 	ssgTexturePath( (char *)(dm->get_texture_path().c_str()) );
 	ssgEntity *obj_model
 	    = ssgLoad( (char *)(dm->get_model_path().c_str()) );
-	dm->get_obj_trans()->addKid( obj_model );
-	dm->get_tile()->dec_pending_models();
+        if ( obj_model != NULL ) {
+            dm->get_obj_trans()->addKid( obj_model );
+        }
+        dm->get_tile()->dec_pending_models();
 
 	delete dm;
     }
