@@ -73,8 +73,8 @@ foreach $path (@paths) {
     if ( $fg_root eq "" ) {
 	if ( -d "$path/FlightGear" ) {
 	    $fg_root = "$path/FlightGear";
-	} elsif ( -d "$path/lib/FlightGear" ) {
-	    $fg_root = "$path/lib/FlightGear";
+	} elsif ( -d "$path/share/FlightGear" ) {
+	    $fg_root = "$path/share/FlightGear";
 	}
     }
 }
