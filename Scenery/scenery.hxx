@@ -42,10 +42,10 @@ struct fgSCENERY {
     int terrain_skip;
 
     /* center of current scenery chunk */
-    fgCartesianPoint3d center;
+    fgPoint3d center;
 
     /* next center of current scenery chunk */
-    fgCartesianPoint3d next_center;
+    fgPoint3d next_center;
 
     /* angle of sun relative to current local horizontal */
     double sun_angle;
@@ -71,9 +71,15 @@ void fgSceneryRender( void );
 
 
 /* $Log$
-/* Revision 1.2  1998/05/02 01:52:16  curt
-/* Playing around with texture coordinates.
+/* Revision 1.3  1998/07/08 14:47:22  curt
+/* Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
+/* polare3d.h renamed to polar3d.hxx
+/* fg{Cartesian,Polar}Point3d consolodated.
+/* Added some initial support for calculating local current ground elevation.
 /*
+ * Revision 1.2  1998/05/02 01:52:16  curt
+ * Playing around with texture coordinates.
+ *
  * Revision 1.1  1998/04/30 12:35:31  curt
  * Added a command line rendering option specify smooth/flat shading.
  *

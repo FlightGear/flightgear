@@ -172,8 +172,6 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 			      /* GL_LINEAR */ 
 			      /* GL_NEAREST_MIPMAP_LINEAR */
 			      GL_LINEAR_MIPMAP_LINEAR ) ;
-	    xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
-	    xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
 
 	    /* load in the texture data */
 	    tpath[0] = '\0';
@@ -301,6 +299,12 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.8  1998/07/08 14:47:20  curt
+// Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
+// polare3d.h renamed to polar3d.hxx
+// fg{Cartesian,Polar}Point3d consolodated.
+// Added some initial support for calculating local current ground elevation.
+//
 // Revision 1.7  1998/07/04 00:54:28  curt
 // Added automatic mipmap generation.
 //

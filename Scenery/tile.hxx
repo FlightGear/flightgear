@@ -60,7 +60,7 @@ class fgFRAGMENT {
 
 public:
     // culling data for this object fragment (fine grain culling)
-    fgCartesianPoint3d center;
+    fgPoint3d center;
     double bounding_radius;
 
     // variable offset data for this object fragment for this frame
@@ -96,9 +96,9 @@ class fgTILE {
 public:
 
     // culling data for whole tile (course grain culling)
-    fgCartesianPoint3d center;
+    fgPoint3d center;
     double bounding_radius;
-    fgCartesianPoint3d offset;
+    fgPoint3d offset;
     GLdouble model_view[16];
 
     // this tile's official location in the world
@@ -121,6 +121,12 @@ public:
 
 
 // $Log$
+// Revision 1.10  1998/07/08 14:47:22  curt
+// Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
+// polare3d.h renamed to polar3d.hxx
+// fg{Cartesian,Polar}Point3d consolodated.
+// Added some initial support for calculating local current ground elevation.
+//
 // Revision 1.9  1998/07/06 21:34:34  curt
 // Added using namespace std for compilers that support this.
 //

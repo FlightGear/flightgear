@@ -52,7 +52,7 @@ using namespace std;
 #include <Main/options.hxx>
 #include <Math/mat3.h>
 #include <Math/fg_random.h>
-#include <Math/polar3d.h>
+#include <Math/polar3d.hxx>
 
 #include "material.hxx"
 #include "obj.hxx"
@@ -88,9 +88,9 @@ static void calc_normal(double p1[3], double p2[3],
 
 
 // Calculate texture coordinates for a given point.
-fgPolarPoint3d calc_tex_coords(double *node, fgCartesianPoint3d *ref) {
-    fgCartesianPoint3d cp;
-    fgPolarPoint3d pp;
+fgPoint3d calc_tex_coords(double *node, fgPoint3d *ref) {
+    fgPoint3d cp;
+    fgPoint3d pp;
 
     cp.x = node[0] + ref->x; 
     cp.y = node[1] + ref->y;
@@ -109,7 +109,7 @@ fgPolarPoint3d calc_tex_coords(double *node, fgCartesianPoint3d *ref) {
 int fgObjLoad(char *path, fgTILE *tile) {
     fgOPTIONS *o;
     fgFRAGMENT fragment;
-    fgPolarPoint3d pp;
+    fgPoint3d pp;
     char fgpath[256], line[256], material[256];
     double approx_normal[3], normal[3], scale;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
@@ -441,6 +441,12 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
 
 // $Log$
+// Revision 1.17  1998/07/08 14:47:21  curt
+// Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
+// polare3d.h renamed to polar3d.hxx
+// fg{Cartesian,Polar}Point3d consolodated.
+// Added some initial support for calculating local current ground elevation.
+//
 // Revision 1.16  1998/07/06 21:34:33  curt
 // Added using namespace std for compilers that support this.
 //

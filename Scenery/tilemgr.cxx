@@ -41,7 +41,10 @@
 #include <Include/fg_types.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
+#include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
+#include <Math/polar3d.hxx>
+#include <Math/vector.hxx>
 
 #include "material.hxx"
 #include "obj.hxx"
@@ -210,8 +213,24 @@ int fgTileMgrUpdate( void ) {
 }
 
 
+// Calculate shortest distance from point to line
+static double point_line_dist( fgPoint3d *tc, fgPoint3d *vp, MAT3vec d) {
+    MAT3vec p, p0;
+    double dist;
+
+    p[0] = tc->x; p[1] = tc->y; p[2] = tc->z;
+    p0[0] = vp->x; p0[1] = vp->y; p0[2] = vp->z;
+
+    dist = fgPointLine(p, p0, d);
+
+    // printf("dist = %.2f\n", dist);
+
+    return(dist);
+}
+
+
 // Calculate if point/radius is inside view frustum
-static int viewable( fgCartesianPoint3d *cp, double radius ) {
+static int viewable( fgPoint3d *cp, double radius ) {
     fgVIEW *v;
     MAT3hvec world, eye;
     int viewable = 1; // start by assuming it's viewable
@@ -300,11 +319,12 @@ void fgTileMgrRender( void ) {
     fgTILE *t;
     fgVIEW *v;
     fgBUCKET p;
-    fgCartesianPoint3d frag_offset;
+    fgPoint3d frag_offset, fc, pp;
     fgFRAGMENT *frag_ptr;
     fgMATERIAL *mtl_ptr;
     fgTILE *last_tile_ptr;
     GLdouble *m;
+    double dist, min_dist, lat_geod, alt, sea_level_r;
     double x, y, z;
     list < fgFRAGMENT > :: iterator current;
     list < fgFRAGMENT > :: iterator last;
@@ -330,6 +350,7 @@ void fgTileMgrRender( void ) {
 
     // initialize the transient per-material fragment lists
     material_mgr.init_transient_material_lists();
+    min_dist = 100000.0;
 
     // Pass 1
     // traverse the potentially viewable tile list
@@ -353,6 +374,38 @@ void fgTileMgrRender( void ) {
 	m[13] = m[1] * x + m[5] * y + m[9]  * z + m[13];
 	m[14] = m[2] * x + m[6] * y + m[10] * z + m[14];
 	m[15] = m[3] * x + m[7] * y + m[11] * z + m[15];
+
+	// temp ... calc current terrain elevation
+	// calculate distance from vertical tangent line at
+	// current position to center of tile.
+	dist = point_line_dist(&(t->offset), &(v->view_pos), v->local_up);
+	if ( dist < t->bounding_radius ) {
+
+	    // traverse fragment list for tile
+	    current = t->fragment_list.begin();
+	    last = t->fragment_list.end();
+
+	    while ( current != last ) {
+		frag_ptr = &(*current);
+		current++;
+		dist = point_line_dist( &(frag_ptr->center), &(v->view_pos), 
+					v->local_up);
+		if ( dist <= frag_ptr->bounding_radius ) {
+		    if ( dist < min_dist ) {
+			min_dist = dist;
+			// compute geocentric coordinates of tile center
+			pp = fgCartToPolar3d(frag_ptr->center);
+			// convert to geodetic coordinates
+			fgGeocToGeod(pp.lat, pp.radius, &lat_geod, 
+				     &alt, &sea_level_r);
+		    }
+		}
+	    }
+
+	    if ( min_dist <= t->bounding_radius ) {
+		printf("min_dist = %.2f  alt = %.2f\n", min_dist, alt);
+	    }
+	}
 
 	// Course (tile based) culling
 	if ( viewable(&(t->offset), t->bounding_radius) ) {
@@ -478,6 +531,12 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.23  1998/07/08 14:47:23  curt
+// Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
+// polare3d.h renamed to polar3d.hxx
+// fg{Cartesian,Polar}Point3d consolodated.
+// Added some initial support for calculating local current ground elevation.
+//
 // Revision 1.22  1998/07/04 00:54:31  curt
 // Added automatic mipmap generation.
 //
