@@ -222,7 +222,9 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
 	    center[2] = fcenter[2];
 	    sgdXformPnt3( center, m ) ;
 	    double radius_sqd = bsphere->getRadius() * bsphere->getRadius();
-	    if ( sgdPointLineDistSquared( center, orig, dir ) < radius_sqd ) {
+	    if ( sgdClosestPointToLineDistSquared( center, orig, dir ) <
+		 radius_sqd )
+	    {
 		// possible intersections
 		if ( kid->isAKindOf ( ssgTypeBranch() ) ) {
 		    sgdMat4 m_new;
@@ -295,7 +297,9 @@ void FGHitList::IntersectCachedLeaf( sgdMat4 m,
 	sgdSetMat4( m, fxform );
 	sgdXformPnt3( center, m );
 
-	if ( sgdPointLineDistSquared( center, orig, dir ) < radius*radius ) {
+	if ( sgdClosestPointToLineDistSquared( center, orig, dir ) <
+	     radius*radius )
+        {
 	    IntersectLeaf( (ssgLeaf *)last_hit(), m, orig, dir );
 	}
     }
