@@ -697,6 +697,7 @@ bool FGATC610x::do_radio_switches() {
 bool FGATC610x::do_radio_display() {
 
     char digits[10];
+    int i;
 
     if ( dme_switch != 0 ) {
 	// DME minutes
@@ -705,7 +706,7 @@ bool FGATC610x::do_radio_display() {
 	    minutes = 999.0;
 	}
 	sprintf(digits, "%03.0f", minutes);
-	for ( int i = 0; i < 6; ++i ) {
+	for ( i = 0; i < 6; ++i ) {
 	    digits[i] -= '0';
 	}
 	radio_display_data[0] = digits[1] << 4 | digits[2];
@@ -717,7 +718,7 @@ bool FGATC610x::do_radio_display() {
 	    knots = 999.0;
 	}
 	sprintf(digits, "%03.0f", knots);
-	for ( int i = 0; i < 6; ++i ) {
+	for ( i = 0; i < 6; ++i ) {
 	    digits[i] -= '0';
 	}
 	radio_display_data[2] = digits[1] << 4 | digits[2];
@@ -729,7 +730,7 @@ bool FGATC610x::do_radio_display() {
 	    nm = 99.0;
 	}
 	sprintf(digits, "%04.1f", nm);
-	for ( int i = 0; i < 6; ++i ) {
+	for ( i = 0; i < 6; ++i ) {
 	    digits[i] -= '0';
 	}
 	radio_display_data[4] = digits[1] << 4 | digits[3];
@@ -738,7 +739,7 @@ bool FGATC610x::do_radio_display() {
 	// display turns on the decimal point
     } else {
 	// blank dem display
-	for ( int i = 0; i < 6; ++i ) {
+	for ( i = 0; i < 6; ++i ) {
 	    radio_display_data[i] = 0xff;
 	}
     }
@@ -749,7 +750,7 @@ bool FGATC610x::do_radio_display() {
 	com1_stby = 0.0;
     }
     sprintf(digits, "%06.3f", com1_stby);
-    for ( int i = 0; i < 6; ++i ) {
+    for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
     radio_display_data[6] = digits[4] << 4 | digits[5];
@@ -762,7 +763,7 @@ bool FGATC610x::do_radio_display() {
 	com1 = 0.0;
     }
     sprintf(digits, "%06.3f", com1);
-    for ( int i = 0; i < 6; ++i ) {
+    for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
     radio_display_data[9] = digits[4] << 4 | digits[5];
@@ -777,7 +778,7 @@ bool FGATC610x::do_radio_display() {
 	com2_stby = 0.0;
     }
     sprintf(digits, "%06.3f", com2_stby);
-    for ( int i = 0; i < 6; ++i ) {
+    for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
     radio_display_data[18] = digits[4] << 4 | digits[5];
@@ -790,7 +791,7 @@ bool FGATC610x::do_radio_display() {
 	com2 = 0.0;
     }
     sprintf(digits, "%06.3f", com2);
-    for ( int i = 0; i < 6; ++i ) {
+    for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
     radio_display_data[21] = digits[4] << 4 | digits[5];
@@ -805,7 +806,7 @@ bool FGATC610x::do_radio_display() {
 	nav1_stby = 0.0;
     }
     sprintf(digits, "%06.2f", nav1_stby);
-    for ( int i = 0; i < 6; ++i ) {
+    for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
     radio_display_data[12] = digits[4] << 4 | digits[5];
@@ -818,7 +819,7 @@ bool FGATC610x::do_radio_display() {
 	nav1 = 0.0;
     }
     sprintf(digits, "%06.2f", nav1);
-    for ( int i = 0; i < 6; ++i ) {
+    for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
     radio_display_data[15] = digits[4] << 4 | digits[5];
@@ -833,7 +834,7 @@ bool FGATC610x::do_radio_display() {
 	nav2_stby = 0.0;
     }
     sprintf(digits, "%06.2f", nav2_stby);
-    for ( int i = 0; i < 6; ++i ) {
+    for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
     radio_display_data[24] = digits[4] << 4 | digits[5];
@@ -846,7 +847,7 @@ bool FGATC610x::do_radio_display() {
 	nav2 = 0.0;
     }
     sprintf(digits, "%06.2f", nav2);
-    for ( int i = 0; i < 6; ++i ) {
+    for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
     radio_display_data[27] = digits[4] << 4 | digits[5];
@@ -861,7 +862,7 @@ bool FGATC610x::do_radio_display() {
 	adf_stby = 0.0;
     }
     sprintf(digits, "%03.0f", adf_stby);
-    for ( int i = 0; i < 6; ++i ) {
+    for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
     radio_display_data[30] = digits[2] << 4 | 0x0f;
@@ -873,7 +874,7 @@ bool FGATC610x::do_radio_display() {
 	adf = 0.0;
     }
     sprintf(digits, "%03.0f", adf);
-    for ( int i = 0; i < 6; ++i ) {
+    for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
     radio_display_data[33] = digits[1] << 4 | digits[2];

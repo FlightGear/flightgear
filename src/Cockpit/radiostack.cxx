@@ -25,6 +25,8 @@
 #  include <config.h>
 #endif
 
+#include <stdio.h>	// snprintf
+
 #include <simgear/compiler.h>
 #include <simgear/math/sg_random.h>
 

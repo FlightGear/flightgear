@@ -26,6 +26,7 @@
 #include <simgear/compiler.h>
 
 #include <stdlib.h>	// atoi()
+#include <stdio.h>	// sprintf
 #include <string>
 SG_USING_STD(string);
 

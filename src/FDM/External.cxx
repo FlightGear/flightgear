@@ -37,6 +37,10 @@ FGExternal::~FGExternal() {
 // for each subsequent iteration through the EOM
 void FGExternal::init() {
     // cout << "FGExternal::init()" << endl;
+
+    // Explicitly call the superclass's
+    // init method first.
+    common_init();
 }
 
 

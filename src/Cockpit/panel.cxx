@@ -26,6 +26,7 @@
 #  include <windows.h>
 #endif
 
+#include <stdio.h>	// sprintf
 #include <string.h>
 
 #include <plib/ssg.h>

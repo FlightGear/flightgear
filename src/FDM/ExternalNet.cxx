@@ -59,6 +59,10 @@ FGExternalNet::~FGExternalNet() {
 // for each subsequent iteration through the EOM
 void FGExternalNet::init() {
     // cout << "FGExternalNet::init()" << endl;
+
+    // Explicitly call the superclass's
+    // init method first.
+    common_init();
 }
 
 

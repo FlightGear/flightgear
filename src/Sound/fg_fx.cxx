@@ -103,7 +103,7 @@ FGFX::init ()
     _crank[i] = new FGSimpleSound(fgGetString("/sim/sounds/cranking/path",
 					      "Sounds/cranking.wav"));
     _crank[i]->set_volume(fgGetFloat("/sim/sounds/cranking/volume", 0.5));
-    _crank[i]->set_pitch(fgGetFloat("/sim/sounds/cranking/pitch", 1.00));
+    _crank[i]->set_pitch(fgGetFloat("/sim/sounds/cranking/pitch", 0.80));
     mgr->add(_crank[i], crank_names[i]);
   }
 
@@ -182,7 +182,7 @@ FGFX::init ()
   // Create and add the click noise.
   _click = new FGSimpleSound(fgGetString("/sim/sounds/click/path",
 					 "Sounds/click.wav"));
-  _flaps->set_volume(fgGetFloat("/sim/sounds/click/volume", 1.0));
+  _flaps->set_volume(fgGetFloat("/sim/sounds/click/volume", 0.5));
   _flaps->set_pitch(fgGetFloat("/sim/sounds/click/pitch", 1.0));
   mgr->add(_click, "click");
 

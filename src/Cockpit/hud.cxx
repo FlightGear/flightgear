@@ -38,6 +38,7 @@
 
 #include <GL/glut.h>
 #include <stdlib.h>
+#include <stdio.h>	//char related functions
 #include STL_STRING
 #include STL_FSTREAM
 
