@@ -6,7 +6,7 @@ dnl
 AC_INIT(Simulator/Aircraft/aircraft.cxx)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.55)
+AM_INIT_AUTOMAKE(FlightGear, 0.56)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -78,6 +78,10 @@ AM_CONDITIONAL(ENABLE_AUDIO_SUPPORT, \
 AM_CONDITIONAL(ENABLE_IRIX_AUDIO, test -r /usr/include/audio.h)
 
 AM_CONDITIONAL(ENABLE_WIN32_AUDIO, test "x$ac_cv_header_windows_h" = "xyes")
+
+dnl Check for (currently Linux only style) joystick support
+AM_CONDITIONAL(ENABLE_JOYSTICK_SUPPORT, \
+	test -r /usr/include/linux/joystick.h )
 
 dnl extra library and include directories
 EXTRA_DIRS="/usr/local /usr/X11R6 /opt/X11R6"

@@ -1,3 +1,8 @@
+New in 0.56
+* Added some initial joystick support using Steve's joystick interface class.
+  This works great under Linux, but Steve's class now needs to be ported to
+  Windoze and other platforms.
+
 New in 0.55
 * New version of gpc (generic polygon clipping library) from 
   http://www.cs.man.ac.uk/aig/staff/alan/software/
