@@ -178,11 +178,7 @@ private:
 
 public:
 
-    FGElectricalSwitch( SGPropertyNode *node, float rate, bool cb ) {
-        switch_node = node;
-        rating_amps = rate;
-        circuit_breaker = cb;
-    }
+    FGElectricalSwitch( SGPropertyNode *node );
 
     ~FGElectricalSwitch() { };
 

@@ -132,6 +132,33 @@ FGElectricalOutput::FGElectricalOutput ( SGPropertyNode *node ) {
 }  
 
 
+FGElectricalSwitch::FGElectricalSwitch( SGPropertyNode *node ) :
+    switch_node( NULL ),
+    rating_amps( 0.0f ),
+    circuit_breaker( false )
+{
+    bool initial_state = true;
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "prop" ) {
+            switch_node = fgGetNode( cval.c_str(), true );
+            cout << "switch node = " << cval << endl;
+        } else if ( cname == "initial-state" ) {
+            if ( cval == "off" || cval == "false" ) {
+                initial_state = false;
+            }
+            cout << "initial state = " << initial_state << endl;
+        }            
+    }
+
+    switch_node->setBoolValue( initial_state );
+    cout << "  value = " << switch_node->getBoolValue() << endl;
+}
+
+
 FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
                                                FGElectricalSystem *es ) {
     kind = FG_CONNECTOR;
@@ -179,26 +206,12 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
         } else if ( cname == "switch" ) {
             // set default value of switch to true
             // cout << "Switch = " << child->getStringValue() << endl;
-            fgSetBool( child->getStringValue(), true );
-            FGElectricalSwitch s( fgGetNode(child->getStringValue(), true),
-                                  100.0f,
-                                  false );
+            FGElectricalSwitch s( child );
+            // FGElectricalSwitch s( fgGetNode(child->getStringValue(), true),
+            //                       100.0f,
+            //                       false );
+            // fgSetBool( child->getStringValue(), true );
             add_switch( s );
-        }
-    }
-
-    // do a 2nd pass to pick up starting switch value if specified
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        // cout << "  " << cname << " = " << cval << endl;
-        if ( cname == "initial-state" ) {
-            if ( cval == "off" ) {
-                set_switches( false );
-            } else {
-                set_switches( true );
-            }
         }
     }
 }  
