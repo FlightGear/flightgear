@@ -50,7 +50,7 @@ void fgCalculatePlanet(struct OrbElements planet, struct OrbElements theSun,
 {
     // struct CelestialCoord result;
 
-    fgSUNPOS SolarPosition;
+    // fgSUNPOS SolarPosition;
 
     double eccAnom, r, v, ecl, actTime, R, s, ir, Nr, B, FV, ring_magn,
         xv, yv, xh, yh, zh, xg, yg, zg, xe, ye, ze;
@@ -90,7 +90,7 @@ void fgCalculatePlanet(struct OrbElements planet, struct OrbElements theSun,
 	 
     /* Let's calculate the brightness of the planet */
     R = sqrt ( xg*xg + yg*yg + zg*zg);
-    s = SolarPosition.dist;
+    s = solarPosition.dist;
     FV = acos(  (r*r + R*R - s*s) / (2*r*R));
     FV  *= 57.29578;  /* convert radians to degrees */ 
     switch(idx)
@@ -210,10 +210,14 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/06/27 16:51:54  curt
-/* In fgCalculatePlanet() pass a pointer to a structure to be modified, rather
-/* than returning the entire structure.
+/* Revision 1.7  1998/08/22 02:01:11  curt
+/* Nailed a uninitialized variable usage bug that was killing us on some
+/* platforms with some compiler options.
 /*
+ * Revision 1.6  1998/06/27 16:51:54  curt
+ * In fgCalculatePlanet() pass a pointer to a structure to be modified, rather
+ * than returning the entire structure.
+ *
  * Revision 1.5  1998/04/28 01:19:01  curt
  * Type-ified fgTIME and fgVIEW
  *
