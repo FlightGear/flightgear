@@ -272,6 +272,8 @@ private:
     void setAPHeadingLock (bool lock);
     double getAPHeadingBug () const;
     void setAPHeadingBug (double heading);
+    const char * getAPwaypoint () const;
+    void setAPwaypoint (const char * apt);
     bool getAPWingLeveler () const;
     void setAPWingLeveler (bool lock);
     bool getAPNAV1Lock () const;

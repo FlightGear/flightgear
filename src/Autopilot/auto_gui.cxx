@@ -608,58 +608,84 @@ void TgtAptDialog_OK (puObject *)
     TgtAptDialogInput->getValue(&s);
 
     string tmp = s;
-    double alt = 0.0;
     unsigned int pos = tmp.find( "@" );
     if ( pos != string::npos ) {
 	TgtAptId = tmp.substr( 0, pos );
-	string alt_str = tmp.substr( pos + 1 );
-	alt = atof( alt_str.c_str() );
-	if ( !strcmp(fgGetString("/sim/startup/units"), "feet") ) {
-	    alt *= SG_FEET_TO_METER;
-	}
     } else {
 	TgtAptId = tmp;
     }
 
     TgtAptDialog_Cancel( NULL );
     
-    FGAirport a;
-    FGFix f;
-    double t1, t2;
-    if ( fgFindAirportID( TgtAptId, &a ) ) {
+    /* s = input string, either 'FIX' or FIX@4000' */
+    /* TgtAptId is name of fix only; may get appended to below */
 
-	 SG_LOG( SG_GENERAL, SG_INFO,
-		 "Adding waypoint (airport) = " << TgtAptId );
-        
-	 sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
-
-	 SGWayPoint wp( a.longitude, a.latitude, alt,
-			SGWayPoint::WGS84, TgtAptId );
-	 globals->get_route()->add_waypoint( wp );
-
-         /* and turn on the autopilot */
-         globals->get_autopilot()->set_HeadingEnabled( true );
-         globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
-
-    } else if ( current_fixlist->query( TgtAptId, &f ) )
+    if ( NewWaypoint( TgtAptId ) == 0)
     {
-	 SG_LOG( SG_GENERAL, SG_INFO,
-		 "Adding waypoint (fix) = " << TgtAptId );
-        
-	 sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
-
-	 SGWayPoint wp( f.get_lon(), f.get_lat(), alt,
-			SGWayPoint::WGS84, TgtAptId );
-	 globals->get_route()->add_waypoint( wp );
-
-         /* and turn on the autopilot */
-         globals->get_autopilot()->set_HeadingEnabled( true );
-         globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
-    } else {
-	TgtAptId  += " not in database.";
-	mkDialog(TgtAptId.c_str());
+        TgtAptId  += " not in database.";
+        mkDialog(TgtAptId.c_str());
     }
 }
+
+/* add new waypoint (either from above popup window 'ok button or telnet session) */
+
+int NewWaypoint( string Tgt_Alt )
+{
+  string TgtAptId;
+  FGAirport a;
+  FGFix f;
+
+  double alt = 0.0;
+  unsigned int pos = Tgt_Alt.find( "@" );
+  if ( pos != string::npos ) {
+    TgtAptId = Tgt_Alt.substr( 0, pos );
+    string alt_str = Tgt_Alt.substr( pos + 1 );
+    alt = atof( alt_str.c_str() );
+    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") ) {
+      alt *= SG_FEET_TO_METER;
+    }
+  } else {
+    TgtAptId = Tgt_Alt;
+  }
+
+  if ( fgFindAirportID( TgtAptId, &a ) ) {
+
+    SG_LOG( SG_GENERAL, SG_INFO,
+                 "Adding waypoint (airport) = " << TgtAptId );
+
+    sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
+
+    SGWayPoint wp( a.longitude, a.latitude, alt,
+                        SGWayPoint::WGS84, TgtAptId );
+    globals->get_route()->add_waypoint( wp );
+
+         /* and turn on the autopilot */
+    globals->get_autopilot()->set_HeadingEnabled( true );
+    globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT
+);
+
+    return 1;
+
+  } else if ( current_fixlist->query( TgtAptId, &f ) )
+  {
+   SG_LOG( SG_GENERAL, SG_INFO,
+                 "Adding waypoint (fix) = " << TgtAptId );
+
+    sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
+
+    SGWayPoint wp( f.get_lon(), f.get_lat(), alt,
+                        SGWayPoint::WGS84, TgtAptId );
+    globals->get_route()->add_waypoint( wp );
+
+         /* and turn on the autopilot */
+   globals->get_autopilot()->set_HeadingEnabled( true );
+   globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
+   return 2;
+
+  }
+  else return 0;
+}
+
 
 void TgtAptDialog_Reset(puObject *)
 {

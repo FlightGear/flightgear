@@ -5,6 +5,7 @@
 // Contributions by Jeff Goeke-Smith <jgoeke@voyager.net>
 //                  Norman Vine <nhv@cape.com>
 //                  Curtis Olson <curt@flightgear.org>
+//                  Wendell Turner <wendell@adsi-m4.com>
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -44,6 +45,7 @@
 #include <Scenery/scenery.hxx>
 
 #include "newauto.hxx"
+#include "auto_gui.hxx"
 
 
 /// These statics will eventually go into the class
@@ -343,10 +345,17 @@ FGAutopilot::bind ()
     fgTie("/autopilot/locks/heading", this,
 	  &FGAutopilot::getAPHeadingLock, &FGAutopilot::setAPHeadingLock);
     fgSetArchivable("/autopilot/locks/heading");
+
     fgTie("/autopilot/settings/heading-bug-deg", this,
 	  &FGAutopilot::getAPHeadingBug, &FGAutopilot::setAPHeadingBug);
     fgSetArchivable("/autopilot/settings/heading-bug-deg");
     fgSetDouble("/autopilot/settings/heading-bug-deg", 0.0f);
+
+    fgTie("/autopilot/settings/waypoint", this,
+	  &FGAutopilot::getAPwaypoint, &FGAutopilot::setAPwaypoint);
+    fgSetArchivable("/autopilot/settings/waypoint");
+    fgSetString("/autopilot/settings/waypoint", "");
+
     fgTie("/autopilot/locks/wing-leveler", this,
 	  &FGAutopilot::getAPWingLeveler, &FGAutopilot::setAPWingLeveler);
     fgSetArchivable("/autopilot/locks/wing-leveler");
@@ -1272,6 +1281,54 @@ FGAutopilot::setAPHeadingBug (double heading)
   set_DGTargetHeading( heading );
 }
 
+
+/**
+ * return blank-separated string of waypoints
+ */
+const char *
+FGAutopilot::getAPwaypoint () const
+{
+  static char wplist[500];
+  char *p = wplist;
+  int   WPListsize, i;
+
+  // FIXME: This can cause a possible buffer overflow, EMH
+  if ( globals->get_route()->size() > 0 ) { 
+      WPListsize = globals->get_route()->size(); 
+
+      for (i = 0; i < globals->get_route()->size(); i++ ) {
+         p += sprintf(p, "%5s ",
+		globals->get_route()->get_waypoint(i).get_id().c_str() );
+      }
+      return wplist;
+
+  } else {
+    return "none specified";
+  }    
+}
+
+
+/**
+ * set next waypoint (if str='0', then delete next(first) waypoint)
+ */
+void
+FGAutopilot::setAPwaypoint (const char * apt)
+{
+  if (strcmp(apt, "0")==0)
+  {
+    SG_LOG( SG_AUTOPILOT, SG_INFO, "delete of first wp" );
+    if ( globals->get_route()->size() )
+		    globals->get_route()->delete_first();
+    return;
+  }
+
+  if ( NewWaypoint( apt ) == 0)
+    SG_LOG( SG_AUTOPILOT, SG_INFO, "Waypoint " << apt <<  "not in d.b."  );
+  else
+  {
+    /* SG_LOG( SG_AUTOPILOT, SG_INFO, "GOOD!" ); */
+  }
+}
 
 /**
  * Get the autopilot wing leveler lock (true=on).
