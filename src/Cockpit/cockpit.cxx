@@ -276,6 +276,15 @@ float get_view_direction( void )
     return view;
 }
 
+// Added by Markus Hof on 5. Jan 2004
+float get_dme( void )
+{
+    static const SGPropertyNode * dme_node =
+        fgGetNode("/radios/dme/distance-nm");
+
+    return dme_node->getFloatValue();
+}
+
 // $$$ begin - added, VS Renganathan 13 Oct 2K
 // #ifdef FIGHTER_HUD
 float get_Vx   ( void )
