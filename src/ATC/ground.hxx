@@ -21,54 +21,146 @@
 #ifndef _FG_GROUND_HXX
 #define _FG_GROUND_HXX
 
+#include STL_IOSTREAM
+#include STL_STRING
+
+SG_USING_STD(string);
+#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
+SG_USING_STD(ios);
+#endif
+
+#include <map>
 #include <vector>
 #include <list>
-//#include <map>
+#include <simgear/math/point3d.hxx>
+#include <simgear/misc/sgstream.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 
+#include "ATC.hxx"
+#include "ATCProjection.hxx"
+
+SG_USING_STD(map);
 SG_USING_STD(vector);
 SG_USING_STD(list);
-//SG_USING_STD(map);
 
 //////////////////////////////////////////////////////
 // Types for the logical network data structure
 typedef enum arc_type {
-    RUNWAY,
-    TAXIWAY
+	RUNWAY,
+	TAXIWAY
 };
 
 typedef enum node_type {
-    GATE,
-    APRON,
-    HOLD
+	GATE,
+	APRON,
+	HOLD,
+	JUNCTION,
+	TJUNCTION
 };
 
-typedef struct arc {
-    int distance;
-    char* name;
-    arc_type type;
+enum GateType {
+	TRANSPORT_PASSENGER,
+	TRANSPORT_PASSENGER_NARROWBODY,
+	TRANSPORT_PASSENGER_WIDEBODY,
+	TRANSPORT_CARGO,
+	GA_LOCAL,
+	GA_LOCAL_SINGLE,
+	GA_LOCAL_TWIN,
+	GA_TRANSIENT,
+	GA_TRANSIENT_SINGLE,
+	GA_TRANSIENT_TWIN,
+	OTHER	// ie. anything goes!!
 };
 
-typedef list<arc> arc_list_type;
-typedef arc_list_type::iterator arc_list_itr;
-typedef arc_list_type::const_iterator arc_list_const_itr; 
-
-typedef struct node {
-    point pos;
-    char* name;
-    node_type node;
-    arc_list arcs;
+typedef enum network_element_type {
+	NODE,
+	ARC
 };
 
-typedef vector<node> node_array_type;
-typedef node_array_type::iterator node_array_itr;
-typedef node_array_type::const_iterator node_array_const_itr;
+struct ground_network_element {
+	network_element_type struct_type;
+};
+
+struct arc : public ground_network_element {
+	int distance;
+	char* name;
+	arc_type type;
+	bool directed;	//false if 2-way, true if 1-way.  
+	//This is a can of worms since arcs might be one way in different directions under different circumstances
+	unsigned int n1;	// The nodeID of the first node
+	unsigned int n2;	// The nodeID of the second node
+	// If the arc is directed then flow is normally from n1 to n2.  See the above can of worms comment though.
+};
+
+typedef vector <arc*> arc_array_type;	// This was and may become again a list instead of vector
+typedef arc_array_type::iterator arc_array_iterator;
+typedef arc_array_type::const_iterator arc_array_const_iterator; 
+
+struct node : public ground_network_element {
+	unsigned int nodeID;	//each node in an airport needs a unique ID number - this is ZERO-BASED to match array position
+	Point3D pos;
+	Point3D orthoPos;
+	char* name;
+	node_type type;
+	arc_array_type arcs;
+	double max_turn_radius;
+};
+
+typedef vector <node*> node_array_type;
+typedef node_array_type::iterator node_array_iterator;
+typedef node_array_type::const_iterator node_array_const_iterator;
+
+struct Gate : public node {
+	GateType gateType;
+	int max_weight;	//units??
+	//airline_code airline;	//For the future - we don't have any airline codes ATM
+	int id;	// The gate number in the logical scheme of things
+	string sid;	// The real-world gate letter/number
+	//node* pNode;
+	bool used;
+	double heading;	// The direction the parked-up plane should point in degrees
+};
+
+typedef vector < Gate > gate_vec_type;
+typedef gate_vec_type::iterator gate_vec_iterator;
+typedef gate_vec_type::const_iterator gate_vec_const_iterator;
+
+// A map of gate vs. the logical (internal FGFS) gate ID
+typedef map < int, Gate > gate_map_type;
+typedef gate_map_type::iterator gate_map_iterator;
+typedef gate_map_type::const_iterator gate_map_const_iterator;
+
+// Runways - all the runway stuff is likely to change in the future
+typedef struct Rwy {
+	int id;	//note this is a very simplified scheme for now - R & L are not differentiated
+	//It should work for simple one rwy airports
+	node_array_type exits;	//Array of available exits from runway
+	// should probably add an FGRunway structure here as well eventually
+	// Eventually we will also want some encoding of real-life preferred runways
+	// This will get us up and running for single runway airports though.
+};
+typedef vector < Rwy > runway_array_type;
+typedef runway_array_type::iterator runway_array_iterator;
+typedef runway_array_type::const_iterator runway_array_const_iterator;
+
 // end logical network types
 ///////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////
+// Structures to use the network
+
+// A path through the network 
+typedef vector < ground_network_element* > ground_network_path_type;
+typedef ground_network_path_type::iterator ground_network_path_iterator;
+typedef ground_network_path_type::const_iterator ground_network_path_const_iterator;
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+// Planes active within the ground network.
 // somewhere in the ATC/AI system we are going to have defined something like
 // typedef struct plane_rec
 // list <PlaneRec> plane_rec_list_type
-
+/*
 // A more specialist plane rec to include ground information
 typedef struct ground_rec {
     plane_rec plane;
@@ -84,6 +176,8 @@ typedef struct ground_rec {
 typedef list<ground_rec*> ground_rec_list;
 typedef ground_rec_list::iterator ground_rec_list_itr;
 typedef ground_rec_list::const_iterator ground_rec_list_const_itr;
+*/
+//////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -91,6 +185,65 @@ typedef ground_rec_list::const_iterator ground_rec_list_const_itr;
 //
 ///////////////////////////////////////////////////////////////////////////////
 class FGGround : public FGATC {
+
+public:
+	FGGround();
+	~FGGround();
+    void Init();
+
+    void Update();
+	
+	inline char get_type() const { return type; }
+	inline double get_lon() const { return lon; }
+	inline double get_lat() const { return lat; }
+	inline double get_elev() const { return elev; }
+	inline double get_x() const { return x; }
+	inline double get_y() const { return y; }
+	inline double get_z() const { return z; }
+	inline int get_freq() const { return freq; }
+	inline int get_range() const { return range; }
+	inline const char* GetIdent() { return ident.c_str(); }
+	inline string get_trans_ident() { return trans_ident; }
+	inline string get_name() { return name; }
+	inline atc_type GetType() { return GROUND; }
+
+    inline void SetDisplay() {display = true;}
+    inline void SetNoDisplay() {display = false;}
+
+    // Its possible that NewArrival and NewDeparture should simply be rolled into Request.
+
+    // Contact ground control on arrival, assumed to request any gate
+    //void NewArrival(plane_rec plane);
+
+    // Contact ground control on departure, assumed to request currently active runway.
+    //void NewDeparture(plane_rec plane);
+
+    // Contact ground control when the calling routine doesn't know if arrival
+    // or departure is appropriate.
+    //void NewContact(plane_rec plane);
+
+    // Make a request of ground control.
+    //void Request(ground_request request);
+	
+	// Randomly fill some of the available gates and GA parking spots with planes
+	void PopulateGates();
+	
+	// Return a suitable gate (maybe this should be a list of suitable gates so the plane or controller can choose the closest one)
+	void ReturnGate(Gate &gate, GateType type);
+	
+	//The following two functions have been made public for now but may go private with a higher level accessor at some point
+	// Return the internal ID of a random, suitable, unused gate
+	// For now we are simply implementing as any random unused gate
+	int GetRandomGateID();
+	// Return a pointer to a node based on the gate ID
+	Gate* GetGateNode(int gateID);
+	
+	// Runway stuff - this might change in the future.
+	// Get a list of exits from a given runway
+	node_array_type GetExits(int rwyID);
+	
+	// Get a path from one node to another
+	ground_network_path_type GetPath(node* A, node* B); 
 
 private:
 
@@ -101,50 +254,98 @@ private:
     // Need a data structure to hold outstanding communications from aircraft.
     // Possibly need a data structure to hold outstanding communications to aircraft.
 
-    // logical network
+	// The logical network
+	// NODES WILL BE STORED IN THE NETWORK IN ORDER OF nodeID NUMBER
+	// ie. NODE 5 WILL BE AT network[5]
     node_array_type network;
+	
+	// A map of all the gates indexed against internal (FGFS) ID
+	gate_map_type gates;
+	gate_map_iterator gatesItr;
+	
+	// Runway stuff - this might change in the future.
+	//runway_array_type runways;	// STL way
+	Rwy runways[36];	// quick hack!
 
-    // Planes currently active
-    ground_rec_list ground_traffic;
-
-public:
-
-    void Init();
-
-    void Update();
-
-    inline void SetDisplay() {display = true;}
-    inline void SetNoDisplay() {display = false;}
-
-    // Its possible that NewArrival and NewDeparture should simply be rolled into Request.
-
-    // Contact ground control on arrival, assumed to request any gate
-    void NewArrival(plane_rec plane);
-
-    // Contact ground control on departure, assumed to request currently active runway.
-    void NewDeparture(plane_rec plane);
-
-    // Contact ground control when the calling routine doesn't know if arrival
-    // or departure is appropriate.
-    void NewContact(plane_rec plane);
-
-    // Make a request of ground control.
-    void Request(ground_request request);
-
-private:
+	FGATCAlignedProjection ortho;
+	
+	// Planes currently active
+    //ground_rec_list ground_traffic;
 
     // Find the shortest route through the logical network between two points.
-    FindShortestRoute(point a, point b);
+    //FindShortestRoute(point a, point b);
 
     // Project a point in WGS84 lat/lon onto the local gnomonic.
-    ConvertWGS84ToXY(sgVec3 wgs84, point xy);
+    //ConvertWGS84ToXY(sgVec3 wgs84, point xy);
 
     // Assign a gate or parking location to a new arrival
-    AssignGate(ground_rec &g);
+    //AssignGate(ground_rec &g);
 
     // Generate the next clearance for an airplane
-    NextClearance(ground_rec &g);
-
+    //NextClearance(ground_rec &g);
+	
+	char type;
+	double lon, lat;
+	double elev;
+	double x, y, z;
+	int freq;
+	int range;
+	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
+	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
+	string ident;		// Code of the airport its at.
+	string name;		// Name generally used in transmissions.
+	// for failure modeling
+	string trans_ident;		// transmitted ident
+	bool ground_failed;		// ground failed?
+	
+	friend istream& operator>> ( istream&, FGGround& );
 };
 
-#endif  //_FG_GROUND_HXX
+inline istream&
+operator >> ( istream& in, FGGround& g )
+{
+	double f;
+	char ch;
+	
+	in >> g.type;
+	
+	if ( g.type == '[' )
+		return in >> skipeol;
+	
+	in >> g.lat >> g.lon >> g.elev >> f >> g.range 
+	>> g.ident;
+	
+	g.name = "";
+	in >> ch;
+	g.name += ch;
+	while(1) {
+		//in >> noskipws
+		in.unsetf(ios::skipws);
+		in >> ch;
+		g.name += ch;
+		if((ch == '"') || (ch == 0x0A)) {
+			break;
+		}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
+	}
+	in.setf(ios::skipws);
+	//cout << "tower.name = " << t.name << '\n';
+	
+	g.freq = (int)(f*100.0 + 0.5);
+	
+	// cout << g.ident << endl;
+	
+	// generate cartesian coordinates
+	Point3D geod( g.lon * SGD_DEGREES_TO_RADIANS, g.lat * SGD_DEGREES_TO_RADIANS, g.elev );
+	Point3D cart = sgGeodToCart( geod );
+	g.x = cart.x();
+	g.y = cart.y();
+	g.z = cart.z();
+	
+	g.trans_ident = g.ident;
+	g.ground_failed = false;
+	
+	return in >> skipeol;
+}
+
+#endif	// _FG_GROUND_HXX
+
