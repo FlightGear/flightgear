@@ -957,76 +957,76 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 
 int global_day_night_switch = DAY;
 
+void HUD_masterswitch( bool incr )
+{
+    if ( current_options.get_hud_status() ) {
+	if ( global_day_night_switch == DAY ) {
+	    global_day_night_switch = NIGHT;
+	} else {
+	    current_options.set_hud_status( false );
+	}
+    } else {
+	current_options.set_hud_status( true );
+	global_day_night_switch = DAY;
+    }	
+}
+
 void HUD_brightkey( bool incr_bright )
 {
-instr_item *pHUDInstr = HUD_deque[0];
-int brightness        = pHUDInstr->get_brightness();
+    instr_item *pHUDInstr = HUD_deque[0];
+    int brightness        = pHUDInstr->get_brightness();
 
-  if( current_options.get_hud_status() ) {
-    if( incr_bright ) {
-      switch (brightness) {
-        case BRT_LIGHT:
-          current_options.set_hud_status(0);
-          break;
+    if( current_options.get_hud_status() ) {
+	if( incr_bright ) {
+	    switch (brightness)
+		{
+		case BRT_LIGHT:
+		    brightness = BRT_BLACK;
+		    break;
 
-        case BRT_MEDIUM:
-          brightness = BRT_LIGHT;
-          break;
+		case BRT_MEDIUM:
+		    brightness = BRT_LIGHT;
+		    break;
 
-        case BRT_DARK:
-          brightness = BRT_MEDIUM;
-          break;
+		case BRT_DARK:
+		    brightness = BRT_MEDIUM;
+		    break;
 
-        case BRT_BLACK:
-          brightness = BRT_DARK;
-          break;
+		case BRT_BLACK:
+		    brightness = BRT_DARK;
+		    break;
 
-        default:
-          brightness = BRT_BLACK;
-        }
-      }
-    else {
-      switch (brightness) {
-        case BRT_LIGHT:
-          brightness = BRT_MEDIUM;
-          break;
+		default:
+		    brightness = BRT_BLACK;
+		}
+	} else {
+	    switch (brightness)
+		{
+		case BRT_LIGHT:
+		    brightness = BRT_MEDIUM;
+		    break;
 
-        case BRT_MEDIUM:
-          brightness = BRT_DARK;
-          break;
+		case BRT_MEDIUM:
+		    brightness = BRT_DARK;
+		    break;
 
-        case BRT_DARK:
-          brightness = BRT_BLACK;
-          break;
+		case BRT_DARK:
+		    brightness = BRT_BLACK;
+		    break;
 
-        case BRT_BLACK:
-        default:
-          current_options.set_hud_status(0);
-        }
-      }
+		case BRT_BLACK:
+		    brightness = BRT_LIGHT;
+		    break;
+
+		default:
+		    current_options.set_hud_status(0);
+		}
+	}
+    } else {
+	current_options.set_hud_status(true);
     }
-  else {
-    current_options.set_hud_status(1);
-    if( incr_bright ) {
-      if( DAY == global_day_night_switch ) {
-        brightness = BRT_BLACK;
-        }
-      else {
-        brightness = BRT_DARK;
-        global_day_night_switch = DAY;
-        }
-      }
-    else {
-      if( NIGHT == global_day_night_switch ) {
-        brightness = BRT_DARK;
-        }
-      else {
-        brightness = BRT_MEDIUM;
-        global_day_night_switch = NIGHT;
-        }
-      }
-    }
-  pHUDInstr->SetBrightness( brightness );
+
+    pHUDInstr->SetBrightness( brightness );
 }
 
 
@@ -1214,46 +1214,53 @@ void fgUpdateHUD( void ) {
   }
 
   if( day_night_sw == DAY) {
-	  switch (brightness) {
-		  case BRT_LIGHT:
-            set_hud_color (0.1f, 0.9f, 0.1f);
-            break;
+      switch (brightness)
+	  {
+	  case BRT_LIGHT:
+	      set_hud_color (0.1f, 0.9f, 0.1f);
+	      break;
 
           case BRT_MEDIUM:
-            set_hud_color (0.1f, 0.7f, 0.0f);
-            break;
+	      set_hud_color (0.1f, 0.7f, 0.0f);
+	      break;
 
           case BRT_DARK:
-            set_hud_color (0.0f, 0.6f, 0.0f);
-            break;
+	      set_hud_color (0.0f, 0.6f, 0.0f);
+	      break;
 
           case BRT_BLACK:
-            set_hud_color( 0.0f, 0.0f, 0.0f);
-            break;
+	      set_hud_color( 0.0f, 0.0f, 0.0f);
+	      break;
 
           default:
- 		    set_hud_color (0.1f, 0.9f, 0.1f);
+	      set_hud_color (0.1f, 0.9f, 0.1f);
 	  }
-  }
-  else {
-	  if( day_night_sw == NIGHT) {
-		  switch (brightness) {
-			  case BRT_LIGHT:
-                set_hud_color (0.9f, 0.1f, 0.1f);
-                break;
+  } else {
+      if( day_night_sw == NIGHT) {
+	  switch (brightness)
+	      {
+	      case BRT_LIGHT:
+		  set_hud_color (0.9f, 0.1f, 0.1f);
+		  break;
 
               case BRT_MEDIUM:
-                set_hud_color (0.7f, 0.0f, 0.1f);
-                break;
+		  set_hud_color (0.7f, 0.0f, 0.1f);
+		  break;
 
-			  case BRT_DARK:
-			  default:
-				  set_hud_color (0.6f, 0.0f, 0.0f);
-		  }
-	  }
-	  else {     // Just in case default
-		  set_hud_color (0.1f, 0.9f, 0.1f);
-	  }
+	      case BRT_DARK:
+		  set_hud_color (0.6f, 0.0f, 0.0f);
+		  break;
+
+	      case BRT_BLACK:
+		  set_hud_color( 0.0f, 0.0f, 0.0f);
+		  break;
+
+	      default:
+		  set_hud_color (0.6f, 0.0f, 0.0f);
+	      }
+      } else {     // Just in case default
+	  set_hud_color (0.1f, 0.9f, 0.1f);
+      }
   }
 
   deque < instr_item * > :: iterator current = HUD_deque.begin();

@@ -808,6 +808,7 @@ class HudLadder : public dual_instr_item {
 //using namespace std;
 //deque <instr_item>  * Hdeque_ptr;
 
+extern void HUD_masterswitch( bool incr );
 extern void HUD_brightkey( bool incr_bright );
 extern int  fgHUDInit( fgAIRCRAFT * /* current_aircraft */ );
 extern int  fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ );

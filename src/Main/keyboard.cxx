@@ -61,6 +61,7 @@
 #  include <Weather/weather.hxx>
 #endif
 
+#include "bfi.hxx"
 #include "keyboard.hxx"
 #include "options.hxx"
 #include "save.hxx"
@@ -320,7 +321,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    controls.set_brake( FGControls::ALL_WHEELS, b_set);
 	    return;
 	case 104: // h key
-	    HUD_brightkey( false );
+	    HUD_masterswitch( true );
 	    return;
 	case 105: // i key
 	    fgHUDInit(&current_aircraft);  // normal HUD
