@@ -1,4 +1,4 @@
-dnl aclocal.m4 generated automatically by aclocal 1.2h
+dnl aclocal.m4 generated automatically by aclocal 1.3
 
 dnl Copyright (C) 1994, 1995, 1996, 1997, 1998 Free Software Foundation, Inc.
 dnl This Makefile.in is free software; the Free Software Foundation
