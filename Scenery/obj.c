@@ -229,17 +229,19 @@ GLint fgObjLoad(char *path) {
     glEnd();
 
     /* Draw normal vectors (for visually verifying normals)*/
-/*     glBegin(GL_LINES); */
-/*     glColor3f(0.0, 0.0, 0.0); */
-/*     for ( i = 0; i < ncount; i++ ) { */
-/* 	glVertex3d(nodes[i][0] - ref.x,  */
-/* 		   nodes[i][1] - ref.y,  */
-/* 		   nodes[i][2] - ref.z); */
-/* 	glVertex3d(nodes[i][0] - ref.x + 1000*normals[i][0],  */
-/* 		   nodes[i][1] - ref.y + 1000*normals[i][1],  */
-/* 		   nodes[i][2] - ref.z + 1000*normals[i][2]); */
-/*     } */
-/*     glEnd(); */
+    /*
+    glBegin(GL_LINES);
+    glColor3f(0.0, 0.0, 0.0);
+    for ( i = 0; i < ncount; i++ ) {
+ 	glVertex3d(nodes[i][0] - ref.x,
+ 		   nodes[i][1] - ref.y,
+ 		   nodes[i][2] - ref.z);
+ 	glVertex3d(nodes[i][0] - ref.x + 500*normals[i][0],
+ 		   nodes[i][1] - ref.y + 500*normals[i][1],
+ 		   nodes[i][2] - ref.z + 500*normals[i][2]);
+    } 
+    glEnd();
+    */
 
     glEndList();
 
@@ -250,11 +252,14 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.7  1997/12/08 22:51:17  curt
-/* Enhanced to handle ccw and cw tri-stripe winding.  This is a temporary
-/* admission of defeat.  I will eventually go back and get all the stripes
-/* wound the same way (ccw).
+/* Revision 1.8  1997/12/10 01:19:51  curt
+/* Tweaks for verion 0.15 release.
 /*
+ * Revision 1.7  1997/12/08 22:51:17  curt
+ * Enhanced to handle ccw and cw tri-stripe winding.  This is a temporary
+ * admission of defeat.  I will eventually go back and get all the stripes
+ * wound the same way (ccw).
+ *
  * Revision 1.6  1997/11/25 19:25:35  curt
  * Changes to integrate Durk's moon/sun code updates + clean up.
  *

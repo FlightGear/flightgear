@@ -30,7 +30,7 @@
 #---------------------------------------------------------------------------
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 15
+VERSION_MINOR = 16
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 
 
@@ -131,6 +131,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.21  1997/12/10 01:19:42  curt
+# Tweaks for verion 0.15 release.
+#
 # Revision 1.20  1997/12/09 04:25:25  curt
 # Working on adding a global lighting params structure.
 #

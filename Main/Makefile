@@ -54,7 +54,8 @@ $(TARGET): $(OFILES) $(AFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) $(TARGET).exe lib*.a *.os2 *~ core
+	rm -f *.o $(TARGET) $(TARGET).exe \
+		fg$(VERSION_MAJOR) fg$(VERSION_MAJOR).exe lib*.a *.os2 *~ core
 
 
 #---------------------------------------------------------------------------
@@ -81,6 +82,9 @@ views.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.36  1997/12/10 01:19:47  curt
+# Tweaks for verion 0.15 release.
+#
 # Revision 1.35  1997/10/28 21:11:22  curt
 # Organizational changes.
 #

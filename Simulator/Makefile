@@ -77,21 +77,27 @@ scenery-zip:
 	zip -r scenery-$(VERSION).zip FlightGear/Scenery)
 
 bin-tar: all
-	cp GLUT/fg0 GLUT/runfg ..
+	cp Main/fg-$(VERSION) runfg ..
+	$(LN) ../fg-$(VERSION) ../fg$(VERSION_MAJOR)
 	(cd ../..; \
-	tar cvzf bin-$(VERSION).tar.gz FlightGear/fgtop FlightGear/fg0 \
+	tar cvzf bin-$(VERSION).tar.gz FlightGear/fgtop \
+	FlightGear/fg-$(VERSION) FlightGear/fg$(VERSION_MAJOR) \
 	FlightGear/runfg FlightGear/COPYING FlightGear/Docs FlightGear/Thanks)
 
 bin-zip: 
-	cp GLUT/fg0.exe GLUT/runfg.bat GLUT/cygwin.dll ..
+	cp Main/fg$(VERSION_MAJOR).exe Main/cygwin.dll runfg.bat ..
 	(cd ../..; \
-	zip -r bin-$(VERSION).zip FlightGear/fgtop FlightGear/fg0.exe \
-	FlightGear/runfg.bat FlightGear/cygwin.dll FlightGear/COPYING \
-	FlightGear/Docs FlightGear/Thanks)
+	zip -r bin-$(VERSION).zip FlightGear/fgtop \
+	FlightGear/fg$(VERSION_MAJOR).exe FlightGear/runfg.bat \
+	FlightGear/cygwin.dll FlightGear/COPYING FlightGear/Docs \
+	FlightGear/Thanks)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.30  1997/12/10 01:19:42  curt
+# Tweaks for verion 0.15 release.
+#
 # Revision 1.29  1997/10/30 12:38:35  curt
 # Working on new scenery subsystem.
 #
