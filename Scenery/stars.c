@@ -38,19 +38,21 @@
 
 #include "../general.h"
 
+#include "../GLUT/views.h"
 
-/* static struct STAR stars[FG_MAX_STARS]; */
+
 static GLint stars;
 
 
 /* Initialize the Star Management Subsystem */
 void fgStarsInit() {
     FILE *fd;
-    struct general_params *g;
+    struct GENERAL *g;
     char path[1024];
     char line[256], name[256];
     char *tmp_ptr;
     double right_ascension, declination, magnitude;
+    GLfloat mag[4] = {0.0, 0.0, 0.0, 1.0};
     int count;
 
     g = &general;
@@ -93,10 +95,12 @@ void fgStarsInit() {
 	    /* printf("Found star: %d %s, %.3f %.3f %.3f\n", count,
 	       name, right_ascension, declination, magnitude); */
 	    count++;
+	    magnitude = magnitude * 0.8 + 0.2;
+	    mag[0] = mag[1] = mag[2] = magnitude;
 	    glColor3f( magnitude, magnitude, magnitude );
-	    glVertex3f( 100.0 * sin(right_ascension) * cos(declination),
-			100.0 * cos(right_ascension) * cos(declination),
-			100.0 * sin(declination) );
+	    glVertex3f( 190000.0 * sin(right_ascension) * cos(declination),
+			190000.0 * cos(right_ascension) * cos(declination),
+			190000.0 * sin(declination) );
 
 	} /* if valid line */
 
@@ -109,12 +113,38 @@ void fgStarsInit() {
 
 /* Draw the Stars */
 void fgStarsRender() {
+    struct VIEW *v;
+    GLfloat amb[3], diff[3];
+
+    v = &current_view;
+
+    printf("RENDERING STARS\n");
+
+    glDisable( GL_FOG );
+    glDisable( GL_LIGHTING );
+    glPushMatrix();
+
+    /* set lighting parameters for stars */
+    /* amb[0] = amb[1] = amb[2] = 1.0;
+    diff[0] = diff[1] = diff[2] = 1.0;
+    glLightfv(GL_LIGHT0, GL_AMBIENT, amb );
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diff ); */
+
+    glTranslatef(v->view_pos.x, v->view_pos.y, v->view_pos.z);
+
     glCallList(stars);
+
+    glPopMatrix();
+    glEnable( GL_LIGHTING );
+    glEnable( GL_FOG );
 }
 
 
 /* $Log$
-/* Revision 1.1  1997/08/27 03:34:48  curt
-/* Initial revisio.
+/* Revision 1.2  1997/08/27 21:32:30  curt
+/* Restructured view calculation code.  Added stars.
 /*
+ * Revision 1.1  1997/08/27 03:34:48  curt
+ * Initial revisio.
+ *
  */

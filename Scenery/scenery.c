@@ -36,6 +36,7 @@
 
 #include "scenery.h"
 #include "parsevrml.h"
+#include "stars.h"
 
 
 /* Temporary hack until we get the scenery management system running */
@@ -49,7 +50,7 @@ struct SCENERY scenery;
 /* Initialize the Scenery Management system */
 void fgSceneryInit() {
     /* set the default terrain detail level */
-    scenery.terrain_skip = 4;
+    scenery.terrain_skip = 2;
 }
 
 
@@ -81,13 +82,18 @@ void fgSceneryRender() {
     glPushMatrix();
     glCallList(mesh_hack);
     glPopMatrix();
+
+    fgStarsRender();
 }
 
 
 /* $Log$
-/* Revision 1.15  1997/08/27 03:30:32  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.16  1997/08/27 21:32:29  curt
+/* Restructured view calculation code.  Added stars.
 /*
+ * Revision 1.15  1997/08/27 03:30:32  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.14  1997/08/25 20:27:24  curt
  * Merged in initial HUD and Joystick code.
  *

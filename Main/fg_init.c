@@ -28,6 +28,7 @@
 #include <stdlib.h>
 
 #include "fg_init.h"
+#include "views.h"
 
 #include "../constants.h"
 #include "../general.h"
@@ -74,8 +75,11 @@ void fgInitSubsystems( void ) {
     double cur_elev;
 
     struct FLIGHT *f;
+    struct VIEW *v;
 
     f = &current_aircraft.flight;
+    v = &current_view;
+
 
     /****************************************************************
      * The following section sets up the flight model EOM parameters and 
@@ -140,6 +144,9 @@ void fgInitSubsystems( void ) {
     /* Initialize shared sun position and sun_vec */
     fgUpdateSunPos();
 
+    /* Initialize view parameters */
+    fgViewInit(v);
+
     /* Initialize the weather modeling subsystem */
     fgWeatherInit();
 
@@ -188,9 +195,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1997/08/27 03:30:19  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.4  1997/08/27 21:32:26  curt
+/* Restructured view calculation code.  Added stars.
 /*
+ * Revision 1.3  1997/08/27 03:30:19  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.2  1997/08/25 20:27:23  curt
  * Merged in initial HUD and Joystick code.
  *

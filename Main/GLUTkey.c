@@ -24,31 +24,33 @@
  **************************************************************************/
 
 
-#include <stdio.h>
-
 #ifdef WIN32
 #  include <windows.h>                     
 #endif
 
 #include <GL/glut.h>
+#include <stdio.h>
 
 #include "GLUTkey.h"
+#include "views.h"
 
 #include "../constants.h"
 
 #include "../Aircraft/aircraft.h"
 #include "../Weather/weather.h"
 
-extern double goal_view_offset;
+
 extern int show_hud;             /* HUD state */
 
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
     struct CONTROLS *c;
+    struct VIEW *v;
     struct WEATHER *w;
 
     c = &current_aircraft.controls;
+    v = &current_view;
     w = &current_weather;
 
     printf("Key hit = %d", k);
@@ -57,28 +59,28 @@ void GLUTkey(unsigned char k, int x, int y) {
 	printf(" SHIFTED\n");
 	switch (k) {
 	case 49: /* numeric keypad 1 */
-	    goal_view_offset = FG_PI * 0.75;
+	    v->goal_view_offset = FG_PI * 0.75;
 	    return;
 	case 50: /* numeric keypad 2 */
-	    goal_view_offset = FG_PI;
+	    v->goal_view_offset = FG_PI;
 	    return;
 	case 51: /* numeric keypad 3 */
-	    goal_view_offset = FG_PI * 1.25;
+	    v->goal_view_offset = FG_PI * 1.25;
 	    return;
 	case 52: /* numeric keypad 4 */
-	    goal_view_offset = FG_PI * 0.50;
+	    v->goal_view_offset = FG_PI * 0.50;
 	    return;
 	case 54: /* numeric keypad 6 */
-	    goal_view_offset = FG_PI * 1.50;
+	    v->goal_view_offset = FG_PI * 1.50;
 	    return;
 	case 55: /* numeric keypad 7 */
-	    goal_view_offset = FG_PI * 0.25;
+	    v->goal_view_offset = FG_PI * 0.25;
 	    return;
 	case 56: /* numeric keypad 8 */
-	    goal_view_offset = 0.00;
+	    v->goal_view_offset = 0.00;
 	    return;
 	case 57: /* numeric keypad 9 */
-	    goal_view_offset = FG_PI * 1.75;
+	    v->goal_view_offset = FG_PI * 1.75;
 	    return;
 	case 72: /* H key */
 	    show_hud = !show_hud;
@@ -143,8 +145,10 @@ void GLUTkey(unsigned char k, int x, int y) {
 /* Handle "special" keyboard events */
 void GLUTspecialkey(int k, int x, int y) {
     struct CONTROLS *c;
+    struct VIEW *v;
 
     c = &current_aircraft.controls;
+    v = &current_view;
 
     printf("Special key hit = %d", k);
 
@@ -152,28 +156,28 @@ void GLUTspecialkey(int k, int x, int y) {
 	printf(" SHIFTED\n");
 	switch (k) {
 	case GLUT_KEY_END: /* numeric keypad 1 */
-	    goal_view_offset = FG_PI * 0.75;
+	    v->goal_view_offset = FG_PI * 0.75;
 	    return;
 	case GLUT_KEY_DOWN: /* numeric keypad 2 */
-	    goal_view_offset = FG_PI;
+	    v->goal_view_offset = FG_PI;
 	    return;
 	case GLUT_KEY_PAGE_DOWN: /* numeric keypad 3 */
-	    goal_view_offset = FG_PI * 1.25;
+	    v->goal_view_offset = FG_PI * 1.25;
 	    return;
 	case GLUT_KEY_LEFT: /* numeric keypad 4 */
-	    goal_view_offset = FG_PI * 0.50;
+	    v->goal_view_offset = FG_PI * 0.50;
 	    return;
 	case GLUT_KEY_RIGHT: /* numeric keypad 6 */
-	    goal_view_offset = FG_PI * 1.50;
+	    v->goal_view_offset = FG_PI * 1.50;
 	    return;
 	case GLUT_KEY_HOME: /* numeric keypad 7 */
-	    goal_view_offset = FG_PI * 0.25;
+	    v->goal_view_offset = FG_PI * 0.25;
 	    return;
 	case GLUT_KEY_UP: /* numeric keypad 8 */
-	    goal_view_offset = 0.00;
+	    v->goal_view_offset = 0.00;
 	    return;
 	case GLUT_KEY_PAGE_UP: /* numeric keypad 9 */
-	    goal_view_offset = FG_PI * 1.75;
+	    v->goal_view_offset = FG_PI * 1.75;
 	    return;
 	}
     } else {
@@ -220,9 +224,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.20  1997/08/27 03:30:13  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.21  1997/08/27 21:32:23  curt
+/* Restructured view calculation code.  Added stars.
 /*
+ * Revision 1.20  1997/08/27 03:30:13  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.19  1997/08/25 20:27:21  curt
  * Merged in initial HUD and Joystick code.
  *

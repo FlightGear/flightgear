@@ -24,18 +24,16 @@
  **************************************************************************/
 
 
-#include <stdio.h>
-
 #ifdef WIN32
 #  include <windows.h>                     
 #endif
 
-#ifdef GLUT
-    #include <GL/glut.h>
-    #include "GLUTkey.h"
-#endif
+#include <GL/glut.h>
+#include <stdio.h>
 
+#include "GLUTkey.h"
 #include "fg_init.h"
+#include "views.h"
 
 #include "../constants.h"
 #include "../general.h"
@@ -64,6 +62,9 @@ struct GENERAL general;
 /* This is a record containing current weather info */
 struct WEATHER current_weather;
 
+/* This is a record containing current view parameters */
+struct VIEW current_view;
+
 /* view parameters */
 static GLfloat win_ratio = 1.0;
 
@@ -86,8 +87,8 @@ static GLfloat fgFogColor[4] =   {0.65, 0.65, 0.85, 1.0};
 /* static GLint scenery, runway; */
 
 /* Another hack */
-double view_offset = 0.0;
-double goal_view_offset = 0.0;
+/* double view_offset = 0.0;
+double goal_view_offset = 0.0; */
 
 double Simtime;
 
@@ -139,17 +140,19 @@ static void fgInitVisuals() {
  **************************************************************************/
 
 static void fgUpdateViewParams() {
-    struct fgCartesianPoint view_pos /*, alt_up */;
     struct FLIGHT *f;
     struct fgTIME *t;
-    MAT3mat R, TMP, UP, LOCAL, VIEW;
-    MAT3vec vec, view_up, forward, view_forward, local_up, nup, nsun;
+    struct VIEW *v;
+    MAT3vec nup, nsun;
     double sun_angle, temp, ambient, diffuse, sky;
     GLfloat color[4] = { 1.0, 1.0, 0.50, 1.0 };
     GLfloat amb[3], diff[3], fog[4], clear[4];
 
     f = &current_aircraft.flight;
     t = &cur_time_params;
+    v = &current_view;
+
+    fgViewUpdate(f, v);
 
     /* Tell GL we are about to modify the projection parameters */
     glMatrixMode(GL_PROJECTION);
@@ -159,96 +162,19 @@ static void fgUpdateViewParams() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
-    /* calculate view position in current FG view coordinate system */
-    view_pos = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
-			     FG_Radius_to_vehicle * FEET_TO_METER + 1.0);
-    view_pos.x -= scenery.center.x;
-    view_pos.y -= scenery.center.y;
-    view_pos.z -= scenery.center.z;
-
-    printf("View pos = %.4f, %.4f, %.4f\n", view_pos.x, view_pos.y, view_pos.z);
-
-    /* Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw) */
-    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3rotate(R, vec, FG_Phi);
-    /* printf("Roll matrix\n"); */
-    /* MAT3print(R, stdout); */
-
-    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
-    /* MAT3mult_vec(vec, vec, R); */
-    MAT3rotate(TMP, vec, FG_Theta);
-    /* printf("Pitch matrix\n"); */
-    /* MAT3print(TMP, stdout); */
-    MAT3mult(R, R, TMP);
-
-    MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-    /* MAT3mult_vec(vec, vec, R); */
-    /* MAT3rotate(TMP, vec, FG_Psi - FG_PI_2); */
-    MAT3rotate(TMP, vec, -FG_Psi);
-    /* printf("Yaw matrix\n");
-    MAT3print(TMP, stdout); */
-    MAT3mult(LOCAL, R, TMP);
-    /* printf("LOCAL matrix\n"); */
-    /* MAT3print(LOCAL, stdout); */
-
-    /* Derive the local UP transformation matrix based on *geodetic*
-     * coordinates */
-    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3rotate(R, vec, FG_Longitude);     /* R = rotate about Z axis */
-    /* printf("Longitude matrix\n"); */
-    /* MAT3print(R, stdout); */
-
-    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
-    MAT3mult_vec(vec, vec, R);
-    MAT3rotate(TMP, vec, -FG_Latitude);  /* TMP = rotate about X axis */
-    /* printf("Latitude matrix\n"); */
-    /* MAT3print(TMP, stdout); */
-
-    MAT3mult(UP, R, TMP);
-    /* printf("Local up matrix\n"); */
-    /* MAT3print(UP, stdout); */
-
-    MAT3_SET_VEC(local_up, 1.0, 0.0, 0.0);
-    MAT3mult_vec(local_up, local_up, UP);
-
-    printf("    Local Up = (%.4f, %.4f, %.4f)\n", local_up[0], local_up[1], 
-	   local_up[2]);
-    
-    /* Alternative method to Derive local up vector based on
-     * *geodetic* coordinates */
-    /* alt_up = fgPolarToCart(FG_Longitude, FG_Latitude, 1.0); */
-    /* printf("    Alt Up = (%.4f, %.4f, %.4f)\n", 
-       alt_up.x, alt_up.y, alt_up.z); */
-
-    /* Derive the VIEW matrix */
-    MAT3mult(VIEW, LOCAL, UP);
-    /* printf("VIEW matrix\n"); */
-    /* MAT3print(VIEW, stdout); */
-
-    /* generate the current up, forward, and fwrd-view vectors */
-    MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-    MAT3mult_vec(view_up, vec, VIEW);
-
-    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3mult_vec(forward, vec, VIEW);
-    printf("Forward vector is (%.2f,%.2f,%.2f)\n", forward[0], forward[1], 
-	   forward[2]);
-
-    MAT3rotate(TMP, view_up, view_offset);
-    MAT3mult_vec(view_forward, forward, TMP);
-
     /* set up our view volume */
-    gluLookAt(view_pos.x, view_pos.y, view_pos.z,
-	      view_pos.x + view_forward[0], view_pos.y + view_forward[1], 
-	      view_pos.z + view_forward[2],
-	      view_up[0], view_up[1], view_up[2]);
+    gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
+	      v->view_pos.x + v->view_forward[0], 
+	      v->view_pos.y + v->view_forward[1], 
+	      v->view_pos.z + v->view_forward[2],
+	      v->view_up[0], v->view_up[1], v->view_up[2]);
 
     /* set the sun position */
     glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
 
     /* calculate lighting parameters based on sun's relative angle to
      * local up */
-    MAT3_COPY_VEC(nup, local_up);
+    MAT3_COPY_VEC(nup, v->local_up);
     nsun[0] = t->fg_sunpos.x; 
     nsun[1] = t->fg_sunpos.y;
     nsun[2] = t->fg_sunpos.z;
@@ -332,10 +258,12 @@ static void fgUpdateVisuals( void ) {
 void fgUpdateTimeDepCalcs(int multi_loop) {
     struct FLIGHT *f;
     struct fgTIME *t;
+    struct VIEW *v;
     int i;
 
     f = &current_aircraft.flight;
     t = &cur_time_params;
+    v = &current_view;
 
     /* update the flight model */
     if ( multi_loop < 0 ) {
@@ -357,28 +285,28 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 
     /* update the view angle */
     for ( i = 0; i < multi_loop; i++ ) {
-	if ( fabs(goal_view_offset - view_offset) < 0.05 ) {
-	    view_offset = goal_view_offset;
+	if ( fabs(v->goal_view_offset - v->view_offset) < 0.05 ) {
+	    v->view_offset = v->goal_view_offset;
 	    break;
 	} else {
-	    /* move view_offset towards goal_view_offset */
-	    if ( goal_view_offset > view_offset ) {
-		if ( goal_view_offset - view_offset < FG_PI ) {
-		    view_offset += 0.01;
+	    /* move v->view_offset towards v->goal_view_offset */
+	    if ( v->goal_view_offset > v->view_offset ) {
+		if ( v->goal_view_offset - v->view_offset < FG_PI ) {
+		    v->view_offset += 0.01;
 		} else {
-		    view_offset -= 0.01;
+		    v->view_offset -= 0.01;
 		}
 	    } else {
-		if ( view_offset - goal_view_offset < FG_PI ) {
-		    view_offset -= 0.01;
+		if ( v->view_offset - v->goal_view_offset < FG_PI ) {
+		    v->view_offset -= 0.01;
 		} else {
-		    view_offset += 0.01;
+		    v->view_offset += 0.01;
 		}
 	    }
-	    if ( view_offset > FG_2PI ) {
-		view_offset -= FG_2PI;
-	    } else if ( view_offset < 0 ) {
-		view_offset += FG_2PI;
+	    if ( v->view_offset > FG_2PI ) {
+		v->view_offset -= FG_2PI;
+	    } else if ( v->view_offset < 0 ) {
+		v->view_offset += FG_2PI;
 	    }
 	}
     }
@@ -646,9 +574,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.11  1997/08/27 03:30:16  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.12  1997/08/27 21:32:24  curt
+/* Restructured view calculation code.  Added stars.
 /*
+ * Revision 1.11  1997/08/27 03:30:16  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.10  1997/08/25 20:27:22  curt
  * Merged in initial HUD and Joystick code.
  *

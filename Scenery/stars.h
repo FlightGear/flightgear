@@ -28,7 +28,7 @@
 #define STARS_H
 
 
-#define FG_MAX_STARS 100
+#define FG_MAX_STARS 1000
 
 
 /* Define a structure containing star information */
@@ -50,7 +50,10 @@ void fgStarsRender();
 
 
 /* $Log$
-/* Revision 1.1  1997/08/27 03:34:50  curt
-/* Initial revisio.
+/* Revision 1.2  1997/08/27 21:32:30  curt
+/* Restructured view calculation code.  Added stars.
 /*
+ * Revision 1.1  1997/08/27 03:34:50  curt
+ * Initial revisio.
+ *
  */

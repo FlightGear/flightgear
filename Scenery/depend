@@ -8,3 +8,4 @@ parser.o: parser.c parsevrml.h geometry.h common.h mesh.h scenery.h \
  ../types.h
 scanner.o: scanner.c parser.h
 scenery.o: scenery.c ../general.h scenery.h ../types.h parsevrml.h
+stars.o: stars.c stars.h ../general.h
