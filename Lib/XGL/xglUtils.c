@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined( __CYGWIN__ ) && !defined( __CYGWIN32__ )
+#if !defined( WIN32 )
 #  if !defined( HAVE_STL_SGI_PORT ) && !defined( __MWERKS__ )
 //   Avoid malloc with STLport and MSL
 #    include <malloc.h>
@@ -28,12 +28,7 @@
 
 int   xglTraceOn = TRUE ;
 
-#ifndef WIN32
-    FILE *xglTraceFd = stdout ;
-#else /* WIN32 */
-    /* Bail for now, we just want it to compile I guess */
-    FILE *xglTraceFd = NULL;
-#endif /* WIN32 */
+FILE *xglTraceFd = NULL;
 
 struct GLenumLookup
 {

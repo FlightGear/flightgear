@@ -233,20 +233,10 @@ extern float HUD_matrix[16];
 
 class fgText {
 private:
-    char msg[32];
     float x, y;
+    char msg[32];
 public:
-    // note to Norman from Curt.  You had two constructors here that
-    // have defaults values for all parameters.  So, if a constructor
-    // is called with no parameters, which is chosen?  For the second,
-    // I've removed the default value for x which fixes the problem.
-    // However, it might be best to just delete the second redundant
-    // constructor, and fix the constructor variable ordering
-    // throughout the rest of the code.
-    fgText( char *c = NULL, float x = 0, float y =0 )
-        : x(x), y(y) {strncpy(msg,c,32-1);}
-
-    fgText( float x, float y = 0, char *c = NULL )
+    fgText( float x = 0, float y = 0, char *c = NULL )
         : x(x), y(y) {strncpy(msg,c,32-1);}
 
     fgText( const fgText & image )
@@ -441,7 +431,7 @@ class instr_item {  // An Abstract Base Class (ABC)
     }
     void TextString( char *msg, float x, float y )
     {
-        HUD_TextList.add(fgText(msg, x, y));        
+        HUD_TextList.add(fgText(x, y, msg));        
     }
     int getStringWidth ( char *str )
     {

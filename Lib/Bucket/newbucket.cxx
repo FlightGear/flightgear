@@ -28,6 +28,8 @@
 #endif
 
 
+#include <math.h>
+
 #include <Misc/fgpath.hxx>
 
 #include "newbucket.hxx"

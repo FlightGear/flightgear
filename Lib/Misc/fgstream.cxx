@@ -118,18 +118,29 @@ skipws( istream& in ) {
     while ( in.get(c) ) {
 
 #ifdef __MWERKS__
+
 	// -dw- for unix file compatibility
 	// -clo- this causes problems for unix
     	if ( (c == '\n') || (c == '\r') || (c == '\0') ) {
 	    break;
-	}	
-#endif
+	}
+
+	if ( ! isspace( c ) && c != '\n' ) {
+	    // put pack the non-space character
+	    in.putback(c);
+	    break;
+	}
+
+#else
 
 	if ( ! isspace( c ) ) {
 	    // put pack the non-space character
 	    in.putback(c);
 	    break;
 	}
+
+#endif
+
     }
     return in;
 }
