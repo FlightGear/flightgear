@@ -197,16 +197,19 @@ FG3DModel::init (const string &path)
       modelpath = modelpath.dir();
       modelpath.append(props.getStringValue("/path"));
     } else {
-      throw sg_exception("No path for model");
+      if (_model == 0)
+	_model = new ssgBranch;
     }
   }
 
                                 // Assume that textures are in
                                 // the same location as the XML file.
-  ssgTexturePath((char *)xmlpath.dir().c_str());
-  _model = (ssgBranch *)ssgLoad((char *)modelpath.c_str());
-  if (_model == 0)
-    throw sg_exception("Failed to load 3D model");
+  if (_model == 0) {
+    ssgTexturePath((char *)xmlpath.dir().c_str());
+    _model = (ssgBranch *)ssgLoad((char *)modelpath.c_str());
+    if (_model == 0)
+      throw sg_exception("Failed to load 3D model");
+  }
 
                                 // Set up the alignment node
   ssgTransform * align = new ssgTransform;
