@@ -370,7 +370,7 @@ FGPanel::draw()
   // of an existing polygon.  Use an offset to prevent z-fighting.  In
   // 2D mode, this is a no-op.
   glEnable(GL_POLYGON_OFFSET_FILL);
-  glPolygonOffset(0, -POFF_UNITS);
+  glPolygonOffset(-1, -POFF_UNITS);
 
   // save some state
   glPushAttrib( GL_COLOR_BUFFER_BIT | GL_ENABLE_BIT | GL_LIGHTING_BIT
