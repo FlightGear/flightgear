@@ -35,6 +35,8 @@
 /* what do ya' know, here's some global variables */
 static double nodes[MAXNODES][3];
 static double normals[MAXNODES][3];
+static int faces[MAXNODES][3];
+int ncount, vncount, fcount;
 
 static int ccw_list[MAXNODES];
 int ccw_list_ptr;
@@ -43,6 +45,8 @@ static int cw_list[MAXNODES];
 int cw_list_ptr;
 
 FILE *in, *out;
+
+double refx, refy, refz;
 
 
 /* some simple list routines */
@@ -64,6 +68,42 @@ void list_add(int *list, int *list_ptr, int node) {
     *list_ptr += 1;
 
     /* printf("list pointer = %d  adding %d\n", *list_ptr, node); */
+}
+
+
+/* dump nodes */
+void dump_nodes( void ) {
+    int i;
+
+    fprintf(out, "\n");
+    for ( i = 0; i < ncount; i++ ) {
+	fprintf(out, "v %.4lf %.4lf %.4lf\n",
+		nodes[i][0] - refx, nodes[i][1] - refy, nodes[i][2] - refz);
+    }
+}
+
+
+/* dump normals */
+void dump_normals( void ) {
+    int i;
+
+    fprintf(out, "\n");
+    for ( i = 0; i < vncount; i++ ) {
+	fprintf(out, "vn %.4lf %.4lf %.4lf\n", 
+		normals[i][0], normals[i][1], normals[i][2]);
+    }
+}
+
+
+/* dump faces */
+void dump_faces( void ) {
+    int i;
+
+    fprintf(out, "\n");
+    for ( i = 0; i < fcount; i++ ) {
+	fprintf(out, "f %d %d %d\n", 
+		faces[i][0], faces[i][1], faces[i][2]);
+    }
 }
 
 
@@ -142,7 +182,8 @@ double check_cur_face(int n1, int n2, int n3) {
 void obj_fix(char *infile, char *outfile) {
     char line[256];
     double dot_prod;
-    int first, ncount, vncount, n1, n2, n3, n4;
+    int first, n1, n2, n3, n4;
+    double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     int is_ccw;
 
     if ( (in = fopen(infile, "r")) == NULL ) {
@@ -159,8 +200,9 @@ void obj_fix(char *infile, char *outfile) {
     list_init(&cw_list_ptr);
 
     first = 1;
-    ncount = 1;
-    vncount = 1;
+    ncount = 0;
+    vncount = 0;
+    fcount = 0;
 
     printf("Reading file:  %s\n", infile);
 
@@ -169,16 +211,37 @@ void obj_fix(char *infile, char *outfile) {
 	    /* pass along the comments verbatim */
 	    fprintf(out, "%s", line);
 	} else if ( strlen(line) <= 1 ) {
-	    /* pass along empty lines */
-	    fprintf(out, "%s", line);
+	    /* don't pass along empty lines */
+	    // fprintf(out, "%s", line);
 	} else if ( strncmp(line, "v ", 2) == 0 ) {
 	    /* save vertex to memory and output to file */
             if ( ncount < MAXNODES ) {
                 /* printf("vertex = %s", line); */
-                sscanf(line, "v %lf %lf %lf\n", 
-                       &nodes[ncount][0], &nodes[ncount][1], &nodes[ncount][2]);
-		fprintf(out, "v %.2f %.2f %.2f\n", 
-		       nodes[ncount][0], nodes[ncount][1], nodes[ncount][2]);
+                sscanf(line, "v %lf %lf %lf\n", &x, &y, &z);
+		nodes[ncount][0] = x;
+		nodes[ncount][1] = y;
+		nodes[ncount][2] = z;
+
+		/* first time through set min's and max'es */
+		if ( ncount == 1 ) {
+		    xmin = x;
+		    xmax = x;
+		    ymin = y;
+		    ymax = y;
+		    zmin = z;
+		    zmax = z;
+		}
+    
+		/* keep track of min/max vertex values */
+		if ( x < xmin ) xmin = x;
+		if ( x > xmax ) xmax = x;
+		if ( y < ymin ) ymin = y;
+		if ( y > ymax ) ymax = y;
+		if ( z < zmin ) zmin = z;
+		if ( z > zmax ) zmax = z;		
+
+		// fprintf(out, "v %.2f %.2f %.2f\n", 
+		//       nodes[ncount][0], nodes[ncount][1], nodes[ncount][2]);
 		ncount++;
             } else {
                 printf("Read too many nodes ... dying :-(\n");
@@ -191,8 +254,8 @@ void obj_fix(char *infile, char *outfile) {
                 sscanf(line, "vn %lf %lf %lf\n", 
                        &normals[vncount][0], &normals[vncount][1], 
                        &normals[vncount][2]);
-		fprintf(out, "vn %.4f %.4f %.4f\n", normals[vncount][0], 
-			normals[vncount][1], normals[vncount][2]);
+		// fprintf(out, "vn %.4f %.4f %.4f\n", normals[vncount][0], 
+		//	normals[vncount][1], normals[vncount][2]);
                 vncount++;
             } else {
                 printf("Read too many vertex normals ... dying :-(\n");
@@ -252,8 +315,20 @@ void obj_fix(char *infile, char *outfile) {
 		}
 	    }
 	} else if ( line[0] == 'f' ) {
-	    /* pass along the unoptimized faces verbatim */
-	    fprintf(out, "%s", line);
+	    if ( fcount < MAXNODES ) {
+		/* pass along the unoptimized faces verbatim */
+		sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
+		faces[fcount][0] = n1;
+		faces[fcount][1] = n2;
+		faces[fcount][2] = n3;
+
+		fcount++;
+	    } else {
+		printf("Read too many unoptimized faces ... dying :-(\n");
+                exit(-1);
+	    }
+ 
+	    // fprintf(out, "%s", line);
 	} else if ( line[0] == 'q' ) {
 	    /* continue a triangle strip */
 	    n1 = n2 = 0;
@@ -279,6 +354,18 @@ void obj_fix(char *infile, char *outfile) {
 	}
     }
 
+    /* reference point is the "center" */
+    refx = (xmin + xmax) / 2.0;
+    refy = (ymin + ymax) / 2.0;
+    refz = (zmin + zmax) / 2.0;
+
+    fprintf(out, "\n");
+    fprintf(out, "ref %.2f %.2f %.2f\n", refx, refy, refz);	
+
+    dump_nodes();
+    dump_normals();
+    dump_faces();
+
     fprintf(out, "winding ccw\n");
     dump_list(ccw_list, ccw_list_ptr);
 
@@ -291,9 +378,14 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.9  1998/04/18 04:01:03  curt
-/* Now use libMath rather than having local copies of math routines.
+/* Revision 1.10  1998/04/27 03:33:11  curt
+/* Code now calculates a center reference points and outputs everything
+/* relative to that.  This is useful in the rendering engine to keep everything
+/* close to (0, 0, 0) where we can avoid many GLfloat precision problems.
 /*
+ * Revision 1.9  1998/04/18 04:01:03  curt
+ * Now use libMath rather than having local copies of math routines.
+ *
  * Revision 1.8  1998/04/08 23:19:37  curt
  * Adopted Gnu automake/autoconf system.
  *
