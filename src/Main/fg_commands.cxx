@@ -619,9 +619,28 @@ do_property_scale (const SGPropertyNode * arg)
   double offset = arg->getDoubleValue("offset", 0.0);
   double factor = arg->getDoubleValue("factor", 1.0);
   bool squared = arg->getBoolValue("squared", false);
+  int power = arg->getIntValue("power", (squared ? 2 : 1));
 
-  if (squared)
-    setting = (setting < 0 ? -1 : 1) * setting * setting;
+  int sign = (setting < 0 ? -1 : 1);
+
+  switch (power) {
+  case 1:
+      break;
+  case 2:
+      setting = setting * setting * sign;
+      break;
+  case 3:
+      setting = setting * setting * setting;
+      break;
+  case 4:
+      setting = setting * setting * setting * setting * sign;
+      break;
+  default:
+      setting =  pow(setting, power);
+      if ((power % 2) == 0)
+          setting *= sign;
+      break;
+  }
 
   return prop->setDoubleValue((setting + offset) * factor);
 }
