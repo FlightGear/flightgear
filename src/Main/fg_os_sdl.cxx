@@ -61,7 +61,7 @@ void fgOSOpenWindow(int w, int h, int bpp,
                     bool alpha, bool stencil, bool fullscreen)
 {
     int cbits = (bpp <= 16) ?  5 :  8;
-    int zbits = (bpp <= 16) ? 16 : 32;
+    int zbits = (bpp <= 16) ? 16 : 24;
 
     SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE); // FIXME: handle errors
 
