@@ -168,8 +168,8 @@ void guiInit()
     /* OK the rest is largerly put in here to mimick Steve Baker's
        "complex" example It should change in future versions */
       
-    timerText = new puText (300, 10);
-    timerText -> setColour (PUCOL_LABEL, 1.0, 1.0, 1.0);
+    // timerText = new puText (300, 10);
+    // timerText -> setColour (PUCOL_LABEL, 1.0, 1.0, 1.0);
 
     /* Make a button to hide the menu bar */
     hideMenuButton = new puButton       (10,10, 150, 50);
