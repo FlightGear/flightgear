@@ -52,8 +52,8 @@ string button_humannames[7]= { "apply all brakes", "apply left brake",
                                "apply nose-down trim"
                              }; 
 
-string button_propnames[7]={ "/controls/brakes/all", "/controls/brakes/left",
-                             "/controls/brakes/right", "/controls/flaps",
+string button_propnames[7]={ "/controls/brakes/all", "/controls/brakes[0]",
+                             "/controls/brakes[1]", "/controls/flaps",
                              "/controls/flaps","/controls/elevator-trim",
                              "/controls/elevator-trim" 
                            };                                                   
@@ -85,7 +85,7 @@ void waitForButton(jsSuper *jss, int wait_ms) {
 void writeAxisProperties(fstream &fs, int control,int joystick, int axis) {
      
      char jsDesc[25];
-     snprintf(jsDesc,25,"--prop:/input/js%d/axis%d",joystick,axis);
+     snprintf(jsDesc,25,"--prop:/input/joysticks/js[%d]/axis[%d]",joystick,axis);
      fs << jsDesc  << "/control=" << axes_propnames[control] << endl; 
      
      fs << jsDesc << "/dead-band=0.02"  << endl; 
@@ -103,7 +103,7 @@ void writeAxisProperties(fstream &fs, int control,int joystick, int axis) {
 void writeButtonProperties(fstream &fs, int property,int joystick, int button) {
      
      char jsDesc[25];
-     snprintf(jsDesc,25,"--prop:/input/js%d/button%d",joystick,button);
+     snprintf(jsDesc,25,"--prop:/input/joysticks/js%d/button[%d]",joystick,button);
      
      fs << jsDesc << "/action=adjust" << endl; 
      fs << jsDesc << "/control=" << button_propnames[property] << endl;

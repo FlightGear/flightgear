@@ -10,6 +10,6 @@ js_demo_LDADD = $(audio_LIBS)
 
 fgjs_SOURCES = fgjs.cxx jsinput.cxx jssuper.cxx
 
-fgjs_LDADD =
+fgjs_LDADD = $(audio_LIBS)
 
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
