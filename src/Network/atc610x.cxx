@@ -712,7 +712,7 @@ bool FGATC610x::do_analog_in() {
     // elevator
     tmp = -scale( elevator_center->getIntValue(), elevator_min->getIntValue(),
                   elevator_max->getIntValue(), analog_in_data[5] );
-    fgSetFloat( "/controls/flight/elevator", tmp * 0.5 );
+    fgSetFloat( "/controls/flight/elevator", tmp );
     // cout << "trim = " << analog_in_data[4] << " = " << tmp;
 
     // elevator trim
