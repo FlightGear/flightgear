@@ -5,6 +5,7 @@
 #include "Gear.hpp"
 #include "Wing.hpp"
 #include "Math.hpp"
+#include "Propeller.hpp"
 
 #include "ControlMap.hpp"
 namespace yasim {
@@ -187,6 +188,7 @@ void ControlMap::applyControls(float dt)
 	case STARTER:  ((Thruster*)obj)->setStarter(lval != 0.0);  break;
 	case MAGNETOS: ((PropEngine*)obj)->setMagnetos((int)lval); break;
 	case ADVANCE:  ((PropEngine*)obj)->setAdvance(lval);       break;
+        case PROPPITCH: ((PropEngine*)obj)->setPropPitch(lval); break;
 	case REHEAT:   ((Jet*)obj)->setReheat(lval);               break;
 	case VECTOR:   ((Jet*)obj)->setRotation(lval);             break;
 	case BRAKE:    ((Gear*)obj)->setBrake(lval);               break;

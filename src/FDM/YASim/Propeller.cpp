@@ -22,6 +22,8 @@ Propeller::Propeller(float radius, float v, float omega,
     _f0 = 2*_etaC*power/(rho*v*V2);
 
     _matchTakeoff = false;
+    _manual = false;
+    _proppitch = 0;
 }
 
 void Propeller::setTakeoff(float omega0, float power0)
@@ -42,10 +44,26 @@ void Propeller::modPitch(float mod)
     if(_j0 > 4*_baseJ0)     _j0 = 4*_baseJ0;
 }
 
+void Propeller::setManualPitch()
+{
+    _manual = true;
+}
+
+void Propeller::setPropPitch(float proppitch)
+{
+    // makes only positive range of axis effective.
+    _proppitch = Math::clamp(proppitch, 0, 1);
+}
 
 void Propeller::calc(float density, float v, float omega,
 		     float* thrustOut, float* torqueOut)
 {
+    if (_manual) {
+        float pps = _proppitch * 0.9999f; // avoid singularity
+        pps = 1 + ( Math::pow(pps,-1/(pps-1)) - Math::pow(pps,-pps/(pps-1)) );
+        _j0 = (4*_baseJ0) -  (  ((4*_baseJ0) - (0.26f*_baseJ0)) * pps );
+    }
+
     float tipspd = _r*omega;
     float V2 = v*v + tipspd*tipspd;
 

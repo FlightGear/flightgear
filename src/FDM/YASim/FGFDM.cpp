@@ -475,6 +475,10 @@ void FGFDM::parsePropeller(XMLAttributes* a)
 	thruster->setVariableProp(min, max);
     }
 
+    if(a->hasAttribute("manual-pitch")) {
+	prop->setManualPitch();
+    }
+
     char buf[64];
     sprintf(buf, "/engines/engine[%d]", _nextEngine++);
     EngRec* er = new EngRec();
@@ -525,6 +529,7 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "SLAT"))      return ControlMap::SLAT;
     if(eq(name, "SPOILER"))   return ControlMap::SPOILER;
     if(eq(name, "CASTERING")) return ControlMap::CASTERING;
+    if(eq(name, "PROPPITCH")) return ControlMap::PROPPITCH;
     SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '"
            << name << "' in YASim aircraft description.");
     exit(1);

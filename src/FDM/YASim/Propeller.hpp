@@ -20,6 +20,10 @@ public:
 
     void modPitch(float mod);
 
+    void setPropPitch(float proppitch);
+
+    void setManualPitch();
+
     void calc(float density, float v, float omega,
 	      float* thrustOut, float* torqueOut);
 
@@ -33,6 +37,8 @@ private:
     float _beta;        // constant, ~1.48058;
     float _tc0;         // thrust "coefficient" at takeoff
     bool  _matchTakeoff; // Does _tc0 mean anything?
+    bool  _manual;   // manual pitch mode
+    float _proppitch; // prop pitch control setting (0 ~ 1.0)
 };
 
 }; // namespace yasim

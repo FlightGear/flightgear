@@ -13,7 +13,7 @@ public:
 		      ADVANCE, REHEAT, PROP,
 		      BRAKE, STEER, EXTEND,
 		      INCIDENCE, FLAP0, FLAP1, SLAT, SPOILER, VECTOR,
-                      BOOST, CASTERING };
+                      BOOST, CASTERING, PROPPITCH };
 
     enum { OPT_SPLIT  = 0x01,
            OPT_INVERT = 0x02,

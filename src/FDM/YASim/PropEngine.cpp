@@ -34,6 +34,12 @@ void PropEngine::setAdvance(float advance)
     _advance = Math::clamp(advance, 0, 1);
 }
 
+void PropEngine::setPropPitch(float proppitch)
+{
+    // update Propeller property
+    _prop->setPropPitch(proppitch);
+}
+
 void PropEngine::setVariableProp(float min, float max)
 {
     _variable = true;

@@ -15,6 +15,7 @@ public:
 
     void setMagnetos(int magnetos);
     void setAdvance(float advance);
+    void setPropPitch(float proppitch);
     void setVariableProp(float min, float max);
 
     virtual PropEngine* getPropEngine() { return this; }
