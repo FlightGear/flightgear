@@ -36,6 +36,9 @@
 #  include <strings.h>
 #endif
 
+#include <GL/glut.h>
+#include <simgear/xgl/xgl.h>
+
 #include <plib/sg.h>
 
 #include <simgear/debug/logstream.hxx>
