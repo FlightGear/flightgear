@@ -6,7 +6,7 @@
 
  DESCRIPTION:  reads in the yData and xData arrays and the value of x 
                to be interpolated on; performs 1D interpolation, 
-	       i.e. y=f(x)
+               i.e. y=f(x)
 
 ----------------------------------------------------------------------
 
@@ -16,9 +16,9 @@
 
  REFERENCES:   syntax based on interp function in c172_aero.c
                mathematics based on linear interpolation functions 
-	       found in
-	       Kreyszig, Erwin. Advanced Engineering Mathematics, 
-	       7th ed. NY: John Wiley & Sons, 1993.
+               found in
+               Kreyszig, Erwin. Advanced Engineering Mathematics, 
+               7th ed. NY: John Wiley & Sons, 1993.
 
 ----------------------------------------------------------------------
 
@@ -93,13 +93,13 @@ double uiuc_1Dinterpolation( double xData[100], double yData[100], int xmax, dou
   else                       //x between xmax and x min
     {
       /*loop increases i until x is less than a known x, 
-	e.g. Alpha from LaRCsim less than Alpha given in 
-	tabulated data; once this value is found, i becomes 
-	the upper bound and i-1 the lower bound*/
+        e.g. Alpha from LaRCsim less than Alpha given in 
+        tabulated data; once this value is found, i becomes 
+        the upper bound and i-1 the lower bound*/
       while (xData[i] <= x)    //bracket upper bound
-	{
-	  i++;
-	}
+        {
+          i++;
+        }
       x2 = xData[i];          //set upper bounds
       y2 = yData[i];
       x1 = xData[i-1];        //set lower bounds

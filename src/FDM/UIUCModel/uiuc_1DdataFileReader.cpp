@@ -70,8 +70,8 @@
 #include "uiuc_1DdataFileReader.h"
 
 int 
-uiuc_1DdataFileReader( string file_name, double convert_x, double convert_y, 
-			   double x[100], double y[100], int &xmax )
+uiuc_1DdataFileReader( string file_name,  
+                         double x[100], double y[100], int &xmax ) 
 {
 
   ParseFile *matrix;

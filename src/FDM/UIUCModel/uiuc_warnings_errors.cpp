@@ -74,11 +74,7 @@ for information.
  USA or view http://www.gnu.org/copyleft/gpl.html.
 
 **********************************************************************/
-#include <simgear/compiler.h>
-
 #include "uiuc_warnings_errors.h"
-
-FG_USING_NAMESPACE(std);
 
 void uiuc_warnings_errors(int errorCode, string line)
 {

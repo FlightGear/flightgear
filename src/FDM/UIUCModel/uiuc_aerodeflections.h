@@ -1,11 +1,11 @@
-
 #ifndef _AERODEFLECTIONS_H_
 #define _AERODEFLECTIONS_H_
 
-#include "uiuc_aircraft.h"  /* uses aileron, elevator, rudder               */
-#include "../LaRCsim/ls_cockpit.h"     /* uses Long_control, Lat_control, Rudder_pedal */
-#include "../LaRCsim/ls_constants.h"   /* uses RAD_TO_DEG, DEG_TO_RAD                  */
+#include "uiuc_aircraft.h"                 /* aileron, elevator, rudder               */
+#include "../LaRCsim/ls_cockpit.h"     /* Long_control, Lat_control, Rudder_pedal */
+#include "../LaRCsim/ls_constants.h"   /* RAD_TO_DEG, DEG_TO_RAD                  */
 
-void uiuc_aerodeflections();
+
+void uiuc_aerodeflections( double dt );
 
 #endif  // _AERODEFLECTIONS_H_

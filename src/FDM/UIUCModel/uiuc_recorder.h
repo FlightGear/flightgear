@@ -5,6 +5,8 @@
 #include "uiuc_parsefile.h"
 #include "uiuc_aircraft.h"
 #include "../FDM/LaRCsim/ls_generic.h"
+#include "../FDM/LaRCsim/ls_cockpit.h"
+#include "../FDM/LaRCsim/ls_constants.h"
 
 extern double Simtime;
 

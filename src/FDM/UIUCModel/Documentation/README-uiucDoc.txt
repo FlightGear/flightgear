@@ -1,0 +1,1087 @@
+************************************************
+*                                              * 
+*  FGFS Reconfigurable Aircraft Flight Model   *
+*  Input File Documentation                    * 
+*  Version 0.73, June 27, 2000                 *
+*                                              *
+*  Authors:                                    *
+*  Jeff Scott (jscott@mail.com)                *
+*  Bipin Sehgal (bsehgal@uiuc.edu)             *
+*  Michael Selig (m-selig@uiuc.edu)            *
+*  Dept of Aero and Astro Engineering          *
+*  University of Illinois at Urbana-Champaign  *
+*  Urbana, IL                                  *
+*  http://amber.aae.uiuc.edu/~m-selig          *
+*                                              *
+************************************************ 
+
+
+**********************************************************************
+NOTE:  Most of the commands discussed in this documentation are 
+       currently implemented in the UIUC aerodynamics model.  Those 
+       denoted by '|' are proposed and will likely be added in the 
+       future but are not currently implemented.  Some commands are 
+       in use but not producing the desired results.  These are 
+       clearly noted, so please do not attempt to use them at this 
+       time.
+**********************************************************************
+
+**********************************************************************
+This documentation includes:
+ - Required and optional input lines.
+ - Input line formats and conventions.
+
+  Viewing this file in emacs makefile-mode with color makes this file
+  easier to read.
+**********************************************************************
+
+**********************************************************************
+I. Conventions and Notations and Reading this Document:
+
+ # ...     Comments
+ |         Input line not yet implemented
+ |         Optional data
+ |         Sometimes indicates a feature not yet used,
+           but proposed convention is indicated nevertheless.
+ <...>     Value or file name to be placed here
+ ||        Input line disabled
+ ||        Option disabled
+ ...       Repeat similar data
+ ->        Continue onto next line
+**********************************************************************
+
+**********************************************************************
+II. General Input Line Format:
+
+Examples input lines include
+
+Cm Cmo           0.194  # []          Bray pg 33
+Cm Cm_a         -2.12   # [/rad]      Bray pg 33
+CL CLfa CLfa.dat 0 1    # []          Bray pg 50, Table 4.7
+
+These follow the more general input line form
+
+keyword  variableName  <value -or- file> | ->
+    <value -or- file>  # [units]  <data source>
+
+Each term of the input line will be discussed in turn.
+
+(1) KEYWORDS
+============
+
+There currently exist the following variable keyword types:
+
+init            Initial values for equation of motion
+geometry        Aircraft-specific geometric quantities
+controlSurface  Control surface deflections and properties
+|controlsMixer  Control surface mixer options
+mass            Aircraft-specific mass properties
+engine          Propulsion data
+CD              Aerodynamic x-force quantities (longitudinal)
+CL              Aerodynamic z-force quantities (longitudinal)
+Cm              Aerodynamic m-moment quantities (longitudinal)
+CY              Aerodynamic y-force quantities (lateral)
+Cl              Aerodynamic l-moment quantities (lateral)
+Cn              Aerodynamic n-moment quantities (lateral)
+|gear           Landing gear model quantities
+ice             Icing model parameters
+record          Record desired quantites to file
+misc            Miscellaneous inputs
+
+As each line of the input file is read, the code recognizes the
+keyword, enters the appropriate switch statement in the code, and
+proceeds to read the next term in the input line.
+
+(2) VARIABLE NAMES
+==================
+
+The variable name indicates the form of the variable itself.  This
+form may be a constant, a stability derivative (a specific form of a
+constant), or a variable-dimensional lookup table.  More variable
+types can be easily prescribed by defining a new convention.  The
+variable name may also indicate that the quantity is to be calculated
+from a hard-coded equation or set of equations provided at an
+appropriate location within the code.
+
+If the parameter name denotes a constant, a numerical value will 
+follow the variable name.  If a lookup table, the name of the table 
+containing the data will follow.
+
+More than one value or file name can be specified if the code is 
+intended to read in multiple pieces of data when implementing the 
+particular switch in question (see also OPTIONAL data, section (3)).
+
+The conventions used for naming the variables are provided below.
+Several of these variable names are not currently used.
+
+1) variable class
+_                   denotes stability derivative
+f                   "function of" (indicates data table)
+
+2) timing data (global simulator variables)
+Simtime             current simulator time                  [s]
+dt                  current simulator time step             [s]
+
+3) aircraft position data
+Lat_geocentric      geocentric latitude of CG               [rad]
+Lon_geocentric      geocentric longitude of CG              [rad]
+Radius_to_vehicle   distance of CG from inertial frame      [ft]
+Latitude            geodetic latitude of CG                 [rad]
+Longitude           geodetic longitude of CG                [rad]
+Altitude            height of CG above reference ellipsoid  [ft]
+Phi                 Euler bank/roll angle                   [rad]
+Theta               Euler pitch attitude angle              [rad]
+Psi                 Euler heading angle                     [rad]
+
+4) aircraft accelerations
+V_dot_north         local x-acceleration                    [ft/s^2]
+V_dot_east          local y-acceleration                    [ft/s^2]
+V_dot_down          local z-acceleration                    [ft/s^2]
+U_dot_body          body x-acceleration                     [ft/s^2]
+V_dot_body          body y-acceleration                     [ft/s^2]
+W_dot_body          body z-acceleration                     [ft/s^2]
+A_X_pilot           pilot x-acceleration                    [ft/s^2]
+A_Y_pilot           pilot y-acceleration                    [ft/s^2]
+A_Z_pilot           pilot z-acceleration                    [ft/s^2]
+A_X_cg              center of gravity x-acceleration        [ft/s^2]
+A_Y_cg              center of gravity x-acceleration        [ft/s^2]
+A_Z_cg              center of gravity x-acceleration        [ft/s^2]
+N_X_pilot           pilot x-acceleration                    [ft/s^2]
+N_Y_pilot           pilot y-acceleration                    [ft/s^2]
+N_Z_pilot           pilot z-acceleration                    [ft/s^2]
+N_X_cg              center of gravity x-acceleration        [ft/s^2]
+N_Y_cg              center of gravity Y-acceleration        [ft/s^2]
+N_Z_cg              center of gravity Z-acceleration        [ft/s^2]
+P_dot_body          roll rate acceleration                  [rad/s^2]
+Q_dot_body          pitch rate acceleration                 [rad/s^2]
+R_dot_body          yaw rate acceleration                   [rad/s^2]
+
+5) aircraft velocities
+V_north             local x-velocity                        [ft/s]
+V_east              local y-velocity                        [ft/s]
+V_down              local z-velocity                        [ft/s]
+V_north_rel_ground  local x-velocity with respect to ground [ft/s]
+V_east_rel_ground   local y-velocity with respect to ground [ft/s]
+V_down_rel_ground   local z-velocity with respect to ground [ft/s]
+V_north_airmass     local x-velocity of steady airmass      [ft/s]
+V_east_airmass      local y-velocity of steady airmass      [ft/s]
+V_down_airmass      local z-velocity of steady airmass      [ft/s]
+V_north_rel_airmass local x-velocity wrt steady airmass     [ft/s]
+V_east_rel_airmass  local y-velocity wrt steady airmass     [ft/s]
+V_down_rel_airmass  local z-velocity wrt steady airmass     [ft/s]
+U_gust              local linear turbulence x-velocity      [ft/s]
+V_gust              local linear turbulence y-velocity      [ft/s]
+W_gust              local linear turbulence z-velocity      [ft/s]
+U_body              wind x-velocity in body axis            [ft/s]
+V_body              wind y-velocity in body axis            [ft/s]
+W_body              wind z-velocity in body axis            [ft/s]
+V_rel_wind          total wind velocity (freestream)        [ft/s]
+V_true_kts          true velocity                           [kts]
+V_rel_ground        total velocity wrt ground               [ft/s]
+V_inertial          total inertial velocity                 [ft/s]
+V_ground_speed      velocity at right angles to local vertical [ft/s]
+V_equiv             equivalent airspeed                     [ft/s]
+V_equiv_kts         equivalent airspeed                     [kts]
+V_calibrated        calibrated indicated airspeed           [ft/s]
+V_calibrated_kts    calibrated indicated airspeed           [kts]
+P_local             local roll rate                         [rad/s]
+Q_local             local pitch rate                        [rad/s]
+R_local             local yaw rate                          [rad/s]
+P_body              body roll rate                          [rad/s]
+Q_body              body pitch rate                         [rad/s]
+R_body              body yaw rate                           [rad/s]
+P_total             roll rate of body axis wrt local axis   [rad/s]
+Q_total             pitch rate of body axis wrt local axis  [rad/s]
+R_total             yaw rate of body axis wrt local axis    [rad/s]
+Phi_dot             change in bank angle rate               [rad/s]
+Theta_dot           change in pitch attitude angle rate     [rad/s]
+Psi_dot             change in heading angle rate            [rad/s]
+Latitude_dot        change in geocentric latitude rate      [rad/s]
+Longitude_dot       change in geocentric longitude rate     [rad/s]
+Radius_dot          change in geocentric radius rate        [ft/s]
+
+6) angles
+Alpha               angle of attack                         [rad]
+Alpha_deg           angle of attack                         [deg]
+Alpha_dot           rate of change of alpha                 [rad/s]
+Alpha_dot_deg       rate of change of alpha                 [deg/s]
+Beta                sideslip angle                          [rad]
+Beta_deg            sideslip angle                          [deg]
+Beta_dot            rate of change of beta                  [rad]
+Beta_dot_deg        rate of change of beta                  [deg]
+Gamma_vert          local vertical flight path angle        [rad]
+Gamma_ver_deg       local vertical flight path angle        [deg]
+Gamma_horiz         local horizontal flight path angle      [rad]
+Gamma_horiz_deg     local horizontal flight path angle      [deg]
+
+7) atmosperic properties
+Density             atmospheric density                     [slug/ft^3]
+V_sound             speed of sound                          [ft/s]
+Mach_number         free-stream Mach number                 []
+M                   Mach number                             []
+Re                  Reynolds number                         []
+Static_pressure     static pressure                         [lb/ft^2]
+Total_pressure      total pressure                          [lb/ft^2]
+Impact_pressure     impact pressure                         [lb/ft^2]
+Dynamic_pressure    dynamic pressure                        [lb/ft^2]
+Static_temperature  static temperature                      [deg F?]
+Total_temperature   total temperature                       [deg F?]
+
+8) Earth properties
+Gravity             acceleration due to gravity             [ft/s^2]
+Sea_level_radius    local Earth radius                      [ft]
+Earth_position_angle Earth rotation angle since reference time [rad]
+Runway_altitude     runway height above local sea level     [ft]
+Runway_latitude     runway latitude                         [rad]
+Runway_longitude    runway longitude                        [rad]
+Runway_heading      runway heading                          [rad]
+Radius_to_rwy       geocentric radius to runway             [ft]
+D_pilot_north_of_rwy  local pilot x-distance from runway    [ft]
+D_pilot_east_of_rwy   local pilot y-distance from runway    [ft]
+D_pilot_down_of_rwy   local pilot z-distance from runway    [ft]
+X_pilot_rwy         pilot x-distance from rwy in rwy axis   [ft]
+Y_pilot_rwy         pilot y-distance from rwy in rwy axis   [ft]
+H_pilot_rwy         pilot z-distance from rwy in rwy axis   [ft]
+D_cg_north_of_rwy   local cg x-distance from runway         [ft]
+D_cg_east_of_rwy    local cg y-distance from runway         [ft]
+D_cg_down_of_rwy    local cg z-distance from runway         [ft]
+X_cg_rwy            cg x-distance from rwy in rwy axis      [ft]
+Y_cg_rwy            cg y-distance from rwy in rwy axis      [ft]
+H_cg_rwy            cg z-distance from rwy in rwy axis      [ft]
+
+9) aircraft geometric variables
+bw        wingspan                              [ft]
+cbar      mean aerodynamic chord                [ft]
+Sw        wing planform area                    [ft^2]
+|iw       wing incidence angle                  [deg]
+|bc       canard span                           [ft]
+|cc       canard (mean) chord                   [ft]
+|Sc       canard area                           [ft^2]
+|ic       canard incidence angle                [deg]
+bh        horizontal tail span                  [ft]
+ch        horizontal tail (mean) chord          [ft]
+Sh        horizontal tail area                  [ft^2]
+ih        horizontal tail incidence angle       [deg]
+|bv       vertical tail span (height)           [ft]
+|cv       vertical tail (mean) chord            [ft]
+|iv       vertical tail incidence angle         [deg]
+|Sv       vertical tail area                    [ft^2]
+Dx_pilot  reference pilot x-location            [ft]
+Dy_pilot  reference pilot y-location            [ft]
+Dz_pilot  referende pilot z-location            [ft]
+Dx_cg     reference center of gravity x-loc     [ft]
+Dy_cg     reference center of gravity y-loc     [ft]
+Dz_cg     reference center of gravity z-loc     [ft]
+
+10) aircraft control surface properties
+|Sa            aileron area                     [ft^2]
+|Se            elevator area                    [ft^2]
+|Sf            flap area                        [ft^2]
+|Sr            rudder area                      [ft^2]
+Long_control   pitch control input              []
+Long_trim      longitudinal trim input          [rad]
+set_Long_trim  set longitudinal trim to constant[rad]
+zero_Long_trim set longitudinal trim to zero    [deg]
+elevator       elevator deflection              [rad]
+Lat_control    roll control input               []
+aileron        aileron deflection               [rad]
+Rudder_pedal   yaw control input                []
+rudder         rudder deflection                [rad]
+|flap          flap deflection                  [rad]
+
+11) user-specified control surface deflections
+elevator_step_angle        elevator step input angle            [deg]
+elevator_step_startTime    elevator step input starting time    [s]
+elevator_singlet_angle     elevator singlet input angle         [deg]
+elevator_singlet_startTime elevator singlet input starting time [s]
+elevator_singlet_duration  elevator singlet time duration       [s]
+elevator_doublet_angle     elevator singlet input angle         [deg]
+elevator_doublet_startTime elevator doublet input starting time [s]
+elevator_doublet_duration  elevator doublet TOTAL time duration [s]
+elevator_input_file        file of elevator deflections vs. time [s,deg]
+
+12) mass variables
+Weight              gross takeoff weight                    [lb]
+Mass                aircraft mass (used by LaRCsim)         [slug]
+I_xx                roll inertia                            [slug-ft^2]
+I_yy                pitch inertia                           [slug-ft^2]
+I_zz                yaw inertia                             [slug-ft^2]
+I_xz                lateral cross inertia                   [slug-ft^2]
+
+13) engine/propulsion variables
+|thrust             engine thrust                           [lb]
+simpleSingle        treat all engines as one; max thrust    [lb]
+Throttle_pct        throttle input ("stick")                []
+Throttle_3          throttle deflection (determines thrust) [%]
+
+14) force/moment coefficients
+CD                  coefficient of drag                     []
+CY                  coefficient of side-force               []
+CL                  coefficient of lift                     []
+Cl                  coefficient of roll moment              []
+Cm                  coefficient of pitching moment          []
+Cn                  coefficient of yaw moment               []
+|CT                 coefficient of thrust                   []
+
+15) total forces/moments
+F_X_wind            aerodynamic x-force in wind-axes        [lb]
+F_Y_wind            aerodynamic y-force in wind-axes        [lb]
+F_Z_wind            aerodynamic z-force in wind-axes        [lb]
+F_X_aero            aerodynamic x-force in body-axes        [lb]
+F_Y_aero            aerodynamic y-force in body-axes        [lb]
+F_Z_aero            aerodynamic z-force in body-axes        [lb]
+F_X_engine          propulsion x-force in body axes         [lb]
+F_Y_engine          propulsion y-force in body axes         [lb]
+F_Z_engine          propulsion z-force in body axes         [lb]
+F_X_gear            gear x-force in body axes               [lb]
+F_Y_gear            gear y-force in body axes               [lb]
+F_Z_gear            gear z-force in body axes               [lb]
+F_X                 total x-force in body-axes              [lb]
+F_Y                 total y-force in body-axes              [lb]
+F_Z                 total z-force in body-axes              [lb]
+F_north             total x-force in local-axes             [lb]
+F_east              total y-force in local-axes             [lb]
+F_down              total z-force in local-axes             [lb]
+M_l_aero            aero roll-moment in body-axes           [ft-lb]
+M_m_aero            aero pitch-moment in body-axes          [ft-lb]
+M_n_aero            aero yaw-moment in body-axes            [ft-lb]
+M_l_engine          prop roll-moment in body axes           [ft-lb]
+M_m_engine          prop pitch-moment in body axes          [ft-lb]
+M_n_engine          prop yaw-moment in body axes            [ft-lb]
+M_l_gear            gear roll-moment in body axes           [ft-lb]
+M_m_gear            gear pitch-moment in body axes          [ft-lb]
+M_n_gear            gear yaw-moment in body axes            [ft-lb]
+M_l_rp              total roll-moment                       [ft-lb]
+M_m_rp              total pitch-moment                      [ft-lb]
+M_n_rp              total yaw-moment                        [ft-lb]
+
+16) landing gear properties
+|cgear              gear damping constant                   [?]
+|kgear              gear spring constant                    [?]
+|muGear             gear rolling friction coef              [?]
+|strutLength        gear strut length                       [ft]
+
+17) icing model parameters
+iceTime       time when icing begins                         [s]
+transientTime time period over which eta increases to final  [s]
+eta_ice_final icing severity factor at end of transient time []
+kCA           icing constants for associated aero coef.      [] (see IV)
+beta_probe_wing  location of flow angle probe on wing        [ft]
+beta_probe_tail  location of flow angle probe on tail        [ft]
+
+18) subscripts
+o       value for all angles = 0 (alfa, beta, etc)
+a       angle of attack
+a2      alpha squared
+a3      alpha cubed
+adot    rate change in angle alpha
+beta    sideslip angle
+b2      beta squared
+b3      beta cubed
+bdot    rate change in beta
+p       roll rate
+q       pitch rate
+r       yaw rate
+|pdot   rate change in p
+|qdot   rate change in q
+|rdot   rate change in r
+|udot   rate change in x-velocity
+da      aileron deflection
+de      elevator deflection
+dr      rudder deflection
+|df      flap deflection
+|df2    flap deflection for second set
+|df3    flap deflection for third set
+max     maximum
+min     minimum
+
+19) miscellaneous
+recordRate              number of times to record data per second  [/s]
+recordStartTime         time to start recording outpud data        [s]
+dyn_on_speed            speed when dynamic pressure terms first computed [ft/s]
+nondim_rate_V_rel_wind  use V_rel_wind to compute control rates    []
+|simpleHingeMomentCoef  hinge moment coefficient                   []
+
+(3) | [OPTIONAL DATA]
+=====================
+
+An input line may also be used to provide optional data that
+will be used if provided but is not necessary for the code to 
+operate.  As with the variable data described in section (2), multiple 
+values or data files may be provided if the code is written to use 
+them.
+
+(4) # [COMMENTS]
+================
+
+Appended comments should be provided with each input line to indicate 
+units on the variable in question and to indicate the source the data 
+was drawn from.
+**********************************************************************
+
+**********************************************************************
+III. Sample Input Lines:
+
+CONSTANTS
+=========
+
+geometry bw   <value>   # geometric parameter, wingspan
+Cm Cm_a       <value>   # stability derivative, d(Cm)/d(alpha)
+controlSurface de <value> <value>  # max and min elevator deflections
+
+LOOKUP TABLES
+=============
+
+CD CDfCL    <file.dat>  # CD(CL), drag polar data file
+Cm Cmfade   <file.dat>  # Cm(alpha,delta_e), moment data file
+
+HARD-CODED EQUATION
+===================
+
+CD CDfCL                # CD(CL), drag calculated in code based on CL
+(none currently in use)
+
+**********************************************************************
+
+**********************************************************************
+IV. Input Line Definitions:
+
+Of all the possible permutations of variable names described above in
+section II, only some are curently implemented in the code.  These are
+described below.  Comments, denoted by '#,' are used to define the
+lines and to indicate examples of the data if additional clarity is
+needed for unique situations.  Again, those lines beginning with '|'
+are not currently implemented in the code, but indicate planned
+conventions in later versions.
+
+# Key  Variable  Data      Units      Description                       Where Defined
+#------------------------------------------------------------------------------------
+
+init recordRate <recordRate> # [/s]   record data n times per second	uiuc_aircraft.h
+
+# [s]   time to start recording output data				uiuc_aircraft.h
+init recordStartTime <recordStartTime>
+
+# []    use V_rel_wind to compute control rates (instead of U_body)     uiuc_aircraft.h
+init nondim_rate_V_rel_wind <nondim_rate_V_rel_wind>
+
+# [ft/s] speed at which dynamic pressure terms are first computed       uiuc_aircraft.h
+init dyn_on_speed <dyn_on_speed>
+
+init Dx_pilot <Dx_pilot> # [ft]       reference pilot x-position        ls_generic.h
+init Dy_pilot <Dy_pilot> # [ft]       reference pilot y-position        ls_generic.h
+init Dz_pilot <Dz_pilot> # [ft]       reference pilot z-position        ls_generic.h
+
+# the following commands are currently conflicting with Flight
+# Gear and are not working correctly:
+|init Dx_cg <Dx_cg>      # [ft]       reference cg x_location           ls_generic.h
+|init Dy_cg <Dy_cg>      # [ft]       reference cg y_location           ls_generic.h
+|init Dz_cg <Dz_cg>      # [ft]       reference cg z_location           ls_generic.h
+|init V_north <V_north>  # [ft/s]     initial local x-velocity          ls_generic.h
+|init V_east <V_east>    # [ft/s]     initial local y-velocity          ls_generic.h
+|init V_down <V_down>    # [ft/s]     initial local z-velocity          ls_generic.h
+|init Altitude <Altitude> # [ft/s]    initial altitude                  ls_generic.h
+
+init P_body <P_body>     # [rad/s]    initial roll rate                 ls_generic.h
+init Q_body <Q_body>     # [rad/s]    initial pitch rate                ls_generic.h
+init R_body <R_body>     # [rad/s]    initial yaw rate                  ls_generic.h
+init Phi <Phi>           # [rad]      initial bank angle                ls_generic.h
+init Theta <Theta>       # [rad]      initial pitch attitude angle      ls_generic.h
+init Psi <Psi>           # [rad]      initial heading angle             ls_generic.h
+init Long_trim <Long_trim> # [rad]    longitudinal trim                 ls_cockpit.h
+
+geometry bw <bw>        # [ft]        wingspan                          uiuc_aircraft.h
+geometry cbar <cbar>    # [ft]        wing mean aero chord              uiuc_aircraft.h
+geometry Sw <Sw>        # [ft^2]      wing reference area               uiuc_aircraft.h
+|geometry iw <iw>       # [deg]       wing incidence angle              uiuc_aircraft.h
+|geometry bc <bc>       # [ft]        canard span                       uiuc_aircraft.h
+|geometry cc <cc>       # [ft]        canard chord                      uiuc_aircraft.h
+|geometry Sc <Sc>       # [sq-ft]     canard area                       uiuc_aircraft.h
+|geometry ic <ic>       # [deg]       canard incidence angle            uiuc_aircraft.h
+geometry bh <bh>        # [ft]        horizontal tail span              uiuc_aircraft.h
+geometry ch <ch>        # [ft]        horizontal tail chord             uiuc_aircraft.h
+geometry Sh <Sh>        # [sq-ft]     horizontal tail area              uiuc_aircraft.h
+geometry ih <ih>        # [deg]       horiz tail incidence angle        uiuc_aircraft.h
+|geometry bv <bv>       # [ft]        vertical tail span                uiuc_aircraft.h
+|geometry cv <cv>       # [ft]        vertical tail chord               uiuc_aircraft.h
+|geometry Sv <Sv>       # [sq-ft]     vertical tail area                uiuc_aircraft.h
+|geometry iv <iv>       # [deg]       vert tail incidence angle         uiuc_aircraft.h
+
+|controlSurface Se <Se>  # [ft^2]     elevator area                     uiuc_aircraft.h
+|controlSurface Sa <Sa>  # [ft^2]     aileron area                      uiuc_aircraft.h
+|controlSurface Sr <Sr>  # [ft^2]     rudder area                       uiuc_aircraft.h
+|controlSurface Sf <Sf>  # [ft^2]     flap area                         uiuc_aircraft.h
+controlSurface de <demax> <demin>   # [deg]  max/min elev deflections   uiuc_aircraft.h
+controlSurface da <damax> <damin>   # [deg]  max/min ail deflections    uiuc_aircraft.h
+controlSurface dr <drmax> <drmin>   # [deg]  max/min rud deflections    uiuc_aircraft.h
+|controlSurface df <dfmax> <dfmin>  # [deg]  max/min flap deflections   uiuc_aircraft.h
+
+# Note: Currently demin/damin/drmin are not used in the code, and the max/min is +-dema
+
+# trim always set to some fixed input value (radians)             [rad] uiuc_aircraft.h
+controlSurface set_Long_trim <elevator_tab>
+
+# trim always set to some fixed input value (degrees)             [deg] uiuc_aircraft.h
+controlSurface set_Long_trim_deg <elevator_tab>
+
+controlSurface zero_Long_trim       # [deg]  trim always set to zero    uiuc_aircraft.h
+
+# elevator step input with deflection angle [deg] and starting time [s] uiuc_aircraft.h
+controlSurface elevator_step <elevator_step_angle> <elevator_step_startTime>
+
+# elevator singlet input with deflection angle [deg], starting time [s],
+# and duration of input [s]                                             uiuc_aircraft.h
+controlSurface elevator_singlet <elevator_singlet_angle> ->
+        <elevator_singlet_startTime> <elevator_singlet_duration>
+
+# elevator doublet input with deflection angle [deg], starting time [s],
+# and TOTAL duration of input (both up and down deflections) [s]        uiuc_aircraft.h
+controlSurface elevator_doublet <elevator_doublet_angle> ->
+        <elevator_doublet_startTime> <elevator_doublet_duration>
+
+# tabulated elevator input (as function of time) with conversion
+# factor codes and starting time [s]					uiuc_aircraft.h
+controlSurface elevator_input <elevator_input_file> ->
+        <token_value_convert1> <token_value_convert2> ->
+	<elevator_input_startTime>
+
+
+|controlsMixer nomix <?> # []         no controls mixing                uiuc_aircraft.h
+
+
+mass Weight <Weight>    # [lb]        gross takeoff weight              uiuc_aircraft.h
+mass Mass <Mass>        # [slug]      gross takeoff mass                ls_generic.h
+mass I_xx <I_xx>        # [slug-ft^2] roll inertia                      ls_generic.h
+mass I_yy <I_yy>        # [slug-ft^2] pitch inertia                     ls_generic.h
+mass I_zz <I_zz>        # [slug-ft^2] yaw inertia                       ls_generic.h
+mass I_xz <I_xz>        # [slug-ft^2] lateral cross inertia             ls_generic.h
+
+
+# maximum and minimum engine thrust                             [lb]    uiuc_aircraft.h
+|engine thrust <thrustMax> <thrustMin>
+
+# simple single engine maximum thrust                           [lb]    uiuc_aircraft.h
+engine simpleSingle <simpleSingleMaxThrust>
+
+engine c172             # use Cessna 172 engine model of Tony Peden
+engine cherokee         # use Piper Cherokee engine model
+
+
+CL CLo <CLo>            # []          lift coef for all angles = 0      uiuc_aircraft.h
+CL CL_a <CL_a>          # [/rad]      lift curve slope, d(CL)/d(alpha)  uiuc_aircraft.h
+CL CL_adot <CL_adot>    # [/rad]      d(CL)/d(alpha)/da(time)           uiuc_aircraft.h
+CL CL_q <CL_q>          # [/rad]      d(CL)/d(q)                        uiuc_aircraft.h
+CL CL_ih <CL_ih>        # [/rad]      CL due to horiz tail incidence    uiuc_aircraft.h
+CL CL_de <CL_de>        # [/rad]      d(CL)/d(de)                       uiuc_aircraft.h
+
+# CL(alpha), conversion for CL, for alpha                           []  uiuc_aircraft.h
+CL CLfa <CLfa.dat> <token_value_convert1> <token_value_convert2>
+
+# CL(alpha,delta_e), conversion for CL, for alpha, for delta_e      []  uiuc_aircraft.h
+CL CLfade <CLfade.dat> <token_value_convert1> <token_value_convert2> ->
+          <token_value_convert3>
+
+  # the following are lift coefficients in the body axis
+CL CZo <CZo>            # []          lift coef for all angles = 0      uiuc_aircraft.h
+CL CZ_a <Cz_a>          # [/rad]      lift curve slope, d(CZ)/d(alpha)  uiuc_aircraft.h
+CL CZ_a2 <CZ_a2>        # [/rad]      d(CZ)/d(alpha squared)            uiuc_aircraft.h
+CL CZ_a3 <CZ_a3>        # [/rad]      d(CZ)/d(alpha cubed)              uiuc_aircraft.h
+CL CZ_adot <CZ_adot>    # [/rad]      d(CZ)/d(alpha)/d(time)            uiuc_aircraft.h
+CL CZ_q <CZ_q>          # [/rad]      d(CZ)/d(q)                        uiuc_aircraft.h
+CL CZ_de <CZ_de>        # [/rad]      d(CZ)/d(de)                       uiuc_aircraft.h
+CL CZ_deb2 <CZ_deb2>    # [/rad]      d(CZ)/d(de, beta squared)         uiuc_aircraft.h
+CL CZ_df <CZ_df>        # [/rad]      d(CZ)/d(df)                       uiuc_aircraft.h
+CL CZ_adf <CZ_adf>      # [/rad]      d(CZ)/d(alpha, df)                uiuc_aircraft.h
+
+|CL CLfCT <CLfCT.dat>   #             CL(thrust coef)                   uiuc_aircraft.h
+|CL CLfRe               #             CL(Reynolds #), equation          uiuc_aircraft.h
+|CL CL_afaM <CL_afaM.dat> #           CL_alpha(alpha,Mach #)            uiuc_aircraft.h
+   # these are sample examples that might be used in later versions of the code
+
+
+# note that CD terms must come after CL for induced drag to be computed
+CD CDo <CDo>            # []          drag coef for all angles = 0      uiuc_aircraft.h
+CD CDK <CDK>            # []          induced drag constant 1/(pi*e*AR) uiuc_aircraft.h
+CD CD_a <CD_a>          # [/rad]      d(CD)/d(alpha)                    uiuc_aircraft.h
+CD CD_ih <CD_ih>        # [/rad]      CD due to horiz tail incidence    uiuc_aircraft.h
+CD CD_de <CD_de>        # [/rad]      d(CD)/d(delta_e)                  uiuc_aircraft.h
+
+# CD(alpha), conversion for CD, for alpha                           []  uiuc_aircraft.h
+CD CDfa <CDfa.dat> <token_value_convert1> <token_value_convert2>
+
+# CD(CL) drag polar, conversion for CD, for CL                      []  uiuc_aircraft.h
+CD CDfCL <CDfCL.dat> <token_value_convert1> <token_value_convert2>
+
+# CD(alpha,delta_e), conversion for CD, for alpha, for delta_e      []  uiuc_aircraft.h
+CD CDfade <CDfade.dat> <token_value_convert1> <token_value_convert2> ->
+          <token_value_convert3>
+
+  # the following are drag coefficients in the body axis
+CD CXo <CXo>            # []          drag coef for all angles = 0      uiuc_aircraft.h
+CD CXK <CXK>            # []          induced drag constant 1/(pi*e*AR) uiuc_aircraft.h
+CD CX_a <CX_a>          # [/rad]      d(CX)/d(alpha)                    uiuc_aircraft.h
+CD CX_a2 <CX_a2>        # [/rad]      d(CX)/d(alpha squared)            uiuc_aircraft.h
+CD CX_a3 <CX_a3>        # [/rad]      d(CX)/d(alpha cubed)              uiuc_aircraft.h
+CD CX_q <CX_q>          # [/rad]      d(CX)/d(q)                        uiuc_aircraft.h
+CD CX_de <CX_de>        # [/rad]      d(CX)/d(de)                       uiuc_aircraft.h
+CD CX_dr <CX_dr>        # [/rad]      d(CX)/d(dr)                       uiuc_aircraft.h
+CD CX_df <CX_df>        # [/rad]      d(CX)/d(df)                       uiuc_aircraft.h
+CD CX_adf <CX_adf>      # [/rad]      d(CX)/d(alpha, df)                uiuc_aircraft.h
+
+
+Cm Cmo <Cmo>            # []          pitch mom coef for all angles=0   uiuc_aircraft.h
+Cm Cm_a <Cm_a>          # [/rad]      d(Cm)/d(alpha)                    uiuc_aircraft.h
+Cm Cm_a2 <Cm_a2>        # [/rad]      d(Cm)/d(alpha squared)            uiuc_aircraft.h
+Cm Cm_adot <Cm_adot>    # [/rad]      d(Cm)/d(alpha)/d(time)            uiuc_aircraft.h
+Cm Cm_q <Cm_q>          # [/rad]      d(Cm)/d(q)                        uiuc_aircraft.h
+Cm Cm_ih <Cm_ih>        # [/rad]      Cm due to horiz tail incidence    uiuc_aircraft.h
+Cm Cm_de <Cm_de>        # [/rad]      d(Cm)/d(de)                       uiuc_aircraft.h
+Cm Cm_de <Cm_b2>        # [/rad]      d(Cm)/d(beta squared)             uiuc_aircraft.h
+Cm Cm_r <Cm_r>          # [/rad]      d(Cm)/d(r)                        uiuc_aircraft.h
+Cm Cm_df <Cm_df>        # [/rad]      d(Cm)/d(df)                       uiuc_aircraft.h
+
+# Cm(alpha), conversion for Cm, for alpha                           []  uiuc_aircraft.h
+Cm Cmfa <Cmfa.dat> <token_value_convert1> <token_value_convert2>
+
+# Cm(alpha,delta_e), conversion for Cm, for alpha, for delta_e      []  uiuc_aircraft.h
+Cm Cmfade <Cmfade.dat> <token_value_convert1> <token_value_convert2> ->
+          <token_value_convert3>
+
+
+CY CYo <CYo>            # []          side-force coef for all angles=0  uiuc_aircraft.h
+CY CY_beta <CY_beta>    # [/rad]      d(CY)/d(beta)                     uiuc_aircraft.h
+CY CY_p <CY_p>          # [/rad]      d(CY)/d(p)                        uiuc_aircraft.h
+CY CY_r <CY_r>          # [/rad]      d(CY)/d(r)                        uiuc_aircraft.h
+CY CY_da <CY_da>        # [/rad]      d(CY)/d(da)                       uiuc_aircraft.h
+CY CY_dr <CY_dr>        # [/rad]      d(CY)/d(dr)                       uiuc_aircraft.h
+CY CY_dra <CY_dra>      # [/rad]      d(CY)/d(dr, alpha)                uiuc_aircraft.h
+CY CY_dra <CY_bdot>     # [/rad]      d(CY)/d(beta)/d(time)             uiuc_aircraft.h
+
+# CY(alpha,delta_a), conversion for CY, for alpha, for delta_a      []  uiuc_aircraft.h
+CY CYfada <CYfada.dat> <token_value_convert1> <token_value_convert2> ->
+          <token_value_convert3>
+
+# CY(beta,delta_r), conversion for CY, for beta, for delta_r        []  uiuc_aircraft.h
+CY CYfbetadr <CYfbetadr.dat> <token_value_convert1> <token_value_convert2> ->
+          <token_value_convert3>
+
+
+Cl Clo <Clo>            # []          roll mom coef for all angles=0    uiuc_aircraft.h
+Cl Cl_beta <Cl_beta>    # [/rad]      d(Cl)/d(beta)                     uiuc_aircraft.h
+Cl Cl_p <Cl_p>          # [/rad]      d(Cl)/d(p)                        uiuc_aircraft.h
+Cl Cl_r <Cl_r>          # [/rad]      d(Cl)/d(r)                        uiuc_aircraft.h
+Cl Cl_da <Cl_da>        # [/rad]      d(Cl)/d(da)                       uiuc_aircraft.h
+Cl Cl_dr <Cl_dr>        # [/rad]      d(Cl)/d(dr)                       uiuc_aircraft.h
+Cl Cl_daa <Cl_daa>      # [/rad]      d(Cl)/d(da, alpha)                uiuc_aircraft.h
+
+# Cl(alpha,delta_a), conversion for Cl, for alpha, for delta_a      []  uiuc_aircraft.h
+Cl Clfada <CYfada.dat> <token_value_convert1> <token_value_convert2> ->
+          <token_value_convert3>
+
+# Cl(beta,delta_r), conversion for Cl, for beta, for delta_r        []  uiuc_aircraft.h
+Cl Clfbetadr <CYfbetadr.dat> <token_value_convert1> <token_value_convert2> ->
+          <token_value_convert3>
+
+
+Cn Cno <Cno>            # []          yaw mom coef for all angles=0     uiuc_aircraft.h
+Cn Cn_beta <Cn_beta>    # [/rad]      d(Cn)/d(beta)                     uiuc_aircraft.h
+Cn Cn_p <Cn_p>          # [/rad]      d(Cn)/d(p)                        uiuc_aircraft.h
+Cn Cn_r <Cn_r>          # [/rad]      d(Cn)/d(r)                        uiuc_aircraft.h
+Cn Cn_da <Cn_da>        # [/rad]      d(Cn)/d(da)                       uiuc_aircraft.h
+Cn Cn_dr <Cn_dr>        # [/rad]      d(Cn)/d(dr)                       uiuc_aircraft.h
+Cn Cn_q <Cn_q>          # [/rad]      d(Cn)/d(q)                        uiuc_aircraft.h
+Cn Cn_b3 <Cn_b3>        # [/rad]      d(Cn)/d(beta cubed)               uiuc_aircraft.h
+
+# Cn(alpha,delta_a), conversion for Cn, for alpha, for delta_a      []  uiuc_aircraft.h
+Cn Cnfada <Cnfada.dat> <token_value_convert1> <token_value_convert2> ->
+          <token_value_convert3>
+
+# Cn(beta,delta_r), conversion for Cn, for beta, for delta_r        []  uiuc_aircraft.h
+Cn Cnfbetadr <Cnfbetadr.dat> <token_value_convert1> <token_value_convert2> ->
+          <token_value_convert3>
+
+=============================CONVERSION CODES================================
+
+To calculate the aero forces, angles (eg, alfa, beta, elevator deflection, etc)
+must be in radians.  To convert input data in degree to radian, use a
+conversion code of 1.  To use no conversion, use a conversion code of 0.
+
+------------------------------------------------
+convert1/2/3  Action
+------------------------------------------------
+  0           no conversion (multiply by 1)
+  1           convert degrees to radians
+=============================================================================
+
+|gear kgear <kgear>     # []          gear spring constant(s)           uiuc_aircraft.h
+|gear muRoll <muRoll>   # []          gear rolling friction coef(s)     uiuc_aircraft.h
+|gear cgear <cgear>     # []          gear damping constant(s)          uiuc_aircraft.h
+|gear strutLength <sL>  # [ft]        gear strut length                 uiuc_aircraft.h
+
+
+ice iceTime <iceTime>   # [s]         time when icing begins            uiuc_aircraft.h
+
+# [s]   period for eta_ice to reach eta_final				uiuc_aircraft.h
+ice transientTime <transientTime>
+
+# []    icing severity factor						uiuc_aircraft.h
+ice eta_ice_final <eta_ice_final>
+
+ice kCDo <kCDo>         # []          icing constant for CDo            uiuc_aircraft.h
+ice kCDK <kCDo>         # []          icing constant for CDK            uiuc_aircraft.h
+ice kCD_a <kCD_a>       # []          icing constant for CD_a           uiuc_aircraft.h
+ice kCD_q <kCD_q>       # []          icing constant for CD_q           uiuc_aircraft.h
+ice kCD_de <kCD_de>     # []          icing constant for CD_de          uiuc_aircraft.h
+ice kCD_dr <kCD_dr>     # []          icing constant for CD_dr          uiuc_aircraft.h
+ice kCD_df <kCD_df>     # []          icing constant for CD_df          uiuc_aircraft.h
+ice kCD_adf <kCD_adf>   # []          icing constant for CD_adf         uiuc_aircraft.h
+
+ice kCXo <kCXo>         # []          icing constant for CXo            uiuc_aircraft.h
+ice kCXK <kCXo>         # []          icing constant for CXK            uiuc_aircraft.h
+ice kCX_a <kCX_a>       # []          icing constant for CX_a           uiuc_aircraft.h
+ice kCX_a2 <kCX_a2>     # []          icing constant for CX_a2          uiuc_aircraft.h
+ice kCX_a3 <kCX_a3>     # []          icing constant for CX_a3          uiuc_aircraft.h
+ice kCX_q <kCX_q>       # []          icing constant for CX_q           uiuc_aircraft.h
+ice kCX_de <kCX_de>     # []          icing constant for CX_de          uiuc_aircraft.h
+ice kCX_dr <kCX_dr>     # []          icing constant for CX_dr          uiuc_aircraft.h
+ice kCX_df <kCX_df>     # []          icing constant for CX_df          uiuc_aircraft.h
+ice kCX_adf <kCX_adf>   # []          icing constant for CX_adf         uiuc_aircraft.h
+
+ice kCLo <kCLo>         # []          icing constant for CLo            uiuc_aircraft.h
+ice kCL_a <kCL_a>       # []          icing constant for CL_a           uiuc_aircraft.h
+ice kCL_adot <kCL_adot> # []          icing constant for CL_adot        uiuc_aircraft.h
+ice kCL_q <kCL_q>       # []          icing constant for CL_q           uiuc_aircraft.h
+ice kCL_de <kCL_de>     # []          icing constant for CL_de          uiuc_aircraft.h
+ice kCL_df <kCL_df>     # []          icing constant for CL_df          uiuc_aircraft.h
+ice kCL_adf <kCL_adf>   # []          icing constant for CL_adf         uiuc_aircraft.h
+
+ice kCZo <kCZo>         # []          icing constant for CZo            uiuc_aircraft.h
+ice kCZ_a <kCZ_a>       # []          icing constant for CZ_a           uiuc_aircraft.h
+ice kCZ_a2 <kCZ_a2>     # []          icing constant for CZ_a2          uiuc_aircraft.h
+ice kCZ_a3 <kCZ_a3>     # []          icing constant for CZ_a3          uiuc_aircraft.h
+ice kCZ_adot <kCZ_adot> # []          icing constant for CZ_adot        uiuc_aircraft.h
+ice kCZ_q <kCZ_q>       # []          icing constant for CZ_q           uiuc_aircraft.h
+ice kCZ_de <kCZ_de>     # []          icing constant for CZ_de          uiuc_aircraft.h
+ice kCZ_df <kCZ_df>     # []          icing constant for CZ_df          uiuc_aircraft.h
+ice kCZ_adf <kCZ_adf>   # []          icing constant for CZ_adf         uiuc_aircraft.h
+ice kCZ_deb2 <kCZ_deb2> # []          icing constant for CZ_deb2        uiuc_aircraft.h
+
+ice kCmo <kCmo>         # []          icing constant for Cmo            uiuc_aircraft.h
+ice kCm_a <kCm_a>       # []          icing constant for Cm_a           uiuc_aircraft.h
+ice kCm_a2 <kCm_a2>     # []          icing constant for Cm_a2          uiuc_aircraft.h
+ice kCm_a3 <kCm_a3>     # []          icing constant for Cm_a3          uiuc_aircraft.h
+ice kCm_adot <kCm_adot> # []          icing constant for Cm_adot        uiuc_aircraft.h
+ice kCm_q <kCm_q>       # []          icing constant for Cm_q           uiuc_aircraft.h
+ice kCm_r <kCm_r>       # []          icing constant for Cm_r           uiuc_aircraft.h
+ice kCm_de <kCm_de>     # []          icing constant for Cm_de          uiuc_aircraft.h
+ice kCm_df <kCm_df>     # []          icing constant for Cm_df          uiuc_aircraft.h
+
+ice kCYo <kCYo>         # []          icing constant for CYo            uiuc_aircraft.h
+ice kCY_beta <kCy_beta> # []          icing constant for CY_beta        uiuc_aircraft.h
+ice kCY_p <kCY_p>       # []          icing constant for CY_p           uiuc_aircraft.h
+ice kCY_r <kCY_r>       # []          icing constant for CY_r           uiuc_aircraft.h
+ice kCY_da <kCY_da>     # []          icing constant for CY_da          uiuc_aircraft.h
+ice kCY_dr <kCY_dr>     # []          icing constant for CY_dr          uiuc_aircraft.h
+ice kCY_dra <kCY_dra>   # []          icing constant for CY_dra         uiuc_aircraft.h
+ice kCY_bdot <kCY_bdot> # []          icing constant for CY_bdot        uiuc_aircraft.h
+
+ice kClo <kClo>         # []          icing constant for Clo            uiuc_aircraft.h
+ice kCl_beta <kCl_beta> # []          icing constant for Cl_beta        uiuc_aircraft.h
+ice kCl_p <kCl_p>       # []          icing constant for Cl_p           uiuc_aircraft.h
+ice kCl_r <kCl_r>       # []          icing constant for Cl_r           uiuc_aircraft.h
+ice kCl_da <kCl_da>     # []          icing constant for Cl_da          uiuc_aircraft.h
+ice kCl_dr <kCl_dr>     # []          icing constant for Cl_dr          uiuc_aircraft.h
+ice kCl_daa <kCl_daa>   # []          icing constant for Cl_daa         uiuc_aircraft.h
+
+ice kCno <kCno>         # []          icing constant for Cno            uiuc_aircraft.h
+ice kCn_beta <kCn_beta> # []          icing constant for Cn_beta        uiuc_aircraft.h
+ice kCn_b3 <kCn_b3>     # []          icing constant for Cn_b3          uiuc_aircraft.h
+ice kCn_p <kCn_p>       # []          icing constant for Cn_p           uiuc_aircraft.h
+ice kCn_q <kCn_q>       # []          icing constant for Cn_q           uiuc_aircraft.h
+ice kCn_r <kCn_r>       # []          icing constant for Cn_r           uiuc_aircraft.h
+ice kCn_da <kCn_da>     # []          icing constant for Cn_da          uiuc_aircraft.h
+ice kCn_dr <kCn_dr>     # []          icing constant for Cn_dr          uiuc_aircraft.h
+
+ice beta_probe_wing <x_probe_wing> #  wing flow angle probe location    uiuc_aircraft.h
+ice beta_probe_wing <x_probe_tail> #  tail flow angle probe location    uiuc_aircraft.h
+
+
+record Simtime                # [s]       current sim time              global
+record dt                     # [s]       current time step             global
+record Weight                 # [lb]      aircraft gross takeoff weight uiuc_aircraft.h
+record Mass                   # [slug]    aircraft mass                 ls_generic.h
+record I_xx                   # [slug-ft^2] roll inertia                ls_generic.h
+record I_yy                   # [slug-ft^2] pitch inertia               ls_generic.h
+record I_zz                   # [slug-ft^2] yaw inertia                 ls_generic.h
+record I_xz                   # [slug-ft^2] lateral cross inertia       ls_generic.h
+record Dx_pilot               # [ft]      reference pilot x-location    ls_generic.h
+record Dy_pilot               # [ft]      reference pilot y-location    ls_generic.h
+record Dz_pilot               # [ft]      reference pilot z-location    ls_generic.h
+record Dx_cg                  # [ft]      cg x_location                 ls_generic.h
+record Dy_cg                  # [ft]      cg y_location                 ls_generic.h
+record Dz_cg                  # [ft]      cg z_location                 ls_generic.h
+record Lat_geocentric         # [rad]     geocentric latitude           ls_generic.h
+record Lon_geocentric         # [rad]     geocentric longitude          ls_generic.h
+record Radius_to_vehicle      # [ft]      geocentric distance           ls_generic.h
+record Latitude               # [rad]     geodetic latitude             ls_generic.h
+record Longitude              # [rad]     geodetic longitude            ls_generic.h
+record Altitude               # [ft]      geodetic altitude             ls_generic.h
+record Phi                    # [rad]     Euler bank angle              ls_generic.h
+record Theta                  # [rad]     Euler pitch attitude angle    ls_generic.h
+record Psi                    # [rad]     Euler heading angle           ls_generic.h
+record V_dot_north            # [ft/s^2]  local x-acceleration          ls_generic.h
+record V_dot_east             # [ft/s^2]  local y-acceleration          ls_generic.h
+record V_dot_down             # [ft/s^2]  local z-acceleration          ls_generic.h
+record U_dot_body             # [ft/s^2]  body x-acceleration           ls_generic.h
+record V_dot_body             # [ft/s^2]  body y-acceleration           ls_generic.h
+record W_dot_body             # [ft/s^2]  body z-acceleration           ls_generic.h
+record A_X_pilot              # [ft/s^2]  pilot x-acceleration          ls_generic.h
+record A_Y_pilot              # [ft/s^2]  pilot y-acceleration          ls_generic.h
+record A_Z_pilot              # [ft/s^2]  pilot z-acceleration          ls_generic.h
+record A_X_cg                 # [ft/s^2]  cg x-acceleration             ls_generic.h
+record A_Y_cg                 # [ft/s^2]  cg y-acceleration             ls_generic.h
+record A_Z_cg                 # [ft/s^2]  cg z-acceleration             ls_generic.h
+record N_X_pilot              # [ft/s^2]  pilot x-acceleration          ls_generic.h
+record N_Y_pilot              # [ft/s^2]  pilot y-acceleration          ls_generic.h
+record N_Z_pilot              # [ft/s^2]  pilot z-acceleration          ls_generic.h
+record N_X_cg                 # [ft/s^2]  cg x-acceleration             ls_generic.h
+record N_Y_cg                 # [ft/s^2]  cg y-acceleration             ls_generic.h
+record N_Z_cg                 # [ft/s^2]  cg z-acceleration             ls_generic.h
+record P_dot_body             # [rad/s^2] roll rate acceleration        ls_generic.h
+record Q_dot_body             # [rad/s^2] pitch rate acceleration       ls_generic.h
+record R_dot_body             # [rad/s^2] yaw rate acceleration         ls_generic.h
+record V_north                # [ft/s]    local x-velocity              ls_generic.h
+record V_east                 # [ft/s]    local y-velocity              ls_generic.h
+record V_down                 # [ft/s]    local z-velocity              ls_generic.h
+record V_north_rel_ground     # [ft/s]    local x-velocity wrt ground   ls_generic.h
+record V_east_rel_ground      # [ft/s]    local y-velocity wrt ground   ls_generic.h
+record V_down_rel_ground      # [ft/s]    local z-velocity wrt ground   ls_generic.h
+record V_north_airmass        # [ft/s]    local x-velocity of airmass   ls_generic.h
+record V_east_airmass         # [ft/s]    local y-velocity of airmass   ls_generic.h
+record V_down_airmass         # [ft/s]    local z-velocity of airmass   ls_generic.h
+record V_north_rel_airmass    # [ft/s]    local x-velocity wrt airmass  ls_generic.h
+record V_east_rel_airmass     # [ft/s]    local y-velocity wrt airmass  ls_generic.h
+record V_down_rel_airmass     # [ft/s]    local z-velocity wrt airmass  ls_generic.h
+record U_gust                 # [ft/s]    local turbulence x-velocity   ls_generic.h
+record V_gust                 # [ft/s]    local turbulence y-velocity   ls_generic.h
+record W_gust                 # [ft/s]    local turbulence z-velocity   ls_generic.h
+record U_body                 # [ft/s]    wind x-velocity in body axis  ls_generic.h
+record V_body                 # [ft/s]    wind y-velocity in body axis  ls_generic.h
+record W_body                 # [ft/s]    wind z-velocity in body axis  ls_generic.h
+record V_rel_wind             # [ft/s]    total freestream velocity     ls_generic.h
+record V_true_kts             # [kts]     true velocity                 ls_generic.h
+record V_rel_ground           # [ft/s]    total velocity wrt ground     ls_generic.h
+record V_inertial             # [ft/s]    total inertial velocity       ls_generic.h
+record V_ground_speed         # [ft/s]    airspeed wrt ground           ls_generic.h
+record V_equiv                # [ft/s]    equivalent airspeed           ls_generic.h
+record V_equiv_kts            # [kts]     equivalent airspeed           ls_generic.h
+record V_calibrated           # [ft/s]    calibrated airspeed           ls_generic.h
+record V_calibrated_kts       # [kts]     calibrated airspeed           ls_generic.h
+record P_local                # [rad/s]   local roll rate               ls_generic.h
+record Q_local                # [rad/s]   local pitch rate              ls_generic.h
+record R_local                # [rad/s]   local yaw rate                ls_generic.h
+record P_body                 # [rad/s]   body roll rate                ls_generic.h
+record Q_body                 # [rad/s]   body pitch rate               ls_generic.h
+record R_body                 # [rad/s]   body yaw rate                 ls_generic.h
+record P_total                # [rad/s]   total roll rate               ls_generic.h
+record Q_total                # [rad/s]   total pitch rate              ls_generic.h
+record R_total                # [rad/s]   total yaw rate                ls_generic.h
+record Phi_dot                # [rad/s]   bank angle rate               ls_generic.h
+record Theta_dot              # [rad/s]   pitch attitude angle rate     ls_generic.h
+record Psi_dot                # [rad/s]   heading angle rate            ls_generic.h
+record Latitude_dot           # [rad/s]   latitude rate                 ls_generic.h
+record Longitude_dot          # [rad/s]   longitude rate                ls_generic.h
+record Radius_dot             # [rad/s]   radius rate                   ls_generic.h
+record Alpha                  # [rad]     angle of attack               ls_generic.h
+record Alpha_deg              # [deg]     angle of attack (in degrees)  uiuc_aircraft.h
+record Alpha_dot              # [rad/s]   rate of change of alpha       ls_generic.h
+record Alpha_dot_deg          # [rad/s]   rate of change of alpha       uiuc_aircraft.h
+record Beta                   # [rad]     sideslip angle                ls_generic.h
+record Beta_deg               # [rad]     sideslip angle                uiuc_aircraft.h
+record Beta_dot               # [rad/s]   rate of change of beta        ls_generic.h
+record Beta_dot_deg           # [rad/s]   rate of change of beta        uiuc_aircraft.h
+record Gamma_vert             # [rad]     vertical flight path angle    ls_generic.h
+record Gamma_vert_deg         # [deg]     vertical flight path angle    uiuc_aircraft.h
+record Gamma_horiz            # [rad]     horizontal flight path angle  ls_generic.h
+record Gamma_horiz_deg        # [deg]     horizontal flight path angle  uiuc_aircraft.h
+record Density                # [slug/ft^3] air density                 ls_generic.h
+record V_sound                # [ft/s]    speed of sound                ls_generic.h
+record Mach_number            # []        Mach number                   ls_generic.h
+record Static_pressure        # [lb/ft^2] static pressure               ls_generic.h
+record Total_pressure         # [lb/ft^2] total pressure                ls_generic.h
+record Impact_pressure        # [lb/ft^2] impact pressure               ls_generic.h
+record Dynamic_pressure       # [lb/ft^2] dynamic pressure              ls_generic.h
+record Static_temperature     # [?]       static temperature            ls_generic.h
+record Total_temperature      # [?]       total temperature             ls_generic.h
+record Gravity                # [ft/s^2]  acceleration due to gravity   ls_generic.h
+record Sea_level_radius       # [ft]      Earth radius                  ls_generic.h
+record Earth_position_angle   # [rad]     Earth rotation angle          ls_generic.h
+record Runway_altitude        # [ft]      runway altitude               ls_generic.h
+record Runway_latitude        # [rad]     runway latitude               ls_generic.h
+record Runway_longitude       # [rad]     runway longititude            ls_generic.h
+record Runway_heading         # [rad]     runway heading                ls_generic.h
+record Radius_to_rwy          # [ft]      geocentric radius to runway   ls_generic.h
+record D_pilot_north_of_rwy   # [ft]      local pilot x-dist from rwy   ls_generic.h
+record D_pilot_east_of_rwy    # [ft]      local pilot y-dist from rwy   ls_generic.h
+record D_pilot_down_of_rwy    # [ft]      local pilot z-dist from rwy   ls_generic.h
+record X_pilot_rwy            # [ft]      pilot x-dist from rwy         ls_generic.h
+record Y_pilot_rwy            # [ft]      pilot y-dist from rwy         ls_generic.h
+record H_pilot_rwy            # [ft]      pilot z-dist from rwy         ls_generic.h
+record D_cg_north_of_rwy      # [ft]      local cg x-dist from rwy      ls_generic.h
+record D_cg_east_of_rwy       # [ft]      local cg y-dist from rwy      ls_generic.h
+record D_cg_down_of_rwy       # [ft]      local cg z-dist from rwy      ls_generic.h
+record X_cg_rwy               # [ft]      cg x-dist from rwy            ls_generic.h
+record Y_cg_rwy               # [ft]      cg y-dist from rwy            ls_generic.h
+record H_cg_rwy               # [ft]      cg z-dist from rwy            ls_generic.h
+record Throttle_pct           # [%]       throttle input                ls_cockpit.h
+record Throttle_3             # [%]       throttle deflection           ls_cockpit.h
+record Long_control           # []        pitch input                   ls_cockpit.h
+record Long_trim              # [rad]     longitudinal trim             ls_cockpit.h
+record Long_trim_deg          # [deg]     longitudinal trim             uiuc_aircraft.h
+record elevator               # [rad]     elevator deflection           uiuc_aircraft.h
+record elevator_deg           # [deg]     elevator deflection           uiuc_aircraft.h
+record Lat_control            # []        roll input                    ls_cockpit.h
+record aileron                # [rad]     aileron deflection            uiuc_aircraft.h
+record aileron_deg            # [deg]     aileron deflection            uiuc_aircraft.h
+record Rudder_pedal           # []        yaw input                     ls_cockpit.h
+record rudder                 # [rad]     rudder deflection             uiuc_aircraft.h
+record rudder_deg             # [deg]     rudder deflection             uiuc_aircraft.h
+record CDfaI                  # []        CD(alpha)                     uiuc_aircraft.h
+record CDfCLI                 # []        CD(CL), drag polar            uiuc_aircraft.h
+record CDfadeI                # []        CD(alpha,delta_e)             uiuc_aircraft.h
+record CD                     # []        drag coefficient              uiuc_aircraft.h
+record CLfaI                  # []        CL(alpha)                     uiuc_aircraft.h
+record CLfadeI                # []        CL(alpha,delta_e)             uiuc_aircraft.h
+record CL                     # []        lift coefficient              uiuc_aircraft.h
+record CmfaI                  # []        Cm(alpha)                     uiuc_aircraft.h
+record CmfadeI                # []        Cm(alpha,delta_e)             uiuc_aircraft.h
+record Cm                     # []        pitch moment coefficient      uiuc_aircraft.h
+record CYfadaI                # []        CY(alpha,delta_a)             uiuc_aircraft.h
+record CYfbetadrI             # []        CY(beta,delta_r)              uiuc_aircraft.h
+record CY                     # []        side-force coefficient        uiuc_aircraft.h
+record ClfadaI                # []        Cl(alpha,delta_a)             uiuc_aircraft.h
+record ClfbetadrI             # []        Cl(beta,delta_r)              uiuc_aircraft.h
+record Cl                     # []        roll moment coefficient       uiuc_aircraft.h
+record CnfadaI                # []        Cn(alpha,delta_a)             uiuc_aircraft.h
+record CnfbetadrI             # []        Cn(beta,delta_r)              uiuc_aircraft.h
+record Cn                     # []        yaw moment coefficient        uiuc_aircraft.h
+record CLclean_wing           # []        wing clean lift coefficient   uiuc_aircraft.h
+record CLiced_wing            # []        wing iced lift coefficient    uiuc_aircraft.h
+record CLclean_tail           # []        tail clean lift coefficient   uiuc_aircraft.h
+record CLiced_tail            # []        tail iced lift coefficient    uiuc_aircraft.h
+record Lift_clean_wing        # [lb]      wing clean lift force         uiuc_aircraft.h
+record Lift_iced_wing         # [lb]      wing iced lift force          uiuc_aircraft.h
+record Lift_clean_tail        # [lb]      tail clean lift force         uiuc_aircraft.h
+record Lift_iced_tail         # [lb]      tail iced lift force          uiuc_aircraft.h
+record Gamma_clean_wing       # [ft^2/s]  wing clean circulation        uiuc_aircraft.h
+record Gamma_iced_wing        # [ft^2/s]  wing iced circulation         uiuc_aircraft.h
+record Gamma_clean_tail       # [ft^2/s]  tail clean circulation        uiuc_aircraft.h
+record Gamma_iced_tail        # [ft^2/s]  tail iced circulation         uiuc_aircraft.h
+record w_clean_wing           # [ft/s]    wing clean downwash           uiuc_aircraft.h
+record w_iced_wing            # [ft/s]    wing iced downwash            uiuc_aircraft.h
+record w_clean_tail           # [ft/s]    tail clean downwash           uiuc_aircraft.h
+record w_iced_tail            # [ft/s]    tail iced downwash            uiuc_aircraft.h
+record V_total_clean_wing     # [ft/s]    wing clean velocity           uiuc_aircraft.h
+record V_total_iced_wing      # [ft/s]    wing iced velocity            uiuc_aircraft.h
+record V_total_clean_tail     # [ft/s]    tail clean velocity           uiuc_aircraft.h
+record V_total_iced_tail      # [ft/s]    tail iced velocity            uiuc_aircraft.h
+record beta_flow_clean_wing   # [rad]     wing clean flow angle         uiuc_aircraft.h
+record beta_flow_clean_wing_deg # [deg]   wing clean flow angle         uiuc_aircraft.h
+record beta_flow_iced_wing    # [rad]     wing iced flow angle          uiuc_aircraft.h
+record beta_flow_iced_wing_deg # [deg]    wing iced flow angle          uiuc_aircraft.h
+record beta_flow_clean_tail   # [rad]     tail clean flow angle         uiuc_aircraft.h
+record beta_flow_clean_tail_deg # [deg]   tail clean flow angle         uiuc_aircraft.h
+record beta_flow_iced_tail    # [rad]     tail iced flow angle          uiuc_aircraft.h
+record beta_flow_iced_tail_deg # [deg]    tail iced flow angle          uiuc_aircraft.h
+record Dbeta_flow_wing        # [rad]     difference in wing flow angle uiuc_aircraft.h
+record Dbeta_flow_wing_deg    # [deg]     difference in wing flow angle uiuc_aircraft.h
+record Dbeta_flow_tail        # [rad]     difference in tail flow angle uiuc_aircraft.h
+record Dbeta_flow_tail_deg    # [deg]     difference in tail flow angle uiuc_aircraft.h
+record pct_beta_flow_wing     # [%]       difference in wing flow angle uiuc_aircraft.h
+record pct_beta_flow_tail     # [%]       difference in tail flow angle uiuc_aircraft.h
+record F_X_wind               # [lb]      aero x-force in wind-axes     ls_generic.h
+record F_Y_wind               # [lb]      aero y-force in wind-axes     ls_generic.h
+record F_Z_wind               # [lb]      aero z-force in wind-axes     ls_generic.h
+record F_X_aero               # [lb]      aero x-force in body-axes     ls_generic.h
+record F_Y_aero               # [lb]      aero y-force in body-axes     ls_generic.h
+record F_Z_aero               # [lb]      aero z-force in body-axes     ls_generic.h
+record F_X_engine             # [lb]      prop x-force in body-axes     ls_generic.h
+record F_Y_engine             # [lb]      prop y-force in body-axes     ls_generic.h
+record F_Z_engine             # [lb]      prop z-force in body-axes     ls_generic.h
+record F_X_gear               # [lb]      gear x-force in body-axes     ls_generic.h
+record F_Y_gear               # [lb]      gear y-force in body-axes     ls_generic.h
+record F_Z_gear               # [lb]      gear z-force in body-axes     ls_generic.h
+record F_X                    # [lb]      total x-force in body-axes    ls_generic.h
+record F_Y                    # [lb]      total y-force in body-axes    ls_generic.h
+record F_Z                    # [lb]      total z-force in body-axes    ls_generic.h
+record F_nort                 # [lb]      total x-force in local-axes   ls_generic.h
+record F_east                 # [lb]      total y-force in local-axes   ls_generic.h
+record F_down                 # [lb]      total z-force in local-axes   ls_generic.h
+record M_l_aero               # [ft-lb]   aero roll mom in body axes    ls_generic.h
+record M_m_aero               # [ft-lb]   aero pitch mom in body axes   ls_generic.h
+record M_n_aero               # [ft-lb]   aero yaw mom in body axes     ls_generic.h
+record M_l_engine             # [ft-lb]   prop roll mom in body axes    ls_generic.h
+record M_m_engine             # [ft-lb]   prop pitch mom in body axes   ls_generic.h
+record M_n_engine             # [ft-lb]   prop yaw mom in body axes     ls_generic.h
+record M_l_gear               # [ft-lb]   gear roll mom in body axes    ls_generic.h
+record M_m_gear               # [ft-lb]   gear pitch mom in body axes   ls_generic.h
+record M_n_gear               # [ft-lb]   gear yaw mom in body axes     ls_generic.h
+record M_l_rp                 # [ft-lb]   total roll mom in body axes   ls_generic.h
+record M_m_rp                 # [ft-lb]   total pitch mom in body axes  ls_generic.h
+record M_n_rp                 # [ft-lb]   total yaw mom in body axes    ls_generic.h
+
+
+# the following command is implemented but the data is not used in any
+# equation of motion
+# hinge moment coefficient                                      []      uiuc_aircraft.h
+|misc simpleHingeMomentCoef <simpleHingeMomentCoef>
+
+**********************************************************************
+
+**********************************************************************
+V. Mandatory Input:
+
+The following data is required for the simulator to function;
+otherwise either the UIUC Aero Model or LaRCsim parts of the code will
+probably crash.
+
+1) aircraft geometry   (UIUC Aero Model)
+bw        wingspan                       [ft]
+cbar      mean aerodynamic chord         [ft]
+Sw        wing planform area             [ft^2]
+
+2) engine properties   (UIUC Engine Model)
+(some engine model must be specified, such as...)
+engine simpleSingle
+          <or>
+engine c172
+
+3) mass variables   (LaRCsim)
+Weight    aircraft gross takeoff weight  [lb]
+          <or>
+Mass      aircraft mass                  [slug]
+I_xx      roll inertia                   [slug-ft^2]
+I_yy      pitch inertia                  [slug-ft^2]
+I_zz      yaw inertia                    [slug-ft^2]
+I_xz      lateral cross inertia          [slug-ft^2]
+
+4) aerodynamic force/moment components   (Aero Model)
+CLo       lift coef for all angles = 0   []
+CL_a      lift curve slope, d(CL)/d(alpha) [/rad]
+CDo       drag coef for all angles = 0   []
+CDK       induced drag constant          []
+          <or>
+CD_a      d(CD)/d(alpha)                 [/rad]
+Cmo       pitch mom coef for all angles=0 []
+Cm_a      d(Cm)/d(alpha)                 [/rad]
+CY_beta   d(CY)/d(beta)                  [/rad]
+Cl_beta   d(Cl)/d(beta)                  [/rad]
+Cn_beta   d(Cn)/d(beta)                  [/rad]
+
+5) gear properties   (none yet)
+
+With the current version, the C172 model gear model is used for *ALL*
+aircraft.  This can produce some interesting effects with heavy
+aircraft (eg, Convair model), and light aircraft (eg, Pioneer UAV)
+
+**********************************************************************

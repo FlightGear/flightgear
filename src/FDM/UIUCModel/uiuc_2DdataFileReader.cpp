@@ -73,20 +73,17 @@
 #include "uiuc_2DdataFileReader.h"
 
 
-int uiuc_2DdataFileReader( string file_name, 
-                           double convert_x,
-                           double convert_y,
-                           double convert_z,
-                           double x[100][100], 
-                           double y[100], 
-                           double z[100][100], 
-                           int xmax[100], 
-                           int &ymax)
+void uiuc_2DdataFileReader( string file_name, 
+                            double x[100][100], 
+                            double y[100], 
+                            double z[100][100], 
+                            int xmax[100], 
+                            int &ymax)
 {
   ParseFile *matrix;
   double token_value1;
   double token_value2;
-  int counter_y = 1, counter_x = 1, data = 0;
+  int counter_y = 1, counter_x = 1;
   string linetoken1;
   string linetoken2;
 
@@ -128,8 +125,7 @@ int uiuc_2DdataFileReader( string file_name,
           counter_x++;
         }
     }
-  data = 1;
-  return data;
+  return;
 }
 
 // end uiuc_2DdataFileReader.cpp

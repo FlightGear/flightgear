@@ -70,12 +70,11 @@
 
 typedef struct 
 {
-    string real_aircraft_dir;
-    #define aircraft_dir aircraftdir_->real_aircraft_dir
+    string aircraft_dir;
+    #define aircraft_dir aircraftdir_->aircraft_dir
   
 } AIRCRAFTDIR;
 
-// usually defined in the first program that includes uiuc_aircraft.h
-extern AIRCRAFTDIR *aircraftdir_;
+extern AIRCRAFTDIR *aircraftdir_;    // usually defined in the first program that includes uiuc_aircraft.h
 
 #endif  // endif _AIRCRAFTDIR_H

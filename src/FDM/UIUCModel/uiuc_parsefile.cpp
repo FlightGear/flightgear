@@ -62,11 +62,10 @@
  USA or view http://www.gnu.org/copyleft/gpl.html.
 
 **********************************************************************/
-#include <simgear/compiler.h>
+
 
 #include "uiuc_parsefile.h"
 
-FG_USING_NAMESPACE(std);
 
 ParseFile :: ParseFile (const string fileName)
 {

@@ -28,7 +28,7 @@
 
 ----------------------------------------------------------------------
 
- INPUTS:       -coversion type
+ INPUTS:       -conversion type
 
 ----------------------------------------------------------------------
 
@@ -73,11 +73,13 @@ double uiuc_convert( int conversionType )
     {
     case 0:
       {
+	/* no conversion, multiply by 1 */
 	factor = 1;
 	break;
       }
     case 1:
       {
+	/* convert from degrees to radians */
 	factor = DEG_TO_RAD;
 	break;
       }
