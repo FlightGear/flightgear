@@ -179,7 +179,9 @@ operator >> ( istream& in, FGILS& i )
     // generate cartesian coordinates
     Point3D geod, cart;
 
-    geod = Point3D( i.loclon * SGD_DEGREES_TO_RADIANS, i.loclat * SGD_DEGREES_TO_RADIANS, i.gselev );
+    geod = Point3D( i.loclon * SGD_DEGREES_TO_RADIANS,
+                    i.loclat * SGD_DEGREES_TO_RADIANS,
+                    i.gselev * SG_FEET_TO_METER );
     cart = sgGeodToCart( geod );
     i.x = cart.x();
     i.y = cart.y();
@@ -190,7 +192,9 @@ operator >> ( istream& in, FGILS& i )
     } else {
 	i.has_gs = true;
 
-	geod = Point3D( i.gslon * SGD_DEGREES_TO_RADIANS, i.gslat * SGD_DEGREES_TO_RADIANS, i.gselev );
+	geod = Point3D( i.gslon * SGD_DEGREES_TO_RADIANS,
+                        i.gslat * SGD_DEGREES_TO_RADIANS,
+                        i.gselev * SG_FEET_TO_METER );
 	cart = sgGeodToCart( geod );
 	i.gs_x = cart.x();
 	i.gs_y = cart.y();
@@ -203,7 +207,9 @@ operator >> ( istream& in, FGILS& i )
     } else {
 	i.has_dme = true;
 
-	geod = Point3D( i.dmelon * SGD_DEGREES_TO_RADIANS, i.dmelat * SGD_DEGREES_TO_RADIANS, i.gselev);
+	geod = Point3D( i.dmelon * SGD_DEGREES_TO_RADIANS,
+                        i.dmelat * SGD_DEGREES_TO_RADIANS,
+                        i.gselev * SG_FEET_TO_METER );
 	cart = sgGeodToCart( geod );
 	i.dme_x = cart.x();
 	i.dme_y = cart.y();

@@ -102,6 +102,7 @@ class FGNavCom : public FGSubsystem
     double nav_gs_x;
     double nav_gs_y;
     double nav_gs_z;
+    sgdVec3 gs_base_vec;
     double nav_gs_dist;
     double nav_gs_dist_signed;
     SGTimeStamp prev_time;

@@ -29,6 +29,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/sg_random.h>
+#include <simgear/math/vector.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Navaids/ilslist.hxx>
@@ -325,9 +326,20 @@ FGNavCom::update(double dt)
 	nav_loc_dist = aircraft.distance3D( station );
 
 	if ( nav_has_gs ) {
-	    station = Point3D( nav_gs_x, nav_gs_y, nav_gs_z );
-	    nav_gs_dist = aircraft.distance3D( station );
-            // wgs84 heading to glide slope
+            // find closest distance to the gs base line
+            sgdVec3 p;
+            sgdSetVec3( p, aircraft.x(), aircraft.y(), aircraft.z() );
+            sgdVec3 p0;
+            sgdSetVec3( p0, nav_gs_x, nav_gs_y, nav_gs_z );
+            double dist = sgdClosestPointToLineDistSquared( p, p0,
+                                                            gs_base_vec );
+            nav_gs_dist = sqrt( dist );
+            // cout << nav_gs_dist;
+
+            Point3D tmp( nav_gs_x, nav_gs_y, nav_gs_z );
+            // cout << " (" << aircraft.distance3D( tmp ) << ")" << endl;
+
+            // wgs84 heading to glide slope (to determine sign of distance)
             geo_inverse_wgs_84( elev,
                                 lat * SGD_RADIANS_TO_DEGREES,
                                 lon * SGD_RADIANS_TO_DEGREES, 
@@ -491,6 +503,22 @@ void FGNavCom::search()
 	    nav_gs_y = ils->get_gs_y();
 	    nav_gs_z = ils->get_gs_z();
 
+            // derive GS baseline
+            double tlon, tlat, taz;
+            geo_direct_wgs_84 ( 0.0, nav_gslat, nav_gslon, nav_radial + 90,  
+                                100.0, &tlat, &tlon, &taz );
+            cout << nav_gslon << "," << nav_gslat << "  "
+                 << tlon << "," << tlat << "  (" << nav_elev << ")" << endl;
+            Point3D p1 = sgGeodToCart( Point3D(tlon*SGD_DEGREES_TO_RADIANS,
+                                               tlat*SGD_DEGREES_TO_RADIANS,
+                                               nav_elev*SG_FEET_TO_METER) );
+            cout << nav_gs_x << "," << nav_gs_y << "," << nav_gs_z << endl;
+            cout << p1 << endl;
+            sgdSetVec3( gs_base_vec,
+                        p1.x()-nav_gs_x, p1.y()-nav_gs_y, p1.z()-nav_gs_z );
+            cout << gs_base_vec[0] << "," << gs_base_vec[1] << ","
+                 << gs_base_vec[2] << endl;
+
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
 	    }
@@ -625,7 +653,8 @@ double FGNavCom::get_nav_gs_needle_deflection() const {
 	double x = nav_gs_dist;
 	double y = (fgGetDouble("/position/altitude-ft") - nav_elev)
             * SG_FEET_TO_METER;
-	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
+        // cout << "dist = " << x << " height = " << y << endl;
+	double angle = asin( y / x ) * SGD_RADIANS_TO_DEGREES;
 	return (nav_target_gs - angle) * 5.0;
     } else {
 	return 0.0;
