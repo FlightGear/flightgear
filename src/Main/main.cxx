@@ -336,6 +336,22 @@ void trRenderFrame( void ) {
         FGTileMgr::set_tile_filter( false );
         sgSetModelFilter( true );
         ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+    } else {
+        FGTileMgr::set_tile_filter( true );
+        sgSetModelFilter( true );
+        globals->get_aircraft_model()->select( false );
+        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+    }
+
+    // draw the lights
+    glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
+    ssgSetNearFar( scene_nearplane, scene_farplane );
+    ssgCullAndDraw( globals->get_scenery()->get_vasi_lights_root() );
+    ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
+
+    ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
+
+    if ( draw_clouds ) {
         if ( multi_pass_clouds ) {
             // Disable depth buffer update, draw the clouds where the
             //  objects overwrite the already drawn clouds, by testing
@@ -352,31 +368,9 @@ void trRenderFrame( void ) {
             thesky->drawLowerClouds();
             glDepthMask( GL_TRUE );
         }
-
-        // Draw the aircraft
-        sgSetModelFilter( false );
-        globals->get_aircraft_model()->select( true );
-        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
-        FGTileMgr::set_tile_filter( true );
-        sgSetModelFilter( true );
-    } else {
-        FGTileMgr::set_tile_filter( true );
-        sgSetModelFilter( true );
-        globals->get_aircraft_model()->select( true );
-        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
     }
 
-    // draw the lights
-    glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
-    ssgSetNearFar( scene_nearplane, scene_farplane );
-    ssgCullAndDraw( globals->get_scenery()->get_vasi_lights_root() );
-    ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
-
-    ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
-
-    if (fgGetBool("/environment/clouds/status"))
-        thesky->drawLowerClouds();
-
+    globals->get_aircraft_model()->select( true );
     globals->get_model_mgr()->draw();
     globals->get_aircraft_model()->draw();
 }
@@ -712,34 +706,10 @@ void fgRenderFrame() {
                 FGTileMgr::set_tile_filter( false );
                 sgSetModelFilter( true );
                 ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
-
-                if ( multi_pass_clouds ) {
-                    // Disable depth buffer update, draw the clouds where the
-                    //  objects overwrite the already drawn clouds, by testing
-                    //  the stencil buffer against 1
-                    glDepthMask( GL_FALSE );
-                    glStencilFunc( GL_EQUAL, 1, 1 );
-                    glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
-                    thesky->drawUpperClouds();
-                    thesky->drawLowerClouds();
-                    glDepthMask( GL_TRUE );
-                    glDisable( GL_STENCIL_TEST );
-                } else {
-                    glDepthMask( GL_FALSE );
-                    thesky->drawLowerClouds();
-                    glDepthMask( GL_TRUE );
-                }
-
-                // Draw the aircraft
-                sgSetModelFilter( false );
-                globals->get_aircraft_model()->select( true );
-                ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
-                FGTileMgr::set_tile_filter( true );
-                sgSetModelFilter( true );
             } else {
                 FGTileMgr::set_tile_filter( true );
                 sgSetModelFilter( true );
-                globals->get_aircraft_model()->select( true );
+                globals->get_aircraft_model()->select( false );
                 ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
             }
         }
@@ -752,16 +722,18 @@ void fgRenderFrame() {
         static int counter = 0;
         counter++;
         if (counter == 200) {
-          sgFrustum f;
-          f.setFOV(360, 360);
-                            // No need to put the near plane too close;
-                            // this way, at least the aircraft can be
-                            // culled.
-          f.setNearFar(1000, 1000000);
-          sgMat4 m;
-          ssgGetModelviewMatrix(m);
-          globals->get_scenery()->get_scene_graph()->cull(&f, m, true);
-          counter = 0;
+            sgFrustum f;
+            f.setFOV(360, 360);
+                    // No need to put the near plane too close;
+                    // this way, at least the aircraft can be
+                    // culled.
+            f.setNearFar(1000, 1000000);
+            sgMat4 m;
+            ssgGetModelviewMatrix(m);
+            FGTileMgr::set_tile_filter( true );
+            sgSetModelFilter( true );
+            globals->get_scenery()->get_scene_graph()->cull(&f, m, true);
+            counter = 0;
         }
 
         // change state for lighting here
@@ -829,8 +801,7 @@ void fgRenderFrame() {
 
 
         if ( enhanced_lighting ) {
-            if ( distance_attenuation && glPointParameterIsSupported )
-            {
+            if ( distance_attenuation && glPointParameterIsSupported ) {
                 glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT,
                                       default_attenuation);
             }
@@ -845,8 +816,7 @@ void fgRenderFrame() {
             ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
         }
 
-        if ( draw_otw && fgGetBool("/sim/rendering/clouds3d") )
-        {
+        if ( draw_otw && fgGetBool("/sim/rendering/clouds3d") ) {
             glDisable( GL_FOG );
             glDisable( GL_LIGHTING );
             // cout << "drawing new clouds" << endl;
@@ -872,9 +842,40 @@ void fgRenderFrame() {
             glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
         }
 
+        if ( draw_otw && draw_clouds ) {
+            if ( multi_pass_clouds ) {
+                // Disable depth buffer update, draw the clouds where the
+                //  objects overwrite the already drawn clouds, by testing
+                //  the stencil buffer against 1
+                glDepthMask( GL_FALSE );
+                glStencilFunc( GL_EQUAL, 1, 1 );
+                glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
+                thesky->drawUpperClouds();
+                thesky->drawLowerClouds();
+                glDepthMask( GL_TRUE );
+                glDisable( GL_STENCIL_TEST );
+            } else {
+                glDepthMask( GL_FALSE );
+                thesky->drawLowerClouds();
+                glDepthMask( GL_TRUE );
+            }
+        }
+
         if ( draw_otw ) {
+            FGTileMgr::set_tile_filter( false );
+            sgSetModelFilter( false );
+            globals->get_aircraft_model()->select( true );
             globals->get_model_mgr()->draw();
             globals->get_aircraft_model()->draw();
+            // If the view is internal, the previous line draw the 
+            //  cockpit with modified near/far clip planes and deselect
+            //  the aircraft in the global scenegraph
+            // Otherwise, it just enables the aircraft: The scenegraph
+            //  must be drawn again to see the plane.
+            ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+            FGTileMgr::set_tile_filter( true );
+            sgSetModelFilter( true );
+            globals->get_aircraft_model()->select( true );
         }
 
         // display HUD && Panel
