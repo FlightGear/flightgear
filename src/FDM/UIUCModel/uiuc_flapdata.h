@@ -7,12 +7,17 @@ robinst@ecf.toronto.edu
 
 #ifndef _FLAPDATA_H
 #define _FLAPDATA_H
+#include <simgear/compiler.h>
+
 #include <cstdio>
 #include <fstream>
-#include <simgear/compiler.h>
+#include <sstream>
+
 #include "uiuc_warnings_errors.h"
-using namespace std;
 //#include "uiuc_aircraft.h"
+
+SG_USING_STD(ifstream);
+SG_USING_STD(istringstream);
 
 class flapStruct {
 private:
