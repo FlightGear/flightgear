@@ -31,6 +31,11 @@
 #endif
 
 #include <simgear/compiler.h>
+
+#include <iostream>
+SG_USING_STD(cerr);
+SG_USING_STD(endl);
+
 #include <simgear/misc/exception.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/route/route.hxx>
@@ -1598,9 +1603,11 @@ int main ( int argc, char **argv ) {
     try {
         mainLoop(argc, argv);
     } catch (sg_throwable &t) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
-               "Fatal error: " << t.getFormattedMessage()
-               << "\n (received from " << t.getOrigin() << ')');
+				// We must use cerr rather than
+				// logging, since logging may be
+				// disabled.
+        cerr << "Fatal error: " << t.getFormattedMessage()
+	     << "\n (received from " << t.getOrigin() << ')' << endl;
         exit(1);
     }
 

@@ -942,14 +942,7 @@ parse_option (const string& arg)
         apath.concat( "-set.xml" );
 	SG_LOG(SG_INPUT, SG_INFO, "Reading aircraft: " << arg.substr(11)
 	    << " from " << apath.str());
-        try {
-            readProperties( apath.str(), globals->get_props() );
-        } catch (const sg_exception &e) {
-            string message = "Error loading aircraft file: ";
-            message += e.getFormattedMessage();
-            SG_LOG(SG_INPUT, SG_ALERT, message);
-            exit(2);
-        }
+	readProperties( apath.str(), globals->get_props() );
     } else {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;

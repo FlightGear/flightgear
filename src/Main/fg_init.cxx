@@ -231,14 +231,7 @@ bool fgInitConfig ( int argc, char **argv ) {
     SGPath props_path(globals->get_fg_root());
     props_path.append("preferences.xml");
     SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
-    try {
-      readProperties(props_path.str(), globals->get_props());
-    } catch (const sg_exception &e) {
-      string message = "Error reading global preferences: ";
-      message += e.getFormattedMessage();
-      SG_LOG(SG_INPUT, SG_ALERT, message);
-      exit(2);
-    }
+    readProperties(props_path.str(), globals->get_props());
     SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
 
     // Read the default aircraft config file.
