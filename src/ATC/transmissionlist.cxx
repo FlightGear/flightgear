@@ -45,52 +45,13 @@
 FGTransmissionList *current_transmissionlist;
 
 
-// Constructor
 FGTransmissionList::FGTransmissionList( void ) {
 }
 
 
-// Destructor
 FGTransmissionList::~FGTransmissionList( void ) {
 }
 
-/*
-// ============================================================================
-// init menu window
-// ============================================================================
-void mkATCMenuInit (void)
-{
-  int dx = 400;
-  int dy = 100;
-  int y = (fgGetInt("/sim/startup/ysize") - 10 - dy);
-  ATCMenuBox = new puDialogBox (10, y);
-  {
-    ATCMenuFrame = new puFrame (0,0,400,100);
-    ATCMenuBoxMessage  =  new puText         (10, 70);
-    ATCMenuBoxMessage  -> setLabel           ("");
-  }
-  fgSetBool("/sim/atc/menu",false);
-  fgSetBool("/sim/atc/opt1",false);
-  fgSetBool("/sim/atc/opt2",false);
-  fgSetBool("/sim/atc/opt3",false);
-  fgSetBool("/sim/atc/opt4",false);
-  fgSetBool("/sim/atc/opt5",false);
-  fgSetBool("/sim/atc/opt6",false);
-  fgSetBool("/sim/atc/opt7",false);
-  fgSetBool("/sim/atc/opt8",false);
-  fgSetBool("/sim/atc/opt9",false);
-  fgSetBool("/sim/atc/opt0",false);
-}
-
-// ATC Menu Message Box
-void mkATCMenu ( const char *txt )
-{
-  ATCMenuBoxMessage  =  new puText   (10, 70);
-  ATCMenuBoxMessage->setLabel( txt );
-
-  FG_PUSH_PUI_DIALOG( ATCMenuBox );
-}
-*/
 
 // load default.transmissions
 bool FGTransmissionList::init( SGPath path ) {
@@ -179,114 +140,114 @@ bool FGTransmissionList::query_station( const int &station, FGTransmission *t,
 }
 
 string FGTransmissionList::gen_text(const int &station, const TransCode code, 
-				    const TransPar &tpars, const bool ttext )
+                                    const TransPar &tpars, const bool ttext )
 {
-  const int cmax = 100;
-  string message;
-  char tag[4];
-  char crej = '@';
-  char mes[cmax];
-  char dum[cmax];
-  //char buf[10];
-  char *pos;
-  int len;
-  FGTransmission t;
-
-  //  if (current_transmissionlist->query_station( station, &t ) ) {  
-  transmission_list_type     tmissions = transmissionlist_station[station];
-  transmission_list_iterator current   = tmissions.begin();
-  transmission_list_iterator last      = tmissions.end();
-  
-  for ( ; current != last ; ++current ) {
-    if ( current->get_code().c1 == code.c1 &&  
-	 current->get_code().c2 == code.c2 &&
-	 current->get_code().c3 == code.c3 ) {
-      
-      if ( ttext ) message = current->get_transtext();
-      else message = current->get_menutext();
-      strcpy( &mes[0], message.c_str() ); 
-      
-      while ( strchr(&mes[0], crej) != NULL  ) {
-	pos = strchr( &mes[0], crej );
-	bcopy(pos, &tag[0], 3);
-	tag[3] = '\0';
-	int i;
-	len = 0;
-	for ( i=0; i<cmax; i++ ) {
-	  if ( mes[i] == crej ) {
-	    len = i; 
-	    break;
-	  }
-	}
-	strncpy( &dum[0], &mes[0], len );
-	dum[len] = '\0';
+	const int cmax = 100;
+	string message;
+	char tag[4];
+	char crej = '@';
+	char mes[cmax];
+	char dum[cmax];
+	//char buf[10];
+	char *pos;
+	int len;
+	FGTransmission t;
 	
-	if ( strcmp ( tag, "@ST" ) == 0 )
-	  strcat( &dum[0], tpars.station.c_str() );
-	else if ( strcmp ( tag, "@AP" ) == 0 )
-	  strcat( &dum[0], tpars.airport.c_str() );
-	else if ( strcmp ( tag, "@CS" ) == 0 ) 
-	  strcat( &dum[0], tpars.callsign.c_str() );
-	else if ( strcmp ( tag, "@TD" ) == 0 ) {
-	  if ( tpars.tdir == 1 ) {
-	    char buf[] = "left";
-	    strcat( &dum[0], &buf[0] );
-	  }
-	  else {
-	    char buf[] = "right";
-	    strcat( &dum[0], &buf[0] );
-	  }
+	//  if (current_transmissionlist->query_station( station, &t ) ) { 
+	transmission_list_type     tmissions = transmissionlist_station[station];
+	transmission_list_iterator current   = tmissions.begin();
+	transmission_list_iterator last      = tmissions.end();
+	
+	for ( ; current != last ; ++current ) {
+		if ( current->get_code().c1 == code.c1 &&  
+			current->get_code().c2 == code.c2 &&
+		current->get_code().c3 == code.c3 ) {
+			
+			if ( ttext ) message = current->get_transtext();
+			else message = current->get_menutext();
+			strcpy( &mes[0], message.c_str() ); 
+			
+			while ( strchr(&mes[0], crej) != NULL  ) {
+				pos = strchr( &mes[0], crej );
+				bcopy(pos, &tag[0], 3);
+				tag[3] = '\0';
+				int i;
+				len = 0;
+				for ( i=0; i<cmax; i++ ) {
+					if ( mes[i] == crej ) {
+						len = i; 
+						break;
+					}
+				}
+				strncpy( &dum[0], &mes[0], len );
+				dum[len] = '\0';
+				
+				if ( strcmp ( tag, "@ST" ) == 0 )
+					strcat( &dum[0], tpars.station.c_str() );
+				else if ( strcmp ( tag, "@AP" ) == 0 )
+					strcat( &dum[0], tpars.airport.c_str() );
+				else if ( strcmp ( tag, "@CS" ) == 0 ) 
+					strcat( &dum[0], tpars.callsign.c_str() );
+				else if ( strcmp ( tag, "@TD" ) == 0 ) {
+					if ( tpars.tdir == 1 ) {
+						char buf[] = "left";
+						strcat( &dum[0], &buf[0] );
+					}
+					else {
+						char buf[] = "right";
+						strcat( &dum[0], &buf[0] );
+					}
+				}
+				else if ( strcmp ( tag, "@HE" ) == 0 ) {
+					char buf[10];
+					sprintf( buf, "%i", (int)(tpars.heading) );
+					strcat( &dum[0], &buf[0] );
+				}
+				else if ( strcmp ( tag, "@VD" ) == 0 ) {
+					if ( tpars.VDir == 1 ) {
+						char buf[] = "Descend and maintain";
+						strcat( &dum[0], &buf[0] );
+					}
+					else if ( tpars.VDir == 2 ) {
+						char buf[] = "Maintain";
+						strcat( &dum[0], &buf[0] );
+					}
+					else if ( tpars.VDir == 3 ) {
+						char buf[] = "Climb and maintain";
+						strcat( &dum[0], &buf[0] );
+					}  
+				}
+				else if ( strcmp ( tag, "@AL" ) == 0 ) {
+					char buf[10];
+					sprintf( buf, "%i", (int)(tpars.alt) );
+					strcat( &dum[0], &buf[0] );
+				}
+				else if ( strcmp ( tag, "@MI" ) == 0 ) {
+					char buf[10];
+					sprintf( buf, "%3.1f", tpars.miles );
+					strcat( &dum[0], &buf[0] );
+				}
+				else if ( strcmp ( tag, "@FR" ) == 0 ) {
+					char buf[10];
+					sprintf( buf, "%6.2f", tpars.freq );
+					strcat( &dum[0], &buf[0] );
+				}
+				else if ( strcmp ( tag, "@RW" ) == 0 )
+					strcat( &dum[0], tpars.runway.c_str() );
+				else {
+					cout << "Tag " << tag << " not found" << endl;
+					break;
+				}
+				strcat( &dum[0], &mes[len+3] );
+				strcpy( &mes[0], &dum[0] );
+			}
+			
+			//cout << mes  << endl;  
+			break;
+		}
 	}
-	else if ( strcmp ( tag, "@HE" ) == 0 ) {
-	  char buf[10];
-	  sprintf( buf, "%i", (int)(tpars.heading) );
-	  strcat( &dum[0], &buf[0] );
-	}
-	else if ( strcmp ( tag, "@VD" ) == 0 ) {
-	  if ( tpars.VDir == 1 ) {
-	    char buf[] = "Descent and maintain";
-	    strcat( &dum[0], &buf[0] );
-	  }
-	  else if ( tpars.VDir == 2 ) {
-	    char buf[] = "Maintain";
-	    strcat( &dum[0], &buf[0] );
-	  }
-	  else if ( tpars.VDir == 3 ) {
-	    char buf[] = "Climb and maintain";
-	    strcat( &dum[0], &buf[0] );
-	  }  
-	}
-	else if ( strcmp ( tag, "@AL" ) == 0 ) {
-	  char buf[10];
-	  sprintf( buf, "%i", (int)(tpars.alt) );
-	  strcat( &dum[0], &buf[0] );
-	}
-	else if ( strcmp ( tag, "@MI" ) == 0 ) {
-	  char buf[10];
-	  sprintf( buf, "%3.1f", tpars.miles );
-	  strcat( &dum[0], &buf[0] );
-	}
-	else if ( strcmp ( tag, "@FR" ) == 0 ) {
-	  char buf[10];
-	  sprintf( buf, "%6.2f", tpars.freq );
-	  strcat( &dum[0], &buf[0] );
-	}
-	else if ( strcmp ( tag, "@RW" ) == 0 )
-	  strcat( &dum[0], tpars.runway.c_str() );
-	else {
-	  cout << "Tag " << tag << " not found" << endl;
-	  break;
-	}
-	strcat( &dum[0], &mes[len+3] );
-	strcpy( &mes[0], &dum[0] );
-      }
-
-      //cout << mes  << endl;  
-      break;
-    }
-  }
-  if ( mes != "" ) return mes;
-  else return "No transmission found";
+	if ( mes != "" ) return mes;
+	else return "No transmission found";
 }
 
 
