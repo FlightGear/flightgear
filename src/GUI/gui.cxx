@@ -65,6 +65,10 @@
 
 FG_USING_STD(string);
 
+#ifndef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_STD(cout);
+#endif
+
 puFont guiFnt = 0;
 fntTexFont *guiFntHandle = 0;
 
