@@ -12,6 +12,7 @@
 
 #include <simgear/route/route.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/sg_inlines.h>
 #include <Airports/simple.hxx>
 
 #include <Main/fg_init.hxx>
@@ -263,7 +264,8 @@ GPS::update (double delta_time_sec)
 	_indicated_vertical_speed_node->setDoubleValue
             (vertical_speed_mpm * SG_METER_TO_FEET);
         _true_track_node->setDoubleValue(track1_deg);
-	mag_track_bearing = degrange360(track1_deg - magvar_deg);
+	mag_track_bearing = track1_deg - magvar_deg;
+        SG_NORMALIZE_RANGE(mag_track_bearing, 0.0, 360.0);
         _magnetic_track_node->setDoubleValue(mag_track_bearing);
         speed_kt = fgGetLowPass(_last_speed_kts, speed_kt, delta_time_sec/20.0);
         _last_speed_kts = speed_kt;
@@ -411,6 +413,8 @@ GPS::update (double delta_time_sec)
                            wp1_latitude_deg, wp1_altitude_m);
 
             wp1.CourseAndDistance(wp0, &_course_deg, &_distance_m);
+            double leg_mag_course = _course_deg - magvar_deg;
+            SG_NORMALIZE_RANGE(leg_mag_course, 0.0, 360.0);
 
             // Get the altitude / distance ratio
             if ( distance_m > 0.0 ) {
@@ -418,9 +422,15 @@ GPS::update (double delta_time_sec)
                 _alt_dist_ratio = alt_difference_m / _distance_m;
             }
 
-            _leg_distance_node->setDoubleValue(_distance_m);
+            _leg_distance_node->setDoubleValue(_distance_m * SG_METER_TO_NM);
             _leg_course_node->setDoubleValue(_course_deg);
+            _leg_magnetic_course_node->setDoubleValue(leg_mag_course);
             _alt_dist_ratio_node->setDoubleValue(_alt_dist_ratio);
+
+            _wp0_longitude_node->setDoubleValue(wp0_longitude_deg);
+            _wp0_latitude_node->setDoubleValue(wp0_latitude_deg);
+            _wp1_longitude_node->setDoubleValue(wp1_longitude_deg);
+            _wp1_latitude_node->setDoubleValue(wp1_latitude_deg);
         }
 
 
@@ -428,13 +438,13 @@ GPS::update (double delta_time_sec)
         SGWayPoint wp0(wp0_longitude_deg, wp0_latitude_deg, wp0_altitude_m);
         wp0.CourseAndDistance(longitude_deg, latitude_deg, altitude_m,
                               &wp0_bearing_deg, &wp0_distance);
-        _wp0_longitude_node->setDoubleValue(wp0_longitude_deg);
-        _wp0_latitude_node->setDoubleValue(wp0_latitude_deg);
         _wp0_distance_node->setDoubleValue(wp0_distance * SG_METER_TO_NM);
         _wp0_bearing_node->setDoubleValue(wp0_bearing_deg);
-	double wp0_mag_bearing_deg = degrange360(wp0_bearing_deg - magvar_deg);
+	double wp0_mag_bearing_deg = wp0_bearing_deg - magvar_deg;
+        SG_NORMALIZE_RANGE(wp0_mag_bearing_deg, 0.0, 360.0);
 	_wp0_mag_bearing_node->setDoubleValue(wp0_mag_bearing_deg);
-        wp0_bearing_error_deg = degrange180(track1_deg - wp0_bearing_deg);
+        wp0_bearing_error_deg = track1_deg - wp0_bearing_deg;
+        SG_NORMALIZE_RANGE(wp0_bearing_error_deg, -180.0, 180.0);
         _true_wp0_bearing_error_node->setDoubleValue(wp0_bearing_error_deg);
         
         // Estimate time to waypoint 0.
@@ -461,7 +471,7 @@ GPS::update (double delta_time_sec)
             wp0_TTW_seconds -= 60;
             wp0_TTW_minutes++;
           }
-          snprintf(wp0_TTW_str, 8, "%02d:%02d:%02d",
+          snprintf(wp0_TTW_str, 9, "%02d:%02d:%02d",
             wp0_TTW_hours, wp0_TTW_minutes, wp0_TTW_seconds);
           _wp0_ttw_node->setStringValue(wp0_TTW_str);
         }
@@ -471,8 +481,8 @@ GPS::update (double delta_time_sec)
         // Course deviation is the diffenrence between the bearing
         // and the course.
         wp0_course_deviation_deg = wp0_bearing_deg -
-          wp0_course_deg;
-	wp0_course_deviation_deg = degrange180(wp0_course_deviation_deg);
+            wp0_course_deg;
+        SG_NORMALIZE_RANGE(wp0_course_deviation_deg, -180.0, 180.0);
 
         // If the course deviation is less than 90 degrees to either side,
         // our desired course is towards the waypoint.
@@ -487,14 +497,13 @@ GPS::update (double delta_time_sec)
           // When the course is away from the waypoint, 
           // it makes sense to change the sign of the deviation.
           wp0_course_deviation_deg *= -1.0;
-	  wp0_course_deviation_deg =
-	      degrange(wp0_course_deviation_deg, -90.0, 90.0);
+          SG_NORMALIZE_RANGE(wp0_course_deviation_deg, -90.0, 90.0);
 	}
 
         _wp0_course_deviation_node->setDoubleValue(wp0_course_deviation_deg);
 
         // Cross track error.
-        wp0_course_error_m = sin(wp0_course_deviation_deg * SG_PI / 180.0) 
+        wp0_course_error_m = sin(wp0_course_deviation_deg * SG_PI / 180.0)
           * (wp0_distance);
         _wp0_course_error_nm_node->setDoubleValue(wp0_course_error_m 
                                                  * SG_METER_TO_NM);
@@ -505,13 +514,13 @@ GPS::update (double delta_time_sec)
         SGWayPoint wp1(wp1_longitude_deg, wp1_latitude_deg, wp1_altitude_m);
         wp1.CourseAndDistance(longitude_deg, latitude_deg, altitude_m,
                               &wp1_bearing_deg, &wp1_distance);
-        _wp1_longitude_node->setDoubleValue(wp1_longitude_deg);
-        _wp1_latitude_node->setDoubleValue(wp1_latitude_deg);
         _wp1_distance_node->setDoubleValue(wp1_distance * SG_METER_TO_NM);
         _wp1_bearing_node->setDoubleValue(wp1_bearing_deg);
-	double wp1_mag_bearing_deg = degrange360(wp1_bearing_deg - magvar_deg);
+	double wp1_mag_bearing_deg = wp1_bearing_deg - magvar_deg;
+        SG_NORMALIZE_RANGE(wp1_mag_bearing_deg, 0.0, 360.0);
 	_wp1_mag_bearing_node->setDoubleValue(wp1_mag_bearing_deg);
-        wp1_bearing_error_deg = degrange180(track1_deg - wp1_bearing_deg);
+        wp1_bearing_error_deg = track1_deg - wp1_bearing_deg;
+        SG_NORMALIZE_RANGE(wp1_bearing_error_deg, -180.0, 180.0);
         _true_wp1_bearing_error_node->setDoubleValue(wp1_bearing_error_deg);
         
         // Estimate time to waypoint 1.
@@ -538,7 +547,7 @@ GPS::update (double delta_time_sec)
             wp1_TTW_seconds -= 60;
             wp1_TTW_minutes++;
           }
-          snprintf(wp1_TTW_str, 8, "%02d:%02d:%02d",
+          snprintf(wp1_TTW_str, 9, "%02d:%02d:%02d",
             wp1_TTW_hours, wp1_TTW_minutes, wp1_TTW_seconds);
           _wp1_ttw_node->setStringValue(wp1_TTW_str);
         }
@@ -547,9 +556,8 @@ GPS::update (double delta_time_sec)
 
         // Course deviation is the diffenrence between the bearing
         // and the course.
-        wp1_course_deviation_deg = wp1_bearing_deg -
-          wp1_course_deg;
-	wp1_course_deviation_deg = degrange180(wp1_course_deviation_deg);
+        wp1_course_deviation_deg = wp1_bearing_deg - wp1_course_deg;
+        SG_NORMALIZE_RANGE(wp1_course_deviation_deg, -180.0, 180.0);
 
         // If the course deviation is less than 90 degrees to either side,
         // our desired course is towards the waypoint.
@@ -564,8 +572,7 @@ GPS::update (double delta_time_sec)
             // When the course is away from the waypoint, 
             // it makes sense to change the sign of the deviation.
             wp1_course_deviation_deg *= -1.0;
-            wp1_course_deviation_deg =
-                degrange(wp1_course_deviation_deg, -90.0, 90.0);
+            SG_NORMALIZE_RANGE(wp1_course_deviation_deg, -90.0, 90.0);
 	}
 
         _wp1_course_deviation_node->setDoubleValue(wp1_course_deviation_deg);
@@ -580,7 +587,7 @@ GPS::update (double delta_time_sec)
         // Leg course deviation is the diffenrence between the bearing
         // and the course.
         double course_deviation_deg = wp1_bearing_deg - _course_deg;
-	course_deviation_deg = degrange180(course_deviation_deg);
+        SG_NORMALIZE_RANGE(course_deviation_deg, -180.0, 180.0);
         
         // If the course deviation is less than 90 degrees to either side,
         // our desired course is towards the waypoint.
@@ -595,8 +602,7 @@ GPS::update (double delta_time_sec)
             // When the course is away from the waypoint, 
             // it makes sense to change the sign of the deviation.
             course_deviation_deg *= -1.0;
-            course_deviation_deg =
-                degrange(course_deviation_deg, -90.0, 90.0);
+            SG_NORMALIZE_RANGE(course_deviation_deg, -90.0, 90.0);
 	}
         
         _leg_course_deviation_node->setDoubleValue(course_deviation_deg);
@@ -619,9 +625,9 @@ GPS::update (double delta_time_sec)
 	double true_bug_error = tracking_bug - track1_deg;
 	double magnetic_bug_error = tracking_bug - mag_track_bearing;
 
-	// Get the errors into the (-180,180) range.
-	true_bug_error = degrange180(true_bug_error);
-	magnetic_bug_error = degrange180(magnetic_bug_error);
+        // Get the errors into the (-180,180) range.
+        SG_NORMALIZE_RANGE(true_bug_error, -180.0, 180.0);
+        SG_NORMALIZE_RANGE(magnetic_bug_error, -180.0, 180.0);
 
 	_true_bug_error_node->setDoubleValue(true_bug_error);
 	_magnetic_bug_error_node->setDoubleValue(magnetic_bug_error);
@@ -638,35 +644,4 @@ GPS::update (double delta_time_sec)
     _last_altitude_m = altitude_m;
 }
 
-double GPS::degrange360 (double deg)
-{
-    while (deg < 0.0) {
-	deg += 360.0; }
-    while (deg > 360.0) {
-	deg -= 360.0; }
-
-    return deg;
-}
-
-double GPS::degrange180 (double deg)
-{
-    while (deg < -180.0)
-	deg += 360.0;
-    while (deg >  180.0)
-	deg -= 360.0;
-
-    return deg;
-}
-
-double GPS::degrange (double deg, double min, double max)
-{
-    double span = max - min;
-
-    while (deg < min)
-	deg += span;
-    while (deg >  max)
-	deg -= span;
-
-    return deg;
-}
 // end of gps.cxx

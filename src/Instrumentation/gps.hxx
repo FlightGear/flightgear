@@ -77,10 +77,6 @@ private:
     void search (double frequency, double longitude_rad,
                  double latitude_rad, double altitude_m);
 
-    double degrange360 (double deg);
-    double degrange180 (double deg);
-    double degrange (double deg, double min, double max);
-
     SGPropertyNode_ptr _longitude_node;
     SGPropertyNode_ptr _latitude_node;
     SGPropertyNode_ptr _altitude_node;
