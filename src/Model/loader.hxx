@@ -26,7 +26,7 @@ public:
     virtual ~FGSSGLoader ();
     virtual void flush ();
 protected:
-    map<string,ssgBase *> _table;
+    std::map<string,ssgBase *> _table;
 };
 
 
