@@ -61,11 +61,18 @@ int FGMagicCarpet::update( int multiloop ) {
     set_Euler_Angles( get_Phi(), get_Theta(), fmod(get_Psi() + turn, FG_2PI) );
 
     // update (lon/lat) position
-    Point3D start( get_Longitude(), get_Latitude(), 0.0 );
-    Point3D end = calc_lon_lat( start, -get_Psi(), dist );
+    double lat2, lon2, az2;
+    geo_direct_wgs_84 ( get_Altitude(),
+			get_Latitude() * RAD_TO_DEG,
+			get_Longitude() * RAD_TO_DEG,
+			get_Psi() * RAD_TO_DEG,
+			dist, &lat2, &lon2, &az2 );
+    set_Longitude( lon2 * DEG_TO_RAD );
+    set_Latitude( lat2 * DEG_TO_RAD );
 
-    set_Longitude( end.x() );
-    set_Latitude( end.y() );
+    // cout << "lon error = " << fabs(end.x()*RAD_TO_DEG - lon2)
+    //      << "  lat error = " << fabs(end.y()*RAD_TO_DEG - lat2)
+    //      << endl;
 
     double sl_radius, lat_geoc;
     fgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );
@@ -77,8 +84,7 @@ int FGMagicCarpet::update( int multiloop ) {
 
     set_Geocentric_Position( lat_geoc, get_Longitude(), 
 			     sl_radius + get_Altitude() + climb );
-    set_Geodetic_Position( end.y(), end.x(), 
-			   get_Altitude() + climb );
+    set_Altitude( get_Altitude() + climb );
 
     return 1;
 }
