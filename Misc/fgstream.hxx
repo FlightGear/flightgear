@@ -78,6 +78,8 @@ public:
 
     void close() { gzbuf.close(); }
 
+    bool is_open() { return gzbuf.is_open(); }
+
 private:
     // Not defined!
     fg_gzifstream( const fg_gzifstream& );    
@@ -98,6 +100,9 @@ istream& skipcomment( istream& in );
 #endif /* _FGSTREAM_HXX */
 
 // $Log$
+// Revision 1.9  1999/03/27 14:04:25  curt
+// Added is_open() so we can check if the open() succeeded.
+//
 // Revision 1.8  1999/03/02 01:01:55  curt
 // Tweaks for compiling with native SGI compilers.
 //
