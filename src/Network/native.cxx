@@ -70,12 +70,12 @@ bool FGNative::process() {
     } else if ( get_direction() == SG_IO_IN ) {
 	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& buf), length ) == length ) {
-		FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
+		FG_LOG( FG_IO, FG_DEBUG, "Success reading data." );
 		*cur_fdm_state = buf;
 	    }
 	} else {
 	    while ( io->read( (char *)(& buf), length ) == length ) {
-		FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
+		FG_LOG( FG_IO, FG_DEBUG, "Success reading data." );
 		*cur_fdm_state = buf;
 	    }
 	}

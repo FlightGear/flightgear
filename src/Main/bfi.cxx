@@ -209,6 +209,7 @@ FGBFI::init ()
   fgTie("/environment/wind-down", getWindDown, setWindDown);
 
 				// View
+  fgTie("/sim/field-of-view", getFOV, setFOV);
   fgTie("/sim/view/axes/long", (double(*)())0, setViewAxisLong);
   fgTie("/sim/view/axes/lat", (double(*)())0, setViewAxisLat);
 
@@ -1288,6 +1289,18 @@ FGBFI::setWindDown (double speed)
 ////////////////////////////////////////////////////////////////////////
 // View.
 ////////////////////////////////////////////////////////////////////////
+
+double
+FGBFI::getFOV ()
+{
+  globals->get_current_view()->get_fov();
+}
+
+void
+FGBFI::setFOV (double fov)
+{
+  globals->get_current_view()->set_fov( fov );
+}
 
 void
 FGBFI::setViewAxisLong (double axis)

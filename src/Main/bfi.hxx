@@ -170,6 +170,8 @@ public:
   static void setWindDown (double speed); // feet/second
 
 				// View
+  static double getFOV ();	// degrees
+  static void setFOV (double fov); // degrees
   static void setViewAxisLong (double axis);// -1.0:1.0
   static void setViewAxisLat (double axis); // -1.0:1.0
 
