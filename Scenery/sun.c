@@ -28,7 +28,7 @@
 #include "orbits.h"
 #include "sun.h"
 
-GLint sun;
+GLint sun_obj;
 
 static struct CelestialCoord sunPos;
 
@@ -95,8 +95,8 @@ void fgSunInit()
 {
 //   int i;
 
-    sun = glGenLists(1);
-    glNewList(sun, GL_COMPILE );
+    sun_obj = glGenLists(1);
+    glNewList(sun_obj, GL_COMPILE );
 
 //	glBegin( GL_POINTS );
 
@@ -136,7 +136,6 @@ void fgSunInit()
 //     glEnd();
     //glPopMatrix();
 
-    glColor3f(0.85, 0.65, 0.05);
     glutSolidSphere(1.0, 10, 10);
 
     glEndList();
@@ -190,9 +189,11 @@ void fgSunRender() {
     glTranslatef(xSun, ySun, zSun);
     glScalef(1400, 1400, 1400);
 
+    glColor3f(0.85, 0.65, 0.05);
+
     /* glColor3fv( color ); */
     /* glutSolidSphere(1.0, 25, 25); */
-    glCallList(sun);
+    glCallList(sun_obj);
 
     glPopMatrix();
 
@@ -201,10 +202,13 @@ void fgSunRender() {
 
 
 /* $Log$
-/* Revision 1.4  1997/12/10 22:37:53  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.5  1997/12/12 21:41:31  curt
+/* More light/material property tweaking ... still a ways off.
 /*
+ * Revision 1.4  1997/12/10 22:37:53  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.3  1997/12/09 05:11:56  curt
  * Working on tweaking lighting.
  *

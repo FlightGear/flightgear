@@ -176,7 +176,7 @@ static void fgUpdateViewParams() {
 
     light = pow(1.1, -x_10 / 30.0);
     ambient = 0.3 * light;
-    diffuse = 0.7 * light;
+    diffuse = 0.9 * light;
 
     sky_brightness = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
 
@@ -570,9 +570,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.30  1997/12/12 19:52:47  curt
-/* Working on lightling and material properties.
+/* Revision 1.31  1997/12/12 21:41:25  curt
+/* More light/material property tweaking ... still a ways off.
 /*
+ * Revision 1.30  1997/12/12 19:52:47  curt
+ * Working on lightling and material properties.
+ *
  * Revision 1.29  1997/12/11 04:43:54  curt
  * Fixed sun vector and lighting problems.  I thing the moon is now lit
  * correctly.

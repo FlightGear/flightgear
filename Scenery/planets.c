@@ -30,7 +30,7 @@
 
 
 struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
-                                        struct OrbElements sun,
+                                        struct OrbElements theSun,
                                         struct fgTIME t)
 {
    struct CelestialCoord
@@ -70,7 +70,7 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
     */
     /* calculate the solar position */
 
-	SolarPosition = fgCalcSunPos(sun);
+    SolarPosition = fgCalcSunPos(theSun);
     xg = xh + SolarPosition.xs;
     yg = yh + SolarPosition.ys;
     zg = zh;
@@ -85,7 +85,10 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 
 
 /* $Log$
-/* Revision 1.1  1997/10/25 03:16:10  curt
-/* Initial revision of code contributed by Durk Talsma.
+/* Revision 1.2  1997/12/12 21:41:29  curt
+/* More light/material property tweaking ... still a ways off.
 /*
+ * Revision 1.1  1997/10/25 03:16:10  curt
+ * Initial revision of code contributed by Durk Talsma.
+ *
  */

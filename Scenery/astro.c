@@ -55,14 +55,14 @@ void fgAstroInit() {
     /* Initialize the orbital elements of sun, moon and mayor planets */
     fgSolarSystemInit(*t);
 
-    /* Intialize the moon's position */
-    fgMoonInit(); 
+    /* Initialize the Stars subsystem  */
+    fgStarsInit();             
 
     /* Initialize the sun's position */
     fgSunInit();       
 
-    /* Initialize the Stars subsystem  */
-    fgStarsInit();             
+    /* Intialize the moon's position */
+    fgMoonInit(); 
 }
 
 
@@ -107,11 +107,11 @@ void fgAstroRender() {
     /* render the stars */
     fgStarsRender();
 
-    /* render the moon */
-    fgMoonRender();
-
     /* render the sun */
     fgSunRender();
+
+    /* render the moon */
+    fgMoonRender();
 
     glPopMatrix();
 
@@ -121,9 +121,12 @@ void fgAstroRender() {
 
 
 /* $Log$
-/* Revision 1.5  1997/12/12 19:52:54  curt
-/* Working on lightling and material properties.
+/* Revision 1.6  1997/12/12 21:41:27  curt
+/* More light/material property tweaking ... still a ways off.
 /*
+ * Revision 1.5  1997/12/12 19:52:54  curt
+ * Working on lightling and material properties.
+ *
  * Revision 1.4  1997/12/11 04:43:56  curt
  * Fixed sun vector and lighting problems.  I thing the moon is now lit
  * correctly.

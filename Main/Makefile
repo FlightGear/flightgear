@@ -40,7 +40,7 @@ CFLAGS = $(FG_CFLAGS) $(INTERFACE_FLAGS)
 LIBS =  $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
 
 
-TARGET=fg-$(VERSION)
+TARGET=fg-$(FG_VERSION)
 
 
 #---------------------------------------------------------------------------
@@ -49,13 +49,14 @@ TARGET=fg-$(VERSION)
 
 $(TARGET): $(OFILES) $(AFILES)
 	$(CC) -o $(TARGET) $(OFILES) $(AFILES) $(LIBS)
-	$(LN) $(TARGET) fg$(VERSION_MAJOR)
+	$(LN) $(TARGET) fg$(FG_VERSION_MAJOR)
 
 all: $(TARGET)
 
 clean:
 	rm -f *.o $(TARGET) $(TARGET).exe \
-		fg$(VERSION_MAJOR) fg$(VERSION_MAJOR).exe lib*.a *.os2 *~ core
+		fg$(FG_VERSION_MAJOR) fg$(FG_VERSION_MAJOR).exe \
+		lib*.a *.os2 *~ core
 
 
 #---------------------------------------------------------------------------
@@ -82,6 +83,9 @@ views.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.37  1997/12/12 21:41:26  curt
+# More light/material property tweaking ... still a ways off.
+#
 # Revision 1.36  1997/12/10 01:19:47  curt
 # Tweaks for verion 0.15 release.
 #

@@ -231,9 +231,9 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
     static long int warp = 0;
 
     /* get current Unix calendar time (in seconds) */
-    warp += 240;
     /* warp = 60; */
-    t->cur_time = time(NULL) + (0) * 60 * 60;
+    warp += 0;
+    t->cur_time = time(NULL) + (3) * 60 * 60;
     t->cur_time += warp;
     printf("Current Unix calendar time = %ld  warp = %ld\n", t->cur_time, warp);
 
@@ -285,9 +285,12 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.17  1997/12/12 19:53:04  curt
-/* Working on lightling and material properties.
+/* Revision 1.18  1997/12/12 21:41:31  curt
+/* More light/material property tweaking ... still a ways off.
 /*
+ * Revision 1.17  1997/12/12 19:53:04  curt
+ * Working on lightling and material properties.
+ *
  * Revision 1.16  1997/12/11 04:43:57  curt
  * Fixed sun vector and lighting problems.  I thing the moon is now lit
  * correctly.

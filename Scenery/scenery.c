@@ -80,14 +80,30 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
 
 /* Render out the current scene */
 void fgSceneryRender() {
+    static GLfloat terrain_color[4] = { 0.4, 0.8, 0.3, 1.0 };
+    static GLfloat terrain_ambient[4];
+    static GLfloat terrain_diffuse[4];
+    int i;
+
+    for ( i = 0; i < 4; i++ ) {
+	terrain_ambient[i] = terrain_color[i];
+	terrain_diffuse[i] = terrain_color[i];
+    }
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT, terrain_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, terrain_diffuse);
+
     glCallList(area_terrain);
 }
 
 
 /* $Log$
-/* Revision 1.26  1997/12/12 19:52:58  curt
-/* Working on lightling and material properties.
+/* Revision 1.27  1997/12/12 21:41:30  curt
+/* More light/material property tweaking ... still a ways off.
 /*
+ * Revision 1.26  1997/12/12 19:52:58  curt
+ * Working on lightling and material properties.
+ *
  * Revision 1.25  1997/12/10 22:37:51  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

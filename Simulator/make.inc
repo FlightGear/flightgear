@@ -94,6 +94,18 @@ GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(FG_VERSION)\"
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
+# Linux/Mesa with the GLUT toolkit
+#
+INTERFACE_FLAGS = -DGLUT
+INTERFACE_LIBS = -lglut
+INTERFACE_FILES = GLUTmain.c GLUTkey.c
+MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+FG_CFLAGS = $(GLOBAL_CFLAGS)
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
 # SGI IRIX with the GLUT toolkit 
 #     (Surprisingly, this also works on our SunOS 4.x machine with the 
 #     way we have Mesa & Glut installed.)
@@ -106,26 +118,14 @@ GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(FG_VERSION)\"
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
-# Linux/Mesa with the GLUT toolkit
+# Sun/Solaris with the GLUT toolkit
 #
+# VERSION=\"$(VERSION)\"
 # INTERFACE_FLAGS = -DGLUT
 # INTERFACE_LIBS = -lglut
 # INTERFACE_FILES = GLUTmain.c GLUTkey.c
-# MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
-# X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-# GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+# GRAPHICS_LIBS =  -lGLU -lGL -lXext -lXmu -lXi -lX11
 # FG_CFLAGS = $(GLOBAL_CFLAGS)
-#---------------------------------------------------------------------------
-
-#---------------------------------------------------------------------------
-# Sun/Solaris with the GLUT toolkit
-#
-VERSION=\"$(VERSION)\"
-INTERFACE_FLAGS = -DGLUT
-INTERFACE_LIBS = -lglut
-INTERFACE_FILES = GLUTmain.c GLUTkey.c
-GRAPHICS_LIBS =  -lGLU -lGL -lXext -lXmu -lXi -lX11
-FG_CFLAGS = $(GLOBAL_CFLAGS)
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
@@ -142,6 +142,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.24  1997/12/12 21:41:24  curt
+# More light/material property tweaking ... still a ways off.
+#
 # Revision 1.23  1997/12/12 19:52:32  curt
 # Solaris tweaks.
 #

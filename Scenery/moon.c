@@ -147,11 +147,11 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
                                       struct OrbElements sunParams,
                                       struct fgTIME t)
 {
-	struct CelestialCoord
-          result;
-
+    struct CelestialCoord
+	result;
+    
     double
-    	  eccAnom, ecl, lonecl, latecl, actTime,
+	eccAnom, ecl, lonecl, latecl, actTime,
         xv, yv, v, r, xh, yh, zh, xg, yg, zg, xe, ye, ze,
         Ls, Lm, D, F;
 
@@ -226,7 +226,6 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
 
 void fgMoonInit() {
     struct fgLIGHT *l;
-    static GLfloat moon_color[4] = { 1.0, 1.0, 1.0, 1.0 };
 //   int i;
 
     l = &cur_light_params;
@@ -262,6 +261,7 @@ void fgMoonInit() {
 /* Draw the moon */
 void fgMoonRender() {
     struct fgLIGHT *l;
+    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat moon_color[4] = { 1.0, 1.0, 1.0, 1.0 };
 
     l = &cur_light_params;
@@ -270,11 +270,14 @@ void fgMoonRender() {
     glLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_clear );
     glLightfv(GL_LIGHT0, GL_DIFFUSE, moon_color );
 
+    glMaterialfv(GL_FRONT, GL_AMBIENT, black);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color);
+
     glPushMatrix();
     glTranslatef(xMoon, yMoon, zMoon);
     glScalef(1400, 1400, 1400);
 
-    /* glColor3fv(color); */
+    glColor3fv(moon_color);
     /* glutSolidSphere(1.0, 25, 25); */
     glCallList(moon);
 
