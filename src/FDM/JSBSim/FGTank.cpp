@@ -95,19 +95,17 @@ FGTank::~FGTank()
 
 double FGTank::Reduce(double used)
 {
-  double shortage;
+  double shortage = Contents - used;
 
-  if (used < Contents) {
+  if (shortage >= 0) {
     Contents -= used;
     PctFull = 100.0*Contents/Capacity;
-    return 0.0;
   } else {
-    shortage = Contents - used;
     Contents = 0.0;
     PctFull = 0.0;
     Selected = false;
-    return shortage;
   }
+  return shortage;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
