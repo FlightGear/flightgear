@@ -60,6 +60,7 @@ class FGControls;
 class FGSteam;
 class FGSoundMgr;
 class FGSystemMgr;
+class FGInstrumentMgr;
 class FGAutopilot;
 class FGFX;
 class FGViewMgr;
@@ -135,6 +136,9 @@ private:
 
     // aircraft system manager
     FGSystemMgr * systemmgr;
+
+    // aircraft instrument manager
+    FGInstrumentMgr * instrumentmgr;
 
     // environment information
     FGEnvironmentMgr * environment_mgr;
@@ -252,6 +256,8 @@ public:
     inline void set_soundmgr( FGSoundMgr *sm ) { soundmgr = sm; }
 
     inline FGSystemMgr *get_systemmgr() const { return systemmgr; }
+
+    inline FGInstrumentMgr *get_instrumentmgr() const { return instrumentmgr; }
 
     inline FGFX *get_fx() const { return fx; }
     inline void set_fx( FGFX *x ) { fx = x; }

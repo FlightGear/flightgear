@@ -21,6 +21,7 @@ SUBDIRS = \
         FDM \
         GUI \
         Input \
+	Instrumentation \
         Model \
         Navaids \
         $(NETWORK_DIRS) \

@@ -587,6 +587,7 @@ AC_CONFIG_FILES([ \
 	src/FDM/Makefile \
 	src/GUI/Makefile \
 	src/Input/Makefile \
+	src/Instrumentation/Makefile \
 	src/Main/Makefile \
 	src/Main/runfgfs \
 	src/Main/runfgfs.bat \
@@ -598,7 +599,6 @@ AC_CONFIG_FILES([ \
 	src/Scenery/Makefile \
 	src/Sound/Makefile \
 	src/Systems/Makefile \
-	src/Systems/Vacuum/Makefile \
 	src/Time/Makefile \
 	src/WeatherCM/Makefile \
 	tests/Makefile \

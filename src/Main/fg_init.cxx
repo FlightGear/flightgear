@@ -97,6 +97,7 @@
 #include <FDM/YASim/YASim.hxx>
 #include <Include/general.hxx>
 #include <Input/input.hxx>
+#include <Instrumentation/instrument_mgr.hxx>
 // #include <Joystick/joystick.hxx>
 #include <Objects/matlib.hxx>
 #include <Model/acmodel.hxx>
@@ -1024,6 +1025,12 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
     globals->get_systemmgr()->init();
     globals->get_systemmgr()->bind();
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the instrumentation.
+    ////////////////////////////////////////////////////////////////////
+    globals->get_instrumentmgr()->init();
+    globals->get_instrumentmgr()->bind();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the radio stack subsystem.

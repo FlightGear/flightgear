@@ -67,10 +67,10 @@ fgfs_LDADD = \
         $(NETWORK_LIBS) \
 	$(top_builddir)/src/Objects/libObjects.a \
 	$(top_builddir)/src/Systems/libSystems.a \
-	$(top_builddir)/src/Systems/Vacuum/libVacuum.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \
 	$(top_builddir)/src/Input/libInput.a \
+	$(top_builddir)/src/Instrumentation/libInstrumentation.a \
 	-lsgroute -lsgsky -lsgclouds3d -lsgephem -lsgtiming -lsgio -lsgscreen \
 	-lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
 	-lsgserial \

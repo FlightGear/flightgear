@@ -5,7 +5,7 @@
 
 
 #include "system_mgr.hxx"
-#include "Vacuum/vacuum.hxx"
+#include "vacuum.hxx"
 
 
 FGSystemMgr::FGSystemMgr ()

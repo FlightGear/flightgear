@@ -119,6 +119,7 @@ SG_USING_STD(endl);
 #  include <Sound/morse.hxx>
 #endif
 #include <Systems/system_mgr.hxx>
+#include <Instrumentation/instrument_mgr.hxx>
 #include <Time/FGEventMgr.hxx>
 #include <Time/fg_timer.hxx>
 #include <Time/light.hxx>
@@ -1140,6 +1141,7 @@ static void fgMainLoop( void ) {
 #endif
 
     globals->get_systemmgr()->update( delta_time_sec );
+    globals->get_instrumentmgr()->update( delta_time_sec );
 
     //
     // Tile Manager updates - see if we need to load any new scenery tiles.

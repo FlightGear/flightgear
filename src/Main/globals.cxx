@@ -24,6 +24,7 @@
 #include <simgear/misc/commands.hxx>
 
 #include <Environment/environment_mgr.hxx>
+#include <Instrumentation/instrument_mgr.hxx>
 #include <Systems/system_mgr.hxx>
 
 #include "globals.hxx"
@@ -51,6 +52,7 @@ FGGlobals::FGGlobals() :
     warp_delta( 0 ),
     logger(0),
     systemmgr(new FGSystemMgr),
+    instrumentmgr(new FGInstrumentMgr),
     props(new SGPropertyNode),
     initial_state(0),
     commands(new SGCommandMgr),
