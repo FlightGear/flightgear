@@ -46,9 +46,13 @@ int fgJoystickRead( double *joy_x, double *joy_y, int *joy_b1, int *joy_b2 );
 
 
 /* $Log$
-/* Revision 1.3  1998/04/22 13:26:21  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.1  1998/10/24 22:28:18  curt
+/* Renamed joystick.[ch] to joystick.[ch]xx
+/* Added js.hxx which is Steve's joystick interface class.
 /*
+ * Revision 1.3  1998/04/22 13:26:21  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.2  1998/01/22 02:59:36  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

@@ -256,9 +256,13 @@ int fgJoystickRead( double *joy_x, double *joy_y, int *joy_b1, int *joy_b2 )
 
 
 /* $Log$
-/* Revision 1.7  1998/04/25 22:06:29  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.1  1998/10/24 22:28:16  curt
+/* Renamed joystick.[ch] to joystick.[ch]xx
+/* Added js.hxx which is Steve's joystick interface class.
 /*
+ * Revision 1.7  1998/04/25 22:06:29  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.6  1998/04/18 04:14:05  curt
  * Moved fg_debug.c to it's own library.
  *
