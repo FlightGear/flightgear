@@ -138,7 +138,7 @@ bool FGProps::process_command( const char *cmd ) {
 		dir = globals->get_props()->getNode(path + "/" + tokens[1]);
 	    }
 	    if ( dir == 0 ) {
-		tokens[1] += " Not Found\n";
+		tokens[1] = "ERR Node \"" + tokens[1] + "\" not found.\n";
 		io->writestring( tokens[1].c_str() );
 		return true;
 	    }
@@ -149,13 +149,14 @@ bool FGProps::process_command( const char *cmd ) {
 	    string name = child->getName();
 	    string line = name;
 	    if ( dir->getChild(name, 1) ) {
+		char buf[16];
 		sprintf(buf, "[%d]", child->getIndex());
 		line += buf;
 	    }
 	    if ( child->nChildren() > 0 ) {
 		line += "/";
 	    } else {
-		if (mode == PROMPT) {
+		if ( mode == PROMPT ) {
 		    string value = dir->getStringValue ( name, "" );
 		    line += " =\t'" + value + "'\t(";
 		    line += getValueTypeString( dir->getNode( name ) );
@@ -177,7 +178,7 @@ bool FGProps::process_command( const char *cmd ) {
 		writeProperties ( buf, child );
 		io->writestring( buf.str() );
 	    } else {
-		tokens[1] += " Not Found\n";
+		tokens[1] = "ERR Node \"" + tokens[1] + "\" not found.\n";
 		io->writestring( tokens[1].c_str() );
 	    }
 	}
@@ -193,7 +194,7 @@ bool FGProps::process_command( const char *cmd ) {
 		node = child;
 		path = node->getPath();
 	    } else {
-		tokens[1] += " Not Found\n";
+		tokens[1] = "ERR Node \"" + tokens[1] + "\" not found.\n";
 		io->writestring( tokens[1].c_str() );
 	    }
 	}
@@ -211,8 +212,8 @@ bool FGProps::process_command( const char *cmd ) {
 	    string tmp;	
 	    string value = node->getStringValue ( tokens[1], "" );
 	    if ( mode == PROMPT ) {
-		string ttt = "debug = '" + tokens[1] + "'\n";
-		io->writestring( ttt.c_str() );
+		//string ttt = "debug = '" + tokens[1] + "'\n";
+		//io->writestring( ttt.c_str() );
 
 		tmp = tokens[1] + " = '" + value + "' (";
 		tmp += getValueTypeString( node->getNode( tokens[1] ) );
@@ -278,6 +279,7 @@ bool FGProps::process_command( const char *cmd ) {
 // process work for this port
 bool FGProps::process() {
     SGIOChannel *io = get_io_channel();
+    char buf[max_cmd_len];
 
     // cout << "processing incoming props command" << endl;
 
