@@ -27,6 +27,7 @@
 #ifdef HAVE_MKFIFO
 #  include <sys/types.h>        // mkfifo() open() umask()
 #  include <sys/stat.h>         // mkfifo() open() umask()
+#  include <errno.h>            // perror()
 #  include <fcntl.h>            // open()
 #  include <unistd.h>           // unlink()
 #endif
@@ -41,12 +42,14 @@
 #include "ExternalPipe.hxx"
 
 
+static const int MAX_BUF = 32768;
+
 FGExternalPipe::FGExternalPipe( double dt, string name ) {
     valid = true;
     last_weight = 0.0;
     last_cg_offset = -9999.9;
 
-    buf = new char[sizeof(char) + sizeof(int) + sizeof(ctrls)];
+    buf = new char[MAX_BUF];
 
 #ifdef HAVE_MKFIFO
     fifo_name_1 = name + "1";
@@ -61,13 +64,13 @@ FGExternalPipe::FGExternalPipe( double dt, string name ) {
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to create named pipe: "
                 << fifo_name_1 );
-        valid = false;
+        perror( "ExternalPipe()" );
     }
     result = mkfifo( fifo_name_2.c_str(), 0644 );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to create named pipe: "
                 << fifo_name_2 );
-        valid = false;
+        perror( "ExternalPipe()" );
     }
 
     pd1 = open( fifo_name_1.c_str(), O_RDWR );
@@ -96,12 +99,58 @@ FGExternalPipe::~FGExternalPipe() {
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to close named pipe: "
                 << fifo_name_1 );
+        perror( "~FGExternalPipe()" );
     }
     result = close( pd2 );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to close named pipe: "
                 << fifo_name_2 );
+        perror( "~FGExternalPipe()" );
     }
+#endif
+}
+
+
+static int write_fifo( char cmd_type, int pd, char *cmd, int len ) {
+#ifdef HAVE_MKFIFO
+    char *buf = new char[len + 3];
+
+    // write 2 byte command length + command type + command
+    char hi = (len + 1) / 256;
+    char lo = (len + 1) - (hi * 256);
+
+    buf[0] = hi;
+    buf[1] = lo;
+    buf[2] = cmd_type;
+
+    // strncpy( buf + 3, cmd, len );
+    memcpy( buf + 3, cmd, len );
+
+    if ( cmd_type == '1' ) {
+        // cout << "writing '" << cmd << "'" << endl;
+    } else if ( cmd_type == '2' ) {
+        // cout << "writing controls packet" << endl;
+    } else {
+        // cout << "writing unknown command?" << endl;
+    }
+
+    // for ( int i = 0; i < len + 3; ++i ) {
+    //     cout << " " << (int)buf[i];
+    // }
+    // cout << endl;
+
+    int result = ::write( pd, buf, len + 3 );
+    if ( result == -1 ) {
+        perror( "write_fifo()" );
+        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << pd );
+    }
+    // cout << "wrote " << len + 3 << " bytes." << endl;
+
+    delete [] buf;
+
+    return result;
+#else
+    return 0;
 #endif
 }
 
@@ -127,71 +176,44 @@ void FGExternalPipe::init() {
     char cmd[256];
     int result;
 
-    sprintf( cmd, "1longitude-deg=%.8f", lon );
-    result = write( pd1, cmd, strlen(cmd) );
-    if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-    }
+    sprintf( cmd, "longitude-deg=%.8f", lon );
+    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
 
-    sprintf( cmd, "1latitude-deg=%.8f", lat );
-    result = ::write( pd1, cmd, strlen(cmd) );
-    if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-    }
+    sprintf( cmd, "latitude-deg=%.8f", lat );
+    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
 
-    sprintf( cmd, "1altitude-ft=%.8f", alt );
-    result = write( pd1, cmd, strlen(cmd) );
-    if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-    }
+    sprintf( cmd, "altitude-ft=%.8f", alt );
+    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
 
-    sprintf( cmd, "1ground-m=%.8f", ground );
-    result = write( pd1, cmd, strlen(cmd) );
-    if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-    }
+    sprintf( cmd, "ground-m=%.8f", ground );
+    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
 
-    sprintf( cmd, "1speed-kts=%.8f", speed );
-    result = write( pd1, cmd, strlen(cmd) );
-    if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-    }
+    sprintf( cmd, "speed-kts=%.8f", speed );
+    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
 
-    sprintf( cmd, "1heading-deg=%.8f", heading );
-    result = write( pd1, cmd, strlen(cmd) );
-    if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-    }
+    sprintf( cmd, "heading-deg=%.8f", heading );
+    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
 
     if ( weight > 1000.0 ) {
-      sprintf( cmd, "1aircraft-weight-lbs=%.2f", weight );
-      result = write( pd1, cmd, strlen(cmd) );
-      if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-      }
+        sprintf( cmd, "aircraft-weight-lbs=%.2f", weight );
+        result = write_fifo( '1', pd1, cmd, strlen(cmd) );
     }
     last_weight = weight;
 
     if ( cg_offset > -5.0 || cg_offset < 5.0 ) {
-      sprintf( cmd, "1aircraft-cg-offset-inches=%.2f", cg_offset );
-      result = write( pd1, cmd, strlen(cmd) );
-      if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-      }
+        sprintf( cmd, "aircraft-cg-offset-inches=%.2f", cg_offset );
+        result = write_fifo( '1', pd1, cmd, strlen(cmd) );
     }
     last_cg_offset = cg_offset;
 
     SG_LOG( SG_IO, SG_INFO, "before sending reset command." );
 
     if( fgGetBool("/sim/presets/onground") ) {
-      sprintf( cmd, "1reset=ground" );
+        sprintf( cmd, "reset=ground" );
     } else {
-      sprintf( cmd, "1reset=air" );
+        sprintf( cmd, "reset=air" );
     }
-    result = write( pd1, cmd, strlen(cmd) );
-    if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-    }
+    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
 
     SG_LOG( SG_IO, SG_INFO, "Remote FDM init() finished." );
 #endif
@@ -215,23 +237,17 @@ void FGExternalPipe::update( double dt ) {
     double weight = fgGetDouble( "/sim/aircraft-weight-lbs" );
     static double last_weight = 0.0;
     if ( fabs( weight - last_weight ) > 0.01 ) {
-      char cmd[256];
-      sprintf( cmd, "1aircraft-weight-lbs=%.2f", weight );
-      result = write( pd1, cmd, strlen(cmd) );
-      if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-      }
+        char cmd[256];
+        sprintf( cmd, "aircraft-weight-lbs=%.2f", weight );
+        result = write_fifo( '1', pd1, cmd, strlen(cmd) );
     }
     last_weight = weight;
 
     double cg_offset = fgGetDouble( "/sim/aircraft-cg-offset-inches" );
     if ( fabs( cg_offset - last_cg_offset ) > 0.01 ) {
-      char cmd[256];
-      sprintf( cmd, "1aircraft-cg-offset-inches=%.2f", cg_offset );
-      result = write( pd1, cmd, strlen(cmd) );
-      if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
-      }
+        char cmd[256];
+        sprintf( cmd, "aircraft-cg-offset-inches=%.2f", cg_offset );
+        result = write_fifo( '1', pd1, cmd, strlen(cmd) );
     }
     last_cg_offset = cg_offset;
 
@@ -239,19 +255,14 @@ void FGExternalPipe::update( double dt ) {
     length = sizeof(ctrls);
     FGProps2NetCtrls( &ctrls, true, false );
     char *ptr = buf;
-    *ptr = '2';
-    ptr++;
     *((int *)ptr) = iterations;
+    // cout << "iterations = " << iterations << endl;
     ptr += sizeof(int);
     memcpy( ptr, (char *)(&ctrls), length );
-    // cout << "writing control structure to remote fdm." << endl;
-    result = write( pd1, buf, length + 1 );
-    if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: "
-                << fifo_name_1 );
-    } else {
-        // cout << "  write successful = " << length + 1 << endl;
-    }
+    // cout << "writing control structure, size = "
+    //      << length + sizeof(int) << endl;
+
+    result = write_fifo( '2', pd1, buf, length + sizeof(int) );
 
     // Read fdm values
     length = sizeof(fdm);
