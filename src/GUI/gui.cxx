@@ -64,7 +64,6 @@
 #include <Cockpit/panel.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
-#include <Main/bfi.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/fg_io.hxx>
 #include <Main/globals.hxx>
