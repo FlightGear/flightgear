@@ -227,7 +227,13 @@ Roland Voegtli <webmaster@sanw.unibe.ch>
 
 
 Carmelo Volpe <carmelo.volpe@csb.ki.se>
-  Porting Flight Gear to the Metro Works development environment (PC/Mac)
+  Contributed some work to porting Flight Gear to the Metro Works 
+  development environment (PC/Mac)
+
+
+Darrell Walisser <dwaliss1@purdue.edu>
+  Contributed a large number of MacOS changes and is close to having a
+  working Mac versions of FGFS.
 
 
 Robert Allan Zeh <raz@cmg.FCNBD.COM>
