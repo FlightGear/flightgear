@@ -1,4 +1,6 @@
 New in 0.56
+* Changed default HUD units to the more standard feet units.  You can still
+  use meters by specifying the command line option "--units-meters".
 * Added some initial joystick support using Steve's joystick interface class.
   This works great under Linux, but Steve's class now needs to be ported to
   Windoze and other platforms.
