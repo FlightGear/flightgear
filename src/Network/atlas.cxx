@@ -129,10 +129,10 @@ bool FGAtlas::gen_message() {
     sprintf( gga_sum, "%02X", calc_atlas_cksum(gga) );
 
     sprintf( patla, "PATLA,%.2f,%.1f,%.2f,%.1f,%.0f",
-	     current_radiostack->get_nav1_freq(),
-	     current_radiostack->get_nav1_sel_radial(),
-	     current_radiostack->get_nav2_freq(),
-	     current_radiostack->get_nav2_sel_radial(),
+	     current_radiostack->get_navcom1()->get_nav_freq(),
+	     current_radiostack->get_navcom1()->get_nav_sel_radial(),
+	     current_radiostack->get_navcom1()->get_nav_freq(),
+	     current_radiostack->get_navcom1()->get_nav_sel_radial(),
 	     adf_freq->getDoubleValue() );
     sprintf( patla_sum, "%02X", calc_atlas_cksum(patla) );
 

@@ -503,37 +503,37 @@ FGAutopilot::update (double dt)
 
 	    // determine our current radial position relative to the
 	    // navaid in "true" heading.
-	    double cur_radial = current_radiostack->get_nav1_heading();
-	    if ( current_radiostack->get_nav1_loc() ) {
+	    double cur_radial = current_radiostack->get_navcom1()->get_nav_heading();
+	    if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
 		// ILS localizers radials are already "true" in our
 		// database
 	    } else {
-		cur_radial += current_radiostack->get_nav1_magvar();
+		cur_radial += current_radiostack->get_navcom1()->get_nav_magvar();
 	    }
-	    if ( current_radiostack->get_nav1_from_flag() ) {
+	    if ( current_radiostack->get_navcom1()->get_nav_from_flag() ) {
 		cur_radial += 180.0;
 		while ( cur_radial >= 360.0 ) { cur_radial -= 360.0; }
 	    }
 
 	    // determine the target radial in "true" heading
-	    double tgt_radial = current_radiostack->get_nav1_radial();
-	    if ( current_radiostack->get_nav1_loc() ) {
+	    double tgt_radial = current_radiostack->get_navcom1()->get_nav_radial();
+	    if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
 		// ILS localizers radials are already "true" in our
 		// database
 	    } else {
 		// VOR radials need to have that vor's offset added in
-		tgt_radial += current_radiostack->get_nav1_magvar();
+		tgt_radial += current_radiostack->get_navcom1()->get_nav_magvar();
 	    }
 
 	    // determine the heading adjustment needed.
 	    double adjustment = 
-		current_radiostack->get_nav1_heading_needle_deflection()
-		* (current_radiostack->get_nav1_loc_dist() * SG_METER_TO_NM);
+		current_radiostack->get_navcom1()->get_nav_heading_needle_deflection()
+		* (current_radiostack->get_navcom1()->get_nav_loc_dist() * SG_METER_TO_NM);
 	    SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
 
             // clamp closer when inside cone when beyond 5km...
-            if (current_radiostack->get_nav1_loc_dist() > 5000) {
-              double clamp_angle = fabs(current_radiostack->get_nav1_heading_needle_deflection()) * 3;
+            if (current_radiostack->get_navcom1()->get_nav_loc_dist() > 5000) {
+              double clamp_angle = fabs(current_radiostack->get_navcom1()->get_nav_heading_needle_deflection()) * 3;
               if (clamp_angle < 30)
                 SG_CLAMP_RANGE( adjustment, -clamp_angle, clamp_angle);
             }
@@ -696,12 +696,12 @@ FGAutopilot::update (double dt)
 		( TargetAltitude -
 		  globals->get_steam()->get_ALT_ft() * SG_FEET_TO_METER ) * 8.0;
 	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
-	    double x = current_radiostack->get_nav1_gs_dist();
+	    double x = current_radiostack->get_navcom1()->get_nav_gs_dist();
 	    double y = (altitude_node->getDoubleValue()
-			- current_radiostack->get_nav1_elev()) * SG_FEET_TO_METER;
+			- current_radiostack->get_navcom1()->get_nav_elev()) * SG_FEET_TO_METER;
 	    double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 
-	    double target_angle = current_radiostack->get_nav1_target_gs();
+	    double target_angle = current_radiostack->get_navcom1()->get_nav_target_gs();
 
 	    double gs_diff = target_angle - current_angle;
 
