@@ -82,9 +82,9 @@ need"
 
   and follow the instructions in README.plib.
 
-  - (optional) the gpc and gfc libraries.
+  - (optional) the gpc libraries.
 
-  Read the README.g[fp]c files to understand what they are good for
+  Read the README.gpc files to understand what they are good for
   and decide whether you need to download them. If you don't want to
   build your own sceneries, you might not need them.
 
