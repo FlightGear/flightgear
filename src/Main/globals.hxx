@@ -65,7 +65,7 @@ private:
 
     // Fullscreen mode for old 3DFX cards.
 #if defined(FX) && defined(XMESA)
-    extern bool fullscreen;
+    bool fullscreen;
 #endif
 
     // An offset in seconds from the true time.  Allows us to adjust
@@ -128,7 +128,7 @@ public:
 
 #if defined(FX) && defined(XMESA)
     inline bool get_fullscreen() const { return fullscreen; }
-    inline bool set_fullscreen( bool f ) const { fullscreen = f; }
+    inline bool set_fullscreen( bool f ) { fullscreen = f; }
 #endif
 
     inline long int get_warp() const { return warp; }
