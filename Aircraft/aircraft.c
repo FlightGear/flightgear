@@ -64,9 +64,12 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
 
 /* $Log$
-/* Revision 1.18  1998/04/18 04:13:56  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.19  1998/04/25 22:06:24  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.18  1998/04/18 04:13:56  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.17  1998/02/12 21:59:31  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>
@@ -76,7 +79,7 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
  * <chotchkiss@namg.us.anritsu.com>
  *
  * Revision 1.15  1998/01/27 00:47:46  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.14  1998/01/19 19:26:56  curt

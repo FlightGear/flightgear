@@ -84,15 +84,18 @@ void fgSlewUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.12  1998/04/08 23:35:30  curt
-/* Tweaks to Gnu automake/autoconf system.
+/* Revision 1.13  1998/04/25 22:06:29  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.12  1998/04/08 23:35:30  curt
+ * Tweaks to Gnu automake/autoconf system.
+ *
  * Revision 1.11  1998/02/07 15:29:39  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>
  *
  * Revision 1.10  1998/01/27 00:47:53  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.9  1998/01/19 19:27:06  curt

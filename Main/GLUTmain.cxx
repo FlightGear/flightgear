@@ -693,6 +693,9 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.6  1998/04/25 22:06:30  curt
+// Edited cvs log messages in source files ... bad bad bad!
+//
 // Revision 1.5  1998/04/25 20:24:01  curt
 // Cleaned up initialization sequence to eliminate interdependencies
 // between sun position, lighting, and view position.  This creates a
@@ -778,7 +781,7 @@ extern "C" {
 // Minor tweaks.
 //
 // Revision 1.52  1998/01/27 00:47:56  curt
-// Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
 // system and commandline/config file processing code.
 //
 // Revision 1.51  1998/01/26 15:57:05  curt

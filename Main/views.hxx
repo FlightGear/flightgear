@@ -98,11 +98,14 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l);
 
 
 /* $Log$
-/* Revision 1.2  1998/04/24 00:49:22  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Trying out some different option parsing code.
-/* Some code reorganization.
+/* Revision 1.3  1998/04/25 22:06:31  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.2  1998/04/24 00:49:22  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Trying out some different option parsing code.
+ * Some code reorganization.
+ *
  * Revision 1.1  1998/04/22 13:25:46  curt
  * C++ - ifing the code.
  * Starting a bit of reorganization of lighting code.
@@ -118,7 +121,7 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l);
  * Added a view record field for absolute x, y, z position.
  *
  * Revision 1.8  1998/01/27 00:47:58  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.7  1998/01/22 02:59:38  curt

@@ -346,6 +346,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/04/25 22:06:34  curt
+// Edited cvs log messages in source files ... bad bad bad!
+//
 // Revision 1.3  1998/04/25 20:24:03  curt
 // Cleaned up initialization sequence to eliminate interdependencies
 // between sun position, lighting, and view position.  This creates a
@@ -373,7 +376,7 @@ void fgUpdateSunPos( void ) {
 // Minor tweaks.
 //
 // Revision 1.24  1998/01/27 00:48:07  curt
-// Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
 // system and commandline/config file processing code.
 //
 // Revision 1.23  1998/01/19 19:27:21  curt

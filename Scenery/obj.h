@@ -59,11 +59,14 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius);
 
 
 /* $Log$
-/* Revision 1.10  1998/04/24 00:51:07  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Tweaked the scenery file extentions to be "file.obj" (uncompressed)
-/* or "file.obz" (compressed.)
+/* Revision 1.11  1998/04/25 22:06:31  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.10  1998/04/24 00:51:07  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+ * or "file.obz" (compressed.)
+ *
  * Revision 1.9  1998/04/22 13:22:45  curt
  * C++ - ifing the code a bit.
  *
@@ -77,7 +80,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius);
  * Added MetroWorks patches from Carmen Volpe.
  *
  * Revision 1.5  1998/01/27 00:48:03  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.4  1998/01/22 02:59:41  curt

@@ -76,9 +76,12 @@ void fgSceneryRender( void );
 
 
 /* $Log$
-/* Revision 1.20  1998/04/22 13:22:45  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.21  1998/04/25 22:06:31  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.20  1998/04/22 13:22:45  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.19  1998/04/21 17:02:43  curt
  * Prepairing for C++ integration.
  *
@@ -89,7 +92,7 @@ void fgSceneryRender( void );
  * Thursday's tweaks.
  *
  * Revision 1.16  1998/01/27 00:48:03  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.15  1998/01/22 02:59:41  curt

@@ -92,9 +92,12 @@ void fgThrottleSet(int engine, double pos);
 
 
 /* $Log$
-/* Revision 1.14  1998/04/22 13:26:19  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.15  1998/04/25 22:06:27  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.14  1998/04/22 13:26:19  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.13  1998/04/21 17:02:35  curt
  * Prepairing for C++ integration.
  *
@@ -106,7 +109,7 @@ void fgThrottleSet(int engine, double pos);
  * <chotchkiss@namg.us.anritsu.com>
  *
  * Revision 1.10  1998/01/27 00:47:52  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.9  1998/01/22 02:59:31  curt

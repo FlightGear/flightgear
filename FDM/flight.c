@@ -71,10 +71,13 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
 
 
 /* $Log$
-/* Revision 1.12  1998/04/21 16:59:33  curt
-/* Integrated autopilot.
-/* Prepairing for C++ integration.
+/* Revision 1.13  1998/04/25 22:06:28  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.12  1998/04/21 16:59:33  curt
+ * Integrated autopilot.
+ * Prepairing for C++ integration.
+ *
  * Revision 1.11  1998/04/18 04:14:04  curt
  * Moved fg_debug.c to it's own library.
  *
@@ -83,7 +86,7 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
  * <chotchkiss@namg.us.anritsu.com>
  *
  * Revision 1.9  1998/01/27 00:47:53  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.8  1998/01/19 19:27:03  curt

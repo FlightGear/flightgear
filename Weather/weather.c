@@ -71,11 +71,14 @@ void fgWeatherUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.14  1998/02/09 15:07:54  curt
-/* Minor tweaks.
+/* Revision 1.15  1998/04/25 22:06:34  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.14  1998/02/09 15:07:54  curt
+ * Minor tweaks.
+ *
  * Revision 1.13  1998/01/27 00:48:08  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.12  1998/01/19 19:27:22  curt

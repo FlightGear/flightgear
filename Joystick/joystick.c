@@ -256,9 +256,12 @@ int fgJoystickRead( double *joy_x, double *joy_y, int *joy_b1, int *joy_b2 )
 
 
 /* $Log$
-/* Revision 1.6  1998/04/18 04:14:05  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.7  1998/04/25 22:06:29  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.6  1998/04/18 04:14:05  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.5  1998/02/12 21:59:44  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>
@@ -270,7 +273,7 @@ int fgJoystickRead( double *joy_x, double *joy_y, int *joy_b1, int *joy_b2 )
  * by Michele America.
  *
  * Revision 1.3  1998/01/27 00:47:54  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.2  1997/12/30 20:47:40  curt

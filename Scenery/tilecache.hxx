@@ -88,11 +88,14 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 
 /* $Log$
-/* Revision 1.2  1998/04/24 00:51:08  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Tweaked the scenery file extentions to be "file.obj" (uncompressed)
-/* or "file.obz" (compressed.)
+/* Revision 1.3  1998/04/25 22:06:32  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.2  1998/04/24 00:51:08  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+ * or "file.obz" (compressed.)
+ *
  * Revision 1.1  1998/04/22 13:22:47  curt
  * C++ - ifing the code a bit.
  *
@@ -123,7 +126,7 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
  * First pass at tile cache, dynamic tile loading and tile unloading now works.
  *
  * Revision 1.2  1998/01/27 00:48:04  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.1  1998/01/24 00:03:29  curt

@@ -86,6 +86,9 @@ exec("$savepath/$savefile @ARGV");
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/04/25 22:06:31  curt
+# Edited cvs log messages in source files ... bad bad bad!
+#
 # Revision 1.1  1998/04/09 01:45:31  curt
 # Moved to Main/ and incorperated with automake
 #
@@ -96,7 +99,7 @@ exec("$savepath/$savefile @ARGV");
 # Minor tweaks.
 #
 # Revision 1.2  1998/01/27 00:47:43  curt
-# Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+# Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
 # system and commandline/config file processing code.
 #
 # Revision 1.1  1997/10/28 18:47:27  curt

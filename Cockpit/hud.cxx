@@ -1605,9 +1605,12 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
 }
 
 /* $Log$
-/* Revision 1.1  1998/04/24 00:45:57  curt
-/* C++-ifing the code a bit.
+/* Revision 1.2  1998/04/25 22:06:27  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.1  1998/04/24 00:45:57  curt
+ * C++-ifing the code a bit.
+ *
  * Revision 1.22  1998/04/18 04:14:02  curt
  * Moved fg_debug.c to it's own library.
  *
@@ -1656,7 +1659,7 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
  * Added MetroWorks patches from Carmen Volpe.
  *
  * Revision 1.8  1998/01/27 00:47:51  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.7  1998/01/19 18:40:20  curt

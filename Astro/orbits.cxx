@@ -170,10 +170,13 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.2  1998/04/24 00:45:01  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Fixed a bug when generating sky colors.
+/* Revision 1.3  1998/04/25 22:06:25  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.2  1998/04/24 00:45:01  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Fixed a bug when generating sky colors.
+ *
  * Revision 1.1  1998/04/22 13:21:29  curt
  * C++ - ifing the code a bit.
  *
@@ -202,7 +205,7 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
  * To version 0.29
  *
  * Revision 1.4  1998/01/27 00:47:47  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.3  1998/01/22 02:59:27  curt
