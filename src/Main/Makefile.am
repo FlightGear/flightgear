@@ -32,6 +32,7 @@ bin_PROGRAMS = fgfs
 bin_SCRIPTS = runfgfs runfgfs.bat
 
 fgfs_SOURCES = \
+	bfi.cxx bfi.hxx \
 	fg_init.cxx fg_init.hxx \
 	fg_io.cxx fg_io.hxx \
 	keyboard.cxx keyboard.hxx \

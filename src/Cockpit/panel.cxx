@@ -35,6 +35,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 #include <Main/options.hxx>
+#include <Main/bfi.hxx>
 #include <Objects/texload.h>
 #include <Autopilot/autopilot.hxx>
 #include <Time/fg_time.hxx>
@@ -60,120 +61,6 @@ extern fgAPDataPtr APDataGlobal;
 // or BFI (Big Friendly Interface).
 ////////////////////////////////////////////////////////////////////////
 
-/**
- * Return the indicated airspeed in knots.
- */
-static double
-panelGetSpeed ()
-{
-  return get_speed();
-}
-
-/**
- * Return the roll in degrees.
- */
-static double
-panelGetRoll ()
-{
-  return get_roll() * RAD_TO_DEG;
-}
-
-/**
- * Return the pitch in degrees.
- */
-static double
-panelGetPitch ()
-{
-  return get_pitch() * RAD_TO_DEG;
-}
-
-/**
- * Return the altitude in feet.
- */
-static double
-panelGetAltitude ()
-{
-  return get_altitude();
-}
-
-/**
- * Return the sideslip (units unknown).
- */
-static double
-panelGetSideSlip ()
-{
-  return get_sideslip();
-}
-
-/**
- * Return the heading in degrees.
- */
-static double
-panelGetHeading ()
-{
-  return get_heading();
-}
-
-/**
- * Return the current autopilot heading in degrees.
- */
-static double
-panelGetAPHeading ()
-{
-  return fgAPget_TargetHeading();
-}
-
-/**
- * Return the climb rate in feet/minute.
- */
-static double
-panelGetVerticalVelocity ()
-{
-  return get_climb_rate();
-}
-
-/**
- * Return the throttle setting (0.0 - 1.0).
- */
-static double
-panelGetThrottle ()
-{
-  return get_throttleval();
-}
-
-/**
- * Return the flaps setting (0.0 - 1.0).
- */
-static double
-panelGetFlaps ()
-{
-  return controls.get_flaps();
-}
-
-static double
-panelGetAileron ()
-{
-  return controls.get_aileron();
-}
-
-static double
-panelGetRudder ()
-{
-  return controls.get_rudder();
-}
-
-static double
-panelGetElevator ()
-{
-  return controls.get_elevator();
-}
-
-static double
-panelGetElevatorTrim ()
-{
-  return controls.get_elevator_trim();
-}
-
 static char * panelGetTime (char * buf)
 {
   struct tm * t = FGTime::cur_time_params->getGmt();
@@ -192,23 +79,29 @@ static char * panelGetTime (char * buf)
 // they're hard-coded.
 ////////////////////////////////////////////////////////////////////////
 
+static ssgTexture *
+createTexture (const char * relativePath)
+{
+  return FGPanel::OurPanel->createTexture(relativePath);
+}
+
 
 /**
  * Construct an airspeed indicator for a single-engine prop.
  */
 static FGPanelInstrument *
-makeAirspeedIndicator (int x, int y)
+createAirspeedIndicator (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
 				// Layer 0: gauge background.
-  inst->addLayer(0, "Textures/Panel/airspeed.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/airspeed.rgb"));
 
 				// Layer 1: needle.
 				// Rotates with airspeed.
-  inst->addLayer(1, "Textures/Panel/long-needle.rgb");
+  inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  panelGetSpeed,
+			  FGBFI::getAirspeed,
 			  30.0, 220.0, 36.0 / 20.0, -54.0);
   return inst;
 }
@@ -218,37 +111,37 @@ makeAirspeedIndicator (int x, int y)
  * Construct an artificial horizon.
  */
 static FGPanelInstrument *
-makeHorizon (int x, int y)
+createHorizon (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
 				// Layer 0: coloured background
 				// moves with roll only
-  inst->addLayer(0, "Textures/Panel/horizon-bg.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/horizon-bg.rgb"));
   inst->addTransformation(0, FGInstrumentLayer::ROTATION,
-			  panelGetRoll,
+			  FGBFI::getRoll,
 			  -360.0, 360.0, -1.0, 0.0);
 
 				// Layer 1: floating horizon
 				// moves with roll and pitch
-  inst->addLayer(1, "Textures/Panel/horizon-float.rgb");
+  inst->addLayer(1, createTexture("Textures/Panel/horizon-float.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  panelGetRoll,
+			  FGBFI::getRoll,
 			  -360.0, 360.0, -1.0, 0.0);
   inst->addTransformation(1, FGInstrumentLayer::YSHIFT,
-			  panelGetPitch,
+			  FGBFI::getPitch,
 			  -20.0, 20.0, -(1.5 / 160.0) * SIX_W, 0.0);
 
 				// Layer 2: rim
 				// moves with roll only
-  inst->addLayer(2, "Textures/Panel/horizon-rim.rgb");
+  inst->addLayer(2, createTexture("Textures/Panel/horizon-rim.rgb"));
   inst->addTransformation(2, FGInstrumentLayer::ROTATION,
-			  panelGetRoll,
+			  FGBFI::getRoll,
 			  -360.0, 360.0, -1.0, 0.0);
 
 				// Layer 3: glass front of gauge
 				// fixed, with markings
-  inst->addLayer(3, "Textures/Panel/horizon-fg.rgb");
+  inst->addLayer(3, createTexture("Textures/Panel/horizon-fg.rgb"));
 
   return inst;
 }
@@ -258,32 +151,32 @@ makeHorizon (int x, int y)
  * Construct an altimeter.
  */
 static FGPanelInstrument *
-makeAltimeter (int x, int y)
+createAltimeter (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
 				// Layer 0: gauge background
-  inst->addLayer(0, "Textures/Panel/altimeter.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/altimeter.rgb"));
 
 				// Layer 1: hundreds needle (long)
 				// moves with altitude
-  inst->addLayer(1, "Textures/Panel/long-needle.rgb");
+  inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  panelGetAltitude,
+			  FGBFI::getAltitude,
 			  0.0, 100000.0, 360.0 / 1000.0, 0.0);
 
 				// Layer 2: thousands needle (short)
 				// moves with altitude
-  inst->addLayer(2, "Textures/Panel/short-needle.rgb");
+  inst->addLayer(2, createTexture("Textures/Panel/short-needle.rgb"));
   inst->addTransformation(2, FGInstrumentLayer::ROTATION,
-			  panelGetAltitude,
+			  FGBFI::getAltitude,
 			  0.0, 100000.0, 360.0 / 10000.0, 0.0);
 
 				// Layer 3: ten thousands bug (outside)
 				// moves with altitude
-  inst->addLayer(3, "Textures/Panel/bug.rgb");
+  inst->addLayer(3, createTexture("Textures/Panel/bug.rgb"));
   inst->addTransformation(3, FGInstrumentLayer::ROTATION,
-			  panelGetAltitude,
+			  FGBFI::getAltitude,
 			  0.0, 100000.0, 360.0 / 100000.0, 0.0);
 
   return inst;
@@ -294,25 +187,25 @@ makeAltimeter (int x, int y)
  * Construct a turn coordinator.
  */
 static FGPanelInstrument *
-makeTurnCoordinator (int x, int y)
+createTurnCoordinator (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
 				// Layer 0: background
-  inst->addLayer(0, "Textures/Panel/turn-bg.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/turn-bg.rgb"));
 
 				// Layer 1: little plane
 				// moves with roll
-  inst->addLayer(1, "Textures/Panel/turn.rgb");
+  inst->addLayer(1, createTexture("Textures/Panel/turn.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  panelGetRoll,
+			  FGBFI::getRoll,
 			  -30.0, 30.0, 1.0, 0.0);
 
 				// Layer 2: little ball
 				// moves with slip/skid
-  inst->addLayer(2, "Textures/Panel/ball.rgb");
+  inst->addLayer(2, createTexture("Textures/Panel/ball.rgb"));
   inst->addTransformation(2, FGInstrumentLayer::ROTATION,
-			  panelGetSideSlip,
+			  FGBFI::getSideSlip,
 			  -0.1, 0.1, 450.0, 0.0);
 
   return inst;
@@ -323,29 +216,29 @@ makeTurnCoordinator (int x, int y)
  * Construct a gyro compass.
  */
 static FGPanelInstrument *
-makeGyroCompass (int x, int y)
+createGyroCompass (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
 				// Layer 0: compass background
 				// rotates with heading
-  inst->addLayer(0, "Textures/Panel/gyro-bg.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
   inst->addTransformation(0, FGInstrumentLayer::ROTATION,
-			  panelGetHeading,
+			  FGBFI::getHeading,
 			  -360.0, 360.0, -1.0, 0.0);
 
 				// Layer 1: heading bug
 				// rotates with heading and AP heading
-  inst->addLayer(1, "Textures/Panel/bug.rgb");
+  inst->addLayer(1, createTexture("Textures/Panel/bug.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  panelGetHeading,
+			  FGBFI::getHeading,
 			  -360.0, 360.0, -1.0, 0.0);
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  panelGetAPHeading,
+			  FGBFI::getAPHeading,
 			  -360.0, 360.0, 1.0, 0.0);
 
 				// Layer 2: fixed center
-  inst->addLayer(2, "Textures/Panel/gyro-fg.rgb");
+  inst->addLayer(2, createTexture("Textures/Panel/gyro-fg.rgb"));
 
   return inst;
 }
@@ -355,18 +248,18 @@ makeGyroCompass (int x, int y)
  * Construct a vertical velocity indicator.
  */
 static FGPanelInstrument *
-makeVerticalVelocity (int x, int y)
+createVerticalVelocity (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
 				// Layer 0: gauge background
-  inst->addLayer(0, "Textures/Panel/vertical.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/vertical.rgb"));
 
 				// Layer 1: needle
 				// moves with vertical velocity
-  inst->addLayer(1, "Textures/Panel/long-needle.rgb");
+  inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  panelGetVerticalVelocity,
+			  FGBFI::getVerticalSpeed,
 			  -2000.0, 2000.0, 42.0/500.0, 270.0);
 
   return inst;
@@ -377,18 +270,18 @@ makeVerticalVelocity (int x, int y)
  * Construct an RPM gauge.
  */
 static FGPanelInstrument *
-makeRPMGauge (int x, int y)
+createRPMGauge (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SMALL_W, SMALL_W);
 
 				// Layer 0: gauge background
-  inst->addLayer(0, "Textures/Panel/rpm.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/rpm.rgb"));
 
 				// Layer 1: long needle
 				// FIXME: moves with throttle (for now)
-  inst->addLayer(1, "Textures/Panel/long-needle.rgb");
+  inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  panelGetThrottle,
+			  FGBFI::getThrottle,
 			  0.0, 100.0, 300.0, -150.0);
 
   return inst;
@@ -399,32 +292,32 @@ makeRPMGauge (int x, int y)
  * Construct a flap position indicator.
  */
 static FGPanelInstrument *
-makeFlapIndicator (int x, int y)
+createFlapIndicator (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SMALL_W, SMALL_W);
 
 				// Layer 0: gauge background
-  inst->addLayer(0, "Textures/Panel/flaps.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/flaps.rgb"));
 
 				// Layer 1: long needle
 				// shifted over, rotates with flap position
-  inst->addLayer(1, "Textures/Panel/long-needle.rgb");
+  inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::XSHIFT,
 			  -(SMALL_W / 4) + (SMALL_W / 16));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  panelGetFlaps,
+			  FGBFI::getFlaps,
 			  0.0, 1.0, 120.0, 30.0);
 
   return inst;
 }
 
 static FGPanelInstrument *
-makeChronometer (int x, int y)
+createChronometer (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SMALL_W, SMALL_W);
 
 				// Layer 0: gauge background
-  inst->addLayer(0, "Textures/Panel/clock.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/clock.rgb"));
 
 				// Layer 1: text
 				// displays current GMT
@@ -445,42 +338,42 @@ makeChronometer (int x, int y)
  * Construct control-position indicators.
  */
 static FGPanelInstrument *
-makeControls (int x, int y)
+createControls (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SMALL_W, SMALL_W);
 
 				// Layer 0: gauge background
-  inst->addLayer(0, "Textures/Panel/controls.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/controls.rgb"));
 
 				// Layer 1: bug
 				// moves left-right with aileron
-  inst->addLayer(1, "Textures/Panel/bug.rgb");
-  inst->addTransformation(1, FGInstrumentLayer::XSHIFT, panelGetAileron,
+  inst->addLayer(1, createTexture("Textures/Panel/bug.rgb"));
+  inst->addTransformation(1, FGInstrumentLayer::XSHIFT, FGBFI::getAileron,
 			  -1.0, 1.0, SMALL_W * .75 / 2.0, 0.0);
 
 				// Layer 2: bug
 				// moves left-right with rudder
-  inst->addLayer(2, "Textures/Panel/bug.rgb");
+  inst->addLayer(2, createTexture("Textures/Panel/bug.rgb"));
   inst->addTransformation(2, FGInstrumentLayer::ROTATION, 180.0);
-  inst->addTransformation(2, FGInstrumentLayer::XSHIFT, panelGetRudder,
+  inst->addTransformation(2, FGInstrumentLayer::XSHIFT, FGBFI::getRudder,
 			  -1.0, 1.0, -SMALL_W * .75 / 2.0, 0.0);
 
 				// Layer 3: bug
 				// moves up-down with elevator trim
-  inst->addLayer(3, "Textures/Panel/bug.rgb");
+  inst->addLayer(3, createTexture("Textures/Panel/bug.rgb"));
   inst->addTransformation(3, FGInstrumentLayer::ROTATION, 270.0);
   inst->addTransformation(3, FGInstrumentLayer::YSHIFT,
 			  -SMALL_W * (3.0 / 8.0));
-  inst->addTransformation(3, FGInstrumentLayer::XSHIFT, panelGetElevatorTrim,
+  inst->addTransformation(3, FGInstrumentLayer::XSHIFT, FGBFI::getElevatorTrim,
 			  -1.0, 1.0, SMALL_W * .75 / 2.0, 0.0);
 
 				// Layer 4: bug
 				// moves up-down with elevator
-  inst->addLayer(4, "Textures/Panel/bug.rgb");
+  inst->addLayer(4, createTexture("Textures/Panel/bug.rgb"));
   inst->addTransformation(4, FGInstrumentLayer::ROTATION, 90.0);
   inst->addTransformation(4, FGInstrumentLayer::YSHIFT,
 			  -SMALL_W * (3.0 / 8.0));
-  inst->addTransformation(4, FGInstrumentLayer::XSHIFT, panelGetElevator,
+  inst->addTransformation(4, FGInstrumentLayer::XSHIFT, FGBFI::getElevator,
 			  -1.0, 1.0, -SMALL_W * .75 / 2.0, 0.0);
 
   return inst;
@@ -491,12 +384,12 @@ makeControls (int x, int y)
  * Construct a NAV1 gauge (dummy for now).
  */
 static FGPanelInstrument *
-makeNAV1 (int x, int y)
+createNAV1 (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
 				// Layer 0: background
-  inst->addLayer(0, "Textures/Panel/gyro-bg.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
 
   return inst;
 }
@@ -506,12 +399,12 @@ makeNAV1 (int x, int y)
  * Construct a NAV2 gauge (dummy for now).
  */
 static FGPanelInstrument *
-makeNAV2 (int x, int y)
+createNAV2 (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
 				// Layer 0: background
-  inst->addLayer(0, "Textures/Panel/gyro-bg.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
 
   return inst;
 }
@@ -521,12 +414,12 @@ makeNAV2 (int x, int y)
  * Construct an ADF gauge (dummy for now).
  */
 static FGPanelInstrument *
-makeADF (int x, int y)
+createADF (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
 				// Layer 0: background
-  inst->addLayer(0, "Textures/Panel/gyro-bg.rgb");
+  inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
 
   return inst;
 }
@@ -551,46 +444,44 @@ FGPanel::FGPanel ()
   int x = SIX_X;
   int y = SIX_Y;
 
-  FGPath tpath(current_options.get_fg_root());
-  tpath.append("Textures/Panel/panel-bg.rgb");
-  _bg = new ssgTexture((char *)tpath.c_str(), false, false);
+  _bg = createTexture("Textures/Panel/panel-bg.rgb");
 
 				// Chronometer alone at side
   x = SIX_X - SIX_SPACING - 8;
-  _instruments.push_back(makeChronometer(x, y));
+  _instruments.push_back(createChronometer(x, y));
 
 				// Top row
   x = SIX_X;
-  _instruments.push_back(makeAirspeedIndicator(x, y));
+  _instruments.push_back(createAirspeedIndicator(x, y));
   x += SIX_SPACING;
-  _instruments.push_back(makeHorizon(x, y));
+  _instruments.push_back(createHorizon(x, y));
   x += SIX_SPACING;
-  _instruments.push_back(makeAltimeter(x, y));
+  _instruments.push_back(createAltimeter(x, y));
   x += SIX_SPACING + 20;
-  _instruments.push_back(makeNAV1(x, y));
+  _instruments.push_back(createNAV1(x, y));
 
 				// Middle row
   x = SIX_X;
   y -= SIX_SPACING;
-  _instruments.push_back(makeTurnCoordinator(x, y));
+  _instruments.push_back(createTurnCoordinator(x, y));
   x += SIX_SPACING;
-  _instruments.push_back(makeGyroCompass(x, y));
+  _instruments.push_back(createGyroCompass(x, y));
   x += SIX_SPACING;
-  _instruments.push_back(makeVerticalVelocity(x, y));
+  _instruments.push_back(createVerticalVelocity(x, y));
   x += SIX_SPACING + 20;
-  _instruments.push_back(makeNAV2(x, y));
+  _instruments.push_back(createNAV2(x, y));
 
 				// Bottom row
   x = SIX_X;
   y -= SIX_SPACING + 10;
-  _instruments.push_back(makeControls(x, y));
+  _instruments.push_back(createControls(x, y));
   x += SIX_SPACING;
-  _instruments.push_back(makeFlapIndicator(x, y));
+  _instruments.push_back(createFlapIndicator(x, y));
   x += SIX_SPACING;
-  _instruments.push_back(makeRPMGauge(x, y));
+  _instruments.push_back(createRPMGauge(x, y));
   x += SIX_SPACING + 20;
   y += 10;
-  _instruments.push_back(makeADF(x, y));
+  _instruments.push_back(createADF(x, y));
 }
 
 FGPanel::~FGPanel ()
@@ -666,6 +557,24 @@ FGPanel::Update () const
   glPopMatrix();
   ssgForceBasicState();
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+}
+
+ssgTexture *
+FGPanel::createTexture (const char * relativePath)
+{
+  ssgTexture *texture;
+
+  texture = _textureMap[relativePath];
+  if (texture == 0) {
+    FGPath tpath(current_options.get_fg_root());
+    tpath.append(relativePath);
+    texture = new ssgTexture((char *)tpath.c_str(), false, false);
+    _textureMap[relativePath] = texture;
+    cerr << "Created texture " << relativePath
+	 << " handle=" << texture->getHandle() << endl;
+  }
+
+  return texture;
 }
 
 
@@ -751,9 +660,9 @@ FGLayeredInstrument::addLayer (FGInstrumentLayer *layer)
 }
 
 void
-FGLayeredInstrument::addLayer (int layer, const char *textureName)
+FGLayeredInstrument::addLayer (int layer, ssgTexture * texture)
 {
-  addLayer(new FGTexturedInstrumentLayer(textureName, _w, _h, layer));
+  addLayer(new FGTexturedInstrumentLayer(texture, _w, _h, layer));
 }
 
 void
@@ -781,8 +690,8 @@ FGInstrumentLayer::FGInstrumentLayer (int w, int h, int z)
 
 FGInstrumentLayer::~FGInstrumentLayer ()
 {
-  transformation_list::iterator it;
-  transformation_list::iterator end;
+  transformation_list::iterator it = _transformations.begin();
+  transformation_list::iterator end = _transformations.end();
   while (it != end) {
     delete *it;
     it++;
@@ -843,12 +752,12 @@ FGInstrumentLayer::addTransformation (transform_type type,
 // Implementation of FGTexturedInstrumentLayer.
 ////////////////////////////////////////////////////////////////////////
 
-FGTexturedInstrumentLayer::FGTexturedInstrumentLayer (const char *tname,
-						      int w, int h, int z)
-  : FGInstrumentLayer(w, h, z)
-{
-  setTexture(tname);
-}
+// FGTexturedInstrumentLayer::FGTexturedInstrumentLayer (const char *tname,
+// 						      int w, int h, int z)
+//   : FGInstrumentLayer(w, h, z)
+// {
+//   setTexture(tname);
+// }
 
 FGTexturedInstrumentLayer::FGTexturedInstrumentLayer (ssgTexture * texture,
 						      int w, int h, int z)
@@ -881,15 +790,14 @@ FGTexturedInstrumentLayer::draw () const
   glPopMatrix();
 }
 
-void
-FGTexturedInstrumentLayer::setTexture (const char *textureName)
-{
-  FGPath tpath(current_options.get_fg_root());
-  tpath.append(textureName);
-  ssgTexture * texture = new ssgTexture((char *)tpath.c_str(), false, false);
-  cerr << "Loaded texture " << textureName << endl;
-  setTexture(texture);
-}
+// void
+// FGTexturedInstrumentLayer::setTexture (const char *textureName)
+// {
+//   FGPath tpath(current_options.get_fg_root());
+//   tpath.append(textureName);
+//   ssgTexture * texture = new ssgTexture((char *)tpath.c_str(), false, false);
+//   setTexture(texture);
+// }
 
 
 

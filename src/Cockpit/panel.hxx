@@ -38,12 +38,13 @@
 #include <plib/ssg.h>
 
 #include <vector>
+#include <hash_map>
 #include <plib/fnt.h>
 
 FG_USING_STD(vector);
+FG_USING_STD(hash_map);
 
 class FGPanelInstrument;
-
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -54,10 +55,10 @@ class FGPanel
 {
 public:
 
-  typedef vector<FGPanelInstrument *> instrument_list_type;
-
   FGPanel ();
   virtual ~FGPanel ();
+
+  virtual ssgTexture * createTexture (const char * relativePath);
 
 				// Legacy interface from old panel.
   static FGPanel * OurPanel;
@@ -66,11 +67,18 @@ public:
   virtual void Update () const;
 
 private:
+
+  typedef vector<FGPanelInstrument *> instrument_list_type;
+
   int _x, _y, _w, _h;
   int _panel_h;
 
   ssgTexture * _bg;
 
+				// Internalization table.
+  hash_map<const char *,ssgTexture *> _textureMap;
+
+				// List of instruments in panel.
   instrument_list_type _instruments;
 };
 
@@ -173,7 +181,7 @@ public:
   virtual void draw () const;
 
   virtual void addLayer (FGInstrumentLayer *layer);
-  virtual void addLayer (int i, const char *textureName);
+  virtual void addLayer (int i, ssgTexture * texture);
   virtual void addTransformation (int layer,
 				  FGInstrumentLayer::transform_type type,
 				  FGInstrumentLayer::transform_func func,
@@ -205,15 +213,12 @@ protected:
 class FGTexturedInstrumentLayer : public FGInstrumentLayer
 {
 public:
-  FGTexturedInstrumentLayer (const char * textureName,
-			     int w, int h, int z);
   FGTexturedInstrumentLayer (ssgTexture * texture,
 			     int w, int h, int z);
   virtual ~FGTexturedInstrumentLayer ();
 
   virtual void draw () const;
 
-  virtual void setTexture (const char *textureName);
   virtual void setTexture (ssgTexture * texture) { _texture = texture; }
 
 private:

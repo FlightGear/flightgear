@@ -22,10 +22,6 @@
 
 
 /*
-CHANGES:
-- time is now working
-- autopilot is working (even with GPS)
-
 TODO:
 - use a separate options object so that we can roll back on error
 - use proper FGFS logging
@@ -41,27 +37,9 @@ TODO:
 #include <simgear/constants.h>
 #include <simgear/math/fg_types.hxx>
 
-#include <Aircraft/aircraft.hxx>
-#include <Controls/controls.hxx>
-#include <Autopilot/autopilot.hxx>
-#include <Time/fg_time.hxx>
-#ifndef FG_OLD_WEATHER
-#  include <WeatherCM/FGLocalWeatherDatabase.h>
-#else
-#  include <Weather/weather.hxx>
-#endif
-
-#include "options.hxx"
-#include "save.hxx"
-#include "fg_init.hxx"
+#include "bfi.hxx"
 
 FG_USING_NAMESPACE(std);
-
-				// FIXME: these are not part of the
-				// published interface!!!
-extern fgAPDataPtr APDataGlobal;
-extern void fgAPAltitudeSet (double new_altitude);
-extern void fgAPHeadingSet (double new_heading);
 
 #define SAVE(name, value) { output << name << ": " << value << endl; }
 
@@ -71,80 +49,72 @@ extern void fgAPHeadingSet (double new_heading);
 bool
 fgSaveFlight (ostream &output)
 {
-  char tb[100];
-  const FGInterface * f = current_aircraft.fdm_state;
-  struct tm *t = FGTime::cur_time_params->getGmt();
-
   output << "#!fgfs" << endl;
 
   //
   // Simulation
   //
-  SAVE("flight-model", current_options.get_flight_model());
-  SAVE("time", mktime(t));
-  SAVE("hud", current_options.get_hud_status());
-  SAVE("panel", current_options.get_panel_status());
+  SAVE("flight-model", FGBFI::getFlightModel());
+  SAVE("time", FGBFI::getTimeGMT());
+  SAVE("hud", FGBFI::getHUDVisible());
+  SAVE("panel", FGBFI::getPanelVisible());
 
   // 
   // Location
   //
-  SAVE("latitude", (f->get_Latitude() * RAD_TO_DEG));
-  SAVE("longitude", (f->get_Longitude() * RAD_TO_DEG));
-  SAVE("altitude", f->get_Altitude());
+  SAVE("latitude", FGBFI::getLatitude());
+  SAVE("longitude", FGBFI::getLongitude());
+  SAVE("altitude", FGBFI::getAltitude());
 
   //
   // Orientation
   //
-  SAVE("heading", (f->get_Psi() * RAD_TO_DEG));
-  SAVE("pitch", (f->get_Theta() * RAD_TO_DEG));
-  SAVE("roll", (f->get_Phi() * RAD_TO_DEG));
+  SAVE("heading", FGBFI::getHeading());
+  SAVE("pitch", FGBFI::getPitch());
+  SAVE("roll", FGBFI::getRoll());
 
   //
   // Velocities
   //
-  SAVE("speed-north", f->get_V_north());
-  SAVE("speed-east", f->get_V_east());
-  SAVE("speed-down", f->get_V_down());
+  SAVE("speed-north", FGBFI::getSpeedNorth());
+  SAVE("speed-east", FGBFI::getSpeedEast());
+  SAVE("speed-down", FGBFI::getSpeedDown());
 
   //
   // Primary controls
   //
-  SAVE("elevator", controls.get_elevator());
-  SAVE("aileron", controls.get_aileron());
-  SAVE("rudder", controls.get_rudder());
+  SAVE("elevator", FGBFI::getElevator());
+  SAVE("aileron", FGBFI::getAileron());
+  SAVE("rudder", FGBFI::getRudder());
 				// FIXME: save each throttle separately
-  SAVE("throttle", controls.get_throttle(0));
+  SAVE("throttle", FGBFI::getThrottle());
 
   //
   // Secondary controls
   //
-  SAVE("elevator-trim", controls.get_elevator_trim());
-  SAVE("flaps", controls.get_flaps());
+  SAVE("elevator-trim", FGBFI::getElevatorTrim());
+  SAVE("flaps", FGBFI::getFlaps());
 				// FIXME: save each brake separately
-  SAVE("brake", controls.get_brake(0));
+  SAVE("brake", FGBFI::getBrake());
 
   //
   // Navigation.
   //
-  if (current_options.get_airport_id().length() > 0) {
-    SAVE("target-airport", current_options.get_airport_id());
+  if (FGBFI::getTargetAirport().length() > 0) {
+    SAVE("target-airport", FGBFI::getTargetAirport());
   }
-  SAVE("autopilot-altitude-lock", fgAPAltitudeEnabled());
-  SAVE("autopilot-altitude", fgAPget_TargetAltitude() * METER_TO_FEET);
-  SAVE("autopilot-heading-lock", fgAPHeadingEnabled());
-  SAVE("autopilot-heading", fgAPget_TargetHeading());
-  SAVE("autopilot-gps-lock", fgAPWayPointEnabled());
-  SAVE("autopilot-gps-lat", fgAPget_TargetLatitude());
-  SAVE("autopilot-gps-lon", fgAPget_TargetLongitude());
+  SAVE("autopilot-altitude-lock", FGBFI::getAPAltitudeLock());
+  SAVE("autopilot-altitude", FGBFI::getAPAltitude());
+  SAVE("autopilot-heading-lock", FGBFI::getAPHeadingLock());
+  SAVE("autopilot-heading", FGBFI::getAPHeading());
+  SAVE("autopilot-gps-lock", FGBFI::getGPSLock());
+  SAVE("autopilot-gps-lat", FGBFI::getGPSTargetLatitude());
+  SAVE("autopilot-gps-lon", FGBFI::getGPSTargetLongitude());
 
   //
   // Environment.
   //
-#ifndef FG_OLD_WEATHER
-  SAVE("visibility", WeatherDatabase->getWeatherVisibility());
-#else
-  SAVE("visibility", current_weather.get_visibility());
-#endif
+  SAVE("visibility", FGBFI::getVisibility());
 
   return true;
 }
@@ -156,31 +126,10 @@ fgSaveFlight (ostream &output)
 bool
 fgLoadFlight (istream &input)
 {
-  FGInterface * f = current_aircraft.fdm_state;
+//   FGInterface * f = current_aircraft.fdm_state;
   string text;
   double n;
   long int i;
-
-  double elevator = controls.get_elevator();
-  double aileron = controls.get_aileron();
-  double rudder = controls.get_rudder();
-  double throttle = controls.get_throttle(0);
-  double elevator_trim = controls.get_elevator_trim();
-  double flaps = controls.get_flaps();
-  double brake =  controls.get_brake(FGControls::ALL_WHEELS);
-
-  bool ap_heading_lock = false;
-  double ap_heading = 0;
-  bool ap_altitude_lock = false;
-  double ap_altitude = 0;
-  bool ap_gps_lock = false;
-  double ap_gps_lat = 0;
-  double ap_gps_lon = 0;
-
-  string airport_id = current_options.get_airport_id();
-  current_options.set_airport_id("");
-  current_options.set_time_offset(0);
-  current_options.set_time_offset_type(fgOPTIONS::FG_TIME_GMT_OFFSET);
 
   if (!input.good() || input.eof()) {
     cout << "Stream is no good!\n";
@@ -189,7 +138,7 @@ fgLoadFlight (istream &input)
 
   input >> text;
   if (text != "#!fgfs") {
-    printf("Bad save file format!\n");
+    cerr << "Bad save file format!\n";
     return false;
   }
 
@@ -204,30 +153,25 @@ fgLoadFlight (istream &input)
     if (text == "flight-model:") {
       input >> i;
       cout << "flight model is " << i << endl;
-      current_options.set_flight_model(i);
+      FGBFI::setFlightModel(i);
     }
 
     else if (text == "time:") {
       input >> i;
       cout << "saved time is " << i << endl;
-      current_options.set_time_offset(i);
-      current_options.set_time_offset_type(fgOPTIONS::FG_TIME_GMT_ABSOLUTE);
-      FGTime::cur_time_params->init(*cur_fdm_state);
-      FGTime::cur_time_params->update(*cur_fdm_state);
+      FGBFI::setTimeGMT(i);
     }
 
     else if (text == "hud:") {
       input >> i;
       cout << "hud status is " << i << endl;
-      current_options.set_hud_status(i);
+      FGBFI::setHUDVisible(i);
     }
 
     else if (text == "panel:") {
       input >> i;
       cout << "panel status is " << i << endl;
-      if (current_options.get_panel_status() != i) {
-	current_options.toggle_panel();
-      }
+      FGBFI::setPanelVisible(i);
     }
 
     //
@@ -237,15 +181,19 @@ fgLoadFlight (istream &input)
     else if (text == "latitude:") {
       input >> n;
       cout << "latitude is " << n << endl;
-      current_options.set_lat(n);
-    } else if (text == "longitude:") {
+      FGBFI::setLatitude(n);
+    } 
+
+    else if (text == "longitude:") {
       input >> n;
       cout << "longitude is " << n << endl;
-      current_options.set_lon(n);
-    } else if (text == "altitude:") {
+      FGBFI::setLongitude(n);
+    } 
+
+    else if (text == "altitude:") {
       input >> n;
       cout << "altitude is " << n << endl;
-      current_options.set_altitude(n * FEET_TO_METER);
+      FGBFI::setAltitude(n);
     } 
 
     //
@@ -255,15 +203,19 @@ fgLoadFlight (istream &input)
     else if (text == "heading:") {
       input >> n;
       cout << "heading is " << n << endl;
-      current_options.set_heading(n);
-    } else if (text == "pitch:") {
+      FGBFI::setHeading(n);
+    } 
+
+    else if (text == "pitch:") {
       input >> n;
       cout << "pitch is " << n << endl;
-      current_options.set_pitch(n);
-    } else if (text == "roll:") {
+      FGBFI::setPitch(n);
+    } 
+
+    else if (text == "roll:") {
       input >> n;
       cout << "roll is " << n << endl;
-      current_options.set_roll(n);
+      FGBFI::setRoll(n);
     } 
 
     //
@@ -273,15 +225,19 @@ fgLoadFlight (istream &input)
     else if (text == "speed-north:") {
       input >> n;
       cout << "speed north is " << n << endl;
-      current_options.set_uBody(n);
-    } else if (text == "speed-east:") {
+      FGBFI::setSpeedNorth(n);
+    } 
+
+    else if (text == "speed-east:") {
       input >> n;
       cout << "speed east is " << n << endl;
-      current_options.set_vBody(n);
-    } else if (text == "speed-down:") {
+      FGBFI::setSpeedEast(n);
+    } 
+
+    else if (text == "speed-down:") {
       input >> n;
       cout << "speed down is " << n << endl;
-      current_options.set_wBody(n);
+      FGBFI::setSpeedDown(n);
     } 
 
     //
@@ -289,42 +245,49 @@ fgLoadFlight (istream &input)
     //
 
     else if (text == "elevator:") {
-      input >> elevator;
-      cout << "elevator is " << elevator << endl;
+      input >> n;
+      cout << "elevator is " << n << endl;
+      FGBFI::setElevator(n);
     }
 
     else if (text == "aileron:") {
-      input >> aileron;
-      cout << "aileron is " << aileron << endl;
+      input >> n;
+      cout << "aileron is " << n << endl;
+      FGBFI::setAileron(n);
     }
 
     else if (text == "rudder:") {
-      input >> rudder;
-      cout << "rudder is " << rudder << endl;
+      input >> n;
+      cout << "rudder is " << n << endl;
+      FGBFI::setRudder(n);
     }
 
 				// FIXME: assumes single engine
     else if (text == "throttle:") {
-      input >> throttle;
-      cout << "throttle is " << throttle << endl;
+      input >> n;
+      cout << "throttle is " << n << endl;
+      FGBFI::setThrottle(n);
     }
 
     //
     // Secondary controls
 
     else if (text == "elevator-trim:") {
-      input >> elevator_trim;
-      cout << "elevator trim is " << elevator_trim << endl;
+      input >> n;
+      cout << "elevator trim is " << n << endl;
+      FGBFI::setElevatorTrim(n);
     }
 
     else if (text == "flaps:") {
-      input >> flaps;
-      cout << "flaps are " << flaps << endl;
+      input >> n;
+      cout << "flaps are " << n << endl;
+      FGBFI::setFlaps(n);
     }
 
     else if (text == "brake:") {
-      input >> brake;
-      cout << "brake is " << brake << endl;
+      input >> n;
+      cout << "brake is " << n << endl;
+      FGBFI::setBrake(n);
     }
 
     //
@@ -332,41 +295,51 @@ fgLoadFlight (istream &input)
     //
 
     else if (text == "target-airport:") {
-      input >> airport_id;
-      cout << "target airport is " << airport_id << endl;
+      input >> text;
+      cout << "target airport is " << text << endl;
+      FGBFI::setTargetAirport(text);
     }
 
     else if (text == "autopilot-altitude-lock:") {
-      input >> ap_altitude_lock;
-      cout << "autopilot altitude lock is " << ap_altitude_lock << endl;
+      input >> i;
+      cout << "autopilot altitude lock is " << i << endl;
+      FGBFI::setAPAltitudeLock(i);
     }
 
     else if (text == "autopilot-altitude:") {
-      input >> ap_altitude;
-      cout << "autopilot altitude is " << ap_altitude << endl;
+      input >> n;
+      cout << "autopilot altitude is " << n << endl;
+      FGBFI::setAPAltitude(n);
     }
 
     else if (text == "autopilot-heading-lock:") {
-      input >> ap_heading_lock;
-      cout << "autopilot heading lock is " << ap_heading_lock << endl;
+      input >> i;
+      cout << "autopilot heading lock is " << i << endl;
+      FGBFI::setAPHeadingLock(i);
     }
 
     else if (text == "autopilot-heading:") {
-      input >> ap_heading;
-      cout << "autopilot heading is " << ap_heading << endl;
+      input >> n;
+      cout << "autopilot heading is " << n << endl;
+      FGBFI::setAPHeading(n);
     }
 
     else if (text == "autopilot-gps-lock:") {
-      input >> ap_gps_lock;
-      cout << "autopilot GPS lock is " << ap_gps_lock << endl;
+      input >> i;
+      cout << "autopilot GPS lock is " << i << endl;
+      FGBFI::setGPSLock(i);
     }
 
     else if (text == "autopilot-gps-lat:") {
-      input >> ap_gps_lat;
+      input >> n;
+      cout << "GPS target latitude is " << n << endl;
+      FGBFI::setGPSTargetLatitude(n);
     }
 
     else if (text == "autopilot-gps-lon:") {
-      input >> ap_gps_lon;
+      input >> n;
+      cout << "GPS target longitude is " << n << endl;
+      FGBFI::setGPSTargetLongitude(n);
     }
 
     //
@@ -376,12 +349,7 @@ fgLoadFlight (istream &input)
     else if (text == "visibility:") {
       input >> n;
       cout << "visibility is " << n << endl;
-      
-#ifndef FG_OLD_WEATHER
-      WeatherDatabase->setWeatherVisibility(n);
-#else
-      current_weather.set_visibility(n);
-#endif
+      FGBFI::setVisibility(n);
     }
 
     //
@@ -394,33 +362,7 @@ fgLoadFlight (istream &input)
     }
   }
 
-  fgReInitSubsystems();
-
-				// Set airport and controls after the
-				// re-init.
-  current_options.set_airport_id(airport_id);
-
-				// The controls have to be set after
-				// the reinit
-  controls.set_elevator(elevator);
-  controls.set_aileron(aileron);
-  controls.set_rudder(rudder);
-  controls.set_throttle(FGControls::ALL_ENGINES, throttle);
-  controls.set_elevator_trim(elevator_trim);
-  controls.set_flaps(flaps);
-  controls.set_brake(FGControls::ALL_WHEELS, brake);
-
-				// Ditto for the autopilot.
-				// FIXME: shouldn't have to use
-				// APDataGlobal.
-  APDataGlobal->heading_hold = ap_heading_lock;
-  APDataGlobal->altitude_hold = ap_altitude_lock;
-  fgAPHeadingSet(ap_heading);
-  fgAPAltitudeSet(ap_altitude);
-				// GPS overrides heading
-  APDataGlobal->waypoint_hold = ap_gps_lock;
-  APDataGlobal->TargetLatitude = ap_gps_lat;
-  APDataGlobal->TargetLongitude = ap_gps_lon;
+  FGBFI::update();
 
   return true;
 }
