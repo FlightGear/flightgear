@@ -28,8 +28,8 @@
 #include <string.h>
 
 #include <Debug/fg_debug.h>
-#include <Include/general.h>
 #include <Include/fg_zlib.h>
+#include <Main/options.hxx>
 
 #include "airports.hxx"
 
@@ -41,17 +41,17 @@ fgAIRPORTS::fgAIRPORTS( void ) {
 
 // load the data
 int fgAIRPORTS::load( char *file ) {
-    fgGENERAL *g;
+    fgOPTIONS *o;
     char path[256], fgpath[256], line[256];
     char id[5];
     double lon, lat, elev;
     fgFile f;
 
-    g = &general;
+    o = &current_options;
 
     // build the path name to the ambient lookup table
     path[0] = '\0';
-    strcat(path, g->root_dir);
+    strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
     strcat(path, "Airports");
     strcpy(fgpath, path);
@@ -111,6 +111,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/05/13 18:26:25  curt
+// Root path info moved to fgOPTIONS.
+//
 // Revision 1.3  1998/05/06 03:16:24  curt
 // Added an averaged global frame rate counter.
 // Added an option to control tile radius.

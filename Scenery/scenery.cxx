@@ -40,7 +40,7 @@
 #include <string.h>
 
 #include <Debug/fg_debug.h>
-#include <Include/general.h>
+#include <Main/options.hxx>
 #include <Scenery/obj.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/texload.h>
@@ -56,12 +56,12 @@ struct fgSCENERY scenery;
 
 /* Initialize the Scenery Management system */
 int fgSceneryInit( void ) {
-    fgGENERAL *g;
+    fgOPTIONS *o;
     char path[1024], fgpath[1024];
     GLubyte *texbuf;
     int width, height;
 
-    g = &general;
+    o = &current_options;
 
     fgPrintf(FG_TERRAIN, FG_INFO, "Initializing scenery subsystem\n");
 
@@ -70,7 +70,7 @@ int fgSceneryInit( void ) {
 
     /* temp: load in a demo texture */
     path[0] = '\0';
-    strcat(path, g->root_dir);
+    strcat(path, o->fg_root);
     strcat(path, "/Textures/");
     strcat(path, "desert.rgb");
 
@@ -96,18 +96,18 @@ int fgSceneryInit( void ) {
 /* Tell the scenery manager where we are so it can load the proper data, and
  * build the proper structures. */
 void fgSceneryUpdate(double lon, double lat, double elev) {
-    fgGENERAL *g;
+    fgOPTIONS *o;
     double max_radius;
     char path[1024];
 
-    g = &general;
+    o = &current_options;
 
     /* a hardcoded hack follows */
 
     /* this routine should parse the file, and make calls back to the
      * scenery management system to build the appropriate structures */
     path[0] = '\0';
-    strcat(path, g->root_dir);
+    strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
     strcat(path, "mesa-e.obj");
 
@@ -123,10 +123,13 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/05/07 23:15:20  curt
-/* Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
-/* Added support for --tile-radius=n option.
+/* Revision 1.4  1998/05/13 18:26:40  curt
+/* Root path info moved to fgOPTIONS.
 /*
+ * Revision 1.3  1998/05/07 23:15:20  curt
+ * Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
+ * Added support for --tile-radius=n option.
+ *
  * Revision 1.2  1998/05/02 01:52:16  curt
  * Playing around with texture coordinates.
  *

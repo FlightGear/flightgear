@@ -37,7 +37,7 @@
 
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-#include <Include/general.h>
+#include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Math/fg_geodesy.h>
 #include <Math/interpolater.hxx>
@@ -58,17 +58,17 @@ static fgINTERPTABLE *sky_tbl;
 
 // initialize lighting tables
 void fgLightInit( void ) {
-    fgGENERAL *g;
+    fgOPTIONS *o;
     char path[256];
 
     fgPrintf( FG_EVENT, FG_INFO, 
 	     "Initializing Lighting interpolation tables.\n" );
 
-    g = &general;
+    o = &current_options;
 
     // build the path name to the ambient lookup table
     path[0] = '\0';
-    strcat(path, g->root_dir);
+    strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
     strcat(path, "Ambient.table");
     // initialize ambient table
@@ -76,7 +76,7 @@ void fgLightInit( void ) {
 
     // build the path name to the diffuse lookup table
     path[0] = '\0';
-    strcat(path, g->root_dir);
+    strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
     strcat(path, "Diffuse.table");
     // initialize diffuse table
@@ -84,7 +84,7 @@ void fgLightInit( void ) {
     
     // build the path name to the sky lookup table
     path[0] = '\0';
-    strcat(path, g->root_dir);
+    strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
     strcat(path, "Sky.table");
     // initialize sky table
@@ -158,6 +158,9 @@ void fgLightUpdate( void ) {
 
 
 // $Log$
+// Revision 1.7  1998/05/13 18:26:50  curt
+// Root path info moved to fgOPTIONS.
+//
 // Revision 1.6  1998/05/11 18:18:51  curt
 // Made fog color slightly bluish.
 //

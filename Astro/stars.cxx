@@ -43,7 +43,7 @@
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-#include <Include/general.h>
+#include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Time/fg_time.hxx>
 
@@ -63,7 +63,7 @@
 /* Initialize the Star Management Subsystem */
 int fgStarsInit( void ) {
     FILE *fd;
-    fgGENERAL *g;
+    fgOPTIONS *o;
     /* struct CelestialCoord pltPos; */
     char path[1024];
     char line[256], name[256];
@@ -75,11 +75,11 @@ int fgStarsInit( void ) {
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing stars\n");
 
-    g = &general;
+    o = &current_options;
 
     /* build the full path name to the stars data base file */
     path[0] = '\0';
-    strcat(path, g->root_dir);
+    strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
     strcat(path, "Stars.dat");
 
@@ -260,9 +260,12 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/04/28 01:19:03  curt
-/* Type-ified fgTIME and fgVIEW
+/* Revision 1.6  1998/05/13 18:25:35  curt
+/* Root path info moved to fgOPTIONS.
 /*
+ * Revision 1.5  1998/04/28 01:19:03  curt
+ * Type-ified fgTIME and fgVIEW
+ *
  * Revision 1.4  1998/04/26 05:10:02  curt
  * "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
  *

@@ -35,10 +35,9 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Include/general.h>
-
 #include <Bucket/bucketutils.h>
 #include <Debug/fg_debug.h>
+#include <Main/options.hxx>
 #include <Main/views.hxx>
 
 #include "obj.hxx"
@@ -85,11 +84,11 @@ int fgTileCacheExists( struct fgBUCKET *p ) {
 
 /* Fill in a tile cache entry with real data for the specified bucket */
 void fgTileCacheEntryFillIn( int index, struct fgBUCKET *p ) {
-    fgGENERAL *g;
+    fgOPTIONS *o;
     char base_path[256];
     char file_name[256];
 
-    g = &general;
+    o = &current_options;
 
     /* Mark this cache entry as used */
     tile_cache[index].used = 1;
@@ -102,7 +101,7 @@ void fgTileCacheEntryFillIn( int index, struct fgBUCKET *p ) {
 
     /* Load the appropriate area and get the display list pointer */
     fgBucketGenBasePath(p, base_path);
-    sprintf(file_name, "%s/Scenery/%s/%ld", g->root_dir, 
+    sprintf(file_name, "%s/Scenery/%s/%ld", o->fg_root, 
 	    base_path, fgBucketGenIndex(p));
     tile_cache[index].display_list = 
 	fgObjLoad(file_name, &tile_cache[index].local_ref,
@@ -200,9 +199,12 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/05/02 01:52:17  curt
-/* Playing around with texture coordinates.
+/* Revision 1.7  1998/05/13 18:26:41  curt
+/* Root path info moved to fgOPTIONS.
 /*
+ * Revision 1.6  1998/05/02 01:52:17  curt
+ * Playing around with texture coordinates.
+ *
  * Revision 1.5  1998/04/30 12:35:31  curt
  * Added a command line rendering option specify smooth/flat shading.
  *

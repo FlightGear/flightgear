@@ -32,7 +32,7 @@
 
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-#include <Include/general.h>
+#include <Main/options.hxx>
 #include <Time/fg_time.hxx>
 
 #include "orbits.hxx"
@@ -113,7 +113,7 @@ int fgReadOrbElements(struct OrbElements *dest, FILE *src)
 
 int fgSolarSystemInit(fgTIME t)
 {
-    fgGENERAL *g;
+    fgOPTIONS *o;
     char path[80];
     int i;
     FILE *data;
@@ -121,10 +121,10 @@ int fgSolarSystemInit(fgTIME t)
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing solar system\n");
 
-   /* build the full path name to the orbital elements database file */
-    g = &general;
+    /* build the full path name to the orbital elements database file */
+    o = &current_options;
     path[0] = '\0';
-    strcat(path, g->root_dir);
+    strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
     strcat(path, "Planets.dat");
 
@@ -170,9 +170,12 @@ void fgSolarSystemUpdate(struct OrbElements *planet, fgTIME t)
 
 
 /* $Log$
-/* Revision 1.4  1998/04/28 01:19:00  curt
-/* Type-ified fgTIME and fgVIEW
+/* Revision 1.5  1998/05/13 18:25:34  curt
+/* Root path info moved to fgOPTIONS.
 /*
+ * Revision 1.4  1998/04/28 01:19:00  curt
+ * Type-ified fgTIME and fgVIEW
+ *
  * Revision 1.3  1998/04/25 22:06:25  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *
