@@ -241,7 +241,6 @@ fgSetDefaults ()
 
 }
 
-
 static bool
 parse_wind (const string &wind, double * min_hdg, double * max_hdg,
 	    double * speed, double * gust)
@@ -545,11 +544,49 @@ add_channel( const string& type, const string& channel_str ) {
 static void
 setup_wind (double min_hdg, double max_hdg, double speed, double gust)
 {
+                                // Initialize to a reasonable state
   fgDefaultWeatherValue("wind-from-heading-deg", min_hdg);
   fgDefaultWeatherValue("wind-speed-kt", speed);
 
   SG_LOG(SG_GENERAL, SG_INFO, "WIND: " << min_hdg << '@' << 
 	 speed << " knots" << endl);
+
+                                // Now, add some variety to the layers
+  min_hdg += 10;
+  if (min_hdg > 360)
+      min_hdg -= 360;
+  speed *= 1.2;
+  fgSetDouble("/environment/config/boundary/entry[1]/wind-from-heading-deg",
+              min_hdg);
+  fgSetDouble("/environment/config/boundary/entry[1]/wind-speed-kt",
+              speed);
+
+  min_hdg += 20;
+  if (min_hdg > 360)
+      min_hdg -= 360;
+  speed *= 1.5;
+  fgSetDouble("/environment/config/aloft/entry[0]/wind-from-heading-deg",
+              min_hdg);
+  fgSetDouble("/environment/config/aloft/entry[0]/wind-speed-kt",
+              speed);
+              
+  min_hdg += 10;
+  if (min_hdg > 360)
+      min_hdg -= 360;
+  speed *= 1.2;
+  fgSetDouble("/environment/config/aloft/entry[1]/wind-from-heading-deg",
+              min_hdg);
+  fgSetDouble("/environment/config/aloft/entry[1]/wind-speed-kt",
+              speed);
+              
+  min_hdg += 10;
+  if (min_hdg > 360)
+      min_hdg -= 360;
+  speed *= 1.2;
+  fgSetDouble("/environment/config/aloft/entry[2]/wind-from-heading-deg",
+              min_hdg);
+  fgSetDouble("/environment/config/aloft/entry[2]/wind-speed-kt",
+              speed);
 
 #ifdef FG_WEATHERCM
   // convert to fps
@@ -1029,6 +1066,72 @@ fgOptConfig( const char *arg )
     return FG_OPTIONS_OK;
 }
 
+static bool
+parse_colon (const string &s, double * val1, double * val2)
+{
+    string::size_type pos = s.find(':');
+    if (pos == string::npos) {
+        *val2 = atof(s);
+        return false;
+    } else {
+        *val1 = atof(s.substr(0, pos).c_str());
+        *val2 = atof(s.substr(pos+1).c_str());
+        return true;
+    }
+}
+
+
+static int
+fgOptNAV1( const char * arg )
+{
+    double radial, freq;
+    if (parse_colon(arg, &radial, &freq))
+        fgSetDouble("/radios/nav[0]/radials/selected-deg", radial);
+    fgSetDouble("/radios/nav[0]/frequencies/selected-mhz", freq);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptNAV2( const char * arg )
+{
+    double radial, freq;
+    if (parse_colon(arg, &radial, &freq))
+        fgSetDouble("/radios/nav[1]/radials/selected-deg", radial);
+    fgSetDouble("/radios/nav[1]/frequencies/selected-mhz", freq);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptADF( const char * arg )
+{
+    double rot, freq;
+    if (parse_colon(arg, &rot, &freq))
+        fgSetDouble("/radios/kr-87/inputs/rotation-deg", rot);
+    fgSetDouble("/radios/kr-87/outputs/selected-khz", freq);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptDME( const char *arg )
+{
+    string opt = arg;
+    if (opt == "nav1") {
+        fgSetInt("/instrumentation/dme/switch-position", 1);
+        fgSetString("/instrumentation/dme/frequencies/source",
+                    "/radios/nav[0]/frequencies/selected-mhz");
+    } else if (opt == "nav2") {
+        fgSetInt("/instrumentation/dme/switch-position", 3);
+        fgSetString("/instrumentation/dme/frequencies/source",
+                    "/radios/nav[1]/frequencies/selected-mhz");
+    } else {
+        fgSetInt("/instrumentation/dme/switch-position", 2);
+        fgSetString("/instrumentation/dme/frequencies/source",
+                    "/instrumentation/dme/frequencies/selected-mhz");
+        fgSetString("/instrumentation/dme/frequencies/selected-mhz", arg);
+    }
+    return FG_OPTIONS_OK;
+}
+
 static map<string,size_t> fgOptionMap;
 
 /*
@@ -1216,6 +1319,12 @@ struct OptionDesc {
     {"flight-plan",                  true,  OPTION_FUNC,   "", false, "", fgOptFlightPlan },
     {"config",                       true,  OPTION_FUNC,   "", false, "", fgOptConfig },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
+    {"com1",                         true,  OPTION_DOUBLE, "/radios/comm[0]/frequencies/selected-mhz", false, "", 0 },
+    {"com2",                         true,  OPTION_DOUBLE, "/radios/comm[1]/frequencies/selected-mhz", false, "", 0 },
+    {"nav1",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV1 },
+    {"nav2",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV2 },
+    {"adf",                          true,  OPTION_FUNC,   "", false, "", fgOptADF },
+    {"dme",                          true,  OPTION_FUNC,   "", false, "", fgOptDME },
     {0}
 };
 
