@@ -273,7 +273,11 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 
 void fgInitTimeDepCalcs() {
     /* initialize timer */
+
+#ifdef USE_ITIMER
     fgTimerInit( 1.0 / DEFAULT_TIMER_HZ, fgUpdateTimeDepCalcs );
+#endif USE_ITIMER
+
 }
 
 
@@ -416,6 +420,8 @@ int main( int argc, char *argv[] ) {
 
     f = &current_aircraft.flight;
 
+    printf("Flight Gear:  prototype code to test OpenGL, LaRCsim, and VRML\n\n");
+
     #ifdef GLUT
       /* initialize GLUT */
       glutInit(&argc, argv);
@@ -553,9 +559,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.22  1997/06/25 15:39:47  curt
-/* Minor changes to compile with rsxnt/win32.
+/* Revision 1.23  1997/06/26 19:08:33  curt
+/* Restructuring make, adding automatic "make dep" support.
 /*
+ * Revision 1.22  1997/06/25 15:39:47  curt
+ * Minor changes to compile with rsxnt/win32.
+ *
  * Revision 1.21  1997/06/22 21:44:41  curt
  * Working on intergrating the VRML (subset) parser.
  *

@@ -31,9 +31,7 @@ HFILES = fg_timer.h
 OFILES = $(CFILES:.c=.o)
 
 CC = gcc
-# CFLAGS = -g -Wall -DUSE_ITIMER
-CFLAGS = -g -Wall 
-# CFLAGS = -O2 -Wall
+CFLAGS = $(FG_CFLAGS)
 
 AR = ar
 
@@ -51,6 +49,9 @@ $(TARGET): $(OFILES)
 
 all: $(TARGET)
 
+dep:                                 
+	$(CC) -MM *.c > depend                     
+
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
 
@@ -59,12 +60,17 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
-fg_timer.o: fg_timer.c fg_timer.h
+include depend
+
+fg_timer.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -c fg_timer.c
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1997/06/26 19:08:37  curt
+# Restructuring make, adding automatic "make dep" support.
+#
 # Revision 1.3  1997/06/25 17:46:58  curt
 # Make itimer support optional.
 #

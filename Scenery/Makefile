@@ -31,8 +31,7 @@ HFILES =
 OFILES = $(CFILES:.c=.o)
 
 CC = gcc
-CFLAGS = -g -Wall
-# CFLAGS = -O2 -Wall
+CFLAGS = $(FG_CFLAGS)
 
 AR = ar
 
@@ -43,10 +42,13 @@ INCLUDES =
 # Primary Targets
 #---------------------------------------------------------------------------
 
-all: $(TARGET)
-
 $(TARGET): $(OFILES) $(HFILES)
 	$(AR) rv $(TARGET) $(OFILES)
+
+all: $(TARGET)
+
+dep:                                 
+	$(CC) -MM *.c > depend                     
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
@@ -56,15 +58,20 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
-common.o: common.c common.h
+include depend
+
+common.o:
 	$(CC) $(CFLAGS) -c common.c
 
-mesh.o: mesh.c mesh.h common.h
+mesh.o:
 	$(CC) $(CFLAGS) -c mesh.c
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.10  1997/06/26 19:08:34  curt
+# Restructuring make, adding automatic "make dep" support.
+#
 # Revision 1.9  1997/06/25 15:39:48  curt
 # Minor changes to compile with rsxnt/win32.
 #

@@ -35,7 +35,7 @@
 
 unsigned long int fgSimTime;
 
-#ifdef HAVE_ITIMER
+#ifdef USE_ITIMER
   static struct itimerval t, ot;
   static void (*callbackfunc)(int multi_loop);
 
@@ -109,9 +109,12 @@ int fgGetTimeInterval() {
 
 
 /* $Log$
-/* Revision 1.4  1997/06/25 15:39:49  curt
-/* Minor changes to compile with rsxnt/win32.
+/* Revision 1.5  1997/06/26 19:08:38  curt
+/* Restructuring make, adding automatic "make dep" support.
 /*
+ * Revision 1.4  1997/06/25 15:39:49  curt
+ * Minor changes to compile with rsxnt/win32.
+ *
  * Revision 1.3  1997/06/17 16:52:04  curt
  * Timer interval stuff now uses gettimeofday() instead of ftime()
  *

@@ -30,7 +30,7 @@
 #include "gltk.h"
 
 #include "GLTKkey.h"
-#include "../aircraft/aircraft.h"
+#include "../Aircraft/aircraft.h"
 
 
 /* Handle keyboard events */
@@ -75,9 +75,12 @@ GLenum GLTKkey(int k, GLenum mask) {
 
 
 /* $Log$
-/* Revision 1.3  1997/06/21 17:12:52  curt
-/* Capitalized subdirectory names.
+/* Revision 1.4  1997/06/26 19:08:32  curt
+/* Restructuring make, adding automatic "make dep" support.
 /*
+ * Revision 1.3  1997/06/21 17:12:52  curt
+ * Capitalized subdirectory names.
+ *
  * Revision 1.2  1997/05/23 15:40:24  curt
  * Added GNU copyright headers.
  * Fog now works!

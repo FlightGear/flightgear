@@ -22,8 +22,7 @@ CFILES =  $(LaRCsimFILES) $(NavionFILES) $(InterfaceFILES)
 OFILES = $(CFILES:.c=.o)
 
 CC = gcc
-CFLAGS = -g
-# CFLAGS = -O2
+CFLAGS = $(FG_CFLAGS)
 
 AR = ar
 
@@ -44,6 +43,9 @@ simtest: $(TARGET) LaRCsim.o
 
 all: $(TARGET)
 
+dep:                                 
+	$(CC) -MM *.c > depend                     
+
 clean:
 	rm -f *.o $(TARGET) *~ core
 
@@ -52,10 +54,14 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
+include depend
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1997/06/26 19:08:30  curt
+# Restructuring make, adding automatic "make dep" support.
+#
 # Revision 1.3  1997/06/21 17:12:50  curt
 # Capitalized subdirectory names.
 #

@@ -30,8 +30,7 @@ CFILES = flight.c
 OFILES = $(CFILES:.c=.o)
 
 CC = gcc
-CFLAGS = -g -Wall
-# CFLAGS = -O2 -Wall
+CFLAGS = $(FG_CFLAGS)
 
 AR = ar
 
@@ -49,6 +48,9 @@ $(TARGET): $(OFILES)
 
 all: $(TARGET)
 
+dep:                                 
+	$(CC) -MM *.c > depend                     
+
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
 
@@ -57,15 +59,17 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
-flight.h:  Slew/slew.h LaRCsim/ls_interface.h
-	touch flight.h
+include depend
 
-flight.o: flight.c flight.h
+flight.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -c flight.c
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1997/06/26 19:08:30  curt
+# Restructuring make, adding automatic "make dep" support.
+#
 # Revision 1.5  1997/06/25 15:39:46  curt
 # Minor changes to compile with rsxnt/win32.
 #

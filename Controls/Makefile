@@ -31,8 +31,7 @@ HFILES = controls.h
 OFILES = $(CFILES:.c=.o)
 
 CC = gcc
-CFLAGS = -g -Wall
-# CFLAGS = -O2 -Wall
+CFLAGS = $(FG_CFLAGS)
 
 AR = ar
 
@@ -50,6 +49,9 @@ $(TARGET): $(OFILES)
 
 all: $(TARGET)
 
+dep:                                 
+	$(CC) -MM *.c > depend                     
+
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
 
@@ -58,15 +60,17 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
-controls.h: ../limits.h
-	touch controls.h
+include depend
 
-controls.o: controls.c controls.h ../Aircraft/aircraft.h
+controls.o:
 	$(CC) $(CFLAGS) $(INCLUDES) -c controls.c
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1997/06/26 19:08:29  curt
+# Restructuring make, adding automatic "make dep" support.
+#
 # Revision 1.5  1997/06/25 15:39:46  curt
 # Minor changes to compile with rsxnt/win32.
 #

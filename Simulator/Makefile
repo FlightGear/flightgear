@@ -24,30 +24,105 @@
 #---------------------------------------------------------------------------
 
 
-CC = gcc
+#---------------------------------------------------------------------------
+# Choose your weapon
+#---------------------------------------------------------------------------
 
+CC = gcc
+export CC
+
+
+#---------------------------------------------------------------------------
+# Global Compile Options
+#
+# You may set FG_CFLAGS to include any of the following options depending on 
+# your environment:
+#
+# -g           - Compile with debugging symbols
+#
+# -Wall        - Enable full compiler warnings
+#
+# -O2          - Enable compiler optimization
+#
+# -DUSE_ITIMER - Use setitimer(), getitimer(), and signal() to mimic
+#                a real time system and call the flight model routines
+#                at a regular interval, rather than between screen updates
+#                which can be highly variable.  This can make the flight
+#                much smoother.
+#---------------------------------------------------------------------------
+
+FG_CFLAGS = -g -Wall -DUSE_ITIMER
+export FG_CFLAGS
+
+
+#---------------------------------------------------------------------------
+# Uncomment one of the following sections depending on your system
+#
+# You may set FG_GRAPHICS to include any of the following options depending
+# on your environment:
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
+# SGI IRIX with the GLUT toolkit
+#
+# INTERFACE_FLAGS = -DGLUT
+# INTERFACE_LIBS = -lglut
+# INTERFACE_FILES = GLUTkey.c
+# GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
+# Linux/Mesa with the GLUT toolkit
+#
+INTERFACE_FLAGS = -DGLUT
+INTERFACE_LIBS = -lglut
+INTERFACE_FILES = GLUTkey.c
+MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
+# Windows 95/NT with the GLUT toolkit
+#
+# INTERFACE_FLAGS = -DGLUT
+# INTERFACE_LIBS = -lglut
+# INTERFACE_FILES = GLUTkey.c
+# GRAPHICS_LIBS = -lGLU -lGL
+#---------------------------------------------------------------------------
+
+export INTERFACE_FLAGS INTERFACE_LIBS GRAPHICS_LIBS
+
+
+#---------------------------------------------------------------------------
+# You shouldn't need to modify anything beyond this point
+#---------------------------------------------------------------------------
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew Scenery/ParseScn Scenery/ParseVrml
 SUBDIRS = Aircraft Controls Flight mat3 Scenery Timer
 MAIN = OpenGL
 
 
-all:
-	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
-	    ( cd $$dir; make CC=$(CC) ) ; \
+all: 
+	for dir in $(SUBSUBDIRS) $(SUBDIRS); do \
+	    ( cd $$dir; $(MAKE) ) ; \
+	done
+	for dir in $(MAIN); do \
+	    ( cd $$dir; $(MAKE) ) ; \
 	done
 
-
-install:
-	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
-	    ( cd $$dir; make CC=$(CC) install) ; \
+dep:
+	for dir in $(SUBSUBDIRS) $(SUBDIRS); do \
+	    ( cd $$dir; $(MAKE) dep ) ; \
 	done
-
+	for dir in $(MAIN); do \
+	    ( cd $$dir; $(MAKE) dep ) ; \
+	done
 
 clean:
 	-rm -f *~
 	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
-	    (cd $$dir; make clean) ; \
+	    (cd $$dir; $(MAKE) clean) ; \
 	done
 
 
@@ -59,6 +134,9 @@ tar: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.10  1997/06/26 19:08:22  curt
+# Restructuring make, adding automatic "make dep" support.
+#
 # Revision 1.9  1997/06/22 21:44:40  curt
 # Working on intergrating the VRML (subset) parser.
 #

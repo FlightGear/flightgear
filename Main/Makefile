@@ -28,12 +28,9 @@ TARGET=fgfs0
 
 CC = gcc
 
-# STD_FLAGS = -O2 -Wall
-STD_CFLAGS = -g -Wall
-
 
 #---------------------------------------------------------------------------
-# Define the high level GL interface library
+# This is overridden in the top level Makefile, if make is run from there.
 #---------------------------------------------------------------------------
 
 # For GLUT
@@ -53,15 +50,15 @@ INTERFACE_FILES = GLUTkey.c
 #---------------------------------------------------------------------------
 
 # For OpenGL
-GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
+# GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
 
 # For Mesa
-# MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
-# X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-# GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
 
 
-CFLAGS = $(STD_CFLAGS) $(INTERFACE_FLAGS)
+CFLAGS = $(FG_CFLAGS) $(INTERFACE_FLAGS)
 LIBS =  $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
 
 CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
@@ -82,6 +79,9 @@ $(TARGET): $(OFILES) $(AFILES)
 
 all: $(TARGET)
 
+dep:
+	$(CC) -MM *.c > depend
+
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
 
@@ -90,22 +90,26 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
-GLmain.o: GLmain.c GLUTkey.h ../Aircraft/aircraft.h ../Scenery/scenery.h \
-	../Timer/fg_timer.h
-	$(CC) $(CFLAGS) $(INCLUDES) -c GLmain.c
+include depend
 
-GLUTkey.o: GLUTkey.c GLUTkey.h ../Aircraft/aircraft.h
-	$(CC) $(CFLAGS) $(INCLUDES) -c GLUTkey.c
+GLmain.o:
+	$(CC) $(CFLAGS) -c GLmain.c
 
-GLTKkey.o: GLTKkey.c GLTKkey.h ../Aircraft/aircraft.h
-	$(CC) $(CFLAGS) $(INCLUDES) -c GLTKkey.c
+GLUTkey.o:
+	$(CC) $(CFLAGS) -c GLUTkey.c
 
-mesh2GL.o: mesh2GL.c ../Scenery/mesh.h
-	$(CC) $(CFLAGS) $(INCLUDES) -c mesh2GL.c
+GLTKkey.o:
+	$(CC) $(CFLAGS) -c GLTKkey.c
+
+mesh2GL.o:
+	$(CC) $(CFLAGS) -c mesh2GL.c
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.16  1997/06/26 19:08:33  curt
+# Restructuring make, adding automatic "make dep" support.
+#
 # Revision 1.15  1997/06/25 15:39:47  curt
 # Minor changes to compile with rsxnt/win32.
 #
