@@ -20,7 +20,12 @@
 #endif
 
 int   xglTraceOn = TRUE ;
-FILE *xglTraceFd = stdout ;
+#ifndef __CYGWIN32__
+    FILE *xglTraceFd = stdout ;
+#else /* __CYGWIN32__ */
+    /* Bail for now, we just want it to compile I guess */
+    FILE *xglTraceFd = NULL;
+#endif /* __CYGWIN32 */
 
 struct GLenumLookup
 {
