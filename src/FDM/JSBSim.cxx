@@ -50,7 +50,6 @@
 #include <FDM/JSBSim/FGAuxiliary.h>
 #include <FDM/JSBSim/FGDefs.h>
 #include <FDM/JSBSim/FGInitialCondition.h>
-#include <FDM/JSBSim/FGTrimLong.h>
 #include <FDM/JSBSim/FGAtmosphere.h>
 
 #include "JSBSim.hxx"
@@ -75,7 +74,7 @@ int FGJSBsim::init( double dt ) {
 
   FDMExec.GetState()->Setdt( dt );
 
-  result = FDMExec.GetAircraft()->LoadAircraft( aircraft_path.str(),
+  result = FDMExec.LoadModel( aircraft_path.str(),
                                        engine_path.str(),
                                        current_options.get_aircraft() );
 
@@ -93,7 +92,7 @@ int FGJSBsim::init( double dt ) {
   FDMExec.GetAtmosphere()->SetWindNED(get_V_north_airmass(),
                                       get_V_east_airmass(),
                                       get_V_down_airmass());
- 
+  
   FDMExec.GetAtmosphere()->UseInternal();
 
   FG_LOG( FG_FLIGHT, FG_INFO, "  Initializing JSBSim with:" );
@@ -127,6 +126,9 @@ int FGJSBsim::init( double dt ) {
 
   FDMExec.GetPosition()->SetRunwayRadius(scenery.cur_radius*METER_TO_FEET);
   FDMExec.GetPosition()->SetSeaLevelRadius(get_Sea_level_radius());
+  FDMExec.GetPosition()->SetRunwayNormal( scenery.cur_normal[0],
+                                          scenery.cur_normal[1],
+                                          scenery.cur_normal[2] );
 
   FG_LOG( FG_FLIGHT, FG_INFO, "  phi: " <<  get_Phi());
   FG_LOG( FG_FLIGHT, FG_INFO, "  theta: " <<  get_Theta() );
@@ -139,18 +141,17 @@ int FGJSBsim::init( double dt ) {
   if(current_options.get_trim_mode() > 0) {
     FDMExec.RunIC(fgic);
     FG_LOG( FG_FLIGHT, FG_INFO, "  Starting trim..." );
-    FGTrimLong *fgtrim=new FGTrimLong(&FDMExec,fgic);
-    fgtrim->DoTrim();
-    fgtrim->Report();
-    fgtrim->TrimStats();
-    fgtrim->ReportState();
+//    FGTrimLong *fgtrim=new FGTrimLong(&FDMExec,fgic);
+//    fgtrim->DoTrim();
+//    fgtrim->Report();
+//    fgtrim->TrimStats();
+//    fgtrim->ReportState();
 
     controls.set_elevator_trim(FDMExec.GetFCS()->GetPitchTrimCmd());
     controls.set_throttle(FGControls::ALL_ENGINES,FDMExec.GetFCS()->GetThrottleCmd(0)/100);
     //the trimming routine only knows how to get 1 value for throttle
-
     
-    delete fgtrim;
+//    delete fgtrim;
     FG_LOG( FG_FLIGHT, FG_INFO, "  Trim complete." );
   } else {
     FG_LOG( FG_FLIGHT, FG_INFO, "  Initializing without trim" );
@@ -204,6 +205,9 @@ int FGJSBsim::update( int multiloop ) {
   //  FDMExec.GetPosition()->SetRunwayElevation(get_Runway_altitude()); // seems to work
   FDMExec.GetPosition()->SetRunwayRadius(scenery.cur_radius*METER_TO_FEET);
   FDMExec.GetPosition()->SetSeaLevelRadius(get_Sea_level_radius());
+  FDMExec.GetPosition()->SetRunwayNormal( scenery.cur_normal[0],
+                                          scenery.cur_normal[1],
+                                          scenery.cur_normal[2] );
 
   FDMExec.GetAtmosphere()->SetExTemperature(get_Static_temperature());
   FDMExec.GetAtmosphere()->SetExPressure(get_Static_pressure());

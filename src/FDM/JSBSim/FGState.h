@@ -89,9 +89,12 @@ public:
   inline float Getsim_time(void) { return sim_time; }
   inline float Getdt(void) { return dt; }
 
-  float GetParameter(int val_idx);
+  inline void Suspend(void) {saved_dt = dt; dt = 0.0;}
+  inline void Resume(void)  {dt = saved_dt;}
+
+  float GetParameter(eParam val_idx);
   float GetParameter(string val_string);
-  int GetParameterIndex(string val_string);
+  eParam GetParameterIndex(string val_string);
 
   inline void Setadot(float tt) { adot = tt; }
   inline void Setbdot(float tt) { bdot = tt; }
@@ -104,7 +107,7 @@ public:
   }
   inline void  Setdt(float tt) { dt = tt; }
 
-  void SetParameter(int, float);
+  void SetParameter(eParam, float);
 
   inline float IncrTime(void) {
     sim_time+=dt;
@@ -117,12 +120,15 @@ public:
   FGMatrix GetTs2b(float alpha, float beta);
   FGMatrix GetTl2b(void) { return mTl2b; }
   FGMatrix GetTb2l(void) { return mTb2l; }
+  typedef map<eParam, string> ParamMap;
+  ParamMap paramdef;
 
 private:
 
   float adot, bdot;                 // alpha dot and beta dot
   float a;                          // speed of sound
   float sim_time, dt;
+  float saved_dt;
 
   FGFDMExec* FDMExec;
   FGMatrix mTb2l;
@@ -130,7 +136,7 @@ private:
   FGMatrix mTs2b;
   FGColumnVector vQtrn;
 
-  typedef map<string, long> CoeffMap;
+  typedef map<string, eParam> CoeffMap;
   CoeffMap coeffdef;
 
 protected:

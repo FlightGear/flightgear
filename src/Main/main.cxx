@@ -956,42 +956,42 @@ static void fgMainLoop( void ) {
 
 #   elif defined(USE_NEW_ENGINE_CODE)
 
-	// pitch corresponds to rpm
-	// volume corresponds to manifold pressure
+	if ( current_options.get_flight_model() == FGInterface::FG_LARCSIM ) {
+	    // pitch corresponds to rpm
+	    // volume corresponds to manifold pressure
 
-	double rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() / 2500.0;
-	cout << "rpm = " << cur_fdm_state->get_engine(0)->get_RPM() << endl;
+	    double rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() /
+		2500.0;
+	    cout << "rpm = " << cur_fdm_state->get_engine(0)->get_RPM() << endl;
 
-	double pitch = 0.3 + rpm_factor * 3.0;
+	    double pitch = 0.3 + rpm_factor * 3.0;
 	
-	// don't run at absurdly slow rates -- not realistic
-	// and sounds bad to boot.  :-)
-	if (pitch < 0.7) { pitch = 0.7; }
-	if (pitch > 5.0) { pitch = 5.0; }
-	cout << "pitch = " << pitch << endl;
+	    // don't run at absurdly slow rates -- not realistic
+	    // and sounds bad to boot.  :-)
+	    if (pitch < 0.7) { pitch = 0.7; }
+	    if (pitch > 5.0) { pitch = 5.0; }
+	    cout << "pitch = " << pitch << endl;
 
-	double mp_factor =
-	    cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 28;
-	cout << "mp = " << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
-	     << endl;
+	    double mp_factor =
+		cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 28;
+	    cout << "mp = " 
+		 << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
+		 << endl;
 
-	double volume = mp_factor;
+	    double volume = mp_factor;
 
-	if ( volume < 0.3 ) { volume = 0.3; }
-	if ( volume > 2.0 ) { volume = 2.0; }
-	cout << "volume = " << volume << endl;
+	    if ( volume < 0.3 ) { volume = 0.3; }
+	    if ( volume > 2.0 ) { volume = 2.0; }
+	    cout << "volume = " << volume << endl;
 
-	pitch_envelope.setStep  ( 0, 0.01, pitch );
-	volume_envelope.setStep ( 0, 0.01, volume );
-
-#   else
-
-       double param = controls.get_throttle( 0 ) * 2.0 + 1.0;
-       pitch_envelope.setStep  ( 0, 0.01, param );
-       volume_envelope.setStep ( 0, 0.01, param );
-
-#   endif // experimental throttle patch
-
+	    pitch_envelope.setStep  ( 0, 0.01, pitch );
+	    volume_envelope.setStep ( 0, 0.01, volume );
+	} else {
+	    double param = controls.get_throttle( 0 ) * 2.0 + 1.0;
+	    pitch_envelope.setStep  ( 0, 0.01, param );
+	    volume_envelope.setStep ( 0, 0.01, param );
+	}
+#  endif
 	audio_sched -> update();
     }
 #endif

@@ -73,7 +73,10 @@ FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex) {
 
 /******************************************************************************/
 
-FGFCS::~FGFCS(void) {}
+FGFCS::~FGFCS(void) {
+  for(unsigned int i=0;i<Components.size();i++)
+    delete Components[i];
+}
 
 /******************************************************************************/
 
@@ -154,7 +157,7 @@ bool FGFCS::LoadFCS(FGConfigFile* AC_cfg) {
 
 /******************************************************************************/
 
-float FGFCS::GetComponentOutput(int idx) {
+float FGFCS::GetComponentOutput(eParam idx) {
   return Components[idx]->GetOutput();
 }
 

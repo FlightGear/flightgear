@@ -62,17 +62,24 @@ class FGInitialCondition;
 class FGFDMExec
 {
 public:
-  FGFDMExec::FGFDMExec(void);
-  FGFDMExec::~FGFDMExec(void);
+  FGFDMExec(void);
+  ~FGFDMExec(void);
 
   FGModel* FirstModel;
 
   bool Initialize(void);
   int  Schedule(FGModel* model, int rate);
   bool Run(void);
-  bool RunIC(FGInitialCondition *fgic); 
+  bool RunIC(FGInitialCondition *fgic);
   void Freeze(void) {frozen = true;}
   void Resume(void) {frozen = false;}
+
+  bool SetEnginePath(string path)   {EnginePath = path;}
+  bool SetAircraftPath(string path) {AircraftPath = path;}
+  bool SetScriptPath(string path)   {ScriptPath = path;}
+
+  bool LoadModel(string AircraftPath, string EnginePath, string model);
+  bool RunScript(string script);
 
   inline FGState* GetState(void)             {return State;}
   inline FGAtmosphere* GetAtmosphere(void)   {return Atmosphere;}
@@ -83,11 +90,18 @@ public:
   inline FGPosition* GetPosition(void)       {return Position;}
   inline FGAuxiliary* GetAuxiliary(void)     {return Auxiliary;}
   inline FGOutput* GetOutput(void)           {return Output;}
+  
+  
 
 private:
   bool frozen;
   bool terminate;
   int Error;
+
+  string AircraftPath;
+  string EnginePath;
+  string ScriptPath;
+
 
   FGState*       State;
   FGAtmosphere*  Atmosphere;

@@ -37,7 +37,7 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 *******************************************************************************/
 
-#include "FGGain.h"    				
+#include "FGGain.h"            
 
 /*******************************************************************************
 ************************************ CODE **************************************
@@ -53,12 +53,13 @@ FGGain::FGGain(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
                                                    AC_cfg(AC_cfg)
 {
   string token;
+  string strScheduledBy;
 
   lookup = NULL;
   Schedule.clear();
   Gain = 1.000;
   Min = Max = 0;
-  ScheduledBy = 0;
+  ScheduledBy = FG_NOTHING;
 
   Type = AC_cfg->GetValue("TYPE");
   Name = AC_cfg->GetValue("NAME");
@@ -68,10 +69,10 @@ FGGain::FGGain(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
     *AC_cfg >> token;
     if (token == "ID") {
       *AC_cfg >> ID;
-	  cout << "      ID: " << ID << endl;
+      cout << "      ID: " << ID << endl;
     } else if (token == "INPUT") {
       token = AC_cfg->GetValue("INPUT");
-	  cout << "      INPUT: " << token << endl;
+      cout << "      INPUT: " << token << endl;
       if (token.find("FG_") != token.npos) {
         *AC_cfg >> token;
         InputIdx = fcs->GetState()->GetParameterIndex(token);
@@ -85,12 +86,20 @@ FGGain::FGGain(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       cout << "      GAIN: " << Gain << endl;
     } else if (token == "MIN") {
       *AC_cfg >> Min;
-	  cout << "      MIN: " << Min << endl;
+      cout << "      MIN: " << Min << endl;
     } else if (token == "MAX") {
       *AC_cfg >> Max;
-	  cout << "      MAX: " << Max << endl;
+      cout << "      MAX: " << Max << endl;
     } else if (token == "SCHEDULED_BY") {
-      *AC_cfg >> ScheduledBy;
+      token = AC_cfg->GetValue("SCHEDULED_BY");
+      if (token.find("FG_") != token.npos) {
+        *AC_cfg >> strScheduledBy;
+        ScheduledBy = fcs->GetState()->GetParameterIndex(strScheduledBy);
+        cout << "      Scheduled by parameter: " << token << endl;
+      } else {
+        *AC_cfg >> ScheduledBy;
+        cout << "      Scheduled by FCS output: " << ScheduledBy << endl;
+      }
     } else if (token == "OUTPUT") {
       IsOutput = true;
       *AC_cfg >> sOutputIdx;

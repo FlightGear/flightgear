@@ -126,8 +126,28 @@ FGFDMExec::FGFDMExec(void)
 }
 
 
-FGFDMExec::~FGFDMExec(void)
-{
+FGFDMExec::~FGFDMExec(void){
+  
+  cout << "~FGFDMExec" << endl;
+  if ( Atmosphere != NULL )  delete Atmosphere;
+  cout << "Atmosphere" << endl;
+  if ( FCS != NULL )         delete FCS;
+  cout << "FCS" << endl;
+  if ( Aircraft != NULL )    delete Aircraft;
+  cout << "Aircraft" << endl;
+  if ( Translation != NULL ) delete Translation;
+  cout << "Translation" << endl;
+  if ( Rotation != NULL )    delete Rotation;
+  cout << "Rotation" << endl;
+  if ( Position != NULL )    delete Position;
+  cout << "Position" << endl;
+  if ( Auxiliary != NULL )   delete Auxiliary;
+  cout << "Auxiliary" << endl;
+  if ( Output != NULL )      delete Output;
+  cout << "Output" << endl;
+  if ( State != NULL )       delete State;
+  cout << "State" << endl;
+
 }
 
 
@@ -179,14 +199,22 @@ bool FGFDMExec::Run(void)
 
 bool FGFDMExec::RunIC(FGInitialCondition *fgic)
 {
-  float save_dt = State->Getdt();
-
-  State->Setdt(0.0);
+  State->Suspend();
   State->Initialize(fgic);
   Run();
-  State->Setdt(save_dt);
-
+  State->Resume();
   return true;
 }
   
 
+bool FGFDMExec::LoadModel(string APath, string EPath, string model)
+{
+	AircraftPath = APath;
+	EnginePath = EPath;
+  return Aircraft->LoadAircraft(AircraftPath, EnginePath, model);
+}
+
+
+bool FGFDMExec::RunScript(string script)
+{
+}

@@ -54,10 +54,10 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs) : fcs(_fcs)
   Type       = "";
   ID         = 0;
   Input      = 0.0;
-  InputIdx   = 0;
+  InputIdx   = FG_NOTHING;
   Output     = 0.0;
-  sOutputIdx  = "";
-  OutputIdx   = 0;
+  sOutputIdx = "";
+  OutputIdx  = FG_NOTHING;
   IsOutput   = false;
 }
 

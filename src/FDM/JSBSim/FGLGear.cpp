@@ -46,17 +46,29 @@ INCLUDES
 
 FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
                                                            vMoment(3),
+                                                           vWhlBodyVec(3),
                                                            Exec(fdmex)
 {
   string tmp;
-  *AC_cfg >> tmp >> name >> vXYZ(1) >> vXYZ(2) >> vXYZ(3) >> kSpring >> bDamp
-                                                    >> statFCoeff >> brakeCoeff;
+  *AC_cfg >> tmp >> name >> vXYZ(1) >> vXYZ(2) >> vXYZ(3)  
+            >> kSpring >> bDamp >> statFCoeff >> brakeCoeff;
+  
+  
+  cout << "    Name: " << name << endl;
+  cout << "      Location: " << vXYZ << endl;
+  cout << "      Spring Constant: " << kSpring << endl;
+  cout << "      Damping Constant: " << bDamp << endl;
+  cout << "      Rolling Resistance: " << statFCoeff << endl;
+  cout << "      Braking Coeff: " << brakeCoeff << endl;
+  
   State       = Exec->GetState();
   Aircraft    = Exec->GetAircraft();
   Position    = Exec->GetPosition();
   Rotation    = Exec->GetRotation();
-
+  
+  
   WOW = false;
+  ReportEnable=true;
   FirstContact = false;
   Reported = false;
   DistanceTraveled = 0.0;
@@ -74,22 +86,21 @@ FGLGear::~FGLGear(void)
 
 FGColumnVector FGLGear::Force(void)
 {
-  static FGColumnVector vForce(3);
-  static FGColumnVector vLocalForce(3);
-  static FGColumnVector vLocalGear(3);     // Vector: CG to this wheel (Local)
-  static FGColumnVector vWhlBodyVec(3);    // Vector: CG to this wheel (Body)
-  static FGColumnVector vWhlVelVec(3);     // Velocity of this wheel (Local)
-
+  FGColumnVector vForce(3);
+  FGColumnVector vLocalForce(3);
+  FGColumnVector vLocalGear(3);     // Vector: CG to this wheel (Local)
+  FGColumnVector vWhlVelVec(3);     // Velocity of this wheel (Local)
+  
   vWhlBodyVec     = (vXYZ - Aircraft->GetXYZcg()) / 12.0;
   vWhlBodyVec(eX) = -vWhlBodyVec(eX);
   vWhlBodyVec(eZ) = -vWhlBodyVec(eZ);
 
   vLocalGear = State->GetTb2l() * vWhlBodyVec;
-
+  
   compressLength = vLocalGear(eZ) - Position->GetDistanceAGL();
 
   if (compressLength > 0.00) {
-
+     
     WOW = true;
     vWhlVelVec      =  State->GetTb2l() * (Rotation->GetPQR() * vWhlBodyVec);
     vWhlVelVec     +=  Position->GetVel();
@@ -114,6 +125,9 @@ FGColumnVector FGLGear::Force(void)
 
     vForce  = State->GetTl2b() * vLocalForce ;
     vMoment = vWhlBodyVec * vForce;
+    cout << "      Force: " << vForce << endl;
+    cout << "      Moment: " << vMoment << endl;
+
 
   } else {
 
@@ -134,10 +148,9 @@ FGColumnVector FGLGear::Force(void)
     DistanceTraveled += Position->GetVel().Magnitude()*State->Getdt()*Aircraft->GetRate();
   }
 
-  if (Position->GetVel().Magnitude() <= 0.05 && !Reported) {
+  if (ReportEnable && Position->GetVel().Magnitude() <= 0.05 && !Reported) {
     Report();
   }
-
   return vForce;
 }
 

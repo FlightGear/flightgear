@@ -1,6 +1,6 @@
 /*******************************************************************************
  
- Header:       FGTrimLong.h
+ Header:       FGTrim.h
  Author:       Tony Peden
  Date started: 7/1/99
  
@@ -43,8 +43,8 @@ scheme.
 SENTRY
 *******************************************************************************/
 
-#ifndef FGTRIMLONG_H
-#define FGTRIMLONG_H
+#ifndef FGTRIM_H
+#define FGTRIM_H
 
 /*******************************************************************************
 INCLUDES
@@ -60,49 +60,60 @@ INCLUDES
 #include "FGPosition.h"
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
-#include "FGTrimLong.h"
+#include "FGTrim.h"
+#include "FGTrimAxis.h"
 
-#define ELEV_MIN -1
-#define ELEV_MAX 1
+#include <vector.h>
 
-#define THROTTLE_MIN 0
-#define THROTTLE_MAX 1
 
 /*******************************************************************************
 CLASS DECLARATION
 *******************************************************************************/
 
+typedef enum { tLongitudinal, tFull, tGround } TrimMode;
 
-class FGTrimLong {
+class FGTrim {
 private:
-  typedef float (FGTrimLong::*trimfp)(float);
-  int Ncycles,Naxis,Debug;
+
+  vector<FGTrimAxis*> TrimAxes;
+  int current_axis;
+  int N, Nsub;
+  int NumAxes;
+  TrimMode mode;
+  int Debug;
   float Tolerance, A_Tolerance;
-  float alphaMin, alphaMax;
   float wdot,udot,qdot;
   float dth;
-  float udot_subits, wdot_subits, qdot_subits;
+  float *sub_iterations;
+  float *successful;
+  bool *solution;
+  int max_sub_iterations;
+  int max_iterations;
   int total_its;
   bool trimudot;
+  bool gamma_fallback;
+  bool trim_failed;
   int axis_count;
+  int solutionDomain;
+  float xlo,xhi,alo,ahi;
 
-  trimfp udotf,wdotf,qdotf;
+
   FGFDMExec* fdmex;
   FGInitialCondition* fgic;
 
-  void setThrottlesPct(float tt);
-  int checkLimits(trimfp fp,float current,float min, float max);
-  // returns false if no sign change in fp(min)*fp(max) => no solution
-  bool solve(trimfp fp,float guess,float desired,float *result,float eps,float min, float max,int max_iterations,int *actual_its );
-  bool findInterval(trimfp fp, float *lo, float *hi,float guess,float desired,int max_iterations);
-
-  float udot_func(float x);
-  float wdot_func(float x);
-  float qdot_func(float x);
+  // returns false if there is no change in the current axis accel
+  // between accel(control_min) and accel(control_max). if there is a
+  // change, sets solutionDomain to:
+  // 0 for no sign change,
+  // -1 if sign change between accel(control_min) and accel(0)
+  // 1 if sign between accel(0) and accel(control_max)
+  bool solve(void);
+  bool findInterval(void);
+  bool checkLimits(void);
 
 public:
-  FGTrimLong(FGFDMExec *FDMExec, FGInitialCondition *FGIC);
-  ~FGTrimLong(void);
+  FGTrim(FGFDMExec *FDMExec, FGInitialCondition *FGIC, TrimMode tt);
+  ~FGTrim(void);
 
   bool DoTrim(void);
 
@@ -111,11 +122,13 @@ public:
   void TrimStats();
 
   inline void SetUdotTrim(bool bb) { trimudot=bb; }
-
   inline bool GetUdotTrim(void) { return trimudot; }
 
-  inline void SetMaxCycles(int ii) { Ncycles = ii; }
-  inline void SetMaxCyclesPerAxis(int ii) { Naxis = ii; }
+  inline void SetGammaFallback(bool bb) { gamma_fallback=true; }
+  inline bool GetGammaFallback(void) { return gamma_fallback; }
+
+  inline void SetMaxCycles(int ii) { max_iterations = ii; }
+  inline void SetMaxCyclesPerAxis(int ii) { max_sub_iterations = ii; }
   inline void SetTolerance(float tt) {
     Tolerance = tt;
     A_Tolerance = tt / 10;

@@ -151,8 +151,12 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
   AxisIdx["ROLL"]  = 3;
   AxisIdx["PITCH"] = 4;
   AxisIdx["YAW"]   = 5;
+  
+  Coeff = new CoeffArray[6];
 
   GearUp = false;
+  
+  alphaclmin = alphaclmax = 0;
 
   numTanks = numEngines = numSelectedFuelTanks = numSelectedOxiTanks = 0;
 }
@@ -161,7 +165,34 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
 /******************************************************************************/
 
 
-FGAircraft::~FGAircraft(void) {}
+FGAircraft::~FGAircraft(void) { 
+  unsigned int i,j;
+  cout << " ~FGAircraft" << endl;
+  if(Engine != NULL) {
+    for(i=0;i<numEngines; i++) 
+      delete Engine[i];
+  }    
+  cout << "  Engine" << endl;
+  if(Tank != NULL) {
+    for(i=0;i<numTanks; i++) 
+      delete Tank[i];
+  }    
+  cout << "  Tank" << endl;
+  cout << "  NumAxes: " << 6 << endl;
+  for(i=0;i<6;i++) {
+    cout << "  NumCoeffs: " << Coeff[i].size() << "  " << &Coeff[i] << endl;
+    for(j=0;j<Coeff[i].size();j++) {
+      
+      cout << "  Coeff[" << i << "][" << j << "]: " << Coeff[i][j] << endl;
+      delete Coeff[i][j];
+    }
+  } 
+  delete[] Coeff;
+  cout << "  Coeffs" << endl;
+  for(i=0;i<lGear.size();i++) {
+      delete lGear[i];
+  }  
+}
 
 /******************************************************************************/
 
@@ -174,7 +205,11 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
   AircraftPath = aircraft_path;
   EnginePath = engine_path;
 
-  aircraftCfgFileName = AircraftPath + "/" + fname + "/" + fname + ".cfg";
+# ifndef macintosh
+  aircraftCfgFileName = AircraftPath + "/" + fname + "/" + fname + ".xml";
+# else  
+  aircraftCfgFileName = AircraftPath + ";" + fname + ";" + fname + ".xml";
+# endif
 
   FGConfigFile AC_cfg(aircraftCfgFileName);
   if (!AC_cfg.IsOpen()) return false;
@@ -220,7 +255,11 @@ bool FGAircraft::Run(void) {
     FMGear();
     FMMass();
 
-    nlf=vFs(eZ)/Weight;
+    nlf = 0;
+    if (fabs(Position->GetGamma()) < 1.57) {
+        nlf = vFs(eZ)/(Weight*cos(Position->GetGamma()));
+    }    
+        
   } else {                               // skip Run() execution this time
   }
 
@@ -333,12 +372,13 @@ void FGAircraft::FMAero(void) {
 
   for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
     for (ctr=0; ctr < Coeff[axis_ctr].size(); ctr++) {
-      vFs(axis_ctr+1) += Coeff[axis_ctr][ctr].TotalValue();
+      vFs(axis_ctr+1) += Coeff[axis_ctr][ctr]->TotalValue();
     }
   }
 
   vAeroBodyForces = State->GetTs2b(alpha, beta)*vFs;
   vForces += vAeroBodyForces;
+
   // The d*cg distances below, given in inches, are the distances FROM the c.g.
   // TO the reference point. Since the c.g. and ref point are given in inches in
   // the structural system (X positive rearwards) and the body coordinate system
@@ -355,7 +395,7 @@ void FGAircraft::FMAero(void) {
   
   for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
     for (ctr = 0; ctr < Coeff[axis_ctr+3].size(); ctr++) {
-      vMoments(axis_ctr+1) += Coeff[axis_ctr+3][ctr].TotalValue();
+      vMoments(axis_ctr+1) += Coeff[axis_ctr+3][ctr]->TotalValue();
     }
   }
 }
@@ -363,10 +403,10 @@ void FGAircraft::FMAero(void) {
 /******************************************************************************/
 
 void FGAircraft::FMGear(void) {
+
   if (GearUp) {
     // crash routine
-  }
-  else {
+  } else {
     for (unsigned int i=0;i<lGear.size();i++) {
       vForces  += lGear[i]->Force();
       vMoments += lGear[i]->Moment();
@@ -440,26 +480,17 @@ void FGAircraft::ReadMetrics(FGConfigFile* AC_cfg) {
         cout << "    EmptyWeight: " << EmptyWeight  << endl;
     } else if (parameter == "AC_CGLOC") {
         *AC_cfg >> vbaseXYZcg(eX) >> vbaseXYZcg(eY) >> vbaseXYZcg(eZ);
-        cout << "    Xcg: " << vbaseXYZcg(eX) 
-             << " Ycg: " << vbaseXYZcg(eY)
-             << " Zcg: " << vbaseXYZcg(eZ)
-             << endl;
+        cout << "    CG (x, y, z): " << vbaseXYZcg << endl;
     } else if (parameter == "AC_EYEPTLOC") {
         *AC_cfg >> vXYZep(eX) >> vXYZep(eY) >> vXYZep(eZ);
-        cout << "    Xep: " << vXYZep(eX) 
-             << " Yep: " << vXYZep(eY)
-             << " Zep: " << vXYZep(eZ)
-             << endl;
+        cout << "    Eyepoint (x, y, z): " << vXYZep << endl;
     } else if (parameter == "AC_AERORP") {
         *AC_cfg >> vXYZrp(eX) >> vXYZrp(eY) >> vXYZrp(eZ);
-        cout << "    Xrp: " << vXYZrp(eX) 
-             << " Yrp: " << vXYZrp(eY)
-             << " Zrp: " << vXYZrp(eZ)
-             << endl;
+        cout << "    Ref Pt (x, y, z): " << vXYZrp << endl;
     } else if (parameter == "AC_ALPHALIMITS") {
         *AC_cfg >> alphaclmin >> alphaclmax;
         cout << "    Maximum Alpha: " << alphaclmax
-             << " Minimum Alpha: " << alphaclmin 
+             << "    Minimum Alpha: " << alphaclmin 
              << endl;
     }         
   }
@@ -513,22 +544,17 @@ void FGAircraft::ReadAerodynamics(FGConfigFile* AC_cfg) {
   string token, axis;
 
   AC_cfg->GetNextConfigLine();
-
-  Coeff.push_back(*(new CoeffArray()));
-  Coeff.push_back(*(new CoeffArray()));
-  Coeff.push_back(*(new CoeffArray()));
-  Coeff.push_back(*(new CoeffArray()));
-  Coeff.push_back(*(new CoeffArray()));
-  Coeff.push_back(*(new CoeffArray()));
-
+  
   while ((token = AC_cfg->GetValue()) != "/AERODYNAMICS") {
     if (token == "AXIS") {
+      CoeffArray ca;
       axis = AC_cfg->GetValue("NAME");
       AC_cfg->GetNextConfigLine();
       while ((token = AC_cfg->GetValue()) != "/AXIS") {
-        Coeff[AxisIdx[axis]].push_back(*(new FGCoefficient(FDMExec, AC_cfg)));
-        DisplayCoeffFactors(Coeff[AxisIdx[axis]].back().Getmultipliers());
+        ca.push_back(new FGCoefficient(FDMExec, AC_cfg));
+        DisplayCoeffFactors(ca.back()->Getmultipliers());
       }
+      Coeff[AxisIdx[axis]]=ca;
       AC_cfg->GetNextConfigLine();
     }
   }
@@ -638,39 +664,11 @@ void FGAircraft::ReadPrologue(FGConfigFile* AC_cfg) {
 
 /******************************************************************************/
 
-void FGAircraft::DisplayCoeffFactors(int multipliers) {
+void FGAircraft::DisplayCoeffFactors(vector <eParam> multipliers) {
   cout << "   Non-Dimensionalized by: ";
 
-  if (multipliers & FG_QBAR)      cout << "qbar ";
-  if (multipliers & FG_WINGAREA)  cout << "S ";
-  if (multipliers & FG_WINGSPAN)  cout << "b ";
-  if (multipliers & FG_CBAR)      cout << "c ";
-  if (multipliers & FG_ALPHA)     cout << "alpha ";
-  if (multipliers & FG_ALPHADOT)  cout << "alphadot ";
-  if (multipliers & FG_BETA)      cout << "beta ";
-  if (multipliers & FG_BETADOT)   cout << "betadot ";
-  if (multipliers & FG_PITCHRATE) cout << "q ";
-  if (multipliers & FG_ROLLRATE)  cout << "p ";
-  if (multipliers & FG_YAWRATE)   cout << "r ";
-
-  if (multipliers & FG_ELEVATOR_CMD)  cout << "De cmd ";
-  if (multipliers & FG_AILERON_CMD)   cout << "Da cmd ";
-  if (multipliers & FG_RUDDER_CMD)    cout << "Dr cmd ";
-  if (multipliers & FG_FLAPS_CMD)     cout << "Df cmd ";
-  if (multipliers & FG_SPOILERS_CMD)  cout << "Dsp cmd ";
-  if (multipliers & FG_SPDBRAKE_CMD)   cout << "Dsb cmd ";
-
-  if (multipliers & FG_ELEVATOR_POS)  cout << "De ";
-  if (multipliers & FG_AILERON_POS)   cout << "Da ";
-  if (multipliers & FG_RUDDER_POS)    cout << "Dr ";
-  if (multipliers & FG_FLAPS_POS)     cout << "Df ";
-  if (multipliers & FG_SPOILERS_POS)  cout << "Dsp ";
-  if (multipliers & FG_SPDBRAKE_POS)  cout << "Dsb ";
-
-  if (multipliers & FG_MACH)      cout << "Mach ";
-  if (multipliers & FG_ALTITUDE)  cout << "h ";
-  if (multipliers & FG_BI2VEL)    cout << "b /(2*Vt) ";
-  if (multipliers & FG_CI2VEL)    cout << "c /(2*Vt) ";
+  for (unsigned int i=0; i<multipliers.size();i++)
+    cout << State->paramdef[multipliers[i]];
 
   cout << endl;
 }
@@ -688,7 +686,7 @@ string FGAircraft::GetCoefficientStrings(void) {
       } else {
         CoeffStrings += ", ";
       }
-      CoeffStrings += Coeff[axis][sd].Getname();
+      CoeffStrings += Coeff[axis][sd]->Getname();
     }
   }
 
@@ -709,7 +707,7 @@ string FGAircraft::GetCoefficientValues(void) {
       } else {
         SDValues += ", ";
       }
-      sprintf(buffer, "%9.6f", Coeff[axis][sd].GetSD());
+      sprintf(buffer, "%9.6f", Coeff[axis][sd]->GetSD());
       SDValues += string(buffer);
     }
   }

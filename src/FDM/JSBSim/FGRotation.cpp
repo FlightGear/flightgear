@@ -74,9 +74,9 @@ INCLUDES
 FGRotation::FGRotation(FGFDMExec* fdmex) : FGModel(fdmex),
         vPQR(3),
         vPQRdot(3),
+        vMoments(3),
         vEuler(3),
-        vEulerRates(3),
-        vMoments(3)
+        vEulerRates(3)
 {
     Name = "FGRotation";
     cTht=cPhi=cPsi=1.0;
@@ -114,14 +114,14 @@ bool FGRotation::Run(void)
         vEuler = State->CalcEuler();
         
         
-        cTht=cos(vEuler(eTht));   sTht=sin(vEuler(eTht));
-        cPhi=cos(vEuler(ePhi));   sPhi=sin(vEuler(ePhi));
-        cPsi=cos(vEuler(ePsi));   sPsi=sin(vEuler(ePsi));
+        cTht = cos(vEuler(eTht));   sTht = sin(vEuler(eTht));
+        cPhi = cos(vEuler(ePhi));   sPhi = sin(vEuler(ePhi));
+        cPsi = cos(vEuler(ePsi));   sPsi = sin(vEuler(ePsi));
 
 
         vEulerRates(eTht) = vPQR(2)*cPhi - vPQR(3)*sPhi;
-        if(cTht != 0.0) {
-          tTheta=sTht/cTht; // what's cheaper: / or tan() ?
+        if (cTht != 0.0) {
+          tTheta = sTht/cTht;       // what's cheaper: / or tan() ?
           vEulerRates(ePhi) = vPQR(1) + (vPQR(2)*sPhi + vPQR(3)*cPhi)*tTheta;
           vEulerRates(ePsi) = (vPQR(2)*sPhi + vPQR(3)*cPhi)/cTht;
         }

@@ -84,7 +84,14 @@ FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int nu
   Output      = FDMExec->GetOutput();
 
   Name = engineName;
-  fullpath = enginePath + "/" + engineName + ".dat";
+
+# ifndef macintosh  
+    fullpath = enginePath + "/" + engineName + ".xml";
+# else
+    fullpath = enginePath + ";" + engineName + ".xml";
+# endif
+      
+  cout << "    Reading engine: " << engineName << " from file: " << fullpath << endl;
   ifstream enginefile(fullpath.c_str());
 
   if (enginefile) {
@@ -97,6 +104,10 @@ FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int nu
     else                         Type = etUnknown;
 
     switch(Type) {
+    case etTurboProp:
+    case etTurboJet: 
+      cerr << "Unsupported Engine type" << tag << endl;
+      break;
     case etUnknown:
       cerr << "Unknown engine type: " << tag << endl;
       break;
@@ -132,17 +143,17 @@ FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int nu
 
     enginefile.close();
   } else {
-    cerr << "Unable to open engine definition file " << fullpath << endl;
+    cerr << "Unable to open engine definition file " << fullpath.c_str() << endl;
   }
 
   EngineNumber = num;
   Thrust = PctPower = 0.0;
   Starved = Flameout = false;
+  Running = true;
 }
 
 
 FGEngine::~FGEngine(void) {}
-
 
 
 float FGEngine::CalcRocketThrust(void) {
@@ -162,7 +173,9 @@ float FGEngine::CalcRocketThrust(void) {
   }
 
 
-  Thrust -= 0.8*(Thrust - lastThrust); // actual thrust
+  if(State->Getdt() > 0.0) {
+    Thrust -= 0.8*(Thrust - lastThrust); // actual thrust
+  }
 
   return Thrust;
 }
@@ -174,34 +187,38 @@ float FGEngine::CalcPistonThrust(void) {
   Throttle = FCS->GetThrottlePos(EngineNumber);
   Throttle /= 100;
 
-  v=Translation->GetVt();
-  h=Position->Geth();
-  if(v < 10)
-    v=10;
-  if(h < 0)
-    h=0;
-  
+  v = Translation->GetVt();
+  h = Position->Geth();
+
+  if (v < 10)
+    v = 10;
+  if (h < 0)
+    h = 0;
+
   pa=(SpeedSlope*v + SpeedIntercept)*(1 +AltitudeSlope*h)*BrakeHorsePower;
-  
-  Thrust= Throttle*(pa*HPTOFTLBSSEC)/v;
+
+  Thrust = Throttle*(pa*HPTOFTLBSSEC)/v;
 
   return Thrust;
 }
 
 
 float FGEngine::CalcThrust(void) {
-  switch(Type) {
-  case etRocket:
-    return CalcRocketThrust();
-    // break;
-  case etPiston:
-    return CalcPistonThrust();
-    // break;
-  default:
-    return 9999.0;
-    // break;
+  if(Running) {
+    switch(Type) {
+    case etRocket:
+      return CalcRocketThrust();
+      // break;
+    case etPiston:
+      return CalcPistonThrust();
+      // break;
+    default:
+      return 9999.0;
+      // break;
+    }
+  } else {
+    return 0;
   }
-
 }
 
 float FGEngine::CalcFuelNeed() {

@@ -54,6 +54,7 @@ class FGPosition : public FGModel {
   FGColumnVector vUVW;
   FGColumnVector vVel;
   FGColumnVector vVelDot;
+  FGColumnVector vRunwayNormal;
   
   double Vee, invMass, invRadius;
   double Radius, h;
@@ -89,7 +90,10 @@ public:
   inline double GetLongitudeDot(void) { return LongitudeDot; }
   inline double GetRunwayRadius(void) { return RunwayRadius; }
   inline double GetDistanceAGL(void)  { return DistanceAGL; }
+  inline FGColumnVector GetRunwayNormal(void) { return vRunwayNormal; }
+  
   inline double GetGamma(void) { return gamma; }
+  inline void SetGamma(float tt) { gamma = tt; }
   inline double GetHOverB(void) { return hoverb; }
   void SetvVel(const FGColumnVector& v) { vVel = v; }
   void SetLatitude(float tt) { Latitude = tt; }
@@ -98,7 +102,10 @@ public:
   void SetRunwayRadius(double tt) { RunwayRadius = tt; }
   void SetSeaLevelRadius(double tt) { SeaLevelRadius = tt;}
   void SetDistanceAGL(double tt);
-
+  inline void SetRunwayNormal(double fgx, double fgy, double fgz ) {
+      vRunwayNormal << fgx << fgy << fgz;
+  }
+  
   bool Run(void);
 };
 

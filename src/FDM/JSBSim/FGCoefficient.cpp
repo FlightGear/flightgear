@@ -60,6 +60,7 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, FGConfigFile* AC_cfg)
 
   FDMExec     = fdex;
   State       = FDMExec->GetState();
+  Table = 0;
 
   if (AC_cfg) {
     name = AC_cfg->GetValue("NAME");
@@ -89,25 +90,14 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, FGConfigFile* AC_cfg)
       cout << endl;
 
       *AC_cfg >> multparms;
-      if (multparms.substr(0,1) == "F") {
-        LookupR = State->GetParameterIndex(multparms);
-        cout << "   Row indexing parameter: " << multparms << endl;
-      } else {
-        LookupR = atoi(multparms.c_str());
-        cout << "   Row indexing parameter: " << LookupR << endl;
-      }
-
+      LookupR = State->GetParameterIndex(multparms);
+      cout << "   Row indexing parameter: " << multparms << endl;
     }
 
     if (type == TABLE) {
       *AC_cfg >> multparms;
-      if (multparms.substr(0,1) == "F") {
-        LookupC = State->GetParameterIndex(multparms);
-        cout << "   Column indexing parameter: " << multparms << endl;
-      } else {
-        LookupC = atoi(multparms.c_str());
-        cout << "   Column indexing parameter: " << LookupC << endl;
-      }
+      LookupC = State->GetParameterIndex(multparms);
+      cout << "   Column indexing parameter: " << multparms << endl;
     }
 
     // Here, read in the line of the form (e.g.) FG_MACH|FG_QBAR|FG_ALPHA
@@ -118,19 +108,16 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, FGConfigFile* AC_cfg)
 
     end   = multparms.length();
     n     = multparms.find("|");
-    start = mult_count = multipliers = 0;
+    start = 0;
 
     while (n < end && n >= 0) {
       n -= start;
-      mult_idx[mult_count] = State->GetParameterIndex(multparms.substr(start,n));
-      multipliers += mult_idx[mult_count];
-      mult_count++;
+      multipliers.push_back(State->GetParameterIndex(multparms.substr(start,n)));
       start += n+1;
       n = multparms.find("|",start);
     }
-    mult_idx[mult_count] = State->GetParameterIndex(multparms.substr(start,n));
-    multipliers += mult_idx[mult_count];
-    mult_count++;
+
+    multipliers.push_back(State->GetParameterIndex(multparms.substr(start,n)));
 
     // End of non-dimensionalizing parameter read-in
 
@@ -143,14 +130,14 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, FGConfigFile* AC_cfg)
       Allocate(rows,2);
 
       for (r=1;r<=rows;r++) {
-        *AC_cfg >> Table3D[r][0];
-        *AC_cfg >> Table3D[r][1];
+        *AC_cfg >> Table[r][0];
+        *AC_cfg >> Table[r][1];
       }
 
       for (r=1;r<=rows;r++) {
         cout << "	";
         for (c=0;c<columns;c++) {
-          cout << Table3D[r][c] << "	";
+          cout << Table[r][c] << "	";
         }
         cout << endl;
       }
@@ -159,25 +146,29 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, FGConfigFile* AC_cfg)
     case TABLE:
       Allocate(rows, columns);
 
-      Table3D[0][0] = 0.0;
+      Table[0][0] = 0.0;
       for (c=1;c<=columns;c++) {
-        *AC_cfg >> Table3D[0][c];
+        *AC_cfg >> Table[0][c];
         for (r=1;r<=rows;r++) {
-          if ( c==1 ) *AC_cfg >> Table3D[r][0];
+          if ( c==1 ) *AC_cfg >> Table[r][0];
           else *AC_cfg >> ftrashcan;
-          *AC_cfg >> Table3D[r][c];
+          *AC_cfg >> Table[r][c];
         }
       }
 
       for (r=0;r<=rows;r++) {
         cout << "	";
         for (c=0;c<=columns;c++) {
-          cout << Table3D[r][c] << "	";
+          cout << Table[r][c] << "	";
         }
         cout << endl;
       }
 
       break;
+    case EQUATION:
+    case UNKNOWN:
+      cerr << "Unimplemented coefficient type: " << type << endl;
+      break;  
     }
     AC_cfg->GetNextConfigLine();
   }
@@ -185,8 +176,21 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, FGConfigFile* AC_cfg)
 
 /******************************************************************************/
 
-FGCoefficient::~FGCoefficient(void)
+FGCoefficient::~FGCoefficient(void) {
+  DeAllocate();
+}
+
+/******************************************************************************/
+
+bool FGCoefficient::DeAllocate(void)
 {
+  if (Table != NULL ) {
+    for (unsigned int i=0; i<=rows; i++) delete[] Table[i];
+    
+    delete[] Table;
+  } 
+  
+  return true;
 }
 
 /******************************************************************************/
@@ -195,18 +199,8 @@ bool FGCoefficient::Allocate(int r, int c)
 {
   rows = r;
   columns = c;
-  Table3D = new float*[r+1];
-  for (int i=0;i<=r;i++) Table3D[i] = new float[c+1];
-  return true;
-}
-
-/******************************************************************************/
-
-bool FGCoefficient::Allocate(int n)
-{
-  rows = n;
-  columns = 0;
-  Table2D = new float[n+1];
+  Table = new float*[r+1];
+  for (int i=0;i<=r;i++) Table[i] = new float[c+1];
   return true;
 }
 
@@ -215,26 +209,27 @@ bool FGCoefficient::Allocate(int n)
 float FGCoefficient::Value(float rVal, float cVal)
 {
   float rFactor, cFactor, col1temp, col2temp, Value;
-  int r, c, midx;
+  int r, c;
+  unsigned midx;
 
   if (rows < 2 || columns < 2) return 0.0;
 
-  for (r=1;r<=rows;r++) if (Table3D[r][0] >= rVal) break;
-  for (c=1;c<=columns;c++) if (Table3D[0][c] >= cVal) break;
+  for (r=1;r<=rows;r++) if (Table[r][0] >= rVal) break;
+  for (c=1;c<=columns;c++) if (Table[0][c] >= cVal) break;
 
   c = c < 2 ? 2 : (c > columns ? columns : c);
   r = r < 2 ? 2 : (r > rows    ? rows    : r);
 
-  rFactor = (rVal - Table3D[r-1][0]) / (Table3D[r][0] - Table3D[r-1][0]);
-  cFactor = (cVal - Table3D[0][c-1]) / (Table3D[0][c] - Table3D[0][c-1]);
+  rFactor = (rVal - Table[r-1][0]) / (Table[r][0] - Table[r-1][0]);
+  cFactor = (cVal - Table[0][c-1]) / (Table[0][c] - Table[0][c-1]);
 
-  col1temp = rFactor*(Table3D[r][c-1] - Table3D[r-1][c-1]) + Table3D[r-1][c-1];
-  col2temp = rFactor*(Table3D[r][c] - Table3D[r-1][c]) + Table3D[r-1][c];
+  col1temp = rFactor*(Table[r][c-1] - Table[r-1][c-1]) + Table[r-1][c-1];
+  col2temp = rFactor*(Table[r][c] - Table[r-1][c]) + Table[r-1][c];
 
   SD = Value = col1temp + cFactor*(col2temp - col1temp);
 
-  for (midx=0;midx<mult_count;midx++) {
-    Value *= State->GetParameter(mult_idx[midx]);
+  for (midx=0; midx < multipliers.size(); midx++) {
+    Value *= State->GetParameter(multipliers[midx]);
   }
 
   return Value;
@@ -244,25 +239,28 @@ float FGCoefficient::Value(float rVal, float cVal)
 
 float FGCoefficient::Value(float Val)
 {
+  
+  
   float Factor, Value;
-  int r, midx;
+  int r;
+  unsigned midx;
 
   if (rows < 2) return 0.0;
 
-  for (r=1;r<=rows;r++) if (Table3D[r][0] >= Val) break;
+  for (r=1;r<=rows;r++) if (Table[r][0] >= Val) break;
   r = r < 2 ? 2 : (r > rows    ? rows    : r);
 
   // make sure denominator below does not go to zero.
-  if (Table3D[r][0] != Table3D[r-1][0]) {
-    Factor = (Val - Table3D[r-1][0]) / (Table3D[r][0] - Table3D[r-1][0]);
+  if (Table[r][0] != Table[r-1][0]) {
+    Factor = (Val - Table[r-1][0]) / (Table[r][0] - Table[r-1][0]);
   } else {
     Factor = 1.0;
   }
 
-  SD = Value = Factor*(Table3D[r][1] - Table3D[r-1][1]) + Table3D[r-1][1];
+  SD = Value = Factor*(Table[r][1] - Table[r-1][1]) + Table[r-1][1];
+  for (midx=0; midx < multipliers.size(); midx++) {
+    Value *= State->GetParameter(multipliers[midx]);
 
-  for (midx=0;midx<mult_count;midx++) {
-    Value *= State->GetParameter(mult_idx[midx]);
   }
 
   return Value;
@@ -273,12 +271,12 @@ float FGCoefficient::Value(float Val)
 float FGCoefficient::Value(void)
 {
 	float Value;
-	int midx;
+	unsigned midx;
 
 	SD = Value = StaticValue;
 
-  for (midx=0;midx<mult_count;midx++) {
-    Value *= State->GetParameter(mult_idx[midx]);
+  for (midx=0; midx < multipliers.size(); midx++) {
+    Value *= State->GetParameter(multipliers[midx]);
   }
 
   return Value;

@@ -663,7 +663,11 @@ FGBFI::setRoll (double roll)
 double
 FGBFI::getRPM ()
 {
-  return current_aircraft.fdm_state->get_engine(0)->get_RPM();
+  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+      return current_aircraft.fdm_state->get_engine(0)->get_RPM();
+  } else {
+      return 0.0;
+  }
 }
 
 
@@ -673,7 +677,9 @@ FGBFI::getRPM ()
 void
 FGBFI::setRPM (double rpm)
 {
-  current_aircraft.fdm_state->get_engine(0)->set_RPM( rpm );
+  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+      current_aircraft.fdm_state->get_engine(0)->set_RPM( rpm );
+  }
 }
 
 
