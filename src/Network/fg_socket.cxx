@@ -276,19 +276,6 @@ int FGSocket::write( char *buf, int length ) {
 	    FG_LOG( FG_IO, FG_ALERT, 
 		    "Error: accept() failed in write()" );
 	    return 0;
-	    int flag = 1;
-	    int result = setsockopt(sock,         /* socket affected */
-				    IPPROTO_TCP,  /* set option at TCP level */
-				    TCP_NODELAY,  /* name of option */
-				    (char *) &flag,/* the cast is historical
-                                                      cruft */
-				    sizeof(int)); /* length of option value */
-	    if (result < 0) {
-		FG_LOG( FG_IO, FG_ALERT, 
-			"Error: setsockopt() failed in write()" );
-		return 0;
-	
-	    }
 	} else {
 	    client_connections.push_back( msgsock );
 	}
