@@ -58,6 +58,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/ATC/libATC.a \
 	$(top_builddir)/src/Autopilot/libAutopilot.a \
 	$(top_builddir)/src/Cockpit/libCockpit.a \
+	$(top_builddir)/src/Cockpit/built_in/libBuilt_in.a \
 	$(top_builddir)/src/Controls/libControls.a \
 	$(top_builddir)/src/FDM/libFlight.a \
 	$(top_builddir)/src/FDM/Balloon/libBalloon.a \

@@ -48,74 +48,14 @@
 #include "steam.hxx"
 #include "panel_io.hxx"
 
+//built-in layers
+#include "built_in/FGMagRibbon.hxx"
+
 #if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(istream);
 SG_USING_STD(ifstream);
 #endif
 SG_USING_STD(string);
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Built-in layer for the magnetic compass ribbon layer.
-//
-// TODO: move this out into a special directory for built-in
-// layers of various sorts.
-////////////////////////////////////////////////////////////////////////
-
-class FGMagRibbon : public FGTexturedLayer
-{
-public:
-  FGMagRibbon (int w, int h);
-  virtual ~FGMagRibbon () {}
-
-  virtual void draw ();
-};
-
-FGMagRibbon::FGMagRibbon (int w, int h)
-  : FGTexturedLayer(w, h)
-{
-  FGCroppedTexture texture("Aircraft/Instruments/Textures/compass-ribbon.rgb");
-  setTexture(texture);
-}
-
-void
-FGMagRibbon::draw ()
-{
-  double heading = FGSteam::get_MH_deg();
-  double xoffset, yoffset;
-
-  while (heading >= 360.0) {
-    heading -= 360.0;
-  }
-  while (heading < 0.0) {
-    heading += 360.0;
-  }
-
-  if (heading >= 60.0 && heading <= 180.0) {
-    xoffset = heading / 240.0;
-    yoffset = 0.75;
-  } else if (heading >= 150.0 && heading <= 270.0) {
-    xoffset = (heading - 90.0) / 240.0;
-    yoffset = 0.50;
-  } else if (heading >= 240.0 && heading <= 360.0) {
-    xoffset = (heading - 180.0) / 240.0;
-    yoffset = 0.25;
-  } else {
-    if (heading < 270.0)
-      heading += 360.0;
-    xoffset = (heading - 270.0) / 240.0;
-    yoffset = 0.0;
-  }
-
-  xoffset = 1.0 - xoffset;
-				// Adjust to put the number in the centre
-  xoffset -= 0.25;
-
-  FGCroppedTexture &t = getTexture();
-  t.setCrop(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
-  FGTexturedLayer::draw();
-}
 
 
 

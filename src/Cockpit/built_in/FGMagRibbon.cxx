@@ -1,0 +1,71 @@
+//  FGMagRibbon.cxx - Built-in layer for the magnetic compass ribbon layer.
+//
+//  Written by David Megginson, started January 2000.
+//
+//  This program is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU General Public License as
+//  published by the Free Software Foundation; either version 2 of the
+//  License, or (at your option) any later version.
+// 
+//  This program is distributed in the hope that it will be useful, but
+//  WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  General Public License for more details.
+// 
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+//  $Id$
+
+
+#include "FGMagRibbon.hxx"
+#include "../steam.hxx"
+
+
+FGMagRibbon::FGMagRibbon (int w, int h)
+  : FGTexturedLayer(w, h)
+{
+  FGCroppedTexture texture("Aircraft/Instruments/Textures/compass-ribbon.rgb");
+  setTexture(texture);
+}
+
+void
+FGMagRibbon::draw ()
+{
+  double heading = FGSteam::get_MH_deg();
+  double xoffset, yoffset;
+
+  while (heading >= 360.0) {
+    heading -= 360.0;
+  }
+  while (heading < 0.0) {
+    heading += 360.0;
+  }
+
+  if (heading >= 60.0 && heading <= 180.0) {
+    xoffset = heading / 240.0;
+    yoffset = 0.75;
+  } else if (heading >= 150.0 && heading <= 270.0) {
+    xoffset = (heading - 90.0) / 240.0;
+    yoffset = 0.50;
+  } else if (heading >= 240.0 && heading <= 360.0) {
+    xoffset = (heading - 180.0) / 240.0;
+    yoffset = 0.25;
+  } else {
+    if (heading < 270.0)
+      heading += 360.0;
+    xoffset = (heading - 270.0) / 240.0;
+    yoffset = 0.0;
+  }
+
+  xoffset = 1.0 - xoffset;
+				// Adjust to put the number in the centre
+  xoffset -= 0.25;
+
+  FGCroppedTexture &t = getTexture();
+  t.setCrop(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
+  FGTexturedLayer::draw();
+}
+
+// end of FGMagRibbon.cxx
