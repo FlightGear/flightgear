@@ -601,7 +601,7 @@ void FGTower::ProcessDownwindReport(TowerPlaneRec* t) {
 	int a = 0;	// Count of preceding planes on approach
 	bool cf = false;	// conflicting traffic on final
 	bool cc = false;	// preceding traffic in circuit
-	TowerPlaneRec* tc;
+	TowerPlaneRec* tc = NULL;
 	for(tower_plane_rec_list_iterator twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
 		if((*twrItr)->plane.callsign == responseID) break;
 		tc = *twrItr;
@@ -609,7 +609,7 @@ void FGTower::ProcessDownwindReport(TowerPlaneRec* t) {
 	}
 	if(i > 1) { cc = true; }
 	doThresholdETACalc();
-	TowerPlaneRec* tf;
+	TowerPlaneRec* tf = NULL;
 	for(tower_plane_rec_list_iterator twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
 		if((*twrItr)->eta < (t->eta + 45)) {
 			a++;
@@ -625,22 +625,23 @@ void FGTower::ProcessDownwindReport(TowerPlaneRec* t) {
 	trns += ConvertNumToSpokenDigits(i + a);
 	// This assumes that the number spoken is landing position, not circuit position, since some of the traffic might be on straight-in final.
 	trns += " ";
-	TowerPlaneRec* tt;
+	TowerPlaneRec* tt = NULL;
 	if((i == 1) && (!rwyList.size()) && (t->nextOnRwy) && (!cf)) {	// Unfortunately nextOnRwy currently doesn't handle circuit/straight-in ordering properly at present, hence the cf check below.
 		trns += "Cleared to land";	// TODO - clear for the option if appropriate
 		t->clearedToLand = true;
 		if(!t->isUser) t->planePtr->RegisterTransmission(7);
 	} else if((i+a) > 1) {
 		//First set tt to point to the correct preceding plane - final or circuit
-		if(i > 1 && a > 0) {
+		if(tc && tf) {
 			tt = (tf->eta < tc->eta ? tf : tc);
-		} else if(i > 1) {
+		} else if(tc) {
 			tt = tc;
-		} else if(a > 0) {
+		} else if(tf) {
 			tt = tf;
 		} else {
 			// We should never get here!
 			SG_LOG(SG_ATC, SG_ALERT, "ALERT - Logic error in FGTower::ProcessDownwindReport");
+			return;
 		}
 		trns += "Follow the ";
 		string s = tt->plane.callsign;
