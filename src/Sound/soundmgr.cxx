@@ -230,6 +230,20 @@ void FGSoundMgr::update(int dt) {
 }
 
 
+void
+FGSoundMgr::pause ()
+{
+  audio_sched->pauseSample(0, 0);
+}
+
+
+void
+FGSoundMgr::resume ()
+{
+  audio_sched->resumeSample(0, 0);
+}
+
+
 // add a sound effect, return true if successful
 bool FGSoundMgr::add( FGSimpleSound *sound, const string& refname ) {
 

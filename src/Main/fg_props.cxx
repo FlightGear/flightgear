@@ -42,6 +42,7 @@
 #include <Objects/matlib.hxx>
 
 #include <GUI/gui.h>
+#include <Sound/soundmgr.hxx>
 
 #include "globals.hxx"
 #include "fgfs.hxx"
@@ -61,6 +62,8 @@ static double getWindDown ();
 static bool winding_ccw = true; // FIXME: temporary
 
 static bool fdm_data_logging = false; // FIXME: temporary
+
+static bool frozen = false;	// FIXME: temporary
 
 
 
@@ -210,6 +213,31 @@ setLoggingPriority (const char * p)
     SG_LOG(SG_GENERAL, SG_WARN, "Unknown logging priority " << priority);
   }
   SG_LOG(SG_GENERAL, SG_INFO, "Logging priority is " << getLoggingPriority());
+}
+
+
+/**
+ * Return the current frozen state.
+ */
+static bool
+getFreeze ()
+{
+  return frozen;
+}
+
+
+/**
+ * Set the current frozen state.
+ */
+static void
+setFreeze (bool f)
+{
+  frozen = f;
+				// Stop sound on a pause
+  if (f)
+    globals->get_soundmgr()->pause();
+  else
+    globals->get_soundmgr()->resume();
 }
 
 
@@ -549,7 +577,7 @@ fgInitProps ()
 				// Simulation
   fgTie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
   fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
-  // fgTie("/sim/freeze", getFreeze, setFreeze);
+  fgTie("/sim/freeze/master", getFreeze, setFreeze);
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
 
   fgTie("/sim/time/elapsed-ms", getElapsedTime_ms);

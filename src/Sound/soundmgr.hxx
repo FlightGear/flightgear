@@ -148,6 +148,18 @@ public:
     void update(int dt);
 
 
+    /**
+     * Pause all sounds.
+     */
+    void pause ();
+
+
+    /**
+     * Resume all sounds.
+     */
+    void resume ();
+
+
     // is audio working?
     inline bool is_working() const { return !audio_sched->notWorking(); }
 
