@@ -123,11 +123,10 @@ int objc=0;
 
 #include "version.h"
 
-#include "bfi.hxx"
 #include "fg_init.hxx"
 #include "fg_io.hxx"
+#include "fg_props.hxx"
 #include "globals.hxx"
-#include "keyboard.hxx"
 #include "splash.hxx"
 
 #ifdef macintosh
@@ -314,8 +313,8 @@ void fgInitVisuals( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 void fgRenderFrame( void ) {
-    // Update the BFI.
-    FGBFI::update();
+    // Update the default (kludged) properties.
+    fgUpdateProps();
 
     fgLIGHT *l = &cur_light_params;
     static double last_visibility = -9999;
@@ -646,9 +645,10 @@ void fgRenderFrame( void ) {
 
 	    if (prop_selector != NULL) {
 	      int propsel_mask = 0;
+	      double rpm = fgGetDouble("/engines/engine0/rpm");
 	      for (int i = 0; i < acmodel_npropsettings; i++) {
-		if (FGBFI::getRPM() >= acmodel_proprpms[i][0] &&
-		    FGBFI::getRPM() <= acmodel_proprpms[i][1]) {
+		if (rpm >= acmodel_proprpms[i][0] &&
+		    rpm <= acmodel_proprpms[i][1]) {
 		  propsel_mask |= 1 << i;
 		}
 	      }
