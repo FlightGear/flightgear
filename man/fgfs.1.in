@@ -16,7 +16,7 @@
 .\" Or try here: http://www.fsf.org/copyleft/gpl.html
 .\"
 .Id $Id$
-.TH FGFS 1 "January 2002" "@VERSION@" "@PACKAGE@"
+.TH FGFS 1 "September 2002" "@VERSION@" "@PACKAGE@"
 .SH NAME
 fgfs \- FlightGear Flight Simulator
 .SH SYNOPSIS
@@ -208,7 +208,7 @@ Specify window geometry (ie. 640x480, 800x600, etc).
 Specify heading or yaw angle (degrees).
 .TP
 .BR "--help" ", " "-h"
-Show help message.
+Show a brief help message.  Use --verbose,-v for a full listing of options.
 .TP
 .BI "--httpd=" "port"
 Start an HTTP server on the specified port.
@@ -224,7 +224,7 @@ Start up in the air.  This is implied when specifying an initial
 altitude above ground level.
 .TP
 .BI "--joyclient=" "medium" "," "direction" "," "hz" "," "options" "," "..."
-Open an IO connection to an Agwagon joystick
+Open an IO connection to an Agwagon joystick.
 .TP
 .BI "--jpg-httpd=" "port"
 Start a screen shot HTTP server on the specified port.
@@ -286,8 +286,11 @@ set property <name> to <value>.
 .BI "--pve=" "medium" "," "direction" "," "hz" "," "options" "," "..."
 Open an IO connection using the PVE (Provision Entertainment) protocol.
 .TP
+.B "--random-wind"
+Randomize initial wind parameters.  See also: --wind.
+.TP
 .BI "--ray=" "medium" "," "direction" "," "hz" "," "options" "," "..."
-Open an IO connection to a "RayWoodworth" motion chair
+Open an IO connection to a "RayWoodworth" motion chair.
 .TP
 .BI "--roll=" "degrees"
 Specify roll angle (degrees).
@@ -300,6 +303,9 @@ Enable flat shading.
 .TP
 .B "--shading-smooth"
 Enable smooth shading.
+.TP
+.B "--show-aircraft"
+Show a listing of all available aircraft.
 .TP
 .BI "--speed=" "n"
 Run the FDM "n" times faster than real-time.
@@ -355,6 +361,9 @@ Specify the default forward view direction as an offset from straight
 ahead.  Allowable values are LEFT, RIGHT, CENTER, or a specific number
 of degrees.
 .TP
+.B "--verbose, -v"
+Show verbose help message.
+.TP
 .BI "--visibility-miles=" "value"
 Specify initial visibility (miles).
 .TP
@@ -384,22 +393,27 @@ Per user configuration file.
 .TP
 $FGROOT/system.fgfsrc
 .RS
-System-wide configuration file in command line format
+System-wide configuration file in command line format.
 .RE
 .TP
 $FGROOT/preferences.xml
 .RS
-System-wide configuration file in XML format
+System-wide configuration file in XML format.
 .RE
 .TP
 $FGROOT/keyboard.xml
 .RS
-Keyboard bindings
+Keyboard bindings.
 .RE
 .TP
-$FGROOT/joystick.xml
+$FGROOT/Input/Joysticks/
 .RS
-Joystick bindings
+Joystick bindings.
+.RE
+.TP
+$FGROOT/mice.xml
+.RS
+Mouse bindings.
 .RE
 .SH BUGS
 Send bug reports to <flightgear-devel@flightgear.org>.
