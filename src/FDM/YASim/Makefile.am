@@ -55,6 +55,6 @@ yasim_SOURCES = yasim-test.cpp \
         Vector.hpp \
         Wing.cpp Wing.hpp
 
-yasim_LDADD = -lsgxml -lsgmisc -lsgdebug
+yasim_LDADD = -lsgxml -lsgprops -lsgmisc -lsgdebug
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include "gui.h"
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 void prop_pickerInit();
 void prop_pickerView( puObject * );

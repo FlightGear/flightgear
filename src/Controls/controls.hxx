@@ -24,7 +24,7 @@
 #ifndef _CONTROLS_HXX
 #define _CONTROLS_HXX
 
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 #include <Main/fgfs.hxx>
 #include <Main/globals.hxx>

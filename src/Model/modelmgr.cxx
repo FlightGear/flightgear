@@ -38,7 +38,10 @@ FGModelMgr::init ()
     Instance * instance = new Instance;
     FGModelPlacement * model = new FGModelPlacement;
     instance->model = model;
-    model->init(node->getStringValue("path", "Models/Geometry/glider.ac"));
+    model->init( globals->get_fg_root(),
+                 node->getStringValue("path", "Models/Geometry/glider.ac"),
+                 globals->get_props(),
+                 globals->get_sim_time_sec() );
 
 				// Set position and orientation either
 				// indirectly through property refs
@@ -120,7 +123,7 @@ FGModelMgr::update (double dt)
     if (instance->heading_deg_node != 0)
       model->setHeadingDeg(instance->heading_deg_node->getDoubleValue());
 
-    instance->model->update();
+    instance->model->update( globals->get_scenery()->get_center() );
   }
 }
 

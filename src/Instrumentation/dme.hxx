@@ -12,7 +12,8 @@
 #endif
 
 #include <simgear/math/point3d.hxx>
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
+
 #include <Main/fgfs.hxx>
 
 

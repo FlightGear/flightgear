@@ -20,11 +20,13 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/props/condition.hxx>
+#include <simgear/props/props_io.hxx>
+#include <simgear/scene/model/location.hxx>
 
-#include <Main/fg_props.hxx>
-#include <Main/globals.hxx>
-#include <Main/location.hxx>
-#include <Scenery/scenery.hxx>
+// #include <Main/fg_props.hxx>
+// #include <Main/globals.hxx>
+// #include <Scenery/scenery.hxx>
 
 #include "model.hxx"
 #include "panelnode.hxx"
@@ -177,7 +179,9 @@ static void
 make_animation (ssgBranch * model,
                 const char * name,
                 vector<SGPropertyNode_ptr> &name_nodes,
-                SGPropertyNode_ptr node)
+                SGPropertyNode *prop_root,
+                SGPropertyNode_ptr node,
+                double sim_time_sec )
 {
   Animation * animation = 0;
   const char * type = node->getStringValue("type", "none");
@@ -188,15 +192,15 @@ make_animation (ssgBranch * model,
   } else if (!strcmp("billboard", type)) {
     animation = new BillboardAnimation(node);
   } else if (!strcmp("select", type)) {
-    animation = new SelectAnimation(node);
+    animation = new SelectAnimation(prop_root, node);
   } else if (!strcmp("spin", type)) {
-    animation = new SpinAnimation(node);
+    animation = new SpinAnimation(prop_root, node, sim_time_sec );
   } else if (!strcmp("timed", type)) {
     animation = new TimedAnimation(node);
   } else if (!strcmp("rotate", type)) {
-    animation = new RotateAnimation(node);
+    animation = new RotateAnimation(prop_root, node);
   } else if (!strcmp("translate", type)) {
-    animation = new TranslateAnimation(node);
+    animation = new TranslateAnimation(prop_root, node);
   } else {
     animation = new NullAnimation(node);
     SG_LOG(SG_INPUT, SG_WARN, "Unknown animation type " << type);
@@ -221,7 +225,7 @@ make_animation (ssgBranch * model,
   ssgBranch * branch = animation->getBranch();
   splice_branch(branch, object);
 
-  for (int i = 1; i < name_nodes.size(); i++) {
+  for (unsigned int i = 1; i < name_nodes.size(); i++) {
       const char * name = name_nodes[i]->getStringValue();
       object = find_named_node(model, name);
       if (object == 0) {
@@ -246,7 +250,9 @@ make_animation (ssgBranch * model,
 ////////////////////////////////////////////////////////////////////////
 
 ssgBranch *
-fgLoad3DModel (const string &path)
+fgLoad3DModel( const string &fg_root, const string &path,
+               SGPropertyNode *prop_root,
+               double sim_time_sec )
 {
   ssgBranch * model = 0;
   SGPropertyNode props;
@@ -258,7 +264,7 @@ fgLoad3DModel (const string &path)
     xmlpath = modelpath;
   }
   else {
-    xmlpath = globals->get_fg_root();
+    xmlpath = fg_root;
     xmlpath.append(modelpath.str());
   }
 
@@ -313,7 +319,8 @@ fgLoad3DModel (const string &path)
     const char * name = animation_nodes[i]->getStringValue("name", 0);
     vector<SGPropertyNode_ptr> name_nodes =
       animation_nodes[i]->getChildren("object-name");
-    make_animation(model, name, name_nodes, animation_nodes[i]);
+    make_animation( model, name, name_nodes, prop_root, animation_nodes[i],
+                    sim_time_sec);
   }
 
                                 // Load sub-models
@@ -331,7 +338,8 @@ fgLoad3DModel (const string &path)
                         node->getFloatValue("offsets/z-m", 0.0));
     align->setTransform(res_matrix);
 
-    ssgBranch * kid = fgLoad3DModel(node->getStringValue("path"));
+    ssgBranch * kid = fgLoad3DModel( fg_root, node->getStringValue("path"),
+                                     prop_root, sim_time_sec );
     align->addKid(kid);
     model->addKid(align);
   }
@@ -420,13 +428,14 @@ BillboardAnimation::~BillboardAnimation ()
 // Implementation of SelectAnimation
 ////////////////////////////////////////////////////////////////////////
 
-SelectAnimation::SelectAnimation (SGPropertyNode_ptr props)
+SelectAnimation::SelectAnimation( SGPropertyNode *prop_root,
+                                  SGPropertyNode_ptr props )
   : Animation(props, new ssgSelector),
     _condition(0)
 {
   SGPropertyNode_ptr node = props->getChild("condition");
   if (node != 0)
-    _condition = fgReadCondition(node);
+    _condition = fgReadCondition(prop_root, node);
 }
 
 SelectAnimation::~SelectAnimation ()
@@ -449,12 +458,14 @@ SelectAnimation::update ()
 // Implementation of SpinAnimation
 ////////////////////////////////////////////////////////////////////////
 
-SpinAnimation::SpinAnimation (SGPropertyNode_ptr props)
+SpinAnimation::SpinAnimation( SGPropertyNode *prop_root,
+                              SGPropertyNode_ptr props,
+                              double sim_time_sec )
   : Animation(props, new ssgTransform),
-    _prop(fgGetNode(props->getStringValue("property", "/null"), true)),
+    _prop((SGPropertyNode *)prop_root->getNode(props->getStringValue("property", "/null"), true)),
     _factor(props->getDoubleValue("factor", 1.0)),
     _position_deg(props->getDoubleValue("starting-position-deg", 0)),
-    _last_time_sec(globals->get_sim_time_sec())
+    _last_time_sec( sim_time_sec /* globals->get_sim_time_sec() */ )
 {
     _center[0] = props->getFloatValue("center/x-m", 0);
     _center[1] = props->getFloatValue("center/y-m", 0);
@@ -470,11 +481,10 @@ SpinAnimation::~SpinAnimation ()
 }
 
 void
-SpinAnimation::update ()
+SpinAnimation::update( double sim_time_sec )
 {
-  double sim_time = globals->get_sim_time_sec();
-  double dt = sim_time - _last_time_sec;
-  _last_time_sec = sim_time;
+  double dt = sim_time_sec - _last_time_sec;
+  _last_time_sec = sim_time_sec;
 
   float velocity_rpms = (_prop->getDoubleValue() * _factor / 60.0);
   _position_deg += (dt * velocity_rpms * 360);
@@ -505,9 +515,8 @@ TimedAnimation::~TimedAnimation ()
 }
 
 void
-TimedAnimation::update ()
+TimedAnimation::update( double sim_time_sec )
 {
-    float sim_time_sec = globals->get_sim_time_sec();
     if ((sim_time_sec - _last_time_sec) >= _duration_sec) {
         _last_time_sec = sim_time_sec;
         _step++;
@@ -523,9 +532,10 @@ TimedAnimation::update ()
 // Implementation of RotateAnimation
 ////////////////////////////////////////////////////////////////////////
 
-RotateAnimation::RotateAnimation (SGPropertyNode_ptr props)
+RotateAnimation::RotateAnimation( SGPropertyNode *prop_root,
+                                  SGPropertyNode_ptr props )
     : Animation(props, new ssgTransform),
-      _prop(fgGetNode(props->getStringValue("property", "/null"), true)),
+      _prop((SGPropertyNode *)prop_root->getNode(props->getStringValue("property", "/null"), true)),
       _offset_deg(props->getDoubleValue("offset-deg", 0.0)),
       _factor(props->getDoubleValue("factor", 1.0)),
       _table(read_interpolation_table(props)),
@@ -550,7 +560,7 @@ RotateAnimation::~RotateAnimation ()
 }
 
 void
-RotateAnimation::update ()
+RotateAnimation::update()
 {
   if (_table == 0) {
    _position_deg = _prop->getDoubleValue() * _factor + _offset_deg;
@@ -571,9 +581,10 @@ RotateAnimation::update ()
 // Implementation of TranslateAnimation
 ////////////////////////////////////////////////////////////////////////
 
-TranslateAnimation::TranslateAnimation (SGPropertyNode_ptr props)
+TranslateAnimation::TranslateAnimation( SGPropertyNode *prop_root,
+                                        SGPropertyNode_ptr props )
   : Animation(props, new ssgTransform),
-    _prop(fgGetNode(props->getStringValue("property", "/null"), true)),
+      _prop((SGPropertyNode *)prop_root->getNode(props->getStringValue("property", "/null"), true)),
     _offset_m(props->getDoubleValue("offset-m", 0.0)),
     _factor(props->getDoubleValue("factor", 1.0)),
     _table(read_interpolation_table(props)),
@@ -634,9 +645,12 @@ FGModelPlacement::~FGModelPlacement ()
 }
 
 void
-FGModelPlacement::init (const string &path)
+FGModelPlacement::init( const string &fg_root,
+                        const string &path,
+                        SGPropertyNode *prop_root,
+                        double sim_time_sec )
 {
-  ssgBranch * model = fgLoad3DModel(path);
+  ssgBranch * model = fgLoad3DModel( fg_root, path, prop_root, sim_time_sec );
   if (model != 0)
       _position->addKid(model);
   _selector->addKid(_position);
@@ -644,12 +658,12 @@ FGModelPlacement::init (const string &path)
 }
 
 void
-FGModelPlacement::update ()
+FGModelPlacement::update( const Point3D scenery_center )
 {
   _location->setPosition( _lon_deg, _lat_deg, _elev_ft );
   _location->setOrientation( _roll_deg, _pitch_deg, _heading_deg );
 
-  sgCopyMat4(POS, _location->getTransformMatrix());
+  sgCopyMat4( POS, _location->getTransformMatrix(scenery_center) );
 
   sgVec3 trans;
   sgCopyVec3(trans, _location->get_view_pos());

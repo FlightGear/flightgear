@@ -77,6 +77,7 @@ SG_USING_STD(endl);
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/model/location.hxx>
 #ifdef FG_USE_CLOUDS_3D
 #  include <simgear/sky/clouds3d/SkySceneLoader.hpp>
 #  include <simgear/sky/clouds3d/SkyUtil.hpp>
@@ -105,7 +106,6 @@ SG_USING_STD(endl);
 #include <Model/loader.hxx>
 #include <Model/model.hxx>
 #include <Model/modelmgr.hxx>
-#include <Main/location.hxx>
 #include <Model/panelnode.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
@@ -445,12 +445,12 @@ void fgRenderFrame() {
     // Process/manage pending events
     global_events.update( delta_time_sec );
 
-    static const SGPropertyNode *longitude
-        = fgGetNode("/position/longitude-deg");
-    static const SGPropertyNode *latitude
-        = fgGetNode("/position/latitude-deg");
-    static const SGPropertyNode *altitude
-        = fgGetNode("/position/altitude-ft");
+    // static const SGPropertyNode *longitude
+    //     = fgGetNode("/position/longitude-deg");
+    // static const SGPropertyNode *latitude
+    //     = fgGetNode("/position/latitude-deg");
+    // static const SGPropertyNode *altitude
+    //     = fgGetNode("/position/altitude-ft");
     static const SGPropertyNode *groundlevel_nearplane
         = fgGetNode("/sim/current-view/ground-level-nearplane-m");
 
@@ -1277,7 +1277,7 @@ static void fgMainLoop( void ) {
                                                  visibility_meters );
         globals->get_tile_mgr()->
             update( acmodel_location, visibility_meters,
-                    acmodel_location->get_absolute_view_pos() );
+                    acmodel_location->get_absolute_view_pos(globals->get_scenery()->get_center()) );
         // save results of update in FGLocation for fdm...
         if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
           acmodel_location->
@@ -1955,7 +1955,7 @@ void fgLoadDCS(void) {
 
                 if ( strcmp(obj_filename,"repeat") != 0) {
                     ship_obj =
-                        globals->get_model_loader()->load_model( obj_filename );
+                      globals->get_model_loader()->load_model( globals->get_fg_root(), obj_filename, globals->get_props(), globals->get_sim_time_sec() );
                 }
       
                 if ( ship_obj != NULL ) {
@@ -1976,11 +1976,11 @@ void fgLoadDCS(void) {
                             // temporary hack for deck lights - ultimately should move to PLib (when??)
                             //const char *extn = file_extension ( obj_filename ) ;
                             if ( objc == 1 ){
-                                ssgVertexArray *lights = new ssgVertexArray( 100 );
+                                // ssgVertexArray *lights = new ssgVertexArray( 100 );
                             	ssgVertexArray *lightpoints = new ssgVertexArray( 100 );
                             	ssgVertexArray *lightnormals = new ssgVertexArray( 100 );
                             	ssgVertexArray *lightdir = new ssgVertexArray( 100 );
-                            	int ltype[500], light_type;
+                            	int ltype[500], light_type = 0;
                             	static int ltcount = 0;
                                 string token;
                             	sgVec3 rway_dir,rway_normal,lightpt;

@@ -22,7 +22,7 @@
 #  include <config.h>
 #endif
 
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 #include <Include/general.hxx>
 #include <Main/fg_props.hxx>

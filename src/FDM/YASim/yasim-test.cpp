@@ -1,7 +1,7 @@
 #include <stdio.h>
 
+#include <simgear/props/props.hxx>
 #include <simgear/xml/easyxml.hxx>
-#include <simgear/misc/props.hxx>
 
 #include "FGFDM.hpp"
 #include "Airplane.hpp"

@@ -16,18 +16,21 @@
 // Static (!) handling for all 3D panels in the program.  Very
 // clumsy.  Replace with per-aircraft handling.
 vector<FGPanelNode*> all_3d_panels;
-bool fgHandle3DPanelMouseEvent(int button, int updown, int x, int y)
+bool fgHandle3DPanelMouseEvent( int button, int updown, int x, int y )
 {
-    for(int i=0; i<all_3d_panels.size(); i++)
-        if(all_3d_panels[i]->doMouseAction(button, updown, x, y))
+    for ( unsigned int i = 0; i < all_3d_panels.size(); i++ ) {
+        if ( all_3d_panels[i]->doMouseAction(button, updown, x, y) ) {
             return true;
+        }
+    }
     return false;
 }
 
 void fgUpdate3DPanels()
 {
-    for(int i=0; i<all_3d_panels.size(); i++)
+    for ( unsigned int i = 0; i < all_3d_panels.size(); i++ ) {
         all_3d_panels[i]->getPanel()->updateMouseDelay();
+    }
 }
 
 FGPanelNode::FGPanelNode(SGPropertyNode* props)

@@ -49,7 +49,7 @@ SG_USING_STD(vector);
 #include <map>
 SG_USING_STD(map);
 
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 
 

@@ -45,7 +45,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Autopilot/auto_gui.hxx>
@@ -104,7 +104,7 @@ FGBinding::read (const SGPropertyNode * node)
 {
   const SGPropertyNode * conditionNode = node->getChild("condition");
   if (conditionNode != 0)
-    setCondition(fgReadCondition(conditionNode));
+    setCondition(fgReadCondition(globals->get_props(), conditionNode));
 
   _command_name = node->getStringValue("command", "");
   if (_command_name.empty()) {

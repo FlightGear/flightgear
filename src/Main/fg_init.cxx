@@ -1298,12 +1298,12 @@ SGTime *fgInitTime() {
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
 bool fgInitSubsystems() {
-    static const SGPropertyNode *longitude
-        = fgGetNode("/sim/presets/longitude-deg");
-    static const SGPropertyNode *latitude
-        = fgGetNode("/sim/presets/latitude-deg");
-    static const SGPropertyNode *altitude
-        = fgGetNode("/sim/presets/altitude-ft");
+    // static const SGPropertyNode *longitude
+    //     = fgGetNode("/sim/presets/longitude-deg");
+    // static const SGPropertyNode *latitude
+    //     = fgGetNode("/sim/presets/latitude-deg");
+    // static const SGPropertyNode *altitude
+    //     = fgGetNode("/sim/presets/altitude-ft");
 
     fgLIGHT *l = &cur_light_params;
 
@@ -1669,10 +1669,10 @@ bool fgInitSubsystems() {
 
 void fgReInitSubsystems()
 {
-    static const SGPropertyNode *longitude
-        = fgGetNode("/sim/presets/longitude-deg");
-    static const SGPropertyNode *latitude
-        = fgGetNode("/sim/presets/latitude-deg");
+    // static const SGPropertyNode *longitude
+    //     = fgGetNode("/sim/presets/longitude-deg");
+    // static const SGPropertyNode *latitude
+    //     = fgGetNode("/sim/presets/latitude-deg");
     static const SGPropertyNode *altitude
         = fgGetNode("/sim/presets/altitude-ft");
     static const SGPropertyNode *master_freeze

@@ -10,7 +10,7 @@
 #include <plib/pu.h>
 
 #include <simgear/compiler.h>	// for SG_USING_STD
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 #include <vector>
 SG_USING_STD(vector);

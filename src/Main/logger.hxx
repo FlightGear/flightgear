@@ -20,7 +20,7 @@
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/exception.hxx>
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 SG_USING_STD(ostream);
 SG_USING_STD(vector);

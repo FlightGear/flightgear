@@ -54,8 +54,7 @@ fgfs_SOURCES = \
 	splash.cxx splash.hxx \
 	util.cxx util.hxx \
 	viewer.cxx viewer.hxx \
-	viewmgr.cxx viewmgr.hxx \
-        location.cxx location.hxx
+	viewmgr.cxx viewmgr.hxx
 
 fgfs_LDADD = \
 	$(top_builddir)/src/Aircraft/libAircraft.a \
@@ -89,8 +88,8 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \
-	-lsgroute -lsgsky -lsgephem -lsgtiming -lsgio -lsgscreen \
-	-lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
+	-lsgroute -lsgsky -lsgephem -lsgmodel -lsgtiming -lsgio -lsgscreen \
+	-lsgmath -lsgbucket -lsgprops -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
 	-lsgserial \
 	$(THREAD_LIBS) \
 	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \

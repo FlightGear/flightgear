@@ -11,7 +11,7 @@
 # error This library requires C++
 #endif
 
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 #include <Main/fgfs.hxx>
 
 

@@ -24,19 +24,18 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/scene/model/location.hxx>
 
-
-#include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
 #include <Model/model.hxx>
-#include <Main/location.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/LaRCsim/ls_cockpit.h>
 #include <FDM/LaRCsim/ls_generic.h>
 #include <FDM/LaRCsim/ls_interface.h>
 #include <FDM/LaRCsimIC.hxx>
 #include <FDM/UIUCModel/uiuc_aircraft.h>
+#include <Main/fg_props.hxx>
 #include <Model/acmodel.hxx>
 
 #include "IO360.hxx"

@@ -39,7 +39,10 @@ public:
     FGModelLoader ();
     virtual ~FGModelLoader ();
 
-    virtual ssgEntity * load_model (const string &path);
+    virtual ssgEntity * load_model( const string &fg_root,
+                                    const string &path,
+                                    SGPropertyNode *prop_root,
+                                    double sim_time_sec );
 };
 
 
@@ -52,7 +55,8 @@ public:
     FGTextureLoader ();
     virtual ~FGTextureLoader ();
 
-    virtual ssgTexture * load_texture (const string &path);
+    virtual ssgTexture * load_texture( const string &fg_root,
+                                       const string &path );
 };
 
 #endif

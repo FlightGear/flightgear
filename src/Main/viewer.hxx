@@ -34,12 +34,11 @@
 
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
+#include <simgear/scene/model/location.hxx>
 
 #include <plib/sg.h>		// plib include
 
 #include "fgfs.hxx"
-
-#include <Main/location.hxx>
 
 #define FG_FOV_MIN 0.1
 #define FG_FOV_MAX 179.9

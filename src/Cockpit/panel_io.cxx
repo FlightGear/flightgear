@@ -31,9 +31,9 @@
 #include <simgear/compiler.h>
 #include <simgear/misc/exception.hxx>
 
-#include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/props.hxx>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props.hxx>
 
 #include STL_IOSTREAM
 #include STL_FSTREAM
@@ -137,7 +137,8 @@ readConditions (FGConditional * component, const SGPropertyNode * node)
   const SGPropertyNode * conditionNode = node->getChild("condition");
   if (conditionNode != 0)
 				// The top level is implicitly AND
-    component->setCondition(fgReadCondition(conditionNode));
+    component->setCondition(fgReadCondition(globals->get_props(),
+                                            conditionNode) );
 }
 
 

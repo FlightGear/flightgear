@@ -485,7 +485,8 @@ FGViewer::updateFromModelLocation (FGLocation * location)
 void
 FGViewer::updateAtModelLocation (FGLocation * location)
 {
-  sgCopyMat4(ATLOCAL, location->getCachedTransformMatrix());
+  sgCopyMat4(ATLOCAL, 
+             location->getCachedTransformMatrix());
 }
 
 void
@@ -495,7 +496,8 @@ FGViewer::recalcOurOwnLocation (FGLocation * location, double lon_deg, double la
   // update from our own data...
   location->setPosition( lon_deg, lat_deg, alt_ft );
   location->setOrientation( roll_deg, pitch_deg, heading_deg );
-  sgCopyMat4(LOCAL, location->getTransformMatrix());
+  sgCopyMat4(LOCAL,
+             location->getTransformMatrix(globals->get_scenery()->get_center()));
 }
 
 // recalc() is done every time one of the setters is called (making the 
@@ -519,7 +521,7 @@ FGViewer::recalcLookFrom ()
 {
 
   sgVec3 right, forward;
-  sgVec3 eye_pos;
+  // sgVec3 eye_pos;
   sgVec3 position_offset; // eye position offsets (xyz)
 
   // LOOKFROM mode...
@@ -606,7 +608,9 @@ FGViewer::recalcLookAt ()
   // calculate the "at" target object positon relative to eye or view's tile center...
   sgdVec3 dVec3;
   sgdSetVec3(dVec3,  _location->get_tile_center()[0], _location->get_tile_center()[1], _location->get_tile_center()[2]);
-  sgdSubVec3(dVec3, _target_location->get_absolute_view_pos(), dVec3 );
+  sgdSubVec3(dVec3,
+             _target_location->get_absolute_view_pos(globals->get_scenery()->get_center()),
+             dVec3 );
   sgSetVec3(at_pos, dVec3[0], dVec3[1], dVec3[2]);
 
   // Update location data for eye...
@@ -668,7 +672,8 @@ FGViewer::copyLocationData()
   // Get our friendly vectors from the eye location...
   sgCopyVec3(_zero_elev_view_pos,  _location->get_zero_elev());
   sgCopyVec3(_relative_view_pos, _location->get_view_pos());
-  sgdCopyVec3(_absolute_view_pos, _location->get_absolute_view_pos());
+  sgdCopyVec3(_absolute_view_pos,
+              _location->get_absolute_view_pos(globals->get_scenery()->get_center()));
   sgCopyMat4(UP, _location->getCachedUpMatrix());
   sgCopyVec3(_world_up, _location->get_world_up());
   // these are the vectors that the sun and moon code like to get...

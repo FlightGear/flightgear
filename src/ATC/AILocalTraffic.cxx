@@ -23,9 +23,10 @@
 #  include <config.h>
 #endif
 
+#include <simgear/scene/model/location.hxx>
+
 #include <Airports/runways.hxx>
 #include <Main/globals.hxx>
-#include <Main/location.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <simgear/math/point3d.hxx>
@@ -156,7 +157,8 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	string planepath = "Aircraft/c172/Models/c172-dpm.ac";
 	SGPath path = globals->get_fg_root();
 	path.append(planepath);
-	aip.init(planepath.c_str());
+	aip.init( path.str(), planepath.c_str(), globals->get_props(),
+                  globals->get_sim_time_sec() );
 	aip.setVisible(false);		// This will be set to true once a valid ground elevation has been determined
 	globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
 	
@@ -1117,7 +1119,8 @@ void FGAILocalTraffic::DoGroundElev() {
 	double visibility_meters = fgGetDouble("/environment/visibility-m");
 	//globals->get_tile_mgr()->prep_ssg_nodes( acmodel_location,
 	globals->get_tile_mgr()->prep_ssg_nodes( aip.getFGLocation(),	visibility_meters );
-	globals->get_tile_mgr()->update( aip.getFGLocation(), visibility_meters, (aip.getFGLocation())->get_absolute_view_pos() );
+        Point3D scenery_center = globals->get_scenery()->get_center();
+	globals->get_tile_mgr()->update( aip.getFGLocation(), visibility_meters, (aip.getFGLocation())->get_absolute_view_pos( scenery_center ) );
 	// save results of update in FGLocation for fdm...
 	
 	//if ( globals->get_scenery()->get_cur_elev() > -9990 ) {

@@ -41,7 +41,7 @@
 #include <plib/ssg.h>
 
 #include <simgear/math/interpolater.hxx>
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <cmath>

@@ -17,7 +17,7 @@
 #endif
 
 #include <simgear/misc/commands.hxx>
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 /**
  * Initialize the built-in commands.

@@ -34,10 +34,10 @@
 #  include <windows.h>
 #endif
 
-#include <simgear/misc/props.hxx>
-#include <simgear/misc/props_io.hxx>
 #include <simgear/misc/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <plib/pu.h>
 

@@ -35,13 +35,15 @@
 #  include <config.h>
 #endif
 
-#include "prop_picker.hxx"
-#include <Main/globals.hxx>
-
 #include <simgear/compiler.h>
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 #include STL_STRING
+
+#include <Main/globals.hxx>
+
+#include "prop_picker.hxx"
+
 SG_USING_STD(string);
 
 // A local alternative name, for use when a variable called "string" is in scope - e.g. in classes derived from puInput.

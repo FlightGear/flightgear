@@ -47,10 +47,8 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/misc/sg_path.hxx>
-//#include <simgear/math/fg_random.h>
-//#include <simgear/math/polar3d.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Autopilot/newauto.hxx>
@@ -61,7 +59,6 @@
 #include <NetworkOLK/network.h>
 #endif
 #include <Scenery/scenery.hxx>
-//#include <Time/fg_timer.hxx>
 
 #if defined ( __sun__ ) || defined ( __sgi )
 extern "C" {

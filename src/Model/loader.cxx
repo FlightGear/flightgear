@@ -5,7 +5,7 @@
 #endif
 
 #include <simgear/compiler.h>
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 #include "loader.hxx"
 #include "model.hxx"
@@ -61,13 +61,16 @@ FGModelLoader::~FGModelLoader ()
 }
 
 ssgEntity *
-FGModelLoader::load_model (const string &path)
+FGModelLoader::load_model( const string &fg_root,
+                           const string &path,
+                           SGPropertyNode *prop_root,
+                           double sim_time_sec )
 {
                                 // FIXME: normalize path to
                                 // avoid duplicates.
     std::map<string, ssgBase *>::iterator it = _table.find(path);
     if (it == _table.end()) {
-        _table[path] = fgLoad3DModel((char *)path.c_str());
+        _table[path] = fgLoad3DModel( fg_root, path, prop_root, sim_time_sec );
         it = _table.find(path);
         it->second->ref();      // add one reference to keep it around
     }
@@ -89,7 +92,7 @@ FGTextureLoader::~FGTextureLoader ()
 }
 
 ssgTexture *
-FGTextureLoader::load_texture (const string &path)
+FGTextureLoader::load_texture( const string &fg_root, const string &path )
 {
     std::map<string, ssgBase *>::iterator it = _table.find(path);
     if (it == _table.end()) {

@@ -17,7 +17,8 @@ SG_USING_STD(vector);
 #include <plib/sg.h>
 #include <plib/ssg.h>
 
-#include <simgear/misc/props.hxx>
+#include <simgear/math/point3d.hxx>
+#include <simgear/props/props.hxx>
 
 
 // Don't pull in the headers, since we don't need them here.
@@ -51,7 +52,9 @@ class FGLocation;
  * Subsystems should not normally invoke this function directly;
  * instead, they should use the FGModelLoader declared in loader.hxx.
  */
-ssgBranch * fgLoad3DModel (const string &path);
+ssgBranch * fgLoad3DModel( const string& fg_root, const string &path,
+                           SGPropertyNode *prop_root,
+                           double sim_time_sec );
 
 
 
@@ -131,7 +134,8 @@ public:
 class SelectAnimation : public Animation
 {
 public:
-  SelectAnimation (SGPropertyNode_ptr props);
+  SelectAnimation( SGPropertyNode *prop_root,
+                   SGPropertyNode_ptr props );
   virtual ~SelectAnimation ();
   virtual void update ();
 private:
@@ -147,9 +151,11 @@ private:
 class SpinAnimation : public Animation
 {
 public:
-  SpinAnimation (SGPropertyNode_ptr props);
+  SpinAnimation( SGPropertyNode *prop_root,
+                 SGPropertyNode_ptr props,
+                 double sim_time_sec );
   virtual ~SpinAnimation ();
-  virtual void update ();
+  virtual void update( double sim_time_sec );
 private:
   SGPropertyNode_ptr _prop;
   double _factor;
@@ -169,7 +175,7 @@ class TimedAnimation : public Animation
 public:
     TimedAnimation (SGPropertyNode_ptr props);
     virtual ~TimedAnimation ();
-    virtual void update ();
+    virtual void update( double sim_time_sec );
 private:
     double _duration_sec;
     double _last_time_sec;
@@ -185,9 +191,9 @@ private:
 class RotateAnimation : public Animation
 {
 public:
-  RotateAnimation (SGPropertyNode_ptr props);
+  RotateAnimation( SGPropertyNode *prop_root, SGPropertyNode_ptr props );
   virtual ~RotateAnimation ();
-  virtual void update ();
+  virtual void update();
 private:
   SGPropertyNode_ptr _prop;
   double _offset_deg;
@@ -210,7 +216,8 @@ private:
 class TranslateAnimation : public Animation
 {
 public:
-  TranslateAnimation (SGPropertyNode_ptr props);
+  TranslateAnimation( SGPropertyNode *prop_root,
+                      SGPropertyNode_ptr props );
   virtual ~TranslateAnimation ();
   virtual void update ();
 private:
@@ -243,8 +250,11 @@ public:
   FGModelPlacement ();
   virtual ~FGModelPlacement ();
 
-  virtual void init (const string &path);
-  virtual void update ();
+  virtual void init( const string &fg_root,
+                     const string &path,
+                     SGPropertyNode *prop_root,
+                     double sim_time_sec );
+  virtual void update( const Point3D scenery_center );
 
   virtual ssgEntity * getSceneGraph () { return (ssgEntity *)_selector; }
 

@@ -90,7 +90,7 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 // Show available aircraft types
 void fgReadAircraft(void) {
 
-   SGPropertyNode *aircraft_types = fgGetNode("/sim/aircraft-types", true);
+   // SGPropertyNode *aircraft_types = fgGetNode("/sim/aircraft-types", true);
 
    SGPath path( globals->get_fg_root() );
    path.append("Aircraft");
@@ -127,10 +127,8 @@ void fgReadAircraft(void) {
              SGPropertyNode *desc = node->getNode("description");
 
              if (desc) {
-#endif
-                SGPropertyNode *aircraft =
+                 SGPropertyNode *aircraft =
                                 aircraft_types->getChild(dire->d_name, 0, true);
-#if 0
 
                 aircraft->setStringValue(strdup(desc->getStringValue()));
              }

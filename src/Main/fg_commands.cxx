@@ -8,11 +8,11 @@
 #include STL_STRING
 #include STL_FSTREAM
 
+#include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/commands.hxx>
-#include <simgear/misc/props.hxx>
-#include <simgear/sg_inlines.h>
+#include <simgear/props/props.hxx>
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
@@ -22,7 +22,7 @@
 #include <GUI/dialog.hxx>
 #include <Scenery/tilemgr.hxx>
 #if defined(HAVE_PLIB_PSL)
-#include <Scripting/scriptmgr.hxx>
+#  include <Scripting/scriptmgr.hxx>
 #endif
 #include <Time/tmp.hxx>
 
@@ -196,7 +196,7 @@ do_reinit (const SGPropertyNode * arg)
     vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
     if (subsystems.size() == 0)
         globals->get_subsystem_mgr()->reinit();
-    else for (int i = 0; i < subsystems.size(); i++) {
+    else for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
         const char * name = subsystems[i]->getStringValue();
         FGSubsystem * subsystem = globals->get_subsystem(name);
         if (subsystem == 0) {
@@ -220,7 +220,7 @@ do_suspend (const SGPropertyNode * arg)
     bool result = true;
 
     vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
-    for (int i = 0; i < subsystems.size(); i++) {
+    for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
         const char * name = subsystems[i]->getStringValue();
         FGSubsystem * subsystem = globals->get_subsystem(name);
         if (subsystem == 0) {
@@ -244,7 +244,7 @@ do_resume (const SGPropertyNode * arg)
     bool result = true;
 
     vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
-    for (int i = 0; i < subsystems.size(); i++) {
+    for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
         const char * name = subsystems[i]->getStringValue();
         FGSubsystem * subsystem = globals->get_subsystem(name);
         if (subsystem == 0) {

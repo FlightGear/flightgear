@@ -27,7 +27,7 @@
 #define _NEWAUTO_HXX
 
 
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/route/waypoint.hxx>
 
 #include <Main/fgfs.hxx>

@@ -33,7 +33,8 @@
 #include <simgear/compiler.h>
 
 #include <simgear/misc/commands.hxx>
-#include <simgear/misc/props.hxx>
+#include <simgear/props/condition.hxx>
+#include <simgear/props/props.hxx>
 
 #include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
