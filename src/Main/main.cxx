@@ -518,7 +518,9 @@ void fgRenderFrame( void ) {
 	}
  
 	// set lighting parameters
-	glLightfv( GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
+	GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
+	glLightModelfv( GL_LIGHT_MODEL_AMBIENT, l->scene_ambient );
+	glLightfv( GL_LIGHT0, GL_AMBIENT, black );
 	glLightfv( GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
 	// glLightfv(GL_LIGHT0, GL_SPECULAR, white );
 
