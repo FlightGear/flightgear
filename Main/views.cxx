@@ -538,12 +538,64 @@ void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
 }
 
 
+#if 0
+// Reject non viewable spheres from current View Frustrum by Curt
+// Olson curt@me.umn.edu and Norman Vine nhv@yahoo.com with 'gentle
+// guidance' from Steve Baker sbaker@link.com
+int
+fgVIEW::SphereClip( const fgPoint3d *cp,
+			const double radius )
+{
+    double x1, y1;
+
+    MAT3vec eye;	
+    double *mat;
+    double x, y, z;
+
+    x = cp->x;
+    y = cp->y;
+    z = cp->z;
+	
+    mat = (double *)(WORLD_TO_EYE);
+	
+    eye[2] =  x*mat[2] + y*mat[6] + z*mat[10] + mat[14];
+	
+    // Check near and far clip plane
+    if( ( eye[2] > radius ) ||
+	( eye[2] + radius + current_weather.visibility < 0) )
+	// ( eye[2] + radius + far_plane < 0) )
+    {
+	return 1;
+    }
+	
+    // check right and left clip plane (from eye perspective)
+    x1 = radius * fov_x_clip;
+    eye[0] = (x*mat[0] + y*mat[4] + z*mat[8] + mat[12]) * slope_x;
+    if( (eye[2] > -(eye[0]+x1)) || (eye[2] > (eye[0]-x1)) ) {
+	return(1);
+    }
+	
+    // check bottom and top clip plane (from eye perspective)
+    y1 = radius * fov_y_clip;
+    eye[1] = (x*mat[1] + y*mat[5] + z*mat[9] + mat[13]) * slope_y; 
+    if( (eye[2] > -(eye[1]+y1)) || (eye[2] > (eye[1]-y1)) ) {
+	return 1;
+    }
+
+    return 0;
+}
+#endif
+
+
 // Destructor
 fgVIEW::~fgVIEW( void ) {
 }
 
 
 // $Log$
+// Revision 1.21  1998/09/17 18:35:33  curt
+// Added F8 to toggle fog and F9 to toggle texturing.
+//
 // Revision 1.20  1998/09/08 15:04:35  curt
 // Optimizations by Norman Vine.
 //

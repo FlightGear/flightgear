@@ -47,6 +47,7 @@
 #include <Debug/fg_debug.h>
 #include <GUI/gui.h>
 #include <Include/fg_constants.h>
+#include <Objects/material.hxx>
 #include <PUI/pu.h>
 #include <Time/light.hxx>
 #include <Weather/weather.h>
@@ -78,7 +79,6 @@ void GLUTkey(unsigned char k, int x, int y) {
     fgVIEW *v;
     struct fgWEATHER *w;
     float fov, tmp;
-    int status;
 
     c = current_aircraft.controls;
     f = current_aircraft.flight;
@@ -299,8 +299,37 @@ void GLUTspecialkey(int k, int x, int y) {
     } else {
         fgPrintf( FG_INPUT, FG_DEBUG, "\n");
 	switch (k) {
+ 	case GLUT_KEY_F8: /* F8 toggles fog ... off fastest nicest... */
+	    current_options.cycle_fog();
+	
+	    if ( current_options.get_fog() == fgOPTIONS::FG_FOG_DISABLED ) {
+		fgPrintf( FG_INPUT, FG_INFO, "Fog disabled\n" );
+	    } else if ( current_options.get_fog() == 
+			fgOPTIONS::FG_FOG_FASTEST )
+	    {
+		fgPrintf( FG_INPUT, FG_INFO, 
+			  "Fog enabled, hint set to fastest\n" );
+	    } else if ( current_options.get_fog() ==
+			fgOPTIONS::FG_FOG_NICEST )
+	    {
+		fgPrintf( FG_INPUT, FG_INFO,
+			  "Fog enabled, hint set to nicest\n" );
+	    }
+
+ 	    return;
+ 	case GLUT_KEY_F9: /* F9 toggles textures on and off... */
+	    if ( material_mgr.get_textures_loaded() ) {
+		current_options.get_textures() ?
+		    current_options.set_textures(false) :
+		    current_options.set_textures(true);
+		fgPrintf( FG_INPUT, FG_INFO, "Toggling texture\n" );
+	    } else {
+		fgPrintf( FG_INPUT, FG_INFO, 
+			  "No textures loaded, cannot toggle\n" );
+	    }
+ 	    return;
 	case GLUT_KEY_F10: /* F10 toggles menu on and off... */
-	    printf("Invoking call back function");
+	    fgPrintf(FG_INPUT, FG_INFO, "Invoking call back function");
 	    hideMenuButton -> 
 		setValue ((int) !(hideMenuButton -> getValue() ) );
 	    hideMenuButton -> invokeCallback();
@@ -347,9 +376,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.22  1998/09/15 04:27:27  curt
-/* Changes for new Astro code.
+/* Revision 1.23  1998/09/17 18:35:30  curt
+/* Added F8 to toggle fog and F9 to toggle texturing.
 /*
+ * Revision 1.22  1998/09/15 04:27:27  curt
+ * Changes for new Astro code.
+ *
  * Revision 1.21  1998/08/29 13:09:25  curt
  * Changes to event manager from Bernie Bright.
  *

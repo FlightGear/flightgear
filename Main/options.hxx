@@ -35,6 +35,13 @@
 #  include <config.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
+#include <GL/glut.h>
+#include <XGL/xgl.h>
+
 #include <string>
 
 #ifdef NEEDNAMESPACESTD
@@ -163,6 +170,18 @@ public:
     // Update functions
     void set_hud_status( bool status ) { hud_status = status; }
     void set_fov( double amount ) { fov = amount; }
+    void set_textures( bool status ) { textures = status; }
+    void cycle_fog( void ) { 
+	if ( fog == FG_FOG_DISABLED ) {
+	    fog = FG_FOG_FASTEST;
+	} else if ( fog == FG_FOG_FASTEST ) {
+	    fog = FG_FOG_NICEST;
+	    xglHint ( GL_FOG_HINT, GL_NICEST );
+	} else if ( fog == FG_FOG_NICEST ) {
+	    fog = FG_FOG_DISABLED;
+	    xglHint ( GL_FOG_HINT, GL_FASTEST );
+	}
+    }
 
 private:
 
@@ -182,6 +201,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.18  1998/09/17 18:35:31  curt
+// Added F8 to toggle fog and F9 to toggle texturing.
+//
 // Revision 1.17  1998/09/08 21:40:10  curt
 // Fixes by Charlie Hotchkiss.
 //
