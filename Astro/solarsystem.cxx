@@ -33,7 +33,7 @@
 
 #include <GL/glut.h>
 #include <XGL/xgl.h>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Time/sunpos.hxx>
 #include "solarsystem.hxx"
 
@@ -47,7 +47,8 @@ SolarSystem::SolarSystem(fgTIME *t)
 {
   if (theSolarSystem)
     {
-      fgPrintf(FG_GENERAL, FG_EXIT, "Error: only one solarsystem allowed\n");
+      FG_LOG( FG_GENERAL, FG_ALERT, "Error: only one solarsystem allowed" );
+      exit(-1);
     }
   theSolarSystem = this;
   ourSun     = new Star(t);   

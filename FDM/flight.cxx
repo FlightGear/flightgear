@@ -27,7 +27,7 @@
 #include "flight.hxx"
 #include "LaRCsim.hxx"
 
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Flight/LaRCsim/ls_interface.h>
 #include <Include/fg_constants.h>
 #include <Math/fg_geodesy.hxx>
@@ -41,7 +41,7 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
     double save_alt = 0.0;
     int result;
 
-    fgPrintf(FG_FLIGHT,FG_INFO,"Initializing flight model\n");
+    FG_LOG( FG_FLIGHT ,FG_INFO, "Initializing flight model" );
 
     if ( model == FG_SLEW ) {
 	// fgSlewInit(dt);
@@ -54,7 +54,7 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
 
 	fgFlight_2_LaRCsim(f);  /* translate FG to LaRCsim structure */
 	fgLaRCsimInit(dt);
-	fgPrintf( FG_FLIGHT, FG_INFO, "FG pos = %.2f\n", FG_Latitude );
+	FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << FG_Latitude );
 	fgLaRCsim_2_Flight(f);  /* translate LaRCsim back to FG	structure */
 
 	/* but lets restore our original bogus altitude when we are done */
@@ -62,8 +62,8 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
 	    FG_Altitude = save_alt;
 	}
     } else {
-	fgPrintf( FG_FLIGHT, FG_WARN,
-		  "Unimplemented flight model == %d\n", model );
+	FG_LOG( FG_FLIGHT, FG_WARN,
+		  "Unimplemented flight model == " << model );
     }
 
     result = 1;
@@ -86,8 +86,8 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
     } else if ( model == FG_LARCSIM ) {
 	fgLaRCsimUpdate(f, multiloop);
     } else {
-	fgPrintf( FG_FLIGHT, FG_WARN,
-		  "Unimplemented flight model == %d\n", model );
+	FG_LOG( FG_FLIGHT, FG_WARN,
+		"Unimplemented flight model == " <<  model );
     }
 
     end_elev = FG_Altitude;
@@ -121,6 +121,11 @@ void fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters) {
 
 
 // $Log$
+// Revision 1.3  1998/11/06 21:18:03  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.2  1998/10/16 23:27:40  curt
 // C++-ifying.
 //

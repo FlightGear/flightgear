@@ -49,7 +49,8 @@
 #include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
-#include <Debug/fg_debug.h>
+// #include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Joystick/joystick.hxx>
 #include <Math/fg_geodesy.hxx>
 #include <Math/fg_random.h>
@@ -85,14 +86,15 @@ int fgInitPosition( void ) {
 	fgAIRPORTS airports;
 	fgAIRPORT a;
 
-	fgPrintf( FG_GENERAL, FG_INFO, 
-		  "Attempting to set starting position from airport code %s.\n",
-		  id.c_str() );
+	FG_LOG( FG_GENERAL, FG_INFO, 
+		"Attempting to set starting position from airport code "
+		<< id );
 
 	airports.load("apt_simple");
 	if ( ! airports.search( id, &a ) ) {
-	    fgPrintf( FG_GENERAL, FG_EXIT, 
-		      "Failed to find %s in database.\n", id.c_str() );
+	    FG_LOG( FG_GENERAL, FG_ALERT, 
+		    "Failed to find " << id << " in database." );
+	    exit(-1);
 	} else {
 	    FG_Longitude = a.longitude * DEG_TO_RAD;
 	    FG_Latitude  = a.latitude * DEG_TO_RAD;
@@ -108,10 +110,11 @@ int fgInitPosition( void ) {
     FG_Altitude = current_options.get_altitude() * METER_TO_FEET;
     FG_Runway_altitude = FG_Altitude - 3.758099;
 
-    fgPrintf( FG_GENERAL, FG_INFO,
-	      "Initial position is: (%.4f, %.4f, %.2f)\n", 
-	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
-	      FG_Altitude * FEET_TO_METER);
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "Initial position is: ("
+	    << (FG_Longitude * RAD_TO_DEG) << ", " 
+	    << (FG_Latitude * RAD_TO_DEG) << ", " 
+	    << (FG_Altitude * FEET_TO_METER) << ")" );
 
     return(1);
 }
@@ -125,8 +128,11 @@ int fgInitGeneral( void ) {
 
     g = &general;
 
-    fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
-    fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
+    // set default log levels
+    fglog().setLogLevels( FG_ALL, FG_INFO );
+
+    FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
+    FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
 
     g->glVendor = (char *)glGetString ( GL_VENDOR );
     g->glRenderer = (char *)glGetString ( GL_RENDERER );
@@ -135,11 +141,12 @@ int fgInitGeneral( void ) {
     root = current_options.get_fg_root();
     if ( ! root.length() ) {
 	// No root path set? Then bail ...
-	fgPrintf( FG_GENERAL, FG_EXIT, "%s %s\n",
-		  "Cannot continue without environment variable FG_ROOT",
-		  "being defined.");
+	FG_LOG( FG_GENERAL, FG_ALERT, 
+		"Cannot continue without environment variable FG_ROOT"
+		<< "being defined." );
+	exit(-1);
     }
-    fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", root.c_str() );
+    FG_LOG( FG_GENERAL, FG_INFO, "FG_ROOT = " << root << endl );
 
     // prime the frame rate counter pump
     for ( i = 0; i < FG_FRAME_RATE_HISTORY; i++ ) {
@@ -166,8 +173,8 @@ int fgInitSubsystems( void )
     t = &cur_time_params;
     v = &current_view;
 
-    fgPrintf( FG_GENERAL, FG_INFO, "Initialize Subsystems\n");
-    fgPrintf( FG_GENERAL, FG_INFO, "========== ==========\n");
+    FG_LOG( FG_GENERAL, FG_INFO, "Initialize Subsystems");
+    FG_LOG( FG_GENERAL, FG_INFO, "========== ==========");
 
     // seed the random number generater
     fg_srandom();
@@ -184,15 +191,16 @@ int fgInitSubsystems( void )
     if ( fgSceneryInit() ) {
 	// Scenery initialized ok.
     } else {
-    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Scenery initialization!\n" );
+    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Scenery initialization!" );
+	exit(-1);
     }
 
     if( fgTileMgrInit() ) {
 	// Load the local scenery data
 	fgTileMgrUpdate();
     } else {
-    	fgPrintf( FG_GENERAL, FG_EXIT, 
-		  "Error in Tile Manager initialization!\n" );
+    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
+	exit(-1);
     }
 
     // calculalate a cartesian point somewhere along the line between
@@ -212,10 +220,11 @@ int fgInitSubsystems( void )
 	FG_Altitude = FG_Runway_altitude + 3.758099;
     }
 
-    fgPrintf( FG_GENERAL, FG_INFO,
-	      "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n",
-	      FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG,
-	      FG_Altitude * FEET_TO_METER);
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "Updated position (after elevation adj): ("
+	    << (FG_Latitude * RAD_TO_DEG) << ", " 
+	    << (FG_Longitude * RAD_TO_DEG) << ", " 
+	    << (FG_Altitude * FEET_TO_METER) << ")" );
     // end of thing that I just stuck in that I should probably move
 		
     // The following section sets up the flight model EOM parameters
@@ -264,20 +273,23 @@ int fgInitSubsystems( void )
     fgTimeUpdate(f, t);
 
     // Initialize view parameters
+    FG_LOG( FG_GENERAL, FG_DEBUG, "Before v->init()");
     v->Init();
+    FG_LOG( FG_GENERAL, FG_DEBUG, "After v->init()");
     v->UpdateViewMath(f);
     v->UpdateWorldToEye(f);
 
     // Build the solar system
     //fgSolarSystemInit(*t);
-    fgPrintf(FG_GENERAL, FG_INFO, "Building SolarSystem\n");
+    FG_LOG(FG_GENERAL, FG_INFO, "Building SolarSystem");
     SolarSystem::theSolarSystem = new SolarSystem(t);
 
     // Initialize the Stars subsystem
     if( fgStarsInit() ) {
 	// Stars initialized ok.
     } else {
-    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Stars initialization!\n" );
+    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Stars initialization!" );
+	exit(-1);
     }
 
     // Initialize the planetary subsystem
@@ -319,7 +331,8 @@ int fgInitSubsystems( void )
     if( fgCockpitInit( &current_aircraft )) {
 	// Cockpit initialized ok.
     } else {
-    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Cockpit initialization!\n" );
+    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Cockpit initialization!" );
+	exit(-1);
     }
 
     // Initialize the "sky"
@@ -339,29 +352,35 @@ int fgInitSubsystems( void )
 	FG_Altitude = FG_Runway_altitude + 3.758099;
     }
 
-    fgPrintf( FG_GENERAL, FG_INFO,
-	      "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n",
-	      FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG,
-	      FG_Altitude * FEET_TO_METER);
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "Updated position (after elevation adj): ("
+	    << (FG_Latitude * RAD_TO_DEG) << ", " 
+	    << (FG_Longitude * RAD_TO_DEG) << ", "
+	    << (FG_Altitude * FEET_TO_METER) << ")" );
     // end of thing that I just stuck in that I should probably move
 
     // Joystick support
     if ( fgJoystickInit() ) {
 	// Joystick initialized ok.
     } else {
-    	fgPrintf( FG_GENERAL, FG_ALERT, "Error in Joystick initialization!\n" );
+    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Joystick initialization!" );
     }
 
     // Autopilot init added here, by Jeff Goeke-Smith
     fgAPInit(&current_aircraft);
     
-    fgPrintf(FG_GENERAL, FG_INFO,"\n");
+    FG_LOG( FG_GENERAL, FG_INFO, endl);
 
     return(1);
 }
 
 
 // $Log$
+// Revision 1.47  1998/11/06 21:18:10  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.46  1998/10/27 02:14:38  curt
 // Changes to support GLUT joystick routines as fall back.
 //

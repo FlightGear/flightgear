@@ -39,7 +39,7 @@
 #endif
 
 #include <Aircraft/aircraft.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Math/fg_random.h>
@@ -150,7 +150,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
   instr_item *HIptr;
   int index;
 
-  fgPrintf( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD\n" );
+  FG_LOG( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD" );
 
   HUD_deque.erase( HUD_deque.begin(), HUD_deque.end());  // empty the HUD deque
 
@@ -532,7 +532,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
     instr_item *HIptr;
     int index;
 
-    fgPrintf( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD\n" );
+    FG_LOG( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD" );
 
     HUD_deque.erase( HUD_deque.begin(), HUD_deque.end());
 
@@ -835,6 +835,11 @@ void fgUpdateHUD( void ) {
 }
 
 // $Log$
+// Revision 1.27  1998/11/06 21:17:47  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.26  1998/11/03 12:33:11  curt
 // Display ft or m in mini-hud next to altitude.
 //

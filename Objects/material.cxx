@@ -37,7 +37,7 @@
 #include <string>
 
 #include "Include/fg_stl_config.h"
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Main/options.hxx>
 #include <Misc/fgstream.hxx>
 #include <Main/views.hxx>
@@ -117,8 +117,7 @@ operator >> ( istream& in, fgMATERIAL& m )
 		m.alpha = 0;
 	    else
 	    {
-		fgPrintf( FG_TERRAIN, FG_INFO,
-			  "Bad alpha value '%s'\n", token.c_str() );
+		FG_LOG( FG_TERRAIN, FG_INFO, "Bad alpha value " << token );
 	    }
 	}
 	else if ( token[0] == '}' )
@@ -177,10 +176,9 @@ fgMATERIAL::load_texture()
 		      read_rgb_texture(fg_tpath.c_str(), &width, &height)) 
 		     == NULL )
 		{
-		    fgPrintf( FG_GENERAL, FG_EXIT, 
-			      "Error in loading texture %s\n", 
-			      tpath.c_str() );
-		    return;
+		    FG_LOG( FG_GENERAL, FG_ALERT, 
+			    "Error in loading texture " << tpath );
+		    exit(-1);
 		} 
 	    } 
 
@@ -202,10 +200,9 @@ fgMATERIAL::load_texture()
 		     read_alpha_texture(fg_tpath.c_str(), &width, &height))
 		    == NULL )
 		{
-		    fgPrintf( FG_GENERAL, FG_EXIT, 
-			      "Error in loading texture %s\n",
-			      tpath.c_str() );
-		    return;
+		    FG_LOG( FG_GENERAL, FG_ALERT, 
+			    "Error in loading texture " << tpath );
+		    exit(-1);
 		} 
 	    } 
 
@@ -278,9 +275,10 @@ fgMATERIAL_MGR::load_lib ( void )
     // build the path name to the material db
     string mpath = current_options.get_fg_root() + "/materials";
     fg_gzifstream in( mpath );
-    if ( ! in )
-	fgPrintf( FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", 
-		  mpath.c_str() );
+    if ( ! in ) {
+	FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << mpath );
+	exit(-1);
+    }
 
     while ( ! in.eof() ) {
         // printf("%s", line);
@@ -357,6 +355,11 @@ fgMATERIAL_MGR::render_fragments()
 
 
 // $Log$
+// Revision 1.10  1998/11/06 21:18:17  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.9  1998/11/06 14:47:05  curt
 // Changes to track Bernie's updates to fgstream.
 //

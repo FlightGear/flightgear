@@ -40,7 +40,7 @@
 #include <string.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 #include <Main/options.hxx>
@@ -258,7 +258,7 @@ double get_climb_rate( void )
 
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 {
-    fgPrintf( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem\n");
+    FG_LOG( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem" );
 
     //	cockpit->code = 1;	/* It will be aircraft dependent */
     //	cockpit->status = 0;
@@ -279,9 +279,9 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 	fgPanelInit();
     }
 
-    fgPrintf( FG_COCKPIT, FG_INFO,
-	      "  Code %d  Status %d\n",
-	      ac_cockpit->code(), ac_cockpit->status() );
+    FG_LOG( FG_COCKPIT, FG_INFO,
+	    "  Code " << ac_cockpit->code() << " Status " 
+	    << ac_cockpit->status() );
     
     return true;
 }
@@ -292,9 +292,9 @@ void fgCockpitUpdate( void ) {
 
     pview = &current_view;
 
-    fgPrintf( FG_COCKPIT, FG_DEBUG,
-	      "Cockpit: code %d   status %d\n",
-	      ac_cockpit->code(), ac_cockpit->status() );
+    FG_LOG( FG_COCKPIT, FG_DEBUG,
+	    "Cockpit: code " << ac_cockpit->code() << " status " 
+	    << ac_cockpit->status() );
 
     if ( current_options.get_hud_status() ) {
 	// This will check the global hud linked list pointer.
@@ -310,6 +310,11 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.22  1998/11/06 21:17:45  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.21  1998/11/02 23:04:02  curt
 // HUD units now display in feet by default with meters being a command line
 // option.

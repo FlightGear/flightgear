@@ -26,7 +26,6 @@
 #define _MOON_HXX_
 
 #include <Aircraft/aircraft.hxx>
-#include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 #include <Main/views.hxx>

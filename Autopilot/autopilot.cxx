@@ -31,22 +31,12 @@
 #include <assert.h>
 #include <stdlib.h>
 
-// #include <list>
-// #include <Include/fg_stl_config.h>
-
 #include <Scenery/scenery.hxx>
-
-// #ifdef NEEDNAMESPACESTD
-// using namespace std;
-// #endif
 
 #include "autopilot.hxx"
 
 #include <Include/fg_constants.h>
-#include <Debug/fg_debug.h>
-
-
-// static list < double > alt_error_queue;
+#include <Debug/logstream.hxx>
 
 
 // The below routines were copied right from hud.c ( I hate reinventing
@@ -155,12 +145,15 @@ void fgAPInit( fgAIRCRAFT *current_aircraft )
 {
 	fgAPDataPtr APData ;
 
-	fgPrintf( FG_AUTOPILOT, FG_INFO, "Init AutoPilot Subsystem\n" );
+	FG_LOG( FG_AUTOPILOT, FG_INFO, "Init AutoPilot Subsystem" );
 
 	APData  = (fgAPDataPtr)calloc(sizeof(fgAPData),1);
 	
-	if (APData == NULL) // I couldn't get the mem.  Dying
-		fgPrintf( FG_AUTOPILOT, FG_EXIT,"No ram for Autopilot. Dying.\n");
+	if (APData == NULL) {
+	    // I couldn't get the mem.  Dying
+	    FG_LOG( FG_AUTOPILOT, FG_ALERT, "No ram for Autopilot. Dying.");
+	    exit(-1);
+	}
 		
 	APData->heading_hold = 0 ;     // turn the heading hold off
 	APData->altitude_hold = 0 ;    // turn the altitude hold off
@@ -203,7 +196,7 @@ int fgAPRun( void )
 	// figure out how far off we are from desired heading
 		  
 	// Now it is time to deterime how far we should be rolled.
-	fgPrintf( FG_AUTOPILOT, FG_DEBUG, "RelHeading: %f\n", RelHeading);
+	FG_LOG( FG_AUTOPILOT, FG_DEBUG, "RelHeading: " << RelHeading );
 		
 		
 	// Check if we are further from heading than the roll out point
@@ -232,7 +225,7 @@ int fgAPRun( void )
 
 	// Compare Target roll to Current Roll, Generate Rel Roll
 
-	fgPrintf( FG_COCKPIT, FG_BULK, "TargetRoll: %f\n", TargetRoll);
+	FG_LOG( FG_COCKPIT, FG_BULK, "TargetRoll: " << TargetRoll );
 		
 	RelRoll = NormalizeDegrees(TargetRoll - fgAPget_roll());
 
@@ -413,9 +406,8 @@ void fgAPToggleHeading( void )
 	APData->TargetHeading = fgAPget_heading();
     }
 
-    fgPrintf( FG_COCKPIT, FG_INFO, " fgAPSetHeading: (%d) %.2f\n",
-	      APData->heading_hold,
-	      APData->TargetHeading);
+    FG_LOG( FG_COCKPIT, FG_INFO, " fgAPSetHeading: (" 
+	    << APData->heading_hold << ") " << APData->TargetHeading );
 }
 	         
 
@@ -440,9 +432,8 @@ void fgAPToggleAltitude( void )
 	//                        alt_error_queue.end() );
     }
 
-    fgPrintf( FG_COCKPIT, FG_INFO, " fgAPSetAltitude: (%d) %.2f\n",
-	      APData->altitude_hold,
-	      APData->TargetAltitude);
+    FG_LOG( FG_COCKPIT, FG_INFO, " fgAPSetAltitude: (" 
+	    << APData->altitude_hold << ") " << APData->TargetAltitude );
 }
 	         
 
@@ -464,9 +455,8 @@ void fgAPToggleAutoThrottle ( void )
 	APData->speed_error_accum = 0.0;
     }
 
-    fgPrintf( FG_COCKPIT, FG_INFO, " fgAPSetAutoThrottle: (%d) %.2f\n",
-	      APData->auto_throttle,
-	      APData->TargetSpeed);
+    FG_LOG( FG_COCKPIT, FG_INFO, " fgAPSetAutoThrottle: (" 
+	    << APData->auto_throttle << ") " << APData->TargetSpeed );
 }
 
 void fgAPToggleTerrainFollow( void )
@@ -488,9 +478,8 @@ void fgAPToggleTerrainFollow( void )
 	APData->alt_error_accum = 0.0;
     }
 
-    fgPrintf( FG_COCKPIT, FG_INFO, " fgAPSetTerrainFollow: (%d) %.2f\n",
-	      APData->terrain_follow,
-	      APData->TargetAGL);
+    FG_LOG( FG_COCKPIT, FG_INFO, " fgAPSetTerrainFollow: ("
+	    << APData->terrain_follow << ") " << APData->TargetAGL );
 }
 
 double LinearExtrapolate( double x,double x1,double y1,double x2,double y2)

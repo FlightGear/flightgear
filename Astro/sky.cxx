@@ -36,7 +36,7 @@
 #include <XGL/xgl.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Flight/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Main/views.hxx>
@@ -78,7 +78,7 @@ void fgSkyVerticesInit( void ) {
     float theta;
     int i;
 
-    fgPrintf(FG_ASTRO, FG_INFO, "  Generating the sky dome vertices.\n");
+    FG_LOG(FG_ASTRO, FG_INFO, "  Generating the sky dome vertices.");
 
     for ( i = 0; i < 12; i++ ) {
 	theta = (i * 30.0) * DEG_TO_RAD;
@@ -115,8 +115,8 @@ void fgSkyColorsInit( void ) {
 
     l = &cur_light_params;
 
-    fgPrintf( FG_ASTRO, FG_INFO, 
-	      "  Generating the sky colors for each vertex.\n" );
+    FG_LOG( FG_ASTRO, FG_INFO, 
+	    "  Generating the sky colors for each vertex." );
 
     // setup for the possibility of sunset effects
     sun_angle = l->sun_angle * RAD_TO_DEG;
@@ -243,7 +243,7 @@ void fgSkyColorsInit( void ) {
 
 // Initialize the sky structure and colors
 void fgSkyInit( void ) {
-    fgPrintf(FG_ASTRO, FG_INFO, "Initializing the sky\n");
+    FG_LOG( FG_ASTRO, FG_INFO, "Initializing the sky" );
 
     fgSkyVerticesInit();
 
@@ -365,6 +365,11 @@ void fgSkyRender( void ) {
 
 
 // $Log$
+// Revision 1.14  1998/11/06 21:17:39  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.13  1998/10/20 18:28:30  curt
 // Tweaked sunset/sunrise colors.
 //

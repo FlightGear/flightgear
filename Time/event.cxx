@@ -43,7 +43,7 @@
 #include STL_ALGORITHM
 #include STL_FUNCTIONAL
 
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 
 #include "event.hxx"
 
@@ -214,13 +214,13 @@ void fgEVENT_MGR::Process( void ) {
     fg_timestamp cur_time;
     unsigned int i, size;
 
-    fgPrintf(FG_EVENT, FG_DEBUG, "Processing events\n");
+    FG_LOG( FG_EVENT, FG_DEBUG, "Processing events" );
     
     // get the current time
     timestamp(&cur_time);
 
-    fgPrintf( FG_EVENT, FG_DEBUG, 
-	      "  Current timestamp = %ld\n", cur_time.seconds);
+    FG_LOG( FG_EVENT, FG_DEBUG, 
+	    "  Current timestamp = " << cur_time.seconds );
 
     // printf("Checking if anything is ready to move to the run queue\n");
 
@@ -231,9 +231,9 @@ void fgEVENT_MGR::Process( void ) {
 	// e = *current++;
 	e_ptr = &event_table[i];
 	if ( e_ptr->status == fgEVENT::FG_EVENT_READY ) {
-	    fgPrintf(FG_EVENT, FG_DEBUG, 
-		     "  Item %d, current %d, next run @ %ld\n", 
-		     i, cur_time.seconds, e_ptr->next_run.seconds);
+	    FG_LOG( FG_EVENT, FG_DEBUG, 
+		    "  Item " << i << " current " << cur_time.seconds 
+		    << " next run @ " << e_ptr->next_run.seconds );
 	    if ( timediff(&cur_time, &(e_ptr->next_run)) <= 0) {
 	        run_queue.push_back(e_ptr);
 		e_ptr->status = fgEVENT::FG_EVENT_QUEUED;
@@ -258,6 +258,11 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 
 
 // $Log$
+// Revision 1.9  1998/11/06 21:18:24  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.8  1998/09/15 02:09:29  curt
 // Include/fg_callback.hxx
 //   Moved code inline to stop g++ 2.7 from complaining.

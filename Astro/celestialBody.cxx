@@ -25,7 +25,7 @@
 
 #include "celestialBody.hxx"
 #include "star.hxx"
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 
 /**************************************************************************
  * void CelestialBody::updatePosition(fgTIME *t, Star *ourSun)
@@ -78,8 +78,8 @@ void CelestialBody::updatePosition(fgTIME *t, Star *ourSun)
   ze = yg * sin(ecl) + zg * cos(ecl);
   rightAscension = atan2(ye, xe);
   declination = atan2(ze, sqrt(xe*xe + ye*ye));
-  fgPrintf(FG_GENERAL, FG_INFO, "Planet found at : %f (ra), %f (dec)\n", 
-	   rightAscension, declination);
+  FG_LOG(FG_GENERAL, FG_INFO, "Planet found at : " 
+	 << rightAscension << " (ra), " << declination << " (dec)" );
 
   //calculate some variables specific to calculating the magnitude 
   //of the planet

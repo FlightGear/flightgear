@@ -26,7 +26,7 @@
 
 #include <string.h>
 #include "moon.hxx"
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Objects/texload.h>
 
 static GLuint moon_texid;
@@ -51,7 +51,7 @@ Moon::Moon(fgTIME *t) :
   string tpath, fg_tpath;
   int width, height;
   
-  fgPrintf( FG_GENERAL, FG_INFO, "Initializing Moon Texture\n");
+  FG_LOG( FG_GENERAL, FG_INFO, "Initializing Moon Texture");
 #ifdef GL_VERSION_1_1
   xglGenTextures(1, &moon_texid);
   xglBindTexture(GL_TEXTURE_2D, moon_texid);
@@ -77,9 +77,9 @@ Moon::Moon(fgTIME *t) :
     if ( (moon_texbuf = read_rgb_texture(fg_tpath.c_str(), &width, &height)) 
 	 == NULL )
     {
-      fgPrintf( FG_GENERAL, FG_EXIT, 
-		"Error in loading moon texture %s\n", tpath.c_str() );
-      exit(1);
+	FG_LOG( FG_GENERAL, FG_ALERT, 
+		"Error in loading moon texture " << tpath );
+	exit(-1);
     } 
   } 
 
@@ -162,7 +162,7 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
   r += (-0.58 * cos(M - 2*D)
 	-0.46 * cos(2*D)
 	);
-  fgPrintf(FG_GENERAL, FG_INFO, "Running moon update\n");
+  FG_LOG(FG_GENERAL, FG_INFO, "Running moon update");
   xg = r * cos(lonecl) * cos(latecl);
   yg = r * sin(lonecl) * cos(latecl);
   zg = r *               sin(latecl);
@@ -213,8 +213,9 @@ void Moon::newImage(float ra, float dec)
   xglRotatef(((RAD_TO_DEG * ra)- 90.0), 0.0, 0.0, 1.0);
   xglRotatef((RAD_TO_DEG * dec), 1.0, 0.0, 0.0);
 
-  fgPrintf( FG_GENERAL, FG_INFO, 
-	   "Ra = (%f), Dec= (%f)", (RAD_TO_DEG *ra), (RAD_TO_DEG *dec) );
+  FG_LOG( FG_GENERAL, FG_INFO, 
+	  "Ra = (" << (RAD_TO_DEG *ra) 
+	  << "), Dec= (" << (RAD_TO_DEG *dec) << ")" );
   xglTranslatef(0.0, 58600.0, 0.0);
   Object = gluNewQuadric();
   gluQuadricTexture( Object, GL_TRUE );   

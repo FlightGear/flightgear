@@ -31,7 +31,7 @@
 #endif
 
 #include <Aircraft/aircraft.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 
 #if defined( ENABLE_LINUX_JOYSTICK )
 #  include <Joystick/js.hxx>
@@ -112,7 +112,7 @@ void joystick(unsigned int buttonMask, int js_x, int js_y, int js_z)
 // Initialize the joystick(s)
 int fgJoystickInit( void ) {
 
-    fgPrintf( FG_INPUT, FG_INFO, "Initializing joystick\n");
+    FG_LOG( FG_INPUT, FG_INFO, "Initializing joystick" );
 
 #if defined( ENABLE_LINUX_JOYSTICK )
 
@@ -129,9 +129,9 @@ int fgJoystickInit( void ) {
 	js0->setDeadBand( 0, 0.1 );
 	js0->setDeadBand( 1, 0.1 );
 
-	fgPrintf ( FG_INPUT, FG_INFO, 
-		   "  Joystick 0 detected with %d axes\n",
-		   js0->getNumAxes() );
+	FG_LOG ( FG_INPUT, FG_INFO, 
+		 "  Joystick 0 detected with " << js0->getNumAxes() 
+		 << " axes" );
     }
 
     if ( js1->notWorking () ) {
@@ -144,13 +144,13 @@ int fgJoystickInit( void ) {
 	js1->setDeadBand( 0, 0.1 );
 	js1->setDeadBand( 1, 0.1 );
 
-	fgPrintf ( FG_INPUT, FG_INFO,
-		   "  Joystick 1 detected with %d axes\n",
-		   js1->getNumAxes() );
+	FG_LOG ( FG_INPUT, FG_INFO,
+		 "  Joystick 1 detected with " << js1->getNumAxes() 
+		 << " axes" );
     }
 
     if ( js0->notWorking() && js1->notWorking() ) {
-	fgPrintf ( FG_INPUT, FG_INFO, "  No joysticks detected\n" );
+	FG_LOG ( FG_INPUT, FG_INFO, "  No joysticks detected" );
 	return 0;
     }
 
@@ -191,6 +191,11 @@ int fgJoystickRead( void ) {
 
 
 // $Log$
+// Revision 1.5  1998/11/06 21:18:04  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.4  1998/10/27 02:14:32  curt
 // Changes to support GLUT joystick routines as fall back.
 //

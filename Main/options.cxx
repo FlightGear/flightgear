@@ -33,7 +33,7 @@
 #include <string.h>
 #include <string>
 
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Flight/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Misc/fgstream.hxx>
@@ -312,16 +312,16 @@ fgOPTIONS::parse_flight_model( const string& fm ) {
     // printf("flight model = %s\n", fm);
 
     if ( fm == "slew" ) {
-	return(FG_SLEW);
+	return FG_SLEW;
     } else if ( (fm == "larcsim") || (fm == "LaRCsim") ) {
-	return(FG_LARCSIM);
+	return FG_LARCSIM;
     } else {
-	fgPrintf( FG_GENERAL, FG_EXIT, "Unknown flight model = %s\n",
-		  fm.c_str());
+	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown flight model = " << fm );
+	exit(-1);
     }
 
     // we'll never get here, but it makes the compiler happy.
-    return(-1);
+    return -1;
 }
 
 
@@ -437,12 +437,11 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg == "--hud-culled" ) {
 	tris_or_culled = 1;	
     } else {
-	fgPrintf( FG_GENERAL, FG_EXIT, "Unknown option '%s'\n",
-		  arg.c_str() );
-	return(FG_OPTIONS_ERROR);
+	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown option '" << arg << "'" );
+	return FG_OPTIONS_ERROR;
     }
     
-    return(FG_OPTIONS_OK);
+    return FG_OPTIONS_OK;
 }
 
 
@@ -451,10 +450,10 @@ int fgOPTIONS::parse_command_line( int argc, char **argv ) {
     int i = 1;
     int result;
 
-    fgPrintf(FG_GENERAL, FG_INFO, "Processing command line arguments\n");
+    FG_LOG(FG_GENERAL, FG_INFO, "Processing command line arguments");
 
     while ( i < argc ) {
-	fgPrintf(FG_GENERAL, FG_DEBUG, "argv[%d] = %s\n", i, argv[i]);
+	FG_LOG( FG_GENERAL, FG_DEBUG, "argv[" << i << "] = " << argv[i] );
 
 	result = parse_option(argv[i]);
 	if ( (result == FG_OPTIONS_HELP) || (result == FG_OPTIONS_ERROR) ) {
@@ -474,8 +473,7 @@ int fgOPTIONS::parse_config_file( const string& path ) {
     if ( !in )
 	return(FG_OPTIONS_ERROR);
 
-    fgPrintf( FG_GENERAL, FG_INFO, "Processing config file: %s\n",
-	      path.c_str() );
+    FG_LOG( FG_GENERAL, FG_INFO, "Processing config file: " << path );
 
     in >> skipcomment;
     while ( !in.eof() )
@@ -484,9 +482,10 @@ int fgOPTIONS::parse_config_file( const string& path ) {
 	getline( in, line );
 
 	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
-	    fgPrintf( FG_GENERAL, FG_EXIT, 
-		      "Config file parse error: %s '%s'\n",
-		      path.c_str(), line.c_str() );
+	    FG_LOG( FG_GENERAL, FG_ALERT, 
+		    "Config file parse error: " << path << " '" 
+		    << line << "'" );
+	    exit(-1);
 	}
 	in >> skipcomment;
     }
@@ -573,6 +572,11 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.29  1998/11/06 21:18:12  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.28  1998/11/06 14:47:03  curt
 // Changes to track Bernie's updates to fgstream.
 //

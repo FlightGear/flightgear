@@ -41,7 +41,7 @@
 #include <XGL/xgl.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Misc/fgstream.hxx>
 #include <Main/options.hxx>
@@ -70,21 +70,23 @@ int fgStarsInit( void ) {
     // double ra_save1, decl_save1;
     int i, j, starcount, count;
 
-    fgPrintf( FG_ASTRO, FG_INFO, "Initializing stars\n");
+    FG_LOG( FG_ASTRO, FG_INFO, "Initializing stars" );
 
     if ( FG_STAR_LEVELS < 4 ) {
-	fgPrintf( FG_ASTRO, FG_EXIT, "Big whups in stars.cxx\n");
+	FG_LOG( FG_ASTRO, FG_ALERT, "Big whups in stars.cxx" );
+	exit(-1);
     }
 
     // build the full path name to the stars data base file
     string path = current_options.get_fg_root() + "/Astro/stars" + ".gz";
 
-    fgPrintf( FG_ASTRO, FG_INFO, "  Loading stars from %s\n", path.c_str() );
+    FG_LOG( FG_ASTRO, FG_INFO, "  Loading stars from " << path );
 
     fg_gzifstream in( path );
-    if ( ! in )
-	fgPrintf( FG_ASTRO, FG_EXIT,
-		  "Cannot open star file: '%s'\n", path.c_str() );
+    if ( ! in ) {
+	FG_LOG( FG_ASTRO, FG_ALERT, "Cannot open star file: " << path );
+	exit(-1);
+    }
 
     starcount = 0;
 
@@ -195,9 +197,9 @@ int fgStarsInit( void ) {
 
 	xglEndList();
 	    
-	fgPrintf( FG_ASTRO, FG_INFO,
-		  "  Loading %d stars brighter than %.2f\n", 
-		  count, min_magnitude[i]);
+	FG_LOG( FG_ASTRO, FG_INFO,
+		"  Loading " << count << " stars brighter than " 
+		<< min_magnitude[i] );
     }
 
     return 1;  // OK, we got here because initialization worked.
@@ -252,6 +254,11 @@ void fgStarsRender( void ) {
 
 
 // $Log$
+// Revision 1.21  1998/11/06 21:17:42  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.20  1998/11/06 14:47:02  curt
 // Changes to track Bernie's updates to fgstream.
 //

@@ -28,7 +28,7 @@
 #endif
 
 #include <Aircraft/aircraft.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
@@ -52,7 +52,7 @@ fgVIEW::fgVIEW( void ) {
 
 // Initialize a view structure
 void fgVIEW::Init( void ) {
-    fgPrintf( FG_VIEW, FG_INFO, "Initializing View parameters\n");
+    FG_LOG( FG_VIEW, FG_INFO, "Initializing View parameters" );
 
     view_offset = 0.0;
     goal_view_offset = 0.0;
@@ -287,10 +287,12 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
     abs_view_pos = fgPolarToCart3d(p);
     view_pos = abs_view_pos - scenery.center;
 
-    fgPrintf( FG_VIEW, FG_DEBUG, "Absolute view pos = %.4f, %.4f, %.4f\n", 
-	   abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z());
-    fgPrintf( FG_VIEW, FG_DEBUG, "Relative view pos = %.4f, %.4f, %.4f\n", 
-	   view_pos.x(), view_pos.y(), view_pos.z());
+    FG_LOG( FG_VIEW, FG_DEBUG, "Absolute view pos = "
+	    << abs_view_pos.x() << ", " 
+	    << abs_view_pos.y() << ", " 
+	    << abs_view_pos.z() );
+    FG_LOG( FG_VIEW, FG_DEBUG, "Relative view pos = "
+	    << view_pos.x() << ", " << view_pos.y() << ", " << view_pos.z() );
 
     // Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw)
     // from FG_T_local_to_body[3][3]
@@ -584,6 +586,11 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.25  1998/11/06 21:18:15  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.24  1998/10/18 01:17:19  curt
 // Point3D tweaks.
 //

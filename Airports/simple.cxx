@@ -27,7 +27,7 @@
 
 #include <string>
 
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Main/options.hxx>
 #include <Misc/fgstream.hxx>
 
@@ -52,9 +52,10 @@ int fgAIRPORTS::load( const string& file ) {
     airports.erase( airports.begin(), airports.end() );
 
     fg_gzifstream in( path );
-    if ( !in )
-	fgPrintf( FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", 
-		  path.c_str());
+    if ( !in ) {
+	FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << path );
+	exit(-1);
+    }
 
     /*
     // We can use the STL copy algorithm because the input
@@ -109,6 +110,11 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.9  1998/11/06 21:17:34  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.8  1998/11/06 14:47:01  curt
 // Changes to track Bernie's updates to fgstream.
 //

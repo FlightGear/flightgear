@@ -36,7 +36,7 @@
 #include <string.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
@@ -62,8 +62,8 @@ fgLIGHT::fgLIGHT( void ) {
 void fgLIGHT::Init( void ) {
     string path, ambient, diffuse, sky;
 
-    fgPrintf( FG_EVENT, FG_INFO, 
-	     "Initializing Lighting interpolation tables.\n" );
+    FG_LOG( FG_EVENT, FG_INFO, 
+	    "Initializing Lighting interpolation tables." );
 
     // build the path name to the ambient lookup table
     path = current_options.get_fg_root();
@@ -99,21 +99,21 @@ void fgLIGHT::Update( void ) {
     t = &cur_time_params;
     v = &current_view;
 
-    fgPrintf( FG_EVENT, FG_INFO, "Updating light parameters.\n" );
+    FG_LOG( FG_EVENT, FG_INFO, "Updating light parameters." );
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
 
     deg = sun_angle * 180.0 / FG_PI;
-    fgPrintf( FG_EVENT, FG_INFO, "  Sun angle = %.2f.\n", deg );
+    FG_LOG( FG_EVENT, FG_INFO, "  Sun angle = " << deg );
 
     ambient = ambient_tbl->interpolate( deg );
     diffuse = diffuse_tbl->interpolate( deg );
     sky_brightness = sky_tbl->interpolate( deg );
 
-    fgPrintf( FG_EVENT, FG_INFO, 
-	      "  ambient = %.2f  diffuse = %.2f  sky = %.2f\n", 
-	      ambient, diffuse, sky_brightness );
+    FG_LOG( FG_EVENT, FG_INFO, 
+	    "  ambient = " << ambient << "  diffuse = " << diffuse 
+	    << "  sky = " << sky_brightness );
 
     // sky_brightness = 0.15;  // used to force a dark sky (when testing)
 
@@ -152,7 +152,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
     f = current_aircraft.flight;
     v = &current_view;
 
-    fgPrintf( FG_EVENT, FG_DEBUG, "Updating adjusted fog parameters.\n" );
+    FG_LOG( FG_EVENT, FG_DEBUG, "Updating adjusted fog parameters." );
 
     // set fog color (we'll try to match the sunset color in the
     // direction we are looking
@@ -212,6 +212,11 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.20  1998/11/06 21:18:27  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.19  1998/10/20 18:41:53  curt
 // Tweaked sunrise/sunset colors.
 //

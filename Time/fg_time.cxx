@@ -53,7 +53,7 @@
 
 #include <Astro/sky.hxx>
 #include <Astro/solarsystem.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Flight/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
@@ -83,12 +83,12 @@ static void local_update_sky_and_lighting_params( void ) {
 
 // Initialize the time dependent variables
 void fgTimeInit(fgTIME *t) {
-    fgPrintf( FG_EVENT, FG_INFO, "Initializing Time\n");
+    FG_LOG( FG_EVENT, FG_INFO, "Initializing Time" );
 
     t->gst_diff = -9999.0;
 
-    fgPrintf( FG_EVENT, FG_DEBUG, "time offset = %d\n", 
-	      current_options.get_time_offset() );
+    FG_LOG( FG_EVENT, FG_DEBUG, 
+	    "time offset = " << current_options.get_time_offset() );
 
     t->warp = current_options.get_time_offset();
     t->warp_delta = 0;
@@ -214,7 +214,7 @@ double utc_gst (double mjd) {
     x /= 3600.0;
     gst = (1.0/SIDRATE)*hr + x;
 
-    fgPrintf( FG_EVENT, FG_DEBUG, "  gst => %.4f\n", gst);
+    FG_LOG( FG_EVENT, FG_DEBUG, "  gst => " << gst );
 
     return(gst);
 }
@@ -303,17 +303,17 @@ time_t get_start_gmt(int year) {
 
     long int start = mktime(&mt);
 
-    fgPrintf( FG_EVENT, FG_DEBUG, "start1 = %ld\n", start);
+    FG_LOG( FG_EVENT, FG_DEBUG, "start1 = " << start );
     // the ctime() call can screw up time progression on some versions
     // of Linux
     // fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s", ctime(&start));
-    fgPrintf( FG_EVENT, FG_DEBUG, "(tm_isdst = %d)\n", mt.tm_isdst);
+    FG_LOG( FG_EVENT, FG_DEBUG, "(tm_isdst = " << mt.tm_isdst << ")" );
 
     timezone = fix_up_timezone( timezone );
 
 #   if defined( TIMEZONE_OFFSET_WORKS )
-    fgPrintf( FG_EVENT, FG_DEBUG, 
-	      "start = %ld, timezone = %ld\n", start, timezone );
+    FG_LOG( FG_EVENT, FG_DEBUG, 
+	    "start = " << start << ", timezone = " << timezone );
     return( start - timezone );
 #   else // ! defined( TIMEZONE_OFFSET_WORKS )
 
@@ -321,22 +321,22 @@ time_t get_start_gmt(int year) {
     if ( daylight > 0 ) {
 	daylight = 1;
     } else if ( daylight < 0 ) {
-	fgPrintf( FG_EVENT, FG_WARN, 
-		  "OOOPS, problem in fg_time.cxx, no daylight savings info.\n");
+	FG_LOG( FG_EVENT, FG_WARN, 
+		"OOOPS, problem in fg_time.cxx, no daylight savings info." );
     }
 
     long int offset = -(timezone / 3600 - daylight);
 
-    fgPrintf( FG_EVENT, FG_DEBUG,
-	      "  Raw time zone offset = %ld\n", timezone);
-    fgPrintf( FG_EVENT, FG_DEBUG,
-	      "  Daylight Savings = %d\n", daylight);
-    fgPrintf( FG_EVENT, FG_DEBUG,
-	      "  Local hours from GMT = %ld\n", offset);
+    FG_LOG( FG_EVENT, FG_DEBUG,
+	    "  Raw time zone offset = " << timezone );
+    FG_LOG( FG_EVENT, FG_DEBUG,
+	    "  Daylight Savings = " << daylight );
+    FG_LOG( FG_EVENT, FG_DEBUG,
+	    "  Local hours from GMT = " << offset);
     
     long int start_gmt = start - timezone + (daylight * 3600);
     
-    fgPrintf( FG_EVENT, FG_DEBUG, "  March 21 noon (CST) = %ld\n", start);
+    FG_LOG( FG_EVENT, FG_DEBUG, "  March 21 noon (CST) = " << start );
 
     return ( start_gmt );
 #   endif // ! defined( TIMEZONE_OFFSET_WORKS )
@@ -354,17 +354,18 @@ double sidereal_course(fgTIME *t, double lng) {
     now = t->cur_time;
     start_gmt = get_start_gmt(gmt->tm_year);
 
-    fgPrintf(FG_EVENT, FG_DEBUG, 
-	     "  COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
-	     gmt->tm_mon, gmt->tm_mday, gmt->tm_year,
-	     gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
+    FG_LOG( FG_EVENT, FG_DEBUG, 
+	    "  COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n"
+	    << gmt->tm_mon << "/" << gmt->tm_mday << "/" << gmt->tm_year
+	    << " "
+	    << gmt->tm_hour << ":" << gmt->tm_min << ":" <<  gmt->tm_sec );
 
-    fgPrintf( FG_EVENT, FG_DEBUG, "  March 21 noon (GMT) = %ld\n", start_gmt);
+    FG_LOG( FG_EVENT, FG_DEBUG, "  March 21 noon (GMT) = " << start_gmt);
 
     diff = (now - start_gmt) / (3600.0 * 24.0);
     
-    fgPrintf( FG_EVENT, FG_DEBUG, 
-	      "  Time since 3/21/%2d GMT = %.2f\n", gmt->tm_year, diff);
+    FG_LOG( FG_EVENT, FG_DEBUG, 
+	    "  Time since 3/21/" << gmt->tm_year << " GMT = " << diff );
 
     part = fmod(diff, 1.0);
     days = diff - part;
@@ -376,9 +377,9 @@ double sidereal_course(fgTIME *t, double lng) {
 	lst += 24.0;
     }
 
-    fgPrintf( FG_EVENT, FG_DEBUG,
-	      "  days = %.1f  hours = %.2f  lon = %.2f  lst = %.2f\n", 
-	      days, hours, lng, lst);
+    FG_LOG( FG_EVENT, FG_DEBUG,
+	    "  days = " << days << "  hours = " << hours << "  lon = " 
+	    << lng << "  lst = " << lst );
 
     return(lst);
 }
@@ -388,14 +389,14 @@ double sidereal_course(fgTIME *t, double lng) {
 void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
     double gst_precise, gst_course;
 
-    fgPrintf( FG_EVENT, FG_BULK, "Updating time\n");
+    FG_LOG( FG_EVENT, FG_BULK, "Updating time" );
 
     // get current Unix calendar time (in seconds)
     t->warp += t->warp_delta;
     t->cur_time = time(NULL) + t->warp;
-    fgPrintf( FG_EVENT, FG_BULK, 
-	      "  Current Unix calendar time = %ld  warp = %ld  delta = %ld\n", 
-	      t->cur_time, t->warp, t->warp_delta);
+    FG_LOG( FG_EVENT, FG_BULK, 
+	    "  Current Unix calendar time = " << t->cur_time 
+	    << "  warp = " << t->warp << "  delta = " << t->warp_delta );
 
     if ( t->warp_delta ) {
 	// time is changing so force an update
@@ -404,10 +405,11 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
     // get GMT break down for current time
     t->gmt = gmtime(&t->cur_time);
-    fgPrintf( FG_EVENT, FG_BULK, 
-	      "  Current GMT = %d/%d/%2d %d:%02d:%02d\n", 
-	      t->gmt->tm_mon+1, t->gmt->tm_mday, t->gmt->tm_year,
-	      t->gmt->tm_hour, t->gmt->tm_min, t->gmt->tm_sec);
+    FG_LOG( FG_EVENT, FG_BULK, 
+	    "  Current GMT = " << t->gmt->tm_mon+1 << "/" 
+	    << t->gmt->tm_mday << "/" << t->gmt->tm_year << " "
+	    << t->gmt->tm_hour << ":" << t->gmt->tm_min << ":" 
+	    << t->gmt->tm_sec );
 
     // calculate modified Julian date
     t->mjd = cal_mjd ((int)(t->gmt->tm_mon+1), (double)t->gmt->tm_mday, 
@@ -419,7 +421,7 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
     // convert "back" to Julian date + partial day (as a fraction of one)
     t->jd = t->mjd + MJD0;
-    fgPrintf( FG_EVENT, FG_BULK, "  Current Julian Date = %.5f\n", t->jd);
+    FG_LOG( FG_EVENT, FG_BULK, "  Current Julian Date = " << t->jd );
 
     // printf("  Current Longitude = %.3f\n", FG_Longitude * RAD_TO_DEG);
 
@@ -427,7 +429,7 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
     if ( t->gst_diff < -100.0 ) {
 	// first time through do the expensive calculation & cheap
         // calculation to get the difference.
-      fgPrintf( FG_EVENT, FG_INFO, "  First time, doing precise gst\n");
+      FG_LOG( FG_EVENT, FG_INFO, "  First time, doing precise gst" );
       t->gst = gst_precise = sidereal_precise(t->mjd, 0.00);
       gst_course = sidereal_course(t, 0.00);
       t->gst_diff = gst_precise - gst_course;
@@ -438,16 +440,21 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 	t->gst = sidereal_course(t, 0.00) + t->gst_diff;
 	t->lst = sidereal_course(t, -(FG_Longitude * RAD_TO_DEG)) + t->gst_diff;
     }
-    fgPrintf( FG_EVENT, FG_DEBUG,
-	      "  Current lon=0.00 Sidereal Time = %.3f\n", t->gst);
-    fgPrintf( FG_EVENT, FG_DEBUG,
-	      "  Current LOCAL Sidereal Time = %.3f (%.3f) (diff = %.3f)\n", 
-	      t->lst, sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG)),
-	      t->gst_diff);
+    FG_LOG( FG_EVENT, FG_DEBUG,
+	    "  Current lon=0.00 Sidereal Time = " << t->gst );
+    FG_LOG( FG_EVENT, FG_DEBUG,
+	    "  Current LOCAL Sidereal Time = " << t->lst << " (" 
+	    << sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG)) 
+	    << ") (diff = " << t->gst_diff << ")" );
 }
 
 
 // $Log$
+// Revision 1.21  1998/11/06 21:18:26  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.20  1998/11/02 18:25:38  curt
 // Check for __CYGWIN__ (b20) as well as __CYGWIN32__ (pre b20 compilers)
 // Other misc. tweaks.

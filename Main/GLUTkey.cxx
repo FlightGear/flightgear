@@ -40,7 +40,7 @@
 #include <Astro/sky.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/hud.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <GUI/gui.h>
 #include <Include/fg_constants.h>
 #include <Objects/material.hxx>
@@ -81,11 +81,11 @@ void GLUTkey(unsigned char k, int x, int y) {
     v = &current_view;
     w = &current_weather;
 
-    fgPrintf( FG_INPUT, FG_DEBUG, "Key hit = %d", k);
+    FG_LOG( FG_INPUT, FG_DEBUG, "Key hit = " << k );
     puKeyboard(k, PU_DOWN );
 
     if ( GLUT_ACTIVE_ALT && glutGetModifiers() ) {
-	fgPrintf( FG_INPUT, FG_DEBUG, " SHIFTED\n");
+	FG_LOG( FG_INPUT, FG_DEBUG, " SHIFTED" );
 	switch (k) {
 	case 1: // Ctrl-A key
 	    fgAPToggleAltitude();
@@ -173,7 +173,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	}
     } else {
-	fgPrintf( FG_INPUT, FG_DEBUG, "\n");
+	FG_LOG( FG_INPUT, FG_DEBUG, "" );
 	switch (k) {
 	case 50: // numeric keypad 2
 	    controls.move_elevator(-0.05);
@@ -230,16 +230,14 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 112: // p key
 	    t->pause = !t->pause;
 	    // printf position and attitude information
-	    fgPrintf( FG_INPUT, FG_INFO,
-		      "Lon = %.4f  Lat = %.4f  Altitude = %.1f\n", 
-		      FG_Longitude * RAD_TO_DEG,
-		      FG_Latitude * RAD_TO_DEG,
-		      FG_Altitude * FEET_TO_METER);
-	    fgPrintf( FG_INPUT, FG_INFO,
-		      "Heading = %.2f  Roll = %.2f  Pitch = %.2f\n", 
-		      FG_Psi * RAD_TO_DEG,
-		      FG_Phi * RAD_TO_DEG,
-		      FG_Theta * RAD_TO_DEG);
+	    FG_LOG( FG_INPUT, FG_INFO,
+		    "Lon = " << FG_Longitude * RAD_TO_DEG
+		    << "  Lat = " << FG_Latitude * RAD_TO_DEG
+		    << "  Altitude = " << FG_Altitude * FEET_TO_METER );
+	    FG_LOG( FG_INPUT, FG_INFO,
+		    "Heading = " << FG_Psi * RAD_TO_DEG 
+		    << "  Roll = " << FG_Phi * RAD_TO_DEG
+		    << "  Pitch = " << FG_Theta * RAD_TO_DEG );
 	    return;
 	case 116: // t key
 	    t->warp_delta += 30;
@@ -263,8 +261,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    // if( fg_DebugOutput ) {
 	    //   fclose( fg_DebugOutput );
 	    // }
-	    fgPrintf( FG_INPUT, FG_EXIT, 
-		      "Program exiting normally at user request.\n");
+	    FG_LOG( FG_INPUT, FG_ALERT, 
+		    "Program exiting normally at user request." );
+	    exit(-1);
 	}
     }
 }
@@ -276,11 +275,11 @@ void GLUTspecialkey(int k, int x, int y) {
 
     v = &current_view;
 
-    fgPrintf( FG_INPUT, FG_DEBUG, "Special key hit = %d", k);
+    FG_LOG( FG_INPUT, FG_DEBUG, "Special key hit = " << k );
     puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN);
 
     if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
-	fgPrintf( FG_INPUT, FG_DEBUG, " SHIFTED\n");
+	FG_LOG( FG_INPUT, FG_DEBUG, " SHIFTED" );
 	switch (k) {
 	case GLUT_KEY_END: // numeric keypad 1
 	    v->goal_view_offset = FG_PI * 0.75;
@@ -308,23 +307,23 @@ void GLUTspecialkey(int k, int x, int y) {
 	    return;
 	}
     } else {
-        fgPrintf( FG_INPUT, FG_DEBUG, "\n");
+        FG_LOG( FG_INPUT, FG_DEBUG, "" );
 	switch (k) {
  	case GLUT_KEY_F8: // F8 toggles fog ... off fastest nicest...
 	    current_options.cycle_fog();
 	
 	    if ( current_options.get_fog() == fgOPTIONS::FG_FOG_DISABLED ) {
-		fgPrintf( FG_INPUT, FG_INFO, "Fog disabled\n" );
+		FG_LOG( FG_INPUT, FG_INFO, "Fog disabled" );
 	    } else if ( current_options.get_fog() == 
 			fgOPTIONS::FG_FOG_FASTEST )
 	    {
-		fgPrintf( FG_INPUT, FG_INFO, 
-			  "Fog enabled, hint set to fastest\n" );
+		FG_LOG( FG_INPUT, FG_INFO, 
+			"Fog enabled, hint set to fastest" );
 	    } else if ( current_options.get_fog() ==
 			fgOPTIONS::FG_FOG_NICEST )
 	    {
-		fgPrintf( FG_INPUT, FG_INFO,
-			  "Fog enabled, hint set to nicest\n" );
+		FG_LOG( FG_INPUT, FG_INFO,
+			"Fog enabled, hint set to nicest" );
 	    }
 
  	    return;
@@ -333,14 +332,14 @@ void GLUTspecialkey(int k, int x, int y) {
 		current_options.get_textures() ?
 		    current_options.set_textures(false) :
 		    current_options.set_textures(true);
-		fgPrintf( FG_INPUT, FG_INFO, "Toggling texture\n" );
+		FG_LOG( FG_INPUT, FG_INFO, "Toggling texture" );
 	    } else {
-		fgPrintf( FG_INPUT, FG_INFO, 
-			  "No textures loaded, cannot toggle\n" );
+		FG_LOG( FG_INPUT, FG_INFO, 
+			"No textures loaded, cannot toggle" );
 	    }
  	    return;
 	case GLUT_KEY_F10: // F10 toggles menu on and off...
-	    fgPrintf(FG_INPUT, FG_INFO, "Invoking call back function");
+	    FG_LOG(FG_INPUT, FG_INFO, "Invoking call back function");
 	    hideMenuButton -> 
 		setValue ((int) !(hideMenuButton -> getValue() ) );
 	    hideMenuButton -> invokeCallback();
@@ -387,6 +386,11 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.32  1998/11/06 21:18:06  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.31  1998/11/02 18:25:37  curt
 // Check for __CYGWIN__ (b20) as well as __CYGWIN32__ (pre b20 compilers)
 // Other misc. tweaks.

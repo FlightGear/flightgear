@@ -48,7 +48,7 @@ extern "C" void *memset(void *, int, size_t);
 using namespace std;
 #endif
 
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Include/fg_zlib.h>
 #include <Main/options.hxx>
@@ -148,8 +148,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	in.open( path + ".obj" );
 	if ( ! in )
 	{
-	    fgPrintf( FG_TERRAIN, FG_ALERT, 
-		      "Cannot open file: %s\n", path.c_str() );
+	    FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << path );
 	    return 0;
 	}
     }
@@ -198,8 +197,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		   >> normals[vncount][2];
 		vncount++;
 	    } else {
-		fgPrintf( FG_TERRAIN, FG_EXIT, 
-			  "Read too many vertex normals ... dying :-(\n");
+		FG_LOG( FG_TERRAIN, FG_ALERT, 
+			"Read too many vertex normals ... dying :-(" );
+		exit(-1);
 	    }
 	}
 	else if ( token[0] == 'v' )
@@ -211,8 +211,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		   >> t->nodes[t->ncount][2];
 		t->ncount++;
 	    } else {
-		fgPrintf( FG_TERRAIN, FG_EXIT, 
-			  "Read too many nodes ... dying :-(\n");
+		FG_LOG( FG_TERRAIN, FG_ALERT, 
+			"Read too many nodes ... dying :-(");
+		exit(-1);
 	    }
 	}
 	else if ( token == "usemtl" )
@@ -254,9 +255,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 	    // find this material in the properties list
 	    if ( ! material_mgr.find( material, fragment.material_ptr )) {
-		fgPrintf( FG_TERRAIN, FG_ALERT, 
-			  "Ack! unknown usemtl name = %s in %s\n",
-			  material.c_str(), path.c_str() );
+		FG_LOG( FG_TERRAIN, FG_ALERT, 
+			"Ack! unknown usemtl name = " << material 
+			<< " in " << path );
 	    }
 
 	    // initialize the fragment transformation matrix
@@ -505,8 +506,8 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		last2 = n2;
 	    }
 	} else {
-	    fgPrintf( FG_TERRAIN, FG_WARN, "Unknown token in %s = %s\n", 
-		      path.c_str(), token.c_str() );
+	    FG_LOG( FG_TERRAIN, FG_WARN, "Unknown token in " 
+		    << path << " = " << token );
 	}
 
 	// eat comments and blank lines before start of while loop so
@@ -543,8 +544,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
     */   
 
     stopwatch.stop();
-    fgPrintf( FG_TERRAIN, FG_INFO, "Loaded %s in %f seconds\n",
-	      path.c_str(), stopwatch.elapsedSeconds() );
+    FG_LOG( FG_TERRAIN, FG_INFO, 
+	    "Loaded " << path << " in " 
+	    << stopwatch.elapsedSeconds() << " seconds" );
 
     // printf("end of tile\n");
 
@@ -553,6 +555,11 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.10  1998/11/06 21:18:18  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.9  1998/11/06 14:47:06  curt
 // Changes to track Bernie's updates to fgstream.
 //

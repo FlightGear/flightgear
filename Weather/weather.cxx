@@ -34,12 +34,11 @@
 #include <XGL/xgl.h>
 
 #include <math.h>
-#include <stdio.h>
 
 #include "weather.hxx"
 
 #include <Aircraft/aircraft.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Math/fg_random.h>
 
 
@@ -53,7 +52,7 @@ void fgWeatherInit( void ) {
 
     w = &current_weather;
 
-    printf("Initializing weather subsystem\n");
+    FG_LOG( FG_GENERAL, FG_INFO, "Initializing weather subsystem");
 
     // Configure some wind
     // FG_V_north_airmass = 15; // ft/s =~ 10mph
@@ -101,12 +100,16 @@ void fgWeatherSetVisibility( float visibility ) {
     // w->fog_density = -log(0.01 / w->visibility;        // for GL_FOG_EXP
     w->fog_density = sqrt( -log(0.01) ) / w->visibility;  // for GL_FOG_EXP2
     xglFogf (GL_FOG_DENSITY, w->fog_density);
-    fgPrintf( FG_INPUT, FG_DEBUG, 
-	      "Fog density = %.4f\n", w->fog_density);
+    FG_LOG( FG_INPUT, FG_DEBUG, "Fog density = " << w->fog_density );
 }
 
 
 // $Log$
+// Revision 1.2  1998/11/06 21:18:29  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.1  1998/10/17 01:34:36  curt
 // C++ ifying ...
 //

@@ -42,7 +42,6 @@
 #include <math.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <Debug/fg_debug.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 
@@ -404,8 +403,9 @@ CreatePointer(&pointer[i]);
     // strcat(tpath, "arthor.rgb");
 
  //   if ( (imag = ImageLoad(tpath)) == NULL ){
- //	fgPrintf( FG_COCKPIT, FG_EXIT, 
+ //	fgPrintf( FG_COCKPIT, FG_ALERT, 
 		 // "Error loading cockpit texture %s\n", tpath );
+    //  exit(-1);
    // }
     
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
@@ -726,6 +726,11 @@ pointer->vertices[19] = pointer->vertices[3];
 
 
 /* $Log$
+/* Revision 1.9  1998/11/06 21:18:01  curt
+/* Converted to new logstream debugging facility.  This allows release
+/* builds with no messages at all (and no performance impact) by using
+/* the -DFG_NDEBUG flag.
+/*
 /* Revision 1.8  1998/10/16 23:27:37  curt
 /* C++-ifying.
 /*

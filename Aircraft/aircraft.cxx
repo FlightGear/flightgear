@@ -25,7 +25,7 @@
 #include <stdio.h>
 
 #include "aircraft.hxx"
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 
 // This is a record containing all the info for the aircraft currently
@@ -35,7 +35,7 @@ fgAIRCRAFT current_aircraft;
 
 // Initialize an Aircraft structure
 void fgAircraftInit( void ) {
-    fgPrintf( FG_AIRCRAFT, FG_INFO, "Initializing Aircraft structure\n" );
+    FG_LOG( FG_AIRCRAFT, FG_INFO, "Initializing Aircraft structure" );
 
     current_aircraft.flight   = &cur_flight_params;
     current_aircraft.controls = &controls;
@@ -48,24 +48,29 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
     f = a->flight;
 
-    fgPrintf( FG_FLIGHT, FG_DEBUG,
-	      "Pos = (%.2f,%.2f,%.2f)  (Phi,Theta,Psi)=(%.2f,%.2f,%.2f)\n",
-	      FG_Longitude * 3600.0 * RAD_TO_DEG, 
-	      FG_Latitude  * 3600.0 * RAD_TO_DEG,
-	      FG_Altitude, FG_Phi, FG_Theta, FG_Psi);
+    FG_LOG( FG_FLIGHT, FG_DEBUG,
+	    "Pos = ("
+	    << (FG_Longitude * 3600.0 * RAD_TO_DEG) << "," 
+	    << (FG_Latitude  * 3600.0 * RAD_TO_DEG) << ","
+	    << FG_Altitude 
+	    << ")  (Phi,Theta,Psi)=("
+	    << FG_Phi << "," << FG_Theta << "," << FG_Psi << ")" );
 
-    double elevator = controls.get_elevator();
-    double aileron = controls.get_aileron();
-    double rudder = controls.get_rudder();
-    double throttle = controls.get_throttle( 0 );
-
-    fgPrintf( FG_FLIGHT, FG_DEBUG,
-	      "Kts = %.0f  Elev = %.2f, Aileron = %.2f, Rudder = %.2f  Power = %.2f\n", 
-	      FG_V_equiv_kts, elevator, aileron,rudder, throttle );
+    FG_LOG( FG_FLIGHT, FG_DEBUG,
+	    "Kts = " << FG_V_equiv_kts 
+	    << "  Elev = " << controls.get_elevator() 
+	    << "  Aileron = " << controls.get_aileron() 
+	    << "  Rudder = " << controls.get_rudder() 
+	    << "  Power = " << controls.get_throttle( 0 ) );
 }
 
 
 // $Log$
+// Revision 1.4  1998/11/06 21:17:31  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.3  1998/10/25 14:08:37  curt
 // Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
 //

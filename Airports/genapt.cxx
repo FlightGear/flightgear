@@ -31,7 +31,7 @@
 using namespace std;
 #endif
 
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 // #include <Include/fg_types.h>
 #include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
@@ -97,9 +97,9 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 
     // find airport base material in the properties list
     if ( ! material_mgr.find( APT_BASE_MATERIAL, fragment.material_ptr )) {
-	fgPrintf( FG_TERRAIN, FG_ALERT, 
-		  "Ack! unknown material name = %s in fgAptGenerat()\n",
-		  APT_BASE_MATERIAL );
+	FG_LOG( FG_TERRAIN, FG_ALERT, 
+		"Ack! unknown material name = " << APT_BASE_MATERIAL 
+		<< " in fgAptGenerat()" );
     }
 
     printf(" tile center = %.2f %.2f %.2f\n", 
@@ -281,6 +281,11 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.9  1998/11/06 21:17:32  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.8  1998/11/06 14:46:59  curt
 // Changes to track Bernie's updates to fgstream.
 //

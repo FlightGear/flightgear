@@ -62,7 +62,7 @@
 
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <GUI/gui.h>
 #include <Joystick/joystick.hxx>
 #include <Math/fg_geodesy.hxx>
@@ -468,8 +468,8 @@ static void fgMainLoop( void ) {
     g = &general;
     t = &cur_time_params;
 
-    fgPrintf( FG_ALL, FG_DEBUG, "Running Main Loop\n");
-    fgPrintf( FG_ALL, FG_DEBUG, "======= ==== ====\n");
+    FG_LOG( FG_ALL, FG_DEBUG, "Running Main Loop");
+    FG_LOG( FG_ALL, FG_DEBUG, "======= ==== ====");
 
     fgWeatherUpdate();
 
@@ -492,9 +492,9 @@ static void fgMainLoop( void ) {
 	    fgFlightModelSetAltitude( current_options.get_flight_model(), f, 
 				      scenery.cur_elev + alt_adjust_m );
 
-	    fgPrintf( FG_ALL, FG_BULK, 
-		      "<*> resetting altitude to %.0f meters\n", 
-		      FG_Altitude * FEET_TO_METER);
+	    FG_LOG( FG_ALL, FG_BULK, 
+		    "<*> resetting altitude to " 
+		    << FG_Altitude * FEET_TO_METER << " meters" );
 	}
 	FG_Runway_altitude = scenery.cur_elev * METER_TO_FEET;
     }
@@ -518,9 +518,9 @@ static void fgMainLoop( void ) {
 
     // Get elapsed time for this past frame
     elapsed = fgGetTimeInterval();
-    fgPrintf( FG_ALL, FG_BULK, 
-	      "Time interval is = %d, previous remainder is = %d\n", 
-	      elapsed, remainder);
+    FG_LOG( FG_ALL, FG_BULK, 
+	    "Time interval is = " << elapsed 
+	    << ", previous remainder is = " << remainder );
 
     // Calculate frame rate average
     if ( elapsed > 0.0 ) {
@@ -538,15 +538,15 @@ static void fgMainLoop( void ) {
     }
 
     // Calculate model iterations needed for next frame
-    fgPrintf( FG_ALL, FG_DEBUG, 
-	      "--> Frame rate is = %.2f\n", g->frame_rate);
+    FG_LOG( FG_ALL, FG_DEBUG, 
+	    "--> Frame rate is = " << g->frame_rate );
     elapsed += remainder;
 
     multi_loop = (int)(((float)elapsed * 0.001) * DEFAULT_MODEL_HZ);
     remainder = elapsed - ((multi_loop*1000) / DEFAULT_MODEL_HZ);
-    fgPrintf( FG_ALL, FG_BULK, 
-	      "Model iterations needed = %d, new remainder = %d\n", 
-	      multi_loop, remainder);
+    FG_LOG( FG_ALL, FG_BULK, 
+	    "Model iterations needed = " << multi_loop
+	    << ", new remainder = " << remainder );
 	
     /* printf("right before fm - ground = %.2f  runway = %.2f  alt = %.2f\n",
 	   scenery.cur_elev,
@@ -587,7 +587,7 @@ static void fgMainLoop( void ) {
     // redraw display
     fgRenderFrame();
 
-    fgPrintf( FG_ALL, FG_DEBUG, "\n");
+    FG_LOG( FG_ALL, FG_DEBUG, "" );
 }
 
 
@@ -621,8 +621,8 @@ static void fgIdleFunction ( void ) {
 		"/Sounds/intro.mp3";
 	    string command = "(touch " + lockfile + "; mpg123 " + mp3file +
 		 "> /dev/null 2>&1; /bin/rm " + lockfile + ") &";
-	    fgPrintf( FG_GENERAL, FG_INFO, 
-		      "Starting intro music: %s\n", mp3file.c_str() );
+	    FG_LOG( FG_GENERAL, FG_INFO, 
+		    "Starting intro music: " << mp3file );
 	    system ( command.c_str() );
 	}
 #endif
@@ -645,8 +645,9 @@ static void fgIdleFunction ( void ) {
 	// a subsystem to flight gear, its initialization call should
 	// located in this routine.
 	if( !fgInitSubsystems()) {
-	    fgPrintf( FG_GENERAL, FG_EXIT,
-		      "Subsystem initializations failed ...\n" );
+	    FG_LOG( FG_GENERAL, FG_ALERT,
+		    "Subsystem initializations failed ..." );
+	    exit(-1);
 	}
 
 	idle_state++;
@@ -674,14 +675,14 @@ static void fgIdleFunction ( void ) {
 	    string lockfile = "/tmp/mpg123.running";
 	    struct stat stat_buf;
 
-	    fgPrintf( FG_GENERAL, FG_INFO, 
-		      "Waiting for mpg123 player to finish ...\n" );
+	    FG_LOG( FG_GENERAL, FG_INFO, 
+		    "Waiting for mpg123 player to finish ..." );
 	    while ( stat(lockfile.c_str(), &stat_buf) == 0 ) {
 		// file exist, wait ...
 		sleep(1);
-		fgPrintf( FG_GENERAL, FG_INFO, ".");
+		FG_LOG( FG_GENERAL, FG_INFO, ".");
 	    }
-	    fgPrintf( FG_GENERAL, FG_INFO, "\n");
+	    FG_LOG( FG_GENERAL, FG_INFO, "");
 	}
 #endif // WIN32
 
@@ -833,10 +834,10 @@ int main( int argc, char **argv ) {
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
 #endif
 
-    // Initialize the debugging output system
-    fgInitDebug();
+    // Initialize the [old] debugging output system
+    // fgInitDebug();
 
-    fgPrintf(FG_GENERAL, FG_INFO, "Flight Gear:  Version %s\n\n", VERSION);
+    FG_LOG( FG_GENERAL, FG_INFO, "Flight Gear:  Version" << VERSION << endl );
 
     // Attempt to locate and parse a config file
     // First check fg_root
@@ -859,24 +860,28 @@ int main( int argc, char **argv ) {
 	// Something must have gone horribly wrong with the command
 	// line parsing or maybe the user just requested help ... :-)
 	current_options.usage();
-	fgPrintf( FG_GENERAL, FG_EXIT, "\nExiting ...\n");
+	FG_LOG( FG_GENERAL, FG_ALERT, "\nExiting ...");
+	exit(-1);
     }
     
     // Initialize the Window/Graphics environment.
     if( !fgGlutInit(&argc, argv) ) {
-	fgPrintf( FG_GENERAL, FG_EXIT, "GLUT initialization failed ...\n" );
+	FG_LOG( FG_GENERAL, FG_ALERT, "GLUT initialization failed ..." );
+	exit(-1);
     }
 
     // Initialize the various GLUT Event Handlers.
     if( !fgGlutInitEvents() ) {
-	fgPrintf( FG_GENERAL, FG_EXIT, 
-		  "GLUT event handler initialization failed ...\n" );
+	FG_LOG( FG_GENERAL, FG_ALERT, 
+		"GLUT event handler initialization failed ..." );
+	exit(-1);
     }
 
     // First do some quick general initializations
     if( !fgInitGeneral()) {
-	fgPrintf( FG_GENERAL, FG_EXIT, 
-		  "General initializations failed ...\n" );
+	FG_LOG( FG_GENERAL, FG_ALERT, 
+		"General initializations failed ..." );
+	exit(-1);
     }
 
     // Init the user interface (we need to do this before passing off
@@ -892,6 +897,11 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.63  1998/11/06 21:18:08  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.62  1998/10/27 02:14:35  curt
 // Changes to support GLUT joystick routines as fall back.
 //

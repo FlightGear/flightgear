@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Main/options.hxx>
 
 // #include "obj.hxx"
@@ -61,7 +61,7 @@ int fgSceneryInit( void ) {
 
     o = &current_options;
 
-    fgPrintf(FG_TERRAIN, FG_INFO, "Initializing scenery subsystem\n");
+    FG_LOG( FG_TERRAIN, FG_INFO, "Initializing scenery subsystem" );
 
     scenery.cur_elev = -9999;
 
@@ -82,6 +82,11 @@ void fgSceneryRender( void ) {
 
 
 // $Log$
+// Revision 1.10  1998/11/06 21:18:20  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.9  1998/10/16 23:27:57  curt
 // C++-ifying.
 //

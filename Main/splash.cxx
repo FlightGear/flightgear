@@ -36,7 +36,7 @@
 
 #include <string.h>
 
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Main/options.hxx>
 #include <Objects/texload.h>
 
@@ -52,7 +52,7 @@ void fgSplashInit ( void ) {
     string tpath, fg_tpath;
     int width, height;
 
-    fgPrintf( FG_GENERAL, FG_INFO, "Initializing splash screen\n");
+    FG_LOG( FG_GENERAL, FG_INFO, "Initializing splash screen" );
 #ifdef GL_VERSION_1_1
     xglGenTextures(1, &splash_texid);
     xglBindTexture(GL_TEXTURE_2D, splash_texid);
@@ -79,9 +79,9 @@ void fgSplashInit ( void ) {
 	if ( (splash_texbuf = 
 	      read_rgb_texture(fg_tpath.c_str(), &width, &height)) == NULL )
 	{
-	    fgPrintf( FG_GENERAL, FG_EXIT, 
-		      "Error in loading splash screen texture %s\n", 
-		      tpath.c_str() );
+	    FG_LOG( FG_GENERAL, FG_ALERT, 
+		    "Error in loading splash screen texture " << tpath );
+	    exit(-1);
 	} 
     } 
 
@@ -148,6 +148,11 @@ void fgSplashUpdate ( double progress ) {
 
 
 // $Log$
+// Revision 1.7  1998/11/06 21:18:14  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.6  1998/10/17 01:34:25  curt
 // C++ ifying ...
 //

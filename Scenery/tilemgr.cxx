@@ -36,7 +36,7 @@
 #include <Aircraft/aircraft.hxx>
 
 #include <Bucket/bucketutils.h>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
@@ -78,7 +78,7 @@ int tiles[FG_LOCAL_X_Y];
 
 // Initialize the Tile Manager subsystem
 int fgTileMgrInit( void ) {
-    fgPrintf( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem.\n");
+    FG_LOG( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem." );
 
     // load default material library
     material_mgr.load_lib();
@@ -93,8 +93,9 @@ void fgTileMgrLoadTile( fgBUCKET *p, int *index) {
 
     c = &global_tile_cache;
 
-    fgPrintf( FG_TERRAIN, FG_DEBUG, "Updating for bucket %d %d %d %d\n", 
-	   p->lon, p->lat, p->x, p->y);
+    FG_LOG( FG_TERRAIN, FG_DEBUG, 
+	    "Updating for bucket "
+	    << p->lon << " " << p->lat << " " << p->x << " " << p->y );
     
     // if not in cache, load tile into the next available slot
     if ( (*index = c->exists(p)) < 0 ) {
@@ -102,7 +103,7 @@ void fgTileMgrLoadTile( fgBUCKET *p, int *index) {
 	c->fill_in(*index, p);
     }
 
-    fgPrintf( FG_TERRAIN, FG_DEBUG, "Selected cache index of %d\n", *index);
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "Selected cache index of " << *index);
 }
 
 
@@ -128,16 +129,18 @@ int fgTileMgrUpdate( void ) {
     if ( (p1.lon == p_last.lon) && (p1.lat == p_last.lat) &&
 	 (p1.x == p_last.x) && (p1.y == p_last.y) ) {
 	// same bucket as last time
-	fgPrintf( FG_TERRAIN, FG_DEBUG, "Same bucket as last time\n");
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "Same bucket as last time" );
     } else if ( p_last.lon == -1000 ) {
 	// First time through, initialize the system and load all
 	// relavant tiles
 
-	fgPrintf( FG_TERRAIN, FG_INFO, "  First time through ... ");
-	fgPrintf( FG_TERRAIN, FG_INFO, "  Updating Tile list for %d,%d %d,%d\n",
-		  p1.lon, p1.lat, p1.x, p1.y);
-	fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		  tile_diameter * tile_diameter);
+	FG_LOG( FG_TERRAIN, FG_INFO, "  First time through ... " );
+	FG_LOG( FG_TERRAIN, FG_INFO, 
+		"  Updating Tile list for "
+		<< p1.lon << "," << p1.lat << " " << p1.x << "," << p1.y );
+	FG_LOG( FG_TERRAIN, FG_INFO, "  Loading " 
+		<< tile_diameter * tile_diameter
+		<< " tiles" );
 
 	// wipe/initialize tile cache
 	c->init();
@@ -157,13 +160,14 @@ int fgTileMgrUpdate( void ) {
 	// AT ULTRA HIGH SPEEDS THIS ASSUMPTION MAY NOT BE VALID IF
 	// THE AIRCRAFT CAN SKIP A TILE IN A SINGLE ITERATION.
 
-	fgPrintf( FG_TERRAIN, FG_INFO, "Updating Tile list for %d,%d %d,%d\n",
-		  p1.lon, p1.lat, p1.x, p1.y);
+	FG_LOG( FG_TERRAIN, FG_INFO, 
+		"Updating Tile list for "
+		<< p1.lon << "," << p1.lat << " " << p1.x << "," << p1.y );
 
 	if ( (p1.lon > p_last.lon) ||
 	     ( (p1.lon == p_last.lon) && (p1.x > p_last.x) ) ) {
-	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      tile_diameter);
+	    FG_LOG( FG_TERRAIN, FG_INFO, 
+		    "  Loading " << tile_diameter << "tiles" );
 	    for ( j = 0; j < tile_diameter; j++ ) {
 		// scrolling East
 		for ( i = 0; i < tile_diameter - 1; i++ ) {
@@ -177,8 +181,8 @@ int fgTileMgrUpdate( void ) {
 	    }
 	} else if ( (p1.lon < p_last.lon) ||
 		    ( (p1.lon == p_last.lon) && (p1.x < p_last.x) ) ) {
-	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      tile_diameter);
+	    FG_LOG( FG_TERRAIN, FG_INFO, 
+		    "  Loading " << tile_diameter << "tiles" );
 	    for ( j = 0; j < tile_diameter; j++ ) {
 		// scrolling West
 		for ( i = tile_diameter - 1; i > 0; i-- ) {
@@ -193,8 +197,8 @@ int fgTileMgrUpdate( void ) {
 
 	if ( (p1.lat > p_last.lat) ||
 	     ( (p1.lat == p_last.lat) && (p1.y > p_last.y) ) ) {
-	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      tile_diameter);
+	    FG_LOG( FG_TERRAIN, FG_INFO, 
+		    "  Loading " << tile_diameter << "tiles" );
 	    for ( i = 0; i < tile_diameter; i++ ) {
 		// scrolling North
 		for ( j = 0; j < tile_diameter - 1; j++ ) {
@@ -208,8 +212,8 @@ int fgTileMgrUpdate( void ) {
 	    }
 	} else if ( (p1.lat < p_last.lat) ||
 		    ( (p1.lat == p_last.lat) && (p1.y < p_last.y) ) ) {
-	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      tile_diameter);
+	    FG_LOG( FG_TERRAIN, FG_INFO, 
+		    "  Loading " << tile_diameter << "tiles" );
 	    for ( i = 0; i < tile_diameter; i++ ) {
 		// scrolling South
 		for ( j = tile_diameter - 1; j > 0; j-- ) {
@@ -436,10 +440,11 @@ double fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
     
     earth_center = Point3D(0.0, 0.0, 0.0);
 
-    fgPrintf( FG_TERRAIN, FG_DEBUG, 
-	      "Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
-	      lon * RAD_TO_DEG, lat * RAD_TO_DEG,
-	      p.lon, p.lat, p.x, p.y, fgBucketGenIndex(&p) );
+    FG_LOG( FG_TERRAIN, FG_DEBUG, 
+	    "Pos = (" << lon * RAD_TO_DEG << ", " << lat * RAD_TO_DEG
+	    << "  Current bucket = " 
+	    << p.lon << " " << p.lat << " " << p.x << " " << p.y
+	    << "  Index = " << fgBucketGenIndex(&p) );
 
     // calculate tile offset
     // x = (t->offset.x = t->center.x - scenery.center.x);
@@ -594,8 +599,8 @@ void fgTileMgrRender( void ) {
 			mtl_ptr = frag_ptr->material_ptr;
 			// printf(" lookup = %s\n", mtl_ptr->texture_name);
 			if ( ! mtl_ptr->append_sort_list( frag_ptr ) ) {
-			    fgPrintf( FG_TERRAIN, FG_ALERT,
-				      "Overran material sorting array\n" );
+			    FG_LOG( FG_TERRAIN, FG_ALERT,
+				    "Overran material sorting array" );
 			}
 
 			// xglCallList(frag_ptr->display_list);
@@ -633,6 +638,11 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.42  1998/11/06 21:18:23  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.41  1998/10/18 01:17:23  curt
 // Point3D tweaks.
 //

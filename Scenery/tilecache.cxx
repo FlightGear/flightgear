@@ -35,7 +35,7 @@
 
 #include <Airports/genapt.hxx>
 #include <Bucket/bucketutils.h>
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Objects/obj.hxx>
@@ -59,7 +59,7 @@ fgTILECACHE::init( void )
 {
     int i;
 
-    fgPrintf(FG_TERRAIN, FG_INFO, "Initializing the tile cache.\n");
+    FG_LOG( FG_TERRAIN, FG_INFO, "Initializing the tile cache." );
 
     for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
 	tile_cache[i].used = 0;
@@ -78,8 +78,8 @@ fgTILECACHE::exists( fgBUCKET *p )
 	    if ( tile_cache[i].tile_bucket.lat == p->lat ) {
 		if ( tile_cache[i].tile_bucket.x == p->x ) {
 		    if ( tile_cache[i].tile_bucket.y == p->y ) {
-			fgPrintf( FG_TERRAIN, FG_DEBUG, 
-				  "TILE EXISTS in cache ... index = %d\n", i );
+			FG_LOG( FG_TERRAIN, FG_DEBUG, 
+				"TILE EXISTS in cache ... index = " << i );
 			return( i );
 		    }
 		}
@@ -139,12 +139,12 @@ fgTILECACHE::entry_free( int index )
     tile_cache[index].used = 0;
 
     // Update the bucket
-    fgPrintf( FG_TERRAIN, FG_DEBUG, 
-	      "FREEING TILE = (%d %d %d %d)\n",
-	      tile_cache[index].tile_bucket.lon, 
-	      tile_cache[index].tile_bucket.lat, 
-	      tile_cache[index].tile_bucket.x,
-	      tile_cache[index].tile_bucket.y );
+    FG_LOG( FG_TERRAIN, FG_DEBUG, 
+	    "FREEING TILE = ("
+	    << tile_cache[index].tile_bucket.lon << " "
+	    << tile_cache[index].tile_bucket.lat << " "
+	    << tile_cache[index].tile_bucket.x << " "
+	    << tile_cache[index].tile_bucket.y << ")" );
 
     // Step through the fragment list, deleting the display list, then
     // the fragment, until the list is empty.
@@ -188,14 +188,16 @@ fgTILECACHE::next_avail( void )
 	    return(i);
 	} else {
 	    // calculate approximate distance from view point
-	    fgPrintf( FG_TERRAIN, FG_DEBUG,
-		      "DIST Abs view pos = %.4f, %.4f, %.4f\n", 
-		      v->abs_view_pos.x(), v->abs_view_pos.y(),
-		      v->abs_view_pos.z() );
-	    fgPrintf( FG_TERRAIN, FG_DEBUG,
-		      "    ref point = %.4f, %.4f, %.4f\n", 
-		      tile_cache[i].center.x(), tile_cache[i].center.y(),
-		      tile_cache[i].center.z());
+	    FG_LOG( FG_TERRAIN, FG_DEBUG,
+		    "DIST Abs view pos = "
+		    << v->abs_view_pos.x() << ", "
+		    << v->abs_view_pos.y() << ", "
+		    << v->abs_view_pos.z() );
+	    FG_LOG( FG_TERRAIN, FG_DEBUG,
+		    "    ref point = "
+		    << tile_cache[i].center.x() << ", "
+		    << tile_cache[i].center.y() << ", "
+		    << tile_cache[i].center.z() );
 
 	    delta.setx( fabs(tile_cache[i].center.x() - v->abs_view_pos.x() ) );
 	    delta.sety( fabs(tile_cache[i].center.y() - v->abs_view_pos.y() ) );
@@ -210,7 +212,7 @@ fgTILECACHE::next_avail( void )
 	    }
 	    dist = max + (med + min) / 4;
 
-	    fgPrintf( FG_TERRAIN, FG_DEBUG, "    distance = %.2f\n", dist);
+	    FG_LOG( FG_TERRAIN, FG_DEBUG, "    distance = " << dist );
 
 	    if ( dist > max_dist ) {
 		max_dist = dist;
@@ -234,6 +236,11 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.19  1998/11/06 21:18:21  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.18  1998/10/16 18:12:28  curt
 // Fixed a bug in the conversion to Point3D.
 //
