@@ -722,3 +722,24 @@ FGNavCom::get_nav_from_flag () const
         return false;
     }
 }
+
+
+/**
+ * Return the current radial.
+ *
+ * FIXME: the variable 'nav_radial' does not contain the current
+ * radial, while the variable 'nav_heading' contains the reciprocal of
+ * the current radial.
+ */
+double
+FGNavCom::get_nav_radial () const
+{
+    if (nav_inrange && nav_serviceable->getBoolValue()) {
+        double radial = nav_heading + 180;
+        if (radial >= 360)
+            radial -= 360;
+        return radial;
+    } else {
+        return 0.0;
+    }
+}

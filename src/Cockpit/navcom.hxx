@@ -213,7 +213,7 @@ public:
     inline double get_nav_gs_dist_signed() const { return nav_gs_dist_signed; }
     inline double get_nav_elev() const { return nav_elev; }
     inline double get_nav_heading() const { return nav_heading; }
-    inline double get_nav_radial() const { return nav_radial; }
+    inline double get_nav_radial() const;
     inline double get_nav_target_gs() const { return nav_target_gs; }
     inline double get_nav_magvar() const { return nav_magvar; }
     double get_nav_heading_needle_deflection() const;
