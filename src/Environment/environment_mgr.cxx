@@ -68,6 +68,14 @@ FGEnvironmentMgr::bind ()
 	&FGEnvironment::get_temperature_degc,
 	&FGEnvironment::set_temperature_degc);
   fgSetArchivable("/environment/temperature-degc");
+  fgTie("/environment/dewpoint-sea-level-degc", _environment,
+	&FGEnvironment::get_dewpoint_sea_level_degc,
+	&FGEnvironment::set_dewpoint_sea_level_degc);
+  fgSetArchivable("/environment/dewpoint-sea-level-degc");
+  fgTie("/environment/dewpoint-degc", _environment,
+	&FGEnvironment::get_dewpoint_degc,
+	&FGEnvironment::set_dewpoint_degc);
+  fgSetArchivable("/environment/dewpoint-degc");
   fgTie("/environment/pressure-sea-level-inhg", _environment,
 	&FGEnvironment::get_pressure_sea_level_inhg,
 	&FGEnvironment::set_pressure_sea_level_inhg);
@@ -76,13 +84,8 @@ FGEnvironmentMgr::bind ()
 	&FGEnvironment::get_pressure_inhg,
 	&FGEnvironment::set_pressure_inhg);
   fgSetArchivable("/environment/pressure-inhg");
-  fgTie("/environment/density-sea-level-slugft3", _environment,
-	&FGEnvironment::get_density_sea_level_slugft3,
-	&FGEnvironment::set_density_sea_level_slugft3);
-  fgSetArchivable("/environment/density-sea-level-slugft3");
   fgTie("/environment/density-slugft3", _environment,
-	&FGEnvironment::get_density_slugft3,
-	&FGEnvironment::set_density_slugft3);
+	&FGEnvironment::get_density_slugft3); // read-only
   fgSetArchivable("/environment/density-inhg");
   fgTie("/environment/wind-from-heading-deg", _environment,
 	&FGEnvironment::get_wind_from_heading_deg,
@@ -108,22 +111,27 @@ FGEnvironmentMgr::bind ()
     fgTie(buf, this, i,
 	  &FGEnvironmentMgr::get_cloud_layer_span_m,
 	  &FGEnvironmentMgr::set_cloud_layer_span_m);
+    fgSetArchivable(buf);
     sprintf(buf, "/environment/clouds/layer[%d]/elevation-ft", i);
     fgTie(buf, this, i,
 	  &FGEnvironmentMgr::get_cloud_layer_elevation_ft,
 	  &FGEnvironmentMgr::set_cloud_layer_elevation_ft);
+    fgSetArchivable(buf);
     sprintf(buf, "/environment/clouds/layer[%d]/thickness-ft", i);
     fgTie(buf, this, i,
 	  &FGEnvironmentMgr::get_cloud_layer_thickness_ft,
 	  &FGEnvironmentMgr::set_cloud_layer_thickness_ft);
+    fgSetArchivable(buf);
     sprintf(buf, "/environment/clouds/layer[%d]/transition-ft", i);
     fgTie(buf, this, i,
 	  &FGEnvironmentMgr::get_cloud_layer_transition_ft,
 	  &FGEnvironmentMgr::set_cloud_layer_transition_ft);
+    fgSetArchivable(buf);
     sprintf(buf, "/environment/clouds/layer[%d]/type", i);
     fgTie(buf, this, i,
 	  &FGEnvironmentMgr::get_cloud_layer_type,
 	  &FGEnvironmentMgr::set_cloud_layer_type);
+    fgSetArchivable(buf);
   }
 }
 
@@ -131,8 +139,13 @@ void
 FGEnvironmentMgr::unbind ()
 {
   fgUntie("/environment/visibility-m");
-  fgUntie("/environment/wind-from-heading-deg");
-  fgUntie("/environment/wind-speed-kt");
+  fgUntie("/environment/temperature-sea-level-degc");
+  fgUntie("/environment/temperature-degc");
+  fgUntie("/environment/dewpoint-sea-level-degc");
+  fgUntie("/environment/dewpoint-degc");
+  fgUntie("/environment/pressure-sea-level-inhg");
+  fgUntie("/environment/pressure-inhg");
+  fgUntie("/environment/density-inhg");
   fgUntie("/environment/wind-from-north-fps");
   fgUntie("/environment/wind-from-east-fps");
   fgUntie("/environment/wind-from-down-fps");

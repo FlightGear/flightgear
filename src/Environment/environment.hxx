@@ -58,9 +58,10 @@ public:
 
   virtual double get_temperature_sea_level_degc () const;
   virtual double get_temperature_degc () const;
+  virtual double get_dewpoint_sea_level_degc () const;
+  virtual double get_dewpoint_degc () const;
   virtual double get_pressure_sea_level_inhg () const;
   virtual double get_pressure_inhg () const;
-  virtual double get_density_sea_level_slugft3 () const;
   virtual double get_density_slugft3 () const;
 
   virtual double get_wind_from_heading_deg () const;
@@ -73,10 +74,10 @@ public:
 
   virtual void set_temperature_sea_level_degc (double t);
   virtual void set_temperature_degc (double t);
+  virtual void set_dewpoint_sea_level_degc (double d);
+  virtual void set_dewpoint_degc (double d);
   virtual void set_pressure_sea_level_inhg (double p);
   virtual void set_pressure_inhg (double p);
-  virtual void set_density_sea_level_slugft3 (double d);
-  virtual void set_density_slugft3 (double d);
 
   virtual void set_wind_from_heading_deg (double h);
   virtual void set_wind_speed_kt (double s);
@@ -100,14 +101,14 @@ private:
 
   void _recalc_sl_temperature ();
   void _recalc_alt_temperature ();
+  void _recalc_sl_dewpoint ();
+  void _recalc_alt_dewpoint ();
   void _recalc_sl_pressure ();
   void _recalc_alt_pressure ();
-  void _recalc_sl_density ();
-  void _recalc_alt_density ();
+  void _recalc_density ();
 
   SGInterpTable * _temperature_degc_table;
   SGInterpTable * _pressure_inhg_table;
-  SGInterpTable * _density_slugft3_table;
 
   double elevation_ft;
 
@@ -116,9 +117,10 @@ private:
 				// Atmosphere
   double temperature_sea_level_degc;
   double temperature_degc;
+  double dewpoint_sea_level_degc;
+  double dewpoint_degc;
   double pressure_sea_level_inhg;
   double pressure_inhg;
-  double density_sea_level_slugft3;
   double density_slugft3;
 
   double wind_from_heading_deg;

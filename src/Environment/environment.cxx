@@ -44,11 +44,10 @@
 FGEnvironment::FGEnvironment()
   : _temperature_degc_table(new SGInterpTable),
     _pressure_inhg_table(new SGInterpTable),
-    _density_slugft3_table(new SGInterpTable),
     visibility_m(32000),
-    temperature_sea_level_degc(20),
+    temperature_sea_level_degc(15),
+    dewpoint_sea_level_degc(5), // guess
     pressure_sea_level_inhg(29.92),
-    density_sea_level_slugft3(0.00237),
     wind_from_heading_deg(0),
     wind_speed_kt(0),
     wind_from_north_fps(0),
@@ -61,12 +60,11 @@ FGEnvironment::FGEnvironment()
 FGEnvironment::FGEnvironment (const FGEnvironment &env)
   : _temperature_degc_table(new SGInterpTable),
     _pressure_inhg_table(new SGInterpTable),
-    _density_slugft3_table(new SGInterpTable),
     elevation_ft(env.elevation_ft),
     visibility_m(env.visibility_m),
     temperature_sea_level_degc(env.temperature_sea_level_degc),
+    dewpoint_sea_level_degc(env.dewpoint_sea_level_degc),
     pressure_sea_level_inhg(env.pressure_sea_level_inhg),
-    density_sea_level_slugft3(env.density_sea_level_slugft3),
     wind_from_heading_deg(env.wind_from_heading_deg),
     wind_speed_kt(env.wind_speed_kt),
     wind_from_north_fps(env.wind_from_north_fps),
@@ -80,7 +78,6 @@ FGEnvironment::~FGEnvironment()
 {
   delete _temperature_degc_table;
   delete _pressure_inhg_table;
-  delete _density_slugft3_table;
 }
 
 
@@ -103,6 +100,18 @@ FGEnvironment::get_temperature_degc () const
 }
 
 double
+FGEnvironment::get_dewpoint_sea_level_degc () const
+{
+  return dewpoint_sea_level_degc;
+}
+
+double
+FGEnvironment::get_dewpoint_degc () const
+{
+  return dewpoint_degc;
+}
+
+double
 FGEnvironment::get_pressure_sea_level_inhg () const
 {
   return pressure_sea_level_inhg;
@@ -112,12 +121,6 @@ double
 FGEnvironment::get_pressure_inhg () const
 {
   return pressure_inhg;
-}
-
-double
-FGEnvironment::get_density_sea_level_slugft3 () const
-{
-  return density_sea_level_slugft3;
 }
 
 double
@@ -173,6 +176,7 @@ FGEnvironment::set_temperature_sea_level_degc (double t)
 {
   temperature_sea_level_degc = t;
   _recalc_alt_temperature();
+  _recalc_density();
 }
 
 void
@@ -180,6 +184,23 @@ FGEnvironment::set_temperature_degc (double t)
 {
   temperature_degc = t;
   _recalc_sl_temperature();
+  _recalc_density();
+}
+
+void
+FGEnvironment::set_dewpoint_sea_level_degc (double t)
+{
+  dewpoint_sea_level_degc = t;
+  _recalc_alt_dewpoint();
+  _recalc_density();
+}
+
+void
+FGEnvironment::set_dewpoint_degc (double t)
+{
+  dewpoint_degc = t;
+  _recalc_sl_dewpoint();
+  _recalc_density();
 }
 
 void
@@ -187,6 +208,7 @@ FGEnvironment::set_pressure_sea_level_inhg (double p)
 {
   pressure_sea_level_inhg = p;
   _recalc_alt_pressure();
+  _recalc_density();
 }
 
 void
@@ -194,20 +216,7 @@ FGEnvironment::set_pressure_inhg (double p)
 {
   pressure_inhg = p;
   _recalc_sl_pressure();
-}
-
-void
-FGEnvironment::set_density_sea_level_slugft3 (double d)
-{
-  density_sea_level_slugft3 = d;
-  _recalc_alt_density();
-}
-
-void
-FGEnvironment::set_density_slugft3 (double d)
-{
-  density_slugft3 = d;
-  _recalc_sl_density();
+  _recalc_density();
 }
 
 void
@@ -250,8 +259,9 @@ FGEnvironment::set_elevation_ft (double e)
 {
   elevation_ft = e;
   _recalc_alt_temperature();
+  _recalc_alt_dewpoint();
   _recalc_alt_pressure();
-  _recalc_alt_density();
+  _recalc_density();
 }
 
 // Atmosphere model.
@@ -269,32 +279,31 @@ FGEnvironment::set_elevation_ft (double e)
 // R=287.  I chose to correct the temperature to 288.20, since 79F is
 // pretty hot for a "standard" atmosphere.
 
-// Elevation (ft), temperature factor (degK), pressure factor (inHG),
-// density factor (slug/ft^3)
-static double atmosphere_data[][4] = {
-  0.00, 1.00, 1.000, 1.000000,
-  2952.76, 0.98, 0.898, 0.916408,
-  5905.51, 0.96, 0.804, 0.838286,
-  8858.27, 0.94, 0.719, 0.765429,
-  11811.02, 0.92, 0.641, 0.697510,
-  14763.78, 0.90, 0.570, 0.634318,
-  17716.54, 0.88, 0.506, 0.575616,
-  20669.29, 0.86, 0.447, 0.521184,
-  23622.05, 0.84, 0.394, 0.470784,
-  26574.80, 0.82, 0.347, 0.424220,
-  29527.56, 0.80, 0.304, 0.381273,
-  32480.31, 0.78, 0.266, 0.341747,
-  35433.07, 0.76, 0.231, 0.305445,
-  38385.83, 0.75, 0.201, 0.266931,
-  41338.58, 0.75, 0.174, 0.231739,
-  44291.34, 0.75, 0.151, 0.201192,
-  47244.09, 0.75, 0.131, 0.174686,
-  50196.85, 0.75, 0.114, 0.151673,
-  53149.61, 0.75, 0.099, 0.131698,
-  56102.36, 0.75, 0.086, 0.114359,
-  59055.12, 0.75, 0.075, 0.099306,
-  62007.87, 0.75, 0.065, 0.086237,
-  -1, -1, -1, -1
+// Elevation (ft), temperature factor (degK), pressure factor (inHG)
+static double atmosphere_data[][3] = {
+  0.00, 1.00, 1.000,
+  2952.76, 0.98, 0.898,
+  5905.51, 0.96, 0.804,
+  8858.27, 0.94, 0.719,
+  11811.02, 0.92, 0.641,
+  14763.78, 0.90, 0.570,
+  17716.54, 0.88, 0.506,
+  20669.29, 0.86, 0.447,
+  23622.05, 0.84, 0.394,
+  26574.80, 0.82, 0.347,
+  29527.56, 0.80, 0.304,
+  32480.31, 0.78, 0.266,
+  35433.07, 0.76, 0.231,
+  38385.83, 0.75, 0.201,
+  41338.58, 0.75, 0.174,
+  44291.34, 0.75, 0.151,
+  47244.09, 0.75, 0.131,
+  50196.85, 0.75, 0.114,
+  53149.61, 0.75, 0.099,
+  56102.36, 0.75, 0.086,
+  59055.12, 0.75, 0.075,
+  62007.87, 0.75, 0.065,
+  -1, -1, -1
 };
 
 void
@@ -305,8 +314,6 @@ FGEnvironment::_setup_tables ()
 				      atmosphere_data[i][1]);
     _pressure_inhg_table->addEntry(atmosphere_data[i][0],
 				   atmosphere_data[i][2]);
-    _density_slugft3_table->addEntry(atmosphere_data[i][0],
-				     atmosphere_data[i][3]);
   }
 }
 
@@ -370,6 +377,28 @@ FGEnvironment::_recalc_alt_temperature ()
 }
 
 void
+FGEnvironment::_recalc_sl_dewpoint ()
+{
+				// 0.2degC/1000ft
+				// FIXME: this will work only for low
+				// elevations
+  dewpoint_sea_level_degc = dewpoint_degc + (elevation_ft * .0002);
+  if (dewpoint_sea_level_degc > temperature_sea_level_degc)
+    dewpoint_sea_level_degc = temperature_sea_level_degc;
+}
+
+void
+FGEnvironment::_recalc_alt_dewpoint ()
+{
+				// 0.2degC/1000ft
+				// FIXME: this will work only for low
+				// elevations
+  dewpoint_degc = dewpoint_sea_level_degc + (elevation_ft * .0002);
+  if (dewpoint_degc > temperature_degc)
+    dewpoint_degc = temperature_degc;
+}
+
+void
 FGEnvironment::_recalc_sl_pressure ()
 {
   pressure_sea_level_inhg =
@@ -384,18 +413,21 @@ FGEnvironment::_recalc_alt_pressure ()
 }
 
 void
-FGEnvironment::_recalc_sl_density ()
+FGEnvironment::_recalc_density ()
 {
-  density_sea_level_slugft3 =
-    density_slugft3 / _density_slugft3_table->interpolate(elevation_ft);
-}
+  double pressure_psf = pressure_inhg * 70.7487;
+  
+  // adjust for humidity
+  // calculations taken from USA Today (oops!) at
+  // http://www.usatoday.com/weather/basics/density-calculations.htm
+  double temperature_degk = temperature_degc + 273.15;
+  double pressure_mb = pressure_inhg * 33.86;
+  double vapor_pressure_mb =
+    6.11 * pow(10.0, 7.5 * dewpoint_degc / (237.7 + dewpoint_degc));
+  double virtual_temperature_degk = temperature_degk / (1 - (vapor_pressure_mb / pressure_mb) * (1.0 - 0.622));
+  double virtual_temperature_degr = virtual_temperature_degk * 1.8;
 
-void
-FGEnvironment::_recalc_alt_density ()
-{
-  density_slugft3 =
-    density_sea_level_slugft3 *
-    _density_slugft3_table->interpolate(elevation_ft);
+  density_slugft3 = pressure_psf / (virtual_temperature_degr * 1718);
 }
 
 // end of environment.cxx
