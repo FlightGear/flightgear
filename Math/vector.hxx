@@ -33,12 +33,28 @@
 #endif                                   
 
 
-#include <Math/mat3.h>
+#include "mat3.h"
 
 
 /* Map a vector onto the plane specified by normal */
-void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
+#if defined( USE_XTRA_MAT3_INLINES )
+#  define map_vec_onto_cur_surface_plane(normal, v0, vec, result) { \
+	double scale = ((normal[0]*vec[0]+normal[1]*vec[1]+normal[2]*vec[2]) / \
+	       (normal[0]*normal[0]+normal[1]*normal[1]+normal[2]*normal[2])); \
+	result[0] = vec[0]-normal[0]*scale; \
+	result[1] = vec[1]-normal[1]*scale; \
+	result[2] = vec[2]-normal[2]*scale; \
+  }
+#else
+  void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
 				    MAT3vec result);
+#endif //defined( USE_XTRA_MAT3_INLINES )
+
+
+// Given a point p, and a line through p0 with direction vector d,
+// find the shortest distance from the point to the line
+double fgPointLine(MAT3vec p, MAT3vec p0, MAT3vec d);
+
 
 // Given a point p, and a line through p0 with direction vector d,
 // find the shortest distance (squared) from the point to the line
@@ -49,10 +65,13 @@ double fgPointLineSquared(MAT3vec p, MAT3vec p0, MAT3vec d);
 
 
 /* $Log$
-/* Revision 1.2  1998/07/24 21:34:38  curt
-/* fgPointLine() rewritten into fgPointLineSquared() ... this ultimately saves
-/* us from doing a sqrt().
+/* Revision 1.3  1998/08/24 20:04:13  curt
+/* Various "inline" code optimizations contributed by Norman Vine.
 /*
+ * Revision 1.2  1998/07/24 21:34:38  curt
+ * fgPointLine() rewritten into fgPointLineSquared() ... this ultimately saves
+ * us from doing a sqrt().
+ *
  * Revision 1.1  1998/07/08 14:40:10  curt
  * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
  * Updated fg_geodesy comments to reflect that routines expect and produce

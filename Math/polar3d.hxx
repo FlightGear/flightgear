@@ -33,6 +33,7 @@
 #endif                                   
 
 
+#include <Include/fg_constants.h>
 #include <Include/fg_types.h>
 
 
@@ -47,15 +48,24 @@ fgPoint3d fgPolarToCart3d(fgPoint3d p);
 fgPoint3d fgCartToPolar3d(fgPoint3d cp);
 
 
+/* Find the Altitude above the Ellipsoid (WGS84) given the Earth
+ * Centered Cartesian coordinate vector Distances are specified in
+ * meters. */
+double fgGeodAltFromCart(fgPoint3d cp);
+
+
 #endif /* _POLAR_HXX */
 
 
 /* $Log$
-/* Revision 1.1  1998/07/08 14:40:09  curt
-/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-/* Updated fg_geodesy comments to reflect that routines expect and produce
-/*   meters.
+/* Revision 1.2  1998/08/24 20:04:12  curt
+/* Various "inline" code optimizations contributed by Norman Vine.
 /*
+ * Revision 1.1  1998/07/08 14:40:09  curt
+ * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+ * Updated fg_geodesy comments to reflect that routines expect and produce
+ *   meters.
+ *
  * Revision 1.1  1998/05/02 01:50:11  curt
  * polar.[ch] renamed to polar3d.[ch]
  *

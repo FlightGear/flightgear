@@ -34,6 +34,7 @@
 #include "mat3.h"
 
 
+#if !defined( USE_XTRA_MAT3_INLINES )
 /* Map a vector onto the plane specified by normal */
 void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
 				    MAT3vec result)
@@ -78,6 +79,34 @@ void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
     /* printf("  result = %.2f, %.2f, %.2f\n", 
        result[0], result[1], result[2]); */
 }
+#endif // !defined( USE_XTRA_MAT3_INLINES )
+
+
+// Given a point p, and a line through p0 with direction vector d,
+// find the shortest distance from the point to the line
+double fgPointLine(MAT3vec p, MAT3vec p0, MAT3vec d) {
+    MAT3vec u, u1, v;
+    double ud, dd, tmp, dist;
+    
+    // u = p - p0
+    MAT3_SUB_VEC(u, p, p0);
+
+    // calculate the projection, u1, of u along d.
+    // u1 = ( dot_prod(u, d) / dot_prod(d, d) ) * d;
+    ud = MAT3_DOT_PRODUCT(u, d);
+    dd = MAT3_DOT_PRODUCT(d, d);
+    tmp = ud / dd;
+
+    MAT3_SCALE_VEC(u1, d, tmp);;
+
+    // v = u - u1 = vector from closest point on line, p1, to the
+    // original point, p.
+    MAT3_SUB_VEC(v, u, u1);
+
+    dist = sqrt(MAT3_DOT_PRODUCT(v, v));
+
+    return( dist );
+}
 
 
 // Given a point p, and a line through p0 with direction vector d,
@@ -106,10 +135,13 @@ double fgPointLineSquared(MAT3vec p, MAT3vec p0, MAT3vec d) {
 
 
 /* $Log$
-/* Revision 1.2  1998/07/24 21:34:38  curt
-/* fgPointLine() rewritten into fgPointLineSquared() ... this ultimately saves
-/* us from doing a sqrt().
+/* Revision 1.3  1998/08/24 20:04:12  curt
+/* Various "inline" code optimizations contributed by Norman Vine.
 /*
+ * Revision 1.2  1998/07/24 21:34:38  curt
+ * fgPointLine() rewritten into fgPointLineSquared() ... this ultimately saves
+ * us from doing a sqrt().
+ *
  * Revision 1.1  1998/07/08 14:40:10  curt
  * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
  * Updated fg_geodesy comments to reflect that routines expect and produce

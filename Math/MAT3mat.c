@@ -28,6 +28,8 @@
 /* --------------------------  Public Routines	---------------------------- */
 
 
+#if !defined( USE_XTRA_MAT3_INLINES )
+
 /*
  * Sets a matrix to identity.
  */
@@ -95,6 +97,7 @@ MAT3mult (double (*result_mat)[4], register double (*mat1)[4], register double (
 		       mat1[i][3] * mat2[3][j]);
    MAT3copy (result_mat, tmp_mat);
 }
+#endif // !defined( USE_XTRA_MAT3_INLINES )
 
 /*
  * This returns the transpose of a matrix.  The result matrix may be

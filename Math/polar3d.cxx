@@ -37,9 +37,12 @@
  * to be specified in meters */
 fgPoint3d fgPolarToCart3d(fgPoint3d p) {
     fgPoint3d pnew;
+    double tmp;
 
-    pnew.x = cos(p.lon) * cos(p.lat) * p.radius;
-    pnew.y = sin(p.lon) * cos(p.lat) * p.radius;
+    tmp = cos(p.lat) * p.radius;
+
+    pnew.x = cos(p.lon) * tmp;
+    pnew.y = sin(p.lon) * tmp;
     pnew.z = sin(p.lat) * p.radius;
 
     return(pnew);
@@ -61,12 +64,45 @@ fgPoint3d fgCartToPolar3d(fgPoint3d cp) {
 }
 
 
+/* Find the Altitude above the Ellipsoid (WGS84) given the Earth
+ * Centered Cartesian coordinate vector Distances are specified in
+ * meters. */
+double fgGeodAltFromCart(fgPoint3d cp)
+{
+    double t_lat, x_alpha, mu_alpha;
+    double lat_geoc, radius;
+    double result;
+
+    lat_geoc = FG_PI_2 - atan2( sqrt(cp.x*cp.x + cp.y*cp.y), cp.z );
+    radius = sqrt(cp.x*cp.x + cp.y*cp.y + cp.z*cp.z);
+	
+    if( ( (FG_PI_2 - lat_geoc) < ONE_SECOND )    /* near North pole */
+	|| ( (FG_PI_2 + lat_geoc) < ONE_SECOND ) )   /* near South pole */
+    {
+	result = radius - EQUATORIAL_RADIUS_M*E;
+    } else {
+	t_lat = tan(lat_geoc);
+	x_alpha = E*EQUATORIAL_RADIUS_M/sqrt(t_lat*t_lat + E*E);
+	mu_alpha = atan2(sqrt(RESQ_M - x_alpha*x_alpha),E*x_alpha);
+	if (lat_geoc < 0) {
+	    mu_alpha = - mu_alpha;
+	}
+	result = (radius - x_alpha/cos(lat_geoc))*cos(mu_alpha - lat_geoc);
+    }
+
+    return(result);
+}
+
+
 /* $Log$
-/* Revision 1.1  1998/07/08 14:40:08  curt
-/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-/* Updated fg_geodesy comments to reflect that routines expect and produce
-/*   meters.
+/* Revision 1.2  1998/08/24 20:04:11  curt
+/* Various "inline" code optimizations contributed by Norman Vine.
 /*
+ * Revision 1.1  1998/07/08 14:40:08  curt
+ * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+ * Updated fg_geodesy comments to reflect that routines expect and produce
+ *   meters.
+ *
  * Revision 1.2  1998/05/03 00:45:49  curt
  * Commented out a debugging printf.
  *

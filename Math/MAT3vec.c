@@ -29,6 +29,7 @@
 #  define FALSE 0
 #endif
 
+#if !defined( USE_XTRA_MAT3_INLINES )
 
 void
 MAT3mult_vec(double *result_vec, register double *vec, register double (*mat)[4])
@@ -45,6 +46,7 @@ MAT3mult_vec(double *result_vec, register double *vec, register double (*mat)[4]
 
    MAT3_COPY_VEC(result_vec, temp);
 }
+#endif // !defined( USE_XTRA_MAT3_INLINES )
 
 /*
  * Multiplies a vector of size 4 by a matrix, setting the result vector.
@@ -92,6 +94,8 @@ MAT3mult_hvec(double *result_vec, register double *vec, register double (*mat)[4
    return(ret);
 }
 
+#if !defined( USE_XTRA_MAT3_INLINES )
+
 /*
  * Sets the first vector to be the cross-product of the last two vectors.
  */
@@ -108,6 +112,7 @@ MAT3cross_product(double *result_vec, register double *vec1, register double *ve
 
    MAT3_COPY_VEC(result_vec, temp);
 }
+#endif // !defined( USE_XTRA_MAT3_INLINES )
 
 /*
  * Finds a vector perpendicular to vec and stores it in result_vec.
