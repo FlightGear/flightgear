@@ -260,6 +260,7 @@ sub load_faa() {
         $id = &strip_ws( $id );
         $rwy = &strip_ws( $rwy );
         $rwy =~ s/\/$//;
+        $rwy =~ s/\/$//;
         $loc_id =~ s/^I-//;
         my( $loc_hdg ) = $faa_bearing + make_dmagvar($faa_magvar);
         my( $loc_lat ) = make_dcoord($faa_loc_lats) / 3600.0;
@@ -337,7 +338,11 @@ sub load_fgfs() {
                 # skip USA approaches not found in FAA or DAFIFT data
             } else {
                 print "FGFS adding: $icao $rwy\n";
-                $ILS{$icao . $rwy} = $_;
+                &safe_add_record( $icao, $rwy, $type_name, $loc_freq, $loc_id,
+                                  $loc_hdg, $loc_lat, $loc_lon, $gs_elev,
+                                  $gs_angle, $gs_lat, $gs_lon, $dme_lat,
+                                  $dme_lon, $om_lat, $om_lon, $mm_lat,
+                                  $mm_lon, $im_lat, $im_lon );
             }
         } else {
             print "FGFS discarding: $_\n";
