@@ -1,12 +1,10 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libsl.a libsm.a
 
-lib_LTLIBRARIES = libsl.la libsm.la
-
-libsl_la_SOURCES = \
+libsl_a_SOURCES = \
 	sl.h slPortability.h \
 	slDSP.cxx slSample.cxx slEnvelope.cxx \
 	slSamplePlayer.cxx slScheduler.cxx
 
-libsm_la_SOURCES = sm.h slPortability.h smMixer.cxx
+libsm_a_SOURCES = sm.h slPortability.h smMixer.cxx
 
 INCLUDES += -I$(top_builddir) -I.
