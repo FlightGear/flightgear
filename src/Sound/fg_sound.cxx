@@ -31,7 +31,6 @@
 #include <string.h>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/sg_random.h>
 
 #include <Main/fg_props.hxx>
 
@@ -307,7 +306,6 @@ FGSound::update (double dt)
    //
     _dt_play += dt;
    _prev_value = curr_value;
-   _random = sg_random();
 
    //
    // Update the volume

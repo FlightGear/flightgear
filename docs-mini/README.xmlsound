@@ -166,8 +166,6 @@ Configuration description:
 	dt_play:	the number of seconds since the sound started playing.
 
 	dt_stop:	the number of seconds after the sound has stopped.
-
-	random:		a random number between 0.0 and 1.0
  
      <type>
 	Defines the function that should be used upon the property
