@@ -1,0 +1,95 @@
+/*****************************************************************************
+
+ Header:       BalloonSimInterface.h	
+ Author:       Christian Mayer
+ Date started: 07.10.99
+
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 2 of the License, or (at your option) any later
+ version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ details.
+
+ You should have received a copy of the GNU General Public License along with
+ this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ Place - Suite 330, Boston, MA  02111-1307, USA.
+
+ Further information about the GNU General Public License can also be found on
+ the world wide web at http://www.gnu.org.
+
+FUNCTIONAL DESCRIPTION
+------------------------------------------------------------------------------
+interface to the the hot air balloon simulator
+
+HISTORY
+------------------------------------------------------------------------------
+07.10.1999 Christian Mayer	Created
+*****************************************************************************/
+
+/****************************************************************************/
+/* SENTRY                                                                   */
+/****************************************************************************/
+#ifndef BalloonSimInterface_H
+#define BalloonSimInterface_H
+
+/****************************************************************************/
+/* INCLUDES								    */
+/****************************************************************************/
+#include <FDM/Balloon/BalloonSim.h>
+
+#include <Aircraft/aircraft.hxx>
+
+#include "flight.hxx"
+		
+/****************************************************************************/
+/* DEFINES								    */
+/****************************************************************************/
+
+/****************************************************************************/
+/* DECLARATIONS  							    */
+/****************************************************************************/
+
+// reset flight params to a specific position 
+// int fgBalloonSimInit(double dt, FGInterface& f);
+
+// update position based on inputs, positions, velocities, etc.
+// int fgBalloonSimUpdate(FGInterface& f, int multiloop);
+
+// Convert from the FGInterface struct to the BalloonSim
+// int FGInterface_2_fgBalloonSim (FGInterface& f);
+
+// Convert from the BalloonSim to the FGInterface struct
+// int fgBalloonSim_2_FGInterface (FGInterface& f);
+
+class FGBalloonSim: public FGInterface {
+
+    balloon current_balloon;
+
+public:
+
+    // copy FDM state to BalloonSim structures
+    int copy_to_BalloonSim();
+
+    // copy FDM state from BalloonSim structures
+    int copy_from_BalloonSim();
+
+    // reset flight params to a specific position 
+    int init( double dt );
+
+    // update position based on inputs, positions, velocities, etc.
+    int update( int multiloop );
+};
+
+
+/****************************************************************************/
+#endif /*BalloonSimInterface_H*/
+
+
+
+

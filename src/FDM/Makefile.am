@@ -1,8 +1,10 @@
-SUBDIRS	= External JSBsim LaRCsim Slew
+SUBDIRS	= Balloon External JSBsim LaRCsim Slew
 
 noinst_LIBRARIES = libFlight.a
 
-libFlight_a_SOURCES = flight.cxx flight.hxx \
+libFlight_a_SOURCES = \
+	Balloon.cxx Balloon.hxx \
+	flight.cxx flight.hxx \
 	JSBsim.cxx JSBsim.hxx \
 	LaRCsim.cxx LaRCsim.hxx
 

@@ -120,13 +120,15 @@ public:
 	// Jon S. Berndt's new FDM written from the ground up in C++
 	FG_JSBSIM = 2,
 
+	// Christian's hot air balloon simulation
+	FG_BALLOONSIM = 3,
+
 	// The following aren't implemented but are here to spark
 	// thoughts and discussions, and maybe even action.
-	FG_ACM = 3,
-	FG_SUPER_SONIC = 4,
-	FG_HELICOPTER = 5,
-	FG_AUTOGYRO = 6,
-	FG_BALLOON = 7,
+	FG_ACM = 4,
+	FG_SUPER_SONIC = 5,
+	FG_HELICOPTER = 6,
+	FG_AUTOGYRO = 7,
 	FG_PARACHUTE = 8,
 
 	// Driven externally via a serial port, net, file, etc.
