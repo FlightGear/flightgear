@@ -33,15 +33,14 @@
 
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
-// #include <Math/fg_geodesy.h>
-// #include <Math/mat3.h>
-// #include <Math/polar.h>
 #include <Bucket/bucketutils.h>
 
 
 int nodecount = 0;
+int excount = 0;
 
 static double nodes[MAX_NODES][3];
+static double exnodes[MAX_NODES][3];
 
 
 fgBUCKET my_index;
@@ -78,6 +77,54 @@ void extract_path(char *in, char *base) {
     }
 
     base[i] = '\0';
+}
+
+
+/* check to see if specified node is in the extra list */
+int is_extra_node(double *n) {
+    int i;
+
+    for ( i = 1; i <= excount; i++ ) {
+	// we only check lon/lat in case the height got fooled with
+	// along the way
+	if ( (fabs(n[0] - exnodes[i][0]) < FG_EPSILON) &&
+	     (fabs(n[1] - exnodes[i][1]) < FG_EPSILON) ) {
+	    return(1);
+	}
+    }
+
+    return(0);
+}
+
+/* Read all the extra nodes.  These typically define inner areas to
+   exclude from triangulations.  There will be a .poly file that
+   refers to these by position number which assumes all the extra
+   nodes come first in the generated .node file. */
+void read_extra_nodes(char *exfile) {
+    FILE *fd;
+    int i, junk1, junk2, junk3;
+
+    // load extra nodes if they exist
+    excount = 0;
+    if ( (fd = fopen(exfile, "r")) != NULL ) {
+	printf("Found and 'extra' node file = %s\n", exfile);
+	fscanf(fd, "%d %d %d %d", &excount, &junk1, &junk2, &junk3);
+
+	if ( excount > MAX_NODES - 1 ) {
+	    printf("Error, too many 'extra' nodes, increase array size\n");
+	    exit(-1);
+	} else {
+	    printf("    Expecting %d 'extra' nodes\n", excount);
+	}
+
+	for ( i = 1; i <= excount; i++ ) {
+	    fscanf(fd, "%d %lf %lf %lf\n", &junk1, 
+		   &exnodes[i][0], &exnodes[i][1], &exnodes[i][2]);
+	    printf("(extra) %d %.2f %.2f %.2f\n", 
+		    i, exnodes[i][0], exnodes[i][1], exnodes[i][2]);
+	}
+    }
+    fclose(fd);
 }
 
 
@@ -315,22 +362,28 @@ FILE *my_open(char *basename, char *basepath, char *ext) {
    precision problems.  1 arcsec == about 100 feet so 0.01 arcsec ==
    about 1 foot */
 void read_nodes(FILE *fp, double offset_lon, double offset_lat) {
+    double n[3];
     char line[256];
 
     while ( fgets(line, 250, fp) != NULL ) {
 	if ( strncmp(line, "gdn ", 4) == 0 ) {
-	    sscanf(line, "gdn %lf %lf %lf\n", &nodes[nodecount][0], 
-		   &nodes[nodecount][1], &nodes[nodecount][2]);
+	    sscanf(line, "gdn %lf %lf %lf\n", &n[0], &n[1], &n[2]);
 
-	    nodes[nodecount][0] += offset_lon;
-	    nodes[nodecount][1] += offset_lat;
+	    if ( ! is_extra_node(n) ) {
+		nodes[nodecount][0] = n[0] + offset_lon;
+		nodes[nodecount][1] = n[1] + offset_lat;
+		nodes[nodecount][2] = n[2];
 
-	    /*
-	    printf("read_nodes(%d) %.2f %.2f %.2f %s", nodecount, 
-		   nodes[nodecount][0], nodes[nodecount][1], 
-		   nodes[nodecount][2], line);
-		   */
-	    nodecount++;
+		/*
+		  printf("read_nodes(%d) %.2f %.2f %.2f %s", nodecount, 
+		      nodes[nodecount][0], nodes[nodecount][1], 
+		      nodes[nodecount][2], line);
+		      */
+
+		nodecount++;
+	    } else {
+		printf("found extra node %.2f %.2f %.2f\n", n[0], n[1], n[2]);
+	    }
 	}
     }
 }
@@ -339,7 +392,13 @@ void read_nodes(FILE *fp, double offset_lon, double offset_lat) {
 /* load in nodes from the various split and shared pieces to
  * reconstruct a tile */
 void build_node_list(char *basename, char *basepath) {
+    char exfile[256];
     FILE *ne, *nw, *se, *sw, *north, *south, *east, *west, *body;
+
+    // load extra nodes if they exist
+    strcpy(exfile, basename);
+    strcat(exfile, ".node.ex");
+    read_extra_nodes(exfile);
 
     ne = my_open(basename, basepath, ".ne");
     read_nodes(ne, 0.1, 0.1);
@@ -382,29 +441,35 @@ void build_node_list(char *basename, char *basepath) {
 /* dump in WaveFront .obj format */
 void dump_nodes(char *basename) {
     char file[256];
-    FILE *fp;
-    int i, len;
+    FILE *fd;
+    int i;
 
     /* generate output file name */
     strcpy(file, basename);
-    len = strlen(file);
-    file[len-2] = '\0';
+    // len = strlen(file);
+    // file[len-2] = '\0';
     strcat(file, ".node");
     
     /* dump vertices */
     printf("Creating node file:  %s\n", file);
     printf("  writing vertices in .node format.\n");
-    fp = fopen(file, "w");
+    fd = fopen(file, "w");
 
-    fprintf(fp, "%d 2 1 0\n", nodecount);
+    fprintf(fd, "%d 2 1 0\n", excount + nodecount);
+
+    // now write out extra node data
+    for ( i = 1; i <= excount; i++ ) {
+	fprintf(fd, "%d %.2f %.2f %.2f 0\n", 
+		i, exnodes[i][0], exnodes[i][1], exnodes[i][2]);
+    }
 
     /* now write out actual node data */
     for ( i = 0; i < nodecount; i++ ) {
-	fprintf(fp, "%d %.2f %.2f %.2f 0\n", i + 1,
+	fprintf(fd, "%d %.2f %.2f %.2f 0\n", excount + i + 1,
 	       nodes[i][0], nodes[i][1], nodes[i][2]);
     }
 
-    fclose(fp);
+    fclose(fd);
 }
 
 
@@ -413,7 +478,9 @@ int main(int argc, char **argv) {
     long int tmp_index;
     int len;
 
+    // derive base name
     strcpy(basename, argv[1]);
+    len = strlen(basename);
 
     /* find the base path of the file */
     extract_path(basename, basepath);
@@ -423,10 +490,10 @@ int main(int argc, char **argv) {
 
     /* find the index of the current file */
     extract_file(basename, temp);
-    len = strlen(temp);
-    if ( len >= 2 ) {
-	temp[len-2] = '\0';
-    }
+    // len = strlen(temp);
+    // if ( len >= 2 ) {
+    //    temp[len-2] = '\0';
+    // }
     tmp_index = atoi(temp);
     printf("%ld\n", tmp_index);
     fgBucketParseIndex(tmp_index, &my_index);
@@ -462,9 +529,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.9  1998/07/04 00:55:39  curt
-/* typedef'd struct fgBUCKET.
+/* Revision 1.10  1998/07/21 04:34:20  curt
+/* Mods to handle extra nodes (i.e. preserve cutouts).
 /*
+ * Revision 1.9  1998/07/04 00:55:39  curt
+ * typedef'd struct fgBUCKET.
+ *
  * Revision 1.8  1998/06/01 17:58:19  curt
  * Added a slight border overlap to try to minimize pixel wide gaps between
  * tiles due to round off error.  This is not a perfect solution, but helps.
