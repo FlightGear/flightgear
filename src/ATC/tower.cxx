@@ -187,6 +187,8 @@ GO-AROUND is instructed very late at < 12s to landing - possibly make more depen
 Need to make clear when TowerPlaneRecs do or don't get deleted in RemoveFromCircuitList etc. (MINOR until I misuse it - then CRITICAL!)
 
 FGTower::RemoveAllUserDialogOptions() really ought to be replaced by an ATCDialog::clear_entries() function. (MINOR - efficiency).
+
+At the moment planes in the lists are not guaranteed to always have a sensible ETA - it should be set as part of AddList functions, and lists should only be accessed this way. (FAIRLY MAJOR). 
 *******************************************/
 
 FGTower::FGTower() {
@@ -1051,7 +1053,15 @@ void FGTower::CheckCircuitList(double dt) {
 					t->planePtr->RegisterTransmission(13);
 				}
 			} else if(!t->clearedToLand) {
-				if(t->nextOnRwy) {
+				// The whip through the appList is a hack since currently t->nextOnRwy doesn't always work
+				// TODO - fix this!
+				bool cf = false;
+				for(tower_plane_rec_list_iterator twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
+					if((*twrItr)->eta < t->eta) {
+						cf = true;
+					}
+				}
+				if(t->nextOnRwy && !cf) {
 					if(!rwyList.size()) {
 						string trns = t->plane.callsign;
 						trns += " Cleared to land";
@@ -1166,6 +1176,7 @@ void FGTower::CheckApproachList(double dt) {
 		} else {
 			// TODO - set/update the position if it's an AI plane
 		}
+		doThresholdETACalc();	// We need this here because planes in the lists are not guaranteed to *always* have the correct ETA
 		//cout << "eta is " << t->eta << ", rwy is " << (rwyList.size() ? "occupied " : "clear ") << '\n';
 		if(t->eta < 12 && rwyList.size() && !(t->instructedToGoAround)) {
 			// TODO - need to make this more sophisticated 
@@ -1191,10 +1202,32 @@ void FGTower::CheckApproachList(double dt) {
 				// TODO - add Go-around ack to comm options,
 				// remove report rwy vacated. (possibly).
 			}
-		}				
-		if(t->nextOnRwy && !(t->clearedToLand) && !(t->instructedToGoAround)) {
-			// check distance away and whether runway occupied
-			// and schedule transmission if necessary
+		} else if(t->eta < 90 && !t->clearedToLand) {
+			//doThresholdETACalc();
+			doThresholdUseOrder();
+			// The whip through the appList is a hack since currently t->nextOnRwy doesn't always work
+			// TODO - fix this!
+			bool cf = false;
+			for(tower_plane_rec_list_iterator twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
+				if((*twrItr)->eta < t->eta) {
+					cf = true;
+				}
+			}
+			if(t->nextOnRwy && !cf) {
+				if(!rwyList.size()) {
+					string trns = t->plane.callsign;
+					trns += " Cleared to land";
+					pending_transmission = trns;
+					Transmit();
+					//if(t->isUser) cout << "Transmitting cleared to Land!!!\n";
+					t->clearedToLand = true;
+					if(!t->isUser) {
+						t->planePtr->RegisterTransmission(7);
+					}
+				}
+			} else {
+				//if(t->isUser) cout << "Not next\n";
+			}
 		}
 		
 		// Check for landing...
