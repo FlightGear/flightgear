@@ -202,7 +202,7 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 		// everything is too close together to tell the difference
 		// so the current intersection point should work as good
 		// as any
-		result.setvals(x, y, z);
+		result = Point3D(x, y, z);
 		return(1);
 	    }
 	    side1 = FG_SIGN (t1 - t2);
@@ -282,7 +282,7 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 	} else {
 	    // all dimensions are really small so lets call it close
 	    // enough and return a successful match
-	    result.setvals(x, y, z);
+	    result = Point3D(x, y, z);
 	    return(1);
 	}
 
@@ -314,7 +314,7 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 	}
 
 	// printf( "intersection point = %.2f %.2f %.2f\n", x, y, z);
-	result.setvals(x, y, z);
+	result = Point3D(x, y, z);
 	return(1);
     }
 
@@ -324,6 +324,9 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 }
 
 // $Log$
+// Revision 1.6  1998/10/18 01:17:20  curt
+// Point3D tweaks.
+//
 // Revision 1.5  1998/10/16 00:54:37  curt
 // Converted to Point3D class.
 //

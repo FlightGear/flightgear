@@ -268,10 +268,9 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
     //        scenery.center.y, scenery.center.z);
 
     // calculate the cartesion coords of the current lat/lon/0 elev
-    p.setvals(
-	      FG_Longitude, 
-	      FG_Lat_geocentric, 
-	      FG_Sea_level_radius * FEET_TO_METER );
+    p = Point3D( FG_Longitude, 
+		 FG_Lat_geocentric, 
+		 FG_Sea_level_radius * FEET_TO_METER );
 
     cur_zero_elev = fgPolarToCart3d(p) - scenery.center;
 
@@ -585,6 +584,9 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.24  1998/10/18 01:17:19  curt
+// Point3D tweaks.
+//
 // Revision 1.23  1998/10/17 01:34:26  curt
 // C++ ifying ...
 //

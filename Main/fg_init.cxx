@@ -199,7 +199,7 @@ int fgInitSubsystems( void )
     // the center of the earth and our view position.  Doesn't have to
     // be the exact elevation (this is good because we don't know it
     // yet :-)
-    geod_pos.setvals( FG_Longitude, FG_Latitude, 0.0);
+    geod_pos = Point3D( FG_Longitude, FG_Latitude, 0.0);
     abs_view_pos = fgGeodToCart(geod_pos);
 
     // Calculate ground elevation at starting point
@@ -362,6 +362,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.44  1998/10/18 01:17:17  curt
+// Point3D tweaks.
+//
 // Revision 1.43  1998/10/17 01:34:22  curt
 // C++ ifying ...
 //

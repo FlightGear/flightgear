@@ -85,29 +85,31 @@ static void calc_normal(double p1[3], double p2[3],
 }
 
 
-#define FG_TEX_CONSTANT 128.0
+#define FG_TEX_CONSTANT 8.0
 
 
 // Calculate texture coordinates for a given point.
-Point3D calc_tex_coords(double *node, const Point3D& ref) {
+static Point3D calc_tex_coords(double *node, const Point3D& ref) {
     Point3D cp;
     Point3D pp;
 
-    cp.setvals( node[0] + ref.x(),
-		node[1] + ref.y(),
-		node[2] + ref.z() );
+    cp = Point3D( node[0] + ref.x(),
+		  node[1] + ref.y(),
+		  node[2] + ref.z() );
 
     pp = fgCartToPolar3d(cp);
 
-    pp.setx( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.x(), 25.0) );
-    pp.sety( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.y(), 25.0) );
+    cout << pp << endl;
+
+    pp.setx( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.x(), 1.0) );
+    pp.sety( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.y(), 1.0) );
 
     if ( pp.x() < 0.0 ) {
-	pp.setx( pp.x() + 25.0 );
+	pp.setx( pp.x() + 1.0 );
     }
 
     if ( pp.y() < 0.0 ) {
-	pp.sety( pp.y() + 25.0 );
+	pp.sety( pp.y() + 1.0 );
     }
 
     return(pp);
@@ -547,6 +549,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.6  1998/10/18 01:17:21  curt
+// Point3D tweaks.
+//
 // Revision 1.5  1998/10/16 00:54:39  curt
 // Converted to Point3D class.
 //

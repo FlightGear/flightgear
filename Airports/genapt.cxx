@@ -64,40 +64,12 @@ static double calc_dist(const Point3D& p1, const Point3D& p2) {
 
 #define FG_APT_BASE_TEX_CONSTANT 2000.0
 
-#ifdef OLD_TEX_COORDS
-// Calculate texture coordinates for a given point.
-static fgPoint3d
-calc_tex_coords(const fgPoint3d& p) {
-    fgPoint3d tex;
-
-    cout << "Texture coordinates = " << 
-	FG_APT_BASE_TEX_CONSTANT * p.lon << "  " << 
-	FG_APT_BASE_TEX_CONSTANT * p.lat << "\n";
-
-    tex.x = fmod(FG_APT_BASE_TEX_CONSTANT * p.lon, 10.0);
-    tex.y = fmod(FG_APT_BASE_TEX_CONSTANT * p.lat, 10.0);
-
-    if ( tex.x < 0.0 ) {
-	tex.x += 10.0;
-    }
-
-    if ( tex.y < 0.0 ) {
-	tex.y += 10.0;
-    }
-
-    cout << "Texture coordinates = " << tex.x << "  " << tex.y << "\n";
-
-    return tex;
-}
-#endif
-
-
 // Calculate texture coordinates for a given point.
 static Point3D calc_tex_coords(double *node, const Point3D& ref) {
     Point3D cp;
     Point3D pp;
 
-    cp.setvals( node[0] + ref.x(), node[1] + ref.y(), node[2] + ref.z() );
+    cp = Point3D( node[0] + ref.x(), node[1] + ref.y(), node[2] + ref.z() );
 
     pp = fgCartToPolar3d(cp);
 
@@ -310,9 +282,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	// we have just finished reading and airport record.
 	// process the info
 	size = perimeter.size();
-	average.setvals( avex / (double)size + tile->center.x(),
-			 avey / (double)size + tile->center.y(),
-			 avez / (double)size + tile->center.z() );
+	average = Point3D( avex / (double)size + tile->center.x(),
+			   avey / (double)size + tile->center.y(),
+			   avez / (double)size + tile->center.z() );
 
 	gen_base(average, perimeter, tile);
     }
@@ -322,6 +294,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.6  1998/10/18 01:17:16  curt
+// Point3D tweaks.
+//
 // Revision 1.5  1998/10/16 23:27:14  curt
 // C++-ifying.
 //

@@ -346,7 +346,7 @@ void fgUpdateSunPos( void ) {
 
     fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &l->sun_gc_lat);
 
-    p.setvals( l->sun_lon, l->sun_gc_lat, sl_radius );
+    p = Point3D( l->sun_lon, l->sun_gc_lat, sl_radius );
     l->fg_sunpos = fgPolarToCart3d(p);
 
     printf( "    t->cur_time = %ld\n", t->cur_time);
@@ -423,6 +423,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.15  1998/10/18 01:17:24  curt
+// Point3D tweaks.
+//
 // Revision 1.14  1998/10/17 01:34:32  curt
 // C++ ifying ...
 //

@@ -434,7 +434,7 @@ double fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
 
     scenery.next_center = t->center;
     
-    earth_center.setvals(0.0, 0.0, 0.0);
+    earth_center = Point3D(0.0, 0.0, 0.0);
 
     fgPrintf( FG_TERRAIN, FG_DEBUG, 
 	      "Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
@@ -633,6 +633,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.41  1998/10/18 01:17:23  curt
+// Point3D tweaks.
+//
 // Revision 1.40  1998/10/17 01:34:28  curt
 // C++ ifying ...
 //
