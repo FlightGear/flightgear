@@ -184,6 +184,32 @@
 
 #endif // __BORLANDC__
 
+//
+// Native SGI compilers
+//
+
+#if defined ( sgi ) && !defined( __GNUC__ )
+#  define FG_HAVE_NATIVE_SGI_COMPILERS
+
+#  define FG_EXPLICIT_FUNCTION_TMPL_ARGS
+#  define FG_NEED_AUTO_PTR
+#  define FG_MEMBER_TEMPLATES
+#  define FG_NAMESPACES
+// #  define FG_HAVE_STD
+// #  define FG_HAVE_STREAMBUF
+#  define FG_CLASS_PARTIAL_SPECIALIZATION
+
+#  define STL_ALGORITHM  <algorithm>
+#  define STL_FUNCTIONAL <functional>
+#  define STL_IOMANIP    <iomanip>
+#  define STL_IOSTREAM   <iostream.h>
+#  define STL_STDEXCEPT  <stdexcept>
+#  define STL_STRING     <string>
+#  define STL_STRSTREAM  <strstream>
+
+#endif // Native SGI compilers
+
+
 #if defined ( sun )
 #  include <memory.h>
 #  if defined ( __cplusplus )
@@ -276,6 +302,9 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // _COMPILER_H
 
 // $Log$
+// Revision 1.8  1999/02/26 22:07:10  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.7  1999/02/05 21:27:41  curt
 // Tweaks for the solaris platform.
 //
