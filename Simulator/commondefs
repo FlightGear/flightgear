@@ -50,9 +50,6 @@ GLOBAL_CFLAGS = -Wall -DVERSION=\"$(FG_VERSION)\"
 # Platform specific compile options, these should be set with FG_CFLAGS
 # below.  These have been predefined for the supported platforms below.
 #
-# -DNO_PRINTF -  Disable all printf()'s.  Works by replacing the printf
-#                fuction with an empty function.
-#
 # -DUSE_ITIMER - Use setitimer(), getitimer(), and signal() to mimic
 #                a real time system and call the flight model routines
 #                at a regular interval, rather than between screen updates

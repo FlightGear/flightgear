@@ -64,8 +64,8 @@ void fgStarsInit( void ) {
     char line[256], name[256];
     char *front, *end;
     double right_ascension, declination, magnitude;
-    double ra_save, decl_save;
-    double ra_save1, decl_save1;
+    /* double ra_save, decl_save; */
+    /* double ra_save1, decl_save1; */
     int count, i, j, max_stars;
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing stars\n");
@@ -276,10 +276,13 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/01/27 00:47:49  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.5  1998/01/27 18:35:53  curt
+/* Minor tweaks.
 /*
+ * Revision 1.4  1998/01/27 00:47:49  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.3  1998/01/19 19:26:59  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

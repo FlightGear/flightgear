@@ -459,8 +459,8 @@ static void fgMainLoop( void ) {
     static int remainder = 0;
     int elapsed, multi_loop;
     double cur_elev;
-    double joy_x, joy_y;
-    int joy_b1, joy_b2;
+    /* double joy_x, joy_y; */
+    /* int joy_b1, joy_b2; */
     struct fgAIRCRAFT *a;
     struct fgFLIGHT *f;
     struct fgTIME *t;
@@ -629,17 +629,14 @@ int main( int argc, char *argv[] ) {
 }
 
 
-#ifdef NO_PRINTF
-  #include <stdarg.h>
-  int printf (const char *format, ...) {}
-#endif
-
-
 /* $Log$
-/* Revision 1.52  1998/01/27 00:47:56  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.53  1998/01/27 18:35:54  curt
+/* Minor tweaks.
 /*
+ * Revision 1.52  1998/01/27 00:47:56  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.51  1998/01/26 15:57:05  curt
  * Tweaks for dynamic scenery development.
  *
