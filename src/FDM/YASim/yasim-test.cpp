@@ -45,7 +45,7 @@ int main(int argc, char** argv)
     printf("       Cruise AoA: %f\n", aoa);
     printf("   Tail Incidence: %f\n", tail);
     printf("Approach Elevator: %f\n", a->getApproachElevator());
-    printf("               CG: %.1f, %.1f, %.1f\n", cg[0], cg[1], cg[2]);
+    printf("               CG: %.3f, %.3f, %.3f\n", cg[0], cg[1], cg[2]);
 
     if(a->getFailureMsg())
         printf("SOLUTION FAILURE: %s\n", a->getFailureMsg());

@@ -23,4 +23,10 @@ libYASim_a_SOURCES = \
         Vector.hpp \
         Wing.cpp Wing.hpp
 
+bin_PROGRAMS = yasim
+
+yasim_SOURCES = yasim-test.cpp
+
+yasim_LDADD = libYASim.a -lsgxml -lsgmisc -lsgdebug
+
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
