@@ -1,52 +1,73 @@
-Oct 8, 1998
-============
+I.  GENERAL LINUX INSTRUCTIONS
+==============================
 
-This is a short description of the things I had to do to get
+This is a short description of the things that need to be done to get
 FlightGear up and running under Linux.
 
 1. Prerequisites:
 
-Linux (of any Flavour), a 3DFX-card (Voodoo1 in my case). 3D
-operations without hardware support can force even the fastest PII to
-its knees.... To make use of the accelerator board you need
+You need to understand the concepts of 3D acceleration under Linux and
+the needed libraries. An excellent source of information is the "Linux
+3Dfx HOWTO" which can be found at
+
+       http://www.gamers.org/dEngine/xf3D/howto/3Dfx-HOWTO.html
+
+If anything seem to be wrong with your 3D setup, check there first!
+
+You need Linux of course (any flavour) and a 3DFX-card (Voodoo1 in my
+case).  3D rendering without hardware support can force even the
+fastest PII to its knees.  To make use of the accelerator board you
+need"
 
 - the GLIDE library installed. Grab it at:
 
 	http://www.3dfx.com/software/download_glidel.html
 
-and install. There is even an install script contained that will do
-things for you. The canonical place for GLIDE is /usr/local/glide, if
-you prefer another location, you'll have to edit the Makefile for
-FlightGear by hand. Be sure to read and understand the file
-/usr/local/glide/README.
+  and install. There is even an install script contained that will do
+  things for you. The canonical place for GLIDE is /usr/local/glide,
+  if you prefer another location, you'll have to edit the Makefile for
+  FlightGear by hand. Be sure to read and understand the file
+  /usr/local/glide/README.
 
-- the MESA library version 2.6 (or greater) installed. I used 3.0 to
-be on the safer side...
+- the MESA library version 3.0 (or greater) installed.
 
-Grab it at"
+  Grab it at:
 
-	ftp://iris.ssec.wisc.edu/pub/Mesa
+			http://www.mesa3d.org/
 
-unpack it and run "make linux-glide" in the Mesa directory. Follow the
-instructions in the README file, take a close look at README.3DFX and
-play with the demo programs. Relax, rejoice :-)
+  unpack it and run "make linux-glide" in the Mesa directory. Follow
+  the instructions in the README file, take a close look at
+  README.3DFX and play with the demo programs. Relax, rejoice :-)
 
 - the GLUT library version 3.7 (or greater, aka GameGLUT) installed.
 
-Grab it at:
+  Grab it at:
 
 	http://reality.sgi.com/opengl/glut3/glut3.html
 
   Note: glut-3.7 is included with Mesa 3.0 so if you've already
-grabbed the latest version of mesa, you should have everything you
-need.
+  grabbed the latest version of mesa, you should have everything you
+  need.
 
 2. Build FlightGear:
 
 You will need the following files:
 
 	FlightGear-x.xx.tar.gz (source code)
-	base-x.xx.tar.gz       (data files)
+
+which can be found under 
+
+	      ftp://ftp.flightgear.org/pub/fgfs/Source/
+
+and the support files located at
+
+	     ftp://ftp.flightgear.org/pub/fgfs/Binaries/
+
+the file is called 
+
+	fgfs-base-x.xx.tar.gz       (data files)
+
+Ok, now that you got all the stuff, let's proceed towards installation.
 
 Unpack FlightGear-x.xx.tar.gz using :
 
@@ -87,8 +108,7 @@ website.
 
 Change to /usr/local/lib/FlightGear and unpack the data files:
 
-	tar xvfz WHERE_YOU DOWNLOADED_THE_FILES/base-x.xx.tar.gz 
-	tar xvfz WHERE_YOU DOWNLOADED_THE_FILES/textures-x.xx.tar.gz
+	tar xvfz WHERE_YOU DOWNLOADED_THE_FILES/fgfs-base-x.xx.tar.gz 
 
 That's it...
 
@@ -117,6 +137,9 @@ one to your accelerator. You'll then get a window on your desktop
 which manages all keyboard events and you're still able to see your
 desktop.
 
+A final note: There are several types of VooDoo cards out there, so be
+sure to get the correct version of Glide!
+
 Enjoy!
 
 6. Conclusion
@@ -128,5 +151,29 @@ Bernhard H. Buckel
 <buckel@wmad95.mathematik.uni-wuerzburg.de>
 
 
+II.  Linux/AXP Notes
+====================
 
+As of 2/19/99 I'm not aware of any glide port to Linux/AXP so it's
+software rendering only for now.  :-(
 
+This following information is contributed by "Daniel J. Frasnelli"
+<dfrasnel@csee.wvu.edu>
+
+1) Mesa was not built correctly by default.  I had to add the "-mieee"
+flag to the Make-config for Mesa-3.1beta1 to fix the problem.  After
+building and installation, all of the problems I had previously with
+GL programs under AlphaLinux disappeared.
+
+2) I also had to set the '-mieee' flag in $CFLAGS before configuring
+and building FGFS.  The -mieee switch fixes floating point exception
+handling.
+
+I heavily optimized both Mesa and FGFS, using the libffm "fast math
+library for Alpha" in preference over the default libm, sticking all
+sorts of strange flags in $CFLAGS, etc.  These flags should be
+adjusted for your specific architecture:
+
+    export CFLAGS="-mieee -mcpu=ev56 -Wa,-m21164a -pipe -g"
+    export CXXFLAGS="-mieee -mcpu=ev56 -Wa,-m21164a -pipe -g"
+    ./configure

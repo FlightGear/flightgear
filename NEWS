@@ -1,3 +1,7 @@
+New in 0.59
+* Changes to allow adjustment of the autopilot settings while it is
+  activated.
+
 New in 0.58
 * Added JSBsim alpha code ... this is Jon S. Berndts alpha FDM rewrite.
   Still lots to do, but you can watch a balistic flight for a short time.

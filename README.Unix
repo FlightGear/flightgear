@@ -53,3 +53,13 @@ To make sure joystick support is included when building under Linux:
   - make sure you have the proper joystick module installed.
   - make sure the proper devices are created in /dev.
   - /usr/include/linux/joystick.h must exist on your system.
+
+
+Native SGI Irix Compilers
+=========================
+
+If you are building with native SGI compilers try running configure like the
+following (assuming sh syntax):
+
+  CC=cc CXX=CC CFLAGS=-Xcpluscomm ./configure
+
