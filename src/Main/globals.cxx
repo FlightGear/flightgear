@@ -117,6 +117,38 @@ void FGGlobals::set_fg_root (const string &root) {
         }
 }
 
+void FGGlobals::set_fg_scenery (const string &scenery) {
+
+    if (scenery.empty())
+        return;
+
+    SGPath pt( scenery ), po( scenery );
+    pt.append("Terrain");
+    po.append("Objects");
+
+cout << "pt: " << pt.str() << endl;
+cout << "po: " << po.str() << endl;
+    ulDir *td = ulOpenDir(pt.c_str());
+    ulDir *od = ulOpenDir(po.c_str());
+
+    if (td == NULL) {
+        if (od == NULL) {
+            fg_scenery = scenery;
+        } else {
+            fg_scenery = po.str();
+            ulCloseDir(od);
+        }
+    } else {
+        if (od != NULL) {
+            pt.add(po.str());
+            ulCloseDir(od);
+        }
+        fg_scenery = pt.str();
+        ulCloseDir(td);
+    }
+cout << "fg_scenery: " << fg_scenery << endl;
+}
+
 
 SGSubsystemMgr *
 FGGlobals::get_subsystem_mgr () const

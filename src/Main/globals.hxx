@@ -237,9 +237,7 @@ public:
     void set_fg_root (const string &root);
 
     inline const string &get_fg_scenery () const { return fg_scenery; }
-    inline void set_fg_scenery (const string &scenery) {
-      fg_scenery = scenery;
-    }
+    void set_fg_scenery (const string &scenery);
 
 #if defined(FX) && defined(XMESA)
     inline bool get_fullscreen() const { return fullscreen; }
