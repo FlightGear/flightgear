@@ -28,6 +28,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include <plib/sg.h>
 
@@ -48,6 +49,7 @@
 #include "SchedFlight.hxx"
 #include "TrafficMgr.hxx"
 
+SG_USING_STD( sort );
 
 /******************************************************************************
  * the FGAISchedule class contains data members and code to maintain a
