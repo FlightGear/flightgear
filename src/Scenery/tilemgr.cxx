@@ -445,7 +445,7 @@ int FGTileMgr::update( void ) {
 	p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 			     f->get_Latitude() * RAD_TO_DEG,
 			     0, 0 );
-	tiles[(dh*tile_diameter) + dw] = sched_tile( p2 );
+	sched_tile( p2 );
 
 	for ( i = 3; i <= tile_diameter; i = i + 2 ) {
 	    int span = i / 2;
@@ -455,7 +455,7 @@ int FGTileMgr::update( void ) {
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     j, -span );
-		tiles[((dh-span)*tile_diameter) + dw+j] = sched_tile( p2 );
+		sched_tile( p2 );
 	    }
 
 	    // top row
@@ -463,7 +463,7 @@ int FGTileMgr::update( void ) {
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     j, span );
-		tiles[((dh+span)*tile_diameter) + dw+j] = sched_tile( p2 );
+		sched_tile( p2 );
 	    }
 
 	    // middle rows
@@ -471,11 +471,11 @@ int FGTileMgr::update( void ) {
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     -span, j );
-		tiles[((dh+j)*tile_diameter) + dw-span] = sched_tile( p2 );
+		sched_tile( p2 );
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     span, j );
-		tiles[((dh+j)*tile_diameter) + dw+span] = sched_tile( p2 );
+		sched_tile( p2 );
 	    }
 
 	}
@@ -486,7 +486,7 @@ int FGTileMgr::update( void ) {
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     i - dw, j -dh );
-		tiles[(j*tile_diameter) + i] = sched_tile( p2 );
+		sched_tile( p2 );
 	    }
 	} */
 
@@ -526,19 +526,15 @@ int FGTileMgr::update( void ) {
 	FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << p1 );
 
 	if ( (p1.get_lon() > p_last.get_lon()) ||
-	     ( (p1.get_lon() == p_last.get_lon()) && (p1.get_x() > p_last.get_x()) ) ) {
+	     ( (p1.get_lon() == p_last.get_lon()) && 
+	       (p1.get_x() > p_last.get_x()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
 		    "  (East) Loading " << tile_diameter << " tiles" );
 	    for ( j = 0; j < tile_diameter; j++ ) {
 		// scrolling East
-		disable_tile( tiles[(j*tile_diameter) + 0] );
-		for ( i = 0; i < tile_diameter - 1; i++ ) {
-		    tiles[(j*tile_diameter) + i] = 
-			tiles[(j*tile_diameter) + i + 1];
-		}
-		// load in new column
+		// schedule new column
 		p2 = fgBucketOffset( last_lon, last_lat, dw + 1, j - dh );
-		tiles[(j*tile_diameter) + tile_diameter - 1] = sched_tile( p2 );
+		sched_tile( p2 );
 	    }
 	} else if ( (p1.get_lon() < p_last.get_lon()) ||
 		    ( (p1.get_lon() == p_last.get_lon()) && 
@@ -547,47 +543,33 @@ int FGTileMgr::update( void ) {
 		    "  (West) Loading " << tile_diameter << " tiles" );
 	    for ( j = 0; j < tile_diameter; j++ ) {
 		// scrolling West
-		disable_tile( tiles[(j*tile_diameter) + tile_diameter - 1] );
-		for ( i = tile_diameter - 1; i > 0; i-- ) {
-		    tiles[(j*tile_diameter) + i] = 
-			tiles[(j*tile_diameter) + i - 1];
-		}
-		// load in new column
+		// schedule new column
 		p2 = fgBucketOffset( last_lon, last_lat, -dw - 1, j - dh );
-		tiles[(j*tile_diameter) + 0] = sched_tile( p2 );
+		sched_tile( p2 );
 	    }
 	}
 
 	if ( (p1.get_lat() > p_last.get_lat()) ||
-	     ( (p1.get_lat() == p_last.get_lat()) && (p1.get_y() > p_last.get_y()) ) ) {
+	     ( (p1.get_lat() == p_last.get_lat()) && 
+	       (p1.get_y() > p_last.get_y()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
 		    "  (North) Loading " << tile_diameter << " tiles" );
 	    for ( i = 0; i < tile_diameter; i++ ) {
 		// scrolling North
-		disable_tile( tiles[0 + i] );
-		for ( j = 0; j < tile_diameter - 1; j++ ) {
-		    tiles[(j * tile_diameter) + i] =
-			tiles[((j+1) * tile_diameter) + i];
-		}
-		// load in new column
+		// schedule new row
 		p2 = fgBucketOffset( last_lon, last_lat, i - dw, dh + 1);
-		tiles[((tile_diameter-1) * tile_diameter) + i] = 
-		    sched_tile( p2 );
+		sched_tile( p2 );
 	    }
 	} else if ( (p1.get_lat() < p_last.get_lat()) ||
-		    ( (p1.get_lat() == p_last.get_lat()) && (p1.get_y() < p_last.get_y()) ) ) {
+		    ( (p1.get_lat() == p_last.get_lat()) && 
+		      (p1.get_y() < p_last.get_y()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
 		    "  (South) Loading " << tile_diameter << " tiles" );
 	    for ( i = 0; i < tile_diameter; i++ ) {
 		// scrolling South
-		disable_tile( tiles[((tile_diameter-1) * tile_diameter) + i] );
-		for ( j = tile_diameter - 1; j > 0; j-- ) {
-		    tiles[(j * tile_diameter) + i] = 
-			tiles[((j-1) * tile_diameter) + i];
-		}
-		// load in new column
+		// schedule new row
 		p2 = fgBucketOffset( last_lon, last_lat, i - dw, -dh - 1);
-		tiles[0 + i] = sched_tile( p2 );
+		sched_tile( p2 );
 	    }
 	}
     }
@@ -695,16 +677,13 @@ update_tile_geometry( FGTileEntry *t, GLdouble *MODEL_VIEW)
 void FGTileMgr::prep_ssg_nodes( void ) {
     FGTileEntry *t;
 
-    int tile_diameter = current_options.get_tile_diameter();
-
     float ranges[2];
     ranges[0] = 0.0f;
 
     // traverse the potentially viewable tile list and update range
     // selector and transform
-    for ( int i = 0; i < (tile_diameter * tile_diameter); i++ ) {
-	int index = tiles[i];
-	t = global_tile_cache.get_tile(index);
+    for ( int i = 0; i < (int)global_tile_cache.get_size(); i++ ) {
+	t = global_tile_cache.get_tile( i );
 
 	if ( t->is_loaded() ) {
 	    // set range selector (LOD trick) to be distance to center

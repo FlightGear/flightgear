@@ -63,10 +63,6 @@ class FGTileMgr {
 
 private:
 
-    // closest (potentially viewable) tiles, centered on current tile.
-    // This is an array of pointers to cache indexes.
-    int tiles[FG_LOCAL_X_Y];
-
     // Tile loading state
     enum load_state {
 	Start = 0,
