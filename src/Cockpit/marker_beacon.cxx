@@ -198,10 +198,10 @@ void FGMarkerBeacon::search()
                 globals->get_soundmgr()->add( sound, "outer-marker" );
             }
         }
-        if ( audio_btn->getBoolValue() 
-             && !globals->get_soundmgr()->is_playing("outer-marker") )
-        {
-            globals->get_soundmgr()->play_looped( "outer-marker" );
+        if ( audio_btn->getBoolValue() ) {
+            if ( !globals->get_soundmgr()->is_playing("outer-marker") ) {
+                globals->get_soundmgr()->play_looped( "outer-marker" );
+            }
         } else {
             globals->get_soundmgr()->stop( "outer-marker" );
         }
@@ -215,10 +215,10 @@ void FGMarkerBeacon::search()
 		globals->get_soundmgr()->add( sound, "middle-marker" );
 	    }
         }
-        if ( audio_btn->getBoolValue() 
-             && !globals->get_soundmgr()->is_playing("middle-marker") )
-        {
-            globals->get_soundmgr()->play_looped( "middle-marker" );
+        if ( audio_btn->getBoolValue() ) {
+            if ( !globals->get_soundmgr()->is_playing("middle-marker") ) {
+                globals->get_soundmgr()->play_looped( "middle-marker" );
+            }
         } else {
             globals->get_soundmgr()->stop( "middle-marker" );
         }
@@ -232,10 +232,10 @@ void FGMarkerBeacon::search()
 		globals->get_soundmgr()->add( sound, "inner-marker" );
 	    }
         }
-        if ( audio_btn->getBoolValue() 
-             && !globals->get_soundmgr()->is_playing("inner-marker") )
-        {
-            globals->get_soundmgr()->play_looped( "inner-marker" );
+        if ( audio_btn->getBoolValue() ) {
+            if ( !globals->get_soundmgr()->is_playing("inner-marker") ) {
+                globals->get_soundmgr()->play_looped( "inner-marker" );
+            }
         } else {
             globals->get_soundmgr()->stop( "inner-marker" );
         }
