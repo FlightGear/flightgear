@@ -91,7 +91,7 @@ SG_USING_STD(endl);
 
 #include <ATC/ATCmgr.hxx>
 #include <ATC/ATCdisplay.hxx>
-//#include <ATC/AIMgr.hxx>
+#include <ATC/AIMgr.hxx>
 
 
 #include <Autopilot/newauto.hxx>
@@ -1097,7 +1097,8 @@ static void fgMainLoop( void ) {
     globals->get_ATC_mgr()->update(delta_time_sec);
 
     // Run the AI subsystem
-    // globals->get_AI_mgr()->update(delta_time_sec);
+    if (fgGetBool("/sim/ai-traffic/enabled"))
+        globals->get_AI_mgr()->update(delta_time_sec);
 
     // Run flight model
 
