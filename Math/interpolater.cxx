@@ -46,7 +46,7 @@ fgINTERPTABLE::fgINTERPTABLE( char *file ) {
     if ( (fd = gzopen(gzfile, "r")) == NULL ) {
         // Next try "path"
         if ( (fd = gzopen(file, "r")) == NULL ) {
-            fgPrintf(FG_MATH, FG_ALERT, "Cannot open file: %s\n", file);
+            fgPrintf(FG_MATH, FG_EXIT, "Cannot open file: %s\n", file);
         }
     }
 
@@ -56,7 +56,7 @@ fgINTERPTABLE::fgINTERPTABLE( char *file ) {
 	    sscanf(line, "%lf %lf\n", &(table[size][0]), &(table[size][1]));
 	    size++;
 	} else {
-            fgPrintf( FG_MATH, FG_ALERT, 
+            fgPrintf( FG_MATH, FG_EXIT, 
 		      "fgInterpolateInit(): Exceed max table size = %d\n",
 		      MAX_TABLE_SIZE );
 	}
@@ -77,7 +77,7 @@ double fgINTERPTABLE::interpolate(double x) {
 	i++;
     }
 
-    printf ("i = %d ", i);
+    // printf ("i = %d ", i);
 
     if ( (i == 0) && (x < table[0][0]) ) {
 	fgPrintf( FG_MATH, FG_ALERT, 
@@ -107,10 +107,12 @@ fgINTERPTABLE::~fgINTERPTABLE( void ) {
 
 
 // $Log$
+// Revision 1.2  1998/04/22 13:18:10  curt
+// C++ - ified comments.  Make file open errors fatal.
+//
 // Revision 1.1  1998/04/21 19:14:23  curt
 // Modified Files:
 //     Makefile.am Makefile.in
 // Added Files:
 //     interpolater.cxx interpolater.hxx
-//
 //
