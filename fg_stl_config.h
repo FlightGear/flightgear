@@ -37,21 +37,40 @@
 //  (7) Defines _FG_NEED_AUTO_PTR if STL doesn't provide auto_ptr<>.
 
 #ifdef __GNUC__
-#  if __GNUC__ == 2 && __GNUC_MINOR__ >= 8
-     // g++-2.8.x and egcs-1.0.x
-#    define STL_ALGORITHM  <algorithm>
-#    define STL_FUNCTIONAL <functional>
-#    define STL_IOMANIP    <iomanip>
-#    define STL_IOSTREAM   <iostream>
-#    define STL_STDEXCEPT  <stdexcept>
-#    define STL_STRING     <string>
-#    define STL_STRSTREAM  <strstream>
+#  if __GNUC__ == 2 
+#    if __GNUC_MINOR__ < 8
 
-#    define _FG_EXPLICIT_FUNCTION_TMPL_ARGS
-#    define _FG_NEED_AUTO_PTR
+       // g++-2.7.x
+#      define STL_ALGORITHM  <algorithm>
+#      define STL_FUNCTIONAL <functional>
+#      define STL_IOMANIP    <iomanip.h>
+#      define STL_IOSTREAM   <iostream.h>
+#      define STL_STDEXCEPT  <stdexcept>
+#      define STL_STRING     <string>
+#      define STL_STRSTREAM  <strstream.h>
 
+#      define _FG_NEED_AUTO_PTR
+#      define _FG_NO_DEFAULT_TEMPLATE_ARGS
+#      define _FG_INCOMPLETE_FUNCTIONAL
+
+#    elif __GNUC_MINOR__ >= 8
+
+       // g++-2.8.x and egcs-1.x
+#      define STL_ALGORITHM  <algorithm>
+#      define STL_FUNCTIONAL <functional>
+#      define STL_IOMANIP    <iomanip>
+#      define STL_IOSTREAM   <iostream>
+#      define STL_STDEXCEPT  <stdexcept>
+#      define STL_STRING     <string>
+#      define STL_STRSTREAM  <strstream>
+
+#      define _FG_EXPLICIT_FUNCTION_TMPL_ARGS
+#      define _FG_NEED_AUTO_PTR
+#      define _FG_MEMBER_TEMPLATES
+
+#    endif
 #  else 
-#    error Old GNU compilers not yet supported
+#    error Time to upgrade. GNU compilers < 2.7 not supported
 #  endif
 #endif
 
@@ -70,6 +89,10 @@
 #  define typename
 #endif
 
+#ifdef _FG_NEED_MUTABLE
+#  define mutable
+#endif
+
 #ifdef _FG_NEED_BOOL
    typedef int bool;
 #  define true 1
@@ -82,9 +105,56 @@
 #  define _FG_NULL_TMPL_ARGS
 #endif
 
+#ifdef _FG_INCOMPLETE_FUNCTIONAL
+
+// Additional <functional> implementation from SGI STL 3.11
+// Adapter function objects: pointers to member functions
+
+template <class _Ret, class _Tp>
+class const_mem_fun_ref_t : public unary_function<_Tp,_Ret> {
+public:
+  explicit const_mem_fun_ref_t(_Ret (_Tp::*__pf)() const) : _M_f(__pf) {}
+  _Ret operator()(const _Tp& __r) const { return (__r.*_M_f)(); }
+private:
+  _Ret (_Tp::*_M_f)() const;
+};
+
+template <class _Ret, class _Tp>
+inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
+  { return const_mem_fun_ref_t<_Ret,_Tp>(__f); }
+
+#endif
+
 #endif // _FG_STL_CONFIG_H
 
 // $Log$
+// Revision 1.2  1998/09/10 19:07:04  curt
+// /Simulator/Objects/fragment.hxx
+//   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.
+//
+// ./Simulator/Objects/material.cxx
+// ./Simulator/Objects/material.hxx
+//   Made fgMATERIAL and fgMATERIAL_MGR bona fide classes with private
+//   data members - that should keep the rabble happy :)
+//
+// ./Simulator/Scenery/tilemgr.cxx
+//   In viewable() delay evaluation of eye[0] and eye[1] in until they're
+//   actually needed.
+//   Change to fgTileMgrRender() to call fgMATERIAL_MGR::render_fragments()
+//   method.
+//
+// ./Include/fg_stl_config.h
+// ./Include/auto_ptr.hxx
+//   Added support for g++ 2.7.
+//   Further changes to other files are forthcoming.
+//
+// Brief summary of changes required for g++ 2.7.
+//   operator->() not supported by iterators: use (*i).x instead of i->x
+//   default template arguments not supported,
+//   <functional> doesn't have mem_fun_ref() needed by callbacks.
+//   some std include files have different names.
+//   template member functions not supported.
+//
 // Revision 1.1  1998/08/30 14:13:49  curt
 // Initial revision.  Contributed by Bernie Bright.
 //
