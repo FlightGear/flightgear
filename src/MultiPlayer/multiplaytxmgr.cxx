@@ -109,13 +109,13 @@ bool FGMultiplayTxMgr::init(void) {
             mDataTxSocket = new netSocket();
             if (!mDataTxSocket->open(false)) {
                 // Failed to open tx socket
-                cerr << "FGMultiplayTxMgr::init - Failed to create data transmit socket" << endl;
+                SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayTxMgr::init - Failed to create data transmit socket" );
                 bSuccess = false;
             } else {
                 mDataTxSocket->setBroadcast(true);
                 if (mDataTxSocket->connect(sTxAddress.c_str(), iTxPort) != 0) {
                     // Failed to connect tx socket
-                    cerr << "FGMultiplayTxMgr::init - Failed to connect data transmit socket" << endl;
+                    SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayTxMgr::init - Failed to connect data transmit socket" );
                     bSuccess = false;
                 }
             }
@@ -125,7 +125,7 @@ bool FGMultiplayTxMgr::init(void) {
                 mLocalPlayer = new MPPlayer();
                 if (!mLocalPlayer->Open(fgGetString("/sim/multiplay/rxhost"), fgGetInt("/sim/multiplay/rxport"),
                                         fgGetString("/sim/multiplay/callsign"), fgGetString("/sim/model/path"), true)) {
-                    cerr << "FGMultiplayTxMgr::init - Failed to create player object for local player" << endl;
+                    SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayTxMgr::init - Failed to create player object for local player" );
                     bSuccess = false;
                 }
             }

@@ -135,7 +135,7 @@ bool FGMultiplayRxMgr::init(void) {
         mDataRxSocket = new netSocket();
         if (!mDataRxSocket->open(false)) {
             // Failed to open rx socket
-            cerr << "FGMultiplayRxMgr::Open - Failed to create data receive socket" << endl;
+            SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::Open - Failed to create data receive socket" );
             bSuccess = false;
         } else {
 
@@ -145,7 +145,7 @@ bool FGMultiplayRxMgr::init(void) {
             if (mDataRxSocket->bind(m_sRxAddress.c_str(), m_iRxPort) != 0) {
                 perror("bind");
                 // Failed to bind
-                cerr << "FGMultiplayRxMgr::Open - Failed to bind receive socket" << endl;
+                SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::Open - Failed to bind receive socket" );
                 bSuccess = false;
             }
 
@@ -155,7 +155,7 @@ bool FGMultiplayRxMgr::init(void) {
         m_bInitialised = bSuccess;
 
     } else {
-        cerr << "FGMultiplayRxMgr::OpenRx - Receiver open requested when receiver is already open" << endl;
+        SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::OpenRx - Receiver open requested when receiver is already open" );
         bSuccess = false;
     }
 
@@ -288,18 +288,18 @@ void FGMultiplayRxMgr::ProcessData(void) {
                                         // Check if the player was added
                                         if (!bActivePlayer) {
                                             if (iPlayerCnt == MAX_PLAYERS) {
-                                                cerr << "FGMultiplayRxMgr::MP_ProcessData - Unable to add new player (" << sCallsign << "). Too many players." << endl;
+                                                SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::MP_ProcessData - Unable to add new player (" << sCallsign << "). Too many players." );
                                             }
                                         }
                                     }
 
                                 } else {
-                                    cerr << "FGMultiplayRxMgr::MP_ProcessData - Position message received with insufficient data" << endl;
+                                    SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::MP_ProcessData - Position message received with insufficient data" );
                                 }
                                 break;
 
                             default:
-                                cerr << "FGMultiplayRxMgr::MP_ProcessData - Unknown message Id received: " << MsgHdr->MsgId << endl;
+                                SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::MP_ProcessData - Unknown message Id received: " << MsgHdr->MsgId );
                                 break;
 
 

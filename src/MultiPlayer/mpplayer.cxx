@@ -109,7 +109,7 @@ bool MPPlayer::Open(const string &sAddress, const int &iPort, const string &sCal
         m_bInitialised = bSuccess;
 
     } else {
-        cerr << "MPPlayer::Open - Attempt to open an already open player connection." << endl;
+        SG_LOG( SG_NETWORK, SG_ALERT, "MPPlayer::Open - Attempt to open an already open player connection." );
         bSuccess = false;
     }
 
