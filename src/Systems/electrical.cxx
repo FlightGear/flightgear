@@ -56,6 +56,7 @@ FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
     }
     volts = node->getDoubleValue("volts");
     amps = node->getDoubleValue("amps");
+    rpm_src = node->getStringValue("rpm-source");
 
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
@@ -69,7 +70,7 @@ FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
         }
     }
 
-    _rpm_node = fgGetNode("/engines/engine[0]/rpm", true);
+    _rpm_node = fgGetNode( rpm_src.c_str(), true);
 }  
 
 

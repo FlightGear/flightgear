@@ -117,6 +117,7 @@ class FGElectricalSupplier : public FGElectricalComponent {
         FG_EXTERNAL = 2
     };
 
+    string rpm_src;
     int model;
     double volts;
     double amps;
@@ -178,15 +179,7 @@ public:
 
 
 /**
- * Model an electrical system.  This is a simple system with the
- * alternator hardwired to engine[0]/rpm
- *
- * Input properties:
- *
- * /engines/engine[0]/rpm
- *
- * Output properties:
- *
+ * Model an electrical system.  This is a fairly simplistic system
  * 
  */
 
