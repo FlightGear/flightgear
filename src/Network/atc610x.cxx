@@ -591,9 +591,11 @@ bool FGATC610x::do_analog_in() {
     // cout << "throttle = " << tmp << endl;
 
     // rudder
+    /*
     tmp = scale( rudder_center->getIntValue(), rudder_min->getIntValue(),
                  rudder_max->getIntValue(), analog_in_data[10] );
     fgSetFloat( "/controls/rudder", -tmp );
+    */
 
     // nav1 volume
     tmp = (float)analog_in_data[25] / 1024.0f;

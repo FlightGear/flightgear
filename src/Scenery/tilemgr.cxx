@@ -484,27 +484,13 @@ int FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center) {
 }
 
 
-void FGTileMgr::prep_ssg_nodes(float vis) {
+void FGTileMgr::prep_ssg_nodes( FGLocation *location, float vis ) {
 
     // traverse the potentially viewable tile list and update range
     // selector and transform
 
-    // just setup and call new function...
-
-    sgVec3 up;
-    sgCopyVec3( up, globals->get_current_view()->get_world_up() );
-
-    Point3D center;
-    center = globals->get_scenery()->get_center();
-    prep_ssg_nodes( vis, up, center );
-
-}
-
-
-void FGTileMgr::prep_ssg_nodes(float vis, sgVec3 up, Point3D center) {
-
-    // traverse the potentially viewable tile list and update range
-    // selector and transform
+    Point3D center = location->get_tile_center();
+    float *up = location->get_world_up();
 
     FGTileEntry *e;
     tile_cache.reset_traversal();

@@ -41,6 +41,8 @@
 #  include <simgear/threads/SGQueue.hxx>
 #endif // ENABLE_THREADS
 
+#include <Main/location.hxx>
+
 #include "FGTileLoader.hxx"
 #include "hitlist.hxx"
 #include "newcache.hxx"
@@ -173,15 +175,14 @@ public:
 		     const sgdVec3 p, const sgdVec3 dir,
 		     FGHitList *list );
 
-    // Prepare the ssg nodes ... for each tile, set it's proper
-    // transform and update it's range selector based on current
-    // visibilty
-    void prep_ssg_nodes(float visibility_meters);
-    void prep_ssg_nodes(float visibility_meters, sgVec3 up, Point3D center);
+    // Prepare the ssg nodes corresponding to each tile.  For each
+    // tile, set the ssg transform and update it's range selector
+    // based on current visibilty void prep_ssg_nodes( float
+    // visibility_meters );
+    void prep_ssg_nodes( FGLocation *location, float visibility_meters );
 
-    //
-    // Set flag with event manager so that non-moving view refreshes tiles...
-    //
+    // Set flag with event manager so that non-moving view refreshes
+    // tiles...
     void refresh_view_timestamps();
 
     inline SGBucket get_current_bucket () { return current_bucket; }

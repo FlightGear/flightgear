@@ -1208,9 +1208,7 @@ static void fgMainLoop( void ) {
     // ...only if location is different than the viewer (to avoid duplicating effort)
     if( acmodel_location != current_view->getFGLocation() ) {
       if( acmodel_location != 0 ) {
-        global_tile_mgr.prep_ssg_nodes(visibility_meters,
-               acmodel_location->get_world_up(),
-               acmodel_location->get_tile_center());
+        global_tile_mgr.prep_ssg_nodes( acmodel_location, visibility_meters );
         global_tile_mgr.update( acmodel_location->getLongitude_deg(),
  			    acmodel_location->getLatitude_deg(),
                             visibility_meters,
@@ -1229,9 +1227,8 @@ static void fgMainLoop( void ) {
       }
     }
 
-    global_tile_mgr.prep_ssg_nodes(visibility_meters,
-       current_view->getFGLocation()->get_world_up(),
-       current_view->getFGLocation()->get_tile_center());
+    global_tile_mgr.prep_ssg_nodes( current_view->getFGLocation(),
+                                    visibility_meters );
     // update tile manager for view...
     // IMPORTANT!!! the tilemgr update for view location _must_ be done last 
     // after the FDM's until all of Flight Gear code references the viewer's location
