@@ -1,0 +1,482 @@
+// metar interface class demo
+//
+// Written by Melchior FRANZ, started December 2003.
+//
+// Copyright (C) 2003  Melchior FRANZ - mfranz@aon.at
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA
+//
+// $Id$
+
+#include <iomanip>
+#include <sstream>
+
+#include <simgear/debug/logstream.hxx>
+#include <simgear/structure/exception.hxx>
+
+#include "metar.hxx"
+
+using std::ostringstream;
+
+// text color
+#if defined(__linux__) || defined( __sun__ ) ||defined(__CYGWIN__) || defined( __FreeBSD__ )
+#	define R "\033[31;1m"		// red
+#	define G "\033[32;1m"		// green
+#	define Y "\033[33;1m"		// yellow
+#	define B "\033[34;1m"		// blue
+#	define M "\033[35;1m"		// magenta
+#	define C "\033[36;1m"		// cyan
+#	define W "\033[37;1m"		// white
+#	define N "\033[m"		// normal
+#else
+#	define R ""
+#	define G ""
+#	define Y ""
+#	define B ""
+#	define M ""
+#	define C ""
+#	define W ""
+#	define N ""
+#endif
+
+
+const char *azimuthName(double d);
+double rnd(double number, int digits);
+void printReport(Metar *m);
+void printVisibility(FGMetarVisibility *v);
+void printArgs(Metar *m, double airport_elevation);
+
+
+const char *azimuthName(double d)
+{
+	const char *dir[] = {
+		"N", "NNE", "NE", "ENE",
+		"E", "ESE", "SE", "SSE",
+		"S", "SSW", "SW", "WSW",
+		"W", "WNW", "NW", "NNW"
+	};
+	d += 11.25;
+	while (d < 0)
+		d += 360;
+	while (d >= 360)
+		d -= 360;
+	return dir[int(d / 22.5)];
+}
+
+
+// round double to 10^g
+double rnd(double r, int g = 0)
+{
+	double f = pow(10.0, g);
+	return f * rint(r / f);
+}
+
+
+ostream& operator<<(ostream& s, FGMetarVisibility& v)
+{
+	ostringstream buf;
+	int m = v.getModifier();
+	const char *mod;
+	if (m == FGMetarVisibility::GREATER_THAN)
+		mod = ">=";
+	else if (m == FGMetarVisibility::LESS_THAN)
+		mod = "<";
+	else
+		mod = "";
+	buf << mod;
+
+	double dist = rnd(v.getVisibility_m(), 1);
+	if (dist < 1000.0)
+		buf << rnd(dist, 1) << " m";
+	else
+		buf << rnd(dist / 1000.0, -1) << " km";
+
+	const char *dir = "";
+	int i;
+	if ((i = v.getDirection()) != -1) {
+		dir = azimuthName(i);
+		buf << " " << dir;
+	}
+	buf << "\t\t\t\t\t" << mod << rnd(v.getVisibility_sm(), -1) << " US-miles " << dir;
+	return s << buf.str();
+}
+
+
+void printReport(Metar *m)
+{
+#define NaN FGMetarNaN
+	const char *s;
+	char buf[256];
+	double d;
+	int i, lineno;
+
+	if ((i = m->getReportType()) == Metar::AUTO)
+		s = "\t\t(automatically generated)";
+	else if (i == Metar::COR)
+		s = "\t\t(manually corrected)";
+	else if (i == Metar::RTD)
+		s = "\t\t(routine delayed)";
+	else
+		s = "";
+
+	cout << "METAR Report" << s << endl;
+	cout << "============" << endl;
+	cout << "Airport-Id:\t\t" << m->getId() << endl;
+
+
+	// date/time
+	int year = m->getYear();
+	int month = m->getMonth();
+	cout << "Report time:\t\t";
+	if (year != -1 && month != -1)
+		cout << year << '/' << month << '/' << m->getDay();
+	cout << ' ' << m->getHour() << ':';
+	cout << std::setw(2) << std::setfill('0') << m->getMinute() << " UTC" << endl;
+
+
+	// visibility
+	FGMetarVisibility minvis = m->getMinVisibility();
+	FGMetarVisibility maxvis = m->getMaxVisibility();
+	double min = minvis.getVisibility_m();
+	double max = maxvis.getVisibility_m();
+	if (min != NaN) {
+		if (max != NaN) {
+			cout << "min. Visibility:\t" << minvis << endl;
+			cout << "max. Visibility:\t" << maxvis << endl;
+		} else
+			cout << "Visibility:\t\t" << minvis << endl;
+	}
+
+
+	// directed visibility
+	FGMetarVisibility *dirvis = m->getDirVisibility();
+	for (i = 0; i < 8; i++, dirvis++)
+		if (dirvis->getVisibility_m() != NaN)
+			cout << "\t\t\t" << *dirvis << endl;
+
+
+	// vertical visibility
+	FGMetarVisibility vertvis = m->getVertVisibility();
+	if ((d = vertvis.getVisibility_ft()) != NaN)
+		cout << "Vert. visibility:\t" << vertvis << endl;
+	else if (vertvis.getModifier() == FGMetarVisibility::NOGO)
+		cout << "Vert. visibility:\timpossible to determine" << endl;
+
+
+	// wind
+	d = m->getWindSpeed_kmh();
+	cout << "Wind:\t\t\t";
+	if (d < .1)
+		cout << "none" << endl;
+	else {
+		if ((i = m->getWindDir()) == -1)
+			cout << "from variable directions";
+		else
+			cout << "from the " << azimuthName(i) << " (" << i << "°)";
+		cout << " at " << rnd(d, -1) << " km/h";
+
+		cout << "\t\t" << rnd(m->getWindSpeed_kt(), -1) << " kt";
+		cout << " = " << rnd(m->getWindSpeed_mph(), -1) << " mph";
+		cout << " = " << rnd(m->getWindSpeed_mps(), -1) << " m/s";
+		cout << endl;
+
+		if ((d = m->getGustSpeed_kmh()) != NaN) {
+			cout << "\t\t\twith gusts at " << rnd(d, -1) << " km/h";
+			cout << "\t\t\t" << rnd(m->getGustSpeed_kt(), -1) << " kt";
+			cout << " = " << rnd(m->getGustSpeed_mph(), -1) << " mph";
+			cout << " = " << rnd(m->getGustSpeed_mps(), -1) << " m/s";
+			cout << endl;
+		}
+
+		int from = m->getWindRangeFrom();
+		int to = m->getWindRangeTo();
+		if (from != to) {
+			cout << "\t\t\tvariable from " << azimuthName(from);
+			cout << " to " << azimuthName(to);
+			cout << " (" << from << "°--" << to << "°)" << endl;
+		}
+	}
+
+
+	// temperature/humidity/air pressure
+	if ((d = m->getTemperature_C()) != NaN) {
+		cout << "Temperature:\t\t" << d << "°C\t\t\t\t\t";
+		cout << rnd(m->getTemperature_F(), -1) << "°F" << endl;
+
+		if ((d = m->getDewpoint_C()) != NaN) {
+			cout << "Dewpoint:\t\t" << d << "°C\t\t\t\t\t";
+			cout << rnd(m->getDewpoint_F(), -1) << "°F"  << endl;
+			cout << "Rel. Humidity:\t\t" << rnd(m->getRelHumidity()) << "%" << endl;
+		}
+	}
+	if ((d = m->getPressure_hPa()) != NaN) {
+		cout << "Pressure:\t\t" << rnd(d) << " hPa\t\t\t\t";
+		cout << rnd(m->getPressure_inHg(), -2) << " in. Hg" << endl;
+	}
+
+
+	// weather phenomena
+	vector<string> wv = m->getWeather();
+	vector<string>::iterator weather;
+	for (i = 0, weather = wv.begin(); weather != wv.end(); weather++, i++) {
+		cout << (i ? ", " : "Weather:\t\t") << weather->c_str();
+	}
+	if (i)
+		cout << endl;
+
+
+	// cloud layers
+	const char *coverage_string[5] = {
+		"clear skies", "few clouds", "scattered clouds", "broken clouds", "sky overcast"
+	};
+	vector<FGMetarCloud> cv = m->getClouds();
+	vector<FGMetarCloud>::iterator cloud;
+	for (lineno = 0, cloud = cv.begin(); cloud != cv.end(); cloud++, lineno++) {
+		cout << (lineno ? "\t\t\t" : "Sky condition:\t\t");
+
+		if ((i = cloud->getCoverage()) != -1)
+			cout << coverage_string[i];
+		if ((d = cloud->getAltitude_ft()) != NaN)
+			cout << " at " << rnd(d, 1) << " ft";
+		if ((s = cloud->getTypeLongString()))
+			cout << " (" << s << ')';
+		if (d != NaN)
+			cout << "\t\t\t" << rnd(cloud->getAltitude_m(), 1) << " m";
+		cout << endl;
+	}
+
+
+	// runways
+	map<string, FGMetarRunway> rm = m->getRunways();
+	map<string, FGMetarRunway>::iterator runway;
+	for (runway = rm.begin(); runway != rm.end(); runway++) {
+		lineno = 0;
+		if (!strcmp(runway->first.c_str(), "ALL"))
+			cout << "All runways:\t\t";
+		else
+			cout << "Runway " << runway->first << ":\t\t";
+		FGMetarRunway rwy = runway->second;
+
+		// assemble surface string
+		vector<string> surface;
+		if ((s = rwy.getDeposit()) && strlen(s))
+			surface.push_back(s);
+		if ((s = rwy.getExtentString()) && strlen(s))
+			surface.push_back(s);
+		if ((d = rwy.getDepth()) != NaN) {
+			sprintf(buf, "%.0lf mm", d * 1000.0);
+			surface.push_back(buf);
+		}
+		if ((s = rwy.getFrictionString()) && strlen(s))
+			surface.push_back(s);
+		if ((d = rwy.getFriction()) != NaN) {
+			sprintf(buf, "friction: %.2lf", d);
+			surface.push_back(buf);
+		}
+
+		if (surface.size()) {
+			vector<string>::iterator rwysurf = surface.begin();
+			for (i = 0; rwysurf != surface.end(); rwysurf++, i++) {
+				if (i)
+					cout << ", ";
+				cout << *rwysurf;
+			}
+			lineno++;
+		}
+
+		// assemble visibility string
+		FGMetarVisibility minvis = rwy.getMinVisibility();
+		FGMetarVisibility maxvis = rwy.getMaxVisibility();
+		if ((d = minvis.getVisibility_m()) != NaN) {
+			if (lineno++)
+				cout << endl << "\t\t\t";
+			cout << minvis;
+		}
+		if (maxvis.getVisibility_m() != d) {
+			cout << endl << "\t\t\t" << maxvis << endl;
+			lineno++;
+		}
+
+		if (rwy.getWindShear()) {
+			if (lineno++)
+				cout << endl << "\t\t\t";
+			cout << "critical wind shear" << endl;
+		}
+		cout << endl;
+	}
+	cout << endl;
+#undef NaN
+}
+
+
+void printArgs(Metar *m, double airport_elevation)
+{
+#define NaN FGMetarNaN
+	vector<string> args;
+	char buf[256];
+	int i;
+
+	// ICAO id
+	sprintf(buf, "--airport=%s ", m->getId());
+	args.push_back(buf);
+
+	// report time
+	sprintf(buf, "--start-date-gmt=%4d:%02d:%02d:%02d:%02d:00 ",
+			m->getYear(), m->getMonth(), m->getDay(),
+			m->getHour(), m->getMinute());
+	args.push_back(buf);
+
+	// cloud layers
+	const char *coverage_string[5] = {
+		"clear", "few", "scattered", "broken", "overcast"
+	};
+	vector<FGMetarCloud> cv = m->getClouds();
+	vector<FGMetarCloud>::iterator cloud;
+	for (i = 0, cloud = cv.begin(); i < 5; i++) {
+		int coverage = 0;
+		double altitude = -99999;
+		if (cloud != cv.end()) {
+			coverage = cloud->getCoverage();
+			altitude = coverage ? cloud->getAltitude_ft() + airport_elevation : -99999;
+			cloud++;
+		}
+		sprintf(buf, "--prop:/environment/clouds/layer[%d]/coverage=%s ", i, coverage_string[coverage]);
+		args.push_back(buf);
+		sprintf(buf, "--prop:/environment/clouds/layer[%d]/elevation-ft=%.0lf ", i, altitude);
+		args.push_back(buf);
+		sprintf(buf, "--prop:/environment/clouds/layer[%d]/thickness-ft=500 ", i);
+		args.push_back(buf);
+	}
+
+	// environment (temperature, dewpoint, visibility, pressure)
+	// metar sets don't provide aloft information; we have to
+	// set the same values for all boundary levels
+	int wind_dir = m->getWindDir();
+	double visibility = m->getMinVisibility().getVisibility_m();
+	double dewpoint = m->getDewpoint_C();
+	double temperature = m->getTemperature_C();
+	double pressure = m->getPressure_inHg();
+	double wind_speed = m->getWindSpeed_kt();
+	double elevation = -100;
+	for (i = 0; i < 3; i++, elevation += 2000.0) {
+		sprintf(buf, "--prop:/environment/config/boundary/entry[%d]/", i);
+		int pos = strlen(buf);
+
+		sprintf(&buf[pos], "elevation-ft=%.0lf", elevation);
+		args.push_back(buf);
+		sprintf(&buf[pos], "turbulence-norm=%.0lf", 0.0);
+		args.push_back(buf);
+
+		if (visibility != NaN) {
+			sprintf(&buf[pos], "visibility-m=%.0lf", visibility);
+			args.push_back(buf);
+		}
+		if (temperature != NaN) {
+			sprintf(&buf[pos], "temperature-degc=%.0lf", temperature);
+			args.push_back(buf);
+		}
+		if (dewpoint != NaN) {
+			sprintf(&buf[pos], "dewpoint-degc=%.0lf", dewpoint);
+			args.push_back(buf);
+		}
+		if (pressure != NaN) {
+			sprintf(&buf[pos], "pressure-sea-level-inhg=%.0lf", pressure);
+			args.push_back(buf);
+		}
+		if (wind_dir != NaN) {
+			sprintf(&buf[pos], "wind-from-heading-deg=%d", wind_dir);
+			args.push_back(buf);
+		}
+		if (wind_speed != NaN) {
+			sprintf(&buf[pos], "wind-speed-kt=%.0lf", wind_speed);
+			args.push_back(buf);
+		}
+	}
+
+	// wind dir@speed
+	int range_from = m->getWindRangeFrom();
+	int range_to = m->getWindRangeTo();
+	double gust_speed = m->getGustSpeed_kt();
+	if (wind_speed != NaN && wind_dir != -1) {
+		strcpy(buf, "--wind=");
+		if (range_from != -1 && range_to != -1)
+			sprintf(&buf[strlen(buf)], "%d:%d", range_from, range_to);
+		else
+			sprintf(&buf[strlen(buf)], "%d", wind_dir);
+		sprintf(&buf[strlen(buf)], "@%.0lf", wind_speed);
+		if (gust_speed != NaN)
+			sprintf(&buf[strlen(buf)], ":%.0lf", gust_speed);
+		args.push_back(buf);
+	}
+	
+
+	// output everything
+	cout << "fgfs" << endl;
+	vector<string>::iterator arg;
+	for (i = 0, arg = args.begin(); arg != args.end(); i++, arg++) {
+		cout << "\t" << *arg << endl;
+	}
+	cout << endl;
+#undef NaN
+}
+
+
+
+
+
+const char *metar_list[] = {
+	"LOWW", "VHHH", "ULLI", "EHTW", "EFHK", "CYXU", 0, // note the trailing zero
+	"CYGK", "CYOW", "CYQY", "CYTZ", "CYXU", "EBBR", "EDDB", "EDDK", "EDVE", "EFHF",
+	"EFHK", "EGLC", "EGLL", "EHTW", "EIDW", "ENGM", "GMMN", "KART", "KBFI", "KBOS",
+	"KCCR", "KCEZ", "KCOF", "KDAL", "KDEN", "KDSM", "KEDW", "KEMT", "KENW", "KHON",
+	"KIGM", "KJFK", "KLAX", "KMCI", "KMKE", "KMLB", "KMSY", "KNBC", "KOAK", "KORD",
+	"KPNE", "KSAC", "KSAN", "KSEA", "KSFO", "KSJC", "KSMF", "KSMO", "KSNS", "KSQL",
+	"KSUN", "LBSF", "LEMD", "LFPG", "LFPO", "LGAT", "LHBP", "LIPQ", "LIRA", "LKPR",
+	"LLJR", "LOWG", "LOWI", "LOWK", "LOWL", "LOWS", "LOWW", "LOWZ", "LOXA", "LOXT",
+	"LOXZ", "LSZH", "LYBE", "NZWP", "ORBS", "PHNL", "ULLI", "VHHH", "WMKB", "YSSY",
+	0
+};
+
+
+int main(int argc, char *argv[])
+{
+	const char **src = metar_list;
+	if (argc > 1)
+		src = (const char **)&argv[1];
+
+	for (int i = 0; src[i]; i++) {
+		const char *icao = src[i];
+
+		try {
+			Metar *m = new Metar(icao);
+			//Metar *m = new Metar("2004/01/11 01:20\nLOWG 110120Z AUTO VRB01KT 0050 1600N R35/0600 FG M06/M06 Q1019 88//////\n");
+
+			printf(G"INPUT: %s\n"N, m->getData());
+			const char *unused = m->getUnusedData();
+			if (*unused)
+				printf(R"UNUSED: %s\n"N, unused);
+
+			printReport(m);
+			//printArgs(m, 0.0);
+
+			delete m;
+		} catch (const sg_io_exception& e) {
+			fprintf(stderr, R"ERROR: %s\n\n"N, e.getFormattedMessage().c_str());
+		}
+	}
+	return 0;
+}
+
+
