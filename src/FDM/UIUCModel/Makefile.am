@@ -4,6 +4,7 @@ noinst_LIBRARIES = libUIUCModel.a
 libUIUCModel_a_SOURCES = \
 	uiuc_1DdataFileReader.h \
 	uiuc_1DdataFileReader.cpp \
+	uiuc_1Dinterpolation.h \
 	uiuc_1Dinterpolation.cpp \
 	uiuc_2DdataFileReader.h \
 	uiuc_2DdataFileReader.cpp \
