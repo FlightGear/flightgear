@@ -55,7 +55,10 @@ void fgTileMgrRender( void );
 
 
 // $Log$
-// Revision 1.3  1998/08/22 14:49:59  curt
+// Revision 1.4  1998/09/09 20:58:11  curt
+// Tweaks to loop constructs with STL usage.
+//
+// Revision 1.3  1998/08/22  14:49:59  curt
 // Attempting to iron out seg faults and crashes.
 // Did some shuffling to fix a initialization order problem between view
 // position, scenery elevation.

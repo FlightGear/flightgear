@@ -484,9 +484,8 @@ double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos ) {
 	current = t->fragment_list.begin();
 	last = t->fragment_list.end();
 
-	while ( current != last ) {
+	for ( ; current != last; ++current ) {
 	    frag_ptr = &(*current);
-	    current++;
 	    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
 	       point_line_dist_squared( &(frag_ptr->center), 
 	       &abs_view_pos), local_up),
@@ -644,9 +643,8 @@ void fgTileMgrRender( void ) {
 	    current = t->fragment_list.begin();
 	    last = t->fragment_list.end();
 
-	    while ( current != last ) {
+	    for ( ; current != last; ++current ) {
 		frag_ptr = &(*current);
-		current++;
 		
 		if ( frag_ptr->display_list >= 0 ) {
 		    // Fine (fragment based) culling
@@ -714,7 +712,7 @@ void fgTileMgrRender( void ) {
 
     xglPushMatrix();
 
-    while ( mapcurrent != maplast ) {
+    for ( ; mapcurrent != maplast; ++mapcurrent ) {
         // (char *)key = (*mapcurrent).first;
         // (fgMATERIAL)value = (*mapcurrent).second;
 	mtl_ptr = &(*mapcurrent).second;
@@ -761,8 +759,6 @@ void fgTileMgrRender( void ) {
 		last_tile_ptr = frag_ptr->tile_ptr;
 	    }
 	}
-
-        *mapcurrent++;
     }
 
     xglPopMatrix();
@@ -775,6 +771,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.34  1998/09/09 20:58:09  curt
+// Tweaks to loop constructs with STL usage.
+//
 // Revision 1.33  1998/09/08 15:05:10  curt
 // Optimization by Norman Vine.
 //
