@@ -31,6 +31,9 @@
 #endif                                   
 
 
+#include <Bucket/bucketutils.hxx>
+
+
 // Initialize the Tile Manager subsystem
 int fgTileMgrInit( void );
 
@@ -44,7 +47,8 @@ int fgTileMgrUpdate( void );
 // render the scene, but we'd also like to be able to do this
 // explicitely.  lat & lon are in radians.  abs_view_pos in meters.
 // Returns result in meters.
-double fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos );
+double fgTileMgrCurElev( const fgBUCKET& p );
+double fgTileMgrCurElevOLD( double lon, double lat, const Point3D& abs_view_pos );
 
 
 // Render the local tiles --- hack, hack, hack
@@ -55,6 +59,11 @@ void fgTileMgrRender( void );
 
 
 // $Log$
+// Revision 1.6  1998/12/03 01:18:19  curt
+// Converted fgFLIGHT to a class.
+// Tweaks for Sun Portability.
+// Tweaked current terrain elevation code as per NHV.
+//
 // Revision 1.5  1998/10/16 00:55:52  curt
 // Converted to Point3D class.
 //

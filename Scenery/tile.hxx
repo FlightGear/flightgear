@@ -127,9 +127,9 @@ public:
     UpdateViewMatrix(GLdouble *MODEL_VIEW)
     {
 
-#ifdef WIN32
+#if defined( USE_MEM ) || defined( WIN32 )
 	memcpy( model_view, MODEL_VIEW, 16*sizeof(GLdouble) );
-#else
+#else 
 	bcopy( MODEL_VIEW, model_view, 16*sizeof(GLdouble) );
 #endif
 	
@@ -160,6 +160,11 @@ private:
 
 
 // $Log$
+// Revision 1.22  1998/12/03 01:18:16  curt
+// Converted fgFLIGHT to a class.
+// Tweaks for Sun Portability.
+// Tweaked current terrain elevation code as per NHV.
+//
 // Revision 1.21  1998/11/09 23:40:47  curt
 // Bernie Bright <bbright@c031.aone.net.au> writes:
 // I've made some changes to the Scenery handling.  Basically just tidy ups.

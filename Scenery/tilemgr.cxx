@@ -52,6 +52,7 @@
 #include "scenery.hxx"
 #include "tile.hxx"
 #include "tilecache.hxx"
+#include "tilemgr.hxx"
 
 
 // to test clipping speedup in fgTileMgrRender()
@@ -106,6 +107,226 @@ void fgTileMgrLoadTile( const fgBUCKET& p, int *index) {
 }
 
 
+// Calculate shortest distance from point to line
+static double point_line_dist_squared( const Point3D& tc, const Point3D& vp, 
+				       MAT3vec d )
+{
+    MAT3vec p, p0;
+    double dist;
+
+    p[0] = tc.x(); p[1] = tc.y(); p[2] = tc.z();
+    p0[0] = vp.x(); p0[1] = vp.y(); p0[2] = vp.z();
+
+    dist = fgPointLineSquared(p, p0, d);
+
+    // cout << "dist = " << dist << endl;
+
+    return(dist);
+}
+
+
+// Determine scenery altitude.  Normally this just happens when we
+// render the scene, but we'd also like to be able to do this
+// explicitely.  lat & lon are in radians.  abs_view_pos in meters.
+// Returns result in meters.
+double
+fgTileMgrCurElev( const fgBUCKET& p ) {
+    fgTILE *t;
+    fgFRAGMENT *frag_ptr;
+    Point3D abs_view_pos = current_view.abs_view_pos;
+    Point3D earth_center(0.0);
+    Point3D result;
+    MAT3vec local_up;
+    double dist, lat_geod, alt, sea_level_r;
+    int index;
+
+    local_up[0] = abs_view_pos.x();
+    local_up[1] = abs_view_pos.y();
+    local_up[2] = abs_view_pos.z();
+
+    // Find current translation offset
+    // fgBucketFind(lon * RAD_TO_DEG, lat * RAD_TO_DEG, &p);
+    index = global_tile_cache.exists(p);
+    if ( index < 0 ) {
+	FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
+	return 0.0;
+    }
+
+    t = global_tile_cache.get_tile(index);
+
+    scenery.next_center = t->center;
+    
+    // earth_center = Point3D(0.0, 0.0, 0.0);
+
+    FG_LOG( FG_TERRAIN, FG_DEBUG, 
+	    "Current bucket = " << p << "  Index = " << fgBucketGenIndex(&p) );
+
+    // calculate tile offset
+    // x = (t->offset.x = t->center.x - scenery.center.x);
+    // y = (t->offset.y = t->center.y - scenery.center.y);
+    // z = (t->offset.z = t->center.z - scenery.center.z);
+    
+    // calc current terrain elevation calculate distance from
+    // vertical tangent line at current position to center of
+    // tile.
+	
+    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
+       point_line_dist_squared(&(t->offset), &(v->view_pos), 
+       v->local_up), t->bounding_radius); */
+
+    dist = point_line_dist_squared( t->center, abs_view_pos, local_up );
+    if ( dist < FG_SQUARE(t->bounding_radius) ) {
+
+	// traverse fragment list for tile
+        fgTILE::FragmentIterator current = t->begin();
+        fgTILE::FragmentIterator last = t->end();
+
+	for ( ; current != last; ++current ) {
+	    frag_ptr = &(*current);
+	    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
+	       point_line_dist_squared( &(frag_ptr->center), 
+	       &abs_view_pos), local_up),
+	       frag_ptr->bounding_radius); */
+
+	    dist = point_line_dist_squared( frag_ptr->center,
+					    abs_view_pos,
+					    local_up);
+	    if ( dist <= FG_SQUARE(frag_ptr->bounding_radius) ) {
+		if ( frag_ptr->intersect( abs_view_pos, 
+					  earth_center, 0, result ) ) {
+		    FG_LOG( FG_TERRAIN, FG_DEBUG, "intersection point " <<
+			    result );
+		    // compute geocentric coordinates of tile center
+		    Point3D pp = fgCartToPolar3d(result);
+		    FG_LOG( FG_TERRAIN, FG_DEBUG, "  polar form = " << pp );
+		    // convert to geodetic coordinates
+		    fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
+				 &alt, &sea_level_r);
+
+		    // printf("alt = %.2f\n", alt);
+		    // exit since we found an intersection
+		    if ( alt > -9999.0 ) {
+			// printf("returning alt\n");
+			return alt;
+		    } else {
+			// printf("returning 0\n");
+			return 0.0;
+		    }
+		}
+	    }
+	}
+    }
+
+    cout << "no terrain intersection found\n";
+    return 0.0;
+}
+
+
+// Determine scenery altitude.  Normally this just happens when we
+// render the scene, but we'd also like to be able to do this
+// explicitely.  lat & lon are in radians.  abs_view_pos in meters.
+// Returns result in meters.
+double
+fgTileMgrCurElevOLD( double lon, double lat, const Point3D& abs_view_pos ) {
+    fgTILECACHE *c;
+    fgTILE *t;
+    // fgVIEW *v;
+    fgFRAGMENT *frag_ptr;
+    fgBUCKET p;
+    Point3D earth_center(0.0);
+    Point3D result;
+    MAT3vec local_up;
+    double dist, lat_geod, alt, sea_level_r;
+    // double x, y, z;
+    int index;
+
+    c = &global_tile_cache;
+    // v = &current_view;
+
+    local_up[0] = abs_view_pos.x();
+    local_up[1] = abs_view_pos.y();
+    local_up[2] = abs_view_pos.z();
+
+    // Find current translation offset
+    fgBucketFind(lon * RAD_TO_DEG, lat * RAD_TO_DEG, &p);
+    index = c->exists(p);
+    if ( index < 0 ) {
+	FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
+	return 0.0;
+    }
+
+    t = c->get_tile(index);
+
+    scenery.next_center = t->center;
+    
+    // earth_center = Point3D(0.0, 0.0, 0.0);
+
+    FG_LOG( FG_TERRAIN, FG_DEBUG, 
+	    "Pos = (" << lon * RAD_TO_DEG << ", " << lat * RAD_TO_DEG
+	    << ")  Current bucket = " << p 
+	    << "  Index = " << fgBucketGenIndex(&p) );
+
+    // calculate tile offset
+    // x = (t->offset.x = t->center.x - scenery.center.x);
+    // y = (t->offset.y = t->center.y - scenery.center.y);
+    // z = (t->offset.z = t->center.z - scenery.center.z);
+    
+    // calc current terrain elevation calculate distance from
+    // vertical tangent line at current position to center of
+    // tile.
+	
+    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
+       point_line_dist_squared(&(t->offset), &(v->view_pos), 
+       v->local_up), t->bounding_radius); */
+
+    dist = point_line_dist_squared( t->center, abs_view_pos, local_up );
+    if ( dist < FG_SQUARE(t->bounding_radius) ) {
+
+	// traverse fragment list for tile
+        fgTILE::FragmentIterator current = t->begin();
+        fgTILE::FragmentIterator last = t->end();
+
+	for ( ; current != last; ++current ) {
+	    frag_ptr = &(*current);
+	    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
+	       point_line_dist_squared( &(frag_ptr->center), 
+	       &abs_view_pos), local_up),
+	       frag_ptr->bounding_radius); */
+
+	    dist = point_line_dist_squared( frag_ptr->center,
+					    abs_view_pos,
+					    local_up);
+	    if ( dist <= FG_SQUARE(frag_ptr->bounding_radius) ) {
+		if ( frag_ptr->intersect( abs_view_pos, 
+					  earth_center, 0, result ) ) {
+		    FG_LOG( FG_TERRAIN, FG_DEBUG, "intersection point " <<
+			    result );
+		    // compute geocentric coordinates of tile center
+		    Point3D pp = fgCartToPolar3d(result);
+		    FG_LOG( FG_TERRAIN, FG_DEBUG, "  polar form = " << pp );
+		    // convert to geodetic coordinates
+		    fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
+				 &alt, &sea_level_r);
+
+		    // printf("alt = %.2f\n", alt);
+		    // exit since we found an intersection
+		    if ( alt > -9999.0 ) {
+			// printf("returning alt\n");
+			return alt;
+		    } else {
+			// printf("returning 0\n");
+			return 0.0;
+		    }
+		}
+	    }
+	}
+    }
+
+    cout << "no terrain intersection found\n";
+    return 0.0;
+}
+
+
 // given the current lon/lat, fill in the array of local chunks.  If
 // the chunk isn't already in the cache, then read it from disk.
 int fgTileMgrUpdate( void ) {
@@ -121,7 +342,8 @@ int fgTileMgrUpdate( void ) {
 
     tile_diameter = current_options.get_tile_diameter();
 
-    fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p1);
+    fgBucketFind( f->get_Longitude() * RAD_TO_DEG,
+		  f->get_Latitude() * RAD_TO_DEG, &p1);
     dw = tile_diameter / 2;
     dh = tile_diameter / 2;
 
@@ -219,29 +441,16 @@ int fgTileMgrUpdate( void ) {
 	    }
 	}
     }
+
+    // find our current elevation (feed in the current bucket to save work)
+    fgTileMgrCurElev( p1 );
+
     p_last.lon = p1.lon;
     p_last.lat = p1.lat;
     p_last.x = p1.x;
     p_last.y = p1.y;
+
     return 1;
-}
-
-
-// Calculate shortest distance from point to line
-static double point_line_dist_squared( const Point3D& tc, const Point3D& vp, 
-				       MAT3vec d )
-{
-    MAT3vec p, p0;
-    double dist;
-
-    p[0] = tc.x(); p[1] = tc.y(); p[2] = tc.z();
-    p0[0] = vp.x(); p0[1] = vp.y(); p0[2] = vp.z();
-
-    dist = fgPointLineSquared(p, p0, d);
-
-    // cout << "dist = " << dist << endl;
-
-    return(dist);
 }
 
 
@@ -398,111 +607,6 @@ inrange( const double radius, const Point3D& center, const Point3D& vp,
 }
 
 
-// Determine scenery altitude.  Normally this just happens when we
-// render the scene, but we'd also like to be able to do this
-// explicitely.  lat & lon are in radians.  abs_view_pos in meters.
-// Returns result in meters.
-double
-fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
-    fgTILECACHE *c;
-    fgTILE *t;
-    // fgVIEW *v;
-    fgFRAGMENT *frag_ptr;
-    fgBUCKET p;
-    Point3D earth_center(0.0);
-    Point3D result;
-    MAT3vec local_up;
-    double dist, lat_geod, alt, sea_level_r;
-    // double x, y, z;
-    int index;
-
-    c = &global_tile_cache;
-    // v = &current_view;
-
-    local_up[0] = abs_view_pos.x();
-    local_up[1] = abs_view_pos.y();
-    local_up[2] = abs_view_pos.z();
-
-    // Find current translation offset
-    fgBucketFind(lon * RAD_TO_DEG, lat * RAD_TO_DEG, &p);
-    index = c->exists(p);
-    if ( index < 0 ) {
-	FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
-	return 0.0;
-    }
-
-    t = c->get_tile(index);
-
-    scenery.next_center = t->center;
-    
-    // earth_center = Point3D(0.0, 0.0, 0.0);
-
-    FG_LOG( FG_TERRAIN, FG_DEBUG, 
-	    "Pos = (" << lon * RAD_TO_DEG << ", " << lat * RAD_TO_DEG
-	    << ")  Current bucket = " << p 
-	    << "  Index = " << fgBucketGenIndex(&p) );
-
-    // calculate tile offset
-    // x = (t->offset.x = t->center.x - scenery.center.x);
-    // y = (t->offset.y = t->center.y - scenery.center.y);
-    // z = (t->offset.z = t->center.z - scenery.center.z);
-    
-    // calc current terrain elevation calculate distance from
-    // vertical tangent line at current position to center of
-    // tile.
-	
-    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
-       point_line_dist_squared(&(t->offset), &(v->view_pos), 
-       v->local_up), t->bounding_radius); */
-
-    dist = point_line_dist_squared( t->center, abs_view_pos, local_up );
-    if ( dist < FG_SQUARE(t->bounding_radius) ) {
-
-	// traverse fragment list for tile
-        fgTILE::FragmentIterator current = t->begin();
-        fgTILE::FragmentIterator last = t->end();
-
-	for ( ; current != last; ++current ) {
-	    frag_ptr = &(*current);
-	    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
-	       point_line_dist_squared( &(frag_ptr->center), 
-	       &abs_view_pos), local_up),
-	       frag_ptr->bounding_radius); */
-
-	    dist = point_line_dist_squared( frag_ptr->center,
-					    abs_view_pos,
-					    local_up);
-	    if ( dist <= FG_SQUARE(frag_ptr->bounding_radius) ) {
-		if ( frag_ptr->intersect( abs_view_pos, 
-					  earth_center, 0, result ) ) {
-		    FG_LOG( FG_TERRAIN, FG_DEBUG, "intersection point " <<
-			    result );
-		    // compute geocentric coordinates of tile center
-		    Point3D pp = fgCartToPolar3d(result);
-		    FG_LOG( FG_TERRAIN, FG_DEBUG, "  polar form = " << pp );
-		    // convert to geodetic coordinates
-		    fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
-				 &alt, &sea_level_r);
-
-		    // printf("alt = %.2f\n", alt);
-		    // exit since we found an intersection
-		    if ( alt > -9999.0 ) {
-			// printf("returning alt\n");
-			return alt;
-		    } else {
-			// printf("returning 0\n");
-			return 0.0;
-		    }
-		}
-	    }
-	}
-    }
-
-    cout << "no terrain intersection found\n";
-    return 0.0;
-}
-
-
 // NEW for legibility
 
 // update this tile's geometry for current view
@@ -556,8 +660,10 @@ void fgTileMgrRender( void ) {
 
     tile_diameter = current_options.get_tile_diameter();
 
-    scenery.cur_elev = fgTileMgrCurElev( FG_Longitude, FG_Latitude, 
-					 v->abs_view_pos );
+    // moved to fgTileMgrUpdate, right after we check if we need to
+    // load additional tiles:
+    // scenery.cur_elev = fgTileMgrCurElev( FG_Longitude, FG_Latitude, 
+    //                                      v->abs_view_pos );
  
     // initialize the transient per-material fragment lists
     material_mgr.init_transient_material_lists();
@@ -642,6 +748,11 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.45  1998/12/03 01:18:18  curt
+// Converted fgFLIGHT to a class.
+// Tweaks for Sun Portability.
+// Tweaked current terrain elevation code as per NHV.
+//
 // Revision 1.44  1998/11/23 21:49:48  curt
 // minor tweaks.
 //
