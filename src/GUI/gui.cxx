@@ -178,8 +178,8 @@ void guiInit()
 
     // Initialize PUI
     puInit();
-    puSetDefaultStyle         ( PUSTYLE_BEVELLED ); //PUSTYLE_DEFAULT
-    puSetDefaultColourScheme  (0.6, 0.6, 0.5, 1.0);
+    puSetDefaultStyle         ( PUSTYLE_SMALL_BEVELLED ); //PUSTYLE_DEFAULT
+    puSetDefaultColourScheme  (0.8, 0.8, 0.9, 0.8);
 
     initDialog();
 
