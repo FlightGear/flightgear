@@ -236,7 +236,7 @@ $Original log: LaRCsim.c,v $
 #include "ls_cockpit.h"
 #include "ls_interface.h"
 #include "../flight.h"
-#include "../../aircraft/aircraft.h"
+#include "../../Aircraft/aircraft.h"
 
 /* global variable declarations */
 
@@ -909,6 +909,9 @@ int fgLaRCsim_2_Flight (struct flight_params *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.8  1997/06/21 17:12:50  curt
+ * Capitalized subdirectory names.
+ *
  * Revision 1.7  1997/05/31 19:16:28  curt
  * Elevator trim added.
  *

@@ -63,6 +63,7 @@ GLenum GLTKkey(int k, GLenum mask) {
 	return GL_TRUE;
     case TK_s:
 	c->throttle[0] += 0.05;
+	return GL_TRUE;
     case TK_ESCAPE:
 	tkQuit();
     }
@@ -74,10 +75,13 @@ GLenum GLTKkey(int k, GLenum mask) {
 
 
 /* $Log$
-/* Revision 1.2  1997/05/23 15:40:24  curt
-/* Added GNU copyright headers.
-/* Fog now works!
+/* Revision 1.3  1997/06/21 17:12:52  curt
+/* Capitalized subdirectory names.
 /*
+ * Revision 1.2  1997/05/23 15:40:24  curt
+ * Added GNU copyright headers.
+ * Fog now works!
+ *
  * Revision 1.1  1997/05/21 15:57:49  curt
  * Renamed due to added GLUT support.
  *

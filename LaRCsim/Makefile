@@ -11,7 +11,7 @@
 TARGET = libLaRCsim.a
 
 LaRCsimFILES = atmos_62.c ls_accel.c ls_aux.c ls_geodesy.c ls_gravity.c \
-	ls_step.c ls_model.c default_model_routines.c ls_init.c ls_sync.c \
+	ls_step.c ls_model.c default_model_routines.c ls_init.c ls_sync.c
 
 NavionFILES = navion_aero.c navion_engine.c navion_gear.c navion_init.c
 
@@ -56,6 +56,9 @@ clean:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/06/21 17:12:50  curt
+# Capitalized subdirectory names.
+#
 # Revision 1.2  1997/06/17 16:52:02  curt
 # Timer interval stuff now uses gettimeofday() instead of ftime()
 #

@@ -27,8 +27,8 @@
 CC = gcc
 
 
-SUBSUBDIRS = flight/LaRCsim flight/slew
-SUBDIRS = aircraft controls flight mat3 scenery timer
+SUBSUBDIRS = Flight/LaRCsim Flight/Slew
+SUBDIRS = Aircraft Controls Flight mat3 Scenery Timer
 MAIN = OpenGL
 
 
@@ -51,8 +51,17 @@ clean:
 	done
 
 
+tar: clean
+	(cd ../..; \
+	tar cvf prototype-0.04.tar FlightGear/COPYING FlightGear/Docs \
+	FlightGear/Scenery/mesa-e.scn FlightGear/Src FlightGear/Thanks)
+
+
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1997/06/21 17:12:38  curt
+# Capitalized subdirectory names.
+#
 # Revision 1.6  1997/06/16 19:32:50  curt
 # Starting to add general timer support.
 #

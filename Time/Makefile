@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = libtimer.a
+TARGET = libTimer.a
 
 CFILES = fg_timer.c
 HFILES = fg_timer.h
@@ -64,6 +64,9 @@ fg_timer.o: fg_timer.c fg_timer.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1997/06/21 17:12:55  curt
+# Capitalized subdirectory names.
+#
 # Revision 1.1  1997/06/16 19:24:19  curt
 # Initial revision.
 #

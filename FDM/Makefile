@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET=libflight.a
+TARGET=libFlight.a
 
 CFILES = flight.c
 OFILES = $(CFILES:.c=.o)
@@ -57,7 +57,7 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
-flight.h:  slew/slew.h LaRCsim/ls_interface.h
+flight.h:  Slew/slew.h LaRCsim/ls_interface.h
 	touch flight.h
 
 flight.o: flight.c flight.h
@@ -66,6 +66,9 @@ flight.o: flight.c flight.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1997/06/21 17:12:48  curt
+# Capitalized subdirectory names.
+#
 # Revision 1.3  1997/05/29 02:32:25  curt
 # Starting to build generic flight model interface.
 #

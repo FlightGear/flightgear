@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET=libslew.a
+TARGET=libSlew.a
 
 CFILES = slew.c
 OFILES = $(CFILES:.c=.o)
@@ -57,12 +57,15 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
-slew.o: slew.c slew.h ../../aircraft/aircraft.h ../../controls/controls.h
+slew.o: slew.c slew.h ../../Aircraft/aircraft.h ../../Controls/controls.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c slew.c
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1997/06/21 17:12:51  curt
+# Capitalized subdirectory names.
+#
 # Revision 1.1  1997/05/29 02:29:42  curt
 # Moved to their own directory.
 #

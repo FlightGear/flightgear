@@ -28,8 +28,8 @@
 
 #include "slew.h"
 #include "../flight.h"
-#include "../../aircraft/aircraft.h"
-#include "../../controls/controls.h"
+#include "../../Aircraft/aircraft.h"
+#include "../../Controls/controls.h"
 
 
 #ifndef M_PI                                    
@@ -90,9 +90,12 @@ void fgSlewUpdate() {
 
 
 /* $Log$
-/* Revision 1.3  1997/05/29 22:40:00  curt
-/* Working on incorporating the LaRCsim flight model.
+/* Revision 1.4  1997/06/21 17:12:51  curt
+/* Capitalized subdirectory names.
 /*
+ * Revision 1.3  1997/05/29 22:40:00  curt
+ * Working on incorporating the LaRCsim flight model.
+ *
  * Revision 1.2  1997/05/29 12:30:19  curt
  * Some initial mods to work better in a timer environment.
  *

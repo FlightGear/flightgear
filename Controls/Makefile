@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = libcontrols.a
+TARGET = libControls.a
 
 CFILES = controls.c
 HFILES = controls.h
@@ -61,12 +61,15 @@ clean:
 controls.h: ../limits.h
 	touch controls.h
 
-controls.o: controls.c controls.h ../aircraft/aircraft.h
+controls.o: controls.c controls.h ../Aircraft/aircraft.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c controls.c
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1997/06/21 17:12:47  curt
+# Capitalized subdirectory names.
+#
 # Revision 1.3  1997/05/31 19:16:27  curt
 # Elevator trim added.
 #

@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = libscenery.a
+TARGET = libScenery.a
 
 CFILES = scanner.c parser.c common.c mesh.c
 HFILES = 
@@ -89,6 +89,9 @@ mesh.o: mesh.c mesh.h common.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1997/06/21 17:12:55  curt
+# Capitalized subdirectory names.
+#
 # Revision 1.5  1997/05/31 19:16:29  curt
 # Elevator trim added.
 #

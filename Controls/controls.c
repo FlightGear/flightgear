@@ -25,7 +25,7 @@
 
 
 #include "controls.h"
-#include "../aircraft/aircraft.h"
+#include "../Aircraft/aircraft.h"
 
 
 void fgControlsInit() {
@@ -167,7 +167,10 @@ void fgThrottleSet(int engine, double pos) {
 
 
 /* $Log$
-/* Revision 1.1  1997/05/31 19:24:04  curt
-/* Initial revision.
+/* Revision 1.2  1997/06/21 17:12:48  curt
+/* Capitalized subdirectory names.
 /*
+ * Revision 1.1  1997/05/31 19:24:04  curt
+ * Initial revision.
+ *
  */

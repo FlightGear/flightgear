@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET=proto
+TARGET=fgfs0
 
 CC = gcc
 
@@ -66,10 +66,10 @@ LIBS =  $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
 
 CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
 OFILES = $(CFILES:.c=.o)
-AFILES = ../aircraft/libaircraft.a ../controls/libcontrols.a \
-	../flight/libflight.a ../flight/LaRCsim/libLaRCsim.a \
-	../flight/slew/libslew.a ../mat3/libmat3.a ../scenery/libscenery.a \
-	../timer/libtimer.a
+AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
+	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
+	../Flight/Slew/libSlew.a ../mat3/libmat3.a ../Scenery/libScenery.a \
+	../Timer/libTimer.a
 
 
 #---------------------------------------------------------------------------
@@ -89,22 +89,25 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
-GLmain.o: GLmain.c GLUTkey.h ../aircraft/aircraft.h ../scenery/scenery.h \
-	../timer/fg_timer.h
+GLmain.o: GLmain.c GLUTkey.h ../Aircraft/aircraft.h ../Scenery/scenery.h \
+	../Timer/fg_timer.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c GLmain.c
 
-GLUTkey.o: GLUTkey.c GLUTkey.h ../aircraft/aircraft.h
+GLUTkey.o: GLUTkey.c GLUTkey.h ../Aircraft/aircraft.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c GLUTkey.c
 
-GLTKkey.o: GLTKkey.c GLTKkey.h ../aircraft/aircraft.h
+GLTKkey.o: GLTKkey.c GLTKkey.h ../Aircraft/aircraft.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c GLTKkey.c
 
-mesh2GL.o: mesh2GL.c ../scenery/mesh.h
+mesh2GL.o: mesh2GL.c ../Scenery/mesh.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c mesh2GL.c
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.13  1997/06/21 17:12:54  curt
+# Capitalized subdirectory names.
+#
 # Revision 1.12  1997/06/16 19:32:51  curt
 # Starting to add general timer support.
 #

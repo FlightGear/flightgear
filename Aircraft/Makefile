@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = libaircraft.a
+TARGET = libAircraft.a
 
 CFILES = aircraft.c
 HFILES = aircraft.h
@@ -61,12 +61,15 @@ clean:
 aircraft.o: aircraft.c aircraft.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c aircraft.c
 
-aircraft.h: ../flight/flight.h ../controls/controls.h
+aircraft.h: ../Flight/flight.h ../Controls/controls.h
 	touch aircraft.h
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/06/21 17:12:42  curt
+# Capitalized subdirectory names.
+#
 # Revision 1.2  1997/05/23 15:40:29  curt
 # Added GNU copyright headers.
 #

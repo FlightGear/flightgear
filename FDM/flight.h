@@ -28,7 +28,7 @@
 #define FLIGHT_H
 
 
-#include "slew/slew.h"
+#include "Slew/slew.h"
 #include "LaRCsim/ls_interface.h"
 
 
@@ -407,9 +407,12 @@ int fgFlightModelUpdate(int model, struct flight_params *f, int multiloop);
 
 
 /* $Log$
-/* Revision 1.4  1997/05/29 22:39:57  curt
-/* Working on incorporating the LaRCsim flight model.
+/* Revision 1.5  1997/06/21 17:12:49  curt
+/* Capitalized subdirectory names.
 /*
+ * Revision 1.4  1997/05/29 22:39:57  curt
+ * Working on incorporating the LaRCsim flight model.
+ *
  * Revision 1.3  1997/05/29 02:32:25  curt
  * Starting to build generic flight model interface.
  *

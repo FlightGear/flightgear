@@ -30,7 +30,7 @@
 #include <GL/glut.h>
 
 #include "GLUTkey.h"
-#include "../aircraft/aircraft.h"
+#include "../Aircraft/aircraft.h"
 
 extern double fogDensity;
 extern double goal_view_offset;
@@ -152,9 +152,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.11  1997/06/18 04:10:31  curt
-/* A couple more runway tweaks ...
+/* Revision 1.12  1997/06/21 17:12:52  curt
+/* Capitalized subdirectory names.
 /*
+ * Revision 1.11  1997/06/18 04:10:31  curt
+ * A couple more runway tweaks ...
+ *
  * Revision 1.10  1997/06/18 02:21:23  curt
  * Hacked in a runway
  *

@@ -31,7 +31,7 @@
     #include "gltk.h"
 #endif
 
-#include "../scenery/mesh.h"
+#include "../Scenery/mesh.h"
 #include "../mat3/mat3.h"
 
 
@@ -108,9 +108,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.20  1997/06/18 04:10:32  curt
-/* A couple more runway tweaks ...
+/* Revision 1.21  1997/06/21 17:12:54  curt
+/* Capitalized subdirectory names.
 /*
+ * Revision 1.20  1997/06/18 04:10:32  curt
+ * A couple more runway tweaks ...
+ *
  * Revision 1.19  1997/06/18 02:21:24  curt
  * Hacked in a runway
  *

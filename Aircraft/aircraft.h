@@ -27,8 +27,8 @@
 #ifndef AIRCRAFT_H
 #define AIRCRAFT_H
 
-#include "../flight/flight.h"
-#include "../controls/controls.h"
+#include "../Flight/flight.h"
+#include "../Controls/controls.h"
 
 
 /* Define a structure containing all the parameters for an aircraft */
@@ -51,9 +51,12 @@ void aircraft_debug(int type);
 
 
 /* $Log$
-/* Revision 1.2  1997/05/23 15:40:30  curt
-/* Added GNU copyright headers.
+/* Revision 1.3  1997/06/21 17:12:42  curt
+/* Capitalized subdirectory names.
 /*
+ * Revision 1.2  1997/05/23 15:40:30  curt
+ * Added GNU copyright headers.
+ *
  * Revision 1.1  1997/05/16 15:58:25  curt
  * Initial revision.
  *

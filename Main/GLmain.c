@@ -37,10 +37,10 @@
     #include "GLTKkey.h"
 #endif
 
-#include "../aircraft/aircraft.h"
-#include "../scenery/scenery.h"
+#include "../Aircraft/aircraft.h"
+#include "../Scenery/scenery.h"
 #include "../mat3/mat3.h"
-#include "../timer/fg_timer.h"
+#include "../Timer/fg_timer.h"
 
 
 #define DEG_TO_RAD       0.017453292
@@ -336,14 +336,17 @@ GLint fgRunwayHack(double width, double length) {
 static void fgSceneryDraw() {
     static float z = 32.35;
 
+    glPushMatrix();
+
     glCallList(terrain);
 
-    /* z -= 0.01; */
     printf("*** Drawing runway at %.2f\n", z);
 
-    glTranslatef( -398391.28, 120070.41, z);
+    glTranslatef( -398391.28, 120070.41, 32.35);
     glRotatef(170.0, 0.0, 0.0, 1.0);
     glCallList(runway);
+
+    glPopMatrix();
 }
 
 
@@ -534,9 +537,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.19  1997/06/18 04:10:31  curt
-/* A couple more runway tweaks ...
+/* Revision 1.20  1997/06/21 17:12:53  curt
+/* Capitalized subdirectory names.
 /*
+ * Revision 1.19  1997/06/18 04:10:31  curt
+ * A couple more runway tweaks ...
+ *
  * Revision 1.18  1997/06/18 02:21:24  curt
  * Hacked in a runway
  *
