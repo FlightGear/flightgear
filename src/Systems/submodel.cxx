@@ -53,6 +53,11 @@ SubmodelSystem::bind ()
 void
 SubmodelSystem::unbind ()
 {
+  submodel_iterator = submodels.begin();
+  while(submodel_iterator != submodels.end()) {
+    (*submodel_iterator)->prop->untie("count");
+    ++submodel_iterator;
+  }
 }
 
 void
@@ -66,10 +71,6 @@ SubmodelSystem::update (double dt)
     if ((*submodel_iterator)->trigger->getBoolValue()) {
         if ((*submodel_iterator)->count != 0) {
           release( (*submodel_iterator), dt);
-         // now update the "count" property for this submodel
-         char name[80];
-         snprintf(name, 80, "/systems/submodels/submodel[%d]/count", i);  
-         fgSetInt(name, (*submodel_iterator)->count);
         } 
     } 
     ++submodel_iterator;
@@ -119,8 +120,8 @@ SubmodelSystem::load ()
    int count = root.nChildren();
    for (i = 0; i < count; i++) { 
      // cout << "Reading submodel " << i << endl;        
+     SGPropertyNode *prop;
      submodel* sm = new submodel;
-     submodels.push_back( sm );
      SGPropertyNode * entry_node = root.getChild(i);
      sm->trigger        = fgGetNode(entry_node->getStringValue("trigger", "none"), true);
      sm->name           = entry_node->getStringValue("name", "none_defined");
@@ -141,9 +142,10 @@ SubmodelSystem::load ()
      sm->trigger->setBoolValue(false);
      sm->timer = sm->delay;
 
-     char name[80];
-     snprintf(name, 80, "/systems/submodels/submodel[%d]/count", i);  
-     fgSetInt(name, sm->count);
+     sm->prop = fgGetNode("/systems/submodels/submodel", i, true);
+     sm->prop->tie("count", SGRawValuePointer<int>(&(sm->count)));
+
+     submodels.push_back( sm );
    }
 
   submodel_iterator = submodels.begin();

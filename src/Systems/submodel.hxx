@@ -27,6 +27,7 @@ public:
 
  typedef struct {
   SGPropertyNode_ptr trigger;
+  SGPropertyNode_ptr prop;
   string             name;
   string             model;
   double             speed;

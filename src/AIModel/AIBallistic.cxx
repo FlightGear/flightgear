@@ -49,10 +49,12 @@ bool FGAIBallistic::init() {
 
 void FGAIBallistic::bind() {
 //    FGAIBase::bind();
+   props->tie("sim/time/elapsed-sec", SGRawValuePointer<double>(&life_timer));
 }
 
 void FGAIBallistic::unbind() {
 //    FGAIBase::unbind();
+   props->untie("sim/time/elapsed-sec");
 }
 
 void FGAIBallistic::update(double dt) {
