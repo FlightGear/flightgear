@@ -87,7 +87,9 @@ static FGProtocol *parse_port_config( const string& config )
     try
     {
 	if ( protocol == "atc610x" ) {
-	    return new FGATC610x;
+            FGATC610x *atc610x = new FGATC610x;
+	    atc610x->set_hz( 30 );
+	    return atc610x;
 	} else if ( protocol == "atlas" ) {
 	    FGAtlas *atlas = new FGAtlas;
 	    io = atlas;
