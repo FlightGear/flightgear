@@ -341,6 +341,12 @@ FGInterface::bind ()
 	&FGInterface::set_V_calibrated_kts,
 	false);
 
+				// Mach number
+  fgTie("/velocities/mach", this,
+	&FGInterface::get_Mach_number,
+	&FGInterface::set_Mach_number,
+	false);
+
 				// Local velocities
 //   fgTie("/velocities/speed-north-fps", this,
 // 	&FGInterface::get_V_north,
