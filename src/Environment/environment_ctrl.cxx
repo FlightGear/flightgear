@@ -121,6 +121,11 @@ FGUserDefEnvironmentCtrl::update (double dt)
   double base_wind_speed = _base_wind_speed_node->getDoubleValue();
   double gust_wind_speed = _gust_wind_speed_node->getDoubleValue();
 
+  if (gust_wind_speed < base_wind_speed) {
+      gust_wind_speed = base_wind_speed;
+      _gust_wind_speed_node->setDoubleValue(gust_wind_speed);
+  }
+
   if (base_wind_speed == gust_wind_speed) {
     _current_wind_speed_kt = base_wind_speed;
   } else {
