@@ -515,6 +515,9 @@ void FGTileMgr::prep_ssg_nodes( SGLocation *location, float vis ) {
     // selector and transform
 
     Point3D center = location->get_tile_center();
+    if (center == Point3D(0.0))
+      return;
+    current_center = center;
     float *up = location->get_world_up();
 
     FGTileEntry *e;

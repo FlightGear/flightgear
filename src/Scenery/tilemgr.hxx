@@ -103,6 +103,10 @@ private:
      * tile cache
      */
     FGNewCache tile_cache;
+    /**
+     * and its center
+     */
+    Point3D current_center;
 
     /**
      * Queue tiles for loading.
@@ -188,6 +192,7 @@ public:
     // based on current visibilty void prep_ssg_nodes( float
     // visibility_meters );
     void prep_ssg_nodes( SGLocation *location, float visibility_meters );
+    const Point3D get_current_center(void) const { return current_center; }
 
     // Set flag with event manager so that non-moving view refreshes
     // tiles...

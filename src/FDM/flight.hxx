@@ -90,13 +90,11 @@
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <FDM/groundcache.hxx>
 
 SG_USING_STD(list);
 SG_USING_STD(vector);
 SG_USING_STD(string);
-
-class FGAircraftModel;
-
 
 typedef double FG_VECTOR_3[3];
 
@@ -222,6 +220,9 @@ private:
 
     // SGTimeStamp valid_stamp;          // time this record is valid
     // SGTimeStamp next_stamp;           // time this record is valid
+
+    // the ground cache object itself.
+    FGGroundCache ground_cache;
 
 protected:
 
@@ -1080,19 +1081,77 @@ public:
     // Note that currently this is the "same" value runway altitude...
     inline double get_ground_elev_ft() const { return runway_altitude; }
 
+
+    //////////////////////////////////////////////////////////////////////////
+    // Ground handling routines
+    //////////////////////////////////////////////////////////////////////////
+
+    enum GroundType {
+      Unknown = 0, //??
+      Solid, // Whatever we will roll on with infinite load factor.
+      Forest, // Ground unsuitable for taxiing.
+      Water, // For the beaver ...
+      Catapult, // Carrier cats.
+      Wire // Carrier wires.
+    };
+
+    // Prepare the ground cache for the wgs84 position pt_*.
+    // That is take all vertices in the ball with radius rad around the
+    // position given by the pt_* and store them in a local scene graph.
+    bool prepare_ground_cache_m(double ref_time, const double pt[3],
+                                double rad);
+    bool prepare_ground_cache_ft(double ref_time, const double pt[3],
+                                 double rad);
+
+
+    // Returns true if the cache is valid.
+    // Also the reference time, point and radius values where the cache
+    // is valid for are returned.
+    bool is_valid_m(double *ref_time, double pt[3], double *rad);
+    bool is_valid_ft(double *ref_time, double pt[3], double *rad);
+
+    // Return the nearest catapult to the given point
+    // pt in wgs84 coordinates.
+    double get_cat_m(double t, const double pt[3],
+                     double end[2][3], double vel[2][3]);
+    double get_cat_ft(double t, const double pt[3],
+                      double end[2][3], double vel[2][3]);
+  
+
+    // Return the altitude above ground below the wgs84 point pt
+    // Search for the nearest triangle to pt.
+    // Return ground properties like the ground type, the maximum load
+    // this kind kind of ground can carry, the friction factor between
+    // 0 and 1 which can be used to model lower friction with wet runways
+    // and finally the altitude above ground.
+    bool get_agl_m(double t, const double pt[3],
+                   double contact[3], double normal[3], double vel[3],
+                   int *type, double *loadCapacity,
+                   double *frictionFactor, double *agl);
+    bool get_agl_ft(double t, const double pt[3],
+                    double contact[3], double normal[3], double vel[3],
+                    int *type, double *loadCapacity,
+                    double *frictionFactor, double *agl);
+
+
+    // Return 1 if the hook intersects with a wire.
+    // That test is done by checking if the quad spanned by the points pt*
+    // intersects with the line representing the wire.
+    // If the wire is caught, the cache will trace this wires endpoints until
+    // the FDM calls release_wire().
+    bool caught_wire_m(double t, const double pt[4][3]);
+    bool caught_wire_ft(double t, const double pt[4][3]);
+  
+    // Return the location and speed of the wire endpoints.
+    bool get_wire_ends_m(double t, double end[2][3], double vel[2][3]);
+    bool get_wire_ends_ft(double t, double end[2][3], double vel[2][3]);
+
+    // Tell the cache code that it does no longer need to care for
+    // the wire end position.
+    void release_wire(void);
 };
 
-
-typedef list < FGInterface > fdm_state_list;
-typedef fdm_state_list::iterator fdm_state_list_iterator;
-typedef fdm_state_list::const_iterator const_fdm_state_list_iterator;
-
-
 extern FGInterface * cur_fdm_state;
-
-
-// General interface to the flight model routines
-
 
 // Toggle data logging on/off
 void fgToggleFDMdataLogging(void);

@@ -32,9 +32,9 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include <Scenery/scenery.hxx>
-#include <FDM/LaRCsim/ls_interface.h>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <FDM/groundcache.hxx>
 
 #include "flight.hxx"
 
@@ -789,6 +789,129 @@ void FGInterface::_busdump(void) {
     SG_LOG(SG_FLIGHT,SG_INFO,"altitude_agl: " << altitude_agl );
 }
 
+bool
+FGInterface::prepare_ground_cache_m(double ref_time, const double pt[3],
+                                    double rad)
+{
+  return ground_cache.prepare_ground_cache(ref_time, pt, rad);
+}
+
+bool FGInterface::prepare_ground_cache_ft(double ref_time, const double pt[3],
+                                          double rad)
+{
+  // Convert units and do the real work.
+  sgdVec3 pt_ft;
+  sgdScaleVec3( pt_ft, pt, SG_FEET_TO_METER );
+  return ground_cache.prepare_ground_cache(ref_time, pt_ft, rad*SG_FEET_TO_METER);
+}
+
+bool
+FGInterface::is_valid_m(double *ref_time, double pt[3], double *rad)
+{
+  return ground_cache.is_valid(ref_time, pt, rad);
+}
+
+bool FGInterface::is_valid_ft(double *ref_time, double pt[3], double *rad)
+{
+  // Convert units and do the real work.
+  bool found_ground = ground_cache.is_valid(ref_time, pt, rad);
+  sgdScaleVec3(pt, SG_METER_TO_FEET);
+  *rad *= SG_METER_TO_FEET;
+  return found_ground;
+}
+
+double
+FGInterface::get_cat_m(double t, const double pt[3],
+                       double end[2][3], double vel[2][3])
+{
+  return ground_cache.get_cat(t, pt, end, vel);
+}
+
+double
+FGInterface::get_cat_ft(double t, const double pt[3],
+                        double end[2][3], double vel[2][3])
+{
+  // Convert units and do the real work.
+  sgdVec3 pt_m;
+  sgdScaleVec3( pt_m, pt, SG_FEET_TO_METER );
+  double dist = ground_cache.get_cat(t, pt_m, end, vel);
+  for (int k=0; k<2; ++k) {
+    sgdScaleVec3( end[k], SG_METER_TO_FEET );
+    sgdScaleVec3( vel[k], SG_METER_TO_FEET );
+  }
+  return dist*SG_METER_TO_FEET;
+}
+
+bool
+FGInterface::get_agl_m(double t, const double pt[3],
+                       double contact[3], double normal[3], double vel[3],
+                       int *type, double *loadCapacity,
+                       double *frictionFactor, double *agl)
+{
+  return ground_cache.get_agl(t, pt, contact, normal, vel, type,
+                              loadCapacity, frictionFactor, agl);
+}
+
+bool
+FGInterface::get_agl_ft(double t, const double pt[3],
+                        double contact[3], double normal[3], double vel[3],
+                        int *type, double *loadCapacity,
+                        double *frictionFactor, double *agl)
+{
+  // Convert units and do the real work.
+  sgdVec3 pt_m;
+  sgdScaleVec3( pt_m, pt, SG_FEET_TO_METER );
+  bool ret = ground_cache.get_agl(t, pt_m, contact, normal, vel,
+                                  type, loadCapacity, frictionFactor, agl);
+  // Convert units back ...
+  sgdScaleVec3( contact, SG_METER_TO_FEET );
+  sgdScaleVec3( vel, SG_METER_TO_FEET );
+  *agl *= SG_METER_TO_FEET;
+  // FIXME: scale the load limit to something in the english unit system.
+  // Be careful with the DBL_MAX which is returned by default.
+  return ret;
+}
+
+bool
+FGInterface::caught_wire_m(double t, const double pt[4][3])
+{
+  return ground_cache.caught_wire(t, pt);
+}
+
+bool
+FGInterface::caught_wire_ft(double t, const double pt[4][3])
+{
+  // Convert units and do the real work.
+  double pt_m[4][3];
+  for (int i=0; i<4; ++i)
+    sgdScaleVec3(pt_m[i], pt[i], SG_FEET_TO_METER);
+    
+  return ground_cache.caught_wire(t, pt_m);
+}
+  
+bool
+FGInterface::get_wire_ends_m(double t, double end[2][3], double vel[2][3])
+{
+  return ground_cache.get_wire_ends(t, end, vel);
+}
+
+bool
+FGInterface::get_wire_ends_ft(double t, double end[2][3], double vel[2][3])
+{
+  // Convert units and do the real work.
+  bool ret = ground_cache.get_wire_ends(t, end, vel);
+  for (int k=0; k<2; ++k) {
+    sgdScaleVec3( end[k], SG_METER_TO_FEET );
+    sgdScaleVec3( vel[k], SG_METER_TO_FEET );
+  }
+  return ret;
+}
+
+void
+FGInterface::release_wire(void)
+{
+  ground_cache.release_wire();
+}
 
 void fgToggleFDMdataLogging(void) {
   cur_fdm_state->ToggleDataLogging();
