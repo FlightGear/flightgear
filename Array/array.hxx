@@ -73,21 +73,8 @@ private:
     // float (*out_data)[ARRAY_SIZE_1];
 
     // output nodes
+    fitnode_list corner_list;
     fitnode_list node_list;
-
-    // Initialize output mesh structure
-    // void outputmesh_init( void );
-
-    // Get the value of a mesh node
-    // double outputmesh_get_pt( int i, int j );
-
-    // Set the value of a mesh node
-    // void outputmesh_set_pt( int i, int j, double value );
-
-#if 0
-    // Write out a node file that can be used by the "triangle" program
-    // void outputmesh_output_nodes( const string& fg_root, FGBucket& p );
-#endif
 
 public:
 
@@ -110,13 +97,16 @@ public:
     // Use least squares to fit a simpler data set to dem data
     void fit( double error );
 
-    // add a node to the output (fitted) node list
+    // add a node to the output corner node list
+    void add_corner_node( int i, int j, double val );
+
+    // add a node to the output fitted node list
     void add_fit_node( int i, int j, double val );
 
     // return the current altitude based on grid data.  We should
     // rewrite this to interpolate exact values, but for now this is
     // good enough
-    double interpolate_altitude( double lon, double lat );
+    double interpolate_altitude( double lon, double lat ) const;
 
     // Informational methods
     inline double get_originx() const { return originx; }
@@ -126,6 +116,7 @@ public:
     inline double get_col_step() const { return col_step; }
     inline double get_row_step() const { return row_step; }
 
+    inline fitnode_list get_corner_node_list() const { return corner_list; }
     inline fitnode_list get_fit_node_list() const { return node_list; }
 };
 
@@ -134,6 +125,10 @@ public:
 
 
 // $Log$
+// Revision 1.4  1999/03/27 05:20:14  curt
+// Handle corner nodes separately from the rest of the fitted nodes.
+// Fixed some "const" related warnings.
+//
 // Revision 1.3  1999/03/20 20:32:52  curt
 // First mostly successful tile triangulation works.  There's plenty of tweaking
 // to do, but we are marching in the right direction.

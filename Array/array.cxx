@@ -130,40 +130,22 @@ FGArray::parse() {
 }
 
 
-// add a node to the output (fitted) node list
+// add a node to the output corner node list
+void FGArray::add_corner_node( int i, int j, double val ) {
+    double x = (originx + i * col_step) / 3600.0;
+    double y = (originy + j * row_step) / 3600.0;
+    // cout << Point3D(x, y, val) << endl;
+    corner_list.push_back( Point3D(x, y, val) );
+}
+
+
+// add a node to the output fitted node list
 void FGArray::add_fit_node( int i, int j, double val ) {
     double x = (originx + i * col_step) / 3600.0;
     double y = (originy + j * row_step) / 3600.0;
-    cout << Point3D(x, y, val) << endl;
+    // cout << Point3D(x, y, val) << endl;
     node_list.push_back( Point3D(x, y, val) );
 }
-
-
-#if 0
-// Initialize output mesh structure
-void FGArray::outputmesh_init( void ) {
-    int i, j;
-    
-    for ( j = 0; j < ARRAY_SIZE_1; j++ ) {
-	for ( i = 0; i < ARRAY_SIZE_1; i++ ) {
-	    out_data[i][j] = -9999.0;
-	}
-    }
-}
-
-
-// Get the value of a mesh node
-double FGArray::outputmesh_get_pt( int i, int j ) {
-    return ( out_data[i][j] );
-}
-
-
-// Set the value of a mesh node
-void FGArray::outputmesh_set_pt( int i, int j, double value ) {
-    // cout << "Setting data[" << i << "][" << j << "] = " << value << endl;
-   out_data[i][j] = value;
-}
-#endif
 
 
 // Use least squares to fit a simpler data set to dem data
@@ -191,11 +173,11 @@ void FGArray::fit( double error ) {
     cout << "  Fitting region = " << colmin << "," << rowmin << " to " 
 	 << colmax << "," << rowmax << endl;;
     
-    // include the corners explicitly
-    add_fit_node( colmin, rowmin, in_data[colmin][rowmin] );
-    add_fit_node( colmin, rowmax-1, in_data[colmin][rowmax] );
-    add_fit_node( colmax-1, rowmin, in_data[colmax][rowmin] );
-    add_fit_node( colmax-1, rowmax-1, in_data[colmax][rowmax] );
+    // generate corners list
+    add_corner_node( colmin, rowmin, in_data[colmin][rowmin] );
+    add_corner_node( colmin, rowmax-1, in_data[colmin][rowmax] );
+    add_corner_node( colmax-1, rowmin, in_data[colmax][rowmin] );
+    add_corner_node( colmax-1, rowmax-1, in_data[colmax][rowmax] );
 
     cout << "  Beginning best fit procedure" << endl;
     lasty = 0;
@@ -320,7 +302,7 @@ void FGArray::fit( double error ) {
 
 // return the current altitude based on grid data.  We should rewrite
 // this to interpolate exact values, but for now this is good enough
-double FGArray::interpolate_altitude( double lon, double lat ) {
+double FGArray::interpolate_altitude( double lon, double lat ) const {
     // we expect incoming (lon,lat) to be in arcsec for now
 
     double xlocal, ylocal, dx, dy, zA, zB, elev;
@@ -557,6 +539,10 @@ FGArray::~FGArray( void ) {
 
 
 // $Log$
+// Revision 1.6  1999/03/27 05:20:13  curt
+// Handle corner nodes separately from the rest of the fitted nodes.
+// Fixed some "const" related warnings.
+//
 // Revision 1.5  1999/03/25 19:03:50  curt
 // Minor tweaks related to FGBucket usage.
 //
