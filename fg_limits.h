@@ -31,15 +31,21 @@
 /* Maximum number of engines for a single aircraft */
 #define FG_MAX_ENGINES 10
 
-
+#define MAXPATH 80  // Arbitrary limit on path names to make
+                    // a limit on pathways supported.
+                    
 #endif /* _LIMITS_H */
 
 
 /* $Log$
-/* Revision 1.1  1998/01/27 00:46:51  curt
-/* prepended "fg_" on the front of these to avoid potential conflicts with
-/* system include files.
+/* Revision 1.2  1998/02/12 21:59:43  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.1  1998/01/27 00:46:51  curt
+ * prepended "fg_" on the front of these to avoid potential conflicts with
+ * system include files.
+ *
  * Revision 1.2  1998/01/22 02:59:35  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *
