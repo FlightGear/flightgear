@@ -39,6 +39,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
+#include <simgear/misc/exception.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -330,12 +331,20 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters,
 #endif
 	
 	ssgTexturePath( (char *)(dm->get_texture_path().c_str()) );
-	ssgEntity *obj_model = globals->get_model_loader()->load_model(dm->get_model_path());
-        if ( obj_model != NULL ) {
-            dm->get_obj_trans()->addKid( obj_model );
-        }
-        dm->get_tile()->dec_pending_models();
+	try
+	{
+	    ssgEntity *obj_model =
+		globals->get_model_loader()->load_model(dm->get_model_path());
+	    if ( obj_model != NULL ) {
+		dm->get_obj_trans()->addKid( obj_model );
+	    }
+	}
+	catch (const sg_exception& exc)
+	{
+	    SG_LOG( SG_ALL, SG_ALERT, exc.getMessage() );
+	}
 
+	dm->get_tile()->dec_pending_models();
 	delete dm;
     }
     
