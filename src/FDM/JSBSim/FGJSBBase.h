@@ -45,7 +45,6 @@ INCLUDES
 #  include STL_STRING
 
 SG_USING_STD(string);
-SG_USING_STD(queue);
 
 # ifndef M_PI
 #  include <simgear/constants.h>
@@ -63,7 +62,6 @@ SG_USING_STD(queue);
 #  endif
 
 using std::string;
-using std::queue;
 
 # ifndef M_PI
 #  define M_PI 3.14159265358979323846
@@ -221,7 +219,7 @@ public:
 protected:
   static Message localMsg;
   
-  static queue <Message*> Messages;
+  static std::queue <Message*> Messages;
 
   virtual void Debug(int from) {};
 

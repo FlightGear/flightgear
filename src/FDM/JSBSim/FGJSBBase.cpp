@@ -71,7 +71,7 @@ const double FGJSBBase::SHRatio = 1.40;
 const string FGJSBBase::needed_cfg_version = "1.60";
 const string FGJSBBase::JSBSim_version = "0.9.4";
 
-queue <FGJSBBase::Message*> FGJSBBase::Messages;
+std::queue <FGJSBBase::Message*> FGJSBBase::Messages;
 FGJSBBase::Message FGJSBBase::localMsg;
 unsigned int FGJSBBase::messageId = 0; 
 unsigned int FGJSBBase::frame = 0;
