@@ -362,9 +362,25 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters,
 	// cout << "Adding ssg nodes for "
     }
 
-    // cout << "delete queue = " << delete_queue.size() << endl;
     if ( !delete_queue.empty() ) {
-	FGTileEntry* e = delete_queue.front();
+        // cout << "delete queue = " << delete_queue.size() << endl;
+
+        while ( delete_queue.size() > 30 ) {
+            // uh oh, delete queue is blowing up, we aren't clearing
+            // it fast enough.  Let's just panic, well not panic, but
+            // get real serious and agressively free up some tiles so
+            // we don't explode our memory usage.
+
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "Alert: catching up on tile delete queue" );
+
+            FGTileEntry* e = delete_queue.front();
+            while ( !e->free_tile() );
+            delete_queue.pop();
+            delete e;
+        }
+
+        FGTileEntry* e = delete_queue.front();
         if ( e->free_tile() ) {
             delete_queue.pop();
             delete e;

@@ -218,11 +218,6 @@ public:
     // Destructor
     ~FGTileEntry();
 
-#ifdef WISH_PLIB_WAS_THREADED // but it isn't
-    // Schedule tile to be freed/removed
-    void sched_removal();
-#endif
-
     // Clean up the memory used by this tile and delete the arrays
     // used by ssg as well as the whole ssg branch.  This does a
     // partial clean up and exits so we can spread the load across
