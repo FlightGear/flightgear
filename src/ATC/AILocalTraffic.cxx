@@ -340,9 +340,17 @@ void FGAILocalTraffic::Update(double dt) {
 			//Transmit("DING!");
 			// Contact the tower, even if only virtually
 			changeFreq = false;
-			tower->ContactAtHoldShort(plane, this, CIRCUIT);
-			pending_transmission = "";	// Transmit an empty string until we do it properly to activate the ATC response timer mechanism
-			Transmit();
+			pending_transmission = plane.callsign;
+			pending_transmission += " at hold short for runway ";
+			pending_transmission += ConvertRwyNumToSpokenString(rwy.rwyID);
+			pending_transmission += " traffic pattern ";
+			if(circuitsToFly) {
+				pending_transmission += ConvertNumToSpokenDigits(circuitsToFly + 1);
+				pending_transmission += " circuits touch and go";
+			} else {
+				pending_transmission += " one circuit to full stop";
+			}
+			Transmit(2);
 			break;
 		case GROUND:
 			tuned_station = ground;
@@ -958,8 +966,7 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 		trns += "pattern ";
 		break;
 	}
-	// FIXME - I've hardwired the runway call as well!! (We could work this out from rwy heading and mag deviation)
-	trns += ConvertRwyNumToSpokenString(1);
+	trns += ConvertRwyNumToSpokenString(rwy.rwyID);
 	
 	// And add the airport name again
 	trns += tower->get_name();
@@ -972,12 +979,15 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 // TODO - Really should enumerate these coded values.
 void FGAILocalTraffic::ProcessCallback(int code) {
 	// 1 - Request Departure from ground
+	// 2 - Report at hold short
 	// 10 - report crosswind
 	// 11 - report downwind
 	// 12 - report base
 	// 13 - report final
 	if(code == 1) {
 		ground->RequestDeparture(plane, this);
+	} else if(code == 2) {
+		tower->ContactAtHoldShort(plane, this, CIRCUIT);
 	} else if(code == 11) {
 		tower->ReportDownwind(plane.callsign);
 	} else if(code == 13) {
