@@ -29,11 +29,13 @@
 
 
 #include "hud.hxx"
+#include "panel.hxx"
 
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
 #endif                                   
+
 
 //typedef struct  {
 //	int code;
@@ -58,6 +60,7 @@ class fg_Cockpit  {
     int   status( void ) { return Status; }
 };
 
+
 typedef fg_Cockpit * pCockpit;
 
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft );
@@ -68,9 +71,13 @@ void fgCockpitUpdate( void );
 
 
 /* $Log$
-/* Revision 1.2  1998/05/11 18:13:10  curt
-/* Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
+/* Revision 1.3  1998/06/27 16:47:54  curt
+/* Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
+/* first pass at an isntrument panel.
 /*
+ * Revision 1.2  1998/05/11 18:13:10  curt
+ * Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
+ *
  * Revision 1.1  1998/04/24 00:45:55  curt
  * C++-ifing the code a bit.
  *

@@ -1,5 +1,5 @@
 /**************************************************************************
- * cockpit.c -- routines to draw a cockpit (initial draft)
+ * cockpit.cxx -- routines to draw a cockpit (initial draft)
  *
  * Written by Michele America, started September 1997.
  *
@@ -33,8 +33,11 @@
 #endif
 
 #include <GL/glut.h>
+#include <XGL/xgl.h>
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
@@ -239,44 +242,64 @@ double get_vfc_ratio( void )
 
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 {
-	fgPrintf( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem\n");
+    fgPrintf( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem\n");
 
-//	cockpit->code = 1;	/* It will be aircraft dependent */
-//	cockpit->status = 0;
+    //	cockpit->code = 1;	/* It will be aircraft dependent */
+    //	cockpit->status = 0;
 
-	// If aircraft has HUD specified we will get the specs from its def
-  // file. For now we will depend upon hard coding in hud?
+    // If aircraft has HUD specified we will get the specs from its def
+    // file. For now we will depend upon hard coding in hud?
+    
+    // We must insure that the existing instrument link is purged.
+    // This is done by deleting the links in the list.
+    
+    // HI_Head is now a null pointer so we can generate a new list from the
+    // current aircraft.
 
-  // We must insure that the existing instrument link is purged.
-  // This is done by deleting the links in the list.
+    fgHUDInit( cur_aircraft );
+    ac_cockpit = new fg_Cockpit();
+    
+    fgPanelInit();
 
-  // HI_Head is now a null pointer so we can generate a new list from the
-  // current aircraft.
-
-  fgHUDInit( cur_aircraft );
-  ac_cockpit = new fg_Cockpit();
-
-	fgPrintf( FG_COCKPIT, FG_INFO,
-		  "  Code %d  Status %d\n",
-		  ac_cockpit->code(), ac_cockpit->status() );
-
-	return true;
+    fgPrintf( FG_COCKPIT, FG_INFO,
+	      "  Code %d  Status %d\n",
+	      ac_cockpit->code(), ac_cockpit->status() );
+    
+    return true;
 }
 
-void fgCockpitUpdate( void )
-{
 
-	fgPrintf( FG_COCKPIT, FG_DEBUG,
-		  "Cockpit: code %d   status %d\n",
-		  ac_cockpit->code(), ac_cockpit->status() );
-	fgUpdateHUD();	// This will check the global hud linked list pointer.
-                  // If these is anything to draw it will.
+void fgCockpitUpdate( void ) {
+    fgOPTIONS *o;
+    fgVIEW *v;
+
+    o = &current_options;
+    v = &current_view;
+
+    fgPrintf( FG_COCKPIT, FG_DEBUG,
+	      "Cockpit: code %d   status %d\n",
+	      ac_cockpit->code(), ac_cockpit->status() );
+
+    if ( o->hud_status ) {
+	// This will check the global hud linked list pointer.
+	// If these is anything to draw it will.
+	fgUpdateHUD();
+    }
+
+    if ( o->panel_status && (fabs(v->view_offset) < 0.2) ) {
+	fgPanelUpdate();
+    }
 }
+
 
 /* $Log$
-/* Revision 1.8  1998/05/17 16:58:12  curt
-/* Added a View Frustum Culling ratio display to the hud.
+/* Revision 1.9  1998/06/27 16:47:53  curt
+/* Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
+/* first pass at an isntrument panel.
 /*
+ * Revision 1.8  1998/05/17 16:58:12  curt
+ * Added a View Frustum Culling ratio display to the hud.
+ *
  * Revision 1.7  1998/05/16 13:04:13  curt
  * New updates from Charlie Hotchkiss.
  *
