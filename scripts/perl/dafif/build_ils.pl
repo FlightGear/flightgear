@@ -24,6 +24,7 @@ die "Usage: $0 " .
 
 my( %CODES );
 my( %CodesByICAO );
+my( %Elevations );
 my( %ILS );
 my( %AIRPORTS );
 my( %RUNWAYS );
@@ -34,6 +35,7 @@ my( %RUNWAYS );
 &load_fgfs( $fgfs_ils_file );
 &load_fgfs_airports( $fgfs_apt_file );
 &fix_localizer();
+&fudge_missing_gs_elev();
 
 &write_result( $output_file );
 
@@ -78,6 +80,8 @@ sub load_dafift() {
         $CODES{$F[0]} = $icao;
         $CodesByICAO{$icao} = 1;
         # print "$F[0] - $icao\n";
+        $Elevations{$icao} = $F[11];
+        print "$icao $F[11]\n";
     }
 
     # Load the DAFIFT ils file
@@ -301,6 +305,9 @@ sub load_faa() {
             if ( $ILS{$id . $rwy} ne "" ) {
                 print "FAA updating: $id - $rwy $type\n";
                 &update_type( $id, $rwy, $type );
+                if ( $gs_elev > 0 ) {
+                    &maybe_update_gs_elev( $id . $rwy, $gs_elev );
+                }
             } else {
                 print "FAA adding: $id - $rwy\n";
                 &safe_add_record( $id, $rwy, $type, $loc_freq, $loc_id,
@@ -412,6 +419,22 @@ sub fix_localizer() {
                 }
             }
             &update_loc( $F[2], $F[3], $lat, $lon, $G[5]);
+        }
+    }
+}
+
+
+########################################################################
+# Run through the final ils list and adjust the heading to match the runway
+########################################################################
+
+sub fudge_missing_gs_elev() {
+    my( $key );
+    foreach $key ( sort (keys %ILS) ) {
+        my(@F) = split( /\s+/, $ILS{$key} );
+        if ( $F[9] <= 0 ) {            
+            print "FUDGING GS: $key $F[2] $F[3] $F[4] - $F[9]\n";
+            &maybe_update_gs_elev( $key, $Elevations{$F[2]});
         }
     }
 }
@@ -557,6 +580,33 @@ sub update_type() {
                         $mm_lon, $im_lat, $im_lon );
     } else {
         die "Error, trying to update $apt_id - $rwy which doesn't exist\n";
+    }
+}
+
+
+# update the glide slope elevation of the record (but only if it is 0)
+sub maybe_update_gs_elev() {
+    my( $key ) = shift;
+    my( $new_gs_elev ) = shift;
+
+    my( $record );
+
+    if ( $ILS{$key} ne "" ) {
+        my( $type_code, $type_name, $apt_id, $rwy, $loc_freq, $loc_id,
+            $loc_hdg, $loc_lat, $loc_lon, $gs_elev, $gs_angle, $gs_lat,
+            $gs_lon, $dme_lat, $dme_lon, $om_lat, $om_lon, $mm_lat, $mm_lon,
+            $im_lat, $im_lon ) = split( /\s+/, $ILS{$key} );
+        if ( $gs_elev == 0 ) {
+            print "Updating gs elev: $apt_id $rwy: $gs_elev -> $new_gs_elev\n";
+            $gs_elev = $new_gs_elev;
+            &update_record( $apt_id, $rwy, $type_name, $loc_freq, $loc_id,
+                            $loc_hdg, $loc_lat, $loc_lon, $gs_elev,
+                            $gs_angle, $gs_lat, $gs_lon, $dme_lat,
+                            $dme_lon, $om_lat, $om_lon, $mm_lat,
+                            $mm_lon, $im_lat, $im_lon );
+        }
+    } else {
+        die "Error, trying to update $key which doesn't exist\n";
     }
 }
 
