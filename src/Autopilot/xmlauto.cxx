@@ -226,7 +226,7 @@ void FGPIDController::update( double dt ) {
         enabled = false;
     }
 
-    if ( enabled ) {
+    if ( enabled && Ts > 0.0) {
         if ( debug ) cout << "Updating " << name << endl;
 
         double y_n = 0.0;
@@ -256,26 +256,44 @@ void FGPIDController::update( double dt ) {
         ed_n = gamma * r_n - y_n;
         if ( debug ) cout << " ed_n = " << ed_n;
 
-        // Calculates filter time:
-        Tf = alpha * Td;
-        if ( debug ) cout << " Tf = " << Tf;
+        if ( Td > 0.0 ) {
+            // Calculates filter time:
+            Tf = alpha * Td;
+            if ( debug ) cout << " Tf = " << Tf;
 
-        // Filters the derivate error:
-        edf_n = edf_n_1 / (Ts/Tf + 1)
-            + ed_n * (Ts/Tf) / (Ts/Tf + 1);
-        if ( debug ) cout << " edf_n = " << edf_n;
+            // Filters the derivate error:
+            edf_n = edf_n_1 / (Ts/Tf + 1)
+                + ed_n * (Ts/Tf) / (Ts/Tf + 1);
+            if ( debug ) cout << " edf_n = " << edf_n;
+        } else {
+            edf_n = ed_n;
+        }
 
         // Calculates the incremental output:
-        delta_u_n = Kp * ( (ep_n - ep_n_1)
-                           + ((Ts/Ti) * e_n)
-                           + ((Td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
-        if ( debug ) cout << " delta_u_n = " << delta_u_n << endl;
+        if ( Ti > 0.0 ) {
+            delta_u_n = Kp * ( (ep_n - ep_n_1)
+                               + ((Ts/Ti) * e_n)
+                               + ((Td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
+        } else if ( Ti <= 0.0 ) {
+            delta_u_n = Kp * ( (ep_n - ep_n_1)
+                               + ((Td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
+        }
+
+        if ( debug ) {
+            cout << " delta_u_n = " << delta_u_n << endl;
+            cout << "P:" << Kp * (ep_n - ep_n_1)
+                 << " I:" << Kp * ((Ts/Ti) * e_n)
+                 << " D:" << Kp * ((Td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
+                 << endl;
+        }
 
         // Integrator anti-windup logic:
         if ( delta_u_n > (u_max - u_n_1) ) {
             delta_u_n = 0;
+            if ( debug ) cout << " max saturation " << endl;
         } else if ( delta_u_n < (u_min - u_n_1) ) {
             delta_u_n = 0;
+            if ( debug ) cout << " min saturation " << endl;
         }
 
         // Calculates absolute output:
@@ -293,7 +311,6 @@ void FGPIDController::update( double dt ) {
             output_list[i]->setDoubleValue( u_n );
         }
     } else if ( !enabled ) {
-        u_n   = 0.0;
         ep_n  = 0.0;
         edf_n = 0.0;
         // Updates indexed values;
