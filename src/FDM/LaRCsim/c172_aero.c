@@ -262,10 +262,11 @@ void aero( SCALAR dt, int Initialize ) {
   {		
 	 
 	 
-	 if((Flap_handle != lastFlapHandle) && (dt > 0))
+	 if((Flap_handle != lastFlapHandle) && (dt > 0)) {
 	 	Flaps_In_Transit=1;
-	 else if(dt <= 0)
+	 } else if(dt <= 0) {
 	 	Flap_Position=Flap_handle;
+	 }
 			
 	 lastFlapHandle=Flap_handle;
 	 if((Flaps_In_Transit) && (dt > 0))	

@@ -201,6 +201,7 @@ int main(int argc, char *argv[]) {
     SCALAR *control[7];
 	SCALAR *state[7];
 	float old_state,effectiveness,tol,delta_state,lctrim;
+	float newcm,lastcm,cmalpha;
 	
     if(argc < 6)
 	{
@@ -232,19 +233,23 @@ int main(int argc, char *argv[]) {
 	printf("\nLong_control: %g\n\n",Long_control);
 	
 	
-	IC.altitude=1000;
-	setIC(IC);
-	ls_loop(0.0,-1);
-	IC.flap_handle=10;
-	setIC(IC);
-	ls_loop(0.0,-1);
-	IC.flap_handle=20;
-	setIC(IC);
-	ls_loop(0.0,-1);
-	IC.flap_handle=30;
-	setIC(IC);
-	ls_loop(0.0,-1);
-	
+	IC.cg=0.155;
+    IC.alpha=-5;
+	setIC(IC);ls_loop(0.0,-1);
+	newcm=CLwbh*(IC.cg - 0.557);
+	lastcm=newcm;
+	out=fopen("cmcl.out","w");
+	while(IC.alpha < 22)
+	{
+		IC.alpha+=1;
+		setIC(IC);ls_loop(0.0,-1);
+		newcm=CLwbh*(IC.cg - 0.557);
+		cmalpha=newcm-lastcm;
+		printf("alpha: %4.0f, CL: %5.2f, Cm: %5.2f, Cma: %7.4f\n",Alpha*RAD_TO_DEG,CLwbh,newcm,cmalpha);
+		fprintf(out,"%g %g\n",newcm,CLwbh);
+		lastcm=newcm;
+	}	
+	fclose(out);
 	/* find_trim_stall(200,out,IC);
 	
     IC.vc=120;

@@ -36,6 +36,9 @@
 
 $Header$
 $Log$
+Revision 1.10  1999/11/03 16:46:24  curt
+Patches from Tony to enable brakes.
+
 Revision 1.9  1999/11/01 18:17:16  curt
 c172 updates from Tony.  Fix extra yaw when using ailerons.  Flaps and elevator
 tweaks.
@@ -196,7 +199,7 @@ char rcsid[] = "$Id$";
    * Put aircraft specific executable code here
    */
    
-    percent_brake[1] = 0.; /* replace with cockpit brake handle connection code */
+    percent_brake[1] = Brake_pct; /* replace with cockpit brake handle connection code */
     percent_brake[2] = percent_brake[1];
     
     caster_angle_rad[0] = 0.03*Rudder_pedal;
