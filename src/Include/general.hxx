@@ -44,6 +44,7 @@ class FGGeneral {
     char *glVendor;
     char *glRenderer;
     char *glVersion;
+    int glMaxTexSize;
 
     // Last frame rate measurement
     int frame_rate;
@@ -57,6 +58,8 @@ public:
     inline char* get_glRenderer() const { return glRenderer; }
     inline void set_glRenderer( char *str ) { glRenderer = str; }
     inline void set_glVersion( char *str ) { glVersion = str; }
+    inline void set_glMaxTexSize( int i ) { glMaxTexSize = i; }
+    inline int get_glMaxTexSize() const { return glMaxTexSize; }
     inline double get_frame_rate() const { return frame_rate; }
 #ifdef FANCY_FRAME_COUNTER
     inline double get_frame(int idx) const { return frames[idx]; }
