@@ -276,8 +276,8 @@ bool fgSetPosFromAirportID( const string& id ) {
 	    "Attempting to set starting position from airport code " << id );
 
     if ( fgFindAirportID( id, &a ) ) {
-	fgSetDouble("/position/longitude",  a.longitude );
-	fgSetDouble("/position/latitude",  a.latitude );
+	fgSetDouble("/position/longitude-deg",  a.longitude );
+	fgSetDouble("/position/latitude-deg",  a.latitude );
 	SG_LOG( SG_GENERAL, SG_INFO,
 		"Position for " << id << " is ("
 		<< a.longitude << ", "
@@ -397,9 +397,9 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 	lat2=olat;
 	lon2=olon;
     }
-    fgSetDouble("/position/longitude",  lon2 );
-    fgSetDouble("/position/latitude",  lat2 );
-    fgSetDouble("/orientation/heading", heading );
+    fgSetDouble("/position/longitude-deg",  lon2 );
+    fgSetDouble("/position/latitude-deg",  lat2 );
+    fgSetDouble("/orientation/heading-deg", heading );
 
     SG_LOG( SG_GENERAL, SG_INFO,
 	    "Position for " << id << " is ("
@@ -488,8 +488,8 @@ bool fgInitSubsystems( void ) {
 
     if ( global_tile_mgr.init() ) {
 	// Load the local scenery data
-	global_tile_mgr.update( fgGetDouble("/position/longitude"),
-				fgGetDouble("/position/latitude") );
+	global_tile_mgr.update( fgGetDouble("/position/longitude-deg"),
+				fgGetDouble("/position/latitude-deg") );
     } else {
     	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
 	exit(-1);
@@ -634,7 +634,7 @@ bool fgInitSubsystems( void ) {
 
     WeatherDatabase = FGLocalWeatherDatabase::theFGLocalWeatherDatabase;
     
-    double init_vis = fgGetDouble("/environment/visibility");
+    double init_vis = fgGetDouble("/environment/visibility-m");
     if ( init_vis > 0 ) {
 	WeatherDatabase->setWeatherVisibility( init_vis );
     }
@@ -751,7 +751,7 @@ bool fgInitSubsystems( void ) {
     // Initialize the default (kludged) properties.
     ////////////////////////////////////////////////////////////////////
 
-    fgInitProps ();
+    fgInitProps();
 
 
     ////////////////////////////////////////////////////////////////////
@@ -787,7 +787,7 @@ bool fgInitSubsystems( void ) {
 void fgReInitSubsystems( void )
 {
     SG_LOG( SG_GENERAL, SG_INFO,
-	    "/position/altitude = " << fgGetDouble("/position/altitude") );
+	    "/position/altitude = " << fgGetDouble("/position/altitude-ft") );
 
     bool freeze = globals->get_freeze();
     if( !freeze )
@@ -801,8 +801,8 @@ void fgReInitSubsystems( void )
 
     if( global_tile_mgr.init() ) {
 	// Load the local scenery data
-	global_tile_mgr.update( fgGetDouble("/position/longitude"),
-				fgGetDouble("/position/latitude") );
+	global_tile_mgr.update( fgGetDouble("/position/longitude-deg"),
+				fgGetDouble("/position/latitude-deg") );
     } else {
     	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
 		exit(-1);

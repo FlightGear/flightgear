@@ -56,7 +56,7 @@ void FGSteam::set_ALT_datum_mb ( double datum_mb ) {
     the_ALT_datum_mb = datum_mb;
 }
 
-double FGSteam::get_ASI_kias() { return fgGetDouble("/velocities/airspeed"); }
+double FGSteam::get_ASI_kias() { return fgGetDouble("/velocities/airspeed-kt"); }
 
 double FGSteam::the_VSI_case = 29.92;
 double FGSteam::the_VSI_fps = 0.0;
@@ -102,20 +102,20 @@ void FGSteam::update ( int timesteps )
 {
     if (!isTied) {
         isTied = true;
-        fgTie("/steam/airspeed", FGSteam::get_ASI_kias);
-        fgTie("/steam/altitude", FGSteam::get_ALT_ft);
+        fgTie("/steam/airspeed-kt", FGSteam::get_ASI_kias);
+        fgTie("/steam/altitude-ft", FGSteam::get_ALT_ft);
         fgTie("/steam/altimeter-datum-mb",
               FGSteam::get_ALT_datum_mb, FGSteam::set_ALT_datum_mb,
               false);  /* don't modify the value */
         fgTie("/steam/turn-rate", FGSteam::get_TC_std);
         fgTie("/steam/slip-skid", FGSteam::get_TC_rad);
-        fgTie("/steam/vertical-speed", FGSteam::get_VSI_fps);
-        fgTie("/steam/gyro-compass", FGSteam::get_DG_deg);
-        fgTie("/steam/adf", FGSteam::get_HackADF_deg);
-        fgTie("/steam/gyro-compass-error",
+        fgTie("/steam/vertical-speed-fpm", FGSteam::get_VSI_fps);
+        fgTie("/steam/gyro-compass-deg", FGSteam::get_DG_deg);
+        fgTie("/steam/adf-deg", FGSteam::get_HackADF_deg);
+        fgTie("/steam/gyro-compass-error-deg",
               FGSteam::get_DG_err, FGSteam::set_DG_err,
               false);  /* don't modify the value */
-        fgTie("/steam/mag-compass", FGSteam::get_MH_deg);
+        fgTie("/steam/mag-compass-deg", FGSteam::get_MH_deg);
     }
     _UpdatesPending += timesteps;
 }
@@ -268,16 +268,16 @@ void FGSteam::_CatchUp()
 	if ( fabs(the_TC_rad) > 0.2 )
 	{       /* Massive sideslip jams it; it stops turning */
 	        the_MH_degps = 0.0;
-	        the_MH_err   = fgGetDouble("/orientation/heading") - the_MH_deg;
+	        the_MH_err   = fgGetDouble("/orientation/heading-deg") - the_MH_deg;
 	} else
 	{       double MagDip, MagVar, CosDip;
 	        double FrcN, FrcE, FrcU, AccTot;
 	        double EdgN, EdgE, EdgU;
 	        double TrqN, TrqE, TrqU, Torque;
 	        /* Find a force vector towards exact magnetic north */
-	        MagVar = fgGetDouble("/environment/magnetic-variation") 
+	        MagVar = fgGetDouble("/environment/magnetic-variation-deg") 
                     / SGD_RADIANS_TO_DEGREES;
-	        MagDip = fgGetDouble("/environment/magnetic-dip")
+	        MagDip = fgGetDouble("/environment/magnetic-dip-deg")
                     / SGD_RADIANS_TO_DEGREES;
 	        CosDip = cos ( MagDip );
 	        FrcN = CosDip * cos ( MagVar );
@@ -308,7 +308,7 @@ void FGSteam::_CatchUp()
 	        }
 	        if ( the_MH_err >  180.0 ) the_MH_err -= 360.0; else
 	        if ( the_MH_err < -180.0 ) the_MH_err += 360.0;
-	        the_MH_deg  = fgGetDouble("/orientation/heading") - the_MH_err;
+	        the_MH_deg  = fgGetDouble("/orientation/heading-deg") - the_MH_err;
 	}
 
 	/**************************
@@ -325,7 +325,7 @@ void FGSteam::_CatchUp()
 	account for the line impedance of the plumbing.
 	*/
 	double static_inhg
-            = altFtToPressInHg(fgGetDouble("/position/altitude"));
+            = altFtToPressInHg(fgGetDouble("/position/altitude-ft"));
 	set_lowpass ( & the_STATIC_inhg, static_inhg, dt ); 
 
 	/*
@@ -385,10 +385,10 @@ void FGSteam::_CatchUp()
 > put in those insidious turning errors ... for now anyway.
 */
  	if ( _UpdatesPending > 999999 )
-	    the_DG_err = fgGetDouble("/environment/magnetic-variation");
+	    the_DG_err = fgGetDouble("/environment/magnetic-variation-deg");
  	the_DG_degps = 0.01; /* HACK! */
  	if (dt<1.0) the_DG_err += dt * the_DG_degps;
- 	the_DG_deg = fgGetDouble("/orientation/heading") - the_DG_err;
+ 	the_DG_deg = fgGetDouble("/orientation/heading-deg") - the_DG_err;
 
 	/**************************
 	Finished updates, now clear the timer 
@@ -412,7 +412,7 @@ double FGSteam::get_HackGS_deg () {
 	 current_radiostack->get_nav1_has_gs() )
     {
 	double x = current_radiostack->get_nav1_gs_dist();
-	double y = (fgGetDouble("/position/altitude")
+	double y = (fgGetDouble("/position/altitude-ft")
                     - current_radiostack->get_nav1_elev())
 	    * SG_FEET_TO_METER;
 	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;

@@ -84,9 +84,9 @@ FGRadioStack::FGRadioStack() {
     nav2_radial = 0.0;
     nav2_dme_dist = 0.0;
     need_update = true;
-    lon_node = fgGetNode("/position/longitude");
-    lat_node = fgGetNode("/position/latitude");
-    alt_node = fgGetNode("/position/altitude");
+    lon_node = fgGetNode("/position/longitude-deg");
+    lat_node = fgGetNode("/position/latitude-deg");
+    alt_node = fgGetNode("/position/altitude-ft");
 }
 
 
@@ -128,67 +128,67 @@ void
 FGRadioStack::bind ()
 {
 				// User inputs
-    fgTie("/radios/nav1/frequencies/selected", this,
+    fgTie("/radios/nav[0]/frequencies/selected-mhz", this,
 	  &FGRadioStack::get_nav1_freq, &FGRadioStack::set_nav1_freq);
-    fgTie("/radios/nav1/frequencies/standby", this,
+    fgTie("/radios/nav[0]/standby-mhz", this,
 	  &FGRadioStack::get_nav1_alt_freq, &FGRadioStack::set_nav1_alt_freq);
-    fgTie("/radios/nav1/radials/selected", this,
+    fgTie("/radios/nav[0]/radials/selected-deg", this,
 	  &FGRadioStack::get_nav1_sel_radial,
 	  &FGRadioStack::set_nav1_sel_radial);
-    fgTie("/radios/nav1/volume", this,
+    fgTie("/radios/nav[0]/volume", this,
 	  &FGRadioStack::get_nav1_vol_btn,
 	  &FGRadioStack::set_nav1_vol_btn);
-    fgTie("/radios/nav1/ident", this,
+    fgTie("/radios/nav[0]/ident", this,
 	  &FGRadioStack::get_nav1_ident_btn,
 	  &FGRadioStack::set_nav1_ident_btn);
 
 				// Radio outputs
-    fgTie("/radios/nav1/radials/actual", this, &FGRadioStack::get_nav1_radial);
-    fgTie("/radios/nav1/to-flag", this, &FGRadioStack::get_nav1_to_flag);
-    fgTie("/radios/nav1/from-flag", this, &FGRadioStack::get_nav1_from_flag);
-    fgTie("/radios/nav1/in-range", this, &FGRadioStack::get_nav1_inrange);
-    fgTie("/radios/nav1/dme/distance", this, &FGRadioStack::get_nav1_dme_dist);
-    fgTie("/radios/nav1/dme/in-range", this,
+    fgTie("/radios/nav[0]/radials/actual-deg", this, &FGRadioStack::get_nav1_radial);
+    fgTie("/radios/nav[0]/to-flag", this, &FGRadioStack::get_nav1_to_flag);
+    fgTie("/radios/nav[0]/from-flag", this, &FGRadioStack::get_nav1_from_flag);
+    fgTie("/radios/nav[0]/in-range", this, &FGRadioStack::get_nav1_inrange);
+    fgTie("/radios/nav[0]/dme/distance-nm", this, &FGRadioStack::get_nav1_dme_dist);
+    fgTie("/radios/nav[0]/dme/in-range", this,
 	  &FGRadioStack::get_nav1_dme_inrange);
-    fgTie("/radios/nav1/heading-needle-deflection", this,
+    fgTie("/radios/nav[0]/heading-needle-deflection", this,
 	  &FGRadioStack::get_nav1_heading_needle_deflection);
-    fgTie("/radios/nav1/gs-needle-deflection", this,
+    fgTie("/radios/nav[0]/gs-needle-deflection", this,
 	  &FGRadioStack::get_nav1_gs_needle_deflection);
 
 				// User inputs
-    fgTie("/radios/nav2/frequencies/selected", this,
+    fgTie("/radios/nav[1]/frequencies/selected-mhz", this,
 	  &FGRadioStack::get_nav2_freq, &FGRadioStack::set_nav2_freq);
-    fgTie("/radios/nav2/frequencies/standby", this,
+    fgTie("/radios/nav[1]/standby-mhz", this,
 	  &FGRadioStack::get_nav2_alt_freq, &FGRadioStack::set_nav2_alt_freq);
-    fgTie("/radios/nav2/radials/selected", this,
+    fgTie("/radios/nav[1]/radials/selected-deg", this,
 	  &FGRadioStack::get_nav2_sel_radial,
 	  &FGRadioStack::set_nav2_sel_radial);
-    fgTie("/radios/nav2/volume", this,
+    fgTie("/radios/nav[1]/volume", this,
 	  &FGRadioStack::get_nav2_vol_btn,
 	  &FGRadioStack::set_nav2_vol_btn);
-    fgTie("/radios/nav2/ident", this,
+    fgTie("/radios/nav[1]/ident", this,
 	  &FGRadioStack::get_nav2_ident_btn,
 	  &FGRadioStack::set_nav2_ident_btn);
 
 				// Radio outputs
-    fgTie("/radios/nav2/radials/actual", this, &FGRadioStack::get_nav2_radial);
-    fgTie("/radios/nav2/to-flag", this, &FGRadioStack::get_nav2_to_flag);
-    fgTie("/radios/nav2/from-flag", this, &FGRadioStack::get_nav2_from_flag);
-    fgTie("/radios/nav2/in-range", this, &FGRadioStack::get_nav2_inrange);
-    fgTie("/radios/nav2/dme/distance", this, &FGRadioStack::get_nav2_dme_dist);
-    fgTie("/radios/nav2/dme/in-range", this,
+    fgTie("/radios/nav[1]/radials/actual-deg", this, &FGRadioStack::get_nav2_radial);
+    fgTie("/radios/nav[1]/to-flag", this, &FGRadioStack::get_nav2_to_flag);
+    fgTie("/radios/nav[1]/from-flag", this, &FGRadioStack::get_nav2_from_flag);
+    fgTie("/radios/nav[1]/in-range", this, &FGRadioStack::get_nav2_inrange);
+    fgTie("/radios/nav[1]/dme/distance-nm", this, &FGRadioStack::get_nav2_dme_dist);
+    fgTie("/radios/nav[1]/dme/in-range", this,
 	  &FGRadioStack::get_nav2_dme_inrange);
-    fgTie("/radios/nav2/heading-needle-deflection", this,
+    fgTie("/radios/nav[1]/heading-needle-deflection", this,
 	  &FGRadioStack::get_nav2_heading_needle_deflection);
-    fgTie("/radios/nav2/gs-needle-deflection", this,
+    fgTie("/radios/nav[1]/gs-needle-deflection", this,
 	  &FGRadioStack::get_nav2_gs_needle_deflection);
 
 				// User inputs
-    fgTie("/radios/adf/frequencies/selected", this,
+    fgTie("/radios/adf/frequencies/selected-khz", this,
 	  &FGRadioStack::get_adf_freq, &FGRadioStack::set_adf_freq);
-    fgTie("/radios/adf/frequencies/standby", this,
+    fgTie("/radios/adf/frequencies/standby-khz", this,
 	  &FGRadioStack::get_adf_alt_freq, &FGRadioStack::set_adf_alt_freq);
-    fgTie("/radios/adf/rotation", this,
+    fgTie("/radios/adf/rotation-deg", this,
 	  &FGRadioStack::get_adf_rotation, &FGRadioStack::set_adf_rotation);
     fgTie("/radios/adf/volume", this,
 	  &FGRadioStack::get_adf_vol_btn,
@@ -208,37 +208,37 @@ FGRadioStack::bind ()
 void
 FGRadioStack::unbind ()
 {
-    fgUntie("/radios/nav1/frequencies/selected");
-    fgUntie("/radios/nav1/frequencies/standby");
-    fgUntie("/radios/nav1/radials/actual");
-    fgUntie("/radios/nav1/radials/selected");
-    fgUntie("/radios/nav1/on");
-    fgUntie("/radios/nav1/ident");
-    fgUntie("/radios/nav1/to-flag");
-    fgUntie("/radios/nav1/from-flag");
-    fgUntie("/radios/nav1/in-range");
-    fgUntie("/radios/nav1/dme/distance");
-    fgUntie("/radios/nav1/dme/in-range");
-    fgUntie("/radios/nav1/heading-needle-deflection");
-    fgUntie("/radios/nav1/gs-needle-deflection");
+    fgUntie("/radios/nav[0]/frequencies/selected-mhz");
+    fgUntie("/radios/nav[0]/standby-mhz");
+    fgUntie("/radios/nav[0]/radials/actual-deg");
+    fgUntie("/radios/nav[0]/radials/selected-deg");
+    fgUntie("/radios/nav[0]/on");
+    fgUntie("/radios/nav[0]/ident");
+    fgUntie("/radios/nav[0]/to-flag");
+    fgUntie("/radios/nav[0]/from-flag");
+    fgUntie("/radios/nav[0]/in-range");
+    fgUntie("/radios/nav[0]/dme/distance-nm");
+    fgUntie("/radios/nav[0]/dme/in-range");
+    fgUntie("/radios/nav[0]/heading-needle-deflection");
+    fgUntie("/radios/nav[0]/gs-needle-deflection");
 
-    fgUntie("/radios/nav2/frequencies/selected");
-    fgUntie("/radios/nav2/frequencies/standby");
-    fgUntie("/radios/nav2/radials/actual");
-    fgUntie("/radios/nav2/radials/selected");
-    fgUntie("/radios/nav2/on");
-    fgUntie("/radios/nav2/ident");
-    fgUntie("/radios/nav2/to-flag");
-    fgUntie("/radios/nav2/from-flag");
-    fgUntie("/radios/nav2/in-range");
-    fgUntie("/radios/nav2/dme/distance");
-    fgUntie("/radios/nav2/dme/in-range");
-    fgUntie("/radios/nav2/heading-needle-deflection");
-    fgUntie("/radios/nav2/gs-needle-deflection");
+    fgUntie("/radios/nav[1]/frequencies/selected-mhz");
+    fgUntie("/radios/nav[1]/standby-mhz");
+    fgUntie("/radios/nav[1]//radials/actual-deg");
+    fgUntie("/radios/nav[1]/radials/selected-deg");
+    fgUntie("/radios/nav[1]/on");
+    fgUntie("/radios/nav[1]/ident");
+    fgUntie("/radios/nav[1]/to-flag");
+    fgUntie("/radios/nav[1]/from-flag");
+    fgUntie("/radios/nav[1]/in-range");
+    fgUntie("/radios/nav[1]/dme/distance-nm");
+    fgUntie("/radios/nav[1]/dme/in-range");
+    fgUntie("/radios/nav[1]/heading-needle-deflection");
+    fgUntie("/radios/nav[1]/gs-needle-deflection");
 
-    fgUntie("/radios/adf/frequencies/selected");
-    fgUntie("/radios/adf/frequencies/standby");
-    fgUntie("/radios/adf/rotation");
+    fgUntie("/radios/adf/frequencies/selected-khz");
+    fgUntie("/radios/adf/frequencies/standby-khz");
+    fgUntie("/radios/adf/rotation-deg");
     fgUntie("/radios/adf/on");
     fgUntie("/radios/adf/ident");
 
@@ -1052,7 +1052,7 @@ double FGRadioStack::get_nav2_heading_needle_deflection() const {
 double FGRadioStack::get_nav1_gs_needle_deflection() const {
     if ( nav1_inrange && nav1_has_gs ) {
 	double x = nav1_gs_dist;
-	double y = (fgGetDouble("/position/altitude") - nav1_elev)
+	double y = (fgGetDouble("/position/altitude-ft") - nav1_elev)
             * SG_FEET_TO_METER;
 	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (nav1_target_gs - angle) * 5.0;
@@ -1067,7 +1067,7 @@ double FGRadioStack::get_nav1_gs_needle_deflection() const {
 double FGRadioStack::get_nav2_gs_needle_deflection() const {
     if ( nav2_inrange && nav2_has_gs ) {
 	double x = nav2_gs_dist;
-	double y = (fgGetDouble("/position/altitude") - nav2_elev)
+	double y = (fgGetDouble("/position/altitude-ft") - nav2_elev)
             * SG_FEET_TO_METER;
 	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (nav2_target_gs - angle) * 5.0;

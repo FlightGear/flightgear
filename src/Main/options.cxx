@@ -114,24 +114,24 @@ fgSetDefaults ()
 	globals->set_fg_scenery("");
     }
 				// Position (Globe, AZ)
-    fgSetDouble("/position/longitude", -110.6642444);
-    fgSetDouble("/position/latitude", 33.3528917);
-    fgSetDouble("/position/altitude", -9999.0);
+    fgSetDouble("/position/longitude-deg", -110.6642444);
+    fgSetDouble("/position/latitude-deg", 33.3528917);
+    fgSetDouble("/position/altitude-ft", -9999.0);
 
 				// Orientation
-    fgSetDouble("/orientation/heading", 270);
-    fgSetDouble("/orientation/roll", 0);
-    fgSetDouble("/orientation/pitch", 0.424);
+    fgSetDouble("/orientation/heading-deg", 270);
+    fgSetDouble("/orientation/roll-deg", 0);
+    fgSetDouble("/orientation/pitch-deg", 0.424);
 
 				// Velocities
     fgSetString("/sim/startup/speed-set", "knots");
-    fgSetDouble("/velocities/uBody", 0.0);
-    fgSetDouble("/velocities/vBody", 0.0);
-    fgSetDouble("/velocities/wBody", 0.0);
-    fgSetDouble("/velocities/speed-north", 0.0);
-    fgSetDouble("/velocities/speed-east", 0.0);
-    fgSetDouble("/velocities/speed-down", 0.0);
-    fgSetDouble("/velocities/airspeed", 0.0);
+    fgSetDouble("/velocities/uBody-fps", 0.0);
+    fgSetDouble("/velocities/vBody-fps", 0.0);
+    fgSetDouble("/velocities/wBody-fps", 0.0);
+    fgSetDouble("/velocities/speed-north-fps", 0.0);
+    fgSetDouble("/velocities/speed-east-fps", 0.0);
+    fgSetDouble("/velocities/speed-down-fps", 0.0);
+    fgSetDouble("/velocities/airspeed-kt", 0.0);
     fgSetDouble("/velocities/mach", 0.0);
 
 				// Miscellaneous
@@ -161,7 +161,7 @@ fgSetDefaults ()
 				// Rendering options
     fgSetString("/sim/rendering/fog", "nicest");
     fgSetBool("/environment/clouds/status", true);
-    fgSetDouble("/environment/clouds/altitude", 5000);
+    fgSetDouble("/environment/clouds/altitude-ft", 5000);
     fgSetBool("/sim/startup/fullscreen", false);
     fgSetBool("/sim/rendering/shading", true);
     fgSetBool("/sim/rendering/skyblend", true);
@@ -171,8 +171,8 @@ fgSetDefaults ()
     fgSetInt("/sim/startup/ysize", 600);
     fgSetInt("/sim/rendering/bits-per-pixel", 16);
     fgSetString("/sim/view-mode", "pilot");
-    fgSetDouble("/sim/view/offset", 0);
-    fgSetDouble("/environment/visibility", 20000);
+    fgSetDouble("/sim/view/offset-deg", 0);
+    fgSetDouble("/environment/visibility-m", 20000);
 
 				// HUD options
     fgSetString("/sim/startup/units", "feet");
@@ -578,74 +578,74 @@ parse_option (const string& arg)
     } else if ( arg.find( "--offset-azimuth=") == 0 ) {
 	fgSetDouble("/sim/startup/offset-azimuth", atof(arg.substr(17))); 
     } else if ( arg.find( "--lon=" ) == 0 ) {
-	fgSetDouble("/position/longitude",
+	fgSetDouble("/position/longitude-deg",
 			      parse_degree(arg.substr(6)));
 	fgSetString("/sim/startup/airport-id", "");
     } else if ( arg.find( "--lat=" ) == 0 ) {
-	fgSetDouble("/position/latitude",
+	fgSetDouble("/position/latitude-deg",
 			      parse_degree(arg.substr(6)));
 	fgSetString("/sim/startup/airport-id", "");
     } else if ( arg.find( "--altitude=" ) == 0 ) {
 	fgSetBool("/sim/startup/onground", false);
 	if ( fgGetString("/sim/startup/units") == "feet" )
-	    fgSetDouble("/position/altitude", atof(arg.substr(11)));
+	    fgSetDouble("/position/altitude-ft", atof(arg.substr(11)));
 	else
-	    fgSetDouble("/position/altitude",
+	    fgSetDouble("/position/altitude-ft",
 			atof(arg.substr(11)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--uBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
 	if ( fgGetString("/sim/startup/units") == "feet" )
-	  fgSetDouble("/velocities/uBody", atof(arg.substr(8)));
+	  fgSetDouble("/velocities/uBody-fps", atof(arg.substr(8)));
 	else
-	  fgSetDouble("/velocities/uBody",
+	  fgSetDouble("/velocities/uBody-fps",
 			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
 	if ( fgGetString("/sim/startup/units") == "feet" )
-	  fgSetDouble("/velocities/vBody", atof(arg.substr(8)));
+	  fgSetDouble("/velocities/vBody-fps", atof(arg.substr(8)));
 	else
-	  fgSetDouble("/velocities/vBody",
+	  fgSetDouble("/velocities/vBody-fps",
 			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--wBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
 	if ( fgGetString("/sim/startup/units") == "feet" )
-	  fgSetDouble("/velocities/wBody", atof(arg.substr(8)));
+	  fgSetDouble("/velocities/wBody-fps", atof(arg.substr(8)));
 	else
-	  fgSetDouble("/velocities/wBody",
+	  fgSetDouble("/velocities/wBody-fps",
 			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vNorth=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
 	if ( fgGetString("/sim/startup/units") == "feet" )
-	  fgSetDouble("/velocities/speed-north", atof(arg.substr(9)));
+	  fgSetDouble("/velocities/speed-north-fps", atof(arg.substr(9)));
 	else
-	  fgSetDouble("/velocities/speed-north",
+	  fgSetDouble("/velocities/speed-north-fps",
 			       atof(arg.substr(9)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vEast=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
 	if ( fgGetString("/sim/startup/units") == "feet" )
-	  fgSetDouble("/velocities/speed-east", atof(arg.substr(8)));
+	  fgSetDouble("/velocities/speed-east-fps", atof(arg.substr(8)));
 	else
-	  fgSetDouble("/velocities/speed-east",
-			       atof(arg.substr(8)) * SG_METER_TO_FEET);
+	  fgSetDouble("/velocities/speed-east-fps",
+		      atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vDown=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
 	if ( fgGetString("/sim/startup/units") == "feet" )
-	  fgSetDouble("/velocities/speed-down", atof(arg.substr(8)));
+	  fgSetDouble("/velocities/speed-down-fps", atof(arg.substr(8)));
 	else
-	  fgSetDouble("/velocities/speed-down",
+	  fgSetDouble("/velocities/speed-down-fps",
 			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vc=" ) == 0) {
         fgSetString("/sim/startup/speed-set", "knots");
-	fgSetDouble("/velocities/airspeed", atof(arg.substr(5)));
+	fgSetDouble("/velocities/airspeed-kt", atof(arg.substr(5)));
     } else if ( arg.find( "--mach=" ) == 0) {
         fgSetString("/sim/startup/speed-set", "mach");
 	fgSetDouble("/velocities/mach", atof(arg.substr(7)));
     } else if ( arg.find( "--heading=" ) == 0 ) {
-	fgSetDouble("/orientation/heading", atof(arg.substr(10)));
+	fgSetDouble("/orientation/heading-deg", atof(arg.substr(10)));
     } else if ( arg.find( "--roll=" ) == 0 ) {
-	fgSetDouble("/orientation/roll", atof(arg.substr(7)));
+	fgSetDouble("/orientation/roll-deg", atof(arg.substr(7)));
     } else if ( arg.find( "--pitch=" ) == 0 ) {
-	fgSetDouble("/orientation/pitch", atof(arg.substr(8)));
+	fgSetDouble("/orientation/pitch-deg", atof(arg.substr(8)));
     } else if ( arg.find( "--fg-root=" ) == 0 ) {
 	globals->set_fg_root(arg.substr( 10 ));
     } else if ( arg.find( "--fg-scenery=" ) == 0 ) {
@@ -681,10 +681,10 @@ parse_option (const string& arg)
     } else if ( arg.find( "--clouds-asl=" ) == 0 ) {
 				// FIXME: check units
         if ( fgGetString("/sim/startup/units") == "feet" )
-	  fgSetDouble("/environment/clouds/altitude",
+	  fgSetDouble("/environment/clouds/altitude-ft",
 				atof(arg.substr(13)) * SG_FEET_TO_METER);
 	else
-	  fgSetDouble("/environment/clouds/altitude",
+	  fgSetDouble("/environment/clouds/altitude-ft",
 				atof(arg.substr(13)));
     } else if ( arg.find( "--fov=" ) == 0 ) {
 	parse_fov( arg.substr(6) );
@@ -837,13 +837,13 @@ parse_option (const string& arg)
 	    (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
 	pilot_view->set_view_offset( default_view_offset );
 	pilot_view->set_goal_view_offset( default_view_offset );
-	fgSetDouble("/sim/view/offset", default_view_offset);
+	fgSetDouble("/sim/view/offset-deg", default_view_offset);
     // $$$ end - added VS Renganathan, 14 Oct 2K
     } else if ( arg.find( "--visibility=" ) == 0 ) {
-	fgSetDouble("/environment/visibility", atof(arg.substr(13)));
+	fgSetDouble("/environment/visibility-m", atof(arg.substr(13)));
     } else if ( arg.find( "--visibility-miles=" ) == 0 ) {
         double visibility = atof(arg.substr(19)) * 5280.0 * SG_FEET_TO_METER;
-	fgSetDouble("/environment/visibility", visibility);
+	fgSetDouble("/environment/visibility-m", visibility);
     } else if ( arg.find( "--wind=" ) == 0 ) {
         string val = arg.substr(7);
 	unsigned int pos = val.find('@');
@@ -861,9 +861,9 @@ parse_option (const string& arg)
 	if (dir >= 360)
 	  dir -= 360;
 	dir *= SGD_DEGREES_TO_RADIANS;
-	fgSetDouble("/environment/wind-north",
+	fgSetDouble("/environment/wind-north-fps",
 					     speed * cos(dir));
-	fgSetDouble("/environment/wind-east",
+	fgSetDouble("/environment/wind-east-fps",
 					     speed * sin(dir));
     } else if ( arg.find( "--wp=" ) == 0 ) {
 	parse_wp( arg.substr( 5 ) );

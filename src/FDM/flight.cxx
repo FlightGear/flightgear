@@ -184,14 +184,14 @@ FGInterface::init ()
 
 				// Set initial position
   SG_LOG(SG_FLIGHT, SG_INFO, "...initializing position...");
-  set_Longitude(fgGetDouble("/position/longitude") * SGD_DEGREES_TO_RADIANS);
-  set_Latitude(fgGetDouble("/position/latitude") * SGD_DEGREES_TO_RADIANS);
+  set_Longitude(fgGetDouble("/position/longitude-deg") * SGD_DEGREES_TO_RADIANS);
+  set_Latitude(fgGetDouble("/position/latitude-deg") * SGD_DEGREES_TO_RADIANS);
   double ground_elev_m = scenery.cur_elev + 1;
   double ground_elev_ft = ground_elev_m * METERS_TO_FEET;
   if (fgGetBool("/sim/startup/onground") ||
-      fgGetDouble("/position/altitude") < ground_elev_ft)
-    fgSetDouble("/position/altitude", ground_elev_ft);
-  set_Altitude(fgGetDouble("/position/altitude"));
+      fgGetDouble("/position/altitude-ft") < ground_elev_ft)
+    fgSetDouble("/position/altitude-ft", ground_elev_ft);
+  set_Altitude(fgGetDouble("/position/altitude-ft"));
 
 				// Set ground elevation
   SG_LOG(SG_FLIGHT, SG_INFO,
@@ -214,17 +214,17 @@ FGInterface::init ()
   } else {
     const string speedset = fgGetString("/sim/startup/speed-set");
     if (speedset == "knots" || speedset == "KNOTS") {
-      set_V_calibrated_kts(fgGetDouble("/velocities/airspeed"));
+      set_V_calibrated_kts(fgGetDouble("/velocities/airspeed-kt"));
     } else if (speedset == "mach" || speedset == "MACH") {
       set_Mach_number(fgGetDouble("/velocities/mach"));
     } else if (speedset == "UVW" || speedset == "uvw") {
-      set_Velocities_Wind_Body(fgGetDouble("/velocities/uBody"),
-			       fgGetDouble("/velocities/vBody"),
-			       fgGetDouble("/velocities/wBody"));
+      set_Velocities_Wind_Body(fgGetDouble("/velocities/uBody-fps"),
+			       fgGetDouble("/velocities/vBody-fps"),
+			       fgGetDouble("/velocities/wBody-fps"));
     } else if (speedset == "NED" || speedset == "ned") {
-      set_Velocities_Local(fgGetDouble("/velocities/speed-north"),
-			   fgGetDouble("/velocities/speed-east"),
-			   fgGetDouble("/velocities/speed-down"));
+      set_Velocities_Local(fgGetDouble("/velocities/speed-north-fps"),
+			   fgGetDouble("/velocities/speed-east-fps"),
+			   fgGetDouble("/velocities/speed-down-fps"));
     } else {
       SG_LOG(SG_FLIGHT, SG_ALERT,
 	     "Unrecognized value for /sim/startup/speed-set: " << speedset);
@@ -235,9 +235,9 @@ FGInterface::init ()
 				// Set initial Euler angles
   SG_LOG(SG_FLIGHT, SG_INFO, "...initializing Euler angles...");
   set_Euler_Angles
-    (fgGetDouble("/orientation/roll") * SGD_DEGREES_TO_RADIANS,
-     fgGetDouble("/orientation/pitch") * SGD_DEGREES_TO_RADIANS,
-     fgGetDouble("/orientation/heading") * SGD_DEGREES_TO_RADIANS);
+    (fgGetDouble("/orientation/roll-deg") * SGD_DEGREES_TO_RADIANS,
+     fgGetDouble("/orientation/pitch-deg") * SGD_DEGREES_TO_RADIANS,
+     fgGetDouble("/orientation/heading-deg") * SGD_DEGREES_TO_RADIANS);
 
   SG_LOG(SG_FLIGHT, SG_INFO, "End initializing FGInterface");
 }
@@ -266,63 +266,63 @@ FGInterface::bind ()
 	&FGInterface::get_multi_loop); // read-only
 
 			// Aircraft position
-  fgTie("/position/latitude", this,
+  fgTie("/position/latitude-deg", this,
 	&FGInterface::get_Latitude_deg,
 	&FGInterface::set_Latitude_deg,
 	false);
-  fgTie("/position/longitude", this,
+  fgTie("/position/longitude-deg", this,
 	&FGInterface::get_Longitude_deg,
 	&FGInterface::set_Longitude_deg,
 	false);
-  fgTie("/position/altitude", this,
+  fgTie("/position/altitude-ft", this,
 	&FGInterface::get_Altitude,
 	&FGInterface::set_Altitude,
 	false);
-  fgTie("/position/altitude-agl", this,
+  fgTie("/position/altitude-agl-ft", this,
 	&FGInterface::get_Altitude_AGL); // read-only
 
 				// Orientation
-  fgTie("/orientation/roll", this,
+  fgTie("/orientation/roll-deg", this,
 	&FGInterface::get_Phi_deg,
 	&FGInterface::set_Phi_deg);
-  fgTie("/orientation/pitch", this,
+  fgTie("/orientation/pitch-deg", this,
 	&FGInterface::get_Theta_deg,
 	&FGInterface::set_Theta_deg);
-  fgTie("/orientation/heading", this,
+  fgTie("/orientation/heading-deg", this,
 	&FGInterface::get_Psi_deg,
 	&FGInterface::set_Psi_deg);
 
 				// Calibrated airspeed
-  fgTie("/velocities/airspeed", this,
+  fgTie("/velocities/airspeed-kt", this,
 	&FGInterface::get_V_calibrated_kts,
 	&FGInterface::set_V_calibrated_kts);
 
 				// Local velocities
-  fgTie("/velocities/speed-north", this,
+  fgTie("/velocities/speed-north-fps", this,
 	&FGInterface::get_V_north,
 	&FGInterface::set_V_north);
-  fgTie("/velocities/speed-east", this,
+  fgTie("/velocities/speed-east-fps", this,
 	&FGInterface::get_V_east,
 	&FGInterface::set_V_east);
-  fgTie("/velocities/speed-down", this,
+  fgTie("/velocities/speed-down-fps", this,
 	&FGInterface::get_V_down,
 	&FGInterface::set_V_down);
 
 				// Relative wind
-  fgTie("/velocities/uBody", this,
+  fgTie("/velocities/uBody-fps", this,
 	&FGInterface::get_uBody,
 	&FGInterface::set_uBody);
-  fgTie("/velocities/vBody", this,
+  fgTie("/velocities/vBody-fps", this,
 	&FGInterface::get_vBody,
 	&FGInterface::set_vBody);
-  fgTie("/velocities/wBody", this,
+  fgTie("/velocities/wBody-fps", this,
 	&FGInterface::get_wBody,
 	&FGInterface::set_wBody);
 
 				// Climb and slip (read-only)
-  fgTie("/velocities/vertical-speed", this,
+  fgTie("/velocities/vertical-speed-fps", this,
 	&FGInterface::get_Climb_Rate); // read-only
-  fgTie("/velocities/side-slip", this,
+  fgTie("/velocities/side-slip-rad", this,
 	&FGInterface::get_Beta); // read-only
 }
 
@@ -340,21 +340,21 @@ FGInterface::unbind ()
   fgUntie("/fdm/time/elapsed");
   fgUntie("/fdm/time/remainder");
   fgUntie("/fdm/time/multi_loop");
-  fgUntie("/position/latitude");
-  fgUntie("/position/longitude");
-  fgUntie("/position/altitude");
+  fgUntie("/position/latitude-deg");
+  fgUntie("/position/longitude-deg");
+  fgUntie("/position/altitude-ft");
   fgUntie("/position/heading");
   fgUntie("/position/pitch");
   fgUntie("/position/roll");
-  fgUntie("/velocities/airspeed");
-  fgUntie("/velocities/speed-north");
-  fgUntie("/velocities/speed-east");
-  fgUntie("/velocities/speed-down");
-  fgUntie("/velocities/uBody");
-  fgUntie("/velocities/vBody");
-  fgUntie("/velocities/wBody");
-  fgUntie("/velocities/vertical-speed");
-  fgUntie("/velocities/side-slip");
+  fgUntie("/velocities/airspeed-kt");
+  fgUntie("/velocities/speed-north-fps");
+  fgUntie("/velocities/speed-east-fps");
+  fgUntie("/velocities/speed-down-fps");
+  fgUntie("/velocities/uBody-fps");
+  fgUntie("/velocities/vBody-fps");
+  fgUntie("/velocities/wBody-fps");
+  fgUntie("/velocities/vertical-speed-fps");
+  fgUntie("/velocities/side-slip-rad");
 }
 
 

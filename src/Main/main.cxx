@@ -718,7 +718,7 @@ void fgRenderFrame( void ) {
 
 	    if (prop_selector != NULL) {
 	      int propsel_mask = 0;
-	      double rpm = fgGetDouble("/engines/engine0/rpm");
+	      double rpm = fgGetDouble("/engines/engine[0]/rpm");
 	      for (int i = 0; i < acmodel_npropsettings; i++) {
 		if (rpm >= acmodel_proprpms[i][0] &&
 		    rpm <= acmodel_proprpms[i][1]) {
@@ -1553,14 +1553,14 @@ int main( int argc, char **argv ) {
     if ( fgGetString("/sim/startup/airport-id").length() ) {
 	// fgSetPosFromAirportID( fgGetString("/sim/startup/airport-id") );
 	fgSetPosFromAirportIDandHdg( fgGetString("/sim/startup/airport-id"),
-				     fgGetDouble("/orientation/heading") );
+				     fgGetDouble("/orientation/heading-deg") );
     }
 
     // Initialize time
     SGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
-    SGTime *t = new SGTime( fgGetDouble("/position/longitude") * SGD_DEGREES_TO_RADIANS,
-			    fgGetDouble("/position/latitude") * SGD_DEGREES_TO_RADIANS,
+    SGTime *t = new SGTime( fgGetDouble("/position/longitude-deg") * SGD_DEGREES_TO_RADIANS,
+			    fgGetDouble("/position/latitude-deg") * SGD_DEGREES_TO_RADIANS,
 			    zone.str() );
 
     // Handle potential user specified time offsets

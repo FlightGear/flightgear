@@ -101,9 +101,9 @@ void FGBalloonSim::init() {
 
     //set velocities
     sgSetVec3( temp,
-	       fgGetDouble("/velocities/uBody"),
-	       fgGetDouble("/velocities/vBody"),
-	       fgGetDouble("/velocities/wBody") );
+	       fgGetDouble("/velocities/uBody-fps"),
+	       fgGetDouble("/velocities/vBody-fps"),
+	       fgGetDouble("/velocities/wBody-fps") );
     current_balloon.setVelocity( temp );
 
     SG_LOG( SG_FLIGHT, SG_INFO, "Finished initializing BalloonSim" );

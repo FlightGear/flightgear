@@ -218,7 +218,7 @@ void NewHeadingInit(void)
     char NewHeadingLabel[] = "Enter New Heading";
     char *s;
 
-    float heading = fgGetDouble("/orientation/heading");
+    float heading = fgGetDouble("/orientation/heading-deg");
     int len = 260/2 -
 	(puGetStringWidth( puGetDefaultLabelFont(), NewHeadingLabel ) /2 );
 
@@ -662,7 +662,7 @@ void PopWayPoint(puObject *cb)
 
 	// use current heading
 	current_autopilot
-            ->set_TargetHeading(fgGetDouble("/orientation/heading"));
+            ->set_TargetHeading(fgGetDouble("/orientation/heading-deg"));
     }
 }
 

@@ -218,13 +218,13 @@ void FGAutopilot::update_old_control_values() {
 void FGAutopilot::init() {
     SG_LOG( SG_AUTOPILOT, SG_INFO, "Init AutoPilot Subsystem" );
 
-    latitude_node = fgGetNode("/position/latitude", true);
-    longitude_node = fgGetNode("/position/longitude", true);
-    altitude_node = fgGetNode("/position/altitude", true);
-    altitude_agl_node = fgGetNode("/position/altitude-agl", true);
-    vertical_speed_node = fgGetNode("/velocities/vertical-speed", true);
-    heading_node = fgGetNode("/orientation/heading", true);
-    roll_node = fgGetNode("/orientation/roll", true);
+    latitude_node = fgGetNode("/position/latitude-deg", true);
+    longitude_node = fgGetNode("/position/longitude-deg", true);
+    altitude_node = fgGetNode("/position/altitude-ft", true);
+    altitude_agl_node = fgGetNode("/position/altitude-agl-ft", true);
+    vertical_speed_node = fgGetNode("/velocities/vertical-speed-fps", true);
+    heading_node = fgGetNode("/orientation/heading-deg", true);
+    roll_node = fgGetNode("/orientation/roll-deg", true);
 
     heading_hold = false ;      // turn the heading hold off
     altitude_hold = false ;     // turn the altitude hold off
@@ -1045,7 +1045,7 @@ void FGAutopilot::set_AutoThrottleEnabled( bool value ) {
     auto_throttle = value;
 
     if ( auto_throttle == true ) {
-        TargetSpeed = fgGetDouble("/velocities/airspeed");
+        TargetSpeed = fgGetDouble("/velocities/airspeed-kt");
 	speed_error_accum = 0.0;
     }
 

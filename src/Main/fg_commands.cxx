@@ -187,8 +187,8 @@ do_tile_cache_reload (const SGPropertyNode * arg, SGCommandState ** state)
   BusyCursor(0);
   if ( global_tile_mgr.init() ) {
     // Load the local scenery data
-    global_tile_mgr.update(fgGetDouble("/position/longitude"),
-			   fgGetDouble("/position/latitude"));
+    global_tile_mgr.update(fgGetDouble("/position/longitude-deg"),
+			   fgGetDouble("/position/latitude-deg"));
   } else {
     SG_LOG( SG_GENERAL, SG_ALERT, 
 	    "Error in Tile Manager initialization!" );
