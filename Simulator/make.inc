@@ -25,7 +25,7 @@
 #---------------------------------------------------------------------------
 
 
-VERSION = 0.12
+VERSION = 0.13
 
 #---------------------------------------------------------------------------
 # Choose your weapons
@@ -120,6 +120,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.17  1997/10/25 03:30:02  curt
+# Misc. tweaks.
+#
 # Revision 1.16  1997/10/25 03:24:21  curt
 # Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
 #

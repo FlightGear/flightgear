@@ -230,8 +230,8 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
     static long int warp = 0;
 
     /* get current Unix calendar time (in seconds) */
-    /* warp += 120; */
-    warp = 0;
+    warp += 60; 
+    /* warp = 0; */
     t->cur_time = time(NULL);
     t->cur_time += warp;
     printf("Current Unix calendar time = %ld  warp = %ld\n", t->cur_time, warp);
@@ -284,9 +284,12 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.7  1997/09/23 00:29:50  curt
-/* Tweaks to get things to compile with gcc-win32.
+/* Revision 1.8  1997/10/25 03:30:08  curt
+/* Misc. tweaks.
 /*
+ * Revision 1.7  1997/09/23 00:29:50  curt
+ * Tweaks to get things to compile with gcc-win32.
+ *
  * Revision 1.6  1997/09/20 03:34:34  curt
  * Still trying to get those durned stars aligned properly.
  *

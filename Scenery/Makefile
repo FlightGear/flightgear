@@ -101,7 +101,7 @@ scenery.o:
 	$(CC) $(CFLAGS) -c scenery.c -o $@
 
 stars.c:
-	$(CC) $(CFLAGS) -c starts.c -o $@
+	$(CC) $(CFLAGS) -c stars.c -o $@
 
 sun.o:
 	$(CC) $(CFLAGS) -c sun.c -o $@
@@ -109,8 +109,12 @@ sun.o:
 geometry.o:
 	$(CC) $(CFLAGS) -c geometry.c -o $@
 
+
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.22  1997/10/25 03:30:07  curt
+# Misc. tweaks.
+#
 # Revision 1.21  1997/10/25 03:18:26  curt
 # Incorporated sun, moon, and planet position and rendering code contributed
 # by Durk Talsma.
