@@ -160,7 +160,6 @@ FGViewMgr::update (int dt)
 	fgGetDouble("/position/latitude-deg"),
 	fgGetDouble("/position/altitude-ft"));
   chase_view->setPositionOffsets(zPO[0], zPO[1], zPO[2] );
-  chase_view->set_view_forward( pilot_view->get_view_pos() );
 
 				// Update the current view
   do_axes();
@@ -363,5 +362,6 @@ FGViewMgr::do_axes ()
 
   get_current_view()->setGoalHeadingOffset_deg(viewDir);
 }
+
 
 

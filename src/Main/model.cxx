@@ -148,6 +148,8 @@ FGAircraftModel::unbind ()
 void
 FGAircraftModel::update (int dt)
 {
+  sgMat4 VIEW_ROT;
+
   _current_timestamp.stamp();
   long elapsed_ms = (_current_timestamp - _last_timestamp) / 1000;
   _last_timestamp.stamp();
@@ -165,7 +167,11 @@ FGAircraftModel::update (int dt)
       (FGViewer *)globals->get_viewmgr()->get_view( 0 );
     
     sgMat4 sgTRANS;
-    sgMakeTransMat4( sgTRANS, pilot_view->get_view_pos() );
+    // FIXME: this needs to be unlinked from the viewer
+    //        The lon/lat/alt should come from properties and the
+    //        calculation for relative position should probably be 
+    //        added to SimGear.
+    sgMakeTransMat4( sgTRANS, pilot_view->getRelativeViewPos() );
     
     sgVec3 ownship_up;
     sgSetVec3( ownship_up, 0.0, 0.0, 1.0);
@@ -175,47 +181,41 @@ FGAircraftModel::update (int dt)
     
     sgMat4 sgTUX;
     sgCopyMat4( sgTUX, sgROT );
-    sgMat4 VIEW_ROT;
-    sgCopyMat4( VIEW_ROT, pilot_view->get_VIEW_ROT());
+
     if (view_number == 0) {
-				// FIXME: orientation is not applied
-				// correctly when view is not forward
-      sgMakeRotMat4( sgROT, -pilot_view->getHeadingOffset_deg(), 
-         pilot_view->get_world_up() );
 
-      /* Warning lame hack from Wilson ahead */
-      /* get the pitch value */
-      /* double it to counter the value already in the VIEW_ROT */
-      float pitch = pilot_view->getPitch_deg() * SGD_DEGREES_TO_RADIANS * 2;
-      /* make a ROT matrix 
-         with the values waited by the X coordinate from the offset 
-         rotation see sgROT above
-      */
-      sgMat4 PunROT;
-      PunROT[0][0] = SG_ONE;
-      PunROT[0][1] = SG_ZERO;
-      PunROT[0][2] = SG_ZERO;
-      PunROT[0][3] = SG_ZERO;
-      PunROT[1][0] = SG_ZERO;
-      PunROT[1][1] = cos((1 - sgROT[0][0]) * -pitch);
-      PunROT[1][2] = -sin((1 - sgROT[0][0]) * -pitch);
-      PunROT[1][3] = SG_ZERO;
-      PunROT[2][0] = SG_ZERO;
-      PunROT[2][1] = sin((1 - sgROT[0][0]) * -pitch);
-      PunROT[2][2] = cos((1 - sgROT[0][0]) * -pitch);
-      PunROT[2][3] = SG_ZERO;
-      PunROT[3][0] = SG_ZERO;
-      PunROT[3][1] = SG_ZERO;
-      PunROT[3][2] = SG_ZERO;
-      PunROT[3][3] = SG_ONE;
+      // FIXME: This needs to be unlinked from the viewer
+      //        The lon/lat/alt should come from properties and the
+      //        calculation for relative position should probably be 
+      //        added to SimGear.
+      //        Note that the function for building the LOCAL matrix 
+      //        or redone using plib. Should probably be moved to Simgear.
+      //        (cockpit_ROT = LOCAL from viewer).
+      sgMat4 tmpROT;
+      sgCopyMat4( tmpROT, pilot_view->get_COCKPIT_ROT() );
+      sgMat4 cockpit_ROT;
+      sgCopyMat4( cockpit_ROT, tmpROT );
 
-      sgPostMultMat4( sgTUX, PunROT );
-      sgPostMultMat4( sgTUX, VIEW_ROT );
-      sgPostMultMat4( sgTUX, sgROT );
+      // Make the Cockpit rotation matrix (just juggling the vectors).
+      cockpit_ROT[0][0] = tmpROT[1][0]; // right
+      cockpit_ROT[0][1] = tmpROT[1][1];
+      cockpit_ROT[0][2] = tmpROT[1][2];
+      cockpit_ROT[1][0] = tmpROT[2][0]; // forward
+      cockpit_ROT[1][1] = tmpROT[2][1];
+      cockpit_ROT[1][2] = tmpROT[2][2];
+      cockpit_ROT[2][0] = tmpROT[0][0]; // view_up
+      cockpit_ROT[2][1] = tmpROT[0][1];
+      cockpit_ROT[2][2] = tmpROT[0][2];
+
+      sgPostMultMat4( sgTUX, cockpit_ROT );
       sgPostMultMat4( sgTUX, sgTRANS );
-      /* end lame hack */
 
     } else {
+      // FIXME: Model rotation need to be unlinked from the viewer.
+      //        When the cockpit rotation gets removed from viewer
+      //        then it'll be easy to apply offsets and get the equivelant
+      //        of this "VIEW_ROT" thing.
+      sgCopyMat4( VIEW_ROT, pilot_view->get_VIEW_ROT());
       sgPostMultMat4( sgTUX, VIEW_ROT );
       sgPostMultMat4( sgTUX, sgTRANS );
     }
@@ -383,3 +383,4 @@ FGAircraftModel::Animation::setRotation()
 
 
 // end of model.cxx
+
