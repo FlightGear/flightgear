@@ -7,6 +7,11 @@ possible only by the help and hard work of others.  I want to properly
 credit everyone who has contributed to this project.
 
 
+Raoul Alonzo <amil@las.es>.  Mr. Alonzo is the author of Ssystem and
+  provided his kind permission for using the moon texture. I also used
+  parts of his code as a template when adding the texture.
+
+
 Michele America <nomimarketing@mail.telepac.pt>
   Contributed to the HUD code.
 
@@ -134,6 +139,10 @@ Petter Reinholdtsen <pere@games.no>
   This should streamline and standardize the build process for all
   Unix-like platforms.  It should have little effect on IDE type 
   environments since the don't use the Unix make system.
+
+
+Paul Schlyter <pausch@saaf.se>.  Mr. Schlyter provided Durk Talsma with 
+  all the information he needed to write the astro code.
 
 
 Chris Schoeneman <crs@millpond.engr.sgi.com>
