@@ -122,7 +122,7 @@ void FGAISchedule::update(time_t now)
     userLatitude,
     userLongitude;
 
-  if (fgGetBool("/sim/ai/enabled") == false)
+  if (fgGetBool("/sim/traffic-manager/enabled") == false)
     return;
   
   aimgr = (FGAIManager *) globals-> get_subsystem("ai_model");  
@@ -251,25 +251,23 @@ void FGAISchedule::update(time_t now)
 	  // one hour flight time, so that would be a good approximate point
 	  // to start a more detailed simulation of this aircraft.
 	  //cerr << registration << " is currently enroute from " 
-	  //   << dep->id << " to " << arr->id << "distance : " << distanceToUser*SG_METER_TO_NM << endl;
+	  //   << dep->id << " to " << arr->id << "distance : " 
+          //   << distanceToUser*SG_METER_TO_NM << endl;
 	  if ((distanceToUser*SG_METER_TO_NM) < 500.0)
 	    {
-	      string flightPlanName = dep->id + string("-") + arr->id + string(".xml");
+	      string flightPlanName = dep->id + string("-") + arr->id + 
+		string(".xml");
 
 	      FGAIFlightPlan* f;
-	      // If we're less then 10 minutes behind schedule, do a normal
-	      // full flight plan initialization, otherwise, do a modified 
-	      // in-air initializition, at the location where this flight is
-	      // according to the Traffic Manager
-	      if (elapsedTimeEnroute < 600)
-		f = new FGAIFlightPlan(flightPlanName);
-	      else
-		f = new FGAIFlightPlan(flightPlanName, 
-				       lat, 
-				       lon, 
-				       i->getCruiseAlt() * 1000, // convert from FL to feet
-				       speed, 
-				       courseToDest);
+	      f = new FGAIFlightPlan(flightPlanName, 
+				     lat, 
+				     lon,
+				     i->getCruiseAlt() * 100, // convert from FL to feet
+				     //speed, 
+				     450,
+				     courseToDest,
+				     dep,
+				     arr);
 	      // Fixme: A non-existent model path results in an
 	      // abort, due to an unhandled exeption, in fg main loop.
 	      AIManagerRef = aimgr->createAircraft("jet_transport", 
@@ -278,6 +276,7 @@ void FGAISchedule::update(time_t now)
 	    }
 	  return;
 	}
+
       // Both departure and arrival time are in the future, so this
       // the aircraft is parked at the departure airport.
       // Currently this status is mostly ignored, but in furture

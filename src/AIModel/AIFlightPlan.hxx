@@ -22,6 +22,9 @@
 #include <simgear/compiler.h>
 #include <vector>
 #include <string>
+
+#include <Airports/simple.hxx>
+
 SG_USING_STD(vector);
 SG_USING_STD(string);
 
@@ -46,10 +49,12 @@ public:
    FGAIFlightPlan(string filename);
   FGAIFlightPlan(string filename, 
 		 double lat, 
-		 double lon, 
+		 double lon,
 		 double alt, 
 		 double speed, 
-		 double course);
+		 double course,
+		 FGAirport *dep,
+		 FGAirport *arr);
    ~FGAIFlightPlan();
 
    waypoint* getPreviousWaypoint( void );
@@ -63,6 +68,8 @@ public:
    double getLeadDistance( void ) const {return lead_distance;}
    double getBearing(waypoint* previous, waypoint* next);
    double getBearing(double lat, double lon, waypoint* next);
+
+  void    create(FGAirport *dep, FGAirport *arr, double alt, double speed);
 
 private:
 
