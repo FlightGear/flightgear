@@ -195,8 +195,7 @@
 #  define FG_NEED_AUTO_PTR
 #  define FG_MEMBER_TEMPLATES
 #  define FG_NAMESPACES
-// #  define FG_HAVE_STD
-// #  define FG_HAVE_STREAMBUF
+#  define FG_HAVE_STD
 #  define FG_CLASS_PARTIAL_SPECIALIZATION
 
 #  define STL_ALGORITHM  <algorithm>
@@ -302,6 +301,9 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // _COMPILER_H
 
 // $Log$
+// Revision 1.9  1999/03/02 00:36:31  curt
+// Tweaks for native SGI compilers.
+//
 // Revision 1.8  1999/02/26 22:07:10  curt
 // Added initial support for native SGI compilers.
 //
