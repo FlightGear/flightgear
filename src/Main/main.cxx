@@ -1338,7 +1338,7 @@ int fgGlutInitEvents( void ) {
 
     // keyboard and mouse callbacks are set in FGInput::init
 
-#ifndef FG_NEW_MOUSE
+#ifdef FG_OLD_MOUSE
     // call guiMouseFunc() whenever our little rodent is used
     glutMouseFunc ( guiMouseFunc );
     glutMotionFunc (guiMotionFunc );

@@ -197,7 +197,7 @@ FGInput::init ()
   glutKeyboardUpFunc(GLUTkeyup);
   glutSpecialFunc(GLUTspecialkey);
   glutSpecialUpFunc(GLUTspecialkeyup);
-#ifdef FG_NEW_MOUSE
+#ifndef FG_OLD_MOUSE
   glutMouseFunc (GLUTmouse);
   glutMotionFunc (GLUTmotion);
   glutPassiveMotionFunc (GLUTmotion);
