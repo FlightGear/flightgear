@@ -228,6 +228,9 @@ void FGLaRCsim::update( double dt ) {
       fgSetDouble("/surface-positions/flight/right-aileron-pos-norm", -1 * fgGetDouble("/controls/flight/aileron")); // FIXME: ignoring trim
       fgSetDouble("/surface-positions/flight/left-aileron-pos-norm",       fgGetDouble("/controls/flight/aileron")); // FIXME: ignoring trim
 
+      // used by Instruments/accel.xml
+      fgSetDouble("/accelerations/pilot-g",   -N_Z_cg);
+
       Flap_handle = flap_max * globals->get_controls()->get_flaps();
 
       // flaps with transition occuring in uiuc_aerodeflections.cpp
