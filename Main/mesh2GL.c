@@ -43,8 +43,8 @@
 void mesh_make_test_object(double lon, double lat) {
     struct fgCartesianPoint origin;
     double elev;
-    double b = 0.01;
-    double h = 0.05;
+    double b = 0.10;
+    double h = 0.50;
     static GLfloat color[4] = { 1.0, 0.25, 0.25, 1.0 };
 
     glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color );
@@ -185,7 +185,7 @@ GLint mesh2GL(struct mesh *m) {
     }
     */
 
-    for ( i = 0; i < 400; i++ ) {
+    for ( i = 0; i < 200; i++ ) {
 	randx = fg_random() * 3600.0;
 	randy = fg_random() * 3600.0;
 
@@ -200,9 +200,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.38  1997/07/21 14:45:02  curt
-/* Minor tweaks.
+/* Revision 1.39  1997/07/21 21:20:48  curt
+/* Twiddled with random object placement.
 /*
+ * Revision 1.38  1997/07/21 14:45:02  curt
+ * Minor tweaks.
+ *
  * Revision 1.37  1997/07/19 22:34:03  curt
  * Moved PI definitions to ../constants.h
  * Moved random() stuff to ../Utils/ and renamed fg_random()
