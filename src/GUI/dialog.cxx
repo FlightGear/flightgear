@@ -18,9 +18,7 @@ static void
 action_callback (puObject * object)
 {
     GUIInfo * info = (GUIInfo *)object->getUserData();
-    NewGUI * gui =
-        (NewGUI *)globals->get_subsystem_mgr()
-          ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
+    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
     gui->setCurrentWidget(info->widget);
     for (int i = 0; i < info->bindings.size(); i++)
         info->bindings[i]->fire();
