@@ -269,31 +269,31 @@ FGEnvironment::set_elevation_ft (double e)
 // R=287.  I chose to correct the temperature to 288.20, since 79F is
 // pretty hot for a "standard" atmosphere.
 
-// Elevation (ft), delta temperature (degC), delta pressure (inHG),
-// delta density (slug/ft^3)
+// Elevation (ft), temperature factor (degK), pressure factor (inHG),
+// density factor (slug/ft^3)
 static double atmosphere_data[][4] = {
-  0, 0.00, 0.000, 0.000000,
-  2952, -5.89, -3.058, -0.000198,
-  5905, -11.74, -5.856, -0.000384,
-  8858, -17.58, -8.413, -0.000556,
-  11811, -23.43, -10.745, -0.000717,
-  14763, -29.27, -12.867, -0.000867,
-  17716, -35.11, -14.794, -0.001006,
-  20669, -40.95, -16.541, -0.001136,
-  23622, -46.79, -18.120, -0.001255,
-  26574, -52.62, -19.544, -0.001366,
-  29527, -58.46, -20.826, -0.001467,
-  32480, -64.29, -21.976, -0.001561,
-  35433, -70.12, -23.005, -0.001647,
-  38385, -71.54, -23.916, -0.001739,
-  41338, -71.54, -24.708, -0.001822,
-  44291, -71.54, -25.395, -0.001894,
-  47244, -71.54, -25.991, -0.001957,
-  50196, -71.54, -26.509, -0.002012,
-  53149, -71.54, -26.959, -0.002059,
-  56102, -71.54, -27.349, -0.002100,
-  59055, -71.54, -27.687, -0.002136,
-  62007, -71.54, -27.981, -0.002167,
+  0.00, 1.00, 1.000, 1.000000,
+  2952.76, 0.98, 0.898, 0.916408,
+  5905.51, 0.96, 0.804, 0.838286,
+  8858.27, 0.94, 0.719, 0.765429,
+  11811.02, 0.92, 0.641, 0.697510,
+  14763.78, 0.90, 0.570, 0.634318,
+  17716.54, 0.88, 0.506, 0.575616,
+  20669.29, 0.86, 0.447, 0.521184,
+  23622.05, 0.84, 0.394, 0.470784,
+  26574.80, 0.82, 0.347, 0.424220,
+  29527.56, 0.80, 0.304, 0.381273,
+  32480.31, 0.78, 0.266, 0.341747,
+  35433.07, 0.76, 0.231, 0.305445,
+  38385.83, 0.75, 0.201, 0.266931,
+  41338.58, 0.75, 0.174, 0.231739,
+  44291.34, 0.75, 0.151, 0.201192,
+  47244.09, 0.75, 0.131, 0.174686,
+  50196.85, 0.75, 0.114, 0.151673,
+  53149.61, 0.75, 0.099, 0.131698,
+  56102.36, 0.75, 0.086, 0.114359,
+  59055.12, 0.75, 0.075, 0.099306,
+  62007.87, 0.75, 0.065, 0.086237,
   -1, -1, -1, -1
 };
 
@@ -348,47 +348,53 @@ FGEnvironment::_recalc_ne ()
 void
 FGEnvironment::_recalc_sl_temperature ()
 {
+  // If we're in the stratosphere, leave sea-level temp alone
   if (elevation_ft < 38000) {
     temperature_sea_level_degc =
-      temperature_degc - _temperature_degc_table->interpolate(elevation_ft);
+      (temperature_degc + 273.15)
+      /_temperature_degc_table->interpolate(elevation_ft)
+      - 273.15;
   }
-  // If we're in the stratosphere, leave sea-level temp alone
 }
 
 void
 FGEnvironment::_recalc_alt_temperature ()
 {
-  temperature_degc =
-    temperature_sea_level_degc +
-    _temperature_degc_table->interpolate(elevation_ft);
+  if (elevation_ft < 38000) {
+    temperature_degc =
+      (temperature_sea_level_degc + 273.15) *
+      _temperature_degc_table->interpolate(elevation_ft) - 273.15;
+  } else {
+    temperature_degc = -56.49;	// Stratosphere is constant
+  }
 }
 
 void
 FGEnvironment::_recalc_sl_pressure ()
 {
   pressure_sea_level_inhg =
-    pressure_inhg - _pressure_inhg_table->interpolate(elevation_ft);
+    pressure_inhg / _pressure_inhg_table->interpolate(elevation_ft);
 }
 
 void
 FGEnvironment::_recalc_alt_pressure ()
 {
   pressure_inhg =
-    pressure_sea_level_inhg + _pressure_inhg_table->interpolate(elevation_ft);
+    pressure_sea_level_inhg * _pressure_inhg_table->interpolate(elevation_ft);
 }
 
 void
 FGEnvironment::_recalc_sl_density ()
 {
   density_sea_level_slugft3 =
-    density_slugft3 - _density_slugft3_table->interpolate(elevation_ft);
+    density_slugft3 / _density_slugft3_table->interpolate(elevation_ft);
 }
 
 void
 FGEnvironment::_recalc_alt_density ()
 {
   density_slugft3 =
-    density_sea_level_slugft3 +
+    density_sea_level_slugft3 *
     _density_slugft3_table->interpolate(elevation_ft);
 }
 
