@@ -248,7 +248,7 @@ void FGGenOutput::calc_bounding_sphere( int i, Point3D *center,
 
 
 // write out the fgfs scenery file
-int FGGenOutput::write( const string& path ) {
+int FGGenOutput::write( const FGBucket& b, const string& path ) {
     Point3D p;
 
     FILE *fp;
@@ -268,7 +268,7 @@ int FGGenOutput::write( const string& path ) {
     fprintf(fp, "# Created %s\n", time_str );
     fprintf(fp, "\n");
 
-    // write global bounding spher
+    // write global bounding sphere
     fprintf(fp, "# gbs %.5f %.5f %.5f %.2f\n",
 	    gbs_center.x(), gbs_center.y(), gbs_center.z(), gbs_radius);
     fprintf(fp, "\n");
@@ -317,6 +317,9 @@ int FGGenOutput::write( const string& path ) {
 
 
 // $Log$
+// Revision 1.3  1999/03/25 19:04:21  curt
+// Preparations for outputing scenery file to correct location.
+//
 // Revision 1.2  1999/03/23 22:02:03  curt
 // Worked on creating data to output ... normals, bounding spheres, etc.
 //

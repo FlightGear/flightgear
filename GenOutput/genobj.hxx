@@ -32,6 +32,7 @@
 #endif                                   
 
 
+#include <Bucket/newbucket.hxx>
 #include <Math/fg_geodesy.hxx>
 #include <Math/point3d.hxx>
 #include <Triangulate/triangle.hxx>
@@ -108,7 +109,7 @@ public:
     int build( const FGTriangle& t );
 
     // write out the fgfs scenery file
-    int write( const string& path );
+    int write( const FGBucket& b, const string& path );
 };
 
 
@@ -116,6 +117,9 @@ public:
 
 
 // $Log$
+// Revision 1.4  1999/03/25 19:04:22  curt
+// Preparations for outputing scenery file to correct location.
+//
 // Revision 1.3  1999/03/23 22:02:04  curt
 // Worked on creating data to output ... normals, bounding spheres, etc.
 //
