@@ -110,7 +110,7 @@ int fgFDMInit(int model, FGInterface& f, double dt) {
 	fgExternalInit(base_fdm_state);
     } else {
 	FG_LOG( FG_FLIGHT, FG_WARN,
-		  "Unimplemented flight model == " << model );
+		"Unimplemented flight model == " << model );
     }
 
     // set valid time for this record
@@ -195,6 +195,9 @@ void fgFDMSetGroundElevation(int model, double ground_meters) {
 
 
 // $Log$
+// Revision 1.17  1999/04/03 04:20:03  curt
+// Optimizations (tm) by Norman Vine.
+//
 // Revision 1.16  1999/02/26 22:09:12  curt
 // Added initial support for native SGI compilers.
 // Integrated Jon's next version of JSBsim.

@@ -248,12 +248,19 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
     //                        D_pilot_above_rwy );
     // f.set_Pilot_Rwy_Rwy( X_pilot_rwy, Y_pilot_rwy, H_pilot_rwy );
 
+    f.set_sin_lat_geocentric( lat_geoc );
+    f.set_cos_lat_geocentric( lat_geoc );
+    f.set_sin_cos_longitude( lon );
+    f.set_sin_cos_latitude( lat_geod );
 
     return 0;
 }
 
 
 // $Log$
+// Revision 1.4  1999/04/03 04:20:01  curt
+// Optimizations (tm) by Norman Vine.
+//
 // Revision 1.3  1999/02/26 22:09:10  curt
 // Added initial support for native SGI compilers.
 // Integrated Jon's next version of JSBsim.

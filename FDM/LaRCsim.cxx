@@ -47,7 +47,7 @@ int fgLaRCsimUpdate(FGInterface& f, int multiloop) {
     double save_alt = 0.0;
 
     // lets try to avoid really screwing up the LaRCsim model
-    if ( f.get_Altitude() < -9000 ) {
+    if ( f.get_Altitude() < -9000.0 ) {
 	save_alt = f.get_Altitude();
 	f.set_Altitude( 0.0 );
     }
@@ -389,12 +389,25 @@ int fgLaRCsim_2_FGInterface (FGInterface& f) {
     //                        D_pilot_above_rwy );
     // f.set_Pilot_Rwy_Rwy( X_pilot_rwy, Y_pilot_rwy, H_pilot_rwy );
 
+    f.set_sin_lat_geocentric(Lat_geocentric);
+    f.set_cos_lat_geocentric(Lat_geocentric);
+    f.set_sin_cos_longitude(Longitude);
+    f.set_sin_cos_latitude(Latitude);
+
+    // printf("sin_lat_geo %f  cos_lat_geo %f\n", sin_Lat_geoc, cos_Lat_geoc);
+    // printf("sin_lat     %f  cos_lat     %f\n", 
+    //        f.get_sin_latitude(), f.get_cos_latitude());
+    // printf("sin_lon     %f  cos_lon     %f\n",
+    //        f.get_sin_longitude(), f.get_cos_longitude());
 
     return 0;
 }
 
 
 // $Log$
+// Revision 1.12  1999/04/03 04:20:02  curt
+// Optimizations (tm) by Norman Vine.
+//
 // Revision 1.11  1999/02/05 21:28:58  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

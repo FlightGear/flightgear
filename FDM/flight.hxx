@@ -794,6 +794,47 @@ public:
     // Extrapolate FDM based on time_offset (in usec)
     void extrapolate( int time_offset );
 
+    // sin/cos lat_geocentric
+    double sin_lat_geocentric;
+    double cos_lat_geocentric;
+    inline void set_sin_lat_geocentric(double parm) {
+	sin_lat_geocentric = sin(parm);
+    }
+    inline void set_cos_lat_geocentric(double parm) {
+	cos_lat_geocentric = cos(parm);
+    }
+    inline double get_sin_lat_geocentric(void) const {
+	return sin_lat_geocentric;
+    }
+    inline double get_cos_lat_geocentric(void) const {
+	return cos_lat_geocentric;
+    }
+
+    double sin_longitude;
+    double cos_longitude;
+    inline void set_sin_cos_longitude(double parm) {
+	sin_longitude = sin(parm);
+	cos_longitude = cos(parm);
+    }
+    inline double get_sin_longitude(void) const {
+	return sin_longitude;
+    }
+    inline double get_cos_longitude(void) const {
+	return cos_longitude;
+    }
+	
+    double sin_latitude;
+    double cos_latitude;
+    inline void set_sin_cos_latitude(double parm) {
+	sin_latitude = sin(parm);
+	cos_latitude = cos(parm);
+    }
+    inline double get_sin_latitude(void) const {
+	return sin_latitude;
+    }
+    inline double get_cos_latitude(void) const {
+	return cos_latitude;
+    }
 };
 
 
@@ -819,6 +860,9 @@ void fgFDMSetGroundElevation(int model, double alt_meters);
 
 
 // $Log$
+// Revision 1.14  1999/04/03 04:20:04  curt
+// Optimizations (tm) by Norman Vine.
+//
 // Revision 1.13  1999/02/05 21:29:02  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //
