@@ -377,7 +377,7 @@ void trRenderFrame( void ) {
     if ( fgPanelVisible() ) {
         GLfloat height = fgGetInt("/sim/startup/ysize");
         GLfloat view_h =
-            (current_panel->getViewHeight() - current_panel->getYOffset())
+            (globals->get_current_panel()->getViewHeight() - globals->get_current_panel()->getYOffset())
             * (height / 768.0) + 1;
         glTranslatef( 0.0, view_h, 0.0 );
     }
@@ -898,8 +898,8 @@ void fgRenderFrame() {
 	globals->get_ATC_display()->update(delta_time_sec);
 
 	// update the panel subsystem
-	if ( current_panel != NULL ) {
-	    current_panel->update(delta_time_sec);
+	if ( globals->get_current_panel() != NULL ) {
+	    globals->get_current_panel()->update(delta_time_sec);
 	}
         fgUpdate3DPanels();
 
@@ -1403,8 +1403,8 @@ void fgReshape( int width, int height ) {
 
     if ( (!fgGetBool("/sim/virtual-cockpit"))
 	 && fgPanelVisible() && idle_state == 1000 ) {
-	view_h = (int)(height * (current_panel->getViewHeight() -
-				 current_panel->getYOffset()) / 768.0);
+	view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
+				 globals->get_current_panel()->getYOffset()) / 768.0);
     } else {
 	view_h = height;
     }

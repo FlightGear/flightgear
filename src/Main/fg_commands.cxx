@@ -324,10 +324,10 @@ do_panel_load (const SGPropertyNode * arg)
     return false;
   }
   SG_LOG(SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path);
-  current_panel->unbind();
-  delete current_panel;
-  current_panel = new_panel;
-  current_panel->bind();
+  globals->get_current_panel()->unbind();
+  delete globals->get_current_panel();
+  globals->set_current_panel( new_panel );
+  globals->get_current_panel()->bind();
   return true;
 }
 
@@ -343,8 +343,8 @@ do_panel_load (const SGPropertyNode * arg)
 static bool
 do_panel_mouse_click (const SGPropertyNode * arg)
 {
-  if (current_panel != 0)
-    return current_panel
+  if (globals->get_current_panel() != 0)
+    return globals->get_current_panel()
       ->doMouseAction(arg->getIntValue("button"),
 		      arg->getBoolValue("is-down") ? PU_DOWN : PU_UP,
 		      arg->getIntValue("x-pos"),

@@ -72,6 +72,7 @@ class FGScenery;
 class FGMultiplayRxMgr;
 class FGMultiplayTxMgr;
 #endif
+class FGPanel;
 class FGSoundMgr;
 class FGTextureLoader;
 class FGTileMgr;
@@ -125,6 +126,9 @@ private:
 
     // Global autopilot "route"
     SGRoute *route;
+
+    // 2D panel
+    FGPanel *current_panel;
 
     // sound manager
     FGSoundMgr *soundmgr;
@@ -252,6 +256,9 @@ public:
 
     inline FGAIMgr *get_AI_mgr() const { return AI_mgr; }
     inline void set_AI_mgr( FGAIMgr *a ) {AI_mgr = a; }
+
+    inline FGPanel *get_current_panel() const { return current_panel; }
+    inline void set_current_panel( FGPanel *cp ) { current_panel = cp; }
 
     inline FGSoundMgr *get_soundmgr() const { return soundmgr; }
     inline void set_soundmgr( FGSoundMgr *sm ) { soundmgr = sm; }

@@ -1529,6 +1529,7 @@ bool fgInitSubsystems() {
         globals->get_AI_mgr()->init();
     }
 
+
 #ifdef ENABLE_AUDIO_SUPPORT
     ////////////////////////////////////////////////////////////////////
     // Initialize the sound subsystem.
@@ -1593,17 +1594,22 @@ bool fgInitSubsystems() {
     globals->get_io()->init();
     globals->get_io()->bind();
 
-    // Initialize the 2D panel.
+
+    ////////////////////////////////////////////////////////////////////
+    // Add a new 2D panel.
+    ////////////////////////////////////////////////////////////////////
+
     string panel_path = fgGetString("/sim/panel/path",
                                     "Panels/Default/default.xml");
-    current_panel = fgReadPanel(panel_path);
-    if (current_panel == 0) {
+
+    globals->set_current_panel( fgReadPanel(panel_path) );
+    if (globals->get_current_panel() == 0) {
         SG_LOG( SG_INPUT, SG_ALERT, 
                 "Error reading new panel from " << panel_path );
     } else {
         SG_LOG( SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path );
-        current_panel->init();
-        current_panel->bind();
+        globals->get_current_panel()->init();
+        globals->get_current_panel()->bind();
     }
 
     

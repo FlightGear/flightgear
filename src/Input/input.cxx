@@ -341,9 +341,9 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
   if (mode.pass_through) {
     if (puMouse(b, updown, x, y))
       return;
-    else if ((current_panel != 0) &&
-             current_panel->getVisibility() &&
-             current_panel->doMouseAction(b, updown, x, y))
+    else if ((globals->get_current_panel() != 0) &&
+             globals->get_current_panel()->getVisibility() &&
+             globals->get_current_panel()->doMouseAction(b, updown, x, y))
       return;
     else if (fgHandle3DPanelMouseEvent(b, updown, x, y))
       return;

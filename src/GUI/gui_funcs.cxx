@@ -693,8 +693,8 @@ void fgHiResDump()
     GLfloat hud_row_step = 480.0 / nrows;
 	
     bool do_panel = fgPanelVisible();
-    GLfloat panel_col_step = current_panel->getWidth() / ncols;
-    GLfloat panel_row_step = current_panel->getHeight() / nrows;
+    GLfloat panel_col_step = globals->get_current_panel()->getWidth() / ncols;
+    GLfloat panel_row_step = globals->get_current_panel()->getHeight() / nrows;
 	
     /* Draw tiles */
     int more = 1;
@@ -707,7 +707,8 @@ void fgHiResDump()
             fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,
                          (curColumn+1)*hud_col_step, (curRow+1)*hud_row_step );
         if (do_panel)
-            current_panel->update( curColumn*panel_col_step, panel_col_step,
+            globals->get_current_panel()->update(
+                                   curColumn*panel_col_step, panel_col_step,
                                    curRow*panel_row_step,    panel_row_step );
         more = trEndTile(tr);
 

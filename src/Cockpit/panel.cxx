@@ -80,9 +80,9 @@ get_aspect_adjust (int xsize, int ysize)
 bool
 fgPanelVisible ()
 {
-     if(current_panel == 0)
+     if(globals->get_current_panel() == 0)
 	return false;
-     if(current_panel->getVisibility() == 0)
+     if(globals->get_current_panel()->getVisibility() == 0)
 	return false;
      if(globals->get_viewmgr()->get_current() != 0)
 	return false;
@@ -163,7 +163,6 @@ FGCroppedTexture::getTexture ()
 // Implementation of FGPanel.
 ////////////////////////////////////////////////////////////////////////
 
-FGPanel * current_panel = NULL;
 static fntRenderer text_renderer;
 static fntTexFont *default_font = 0;
 static fntTexFont *led_font = 0;
