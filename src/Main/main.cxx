@@ -891,6 +891,8 @@ static void fgMainLoop( void ) {
 
 #   ifdef MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO
 
+	static double kts_to_fts = NM_TO_METER * METER_TO_FEET / 3600.0;
+
 	// note: all these factors are relative to the sample.  our
 	// sample format should really contain a conversion factor so
 	// that we can get prop speed right for arbitrary samples.
@@ -904,17 +906,17 @@ static void fgMainLoop( void ) {
 	double pitch = log((controls.get_throttle(0) * 14.0) + 1.0);
 	//fprintf(stderr, "pitch1: %f ", pitch);
 	// if (controls.get_throttle(0) > 0.0 || 
-	//     cur_fdm_state->v_rel_wind > 40.0) {
+	//     cur_fdm_state->get_V_calibrated_kts() > 40.0) {
 
-	//fprintf(stderr, "rel_wind: %f ", cur_fdm_state->v_rel_wind);
+	//fprintf(stderr, "rel_wind: %f ", cur_fdm_state->get_V_calibrated_kts());
 	// only add relative wind and AoA if prop is moving
 	// or we're really flying at idle throttle
 	if (pitch < 5.4) {  // this needs tuning
 	    // prop tips not breaking sound barrier
-	    pitch += log(cur_fdm_state->v_rel_wind + 0.8)/2;
+	    pitch += log(cur_fdm_state->get_V_calibrated_kts() * kts_to_fts + 0.8)/2;
 	} else {
 	    // prop tips breaking sound barrier
-	    pitch += log(cur_fdm_state->v_rel_wind + 0.8)/10;
+	    pitch += log(cur_fdm_state->get_V_calibrated_kts() * kts_to_fts + 0.8)/10;
 	}
 	//fprintf(stderr, "pitch2: %f ", pitch);
 	//fprintf(stderr, "AoA: %f ", FG_Gamma_vert_rad);
@@ -936,7 +938,7 @@ static void fgMainLoop( void ) {
 	// fprintf(stderr, "pitch4: %f\n", pitch);
 
 	double volume = controls.get_throttle(0) * 1.15 + 0.3 +
-	    log(cur_fdm_state->v_rel_wind + 1.0)/14.0;
+	    log(cur_fdm_state->get_V_calibrated_kts() * kts_to_fts + 1.0)/14.0;
 	// fprintf(stderr, "volume: %f\n", volume);
 
 	pitch_envelope.setStep  ( 0, 0.01, pitch );

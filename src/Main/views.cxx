@@ -387,7 +387,7 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 }
 
 
-void  FGView::CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
+void FGView::CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
     sgVec3 tmp;
     sgSetVec3(tmp, src[0], src[1], src[2] );
     sgMat4 TMP;
