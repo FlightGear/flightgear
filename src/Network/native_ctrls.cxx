@@ -168,7 +168,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
     tempnode = fgGetNode("/controls/gear", true);
     for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
         node = fgGetNode("/controls/gear/wheel", i);
-        if ( node->getChild("brake") != NULL ) {
+        if ( node != NULL && node->getChild("brake") != NULL ) {
             if ( tempnode->getChild("parking-brake")->getDoubleValue() > 0.0 ) {
                 net->brake[i] = 1.0;
            } else {
