@@ -114,9 +114,6 @@ int fgInitPosition( void ) {
 	f->set_Latitude( current_options.get_lat() * DEG_TO_RAD );
     }
 
-    f->set_sin_cos_longitude(current_options.get_lon() * DEG_TO_RAD);
-    f->set_sin_cos_latitude(current_options.get_lat() * DEG_TO_RAD);
-
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "starting altitude is = " << current_options.get_altitude() );
 
@@ -269,6 +266,12 @@ int fgInitSubsystems( void )
 				f->get_Altitude() +
 				(sea_level_radius_meters * METER_TO_FEET) );
     f->set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET );
+
+    f->set_sin_cos_longitude(f->get_Longitude());
+    f->set_sin_cos_latitude(f->get_Latitude());
+	
+    f->set_sin_lat_geocentric(sin(lat_geoc));
+    f->set_cos_lat_geocentric(cos(lat_geoc));
 
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
