@@ -98,8 +98,8 @@ FGBinding::FGBinding (const SGPropertyNode * node)
 
 FGBinding::~FGBinding ()
 {
-//   delete _arg;			// Delete the saved arguments
-//   delete _command_state;	// Delete the saved command state
+//   delete _arg;                       // Delete the saved arguments
+//   delete _command_state;     // Delete the saved command state
 }
 
 void
@@ -139,7 +139,7 @@ FGBinding::fire () const
       SG_LOG(SG_INPUT, SG_WARN, "No command attached to binding");
     } else if (!(*_command)(_arg)) {
       SG_LOG(SG_INPUT, SG_ALERT, "Failed to execute command "
-	     << _command_name);
+             << _command_name);
     }
   }
 }
@@ -157,9 +157,9 @@ void
 FGBinding::fire (double setting) const
 {
   if (test()) {
-				// A value is automatically added to
-				// the args
-    if (_setting == 0)		// save the setting node for efficiency
+                                // A value is automatically added to
+                                // the args
+    if (_setting == 0)          // save the setting node for efficiency
       _setting = _arg->getChild("setting", 0, true);
     _setting->setDoubleValue(setting);
     fire();
@@ -172,7 +172,7 @@ FGBinding::fire (double setting) const
 // Implementation of FGInput.
 ////////////////////////////////////////////////////////////////////////
 
-				// From main.cxx
+                                // From main.cxx
 extern void fgReshape( int width, int height );
 
 
@@ -237,9 +237,9 @@ void
 FGInput::doKey (int k, int modifiers, int x, int y)
 {
   SG_LOG( SG_INPUT, SG_DEBUG, "User pressed key " << k
-	  << " with modifiers " << modifiers );
+          << " with modifiers " << modifiers );
 
-				// Sanity check.
+                                // Sanity check.
   if (k < 0 || k >= MAX_KEYS) {
     SG_LOG(SG_INPUT, SG_WARN, "Key value " << k << " out of range");
     return;
@@ -247,40 +247,40 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
   button &b = _key_bindings[k];
 
-				// Key pressed.
+                                // Key pressed.
   if (modifiers&FG_MOD_UP == 0) {
     SG_LOG( SG_INPUT, SG_DEBUG, "User pressed key " << k
-	    << " with modifiers " << modifiers );
+            << " with modifiers " << modifiers );
     if (!b.last_state || b.is_repeatable) {
       const binding_list_t &bindings =
-	_find_key_bindings(k, modifiers);
+        _find_key_bindings(k, modifiers);
       int max = bindings.size();
       if (max > 0) {
-	for (int i = 0; i < max; i++)
-	  bindings[i]->fire();
-	return;
+        for (int i = 0; i < max; i++)
+          bindings[i]->fire();
+        return;
       }
     }
   }
 
-				// Key released.
+                                // Key released.
   else {
     SG_LOG(SG_INPUT, SG_DEBUG, "User released key " << k
-	   << " with modifiers " << modifiers);
+           << " with modifiers " << modifiers);
     if (b.last_state) {
       const binding_list_t &bindings =
-	_find_key_bindings(k, modifiers);
+        _find_key_bindings(k, modifiers);
       int max = bindings.size();
       if (max > 0) {
-	for (int i = 0; i < max; i++)
-	  bindings[i]->fire();
-	return;
+        for (int i = 0; i < max; i++)
+          bindings[i]->fire();
+        return;
       }
     }
   }
 
 
-				// Use the old, default actions.
+                                // Use the old, default actions.
   SG_LOG( SG_INPUT, SG_DEBUG, "(No user binding.)" );
   if (modifiers&FG_MOD_UP)
     return;
@@ -289,71 +289,71 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
   if (modifiers & FG_MOD_SHIFT) {
 
-	switch (k) {
-	case 72: // H key
-	    HUD_brightkey( true );
-	    return;
-	case 73: // I key
-	    // Minimal Hud
-	    fgHUDInit2(&current_aircraft);
-	    return;
-	}
+        switch (k) {
+        case 72: // H key
+            HUD_brightkey( true );
+            return;
+        case 73: // I key
+            // Minimal Hud
+            fgHUDInit2(&current_aircraft);
+            return;
+        }
 
 
     } else {
-	SG_LOG( SG_INPUT, SG_DEBUG, "" );
-	switch (k) {
-	case 104: // h key
-	    HUD_masterswitch( true );
-	    return;
-	case 105: // i key
-	    fgHUDInit(&current_aircraft);  // normal HUD
-	    return;
+        SG_LOG( SG_INPUT, SG_DEBUG, "" );
+        switch (k) {
+        case 104: // h key
+            HUD_masterswitch( true );
+            return;
+        case 105: // i key
+            fgHUDInit(&current_aircraft);  // normal HUD
+            return;
 
 // START SPECIALS
 
         case 256+GLUT_KEY_F6: // F6 toggles Autopilot target location
-	    if ( globals->get_autopilot()->get_HeadingMode() !=
-		 FGAutopilot::FG_HEADING_WAYPOINT ) {
-		globals->get_autopilot()->set_HeadingMode(
-		    FGAutopilot::FG_HEADING_WAYPOINT );
-		globals->get_autopilot()->set_HeadingEnabled( true );
-	    } else {
-		globals->get_autopilot()->set_HeadingMode(
-		    FGAutopilot::FG_TC_HEADING_LOCK );
-	    }
-	    return;
-	case 256+GLUT_KEY_F8: {// F8 toggles fog ... off fastest nicest...
-	    const string &fog = fgGetString("/sim/rendering/fog");
-	    if (fog == "disabled") {
-	      fgSetString("/sim/rendering/fog", "fastest");
-	      SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=fastest");
-	    } else if (fog == "fastest") {
-	      fgSetString("/sim/rendering/fog", "nicest");
-	      SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=nicest");
-	    } else if (fog == "nicest") {
-	      fgSetString("/sim/rendering/fog", "disabled");
-	      SG_LOG(SG_INPUT, SG_INFO, "Fog disabled");
-	    } else {
-	      fgSetString("/sim/rendering/fog", "disabled");
-	      SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized fog type "
-		     << fog << ", changed to 'disabled'");
-	    }
- 	    return;
-	}
-	case 256+GLUT_KEY_F10: // F10 toggles menu on and off...
-	    SG_LOG(SG_INPUT, SG_INFO, "Invoking call back function");
-	    guiToggleMenu();
-	    return;
-	case 256+GLUT_KEY_F11: // F11 Altitude Dialog.
-	    SG_LOG(SG_INPUT, SG_INFO, "Invoking Altitude call back function");
-	    NewAltitude( NULL );
-	    return;
-	case 256+GLUT_KEY_F12: // F12 Heading Dialog...
-	    SG_LOG(SG_INPUT, SG_INFO, "Invoking Heading call back function");
-	    NewHeading( NULL );
-	    return;
-	}
+            if ( globals->get_autopilot()->get_HeadingMode() !=
+                 FGAutopilot::FG_HEADING_WAYPOINT ) {
+                globals->get_autopilot()->set_HeadingMode(
+                    FGAutopilot::FG_HEADING_WAYPOINT );
+                globals->get_autopilot()->set_HeadingEnabled( true );
+            } else {
+                globals->get_autopilot()->set_HeadingMode(
+                    FGAutopilot::FG_TC_HEADING_LOCK );
+            }
+            return;
+        case 256+GLUT_KEY_F8: {// F8 toggles fog ... off fastest nicest...
+            const string &fog = fgGetString("/sim/rendering/fog");
+            if (fog == "disabled") {
+              fgSetString("/sim/rendering/fog", "fastest");
+              SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=fastest");
+            } else if (fog == "fastest") {
+              fgSetString("/sim/rendering/fog", "nicest");
+              SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=nicest");
+            } else if (fog == "nicest") {
+              fgSetString("/sim/rendering/fog", "disabled");
+              SG_LOG(SG_INPUT, SG_INFO, "Fog disabled");
+            } else {
+              fgSetString("/sim/rendering/fog", "disabled");
+              SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized fog type "
+                     << fog << ", changed to 'disabled'");
+            }
+            return;
+        }
+        case 256+GLUT_KEY_F10: // F10 toggles menu on and off...
+            SG_LOG(SG_INPUT, SG_INFO, "Invoking call back function");
+            guiToggleMenu();
+            return;
+        case 256+GLUT_KEY_F11: // F11 Altitude Dialog.
+            SG_LOG(SG_INPUT, SG_INFO, "Invoking Altitude call back function");
+            NewAltitude( NULL );
+            return;
+        case 256+GLUT_KEY_F12: // F12 Heading Dialog...
+            SG_LOG(SG_INPUT, SG_INFO, "Invoking Heading call back function");
+            NewHeading( NULL );
+            return;
+        }
 
 // END SPECIALS
 
@@ -363,32 +363,33 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 void
 FGInput::doMouseClick (int b, int updown, int x, int y)
 {
-  int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
+  int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
 
   mouse &m = _mouse_bindings[0];
   mouse_mode &mode = m.modes[m.current_mode];
 
-				// Let the property manager know.
+                                // Let the property manager know.
   if (b >= 0 && b < MAX_MOUSE_BUTTONS)
     m.mouse_button_nodes[b]->setBoolValue(updown == GLUT_DOWN);
 
-				// Pass on to PUI and the panel if
-				// requested, and return if one of
-				// them consumes the event.
+                                // Pass on to PUI and the panel if
+                                // requested, and return if one of
+                                // them consumes the event.
   if (mode.pass_through) {
     if (puMouse(b, updown, x, y))
       return;
     else if ((current_panel != 0) &&
+             current_panel->getVisibility() &&
              current_panel->doMouseAction(b, updown, x, y))
       return;
     else if (fgHandle3DPanelMouseEvent(b, updown, x, y))
       return;
   }
 
-				// OK, PUI and the panel didn't want the click
+                                // OK, PUI and the panel didn't want the click
   if (b >= MAX_MOUSE_BUTTONS) {
     SG_LOG(SG_INPUT, SG_ALERT, "Mouse button " << b
-	   << " where only " << MAX_MOUSE_BUTTONS << " expected");
+           << " where only " << MAX_MOUSE_BUTTONS << " expected");
     return;
   }
 
@@ -398,7 +399,7 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
 void
 FGInput::doMouseMotion (int x, int y)
 {
-  int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
+  int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
 
   int xsize = fgGetInt("/sim/startup/xsize", 800);
   int ysize = fgGetInt("/sim/startup/ysize", 600);
@@ -407,13 +408,13 @@ FGInput::doMouseMotion (int x, int y)
     return;
   mouse_mode &mode = m.modes[m.current_mode];
 
-				// Pass on to PUI if requested, and return
-				// if PUI consumed the event.
+                                // Pass on to PUI if requested, and return
+                                // if PUI consumed the event.
   if (mode.pass_through && puMouse(x, y))
     return;
 
-				// OK, PUI didn't want the event,
-				// so we can play with it.
+                                // OK, PUI didn't want the event,
+                                // so we can play with it.
   if (x != m.x) {
     int delta = x - m.x;
     for (unsigned int i = 0; i < mode.x_bindings[modifiers].size(); i++)
@@ -425,7 +426,7 @@ FGInput::doMouseMotion (int x, int y)
       mode.y_bindings[modifiers][i]->fire(double(delta), double(ysize));
   }
 
-				// Constrain the mouse if requested
+                                // Constrain the mouse if requested
   if (mode.constrained) {
     bool need_warp = false;
     if (x <= 0) {
@@ -454,7 +455,7 @@ FGInput::doMouseMotion (int x, int y)
 void
 FGInput::_init_keyboard ()
 {
-				// TODO: zero the old bindings first.
+                                // TODO: zero the old bindings first.
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing key bindings");
   SGPropertyNode * key_nodes = fgGetNode("/input/keyboard");
   if (key_nodes == 0) {
@@ -475,7 +476,7 @@ FGInput::_init_keyboard ()
 void
 FGInput::_init_joystick ()
 {
-				// TODO: zero the old bindings first.
+                                // TODO: zero the old bindings first.
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick bindings");
   SGPropertyNode * js_nodes = fgGetNode("/input/joysticks");
   if (js_nodes == 0) {
@@ -499,10 +500,10 @@ FGInput::_init_joystick ()
       bool found_js = false;
       const char * name = js->getName();
       SG_LOG(SG_INPUT, SG_INFO, "Looking for bindings for joystick \""
-	     << name << '"');
+             << name << '"');
       vector<SGPropertyNode_ptr> nodes = js_nodes->getChildren("js-named");
       for (unsigned int i = 0; i < nodes.size(); i++) {
-	SGPropertyNode_ptr node = nodes[i];
+        SGPropertyNode_ptr node = nodes[i];
         vector<SGPropertyNode_ptr> name_nodes = node->getChildren("name");
         for (unsigned int j = 0; j < name_nodes.size(); j++) {
             const char * js_name = name_nodes[j]->getStringValue();
@@ -527,7 +528,7 @@ FGInput::_init_joystick ()
 #else
     int nbuttons = MAX_JOYSTICK_BUTTONS;
 #endif
-	
+        
     int naxes = js->getNumAxes();
     if (naxes > MAX_JOYSTICK_AXES) naxes = MAX_JOYSTICK_AXES;
     _joystick_bindings[i].naxes = naxes;
@@ -535,17 +536,17 @@ FGInput::_init_joystick ()
 
     SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick " << i);
 
-				// Set up range arrays
+                                // Set up range arrays
     float minRange[MAX_JOYSTICK_AXES];
     float maxRange[MAX_JOYSTICK_AXES];
     float center[MAX_JOYSTICK_AXES];
 
-				// Initialize with default values
+                                // Initialize with default values
     js->getMinRange(minRange);
     js->getMaxRange(maxRange);
     js->getCenter(center);
 
-				// Allocate axes and buttons
+                                // Allocate axes and buttons
     _joystick_bindings[i].axes = new axis[naxes];
     _joystick_bindings[i].buttons = new button[nbuttons];
 
@@ -557,8 +558,8 @@ FGInput::_init_joystick ()
     for (j = 0; j < naxes; j++) {
       const SGPropertyNode * axis_node = js_node->getChild("axis", j);
       if (axis_node == 0) {
-	SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for axis " << j);
-	axis_node = js_node->getChild("axis", j, true);
+        SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for axis " << j);
+        axis_node = js_node->getChild("axis", j, true);
       }
       
       axis &a = _joystick_bindings[i].axes[j];
@@ -588,9 +589,9 @@ FGInput::_init_joystick ()
       sprintf(buf, "%d", j);
       SG_LOG(SG_INPUT, SG_DEBUG, "Initializing button " << j);
       _init_button(js_node->getChild("button", j),
-		   _joystick_bindings[i].buttons[j],
-		   buf);
-		   
+                   _joystick_bindings[i].buttons[j],
+                   buf);
+                   
     }
 
     js->setMinRange(minRange);
@@ -650,7 +651,7 @@ FGInput::_init_mouse ()
     SGPropertyNode * mouse_node = mouse_nodes->getChild("mouse", i, true);
     mouse &m = _mouse_bindings[i];
 
-				// Grab node pointers
+                                // Grab node pointers
     char buf[64];
     sprintf(buf, "/devices/status/mice/mouse[%d]/mode", i);
     m.mode_node = fgGetNode(buf, true);
@@ -661,47 +662,47 @@ FGInput::_init_mouse ()
       m.mouse_button_nodes[j]->setBoolValue(false);
     }
 
-				// Read all the modes
+                                // Read all the modes
     m.nModes = mouse_node->getIntValue("mode-count", 1);
     m.modes = new mouse_mode[m.nModes];
 
     for (int j = 0; j < m.nModes; j++) {
       int k;
 
-				// Read the mouse cursor for this mode
+                                // Read the mouse cursor for this mode
       SGPropertyNode * mode_node = mouse_node->getChild("mode", j, true);
       const char * cursor_name =
-	mode_node->getStringValue("cursor", "inherit");
+        mode_node->getStringValue("cursor", "inherit");
       m.modes[j].cursor = GLUT_CURSOR_INHERIT;
       for (k = 0; mouse_cursor_map[k].name != 0; k++) {
-	if (!strcmp(mouse_cursor_map[k].name, cursor_name)) {
-	  m.modes[j].cursor = mouse_cursor_map[k].cursor;
-	  break;
-	}
+        if (!strcmp(mouse_cursor_map[k].name, cursor_name)) {
+          m.modes[j].cursor = mouse_cursor_map[k].cursor;
+          break;
+        }
       }
 
-				// Read other properties for this mode
+                                // Read other properties for this mode
       m.modes[j].constrained = mode_node->getBoolValue("constrained", false);
       m.modes[j].pass_through = mode_node->getBoolValue("pass-through", false);
 
-				// Read the button bindings for this mode
+                                // Read the button bindings for this mode
       m.modes[j].buttons = new button[MAX_MOUSE_BUTTONS];
       char buf[32];
       for (k = 0; k < MAX_MOUSE_BUTTONS; k++) {
-	sprintf(buf, "mouse button %d", k);
-	SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse button " << k);
-	_init_button(mode_node->getChild("button", k),
-		     m.modes[j].buttons[k],
-		     buf);
+        sprintf(buf, "mouse button %d", k);
+        SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse button " << k);
+        _init_button(mode_node->getChild("button", k),
+                     m.modes[j].buttons[k],
+                     buf);
       }
 
-				// Read the axis bindings for this mode
+                                // Read the axis bindings for this mode
       _read_bindings(mode_node->getChild("x-axis", 0, true),
-		     m.modes[j].x_bindings,
-		     FG_MOD_NONE);
+                     m.modes[j].x_bindings,
+                     FG_MOD_NONE);
       _read_bindings(mode_node->getChild("y-axis", 0, true),
-		     m.modes[j].y_bindings,
-		     FG_MOD_NONE);
+                     m.modes[j].y_bindings,
+                     FG_MOD_NONE);
     }
   }
 }
@@ -709,15 +710,15 @@ FGInput::_init_mouse ()
 
 void
 FGInput::_init_button (const SGPropertyNode * node,
-		       button &b,
-		       const string name)
-{	
+                       button &b,
+                       const string name)
+{       
   if (node == 0) {
     SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for button " << name);
   } else {
     b.is_repeatable = node->getBoolValue("repeatable", b.is_repeatable);
     
-    		// Get the bindings for the button
+                // Get the bindings for the button
     _read_bindings(node, b.bindings, FG_MOD_NONE);
   }
 }
@@ -733,7 +734,7 @@ FGInput::_update_keyboard ()
 void
 FGInput::_update_joystick ()
 {
-  int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
+  int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
   int buttons;
   // float js_val, diff;
   float axis_values[MAX_JOYSTICK_AXES];
@@ -750,43 +751,43 @@ FGInput::_update_joystick ()
     js->read(&buttons, axis_values);
 
 
-				// Fire bindings for the axes.
+                                // Fire bindings for the axes.
     for ( j = 0; j < _joystick_bindings[i].naxes; j++) {
       axis &a = _joystick_bindings[i].axes[j];
       
-				// Do nothing if the axis position
-				// is unchanged; only a change in
-				// position fires the bindings.
+                                // Do nothing if the axis position
+                                // is unchanged; only a change in
+                                // position fires the bindings.
       if (fabs(axis_values[j] - a.last_value) > a.tolerance) {
-// 	SG_LOG(SG_INPUT, SG_DEBUG, "Axis " << j << " has moved");
-	SGPropertyNode node;
-	a.last_value = axis_values[j];
-// 	SG_LOG(SG_INPUT, SG_DEBUG, "There are "
-// 	       << a.bindings[modifiers].size() << " bindings");
-	for (unsigned int k = 0; k < a.bindings[modifiers].size(); k++)
-	  a.bindings[modifiers][k]->fire(axis_values[j]);
+//      SG_LOG(SG_INPUT, SG_DEBUG, "Axis " << j << " has moved");
+        SGPropertyNode node;
+        a.last_value = axis_values[j];
+//      SG_LOG(SG_INPUT, SG_DEBUG, "There are "
+//             << a.bindings[modifiers].size() << " bindings");
+        for (unsigned int k = 0; k < a.bindings[modifiers].size(); k++)
+          a.bindings[modifiers][k]->fire(axis_values[j]);
       }
      
-				// do we have to emulate axis buttons?
+                                // do we have to emulate axis buttons?
       if (a.low.bindings[modifiers].size())
-	_update_button(_joystick_bindings[i].axes[j].low,
-		       modifiers,
-		       axis_values[j] < a.low_threshold,
-		       -1, -1);
+        _update_button(_joystick_bindings[i].axes[j].low,
+                       modifiers,
+                       axis_values[j] < a.low_threshold,
+                       -1, -1);
       
       if (a.high.bindings[modifiers].size())
-	_update_button(_joystick_bindings[i].axes[j].high,
-		       modifiers,
-		       axis_values[j] > a.high_threshold,
-		       -1, -1);
+        _update_button(_joystick_bindings[i].axes[j].high,
+                       modifiers,
+                       axis_values[j] > a.high_threshold,
+                       -1, -1);
     }
 
-				// Fire bindings for the buttons.
+                                // Fire bindings for the buttons.
     for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
       _update_button(_joystick_bindings[i].buttons[j],
-		     modifiers,
-		     (buttons & (1 << j)) > 0,
-		     -1, -1);
+                     modifiers,
+                     (buttons & (1 << j)) > 0,
+                     -1, -1);
     }
   }
 }
@@ -812,57 +813,57 @@ FGInput::_update_mouse ()
 
 void
 FGInput::_update_button (button &b, int modifiers, bool pressed,
-			 int x, int y)
+                         int x, int y)
 {
   if (pressed) {
-				// The press event may be repeated.
+                                // The press event may be repeated.
     if (!b.last_state || b.is_repeatable) {
       SG_LOG( SG_INPUT, SG_DEBUG, "Button has been pressed" );
       for (unsigned int k = 0; k < b.bindings[modifiers].size(); k++)
-	b.bindings[modifiers][k]->fire(x, y);
+        b.bindings[modifiers][k]->fire(x, y);
     }
   } else {
-				// The release event is never repeated.
+                                // The release event is never repeated.
     if (b.last_state) {
       SG_LOG( SG_INPUT, SG_DEBUG, "Button has been released" );
       for (unsigned int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
-	b.bindings[modifiers|FG_MOD_UP][k]->fire(x, y);
+        b.bindings[modifiers|FG_MOD_UP][k]->fire(x, y);
     }
   }
-	  
+          
   b.last_state = pressed;
 }  
 
 
 void
 FGInput::_read_bindings (const SGPropertyNode * node, 
-			 binding_list_t * binding_list,
-			 int modifiers)
+                         binding_list_t * binding_list,
+                         int modifiers)
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Reading all bindings");
   vector<SGPropertyNode_ptr> bindings = node->getChildren("binding");
   for (unsigned int i = 0; i < bindings.size(); i++) {
     SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding "
-	   << bindings[i]->getStringValue("command"));
+           << bindings[i]->getStringValue("command"));
     binding_list[modifiers].push_back(new FGBinding(bindings[i]));
   }
 
-				// Read nested bindings for modifiers
+                                // Read nested bindings for modifiers
   if (node->getChild("mod-up") != 0)
     _read_bindings(node->getChild("mod-up"), binding_list,
-		   modifiers|FG_MOD_UP);
+                   modifiers|FG_MOD_UP);
 
   if (node->getChild("mod-shift") != 0)
     _read_bindings(node->getChild("mod-shift"), binding_list,
-		   modifiers|FG_MOD_SHIFT);
+                   modifiers|FG_MOD_SHIFT);
 
   if (node->getChild("mod-ctrl") != 0)
     _read_bindings(node->getChild("mod-ctrl"), binding_list,
-		   modifiers|FG_MOD_CTRL);
+                   modifiers|FG_MOD_CTRL);
 
   if (node->getChild("mod-alt") != 0)
     _read_bindings(node->getChild("mod-alt"), binding_list,
-		   modifiers|FG_MOD_ALT);
+                   modifiers|FG_MOD_ALT);
 }
 
 
@@ -871,28 +872,28 @@ FGInput::_find_key_bindings (unsigned int k, int modifiers)
 {
   button &b = _key_bindings[k];
 
-				// Try it straight, first.
+                                // Try it straight, first.
   if (b.bindings[modifiers].size() > 0)
     return b.bindings[modifiers];
 
-				// Try removing the control modifier
-				// for control keys.
+                                // Try removing the control modifier
+                                // for control keys.
   else if ((modifiers&FG_MOD_CTRL) && iscntrl(k))
     return _find_key_bindings(k, modifiers&~FG_MOD_CTRL);
 
-				// Try removing shift modifier 
-				// for upper case or any punctuation
-				// (since different keyboards will
-				// shift different punctuation types)
+                                // Try removing shift modifier 
+                                // for upper case or any punctuation
+                                // (since different keyboards will
+                                // shift different punctuation types)
   else if ((modifiers&FG_MOD_SHIFT) && (isupper(k) || ispunct(k)))
     return _find_key_bindings(k, modifiers&~FG_MOD_SHIFT);
 
-				// Try removing alt modifier for
-				// high-bit characters.
+                                // Try removing alt modifier for
+                                // high-bit characters.
   else if ((modifiers&FG_MOD_ALT) && k >= 128 && k < 256)
     return _find_key_bindings(k, modifiers&~FG_MOD_ALT);
 
-				// Give up and return the empty vector.
+                                // Give up and return the empty vector.
   else
     return b.bindings[modifiers];
 }
@@ -911,7 +912,7 @@ FGInput::button::button ()
 
 FGInput::button::~button ()
 {
-				// FIXME: memory leak
+                                // FIXME: memory leak
 //   for (int i = 0; i < FG_MOD_MAX; i++)
 //     for (int j = 0; i < bindings[i].size(); j++)
 //       delete bindings[i][j];
@@ -971,7 +972,7 @@ FGInput::mouse_mode::mouse_mode ()
 
 FGInput::mouse_mode::~mouse_mode ()
 {
-				// FIXME: memory leak
+                                // FIXME: memory leak
 //   for (int i = 0; i < FG_MOD_MAX; i++) {
 //     int j;
 //     for (j = 0; i < x_bindings[i].size(); j++)
@@ -1036,7 +1037,7 @@ static inline int get_mods ()
 void
 GLUTkey(unsigned char k, int x, int y)
 {
-				// Give PUI a chance to grab it first.
+                                // Give PUI a chance to grab it first.
     if (!puKeyboard(k, PU_DOWN)) {
       if (default_input != 0)
           default_input->doKey(k, get_mods(), x, y);
@@ -1053,7 +1054,7 @@ GLUTkeyup(unsigned char k, int x, int y)
 void
 GLUTspecialkey(int k, int x, int y)
 {
-				// Give PUI a chance to grab it first.
+                                // Give PUI a chance to grab it first.
     if (!puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN)) {
         if (default_input != 0)
             default_input->doKey(k + 256, get_mods(), x, y);
