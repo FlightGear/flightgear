@@ -6,6 +6,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 #include <GL/gl.h>
 #include <simgear/screen/texture.hxx>
 
@@ -92,7 +93,7 @@ int main (int argc, char **argv)
       memcpy(normalmap_file+i, "_n.rgb\0", 7);
    }
 
-   texture.make_normalmap();
+   texture.make_normalmap(brightness, contrast);
    texture.write_texture(normalmap_file);
 
    free( normalmap_file );
