@@ -79,7 +79,7 @@ time_t get_start_gmt(int year) {
 #   define TIMEZONE_OFFSET_WORKS 1
 #  endif
 
-    long int start = mktime(&mt);
+    time_t start = mktime(&mt);
 
     printf("start1 = %ld\n", start);
     printf("start2 = %s", ctime(&start));
