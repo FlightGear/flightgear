@@ -38,6 +38,9 @@
 	                    values can be recorded
                03/03/2003   (RD) Added flap_cmd_record
                03/16/2003   (RD) Added trigger record variables
+               07/17/2003   (RD) Added error checking code (default
+                            routine) since it was removed from
+                            uiuc_menu_record()
 
 ----------------------------------------------------------------------
 
@@ -2287,6 +2290,16 @@ void uiuc_recorder( double dt )
 	    case trigger_counter_record:
 	      {
 		fout << trigger_counter << " ";
+		break;
+	      }
+	    default:
+	      {
+		if (ignore_unknown_keywords) {
+		  // do nothing
+		} else {
+		  // print error message
+		  uiuc_warnings_errors(2, *command_line);
+		}
 		break;
 	      }
 	    };
