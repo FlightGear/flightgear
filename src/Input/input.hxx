@@ -283,6 +283,12 @@ private:
 
 };
 
+// Handle keyboard events
+void GLUTkey(unsigned char k, int x, int y);
+void GLUTkeyup(unsigned char k, int x, int y);
+void GLUTspecialkey(int k, int x, int y);
+void GLUTspecialkeyup(int k, int x, int y);
+
 extern FGInput current_input;
 
 #endif // _CONTROLS_HXX
