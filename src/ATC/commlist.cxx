@@ -209,6 +209,52 @@ int FGCommList::FindByPos(double lon, double lat, double elev, double range, com
 }
 
 
+// Returns the distance in meters to the closest station of a given type,
+// with the details written into ATCData& ad.  If no type is specifed simply
+// returns the distance to the closest station of any type.
+// Returns -9999 if no stations found within max_range in nautical miles (default 100 miles).
+// Note that the search algorithm starts at 10 miles and multiplies by 10 thereafter, so if
+// say 300 miles is specifed 10, then 100, then 1000 will be searched, breaking at first result 
+// and giving up after 1000.
+double FGCommList::FindClosest( double lon, double lat, double elev, ATCData& ad, atc_type tp, double max_range) {
+	int num_stations = 0;
+	int range = 10;
+	comm_list_type stations;
+	comm_list_iterator itr;
+	double distance = -9999.0;
+	
+	while(num_stations == 0) {
+		num_stations = FindByPos(lon, lat, elev, range, &stations, tp);
+		if(num_stations) {
+			double closest = max_range * SG_NM_TO_METER;
+			double tmp;
+			for(itr = stations.begin(); itr != stations.end(); ++itr) {	
+				ATCData ad2 = *itr;
+				//Point3D p1(*itr.lon, *itr.lat, *itr.elev);
+				Point3D p1(ad2.lon, ad2.lat, ad2.elev);
+				FGAirport a;
+				if(dclFindAirportID(ad2.ident, &a)) {
+					Point3D p2(lon, lat, elev);
+					tmp = dclGetHorizontalSeparation(p1, p2);
+					if(tmp <= closest) {
+						closest = tmp;
+						distance = tmp;
+						ad = *itr;
+					}
+				}
+			}
+			//cout << "Closest station is " << ad.ident << " at a range of " << distance << " meters\n";
+			return(distance);
+		}
+		if(range > max_range) {
+			break;
+		}
+		range *= 10;
+	}
+	return(-9999.0);
+}
+
+
 // Find by Airport code.
 // This is basically a wrapper for a call to the airport database to get the airport
 // position followed by a call to FindByPos(...)

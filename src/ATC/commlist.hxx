@@ -84,6 +84,17 @@ public:
 	// ** stations is erased before use **
     int FindByPos( double lon, double lat, double elev, double range, comm_list_type* stations, atc_type tp = INVALID );
 	
+	// Returns the distance in meters to the closest station of a given type,
+	// with the details written into ATCData& ad.  If no type is specifed simply
+	// returns the distance to the closest station of any type.
+	// Returns -9999 if no stations found within max_range in nautical miles (default 100 miles).
+	// Note that the search algorithm starts at 10 miles and multiplies by 10 thereafter, so if
+	// say 300 miles is specifed 10, then 100, then 1000 will be searched, breaking at first result 
+	// and giving up after 1000.
+	// !!!Be warned that searching anything over 100 miles will pause the sim unacceptably!!!
+	//	(The ability to search longer ranges should be used during init only).
+	double FindClosest( double lon, double lat, double elev, ATCData& ad, atc_type tp = INVALID, double max_range = 100.0 );
+	
 	// Find by Airport code.
 	bool FindByCode( string ICAO, ATCData& ad, atc_type tp = INVALID );
 
