@@ -21,7 +21,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * $Id$
- * (Log is kept at end of this file)
  **************************************************************************/
 
 
@@ -281,33 +280,3 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... ) {
 }
 
 
-/* $Log$
-/* Revision 1.1  1999/04/05 21:32:33  curt
-/* Initial revision
-/*
- * Revision 1.4  1998/06/01 17:49:44  curt
- * Rewrote a slightly ambiguous code fragment (contributed by Charlie Hotchkiss)
- *
- * Revision 1.3  1998/05/07 23:03:54  curt
- * Added an entry for AUTOPILOT.
- *
- * Revision 1.2  1998/04/21 17:03:45  curt
- * Prepairing for C++ integration.
- *
- * Revision 1.1  1998/04/18 03:52:04  curt
- * Moved to Lib directory and created a libDebug.
- *
- * Revision 1.10  1998/03/14 00:31:21  curt
- * Beginning initial terrain texturing experiments.
- *
- * Revision 1.9  1998/03/09 22:44:58  curt
- * Modified so that you can specify FG_DEBUGCLASS ***or*** FG_DEBUG_PRIORITY
- *
- * Revision 1.8  1998/03/09 22:11:00  curt
- * Processed through the format-o-matic.
- *
- * Revision 1.7  1998/02/16 13:39:43  curt
- * Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
- * tiles to occasionally be missing.
- *
- */

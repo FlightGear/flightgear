@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 #ifndef STRUTILS_H
 #define STRUTILS_H
@@ -63,25 +62,3 @@ atoi( const string& str )
 
 #endif // STRUTILS_H
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.6  1999/03/02 01:01:56  curt
-// Tweaks for compiling with native SGI compilers.
-//
-// Revision 1.5  1999/02/26 22:08:09  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.4  1999/01/19 20:41:47  curt
-// Portability updates contributed by Bernie Bright.
-//
-// Revision 1.3  1998/10/16 00:50:57  curt
-// Remove leading _ from a couple defines.
-//
-// Revision 1.2  1998/10/13 00:10:07  curt
-// More portability changes to help with windoze compilation problems.
-//
-// Revision 1.1  1998/09/01 19:06:31  curt
-// Initial revision.
-//

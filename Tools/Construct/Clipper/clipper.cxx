@@ -21,7 +21,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
  
 
 
@@ -272,36 +271,3 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.9  1999/03/31 23:46:38  curt
-// Debuggin output tweaks.
-//
-// Revision 1.8  1999/03/30 23:49:22  curt
-// Added some debugging output.
-//
-// Revision 1.7  1999/03/30 13:41:38  curt
-// Working towards better handling of multi-contoured polygons.
-//
-// Revision 1.6  1999/03/27 05:20:53  curt
-// Pass along default area explicitely to triangulator.
-//
-// Revision 1.5  1999/03/19 22:28:46  curt
-// Only add non-null polygons to output list.
-//
-// Revision 1.4  1999/03/19 00:26:18  curt
-// Fixed a clipping bug (polygons specified in wrong order).
-// Touched up a few compiler warnings.
-//
-// Revision 1.3  1999/03/17 23:48:58  curt
-// minor renaming and a bit of rearranging.
-//
-// Revision 1.2  1999/03/13 23:51:33  curt
-// Renamed main.cxx to testclipper.cxx
-// Converted clipper routines to a class FGClipper.
-//
-// Revision 1.1  1999/03/01 15:39:39  curt
-// Initial revision.
-//

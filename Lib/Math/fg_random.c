@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifdef HAVE_CONFIG_H
@@ -70,48 +69,3 @@ double fg_random(void) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.10  1998/11/07 19:07:03  curt
-// Enable release builds using the --without-logging option to the configure
-// script.  Also a couple log message cleanups, plus some C to C++ comment
-// conversion.
-//
-// Revision 1.9  1998/11/06 21:17:26  curt
-// Converted to new logstream debugging facility.  This allows release
-// builds with no messages at all (and no performance impact) by using
-// the -DFG_NDEBUG flag.
-//
-// Revision 1.8  1998/04/25 22:06:23  curt
-// Edited cvs log messages in source files ... bad bad bad!
-//
-// Revision 1.7  1998/04/24 00:43:13  curt
-// Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-//
-// Revision 1.6  1998/04/18 03:53:42  curt
-// Miscellaneous Tweaks.
-//
-// Revision 1.5  1998/04/03 22:10:29  curt
-// Converting to Gnu autoconf system.
-//
-// Revision 1.4  1998/02/03 23:20:28  curt
-// Lots of little tweaks to fix various consistency problems discovered by
-// Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-// passed arguments along to the real printf().  Also incorporated HUD changes
-// by Michele America.
-//
-// Revision 1.3  1998/01/27 00:47:59  curt
-// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
-// system and commandline/config file processing code.
-//
-// Revision 1.2  1997/12/30 20:47:48  curt
-// Integrated new event manager with subsystem initializations.
-//
-// Revision 1.1  1997/07/30 16:04:09  curt
-// Moved random routines from Utils/ to Math/
-//
-// Revision 1.1  1997/07/19 22:31:57  curt
-// Initial revision.
-//

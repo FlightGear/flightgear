@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include <Include/compiler.h>
@@ -466,48 +465,3 @@ void fgSerialProcess() {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:46  curt
-// Initial revision
-//
-// Revision 1.13  1999/03/02 01:03:16  curt
-// Tweaks for building with native SGI compilers.
-//
-// Revision 1.12  1999/02/26 22:09:50  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.11  1999/02/05 21:29:11  curt
-// Modifications to incorporate Jon S. Berndts flight model code.
-//
-// Revision 1.10  1999/01/21 00:55:01  curt
-// Fixed some problems with timing of output strings.
-// Added checksum support for nmea and garmin output.
-//
-// Revision 1.9  1999/01/20 13:42:26  curt
-// Tweaked FDM interface.
-// Testing check sum support for NMEA serial output.
-//
-// Revision 1.8  1999/01/19 20:57:04  curt
-// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
-//
-// Revision 1.7  1998/12/05 15:54:21  curt
-// Renamed class fgFLIGHT to class FGState as per request by JSB.
-//
-// Revision 1.6  1998/12/03 01:17:18  curt
-// Converted fgFLIGHT to a class.
-//
-// Revision 1.5  1998/11/30 17:43:32  curt
-// Lots of tweaking to get serial output to actually work.
-//
-// Revision 1.4  1998/11/25 01:33:58  curt
-// Support for an arbitrary number of serial ports.
-//
-// Revision 1.3  1998/11/23 20:51:51  curt
-// Tweaking serial stuff.
-//
-// Revision 1.2  1998/11/19 13:53:25  curt
-// Added a "Garmin" mode.
-//
-// Revision 1.1  1998/11/16 13:57:42  curt
-// Initial revision.
-//

@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifdef HAVE_CONFIG_H
@@ -153,52 +152,4 @@ void fgSplashUpdate ( double progress ) {
     xglPopMatrix();
 }
 
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:47  curt
-// Initial revision
-//
-// Revision 1.10  1999/03/08 21:56:40  curt
-// Added panel changes sent in by Friedemann.
-// Added a splash screen randomization since we have several nice splash screens.
-//
-// Revision 1.9  1998/12/09 18:50:26  curt
-// Converted "class fgVIEW" to "class FGView" and updated to make data
-// members private and make required accessor functions.
-//
-// Revision 1.8  1998/11/16 14:00:05  curt
-// Added pow() macro bug work around.
-// Added support for starting FGFS at various resolutions.
-// Added some initial serial port support.
-// Specify default log levels in main().
-//
-// Revision 1.7  1998/11/06 21:18:14  curt
-// Converted to new logstream debugging facility.  This allows release
-// builds with no messages at all (and no performance impact) by using
-// the -DFG_NDEBUG flag.
-//
-// Revision 1.6  1998/10/17 01:34:25  curt
-// C++ ifying ...
-//
-// Revision 1.5  1998/09/26 13:17:29  curt
-// Clear screen to "black" before drawing splash screen.
-//
-// Revision 1.4  1998/08/27 17:02:08  curt
-// Contributions from Bernie Bright <bbright@c031.aone.net.au>
-// - use strings for fg_root and airport_id and added methods to return
-//   them as strings,
-// - inlined all access methods,
-// - made the parsing functions private methods,
-// - deleted some unused functions.
-// - propogated some of these changes out a bit further.
-//
-// Revision 1.3  1998/08/25 16:59:10  curt
-// Directory reshuffling.
-//
-// Revision 1.2  1998/07/13 21:01:40  curt
-// Wrote access functions for current fgOPTIONS.
-//
-// Revision 1.1  1998/07/06 02:42:36  curt
-// Initial revision.
-//
 

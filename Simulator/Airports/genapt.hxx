@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _GENAPT_HXX
@@ -64,17 +63,3 @@ fgAptGenerate(const string& path, fgTILE *tile);
 #endif /* _AIRPORTS_HXX */
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:47  curt
-// Initial revision
-//
-// Revision 1.3  1999/03/02 01:02:32  curt
-// Tweaks for building with native SGI compilers.
-//
-// Revision 1.2  1998/11/23 21:48:10  curt
-// Borland portability tweaks.
-//
-// Revision 1.1  1998/09/14 02:14:01  curt
-// Initial revision of genapt.[ch]xx for generating airport scenery.
-//
-//

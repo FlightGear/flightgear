@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifdef HAVE_CONFIG_H
@@ -335,50 +334,3 @@ int fgSERIAL::write_port(const string& value) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:34  curt
-// Initial revision
-//
-// Revision 1.9  1999/02/02 20:13:23  curt
-// MSVC++ portability changes by Bernie Bright:
-//
-// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
-// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
-// Simulator/Cockpit/hud.cxx: Added Standard headers
-// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
-// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
-// Simulator/Main/fg_init.cxx:
-// Simulator/Main/GLUTmain.cxx:
-// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
-// Simulator/Objects/material.hxx:
-// Simulator/Time/timestamp.hxx: VC++ friend kludge
-// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
-// Simulator/Main/views.hxx: Added a constant
-//
-// Revision 1.8  1999/01/20 13:42:21  curt
-// Tweaked FDM interface.
-// Testing check sum support for NMEA serial output.
-//
-// Revision 1.7  1998/12/04 01:24:35  curt
-// Tweak for SGI portability.
-//
-// Revision 1.6  1998/11/30 17:15:29  curt
-// Having the class destructor close the fd was a bad idea ... especially if you
-// ever make a copy of the instance and then subsequently destroy either.
-// close_port() is now a separate member function.
-//
-// Revision 1.5  1998/11/25 01:33:23  curt
-// Remove call to cfmakeraw()
-//
-// Revision 1.4  1998/11/23 21:47:00  curt
-// Cygnus tools compatibility tweaks.
-//
-// Revision 1.3  1998/11/19 13:52:54  curt
-// port configuration tweaks & experiments.
-//
-// Revision 1.2  1998/11/19 03:35:43  curt
-// Updates ...
-//
-// Revision 1.1  1998/11/16 13:53:02  curt
-// Initial revision.
-//

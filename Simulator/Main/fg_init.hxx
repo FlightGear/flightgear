@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _FG_INIT_HXX
@@ -45,27 +44,3 @@ int fgInitSubsystems( void );
 #endif // _FG_INIT_H
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:47  curt
-// Initial revision
-//
-// Revision 1.2  1998/04/25 15:11:12  curt
-// Added an command line option to set starting position based on airport ID.
-//
-// Revision 1.1  1998/04/22 13:25:44  curt
-// C++ - ifing the code.
-// Starting a bit of reorganization of lighting code.
-//
-// Revision 1.4  1998/04/21 17:02:41  curt
-// Prepairing for C++ integration.
-//
-// Revision 1.3  1998/02/12 21:59:50  curt
-// Incorporated code changes contributed by Charlie Hotchkiss
-// <chotchkiss@namg.us.anritsu.com>
-//
-// Revision 1.2  1998/01/22 02:59:38  curt
-// Changed #ifdef FILE_H to #ifdef _FILE_H
-//
-// Revision 1.1  1997/08/23 01:46:20  curt
-// Initial revision.
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 //
 
 
@@ -41,17 +40,3 @@ gen_runway_area( double lon, double lat, double heading,
 #endif // _AREA_H
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.2  1998/09/04 23:04:49  curt
-// Beginning of convex hull genereration routine.
-//
-// Revision 1.1  1998/09/01 19:34:33  curt
-// Initial revision.
-//
-// Revision 1.1  1998/07/20 12:54:05  curt
-// Initial revision.
-//
-//

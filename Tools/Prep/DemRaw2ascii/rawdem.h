@@ -19,7 +19,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * $Id$
- * (Log is kept at end of this file)
  */
 
 
@@ -75,14 +74,3 @@ void rawProcessStrip( fgRAWDEM *raw, int lat_degrees, char *path );
 #endif /* _RAWDEM_H */
 
 
-/* $Log$
-/* Revision 1.1  1999/04/05 21:32:42  curt
-/* Initial revision
-/*
-/* Revision 1.2  1998/03/03 13:10:30  curt
-/* Close to a working version.
-/*
- * Revision 1.1  1998/03/02 23:31:02  curt
- * Initial revision.
- *
- */

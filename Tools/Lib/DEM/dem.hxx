@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _DEM_HXX
@@ -153,61 +152,3 @@ public:
 #endif // _DEM_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:41  curt
-// Initial revision
-//
-// Revision 1.13  1999/03/13 17:40:39  curt
-// Moved point interpolation and least squares fitting to contruction program
-// area.
-// Moved leastsqs.* to Lib/Math/
-//
-// Revision 1.12  1999/03/12 22:53:09  curt
-// Added a routine to dump out the portion of the dem data covered by a
-// specified bucket.  Other changes related to needs of scenery tools overhaul.
-//
-// Revision 1.11  1999/03/11 23:31:57  curt
-// Tweaks to use newbucket.hxx
-//
-// Revision 1.10  1999/03/10 01:09:13  curt
-// Tweaks to go along with scenery tools overhaul.
-// Added a new constructor that accepts the file name.
-//
-// Revision 1.9  1998/10/16 19:08:14  curt
-// Portability updates from Bernie Bright.
-//
-// Revision 1.8  1998/09/19 17:59:46  curt
-// Use c++ streams (fg_gzifstream).  Also converted many character arrays to
-// the string class.
-//
-// Revision 1.7  1998/07/04 00:47:19  curt
-// typedef'd struct fgBUCKET.
-//
-// Revision 1.6  1998/06/05 18:14:40  curt
-// Abort out early when reading the "A" record if it doesn't look like
-// a proper DEM file.
-//
-// Revision 1.5  1998/04/22 13:14:46  curt
-// Fixed a bug in zlib usage.
-//
-// Revision 1.4  1998/04/21 17:03:41  curt
-// Prepairing for C++ integration.
-//
-// Revision 1.3  1998/04/18 03:53:06  curt
-// Added zlib support.
-//
-// Revision 1.2  1998/04/14 02:43:28  curt
-// Used "new" to auto-allocate large DEM parsing arrays in class constructor.
-//
-// Revision 1.1  1998/04/08 22:57:23  curt
-// Adopted Gnu automake/autoconf system.
-//
-// Revision 1.2  1998/03/23 20:35:42  curt
-// Updated to use FG_EPSILON
-//
-// Revision 1.1  1998/03/19 02:54:47  curt
-// Reorganized into a class lib called fgDEM.
-//
-// Revision 1.1  1998/03/19 01:46:29  curt
-// Initial revision.
-//

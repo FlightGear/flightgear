@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include "trinodes.hxx"
@@ -96,38 +95,5 @@ int FGTriNodes::course_add( const Point3D& p ) {
 
     return counter;
 }
-
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.6  1999/03/27 05:30:15  curt
-// Handle corner nodes separately from the rest of the fitted nodes.
-// Add fitted nodes in after corners and polygon nodes since the fitted nodes
-//   are less important.  Subsequent nodes will "snap" to previous nodes if
-//   they are "close enough."
-// Need to manually divide segments to prevent "T" intersetions which can
-//   confound the triangulator.  Hey, I got to use a recursive method!
-// Pass along correct triangle attributes to output file generator.
-// Do fine grained node snapping for corners and polygons, but course grain
-//   node snapping for fitted terrain nodes.
-//
-// Revision 1.5  1999/03/23 22:02:54  curt
-// Refinements in naming and organization.
-//
-// Revision 1.4  1999/03/22 23:49:04  curt
-// Modifications to facilitate conversion to output format.
-//
-// Revision 1.3  1999/03/20 02:21:54  curt
-// Continue shaping the code towards triangulation bliss.  Added code to
-// calculate some point guaranteed to be inside a polygon.
-//
-// Revision 1.2  1999/03/19 00:27:12  curt
-// Continued work on triangulation preparation.
-//
-// Revision 1.1  1999/03/17 23:52:00  curt
-// Initial revision.
-//
 
 

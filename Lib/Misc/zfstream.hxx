@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 #ifndef _zfstream_hxx
 #define _zfstream_hxx
@@ -152,29 +151,4 @@ struct gzifstream_base
 };
 
 #endif // _zfstream_hxx
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.9  1999/03/08 22:00:12  curt
-// Tweak for native SGI compilers.
-//
-// Revision 1.8  1999/02/26 22:08:10  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.7  1999/01/19 20:41:49  curt
-// Portability updates contributed by Bernie Bright.
-//
-// Revision 1.6  1998/12/07 21:10:26  curt
-// Portability improvements.
-//
-// Revision 1.5  1998/11/06 21:17:29  curt
-// Converted to new logstream debugging facility.  This allows release
-// builds with no messages at all (and no performance impact) by using
-// the -DFG_NDEBUG flag.
-//
-// Revision 1.4  1998/11/06 14:05:16  curt
-// More portability improvements by Bernie Bright.
-//
 

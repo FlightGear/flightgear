@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
  
 
 #ifndef _NAMES_HXX
@@ -66,27 +65,3 @@ string get_area_name( AreaType area );
 #endif // _NAMES_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:42  curt
-// Initial revision
-//
-// Revision 1.5  1999/03/27 05:31:25  curt
-// Make 0 the default area type since this corresponds well with the conventions
-//   used by the triangulator.
-//
-// Revision 1.4  1999/03/22 23:49:30  curt
-// Moved AreaType get_shapefile_type(GDBFile *dbf, int rec) to where it
-// belongs in ShapeFile/
-//
-// Revision 1.3  1999/03/01 15:35:53  curt
-// Generalized the routines a bit to make them more useful.
-//
-// Revision 1.2  1999/02/26 22:10:42  curt
-// Updated names and priorities of area types.
-//
-// Revision 1.1  1999/02/25 21:30:24  curt
-// Initial revision.
-//
-// Revision 1.1  1999/02/23 01:29:05  curt
-// Additional progress.
-//

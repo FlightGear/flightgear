@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _TIMESTAMP_HXX
@@ -166,36 +165,3 @@ inline long operator - (const FGTimeStamp& a, const FGTimeStamp& b)
 #endif // _TIMESTAMP_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:47  curt
-// Initial revision
-//
-// Revision 1.5  1999/02/02 20:13:43  curt
-// MSVC++ portability changes by Bernie Bright:
-//
-// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
-// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
-// Simulator/Cockpit/hud.cxx: Added Standard headers
-// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
-// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
-// Simulator/Main/fg_init.cxx:
-// Simulator/Main/GLUTmain.cxx:
-// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
-// Simulator/Objects/material.hxx:
-// Simulator/Time/timestamp.hxx: VC++ friend kludge
-// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
-// Simulator/Main/views.hxx: Added a constant
-//
-// Revision 1.4  1999/01/09 13:37:46  curt
-// Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
-//
-// Revision 1.3  1999/01/07 20:25:39  curt
-// Portability changes and updates from Bernie Bright.
-//
-// Revision 1.2  1998/12/11 20:26:56  curt
-// #include tweaks.
-//
-// Revision 1.1  1998/12/05 14:21:33  curt
-// Moved struct fg_timestamp to class fgTIMESTAMP and moved it's definition
-// to it's own file, timestamp.hxx.
-//

@@ -16,7 +16,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * $Id$
- * (Log is kept at end of this file)
  **************************************************************************/
 
 #ifndef _COMPILER_H
@@ -300,69 +299,3 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 
 #endif // _COMPILER_H
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:40  curt
-// Initial revision
-//
-// Revision 1.9  1999/03/02 00:36:31  curt
-// Tweaks for native SGI compilers.
-//
-// Revision 1.8  1999/02/26 22:07:10  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.7  1999/02/05 21:27:41  curt
-// Tweaks for the solaris platform.
-//
-// Revision 1.6  1999/01/27 04:45:17  curt
-// Tweak for solaris.
-//
-// Revision 1.5  1999/01/19 20:41:25  curt
-// Added support for MacOS (Metrowerks)
-//
-// Revision 1.4  1999/01/06 21:47:37  curt
-// renamed general.h to general.hxx
-// More portability enhancements to compiler.h
-//
-// Revision 1.3  1998/11/06 14:04:09  curt
-// More portability improvements by Bernie Bright.
-//
-// Revision 1.2  1998/11/02 18:28:08  curt
-// Portability updates from Bernie Bright
-//
-// Revision 1.1  1998/10/16 00:49:04  curt
-// fg_stl_config.h -> compiler.h, fg_stl_config.h maintained for backwards
-// compatibility.
-//
-// Revision 1.3  1998/09/29 02:00:16  curt
-// Start of some borland c support
-//
-// Revision 1.2  1998/09/10 19:07:04  curt
-// /Simulator/Objects/fragment.hxx
-//   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.
-//
-// ./Simulator/Objects/material.cxx
-// ./Simulator/Objects/material.hxx
-//   Made fgMATERIAL and fgMATERIAL_MGR bona fide classes with private
-//   data members - that should keep the rabble happy :)
-//
-// ./Simulator/Scenery/tilemgr.cxx
-//   In viewable() delay evaluation of eye[0] and eye[1] in until they're
-//   actually needed.
-//   Change to fgTileMgrRender() to call fgMATERIAL_MGR::render_fragments()
-//   method.
-//
-// ./Include/fg_stl_config.h
-// ./Include/auto_ptr.hxx
-//   Added support for g++ 2.7.
-//   Further changes to other files are forthcoming.
-//
-// Brief summary of changes required for g++ 2.7.
-//   operator->() not supported by iterators: use (*i).x instead of i->x
-//   default template arguments not supported,
-//   <functional> doesn't have mem_fun_ref() needed by callbacks.
-//   some std include files have different names.
-//   template member functions not supported.
-//
-// Revision 1.1  1998/08/30 14:13:49  curt
-// Initial revision.  Contributed by Bernie Bright.
-//

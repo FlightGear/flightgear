@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _JOYSTICK_HXX
@@ -42,28 +41,4 @@ int fgJoystickInit( void );
 
 #endif // _JOYSTICK_HXX
 
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:49  curt
-// Initial revision
-//
-// Revision 1.3  1998/10/27 02:14:33  curt
-// Changes to support GLUT joystick routines as fall back.
-//
-// Revision 1.2  1998/10/25 10:56:27  curt
-// Completely rewritten to use Steve Baker's joystick interface class.
-//
-// Revision 1.1  1998/10/24 22:28:18  curt
-// Renamed joystick.[ch] to joystick.[ch]xx
-// Added js.hxx which is Steve's joystick interface class.
-//
-// Revision 1.3  1998/04/22 13:26:21  curt
-// C++ - ifing the code a bit.
-//
-// Revision 1.2  1998/01/22 02:59:36  curt
-// Changed #ifdef FILE_H to #ifdef _FILE_H
-//
-// Revision 1.1  1997/08/29 18:06:55  curt
-// Initial revision.
-//
 

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
  
 #include <Include/compiler.h>
 
@@ -115,35 +114,3 @@ string get_area_name( AreaType area ) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:42  curt
-// Initial revision
-//
-// Revision 1.7  1999/04/01 13:52:13  curt
-// Version 0.6.0
-// Shape name tweak.
-// Removing tool: FixNode
-//
-// Revision 1.6  1999/03/27 05:31:24  curt
-// Make 0 the default area type since this corresponds well with the conventions
-//   used by the triangulator.
-//
-// Revision 1.5  1999/03/22 23:49:29  curt
-// Moved AreaType get_shapefile_type(GDBFile *dbf, int rec) to where it
-// belongs in ShapeFile/
-//
-// Revision 1.4  1999/03/13 18:47:04  curt
-// Removed an unused variable.
-//
-// Revision 1.3  1999/03/02 01:03:58  curt
-// Added more reverse lookup support.
-//
-// Revision 1.2  1999/03/01 15:35:52  curt
-// Generalized the routines a bit to make them more useful.
-//
-// Revision 1.1  1999/02/25 21:30:24  curt
-// Initial revision.
-//
-// Revision 1.1  1999/02/23 01:29:05  curt
-// Additional progress.
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _SKY_HXX
@@ -44,33 +43,3 @@ void fgSkyRender( void );
 #endif // _SKY_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:48  curt
-// Initial revision
-//
-// Revision 1.2  1998/10/16 23:27:19  curt
-// C++-ifying.
-//
-// Revision 1.1  1998/04/22 13:21:33  curt
-// C++ - ifing the code a bit.
-//
-// Revision 1.4  1998/04/21 17:02:32  curt
-// Prepairing for C++ integration.
-//
-// Revision 1.3  1998/01/22 02:59:28  curt
-// Changed #ifdef FILE_H to #ifdef _FILE_H
-//
-// Revision 1.2  1998/01/19 18:40:17  curt
-// Tons of little changes to clean up the code and to remove fatal errors
-// when building with the c++ compiler.
-//
-// Revision 1.1  1998/01/07 03:16:19  curt
-// Moved from .../Src/Scenery/ to .../Src/Astro/
-//
-// Revision 1.2  1997/12/22 23:45:49  curt
-// First stab at sunset/sunrise sky glow effects.
-//
-// Revision 1.1  1997/12/17 23:14:31  curt
-// Initial revision.
-// Begin work on rendering the sky. (Rather than just using a clear screen.)
-//

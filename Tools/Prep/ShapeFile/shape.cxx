@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include <Include/compiler.h>
@@ -243,16 +242,3 @@ void free_shape(gpc_polygon *shape) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:42  curt
-// Initial revision
-//
-// Revision 1.3  1999/03/19 00:27:41  curt
-// Use long int for index instead of just int.
-//
-// Revision 1.2  1999/02/25 21:31:08  curt
-// First working version???
-//
-// Revision 1.1  1999/02/23 01:29:06  curt
-// Additional progress.
-//

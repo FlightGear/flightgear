@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include "genfans.hxx"
@@ -243,27 +242,3 @@ double FGGenFans::ave_size() {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.6  1999/04/05 02:16:02  curt
-// Fixed a compiler warning.
-//
-// Revision 1.5  1999/03/31 23:46:49  curt
-// Debugging output tweaks.
-//
-// Revision 1.4  1999/03/31 13:26:39  curt
-// Debugging output tweeaks.
-//
-// Revision 1.3  1999/03/31 05:35:04  curt
-// Fixed bug in genfans (deleting the wrong triangles from the available pool.)
-//
-// Revision 1.2  1999/03/30 23:50:15  curt
-// Fannifier is clearly bugging ... working on debugging it.  I suspect there
-// is a problem related to deleting triangles from the triangle pool as they
-// are combined into fans.
-//
-// Revision 1.1  1999/03/29 13:08:35  curt
-// Initial revision.
-//

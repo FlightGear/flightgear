@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _GENFANS_HXX
@@ -79,10 +78,3 @@ public:
 #endif // _GENFANS_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.1  1999/03/29 13:08:35  curt
-// Initial revision.
-//

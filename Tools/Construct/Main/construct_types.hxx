@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _CONSTRUCT_TYPES_HXX
@@ -52,10 +51,3 @@ typedef point_list::const_iterator const_point_list_iterator;
 #endif // _CONSTRUCT_TYPES_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.1  1999/03/29 13:19:44  curt
-// Initial revision.
-//

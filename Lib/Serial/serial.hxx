@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _SERIAL_HXX
@@ -79,37 +78,3 @@ public:
 #endif // _SERIAL_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:34  curt
-// Initial revision
-//
-// Revision 1.5  1999/03/02 01:01:58  curt
-// Tweaks for compiling with native SGI compilers.
-//
-// Revision 1.4  1999/02/26 22:08:13  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.3  1999/02/02 20:13:24  curt
-// MSVC++ portability changes by Bernie Bright:
-//
-// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
-// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
-// Simulator/Cockpit/hud.cxx: Added Standard headers
-// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
-// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
-// Simulator/Main/fg_init.cxx:
-// Simulator/Main/GLUTmain.cxx:
-// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
-// Simulator/Objects/material.hxx:
-// Simulator/Time/timestamp.hxx: VC++ friend kludge
-// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
-// Simulator/Main/views.hxx: Added a constant
-//
-// Revision 1.2  1998/11/30 17:15:30  curt
-// Having the class destructor close the fd was a bad idea ... especially if you
-// ever make a copy of the instance and then subsequently destroy either.
-// close_port() is now a separate member function.
-//
-// Revision 1.1  1998/11/16 13:53:02  curt
-// Initial revision.
-//

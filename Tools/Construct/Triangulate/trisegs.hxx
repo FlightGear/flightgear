@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _TRISEGS_HXX
@@ -117,29 +116,3 @@ public:
 #endif // _TRISEGS_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.4  1999/04/05 02:17:14  curt
-// Dynamically update "error" until the resulting tile data scales within
-// a lower and upper bounds.
-//
-// Revision 1.3  1999/03/27 05:30:18  curt
-// Handle corner nodes separately from the rest of the fitted nodes.
-// Add fitted nodes in after corners and polygon nodes since the fitted nodes
-//   are less important.  Subsequent nodes will "snap" to previous nodes if
-//   they are "close enough."
-// Need to manually divide segments to prevent "T" intersetions which can
-//   confound the triangulator.  Hey, I got to use a recursive method!
-// Pass along correct triangle attributes to output file generator.
-// Do fine grained node snapping for corners and polygons, but course grain
-//   node snapping for fitted terrain nodes.
-//
-// Revision 1.2  1999/03/20 20:33:00  curt
-// First mostly successful tile triangulation works.  There's plenty of tweaking
-// to do, but we are marching in the right direction.
-//
-// Revision 1.1  1999/03/20 13:21:36  curt
-// Initial revision.
-//

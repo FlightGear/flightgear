@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 #include "logstream.hxx"
 
@@ -62,13 +61,3 @@ logstream::setLogLevels( fgDebugClass c, fgDebugPriority p )
     logbuf::set_log_level( c, p );
 }
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.2  1999/01/19 20:53:34  curt
-// Portability updates by Bernie Bright.
-//
-// Revision 1.1  1998/11/06 21:20:41  curt
-// Initial revision.
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 #include <ctype.h> // isspace()
 #include <Misc/fgstream.hxx>
@@ -139,16 +138,3 @@ skipcomment( istream& in )
     return in;
 }
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.3  1998/11/06 14:05:12  curt
-// More portability improvements by Bernie Bright.
-//
-// Revision 1.2  1998/09/24 15:22:17  curt
-// Additional enhancements.
-//
-// Revision 1.1  1998/09/01 19:06:29  curt
-// Initial revision.
-//

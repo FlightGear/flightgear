@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 //
 
 
@@ -38,11 +37,3 @@ point2d cart_to_polar_2d(point2d in) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.1  1998/09/04 23:04:53  curt
-// Beginning of convex hull genereration routine.
-//
-//

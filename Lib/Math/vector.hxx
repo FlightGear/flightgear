@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _VECTOR_HXX
@@ -61,37 +60,4 @@ double fgPointLineSquared(MAT3vec p, MAT3vec p0, MAT3vec d);
 
 #endif // _VECTOR_HXX
 
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.4  1998/10/16 23:36:39  curt
-// c++-ifying.
-//
-// Revision 1.3  1998/08/24 20:04:13  curt
-// Various "inline" code optimizations contributed by Norman Vine.
-//
-// Revision 1.2  1998/07/24 21:34:38  curt
-// fgPointLine() rewritten into fgPointLineSquared() ... this ultimately saves
-// us from doing a sqrt().
-//
-// Revision 1.1  1998/07/08 14:40:10  curt
-// polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-// Updated fg_geodesy comments to reflect that routines expect and produce
-//   meters.
-//
-// Revision 1.4  1998/04/21 17:03:51  curt
-// Prepairing for C++ integration.
-//
-// Revision 1.3  1998/01/22 02:59:39  curt
-// Changed #ifdef FILE_H to #ifdef _FILE_H
-//
-// Revision 1.2  1998/01/19 19:27:14  curt
-// Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-// This should simplify things tremendously.
-//
-// Revision 1.1  1997/12/22 04:13:18  curt
-// Initial revision.
-//
 

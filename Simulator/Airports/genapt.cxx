@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include <Include/compiler.h>
@@ -293,56 +292,3 @@ fgAptGenerate(const string& path, fgTILE *tile)
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:47  curt
-// Initial revision
-//
-// Revision 1.14  1999/03/02 01:02:31  curt
-// Tweaks for building with native SGI compilers.
-//
-// Revision 1.13  1999/02/26 22:08:34  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.12  1999/02/01 21:08:33  curt
-// Optimizations from Norman Vine.
-//
-// Revision 1.11  1998/11/23 21:48:09  curt
-// Borland portability tweaks.
-//
-// Revision 1.10  1998/11/07 19:07:06  curt
-// Enable release builds using the --without-logging option to the configure
-// script.  Also a couple log message cleanups, plus some C to C++ comment
-// conversion.
-//
-// Revision 1.9  1998/11/06 21:17:32  curt
-// Converted to new logstream debugging facility.  This allows release
-// builds with no messages at all (and no performance impact) by using
-// the -DFG_NDEBUG flag.
-//
-// Revision 1.8  1998/11/06 14:46:59  curt
-// Changes to track Bernie's updates to fgstream.
-//
-// Revision 1.7  1998/10/20 18:26:06  curt
-// Updates to point3d.hxx
-//
-// Revision 1.6  1998/10/18 01:17:16  curt
-// Point3D tweaks.
-//
-// Revision 1.5  1998/10/16 23:27:14  curt
-// C++-ifying.
-//
-// Revision 1.4  1998/10/16 00:51:46  curt
-// Converted to Point3D class.
-//
-// Revision 1.3  1998/09/21 20:55:00  curt
-// Used the cartesian form of the airport area coordinates to determine the
-// center.
-//
-// Revision 1.2  1998/09/14 12:44:30  curt
-// Don't recalculate perimeter points since it is not likely that they will match
-// exactly with the previously calculated points, which will leave an ugly gap
-// around the airport area.
-//
-// Revision 1.1  1998/09/14 02:14:01  curt
-// Initial revision of genapt.[ch]xx for generating airport scenery.
-//

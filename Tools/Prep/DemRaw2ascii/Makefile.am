@@ -20,7 +20,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 # $Id$
-# (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
 
@@ -34,17 +33,3 @@ INCLUDES +=
 
 
 #---------------------------------------------------------------------------
-# $Log$
-# Revision 1.1  1999/04/05 21:32:42  curt
-# Initial revision
-#
-# Revision 1.3  1998/11/04 23:01:50  curt
-# Changes to the automake/autoconf system to reduce the number of libraries
-# that are unnecessarily linked into the various executables.
-#
-# Revision 1.2  1998/04/24 00:44:04  curt
-# Added zlib support.
-#
-# Revision 1.1  1998/04/18 03:59:44  curt
-# Incorporated into gnu automake/autoconf system.
-#

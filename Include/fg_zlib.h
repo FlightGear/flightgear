@@ -21,7 +21,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * $Id$
- * (Log is kept at end of this file)
  **************************************************************************/
 
 
@@ -81,11 +80,3 @@
 #endif /* _FG_ZLIB_H */
 
 
-/* $Log$
-/* Revision 1.1  1999/04/05 21:32:41  curt
-/* Initial revision
-/*
- * Revision 1.1  1998/04/28 21:41:39  curt
- * Initial revision of fg_zlib.h
- *
- */

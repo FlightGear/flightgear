@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 #ifndef _FGSTREAM_HXX
 #define _FGSTREAM_HXX
@@ -99,34 +98,3 @@ istream& skipcomment( istream& in );
 
 #endif /* _FGSTREAM_HXX */
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.9  1999/03/27 14:04:25  curt
-// Added is_open() so we can check if the open() succeeded.
-//
-// Revision 1.8  1999/03/02 01:01:55  curt
-// Tweaks for compiling with native SGI compilers.
-//
-// Revision 1.7  1999/02/26 22:08:08  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.6  1999/01/19 20:41:46  curt
-// Portability updates contributed by Bernie Bright.
-//
-// Revision 1.5  1998/11/06 14:05:13  curt
-// More portability improvements by Bernie Bright.
-//
-// Revision 1.4  1998/10/16 00:50:56  curt
-// Remove leading _ from a couple defines.
-//
-// Revision 1.3  1998/10/13 00:10:06  curt
-// More portability changes to help with windoze compilation problems.
-//
-// Revision 1.2  1998/09/24 15:22:18  curt
-// Additional enhancements.
-//
-// Revision 1.1  1998/09/01 19:06:29  curt
-// Initial revision.
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include "LaRCsim.hxx"
@@ -404,55 +403,3 @@ int fgLaRCsim_2_FGInterface (FGInterface& f) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:44  curt
-// Initial revision
-//
-// Revision 1.12  1999/04/03 04:20:02  curt
-// Optimizations (tm) by Norman Vine.
-//
-// Revision 1.11  1999/02/05 21:28:58  curt
-// Modifications to incorporate Jon S. Berndts flight model code.
-//
-// Revision 1.10  1999/02/01 21:33:30  curt
-// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
-// Jon accepted my offer to do this and thought it was a good idea.
-//
-// Revision 1.9  1999/01/08 19:27:36  curt
-// Fixed AOA reading on HUD.
-// Continued work on time jitter compensation.
-//
-// Revision 1.8  1998/12/18 23:37:06  curt
-// Collapsed out the FGState variables not currently needed.  They are just
-// commented out and can be readded easily at any time.  The point of this
-// exersize is to determine which variables were or were not currently being
-// used.
-//
-// Revision 1.7  1998/12/14 13:31:06  curt
-// LaRCsim maintains all it's variables internally.  I had been copying all of
-// them back and forth to the FG struture everytime I updated the flight model.
-// However, I have realized that this is not necessary.  I just need to copy
-// the control positions and environmental parameters into the LaRCsim structure
-// before updating the FDM, then copy every thing back out into the publick FGFS
-// structure afterwords.  This seems to solve (or at least help) a westward
-// drift problem some poeple had been observing.
-//
-// Revision 1.6  1998/12/05 15:54:08  curt
-// Renamed class fgFLIGHT to class FGState as per request by JSB.
-//
-// Revision 1.5  1998/12/03 04:25:02  curt
-// Working on fixing up new fgFLIGHT class.
-//
-// Revision 1.4  1998/12/03 01:16:37  curt
-// Converted fgFLIGHT to a class.
-//
-// Revision 1.3  1998/10/25 14:08:43  curt
-// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
-//
-// Revision 1.2  1998/10/17 01:34:11  curt
-// C++ ifying ...
-//
-// Revision 1.1  1998/10/17 00:43:58  curt
-// Initial revision.
-//
-//

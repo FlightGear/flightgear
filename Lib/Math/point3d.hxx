@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _POINT3D_HXX
@@ -336,39 +335,3 @@ Point3D::distance3Dsquared(const Point3D& a ) const
 #endif // _POINT3D_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.10  1999/03/02 01:01:52  curt
-// Tweaks for compiling with native SGI compilers.
-//
-// Revision 1.9  1999/02/01 21:08:28  curt
-// Optimizations from Norman Vine.
-//
-// Revision 1.8  1999/01/27 04:46:18  curt
-// Portability tweaks by Bernie Bright.
-//
-// Revision 1.7  1999/01/19 20:56:58  curt
-// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
-//
-// Revision 1.6  1998/11/23 21:46:37  curt
-// Borland portability tweaks.
-//
-// Revision 1.5  1998/11/20 01:00:38  curt
-// Patch in fgGeoc2Geod() to avoid a floating explosion.
-// point3d.hxx include math.h for FreeBSD
-//
-// Revision 1.4  1998/11/11 00:18:38  curt
-// Check for domain error in fgGeoctoGeod()
-//
-// Revision 1.3  1998/10/20 18:21:49  curt
-// Tweaks from Bernie Bright.
-//
-// Revision 1.2  1998/10/18 01:17:12  curt
-// Point3D tweaks.
-//
-// Revision 1.1  1998/10/16 00:50:29  curt
-// Added point3d.hxx to replace cheezy fgPoint3d struct.
-//
-//

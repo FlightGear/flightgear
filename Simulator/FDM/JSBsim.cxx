@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include <Include/compiler.h>
@@ -257,20 +256,3 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:45  curt
-// Initial revision
-//
-// Revision 1.4  1999/04/03 04:20:01  curt
-// Optimizations (tm) by Norman Vine.
-//
-// Revision 1.3  1999/02/26 22:09:10  curt
-// Added initial support for native SGI compilers.
-// Integrated Jon's next version of JSBsim.
-//
-// Revision 1.2  1999/02/11 21:09:40  curt
-// Interface with Jon's submitted JSBsim changes.
-//
-// Revision 1.1  1999/02/05 21:29:38  curt
-// Incorporating Jon S. Berndt's flight model code.
-//

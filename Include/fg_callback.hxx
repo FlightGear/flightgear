@@ -17,7 +17,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * $Id$
- * (Log is kept at end of this file)
  **************************************************************************/
 
 #ifndef _FG_CALLBACK_HXX
@@ -168,31 +167,4 @@ fgMethodCallback<T>::call0v( void** )
 }
 
 #endif // _FG_CALLBACK_HXX
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:41  curt
-// Initial revision
-//
-// Revision 1.2  1998/09/15 02:09:04  curt
-// Include/fg_callback.hxx
-//   Moved code inline to stop g++ 2.7 from complaining.
-//
-// Simulator/Time/event.[ch]xx
-//   Changed return type of fgEVENT::printStat().  void caused g++ 2.7 to
-//   complain bitterly.
-//
-// Minor bugfix and changes.
-//
-// Simulator/Main/GLUTmain.cxx
-//   Added missing type to idle_state definition - eliminates a warning.
-//
-// Simulator/Main/fg_init.cxx
-//   Changes to airport lookup.
-//
-// Simulator/Main/options.cxx
-//   Uses fg_gzifstream when loading config file.
-//
-// Revision 1.1  1998/08/30 14:13:48  curt
-// Initial revision.  Contributed by Bernie Bright.
-//
 

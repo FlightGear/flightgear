@@ -21,7 +21,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _INTERPOLATER_H
@@ -61,30 +60,3 @@ public:
 #endif // _INTERPOLATER_H
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.6  1999/03/02 01:01:50  curt
-// Tweaks for compiling with native SGI compilers.
-//
-// Revision 1.5  1999/02/26 22:08:05  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.4  1999/01/27 04:46:17  curt
-// Portability tweaks by Bernie Bright.
-//
-// Revision 1.3  1998/11/06 21:17:28  curt
-// Converted to new logstream debugging facility.  This allows release
-// builds with no messages at all (and no performance impact) by using
-// the -DFG_NDEBUG flag.
-//
-// Revision 1.2  1998/04/22 13:18:10  curt
-// C++ - ified comments.  Make file open errors fatal.
-//
-// Revision 1.1  1998/04/21 19:14:23  curt
-// Modified Files:
-//     Makefile.am Makefile.in
-// Added Files:
-//     interpolater.cxx interpolater.hxx
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 //
 
 
@@ -38,10 +37,3 @@ point2d cart_to_polar_2d(point2d in) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:42  curt
-// Initial revision
-//
-// Revision 1.1  1999/03/10 01:02:54  curt
-// Initial revision.
-//

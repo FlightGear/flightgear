@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 //
 
 
@@ -126,5 +125,3 @@ int main( int argc, char **argv ) {
 }
 
 
-// $Log: main.c,v
-//

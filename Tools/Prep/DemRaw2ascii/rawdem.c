@@ -19,7 +19,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * $Id$
- * (Log is kept at end of this file)
  */
 
 
@@ -461,28 +460,3 @@ void rawProcessStrip( fgRAWDEM *raw, int lat_degrees, char *path ) {
 }
 
 
-/* $Log$
-/* Revision 1.1  1999/04/05 21:32:42  curt
-/* Initial revision
-/*
-/* Revision 1.6  1998/04/27 03:32:03  curt
-/* Wrapped rint()'s in #ifdef HAVE_RINT
-/*
- * Revision 1.5  1998/04/18 03:59:46  curt
- * Incorporated into gnu automake/autoconf system.
- *
- * Revision 1.4  1998/04/06 21:09:43  curt
- * Additional win32 support.
- * Fixed a bad bug in dem file parsing that was causing the output to be
- * flipped about x = y.
- *
- * Revision 1.3  1998/03/03 13:10:29  curt
- * Close to a working version.
- *
- * Revision 1.2  1998/03/03 02:04:01  curt
- * Starting DEM Ascii format output routine.
- *
- * Revision 1.1  1998/03/02 23:31:01  curt
- * Initial revision.
- *
- */

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 //
 
 
@@ -217,28 +216,3 @@ gen_runway_area( double lon, double lat, double heading,
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.5  1998/10/20 15:49:54  curt
-// tweak ...
-//
-// Revision 1.4  1998/09/09 20:59:53  curt
-// Loop construct tweaks for STL usage.
-// Output airport file to be used to generate airport scenery on the fly
-//   by the run time sim.
-//
-// Revision 1.3  1998/09/09 16:26:31  curt
-// Continued progress in implementing the convex hull algorithm.
-//
-// Revision 1.2  1998/09/04 23:04:48  curt
-// Beginning of convex hull genereration routine.
-//
-// Revision 1.1  1998/09/01 19:34:33  curt
-// Initial revision.
-//
-// Revision 1.1  1998/07/20 12:54:05  curt
-// Initial revision.
-//
-//

@@ -14,7 +14,6 @@
 // CHotchkiss 10 Feb 98
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _CMDARGS_H
@@ -41,13 +40,3 @@ extern const int   DefaultViewMode;
 // end of cmdargs.h
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:41  curt
-// Initial revision
-//
-// Revision 1.2  1998/02/16 16:17:36  curt
-// Minor tweaks.
-//
-// Revision 1.1  1998/02/13 00:18:46  curt
-// Initial revision.
-//

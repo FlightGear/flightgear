@@ -6,7 +6,6 @@
 // See below for the complete original LaRCsim comments.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 #include "Include/compiler.h"
 #ifdef FG_HAVE_STD_INCLUDES
@@ -163,55 +162,6 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 	CURRENT RCS HEADER:
 
 $Header$
-$Log$
-Revision 1.1  1999/04/05 21:32:33  curt
-Initial revision
-
-Revision 1.6  1999/03/02 01:01:49  curt
-Tweaks for compiling with native SGI compilers.
-
-Revision 1.5  1999/01/27 04:46:14  curt
-Portability tweaks by Bernie Bright.
-
-Revision 1.4  1998/11/20 01:00:36  curt
-Patch in fgGeoc2Geod() to avoid a floating explosion.
-point3d.hxx include math.h for FreeBSD
-
-Revision 1.3  1998/11/11 00:18:36  curt
-Check for domain error in fgGeoctoGeod()
-
-Revision 1.2  1998/10/16 23:36:36  curt
-c++-ifying.
-
-Revision 1.1  1998/10/16 19:30:40  curt
-Renamed .c -> .h so we can start adding c++ supporting routines.
-
-Revision 1.6  1998/07/08 14:40:07  curt
-polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-Updated fg_geodesy comments to reflect that routines expect and produce
-  meters.
-
-Revision 1.5  1998/04/25 22:06:23  curt
-Edited cvs log messages in source files ... bad bad bad!
-
-Revision 1.4  1998/01/27 00:47:59  curt
-Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
-system and commandline/config file processing code.
-
-Revision 1.3  1998/01/19 19:27:12  curt
-Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-This should simplify things tremendously.
-
-Revision 1.2  1997/12/15 23:54:54  curt
-Add xgl wrappers for debugging.
-Generate terrain normals on the fly.
-
-Revision 1.1  1997/07/31 23:13:14  curt
-Initial revision.
-
-Revision 1.1  1997/05/29 00:09:56  curt
-Initial Flight Gear revision.
-
  * Revision 1.5  1994/01/11  18:47:05  bjax
  * Changed include files to use types and constants, not ls_eom.h
  * Also changed DATA type to SCALAR type.
@@ -257,51 +207,4 @@ Initial Flight Gear revision.
 
 --------------------------------------------------------------------------*/
 
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.6  1999/03/02 01:01:49  curt
-// Tweaks for compiling with native SGI compilers.
-//
-// Revision 1.5  1999/01/27 04:46:14  curt
-// Portability tweaks by Bernie Bright.
-//
-// Revision 1.4  1998/11/20 01:00:36  curt
-// Patch in fgGeoc2Geod() to avoid a floating explosion.
-// point3d.hxx include math.h for FreeBSD
-//
-// Revision 1.3  1998/11/11 00:18:36  curt
-// Check for domain error in fgGeoctoGeod()
-//
-// Revision 1.2  1998/10/16 23:36:36  curt
-// c++-ifying.
-//
-// Revision 1.1  1998/10/16 19:30:40  curt
-// Renamed .c -> .h so we can start adding c++ supporting routines.
-//
-// Revision 1.6  1998/07/08 14:40:07  curt
-// polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-// Updated fg_geodesy comments to reflect that routines expect and produce
-//   meters.
-//
-// Revision 1.5  1998/04/25 22:06:23  curt
-// Edited cvs log messages in source files ... bad bad bad!
-//
-// Revision 1.4  1998/01/27 00:47:59  curt
-// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
-// system and commandline/config file processing code.
-//
-// Revision 1.3  1998/01/19 19:27:12  curt
-// Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-// This should simplify things tremendously.
-//
-// Revision 1.2  1997/12/15 23:54:54  curt
-// Add xgl wrappers for debugging.
-// Generate terrain normals on the fly.
-//
-// Revision 1.1  1997/07/31 23:13:14  curt
-// Initial revision.
-//
 

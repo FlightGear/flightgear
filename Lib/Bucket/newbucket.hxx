@@ -20,7 +20,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * $Id$
- * (Log is kept at end of this file)
  **************************************************************************/
 
 
@@ -329,35 +328,3 @@ operator== ( const FGBucket& b1, const FGBucket& b2 )
 #endif // _NEWBUCKET_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:34  curt
-// Initial revision
-//
-// Revision 1.8  1999/03/27 05:34:06  curt
-// Elimitated some const warnings from the compiler.
-//
-// Revision 1.7  1999/03/25 19:01:51  curt
-// Jettisoned old bucketutils.[ch] for newbucket.[ch]xx
-//
-// Revision 1.6  1999/03/15 17:58:41  curt
-// MSVC++ portability tweaks contributed by Bernie Bright.
-//   Added using std::ostream declaration.
-//   Added forward declarations to work around a MSVC bug.
-//
-// Revision 1.5  1999/03/12 22:51:18  curt
-// Added some informational methods.
-//
-// Revision 1.4  1999/03/02 01:01:43  curt
-// Tweaks for compiling with native SGI compilers.
-//
-// Revision 1.3  1999/02/26 22:07:55  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.2  1999/02/11 01:09:34  curt
-// Added a routine to calculate the offset in bucket units between two buckets.
-//
-// Revision 1.1  1999/02/08 23:52:16  curt
-// Added a new "newbucket.[ch]xx" FGBucket class to replace the old
-// fgBUCKET struct and C routines.  This FGBucket class adjusts the tile
-// width towards the poles to ensure the tiles are at least 8 miles wide.
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifdef HAVE_CONFIG_H
@@ -1058,43 +1057,3 @@ xglEnable(GL_TEXTURE_2D);
      xglDisable(GL_TEXTURE_2D);
      }
      
-// $Log$
-// Revision 1.1  1999/04/05 21:32:48  curt
-// Initial revision
-//
-// Revision 1.18  1999/03/09 20:58:17  curt
-// Tweaks for compiling under native Irix compilers.
-//
-// Revision 1.17  1999/03/08 21:56:09  curt
-// Added panel changes sent in by Friedemann.
-//
-// Revision 1.13  1999/01/07 19:25:53  curt
-// Updates from Friedemann Reinhard.
-//
-// Revision 1.11  1998/11/11 00:19:27  curt
-// Updated comment delimeter to C++ style.
-//
-// Revision 1.10  1998/11/09 23:38:52  curt
-// Panel updates from Friedemann.
-//
-// Revision 1.9  1998/11/06 21:18:01  curt
-// Converted to new logstream debugging facility.  This allows release
-// builds with no messages at all (and no performance impact) by using
-// the -DFG_NDEBUG flag.
-//
-// Revision 1.8  1998/10/16 23:27:37  curt
-// C++-ifying.
-//
-// Revision 1.7  1998/08/31 20:45:31  curt
-// Tweaks from Friedemann.
-//
-// Revision 1.6  1998/08/28 18:14:40  curt
-// Added new cockpit code from Friedemann Reinhard
-// <mpt218@faupt212.physik.uni-erlangen.de>
-//
-// Revision 1.1  1998/06/27 16:47:54  curt
-// Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
-// first pass at an isntrument panel.
-//
-
-

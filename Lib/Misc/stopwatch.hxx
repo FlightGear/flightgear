@@ -23,29 +23,6 @@
  * For more information, please see the Blitz++ Home Page:
  *    http://seurat.uwaterloo.ca/blitz/
  *
- ***************************************************************************
- * $Log$
- * Revision 1.1  1999/04/05 21:32:33  curt
- * Initial revision
- *
- * Revision 1.3  1998/11/20 01:01:03  curt
- * FreeBSD support.
- *
- * Revision 1.2  1998/11/02 18:28:31  curt
- * Additional win32 support.
- *
- * Revision 1.1  1998/09/01 19:06:30  curt
- * Initial revision.
- *
- * Revision 1.4  1998/03/14 00:04:47  tveldhui
- * 0.2-alpha-05
- *
- * Revision 1.3  1997/07/16 14:51:20  tveldhui
- * Update: Alpha release 0.2 (Arrays)
- *
- * Revision 1.2  1997/01/24 14:42:00  tveldhui
- * Periodic RCS update
- *
  */
 
 // This class is not portable to non System V platforms.

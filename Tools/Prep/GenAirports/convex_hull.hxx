@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 //
 
 
@@ -50,14 +49,3 @@ list_container convex_hull( list_container input_list );
 #endif // _CONVEX_HULL_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.2  1998/09/09 16:26:33  curt
-// Continued progress in implementing the convex hull algorithm.
-//
-// Revision 1.1  1998/09/04 23:04:51  curt
-// Beginning of convex hull genereration routine.
-//
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifdef HAVE_CONFIG_H
@@ -195,62 +194,4 @@ int fgJoystickRead( void ) {
 
 #endif // ENABLE_LINUX_JOYSTICK
 
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:49  curt
-// Initial revision
-//
-// Revision 1.8  1999/04/03 04:20:33  curt
-// Integration of Steve's plib conglomeration.
-//
-// Revision 1.7  1999/01/19 17:52:30  curt
-// Some joystick tweaks by Norman Vine.
-//
-// Revision 1.6  1998/12/05 16:13:16  curt
-// Renamed class fgCONTROLS to class FGControls.
-//
-// Revision 1.5  1998/11/06 21:18:04  curt
-// Converted to new logstream debugging facility.  This allows release
-// builds with no messages at all (and no performance impact) by using
-// the -DFG_NDEBUG flag.
-//
-// Revision 1.4  1998/10/27 02:14:32  curt
-// Changes to support GLUT joystick routines as fall back.
-//
-// Revision 1.3  1998/10/25 14:08:44  curt
-// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
-//
-// Revision 1.2  1998/10/25 10:56:25  curt
-// Completely rewritten to use Steve Baker's joystick interface class.
-//
-// Revision 1.1  1998/10/24 22:28:16  curt
-// Renamed joystick.[ch] to joystick.[ch]xx
-// Added js.hxx which is Steve's joystick interface class.
-//
-// Revision 1.7  1998/04/25 22:06:29  curt
-// Edited cvs log messages in source files ... bad bad bad!
-//
-// Revision 1.6  1998/04/18 04:14:05  curt
-// Moved fg_debug.c to it's own library.
-//
-// Revision 1.5  1998/02/12 21:59:44  curt
-// Incorporated code changes contributed by Charlie Hotchkiss
-// <chotchkiss@namg.us.anritsu.com>
-//
-// Revision 1.4  1998/02/03 23:20:20  curt
-// Lots of little tweaks to fix various consistency problems discovered by
-// Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-// passed arguments along to the real printf().  Also incorporated HUD changes
-// by Michele America.
-//
-// Revision 1.3  1998/01/27 00:47:54  curt
-// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
-// system and commandline/config file processing code.
-//
-// Revision 1.2  1997/12/30 20:47:40  curt
-// Integrated new event manager with subsystem initializations.
-//
-// Revision 1.1  1997/08/29 18:06:54  curt
-// Initial revision.
-//
 

@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _SPLASH_HXX
@@ -42,11 +41,3 @@ void fgSplashUpdate ( double progress );
 #endif // _SPLASH_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:47  curt
-// Initial revision
-//
-// Revision 1.1  1998/07/06 02:42:37  curt
-// Initial revision.
-//
-//

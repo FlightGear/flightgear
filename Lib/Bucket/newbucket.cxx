@@ -20,7 +20,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * $Id$
- * (Log is kept at end of this file)
  **************************************************************************/
 
 
@@ -144,23 +143,4 @@ void fgBucketDiff( const FGBucket& b1, const FGBucket& b2, int *dx, int *dy ) {
 #endif
 }
 
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:34  curt
-// Initial revision
-//
-// Revision 1.4  1999/03/27 05:34:05  curt
-// Elimitated some const warnings from the compiler.
-//
-// Revision 1.3  1999/02/26 22:07:54  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.2  1999/02/11 01:09:33  curt
-// Added a routine to calculate the offset in bucket units between two buckets.
-//
-// Revision 1.1  1999/02/08 23:52:16  curt
-// Added a new "newbucket.[ch]xx" FGBucket class to replace the old
-// fgBUCKET struct and C routines.  This FGBucket class adjusts the tile
-// width towards the poles to ensure the tiles are at least 8 miles wide.
-//
 

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _FG_SERIAL_HXX
@@ -95,23 +94,3 @@ void fgSerialProcess();
 #endif // _FG_SERIAL_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:46  curt
-// Initial revision
-//
-// Revision 1.5  1999/01/21 00:55:02  curt
-// Fixed some problems with timing of output strings.
-// Added checksum support for nmea and garmin output.
-//
-// Revision 1.4  1998/11/30 17:43:34  curt
-// Lots of tweaking to get serial output to actually work.
-//
-// Revision 1.3  1998/11/25 01:33:59  curt
-// Support for an arbitrary number of serial ports.
-//
-// Revision 1.2  1998/11/19 13:53:27  curt
-// Added a "Garmin" mode.
-//
-// Revision 1.1  1998/11/16 13:57:43  curt
-// Initial revision.
-//

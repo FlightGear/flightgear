@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 //*************************************************************************/
 
 
@@ -47,22 +46,3 @@ int fgLaRCsim_2_FGInterface (FGInterface& f);
 #endif // _LARCSIM_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:44  curt
-// Initial revision
-//
-// Revision 1.5  1999/02/05 21:28:59  curt
-// Modifications to incorporate Jon S. Berndts flight model code.
-//
-// Revision 1.4  1998/12/05 15:54:09  curt
-// Renamed class fgFLIGHT to class FGState as per request by JSB.
-//
-// Revision 1.3  1998/12/03 01:16:38  curt
-// Converted fgFLIGHT to a class.
-//
-// Revision 1.2  1998/10/17 01:34:13  curt
-// C++ ifying ...
-//
-// Revision 1.1  1998/10/17 00:43:58  curt
-// Initial revision.
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -70,13 +69,3 @@ trim( const string& s, const string& trimmings )
     return trimright( trimleft( s, trimmings ), trimmings );
 }
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.2  1998/10/18 01:17:15  curt
-// Point3D tweaks.
-//
-// Revision 1.1  1998/09/01 19:06:30  curt
-// Initial revision.
-//

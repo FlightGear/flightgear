@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _TRIPOLY_HXX
@@ -81,29 +80,3 @@ typedef tripoly_list::const_iterator const_tripoly_list_iterator;
 #endif // _TRIPOLY_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.5  1999/03/29 13:11:12  curt
-// Shuffled stl type names a bit.
-// Began adding support for tri-fanning (or maybe other arrangments too.)
-//
-// Revision 1.4  1999/03/23 22:02:56  curt
-// Refinements in naming and organization.
-//
-// Revision 1.3  1999/03/21 14:02:07  curt
-// Added a mechanism to dump out the triangle structures for viewing.
-// Fixed a couple bugs in first pass at triangulation.
-// - needed to explicitely initialize the polygon accumulator in triangle.cxx
-//   before each polygon rather than depending on the default behavior.
-// - Fixed a problem with region attribute propagation where I wasn't generating
-//   the hole points correctly.
-//
-// Revision 1.2  1999/03/20 20:32:58  curt
-// First mostly successful tile triangulation works.  There's plenty of tweaking
-// to do, but we are marching in the right direction.
-//
-// Revision 1.1  1999/03/20 13:21:36  curt
-// Initial revision.
-//

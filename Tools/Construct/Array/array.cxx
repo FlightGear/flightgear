@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifdef HAVE_CONFIG_H
@@ -576,35 +575,3 @@ FGArray::~FGArray( void ) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.8  1999/04/05 02:15:23  curt
-// Make dem fitting more robust in cases when no dem file available.
-//
-// Revision 1.7  1999/03/27 14:05:10  curt
-// More sensible handling of the case where no dem file for this tile exists
-// (or has been generated).
-//
-// Revision 1.6  1999/03/27 05:20:13  curt
-// Handle corner nodes separately from the rest of the fitted nodes.
-// Fixed some "const" related warnings.
-//
-// Revision 1.5  1999/03/25 19:03:50  curt
-// Minor tweaks related to FGBucket usage.
-//
-// Revision 1.4  1999/03/20 20:32:51  curt
-// First mostly successful tile triangulation works.  There's plenty of tweaking
-// to do, but we are marching in the right direction.
-//
-// Revision 1.3  1999/03/17 23:48:17  curt
-// Removed forced -g compile flag.
-// Fixed a couple compiler warnings.
-//
-// Revision 1.2  1999/03/13 23:50:26  curt
-// Tweaked output formatting a bit.
-//
-// Revision 1.1  1999/03/13 18:45:02  curt
-// Initial revision. (derived from libDEM.a code.)
-//

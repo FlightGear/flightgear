@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include <math.h>
@@ -81,78 +80,4 @@ void fgSlewUpdate( void ) {
     f->pos_y = f->pos_y + (sin(f->Psi) * f->vel_x); */
 }
 
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:45  curt
-// Initial revision
-//
-// Revision 1.6  1999/02/05 21:29:05  curt
-// Modifications to incorporate Jon S. Berndts flight model code.
-//
-// Revision 1.5  1999/02/01 21:33:33  curt
-// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
-// Jon accepted my offer to do this and thought it was a good idea.
-//
-// Revision 1.4  1998/12/05 16:13:14  curt
-// Renamed class fgCONTROLS to class FGControls.
-//
-// Revision 1.3  1998/12/05 15:54:16  curt
-// Renamed class fgFLIGHT to class FGState as per request by JSB.
-//
-// Revision 1.2  1998/10/17 01:34:17  curt
-// C++ ifying ...
-//
-// Revision 1.1  1998/10/16 23:27:50  curt
-// C++-ifying.
-//
-// Revision 1.13  1998/04/25 22:06:29  curt
-// Edited cvs log messages in source files ... bad bad bad!
-//
-// Revision 1.12  1998/04/08 23:35:30  curt
-// Tweaks to Gnu automake/autoconf system.
-//
-// Revision 1.11  1998/02/07 15:29:39  curt
-// Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-// <chotchkiss@namg.us.anritsu.com>
-//
-// Revision 1.10  1998/01/27 00:47:53  curt
-// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
-// system and commandline/config file processing code.
-//
-// Revision 1.9  1998/01/19 19:27:06  curt
-// Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-// This should simplify things tremendously.
-//
-// Revision 1.8  1998/01/19 18:40:30  curt
-// Tons of little changes to clean up the code and to remove fatal errors
-// when building with the c++ compiler.
-//
-// Revision 1.7  1997/12/15 23:54:42  curt
-// Add xgl wrappers for debugging.
-// Generate terrain normals on the fly.
-//
-// Revision 1.6  1997/08/27 03:30:11  curt
-// Changed naming scheme of basic shared structures.
-//
-// Revision 1.5  1997/07/19 22:35:06  curt
-// Moved fiddled with PI to avoid compiler warnings.
-//
-// Revision 1.4  1997/06/21 17:12:51  curt
-// Capitalized subdirectory names.
-//
-// Revision 1.3  1997/05/29 22:40:00  curt
-// Working on incorporating the LaRCsim flight model.
-//
-// Revision 1.2  1997/05/29 12:30:19  curt
-// Some initial mods to work better in a timer environment.
-//
-// Revision 1.1  1997/05/29 02:29:42  curt
-// Moved to their own directory.
-//
-// Revision 1.2  1997/05/23 15:40:37  curt
-// Added GNU copyright headers.
-//
-// Revision 1.1  1997/05/16 16:04:45  curt
-// Initial revision.
-//
 

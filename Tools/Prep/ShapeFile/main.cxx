@@ -21,7 +21,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
  
 
 // Include Geographic Foundation Classes library
@@ -305,32 +304,3 @@ int main( int argc, char **argv ) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:42  curt
-// Initial revision
-//
-// Revision 1.8  1999/03/22 23:49:36  curt
-// Moved AreaType get_shapefile_type(GDBFile *dbf, int rec) to where it
-// belongs in ShapeFile/
-//
-// Revision 1.7  1999/03/17 23:51:29  curt
-// Changed polygon index counter file.
-//
-// Revision 1.6  1999/03/02 01:04:28  curt
-// Don't crash when work directory doesn't exist ... create it.
-//
-// Revision 1.5  1999/03/01 15:36:28  curt
-// Tweaked a function call name in "names.hxx".
-//
-// Revision 1.4  1999/02/25 21:31:05  curt
-// First working version???
-//
-// Revision 1.3  1999/02/23 01:29:04  curt
-// Additional progress.
-//
-// Revision 1.2  1999/02/19 19:05:18  curt
-// Working on clipping shapes and distributing into buckets.
-//
-// Revision 1.1  1999/02/15 19:10:23  curt
-// Initial revision.
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 //
 
 
@@ -255,26 +254,3 @@ list_container convex_hull( list_container input_list )
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.5  1999/02/25 21:32:48  curt
-// Modified to adhere to new polygon naming convention, and also to read the
-// new Robin Peel aiport format.
-//
-// Revision 1.4  1998/09/17 18:40:42  curt
-// Debug message tweaks.
-//
-// Revision 1.3  1998/09/09 20:59:55  curt
-// Loop construct tweaks for STL usage.
-// Output airport file to be used to generate airport scenery on the fly
-//   by the run time sim.
-//
-// Revision 1.2  1998/09/09 16:26:32  curt
-// Continued progress in implementing the convex hull algorithm.
-//
-// Revision 1.1  1998/09/04 23:04:51  curt
-// Beginning of convex hull genereration routine.
-//
-//

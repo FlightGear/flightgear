@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _SLEW_HXX
@@ -40,34 +39,4 @@ void fgSlewUpdate( void );
 
 #endif // _SLEW_HXX
 
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:45  curt
-// Initial revision
-//
-// Revision 1.2  1998/10/17 01:34:18  curt
-// C++ ifying ...
-//
-// Revision 1.1  1998/10/16 23:27:52  curt
-// C++-ifying.
-//
-// Revision 1.4  1998/01/22 02:59:34  curt
-// Changed #ifdef FILE_H to #ifdef _FILE_H
-//
-// Revision 1.3  1998/01/19 18:40:30  curt
-// Tons of little changes to clean up the code and to remove fatal errors
-// when building with the c++ compiler.
-//
-// Revision 1.2  1997/07/23 21:52:20  curt
-// Put comments around the text after an #endif for increased portability.
-//
-// Revision 1.1  1997/05/29 02:29:43  curt
-// Moved to their own directory.
-//
-// Revision 1.2  1997/05/23 15:40:38  curt
-// Added GNU copyright headers.
-//
-// Revision 1.1  1997/05/16 16:04:46  curt
-// Initial revision.
-//
 

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
                        
                        
 #ifndef _AUTOPILOT_HXX
@@ -82,14 +81,3 @@ void fgAPAutoThrottleAdjust( double inc );
 #endif // _AUTOPILOT_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:49  curt
-// Initial revision
-//
-// Revision 1.9  1999/02/12 23:22:36  curt
-// Allow auto-throttle adjustment while active.
-//
-// Revision 1.8  1999/02/12 22:17:15  curt
-// Changes contributed by Norman Vine to allow adjustment of the autopilot
-// while it is activated.
-//

@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _EXTERNAL_HXX
@@ -82,26 +81,3 @@ void fgExternalInit( FGInterface& f );
 #endif // _EXTERNAL_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:46  curt
-// Initial revision
-//
-// Revision 1.6  1999/02/05 21:29:04  curt
-// Modifications to incorporate Jon S. Berndts flight model code.
-//
-// Revision 1.5  1999/01/19 17:52:12  curt
-// Working on being able to extrapolate a new position and orientation
-// based on a position, orientation, and time offset.
-//
-// Revision 1.4  1999/01/09 13:37:37  curt
-// Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
-//
-// Revision 1.3  1998/12/05 15:54:14  curt
-// Renamed class fgFLIGHT to class FGState as per request by JSB.
-//
-// Revision 1.2  1998/12/05 14:18:47  curt
-// added an fgTIMESTAMP to define when this record is valid.
-//
-// Revision 1.1  1998/12/04 01:28:49  curt
-// Initial revision.
-//

@@ -23,7 +23,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 # $Id$
-# (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
 
@@ -55,10 +54,3 @@ while ( $dir = shift(@ARGV) ) {
 
 
 #---------------------------------------------------------------------------
-# $Log$
-# Revision 1.1  1999/04/05 21:32:43  curt
-# Initial revision
-#
-# Revision 1.1  1998/06/04 19:18:06  curt
-# Initial revision.
-#

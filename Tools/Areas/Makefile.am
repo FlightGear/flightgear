@@ -20,7 +20,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 # $Id$
-# (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
 
@@ -36,30 +35,3 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
-# $Log$
-# Revision 1.1  1999/04/05 21:32:44  curt
-# Initial revision
-#
-# Revision 1.3  1998/11/04 23:01:43  curt
-# Changes to the automake/autoconf system to reduce the number of libraries
-# that are unnecessarily linked into the various executables.
-#
-# Revision 1.2  1998/07/30 23:49:18  curt
-# Removed libtool support.
-#
-# Revision 1.1  1998/07/20 12:54:53  curt
-# Whoops, need to commit Makefile.am, not Makefile.
-#
-# Revision 1.2  1998/04/14 02:25:59  curt
-# Code reorganizations.  Added a Lib/ directory for more general libraries.
-#
-# Revision 1.1  1998/04/08 22:54:57  curt
-# Adopted Gnu automake/autoconf system.
-#
-# Revision 1.2  1998/01/21 02:55:46  curt
-# Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
-#
-# Revision 1.1  1998/01/15 02:45:25  curt
-# Initial revision.
-#
-

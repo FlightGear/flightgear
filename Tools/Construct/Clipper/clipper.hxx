@@ -21,7 +21,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
  
 
 
@@ -108,25 +107,3 @@ public:
 #endif // _CLIPPER_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.5  1999/03/19 00:26:19  curt
-// Fixed a clipping bug (polygons specified in wrong order).
-// Touched up a few compiler warnings.
-//
-// Revision 1.4  1999/03/18 04:31:10  curt
-// Let's not pass copies of huge structures on the stack ... ye might see a
-// segfault ... :-)
-//
-// Revision 1.3  1999/03/17 23:48:59  curt
-// minor renaming and a bit of rearranging.
-//
-// Revision 1.2  1999/03/13 23:51:34  curt
-// Renamed main.cxx to testclipper.cxx
-// Converted clipper routines to a class FGClipper.
-//
-// Revision 1.1  1999/03/01 15:39:39  curt
-// Initial revision.
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include <Include/fg_constants.h>
@@ -321,89 +320,4 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 
     return(0);
 }
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:49  curt
-// Initial revision
-//
-// Revision 1.7  1999/02/26 22:09:56  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.6  1998/10/18 01:17:20  curt
-// Point3D tweaks.
-//
-// Revision 1.5  1998/10/16 00:54:37  curt
-// Converted to Point3D class.
-//
-// Revision 1.4  1998/09/15 01:35:03  curt
-// cleaned up my fragment.num_faces hack :-) to use the STL (no need in
-// duplicating work.)
-// Tweaked fgTileMgrRender() do not calc tile matrix unless necessary.
-// removed some unneeded stuff from fgTileMgrCurElev()
-//
-// Revision 1.3  1998/09/08 21:40:42  curt
-// Updates from Bernie Bright.
-//
-// Revision 1.2  1998/09/01 19:03:07  curt
-// Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
-//  - The new classes in libmisc.tgz define a stream interface into zlib.
-//    I've put these in a new directory, Lib/Misc.  Feel free to rename it
-//    to something more appropriate.  However you'll have to change the
-//    include directives in all the other files.  Additionally you'll have
-//    add the library to Lib/Makefile.am and Simulator/Main/Makefile.am.
-//
-//    The StopWatch class in Lib/Misc requires a HAVE_GETRUSAGE autoconf
-//    test so I've included the required changes in config.tgz.
-//
-//    There are a fair few changes to Simulator/Objects as I've moved
-//    things around.  Loading tiles is quicker but thats not where the delay
-//    is.  Tile loading takes a few tenths of a second per file on a P200
-//    but it seems to be the post-processing that leads to a noticeable
-//    blip in framerate.  I suppose its time to start profiling to see where
-//    the delays are.
-//
-//    I've included a brief description of each archives contents.
-//
-// Lib/Misc/
-//   zfstream.cxx
-//   zfstream.hxx
-//     C++ stream interface into zlib.
-//     Taken from zlib-1.1.3/contrib/iostream/.
-//     Minor mods for STL compatibility.
-//     There's no copyright associated with these so I assume they're
-//     covered by zlib's.
-//
-//   fgstream.cxx
-//   fgstream.hxx
-//     FlightGear input stream using gz_ifstream.  Tries to open the
-//     given filename.  If that fails then filename is examined and a
-//     ".gz" suffix is removed or appended and that file is opened.
-//
-//   stopwatch.hxx
-//     A simple timer for benchmarking.  Not used in production code.
-//     Taken from the Blitz++ project.  Covered by GPL.
-//
-//   strutils.cxx
-//   strutils.hxx
-//     Some simple string manipulation routines.
-//
-// Simulator/Airports/
-//   Load airports database using fgstream.
-//   Changed fgAIRPORTS to use set<> instead of map<>.
-//   Added bool fgAIRPORTS::search() as a neater way doing the lookup.
-//   Returns true if found.
-//
-// Simulator/Astro/
-//   Modified fgStarsInit() to load stars database using fgstream.
-//
-// Simulator/Objects/
-//   Modified fgObjLoad() to use fgstream.
-//   Modified fgMATERIAL_MGR::load_lib() to use fgstream.
-//   Many changes to fgMATERIAL.
-//   Some changes to fgFRAGMENT but I forget what!
-//
-// Revision 1.1  1998/08/25 16:51:23  curt
-// Moved from ../Scenery
-//
-//
 

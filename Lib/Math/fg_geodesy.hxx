@@ -6,7 +6,6 @@
 // See below for the complete original LaRCsim comments.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _FG_GEODESY_HXX
@@ -113,38 +112,6 @@ inline Point3D fgGeodToCart(const Point3D& geod) {
 	CURRENT RCS HEADER:
 
 $Header$
-$Log$
-Revision 1.1  1999/04/05 21:32:33  curt
-Initial revision
-
-Revision 1.4  1999/01/27 04:46:15  curt
-Portability tweaks by Bernie Bright.
-
-Revision 1.3  1998/10/18 01:17:11  curt
-Point3D tweaks.
-
-Revision 1.2  1998/10/16 23:36:37  curt
-c++-ifying.
-
-Revision 1.1  1998/10/16 19:30:42  curt
-Renamed .c -> .h so we can start adding c++ supporting routines.
-
-Revision 1.4  1998/07/08 14:40:08  curt
-polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-Updated fg_geodesy comments to reflect that routines expect and produce
-  meters.
-
-Revision 1.3  1998/04/21 17:03:48  curt
-Prepairing for C++ integration.
-
-Revision 1.2  1998/01/22 02:59:38  curt
-Changed #ifdef FILE_H to #ifdef _FILE_H
-
-Revision 1.1  1997/07/31 23:13:14  curt
-Initial revision.
-
-Revision 1.1  1997/05/29 00:09:56  curt
-Initial Flight Gear revision.
 
  * Revision 1.5  1994/01/11  18:47:05  bjax
  * Changed include files to use types and constants, not ls_eom.h
@@ -193,36 +160,3 @@ Initial Flight Gear revision.
 
 
 #endif // _FG_GEODESY_HXX
-
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.4  1999/01/27 04:46:15  curt
-// Portability tweaks by Bernie Bright.
-//
-// Revision 1.3  1998/10/18 01:17:11  curt
-// Point3D tweaks.
-//
-// Revision 1.2  1998/10/16 23:36:37  curt
-// c++-ifying.
-//
-// Revision 1.1  1998/10/16 19:30:42  curt
-// Renamed .c -> .h so we can start adding c++ supporting routines.
-//
-// Revision 1.4  1998/07/08 14:40:08  curt
-// polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-// Updated fg_geodesy comments to reflect that routines expect and produce
-//   meters.
-//
-// Revision 1.3  1998/04/21 17:03:48  curt
-// Prepairing for C++ integration.
-//
-// Revision 1.2  1998/01/22 02:59:38  curt
-// Changed #ifdef FILE_H to #ifdef _FILE_H
-//
-// Revision 1.1  1997/07/31 23:13:14  curt
-// Initial revision.
-//
-

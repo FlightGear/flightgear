@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _FG_TIMER_HXX
@@ -45,40 +44,4 @@ int fgGetTimeInterval( void );
 
 #endif // _FG_TIMER_HXX
 
-
-// $Log$
-// Revision 1.2  1999/04/06 16:58:35  curt
-// Clean ups and reorganizations:
-// - Additional Thanks entry
-// - more info on getting gfc library
-// - converted some C style comments to C++ style.
-//
-// Revision 1.1.1.1  1999/04/05 21:32:47  curt
-// Start of 0.6.x branch.
-//
-// Revision 1.1  1998/04/24 00:52:30  curt
-// Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-// Fog color fixes.
-// Separated out lighting calcs into their own file.
-//
-// Revision 1.5  1998/04/21 17:01:45  curt
-// Fixed a problems where a pointer to a function was being passed around.  In
-// one place this functions arguments were defined as ( void ) while in another
-// place they were defined as ( int ).  The correct answer was ( int ).
-//
-// Prepairing for C++ integration.
-//
-// Revision 1.4  1998/01/22 02:59:43  curt
-// Changed #ifdef FILE_H to #ifdef _FILE_H
-//
-// Revision 1.3  1998/01/19 18:40:40  curt
-// Tons of little changes to clean up the code and to remove fatal errors
-// when building with the c++ compiler.
-//
-// Revision 1.2  1997/07/23 21:52:27  curt
-// Put comments around the text after an #endif for increased portability.
-//
-// Revision 1.1  1997/06/16 19:24:20  curt
-// Initial revision.
-//
 

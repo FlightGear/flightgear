@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
  
 
 
@@ -109,14 +108,3 @@ int main( int argc, char **argv ) {
     return 0;
 }
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.1  1999/03/13 23:51:36  curt
-// Renamed main.cxx to testclipper.cxx
-// Converted clipper routines to a class FGClipper.
-//
-// Revision 1.1  1999/03/01 15:39:39  curt
-// Initial revision.
-//

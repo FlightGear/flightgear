@@ -16,7 +16,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * $Id$
- * (Log is kept at end of this file)
  **************************************************************************/
 
 #ifndef _AUTO_PTR_HXX
@@ -88,37 +87,3 @@ public:
 
 #endif /* _AUTO_PTR_HXX */
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:41  curt
-// Initial revision
-//
-// Revision 1.2  1998/09/10 19:07:03  curt
-// /Simulator/Objects/fragment.hxx
-//   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.
-//
-// ./Simulator/Objects/material.cxx
-// ./Simulator/Objects/material.hxx
-//   Made fgMATERIAL and fgMATERIAL_MGR bona fide classes with private
-//   data members - that should keep the rabble happy :)
-//
-// ./Simulator/Scenery/tilemgr.cxx
-//   In viewable() delay evaluation of eye[0] and eye[1] in until they're
-//   actually needed.
-//   Change to fgTileMgrRender() to call fgMATERIAL_MGR::render_fragments()
-//   method.
-//
-// ./Include/fg_stl_config.h
-// ./Include/auto_ptr.hxx
-//   Added support for g++ 2.7.
-//   Further changes to other files are forthcoming.
-//
-// Brief summary of changes required for g++ 2.7.
-//   operator->() not supported by iterators: use (*i).x instead of i->x
-//   default template arguments not supported,
-//   <functional> doesn't have mem_fun_ref() needed by callbacks.
-//   some std include files have different names.
-//   template member functions not supported.
-//
-// Revision 1.1  1998/08/30 14:12:45  curt
-// Initial revision.  Contributed by Bernie Bright.
-//

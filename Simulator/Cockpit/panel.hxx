@@ -17,7 +17,6 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 //  $Id$
-//  (Log is kept at end of this file)
  
 #define LETTER_OFFSET 0.03515625 
 
@@ -251,33 +250,5 @@ void PrintMatrix( void);
 
 #endif // _PANEL_HXX 
 
-
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:48  curt
-// Initial revision
-//
-// Revision 1.9  1999/03/09 20:58:18  curt
-// Tweaks for compiling under native Irix compilers.
-//
-// Revision 1.8  1999/03/08 21:56:10  curt
-// Added panel changes sent in by Friedemann.
-//
-// Revision 1.5  1999/01/07 19:25:55  curt
-// Updates from Friedemann Reinhard.
-//
-// Revision 1.4  1998/11/11 00:19:29  curt
-// Updated comment delimeter to C++ style.
-//
-// Revision 1.3  1998/11/09 23:38:54  curt
-// Panel updates from Friedemann.
-//
-// Revision 1.2  1998/08/28 18:14:41  curt
-// Added new cockpit code from Friedemann Reinhard
-// <mpt218@faupt212.physik.uni-erlangen.de>
-//
-// Revision 1.1  1998/06/27 16:47:55  curt
-// Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
-// first pass at an isntrument panel.
 
 

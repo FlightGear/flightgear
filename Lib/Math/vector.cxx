@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include <math.h>
@@ -128,38 +127,3 @@ double fgPointLineSquared(MAT3vec p, MAT3vec p0, MAT3vec d) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.6  1999/03/25 19:02:28  curt
-// Minor optimization tweaks.
-//
-// Revision 1.5  1998/10/16 23:36:38  curt
-// c++-ifying.
-//
-// Revision 1.4  1998/10/16 00:50:31  curt
-// Added point3d.hxx to replace cheezy fgPoint3d struct.
-//
-// Revision 1.3  1998/08/24 20:04:12  curt
-// Various "inline" code optimizations contributed by Norman Vine.
-//
-// Revision 1.2  1998/07/24 21:34:38  curt
-// fgPointLine() rewritten into fgPointLineSquared() ... this ultimately saves
-// us from doing a sqrt().
-//
-// Revision 1.1  1998/07/08 14:40:10  curt
-// polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-// Updated fg_geodesy comments to reflect that routines expect and produce
-//   meters.
-//
-// Revision 1.3  1998/05/07 23:04:28  curt
-// Added a blank formating line!
-//
-// Revision 1.2  1998/01/19 19:27:13  curt
-// Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-// This should simplify things tremendously.
-//
-// Revision 1.1  1997/12/22 04:13:17  curt
-// Initial revision.
-//

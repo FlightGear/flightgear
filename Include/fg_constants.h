@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _FG_CONSTANTS_H
@@ -171,95 +170,4 @@
 
 #endif // _FG_CONSTANTS_H
 
-
-// $Log$
-// Revision 1.1  1999/04/05 21:32:40  curt
-// Initial revision
-//
-// Revision 1.13  1999/04/05 02:12:59  curt
-// Define maximum nodes for a tile here.
-//
-// Revision 1.12  1999/03/01 15:33:43  curt
-// Truth in advertising.
-//
-// Revision 1.11  1999/02/01 21:14:10  curt
-// Converted to C++ style comments.
-//
-// Revision 1.10  1999/01/27 04:45:19  curt
-// Tweak for solaris.
-//
-// Revision 1.9  1998/08/24 20:02:35  curt
-// Added ONE_SECOND (in radians)
-//
-// Revision 1.8  1998/07/12 03:07:13  curt
-// Added #ifdef HAVE_CONFIG_H ...
-//
-// Revision 1.7  1998/07/08 14:36:29  curt
-// Changed name of EQUATORIAL_RADIUS_KM and RESQ_KM to "M" since they were
-// in meters anyways.
-//
-// Unified fgCartesianPoint3d and fgPolarPoint3d in a single struct called
-// fgPoint3d.
-//
-// Revision 1.6  1998/07/03 14:36:11  curt
-// Added conversion constants to fg_constants.h to assist with converting
-//   between various world units and coordinate systems.
-// Added gl vendor/renderer/version info to general structure.  Initialized
-//   in fg_init.cxx
-//
-// Revision 1.5  1998/05/17 16:56:47  curt
-// Re-organized PI related constants.
-//
-// Revision 1.4  1998/05/16 13:03:10  curt
-// Defined field of view max/min limits.
-//
-// Revision 1.3  1998/04/08 23:35:32  curt
-// Tweaks to Gnu automake/autoconf system.
-//
-// Revision 1.2  1998/03/23 21:18:37  curt
-// Made FG_EPSILON smaller.
-//
-// Revision 1.1  1998/01/27 00:46:50  curt
-// prepended "fg_" on the front of these to avoid potential conflicts with
-// system include files.
-//
-// Revision 1.3  1998/01/22 02:59:35  curt
-// Changed #ifdef FILE_H to #ifdef _FILE_H
-//
-// Revision 1.2  1998/01/07 03:31:26  curt
-// Miscellaneous tweaks.
-//
-// Revision 1.1  1997/12/15 21:02:15  curt
-// Moved to .../FlightGear/Src/Include/
-//
-// Revision 1.10  1997/09/13 01:59:45  curt
-// Mostly working on stars and generating sidereal time for accurate star
-// placement.
-//
-// Revision 1.9  1997/08/22 21:34:32  curt
-// Doing a bit of reorganizing and house cleaning.
-//
-// Revision 1.8  1997/07/31 22:52:22  curt
-// Working on redoing internal coordinate systems & scenery transformations.
-//
-// Revision 1.7  1997/07/23 21:52:10  curt
-// Put comments around the text after an #endif for increased portability.
-//
-// Revision 1.6  1997/07/21 14:45:01  curt
-// Minor tweaks.
-//
-// Revision 1.5  1997/07/19 23:04:46  curt
-// Added an initial weather section.
-//
-// Revision 1.4  1997/07/19 22:37:03  curt
-// Added various PI definitions.
-//
-// Revision 1.3  1997/07/14 16:26:03  curt
-// Testing/playing -- placed objects randomly across the entire terrain.
-//
-// Revision 1.2  1997/07/08 18:20:11  curt
-// Working on establishing a hard ground.
-//
-// Revision 1.1  1997/07/07 21:02:36  curt
-// Initial revision.
 

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 //
 
 
@@ -154,11 +153,3 @@ void gen_runway_area( double lon, double lat, double heading,
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:44  curt
-// Initial revision
-//
-// Revision 1.1  1998/07/20 12:54:05  curt
-// Initial revision.
-//
-//

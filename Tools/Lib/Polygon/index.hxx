@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _INDEX_HXX
@@ -42,13 +41,3 @@ long int poly_index_next();
 #endif // _INDEX_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:42  curt
-// Initial revision
-//
-// Revision 1.2  1999/03/19 00:27:31  curt
-// Use long int for index instead of just int.
-//
-// Revision 1.1  1999/02/25 21:30:24  curt
-// Initial revision.
-//

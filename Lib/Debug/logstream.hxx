@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 #ifndef _LOGSTREAM_H
 #define _LOGSTREAM_H
@@ -211,21 +210,3 @@ fglog()
 
 #endif // _LOGSTREAM_H
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.4  1999/03/02 01:01:47  curt
-// Tweaks for compiling with native SGI compilers.
-//
-// Revision 1.3  1999/01/19 20:53:35  curt
-// Portability updates by Bernie Bright.
-//
-// Revision 1.2  1998/11/07 19:07:02  curt
-// Enable release builds using the --without-logging option to the configure
-// script.  Also a couple log message cleanups, plus some C to C++ comment
-// conversion.
-//
-// Revision 1.1  1998/11/06 21:20:42  curt
-// Initial revision.
-//

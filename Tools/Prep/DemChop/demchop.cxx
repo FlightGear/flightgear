@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include <Include/compiler.h>
@@ -101,16 +100,3 @@ int main(int argc, char **argv) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:42  curt
-// Initial revision
-//
-// Revision 1.3  1999/03/12 22:53:46  curt
-// First working version!
-//
-// Revision 1.2  1999/03/10 16:09:44  curt
-// Hacking towards the first working version.
-//
-// Revision 1.1  1999/03/10 01:02:54  curt
-// Initial revision.
-//

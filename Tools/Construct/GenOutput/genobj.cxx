@@ -20,7 +20,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include <time.h>
@@ -431,42 +430,3 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.10  1999/03/31 23:46:57  curt
-// Debugging output tweaks.
-//
-// Revision 1.9  1999/03/31 13:26:40  curt
-// Debugging output tweeaks.
-//
-// Revision 1.8  1999/03/31 05:35:05  curt
-// Fixed bug in genfans (deleting the wrong triangles from the available pool.)
-//
-// Revision 1.7  1999/03/30 23:50:43  curt
-// Modifications to fanify by attribute.
-//
-// Revision 1.6  1999/03/29 13:11:03  curt
-// Shuffled stl type names a bit.
-// Began adding support for tri-fanning (or maybe other arrangments too.)
-//
-// Revision 1.5  1999/03/27 14:06:42  curt
-// Tweaks to bounding sphere calculation routines.
-// Group like triangles together for output to be in a single display list,
-// even though they are individual, non-fanified, triangles.
-//
-// Revision 1.4  1999/03/27 05:23:22  curt
-// Interpolate real z value of all nodes from dem data.
-// Write scenery file to correct location.
-// Pass along correct triangle attributes and write to output file.
-//
-// Revision 1.3  1999/03/25 19:04:21  curt
-// Preparations for outputing scenery file to correct location.
-//
-// Revision 1.2  1999/03/23 22:02:03  curt
-// Worked on creating data to output ... normals, bounding spheres, etc.
-//
-// Revision 1.1  1999/03/22 23:51:51  curt
-// Initial revision.
-//

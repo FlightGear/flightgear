@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 //
 
 
@@ -343,35 +342,3 @@ int main( int argc, char **argv ) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.11  1999/03/19 00:27:38  curt
-// Use long int for index instead of just int.
-//
-// Revision 1.10  1999/03/17 23:51:25  curt
-// Changed polygon index counter file.
-//
-// Revision 1.9  1999/03/12 22:54:19  curt
-// Rearrange a bit of code ...
-//
-// Revision 1.8  1999/03/01 15:35:26  curt
-// Fixed bug in output format generated.
-//
-// Revision 1.7  1999/02/25 21:32:49  curt
-// Modified to adhere to new polygon naming convention, and also to read the
-// new Robin Peel aiport format.
-//
-// Revision 1.6  1999/02/11 01:10:51  curt
-// Start of scenery revamp project.
-//
-// Revision 1.5  1998/09/17 18:40:43  curt
-// Debug message tweaks.
-//
-// Revision 1.4  1998/09/09 20:59:56  curt
-// Loop construct tweaks for STL usage.
-// Output airport file to be used to generate airport scenery on the fly
-//   by the run time sim.
-//
-//

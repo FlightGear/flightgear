@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _JSBSIM_HXX
@@ -47,13 +46,3 @@ int fgJSBsim_2_FGInterface (FGInterface& f);
 #endif // _JSBSIM_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:45  curt
-// Initial revision
-//
-// Revision 1.2  1999/02/11 21:09:41  curt
-// Interface with Jon's submitted JSBsim changes.
-//
-// Revision 1.1  1999/02/05 21:29:38  curt
-// Incorporating Jon S. Berndt's flight model code.
-//

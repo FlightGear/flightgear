@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include <Include/fg_constants.h>
@@ -179,14 +178,3 @@ void FGTriPoly::calc_point_inside( const FGTriNodes& trinodes ) {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.2  1999/03/29 13:11:11  curt
-// Shuffled stl type names a bit.
-// Began adding support for tri-fanning (or maybe other arrangments too.)
-//
-// Revision 1.1  1999/03/20 13:21:36  curt
-// Initial revision.
-//

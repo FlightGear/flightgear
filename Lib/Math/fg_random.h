@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _FG_RANDOM_H
@@ -47,27 +46,3 @@ double fg_random(void);
 #endif // _FG_RANDOM_H
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.4  1998/11/07 19:07:04  curt
-// Enable release builds using the --without-logging option to the configure
-// script.  Also a couple log message cleanups, plus some C to C++ comment
-// conversion.
-//
-// Revision 1.3  1998/04/21 17:03:48  curt
-// Prepairing for C++ integration.
-//
-// Revision 1.2  1998/01/22 02:59:38  curt
-// Changed #ifdef FILE_H to #ifdef _FILE_H
-//
-// Revision 1.1  1997/07/30 16:04:09  curt
-// Moved random routines from Utils/ to Math/
-//
-// Revision 1.2  1997/07/23 21:52:28  curt
-// Put comments around the text after an #endif for increased portability.
-//
-// Revision 1.1  1997/07/19 22:31:57  curt
-// Initial revision.
-//

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 ///
 
 
@@ -72,22 +71,3 @@ double least_squares_max_error(double *x, double *y, int n, double m, double b);
 #endif // _LEASTSQS_H
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:33  curt
-// Initial revision
-//
-// Revision 1.1  1999/03/13 17:34:45  curt
-// Moved to math subdirectory.
-//
-// Revision 1.2  1998/04/21 17:03:42  curt
-// Prepairing for C++ integration.
-//
-// Revision 1.1  1998/04/08 22:57:25  curt
-// Adopted Gnu automake/autoconf system.
-//
-// Revision 1.1  1998/03/19 02:54:48  curt
-// Reorganized into a class lib called fgDEM.
-//
-// Revision 1.1  1997/10/13 17:02:35  curt
-// Initial revision.
-//

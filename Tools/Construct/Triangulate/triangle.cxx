@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #include "triangle.hxx"
@@ -404,76 +403,3 @@ int FGTriangle::run_triangulate() {
 }
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.16  1999/04/05 02:17:11  curt
-// Dynamically update "error" until the resulting tile data scales within
-// a lower and upper bounds.
-//
-// Revision 1.15  1999/04/03 05:22:58  curt
-// Found a bug in dividing and adding unique verticle segments which could
-// cause the triangulator to end up in an infinite loop.  Basically the code
-// was correct, but the verticle line test was a bit to selective.
-//
-// Revision 1.14  1999/03/31 23:47:09  curt
-// Debugging output tweaks.
-//
-// Revision 1.13  1999/03/29 13:11:07  curt
-// Shuffled stl type names a bit.
-// Began adding support for tri-fanning (or maybe other arrangments too.)
-//
-// Revision 1.12  1999/03/27 05:30:12  curt
-// Handle corner nodes separately from the rest of the fitted nodes.
-// Add fitted nodes in after corners and polygon nodes since the fitted nodes
-//   are less important.  Subsequent nodes will "snap" to previous nodes if
-//   they are "close enough."
-// Need to manually divide segments to prevent "T" intersetions which can
-//   confound the triangulator.  Hey, I got to use a recursive method!
-// Pass along correct triangle attributes to output file generator.
-// Do fine grained node snapping for corners and polygons, but course grain
-//   node snapping for fitted terrain nodes.
-//
-// Revision 1.11  1999/03/23 22:02:51  curt
-// Refinements in naming and organization.
-//
-// Revision 1.10  1999/03/22 23:49:02  curt
-// Modifications to facilitate conversion to output format.
-//
-// Revision 1.9  1999/03/21 15:48:02  curt
-// Removed Dem2node from the Tools fold.
-// Tweaked the triangulator options to add quality mesh refinement.
-//
-// Revision 1.8  1999/03/21 14:02:06  curt
-// Added a mechanism to dump out the triangle structures for viewing.
-// Fixed a couple bugs in first pass at triangulation.
-// - needed to explicitely initialize the polygon accumulator in triangle.cxx
-//   before each polygon rather than depending on the default behavior.
-// - Fixed a problem with region attribute propagation where I wasn't generating
-//   the hole points correctly.
-//
-// Revision 1.7  1999/03/20 20:32:55  curt
-// First mostly successful tile triangulation works.  There's plenty of tweaking
-// to do, but we are marching in the right direction.
-//
-// Revision 1.6  1999/03/20 13:22:11  curt
-// Added trisegs.[ch]xx tripoly.[ch]xx.
-//
-// Revision 1.5  1999/03/20 02:21:52  curt
-// Continue shaping the code towards triangulation bliss.  Added code to
-// calculate some point guaranteed to be inside a polygon.
-//
-// Revision 1.4  1999/03/19 22:29:04  curt
-// Working on preparationsn for triangulation.
-//
-// Revision 1.3  1999/03/19 00:27:10  curt
-// Continued work on triangulation preparation.
-//
-// Revision 1.2  1999/03/18 04:31:11  curt
-// Let's not pass copies of huge structures on the stack ... ye might see a
-// segfault ... :-)
-//
-// Revision 1.1  1999/03/17 23:51:59  curt
-// Initial revision.
-//

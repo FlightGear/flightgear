@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _TILEMGR_HXX
@@ -58,59 +57,3 @@ void fgTileMgrRender( void );
 #endif // _TILEMGR_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:49  curt
-// Initial revision
-//
-// Revision 1.8  1999/03/25 19:03:29  curt
-// Converted to use new bucket routines.
-//
-// Revision 1.7  1999/01/27 04:49:49  curt
-// Fixes so that the sim can start out at an airport below sea level.
-//
-// Revision 1.6  1998/12/03 01:18:19  curt
-// Converted fgFLIGHT to a class.
-// Tweaks for Sun Portability.
-// Tweaked current terrain elevation code as per NHV.
-//
-// Revision 1.5  1998/10/16 00:55:52  curt
-// Converted to Point3D class.
-//
-// Revision 1.4  1998/09/09 20:58:11  curt
-// Tweaks to loop constructs with STL usage.
-//
-// Revision 1.3  1998/08/22  14:49:59  curt
-// Attempting to iron out seg faults and crashes.
-// Did some shuffling to fix a initialization order problem between view
-// position, scenery elevation.
-//
-// Revision 1.2  1998/05/20 20:53:56  curt
-// Moved global ref point and radius (bounding sphere info, and offset) to
-// data file rather than calculating it on the fly.
-// Fixed polygon winding problem in scenery generation stage rather than
-// compensating for it on the fly.
-// Made a fgTILECACHE class.
-//
-// Revision 1.1  1998/04/22 13:22:49  curt
-// C++ - ifing the code a bit.
-//
-// Revision 1.6  1998/04/21 17:02:45  curt
-// Prepairing for C++ integration.
-//
-// Revision 1.5  1998/02/12 21:59:53  curt
-// Incorporated code changes contributed by Charlie Hotchkiss
-// <chotchkiss@namg.us.anritsu.com>
-//
-// Revision 1.4  1998/01/22 02:59:42  curt
-// Changed #ifdef FILE_H to #ifdef _FILE_H
-//
-// Revision 1.3  1998/01/19 18:40:38  curt
-// Tons of little changes to clean up the code and to remove fatal errors
-// when building with the c++ compiler.
-//
-// Revision 1.2  1998/01/13 00:23:11  curt
-// Initial changes to support loading and management of scenery tiles.  Note,
-// there's still a fair amount of work left to be done.
-//
-// Revision 1.1  1998/01/07 23:50:51  curt
-// "area" renamed to "tile"

@@ -19,7 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 // $Id$
-// (Log is kept at end of this file)
 
 
 #ifndef _ARRAY_HXX
@@ -122,28 +121,3 @@ public:
 #endif // _ARRAY_HXX
 
 
-// $Log$
-// Revision 1.1  1999/04/05 21:32:43  curt
-// Initial revision
-//
-// Revision 1.6  1999/04/05 02:15:24  curt
-// Make dem fitting more robust in cases when no dem file available.
-//
-// Revision 1.5  1999/03/29 13:11:02  curt
-// Shuffled stl type names a bit.
-// Began adding support for tri-fanning (or maybe other arrangments too.)
-//
-// Revision 1.4  1999/03/27 05:20:14  curt
-// Handle corner nodes separately from the rest of the fitted nodes.
-// Fixed some "const" related warnings.
-//
-// Revision 1.3  1999/03/20 20:32:52  curt
-// First mostly successful tile triangulation works.  There's plenty of tweaking
-// to do, but we are marching in the right direction.
-//
-// Revision 1.2  1999/03/13 23:50:27  curt
-// Tweaked output formatting a bit.
-//
-// Revision 1.1  1999/03/13 18:45:02  curt
-// Initial revision. (derived from libDEM.a code.)
-//
