@@ -5,9 +5,18 @@ SERIAL_LIBS =
 endif
 
 if ENABLE_OLD_WEATHER
-WEATHER_LIBS =	$(top_builddir)/Simulator/Weather/libWeather.a
+WEATHER_LIBS = $(top_builddir)/Simulator/Weather/libWeather.a
 else
-WEATHER_LIBS =	$(top_builddir)/Simulator/WeatherCM/libWeatherCM.a
+WEATHER_LIBS = $(top_builddir)/Simulator/WeatherCM/libWeatherCM.a
+endif
+
+if ENABLE_NETWORK_OLK
+NETWORK_LIBS = \
+	$(top_builddir)/Simulator/Network/libNetwork.a \
+	$(top_builddir)/Simulator/NetworkOLK/libNetworkOLK.a
+else
+NETWORK_LIBS = \
+	$(top_builddir)/Simulator/Network/libNetwork.a
 endif
 
 if OLD_AUTOMAKE
@@ -46,7 +55,7 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/GUI/libGUI.a \
 	$(top_builddir)/Simulator/Scenery/libScenery.a \
 	$(top_builddir)/Simulator/Airports/libAirports.a \
-        $(top_builddir)/Simulator/Network/libNetwork.a \
+        $(NETWORK_LIBS) \
 	$(top_builddir)/Simulator/Objects/libObjects.a \
 	$(top_builddir)/Simulator/Clouds/libClouds.a \
 	$(top_builddir)/Simulator/Time/libTime.a \

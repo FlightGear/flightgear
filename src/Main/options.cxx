@@ -45,7 +45,7 @@ bool global_fullscreen = true;
 #include <Cockpit/cockpit.hxx>
 #include <FDM/flight.hxx>
 #ifdef FG_NETWORK_OLK
-#  include <Network/network.h>
+#  include <NetworkOLK/network.h>
 #endif
 #include <Time/fg_time.hxx>
 
