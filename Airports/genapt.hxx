@@ -32,19 +32,19 @@
 #endif                                   
 
 
-#include <string>        // Standard C++ string library
-#include <set>
-#include "Include/fg_stl_config.h"
+#include <Include/compiler.h>
 
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
+#include STL_STRING
+#include <set>
 
 #ifdef __BORLANDC__
 #  define exception c_exception
 #endif
 
 #include <Scenery/tile.hxx>
+
+FG_USING_STD(string);
+FG_USING_STD(set);
 
 
 // maximum size of airport perimeter structure, even for complex
@@ -65,6 +65,9 @@ fgAptGenerate(const string& path, fgTILE *tile);
 
 
 // $Log$
+// Revision 1.3  1999/03/02 01:02:32  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.2  1998/11/23 21:48:10  curt
 // Borland portability tweaks.
 //

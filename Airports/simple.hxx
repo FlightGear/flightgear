@@ -39,7 +39,8 @@
 #include STL_STRING
 #include <set>
 
-FG_USING_NAMESPACE(std);
+FG_USING_STD(string);
+FG_USING_STD(set);
 
 
 class fgAIRPORT {
@@ -104,6 +105,9 @@ public:
 
 
 // $Log$
+// Revision 1.7  1999/03/02 01:02:33  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.6  1999/02/26 22:08:36  curt
 // Added initial support for native SGI compilers.
 //

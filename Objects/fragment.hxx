@@ -52,10 +52,6 @@
 
 FG_USING_STD(vector);
 
-#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_NAMESPACE(std);
-#endif
-
 // Maximum nodes per tile
 #define MAX_NODES 2000
 
@@ -182,6 +178,9 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.9  1999/03/02 01:03:23  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.8  1999/02/26 22:09:57  curt
 // Added initial support for native SGI compilers.
 //

@@ -70,9 +70,6 @@
 #include "fg_serial.hxx"
 
 FG_USING_STD(string);
-#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_NAMESPACE(std);
-#endif
 
 extern const char *default_root;
 
@@ -398,6 +395,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.68  1999/03/02 01:03:15  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.67  1999/02/26 22:09:48  curt
 // Added initial support for native SGI compilers.
 //

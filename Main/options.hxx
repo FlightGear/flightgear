@@ -49,10 +49,6 @@
 FG_USING_STD(vector);
 FG_USING_STD(string);
 
-#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_NAMESPACE(std);
-#endif
-
 typedef vector < string > str_container;
 typedef str_container::iterator str_iterator;
 typedef str_container::const_iterator const_str_iterator;
@@ -245,6 +241,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.29  1999/03/02 01:03:19  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.28  1999/02/26 22:09:52  curt
 // Added initial support for native SGI compilers.
 //

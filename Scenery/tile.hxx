@@ -56,7 +56,6 @@ FG_USING_STD(vector);
 
 #ifdef FG_HAVE_NATIVE_SGI_COMPILERS
 #include <strings.h>
-FG_USING_NAMESPACE(std);
 #endif
 
 // Scenery tile class
@@ -162,6 +161,9 @@ private:
 
 
 // $Log$
+// Revision 1.25  1999/03/02 01:03:30  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.24  1999/02/26 22:10:02  curt
 // Added initial support for native SGI compilers.
 //

@@ -65,9 +65,6 @@ static char units[5];
 // They should eventually be member functions of the aircraft.
 //
 
-typedef deque< instr_item * > HudContainerType;
-typedef HudContainerType::iterator HudIterator;
-
 HudContainerType HUD_deque;
 
 class locRECT {
@@ -838,6 +835,9 @@ void fgUpdateHUD( void ) {
 }
 
 // $Log$
+// Revision 1.32  1999/03/02 01:02:37  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.31  1999/02/02 20:13:31  curt
 // MSVC++ portability changes by Bernie Bright:
 //

@@ -22,17 +22,19 @@
 // (Log is kept at end of this file)
 
 
-#include "Include/compiler.h"
+#include <Include/compiler.h>
+
 #include STL_FUNCTIONAL
 #include STL_ALGORITHM
-FG_USING_STD(for_each);
-FG_USING_STD(mem_fun_ref);
 
 #include <Debug/logstream.hxx>
 #include <Scenery/tile.hxx>
 #include "Bucket/bucketutils.hxx"
 
 #include "tile.hxx"
+
+FG_USING_STD(for_each);
+FG_USING_STD(mem_fun_ref);
 
 
 // Constructor
@@ -65,6 +67,9 @@ fgTILE::release_fragments()
 
 
 // $Log$
+// Revision 1.15  1999/03/02 01:03:29  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.14  1999/02/02 20:13:40  curt
 // MSVC++ portability changes by Bernie Bright:
 //

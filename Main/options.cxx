@@ -26,11 +26,14 @@
 #  include <config.h>
 #endif
 
+#include <Include/compiler.h>
+
 #include <math.h>            // rint()
 #include <stdio.h>
 #include <stdlib.h>          // atof(), atoi()
 #include <string.h>
-#include <string>
+
+#include STL_STRING
 
 #include <Debug/logstream.hxx>
 #include <Misc/fgstream.hxx>
@@ -39,6 +42,9 @@
 #include <Main/options.hxx>
 
 #include "fg_serial.hxx"
+
+FG_USING_STD(string);
+FG_USING_NAMESPACE(std);
 
 
 inline double
@@ -631,6 +637,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.41  1999/03/02 01:03:17  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.40  1999/02/26 22:09:51  curt
 // Added initial support for native SGI compilers.
 //

@@ -49,10 +49,6 @@
 #include "texload.h"
 
 FG_USING_STD(string);
-#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_NAMESPACE(std);
-#endif
-
 
 
 // global material management class
@@ -368,6 +364,9 @@ fgMATERIAL_MGR::render_fragments()
 
 
 // $Log$
+// Revision 1.14  1999/03/02 01:03:24  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.13  1999/02/26 22:09:58  curt
 // Added initial support for native SGI compilers.
 //

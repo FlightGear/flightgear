@@ -44,7 +44,8 @@
 
 #include "fg_serial.hxx"
 
-FG_USING_NAMESPACE(std);
+FG_USING_STD(string);
+FG_USING_STD(vector);
 
 // support an arbitrary number of serial channels.  Each channel can
 // be assigned to an arbitrary port.  Bi-directional communication is
@@ -466,6 +467,9 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.13  1999/03/02 01:03:16  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.12  1999/02/26 22:09:50  curt
 // Added initial support for native SGI compilers.
 //

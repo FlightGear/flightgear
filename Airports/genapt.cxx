@@ -50,7 +50,8 @@
 
 #include "genapt.hxx"
 
-FG_USING_NAMESPACE(std);
+FG_USING_STD(string);
+FG_USING_STD(vector);
 
 
 typedef vector < Point3D > container;
@@ -293,6 +294,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.14  1999/03/02 01:02:31  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.13  1999/02/26 22:08:34  curt
 // Added initial support for native SGI compilers.
 //

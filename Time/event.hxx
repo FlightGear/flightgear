@@ -45,9 +45,6 @@ FG_USING_STD(deque);
 FG_USING_STD(list);
 FG_USING_STD(string);
 
-#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_NAMESPACE(std);
-#endif
 
 class fgEVENT
 {
@@ -169,6 +166,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.18  1999/03/02 01:03:33  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.17  1999/02/26 22:10:08  curt
 // Added initial support for native SGI compilers.
 //

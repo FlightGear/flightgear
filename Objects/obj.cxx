@@ -61,9 +61,7 @@
 #include "obj.hxx"
 
 FG_USING_STD(string);
-#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_NAMESPACE(std);
-#endif
+
 
 static double normals[MAX_NODES][3];
 
@@ -556,6 +554,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.12  1999/03/02 01:03:25  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.11  1999/02/26 22:09:59  curt
 // Added initial support for native SGI compilers.
 //

@@ -45,15 +45,15 @@
 #  include <values.h>  // for MAXINT
 #endif
 
+#include <deque>        // STL double ended queue
+
 #include <fg_typedefs.h>
 #include <fg_constants.h>
 #include <Aircraft/aircraft.hxx>
 #include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
 
-#include <deque>        // STL double ended queue
-
-FG_USING_NAMESPACE(std);
+FG_USING_STD(deque);
 
 #ifndef WIN32
   typedef struct {
@@ -245,8 +245,11 @@ class instr_item {  // An Abstract Base Class (ABC)
     virtual void draw( void ) = 0;   // Required method in derived classes
 };
 
+typedef deque< instr_item * > HudContainerType;
+typedef HudContainerType::iterator HudIterator;
+
 typedef instr_item *HIptr;
-extern deque< instr_item *> HUD_deque;
+extern HudContainerType HUD_deque;
 
 // instr_item           This class has no other purpose than to maintain
 //                      a linked list of instrument and derived class
@@ -522,6 +525,9 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 // $Log$
+// Revision 1.19  1999/03/02 01:02:38  curt
+// Tweaks for building with native SGI compilers.
+//
 // Revision 1.18  1999/02/26 22:08:45  curt
 // Added initial support for native SGI compilers.
 //
