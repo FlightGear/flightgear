@@ -72,7 +72,8 @@ public:
   virtual double get_wind_from_east_fps () const;
   virtual double get_wind_from_down_fps () const;
 
-  virtual double get_turbulence_norm () const;
+  virtual double get_turbulence_magnitude_norm () const;
+  virtual double get_turbulence_rate_hz () const;
 
   virtual void set_visibility_m (double v);
 
@@ -89,7 +90,8 @@ public:
   virtual void set_wind_from_east_fps (double e);
   virtual void set_wind_from_down_fps (double d);
 
-  virtual void set_turbulence_norm (double t);
+  virtual void set_turbulence_magnitude_norm (double t);
+  virtual void set_turbulence_rate_hz (double t);
 
   virtual double get_elevation_ft () const;
   virtual void set_elevation_ft (double elevation_ft);
@@ -120,7 +122,8 @@ private:
   double pressure_inhg;
   double density_slugft3;
 
-  double turbulence_norm;
+  double turbulence_magnitude_norm;
+  double turbulence_rate_hz;
 
   double wind_from_heading_deg;
   double wind_speed_kt;

@@ -126,7 +126,8 @@ FGEnvironment::FGEnvironment()
     wind_from_north_fps(0),
     wind_from_east_fps(0),
     wind_from_down_fps(0),
-    turbulence_norm(0)
+    turbulence_magnitude_norm(0),
+    turbulence_rate_hz(1)
 {
   _setup_tables();
   _recalc_density();
@@ -157,14 +158,15 @@ FGEnvironment::copy (const FGEnvironment &env)
     wind_from_north_fps = env.wind_from_north_fps;
     wind_from_east_fps = env.wind_from_east_fps;
     wind_from_down_fps = env.wind_from_down_fps;
-    turbulence_norm = env.turbulence_norm;
+    turbulence_magnitude_norm = env.turbulence_magnitude_norm;
+    turbulence_rate_hz = env.turbulence_rate_hz;
 }
 
 static inline bool
 maybe_copy_value (FGEnvironment * env, const SGPropertyNode * node,
                   const char * name, void (FGEnvironment::*setter)(double))
 {
-    const SGPropertyNode * child = node->getChild(name);
+    const SGPropertyNode * child = node->getNode(name);
                                 // fragile: depends on not being typed
                                 // as a number
     if (child != 0 && child->getStringValue()[0] != '\0') {
@@ -205,8 +207,11 @@ FGEnvironment::read (const SGPropertyNode * node)
     maybe_copy_value(this, node, "elevation-ft",
                      &FGEnvironment::set_elevation_ft);
 
-    maybe_copy_value(this, node, "turbulence-norm",
-                     &FGEnvironment::set_turbulence_norm);
+    maybe_copy_value(this, node, "turbulence/magnitude-norm",
+                     &FGEnvironment::set_turbulence_magnitude_norm);
+
+    maybe_copy_value(this, node, "turbulence/rate-hz",
+                     &FGEnvironment::set_turbulence_rate_hz);
 }
 
 
@@ -289,9 +294,15 @@ FGEnvironment::get_wind_from_down_fps () const
 }
 
 double
-FGEnvironment::get_turbulence_norm () const
+FGEnvironment::get_turbulence_magnitude_norm () const
 {
-  return turbulence_norm;
+  return turbulence_magnitude_norm;
+}
+
+double
+FGEnvironment::get_turbulence_rate_hz () const
+{
+  return turbulence_rate_hz;
 }
 
 double
@@ -394,9 +405,15 @@ FGEnvironment::set_wind_from_down_fps (double d)
 }
 
 void
-FGEnvironment::set_turbulence_norm (double t)
+FGEnvironment::set_turbulence_magnitude_norm (double t)
 {
-  turbulence_norm = t;
+  turbulence_magnitude_norm = t;
+}
+
+void
+FGEnvironment::set_turbulence_rate_hz (double r)
+{
+  turbulence_rate_hz = r;
 }
 
 void
@@ -588,9 +605,14 @@ interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
                    env2->get_elevation_ft(),
                    fraction));
 
-    result->set_turbulence_norm
-        (do_interp(env1->get_turbulence_norm(),
-                   env2->get_turbulence_norm(),
+    result->set_turbulence_magnitude_norm
+        (do_interp(env1->get_turbulence_magnitude_norm(),
+                   env2->get_turbulence_magnitude_norm(),
+                   fraction));
+
+    result->set_turbulence_rate_hz
+        (do_interp(env1->get_turbulence_rate_hz(),
+                   env2->get_turbulence_rate_hz(),
                    fraction));
 }
 

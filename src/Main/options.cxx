@@ -995,7 +995,7 @@ fgOptWind( const char *arg )
 static int
 fgOptTurbulence( const char *arg)
 {
-    fgDefaultWeatherValue("turbulence-norm", atof(arg));
+    fgDefaultWeatherValue("turbulence/magnitude-norm", atof(arg));
     return FG_OPTIONS_OK;
 }
 

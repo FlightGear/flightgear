@@ -106,10 +106,14 @@ FGEnvironmentMgr::bind ()
 	&FGEnvironment::get_wind_from_down_fps,
 	&FGEnvironment::set_wind_from_down_fps);
   fgSetArchivable("/environment/wind-from-down-fps");
-  fgTie("/environment/turbulence-norm", _environment,
-        &FGEnvironment::get_turbulence_norm,
-        &FGEnvironment::set_turbulence_norm);
-  fgSetArchivable("/environment/turbulence-norm");
+  fgTie("/environment/turbulence/magnitude-norm", _environment,
+        &FGEnvironment::get_turbulence_magnitude_norm,
+        &FGEnvironment::set_turbulence_magnitude_norm);
+  fgSetArchivable("/environment/turbulence/magnitude-norm");
+  fgTie("/environment/turbulence/rate_hz", _environment,
+        &FGEnvironment::get_turbulence_rate_hz,
+        &FGEnvironment::set_turbulence_rate_hz);
+  fgSetArchivable("/environment/turbulence/rate_hz");
 
   for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
     char buf[128];

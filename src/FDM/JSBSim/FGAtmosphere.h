@@ -150,6 +150,7 @@ public:
   inline double GetWindPsi(void) const { return psiw; }
   
   inline void SetTurbGain(double tt) {TurbGain = tt;}
+  inline void SetTurbRate(double tt) {TurbRate = tt;}
   
   inline double GetTurbPQR(int idx) const {return vTurbPQR(idx);}
   inline FGColumnVector3& GetTurbPQR(void) {return vTurbPQR;}
@@ -176,6 +177,7 @@ private:
   
   double MagnitudedAccelDt, MagnitudeAccel, Magnitude;
   double TurbGain;
+  double TurbRate;
   FGColumnVector3 vDirectiondAccelDt;
   FGColumnVector3 vDirectionAccel;
   FGColumnVector3 vDirection;
