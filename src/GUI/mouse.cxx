@@ -52,7 +52,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/screen/screen-dump.hxx>
 
 #include <Include/general.hxx>
 #include <Aircraft/aircraft.hxx>
