@@ -721,12 +721,7 @@ void fgCockpitUpdate( void ) {
         // This will check the global hud linked list pointer.
         // If these is anything to draw it will.
         fgUpdateHUD();
-    }
-
-#define DISPLAY_COUNTER
-#ifdef DISPLAY_COUNTER
-    else
-    {
+    } else if ( fgGetBool( "/sim/hud/draw-fps-when-off", false ) ) {
         char buf[64];
         float fps    =       get_frame_rate();
 //      float tris   = fps * get_vfc_tris_drawn();
@@ -757,7 +752,6 @@ void fgCockpitUpdate( void ) {
         glMatrixMode( GL_MODELVIEW );
         glPopMatrix();
     }
-#endif // #ifdef DISPLAY_COUNTER
     
     glViewport( 0, 0, iwidth, iheight );
 }
