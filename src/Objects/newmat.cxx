@@ -153,11 +153,20 @@ FGNewMat::Object::load_models () const
 {
 				// Load model only on demand
   if (!_models_loaded) {
-    for (unsigned int i = 0; i < _paths.size(); i++) {
+    for (int i = 0; i < _paths.size(); i++) {
+
+// Original
+//      SGPath path = globals->get_fg_root();
+//      path.append(_paths[i]);
+//      ssgTexturePath((char *)path.dir().c_str());
+//      ssgEntity * entity = load_object((char *)path.c_str());
+
+// DCL
       SGPath path = globals->get_fg_root();
+      SGPath modelPath = _paths[i];
       path.append(_paths[i]);
       ssgTexturePath((char *)path.dir().c_str());
-      ssgEntity * entity = load_object((char *)path.c_str());
+      ssgEntity * entity = load_object((char *)modelPath.c_str());
       if (entity != 0) {
         // entity->ref();
 	float ranges[] = {0, _range_m};
