@@ -42,6 +42,34 @@
 #include "hud.hxx"
 #include "panel.hxx"
 
+#define WIN_X 0
+#define WIN_Y 0
+#define WIN_W 1024
+#define WIN_H 768
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Local functions.
+////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * Calculate the aspect adjustment for the panel.
+ */
+float
+get_aspect_adjust (int xsize, int ysize)
+{
+  float ideal_aspect = float(WIN_W) / float(WIN_H);
+  float real_aspect = float(xsize) / float(ysize);
+  return (real_aspect / ideal_aspect);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Global functions.
+////////////////////////////////////////////////////////////////////////
 
 bool
 fgPanelVisible ()
@@ -131,13 +159,14 @@ static fntRenderer text_renderer;
 /**
  * Constructor.
  */
-FGPanel::FGPanel (int window_x, int window_y, int window_w, int window_h)
+FGPanel::FGPanel ()
   : _mouseDown(false),
     _mouseInstrument(0),
-    _winx(window_x), _winy(window_y), _winw(window_w), _winh(window_h),
-    _width(_winw), _height(int(_winh * 0.5768 + 1)),
-    _x_offset(0), _y_offset(0), _view_height(int(_winh * 0.4232)),
-    _bound(false)
+    _width(WIN_W), _height(int(WIN_H * 0.5768 + 1)),
+    _x_offset(0), _y_offset(0), _view_height(int(WIN_H * 0.4232)),
+    _bound(false),
+    _xsize_node(fgGetNode("/sim/startup/xsize", true)),
+    _ysize_node(fgGetNode("/sim/startup/ysize", true))
 {
   setVisibility(fgPanelVisible());
 }
@@ -208,15 +237,12 @@ FGPanel::unbind ()
 /**
  * Update the panel.
  */
-void FGPanel::update ()
-{
-	update(_winx, _winw, _winy, _winh);
-}
-
-
 void
-FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
+FGPanel::update ()
 {
+  float aspect_adjust = get_aspect_adjust(_xsize_node->getIntValue(),
+					  _ysize_node->getIntValue());
+
 				// Do nothing if the panel isn't visible.
   if (!fgPanelVisible())
     return;
@@ -234,7 +260,12 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  gluOrtho2D(winx, winx + winw, winy, winy + winh);
+  if (aspect_adjust <1.0)
+    gluOrtho2D(WIN_X, WIN_X + int(WIN_W * aspect_adjust),
+	       WIN_Y, WIN_Y + WIN_H);
+  else
+    gluOrtho2D(WIN_X, WIN_X + WIN_W,
+	       WIN_Y, WIN_Y + int(WIN_H / aspect_adjust));
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
@@ -259,10 +290,10 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   glBegin(GL_POLYGON);
-  glTexCoord2f(0.0, 0.0); glVertex3f(_winx, _winy, 0);
-  glTexCoord2f(1.0, 0.0); glVertex3f(_winx + _width, _winy, 0);
-  glTexCoord2f(1.0, 1.0); glVertex3f(_winx + _width, _winy + _height, 0);
-  glTexCoord2f(0.0, 1.0); glVertex3f(_winx, _winy + _height, 0);
+  glTexCoord2f(0.0, 0.0); glVertex3f(WIN_X, WIN_Y, 0);
+  glTexCoord2f(1.0, 0.0); glVertex3f(WIN_X + _width, WIN_Y, 0);
+  glTexCoord2f(1.0, 1.0); glVertex3f(WIN_X + _width, WIN_Y + _height, 0);
+  glTexCoord2f(0.0, 1.0); glVertex3f(WIN_X, WIN_Y + _height, 0);
   glEnd();
 
 				// Draw the instruments.
@@ -322,7 +353,7 @@ FGPanel::setBackground (ssgTexture * texture)
 void
 FGPanel::setXOffset (int offset)
 {
-  if (offset <= 0 && offset >= -_width + _winw)
+  if (offset <= 0 && offset >= -_width + WIN_W)
     _x_offset = offset;
 }
 
@@ -344,6 +375,10 @@ FGPanel::setYOffset (int offset)
 bool
 FGPanel::doMouseAction (int button, int updown, int x, int y)
 {
+				// FIXME: this same code appears in update()
+  int xsize = _xsize_node->getIntValue();
+  int ysize = _ysize_node->getIntValue();
+  float aspect_adjust = get_aspect_adjust(xsize, ysize);
 
 				// Note a released button and return
   // cerr << "Doing mouse action\n";
@@ -354,9 +389,13 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   }
 
 				// Scale for the real window size.
-  x = int(((float)x / fgGetInt("/sim/startup/xsize")) * _winw);
-  y = int(_winh - (((float)y / fgGetInt("/sim/startup/ysize"))
-		   * _winh));
+  if (aspect_adjust < 1.0) {
+    x = int(((float)x / xsize) * WIN_W * aspect_adjust);
+    y = int(WIN_H - ((float(y) / ysize) * WIN_H));
+  } else {
+    x = int(((float)x / xsize) * WIN_W);
+    y = int((WIN_H - ((float(y) / ysize) * WIN_H)) / aspect_adjust);
+  }
 
 				// Adjust for offsets.
   x -= _x_offset;
