@@ -442,7 +442,7 @@ static bool xpdr_has_power() {
     static SGPropertyNode *xpdr_bus_power
         = fgGetNode( "/systems/electrical/outputs/transponder", true );
     static SGPropertyNode *xpdr_func_knob
-        = fgGetNode( "/instrumentation/kt-70/inputs/func-knob", true );
+        = fgGetNode( "/instrumentation/transponder/inputs/func-knob", true );
 
     return (xpdr_bus_power->getDoubleValue() > 1.0)
         && (xpdr_func_knob->getIntValue() > 0);
@@ -506,13 +506,13 @@ bool FGATCOutput::do_radio_display() {
         = fgGetNode( "/instrumentation/kr-87/outputs/elapsed-timer", true );
 
     static SGPropertyNode *xpdr_serviceable
-        = fgGetNode( "/instrumentation/kt-70/inputs/serviceable", true );
+        = fgGetNode( "/instrumentation/transponder/inputs/serviceable", true );
     static SGPropertyNode *xpdr_func_knob
-        = fgGetNode( "/instrumentation/kt-70/inputs/func-knob", true );
+        = fgGetNode( "/instrumentation/transponder/inputs/func-knob", true );
     static SGPropertyNode *xpdr_flight_level
-        = fgGetNode( "/instrumentation/kt-70/outputs/flight-level", true );
+        = fgGetNode( "/instrumentation/transponder/outputs/flight-level", true );
     static SGPropertyNode *xpdr_id_code
-        = fgGetNode( "/instrumentation/kt-70/outputs/id-code", true );
+        = fgGetNode( "/instrumentation/transponder/outputs/id-code", true );
 
     char digits[10];
     int i;
