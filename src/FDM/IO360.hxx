@@ -100,7 +100,8 @@ private:
     float RPM;
     float Fuel_Flow;		// lbs/hour
     float Torque;
-    float CHT;			// Cylinder head temperature
+    float CHT;			// Cylinder head temperature deg K
+    float CHT_degF;		// Ditto in deg Fahrenheit
     float EGT;			// Exhaust gas temperature
     float Mixture;
     float Oil_Pressure;		// PSI
@@ -195,7 +196,7 @@ public:
 
     //constructor
     FGNewEngine() {
-//	outfile.open("FGEngine.dat", ios::out|ios::trunc);
+//	outfile.open("FGNewEngine.dat", ios::out|ios::trunc);
     }
 
     //destructor
@@ -230,6 +231,8 @@ public:
     inline float get_MaxHP() const { return MaxHP; }
     inline float get_Percentage_Power() const { return Percentage_Power; }
     inline float get_EGT() const { return EGT; }
+    // Note this returns CHT in Fahrenheit
+    inline float get_CHT() const { return CHT_degF; }
     inline float get_prop_thrust_SI() const { return prop_thrust; }
 };
 

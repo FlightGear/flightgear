@@ -86,7 +86,7 @@ FG_USING_STD(cout);
 // CODE
 // ------------------------------------------------------------------------
 
-
+/*
 // Calculate Engine RPM based on Propellor Lever Position
 float FGNewEngine::Calc_Engine_RPM (float LeverPosition)
 {
@@ -103,6 +103,7 @@ float FGNewEngine::Calc_Engine_RPM (float LeverPosition)
 
     return RPM;
 }
+*/
 
 float FGNewEngine::Lookup_Combustion_Efficiency(float thi_actual)
 {
@@ -246,7 +247,8 @@ void FGNewEngine::init(double dt) {
     RPM = 600;
     Fuel_Flow = 0;	// lbs/hour
     Torque = 0;
-    CHT = 370;
+    CHT = 298.0;	//deg Kelvin
+    CHT_degF = (CHT * 1.8) - 459.67;  //deg Fahrenheit
     Mixture = 14;
     Oil_Pressure = 0;	// PSI
     Oil_Temp = 85;	// Deg C
@@ -297,13 +299,15 @@ static float Oil_Press (float Oil_Temp, float Engine_RPM)
 }
 
 
+/*
 // Calculate Cylinder Head Temperature
-static float Calc_CHT (float Fuel_Flow, float Mixture, float IAS)
+static float Calc_CHT (float Fuel_Flow, float Mixture, float IAS, float rhoair, float tamb)
 {
     float CHT = 350;
 	
     return CHT;
 }
+*/
 
 /*
 //Calculate Exhaust Gas Temperature
@@ -345,12 +349,14 @@ static float IAS_to_FPS (float x)
 }
 
 
+//*****************************************************************************
+//*****************************************************************************
 // update the engine model based on current control positions
 void FGNewEngine::update() {
     // Declare local variables
-    int num = 0;
+//    int num = 0;
     // const int num2 = 500;	// default is 100, number if iterations to run
-    const int num2 = 5;	// default is 100, number if iterations to run
+//    const int num2 = 5;	// default is 100, number if iterations to run
     float ManXRPM = 0;
     float Vo = 0;
     float V1 = 0;
@@ -378,29 +384,11 @@ void FGNewEngine::update() {
     float FG_Pressure_Ht = 0;
 
     // Parameters that alter the operation of the engine.
-    // Yes = 1. Is there Fuel Available. Calculated elsewhere
-    int Fuel_Available = 1;
-    // Off = 0. Reduces power by 3 % for same throttle setting
-    int Alternate_Air_Pos =0;
-    // 1 = On.   Reduces power by 5 % for same power lever settings
-    int Magneto_Left = 1;
-    // 1 = On.  Ditto, Both of the above though do not alter fuel flow
-    int Magneto_Right = 1;
+    int Fuel_Available = 1;	// Yes = 1. Is there Fuel Available. Calculated elsewhere
+    int Alternate_Air_Pos =0;	// Off = 0. Reduces power by 3 % for same throttle setting
+    int Magneto_Left = 1;	// 1 = On.   Reduces power by 5 % for same power lever settings
+    int Magneto_Right = 1;	// 1 = On.  Ditto, Both of the above though do not alter fuel flow
 
-    // There needs to be a section in here to trap silly values, like
-    // 0, otherwise they will crash the calculations
-
-    // cout << " Number of Iterations ";
-    // cin >> num2;
-    // cout << endl;
-
-    // cout << " Throttle % ";
-    // cin >> Throttle_Lever_Pos;
-    // cout << endl;
-
-    // cout << " Prop % ";
-    // cin >> Propeller_Lever_Pos;
-    // cout << endl;
 
     //==================================================================
     // Engine & Environmental Inputs from elsewhere
@@ -417,6 +405,7 @@ void FGNewEngine::update() {
 	Calc_Manifold_Pressure( Throttle_Lever_Pos, Max_Manifold_Pressure, Min_Manifold_Pressure );
     // cout << "manifold pressure = " << Manifold_Pressure << endl;
 
+//**************************FIXME*******************************************
     //DCL - hack for testing - fly at sea level
     T_amb = 298.0;
     p_amb = 101325;
@@ -436,74 +425,151 @@ void FGNewEngine::update() {
 
 //**************	
 	
-	//DCL - calculate mass air flow into engine based on speed and load - separate this out into a function eventually
-	//t_amb is actual temperature calculated from altitude
-	//calculate density from ideal gas equation
-	rho_air = p_amb / ( R_air * T_amb );
-	rho_air_manifold = rho_air * Manifold_Pressure / 29.6;
-	//calculate ideal engine volume inducted per second
-	swept_volume = (displacement_SI * (RPM / 60)) / 2;  //This equation is only valid for a four stroke engine
-	//calculate volumetric efficiency - for now we will just use 0.8, but actually it is a function of engine speed and the exhaust to manifold pressure ratio
-	volumetric_efficiency = 0.8;
-	//Now use volumetric efficiency to calculate actual air volume inducted per second
-	v_dot_air = swept_volume * volumetric_efficiency;
-	//Now calculate mass flow rate of air into engine
-	m_dot_air = v_dot_air * rho_air_manifold;
+    //DCL - calculate mass air flow into engine based on speed and load - separate this out into a function eventually
+    //t_amb is actual temperature calculated from altitude
+    //calculate density from ideal gas equation
+    rho_air = p_amb / ( R_air * T_amb );
+    rho_air_manifold = rho_air * Manifold_Pressure / 29.6;
+    //calculate ideal engine volume inducted per second
+    swept_volume = (displacement_SI * (RPM / 60)) / 2;  //This equation is only valid for a four stroke engine
+    //calculate volumetric efficiency - for now we will just use 0.8, but actually it is a function of engine speed and the exhaust to manifold pressure ratio
+    volumetric_efficiency = 0.8;
+    //Now use volumetric efficiency to calculate actual air volume inducted per second
+    v_dot_air = swept_volume * volumetric_efficiency;
+    //Now calculate mass flow rate of air into engine
+    m_dot_air = v_dot_air * rho_air_manifold;
 
-	// cout << "rho air manifold " << rho_air_manifold << '\n';
-	// cout << "Swept volume " << swept_volume << '\n';
-
-//**************
-
-	//DCL - now calculate fuel flow into engine based on air flow and mixture lever position
-	//assume lever runs from no flow at fully out to thi = 1.6 at fully in at sea level
-	//also assume that the injector linkage is ideal - hence the set mixture is maintained at a given altitude throughout the speed and load range
-	thi_sea_level = 1.6 * ( Mixture_Lever_Pos / 100.0 );
-	equivalence_ratio = thi_sea_level * p_amb_sea_level / p_amb; //ie as we go higher the mixture gets richer for a given lever position
-	m_dot_fuel = m_dot_air / 14.7 * equivalence_ratio;
-
-	// cout << "fuel " << m_dot_fuel;
-	// cout << " air " << m_dot_air << '\n';
+    // cout << "rho air manifold " << rho_air_manifold << '\n';
+    // cout << "Swept volume " << swept_volume << '\n';
 
 //**************
 
-	// cout << "Thi = " << equivalence_ratio << '\n'; 
+    //DCL - now calculate fuel flow into engine based on air flow and mixture lever position
+    //assume lever runs from no flow at fully out to thi = 1.6 at fully in at sea level
+    //also assume that the injector linkage is ideal - hence the set mixture is maintained at a given altitude throughout the speed and load range
+    thi_sea_level = 1.6 * ( Mixture_Lever_Pos / 100.0 );
+    equivalence_ratio = thi_sea_level * p_amb_sea_level / p_amb; //ie as we go higher the mixture gets richer for a given lever position
+    m_dot_fuel = m_dot_air / 14.7 * equivalence_ratio;
 
-	combustion_efficiency = Lookup_Combustion_Efficiency(equivalence_ratio);  //The combustion efficiency basically tells us what proportion of the fuels calorific value is released
+    // cout << "fuel " << m_dot_fuel;
+    // cout << " air " << m_dot_air << '\n';
 
-	// cout << "Combustion efficiency = " << combustion_efficiency << '\n';
+//**************
 
-	//now calculate energy release to exhaust
-	//We will assume a three way split of fuel energy between useful work, the coolant system and the exhaust system
-	//This is a reasonable first suck of the thumb estimate for a water cooled automotive engine - whether it holds for an air cooled aero engine is probably open to question
-	//Regardless - it won't affect the variation of EGT with mixture, and we con always put a multiplier on EGT to get a reasonable peak value.
-	enthalpy_exhaust = m_dot_fuel * calorific_value_fuel * combustion_efficiency * 0.33;
-	heat_capacity_exhaust = (Cp_air * m_dot_air) + (Cp_fuel * m_dot_fuel);
-	delta_T_exhaust = enthalpy_exhaust / heat_capacity_exhaust;	
-//	delta_T_exhaust = Calculate_Delta_T_Exhaust();
+    // cout << "Thi = " << equivalence_ratio << '\n'; 
 
-	// cout << "T_amb " << T_amb;
-	// cout << " dT exhaust = " << delta_T_exhaust;
+    combustion_efficiency = Lookup_Combustion_Efficiency(equivalence_ratio);  //The combustion efficiency basically tells us what proportion of the fuels calorific value is released
 
-	EGT = T_amb + delta_T_exhaust;
+    // cout << "Combustion efficiency = " << combustion_efficiency << '\n';
 
-	// cout << " EGT = " << EGT << '\n';
+    //now calculate energy release to exhaust
+    //We will assume a three way split of fuel energy between useful work, the coolant system and the exhaust system
+    //This is a reasonable first suck of the thumb estimate for a water cooled automotive engine - whether it holds for an air cooled aero engine is probably open to question
+    //Regardless - it won't affect the variation of EGT with mixture, and we con always put a multiplier on EGT to get a reasonable peak value.
+    enthalpy_exhaust = m_dot_fuel * calorific_value_fuel * combustion_efficiency * 0.33;
+    heat_capacity_exhaust = (Cp_air * m_dot_air) + (Cp_fuel * m_dot_fuel);
+    delta_T_exhaust = enthalpy_exhaust / heat_capacity_exhaust;	
+//  delta_T_exhaust = Calculate_Delta_T_Exhaust();
+
+    // cout << "T_amb " << T_amb;
+    // cout << " dT exhaust = " << delta_T_exhaust;
+
+    EGT = T_amb + delta_T_exhaust;
+
+    // cout << " EGT = " << EGT << '\n';
+
+//***************************************************************************************
+// Calculate Cylinder Head Temperature
+
+/* DCL 27/10/00  
+
+This is a somewhat rough first attempt at modelling cylinder head temperature.  The cylinder head
+is assumed to be at uniform temperature.  Obviously this is incorrect, but it simplifies things a 
+lot, and we're just looking for the behaviour of CHT to be correct.  Energy transfer to the cylinder
+head is assumed to be one third of the energy released by combustion at all conditions.  This is a
+reasonable estimate, although obviously in real life it varies with different conditions and possibly
+with CHT itself.  I've split energy transfer from the cylinder head into 2 terms - free convection - 
+ie convection to stationary air, and forced convection, ie convection into flowing air.  The basic 
+free convection equation is: dqdt = -hAdT   Since we don't know A and are going to set h quite arbitarily
+anyway I've knocked A out and just wrapped it up in h - the only real significance is that the units
+of h will be different but that dosn't really matter to us anyway.  In addition, we have the problem
+that the prop model I'm currently using dosn't model the backwash from the prop which will add to the
+velocity of the cooling air when the prop is turning, so I've added an extra term to try and cope 
+with this.
+
+In real life, forced convection equations are genarally empirically derived, and are quite complicated 
+and generally contain such things as the Reynolds and Nusselt numbers to various powers.  The best 
+course of action would probably to find an empirical correlation from the literature for a similar
+situation and try and get it to fit well.  However, for now I am using my own made up very simple 
+correlation for the energy transfer from the cylinder head:
+
+dqdt = -(h1.dT) -(h2.m_dot.dT) -(h3.rpm.dT)
+
+where dT is the temperature different between the cylinder head and the surrounding air, m_dot is the
+mass flow rate of cooling air through an arbitary volume, rpm is the engine speed in rpm (this is the
+backwash term), and h1, h2, h3 are co-efficients which we can play with to attempt to get the CHT 
+behaviour to match real life.
+
+In order to change the values of CHT that the engine settles down at at various conditions,
+have a play with h1, h2 and h3.  In order to change the rate of heating/cooling without affecting
+equilibrium values alter the cylinder head mass, which is really quite arbitary.  Bear in mind that
+altering h1, h2 and h3 will also alter the rate of heating or cooling as well as equilibrium values,
+but altering the cylinder head mass will only alter the rate.  It would I suppose be better to read 
+the values from file to avoid the necessity for re-compilation every time I change them.
+		    
+*/
+    //CHT = Calc_CHT( Fuel_Flow, Mixture, IAS);
+    // cout << "Cylinder Head Temp (F) = " << CHT << endl;
+    float h1 = -95.0;   //co-efficient for free convection
+    float h2 = -3.95;   //co-efficient for forced convection
+    float h3 = -0.05;	//co-efficient for forced convection due to prop backwash
+    float v_apparent;	//air velocity over cylinder head in m/s
+    float v_dot_cooling_air;
+    float m_dot_cooling_air;
+    float temperature_difference;
+    float arbitary_area = 1.0;
+    float dqdt_from_combustion;
+    float dqdt_forced;	    //Rate of energy transfer to/from cylinder head due to forced convection (Joules) (sign convention: to cylinder head is +ve)
+    float dqdt_free;	    //Rate of energy transfer to/from cylinder head due to free convection (Joules) (sign convention: to cylinder head is +ve)
+    float dqdt_cylinder_head;	    //Overall energy change in cylinder head
+    float CpCylinderHead = 800.0;   //FIXME - this is a guess - I need to look up the correct value
+    float MassCylinderHead = 8.0;   //Kg - this is a guess - it dosn't have to be absolutely accurate but can be varied to alter the warm-up rate
+    float HeatCapacityCylinderHead;
+    float dCHTdt;
+
+    temperature_difference = CHT - T_amb; 
+
+    v_apparent = IAS * 0.5144444;  //convert from knots to m/s
+    v_dot_cooling_air = arbitary_area * v_apparent;
+    m_dot_cooling_air = v_dot_cooling_air * rho_air;
+
+    //Calculate rate of energy transfer to cylinder head from combustion
+    dqdt_from_combustion = m_dot_fuel * calorific_value_fuel * combustion_efficiency * 0.33;
+    
+    //Calculate rate of energy transfer from cylinder head due to cooling  NOTE is calculated as rate to but negative
+    dqdt_forced = (h2 * m_dot_cooling_air * temperature_difference) + (h3 * RPM * temperature_difference);
+    dqdt_free = h1 * temperature_difference;
+
+    //Calculate net rate of energy transfer to or from cylinder head
+    dqdt_cylinder_head = dqdt_from_combustion + dqdt_forced + dqdt_free;
+
+    HeatCapacityCylinderHead = CpCylinderHead * MassCylinderHead;
+
+    dCHTdt = dqdt_cylinder_head / HeatCapacityCylinderHead;
+
+    CHT += (dCHTdt * time_step);
+
+    CHT_degF = (CHT * 1.8) - 459.67;
+
+    // cout << "CHT = " << CHT_degF << " degF\n";
+
+
+// End calculate Cylinder Head Temperature
 
  
-    // Calculate Manifold Pressure (Engine 2) as set by throttle opening
+//***************************************************************************************
+// Engine Power & Torque Calculations
 
-    // FGEng2_Manifold_Pressure = Manifold_Pressure(FGEng2_Throttle_Lever_Pos, FGEng2_Manifold_Pressure);
-    // Show_Manifold_Pressure(FGEng2_Manifold_Pressure);
-
-
-
-    //==================================================================
-    // Engine Power & Torque Calculations
-
-    // Loop until stable - required for testing only
-//    for (num = 0; num < num2; num++) {
-	// cout << Manifold_Pressure << " Inches" << "\t";
-	// cout << RPM << "  RPM" << "\t";
 
 	// For a given Manifold Pressure and RPM calculate the % Power
 	// Multiply Manifold Pressure by RPM
@@ -511,20 +577,21 @@ void FGNewEngine::update() {
 	//	cout << ManXRPM;
 	// cout << endl;
 
+/*
 //  Phil's %power correlation
-/*	//  Calculate % Power
-	Percentage_Power = (+ 7E-09 * ManXRPM * ManXRPM) 
-	    + ( + 7E-04 * ManXRPM) - 0.1218;
-	// cout << Percentage_Power <<  "%" << "\t";   */  
+	//  Calculate % Power
+	Percentage_Power = (+ 7E-09 * ManXRPM * ManXRPM) + ( + 7E-04 * ManXRPM) - 0.1218;
+	// cout << Percentage_Power <<  "%" << "\t";   
+*/
 
 // DCL %power correlation - basically Phil's correlation modified to give slighty less power at the low end
 // might need some adjustment as the prop model is adjusted
 // My aim is to match the prop model and engine model at the low end to give the manufacturer's recommended idle speed with the throttle closed - 600rpm for the Continental IO520
 	//  Calculate % Power
-	Percentage_Power = (+ 6E-09 * ManXRPM * ManXRPM) 
-	    + ( + 8E-04 * ManXRPM) - 1.8524;
+	Percentage_Power = (+ 6E-09 * ManXRPM * ManXRPM) + ( + 8E-04 * ManXRPM) - 1.8524;
 	// cout << Percentage_Power <<  "%" << "\t";
 
+	
 	// Adjust for Temperature - Temperature above Standard decrease
 	// power % by 7/120 per degree F increase, and incease power for
 	// temps below at the same ratio
@@ -535,6 +602,7 @@ void FGNewEngine::update() {
 	// used. Decrease 1% for each 1000' increase in Altitde
 	Percentage_Power = Percentage_Power + (FG_Pressure_Ht * 12/10000);	
 	// cout << Percentage_Power <<  "%" << "\t";
+
 
 	//DCL - now adjust power to compensate for mixture
 	//uses a curve fit to the data in the IO360 / O360 operating manual
@@ -581,11 +649,6 @@ void FGNewEngine::update() {
 	Torque_SI = (Power_SI * 60.0) / (2.0 * PI * RPM);  //Torque = power / angular velocity
 	// cout << Torque << " Nm\n";
 
-	// Calculate Cylinder Head Temperature
-	CHT = Calc_CHT( Fuel_Flow, Mixture, IAS);
-	// cout << "Cylinder Head Temp (F) = " << CHT << endl;
-
-//	EGT = Calc_EGT( Mixture );
 
 	// Calculate Oil Pressure
 	Oil_Pressure = Oil_Press( Oil_Temp, RPM );
