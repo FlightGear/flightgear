@@ -1,0 +1,34 @@
+Network README
+--------------
+Here in .../Simulator/Network will be the new home for multi pilot
+related code.
+For the moment all you get is a new menu entry "Network" with the
+folowing entries:
+
+- Hyper Blast            : Toggles between LaRCsim and a tuned Flight-Model
+                           you can change between both "on the fly "
+- Toggle Display         : enable/disable info (Lat/Lon/Alt) about found player
+                           well, by now it will be you. ;-))
+- Display Netinfos       : n.i. will display more detailed information
+- Enter Callsign         : to enter your name
+- Scan for Deamons       : n.i. will scan the network for FGFS_D's
+- Register to FGD        : n.i. will allow pilot to connect to found Deamons
+- Show Pilots            : n.i. ? not yet sure what to show, maybe their planes
+- Send Message           : n.i. will send a message to a specific Pilot
+- Send Message to all    : n.i. obvious, isn't it ?
+- Unregister from Deamon : n.i. 
+
+In the Tools directory you will find some progs (one first try of deamon)
+to play with. There is also a README file, check it out.
+
+You don't need a net-access to test this new stuff since it is just an idea
+of how to incorporate a Multi-Pilot Mode in FGFS.
+
+There are two security options:
+a) Compiletime - commenting the "#define FG_NETWORK_OLK" in "network.h" 
+   disables ALL network related stuff in case of problems, shouldn't occur ;-)
+b) Runtime - setting the "int net_hud_display" variable to 0 disables any
+   network display (default)
+
+Have Phun
+Oliver  <delise@rp-plus.de>
