@@ -38,7 +38,7 @@
 #  include <windows.h>
 #endif
 
-#include FG_GLUT_H
+#include <Main/fg_os.hxx>
 
 #if defined(FX) && defined(XMESA)
 #  include <GL/xmesa.h>
@@ -91,12 +91,6 @@ static int mouse_joystick_control = 0;
 // This has file scope so that it can be reset
 // if the little rodent is moved  NHV
 static  int _mVtoggle = 0;
-
-// we break up the glutGetModifiers return mask
-// once per loop and stash what we need in these
-static int glut_active_shift = 0;
-static int glut_active_ctrl = 0;
-static int glut_active_alt = 0;
 
 static int MOUSE_XSIZE = 0;
 static int MOUSE_YSIZE = 0;
@@ -156,15 +150,15 @@ static inline void guiGetMouse(int *x, int *y)
 };
 
 static inline int left_button( void ) {
-    return( last_buttons & (1 << GLUT_LEFT_BUTTON) );
+    return( last_buttons & (1 << MOUSE_BUTTON_LEFT) );
 }
 
 static inline int middle_button( void ) {
-    return( last_buttons & (1 << GLUT_MIDDLE_BUTTON) );
+    return( last_buttons & (1 << MOUSE_BUTTON_MIDDLE) );
 }
 
 static inline int right_button( void ) {
-    return( last_buttons & (1 << GLUT_RIGHT_BUTTON) );
+    return( last_buttons & (1 << MOUSE_BUTTON_RIGHT) );
 }
 
 static inline void set_goal_view_offset( float offset )
@@ -246,19 +240,18 @@ void TurnCursorOn( void )
 #if defined(WIN32)
     switch (mouse_mode) {
         case MOUSE_POINTER:
-            glutSetCursor(GLUT_CURSOR_INHERIT);
+            fgSetMouseCursor(MOUSE_CURSOR_INHERIT);
             break;
         case MOUSE_YOKE:
-            glutSetCursor(GLUT_CURSOR_CROSSHAIR);
+            fgSetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
             break;
         case MOUSE_VIEW:
-            glutSetCursor(GLUT_CURSOR_LEFT_RIGHT);
+            fgSetMouseCursor(MOUSE_CURSOR_LEFT_RIGHT);
             break;
     }
 #endif
 #if defined(X_CURSOR_TWEAKS)
-    glutWarpPointer( MOUSE_XSIZE/2,
-		     MOUSE_YSIZE/2);
+    fgWarpMouse( MOUSE_XSIZE/2, MOUSE_YSIZE/2 );
 #endif
 }
 
@@ -266,10 +259,9 @@ void TurnCursorOff( void )
 {
     mouse_active = 0;
 #if defined(WIN32_CURSOR_TWEAKS)
-    glutSetCursor(GLUT_CURSOR_NONE);
+    fgSetMouseCursor(MOUSE_CURSOR_NONE);
 #elif defined(X_CURSOR_TWEAKS)
-    glutWarpPointer( MOUSE_XSIZE,
-		     MOUSE_YSIZE);
+    fgWarpMouse( MOUSE_XSIZE, MOUSE_YSIZE );
 #endif
 }
 
@@ -301,15 +293,15 @@ void maybeToggleMouse( void )
 // Call with FALSE to init and TRUE to restore
 void BusyCursor( int restore )
 {
-    static GLenum cursor = (GLenum) 0;
+    static int cursor = MOUSE_CURSOR_POINTER;
     if( restore ) {
-        glutSetCursor(cursor);
+        fgSetMouseCursor(cursor);
     } else {
-        cursor = (GLenum) glutGet( (GLenum) GLUT_WINDOW_CURSOR );
+        cursor = fgGetMouseCursor();
 #if defined(WIN32_CURSOR_TWEAKS)
         TurnCursorOn();
 #endif
-        glutSetCursor( GLUT_CURSOR_WAIT );
+        fgSetMouseCursor( MOUSE_CURSOR_WAIT );
     }
 }
 
@@ -323,14 +315,14 @@ void CenterView( void ) {
 	_mVtoggle = 0;
 	Quat0();
 	build_rotmatrix(GuiQuat_mat, curGuiQuat);
-	glutSetCursor(GLUT_CURSOR_INHERIT);
+	fgSetMouseCursor(MOUSE_CURSOR_POINTER);
 
 	// Is this necessary ??
 #if defined(FG_OLD_MENU)
 	if( !gui_menu_on )   TurnCursorOff();
 #endif
 
-	glutWarpPointer( _savedX, _savedY );
+	fgWarpMouse( _savedX, _savedY );
     }
     set_goal_view_offset(0.0);
     set_view_offset(0.0);
@@ -386,7 +378,7 @@ void guiMotionFunc ( int x, int y )
         }
 #endif
         puMouse ( x, y ) ;
-        glutPostRedisplay () ;
+        fgRequestRedraw () ;
     } else {
         if( x == _mX && y == _mY)
             return;
@@ -501,7 +493,7 @@ void guiMotionFunc ( int x, int y )
         }
     }
     if( need_warp)
-        glutWarpPointer(x, y);
+        fgWarpMouse(x, y);
     
     // Record the new mouse position.
     _mX = x;
@@ -511,7 +503,6 @@ void guiMotionFunc ( int x, int y )
 
 void guiMouseFunc(int button, int updown, int x, int y)
 {
-    int glutModifiers;
 
     // private MOUSE_VIEW state variables
     // to allow alternate left clicks in MOUSE_VIEW mode
@@ -521,14 +512,9 @@ void guiMouseFunc(int button, int updown, int x, int y)
     static float _quat[4];
     static double _view_offset;
     
-    glutModifiers = glutGetModifiers();
-    glut_active_shift = glutModifiers & GLUT_ACTIVE_SHIFT;
-    glut_active_ctrl  = glutModifiers & GLUT_ACTIVE_CTRL; 
-    glut_active_alt   = glutModifiers & GLUT_ACTIVE_ALT;
-    
     // Was the left button pressed?
-    if (updown == GLUT_DOWN ) {
-        if( button == GLUT_LEFT_BUTTON)
+    if ( updown == MOUSE_BUTTON_DOWN ) {
+        if( button == MOUSE_BUTTON_LEFT)
         {
             switch (mouse_mode) {
                 case MOUSE_POINTER:
@@ -566,12 +552,12 @@ void guiMouseFunc(int button, int updown, int x, int y)
                         set_view_tilt(0.0);
 #endif
                     }
-                    glutWarpPointer( x , y);
+                    fgWarpMouse( x , y);
                     build_rotmatrix(GuiQuat_mat, curGuiQuat);
                     _mVtoggle = ~_mVtoggle;
                     break;
             }
-        } else if ( button == GLUT_RIGHT_BUTTON) {
+        } else if ( button == MOUSE_BUTTON_RIGHT) {
             switch (mouse_mode) {
 				
                 case MOUSE_POINTER:
@@ -590,7 +576,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     x = _mX - (int)(get_aileron() * aileron_sensitivity);
                     y = _mY - (int)(get_elevator() * elevator_sensitivity);
                     
-                    glutSetCursor(GLUT_CURSOR_CROSSHAIR);
+                    fgSetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
                     break;
                     
                 case MOUSE_YOKE:
@@ -607,7 +593,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     Quat0();
                     build_rotmatrix(GuiQuat_mat, curGuiQuat);
 // #endif
-                    glutSetCursor(GLUT_CURSOR_LEFT_RIGHT);
+                    fgSetMouseCursor(MOUSE_CURSOR_LEFTRIGHT);
                     break;
                     
                 case MOUSE_VIEW:
@@ -626,7 +612,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     set_view_tilt(0.0);
 #endif // NO_SMOOTH_MOUSE_VIEW
 #endif // RESET_VIEW_ON_LEAVING_MOUSE_VIEW
-                    glutSetCursor(GLUT_CURSOR_INHERIT);
+                    fgSetMouseCursor(MOUSE_CURSOR_POINTER);
 
 #if defined(FG_OLD_MENU)                    
 #if defined(WIN32_CURSOR_TWEAKS_OFF)
@@ -636,12 +622,12 @@ void guiMouseFunc(int button, int updown, int x, int y)
 #endif // FG_OLD_MENU
                     break;
             } // end switch (mouse_mode)
-            glutWarpPointer( x, y );
+            fgWarpMouse( x, y );
         } // END RIGHT BUTTON
-    } // END UPDOWN == GLUT_DOWN
+    } // END MOUSE DOWN
     
-    // Note which button is pressed.
-    if ( updown == GLUT_DOWN ) {
+    // Update the button state
+    if ( updown == MOUSE_BUTTON_DOWN ) {
         last_buttons |=  ( 1 << button ) ;
     } else {
         last_buttons &= ~( 1 << button ) ;
@@ -650,7 +636,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
     // If we're in pointer mode, let PUI
     // know what's going on.
     if (mouse_mode == MOUSE_POINTER) {
-      if (!puMouse (button, updown, x,y)) {
+      if (!puMouse (button, updown , x,y)) {
         if ( globals->get_current_panel() != NULL ) {
           globals->get_current_panel()->doMouseAction(button, updown, x, y);
         }
@@ -662,7 +648,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
     _mX = x;
     _mY = y;
     
-    glutPostRedisplay ();
+    fgRequestRedraw ();
 }
 
 

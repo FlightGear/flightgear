@@ -40,7 +40,8 @@ libMain_a_SOURCES = \
 	splash.cxx splash.hxx \
 	util.cxx util.hxx \
 	viewer.cxx viewer.hxx \
-	viewmgr.cxx viewmgr.hxx
+	viewmgr.cxx viewmgr.hxx \
+	fg_os.cxx fg_os.hxx
 
 fgfs_SOURCES = bootstrap.cxx
 

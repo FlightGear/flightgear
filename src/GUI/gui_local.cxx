@@ -6,7 +6,7 @@
 #  include <windows.h>
 #endif
 
-#include FG_GLUT_H          // needed before pu.h
+#include <Main/fg_os.hxx>   // needed before pu.h
 #include <plib/pu.h>        // plib include
 
 #include <FDM/flight.hxx>

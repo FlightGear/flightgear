@@ -37,10 +37,6 @@
 #include STL_STRING
 #include <vector>
 
-#include FG_GLUT_H
-
-#include <plib/pu.h>
-
 #include <simgear/compiler.h>
 
 #include <simgear/constants.h>
@@ -64,6 +60,9 @@ SG_USING_STD(ifstream);
 SG_USING_STD(string);
 SG_USING_STD(vector);
 
+void mouseClickHandler(int button, int updown, int x, int y);
+void mouseMotionHandler(int x, int y);
+void keyHandler(int key, int keymod, int mousex, int mousey);
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -175,13 +174,9 @@ FGInput::init ()
   _init_joystick();
   _init_mouse();
 
-  glutKeyboardFunc(GLUTkey);
-  glutKeyboardUpFunc(GLUTkeyup);
-  glutSpecialFunc(GLUTspecialkey);
-  glutSpecialUpFunc(GLUTspecialkeyup);
-  glutMouseFunc (GLUTmouse);
-  glutMotionFunc (GLUTmotion);
-  glutPassiveMotionFunc (GLUTmotion);
+  fgRegisterKeyHandler(keyHandler);
+  fgRegisterMouseClickHandler(mouseClickHandler);
+  fgRegisterMouseMotionHandler(mouseMotionHandler);
 }
 
 void 
@@ -234,7 +229,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   button &b = _key_bindings[k];
 
                                 // Key pressed.
-  if (modifiers&FG_MOD_UP == 0) {
+  if (modifiers&KEYMOD_RELEASED == 0) {
     SG_LOG( SG_INPUT, SG_DEBUG, "User pressed key " << k
             << " with modifiers " << modifiers );
     if (!b.last_state || b.is_repeatable) {
@@ -268,62 +263,19 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
                                 // Use the old, default actions.
   SG_LOG( SG_INPUT, SG_DEBUG, "(No user binding.)" );
-  if (modifiers&FG_MOD_UP)
-    return;
-
-  // everything after here will be removed sooner or later...
-
-  if (modifiers & FG_MOD_SHIFT) {
-
-        switch (k) {
-        case 72: // H key
-            HUD_brightkey( true );
-            return;
-        case 73: // I key
-            // Minimal Hud
-            fgHUDInit2(&current_aircraft);
-            return;
-        }
-
-
-    } else {
-        SG_LOG( SG_INPUT, SG_DEBUG, "" );
-        switch (k) {
-        case 104: // h key
-            HUD_masterswitch( true );
-            return;
-        case 105: // i key
-            fgHUDInit(&current_aircraft);  // normal HUD
-            return;
-
-// START SPECIALS
-
-        case 256+GLUT_KEY_F6: // F6 toggles Autopilot target location
-            if ( strcmp( heading_enabled->getStringValue(),
-                         "true-heading-hold" ) != 0 ) {
-                heading_enabled->setStringValue( "true-heading-hold" );
-            } else {
-                heading_enabled->setStringValue( "" );
-            }
-            return;
-        }
-
-// END SPECIALS
-
-    }
 }
 
 void
 FGInput::doMouseClick (int b, int updown, int x, int y)
 {
-  int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
+  int modifiers = fgGetKeyModifiers();
 
   mouse &m = _mouse_bindings[0];
   mouse_mode &mode = m.modes[m.current_mode];
 
                                 // Let the property manager know.
   if (b >= 0 && b < MAX_MOUSE_BUTTONS)
-    m.mouse_button_nodes[b]->setBoolValue(updown == GLUT_DOWN);
+    m.mouse_button_nodes[b]->setBoolValue(updown == MOUSE_BUTTON_DOWN);
 
                                 // Pass on to PUI and the panel if
                                 // requested, and return if one of
@@ -352,7 +304,7 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
 void
 FGInput::doMouseMotion (int x, int y)
 {
-  int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
+  int modifiers = fgGetKeyModifiers();
 
   int xsize = fgGetInt("/sim/startup/xsize", 800);
   int ysize = fgGetInt("/sim/startup/ysize", 600);
@@ -399,7 +351,7 @@ FGInput::doMouseMotion (int x, int y)
     }
 
     if (need_warp)
-      glutWarpPointer(x, y);
+      fgWarpMouse(x, y);
   }
   m.x = x;
   m.y = y;
@@ -422,7 +374,7 @@ FGInput::_init_keyboard ()
 
     _key_bindings[index].bindings->clear();
     _key_bindings[index].is_repeatable = keys[i]->getBoolValue("repeatable");
-    _read_bindings(keys[i], _key_bindings[index].bindings, FG_MOD_NONE);
+    _read_bindings(keys[i], _key_bindings[index].bindings, KEYMOD_NONE);
   }
 }
 
@@ -523,7 +475,7 @@ FGInput::_init_joystick ()
       maxRange[j] = axis_node->getDoubleValue("max-range", maxRange[j]);
       center[j] = axis_node->getDoubleValue("center", center[j]);
 
-      _read_bindings(axis_node, a.bindings, FG_MOD_NONE);
+      _read_bindings(axis_node, a.bindings, KEYMOD_NONE);
 
       // Initialize the virtual axis buttons.
       _init_button(axis_node->getChild("low"), a.low, "low");
@@ -562,39 +514,25 @@ FGInput::_init_joystick ()
 }
 
 // 
-// Map of all known GLUT cursor names
+// Map of all known cursor names
+// This used to contain all the Glut cursors, but those are
+// not defined by other toolkits.  It now supports only the cursor
+// images we actually use, in the interest of portability.  Someday,
+// it would be cool to write an OpenGL cursor renderer, with the
+// cursors defined as textures referenced in the property tree.  This
+// list could then be eliminated. -Andy
 //
 struct {
   const char * name;
   int cursor;
 } mouse_cursor_map[] = {
-  { "right-arrow", GLUT_CURSOR_RIGHT_ARROW },
-  { "left-arrow", GLUT_CURSOR_LEFT_ARROW },
-  { "info", GLUT_CURSOR_INFO },
-  { "destroy", GLUT_CURSOR_DESTROY },
-  { "help", GLUT_CURSOR_HELP },
-  { "cycle", GLUT_CURSOR_CYCLE },
-  { "spray", GLUT_CURSOR_SPRAY },
-  { "wait", GLUT_CURSOR_WAIT },
-  { "text", GLUT_CURSOR_TEXT },
-  { "crosshair", GLUT_CURSOR_CROSSHAIR },
-  { "up-down", GLUT_CURSOR_UP_DOWN },
-  { "left-right", GLUT_CURSOR_LEFT_RIGHT },
-  { "top-side", GLUT_CURSOR_TOP_SIDE },
-  { "bottom-side", GLUT_CURSOR_BOTTOM_SIDE },
-  { "left-side", GLUT_CURSOR_LEFT_SIDE },
-  { "right-side", GLUT_CURSOR_RIGHT_SIDE },
-  { "top-left-corner", GLUT_CURSOR_TOP_LEFT_CORNER },
-  { "top-right-corner", GLUT_CURSOR_TOP_RIGHT_CORNER },
-  { "bottom-right-corner", GLUT_CURSOR_BOTTOM_RIGHT_CORNER },
-  { "bottom-left-corner", GLUT_CURSOR_BOTTOM_LEFT_CORNER },
-  { "inherit", GLUT_CURSOR_INHERIT },
-  { "none", GLUT_CURSOR_NONE },
-  { "full-crosshair", GLUT_CURSOR_FULL_CROSSHAIR },
+  { "none", MOUSE_CURSOR_NONE },
+  { "inherit", MOUSE_CURSOR_POINTER },
+  { "wait", MOUSE_CURSOR_WAIT },
+  { "crosshair", MOUSE_CURSOR_CROSSHAIR },
+  { "left-right", MOUSE_CURSOR_LEFTRIGHT },
   { 0, 0 }
 };
-
-
 
 void
 FGInput::_init_mouse ()
@@ -637,7 +575,7 @@ FGInput::_init_mouse ()
       SGPropertyNode * mode_node = mouse_node->getChild("mode", j, true);
       const char * cursor_name =
         mode_node->getStringValue("cursor", "inherit");
-      m.modes[j].cursor = GLUT_CURSOR_INHERIT;
+      m.modes[j].cursor = MOUSE_CURSOR_POINTER;
       for (k = 0; mouse_cursor_map[k].name != 0; k++) {
         if (!strcmp(mouse_cursor_map[k].name, cursor_name)) {
           m.modes[j].cursor = mouse_cursor_map[k].cursor;
@@ -663,10 +601,10 @@ FGInput::_init_mouse ()
                                 // Read the axis bindings for this mode
       _read_bindings(mode_node->getChild("x-axis", 0, true),
                      m.modes[j].x_bindings,
-                     FG_MOD_NONE);
+                     KEYMOD_NONE);
       _read_bindings(mode_node->getChild("y-axis", 0, true),
                      m.modes[j].y_bindings,
-                     FG_MOD_NONE);
+                     KEYMOD_NONE);
     }
   }
 }
@@ -683,7 +621,7 @@ FGInput::_init_button (const SGPropertyNode * node,
     b.is_repeatable = node->getBoolValue("repeatable", b.is_repeatable);
     
                 // Get the bindings for the button
-    _read_bindings(node, b.bindings, FG_MOD_NONE);
+    _read_bindings(node, b.bindings, KEYMOD_NONE);
   }
 }
 
@@ -698,7 +636,7 @@ FGInput::_update_keyboard ()
 void
 FGInput::_update_joystick (double dt)
 {
-  int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
+  int modifiers = KEYMOD_NONE;  // FIXME: any way to get the real ones?
   int buttons;
   // float js_val, diff;
   float axis_values[MAX_JOYSTICK_AXES];
@@ -773,13 +711,13 @@ FGInput::_update_mouse ()
   if (mode != m.current_mode) {
     m.current_mode = mode;
     if (mode >= 0 && mode < m.nModes) {
-      glutSetCursor(m.modes[mode].cursor);
+      fgSetMouseCursor(m.modes[mode].cursor);
       m.x = fgGetInt("/sim/startup/xsize", 800) / 2;
       m.y = fgGetInt("/sim/startup/ysize", 600) / 2;
-      glutWarpPointer(m.x, m.y);
+      fgWarpMouse(m.x, m.y);
     } else {
       SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode " << mode << " out of range");
-      glutSetCursor(GLUT_CURSOR_INHERIT);
+      fgSetMouseCursor(MOUSE_CURSOR_POINTER);
     }
   }
 }
@@ -799,8 +737,8 @@ FGInput::_update_button (button &b, int modifiers, bool pressed,
                                 // The release event is never repeated.
     if (b.last_state) {
       SG_LOG( SG_INPUT, SG_DEBUG, "Button has been released" );
-      for (unsigned int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
-        b.bindings[modifiers|FG_MOD_UP][k]->fire(x, y);
+      for (unsigned int k = 0; k < b.bindings[modifiers|KEYMOD_RELEASED].size(); k++)
+        b.bindings[modifiers|KEYMOD_RELEASED][k]->fire(x, y);
     }
   }
           
@@ -824,19 +762,19 @@ FGInput::_read_bindings (const SGPropertyNode * node,
                                 // Read nested bindings for modifiers
   if (node->getChild("mod-up") != 0)
     _read_bindings(node->getChild("mod-up"), binding_list,
-                   modifiers|FG_MOD_UP);
+                   modifiers|KEYMOD_RELEASED);
 
   if (node->getChild("mod-shift") != 0)
     _read_bindings(node->getChild("mod-shift"), binding_list,
-                   modifiers|FG_MOD_SHIFT);
+                   modifiers|KEYMOD_SHIFT);
 
   if (node->getChild("mod-ctrl") != 0)
     _read_bindings(node->getChild("mod-ctrl"), binding_list,
-                   modifiers|FG_MOD_CTRL);
+                   modifiers|KEYMOD_CTRL);
 
   if (node->getChild("mod-alt") != 0)
     _read_bindings(node->getChild("mod-alt"), binding_list,
-                   modifiers|FG_MOD_ALT);
+                   modifiers|KEYMOD_ALT);
 }
 
 
@@ -851,25 +789,25 @@ FGInput::_find_key_bindings (unsigned int k, int modifiers)
     return b.bindings[modifiers];
 
                                 // Alt-Gr is CTRL+ALT
-  else if (modifiers&(FG_MOD_CTRL|FG_MOD_ALT))
-    return _find_key_bindings(k, modifiers&~(FG_MOD_CTRL|FG_MOD_ALT));
+  else if (modifiers&(KEYMOD_CTRL|KEYMOD_ALT))
+    return _find_key_bindings(k, modifiers&~(KEYMOD_CTRL|KEYMOD_ALT));
 
                                 // Try removing the control modifier
                                 // for control keys.
-  else if ((modifiers&FG_MOD_CTRL) && iscntrl(kc))
-    return _find_key_bindings(k, modifiers&~FG_MOD_CTRL);
+  else if ((modifiers&KEYMOD_CTRL) && iscntrl(kc))
+    return _find_key_bindings(k, modifiers&~KEYMOD_CTRL);
 
                                 // Try removing shift modifier 
                                 // for upper case or any punctuation
                                 // (since different keyboards will
                                 // shift different punctuation types)
-  else if ((modifiers&FG_MOD_SHIFT) && (isupper(kc) || ispunct(kc)))
-    return _find_key_bindings(k, modifiers&~FG_MOD_SHIFT);
+  else if ((modifiers&KEYMOD_SHIFT) && (isupper(kc) || ispunct(kc)))
+    return _find_key_bindings(k, modifiers&~KEYMOD_SHIFT);
 
                                 // Try removing alt modifier for
                                 // high-bit characters.
-  else if ((modifiers&FG_MOD_ALT) && k >= 128 && k < 256)
-    return _find_key_bindings(k, modifiers&~FG_MOD_ALT);
+  else if ((modifiers&KEYMOD_ALT) && k >= 128 && k < 256)
+    return _find_key_bindings(k, modifiers&~KEYMOD_ALT);
 
                                 // Give up and return the empty vector.
   else
@@ -891,7 +829,7 @@ FGInput::button::button ()
 FGInput::button::~button ()
 {
                                 // FIXME: memory leak
-//   for (int i = 0; i < FG_MOD_MAX; i++)
+//   for (int i = 0; i < KEYMOD_MAX; i++)
 //     for (int j = 0; i < bindings[i].size(); j++)
 //       delete bindings[i][j];
 }
@@ -912,7 +850,7 @@ FGInput::axis::axis ()
 
 FGInput::axis::~axis ()
 {
-//   for (int i = 0; i < FG_MOD_MAX; i++)
+//   for (int i = 0; i < KEYMOD_MAX; i++)
 //     for (int j = 0; i < bindings[i].size(); j++)
 //       delete bindings[i][j];
 }
@@ -941,7 +879,7 @@ FGInput::joystick::~joystick ()
 ////////////////////////////////////////////////////////////////////////
 
 FGInput::mouse_mode::mouse_mode ()
-  : cursor(GLUT_CURSOR_INHERIT),
+  : cursor(MOUSE_CURSOR_POINTER),
     constrained(false),
     pass_through(false),
     buttons(0)
@@ -951,7 +889,7 @@ FGInput::mouse_mode::mouse_mode ()
 FGInput::mouse_mode::~mouse_mode ()
 {
                                 // FIXME: memory leak
-//   for (int i = 0; i < FG_MOD_MAX; i++) {
+//   for (int i = 0; i < KEYMOD_MAX; i++) {
 //     int j;
 //     for (j = 0; i < x_bindings[i].size(); j++)
 //       delete bindings[i][j];
@@ -981,83 +919,28 @@ FGInput::mouse::~mouse ()
   delete [] modes;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////
-// Implementation of GLUT callbacks.
+// Implementation of OS callbacks.
 ////////////////////////////////////////////////////////////////////////
 
-
-/**
- * Construct the modifiers.
- */
-static inline int get_mods ()
+void keyHandler(int key, int keymod, int mousex, int mousey)
 {
-  int glut_modifiers = glutGetModifiers();
-  int modifiers = 0;
+    if((keymod & KEYMOD_RELEASED) == 0)
+        if(puKeyboard(key, PU_DOWN))
+            return;
 
-  if (glut_modifiers & GLUT_ACTIVE_SHIFT)
-    modifiers |= FGInput::FG_MOD_SHIFT;
-  if (glut_modifiers & GLUT_ACTIVE_CTRL)
-    modifiers |= FGInput::FG_MOD_CTRL;
-  if (glut_modifiers & GLUT_ACTIVE_ALT)
-    modifiers |= FGInput::FG_MOD_ALT;
-
-  return modifiers;
+    if(default_input)
+        default_input->doKey(key, keymod, mousex, mousey);
 }
 
-
-
-////////////////////////////////////////////////////////////////////////
-// GLUT C callbacks.
-////////////////////////////////////////////////////////////////////////
-
-void
-GLUTkey(unsigned char k, int x, int y)
+void mouseClickHandler(int button, int updown, int x, int y)
 {
-                                // Give PUI a chance to grab it first.
-    if (!puKeyboard(k, PU_DOWN)) {
-      if (default_input != 0)
-          default_input->doKey(k, get_mods(), x, y);
-    }
-}
-
-void
-GLUTkeyup(unsigned char k, int x, int y)
-{
-    if (default_input != 0)
-        default_input->doKey(k, get_mods()|FGInput::FG_MOD_UP, x, y);
-}
-
-void
-GLUTspecialkey(int k, int x, int y)
-{
-                                // Give PUI a chance to grab it first.
-    if (!puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN)) {
-        if (default_input != 0)
-            default_input->doKey(k + 256, get_mods(), x, y);
-    }
-}
-
-void
-GLUTspecialkeyup(int k, int x, int y)
-{
-    if (default_input != 0)
-        default_input->doKey(k + 256, get_mods()|FGInput::FG_MOD_UP, x, y);
-}
-
-void
-GLUTmouse (int button, int updown, int x, int y)
-{
-    if (default_input != 0)
+    if(default_input)
         default_input->doMouseClick(button, updown, x, y);
 }
 
-void
-GLUTmotion (int x, int y)
+void mouseMotionHandler(int x, int y)
 {
     if (default_input != 0)
         default_input->doMouseMotion(x, y);
 }
-
-// end of input.cxx

@@ -37,6 +37,7 @@
 #include <simgear/props/condition.hxx>
 #include <simgear/props/props.hxx>
 
+#include <Main/fg_os.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
@@ -169,22 +170,10 @@ private:
 class FGInput : public SGSubsystem
 {
 public:
-
-  enum {
-    FG_MOD_NONE = 0,
-    FG_MOD_UP = 1,		// key- or button-up
-    FG_MOD_SHIFT = 2,
-    FG_MOD_CTRL = 4,
-    FG_MOD_ALT = 8,
-    FG_MOD_MAX = 16		// enough to handle all combinations
-  };
-
-
   /**
    * Default constructor.
    */
   FGInput ();
-
 
   /**
    * Destructor.
@@ -216,16 +205,10 @@ public:
   /**
    * Handle a single keystroke.
    *
-   * <p>Note: for special keys, the integer key code will be the Glut
-   * code + 256.</p>
-   *
-   * @param k The integer key code, as returned by glut.
+   * @param k The integer key code, see Main/fg_os.hxx
    * @param modifiers Modifier keys pressed (bitfield).
    * @param x The mouse x position at the time of keypress.
    * @param y The mouse y position at the time of keypress.
-   * @see #FG_MOD_SHIFT
-   * @see #FG_MOD_CTRL
-   * @see #FG_MOD_ALT
    */
   virtual void doKey (int k, int modifiers, int x, int y);
 
@@ -282,7 +265,7 @@ private:
     float interval_sec;
     float last_dt;
     int last_state;
-    binding_list_t bindings[FG_MOD_MAX];
+    binding_list_t bindings[KEYMOD_MAX];
   };
 
 
@@ -294,7 +277,7 @@ private:
     virtual ~axis ();
     float last_value;
     float tolerance;
-    binding_list_t bindings[FG_MOD_MAX];
+    binding_list_t bindings[KEYMOD_MAX];
     float low_threshold;
     float high_threshold;
     struct button low;
@@ -329,8 +312,8 @@ private:
     bool constrained;
     bool pass_through;
     button * buttons;
-    binding_list_t x_bindings[FG_MOD_MAX];
-    binding_list_t y_bindings[FG_MOD_MAX];
+    binding_list_t x_bindings[KEYMOD_MAX];
+    binding_list_t y_bindings[KEYMOD_MAX];
   };
 
 
@@ -419,84 +402,5 @@ private:
   mouse _mouse_bindings[MAX_MICE];
 
 };
-
-
-
-////////////////////////////////////////////////////////////////////////
-// GLUT callbacks.
-////////////////////////////////////////////////////////////////////////
-
-// Handle GLUT events.
-extern "C" {
-
-/**
- * Key-down event handler for Glut.
- *
- * <p>Pass the value on to the FGInput module unless PUI wants it.</p>
- *
- * @param k The integer value for the key pressed.
- * @param x (unused)
- * @param y (unused)
- */
-void GLUTkey (unsigned char k, int x, int y);
-
-
-/**
- * Key-up event handler for GLUT.
- *
- * <p>PUI doesn't use this, so always pass it to the input manager.</p>
- *
- * @param k The integer value for the key pressed.
- * @param x (unused)
- * @param y (unused)
- */
-void GLUTkeyup (unsigned char k, int x, int y);
-
-
-/**
- * Special key-down handler for Glut.
- *
- * <p>Pass the value on to the FGInput module unless PUI wants it.
- * The key value will have 256 added to it.</p>
- *
- * @param k The integer value for the key pressed (will have 256 added
- * to it).
- * @param x (unused)
- * @param y (unused)
- */
-void GLUTspecialkey (int k, int x, int y);
-
-
-/**
- * Special key-up handler for Glut.
- *
- * @param k The integer value for the key pressed (will have 256 added
- * to it).
- * @param x (unused)
- * @param y (unused)
- */
-void GLUTspecialkeyup (int k, int x, int y);
-
-
-/**
- * Mouse click handler for Glut.
- *
- * @param button The mouse button pressed.
- * @param updown Press or release flag.
- * @param x The x-location of the click.
- * @param y The y-location of the click.
- */
-void GLUTmouse (int button, int updown, int x, int y);
-
-
-/**
- * Mouse motion handler for Glut.
- *
- * @param x The new x-location of the mouse.
- * @param y The new y-location of the mouse.
- */
-void GLUTmotion (int x, int y);
-
-} // extern "C"
 
 #endif // _INPUT_HXX

@@ -42,7 +42,6 @@
 #endif
 
 #include <plib/ssg.h>
-#include <plib/pu.h>
 #include <plib/netSocket.h>
 
 #include <simgear/screen/extensions.hxx>
@@ -127,7 +126,7 @@ bool glPointParameterIsSupported = false;
 FGGeneral general;
 
 // Specify our current idle function state.  This is used to run all
-// our initializations out of the glutIdleLoop() so that we can get a
+// our initializations out of the idle callback so that we can get a
 // splash screen up and running right away.
 static int idle_state = 0;
 static long global_multi_loop;
@@ -158,27 +157,6 @@ sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
   {  0.0f,  1.0f,  0.0f,  0.0f },
   {  0.0f,  0.0f,  0.0f,  1.0f }
 };
-
-// The following defines flightgear options. Because glutlib will also
-// want to parse its own options, those options must not be included here
-// or they will get parsed by the main program option parser. Hence case
-// is significant for any option added that might be in conflict with
-// glutlib's parser.
-//
-// glutlib parses for:
-//    -display
-//    -direct   (invalid in Win32)
-//    -geometry
-//    -gldebug
-//    -iconized
-//    -indirect (invalid in Win32)
-//    -synce
-//
-// Note that glutlib depends upon strings while this program's
-// option parser wants only initial characters followed by numbers
-// or pathnames.
-//
-
 
 ssgSimpleState *cloud3d_imposter_state;
 ssgSimpleState *default_state;
@@ -236,12 +214,10 @@ void fgInitVisuals( void ) {
 
     FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
 
-#ifndef GLUT_WRONG_VERSION
     // Go full screen if requested ...
     if ( fgGetBool("/sim/startup/fullscreen") ) {
-        glutFullScreen();
+        fgOSFullScreen();
     }
-#endif
 
     // If enabled, normal vectors specified with glNormal are scaled
     // to unit length after transformation.  Enabling this has
@@ -829,8 +805,6 @@ void fgRenderFrame() {
             fgSplashUpdate(0.0, (3.0 - t) / 2.0);
         }
     }
-
-    glutSwapBuffers();
 }
 
 
@@ -989,10 +963,6 @@ static void fgMainLoop( void ) {
     // {
     //    fgJoystickRead();
     // }
-#elif defined( ENABLE_GLUT_JOYSTICK )
-    // Glut joystick support works by feeding a joystick handler
-    // function to glut.  This is taken care of once in the joystick
-    // init routine and we don't have to worry about it again.
 #endif
 
     // Fix elevation.  I'm just sticking this here for now, it should
@@ -1210,8 +1180,7 @@ static void fgMainLoop( void ) {
         // glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
     }
 
-    // redraw display
-    fgRenderFrame();
+    fgRequestRedraw();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
 }
@@ -1312,7 +1281,7 @@ static void fgIdleFunction ( void ) {
         // We've finished all our initialization steps, from now on we
         // run the main loop.
 
-        glutIdleFunc(fgMainLoop);
+        fgRegisterIdleHandler(fgMainLoop);
     } else {
         if ( fgGetBool("/sim/startup/splash-screen") ) {
             fgSplashUpdate(0.0, 1.0);
@@ -1358,110 +1327,6 @@ void fgReshape( int width, int height ) {
 
     fgHUDReshape();
 
-}
-
-// Initialize GLUT and define a main window
-static bool fgGlutInit( int *argc, char **argv ) {
-
-#if !defined( macintosh )
-    // GLUT will extract all glut specific options so later on we only
-    // need wory about our own.
-    glutInit(argc, argv);
-#endif
-
-    // Define Display Parameters. Clouds3d works best with --bpp32 option
-    if ( fgGetBool("/sim/rendering/clouds3d") ) {
-        glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_ALPHA );
-    } else {
-        glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
-    }
-
-    SG_LOG( SG_GENERAL, SG_INFO, "Opening a window: " <<
-            fgGetInt("/sim/startup/xsize") << "x"
-            << fgGetInt("/sim/startup/ysize") );
-
-    // Define initial window size
-    glutInitWindowSize( fgGetInt("/sim/startup/xsize"),
-                    fgGetInt("/sim/startup/ysize") );
-
-    // Initialize windows
-    if ( !fgGetBool("/sim/startup/game-mode")) {
-        // Open the regular window
-        glutCreateWindow("FlightGear");
-#ifndef GLUT_WRONG_VERSION
-    } else {
-        // Open the cool new 'game mode' window
-        char game_mode_str[256];
-//#define SYNC_OPENGL_WITH_DESKTOP_SETTINGS
-#if defined(WIN32) && defined(SYNC_OPENGL_WITH_DESKTOP_SETTINGS)
-#ifndef ENUM_CURRENT_SETTINGS
-#define ENUM_CURRENT_SETTINGS       ((DWORD)-1)
-#define ENUM_REGISTRY_SETTINGS      ((DWORD)-2)
-#endif
-
-        DEVMODE dm;
-        dm.dmSize = sizeof(DEVMODE);
-        EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm);
-        fgSetInt("/sim/startup/xsize", dm.dmPelsWidth);
-        fgSetInt("/sim/startup/ysize", dm.dmPelsHeight);
-        glutInitWindowSize( fgGetInt("/sim/startup/xsize"),
-                            fgGetInt("/sim/startup/ysize") );
-        sprintf( game_mode_str, "%dx%d:%d@%d",
-                     dm.dmPelsWidth,
-                     dm.dmPelsHeight,
-                     dm.dmBitsPerPel,
-                     dm.dmDisplayFrequency );
-#else
-        // Open the cool new 'game mode' window
-        sprintf( game_mode_str, "width=%d height=%d bpp=%d",
-             fgGetInt("/sim/startup/xsize"),
-             fgGetInt("/sim/startup/ysize"),
-             fgGetInt("/sim/rendering/bits-per-pixel"));
-
-#endif // HAVE_WINDOWS_H
-        SG_LOG( SG_GENERAL, SG_INFO, 
-            "game mode params = " << game_mode_str );
-        glutGameModeString( game_mode_str );
-        glutEnterGameMode();
-#endif // GLUT_WRONG_VERSION
-    }
-
-    // This seems to be the absolute earliest in the init sequence
-    // that these calls will return valid info.  Too bad it's after
-    // we've already created and sized out window. :-(
-    general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
-    general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
-    general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
-    SG_LOG( SG_GENERAL, SG_INFO, general.get_glRenderer() );
-
-    GLint tmp;
-    glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
-    general.set_glMaxTexSize( tmp );
-    SG_LOG ( SG_GENERAL, SG_INFO, "Max texture size = " << tmp );
-
-    glGetIntegerv( GL_DEPTH_BITS, &tmp );
-    general.set_glDepthBits( tmp );
-    SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
-
-    return true;
-}
-
-
-// Initialize GLUT event handlers
-static bool fgGlutInitEvents( void ) {
-    // call fgReshape() on window resizes
-    glutReshapeFunc( fgReshape );
-
-    // keyboard and mouse callbacks are set in FGInput::init
-
-    // call fgMainLoop() whenever there is
-    // nothing else to do
-    glutIdleFunc( fgIdleFunction );
-
-    // draw the scene
-    glutDisplayFunc( fgRenderFrame );
-
-    return true;
 }
 
 // Main top level initialization
@@ -1533,28 +1398,49 @@ bool fgMainInit( int argc, char **argv ) {
     }
 
     // Initialize the Window/Graphics environment.
-    if( !fgGlutInit(&argc, argv) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "GLUT initialization failed ..." );
-        exit(-1);
-    }
+#if !defined(__APPLE__) || defined(OSX_BUNDLE)
+    // Mac OS X command line ("non-bundle") applications call this
+    // from main(), in bootstrap.cxx.  Andy doesn't know why, someone
+    // feel free to add comments...
+    fgOSInit(&argc, argv);
+#endif
 
-    // Initialize the various GLUT Event Handlers.
-    if( !fgGlutInitEvents() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, 
-        	"GLUT event handler initialization failed ..." );
-        exit(-1);
-    }
+    fgRegisterWindowResizeHandler( fgReshape );
+    fgRegisterIdleHandler( fgIdleFunction );
+    fgRegisterDrawHandler( fgRenderFrame );
+
+    // Clouds3D requires an alpha channel
+    fgOSOpenWindow( fgGetInt("/sim/startup/xsize"),
+                    fgGetInt("/sim/startup/ysize"),
+                    fgGetBool("/sim/rendering/clouds3d") );
+
+    // This seems to be the absolute earliest in the init sequence
+    // that these calls will return valid info.  Too bad it's after
+    // we've already created and sized out window. :-(
+    general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
+    general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
+    general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
+    SG_LOG( SG_GENERAL, SG_INFO, general.get_glRenderer() );
+
+    GLint tmp;
+    glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
+    general.set_glMaxTexSize( tmp );
+    SG_LOG ( SG_GENERAL, SG_INFO, "Max texture size = " << tmp );
+
+    glGetIntegerv( GL_DEPTH_BITS, &tmp );
+    general.set_glDepthBits( tmp );
+    SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
 
     // Initialize plib net interface
     netInit( &argc, argv );
 
     // Initialize ssg (from plib).  Needs to come before we do any
-    // other ssg stuff, but after opengl/glut has been initialized.
+    // other ssg stuff, but after opengl has been initialized.
     ssgInit();
 
     // Initialize the user interface (we need to do this before
-    // passing off control to glut and before fgInitGeneral to get our
-    // fonts !!!
+    // passing off control to the OS main loop and before
+    // fgInitGeneral to get our fonts !!!
     guiInit();
 
     // Read the list of available aircrafts
@@ -1705,8 +1591,8 @@ bool fgMainInit( int argc, char **argv ) {
     // build our custom render states
     fgBuildRenderStates();
     
-    // pass control off to the master GLUT event handler
-    glutMainLoop();
+    // pass control off to the master event handler
+    fgOSMainLoop();
 
     // we never actually get here ... but to avoid compiler warnings,
     // etc.

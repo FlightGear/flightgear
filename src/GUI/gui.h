@@ -33,9 +33,8 @@
 #  include <windows.h>
 #endif
 
-#include FG_GLUT_H              // needed before pu.h
-
-#include <plib/pu.h>		// plib include
+#include <Main/fg_os.hxx>  // must come before pu.h
+#include <plib/pu.h>
 
 #include <simgear/structure/exception.hxx>
 

@@ -48,7 +48,7 @@ SG_USING_STD(endl);
 #  include <float.h>
 #endif
 
-#include FG_GLUT_H
+#include "fg_os.hxx"
 
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog
@@ -133,7 +133,7 @@ int main ( int argc, char **argv ) {
     {
       PSN psn;
 
-      glutInit (&argc, argv);
+      fgOSInit (&argc, argv);
 
       CPSGetCurrentProcess(&psn);
       CPSSetProcessName(&psn, "FlightGear");

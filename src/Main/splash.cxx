@@ -34,9 +34,9 @@
 #  include <windows.h>
 #endif
 
-#include FG_GLUT_H
-
 #include <string.h>
+
+#include <GL/glu.h>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/screen/texture.hxx>
@@ -46,6 +46,8 @@
 #include "globals.hxx"
 #include "fg_props.hxx"
 #include "splash.hxx"
+#include "fg_os.hxx"
+
 
 
 static SGTexture splash;
@@ -140,8 +142,6 @@ void fgSplashUpdate ( double progress, float alpha ) {
     glTexCoord2f(1.0, 1.0); glVertex2f(xmax, ymax);
     glTexCoord2f(0.0, 1.0); glVertex2f(xmin, ymax); 
     glEnd();
-
-    glutSwapBuffers();
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
