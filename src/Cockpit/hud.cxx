@@ -50,7 +50,9 @@
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
+#ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
+#endif
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 

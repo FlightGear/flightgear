@@ -62,7 +62,9 @@
 #include <Main/fg_init.hxx>
 #include <Main/views.hxx>
 #include <Misc/fgpath.hxx>
+#ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
+#endif
 #include <Screen/screen-dump.hxx>
 #include <Time/fg_time.hxx>
 
@@ -1080,6 +1082,8 @@ static void NewAirportInit(void)
     FG_FINALIZE_PUI_DIALOG( AptDialog );
 }
 
+#ifdef FG_NETWORK_OLK
+
 /// The beginnings of networking :-)
 //  Needs cleaning up but works
 //  These statics should disapear when this is a class
@@ -1338,6 +1342,9 @@ static void net_display_toggle( puObject *cb)
 }
 
 */
+
+#endif
+
 /***************  End Networking  **************/
 
 
