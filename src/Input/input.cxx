@@ -63,7 +63,6 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/options.hxx>
 
 #include "input.hxx"
 
