@@ -746,9 +746,9 @@ FGAutopilot::update (double dt)
 	if ( altitude_mode == FG_ALTITUDE_LOCK ) {
 	    climb_rate =
 		( TargetAltitude -
-		  fgGetDouble("/instrumentation/altimeter/indicated-altitude-ft") * SG_FEET_TO_METER ) * (TargetClimbRate->getDoubleValue() * 0.016);
+		  fgGetDouble("/instrumentation/altimeter/indicated-altitude-ft") * SG_FEET_TO_METER ) * 8.0;
         } else if ( altitude_mode == FG_TRUE_ALTITUDE_LOCK ) {
-            climb_rate = ( TargetAltitude - alt ) * (TargetClimbRate->getDoubleValue() * 0.016);
+            climb_rate = ( TargetAltitude - alt ) * 8.0;
 	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
 	    double x = current_radiostack->get_navcom1()->get_nav_gs_dist();
 	    double y = (altitude_node->getDoubleValue()
