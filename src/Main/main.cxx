@@ -279,14 +279,6 @@ void fgRenderFrame( void ) {
     // FGView *v = &current_view;
     static double last_visibility = -9999;
 
-#if 0
-    static bool in_puff = false;
-    static double puff_length = 0;
-    static double puff_progression = 0;
-    const double ramp_up = 0.15;
-    const double ramp_down = 0.15;
-#endif
-
     double angle;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     // GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
@@ -580,13 +572,13 @@ void fgRenderFrame( void ) {
 	// }
 
 	// draw the sky backdrop
-	thesky->draw_background();
+	thesky->preDraw();
 
 	// draw the ssg scene
 	ssgCullAndDraw( scene );
 
 	// draw the sky cloud layers
-	thesky->draw_scene( cur_fdm_state->get_Altitude() * FEET_TO_METER );
+	thesky->postDraw( cur_fdm_state->get_Altitude() * FEET_TO_METER );
 
 	// display HUD && Panel
 	glDisable( GL_FOG );
@@ -1355,6 +1347,7 @@ int main( int argc, char **argv ) {
 		   ephem->getPlanets(), 60000.0,
 		   ephem->getNumStars(),
 		   ephem->getStars(), 60000.0 );
+    thesky->add_cloud_layer( 213.0, 50.0, 50.0, SG_CLOUD_MOSTLY_SUNNY );
     thesky->add_cloud_layer( 2600.0, 200.0, 50.0, SG_CLOUD_MOSTLY_SUNNY );
     thesky->add_cloud_layer( 6000.0, 20.0, 10.0, SG_CLOUD_CIRRUS );
 
