@@ -1,0 +1,454 @@
+/* splittris.c -- reassemble the pieces produced by splittris
+ *
+ * Written by Curtis Olson, started January 1998.
+ *
+ * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id$
+ * (Log is kept at end of this file) */
+
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>   /* for atoi() */
+#include <string.h>
+#include <sys/stat.h> /* for stat() */
+#include <unistd.h>   /* for stat() */
+
+#include "assemtris.h"
+
+#include "../../Src/Include/constants.h"
+#include "../../Src/Include/types.h"
+#include "../../Src/Math/fg_geodesy.h"
+#include "../../Src/Math/mat3.h"
+#include "../../Src/Math/polar.h"
+#include "../../Src/Scenery/tileutils.h"
+
+
+int nodecount = 0;
+
+float nodes[MAX_NODES][3];
+
+
+struct bucket my_index;
+struct bucket ne_index, nw_index, sw_index, se_index;
+struct bucket north_index, south_index, east_index, west_index;
+
+
+/* return the file base name ( foo/bar/file.ext = file.ext ) */
+void extract_file(char *in, char *base) {
+    int len, i;
+
+    len = strlen(in);
+
+    i = len - 1;
+    while ( (i >= 0) && (in[i] != '/') ) {
+	i--;
+    }
+
+    in += (i + 1);
+    strcpy(base, in);
+}
+
+
+/* return the file path name ( foo/bar/file.ext = foo/bar ) */
+void extract_path(char *in, char *base) {
+    int len, i;
+
+    len = strlen(in);
+    strcpy(base, in);
+
+    i = len - 1;
+    while ( (i >= 0) && (in[i] != '/') ) {
+	i--;
+    }
+
+    base[i] = '\0';
+}
+
+
+/* check if a file exists */
+int file_exists(char *file) {
+    struct stat stat_buf;
+    int result;
+
+    printf("checking %s ... ", file);
+
+    result = stat(file, &stat_buf);
+
+    if ( result != 0 ) {
+	/* stat failed, no file */
+	printf("not found.\n");
+	return(0);
+    } else {
+	/* stat succeeded, file exists */
+	printf("exists.\n");
+	return(1);
+    }
+}
+
+
+/* check to see if a shared object exists */
+int shared_object_exists(char *basepath, char *ext, char *file) {
+    char scene_path[256];
+    long int index;
+
+    if ( strcmp(ext, ".sw") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&west_index, scene_path);
+	index = gen_index(&west_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&sw_index, scene_path);
+	index = gen_index(&sw_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&south_index, scene_path);
+	index = gen_index(&south_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".se") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&east_index, scene_path);
+	index = gen_index(&east_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&se_index, scene_path);
+	index = gen_index(&se_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&south_index, scene_path);
+	index = gen_index(&south_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".ne") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&east_index, scene_path);
+	index = gen_index(&east_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&ne_index, scene_path);
+	index = gen_index(&ne_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&north_index, scene_path);
+	index = gen_index(&north_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".nw") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&west_index, scene_path);
+	index = gen_index(&west_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&nw_index, scene_path);
+	index = gen_index(&nw_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&north_index, scene_path);
+	index = gen_index(&north_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".south") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.south", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&south_index, scene_path);
+	index = gen_index(&south_index);
+	sprintf(file, "%s/%s/%ld.1.north", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".north") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.north", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&north_index, scene_path);
+	index = gen_index(&north_index);
+	sprintf(file, "%s/%s/%ld.1.south", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".west") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.west", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&west_index, scene_path);
+	index = gen_index(&west_index);
+	sprintf(file, "%s/%s/%ld.1.east", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".east") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.east", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&east_index, scene_path);
+	index = gen_index(&east_index);
+	sprintf(file, "%s/%s/%ld.1.west", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".body") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.body", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    return(0);
+}
+
+
+/* my custom file opening routine ... don't open if a shared edge or
+ * vertex alread exists */
+FILE *my_open(char *basename, char *basepath, char *ext) {
+    FILE *fp;
+    char filename[256];
+
+    /* check if a shared object already exists */
+    if ( shared_object_exists(basepath, ext, filename) ) {
+	/* not an actual file open error, but we've already got the
+         * shared edge, so we don't want to create another one */
+	fp = fopen(filename, "r");
+	printf("Opening %s\n", filename);
+	return(fp);
+    } else {
+	/* open the file */
+	printf("not opening\n");
+	return(NULL);
+    }
+}
+
+
+/* given a file pointer, read all the gdn (geodetic nodes from it) */
+void read_nodes(FILE *fp) {
+    char line[256];
+
+    while ( fgets(line, 250, fp) != NULL ) {
+	if ( strncmp(line, "gdn ", 4) == 0 ) {
+	    sscanf(line, "gdn %f %f %f\n", &nodes[nodecount][0], 
+		   &nodes[nodecount][1], &nodes[nodecount][2]);
+	    /*
+	    printf("read_nodes(%d) %.2f %.2f %.2f %s", nodecount, 
+		   nodes[nodecount][0], nodes[nodecount][1], 
+		   nodes[nodecount][2], line);
+		   */
+	    nodecount++;
+	}
+    }
+}
+
+
+/* load in nodes from the various split and shared pieces to
+ * reconstruct a tile */
+void build_node_list(char *basename, char *basepath) {
+    FILE *ne, *nw, *se, *sw, *north, *south, *east, *west, *body;
+
+    ne = my_open(basename, basepath, ".ne");
+    read_nodes(ne);
+    fclose(ne);
+
+    nw = my_open(basename, basepath, ".nw");
+    read_nodes(nw);
+    fclose(nw);
+
+    se = my_open(basename, basepath, ".se");
+    read_nodes(se);
+    fclose(se);
+
+    sw = my_open(basename, basepath, ".sw");
+    read_nodes(sw);
+    fclose(sw);
+
+    north = my_open(basename, basepath, ".north");
+    read_nodes(north);
+    fclose(north);
+
+    south = my_open(basename, basepath, ".south");
+    read_nodes(south);
+    fclose(south);
+
+    east = my_open(basename, basepath, ".east");
+    read_nodes(east);
+    fclose(east);
+
+    west = my_open(basename, basepath, ".west");
+    read_nodes(west);
+    fclose(west);
+
+    body = my_open(basename, basepath, ".body");
+    read_nodes(body);
+    fclose(body);
+}
+
+
+/* dump in WaveFront .obj format */
+void dump_nodes(char *basename, char *basepath) {
+    FILE *fp;
+    int i;
+
+    /* dump vertices */
+    printf("  writing vertices in .node format\n");
+    /* printf("Creating node file:  %s\n", file);
+    fd = fopen(file, "w"); */
+
+    printf("%d 2 1 0\n", nodecount);
+
+    /* now write out actual node data */
+    for ( i = 0; i < nodecount; i++ ) {
+	printf("%d %.2f %.2f %.2f 0\n", i + 1,
+	       nodes[i][0], nodes[i][1], nodes[i][2]);
+    }
+
+    /* fclose(fd); */
+
+}
+
+
+int main(int argc, char **argv) {
+    char basename[256], basepath[256], temp[256];
+    long int tmp_index;
+    int len;
+
+    strcpy(basename, argv[1]);
+
+    /* find the base path of the file */
+    extract_path(basename, basepath);
+    extract_path(basepath, basepath);
+    extract_path(basepath, basepath);
+    printf("%s\n", basepath);
+
+    /* find the index of the current file */
+    extract_file(basename, temp);
+    len = strlen(temp);
+    if ( len >= 2 ) {
+	temp[len-2] = '\0';
+    }
+    tmp_index = atoi(temp);
+    printf("%ld\n", tmp_index);
+    parse_index(tmp_index, &my_index);
+
+    printf("bucket = %d %d %d %d\n", 
+	   my_index.lon, my_index.lat, my_index.x, my_index.y);
+    /* generate the indexes of the neighbors */
+    offset_bucket(&my_index, &ne_index,  1,  1);
+    offset_bucket(&my_index, &nw_index, -1,  1);
+    offset_bucket(&my_index, &se_index,  1, -1);
+    offset_bucket(&my_index, &sw_index, -1, -1);
+
+    offset_bucket(&my_index, &north_index,  0,  1);
+    offset_bucket(&my_index, &south_index,  0, -1);
+    offset_bucket(&my_index, &east_index,  1,  0);
+    offset_bucket(&my_index, &west_index, -1,  0);
+
+    /*
+    printf("Corner indexes = %ld %ld %ld %ld\n", 
+	   ne_index, nw_index, sw_index, se_index);
+    printf("Edge indexes = %ld %ld %ld %ld\n",
+	   north_index, south_index, east_index, west_index);
+	   */
+
+    /* load the input data files */
+    build_node_list(basename, basepath);
+
+    /* dump in WaveFront .obj format */
+    dump_nodes(basename, basepath);
+
+    return(0);
+}
+
+
+/* $Log$
+/* Revision 1.1  1998/01/15 02:45:26  curt
+/* Initial revision.
+/*
+ */
