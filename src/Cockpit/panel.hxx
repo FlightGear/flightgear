@@ -36,7 +36,7 @@
 #  include <windows.h>
 #endif
 
-#include GLUT_H
+#include <GL/gl.h>
 
 #include <plib/ssg.h>
 
