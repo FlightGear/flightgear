@@ -208,9 +208,12 @@ void obj_fix(char *infile, char *outfile) {
 	    printf("new tri strip = %s", line);
 	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
 
-	    /* special case to handle a bug in our beloved tri striper */
+	    /* special cases to handle bugs in our beloved tri striper */
 	    if ( (n1 == 4) && (n2 == 2) && (n3 == 2) && (n4 == 1) ) {
 		n2 = 3;
+	    }
+	    if ( (n1 == 3) && (n2 == 1) && (n3 == 1) && (n4 == 0) ) {
+		n3 = 4;
 	    }
 
 	    dot_prod = check_cur_face(n1, n2, n3);
@@ -288,9 +291,12 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.6  1998/03/03 15:36:12  curt
-/* Tweaks for compiling with g++
+/* Revision 1.7  1998/03/19 02:51:41  curt
+/* Added special case handling to compensate for bugs in our beloved tri striper
 /*
+ * Revision 1.6  1998/03/03 15:36:12  curt
+ * Tweaks for compiling with g++
+ *
  * Revision 1.5  1998/03/03 03:37:03  curt
  * Cumulative tweaks.
  *
