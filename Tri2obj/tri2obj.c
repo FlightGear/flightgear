@@ -78,7 +78,7 @@ void calc_normal(struct fgCartesianPoint p1, struct fgCartesianPoint p2,
     MAT3cross_product(normal, v1, v2);
     MAT3_NORMALIZE_VEC(normal,temp);
 
-    /* printf("Normal = %.2f %.2f %.2f\n", normal[0], normal[1], normal[2]); */
+/*  printf("  Normal = %.2f %.2f %.2f\n", normal[0], normal[1], normal[2]); */
 }
 
 
@@ -192,11 +192,13 @@ void dump_obj(char *basename) {
     printf("  calculating and writing normals\n");
     /* calculate and generate normals */
     for ( i = 1; i <= nodecount; i++ ) {
+/* 	printf("Finding normal\n"); */
+
 	find_tris(i, &t1, &t2, &t3);
 
 	n1[0] = n1[1] = n1[2] = 0.0;
 	n2[0] = n2[1] = n2[2] = 0.0;
-	n3[0] = n3[1] = n3[3] = 0.0;
+	n3[0] = n3[1] = n3[2] = 0.0;
 
 	count = 1;
 	calc_normal(nodes[tris[t1][0]], nodes[tris[t1][1]], nodes[tris[t1][2]], 
@@ -214,11 +216,17 @@ void dump_obj(char *basename) {
 	    count = 3;
 	}
 
+/* 	printf("  norm[2] = %.2f %.2f %.2f\n", n1[2], n2[2], n3[2]); */
+
 	norm[0] = ( n1[0] + n2[0] + n3[0] ) / (double)count;
 	norm[1] = ( n1[1] + n2[1] + n3[1] ) / (double)count;
 	norm[2] = ( n1[2] + n2[2] + n3[2] ) / (double)count;
-
+	
+/* 	printf("  count = %d\n", count); */
+/* 	printf("  Ave. normal = %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);*/
 	MAT3_NORMALIZE_VEC(norm, temp);
+/* 	printf("  Normalized ave. normal = %.4f %.4f %.4f\n",  */
+/* 	       norm[0], norm[1], norm[2]); */
 	
 	fprintf(obj, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
     }
@@ -251,9 +259,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.4  1997/12/02 13:13:32  curt
-/* Fixed problem with averaged vertex normals.
+/* Revision 1.5  1997/12/08 19:17:50  curt
+/* Fixed a type in the normal generation code.
 /*
+ * Revision 1.4  1997/12/02 13:13:32  curt
+ * Fixed problem with averaged vertex normals.
+ *
  * Revision 1.3  1997/11/15 18:05:05  curt
  * minor tweaks ...
  *
