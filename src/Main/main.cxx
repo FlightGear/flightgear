@@ -285,7 +285,7 @@ static void fgRenderFrame( void ) {
 	xglMatrixMode(GL_MODELVIEW);
 	xglLoadIdentity();
 	sgMat4 vm_tmp, view_mat;
-	sgTransposeNegateMat4 ( vm_tmp, current_view.sgVIEW ) ;
+	sgTransposeNegateMat4 ( vm_tmp, current_view.VIEW ) ;
 	sgCopyMat4( view_mat, copy_of_ssgOpenGLAxisSwapMatrix ) ;
 	sgPreMultMat4( view_mat, vm_tmp ) ;
 	xglLoadMatrixf( (float *)view_mat );
@@ -414,7 +414,7 @@ static void fgRenderFrame( void ) {
 
 	    sgMat4 sgTMP;
 	    sgMat4 sgTUX;
-	    sgMultMat4( sgTMP, sgROT, current_view.sgVIEW_ROT );
+	    sgMultMat4( sgTMP, sgROT, current_view.VIEW_ROT );
 	    sgMultMat4( sgTUX, sgTMP, sgTRANS );
 	
 	    sgCoord tuxpos;
@@ -422,7 +422,7 @@ static void fgRenderFrame( void ) {
 	    penguin_pos->setTransform( &tuxpos );
 	}
 
-	ssgSetCamera( current_view.sgVIEW );
+	ssgSetCamera( current_view.VIEW );
 
 	// position tile nodes and update range selectors
 	global_tile_mgr.prep_ssg_nodes();

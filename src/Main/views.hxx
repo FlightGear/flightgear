@@ -36,7 +36,6 @@
 #include <sg.h>			// plib include
 
 #include <FDM/flight.hxx>
-#include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
@@ -44,16 +43,6 @@
 #include "options.hxx"
 
 FG_USING_STD(list);
-
-
-// class FGMat4Wrapper {
-// public:
-//     sgMat4 m;
-// };
-
-// typedef list < FGMat4Wrapper > sgMat4_list;
-// typedef sgMat4_list::iterator sgMat4_list_iterator;
-// typedef sgMat4_list::const_iterator const_sgMat4_list_iterator;
 
 
 // used in views.cxx and tilemgr.cxx
@@ -143,28 +132,23 @@ public:
 
     // up vector for the view (usually point straight up through the
     // top of the aircraft
-    MAT3vec view_up;
-    sgVec3 sgview_up;
+    sgVec3 view_up;
 
     // the vector pointing straight out the nose of the aircraft
-    MAT3vec view_forward;
+    sgVec3 view_forward;
 
     // Transformation matrix for eye coordinates to aircraft coordinates
-    MAT3mat AIRCRAFT;
+    // sgMat4 AIRCRAFT;
 
     // Transformation matrix for the view direction offset relative to
     // the AIRCRAFT matrix
-    MAT3mat VIEW_OFFSET;
-    sgMat4 sgVIEW_OFFSET;
+    sgMat4 VIEW_OFFSET;
 
     // Current model view matrix;
     GLfloat MODEL_VIEW[16];
 
     // sg versions of our friendly matrices
-    sgMat4 sgLOCAL, sgUP, sgVIEW_ROT, sgTRANS, sgVIEW, sgLARC_TO_SSG;
-
-    // queue of view matrices so we can have a follow view
-    // sgMat4_list follow;
+    sgMat4 LOCAL, UP, VIEW_ROT, TRANS, VIEW, LARC_TO_SSG;
 
 public:
 
@@ -236,7 +220,7 @@ public:
     inline float *get_surface_south() { return surface_south; }
     inline float *get_surface_east() { return surface_east; }
     inline float *get_local_up() { return local_up; }
-    inline double *get_view_forward() { return view_forward; }
+    inline float *get_view_forward() { return view_forward; }
     inline GLfloat *get_MODEL_VIEW() { return MODEL_VIEW; }
 };
 

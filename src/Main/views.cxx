@@ -32,7 +32,6 @@
 #include <Cockpit/panel.hxx>
 #include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
-#include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Math/vector.hxx>
@@ -79,25 +78,25 @@ void FGView::Init( void ) {
     }
 
     // This never changes -- NHV
-    sgLARC_TO_SSG[0][0] = 0.0; 
-    sgLARC_TO_SSG[0][1] = 1.0; 
-    sgLARC_TO_SSG[0][2] = -0.0; 
-    sgLARC_TO_SSG[0][3] = 0.0; 
+    LARC_TO_SSG[0][0] = 0.0; 
+    LARC_TO_SSG[0][1] = 1.0; 
+    LARC_TO_SSG[0][2] = -0.0; 
+    LARC_TO_SSG[0][3] = 0.0; 
 
-    sgLARC_TO_SSG[1][0] = 0.0; 
-    sgLARC_TO_SSG[1][1] = 0.0; 
-    sgLARC_TO_SSG[1][2] = 1.0; 
-    sgLARC_TO_SSG[1][3] = 0.0;
+    LARC_TO_SSG[1][0] = 0.0; 
+    LARC_TO_SSG[1][1] = 0.0; 
+    LARC_TO_SSG[1][2] = 1.0; 
+    LARC_TO_SSG[1][3] = 0.0;
 	
-    sgLARC_TO_SSG[2][0] = 1.0; 
-    sgLARC_TO_SSG[2][1] = -0.0; 
-    sgLARC_TO_SSG[2][2] = 0.0; 
-    sgLARC_TO_SSG[2][3] = 0.0;
+    LARC_TO_SSG[2][0] = 1.0; 
+    LARC_TO_SSG[2][1] = -0.0; 
+    LARC_TO_SSG[2][2] = 0.0; 
+    LARC_TO_SSG[2][3] = 0.0;
 	
-    sgLARC_TO_SSG[3][0] = 0.0; 
-    sgLARC_TO_SSG[3][1] = 0.0; 
-    sgLARC_TO_SSG[3][2] = 0.0; 
-    sgLARC_TO_SSG[3][3] = 1.0; 
+    LARC_TO_SSG[3][0] = 0.0; 
+    LARC_TO_SSG[3][1] = 0.0; 
+    LARC_TO_SSG[3][2] = 0.0; 
+    LARC_TO_SSG[3][3] = 1.0; 
 	
     force_update_fov_math();
 }
@@ -124,46 +123,21 @@ void FGView::UpdateViewParams( const FGInterface& f ) {
 
 // convert sgMat4 to MAT3 and print
 static void print_sgMat4( sgMat4 &in) {
-    MAT3mat print;
-    int i;
-    int j;
+    int i, j;
     for ( i = 0; i < 4; i++ ) {
 	for ( j = 0; j < 4; j++ ) {
-	    print[i][j] = in[i][j];
+	    printf("%10.4f ", in[i][j]);
 	}
+	cout << endl;
     }
-    MAT3print( print, stdout);
-}
-
-
-// convert convert MAT3 to sgMat4
-static void MAT3mat_To_sgMat4( MAT3mat &in, sgMat4 &out ) {
-    out[0][0] = in[0][0];
-    out[0][1] = in[0][1];
-    out[0][2] = in[0][2];
-    out[0][3] = in[0][3];
-    out[1][0] = in[1][0];
-    out[1][1] = in[1][1];
-    out[1][2] = in[1][2];
-    out[1][3] = in[1][3];
-    out[2][0] = in[2][0];
-    out[2][1] = in[2][1];
-    out[2][2] = in[2][2];
-    out[2][3] = in[2][3];
-    out[3][0] = in[3][0];
-    out[3][1] = in[3][1];
-    out[3][2] = in[3][2];
-    out[3][3] = in[3][3];
 }
 
 
 // Update the view parameters
 void FGView::UpdateViewMath( const FGInterface& f ) {
     Point3D p;
-    sgVec3 v0, minus_z;
-    MAT3vec vec, forward;
-    MAT3mat R, TMP, UP, LOCAL, VIEW;
-    sgMat4 sgTMP;
+    sgVec3 v0, minus_z, sgvec, forward;
+    sgMat4 VIEWo, TMP;
 
     if ( update_fov ) {
 	ssgSetFOV( current_options.get_fov(), 
@@ -205,86 +179,35 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     // Psi (roll, pitch, yaw) in case we aren't running LaRCsim as our
     // flight model
 
-    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3rotate(R, vec, f.get_Phi());
-    // cout << "Roll matrix" << endl;
-    // MAT3print(R, stdout);
+    sgVec3 rollvec;
+    sgSetVec3( rollvec, 0.0, 0.0, 1.0 );
+    sgMat4 PHI;		// roll
+    sgMakeRotMat4( PHI, f.get_Phi() * RAD_TO_DEG, rollvec );
 
-    sgVec3 sgrollvec;
-    sgSetVec3( sgrollvec, 0.0, 0.0, 1.0 );
-    sgMat4 sgPHI;		// roll
-    sgMakeRotMat4( sgPHI, f.get_Phi() * RAD_TO_DEG, sgrollvec );
+    sgVec3 pitchvec;
+    sgSetVec3( pitchvec, 0.0, 1.0, 0.0 );
+    sgMat4 THETA;		// pitch
+    sgMakeRotMat4( THETA, f.get_Theta() * RAD_TO_DEG, pitchvec );
 
-    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
-    MAT3rotate(TMP, vec, f.get_Theta());
-    // cout << "Pitch matrix" << endl;;
-    // MAT3print(TMP, stdout);
-    MAT3mult(R, R, TMP);
-    // cout << "tmp rotation matrix, R:" << endl;;
-    // MAT3print(R, stdout);
+    sgMat4 ROT;
+    sgMultMat4( ROT, PHI, THETA );
 
-    sgVec3 sgpitchvec;
-    sgSetVec3( sgpitchvec, 0.0, 1.0, 0.0 );
-    sgMat4 sgTHETA;		// pitch
-    sgMakeRotMat4( sgTHETA, f.get_Theta() * RAD_TO_DEG,
-		   sgpitchvec );
+    sgVec3 yawvec;
+    sgSetVec3( yawvec, 1.0, 0.0, 0.0 );
+    sgMat4 PSI;		// pitch
+    sgMakeRotMat4( PSI, -f.get_Psi() * RAD_TO_DEG, yawvec );
 
-    sgMat4 sgROT;
-    sgMultMat4( sgROT, sgPHI, sgTHETA );
-
-    MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-    MAT3rotate(TMP, vec, -f.get_Psi());
-    // cout << "Yaw matrix" << endl;
-    // MAT3print(TMP, stdout);
-    MAT3mult(LOCAL, R, TMP);
-    // cout << "LOCAL matrix:" << endl;
-    // MAT3print(LOCAL, stdout);
-
-    sgVec3 sgyawvec;
-    sgSetVec3( sgyawvec, 1.0, 0.0, 0.0 );
-    sgMat4 sgPSI;		// pitch
-    sgMakeRotMat4( sgPSI, -f.get_Psi() * RAD_TO_DEG, sgyawvec );
-
-    sgMultMat4( sgLOCAL, sgROT, sgPSI );
-    // cout << "sgLOCAL matrix" << endl;
-    // print_sgMat4( sgLOCAL );
+    sgMultMat4( LOCAL, ROT, PSI );
+    // cout << "LOCAL matrix" << endl;
+    // print_sgMat4( LOCAL );
 	
-    // Derive the local UP transformation matrix based on *geodetic*
-    // coordinates
-    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3rotate(R, vec, f.get_Longitude());     // R = rotate about Z axis
-    // printf("Longitude matrix\n");
-    // MAT3print(R, stdout);
-
-    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
-    MAT3mult_vec(vec, vec, R);
-    MAT3rotate(TMP, vec, -f.get_Latitude());  // TMP = rotate about X axis
-    // printf("Latitude matrix\n");
-    // MAT3print(TMP, stdout);
-
-    MAT3mult(UP, R, TMP);
-    // cout << "Local up matrix" << endl;;
-    // MAT3print(UP, stdout);
-
-    sgMakeRotMat4( sgUP, 
+    sgMakeRotMat4( UP, 
 		   f.get_Longitude() * RAD_TO_DEG,
 		   0.0,
 		   -f.get_Latitude() * RAD_TO_DEG );
-    /*
-      cout << "FG derived UP matrix using sg routines" << endl;
-    MAT3mat print;
-    int i;
-    int j;
-    for ( i = 0; i < 4; i++ ) {
-	for ( j = 0; j < 4; j++ ) {
-	print[i][j] = sgUP[i][j];
-	}
-	}
-    MAT3print( print, stdout);
-    */
 
     sgSetVec3( local_up, 1.0, 0.0, 0.0 );
-    sgXformVec3( local_up, sgUP );
+    sgXformVec3( local_up, UP );
     // cout << "Local Up = " << local_up[0] << "," << local_up[1] << ","
     //      << local_up[2] << endl;
     
@@ -294,60 +217,40 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     // printf( "    Alt Up = (%.4f, %.4f, %.4f)\n", 
     //         alt_up.x, alt_up.y, alt_up.z);
 
-    // Calculate the VIEW matrix
-    MAT3mult(VIEW, LOCAL, UP);
-    // cout << "VIEW matrix" << endl;;
-    // MAT3print(VIEW, stdout);
-
-    sgMat4 sgTMP2;
-    sgMultMat4( sgTMP, sgLOCAL, sgUP );
+    sgMat4 TMP2;
+    sgMultMat4( VIEWo, LOCAL, UP );
+    // cout << "VIEWo matrix" << endl;
+    // print_sgMat4( VIEWo );
 
     // generate the sg view up vector
     sgVec3 vec1;
     sgSetVec3( vec1, 1.0, 0.0, 0.0 );
-    sgXformVec3( sgview_up, vec1, sgTMP );
+    sgXformVec3( view_up, vec1, VIEWo );
 
     // generate the view offset matrix
-    sgMakeRotMat4( sgVIEW_OFFSET, view_offset * RAD_TO_DEG, sgview_up );
-    // cout << "sgVIEW_OFFSET matrix" << endl;
-    // print_sgMat4( sgVIEW_OFFSET );
+    sgMakeRotMat4( VIEW_OFFSET, view_offset * RAD_TO_DEG, view_up );
+    // cout << "VIEW_OFFSET matrix" << endl;
+    // print_sgMat4( VIEW_OFFSET );
 	
-    sgMultMat4( sgTMP2, sgTMP, sgVIEW_OFFSET );
-    sgMultMat4( sgVIEW_ROT, sgLARC_TO_SSG, sgTMP2 );
+    sgMultMat4( TMP2, VIEWo, VIEW_OFFSET );
+    sgMultMat4( VIEW_ROT, LARC_TO_SSG, TMP2 );
+    // cout << "VIEW_ROT matrix" << endl;
+    // print_sgMat4( VIEW_ROT );
 
-    sgMakeTransMat4( sgTRANS, view_pos.x(), view_pos.y(), view_pos.z() );
+    sgMakeTransMat4( TRANS, view_pos.x(), view_pos.y(), view_pos.z() );
 
-    sgMultMat4( sgVIEW, sgVIEW_ROT, sgTRANS );
+    sgMultMat4( VIEW, VIEW_ROT, TRANS );
 
-    // FGMat4Wrapper tmp;
-    // sgCopyMat4( tmp.m, sgVIEW );
-    // follow.push_back( tmp );
+    sgSetVec3( sgvec, 0.0, 0.0, 1.0 );
+    sgXformVec3( forward, sgvec, VIEWo );
+    // cout << "forward = " << forward[0] << ","
+    //      << forward[1] << "," << forward[2] << endl;
 
-    // generate the current up, forward, and fwrd-view vectors
-    MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-    MAT3mult_vec(view_up, vec, VIEW);
-
-    /*
-    cout << "FG derived VIEW matrix using sg routines" << endl;
-    MAT3mat print;
-    int i;
-    int j;
-    for ( i = 0; i < 4; i++ ) {
-	for ( j = 0; j < 4; j++ ) {
-	    print[i][j] = sgVIEW[i][j];
-	}
-    }
-    MAT3print( print, stdout);
-    */
-
-    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3mult_vec(forward, vec, VIEW);
-    // printf( "Forward vector is (%.2f,%.2f,%.2f)\n", forward[0], forward[1], 
-    //         forward[2]);
-
-    MAT3rotate(TMP, view_up, view_offset);
-    MAT3mult_vec(view_forward, forward, TMP);
-
+    sgMakeRotMat4( TMP, view_offset * RAD_TO_DEG, view_up );
+    sgXformVec3( view_forward, forward, TMP );
+    // cout << "view_forward = " << view_forward[0] << ","
+    //      << view_forward[1] << "," << view_forward[2] << endl;
+    
     // make a vector to the current view position
     sgSetVec3( v0, view_pos.x(), view_pos.y(), view_pos.z() );
 
@@ -362,10 +265,10 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     //      << surface_south[1] << "," << surface_south[2] << endl;
 
     // now calculate the surface east vector
-    sgMakeRotMat4( sgTMP, FG_PI_2 * RAD_TO_DEG, sgview_up );
-    // cout << "sgMat4 sgTMP" << endl;
-    // print_sgMat4( sgTMP );
-    sgXformVec3(surface_east, surface_south, sgTMP);
+    sgMakeRotMat4( TMP, FG_PI_2 * RAD_TO_DEG, view_up );
+    // cout << "sgMat4 TMP" << endl;
+    // print_sgMat4( TMP );
+    sgXformVec3(surface_east, surface_south, TMP);
     // cout << "Surface direction directly east" << surface_east[0] << ","
     //      << surface_east[1] << "," << surface_east[2] << endl;
     // cout << "Should be close to zero = "
