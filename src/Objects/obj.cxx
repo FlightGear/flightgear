@@ -176,14 +176,15 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     geod[3] = Point3D( clon - width/2.0, clat + height/2.0, 0.0 );
 
     Point3D rad[4];
-    for ( int i = 0; i < 4; ++i ) {
+    int i;
+    for ( i = 0; i < 4; ++i ) {
 	rad[i] = Point3D( geod[i].x() * DEG_TO_RAD, geod[i].y() * DEG_TO_RAD,
 			  geod[i].z() );
     }
 
     Point3D cart[4], rel[4];
     t->nodes.clear();
-    for ( int i = 0; i < 4; ++i ) {
+    for ( i = 0; i < 4; ++i ) {
 	cart[i] = fgGeodToCart(rad[i]);
 	rel[i] = cart[i] - center;
 	t->nodes.push_back( rel[i] );
@@ -199,7 +200,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 
     // Calculate normals
     Point3D normals[4];
-    for ( int i = 0; i < 4; ++i ) {
+    for ( i = 0; i < 4; ++i ) {
 	normals[i] = cart[i];
 	double length = normals[i].distance3D( Point3D(0.0) );
 	normals[i] /= length;
@@ -208,7 +209,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 
     // Calculate texture coordinates
     Point3D texs[4];
-    for ( int i = 0; i < 4; ++i ) {
+    for ( i = 0; i < 4; ++i ) {
 	texs[i] = calc_tex_coords( rel[i], center );
 	// cout << "texture coordinate = " << texs[i] << endl;
     }
@@ -223,7 +224,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     t->vnlist = new sgVec3 [ 4 ];
     t->tclist = new sgVec2 [ 4 ];
 
-    for ( int i = 0; i < 4; ++i ) {
+    for ( i = 0; i < 4; ++i ) {
 	sgSetVec3( t->vtlist[i], 
 		   rel[i].x(), rel[i].y(), rel[i].z() );
 	sgSetVec3( t->vnlist[i], 
@@ -233,7 +234,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     
     unsigned short *vindex = new unsigned short [ 4 ];
     unsigned short *tindex = new unsigned short [ 4 ];
-    for ( int i = 0; i < 4; ++i ) {
+    for ( i = 0; i < 4; ++i ) {
 	vindex[i] = i;
 	tindex[i] = i;
     }
@@ -857,7 +858,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     t->nodes = nodes;
 
     stopwatch.stop();
-    FG_LOG( FG_TERRAIN, FG_INFO, 
+    FG_LOG( FG_TERRAIN, FG_DEBUG, 
 	    "Loaded " << path << " in " 
 	    << stopwatch.elapsedSeconds() << " seconds" );
     
