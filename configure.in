@@ -276,6 +276,7 @@ AC_OUTPUT( \
 	Lib/Math/Makefile \
 	Lib/Misc/Makefile \
 	Lib/PUI/Makefile \
+	Lib/Serial/Makefile \
 	Lib/XGL/Makefile \
 	Lib/zlib/Makefile \
 	Simulator/Makefile \
@@ -296,7 +297,6 @@ AC_OUTPUT( \
 	Simulator/Makefile \
 	Simulator/Objects/Makefile \
 	Simulator/Scenery/Makefile \
-	Simulator/Serial/Makefile \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
 	Tools/Makefile \
