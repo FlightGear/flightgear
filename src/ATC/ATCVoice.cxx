@@ -53,7 +53,7 @@ bool FGATCVoice::LoadVoice(string voice) {
 
         string file = voice + ".wav";
 	
-	SoundData = new SGSoundSample( path.c_str(), file.c_str() );
+	SoundData = new SGSoundSample( path.c_str(), file.c_str(), false );
 	rawDataSize = SoundData->get_size();
 	rawSoundData = SoundData->get_data();
 	
