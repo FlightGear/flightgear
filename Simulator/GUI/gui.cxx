@@ -44,7 +44,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <Aircraft/aircraft.hxx>
+#include <Airports/simple.hxx>
+#include <Autopilot/autopilot.hxx>
+#include <Debug/logstream.hxx>
+#include <FDM/flight.hxx>
 #include <Include/general.hxx>
+#include <Main/fg_init.hxx>
 #include <Main/options.hxx>
 
 #include "gui.h"
@@ -65,8 +71,8 @@ puText       *timerText;
 
 void guiMotionFunc ( int x, int y )
 {
-  puMouse ( x, y ) ;
-  glutPostRedisplay () ;
+    puMouse ( x, y ) ;
+    glutPostRedisplay () ;
 }
 
 
@@ -80,51 +86,211 @@ void guiMouseFunc(int button, int updown, int x, int y)
   the Gui callback functions 
   ____________________________________________________________________*/
 
-void hideMenuCb (puObject *cb)
+void reInit(puObject *cb)
 {
-  if (cb -> getValue () )
-    {
-      mainMenuBar -> reveal();
-      printf("Showing Menu");
-      hideMenuButton -> setLegend ("Hide Menu");
-    }
-  else
-    {
-      mainMenuBar -> hide  ();
-      printf("Hiding Menu");
-      hideMenuButton -> setLegend ("Show Menu");
-    }
+    fgReInitSubsystems();
 }
 
- void goAwayCb (puObject *)
+void hideMenuCb (puObject *cb)
 {
-  delete dialogBox;
-  dialogBox = NULL;
+    if (cb -> getValue () )
+	{
+	    mainMenuBar -> reveal();
+	    printf("Showing Menu");
+	    hideMenuButton -> setLegend ("Hide Menu");
+	}
+    else
+	{
+	    mainMenuBar -> hide  ();
+	    printf("Hiding Menu");
+	    hideMenuButton -> setLegend ("Show Menu");
+	}
+}
+
+void goodBye(puObject *)
+{
+    //	FG_LOG( FG_INPUT, FG_ALERT, 
+    //			"Program exiting normally at user request." );
+    cout << "Program exiting normally at user request." << endl;
+
+    //	if(gps_bug)
+    //		fclose(gps_bug);
+				
+    exit(-1);
+}
+	
+void goAwayCb (puObject *)
+{
+    delete dialogBox;
+    dialogBox = NULL;
 }
 
 void mkDialog (char *txt)
 {
-  dialogBox = new puDialogBox (150, 50);
-  {
-    new puFrame (0,0,400, 100);
-    dialogBoxMessage =   new puText         (10, 70);
-    dialogBoxMessage ->  setLabel           (txt);
-    dialogBoxOkButton =  new puOneShot      (180, 10, 240, 50);
-    dialogBoxOkButton -> setLegend          ("OK");
-    dialogBoxOkButton -> makeReturnDefault  (TRUE );
-    dialogBoxOkButton -> setCallback        (goAwayCb);
-  }
-  dialogBox -> close();
-  dialogBox -> reveal();
+    dialogBox = new puDialogBox (150, 50);
+    {
+	new puFrame (0,0,400, 100);
+	dialogBoxMessage =   new puText         (10, 70);
+	dialogBoxMessage ->  setLabel           (txt);
+	dialogBoxOkButton =  new puOneShot      (180, 10, 240, 50);
+	dialogBoxOkButton -> setLegend          ("OK");
+	dialogBoxOkButton -> makeReturnDefault  (TRUE );
+	dialogBoxOkButton -> setCallback        (goAwayCb);
+    }
+    dialogBox -> close();
+    dialogBox -> reveal();
 }
+
+
+/// The beginnings of teleportation :-)
+//  Needs cleaning up but works
+//  These statics should disapear when this is a class
+static puDialogBox     *AptDialog;
+static puFrame         *AptDialogFrame;
+static puText          *AptDialogMessage;
+static puInput         *AptDialogInput;
+
+static puOneShot       *AptDialogOkButton;
+static puOneShot       *AptDialogCancelButton;
+static puOneShot       *AptDialogResetButton;
+
+static string AptDialog_OldAptId;
+static string AptDialog_NewAptId;
+static int AptDialog_ValidAptId;
+
+static void validateApt (puObject *inpApt)
+{
+    char *s;
+    AptDialog_ValidAptId = 0;
+
+    inpApt->getValue(&s);
+
+    AptDialog_NewAptId = s;
+
+    FG_LOG( FG_GENERAL, FG_INFO, "Validating apt id = " << s );
+
+    if ( AptDialog_NewAptId.length() ) {
+	// set initial position from airport id
+
+	fgAIRPORTS airports;
+	fgAIRPORT a;
+
+	FG_LOG( FG_GENERAL, FG_INFO, 
+		"Attempting to set starting position from airport code "
+		<< s );
+
+	airports.load("apt_simple");
+	if ( ! airports.search( AptDialog_NewAptId, &a ) ) {
+	    string err_string = "Failed to find ";
+	    err_string += s;
+	    err_string += " in database.";
+	    mkDialog(err_string.c_str());
+	    FG_LOG( FG_GENERAL, FG_ALERT,
+		    "Failed to find " << s << " in database." );
+	} else {
+	    AptDialog_ValidAptId = 1;
+	    AptDialog_OldAptId = s;
+	    current_options.set_airport_id(AptDialog_NewAptId);
+	}
+    }
+	
+    if( AptDialog_ValidAptId ) {
+	fgReInitSubsystems();
+    }
+}
+
+void AptDialog_Cancel(puObject *)
+{
+    delete AptDialogResetButton;
+    AptDialogResetButton = NULL;
+
+    delete AptDialogCancelButton;
+    AptDialogCancelButton = NULL;
+
+    delete AptDialogOkButton;
+    AptDialogOkButton = NULL;
+
+    delete AptDialogInput;
+    AptDialogInput = NULL;
+
+    delete AptDialogMessage;
+    AptDialogMessage = NULL;
+
+    delete AptDialogFrame;
+    AptDialogFrame = NULL;
+
+    delete AptDialog;
+    AptDialog = NULL;
+}
+
+void AptDialog_OK (puObject *me)
+{
+    validateApt(AptDialogInput);
+    AptDialog_Cancel(me);
+}
+
+void AptDialog_Reset(puObject *)
+{
+    AptDialogInput->setValue ( AptDialog_OldAptId.c_str() );
+    AptDialogInput->setCursor( 0 ) ;
+}
+
+void NewAirportInit(puObject *cb)
+{
+    FGInterface *f;
+    f = current_aircraft.fdm_state;
+
+    char *AptLabel = "Enter New Airport ID";
+    int len = 350/2 - puGetStringWidth(NULL, AptLabel)/2;
+
+    AptDialog_OldAptId = current_options.get_airport_id();
+    char *s            = AptDialog_OldAptId.c_str();
+
+    AptDialog = new puDialogBox (150, 50);
+    {
+	AptDialogFrame   = new puFrame           (0,0,350, 150);
+	AptDialogMessage = new puText            (len, 110);
+	AptDialogMessage ->    setLabel          (AptLabel);
+
+	AptDialogInput   = new puInput           ( 50, 70, 300, 100 );
+	AptDialogInput   ->    setValue          ( s );
+	// Uncomment the next line to have input active on startup
+	AptDialogInput   ->    acceptInput       ( );
+	// cursor at begining or end of line ?
+	//len = strlen(s);
+	len = 0;
+	AptDialogInput   ->    setCursor         ( len );
+	AptDialogInput   ->    setSelectRegion   ( 5, 9 );
+
+        AptDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
+        AptDialogOkButton     ->     setLegend         ("OK");
+        AptDialogOkButton     ->     makeReturnDefault (TRUE );
+        AptDialogOkButton     ->     setCallback       (AptDialog_OK);
+
+        AptDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
+        AptDialogCancelButton ->     setLegend         ("Cancel");
+        AptDialogCancelButton ->     makeReturnDefault (TRUE );
+        AptDialogCancelButton ->     setCallback       (AptDialog_Cancel);
+
+        AptDialogResetButton  =  new puOneShot         (240, 10, 300, 50);
+        AptDialogResetButton  ->     setLegend         ("Reset");
+        AptDialogResetButton  ->     makeReturnDefault (TRUE );
+        AptDialogResetButton  ->     setCallback       (AptDialog_Reset);
+    }
+    AptDialog -> close();
+    AptDialog -> reveal();
+}
+
 
 void notCb (puObject *)
 {
-  mkDialog ("This function isn't implemented yet");
+    mkDialog ("This function isn't implemented yet");
 }
 
 void helpCb (puObject *)
 {
+    string command;
+
 #if defined(FX) && !defined(WIN32)
 #  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
     if ( global_fullscreen ) {
@@ -136,19 +302,18 @@ void helpCb (puObject *)
 
 #if !defined(WIN32)
     string url = "http://www.flightgear.org/Docs/InstallGuide/getstart.html";
-    string command;
 
     if ( system("xwininfo -name Netscape > /dev/null 2>&1") == 0 ) {
 	command = "netscape -remote \"openURL(" + url + ")\" &";
     } else {
 	command = "netscape " + url + " &";
     }
+#else
+    command = "webrun.bat";
+#endif
 
     system( command.c_str() );
     string text = "Help started in netscape window.";
-#else
-    string text = "Help not yet implimented for Win32.";
-#endif
 
     mkDialog ( (char*)text.c_str() );
 }
@@ -156,19 +321,24 @@ void helpCb (puObject *)
 /* -----------------------------------------------------------------------
    The menu stuff 
    ---------------------------------------------------------------------*/
-char *fileSubmenu        [] = { "Exit", "Close", "---------", "Print", "---------", "Save", "New", NULL };
+char *fileSubmenu        [] = { "Exit", "Close", "---------", "Print",
+				"---------", "Save", "Reset", NULL };
 char *editSubmenu        [] = { "Edit text", NULL };
-char *viewSubmenu        [] = { "Cockpit View > ", "View >","------------", "View options...", NULL };
-char *aircraftSubmenu    [] = { "Autopilot ...", "Engine ...", "Navigation", "Communication", NULL};
-char *environmentSubmenu [] = { "Time & Date...", "Terrain ...", "Weather", NULL};
-char *optionsSubmenu     [] = { "Preferences", "Realism & Reliablity...", NULL};
+char *viewSubmenu        [] = { "Cockpit View > ", "View >","------------",
+				"View options...", NULL };
+char *aircraftSubmenu    [] = { "Autopilot ...", "Engine ...", "Navigation",
+				"Communication", NULL};
+char *environmentSubmenu [] = { "Airport", "Terrain", "Weather", NULL};
+char *optionsSubmenu     [] = { "Preferences", "Realism & Reliablity...",
+				NULL};
 char *helpSubmenu        [] = { "About...", "Help", NULL };
 
-puCallback fileSubmenuCb        [] = { notCb, notCb, NULL, notCb, NULL, notCb, notCb, NULL};
+puCallback fileSubmenuCb        [] = { goodBye, hideMenuCb, NULL, notCb,
+				       NULL, notCb, reInit, NULL};
 puCallback editSubmenuCb        [] = { notCb, NULL };
 puCallback viewSubmenuCb        [] = { notCb, notCb, NULL, notCb, NULL };
-puCallback aircraftSubmenuCb    [] = { notCb, notCb, notCb,notCb, NULL };
-puCallback environmentSubmenuCb [] = { notCb, notCb, notCb, NULL };
+puCallback aircraftSubmenuCb    [] = { fgAPAdjust, notCb, notCb, notCb, NULL };
+puCallback environmentSubmenuCb [] = { NewAirportInit, notCb, notCb, NULL };
 puCallback optionsSubmenuCb     [] = { notCb, notCb, NULL};
 puCallback helpSubmenuCb        [] = { notCb, helpCb, NULL };
 
@@ -213,7 +383,7 @@ void guiInit()
     // puSetDefaultColourScheme  (0.2, 0.4, 0.8, 0.5);
     puSetDefaultColourScheme  (0.8, 0.8, 0.8, 0.5);
       
-    /* OK the rest is largerly put in here to mimick Steve Baker's
+    /* OK the rest is largely put in here to mimick Steve Baker's
        "complex" example It should change in future versions */
       
     // timerText = new puText (300, 10);
