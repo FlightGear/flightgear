@@ -276,23 +276,24 @@ double FGNavCom::adjustILSRange( double stationElev, double aircraftElev,
 
     // altitude difference
     // double alt = ( aircraftElev * SG_METER_TO_FEET - stationElev );
-    double offset = fabs( offsetDegrees );
+//     double offset = fabs( offsetDegrees );
 
-    if ( offset < 10 ) {
-	return FG_ILS_DEFAULT_RANGE;
-    } else if ( offset < 35 ) {
-	return 10 + (35 - offset) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
-    } else if ( offset < 45 ) {
-	return (45 - offset);
-    } else if ( offset > 170 ) {
-        return FG_ILS_DEFAULT_RANGE;
-    } else if ( offset > 145 ) {
-	return 10 + (offset - 145) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
-    } else if ( offset > 135 ) {
-        return (offset - 135);
-    } else {
-	return 0;
-    }
+//     if ( offset < 10 ) {
+// 	return FG_ILS_DEFAULT_RANGE;
+//     } else if ( offset < 35 ) {
+// 	return 10 + (35 - offset) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
+//     } else if ( offset < 45 ) {
+// 	return (45 - offset);
+//     } else if ( offset > 170 ) {
+//         return FG_ILS_DEFAULT_RANGE;
+//     } else if ( offset > 145 ) {
+// 	return 10 + (offset - 145) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
+//     } else if ( offset > 135 ) {
+//         return (offset - 135);
+//     } else {
+// 	return 0;
+//     }
+    return FG_ILS_DEFAULT_RANGE;
 }
 
 
