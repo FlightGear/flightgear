@@ -29,8 +29,6 @@
 #include <vector>
 #include STL_STRING
 
-#include "viewmgr.hxx"
-
 SG_USING_STD( vector );
 SG_USING_STD( string );
 
@@ -61,6 +59,7 @@ class FGControls;
 class FGSoundMgr;
 class FGAutopilot;
 class FGFX;
+class FGViewMgr;
 class FGViewer;
 class FGATCMgr;
 class FGATCDisplay;
@@ -235,9 +234,7 @@ public:
 
     inline FGViewMgr *get_viewmgr() const { return viewmgr; }
     inline void set_viewmgr( FGViewMgr *vm ) { viewmgr = vm; }
-    inline FGViewer *get_current_view() const {
-      return viewmgr->get_current_view();
-    }
+    FGViewer *get_current_view() const;
 
     inline SGPropertyNode *get_props () { return props; }
     inline void set_props( SGPropertyNode *n ) { props = n; }

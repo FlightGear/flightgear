@@ -26,6 +26,8 @@
 #include <Environment/environment_mgr.hxx>
 
 #include "globals.hxx"
+#include "viewmgr.hxx"
+
 #include "fg_props.hxx"
 
 
@@ -100,5 +102,10 @@ FGGlobals::get_environment (double lat, double lon, double alt) const
   return environment_mgr->getEnvironment(lat, lon, alt);
 }
 
+FGViewer *
+FGGlobals::get_current_view () const
+{
+  return viewmgr->get_current_view();
+}
 
 // end of globals.cxx
