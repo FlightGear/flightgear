@@ -54,6 +54,7 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FGTank::FGTank(FGConfigFile* AC_cfg)
+    : Contents(0.0)
 {
   string token;
   
@@ -70,8 +71,9 @@ FGTank::FGTank(FGConfigFile* AC_cfg)
     else if (token == "ZLOC") *AC_cfg >> Z;
     else if (token == "RADIUS") *AC_cfg >> Radius;
     else if (token == "CAPACITY") *AC_cfg >> Capacity;
-    else if (token == "CONTENTS") *AC_cfg >> Contents;
-    else cerr << "Unknown identifier: " << token << " in tank definition." << endl;
+    else if (token == "CONTENTS") {
+        if (Contents == 0.0) *AC_cfg >> Contents;
+    } else cerr << "Unknown identifier: " << token << " in tank definition." << endl;
   }
   
   Selected = true;
