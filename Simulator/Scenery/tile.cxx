@@ -38,7 +38,7 @@ FG_USING_STD(mem_fun_ref);
 
 // Constructor
 fgTILE::fgTILE ( void )
-    : nodes(new double[MAX_NODES][3]),
+    : nodes(new double[FG_MAX_NODES][3]),
       ncount(0),
       used(false)
 {
