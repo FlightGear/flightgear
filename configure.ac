@@ -57,30 +57,27 @@ if test "x$with_logging" = "xno" ; then
     AC_DEFINE([FG_NDEBUG], 1, [Define for no logging output])
 fi
 
-# Specify if we want to build with default Multiplayer support
+# Specify if we want to build with Multiplayer support
 # default to with_network=yes
 AC_ARG_WITH(multiplayer, [  --with-multiplayer      Include default multiplayer support])
-if test "x$with_multiplayer" = "xno" ; then
-    echo "Building without default multiplayer support"
-else
-    echo "Building with default multiplayer support"
-    AC_DEFINE([FG_MPLAYER_AS], 1, [Define to build with default multiplayer support])
-fi
-AM_CONDITIONAL(ENABLE_MPLAYER_AS, test "x$with_multiplayer" != "xno")
-
-
-# Specify if we want to build with Oliver's networking support
-# default to with_network=yes
-NETWORK_DIRS=Network
 AC_ARG_WITH(network_olk, [  --with-network-olk      Include Oliver's multi-pilot networking support [default=no]])
-if test "x$with_network_olk" = "xno" ; then
-    echo "Building without Oliver's multi-pilot network support"
-else
-    echo "Building with Oliver's multi-pilot network support"
-    AC_DEFINE([FG_NETWORK_OLK], 1, [Define to build with Oliver's networking])
-fi
-AM_CONDITIONAL(ENABLE_NETWORK_OLK, test "x$with_network_olk" != "xno" -a "x$with_multiplayer" = "xno")
 
+if test "x$with_multiplayer" = "xno" -a "x$with_network_olk" = "xno"; then
+  echo "Building without any kind of multiplayer support"
+
+elif test "x$with_multiplayer" = "xno"; then
+# echo "Building without default multiplayer support"
+  echo "Building with Oliver's multi-pilot network support"
+  AC_DEFINE([FG_NETWORK_OLK], 1, [Define to build with Oliver's networking])
+
+else
+  echo "Building with default multiplayer support"
+# echo "Building without Oliver's multi-pilot network support"
+  AC_DEFINE([FG_MPLAYER_AS], 1, [Define to build with default multiplayer support])
+fi
+
+AM_CONDITIONAL(ENABLE_NETWORK_OLK, test "x$with_network_olk" != "xno")
+AM_CONDITIONAL(ENABLE_MPLAYER_AS, test "x$with_multiplayer" != "xno")
 
 
 # Specify if we want to use WeatherCM instead of FGEnvironment.
