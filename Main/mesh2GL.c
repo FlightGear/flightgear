@@ -33,7 +33,7 @@
 /* walk through mesh and make ogl calls */
 GLint mesh2GL(struct mesh *m) {
     GLint mesh;
-    static GLfloat color[4] = { 0.3, 0.7, 0.2, 1.0 };
+    static GLfloat color[4] = { 0.5, 0.4, 0.25, 1.0 };
 
     float x1, y1, x2, y2, z11, z12, z21, z22;
 
@@ -43,7 +43,7 @@ GLint mesh2GL(struct mesh *m) {
 
     printf("In mesh2GL(), generating GL call list.\n");
 
-    istep = jstep = 25;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 4;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -105,9 +105,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.22  1997/06/29 21:19:17  curt
-/* Working on scenery management system.
+/* Revision 1.23  1997/07/03 00:51:14  curt
+/* Playing with terrain color.
 /*
+ * Revision 1.22  1997/06/29 21:19:17  curt
+ * Working on scenery management system.
+ *
  * Revision 1.21  1997/06/21 17:12:54  curt
  * Capitalized subdirectory names.
  *
