@@ -134,21 +134,6 @@ void fgLIGHT::Update( void ) {
     // if ( diffuse < 0.0 ) { diffuse = 0.0; }
     // if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
 
-    scene_ambient[0] = white[0] * ambient;
-    scene_ambient[1] = white[1] * ambient;
-    scene_ambient[2] = white[2] * ambient;
-    scene_ambient[3] = 1.0;
-
-    scene_diffuse[0] = white[0] * diffuse;
-    scene_diffuse[1] = white[1] * diffuse;
-    scene_diffuse[2] = white[2] * diffuse;
-    scene_diffuse[3] = 1.0;
-
-    scene_specular[0] = white[0] * specular;
-    scene_specular[1] = white[1] * specular;
-    scene_specular[2] = white[2] * specular;
-    scene_specular[3] = 1.0;
-
     // set sky color
     sky_color[0] = base_sky_color[0] * sky_brightness;
     sky_color[1] = base_sky_color[1] * sky_brightness;
@@ -171,6 +156,23 @@ void fgLIGHT::Update( void ) {
        cloud_color[2] /= sun2;
     }
     gamma_correct_rgb( cloud_color );
+
+    float *sun_color = thesky->get_sun_color();
+
+    scene_ambient[0] = fog_color[0] * ambient;
+    scene_ambient[1] = fog_color[1] * ambient;
+    scene_ambient[2] = fog_color[2] * ambient;
+    scene_ambient[3] = 1.0;
+
+    scene_diffuse[0] = fog_color[0] * diffuse;
+    scene_diffuse[1] = fog_color[1] * diffuse;
+    scene_diffuse[2] = fog_color[2] * diffuse;
+    scene_diffuse[3] = 1.0;
+
+    scene_specular[0] = sun_color[0] * specular;
+    scene_specular[1] = sun_color[1] * specular;
+    scene_specular[2] = sun_color[2] * specular;
+    scene_specular[3] = 1.0;
 }
 
 
