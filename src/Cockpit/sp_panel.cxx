@@ -689,19 +689,19 @@ createADFRadio (int x, int y)
   inst->addAction(0, SIX_W * 0.7, -SIX_W * 0.07, SIX_W * 0.09, SIX_W * 0.14,
 		  new FGAdjustAction(FGBFI::getADFFreq,
 				     FGBFI::setADFFreq,
-				     -0.05, 111.0, 999.95, true));
+				     -1.0, 100.0, 1299, true));
   inst->addAction(0, SIX_W * 0.79, -SIX_W * 0.07, SIX_W * 0.09, SIX_W * 0.14,
 		  new FGAdjustAction(FGBFI::getADFFreq,
 				     FGBFI::setADFFreq,
-				     0.05, 111.0, 999.95, true));
+				     1.0, 100.0, 1299, true));
   inst->addAction(1, SIX_W * 0.7, -SIX_W * 0.07, SIX_W * 0.09, SIX_W * 0.14,
 		  new FGAdjustAction(FGBFI::getADFFreq,
 				     FGBFI::setADFFreq,
-				     -5.0, 111.0, 999.95, true));
+				     -25.0, 100.0, 1299, true));
   inst->addAction(1, SIX_W * 0.79, -SIX_W * 0.07, SIX_W * 0.09, SIX_W * 0.14,
 		  new FGAdjustAction(FGBFI::getADFFreq,
 				     FGBFI::setADFFreq,
-				     5.0, 111.0, 999.95, true));
+				     25.0, 100.0, 1299, true));
 
 				// Layer 0: background
   FGTexturedLayer * layer =
@@ -711,11 +711,11 @@ createADFRadio (int x, int y)
 
 				// Layer: ADF frequency
   FGTextLayer * text = new FGTextLayer(SIX_W*2, SIX_W/2);
-  text->addChunk(new FGTextLayer::Chunk(FGBFI::getADFFreq, "%.2f"));
+  text->addChunk(new FGTextLayer::Chunk(FGBFI::getADFFreq, "%4.0f"));
   text->setPointSize(14);
   text->setColor(1.0, 0.5, 0.0);
   inst->addLayer(text);
-  inst->addTransformation(FGInstrumentLayer::XSHIFT, -SIX_W + 12);
+  inst->addTransformation(FGInstrumentLayer::XSHIFT, -SIX_W + 18);
 
   return inst;
 }
