@@ -1,4 +1,4 @@
-// fg_init.cxx -- Flight Gear top level initialization routines
+<// fg_init.cxx -- Flight Gear top level initialization routines
 //
 // Written by Curtis Olson, started August 1997.
 //
@@ -751,7 +751,7 @@ bool fgInitSubsystems( void ) {
     // Initialize the default (kludged) properties.
     ////////////////////////////////////////////////////////////////////
 
-    fgInitProps();
+    fgInitProps ();
 
 
     ////////////////////////////////////////////////////////////////////
