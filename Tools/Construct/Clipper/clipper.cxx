@@ -182,7 +182,9 @@ void FGClipper::move_slivers( FGPolygon& in, FGPolygon& out ) {
 	     << min_angle * 180.0 / FG_PI << endl;
 	cout << "  area = " << area << endl;
 
-	if ( (min_angle < angle_cutoff) && (area < area_cutoff)  ) {
+	if ( ((min_angle < angle_cutoff) && (area < area_cutoff)) ||
+	     (area < area_cutoff / 10.0) )
+	{
 	    cout << "      WE THINK IT'S A SLIVER!" << endl;
 
 	    // check if this is a hole
