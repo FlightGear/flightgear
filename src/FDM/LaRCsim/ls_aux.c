@@ -47,6 +47,9 @@
 
 $Header$
 $Log$
+Revision 1.4  2003/05/25 12:14:46  ehofman
+Rename some defines to prevent a namespace clash
+
 Revision 1.3  2003/05/13 18:45:06  curt
 Robert Deters:
 
@@ -365,14 +368,14 @@ void ls_aux( void ) {
 		
 	if( (v_XZ_plane_2 == 0) || (V_rel_wind == 0) )
 	{
-		Alpha_dot = 0;
-		Beta_dot = 0;
+		Std_Alpha_dot = 0;
+		Std_Beta_dot = 0;
 	}
 	else
 	{
-		Alpha_dot = (U_body*W_dot_body - W_body*U_dot_body)/
+		Std_Alpha_dot = (U_body*W_dot_body - W_body*U_dot_body)/
 		  v_XZ_plane_2;
-		Beta_dot = (signU*v_XZ_plane_2*V_dot_body 
+		Std_Beta_dot = (signU*v_XZ_plane_2*V_dot_body 
 		  - V_body*(U_body*U_dot_body + W_body*W_dot_body))
 		    /(V_rel_wind*V_rel_wind*sqrt(v_XZ_plane_2));
 	}
@@ -380,20 +383,20 @@ void ls_aux( void ) {
     /* Calculate flight path and other flight condition values */
 
 	if (U_body == 0) 
-		Alpha = 0;
+		Std_Alpha = 0;
 	else
-		Alpha = atan2( W_body, U_body );
+		Std_Alpha = atan2( W_body, U_body );
 		
-	Cos_alpha = cos(Alpha);
-	Sin_alpha = sin(Alpha);
+	Cos_alpha = cos(Std_Alpha);
+	Sin_alpha = sin(Std_Alpha);
 	
 	if (V_rel_wind == 0)
-		Beta = 0;
+		Std_Beta = 0;
 	else
-		Beta = asin( V_body/ V_rel_wind );
+		Std_Beta = asin( V_body/ V_rel_wind );
 		
-	Cos_beta = cos(Beta);
-	Sin_beta = sin(Beta);
+	Cos_beta = cos(Std_Beta);
+	Sin_beta = sin(Std_Beta);
 	
 	V_true_kts = V_rel_wind * V_TO_KNOTS;
 	

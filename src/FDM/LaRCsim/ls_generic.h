@@ -81,13 +81,6 @@ extern "C" {
 
 typedef struct {
 
-/*
- * Needed for windows builds
- */
-#ifdef Alpha
-#undef Alpha
-#endif
-
 /*================== Mass properties and geometry values ==================*/
 	
     DATA    mass, i_xx, i_yy, i_zz, i_xz;	/* Inertias */
@@ -343,10 +336,10 @@ typedef struct {
 #define Centrifugal_relief	generic_.centrifugal_relief
 
     DATA    alpha, beta, alpha_dot, beta_dot;	/* in radians	*/
-#define Alpha			generic_.alpha
-#define Beta			generic_.beta
-#define Alpha_dot		generic_.alpha_dot
-#define Beta_dot		generic_.beta_dot
+#define Std_Alpha		generic_.alpha
+#define Std_Beta		generic_.beta
+#define Std_Alpha_dot		generic_.alpha_dot
+#define Std_Beta_dot		generic_.beta_dot
 
     DATA    cos_alpha, sin_alpha, cos_beta, sin_beta;
 #define Cos_alpha		generic_.cos_alpha

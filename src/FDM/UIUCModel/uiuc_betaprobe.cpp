@@ -74,10 +74,10 @@ void uiuc_betaprobe()
 {
   if (CX && CZ)
     {
-      CLclean_wing = CXclean_wing * sin(Alpha) - CZclean_wing * cos(Alpha);
-      CLiced_wing  = CXiced_wing * sin(Alpha) - CZiced_wing * cos(Alpha);
-      CLclean_tail = CXclean_tail * sin(Alpha) - CZclean_tail * cos(Alpha);
-      CLiced_tail  = CXiced_tail * sin(Alpha) - CZiced_tail * cos(Alpha);
+      CLclean_wing = CXclean_wing * sin(Std_Alpha) - CZclean_wing * cos(Std_Alpha);
+      CLiced_wing  = CXiced_wing * sin(Std_Alpha) - CZiced_wing * cos(Std_Alpha);
+      CLclean_tail = CXclean_tail * sin(Std_Alpha) - CZclean_tail * cos(Std_Alpha);
+      CLiced_tail  = CXiced_tail * sin(Std_Alpha) - CZiced_tail * cos(Std_Alpha);
     }
 
   /* calculate lift per unit span*/
@@ -99,28 +99,28 @@ void uiuc_betaprobe()
   V_total_clean_wing = sqrt(w_clean_wing*w_clean_wing + 
 			    V_rel_wind*V_rel_wind - 
 			    2*w_clean_wing*V_rel_wind * 
-			    cos(LS_PI/2 + Alpha));
+			    cos(LS_PI/2 + Std_Alpha));
   V_total_iced_wing = sqrt(w_iced_wing*w_iced_wing + 
 			   V_rel_wind*V_rel_wind - 
 			   2*w_iced_wing*V_rel_wind * 
-			   cos(LS_PI/2 + Alpha));
+			   cos(LS_PI/2 + Std_Alpha));
   V_total_clean_tail = sqrt(w_clean_tail*w_clean_tail + 
 			    V_rel_wind*V_rel_wind - 
 			    2*w_clean_tail*V_rel_wind * 
-			    cos(LS_PI/2 + Alpha));
+			    cos(LS_PI/2 + Std_Alpha));
   V_total_iced_tail = sqrt(w_iced_tail*w_iced_tail + 
 			   V_rel_wind*V_rel_wind - 
 			   2*w_iced_tail*V_rel_wind * 
-			   cos(LS_PI/2 + Alpha));
+			   cos(LS_PI/2 + Std_Alpha));
 
   beta_flow_clean_wing = asin((w_clean_wing / V_total_clean_wing) * 
-			      sin (LS_PI/2 + Alpha));
+			      sin (LS_PI/2 + Std_Alpha));
   beta_flow_iced_wing = asin((w_iced_wing / V_total_iced_wing) * 
-			     sin (LS_PI/2 + Alpha));
+			     sin (LS_PI/2 + Std_Alpha));
   beta_flow_clean_tail = asin((w_clean_tail / V_total_clean_tail) * 
-			      sin (LS_PI/2 + Alpha));
+			      sin (LS_PI/2 + Std_Alpha));
   beta_flow_iced_tail = asin((w_iced_tail / V_total_iced_tail) * 
-			     sin (LS_PI/2 + Alpha));
+			     sin (LS_PI/2 + Std_Alpha));
 
   Dbeta_flow_wing = fabs(beta_flow_clean_wing - beta_flow_iced_wing);
   Dbeta_flow_tail = fabs(beta_flow_clean_tail - beta_flow_iced_tail);

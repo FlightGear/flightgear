@@ -420,7 +420,7 @@ void c172_aero( SCALAR dt, int Initialize ) {
  
   
   /* sum coefficients */
-  CLwbh = interp(CLtable,alpha_ind,NCL,Alpha);
+  CLwbh = interp(CLtable,alpha_ind,NCL,Std_Alpha);
 /*   printf("CLwbh: %g\n",CLwbh);
  */
   CLo = CLob + interp(dCLf,flap_ind,Ndf,Flap_Position);
@@ -436,13 +436,13 @@ void c172_aero( SCALAR dt, int Initialize ) {
  
 
 
-  CL = CLo + CLwbh + (CLadot*Alpha_dot + CLq*Theta_dot)*cbar_2V + CLde*elevator;
+  CL = CLo + CLwbh + (CLadot*Std_Alpha_dot + CLq*Theta_dot)*cbar_2V + CLde*elevator;
   cd = Cdo + rPiARe*Ai*Ai*CL*CL + Cdde*elevator;
-  cy = Cybeta*Beta + (Cyp*P_body + Cyr*R_body)*b_2V + Cyda*aileron + Cydr*rudder;
+  cy = Cybeta*Std_Beta + (Cyp*P_body + Cyr*R_body)*b_2V + Cyda*aileron + Cydr*rudder;
   
-  cm = Cmo + Cma*Alpha + (Cmq*Q_body + Cmadot*Alpha_dot)*cbar_2V + Cmde*(elevator);
-  cn = Cnbeta*Beta + (Cnp*P_body + Cnr*R_body)*b_2V + Cnda*aileron + Cndr*rudder; 
-  croll=Clbeta*Beta + (Clp*P_body + Clr*R_body)*b_2V + Clda*aileron + Cldr*rudder;
+  cm = Cmo + Cma*Std_Alpha + (Cmq*Q_body + Cmadot*Std_Alpha_dot)*cbar_2V + Cmde*(elevator);
+  cn = Cnbeta*Std_Beta + (Cnp*P_body + Cnr*R_body)*b_2V + Cnda*aileron + Cndr*rudder; 
+  croll=Clbeta*Std_Beta + (Clp*P_body + Clr*R_body)*b_2V + Clda*aileron + Cldr*rudder;
   
 /*   printf("aero: CL: %7.4f, Cd: %7.4f, Cm: %7.4f, Cy: %7.4f, Cn: %7.4f, Cl: %7.4f\n",CL,cd,cm,cy,cn,croll);
  */

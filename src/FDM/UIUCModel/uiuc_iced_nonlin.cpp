@@ -33,7 +33,7 @@ void Calc_Iced_Forces()
 	
 	
 	
-	alpha = Alpha*RAD_TO_DEG;
+	alpha = Std_Alpha*RAD_TO_DEG;
 	de = elevator*RAD_TO_DEG;
 	// lift fits
 	if (alpha < 16)

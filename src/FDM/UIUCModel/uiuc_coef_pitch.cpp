@@ -121,7 +121,7 @@ void uiuc_coef_pitch()
               {
                 Cm_a = uiuc_ice_filter(Cm_a_clean,kCm_a);
               }
-	    Cm_a_save = Cm_a * Alpha;
+	    Cm_a_save = Cm_a * Std_Alpha;
             Cm += Cm_a_save;
             break;
           }
@@ -131,7 +131,7 @@ void uiuc_coef_pitch()
               {
                 Cm_a2 = uiuc_ice_filter(Cm_a2_clean,kCm_a2);
               }
-	    Cm_a2_save = Cm_a2 * Alpha * Alpha;
+	    Cm_a2_save = Cm_a2 * Std_Alpha * Std_Alpha;
             Cm += Cm_a2_save;
             break;
           }
@@ -143,7 +143,7 @@ void uiuc_coef_pitch()
               }
             /* Cm_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
-	    Cm_adot_save = Cm_adot * Alpha_dot * cbar_2U;
+	    Cm_adot_save = Cm_adot * Std_Alpha_dot * cbar_2U;
 	    if (eta_q_Cm_adot_fac)
 	      {
 		Cm += Cm_adot_save * eta_q_Cm_adot_fac;
@@ -202,7 +202,7 @@ void uiuc_coef_pitch()
               {
                 Cm_b2 = uiuc_ice_filter(Cm_b2_clean,kCm_b2);
               }
-	    Cm_b2_save = Cm_b2 * Beta * Beta;
+	    Cm_b2_save = Cm_b2 * Std_Beta * Std_Beta;
             Cm += Cm_b2_save;
             break;
           }
@@ -243,7 +243,7 @@ void uiuc_coef_pitch()
             CmfaI = uiuc_1Dinterpolation(Cmfa_aArray,
                                          Cmfa_CmArray,
                                          Cmfa_nAlpha,
-                                         Alpha);
+                                         Std_Alpha);
             Cm += CmfaI;
             break;
           }
@@ -257,7 +257,7 @@ void uiuc_coef_pitch()
 		  case 100:	       
 		    if (V_rel_wind < dyn_on_speed)
 		      {
-			alphaTail = Alpha;
+			alphaTail = Std_Alpha;
 		      }
 		    else
 		      {
@@ -265,7 +265,7 @@ void uiuc_coef_pitch()
 			// printf("gammaWing = %.4f\n", (gammaWing));
 			downwash  = downwashCoef * gammaWing;
 			downwashAngle = atan(downwash/V_rel_wind);
-			alphaTail = Alpha - downwashAngle;
+			alphaTail = Std_Alpha - downwashAngle;
 		      }
 		    CmfadeI = uiuc_2Dinterpolation(Cmfade_aArray,
 						   Cmfade_deArray,
@@ -284,7 +284,7 @@ void uiuc_coef_pitch()
 					       Cmfade_CmArray,
 					       Cmfade_nAlphaArray,
 					       Cmfade_nde,
-					       Alpha,
+					       Std_Alpha,
 					       elevator); 
 	      }
 	    if (eta_q_Cmfade_fac)
@@ -313,7 +313,7 @@ void uiuc_coef_pitch()
                                            Cmfadf_CmArray,
                                            Cmfadf_nAlphaArray,
                                            Cmfadf_ndf,
-                                           Alpha,
+                                           Std_Alpha,
                                            flap_pos);
             Cm += CmfadfI;
             break;
@@ -329,8 +329,8 @@ void uiuc_coef_pitch()
 					       Cmfabetaf_nb_nice,
 					       Cmfabetaf_nf,
 					       flap_pos,
-					       Alpha,
-					       Beta);
+					       Std_Alpha,
+					       Std_Beta);
 	    else
 	      CmfabetafI = uiuc_3Dinterpolation(Cmfabetaf_fArray,
 						Cmfabetaf_aArray,
@@ -340,8 +340,8 @@ void uiuc_coef_pitch()
 						Cmfabetaf_nbeta,
 						Cmfabetaf_nf,
 						flap_pos,
-						Alpha,
-						Beta);
+						Std_Alpha,
+						Std_Beta);
             Cm += CmfabetafI;
             break;
           }
@@ -356,7 +356,7 @@ void uiuc_coef_pitch()
 					     Cmfadef_nde_nice,
 					     Cmfadef_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     elevator);
 	    else
 	      CmfadefI = uiuc_3Dinterpolation(Cmfadef_fArray,
@@ -367,7 +367,7 @@ void uiuc_coef_pitch()
 					      Cmfadef_nde,
 					      Cmfadef_nf,
 					      flap_pos,
-					      Alpha,
+					      Std_Alpha,
 					      elevator);
 	    Cm += CmfadefI;
             break;
@@ -384,7 +384,7 @@ void uiuc_coef_pitch()
 					    Cmfaqf_nq_nice,
 					    Cmfaqf_nf,
 					    flap_pos,
-					    Alpha,
+					    Std_Alpha,
 					    q_nondim);
 	    else
 	      CmfaqfI = uiuc_3Dinterpolation(Cmfaqf_fArray,
@@ -395,7 +395,7 @@ void uiuc_coef_pitch()
 					     Cmfaqf_nq,
 					     Cmfaqf_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     q_nondim);
             Cm += CmfaqfI;
             break;

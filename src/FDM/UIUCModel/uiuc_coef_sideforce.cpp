@@ -123,7 +123,7 @@ void uiuc_coef_sideforce()
               {
                 CY_beta = uiuc_ice_filter(CY_beta_clean,kCY_beta);
               }
-	    CY_beta_save = CY_beta * Beta;
+	    CY_beta_save = CY_beta * Std_Beta;
 	    if (eta_q_CY_beta_fac)
 	      {
 		CY += CY_beta_save * eta_q_CY_beta_fac;
@@ -205,7 +205,7 @@ void uiuc_coef_sideforce()
               {
                 CY_dra = uiuc_ice_filter(CY_dra_clean,kCY_dra);
               }
-	    CY_dra_save = CY_dra * rudder * Alpha;
+	    CY_dra_save = CY_dra * rudder * Std_Alpha;
             CY += CY_dra_save;
             break;
           }
@@ -215,7 +215,7 @@ void uiuc_coef_sideforce()
               {
                 CY_bdot = uiuc_ice_filter(CY_bdot_clean,kCY_bdot);
               }
-	    CY_bdot_save = CY_bdot * Beta_dot * b_2U;
+	    CY_bdot_save = CY_bdot * Std_Beta_dot * b_2U;
             CY += CY_bdot_save;
             break;
           }
@@ -226,7 +226,7 @@ void uiuc_coef_sideforce()
                                            CYfada_CYArray,
                                            CYfada_nAlphaArray,
                                            CYfada_nda,
-                                           Alpha,
+                                           Std_Alpha,
                                            aileron);
             CY += CYfadaI;
             break;
@@ -238,7 +238,7 @@ void uiuc_coef_sideforce()
                                               CYfbetadr_CYArray,
                                               CYfbetadr_nBetaArray,
                                               CYfbetadr_ndr,
-                                              Beta,
+                                              Std_Beta,
                                               rudder);
             CY += CYfbetadrI;
             break;
@@ -254,8 +254,8 @@ void uiuc_coef_sideforce()
 					       CYfabetaf_nb_nice,
 					       CYfabetaf_nf,
 					       flap_pos,
-					       Alpha,
-					       Beta);
+					       Std_Alpha,
+					       Std_Beta);
 	    else
 	      CYfabetafI = uiuc_3Dinterpolation(CYfabetaf_fArray,
 						CYfabetaf_aArray,
@@ -265,8 +265,8 @@ void uiuc_coef_sideforce()
 						CYfabetaf_nbeta,
 						CYfabetaf_nf,
 						flap_pos,
-						Alpha,
-						Beta);
+						Std_Alpha,
+						Std_Beta);
             CY += CYfabetafI;
             break;
           }
@@ -281,7 +281,7 @@ void uiuc_coef_sideforce()
 					     CYfadaf_nda_nice,
 					     CYfadaf_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     aileron);
 	    else
 	      CYfadafI = uiuc_3Dinterpolation(CYfadaf_fArray,
@@ -292,7 +292,7 @@ void uiuc_coef_sideforce()
 					      CYfadaf_nda,
 					      CYfadaf_nf,
 					      flap_pos,
-					      Alpha,
+					      Std_Alpha,
 					      aileron);
             CY += CYfadafI;
             break;
@@ -308,7 +308,7 @@ void uiuc_coef_sideforce()
 					     CYfadrf_ndr_nice,
 					     CYfadrf_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     rudder);
 	    else
 	      CYfadrfI = uiuc_3Dinterpolation(CYfadrf_fArray,
@@ -319,7 +319,7 @@ void uiuc_coef_sideforce()
 					      CYfadrf_ndr,
 					      CYfadrf_nf,
 					      flap_pos,
-					      Alpha,
+					      Std_Alpha,
 					      rudder);
             CY += CYfadrfI;
             break;
@@ -336,7 +336,7 @@ void uiuc_coef_sideforce()
 					    CYfapf_np_nice,
 					    CYfapf_nf,
 					    flap_pos,
-					    Alpha,
+					    Std_Alpha,
 					    p_nondim);
 	    else
 	      CYfapfI = uiuc_3Dinterpolation(CYfapf_fArray,
@@ -347,7 +347,7 @@ void uiuc_coef_sideforce()
 					     CYfapf_np,
 					     CYfapf_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     p_nondim);
             CY += CYfapfI;
             break;
@@ -364,7 +364,7 @@ void uiuc_coef_sideforce()
 					    CYfarf_nr_nice,
 					    CYfarf_nf,
 					    flap_pos,
-					    Alpha,
+					    Std_Alpha,
 					    r_nondim);
 	    else
 	      CYfarfI = uiuc_3Dinterpolation(CYfarf_fArray,
@@ -375,7 +375,7 @@ void uiuc_coef_sideforce()
 					     CYfarf_nr,
 					     CYfarf_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     r_nondim);
             CY += CYfarfI;
             break;

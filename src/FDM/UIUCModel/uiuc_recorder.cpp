@@ -564,42 +564,42 @@ void uiuc_recorder( double dt )
               /************************ Angles ***********************/
             case Alpha_record:
               {
-                fout << Alpha << " ";
+                fout << Std_Alpha << " ";
                 break;
               }
             case Alpha_deg_record:
               {
-                fout << Alpha * RAD_TO_DEG << " ";
+                fout << Std_Alpha * RAD_TO_DEG << " ";
                 break;
               }
             case Alpha_dot_record:
               {
-                fout << Alpha_dot << " ";
+                fout << Std_Alpha_dot << " ";
                 break;
               }
             case Alpha_dot_deg_record:
               {
-                fout << Alpha_dot * RAD_TO_DEG << " ";
+                fout << Std_Alpha_dot * RAD_TO_DEG << " ";
                 break;
               }
             case Beta_record:
               {
-                fout << Beta << " ";
+                fout << Std_Beta << " ";
                 break;
               }
             case Beta_deg_record:
               {
-                fout << Beta * RAD_TO_DEG << " ";
+                fout << Std_Beta * RAD_TO_DEG << " ";
                 break;
               }
             case Beta_dot_record:
               {
-                fout << Beta_dot << " ";
+                fout << Std_Beta_dot << " ";
                 break;
               }
             case Beta_dot_deg_record:
               {
-                fout << Beta_dot * RAD_TO_DEG << " ";
+                fout << Std_Beta_dot * RAD_TO_DEG << " ";
                 break;
               }
             case Gamma_vert_record:

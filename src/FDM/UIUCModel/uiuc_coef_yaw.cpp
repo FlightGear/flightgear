@@ -123,7 +123,7 @@ void uiuc_coef_yaw()
               {
                 Cn_beta = uiuc_ice_filter(Cn_beta_clean,kCn_beta);
               }
-	    Cn_beta_save = Cn_beta * Beta;
+	    Cn_beta_save = Cn_beta * Std_Beta;
 	    if (eta_q_Cn_beta_fac)
 	      {
 		Cn += Cn_beta_save * eta_q_Cn_beta_fac;
@@ -215,7 +215,7 @@ void uiuc_coef_yaw()
               {
                 Cn_b3 = uiuc_ice_filter(Cn_b3_clean,kCn_b3);
               }
-	    Cn_b3_save = Cn_b3 * Beta * Beta * Beta;
+	    Cn_b3_save = Cn_b3 * Std_Beta * Std_Beta * Std_Beta;
             Cn += Cn_b3_save;
             break;
           }
@@ -226,7 +226,7 @@ void uiuc_coef_yaw()
                                            Cnfada_CnArray,
                                            Cnfada_nAlphaArray,
                                            Cnfada_nda,
-                                           Alpha,
+                                           Std_Alpha,
                                            aileron);
             Cn += CnfadaI;
             break;
@@ -238,7 +238,7 @@ void uiuc_coef_yaw()
                                               Cnfbetadr_CnArray,
                                               Cnfbetadr_nBetaArray,
                                               Cnfbetadr_ndr,
-                                              Beta,
+                                              Std_Beta,
                                               rudder);
             Cn += CnfbetadrI;
             break;
@@ -254,8 +254,8 @@ void uiuc_coef_yaw()
 					       Cnfabetaf_nb_nice,
 					       Cnfabetaf_nf,
 					       flap_pos,
-					       Alpha,
-					       Beta);
+					       Std_Alpha,
+					       Std_Beta);
 	    else
 	      CnfabetafI = uiuc_3Dinterpolation(Cnfabetaf_fArray,
 						Cnfabetaf_aArray,
@@ -265,8 +265,8 @@ void uiuc_coef_yaw()
 						Cnfabetaf_nbeta,
 						Cnfabetaf_nf,
 						flap_pos,
-						Alpha,
-						Beta);
+						Std_Alpha,
+						Std_Beta);
             Cn += CnfabetafI;
             break;
           }
@@ -281,7 +281,7 @@ void uiuc_coef_yaw()
 					     Cnfadaf_nda_nice,
 					     Cnfadaf_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     aileron);
 	    else
 	      CnfadafI = uiuc_3Dinterpolation(Cnfadaf_fArray,
@@ -292,7 +292,7 @@ void uiuc_coef_yaw()
 					      Cnfadaf_nda,
 					      Cnfadaf_nf,
 					      flap_pos,
-					      Alpha,
+					      Std_Alpha,
 					      aileron);
             Cn += CnfadafI;
             break;
@@ -308,7 +308,7 @@ void uiuc_coef_yaw()
 					     Cnfadrf_ndr_nice,
 					     Cnfadrf_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     rudder);
 	    else
 	      CnfadrfI = uiuc_3Dinterpolation(Cnfadrf_fArray,
@@ -319,7 +319,7 @@ void uiuc_coef_yaw()
 					      Cnfadrf_ndr,
 					      Cnfadrf_nf,
 					      flap_pos,
-					      Alpha,
+					      Std_Alpha,
 					      rudder);
             Cn += CnfadrfI;
             break;
@@ -336,7 +336,7 @@ void uiuc_coef_yaw()
 					    Cnfapf_np_nice,
 					    Cnfapf_nf,
 					    flap_pos,
-					    Alpha,
+					    Std_Alpha,
 					    p_nondim);
 	    else
 	      CnfapfI = uiuc_3Dinterpolation(Cnfapf_fArray,
@@ -347,7 +347,7 @@ void uiuc_coef_yaw()
 					     Cnfapf_np,
 					     Cnfapf_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     p_nondim);
             Cn += CnfapfI;
             break;
@@ -364,7 +364,7 @@ void uiuc_coef_yaw()
 					    Cnfarf_nr_nice,
 					    Cnfarf_nf,
 					    flap_pos,
-					    Alpha,
+					    Std_Alpha,
 					    r_nondim);
 	    else
 	      CnfarfI = uiuc_3Dinterpolation(Cnfarf_fArray,
@@ -375,7 +375,7 @@ void uiuc_coef_yaw()
 					     Cnfarf_nr,
 					     Cnfarf_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     r_nondim);
             Cn += CnfarfI;
             break;

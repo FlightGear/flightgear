@@ -28,8 +28,8 @@
                             Cnfada, and Cnfbetadr switches
 	       04/15/2000   (JS) broke up into multiple 
 	                    uiuc_coef_xxx functions
-	       06/18/2001   (RD) Added initialization of Alpha and
-	                    Beta.  Added aileron_input and rudder_input.
+	       06/18/2001   (RD) Added initialization of Std_Alpha and
+	                    Std_Beta.  Added aileron_input and rudder_input.
 			    Added pilot_elev_no, pilot_ail_no, and
 			    pilot_rud_no.
 	       07/05/2001   (RD) Added pilot_(elev,ail,rud)_no=false
@@ -110,10 +110,10 @@ void uiuc_coefficients(double dt)
   int ap_alh_init = 1;
 
   if (Alpha_init_true && Simtime==0)
-    Alpha = Alpha_init;
+    Std_Alpha = Alpha_init;
 
   if (Beta_init_true && Simtime==0)
-    Beta = Beta_init;
+    Std_Beta = Beta_init;
 
   // calculate rate derivative nondimensionalization factors
   // check if speed is sufficient to compute dynamic pressure terms
@@ -136,14 +136,14 @@ void uiuc_coefficients(double dt)
   	  cbar_2U        = cbar / (2.0 * V_rel_wind_dum);
   	  b_2U           = bw /   (2.0 * V_rel_wind_dum);
   	  ch_2U          = ch /   (2.0 * V_rel_wind_dum);
-	  Alpha_dot      = 0.0;
+	  Std_Alpha_dot      = 0.0;
   	}
       else
 	{
 	  cbar_2U   = 0.0;
 	  b_2U      = 0.0;
 	  ch_2U     = 0.0;
-	  Alpha_dot = 0.0;
+	  Std_Alpha_dot = 0.0;
 	}
     }
   else if(use_abs_U_body_2U)      // use absolute(U_body)
@@ -160,14 +160,14 @@ void uiuc_coefficients(double dt)
 	  cbar_2U    = cbar / (2.0 * U_body_dum);
 	  b_2U       = bw /   (2.0 * U_body_dum);
 	  ch_2U      = ch /   (2.0 * U_body_dum);
-	  Alpha_dot  = 0.0;
+	  Std_Alpha_dot  = 0.0;
 	}
       else
 	{
 	  cbar_2U   = 0.0;
 	  b_2U      = 0.0;
 	  ch_2U     = 0.0;
-	  Alpha_dot = 0.0;
+	  Std_Alpha_dot = 0.0;
 	}
     }
   else      // use U_body
@@ -184,7 +184,7 @@ void uiuc_coefficients(double dt)
 	  cbar_2U    = cbar / (2.0 * U_body_dum);
 	  b_2U       = bw /   (2.0 * U_body_dum);
 	  ch_2U      = ch /   (2.0 * U_body_dum);
-	  Alpha_dot  = 0.0;
+	  Std_Alpha_dot  = 0.0;
 	  beta_flow_clean_tail = cbar_2U;
 	}
       else
@@ -192,15 +192,15 @@ void uiuc_coefficients(double dt)
 	  cbar_2U   = 0.0;
 	  b_2U      = 0.0;
 	  ch_2U     = 0.0;
-	  Alpha_dot = 0.0;
+	  Std_Alpha_dot = 0.0;
 	}
     }
 
-  // check if speed is sufficient to "trust" Alpha_dot value
+  // check if speed is sufficient to "trust" Std_Alpha_dot value
   if (use_Alpha_dot_on_speed)
     {
       if (V_rel_wind     < Alpha_dot_on_speed)
-	  Alpha_dot = 0.0;
+	  Std_Alpha_dot = 0.0;
     }
 
 
@@ -320,7 +320,7 @@ void uiuc_coefficients(double dt)
 					   tactilefadef_nde_nice,
 					   tactilefadef_nf,
 					   flap_pos,
-					   Alpha,
+					   Std_Alpha,
 					   elevator);
 	  else
 	    tactilefadefI = uiuc_3Dinterpolation(tactilefadef_fArray,
@@ -331,7 +331,7 @@ void uiuc_coefficients(double dt)
 					    tactilefadef_nde,
 					    tactilefadef_nf,
 					    flap_pos,
-					    Alpha,
+					    Std_Alpha,
 					    elevator);
 	}
       else if (demo_tactile)

@@ -202,10 +202,10 @@ void navion_aero( SCALAR dt, int Initialize ) {
   F_Y_aero = scale*(Mass*Y_v*V_body);
   F_Z_aero = scale*(Z_0 + Mass*(Z_u*u + Z_w*w + Z_de*elevator));
   
-  M_l_aero = scale*(I_xx*(L_beta*Beta + L_p*P_body + L_r*R_body
+  M_l_aero = scale*(I_xx*(L_beta*Std_Beta + L_p*P_body + L_r*R_body
 		   + L_da*aileron + L_dr*rudder));
   M_m_aero = scale*(M_0 + I_yy*(M_w*w + M_q*Q_body + M_de*(elevator + Long_trim)));
-  M_n_aero = scale*(I_zz*(N_beta*Beta + N_p*P_body + N_r*R_body
+  M_n_aero = scale*(I_zz*(N_beta*Std_Beta + N_p*P_body + N_r*R_body
 		   + N_da*aileron + N_dr*rudder));
   
 }

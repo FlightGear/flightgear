@@ -598,10 +598,10 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     // set_Gravity( Gravity );
     // set_Centrifugal_relief( Centrifugal_relief );
 
-    _set_Alpha( Alpha );
-    _set_Beta( Beta );
-    // set_Alpha_dot( Alpha_dot );
-    // set_Beta_dot( Beta_dot );
+    _set_Alpha( Std_Alpha );
+    _set_Beta( Std_Beta );
+    // set_Alpha_dot( Std_Alpha_dot );
+    // set_Beta_dot( Std_Beta_dot );
 
     // set_Cos_alpha( Cos_alpha );
     // set_Sin_alpha( Sin_alpha );

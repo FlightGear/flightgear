@@ -50,8 +50,11 @@
 
 $Header$
 $Log$
-Revision 1.1  2002/09/10 01:14:02  curt
-Initial revision
+Revision 1.2  2003/05/25 12:14:46  ehofman
+Rename some defines to prevent a namespace clash
+
+Revision 1.1.1.1  2002/09/10 01:14:02  curt
+Initial revision of FlightGear-0.9.0
 
 Revision 1.5  2001/09/14 18:47:27  curt
 More changes in support of UIUCModel.
@@ -393,8 +396,8 @@ void ls_step( SCALAR dt, int Initialize ) {
 /* Initialize auxiliary variables */
 
 		ls_aux();
-		Alpha_dot = 0.;
-		Beta_dot = 0.;
+		Std_Alpha_dot = 0.;
+		Std_Beta_dot = 0.;
 
 /* set flag; disable integrators */
 

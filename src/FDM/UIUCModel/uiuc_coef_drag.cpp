@@ -137,7 +137,7 @@ void uiuc_coef_drag()
               {
                 CD_a = uiuc_ice_filter(CD_a_clean,kCD_a);
               }
-	    CD_a_save = CD_a * Alpha;
+	    CD_a_save = CD_a * Std_Alpha;
             CD += CD_a_save;
             break;
           }
@@ -149,7 +149,7 @@ void uiuc_coef_drag()
               }
             /* CD_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
-	    CD_adot_save = CD_adot * Alpha_dot * cbar_2U;
+	    CD_adot_save = CD_adot * Std_Alpha_dot * cbar_2U;
             CD += CD_adot_save;
             break;
           }
@@ -197,7 +197,7 @@ void uiuc_coef_drag()
           }
         case CD_beta_flag:
           {
-	    CD_beta_save = fabs(CD_beta * Beta);
+	    CD_beta_save = fabs(CD_beta * Std_Beta);
             CD += CD_beta_save;
             break;
           }
@@ -224,7 +224,7 @@ void uiuc_coef_drag()
             CDfaI = uiuc_1Dinterpolation(CDfa_aArray,
                                          CDfa_CDArray,
                                          CDfa_nAlpha,
-                                         Alpha);
+                                         Std_Alpha);
             CD += CDfaI;
             break;
           }
@@ -253,7 +253,7 @@ void uiuc_coef_drag()
                                            CDfade_CDArray,
                                            CDfade_nAlphaArray,
                                            CDfade_nde,
-                                           Alpha,
+                                           Std_Alpha,
                                            elevator);
                   CD += CDfadeI;
                   break;
@@ -265,7 +265,7 @@ void uiuc_coef_drag()
                                            CDfadf_CDArray,
                                            CDfadf_nAlphaArray,
                                            CDfadf_ndf,
-                                           Alpha,
+                                           Std_Alpha,
                                            flap_pos);
             CD += CDfadfI;
             break;
@@ -311,13 +311,13 @@ void uiuc_coef_drag()
                 CX_a = uiuc_ice_filter(CX_a_clean,kCX_a);
                 if (beta_model)
                   {
-                    CXclean_wing += CX_a_clean * Alpha;
-                    CXclean_tail += CX_a_clean * Alpha;
-                    CXiced_wing += CX_a * Alpha;
-                    CXiced_tail += CX_a * Alpha;
+                    CXclean_wing += CX_a_clean * Std_Alpha;
+                    CXclean_tail += CX_a_clean * Std_Alpha;
+                    CXiced_wing += CX_a * Std_Alpha;
+                    CXiced_tail += CX_a * Std_Alpha;
                   }
               }
-	    CX_a_save = CX_a * Alpha;
+	    CX_a_save = CX_a * Std_Alpha;
             CX += CX_a_save;
             break;
           }
@@ -328,13 +328,13 @@ void uiuc_coef_drag()
                 CX_a2 = uiuc_ice_filter(CX_a2_clean,kCX_a2);
                 if (beta_model)
                   {
-                    CXclean_wing += CX_a2_clean * Alpha * Alpha;
-                    CXclean_tail += CX_a2_clean * Alpha * Alpha;
-                    CXiced_wing += CX_a2 * Alpha * Alpha;
-                    CXiced_tail += CX_a2 * Alpha * Alpha;
+                    CXclean_wing += CX_a2_clean * Std_Alpha * Std_Alpha;
+                    CXclean_tail += CX_a2_clean * Std_Alpha * Std_Alpha;
+                    CXiced_wing += CX_a2 * Std_Alpha * Std_Alpha;
+                    CXiced_tail += CX_a2 * Std_Alpha * Std_Alpha;
                   }
               }
-	    CX_a2_save = CX_a2 * Alpha * Alpha;
+	    CX_a2_save = CX_a2 * Std_Alpha * Std_Alpha;
             CX += CX_a2_save;
             break;
           }
@@ -345,13 +345,13 @@ void uiuc_coef_drag()
                 CX_a3 = uiuc_ice_filter(CX_a3_clean,kCX_a3);
                 if (beta_model)
                   {
-                    CXclean_wing += CX_a3_clean * Alpha * Alpha * Alpha;
-                    CXclean_tail += CX_a3_clean * Alpha * Alpha * Alpha;
-                    CXiced_wing += CX_a3 * Alpha * Alpha * Alpha;
-                    CXiced_tail += CX_a3 * Alpha * Alpha * Alpha;
+                    CXclean_wing += CX_a3_clean * Std_Alpha * Std_Alpha * Std_Alpha;
+                    CXclean_tail += CX_a3_clean * Std_Alpha * Std_Alpha * Std_Alpha;
+                    CXiced_wing += CX_a3 * Std_Alpha * Std_Alpha * Std_Alpha;
+                    CXiced_tail += CX_a3 * Std_Alpha * Std_Alpha * Std_Alpha;
                   }
               }
-	    CX_a3_save = CX_a3 * Alpha * Alpha * Alpha;
+	    CX_a3_save = CX_a3 * Std_Alpha * Std_Alpha * Std_Alpha;
             CX += CX_a3_save;
             break;
           }
@@ -362,15 +362,15 @@ void uiuc_coef_drag()
                 CX_adot = uiuc_ice_filter(CX_adot_clean,kCX_adot);
                 if (beta_model)
                   {
-                    CXclean_wing += CX_adot_clean * Alpha_dot * cbar_2U;
-                    CXclean_tail += CX_adot_clean * Alpha_dot * ch_2U;
-                    CXiced_wing += CX * Alpha_dot * cbar_2U;
-                    CXiced_tail += CX * Alpha_dot * ch_2U;
+                    CXclean_wing += CX_adot_clean * Std_Alpha_dot * cbar_2U;
+                    CXclean_tail += CX_adot_clean * Std_Alpha_dot * ch_2U;
+                    CXiced_wing += CX * Std_Alpha_dot * cbar_2U;
+                    CXiced_tail += CX * Std_Alpha_dot * ch_2U;
                   }
               }
             /* CX_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
-	    CX_adot_save = CX_adot * Alpha_dot * cbar_2U;
+	    CX_adot_save = CX_adot * Std_Alpha_dot * cbar_2U;
             CX += CX_adot_save;
             break;
           }
@@ -451,13 +451,13 @@ void uiuc_coef_drag()
                 CX_adf = uiuc_ice_filter(CX_adf_clean,kCX_adf);
                 if (beta_model)
                   {
-                    CXclean_wing += CX_adf_clean * Alpha * flap_pos;
-                    CXclean_tail += CX_adf_clean * Alpha * flap_pos;
-                    CXiced_wing += CX_adf * Alpha * flap_pos;
-                    CXiced_tail += CX_adf * Alpha * flap_pos;
+                    CXclean_wing += CX_adf_clean * Std_Alpha * flap_pos;
+                    CXclean_tail += CX_adf_clean * Std_Alpha * flap_pos;
+                    CXiced_wing += CX_adf * Std_Alpha * flap_pos;
+                    CXiced_tail += CX_adf * Std_Alpha * flap_pos;
                   }
               }
-	    CX_adf_save = CX_adf * Alpha * flap_pos;
+	    CX_adf_save = CX_adf * Std_Alpha * flap_pos;
             CX += CX_adf_save;
             break;
           }
@@ -472,8 +472,8 @@ void uiuc_coef_drag()
 					       CXfabetaf_nb_nice,
 					       CXfabetaf_nf,
 					       flap_pos,
-					       Alpha,
-					       Beta);
+					       Std_Alpha,
+					       Std_Beta);
 	      // temp until Jim's code works
 	      //CXo = uiuc_3Dinterp_quick(CXfabetaf_fArray,
 	      //			 CXfabetaf_aArray_nice,
@@ -484,7 +484,7 @@ void uiuc_coef_drag()
 	      //			 CXfabetaf_nf,
 	      //			 flap_pos,
 	      //			 0.0,
-	      //			 Beta); 
+	      //			 Std_Beta); 
 	    }
 	    else {
 	      CXfabetafI = uiuc_3Dinterpolation(CXfabetaf_fArray,
@@ -495,8 +495,8 @@ void uiuc_coef_drag()
 						CXfabetaf_nbeta,
 						CXfabetaf_nf,
 						flap_pos,
-						Alpha,
-						Beta);
+						Std_Alpha,
+						Std_Beta);
 	      // temp until Jim's code works
 	      //CXo = uiuc_3Dinterpolation(CXfabetaf_fArray,
 	      //			  CXfabetaf_aArray,
@@ -507,7 +507,7 @@ void uiuc_coef_drag()
 	      //			  CXfabetaf_nf,
 	      //			  flap_pos,
 	      //			  0.0,
-	      //			  Beta); 
+	      //			  Std_Beta); 
 	    }
 	    CX += CXfabetafI;
             break;
@@ -523,7 +523,7 @@ void uiuc_coef_drag()
 					     CXfadef_nde_nice,
 					     CXfadef_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     elevator);
 	    else
 	      CXfadefI = uiuc_3Dinterpolation(CXfadef_fArray,
@@ -534,7 +534,7 @@ void uiuc_coef_drag()
 					      CXfadef_nde,
 					      CXfadef_nf,
 					      flap_pos,
-					      Alpha,
+					      Std_Alpha,
 					      elevator);
             CX += CXfadefI;
             break;
@@ -551,7 +551,7 @@ void uiuc_coef_drag()
 					    CXfaqf_nq_nice,
 					    CXfaqf_nf,
 					    flap_pos,
-					    Alpha,
+					    Std_Alpha,
 					    q_nondim);
 	    else
 	      CXfaqfI = uiuc_3Dinterpolation(CXfaqf_fArray,
@@ -562,7 +562,7 @@ void uiuc_coef_drag()
 					     CXfaqf_nq,
 					     CXfaqf_nf,
 					     flap_pos,
-					     Alpha,
+					     Std_Alpha,
 					     q_nondim);
             CX += CXfaqfI;
             break;

@@ -8,7 +8,7 @@ void uiuc_get_flapper(double dt)
   flapStruct flapper_struct;
   //FlapStruct flapper_struct;
 
-  flapper_alpha = Alpha*180/LS_PI;
+  flapper_alpha = Std_Alpha*180/LS_PI;
   flapper_V = V_rel_wind;
 
   flapper_freq = 0.8 + 0.45*Throttle_pct;
@@ -49,8 +49,8 @@ void uiuc_get_flapper(double dt)
   flapper_Inertia=flapper_struct.getInertia();
   flapper_Moment=flapper_struct.getMoment();
 
-  F_Z_aero_flapper = -1*flapper_Lift*cos(Alpha) - flapper_Thrust*sin(Alpha);
+  F_Z_aero_flapper = -1*flapper_Lift*cos(Std_Alpha) - flapper_Thrust*sin(Std_Alpha);
   F_Z_aero_flapper -= flapper_Inertia;
-  F_X_aero_flapper = -1*flapper_Lift*sin(Alpha) + flapper_Thrust*cos(Alpha);
+  F_X_aero_flapper = -1*flapper_Lift*sin(Std_Alpha) + flapper_Thrust*cos(Std_Alpha);
 
 }

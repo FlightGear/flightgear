@@ -2711,7 +2711,7 @@ struct AIRCRAFT
   
   AIRCRAFT()
   {
-    fog_field;
+    fog_field = 0;
     fog_segments = 0;
     fog_point_index = -1;
     fog_time = NULL;
