@@ -95,13 +95,13 @@ int fgInitPosition( void ) {
 	fgAIRPORTS airports;
 	fgAIRPORT a;
 
-	FG_LOG( FG_GENERAL, FG_INFO, 
+	FG_LOG( FG_GENERAL, FG_INFO,
 		"Attempting to set starting position from airport code "
 		<< id );
 
 	airports.load("apt_simple");
 	if ( ! airports.search( id, &a ) ) {
-	    FG_LOG( FG_GENERAL, FG_ALERT, 
+	    FG_LOG( FG_GENERAL, FG_ALERT,
 		    "Failed to find " << id << " in database." );
 	    exit(-1);
 	} else {
@@ -114,7 +114,11 @@ int fgInitPosition( void ) {
 	f->set_Longitude( current_options.get_lon() * DEG_TO_RAD );
 	f->set_Latitude( current_options.get_lat() * DEG_TO_RAD );
     }
-    FG_LOG( FG_GENERAL, FG_INFO, 
+
+    f->set_sin_cos_longitude(current_options.get_lon() * DEG_TO_RAD);
+    f->set_sin_cos_latitude(current_options.get_lat() * DEG_TO_RAD);
+
+    FG_LOG( FG_GENERAL, FG_INFO,
 	    "starting altitude is = " << current_options.get_altitude() );
 
     f->set_Altitude( current_options.get_altitude() * METER_TO_FEET );
@@ -123,8 +127,8 @@ int fgInitPosition( void ) {
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Initial position is: ("
-	    << (f->get_Longitude() * RAD_TO_DEG) << ", " 
-	    << (f->get_Latitude() * RAD_TO_DEG) << ", " 
+	    << (f->get_Longitude() * RAD_TO_DEG) << ", "
+	    << (f->get_Latitude() * RAD_TO_DEG) << ", "
 	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
 
     return(1);
@@ -142,7 +146,7 @@ int fgInitGeneral( void ) {
     root = current_options.get_fg_root();
     if ( ! root.length() ) {
 	// No root path set? Then bail ...
-	FG_LOG( FG_GENERAL, FG_ALERT, 
+	FG_LOG( FG_GENERAL, FG_ALERT,
 		"Cannot continue without environment variable FG_ROOT"
 		<< "being defined." );
 	exit(-1);
@@ -156,7 +160,7 @@ int fgInitGeneral( void ) {
 	// Test for the MESA_GLX_FX env variable
 	if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
 	    // test if we are fullscreen mesa/glide
-	    if ( (mesa_win_state[0] == 'f') || 
+	    if ( (mesa_win_state[0] == 'f') ||
 		 (mesa_win_state[0] == 'F') ) {
 		global_fullscreen = true;
 	    }
@@ -164,7 +168,7 @@ int fgInitGeneral( void ) {
     }
 #endif
 
-    return ( 1 ); 
+    return ( 1 );
 }
 
 
@@ -206,8 +210,8 @@ int fgInitSubsystems( void )
 	exit(-1);
     }
 
-    FG_LOG( FG_GENERAL, FG_DEBUG, 
-    	    "Current terrain elevation after tile mgr init " << 
+    FG_LOG( FG_GENERAL, FG_DEBUG,
+    	    "Current terrain elevation after tile mgr init " <<
 	    scenery.cur_elev );
 
     // Calculate ground elevation at starting point (we didn't have
@@ -224,21 +228,21 @@ int fgInitSubsystems( void )
     geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
     tmp_abs_view_pos = fgGeodToCart(geod_pos);
 
-    FG_LOG( FG_GENERAL, FG_DEBUG, 
+    FG_LOG( FG_GENERAL, FG_DEBUG,
     	    "Initial abs_view_pos = " << tmp_abs_view_pos );
-    scenery.cur_elev = 
-	fgTileMgrCurElev( f->get_Longitude(), f->get_Latitude(), 
+    scenery.cur_elev =
+	fgTileMgrCurElev( f->get_Longitude(), f->get_Latitude(),
 			  tmp_abs_view_pos );
-    FG_LOG( FG_GENERAL, FG_DEBUG, 
+    FG_LOG( FG_GENERAL, FG_DEBUG,
 	    "Altitude after update " << scenery.cur_elev );
     */
 
-    fgFDMSetGroundElevation( current_options.get_flight_model(), 
+    fgFDMSetGroundElevation( current_options.get_flight_model(),
 			     scenery.cur_elev );
 
     // Reset our altitude if we are below ground
     FG_LOG( FG_GENERAL, FG_DEBUG, "Current altitude = " << f->get_Altitude() );
-    FG_LOG( FG_GENERAL, FG_DEBUG, "Current runway altitude = " << 
+    FG_LOG( FG_GENERAL, FG_DEBUG, "Current runway altitude = " <<
 	    f->get_Runway_altitude() );
 
     if ( f->get_Altitude() < f->get_Runway_altitude() + 3.758099) {
@@ -247,8 +251,8 @@ int fgInitSubsystems( void )
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Updated position (after elevation adj): ("
-	    << (f->get_Latitude() * RAD_TO_DEG) << ", " 
-	    << (f->get_Longitude() * RAD_TO_DEG) << ", " 
+	    << (f->get_Latitude() * RAD_TO_DEG) << ", "
+	    << (f->get_Longitude() * RAD_TO_DEG) << ", "
 	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
 
     // We need to calculate a few more values here that would normally
@@ -258,10 +262,10 @@ int fgInitSubsystems( void )
     double sea_level_radius_meters;
     double lat_geoc;
     // Set the FG variables first
-    fgGeodToGeoc( f->get_Latitude(), f->get_Altitude(), 
+    fgGeodToGeoc( f->get_Latitude(), f->get_Altitude(),
 		  &sea_level_radius_meters, &lat_geoc);
-    f->set_Geocentric_Position( lat_geoc, f->get_Longitude(), 
-				f->get_Altitude() + 
+    f->set_Geocentric_Position( lat_geoc, f->get_Longitude(),
+				f->get_Altitude() +
 				(sea_level_radius_meters * METER_TO_FEET) );
     f->set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET );
 
@@ -282,7 +286,7 @@ int fgInitSubsystems( void )
     f->set_Earth_position_angle( 0.0 );
 
     // Mass properties and geometry values
-    f->set_Inertias( 8.547270E+01, 
+    f->set_Inertias( 8.547270E+01,
 		     1.048000E+03, 3.000000E+03, 3.530000E+03, 0.000000E+00 );
 
     // CG position w.r.t. ref. point
@@ -323,21 +327,21 @@ int fgInitSubsystems( void )
     }
 
     // Initialize the planetary subsystem
-    // global_events.Register( "fgPlanetsInit()", fgPlanetsInit, 
+    // global_events.Register( "fgPlanetsInit()", fgPlanetsInit,
     //			    fgEVENT::FG_EVENT_READY, 600000);
 
-    // Initialize the sun's position 
-    // global_events.Register( "fgSunInit()", fgSunInit, 
+    // Initialize the sun's position
+    // global_events.Register( "fgSunInit()", fgSunInit,
     //			    fgEVENT::FG_EVENT_READY, 30000 );
 
     // Intialize the moon's position
-    // global_events.Register( "fgMoonInit()", fgMoonInit, 
+    // global_events.Register( "fgMoonInit()", fgMoonInit,
     //			    fgEVENT::FG_EVENT_READY, 600000 );
 
     // register the periodic update of Sun, moon, and planets
     global_events.Register( "ssolsysUpdate", solarSystemRebuild,
 			    fgEVENT::FG_EVENT_READY, 600000);
-    
+
     // fgUpdateSunPos() needs a few position and view parameters set
     // so it can calculate local relative sun angle and a few other
     // things for correctly orienting the sky.
@@ -374,7 +378,7 @@ int fgInitSubsystems( void )
     // Initialize the flight model subsystem data structures base on
     // above values
 
-    fgFDMInit( current_options.get_flight_model(), cur_fdm_state, 
+    fgFDMInit( current_options.get_flight_model(), cur_fdm_state,
 		       1.0 / DEFAULT_MODEL_HZ );
 
     // I'm just sticking this here for now, it should probably move
@@ -387,7 +391,7 @@ int fgInitSubsystems( void )
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Updated position (after elevation adj): ("
-	    << (f->get_Latitude() * RAD_TO_DEG) << ", " 
+	    << (f->get_Latitude() * RAD_TO_DEG) << ", "
 	    << (f->get_Longitude() * RAD_TO_DEG) << ", "
 	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
     // end of thing that I just stuck in that I should probably move
@@ -412,6 +416,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.72  1999/04/05 02:13:58  curt
+// Minor patch from Norman Vine.
+//
 // Revision 1.71  1999/03/22 02:08:13  curt
 // Changes contributed by Durk Talsma:
 //
