@@ -27,17 +27,12 @@
 
 #include <plib/pu.h>
 
-extern puMenuBar    *mainMenuBar;
-extern puButton     *hideMenuButton;
-extern puDialogBox  *dialogBox;
-extern puText       *dialogBoxMessage;
-extern puOneShot    *dialogBoxOkButton;
-extern puText       *timerText;
-
 extern void guiMotionFunc ( int x, int y );
 extern void guiMouseFunc(int button, int updown, int x, int y);
 extern void guiInit();
+extern void guiToggleMenu(void);
+extern void mkDialog (char *txt);
 
 extern void mkDialog (char *txt);
 
-#endif // _GUI_H_ 
+#endif // _GUI_H_

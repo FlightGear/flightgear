@@ -34,7 +34,7 @@
 
 #include <Debug/logstream.hxx>
 #include <Airports/genapt.hxx>
-// #include <Bucket/bucketutils.hxx>
+#include <Bucket/newbucket.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Misc/fgpath.hxx>
@@ -64,9 +64,9 @@ fgTILECACHE::init( void )
     for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
 	if ( tile_cache[i].used ) {
 	    entry_free(i);
-	    tile_cache[i].tile_bucket.make_bad();
 	}
 	tile_cache[i].used = 0;
+	tile_cache[i].tile_bucket.make_bad();
     }
 }
 

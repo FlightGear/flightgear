@@ -27,7 +27,7 @@
 #endif
 
 #ifdef HAVE_WINDOWS_H
-#  include <windows.h>                     
+#  include <windows.h>
 #endif
 
 #include <Include/compiler.h>
@@ -44,33 +44,41 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <Include/general.hxx>
+#include <Debug/logstream.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
-#include <Autopilot/autopilot.hxx>
-#include <Debug/logstream.hxx>
 #include <FDM/flight.hxx>
-#include <Include/general.hxx>
-#include <Main/fg_init.hxx>
 #include <Main/options.hxx>
+#include <Main/fg_init.hxx>
+#include <Time/fg_time.hxx>
 
 #include "gui.h"
 
 FG_USING_STD(string);
 
+static puMenuBar    *mainMenuBar;
+static puButton     *hideMenuButton;
 
-puMenuBar    *mainMenuBar;
-puButton     *hideMenuButton;
-puDialogBox  *dialogBox;
-puText       *dialogBoxMessage;
-puOneShot    *dialogBoxOkButton;
-puText       *timerText;
+static puDialogBox  *dialogBox;
+static puFrame      *dialogFrame;
+static puText       *dialogBoxMessage;
+static puOneShot    *dialogBoxOkButton;
 
+extern void fgAPAdjust( puObject * );
+// extern void fgLatLonFormatToggle( puObject *);
 /* --------------------------------------------------------------------
-       Mouse stuff 
-  ---------------------------------------------------------------------*/
+Mouse stuff
+---------------------------------------------------------------------*/
+
+static int _mX = 0;
+static int  _mY = 0;
+static int last_buttons = 0 ;
 
 void guiMotionFunc ( int x, int y )
 {
+    _mX = x;
+    _mY = y;
     puMouse ( x, y ) ;
     glutPostRedisplay () ;
 }
@@ -78,9 +86,27 @@ void guiMotionFunc ( int x, int y )
 
 void guiMouseFunc(int button, int updown, int x, int y)
 {
+    _mX = x;
+    _mY = y;
+    if ( updown == PU_DOWN )
+	last_buttons |=  ( 1 << button ) ;
+    else
+	last_buttons &= ~( 1 << button ) ;
+	
     puMouse (button, updown, x,y);
     glutPostRedisplay ();
 }
+
+int guiGetMouseButton(void)
+{
+    return last_buttons;
+}
+
+void guiGetMouse(int *x, int *y)
+{
+    *x = _mX;
+    *y = _mY;
+};
 
 /* -----------------------------------------------------------------------
   the Gui callback functions 
@@ -91,19 +117,49 @@ void reInit(puObject *cb)
     fgReInitSubsystems();
 }
 
+void guiToggleMenu(void)
+{
+    hideMenuButton -> 
+	setValue ((int) !(hideMenuButton -> getValue() ) );
+    hideMenuButton -> invokeCallback();
+}
+	
+
+void MenuHideMenuCb(puObject *cb)
+{
+    mainMenuBar -> hide  ();
+    //	printf("Hiding Menu\n");
+    hideMenuButton -> setLegend ("Show Menu");
+#if defined ( WIN32 ) || defined(__CYGWIN32__)
+    glutSetCursor(GLUT_CURSOR_NONE);
+#else  // I guess this is what we want to do ??
+    //	puHideCursor(); // does not work with VooDoo
+#endif
+}
+
 void hideMenuCb (puObject *cb)
 {
     if (cb -> getValue () )
 	{
 	    mainMenuBar -> reveal();
-	    printf("Showing Menu");
+	    // printf("Showing Menu\n");
 	    hideMenuButton -> setLegend ("Hide Menu");
+#if defined ( WIN32 ) || defined(__CYGWIN32__)
+	    glutSetCursor(GLUT_CURSOR_INHERIT);
+#else  // I guess this is what we want to do ??
+	    //	  puShowCursor(); // does not work with VooDoo
+#endif
 	}
     else
 	{
 	    mainMenuBar -> hide  ();
-	    printf("Hiding Menu");
+	    // printf("Hiding Menu\n");
 	    hideMenuButton -> setLegend ("Show Menu");
+#if defined ( WIN32 ) || defined(__CYGWIN32__)
+	    glutSetCursor(GLUT_CURSOR_NONE);
+#else  // I guess this is what we want to do ??
+	    //	  puHideCursor(); // does not work with VooDoo
+#endif
 	}
 }
 
@@ -118,9 +174,19 @@ void goodBye(puObject *)
 				
     exit(-1);
 }
-	
-void goAwayCb (puObject *)
+
+
+void goAwayCb (puObject *me)
 {
+    delete dialogBoxOkButton;
+    dialogBoxOkButton = NULL;
+	
+    delete dialogBoxMessage;
+    dialogBoxMessage = NULL;
+	
+    delete dialogFrame;
+    dialogFrame = NULL;
+
     delete dialogBox;
     dialogBox = NULL;
 }
@@ -129,9 +195,9 @@ void mkDialog (char *txt)
 {
     dialogBox = new puDialogBox (150, 50);
     {
-	new puFrame (0,0,400, 100);
-	dialogBoxMessage =   new puText         (10, 70);
-	dialogBoxMessage ->  setLabel           (txt);
+	dialogFrame = new puFrame (0,0,400, 100);
+	dialogBoxMessage  =  new puText         (10, 70);
+	dialogBoxMessage  -> setLabel           (txt);
 	dialogBoxOkButton =  new puOneShot      (180, 10, 240, 50);
 	dialogBoxOkButton -> setLegend          ("OK");
 	dialogBoxOkButton -> makeReturnDefault  (TRUE );
@@ -141,6 +207,41 @@ void mkDialog (char *txt)
     dialogBox -> reveal();
 }
 
+void notCb (puObject *)
+{
+    mkDialog ("This function isn't implemented yet");
+}
+
+void helpCb (puObject *)
+{
+    string command;
+	
+#if defined(FX) && !defined(WIN32)
+#  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
+    if ( global_fullscreen ) {
+	global_fullscreen = false;
+	XMesaSetFXmode( XMESA_FX_WINDOW );
+    }
+#  endif
+#endif
+	
+#if !defined(WIN32)
+    string url = "http://www.flightgear.org/Docs/InstallGuide/getstart.html";
+	
+    if ( system("xwininfo -name Netscape > /dev/null 2>&1") == 0 ) {
+	command = "netscape -remote \"openURL(" + url + ")\" &";
+    } else {
+	command = "netscape " + url + " &";
+    }
+#else
+    command = "webrun.bat";
+#endif
+	
+    system( command.c_str() );
+    string text = "Help started in netscape window.";
+	
+    mkDialog (text.c_str());
+}
 
 /// The beginnings of teleportation :-)
 //  Needs cleaning up but works
@@ -156,7 +257,7 @@ static puOneShot       *AptDialogResetButton;
 
 static string AptDialog_OldAptId;
 static string AptDialog_NewAptId;
-static int AptDialog_ValidAptId;
+static int    AptDialog_ValidAptId;
 
 static void validateApt (puObject *inpApt)
 {
@@ -166,8 +267,6 @@ static void validateApt (puObject *inpApt)
     inpApt->getValue(&s);
 
     AptDialog_NewAptId = s;
-
-    FG_LOG( FG_GENERAL, FG_INFO, "Validating apt id = " << s );
 
     if ( AptDialog_NewAptId.length() ) {
 	// set initial position from airport id
@@ -201,6 +300,8 @@ static void validateApt (puObject *inpApt)
 
 void AptDialog_Cancel(puObject *)
 {
+    FGTime *t = FGTime::cur_time_params;
+	
     delete AptDialogResetButton;
     AptDialogResetButton = NULL;
 
@@ -221,6 +322,8 @@ void AptDialog_Cancel(puObject *)
 
     delete AptDialog;
     AptDialog = NULL;
+	
+    t->togglePauseMode();
 }
 
 void AptDialog_OK (puObject *me)
@@ -238,8 +341,11 @@ void AptDialog_Reset(puObject *)
 void NewAirportInit(puObject *cb)
 {
     FGInterface *f;
+    FGTime *t;
+	
     f = current_aircraft.fdm_state;
-
+    t = FGTime::cur_time_params;
+	
     char *AptLabel = "Enter New Airport ID";
     int len = 350/2 - puGetStringWidth(NULL, AptLabel)/2;
 
@@ -261,80 +367,46 @@ void NewAirportInit(puObject *cb)
 	len = 0;
 	AptDialogInput   ->    setCursor         ( len );
 	AptDialogInput   ->    setSelectRegion   ( 5, 9 );
-
-        AptDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
-        AptDialogOkButton     ->     setLegend         ("OK");
-        AptDialogOkButton     ->     makeReturnDefault (TRUE );
-        AptDialogOkButton     ->     setCallback       (AptDialog_OK);
-
-        AptDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
-        AptDialogCancelButton ->     setLegend         ("Cancel");
-        AptDialogCancelButton ->     makeReturnDefault (TRUE );
-        AptDialogCancelButton ->     setCallback       (AptDialog_Cancel);
-
-        AptDialogResetButton  =  new puOneShot         (240, 10, 300, 50);
-        AptDialogResetButton  ->     setLegend         ("Reset");
-        AptDialogResetButton  ->     makeReturnDefault (TRUE );
-        AptDialogResetButton  ->     setCallback       (AptDialog_Reset);
+		
+	AptDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
+	AptDialogOkButton     ->     setLegend         ("OK");
+	AptDialogOkButton     ->     makeReturnDefault (TRUE );
+	AptDialogOkButton     ->     setCallback       (AptDialog_OK);
+		
+	AptDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
+	AptDialogCancelButton ->     setLegend         ("Cancel");
+	AptDialogCancelButton ->     makeReturnDefault (TRUE );
+	AptDialogCancelButton ->     setCallback       (AptDialog_Cancel);
+		
+	AptDialogResetButton  =  new puOneShot         (240, 10, 300, 50);
+	AptDialogResetButton  ->     setLegend         ("Reset");
+	AptDialogResetButton  ->     makeReturnDefault (TRUE );
+	AptDialogResetButton  ->     setCallback       (AptDialog_Reset);
     }
     AptDialog -> close();
     AptDialog -> reveal();
 }
 
 
-void notCb (puObject *)
-{
-    mkDialog ("This function isn't implemented yet");
-}
-
-void helpCb (puObject *)
-{
-    string command;
-
-#if defined(FX) && !defined(WIN32)
-#  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
-    if ( global_fullscreen ) {
-	global_fullscreen = false;
-	XMesaSetFXmode( XMESA_FX_WINDOW );
-    }
-#  endif
-#endif
-
-#if !defined(WIN32)
-    string url = "http://www.flightgear.org/Docs/InstallGuide/getstart.html";
-
-    if ( system("xwininfo -name Netscape > /dev/null 2>&1") == 0 ) {
-	command = "netscape -remote \"openURL(" + url + ")\" &";
-    } else {
-	command = "netscape " + url + " &";
-    }
-#else
-    command = "webrun.bat";
-#endif
-
-    system( command.c_str() );
-    string text = "Help started in netscape window.";
-
-    mkDialog ( (char*)text.c_str() );
-}
-
 /* -----------------------------------------------------------------------
    The menu stuff 
    ---------------------------------------------------------------------*/
-char *fileSubmenu        [] = { "Exit", "Close", "---------", "Print",
-				"---------", "Save", "Reset", NULL };
-char *editSubmenu        [] = { "Edit text", NULL };
-char *viewSubmenu        [] = { "Cockpit View > ", "View >","------------",
-				"View options...", NULL };
-char *aircraftSubmenu    [] = { "Autopilot ...", "Engine ...", "Navigation",
-				"Communication", NULL};
-char *environmentSubmenu [] = { "Airport", "Terrain", "Weather", NULL};
-char *optionsSubmenu     [] = { "Preferences", "Realism & Reliablity...",
-				NULL};
-char *helpSubmenu        [] = { "About...", "Help", NULL };
+char *fileSubmenu        [] = {
+    "Exit", "Close", "---------", "Print", "---------", "Save", "Reset", NULL };
+char *editSubmenu        [] = {
+    "Edit text", NULL };
+char *viewSubmenu        [] = {
+    "Cockpit View > ", "View >","------------", "View options...", NULL };
+char *aircraftSubmenu    [] = {
+    "Autopilot ...", "Engine ...", "Navigation", "Communication", NULL};
+char *environmentSubmenu [] = {
+    "Airport", "Terrain", "Weather", NULL};
+char *optionsSubmenu     [] = {
+    "Preferences", "Realism & Reliablity...", NULL};
+char *helpSubmenu        [] = {
+    "About...", "Help", NULL };
 
-puCallback fileSubmenuCb        [] = { goodBye, hideMenuCb, NULL, notCb,
-				       NULL, notCb, reInit, NULL};
+puCallback fileSubmenuCb        [] = { goodBye, MenuHideMenuCb, NULL, notCb, NULL, notCb, reInit, NULL};
 puCallback editSubmenuCb        [] = { notCb, NULL };
 puCallback viewSubmenuCb        [] = { notCb, notCb, NULL, notCb, NULL };
 puCallback aircraftSubmenuCb    [] = { fgAPAdjust, notCb, notCb, notCb, NULL };
@@ -365,7 +437,7 @@ void guiInit()
 	    // Test for the MESA_GLX_FX env variable
 	    if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
 		// test if we are fullscreen mesa/glide
-		if ( (mesa_win_state[0] == 'f') || 
+		if ( (mesa_win_state[0] == 'f') ||
 		     (mesa_win_state[0] == 'F') ) {
 		    puShowCursor ();
 		}
@@ -380,14 +452,10 @@ void guiInit()
 
     // puSetDefaultStyle         ( PUSTYLE_SMALL_BEVELLED );
     puSetDefaultStyle         ( PUSTYLE_DEFAULT );
-    // puSetDefaultColourScheme  (0.2, 0.4, 0.8, 0.5);
-    puSetDefaultColourScheme  (0.8, 0.8, 0.8, 0.5);
-      
+    //    puSetDefaultColourScheme  (0.2, 0.4, 0.8, 0.5);
+    puSetDefaultColourScheme  (0.8, 0.8, 0.8, 0.4);
     /* OK the rest is largely put in here to mimick Steve Baker's
        "complex" example It should change in future versions */
-      
-    // timerText = new puText (300, 10);
-    // timerText -> setColour (PUCOL_LABEL, 1.0, 1.0, 1.0);
 
     /* Make a button to hide the menu bar */
     hideMenuButton = new puButton       (10,10, 150, 50);
@@ -403,7 +471,7 @@ void guiInit()
     mainMenuBar -> add_submenu ("Edit", editSubmenu, editSubmenuCb);
     mainMenuBar -> add_submenu ("View", viewSubmenu, viewSubmenuCb);
     mainMenuBar -> add_submenu ("Aircraft", aircraftSubmenu, aircraftSubmenuCb);
-    mainMenuBar -> add_submenu ("Environment", environmentSubmenu, 
+    mainMenuBar -> add_submenu ("Environment", environmentSubmenu,
 				environmentSubmenuCb);
     mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
     mainMenuBar -> add_submenu ("Help", helpSubmenu, helpSubmenuCb);

@@ -457,10 +457,13 @@ static void fgMainLoop( void ) {
     FGTime *t;
     static long remainder = 0;
     long elapsed, multi_loop;
-    // int i;
-    // double accum;
+#ifdef FANCY_FRAME_COUNTER
+    int i;
+    double accum;
+#else
     static time_t last_time = 0;
     static int frames = 0;
+#endif // FANCY_FRAME_COUNTER
 
     f = current_aircraft.fdm_state;
     t = FGTime::cur_time_params;
@@ -521,6 +524,25 @@ static void fgMainLoop( void ) {
 	    << ", previous remainder is = " << remainder );
 
     // Calculate frame rate average
+#ifdef FANCY_FRAME_COUNTER
+    /* old fps calculation */
+    if ( elapsed > 0 ) {
+        double tmp;
+        accum = 0.0;
+        for ( i = FG_FRAME_RATE_HISTORY - 2; i >= 0; i-- ) {
+            tmp = general.get_frame(i);
+            accum += tmp;
+            // printf("frame[%d] = %.2f\n", i, g->frames[i]);
+            general.set_frame(i+1,tmp);
+        }
+        tmp = 1000000.0 / (float)elapsed;
+        general.set_frame(0,tmp);
+        // printf("frame[0] = %.2f\n", general.frames[0]);
+        accum += tmp;
+        general.set_frame_rate(accum / (float)FG_FRAME_RATE_HISTORY);
+        // printf("ave = %.2f\n", general.frame_rate);
+    }
+#else
     if ( (t->get_cur_time() != last_time) && (last_time > 0) ) {
 	general.set_frame_rate( frames );
 	FG_LOG( FG_ALL, FG_DEBUG, 
@@ -529,22 +551,7 @@ static void fgMainLoop( void ) {
     }
     last_time = t->get_cur_time();
     ++frames;
-
-    /* old fps calculation
-    if ( elapsed > 0 ) {
-	accum = 0.0;
-	for ( i = FG_FRAME_RATE_HISTORY - 2; i >= 0; i-- ) {
-	    accum += g->frames[i];
-	    // printf("frame[%d] = %.2f\n", i, g->frames[i]);
-	    g->frames[i+1] = g->frames[i];
-	}
-	g->frames[0] = 1000.0 / (float)elapsed;
-	// printf("frame[0] = %.2f\n", g->frames[0]);
-	accum += g->frames[0];
-	g->frame_rate = accum / (float)FG_FRAME_RATE_HISTORY;
-	// printf("ave = %.2f\n", g->frame_rate);
-    }
-    */
+#endif
 
     // Run flight model
     if ( ! use_signals ) {

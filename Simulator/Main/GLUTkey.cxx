@@ -364,9 +364,7 @@ void GLUTspecialkey(int k, int x, int y) {
  	    return;
 	case GLUT_KEY_F10: // F10 toggles menu on and off...
 	    FG_LOG(FG_INPUT, FG_INFO, "Invoking call back function");
-	    hideMenuButton -> 
-		setValue ((int) !(hideMenuButton -> getValue() ) );
-	    hideMenuButton -> invokeCallback();
+	    guiToggleMenu();
 	    //exit(1);
 	    return;
 	case GLUT_KEY_UP:

@@ -71,9 +71,20 @@
 #  define FG_MEM_COPY(to,from,n)        bcopy(from, to, n)
 #endif
 
+
+// Tile loading state
+enum fgTileLoadState {
+    START = 0,
+    INITED = 1,
+    RUNNING = 2
+};
+
+
 // closest (potentially viewable) tiles, centered on current tile.
 // This is an array of pointers to cache indexes.
 int tiles[FG_LOCAL_X_Y];
+
+static fgTileLoadState state = START;
 
 
 // Initialize the Tile Manager subsystem
@@ -84,6 +95,8 @@ int fgTileMgrInit( void ) {
     if ( ! material_mgr.loaded() ) {
 	material_mgr.load_lib();
     }
+
+    state = INITED;
 
     return 1;
 }
@@ -113,7 +126,6 @@ static double point_line_dist_squared( const Point3D& tc, const Point3D& vp,
 				       MAT3vec d )
 {
     MAT3vec p, p0;
-    double dist;
 
     p[0] = tc.x(); p[1] = tc.y(); p[2] = tc.z();
     p0[0] = vp.x(); p0[1] = vp.y(); p0[2] = vp.z();
@@ -349,12 +361,14 @@ int fgTileMgrUpdate( void ) {
     dw = tile_diameter / 2;
     dh = tile_diameter / 2;
 
-    if ( p1 == p_last ) {
+    if ( (p1 == p_last) && (state == RUNNING) ) {
 	// same bucket as last time
 	FG_LOG( FG_TERRAIN, FG_DEBUG, "Same bucket as last time" );
-    } else if ( p_last.get_lon() == -1000 ) {
-	// First time through, initialize the system and load all
-	// relavant tiles
+    } else if ( (state == START) || (state == INITED) ) {
+	state = RUNNING;
+
+	// First time through or we have teleporte, initialize the
+	// system and load all relavant tiles
 
 	FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << p1 );
 	FG_LOG( FG_TERRAIN, FG_INFO, "  First time through ... " );
