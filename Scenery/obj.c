@@ -70,6 +70,7 @@ GLint fgObjLoad(char *path) {
     GLint area;
     FILE *f;
     int first, ncount, vncount, n1, n2, n3, n4;
+    static int use_vertex_norms = 1;
     int i, winding;
     int last1, last2, odd;
 
@@ -150,30 +151,6 @@ GLint fgObjLoad(char *path) {
 
 	    /* printf("(t) = "); */
 
-	    /* try to get the proper rotation by calculating an
-             * approximate normal and seeing if it is close to the
-	     * precalculated normal */
-	    /* v1[0] = nodes[n2][0] - nodes[n1][0];
-	    v1[1] = nodes[n2][1] - nodes[n1][1];
-	    v1[2] = nodes[n2][2] - nodes[n1][2];
-	    v2[0] = nodes[n3][0] - nodes[n1][0];
-	    v2[1] = nodes[n3][1] - nodes[n1][1];
-	    v2[2] = nodes[n3][2] - nodes[n1][2];
-	    MAT3cross_product(approx_normal, v1, v2);
-	    MAT3_NORMALIZE_VEC(approx_normal,temp);
-	    printf("Approx normal = %.2f %.2f %.2f\n", approx_normal[0], 
-		   approx_normal[1], approx_normal[2]);
-	    dot_prod = MAT3_DOT_PRODUCT(normals[n1], approx_normal);
-	    printf("Dot product = %.4f\n", dot_prod); */
-	    /* angle = acos(dot_prod); */
-	    /* printf("Normal ANGLE = %.3f rads.\n", angle); */
-
-	    /* if ( dot_prod < -0.5 ) {
-		xglFrontFace( GL_CW );
-	    } else {
-		xglFrontFace( GL_CCW );
-	    } */
-
 	    xglBegin(GL_TRIANGLE_STRIP);
 
 	    if ( winding ) {
@@ -182,41 +159,45 @@ GLint fgObjLoad(char *path) {
 		odd = 0;
 	    }
 
-	    if ( odd ) {
-		calc_normal(nodes[n1], nodes[n2], nodes[n3], approx_normal);
+	    if ( use_vertex_norms ) {
+		xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
+		xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
+			    nodes[n1][2] - ref.z);
+
+		xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+		xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
+			    nodes[n2][2] - ref.z);
+
+		xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
+		xglVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
+			    nodes[n3][2] - ref.z);
 	    } else {
-		calc_normal(nodes[n2], nodes[n1], nodes[n3], approx_normal);
+		if ( odd ) {
+		    calc_normal(nodes[n1], nodes[n2], nodes[n3], approx_normal);
+		} else {
+		    calc_normal(nodes[n2], nodes[n1], nodes[n3], approx_normal);
+		}
+		xglNormal3dv(approx_normal);
+
+		xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
+			    nodes[n1][2] - ref.z);
+		xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
+			    nodes[n2][2] - ref.z);
+		xglVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
+			    nodes[n3][2] - ref.z);
 	    }
-	    xglNormal3dv(approx_normal);
-
-            /* xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]); */
-	    xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
-			nodes[n1][2] - ref.z);
-
-	    /* xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]); */
-	    xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
-			nodes[n2][2] - ref.z);
-
-	    /* xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]); */
-	    xglVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
-			nodes[n3][2] - ref.z);
 
 	    odd = 1 - odd;
 	    last1 = n2;
 	    last2 = n3;
 
 	    if ( n4 > 0 ) {
-		if ( odd ) {
-		    calc_normal(nodes[last1], nodes[last2], nodes[n4], 
-				approx_normal);
+		if ( use_vertex_norms ) {
+		    xglNormal3d(normals[n4][0], normals[n4][1], normals[n4][2]);
 		} else {
-		    calc_normal(nodes[last2], nodes[last1], nodes[n4], 
-				approx_normal);
+		    calc_normal(nodes[n3], nodes[n2], nodes[n4], approx_normal);
+		    xglNormal3dv(approx_normal);
 		}
-		calc_normal(nodes[n3], nodes[n2], nodes[n4], approx_normal);
-		xglNormal3dv(approx_normal);
-
-		/*xglNormal3d(normals[n4][0], normals[n4][1], normals[n4][2]);*/
 		xglVertex3d(nodes[n4][0] - ref.x, nodes[n4][1] - ref.y, 
 			    nodes[n4][2] - ref.z);
 
@@ -258,16 +239,19 @@ GLint fgObjLoad(char *path) {
 	    sscanf(line, "q %d %d\n", &n1, &n2);
 	    /* printf("read %d %d\n", n1, n2); */
 
-	    if ( odd ) {
-		calc_normal(nodes[last1], nodes[last2], nodes[n1], 
-			    approx_normal);
+	    if ( use_vertex_norms ) {
+		xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
 	    } else {
-		calc_normal(nodes[last2], nodes[last1], nodes[n1], 
-			    approx_normal);
+		if ( odd ) {
+		    calc_normal(nodes[last1], nodes[last2], nodes[n1], 
+				approx_normal);
+		} else {
+		    calc_normal(nodes[last2], nodes[last1], nodes[n1], 
+				approx_normal);
+		}
+		xglNormal3dv(approx_normal);
 	    }
-	    xglNormal3dv(approx_normal);
 
-            /* xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]); */
 	    xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
 			nodes[n1][2] - ref.z);
 	    
@@ -277,16 +261,20 @@ GLint fgObjLoad(char *path) {
 
 	    if ( n2 > 0 ) {
 		/* printf(" (cont)\n"); */
-		if ( odd ) {
-		    calc_normal(nodes[last1], nodes[last2], nodes[n2], 
-				approx_normal);
-		} else {
-		    calc_normal(nodes[last2], nodes[last1], nodes[n2], 
-				approx_normal);
-		}
-		xglNormal3dv(approx_normal);
 
-		/*xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);*/
+		if ( use_vertex_norms ) {
+		    xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+		} else {
+		    if ( odd ) {
+			calc_normal(nodes[last1], nodes[last2], nodes[n2], 
+				    approx_normal);
+		    } else {
+			calc_normal(nodes[last2], nodes[last1], nodes[n2], 
+				    approx_normal);
+		    }
+		    xglNormal3dv(approx_normal);
+		}
+
 		xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
 			    nodes[n2][2] - ref.z);
 
@@ -327,9 +315,12 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.13  1997/12/18 23:32:36  curt
-/* First stab at sky dome actually starting to look reasonable. :-)
+/* Revision 1.14  1997/12/30 01:38:46  curt
+/* Switched back to per vertex normals and smooth shading for terrain.
 /*
+ * Revision 1.13  1997/12/18 23:32:36  curt
+ * First stab at sky dome actually starting to look reasonable. :-)
+ *
  * Revision 1.12  1997/12/17 23:13:47  curt
  * Began working on rendering the sky.
  *

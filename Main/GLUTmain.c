@@ -104,7 +104,7 @@ static void fgInitVisuals() {
     /* xglFogf (GL_FOG_START, 1.0); */
     xglFogf (GL_FOG_END, w->visibility);
     /* xglFogf (GL_FOG_DENSITY, w->visibility); */
-    /* xglHint (GL_FOG_HINT, GL_FASTEST); */
+    xglHint (GL_FOG_HINT, GL_NICEST /* GL_FASTEST */ );
 }
 
 
@@ -178,7 +178,7 @@ static void fgUpdateViewParams() {
     x_10 = x_8 * x_2;
 
     light = pow(1.1, -x_10 / 30.0);
-    ambient = 0.3 * light;
+    ambient = 0.2 * light;
     diffuse = 0.9 * light;
 
     sky_brightness = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
@@ -281,7 +281,7 @@ static void fgRenderFrame( void ) {
     xglPopMatrix();
 
     /* draw scenery */
-    xglShadeModel( GL_FLAT ); 
+    xglShadeModel( GL_SMOOTH ); 
     xglEnable( GL_DEPTH_TEST );
     xglEnable( GL_FOG );
     xglFogfv (GL_FOG_COLOR, l->fog_color);
@@ -623,9 +623,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.39  1997/12/22 23:45:45  curt
-/* First stab at sunset/sunrise sky glow effects.
+/* Revision 1.40  1997/12/30 01:38:37  curt
+/* Switched back to per vertex normals and smooth shading for terrain.
 /*
+ * Revision 1.39  1997/12/22 23:45:45  curt
+ * First stab at sunset/sunrise sky glow effects.
+ *
  * Revision 1.38  1997/12/22 04:14:28  curt
  * Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
  *
