@@ -85,7 +85,7 @@ SubmodelSystem::release (double dt)
   if (elapsed_time < 0.25) return false;
   elapsed_time = 0.0;
 
-  int rval = ai->createBallistic( "Models/Geometry/tracer.ac",
+  int rval = ai->createBallistic( "Models/Geometry/tracer.xml",
         _user_lat_node->getDoubleValue(),
         _user_lon_node->getDoubleValue(),
         _user_alt_node->getDoubleValue() + z_offset,
