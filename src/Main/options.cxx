@@ -839,9 +839,17 @@ parse_option (const string& arg)
 	fgSetString(name.c_str(), value);
 	// SG_LOG(SG_GENERAL, SG_INFO, "Setting default value of property "
 	//        << name << " to \"" << value << '"');
-    // $$$ begin - added VS Renganathan, 14 Oct 2K
-    // for multi-window outside window imagery
+    } else if ( arg.find("--trace-read=") == 0) {
+        string name = arg.substr(13);
+	SG_LOG(SG_GENERAL, SG_INFO, "Tracing reads for property " << name);
+	fgGetNode(name, true)->setAttribute(SGPropertyNode::TRACE_READ, true);
+    } else if ( arg.find("--trace-write=") == 0) {
+        string name = arg.substr(14);
+	SG_LOG(SG_GENERAL, SG_INFO, "Tracing writes for property " << name);
+	fgGetNode(name, true)->setAttribute(SGPropertyNode::TRACE_WRITE, true);
     } else if ( arg.find( "--view-offset=" ) == 0 ) {
+        // $$$ begin - added VS Renganathan, 14 Oct 2K
+        // for multi-window outside window imagery
 	string woffset = arg.substr( 14 );
 	double default_view_offset = 0.0;
 	if ( woffset == "LEFT" ) {
