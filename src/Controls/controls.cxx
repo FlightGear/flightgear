@@ -59,7 +59,10 @@ FGControls::FGControls() :
     elevator_trim( 0.0 ),
     rudder( 0.0 ),
     rudder_trim( 0.0 ),
-    throttle_idle( true )
+    flaps( 0.0 ),
+    parking_brake( 0.0 ),
+    throttle_idle( true ),
+    gear_down( false )
 {
 }
 
@@ -100,7 +103,6 @@ FGControls::init ()
         brake[wheel] = 0.0;
     }
 
-    parking_brake = 0.0;
     auto_coordination = fgGetNode("/sim/auto-coordination", true);
 }
 
