@@ -40,12 +40,12 @@ SG_USING_STD(cout);
 //#include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-//#ifndef FG_NEW_ENVIRONMENT
-//sorry, that works only with the new weather system
-#include <WeatherCM/FGLocalWeatherDatabase.h>
-//#else
-//#  include <Environment/environment.hxx>
-//#endif
+#ifdef FG_NEW_ENVIRONMENT
+# include <Environment/environment_mgr.hxx>
+# include <Environment/environment.hxx>
+#else
+# include <WeatherCM/FGLocalWeatherDatabase.h>
+#endif
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -135,7 +135,6 @@ void FGATIS::Update() {
 
 // Sets the actual broadcast ATIS transmission.
 void FGATIS::UpdateTransmission() {
-#if !defined(FG_NEW_ENVIRONMENT)
     double visibility;
     char buf[10];
     int phonetic_id;
@@ -143,8 +142,14 @@ void FGATIS::UpdateTransmission() {
     string time_str = fgGetString("sim/time/gmt-string");
     int hours;
     // int minutes;
+
+#ifdef FG_NEW_ENVIRONMENT
+    FGEnvironment stationweather =
+      globals->get_environment_mgr()->getEnvironment(lat, lon, elev);
+#else
     sgVec3 position = { lat, lon, elev };
     FGPhysicalProperty stationweather = WeatherDatabase->get(position);
+#endif
 
     transmission = "";
 
@@ -172,7 +177,11 @@ void FGATIS::UpdateTransmission() {
     // Get the temperature
     // (Hardwire it for now since the global property returns the temperature at the current altitude
     //temperature = fgGetDouble("/environment/weather/temperature-K");
+#ifdef FG_NEW_ENVIRONMENT
+    sprintf(buf, "%i", int(stationweather.get_temperature_degc()));
+#else
     sprintf(buf, "%i", int(stationweather.Temperature - 273.15));
+#endif
     transmission += "  Temperature ";
     transmission += buf;
     transmission += " degrees Celsius";
@@ -181,7 +190,11 @@ void FGATIS::UpdateTransmission() {
         // pressure is: stationweather.AirPressure in Pascal
 
 	// Get the visibility
+#ifdef FG_NEW_ENVIRONMENT
+        visibility = stationweather.get_visibility_m();
+#else
 	visibility = fgGetDouble("/environment/visibility-m");
+#endif
 	sprintf(buf, "%i", int(visibility/1600));
 	transmission += "  Visibility ";
 	transmission += buf;
@@ -204,6 +217,18 @@ void FGATIS::UpdateTransmission() {
 	path.append( "runways.mk4" );
 	FGRunways runways( path.c_str() );
 
+#ifdef FG_NEW_ENVIRONMENT
+	double speed = stationweather.get_wind_speed_kt();
+	double hdg = stationweather.get_wind_from_heading_deg();
+	if (speed == 0) {
+	  transmission += "  Winds light and variable";
+	} else {
+				// FIXME: get gust factor in somehow
+	    char buf2[72];
+	    sprintf(buf2, "%s %i %s %i %s", "  Winds ", int(speed),
+		    " knots from ", int(hdg), " degrees");
+	}
+#else
 	//Set the heading to into the wind
         double wind_x = stationweather.Wind[0];
         double wind_y = stationweather.Wind[1];
@@ -228,6 +253,7 @@ void FGATIS::UpdateTransmission() {
 	    sprintf(buf2, "%s %i %s %i %s", "  Winds ", int(speed), " knots from ", int(hdg), " degrees");
 	    transmission += buf2;
 	}
+#endif
 
 	string rwy_no = runways.search(ident, int(hdg));
 	if(rwy_no != (string)"NN") {
@@ -240,9 +266,4 @@ void FGATIS::UpdateTransmission() {
 
 	transmission += "  Advise controller on initial contact you have ";
 	transmission += phonetic_id_string;
-
-#else
-    transmission = "Station unavailable (not supported by FG_NEW_ENVIRONMENT)";
-    //return "Station unavailable (not supported by FG_NEW_ENVIRONMENT)";
-#endif // FG_NEW_ENVIRONMENT
 }

@@ -23,8 +23,13 @@
 #include <Airports/runways.hxx>
 
 #include <simgear/misc/sg_path.hxx>
-#include <WeatherCM/FGLocalWeatherDatabase.h>
 
+#ifdef FG_NEW_ENVIRONMENT
+#include <Environment/environment_mgr.hxx>
+#include <Environment/environment.hxx>
+#else
+#include <WeatherCM/FGLocalWeatherDatabase.h>
+#endif
 
 //Constructor
 FGApproach::FGApproach(){
@@ -184,9 +189,11 @@ void FGApproach::Update() {
 // ============================================================================
 void FGApproach::get_active_runway() {
 
+#ifdef FG_NEW_ENVIRONMENT
+  FGEnvironment stationweather =
+    globals->get_environment_mgr()->getEnvironment(lat, lon, elev);
+#else
   sgVec3 position = { lat, lon, elev };
-
-#ifndef FG_NEW_ENVIRONMENT
   FGPhysicalProperty stationweather = WeatherDatabase->get(position);
 #endif
 
@@ -196,13 +203,11 @@ void FGApproach::get_active_runway() {
   FGRunways runways( path.c_str() );
   
   //Set the heading to into the wind
-#ifndef FG_NEW_ENVIRONMENT
+#ifdef FG_NEW_ENVIRONMENT
+  double hdg = stationweather.get_wind_from_heading_deg();
+#else
   double wind_x = stationweather.Wind[0];
   double wind_y = stationweather.Wind[1];
-#else
-  double wind_x = 0;
-  double wind_y = 0;		// FIXME
-#endif
   
   double speed = sqrt( wind_x*wind_x + wind_y*wind_y ) * SG_METER_TO_NM / (60.0*60.0);
   double hdg;
@@ -218,6 +223,7 @@ void FGApproach::get_active_runway() {
     if (hdg < 0.0)
       hdg += 360.0;
   }
+#endif
   
   FGRunway runway;
   if ( runways.search( ident, int(hdg), &runway) ) {
