@@ -53,12 +53,15 @@ if ( $ENV{FG_ROOT} eq "" ) {
 }
 
 # run Flight Gear
-print "Running $path\n";
-exec($path);
+print "Running $path @ARGV\n";
+exec("$path @ARGV");
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/02/16 16:17:34  curt
+# Minor tweaks.
+#
 # Revision 1.2  1998/01/27 00:47:43  curt
 # Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
 # system and commandline/config file processing code.
