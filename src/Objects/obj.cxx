@@ -150,8 +150,8 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     // set the texture width and height values for this
     // material
     FGMaterial m = fragment.material_ptr->get_m();
-    double tex_width = m.get_xsize();
-    double tex_height = m.get_ysize();
+    // double tex_width = m.get_xsize();
+    // double tex_height = m.get_ysize();
 
     // set ssgState
     state = fragment.material_ptr->get_state();
@@ -182,6 +182,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     }
 
     Point3D cart[4], rel[4];
+    t->nodes.clear();
     for ( int i = 0; i < 4; ++i ) {
 	cart[i] = fgGeodToCart(rad[i]);
 	rel[i] = cart[i] - center;
@@ -213,8 +214,8 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     }
 
     // Build flight gear structure
-    fragment.add_face(1, 2, 3);
-    fragment.add_face(1, 3, 4);
+    fragment.add_face(0, 1, 2);
+    fragment.add_face(0, 2, 3);
     t->fragment_list.push_back(fragment);
 
     // Build ssg structure
