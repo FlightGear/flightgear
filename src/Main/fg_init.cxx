@@ -699,6 +699,7 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
         double oaz = azimuth;
         if ( fabs(fgGetDouble("/sim/presets/offset-azimuth")) > SG_EPSILON ) {
             oaz = fgGetDouble("/sim/presets/offset-azimuth") + 180;
+            heading = tgt_hdg;
         }
         while ( oaz >= 360.0 ) { oaz -= 360.0; }
         geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
@@ -776,6 +777,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
 	if ( fabs(fgGetDouble("/sim/presets/offset-azimuth")) > SG_EPSILON )
 	{
 	    oaz = fgGetDouble("/sim/presets/offset-azimuth") + 180;
+            heading = fgGetDouble("/sim/presets/heading-deg");
 	}
 	while ( oaz >= 360.0 ) { oaz -= 360.0; }
 	geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
