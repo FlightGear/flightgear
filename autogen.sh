@@ -47,7 +47,7 @@ if test "$OSTYPE" = "IRIX" -o "$OSTYPE" = "IRIX64"; then
     echo "Fixing Makefiles for Irix"
     for n in `find . -name Makefile.in`; do \
         mv -f $n $n.ar-new; \
-        sed 's/$(AR) cru /$(AR) -o /g' $n.ar-new > $n; \
+        sed 's/$(AR) cru/$(AR) -o/g' $n.ar-new > $n; \
         rm -f $n.ar-new; \
     done;
 fi
