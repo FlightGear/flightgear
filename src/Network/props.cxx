@@ -484,6 +484,7 @@ FGProps::open()
 bool
 FGProps::close()
 {
+    SG_LOG( SG_IO, SG_INFO, "closing FGProps" );   
     return true;
 }
 

@@ -74,7 +74,12 @@ bool FGHttpd::process() {
 
 
 bool FGHttpd::close() {
-    delete server;
+    SG_LOG( SG_IO, SG_INFO, "closing FGHttpd" );   
+
+    // the following delete causes a seg fault, gdb is not helpful.
+    // delete server;
+
+    set_enabled( false );
 
     return true;
 }

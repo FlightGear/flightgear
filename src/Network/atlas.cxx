@@ -568,6 +568,7 @@ bool FGAtlas::process() {
 
 // close the channel
 bool FGAtlas::close() {
+    SG_LOG( SG_IO, SG_INFO, "closing FGAtlas" );   
     SGIOChannel *io = get_io_channel();
 
     set_enabled( false );

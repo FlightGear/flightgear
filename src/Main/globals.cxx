@@ -21,6 +21,7 @@
 // $Id$
 
 
+#include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
 
@@ -71,10 +72,10 @@ FGGlobals::FGGlobals() :
     acmodel( NULL ),
     model_mgr( NULL ),
     channel_options_list( NULL ),
+    initial_waypoints(0),
     scenery( NULL ),
     tile_mgr( NULL ),
-    io( new FGIO ),
-    initial_waypoints(0)
+    io( new FGIO )
 {
 }
 
@@ -82,17 +83,18 @@ FGGlobals::FGGlobals() :
 // Destructor
 FGGlobals::~FGGlobals() 
 {
-  delete subsystem_mgr;
-  delete event_mgr;
-  delete initial_state;
-  delete props;
-  delete commands;
-  delete io;
+    delete soundmgr;
+    delete subsystem_mgr;
+    delete event_mgr;
+    delete initial_state;
+    delete props;
+    delete commands;
+    delete io;
   
-  // make sure only to delete the initial waypoints list if it acually
-  // still exists. 
-  if (initial_waypoints)
-    delete initial_waypoints;
+    // make sure only to delete the initial waypoints list if it acually
+    // still exists. 
+    if (initial_waypoints)
+        delete initial_waypoints;
 }
 
 

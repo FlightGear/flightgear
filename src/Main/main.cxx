@@ -1442,6 +1442,14 @@ void fgReshape( int width, int height ) {
 
 }
 
+
+// do some clean up on exit.  Specifically we want to call alutExit()
+// which happens in the sound manager destructor.
+void fgExitCleanup() {
+    delete globals;
+}
+
+
 // Main top level initialization
 bool fgMainInit( int argc, char **argv ) {
 
@@ -1453,6 +1461,8 @@ bool fgMainInit( int argc, char **argv ) {
 
     // set default log levels
     sglog().setLogLevels( SG_ALL, SG_ALERT );
+
+    atexit(fgExitCleanup);
 
     string version;
 #ifdef FLIGHTGEAR_VERSION
