@@ -49,7 +49,6 @@ FGRouteMgr::FGRouteMgr() :
     wpn_dist( NULL ),
     wpn_eta( NULL )
 {
-    cout << "route = " << route << endl;
 }
 
 
