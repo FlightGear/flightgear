@@ -66,6 +66,7 @@ void FGView::Init( void ) {
 
     view_offset = 0.0;
     goal_view_offset = 0.0;
+    sgSetVec3( pilot_offset, 0.0, 0.0, 0.0 );
 
     winWidth = current_options.get_xsize();
     winHeight = current_options.get_ysize();
@@ -227,6 +228,12 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     sgSetVec3( vec1, 1.0, 0.0, 0.0 );
     sgXformVec3( view_up, vec1, VIEWo );
 
+    // generate the pilot offset vector in world coordinates
+    sgVec3 pilot_offset_world;
+    sgSetVec3( vec1, 
+	       pilot_offset[2], pilot_offset[1], -pilot_offset[0] );
+    sgXformVec3( pilot_offset_world, vec1, VIEWo );
+
     // generate the view offset matrix
     sgMakeRotMat4( VIEW_OFFSET, view_offset * RAD_TO_DEG, view_up );
     // cout << "VIEW_OFFSET matrix" << endl;
@@ -237,7 +244,10 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     // cout << "VIEW_ROT matrix" << endl;
     // print_sgMat4( VIEW_ROT );
 
-    sgMakeTransMat4( TRANS, view_pos.x(), view_pos.y(), view_pos.z() );
+    sgMakeTransMat4( TRANS, 
+		     view_pos.x() + pilot_offset_world[0],
+		     view_pos.y() + pilot_offset_world[1],
+		     view_pos.z() + pilot_offset_world[2] );
 
     sgMultMat4( VIEW, VIEW_ROT, TRANS );
 

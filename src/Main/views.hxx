@@ -101,6 +101,11 @@ public:
     // view position translated to scenery.center
     Point3D view_pos;
 
+    // pilot offset from center of gravity.  The X axis is positive
+    // out the tail, Y is out the right wing, and Z is positive up.
+    // Distances in meters of course.
+    sgVec3 pilot_offset;
+
     // cartesion coordinates of current lon/lat if at sea level
     // translated to scenery.center
     Point3D cur_zero_elev;
@@ -200,9 +205,13 @@ public:
     inline void set_tris_culled( int tris) { tris_culled = tris; }
     inline Point3D get_abs_view_pos() const { return abs_view_pos; }
     inline Point3D get_view_pos() const { return view_pos; }
+    inline float *get_pilot_offset() { return pilot_offset; }
+    inline void set_pilot_offset( float x, float y, float z ) {
+	sgSetVec3( pilot_offset, x, y, z );
+    }
     inline Point3D get_cur_zero_elev() const { return cur_zero_elev; }
     inline float *get_to_sun() { return to_sun; }
-    inline void set_to_sun( float x, float y, float z) {
+    inline void set_to_sun( float x, float y, float z ) {
 	sgSetVec3( to_sun, x, y, z );
     }
     inline float *get_surface_to_sun() { return surface_to_sun; }
