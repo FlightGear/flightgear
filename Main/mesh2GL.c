@@ -25,7 +25,7 @@
 
 
 #ifdef __CYGWIN32__                                                  
-#  include <Windows32/Base.h>                     
+#  include <windows.h>                     
 #endif
 
 #include <GL/glut.h>
@@ -85,6 +85,7 @@ GLint mesh2GL(struct mesh *m) {
     GLint mesh;
     /* static GLfloat color[4] = { 0.5, 0.4, 0.25, 1.0 }; */ /* dark desert */
     static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
+    double randx, randy;
 
     float x1, y1, x2, y2, z11, z12, z21, z22;
     struct fgCartesianPoint p11, p12, p21, p22;
@@ -185,9 +186,16 @@ GLint mesh2GL(struct mesh *m) {
     }
     */
 
-    for ( i = 0; i < 800; i++ ) {
-	mesh_make_test_object(m->originx + (random() * 3600.0 / RAND_MAX) ,
-			      m->originy + (random() * 3600.0 / RAND_MAX) );
+    for ( i = 0; i < 200; i++ ) {
+#ifdef USE_RAND
+	randx = rand() * 3600.0 / RAND_MAX;
+	randy = rand() * 3600.0 / RAND_MAX;
+#else
+	randx = random() * 3600.0 / RAND_MAX;
+	randy = random() * 3600.0 / RAND_MAX;
+#endif
+
+	mesh_make_test_object(m->originx + randx, m->originy + randy);
     }
 
     glEndList();
@@ -198,9 +206,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.33  1997/07/14 16:26:04  curt
-/* Testing/playing -- placed objects randomly across the entire terrain.
+/* Revision 1.34  1997/07/16 20:04:50  curt
+/* Minor tweaks to aid Win32 port.
 /*
+ * Revision 1.33  1997/07/14 16:26:04  curt
+ * Testing/playing -- placed objects randomly across the entire terrain.
+ *
  * Revision 1.32  1997/07/12 03:50:21  curt
  * Added an #include <Windows32/Base.h> to help compiling for Win32
  *

@@ -29,7 +29,7 @@
 #endif
 
 #ifdef __CYGWIN32__
-#  include <Windows32/Base.h>
+#  include <windows.h>
 #endif
 
 #include <stdio.h>
@@ -265,9 +265,12 @@ double mesh_altitude(double lon, double lat) {
 
 
 /* $Log$
-/* Revision 1.15  1997/07/14 16:26:04  curt
-/* Testing/playing -- placed objects randomly across the entire terrain.
+/* Revision 1.16  1997/07/16 20:04:51  curt
+/* Minor tweaks to aid Win32 port.
 /*
+ * Revision 1.15  1997/07/14 16:26:04  curt
+ * Testing/playing -- placed objects randomly across the entire terrain.
+ *
  * Revision 1.14  1997/07/12 04:01:14  curt
  * Added #include <Windows32/Base.h> to help Win32 compiling.
  *

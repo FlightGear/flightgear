@@ -28,7 +28,7 @@
 #include <stdio.h>
 
 #ifdef __CYGWIN32__                                                  
-#  include <Windows32/Base.h>                     
+#  include <windows.h>                     
 #endif
 
 #include <GL/glut.h>
@@ -160,9 +160,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.14  1997/07/12 03:50:20  curt
-/* Added an #include <Windows32/Base.h> to help compiling for Win32
+/* Revision 1.15  1997/07/16 20:04:47  curt
+/* Minor tweaks to aid Win32 port.
 /*
+ * Revision 1.14  1997/07/12 03:50:20  curt
+ * Added an #include <Windows32/Base.h> to help compiling for Win32
+ *
  * Revision 1.13  1997/06/25 15:39:46  curt
  * Minor changes to compile with rsxnt/win32.
  *
