@@ -1419,15 +1419,17 @@ int mainLoop( int argc, char **argv ) {
     fgInitFGRoot(argc, argv);
 
     // Check for the correct base package version
+    static char required_version[] = "0.7.11pre1";
     string base_version = fgBasePackageVersion();
-    if ( !(base_version == "0.7.11pre1") ) {
+    if ( !(base_version == required_version) ) {
         // tell the operator how to use this application
         fgUsage();
 
 	SG_LOG( SG_GENERAL, SG_ALERT, "Base package check failed ... "
 		<< "Found version " << base_version << " at: "
                 << globals->get_fg_root() );
-        SG_LOG( SG_GENERAL, SG_ALERT, "Please upgrade to version 0.7.9" );
+        SG_LOG( SG_GENERAL, SG_ALERT, "Please upgrade to version"
+                << required_version);
 	exit(-1);
     }
 
