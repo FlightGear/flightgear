@@ -57,6 +57,7 @@ void fgTimeInit(struct fgTIME *t) {
 
     t->gst_diff = -9999.0;
     t->warp = 0;
+    t->warp = 5 * 3600;
     t->warp_delta = 0;
 }
 
@@ -244,7 +245,6 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
     printf("Updating time\n");
 
     /* get current Unix calendar time (in seconds) */
-    /* warp = 60; */
     t->warp += t->warp_delta;
     t->cur_time = time(NULL) + t->warp;
     printf("  Current Unix calendar time = %ld  warp = %ld  delta = %ld\n", 
@@ -298,9 +298,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.26  1998/01/05 18:44:36  curt
-/* Add an option to advance/decrease time from keyboard.
+/* Revision 1.27  1998/01/13 00:23:13  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.26  1998/01/05 18:44:36  curt
+ * Add an option to advance/decrease time from keyboard.
+ *
  * Revision 1.25  1997/12/31 17:46:50  curt
  * Tweaked fg_time.c to be able to use ftime() instead of gettimeofday()
  *

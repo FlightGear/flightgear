@@ -205,19 +205,20 @@ void find_bucket(double lon, double lat, struct bucket *p) {
 
 
 /* Given a lat/lon, fill in the local tile index array */
-void gen_idx_array(struct bucket *p1, long int *tiles, 
+void gen_idx_array(struct bucket *p1, struct bucket *tiles, 
 			  int width, int height) {
-    struct bucket p2;
+    struct bucket *p2;
     int dw, dh, i, j;
 
     dh = height / 2;
     dw = width / 2;
     for ( j = 0; j < height; j++ ) {
 	for ( i = 0; i < width; i++ ) {
-	    offset_bucket(p1, &p2, i - dw, j - dh);
-	    tiles[(j*width)+i] = gen_index(&p2);
+	    offset_bucket(p1, &tiles[(j*width)+i], i - dw, j - dh);
+	    p2 = &tiles[(j*width)+i];
 	    printf("  bucket = %d %d %d %d  index = %ld\n", 
-		   p2.lon, p2.lat, p2.x, p2.y, tiles[(j*width)+i]);
+		   p2->lon, p2->lat, p2->x, p2->y, 
+		   gen_index(&tiles[(j*width)+i]));
 	}
     }
 }
@@ -265,9 +266,13 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/10 00:01:47  curt
-/* Misc api changes and tweaks.
+/* Revision 1.4  1998/01/13 00:23:12  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.3  1998/01/10 00:01:47  curt
+ * Misc api changes and tweaks.
+ *
  * Revision 1.2  1998/01/08 02:22:28  curt
  * Continue working on basic features.
  *

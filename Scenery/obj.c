@@ -63,10 +63,9 @@ void calc_normal(float p1[3], float p2[3], float p3[3], double normal[3])
 
 
 /* Load a .obj file and generate the GL call list */
-GLint fgObjLoad(char *path) {
+GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
     char line[256], winding_str[256];
     double v1[3], v2[3], approx_normal[3], normal[3], dot_prod, scale, temp;
-    struct fgCartesianPoint ref;
     GLint area;
     FILE *f;
     int first, ncount, vncount, n1, n2, n3, n4;
@@ -76,7 +75,8 @@ GLint fgObjLoad(char *path) {
 
     if ( (f = fopen(path, "r")) == NULL ) {
 	printf("Cannot open file: %s\n", path);
-	exit(-1);
+	/* exit(-1); */
+	return(0);
     }
 
     area = xglGenLists(1);
@@ -99,10 +99,10 @@ GLint fgObjLoad(char *path) {
 		       &nodes[ncount][0], &nodes[ncount][1], &nodes[ncount][2]);
 		if ( ncount == 1 ) {
 		    /* first node becomes the reference point */
-		    ref.x = nodes[ncount][0];
-		    ref.y = nodes[ncount][1];
-		    ref.z = nodes[ncount][2];
-		    scenery.center = ref;
+		    ref->x = nodes[ncount][0];
+		    ref->y = nodes[ncount][1];
+		    ref->z = nodes[ncount][2];
+		    /* scenery.center = ref; */
 		}
 		ncount++;
 	    } else {
@@ -166,18 +166,18 @@ GLint fgObjLoad(char *path) {
 	    if ( use_vertex_norms ) {
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
-		xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
-			    nodes[n1][2] - ref.z);
+		xglVertex3d(nodes[n1][0] - ref->x, nodes[n1][1] - ref->y, 
+			    nodes[n1][2] - ref->z);
 
 		MAT3_SCALE_VEC(normal, normals[n2], scale);
 		xglNormal3dv(normal);
-		xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
-			    nodes[n2][2] - ref.z);
+		xglVertex3d(nodes[n2][0] - ref->x, nodes[n2][1] - ref->y, 
+			    nodes[n2][2] - ref->z);
 
 		MAT3_SCALE_VEC(normal, normals[n3], scale);
 		xglNormal3dv(normal);
-		xglVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
-			    nodes[n3][2] - ref.z);
+		xglVertex3d(nodes[n3][0] - ref->x, nodes[n3][1] - ref->y, 
+			    nodes[n3][2] - ref->z);
 	    } else {
 		if ( odd ) {
 		    calc_normal(nodes[n1], nodes[n2], nodes[n3], approx_normal);
@@ -187,12 +187,12 @@ GLint fgObjLoad(char *path) {
 		MAT3_SCALE_VEC(normal, approx_normal, scale);
 		xglNormal3dv(normal);
 
-		xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
-			    nodes[n1][2] - ref.z);
-		xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
-			    nodes[n2][2] - ref.z);
-		xglVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
-			    nodes[n3][2] - ref.z);
+		xglVertex3d(nodes[n1][0] - ref->x, nodes[n1][1] - ref->y, 
+			    nodes[n1][2] - ref->z);
+		xglVertex3d(nodes[n2][0] - ref->x, nodes[n2][1] - ref->y, 
+			    nodes[n2][2] - ref->z);
+		xglVertex3d(nodes[n3][0] - ref->x, nodes[n3][1] - ref->y, 
+			    nodes[n3][2] - ref->z);
 	    }
 
 	    odd = 1 - odd;
@@ -207,8 +207,8 @@ GLint fgObjLoad(char *path) {
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
 		xglNormal3dv(normal);
-		xglVertex3d(nodes[n4][0] - ref.x, nodes[n4][1] - ref.y, 
-			    nodes[n4][2] - ref.z);
+		xglVertex3d(nodes[n4][0] - ref->x, nodes[n4][1] - ref->y, 
+			    nodes[n4][2] - ref->z);
 
 		odd = 1 - odd;
 		last1 = n3;
@@ -230,16 +230,16 @@ GLint fgObjLoad(char *path) {
 	    sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
 
             xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-	    xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
-			nodes[n1][2] - ref.z);
+	    xglVertex3d(nodes[n1][0] - ref->x, nodes[n1][1] - ref->y, 
+			nodes[n1][2] - ref->z);
 
             xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-	    xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
-			nodes[n2][2] - ref.z);
+	    xglVertex3d(nodes[n2][0] - ref->x, nodes[n2][1] - ref->y, 
+			nodes[n2][2] - ref->z);
 
             xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
-	    xglVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
-			nodes[n3][2] - ref.z);
+	    xglVertex3d(nodes[n3][0] - ref->x, nodes[n3][1] - ref->y, 
+			nodes[n3][2] - ref->z);
 	} else if ( line[0] == 'q' ) {
 	    /* continue a triangle strip */
 	    n1 = n2 = 0;
@@ -263,8 +263,8 @@ GLint fgObjLoad(char *path) {
 		xglNormal3dv(normal);
 	    }
 
-	    xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
-			nodes[n1][2] - ref.z);
+	    xglVertex3d(nodes[n1][0] - ref->x, nodes[n1][1] - ref->y, 
+			nodes[n1][2] - ref->z);
 	    
 	    odd = 1 - odd;
 	    last1 = last2;
@@ -288,8 +288,8 @@ GLint fgObjLoad(char *path) {
 		    xglNormal3dv(normal);
 		}
 
-		xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
-			    nodes[n2][2] - ref.z);
+		xglVertex3d(nodes[n2][0] - ref->x, nodes[n2][1] - ref->y, 
+			    nodes[n2][2] - ref->z);
 
 		odd = 1 -odd;
 		last1 = last2;
@@ -307,12 +307,12 @@ GLint fgObjLoad(char *path) {
     xglBegin(GL_LINES);
     xglColor3f(0.0, 0.0, 0.0);
     for ( i = 0; i < ncount; i++ ) {
-        xglVertex3d(nodes[i][0] - ref.x,
- 		    nodes[i][1] - ref.y,
- 		    nodes[i][2] - ref.z);
- 	xglVertex3d(nodes[i][0] - ref.x + 500*normals[i][0],
- 		    nodes[i][1] - ref.y + 500*normals[i][1],
- 		    nodes[i][2] - ref.z + 500*normals[i][2]);
+        xglVertex3d(nodes[i][0] - ref->x,
+ 		    nodes[i][1] - ref->y,
+ 		    nodes[i][2] - ref->z);
+ 	xglVertex3d(nodes[i][0] - ref->x + 500*normals[i][0],
+ 		    nodes[i][1] - ref->y + 500*normals[i][1],
+ 		    nodes[i][2] - ref->z + 500*normals[i][2]);
     } 
     xglEnd();
     */
@@ -328,10 +328,14 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.16  1997/12/30 23:09:40  curt
-/* Worked on winding problem without luck, so back to calling glFrontFace()
-/* 3 times for each scenery area.
+/* Revision 1.17  1998/01/13 00:23:10  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.16  1997/12/30 23:09:40  curt
+ * Worked on winding problem without luck, so back to calling glFrontFace()
+ * 3 times for each scenery area.
+ *
  * Revision 1.15  1997/12/30 20:47:51  curt
  * Integrated new event manager with subsystem initializations.
  *

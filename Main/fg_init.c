@@ -122,6 +122,12 @@ void fgInitSubsystems( void ) {
     /* FG_Latitude  = (  119548.21 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Altitude = 0.0 + 3.758099; */
 
+    /* Initial Posisition near where I used to live in Globe, AZ */
+    /* FG_Longitude = ( -398757.6 / 3600.0 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = (  120160.0 / 3600.0 ) * DEG_TO_RAD; */
+    /* FG_Runway_altitude = 5000.0; */
+    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+
     /* Initial Position: 10125 Jewell St. NE */
     /* FG_Longitude = ( -93.15 ) * DEG_TO_RAD; */
     /* FG_Latitude  = (  45.15 ) * DEG_TO_RAD; */
@@ -130,6 +136,7 @@ void fgInitSubsystems( void ) {
     /* A random test position */
     /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Latitude  = ( 93312.00 / 3600.0 ) * DEG_TO_RAD; */
+
     FG_Runway_altitude = 4000.0;
     FG_Altitude = FG_Runway_altitude + 3.758099;
 
@@ -225,11 +232,12 @@ void fgInitSubsystems( void ) {
 
     /* Initialize the Scenery Management subsystem */
     fgTileMgrInit();
-    fgSceneryInit();
+    /* fgSceneryInit(); */
 
     /* Tell the Scenery Management system where we are so it can load
      * the correct scenery data */
-    fgSceneryUpdate(FG_Latitude, FG_Longitude, FG_Altitude);
+    fgTileMgrUpdate();
+    /* fgSceneryUpdate(FG_Latitude, FG_Longitude, FG_Altitude); */
 
     /* I'm just sticking this here for now, it should probably move 
      * eventually */
@@ -269,9 +277,13 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.29  1998/01/08 02:22:08  curt
-/* Beginning to integrate Tile management subsystem.
+/* Revision 1.30  1998/01/13 00:23:09  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.29  1998/01/08 02:22:08  curt
+ * Beginning to integrate Tile management subsystem.
+ *
  * Revision 1.28  1998/01/07 03:18:58  curt
  * Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
  *

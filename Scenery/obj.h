@@ -34,16 +34,22 @@
 
 #include <GL/glut.h>
 
+#include "../Include/types.h"
+
 
 /* Load a .obj file and generate the GL call list */
-GLint fgObjLoad(char *file);
+GLint fgObjLoad(char *file, struct fgCartesianPoint *ref);
 
 
 #endif /* OBJ_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/10/28 21:14:55  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/13 00:23:10  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.1  1997/10/28 21:14:55  curt
+ * Initial revision.
+ *
  */

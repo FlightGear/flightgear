@@ -33,10 +33,18 @@ void fgTileMgrInit();
 void fgTileMgrUpdate();
 
 
+/* Render the local tiles --- hack, hack, hack */
+void fgTileMgrRender();
+
+
 /* $Log$
-/* Revision 1.1  1998/01/07 23:50:51  curt
-/* "area" renamed to "tile"
+/* Revision 1.2  1998/01/13 00:23:11  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.1  1998/01/07 23:50:51  curt
+ * "area" renamed to "tile"
+ *
  * */
 
 

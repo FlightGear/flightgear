@@ -69,7 +69,7 @@ void find_bucket(double lon, double lat, struct bucket *p);
 
 
 /* Given a lat/lon, fill in the local tile index array */
-void gen_idx_array(struct bucket *p1, long int *tiles, 
+void gen_idx_array(struct bucket *p1, struct bucket *tiles,
 			  int width, int height);
 
 
@@ -77,9 +77,13 @@ void gen_idx_array(struct bucket *p1, long int *tiles,
 
 
 /* $Log$
-/* Revision 1.3  1998/01/10 00:01:48  curt
-/* Misc api changes and tweaks.
+/* Revision 1.4  1998/01/13 00:23:12  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.3  1998/01/10 00:01:48  curt
+ * Misc api changes and tweaks.
+ *
  * Revision 1.2  1998/01/08 02:22:28  curt
  * Continue working on basic features.
  *

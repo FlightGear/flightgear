@@ -283,7 +283,8 @@ static void fgRenderFrame( void ) {
     /* set lighting parameters */
     xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
     xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
-    fgSceneryRender();
+    fgTileMgrRender();
+    /* fgSceneryRender(); */
 
     /* display HUD */
     if( show_hud ) {
@@ -516,7 +517,7 @@ static void fgMainLoop( void ) {
     /* fgAircraftOutputCurrent(a); */
 
     /* see if we need to load any new scenery tiles */
-    fgTileMgrUpdate();
+    /* fgTileMgrUpdate(); */
 
     /* Process/manage pending events */
     fgEventProcess();
@@ -632,9 +633,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.46  1998/01/08 02:22:06  curt
-/* Beginning to integrate Tile management subsystem.
+/* Revision 1.47  1998/01/13 00:23:08  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.46  1998/01/08 02:22:06  curt
+ * Beginning to integrate Tile management subsystem.
+ *
  * Revision 1.45  1998/01/07 03:18:55  curt
  * Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
  *

@@ -31,14 +31,20 @@
 #include <GL/glut.h>
 #include "../XGL/xgl.h"
 
+#include "scenery.h"
 #include "tileutils.h"
+#include "obj.h"
 
 #include "../Aircraft/aircraft.h"
 #include "../Include/constants.h"
+#include "../Include/general.h"
+#include "../Include/types.h"
 
 
 /* here's where we keep the array of closest (potentially viewable) tiles */
-static long int tile[49];
+struct bucket local_tiles[49];
+GLint local_display_lists[49];
+struct fgCartesianPoint local_refs[49];
 
 
 /* Initialize the Tile Manager subsystem */
@@ -52,21 +58,73 @@ void fgTileMgrInit() {
  * the chunk isn't already in the cache, then read it from disk. */
 void fgTileMgrUpdate() {
     struct fgFLIGHT *f;
+    struct fgGENERAL *g;
     struct bucket p;
+    char base_path[256];
+    char file_name[256];
+    int i, j;
 
     f = &current_aircraft.flight;
+    g = &general;
 
     find_bucket(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
     printf("Updating Tile list for %d,%d %d,%d\n", p.lon, p.lat, p.x, p.y);
 
-    gen_idx_array(&p, tile, 7, 7);
+    gen_idx_array(&p, local_tiles, 7, 7);
+
+    /* scenery.center = ref; */
+
+    for ( i = 0; i < 49; i++ ) {
+	gen_base_path(&local_tiles[i], base_path);
+	sprintf(file_name, "%s/Scenery/%s/%ld.obj", 
+		g->root_dir, base_path, gen_index(&local_tiles[i]));
+	local_display_lists[i] = 
+	    fgObjLoad(file_name, &local_refs[i]);
+
+	if ( (local_tiles[i].lon == p.lon) &&
+	     (local_tiles[i].lat == p.lat) &&
+	     (local_tiles[i].x == p.x) &&
+	     (local_tiles[i].y == p.y) ) {
+	    scenery.center = local_refs[i];
+	}
+    }
+}
+
+
+/* Render the local tiles --- hack, hack, hack */
+void fgTileMgrRender() {
+    static GLfloat terrain_color[4] = { 0.6, 0.8, 0.4, 1.0 };
+    static GLfloat terrain_ambient[4];
+    static GLfloat terrain_diffuse[4];
+    int i, j;
+
+    for ( i = 0; i < 4; i++ ) {
+	terrain_ambient[i] = terrain_color[i] * 0.5;
+	terrain_diffuse[i] = terrain_color[i];
+    }
+
+    xglMaterialfv(GL_FRONT, GL_AMBIENT, terrain_ambient);
+    xglMaterialfv(GL_FRONT, GL_DIFFUSE, terrain_diffuse);
+
+    for ( i = 0; i < 49; i++ ) {
+	xglPushMatrix();
+	xglTranslatef(local_refs[i].x - scenery.center.x,
+		      local_refs[i].y - scenery.center.y,
+		      local_refs[i].z - scenery.center.z);
+	xglCallList(local_display_lists[i]);
+	xglPopMatrix();
+    }
 }
 
 
 /* $Log$
-/* Revision 1.2  1998/01/08 02:22:27  curt
-/* Continue working on basic features.
+/* Revision 1.3  1998/01/13 00:23:11  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.2  1998/01/08 02:22:27  curt
+ * Continue working on basic features.
+ *
  * Revision 1.1  1998/01/07 23:50:51  curt
  * "area" renamed to "tile"
  *

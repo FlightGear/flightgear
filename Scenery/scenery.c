@@ -76,7 +76,7 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
 
     printf("  Loading Scenery: %s\n", path);
 
-    area_terrain = fgObjLoad(path);
+    area_terrain = fgObjLoad(path, &scenery.center);
 }
 
 
@@ -100,9 +100,13 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.30  1998/01/07 03:22:29  curt
-/* Moved astro stuff to .../Src/Astro/
+/* Revision 1.31  1998/01/13 00:23:11  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.30  1998/01/07 03:22:29  curt
+ * Moved astro stuff to .../Src/Astro/
+ *
  * Revision 1.29  1997/12/30 20:47:52  curt
  * Integrated new event manager with subsystem initializations.
  *

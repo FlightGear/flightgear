@@ -69,8 +69,8 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     v->view_pos.y -= scenery.center.y;
     v->view_pos.z -= scenery.center.z;
 
-    /* printf("View pos = %.4f, %.4f, %.4f\n", 
-	   v->view_pos.x, v->view_pos.y, v->view_pos.z); */
+    printf("View pos = %.4f, %.4f, %.4f\n", 
+	   v->view_pos.x, v->view_pos.y, v->view_pos.z);
 
     /* make a vector to the current view position */
     MAT3_SET_VEC(v0, v->view_pos.x, v->view_pos.y, v->view_pos.z);
@@ -182,9 +182,13 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
 
 
 /* $Log$
-/* Revision 1.8  1997/12/30 22:22:33  curt
-/* Further integration of event manager.
+/* Revision 1.9  1998/01/13 00:23:09  curt
+/* Initial changes to support loading and management of scenery tiles.  Note,
+/* there's still a fair amount of work left to be done.
 /*
+ * Revision 1.8  1997/12/30 22:22:33  curt
+ * Further integration of event manager.
+ *
  * Revision 1.7  1997/12/30 20:47:45  curt
  * Integrated new event manager with subsystem initializations.
  *
