@@ -42,6 +42,7 @@
 
 #if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(strstream);
+SG_USING_STD(ends);
 #endif
 
 /**
@@ -87,8 +88,6 @@ private:
      * Return a "Node no found" error message to the client.
      */
     void node_not_found_error( const string& node_name );
-
-    void view_cmd( const vector<string>& );
 };
 
 /**
@@ -160,28 +159,6 @@ getValueTypeString( const SGPropertyNode *node )
 /**
  * We have a command.
  * 
- * TODO: possible future commands:
- * panel <subcmd>
- *   panel load [path]
- *   panel mouse <button> up|down|click <x> <y>
- *   panel visible 0|1
- *   panel height -> h, Retrieve panel height
- *   panel width -> w, Retrieve panel width
- *   panel xoffset -> x, Retrieve panel x offset
- *   panel yoffset -> y, Retrieve panel y offset
- *
- * property <subcmd>
- *   property toggle <prop>
- *   property adjust <prop> <step> <offset> <factor> <min> <max> <wrap>
- *   property multiply <prop> <factor>
- *   property swap <prop1> <prop2>
- *   property scale <prop> <setting> <offset> <factor>
- *
- * view <subcmd>
- *   view next
- *   view prev
- *   view set <n>
- *   view current -> n, Retrieve index of current view
  */
 void
 TelnetChannel::foundTerminator()
@@ -260,6 +237,7 @@ TelnetChannel::foundTerminator()
 	    if ( tokens.size() <= 1 )
 	    {
 		writeProperties( buf, node );
+		buf << ends; // null terminate the string
 		push( buf.str() );
 		push( getTerminator() );
 	    }
@@ -269,6 +247,7 @@ TelnetChannel::foundTerminator()
 		if ( child )
 		{
 		    writeProperties ( buf, child );
+		    buf << ends; // null terminate the string
 		    push( buf.str() );
 		    push( getTerminator() );
 		}
@@ -326,13 +305,14 @@ TelnetChannel::foundTerminator()
 		    tmp += "' (";
 		    tmp += getValueTypeString(
 				     node->getNode( tokens[1].c_str() ) );
-		    tmp += ")\n";
+		    tmp += ")";
 		}
 		else
 		{
-		    tmp = value + "\n";
+		    tmp = value;
 		}
 		push( tmp.c_str() );
+		push( getTerminator() );
 	    }
 	}
 	else if ( command == "set" )
@@ -348,8 +328,9 @@ TelnetChannel::foundTerminator()
 		    string value = node->getStringValue ( tokens[1].c_str(), "" );
 		    string tmp = tokens[1] + " = '" + value + "' (";
 		    tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
-		    tmp += ")\n";
+		    tmp += ")";
 		    push( tmp.c_str() );
+		    push( getTerminator() );
 		}
 	    }
 	}
@@ -367,40 +348,22 @@ TelnetChannel::foundTerminator()
 	{
 	    mode = PROMPT;
 	}
-	else if ( command == "view" )
-	{
-	    view_cmd( tokens );
-	}
-// 	else if ( command == "panel" )
-// 	{
-// 	    panel_cmd( tokens );
-// 	}
-// 	else if ( command == "property" )
-// 	{
-// 	    property_cmd( tokens );
-// 	}
 	else
 	{
 	    const char* msg = "\
-Valid commands are:\n\
-\n\
-cd <dir>         cd to a directory, '..' to move back\n\
-data             switch to raw data mode\n\
-dump             dump current state (in xml)\n\
-get <var>        show the value of a parameter\n\
-help             show this help message\n\
-ls [<dir>]       list directory\n\
-prompt           switch to interactive mode (default)\n\
-pwd              display your current path\n\
-quit             terminate connection\n\
-set <var> <val>  set <var> to a new <val>\n\
-show <var>       synonym for get\n\
-view next        display next view\n\
-view prev        display prev view\n\
-view set <n>     display view 'n'\n\
-view get         return current view index\n\
-view current     return current view index\n\
-";
+Valid commands are:\r\n\
+\r\n\
+cd <dir>           cd to a directory, '..' to move back\r\n\
+data               switch to raw data mode\r\n\
+dump               dump current state (in xml)\r\n\
+get <var>          show the value of a parameter\r\n\
+help               show this help message\r\n\
+ls [<dir>]         list directory\r\n\
+prompt             switch to interactive mode (default)\r\n\
+pwd                display your current path\r\n\
+quit               terminate connection\r\n\
+set <var> <val>    set <var> to a new <val>\r\n\
+show <var>         synonym for get\r\n";
 	    push( msg );
 	}
     }
@@ -423,64 +386,17 @@ view current     return current view index\n\
 /**
  * 
  */
-void
-TelnetChannel::view_cmd( const vector<string>& tokens )
-{
-    if (tokens.size() <= 1)
-    {
-	// ERROR: no sub-command
-	return;
-    }
-    string subcmd = tokens[1];
-
-    if (subcmd == "next")
-    {
-	globals->get_current_view()->setHeadingOffset_deg(0.0);
-	globals->get_viewmgr()->next_view();
-    }
-    else if (subcmd == "prev")
-    {
-	globals->get_current_view()->setHeadingOffset_deg(0.0);
-	globals->get_viewmgr()->prev_view();
-    }
-    else if (subcmd == "set")
-    {
-	if (tokens.size() == 3)
-	{
-	    int i = atoi( tokens[2].c_str() );
-	    if (0 >= i && i < globals->get_viewmgr()->size())
-	    {
-		globals->get_current_view()->setHeadingOffset_deg(0.0);
-		globals->get_viewmgr()->set_view(i);
-		globals->get_viewmgr()->copyToCurrent();
-	    }
-	}
-    }
-    else if (subcmd == "get" || subcmd == "current")
-    {
-	int i = globals->get_viewmgr()->get_current();
-	char buf[16];
-	snprintf( buf, sizeof(buf), "%d", i );
-	push( buf );
-	push( getTerminator() );
-    }
-    else
-    {
-	// ERROR: invalid subcommand.
-    }
-}
-
-/**
- * 
- */
 FGTelnet::FGTelnet( const vector<string>& tokens )
 {
-    if (tokens.size() != 2)
-    {
-	throw FGProtocolConfigError( "FGProps: expected 1 argument, <port>" );
-    }
-
-    port = atoi( tokens[1].c_str() );
+    // tokens:
+    //   telnet,port#
+    //   props,medium,direction,hz,hostname,port#,style
+    if (tokens.size() == 2)
+	port = atoi( tokens[1].c_str() );
+    else if (tokens.size() == 7)
+	port = atoi( tokens[5].c_str() );
+    else
+	throw FGProtocolConfigError( "FGTelnet: incorrect number of configuration arguments" );
 }
 
 /**
