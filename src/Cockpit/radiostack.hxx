@@ -37,6 +37,7 @@ class FGRadioStack {
 
     bool nav1_valid;
     bool nav1_inrange;
+    bool nav1_dme;
     bool nav1_loc;
     double nav1_freq;
     double nav1_alt_freq;
@@ -55,6 +56,7 @@ class FGRadioStack {
 
     bool nav2_valid;
     bool nav2_inrange;
+    bool nav2_dme;
     bool nav2_loc;
     double nav2_freq;
     double nav2_alt_freq;
@@ -140,6 +142,7 @@ public:
 
     // Calculated values.
     inline bool get_nav1_inrange() const { return nav1_inrange; }
+    inline bool get_nav1_dme() const { return nav1_dme; }
     inline bool get_nav1_loc() const { return nav1_loc; }
     inline double get_nav1_lon() const { return nav1_lon; }
     inline double get_nav1_lat() const { return nav1_lat; }
@@ -150,6 +153,7 @@ public:
     inline double get_nav1_target_gs() const { return nav1_target_gs; }
 
     inline bool get_nav2_inrange() const { return nav2_inrange; }
+    inline bool get_nav2_dme() const { return nav2_dme; }
     inline bool get_nav2_loc() const { return nav2_loc; }
     inline double get_nav2_lon() const { return nav2_lon; }
     inline double get_nav2_lat() const { return nav2_lat; }

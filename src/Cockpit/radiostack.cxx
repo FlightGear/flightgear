@@ -143,6 +143,7 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
     if ( current_ilslist->query( lon, lat, elev, nav1_freq, &ils ) ) {
 	nav1_valid = true;
 	nav1_loc = true;
+	nav1_dme = true;
 
 	nav1_lon = ils.get_loclon();
 	nav1_lat = ils.get_loclat();
@@ -160,7 +161,7 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
     } else if ( current_navlist->query( lon, lat, elev, nav1_freq, &nav ) ) {
 	nav1_valid = true;
 	nav1_loc = false;
-
+	nav1_dme = nav.get_dme();
 	nav1_lon = nav.get_lon();
 	nav1_lat = nav.get_lat();
 	nav1_elev = nav.get_elev();
@@ -180,6 +181,7 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
     if ( current_ilslist->query( lon, lat, elev, nav2_freq, &ils ) ) {
 	nav2_valid = true;
 	nav2_loc = true;
+	nav2_dme = true;
 
 	nav2_lon = ils.get_loclon();
 	nav2_lat = ils.get_loclat();
@@ -197,6 +199,7 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
     } else if ( current_navlist->query( lon, lat, elev, nav2_freq, &nav ) ) {
 	nav2_valid = true;
 	nav2_loc = false;
+	nav2_dme = nav.get_dme();
 
 	nav2_lon = nav.get_lon();
 	nav2_lat = nav.get_lat();
