@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>         /* for random(), srandom() */
 #include <time.h>           /* for time() to seed srandom() */        
+#include <Main/fg_debug.h>
 
 #include "fg_random.h"
 
@@ -41,7 +42,7 @@
 /* Seed the random number generater with time() so we don't see the
  * same sequence every time */
 void fg_srandom(void) {
-    printf("Seeding random number generater\n");
+    fgPrintf( FG_MATH, FG_INFO, "Seeding random number generater\n");
 
 #ifdef USE_RAND
     srand(time(NULL));
@@ -62,9 +63,13 @@ double fg_random(void) {
 
 
 /* $Log$
-/* Revision 1.2  1997/12/30 20:47:48  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.3  1998/01/27 00:47:59  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.2  1997/12/30 20:47:48  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.1  1997/07/30 16:04:09  curt
  * Moved random routines from Utils/ to Math/
  *

@@ -28,7 +28,7 @@
 #define _POLAR_H
 
 
-#include <Include/types.h>
+#include <Include/fg_types.h>
 
 
 /* Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
@@ -63,9 +63,13 @@ struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p);
 
 
 /* $Log$
-/* Revision 1.6  1998/01/22 02:59:39  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.7  1998/01/27 00:48:00  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.6  1998/01/22 02:59:39  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.5  1998/01/19 19:27:13  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

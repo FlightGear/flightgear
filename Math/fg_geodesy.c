@@ -14,7 +14,7 @@
 #include <math.h>
 
 #include <Math/fg_geodesy.h>
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 
 
 /* ONE_SECOND is pi/180/60/60, or about 100 feet at earths' equator */
@@ -140,6 +140,10 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.4  1998/01/27 00:47:59  curt
+Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+system and commandline/config file processing code.
+
 Revision 1.3  1998/01/19 19:27:12  curt
 Merged in make system changes from Bob Kuehne <rpk@sgi.com>
 This should simplify things tremendously.
@@ -201,10 +205,14 @@ Initial Flight Gear revision.
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 19:27:12  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.4  1998/01/27 00:47:59  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.3  1998/01/19 19:27:12  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.2  1997/12/15 23:54:54  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

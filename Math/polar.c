@@ -28,7 +28,7 @@
 #include <stdio.h>
 
 #include <Math/polar.h>
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 
 
 /* we can save these values between calls for efficiency */
@@ -101,10 +101,14 @@ struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p) {
 
 
 /* $Log$
-/* Revision 1.4  1998/01/19 19:27:12  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.5  1998/01/27 00:48:00  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.4  1998/01/19 19:27:12  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.3  1997/12/15 23:54:54  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.
