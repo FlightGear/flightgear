@@ -35,8 +35,11 @@
 
 $Header$
 $Log$
-Revision 1.1  1999/06/17 18:07:34  curt
-Initial revision
+Revision 1.2  1999/10/29 16:08:32  curt
+Added flaps support to c172 model.
+
+Revision 1.1.1.1  1999/06/17 18:07:34  curt
+Start of 0.7.x branch
 
 Revision 1.2  1999/04/22 18:47:25  curt
 Wrap with extern "C" { } if building with __cplusplus compiler.
@@ -82,6 +85,7 @@ extern "C" {
 
 typedef struct {
     float   long_stick, lat_stick, rudder_pedal;
+    float   flap_handle;
     float   long_trim;
     float   throttle[4];
     short   forward_trim, aft_trim, left_trim, right_trim;
@@ -96,6 +100,7 @@ extern COCKPIT cockpit_;
 #define Left_button	cockpit_.left_pb_on_stick
 #define Right_button	cockpit_.right_pb_on_stick
 #define Rudder_pedal	cockpit_.rudder_pedal
+#define Flap_handle	cockpit_.flap_handle
 #define Throttle	cockpit_.throttle
 #define Throttle_pct	cockpit_.throttle_pct
 #define First_trigger	cockpit_.trig_pos_1

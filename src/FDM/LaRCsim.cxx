@@ -89,6 +89,7 @@ int FGLaRCsim::update( int multiloop ) {
     Long_control = controls.get_elevator();
     Long_trim = controls.get_elevator_trim();
     Rudder_pedal = controls.get_rudder();
+    Flap_handle = 30.0 * controls.get_flaps();
     Throttle_pct = controls.get_throttle( 0 ) * 1.0;
     Brake_pct = controls.get_brake( 0 );
 

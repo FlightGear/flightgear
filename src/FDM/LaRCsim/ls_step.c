@@ -50,8 +50,11 @@
 
 $Header$
 $Log$
-Revision 1.1  1999/06/17 18:07:33  curt
-Initial revision
+Revision 1.2  1999/10/29 16:08:33  curt
+Added flaps support to c172 model.
+
+Revision 1.1.1.1  1999/06/17 18:07:33  curt
+Start of 0.7.x branch
 
 Revision 1.1.1.1  1999/04/05 21:32:45  curt
 Start of 0.6.x branch.
@@ -217,7 +220,7 @@ void ls_step( SCALAR dt, int Initialize ) {
 /* set flag; disable integrators */
 
 		inited = -1;
-		dt = 0;
+		dt = 0.0;
 		
 	}
 

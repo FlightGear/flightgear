@@ -60,6 +60,7 @@
 #include "ls_generic.h"
 #include "ls_cockpit.h"
 #include "ls_constants.h"
+#include "c172_aero.h"
 
 void model_init( void ) {
 
@@ -71,6 +72,8 @@ void model_init( void ) {
   I_yy=1346;
   I_zz=1967;
   I_xz=0;
+  Flap_Position=Flap_handle;
+  Flaps_In_Transit=0;
   
   
 }

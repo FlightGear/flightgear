@@ -5,17 +5,17 @@
    SCALAR CLadot;
    SCALAR CLq;
    SCALAR CLde;
-   SCALAR CLo;
+   SCALAR CLob;
   
   
-   SCALAR Cdo;
+   SCALAR Cdob;
    SCALAR Cda;  /*Not used*/
    SCALAR Cdde;
   
    SCALAR Cma;
    SCALAR Cmadot;
    SCALAR Cmq;
-   SCALAR Cmo; 
+   SCALAR Cmob; 
    SCALAR Cmde;
   
    SCALAR Clbeta;
@@ -42,6 +42,7 @@
    SCALAR b; /*wing span ft */
    SCALAR Sw; /*wing planform surface area ft^2*/
    SCALAR rPiARe; /*reciprocal of Pi*AR*e*/
+   SCALAR lbare;  /*elevator moment arm  MAC*/
    
    SCALAR Weight; /*lbs*/
    SCALAR MaxTakeoffWeight,EmptyWeight;
@@ -49,7 +50,8 @@
    SCALAR Zcg;    /*%MAC*/
   
   
-  SCALAR CLwbh,CL,cm,cd,cn,cy,croll,cbar_2V,b_2V,qS,qScbar,qSb,ps,rs;
+  SCALAR CLwbh,CL,cm,cd,cn,cy,croll,cbar_2V,b_2V,qS,qScbar,qSb;
+  SCALAR CLo,Cdo,Cmo;
   
   SCALAR F_X_wind,F_Y_wind,F_Z_wind;
   
@@ -57,3 +59,8 @@
 
   
   SCALAR elevator, aileron, rudder;
+  
+  SCALAR Flap_Position;
+  /* float Flap_Handle; */
+  int Flaps_In_Transit;
+  
