@@ -39,9 +39,13 @@ noinst_LIBRARIES = libYASim.a
 libYASim_a_SOURCES = YASim.cxx YASim.hxx $(SHARED_SOURCE_FILES)
 
 bin_PROGRAMS = yasim
+noinst_PROGRAMS = proptest
 
 yasim_SOURCES = yasim-test.cpp $(SHARED_SOURCE_FILES)
 
 yasim_LDADD = -lsgxml -lsgprops -lsgmisc -lsgdebug -lsgstructure  $(base_LIBS)
+
+proptest_SOURCES = proptest.cpp $(SHARED_SOURCE_FILES)
+proptest_LDADD = -lsgxml -lsgprops -lsgmisc -lsgdebug -lsgstructure  $(base_LIBS)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

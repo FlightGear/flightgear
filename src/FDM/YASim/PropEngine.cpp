@@ -111,14 +111,20 @@ void PropEngine::stabilize()
     bool goingUp = false;
     float step = 10;
     while(true) {
-	float ptau, dummy;
-	_prop->calc(_rho, speed, _omega * _gearRatio, &dummy, &ptau);
+	float ptau, thrust;
+	_prop->calc(_rho, speed, _omega * _gearRatio, &thrust, &ptau);
 	_eng->calc(_pressure, _temp, _omega);
         _eng->stabilize();
+
+        // Compute torque as seen by the engine's end of the
+        // gearbox.
+        ptau *= _gearRatio;
         float etau = _eng->getTorque();
 	float tdiff = etau - ptau;
+        
+        Math::mul3(thrust, _dir, _thrust);
 
-	if(Math::abs(tdiff/_moment) < 0.1)
+	if(Math::abs(tdiff/(_moment * _gearRatio)) < 0.1)
 	    break;
 
 	if(tdiff > 0) {
@@ -166,16 +172,20 @@ void PropEngine::integrate(float dt)
     // Turn the thrust into a vector and save it
     Math::mul3(thrust, _dir, _thrust);
 
+    // We do our "RPM" computations on the engine's side of the
+    // world, so modify the moment value accordingly.
+    float momt = _moment * _gearRatio;
+
     // Euler-integrate the RPM.  This doesn't need the full-on
     // Runge-Kutta stuff.
-    float rotacc = (engTorque-propTorque)/Math::abs(_moment);
+    float rotacc = (engTorque-propTorque)/Math::abs(momt);
     _omega += dt * rotacc;
     if (_omega < 0)
         _omega = 0 - _omega;    // don't allow negative RPM
                                 // FIXME: introduce proper windmilling
 
     // Store the total angular momentum into _gyro
-    Math::mul3(_omega*_moment, _dir, _gyro);
+    Math::mul3(_omega*momt, _dir, _gyro);
 
     // Accumulate the engine torque, it acts on the body as a whole.
     // (Note: engine torque, not propeller torque.  They can be
@@ -201,7 +211,7 @@ void PropEngine::integrate(float dt)
 
 	// Convert to an acceleration here, so that big propellers
 	// don't seek faster than small ones.
-	float diff = Math::abs((propTorque - targetTorque) / _moment);
+	float diff = Math::abs((propTorque - targetTorque) / momt);
 	if(diff < 10) mod = 1 + (mod-1)*(0.1f*diff);
 
 	_prop->modPitch(mod);
