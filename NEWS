@@ -1,3 +1,35 @@
+New in 0.7.2
+* Lots of code reorganizations
+* Build requires plib-1.1.x
+* Build requires SimGear-0.0.x
+* LaRCsim/c172 is now the default aircraft model.
+* Added flaps support to control model.
+* Lots of updates and tweaks for the LaRCsim/c172 model.
+* Use a more standard texture/blend mode combination for sun/moon halos to
+  avoid render path that's not supported by all cards/drivers.
+* Change reported speed on hud from V_equiv_kts to V_calibrated_kts
+* Instrument panel rewrite by David Megginson.  This isn't quite as flashy
+  as the first pass, but is much more functional, plays much better with 
+  opengl, and it should be relatively easy for someone with graphical skills
+  to make it look more spiffy.
+* MacOS fixes contributed by Darrell Walisser.
+* Many JSBsim updates.
+* Added a screen snapshot facility (F3).
+* Added a load/save state function contributed by David Megginson.
+* Added support for various I/O protocols and channels so that flightgear
+  can communicate with itself and other programs through a variety of means.
+* Bug fix:  The aircraft model used for external views was being included in 
+  the height above terrain check so when the view position and the aircraft
+  model collided the current altitude kept getting pushed up to compensate,
+  but of course the aircraft model would get pushed up as well because it
+  tracks the current aircraft position and orientation.  Thus you had a never
+  ending cycle ...
+* Oliver's multiplayer network code now moved to his own subdirectory:
+  NetworkOLK
+* Added simulated cloud puffs as we pass through the cloud layer.
+* Cleaned up some memory leaks occuring between ssg and flightgear.
+* Update to Christian's weather data base code.
+
 New in 0.7.1
 * Durk Talsma added a nifty cloud layer.
 * Default to Christian Mayer's new weather system.

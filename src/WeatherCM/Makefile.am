@@ -1,5 +1,7 @@
 noinst_LIBRARIES = libWeatherCM.a
 
+EXTRA_DIST = linintp2.h linintp2.inl sphrintp.h sphrintp.inl
+
 libWeatherCM_a_SOURCES = \
 	FGAirPressureItem.cpp FGAirPressureItem.h \
 	FGCloud.h FGCloudItem.cpp FGCloudItem.h \

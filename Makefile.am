@@ -51,15 +51,15 @@ jsbsim-data:
 fgfs-docs: fgfs-docs-tar fgfs-manual-zip
 
 fgfs-docs-tar:
-	( cd .. ; \
+	( cd ../.. ; \
 	tar czvf fgfs-docs-$(VERSION).tar.gz FlightGear/docs )
 
 # fgfs-docs-zip:
-# 	( cd .. ; \
+# 	( cd ../.. ; \
 # 	zip -r fgfs-docs-$(VERSION).zip FlightGear/docs )
 
 fgfs-manual-zip:
-	( cd .. ; \
+	( cd ../.. ; \
 	zip -r fgfs-manual-$(VERSION).zip FlightGear/docs/InstallGuide )
 
 # make the win32-bin distribution
