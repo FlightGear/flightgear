@@ -250,34 +250,28 @@ FGIO::update( double delta_time_sec )
 {
     // cout << "processing I/O channels" << endl;
 
-    static int inited = 0;
-    int interval;
-    static SGTimeStamp last;
-    SGTimeStamp current;
-
-    if ( ! inited ) {
-	inited = 1;
-	last.stamp();
-	interval = 0;
-    } else {
-        current.stamp();
-	interval = current - last;
-	last = current;
-    }
+    // SGTimeStamp current_time;
+    // current_time.stamp();
+    // static SGTimeStamp start_time = current_time;
+    // double elapsed_time = (current_time - start_time) / 1000000.0;
+    // cout << " Elapsed time = " << elapsed_time << endl;
 
     typedef vector< FGProtocol* > container;
     container::iterator i = io_channels.begin();
     container::iterator end = io_channels.end();
-    for (; i != end; ++i )
-    {
+    for (; i != end; ++i ) {
 	FGProtocol* p = *i;
 
 	if ( p->is_enabled() ) {
-	    p->dec_count_down( interval );
-	    while ( p->get_count_down() < 0 ) {
+	    p->dec_count_down( delta_time_sec );
+            double dt = 1 / p->get_hz();
+	    while ( p->get_count_down() < 0.33 * dt ) {
 		p->process();
-		p->dec_count_down(int( -1000000.0 / p->get_hz()));
+		p->inc_count_down( dt );
+                p->inc_count();
 	    }
+            // double ave = elapsed_time / p->get_count();
+            // cout << "  ave rate = " << ave << endl;
 	}
     }
 }
