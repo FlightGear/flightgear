@@ -78,11 +78,11 @@ void FGAIPlane::Update(double dt) {
 	// TODO - turn it off if user switches to another freq - keep track of where in message we are etc.
 	if(_transmit) {
 		double user_freq0 = fgGetDouble("/radios/comm[0]/frequencies/selected-mhz");
-		//comm1 is not used yet.
+		double user_freq1 = fgGetDouble("/radios/comm[1]/frequencies/selected-mhz");
 		_counter = 0.0;
 		_max_count = 5.0;		// FIXME - hardwired length of message - need to calculate it!
 		
-		if(freq == user_freq0) {
+		if(freq == user_freq0 || freq == user_freq1) {
 			//cout << "Transmitting..." << endl;
 			// we are on the same frequency, so check distance to the user plane
 			if(1) {
