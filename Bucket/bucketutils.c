@@ -1,27 +1,25 @@
-/**************************************************************************
- * bucketutils.c -- support routines to handle fgBUCKET operations
- *
- * Written by Curtis Olson, started January 1998.
- *
- * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * $Id$
- * (Log is kept at end of this file)
- **************************************************************************/
+// bucketutils.c -- support routines to handle fgBUCKET operations
+//
+// Written by Curtis Olson, started January 1998.
+//
+// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
 
 
 #include <math.h>
@@ -49,13 +47,13 @@ long int fgBucketGenIndex( const fgBUCKET *p) {
     long index = 0;
 
     index = ((p->lon + 180) << 14) + ((p->lat + 90) << 6) + (p->y << 3) + p->x;
-    /* printf("  generated index = %ld\n", index); */
+    // printf("  generated index = %ld\n", index);
 
     return(index);
 }
 
 
-/* Parse a unique scenery tile index and find the lon, lat, x, and y */
+// Parse a unique scenery tile index and find the lon, lat, x, and y
 void fgBucketParseIndex(long int index, fgBUCKET *p) {
     p->lon = index >> 14;
     index -= p->lon << 14;
@@ -72,7 +70,7 @@ void fgBucketParseIndex(long int index, fgBUCKET *p) {
 }
 
 
-/* Build a path name from an tile index */
+// Build a path name from an tile index
 void fgBucketGenBasePath( const fgBUCKET *p, char *path) {
     long int index;
     int top_lon, top_lat, main_lon, main_lat;
@@ -120,7 +118,7 @@ void fgBucketGenBasePath( const fgBUCKET *p, char *path) {
 }
 
 
-/* offset an bucket struct by the specified amounts in the X & Y direction */
+// offset an bucket struct by the specified amounts in the X & Y direction
 void fgBucketOffset(fgBUCKET *in, fgBUCKET *out, int x, int y) {
     int diff, temp;
     int dist_lat;
@@ -130,9 +128,9 @@ void fgBucketOffset(fgBUCKET *in, fgBUCKET *out, int x, int y) {
     out->x = in->x;
     out->y = in->y;
 
-    /* do X direction */
+    // do X direction
     diff = out->x + x;
-    /* printf("      reducing x (%d)\n", diff); */
+    // printf("      reducing x (%d)\n", diff);
     if ( diff >= 0 ) {
 	temp = diff / 8;
     } else if ( diff < -7 ) {
@@ -143,9 +141,9 @@ void fgBucketOffset(fgBUCKET *in, fgBUCKET *out, int x, int y) {
     out->x = ((diff % 8) + 8) % 8;
     out->lon = ( (out->lon + 180 + 360 + temp) % 360 ) - 180;
 
-    /* do Y direction */
+    // do Y direction
     diff = out->y + y;
-    /* printf("      reducing x (%d)\n", diff); */
+    // printf("      reducing x (%d)\n", diff);
     if ( diff >= 0 ) {
 	temp = diff / 8;
     } else if ( diff < -7 ) {
@@ -158,7 +156,7 @@ void fgBucketOffset(fgBUCKET *in, fgBUCKET *out, int x, int y) {
 
     if ( out->lat >= 90 ) {
 	dist_lat = out->lat - 90;
-	/* printf("      +lat = %d  +y = %d\n", dist_lat, out->y); */
+	// printf("      +lat = %d  +y = %d\n", dist_lat, out->y);
 	
 	out->lat = 90 - (dist_lat + 1);
 	out->lon = ( (out->lon + 180 + 180) % 360 ) - 180;
@@ -167,7 +165,7 @@ void fgBucketOffset(fgBUCKET *in, fgBUCKET *out, int x, int y) {
 
     if ( out->lat < -90 ) {
 	dist_lat = -90 - out->lat;
-	/* printf("      +lat = %d  +y = %d\n", dist_lat, out->y); */
+	// printf("      +lat = %d  +y = %d\n", dist_lat, out->y);
 	
 	out->lat = -90 + (dist_lat - 1);
 	out->lon = ( (out->lon + 180 + 180) % 360 ) - 180;
@@ -176,37 +174,37 @@ void fgBucketOffset(fgBUCKET *in, fgBUCKET *out, int x, int y) {
 }
 
 
-/* Given a lat/lon in degrees, find the "bucket" or tile that it falls
-   within */
+// Given a lat/lon in degrees, find the "bucket" or tile that it falls
+// within
 void fgBucketFind(double lon, double lat, fgBUCKET *p) {
     double diff;
 
     diff = lon - (double)(int)lon;
-    /* printf("diff = %.2f\n", diff); */
+    // printf("diff = %.2f\n", diff);
     if ( (lon >= 0) || (fabs(diff) < FG_EPSILON) ) {
 	p->lon = (int)lon;
     } else {
 	p->lon = (int)lon - 1;
     }
-    /* printf("  p->lon = %d\n", p->lon); */
+    // printf("  p->lon = %d\n", p->lon);
 
     diff = lat - (double)(int)lat;
-    /* printf("diff = %.2f\n", diff); */
+    // printf("diff = %.2f\n", diff);
     if ( (lat >= 0) || (fabs(diff) < FG_EPSILON) ) {
 	p->lat = (int)lat;
     } else {
 	p->lat = (int)lat - 1;
     }
-    /* printf("  p->lat = %d\n", p->lat); */
+    // printf("  p->lat = %d\n", p->lat);
 
     p->x = (int)((lon - p->lon) * 8);
     p->y = (int)((lat - p->lat) * 8);
-    /* printf( "Bucket = lon,lat = %d,%d  x,y index = %d,%d\n", 
-	    p->lon, p->lat, p->x, p->y); */
+    // printf( "Bucket = lon,lat = %d,%d  x,y index = %d,%d\n", 
+    //	       p->lon, p->lat, p->x, p->y);
 }
 
 
-/* Given a lat/lon, fill in the local tile index array */
+// Given a lat/lon, fill in the local tile index array
 void fgBucketGenIdxArray(fgBUCKET *p1, fgBUCKET *tiles, int width, int height) {
     fgBUCKET *p2;
     int dw, dh, i, j;
@@ -266,61 +264,63 @@ int main() {
 } */
 
 
-/* $Log$
-/* Revision 1.4  1998/12/07 21:08:01  curt
-/* Added a const in a couple places to get rid of annoying compiler warnings.
-/*
- * Revision 1.3  1998/07/04 00:46:47  curt
- * typedef'd struct fgBUCKET.
- *
- * Revision 1.2  1998/04/25 22:06:22  curt
- * Edited cvs log messages in source files ... bad bad bad!
- *
- * Revision 1.1  1998/04/08 23:28:58  curt
- * Adopted Gnu automake/autoconf system.
- *
- * Revision 1.6  1998/02/09 15:07:51  curt
- * Minor tweaks.
- *
- * Revision 1.5  1998/01/29 00:51:38  curt
- * First pass at tile cache, dynamic tile loading and tile unloading now works.
- *
- * Revision 1.4  1998/01/27 03:26:41  curt
- * Playing with new fgPrintf command.
- *
- * Revision 1.3  1998/01/27 00:48:01  curt
- * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
- * system and commandline/config file processing code.
- *
- * Revision 1.2  1998/01/24 00:03:28  curt
- * Initial revision.
- *
- * Revision 1.1  1998/01/23 20:06:51  curt
- * tileutils.* renamed to bucketutils.*
- *
- * Revision 1.6  1998/01/19 19:27:18  curt
- * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
- * This should simplify things tremendously.
- *
- * Revision 1.5  1998/01/14 02:19:04  curt
- * Makde offset_bucket visible to outside.
- *
- * Revision 1.4  1998/01/13 00:23:12  curt
- * Initial changes to support loading and management of scenery tiles.  Note,
- * there's still a fair amount of work left to be done.
- *
- * Revision 1.3  1998/01/10 00:01:47  curt
- * Misc api changes and tweaks.
- *
- * Revision 1.2  1998/01/08 02:22:28  curt
- * Continue working on basic features.
- *
- * Revision 1.1  1998/01/07 23:50:52  curt
- * "area" renamed to "tile"
- *
- * Revision 1.1  1998/01/07 23:23:40  curt
- * Initial revision.
- *
- * */
+// $Log$
+// Revision 1.5  1998/12/09 18:48:08  curt
+// Use C++ style comments.
+//
+// Revision 1.4  1998/12/07 21:08:01  curt
+// Added a const in a couple places to get rid of annoying compiler warnings.
+//
+// Revision 1.3  1998/07/04 00:46:47  curt
+// typedef'd struct fgBUCKET.
+//
+// Revision 1.2  1998/04/25 22:06:22  curt
+// Edited cvs log messages in source files ... bad bad bad!
+//
+// Revision 1.1  1998/04/08 23:28:58  curt
+// Adopted Gnu automake/autoconf system.
+//
+// Revision 1.6  1998/02/09 15:07:51  curt
+// Minor tweaks.
+//
+// Revision 1.5  1998/01/29 00:51:38  curt
+// First pass at tile cache, dynamic tile loading and tile unloading now works.
+//
+// Revision 1.4  1998/01/27 03:26:41  curt
+// Playing with new fgPrintf command.
+//
+// Revision 1.3  1998/01/27 00:48:01  curt
+// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
+// system and commandline/config file processing code.
+//
+// Revision 1.2  1998/01/24 00:03:28  curt
+// Initial revision.
+//
+// Revision 1.1  1998/01/23 20:06:51  curt
+// tileutils.* renamed to bucketutils.*
+//
+// Revision 1.6  1998/01/19 19:27:18  curt
+// Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+// This should simplify things tremendously.
+//
+// Revision 1.5  1998/01/14 02:19:04  curt
+// Makde offset_bucket visible to outside.
+//
+// Revision 1.4  1998/01/13 00:23:12  curt
+// Initial changes to support loading and management of scenery tiles.  Note,
+// there's still a fair amount of work left to be done.
+//
+// Revision 1.3  1998/01/10 00:01:47  curt
+// Misc api changes and tweaks.
+//
+// Revision 1.2  1998/01/08 02:22:28  curt
+// Continue working on basic features.
+//
+// Revision 1.1  1998/01/07 23:50:52  curt
+// "area" renamed to "tile"
+//
+// Revision 1.1  1998/01/07 23:23:40  curt
+// Initial revision.
+//
 
 
