@@ -80,8 +80,8 @@ static string getValueTypeString( const SGPropertyNode *node ) {
     }
 
     SGPropertyNode::Type type = node->getType();
-    if ( type == SGPropertyNode::UNKNOWN ) {
-	result = "unknown";
+    if ( type == SGPropertyNode::UNSPECIFIED ) {
+	result = "unspecified";
     } else if ( type == SGPropertyNode::BOOL ) {
 	result = "bool";
     } else if ( type == SGPropertyNode::INT ) {
