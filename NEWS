@@ -1,4 +1,5 @@
 New in 0.54
+* Implimented audio envelopes so that pitch of engine changes with throttle
 * Textured moon, and rewritten/restructured Astro code.
 * More optimizations and code cleanups.  (Norman Vine, Bernie Bright, Charlie
   Hotchkiss.)

@@ -3,8 +3,43 @@
 # Use "make -f Makefile.extra <target>
 
 
-VERSION=0.41
-ROOT=fg-$(VERSION)
+VERSION=0.54
+FG_ROOT=$(HOME)/FlightGear
+
+# make the base distribution with textures, sounds and a bit of
+# scenery, and all the other associated files
+fg-base-tar:
+	(cd $(HOME); \
+	tar czvf fgfs-base-$(VERSION).tar.gz \
+	FlightGear/[A-R]* \
+	FlightGear/Scenery/w120n030/w111n033 \
+	FlightGear/Sounds \
+	FlightGear/Textures FlightGear/Thanks \
+	FlightGear/[m-r]* )
+
+fg-base-zip:
+	(cd $(HOME); \
+	zip -r fgfs-base-$(VERSION).zip \
+	FlightGear/[A-R]* \
+	FlightGear/Scenery/w120n030/w111n033 \
+	FlightGear/Sounds \
+	FlightGear/Textures FlightGear/Thanks \
+	FlightGear/[m-r]* )
+
+# make the win32-bin distribution
+fg-win32-bin:
+	(cd $(HOME); \
+	zip -r fgfs-win32-bin-$(VERSION).zip FlightGear/bin )
+
+# make the win32-libs distribution
+win32-libs:
+	( zip -r win32-libs-$(VERSION).zip Win32/Makefile \
+	Win32/README.glut Win32/cygwinb19.dll Win32/def \
+	Win32/*.exp Win32/gen-def-from-errors.pl \
+	Win32/glut.dll Win32/glut32.dll Win32/impdef.cpp \
+	Win32/impdef.exe Win32/include \
+	Win32/install.exe \
+	Win32/lib Win32/zlib.lib )
 
 # clean up dependencies
 clean-deps:
@@ -14,6 +49,7 @@ clean-deps:
 	Lib/*/*/.deps Simulator/*/*/.deps Tools/*/*/.deps \
 	Tests/.deps
 
+# clean up after libtool
 clean-libs:
 	rm -rf .libs Lib/.libs Simulator/.libs Tools/.libs \
 		Lib/*/.libs Simulator/*/.libs Tools/*/.libs \

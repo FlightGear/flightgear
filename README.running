@@ -40,8 +40,18 @@ Num Lock Inactive
     6 = right
     9 = right/forward
 
+Brakes
+------
+    Press the "b" key to toggle
+
 Autopilot
 ---------
     Shift + A               Enable autopilot (defaults to heading of 000)
     Shift + S               Disable autopilot
     Shift + D               Lock autopilot heading to current heading
+
+Other
+-----
+    F8 = Toggle fog modes
+    F9 = Toggle textures on/off
+    F10 = Toggle menu
