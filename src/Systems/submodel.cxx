@@ -64,7 +64,7 @@ SubmodelSystem::update (double dt)
   while(submodel_iterator != submodels.end()) {
     i++;
     if ((*submodel_iterator)->trigger->getBoolValue()) {
-        if ((*submodel_iterator)->count > 0) {
+        if ((*submodel_iterator)->count != 0) {
           release( (*submodel_iterator), dt);
          // now update the "count" property for this submodel
          char name[80];
@@ -90,7 +90,7 @@ SubmodelSystem::release (submodel* sm, double dt)
   int rval = ai->createBallistic( sm->model, IC.lat, IC.lon, IC.alt, IC.azimuth,
                                   IC.elevation, IC.speed, sm->drag_area, sm->life );
   //cout << "Submodel created." << endl;
-  (sm->count)--; 
+  if (sm->count > 0) (sm->count)--; 
 
   return true;                    
 }
