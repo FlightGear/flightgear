@@ -101,7 +101,6 @@ int jsInput::getInput(void){
 
         ulMilliSecondSleep(1);
       }
-#if 0
       if(button_bits != 0) {
         for(int i=1;i<=31;i++) {
           if( ( button_bits & (1 << i) ) > 0 ) {
@@ -110,9 +109,6 @@ int jsInput::getInput(void){
           } 
         }    
       } 
-#else
-      button = button_bits;
-#endif
 
       return 0;
 }
