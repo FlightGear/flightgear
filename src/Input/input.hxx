@@ -51,7 +51,7 @@ SG_USING_STD(vector);
  * keyboard key, a joystick button or axis, or even a panel
  * instrument.</p>
  */
-class FGBinding
+class FGBinding : public FGConditional
 {
 public:
 
@@ -59,12 +59,6 @@ public:
    * Default constructor.
    */
   FGBinding ();
-
-
-  /**
-   * Copy constructor.
-   */
-  FGBinding (const FGBinding &binding);
 
 
   /**
@@ -206,7 +200,7 @@ private:
   };
 
 
-  typedef vector<FGBinding> binding_list_t;
+  typedef vector<FGBinding *> binding_list_t;
 
   /**
    * Settings for a key or button.
@@ -216,6 +210,11 @@ private:
       : is_repeatable(false),
 	last_state(-1)
     {}
+    virtual ~button () {
+      for (int i = 0; i < FG_MOD_MAX; i++)
+	for (int j = 0; i < bindings[i].size(); j++)
+	  delete bindings[i][j];
+    }
     bool is_repeatable;
     int last_state;
     binding_list_t bindings[FG_MOD_MAX];
@@ -232,6 +231,11 @@ private:
 	low_threshold(-0.9),
 	high_threshold(0.9)
     {}
+    virtual ~axis () {
+      for (int i = 0; i < FG_MOD_MAX; i++)
+	for (int j = 0; i < bindings[i].size(); j++)
+	  delete bindings[i][j];
+    }
     float last_value;
     float tolerance;
     binding_list_t bindings[FG_MOD_MAX];
@@ -307,7 +311,8 @@ private:
   /**
    * Look up the bindings for a key code.
    */
-  const vector<FGBinding> &_find_key_bindings (unsigned int k, int modifiers);
+  const vector<FGBinding *> &_find_key_bindings (unsigned int k,
+						 int modifiers);
 
   button _key_bindings[MAX_KEYS];
   joystick _joystick_bindings[MAX_JOYSTICKS];
