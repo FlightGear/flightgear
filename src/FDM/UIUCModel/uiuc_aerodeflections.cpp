@@ -74,8 +74,9 @@
 
 void uiuc_aerodeflections( double dt )
 {
-  double prevFlapHandle, flap_transit_rate;
-  bool flaps_in_transit;
+  double prevFlapHandle = 0.0f;
+  double flap_transit_rate;
+  bool flaps_in_transit = false;
 
   if (zero_Long_trim)
     {

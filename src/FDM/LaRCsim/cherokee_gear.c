@@ -36,6 +36,9 @@
 
 $Header$
 $Log$
+Revision 1.3  2001/07/30 20:53:54  curt
+Various MSVC tweaks and warning fixes.
+
 Revision 1.2  2000/04/10 18:09:41  curt
 David Megginson made a few (mostly minor) mods to the LaRCsim files, and
 it's now possible to choose the LaRCsim model at runtime, as in
@@ -189,7 +192,7 @@ char rcsid[] = "$Id$";
     DATA d_wheel_cg_body_v[3];		/* wheel offset from cg,  X-Y-Z	*/
     DATA d_wheel_cg_local_v[3];		/* wheel offset from cg,  N-E-D	*/
     DATA d_wheel_rwy_local_v[3];	/* wheel offset from rwy, N-E-U */
-    DATA v_wheel_body_v[3];		/* wheel velocity,	  X-Y-Z	*/
+    // DATA v_wheel_body_v[3];		/* wheel velocity,	  X-Y-Z	*/
     DATA v_wheel_local_v[3];		/* wheel velocity,	  N-E-D	*/
     DATA f_wheel_local_v[3];		/* wheel reaction force,  N-E-D	*/
     DATA temp3a[3], temp3b[3], tempF[3], tempM[3];	

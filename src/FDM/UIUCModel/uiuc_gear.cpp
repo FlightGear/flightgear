@@ -181,12 +181,15 @@ void uiuc_gear()
     DATA d_wheel_cg_local_v[3];		/* wheel offset from cg,  N-E-D	*/
     DATA d_wheel_rwy_local_v[3];	/* wheel offset from rwy, N-E-U */
 	DATA v_wheel_cg_local_v[3];    /*wheel velocity rel to cg N-E-D*/
-    DATA v_wheel_body_v[3];		/* wheel velocity,	  X-Y-Z	*/
+    // DATA v_wheel_body_v[3];		/* wheel velocity,	  X-Y-Z	*/
     DATA v_wheel_local_v[3];		/* wheel velocity,	  N-E-D	*/
     DATA f_wheel_local_v[3];		/* wheel reaction force,  N-E-D	*/
-	DATA altitude_local_v[3];       /*altitude vector in local (N-E-D) i.e. (0,0,h)*/
-	DATA altitude_body_v[3];        /*altitude vector in body (X,Y,Z)*/
-    DATA temp3a[3], temp3b[3], tempF[3], tempM[3];	
+    // DATA altitude_local_v[3];       /*altitude vector in local (N-E-D) i.e. (0,0,h)*/
+    // DATA altitude_body_v[3];        /*altitude vector in body (X,Y,Z)*/
+    DATA temp3a[3];
+    // DATA temp3b[3];
+    DATA tempF[3];
+    DATA tempM[3];	
     DATA reaction_normal_force;		/* wheel normal (to rwy) force	*/
     DATA cos_wheel_hdg_angle, sin_wheel_hdg_angle;	/* temp storage */
     DATA v_wheel_forward, v_wheel_sideward,  abs_v_wheel_sideward;

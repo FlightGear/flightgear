@@ -88,8 +88,11 @@
 
 $Header$
 $Log$
-Revision 1.1  1999/06/17 18:07:33  curt
-Initial revision
+Revision 1.2  2001/07/30 20:53:54  curt
+Various MSVC tweaks and warning fixes.
+
+Revision 1.1.1.1  1999/06/17 18:07:33  curt
+Start of 0.7.x branch
 
 Revision 1.1.1.1  1999/04/05 21:32:45  curt
 Start of 0.6.x branch.
@@ -226,7 +229,7 @@ int ls_trim_init()
 /*  Initialize partials matrix */
 {
     int i, error;
-    int result;
+    // int result;
 
     Index = -1;
     Trim_Cycles = 0;

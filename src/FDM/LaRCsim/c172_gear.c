@@ -36,6 +36,9 @@
 
 $Header$
 $Log$
+Revision 1.20  2001/07/30 20:53:54  curt
+Various MSVC tweaks and warning fixes.
+
 Revision 1.19  2001/03/02 21:37:01  curt
 Added a first pass at a C++ sound manager class.
 
@@ -145,7 +148,7 @@ void c172_gear()
 {
 char rcsid[] = "$Id$";
 #define NUM_WHEELS 4
-char gear_strings[NUM_WHEELS][12]={"nose","right main", "left main", "tail skid"};
+// char gear_strings[NUM_WHEELS][12]={"nose","right main", "left main", "tail skid"};
   /*
    * Aircraft specific initializations and data goes here
    */
@@ -159,8 +162,8 @@ char gear_strings[NUM_WHEELS][12]={"nose","right main", "left main", "tail skid"
 	{ -1.47, -3.58, 6.71 },        /*left main*/ 
 	{ -15.67, 0, 2.42 }            /*tail skid */
     };
-	static DATA gear_travel[NUM_WHEELS] = /*in Z-axis*/
-	{ -0.5, 2.5, 2.5, 0};
+    // static DATA gear_travel[NUM_WHEELS] = /*in Z-axis*/
+           // { -0.5, 2.5, 2.5, 0};
     static DATA spring_constant[NUM_WHEELS] =	    /* springiness, lbs/ft */
 	{ 1200., 900., 900., 10000. };
     static DATA spring_damping[NUM_WHEELS] =	    /* damping, lbs/ft/sec */
@@ -208,12 +211,15 @@ char gear_strings[NUM_WHEELS][12]={"nose","right main", "left main", "tail skid"
     DATA d_wheel_cg_local_v[3];		/* wheel offset from cg,  N-E-D	*/
     DATA d_wheel_rwy_local_v[3];	/* wheel offset from rwy, N-E-U */
 	DATA v_wheel_cg_local_v[3];    /*wheel velocity rel to cg N-E-D*/
-    DATA v_wheel_body_v[3];		/* wheel velocity,	  X-Y-Z	*/
+    // DATA v_wheel_body_v[3];		/* wheel velocity,	  X-Y-Z	*/
     DATA v_wheel_local_v[3];		/* wheel velocity,	  N-E-D	*/
     DATA f_wheel_local_v[3];		/* wheel reaction force,  N-E-D	*/
-	DATA altitude_local_v[3];       /*altitude vector in local (N-E-D) i.e. (0,0,h)*/
-	DATA altitude_body_v[3];        /*altitude vector in body (X,Y,Z)*/
-    DATA temp3a[3], temp3b[3], tempF[3], tempM[3];	
+    // DATA altitude_local_v[3];       /*altitude vector in local (N-E-D) i.e. (0,0,h)*/
+    // DATA altitude_body_v[3];        /*altitude vector in body (X,Y,Z)*/
+    DATA temp3a[3];
+    // DATA temp3b[3];
+    DATA tempF[3];
+    DATA tempM[3];	
     DATA reaction_normal_force;		/* wheel normal (to rwy) force	*/
     DATA cos_wheel_hdg_angle, sin_wheel_hdg_angle;	/* temp storage */
     DATA v_wheel_forward, v_wheel_sideward,  abs_v_wheel_sideward;

@@ -36,6 +36,9 @@
 
 $Header$
 $Log$
+Revision 1.4  2001/07/30 20:53:54  curt
+Various MSVC tweaks and warning fixes.
+
 Revision 1.3  2000/06/12 18:52:37  curt
 Added differential braking (Alex and David).
 
@@ -213,7 +216,7 @@ char rcsid[] = "$Id$";
     DATA d_wheel_cg_body_v[3];		/* wheel offset from cg,  X-Y-Z	*/
     DATA d_wheel_cg_local_v[3];		/* wheel offset from cg,  N-E-D	*/
     DATA d_wheel_rwy_local_v[3];	/* wheel offset from rwy, N-E-U */
-    DATA v_wheel_body_v[3];		/* wheel velocity,	  X-Y-Z	*/
+    // DATA v_wheel_body_v[3];		/* wheel velocity,	  X-Y-Z	*/
     DATA v_wheel_local_v[3];		/* wheel velocity,	  N-E-D	*/
     DATA f_wheel_local_v[3];		/* wheel reaction force,  N-E-D	*/
     DATA temp3a[3], temp3b[3], tempF[3], tempM[3];	

@@ -70,6 +70,7 @@
  USA or view http://www.gnu.org/copyleft/gpl.html.
 
 **********************************************************************/
+#include <simgear/compiler.h>    // to disable C4244 d to f warning
 
 #include "uiuc_1Dinterpolation.h"
 

@@ -141,7 +141,7 @@ float FGNewEngine::Lookup_Combustion_Efficiency(float thi_actual)
     float thi[NUM_ELEMENTS] = {0.0, 0.9, 1.0, 1.05, 1.1, 1.15, 1.2, 1.3, 1.4, 1.5, 1.6};  //array of equivalence ratio values
     float neta_comb[NUM_ELEMENTS] = {0.98, 0.98, 0.97, 0.95, 0.9, 0.85, 0.79, 0.7, 0.63, 0.57, 0.525};  //corresponding array of combustion efficiency values
     //combustion efficiency values from Heywood, "Internal Combustion Engine Fundamentals", ISBN 0-07-100499-8
-    float neta_comb_actual;
+    float neta_comb_actual = 0.0f;
     float factor;
 
     int i;
@@ -188,7 +188,7 @@ float FGNewEngine::Power_Mixture_Correlation(float thi_actual)
     // The lookup table is in AFR because the source data was.  I added the two end elements to make sure we are almost always in it.
     float AFR[NUM_ELEMENTS] = {(14.7/1.6), 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, (14.7/0.6)};  //array of equivalence ratio values
     float mixPerPow[NUM_ELEMENTS] = {78, 86, 93.5, 98, 100, 99, 96.4, 92.5, 88, 83, 78.5, 74, 58};  //corresponding array of combustion efficiency values
-    float mixPerPow_actual;
+    float mixPerPow_actual = 0.0f;
     float factor;
     float dydx;
 
