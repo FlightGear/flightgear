@@ -691,8 +691,11 @@ FGBFI::getRPM ()
 void
 FGBFI::setRPM (double rpm)
 {
-  if (getRPM() != rpm)
-    current_aircraft.fdm_state->get_engine(0)->set_RPM( rpm );
+    if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+	if (getRPM() != rpm) {
+	    current_aircraft.fdm_state->get_engine(0)->set_RPM( rpm );
+	}
+    }
 }
 
 
@@ -702,7 +705,9 @@ FGBFI::setRPM (double rpm)
 double
 FGBFI::getEGT ()
 {
-  return current_aircraft.fdm_state->get_engine(0)->get_EGT();
+  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+      return current_aircraft.fdm_state->get_engine(0)->get_EGT();
+  }
 }
 
 
