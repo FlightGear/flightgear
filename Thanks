@@ -211,6 +211,11 @@ Bruce Jackson of NASA <e.b.jackson@larc.nasa.gov>
   http://dcb.larc.nasa.gov/www/DCBStaff/ebj/ebj.html
 
 
+Maik Justus <fg@mjustus.de>
+  Developed YASim's helicopter/rotor logic.
+  Wrote the Bo105 helicopter FDM configuration file.
+
+
 Richard Kaszeta <bofh@me.umn.edu>
   Contributed screen buffer to ppm screen shot routine.
   Rich has also helped in the early development of the Flight Gear "altitude 
