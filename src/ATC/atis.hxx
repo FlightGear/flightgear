@@ -104,8 +104,11 @@ class FGATIS : public FGATC {
 	inline const char* GetIdent() { return ident.c_str(); }
 	inline string get_trans_ident() { return trans_ident; }
 	inline atc_type GetType() { return ATIS; }
+	inline void set_refname(string r) { refname = r; } 
 	
 	private:
+	
+	string refname;		// Holds the refname of a transmission in progress
 	
 	//Update the transmission string
 	void UpdateTransmission(void);

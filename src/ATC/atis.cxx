@@ -69,7 +69,8 @@ ident(""),
 name(""),
 transmission(""),
 trans_ident(""),
-atis_failed(false)
+atis_failed(false),
+refname("atis")
 {
 }
 
@@ -88,14 +89,14 @@ void FGATIS::Update() {
 			// We need to get and display the message
 			UpdateTransmission();
 			//cout << "ATIS.CXX - calling ATCMgr to render transmission..." << endl;
-			globals->get_ATC_mgr()->Render(transmission, true);
+			globals->get_ATC_mgr()->Render(transmission, refname, true);
 			displaying = true;
 		}
 	} else {
 		// We shouldn't be displaying
 		if(displaying) {
 			//cout << "ATIS.CXX - calling NoRender()..." << endl;
-			globals->get_ATC_mgr()->NoRender();
+			globals->get_ATC_mgr()->NoRender(refname);
 			displaying = false;
 		}
 	}

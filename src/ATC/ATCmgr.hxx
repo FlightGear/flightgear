@@ -104,7 +104,8 @@ private:
     atc_type comm2_type;
 	
 	// Pointer to the ATC station that the user is currently tuned into.
-	FGATC* tuned_atc_ptr;
+	FGATC* comm1_atc_ptr;
+	FGATC* comm2_atc_ptr;
 
     double comm1_freq;
     double comm2_freq;
@@ -118,9 +119,11 @@ private:
     SGPropertyNode* lat_node;
     SGPropertyNode* elev_node;
 
-    // Position of the ATC that the comm radios are tuned to in order to decide whether transmission
-    // will be received
+    // Position of the ATC that the comm radios are tuned to in order to decide 
+	// whether transmission will be received.
     double comm1_x, comm1_y, comm1_z, comm1_elev;
+    double comm2_x, comm2_y, comm2_z, comm2_elev;
+
     double comm1_range, comm1_effective_range;
     bool comm1_valid; 
     bool comm1_atis_valid;
@@ -134,13 +137,23 @@ private:
     const char* last_comm1_atis_ident;
     const char* last_comm1_tower_ident;
     const char* last_comm1_approach_ident;
-    const char* approach_ident;
-    bool last_in_range;
-    double comm2_x, comm2_y, comm2_z, comm2_elev;
+	
     double comm2_range, comm2_effective_range;
     bool comm2_valid;
+    bool comm2_atis_valid;
+    bool comm2_tower_valid;
+    bool comm2_approach_valid;
     const char* comm2_ident;
+    const char* comm2_atis_ident;
+    const char* comm2_tower_ident;
+    const char* comm2_approach_ident;
     const char* last_comm2_ident;
+    const char* last_comm2_atis_ident;
+    const char* last_comm2_tower_ident;
+    const char* last_comm2_approach_ident;
+	
+    const char* approach_ident;
+    bool last_in_range;
 
     FGATIS atis;
     //FGGround ground;
@@ -153,7 +166,6 @@ private:
 	bool voice;			// Flag - true if we are using voice
 	bool playing;		// Indicates a message in progress	
 #ifdef ENABLE_AUDIO_SUPPORT
-	string refname;		// FIXME - A hack - assumes only one sound to track.
 	bool voiceOK;		// Flag - true if at least one voice has loaded OK
 	FGATCVoice v1;
 #endif
@@ -179,18 +191,21 @@ public:
 	
 	// Render a transmission
 	// Outputs the transmission either on screen or as audio depending on user preference
+	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
-	void Render(string msg, bool repeating);
+	void Render(string msg, string refname, bool repeating);
 
 	// Cease rendering a transmission.
-	// At the moment this can handle one transmission active at a time only.
-	void NoRender();
+	// Requires the sound manager refname if audio, else "".
+	void NoRender(string refname);
 	
 	// Display a dialog box with options relevant to the currently tuned ATC service.
 	void doStandardDialog();
 	
-	atc_type GetCurrentATCType() { return(comm1_type); }
-	FGATC* GetCurrentATCPointer() { return(tuned_atc_ptr); }
+	atc_type GetComm1ATCType() { return(comm1_type); }
+	FGATC* GetComm1ATCPointer() { return(comm1_atc_ptr); }
+	atc_type GetComm2ATCType() { return(comm2_type); }
+	FGATC* GetComm2ATCPointer() { return(comm2_atc_ptr); }
 	
 private:
 
@@ -200,8 +215,8 @@ private:
     // Return a pointer to a class in the list (external interface to this is through GetATCPointer)
     FGATC* FindInList(const char* id, atc_type tp);
 
-    // Search a specified freq for matching stations
-    void Search();
+    // Search the specified channel for stations on the same frequency and in range.
+    void Search(int chan);
 
 };
 
