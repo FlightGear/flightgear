@@ -825,10 +825,6 @@ void xglDeleteTexturesEXT           ( GLsizei n, GLuint *textures ) ;
 void xglGenTexturesEXT              ( GLsizei n, GLuint *textures ) ;
 void xglPrioritizeTexturesEXT       ( GLsizei n, GLuint *textures, GLclampf *priorities ) ;
 
-#ifdef __cplusplus
-}; 
-#endif
-
 #endif
 
 
