@@ -20,10 +20,13 @@
 #ifndef _FG_AIBASE_HXX
 #define _FG_AIBASE_HXX
 
+#include <string>
+
 #include <simgear/constants.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/placement.hxx>
-#include <string>
+
+#include <Main/fg_props.hxx>
 
 SG_USING_STD(string);
 
@@ -80,13 +83,21 @@ protected:
     static FGAIBase *_self;
     const char *_type_str;
 
-private:
+public:
+
+    static double _getVS_fps();
+    static void _setVS_fps( double _vs );
+
+    static double _getAltitude();
+    static void _setAltitude( double _alt );
 
     static void _setLongitude( double longitude );
     static void _setLatitude ( double latitude );
+
     static double _getLongitude();
     static double _getLatitude ();
 
+    static bool _isNight();
 };
 
 
@@ -98,25 +109,48 @@ inline void FGAIBase::setSpeed( double speed_KTAS ) {
   speed = tgt_speed = speed_KTAS;
 }
 
-inline void FGAIBase::setAltitude( double altitude_ft ) {
-  altitude = tgt_altitude = altitude_ft;
-  pos.setelev(altitude * SG_FEET_TO_METER);
-}
-
 inline void FGAIBase::setHeading( double heading ) {
   hdg = tgt_heading = heading;
+}
+
+inline void FGAIBase::setAltitude( double altitude_ft ) {
+    altitude = tgt_altitude = altitude_ft;
+    pos.setelev(altitude * SG_FEET_TO_METER);
 }
 
 inline void FGAIBase::setLongitude( double longitude ) {
     pos.setlon( longitude );
 }
-
 inline void FGAIBase::setLatitude ( double latitude ) {
     pos.setlat( latitude );
 }
 
 inline void FGAIBase::setDie( bool die ) { delete_me = die; }
 inline bool FGAIBase::getDie() { return delete_me; }
+
+inline void FGAIBase::_setLongitude( double longitude ) {
+    _self->pos.setlon(longitude);
+}
+inline void FGAIBase::_setLatitude ( double latitude )  {
+    _self->pos.setlat(latitude);
+}
+
+inline double FGAIBase::_getLongitude() { return _self->pos.lon(); }
+inline double FGAIBase::_getLatitude () { return _self->pos.lat(); }
+
+inline double FGAIBase::_getVS_fps() { return _self->vs*60.0; }
+inline void FGAIBase::_setVS_fps( double _vs ) { _self->vs = _vs/60.0; }
+
+inline double FGAIBase::_getAltitude() {
+    return _self->altitude * SG_METER_TO_FEET;
+}
+inline void FGAIBase::_setAltitude( double _alt ) {
+    _self->setAltitude( _alt );
+}
+
+inline bool FGAIBase::_isNight() {
+    return (fgGetFloat("/sim/time/sun-angle-rad") > 1.57);
+}
 
 #endif  // _FG_AIBASE_HXX
 

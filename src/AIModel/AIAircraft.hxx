@@ -64,6 +64,9 @@ public:
         void YawTo(double angle);
         void ClimbTo(double altitude);
         void TurnTo(double heading);
+
+protected:
+        static FGAIAircraft *_self;
 	
 private:
 
@@ -76,6 +79,16 @@ private:
 
 	void Run(double dt);
         double sign(double x);	
+
+        static bool _getGearDown();
 };
+
+inline bool FGAIAircraft::_getGearDown() {
+    return ((fgGetFloat("/position/altitude-agl-ft") < 150.0)
+             && (fgGetFloat("/orientation/pitch-deg") < 0.0)
+             && (fgGetFloat("/velocities/airspeed-kt")
+                   < _self->performance->land_speed*1.5));
+}
+
 
 #endif  // _FG_AIAircraft_HXX

@@ -86,13 +86,19 @@ bool FGAIBase::init() {
 
    tgt_roll = tgt_pitch = tgt_yaw = tgt_vs = vs = roll = pitch = 0.0;
    setDie(false);
+
+   return true;
 }
 
 void FGAIBase::bind() {
    props->tie("velocities/airspeed-kt",  SGRawValuePointer<double>(&speed));
-   props->tie("velocities/vertical-speed-fps", SGRawValuePointer<double>(&vs));
+   props->tie("velocities/vertical-speed-fps",
+               SGRawValueFunctions<double>(FGAIBase::_getVS_fps,
+                                           FGAIBase::_setVS_fps));
 
-   props->tie("position/altitude-ft", SGRawValuePointer<double>(&altitude));
+   props->tie("position/altitude-ft",
+               SGRawValueFunctions<double>(FGAIBase::_getAltitude,
+                                           FGAIBase::_setAltitude));
    props->tie("position/latitude-deg",
                SGRawValueFunctions<double>(FGAIBase::_getLatitude,
                                            FGAIBase::_setLatitude));
@@ -100,9 +106,14 @@ void FGAIBase::bind() {
                SGRawValueFunctions<double>(FGAIBase::_getLongitude,
                                            FGAIBase::_setLongitude));
 
-   props->tie("orientation/pitch-deg", SGRawValuePointer<double>(&pitch));
-   props->tie("orientation/roll-deg", SGRawValuePointer<double>(&roll));
+   props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
+   props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
    props->tie("orientation/heading-deg", SGRawValuePointer<double>(&hdg));
+
+   props->tie("controls/lighting/nav-lights",
+               SGRawValueFunctions<bool>(FGAIBase::_isNight));
+   props->setBoolValue("controls/lighting/beacon", true);
+   props->setBoolValue("controls/lighting/strobe", true);
 }
 
 void FGAIBase::unbind() {
@@ -116,17 +127,7 @@ void FGAIBase::unbind() {
     props->untie("orientation/pitch-deg");
     props->untie("orientation/roll-deg");
     props->untie("orientation/heading-deg");
+
+    props->untie("controls/controls/lighting/nav-lights");
 }
 
-
-void FGAIBase::_setLongitude( double longitude ) {
-    _self->pos.setlon(longitude);
-}
-
-void FGAIBase::_setLatitude ( double latitude )  {
-    _self->pos.setlat(latitude);
-}
-
-double FGAIBase::_getLongitude() { return _self->pos.lon(); }
-
-double FGAIBase::_getLatitude () { return _self->pos.lat(); }

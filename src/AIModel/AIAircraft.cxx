@@ -33,7 +33,10 @@ SG_USING_STD(string);
 
 #include "AIAircraft.hxx"
 
-
+//
+// accel, decel, climb_rate, descent_rate, takeoff_speed, climb_speed,
+// cruise_speed, descent_speed, land_speed
+//
 const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
     // light aircraft
     {2.0, 2.0,  450.0, 1000.0,  70.0,  80.0, 100.0,  80.0,  60.0},
@@ -46,7 +49,10 @@ const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
 };
 
 
+FGAIAircraft *FGAIAircraft::_self = NULL;
+
 FGAIAircraft::FGAIAircraft() {
+   _self = this;
 
    // set heading and altitude locks
    hdg_lock = false;
@@ -56,6 +62,7 @@ FGAIAircraft::FGAIAircraft() {
 
 
 FGAIAircraft::~FGAIAircraft() {
+    _self = NULL;
 }
 
 
@@ -65,10 +72,21 @@ bool FGAIAircraft::init() {
 
 void FGAIAircraft::bind() {
     FGAIBase::bind();
+
+    props->tie("controls/gear/gear-down",
+               SGRawValueFunctions<bool>(FGAIAircraft::_getGearDown));
+
+/*
+    props->getNode("controls/lighting/landing-lights", true)
+           ->alias("controls/gear/gear-down");
+*/
 }
 
 void FGAIAircraft::unbind() {
     FGAIBase::unbind();
+
+    props->untie("controls/gear/gear-down");
+//    props->getNode("controls/lighting/landing-lights")->unalias();
 }
 
 
