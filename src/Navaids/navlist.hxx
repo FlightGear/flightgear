@@ -82,7 +82,4 @@ public:
 };
 
 
-extern FGNavList *current_navlist;
-
-
 #endif // _FG_NAVLIST_HXX

@@ -75,7 +75,11 @@ FGGlobals::FGGlobals() :
     initial_waypoints(0),
     scenery( NULL ),
     tile_mgr( NULL ),
-    io( new FGIO )
+    io( new FGIO ),
+    navlist( NULL ),
+    fixlist( NULL ),
+    ilslist( NULL ),
+    beacons( NULL )
 {
 }
 

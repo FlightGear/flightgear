@@ -70,6 +70,10 @@ class FGATCDisplay;
 class FGAircraftModel;
 class FGControls;
 class FGIO;
+class FGNavList;
+class FGFixList;
+class FGILSList;
+class FGMarkerBeacons;
 class FGLight;
 class FGModelMgr;
 class FGRouteMgr;
@@ -190,6 +194,12 @@ private:
 
     // Input/Ouput subsystem
     FGIO *io;
+
+    // Navigational Aids
+    FGNavList *navlist;
+    FGFixList *fixlist;
+    FGILSList *ilslist;
+    FGMarkerBeacons *beacons;
 
 #ifdef FG_MPLAYER_AS
     //Mulitplayer managers
@@ -347,7 +357,20 @@ public:
 
     inline FGIO* get_io() const { return io; }
 
-    /**
+    inline FGNavList *get_navlist() const { return navlist; }
+    inline void set_navlist( FGNavList *n ) { navlist = n; }
+
+    inline FGFixList *get_fixlist() const { return fixlist; }
+    inline void set_fixlist( FGFixList *f ) { fixlist = f; }
+
+    inline FGILSList *get_ilslist() const { return ilslist; }
+    inline void set_ilslist( FGILSList *i ) { ilslist = i; }
+
+    inline FGMarkerBeacons *get_beacons() const { return beacons; }
+    inline void set_beacons( FGMarkerBeacons *b ) { beacons = b; }
+
+
+   /**
      * Save the current state as the initial state.
      */
     void saveInitialState ();

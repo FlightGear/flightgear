@@ -163,9 +163,9 @@ ADF::search (double frequency_khz, double longitude_rad,
     _time_before_search_sec = 1.0;
 
                                 // try the ILS list first
-    FGNav * nav =
-        current_navlist->findByFreq(frequency_khz, longitude_rad,
-                                    latitude_rad, altitude_m);
+    FGNav *nav =
+        globals->get_navlist()->findByFreq(frequency_khz, longitude_rad,
+                                           latitude_rad, altitude_m);
 
     if (nav !=0) {
         _transmitter_valid = true;

@@ -906,7 +906,7 @@ static void fgSetDistOrAltFromGlideSlope() {
 
 // Set current_options lon/lat given an airport id and heading (degrees)
 static bool fgSetPosFromNAV( const string& id, const double& freq ) {
-    FGNav *nav = current_navlist->findByIdentAndFreq( id.c_str(), freq );
+    FGNav *nav = globals->get_navlist()->findByIdentAndFreq( id.c_str(), freq );
 
     // set initial position from runway and heading
     if ( nav != NULL ) {
@@ -958,7 +958,7 @@ static bool fgSetPosFromFix( const string& id ) {
     FGFix fix;
 
     // set initial position from runway and heading
-    if ( current_fixlist->query( id.c_str(), &fix ) ) {
+    if ( globals->get_fixlist()->query( id.c_str(), &fix ) ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
                 << id );
 
@@ -1049,24 +1049,28 @@ fgInitNav ()
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaids");
 
     SG_LOG(SG_GENERAL, SG_INFO, "  VOR/NDB");
-    current_navlist = new FGNavList;
+    FGNavList *navlist = new FGNavList;
     SGPath p_nav( globals->get_fg_root() );
     p_nav.append( "Navaids/default.nav" );
-    current_navlist->init( p_nav );
+    navlist->init( p_nav );
+    globals->set_navlist( navlist );
 
     SG_LOG(SG_GENERAL, SG_INFO, "  ILS and Marker Beacons");
-    current_beacons = new FGMarkerBeacons;
-    current_beacons->init();
-    current_ilslist = new FGILSList;
+    FGMarkerBeacons *beacons = new FGMarkerBeacons;
+    beacons->init();
+    globals->set_beacons( beacons );
+    FGILSList *ilslist = new FGILSList;
     SGPath p_ils( globals->get_fg_root() );
     p_ils.append( "Navaids/default.ils" );
-    current_ilslist->init( p_ils );
+    ilslist->init( p_ils );
+    globals->set_ilslist( ilslist );
 
     SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
-    current_fixlist = new FGFixList;
+    FGFixList *fixlist = new FGFixList;
     SGPath p_fix( globals->get_fg_root() );
     p_fix.append( "Navaids/fix.dat" );
-    current_fixlist->init( p_fix );
+    fixlist->init( p_fix );
+    globals->set_fixlist( fixlist );
 
     return true;
 }

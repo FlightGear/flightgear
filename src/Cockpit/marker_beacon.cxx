@@ -174,8 +174,8 @@ void FGMarkerBeacon::search()
     ////////////////////////////////////////////////////////////////////////
 
     FGMkrBeacon::fgMkrBeacType beacon_type
-	= current_beacons->query( lon * SGD_RADIANS_TO_DEGREES,
-				  lat * SGD_RADIANS_TO_DEGREES, elev );
+	= globals->get_beacons()->query( lon * SGD_RADIANS_TO_DEGREES,
+                                         lat * SGD_RADIANS_TO_DEGREES, elev );
 
     outer_marker = middle_marker = inner_marker = false;
 

@@ -488,7 +488,7 @@ void FGKR_87::search() {
     ////////////////////////////////////////////////////////////////////////
 
     FGNav *nav
-        = current_navlist->findByFreq(freq, acft_lon, acft_lat, acft_elev);
+        = globals->get_navlist()->findByFreq(freq, acft_lon, acft_lat, acft_elev);
 
     if ( nav != NULL ) {
 	char sfreq[128];

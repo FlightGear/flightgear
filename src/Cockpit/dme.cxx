@@ -221,7 +221,7 @@ void FGDME::search()
     FGILS *ils;
     FGNav *nav;
 
-    if ( (ils = current_ilslist->findByFreq( freq, lon, lat, elev )) != NULL ) {
+    if ( (ils = globals->get_ilslist()->findByFreq( freq, lon, lat, elev )) != NULL ) {
         if ( ils->get_has_dme() ) {
             valid = true;
             lon = ils->get_loclon();
@@ -233,7 +233,7 @@ void FGDME::search()
             y = ils->get_dme_y();
             z = ils->get_dme_z();
         }
-    } else if ( (nav = current_navlist->findByFreq(freq, lon, lat, elev)) != NULL ) {
+    } else if ( (nav = globals->get_navlist()->findByFreq(freq, lon, lat, elev)) != NULL ) {
         if (nav->get_has_dme()) {
             valid = true;
             lon = nav->get_lon();

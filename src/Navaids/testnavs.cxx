@@ -11,7 +11,7 @@ const string FG_DATA_DIR("/usr/local/lib/FlightGear");
 int main() {
     double heading, dist;
 
-    current_navlist = new FGNavList;
+    FGNavList *current_navlist = new FGNavList;
     SGPath p_nav( FG_DATA_DIR + "/Navaids/default.nav" );
 
     current_navlist->init( p_nav );
@@ -42,10 +42,10 @@ int main() {
     }
 	
     // we have to init the marker beacon storage before we parse the ILS file
-    current_beacons = new FGMarkerBeacons;
+    FGMarkerBeacons *current_beacons = new FGMarkerBeacons;
     current_beacons->init();
 	
-    current_ilslist = new FGILSList;
+    FGILSList *current_ilslist = new FGILSList;
     SGPath p_ils( FG_DATA_DIR + "/Navaids/default.ils" );
     current_ilslist->init( p_ils );
     FGILS *i = current_ilslist->findByFreq( -93.1 * SG_DEGREES_TO_RADIANS,
@@ -59,7 +59,7 @@ int main() {
 	cout << "not picking up ils. :-(" << endl;
     }
 
-    current_fixlist = new FGFixList;
+    FGFixList *current_fixlist = new FGFixList;
     SGPath p_fix( FG_DATA_DIR + "/Navaids/default.fix" );
     current_fixlist->init( p_fix );
     FGFix fix;

@@ -110,7 +110,4 @@ public:
 };
 
 
-extern FGMarkerBeacons *current_beacons;
-
-
 #endif // _FG_MKRBEACON_HXX

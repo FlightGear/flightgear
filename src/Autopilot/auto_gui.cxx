@@ -677,7 +677,7 @@ int NewWaypoint( string Tgt_Alt )
 
       return 1;
 
-  } else if ( current_fixlist->query( TgtAptId, &f ) ) {
+  } else if ( globals->get_fixlist()->query( TgtAptId, &f ) ) {
       SG_LOG( SG_GENERAL, SG_INFO,
               "Adding waypoint (fix) = " << TgtAptId );
 

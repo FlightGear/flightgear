@@ -29,6 +29,8 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
+#include <Main/globals.hxx>
+
 #include "mkrbeacons.hxx"
 #include "ilslist.hxx"
 
@@ -98,18 +100,21 @@ bool FGILSList::init( SGPath path ) {
 	// update the marker beacon list
 	if ( fabs(ils->get_omlon()) > SG_EPSILON ||
 	     fabs(ils->get_omlat()) > SG_EPSILON ) {
-	    current_beacons->add( ils->get_omlon(), ils->get_omlat(),
-				  ils->get_gselev(), FGMkrBeacon::OUTER );
+	    globals->get_beacons()->add( ils->get_omlon(), ils->get_omlat(),
+                                         ils->get_gselev(),
+                                         FGMkrBeacon::OUTER );
 	}
 	if ( fabs(ils->get_mmlon()) > SG_EPSILON ||
 	     fabs(ils->get_mmlat()) > SG_EPSILON ) {
-	    current_beacons->add( ils->get_mmlon(), ils->get_mmlat(),
-				  ils->get_gselev(), FGMkrBeacon::MIDDLE );
+	    globals->get_beacons()->add( ils->get_mmlon(), ils->get_mmlat(),
+                                         ils->get_gselev(),
+                                         FGMkrBeacon::MIDDLE );
 	}
 	if ( fabs(ils->get_imlon()) > SG_EPSILON ||
 	     fabs(ils->get_imlat()) > SG_EPSILON ) {
-	    current_beacons->add( ils->get_imlon(), ils->get_imlat(),
-				  ils->get_gselev(), FGMkrBeacon::INNER );
+	    globals->get_beacons()->add( ils->get_imlon(), ils->get_imlat(),
+                                         ils->get_gselev(),
+                                         FGMkrBeacon::INNER );
 	}
     }
 

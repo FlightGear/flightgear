@@ -604,7 +604,7 @@ void FGNavCom::search()
     // Nav.
     ////////////////////////////////////////////////////////////////////////
 
-    if ( (ils = current_ilslist->findByFreq(nav_freq, lon, lat, elev)) != NULL ) {
+    if ( (ils = globals->get_ilslist()->findByFreq(nav_freq, lon, lat, elev)) != NULL ) {
 	nav_id = ils->get_locident();
 	nav_valid = true;
 	if ( last_nav_id != nav_id || last_nav_vor ) {
@@ -678,7 +678,7 @@ void FGNavCom::search()
 	    // cout << "Found an ils station in range" << endl;
 	    // cout << " id = " << ils->get_locident() << endl;
 	}
-    } else if ( (nav = current_navlist->findByFreq(nav_freq, lon, lat, elev)) != NULL ) {
+    } else if ( (nav = globals->get_navlist()->findByFreq(nav_freq, lon, lat, elev)) != NULL ) {
 	nav_id = nav->get_ident();
 	nav_valid = (nav->get_type() == 'V');
 	if ( last_nav_id != nav_id || !last_nav_vor ) {

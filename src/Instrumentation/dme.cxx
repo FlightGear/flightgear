@@ -149,10 +149,10 @@ DME::search (double frequency_mhz, double longitude_rad,
     _time_before_search_sec = 1.0;
 
                                 // try the ILS list first
-    FGILS * ils = current_ilslist->findByFreq(frequency_mhz,
-                                              longitude_rad,
-                                              latitude_rad,
-                                              altitude_m);
+    FGILS *ils = globals->get_ilslist()->findByFreq(frequency_mhz,
+                                                    longitude_rad,
+                                                    latitude_rad,
+                                                    altitude_m);
     if (ils !=0 && ils->get_has_dme()) {
         _transmitter_valid = true;
         _transmitter = Point3D(ils->get_dme_x(),
@@ -164,10 +164,10 @@ DME::search (double frequency_mhz, double longitude_rad,
     }
 
                                 // try the VORs next
-    FGNav * nav = current_navlist->findByFreq(frequency_mhz,
-                                              longitude_rad,
-                                              latitude_rad,
-                                              altitude_m);
+    FGNav *nav = globals->get_navlist()->findByFreq(frequency_mhz,
+                                                    longitude_rad,
+                                                    latitude_rad,
+                                                    altitude_m);
     if (nav != 0 && nav->get_has_dme()) {
         _transmitter_valid = true;
         _transmitter = Point3D(nav->get_x(),

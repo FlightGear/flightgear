@@ -67,7 +67,4 @@ public:
 };
 
 
-extern FGFixList *current_fixlist;
-
-
 #endif // _FG_FIXLIST_HXX

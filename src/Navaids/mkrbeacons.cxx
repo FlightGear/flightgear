@@ -134,7 +134,8 @@ bool FGMarkerBeacons::add( double lon, double lat, double elev,
 // returns marker beacon type if we are over a marker beacon, NOBEACON
 // otherwise
 FGMkrBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
-						double elev ) {
+                                                   double elev )
+{
     double diff;
 
     int lonidx = (int)lon;
@@ -160,7 +161,8 @@ FGMkrBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
     beacon_list_iterator current = beacons.begin();
     beacon_list_iterator last = beacons.end();
 
-    Point3D aircraft = sgGeodToCart(Point3D(lon*SGD_DEGREES_TO_RADIANS, lat*SGD_DEGREES_TO_RADIANS, 0));
+    Point3D aircraft = sgGeodToCart( Point3D(lon*SGD_DEGREES_TO_RADIANS,
+                                             lat*SGD_DEGREES_TO_RADIANS, 0) );
 
     double min_dist = 999999999.0;
 
