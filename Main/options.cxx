@@ -23,6 +23,10 @@
 // (Log is kept at end of this file)
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <math.h>            // rint()
 #include <stdio.h>
 #include <stdlib.h>          // atof()
@@ -132,7 +136,11 @@ static int parse_time_offset(char *time_str) {
 
     // printf("time offset = %s\n", time_str);
 
+#ifdef HAVE_RINT
     result = (int)rint(parse_time(time_str));
+#else
+    result = (int)parse_time(time_str);
+#endif
 
     printf("parse_time_offset(): %d\n", result);
 
@@ -191,6 +199,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/04/26 05:01:19  curt
+// Added an rint() / HAVE_RINT check.
+//
 // Revision 1.2  1998/04/25 15:11:12  curt
 // Added an command line option to set starting position based on airport ID.
 //
