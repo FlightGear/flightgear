@@ -79,7 +79,7 @@ IMAGE *img2;
 IMAGE *img;
 
 static GLuint panel_list;
-static GLuint panel_tex_id[4];
+static GLuint panel_tex_id;
 static GLubyte tex[32][128][3];
 static GLint stencil[1024][768];
 static float alphahist;
@@ -370,13 +370,11 @@ for(i=0;i<NumPoint;i++){
 CreatePointer(&pointer[i]);
 }
 #ifdef GL_VERSION_1_1
-    xglGenTextures(1, &panel_tex_id[0]);
-    xglGenTextures(1, &panel_tex_id[1]);
-    xglBindTexture(GL_TEXTURE_2D, panel_tex_id[0]);
+    xglGenTextures(1, &panel_tex_id);
+    xglBindTexture(GL_TEXTURE_2D, panel_tex_id);
 #elif GL_EXT_texture_object
-    xglGenTexturesEXT(1, &panel_tex_id[0]);
-    xglGenTexturesEXT(1, &panel_tex_id[1]);
-    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id[0]);
+    xglGenTexturesEXT(1, &panel_tex_id);
+    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id);
 #else
 #  error port me
 #endif
@@ -538,9 +536,9 @@ void fgPanelUpdate ( void ) {
     // xglEnable(GL_STENCIL_TEST);
         xglEnable(GL_TEXTURE_2D);
 #ifdef GL_VERSION_1_1
-    xglBindTexture(GL_TEXTURE_2D, panel_tex_id[0]);
+    xglBindTexture(GL_TEXTURE_2D, panel_tex_id);
 #elif GL_EXT_texture_object
-    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id[0]);
+    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id);
 #else
 #  error port me
 #endif
@@ -591,9 +589,9 @@ void horizont(void){
     xglTranslatef(200, 130, 0);
     xglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);    
     #ifdef GL_VERSION_1_1
-    xglBindTexture(GL_TEXTURE_2D, panel_tex_id[0]);
+    xglBindTexture(GL_TEXTURE_2D, panel_tex_id);
     #elif GL_EXT_texture_object
-    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id[0]);
+    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id);
     #else
     #  error port me
     #endif
@@ -662,9 +660,9 @@ xglMatrixMode(GL_TEXTURE);
 xglLoadIdentity();
     
     #ifdef GL_VERSION_1_1
-    xglBindTexture(GL_TEXTURE_2D, panel_tex_id[0]);
+    xglBindTexture(GL_TEXTURE_2D, panel_tex_id);
     #elif GL_EXT_texture_object
-    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id[0]);
+    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id);
     #else
     #  error port me
     #endif
@@ -728,15 +726,15 @@ pointer->vertices[19] = pointer->vertices[3];
 
 
 /* $Log$
-/* Revision 1.6  1998/08/28 18:14:40  curt
-/* Added new cockpit code from Friedemann Reinhard
-/* <mpt218@faupt212.physik.uni-erlangen.de>
+/* Revision 1.7  1998/08/31 20:45:31  curt
+/* Tweaks from Friedemann.
 /*
+ * Revision 1.6  1998/08/28 18:14:40  curt
+ * Added new cockpit code from Friedemann Reinhard
+ * <mpt218@faupt212.physik.uni-erlangen.de>
+ *
  * Revision 1.1  1998/06/27 16:47:54  curt
  * Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
  * first pass at an isntrument panel.
  *
  */
-
-
-
