@@ -651,7 +651,7 @@ FGInput::_init_mouse ()
 
 				// Read the button bindings for this mode
       m.modes[j].buttons = new button[MAX_MOUSE_BUTTONS];
-      char buf[8];
+      char buf[32];
       for (k = 0; k < MAX_MOUSE_BUTTONS; k++) {
 	sprintf(buf, "mouse button %d", k);
 	SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse button " << k);
