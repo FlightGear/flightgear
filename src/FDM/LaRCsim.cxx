@@ -313,7 +313,7 @@ int fgLaRCsim_2_FGInterface (FGInterface& f) {
     // f.set_V_true_kts( V_true_kts );
     // f.set_V_rel_ground( V_rel_ground );
     // f.set_V_inertial( V_inertial );
-    // f.set_V_ground_speed( V_ground_speed );
+    f.set_V_ground_speed( V_ground_speed );
     // f.set_V_equiv( V_equiv );
     f.set_V_equiv_kts( V_equiv_kts );
     // f.set_V_calibrated( V_calibrated );

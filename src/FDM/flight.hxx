@@ -473,8 +473,8 @@ public:
     // inline double get_V_inertial() const { return v_inertial; }
     // inline void set_V_inertial(double v) { v_inertial = v; }
 
-    // inline double get_V_ground_speed() const { return v_ground_speed; }
-    // inline void set_V_ground_speed( double v) { v_ground_speed = v; }
+    inline double get_V_ground_speed() const { return v_ground_speed; }
+    inline void set_V_ground_speed( double v) { v_ground_speed = v; }
 
     // inline double get_V_equiv() const { return v_equiv; }
     // inline void set_V_equiv( double v ) { v_equiv = v; }
