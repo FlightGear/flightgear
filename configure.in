@@ -285,6 +285,7 @@ AC_OUTPUT( \
 	Simulator/Autopilot/Makefile \
 	Simulator/Cockpit/Makefile \
 	Simulator/Controls/Makefile \
+	Simulator/Flight/External/Makefile \
 	Simulator/Flight/LaRCsim/Makefile \
 	Simulator/Flight/Slew/Makefile \
 	Simulator/Flight/Makefile \
