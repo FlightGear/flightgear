@@ -9,14 +9,14 @@ echo -n " automake: `automake --version | head -1 | awk '{print $4}'`"
 echo " ($AUTO_MAKE_VERSION)"
 echo ""
 
-echo -n "Running aclocal"
-if [ $AUTO_MAKE_VERSION -ge 15 ]; then
-    echo " -I ."
-    aclocal -I .
-else
-    echo ""
-    aclocal
+ACLOCAL_OPTS=""
+if [ $AUTO_MAKE_VERSION -ge 14 ]; then
+    if [ $OSTYPE = "IRIX" -o $OSTYPE = "IRIX64" ]; then    echo " -I ."
+        ACLOCAL_OPTS="-I ."
+    fi
 fi
+echo "Running aclocal $ACLOCAL_OPTS"
+aclocal $ACLOCAL_OPTS
 
 echo "Running autoheader"
 autoheader
