@@ -158,9 +158,7 @@ do_null (const SGPropertyNode * arg)
 static bool
 do_script (const SGPropertyNode * arg)
 {
-    FGScriptMgr * mgr = (FGScriptMgr *)globals->get_subsystem_mgr()
-        ->get_group(FGSubsystemMgr::GENERAL)->get_subsystem("scripting");
-
+    FGScriptMgr * mgr = (FGScriptMgr *)globals->get_subsystem("scripting");
     return mgr->run(arg->getStringValue("script"));
 }
 #endif // HAVE_PLIB_PSL
@@ -596,9 +594,8 @@ do_property_cycle (const SGPropertyNode * arg)
 static bool
 do_dialog_show (const SGPropertyNode * arg)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
-        ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
-    gui->display(arg->getStringValue("dialog-name"));
+    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    gui->showDialog(arg->getStringValue("dialog-name"));
     return true;
 }
 
@@ -609,16 +606,8 @@ do_dialog_show (const SGPropertyNode * arg)
 static bool
 do_dialog_close (const SGPropertyNode * arg)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
-        ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
-    FGDialog * widget = gui->getCurrentWidget();
-    if (widget != 0) {
-        delete widget;
-        gui->setCurrentWidget(0);
-        return true;
-    } else {
-        return false;
-    }
+    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    gui->closeActiveDialog();
 }
 
 
@@ -630,15 +619,13 @@ do_dialog_close (const SGPropertyNode * arg)
 static bool
 do_dialog_update (const SGPropertyNode * arg)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
-        ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
-    FGDialog * widget = gui->getCurrentWidget();
-    if (widget != 0) {
+    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    FGDialog * dialog = gui->getActiveDialog();
+    if (dialog != 0) {
         if (arg->hasValue("object-name")) {
-            gui->getCurrentWidget()
-                ->updateValue(arg->getStringValue("object-name"));
+            dialog->updateValue(arg->getStringValue("object-name"));
         } else {
-            gui->getCurrentWidget()->updateValues();
+            dialog->updateValues();
         }
         return true;
     } else {
@@ -655,17 +642,16 @@ do_dialog_update (const SGPropertyNode * arg)
 static bool
 do_dialog_apply (const SGPropertyNode * arg)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
-        ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
-    FGDialog * widget = gui->getCurrentWidget();
-    if (widget != 0) {
+    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    FGDialog * dialog = gui->getActiveDialog();
+    if (dialog != 0) {
         if (arg->hasValue("object-name")) {
             const char * name = arg->getStringValue("object-name");
-            gui->getCurrentWidget()->applyValue(name);
-            gui->getCurrentWidget()->updateValue(name);
+            dialog->applyValue(name);
+            dialog->updateValue(name);
         } else {
-            gui->getCurrentWidget()->applyValues();
-            gui->getCurrentWidget()->updateValues();
+            dialog->applyValues();
+            dialog->updateValues();
         }
         return true;
     } else {
