@@ -106,14 +106,14 @@ tri2obj_SOURCES = \
 	polar.c polar.h
 
 tri2obj_LDADD = \
-	$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la
+	$(top_builddir)/Lib/Bucket/libBucket.la
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_HEADER = ../../Simulator/Include/config.h
+CONFIG_HEADER = ../../Include/config.h
 CONFIG_CLEAN_FILES = 
 PROGRAMS =  $(bin_PROGRAMS)
 
 
-DEFS = @DEFS@ -I. -I$(srcdir) -I../../Simulator/Include
+DEFS = @DEFS@ -I. -I$(srcdir) -I../../Include
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -122,8 +122,7 @@ X_LIBS = @X_LIBS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 tri2obj_OBJECTS =  tri2obj.o MAT3vec.o fg_geodesy.o polar.o
-tri2obj_DEPENDENCIES =  \
-$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la
+tri2obj_DEPENDENCIES =  $(top_builddir)/Lib/Bucket/libBucket.la
 tri2obj_LDFLAGS = 
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
@@ -347,11 +346,14 @@ clean-generic maintainer-clean-generic clean mostlyclean distclean \
 maintainer-clean
 
 
-INCLUDES += -I../../Simulator
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.1  1998/04/08 23:22:14  curt
+# Revision 1.2  1998/04/14 02:26:10  curt
+# Code reorganizations.  Added a Lib/ directory for more general libraries.
+#
+# Revision 1.1  1998/04/08 23:22:13  curt
 # Adopted Gnu automake/autoconf system.
 #
 # Revision 1.2  1998/01/21 02:55:46  curt

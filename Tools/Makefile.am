@@ -2,7 +2,6 @@ EXTRA_DIST = process-dem.pl
 
 SUBDIRS = \
 	AssemTris \
-	DEM \
 	Dem2node \
 	FixNode \
 	FixObj \

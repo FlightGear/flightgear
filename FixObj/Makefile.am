@@ -30,11 +30,14 @@ fixobj_SOURCES = main.c mat3.h obj.c obj.h MAT3vec.c
 
 fixobj_LDADD =
 
-INCLUDES += -I../../Simulator
+INCLUDES += -I$(top_builddir)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/04/14 02:26:05  curt
+# Code reorganizations.  Added a Lib/ directory for more general libraries.
+#
 # Revision 1.1  1998/04/08 23:19:35  curt
 # Adopted Gnu automake/autoconf system.
 #

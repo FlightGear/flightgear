@@ -34,13 +34,16 @@ splittris_SOURCES = \
 	splittris.c splittris.h
 
 splittris_LDADD = \
-	$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la
+	$(top_builddir)/Lib/Bucket/libBucket.la
 
-INCLUDES += -I../../Simulator
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/04/14 02:26:06  curt
+# Code reorganizations.  Added a Lib/ directory for more general libraries.
+#
 # Revision 1.1  1998/04/08 23:21:10  curt
 # Adopted Gnu automake/autoconf system.
 #

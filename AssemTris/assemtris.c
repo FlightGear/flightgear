@@ -36,7 +36,7 @@
 // #include <Math/fg_geodesy.h>
 // #include <Math/mat3.h>
 // #include <Math/polar.h>
-#include <Scenery/Bucket/bucketutils.h>
+#include <Bucket/bucketutils.h>
 
 
 int nodecount = 0;
@@ -454,9 +454,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.6  1998/04/08 22:54:58  curt
-/* Adopted Gnu automake/autoconf system.
+/* Revision 1.7  1998/04/14 02:26:00  curt
+/* Code reorganizations.  Added a Lib/ directory for more general libraries.
 /*
+ * Revision 1.6  1998/04/08 22:54:58  curt
+ * Adopted Gnu automake/autoconf system.
+ *
  * Revision 1.5  1998/03/03 16:00:52  curt
  * More c++ compile tweaks.
  *

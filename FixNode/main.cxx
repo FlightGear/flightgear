@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 
     // load the corresponding dem file so we can interpolate elev values
     dem.open(demfile);
-    dem.parse(dem_data);
+    dem.parse();
     dem.close();
 
     // process all the *.1.node files in the specified directory
@@ -104,6 +104,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.2  1998/04/14 02:26:04  curt
+// Code reorganizations.  Added a Lib/ directory for more general libraries.
+//
 // Revision 1.1  1998/04/08 23:05:57  curt
 // Adopted Gnu automake/autoconf system.
 //

@@ -36,7 +36,7 @@
 
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
-#include <Scenery/Bucket/bucketutils.h>
+#include <Bucket/bucketutils.h>
 
 #include "fg_geodesy.h"
 #include "mat3.h"
@@ -612,9 +612,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.7  1998/04/08 23:21:13  curt
-/* Adopted Gnu automake/autoconf system.
+/* Revision 1.8  1998/04/14 02:26:08  curt
+/* Code reorganizations.  Added a Lib/ directory for more general libraries.
 /*
+ * Revision 1.7  1998/04/08 23:21:13  curt
+ * Adopted Gnu automake/autoconf system.
+ *
  * Revision 1.6  1998/03/03 15:36:13  curt
  * Tweaks for compiling with g++
  *

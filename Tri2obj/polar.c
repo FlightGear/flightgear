@@ -27,8 +27,9 @@
 #include <math.h>
 #include <stdio.h>
 
-#include <Math/polar.h>
 #include <Include/fg_constants.h>
+
+#include "polar.h"
 
 
 /* we can save these values between calls for efficiency */
@@ -101,9 +102,12 @@ struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/08 23:22:16  curt
-/* Adopted Gnu automake/autoconf system.
+/* Revision 1.2  1998/04/14 02:26:10  curt
+/* Code reorganizations.  Added a Lib/ directory for more general libraries.
 /*
+ * Revision 1.1  1998/04/08 23:22:16  curt
+ * Adopted Gnu automake/autoconf system.
+ *
  * Revision 1.5  1998/01/27 00:48:00  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

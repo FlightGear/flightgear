@@ -53,7 +53,7 @@ void fixnodes( char *filename, fgDEM dem,
 	       nodes[i][1], nodes[i][2]); */
 
 	nodes[i][2] = 
-	    dem.interpolate_altitude(dem_data, nodes[i][0], nodes[i][1]);
+	    dem.interpolate_altitude(nodes[i][0], nodes[i][1]);
 
 	/* printf("Fixed: %d %.2f %.2f %.2f\n", i, nodes[i][0],
 	       nodes[i][1], nodes[i][2]); */
@@ -80,9 +80,12 @@ void fixnodes( char *filename, fgDEM dem,
 
 
 /* $Log$
-/* Revision 1.1  1998/04/08 23:05:56  curt
-/* Adopted Gnu automake/autoconf system.
+/* Revision 1.2  1998/04/14 02:26:03  curt
+/* Code reorganizations.  Added a Lib/ directory for more general libraries.
 /*
+ * Revision 1.1  1998/04/08 23:05:56  curt
+ * Adopted Gnu automake/autoconf system.
+ *
  * Revision 1.5  1998/03/19 02:50:19  curt
  * Updated to support -lDEM class.
  *

@@ -100,12 +100,12 @@ strips_SOURCES = \
 	triangulate.h triangulatex.h \
 	util.c util.h
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_HEADER = ../../Simulator/Include/config.h
+CONFIG_HEADER = ../../Include/config.h
 CONFIG_CLEAN_FILES = 
 PROGRAMS =  $(bin_PROGRAMS)
 
 
-DEFS = @DEFS@ -I. -I$(srcdir) -I../../Simulator/Include
+DEFS = @DEFS@ -I. -I$(srcdir) -I../../Include
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@

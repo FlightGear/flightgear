@@ -104,15 +104,20 @@ fixnode_SOURCES = \
 	triload.cxx triload.hxx
 
 fixnode_LDADD = \
-	$(top_builddir)/Tools/DEM/libDEM.la \
-        $(top_builddir)/Simulator/Scenery/Bucket/libBucket.la
+	$(top_builddir)/Lib/DEM/libDEM.la \
+        $(top_builddir)/Lib/Bucket/libBucket.la
+
+# We can't build this with "-O2" (optimization) since this causes a seg fault
+# I haven't found a way to strip this out of the CXXFLAGS, so I'm just
+# setting it to "-g"
+CXXFLAGS = -g
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_HEADER = ../../Simulator/Include/config.h
+CONFIG_HEADER = ../../Include/config.h
 CONFIG_CLEAN_FILES = 
 PROGRAMS =  $(bin_PROGRAMS)
 
 
-DEFS = @DEFS@ -I. -I$(srcdir) -I../../Simulator/Include
+DEFS = @DEFS@ -I. -I$(srcdir) -I../../Include
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -121,10 +126,9 @@ X_LIBS = @X_LIBS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 fixnode_OBJECTS =  fixnode.o main.o triload.o
-fixnode_DEPENDENCIES =  $(top_builddir)/Tools/DEM/libDEM.la \
-$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la
+fixnode_DEPENDENCIES =  $(top_builddir)/Lib/DEM/libDEM.la \
+$(top_builddir)/Lib/Bucket/libBucket.la
 fixnode_LDFLAGS = 
-CXXFLAGS = @CXXFLAGS@
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 CXXLINK = $(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@
@@ -361,11 +365,14 @@ clean-generic maintainer-clean-generic clean mostlyclean distclean \
 maintainer-clean
 
 
-INCLUDES += -I.. -I../../Simulator
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.1  1998/04/08 23:05:55  curt
+# Revision 1.2  1998/04/14 02:26:03  curt
+# Code reorganizations.  Added a Lib/ directory for more general libraries.
+#
+# Revision 1.1  1998/04/08 23:05:54  curt
 # Adopted Gnu automake/autoconf system.
 #
 # Revision 1.4  1998/04/06 21:09:44  curt

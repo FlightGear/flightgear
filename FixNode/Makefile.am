@@ -32,14 +32,22 @@ fixnode_SOURCES = \
 	triload.cxx triload.hxx
 
 fixnode_LDADD = \
-	$(top_builddir)/Tools/DEM/libDEM.la \
-        $(top_builddir)/Simulator/Scenery/Bucket/libBucket.la
+	$(top_builddir)/Lib/DEM/libDEM.la \
+        $(top_builddir)/Lib/Bucket/libBucket.la
 
-INCLUDES += -I.. -I../../Simulator
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
+
+# We can't build this with "-O2" (optimization) since this causes a seg fault
+# I haven't found a way to strip this out of the CXXFLAGS, so I'm just
+# setting it to "-g"
+CXXFLAGS = -g
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/04/14 02:26:02  curt
+# Code reorganizations.  Added a Lib/ directory for more general libraries.
+#
 # Revision 1.1  1998/04/08 23:05:54  curt
 # Adopted Gnu automake/autoconf system.
 #
