@@ -1,0 +1,21 @@
+#ifndef _VEC3_SLIDER_H
+#define  _VEC3_SLIDER_H
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <simgear/compiler.h>
+
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
+#include <stdio.h>
+#include "gui.h"
+
+void PilotOffsetInit( sgVec3 vec );
+void PilotOffsetAdjust( puObject * );
+//void PilotOffsetGet( float *po );
+sgVec3 *PilotOffsetGet();
+#endif // _VEC3_SLIDER_H

@@ -83,6 +83,7 @@
 #include "gui_local.hxx"
 #include "apt_dlg.hxx"
 #include "net_dlg.hxx"
+#include "sgVec3Slider.hxx"
 
 FG_USING_STD(string);
 
@@ -635,11 +636,13 @@ puCallback editSubmenuCb        [] = {
 extern void fgHUDalphaAdjust( puObject * );
 char *viewSubmenu               [] = {
     "HUD Alpha",
+    "Pilot Offset",
     /* "Cockpit View > ", "View >","------------", */
     "Toggle Panel...", NULL
 };
 puCallback viewSubmenuCb        [] = {
     fgHUDalphaAdjust,
+    PilotOffsetAdjust,
     /* notCb, notCb, NULL, */
     guiTogglePanel, NULL
 };

@@ -81,6 +81,7 @@
 
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
+#include <GUI/sgVec3Slider.hxx>
 #include <Joystick/joystick.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
@@ -377,7 +378,8 @@ void fgRenderFrame( void ) {
 		       cur_fdm_state->get_Psi() * RAD_TO_DEG,
 		       wup );
 	sgVec3 npo;		// new pilot offset after rotation
-	sgXformVec3( po, po, pilot_view->get_UP() );
+        sgVec3 *pPO = PilotOffsetGet();
+	sgXformVec3( po, *pPO, pilot_view->get_UP() );
 	sgXformVec3( npo, po, CXFM );
 
 	chase_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 

@@ -6,6 +6,7 @@ libGUI_a_SOURCES = \
 	gui_local.cxx gui_local.hxx \
 	mouse.cxx \
 	net_dlg.cxx net_dlg.hxx \
+	sgVec3Slider.cxx sgVec3Slider.hxx \
 	trackball.c trackball.h
 
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
