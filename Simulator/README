@@ -22,6 +22,11 @@ Strucures and code to implement various flight models.  Provides a
 standardized interface to all interesting flight model variabls.
 
 
+mat3/
+-----
+Contains miscellaneous matrix/vector routines.
+
+
 scenery/
 --------
 Scenery parsing/generating code.

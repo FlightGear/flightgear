@@ -59,6 +59,9 @@ struct aircraft_params current_aircraft;
 /* view parameters */
 static GLfloat win_ratio = 1.0;
 
+/* sun direction */
+static GLfloat sun_vec[4] = {-3.0, 1.0, 2.0, 0.0 };
+
 /* temporary hack */
 extern struct mesh *mesh_ptr;
 /* Function prototypes */
@@ -82,7 +85,6 @@ double Simtime;
 
 static void fgInitVisuals() {
     /* if the 4th field is 0.0, this specifies a direction ... */
-    static GLfloat sun_vec[4] = {3.0, 1.0, 3.0, 0.0 };
     static GLfloat color[4] = { 0.3, 0.7, 0.2, 1.0 };
     static GLfloat fogColor[4] = {0.65, 0.65, 0.85, 1.0};
     
@@ -122,6 +124,7 @@ static void fgUpdateViewParams() {
     struct flight_params *f;
     MAT3mat R, tmp;
     MAT3vec vec, forward, up;
+    MAT3hvec sun;
 
     f = &current_aircraft.flight;
 
@@ -170,6 +173,7 @@ static void fgUpdateViewParams() {
 	      pos_x + forward[0], pos_y + forward[1], pos_z + forward[2],
 	      up[0], up[1], up[2]);
 
+    glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
 }
 
 
@@ -209,6 +213,9 @@ void fgTimerCatch() {
     struct flight_params *f;
     static double lastSimtime = -99.9;
     int Overrun;
+
+    /* ignore any SIGALRM's until we come back from our EOM iteration */
+    signal(SIGALRM, SIG_IGN);
 
     f = &current_aircraft.flight;
 
@@ -390,7 +397,7 @@ int main( int argc, char *argv[] ) {
     /* fgSlewInit(-335340,162540, 15, 4.38); */
     /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
 
-    fgFlightModelInit(FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ);
+    fgFlightModelInit(FG_LARCSIM, f, 1.0/(DEFAULT_MODEL_HZ*DEFAULT_MULTILOOP));
 
     /* build all objects */
     fgSceneryInit();
@@ -404,7 +411,7 @@ int main( int argc, char *argv[] ) {
 
       /* call key() on keyboard event */
       glutKeyboardFunc( GLUTkey );
-      glutSpecialFunc( GLUTkey );
+      glutSpecialFunc( GLUTspecialkey );
 
       /* call fgMainLoop() whenever there is nothing else to do */
       glutIdleFunc( fgMainLoop );
@@ -439,9 +446,15 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.9  1997/05/30 19:27:01  curt
-/* The LaRCsim flight model is starting to look like it is working.
+/* Revision 1.10  1997/05/31 04:13:52  curt
+/* WE CAN NOW FLY!!!
 /*
+/* Continuing work on the LaRCsim flight model integration.
+/* Added some MSFS-like keyboard input handling.
+/*
+ * Revision 1.9  1997/05/30 19:27:01  curt
+ * The LaRCsim flight model is starting to look like it is working.
+ *
  * Revision 1.8  1997/05/30 03:54:10  curt
  * Made a bit more progress towards integrating the LaRCsim flight model.
  *

@@ -53,12 +53,12 @@ INTERFACE_FILES = GLUTkey.c
 #---------------------------------------------------------------------------
 
 # For OpenGL
-GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
+# GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
 
 # For Mesa
-# MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
-# X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-# GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
 
 
 CFLAGS = $(STD_CFLAGS) $(INTERFACE_FLAGS)
@@ -103,6 +103,12 @@ mesh2GL.o: mesh2GL.c ../scenery/mesh.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.10  1997/05/31 04:13:53  curt
+# WE CAN NOW FLY!!!
+#
+# Continuing work on the LaRCsim flight model integration.
+# Added some MSFS-like keyboard input handling.
+#
 # Revision 1.9  1997/05/30 23:26:19  curt
 # Added elevator/aileron controls.
 #

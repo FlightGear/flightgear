@@ -42,29 +42,33 @@ void GLUTkey(unsigned char k, int x, int y) {
     printf("Key hit = %d\n", k);
 
     switch (k) {
-    case GLUT_KEY_UP:
-	c->elev -= 0.01;
-	return;
-    case GLUT_KEY_DOWN:
+    case 50: /* numeric keypad 2 */
 	c->elev += 0.01;
 	return;
-    case GLUT_KEY_LEFT:
+    case 56: /* numeric keypad 8 */
+	c->elev -= 0.01;
+	return;
+    case 52: /* numeric keypad 4 */
 	c->aileron += 0.01;
 	return;
-    case GLUT_KEY_RIGHT:
+    case 54: /* numeric keypad 6 */
 	c->aileron -= 0.01;
 	return;
-    case 1 /* TK_END */:
+    case 48: /* numeric keypad Ins */
 	c->rudder -= 0.01;
 	return;
-    case 2 /* TK_PGDWN */:
+    case 13: /* numeric keypad Enter */
 	c->rudder += 0.01;
 	return;
-    case 3:
-	c->throttle[0] -= 0.05;
-	return;
-    case 4:
+    case 53: /* numeric keypad 5 */
+	c->aileron = 0.0;
+	c->elev = 0.0;
+	c->rudder = 0.0;
+    case 57: /* numeric keypad 9 (Pg Up) */
 	c->throttle[0] += 0.05;
+	return;
+    case 51: /* numeric keypad 3 (Pg Dn) */
+	c->throttle[0] -= 0.05;
 	return;
     case 122:
 	fogDensity *= 1.10;
@@ -83,10 +87,42 @@ void GLUTkey(unsigned char k, int x, int y) {
 }
 
 
+/* Handle "special" keyboard events */
+void GLUTspecialkey(unsigned char k, int x, int y) {
+    struct control_params *c;
+
+    c = &current_aircraft.controls;
+
+    printf("Special key hit = %d\n", k);
+
+    switch (k) {
+    case GLUT_KEY_UP:
+	c->elev -= 0.01;
+	return;
+    case GLUT_KEY_DOWN:
+	c->elev += 0.01;
+	return;
+    case GLUT_KEY_LEFT:
+	c->aileron += 0.01;
+	return;
+    case GLUT_KEY_RIGHT:
+	c->aileron -= 0.01;
+	return;
+    }
+
+}
+
+
 /* $Log$
-/* Revision 1.5  1997/05/30 23:26:19  curt
-/* Added elevator/aileron controls.
+/* Revision 1.6  1997/05/31 04:13:52  curt
+/* WE CAN NOW FLY!!!
 /*
+/* Continuing work on the LaRCsim flight model integration.
+/* Added some MSFS-like keyboard input handling.
+/*
+ * Revision 1.5  1997/05/30 23:26:19  curt
+ * Added elevator/aileron controls.
+ *
  * Revision 1.4  1997/05/27 17:44:31  curt
  * Renamed & rearranged variables and routines.   Added some initial simple
  * timer/alarm routines so the flight model can be updated on a regular interval.

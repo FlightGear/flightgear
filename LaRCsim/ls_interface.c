@@ -497,14 +497,14 @@ int initialize;
 int ls_cockpit() {
     struct control_params *c;
 
+    sim_control_.paused = 0;
+
     c = &current_aircraft.controls;
 
     Lat_control = -c->aileron;
     Long_control = -c->elev;
-
-    sim_control_.paused = 0;
-
-    Throttle_pct = 0.95;
+    Rudder_pedal = c->rudder;
+    Throttle_pct = c->throttle[0];
 
     /* printf("Mach = %.2f  ", Mach_number);
     printf("%.4f,%.4f,%.2f  ", Latitude, Longitude, Altitude);
@@ -908,6 +908,12 @@ int fgLaRCsim_2_Flight (struct flight_params *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.6  1997/05/31 04:13:53  curt
+ * WE CAN NOW FLY!!!
+ *
+ * Continuing work on the LaRCsim flight model integration.
+ * Added some MSFS-like keyboard input handling.
+ *
  * Revision 1.5  1997/05/30 23:26:25  curt
  * Added elevator/aileron controls.
  *
