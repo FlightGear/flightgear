@@ -387,29 +387,29 @@ void FGExternalNet::init() {
     HTTPClient *http;
     sprintf( cmd, "/longitude-deg?value=%.8f", lon );
     http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
-    while ( !http->isDone() ) http->poll(0);
+    while ( !http->isDone(1000000) ) http->poll(0);
     delete http;
 
     sprintf( cmd, "/latitude-deg?value=%.8f", lat );
     http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
-    while ( !http->isDone() ) http->poll(0);
+    while ( !http->isDone(1000000) ) http->poll(0);
     delete http;
 
     sprintf( cmd, "/ground-m?value=%.8f", ground );
     http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
-    while ( !http->isDone() ) http->poll(0);
+    while ( !http->isDone(1000000) ) http->poll(0);
     delete http;
 
     sprintf( cmd, "/heading-deg?value=%.8f", heading );
     http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
-    while ( !http->isDone() ) http->poll(0);
+    while ( !http->isDone(1000000) ) http->poll(0);
     delete http;
 
     SG_LOG( SG_IO, SG_INFO, "before sending reset command." );
 
     sprintf( cmd, "/reset?value=ground" );
     http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
-    while ( !http->isDone() ) http->poll(0);
+    while ( !http->isDone(1000000) ) http->poll(0);
     delete http;
 
     SG_LOG( SG_IO, SG_INFO, "Remote FDM init() finished." );
