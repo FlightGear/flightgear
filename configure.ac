@@ -530,6 +530,7 @@ AC_CONFIG_FILES([ \
 	src/Makefile \
 	src/Include/Makefile \
 	src/Include/version.h \
+	src/Include/config.h-msvc6 \
 	src/Aircraft/Makefile \
 	src/Airports/Makefile \
 	src/ATC/Makefile \

@@ -2,6 +2,7 @@
 Makefile
 Makefile.in
 config.h
+config.h-msvc6
 config.h.in
 stamp-h
 stamp-h.in
