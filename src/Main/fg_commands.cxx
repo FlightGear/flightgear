@@ -526,8 +526,12 @@ do_set_oat_degc (const SGPropertyNode * arg)
 {
     const string &temp_str = arg->getStringValue("temp-degc", "15.0");
 
-    static const SGPropertyNode *altitude_ft
-      = fgGetNode("/position/altitude-ft");
+    // check for an altitude specified in the arguments, otherwise use
+    // current aircraft altitude.
+    const SGPropertyNode *altitude_ft = arg->getChild("altitude-ft");
+    if ( altitude_ft == NULL ) {
+        altitude_ft = fgGetNode("/position/altitude-ft");
+    }
 
     FGEnvironment dummy;	// instantiate a dummy so we can leech a method
     dummy.set_elevation_ft( altitude_ft->getDoubleValue() );
@@ -558,6 +562,96 @@ do_set_oat_degc (const SGPropertyNode * arg)
       while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
 	child->setDoubleValue( "temperature-sea-level-degc",
 			       temp_sea_level_degc );
+	++i;
+      }
+    }
+
+    return true;
+}
+
+/**
+ * Set the sea level outside air dewpoint and assigning that to all
+ * boundary and aloft environment layers.
+ */
+static bool
+do_set_dewpoint_sea_level_degc (const SGPropertyNode * arg)
+{
+    double dewpoint_sea_level_degc = arg->getDoubleValue("dewpoint-degc", 5.0);
+
+    SGPropertyNode *node, *child;
+
+    // boundary layers
+    node = fgGetNode( "/environment/config/boundary" );
+    if ( node != NULL ) {
+      int i = 0;
+      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
+	child->setDoubleValue( "dewpoint-sea-level-degc",
+			       dewpoint_sea_level_degc );
+	++i;
+      }
+    }
+
+    // aloft layers
+    node = fgGetNode( "/environment/config/aloft" );
+    if ( node != NULL ) {
+      int i = 0;
+      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
+	child->setDoubleValue( "dewpoint-sea-level-degc",
+			       dewpoint_sea_level_degc );
+	++i;
+      }
+    }
+
+    return true;
+}
+
+
+/**
+ * Set the outside air dewpoint at the "current" altitude by first
+ * calculating the corresponding sea level dewpoint, and assigning
+ * that to all boundary and aloft environment layers.
+ */
+static bool
+do_set_dewpoint_degc (const SGPropertyNode * arg)
+{
+    const string &dewpoint_str = arg->getStringValue("dewpoint-degc", "5.0");
+
+    // check for an altitude specified in the arguments, otherwise use
+    // current aircraft altitude.
+    const SGPropertyNode *altitude_ft = arg->getChild("altitude-ft");
+    if ( altitude_ft == NULL ) {
+        altitude_ft = fgGetNode("/position/altitude-ft");
+    }
+
+    FGEnvironment dummy;	// instantiate a dummy so we can leech a method
+    dummy.set_elevation_ft( altitude_ft->getDoubleValue() );
+    dummy.set_dewpoint_degc( atof( dewpoint_str.c_str() ) );
+    double dewpoint_sea_level_degc = dummy.get_dewpoint_sea_level_degc();
+
+    cout << "Altitude = " << altitude_ft->getDoubleValue() << endl;
+    cout << "Dewpoint at alt (C) = " << atof( dewpoint_str.c_str() ) << endl;
+    cout << "Dewpoint at sea level (C) = " << dewpoint_sea_level_degc << endl;
+ 
+    SGPropertyNode *node, *child;
+
+    // boundary layers
+    node = fgGetNode( "/environment/config/boundary" );
+    if ( node != NULL ) {
+      int i = 0;
+      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
+	child->setDoubleValue( "dewpoint-sea-level-degc",
+			       dewpoint_sea_level_degc );
+	++i;
+      }
+    }
+
+    // aloft layers
+    node = fgGetNode( "/environment/config/aloft" );
+    if ( node != NULL ) {
+      int i = 0;
+      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
+	child->setDoubleValue( "dewpoint-sea-level-degc",
+			       dewpoint_sea_level_degc );
 	++i;
       }
     }
@@ -1118,6 +1212,8 @@ static struct {
     { "tile-cache-reload", do_tile_cache_reload },
     { "set-sea-level-air-temp-degc", do_set_sea_level_degc },
     { "set-outside-air-temp-degc", do_set_oat_degc },
+    { "set-dewpoint-sea-level-air-temp-degc", do_set_dewpoint_sea_level_degc },
+    { "set-dewpoint-temp-degc", do_set_dewpoint_degc },
     { "timeofday", do_timeofday },
     { "property-toggle", do_property_toggle },
     { "property-assign", do_property_assign },

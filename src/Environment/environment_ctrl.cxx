@@ -25,8 +25,10 @@
 #include <stdlib.h>
 #include <algorithm>
 
+#include <simgear/structure/commands.hxx>
 #include <simgear/structure/exception.hxx>
 
+#include <Airports/simple.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
@@ -333,6 +335,27 @@ FGMetarEnvironmentCtrl::~FGMetarEnvironmentCtrl ()
 }
 
 
+// use a "command" to set station temp at station elevation
+static void set_temp_at_altitude( float temp_degc, float altitude_ft ) {
+    SGPropertyNode args;
+    SGPropertyNode *node = args.getNode("temp-degc", 0, true);
+    node->setFloatValue( temp_degc );
+    node = args.getNode("altitude-ft", 0, true);
+    node->setFloatValue( altitude_ft );
+    globals->get_commands()->execute("set-outside-air-temp-degc", &args);
+}
+
+
+static void set_dewpoint_at_altitude( float dewpoint_degc, float altitude_ft ) {
+    SGPropertyNode args;
+    SGPropertyNode *node = args.getNode("dewpoint-degc", 0, true);
+    node->setFloatValue( dewpoint_degc );
+    node = args.getNode("altitude-ft", 0, true);
+    node->setFloatValue( altitude_ft );
+    globals->get_commands()->execute("set-dewpoint-temp-degc", &args);
+}
+
+
 void
 FGMetarEnvironmentCtrl::init ()
 {
@@ -349,15 +372,10 @@ FGMetarEnvironmentCtrl::init ()
 
     fgDefaultWeatherValue( "visibility-m",
                            fgGetDouble("/environment/metar/min-visibility-m") );
-
-    // FIXME: this isn't the correct place in the property tree to set
-    // the weather and it doesn't account for weather station
-    // elevation.
-    fgSetDouble("/environment/temperature-degc",
-        fgGetDouble("/environment/metar/temperature-degc"));
-    fgSetDouble("/environment/dewpoint-degc",
-        fgGetDouble("/environment/metar/dewpoint-degc"));
-
+    set_temp_at_altitude( fgGetDouble("/environment/metar/temperature-degc"),
+                          station_elevation_ft );
+    set_dewpoint_at_altitude( fgGetDouble("/environment/metar/dewpoint-degc"),
+                              station_elevation_ft );
     fgDefaultWeatherValue( "pressure-sea-level-inhg",
                            fgGetDouble("/environment/metar/pressure-inhg") );
 
@@ -381,15 +399,10 @@ FGMetarEnvironmentCtrl::reinit ()
 
     fgDefaultWeatherValue( "visibility-m",
                            fgGetDouble("/environment/metar/min-visibility-m") );
-
-    // FIXME: this isn't the correct place in the property tree to set
-    // the weather and it doesn't account for weather station
-    // elevation.
-    fgSetDouble("/environment/temperature-degc",
-        fgGetDouble("/environment/metar/temperature-degc"));
-    fgSetDouble("/environment/dewpoint-degc",
-        fgGetDouble("/environment/metar/dewpoint-degc"));
-
+    set_temp_at_altitude( fgGetDouble("/environment/metar/temperature-degc"),
+                          station_elevation_ft );
+    set_dewpoint_at_altitude( fgGetDouble("/environment/metar/dewpoint-degc"),
+                              station_elevation_ft );
     fgDefaultWeatherValue( "pressure-sea-level-inhg",
                            fgGetDouble("/environment/metar/pressure-inhg") );
 #endif
@@ -426,6 +439,11 @@ FGMetarEnvironmentCtrl::fetch_data (const char *icao)
         _icao = strdup(icao);
     }
 
+    // fetch station elevation if exists
+    FGAirport a = globals->get_airports()->search( _icao );
+    station_elevation_ft = a.elevation;
+
+    // fetch current metar data
     SGMetar *m;
     try {
         m = new SGMetar(_icao);
@@ -510,7 +528,7 @@ FGMetarEnvironmentCtrl::fetch_data (const char *icao)
         strncat(s, "/elevation-ft", 128);
         d = cloud->getAltitude_ft();
         d = (d != SGMetarNaN) ? d : -9999;
-        fgSetDouble(s, d);
+        fgSetDouble(s, d + station_elevation_ft);
 
         snprintf(s, 128, cl, i);
         strncat(s, "/thickness-ft", 128);

@@ -154,6 +154,7 @@ private:
     FGInterpolateEnvironmentCtrl *env;
 
     char *_icao;
+    float station_elevation_ft;
     void fetch_data (const char *icao);
 };
 
