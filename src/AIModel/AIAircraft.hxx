@@ -90,9 +90,10 @@ private:
 };
 
 inline bool FGAIAircraft::_getGearDown() {
-    return ((fgGetFloat("/position/altitude-agl-ft") < 150.0)
-             && (fgGetFloat("/velocities/airspeed-kt")
-                   < _self->performance->land_speed*1.5));
+    return (!_self) ? false
+                    : ((fgGetFloat("/position/altitude-agl-ft") < 150.0)
+                       && (fgGetFloat("/velocities/airspeed-kt")
+                           < _self->performance->land_speed*1.5));
 }
 
 
