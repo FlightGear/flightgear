@@ -195,9 +195,6 @@ static GLfloat fog_exp_density;
 static GLfloat fog_exp2_density;
 static GLfloat fog_exp2_punch_through;
 
-ssgRoot *lighting = NULL;
-// ssgBranch *airport = NULL;
-
 #ifdef FG_NETWORK_OLK
 ssgSelector *fgd_sel = NULL;
 ssgTransform *fgd_pos = NULL;
@@ -378,7 +375,7 @@ void trRenderFrame( void ) {
     // draw the lights
     glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
     ssgSetNearFar( scene_nearplane, scene_farplane );
-    ssgCullAndDraw( lighting );
+    ssgCullAndDraw( globals->get_scenery()->get_lighting() );
 
     thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 
@@ -687,7 +684,7 @@ void fgRenderFrame() {
 #endif
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
-	ssgCullAndDraw( lighting );
+	ssgCullAndDraw( globals->get_scenery()->get_lighting() );
 
 
 #ifdef FG_EXPERIMENTAL_LIGHTING
@@ -1454,35 +1451,8 @@ int mainLoop( int argc, char **argv ) {
 
     // Initialize the global scenery manager
     globals->set_scenery( new FGScenery );
-
-    // Scene graph root
-    globals->get_scenery()->set_scene_graph(new ssgRoot);
-    globals->get_scenery()->get_scene_graph()->setName( "Scene" );
-
-    lighting = new ssgRoot;
-    lighting->setName( "Lighting" );
-
-    // Terrain branch
-    globals->get_scenery()->set_terrain_branch(new ssgBranch);
-    globals->get_scenery()->get_terrain_branch()->setName( "Terrain" );
-    globals->get_scenery()->get_scene_graph()->addKid( globals->get_scenery()->get_terrain_branch() );
-
-    globals->get_scenery()->set_models_branch(new ssgBranch);
-    globals->get_scenery()->get_models_branch()->setName( "Models" );
-    globals->get_scenery()->get_scene_graph()->addKid( globals->get_scenery()->get_models_branch() );
-
-    globals->get_scenery()->set_aircraft_branch(new ssgBranch);
-    globals->get_scenery()->get_aircraft_branch()->setName( "Aircraft" );
-    globals->get_scenery()->get_scene_graph()->addKid( globals->get_scenery()->get_aircraft_branch() );
-
-    // Lighting
-    globals->get_scenery()->set_gnd_lights_branch(new ssgBranch);
-    globals->get_scenery()->get_gnd_lights_branch()->setName( "Ground Lighting" );
-    lighting->addKid( globals->get_scenery()->get_gnd_lights_branch() );
-
-    globals->get_scenery()->set_rwy_lights_branch(new ssgBranch);
-    globals->get_scenery()->get_rwy_lights_branch()->setName( "Runway Lighting" );
-    lighting->addKid( globals->get_scenery()->get_rwy_lights_branch() );
+    globals->get_scenery()->init();
+    globals->get_scenery()->bind();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the general model subsystem.

@@ -68,6 +68,8 @@ class FGScenery : public FGSubsystem {
     ssgBranch * models_branch;
     ssgBranch * aircraft_branch;
 
+    ssgRoot *lighting;
+
 public:
 
     FGScenery();
@@ -124,6 +126,9 @@ public:
     inline void set_aircraft_branch (ssgBranch * t) {
       aircraft_branch = t;
     }
+
+    inline ssgRoot * get_lighting () const { return lighting; }
+    inline void set_lighting (ssgRoot *l) { lighting = l; }
 };
 
 

@@ -50,20 +50,53 @@ FGScenery::FGScenery() {
     cur_elev = -9999;
 }
 
+
 // Initialize the Scenery Management system
 FGScenery::~FGScenery() {
 }
 
+
 void FGScenery::init() {
+    // Scene graph root
+    scene_graph = new ssgRoot;
+    scene_graph->setName( "Scene" );
+
+    lighting = new ssgRoot;
+    lighting->setName( "Lighting" );
+
+    // Terrain branch
+    terrain_branch = new ssgBranch;
+    terrain_branch->setName( "Terrain" );
+    scene_graph->addKid( terrain_branch );
+
+    models_branch = new ssgBranch;
+    models_branch->setName( "Models" );
+    scene_graph->addKid( models_branch );
+
+    aircraft_branch = new ssgBranch;
+    aircraft_branch->setName( "Aircraft" );
+    scene_graph->addKid( aircraft_branch );
+
+    // Lighting
+    gnd_lights_branch = new ssgBranch;
+    gnd_lights_branch->setName( "Ground Lighting" );
+    lighting->addKid( gnd_lights_branch );
+
+    rwy_lights_branch = new ssgBranch;
+    rwy_lights_branch->setName( "Runway Lighting" );
+    lighting->addKid( rwy_lights_branch );
 }
+
 
 void FGScenery::update(double dt) {
 }
+
 
 void FGScenery::bind() {
     fgTie("/environment/ground-elevation-m", this,
 	  &FGScenery::get_cur_elev, &FGScenery::set_cur_elev);
 }
+
 
 void FGScenery::unbind() {
     fgUntie("/environment/ground-elevation-m");

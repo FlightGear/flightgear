@@ -745,9 +745,6 @@ bool fgInitSubsystems( void ) {
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->get_scenery()->init();
-    globals->get_scenery()->bind();
-
     if ( global_tile_mgr.init() ) {
 	// Load the local scenery data
 	double visibility_meters = fgGetDouble("/environment/visibility-m");
@@ -796,7 +793,7 @@ bool fgInitSubsystems( void ) {
 
 
     ////////////////////////////////////////////////////////////////////
-    // Initialize the lighting subsystem.
+    // Initialize the lightingsubsystem.
     ////////////////////////////////////////////////////////////////////
 
     // fgUpdateSunPos() needs a few position and view parameters set
