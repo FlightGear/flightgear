@@ -1,3 +1,6 @@
+// This should be ported to plib/sg before you try to compile it.  If
+// you do the port please send it to me. :-)
+
 #include <Math/mat3.h>
 #include <Include/fg_constants.h>
 

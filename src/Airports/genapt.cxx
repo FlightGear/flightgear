@@ -36,16 +36,15 @@
 #  include <strings.h>
 #endif
 
+#include <plib/sg.h>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
-#include <simgear/math/mat3.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/fgstream.hxx>
 
 #include <Objects/materialmgr.hxx>
-
-// #include <gpc/gpc.h>
 
 #include "genapt.hxx"
 
@@ -90,8 +89,8 @@ gen_base( const Point3D& average, const container& perimeter, FGTileEntry *t)
 {
     GLint display_list;
     Point3D cart, cart_trans, tex;
-    MAT3vec normal;
-    double dist, max_dist, temp;
+    sgVec3 normal;
+    double dist, max_dist;
     int center_num, i;
 
     fgFRAGMENT fragment;
@@ -119,10 +118,8 @@ gen_base( const Point3D& average, const container& perimeter, FGTileEntry *t)
 	    << average.x() << " " << average.y() << " " << average.z() );
     fragment.center = average;
 
-    normal[0] = average.x();
-    normal[1] = average.y();
-    normal[2] = average.z();
-    MAT3_NORMALIZE_VEC(normal, temp);
+    sgSetVec3( normal, average.x(), average.y(), average.z() );
+    sgNormalizeVec3( normal );
     
     display_list = xglGenLists(1);
     xglNewList(display_list, GL_COMPILE);
@@ -138,7 +135,7 @@ gen_base( const Point3D& average, const container& perimeter, FGTileEntry *t)
 
     tex = calc_tex_coords( t->nodes[t->ncount-1], t->center );
     xglTexCoord2f(tex.x(), tex.y());
-    xglNormal3dv(normal);
+    xglNormal3fv(normal);
     xglVertex3d(t->nodes[t->ncount-1][0],
 		t->nodes[t->ncount-1][1],
 		t->nodes[t->ncount-1][2]);

@@ -22,7 +22,6 @@
 
 
 #include <simgear/constants.h>
-#include <simgear/math/mat3.h>
 #include <simgear/math/point3d.hxx>
 
 #include <Scenery/tileentry.hxx>
@@ -98,8 +97,9 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 			   Point3D& result) const
 {
     FGTileEntry *t;
-    MAT3vec v1, v2, n, center;
-    double p1[3], p2[3], p3[3];
+    sgVec3 v1, v2, n, center;
+    sgVec3 p1, p2, p3;
+    sgVec3 temp;
     double x, y, z;  // temporary holding spot for result
     double a, b, c, d;
     double x0, y0, z0, x1, y1, z1, a1, b1, c1;
@@ -120,22 +120,28 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 	// printf(".");
 
 	// get face vertex coordinates
-	center[0] = t->center.x();
-	center[1] = t->center.y();
-	center[2] = t->center.z();
+	sgSetVec3( center, t->center.x(), t->center.y(), t->center.z() );
 
-	MAT3_ADD_VEC(p1, t->nodes[(*current).n1], center);
-	MAT3_ADD_VEC(p2, t->nodes[(*current).n2], center);
-	MAT3_ADD_VEC(p3, t->nodes[(*current).n3], center);
+	sgSetVec3( temp, t->nodes[(*current).n1].x(), 
+		   t->nodes[(*current).n1].y(), t->nodes[(*current).n1].z() );
+	sgAddVec3( p1, temp, center );
+
+	sgSetVec3( temp, t->nodes[(*current).n2].x(), 
+		   t->nodes[(*current).n2].y(), t->nodes[(*current).n2].z() );
+	sgAddVec3( p2, temp, center );
+
+	sgSetVec3( temp, t->nodes[(*current).n3].x(), 
+		   t->nodes[(*current).n3].y(), t->nodes[(*current).n3].z() );
+	sgAddVec3( p3, temp, center );
 
 	// printf("point 1 = %.2f %.2f %.2f\n", p1[0], p1[1], p1[2]);
 	// printf("point 2 = %.2f %.2f %.2f\n", p2[0], p2[1], p2[2]);
 	// printf("point 3 = %.2f %.2f %.2f\n", p3[0], p3[1], p3[2]);
 
 	// calculate two edge vectors, and the face normal
-	MAT3_SUB_VEC(v1, p2, p1);
-	MAT3_SUB_VEC(v2, p3, p1);
-	MAT3cross_product(n, v1, v2);
+	sgSubVec3( v1, p2, p1 );
+	sgSubVec3( v2, p3, p1 );
+	sgVectorProductVec3( n, v1, v2 );
 
 	// calculate the plane coefficients for the plane defined by
 	// this face.  If n is the normal vector, n = (a, b, c) and p1
@@ -282,7 +288,7 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 	    // all dimensions are really small so lets call it close
 	    // enough and return a successful match
 	    result = Point3D(x, y, z);
-	    return(1);
+	    return 1;
 	}
 
 	// check if intersection point is on the same side of p1 <-> p2 as p3
@@ -314,11 +320,11 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 
 	// printf( "intersection point = %.2f %.2f %.2f\n", x, y, z);
 	result = Point3D(x, y, z);
-	return(1);
+	return 1;
     }
 
     // printf("\n");
 
-    return(0);
+    return 0;
 }
 

@@ -46,7 +46,6 @@
 #include <simgear/logstream.hxx>
 #include <simgear/constants.h>
 #include <simgear/fg_random.h>
-#include <simgear/mat3.h>
 #include <simgear/polar3d.hxx>
 
 #include <Aircraft/aircraft.hxx>

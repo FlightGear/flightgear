@@ -48,7 +48,6 @@
 #include <deque>        // STL double ended queue
 
 #include <simgear/constants.h>
-#include <simgear/math/mat3.h>
 
 #include <fg_typedefs.h>
 #include <Aircraft/aircraft.hxx>
@@ -56,10 +55,14 @@
 #include <Controls/controls.hxx>
 #include <GUI/gui.h>
 
+#include "hud_opts.hxx"
+
 FG_USING_STD(deque);
 FG_USING_STD(vector);
 FG_USING_NAMESPACE(std);
 
+
+// some of Norman's crazy optimizations. :-)
 
 #ifndef WIN32
   typedef struct {

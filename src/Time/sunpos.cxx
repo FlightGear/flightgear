@@ -53,7 +53,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
-#include <simgear/math/mat3.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/vector.hxx>

@@ -35,7 +35,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
-#include <simgear/math/mat3.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/vector.hxx>
@@ -152,14 +151,14 @@ void FGTileMgr::load_tile( const FGBucket& b, int cache_index) {
 
 // Calculate shortest distance from point to line
 static double point_line_dist_squared( const Point3D& tc, const Point3D& vp, 
-				       MAT3vec d )
+				       sgVec3 d )
 {
-    MAT3vec p, p0;
+    sgVec3 p, p0;
 
-    p[0] = tc.x(); p[1] = tc.y(); p[2] = tc.z();
-    p0[0] = vp.x(); p0[1] = vp.y(); p0[2] = vp.z();
+    sgSetVec3( p, tc.x(), tc.y(), tc.z() );
+    sgSetVec3( p0, vp.x(), vp.y(), vp.z() );
 
-    return fgPointLineSquared(p, p0, d);
+    return sgPointLineDistSquared(p, p0, d);
 }
 
 
@@ -174,13 +173,11 @@ FGTileMgr::current_elev_new( const FGBucket& p ) {
     Point3D abs_view_pos = current_view.get_abs_view_pos();
     Point3D earth_center(0.0);
     Point3D result;
-    MAT3vec local_up;
+    sgVec3 local_up;
     double dist, lat_geod, alt, sea_level_r;
     int index;
 
-    local_up[0] = abs_view_pos.x();
-    local_up[1] = abs_view_pos.y();
-    local_up[2] = abs_view_pos.z();
+    sgSetVec3( local_up, abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z() );
 
     // Find current translation offset
     // fgBucketFind(lon * RAD_TO_DEG, lat * RAD_TO_DEG, &p);
@@ -272,7 +269,7 @@ FGTileMgr::current_elev( double lon, double lat, const Point3D& abs_view_pos ) {
     fgFRAGMENT *frag_ptr;
     Point3D earth_center(0.0);
     Point3D result;
-    MAT3vec local_up;
+    sgVec3 local_up;
     double dist, lat_geod, alt, sea_level_r;
     int index;
 
@@ -985,9 +982,9 @@ int FGTileMgr::update( void ) {
 
 static int
 inrange( const double radius, const Point3D& center, const Point3D& vp,
-	 const MAT3vec up)
+	 const sgVec3 up)
 {
-    MAT3vec u, u1, v;
+    sgVec3 u, u1, v;
     //	double tmp;
 	
     // u = p - p0
@@ -998,14 +995,14 @@ inrange( const double radius, const Point3D& center, const Point3D& vp,
     // calculate the projection, u1, of u along d.
     // u1 = ( dot_prod(u, d) / dot_prod(d, d) ) * d;
 	
-    MAT3_SCALE_VEC(u1, up,
-		   (MAT3_DOT_PRODUCT(u, up) / MAT3_DOT_PRODUCT(up, up)) );
+    sgScaleVec3( u1, up,
+		 (sgScalarProductVec3(u, up) / sgScalarProductVec3(up, up)) );
     
     // v = u - u1 = vector from closest point on line, p1, to the
     // original point, p.
-    MAT3_SUB_VEC(v, u, u1);
+    sgSubVec3( v, u, u1 );
 	
-    return( FG_SQUARE(radius) >= MAT3_DOT_PRODUCT(v, v));
+    return( FG_SQUARE(radius) >= sgScalarProductVec3(v, v));
 }
 
 

@@ -46,7 +46,6 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/mat3.h>
 #include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/fg_random.h>
 #include <simgear/math/point3d.hxx>
@@ -76,16 +75,15 @@ static double tex_coords[FG_MAX_NODES*3][3];
 
 // given three points defining a triangle, calculate the normal
 static void calc_normal(Point3D p1, Point3D p2, 
-			Point3D p3, double normal[3])
+			Point3D p3, sgVec3 normal)
 {
-    double v1[3], v2[3];
-    double temp;
+    sgVec3 v1, v2;
 
     v1[0] = p2[0] - p1[0]; v1[1] = p2[1] - p1[1]; v1[2] = p2[2] - p1[2];
     v2[0] = p3[0] - p1[0]; v2[1] = p3[1] - p1[1]; v2[2] = p3[2] - p1[2];
 
-    MAT3cross_product(normal, v1, v2);
-    MAT3_NORMALIZE_VEC(normal,temp);
+    sgVectorProductVec3( normal, v1, v2 );
+    sgNormalizeVec3( normal );
 
     // fgPrintf( FG_TERRAIN, FG_DEBUG, "  Normal = %.2f %.2f %.2f\n", 
     //           normal[0], normal[1], normal[2]);
@@ -152,7 +150,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     // material
     FGMaterial m = fragment.material_ptr->get_m();
     double tex_width = m.get_xsize();
-    double tex_height = m.get_ysize();
+    // double tex_height = m.get_ysize();
 
     // set ssgState
     state = fragment.material_ptr->get_state();
@@ -273,7 +271,8 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
     fgFRAGMENT fragment;
     Point3D pp;
-    double approx_normal[3] /*, normal[3], scale = 0.0 */;
+    sgVec3 approx_normal;
+    // double normal[3], scale = 0.0;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     // GLint display_list = 0;
