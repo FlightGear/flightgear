@@ -12,10 +12,10 @@ main() {
     double FG_Phi = 0.00;
     double FG_Theta = 0.00;
     double FG_Psi = 0.00;
-    // double FG_Latitude = 33.3528917 * DEG_TO_RAD;
+    // double FG_Latitude = 33.3528917 * SGD_DEGREES_TO_RADIANS;
     double FG_Latitude = 0.0;
-    // double FG_Longitude = -110.6642444 * DEG_TO_RAD;
-    double FG_Longitude = 90.0 * DEG_TO_RAD;
+    // double FG_Longitude = -110.6642444 * SGD_DEGREES_TO_RADIANS;
+    double FG_Longitude = 90.0 * SGD_DEGREES_TO_RADIANS;
     // double view_pos[] = {2936.3222, 1736.9243, 3689.5359, 1.0};
     double view_pos[] = {0.0, 0.0, 0.0, 1.0};
 

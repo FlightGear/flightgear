@@ -410,8 +410,8 @@ bool fgInitPosition( void ) {
     string id = fgGetString("/sim/startup/airport-id");
 
     // set initial position from default or command line coordinates
-    f->set_Longitude( fgGetDouble("/position/longitude") * DEG_TO_RAD );
-    f->set_Latitude( fgGetDouble("/position/latitude") * DEG_TO_RAD );
+    f->set_Longitude( fgGetDouble("/position/longitude") * SGD_DEGREES_TO_RADIANS );
+    f->set_Latitude( fgGetDouble("/position/latitude") * SGD_DEGREES_TO_RADIANS );
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "scenery.cur_elev = " << scenery.cur_elev );
@@ -438,8 +438,8 @@ bool fgInitPosition( void ) {
     f->set_Altitude( fgGetDouble("/position/altitude") );
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Initial position is: ("
-	    << (f->get_Longitude() * RAD_TO_DEG) << ", "
-	    << (f->get_Latitude() * RAD_TO_DEG) << ", "
+	    << (f->get_Longitude() * SGD_RADIANS_TO_DEGREES) << ", "
+	    << (f->get_Latitude() * SGD_RADIANS_TO_DEGREES) << ", "
 	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
 
     return true;
@@ -620,8 +620,8 @@ bool fgInitSubsystems( void ) {
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Updated position (after elevation adj): ("
-	    << (cur_fdm_state->get_Latitude() * RAD_TO_DEG) << ", "
-	    << (cur_fdm_state->get_Longitude() * RAD_TO_DEG) << ", "
+	    << (cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES) << ", "
+	    << (cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES) << ", "
 	    << (cur_fdm_state->get_Altitude() * FEET_TO_METER) << ")" );
 
     // We need to calculate a few sea_level_radius here so we can pass
@@ -642,9 +642,9 @@ bool fgInitSubsystems( void ) {
 
     // Initial Orientation
 //     cur_fdm_state->
-// 	set_Euler_Angles( fgGetDouble("/orientation/roll") * DEG_TO_RAD,
-// 			  fgGetDouble("/orientation/pitch") * DEG_TO_RAD,
-// 			  fgGetDouble("/orientation/heading") * DEG_TO_RAD );
+// 	set_Euler_Angles( fgGetDouble("/orientation/roll") * SGD_DEGREES_TO_RADIANS,
+// 			  fgGetDouble("/orientation/pitch") * SGD_DEGREES_TO_RADIANS,
+// 			  fgGetDouble("/orientation/heading") * SGD_DEGREES_TO_RADIANS );
 
     // Initialize the event manager
     global_events.Init();
@@ -794,8 +794,8 @@ bool fgInitSubsystems( void ) {
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Updated position (after elevation adj): ("
-	    << (cur_fdm_state->get_Latitude() * RAD_TO_DEG) << ", "
-	    << (cur_fdm_state->get_Longitude() * RAD_TO_DEG) << ", "
+	    << (cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES) << ", "
+	    << (cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES) << ", "
 	    << (cur_fdm_state->get_Altitude() * FEET_TO_METER) << ")" );
     // *ABCD* end of thing that I just stuck in that I should probably
     // move
@@ -906,9 +906,9 @@ void fgReInitSubsystems( void )
 
     // Initial Orientation
 //     cur_fdm_state->
-// 	set_Euler_Angles( fgGetDouble("/orientation/roll") * DEG_TO_RAD,
-// 			  fgGetDouble("/orientation/pitch") * DEG_TO_RAD,
-// 			  fgGetDouble("/orientation/heading") * DEG_TO_RAD );
+// 	set_Euler_Angles( fgGetDouble("/orientation/roll") * SGD_DEGREES_TO_RADIANS,
+// 			  fgGetDouble("/orientation/pitch") * SGD_DEGREES_TO_RADIANS,
+// 			  fgGetDouble("/orientation/heading") * SGD_DEGREES_TO_RADIANS );
 
     // Initialize view parameters
     FGViewerRPH *pilot_view =

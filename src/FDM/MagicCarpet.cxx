@@ -74,17 +74,17 @@ bool FGMagicCarpet::update( int multiloop ) {
     double lat2, lon2, az2;
     if ( speed > SG_EPSILON ) {
 	geo_direct_wgs_84 ( get_Altitude(),
-			    get_Latitude() * RAD_TO_DEG,
-			    get_Longitude() * RAD_TO_DEG,
-			    get_Psi() * RAD_TO_DEG,
+			    get_Latitude() * SGD_RADIANS_TO_DEGREES,
+			    get_Longitude() * SGD_RADIANS_TO_DEGREES,
+			    get_Psi() * SGD_RADIANS_TO_DEGREES,
 			    dist, &lat2, &lon2, &az2 );
 
-	_set_Longitude( lon2 * DEG_TO_RAD );
-	_set_Latitude( lat2 * DEG_TO_RAD );
+	_set_Longitude( lon2 * SGD_DEGREES_TO_RADIANS );
+	_set_Latitude( lat2 * SGD_DEGREES_TO_RADIANS );
     }
 
-    // cout << "lon error = " << fabs(end.x()*RAD_TO_DEG - lon2)
-    //      << "  lat error = " << fabs(end.y()*RAD_TO_DEG - lat2)
+    // cout << "lon error = " << fabs(end.x()*SGD_RADIANS_TO_DEGREES - lon2)
+    //      << "  lat error = " << fabs(end.y()*SGD_RADIANS_TO_DEGREES - lat2)
     //      << endl;
 
     double sl_radius, lat_geoc;

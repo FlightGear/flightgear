@@ -253,7 +253,7 @@ bool FGADA::copy_from_FGADA() {
     _set_Mach_number( Machno);
 
     //    printf("sr=%f\n",Sea_level_radius);
-    //    printf("psi = %f %f\n",Psi,Psi*RAD_TO_DEG);    
+    //    printf("psi = %f %f\n",Psi,Psi*SGD_RADIANS_TO_DEGREES);    
 
     // controls
     controls.set_throttle(0,throttle/131.0);

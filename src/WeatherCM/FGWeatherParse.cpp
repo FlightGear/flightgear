@@ -169,6 +169,6 @@ FGPhysicalProperties FGWeatherParse::getFGPhysicalProperties(const unsigned int 
 void FGWeatherParse::getPosition(const unsigned int nr, sgVec2 pos) const
 {
     //set the position of the station
-    sgSetVec2( pos, weather_station[nr].lat * DEG_TO_RAD, weather_station[nr].lon * DEG_TO_RAD ); 
+    sgSetVec2( pos, weather_station[nr].lat * SGD_DEGREES_TO_RADIANS, weather_station[nr].lon * SGD_DEGREES_TO_RADIANS ); 
 }
 

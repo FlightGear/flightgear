@@ -30,6 +30,8 @@
 INCLUDES
 *******************************************************************************/
 
+#include <plib/sg.h>
+
 #include <FDM/LaRCsim/ls_constants.h>
 #include <FDM/LaRCsim/ls_types.h>
 
@@ -69,7 +71,7 @@ public:
   void SetAltitudeAGLFtIC(SCALAR tt);
   
   //"vertical" flight path, recalculate theta
-  inline void SetFlightPathAngleDegIC(SCALAR tt) { SetFlightPathAngleRadIC(tt*DEG_TO_RAD); }
+  inline void SetFlightPathAngleDegIC(SCALAR tt) { SetFlightPathAngleRadIC(tt*SGD_DEGREES_TO_RADIANS); }
   void SetFlightPathAngleRadIC(SCALAR tt);
   
   //set speed first
@@ -77,26 +79,26 @@ public:
   void SetClimbRateFpsIC(SCALAR tt);
   
   //use currently stored gamma, recalcualte theta
-  inline void SetAlphaDegIC(SCALAR tt)      { alpha=tt*DEG_TO_RAD; getTheta(); }
+  inline void SetAlphaDegIC(SCALAR tt)      { alpha=tt*SGD_DEGREES_TO_RADIANS; getTheta(); }
   inline void SetAlphaRadIC(SCALAR tt)      { alpha=tt; getTheta(); }
   
   //use currently stored gamma, recalcualte alpha
-  inline void SetPitchAngleDegIC(SCALAR tt) { SetPitchAngleRadIC(tt*DEG_TO_RAD); }
+  inline void SetPitchAngleDegIC(SCALAR tt) { SetPitchAngleRadIC(tt*SGD_DEGREES_TO_RADIANS); }
          void SetPitchAngleRadIC(SCALAR tt);
 
-  inline void SetBetaDegIC(SCALAR tt)       { beta=tt*DEG_TO_RAD; getTheta();}
+  inline void SetBetaDegIC(SCALAR tt)       { beta=tt*SGD_DEGREES_TO_RADIANS; getTheta();}
   inline void SetBetaRadIC(SCALAR tt)       { beta=tt; getTheta(); }
   
-  inline void SetRollAngleDegIC(SCALAR tt) { phi=tt*DEG_TO_RAD; getTheta(); }
+  inline void SetRollAngleDegIC(SCALAR tt) { phi=tt*SGD_DEGREES_TO_RADIANS; getTheta(); }
   inline void SetRollAngleRadIC(SCALAR tt) { phi=tt; getTheta(); }
 
-  inline void SetHeadingDegIC(SCALAR tt)   { psi=tt*DEG_TO_RAD; }
+  inline void SetHeadingDegIC(SCALAR tt)   { psi=tt*SGD_DEGREES_TO_RADIANS; }
   inline void SetHeadingRadIC(SCALAR tt)   { psi=tt; }
 
-  inline void SetLatitudeGDDegIC(SCALAR tt)  { SetLatitudeGDRadIC(tt*DEG_TO_RAD); }
+  inline void SetLatitudeGDDegIC(SCALAR tt)  { SetLatitudeGDRadIC(tt*SGD_DEGREES_TO_RADIANS); }
          void SetLatitudeGDRadIC(SCALAR tt);
 
-  inline void SetLongitudeDegIC(SCALAR tt) { longitude=tt*DEG_TO_RAD; }
+  inline void SetLongitudeDegIC(SCALAR tt) { longitude=tt*SGD_DEGREES_TO_RADIANS; }
   inline void SetLongitudeRadIC(SCALAR tt) { longitude=tt; }
   
   void SetRunwayAltitudeFtIC(SCALAR tt);
@@ -112,32 +114,32 @@ public:
   
   inline SCALAR GetRunwayAltitudeFtIC(void) { return runway_altitude; }
 
-  inline SCALAR GetFlightPathAngleDegIC(void) { return gamma*RAD_TO_DEG; }
+  inline SCALAR GetFlightPathAngleDegIC(void) { return gamma*SGD_RADIANS_TO_DEGREES; }
   inline SCALAR GetFlightPathAngleRadIC(void) { return gamma; }
 
   inline SCALAR GetClimbRateFpmIC(void) { return hdot*60; }
   inline SCALAR GetClimbRateFpsIC(void) { return hdot; }
 
-  inline SCALAR GetAlphaDegIC(void)      { return alpha*RAD_TO_DEG; }
+  inline SCALAR GetAlphaDegIC(void)      { return alpha*SGD_RADIANS_TO_DEGREES; }
   inline SCALAR GetAlphaRadIC(void)      { return alpha; }
 
-  inline SCALAR GetPitchAngleDegIC(void) { return theta*RAD_TO_DEG; }
+  inline SCALAR GetPitchAngleDegIC(void) { return theta*SGD_RADIANS_TO_DEGREES; }
   inline SCALAR GetPitchAngleRadIC(void) { return theta; }
 
 
-  inline SCALAR GetBetaDegIC(void)       { return beta*RAD_TO_DEG; }
-  inline SCALAR GetBetaRadIC(void)       { return beta*RAD_TO_DEG; }
+  inline SCALAR GetBetaDegIC(void)       { return beta*SGD_RADIANS_TO_DEGREES; }
+  inline SCALAR GetBetaRadIC(void)       { return beta*SGD_RADIANS_TO_DEGREES; }
 
-  inline SCALAR GetRollAngleDegIC(void) { return phi*RAD_TO_DEG; }
+  inline SCALAR GetRollAngleDegIC(void) { return phi*SGD_RADIANS_TO_DEGREES; }
   inline SCALAR GetRollAngleRadIC(void) { return phi; }
 
-  inline SCALAR GetHeadingDegIC(void)   { return psi*RAD_TO_DEG; }
+  inline SCALAR GetHeadingDegIC(void)   { return psi*SGD_RADIANS_TO_DEGREES; }
   inline SCALAR GetHeadingRadIC(void)   { return psi; }
 
-  inline SCALAR GetLatitudeGDDegIC(void)  { return latitude_gd*RAD_TO_DEG; }
+  inline SCALAR GetLatitudeGDDegIC(void)  { return latitude_gd*SGD_RADIANS_TO_DEGREES; }
   inline SCALAR GetLatitudeGDRadIC(void) { return latitude_gd; }
 
-  inline SCALAR GetLongitudeDegIC(void) { return longitude*RAD_TO_DEG; }
+  inline SCALAR GetLongitudeDegIC(void) { return longitude*SGD_RADIANS_TO_DEGREES; }
   inline SCALAR GetLongitudeRadIC(void) { return longitude; }
 
   inline SCALAR GetUBodyFpsIC(void) { return vt*cos(alpha)*cos(beta); }

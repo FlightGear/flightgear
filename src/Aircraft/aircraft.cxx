@@ -50,8 +50,8 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
     FG_LOG( FG_FLIGHT, FG_DEBUG,
 	    "Pos = ("
-	    << (f->get_Longitude() * 3600.0 * RAD_TO_DEG) << "," 
-	    << (f->get_Latitude()  * 3600.0 * RAD_TO_DEG) << ","
+	    << (f->get_Longitude() * 3600.0 * SGD_RADIANS_TO_DEGREES) << "," 
+	    << (f->get_Latitude()  * 3600.0 * SGD_RADIANS_TO_DEGREES) << ","
 	    << f->get_Altitude() 
 	    << ")  (Phi,Theta,Psi)=("
 	    << f->get_Phi() << "," 

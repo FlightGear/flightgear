@@ -382,8 +382,8 @@ void fgd_send_com( char *FGD_com, char *FGFS_host) {
    speed loss/gain in network-area...
 */
                           get_latitude(), get_longitude(), get_altitude(),
-                          get_speed(), get_roll()*RAD_TO_DEG,
-                          get_pitch()*RAD_TO_DEG, get_heading());
+                          get_speed(), get_roll()*SGD_RADIANS_TO_DEGREES,
+                          get_pitch()*SGD_RADIANS_TO_DEGREES, get_heading());
                  write( sock, fgd_txt, 56);
                  break;
 

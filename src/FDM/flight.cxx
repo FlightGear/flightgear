@@ -283,7 +283,7 @@ void FGInterface::_updatePosition( double lat_geoc, double lon, double alt ) {
 	    << " tmp_alt = " << tmp_alt * METER_TO_FEET
 	    << " sl_radius1 = " << sl_radius1 * METER_TO_FEET
 	    << " sl_radius2 = " << sl_radius2 * METER_TO_FEET
-	    << " Equator = " << EQUATORIAL_RADIUS_FT );
+	    << " Equator = " << SG_EQUATORIAL_RADIUS_FT );
 
     _set_Geocentric_Position( lat_geoc, lon, 
 			      sl_radius2 * METER_TO_FEET + alt );

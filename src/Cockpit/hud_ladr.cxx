@@ -156,7 +156,7 @@ void HudLadder :: draw( void )
     wowm = get_iaux4();
     ihook = get_iaux5();
     
-    float pitch_value = current_ch1() * RAD_TO_DEG;
+    float pitch_value = current_ch1() * SGD_RADIANS_TO_DEGREES;
 	
     if(hudladder_type=="Climb/Dive Ladder") {
 	pitch_ladder = false;
@@ -234,11 +234,11 @@ void HudLadder :: draw( void )
 		actslope = (up_vel/fabs(up_vel))*90.0;
 	    }
 	} else {
-	    actslope = atan(up_vel/ground_vel)*RAD_TO_DEG;
+	    actslope = atan(up_vel/ground_vel)*SGD_RADIANS_TO_DEGREES;
 	}
 
-	xvvr = (((atan2(Vyy,Vxx)*RAD_TO_DEG)-psi)*(640.0/45.0));
-	drift = ((atan2(Vyy,Vxx)*RAD_TO_DEG)-psi);
+	xvvr = (((atan2(Vyy,Vxx)*SGD_RADIANS_TO_DEGREES)-psi)*(640.0/45.0));
+	drift = ((atan2(Vyy,Vxx)*SGD_RADIANS_TO_DEGREES)-psi);
 	yvvr = ((actslope - pitch_value)*factor);
 	vel_y = ((actslope -pitch_value) * cos(roll_value) + drift*sin(roll_value))*factor;
 	vel_x = (-(actslope -pitch_value)*sin(roll_value) + drift*cos(roll_value))*(640/45.0);
@@ -369,7 +369,7 @@ void HudLadder :: draw( void )
 	    t1 = up_vel/total_vel;
 	    t2 = asin((Vxx*Axx + Vyy*Ayy + Vzz*Azz)/(9.81*total_vel));
 	}
-	pot_slope = ((t2/3)*RAD_TO_DEG)*factor + vel_y;
+	pot_slope = ((t2/3)*SGD_RADIANS_TO_DEGREES)*factor + vel_y;
 	//    if (pot_slope < (vel_y - 45)) pot_slope = vel_y-45;
 	//    if (pot_slope > (vel_y + 45)) pot_slope = vel_y+45;
 
@@ -413,8 +413,8 @@ void HudLadder :: draw( void )
 	    // ATTRIB - ON CONDITION
 	    glBegin(GL_LINE_STRIP);
 	    glVertex2f(-6, -134);
-	    glVertex2f(-6, t2*RAD_TO_DEG*4.0 - 134);
-	    glVertex2f(+6, t2*RAD_TO_DEG*4.0 - 134);
+	    glVertex2f(-6, t2*SGD_RADIANS_TO_DEGREES*4.0 - 134);
+	    glVertex2f(+6, t2*SGD_RADIANS_TO_DEGREES*4.0 - 134);
 	    glVertex2f(6, -134);
 	    glEnd();
 	    // OBJECT MOVING RETICLE
@@ -460,7 +460,7 @@ void HudLadder :: draw( void )
 
 	}
 
-    glRotatef(roll_value * RAD_TO_DEG, 0.0, 0.0, 1.0);
+    glRotatef(roll_value * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
     // FRL marker not rotated - this line shifted below
 
     if( div_units ) {
@@ -621,10 +621,10 @@ void HudLadder :: draw( void )
 	//waypoint marker computation
 	float fromwp_lat,towp_lat,fromwp_lon,towp_lon,dist,delx,dely,hyp,theta,brg;
 
-	fromwp_lon = get_longitude()*DEG_TO_RAD;
-	fromwp_lat = get_latitude()*DEG_TO_RAD;
-	towp_lon = get_aux5()*DEG_TO_RAD;
-	towp_lat = get_aux6()*DEG_TO_RAD;
+	fromwp_lon = get_longitude()*SGD_DEGREES_TO_RADIANS;
+	fromwp_lat = get_latitude()*SGD_DEGREES_TO_RADIANS;
+	towp_lon = get_aux5()*SGD_DEGREES_TO_RADIANS;
+	towp_lat = get_aux6()*SGD_DEGREES_TO_RADIANS;
 
 	dist = acos(sin(fromwp_lat)*sin(towp_lat)+cos(fromwp_lat)*cos(towp_lat)*cos(fabs(fromwp_lon-towp_lon)));
 	delx= towp_lat - fromwp_lat;
@@ -635,13 +635,13 @@ void HudLadder :: draw( void )
 	} else {
 	    theta = 0.0;
 	}
-	brg = theta*RAD_TO_DEG;
+	brg = theta*SGD_RADIANS_TO_DEGREES;
 	if (brg > 360.0) brg = 0.0;
 	if (delx < 0) brg = 180 - brg;
 
 	//        {Brg  = asin(cos(towp_lat)*sin(fabs(fromwp_lon-towp_lon))/ sin(dist));
-	//        Brg = Brg * RAD_TO_DEG; }
-	dist = dist*RAD_TO_DEG * 60.0*1852.0; //rad->deg->nm->m
+	//        Brg = Brg * SGD_RADIANS_TO_DEGREES; }
+	dist = dist*SGD_RADIANS_TO_DEGREES * 60.0*1852.0; //rad->deg->nm->m
 	// end waypoint marker computation
 	//*********************************************************
 	// OBJECT MOVING RETICLE

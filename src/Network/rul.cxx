@@ -61,7 +61,7 @@ bool FGRUL::gen_message() {
     FGInterface *f = cur_fdm_state;
 
     // get roll and pitch, convert to degrees
-    double roll_deg = f->get_Phi() * RAD_TO_DEG;
+    double roll_deg = f->get_Phi() * SGD_RADIANS_TO_DEGREES;
     while ( roll_deg < -180.0 ) {
 	roll_deg += 360.0;
     }
@@ -69,7 +69,7 @@ bool FGRUL::gen_message() {
 	roll_deg -= 360.0;
     }
 
-    double pitch_deg = f->get_Theta() * RAD_TO_DEG;
+    double pitch_deg = f->get_Theta() * SGD_RADIANS_TO_DEGREES;
     while ( pitch_deg < -180.0 ) {
 	pitch_deg += 360.0;
     }

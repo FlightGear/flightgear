@@ -153,8 +153,8 @@ _set_view_from_axes ()
       viewDir = 270;
   }
 
-  globals->get_current_view()->set_goal_view_offset(viewDir*DEG_TO_RAD);
-//   globals->get_current_view()->set_view_offset(viewDir*DEG_TO_RAD);
+  globals->get_current_view()->set_goal_view_offset(viewDir*SGD_DEGREES_TO_RADIANS);
+//   globals->get_current_view()->set_view_offset(viewDir*SGD_DEGREES_TO_RADIANS);
 }
 
 // END: kludge
@@ -362,7 +362,7 @@ FGBFI::getGMTString ()
 double
 FGBFI::getLatitude ()
 {
-  return current_aircraft.fdm_state->get_Latitude() * RAD_TO_DEG;
+  return current_aircraft.fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;
 }
 
 
@@ -372,7 +372,7 @@ FGBFI::getLatitude ()
 void
 FGBFI::setLatitude (double latitude)
 {
-  current_aircraft.fdm_state->set_Latitude(latitude * DEG_TO_RAD);
+  current_aircraft.fdm_state->set_Latitude(latitude * SGD_DEGREES_TO_RADIANS);
 }
 
 
@@ -382,7 +382,7 @@ FGBFI::setLatitude (double latitude)
 double
 FGBFI::getLongitude ()
 {
-  return current_aircraft.fdm_state->get_Longitude() * RAD_TO_DEG;
+  return current_aircraft.fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;
 }
 
 
@@ -392,7 +392,7 @@ FGBFI::getLongitude ()
 void
 FGBFI::setLongitude (double longitude)
 {
-  current_aircraft.fdm_state->set_Longitude(longitude * DEG_TO_RAD);
+  current_aircraft.fdm_state->set_Longitude(longitude * SGD_DEGREES_TO_RADIANS);
 }
 
 
@@ -440,7 +440,7 @@ FGBFI::setAltitude (double altitude)
 double
 FGBFI::getHeading ()
 {
-  return current_aircraft.fdm_state->get_Psi() * RAD_TO_DEG;
+  return current_aircraft.fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES;
 }
 
 
@@ -450,7 +450,7 @@ FGBFI::getHeading ()
 double
 FGBFI::getHeadingMag ()
 {
-  return current_aircraft.fdm_state->get_Psi() * RAD_TO_DEG - getMagVar();
+  return current_aircraft.fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES - getMagVar();
 }
 
 
@@ -462,7 +462,7 @@ FGBFI::setHeading (double heading)
 {
   FGInterface * fdm = current_aircraft.fdm_state;
   fdm->set_Euler_Angles(fdm->get_Phi(), fdm->get_Theta(),
-			heading * DEG_TO_RAD);
+			heading * SGD_DEGREES_TO_RADIANS);
 }
 
 
@@ -472,7 +472,7 @@ FGBFI::setHeading (double heading)
 double
 FGBFI::getPitch ()
 {
-  return current_aircraft.fdm_state->get_Theta() * RAD_TO_DEG;
+  return current_aircraft.fdm_state->get_Theta() * SGD_RADIANS_TO_DEGREES;
 }
 
 
@@ -483,7 +483,7 @@ void
 FGBFI::setPitch (double pitch)
 {
   FGInterface * fdm = current_aircraft.fdm_state;
-  fdm->set_Euler_Angles(fdm->get_Phi(), pitch * DEG_TO_RAD, fdm->get_Psi());
+  fdm->set_Euler_Angles(fdm->get_Phi(), pitch * SGD_DEGREES_TO_RADIANS, fdm->get_Psi());
 }
 
 
@@ -493,7 +493,7 @@ FGBFI::setPitch (double pitch)
 double
 FGBFI::getRoll ()
 {
-  return current_aircraft.fdm_state->get_Phi() * RAD_TO_DEG;
+  return current_aircraft.fdm_state->get_Phi() * SGD_RADIANS_TO_DEGREES;
 }
 
 
@@ -504,7 +504,7 @@ void
 FGBFI::setRoll (double roll)
 {
   FGInterface * fdm = current_aircraft.fdm_state;
-  fdm->set_Euler_Angles(roll * DEG_TO_RAD, fdm->get_Theta(), fdm->get_Psi());
+  fdm->set_Euler_Angles(roll * SGD_DEGREES_TO_RADIANS, fdm->get_Theta(), fdm->get_Psi());
 }
 
 
@@ -1375,7 +1375,7 @@ FGBFI::setViewAxisLat (double axis)
 double
 FGBFI::getMagVar ()
 {
-  return globals->get_mag()->get_magvar() * RAD_TO_DEG;
+  return globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
 }
 
 
@@ -1385,7 +1385,7 @@ FGBFI::getMagVar ()
 double
 FGBFI::getMagDip ()
 {
-  return globals->get_mag()->get_magdip() * RAD_TO_DEG;
+  return globals->get_mag()->get_magdip() * SGD_RADIANS_TO_DEGREES;
 }
 
 

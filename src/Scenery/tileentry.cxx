@@ -217,7 +217,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 	lights_transform->setTransform( sgTrans );
 
 	// select which set of lights based on sun angle
-	float sun_angle = cur_light_params.sun_angle * RAD_TO_DEG;
+	float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
 	if ( sun_angle > 95 ) {
 	    lights_brightness->select(0x04);
 	} else if ( sun_angle > 92 ) {

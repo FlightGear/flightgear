@@ -595,7 +595,7 @@ int FGAutopilot::run() {
 	    double x = current_radiostack->get_nav1_gs_dist();
 	    double y = (FGBFI::getAltitude() 
 			- current_radiostack->get_nav1_elev()) * FEET_TO_METER;
-	    double current_angle = atan2( y, x ) * RAD_TO_DEG;
+	    double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	    // cout << "current angle = " << current_angle << endl;
 
 	    double target_angle = current_radiostack->get_nav1_target_gs();
@@ -613,7 +613,7 @@ int FGAutopilot::run() {
 	    double horiz_vel = cur_fdm_state->get_V_ground_speed()
 		* FEET_TO_METER * 60.0;
 	    // cout << "Horizontal vel = " << horiz_vel << endl;
-	    climb_rate = -sin( des_angle * DEG_TO_RAD ) * horiz_vel;
+	    climb_rate = -sin( des_angle * SGD_DEGREES_TO_RADIANS ) * horiz_vel;
 	    // cout << "climb_rate = " << climb_rate << endl;
 	    /* climb_error_accum += gs_diff * 2.0; */
 	    /* climb_rate = gs_diff * 200.0 + climb_error_accum; */
@@ -864,19 +864,19 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
 
 #if 0
 static inline double get_aoa( void ) {
-    return( cur_fdm_state->get_Gamma_vert_rad() * RAD_TO_DEG );
+    return( cur_fdm_state->get_Gamma_vert_rad() * SGD_RADIANS_TO_DEGREES );
 }
 
 static inline double fgAPget_latitude( void ) {
-    return( cur_fdm_state->get_Latitude() * RAD_TO_DEG );
+    return( cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES );
 }
 
 static inline double fgAPget_longitude( void ) {
-    return( cur_fdm_state->get_Longitude() * RAD_TO_DEG );
+    return( cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES );
 }
 
 static inline double fgAPget_roll( void ) {
-    return( cur_fdm_state->get_Phi() * RAD_TO_DEG );
+    return( cur_fdm_state->get_Phi() * SGD_RADIANS_TO_DEGREES );
 }
 
 static inline double get_pitch( void ) {
@@ -884,7 +884,7 @@ static inline double get_pitch( void ) {
 }
 
 double fgAPget_heading( void ) {
-    return( cur_fdm_state->get_Psi() * RAD_TO_DEG );
+    return( cur_fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES );
 }
 
 static inline double fgAPget_altitude( void ) {

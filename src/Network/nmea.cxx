@@ -75,7 +75,7 @@ bool FGNMEA::gen_message() {
 	     t->getGmt()->tm_hour, t->getGmt()->tm_min, t->getGmt()->tm_sec );
 
     char lat[20];
-    double latd = cur_fdm_state->get_Latitude() * RAD_TO_DEG;
+    double latd = cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;
     if ( latd < 0.0 ) {
 	latd *= -1.0;
 	dir = 'S';
@@ -87,7 +87,7 @@ bool FGNMEA::gen_message() {
     sprintf( lat, "%02d%06.3f,%c", abs(deg), min, dir);
 
     char lon[20];
-    double lond = cur_fdm_state->get_Longitude() * RAD_TO_DEG;
+    double lond = cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;
     if ( lond < 0.0 ) {
 	lond *= -1.0;
 	dir = 'W';
@@ -102,7 +102,7 @@ bool FGNMEA::gen_message() {
     sprintf( speed, "%05.1f", cur_fdm_state->get_V_equiv_kts() );
 
     char heading[10];
-    sprintf( heading, "%05.1f", cur_fdm_state->get_Psi() * RAD_TO_DEG );
+    sprintf( heading, "%05.1f", cur_fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES );
 
     char altitude_m[10];
     sprintf( altitude_m, "%02d", 
@@ -241,7 +241,7 @@ bool FGNMEA::parse_message() {
 		lat *= -1;
 	    }
 
-	    cur_fdm_state->set_Latitude( lat * DEG_TO_RAD );
+	    cur_fdm_state->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
 	    FG_LOG( FG_IO, FG_INFO, "  lat = " << lat );
 
 	    // lon val
@@ -270,7 +270,7 @@ bool FGNMEA::parse_message() {
 		lon *= -1;
 	    }
 
-	    cur_fdm_state->set_Longitude( lon * DEG_TO_RAD );
+	    cur_fdm_state->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
 	    FG_LOG( FG_IO, FG_INFO, "  lon = " << lon );
 
 #if 0
@@ -307,7 +307,7 @@ bool FGNMEA::parse_message() {
 	    heading = atof( hdg_str.c_str() );
 	    cur_fdm_state->set_Euler_Angles( cur_fdm_state->get_Phi(), 
 					     cur_fdm_state->get_Theta(), 
-					     heading * DEG_TO_RAD );
+					     heading * SGD_DEGREES_TO_RADIANS );
 	    FG_LOG( FG_IO, FG_INFO, "  heading = " << heading );
 	} else if ( sentence == "GPGGA" ) {
 	    // time
@@ -346,7 +346,7 @@ bool FGNMEA::parse_message() {
 		lat *= -1;
 	    }
 
-	    // cur_fdm_state->set_Latitude( lat * DEG_TO_RAD );
+	    // cur_fdm_state->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
 	    FG_LOG( FG_IO, FG_INFO, "  lat = " << lat );
 
 	    // lon val
@@ -375,7 +375,7 @@ bool FGNMEA::parse_message() {
 		lon *= -1;
 	    }
 
-	    // cur_fdm_state->set_Longitude( lon * DEG_TO_RAD );
+	    // cur_fdm_state->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
 	    FG_LOG( FG_IO, FG_INFO, "  lon = " << lon );
 
 	    // junk

@@ -348,8 +348,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    globals->set_freeze( ! globals->get_freeze() );
 
 	    {
-		SGBucket p( f->get_Longitude() * RAD_TO_DEG,
-			    f->get_Latitude() * RAD_TO_DEG );
+		SGBucket p( f->get_Longitude() * SGD_RADIANS_TO_DEGREES,
+			    f->get_Latitude() * SGD_RADIANS_TO_DEGREES );
 		FGPath tile_path( globals->get_fg_root() );
 		tile_path.append( "Scenery" );
 		tile_path.append( p.gen_base_path() );
@@ -357,14 +357,14 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 		// printf position and attitude information
 		FG_LOG( FG_INPUT, FG_INFO,
-			"Lon = " << f->get_Longitude() * RAD_TO_DEG
-			<< "  Lat = " << f->get_Latitude() * RAD_TO_DEG
+			"Lon = " << f->get_Longitude() * SGD_RADIANS_TO_DEGREES
+			<< "  Lat = " << f->get_Latitude() * SGD_RADIANS_TO_DEGREES
 			<< "  Altitude = " << f->get_Altitude() * FEET_TO_METER
 			);
 		FG_LOG( FG_INPUT, FG_INFO,
-			"Heading = " << f->get_Psi() * RAD_TO_DEG 
-			<< "  Roll = " << f->get_Phi() * RAD_TO_DEG
-			<< "  Pitch = " << f->get_Theta() * RAD_TO_DEG );
+			"Heading = " << f->get_Psi() * SGD_RADIANS_TO_DEGREES 
+			<< "  Roll = " << f->get_Phi() * SGD_RADIANS_TO_DEGREES
+			<< "  Pitch = " << f->get_Theta() * SGD_RADIANS_TO_DEGREES );
 		FG_LOG( FG_INPUT, FG_INFO, tile_path.c_str());
 	    }
 	    return;
@@ -534,8 +534,8 @@ void GLUTspecialkey(int k, int x, int y) {
 		if ( global_tile_mgr.init() ) {
 		    // Load the local scenery data
 		    global_tile_mgr.update( 
-		        cur_fdm_state->get_Longitude() * RAD_TO_DEG,
-			cur_fdm_state->get_Latitude() * RAD_TO_DEG );
+		        cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES,
+			cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES );
 		} else {
 		    FG_LOG( FG_GENERAL, FG_ALERT, 
 			    "Error in Tile Manager initialization!" );

@@ -435,7 +435,7 @@ void fgUpdateMoonPos( void ) {
 	l->moon_rotation = -acos(dot);
     }
     // cout << "  Sky needs to rotate = " << angle << " rads = "
-    //      << angle * RAD_TO_DEG << " degrees." << endl;
+    //      << angle * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
 }
 
 

@@ -104,7 +104,7 @@ void LaRCsimIC::SetClimbRateFpsIC( SCALAR tt) {
     getTheta();
     vdown=-1*hdot;
     cout << "hdot: " << hdot << endl;
-    cout << "gamma: " << gamma*RAD_TO_DEG << endl;
+    cout << "gamma: " << gamma*SGD_RADIANS_TO_DEGREES << endl;
     cout << "vdown: " << vdown << endl;
   }
 }

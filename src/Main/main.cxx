@@ -369,8 +369,8 @@ void fgRenderFrame( void ) {
 	sgCopyVec3( wup, pilot_view->get_world_up() );
 	sgMat4 CXFM;		// chase view + pilot offset xform
 	sgMakeRotMat4( CXFM,
-		       chase_view->get_view_offset() * RAD_TO_DEG -
-		       cur_fdm_state->get_Psi() * RAD_TO_DEG,
+		       chase_view->get_view_offset() * SGD_RADIANS_TO_DEGREES -
+		       cur_fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES,
 		       wup );
 	sgVec3 npo;		// new pilot offset after rotation
         sgVec3 *pPO = PilotOffsetGet();
@@ -832,8 +832,8 @@ void fgUpdateTimeDepCalcs() {
 	tmp -= SGD_2PI;
     }
     /* printf("Psi = %.2f, viewoffset = %.2f sunrot = %.2f rottosun = %.2f\n",
-	   FG_Psi * RAD_TO_DEG, current_view.view_offset * RAD_TO_DEG, 
-	   -(l->sun_rotation+SGD_PI) * RAD_TO_DEG, tmp * RAD_TO_DEG); */
+	   FG_Psi * SGD_RADIANS_TO_DEGREES, current_view.view_offset * SGD_RADIANS_TO_DEGREES, 
+	   -(l->sun_rotation+SGD_PI) * SGD_RADIANS_TO_DEGREES, tmp * SGD_RADIANS_TO_DEGREES); */
     l->UpdateAdjFog();
 
     // Update solar system
@@ -1024,8 +1024,8 @@ static void fgMainLoop( void ) {
 #endif
 
     // see if we need to load any new scenery tiles
-    global_tile_mgr.update( cur_fdm_state->get_Longitude() * RAD_TO_DEG,
-			    cur_fdm_state->get_Latitude() * RAD_TO_DEG );
+    global_tile_mgr.update( cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES,
+			    cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES );
 
     // Process/manage pending events
     global_events.Process();
@@ -1449,8 +1449,8 @@ int main( int argc, char **argv ) {
     // Initialize time
     FGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
-    SGTime *t = new SGTime( fgGetDouble("/position/longitude") * DEG_TO_RAD,
-			    fgGetDouble("/position/latitude") * DEG_TO_RAD,
+    SGTime *t = new SGTime( fgGetDouble("/position/longitude") * SGD_DEGREES_TO_RADIANS,
+			    fgGetDouble("/position/latitude") * SGD_DEGREES_TO_RADIANS,
 			    zone.str() );
 
     // Handle potential user specified time offsets
@@ -1696,8 +1696,8 @@ void fgLoadDCS(void) {
 /*       	cout << endl << obj_filename << " " << obj_lat[objc] << " " << obj_lon[objc] <<  " " << obj_alt[objc] << endl;
        	int chj=getchar();*/
                 
-	      obj_lon[objc] *=DEG_TO_RAD;
-      	obj_lat[objc] *=DEG_TO_RAD;
+	      obj_lon[objc] *=SGD_DEGREES_TO_RADIANS;
+      	obj_lat[objc] *=SGD_DEGREES_TO_RADIANS;
     
             ship_pos[objc] = new ssgTransform;
        
@@ -1742,14 +1742,14 @@ void fgUpdateDCS (void) {
 
     if (fgGetString("/sim/flight-model") == "ada")
     {
-      obj_lon[0] = fdm->get_aux5()*DEG_TO_RAD;
-      obj_lat[0] = fdm->get_aux6()*DEG_TO_RAD;
+      obj_lon[0] = fdm->get_aux5()*SGD_DEGREES_TO_RADIANS;
+      obj_lat[0] = fdm->get_aux6()*SGD_DEGREES_TO_RADIANS;
       obj_alt[0] = fdm->get_aux7();
     }
     
     for (int m=0; m<=objc; m++)
     {
-    	//cout << endl <<  obj_lat[m]*RAD_TO_DEG << " " << obj_lon[m]*RAD_TO_DEG << " " << obj_alt[m] << " " << objc << endl;
+    	//cout << endl <<  obj_lat[m]*SGD_RADIANS_TO_DEGREES << " " << obj_lon[m]*SGD_RADIANS_TO_DEGREES << " " << obj_alt[m] << " " << objc << endl;
 	//int v=getchar();
 
         //Geodetic to Geocentric angles for rotation
@@ -1776,8 +1776,8 @@ void fgUpdateDCS (void) {
 	sgSetVec3( ship_up, 0.0, 0.0, 1.0); //north,yaw
 
 	sgMat4 sgROT_lon, sgROT_lat, sgROT_hdg;
-	sgMakeRotMat4( sgROT_lon, obj_lon[m]*RAD_TO_DEG, ship_up );
-	sgMakeRotMat4( sgROT_lat, 90-obj_latgc*RAD_TO_DEG, ship_rt );
+	sgMakeRotMat4( sgROT_lon, obj_lon[m]*SGD_RADIANS_TO_DEGREES, ship_up );
+	sgMakeRotMat4( sgROT_lat, 90-obj_latgc*SGD_RADIANS_TO_DEGREES, ship_rt );
 	sgMakeRotMat4( sgROT_hdg, 180.0, ship_up );
 	
 	sgMat4 sgTUX;

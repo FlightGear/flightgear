@@ -496,10 +496,10 @@ public:
     virtual void set_Altitude(double alt);  // triggers re-calc of AGL altitude
     virtual void set_AltitudeAGL(double altagl); // and vice-versa
     virtual void set_Latitude_deg (double lat) {
-      set_Latitude(lat * DEG_TO_RAD);
+      set_Latitude(lat * SGD_DEGREES_TO_RADIANS);
     }
     virtual void set_Longitude_deg (double lon) {
-      set_Longitude(lon * DEG_TO_RAD);
+      set_Longitude(lon * SGD_DEGREES_TO_RADIANS);
     }
     
     // Speeds -- setting any of these will trigger a re-calc of the rest
@@ -525,11 +525,11 @@ public:
     virtual void set_Psi (double psi) { 
       set_Euler_Angles(get_Phi(), get_Theta(), psi);
     }
-    virtual void set_Phi_deg (double phi) { set_Phi(phi * DEG_TO_RAD); }
+    virtual void set_Phi_deg (double phi) { set_Phi(phi * SGD_DEGREES_TO_RADIANS); }
     virtual void set_Theta_deg (double theta) {
-      set_Theta(theta * DEG_TO_RAD); 
+      set_Theta(theta * SGD_DEGREES_TO_RADIANS); 
     }
-    virtual void set_Psi_deg (double psi) { set_Psi(psi * DEG_TO_RAD); }
+    virtual void set_Psi_deg (double psi) { set_Psi(psi * SGD_DEGREES_TO_RADIANS); }
     
     // Flight Path
     virtual void set_Climb_Rate( double roc);
@@ -891,19 +891,19 @@ public:
     inline double get_Altitude_AGL(void) const { return altitude_agl; }
 
     inline double get_Latitude_deg () const {
-      return get_Latitude() * RAD_TO_DEG;
+      return get_Latitude() * SGD_RADIANS_TO_DEGREES;
     }
     inline double get_Longitude_deg () const {
-      return get_Longitude() * RAD_TO_DEG;
+      return get_Longitude() * SGD_RADIANS_TO_DEGREES;
     }
 
     // inline double * get_Euler_angles_v() { return euler_angles_v; }
     inline double get_Phi() const { return euler_angles_v[0]; }
     inline double get_Theta() const { return euler_angles_v[1]; }
     inline double get_Psi() const { return euler_angles_v[2]; }
-    inline double get_Phi_deg () const { return get_Phi() * RAD_TO_DEG; }
-    inline double get_Theta_deg () const { return get_Theta() * RAD_TO_DEG; }
-    inline double get_Psi_deg () const { return get_Psi() * RAD_TO_DEG; }
+    inline double get_Phi_deg () const { return get_Phi() * SGD_RADIANS_TO_DEGREES; }
+    inline double get_Theta_deg () const { return get_Theta() * SGD_RADIANS_TO_DEGREES; }
+    inline double get_Psi_deg () const { return get_Psi() * SGD_RADIANS_TO_DEGREES; }
 
 
     // ========== Miscellaneous quantities ==========

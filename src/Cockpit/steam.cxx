@@ -261,9 +261,9 @@ void FGSteam::_CatchUp()
 	*/
 	set_lowpass ( & the_TC_std,
 	        current_aircraft.fdm_state->get_Phi_dot ()
-	                * RAD_TO_DEG / 20.0 +
+	                * SGD_RADIANS_TO_DEGREES / 20.0 +
 	        current_aircraft.fdm_state->get_Psi_dot ()
-	                * RAD_TO_DEG / 3.0  , dt );
+	                * SGD_RADIANS_TO_DEGREES / 3.0  , dt );
 
 	/**************************
 	We want to know the pilot accelerations,
@@ -283,8 +283,8 @@ void FGSteam::_CatchUp()
 	        double EdgN, EdgE, EdgU;
 	        double TrqN, TrqE, TrqU, Torque;
 	        /* Find a force vector towards exact magnetic north */
-	        MagVar = FGBFI::getMagVar() / RAD_TO_DEG;
-	        MagDip = FGBFI::getMagDip() / RAD_TO_DEG;
+	        MagVar = FGBFI::getMagVar() / SGD_RADIANS_TO_DEGREES;
+	        MagDip = FGBFI::getMagDip() / SGD_RADIANS_TO_DEGREES;
 	        CosDip = cos ( MagDip );
 	        FrcN = CosDip * cos ( MagVar );
 	        FrcE = CosDip * sin ( MagVar );
@@ -295,8 +295,8 @@ void FGSteam::_CatchUp()
 	        if ( AccTot > 1.0 )  AccTot = sqrt ( AccTot );
 	                        else AccTot = 1.0;
 	        /* Force applies to north marking on compass card */
-	        EdgN = cos ( the_MH_err / RAD_TO_DEG );
-	        EdgE = sin ( the_MH_err / RAD_TO_DEG );
+	        EdgN = cos ( the_MH_err / SGD_RADIANS_TO_DEGREES );
+	        EdgE = sin ( the_MH_err / SGD_RADIANS_TO_DEGREES );
 	        EdgU = 0.0;
 	        /* Apply the force to the edge to get torques */
 	        TrqN = EdgE * FrcU - EdgU * FrcE;
@@ -419,7 +419,7 @@ double FGSteam::get_HackGS_deg () {
 	double x = current_radiostack->get_nav1_gs_dist();
 	double y = (FGBFI::getAltitude() - current_radiostack->get_nav1_elev())
 	    * FEET_TO_METER;
-	double angle = atan2( y, x ) * RAD_TO_DEG;
+	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (current_radiostack->get_nav1_target_gs() - angle) * 5.0;
     } else {
 	return 0.0;

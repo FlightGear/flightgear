@@ -826,7 +826,7 @@ parse_option (const string& arg)
 	} else if ( woffset == "CENTER" ) {
 	    default_view_offset = 0.00;
 	} else {
-	    default_view_offset = atof( woffset.c_str() ) * DEG_TO_RAD;
+	    default_view_offset = atof( woffset.c_str() ) * SGD_DEGREES_TO_RADIANS;
 	}
 	FGViewerRPH *pilot_view =
 	    (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
@@ -855,7 +855,7 @@ parse_option (const string& arg)
 	dir += 180;
 	if (dir >= 360)
 	  dir -= 360;
-	dir *= DEG_TO_RAD;
+	dir *= SGD_DEGREES_TO_RADIANS;
 	fgSetDouble("/environment/wind-north",
 					     speed * cos(dir));
 	fgSetDouble("/environment/wind-east",

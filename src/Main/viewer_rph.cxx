@@ -206,12 +206,12 @@ void FGViewerRPH::update() {
     sgVec3 rollvec;
     sgSetVec3( rollvec, 0.0, 0.0, 1.0 );
     sgMat4 PHI;		// roll
-    sgMakeRotMat4( PHI, rph[0] * RAD_TO_DEG, rollvec );
+    sgMakeRotMat4( PHI, rph[0] * SGD_RADIANS_TO_DEGREES, rollvec );
 
     sgVec3 pitchvec;
     sgSetVec3( pitchvec, 0.0, 1.0, 0.0 );
     sgMat4 THETA;		// pitch
-    sgMakeRotMat4( THETA, rph[1] * RAD_TO_DEG, pitchvec );
+    sgMakeRotMat4( THETA, rph[1] * SGD_RADIANS_TO_DEGREES, pitchvec );
 
     // ROT = PHI * THETA
     sgMat4 ROT;
@@ -222,7 +222,7 @@ void FGViewerRPH::update() {
     sgVec3 yawvec;
     sgSetVec3( yawvec, 1.0, 0.0, 0.0 );
     sgMat4 PSI;		// heading
-    sgMakeRotMat4( PSI, -rph[2] * RAD_TO_DEG, yawvec );
+    sgMakeRotMat4( PSI, -rph[2] * SGD_RADIANS_TO_DEGREES, yawvec );
 
     // LOCAL = ROT * PSI
     // sgMultMat4( LOCAL, ROT, PSI );
@@ -235,9 +235,9 @@ void FGViewerRPH::update() {
     // print_sgMat4( LOCAL );
 	
     sgMakeRotMat4( UP, 
-		   geod_view_pos[0] * RAD_TO_DEG,
+		   geod_view_pos[0] * SGD_RADIANS_TO_DEGREES,
 		   0.0,
-		   -geod_view_pos[1] * RAD_TO_DEG );
+		   -geod_view_pos[1] * SGD_RADIANS_TO_DEGREES );
 
     sgSetVec3( world_up, UP[0][0], UP[0][1], UP[0][2] );
     // sgXformVec3( world_up, UP );
@@ -272,7 +272,7 @@ void FGViewerRPH::update() {
     sgXformVec3( pilot_offset_world, pilot_offset_world, VIEWo );
 
     // generate the view offset matrix
-    sgMakeRotMat4( VIEW_OFFSET, view_offset * RAD_TO_DEG, view_up );
+    sgMakeRotMat4( VIEW_OFFSET, view_offset * SGD_RADIANS_TO_DEGREES, view_up );
     // cout << "VIEW_OFFSET matrix" << endl;
     // print_sgMat4( VIEW_OFFSET );
     sgXformVec3( view_forward, forward, VIEW_OFFSET );
@@ -326,7 +326,7 @@ void FGViewerRPH::update() {
     sgNegateVec3(world_down, world_up);
     sgVectorProductVec3(surface_east, surface_south, world_down);
 #else
-    sgMakeRotMat4( TMP, SGD_PI_2 * RAD_TO_DEG, world_up );
+    sgMakeRotMat4( TMP, SGD_PI_2 * SGD_RADIANS_TO_DEGREES, world_up );
     // cout << "sgMat4 TMP" << endl;
     // print_sgMat4( TMP );
     sgXformVec3(surface_east, surface_south, TMP);

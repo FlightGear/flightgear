@@ -129,9 +129,9 @@ operator >> ( istream& in, FGNav& n )
 	// cout << "lat = " << n.lat << " lon = " << n.lon << " elev = " 
 	//      << n.elev << " JD = " 
 	//      << julian_date << endl;
-	n.magvar = sgGetMagVar(n.lon * DEG_TO_RAD, n.lat * DEG_TO_RAD,
+	n.magvar = sgGetMagVar(n.lon * SGD_DEGREES_TO_RADIANS, n.lat * SGD_DEGREES_TO_RADIANS,
 				n.elev * FEET_TO_METER,
-				julian_date) * RAD_TO_DEG;
+				julian_date) * SGD_RADIANS_TO_DEGREES;
 	// cout << "Default variation at " << n.lon << ',' << n.lat
 	// 	<< " is " << var << endl;
 #if 0
@@ -156,7 +156,7 @@ operator >> ( istream& in, FGNav& n )
     // cout << n.ident << " " << n.magvar << endl;
 
     // generate cartesian coordinates
-    Point3D geod( n.lon * DEG_TO_RAD, n.lat * DEG_TO_RAD, n.elev );
+    Point3D geod( n.lon * SGD_DEGREES_TO_RADIANS, n.lat * SGD_DEGREES_TO_RADIANS, n.elev );
     Point3D cart = sgGeodToCart( geod );
     n.x = cart.x();
     n.y = cart.y();

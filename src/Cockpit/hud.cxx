@@ -224,7 +224,7 @@ void strokeString(int x, int y, char *msg, void *font, float theta)
     if(*msg)
     {
     glPushMatrix();
-    glRotatef(theta * RAD_TO_DEG, 0.0, 0.0, 1.0);
+    glRotatef(theta * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
     sintheta = sin(theta);
     costheta = cos(theta);
     xx = (int)(x * costheta + y * sintheta);

@@ -112,7 +112,7 @@ void fgLIGHT::Update( void ) {
     // calculate lighting parameters based on sun's relative angle to
     // local up
 
-    deg = sun_angle * RAD_TO_DEG;
+    deg = sun_angle * SGD_RADIANS_TO_DEGREES;
     FG_LOG( FG_EVENT, FG_INFO, "  Sun angle = " << deg );
 
     ambient = ambient_tbl->interpolate( deg );
@@ -178,12 +178,12 @@ void fgLIGHT::UpdateAdjFog( void ) {
     while ( rotation > SGD_2PI ) {
 	rotation -= SGD_2PI;
     }
-    rotation *= RAD_TO_DEG;
+    rotation *= SGD_RADIANS_TO_DEGREES;
     // fgPrintf( FG_EVENT, FG_INFO, 
     //           "  View to sun difference in degrees = %.2f\n", rotation);
 
     // next check if we are in a sunset/sunrise situation
-    sun_angle_deg = sun_angle * RAD_TO_DEG;
+    sun_angle_deg = sun_angle * SGD_RADIANS_TO_DEGREES;
     if ( (sun_angle_deg > 80.0) && (sun_angle_deg < 100.0) ) {
 	/* 0.0 - 0.6 */
 	param1[0] = (10.0 - fabs(90.0 - sun_angle_deg)) / 20.0;

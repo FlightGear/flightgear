@@ -84,7 +84,7 @@ operator = (const fgTBI_instr & rhs )
 
      cen_x = centroid.x;
      cen_y = centroid.y;
-     bank  = bank_angle * RAD_TO_DEG;
+     bank  = bank_angle * SGD_RADIANS_TO_DEGREES;
      tee   = -tee_height;
      fspan = span;
      hole  = scr_hole;

@@ -163,9 +163,9 @@ void FGViewerLookAt::update() {
 
     // Make the world up rotation matrix
     sgMakeRotMat4( UP, 
-		   geod_view_pos[0] * RAD_TO_DEG,
+		   geod_view_pos[0] * SGD_RADIANS_TO_DEGREES,
 		   0.0,
-		   -geod_view_pos[1] * RAD_TO_DEG );
+		   -geod_view_pos[1] * SGD_RADIANS_TO_DEGREES );
 
     // use a clever observation into the nature of our tranformation
     // matrix to grab the world_up vector
@@ -200,7 +200,7 @@ void FGViewerLookAt::update() {
     sgNegateVec3(world_down, world_up);
     sgVectorProductVec3(surface_east, surface_south, world_down);
 #else
-    sgMakeRotMat4( TMP, SGD_PI_2 * RAD_TO_DEG, world_up );
+    sgMakeRotMat4( TMP, SGD_PI_2 * SGD_RADIANS_TO_DEGREES, world_up );
     // cout << "sgMat4 TMP" << endl;
     // print_sgMat4( TMP );
     sgXformVec3(surface_east, surface_south, TMP);

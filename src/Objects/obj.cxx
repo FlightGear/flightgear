@@ -87,12 +87,12 @@ static Point3D local_calc_tex_coords(const Point3D& node, const Point3D& ref) {
 
     pp = sgCartToPolar3d(cp);
 
-    // tmplon = pp.lon() * RAD_TO_DEG;
-    // tmplat = pp.lat() * RAD_TO_DEG;
+    // tmplon = pp.lon() * SGD_RADIANS_TO_DEGREES;
+    // tmplat = pp.lat() * SGD_RADIANS_TO_DEGREES;
     // cout << tmplon << " " << tmplat << endl;
 
-    pp.setx( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.x(), 11.0) );
-    pp.sety( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.y(), 11.0) );
+    pp.setx( fmod(SGD_RADIANS_TO_DEGREES * FG_TEX_CONSTANT * pp.x(), 11.0) );
+    pp.sety( fmod(SGD_RADIANS_TO_DEGREES * FG_TEX_CONSTANT * pp.y(), 11.0) );
 
     if ( pp.x() < 0.0 ) {
 	pp.setx( pp.x() + 11.0 );
@@ -143,7 +143,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     double height = b.get_height();
     double width = b.get_width();
 
-    Point3D center = sgGeodToCart(Point3D(clon*DEG_TO_RAD,clat*DEG_TO_RAD,0.0));
+    Point3D center = sgGeodToCart(Point3D(clon*SGD_DEGREES_TO_RADIANS,clat*SGD_DEGREES_TO_RADIANS,0.0));
     t->center = center;
     // cout << "center = " << center << endl;;
     
@@ -157,7 +157,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     Point3D rad[4];
     int i;
     for ( i = 0; i < 4; ++i ) {
-	rad[i] = Point3D( geod[i].x() * DEG_TO_RAD, geod[i].y() * DEG_TO_RAD,
+	rad[i] = Point3D( geod[i].x() * SGD_DEGREES_TO_RADIANS, geod[i].y() * SGD_DEGREES_TO_RADIANS,
 			  geod[i].z() );
     }
 

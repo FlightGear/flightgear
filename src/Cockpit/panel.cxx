@@ -238,7 +238,7 @@ FGPanel::update ()
   glEnable(GL_ALPHA_TEST);
   glEnable(GL_COLOR_MATERIAL);
   // glColor4f(1.0, 1.0, 1.0, 1.0);
-  if ( cur_light_params.sun_angle * RAD_TO_DEG < 95.0 ) {
+  if ( cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES < 95.0 ) {
       glColor4fv( cur_light_params.scene_diffuse );
   } else {
       glColor4f(0.7, 0.2, 0.2, 1.0);
@@ -718,7 +718,7 @@ FGTexturedLayer::draw ()
 
 				// From Curt: turn on the panel
 				// lights after sundown.
-  if ( cur_light_params.sun_angle * RAD_TO_DEG < 95.0 ) {
+  if ( cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES < 95.0 ) {
       glColor4fv( cur_light_params.scene_diffuse );
   } else {
       glColor4f(0.7, 0.2, 0.2, 1.0);

@@ -83,7 +83,7 @@ void AptDialog_OK (puObject *)
 			// fgSetPosFromAirportID( AptId );
 			fgSetPosFromAirportIDandHdg( AptId, 
 						     cur_fdm_state->get_Psi() *
-						     RAD_TO_DEG);
+						     SGD_RADIANS_TO_DEGREES);
 			BusyCursor(0);
 			fgReInitSubsystems();
 			BusyCursor(1);

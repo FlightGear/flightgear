@@ -318,8 +318,8 @@ int FGTileMgr::update( double lon, double lat ) {
     // FGInterface *f = current_aircraft.fdm_state;
 
     // lonlat for this update 
-    // longitude = f->get_Longitude() * RAD_TO_DEG;
-    // latitude = f->get_Latitude() * RAD_TO_DEG;
+    // longitude = f->get_Longitude() * SGD_RADIANS_TO_DEGREES;
+    // latitude = f->get_Latitude() * SGD_RADIANS_TO_DEGREES;
     longitude = lon;
     latitude = lat;
     // FG_LOG( FG_TERRAIN, FG_DEBUG, "lon "<< lonlat[LON] <<
@@ -361,8 +361,8 @@ int FGTileMgr::update( double lon, double lat ) {
 	sgdVec3 tmp_abs_view_pos;
 	sgVec3 tmp_view_pos;
 
-	Point3D geod_pos = Point3D( longitude * DEG_TO_RAD,
-				    latitude * DEG_TO_RAD,
+	Point3D geod_pos = Point3D( longitude * SGD_DEGREES_TO_RADIANS,
+				    latitude * SGD_DEGREES_TO_RADIANS,
 				    0.0);
 	Point3D tmp = sgGeodToCart( geod_pos );
 	scenery.center = tmp;

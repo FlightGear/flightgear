@@ -36,7 +36,7 @@ FGBeacon::FGBeacon( double _lon, double _lat, double _elev,
     elev = _elev;
     type = _type;
 
-    Point3D pos = sgGeodToCart(Point3D(lon * DEG_TO_RAD, lat * DEG_TO_RAD, 0));
+    Point3D pos = sgGeodToCart(Point3D(lon * SGD_DEGREES_TO_RADIANS, lat * SGD_DEGREES_TO_RADIANS, 0));
     // cout << "pos = " << pos << endl;
     x = pos.x();
     y = pos.y();
@@ -160,7 +160,7 @@ FGBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
     beacon_list_iterator current = beacons.begin();
     beacon_list_iterator last = beacons.end();
 
-    Point3D aircraft = sgGeodToCart(Point3D(lon*DEG_TO_RAD, lat*DEG_TO_RAD, 0));
+    Point3D aircraft = sgGeodToCart(Point3D(lon*SGD_DEGREES_TO_RADIANS, lat*SGD_DEGREES_TO_RADIANS, 0));
 
     double min_dist = 999999999.0;
 

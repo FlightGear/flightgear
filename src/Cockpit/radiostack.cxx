@@ -296,8 +296,8 @@ double FGRadioStack::adjustILSRange( double stationElev, double aircraftElev,
 void 
 FGRadioStack::update() 
 {
-    double lon = longitudeVal->getDoubleValue() * DEG_TO_RAD;
-    double lat = latitudeVal->getDoubleValue() * DEG_TO_RAD;
+    double lon = longitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double lat = latitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double elev = altitudeVal->getDoubleValue() * FEET_TO_METER;
 
     need_update = false;
@@ -326,7 +326,7 @@ FGRadioStack::update()
 	}
 	
 	// wgs84 heading
-	geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
+	geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES, lon * SGD_RADIANS_TO_DEGREES, 
 			    nav1_loclat, nav1_loclon,
 			    &az1, &az2, &s );
 	// cout << "az1 = " << az1 << " magvar = " << nav1_magvar << endl;
@@ -420,7 +420,7 @@ FGRadioStack::update()
 	}
 
 	// wgs84 heading
-	geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
+	geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES, lon * SGD_RADIANS_TO_DEGREES, 
 			    nav2_loclat, nav2_loclon,
 			    &az1, &az2, &s );
 	nav2_heading = az1 - nav2_magvar;
@@ -500,7 +500,7 @@ FGRadioStack::update()
 	adf_dist = aircraft.distance3D( station );
 
 	// wgs84 heading
-	geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
+	geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES, lon * SGD_RADIANS_TO_DEGREES, 
 			    adf_lat, adf_lon,
 			    &az1, &az2, &s );
 	adf_heading = az1;
@@ -550,8 +550,8 @@ FGRadioStack::update()
 // Update current nav/adf radio stations based on current postition
 void FGRadioStack::search() 
 {
-    double lon = longitudeVal->getDoubleValue() * DEG_TO_RAD;
-    double lat = latitudeVal->getDoubleValue() * DEG_TO_RAD;
+    double lon = longitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double lat = latitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double elev = altitudeVal->getDoubleValue() * FEET_TO_METER;
 
     // nav1
@@ -807,7 +807,7 @@ void FGRadioStack::search()
     }
 
     FGBeacon::fgMkrBeacType beacon_type
-	= current_beacons->query( lon * RAD_TO_DEG, lat * RAD_TO_DEG, elev );
+	= current_beacons->query( lon * SGD_RADIANS_TO_DEGREES, lat * SGD_RADIANS_TO_DEGREES, elev );
 
     outer_marker = middle_marker = inner_marker = false;
 
@@ -939,7 +939,7 @@ double FGRadioStack::get_nav1_gs_needle_deflection() const {
     if ( nav1_inrange && nav1_has_gs ) {
 	double x = nav1_gs_dist;
 	double y = (FGBFI::getAltitude() - nav1_elev) * FEET_TO_METER;
-	double angle = atan2( y, x ) * RAD_TO_DEG;
+	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (nav1_target_gs - angle) * 5.0;
     } else {
 	return 0.0;
@@ -953,7 +953,7 @@ double FGRadioStack::get_nav2_gs_needle_deflection() const {
     if ( nav2_inrange && nav2_has_gs ) {
 	double x = nav2_gs_dist;
 	double y = (FGBFI::getAltitude() - nav2_elev) * FEET_TO_METER;
-	double angle = atan2( y, x ) * RAD_TO_DEG;
+	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (nav2_target_gs - angle) * 5.0;
     } else {
 	return 0.0;

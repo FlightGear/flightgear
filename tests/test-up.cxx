@@ -23,10 +23,10 @@ int main() {
 	cout << "lon = " << lon << "  geod lat = " << lat;
 
 	double sl_radius, lat_geoc;
-	sgGeodToGeoc( lat * DEG_TO_RAD, alt, &sl_radius, &lat_geoc );
-	cout << "  geoc lat = " << lat_geoc * RAD_TO_DEG << endl;
+	sgGeodToGeoc( lat * SGD_DEGREES_TO_RADIANS, alt, &sl_radius, &lat_geoc );
+	cout << "  geoc lat = " << lat_geoc * SGD_RADIANS_TO_DEGREES << endl;
 
-	Point3D pgd( lon * DEG_TO_RAD, lat * DEG_TO_RAD, 0.0 );
+	Point3D pgd( lon * SGD_DEGREES_TO_RADIANS, lat * SGD_DEGREES_TO_RADIANS, 0.0 );
 	Point3D pc = sgGeodToCart( pgd );
 	cout << "  cartesian = " << pc << endl;
 
@@ -39,7 +39,7 @@ int main() {
 
 	sgdMat4 GEOC_UP;
 	sgdVec3 geoc_up;
-	sgdMakeRotMat4( GEOC_UP, lon, 0.0, -lat_geoc * RAD_TO_DEG );
+	sgdMakeRotMat4( GEOC_UP, lon, 0.0, -lat_geoc * SGD_RADIANS_TO_DEGREES );
 	sgdSetVec3( geoc_up, GEOC_UP[0][0], GEOC_UP[0][1], GEOC_UP[0][2] );
 	cout << "  geoc up = " << geoc_up[0] << ", " << geoc_up[1] << ", "
 	     << geoc_up[2] << endl;

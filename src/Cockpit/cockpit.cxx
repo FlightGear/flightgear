@@ -65,7 +65,7 @@ float get_latitude( void )
 {
     double lat;
 
-    lat = current_aircraft.fdm_state->get_Latitude() * RAD_TO_DEG;
+    lat = current_aircraft.fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;
 
     float flat = lat;
     return(flat);
@@ -76,7 +76,7 @@ float get_lat_min( void )
 {
     double      a, d;
 
-    a = current_aircraft.fdm_state->get_Latitude() * RAD_TO_DEG;    
+    a = current_aircraft.fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;    
     if (a < 0.0) {
         a = -a;
     }
@@ -90,7 +90,7 @@ float get_longitude( void )
 {
     double lon;
 
-    lon = current_aircraft.fdm_state->get_Longitude() * RAD_TO_DEG;
+    lon = current_aircraft.fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;
 
     float flon = lon;
     return(flon);
@@ -112,7 +112,7 @@ get_formated_gmt_time( void )
 float get_long_min( void )
 {
     double  a, d;
-    a = current_aircraft.fdm_state->get_Longitude() * RAD_TO_DEG;   
+    a = current_aircraft.fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;   
     if (a < 0.0) {
         a = -a;
     }
@@ -167,7 +167,7 @@ float get_mach(void)
 
 float get_aoa( void )
 {
-    float aoa = current_aircraft.fdm_state->get_Alpha() * RAD_TO_DEG;
+    float aoa = current_aircraft.fdm_state->get_Alpha() * SGD_RADIANS_TO_DEGREES;
     return( aoa );
 }
 
@@ -185,7 +185,7 @@ float get_pitch( void )
 
 float get_heading( void )
 {
-    float heading = (current_aircraft.fdm_state->get_Psi() * RAD_TO_DEG);
+    float heading = (current_aircraft.fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES);
     return( heading );
 }
 
@@ -276,7 +276,7 @@ float get_view_direction( void )
 {
     double view_off = SGD_2PI - globals->get_current_view()->get_view_offset();
     double view = ( current_aircraft.fdm_state->get_Psi() + view_off)
-	* RAD_TO_DEG;
+	* SGD_RADIANS_TO_DEGREES;
     
     if(view > 360.)
         view -= 360.;
