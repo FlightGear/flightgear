@@ -328,7 +328,7 @@ void fgInitVisuals( void ) {
 #ifndef GLUT_WRONG_VERSION
     // Go full screen if requested ...
     if ( fgGetBool("/sim/startup/fullscreen") ) {
-	glutFullScreen();
+        glutFullScreen();
     }
 #endif
 
@@ -347,15 +347,15 @@ void fgInitVisuals( void ) {
 
     glFogi (GL_FOG_MODE, GL_EXP2);
     if ( (!strcmp(fgGetString("/sim/rendering/fog"), "disabled")) || 
-	 (!fgGetBool("/sim/rendering/shading"))) {
-	// if fastest fog requested, or if flat shading force fastest
-	glHint ( GL_FOG_HINT, GL_FASTEST );
+         (!fgGetBool("/sim/rendering/shading"))) {
+        // if fastest fog requested, or if flat shading force fastest
+        glHint ( GL_FOG_HINT, GL_FASTEST );
     } else if ( !strcmp(fgGetString("/sim/rendering/fog"), "nicest") ) {
-	glHint ( GL_FOG_HINT, GL_NICEST );
+        glHint ( GL_FOG_HINT, GL_NICEST );
     }
     if ( fgGetBool("/sim/rendering/wireframe") ) {
-	// draw wire frame
-	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        // draw wire frame
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     }
 
     // This is the default anyways, but it can't hurt
@@ -446,13 +446,13 @@ void fgRenderFrame() {
     global_events.update( delta_time_sec );
 
     static const SGPropertyNode *longitude
-	= fgGetNode("/position/longitude-deg");
+        = fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
-	= fgGetNode("/position/latitude-deg");
+        = fgGetNode("/position/latitude-deg");
     static const SGPropertyNode *altitude
-	= fgGetNode("/position/altitude-ft");
+        = fgGetNode("/position/altitude-ft");
     static const SGPropertyNode *groundlevel_nearplane
-	= fgGetNode("/sim/current-view/ground-level-nearplane-m");
+        = fgGetNode("/sim/current-view/ground-level-nearplane-m");
 
     // Update the default (kludged) properties.
     fgUpdateProps();
@@ -491,23 +491,23 @@ void fgRenderFrame() {
     GLbitfield clear_mask;
 
     if ( idle_state != 1000 ) {
-	// still initializing, draw the splash screen
-	if ( fgGetBool("/sim/startup/splash-screen") ) {
-	    fgSplashUpdate(0.0, 1.0);
-	}
+        // still initializing, draw the splash screen
+        if ( fgGetBool("/sim/startup/splash-screen") ) {
+            fgSplashUpdate(0.0, 1.0);
+        }
         // Keep resetting sim time while the sim is initializing
-	globals->set_sim_time_sec( 0.0 );
+        globals->set_sim_time_sec( 0.0 );
     } else {
-	// idle_state is now 1000 meaning we've finished all our
-	// initializations and are running the main loop, so this will
-	// now work without seg faulting the system.
+        // idle_state is now 1000 meaning we've finished all our
+        // initializations and are running the main loop, so this will
+        // now work without seg faulting the system.
 
-	// calculate our current position in cartesian space
-	globals->get_scenery()->set_center( globals->get_scenery()->get_next_center() );
+        // calculate our current position in cartesian space
+        globals->get_scenery()->set_center( globals->get_scenery()->get_next_center() );
 
-	// update view port
-	fgReshape( fgGetInt("/sim/startup/xsize"),
-		   fgGetInt("/sim/startup/ysize") );
+        // update view port
+        fgReshape( fgGetInt("/sim/startup/xsize"),
+               fgGetInt("/sim/startup/ysize") );
 
         if ( fgGetBool("/sim/rendering/clouds3d") ) {
             glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
@@ -530,180 +530,208 @@ void fgRenderFrame() {
             glDisable(GL_DEPTH_TEST);
         }
 
-	clear_mask = GL_DEPTH_BUFFER_BIT;
-	if ( fgGetBool("/sim/rendering/wireframe") ) {
-	    clear_mask |= GL_COLOR_BUFFER_BIT;
-	}
+        clear_mask = GL_DEPTH_BUFFER_BIT;
+        if ( fgGetBool("/sim/rendering/wireframe") ) {
+            clear_mask |= GL_COLOR_BUFFER_BIT;
+        }
 
-	if ( fgGetBool("/sim/rendering/skyblend") ) {
-	    if ( fgGetBool("/sim/rendering/textures") ) {
-		// glClearColor(black[0], black[1], black[2], black[3]);
-		glClearColor(l->adj_fog_color[0], l->adj_fog_color[1],
-			     l->adj_fog_color[2], l->adj_fog_color[3]);
-		clear_mask |= GL_COLOR_BUFFER_BIT;
-	    }
-	} else {
-	    glClearColor(l->sky_color[0], l->sky_color[1],
-			 l->sky_color[2], l->sky_color[3]);
-	    clear_mask |= GL_COLOR_BUFFER_BIT;
-	}
-	glClear( clear_mask );
+        if ( fgGetBool("/sim/rendering/skyblend") ) {
+            if ( fgGetBool("/sim/rendering/textures") ) {
+            // glClearColor(black[0], black[1], black[2], black[3]);
+            glClearColor(l->adj_fog_color[0], l->adj_fog_color[1],
+                         l->adj_fog_color[2], l->adj_fog_color[3]);
+            clear_mask |= GL_COLOR_BUFFER_BIT;
+            }
+        } else {
+            glClearColor(l->sky_color[0], l->sky_color[1],
+                     l->sky_color[2], l->sky_color[3]);
+            clear_mask |= GL_COLOR_BUFFER_BIT;
+        }
+        glClear( clear_mask );
 
-	// Tell GL we are switching to model view parameters
+        // Tell GL we are switching to model view parameters
 
-	// I really should create a derived ssg node or use a call
-	// back or something so that I can draw the sky within the
-	// ssgCullAndDraw() function, but for now I just mimic what
-	// ssg does to set up the model view matrix
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	ssgSetCamera( (sgVec4 *)current__view->get_VIEW() );
+        // I really should create a derived ssg node or use a call
+        // back or something so that I can draw the sky within the
+        // ssgCullAndDraw() function, but for now I just mimic what
+        // ssg does to set up the model view matrix
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        ssgSetCamera( (sgVec4 *)current__view->get_VIEW() );
 
-	// set the opengl state to known default values
-	default_state->force();
+        // set the opengl state to known default values
+        default_state->force();
 
-	// update fog params if visibility has changed
-	double visibility_meters = fgGetDouble("/environment/visibility-m");
-	thesky->set_visibility(visibility_meters);
+        // update fog params if visibility has changed
+        double visibility_meters = fgGetDouble("/environment/visibility-m");
+        thesky->set_visibility(visibility_meters);
 
-	thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
-			    ( global_multi_loop * fgGetInt("/sim/speed-up") )
+        thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
+                        ( global_multi_loop * fgGetInt("/sim/speed-up") )
                             / (double)fgGetInt("/sim/model-hz") );
 
-	// Set correct opengl fog density
-	glFogf (GL_FOG_DENSITY, fog_exp2_density);
+        // Set correct opengl fog density
+        glFogf (GL_FOG_DENSITY, fog_exp2_density);
 
-	// update the sky dome
-	if ( fgGetBool("/sim/rendering/skyblend") ) {
-	    /*
+        // update the sky dome
+        if ( fgGetBool("/sim/rendering/skyblend") ) {
+            /*
              SG_LOG( SG_GENERAL, SG_BULK, "thesky->repaint() sky_color = "
-		 << cur_light_params.sky_color[0] << " "
-		 << cur_light_params.sky_color[1] << " "
-		 << cur_light_params.sky_color[2] << " "
-		 << cur_light_params.sky_color[3] );
-	    SG_LOG( SG_GENERAL, SG_BULK, "    fog = "
-		 << cur_light_params.fog_color[0] << " "
-		 << cur_light_params.fog_color[1] << " "
-		 << cur_light_params.fog_color[2] << " "
-		 << cur_light_params.fog_color[3] ); 
-	    SG_LOG( SG_GENERAL, SG_BULK,
+             << cur_light_params.sky_color[0] << " "
+             << cur_light_params.sky_color[1] << " "
+             << cur_light_params.sky_color[2] << " "
+             << cur_light_params.sky_color[3] );
+            SG_LOG( SG_GENERAL, SG_BULK, "    fog = "
+             << cur_light_params.fog_color[0] << " "
+             << cur_light_params.fog_color[1] << " "
+             << cur_light_params.fog_color[2] << " "
+             << cur_light_params.fog_color[3] ); 
+            SG_LOG( SG_GENERAL, SG_BULK,
                     "    sun_angle = " << cur_light_params.sun_angle
-		 << "    moon_angle = " << cur_light_params.moon_angle );
+             << "    moon_angle = " << cur_light_params.moon_angle );
             */
-	    thesky->repaint( cur_light_params.sky_color,
-			     cur_light_params.adj_fog_color,
-			     cur_light_params.sun_angle,
-			     cur_light_params.moon_angle,
-			     globals->get_ephem()->getNumPlanets(),
-			     globals->get_ephem()->getPlanets(),
-			     globals->get_ephem()->getNumStars(),
-			     globals->get_ephem()->getStars() );
 
-	    /*
+            // Some insane defaults.
+            static int init = 0;
+            static double sun_pos_angle = 9999.0;
+            static double sun_pos_rotation = 9999.0;
+            static double lat_curr = 9999.0;
+            static double long_curr = 9999.0;
+
+            if ((fabs(sun_pos_rotation - cur_light_params.sun_rotation) > 5e-3)
+                || (fabs(sun_pos_angle - cur_light_params.sun_angle) > 5e-3)
+                || (init < 100)
+#if 0
+                || (fabs(lat_curr - current__view->getLongitude_deg()) > 0.5)
+                || (fabs(long_curr - current__view->getLatitude_deg()) > 0.5))
+#else
+                )
+#endif
+            {
+                if (init < 200)
+                   init++;
+
+                sun_pos_angle = cur_light_params.sun_angle;
+                sun_pos_rotation = cur_light_params.sun_rotation;
+
+                thesky->repaint( cur_light_params.sky_color,
+                             cur_light_params.adj_fog_color,
+                             cur_light_params.sun_angle,
+                             cur_light_params.moon_angle,
+                             globals->get_ephem()->getNumPlanets(),
+                             globals->get_ephem()->getPlanets(),
+                             globals->get_ephem()->getNumStars(),
+                             globals->get_ephem()->getStars() );
+
+            /*
             SG_LOG( SG_GENERAL, SG_BULK,
                     "thesky->reposition( view_pos = " << view_pos[0] << " "
-		 << view_pos[1] << " " << view_pos[2] );
-	    SG_LOG( SG_GENERAL, SG_BULK,
+             << view_pos[1] << " " << view_pos[2] );
+            SG_LOG( SG_GENERAL, SG_BULK,
                     "    zero_elev = " << zero_elev[0] << " "
-		 << zero_elev[1] << " " << zero_elev[2]
-		 << " lon = " << cur_fdm_state->get_Longitude()
-		 << " lat = " << cur_fdm_state->get_Latitude() );
-	    SG_LOG( SG_GENERAL, SG_BULK,
+             << zero_elev[1] << " " << zero_elev[2]
+             << " lon = " << cur_fdm_state->get_Longitude()
+             << " lat = " << cur_fdm_state->get_Latitude() );
+            SG_LOG( SG_GENERAL, SG_BULK,
                     "    sun_rot = " << cur_light_params.sun_rotation
-		 << " gst = " << SGTime::cur_time_params->getGst() );
-	    SG_LOG( SG_GENERAL, SG_BULK,
+             << " gst = " << SGTime::cur_time_params->getGst() );
+            SG_LOG( SG_GENERAL, SG_BULK,
                  "    sun ra = " << globals->get_ephem()->getSunRightAscension()
               << " sun dec = " << globals->get_ephem()->getSunDeclination()
               << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
               << " moon dec = " << globals->get_ephem()->getMoonDeclination() );
             */
 
-	    thesky->reposition( current__view->get_view_pos(),
-				current__view->get_zero_elev(),
-				current__view->get_world_up(),
-				current__view->getLongitude_deg()
-				  * SGD_DEGREES_TO_RADIANS,
-				current__view->getLatitude_deg()
-				  * SGD_DEGREES_TO_RADIANS,
-				current__view->getAltitudeASL_ft() * SG_FEET_TO_METER,
-				cur_light_params.sun_rotation,
-				globals->get_time_params()->getGst(),
-				globals->get_ephem()->getSunRightAscension(),
-				globals->get_ephem()->getSunDeclination(),
-				50000.0,
-				globals->get_ephem()->getMoonRightAscension(),
-				globals->get_ephem()->getMoonDeclination(),
-				50000.0 );
-	}
+                lat_curr = current__view->getLongitude_deg();
+                long_curr = current__view->getLatitude_deg();
+                thesky->reposition( current__view->get_view_pos(),
+                            current__view->get_zero_elev(),
+                            current__view->get_world_up(),
+                            current__view->getLongitude_deg()
+                               * SGD_DEGREES_TO_RADIANS,
+                            current__view->getLatitude_deg()
+                               * SGD_DEGREES_TO_RADIANS,
+                            current__view->getAltitudeASL_ft()
+                               * SG_FEET_TO_METER,
+                            cur_light_params.sun_rotation,
+                            globals->get_time_params()->getGst(),
+                            globals->get_ephem()->getSunRightAscension(),
+                            globals->get_ephem()->getSunDeclination(),
+                            50000.0,
+                            globals->get_ephem()->getMoonRightAscension(),
+                            globals->get_ephem()->getMoonDeclination(),
+                            50000.0 );
+            }
+        }
 
-	glEnable( GL_DEPTH_TEST );
-	if ( strcmp(fgGetString("/sim/rendering/fog"), "disabled") ) {
-	    glEnable( GL_FOG );
-	    glFogi( GL_FOG_MODE, GL_EXP2 );
-	    glFogfv( GL_FOG_COLOR, l->adj_fog_color );
-	}
+        glEnable( GL_DEPTH_TEST );
+        if ( strcmp(fgGetString("/sim/rendering/fog"), "disabled") ) {
+            glEnable( GL_FOG );
+            glFogi( GL_FOG_MODE, GL_EXP2 );
+            glFogfv( GL_FOG_COLOR, l->adj_fog_color );
+        }
 
-	// set sun/lighting parameters
-	ssgGetLight( 0 ) -> setPosition( l->sun_vec );
+        // set sun/lighting parameters
+        ssgGetLight( 0 ) -> setPosition( l->sun_vec );
 
         // GL_LIGHT_MODEL_AMBIENT has a default non-zero value so if
         // we only update GL_AMBIENT for our lights we will never get
         // a completely dark scene.  So, we set GL_LIGHT_MODEL_AMBIENT
         // explicitely to black.
-	glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
+        glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
 
-	ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
-	ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
-	ssgGetLight( 0 ) -> setColour( GL_SPECULAR, l->scene_specular );
+        ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
+        ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
+        ssgGetLight( 0 ) -> setColour( GL_SPECULAR, l->scene_specular );
 
-	// texture parameters
-	// glEnable( GL_TEXTURE_2D );
-	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
-	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
+        // texture parameters
+        // glEnable( GL_TEXTURE_2D );
+        glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
+        glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
 
-	// glMatrixMode( GL_PROJECTION );
-	// glLoadIdentity();
-	ssgSetFOV( current__view->get_h_fov(),
-		   current__view->get_v_fov() );
+        // glMatrixMode( GL_PROJECTION );
+        // glLoadIdentity();
+        ssgSetFOV( current__view->get_h_fov(),
+               current__view->get_v_fov() );
 
-	double agl =
+        double agl =
             current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-	    - globals->get_scenery()->get_cur_elev();
+            - globals->get_scenery()->get_cur_elev();
 
         if ( agl > 10.0 ) {
             scene_nearplane = 10.0f;
             scene_farplane = 120000.0f;
-	} else {
+        } else {
             scene_nearplane = groundlevel_nearplane->getDoubleValue();
             scene_farplane = 120000.0f;
         }
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
 
-	// $$$ begin - added VS Renganthan 17 Oct 2K
-	if(objc)
-	  fgUpdateDCS();
-	// $$$ end - added VS Renganthan 17 Oct 2K
+        // $$$ begin - added VS Renganthan 17 Oct 2K
+        if(objc)
+          fgUpdateDCS();
+        // $$$ end - added VS Renganthan 17 Oct 2K
 
 # ifdef FG_NETWORK_OLK
-	if ( fgGetBool("/sim/networking/network-olk") ) {
-	    sgCoord fgdpos;
-	    other = head->next;             /* put listpointer to start  */
-	    while ( other != tail) {        /* display all except myself */
-		if ( strcmp( other->ipadr, fgd_mcp_ip) != 0) {
-		    other->fgd_sel->select(1);
-		    sgSetCoord( &fgdpos, other->sgFGD_COORD );
-		    other->fgd_pos->setTransform( &fgdpos );
-		}
-		other = other->next;
-	    }
+        if ( fgGetBool("/sim/networking/network-olk") ) {
+            sgCoord fgdpos;
+            other = head->next;             /* put listpointer to start  */
+            while ( other != tail) {        /* display all except myself */
+            if ( strcmp( other->ipadr, fgd_mcp_ip) != 0) {
+                other->fgd_sel->select(1);
+                sgSetCoord( &fgdpos, other->sgFGD_COORD );
+                other->fgd_pos->setTransform( &fgdpos );
+            }
+            other = other->next;
+            }
 
-	    // fgd_sel->select(1);
-	    // sgCopyMat4( sgTUX, current_view.sgVIEW);
-	    // sgCoord fgdpos;
-	    // sgSetCoord( &fgdpos, sgFGD_VIEW );
-	    // fgd_pos->setTransform( &fgdpos);
-	}
+            // fgd_sel->select(1);
+            // sgCopyMat4( sgTUX, current_view.sgVIEW);
+            // sgCoord fgdpos;
+            // sgSetCoord( &fgdpos, sgFGD_VIEW );
+            // fgd_pos->setTransform( &fgdpos);
+        }
 # endif
 
 #ifdef FG_MPLAYER_AS
@@ -714,19 +742,19 @@ void fgRenderFrame() {
         if ( fgGetBool("/sim/rendering/skyblend") &&
              fgGetBool("/sim/rendering/draw-otw") )
         {
-	    // draw the sky backdrop
+            // draw the sky backdrop
 
             // we need a white diffuse light for the phase of the moon
             ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
 
-	    thesky->preDraw();
+            thesky->preDraw();
 
             // return to the desired diffuse color
             ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
-	}
+        }
 
-	// draw the ssg scene
-	glEnable( GL_DEPTH_TEST );
+        // draw the ssg scene
+        glEnable( GL_DEPTH_TEST );
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
 
@@ -738,30 +766,30 @@ void fgRenderFrame() {
             ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
         }
 
-	// This is a bit kludgy.  Every 200 frames, do an extra
-	// traversal of the scene graph without drawing anything, but
-	// with the field-of-view set to 360x360 degrees.  This
-	// ensures that out-of-range random objects that are not in
-	// the current view frustum will still be freed properly.
-	static int counter = 0;
-	counter++;
-	if (counter == 200) {
-	  sgFrustum f;
-	  f.setFOV(360, 360);
-				// No need to put the near plane too close;
-				// this way, at least the aircraft can be
-				// culled.
-	  f.setNearFar(1000, 1000000);
-	  sgMat4 m;
-	  ssgGetModelviewMatrix(m);
-	  globals->get_scenery()->get_scene_graph()->cull(&f, m, true);
-	  counter = 0;
-	}
+        // This is a bit kludgy.  Every 200 frames, do an extra
+        // traversal of the scene graph without drawing anything, but
+        // with the field-of-view set to 360x360 degrees.  This
+        // ensures that out-of-range random objects that are not in
+        // the current view frustum will still be freed properly.
+        static int counter = 0;
+        counter++;
+        if (counter == 200) {
+          sgFrustum f;
+          f.setFOV(360, 360);
+                            // No need to put the near plane too close;
+                            // this way, at least the aircraft can be
+                            // culled.
+          f.setNearFar(1000, 1000000);
+          sgMat4 m;
+          ssgGetModelviewMatrix(m);
+          globals->get_scenery()->get_scene_graph()->cull(&f, m, true);
+          counter = 0;
+        }
 
-	// change state for lighting here
+        // change state for lighting here
 
-	// draw runway lighting
-	glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
+        // draw runway lighting
+        glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
         ssgSetNearFar( scene_nearplane, scene_farplane );
 
 #ifdef FG_EXPERIMENTAL_POINT_LIGHTING
@@ -794,7 +822,7 @@ void fgRenderFrame() {
         }
 
         // change punch through and then draw taxi lighting
-	glFogf ( GL_FOG_DENSITY, fog_exp2_density );
+        glFogf ( GL_FOG_DENSITY, fog_exp2_density );
         // sgVec3 taxi_fog;
         // sgSetVec3( taxi_fog, 0.0, 0.0, 0.0 );
         // glFogfv ( GL_FOG_COLOR, taxi_fog );
@@ -807,14 +835,14 @@ void fgRenderFrame() {
         glDisable(GL_TEXTURE_GEN_S);
         glDisable(GL_TEXTURE_GEN_T);
 
-	//static int _frame_count = 0;
-	//if (_frame_count % 30 == 0) {
-	//  printf("SSG: %s\n", ssgShowStats());
-	//}
-	//else {
-	//  ssgShowStats();
-	//}
-	//_frame_count++;
+        //static int _frame_count = 0;
+        //if (_frame_count % 30 == 0) {
+        //  printf("SSG: %s\n", ssgShowStats());
+        //}
+        //else {
+        //  ssgShowStats();
+        //}
+        //_frame_count++;
 
 
 #ifdef FG_EXPERIMENTAL_POINT_LIGHTING
@@ -830,20 +858,20 @@ void fgRenderFrame() {
 #endif
 
         // draw ground lighting
-	glFogf (GL_FOG_DENSITY, ground_exp2_punch_through);
+        glFogf (GL_FOG_DENSITY, ground_exp2_punch_through);
         if ( fgGetBool("/sim/rendering/draw-otw") ) {
             ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
         }
 
-	if ( fgGetBool("/sim/rendering/skyblend") ) {
-	    // draw the sky cloud layers
+        if ( fgGetBool("/sim/rendering/skyblend") ) {
+            // draw the sky cloud layers
             if ( fgGetBool("/environment/clouds/status") &&
                  fgGetBool("/sim/rendering/draw-otw") )
             {
                 thesky->postDraw( cur_fdm_state->get_Altitude()
                                   * SG_FEET_TO_METER );
             }
-	}
+        }
 
         if ( fgGetBool("/sim/rendering/clouds3d") &&
              fgGetBool("/sim/rendering/draw-otw") )
@@ -878,34 +906,34 @@ void fgRenderFrame() {
             globals->get_aircraft_model()->draw();
         }
 
-	// display HUD && Panel
-	glDisable( GL_FOG );
-	glDisable( GL_DEPTH_TEST );
-	// glDisable( GL_CULL_FACE );
-	// glDisable( GL_TEXTURE_2D );
+        // display HUD && Panel
+        glDisable( GL_FOG );
+        glDisable( GL_DEPTH_TEST );
+        // glDisable( GL_CULL_FACE );
+        // glDisable( GL_TEXTURE_2D );
 
-	// update the controls subsystem
-	globals->get_controls()->update(delta_time_sec);
+        // update the controls subsystem
+        globals->get_controls()->update(delta_time_sec);
 
-	hud_and_panel->apply();
-	fgCockpitUpdate();
+        hud_and_panel->apply();
+        fgCockpitUpdate();
 
-	// Use the hud_and_panel ssgSimpleState for rendering the ATC output
-	// This only works properly if called before the panel call
-	if((fgGetBool("/sim/ATC/enabled")) || (fgGetBool("/sim/ai-traffic/enabled")))
-	    globals->get_ATC_display()->update(delta_time_sec);
+        // Use the hud_and_panel ssgSimpleState for rendering the ATC output
+        // This only works properly if called before the panel call
+        if((fgGetBool("/sim/ATC/enabled")) || (fgGetBool("/sim/ai-traffic/enabled")))
+            globals->get_ATC_display()->update(delta_time_sec);
 
-	// update the panel subsystem
-	if ( globals->get_current_panel() != NULL ) {
-	    globals->get_current_panel()->update(delta_time_sec);
-	}
+        // update the panel subsystem
+        if ( globals->get_current_panel() != NULL ) {
+            globals->get_current_panel()->update(delta_time_sec);
+        }
         fgUpdate3DPanels();
 
-	// We can do translucent menus, so why not. :-)
-	menus->apply();
-	glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-	puDisplay();
-	// glDisable ( GL_BLEND ) ;
+        // We can do translucent menus, so why not. :-)
+        menus->apply();
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
+        puDisplay();
+        // glDisable ( GL_BLEND ) ;
 
         glEnable( GL_DEPTH_TEST );
         glEnable( GL_FOG );
@@ -942,12 +970,12 @@ void fgUpdateTimeDepCalcs() {
     if ( !cur_fdm_state->get_inited() &&
          globals->get_scenery()->get_cur_elev() > -9990 )
     {
-	SG_LOG(SG_FLIGHT,SG_INFO, "Finally initializing fdm");  
-	cur_fdm_state->init();
-	if ( cur_fdm_state->get_bound() ) {
-	    cur_fdm_state->unbind();
-	}
-	cur_fdm_state->bind();
+        SG_LOG(SG_FLIGHT,SG_INFO, "Finally initializing fdm");  
+        cur_fdm_state->init();
+        if ( cur_fdm_state->get_bound() ) {
+            cur_fdm_state->unbind();
+        }
+        cur_fdm_state->bind();
     }
 
 #ifndef FG_WEATHERCM
@@ -957,16 +985,16 @@ void fgUpdateTimeDepCalcs() {
     // conceptually, the following block could be done for each fdm
     // instance ...
     if ( !cur_fdm_state->get_inited() ) {
-	// do nothing, fdm isn't inited yet
+        // do nothing, fdm isn't inited yet
     } else {
-	// we have been inited, and  we are good to go ...
+        // we have been inited, and  we are good to go ...
 
-	if ( !inited ) {
-	    inited = true;
-	}
+        if ( !inited ) {
+            inited = true;
+        }
 
-	globals->get_autopilot()->update(delta_time_sec);
-	cur_fdm_state->update(delta_time_sec);
+        globals->get_autopilot()->update(delta_time_sec);
+        cur_fdm_state->update(delta_time_sec);
     }
 
     globals->get_model_mgr()->update(delta_time_sec);
@@ -979,8 +1007,8 @@ void fgUpdateTimeDepCalcs() {
 
     // Update solar system
     globals->get_ephem()->update( globals->get_time_params()->getMjd(),
-				  globals->get_time_params()->getLst(),
-				  cur_fdm_state->get_Latitude() );
+                              globals->get_time_params()->getLst(),
+                              cur_fdm_state->get_Latitude() );
 
     // Update radio stack model
     current_radiostack->update(delta_time_sec);
@@ -1001,15 +1029,15 @@ static const double alt_adjust_m = alt_adjust_ft * SG_FEET_TO_METER;
 static void fgMainLoop( void ) {
 
     static const SGPropertyNode *longitude
-	= fgGetNode("/position/longitude-deg");
+        = fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
-	= fgGetNode("/position/latitude-deg");
+        = fgGetNode("/position/latitude-deg");
     static const SGPropertyNode *altitude
-	= fgGetNode("/position/altitude-ft");
+        = fgGetNode("/position/altitude-ft");
     static const SGPropertyNode *clock_freeze
-	= fgGetNode("/sim/freeze/clock", true);
+        = fgGetNode("/sim/freeze/clock", true);
     static const SGPropertyNode *cur_time_override
-	= fgGetNode("/sim/time/cur-time-override", true);
+        = fgGetNode("/sim/time/cur-time-override", true);
 
     // Update the elapsed time.
     static bool first_time = true;
@@ -1048,11 +1076,11 @@ static void fgMainLoop( void ) {
 
 #ifdef FG_NETWORK_OLK
     if ( fgGetBool("/sim/networking/network-olk") ) {
-	if ( net_is_registered == 0 ) {	     // We first have to reg. to fgd
-	    // printf("FGD: Netupdate\n");
-	    fgd_send_com( "A", FGFS_host);   // Send Mat4 data
-	    fgd_send_com( "B", FGFS_host);   // Recv Mat4 data
-	}
+        if ( net_is_registered == 0 ) {	     // We first have to reg. to fgd
+            // printf("FGD: Netupdate\n");
+            fgd_send_com( "A", FGFS_host);   // Send Mat4 data
+            fgd_send_com( "B", FGFS_host);   // Recv Mat4 data
+        }
     }
 #endif
 
@@ -1072,35 +1100,35 @@ static void fgMainLoop( void ) {
     // probably move eventually
 
     /* printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
-	   scenery.get_cur_elev(),
-	   cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
-	   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
+           scenery.get_cur_elev(),
+           cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
+           cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
 // Curt is this code used?  I don't see any problems when I comment it out.
     if ( acmodel_location != 0 ) {
       if ( acmodel_location->get_cur_elev_m() > -9990 && cur_fdm_state->get_inited() ) {
- 	if ( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER < 
-	     (acmodel_location->get_cur_elev_m() + alt_adjust_m - 3.0) ) {
-	    // now set aircraft altitude above ground
-	    printf("(*) Current Altitude = %.2f < %.2f forcing to %.2f\n", 
-		   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
-		   acmodel_location->get_cur_elev_m() + alt_adjust_m - 3.0,
-		   acmodel_location->get_cur_elev_m() + alt_adjust_m );
-	    cur_fdm_state->set_Altitude( (acmodel_location->get_cur_elev_m() 
+        if ( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER < 
+             (acmodel_location->get_cur_elev_m() + alt_adjust_m - 3.0) ) {
+            // now set aircraft altitude above ground
+            printf("(*) Current Altitude = %.2f < %.2f forcing to %.2f\n", 
+               cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
+               acmodel_location->get_cur_elev_m() + alt_adjust_m - 3.0,
+               acmodel_location->get_cur_elev_m() + alt_adjust_m );
+            cur_fdm_state->set_Altitude( (acmodel_location->get_cur_elev_m() 
                                                 + alt_adjust_m) * SG_METER_TO_FEET );
-	    SG_LOG( SG_ALL, SG_DEBUG, 
-		    "<*> resetting altitude to " 
-		    << cur_fdm_state->get_Altitude() * SG_FEET_TO_METER
-		    << " meters" );
-	}
+            SG_LOG( SG_ALL, SG_DEBUG, 
+                "<*> resetting altitude to " 
+                << cur_fdm_state->get_Altitude() * SG_FEET_TO_METER
+                << " meters" );
+        }
       }
     }
 // End of code in question. (see Curt is this code used? above)
 
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
-	   scenery.get_cur_elev(),
-	   cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
-	   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
+           scenery.get_cur_elev(),
+           cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
+           cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
     // cout << "Warp = " << globals->get_warp() << endl;
 
@@ -1108,50 +1136,50 @@ static void fgMainLoop( void ) {
     static bool last_clock_freeze = false;
 
     if ( clock_freeze->getBoolValue() ) {
-	// clock freeze requested
-	if ( cur_time_override->getLongValue() == 0 ) {
-	    fgSetLong( "/sim/time/cur-time-override", t->get_cur_time() );
-	    globals->set_warp( 0 );
-	}
+        // clock freeze requested
+        if ( cur_time_override->getLongValue() == 0 ) {
+            fgSetLong( "/sim/time/cur-time-override", t->get_cur_time() );
+            globals->set_warp( 0 );
+        }
     } else {
-	// no clock freeze requested
-	if ( last_clock_freeze == true ) {
-	    // clock just unfroze, let's set warp as the difference
-	    // between frozen time and current time so we don't get a
-	    // time jump (and corresponding sky object and lighting
-	    // jump.)
-	    globals->set_warp( cur_time_override->getLongValue() - time(NULL) );
-	    fgSetLong( "/sim/time/cur-time-override", 0 );
-	}
-	if ( globals->get_warp_delta() != 0 ) {
-	    globals->inc_warp( globals->get_warp_delta() );
-	}
+        // no clock freeze requested
+        if ( last_clock_freeze == true ) {
+            // clock just unfroze, let's set warp as the difference
+            // between frozen time and current time so we don't get a
+            // time jump (and corresponding sky object and lighting
+            // jump.)
+            globals->set_warp( cur_time_override->getLongValue() - time(NULL) );
+            fgSetLong( "/sim/time/cur-time-override", 0 );
+        }
+        if ( globals->get_warp_delta() != 0 ) {
+            globals->inc_warp( globals->get_warp_delta() );
+        }
     }
 
     last_clock_freeze = clock_freeze->getBoolValue();
 
     t->update( longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
-	       latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
-	       cur_time_override->getLongValue(),
-	       globals->get_warp() );
+               latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
+               cur_time_override->getLongValue(),
+               globals->get_warp() );
 
     if ( globals->get_warp_delta() != 0 ) {
-	fgUpdateSkyAndLightingParams();
+        fgUpdateSkyAndLightingParams();
     }
 
     // update magvar model
     globals->get_mag()->update( longitude->getDoubleValue()
-				  * SGD_DEGREES_TO_RADIANS,
-				latitude->getDoubleValue()
-				  * SGD_DEGREES_TO_RADIANS,
-				altitude->getDoubleValue() * SG_FEET_TO_METER,
-				globals->get_time_params()->getJD() );
+                              * SGD_DEGREES_TO_RADIANS,
+                            latitude->getDoubleValue()
+                              * SGD_DEGREES_TO_RADIANS,
+                            altitude->getDoubleValue() * SG_FEET_TO_METER,
+                            globals->get_time_params()->getJD() );
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
     SG_LOG( SG_ALL, SG_DEBUG, 
-	    "Elapsed time interval is = " << elapsed 
-	    << ", previous remainder is = " << remainder );
+            "Elapsed time interval is = " << elapsed 
+            << ", previous remainder is = " << remainder );
 
     // Calculate frame rate average
 #ifdef FANCY_FRAME_COUNTER
@@ -1174,11 +1202,11 @@ static void fgMainLoop( void ) {
     }
 #else
     if ( (t->get_cur_time() != last_time) && (last_time > 0) ) {
-	general.set_frame_rate( frames );
+        general.set_frame_rate( frames );
         fgSetInt("/sim/frame-rate", frames);
-	SG_LOG( SG_ALL, SG_DEBUG, 
-		"--> Frame rate is = " << general.get_frame_rate() );
-	frames = 0;
+        SG_LOG( SG_ALL, SG_DEBUG, 
+            "--> Frame rate is = " << general.get_frame_rate() );
+        frames = 0;
     }
     last_time = t->get_cur_time();
     ++frames;
@@ -1198,26 +1226,26 @@ static void fgMainLoop( void ) {
     elapsed += remainder;
 
     global_multi_loop = (long)(((double)elapsed * 0.000001) * 
-			      fgGetInt("/sim/model-hz"));
+                          fgGetInt("/sim/model-hz"));
     remainder = elapsed - ( (global_multi_loop*1000000) / 
-			    fgGetInt("/sim/model-hz") );
+                        fgGetInt("/sim/model-hz") );
     SG_LOG( SG_ALL, SG_DEBUG, 
-	    "Model iterations needed = " << global_multi_loop
-	    << ", new remainder = " << remainder );
-	
+            "Model iterations needed = " << global_multi_loop
+            << ", new remainder = " << remainder );
+        
     // chop max interations to something reasonable if the sim was
     // delayed for an excesive amount of time
     if ( global_multi_loop > 2.0 * fgGetInt("/sim/model-hz") ) {
-	global_multi_loop = (int)(2.0 * fgGetInt("/sim/model-hz") );
-	remainder = 0;
+        global_multi_loop = (int)(2.0 * fgGetInt("/sim/model-hz") );
+        remainder = 0;
     }
 
     // flight model
     if ( global_multi_loop > 0 ) {
-	fgUpdateTimeDepCalcs();
+        fgUpdateTimeDepCalcs();
     } else {
-	SG_LOG( SG_ALL, SG_DEBUG, 
-		"Elapsed time is zero ... we're zinging" );
+        SG_LOG( SG_ALL, SG_DEBUG, 
+            "Elapsed time is zero ... we're zinging" );
     }
 
     // Do any I/O channel work that might need to be done
@@ -1309,89 +1337,89 @@ static void fgIdleFunction ( void ) {
     // printf("idle state == %d\n", idle_state);
 
     if ( idle_state == 0 ) {
-	// Initialize the splash screen right away
-	if ( fgGetBool("/sim/startup/splash-screen") ) {
-	    fgSplashInit();
-	}
-	
-	idle_state++;
+        // Initialize the splash screen right away
+        if ( fgGetBool("/sim/startup/splash-screen") ) {
+            fgSplashInit();
+        }
+        
+        idle_state++;
     } else if ( idle_state == 1 ) {
-	// Initialize audio support
+        // Initialize audio support
 #ifdef ENABLE_AUDIO_SUPPORT
 
-	// Start the intro music
-	if ( fgGetBool("/sim/startup/intro-music") ) {
-	    SGPath mp3file( globals->get_fg_root() );
-	    mp3file.append( "Sounds/intro.mp3" );
+        // Start the intro music
+        if ( fgGetBool("/sim/startup/intro-music") ) {
+            SGPath mp3file( globals->get_fg_root() );
+            mp3file.append( "Sounds/intro.mp3" );
 
-	    SG_LOG( SG_GENERAL, SG_INFO, 
-		    "Starting intro music: " << mp3file.str() );
+            SG_LOG( SG_GENERAL, SG_INFO, 
+                "Starting intro music: " << mp3file.str() );
 
 #if defined( __CYGWIN__ )
-	    string command = "start /m `cygpath -w " + mp3file.str() + "`";
+            string command = "start /m `cygpath -w " + mp3file.str() + "`";
 #elif defined( WIN32 )
-	    string command = "start /m " + mp3file.str();
+            string command = "start /m " + mp3file.str();
 #else
-	    string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
+            string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
 #endif
 
-	    system ( command.c_str() );
-	}
+            system ( command.c_str() );
+        }
 #endif
 
-	idle_state++;
+        idle_state++;
     } else if ( idle_state == 2 ) {
-	// These are a few miscellaneous things that aren't really
-	// "subsystems" but still need to be initialized.
+        // These are a few miscellaneous things that aren't really
+        // "subsystems" but still need to be initialized.
 
 #ifdef USE_GLIDE
-	if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
-	    grTexLodBiasValue ( GR_TMU0, 1.0 ) ;
-	}
+        if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
+            grTexLodBiasValue ( GR_TMU0, 1.0 ) ;
+        }
 #endif
 
-	idle_state++;
+        idle_state++;
     } else if ( idle_state == 3 ) {
-	// This is the top level init routine which calls all the
-	// other subsystem initialization routines.  If you are adding
-	// a subsystem to flightgear, its initialization call should
-	// located in this routine.
-	if( !fgInitSubsystems()) {
-	    SG_LOG( SG_GENERAL, SG_ALERT,
-		    "Subsystem initializations failed ..." );
-	    exit(-1);
-	}
+        // This is the top level init routine which calls all the
+        // other subsystem initialization routines.  If you are adding
+        // a subsystem to flightgear, its initialization call should
+        // located in this routine.
+        if( !fgInitSubsystems()) {
+            SG_LOG( SG_GENERAL, SG_ALERT,
+                "Subsystem initializations failed ..." );
+            exit(-1);
+        }
 
-	idle_state++;
+        idle_state++;
     } else if ( idle_state == 4 ) {
-	// setup OpenGL view parameters
-	fgInitVisuals();
+        // setup OpenGL view parameters
+        fgInitVisuals();
 
         // Read the list of available aircrafts
         fgReadAircraft();
 
-	idle_state++;
+        idle_state++;
     } else if ( idle_state == 5 ) {
 
-	idle_state++;
+        idle_state++;
     } else if ( idle_state == 6 ) {
-	// sleep(1);
-	idle_state = 1000;
+        // sleep(1);
+        idle_state = 1000;
 
-	SG_LOG( SG_GENERAL, SG_INFO, "Panel visible = " << fgPanelVisible() );
-	fgReshape( fgGetInt("/sim/startup/xsize"),
-		   fgGetInt("/sim/startup/ysize") );
+        SG_LOG( SG_GENERAL, SG_INFO, "Panel visible = " << fgPanelVisible() );
+        fgReshape( fgGetInt("/sim/startup/xsize"),
+               fgGetInt("/sim/startup/ysize") );
     } 
 
     if ( idle_state == 1000 ) {
-	// We've finished all our initialization steps, from now on we
-	// run the main loop.
+        // We've finished all our initialization steps, from now on we
+        // run the main loop.
 
-	glutIdleFunc(fgMainLoop);
+        glutIdleFunc(fgMainLoop);
     } else {
-	if ( fgGetBool("/sim/startup/splash-screen") ) {
-	    fgSplashUpdate(0.0, 1.0);
-	}
+        if ( fgGetBool("/sim/startup/splash-screen") ) {
+            fgSplashUpdate(0.0, 1.0);
+        }
     }
 }
 
@@ -1401,18 +1429,18 @@ void fgReshape( int width, int height ) {
     int view_h;
 
     if ( (!fgGetBool("/sim/virtual-cockpit"))
-	 && fgPanelVisible() && idle_state == 1000 ) {
-	view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
-				 globals->get_current_panel()->getYOffset()) / 768.0);
+         && fgPanelVisible() && idle_state == 1000 ) {
+        view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
+                             globals->get_current_panel()->getYOffset()) / 768.0);
     } else {
-	view_h = height;
+        view_h = height;
     }
 
     // for all views
     FGViewMgr *viewmgr = globals->get_viewmgr();
     for ( int i = 0; i < viewmgr->size(); ++i ) {
       viewmgr->get_view(i)->
-	set_aspect_ratio((float)view_h / (float)width);
+        set_aspect_ratio((float)view_h / (float)width);
     }
 
     glViewport( 0, (GLint)(height - view_h), (GLint)(width), (GLint)(view_h) );
@@ -1422,7 +1450,7 @@ void fgReshape( int width, int height ) {
     guiInitMouse(width, height);
 
     ssgSetFOV( viewmgr->get_current_view()->get_h_fov(),
-	       viewmgr->get_current_view()->get_v_fov() );
+               viewmgr->get_current_view()->get_v_fov() );
 
     fgHUDReshape();
 
@@ -1450,21 +1478,21 @@ static bool fgGlutInit( int *argc, char **argv ) {
     }
 
     SG_LOG( SG_GENERAL, SG_INFO, "Opening a window: " <<
-	    fgGetInt("/sim/startup/xsize") << "x"
-	    << fgGetInt("/sim/startup/ysize") );
+            fgGetInt("/sim/startup/xsize") << "x"
+            << fgGetInt("/sim/startup/ysize") );
 
     // Define initial window size
     glutInitWindowSize( fgGetInt("/sim/startup/xsize"),
-			fgGetInt("/sim/startup/ysize") );
+                    fgGetInt("/sim/startup/ysize") );
 
     // Initialize windows
     if ( !fgGetBool("/sim/startup/game-mode")) {
-	// Open the regular window
-	glutCreateWindow("FlightGear");
+        // Open the regular window
+        glutCreateWindow("FlightGear");
 #ifndef GLUT_WRONG_VERSION
     } else {
-	// Open the cool new 'game mode' window
-	char game_mode_str[256];
+        // Open the cool new 'game mode' window
+        char game_mode_str[256];
 //#define SYNC_OPENGL_WITH_DESKTOP_SETTINGS
 #if defined(WIN32) && defined(SYNC_OPENGL_WITH_DESKTOP_SETTINGS)
 #ifndef ENUM_CURRENT_SETTINGS
@@ -1472,30 +1500,30 @@ static bool fgGlutInit( int *argc, char **argv ) {
 #define ENUM_REGISTRY_SETTINGS      ((DWORD)-2)
 #endif
 
-	DEVMODE dm;
-	dm.dmSize = sizeof(DEVMODE);
-	EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm);
-	fgSetInt("/sim/startup/xsize", dm.dmPelsWidth);
-	fgSetInt("/sim/startup/ysize", dm.dmPelsHeight);
-	glutInitWindowSize( fgGetInt("/sim/startup/xsize"),
-						fgGetInt("/sim/startup/ysize") );
-	sprintf( game_mode_str, "%dx%d:%d@%d",
-			 dm.dmPelsWidth,
-			 dm.dmPelsHeight,
-			 dm.dmBitsPerPel,
-			 dm.dmDisplayFrequency );
+        DEVMODE dm;
+        dm.dmSize = sizeof(DEVMODE);
+        EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm);
+        fgSetInt("/sim/startup/xsize", dm.dmPelsWidth);
+        fgSetInt("/sim/startup/ysize", dm.dmPelsHeight);
+        glutInitWindowSize( fgGetInt("/sim/startup/xsize"),
+                            fgGetInt("/sim/startup/ysize") );
+        sprintf( game_mode_str, "%dx%d:%d@%d",
+                     dm.dmPelsWidth,
+                     dm.dmPelsHeight,
+                     dm.dmBitsPerPel,
+                     dm.dmDisplayFrequency );
 #else
-	// Open the cool new 'game mode' window
-	sprintf( game_mode_str, "width=%d height=%d bpp=%d",
-		 fgGetInt("/sim/startup/xsize"),
-		 fgGetInt("/sim/startup/ysize"),
-		 fgGetInt("/sim/rendering/bits-per-pixel"));
+        // Open the cool new 'game mode' window
+        sprintf( game_mode_str, "width=%d height=%d bpp=%d",
+             fgGetInt("/sim/startup/xsize"),
+             fgGetInt("/sim/startup/ysize"),
+             fgGetInt("/sim/rendering/bits-per-pixel"));
 
 #endif // HAVE_WINDOWS_H
-	SG_LOG( SG_GENERAL, SG_INFO, 
-		"game mode params = " << game_mode_str );
-	glutGameModeString( game_mode_str );
-	glutEnterGameMode();
+        SG_LOG( SG_GENERAL, SG_INFO, 
+            "game mode params = " << game_mode_str );
+        glutGameModeString( game_mode_str );
+        glutEnterGameMode();
 #endif // GLUT_WRONG_VERSION
     }
 
@@ -1556,7 +1584,7 @@ static bool fgMainInit( int argc, char **argv ) {
     version = "unknown version";
 #endif
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
-	    << version );
+            << version );
     SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR << endl );
 
     // Allocate global data structures.  This needs to happen before
@@ -1590,11 +1618,11 @@ static bool fgMainInit( int argc, char **argv ) {
     if ( !(base_version == required_version) ) {
         // tell the operator how to use this application
 
-	cerr << endl << "Base package check failed ... " \
-	     << "Found version " << base_version << " at: " \
+        cerr << endl << "Base package check failed ... " \
+             << "Found version " << base_version << " at: " \
              << globals->get_fg_root() << endl;
         cerr << "Please upgrade to version: " << required_version << endl;
-	exit(-1);
+        exit(-1);
     }
 
     // Initialize the Aircraft directory to "" (UIUC)
@@ -1604,21 +1632,21 @@ static bool fgMainInit( int argc, char **argv ) {
     // overrides config file options.  Config file options override
     // defaults.)
     if ( !fgInitConfig(argc, argv) ) {
-	SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
-	exit(-1);
+        SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
+        exit(-1);
     }
 
     // Initialize the Window/Graphics environment.
     if( !fgGlutInit(&argc, argv) ) {
-	SG_LOG( SG_GENERAL, SG_ALERT, "GLUT initialization failed ..." );
-	exit(-1);
+        SG_LOG( SG_GENERAL, SG_ALERT, "GLUT initialization failed ..." );
+        exit(-1);
     }
 
     // Initialize the various GLUT Event Handlers.
     if( !fgGlutInitEvents() ) {
- 	SG_LOG( SG_GENERAL, SG_ALERT, 
- 		"GLUT event handler initialization failed ..." );
- 	exit(-1);
+ SG_LOG( SG_GENERAL, SG_ALERT, 
+        	"GLUT event handler initialization failed ..." );
+        exit(-1);
     }
 
     // Initialize plib net interface
@@ -1668,9 +1696,9 @@ static bool fgMainInit( int argc, char **argv ) {
 
     // Do some quick general initializations
     if( !fgInitGeneral()) {
-	SG_LOG( SG_GENERAL, SG_ALERT, 
-		"General initializations failed ..." );
-	exit(-1);
+        SG_LOG( SG_GENERAL, SG_ALERT, 
+            "General initializations failed ..." );
+        exit(-1);
     }
 
     SGPath modelpath( globals->get_fg_root() );
@@ -1722,11 +1750,11 @@ static bool fgMainInit( int argc, char **argv ) {
     ephem_data_path.append( "Astro" );
     SGEphemeris *ephem = new SGEphemeris( ephem_data_path.c_str() );
     ephem->update( globals->get_time_params()->getMjd(),
-		   globals->get_time_params()->getLst(),
-		   0.0 );
+               globals->get_time_params()->getLst(),
+               0.0 );
     globals->set_ephem( ephem );
 
-				// TODO: move to environment mgr
+                            // TODO: move to environment mgr
     thesky = new SGSky;
     SGPath texture_path(globals->get_fg_root());
     texture_path.append("Textures");
@@ -1743,10 +1771,10 @@ static bool fgMainInit( int argc, char **argv ) {
     thesky->texture_path( sky_tex_path.str() );
 
     thesky->build( 550.0, 550.0,
-		   globals->get_ephem()->getNumPlanets(), 
-		   globals->get_ephem()->getPlanets(), 60000.0,
-		   globals->get_ephem()->getNumStars(),
-		   globals->get_ephem()->getStars(), 60000.0 );
+               globals->get_ephem()->getNumPlanets(), 
+               globals->get_ephem()->getPlanets(), 60000.0,
+               globals->get_ephem()->getNumStars(),
+               globals->get_ephem()->getStars(), 60000.0 );
 
     // Initialize MagVar model
     SGMagVar *magvar = new SGMagVar();
@@ -1763,8 +1791,8 @@ static bool fgMainInit( int argc, char **argv ) {
 #ifdef FG_NETWORK_OLK
     // Do the network intialization
     if ( fgGetBool("/sim/networking/network-olk") ) {
-	printf("Multipilot mode %s\n",
-	       fg_net_init( globals->get_scenery()->get_scene_graph() ) );
+        printf("Multipilot mode %s\n",
+               fg_net_init( globals->get_scenery()->get_scene_graph() ) );
     }
 #endif
 
@@ -1866,11 +1894,11 @@ int main ( int argc, char **argv ) {
     try {
         fgMainInit(argc, argv);
     } catch (sg_throwable &t) {
-				// We must use cerr rather than
-				// logging, since logging may be
-				// disabled.
+                            // We must use cerr rather than
+                            // logging, since logging may be
+                            // disabled.
         cerr << "Fatal error: " << t.getFormattedMessage()
-	     << "\n (received from " << t.getOrigin() << ')' << endl;
+             << "\n (received from " << t.getOrigin() << ')' << endl;
         exit(1);
     }
 
@@ -1893,7 +1921,7 @@ void fgLoadDCS(void) {
     tile_path.append( "Objects.txt" );
     sg_gzifstream in( tile_path.str() );
     if ( ! in.is_open() ) {
-	SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << tile_path.str() );
+        SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << tile_path.str() );
     } else {
 
         SGPath modelpath( globals->get_fg_root() );
@@ -1934,11 +1962,11 @@ void fgLoadDCS(void) {
                 }
       
                 if ( ship_obj != NULL ) {
-					ship_obj->setName(obj_filename);
-			        if (objc == 0)
-						ship_obj->clrTraversalMaskBits( SSGTRAV_HOT );
-					else
-						ship_obj->setTraversalMaskBits( SSGTRAV_HOT );
+                            	ship_obj->setName(obj_filename);
+                            if (objc == 0)
+                            		ship_obj->clrTraversalMaskBits( SSGTRAV_HOT );
+                            	else
+                            		ship_obj->setTraversalMaskBits( SSGTRAV_HOT );
                     ship_pos[objc]->addKid( ship_obj ); // add object to transform node
                     ship_sel->addKid( ship_pos[objc] ); // add transform node to selector
                     SG_LOG( SG_TERRAIN, SG_ALERT, "Loaded file: "
@@ -1948,100 +1976,100 @@ void fgLoadDCS(void) {
                             << obj_filename );
                 }
             
-				// temporary hack for deck lights - ultimately should move to PLib (when??)
-				//const char *extn = file_extension ( obj_filename ) ;
-				if ( objc == 1 ){
-				    ssgVertexArray *lights = new ssgVertexArray( 100 );
-					ssgVertexArray *lightpoints = new ssgVertexArray( 100 );
-					ssgVertexArray *lightnormals = new ssgVertexArray( 100 );
-					ssgVertexArray *lightdir = new ssgVertexArray( 100 );
-					int ltype[500], light_type;
-					static int ltcount = 0;
-				    string token;
-					sgVec3 rway_dir,rway_normal,lightpt;
-					Point3D node;
-					modelpath.append(obj_filename);
-					sg_gzifstream in1( modelpath.str() );
-					if ( ! in1.is_open() ) {
-						SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << modelpath.str() );
-					} else {
-						while ( ! in1.eof() ) {
+                            // temporary hack for deck lights - ultimately should move to PLib (when??)
+                            //const char *extn = file_extension ( obj_filename ) ;
+                            if ( objc == 1 ){
+                                ssgVertexArray *lights = new ssgVertexArray( 100 );
+                            	ssgVertexArray *lightpoints = new ssgVertexArray( 100 );
+                            	ssgVertexArray *lightnormals = new ssgVertexArray( 100 );
+                            	ssgVertexArray *lightdir = new ssgVertexArray( 100 );
+                            	int ltype[500], light_type;
+                            	static int ltcount = 0;
+                                string token;
+                            	sgVec3 rway_dir,rway_normal,lightpt;
+                            	Point3D node;
+                            	modelpath.append(obj_filename);
+                            	sg_gzifstream in1( modelpath.str() );
+                            	if ( ! in1.is_open() ) {
+                            		SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << modelpath.str() );
+                            	} else {
+                            		while ( ! in1.eof() ) {
                                                         in1 >> ::skipws;
-							if ( in1.get( c ) && c == '#' ) { 
-								in1 >> skipeol;
-							} else { 
-								in1.putback(c);
-								in1 >> token;
-								//cout << token << endl;
-								if ( token == "runway" ) {
-									in1 >> node;
-									sgSetVec3 (rway_dir, node[0], node[1], node[2] );			 
-								} else if ( token == "edgelight" ) {
-									in1 >> node;
-									sgSetVec3 (rway_normal, node[0], node[1], node[2] );
-									light_type = 1;
-								} else if ( token == "taxi" ) {
-									in1 >> node;
-									sgSetVec3 (rway_normal, node[0], node[1], node[2] );			 
-									light_type = 2;
-								} else if ( token == "vasi" ) {
-									in1 >> node;
-									sgSetVec3 (rway_normal, node[0], node[1], node[2] );			 
-									light_type = 3;
-								} else if ( token == "threshold" ) {
-									in1 >> node;
-									sgSetVec3 (rway_normal, node[0], node[1], node[2] );			 
-									light_type = 4;
-								} else if ( token == "rabbit" ) {
-									in1 >> node;
-									sgSetVec3 (rway_normal, node[0], node[1], node[2] );
-									light_type = 5;
-								} else if ( token == "ols" ) {
-									in1 >> node;
-									sgSetVec3 (rway_ols, node[0], node[1], node[2] );
-									light_type = 6;
-								} else if ( token == "red" ) {
-									in1 >> node;
-									sgSetVec3 (rway_normal, node[0], node[1], node[2] );
-									light_type = 7;
-								} else if ( token == "green" ) {
-									in1 >> node;
-									sgSetVec3 (rway_normal, node[0], node[1], node[2] );
-									light_type = 8;
-								} else if ( token == "lp" ) {
-									in1 >> node;
-									sgSetVec3 (lightpt, node[0], node[1], node[2] );
-									lightpoints->add( lightpt );
-									lightnormals->add( rway_normal );
-									lightdir->add( rway_dir );
-									ltype[ltcount]= light_type;
-									ltcount++;
-								}
-								if (in1.eof()) break;
-							} 
-						}  //while
-	
-						if ( lightpoints->getNum() ) {
-							ssgBranch *lightpoints_branch;
-							long int dummy = -999;
-							dummy_tile = new FGTileEntry((SGBucket)dummy);
-							dummy_tile->lightmaps_sequence = new ssgSelector;
-							dummy_tile->ols_transform = new ssgTransform;
+                            			if ( in1.get( c ) && c == '#' ) { 
+                            				in1 >> skipeol;
+                            			} else { 
+                            				in1.putback(c);
+                            				in1 >> token;
+                            				//cout << token << endl;
+                            				if ( token == "runway" ) {
+                            					in1 >> node;
+                            					sgSetVec3 (rway_dir, node[0], node[1], node[2] );			 
+                            				} else if ( token == "edgelight" ) {
+                            					in1 >> node;
+                            					sgSetVec3 (rway_normal, node[0], node[1], node[2] );
+                            					light_type = 1;
+                            				} else if ( token == "taxi" ) {
+                            					in1 >> node;
+                            					sgSetVec3 (rway_normal, node[0], node[1], node[2] );			 
+                            					light_type = 2;
+                            				} else if ( token == "vasi" ) {
+                            					in1 >> node;
+                            					sgSetVec3 (rway_normal, node[0], node[1], node[2] );			 
+                            					light_type = 3;
+                            				} else if ( token == "threshold" ) {
+                            					in1 >> node;
+                            					sgSetVec3 (rway_normal, node[0], node[1], node[2] );			 
+                            					light_type = 4;
+                            				} else if ( token == "rabbit" ) {
+                            					in1 >> node;
+                            					sgSetVec3 (rway_normal, node[0], node[1], node[2] );
+                            					light_type = 5;
+                            				} else if ( token == "ols" ) {
+                            					in1 >> node;
+                            					sgSetVec3 (rway_ols, node[0], node[1], node[2] );
+                            					light_type = 6;
+                            				} else if ( token == "red" ) {
+                            					in1 >> node;
+                            					sgSetVec3 (rway_normal, node[0], node[1], node[2] );
+                            					light_type = 7;
+                            				} else if ( token == "green" ) {
+                            					in1 >> node;
+                            					sgSetVec3 (rway_normal, node[0], node[1], node[2] );
+                            					light_type = 8;
+                            				} else if ( token == "lp" ) {
+                            					in1 >> node;
+                            					sgSetVec3 (lightpt, node[0], node[1], node[2] );
+                            					lightpoints->add( lightpt );
+                            					lightnormals->add( rway_normal );
+                            					lightdir->add( rway_dir );
+                            					ltype[ltcount]= light_type;
+                            					ltcount++;
+                            				}
+                            				if (in1.eof()) break;
+                            			} 
+                            		}  //while
+        
+                            		if ( lightpoints->getNum() ) {
+                            			ssgBranch *lightpoints_branch;
+                            			long int dummy = -999;
+                            			dummy_tile = new FGTileEntry((SGBucket)dummy);
+                            			dummy_tile->lightmaps_sequence = new ssgSelector;
+                            			dummy_tile->ols_transform = new ssgTransform;
 
-							// call function to generate the runway lights
-							lightpoints_branch = 
-							dummy_tile->gen_runway_lights( lightpoints, lightnormals,
-																lightdir, ltype);
-							lightpoints_brightness->addKid(lightpoints_branch);
-							lightpoints_transform->addKid(lightpoints_brightness);
-						    //dummy_tile->lightmaps_sequence->setTraversalMaskBits( SSGTRAV_HOT );
-							lightpoints_transform->addKid( dummy_tile->lightmaps_sequence );
-							lightpoints_transform->ref();
-							globals->get_scenery()->get_gnd_lights_root()->addKid( lightpoints_transform );
-						} 
-					} //if in1 
+                            			// call function to generate the runway lights
+                            			lightpoints_branch = 
+                            			dummy_tile->gen_runway_lights( lightpoints, lightnormals,
+                            												lightdir, ltype);
+                            			lightpoints_brightness->addKid(lightpoints_branch);
+                            			lightpoints_transform->addKid(lightpoints_brightness);
+                            		    //dummy_tile->lightmaps_sequence->setTraversalMaskBits( SSGTRAV_HOT );
+                            			lightpoints_transform->addKid( dummy_tile->lightmaps_sequence );
+                            			lightpoints_transform->ref();
+                            			globals->get_scenery()->get_gnd_lights_root()->addKid( lightpoints_transform );
+                            		} 
+                            	} //if in1 
                 } //if objc
-				// end hack for deck lights
+                            // end hack for deck lights
 
                 objc++;
 
@@ -2073,22 +2101,22 @@ void fgUpdateDCS (void) {
     // Deck should be the first object in objects.txt in case of fdm=ada
 
     if (!strcmp(fgGetString("/sim/flight-model"), "ada")) {
-		if ((fdm->get_iaux(1))==1)
-		{
-			obj_lat[1] = fdm->get_daux(1)*SGD_DEGREES_TO_RADIANS;
-			obj_lon[1] = fdm->get_daux(2)*SGD_DEGREES_TO_RADIANS;
-			obj_alt[1] = fdm->get_daux(3);
-			obj_pitch[1] = fdm->get_faux(1);
-			obj_roll[1] = fdm->get_faux(2);
-		}
+            if ((fdm->get_iaux(1))==1)
+            {
+                    obj_lat[1] = fdm->get_daux(1)*SGD_DEGREES_TO_RADIANS;
+                    obj_lon[1] = fdm->get_daux(2)*SGD_DEGREES_TO_RADIANS;
+                    obj_alt[1] = fdm->get_daux(3);
+                    obj_pitch[1] = fdm->get_faux(1);
+                    obj_roll[1] = fdm->get_faux(2);
+            }
     }
     
     for ( int m = 0; m < objc; m++ ) {
     	//cout << endl <<  obj_lat[m]*SGD_RADIANS_TO_DEGREES << " " << obj_lon[m]*SGD_RADIANS_TO_DEGREES << " " << obj_alt[m] << " " << objc << endl;
-	//int v=getchar();
+        //int v=getchar();
 
         //Geodetic to Geocentric angles for rotation
-	sgGeodToGeoc(obj_lat[m],obj_alt[m],&sl_radius,&obj_latgc);
+        sgGeodToGeoc(obj_lat[m],obj_alt[m],&sl_radius,&obj_latgc);
 
         //moving object gbs-posn in cartesian coords
         Point3D obj_posn = Point3D( obj_lon[m],obj_lat[m],obj_alt[m]);
@@ -2101,64 +2129,64 @@ void fgUpdateDCS (void) {
         bz[2]=Objtrans.z();
 
        // rotate dynamic objects for lat,lon & alt and other motion about its axes
-	
-	sgMat4 sgTRANS;
-	sgMakeTransMat4( sgTRANS, bz[0],bz[1],bz[2]);
-
-	sgVec3 ship_fwd,ship_rt,ship_up;
-	sgSetVec3( ship_fwd, 1.0, 0.0, 0.0);//east,roll
-	sgSetVec3( ship_rt, 0.0, 1.0, 0.0);//up,pitch
-	sgSetVec3( ship_up, 0.0, 0.0, 1.0); //north,yaw
-
-	sgMat4 sgROT_lon, sgROT_lat, sgROT_hdg, sgROT_pitch, sgROT_roll;
-	sgMakeRotMat4( sgROT_lon, obj_lon[m]*SGD_RADIANS_TO_DEGREES, ship_up );
-	sgMakeRotMat4( sgROT_lat, 90-obj_latgc*SGD_RADIANS_TO_DEGREES, ship_rt );
-	sgMakeRotMat4( sgROT_hdg, 180.0, ship_up );
-	sgMakeRotMat4( sgROT_pitch, obj_pitch[m], ship_rt );
-	sgMakeRotMat4( sgROT_roll, obj_roll[m], ship_fwd );
-	
-	sgMat4 sgTUX;
-	sgCopyMat4( sgTUX, sgROT_hdg );
-	sgPostMultMat4( sgTUX, sgROT_pitch );
-	sgPostMultMat4( sgTUX, sgROT_roll );
-	sgPostMultMat4( sgTUX, sgROT_lat );
-	sgPostMultMat4( sgTUX, sgROT_lon );
-	sgPostMultMat4( sgTUX, sgTRANS );
-
-	sgCoord shippos;
-	sgSetCoord(&shippos, sgTUX );
-	ship_pos[m]->setTransform( &shippos );
-	// temporary hack for deck lights - ultimately should move to PLib (when ??)
-	if (m == 1) {
-		if (lightpoints_transform) {
-			lightpoints_transform->setTransform( &shippos );
-			float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
-			if ( sun_angle > 89 ) {
-				lightpoints_brightness->select(0x01);
-			} else {
-				lightpoints_brightness->select(0x00);
-			}
-		}
-
-		float elev;
-		sgVec3 rp,to;
-		float *vp;
-		float alt;
-		float ref_elev;
-		sgXformPnt3( rp, rway_ols, sgTUX );
-		vp = globals->get_current_view()->get_view_pos();
-	    to[0] = rp[0]-vp[0];
-	    to[1] = rp[1]-vp[1];
-	    to[2] = rp[2]-vp[2];
-		float dist = sgLengthVec3( to );
-		alt = (current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER)-rway_ols[2];
-
-		elev = asin(alt/dist)*SGD_RADIANS_TO_DEGREES;
-
-	    ref_elev = elev - 3.75; // +ve above, -ve below
         
-		unsigned int sel;
-		sel = 0xFF;
+        sgMat4 sgTRANS;
+        sgMakeTransMat4( sgTRANS, bz[0],bz[1],bz[2]);
+
+        sgVec3 ship_fwd,ship_rt,ship_up;
+        sgSetVec3( ship_fwd, 1.0, 0.0, 0.0);//east,roll
+        sgSetVec3( ship_rt, 0.0, 1.0, 0.0);//up,pitch
+        sgSetVec3( ship_up, 0.0, 0.0, 1.0); //north,yaw
+
+        sgMat4 sgROT_lon, sgROT_lat, sgROT_hdg, sgROT_pitch, sgROT_roll;
+        sgMakeRotMat4( sgROT_lon, obj_lon[m]*SGD_RADIANS_TO_DEGREES, ship_up );
+        sgMakeRotMat4( sgROT_lat, 90-obj_latgc*SGD_RADIANS_TO_DEGREES, ship_rt );
+        sgMakeRotMat4( sgROT_hdg, 180.0, ship_up );
+        sgMakeRotMat4( sgROT_pitch, obj_pitch[m], ship_rt );
+        sgMakeRotMat4( sgROT_roll, obj_roll[m], ship_fwd );
+        
+        sgMat4 sgTUX;
+        sgCopyMat4( sgTUX, sgROT_hdg );
+        sgPostMultMat4( sgTUX, sgROT_pitch );
+        sgPostMultMat4( sgTUX, sgROT_roll );
+        sgPostMultMat4( sgTUX, sgROT_lat );
+        sgPostMultMat4( sgTUX, sgROT_lon );
+        sgPostMultMat4( sgTUX, sgTRANS );
+
+        sgCoord shippos;
+        sgSetCoord(&shippos, sgTUX );
+        ship_pos[m]->setTransform( &shippos );
+        // temporary hack for deck lights - ultimately should move to PLib (when ??)
+        if (m == 1) {
+            if (lightpoints_transform) {
+                    lightpoints_transform->setTransform( &shippos );
+                    float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+                    if ( sun_angle > 89 ) {
+                            lightpoints_brightness->select(0x01);
+                    } else {
+                            lightpoints_brightness->select(0x00);
+                    }
+            }
+
+            float elev;
+            sgVec3 rp,to;
+            float *vp;
+            float alt;
+            float ref_elev;
+            sgXformPnt3( rp, rway_ols, sgTUX );
+            vp = globals->get_current_view()->get_view_pos();
+            to[0] = rp[0]-vp[0];
+            to[1] = rp[1]-vp[1];
+            to[2] = rp[2]-vp[2];
+            float dist = sgLengthVec3( to );
+            alt = (current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER)-rway_ols[2];
+
+            elev = asin(alt/dist)*SGD_RADIANS_TO_DEGREES;
+
+            ref_elev = elev - 3.75; // +ve above, -ve below
+        
+            unsigned int sel;
+            sel = 0xFF;
 // DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
 //		if (ref_elev > 0.51) sel = 0x21;
 //		if ((ref_elev <= 0.51) & (ref_elev > 0.17)) sel = 0x22;
@@ -2166,22 +2194,22 @@ void fgUpdateDCS (void) {
 //		if ((ref_elev < -0.17) & (ref_elev >= -0.51)) sel = 0x28;
 //		if (ref_elev < -0.51) sel = 0x30;
 // DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
-		dummy_tile->lightmaps_sequence->select(sel);
+            dummy_tile->lightmaps_sequence->select(sel);
 
-		sgVec3 up;
-		sgCopyVec3 (up, ship_up);
-		if (dist > 750) 
-			sgScaleVec3 (up, 4.0*ref_elev*dist/750.0);
-		else
-			sgScaleVec3 (up, 4.0*ref_elev);
-		dummy_tile->ols_transform->setTransform(up);
-		//cout << "ref_elev  " << ref_elev << endl;
-	}
+            sgVec3 up;
+            sgCopyVec3 (up, ship_up);
+            if (dist > 750) 
+                    sgScaleVec3 (up, 4.0*ref_elev*dist/750.0);
+            else
+                    sgScaleVec3 (up, 4.0*ref_elev);
+            dummy_tile->ols_transform->setTransform(up);
+            //cout << "ref_elev  " << ref_elev << endl;
+        }
     // end hack for deck lights
 
     }
     if ( ship_sel != NULL ) {
-	ship_sel->select(0xFFFFFFFE); // first object is ownship, added to acmodel
+        ship_sel->select(0xFFFFFFFE); // first object is ownship, added to acmodel
     }
 }
 
