@@ -31,7 +31,7 @@ static bool first_time = false;
 int make_socket (unsigned short int* port) {
     int sock;
     struct sockaddr_in name;
-    socklen_t length;
+    int length;
      
     // Create the socket.
     sock = socket (PF_INET, SOCK_STREAM, 0);
