@@ -538,28 +538,28 @@ InstrumentData instruments[] =
        1, SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5},
     {new FGAdjustAction(FGBFI::getAPHeadingMag, FGBFI::setAPHeadingMag,
 			5.0, -360.0, 360.0, true),
-       1, SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}
-//     {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
-// 			-1.0, -360.0, 360.0, true),
-//        0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5}
-//     {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
-// 			1.0, -360.0, 360.0, true),
-//        0, -SIX_W/2+SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}
-//     {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
-// 			-5.0, -360.0, 360.0, true),
-//        1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5}
-//     {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
-// 			5.0, -360.0, 360.0, true),
-//        1, -SIX_W/2+SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}
+       1, SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+			-1.0, -360.0, 360.0, true),
+       0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+			1.0, -360.0, 360.0, true),
+       0, -SIX_W/2+SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+			-5.0, -360.0, 360.0, true),
+       1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+			5.0, -360.0, 360.0, true),
+       1, -SIX_W/2+SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}
   }, {
     {new MyTexturedLayer("compassBG", -1, -1), {
       {TransData::Rotation, FGSteam::get_DG_deg, -720.0, 720.0, -1.0, 0.0}
     }},
     {new MyTexturedLayer("bug",
 			 int(SIX_W*(4.0/64.0)), int(SIX_W*(4.0/64.0))), {
-      {TransData::Rotation, FGSteam::get_DG_deg, -720.0, 720.0, -1.0, 0.0},
-      {TransData::Rotation, FGBFI::getAPHeadingMag, -720.0, 720.0, -1.0, 0.0},
-      {TransData::YShift, 0, 0.0, 0.0, 0.0, (SIX_W/2.0)-4}
+      {TransData::Rotation, FGBFI::getAPHeadingMag, -720.0, 720.0, 1.0, 0.0},
+      {TransData::Rotation, FGSteam::get_DG_deg, -720.0, 720.0, 1.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -(SIX_W/2.0)+4}
     }},
     {new MyTexturedLayer("compassCenter", int(SIX_W*0.625), int(SIX_W*0.625))},
     {new MyTexturedLayer("headingKnob",
