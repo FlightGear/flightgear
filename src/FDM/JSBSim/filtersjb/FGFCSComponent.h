@@ -1,9 +1,8 @@
-
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  Header:       FGFCSComponent.h
- Author:       
- Date started: 
+ Author:       Jon S. Berndt
+ Date started: 05/01/2000
 
  ------------- Copyright (C)  -------------
 
@@ -27,20 +26,16 @@
 HISTORY
 --------------------------------------------------------------------------------
 
-********************************************************************************
-COMMENTS, REFERENCES,  and NOTES
-********************************************************************************
-
-********************************************************************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifndef FGFCSCOMPONENT_H
 #define FGFCSCOMPONENT_H
 
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
@@ -49,19 +44,50 @@ INCLUDES
 #include <string>
 #include "../FGDefs.h"
 
-/*******************************************************************************
-DEFINES
-*******************************************************************************/
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DEFINITIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_FCSCOMPONENT "$Header"
 
 using std::string;
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FORWARD DECLARATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 class FGFCS;
 
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/** Base class for JSBSim Flight Control System Components.
+    The Flight Control System (FCS) for JSBSim consists of the FCS container
+    class (see \URL[FGFCS]{FGFCS.html}), the FGFCSComponent base class, and the
+    component classes from which can be constructed a string, or channel. See:
+    <ul>
+    <li>\URL[Switch Component]{FGSwitch.html}</li>
+    <li>\URL[Gain Component]{FGGain.html}</li>
+    <li>\URL[Flaps Component]{FGFlaps.html}</li>
+    <li>\URL[Filter Component]{FGFilter.html}</li>
+    <li>\URL[Deadband Component]{FGDeadBand.html}</li>
+    <li>\URL[Summer Component]{FGSummer.html}</li>
+    <li>\URL[Gradient Component]{FGGradient.html}</li>
+    </ul>
+    @author Jon S. Berndt
+    @version $Id$
+    @see Documentation for the FGFCS class, and for the configuration file class
+         FGConfigFile.
+*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 class FGFCSComponent
 {
@@ -71,7 +97,8 @@ protected:
   FGFCS* fcs;
   string Type;
   string Name;
-  enum {itPilotAC, itFCS, itAP} InputType; // Pilot/Aircraft, FCS, Autopilot inputs
+   /// Pilot/Aircraft, FCS, Autopilot inputs
+  enum eInputType {itPilotAC, itFCS, itAP} InputType;
   int ID;
   eParam InputIdx;
   float Input;
@@ -81,7 +108,9 @@ protected:
   bool IsOutput;
 
 public:
+  /// Constructor
   FGFCSComponent(FGFCS*);
+  /// Destructor
   virtual ~FGFCSComponent ( ) { }       //Destructor
 
   virtual bool Run (void);

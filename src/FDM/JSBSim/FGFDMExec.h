@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  Header:       FGFDMExec.h
  Author:       Jon Berndt
@@ -30,25 +30,25 @@ HISTORY
                  begins with the IC values from the given FGInitialCondition 
 	  	  	  	   object and dt=0. 
 
-********************************************************************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifndef FGFDMEXEC_HEADER_H
 #define FGFDMEXEC_HEADER_H
 
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_FDMEXEC "$Header"
 
 #include "FGModel.h"
 #include "FGInitialCondition.h"
 
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 class FGState;
 class FGAtmosphere;
@@ -92,8 +92,8 @@ public:
   inline FGPosition* GetPosition(void)       {return Position;}
   inline FGAuxiliary* GetAuxiliary(void)     {return Auxiliary;}
   inline FGOutput* GetOutput(void)           {return Output;}
-  
-  
+  inline string GetEnginePath(void)          {return EnginePath;}
+  inline string GetAircraftPath(void)        {return AircraftPath;}
 
 private:
   bool frozen;
@@ -104,7 +104,6 @@ private:
   string AircraftPath;
   string EnginePath;
   string ScriptPath;
-
 
   FGState*       State;
   FGAtmosphere*  Atmosphere;
@@ -122,5 +121,5 @@ private:
 protected:
 };
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

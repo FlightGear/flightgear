@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  Module:       FGLGear.cpp
  Author:       Jon S. Berndt
@@ -32,20 +32,27 @@ HISTORY
 --------------------------------------------------------------------------------
 11/18/99   JSB   Created
 
-********************************************************************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGLGear.h"
 #include <algorithm>
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DEFINITIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+GLOBAL DATA
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 static const char *IdSrc = "$Header$";
 static const char *IdHdr = ID_LGEAR;
 
-/*******************************************************************************
-************************************ CODE **************************************
-*******************************************************************************/
-
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS IMPLEMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
                                                            vMoment(3),
@@ -55,7 +62,7 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
   string tmp;
   *AC_cfg >> tmp >> name >> vXYZ(1) >> vXYZ(2) >> vXYZ(3)  
             >> kSpring >> bDamp>> dynamicFCoeff >> staticFCoeff
-	          >> SteerType >> BrakeType >> GroupMember >> maxSteerAngle;
+	          >> SteerType >> BrakeGroup >> maxSteerAngle;
     
   cout << "    Name: " << name << endl;
   cout << "      Location: " << vXYZ << endl;
@@ -63,11 +70,24 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
   cout << "      Damping Constant: " << bDamp << endl;
   cout << "      Dynamic Friction: " << dynamicFCoeff << endl;
   cout << "      Static Friction:  " << staticFCoeff << endl;
-  cout << "      Brake Type:       " << BrakeType << endl;
-  cout << "      Grouping:         " << GroupMember << endl;
+  cout << "      Grouping:         " << BrakeGroup << endl;
   cout << "      Steering Type:    " << SteerType << endl;
   cout << "      Max Steer Angle:  " << maxSteerAngle << endl;
-  
+
+  if      (BrakeGroup == "LEFT"  ) eBrakeGrp = bgLeft;
+  else if (BrakeGroup == "RIGHT" ) eBrakeGrp = bgRight;
+  else if (BrakeGroup == "CENTER") eBrakeGrp = bgCenter;
+  else if (BrakeGroup == "NOSE"  ) eBrakeGrp = bgNose;
+  else if (BrakeGroup == "TAIL"  ) eBrakeGrp = bgTail;
+  else if (BrakeGroup == "NONE"  ) eBrakeGrp = bgNone;
+  else {
+    cerr << "Improper braking group specification in config file: "
+         << BrakeGroup << " is undefined." << endl;
+  }
+
+// add some AI here to determine if gear is located properly according to its
+// brake group type
+
   State       = Exec->GetState();
   Aircraft    = Exec->GetAircraft();
   Position    = Exec->GetPosition();
@@ -79,23 +99,65 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
   Reported = false;
   DistanceTraveled = 0.0;
   MaximumStrutForce = MaximumStrutTravel = 0.0;
+  
+  vWhlBodyVec     = (vXYZ - Aircraft->GetXYZcg()) / 12.0;
+  vWhlBodyVec(eX) = -vWhlBodyVec(eX);
+  vWhlBodyVec(eZ) = -vWhlBodyVec(eZ);
+
+  vLocalGear = State->GetTb2l() * vWhlBodyVec;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/******************************************************************************/
-
-FGLGear::~FGLGear(void)
+FGLGear::FGLGear(const FGLGear& lgear)
 {
-  cout << "Destructing Landing Gear ..." << endl;
+  State    = lgear.State;
+  Aircraft = lgear.Aircraft;
+  Position = lgear.Position;
+  Rotation = lgear.Rotation;
+  Exec     = lgear.Exec;
+
+  vXYZ = lgear.vXYZ;
+  vMoment = lgear.vMoment;
+  vWhlBodyVec = lgear.vWhlBodyVec;
+  vLocalGear = lgear.vLocalGear;
+
+  WOW                = lgear.WOW;
+  ReportEnable       = lgear.ReportEnable;
+  FirstContact       = lgear.FirstContact;
+  DistanceTraveled   = lgear.DistanceTraveled;
+  MaximumStrutForce  = lgear.MaximumStrutForce;
+  MaximumStrutTravel = lgear.MaximumStrutTravel;
+
+  kSpring         = lgear.kSpring;
+  bDamp           = lgear.bDamp;
+  compressLength  = lgear.compressLength;
+  compressSpeed   = lgear.compressSpeed;
+  staticFCoeff    = lgear.staticFCoeff;
+  dynamicFCoeff   = lgear.dynamicFCoeff;
+  brakePct        = lgear.brakePct;
+  maxCompLen      = lgear.maxCompLen;
+  SinkRate        = lgear.SinkRate;
+  GroundSpeed     = lgear.GroundSpeed;
+  Reported        = lgear.Reported;
+  name            = lgear.name;
+  SteerType       = lgear.SteerType;
+  BrakeGroup      = lgear.BrakeGroup;
+  eBrakeGrp       = lgear.eBrakeGrp;
+  maxSteerAngle   = lgear.maxSteerAngle;
 }
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGLGear::~FGLGear(void) {}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGColumnVector FGLGear::Force(void)
 {
   FGColumnVector vForce(3);
   FGColumnVector vLocalForce(3);
-  FGColumnVector vLocalGear(3);     // Vector: CG to this wheel (Local)
+  //FGColumnVector vLocalGear(3);     // Vector: CG to this wheel (Local)
   FGColumnVector vWhlVelVec(3);     // Velocity of this wheel (Local)
   
   vWhlBodyVec     = (vXYZ - Aircraft->GetXYZcg()) / 12.0;
@@ -130,6 +192,26 @@ FGColumnVector FGLGear::Force(void)
     vWhlVelVec(eZ)  =  0.00;
 
 // the following needs work regarding friction coefficients and braking and steering
+
+    switch (eBrakeGrp) {
+    case bgLeft:
+
+      break;
+    case bgRight:
+      break;
+    case bgCenter:
+      break;
+    case bgNose:
+      break;
+    case bgTail:
+      break;
+    case bgNone:
+      break;
+    default:
+      cerr << "Improper brake group membership detected for this gear." << endl;
+      break;
+    }
+//
 
     vLocalForce(eZ) =  min(-compressLength * kSpring - compressSpeed * bDamp, (float)0.0);
     vLocalForce(eX) =  fabs(vLocalForce(eZ) * staticFCoeff) * vWhlVelVec(eX);
@@ -166,7 +248,7 @@ FGColumnVector FGLGear::Force(void)
   return vForce;
 }
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGLGear::Report(void)
 {

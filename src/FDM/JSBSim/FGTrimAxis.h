@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
  Header:       FGTrimAxis.h
  Author:       Tony Peden
@@ -30,16 +30,16 @@
  
  
  
-********************************************************************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifndef FGTRIMAXIS_H
 #define FGTRIMAXIS_H
 
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <string>
 
@@ -63,9 +63,9 @@ const string ControlNames[13]= { "Throttle","Sideslip","Angle of Attack",
                                  "Roll Angle", "Flight Path Angle", 
                                  "Pitch Trim", "Roll Trim", "Yaw Trim"
                                };
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 enum Accel { tUdot,tVdot,tWdot,tQdot,tPdot,tRdot };
 enum Control { tThrottle, tBeta, tAlpha, tElevator, tAileron, tRudder, tAltAGL,
@@ -78,7 +78,7 @@ public:
   ~FGTrimAxis();
 
   void Run(void);
-
+ 
   float GetAccel(void) { getAccel(); return accel_value; }
   //Accels are not settable
   inline void SetControl(float value ) { control_value=value; }
@@ -95,6 +95,11 @@ public:
 
   inline void SetControlToMin(void) { control_value=control_min; }
   inline void SetControlToMax(void) { control_value=control_max; }
+  
+  inline void SetControlLimits(float min, float max) { 
+      control_min=min;
+      control_max=max;
+  }    
 
   inline void  SetTolerance(float ff) { tolerance=ff;}
   inline float GetTolerance(void) { return tolerance; }
@@ -111,7 +116,9 @@ public:
   
   void SetThetaOnGround(float ff);
   void SetPhiOnGround(float ff);
-
+  
+  bool initTheta(void);
+  
   void AxisReport(void);
   
   bool InTolerance(void) { getAccel(); return (fabs(accel_value) <= tolerance); }
@@ -149,6 +156,8 @@ private:
   void getAccel(void);
   void getControl(void);
   void setControl(void);
+  
+  
 
 };
 

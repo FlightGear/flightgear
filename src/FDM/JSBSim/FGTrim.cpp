@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
  Header:       FGTrim.cpp
  Author:       Tony Peden
@@ -40,9 +40,9 @@ scheme. */
 //  !!!!!!! BEWARE ALL YE WHO ENTER HERE !!!!!!!
 
 
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <stdlib.h>
 
@@ -55,7 +55,7 @@ INCLUDES
 static const char *IdSrc = "$Header$";
 static const char *IdHdr = ID_TRIM;
 
-/*******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGTrim::FGTrim(FGFDMExec *FDMExec,FGInitialCondition *FGIC, TrimMode tt ) {
 
@@ -94,7 +94,7 @@ FGTrim::FGTrim(FGFDMExec *FDMExec,FGInitialCondition *FGIC, TrimMode tt ) {
     cout << "  Ground Trim" << endl;
     TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tWdot,tAltAGL,Tolerance));
     TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tQdot,tTheta,A_Tolerance));
-    TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tPdot,tPhi,A_Tolerance));
+    //TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tPdot,tPhi,A_Tolerance));
     break;
   }
   //cout << "NumAxes: " << TrimAxes.size() << endl;
@@ -105,7 +105,7 @@ FGTrim::FGTrim(FGFDMExec *FDMExec,FGInitialCondition *FGIC, TrimMode tt ) {
   current_axis=0;
 }
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGTrim::~FGTrim(void) {
   for(current_axis=0; current_axis<NumAxes; current_axis++) {
@@ -116,7 +116,7 @@ FGTrim::~FGTrim(void) {
   delete[] solution;
 }
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGTrim::TrimStats() {
   char out[80];
@@ -139,7 +139,7 @@ void FGTrim::TrimStats() {
   }
 }
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGTrim::Report(void) {
   cout << "  Trim Results: " << endl;
@@ -148,7 +148,7 @@ void FGTrim::Report(void) {
 
 }
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGTrim::ReportState(void) {
   char out[80], flap[10], gear[10];
@@ -195,7 +195,7 @@ void FGTrim::ReportState(void) {
                     fdmex->GetRotation()->Getpsi()*RADTODEG,
                     fdmex->GetState()->GetParameter(FG_BETA)*RADTODEG );                  
   cout << out;
-  sprintf(out, "    Bank Angle: %3.0f deg\n",
+  sprintf(out, "    Bank Angle: %5.2f deg\n",
                     fdmex->GetRotation()->Getphi()*RADTODEG );
   cout << out;
   sprintf(out, "    Elevator: %5.2f deg  Left Aileron: %5.2f deg  Rudder: %5.2f deg\n",
@@ -208,7 +208,7 @@ void FGTrim::ReportState(void) {
   cout << out;                                  
 }
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGTrim::DoTrim(void) {
   
@@ -225,6 +225,10 @@ bool FGTrim::DoTrim(void) {
   for(current_axis=0;current_axis<NumAxes;current_axis++) {
     //cout << current_axis << "  " << TrimAxes[current_axis]->GetAccelName()
     //<< "  " << TrimAxes[current_axis]->GetControlName()<< endl;
+    if(TrimAxes[current_axis]->GetAccelType() == tQdot) {
+      if(mode == tGround) 
+    	  TrimAxes[current_axis]->initTheta();
+    }  
     xlo=TrimAxes[current_axis]->GetControlMin();
     xhi=TrimAxes[current_axis]->GetControlMax();
     TrimAxes[current_axis]->SetControl((xlo+xhi)/2);
@@ -314,7 +318,7 @@ bool FGTrim::DoTrim(void) {
   return !trim_failed;
 }
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGTrim::solve(void) {
 
@@ -373,7 +377,7 @@ bool FGTrim::solve(void) {
   return success;
 }
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 /*
  produces an interval (xlo..xhi) on one side or the other of the current 
  control value in which a solution exists.  This domain is, hopefully, 
@@ -453,7 +457,7 @@ bool FGTrim::findInterval(void) {
   return found;
 }
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //checks to see which side of the current control value the solution is on
 //and sets solutionDomain accordingly:
 //  1 if solution is between the current and max
@@ -487,7 +491,7 @@ bool FGTrim::checkLimits(void) {
   solutionDomain=0;
   solutionExists=false;
   if(fabs(ahi-alo) > TrimAxes[current_axis]->GetTolerance()) {
-    if(alo*current_accel < 0) {
+    if(alo*current_accel <= 0) {
       solutionExists=true;
       solutionDomain=-1;
       xhi=current_control;

@@ -1,5 +1,5 @@
-/*******************************************************************************
- 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
  Header:       FGPosition.h
  Author:       Jon S. Berndt
  Date started: 1/5/99
@@ -27,65 +27,60 @@ HISTORY
 --------------------------------------------------------------------------------
 01/05/99   JSB   Created
  
-********************************************************************************
-COMMENTS, REFERENCES,  and NOTES
-********************************************************************************
- 
-********************************************************************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifndef FGPOSITION_H
 #define FGPOSITION_H
 
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGModel.h"
 #include "FGMatrix.h"
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DEFINITIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 #define ID_POSITION "$Header$"
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FORWARD DECLARATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/*******************************************************************************
-DEFINITIONS
-*******************************************************************************/
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COMMENTS, REFERENCES,  and NOTES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Models the lateral and longitudinal translational EOM.
     @author Jon S. Berndt
     @version $Id$
   */
-/*******************************************************************************
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 class FGPosition : public FGModel {
-  
-  FGColumnVector vUVW;
-  FGColumnVector vVel;
-  FGColumnVector vVelDot;
-  FGColumnVector vRunwayNormal;
-  
-  double Vee, invMass, invRadius;
-  double Radius, h;
-  double LatitudeDot, LongitudeDot, RadiusDot;
-  double lastLatitudeDot, lastLongitudeDot, lastRadiusDot;
-  double Longitude, Latitude;
-  float dt;
-  double RunwayRadius;
-  double DistanceAGL;
-  double SeaLevelRadius;
-  double gamma;
-  double Vt, Vground;
-  double hoverb,b;
-
-  void GetState(void);
-
 public:
+  /** Constructor
+      @param Executive a pointer to the parent executive object */
   FGPosition(FGFDMExec*);
+  /// Destructor
   ~FGPosition(void);
 
+  /** Runs the Position model; called by the Executive
+      @see JSBSim.cpp documentation
+      @return false if no error */
+  bool Run(void);
+  
   inline FGColumnVector GetVel(void) { return vVel; }
   inline FGColumnVector GetVelDot(void) { return vVelDot; }
   inline FGColumnVector GetUVW(void) { return vUVW; }
@@ -117,8 +112,29 @@ public:
       vRunwayNormal << fgx << fgy << fgz;
   }
   
-  bool Run(void);
+private:  
+  FGColumnVector vUVW;
+  FGColumnVector vVel;
+  FGColumnVector vVelDot;
+  FGColumnVector vRunwayNormal;
+  
+  double Vee, invMass, invRadius;
+  double Radius, h;
+  double LatitudeDot, LongitudeDot, RadiusDot;
+  double lastLatitudeDot, lastLongitudeDot, lastRadiusDot;
+  double Longitude, Latitude;
+  float dt;
+  double RunwayRadius;
+  double DistanceAGL;
+  double SeaLevelRadius;
+  double gamma;
+  double Vt, Vground;
+  double hoverb,b;
+
+  void GetState(void);
+
+  
 };
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

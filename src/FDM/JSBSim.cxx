@@ -117,7 +117,7 @@ bool FGJSBsim::init( double dt ) {
 #endif
 
     if (result) {
-	FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" << globals->get_options()->get_aircraft() );
+	FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft " << globals->get_options()->get_aircraft() );
     } else {
 	FG_LOG( FG_FLIGHT, FG_INFO, "  aircraft "
 		<< globals->get_options()->get_aircraft()
@@ -210,10 +210,14 @@ bool FGJSBsim::update( int multiloop ) {
 	set_Altitude( 0.0 );
     }
 
-  
-  
-    if(needTrim) {
-	FGTrim *fgtrim=new FGTrim(fdmex,fgic,tLongitudinal);
+    if(needTrim && (globals->get_options()->get_trim_mode() > 0)) {
+	FGTrim *fgtrim;
+	if(fgic->GetVcalibratedKtsIC() < 10 ) {
+		fgic->SetVcalibratedKtsIC(0.0);
+		fgtrim=new FGTrim(fdmex,fgic,tGround);
+	} else {
+		fgtrim=new FGTrim(fdmex,fgic,tLongitudinal);
+	}	
 	if(!fgtrim->DoTrim()) {
 	    fgtrim->Report();
 	    fgtrim->TrimStats();
@@ -223,6 +227,7 @@ bool FGJSBsim::update( int multiloop ) {
     
 	needTrim=false;
     
+         
 	controls.set_elevator_trim(fdmex->GetFCS()->GetPitchTrimCmd());
 	controls.set_elevator(fdmex->GetFCS()->GetDeCmd());
 	controls.set_throttle(FGControls::ALL_ENGINES,
@@ -250,6 +255,8 @@ bool FGJSBsim::update( int multiloop ) {
     // autopilot (and the rest of the sim can use the updated values
 
     copy_from_JSBsim();
+    
+ 
 
     // but lets restore our original bogus altitude when we are done
 
@@ -380,12 +387,14 @@ bool FGJSBsim::copy_from_JSBsim() {
     _set_Alpha( fdmex->GetTranslation()->Getalpha() );
     _set_Beta( fdmex->GetTranslation()->Getbeta() );
 
+    
     _set_Gamma_vert_rad( fdmex->GetPosition()->GetGamma() );
     // set_Gamma_horiz_rad( Gamma_horiz_rad );
 
     _set_Earth_position_angle( fdmex->GetAuxiliary()->GetEarthPositionAngle() );
 
     _set_Climb_Rate( fdmex->GetPosition()->Gethdot() );
+    
 
     for ( i = 1; i <= 3; i++ ) {
 	for ( j = 1; j <= 3; j++ ) {

@@ -53,8 +53,8 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.19  2000/10/14 00:10:12  curt
-// Friday the 13th JSBSim update ... :-0  !!!
+// Revision 1.20  2000/11/03 22:02:48  curt
+// Sync with current JSBSim devel code.
 //
 // Revision 1.4  2000/10/13 19:21:02  jsb
 // ** JSB ** Added version identifiers for all files

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
  Header:       FGAuxiliary.h
  Author:       Jon Berndt
@@ -28,38 +28,61 @@ HISTORY
 11/22/98   JSB   Created
   1/1/00   TP    Added calcs and getters for VTAS, VCAS, VEAS, Vground, in knots
  
-********************************************************************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifndef FGAUXILIARY_H
 #define FGAUXILIARY_H
 
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGModel.h"
 #include "FGMatrix.h"
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DEFINITIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 #define ID_AUXILIARY "$Header"
 
-/*******************************************************************************
-DEFINES
-*******************************************************************************/
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FORWARD DECLARATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/** Encapsulates various uncategorized scheduled functions.
+    @author Tony Peden, Jon Berndt
+    @version $Id$
+    @see -
+*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 class FGAuxiliary : public FGModel {
 public:
+  /** Constructor
+      @param Executive a pointer to the parent executive object */
   FGAuxiliary(FGFDMExec*);
+  /// Destructor
   ~FGAuxiliary(void);
 
+  /** Runs the Auxiliary routines; called by the Executive
+      @return false if no error */
   bool Run(void);
 
-  //use FGInitialCondition to set these speeds
+  // Use FGInitialCondition to set these speeds
   inline float GetVcalibratedFPS(void) { return vcas; }
   inline float GetVcalibratedKTS(void) { return vcas*FPSTOKTS; }
   inline float GetVequivalentFPS(void) { return veas; }
@@ -78,15 +101,14 @@ private:
   float veas;
   float mach;
   float qbar,rhosl,rho,p,psl,pt;
-  //Don't add a getter for pt!
-  //pt above is freestream total pressure for subsonic only
-  //for supersonic it is the 1D total pressure behind a normal shock
-  //if a general freestream total is needed, e-mail Tony Peden
+
+  // Don't add a getter for pt!
+  // pt above is freestream total pressure for subsonic only
+  // for supersonic it is the 1D total pressure behind a normal shock
+  // if a general freestream total is needed, e-mail Tony Peden
   // (apeden@earthlink.net) or you can add it your self using the
   // isentropic flow equations
-  
- 
-  
+
   FGColumnVector vPilotAccel;
   
   float earthPosAngle;
@@ -94,5 +116,5 @@ private:
   void GetState(void);
 };
 
-/******************************************************************************/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

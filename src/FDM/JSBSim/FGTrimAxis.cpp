@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
  Header:       FGTrimAxis.cpp
  Author:       Tony Peden
@@ -28,9 +28,9 @@
 --------------------------------------------------------------------------------
 7/3/00   TP   Created
  
-********************************************************************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <string>
 #include <stdlib.h>
@@ -103,13 +103,13 @@ FGTrimAxis::FGTrimAxis(FGFDMExec* fdex, FGInitialCondition* ic, Accel acc,
     solver_eps=tolerance/100;
     break;
   case tTheta:
-    control_min=-10*DEGTORAD;
-    control_max=10*DEGTORAD;
+    control_min=fdmex->GetRotation()->Gettht() - 5*DEGTORAD;
+    control_max=fdmex->GetRotation()->Gettht() + 5*DEGTORAD;
     accel_convert=RADTODEG;
     break;
   case tPhi:
-    control_min=-30*DEGTORAD;
-    control_max=30*DEGTORAD;
+    control_min=fdmex->GetRotation()->Getphi() - 5*DEGTORAD;
+    control_max=fdmex->GetRotation()->Getphi() + 5*DEGTORAD;
     accel_convert=RADTODEG;
     break;
   case tGamma:
@@ -182,6 +182,10 @@ void FGTrimAxis::setControl(void) {
   }
 }
 
+
+  
+
+
 /*****************************************************************************/
 
 // the aircraft center of rotation is no longer the cg once the gear
@@ -226,6 +230,68 @@ void FGTrimAxis::SetThetaOnGround(float ff) {
   fgic->SetPitchAngleRadIC(ff);  
   cout << "SetThetaOnGround new theta: " << ff << endl;      
 }      
+
+/*****************************************************************************/
+
+bool FGTrimAxis::initTheta(void) {
+  int i,N,iAft, iForward;
+  float zAft,zForward,zDiff,theta;
+  bool level;  
+  float saveAlt;
+  
+  saveAlt=fgic->GetAltitudeAGLFtIC();
+  fgic->SetAltitudeAGLFtIC(100);
+  
+  
+  N=fdmex->GetAircraft()->GetNumGearUnits();
+  
+  //find the first wheel unit forward of the cg
+  //the list is short so a simple linear search is fine
+  for( i=0; i<N; i++ ) {
+    if(fdmex->GetAircraft()->GetGearUnit(i)->GetBodyLocation()(1) > 0 ) {
+        iForward=i;
+        break;
+    }
+  }
+  //now find the first wheel unit aft of the cg
+  for( i=0; i<N; i++ ) {
+    if(fdmex->GetAircraft()->GetGearUnit(i)->GetBodyLocation()(1) < 0 ) {
+        iAft=i;
+        break;
+    }
+  }
+  	  
+  // now adjust theta till the wheels are the same distance from the ground
+  zAft=fdmex->GetAircraft()->GetGearUnit(1)->GetLocalGear()(3);
+  zForward=fdmex->GetAircraft()->GetGearUnit(0)->GetLocalGear()(3);
+  zDiff = zForward - zAft;
+  level=false;
+  theta=fgic->GetPitchAngleDegIC(); 
+  while(!level && (i < 100)) {
+	theta+=2.0*zDiff;
+	fgic->SetPitchAngleDegIC(theta);   
+	fdmex->RunIC(fgic);
+	zAft=fdmex->GetAircraft()->GetGearUnit(1)->GetLocalGear()(3);
+        zForward=fdmex->GetAircraft()->GetGearUnit(0)->GetLocalGear()(3);
+        zDiff = zForward - zAft;
+	//cout << endl << theta << "  " << zDiff << endl;
+	//cout << "0: " << fdmex->GetAircraft()->GetGearUnit(0)->GetLocalGear() << endl;
+	//cout << "1: " << fdmex->GetAircraft()->GetGearUnit(1)->GetLocalGear() << endl;
+
+	if(fabs(zDiff ) < 0.1) 
+	    level=true;
+	i++;   
+  }	    	    	
+  //cout << i << endl;
+  cout << "    Initial Theta: " << fdmex->GetRotation()->Gettht()*RADTODEG << endl;
+  control_min=(theta+5)*DEGTORAD;
+  control_max=(theta-5)*DEGTORAD;
+  fgic->SetAltitudeAGLFtIC(saveAlt);
+  if(i < 100) 
+    return true;
+  else
+    return false;  
+} 
 
 /*****************************************************************************/
 

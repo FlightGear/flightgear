@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  Module:       FGPropulsion.cpp
  Author:       Jon S. Berndt
@@ -52,18 +52,18 @@ HISTORY
 --------------------------------------------------------------------------------
 08/20/00   JSB   Created
 
-********************************************************************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGPropulsion.h"
 
 static const char *IdSrc = "$Header$";
 static const char *IdHdr = ID_PROPULSION;
 
-/*******************************************************************************
-************************************ CODE **************************************
-*******************************************************************************/
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS IMPLEMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
 FGPropulsion::FGPropulsion(FGFDMExec* fgex) : FGModel(fgex)
@@ -88,6 +88,7 @@ bool FGPropulsion::LoadPropulsion(FGConfigFile* AC_cfg)
   string token;
   string engine_name;
   string parameter;
+  int numEngines=0, numTanks=0;
 
   AC_cfg->GetNextConfigLine();
 
@@ -97,18 +98,18 @@ bool FGPropulsion::LoadPropulsion(FGConfigFile* AC_cfg)
     if (parameter == "AC_ENGINE") {
 
       *AC_cfg >> engine_name;
-      Engine[numEngines] = new FGEngine(FDMExec, EnginePath, engine_name, numEngines);
+      Engines[numEngines] = *(new FGEngine(FDMExec, FDMExec->GetEnginePath(), engine_name, numEngines));
       numEngines++;
 
     } else if (parameter == "AC_TANK") {
 
-      Tank[numTanks] = new FGTank(AC_cfg);
-      switch(Tank[numTanks]->GetType()) {
+      Tanks[numTanks] = *(new FGTank(AC_cfg));
+      switch(Tanks[numTanks].GetType()) {
       case FGTank::ttFUEL:
-        numSelectedFuelTanks++;
+//        numSelectedFuelTanks++;
         break;
       case FGTank::ttOXIDIZER:
-        numSelectedOxiTanks++;
+//        numSelectedOxiTanks++;
         break;
       }
       numTanks++;

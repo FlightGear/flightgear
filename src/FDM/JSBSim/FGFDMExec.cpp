@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  Module:       FGFDMExec.cpp
  Author:       Jon S. Berndt
@@ -34,9 +34,9 @@ HISTORY
 --------------------------------------------------------------------------------
 11/17/98   JSB   Created
 
-********************************************************************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
@@ -66,9 +66,9 @@ INCLUDES
 static const char *IdSrc = "$Header$";
 static const char *IdHdr = "ID_FDMEXEC";
 
-/*******************************************************************************
-************************************ CODE **************************************
-*******************************************************************************/
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS IMPLEMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
 // Constructor
@@ -103,7 +103,6 @@ FGFDMExec::~FGFDMExec(void){
 
 bool FGFDMExec::Allocate(void) {
   
-  cout << "FGFDMExec::Allocate ... ";
   bool result=true;
   
   Atmosphere  = new FGAtmosphere(this);
@@ -144,13 +143,11 @@ bool FGFDMExec::Allocate(void) {
   Schedule(Output,     1);
   
   modelLoaded = false;
-  cout << "done." << endl;
   return result;
 
 }
 
 bool FGFDMExec::DeAllocate(void) {
-  cout << "FGFDMExec::DeAllocate ... ";
  
   if ( Atmosphere != 0 )  delete Atmosphere;
   if ( FCS != 0 )         delete FCS;
@@ -177,7 +174,6 @@ bool FGFDMExec::DeAllocate(void) {
 
   modelLoaded = false;
   
-  cout << "done" << endl;
 }
 
 
@@ -240,7 +236,6 @@ bool FGFDMExec::RunIC(FGInitialCondition *fgic)
 bool FGFDMExec::LoadModel(string APath, string EPath, string model)
 {
 	bool result=false;
-  cout << "FGFDMExec::LoadModel ..." << endl;
   if(modelLoaded) {
      DeAllocate();
      Allocate();
@@ -248,12 +243,13 @@ bool FGFDMExec::LoadModel(string APath, string EPath, string model)
   AircraftPath = APath;
 	EnginePath = EPath;
   result = Aircraft->LoadAircraft(AircraftPath, EnginePath, model);
-  if(result) {
-    modelLoaded=true;
+
+  if (result) {
+    modelLoaded = true;
   } else {
     cerr << "FGFDMExec: Failed to load aircraft and/or engine model" << endl;
-  }  
-  cout << "FGFDMExec::LoadModel complete." << endl;;
+  }
+
   return result;
 }
 

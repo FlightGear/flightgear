@@ -21,9 +21,6 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
- Further information about the GNU General Public License can also be found on
- the world wide web at http://www.gnu.org.
-
 HISTORY
 --------------------------------------------------------------------------------
 02/01/1999   CLO   Created
@@ -63,7 +60,7 @@ COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** FGFS / JSBSim interface (aka "The Bus")
+/** FGFS / JSBSim interface (aka "The Bus").
     This class provides for an interface between FlightGear and its data
     structures and JSBSim and its data structures. This is the class which is
     used to command JSBSim when integrated with FlightGear. See the
@@ -80,6 +77,17 @@ CLASS DECLARATION
 
 class FGJSBsim: public FGInterface {
 
+#if 0
+    // The aircraft for this instance
+    FGFDMExec *fdmex;
+    FGInitialCondition *fgic;
+    bool needTrim;
+    
+    bool trimmed;
+    float trim_elev;
+    float trim_throttle;
+#endif
+
 public:
     /// Constructor
     FGJSBsim::FGJSBsim(void);
@@ -95,7 +103,7 @@ public:
     /// Reset flight params to a specific position
     bool init( double dt );
 
-    /// Position Parameters
+    /// @name Position Parameter Set
     //@{
     /** Set geocentric latitude
         @param lat latitude in radians measured from the 0 meridian where
@@ -115,7 +123,7 @@ public:
 
     //void set_AltitudeAGL(double altagl); // and vice-versa
 
-    /// Velocity Parameters
+    /// @name Velocity Parameter Set
     //@{
     /** Sets calibrated airspeed
         Setting this will trigger a recalc of the other velocity terms.
@@ -142,13 +150,13 @@ public:
     void set_Velocities_Wind_Body( double u, double v, double w);
     //@}
 
-    /** Euler angle parameters
+    /** Euler Angle Parameter Set
         @param phi roll angle in radians
 	      @param theta pitch angle in radians
 	      @param psi heading angle in radians */
     void set_Euler_Angles( double phi, double theta, double psi );
 
-    /// Flight Path Parameters
+    /// @name Flight Path Parameter Set
     //@{
     /** Sets rate of climb
         @param roc Rate of climb in ft/sec */
@@ -159,7 +167,7 @@ public:
     void set_Gamma_vert_rad( double gamma);
     //@}
 
-    /// Earth Parameters
+    /// @name Earth Parameter Set
     //@{
     /** Sets the sea level radius in feet.
         @param slr Sea Level Radius in feet */
@@ -170,7 +178,7 @@ public:
     void set_Runway_altitude(double ralt);
     //@}
 
-    /// Atmospheric Parameters
+    /// @name Atmospheric Parameter Set
     //@{
     /** Sets the atmospheric static pressure
         @param p pressure in psf */
