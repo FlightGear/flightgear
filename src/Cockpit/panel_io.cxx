@@ -700,6 +700,34 @@ fgReadPanel (istream &input)
   //
   FGPanel * panel = new FGPanel(0, 0, 1024, 768);// FIXME: use variable size
 
+
+  //
+  // Grab the panel's dimensions, default to 1024x443.
+  //
+  int panel_w = (props.hasValue("/w") ? props.getIntValue("/w") : 1024);
+  int panel_h = (props.hasValue("/h") ? props.getIntValue("/h") : 443);
+  panel->setWidth(panel_w);
+  panel->setHeight(panel_h);
+
+  //
+  // Grab the visible external viewing area, default to 
+  //
+  panel->setViewHeight(props.hasValue("/view-height") ?
+		       props.getIntValue("/view-height") :
+		       768 - panel_h + 2);
+
+  //
+  // Grab the panel's initial offsets, default to 0, 0.
+  //
+  int xoffset = (props.hasValue("/x-offset") ?
+		 props.getIntValue("x-offset") :
+		 0);
+  int yoffset = (props.hasValue("/y-offset") ?
+		 props.getIntValue("y-offset") :
+		 0);
+  panel->setXOffset(xoffset);
+  panel->setYOffset(yoffset);
+
   //
   // Assign the background texture, if any, or a bogus chequerboard.
   //

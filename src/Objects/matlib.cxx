@@ -45,6 +45,7 @@
 #include <simgear/misc/fgpath.hxx>
 #include <simgear/misc/fgstream.hxx>
 
+#include <Include/general.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Scenery/tileentry.hxx>
@@ -123,7 +124,8 @@ bool FGMaterialLib::load( const string& mpath ) {
 
 	    FGPath tmp_path = tex_path;
 	    tmp_path.append( m.get_texture_name() );
-	    if ( ! local_file_exists( tmp_path.str() ) ) {
+	    if ( ! local_file_exists(tmp_path.str())
+		 || general.get_glMaxTexSize() < 512 ) {
 		tex_path = FGPath( current_options.get_fg_root() );
 		tex_path.append( "Textures" );
 	    }

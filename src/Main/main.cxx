@@ -1156,12 +1156,15 @@ static void fgIdleFunction ( void ) {
 // Handle new window size or exposure
 void fgReshape( int width, int height ) {
     if ( ! current_options.get_panel_status() || idle_state != 1000 ) {
-	current_view.set_win_ratio( height / width );
+	current_view.set_win_ratio( (float)height / (float)width );
 	glViewport(0, 0 , (GLint)(width), (GLint)(height) );
     } else {
-	current_view.set_win_ratio( (height*0.4232) / width );
-	glViewport(0, (GLint)((height)*0.5768),
-		   (GLint)(width), (GLint)((height)*0.4232) );
+        int view_h =
+	  int((current_panel->getViewHeight() - current_panel->getYOffset())
+	      * (height / 768.0)) + 1;
+	current_view.set_win_ratio( (float)view_h / (float)width );
+	glViewport(0, (GLint)(height - view_h),
+		   (GLint)(width), (GLint)(view_h) );
     }
 
     current_view.set_winWidth( width );

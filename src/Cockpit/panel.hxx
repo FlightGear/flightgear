@@ -123,7 +123,7 @@ class FGPanel
 {
 public:
 
-  FGPanel (int x, int y, int w, int h);
+  FGPanel (int window_x, int window_y, int window_w, int window_h);
   virtual ~FGPanel ();
 
 				// transfer pointer ownership!!!
@@ -139,6 +139,26 @@ public:
   virtual bool getVisibility () const;
   virtual void setVisibility (bool visibility);
 
+				// Full width of panel.
+  virtual void setWidth (int width) { _width = width; }
+  virtual int getWidth () const { return _width; }
+
+				// Full height of panel.
+  virtual void setHeight (int height) { _height = height; }
+  virtual int getHeight () const { return _height; }
+
+				// X-offset
+  virtual void setXOffset (int offset);
+  virtual int getXOffset () const { return _x_offset; }
+
+				// Y-offset.
+  virtual void setYOffset (int offset);
+  virtual int getYOffset () const { return _y_offset; }
+
+				// View height.
+  virtual void setViewHeight (int height) { _view_height = height; }
+  virtual int getViewHeight () const { return _view_height; }
+
 				// Handle a mouse click.
   virtual bool doMouseAction (int button, int updown, int x, int y);
 
@@ -149,8 +169,13 @@ private:
   mutable int _mouseDelay;
   mutable FGPanelInstrument * _mouseInstrument;
   typedef vector<FGPanelInstrument *> instrument_list_type;
-  int _x, _y, _w, _h;
-  int _panel_h;
+  int _winx, _winy, _winw, _winh;
+  int _width;
+  int _height;
+  int _x_offset;
+  int _y_offset;
+  int _view_height;
+  
   ssgTexture * _bg;
 				// List of instruments in panel.
   instrument_list_type _instruments;

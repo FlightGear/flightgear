@@ -98,11 +98,7 @@ void FGView::Init( void ) {
     winWidth = current_options.get_xsize();
     winHeight = current_options.get_ysize();
 
-    if ( ! current_options.get_panel_status() ) {
-	set_win_ratio( winHeight / winWidth );
-    } else {
-	set_win_ratio( (winHeight*0.4232) / winWidth );
-    }
+    set_win_ratio( winHeight / winWidth );
 
 #ifndef USE_FAST_VIEWROT
     // This never changes -- NHV
@@ -173,8 +169,11 @@ void FGView::UpdateViewParams( const FGInterface& f ) {
     if ( ! current_options.get_panel_status() ) {
 	xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
     } else {
-	xglViewport(0, (GLint)((winHeight)*0.5768), (GLint)(winWidth), 
-		    (GLint)((winHeight)*0.4232) );
+        int view_h =
+	  int((current_panel->getViewHeight() - current_panel->getYOffset())
+	      * (winHeight / 768.0));
+	glViewport(0, (GLint)(winHeight - view_h),
+		   (GLint)(winWidth), (GLint)(view_h) );
     }
 }
 

@@ -112,7 +112,8 @@ int FGLaRCsim::update( int multiloop ) {
     e->set_Percentage_Power( eng.get_Percentage_Power() );
     e->set_EGT( eng.get_EGT() );
     e->set_prop_thrust( eng.get_prop_thrust_SI() );
-    
+
+#if 0
     cout << "Throttle = " << controls.get_throttle( 0 ) * 100.0;
     cout << " Mixture = " << controls.get_mixture( 0 ) * 100.0;
     cout << " RPM = " << eng.get_RPM();
@@ -122,6 +123,7 @@ int FGLaRCsim::update( int multiloop ) {
     cout << " EGT = " << eng.get_EGT();
     cout << " Thrust (N) " << eng.get_prop_thrust_SI();	// Thrust in Newtons
     cout << '\n';
+#endif
     
     F_X_engine = eng.get_prop_thrust_SI() * 0.07;
 #endif // USE_NEW_ENGINE_CODE

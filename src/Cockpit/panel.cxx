@@ -115,15 +115,23 @@ FGPanel * current_panel = NULL;
 static fntRenderer text_renderer;
 
 
-FGPanel::FGPanel (int x, int y, int w, int h)
+/**
+ * Constructor.
+ */
+FGPanel::FGPanel (int window_x, int window_y, int window_w, int window_h)
   : _mouseDown(false),
     _mouseInstrument(0),
-    _x(x), _y(y), _w(w), _h(h)
+    _winx(window_x), _winy(window_y), _winw(window_w), _winh(window_h),
+    _width(_winw), _height(int(_winh * 0.5768 + 1)),
+    _x_offset(0), _y_offset(0), _view_height(int(_winh * 0.4232))
 {
   setVisibility(current_options.get_panel_status());
-  _panel_h = (int)(h * 0.5768 + 1);
 }
 
+
+/**
+ * Destructor.
+ */
 FGPanel::~FGPanel ()
 {
   for (instrument_list_type::iterator it = _instruments.begin();
@@ -134,12 +142,20 @@ FGPanel::~FGPanel ()
   }
 }
 
+
+/**
+ * Add an instrument to the panel.
+ */
 void
 FGPanel::addInstrument (FGPanelInstrument * instrument)
 {
   _instruments.push_back(instrument);
 }
 
+
+/**
+ * Update the panel.
+ */
 void
 FGPanel::update () const
 {
@@ -160,11 +176,13 @@ FGPanel::update () const
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  gluOrtho2D(_x, _x + _w, _y, _y + _h);
+  gluOrtho2D(_winx, _winx + _winw, _winy, _winy + _winh);
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glLoadIdentity();
+
+  glTranslated(_x_offset, _y_offset, 0);
 
 				// Draw the background
   glEnable(GL_TEXTURE_2D);
@@ -183,10 +201,10 @@ FGPanel::update () const
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   glBegin(GL_POLYGON);
-  glTexCoord2f(0.0, 0.0); glVertex3f(_x, _y, 0);
-  glTexCoord2f(10.0, 0.0); glVertex3f(_x + _w, _y, 0);
-  glTexCoord2f(10.0, 5.0); glVertex3f(_x + _w, _y + _panel_h, 0);
-  glTexCoord2f(0.0, 5.0); glVertex3f(_x, _y + _panel_h, 0);
+  glTexCoord2f(0.0, 0.0); glVertex3f(_winx, _winy, 0);
+  glTexCoord2f(10.0, 0.0); glVertex3f(_winx + _width, _winy, 0);
+  glTexCoord2f(10.0, 5.0); glVertex3f(_winx + _width, _winy + _height, 0);
+  glTexCoord2f(0.0, 5.0); glVertex3f(_winx, _winy + _height, 0);
   glEnd();
 
 				// Draw the instruments.
@@ -196,6 +214,7 @@ FGPanel::update () const
   for ( ; current != end; current++) {
     FGPanelInstrument * instr = *current;
     glLoadIdentity();
+    glTranslated(_x_offset, _y_offset, 0);
     glTranslated(instr->getXPos(), instr->getYPos(), 0);
     instr->draw();
   }
@@ -208,27 +227,66 @@ FGPanel::update () const
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 
+
+/**
+ * Set the panel's visibility.
+ */
 void
 FGPanel::setVisibility (bool visibility)
 {
   _visibility = visibility;
 }
 
+
+/**
+ * Return true if the panel is visible.
+ */
 bool
 FGPanel::getVisibility () const
 {
   return _visibility;
 }
 
+
+/**
+ * Set the panel's background texture.
+ */
 void
 FGPanel::setBackground (ssgTexture * texture)
 {
   _bg = texture;
 }
 
+
+/**
+ * Set the panel's x-offset.
+ */
+void
+FGPanel::setXOffset (int offset)
+{
+  if (offset <= 0 && offset >= -_width + _winw)
+    _x_offset = offset;
+}
+
+
+/**
+ * Set the panel's y-offset.
+ */
+void
+FGPanel::setYOffset (int offset)
+{
+  if (offset <= 0 && offset >= -_height)
+    _y_offset = offset;
+}
+
+
+/**
+ * Perform a mouse action.
+ */
 bool
 FGPanel::doMouseAction (int button, int updown, int x, int y)
 {
+
 				// Note a released button and return
   // cerr << "Doing mouse action\n";
   if (updown == 1) {
@@ -237,9 +295,15 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
     return true;
   }
 
-  x = (int)(((float)x / current_view.get_winWidth()) * _w);
-  y = (int)(_h - (((float)y / current_view.get_winHeight()) * _h));
+				// Scale for the real window size.
+  x = int(((float)x / current_view.get_winWidth()) * _winw);
+  y = int(_winh - (((float)y / current_view.get_winHeight()) * _winh));
 
+				// Adjust for offsets.
+  x -= _x_offset;
+  y -= _y_offset;
+
+				// Search for a matching instrument.
   for (int i = 0; i < (int)_instruments.size(); i++) {
     FGPanelInstrument *inst = _instruments[i];
     int ix = inst->getXPos();
