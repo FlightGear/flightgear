@@ -861,10 +861,14 @@ void printScreen ( puObject *obj ) {
     BusyCursor( 0 );
     mainMenuBar->hide();
 
-    CGlPrinter p;
+    CGlPrinter p( CGlPrinter::READ_BITMAP );
+    int cur_width = current_view.get_winWidth( );
+    int cur_height = current_view.get_winHeight( );
     p.Begin( "FlightGear" );
     fgInitVisuals();
-    fgReshape( p.GetHorzRes(), p.GetVertRes() );
+    fgReshape( cur_width, cur_height );
+    //fgReshape( p.GetHorzRes(), p.GetVertRes() );
+    fgRenderFrame();
     fgRenderFrame();
     p.End();
 
