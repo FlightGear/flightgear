@@ -152,7 +152,15 @@ void HttpdChannel::foundTerminator (void) {
         response += "<BODY>";
         response += getTerminator();
 
-        if ( node->nChildren() > 0 ) {
+        if (node == NULL) {
+            response += "<H3>Non-existent node requested!</H3>";
+            response += getTerminator();
+
+            response += "<B>";
+            response += request.c_str();
+            response += "</B> does not exist.";
+            response += getTerminator();
+	} else if ( node->nChildren() > 0 ) {
             // request is a path with children
             response += "<H3>Contents of \"";
             response += request;
