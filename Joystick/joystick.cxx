@@ -46,24 +46,30 @@
 
 #if defined( ENABLE_LINUX_JOYSTICK )
 
-    // joystick classes
-    static jsJoystick *js0;
-    static jsJoystick *js1;
+// joystick classes
+static jsJoystick *js0;
+static jsJoystick *js1;
 
-    // these will hold the values of the axes
-    static float *js_ax0, *js_ax1;
+// these will hold the values of the axes
+static float *js_ax0, *js_ax1;
 
 #elif defined( ENABLE_GLUT_JOYSTICK )
 
-    // Joystick support using glut -- William Riley -- riley@technologist.com
+// Do we want these user settable ??
+static float joy_scale = 1./1000;
 
-    // Joystick fixed values for calibration and scaling
-    static int joy_x_min=1000, /* joy_x_ctr=0, */ joy_x_max=-1000;
-    static int joy_y_min=1000, /* joy_y_ctr=0, */ joy_y_max=-1000;
-    static int joy_z_min=1000, /* joy_z_ctr=0, */ joy_z_max=-1000;
-    static int joy_x_dead_min=100, joy_x_dead_max=-100;
-    static int joy_y_dead_min=100, joy_y_dead_max=-100;
-    static int joy_z_dead_min=100, joy_z_dead_max=-100;
+// play with following to get your desired sensitivity
+static int x_dead_zone = 50;
+static int y_dead_zone = 2*x_dead_zone;
+
+// Joystick support using glut -- William Riley -- riley@technologist.com
+
+// Joystick fixed values for calibration and scaling
+static float joy_x_max = joy_scale;
+static float joy_y_max = joy_scale;
+
+static int joy_z_min = 1000, /* joy_z_ctr=0, */ joy_z_max = -1000;
+static int joy_z_dead_min = 100, joy_z_dead_max = -100;
 
 #else
 #  error port me: no joystick support
@@ -77,32 +83,32 @@
 // passes them to the necessary aircraft control functions
 void joystick(unsigned int buttonMask, int js_x, int js_y, int js_z)
 {
-    double joy_x, joy_y, joy_z;
+    float joy_x, joy_y, joy_z;
     // adjust the values to fgfs's scale and allow a 'dead zone' to
     // reduce jitter code adapted from joystick.c by Michele
     // F. America - nomimarketing@mail.telepac.pt
-    if( js_x >= joy_x_dead_min && js_x <= joy_x_dead_max ) {
+
+    if( js_x > -x_dead_zone && js_x < x_dead_zone) {
 	joy_x = 0.0;
     } else {
-	joy_x = (double)js_x/(double)(joy_x_max-joy_x_min);
-    }	
-    if( js_y >= joy_y_dead_min && js_y <= joy_y_dead_max ) {
+	joy_x = js_x * joy_scale;
+    }
+
+    if( js_y > -y_dead_zone && js_y < y_dead_zone) {
 	joy_y = 0.0;
     } else {
-	joy_y = (double)js_y/(double)(joy_y_max-joy_y_min);
+	joy_y = js_y * joy_scale;
     }
+
     if( js_z >= joy_z_dead_min && js_z <= joy_z_dead_max ) {
 	joy_z = 0.0;
-    } else {
-	joy_z = (double)js_z/(double)(joy_z_max-joy_z_min);
     }
-    // Scale the values up for full range of motion
-    joy_x *= 2.0;
-    joy_y *= 2.0;
+    joy_z = (float)js_z / (float)(joy_z_max - joy_z_min);
     joy_z = (((joy_z*2.0)+1.0)/2);
+
     // Pass the values to the control routines
-    controls.set_elevator( joy_y );
-    controls.set_aileron( -joy_x ); 
+    controls.set_elevator( -joy_y );
+    controls.set_aileron( joy_x );
     controls.set_throttle( FGControls::ALL_ENGINES, joy_z );
 }
 
@@ -191,6 +197,9 @@ int fgJoystickRead( void ) {
 
 
 // $Log$
+// Revision 1.7  1999/01/19 17:52:30  curt
+// Some joystick tweaks by Norman Vine.
+//
 // Revision 1.6  1998/12/05 16:13:16  curt
 // Renamed class fgCONTROLS to class FGControls.
 //
