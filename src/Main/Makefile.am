@@ -22,14 +22,6 @@ else
 CLOUD3D_LIBS = 
 endif
 
-if HAVE_PLIB_PSL
-SCRIPTING_LIBS = $(top_builddir)/src/Scripting/libScripting.a
-PSL_LIBS = -lplibpsl
-else
-SCRIPTING_LIBS =
-PSL_LIBS =
-endif
-
 AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkglibdir)\"
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
@@ -82,7 +74,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Network/libNetwork.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
-        $(SCRIPTING_LIBS) \
+	$(top_builddir)/src/Scripting/libScripting.a \
 	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
 	$(MPLAYER_LIBS) \
@@ -94,11 +86,10 @@ fgfs_LDADD = \
 	$(CLOUD3D_LIBS) \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgmaterial -lsgtgdb -lsgmodel \
 	-lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket -lsgprops -lsgdebug \
-	-lsgmagvar -lsgmisc -lsgxml -lsgsound -lsgserial -lsgstructure \
+	-lsgmagvar -lsgmisc -lnasal -lsgxml -lsgsound -lsgserial -lsgstructure \
 	$(THREAD_LIBS) \
 	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
 	$(network_LIBS) \
-        $(PSL_LIBS) \
 	-lz \
 	$(opengl_LIBS) \
 	$(audio_LIBS)

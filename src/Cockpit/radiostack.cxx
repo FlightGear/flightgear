@@ -77,8 +77,8 @@ FGRadioStack::init ()
     update(0);			// FIXME: use dt
 
     // Search radio database once per second
-    globals->get_event_mgr()->add( "fgRadioSearch()", current_radiostack,
-                                   &FGRadioStack::search, 1000 );
+    globals->get_event_mgr()->addTask( "fgRadioSearch()", current_radiostack,
+                                       &FGRadioStack::search, 1 );
 }
 
 

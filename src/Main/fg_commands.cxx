@@ -26,6 +26,7 @@
 #if defined(HAVE_PLIB_PSL)
 #  include <Scripting/scriptmgr.hxx>
 #endif
+#include <Scripting/NasalSys.hxx>
 #include <Time/sunsolver.hxx>
 #include <Time/tmp.hxx>
 
@@ -170,6 +171,14 @@ do_script (const SGPropertyNode * arg)
 }
 #endif // HAVE_PLIB_PSL
 
+/**
+ * Built-in command: run a Nasal script.
+ */
+static bool
+do_nasal (const SGPropertyNode * arg)
+{
+    return ((FGNasalSys*)globals->get_subsystem("nasal"))->handleCommand(arg);
+}
 
 /**
  * Built-in command: exit FlightGear.
@@ -837,9 +846,8 @@ do_property_randomize (const SGPropertyNode * arg)
 
 
 /**
- * Built-in command: Show an XML-configured dialog.
- *
- * dialog-name: the name of the GUI dialog to display.
+ * Built-in command: reinit the data logging system based on the
+ * current contents of the /logger tree.
  */
 static bool
 do_data_logging_commit (const SGPropertyNode * arg)
@@ -1034,6 +1042,7 @@ static struct {
 #if defined(HAVE_PLIB_PSL)
     { "script", do_script },
 #endif // HAVE_PLIB_PSL
+    { "nasal", do_nasal },
     { "exit", do_exit },
     { "reinit", do_reinit },
     { "suspend", do_reinit },

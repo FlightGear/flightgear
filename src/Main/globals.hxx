@@ -215,35 +215,6 @@ public:
 
     virtual SGEventMgr * get_event_mgr () const;
 
-    virtual void add_event (const char * name,
-                            int repeat_value,
-                            int initial_value = -1 );
-
-    virtual void add_event (const char * name,
-                            SGSubsystem * subsystem,
-                            int repeat_value,
-                            int initial_value = -1 );
-
-    template< typename Fun >
-    inline void add_event( const char * name,
-                           const Fun& func,
-                           SGEvent::interval_type repeat_value,
-                           SGEvent::interval_type initial_value = -1 )
-    {
-        event_mgr->add( name, get_subsystem( name ), func,
-                        repeat_value, initial_value);
-    }
-
-    template< typename Fun >
-    inline void add_event( const char * name,
-                           SGSubsystem * subsystem,
-                           const Fun& func,
-                           SGEvent::interval_type repeat_value,
-                           SGEvent::interval_type initial_value = -1 )
-    {
-        event_mgr->add( name, subsystem, func, repeat_value, initial_value);
-    }
-
     inline double get_sim_time_sec () const { return sim_time_sec; }
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }
     inline void set_sim_time_sec (double t) { sim_time_sec = t; }

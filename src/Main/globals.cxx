@@ -134,26 +134,6 @@ FGGlobals::get_event_mgr () const
 }
 
 
-void
-FGGlobals::add_event (const char * name,
-                      int repeat_value,
-                      int initial_value)
-{
-    event_mgr->add(name, subsystem_mgr->get_subsystem(name),
-                   repeat_value, initial_value);
-}
-
-void
-FGGlobals::add_event (const char * name,
-                      SGSubsystem * subsystem,
-                      int repeat_value,
-                      int initial_value)
-{
-    event_mgr->add(name, subsystem, repeat_value, initial_value);
-}
-
-
-
 // Save the current state as the initial state.
 void
 FGGlobals::saveInitialState ()

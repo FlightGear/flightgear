@@ -354,29 +354,6 @@ dnl joystick lib
 AC_DEFINE([ENABLE_PLIB_JOYSTICK], 1, [Define to enable plib joystick support])
 
 
-dnl Checking for PSL in plib
-dnl version of plib, so check for it.
-AC_MSG_CHECKING([for plib PSL scripting support])
-AC_COMPILE_IFELSE([
-#include <plib/psl.h>
-
-int main() {
-  // not for running...
-  pslProgram program((pslExtension *)0);
-  program.compile("int main () {}", "");
-  return 0;
-}
-],
-  [AC_MSG_RESULT(yes);
-   have_plib_psl=yes],
-  AC_MSG_RESULT(no)
-)
-AM_CONDITIONAL(HAVE_PLIB_PSL, test "x$have_plib_psl" = "xyes")
-if test "x$have_plib_psl" = "xyes"; then
-   AC_DEFINE([HAVE_PLIB_PSL], 1,
-             [Define if plib version is new enough to provide "PSL"])
-fi
-
 dnl Check for the presence of SimGear
 AC_CHECK_HEADER(simgear/version.h)
 if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
@@ -554,16 +531,6 @@ echo "Configure Summary"
 echo "================="
 
 echo "Prefix: $prefix"
-
-if test "x$have_plib_psl" = "xyes"; then
-    echo "Plib PSL scripting: yes"
-else
-    echo "Plib PSL scripting: $fg_psl_string_compile"
-    echo "  You will not be able to run scripts written in PSL"
-    echo "  and some advanced GUI and input features may not"
-    echo "  work.  Download and install the latest CVS version"
-    echo "  of plib if you would like to enable PSL support."
-fi
 
 if test "x$with_logging" != "x"; then
     echo "Debug messages: $with_logging"

@@ -105,6 +105,7 @@
 #if defined(HAVE_PLIB_PSL)
 #include <Scripting/scriptmgr.hxx>
 #endif
+#include <Scripting/NasalSys.hxx>
 #include <Sound/fg_fx.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/light.hxx>
@@ -1447,14 +1448,8 @@ bool fgInitSubsystems() {
     // Initialize the event manager subsystem.
     ////////////////////////////////////////////////////////////////////
 
-     globals->get_event_mgr()->bind();
      globals->get_event_mgr()->init();
-
-     // Output event stats every 60 seconds
-     globals->get_event_mgr()->add( "SGEventMgr::print_stats()",
-                                    globals->get_event_mgr(),
-                                    &SGEventMgr::print_stats,
-                                    60000 );
+     globals->get_event_mgr()->setFreezeProperty(fgGetNode("/sim/freeze/clock"));
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the material property subsystem.
@@ -1483,10 +1478,10 @@ bool fgInitSubsystems() {
     }
 
     // cause refresh of viewer scenery timestamps every 15 seconds...
-    globals->get_event_mgr()->add( "FGTileMgr::refresh_view_timestamps()",
-                                   globals->get_tile_mgr(),
-                                   &FGTileMgr::refresh_view_timestamps,
-                                   15000 );
+    globals->get_event_mgr()->addTask( "FGTileMgr::refresh_view_timestamps()",
+                                       globals->get_tile_mgr(),
+                                       &FGTileMgr::refresh_view_timestamps,
+                                       15 );
 
     SG_LOG( SG_GENERAL, SG_DEBUG,
             "Current terrain elevation after tile mgr init " <<
@@ -1539,8 +1534,8 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
 
     // update the current timezone each 30 minutes
-    globals->get_event_mgr()->add( "fgUpdateLocalTime()",
-                                   &fgUpdateLocalTime, 30*60*1000 );
+    globals->get_event_mgr()->addTask( "fgUpdateLocalTime()",
+                                       &fgUpdateLocalTime, 30*60 );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -1787,6 +1782,14 @@ bool fgInitSubsystems() {
     globals->set_multiplayer_rx_mgr(new FGMultiplayRxMgr);
     globals->get_multiplayer_rx_mgr()->init();
 #endif
+
+    ////////////////////////////////////////////////////////////////////////
+    // Initialize the Nasal interpreter.
+    // Do this last, so that the loaded scripts see initialized state
+    ////////////////////////////////////////////////////////////////////////
+    FGNasalSys* nasal = new FGNasalSys();
+    globals->add_subsystem("nasal", nasal);
+    nasal->init();
 
     ////////////////////////////////////////////////////////////////////////
     // End of subsystem initialization.
