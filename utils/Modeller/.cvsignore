@@ -1,5 +1,6 @@
 .deps
+3dconvert
 Makefile
 Makefile.in
-3dconvert
 animassist
+threedconvert
