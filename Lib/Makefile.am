@@ -4,4 +4,4 @@ else
 AUDIO_DIRS = 
 endif
 
-SUBDIRS = $(AUDIO_DIRS) Bucket Debug DEM Math XGL zlib
+SUBDIRS = $(AUDIO_DIRS) Bucket Debug DEM Math Pui XGL zlib
