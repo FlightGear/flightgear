@@ -1,6 +1,7 @@
 // do some non-destructive read tests relating text files
 
 #include <stdio.h>
+#include <string.h>
 
 static void readchars( FILE *fd ) {
     char c;
