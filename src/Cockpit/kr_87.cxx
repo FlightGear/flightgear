@@ -397,7 +397,39 @@ void FGKR_87::update( double dt ) {
         et_ann = false;
     }
 
-    
+    // formatted timer
+    double time;
+    int hours, min, sec;
+    if ( timer_mode == 0 ) {
+        time = flight_timer;
+    } else {
+        time = elapsed_timer;
+    }
+    // cout << time << endl;
+    hours = (int)(time / 3600.0);
+    time -= hours * 3600.00;
+    min = (int)(time / 60.0);
+    time -= min * 60.0;
+    sec = (int)time;
+    int big, little;
+    if ( hours > 0 ) {
+        big = hours;
+        if ( big > 99 ) {
+            big = 99;
+        }
+        little = min;
+    } else {
+        big = min;
+        little = sec;
+    }
+    if ( big > 99 ) {
+        big = 99;
+    }
+    char formatted_timer[128];
+    // cout << big << ":" << little << endl;
+    snprintf(formatted_timer, 6, "%02d:%02d", big, little);
+    fgSetString( "/radios/kr-87/outputs/timer-string", formatted_timer );
+
     while ( goal_needle_deg < 0.0 ) { goal_needle_deg += 360.0; }
     while ( goal_needle_deg >= 360.0 ) { goal_needle_deg -= 360.0; }
 
