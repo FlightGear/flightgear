@@ -323,11 +323,9 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       fetch_elapsed( 9999.0 ),
       proxy_host( fgGetNode("/sim/presets/proxy/host", true) ),
       proxy_port( fgGetNode("/sim/presets/proxy/port", true) ),
-      proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) )
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
-      ,_error_dt( 0.0 ),
+      proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) ),
+      _error_dt( 0.0 ),
       _error_count( 0 )
-#endif
 {
 #if defined(ENABLE_THREADS) && ENABLE_THREADS
     thread = new MetarThread(this);
@@ -548,11 +546,13 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
     } catch (const sg_io_exception& e) {
         SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "
                 << e.getFormattedMessage().c_str() );
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
         if (_error_count++ >= 3) {
            SG_LOG( SG_GENERAL, SG_WARN, "Stop fetching data permanently.");
            thread->cancel();
            thread->join();
         }
+#endif
 
         result.m = NULL;
     }

@@ -249,11 +249,11 @@ private:
      */
     friend void metar_cleanup_handler( void* );
 
+#endif // ENABLE_THREADS
 
     int _error_count;
     double _dt;
     double _error_dt;
-#endif // ENABLE_THREADS
 };
 
 #endif // _ENVIRONMENT_CTRL_HXX
