@@ -172,6 +172,7 @@ FGIO::parse_port_config( const string& config )
         } else if ( protocol == "generic" ) {
             int n = 6;
             if (tokens[1] == "socket")  n++;
+            else if (tokens[1] == "file") n--;
             FGGeneric *generic = new FGGeneric( tokens[n] );
             io = generic;
 

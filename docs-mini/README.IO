@@ -27,7 +27,7 @@ Generic Communction:
     params can be:
     serial port communication:    serial,dir,hz,device,baud,protocol
     socket communication:         socket,dir,hz,machine,port,style,protocol
-    output to a file:             file,dir,hz,filename,,protocol
+    output to a file:             file,dir,hz,filename,protocol
 
 
     The confinfiguration file is defined as follows:
