@@ -28,8 +28,8 @@ include make.inc
 
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
-SUBDIRS = Aircraft Cockpit Controls Flight Joystick Math Scenery Time Weather \
-	  XGL
+SUBDIRS = Aircraft Astro Cockpit Controls Flight Joystick Math Scenery \
+	Time Weather XGL
 MAIN = Main
 
 
@@ -98,6 +98,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.35  1998/01/07 03:18:14  curt
+# Created the Astro/ subdirctory for stuff high in the sky ...
+#
 # Revision 1.34  1997/12/18 23:32:28  curt
 # First stab at sky dome actually starting to look reasonable. :-)
 #
