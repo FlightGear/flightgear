@@ -1109,7 +1109,15 @@ fgUsage ()
     cout << "\t--disable-anti-alias-hud:  disable anti aliased hud" << endl;
     cout << "\t--enable-anti-alias-hud:  enable anti aliased hud" << endl;
     cout << endl;
- 
+
+    cout << "Aircraft:" <<endl;
+    cout << "\t--aircraft=name:  select a top level <name>-set.xml file which" << endl;
+    cout << "\t\twill automatically pull in the correct flight dynamics model," << endl;
+    cout << "\t\taero specification, external 3d model, instrument panel, sounds," << endl;
+    cout << "\t\tetc." << endl;
+    
+    cout << endl;
+
     cout << "Flight Model:" << endl;
     cout << "\t--fdm=abcd:  selects the core flight model code." << endl;
     cout << "\t\tcan be one of jsb, larcsim, magic, null, external, balloon, or ada"
