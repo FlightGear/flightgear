@@ -3,10 +3,10 @@ EXTRA_DIST = process-dem.pl
 SUBDIRS = \
 	Lib \
 	Prep \
+	Construct \
 	Utils \
 	Areas \
 	AssemTris \
-	Clipper \
 	Dem2node \
 	FixNode \
 	FixObj \
