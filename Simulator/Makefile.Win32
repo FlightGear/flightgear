@@ -1,0 +1,78 @@
+#---------------------------------------------------------------------------
+# Toplevel Project Makefile for Win32
+#
+# Written by Curtis Olson, started May 1997.
+#
+# Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+# $Id$
+# (Log is kept at end of this file)
+#---------------------------------------------------------------------------
+
+
+include make.inc
+
+
+SUBSUBDIRS = Flight/LaRCsim Flight/Slew Scenery/ParseScn Scenery/ParseVRML
+SUBDIRS = Aircraft Controls Flight mat3 Scenery Timer
+MAIN = OpenGL
+
+
+all: 
+	$(MAKE) -C Flight/LaRCsim 
+	$(MAKE) -C Flight/Slew 
+	$(MAKE) -C Scenery/ParseScn 
+	$(MAKE) -C Scenery/ParseVRML
+	$(MAKE) -C Aircraft 
+	$(MAKE) -C Controls 
+	$(MAKE) -C Flight 
+	$(MAKE) -C mat3 
+	$(MAKE) -C Scenery 
+	$(MAKE) -C Timer
+	$(MAKE) -C OpenGL
+
+depend:
+	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
+	    ( echo "Making depend in $$dir"; \
+	      cd $$dir; $(CC) -MM *.c > depend ) ; \
+	done
+
+clean:
+	-rm -f *~
+	$(MAKE) -C Flight/LaRCsim clean
+	$(MAKE) -C Flight/Slew clean
+	$(MAKE) -C Scenery/ParseScn clean
+	$(MAKE) -C Scenery/ParseVRML clean
+	$(MAKE) -C Aircraft clean
+	$(MAKE) -C Controls clean
+	$(MAKE) -C Flight clean
+	$(MAKE) -C mat3 clean
+	$(MAKE) -C Scenery clean
+	$(MAKE) -C Timer clean
+	$(MAKE) -C OpenGL clean
+
+tar: clean
+	(cd ../..; \
+	tar cvf prototype-0.04.tar FlightGear/COPYING FlightGear/Docs \
+	FlightGear/Scenery/mesa-e.scn FlightGear/Src FlightGear/Thanks)
+
+
+#---------------------------------------------------------------------------
+# $Log$
+# Revision 1.1  1997/07/04 00:17:21  curt
+# Initial revision.
+#
