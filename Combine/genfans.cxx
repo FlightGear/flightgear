@@ -62,6 +62,7 @@ static FGTriEle canonify( const FGTriEle& t, int center ) {
     }
 }
 
+// returns a list of triangle indices
 static int_list make_best_fan( const triele_list& master_tris, 
 			       const int center, const int_list& local_tris )
 {
@@ -134,6 +135,8 @@ static bool in_fan(int index, const int_list& fan ) {
 fan_list FGGenFans::greedy_build( triele_list tris ) {
     cout << "starting greedy build of fans" << endl;
 
+    fans.clear();
+
     while ( ! tris.empty() ) {
 	reverse_list by_node;
 	by_node.clear();
@@ -166,15 +169,32 @@ fan_list FGGenFans::greedy_build( triele_list tris ) {
 	    }
 	    ++counter;
 	}
-	cout << "master triangle pool = " << tris.size() << endl;
+	cout << "triangle pool = " << tris.size() << endl;
 	cout << "biggest_group = " << biggest_group.size() << endl;
 	cout << "center node = " << index << endl;
 
 	// make the best fan we can out of this group
 	int_list best_fan = make_best_fan( tris, index, biggest_group );
 
+	// generate point form of best_fan
+	int_list node_list;
+	node_list.clear();
+
+	int_list_iterator i_start = best_fan.begin();
+	int_list_iterator i_current = i_start;
+	int_list_iterator i_last = best_fan.end();
+	for ( ; i_current != i_last; ++i_current ) {
+	    FGTriEle t = canonify( tris[*i_current], index );
+	    if ( i_start == i_current ) {
+		node_list.push_back( t.get_n1() );
+		node_list.push_back( t.get_n2() );
+	    }
+	    node_list.push_back( t.get_n3() );
+	}
+	cout << "best list size = " << node_list.size() << endl;
+
 	// add this fan to the fan list
-	fans.push_back( best_fan );
+	fans.push_back( node_list );
 
 	// delete the triangles in best_fan out of tris and repeat
 	triele_list_iterator t_current = tris.begin();
@@ -182,8 +202,8 @@ fan_list FGGenFans::greedy_build( triele_list tris ) {
 	counter = 0;
 	for ( ; t_current != t_last; ++t_current ) {
 	    if ( in_fan(counter, best_fan) ) {
-		// cout << "erasing " << counter << " from master tri pool" 
-		//      << endl;
+		cout << "erasing " << counter << " from master tri pool" 
+		     << endl;
 		tris.erase( t_current );
 	    }
 	    ++counter;
@@ -212,6 +232,11 @@ double FGGenFans::ave_size() {
 
 
 // $Log$
+// Revision 1.2  1999/03/30 23:50:15  curt
+// Fannifier is clearly bugging ... working on debugging it.  I suspect there
+// is a problem related to deleting triangles from the triangle pool as they
+// are combined into fans.
+//
 // Revision 1.1  1999/03/29 13:08:35  curt
 // Initial revision.
 //
