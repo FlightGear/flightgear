@@ -216,9 +216,14 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
     FGNetFDM fdm1 = f1.fdm;
     FGNetFDM fdm2 = f2.fdm;
 
+    FGNetCtrls ctrls1 = f1.ctrls;
+    FGNetCtrls ctrls2 = f2.ctrls;
+
     double ratio = (time - f1.sim_time) / (f2.sim_time - f1.sim_time);
 
-    cout << fdm1.longitude << " " << fdm2.longitude << endl;
+    // Interpolate FDM data
+
+    // Positions
     result.fdm.longitude = weight( fdm1.longitude, fdm2.longitude, ratio );
     result.fdm.latitude = weight( fdm1.latitude, fdm2.latitude, ratio );
     result.fdm.altitude = weight( fdm1.altitude, fdm2.altitude, ratio );
@@ -227,6 +232,7 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
     result.fdm.theta = weight( fdm1.theta, fdm2.theta, ratio, true );
     result.fdm.psi = weight( fdm1.psi, fdm2.psi, ratio, true );
 
+    // Velocities
     result.fdm.phidot = weight( fdm1.phidot, fdm2.phidot, ratio, true );
     result.fdm.thetadot = weight( fdm1.thetadot, fdm2.thetadot, ratio, true );
     result.fdm.psidot = weight( fdm1.psidot, fdm2.psidot, ratio, true );
@@ -243,12 +249,116 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
     result.fdm.v_wind_body_down
         = weight( fdm1.v_wind_body_down, fdm2.v_wind_body_down, ratio );
 
+    // Stall
     result.fdm.stall_warning
         = weight( fdm1.stall_warning, fdm2.stall_warning, ratio );
 
+    // Accelerations
     result.fdm.A_X_pilot = weight( fdm1.A_X_pilot, fdm2.A_X_pilot, ratio );
     result.fdm.A_Y_pilot = weight( fdm1.A_Y_pilot, fdm2.A_Y_pilot, ratio );
     result.fdm.A_Z_pilot = weight( fdm1.A_Z_pilot, fdm2.A_Z_pilot, ratio );
+
+    int i;
+
+    // Engine status
+    for ( i = 0; i < fdm1.num_engines; ++i ) {
+        result.fdm.eng_state[i] = fdm1.eng_state[i];
+        result.fdm.rpm[i] = weight( fdm1.rpm[i], fdm2.rpm[i], ratio );
+        result.fdm.fuel_flow[i]
+            = weight( fdm1.fuel_flow[i], fdm2.fuel_flow[i], ratio );
+        result.fdm.EGT[i] = weight( fdm1.EGT[i], fdm2.EGT[i], ratio );
+        result.fdm.oil_temp[i]
+            = weight( fdm1.oil_temp[i], fdm2.oil_temp[i], ratio );
+        result.fdm.oil_px[i] = weight( fdm1.oil_px[i], fdm2.oil_px[i], ratio );
+    }
+
+    // Consumables
+    for ( i = 0; i < fdm1.num_tanks; ++i ) {
+        result.fdm.fuel_quantity[i]
+            = weight( fdm1.fuel_quantity[i], fdm2.fuel_quantity[i], ratio );
+    }
+
+    // Gear status
+    for ( i = 0; i < fdm1.num_wheels; ++i ) {
+        result.fdm.wow[i]
+            = weight( fdm1.wow[i], fdm2.wow[i], ratio );
+    }
+
+    // Environment
+    result.fdm.cur_time = fdm1.cur_time;
+    result.fdm.warp = fdm1.warp;
+    result.fdm.visibility = weight( fdm1.visibility, fdm2.visibility, ratio );
+
+    // Control surface positions (normalized values)
+    result.fdm.elevator = weight( fdm1.elevator, fdm2.elevator, ratio );
+    result.fdm.flaps = weight( fdm1.flaps, fdm2.flaps, ratio );
+    result.fdm.left_aileron
+        = weight( fdm1.left_aileron, fdm2.left_aileron, ratio );
+    result.fdm.right_aileron
+        = weight( fdm1.right_aileron, fdm2.right_aileron, ratio );
+    result.fdm.rudder = weight( fdm1.rudder, fdm2.rudder, ratio );
+    result.fdm.speedbrake = weight( fdm1.speedbrake, fdm2.speedbrake, ratio );
+    result.fdm.spoilers = weight( fdm1.spoilers, fdm2.spoilers, ratio );
+     
+    // Interpolate Control input data
+
+    // Aero controls
+    result.ctrls.aileron = weight( ctrls1.aileron, ctrls2.aileron, ratio );
+    result.ctrls.elevator = weight( ctrls1.elevator, ctrls2.elevator, ratio );
+    result.ctrls.elevator_trim
+        = weight( ctrls1.elevator_trim, ctrls2.elevator_trim, ratio );
+    result.ctrls.rudder = weight( ctrls1.rudder, ctrls2.rudder, ratio );
+    result.ctrls.flaps = weight( ctrls1.flaps, ctrls2.flaps, ratio );
+    result.ctrls.flaps_power
+        = weight( ctrls1.flaps_power, ctrls2.flaps_power, ratio );
+
+    // Engine controls
+    for ( i = 0; i < ctrls1.num_engines; ++i ) {
+        result.ctrls.magnetos[i] = ctrls1.magnetos[i];
+        result.ctrls.starter_power[i] = ctrls1.starter_power[i];
+        result.ctrls.throttle[i]
+            = weight( ctrls1.throttle[i], ctrls2.throttle[i], ratio );
+        result.ctrls.mixture[i]
+            = weight( ctrls1.mixture[i], ctrls2.mixture[i], ratio );
+        result.ctrls.fuel_pump_power[i] = ctrls1.fuel_pump_power[i];
+        result.ctrls.prop_advance[i]
+            = weight( ctrls1.prop_advance[i], ctrls2.prop_advance[i], ratio );
+    }
+
+    // Fuel management
+    for ( i = 0; i < ctrls1.num_tanks; ++i ) {
+        result.ctrls.fuel_selector[i] = ctrls1.fuel_selector[i];
+    }
+
+    // Brake controls
+    for ( i = 0; i < ctrls1.num_wheels; ++i ) {
+        result.ctrls.brake[i]
+            = weight( ctrls1.brake[i], ctrls2.brake[i], ratio );
+    }
+
+    // Landing Gear
+    result.ctrls.gear_handle = ctrls1.gear_handle;
+
+    // Switches
+    result.ctrls.master_bat = ctrls1.master_bat;
+    result.ctrls.master_alt = ctrls1.master_alt;
+    result.ctrls.turbulence_norm = ctrls1.turbulence_norm;
+
+    // wind and turbulance
+    result.ctrls.wind_speed_kt
+        = weight( ctrls1.wind_speed_kt, ctrls2.wind_speed_kt, ratio );
+    result.ctrls.wind_dir_deg
+        = weight( ctrls1.wind_dir_deg, ctrls2.wind_dir_deg, ratio );
+    result.ctrls.turbulence_norm
+        = weight( ctrls1.turbulence_norm, ctrls2.turbulence_norm, ratio );
+
+    // other information about environment
+    result.ctrls.hground = weight( ctrls1.hground, ctrls2.hground, ratio );
+    result.ctrls.magvar = weight( ctrls1.magvar, ctrls2.magvar, ratio );
+
+    // simulation control
+    result.ctrls.speedup = ctrls1.speedup;
+    result.ctrls.freeze = ctrls1.freeze;
 
     return result;
 }
