@@ -300,7 +300,7 @@ fgMATERIAL_MGR::set_step ( int step )
 }
 
 
-#ifdef
+#if 0
 void
 fgMATERIAL_MGR::render_fragments()
 {

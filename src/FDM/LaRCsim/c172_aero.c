@@ -181,7 +181,7 @@ void aero( SCALAR dt, int Initialize ) {
 	   CLob=0;
 
 
-	   /* original /* /* Cdob=0.031; */
+	   /* original */ /* Cdob=0.031; */
 	   Cdob=0.046;
 	   Cda=0.13;  /*Not used*/
 	   Cdde=0.06;
