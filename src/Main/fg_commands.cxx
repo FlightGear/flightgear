@@ -9,6 +9,7 @@
 #include STL_FSTREAM
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/sg_random.h>
 #include <simgear/misc/commands.hxx>
 #include <simgear/misc/props.hxx>
 #include <simgear/sg_inlines.h>
@@ -685,6 +686,24 @@ do_property_cycle (const SGPropertyNode * arg)
 
 
 /**
+ * Built-in command: randomize a numeric property value.
+ *
+ * property: the name of the property value to randomize.
+ * min: the minimum allowed value.
+ * max: the maximum allowed value.
+ */
+static bool
+do_property_randomize (const SGPropertyNode * arg)
+{
+    SGPropertyNode * prop = get_prop(arg);
+    double min = arg->getDoubleValue("min", DBL_MIN);
+    double max = arg->getDoubleValue("max", DBL_MAX);
+    prop->setDoubleValue(sg_random() * (max - min) + min);
+    std::cerr << "Random value is " << prop->getDoubleValue() << std::endl;
+}
+
+
+/**
  * Built-in command: Show an XML-configured dialog.
  *
  * dialog-name: the name of the GUI dialog to display.
@@ -840,6 +859,7 @@ static struct {
     { "property-swap", do_property_swap },
     { "property-scale", do_property_scale },
     { "property-cycle", do_property_cycle },
+    { "property-randomize", do_property_randomize },
     { "dialog-show", do_dialog_show },
     { "dialog-close", do_dialog_close },
     { "dialog-show", do_dialog_show },
