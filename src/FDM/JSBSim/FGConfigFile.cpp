@@ -218,28 +218,11 @@ string FGConfigFile::GetLine(void)
       }
     }
   }
-  if (cfgfile.eof()) return string("EOF");
+  if (cfgfile.eof() && scratch.empty()) return string("EOF");
   return scratch;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-/*
-FGConfigFile& FGConfigFile::operator>>(double& val)
-{
-  unsigned int pos, end;
-
-  pos = CurrentLine.find_first_not_of(", ",CurrentIndex);
-  if (pos == CurrentLine.npos) pos = CurrentLine.length();
-  end = CurrentLine.find_first_of(", ",pos+1);
-  if (end == CurrentLine.npos) end = CurrentLine.length();
-  string str = CurrentLine.substr(pos, end - pos);
-  val = strtod(str.c_str(),NULL);
-  CurrentIndex = end+1;
-  if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
-  return *this;
-}
-*/
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGConfigFile& FGConfigFile::operator>>(double& val)
 {
@@ -252,7 +235,12 @@ FGConfigFile& FGConfigFile::operator>>(double& val)
   string str = CurrentLine.substr(pos, end - pos);
   val = strtod(str.c_str(),NULL);
   CurrentIndex = end+1;
-  if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
+  if (end == pos) {
+    GetNextConfigLine();
+    *this >> val;
+  } else {
+    if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
+  }
   return *this;
 }
 
@@ -269,7 +257,12 @@ FGConfigFile& FGConfigFile::operator>>(int& val)
   string str = CurrentLine.substr(pos, end - pos);
   val = atoi(str.c_str());
   CurrentIndex = end+1;
-  if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
+  if (end == pos) {
+    GetNextConfigLine();
+    *this >> val;
+  } else {
+    if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
+  }
   return *this;
 }
 
@@ -286,7 +279,12 @@ FGConfigFile& FGConfigFile::operator>>(eParam& val)
   string str = CurrentLine.substr(pos, end - pos);
   val = (eParam)atoi(str.c_str());
   CurrentIndex = end+1;
-  if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
+  if (end == pos) {
+    GetNextConfigLine();
+    *this >> val;
+  } else {
+    if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
+  }
   return *this;
 }
 
@@ -302,7 +300,12 @@ FGConfigFile& FGConfigFile::operator>>(string& str)
   if (end == CurrentLine.npos) end = CurrentLine.length();
   str = CurrentLine.substr(pos, end - pos);
   CurrentIndex = end+1;
-  if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
+  if (end == pos) {
+    GetNextConfigLine();
+    *this >> str;
+  } else {
+    if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
+  }
   return *this;
 }
 

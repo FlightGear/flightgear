@@ -55,9 +55,17 @@ using namespace std;
 
 FGTable::FGTable(int NRows, int NCols) : nRows(NRows), nCols(NCols)
 {
-  Type = tt2D;
-  colCounter = 1;
-  rowCounter = 0;
+  if (NCols > 1) {
+    Type = tt2D;
+    colCounter = 1;
+    rowCounter = 0;
+  } else if (NCols == 1) {
+    Type = tt1D;
+    colCounter = 0;
+    rowCounter = 1;
+  } else {
+    cerr << "FGTable cannot accept 'Rows=0'" << endl;
+  }
 
   Data = Allocate();
 
