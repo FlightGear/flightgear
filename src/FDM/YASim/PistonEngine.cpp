@@ -12,6 +12,7 @@ PistonEngine::PistonEngine(float power, float speed)
     _boost = 1;
     _running = false;
     _cranking = false;
+    _fuel = true;
 
     // Presume a BSFC (in lb/hour per HP) of 0.45.  In SI that becomes
     // (2.2 lb/kg, 745.7 W/hp, 3600 sec/hour) 7.62e-08 kg/Ws.
@@ -131,6 +132,8 @@ void PistonEngine::calc(float pressure, float temp, float speed)
 {
     if(_magnetos == 0 || speed < 200*RPM2RADPS)
 	_running = false;
+    else if(_fuel == false)
+        _running = false;
     else
 	_running = true;
 
@@ -157,6 +160,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // mixture setting.  Not all of this will burn with the same
     // efficiency.
     _fuelFlow = _mixture * speed * _mixCoeff;
+    if(_fuel == false) _fuelFlow = 0;
 
     // How much fuel could be burned with ideal (i.e. uncorrected!)
     // combustion.

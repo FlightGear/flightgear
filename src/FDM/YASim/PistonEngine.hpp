@@ -16,6 +16,7 @@ public:
     void setMagnetos(int magnetos);
     void setMixture(float mixture);
     void setBoost(float boost); // fraction of turbo-mul used
+    void setFuelState(bool hasFuel) { _fuel = hasFuel; }
 
     // For solver use
     void setRunning(bool r);
@@ -48,6 +49,7 @@ private:
     int _magnetos; // 0=off, 1=right, 2=left, 3=both
     float _mixture;
     float _boost;
+    bool _fuel;
 
     // Runtime state/output:
     bool _running;

@@ -31,6 +31,7 @@ Jet::Jet()
     // And sanify the remaining junk, just in case.
     _running = true;
     _cranking = false;
+    _fuel = true;
     _epr = 1;
     _fuelFlow = 0;
     _egt = 273;
@@ -147,6 +148,12 @@ void Jet::integrate(float dt)
                               &statP, &statT, &statD);
     _pressureCorrect = statP/P0;
     _tempCorrect = Math::sqrt(statT/T0);
+
+    // Handle running out of fuel.  This is a hack.  What should
+    // really happen is a simulation of ram air torque on the
+    // turbine.  This just forces the engine into ground idle.
+    if(_fuel == false)
+        _throttle = 0;
 
     // Linearly taper maxThrust to zero at vMax
     float vCorr = 1 - (speed/_vMax);

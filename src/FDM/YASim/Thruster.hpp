@@ -31,6 +31,7 @@ public:
     void setThrottle(float throttle);
     void setMixture(float mixture);
     void setStarter(bool starter);
+    void setFuelState(bool hasFuel) { _fuel = hasFuel; }
 
     // Dynamic output
     virtual bool isRunning()=0;
@@ -38,7 +39,7 @@ public:
     virtual void getThrust(float* out)=0;
     virtual void getTorque(float* out)=0;
     virtual void getGyro(float* out)=0;
-    virtual float getFuelFlow()=0;
+    virtual float getFuelFlow()=0; // in kg/s
 
     // Runtime instructions
     void setWind(float* wind);
@@ -53,6 +54,7 @@ protected:
     float _throttle;
     float _mixture;
     bool _starter; // true=engaged, false=disengaged
+    bool _fuel; // true=available, false=out
 
     float _wind[3];
     float _pressure;

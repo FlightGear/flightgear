@@ -148,7 +148,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	float n2max = attrf(a, "n2-max", 103);
 	j->setRPMs(n1min, n1max, n2min, n2max);
 
-	if(a->hasAttribute("tsfc")) j->setTSFC(attrf(a, "tsfc"));
+	j->setTSFC(attrf(a, "tsfc", 0.8));
 	if(a->hasAttribute("egt"))  j->setEGT(attrf(a, "egt"));
 	if(a->hasAttribute("epr"))  j->setEPR(attrf(a, "epr"));
 	if(a->hasAttribute("exhaust-speed"))
@@ -328,11 +328,22 @@ void FGFDM::setOutputProperties()
         p->prop->setFloatValue(val);
     }
 
-    float fuelDensity = 718.95; // default to gasoline: ~6 lb/gal
+    float totalFuel = 0, totalCap = 0;
+    float fuelDensity = 720; // in kg/m^3, default to gasoline: ~6 lb/gal
     for(i=0; i<_airplane.numTanks(); i++) {
         fuelDensity = _airplane.getFuelDensity(i);
 	sprintf(buf, "/consumables/fuel/tank[%d]/level-gal_us", i);
 	fgSetFloat(buf, CM2GALS*_airplane.getFuel(i)/fuelDensity);
+	sprintf(buf, "/consumables/fuel/tank[%d]/level-lbs", i);
+	fgSetFloat(buf, KG2LBS*_airplane.getFuel(i));
+        totalFuel += _airplane.getFuel(i);
+        totalCap += _airplane.getTankCapacity(i);
+    }
+    if(totalCap != 0) {
+        fgSetFloat("/consumables/fuel/total-fuel-lbs", KG2LBS*totalFuel);
+        fgSetFloat("/consumables/fuel/total-fuel-gals",
+                   CM2GALS*totalFuel/fuelDensity);
+        fgSetFloat("/consumables/fuel/total-fuel-norm", totalFuel/totalCap);
     }
 
     for(i=0; i<_thrusters.size(); i++) {

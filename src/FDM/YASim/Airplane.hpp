@@ -57,6 +57,7 @@ public:
     void setFuelFraction(float frac); // 0-1, total amount of fuel
     float getFuel(int tank); // in kg!
     float getFuelDensity(int tank); // kg/m^3
+    float getTankCapacity(int tank);
 
     void compile(); // generate point masses & such, then solve
     void initEngines();

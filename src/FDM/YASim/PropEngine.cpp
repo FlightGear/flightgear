@@ -15,6 +15,7 @@ PropEngine::PropEngine(Propeller* prop, PistonEngine* eng, float moment)
     _prop = prop;
     _eng = eng;
     _moment = moment;
+    _fuel = true;
 }
 
 PropEngine::~PropEngine()
@@ -140,6 +141,7 @@ void PropEngine::integrate(float dt)
     _eng->setStarter(_starter);
     _eng->setMagnetos(_magnetos);
     _eng->setMixture(_mixture);
+    _eng->setFuelState(_fuel);
     
     _prop->calc(_rho, speed, _omega, &thrust, &propTorque);
     _eng->calc(_pressure, _temp, _omega);

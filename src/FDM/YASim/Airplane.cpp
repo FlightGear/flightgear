@@ -62,7 +62,28 @@ void Airplane::iterate(float dt)
 
     _model.iterate();
 
-    // FIXME: Consume fuel
+    // Consume fuel.  This is a really simple implementation that
+    // assumes all engines draw equally from all tanks in proportion
+    // to the amount of fuel stored there.  Needs to be fixed, but
+    // that has to wait for a decision as to what the property
+    // interface will look like.
+    int i, outOfFuel = 0;
+    float fuelFlow = 0, totalFuel = 0.00001; // <-- overflow protection
+    for(i=0; i<_thrusters.size(); i++)
+        fuelFlow += ((ThrustRec*)_thrusters.get(i))->thruster->getFuelFlow();
+    for(i=0; i<_tanks.size(); i++)
+        totalFuel += ((Tank*)_tanks.get(i))->fill;
+    for(i=0; i<_tanks.size(); i++) {
+        Tank* t = (Tank*)_tanks.get(i);
+        t->fill -= dt * fuelFlow * (t->fill/totalFuel);
+        if(t->fill <= 0) {
+            t->fill = 0;
+            outOfFuel = 1;
+        }
+    }
+    if(outOfFuel)
+        for(int i=0; i<_thrusters.size(); i++)
+            ((ThrustRec*)_thrusters.get(i))->thruster->setFuelState(false);
 }
 
 ControlMap* Airplane::getControlMap()
@@ -189,6 +210,11 @@ float Airplane::getFuelDensity(int tank)
     return ((Tank*)_tanks.get(tank))->density;
 }
 
+float Airplane::getTankCapacity(int tank)
+{
+    return ((Tank*)_tanks.get(tank))->cap;
+}
+
 void Airplane::setWeight(float weight)
 {
     _emptyWeight = weight;
@@ -298,6 +324,7 @@ void Airplane::setFuelFraction(float frac)
     int i;
     for(i=0; i<_tanks.size(); i++) {
         Tank* t = (Tank*)_tanks.get(i);
+        t->fill = frac * t->cap;
         _model.getBody()->setMass(t->handle, t->cap * frac);
     }
 }
