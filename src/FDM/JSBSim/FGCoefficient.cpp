@@ -111,14 +111,13 @@ FGCoefficient::~FGCoefficient()
 bool FGCoefficient::Load(FGConfigFile *AC_cfg)
 {
   int start, end, n;
-  string mult,prop;
+  string mult;
 
   if (AC_cfg) {
     name = AC_cfg->GetValue("NAME");
     method = AC_cfg->GetValue("TYPE");
     AC_cfg->GetNextConfigLine();
     *AC_cfg >> description;
-
     if      (method == "EQUATION") type = EQUATION;
     else if (method == "TABLE")    type = TABLE;
     else if (method == "VECTOR")   type = VECTOR;
@@ -135,42 +134,46 @@ bool FGCoefficient::Load(FGConfigFile *AC_cfg)
       }
 
       *AC_cfg >> multparmsRow;
-      prop = State->GetPropertyName( multparmsRow );
-      LookupR = PropertyManager->GetNode( prop );
+      LookupR = PropertyManager->GetNode( multparmsRow );
     }
 
     if (type == TABLE) {
       *AC_cfg >> multparmsCol;
-      prop = State->GetPropertyName( multparmsCol );
 
-      LookupC = PropertyManager->GetNode( prop );
+      LookupC = PropertyManager->GetNode( multparmsCol );
     }
 
     // Here, read in the line of the form (e.g.) FG_MACH|FG_QBAR|FG_ALPHA
     // where each non-dimensionalizing parameter for this coefficient is
     // separated by a | character
 
-    *AC_cfg >> multparms;
+    string line=AC_cfg->GetCurrentLine();
+    unsigned j=0;
+    char tmp[255];
+    for(unsigned i=0;i<line.length(); i++ ) {
+      if( !isspace(line[i]) ) {
+        tmp[j]=line[i];
+        j++;
+      }
+    } 
+    tmp[j]='\0'; multparms=tmp;  
+    end  = multparms.length();
 
-    end   = multparms.length();
     n     = multparms.find("|");
     start = 0;
-
-    if (multparms != string("FG_NONE")) {
+    if (multparms != string("none")) {
       while (n < end && n >= 0) {
         n -= start;
         mult = multparms.substr(start,n);
-        prop= State->GetPropertyName( mult );
-        multipliers.push_back( PropertyManager->GetNode(prop) );
+        multipliers.push_back( resolveSymbol( mult ) );
         start += n+1;
         n = multparms.find("|",start);
       }
-      prop=State->GetPropertyName( multparms.substr(start,n) );
       mult = multparms.substr(start,n);
-      multipliers.push_back( PropertyManager->GetNode(prop) );
+      multipliers.push_back( resolveSymbol( mult ) );
       // End of non-dimensionalizing parameter read-in
     }
-
+    AC_cfg->GetNextConfigLine();
     if (type == VALUE) {
       *AC_cfg >> StaticValue;
     } else if (type == VECTOR || type == TABLE) {
@@ -335,7 +338,19 @@ void FGCoefficient::unbind(void)
   node->Untie("bias");  
   node->Untie("gain");
 }
-  
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGPropertyManager* FGCoefficient::resolveSymbol(string name){
+        FGPropertyManager* tmpn;
+        tmpn = PropertyManager->GetNode(name,false);
+        if( !tmpn ) {
+          cerr << "Coefficient multipliers cannot create properties, check spelling?" << endl;
+          exit(1);
+        } 
+        return tmpn; 
+}
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print

@@ -120,6 +120,8 @@ public:
       @return the next valid line from the config file OR "EOF" if end of file is
       reached.*/
   string GetNextConfigLine(void);
+  
+  string GetCurrentLine(void) { return CurrentLine; }
 
   /** Returns the value of the tag supplied.
       @param 
@@ -132,7 +134,6 @@ public:
   FGConfigFile& operator>>(double&);
   FGConfigFile& operator>>(int&);
   FGConfigFile& operator>>(string&);
-  FGConfigFile& operator>>(eParam&);
   void ResetLineIndexToZero(void);
 
 private:

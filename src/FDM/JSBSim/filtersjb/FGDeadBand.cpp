@@ -66,7 +66,7 @@ FGDeadBand::FGDeadBand(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       *AC_cfg >> token;
     }
   }
-
+  FGFCSComponent::bind( PropertyManager->GetNode("fcs/components",true) );
   Debug(0);
 }
 

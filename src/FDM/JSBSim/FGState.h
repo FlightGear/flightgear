@@ -325,8 +325,6 @@ public:
   */
   void ReportState(void);
   
-  inline string GetPropertyName(string prm) { return ParamNameToProp[prm]; }
-  
   void bind();
   void unbind();
 
@@ -362,11 +360,6 @@ private:
   FGPropulsion* Propulsion;
   FGPropertyManager* PropertyManager;
 
-  typedef map<string,string> ParamNameMap;
-  ParamNameMap ParamNameToProp;
-  
-  void InitPropertyMaps(void);
-  
   void Debug(int from);
 };
 

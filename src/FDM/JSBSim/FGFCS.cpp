@@ -285,6 +285,7 @@ bool FGFCS::Load(FGConfigFile* AC_cfg)
   vector <FGFCSComponent*> *Components;
   FGConfigFile *FCS_cfg;
 
+  Components=0;
   // Determine if the FCS/Autopilot is defined inline in the aircraft configuration
   // file or in a separate file. Set up the config file class as appropriate.
 
@@ -324,11 +325,11 @@ bool FGFCS::Load(FGConfigFile* AC_cfg)
   if (delimiter == "AUTOPILOT") {
     Components = &APComponents;
     eMode = mAP;
-    Name = "Autopilot:" + name;
+    Name = "Autopilot: " + name;
   } else if (delimiter == "FLIGHT_CONTROL") {
     Components = &FCSComponents;
     eMode = mFCS;
-    Name = "FCS:" + name;
+    Name = "FCS: " + name;
   } else {
     cerr << endl << "Unknown FCS delimiter" << endl << endl;
   }
@@ -436,7 +437,7 @@ string FGFCS::GetComponentName(int idx)
     break;
   }
   return string("");
-}
+} 
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -791,6 +792,7 @@ void FGFCS::bindModel(void)
 {
   unsigned i;
   char tmp[80];
+  
   
   for (i=0; i<ThrottleCmd.size(); i++) {
     snprintf(tmp,80,"fcs/throttle-cmd-norm[%u]",i);

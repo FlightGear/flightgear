@@ -271,28 +271,6 @@ FGConfigFile& FGConfigFile::operator>>(int& val)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGConfigFile& FGConfigFile::operator>>(eParam& val)
-{
-  string::size_type pos, end;
-
-  pos = CurrentLine.find_first_not_of(", ",CurrentIndex);
-  if (pos == CurrentLine.npos) pos = CurrentLine.length();
-  end = CurrentLine.find_first_of(", ",pos+1);
-  if (end == CurrentLine.npos) end = CurrentLine.length();
-  string str = CurrentLine.substr(pos, end - pos);
-  val = (eParam)atoi(str.c_str());
-  CurrentIndex = end+1;
-  if (end == pos) {
-    GetNextConfigLine();
-    *this >> val;
-  } else {
-    if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
-  }
-  return *this;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 FGConfigFile& FGConfigFile::operator>>(string& str)
 {
   string::size_type pos, end;

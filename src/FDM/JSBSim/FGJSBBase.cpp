@@ -66,7 +66,7 @@ const double FGJSBBase::inchtoft = 0.08333333;
 const double FGJSBBase::in3tom3 = 1.638706E-5;
 const double FGJSBBase::Reng = 1716.0;
 const double FGJSBBase::SHRatio = 1.40;
-const string FGJSBBase::needed_cfg_version = "1.58";
+const string FGJSBBase::needed_cfg_version = "1.60";
 const string FGJSBBase::JSBSim_version = "0.9.2";
 
 queue <FGJSBBase::Message*> FGJSBBase::Messages;

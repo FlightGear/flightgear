@@ -100,12 +100,6 @@ public:
 
 private:
   FGConfigFile* AC_cfg;
-  typedef struct {
-    FGPropertyManager* Node;
-    int Idx;
-    int Type;
-  } InputRec;   
-  vector <InputRec*> Inputs;
   bool clip;
   double clipmin,clipmax;
   double Bias;

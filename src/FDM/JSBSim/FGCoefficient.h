@@ -202,6 +202,8 @@ private:
   FGAuxiliary*    Auxiliary;
   FGOutput*       Output;
   FGPropertyManager* PropertyManager;
+  
+  FGPropertyManager* resolveSymbol(string name);
 
   virtual void Debug(int from);
 };

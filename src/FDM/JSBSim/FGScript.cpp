@@ -143,12 +143,12 @@ bool FGScript::LoadScript( string script )
           newCondition = new struct condition();
           while (token != string("/when")) {
             if (token == "parameter") {
-              prop_name = State->GetPropertyName( Script.GetValue("name") );
+              prop_name = Script.GetValue("name");
               newCondition->TestParam.push_back( PropertyManager->GetNode(prop_name) );
               newCondition->TestValue.push_back(strtod(Script.GetValue("value").c_str(), NULL));
               newCondition->Comparison.push_back(Script.GetValue("comparison"));
             } else if (token == "set") {
-              prop_name = State->GetPropertyName( Script.GetValue("name") );
+              prop_name = Script.GetValue("name");
               newCondition->SetParam.push_back( PropertyManager->GetNode(prop_name) );
               newCondition->SetValue.push_back(strtod(Script.GetValue("value").c_str(), NULL));
               newCondition->Triggered.push_back(false);

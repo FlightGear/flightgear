@@ -42,6 +42,7 @@ INCLUDES
 #endif
 
 #include <string>
+#include <vector>
 #include "../FGJSBBase.h"
 #include "../FGPropertyManager.h"
 
@@ -101,12 +102,16 @@ public:
 
   virtual bool Run(void);
   virtual void SetOutput(void);
-  inline double GetOutput (void) {return Output;}
+  inline double GetOutput (void) const {return Output;}
   inline FGPropertyManager* GetOutputNode(void) { return OutputNode; }
-  inline string GetName(void) {return Name;}
-  inline string GetType(void) { return Type; }
-  virtual double GetOutputPct(void) { return 0; }
-
+  inline string GetName(void) const {return Name;}
+  inline string GetType(void) const { return Type; }
+  virtual double GetOutputPct(void) const { return 0; }
+  
+  virtual void bind(FGPropertyManager *node);
+  virtual void unbind( void );
+  FGPropertyManager* resolveSymbol(string token);
+  
 protected:
    /// Pilot/Aircraft, FCS, Autopilot inputs
   enum eInputType {itPilotAC, itFCS, itAP, itBias} InputType;
@@ -115,7 +120,7 @@ protected:
   string Type;
   string Name;
   int ID;
-  FGPropertyManager* InputNode;
+  vector<FGPropertyManager*> InputNodes;
   int InputIdx;
   double Input;
   FGPropertyManager* OutputNode;

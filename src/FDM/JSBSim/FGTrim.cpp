@@ -144,7 +144,7 @@ void FGTrim::ClearStates(void) {
       iAxes++;
     }
     TrimAxes.clear();
-    cout << "TrimAxes.size(): " << TrimAxes.size() << endl;
+    //cout << "TrimAxes.size(): " << TrimAxes.size() << endl;
 }
     
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
