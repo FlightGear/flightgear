@@ -20,6 +20,7 @@
 #include <simgear/math/vector.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/viewer.hxx>
 
 #include "hitlist.hxx"
 

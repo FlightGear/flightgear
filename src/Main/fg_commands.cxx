@@ -27,6 +27,7 @@ SG_USING_STD(ofstream);
 #include "fg_props.hxx"
 #include "fg_io.hxx"
 #include "globals.hxx"
+#include "viewmgr.hxx"
 
 
 

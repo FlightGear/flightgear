@@ -121,7 +121,7 @@ bool FGBalloonSim::update( int multiloop ) {
     }
 
     // set control positions
-    current_balloon.set_burner_strength ( controls.get_throttle(0) );
+    current_balloon.set_burner_strength ( globals->get_controls()->get_throttle(0) );
     //not more implemented yet
 
     // Inform BalloonSim of the local terrain altitude

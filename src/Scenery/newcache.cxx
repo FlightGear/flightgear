@@ -39,6 +39,7 @@
 #include <simgear/misc/sg_path.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>  // for scenery.center
 
 #include "newcache.hxx"

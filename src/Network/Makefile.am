@@ -6,9 +6,11 @@ libNetwork_a_SOURCES = \
 	garmin.cxx garmin.hxx \
 	joyclient.cxx joyclient.hxx \
 	native.cxx native.hxx \
+	native_ctrls.cxx native_ctrls.hxx \
 	nmea.cxx nmea.hxx \
 	props.cxx props.hxx \
 	pve.cxx pve.hxx \
+	raw_ctrls.hxx \
 	ray.cxx ray.hxx \
 	rul.cxx rul.hxx
 

@@ -61,6 +61,7 @@
 #include <simgear/math/vector.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/light.hxx>
 
@@ -335,7 +336,7 @@ static void fgMoonPositionGST(double gst, double *lon, double *lat) {
 // update the cur_time_params structure with the current moon position
 void fgUpdateMoonPos( void ) {
     fgLIGHT *l;
-    FGViewerRPH *v;
+    FGViewer *v;
     sgVec3 nup, nmoon;
     Point3D p, rel_moonpos;
     double dot, east_dot;
@@ -350,7 +351,7 @@ void fgUpdateMoonPos( void ) {
 
     l = &cur_light_params;
     SGTime *t = globals->get_time_params();
-    v = (FGViewerRPH *)globals->get_current_view();
+    v = globals->get_current_view();
 
     SG_LOG( SG_EVENT, SG_INFO, "  Updating Moon position" );
 

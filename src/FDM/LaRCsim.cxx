@@ -101,9 +101,11 @@ bool FGLaRCsim::update( int multiloop ) {
 	// set control inputs
 	// cout << "V_calibrated_kts = " << V_calibrated_kts << '\n';
 	eng.set_IAS( V_calibrated_kts );
-	eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
+	eng.set_Throttle_Lever_Pos( globals->get_controls()->get_throttle( 0 )
+				    * 100.0 );
 	eng.set_Propeller_Lever_Pos( 100 );
-        eng.set_Mixture_Lever_Pos( controls.get_mixture( 0 ) * 100.0 );
+        eng.set_Mixture_Lever_Pos( globals->get_controls()->get_mixture( 0 )
+				   * 100.0 );
 	eng.set_p_amb( Static_pressure );
 	eng.set_T_amb( Static_temperature );
 
@@ -112,7 +114,7 @@ bool FGLaRCsim::update( int multiloop ) {
 
 	// copy engine state values onto "bus"
 	FGEngInterface *e = get_engine( 0 );
-	e->set_Throttle( controls.get_throttle( 0 ) * 100.0 );
+	e->set_Throttle( globals->get_controls()->get_throttle( 0 ) * 100.0 );
 	e->set_Mixture( 80 );
 	e->set_Prop_Advance( 100 );
 	e->set_RPM( eng.get_RPM() );
@@ -132,7 +134,7 @@ bool FGLaRCsim::update( int multiloop ) {
 
 #if 0
 	SG_LOG( SG_FLIGHT, SG_INFO, "Throttle = "
-		<< controls.get_throttle( 0 ) * 100.0);
+		<< globals->get_controls()->get_throttle( 0 ) * 100.0);
 	SG_LOG( SG_FLIGHT, SG_INFO, " Mixture = " << 80);
 	SG_LOG( SG_FLIGHT, SG_INFO, " RPM = " << eng.get_RPM());
 	SG_LOG( SG_FLIGHT, SG_INFO, " MP = " << eng.get_Manifold_Pressure());
@@ -156,13 +158,13 @@ bool FGLaRCsim::update( int multiloop ) {
     }
 
     // copy control positions into the LaRCsim structure
-    Lat_control = controls.get_aileron() /
+    Lat_control = globals->get_controls()->get_aileron() /
 	speed_up->getIntValue();
-    Long_control = controls.get_elevator();
-    Long_trim = controls.get_elevator_trim();
-    Rudder_pedal = controls.get_rudder() /
+    Long_control = globals->get_controls()->get_elevator();
+    Long_trim = globals->get_controls()->get_elevator_trim();
+    Rudder_pedal = globals->get_controls()->get_rudder() /
         speed_up->getIntValue();
-    Flap_handle = 30.0 * controls.get_flaps();
+    Flap_handle = 30.0 * globals->get_controls()->get_flaps();
 
     if ( aircraft->getStringValue() == "c172" ) {
 	Use_External_Engine = 1;
@@ -170,10 +172,10 @@ bool FGLaRCsim::update( int multiloop ) {
 	Use_External_Engine = 0;
     }
 
-    Throttle_pct = controls.get_throttle( 0 ) * 1.0;
+    Throttle_pct = globals->get_controls()->get_throttle( 0 ) * 1.0;
 
-    Brake_pct[0] = controls.get_brake( 1 );
-    Brake_pct[1] = controls.get_brake( 0 );
+    Brake_pct[0] = globals->get_controls()->get_brake( 1 );
+    Brake_pct[1] = globals->get_controls()->get_brake( 0 );
 
     // Inform LaRCsim of the local terrain altitude
     // Runway_altitude = get_Runway_altitude();

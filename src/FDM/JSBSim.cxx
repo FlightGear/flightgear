@@ -235,20 +235,20 @@ bool FGJSBsim::update( int multiloop ) {
         aileron_trim->setDoubleValue( FCS->GetDaCmd() );
         rudder_trim->setDoubleValue( FCS->GetDrCmd() );
 
-        controls.set_elevator_trim(FCS->GetPitchTrimCmd());
-        controls.set_elevator(FCS->GetDeCmd());
-        controls.set_throttle(FGControls::ALL_ENGINES,
-                              FCS->GetThrottleCmd(0));
+        globals->get_controls()->set_elevator_trim(FCS->GetPitchTrimCmd());
+        globals->get_controls()->set_elevator(FCS->GetDeCmd());
+        globals->get_controls()->set_throttle(FGControls::ALL_ENGINES,
+					      FCS->GetThrottleCmd(0));
 
-        controls.set_aileron(FCS->GetDaCmd());
-        controls.set_rudder( FCS->GetDrCmd());
+        globals->get_controls()->set_aileron(FCS->GetDaCmd());
+        globals->get_controls()->set_rudder( FCS->GetDrCmd());
     
         SG_LOG( SG_FLIGHT, SG_INFO, "  Trim complete" );
     }
   
     for( i=0; i<get_num_engines(); i++ ) {
       get_engine(i)->set_RPM( Propulsion->GetThruster(i)->GetRPM() );
-      get_engine(i)->set_Throttle( controls.get_throttle(i) );
+      get_engine(i)->set_Throttle( globals->get_controls()->get_throttle(i) );
     }
 
     for ( i=0; i < multiloop; i++ ) {
@@ -272,18 +272,18 @@ bool FGJSBsim::update( int multiloop ) {
 bool FGJSBsim::copy_to_JSBsim() {
     // copy control positions into the JSBsim structure
 
-    FCS->SetDaCmd( controls.get_aileron());
-    FCS->SetDeCmd( controls.get_elevator());
-    FCS->SetPitchTrimCmd(controls.get_elevator_trim());
-    FCS->SetDrCmd( -controls.get_rudder());
-    FCS->SetDfCmd(  controls.get_flaps() );
+    FCS->SetDaCmd( globals->get_controls()->get_aileron());
+    FCS->SetDeCmd( globals->get_controls()->get_elevator());
+    FCS->SetPitchTrimCmd(globals->get_controls()->get_elevator_trim());
+    FCS->SetDrCmd( -globals->get_controls()->get_rudder());
+    FCS->SetDfCmd(  globals->get_controls()->get_flaps() );
     FCS->SetDsbCmd( 0.0 ); //speedbrakes
     FCS->SetDspCmd( 0.0 ); //spoilers
     FCS->SetThrottleCmd( FGControls::ALL_ENGINES,
-                         controls.get_throttle( 0 ));
-    FCS->SetLBrake( controls.get_brake( 0 ) );
-    FCS->SetRBrake( controls.get_brake( 1 ) );
-    FCS->SetCBrake( controls.get_brake( 2 ) );
+                         globals->get_controls()->get_throttle( 0 ));
+    FCS->SetLBrake( globals->get_controls()->get_brake( 0 ) );
+    FCS->SetRBrake( globals->get_controls()->get_brake( 1 ) );
+    FCS->SetCBrake( globals->get_controls()->get_brake( 2 ) );
 
     Position->SetSeaLevelRadius( get_Sea_level_radius() );
     Position->SetRunwayRadius( scenery.cur_elev*SG_METER_TO_FEET

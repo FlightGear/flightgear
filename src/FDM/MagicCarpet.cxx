@@ -57,7 +57,7 @@ bool FGMagicCarpet::update( int multiloop ) {
     double time_step = get_delta_t() * multiloop;
 
     // speed and distance traveled
-    double speed = controls.get_throttle( 0 ) * 2000; // meters/sec
+    double speed = globals->get_controls()->get_throttle( 0 ) * 2000; // meters/sec
     double dist = speed * time_step;
     double kts = speed * SG_METER_TO_NM * 3600.0;
     _set_V_equiv_kts( kts );
@@ -65,7 +65,7 @@ bool FGMagicCarpet::update( int multiloop ) {
     _set_V_ground_speed( kts );
 
     // angle of turn
-    double turn_rate = controls.get_aileron() * SGD_PI_4; // radians/sec
+    double turn_rate = globals->get_controls()->get_aileron() * SGD_PI_4; // radians/sec
     double turn = turn_rate * time_step;
 
     // update euler angles
@@ -94,7 +94,7 @@ bool FGMagicCarpet::update( int multiloop ) {
     sgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );
 
     // update altitude
-    double real_climb_rate = -controls.get_elevator() * 5000; // feet/sec
+    double real_climb_rate = -globals->get_controls()->get_elevator() * 5000; // feet/sec
     _set_Climb_Rate( real_climb_rate / 500.0 );
     double climb = real_climb_rate * time_step;
 

@@ -45,6 +45,7 @@
 #include <FDM/ADA.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/viewmgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 #include <GUI/gui.h>
@@ -123,31 +124,31 @@ float get_long_min( void )
 
 float get_throttleval( void )
 {
-    float throttle = controls.get_throttle( 0 );
+    float throttle = globals->get_controls()->get_throttle( 0 );
     return (throttle);     // Hack limiting to one engine
 }
 
 float get_aileronval( void )
 {
-    float aileronval = controls.get_aileron();
+    float aileronval = globals->get_controls()->get_aileron();
     return (aileronval);
 }
 
 float get_elevatorval( void )
 {
-    float elevator_val = (float)controls.get_elevator();
+    float elevator_val = (float)globals->get_controls()->get_elevator();
     return elevator_val;
 }
 
 float get_elev_trimval( void )
 {
-    float elevatorval = controls.get_elevator_trim();
+    float elevatorval = globals->get_controls()->get_elevator_trim();
     return (elevatorval);
 }
 
 float get_rudderval( void )
 {
-    float rudderval = controls.get_rudder();
+    float rudderval = globals->get_controls()->get_rudder();
     return (rudderval);
 }
 

@@ -36,6 +36,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
 #include <Main/globals.hxx>
+#include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/light.hxx>
 #include <Objects/apt_signs.hxx>

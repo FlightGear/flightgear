@@ -43,6 +43,7 @@
 
 #include "fgfs.hxx"
 #include "fg_props.hxx"
+#include "viewer.hxx"
 
 #if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(istream);
@@ -668,7 +669,7 @@ getAPRudderControl ()
     if (getAPHeadingLock())
         return current_autopilot->get_TargetHeading();
     else
-        return controls.get_rudder();
+        return globals->get_controls()->get_rudder();
 }
 
 // kludge
@@ -680,7 +681,7 @@ setAPRudderControl (double value)
         value -= current_autopilot->get_TargetHeading();
         current_autopilot->HeadingAdjust(value < 0.0 ? -1.0 : 1.0);
     } else {
-        controls.set_rudder(value);
+        globals->get_controls()->set_rudder(value);
     }
 }
 
@@ -691,7 +692,7 @@ getAPElevatorControl ()
   if (getAPAltitudeLock())
       return current_autopilot->get_TargetAltitude();
   else
-    return controls.get_elevator();
+    return globals->get_controls()->get_elevator();
 }
 
 // kludge
@@ -703,7 +704,7 @@ setAPElevatorControl (double value)
         value -= current_autopilot->get_TargetAltitude();
         current_autopilot->AltitudeAdjust(value < 0.0 ? 100.0 : -100.0);
     } else {
-        controls.set_elevator(value);
+        globals->get_controls()->set_elevator(value);
     }
 }
 
@@ -714,7 +715,7 @@ getAPThrottleControl ()
   if (getAPAutoThrottleLock())
     return 0.0;			// always resets
   else
-    return controls.get_throttle(0);
+    return globals->get_controls()->get_throttle(0);
 }
 
 // kludge
@@ -724,7 +725,7 @@ setAPThrottleControl (double value)
   if (getAPAutoThrottleLock())
     current_autopilot->AutoThrottleAdjust(value < 0.0 ? -0.01 : 0.01);
   else
-    controls.set_throttle(0, value);
+    globals->get_controls()->set_throttle(0, value);
 }
 
 

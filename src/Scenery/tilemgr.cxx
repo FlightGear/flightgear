@@ -41,6 +41,7 @@
 #include <simgear/math/vector.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/viewer.hxx>
 #include <Objects/obj.hxx>
 
 #ifndef FG_OLD_WEATHER

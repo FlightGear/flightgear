@@ -56,6 +56,7 @@ SG_USING_STD(string);
 
 #include <Aircraft/aircraft.hxx>
 #include <Main/globals.hxx>
+#include <Main/viewer.hxx>
 
 #include "light.hxx"
 #include "sunpos.hxx"

@@ -66,9 +66,7 @@
 #include <FDM/flight.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>
-//#include <Main/views.hxx>
-//#include <Network/network.h>
-//#include <Time/fg_time.hxx>
+#include <Main/viewmgr.hxx>
 
 #if defined( WIN32 ) && !defined( __CYGWIN__ )
 #  include <simgear/screen/win32-printer.h>
@@ -293,26 +291,26 @@ void guiMotionFunc ( int x, int y )
                 } else {
                     if ( left_button() ) {
                         offset = (_mX - x) * brake_sensitivity;
-                        controls.move_brake(FGControls::ALL_WHEELS, offset);
+                        globals->get_controls()->move_brake(FGControls::ALL_WHEELS, offset);
                         offset = (_mY - y) * throttle_sensitivity;
-                        controls.move_throttle(FGControls::ALL_ENGINES, offset);
+                        globals->get_controls()->move_throttle(FGControls::ALL_ENGINES, offset);
                     } else if ( right_button() ) {
                         if( ! current_autopilot->get_HeadingEnabled() ) {
                             offset = (x - _mX) * rudder_sensitivity;
-                            controls.move_rudder(offset);
+                            globals->get_controls()->move_rudder(offset);
                         }
                         if( ! current_autopilot->get_AltitudeEnabled() ) {
                             offset = (_mY - y) * trim_sensitivity;
-                            controls.move_elevator_trim(offset);
+                            globals->get_controls()->move_elevator_trim(offset);
                         }
                     } else {
                         if( ! current_autopilot->get_HeadingEnabled() ) {
                             offset = (x - _mX) * aileron_sensitivity;
-                            controls.move_aileron(offset);
+                            globals->get_controls()->move_aileron(offset);
                         }
                         if( ! current_autopilot->get_AltitudeEnabled() ) {
                             offset = (_mY - y) * elevator_sensitivity;
-                            controls.move_elevator(offset);
+                            globals->get_controls()->move_elevator(offset);
                         }
                     }
                 }
@@ -486,9 +484,9 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     
                     // try to have the MOUSE_YOKE position
                     // reflect the current stick position
-                    offset = controls.get_aileron();
+                    offset = globals->get_controls()->get_aileron();
                     x = _mX - (int)(offset * aileron_sensitivity);
-                    offset = controls.get_elevator();
+                    offset = globals->get_controls()->get_elevator();
                     y = _mY - (int)(offset * elevator_sensitivity);
                     
                     glutSetCursor(GLUT_CURSOR_CROSSHAIR);

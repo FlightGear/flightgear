@@ -82,8 +82,8 @@ bool FGJoyClient::process() {
 		if ( fabs(elevator) < 0.05 ) {
 		    elevator = 0.0;
 		}
-		controls.set_aileron( aileron );
-		controls.set_elevator( -elevator );
+		globals->get_controls()->set_aileron( aileron );
+		globals->get_controls()->set_elevator( -elevator );
 	    }
 	} else {
 	    while ( io->read( (char *)(& buf), length ) == length ) {
@@ -100,8 +100,8 @@ bool FGJoyClient::process() {
 		if ( fabs(elevator) < 0.05 ) {
 		    elevator = 0.0;
 		}
-		controls.set_aileron( aileron );
-		controls.set_elevator( -elevator );
+		globals->get_controls()->set_aileron( aileron );
+		globals->get_controls()->set_elevator( -elevator );
 	    }
 	}
     }

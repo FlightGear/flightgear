@@ -326,7 +326,7 @@ void FGSteam::_CatchUp()
 	scaling capability for the vacuum pump later on.
 	When we have a real engine model, we can ask it.
 	*/
-	the_ENGINE_rpm = controls.get_throttle(0) * 26.0;
+	the_ENGINE_rpm = globals->get_controls()->get_throttle(0) * 26.0;
 
 	/**************************
 	First, we need to know what the static line is reporting,

@@ -41,6 +41,7 @@
 #include <Cockpit/hud.hxx>
 #include <plib/ssg.h>
 #include <Main/globals.hxx>
+#include <Main/viewmgr.hxx>
 
 //#define printf //
 

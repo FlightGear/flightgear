@@ -131,6 +131,7 @@ int objc=0;
 #include "fg_props.hxx"
 #include "globals.hxx"
 #include "splash.hxx"
+#include "viewmgr.hxx"
 
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog
@@ -716,7 +717,7 @@ void fgRenderFrame( void ) {
 
 	    // set up moving parts
 	    if (flaps_selector != NULL) {
-	      flaps_selector->select( (controls.get_flaps() > 0.5f) ? 1 : 2 );
+		flaps_selector->select( (globals->get_controls()->get_flaps() > 0.5f) ? 1 : 2 );
 	    }
 
 	    if (prop_selector != NULL) {
@@ -799,7 +800,7 @@ void fgRenderFrame( void ) {
 	current_input.update();
 
 	// update the controls subsystem
-	controls.update();
+	globals->get_controls()->update();
 
 	hud_and_panel->apply();
 	fgCockpitUpdate();
@@ -1175,7 +1176,8 @@ static void fgMainLoop( void ) {
 	    s1->set_pitch( pitch );
 	    s1->set_volume( volume );
 	} else {
-	    double param = controls.get_throttle( 0 ) * 2.0 + 1.0;
+	    double param
+		= globals->get_controls()->get_throttle( 0 ) * 2.0 + 1.0;
 	    s1->set_pitch( param );
 	    s1->set_volume( param );
 	}
@@ -1462,6 +1464,9 @@ int mainLoop( int argc, char **argv ) {
 
     SGRoute *route = new SGRoute;
     globals->set_route( route );
+
+    FGControls *controls = new FGControls;
+    globals->set_controls( controls );
 
     FGViewMgr *viewmgr = new FGViewMgr;
     globals->set_viewmgr( viewmgr );

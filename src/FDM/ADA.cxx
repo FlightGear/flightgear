@@ -22,6 +22,7 @@
 
 #include <Controls/controls.hxx>
 #include <GUI/gui.h>
+#include <Main/globals.hxx>
 
 #include "ADA.hxx"
 
@@ -261,10 +262,10 @@ bool FGADA::copy_from_FGADA() {
     //    printf("psi = %f %f\n",Psi,Psi*SGD_RADIANS_TO_DEGREES);    
 
     // controls
-    controls.set_throttle(0,throttle/131.0);
-    controls.set_elevator(pstick);
-    controls.set_aileron(rstick);
-    controls.set_rudder(rpedal);
+    globals->get_controls()->set_throttle(0,throttle/131.0);
+    globals->get_controls()->set_elevator(pstick);
+    globals->get_controls()->set_aileron(rstick);
+    globals->get_controls()->set_rudder(rpedal);
 
     // auxilliary parameters for HUD
     set_iaux1(sixdof_to_visuals.iaux1);

@@ -26,6 +26,7 @@
 
 #include <simgear/misc/props.hxx>
 
+#include <Sound/soundmgr.hxx>
 #include <Main/fgfs.hxx>
 #include <Main/globals.hxx>
 
@@ -264,9 +265,6 @@ public:
 	}
     }
 };
-
-
-extern FGControls controls;
 
 
 #endif // _CONTROLS_HXX

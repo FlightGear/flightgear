@@ -207,10 +207,10 @@ void FGAutopilot::MakeTargetWPStr( double distance ) {
 
 
 void FGAutopilot::update_old_control_values() {
-    old_aileron = controls.get_aileron();
-    old_elevator = controls.get_elevator();
-    old_elevator_trim = controls.get_elevator_trim();
-    old_rudder = controls.get_rudder();
+    old_aileron = globals->get_controls()->get_aileron();
+    old_elevator = globals->get_controls()->get_elevator();
+    old_elevator_trim = globals->get_controls()->get_elevator_trim();
+    old_rudder = globals->get_controls()->get_rudder();
 }
 
 
@@ -514,8 +514,8 @@ int FGAutopilot::run() {
 	    double AileronSet = -turn / 2.0;
 	    if ( AileronSet < -1.0 ) { AileronSet = -1.0; }
 	    if ( AileronSet >  1.0 ) { AileronSet =  1.0; }
-	    controls.set_aileron( AileronSet );
-	    controls.set_rudder( AileronSet / 4.0 );
+	    globals->get_controls()->set_aileron( AileronSet );
+	    globals->get_controls()->set_rudder( AileronSet / 4.0 );
 	} else {
 	    // steer towards the target heading
 
@@ -580,8 +580,8 @@ int FGAutopilot::run() {
 						MaxAileron );
 	    }
 
-	    controls.set_aileron( AileronSet );
-	    controls.set_rudder( AileronSet / 4.0 );
+	    globals->get_controls()->set_aileron( AileronSet );
+	    globals->get_controls()->set_rudder( AileronSet / 4.0 );
 	    // controls.set_rudder( 0.0 );
 	}
     }
@@ -698,7 +698,7 @@ int FGAutopilot::run() {
 	    total_adj = -1.0;
 	}
 
-	controls.set_elevator( total_adj );
+	globals->get_controls()->set_elevator( total_adj );
     }
 
     // auto throttle
@@ -737,7 +737,8 @@ int FGAutopilot::run() {
 	    total_adj = 0.0;
 	}
 
-	controls.set_throttle( FGControls::ALL_ENGINES, total_adj );
+	globals->get_controls()->set_throttle( FGControls::ALL_ENGINES,
+					       total_adj );
     }
 
 #ifdef THIS_CODE_IS_NOT_USED
@@ -769,10 +770,10 @@ int FGAutopilot::run() {
 
     // stash this runs control settings
     //	update_old_control_values();
-    old_aileron = controls.get_aileron();
-    old_elevator = controls.get_elevator();
-    old_elevator_trim = controls.get_elevator_trim();
-    old_rudder = controls.get_rudder();
+    old_aileron = globals->get_controls()->get_aileron();
+    old_elevator = globals->get_controls()->get_elevator();
+    old_elevator_trim = globals->get_controls()->get_elevator_trim();
+    old_rudder = globals->get_controls()->get_rudder();
 
     // for cross track error
     old_lat = lat;

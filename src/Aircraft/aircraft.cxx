@@ -26,6 +26,8 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 
+#include <Main/globals.hxx>
+
 #include "aircraft.hxx"
 
 // This is a record containing all the info for the aircraft currently
@@ -38,7 +40,7 @@ void fgAircraftInit( void ) {
     SG_LOG( SG_AIRCRAFT, SG_INFO, "Initializing Aircraft structure" );
 
     current_aircraft.fdm_state   = cur_fdm_state;
-    current_aircraft.controls = &controls;
+    current_aircraft.controls = globals->get_controls();
 }
 
 
@@ -60,10 +62,10 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
     SG_LOG( SG_FLIGHT, SG_DEBUG,
 	    "Kts = " << f->get_V_equiv_kts() 
-	    << "  Elev = " << controls.get_elevator() 
-	    << "  Aileron = " << controls.get_aileron() 
-	    << "  Rudder = " << controls.get_rudder() 
-	    << "  Power = " << controls.get_throttle( 0 ) );
+	    << "  Elev = " << globals->get_controls()->get_elevator() 
+	    << "  Aileron = " << globals->get_controls()->get_aileron() 
+	    << "  Rudder = " << globals->get_controls()->get_rudder() 
+	    << "  Power = " << globals->get_controls()->get_throttle( 0 ) );
 }
 
 

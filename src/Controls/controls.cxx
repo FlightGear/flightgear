@@ -27,9 +27,6 @@
 #include <Main/fg_props.hxx>
 
 
-FGControls controls;
-
-
 // Constructor
 FGControls::FGControls() :
     aileron( 0.0 ),

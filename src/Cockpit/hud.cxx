@@ -52,6 +52,7 @@
 #include <GUI/gui.h>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/viewmgr.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif

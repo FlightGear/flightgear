@@ -57,6 +57,7 @@ bool global_fullscreen = true;
 #include "fg_init.hxx"
 #include "fg_props.hxx"
 #include "options.hxx"
+#include "viewmgr.hxx"
 
 SG_USING_STD(string);
 SG_USING_NAMESPACE(std);

@@ -108,6 +108,7 @@
 #include "fg_props.hxx"
 #include "options.hxx"
 #include "globals.hxx"
+#include "viewmgr.hxx"
 
 #if defined(FX) && defined(XMESA)
 #include <GL/xmesa.h>
@@ -810,8 +811,8 @@ bool fgInitSubsystems( void ) {
     // Initialize the controls subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    controls.init();
-    controls.bind();
+    globals->get_controls()->init();
+    globals->get_controls()->bind();
 
 
     ////////////////////////////////////////////////////////////////////
@@ -885,7 +886,7 @@ void fgReInitSubsystems( void )
 
     cur_fdm_state->init();
 
-    controls.reset_all();
+    globals->get_controls()->reset_all();
     current_autopilot->reset();
 
     fgUpdateSunPos();
