@@ -7,9 +7,9 @@ libAirports_a_SOURCES = \
 	simple.cxx simple.hxx
 
 gensimple_SOURCES = gensimple.cxx
-gensimple_LDADD = libAirports.a -lsgdebug -lsgmisc -lmk4 -lz
+gensimple_LDADD = libAirports.a -lsgdebug -lsgmisc -lsgxml -lmk4 -lz
 
 genrunways_SOURCES = genrunways.cxx
-genrunways_LDADD = libAirports.a -lsgdebug -lsgmisc -lmk4 -lz
+genrunways_LDADD = libAirports.a -lsgdebug -lsgmisc -lsgxml -lmk4 -lz
 
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
