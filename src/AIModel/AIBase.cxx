@@ -41,6 +41,7 @@
 
 
 #include "AIBase.hxx"
+#include "AIManager.hxx"
 
 FGAIBase *FGAIBase::_self = NULL;
 
@@ -51,13 +52,18 @@ FGAIBase::FGAIBase() {
     bearing = elevation = range = rdot = 0.0;
     x_shift = y_shift = rotation = 0.0;
     invisible = true;
+    no_roll = true;
     model_path = "";
+    model = 0;
     _otype = otNull;
+    index = 0;
 }
 
 FGAIBase::~FGAIBase() {
     globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
     unbind();
+    SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
+    root->removeChild(_type_str.c_str(), index);
     _self = NULL;
 }
 
@@ -68,7 +74,11 @@ void FGAIBase::update(double dt) {
 void FGAIBase::Transform() {
     if (!invisible) {
       aip.setPosition(pos.lon(), pos.lat(), pos.elev() * SG_METER_TO_FEET);
-      aip.setOrientation(roll, pitch, hdg);
+      if (no_roll) {
+         aip.setOrientation(0.0, pitch, hdg);
+      } else {
+         aip.setOrientation(roll, pitch, hdg);
+      }
       aip.update( globals->get_scenery()->get_center() );    
     }
 }
@@ -77,12 +87,8 @@ void FGAIBase::Transform() {
 bool FGAIBase::init() {
 
    SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
-   vector<SGPropertyNode_ptr> p_vec = root->getChildren(_type_str);
-   unsigned num = p_vec.size();
-   p_vec.clear();
-
-   props = root->getNode(_type_str, num, true);
-   ssgBranch *model = 0;
+   index = manager->getNum(_otype) - 1;
+   props = root->getNode(_type_str.c_str(), index, true);
    if (model_path != "") {
       model = sgLoad3DModel( globals->get_fg_root(),
 	                     model_path.c_str(),
@@ -135,7 +141,6 @@ void FGAIBase::bind() {
    props->tie("radar/bearing-deg",   SGRawValueFunctions<double>(FGAIBase::_getBearing));
    props->tie("radar/elevation-deg", SGRawValueFunctions<double>(FGAIBase::_getElevation));
    props->tie("radar/range-nm",      SGRawValueFunctions<double>(FGAIBase::_getRange));
-//   props->tie("radar/rdot-kts",      SGRawValueFunctions<double>(FGAIBase::_getRdot));
    props->tie("radar/h-offset", SGRawValueFunctions<double>(FGAIBase::_getH_offset));
    props->tie("radar/v-offset", SGRawValueFunctions<double>(FGAIBase::_getV_offset)); 
    props->tie("radar/x-shift", SGRawValueFunctions<double>(FGAIBase::_getX_shift));
@@ -164,13 +169,12 @@ void FGAIBase::unbind() {
     props->untie("radar/bearing-deg");
     props->untie("radar/elevation-deg");
     props->untie("radar/range-nm");
-//    props->untie("radar/rdot-kts");
     props->untie("radar/h-offset");
     props->untie("radar/v-offset");
     props->untie("radar/x-shift");
     props->untie("radar/y-shift");
     props->untie("radar/rotation");
 
-    props->untie("controls/controls/lighting/nav-lights");
+    props->untie("controls/lighting/nav-lights");
 }
 

@@ -393,9 +393,23 @@ void FGAIManager::processScenario( string filename ) {
     FGAIScenario::entry* en = s->getNextEntry();
     if (en) {
       FGAIFlightPlan* f = new FGAIFlightPlan( en->flightplan );
-      createAircraft("jet_transport", "Aircraft/737/Models/boeing733.xml", f);
+      if (en->aitype == "aircraft"){
+        createAircraft( en->aircraft_class, en->model_path, f);
+      }
     }
   }
   delete s;
+}
+
+int FGAIManager::getNum( FGAIBase::object_type ot ) {
+  ai_list_iterator itr = ai_list.begin();
+  int count = 0;
+  while(itr != ai_list.end()) {
+      if ((*itr)->getType() == ot) {
+         ++count;
+      }
+      ++itr;
+  }  
+  return count;
 }
 

@@ -132,7 +132,13 @@ void FGAIAircraft::Run(double dt) {
    double speed_diff = tgt_speed - speed;
    if (fabs(speed_diff) > 0.2) {
      if (speed_diff > 0.0) speed += performance->accel * dt;
-     if (speed_diff < 0.0) speed -= performance->decel * dt;
+     if (speed_diff < 0.0) {
+        if (!no_roll) {
+           speed -= performance->decel * dt * 3;
+        } else {
+           speed -= performance->decel * dt;
+        }
+     }
    } 
    
    // convert speed to degrees per second
@@ -202,25 +208,32 @@ void FGAIAircraft::Run(double dt) {
    }
 
    if (alt_lock && !use_perf_vs) {
-     double max_vs = 2*(tgt_altitude - altitude);
+     double max_vs = 4*(tgt_altitude - altitude);
+     double min_vs = 100;
+     if (tgt_altitude < altitude) min_vs = -100.0;
      if ((fabs(tgt_altitude - altitude) < 1500.0) && 
          (fabs(max_vs) < fabs(tgt_vs))) tgt_vs = max_vs;
+     if (fabs(tgt_vs) < fabs(min_vs)) tgt_vs = min_vs;
    }   
 
    // adjust vertical speed
    double vs_diff = tgt_vs - vs;
    if (fabs(vs_diff) > 10.0) {
      if (vs_diff > 0.0) {
-       vs += 400.0 * dt;
+       vs += 900.0 * dt;
        if (vs > tgt_vs) vs = tgt_vs;
      } else {
-       vs -= 300.0 * dt;
+       vs -= 400.0 * dt;
        if (vs < tgt_vs) vs = tgt_vs;
      }
    }   
    
    // match pitch angle to vertical speed
-   pitch = vs * 0.005;
+   if (vs > 0){
+     pitch = vs * 0.005;
+   } else {
+     pitch = vs * 0.002;
+   }
 
    //###########################//
    // do calculations for radar //
@@ -357,7 +370,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt ) {
     setHeading(fp->getBearing(prev->latitude, prev->longitude, curr));
     if (next) fp->setLeadDistance(speed, hdg, curr, next);
     
-    if (curr->crossat > -1000.0) { //start descent/climb now
+    if (curr->crossat > -1000.0) { //use a calculated descent/climb rate
         use_perf_vs = false;
         tgt_vs = (curr->crossat - prev->altitude)/
                  (fp->getDistanceToGo(pos.lat(), pos.lon(), curr)/
@@ -368,6 +381,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt ) {
         tgt_altitude = prev->altitude;
     }
     alt_lock = hdg_lock = true;
+    no_roll = prev->on_ground;
     //cout << "First waypoint:  " << prev->name << endl;
     //cout << "  Target speed:    " << tgt_speed << endl;
     //cout << "  Target altitude: " << tgt_altitude << endl;
@@ -410,6 +424,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt ) {
       }
       tgt_speed = prev->speed;
       hdg_lock = alt_lock = true;
+      no_roll = prev->on_ground;
       //cout << "Crossing waypoint: " << prev->name << endl;
       //cout << "  Target speed:    " << tgt_speed << endl;
       //cout << "  Target altitude: " << tgt_altitude << endl;

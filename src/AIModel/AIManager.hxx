@@ -121,6 +121,7 @@ public:
     inline double get_user_speed() {return user_speed; }
 
     void processScenario( string filename );
+    int getNum( FGAIBase::object_type ot);
 
 private:
 

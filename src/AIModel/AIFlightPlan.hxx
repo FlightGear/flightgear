@@ -40,6 +40,7 @@ public:
    bool finished;
    bool gear_down;
    bool flaps_down;
+   bool on_ground;
   } waypoint;
 
    FGAIFlightPlan(string filename);

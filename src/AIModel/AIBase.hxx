@@ -97,18 +97,24 @@ protected:
 
 
     string model_path;	   //Path to the 3D model
+    ssgBranch * model;     //The 3D model object
     SGModelPlacement aip;
     bool delete_me;
     int id;
     bool invisible;
+    bool no_roll;
 
     void Transform();
 
     static FGAIBase *_self;
-    const char *_type_str;
+    string _type_str;
     object_type _otype;
+    int index;
 
 public:
+
+    object_type getType();
+    bool isa( object_type otype );
 
     static double _getVS_fps();
     static void _setVS_fps( double _vs );
@@ -133,7 +139,6 @@ public:
     static double _getRotation();
 
     static bool _isNight();
-    bool isa( object_type otype );
 };
 
 
@@ -204,6 +209,8 @@ inline bool FGAIBase::_isNight() {
 
 inline void FGAIBase::setID( int ID ) { id = ID; }
 inline int  FGAIBase::getID() { return id; }
+
+inline FGAIBase::object_type FGAIBase::getType() { return _otype; }
 
 #endif  // _FG_AIBASE_HXX
 

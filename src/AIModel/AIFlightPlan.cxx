@@ -59,6 +59,7 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
      wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
      wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
      wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
+     wpt->on_ground = wpt_node->getBoolValue("on-ground", false);
 
      if (wpt->name == "END") wpt->finished = true;
      else wpt->finished = false;
