@@ -5,6 +5,7 @@ SUBDIRS = \
 	AssemTris \
 	Clipper \
 	DEM \
+	Polygon \
 	Dem2node \
 	DemInfo \
 	DemRaw2ascii \
