@@ -42,8 +42,15 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
-//#include <Astro/orbits.hxx>
-//#include <Astro/sun.hxx>
+#ifdef  WIN32
+#  include <windows.h>
+#  ifdef __CYGWIN32__
+#    define NEAR /* */
+#    define FAR  /* */
+#  endif
+#  include <mmsystem.h>
+#endif
+
 #include <Astro/sky.hxx>
 #include <Astro/solarsystem.hxx>
 #include <Debug/fg_debug.h>
@@ -92,7 +99,12 @@ void fgTimeInit(fgTIME *t) {
 
 // Portability wrap to get current time.
 void timestamp(fg_timestamp *timestamp) {
-#if defined( HAVE_GETTIMEOFDAY )
+#if defined( WIN32 )
+    unsigned int t;
+    t = timeGetTime();
+    timestamp->seconds = 0;
+    timestamp->millis =  t;
+#elif defined( HAVE_GETTIMEOFDAY )
     struct timeval current;
     struct timezone tz;
     // fg_timestamp currtime;
@@ -117,16 +129,25 @@ void timestamp(fg_timestamp *timestamp) {
 
 // Return duration in millis from first to last
 long timediff(fg_timestamp *first, fg_timestamp *last) {
-    return 1000 * (last->seconds - first->seconds) + 
-	(last->millis - first->millis);
+#if defined( WIN32 )
+    return (last->millis - first->millis);
+#else
+    return ( 1000 * (last->seconds - first->seconds) + 
+	     (last->millis - first->millis) );
+#endif
 }
 
 
 // Return new timestamp given a time stamp and an interval to add in
 void timesum(fg_timestamp *res, fg_timestamp *start, long millis) {
+#ifdef WIN32
+    res->seconds = 0;
+    res->millis = ( start->millis + millis );
+#else
     res->seconds = start->seconds + 
 	( start->millis + millis ) / 1000;
     res->millis = ( start->millis + millis ) % 1000;
+#endif
 }
 
 
@@ -427,6 +448,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.18  1998/10/02 21:36:09  curt
+// Fixes to try to break through the win95/98 18.3 fps barrier.
+//
 // Revision 1.17  1998/09/15 04:27:49  curt
 // Changes for new astro code.
 //
