@@ -35,16 +35,19 @@ static int nav1_play_count = 0;
 static time_t nav1_last_time = 0;
 
 
+FGRadioStack *current_radiostack;
+
+
 /**
  * Boy, this is ugly!  Make the VOR range vary by altitude difference.
  */
-static inline double
-kludgeRange (double stationElev, double aircraftElev, double nominalRange)
+static double kludgeRange ( double stationElev, double aircraftElev,
+			    double nominalRange)
 {
 				// Assume that the nominal range (usually
 				// 50nm) applies at a 5,000 ft difference.
 				// Just a wild guess!
-  double factor = ((aircraftElev*METER_TO_FEET) - stationElev) / 1000.0;
+  double factor = ((aircraftElev*METER_TO_FEET) - stationElev) / 5000.0;
   double range = fabs(nominalRange * factor);
 
 				// Clamp the range to keep it sane; for
@@ -60,7 +63,63 @@ kludgeRange (double stationElev, double aircraftElev, double nominalRange)
 }
 
 
-FGRadioStack *current_radiostack;
+// model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
+static double adjustNavRange( double stationElev, double aircraftElev,
+			      double nominalRange )
+{
+    // assumptions we model the standard service volume, plus
+    // ... rather than specifying a cylinder, we model a cone that
+    // contains the cylinder.  Then we put an upside down cone on top
+    // to model diminishing returns at too-high altitudes.
+
+    // altitude difference
+    double alt = ( aircraftElev - stationElev ) * METER_TO_FEET;
+
+    if ( nominalRange < 25.0 + FG_EPSILON ) {
+	// Standard Terminal Service Volume
+	if ( alt <= 1000.0 ) {
+	    return nominalRange;
+	} else if ( alt <= 12000.0 ) {
+	    return nominalRange + nominalRange * ( alt - 1000.0 ) / 11000.0;
+	} else if ( alt <= 18000.0 ) {
+	    return nominalRange * 2 * ( 1 - ( alt - 12000.0 ) / 6000.0 );
+	} else {
+	    return 0.0;
+	}
+    } else if ( nominalRange < 50.0 + FG_EPSILON ) {
+	// Standard Low Altitude Service Volume
+	if ( alt <= 1000.0 ) {
+	    return nominalRange;
+	} else if ( alt <= 18000.0 ) {
+	    return nominalRange + nominalRange * ( alt - 1000.0 ) / 17000.0;
+	} else if ( alt <= 18000.0 ) {
+	    return nominalRange * 2 * ( 1 - ( alt - 18000.0 ) / 9000.0 );
+	} else {
+	    return 0.0;
+	}
+    } else {
+	// Standard High Altitude Service Volume
+	double lc = nominalRange * 0.31;
+	double mc = nominalRange * 0.77;
+	double hc = nominalRange;
+
+	if ( alt <= 1000.0 ) {
+	    return lc;
+	} else if ( alt <= 14500.0 ) {
+	    return lc + (mc-lc) * ( alt - 1000.0 ) / 13500.0;
+	} else if ( alt <= 18000.0 ) {
+	    return mc + (hc-mc) * ( alt - 14500.0 ) / 3500.0;
+	} else if ( alt <= 45000.0 ) {
+	    return hc + hc * ( 1 - fabs(alt - 31500.0) / 13500.0 );
+	} else if ( alt <= 60000.0 ) {
+	    return mc + (hc-mc) * (60000.0 - alt) / 15000.0;
+	} else if ( alt <= 75000.0 ) {
+	    return mc * ( 75000.0 - alt ) / 15000.0;
+	} else {
+	    return 0.0;
+	}
+    }
+}
 
 
 // periodic radio station search wrapper
