@@ -170,8 +170,28 @@ void fgSerialInit() {
 }
 
 
+char calc_nmea_cksum(char *sentence) {
+    unsigned char sum = 0;
+    int i, len;
+
+    // printf("%s\n", sentence);
+
+    len = strlen(sentence);
+    sum = sentence[0];
+    for ( i = 1; i < len; i++ ) {
+        // printf("%c", sentence[i]);
+        sum ^= sentence[i];
+    }
+    // printf("\n");
+
+    // printf("sum = %02x\n", sum);
+    return sum;
+}
+
+
 static void send_nmea_out( fgSERIAL& s ) {
-    char rmc[256], gga[256], rmz[256];
+    char rmc[256], gga[256];
+    char rmc_sum[10], gga_sum[10];
     char dir;
     int deg;
     double min;
@@ -226,28 +246,36 @@ static void send_nmea_out( fgSERIAL& s ) {
 	     t->gmt->tm_mday, t->gmt->tm_mon+1, t->gmt->tm_year );
 
     // $GPRMC,HHMMSS,A,DDMM.MMM,N,DDDMM.MMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
-    sprintf( rmc, "$GPRMC,%s,A,%s,%s,%s,%s,%s,000.0,E*00\r\n",
+    sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,0.000,E",
 	     utc, lat, lon, speed, heading, date );
+    sprintf( rmc_sum, "%02X", 0 /*calc_nmea_cksum(rmc)*/ );
 
-    sprintf( gga, "$GPGGA,%s,%s,%s,1,04,0.0,%s,M,00.0,M,,*00\r\n",
+    sprintf( gga, "GPGGA,%s,%s,%s,1,,,%s,M,,,,",
 	     utc, lat, lon, altitude_m );
+    sprintf( gga_sum, "%02X", 0 /*calc_nmea_cksum(gga)*/ );
 
-    // sprintf( rmz, "$PGRMZ,%s,f,3*00\r\n", altitude_ft );
 
     FG_LOG( FG_SERIAL, FG_DEBUG, rmc );
     FG_LOG( FG_SERIAL, FG_DEBUG, gga );
-    // FG_LOG( FG_SERIAL, FG_DEBUG, rmz );
-
 
     // one full frame every 2 seconds according to the standard
     if ( cur_time_params.cur_time % 2 == 0 ) {
 	// rmc on even seconds
-	s.write_port(rmc);
+	string rmc_sentence = "$";
+	rmc_sentence += rmc;
+	rmc_sentence += "*";
+	rmc_sentence += rmc_sum;
+	rmc_sentence += "\r\n";
+	s.write_port(rmc_sentence);
     } else {
 	// gga on odd seconds
-	s.write_port(gga);
+	string gga_sentence = "$";
+	gga_sentence += gga;
+	gga_sentence += "*";
+	gga_sentence += gga_sum;
+	gga_sentence += "\n";
+	// s.write_port(gga_sentence);
     }
-    // s.write_port(rmz);
 }
 
 static void read_nmea_in( fgSERIAL& s ) {
@@ -387,6 +415,9 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.3  1998/11/23 20:51:51  curt
+// Tweaking serial stuff.
+//
 // Revision 1.2  1998/11/19 13:53:25  curt
 // Added a "Garman" mode.
 //
