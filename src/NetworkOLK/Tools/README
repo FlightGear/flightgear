@@ -1,7 +1,7 @@
 Welcome to FlightGear Deamon fgd
 --------------------------------
 Here the first Tools to play with FlightGear Deamon.
-This is yet alpha and the sources remain to be tidied up,
+This is yet alpha moving to beta and the sources remain to be tidied up,
 and to get documented.
 
 
@@ -242,6 +242,8 @@ History:
                  Nov 29 1999 -> Implementing scenario functions like virtual
                                 Pilots
                  Nov 30 1999 -> ???
+  v0.1-beta    : Jan 16 2000 -> Several libc5, glibc-2.0 and glibc-2.1
+                                issues cleaned up
 
 
 Future Plans:
@@ -284,4 +286,4 @@ You can do whatever you want with this software, even enhance it.
 
 Send comments/flames/BEER/whatever to delise@mail.isis.de
 
-Oliver Delise Nov/08/99
+Oliver Delise Jan/16/00

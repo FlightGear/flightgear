@@ -2,10 +2,9 @@
 /* FGD.C by Oliver Delise                                    */
 /* Contact info:                                             */
 /* e-mail: delise@mail.isis.de                               */
-/* www: http://www.isis.de/members/~odelise/progs/mmx-emu/   */
-/* ftp: http://www.isis.de/members/~odelise/progs/flightgear */
+/* www: http://www.isis.de/members/odelise/progs/flightgear  */
 /*                                                           */
-/* Version 0.1-alpha                                         */
+/* Version 0.1-beta                                          */
 /* The author of this program offers no waranty at all       */
 /* about the correct execution of this software material.    */
 /* Furthermore, the author can NOT be held responsible for   */
@@ -28,6 +27,8 @@
 /*                                                           */
 /*    History: v0.1pre-alpha: May 25 1999 -> First release   */
 /*             v0.1-alpha   : Nov 08 1999                    */
+/*             v0.1-beta    : Jan 16 2000                    */
+/*                            libc5, glibc-2.0, 2.1 cleanups */
 /*************************************************************/
 
 
@@ -41,7 +42,7 @@
 #include <fcntl.h>
 #include <sys/utsname.h>
 
-#define printf //
+//#define printf //
 
 /* Net-stuff */
 fd_set rset, allset;
@@ -217,7 +218,7 @@ int fgd_ele_len;
 struct sockaddr_in address;
 struct sockaddr_in my_address;
 int result;
-extern char *sys_errlist[];
+
 extern int errno;
 int current_port = 0; 
 u_short base_port = 0;
@@ -301,6 +302,7 @@ struct { char *ip, *lon, *lat, *alt;} fg_id;
     if (1 == 1) {
     if ( bind(sock, (struct sockaddr *)&address, sizeof(address)) == -1) {
          printf(" Aiiiieeehh...ADRESS ALSO IN USE...\7hmmm...please check another port\n");
+         printf(" Just wait a few seconds or do a netstat to see the port status.\n");
          exit(-1);
     }
     listen(sock, 5);
@@ -449,10 +451,12 @@ for (;;){
                     }
                     else strcpy( fgd_client.adr, "UNKNOWN");
       /* writing answer back to client */
-                sprintf( (char*) buff, "%s %s", "FGD", fgd_client.adr);
-                buff[3] = strlen(fgd_client.adr);
+                sprintf( (char*) buff, "%sLH%s ", "FGD", fgd_client.adr);
+                buff[3] = strlen(fgd_client.adr) + 1;
+                buff[4] = 0;
+                buff[ buff[3] + 4] = 0;
                 printf("    IP : %s\n", fgd_client.adr);
-                write( my_sock, &buff, buff[3]+4);
+                write( my_sock, &buff, buff[3]+5);
 //      		close(my_sock);
       		break;
       case 17:	printf(" fgd   : Get Mat4 DATA from client\n");
@@ -500,7 +504,7 @@ for (;;){
                 sprintf( (char*) buff, "%s %s", "FGD", fgd_client.adr);
                 buff[3] = 0;
                 fgd_cnt = 0;
-                fgd_curpos = 5;
+                fgd_curpos = 6;
       		test = head->next;
       		while (test != tail) { 
       		   printf("    IP : %-16s  Callsign : %-16s\n", test->ipadr, test->callsign);
@@ -533,7 +537,8 @@ for (;;){
       		if (fgd_cnt == 0) fgd_curpos --;
       		printf(" ele_len %d  curpos %d\n", fgd_ele_len, fgd_curpos);
       		buff[3] = fgd_curpos;
-      		buff[4] = fgd_cnt;
+      		buff[4] = fgd_curpos / 256;
+      		buff[5] = fgd_cnt;
       		write( my_sock, &buff, fgd_curpos);
 //      		close(my_sock);
       		break;
@@ -596,10 +601,19 @@ for (;;){
                     }
                     else strcpy( fgd_client.adr, "UNKNOWN");
       /* writing answer back to client */
-                sprintf( (char*) buff, "%s %s", "FGD", fgd_client.adr);
-                buff[3] = strlen(fgd_client.adr);
+                sprintf( (char*) buff, "FGDLH%s", fgd_client.adr);
+                buff[3] = strlen(fgd_client.adr) + 1;
+                buff[4] = buff[buff[3]+5] = 0;
                 printf("    IP : %s\n", fgd_client.adr);
-                write( my_sock, &buff, buff[3]+4);
+                write( my_sock, &buff, buff[3]+5);                    
+//  Just leaving the old stuff in, to correct it for FGFS later...
+//  I'm sick of this f$%&ing libc5/glibc2.0/2.1 quirks
+//  Oliver...very angry...
+//      /* writing answer back to client */
+//                sprintf( (char*) buff, "%s %s", "FGD", fgd_client.adr);
+//                buff[3] = strlen(fgd_client.adr);
+//                printf("    IP : %s\n", fgd_client.adr);
+//                write( my_sock, &buff, buff[3]+4);
 //                close(my_sock);
       		break;  
       case 9:	printf(" fgd   : Shutdown\n");

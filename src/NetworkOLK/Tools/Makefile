@@ -2,7 +2,7 @@ CPPFLAGS	=
 CFLAGS		=
 CC		= gcc
 RM		= rm
-PROGS		= fgd fgd_scan fgd_com fgd_mcp fgd_verbose
+PROGS		= fgd fgd_scan fgd_com fgd_mcp fgd_silent
 BINDIR		= /usr/local/bin
 
 all: $(PROGS)
@@ -10,7 +10,7 @@ all: $(PROGS)
 fgd:      fgd.c
 	  $(CC) -o $@ $^
 
-fgd_verbose: fgd_verbose.c
+fgd_silent: fgd_silent.c
 	  $(CC) -o $@ $^
 
 fgd_scan: fgd_scan.c

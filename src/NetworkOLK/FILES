@@ -3,7 +3,9 @@ README       - containing Network info
 Makefile.am  -  
 net_hud.cxx  - display found player's info in bottom/left part of HUD
 network.cxx  - initialization of netcode and vars
-network.h    - declaration of used vars and functions for libnetwork.a
-               should be included from other files using libnetwork
+fgd.h        - 
+network.h    - declaration of used vars and functions for libNetworkOLK.a
+               should be included from other files using libNetworkOLK
 net_send.cxx - communication with deamon
-Tools        - directory containing network tools and toys
+Tools        - directory containing the deamon, tools and toys necessairy
+               for testing the network with and without FGFS.

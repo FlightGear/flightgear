@@ -1,4 +1,4 @@
-Please check the presence of the following header files on your system
+These includes must be available on any Un*x, Windoze and Mac Donald's
 
 #include <stdio.h>
 #include <sys/socket.h>
@@ -9,3 +9,10 @@ Please check the presence of the following header files on your system
 #include <sys/time.h>
 #include <fcntl.h>
 #include <sys/utsname.h>
+
+Please look also into *all* your systemwide "socket.h" and the header
+files (mainly in /usr/include/sys or krnl-src) included by them for 
+declarations like "MSG_PEEK" etc.
+In case of missing MSG_foo declarations please contact me:
+
+Oliver Delise  <delise@mail.isis.de>

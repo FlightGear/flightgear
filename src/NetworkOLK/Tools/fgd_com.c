@@ -1,34 +1,35 @@
-/***********************************************************/
-/* FGD_COM.C by Oliver Delise                              */
-/* Contact info:                                           */
-/* e-mail: delise@mail-isis.de                             */
-/* www: http://www.online-club.de/~olk/progs/mmx-emu/      */
-/* ftp: http://www.online-club.de/~olk/progs/flightgear    */ 
-/*                                                         */
-/* Version 0.1-alpha                                       */
-/* The author of this program offers no waranty at all     */
-/* about the correct execution of this software material.  */
-/* Furthermore, the author can NOT be held responsible for */
-/* any physical or moral damage caused by the use of this  */
-/* software.                                               */
-/*                                                         */
-/* This is a standalone Tool to communicate with any       */
-/* FlightGear-Deamon.                                      */
-/* This is Open Source Software with many parts            */
-/* shamelessly stolen from others...                       */
-/*                                                         */
-/* -> This program will use a TCP port listening on a      */
-/*    remote or local host inside the range you give to it.*/
-/*    I offer no warranty over the accuracy though :)      */
-/*    There are 3 verbose modes: No info, service info, and*/
-/*    full info. No info is good of you only want the list */
-/*    of the ports, no more info. The best mode is Full    */
-/*    info, as you get error information,etc. The main     */
-/*    output is STDOUT, and ALL the errors go to STDERR.   */
-/*                                                         */
-/*    History: v0.1pre-alpha: May 25 1999 -> First release */
-/*             v0.1-alpha     Nov 08 1999                  */
-/***********************************************************/
+/*************************************************************/
+/* FGD_COM.C by Oliver Delise                                */
+/* Contact info:                                             */
+/* e-mail: delise@mail-isis.de                               */
+/* www: http://www.isis.de/members/odelise/progs/flightgear  */
+/*                                                           */
+/* Version 0.1-beta                                          */
+/* The author of this program offers no waranty at all       */
+/* about the correct execution of this software material.    */
+/* Furthermore, the author can NOT be held responsible for   */
+/* any physical or moral damage caused by the use of this    */
+/* software.                                                 */
+/*                                                           */
+/* This is a standalone Tool to communicate with any         */
+/* FlightGear-Deamon.                                        */
+/* This is Open Source Software with many parts              */
+/* shamelessly stolen from others...                         */
+/*                                                           */
+/* -> This program will use a TCP port listening on a        */
+/*    remote or local host inside the range you give to it.  */
+/*    I offer no warranty over the accuracy though :)        */
+/*    There are 3 verbose modes: No info, service info, and  */
+/*    full info. No info is good of you only want the list   */
+/*    of the ports, no more info. The best mode is Full      */
+/*    info, as you get error information,etc. The main       */
+/*    output is STDOUT, and ALL the errors go to STDERR.     */
+/*                                                           */
+/*    History: v0.1pre-alpha: May 25 1999 -> First release   */
+/*             v0.1-alpha     Nov 08 1999                    */
+/*             v0.1-beta      Jan 16 2000 -> libc5/glibc-2.0 */
+/*                            glibc2.1 cleanups              */
+/*************************************************************/
 
 #include <stdio.h>
 #include <sys/socket.h>
@@ -47,7 +48,6 @@ int my_sock;
 struct sockaddr_in address;
 struct sockaddr_in my_address;
 int result;
-extern char *sys_errlist[];
 extern int errno;
 int current_port = 0; 
 u_short base_port = 0;

@@ -1,11 +1,10 @@
 /*************************************************************/
-/* FGD_MCP.C by Oliver Delise                                */
+/* NET_SEND.CXX by Oliver Delise                             */
 /* Contact info:                                             */
 /* e-mail: delise@mail.isis.de                               */
-/* www: http://www.isis.de/members/~odelise/progs/mmx-emu/   */
-/* ftp: http://www.isis.de/members/~odelise/progs/flightgear */
+/* www: http://www.isis.de/members/odelise/progs/flightgear  */
 /*                                                           */
-/* Version 0.1-alpha                                         */
+/* Version 0.1-beta                                          */
 /* The author of this program offers no waranty at all       */
 /* about the correct execution of this software material.    */
 /* Furthermore, the author can NOT be held responsible for   */
@@ -28,6 +27,8 @@
 /*                                                           */
 /*    History: v0.1pre-alpha: May 25 1999 -> First release   */
 /*             v0.1-alpha     Nov 11 1999                    */
+/*             v0.1-beta      Jan 16 2000 -> libc5, glibc2.0 */
+/*                            glibc-2.1 issues fixed         */
 /*************************************************************/
 
 #include <stdio.h>
@@ -256,12 +257,12 @@ void fgd_init(void){
    } else if ((address.sin_addr.s_addr = inet_addr( fgd_host)) == INADDR_NONE) {
             fprintf(stderr,"   Could not get %s host entry !\n", fgd_host);
             printf(" NOT resolved !!!\n");
-            exit(1);
+            // exit(1);
           } else if (verbose == 2) printf(" address valid\n");
    
    if ((base_port > end_port) || ((short)base_port < 0)) { 
      fprintf(stderr,"Bad port range : start=%d end=%d !\n");
-     exit(1);
+   // exit(1);
    } else if (verbose == 2) {
             printf("     Port range: %d to %d\n",base_port,end_port);
             }
@@ -314,7 +315,8 @@ void fgd_send_com( char *FGD_com, char *FGFS_host) {
     if (sock == -1)
      {
 	fprintf(stderr, "Error assigning master socket: %s\n",sys_errlist[errno]);
-	exit(-1);
+        /* must check how severe this really is */
+	// exit(-1);
      } 
 
     address.sin_port = htons(current_port);
@@ -416,7 +418,8 @@ void fgd_send_com( char *FGD_com, char *FGFS_host) {
         } 
     }  else if (errno == 113) {
          fprintf(stderr,"No route to host !\n");
-         exit(1);
+         /* must check this */
+         // exit(1);
        } 
 /*     fprintf(stderr,"Error %d connecting socket %d to port %d: %s\n",
                 errno,sock,current_port,sys_errlist[errno]); */ 
@@ -473,10 +476,18 @@ void fgd_send_com( char *FGD_com, char *FGFS_host) {
                       case  5: printf("FGD: Receiving data from Host %s\n", FGFS_host);
                                read( sock, fgd_txt, buffp[3]);
                                fgd_txt[buffp[3]] = 0;
+/* This works...
+                               if (strcmp(fgd_txt, "UNKNOWN") == 0) {
+                                   printf("FGD: Host not in list, sorry...\n");
+                               }
+                               else printf("FGD: Data from Host %s received\n", fgd_txt);
+*/
+/* This has problem with glibc-2.1
                                if (strcmp(fgd_txt, "UNKNOWN") == -1) {
                                    if (verbose == 2) printf("FGD: Data from Host %s received\n", fgd_txt);
                                    }
                                    else if (verbose == 2) printf("FGD: Host not in list, sorry...\n");
+*/
                                break;
                       case 17: if (verbose == 2) printf("FGD: Receiving Mat4 data from Host %s\n", FGFS_host);
                                read( sock, fgd_txt, fgd_reply_len);
@@ -634,11 +645,18 @@ void fgd_send_com( char *FGD_com, char *FGFS_host) {
                                   test = test->next;
                                }
                                fgd_ppl = 0;
-/*
+/*  This does...
+                               if (strcmp(fgd_txt, "UNKNOWN") == 0) {
+                                   printf("FGD: Host not in list, sorry...\n");
+                               }
+                               else printf("FGD: Host %s unregistered\n", fgd_txt);
+*/
+/*  This does not work on glibc-2.1
                                if (strcmp(fgd_txt, "UNKNOWN") == -1) {
                                    printf("FGD: Host %s unregistered\n", fgd_txt);
                                    }
-                                   else printf("FGD: Host not in list, sorry...\n"); */
+                               else printf("FGD: Host not in list, sorry...\n"); 
+*/
                                break;                               
                       case  9: printf(" Shutdown FlightGear-Deamon %s .\n", fgd_name);
                                break;                               

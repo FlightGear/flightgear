@@ -2,7 +2,7 @@
 //
 // Written by Oliver Delise, started May 1999.
 //
-// Copyleft (C) 1999  Oliver Delise - delise@rp-plus.de
+// Copyleft (C) 1999  Oliver Delise - delise@mail.isis.de
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
