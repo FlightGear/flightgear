@@ -254,7 +254,7 @@ void FGKR_87::update( double dt ) {
     // Radio
     ////////////////////////////////////////////////////////////////////////
 
-    if ( on_off_vol_btn >= 0.01 ) {
+    if ( on_off_vol_btn >= 0.05 ) {
         // buttons
         if ( adf_btn == 0 ) {
             ant_mode = 1;

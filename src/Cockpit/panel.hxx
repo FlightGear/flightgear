@@ -197,6 +197,7 @@ private:
   int _y_offset;
   int _view_height;
   float _jitter;
+  bool _flipx;
 
   const SGPropertyNode * _xsize_node;
   const SGPropertyNode * _ysize_node;

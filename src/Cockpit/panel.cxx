@@ -272,6 +272,7 @@ FGPanel::update (double dt)
     _x_offset = fgGetInt("/sim/panel/x-offset");
     _y_offset = fgGetInt("/sim/panel/y-offset");
     _jitter = fgGetFloat("/sim/panel/jitter");
+    _flipx = fgGetBool("/sim/panel/flip-x");
 
 				// Do nothing if the panel isn't visible.
     if ( !fgPanelVisible() ) {
@@ -330,8 +331,11 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
-  // gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
+  if ( _flipx ) {
+    gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
+  } else {
+    gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
+  }
   
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
