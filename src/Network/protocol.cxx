@@ -23,6 +23,7 @@
 
 #include <Debug/logstream.hxx>
 
+#include "iochannel.hxx"
 #include "protocol.hxx"
 
 
@@ -38,11 +39,24 @@ FGProtocol::~FGProtocol() {
 }
 
 
-// dummy open routine
+// standard I/O channel open routine
 bool FGProtocol::open() {
-    FG_LOG( FG_IO, FG_INFO, "dummy FGProtocol::open()" );
-    enabled = false;
-    return false;
+    if ( is_enabled() ) {
+	FG_LOG( FG_IO, FG_ALERT, "This shouldn't happen, but the channel " 
+		<< "is already in use, ignoring" );
+	return false;
+    }
+
+    FGIOChannel *io = get_io_channel();
+
+    if ( ! io->open( get_direction() ) ) {
+	FG_LOG( FG_IO, FG_ALERT, "Error opening channel communication layer." );
+	return false;
+    }
+
+    set_enabled( true );
+
+    return true;
 }
 
 
@@ -60,10 +74,17 @@ bool FGProtocol::close() {
 }
 
 
-// dummy close routine
+// standard I/O channel close routine
 bool FGProtocol::gen_message() {
-    FG_LOG( FG_IO, FG_INFO, "dummy FGProtocol::gen_message()" );
-    return false;
+    FGIOChannel *io = get_io_channel();
+
+    set_enabled( false );
+
+    if ( ! io->close() ) {
+	return false;
+    }
+
+    return true;
 }
 
 

@@ -7,6 +7,8 @@ libNetwork_a_SOURCES = \
 	protocol.cxx protocol.hxx \
 	garmin.cxx garmin.hxx \
 	nmea.cxx nmea.hxx \
+	pve.cxx pve.hxx \
+	rul.cxx rul.hxx \
 	net_hud.cxx network.cxx network.h
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Simulator
