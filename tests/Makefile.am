@@ -1,5 +1,6 @@
-bin_PROGRAMS = est-epsilon gl-info test-gethostname test-mktime test-text \
-	test-up
+bin_PROGRAMS = est-epsilon gl-info
+
+noinst_PROGRAMS = test-gethostname test-mktime test-text test-up
 
 est_epsilon_SOURCES = est-epsilon.c
 est_epsilon_LDADD = $(base_LIBS)
