@@ -465,7 +465,7 @@ echo > confdefs.h
 
 # A filename unique to this package, relative to the directory that
 # configure is in, which we can look for to find out if srcdir is correct.
-ac_unique_file=Src/Aircraft/aircraft.c
+ac_unique_file=Simulator/Aircraft/aircraft.c
 
 # Find the source files, if location was not specified.
 if test -z "$srcdir"; then
@@ -1316,7 +1316,7 @@ echo "configure:1316: checking for ld used by GCC" >&5
   ac_prog=`($CC -print-prog-name=ld) 2>&5`
   case "$ac_prog" in
   # Accept absolute paths.
-  /* | [A-Za-z]:\\*)
+  /* | A-Za-z:\\*)
     test -z "$LD" && LD="$ac_prog"
     ;;
   "")
@@ -3877,26 +3877,24 @@ ac_given_INSTALL="$INSTALL"
 
 trap 'rm -fr `echo "\
 	Makefile \
-	Docs/Makefile \
-	Scenery/Makefile \
-	Src/Aircraft/Makefile \
-	Src/Astro/Makefile \
-	Src/Cockpit/Makefile \
-	Src/Controls/Makefile \
-	Src/Flight/LaRCsim/Makefile \
-	Src/Flight/Makefile \
-	Src/Flight/Slew/Makefile \
-	Src/Include/Makefile \
-	Src/Joystick/Makefile \
-	Src/Linux/Makefile \
-	Src/Main/Makefile \
-	Src/Makefile \
-	Src/Math/Makefile \
-	Src/Scenery/Makefile \
-	Src/Time/Makefile \
-	Src/Weather/Makefile \
-	Src/XGL/Makefile \
-	 Src/Include/config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+	Simulator/Aircraft/Makefile \
+	Simulator/Astro/Makefile \
+	Simulator/Cockpit/Makefile \
+	Simulator/Controls/Makefile \
+	Simulator/Flight/LaRCsim/Makefile \
+	Simulator/Flight/Makefile \
+	Simulator/Flight/Slew/Makefile \
+	Simulator/Include/Makefile \
+	Simulator/Joystick/Makefile \
+	Simulator/Linux/Makefile \
+	Simulator/Main/Makefile \
+	Simulator/Makefile \
+	Simulator/Math/Makefile \
+	Simulator/Scenery/Makefile \
+	Simulator/Time/Makefile \
+	Simulator/Weather/Makefile \
+	Simulator/XGL/Makefile \
+	 Simulator/Include/config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -3998,25 +3996,23 @@ cat >> $CONFIG_STATUS <<EOF
 
 CONFIG_FILES=\${CONFIG_FILES-"\
 	Makefile \
-	Docs/Makefile \
-	Scenery/Makefile \
-	Src/Aircraft/Makefile \
-	Src/Astro/Makefile \
-	Src/Cockpit/Makefile \
-	Src/Controls/Makefile \
-	Src/Flight/LaRCsim/Makefile \
-	Src/Flight/Makefile \
-	Src/Flight/Slew/Makefile \
-	Src/Include/Makefile \
-	Src/Joystick/Makefile \
-	Src/Linux/Makefile \
-	Src/Main/Makefile \
-	Src/Makefile \
-	Src/Math/Makefile \
-	Src/Scenery/Makefile \
-	Src/Time/Makefile \
-	Src/Weather/Makefile \
-	Src/XGL/Makefile \
+	Simulator/Aircraft/Makefile \
+	Simulator/Astro/Makefile \
+	Simulator/Cockpit/Makefile \
+	Simulator/Controls/Makefile \
+	Simulator/Flight/LaRCsim/Makefile \
+	Simulator/Flight/Makefile \
+	Simulator/Flight/Slew/Makefile \
+	Simulator/Include/Makefile \
+	Simulator/Joystick/Makefile \
+	Simulator/Linux/Makefile \
+	Simulator/Main/Makefile \
+	Simulator/Makefile \
+	Simulator/Math/Makefile \
+	Simulator/Scenery/Makefile \
+	Simulator/Time/Makefile \
+	Simulator/Weather/Makefile \
+	Simulator/XGL/Makefile \
 	"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
@@ -4098,7 +4094,7 @@ ac_eD='%g'
 if test "${CONFIG_HEADERS+set}" != set; then
 EOF
 cat >> $CONFIG_STATUS <<EOF
-  CONFIG_HEADERS="Src/Include/config.h"
+  CONFIG_HEADERS="Simulator/Include/config.h"
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 fi
@@ -4189,7 +4185,7 @@ cat >> $CONFIG_STATUS <<EOF
 
 EOF
 cat >> $CONFIG_STATUS <<\EOF
-test -z "$CONFIG_HEADERS" || echo timestamp > Src/Include/stamp-h
+test -z "$CONFIG_HEADERS" || echo timestamp > Simulator/Include/stamp-h
 
 exit 0
 EOF

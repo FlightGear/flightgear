@@ -71,14 +71,14 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 VERSION = @VERSION@
 
-SUBDIRS = Src
+SUBDIRS = Simulator
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_HEADER = ./Src/Include/config.h
+CONFIG_HEADER = ./Simulator/Include/config.h
 CONFIG_CLEAN_FILES = 
-DIST_COMMON =  README COPYING INSTALL Makefile.am Makefile.in aclocal.m4 \
-config.guess config.sub configure configure.in install-sh ltconfig \
-ltmain.sh missing mkinstalldirs
+DIST_COMMON =  README AUTHORS COPYING ChangeLog INSTALL Makefile.am \
+Makefile.in NEWS aclocal.m4 config.guess config.sub configure \
+configure.in install-sh ltconfig ltmain.sh missing mkinstalldirs
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
