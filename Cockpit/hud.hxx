@@ -174,6 +174,7 @@ extern double get_longitude   ( void );
 extern double get_long_min    ( void );
 extern double get_fov         ( void );
 extern double get_vfc_ratio   ( void );
+extern double get_vfc_tris_drawn   ( void );
 
 enum  hudinstype{ HUDno_instr,
               HUDscale,
@@ -495,6 +496,7 @@ class HudLadder : public dual_instr_item {
 
 extern void HUD_brightkey( bool incr_bright );
 extern int  fgHUDInit( fgAIRCRAFT * /* current_aircraft */ );
+extern int  fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ );
 extern void fgUpdateHUD( void );
 
 extern void drawOneLine ( UINT x1, UINT y1, UINT x2, UINT y2);
@@ -523,10 +525,14 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.11  1998/07/24 21:36:55  curt
-/* Ran dos2unix to get rid of extraneous ^M's.  Tweaked parameter in
-/* ImageGetRawData() to match usage.
+/* Revision 1.12  1998/08/24 20:05:17  curt
+/* Added a second minimalistic HUD.
+/* Added code to display the number of triangles rendered.
 /*
+ * Revision 1.11  1998/07/24 21:36:55  curt
+ * Ran dos2unix to get rid of extraneous ^M's.  Tweaked parameter in
+ * ImageGetRawData() to match usage.
+ *
  * Revision 1.10  1998/07/13 21:28:02  curt
  * Converted the aoa scale to a radio altimeter.
  *

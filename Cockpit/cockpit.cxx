@@ -247,6 +247,12 @@ double get_vfc_ratio( void )
     return pview->vfc_ratio;
 }
 
+double get_vfc_tris_drawn   ( void )
+{
+    return current_view.tris_rendered;
+}
+
+
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 {
     fgPrintf( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem\n");
@@ -303,9 +309,13 @@ void fgCockpitUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.13  1998/08/22 01:19:27  curt
-/* Omit panel code because it's texture loading overruns array bounds.
+/* Revision 1.14  1998/08/24 20:05:15  curt
+/* Added a second minimalistic HUD.
+/* Added code to display the number of triangles rendered.
 /*
+ * Revision 1.13  1998/08/22 01:19:27  curt
+ * Omit panel code because it's texture loading overruns array bounds.
+ *
  * Revision 1.12  1998/07/13 21:28:00  curt
  * Converted the aoa scale to a radio altimeter.
  *
