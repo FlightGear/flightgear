@@ -297,6 +297,9 @@ void FGLight::update_adj_fog_color () {
     float avf = 0.87 - (45000 - av) / 83333.33;
     float sif = 0.5 - cos(_sun_angle*2)/2;
 
+    if (sif < 1e-4)
+       sif = 1e-4;
+
     float rf1 = fabs((rotation - SGD_PI) / SGD_PI);             // 0.0 .. 1.0
     float rf2 = avf * pow(rf1 * rf1, 1/sif);
     float rf3 = 0.94 - rf2;
