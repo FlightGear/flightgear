@@ -3165,6 +3165,36 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_engine.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_fog.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_fog.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_gear.cpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -3481,6 +3511,36 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_map_engine.cpp
 # Begin Source File
 
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_engine.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_fog.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_fog.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -5124,6 +5184,36 @@ SOURCE=.\src\Network\garmin.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\httpd.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\httpd.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\joyclient.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -5200,6 +5290,36 @@ SOURCE=.\src\Network\native_ctrls.cxx
 # Begin Source File
 
 SOURCE=.\src\Network\native_ctrls.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\native_fdm.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\native_fdm.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -5305,6 +5425,21 @@ SOURCE=.\src\Network\pve.hxx
 # Begin Source File
 
 SOURCE=.\src\Network\raw_ctrls.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\raw_fdm.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
