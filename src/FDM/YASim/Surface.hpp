@@ -63,7 +63,8 @@ public:
 
 private:
     float stallFunc(float* v);
-    float controlDrag();
+    float flapLift(float alpha);
+    float controlDrag(float lift, float drag);
 
     float _chord;     // X-axis size
     float _c0;        // total force coefficient

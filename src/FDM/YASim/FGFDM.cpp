@@ -41,7 +41,7 @@ FGFDM::FGFDM()
     // Map /controls/elevator to the approach elevator control.  This
     // should probably be settable, but there are very few aircraft
     // who trim their approaches using things other than elevator.
-    _airplane.setElevatorControl(parseAxis("/controls/elevator"));
+    _airplane.setElevatorControl(parseAxis("/controls/elevator-trim"));
 }
 
 FGFDM::~FGFDM()

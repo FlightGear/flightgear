@@ -10,8 +10,10 @@ Surface::Surface()
     _cz0 = 0;
     _peaks[0] = _peaks[1] = 1;
     int i;
-    for(i=0; i<4; i++)
-	_stalls[i] = _widths[i] = 0;
+    for(i=0; i<4; i++) {
+	_stalls[i] = 0;
+        _widths[i] = 0.01; // half a degree
+    }
     _orient[0] = 1; _orient[1] = 0; _orient[2] = 0;
     _orient[3] = 0; _orient[4] = 1; _orient[5] = 0;
     _orient[6] = 0; _orient[7] = 0; _orient[8] = 1;
@@ -20,6 +22,7 @@ Surface::Surface()
     _incidence = 0;
     _slatPos = _spoilerPos = _flapPos = 0;
     _slatDrag = _spoilerDrag = _flapDrag = 1;
+
     _flapLift = 0;
     _slatAlpha = 0;
     _spoilerLift = 1;
@@ -162,12 +165,12 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     float stallMul = stallFunc(out);
     stallMul *= 1 + _spoilerPos * (_spoilerLift - 1);
     float stallLift = (stallMul - 1) * _cz * out[2];
-    float flapLift = _cz * _flapPos * (_flapLift-1);
+    float flaplift = flapLift(out[2]);
 
     out[2] *= _cz;       // scaling factor
     out[2] += _cz*_cz0;  // zero-alpha lift
     out[2] += stallLift;
-    out[2] += flapLift;
+    out[2] += flaplift;
 
     // Airfoil lift (pre-stall and zero-alpha) torques "up" (negative
     // torque) around the Y axis, while flap lift pushes down.  Both
@@ -175,12 +178,14 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     // edge.  Convert to local (i.e. airplane) coordiantes and store
     // into "torque".
     torque[0] = 0;
-    torque[1] = 0.1667f * _chord * (flapLift - (_cz*_cz0 + stallLift));
+    torque[1] = 0.1667f * _chord * (flaplift - (_cz*_cz0 + stallLift));
     torque[2] = 0;
     Math::tmul33(_orient, torque, torque);
 
-    // Diddle X (drag) and Y (side force) in the same manner
-    out[0] *= _cx * controlDrag();
+    // The X (drag) force gets diddled for control deflection
+    out[0] = controlDrag(out[2], _cx * out[0]);
+
+    // Add in any specific Y (side force) coefficient.
     out[1] *= _cy;
 
     // Reverse the incidence rotation to get back to surface
@@ -236,24 +241,48 @@ float Surface::stallFunc(float* v)
     return scale*(1-frac) + frac;
 }
 
-float Surface::controlDrag()
+// Similar to the above -- interpolates out the flap lift past the
+// stall alpha
+float Surface::flapLift(float alpha)
 {
-    float d = 1;
-    d *= 1 + _spoilerPos * (_spoilerDrag - 1);
-    d *= 1 + _slatPos * (_slatDrag - 1);
+    float flapLift = _cz * _flapPos * (_flapLift-1);
 
+    if(alpha < 0) alpha = -alpha;
+    if(alpha < _stalls[0])
+        return flapLift;
+    else if(alpha > _stalls[0] + _widths[0])
+        return 1;
+
+    float frac = (alpha - _stalls[0]) / _widths[0];
+    frac = frac*frac*(3-2*frac);
+    return flapLift * (1-frac) + frac;
+}
+
+float Surface::controlDrag(float lift, float drag)
+{
     // Negative flap deflections don't affect drag until their lift
-    // multiplier exceeds the "camber" (cz0) of the surface.
+    // multiplier exceeds the "camber" (cz0) of the surface.  Use a
+    // synthesized "fp" number instead of the actual flap position.
     float fp = _flapPos;
     if(fp < 0) {
         fp = -fp;
         fp -= _cz0/(_flapLift-1);
         if(fp < 0) fp = 0;
     }
+    
+    // Calculate an "effective" drag -- this is the drag that would
+    // have been produced by an unflapped surface at the same lift.
+    float flapDragAoA = (_flapLift - 1 - _cz0) * _stalls[0];
+    float fd = Math::abs(lift * flapDragAoA * fp);
+    if(drag < 0) fd = -fd;
+    drag += fd;
 
-    d *= 1 + fp * (_flapDrag - 1);
+    // Now multiply by the various control factors
+    drag *= 1 + fp * (_flapDrag - 1);
+    drag *= 1 + _spoilerPos * (_spoilerDrag - 1);
+    drag *= 1 + _slatPos * (_slatDrag - 1);
 
-    return d;
+    return drag;
 }
 
 }; // namespace yasim
