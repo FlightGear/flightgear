@@ -199,6 +199,7 @@ ssgSimpleState *menus;
 
 void fgBuildRenderStates( void ) {
     default_state = new ssgSimpleState;
+    default_state->ref();
     default_state->disable( GL_TEXTURE_2D );
     default_state->enable( GL_CULL_FACE );
     default_state->enable( GL_COLOR_MATERIAL );
@@ -210,12 +211,14 @@ void fgBuildRenderStates( void ) {
     default_state->disable( GL_LIGHTING );
 
     hud_and_panel = new ssgSimpleState;
+    hud_and_panel->ref();
     hud_and_panel->disable( GL_CULL_FACE );
     hud_and_panel->disable( GL_TEXTURE_2D );
     hud_and_panel->disable( GL_LIGHTING );
     hud_and_panel->enable( GL_BLEND );
 
     menus = new ssgSimpleState;
+    menus->ref();
     menus->disable( GL_CULL_FACE );
     menus->disable( GL_TEXTURE_2D );
     menus->enable( GL_BLEND );

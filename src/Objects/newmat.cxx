@@ -75,8 +75,12 @@ void FGNewMat::build_ssg_state( const string& path,
     tex_file.append( texture_name );
 
     state = new ssgStateSelector(2);
+
     textured = new ssgSimpleState();
+    textured->ref();
+
     nontextured = new ssgSimpleState();
+    nontextured->ref();
 
     // Set up the textured state
     textured->setShadeModel( shade_model );
@@ -130,7 +134,9 @@ void FGNewMat::build_ssg_state( const string& path,
 void FGNewMat::set_ssg_state( ssgSimpleState *s ) {
     state = new ssgStateSelector(2);
     textured = s;
+
     nontextured = new ssgSimpleState();
+    nontextured->ref();
 
     // Set up the coloured state
     nontextured->enable( GL_LIGHTING );
