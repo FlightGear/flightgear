@@ -214,6 +214,7 @@ void inline FGLocalWeatherDatabase::setWeatherVisibility(const WeatherPrecision 
     else
 	WeatherVisibility = MINIMUM_WEATHER_VISIBILITY;
 
+#if 0
     //This code doesn't belong here as this is the optical visibility and not
     //the visibility of the weather database (that should be bigger...). The
     //optical visibility should be calculated from the vapor pressure e.g.
@@ -234,8 +235,7 @@ void inline FGLocalWeatherDatabase::setWeatherVisibility(const WeatherPrecision 
     // FG_LOG( FG_INPUT, FG_DEBUG, "Fog density = " << w->fog_density );
     //cerr << "FGLocalWeatherDatabase::setWeatherVisibility(" << visibility << "):\n";
     //cerr << "Fog density = " << fog_exp_density << "\n";
-    
-
+#endif
 }
 
 WeatherPrecision inline FGLocalWeatherDatabase::getWeatherVisibility(void) const
