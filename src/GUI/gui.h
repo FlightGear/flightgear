@@ -25,6 +25,14 @@
 #ifndef _GUI_H_
 #define _GUI_H_
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
 #include <GL/glut.h>		// needed before pu.h
 #include <plib/pu.h>		// plib include
 

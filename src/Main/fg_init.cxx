@@ -31,8 +31,11 @@
 #  include <math.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
 #include <GL/glut.h>
-#include <simgear/xgl/xgl.h>
 
 #include <stdio.h>
 #include <stdlib.h>
