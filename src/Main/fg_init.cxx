@@ -642,6 +642,7 @@ void fgInitFDM() {
 void fgInitView() {
   // force update of model so that viewer can get some data...
   globals->get_aircraft_model()->update(0);
+  // run update for current view so that data is current...
   globals->get_viewmgr()->update(0);
 }
 
@@ -1115,6 +1116,9 @@ void fgReInitSubsystems( void )
     // allocates structures so must happen before any of the flight
     // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
+
+    // copy viewer settings into current-view path
+    globals->get_viewmgr()->copyToCurrent();
 
     fgInitView();
 

@@ -111,6 +111,8 @@ public:
 	views.push_back(v);
         v->init();
     }
+    // copies current offset settings to current-view path...
+    void copyToCurrent ();
 
 private:
 
@@ -139,7 +141,6 @@ private:
     void setNear_m (double near_m);
     void setViewAxisLong (double axis);
     void setViewAxisLat (double axis);
-    void copyToCurrent ();
 
     typedef vector < FGViewer * > viewer_list;
     viewer_list views;
