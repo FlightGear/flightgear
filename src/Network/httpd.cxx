@@ -1,0 +1,237 @@
+// httpd.hxx -- FGFS http property manager interface / external script
+//              and control class
+//
+// Written by Curtis Olson, started June 2001.
+//
+// Copyright (C) 2001  Curtis L. Olson - curt@flightgear.org
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <simgear/compiler.h>
+
+#include <simgear/debug/logstream.hxx>
+#include <simgear/io/iochannel.hxx>
+#include <simgear/math/sg_types.hxx>
+#include <simgear/misc/props.hxx>
+
+#include <stdlib.h>		// atoi() atof()
+
+#include STL_STRING
+#include STL_STRSTREAM
+
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+
+#include "httpd.hxx"
+
+SG_USING_STD(string);
+#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
+SG_USING_STD(cout);
+SG_USING_STD(istrstream);
+#endif
+
+
+bool FGHttpd::open() {
+    if ( is_enabled() ) {
+	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
+		<< "is already in use, ignoring" );
+	return false;
+    }
+
+    server = new HttpdServer( port );
+
+    set_hz( 5 );                // default to processing requests @ 5Hz
+    set_enabled( true );
+
+    return true;
+}
+
+
+bool FGHttpd::process() {
+    netChannel::poll();
+
+    return true;
+}
+
+
+bool FGHttpd::close() {
+    delete server;
+
+    return true;
+}
+
+
+// Handle http GET requests
+void HttpdChannel::foundTerminator (void) {
+    const string s = buffer.getData();
+
+    if ( s.find( "GET " ) == 0 ) {
+        printf("echo: %s\n", s.c_str());
+
+        string rest = s.substr(4);
+        string request;
+        string tmp;
+
+        unsigned int pos = rest.find( " " );
+        if ( pos != string::npos ) {
+            request = rest.substr( 0, pos );
+        } else {
+            request = "/";
+        }
+
+        SGPropertyNode *node = NULL;
+        pos = request.find( "?" );
+        if ( pos != string::npos ) {
+            // request to update property value
+            string args = request.substr( pos + 1 );
+            request = request.substr( 0, pos );
+            printf("'%s' '%s'\n", request.c_str(), args.c_str());
+
+            // parse args looking for "value="
+            bool done = false;
+            while ( ! done ) {
+                string arg;
+                pos = args.find("&");
+                if ( pos != string::npos ) {
+                    arg = args.substr( 0, pos );
+                    args = args.substr( pos + 1 );
+                } else {
+                    arg = args;
+                    done = true;
+                }
+
+                printf("  arg = %s\n", arg.c_str() );
+                unsigned int apos = arg.find("=");
+                if ( apos != string::npos ) {
+                    string a = arg.substr( 0, apos );
+                    string b = arg.substr( apos + 1 );
+                    printf("    a = %s  b = %s\n", a.c_str(), b.c_str() );
+                    if ( a == "value" ) {
+                        fgSetString( request, b );
+                    } 
+                }
+            }
+        }
+
+        node = globals->get_props()->getNode(request);
+
+        string response = "";
+        response += "<HTML LANG=\"en\">";
+        response += getTerminator();
+
+        response += "<HEAD>";
+        response += getTerminator();
+
+        response += "<TITLE>HUD - ";
+        response += request;
+        response += "</TITLE>";
+        response += getTerminator();
+
+        response += "</HEAD>";
+        response += getTerminator();
+
+        response += "<BODY>";
+        response += getTerminator();
+
+        if ( node->nChildren() > 0 ) {
+            // request is a path with children
+            response += "<H3>Contents of \"";
+            response += request;
+            response += "\"</H3>";
+            response += getTerminator();
+
+            for (int i = 0; i < node->nChildren(); i++) {
+                SGPropertyNode *child = node->getChild(i);
+                string name = child->getName();
+                string line = "";
+                if ( child->nChildren() > 0 ) {
+                    line += "<B><A HREF=\"";
+                    line += request;
+                    if ( request.substr(request.length() - 1, 1) != "/" ) {
+                        line += "/";
+                    }
+                    line += name;
+                    line += "\">";
+                    line += name;
+                    line += "</A></B>";
+                    line += "/<BR>";
+                } else {
+                    string value = node->getStringValue ( name, "" );
+                    line += "<B>";
+                    line += name;
+                    line += "</B> <A HREF=\"";
+                    line += request;
+                    if ( request.substr(request.length() - 1, 1) != "/" ) {
+                        line += "/";
+                    }
+                    line += name;
+                    line += "\">(";
+                    line += value;
+                    line += ")</A><BR>";
+                }
+                response += line;
+                response += getTerminator();
+            }
+        } else {
+            // request for an individual data member
+            string value = node->getStringValue();
+            
+            response += "<form method=\"GET\" action=\"";
+            response += request;
+            response += "\">";
+            response += "<B>";
+            response += request;
+            response += "</B> = ";
+            response += "<input type=text name=value size=\"5\" value=\"";
+            response += value;
+            response += "\" maxlength=2047>";
+            response += "<input type=submit value=\"update\" name=\"submit\">";
+            response += "<FORM>";
+            response += "<BR>";
+        }
+        response += "</BODY>";
+        response += getTerminator();
+
+        response += "</HTML>";
+        response += getTerminator();
+
+        push( "HTTP/1.1 200 OK" );
+        push( getTerminator() );
+        
+        printf("size = %d\n", response.length());
+        char ctmp[256];
+        sprintf(ctmp, "Content-Length: %d", response.length());
+        push( ctmp );
+        push( getTerminator() );
+
+        push( "Connection: close" );
+        push( getTerminator() );
+
+        push( "Content-Type: text/html" );
+        push( getTerminator() );
+        push( getTerminator() );
+                
+        push( response.c_str() );
+    }
+
+    buffer.remove();
+}
