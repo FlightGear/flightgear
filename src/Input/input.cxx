@@ -488,7 +488,6 @@ FGInput::_init_joystick ()
       SG_LOG(SG_INPUT, SG_WARN, "Joystick " << i << " not found");
       continue;
     } else {
-#ifdef FG_PLIB_JOYSTICK_GETNAME
       bool found_js = false;
       const char * name = js->getName();
       SG_LOG(SG_INPUT, SG_INFO, "Looking for bindings for joystick \""
@@ -510,7 +509,6 @@ FGInput::_init_joystick ()
         if (found_js)
             break;
       }
-#endif
     }
 #ifdef WIN32
     JOYCAPS jsCaps ;
