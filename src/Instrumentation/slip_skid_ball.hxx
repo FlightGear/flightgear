@@ -50,7 +50,8 @@ private:
     SGPropertyNode_ptr _y_accel_node;
     SGPropertyNode_ptr _z_accel_node;
     SGPropertyNode_ptr _out_node;
-    
+    SGPropertyNode_ptr _override_node;
+   
 };
 
 #endif // __INSTRUMENTS_SLIP_SKID_BALL_HXX

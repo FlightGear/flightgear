@@ -25,12 +25,14 @@ SlipSkidBall::init ()
     _z_accel_node = fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);
     _out_node =
         fgGetNode("/instrumentation/slip-skid-ball/indicated-slip-skid", true);
+    _override_node =
+        fgGetNode("/instrumentation/slip-skid-ball/override", true);
 }
 
 void
 SlipSkidBall::update (double delta_time_sec)
 {
-    if (_serviceable_node->getBoolValue()) {
+    if (_serviceable_node->getBoolValue() && !_override_node->getBoolValue()) {
         double d = -_z_accel_node->getDoubleValue();
         if (d < 1.0)
             d = 1.0;
