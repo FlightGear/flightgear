@@ -74,7 +74,18 @@ int FGTriNodes::unique_add( const Point3D& p ) {
 }
 
 
+// Add the point with no uniqueness checking
+int FGTriNodes::simple_add( const Point3D& p ) {
+    node_list.push_back( p );
+
+    return node_list.size() - 1;
+}
+
+
 // $Log$
+// Revision 1.4  1999/03/22 23:49:04  curt
+// Modifications to facilitate conversion to output format.
+//
 // Revision 1.3  1999/03/20 02:21:54  curt
 // Continue shaping the code towards triangulation bliss.  Added code to
 // calculate some point guaranteed to be inside a polygon.

@@ -68,6 +68,9 @@ public:
     // Returns the index (starting at zero) of the point in the list.
     int unique_add( const Point3D& p );
 
+    // Add the point with no uniqueness checking
+    int simple_add( const Point3D& p );
+
     // return the master node list
     inline trinode_list get_node_list() const { return node_list; }
 
@@ -80,6 +83,9 @@ public:
 
 
 // $Log$
+// Revision 1.4  1999/03/22 23:49:05  curt
+// Modifications to facilitate conversion to output format.
+//
 // Revision 1.3  1999/03/20 02:21:55  curt
 // Continue shaping the code towards triangulation bliss.  Added code to
 // calculate some point guaranteed to be inside a polygon.

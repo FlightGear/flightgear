@@ -57,7 +57,7 @@ FGTriangle::build( const fitnode_list& fit_list,
     f_current = fit_list.begin();
     f_last = fit_list.end();
     for ( ; f_current != f_last; ++f_current ) {
-	index = trinodes.unique_add( *f_current );
+	index = in_nodes.unique_add( *f_current );
     }
 
     gpc_polygon *gpc_poly;
@@ -97,8 +97,8 @@ FGTriangle::build( const fitnode_list& fit_list,
 		    Point3D p( gpc_poly->contour[j].vertex[k].x,
 			       gpc_poly->contour[j].vertex[k].y,
 			       0 );
-		    index = trinodes.unique_add( p );
-		    // junkp = trinodes.get_node( index );
+		    index = in_nodes.unique_add( p );
+		    // junkp = in_nodes.get_node( index );
 		    // fprintf(junkfp, "%.4f %.4f\n", junkp.x(), junkp.y());
 		    poly.add_node(index);
 		    // cout << index << endl;
@@ -108,7 +108,7 @@ FGTriangle::build( const fitnode_list& fit_list,
 		//    gpc_poly->contour[j].vertex[0].y);
 		// fclose(junkfp);
 
-		poly.calc_point_inside( trinodes );
+		poly.calc_point_inside( in_nodes );
 
 		polylist[i].push_back(poly);
 	    }
@@ -208,7 +208,7 @@ int FGTriangle::run_triangulate() {
     int counter;
 
     // point list
-    trinode_list node_list = trinodes.get_node_list();
+    trinode_list node_list = in_nodes.get_node_list();
     in.numberofpoints = node_list.size();
     in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
 
@@ -241,6 +241,7 @@ int FGTriangle::run_triangulate() {
     triseg_list seg_list = trisegs.get_seg_list();
     in.numberofsegments = seg_list.size();
     in.segmentlist = (int *) malloc(in.numberofsegments * 2 * sizeof(int));
+    in.segmentmarkerlist = (int *) NULL;
 
     triseg_list_iterator s_current, s_last;
     s_current = seg_list.begin();
@@ -323,6 +324,27 @@ int FGTriangle::run_triangulate() {
     // TEMPORARY
     write_out_data(&out);
 
+    // now copy the results back into the corresponding FGTriangle
+    // structures
+
+    // nodes
+    for ( int i = 0; i < out.numberofpoints; i++ ) {
+	Point3D p( out.pointlist[2*i], out.pointlist[2*i + 1], 0.0 );
+	// cout << "point = " << p << endl;
+	out_nodes.simple_add( p );
+    }
+
+    // triangles
+    int n1, n2, n3;
+    for ( int i = 0; i < out.numberoftriangles; i++ ) {
+	n1 = out.trianglelist[i * 3];
+	n2 = out.trianglelist[i * 3 + 1];
+	n3 = out.trianglelist[i * 3 + 2];
+	// cout << "triangle = " << n1 << " " << n2 << " " << n3 << endl;
+
+	elelist.push_back( FGTriEle( n1, n2, n3 ) );
+    }
+
     // free mem allocated to the "Triangle" structures
     free(in.pointlist);
     free(in.pointattributelist);
@@ -349,6 +371,9 @@ int FGTriangle::run_triangulate() {
 
 
 // $Log$
+// Revision 1.10  1999/03/22 23:49:02  curt
+// Modifications to facilitate conversion to output format.
+//
 // Revision 1.9  1999/03/21 15:48:02  curt
 // Removed Dem2node from the Tools fold.
 // Tweaked the triangulator options to add quality mesh refinement.

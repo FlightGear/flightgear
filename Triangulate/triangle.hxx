@@ -45,6 +45,7 @@ extern "C" {
 #include <Triangle/triangle.h>
 }
 
+#include "trieles.hxx"
 #include "trinodes.hxx"
 #include "tripoly.hxx"
 #include "trisegs.hxx"
@@ -56,13 +57,18 @@ typedef vector < FGTriPoly > tripoly_list;
 typedef tripoly_list::iterator tripoly_list_iterator;
 typedef tripoly_list::const_iterator const_tripoly_list_iterator;
 
+typedef vector < FGTriEle > triele_list;
+typedef triele_list::iterator triele_list_iterator;
+typedef triele_list::const_iterator const_triele_list_iterator;
+
 
 class FGTriangle {
 
 private:
 
     // list of nodes
-    FGTriNodes trinodes;
+    FGTriNodes in_nodes;
+    FGTriNodes out_nodes;
 
     // list of segments
     FGTriSegments trisegs;
@@ -70,6 +76,9 @@ private:
     // polygon list
     tripoly_list polylist[FG_MAX_AREA_TYPES];
     
+    // triangle list
+    triele_list elelist;
+
 public:
 
     // Constructor and destructor
@@ -84,6 +93,8 @@ public:
 
     // front end triangulator for polygon list
     int run_triangulate();
+
+    inline FGTriNodes get_out_nodes() const { return out_nodes; }
 };
 
 
@@ -91,6 +102,9 @@ public:
 
 
 // $Log$
+// Revision 1.7  1999/03/22 23:49:03  curt
+// Modifications to facilitate conversion to output format.
+//
 // Revision 1.6  1999/03/20 20:32:56  curt
 // First mostly successful tile triangulation works.  There's plenty of tweaking
 // to do, but we are marching in the right direction.
