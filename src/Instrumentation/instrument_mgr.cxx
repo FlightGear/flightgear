@@ -13,7 +13,9 @@
 #include "heading_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
 #include "mag_compass.hxx"
+
 #include "dme.hxx"
+#include "gps.hxx"
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
@@ -27,6 +29,7 @@ FGInstrumentMgr::FGInstrumentMgr ()
     set_subsystem("vsi", new VerticalSpeedIndicator);
     set_subsystem("compass", new MagCompass);
     set_subsystem("dme", new DME, 1.0);
+    set_subsystem("gps", new GPS, 0.45);
 }
 
 FGInstrumentMgr::~FGInstrumentMgr ()
