@@ -61,9 +61,6 @@ static GLfloat win_ratio = 1.0;
 /* sun direction */
 /* static GLfloat sun_vec[4] = {1.0, 0.0, 0.0, 0.0 }; */
 
-/* if the 4th field is 0.0, this specifies a direction ... */
-/* clear color (sky) */
-GLfloat fgClearColor[4] = {0.60, 0.60, 0.90, 1.0};
 /* fog color */
 static GLfloat fgFogColor[4] =   {0.65, 0.65, 0.85, 1.0};
 
@@ -120,8 +117,8 @@ static void fgInitVisuals() {
     /* glFogf (GL_FOG_DENSITY, w->visibility); */
     /* glHint (GL_FOG_HINT, GL_FASTEST); */
 
-    glClearColor(fgClearColor[0], fgClearColor[1], fgClearColor[2], 
-		 fgClearColor[3]);
+    /* initial screen color */
+    glClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
 
@@ -136,9 +133,11 @@ static void fgUpdateViewParams() {
     struct fgVIEW *v;
 
     double x_2, x_4, x_8, x_10;
-    double ambient, diffuse, sky;
-    GLfloat color[4] = { 1.0, 1.0, 0.50, 1.0 };
-    /* GLfloat amb[3], diff[3], fog[4], clear[4]; */
+    double ambient, diffuse, sky_brightness;
+    /* if the 4th field is 0.0, this specifies a direction ... */
+    /* clear color (sky) */
+    GLfloat sky_color[4] = {0.60, 0.60, 0.90, 1.0};
+    GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
     f = &current_aircraft.flight;
     l = &cur_light_params;
@@ -150,7 +149,7 @@ static void fgUpdateViewParams() {
     /* Tell GL we are about to modify the projection parameters */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60.0, 1.0/win_ratio, 1.0, 200000.0);
+    gluPerspective(55.0, 1.0/win_ratio, 1.0, 200000.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -185,22 +184,22 @@ static void fgUpdateViewParams() {
 
     diffuse = ambient;
 
-    sky = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
+    sky_brightness = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
 
-    /* sky = 0.15; */ /* to force a dark sky (for testing) */
+    /* sky_brightness = 0.15; */ /* to force a dark sky (for testing) */
 
     if ( ambient < 0.1 ) { ambient = 0.1; }
     if ( diffuse < 0.0 ) { diffuse = 0.0; }
 
-    if ( sky < 0.0 ) { sky = 0.0; }
+    if ( sky_brightness < 0.0 ) { sky_brightness = 0.0; }
 
-    l->scene_ambient[0] = color[0] * ambient;
-    l->scene_ambient[1] = color[1] * ambient;
-    l->scene_ambient[2] = color[2] * ambient;
+    l->scene_ambient[0] = white[0] * ambient;
+    l->scene_ambient[1] = white[1] * ambient;
+    l->scene_ambient[2] = white[2] * ambient;
 
-    l->scene_diffuse[0] = color[0] * diffuse;
-    l->scene_diffuse[1] = color[1] * diffuse;
-    l->scene_diffuse[2] = color[2] * diffuse;
+    l->scene_diffuse[0] = white[0] * diffuse;
+    l->scene_diffuse[1] = white[1] * diffuse;
+    l->scene_diffuse[2] = white[2] * diffuse;
 
     /* set lighting parameters */
     glLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
@@ -214,10 +213,11 @@ static void fgUpdateViewParams() {
     glFogfv (GL_FOG_COLOR, l->scene_fog);
 
     /* set sky color */
-    l->scene_clear[0] = fgClearColor[0] * sky;
-    l->scene_clear[1] = fgClearColor[1] * sky;
-    l->scene_clear[2] = fgClearColor[2] * sky;
-    l->scene_clear[3] = fgClearColor[3];
+    l->scene_clear[0] = sky_color[0] * sky_brightness;
+    l->scene_clear[1] = sky_color[1] * sky_brightness;
+    l->scene_clear[2] = sky_color[2] * sky_brightness;
+    l->scene_clear[3] = sky_color[3];
+
     glClearColor(l->scene_clear[0], l->scene_clear[1], 
 		 l->scene_clear[2], l->scene_clear[3]);
 }
@@ -573,10 +573,14 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.28  1997/12/10 22:37:45  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.29  1997/12/11 04:43:54  curt
+/* Fixed sun vector and lighting problems.  I thing the moon is now lit
+/* correctly.
 /*
+ * Revision 1.28  1997/12/10 22:37:45  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.27  1997/12/09 05:11:54  curt
  * Working on tweaking lighting.
  *

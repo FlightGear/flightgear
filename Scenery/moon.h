@@ -46,15 +46,18 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements Params,
                                       struct fgTIME t);
 
 extern struct OrbElements pltOrbElements[9];
-extern GLfloat fgClearColor[4];
 
 #endif /* _MOON_H_ */
 
 
 /* $Log$
-/* Revision 1.3  1997/11/25 19:25:35  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.4  1997/12/11 04:43:56  curt
+/* Fixed sun vector and lighting problems.  I thing the moon is now lit
+/* correctly.
 /*
+ * Revision 1.3  1997/11/25 19:25:35  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.2  1997/10/25 03:24:23  curt
  * Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
  *

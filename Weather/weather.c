@@ -42,7 +42,7 @@ void fgWeatherInit(void) {
     /* Configure some wind */
     /* FG_V_north_airmass = 15; */ /* ft/s =~ 10mph */
 
-    w->visibility = 60000.0;       /* meters = 60km */
+    w->visibility = 45000.0;       /* in meters */
 }
 
 
@@ -62,10 +62,14 @@ void fgWeatherUpdate(double lon, double lat, double alt) {
 
 
 /* $Log$
-/* Revision 1.7  1997/12/10 22:37:56  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.8  1997/12/11 04:43:58  curt
+/* Fixed sun vector and lighting problems.  I thing the moon is now lit
+/* correctly.
 /*
+ * Revision 1.7  1997/12/10 22:37:56  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.6  1997/08/27 03:30:38  curt
  * Changed naming scheme of basic shared structures.
  *

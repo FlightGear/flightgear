@@ -35,7 +35,6 @@ extern struct CelestialCoord
 extern float xMoon, yMoon, zMoon, xSun, ySun, zSun;
 extern GLint moon, sun;
 extern GLint stars[FG_STAR_LEVELS];
-extern GLfloat fgClearColor[4];
 
 
 /* Initialize Astronomical Objects */
@@ -49,7 +48,11 @@ void fgAstroRender();
 
 
 /* $Log$
-/* Revision 1.1  1997/11/25 23:20:23  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/11 04:43:56  curt
+/* Fixed sun vector and lighting problems.  I thing the moon is now lit
+/* correctly.
 /*
+ * Revision 1.1  1997/11/25 23:20:23  curt
+ * Initial revision.
+ *
  */

@@ -30,7 +30,7 @@
 #---------------------------------------------------------------------------
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 16
+VERSION_MINOR = 17
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 
 
@@ -131,6 +131,10 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.22  1997/12/11 04:43:53  curt
+# Fixed sun vector and lighting problems.  I thing the moon is now lit
+# correctly.
+#
 # Revision 1.21  1997/12/10 01:19:42  curt
 # Tweaks for verion 0.15 release.
 #

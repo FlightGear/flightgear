@@ -283,11 +283,19 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
     /* printf("Geodetic lat = %.5f Geocentric lat = %.5f\n", sun_gd_lat,
        t->sun_gc_lat); */
 
-    /* the sun position has to be translated just like everything else */
-    l->sun_vec_inv[0] = l->fg_sunpos.x - scenery_center.x; 
-    l->sun_vec_inv[1] = l->fg_sunpos.y - scenery_center.y;
-    l->sun_vec_inv[2] = l->fg_sunpos.z - scenery_center.z;
-    MAT3_SCALE_VEC(l->sun_vec, l->sun_vec_inv, -1.0);
+    /* FALSE! (?> the sun position has to be translated just like
+     * everything else */
+    /* l->sun_vec_inv[0] = l->fg_sunpos.x - scenery_center.x;  */
+    /* l->sun_vec_inv[1] = l->fg_sunpos.y - scenery_center.y; */
+    /* l->sun_vec_inv[2] = l->fg_sunpos.z - scenery_center.z; */
+    /* MAT3_SCALE_VEC(l->sun_vec, l->sun_vec_inv, -1.0); */
+
+    /* I think this will work better for generating the sun light vector */
+    l->sun_vec[0] = l->fg_sunpos.x;
+    l->sun_vec[1] = l->fg_sunpos.y;
+    l->sun_vec[2] = l->fg_sunpos.z;
+    MAT3_NORMALIZE_VEC(l->sun_vec, temp);
+    MAT3_SCALE_VEC(l->sun_vec_inv, l->sun_vec, -1.0);
 
     /* make these are directional light sources only */
     l->sun_vec[3] = 0.0;
@@ -308,10 +316,14 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
 
 
 /* $Log$
-/* Revision 1.15  1997/12/10 22:37:55  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.16  1997/12/11 04:43:57  curt
+/* Fixed sun vector and lighting problems.  I thing the moon is now lit
+/* correctly.
 /*
+ * Revision 1.15  1997/12/10 22:37:55  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.14  1997/12/09 04:25:39  curt
  * Working on adding a global lighting params structure.
  *

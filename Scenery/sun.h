@@ -29,7 +29,6 @@
 
 struct SunPos fgCalcSunPos(struct OrbElements sunParams);
 extern struct OrbElements pltOrbElements[9];
-extern GLfloat fgClearColor[4];
 
 /* Initialize the Sun */
 void fgSunInit();
@@ -42,9 +41,13 @@ void fgSunRender();
 
 
 /* $Log$
-/* Revision 1.2  1997/11/25 19:25:39  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.3  1997/12/11 04:43:56  curt
+/* Fixed sun vector and lighting problems.  I thing the moon is now lit
+/* correctly.
 /*
+ * Revision 1.2  1997/11/25 19:25:39  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.1  1997/10/25 03:16:12  curt
  * Initial revision of code contributed by Durk Talsma.
  *

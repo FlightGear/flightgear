@@ -231,9 +231,9 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
     static long int warp = 0;
 
     /* get current Unix calendar time (in seconds) */
-    warp += 60; 
-    /* warp = 0; */
-    t->cur_time = time(NULL) + (0) * 60 * 60;
+    warp += 0;
+    /* warp = 60; */
+    t->cur_time = time(NULL) + (12) * 60 * 60;
     t->cur_time += warp;
     printf("Current Unix calendar time = %ld  warp = %ld\n", t->cur_time, warp);
 
@@ -285,10 +285,14 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.15  1997/12/10 22:37:54  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.16  1997/12/11 04:43:57  curt
+/* Fixed sun vector and lighting problems.  I thing the moon is now lit
+/* correctly.
 /*
+ * Revision 1.15  1997/12/10 22:37:54  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.14  1997/12/10 01:19:52  curt
  * Tweaks for verion 0.15 release.
  *
