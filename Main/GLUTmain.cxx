@@ -379,6 +379,7 @@ static void fgRenderFrame( void ) {
 
 	// render the moon
 	xglEnable( GL_LIGHTING );
+	xglEnable( GL_LIGHT0 );
 	// set lighting parameters
 	xglLightfv(GL_LIGHT0, GL_AMBIENT, white );
 	xglLightfv(GL_LIGHT0, GL_DIFFUSE, white );
@@ -466,9 +467,9 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 
     if ( !t->pause ) {
 	// printf("updating flight model x %d\n", multi_loop);
-	fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
+	fgFlightModelUpdate(current_options.get_flight_model(), f, multi_loop);
     } else {
-	fgFlightModelUpdate(FG_LARCSIM, f, 0);
+	fgFlightModelUpdate(current_options.get_flight_model(), f, 0);
     }
 
     // update the view angle
@@ -559,7 +560,7 @@ static void fgMainLoop( void ) {
 		   FG_Altitude * FEET_TO_METER,
 		   scenery.cur_elev + 3.758099 * FEET_TO_METER - 3.0,
 		   scenery.cur_elev + 3.758099 * FEET_TO_METER);
-	    fgFlightModelSetAltitude( FG_LARCSIM, f, 
+	    fgFlightModelSetAltitude( current_options.get_flight_model(), f, 
 				      scenery.cur_elev + 
 				      3.758099 * FEET_TO_METER);
 
@@ -933,6 +934,13 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.42  1998/07/30 23:48:25  curt
+// Output position & orientation when pausing.
+// Eliminated libtool use.
+// Added options to specify initial position and orientation.
+// Changed default fov to 55 degrees.
+// Added command line option to start in paused or unpaused state.
+//
 // Revision 1.41  1998/07/27 18:41:24  curt
 // Added a pause command "p"
 // Fixed some initialization order problems between pui and glut.

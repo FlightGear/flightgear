@@ -1,8 +1,12 @@
 if ENABLE_AUDIO_SUPPORT
 DEFS += -DENABLE_AUDIO_SUPPORT
 AUDIO_LIBS = \
-	$(top_builddir)/Lib/Audio/src/libsl.la \
-	$(top_builddir)/Lib/Audio/src/libsm.la
+	$(top_builddir)/Lib/Audio/src/libsl.a \
+	$(top_builddir)/Lib/Audio/src/libsm.a
+endif
+
+if ENABLE_IRIX_AUDIO
+LIBS += -laudio
 endif
 
 if ENABLE_WIN32_AUDIO
@@ -44,11 +48,11 @@ fg_LDADD = \
 	$(top_builddir)/Simulator/Weather/libWeather.a \
         $(top_builddir)/Simulator/Joystick/libJoystick.a \
 	$(AUDIO_LIBS) \
-	$(top_builddir)/Lib/Math/libMath.la \
-	$(top_builddir)/Lib/Bucket/libBucket.la \
-	$(top_builddir)/Lib/Debug/libDebug.la \
-	$(top_builddir)/Lib/PUI/libPUI.la \
-	$(top_builddir)/Lib/zlib/libz.la
+	$(top_builddir)/Lib/Math/libMath.a \
+	$(top_builddir)/Lib/Bucket/libBucket.a \
+	$(top_builddir)/Lib/Debug/libDebug.a \
+	$(top_builddir)/Lib/PUI/libPUI.a \
+	$(top_builddir)/Lib/zlib/libz.a
 
 INCLUDES += \
 	-I$(top_builddir) \

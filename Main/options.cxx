@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include <Debug/fg_debug.h>
+#include <Flight/flight.h>
 #include <Include/fg_constants.h>
 #include <Include/fg_zlib.h>
 
@@ -64,21 +65,89 @@ fgOPTIONS::fgOPTIONS( void ) {
 #endif
     }
 
-    // default airport id
-    strcpy(airport_id, "");
+    // Starting posistion and orientation
+    strcpy(airport_id, "");  // default airport id
+    lon = 0.0;               // starting longitude in degrees (west = -)
+    lat = 0.0;               // starting latitude in degrees (south = -)
+
+    // If nothing else is specified, default initial position is
+    // Globe, AZ (P13)
+    lon = -110.6642444;
+    lat  =  33.3528917;
+
+    // North of the city of Globe
+    // lon = -110.7;
+    // lat =   33.4;
+
+    // North of the city of Globe
+    // lon = -110.742578;
+    // lat =   33.507122;
+
+    // Near where I used to live in Globe, AZ
+    // lon = -110.766000;
+    // lat =   33.377778;
+
+    // 10125 Jewell St. NE
+    // lon = -93.15;
+    // lat =  45.15;
+
+    // Near KHSP (Hot Springs, VA)
+    // lon = -79.8338964 + 0.01;
+    // lat =  37.9514564 + 0.008;
+
+    // (SEZ) SEDONA airport
+    // lon = -111.7884614 + 0.01;
+    // lat =   34.8486289 - 0.015;
+
+    // Somewhere near the Grand Canyon
+    // lon = -112.5;
+    // lat =   36.5;
+
+    // Jim Brennon's Kingmont Observatory
+    // lon = -121.1131667;
+    // lat =   38.8293917;
+
+    // Huaras, Peru (S09d 31.871'  W077d 31.498')
+    // lon = -77.5249667;
+    // lat =  -9.5311833;
+ 
+    // Eclipse Watching w73.5 n10 (approx) 18:00 UT
+    // lon = -73.5;
+    // lat =  10.0;
+
+    // Test Position
+    // lon =  8.5;
+    // lat = 47.5;
+
+    // Timms Hill (WI)
+    // lon = -90.1953055556;
+    // lat =  45.4511388889;
+
+    altitude = -9999.0;      // starting altitude in meters (this will be
+                             // reset to ground level if it is lower
+                             // than the terrain
+
+    // Initial Orientation
+    heading = 270.0;         // heading (yaw) angle in degress (Psi)
+    roll    =   0.0;         // roll angle in degrees (Phi)
+    pitch   =   0.424;       // pitch angle in degrees (Theta)
 
     // Miscellaneous
     splash_screen = 1;
     intro_music = 1;
     mouse_pointer = 0;
+    pause = 0;
 
     // Features
     hud_status = 1;
     panel_status = 0;
 
+    // Flight Model options
+    flight_model = FG_LARCSIM;
+
     // Rendering options
     fog = 2;    // nicest
-    fov = 65.0;
+    fov = 55.0;
     fullscreen = 0;
     shading = 1;
     skyblend = 1;
@@ -129,17 +198,16 @@ static double parse_double(char *arg) {
 	arg++;
     }
 
-    printf("parse_double(): arg = %s\n", arg);
+    // printf("parse_double(): arg = %s\n", arg);
 
     result = atof(arg);
 
-    printf("parse_double(): result = %.4f\n", result);
+    // printf("parse_double(): result = %.4f\n", result);
 
     return(result);
 }
 
 
-// parse time string in the form of [+-]hh:mm:ss, returns the value in seconds
 static double parse_time(char *time_str) {
     char num[256];
     double hours, minutes, seconds;
@@ -176,7 +244,7 @@ static double parse_time(char *time_str) {
 	hours = atof(num);
 	// printf("hours = %.2lf\n", hours);
 
-	result += hours * 3600.0;
+	result += hours;
     }
 
     // get minutes
@@ -194,7 +262,7 @@ static double parse_time(char *time_str) {
 	minutes = atof(num);
 	// printf("minutes = %.2lf\n", minutes);
 
-	result += minutes * 60.0;
+	result += minutes / 60.0;
     }
 
     // get seconds
@@ -209,10 +277,31 @@ static double parse_time(char *time_str) {
 	seconds = atof(num);
 	// printf("seconds = %.2lf\n", seconds);
 
-	result += seconds;
+	result += seconds / 3600.0;
     }
 
     return(sign * result);
+}
+
+
+// parse degree in the form of [+/-]hhh:mm:ss
+static double parse_degree(char *degree_str) {
+    double result;
+
+    // advance past the '='
+    while ( (degree_str[0] != '=') && (degree_str[0] != '\0') ) {
+	degree_str++;
+    }
+
+    if ( degree_str[0] == '=' ) {
+	degree_str++;
+    }
+
+    result = parse_time(degree_str);
+
+    // printf("Degree = %.4f\n", result);
+
+    return(result);
 }
 
 
@@ -220,17 +309,24 @@ static double parse_time(char *time_str) {
 static int parse_time_offset(char *time_str) {
     int result;
 
-    time_str += 14;
+    // advance past the '='
+    while ( (time_str[0] != '=') && (time_str[0] != '\0') ) {
+	time_str++;
+    }
+
+    if ( time_str[0] == '=' ) {
+	time_str++;
+    }
 
     // printf("time offset = %s\n", time_str);
 
 #ifdef HAVE_RINT
-    result = (int)rint(parse_time(time_str));
+    result = (int)rint(parse_time(time_str) * 3600.0);
 #else
-    result = (int)parse_time(time_str);
+    result = (int)(parse_time(time_str) * 3600.0);
 #endif
 
-    printf("parse_time_offset(): %d\n", result);
+    // printf("parse_time_offset(): %d\n", result);
 
     return( result );
 }
@@ -242,7 +338,7 @@ static int parse_time_offset(char *time_str) {
 #define FG_RADIUS_MAX 4
 
 static int parse_tile_radius(char *arg) {
-    int radius, tmp;
+    int radius;
 
     radius = parse_int(arg);
 
@@ -255,6 +351,27 @@ static int parse_tile_radius(char *arg) {
 }
 
 
+// Parse --flightmode=abcdefg type option 
+static int parse_flight_model(char *fm) {
+    fm += 15;
+
+    // printf("flight model = %s\n", fm);
+
+    if ( strcmp(fm, "slew") == 0 ) {
+	return(FG_SLEW);
+    } else if ( strcmp(fm, "larcsim") == 0 ) {
+	return(FG_LARCSIM);
+    } else if ( strcmp(fm, "LaRCsim") == 0 ) {
+	return(FG_LARCSIM);
+    } else {
+	fgPrintf( FG_GENERAL, FG_EXIT, "Unknown flight model = %s\n", fm);
+    }
+
+    // we'll never get here, but it makes the compiler happy.
+    return(-1);
+}
+
+
 // Parse --fov=x.xx type option 
 static double parse_fov(char *arg) {
     double fov;
@@ -264,7 +381,7 @@ static double parse_fov(char *arg) {
     if ( fov < FG_FOV_MIN ) { fov = FG_FOV_MIN; }
     if ( fov > FG_FOV_MAX ) { fov = FG_FOV_MAX; }
 
-    printf("parse_fov(): result = %.4f\n", fov);
+    // printf("parse_fov(): result = %.4f\n", fov);
 
     return(fov);
 }
@@ -289,6 +406,10 @@ int fgOPTIONS::parse_option( char *arg ) {
 	mouse_pointer = 1;
     } else if ( strcmp(arg, "--enable-mouse-pointer") == 0 ) {
 	mouse_pointer = 2;
+    } else if ( strcmp(arg, "--disable-pause") == 0 ) {
+	pause = 0;	
+    } else if ( strcmp(arg, "--enable-pause") == 0 ) {
+	pause = 1;	
     } else if ( strcmp(arg, "--disable-hud") == 0 ) {
 	hud_status = 0;	
     } else if ( strcmp(arg, "--enable-hud") == 0 ) {
@@ -304,9 +425,23 @@ int fgOPTIONS::parse_option( char *arg ) {
     } else if ( strncmp(arg, "--airport-id=", 13) == 0 ) {
 	arg += 13;
 	strncpy(airport_id, arg, 4);
+    } else if ( strncmp(arg, "--lon=", 6) == 0 ) {
+	lon = parse_degree(arg);
+    } else if ( strncmp(arg, "--lat=", 6) == 0 ) {
+	lat = parse_degree(arg);
+    } else if ( strncmp(arg, "--altitude=", 11) == 0 ) {
+	altitude = parse_double(arg);
+    } else if ( strncmp(arg, "--heading=", 6) == 0 ) {
+	heading = parse_double(arg);
+    } else if ( strncmp(arg, "--roll=", 7) == 0 ) {
+	roll = parse_double(arg);
+    } else if ( strncmp(arg, "--pitch=", 8) == 0 ) {
+	pitch = parse_double(arg);
     } else if ( strncmp(arg, "--fg-root=", 10) == 0 ) {
 	arg += 10;
 	strcpy(fg_root, arg);
+    } else if ( strncmp(arg, "--flight-model=", 15) == 0 ) {
+	flight_model = parse_flight_model(arg);
     } else if ( strcmp(arg, "--fog-disable") == 0 ) {
 	fog = 0;	
     } else if ( strcmp(arg, "--fog-fastest") == 0 ) {
@@ -341,6 +476,7 @@ int fgOPTIONS::parse_option( char *arg ) {
     } else if ( strncmp(arg, "--time-offset=", 14) == 0 ) {
 	time_offset = parse_time_offset(arg);
     } else {
+	fgPrintf( FG_GENERAL, FG_EXIT, "Unknown option '%s'\n", arg);
 	return(FG_OPTIONS_ERROR);
     }
     
@@ -428,7 +564,9 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--enable-intro-music:  enable introduction music\n");
     printf("\t--disable-mouse-pointer:  disable extra mouse pointer\n");
     printf("\t--enable-mouse-pointer:  enable extra mouse pointer (i.e. for\n");
-    printf("\t\tfull screen voodoo/voodoo-II based cards.\n");
+    printf("\t\tfull screen voodoo/voodoo-II based cards.)\n");
+    printf("\t--disable-pause:  start out in an active state\n");
+    printf("\t--enable-pause:  start out in a paused state\n");
     printf("\n");
 
     printf("Features:\n");
@@ -440,8 +578,14 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--enable-sound:  enable sound effects\n");
     printf("\n");
  
-    printf("Initial Position:\n");
+    printf("Initial Position and Orientation:\n");
     printf("\t--airport-id=ABCD:  specify starting postion by airport id\n");
+    printf("\t--lon=degrees:  starting longitude in degrees (west = -)\n");
+    printf("\t--lat=degrees:  starting latitude in degrees (south = -)\n");
+    printf("\t--altitude=meters:  starting altitude in meters\n");
+    printf("\t--heading=degrees:  heading (yaw) angle in degress (Psi)\n");
+    printf("\t--roll=degrees:  roll angle in degrees (Phi)\n");
+    printf("\t--pitch=degrees:  pitch angle in degrees (Theta)\n");
     printf("\n");
 
     printf("Rendering Options:\n");
@@ -473,12 +617,20 @@ void fgOPTIONS::usage ( void ) {
 // Query functions
 void fgOPTIONS::get_fg_root(char *root) { strcpy(root, fg_root); }
 void fgOPTIONS::get_airport_id(char *id) { strcpy(id, airport_id); }
+double fgOPTIONS::get_lon( void ) { return(lon); }
+double fgOPTIONS::get_lat( void ) { return(lat); }
+double fgOPTIONS::get_altitude( void ) { return(altitude); }
+double fgOPTIONS::get_heading( void ) { return(heading); }
+double fgOPTIONS::get_roll( void ) { return(roll); }
+double fgOPTIONS::get_pitch( void ) { return(pitch); }
 int fgOPTIONS::get_splash_screen( void ) { return(splash_screen); }
 int fgOPTIONS::get_intro_music( void ) { return(intro_music); }
 int fgOPTIONS::get_mouse_pointer( void ) { return(mouse_pointer); }
+int fgOPTIONS::get_pause( void ) { return(pause); }
 int fgOPTIONS::get_hud_status( void ) { return(hud_status); }
 int fgOPTIONS::get_panel_status( void ) { return(panel_status); }
 int fgOPTIONS::get_sound( void ) { return(sound); }
+int fgOPTIONS::get_flight_model( void ) { return(flight_model); }
 int fgOPTIONS::get_fog( void ) { return(fog); }
 double fgOPTIONS::get_fov( void ) { return(fov); }
 int fgOPTIONS::get_fullscreen( void ) { return(fullscreen); }
@@ -501,6 +653,13 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.20  1998/07/30 23:48:28  curt
+// Output position & orientation when pausing.
+// Eliminated libtool use.
+// Added options to specify initial position and orientation.
+// Changed default fov to 55 degrees.
+// Added command line option to start in paused or unpaused state.
+//
 // Revision 1.19  1998/07/27 18:41:25  curt
 // Added a pause command "p"
 // Fixed some initialization order problems between pui and glut.

@@ -42,18 +42,28 @@ class fgOPTIONS {
     // The flight gear "root" directory
     char fg_root[256];
 
-    // ID of initial starting airport
-    char airport_id[5];
+    // Starting position and orientation
+    char airport_id[5]; // ID of initial starting airport
+    double lon;         // starting longitude in degrees (west = -)
+    double lat;         // starting latitude in degrees (south = -)
+    double altitude;    // starting altitude in meters
+    double heading;     // heading (yaw) angle in degress (Psi)
+    double roll;        // roll angle in degrees (Phi)
+    double pitch;       // pitch angle in degrees (Theta)
 
     // Miscellaneous
     int splash_screen; // show splash screen
     int intro_music;   // play introductory music
     int mouse_pointer; // show mouse pointer
+    int pause;         // pause intially enabled/disabled
 
     // Features
     int hud_status;    // HUD on/off
     int panel_status;  // Panel on/off
     int sound;         // play sound effects
+
+    // Flight Model options
+    int flight_model;  // Flight Model:  FG_SLEW, FG_LARCSIM, etc.
 
     // Rendering options
     int fog;           // Fog enabled/disabled
@@ -95,12 +105,20 @@ public:
     // Query functions
     void get_fg_root(char *root);
     void get_airport_id(char *id);
+    double get_lon( void );
+    double get_lat( void );
+    double get_altitude( void );
+    double get_heading( void );
+    double get_roll( void );
+    double get_pitch( void );
     int get_splash_screen( void );
     int get_intro_music( void );
     int get_mouse_pointer( void );
+    int get_pause( void );
     int get_hud_status( void );
     int get_panel_status( void );
     int get_sound( void );
+    int get_flight_model( void );
     int get_fog( void );
     double get_fov( void );
     int get_fullscreen( void );
@@ -129,6 +147,13 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.13  1998/07/30 23:48:29  curt
+// Output position & orientation when pausing.
+// Eliminated libtool use.
+// Added options to specify initial position and orientation.
+// Changed default fov to 55 degrees.
+// Added command line option to start in paused or unpaused state.
+//
 // Revision 1.12  1998/07/27 18:41:26  curt
 // Added a pause command "p"
 // Fixed some initialization order problems between pui and glut.

@@ -70,83 +70,17 @@
 extern const char *default_root;
 
 
-// Set initial position
+// Set initial position and orientation
 int fgInitPosition( void ) {
     char id[5];
     fgFLIGHT *f;
 
     f = current_aircraft.flight;
 
-    // If nothing else is specified, default initial position is
-    // Globe, AZ (P13)
-    FG_Longitude = ( -110.6642444 ) * DEG_TO_RAD;
-    FG_Latitude  = (  33.3528917 ) * DEG_TO_RAD;
-    FG_Runway_altitude = (3234.5);
-    FG_Altitude = -1000 /* FG_Runway_altitude + 3.758099 */;
-
-    // Initial Position north of the city of Globe
-    // FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD;
-    // FG_Longitude = ( -397867.44 / 3600.0 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  119548.21 / 3600.0 ) * DEG_TO_RAD;
-    // FG_Altitude = 0.0 + 3.758099;
-
-    // Initial Position near where I used to live in Globe, AZ
-    // FG_Longitude = ( -398757.6 / 3600.0 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  120160.0 / 3600.0 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 4000.0;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Initial Position: 10125 Jewell St. NE
-    // FG_Longitude = ( -93.15 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  45.15 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 950.0;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Initial Position near KHSP (Hot Springs, VA)
-    // FG_Longitude = (-79.8338964 + 0.01) * DEG_TO_RAD;
-    // FG_Latitude  = ( 37.9514564 + 0.008) * DEG_TO_RAD;
-    // FG_Runway_altitude = (3792 + 2800);
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Initial Position at (SEZ) SEDONA airport
-    // FG_Longitude = (-111.7884614 + 0.01) * DEG_TO_RAD;
-    // FG_Latitude  = (  34.8486289 - 0.015) * DEG_TO_RAD;
-    // FG_Runway_altitude = (4827 + 450);
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Initial Position: Somewhere near the Grand Canyon
-    // FG_Longitude = ( -112.5 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  36.5 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 8000.0;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Initial Position: Jim Brennon's Kingmont Observatory
-    // FG_Longitude = ( -121.1131667 ) * DEG_TO_RAD;
-    // FG_Latitude  = (   38.8293917 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 920.0;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Initial Position: Huaras, Peru (S09d 31.871'  W077d 31.498')
-    // FG_Longitude = ( -77.5249667 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  -9.5311833 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 0.0;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
- 
-    // Eclipse Watching w73.5 n10 (approx) 18:00 UT
-    // FG_Longitude = ( -73.5 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  10.0 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 0.0;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Test Position
-    // FG_Longitude = (  8.5 ) * DEG_TO_RAD;
-    // FG_Latitude  = ( 47.5 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = ( 6000 );
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
     current_options.get_airport_id(id);
     if ( strlen(id) ) {
+	// set initial position from airport id
+
 	fgAIRPORTS airports;
 	fgAIRPORT a;
 
@@ -164,11 +98,19 @@ int fgInitPosition( void ) {
 	} else {
 	    FG_Longitude = ( a.longitude ) * DEG_TO_RAD;
 	    FG_Latitude  = ( a.latitude ) * DEG_TO_RAD;
-	    FG_Runway_altitude = ( -1000 /* a.elevation */ );
-	    FG_Altitude = FG_Runway_altitude + 3.758099;
 	}
+    } else {
+	// set initial position from default or command line coordinates
+
+	FG_Longitude = current_options.get_lon() * DEG_TO_RAD;
+	FG_Latitude  = current_options.get_lat() * DEG_TO_RAD;
     }
     
+    printf("starting altitude is = %.2f\n", current_options.get_altitude());
+
+    FG_Altitude = current_options.get_altitude() * METER_TO_FEET;
+    FG_Runway_altitude = FG_Altitude - 3.758099;
+
     fgPrintf( FG_GENERAL, FG_INFO, 
 	      "Initial position is: (%.4f, %.4f, %.2f)\n", 
 	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
@@ -249,9 +191,9 @@ int fgInitSubsystems( void ) {
     FG_V_down  = 0.0;   // -1.265722E-05
 
     // Initial Orientation
-    FG_Phi   = -2.658474E-06;
-    FG_Theta =  7.401790E-03;
-    FG_Psi   =  270.0 * DEG_TO_RAD;
+    FG_Phi   = current_options.get_roll()    * DEG_TO_RAD;
+    FG_Theta = current_options.get_pitch()   * DEG_TO_RAD;
+    FG_Psi   = current_options.get_heading() * DEG_TO_RAD;
 
     // Initial Angular B rates
     FG_P_body = 7.206685E-05;
@@ -371,7 +313,8 @@ int fgInitSubsystems( void ) {
     // Initialize the flight model subsystem data structures base on
     // above values
 
-    fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
+    fgFlightModelInit( current_options.get_flight_model(), f, 
+		       1.0 / DEFAULT_MODEL_HZ );
 
     // I'm just sticking this here for now, it should probably move
     // eventually
@@ -404,6 +347,13 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.29  1998/07/30 23:48:27  curt
+// Output position & orientation when pausing.
+// Eliminated libtool use.
+// Added options to specify initial position and orientation.
+// Changed default fov to 55 degrees.
+// Added command line option to start in paused or unpaused state.
+//
 // Revision 1.28  1998/07/27 18:41:25  curt
 // Added a pause command "p"
 // Fixed some initialization order problems between pui and glut.

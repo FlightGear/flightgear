@@ -58,6 +58,7 @@
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
     fgCONTROLS *c;
+    fgFLIGHT *f;
     fgTIME *t;
     fgVIEW *v;
     struct fgWEATHER *w;
@@ -65,6 +66,7 @@ void GLUTkey(unsigned char k, int x, int y) {
     int status;
 
     c = current_aircraft.controls;
+    f = current_aircraft.flight;
     t = &cur_time_params;
     v = &current_view;
     w = &current_weather;
@@ -189,6 +191,17 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 112: /* p key */
 	    t->pause = !t->pause;
+	    // printf position and attitude information
+	    fgPrintf( FG_INPUT, FG_INFO,
+		      "Lon = %.4f  Lat = %.4f  Altitude = %.1f\n", 
+		      FG_Longitude * RAD_TO_DEG,
+		      FG_Latitude * RAD_TO_DEG,
+		      FG_Altitude * FEET_TO_METER);
+	    fgPrintf( FG_INPUT, FG_INFO,
+		      "Heading = %.2f  Roll = %.2f  Pitch = %.2f\n", 
+		      FG_Psi * RAD_TO_DEG,
+		      FG_Phi * RAD_TO_DEG,
+		      FG_Theta * RAD_TO_DEG);
 	    return;
 	case 116: /* t key */
 	    t->warp_delta += 30;
@@ -308,11 +321,18 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.17  1998/07/27 18:41:23  curt
-/* Added a pause command "p"
-/* Fixed some initialization order problems between pui and glut.
-/* Added an --enable/disable-sound option.
+/* Revision 1.18  1998/07/30 23:48:24  curt
+/* Output position & orientation when pausing.
+/* Eliminated libtool use.
+/* Added options to specify initial position and orientation.
+/* Changed default fov to 55 degrees.
+/* Added command line option to start in paused or unpaused state.
 /*
+ * Revision 1.17  1998/07/27 18:41:23  curt
+ * Added a pause command "p"
+ * Fixed some initialization order problems between pui and glut.
+ * Added an --enable/disable-sound option.
+ *
  * Revision 1.16  1998/07/16 17:33:34  curt
  * "H" / "h" now control hud brightness as well with off being one of the
  *   states.
