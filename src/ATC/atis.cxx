@@ -39,11 +39,11 @@ SG_USING_STD(cout);
 //#include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-//#ifndef FG_OLD_WEATHER
+//#ifndef FG_NEW_ENVIRONMENT
 //sorry, that works only with the new weather system
 #include <WeatherCM/FGLocalWeatherDatabase.h>
 //#else
-//#  include <Weather/weather.hxx>
+//#  include <Environment/environment.hxx>
 //#endif
 
 #include <Main/fg_props.hxx>
@@ -96,7 +96,7 @@ FGATIS::~FGATIS() {
 
 string FGATIS::get_transmission() {
 //void FGATIS::get_transmission() {
-#if !defined(FG_OLD_WEATHER)
+#if !defined(FG_NEW_ENVIRONMENT)
 
     string transmission = "";
     double visibility;
@@ -220,6 +220,6 @@ string FGATIS::get_transmission() {
 
     return(transmission);
 #else
-    return "Station unavailable (not supported by FG_OLD_WEATHER)";
-#endif // FG_OLD_WEATHER
+    return "Station unavailable (not supported by FG_NEW_ENVIRONMENT)";
+#endif // FG_NEW_ENVIRONMENT
 }

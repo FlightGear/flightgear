@@ -1,5 +1,5 @@
-if ENABLE_OLD_WEATHER
-WEATHER_DIR = Weather
+if ENABLE_NEW_ENVIRONMENT
+WEATHER_DIR = Environment
 else
 WEATHER_DIR = WeatherCM
 endif

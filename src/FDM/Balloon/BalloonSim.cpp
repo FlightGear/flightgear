@@ -169,7 +169,7 @@ void balloon::update()
     /* later, but currently was my main concern to get it going...          */
     /************************************************************************/
 
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
     sgVec3 v;
 
     FGPhysicalProperty wdbpos = WeatherDatabase->get(position);
@@ -226,7 +226,7 @@ void balloon::update()
     sgVec3 fTotal, fFriction, fLift;
 
     sgScaleVec3(fTotal, gravity_vector, mTotal);
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
     sgScaleVec3(fFriction, v, cw_envelope * wind_facing_area_of_balloon * WeatherDatabase->getAirDensity(position) * speed / 2.0);  //wind resistance
     sgScaleVec3(fLift, gravity_vector, -balloon_envelope_volume * wdbpos.AirPressure / (287.14 * wdbpos.Temperature));
 #endif

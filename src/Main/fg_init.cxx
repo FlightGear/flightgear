@@ -102,10 +102,10 @@
 #include <Time/moonpos.hxx>
 #include <Time/tmp.hxx>
 
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
-#  include <Weather/weather.hxx>
+#  include <Environment/environment.hxx>
 #endif
 
 #include "fg_init.hxx"
@@ -764,7 +764,7 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
 
     // Initialize the weather modeling subsystem
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
     // Initialize the WeatherDatabase
     SG_LOG(SG_GENERAL, SG_INFO, "Creating LocalWeatherDatabase");
     sgVec3 position;
@@ -805,8 +805,8 @@ bool fgInitSubsystems( void ) {
     global_events.Register( "weather update", fgUpdateWeatherDatabase,
                             fgEVENT::FG_EVENT_READY, 30000);
 #else
-    current_weather.init();
-    current_weather.bind();
+    current_environment.init();
+    current_environment.bind();
 #endif
 
     ////////////////////////////////////////////////////////////////////

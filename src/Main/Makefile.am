@@ -4,8 +4,8 @@ else
 SERIAL_LIBS =
 endif
 
-if ENABLE_OLD_WEATHER
-WEATHER_LIBS = $(top_builddir)/src/Weather/libWeather.a
+if ENABLE_NEW_ENVIRONMENT
+WEATHER_LIBS = $(top_builddir)/src/Environment/libEnvironment.a
 else
 WEATHER_LIBS = $(top_builddir)/src/WeatherCM/libWeatherCM.a
 endif

@@ -39,7 +39,7 @@
 
 #include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
-#include <Weather/weather.hxx>
+#include <Environment/environment.hxx>
 
 
 // This is a record containing current weather info

@@ -44,10 +44,10 @@
 #include <Main/viewer.hxx>
 #include <Objects/obj.hxx>
 
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
-#  include <Weather/weather.hxx>
+#  include <Environment/environment.hxx>
 #endif
 
 #include "newcache.hxx"
@@ -168,14 +168,14 @@ void FGTileMgr::schedule_needed() {
    SG_LOG( SG_TERRAIN, SG_INFO,
            "scheduling needed tiles for " << longitude << " " << latitude );
 
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
     if ( WeatherDatabase != NULL ) {
 	vis = WeatherDatabase->getWeatherVisibility();
     } else {
 	vis = 16000;
     }
 #else
-    vis = current_weather.get_visibility_m();
+    vis = current_environment.get_visibility_m();
 #endif
     // cout << "visibility = " << vis << endl;
 
@@ -409,14 +409,14 @@ int FGTileMgr::update( double lon, double lat ) {
 void FGTileMgr::prep_ssg_nodes() {
     float vis = 0.0;
 
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
     if ( WeatherDatabase ) {
 	vis = WeatherDatabase->getWeatherVisibility();
     } else {
 	vis = 16000;
     }
 #else
-    vis = current_weather.get_visibility_m();
+    vis = current_environment.get_visibility_m();
 #endif
     // cout << "visibility = " << vis << endl;
 

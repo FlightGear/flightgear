@@ -55,10 +55,10 @@
 #include <Cockpit/panel_io.hxx>
 #include <GUI/gui.h>
 
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
-#  include <Weather/weather.hxx>
+#  include <Environment/environment.hxx>
 #endif
 
 #include <Main/globals.hxx>

@@ -136,10 +136,10 @@ FGTileEntry *dummy_tile;
 sgVec3 rway_ols;
 // ADA
 
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
-#  include <Weather/weather.hxx>
+#  include <Environment/environment.hxx>
 #endif
 
 #include "version.h"
@@ -553,10 +553,10 @@ void fgRenderFrame( void ) {
 	default_state->force();
 
 	// update fog params if visibility has changed
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
 	thesky->set_visibility( WeatherDatabase->getWeatherVisibility() );
 #else
-	thesky->set_visibility( current_weather.get_visibility_m() );
+	thesky->set_visibility( current_environment.get_visibility_m() );
 #endif
 
 	thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
@@ -674,7 +674,7 @@ void fgRenderFrame( void ) {
 	    - scenery.get_cur_elev();
 
 	// SG_LOG( SG_ALL, SG_INFO, "visibility is " 
-	//         << current_weather.get_visibility() );
+	//         << current_environment.get_visibility() );
 	    
 	if ( agl > 10.0 ) {
 	    ssgSetNearFar( 10.0f, 120000.0f );
@@ -1042,8 +1042,8 @@ static void fgMainLoop( void ) {
     // init routine and we don't have to worry about it again.
 #endif
 
-#ifdef FG_OLD_WEATHER
-    current_weather.update(0);	// FIXME: use real delta time
+#ifdef FG_NEW_ENVIRONMENT
+    current_environment.update(0);	// FIXME: use real delta time
 #endif
 
     // Fix elevation.  I'm just sticking this here for now, it should

@@ -75,10 +75,10 @@
 #include <simgear/misc/sg_path.hxx>
 #include <Aircraft/aircraft.hxx>
 
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
 #include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
-#include <Weather/weather.hxx>
+#include <Environment/environment.hxx>
 #endif
 
 #include "uiuc_aircraft.h"
@@ -222,7 +222,7 @@ void uiuc_force_moment(double dt)
    double vis;
    if (Fog != 0)
    {
- #ifndef FG_OLD_WEATHER
+ #ifndef FG_NEW_ENVIRONMENT
      vis = WeatherDatabase->getWeatherVisibility();
      if (Fog > 0)
        vis /= 1.01;
@@ -230,12 +230,12 @@ void uiuc_force_moment(double dt)
        vis *= 1.01;
      WeatherDatabase->setWeatherVisibility( vis );
  #else
-     vis = current_weather.get_visibility_m();
+     vis = current_environment.get_visibility_m();
      if (Fog > 0)
        vis /= 1.01;
      else
        vis *= 1.01;
-     current_weather.set_visibility_m( vis );
+     current_environment.set_visibility_m( vis );
  #endif
    }
  

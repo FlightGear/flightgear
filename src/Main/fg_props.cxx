@@ -33,11 +33,11 @@
 #include <Aircraft/aircraft.hxx>
 #include <Time/tmp.hxx>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
-#ifndef FG_OLD_WEATHER
+#ifndef FG_NEW_ENVIRONMENT
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
-#  include <Weather/weather.hxx>
-#endif // FG_OLD_WEATHER
+#  include <Environment/environment.hxx>
+#endif // FG_NEW_ENVIRONMENT
 #include <Objects/matlib.hxx>
 
 #include <GUI/gui.h>
@@ -52,11 +52,11 @@ SG_USING_STD(istream);
 SG_USING_STD(ostream);
 #endif
 
-#if !defined(FG_OLD_WEATHER)
+#if !defined(FG_NEW_ENVIRONMENT)
 static double getWindNorth ();
 static double getWindEast ();
 static double getWindDown ();
-#endif // FG_OLD_WEATHER
+#endif // FG_NEW_ENVIRONMENT
 
 // Allow the view to be set from two axes (i.e. a joystick hat)
 // This needs to be in FGViewer itself, somehow.
@@ -890,7 +890,7 @@ setAPThrottleControl (double value)
 }
 
 
-#if !defined(FG_OLD_WEATHER)
+#if !defined(FG_NEW_ENVIRONMENT)
 
 /**
  * Get the current visibility (meters).
@@ -976,7 +976,7 @@ setWindDown (double speed)
 							   speed);
 }
 
-#endif // FG_OLD_WEATHER
+#endif // FG_NEW_ENVIRONMENT
 
 static double
 getFOV ()
@@ -1152,7 +1152,7 @@ fgInitProps ()
   fgSetArchivable("/autopilot/control-overrides/throttle");
 
 				// Environment
-#if !defined(FG_OLD_WEATHER)
+#if !defined(FG_NEW_ENVIRONMENT)
   fgTie("/environment/visibility-m", getVisibility, setVisibility);
   fgSetArchivable("/environment/visibility-m");
   fgTie("/environment/wind-north-fps", getWindNorth, setWindNorth);
