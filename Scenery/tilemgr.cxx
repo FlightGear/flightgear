@@ -443,7 +443,7 @@ int fgTileMgrUpdate( void ) {
     }
 
     // find our current elevation (feed in the current bucket to save work)
-    fgTileMgrCurElev( p1 );
+    scenery.cur_elev = fgTileMgrCurElev( p1 );
 
     p_last.lon = p1.lon;
     p_last.lat = p1.lat;
@@ -748,6 +748,10 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.46  1998/12/03 14:15:24  curt
+// Actually set the current scenery elevation based on scenery intersection point
+// rather than calculating the intesection point and throwing it away.
+//
 // Revision 1.45  1998/12/03 01:18:18  curt
 // Converted fgFLIGHT to a class.
 // Tweaks for Sun Portability.
