@@ -326,6 +326,11 @@ FGInterface::bind ()
 	&FGInterface::set_Psi_deg);
   fgSetArchivable("/orientation/heading-deg");
 
+                                // Rates
+  fgTie("/rates/roll-deg_sec", this, &FGInterface::get_Phi_dot_degps);
+  fgTie("/rates/pitch-deg_sec", this, &FGInterface::get_Theta_dot_degps);
+  fgTie("/rates/heading-deg_sec", this, &FGInterface::get_Psi_dot_degps);
+
   // Body-axis "euler rates" (rotation speed, but in a funny
   // representation).
   fgTie("/orientation/roll-rate-degps", this,
@@ -399,6 +404,15 @@ FGInterface::bind ()
   &FGInterface::get_Alpha_deg); // read-only
   fgTie("/accelerations/nlf", this,
   &FGInterface::get_Nlf); // read-only
+
+                                // Pilot accelerations
+  fgTie("/accelerations/pilot/x-accel-ft_sec2",
+        this, &FGInterface::get_A_X_pilot);
+  fgTie("/accelerations/pilot/y-accel-ft_sec2",
+        this, &FGInterface::get_A_Y_pilot);
+  fgTie("/accelerations/pilot/z-accel-ft_sec2",
+        this, &FGInterface::get_A_Z_pilot);
+
 }
 
 
@@ -421,9 +435,12 @@ FGInterface::unbind ()
   fgUntie("/position/longitude-deg");
   fgUntie("/position/altitude-ft");
   fgUntie("/position/altitude-agl-ft");
-  fgUntie("/orientation/heading-deg");
-  fgUntie("/orientation/pitch-deg");
   fgUntie("/orientation/roll-deg");
+  fgUntie("/orientation/pitch-deg");
+  fgUntie("/orientation/heading-deg");
+  fgUntie("/rates/roll-deg_sec");
+  fgUntie("/rates/pitch-deg_sec");
+  fgUntie("/rates/heading-deg_sec");
   fgUntie("/velocities/airspeed-kt");
   fgUntie("/velocities/speed-north-fps");
   fgUntie("/velocities/speed-east-fps");
@@ -437,7 +454,9 @@ FGInterface::unbind ()
   fgUntie("/velocities/side-slip-deg");
   fgUntie("/velocities/alpha-deg");
   fgUntie("/accelerations/nlf");
-  
+  fgUntie("/accelerations/pilot/x-accel-fps_sec");
+  fgUntie("/accelerations/pilot/y-accel-fps_sec");
+  fgUntie("/accelerations/pilot/z-accel-fps_sec");
 }
 
 /**
