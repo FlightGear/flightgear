@@ -207,6 +207,7 @@ fgSetDefaults ()
     fgSetBool("/sim/rendering/horizon-effect", false);
     fgSetBool("/sim/rendering/enhanced-lighting", false);
     fgSetBool("/sim/rendering/distance-attenuation", false);
+    fgSetBool("/sim/rendering/specular-highlight", true);
     fgSetInt("/sim/startup/xsize", 800);
     fgSetInt("/sim/startup/ysize", 600);
     fgSetInt("/sim/rendering/bits-per-pixel", 16);
@@ -1287,6 +1288,8 @@ struct OptionDesc {
     {"enable-enhanced-lighting",     false, OPTION_BOOL,   "/sim/rendering/enhanced-lighting", true, "", 0 },
     {"disable-distance-attenuation", false, OPTION_BOOL,   "/sim/rendering/distance-attenuation", false, "", 0 },
     {"enable-distance-attenuation",  false, OPTION_BOOL,   "/sim/rendering/distance-attenuation", true, "", 0 },
+    {"disable-specular-highlight",   false, OPTION_BOOL,   "/sim/rendering/specular-highlight", false, "", 0 },
+    {"enable-specular-highlight",    false, OPTION_BOOL,   "/sim/rendering/specular-highlight", true, "", 0 },
     {"disable-clouds",               false, OPTION_BOOL,   "/environment/clouds/status", false, "", 0 },
     {"enable-clouds",                false, OPTION_BOOL,   "/environment/clouds/status", true, "", 0 },
 #ifdef FG_USE_CLOUDS_3D
