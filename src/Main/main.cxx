@@ -135,7 +135,8 @@ SG_USING_STD(endl);
 
 
 // #define FG_EXPERIMENTAL_LIGHTING
-#ifdef WIN32
+#ifdef FG_EXPERIMENTAL_LIGHTING
+#  ifdef WIN32
   typedef void (APIENTRY * PFNGLPOINTPARAMETERFEXTPROC)(GLenum pname,
                                                         GLfloat param);
   typedef void (APIENTRY * PFNGLPOINTPARAMETERFVEXTPROC)(GLenum pname,
@@ -143,7 +144,7 @@ SG_USING_STD(endl);
 
   PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
   PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
-#elif linux
+#  elif linux
   #include <GL/glx.h>
 
   typedef void (* OpenGLFuncExt)(GLenum pname, GLfloat param);
@@ -151,6 +152,7 @@ SG_USING_STD(endl);
 
   OpenGLFuncExt glPointParameterfEXT = 0;
   OpenGLFuncExtv glPointParameterfvEXT = 0;
+#  endif
 #endif
 
 float default_attenuation[3] = {1.0, 0.0, 0.0};
@@ -745,7 +747,7 @@ void fgRenderFrame() {
             // makes the points fade as they move away
             glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
             glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
-            glPointSize(4.0);
+            glPointSize(2.0);
 	}
 
         // blending function for runway lights
