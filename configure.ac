@@ -324,7 +324,7 @@ case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
     dnl CygWin under Windoze.
 
-    LIBS="$LIBS -lalut -lopenal32 -lwinmm -ldsound -ldxguid -lole32"
+    LIBS="$LIBS -lopenal32 -lwinmm -ldsound -ldxguid -lole32"
     ;;
 
 *-apple-darwin*)
