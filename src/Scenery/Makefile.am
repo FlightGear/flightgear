@@ -7,4 +7,4 @@ libScenery_a_SOURCES = \
 	tileentry.cxx tileentry.hxx \
 	tilemgr.cxx tilemgr.hxx
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

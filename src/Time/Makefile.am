@@ -13,4 +13,4 @@ libTime_a_SOURCES = \
 	# lowleveltime.cxx lowleveltime.h \
 	# timezone.cxx timezone.h
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

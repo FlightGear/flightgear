@@ -10,4 +10,4 @@ libNetwork_a_SOURCES = \
 	rul.cxx rul.hxx \
 	joyclient.cxx joyclient.hxx
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

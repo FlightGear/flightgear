@@ -12,6 +12,6 @@ libfiltersjb_a_SOURCES = \
 	FGSummer.cpp FGSummer.h \
 	FGSwitch.cpp FGSwitch.h
 
-INCLUDES += -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir)/src
 
 DEFS += -DFGFS

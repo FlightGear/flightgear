@@ -6,4 +6,4 @@ libObjects_a_SOURCES = \
 	obj.cxx obj.hxx \
 	texload.c texload.h colours.h
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

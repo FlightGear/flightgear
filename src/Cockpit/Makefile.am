@@ -13,4 +13,4 @@ libCockpit_a_SOURCES = \
 	sp_panel.cxx sp_panel.hxx \
 	steam.cxx steam.hxx
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

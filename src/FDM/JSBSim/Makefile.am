@@ -34,6 +34,6 @@ testJSBsim_SOURCES = JSBSim.cpp
 
 testJSBsim_LDADD = libJSBSim.a filtersjb/libfiltersjb.a
 
-INCLUDES += -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir)/src
 
 DEFS += -DFGFS

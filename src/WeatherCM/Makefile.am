@@ -18,4 +18,4 @@ libWeatherCM_a_SOURCES = \
 	FGWeatherVectorWrap.h \
 	FGWindItem.cpp FGWindItem.h
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

@@ -47,4 +47,4 @@ libUIUCModel_a_SOURCES = \
                         uiuc_warnings_errors.cpp uiuc_warnings_errors.h \
                         uiuc_wrapper.cpp uiuc_wrapper.h
 
-INCLUDES += -I$(top_builddir) 
+INCLUDES += -I$(top_srcdir) 

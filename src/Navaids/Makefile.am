@@ -10,4 +10,4 @@ libNavaids_a_SOURCES = \
 testnavs_SOURCES = testnavs.cxx
 testnavs_LDADD = libNavaids.a -lsgmath -lsgmisc -lsgdebug -lz
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

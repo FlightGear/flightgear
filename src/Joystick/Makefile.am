@@ -6,4 +6,4 @@ noinst_PROGRAMS = js_demo
 
 js_demo_SOURCES = js_demo.cxx
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

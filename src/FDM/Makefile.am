@@ -19,4 +19,4 @@ engine_LDADD = libFlight.a
 
 pstest_SOURCES = ps-10520c.cxx
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
