@@ -61,6 +61,9 @@ bool FGCommList::init( SGPath path ) {
 	temp.append( "ATC/default.tower" );
 	LoadComms(temp);
 	temp = path;
+	temp.append( "ATC/default.ground" );
+	LoadComms(temp);
+	temp = path;
 	temp.append( "ATC/default.approach" );
 	LoadComms(temp);
 	return true;
@@ -94,12 +97,13 @@ bool FGCommList::LoadComms(SGPath path) {
 			commlist_freq[a.freq].push_back(a);
 			
 			// Push non-atis stations onto bucket map as well
-			if(a.type != ATIS) {
+			// In fact, push all stations onto bucket map for now so FGATCMgr::GetFrequency() works.
+			//if(a.type != ATIS) {
 				// get bucket number
 				SGBucket bucket(a.lon, a.lat);
 				int bucknum = bucket.gen_index();
 				commlist_bck[bucknum].push_back(a);
-			}
+			//}
 		}
 		
 		fin >> skipcomment;
