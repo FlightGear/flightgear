@@ -202,7 +202,7 @@ private:
    */
   struct button {
     button ()
-      : is_repeatable(true),
+      : is_repeatable(false),
 	last_state(-1)
     {}
     bool is_repeatable;
