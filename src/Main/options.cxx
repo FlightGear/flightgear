@@ -28,11 +28,6 @@
 #include <simgear/compiler.h>
 #include <simgear/misc/exception.hxx>
 
-/* normans fix */
-#if defined(FX) && defined(XMESA)
-bool global_fullscreen = true;
-#endif
-
 #include <math.h>            // rint()
 #include <stdio.h>
 #include <stdlib.h>          // atof(), atoi()

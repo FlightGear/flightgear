@@ -42,6 +42,7 @@
 
 #include <GUI/gui.h>
 
+#include "globals.hxx"
 #include "fgfs.hxx"
 #include "fg_props.hxx"
 #include "viewmgr.hxx"
@@ -1057,7 +1058,7 @@ static bool
 getFullScreen ()
 {
 #if defined(FX) && !defined(WIN32)
-  return global_fullscreen;
+  return globals->get_fullscreen();
 #else
   return false;
 #endif
@@ -1067,9 +1068,9 @@ static void
 setFullScreen (bool state)
 {
 #if defined(FX) && !defined(WIN32)
-  global_fullscreen = state;
+  globals->set_fullscreen(state);
 #  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
-  XMesaSetFXmode( global_fullscreen ? XMESA_FX_FULLSCREEN : XMESA_FX_WINDOW );
+  XMesaSetFXmode( state ? XMESA_FX_FULLSCREEN : XMESA_FX_WINDOW );
 #  endif
 #endif
 }

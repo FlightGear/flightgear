@@ -489,14 +489,14 @@ bool fgInitGeneral( void ) {
 
 #if defined(FX) && defined(XMESA)
     // initialize full screen flag
-    global_fullscreen = false;
+    globals->set_fullscreen(false);
     if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
 	// Test for the MESA_GLX_FX env variable
 	if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
 	    // test if we are fullscreen mesa/glide
 	    if ( (mesa_win_state[0] == 'f') ||
 		 (mesa_win_state[0] == 'F') ) {
-		global_fullscreen = true;
+	        globals->set_fullscreen(true);
 	    }
 	}
     }

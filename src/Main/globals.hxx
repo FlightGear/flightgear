@@ -63,6 +63,11 @@ private:
     // Freeze sim
     bool freeze;
 
+    // Fullscreen mode for old 3DFX cards.
+#if defined(FX) && defined(XMESA)
+    extern bool fullscreen;
+#endif
+
     // An offset in seconds from the true time.  Allows us to adjust
     // the effective time of day.
     long int warp;
@@ -120,6 +125,11 @@ public:
 
     inline bool get_freeze() const { return freeze; }
     inline void set_freeze( bool f ) { freeze = f; }
+
+#if defined(FX) && defined(XMESA)
+    inline bool get_fullscreen() const { return fullscreen; }
+    inline bool set_fullscreen( bool f ) const { fullscreen = f; }
+#endif
 
     inline long int get_warp() const { return warp; }
     inline void set_warp( long int w ) { warp = w; }

@@ -449,8 +449,8 @@ void helpCb (puObject *)
 	
 #if defined(FX) && !defined(WIN32)
 #  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
-    if ( global_fullscreen ) {
-        global_fullscreen = false;
+    if ( globals->get_fullscreen() ) {
+        globals->set_fullscreen(false);
         XMesaSetFXmode( XMESA_FX_WINDOW );
     }
 #  endif
