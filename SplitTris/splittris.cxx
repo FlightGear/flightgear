@@ -32,7 +32,7 @@
 #include <sys/stat.h> /* for stat() */
 #include <unistd.h>   /* for stat() */
 
-#include "splittris.h"
+#include "splittris.hxx"
 
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
@@ -40,7 +40,7 @@
 
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
-#include <Math/polar3d.h>
+#include <Math/polar3d.hxx>
 
 int nodecount, tricount;
 double xmin, xmax, ymin, ymax;
@@ -49,16 +49,16 @@ static double nodes_orig[MAX_NODES][3];
 static int tris[MAX_TRIS][3];
 /* static int new_tris[MAX_TRIS][3]; */
 
-static fgCartesianPoint3d nodes_cart[MAX_NODES];
+static fgPoint3d nodes_cart[MAX_NODES];
 
 fgBUCKET ne_index, nw_index, sw_index, se_index;
 fgBUCKET north_index, south_index, east_index, west_index;
 
 /* convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to
  * a cartesian point */
-fgCartesianPoint3d geod_to_cart(double geod[3]) {
-    fgCartesianPoint3d cp;
-    fgPolarPoint3d pp;
+fgPoint3d geod_to_cart(double geod[3]) {
+    fgPoint3d cp;
+    fgPoint3d pp;
     double gc_lon, gc_lat, sl_radius;
 
     /* printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
@@ -72,7 +72,7 @@ fgCartesianPoint3d geod_to_cart(double geod[3]) {
 
     pp.lon = gc_lon;
     pp.lat = gc_lat;
-    pp.radius = sl_radius+geod[2];
+    pp.radius = sl_radius + geod[2];
     cp = fgPolarToCart3d(pp);
     
     /* printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z); */
@@ -82,8 +82,8 @@ fgCartesianPoint3d geod_to_cart(double geod[3]) {
 
 
 /* given three points defining a triangle, calculate the normal */
-void calc_normal(fgCartesianPoint3d p1, fgCartesianPoint3d p2, 
-		 fgCartesianPoint3d p3, double normal[3])
+void calc_normal(fgPoint3d p1, fgPoint3d p2, 
+		 fgPoint3d p3, double normal[3])
 {
     double v1[3], v2[3];
     double temp;
@@ -616,9 +616,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.11  1998/07/04 00:56:40  curt
-/* typedef'd struct fgBUCKET.
+/* Revision 1.1  1998/07/08 14:59:13  curt
+/* *.[ch] renamed to *.[ch]xx
 /*
+ * Revision 1.11  1998/07/04 00:56:40  curt
+ * typedef'd struct fgBUCKET.
+ *
  * Revision 1.10  1998/05/02 01:54:37  curt
  * Converting to polar3d.h routines.
  *
