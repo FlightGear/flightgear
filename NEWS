@@ -1,3 +1,18 @@
+New in 0.47
+* Added a command line option to specify --fg-root which will override
+  $FG_ROOT
+* Hard coded default locations for FG_ROOT for situations when nothing
+  is specified.  Unix = /usr/local/lib/FlightGear  Win32 = \FlightGear
+* Restructured the command line processing code so that it can process
+  these sames comands (one per line) out of a config file.
+* Added a command line option to specify field of view.  This is
+  adjustable at run time using "X / x".  Supporting code contributed
+  by Norman Vine.
+
+New in 0.46:
+* Complete C++ re-write of the HUD section.
+* Miscellaneous bug fixes and tweaks.
+
 New in 0.45:
 * Added an option to enable/disable wireframe rendering.
 * Added an option to enable/disable fog/haze.
