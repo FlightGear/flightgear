@@ -304,29 +304,44 @@ FGInterface::bind ()
 	&FGInterface::set_V_calibrated_kts);
 
 				// Local velocities
+//   fgTie("/velocities/speed-north-fps", this,
+// 	&FGInterface::get_V_north,
+// 	&FGInterface::set_V_north);
+//   fgSetArchivable("/velocities/speed-north-fps");
+//   fgTie("/velocities/speed-east-fps", this,
+// 	&FGInterface::get_V_east,
+// 	&FGInterface::set_V_east);
+//   fgSetArchivable("/velocities/speed-east-fps");
+//   fgTie("/velocities/speed-down-fps", this,
+// 	&FGInterface::get_V_down,
+// 	&FGInterface::set_V_down);
+//   fgSetArchivable("/velocities/speed-down-fps");
+				// FIXME: Temporarily read-only, until the
+				// incompatibilities between JSBSim and
+				// LaRCSim are fixed (LaRCSim adds the
+				// earth's rotation to the east velocity).
   fgTie("/velocities/speed-north-fps", this,
-	&FGInterface::get_V_north,
-	&FGInterface::set_V_north);
-  fgSetArchivable("/velocities/speed-north-fps");
+	&FGInterface::get_V_north);
   fgTie("/velocities/speed-east-fps", this,
-	&FGInterface::get_V_east,
-	&FGInterface::set_V_east);
-  fgSetArchivable("/velocities/speed-east-fps");
+	&FGInterface::get_V_east);
   fgTie("/velocities/speed-down-fps", this,
-	&FGInterface::get_V_down,
-	&FGInterface::set_V_down);
-  fgSetArchivable("/velocities/speed-down-fps");
+	&FGInterface::get_V_down);
 
 				// Relative wind
+				// FIXME: temporarily archivable, until
+				// the NED problem is fixed.
   fgTie("/velocities/uBody-fps", this,
 	&FGInterface::get_uBody,
 	&FGInterface::set_uBody);
+  fgSetArchivable("/velocities/uBody-fps");
   fgTie("/velocities/vBody-fps", this,
 	&FGInterface::get_vBody,
 	&FGInterface::set_vBody);
+  fgSetArchivable("/velocities/vBody-fps");
   fgTie("/velocities/wBody-fps", this,
 	&FGInterface::get_wBody,
 	&FGInterface::set_wBody);
+  fgSetArchivable("/velocities/wBody-fps");
 
 				// Climb and slip (read-only)
   fgTie("/velocities/vertical-speed-fps", this,
