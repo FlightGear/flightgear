@@ -79,7 +79,7 @@ class FGModel
 {
 public:
   FGModel(FGFDMExec*);
-  ~FGModel(void);
+  virtual ~FGModel(void);
 
   FGModel* NextModel;
   string Name;
