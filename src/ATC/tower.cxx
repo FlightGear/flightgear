@@ -898,7 +898,7 @@ void FGTower::CheckCircuitList(double dt) {
 			//cout << " ho = " << ho << " abs(ho = " << abs(ho) << '\n';
 			// TODO FIXME - get the wind and convert this to track, or otherwise use track somehow!!!
 			// If it's gusty might need to filter the value, although we are leaving 30 degrees each way leeway!
-			if(abs(ho) < 30) {
+			if(fabs(ho) < 30) {
 				// could be either takeoff, climbout or landing - check orthopos.y
 				//cout << "tortho.y = " << tortho.y() << '\n';
 				if((tortho.y() < 0) || (t->leg == TURN4) || (t->leg == FINAL)) {
@@ -931,7 +931,7 @@ void FGTower::CheckCircuitList(double dt) {
 						}
 					}
 				}
-			} else if(abs(ho) < 60) {
+			} else if(fabs(ho) < 60) {
 				// turn1 or turn 4
 				// TODO - either fix or doublecheck this hack by looking at heading and pattern direction
 				if((t->leg == CLIMBOUT) || (t->leg == TURN1)) {
@@ -941,7 +941,7 @@ void FGTower::CheckCircuitList(double dt) {
 					t->leg = TURN4;
 					//cout << "Turn4\n";
 				}
-			} else if(abs(ho) < 120) {
+			} else if(fabs(ho) < 120) {
 				// crosswind or base
 				// TODO - either fix or doublecheck this hack by looking at heading and pattern direction
 				if((t->leg == TURN1) || (t->leg == CROSSWIND)) {
@@ -951,7 +951,7 @@ void FGTower::CheckCircuitList(double dt) {
 					t->leg = BASE;
 					//cout << "Base\n";
 				}
-			} else if(abs(ho) < 150) {
+			} else if(fabs(ho) < 150) {
 				// turn2 or turn 3
 				// TODO - either fix or doublecheck this hack by looking at heading and pattern direction
 				if((t->leg == CROSSWIND) || (t->leg == TURN2)) {
