@@ -41,7 +41,8 @@ Jim Brennan <jjb@foothill.net>
 
 
 Bernie Bright <bbright@c031.aone.net.au>
-  Many C++ style, usage, and implimentation improvements.
+  Many C++ style, usage, and implimentation improvements.  STL portability,
+  tons o' stuff. :-)
 
 
 Bernhard H. Buckel <buckel@wmad95.mathematik.uni-wuerzburg.de>

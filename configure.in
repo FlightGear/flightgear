@@ -80,13 +80,8 @@ AM_CONDITIONAL(ENABLE_IRIX_AUDIO, test -r /usr/include/audio.h)
 AM_CONDITIONAL(ENABLE_WIN32_AUDIO, test "x$ac_cv_header_windows_h" = "xyes")
 
 dnl Check for (currently Linux only style) joystick support
-# AM_CONDITIONAL(ENABLE_JOYSTICK_SUPPORT, \
-#	test -r /usr/include/linux/joystick.h \
-#	-o "x$ac_cv_header_windows_h" = "xyes" )
 
 AM_CONDITIONAL(ENABLE_LINUX_JOYSTICK, test -r /usr/include/linux/joystick.h )
-
-# AM_CONDITIONAL(ENABLE_GLUT_JOYSTICK, "x$ac_cv_header_windows_h" = "xyes" )
 
 dnl extra library and include directories
 EXTRA_DIRS="/usr/local /usr/X11R6 /opt/X11R6"
@@ -103,8 +98,14 @@ AC_PATH_XTRA
 
 dnl Checks for libraries.
 
+null_LIBS="$LIBS"
+
 AC_CHECK_LIB(m, cos)
-AC_CHECK_LIB(socket, socket)
+
+base_LIBS="$LIBS"
+LIBS="$null_LIBS"
+
+# AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(X11, XCreateWindow)
 AC_CHECK_LIB(Xext, XShmCreateImage)
 AC_CHECK_LIB(Xi, XGetExtensionVersion)
@@ -150,8 +151,11 @@ if test "x$ac_cv_header_windows_h" != "xyes" ; then
     dnl check for glut
     AC_CHECK_LIB(glut, glutGetModifiers)
 
-    dnl test for glutGameModeString
+    dnl test for glutGameModeString, but avoid adding glut a second time into
+    dnl the list of libraries
+    save_LIBS="$LIBS"
     AC_CHECK_LIB(glut, glutGameModeString)
+    LIBS="$save_LIBS"
 else
     dnl Win32 is a little wierd because it has to try to handle the various
     dnl winbloze-isms.  We'll just do this manually for now.
@@ -203,6 +207,13 @@ else
     ac_cv_lib_glut_glutGetModifiers="yes"
     ac_cv_lib_glut_glutGameModeString="yes"
 fi
+
+opengl_LIBS="$LIBS"
+LIBS="$null_LIBS"
+
+AC_SUBST(base_LIBS)
+AC_SUBST(opengl_LIBS)
+
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -294,3 +305,4 @@ AC_OUTPUT( \
 )
 
 AC_OUTPUT_COMMANDS([chmod 755 Simulator/Main/runfgfs])
+
