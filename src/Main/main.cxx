@@ -709,6 +709,11 @@ void fgRenderFrame() {
 	glEnable( GL_DEPTH_TEST );
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
+
+        if ( fgGetBool("/sim/rendering/wireframe") ) {
+            // draw wire frame
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        }
 	ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
 
 	// This is a bit kludgy.  Every 200 frames, do an extra
