@@ -95,7 +95,6 @@ FGJSBsim::FGJSBsim( double dt )
                                engine_path.str(),
                                fgGetString("/sim/aircraft") );
     
-
     if (result) {
       SG_LOG( SG_FLIGHT, SG_INFO, "  loaded aircraft.");
     } else {
@@ -104,12 +103,25 @@ FGJSBsim::FGJSBsim( double dt )
       throw(-1);
     }
 
+    SG_LOG( SG_FLIGHT, SG_INFO, "" );
+    SG_LOG( SG_FLIGHT, SG_INFO, "" );
+    SG_LOG( SG_FLIGHT, SG_INFO, "After loading aircraft definition file ..." );
+
     int Neng = Propulsion->GetNumEngines();
-    SG_LOG(SG_FLIGHT,SG_INFO, "Neng: " << Neng );
-    
+    SG_LOG( SG_FLIGHT, SG_INFO, "num engines = " << Neng );
     for(int i=0;i<Neng;i++) {
         add_engine( FGEngInterface() );
     }  
+    
+    if ( fdmex->GetAircraft()->GetNumGearUnits() <= 0 ) {
+        SG_LOG( SG_FLIGHT, SG_ALERT, "num gear units = "
+                << fdmex->GetAircraft()->GetNumGearUnits() );
+        SG_LOG( SG_FLIGHT, SG_ALERT, "This is a very bad thing because with 0 gear units, the ground trimming");
+         SG_LOG( SG_FLIGHT, SG_ALERT, "routine (coming up later in the code) will core dump.");
+         SG_LOG( SG_FLIGHT, SG_ALERT, "Halting the sim now, and hoping a solution will present itself soon!");
+         exit(-1);
+    }
+        
     
     fgSetDouble("/fdm/trim/pitch-trim", FCS->GetPitchTrimCmd());
     fgSetDouble("/fdm/trim/throttle",   FCS->GetThrottleCmd(0));
@@ -149,8 +161,8 @@ void FGJSBsim::init() {
     FGInterface::init();
 
     fdmex->GetState()->Initialize(fgic);
-    // fdmex->RunIC(fgic); //loop JSBSim once w/o integrating
-    fdmex->Run();       //loop JSBSim once
+    fdmex->RunIC(fgic); //loop JSBSim once w/o integrating
+    // fdmex->Run();       //loop JSBSim once
     copy_from_JSBsim(); //update the bus
 
     SG_LOG( SG_FLIGHT, SG_INFO, "  Initialized JSBSim with:" );
@@ -213,7 +225,7 @@ bool FGJSBsim::update( int multiloop ) {
     trimmed->setBoolValue(false);
 
     if ( needTrim && startup_trim->getBoolValue() ) {
-
+        cout << "num gear units = " << fdmex->GetAircraft()->GetNumGearUnits() << endl;
         //fgic->SetSeaLevelRadiusFtIC( get_Sea_level_radius() );
         //fgic->SetTerrainAltitudeFtIC( scenery.cur_elev * SG_METER_TO_FEET );
 
