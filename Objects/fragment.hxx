@@ -51,9 +51,6 @@
 
 FG_USING_STD(vector);
 
-// Maximum nodes per tile
-#define MAX_NODES 2000
-
 
 struct fgFACE {
     int n1, n2, n3;
@@ -175,6 +172,9 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.12  1999/04/05 02:14:21  curt
+// Moved max node per tile definition to fg_constants.h
+//
 // Revision 1.11  1999/03/25 19:02:53  curt
 // Removed an unneeded include.
 //
