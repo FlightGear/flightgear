@@ -30,7 +30,7 @@
 #---------------------------------------------------------------------------
 
 FG_VERSION_MAJOR = 0
-FG_VERSION_MINOR = 23
+FG_VERSION_MINOR = 24
 FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 
@@ -153,12 +153,15 @@ FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 # INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
 # FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS) -DWIN32 -DUSE_RAND
-# LN = ren
+# LN = cp
 #---------------------------------------------------------------------------
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.32  1998/01/19 18:35:40  curt
+# Minor tweaks and fixes for cygwin32.
+#
 # Revision 1.31  1998/01/08 02:21:46  curt
 # Version 0.23
 #

@@ -57,7 +57,7 @@ void fgTimeInit(struct fgTIME *t) {
 
     t->gst_diff = -9999.0;
     t->warp = 0;
-    t->warp = 5 * 3600;
+    t->warp = 0 * 3600;
     t->warp_delta = 0;
 }
 
@@ -167,9 +167,12 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 
 #ifdef USE_FTIME
     struct timeb current;
+#endif /* USE_FTIME */
+
+#ifdef WIN32
     int daylight;
     long int timezone;
-#endif /* USE_FTIME */
+#endif /* WIN32 */
 
     /*
     printf("  COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
@@ -298,10 +301,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.27  1998/01/13 00:23:13  curt
-/* Initial changes to support loading and management of scenery tiles.  Note,
-/* there's still a fair amount of work left to be done.
+/* Revision 1.28  1998/01/19 18:35:49  curt
+/* Minor tweaks and fixes for cygwin32.
 /*
+ * Revision 1.27  1998/01/13 00:23:13  curt
+ * Initial changes to support loading and management of scenery tiles.  Note,
+ * there's still a fair amount of work left to be done.
+ *
  * Revision 1.26  1998/01/05 18:44:36  curt
  * Add an option to advance/decrease time from keyboard.
  *

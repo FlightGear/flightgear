@@ -42,6 +42,8 @@ int fgFlightModelInit(int model, struct fgFLIGHT *f, double dt) {
 	printf("Unimplemented flight model == %d\n", model);
     }
 
+    result = 1;
+
     return(result);
 }
 
@@ -58,14 +60,19 @@ int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop) {
 	printf("Unimplemented flight model == %d\n", model);
     }
 
+    result = 1;
+
     return(result);
 }
 
 
 /* $Log$
-/* Revision 1.5  1997/12/30 20:47:37  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.6  1998/01/19 18:35:43  curt
+/* Minor tweaks and fixes for cygwin32.
 /*
+ * Revision 1.5  1997/12/30 20:47:37  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.4  1997/12/10 22:37:42  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

@@ -111,6 +111,9 @@ static void fgInitVisuals() {
     xglFogf (GL_FOG_END, w->visibility);
     /* xglFogf (GL_FOG_DENSITY, w->visibility); */
     xglHint (GL_FOG_HINT, GL_NICEST /* GL_FASTEST */ );
+
+    /* draw wire frame */
+    /* xglPolygonMode(GL_FRONT_AND_BACK,GL_LINE); */
 }
 
 
@@ -633,10 +636,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.47  1998/01/13 00:23:08  curt
-/* Initial changes to support loading and management of scenery tiles.  Note,
-/* there's still a fair amount of work left to be done.
+/* Revision 1.48  1998/01/19 18:35:46  curt
+/* Minor tweaks and fixes for cygwin32.
 /*
+ * Revision 1.47  1998/01/13 00:23:08  curt
+ * Initial changes to support loading and management of scenery tiles.  Note,
+ * there's still a fair amount of work left to be done.
+ *
  * Revision 1.46  1998/01/08 02:22:06  curt
  * Beginning to integrate Tile management subsystem.
  *
