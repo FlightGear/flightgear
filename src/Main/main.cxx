@@ -1111,14 +1111,17 @@ static void fgMainLoop( void ) {
            cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
 // Curt is this code used?  I don't see any problems when I comment it out.
+// This code is used by LaRCsim/UIUC to position the aircraft at a proper
+// place. This code should eventually go into the LaRCsim directory.
+
     if ( acmodel_location != 0 ) {
       if ( acmodel_location->get_cur_elev_m() > -9990 && cur_fdm_state->get_inited() ) {
         if ( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER < 
-             (acmodel_location->get_cur_elev_m() + alt_adjust_m - 3.0) ) {
+             (acmodel_location->get_cur_elev_m() + alt_adjust_m - 130.0) ) {
             // now set aircraft altitude above ground
             printf("(*) Current Altitude = %.2f < %.2f forcing to %.2f\n", 
                cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
-               acmodel_location->get_cur_elev_m() + alt_adjust_m - 3.0,
+               acmodel_location->get_cur_elev_m() + alt_adjust_m - 130.0,
                acmodel_location->get_cur_elev_m() + alt_adjust_m );
             cur_fdm_state->set_Altitude( (acmodel_location->get_cur_elev_m() 
                                                 + alt_adjust_m) * SG_METER_TO_FEET );
