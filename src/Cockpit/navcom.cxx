@@ -450,42 +450,42 @@ void FGNavCom::search()
     double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
-    FGILS ils;
+    FGILS *ils;
     FGNav *nav;
 
     ////////////////////////////////////////////////////////////////////////
     // Nav.
     ////////////////////////////////////////////////////////////////////////
 
-    if ( current_ilslist->query( lon, lat, elev, nav_freq, &ils ) ) {
-	nav_id = ils.get_locident();
+    if ( (ils = current_ilslist->findByFreq(nav_freq, lon, lat, elev)) != NULL ) {
+	nav_id = ils->get_locident();
 	nav_valid = true;
 	if ( last_nav_id != nav_id || last_nav_vor ) {
-	    nav_trans_ident = ils.get_trans_ident();
+	    nav_trans_ident = ils->get_trans_ident();
 	    last_nav_id = nav_id;
 	    last_nav_vor = false;
 	    nav_loc = true;
-	    nav_has_dme = ils.get_has_dme();
-	    nav_has_gs = ils.get_has_gs();
+	    nav_has_dme = ils->get_has_dme();
+	    nav_has_gs = ils->get_has_gs();
 
-	    nav_loclon = ils.get_loclon();
-	    nav_loclat = ils.get_loclat();
-	    nav_gslon = ils.get_gslon();
-	    nav_gslat = ils.get_gslat();
-	    nav_elev = ils.get_gselev();
+	    nav_loclon = ils->get_loclon();
+	    nav_loclat = ils->get_loclat();
+	    nav_gslon = ils->get_gslon();
+	    nav_gslat = ils->get_gslat();
+	    nav_elev = ils->get_gselev();
 	    nav_magvar = 0;
 	    nav_range = FG_ILS_DEFAULT_RANGE;
 	    nav_effective_range = nav_range;
-	    nav_target_gs = ils.get_gsangle();
-	    nav_radial = ils.get_locheading();
+	    nav_target_gs = ils->get_gsangle();
+	    nav_radial = ils->get_locheading();
 	    while ( nav_radial <   0.0 ) { nav_radial += 360.0; }
 	    while ( nav_radial > 360.0 ) { nav_radial -= 360.0; }
-	    nav_x = ils.get_x();
-	    nav_y = ils.get_y();
-	    nav_z = ils.get_z();
-	    nav_gs_x = ils.get_gs_x();
-	    nav_gs_y = ils.get_gs_y();
-	    nav_gs_z = ils.get_gs_z();
+	    nav_x = ils->get_x();
+	    nav_y = ils->get_y();
+	    nav_z = ils->get_z();
+	    nav_gs_x = ils->get_gs_x();
+	    nav_gs_y = ils->get_gs_y();
+	    nav_gs_z = ils->get_gs_z();
 
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
@@ -513,7 +513,7 @@ void FGNavCom::search()
 	    //      << globals->get_time_params()->get_cur_time() << endl;
 
 	    // cout << "Found an ils station in range" << endl;
-	    // cout << " id = " << ils.get_locident() << endl;
+	    // cout << " id = " << ils->get_locident() << endl;
 	}
     } else if ( (nav = current_navlist->findByFreq(nav_freq, lon, lat, elev)) != NULL ) {
 	nav_id = nav->get_ident();

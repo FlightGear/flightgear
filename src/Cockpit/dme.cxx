@@ -217,20 +217,20 @@ void FGDME::search()
         inrange = false;
     }
 
-    FGILS ils;
+    FGILS *ils;
     FGNav *nav;
 
-    if ( current_ilslist->query( lon, lat, elev, freq, &ils ) ) {
-        if (ils.get_has_dme()) {
+    if ( (ils = current_ilslist->findByFreq( freq, lon, lat, elev )) != NULL ) {
+        if ( ils->get_has_dme() ) {
             valid = true;
-            lon = ils.get_loclon();
-            lat = ils.get_loclat();
-            elev = ils.get_gselev();
+            lon = ils->get_loclon();
+            lat = ils->get_loclat();
+            elev = ils->get_gselev();
             range = FG_ILS_DEFAULT_RANGE;
             effective_range = kludgeRange(elev, elev, range);
-            x = ils.get_dme_x();
-            y = ils.get_dme_y();
-            z = ils.get_dme_z();
+            x = ils->get_dme_x();
+            y = ils->get_dme_y();
+            z = ils->get_dme_z();
         }
     } else if ( (nav = current_navlist->findByFreq(freq, lon, lat, elev)) != NULL ) {
         if (nav->get_has_dme()) {
