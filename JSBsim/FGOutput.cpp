@@ -1,0 +1,219 @@
+/*******************************************************************************
+
+ Module:       FGOutput.cpp
+ Author:       Jon Berndt
+ Date started: 12/02/98
+ Purpose:      Manage output of sim parameters to file or stdout
+ Called by:    FGSimExec
+
+ ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 2 of the License, or (at your option) any later
+ version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ details.
+
+ You should have received a copy of the GNU General Public License along with
+ this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ Place - Suite 330, Boston, MA  02111-1307, USA.
+
+ Further information about the GNU General Public License can also be found on
+ the world wide web at http://www.gnu.org.
+
+FUNCTIONAL DESCRIPTION
+--------------------------------------------------------------------------------
+This is the place where you create output routines to dump data for perusal
+later. Some machines may not support the ncurses console output. Borland is one
+of those environments which does not, so the ncurses stuff is commented out.
+
+ARGUMENTS
+--------------------------------------------------------------------------------
+
+
+HISTORY
+--------------------------------------------------------------------------------
+12/02/98   JSB   Created
+
+********************************************************************************
+INCLUDES
+*******************************************************************************/
+
+/*
+#if !defined( __BORLANDC__ )
+#  define HAVE_NCURSES
+#endif
+*/
+
+#include "FGOutput.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream.h>
+
+#ifndef HAVE_NCURSES
+  #include "FGPosition.h"
+#else
+  #include <ncurses.h>
+  #include "FGPosition.h"
+#endif
+
+/*******************************************************************************
+************************************ CODE **************************************
+*******************************************************************************/
+
+FGOutput::FGOutput(void) : FGModel()
+{
+  strcpy(Name, "FGOutput");
+  FirstPass = true;
+#ifdef HAVE_NCURSES
+  initscr();
+  cbreak();
+  noecho();
+#endif
+}
+
+
+FGOutput::~FGOutput(void)
+{
+}
+
+
+bool FGOutput::Run(void)
+{
+  if (!FGModel::Run()) {
+    DelimitedOutput();
+//    ConsoleOutput();
+  } else {
+  }
+  return false;
+}
+
+
+void FGOutput::ConsoleOutput(void)
+{
+  char buffer[20];
+
+#ifdef HAVE_NCURSES
+  clear();
+  move(1,1);  insstr("Quaternions");
+  move(2,5);  insstr("Q0");
+  move(2,16); insstr("Q1");
+  move(2,27); insstr("Q2");
+  move(2,38); insstr("Q3");
+
+  move(3,1);  sprintf(buffer,"%4.4f",State->GetQ0()); insstr(buffer);
+  move(3,12); sprintf(buffer,"%4.4f",State->GetQ1()); insstr(buffer);
+  move(3,23); sprintf(buffer,"%4.4f",State->GetQ2()); insstr(buffer);
+  move(3,34); sprintf(buffer,"%4.4f",State->GetQ3()); insstr(buffer);
+
+  move(0,0); insstr("Time: ");
+  move(0,6); insstr(gcvt(State->Getsim_time(),6,buffer));
+
+  move(2,46); insstr("Phi");
+  move(2,55); insstr("Tht");
+  move(2,64); insstr("Psi");
+
+  move(3,45); sprintf(buffer,"%3.3f",State->Getphi()); insstr(buffer);
+  move(3,54); sprintf(buffer,"%3.3f",State->Gettht()); insstr(buffer);
+  move(3,63); sprintf(buffer,"%3.3f",State->Getpsi()); insstr(buffer);
+
+  move(5,47); insstr("U");
+  move(5,56); insstr("V");
+  move(5,65); insstr("W");
+
+  move(6,45); sprintf(buffer,"%5.2f",State->GetU()); insstr(buffer);
+  move(6,54); sprintf(buffer,"%5.2f",State->GetV()); insstr(buffer);
+  move(6,63); sprintf(buffer,"%5.2f",State->GetW()); insstr(buffer);
+
+  move(8,47); insstr("Fx");
+  move(8,56); insstr("Fy");
+  move(8,65); insstr("Fz");
+
+  move(9,45); sprintf(buffer,"%5.2f",State->GetFx()); insstr(buffer);
+  move(9,54); sprintf(buffer,"%5.2f",State->GetFy()); insstr(buffer);
+  move(9,63); sprintf(buffer,"%5.2f",State->GetFz()); insstr(buffer);
+
+  move(11,47); insstr("Fn");
+  move(11,56); insstr("Fe");
+  move(11,65); insstr("Fd");
+
+  move(12,45); sprintf(buffer,"%5.2f",Position->GetFn()); insstr(buffer);
+  move(12,54); sprintf(buffer,"%5.2f",Position->GetFe()); insstr(buffer);
+  move(12,63); sprintf(buffer,"%5.2f",Position->GetFd()); insstr(buffer);
+
+  move(14,47); insstr("Latitude");
+  move(14,57); insstr("Longitude");
+  move(14,67); insstr("Altitude");
+
+  move(15,47); sprintf(buffer,"%5.2f",State->Getlatitude()); insstr(buffer);
+  move(15,57); sprintf(buffer,"%5.2f",State->Getlongitude()); insstr(buffer);
+  move(15,67); sprintf(buffer,"%5.2f",State->Geth()); insstr(buffer);
+
+  refresh();
+
+  move(LINES-1,1);
+  refresh();
+#endif
+}
+
+
+void FGOutput::DelimitedOutput(void)
+{
+  if (FirstPass) {
+    cout << "Time,";
+    cout << "Altitude,";
+    cout << "Phi,";
+    cout << "Tht,";
+    cout << "Psi,";
+    cout << "Rho,";
+    cout << "Vtotal,";
+    cout << "U,";
+    cout << "V,";
+    cout << "W,";
+    cout << "Vn,";
+    cout << "Ve,";
+    cout << "Vd,";
+    cout << "Udot,";
+    cout << "Vdot,";
+    cout << "Wdot,";
+    cout << "Fx,";
+    cout << "Fy,";
+    cout << "Fz,";
+    cout << "Latitude,";
+    cout << "Longitude,";
+    cout << "QBar,";
+    cout << "Alpha";
+    cout << endl;
+    FirstPass = false;
+  } else {
+    cout << State->Getsim_time() << ",";
+    cout << State->Geth() << ",";
+    cout << State->Getphi() << ",";
+    cout << State->Gettht() << ",";
+    cout << State->Getpsi() << ",";
+    cout << State->Getrho() << ",";
+    cout << State->GetVt() << ",";
+    cout << State->GetU() << ",";
+    cout << State->GetV() << ",";
+    cout << State->GetW() << ",";
+    cout << State->GetVn() << ",";
+    cout << State->GetVe() << ",";
+    cout << State->GetVd() << ",";
+    cout << State->GetUdot() << ",";
+    cout << State->GetVdot() << ",";
+    cout << State->GetWdot() << ",";
+    cout << State->GetFx() << ",";
+    cout << State->GetFy() << ",";
+    cout << State->GetFz() << ",";
+    cout << State->Getlatitude() << ",";
+    cout << State->Getlongitude() << ",";
+    cout << State->Getqbar() << ",";
+    cout << State->Getalpha() << "";
+    cout << endl;
+  }
+}

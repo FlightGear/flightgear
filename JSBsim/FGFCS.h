@@ -1,0 +1,85 @@
+/*******************************************************************************
+
+ Header:       FGGFCS.h
+ Author:       Jon S. Berndt
+ Date started: 12/12/98
+
+ ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 2 of the License, or (at your option) any later
+ version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ details.
+
+ You should have received a copy of the GNU General Public License along with
+ this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ Place - Suite 330, Boston, MA  02111-1307, USA.
+
+ Further information about the GNU General Public License can also be found on
+ the world wide web at http://www.gnu.org.
+
+HISTORY
+--------------------------------------------------------------------------------
+12/12/98   JSB   Created
+*******************************************************************************/
+
+/*******************************************************************************
+SENTRY
+*******************************************************************************/
+
+#ifndef FGFCS_H
+#define FGFCS_H
+
+/*******************************************************************************
+INCLUDES
+*******************************************************************************/
+
+#include "FGModel.h"
+
+/*******************************************************************************
+CLASS DECLARATION
+*******************************************************************************/
+
+
+class FGFCS : public FGModel
+{
+public:
+	FGFCS(void);
+	~FGFCS(void);
+
+	bool Run(void);
+
+	inline float GetDa(void) {return Da;}
+	inline float GetDe(void) {return De;}
+	inline float GetDr(void) {return Dr;}
+	inline float GetDf(void) {return Df;}
+	inline float GetDs(void) {return Ds;}
+	inline float GetThrottle(void) {return Throttle;}
+
+	inline void SetDa(float tt) {Da = tt;}
+	inline void SetDe(float tt) {De = tt;}
+	inline void SetDr(float tt) {Dr = tt;}
+	inline void SetDf(float tt) {Df = tt;}
+	inline void SetDs(float tt) {Ds = tt;}
+	inline void SetThrottle(float tt) {Throttle = tt;}
+
+protected:
+
+private:
+  float Da, De, Dr, Df, Ds;
+  float Throttle;
+};
+
+#ifndef FDM_MAIN
+extern FGFCS* FCS;
+#else
+FGFCS* FCS;
+#endif
+
+/******************************************************************************/
+#endif
