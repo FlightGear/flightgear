@@ -40,11 +40,17 @@
                      Default is 0.
       <wind>         Set to true if you want the submodel to react to the wind.
                      Default is "false". 
-	  <cd>           The Coeffient of Drag. Varies with sabmodel shape - 0.295 for a bullet, 
+	  <cd>           The Coeffient of Drag. Varies with submodel shape - 0.295 for a bullet, 
 	                 0.045 for an airfoil. Enter an appropriate value. Defaults to 0.295.
 	  <eda>          Effective drag area (sq ft). Usually the cross-sectional area of the
 	                 submodel normal to the airflow.
-      <weight>       The weight of the submodel (lbs). Defaults to 0.25	 			 
+      <weight>       The weight of the submodel (lbs). NOT set to 0 on submodel release.You 
+	                 may wish to set this value to 0 by means of key bindings or Nasal script.
+					 Defaults to 0.25.
+	  <contents>     The path to the contents of a submodel. The contents must be in lbs.
+	  	 			 Intended for use with drop tanks. The property value will be set 
+					 to 0 on release of the submodel: do not also set to 0 elsewhere e.g.
+					 in key bindings. Defaults to 0.
 -->  
  
 <PropertyList>
@@ -80,5 +86,43 @@
     <pitch-offset>1.8</pitch-offset>
     <life>2.0</life>
   </submodel>
+  
+  <submodel> 
+      <name>droptank-l</name>
+      <model>Aircraft/Hunter/Models/droptank-100gal.ac</model>
+      <trigger>controls/armament/station[0]/jettison-all</trigger>
+      <speed>0</speed>
+      <repeat>false</repeat>
+      <count>1</count>
+      <x-offset>0.820</x-offset>
+      <y-offset>-9.61</y-offset>
+      <z-offset>-2.39</z-offset>
+      <yaw-offset>0</yaw-offset>
+      <pitch-offset>0</pitch-offset>
+      <wind>false</wind>
+      <eda>2.11348887</eda>
+	  <weight>170</weight>
+	  <cd>0.045</cd>
+	  <contents>consumables/fuel/tank[2]/level-lbs</contents>
+    </submodel>
+	
+    <submodel> 
+      <name>droptank-r</name>
+      <model>Aircraft/Hunter/Models/droptank-100gal.ac</model>
+      <trigger>controls/armament/station[1]/jettison-all</trigger>
+      <speed>0</speed>
+      <repeat>false</repeat>
+      <count>1</count>
+      <x-offset>0.820</x-offset>
+      <y-offset>9.61</y-offset>
+      <z-offset>-2.39</z-offset>
+      <yaw-offset>0</yaw-offset>
+      <pitch-offset>0</pitch-offset>
+      <wind>false</wind>
+	  <eda>2.11348887</eda>
+	  <weight>170</weight>
+	  <cd>0.045</cd>
+	  <contents>consumables/fuel/tank[3]/level-lbs</contents>
+    </submodel>
 
 </PropertyList>
