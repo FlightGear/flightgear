@@ -1,0 +1,117 @@
+Welcome to FlightGear Deamon fgd
+--------------------------------
+Here the first Tools to play with FlightGear Deamon.
+This is yet pre-alpha and the sources remain to be tidied up,
+and to get documented.
+
+
+Theory of operation:
+--------------------
+The FlightGear Deamon called fgd is a standalone program which registers
+FGFS players willing to have a multiplayer FGFS environment via TCP/IP.
+Information like player's ip/lon/lat/alt etc. can be send to fgd.
+The deamon fgd in turn sends back the gathered information upon request.
+The purpose of the scan prog "fgd_scan" is to locate free ports on the
+network, which can be used for exchanging data between FGFS and fgd.
+The commando program fgd_com serves as an example of how the communication
+to fgd can be done. For the moment consider fgd_com as FGFS.
+Parts of fgd_com will be later incorporated into FGFS.
+
+
+How to play with the tools:
+---------------------------
+Just fire up fgd on whatever machine reachable from the one on which
+FGFS will be running. Even the same machine is ok.
+Then use fgd_scan to locate the fgd-deamon.
+Also use fgd_com to pass some commandos to fgd.
+
+
+How to compile:
+---------------
+Use the Makefile with make or just gcc -o prog prog.c
+
+
+Usage:
+------
+- fgd [start port] [end port] <-v -vv>
+
+where 
+      - start port  and  end port is the range where it should listen and
+        talk to. (Later the range will be used to check for a free port
+        within this range, which can be used for communicating with FGFS.
+        for the moment make sure you use the _SAME_ port value for start
+        and stop. A good starting point should be above 10000.
+      - -v or -vv is the verbose level. This param can be ommitted.
+        
+
+- fgd_scan [host] [start port] [end port] <-v -vv>
+
+comment: params are the same as for fgd except that the start-stop range
+         must be different to detect fgd.
+         
+         Also host means the host running fgd, not where the scanner is 
+         fired up.
+         
+         Just for fun you can take also the dangerous (priviledged ports)
+         But the fgd-scanner will be stuck at some used ports.
+         It doesn't hurt to experiment in the used regions, a ctrl-c
+         will abort the scanning so that new params can be used.
+
+      
+- fgd_com  [FGD-host] [start port] [end port] [-v -vv] [commando] <FGFS-host>
+
+comment: see fgd_scan, but you must enter either a ip/fqdn or dummystring as 
+         last param, some commandos use it to pass it as real information to 
+         fgd.
+
+
+The commandos for fgd_com:
+--------------------------
+
+ 0 : fgd idenditfies itself, answeres back to scanner
+ 1 : registering to fgd
+ 2 : show who's registered
+ 3 : send message to one specific user           (not implemented yet)
+ 4 : send message to all users                   (not implemented yet)
+ 5 : scan for other fgd's                        (not implemented yet)
+ 6 : update (fgd sends it's database to user)    (not implemented yet)
+ 8 : unregister from fgd
+ 9 : shutdown fgd
+
+Comments:
+---------
+Commands 1/2/8 use the last parameter (see above, dummy-string) for the
+ip or hostname or fqdn of the fgfs-machine which will be added/listed/removed
+from fgd.
+Try registering and unregistering various hosts to see if the add/remove
+mechanism works well. It should work correctly.
+
+
+Examples:
+---------
+- fgd olk 10003 10003 -vv
+  fgd runs on host "olk" using port "10003" using max. verbose level
+
+- fgd_com olk 10003 10003 -vv 1 johnny
+  send "register host"-command to fgd running on host "olk" using port"10003"
+  and register machine "johnny"
+
+To do:
+------
+- clean-up code
+- document the code
+- convert code from c to c++
+- find a place within FGFS where to reside
+- make the code more autodetectable, to reduce commandline params
+- implement missing commands
+- find other useful commands
+- find and resolve bugs ;-)
+
+
+REMEMBER:
+---------
+This 3 toys are pre-alpha and dirty and need also to be documented.
+
+Send comments/flame/beer/whatever to delise@rp-plus.de
+
+Oliver Delise 25/May/99
