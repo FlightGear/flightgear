@@ -53,7 +53,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 
-#include <Astro/sky.hxx>
+// #include <Astro/skydome.hxx>
 #include <Astro/solarsystem.hxx>
 #include <FDM/flight.hxx>
 #include <Main/options.hxx>
@@ -534,9 +534,9 @@ void FGTime::local_update_sky_and_lighting_params( void ) {
     // fgSunInit();
     SolarSystem::theSolarSystem->rebuild();
     cur_light_params.Update();
-    current_sky.repaint( cur_light_params.sky_color,
+    /* current_sky.repaint( cur_light_params.sky_color,
 			 cur_light_params.fog_color,
-			 cur_light_params.sun_angle );
+			 cur_light_params.sun_angle ); */
 }
 
 
