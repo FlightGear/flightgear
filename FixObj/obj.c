@@ -159,7 +159,7 @@ void dump_global_bounds( void ) {
 
     }
 
-    fprintf(out, "gb %.5f %.5f %.5f %.2f\n", refx, refy, refz, radius);
+    fprintf(out, "gbs %.5f %.5f %.5f %.2f\n", refx, refy, refz, radius);
 }
 
 
@@ -189,19 +189,59 @@ void dump_normals( void ) {
 
 /* dump faces */
 void dump_faces( void ) {
-    int i;
+    int i, n1, n2, n3;
+    double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin, dist, radius;
 
     fprintf(out, "\n");
     for ( i = 1; i < fcount; i++ ) {
-	fprintf(out, "f %d %d %d\n", 
-		faces[i][0], faces[i][1], faces[i][2]);
+	n1 = faces[i][0];
+	n2 = faces[i][1];
+	n3 = faces[i][2];
+
+	/* calc center of face */
+	xmin = xmax = nodes[n1][0];
+	ymin = ymax = nodes[n1][1];
+	zmin = zmax = nodes[n1][2];
+
+	if ( nodes[n2][0] < xmin ) { xmin = nodes[n2][0]; }
+	if ( nodes[n2][0] > xmax ) { xmax = nodes[n2][0]; }
+	if ( nodes[n2][1] < ymin ) { ymin = nodes[n2][1]; }
+	if ( nodes[n2][1] > ymax ) { ymax = nodes[n2][1]; }
+	if ( nodes[n2][2] < zmin ) { zmin = nodes[n2][2]; }
+	if ( nodes[n2][2] > zmax ) { zmax = nodes[n2][2]; }
+
+	if ( nodes[n3][0] < xmin ) { xmin = nodes[n3][0]; }
+	if ( nodes[n3][0] > xmax ) { xmax = nodes[n3][0]; }
+	if ( nodes[n3][1] < ymin ) { ymin = nodes[n3][1]; }
+	if ( nodes[n3][1] > ymax ) { ymax = nodes[n3][1]; }
+	if ( nodes[n3][2] < zmin ) { zmin = nodes[n3][2]; }
+	if ( nodes[n3][2] > zmax ) { zmax = nodes[n3][2]; }
+
+	x = (xmin + xmax) / 2.0;
+	y = (ymin + ymax) / 2.0;
+	z = (zmin + zmax) / 2.0;
+
+	/* calc bounding radius */
+	radius = calc_dist(nodes[n1][0] - x, nodes[n1][1] - y, 
+			   nodes[n1][2] - z);
+
+	dist = calc_dist(nodes[n2][0] - x, nodes[n2][1] - y, nodes[n2][2] - z);
+	if ( dist > radius ) { radius = dist; }
+
+	dist = calc_dist(nodes[n3][0] - x, nodes[n3][1] - y, nodes[n3][2] - z);
+	if ( dist > radius ) { radius = dist; }
+	
+	/* output data */
+	fprintf(out, "bs %.2f %.2f %.2f %.2f\n", x, y, z, radius);
+	fprintf(out, "f %d %d %d\n", n1, n2, n3);
     }
 }
 
 
 /* dump list */
 void dump_list(int *list, int list_ptr) {
-    int i;
+    double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin, dist, radius;
+    int i, j, len, n;
 
     if ( list_ptr < 3 ) {
 	printf("List is empty ... skipping\n");
@@ -220,7 +260,52 @@ void dump_list(int *list, int list_ptr) {
 	    fprintf(out, "\nusemtl desert2\n");
 	}
 
-	/* dump header */
+	/* find length of next tri strip */
+	len = 0;
+	/* scan rest of strip (until -1) */
+	while ( ((i+len) < list_ptr) && (list[i+len] != -1) ) { 
+	    // printf("len = %d item = %d\n", len, list[i+len] );
+	    len++;
+	}
+	// printf("strip length = %d\n", len);
+
+	/* calc center of face */
+	n = list[i];
+	xmin = xmax = nodes[n][0];
+	ymin = ymax = nodes[n][1];
+	zmin = zmax = nodes[n][2];
+	printf("%.2f %.2f %.2f\n", nodes[n][0], nodes[n][1], nodes[n][2]);
+
+	for ( j = i + 1; j < i + len; j++ ) {
+	    // printf("j = %d\n", j);
+	    n = list[j];
+	    if ( nodes[n][0] < xmin ) { xmin = nodes[n][0]; }
+	    if ( nodes[n][0] > xmax ) { xmax = nodes[n][0]; }
+	    if ( nodes[n][1] < ymin ) { ymin = nodes[n][1]; }
+	    if ( nodes[n][1] > ymax ) { ymax = nodes[n][1]; }
+	    if ( nodes[n][2] < zmin ) { zmin = nodes[n][2]; }
+	    if ( nodes[n][2] > zmax ) { zmax = nodes[n][2]; }
+	    printf("%.2f %.2f %.2f\n", nodes[n][0], nodes[n][1], nodes[n][2]);
+	}	    
+	x = (xmin + xmax) / 2.0;
+	y = (ymin + ymax) / 2.0;
+	z = (zmin + zmax) / 2.0;
+	printf("center = %.2f %.2f %.2f\n", x, y, z);
+
+	/* calc bounding radius */
+	n = list[i];
+	radius = calc_dist(nodes[n][0] - x, nodes[n][1] - y, nodes[n][2] - z);
+
+	for ( j = i + 1; j < i + len; j++ ) {
+	    n = list[j];
+	    dist = calc_dist(nodes[n][0] - x, nodes[n][1] - y, 
+			     nodes[n][2] - z);
+	    if ( dist > radius ) { radius = dist; }
+	}
+	printf("radius = %.2f\n", radius);
+
+	/* dump bounding sphere and header */
+	fprintf(out, "bs %.2f %.2f %.2f %.2f\n", x, y, z, radius);
 	fprintf(out, "t %d %d %d\n", list[i], list[i+1], list[i+2]);
 	/* printf("t %d %d %d\n", list[i], list[i+1], list[i+2]); */
 	i += 3;
@@ -477,9 +562,13 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.14  1998/05/23 15:19:49  curt
-/* Output more digits after the decimal place.
+/* Revision 1.15  1998/05/24 02:47:47  curt
+/* For each strip, specify a default material property and calculate a center
+/* and bounding sphere.
 /*
+ * Revision 1.14  1998/05/23 15:19:49  curt
+ * Output more digits after the decimal place.
+ *
  * Revision 1.13  1998/05/20 20:55:19  curt
  * Fixed arbitrary polygon winding problem here so all tristrips are passed
  * to runtime simulator with a consistant counter clockwise winding.
