@@ -39,7 +39,7 @@
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Main/options.hxx>
-#include <Scenery/texload.h>
+#include <Objects/texload.h>
 
 #include "splash.hxx"
 
@@ -143,6 +143,9 @@ void fgSplashUpdate ( double progress ) {
 
 
 // $Log$
+// Revision 1.3  1998/08/25 16:59:10  curt
+// Directory reshuffling.
+//
 // Revision 1.2  1998/07/13 21:01:40  curt
 // Wrote access functions for current fgOPTIONS.
 //

@@ -64,7 +64,7 @@ die "Cannot locate program.\n" if ( $savepath eq "" );
 
 
 # search for the "FlightGear" root directory
-@paths = ( $saveprefix, $ENV{HOME} );
+@paths = ( $prefix, $saveprefix, $ENV{HOME} );
 
 $fg_root = "";
 
@@ -89,6 +89,9 @@ exec("$savepath/$savefile --fg-root=$fg_root @ARGV");
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/08/25 16:59:10  curt
+# Directory reshuffling.
+#
 # Revision 1.1  1998/08/24 20:32:41  curt
 # runfg.in renamed to runfgfs.in
 #

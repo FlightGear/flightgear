@@ -43,6 +43,7 @@
 #include <Include/general.h>
 
 #include <Aircraft/aircraft.h>
+#include <Airports/simple.hxx>
 #include <Astro/moon.hxx>
 #include <Astro/planets.hxx>
 #include <Astro/sky.hxx>
@@ -63,7 +64,6 @@
 #include <Time/sunpos.hxx>
 #include <Weather/weather.h>
 
-#include "airports.hxx"
 #include "fg_init.hxx"
 #include "options.hxx"
 #include "views.hxx"
@@ -388,7 +388,10 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
-// Revision 1.31  1998/08/22 14:49:57  curt
+// Revision 1.32  1998/08/25 16:59:09  curt
+// Directory reshuffling.
+//
+// Revision 1.31  1998/08/22  14:49:57  curt
 // Attempting to iron out seg faults and crashes.
 // Did some shuffling to fix a initialization order problem between view
 // position, scenery elevation.
