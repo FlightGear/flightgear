@@ -39,12 +39,12 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #include <plib/sg.h>			// plib include
 
-#include <simgear/interpolater.hxx>
-#include <simgear/point3d.hxx>
+#include <simgear/math/interpolater.hxx>
+#include <simgear/math/point3d.hxx>
 
 
 // Define a structure containing the global lighting parameters

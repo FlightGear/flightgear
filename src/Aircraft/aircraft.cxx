@@ -23,8 +23,8 @@
 
 #include <stdio.h>
 
-#include <simgear/logstream.hxx>
 #include <simgear/constants.h>
+#include <simgear/debug/logstream.hxx>
 
 #include "aircraft.hxx"
 

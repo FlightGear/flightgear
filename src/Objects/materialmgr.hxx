@@ -40,7 +40,7 @@
 #include <simgear/compiler.h>
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #include STL_STRING		// Standard C++ string library
 #include <map>			// STL associative "array"

@@ -25,8 +25,8 @@
 
 #include STL_STRING
 
-#include <simgear/logstream.hxx>
-#include <simgear/serial.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/serial/serial.hxx>
 
 #include <Aircraft/aircraft.hxx>
 

@@ -30,7 +30,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #if defined(FX) && defined(XMESA)
 #include <GL/xmesa.h>
@@ -41,9 +41,9 @@
 
 #include <plib/pu.h>		// plib include
 
-#include <simgear/logstream.hxx>
 #include <simgear/constants.h>
-#include <simgear/fgpath.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/fgpath.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Astro/solarsystem.hxx>

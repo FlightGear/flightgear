@@ -48,7 +48,7 @@
 #include <deque>        // STL double ended queue
 
 #include <simgear/constants.h>
-#include <simgear/mat3.h>
+#include <simgear/math/mat3.h>
 
 #include <fg_typedefs.h>
 #include <Aircraft/aircraft.hxx>

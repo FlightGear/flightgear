@@ -33,7 +33,7 @@
 
 #include <list>
 
-#include <simgear/newbucket.hxx>
+#include <simgear/bucket/newbucket.hxx>
 
 
 FG_USING_STD(list);

@@ -35,13 +35,13 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #include <string.h>
 
-#include <simgear/logstream.hxx>
-#include <simgear/fg_random.h>
-#include <simgear/fgpath.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/fg_random.h>
+#include <simgear/misc/fgpath.hxx>
 
 #include <Main/options.hxx>
 #include <Objects/texload.h>

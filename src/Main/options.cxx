@@ -38,9 +38,9 @@ bool global_fullscreen = true;
 
 #include STL_STRING
 
-#include <simgear/logstream.hxx>
-#include <simgear/fgstream.hxx>
 #include <simgear/constants.h>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/fgstream.hxx>
 
 #include <Include/general.hxx>
 #include <Cockpit/cockpit.hxx>

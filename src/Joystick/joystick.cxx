@@ -29,7 +29,7 @@
 #  include <windows.h>                     
 #endif
 
-#include <simgear/logstream.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>

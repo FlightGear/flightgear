@@ -30,7 +30,7 @@
 #endif                                   
 
 
-#include <simgear/point3d.hxx>
+#include <simgear/math/point3d.hxx>
 
 
 // Define a structure containing global scenery parameters

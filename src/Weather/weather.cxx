@@ -30,13 +30,14 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #include <math.h>
 
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/fg_random.h>
+
 #include <Aircraft/aircraft.hxx>
-#include <Debug/logstream.hxx>
-#include <Math/fg_random.h>
 #include <Weather/weather.hxx>
 
 

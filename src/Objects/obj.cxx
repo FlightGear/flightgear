@@ -44,16 +44,16 @@
 #include <vector>		// STL
 #include <ctype.h>		// isdigit()
 
-#include <simgear/logstream.hxx>
-#include <simgear/fgstream.hxx>
 #include <simgear/constants.h>
-#include <simgear/mat3.h>
-#include <simgear/fg_geodesy.hxx>
-#include <simgear/fg_random.h>
-#include <simgear/point3d.hxx>
-#include <simgear/polar3d.hxx>
-#include <simgear/stopwatch.hxx>
-#include <simgear/texcoord.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/mat3.h>
+#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/fg_random.h>
+#include <simgear/math/point3d.hxx>
+#include <simgear/math/polar3d.hxx>
+#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/stopwatch.hxx>
+#include <simgear/misc/texcoord.hxx>
 
 #include <Main/options.hxx>
 #include <Scenery/tileentry.hxx>

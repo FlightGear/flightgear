@@ -23,9 +23,9 @@
 
 #include <stdio.h>
 
-#include <simgear/logstream.hxx>
 #include <simgear/constants.h>
-#include <simgear/fg_geodesy.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/fg_geodesy.hxx>
 
 #include <FDM/LaRCsim/ls_interface.h>
 #include <Main/options.hxx>

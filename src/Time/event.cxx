@@ -53,7 +53,7 @@
                          // contains milliseconds
 #endif
 
-#include <simgear/logstream.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include "event.hxx"
 

@@ -25,8 +25,8 @@
 
 #include STL_STRING
 
-#include <simgear/logstream.hxx>
-#include <simgear/fg_types.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/fg_types.hxx>
 
 #include <Main/options.hxx>
 

@@ -21,9 +21,9 @@
 // $Id$
 
 
-#include <simgear/fg_geodesy.hxx>
-#include <simgear/point3d.hxx>
-#include <simgear/polar3d.hxx>
+#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/point3d.hxx>
+#include <simgear/math/polar3d.hxx>
 
 #include <Controls/controls.hxx>
 #include <Main/options.hxx>

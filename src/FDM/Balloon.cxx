@@ -45,10 +45,10 @@ HISTORY
 
 #include STL_STRING
 
-#include <simgear/logstream.hxx>
 #include <simgear/constants.h>
-#include <simgear/fg_geodesy.hxx>
-#include <simgear/fgpath.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/misc/fgpath.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>

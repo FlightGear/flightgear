@@ -30,8 +30,8 @@
 #include STL_FUNCTIONAL
 #include STL_ALGORITHM
 
-#include <simgear/logstream.hxx>
-#include <simgear/newbucket.hxx>
+#include <simgear/bucket/newbucket.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include "tileentry.hxx"
 

@@ -33,7 +33,7 @@
 
 #include <string>
 
-#include <simgear/fg_types.hxx>
+#include <simgear/math/fg_types.hxx>
 
 #include "iochannel.hxx"
 #include "protocol.hxx"

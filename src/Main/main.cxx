@@ -38,7 +38,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -65,12 +65,12 @@
 #endif
 
 #include <simgear/constants.h>  // for VERSION
-#include <simgear/logstream.hxx>
-#include <simgear/fg_geodesy.hxx>
-#include <simgear/mat3.h>
-#include <simgear/polar3d.hxx>
-#include <simgear/fg_random.h>
-#include <simgear/fgpath.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/mat3.h>
+#include <simgear/math/polar3d.hxx>
+#include <simgear/math/fg_random.h>
+#include <simgear/misc/fgpath.hxx>
 
 #include <Include/general.hxx>
 

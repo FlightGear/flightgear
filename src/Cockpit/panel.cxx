@@ -30,10 +30,10 @@
 
 #include <plib/ssg.h>
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
-#include <simgear/logstream.hxx>
-#include <simgear/fgpath.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/fgpath.hxx>
 
 #include <Main/options.hxx>
 #include <Objects/texload.h>

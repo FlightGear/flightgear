@@ -34,7 +34,7 @@
 #include <Scenery/scenery.hxx>
 
 #include <simgear/constants.h>
-#include <simgear/logstream.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include <Airports/simple.hxx>
 #include <GUI/gui.h>

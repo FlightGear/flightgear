@@ -64,7 +64,7 @@ HISTORY
 #include <simgear/compiler.h>
 #include <vector>
 
-#include <simgear/fgstream.hxx>
+#include <simgear/misc/fgstream.hxx>
 
 #include "FGPhysicalProperties.h"
 

@@ -49,9 +49,9 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
-#include <simgear/logstream.hxx>
 #include <simgear/constants.h>
-#include <simgear/fgpath.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/fgpath.hxx>
 
 #include <Astro/sky.hxx>
 #include <Astro/solarsystem.hxx>

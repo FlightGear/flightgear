@@ -22,8 +22,8 @@
 
 
 #include <simgear/constants.h>
-#include <simgear/mat3.h>
-#include <simgear/point3d.hxx>
+#include <simgear/math/mat3.h>
+#include <simgear/math/point3d.hxx>
 
 #include <Scenery/tileentry.hxx>
 

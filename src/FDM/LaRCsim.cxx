@@ -24,7 +24,7 @@
 #include "LaRCsim.hxx"
 
 #include <simgear/constants.h>
-#include <simgear/logstream.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>

@@ -12,9 +12,9 @@
 #include <string.h>
 
 #include <simgear/constants.h>
-#include <simgear/fg_random.h>
-#include <simgear/mat3.h>
-#include <simgear/polar3d.hxx>
+#include <simgear/math/fg_random.h>
+#include <simgear/math/mat3.h>
+#include <simgear/math/polar3d.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Scenery/scenery.hxx>

@@ -30,13 +30,13 @@
 #endif                                   
 
 #include <simgear/compiler.h>
+#include <simgear/math/point3d.hxx>
 
 #include <list>
 
 #include <plib/sg.h>		// plib include
 
 #include <FDM/flight.hxx>
-#include <simgear/point3d.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 

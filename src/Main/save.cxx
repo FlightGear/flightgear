@@ -38,8 +38,8 @@ TODO:
 
 #include <iostream>
 
-#include <simgear/fg_types.hxx>
 #include <simgear/constants.h>
+#include <simgear/math/fg_types.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>

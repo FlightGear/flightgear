@@ -21,8 +21,8 @@
 // $Id$
 
 
-#include <simgear/logstream.hxx>
-#include <simgear/fg_geodesy.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/fg_geodesy.hxx>
 
 #include <Time/fg_time.hxx>
 

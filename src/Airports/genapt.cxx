@@ -36,12 +36,12 @@
 #  include <strings.h>
 #endif
 
-#include <simgear/logstream.hxx>
-#include <simgear/fg_geodesy.hxx>
-#include <simgear/mat3.h>
-#include <simgear/point3d.hxx>
-#include <simgear/polar3d.hxx>
-#include <simgear/fgstream.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/mat3.h>
+#include <simgear/math/point3d.hxx>
+#include <simgear/math/polar3d.hxx>
+#include <simgear/misc/fgstream.hxx>
 
 #include <Objects/materialmgr.hxx>
 

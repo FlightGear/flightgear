@@ -28,11 +28,11 @@
 
 #include <plib/ssg.h>		// plib include
 
-#include <simgear/logstream.hxx>
 #include <simgear/constants.h>
-#include <simgear/point3d.hxx>
-#include <simgear/polar3d.hxx>
-#include <simgear/vector.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/point3d.hxx>
+#include <simgear/math/polar3d.hxx>
+#include <simgear/math/vector.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Cockpit/panel.hxx>

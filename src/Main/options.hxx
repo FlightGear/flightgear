@@ -40,13 +40,13 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #if defined(FX) && defined(XMESA)
 extern bool global_fullscreen;
 #endif
 
-#include <simgear/fg_types.hxx>
+#include <simgear/math/fg_types.hxx>
 
 #include STL_STRING
 #include <vector>

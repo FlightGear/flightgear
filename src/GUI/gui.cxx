@@ -39,7 +39,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #if defined(FX) && defined(XMESA)
 #  include <GL/xmesa.h>
@@ -51,9 +51,9 @@
 #include <string.h>
 
 #include <simgear/constants.h>
-#include <simgear/logstream.hxx>
-#include <simgear/fgpath.hxx>
-#include <simgear/screen-dump.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/fgpath.hxx>
+#include <simgear/screen/screen-dump.hxx>
 
 #include <Include/general.hxx>
 #include <Aircraft/aircraft.hxx>

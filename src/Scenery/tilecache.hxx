@@ -39,12 +39,12 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #include <vector>
 
-#include <simgear/newbucket.hxx>
-#include <simgear/point3d.hxx>
+#include <simgear/bucket/newbucket.hxx>
+#include <simgear/math/point3d.hxx>
 
 #include "tileentry.hxx"
 

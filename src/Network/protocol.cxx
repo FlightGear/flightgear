@@ -21,7 +21,7 @@
 // $Id$
 
 
-#include <simgear/logstream.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include "iochannel.hxx"
 #include "protocol.hxx"

@@ -31,7 +31,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #include <simgear/compiler.h>
 
@@ -48,13 +48,13 @@
 #include <string>
 FG_USING_STD(string);
 
-#include <simgear/logstream.hxx>
 #include <simgear/constants.h>
-#include <simgear/fg_geodesy.hxx>
-#include <simgear/interpolater.hxx>
-#include <simgear/mat3.h>
-#include <simgear/polar3d.hxx>
-#include <simgear/fgpath.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/interpolater.hxx>
+#include <simgear/math/mat3.h>
+#include <simgear/math/polar3d.hxx>
+#include <simgear/misc/fgpath.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>

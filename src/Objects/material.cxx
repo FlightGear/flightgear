@@ -36,13 +36,13 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #include STL_STRING
 
-#include <simgear/logstream.hxx>
-#include <simgear/fgpath.hxx>
-#include <simgear/fgstream.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/fgstream.hxx>
 
 #include "material.hxx"
 #include "texload.h"

@@ -30,14 +30,14 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #include <plib/ssg.h>		// plib include
 
-#include <simgear/logstream.hxx>
-#include <simgear/fgstream.hxx>
-#include <simgear/newbucket.hxx>
-#include <simgear/fgpath.hxx>
+#include <simgear/bucket/newbucket.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/fgpath.hxx>
 
 #include <Airports/genapt.hxx>
 #include <Clouds/cloudobj.hxx>

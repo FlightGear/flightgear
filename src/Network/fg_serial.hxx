@@ -39,7 +39,7 @@
 // #  include <time.h>
 // #endif
 
-#include <simgear/serial.hxx>
+#include <simgear/serial/serial.hxx>
 
 #include "iochannel.hxx"
 #include "protocol.hxx"

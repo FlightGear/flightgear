@@ -38,14 +38,14 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl.h>
+#include <simgear/xgl/xgl.h>
 
 #include <simgear/compiler.h>
 
 #include <vector>
 
 #include <simgear/constants.h>
-#include <simgear/point3d.hxx>
+#include <simgear/math/point3d.hxx>
 
 FG_USING_STD(vector);
 

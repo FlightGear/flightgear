@@ -2,12 +2,11 @@ SUBDIRS = \
 	tests \
 	src
 
-EXTRA_DIST = FG-FAQ.v3 README.Unix README.Linux README.MacOS README.Win32 \
-	README.Win32-X README.autoconf README.gpc README.plib \
-	README.running Thanks VERSION acsite.m4 acconfig.h irix-hack.pl
+EXTRA_DIST = Thanks VERSION acsite.m4 acconfig.h irix-hack.pl
 
 dist-hook:
-	tar cf - docs-mini hints | (cd $(distdir); tar xvf -)
+	tar --exclude docs-mini/CVS --exclude hints/CVS -cf - docs-mini hints \
+		| (cd $(distdir); tar xvf -)
 	# tar cf - Simulator/FDM/JSBsim/aircraft Simulator/FDM/JSBsim/engine | (cd $(distdir); tar xvf -)
 
 
