@@ -35,7 +35,7 @@
 #include <string>
 
 #include "Include/fg_stl_config.h"
-_FG_USING_NAMESPACE(std);
+FG_USING_NAMESPACE(std);
 
 #include "zfstream.hxx"
 
@@ -105,6 +105,9 @@ istream& skipcomment( istream& in );
 #endif /* _FGSTREAM_HXX */
 
 // $Log$
+// Revision 1.4  1998/10/16 00:50:56  curt
+// Remove leading _ from a couple defines.
+//
 // Revision 1.3  1998/10/13 00:10:06  curt
 // More portability changes to help with windoze compilation problems.
 //

@@ -29,7 +29,7 @@
 #include <stdlib.h>
 
 #include "Include/fg_stl_config.h"
-_FG_USING_NAMESPACE(std);
+FG_USING_NAMESPACE(std);
 
 // Default characters to remove.
 extern const string whitespace;
@@ -60,6 +60,9 @@ atoi( const string& str )
 #endif // STRUTILS_H
 
 // $Log$
+// Revision 1.3  1998/10/16 00:50:57  curt
+// Remove leading _ from a couple defines.
+//
 // Revision 1.2  1998/10/13 00:10:07  curt
 // More portability changes to help with windoze compilation problems.
 //

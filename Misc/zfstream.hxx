@@ -93,7 +93,7 @@ public:
 };
 
 template<class T> class gzomanip {
-    friend gzofstream &operator << _FG_NULL_TMPL_ARGS (gzofstream &, const gzomanip<T> &);
+    friend gzofstream &operator << FG_NULL_TMPL_ARGS (gzofstream &, const gzomanip<T> &);
 public:
   gzomanip(gzofstream &(*f)(gzofstream &, T), T v) : func(f), val(v) { }
 private:
