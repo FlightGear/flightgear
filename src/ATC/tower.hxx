@@ -50,7 +50,7 @@ enum tower_traffic_type {
 	TTT_UNKNOWN,	// departure, but we don't know if for circuits or leaving properly
 	STRAIGHT_IN
 	// Umm - what's the difference between INBOUND and STRAIGHT_IN ?
-};
+};	// TODO - need some differentiation of IFR and VFR traffic in order to give the former priority.
 
 // Structure for holding details of a plane under tower control.
 // Not fixed yet - may include more stuff later.
@@ -141,6 +141,15 @@ public:
 	bool GetCrosswindConstraint(double& cpos);
 	bool GetDownwindConstraint(double& dpos);
 	bool GetBaseConstraint(double& bpos);
+	
+	// Returns true if OK to transmit on this frequency
+	inline bool FreqClear() { return freqClear; }
+	// Indicate that the frequency is in use
+	inline void FreqInUse() { freqClear = false; }
+	// The idea is that AI traffic or the user ATC dialog box calls FreqInUse() when they begin transmitting,
+	// and that the tower control sets freqClear back to true following a reply.
+	// AI traffic should check FreqClear() is true prior to transmitting.
+	// The user will just have to wait for a gap in dialog as in real life.
 
 private:
 	FGATCMgr* ATCmgr;	
@@ -153,13 +162,22 @@ private:
 	// Figure out if a given position lies on a runway or not
 	bool OnAnyRunway(Point3D pt);
 	
-	// Calculate the eta of each plane to the threshold.
+	// Calculate the eta of a plane to the threshold.
 	// For ground traffic this is the fastest they can get there.
 	// For air traffic this is the middle approximation.
+	void CalcETA(TowerPlaneRec* tpr);
+	
+	// Iterate through all the lists and call CalcETA for all the planes.
 	void doThresholdETACalc();
 	
 	// Order the list of traffic as per expected threshold use and flag any conflicts
 	bool doThresholdUseOrder();
+	
+	// Calculate the crow-flys distance of a plane to the threshold in meters
+	double CalcDistOutM(TowerPlaneRec* tpr);
+
+	// Calculate the crow-flys distance of a plane to the threshold in miles
+	double CalcDistOutMiles(TowerPlaneRec* tpr);
 	
 	void doCommunication();
 	
@@ -169,6 +187,8 @@ private:
 	
 	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
 	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
+	
+	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog
 	
 	// environment - need to make sure we're getting the surface winds and not winds aloft.
 	SGPropertyNode* wind_from_hdg;	//degrees
@@ -189,12 +209,18 @@ private:
 	// or possibly another data structure with the positions of the inactive planes.
 	// Need a data structure to hold outstanding communications from aircraft.
 	
-	// Linked-list of planes on approach ordered with nearest first (timewise).
+	// Linked-list of planes on approach to active rwy ordered with nearest first (timewise).
 	// Includes planes that have landed but not yet vacated runway.
 	// Somewhat analagous to the paper strips used (used to be used?) in real life.
 	// Doesn't include planes in circuit until they turn onto base/final?
+	// TODO - may need to alter this for operation to more than one active rwy.
 	tower_plane_rec_list_type appList;
 	tower_plane_rec_list_iterator appListItr;
+
+	// What should we do with planes approaching the airport to join the circuit somewhere
+	// but not on straight-in though? - put them in here for now.	
+	tower_plane_rec_list_type circuitAppList;
+	tower_plane_rec_list_iterator circuitAppListItr;
 	
 	// List of departed planes (planes doing circuits go into circuitList not depList after departure)
 	tower_plane_rec_list_type depList;
@@ -215,6 +241,17 @@ private:
 	// List of all planes due to use a given rwy arranged in projected order of rwy use
 	tower_plane_rec_list_type trafficList;	// TODO - needs to be expandable to more than one rwy
 	tower_plane_rec_list_iterator trafficListItr;
+	
+	// Returns true if successful
+	bool RemoveFromTrafficList(string id);
+	
+	// Return the ETA of plane no. list_pos (1-based) in the traffic list.
+	// i.e. list_pos = 1 implies next to use runway.
+	double GetTrafficETA(unsigned int list_pos);
+	
+	// Add a tower plane rec with ETA to the traffic list in the correct position ETA-wise.
+	// Returns true if this could cause a threshold ETA conflict with other traffic, false otherwise.
+	bool AddToTrafficList(TowerPlaneRec* t, bool holding = false);
 
 	// Ground can be separate or handled by tower in real life.
 	// In the program we will always use a separate FGGround class, but we need to know
