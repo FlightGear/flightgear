@@ -801,7 +801,7 @@ parse_option (const string& arg)
     } else if ( arg.find( "--opengc=" ) == 0 ) {
 	// char stop;
 	// cout << "Adding channel for OpenGC Display" << endl; cin >> stop;
-	add_channel( "opengc", arg.substr(10) );
+	add_channel( "opengc", arg.substr(9) );
     } else if ( arg.find( "--garmin=" ) == 0 ) {
 	add_channel( "garmin", arg.substr(9) );
     } else if ( arg.find( "--nmea=" ) == 0 ) {
