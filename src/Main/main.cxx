@@ -1217,7 +1217,8 @@ static void fgMainLoop( void ) {
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( fgGetBool("/sim/sound/audible")
-           && globals->get_soundmgr()->is_working() ) {
+         && globals->get_soundmgr()->is_working() )
+    {
         globals->get_soundmgr()->update( delta_time_sec );
     }
 #endif
@@ -1233,54 +1234,93 @@ static void fgMainLoop( void ) {
     FGViewer *current_view = globals->get_current_view();
 
     // get the location data for the primary FDM (now hardcoded to ac model)...
-    SGLocation * acmodel_location = 0;
-    acmodel_location = (SGLocation *)  globals->get_aircraft_model()->get3DModel()->getSGLocation();
+    SGLocation *acmodel_loc = NULL;
+    acmodel_loc = (SGLocation *)globals->
+        get_aircraft_model()->get3DModel()->getSGLocation();
 
     // update tile manager for FDM...
-    // ...only if location is different than the current-view location (to avoid duplicating effort)
+    // ...only if location is different than the current-view location
+    // (to avoid duplicating effort)
     if( !fgGetBool("/sim/current-view/config/from-model") ) {
-      if( acmodel_location != 0 ) {
-        globals->get_tile_mgr()->prep_ssg_nodes( acmodel_location,
-                                                 visibility_meters );
-        globals->get_tile_mgr()->
-            update( acmodel_location, visibility_meters,
-                    acmodel_location->get_absolute_view_pos(globals->get_scenery()->get_center()) );
-        // save results of update in SGLocation for fdm...
-        if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
-          acmodel_location->
-              set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
-          fgSetDouble("/position/ground-elev-m", globals->get_scenery()->get_cur_elev());
+        if( acmodel_loc != NULL ) {
+            globals->get_tile_mgr()->prep_ssg_nodes( acmodel_loc,
+                                                     visibility_meters );
+            globals->get_tile_mgr()->
+                update( acmodel_loc, visibility_meters,
+                        acmodel_loc->
+                        get_absolute_view_pos(globals->
+                                              get_scenery()->get_center()) );
+            // save results of update in SGLocation for fdm...
+            if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
+                acmodel_loc->
+                    set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
+                fgSetDouble("/position/ground-elev-m",
+                            globals->get_scenery()->get_cur_elev());
+            }
+            acmodel_loc->
+                set_tile_center( globals->get_scenery()->get_next_center() );
         }
-        acmodel_location->
-            set_tile_center( globals->get_scenery()->get_next_center() );
-      }
     }
 
     globals->get_tile_mgr()->prep_ssg_nodes( current_view->getSGLocation(),
                                              visibility_meters );
     // update tile manager for view...
-    // IMPORTANT!!! the tilemgr update for view location _must_ be done last 
-    // after the FDM's until all of Flight Gear code references the viewer's location
-    // for elevation instead of the "scenery's" current elevation.
+    // IMPORTANT!!! the tilemgr update for view location _must_ be
+    // done last after the FDM's until all of Flight Gear code
+    // references the viewer's location for elevation instead of the
+    // "scenery's" current elevation.
     SGLocation *view_location = globals->get_current_view()->getSGLocation();
     globals->get_tile_mgr()->update( view_location, visibility_meters,
                                      current_view->get_absolute_view_pos() );
     // save results of update in SGLocation for fdm...
     if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
-      current_view->getSGLocation()->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
+        current_view->getSGLocation()->
+            set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
     }
-    current_view->getSGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
+    current_view->getSGLocation()->
+        set_tile_center( globals->get_scenery()->get_next_center() );
 
-    // If fdm location is same as viewer's then we didn't do the update for fdm location 
-    //   above so we need to save the viewer results in the fdm SGLocation as well...
+#ifdef ENABLE_AUDIO_SUPPORT
+    // Right now we make a simplifying assumption that the primary
+    // aircraft is the source of all sounds and that all sounds are
+    // positioned relative to the current view position.
+
+    static sgVec3 last_pos_offset;
+
+    // set positional offset for sources
+    sgVec3 source_pos_offset;
+    sgSubVec3( source_pos_offset,
+               view_location->get_view_pos(), acmodel_loc->get_view_pos() );
+    globals->get_soundmgr()->set_source_pos_all( source_pos_offset );
+
+    // set the velocity
+    sgVec3 source_vel;
+    sgSubVec3( source_vel, source_pos_offset, last_pos_offset );
+    sgScaleVec3( source_vel, delta_time_sec );
+    sgCopyVec3( last_pos_offset, source_pos_offset );
+    globals->get_soundmgr()->set_source_vel_all( source_vel );
+
+    // Right now we make a simplifying assumption that the listener is
+    // always positioned at the origin.
+    sgVec3 listener_pos;
+    sgSetVec3( listener_pos, 0.0, 0.0, 0.0 );
+    globals->get_soundmgr()->set_listener_pos( listener_pos );
+#endif
+
+    // If fdm location is same as viewer's then we didn't do the
+    // update for fdm location above so we need to save the viewer
+    // results in the fdm SGLocation as well...
     if( fgGetBool("/sim/current-view/config/from-model") ) {
-      if( acmodel_location != 0 ) {
-        if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
-          acmodel_location->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
-          fgSetDouble("/position/ground-elev-m", globals->get_scenery()->get_cur_elev());
+        if( acmodel_loc != 0 ) {
+            if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
+                acmodel_loc->set_cur_elev_m( globals->get_scenery()->
+                                             get_cur_elev() );
+                fgSetDouble("/position/ground-elev-m",
+                            globals->get_scenery()->get_cur_elev());
+            }
+            acmodel_loc->set_tile_center( globals->get_scenery()->
+                                          get_next_center() );
         }
-        acmodel_location->set_tile_center( globals->get_scenery()->get_next_center() );
-      }
     }
 
     // END Tile Manager udpates
