@@ -169,7 +169,10 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 	    // set the texture parameters for this texture
 	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
 	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
-	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
+			      GL_LINEAR );
+	    // xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+	    //                   GL_NEAREST_MIPMAP_NEAREST );
 	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
 			      /* GL_LINEAR */ 
 			      /* GL_NEAREST_MIPMAP_LINEAR */
@@ -300,6 +303,9 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.13  1998/08/24 20:11:39  curt
+// Tweaks ...
+//
 // Revision 1.12  1998/08/12 21:41:27  curt
 // Need to negate the test for textures so that textures aren't loaded when
 // they are disabled rather than visa versa ... :-)

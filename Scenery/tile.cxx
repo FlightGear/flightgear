@@ -288,14 +288,16 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 
 	// check to see if intersection point is in the bounding
 	// cube of the face
+#ifdef XTRA_DEBUG_STUFF
 	xmin = fg_min3 (p1[0], p2[0], p3[0]);
 	xmax = fg_max3 (p1[0], p2[0], p3[0]);
 	ymin = fg_min3 (p1[1], p2[1], p3[1]);
 	ymax = fg_max3 (p1[1], p2[1], p3[1]);
 	zmin = fg_min3 (p1[2], p2[2], p3[2]);
 	zmax = fg_max3 (p1[2], p2[2], p3[2]);
-	// printf("bounding cube = %.2f,%.2f,%.2f  %.2f,%.2f,%.2f\n",
-	//        xmin, ymin, zmin, xmax, ymax, zmax);
+	printf("bounding cube = %.2f,%.2f,%.2f  %.2f,%.2f,%.2f\n",
+	       xmin, ymin, zmin, xmax, ymax, zmax);
+#endif
 	// punt if outside bouding cube
 	if ( x < (xmin = fg_min3 (p1[0], p2[0], p3[0])) ) {
 	    continue;
@@ -448,7 +450,10 @@ fgTILE::~fgTILE ( void ) {
 
 
 // $Log$
-// Revision 1.8  1998/08/22 14:49:58  curt
+// Revision 1.9  1998/08/24 20:11:39  curt
+// Tweaks ...
+//
+// Revision 1.8  1998/08/22  14:49:58  curt
 // Attempting to iron out seg faults and crashes.
 // Did some shuffling to fix a initialization order problem between view
 // position, scenery elevation.

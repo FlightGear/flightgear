@@ -671,13 +671,18 @@ void fgTileMgrRender( void ) {
 
     xglPopMatrix();
 
+    v->tris_rendered = total_faces;
+
     fgPrintf( FG_TERRAIN, FG_DEBUG, "Rendered %d polygons this frame.\n", 
 	      total_faces);
 }
 
 
 // $Log$
-// Revision 1.30  1998/08/22 14:49:59  curt
+// Revision 1.31  1998/08/24 20:11:40  curt
+// Tweaks ...
+//
+// Revision 1.30  1998/08/22  14:49:59  curt
 // Attempting to iron out seg faults and crashes.
 // Did some shuffling to fix a initialization order problem between view
 // position, scenery elevation.
