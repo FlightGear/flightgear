@@ -111,7 +111,7 @@ void PropEngine::stabilize()
     float step = 10;
     while(true) {
 	float ptau, dummy;
-	_prop->calc(_rho, speed, _omega, &dummy, &ptau);
+	_prop->calc(_rho, speed, _omega * _gearRatio, &dummy, &ptau);
 	_eng->calc(_pressure, _temp, _omega);
         float etau = _eng->getTorque();
 	float tdiff = etau - ptau;
