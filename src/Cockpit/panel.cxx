@@ -174,12 +174,15 @@ FGPanel::FGPanel ()
   : _mouseDown(false),
     _mouseInstrument(0),
     _width(WIN_W), _height(int(WIN_H * 0.5768 + 1)),
-    _x_offset(0), _y_offset(0), _view_height(int(WIN_H * 0.4232)),
-    _jitter(0.0),
+    _view_height(int(WIN_H * 0.4232)),
     _xsize_node(fgGetNode("/sim/startup/xsize", true)),
-    _ysize_node(fgGetNode("/sim/startup/ysize", true))
+    _ysize_node(fgGetNode("/sim/startup/ysize", true)),
+    _visibility(fgGetNode("/sim/panel/visibility", true)),
+    _x_offset(fgGetNode("/sim/panel/x-offset", true)),
+    _y_offset(fgGetNode("/sim/panel/y-offset", true)),
+    _jitter(fgGetNode("/sim/panel/jitter", true)),
+    _flipx(fgGetNode("/sim/panel/flip-x", true))
 {
-  setVisibility(fgPanelVisible());
 }
 
 
@@ -266,13 +269,6 @@ FGPanel::unbind ()
 void
 FGPanel::update (double dt)
 {
-				// TODO: cache the nodes
-    _visibility = fgGetBool("/sim/panel/visibility");
-    _x_offset = fgGetInt("/sim/panel/x-offset");
-    _y_offset = fgGetInt("/sim/panel/y-offset");
-    _jitter = fgGetFloat("/sim/panel/jitter");
-    _flipx = fgGetBool("/sim/panel/flip-x");
-
 				// Do nothing if the panel isn't visible.
     if ( !fgPanelVisible() ) {
         return;
@@ -314,20 +310,20 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
 				// The factors and bounds are just
 				// initial guesses; using sqrt smooths
 				// out the spikes.
-  double x_offset = _x_offset;
-  double y_offset = _y_offset;
+  double x_offset = _x_offset->getIntValue();
+  double y_offset = _y_offset->getIntValue();
 
 #if 0
-  if (_jitter != 0.0) {
+  if (_jitter->getFloatValue() != 0.0) {
     double a_x_pilot = current_aircraft.fdm_state->get_A_X_pilot();
     double a_y_pilot = current_aircraft.fdm_state->get_A_Y_pilot();
     double a_z_pilot = current_aircraft.fdm_state->get_A_Z_pilot();
 
     double a_zx_pilot = a_z_pilot - a_x_pilot;
     
-    int x_adjust = int(sqrt(fabs(a_y_pilot) * _jitter)) *
+    int x_adjust = int(sqrt(fabs(a_y_pilot) * _jitter->getFloatValue())) *
 		   (a_y_pilot < 0 ? -1 : 1);
-    int y_adjust = int(sqrt(fabs(a_zx_pilot) * _jitter)) *
+    int y_adjust = int(sqrt(fabs(a_zx_pilot) * _jitter->getFloatValue())) *
 		   (a_zx_pilot < 0 ? -1 : 1);
 
 				// adjustments in screen coordinates
@@ -339,7 +335,7 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  if ( _flipx ) {
+  if ( _flipx->getBoolValue() ) {
     gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
   } else {
     gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
@@ -462,7 +458,7 @@ FGPanel::draw()
 void
 FGPanel::setVisibility (bool visibility)
 {
-  _visibility = visibility;
+  _visibility->setBoolValue( visibility );
 }
 
 
@@ -472,7 +468,7 @@ FGPanel::setVisibility (bool visibility)
 bool
 FGPanel::getVisibility () const
 {
-  return _visibility;
+  return _visibility->getBoolValue();
 }
 
 
@@ -502,7 +498,7 @@ void
 FGPanel::setXOffset (int offset)
 {
   if (offset <= 0 && offset >= -_width + WIN_W)
-    _x_offset = offset;
+    _x_offset->setIntValue( offset );
 }
 
 
@@ -513,7 +509,7 @@ void
 FGPanel::setYOffset (int offset)
 {
   if (offset <= 0 && offset >= -_height)
-    _y_offset = offset;
+    _y_offset->setIntValue( offset );
 }
 
 /**
@@ -576,8 +572,8 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   }
 
 				// Adjust for offsets.
-  x -= _x_offset;
-  y -= _y_offset;
+  x -= _x_offset->getIntValue();
+  y -= _y_offset->getIntValue();
 
   // Having fixed up the coordinates, fall through to the local
   // coordinate handler.

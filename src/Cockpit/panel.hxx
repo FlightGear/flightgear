@@ -172,11 +172,11 @@ public:
 
 				// X-offset
   virtual void setXOffset (int offset);
-  virtual int getXOffset () const { return _x_offset; }
+  virtual int getXOffset () const { return _x_offset->getIntValue(); }
 
 				// Y-offset.
   virtual void setYOffset (int offset);
-  virtual int getYOffset () const { return _y_offset; }
+  virtual int getYOffset () const { return _y_offset->getIntValue(); }
 
 				// View height.
   virtual void setViewHeight (int height) { _view_height = height; }
@@ -190,7 +190,6 @@ private:
   void setupVirtualCockpit();
   void cleanupVirtualCockpit();
 
-  mutable bool _visibility;
   mutable bool _mouseDown;
   mutable int _mouseButton, _mouseX, _mouseY;
   mutable int _mouseDelay;
@@ -198,11 +197,13 @@ private:
   typedef vector<FGPanelInstrument *> instrument_list_type;
   int _width;
   int _height;
-  int _x_offset;
-  int _y_offset;
   int _view_height;
-  float _jitter;
-  bool _flipx;
+
+  SGPropertyNode * _visibility;
+  SGPropertyNode * _x_offset;
+  SGPropertyNode * _y_offset;
+  SGPropertyNode * _jitter;
+  SGPropertyNode * _flipx;
 
   const SGPropertyNode * _xsize_node;
   const SGPropertyNode * _ysize_node;
