@@ -4328,7 +4328,37 @@ SOURCE=.\src\FDM\YASim\YASim.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\YASim\YASim.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\YASim\Airplane.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\Airplane.hpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -4358,7 +4388,52 @@ SOURCE=.\src\FDM\YASim\Atmosphere.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\YASim\Atmosphere.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\BodyEnvironment.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\YASim\ControlMap.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\ControlMap.hpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -4388,7 +4463,37 @@ SOURCE=.\src\FDM\YASim\FGFDM.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\YASim\FGFDM.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\YASim\Gear.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\Gear.hpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -4418,7 +4523,37 @@ SOURCE=.\src\FDM\YASim\Glue.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\YASim\Glue.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\YASim\Integrator.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\Integrator.hpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -4448,7 +4583,37 @@ SOURCE=.\src\FDM\YASim\Jet.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\YASim\Jet.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\YASim\Math.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\Math.hpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -4478,6 +4643,21 @@ SOURCE=.\src\FDM\YASim\Model.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\YASim\Model.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\YASim\PistonEngine.cpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -4493,7 +4673,7 @@ SOURCE=.\src\FDM\YASim\PistonEngine.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\FDM\YASim\Propeller.cpp
+SOURCE=.\src\FDM\YASim\PistonEngine.hpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -4523,7 +4703,97 @@ SOURCE=.\src\FDM\YASim\PropEngine.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\YASim\PropEngine.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\Propeller.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\Propeller.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\YASim\RigidBody.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\RigidBody.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\SimpleJet.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\SimpleJet.hpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -4553,7 +4823,52 @@ SOURCE=.\src\FDM\YASim\Surface.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\YASim\Surface.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\YASim\Thruster.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\Thruster.hpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\Vector.hpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -4583,7 +4898,7 @@ SOURCE=.\src\FDM\YASim\Wing.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\FDM\YASim\SimpleJet.cpp
+SOURCE=.\src\FDM\YASim\Wing.hpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
