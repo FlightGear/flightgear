@@ -785,6 +785,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 					fan_tex_coords.size(), tindex, tclist,
 					0, NULL, NULL ) ;
 		}
+		// leaf->makeDList();
 		leaf->setState( state );
 
 		tile->addKid( leaf );
