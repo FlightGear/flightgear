@@ -48,9 +48,12 @@ FGAIBase::FGAIBase() {
     _self = this;
     _type_str = "model";
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
+    bearing = elevation = range = rdot = 0.0;
+    x_shift = y_shift = rotation = 0.0;
 }
 
 FGAIBase::~FGAIBase() {
+    unbind();
     _self = NULL;
 }
 
@@ -91,7 +94,8 @@ bool FGAIBase::init() {
 }
 
 void FGAIBase::bind() {
-   props->tie("velocities/airspeed-kt",  SGRawValuePointer<double>(&speed));
+   props->tie("id", SGRawValuePointer<int>(&id));
+   props->tie("velocities/true-airspeed-kt",  SGRawValuePointer<double>(&speed));
    props->tie("velocities/vertical-speed-fps",
                SGRawValueFunctions<double>(FGAIBase::_getVS_fps,
                                            FGAIBase::_setVS_fps));
@@ -108,7 +112,17 @@ void FGAIBase::bind() {
 
    props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
    props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
-   props->tie("orientation/heading-deg", SGRawValuePointer<double>(&hdg));
+   props->tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
+
+   props->tie("radar/bearing-deg",   SGRawValueFunctions<double>(FGAIBase::_getBearing));
+   props->tie("radar/elevation-deg", SGRawValueFunctions<double>(FGAIBase::_getElevation));
+   props->tie("radar/range-nm",      SGRawValueFunctions<double>(FGAIBase::_getRange));
+//   props->tie("radar/rdot-kts",      SGRawValueFunctions<double>(FGAIBase::_getRdot));
+   props->tie("radar/h-offset", SGRawValueFunctions<double>(FGAIBase::_getH_offset));
+   props->tie("radar/v-offset", SGRawValueFunctions<double>(FGAIBase::_getV_offset)); 
+   props->tie("radar/x-shift", SGRawValueFunctions<double>(FGAIBase::_getX_shift));
+   props->tie("radar/y-shift", SGRawValueFunctions<double>(FGAIBase::_getY_shift));
+   props->tie("radar/rotation", SGRawValueFunctions<double>(FGAIBase::_getRotation));
 
    props->tie("controls/lighting/nav-lights",
                SGRawValueFunctions<bool>(FGAIBase::_isNight));
@@ -117,7 +131,8 @@ void FGAIBase::bind() {
 }
 
 void FGAIBase::unbind() {
-    props->untie("velocities/airspeed-kt");
+    props->untie("id");
+    props->untie("velocities/true-airspeed-kt");
     props->untie("velocities/vertical-speed-fps");
 
     props->untie("position/altitude-ft");
@@ -126,7 +141,17 @@ void FGAIBase::unbind() {
 
     props->untie("orientation/pitch-deg");
     props->untie("orientation/roll-deg");
-    props->untie("orientation/heading-deg");
+    props->untie("orientation/true-heading-deg");
+
+    props->untie("radar/bearing-deg");
+    props->untie("radar/elevation-deg");
+    props->untie("radar/range-nm");
+//    props->untie("radar/rdot-kts");
+    props->untie("radar/h-offset");
+    props->untie("radar/v-offset");
+    props->untie("radar/x-shift");
+    props->untie("radar/y-shift");
+    props->untie("radar/rotation");
 
     props->untie("controls/controls/lighting/nav-lights");
 }

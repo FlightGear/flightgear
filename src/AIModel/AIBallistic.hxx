@@ -28,7 +28,7 @@ class FGAIBallistic : public FGAIBase {
 	
 public:
 	
-    FGAIBallistic();
+    FGAIBallistic(FGAIManager* mgr);
     ~FGAIBallistic();
 	
     bool init();

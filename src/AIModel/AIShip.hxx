@@ -21,15 +21,14 @@
 #ifndef _FG_AISHIP_HXX
 #define _FG_AISHIP_HXX
 
-#include "AIManager.hxx"
 #include "AIBase.hxx"
-
+class FGAIManager;
 
 class FGAIShip : public FGAIBase {
 	
 public:
 	
-	FGAIShip();
+	FGAIShip(FGAIManager* mgr);
 	~FGAIShip();
 	
 	bool init();

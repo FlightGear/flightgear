@@ -27,7 +27,8 @@
 #include "AIBallistic.hxx"
 
 
-FGAIBallistic::FGAIBallistic() {
+FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
+    manager = mgr;
     _type_str = "ballistic";
 }
 

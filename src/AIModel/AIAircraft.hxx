@@ -49,7 +49,7 @@ public:
         enum aircraft_e {LIGHT=0, WW2_FIGHTER, JET_TRANSPORT, JET_FIGHTER};
         static const PERF_STRUCT settings[];
 	
-	FGAIAircraft();
+	FGAIAircraft(FGAIManager* mgr);
 	~FGAIAircraft();
 	
 	bool init();
