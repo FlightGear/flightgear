@@ -24,17 +24,22 @@
  **************************************************************************/
 
 
+#include <config.h>
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#ifdef USE_FTIME
+#ifdef HAVE_SYS_TIMEB_H
 #  include <sys/timeb.h> /* for ftime() and struct timeb */
-#else
+#endif
+#ifdef HAVE_UNISTD_H
 #  include <unistd.h>  /* for gettimeofday() */
+#endif
+#ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
-#endif /* USE_FTIME */
+#endif
 
 #include <Time/fg_time.h>
 #include <Include/fg_constants.h>
@@ -58,6 +63,50 @@ void fgTimeInit(struct fgTIME *t) {
     t->gst_diff = -9999.0;
     t->warp = (0) * 3600;
     t->warp_delta = 0;
+}
+
+
+/* Portability wrap to get current time. */
+void timestamp(fg_timestamp *timestamp) {
+#if defined( HAVE_GETTIMEOFDAY )
+    struct timeval current;
+    struct timezone tz;
+    fg_timestamp currtime;
+    gettimeofday(&current, &tz);
+    timestamp->seconds = current.tv_sec;
+    timestamp->millis = current.tv_usec / 1000;
+#elif defined( HAVE_GETLOCALTIME )
+    SYSTEMTIME current;
+    GetLocalTime(&current);
+    timestamp->seconds = current.wSecond;
+    timestamp->millis = current.wMilliseconds;
+#elif defined( HAVE_FTIME )
+    struct timeb current;
+    ftime(&current);
+    timestamp->seconds = current.time;
+    timestamp->millis = current.millitm;
+#else
+# error Port me
+#endif
+}
+
+
+/* Return duration in millis from first to last */
+long timediff(fg_timestamp *first, fg_timestamp *last) {
+    return 1000 * (last->seconds - first->seconds) + 
+	(last->millis - first->millis);
+}
+
+
+/* Return new timestamp given a time stamp and an interval to add in */
+void timesum(fg_timestamp *res, fg_timestamp *start, long millis) {
+    res->millis = start->millis + millis;
+    if (1000 < res->millis) {
+	res->seconds = start->millis + 1;
+	res->millis -= 1000;
+    } else {
+	res->seconds = start->millis;
+    }
 }
 
 
@@ -168,7 +217,7 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     struct timeb current;
 #endif /* USE_FTIME */
 
-#ifdef WIN32
+#ifdef __CYGWIN32__
     int daylight;
     long int timezone;
 #endif /* WIN32 */
@@ -313,9 +362,13 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.36  1998/03/09 22:48:09  curt
-/* Debug message tweaks.
+/* Revision 1.37  1998/04/03 22:12:55  curt
+/* Converting to Gnu autoconf system.
+/* Centralized time handling differences.
 /*
+ * Revision 1.36  1998/03/09 22:48:09  curt
+ * Debug message tweaks.
+ *
  * Revision 1.35  1998/02/09 15:07:52  curt
  * Minor tweaks.
  *

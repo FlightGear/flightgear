@@ -28,9 +28,9 @@
 #define _FG_TIME_H
 
 
-#ifdef WIN32
-#  include <windows.h>
-#endif
+// #ifdef WIN32
+// #  include <windows.h>
+// #endif
 
 #include <GL/glut.h>
 #include <time.h>
@@ -87,6 +87,20 @@ struct fgLIGHT {
 
 extern struct fgLIGHT cur_light_params;
 
+typedef struct fg_timestamp_t {
+    long seconds;
+    long millis;
+} fg_timestamp;
+
+
+/* Portability wrap to get current time. */
+void timestamp(fg_timestamp *timestamp);
+
+/* Return duration in millis from first to last */
+long timediff(fg_timestamp *first, fg_timestamp *last);
+
+/* Return new timestamp given a time stamp and an interval to add in */
+void timesum(fg_timestamp *res, fg_timestamp *start, long millis);
 
 /* Initialize the time dependent variables */
 void fgTimeInit(struct fgTIME *t);
@@ -99,10 +113,14 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.16  1998/02/07 15:29:47  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.17  1998/04/03 22:12:56  curt
+/* Converting to Gnu autoconf system.
+/* Centralized time handling differences.
 /*
+ * Revision 1.16  1998/02/07 15:29:47  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.15  1998/01/27 00:48:06  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

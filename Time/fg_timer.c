@@ -24,25 +24,22 @@
  **************************************************************************/
 
 
+#include <config.h>
+
 #include <signal.h>    /* for timer routines */
 #include <stdio.h>     /* for printf() */
 
-#ifdef USE_FTIME
-#  include <sys/timeb.h> /* for ftime() and struct timeb */
-#elif defined(__MWERKS__)
-#  include <windows.h>	/* For Metrowerks environment */
-#  include <winbase.h>	/* There is no ANSI/MSL time function that */
-                        /* contains milliseconds */
-#else
+#ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
-#endif /* USE_FTIME */
+#endif
 
+#include <Time/fg_time.h>
 #include <Time/fg_timer.h>
 
 
 unsigned long int fgSimTime;
 
-#ifdef USE_ITIMER
+#ifdef HAVE_SETITIMER
   static struct itimerval t, ot;
   static void (*callbackfunc)(int multi_loop);
 
@@ -86,7 +83,7 @@ void fgTimerInit(float dt, void (*f)()) {
 	exit(0);
     }
 }
-#endif /* HAVE_ITIMER */
+#endif /* HAVE_SETITIMER */
 
 
 /* This function returns the number of milleseconds since the last
@@ -94,49 +91,18 @@ void fgTimerInit(float dt, void (*f)()) {
 int fgGetTimeInterval( void ) {
     int interval;
     static int inited = 0;
-
-#ifdef USE_FTIME
-    static struct timeb last;
-    static struct timeb current;
-#elif defined (__MWERKS__)
-    SYSTEMTIME last;
-    SYSTEMTIME current;
-#else
-    static struct timeval last;
-    static struct timeval current;
-    static struct timezone tz;
-#endif /* USE_FTIME */
+    static fg_timestamp last;
+    fg_timestamp current;
 
     if ( ! inited ) {
 	inited = 1;
-
-#ifdef USE_FTIME
-	ftime(&last);
-#elif defined (__MWERKS__)
-	GetLocalTime(&last);
-#else
-	gettimeofday(&last, &tz);
-#endif /* USE_FTIME */
-
+	timestamp(&last);
 	interval = 0;
     } else {
-
-#ifdef USE_FTIME
-	ftime(&current);
-	interval = 1000 * (current.time - last.time) + 
-	    (current.millitm - last.millitm);
-#elif defined (__MWERKS__)
-	GetLocalTime(&current);
-	interval = 1000 * (current.wSecond - last.wSecond) + 
-	    (current.wMilliseconds - last.wMilliseconds);
-#else
-	gettimeofday(&current, &tz);
-	interval = 1000000 * (current.tv_sec - last.tv_sec) + 
-	    (current.tv_usec - last.tv_usec);
-	interval /= 1000;  /* convert back to milleseconds */
-#endif /* USE_FTIME */
-
-	last = current;
+        timestamp(&current);
+	interval = timediff(&last, &current);
+	last.seconds = current.seconds;
+	last.millis = current.millis;
     }
 
     return(interval);
@@ -144,9 +110,13 @@ int fgGetTimeInterval( void ) {
 
 
 /* $Log$
-/* Revision 1.10  1998/01/31 00:43:45  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.11  1998/04/03 22:12:56  curt
+/* Converting to Gnu autoconf system.
+/* Centralized time handling differences.
 /*
+ * Revision 1.10  1998/01/31 00:43:45  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.9  1998/01/19 19:27:21  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

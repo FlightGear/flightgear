@@ -344,7 +344,7 @@ void fgUpdateSunPos( void ) {
 
     light = pow(1.1, -x_10 / 30.0);
     ambient = 0.2 * light;
-    diffuse = 0.9 * light;
+    diffuse = 1.0 * light;
 
     sky_brightness = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
 
@@ -378,11 +378,15 @@ void fgUpdateSunPos( void ) {
 
 
 /* $Log$
-/* Revision 1.26  1998/02/23 19:08:00  curt
-/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
-/* calculation code between sun display, and other FG sections that use this
-/* for things like lighting.
+/* Revision 1.27  1998/04/03 22:12:57  curt
+/* Converting to Gnu autoconf system.
+/* Centralized time handling differences.
 /*
+ * Revision 1.26  1998/02/23 19:08:00  curt
+ * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+ * calculation code between sun display, and other FG sections that use this
+ * for things like lighting.
+ *
  * Revision 1.25  1998/02/09 15:07:53  curt
  * Minor tweaks.
  *
