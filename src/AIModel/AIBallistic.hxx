@@ -39,6 +39,7 @@ public:
     void setAzimuth( double az );
     void setElevation( double el );
     void setStabilization( bool val );
+    void setDragArea( double a );
 
 private:
 
@@ -46,7 +47,7 @@ private:
     double elevation;       // degrees
     double hs;              // horizontal speed (fps)
     bool aero_stabilized;   // if true, object will point where it's going
-
+    double drag_area;       // equivalent drag area in ft2
     void Run(double dt);
 };
 

@@ -48,6 +48,7 @@ public:
    double rudder;       // used by ship objects 
    double strength;     // used by thermal objects
    double diameter;     // used by thermal objects
+   double eda;          // used by ballistic objects
   } entry;
 
    FGAIScenario(string filename);

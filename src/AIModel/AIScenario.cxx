@@ -69,6 +69,7 @@ FGAIScenario::FGAIScenario(string filename)
      en->rudder         = entry_node->getDoubleValue("rudder", 0.0);
      en->strength       = entry_node->getDoubleValue("strength-fps", 0.0);
      en->diameter       = entry_node->getDoubleValue("diameter-ft", 0.0);
+     en->eda            = entry_node->getDoubleValue("eda", 0.007);
    }
 
   entry_iterator = entries.begin();

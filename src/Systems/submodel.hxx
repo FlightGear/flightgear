@@ -40,6 +40,7 @@ public:
   double             z_offset;
   double             yaw_offset;
   double             pitch_offset;
+  double             drag_area; 
  } submodel; 
 
  typedef struct {

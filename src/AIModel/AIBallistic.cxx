@@ -31,6 +31,7 @@ FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
     manager = mgr;
     _type_str = "ballistic";
     _otype = otBallistic;
+    drag_area = 0.007;
 }
 
 FGAIBallistic::~FGAIBallistic() {
@@ -74,6 +75,9 @@ void FGAIBallistic::setStabilization(bool val) {
    aero_stabilized = val;
 }
 
+void FGAIBallistic::setDragArea(double a) {
+   drag_area = a;
+}
 
 void FGAIBallistic::Run(double dt) {
 
@@ -81,9 +85,9 @@ void FGAIBallistic::Run(double dt) {
    double speed_east_deg_sec;
 
    // the two drag calculations below assume sea-level density, 
-   // mass of 0.03 slugs,  drag coeff of 0.295, frontal area of 0.007 ft2 
+   // mass of 0.03 slugs,  drag coeff of 0.295
    // adjust speed due to drag 
-   speed -= 0.000082 * speed * speed * dt;
+   speed -= 0.0116918 * drag_area * speed * speed * dt;
    if ( speed < 0.0 ) speed = 0.0;
    vs = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed;
    hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed;
