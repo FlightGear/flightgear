@@ -1012,7 +1012,29 @@ FGTextLayer::draw ()
     text_renderer.start3f(0, 0, 0);
 
     _now.stamp();
-    if (_now - _then > 100000) {
+    long diff = _now - _then;
+#if 0
+    // It would be nice to keep this #ifdef'd stuff for (04/18/2002 +
+    // a couple days) as I verify my solution to the panel text
+    // drawing problem is actually correct. -CLO
+    cout << "time diff = " << diff << endl;
+    if ( _now - _then < 0 ) {
+        cout << "Eeek, the past is now in the future!" << endl;
+        cout << "Now = " << _now.get_seconds() << " seconds "
+             << _now.get_usec() << "usecs" << endl;
+        cout << "Past = " << _then.get_seconds() << " seconds "
+             << _then.get_usec() << "usecs" << endl;
+        exit(-1);
+    }
+#endif
+    if (diff > 100000 || diff < 0 ) {
+      // ( diff < 0 ) is a sanity check and indicates our time stamp
+      // difference math probably overflowed.  We can handle a max
+      // difference of 35.8 minutes since the returned value is in
+      // usec.  So if the panel is left off longer than that we can
+      // over flow the math with it is turned back on.  This (diff <
+      // 0) catches that situation, get's us out of trouble, and
+      // back on track.
       recalc_value();
       _then = _now;
     }
