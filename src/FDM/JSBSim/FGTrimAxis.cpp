@@ -337,8 +337,10 @@ bool FGTrimAxis::initTheta(void) {
 	  i++;   
   }	    	    	
   //cout << i << endl;
-  cout << "    Initial Theta: " << fdmex->GetRotation()->Gettht()*radtodeg << endl;
-  cout << "    Used gear unit " << iAft << " as aft and " << iForward << " as forward" << endl;
+  if (debug_lvl > 0) {
+      cout << "    Initial Theta: " << fdmex->GetRotation()->Gettht()*radtodeg << endl;
+      cout << "    Used gear unit " << iAft << " as aft and " << iForward << " as forward" << endl;
+  }
   control_min=(theta+5)*degtorad;
   control_max=(theta-5)*degtorad;
   fgic->SetAltitudeAGLFtIC(saveAlt);

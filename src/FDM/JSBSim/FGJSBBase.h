@@ -215,6 +215,8 @@ public:
   
   void disableHighLighting(void);
 
+  static short debug_lvl;
+
 protected:
   static Message localMsg;
   
@@ -222,7 +224,6 @@ protected:
 
   virtual void Debug(int from) {};
 
-  static short debug_lvl;
   static unsigned int frame;
   static unsigned int messageId;
   

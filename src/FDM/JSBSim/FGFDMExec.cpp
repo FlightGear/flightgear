@@ -140,8 +140,7 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root)
 
   try {
     char* num = getenv("JSBSIM_DEBUG");
-    if (!num) debug_lvl = 1;
-    else debug_lvl = atoi(num); // set debug level
+    if (num) debug_lvl = atoi(num); // set debug level
   } catch (...) {               // if error set to 1
     debug_lvl = 1;
   }

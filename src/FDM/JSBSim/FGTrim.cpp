@@ -341,10 +341,12 @@ bool FGTrim::DoTrim(void) {
   } while((axis_count < TrimAxes.size()) && (!trim_failed));
   if((!trim_failed) && (axis_count >= TrimAxes.size())) {
     total_its=N;
-    cout << endl << "  Trim successful" << endl;
+    if (debug_lvl > 0)
+        cout << endl << "  Trim successful" << endl;
   } else {
     total_its=N;
-    cout << endl << "  Trim failed" << endl;
+    if (debug_lvl > 0)
+        cout << endl << "  Trim failed" << endl;
   }
   for(i=0;i < fdmex->GetGroundReactions()->GetNumGearUnits();i++){
     fdmex->GetGroundReactions()->GetGearUnit(i)->SetReport(true);
@@ -620,7 +622,8 @@ void FGTrim::SetMode(TrimMode tt) {
     mode=tt;
     switch(tt) {
       case tFull:
-        cout << "  Full Trim" << endl;
+        if (debug_lvl > 0)          
+          cout << "  Full Trim" << endl;
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tWdot,tAlpha ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tUdot,tThrottle ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tQdot,tPitchTrim ));
@@ -630,13 +633,15 @@ void FGTrim::SetMode(TrimMode tt) {
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tRdot,tRudder ));
         break;
       case tLongitudinal:
-        cout << "  Longitudinal Trim" << endl;
+        if (debug_lvl > 0)          
+          cout << "  Longitudinal Trim" << endl;
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tWdot,tAlpha ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tUdot,tThrottle ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tQdot,tPitchTrim ));
         break;
       case tGround:
-        cout << "  Ground Trim" << endl;
+        if (debug_lvl > 0)          
+          cout << "  Ground Trim" << endl;
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tWdot,tAltAGL ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tQdot,tTheta ));
         //TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tPdot,tPhi ));

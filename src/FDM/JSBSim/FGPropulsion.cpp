@@ -226,7 +226,6 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
       if (Eng_cfg.IsOpen()) {
         Eng_cfg.GetNextConfigLine();
         engType = Eng_cfg.GetValue();
-        cout << engType << endl;
 
         FCS->AddThrottle();
         ThrottleAdded = true;

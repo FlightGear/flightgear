@@ -76,7 +76,7 @@ FGJSBBase::Message FGJSBBase::localMsg;
 unsigned int FGJSBBase::messageId = 0; 
 unsigned int FGJSBBase::frame = 0;
 
-short FGJSBBase::debug_lvl  = 0;
+short FGJSBBase::debug_lvl  = 1;
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
