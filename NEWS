@@ -15,6 +15,11 @@ New in 0.7.8
 * Updated, more flexible binary scenery format.
 * Support for using digital axes (i.e. a hat) as a pair of buttons
   which can be mapped to any function a button could be mapped to.
+* Added user documentation to the base package
+* Added a c172 mini panel.
+* Improved c172 panel graphics.
+* Added units to configuration files
+* Fixed X15 panel
 * External view panning fix ups.
 * Fixed the segfault on exit bug.
 * Lots of property manager tweaks.  Appened units to property name to
