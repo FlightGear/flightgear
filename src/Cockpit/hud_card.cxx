@@ -233,13 +233,15 @@ draw( void ) //  (HUD_scale * pscale )
             sprintf(TextScale,"%3.1f\n",theta);
         	 
             // draw value
-            int l= abs((int)theta);
-            if((l>=0) && (l<=9))
-                textString (x,y,TextScale,GLUT_BITMAP_8_BY_13,0 );
-            if((l>=10) && (l<=99))
-                textString (x-1.0,y,TextScale,GLUT_BITMAP_8_BY_13,0 );
-            if((l>=100) && (l<=359))
-                textString (x-2.0,y,TextScale,GLUT_BITMAP_8_BY_13,0 ); 
+            int l = abs((int)theta);
+            if (l) {
+                if( l<10)
+                    textString (x,y,TextScale,GLUT_BITMAP_8_BY_13,0 );
+                else if(l<100)
+                    textString (x-1.0,y,TextScale,GLUT_BITMAP_8_BY_13,0 );
+                else if( l<360 )
+                    textString (x-2.0,y,TextScale,GLUT_BITMAP_8_BY_13,0 );
+            }
 			 
         }
       
@@ -322,8 +324,8 @@ draw( void ) //  (HUD_scale * pscale )
                     if(pointer_type=="moving") {
                         if(zoom == 0) {
                             //Code for Moving Type Pointer included by suma.
-                            static float ycentre, ypoint,xpoint;
-                            static int range,wth;
+                            float ycentre, ypoint,xpoint;
+                            int range,wth;
                             if(cur_value > maxValue) cur_value = maxValue;
                             if(cur_value < minValue) cur_value = minValue;
                             if (minValue >= 0.0) 
@@ -378,10 +380,14 @@ draw( void ) //  (HUD_scale * pscale )
                         if(zoom == 0) {
                             //type-fixed & zoom=1, behaviour to be defined
                             // Code for Moving Type Pointer included by suma.
-                            static float ycentre, ypoint,xpoint;
-                            static int range,wth;
-                            if(cur_value > maxValue) cur_value = maxValue;
-                            if(cur_value < minValue) cur_value = minValue;
+                            float ycentre, ypoint,xpoint;
+                            int range,wth;
+							
+                            if(cur_value > maxValue)
+                                cur_value = maxValue;
+                            if(cur_value < minValue)
+                                cur_value = minValue;
+							
                             if (minValue >= 0.0) 
                                 ycentre = scrn_rect.top;
                             else if (maxValue + minValue == 0.0)
@@ -392,6 +398,7 @@ draw( void ) //  (HUD_scale * pscale )
                                 else
                                     ycentre = scrn_rect.top + minValue*scrn_rect.bottom/(maxValue-minValue);
                             range = scrn_rect.bottom;
+							
                             if (oddtype == 1)
                                 ypoint = ycentre + ((cur_value-1.0) * range / val_span);
                             else
@@ -424,8 +431,10 @@ draw( void ) //  (HUD_scale * pscale )
             
             // draw scale or tape
 		
-            last = FloatToInt(vmax)+1;
-            i = FloatToInt(vmin);
+//            last = FloatToInt(vmax)+1;
+//            i = FloatToInt(vmin);
+            last = (int)vmax + 1; // N
+            i = (int)vmin; // N
 
             if(zoom ==1) { 
                 zoomed_scale(vmin,vmax); //suma
@@ -445,12 +454,12 @@ draw( void ) //  (HUD_scale * pscale )
                         // Block calculation artifact from drawing ticks below min coordinate.
                         // Calculation here accounts for text height.
 
-                        /* if(( marker_ys < (scrn_rect.top + 4)) |
+                        if(( marker_ys < (scrn_rect.top + 4)) |
                            ( marker_ys > (height - 4)))
-                           {
-                           // Magic numbers!!!
-                           continue;
-                           } */
+                        {
+                            // Magic numbers!!!
+                            continue;
+                        }
 
                         if (oddtype == 1) 
                             k = i+1; //enable ticks at odd values
@@ -461,8 +470,8 @@ draw( void ) //  (HUD_scale * pscale )
                         if( div_min()) { 
                             // if( (i%div_min()) == 0) {
                             if( !(k%(int)div_min())) {             
-                                /*    if((( marker_ys - 5) > scrn_rect.top ) &&
-                                      (( marker_ys + 5) < (height))){    */
+                                if((( marker_ys - 5) > scrn_rect.top ) &&
+                                   (( marker_ys + 5) < (height))) {
                             
                                 //vertical/left OR vertical/right
                                 if( huds_both(options) ) {
@@ -528,7 +537,8 @@ draw( void ) //  (HUD_scale * pscale )
                                                          marker_xe - 4, marker_ys );
                                         } 
                                     } 
-                                } //end huds both 
+                                } //end huds both
+                              }
                             } //end draw minor ticks
                         }  //end minor ticks
 
@@ -658,14 +668,14 @@ draw( void ) //  (HUD_scale * pscale )
                     if(pointer_type=="moving") { 
                         if (zoom ==0) {
                             //Code for Moving Type Pointer included by suma.
-                            static float xcentre,xpoint,ypoint;
-                            static int range;
+                            // static float xcentre,xpoint,ypoint;
+                            // static int range;
                             if(cur_value > maxValue) cur_value = maxValue;
                             if(cur_value < minValue) cur_value = minValue;
-                            xcentre = mid_scr.x;
-                            range = scrn_rect.right;
-                            xpoint = xcentre + (cur_value * range / val_span);
-                            ypoint = scrn_rect.top - marker_offset;
+                            float xcentre = mid_scr.x;
+                            int range = scrn_rect.right;
+                            float xpoint = xcentre + (cur_value * range / val_span);
+                            float ypoint = scrn_rect.top - marker_offset;
                             drawOneLine(xcentre, ypoint,xpoint,ypoint);
                             drawOneLine(xpoint,ypoint,xpoint,ypoint+marker_offset);
                             drawOneLine(xpoint,ypoint+marker_offset,xpoint+5.0,ypoint+5.0);
@@ -701,15 +711,15 @@ draw( void ) //  (HUD_scale * pscale )
                     if(pointer_type=="moving") { 
                         if(zoom == 0) { 
                             //Code for Moving Type Pointer included by suma.
-                            static float xcentre,xpoint,ypoint;
-                            static int range,hgt;
+                            // static float xcentre,xpoint,ypoint;
+                            // static int range,hgt;
                             if(cur_value > maxValue) cur_value = maxValue;
                             if(cur_value < minValue) cur_value = minValue;
-                            xcentre = mid_scr.x ;
-                            range = scrn_rect.right;
-                            hgt   = scrn_rect.top + scrn_rect.bottom;
-                            xpoint = xcentre + (cur_value * range / val_span);
-                            ypoint = hgt + marker_offset;
+                            float xcentre = mid_scr.x ;
+                            int range = scrn_rect.right;
+                            int hgt   = scrn_rect.top + scrn_rect.bottom;
+                            float xpoint = xcentre + (cur_value * range / val_span);
+                            float ypoint = hgt + marker_offset;
                             drawOneLine(xcentre, ypoint,xpoint,ypoint);
                             drawOneLine(xpoint,ypoint,xpoint,ypoint-marker_offset);
                             drawOneLine(xpoint,ypoint-marker_offset,xpoint+5.0,ypoint-5.0);
@@ -763,8 +773,8 @@ draw( void ) //  (HUD_scale * pscale )
                             //draw minor ticks
                             if( !(k%(int)div_min() )) {           
                                 // draw in ticks only if they aren't too close to the edge.
-                                /*if((( marker_xs - 5) > scrn_rect.left ) &&
-                                  (( marker_xs + 5 )< (scrn_rect.left + scrn_rect.right))){ */ //suma
+                                if((( marker_xs - 5) > scrn_rect.left ) &&
+                                  (( marker_xs + 5 )< (scrn_rect.left + scrn_rect.right))){
                             
                                 if( huds_both(options) ) { 
                                     if(tick_length=="variable") { 
@@ -796,7 +806,8 @@ draw( void ) //  (HUD_scale * pscale )
                                             drawOneLine(marker_xs,marker_ys+4,marker_xs,marker_ye);
                                         else
                                             drawOneLine(marker_xs,marker_ys,marker_xs,marker_ye);
-                                } 
+                                }
+                              }
                             } //end draw minor ticks
                         } //end minor ticks
                         //major ticks
@@ -820,8 +831,8 @@ draw( void ) //  (HUD_scale * pscale )
                                                   // (int)(disp_val  * data_scaling() +.5));
                                                   FloatToInt(disp_val * data_scaling()/*+.5*/));
                                 // Draw major ticks and text only if far enough from the edge.
-                                /*if(( (marker_xs - 10)> scrn_rect.left ) &&
-                                          ( (marker_xs + 10) < (scrn_rect.left + scrn_rect.right))){*/ //suma
+                                if(( (marker_xs - 10)> scrn_rect.left ) &&
+                                          ( (marker_xs + 10) < (scrn_rect.left + scrn_rect.right))){
                                 if( huds_both(options) ) {
                                     // drawOneLine( marker_xs, scrn_rect.top,
                                     //              marker_xs, marker_ys);
@@ -851,7 +862,8 @@ draw( void ) //  (HUD_scale * pscale )
                                                         TextScale, GLUT_BITMAP_8_BY_13,0 ); //suma
                                         } 
                                     } 
-                                } 
+                                }
+                              }
                             }  //end draw major ticks
                         } //endif major ticks
                     }   //end condition
