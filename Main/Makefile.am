@@ -6,7 +6,7 @@ construct_LDADD = \
 	$(top_builddir)/Tools/Construct/Array/libArray.a \
 	$(top_builddir)/Tools/Construct/Clipper/libClipper.a \
 	$(top_builddir)/Tools/Construct/GenOutput/libGenOutput.a \
-	$(top_builddir)/Tools/Construct/GenFans/libGenFans.a \
+	$(top_builddir)/Tools/Construct/Combine/libCombine.a \
 	$(top_builddir)/Tools/Construct/Triangulate/libTriangulate.a \
 	$(top_builddir)/Tools/Lib/Polygon/libPolygon.a \
 	$(top_builddir)/Tools/Lib/Triangle/libTriangle.a \

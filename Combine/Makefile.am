@@ -1,6 +1,6 @@
-noinst_LIBRARIES = libGenFans.a
+noinst_LIBRARIES = libCombine.a
 
-libGenFans_a_SOURCES = genfans.cxx genfans.hxx
+libCombine_a_SOURCES = genfans.cxx genfans.hxx
 
 INCLUDES += \
 	-I$(top_builddir) \

@@ -70,7 +70,7 @@ FGTriangle::build( const point_list& corner_list,
     cout << "prepairing node list and polygons" << endl;
 
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	cout << "area type = " << i << endl;
+	// cout << "area type = " << i << endl;
 	current = gpc_polys.polys[i].begin();
 	last = gpc_polys.polys[i].end();
 	for ( ; current != last; ++current ) {
@@ -140,7 +140,7 @@ FGTriangle::build( const point_list& corner_list,
     int i1, i2;
     point_list node_list = in_nodes.get_node_list();
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	cout << "area type = " << i << endl;
+	// cout << "area type = " << i << endl;
 	tripoly_list_iterator tp_current, tp_last;
 	tp_current = polylist[i].begin();
 	tp_last = polylist[i].end();
@@ -398,6 +398,9 @@ int FGTriangle::run_triangulate() {
 
 
 // $Log$
+// Revision 1.14  1999/03/31 23:47:09  curt
+// Debugging output tweaks.
+//
 // Revision 1.13  1999/03/29 13:11:07  curt
 // Shuffled stl type names a bit.
 // Began adding support for tri-fanning (or maybe other arrangments too.)

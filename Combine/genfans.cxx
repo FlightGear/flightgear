@@ -169,9 +169,9 @@ fan_list FGGenFans::greedy_build( triele_list tris ) {
 	    }
 	    ++counter;
 	}
-	cout << "triangle pool = " << tris.size() << endl;
-	cout << "biggest_group = " << biggest_group.size() << endl;
-	cout << "center node = " << index << endl;
+	// cout << "triangle pool = " << tris.size() << endl;
+	// cout << "biggest_group = " << biggest_group.size() << endl;
+	// cout << "center node = " << index << endl;
 
 	// make the best fan we can out of this group
 	int_list best_fan = make_best_fan( tris, index, biggest_group );
@@ -191,7 +191,7 @@ fan_list FGGenFans::greedy_build( triele_list tris ) {
 	    }
 	    node_list.push_back( t.get_n3() );
 	}
-	cout << "best list size = " << node_list.size() << endl;
+	// cout << "best list size = " << node_list.size() << endl;
 
 	// add this fan to the fan list
 	fans.push_back( node_list );
@@ -238,6 +238,9 @@ double FGGenFans::ave_size() {
 
 
 // $Log$
+// Revision 1.5  1999/03/31 23:46:49  curt
+// Debugging output tweaks.
+//
 // Revision 1.4  1999/03/31 13:26:39  curt
 // Debugging output tweeaks.
 //

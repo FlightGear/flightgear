@@ -40,7 +40,7 @@
 #include <Math/fg_geodesy.hxx>
 #include <Math/point3d.hxx>
 
-#include <GenFans/genfans.hxx>
+#include <Combine/genfans.hxx>
 #include <Main/construct_types.hxx>
 #include <Triangulate/triangle.hxx>
 
@@ -131,6 +131,9 @@ public:
 
 
 // $Log$
+// Revision 1.9  1999/03/31 23:46:58  curt
+// Debugging output tweaks.
+//
 // Revision 1.8  1999/03/30 23:50:44  curt
 // Modifications to fanify by attribute.
 //

@@ -194,8 +194,6 @@ int FGGenOutput::build( const FGArray& array, const FGTriangle& t ) {
     cout << "total triangles = " << tri_elements.size() << endl;
     FGGenFans f;
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	cout << "generating fans for area = " << i << endl;
-
 	triele_list area_tris;
 	area_tris.erase( area_tris.begin(), area_tris.end() );
 
@@ -208,6 +206,7 @@ int FGGenOutput::build( const FGArray& array, const FGTriangle& t ) {
 	}
 
 	if ( (int)area_tris.size() > 0 ) {
+	    cout << "generating fans for area = " << i << endl;
 	    fans[i] = f.greedy_build( area_tris );
 	}
     }
@@ -433,6 +432,9 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
 
 
 // $Log$
+// Revision 1.10  1999/03/31 23:46:57  curt
+// Debugging output tweaks.
+//
 // Revision 1.9  1999/03/31 13:26:40  curt
 // Debugging output tweeaks.
 //
