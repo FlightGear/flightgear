@@ -29,6 +29,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/misc/commands.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/misc/props.hxx>
 #include <simgear/misc/props_io.hxx>
@@ -42,8 +43,10 @@
 
 #include "props.hxx"
 
+#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(strstream);
 SG_USING_STD(ends);
+#endif
 
 /**
  * Props connection class.
@@ -325,6 +328,31 @@ PropsChannel::foundTerminator()
 		}
 	    }
 	}
+	else if ( command == "run" )
+	{
+	    if ( tokens.size() == 2 )
+	    {
+		string tmp;	
+                SGPropertyNode args;
+                if ( !globals->get_commands()
+                         ->execute(tokens[1].c_str(), &args) )
+                {
+                    SG_LOG( SG_GENERAL, SG_ALERT,
+                            "Command " << tokens[1] << " failed.");
+                    if ( mode == PROMPT ) {
+                        tmp += "*failed*";
+                        push( tmp.c_str() );
+                        push( getTerminator() );
+                    }
+                } else {
+                    if ( mode == PROMPT ) {
+                        tmp += "<completed>";
+                        push( tmp.c_str() );
+                        push( getTerminator() );
+                    }
+                }
+	    }
+	}
 	else if (command == "quit")
 	{
 	    close();
@@ -353,6 +381,7 @@ ls [<dir>]         list directory\r\n\
 prompt             switch to interactive mode (default)\r\n\
 pwd                display your current path\r\n\
 quit               terminate connection\r\n\
+run <command>      run built in command\r\n\
 set <var> <val>    set <var> to a new <val>\r\n\
 show <var>         synonym for get\r\n";
 	    push( msg );
