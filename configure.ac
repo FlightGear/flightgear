@@ -153,7 +153,6 @@ dnl search for FreeBSD library
 AC_SEARCH_LIBS(hid_init, usbhid)
 joystick_LIBS="$LIBS"
 LIBS=""
-AC_SUBST(joystick_LIBS)
 
 
 dnl ENABLE_AUDIO_SUPPORT could be depricated at any time in favor of
@@ -244,6 +243,7 @@ case "${host}" in
     dnl Mac OS X
 
     LIBS="$LIBS -framework GLUT -framework OpenGL -framework AGL -framework Carbon -lobjc"
+    joystick_LIBS="$joystick_LIBS -framework IOKit -framework CoreFoundation"
     ;;
 
 *)
@@ -325,6 +325,7 @@ AC_SUBST(openal_LIBS)
 AC_SUBST(opengl_LIBS)
 AC_SUBST(thread_LIBS)
 AC_SUBST(network_LIBS)
+AC_SUBST(joystick_LIBS)
 
 # The following are C++ items that need to be tested for with the c++
 # compiler
