@@ -1,8 +1,9 @@
+majordomo writes:
 Subdirectories
 ==============
 OpenGL/
 -------
-"main" and OpenGL dependent mouse/keyboard/graphics code.
+"main()" and OpenGL dependent mouse/keyboard/graphics code.
 
 
 Aircraft/
@@ -42,6 +43,16 @@ Timer/
 Code to handle time and timing of events.
 
 
+Utils/
+------
+Miscellaneous utility routines such as a general random number generator
+
+
 Weather/
 --------
 Weather management and modeling code.
+
+
+Win32/
+------
+Win32 support stuff
