@@ -47,6 +47,7 @@ FGAIManager::FGAIManager() {
 FGAIManager::~FGAIManager() {
   ai_list_itr = ai_list.begin();
   while(ai_list_itr != ai_list.end()) {
+      (*ai_list_itr)->unbind();
       delete (*ai_list_itr);
       ++ai_list_itr;
     }
@@ -97,6 +98,7 @@ void FGAIManager::update(double dt) {
                 if ((*ai_list_itr)->getDie()) {      
                    --numObjects[(*ai_list_itr)->getType()];
                    --numObjects[0];
+                   (*ai_list_itr)->unbind();
                    delete (*ai_list_itr);
                    if ( ai_list_itr == ai_list.begin() ) {
                        ai_list.erase(ai_list_itr);
@@ -250,6 +252,7 @@ void FGAIManager::destroyObject( void* ID ) {
             if ((*ai_list_itr)->getID() == ID) {
               --numObjects[0];
               --numObjects[(*ai_list_itr)->getType()];
+              (*ai_list_itr)->unbind();
               delete (*ai_list_itr);
               ai_list.erase(ai_list_itr);
 
