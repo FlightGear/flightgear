@@ -100,5 +100,5 @@ double dclGetAirportElev( const string& id );
 ****************/
 
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
-bool OnRunway(Point3D pt, FGRunway* rwy);
+bool OnRunway(Point3D pt, const FGRunway& rwy);
 
