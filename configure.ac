@@ -21,6 +21,14 @@ AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
+# specify the simgear location
+AC_ARG_WITH(simgear, [  --with-simgear=PREFIX   Specify the prefix path to simgear])
+
+if test "x$with_simgear" != "x" ; then
+    echo "SimGear prefix path is $with_simgear"
+    EXTRA_DIRS="${EXTRA_DIRS} $with_simgear"
+fi
+
 dnl set the $host variable based on local machine/os
 AC_CANONICAL_HOST
 
@@ -29,6 +37,7 @@ case "${host}" in
     if test "$CXX" = "CC"; then
         AR="CC -ar"
         ARFLAGS="-o"
+        CXXFLAGS="$CXXFLAGS -I$with_simgear/include/simgear/compatibility"
     else
         AR="ar"
         ARFLAGS="cru"
@@ -96,14 +105,6 @@ AC_ARG_WITH(metakit, [  --with-metakit=PREFIX   Specify the prefix path to metak
 if test "x$with_metakit" != "x" ; then
     echo "metakit prefix is $with_metakit"
     EXTRA_DIRS="${EXTRA_DIRS} $with_metakit"
-fi
-
-# specify the simgear location
-AC_ARG_WITH(simgear, [  --with-simgear=PREFIX   Specify the prefix path to simgear])
-
-if test "x$with_simgear" != "x" ; then
-    echo "SimGear prefix path is $with_simgear"
-    EXTRA_DIRS="${EXTRA_DIRS} $with_simgear"
 fi
 
 dnl Used by JSBSim to conditionally compile in fgfs interface code
