@@ -11,6 +11,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/commands.hxx>
 #include <simgear/misc/props.hxx>
+#include <simgear/sg_inlines.h>
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
@@ -38,22 +39,6 @@ SG_USING_STD(ofstream);
 // Static helper functions.
 ////////////////////////////////////////////////////////////////////////
 
-
-/**
- * Template function to wrap a value.
- */
-template <class T>
-static inline void
-do_wrap (T * value, T min, T max)
-{
-    if (min >= max) {           // basic sanity check
-        *value = min;
-    } else if (*value > max) {
-        *value = min;
-    } else if (*value < min) {
-        *value = max;
-    }
-}
 
 static inline SGPropertyNode *
 get_prop (const SGPropertyNode * arg)
@@ -105,12 +90,21 @@ limit_value (double * value, const SGPropertyNode * arg)
     if (min_node == 0 || max_node == 0)
         wrap = false;
   
-    if (wrap) {                 // wrap
-        if (*value < min_node->getDoubleValue())
-            *value = max_node->getDoubleValue();
-        else if (*value > max_node->getDoubleValue())
-            *value = min_node->getDoubleValue();
-    } else {                    // clamp
+    if (wrap) {                 // wrap such that min <= x < max
+        double min_val = min_node->getDoubleValue();
+        double max_val = max_node->getDoubleValue();
+        double resolution = arg->getDoubleValue("resolution");
+        if (resolution > 0.0) {
+            // snap to (min + N*resolution), taking special care to handle imprecision
+            int n = (int)floor((*value - min_val) / resolution + 0.5);
+            int steps = (int)floor((max_val - min_val) / resolution + 0.5);
+            SG_NORMALIZE_RANGE(n, 0, steps);
+            *value = min_val + resolution * n;
+        } else {
+            // plain circular wrapping
+            SG_NORMALIZE_RANGE(*value, min_val, max_val);
+        }
+    } else {                    // clamp such that min <= x <= max
         if ((min_node != 0) && (*value < min_node->getDoubleValue()))
             *value = min_node->getDoubleValue();
         else if ((max_node != 0) && (*value > max_node->getDoubleValue()))
@@ -278,7 +272,7 @@ fix_hud_visibility()
   }
 }
 
-void
+static void
 do_view_next( bool )
 {
     globals->get_current_view()->setHeadingOffset_deg(0.0);
@@ -287,7 +281,7 @@ do_view_next( bool )
     globals->get_tile_mgr()->refresh_view_timestamps();
 }
 
-void
+static void
 do_view_prev( bool )
 {
     globals->get_current_view()->setHeadingOffset_deg(0.0);
@@ -438,6 +432,8 @@ do_property_adjust (const SGPropertyNode * arg)
   limit_value(&modifiable, arg);
 
   prop->setDoubleValue(unmodifiable + modifiable);
+
+  return true;
 }
 
 
@@ -468,6 +464,8 @@ do_property_multiply (const SGPropertyNode * arg)
   limit_value(&modifiable, arg);
 
   prop->setDoubleValue(unmodifiable + modifiable);
+
+  return true;
 }
 
 
@@ -530,7 +528,7 @@ do_dialog_show (const SGPropertyNode * arg)
 
 
 /**
- * Hide the active XML-configured dialog.
+ * Built-in Command: Hide the active XML-configured dialog.
  */
 static bool
 do_dialog_close (const SGPropertyNode * arg)
