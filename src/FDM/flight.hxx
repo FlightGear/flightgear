@@ -522,8 +522,7 @@ public:
     virtual void init ();
     virtual void bind ();
     virtual void unbind ();
-    virtual void update ();
-    virtual bool update( int multi_loop );
+    virtual void update(int dt);
     virtual bool ToggleDataLogging(bool state) { return false; }
     virtual bool ToggleDataLogging(void) { return false; }
 

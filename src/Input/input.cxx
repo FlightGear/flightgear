@@ -204,7 +204,7 @@ FGInput::unbind ()
 }
 
 void 
-FGInput::update ()
+FGInput::update (int dt)
 {
   _update_keyboard();
   _update_joystick();

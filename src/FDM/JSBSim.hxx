@@ -215,7 +215,7 @@ public:
     /** Update the position based on inputs, positions, velocities, etc.
         @param multiloop number of times to loop through the FDM
 	      @return true if successful */
-    bool update( int multiloop );
+    void update( int multiloop );
     bool ToggleDataLogging(bool state);
     bool ToggleDataLogging(void);
     void do_trim(void);

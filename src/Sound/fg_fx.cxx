@@ -215,7 +215,7 @@ FGFX::unbind ()
 }
 
 void
-FGFX::update ()
+FGFX::update (int dt)
 {
   FGSoundMgr * mgr = globals->get_soundmgr();
   int i;

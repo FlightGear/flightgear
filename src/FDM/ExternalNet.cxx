@@ -65,8 +65,6 @@ void FGExternalNet::init() {
 // Run an iteration of the EOM.  This is a NOP here because the flight
 // model values are getting filled in elsewhere (most likely from some
 // external source.)
-bool FGExternalNet::update( int multiloop ) {
+void FGExternalNet::update( int multiloop ) {
     // cout << "FGExternalNet::update()" << endl;
-
-    return true;
 }

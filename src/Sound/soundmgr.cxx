@@ -121,7 +121,7 @@ void FGSoundMgr::unbind ()
 
 
 // run the audio scheduler
-void FGSoundMgr::update() {
+void FGSoundMgr::update(int dt) {
     SGTimeStamp current;
     current.stamp();
 

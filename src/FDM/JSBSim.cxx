@@ -230,7 +230,8 @@ void FGJSBsim::init() {
 
 // Run an iteration of the EOM (equations of motion)
 
-bool FGJSBsim::update( int multiloop ) {
+void
+FGJSBsim::update( int multiloop ) {
 
     int i;
 
@@ -306,7 +307,6 @@ bool FGJSBsim::update( int multiloop ) {
     // translate JSBsim back to FG structure so that the
     // autopilot (and the rest of the sim can use the updated values
     copy_from_JSBsim();
-    return true;
 }
 
 /******************************************************************************/

@@ -172,11 +172,11 @@ void YASim::init()
     set_inited(true);
 }
 
-bool YASim::update(int iterations)
+void YASim::update(int iterations)
 {
     // If we're crashed, then we don't care
     if(_fdm->getAirplane()->getModel()->isCrashed())
-	return true;
+      return;
 
     int i;
     for(i=0; i<iterations; i++) {
@@ -193,8 +193,6 @@ bool YASim::update(int iterations)
             _updateCount = 0;
         }
     }
-
-    return true; // what does this mean?
 }
 
 void YASim::copyToYASim(bool copyState)

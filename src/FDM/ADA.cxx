@@ -198,7 +198,7 @@ void FGADA::init() {
 // Run an iteration of the EOM.  This is essentially a NOP here
 // because these values are getting filled in elsewhere based on
 // external input.
-bool FGADA::update( int multiloop ) {
+void FGADA::update( int multiloop ) {
     // cout << "FGADA::update()" << endl;
 
     char Buffer[numberofbytes];
@@ -223,8 +223,6 @@ bool FGADA::update( int multiloop ) {
          memcpy (&OutBuffer, &visuals_to_sixdof, sizeof (OutBuffer));
 		 int result = fdmsock->write(OutBuffer, nbytes);
 	}
-
-    return true;
 }
 
 // Convert from the FGInterface struct to the FGADA struct (output)

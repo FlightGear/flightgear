@@ -13,7 +13,7 @@ public:
     virtual void init();
 
     // Run an iteration
-    virtual bool update(int iterations);
+    virtual void update(int iterations);
 
  private:
     void report();

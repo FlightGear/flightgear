@@ -861,10 +861,10 @@ void fgRenderFrame( void ) {
 	// glDisable( GL_TEXTURE_2D );
 
 	// update the input subsystem
-	current_input.update();
+	current_input.update(1); // FIXME: use real dt
 
 	// update the controls subsystem
-	globals->get_controls()->update();
+	globals->get_controls()->update(1); // FIXME: use real dt
 
 	hud_and_panel->apply();
 	fgCockpitUpdate();
@@ -875,7 +875,7 @@ void fgRenderFrame( void ) {
 
 	// update the panel subsystem
 	if ( current_panel != NULL ) {
-	    current_panel->update();
+	    current_panel->update(1); // FIXME: use real dt
 	}
 
 	// We can do translucent menus, so why not. :-)
@@ -1024,7 +1024,7 @@ void fgUpdateTimeDepCalcs() {
 				  cur_fdm_state->get_Latitude() );
 
     // Update radio stack model
-    current_radiostack->update();
+    current_radiostack->update(1); // FIXME: use dt
 }
 
 
@@ -1229,8 +1229,8 @@ static void fgMainLoop( void ) {
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( fgGetBool("/sim/sound") && globals->get_soundmgr()->is_working() ) {
-	globals->get_fx()->update();
-	globals->get_soundmgr()->update();
+	globals->get_fx()->update(1); // FIXME: use dt
+	globals->get_soundmgr()->update(1); // FIXME: use dt
     }
 #endif
 

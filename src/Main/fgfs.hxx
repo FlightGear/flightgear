@@ -150,7 +150,7 @@ public:
    * update its state.  If the subsystem requires delta time information,
    * it should track it itself.</p>
    */
-  virtual void update () = 0;
+  virtual void update (int dt) = 0;
 
 };
 

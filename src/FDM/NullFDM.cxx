@@ -43,8 +43,6 @@ void FGNullFDM::init() {
 // Run an iteration of the EOM.  This is a NOP here because the flight
 // model values are getting filled in elsewhere (most likely from some
 // external source.)
-bool FGNullFDM::update( int multiloop ) {
+void FGNullFDM::update( int multiloop ) {
     // cout << "FGNullFDM::update()" << endl;
-
-    return true;
 }

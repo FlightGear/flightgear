@@ -49,7 +49,7 @@ void FGMagicCarpet::init() {
 
 
 // Run an iteration of the EOM (equations of motion)
-bool FGMagicCarpet::update( int multiloop ) {
+void FGMagicCarpet::update( int multiloop ) {
     // cout << "FGLaRCsim::update()" << endl;
 
     double time_step = get_delta_t() * multiloop;
@@ -102,6 +102,4 @@ bool FGMagicCarpet::update( int multiloop ) {
     // cout << "(setto) sea level radius (ft) = " << get_Sea_level_radius() << endl;
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
     _set_Altitude( get_Altitude() + climb );
-
-    return true;
 }

@@ -113,7 +113,7 @@ void FGBalloonSim::init() {
 
 
 // Run an iteration of the EOM (equations of motion)
-bool FGBalloonSim::update( int multiloop ) {
+void FGBalloonSim::update( int multiloop ) {
     double save_alt = 0.0;
 
     // lets try to avoid really screwing up the BalloonSim model
@@ -162,8 +162,6 @@ bool FGBalloonSim::update( int multiloop ) {
     if ( save_alt < -9000.0 ) {
 	set_Altitude( save_alt );
     }
-
-    return true;
 }
 
 

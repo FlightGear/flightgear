@@ -141,7 +141,7 @@ public:
   virtual void init ();
   virtual void bind ();
   virtual void unbind ();
-  virtual void update ();
+  virtual void update (int dt);
   virtual void update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
 
 				// transfer pointer ownership!!!

@@ -140,7 +140,7 @@ FGRadioStack::init ()
     blink.stamp();
 
     search();
-    update();
+    update(1);			// FIXME: use dt
 
     // Search radio database once per second
     global_events.Register( "fgRadioSearch()", fgRadioSearch,
@@ -400,7 +400,7 @@ double FGRadioStack::adjustILSRange( double stationElev, double aircraftElev,
 
 // Update the various nav values based on position and valid tuned in navs
 void 
-FGRadioStack::update() 
+FGRadioStack::update(int dt) 
 {
     //DCL
     string transmission;

@@ -495,15 +495,9 @@ FGInterface::free_gear_units ()
  * Update the state of the FDM (i.e. run the equations of motion).
  */
 void
-FGInterface::update ()
+FGInterface::update (int dt)
 {
-  update(1);
-}
-
-
-bool FGInterface::update( int multi_loop ) {
     cout << "dummy update() ... SHOULDN'T BE CALLED!" << endl;
-    return false;
 }
 
 

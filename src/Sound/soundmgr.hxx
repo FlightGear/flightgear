@@ -121,7 +121,7 @@ public:
     /**
      * Run the audio scheduler.
      */
-    void update();
+    void update(int dt);
 
 
     // is audio working?

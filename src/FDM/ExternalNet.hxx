@@ -53,7 +53,7 @@ public:
     void init();
 
     // update the fdm
-    bool update( int multiloop );
+    void update( int multiloop );
 
 };
 

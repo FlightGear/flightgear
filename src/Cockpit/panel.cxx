@@ -253,7 +253,7 @@ FGPanel::unbind ()
  * Update the panel.
  */
 void
-FGPanel::update ()
+FGPanel::update (int dt)
 {
 				// Do nothing if the panel isn't visible.
     if ( !fgPanelVisible() ) {

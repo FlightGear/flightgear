@@ -97,7 +97,7 @@ void FGLaRCsim::init() {
 
 
 // Run an iteration of the EOM (equations of motion)
-bool FGLaRCsim::update( int multiloop ) {
+void FGLaRCsim::update( int multiloop ) {
 
     if ( aero->getStringValue() == "c172" ) {
 	// set control inputs
@@ -215,8 +215,6 @@ bool FGLaRCsim::update( int multiloop ) {
     if ( save_alt < -9000.0 ) {
 	set_Altitude( save_alt );
     }
-
-    return true;
 }
 
 

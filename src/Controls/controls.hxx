@@ -92,7 +92,7 @@ public:
     void init ();
     void bind ();
     void unbind ();
-    void update ();
+    void update (int dt);
 
     // Reset function
     void reset_all(void);

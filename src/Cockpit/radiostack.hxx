@@ -215,7 +215,7 @@ public:
     void init ();
     void bind ();
     void unbind ();
-    void update ();
+    void update (int dt);
 
     // Update nav/adf radios based on current postition
     void search ();
