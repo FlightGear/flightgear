@@ -89,6 +89,8 @@ FGExternalPipe::FGExternalPipe( double dt, string name ) {
 FGExternalPipe::~FGExternalPipe() {
     delete [] buf;
 
+    SG_LOG( SG_IO, SG_INFO, "Closing up the ExternalPipe." );
+    
 #if defined( HAVE_SYS_TYPES_H ) && defined( HAVE_SYS_STAT_H )
     // close
     int result;
@@ -100,18 +102,6 @@ FGExternalPipe::~FGExternalPipe() {
     result = close( pd2 );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to close named pipe: "
-                << fifo_name_2 );
-    }
-
-    // remove the file system entry
-    result = unlink( fifo_name_1.c_str() );
-    if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Unable to remove named pipe: "
-                << fifo_name_1 );
-    }
-    result = unlink( fifo_name_2.c_str() );
-    if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Unable to remove named pipe: "
                 << fifo_name_2 );
     }
 #endif
@@ -193,6 +183,8 @@ void FGExternalPipe::init() {
 // Run an iteration of the EOM.
 void FGExternalPipe::update( double dt ) {
 #if defined( HAVE_SYS_TYPES_H ) && defined( HAVE_SYS_STAT_H )
+    // SG_LOG( SG_IO, SG_INFO, "Start FGExternalPipe::udpate()" );
+
     int length;
     int result;
 
@@ -216,9 +208,8 @@ void FGExternalPipe::update( double dt ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: "
                 << fifo_name_1 );
     }
-    // cout << "wrote to pipe" << endl;
+    // cout << "  wrote to pipe" << endl;
 
-    // Read next set of FDM data (blocking enabled to maintain 'sync')
     length = sizeof(fdm);
     result = std::read( pd2, (char *)(& fdm), length );
     if ( result == -1 ) {
@@ -227,5 +218,7 @@ void FGExternalPipe::update( double dt ) {
     }
     FGNetFDM2Props( &fdm, false );
     // cout << "read from pipe" << endl;
+
+    // SG_LOG( SG_IO, SG_INFO, "  End FGExternalPipe::udpate()" );
 #endif
 }
