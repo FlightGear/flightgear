@@ -40,6 +40,13 @@ int fgTileMgrInit( void );
 int fgTileMgrUpdate( void );
 
 
+// Determine scenery altitude.  Normally this just happens when we
+// render the scene, but we'd also like to be able to do this
+// explicitely.  lat & lon are in radians.  abs_view_pos in meters.
+// Returns result in meters.
+double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos );
+
+
 // Render the local tiles --- hack, hack, hack
 void fgTileMgrRender( void );
 
@@ -48,6 +55,11 @@ void fgTileMgrRender( void );
 
 
 // $Log$
+// Revision 1.3  1998/08/22 14:49:59  curt
+// Attempting to iron out seg faults and crashes.
+// Did some shuffling to fix a initialization order problem between view
+// position, scenery elevation.
+//
 // Revision 1.2  1998/05/20 20:53:56  curt
 // Moved global ref point and radius (bounding sphere info, and offset) to
 // data file rather than calculating it on the fly.

@@ -549,6 +549,7 @@ int fgLaRCsimInit(double dt) {
 
 /* Run an iteration of the EOM (equations of motion) */
 int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
+    double save_alt = 0.0;
     int	i;
 
     if (speedup > 0) {
@@ -560,8 +561,14 @@ int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
 	
 	// run Autopilot system
 	// fgPrintf( FG_ALL, FG_BULK, "Attempting autopilot run\n");
-	              
 	fgAPRun();
+
+	/* lets try to avoid really screwing up the LaRCsim model */
+	if ( FG_Altitude < -9000 ) {
+	    save_alt = FG_Altitude;
+	    FG_Altitude = 0;
+	}
+
 	// translate FG to LaRCsim structure
 	fgFlight_2_LaRCsim(f);
 	// printf("FG_Altitude = %.2f\n", FG_Altitude * 0.3048);
@@ -579,6 +586,11 @@ int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
 	// autopilot (and the rest of the sim can use the updated
 	// values
 	fgLaRCsim_2_Flight(f);
+
+	/* but lets restore our original bogus altitude when we are done */
+	if ( save_alt < -9000 ) {
+	    FG_Altitude = save_alt;
+	}
     }
 
     return(1);
@@ -948,6 +960,11 @@ int ls_ForceAltitude(double alt_feet) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.21  1998/08/22 14:49:56  curt
+ * Attempting to iron out seg faults and crashes.
+ * Did some shuffling to fix a initialization order problem between view
+ * position, scenery elevation.
+ *
  * Revision 1.20  1998/07/12 03:11:03  curt
  * Removed some printf()'s.
  * Fixed the autopilot integration so it should be able to update it's control

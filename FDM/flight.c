@@ -37,6 +37,7 @@ fgFLIGHT cur_flight_params;
 
 /* Initialize the flight model parameters */
 int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
+    double save_alt = 0.0;
     int result;
 
     fgPrintf(FG_FLIGHT,FG_INFO,"Initializing flight model\n");
@@ -44,10 +45,21 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
     if ( model == FG_SLEW ) {
 	// fgSlewInit(dt);
     } else if ( model == FG_LARCSIM ) {
+	/* lets try to avoid really screwing up the LaRCsim model */
+	if ( FG_Altitude < -9000 ) {
+	    save_alt = FG_Altitude;
+	    FG_Altitude = 0;
+	}
+
 	fgFlight_2_LaRCsim(f);  /* translate FG to LaRCsim structure */
 	fgLaRCsimInit(dt);
 	fgPrintf( FG_FLIGHT, FG_INFO, "FG pos = %.2f\n", FG_Latitude );
 	fgLaRCsim_2_Flight(f);  /* translate LaRCsim back to FG	structure */
+
+	/* but lets restore our original bogus altitude when we are done */
+	if ( save_alt < -9000 ) {
+	    FG_Altitude = save_alt;
+	}
     } else {
 	fgPrintf( FG_FLIGHT, FG_WARN,
 		  "Unimplemented flight model == %d\n", model );
@@ -101,9 +113,14 @@ int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters) {
 
 
 /* $Log$
-/* Revision 1.15  1998/07/30 23:44:36  curt
-/* Beginning to add support for multiple flight models.
+/* Revision 1.16  1998/08/22 14:49:55  curt
+/* Attempting to iron out seg faults and crashes.
+/* Did some shuffling to fix a initialization order problem between view
+/* position, scenery elevation.
 /*
+ * Revision 1.15  1998/07/30 23:44:36  curt
+ * Beginning to add support for multiple flight models.
+ *
  * Revision 1.14  1998/07/12 03:08:27  curt
  * Added fgFlightModelSetAltitude() to force the altitude to something
  * other than the current altitude.  LaRCsim doesn't let you do this by just

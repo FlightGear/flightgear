@@ -157,8 +157,8 @@ static double fg_max3 (double a, double b, double c)
 // test if line intesects with this fragment.  p0 and p1 are the two
 // line end points of the line.  If side_flag is true, check to see
 // that end points are on opposite sides of face.  Returns 1 if it
-// does, 0 otherwise.  If it intesects, result is the point of
-// intersection
+// intersection found, 0 otherwise.  If it intesects, result is the
+// point of intersection
 
 int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 			   fgPoint3d *result)
@@ -448,6 +448,11 @@ fgTILE::~fgTILE ( void ) {
 
 
 // $Log$
+// Revision 1.8  1998/08/22 14:49:58  curt
+// Attempting to iron out seg faults and crashes.
+// Did some shuffling to fix a initialization order problem between view
+// position, scenery elevation.
+//
 // Revision 1.7  1998/08/20 15:12:05  curt
 // Used a forward declaration of classes fgTILE and fgMATERIAL to eliminate
 // the need for "void" pointers and casts.

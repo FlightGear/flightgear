@@ -52,7 +52,9 @@
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
+#include <Math/fg_geodesy.h>
 #include <Math/fg_random.h>
+#include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
@@ -153,6 +155,33 @@ int fgInitGeneral( void ) {
 }
 
 
+// convert a geodetic point lon(radians), lat(radians), elev(meter) to
+// a cartesian point
+fgPoint3d geod_to_cart(double geod[3]) {
+    fgPoint3d cp;
+    fgPoint3d pp;
+    double gc_lon, gc_lat, sl_radius;
+
+    // printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
+    //        geod[0], geod[1], geod[2]);
+
+    gc_lon = geod[0];
+    fgGeodToGeoc(geod[1], geod[2], &sl_radius, &gc_lat);
+
+    // printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
+    //        gc_lat, sl_radius+geod[2]);
+
+    pp.lon = gc_lon;
+    pp.lat = gc_lat;
+    pp.radius = sl_radius + geod[2];
+    cp = fgPolarToCart3d(pp);
+    
+    // printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z);
+
+    return(cp);
+}
+
+
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
@@ -162,6 +191,8 @@ int fgInitSubsystems( void ) {
     fgLIGHT *l;
     fgTIME *t;
     fgVIEW *v;
+    double geod_pos[3];
+    fgPoint3d abs_view_pos;
 
     l = &cur_light_params;
     t = &cur_time_params;
@@ -173,17 +204,56 @@ int fgInitSubsystems( void ) {
     // seed the random number generater
     fg_srandom();
 
-    // The following section sets up the flight model EOM parameters
-    // and should really be read in from one or more files.
-
-    // Must happen before any of the flight model or control
-    // parameters are set
-
+    // allocates structures so must happen before any of the flight
+    // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
     f = current_aircraft.flight;
 
     // set the initial position
     fgInitPosition();
+
+    // Initialize the Scenery Management subsystem
+    if ( fgSceneryInit() ) {
+	// Scenery initialized ok.
+    } else {
+    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Scenery initialization!\n" );
+    }
+
+    if( fgTileMgrInit() ) {
+	// Load the local scenery data
+	fgTileMgrUpdate();
+    } else {
+    	fgPrintf( FG_GENERAL, FG_EXIT, 
+		  "Error in Tile Manager initialization!\n" );
+    }
+
+    // calculalate a cartesian point somewhere along the line between
+    // the center of the earth and our view position
+    geod_pos[0] = FG_Longitude;
+    geod_pos[1] = FG_Latitude;
+    // doesn't have to be the exact elevation (this is good because we
+    // don't know it yet :-)
+    geod_pos[2] = 0;
+    abs_view_pos = geod_to_cart(geod_pos);
+
+    // Calculate ground elevation at starting point
+    scenery.cur_elev = 
+	fgTileMgrCurElev( FG_Longitude, FG_Latitude, &abs_view_pos );
+    FG_Runway_altitude = scenery.cur_elev * METER_TO_FEET;
+
+    // Reset our altitude if we are below ground
+    if ( FG_Altitude < FG_Runway_altitude + 3.758099) {
+	FG_Altitude = FG_Runway_altitude + 3.758099;
+    }
+
+    fgPrintf( FG_GENERAL, FG_INFO,
+	      "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n",
+	      FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG,
+	      FG_Altitude * FEET_TO_METER);
+    // end of thing that I just stuck in that I should probably move
+		
+    // The following section sets up the flight model EOM parameters
+    // and should really be read in from one or more files.
 
     // Initial Velocity
     FG_V_north = 0.0;   //  7.287719E+00
@@ -281,35 +351,6 @@ int fgInitSubsystems( void ) {
     // Initialize the "sky"
     fgSkyInit();
 
-    // Initialize the Scenery Management subsystem
-    if ( fgSceneryInit() ) {
-	// Scenery initialized ok.
-    } else {
-    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Scenery initialization!\n" );
-    }
-
-    if( fgTileMgrInit() ) {
-	// Load the local scenery data
-	fgTileMgrUpdate();
-    } else {
-    	fgPrintf( FG_GENERAL, FG_EXIT, 
-		  "Error in Tile Manager initialization!\n" );
-    }
-
-    // I'm just sticking this here for now, it should probably move
-    // eventually
-    scenery.cur_elev = FG_Runway_altitude * FEET_TO_METER;
-
-    if ( FG_Altitude < FG_Runway_altitude + 3.758099) {
-	FG_Altitude = FG_Runway_altitude + 3.758099;
-    }
-
-    fgPrintf( FG_GENERAL, FG_INFO,
-	      "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n",
-	      FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG,
-	      FG_Altitude * FEET_TO_METER);
-    // end of thing that I just stuck in that I should probably move
-		
     // Initialize the flight model subsystem data structures base on
     // above values
 
@@ -347,6 +388,11 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.31  1998/08/22 14:49:57  curt
+// Attempting to iron out seg faults and crashes.
+// Did some shuffling to fix a initialization order problem between view
+// position, scenery elevation.
+//
 // Revision 1.30  1998/08/20 20:32:33  curt
 // Reshuffled some of the code in and around views.[ch]xx
 //

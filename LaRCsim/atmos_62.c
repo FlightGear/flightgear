@@ -213,7 +213,18 @@ void ls_atmos( SCALAR altitude, SCALAR * sigma, SCALAR * v_sound,
 	{ 238000.,	 1.18020E-07,	 9.52550E+02,	 2.29613E-16,	-1.45786E-08	},
 	{ 240000.,	 1.08270E-07,	 9.47120E+02,	 0.00000E+00,	 0.00000E+00	}
     };
-    
+
+    /* for purposes of doing the table lookup, force the incoming
+       altitude to be >= 0 */
+
+    // printf("altitude = %.2f\n", altitude);
+
+    if ( altitude < 0.0 ) {
+	altitude = 0.0;
+    }
+
+    // printf("altitude = %.2f\n", altitude);
+
     index = (int)( altitude / 2000 );
     if (index > (MAX_ALT_INDEX-2))
     {
@@ -239,6 +250,7 @@ void ls_atmos( SCALAR altitude, SCALAR * sigma, SCALAR * v_sound,
     if (altitude < HLEV)    /* BUG - these curve fits are only good to about 75000 ft */
       {
 	t_amb_r = 1. - 6.875e-6*altitude;
+	// printf("index = %d  t_amb_r = %.2f\n", index, t_amb_r);
 	p_amb_r = pow( t_amb_r, 5.256 );
       }
     else

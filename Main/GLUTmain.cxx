@@ -253,7 +253,7 @@ static void fgRenderFrame( void ) {
 	//        FG_Altitude * FEET_TO_METER);
     
 	// this is just a temporary hack, to make me understand Pui
-	timerText -> setLabel (ctime (&t->cur_time));
+	// timerText -> setLabel (ctime (&t->cur_time));
 	// end of hack
 
 	// update view volume parameters
@@ -872,6 +872,11 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.46  1998/08/22 14:49:56  curt
+// Attempting to iron out seg faults and crashes.
+// Did some shuffling to fix a initialization order problem between view
+// position, scenery elevation.
+//
 // Revision 1.45  1998/08/20 20:32:31  curt
 // Reshuffled some of the code in and around views.[ch]xx
 //
