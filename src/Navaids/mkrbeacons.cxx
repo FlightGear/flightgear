@@ -82,7 +82,7 @@ bool FGMarkerBeacons::add( double lon, double lat, double elev,
 
     int lonidx = (int)lon;
     diff = lon - (double)lonidx;
-    if ( (lon < 0.0) && (fabs(diff) > FG_EPSILON) ) {
+    if ( (lon < 0.0) && (fabs(diff) > SG_EPSILON) ) {
 	lonidx -= 1;
     }
     double lonfrac = lon - (double)lonidx;
@@ -90,7 +90,7 @@ bool FGMarkerBeacons::add( double lon, double lat, double elev,
 
     int latidx = (int)lat;
     diff = lat - (double)latidx;
-    if ( (lat < 0.0) && (fabs(diff) > FG_EPSILON) ) {
+    if ( (lat < 0.0) && (fabs(diff) > SG_EPSILON) ) {
 	latidx -= 1;
     }
     double latfrac = lat - (double)latidx;
@@ -139,14 +139,14 @@ FGBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
 
     int lonidx = (int)lon;
     diff = lon - (double)lonidx;
-    if ( (lon < 0.0) && (fabs(diff) > FG_EPSILON) ) {
+    if ( (lon < 0.0) && (fabs(diff) > SG_EPSILON) ) {
 	lonidx -= 1;
     }
     lonidx += 180;
 
     int latidx = (int)lat;
     diff = lat - (double)latidx;
-    if ( (lat < 0.0) && (fabs(diff) > FG_EPSILON) ) {
+    if ( (lat < 0.0) && (fabs(diff) > SG_EPSILON) ) {
 	latidx -= 1;
     }
     latidx += 90;

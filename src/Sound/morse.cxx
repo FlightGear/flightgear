@@ -71,7 +71,7 @@ bool FGMorse::init() {
 
     // Make Low DIT
     for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
                              / (8000.0 / LO_FREQUENCY) ) )
 	    * ((double)i / TRANSITION_BYTES)
 	    / 2.0 + 0.5;
@@ -82,7 +82,7 @@ bool FGMorse::init() {
 
     for ( i = TRANSITION_BYTES;
 	  i < DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE; ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / LO_FREQUENCY) ) )
 	    / 2.0 + 0.5;
 
@@ -93,7 +93,7 @@ bool FGMorse::init() {
     for ( i = DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE;
 	  i < DIT_SIZE - COUNT_SIZE;
 	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / LO_FREQUENCY) ) )
 	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
 	--j;
@@ -107,7 +107,7 @@ bool FGMorse::init() {
 
     // Make High DIT
     for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / HI_FREQUENCY)) )
 	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
 
@@ -117,7 +117,7 @@ bool FGMorse::init() {
 
     for ( i = TRANSITION_BYTES;
 	  i < DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE; ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / HI_FREQUENCY) ) )
 	    / 2.0 + 0.5;
 
@@ -128,7 +128,7 @@ bool FGMorse::init() {
     for ( i = DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE;
 	  i < DIT_SIZE - COUNT_SIZE;
 	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / HI_FREQUENCY) ) )
 	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
 	--j;
@@ -142,7 +142,7 @@ bool FGMorse::init() {
 
     // Make Low DAH
     for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / LO_FREQUENCY) ) )
 	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
 
@@ -153,7 +153,7 @@ bool FGMorse::init() {
     for ( i = TRANSITION_BYTES;
 	  i < DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
 	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / LO_FREQUENCY) ) )
 	    / 2.0 + 0.5;
 
@@ -164,7 +164,7 @@ bool FGMorse::init() {
     for ( i = DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
 	  i < DAH_SIZE - COUNT_SIZE;
 	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / LO_FREQUENCY) ) )
 	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
 	--j;
@@ -178,7 +178,7 @@ bool FGMorse::init() {
 
     // Make High DAH
     for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / HI_FREQUENCY) ) )
 	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
 
@@ -189,7 +189,7 @@ bool FGMorse::init() {
     for ( i = TRANSITION_BYTES;
 	  i < DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
 	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / HI_FREQUENCY) ) )
 	    / 2.0 + 0.5;
 
@@ -200,7 +200,7 @@ bool FGMorse::init() {
     for ( i = DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
 	  i < DAH_SIZE - COUNT_SIZE;
 	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI
+	float level = ( sin( (double) i * 2.0 * SG_PI
 			     / (8000.0 / HI_FREQUENCY) ) )
 	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
 	--j;
@@ -227,7 +227,7 @@ bool FGMorse::cust_init(const int freq ) {
 
     // Make DIT
     for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI / (8000.0 / freq)) )
+	float level = ( sin( (double) i * 2.0 * SG_PI / (8000.0 / freq)) )
 	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
 
 	/* Convert to unsigned byte */
@@ -236,7 +236,7 @@ bool FGMorse::cust_init(const int freq ) {
 
     for ( i = TRANSITION_BYTES;
 	  i < DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE; ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI / (8000.0 / freq) ) )
+	float level = ( sin( (double) i * 2.0 * SG_PI / (8000.0 / freq) ) )
 	    / 2.0 + 0.5;
 
 	/* Convert to unsigned byte */
@@ -246,7 +246,7 @@ bool FGMorse::cust_init(const int freq ) {
     for ( i = DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE;
 	  i < DIT_SIZE - COUNT_SIZE;
 	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI / (8000.0 / freq) ) )
+	float level = ( sin( (double) i * 2.0 * SG_PI / (8000.0 / freq) ) )
 	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
 	--j;
 
@@ -259,7 +259,7 @@ bool FGMorse::cust_init(const int freq ) {
 
     // Make DAH
     for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI / (8000.0 / freq) ) )
+	float level = ( sin( (double) i * 2.0 * SG_PI / (8000.0 / freq) ) )
 	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
 
 	/* Convert to unsigned byte */
@@ -269,7 +269,7 @@ bool FGMorse::cust_init(const int freq ) {
     for ( i = TRANSITION_BYTES;
 	  i < DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
 	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI / (8000.0 / freq) ) )
+	float level = ( sin( (double) i * 2.0 * SG_PI / (8000.0 / freq) ) )
 	    / 2.0 + 0.5;
 
 	/* Convert to unsigned byte */
@@ -279,7 +279,7 @@ bool FGMorse::cust_init(const int freq ) {
     for ( i = DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
 	  i < DAH_SIZE - COUNT_SIZE;
 	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * FG_PI / (8000.0 / freq) ) )
+	float level = ( sin( (double) i * 2.0 * SG_PI / (8000.0 / freq) ) )
 	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
 	--j;
 

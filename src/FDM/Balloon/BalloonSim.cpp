@@ -78,10 +78,10 @@ balloon::balloon()
     /* size for hot air balloons					    */
     /************************************************************************/
 
-    balloon_envelope_area = 4.0 * (8.8 * 8.8) * FG_PI; 
-    balloon_envelope_volume = (4.0/3.0) * (8.8 * 8.8 * 8.8) * FG_PI;
+    balloon_envelope_area = 4.0 * (8.8 * 8.8) * SG_PI; 
+    balloon_envelope_volume = (4.0/3.0) * (8.8 * 8.8 * 8.8) * SG_PI;
 
-    wind_facing_area_of_balloon = FG_PI * (8.8 * 8.8);
+    wind_facing_area_of_balloon = SG_PI * (8.8 * 8.8);
     wind_facing_area_of_basket = 2.0;	//guessed: 2 m^2
     
     cw_envelope=0.45;			//a sphere in this case

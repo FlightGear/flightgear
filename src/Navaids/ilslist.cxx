@@ -98,18 +98,18 @@ bool FGILSList::init( FGPath path ) {
 	}
 
 	// update the marker beacon list
-	if ( fabs(ils.get_omlon()) > FG_EPSILON ||
-	     fabs(ils.get_omlat()) > FG_EPSILON ) {
+	if ( fabs(ils.get_omlon()) > SG_EPSILON ||
+	     fabs(ils.get_omlat()) > SG_EPSILON ) {
 	    current_beacons->add( ils.get_omlon(), ils.get_omlat(),
 				  ils.get_gselev(), FGBeacon::OUTER );
 	}
-	if ( fabs(ils.get_mmlon()) > FG_EPSILON ||
-	     fabs(ils.get_mmlat()) > FG_EPSILON ) {
+	if ( fabs(ils.get_mmlon()) > SG_EPSILON ||
+	     fabs(ils.get_mmlat()) > SG_EPSILON ) {
 	    current_beacons->add( ils.get_mmlon(), ils.get_mmlat(),
 				  ils.get_gselev(), FGBeacon::MIDDLE );
 	}
-	if ( fabs(ils.get_imlon()) > FG_EPSILON ||
-	     fabs(ils.get_imlat()) > FG_EPSILON ) {
+	if ( fabs(ils.get_imlon()) > SG_EPSILON ||
+	     fabs(ils.get_imlat()) > SG_EPSILON ) {
 	    current_beacons->add( ils.get_imlon(), ils.get_imlat(),
 				  ils.get_gselev(), FGBeacon::INNER );
 	}

@@ -349,7 +349,7 @@ void guiMotionFunc ( int x, int y )
                     need_warp = 1;
                     x = 1;
                 }
-                // try to get FG_PI movement in each half of screen
+                // try to get SG_PI movement in each half of screen
                 // do spherical pan
                 W = ww;
                 H = wh;
@@ -378,12 +378,12 @@ void guiMotionFunc ( int x, int y )
                 // this could be done in above quat
                 // but requires redoing view pipeline
                 offset = globals->get_current_view()->get_goal_view_offset();
-                offset += ((_mX - x) * FG_2PI / W );
+                offset += ((_mX - x) * SG_2PI / W );
                 while (offset < 0.0) {
-                    offset += FG_2PI;
+                    offset += SG_2PI;
                 }
-                while (offset > FG_2PI) {
-                    offset -= FG_2PI;
+                while (offset > SG_2PI) {
+                    offset -= SG_2PI;
                 }
                 globals->get_current_view()->set_goal_view_offset(offset);
 #ifdef NO_SMOOTH_MOUSE_VIEW

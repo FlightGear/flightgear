@@ -53,7 +53,7 @@ static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     //first, drop the smallest dimension so we only have to work
     //in 2d.
     double x1, y1, x2, y2, x3, y3, rx, ry;
-    if ( fabs(min_dim-dx) <= FG_EPSILON ) {
+    if ( fabs(min_dim-dx) <= SG_EPSILON ) {
         // x is the smallest dimension
         x1 = point[1];
         y1 = point[2];
@@ -63,7 +63,7 @@ static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
         y3 = tri[1][2];
         rx = tri[2][1];
         ry = tri[2][2];
-    } else if ( fabs(min_dim-dy) <= FG_EPSILON ) {
+    } else if ( fabs(min_dim-dy) <= SG_EPSILON ) {
         // y is the smallest dimension
         x1 = point[0];
         y1 = point[2];
@@ -73,7 +73,7 @@ static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
         y3 = tri[1][2];
         rx = tri[2][0];
         ry = tri[2][2];
-    } else if ( fabs(min_dim-dz) <= FG_EPSILON ) {
+    } else if ( fabs(min_dim-dz) <= SG_EPSILON ) {
         // z is the smallest dimension
         x1 = point[0];
         y1 = point[1];

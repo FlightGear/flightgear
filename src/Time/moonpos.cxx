@@ -85,10 +85,10 @@
 /*
  * assuming the apparent orbit of the moon about the earth is circular,
  * the rate at which the orbit progresses is given by RadsPerDay --
- * FG_2PI radians per orbit divided by 365.242191 days per year:
+ * SG_2PI radians per orbit divided by 365.242191 days per year:
  */
 
-#define RadsPerDay (FG_2PI/365.242191)
+#define RadsPerDay (SG_2PI/365.242191)
 
 /*
  * details of moon's apparent orbit at epoch 1990.0 (after
@@ -99,8 +99,8 @@
  * Eccentricity (eccentricity of orbit)                0.016713
  */
 
-#define Epsilon_g    (279.403303*(FG_2PI/360))
-#define OmegaBar_g   (282.768422*(FG_2PI/360))
+#define Epsilon_g    (279.403303*(SG_2PI/360))
+#define OmegaBar_g   (282.768422*(SG_2PI/360))
 #define Eccentricity (0.016713)
 
 /*
@@ -108,7 +108,7 @@
  * 1990.0 (computed as 23.440592 degrees according to the method given
  * in duffett-smith, section 27)
  */
-#define MeanObliquity (23.440592*(FG_2PI/360))
+#define MeanObliquity (23.440592*(SG_2PI/360))
 
 /* static double solve_keplers_equation(double); */
 /* static double moon_ecliptic_longitude(time_t); */
@@ -149,11 +149,11 @@ static double moon_ecliptic_longitude(time_t ssue) {
     D = DaysSinceEpoch(ssue);
 
     N = RadsPerDay * D;
-    N = fmod(N, FG_2PI);
-    if (N < 0) N += FG_2PI;
+    N = fmod(N, SG_2PI);
+    if (N < 0) N += SG_2PI;
 
     M_moon = N + Epsilon_g - OmegaBar_g;
-    if (M_moon < 0) M_moon += FG_2PI;
+    if (M_moon < 0) M_moon += SG_2PI;
 
     E = solve_keplers_equation(M_moon);
     v = 2 * atan(sqrt((1+Eccentricity)/(1-Eccentricity)) * tan(E/2));
@@ -283,13 +283,13 @@ void fgMoonPosition(time_t ssue, double *lon, double *lat) {
 
     ecliptic_to_equatorial( globals->get_ephem()->get_moon()->getLon(),
 			    0.0, &alpha, &delta );
-    tmp = alpha - (FG_2PI/24)*GST(ssue);
-    if (tmp < -FG_PI) {
-	do tmp += FG_2PI;
-	while (tmp < -FG_PI);
-    } else if (tmp > FG_PI) {
-	do tmp -= FG_2PI;
-	while (tmp < -FG_PI);
+    tmp = alpha - (SG_2PI/24)*GST(ssue);
+    if (tmp < -SG_PI) {
+	do tmp += SG_2PI;
+	while (tmp < -SG_PI);
+    } else if (tmp > SG_PI) {
+	do tmp -= SG_2PI;
+	while (tmp < -SG_PI);
     }
 
     *lon = tmp;
@@ -317,14 +317,14 @@ static void fgMoonPositionGST(double gst, double *lon, double *lat) {
 			    globals->get_ephem()->get_moon()->getLat(), 
 			    &alpha,  &delta );
 
-//    tmp = alpha - (FG_2PI/24)*GST(ssue);
-    tmp = alpha - (FG_2PI/24)*gst;	
-    if (tmp < -FG_PI) {
-	do tmp += FG_2PI;
-	while (tmp < -FG_PI);
-    } else if (tmp > FG_PI) {
-	do tmp -= FG_2PI;
-	while (tmp < -FG_PI);
+//    tmp = alpha - (SG_2PI/24)*GST(ssue);
+    tmp = alpha - (SG_2PI/24)*gst;	
+    if (tmp < -SG_PI) {
+	do tmp += SG_2PI;
+	while (tmp < -SG_PI);
+    } else if (tmp > SG_PI) {
+	do tmp -= SG_2PI;
+	while (tmp < -SG_PI);
     }
 
     *lon = tmp;

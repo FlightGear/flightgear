@@ -69,7 +69,7 @@ enum eParam {
   FG_ALPHADOT,
   FG_BETA,
   FG_BETADOT,
-  FG_PITCHRATE,
+  SG_PITCHRATE,
   FG_ROLLRATE,
   FG_YAWRATE,
   FG_MACH,
@@ -91,7 +91,7 @@ enum eParam {
   FG_THROTTLE_CMD,
   FG_THROTTLE_POS,
   FG_HOVERB,
-  FG_PITCH_TRIM_CMD
+  SG_PITCH_TRIM_CMD
 };
 
 /******************************************************************************/

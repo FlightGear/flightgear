@@ -68,7 +68,7 @@
 #include "sunpos.hxx"
 
 // #undef E // should no longer be needed
-#define MeanObliquity (23.440592*(FG_2PI/360))
+#define MeanObliquity (23.440592*(SG_2PI/360))
 
 static void   ecliptic_to_equatorial(double, double, double *, double *);
 static double julian_date(int, int, int);
@@ -191,13 +191,13 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 
     ecliptic_to_equatorial( globals->get_ephem()->get_sun()->getLon(),
 			    0.0, &alpha, &delta );
-    tmp = alpha - (FG_2PI/24)*GST(ssue);
-    if (tmp < -FG_PI) {
-	do tmp += FG_2PI;
-	while (tmp < -FG_PI);
-    } else if (tmp > FG_PI) {
-	do tmp -= FG_2PI;
-	while (tmp < -FG_PI);
+    tmp = alpha - (SG_2PI/24)*GST(ssue);
+    if (tmp < -SG_PI) {
+	do tmp += SG_2PI;
+	while (tmp < -SG_PI);
+    } else if (tmp > SG_PI) {
+	do tmp -= SG_2PI;
+	while (tmp < -SG_PI);
     }
 
     *lon = tmp;
@@ -225,14 +225,14 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
 			    globals->get_ephem()->get_sun()->getLat(),
 			    &alpha, &delta );
 
-//    tmp = alpha - (FG_2PI/24)*GST(ssue);
-    tmp = alpha - (FG_2PI/24)*gst;	
-    if (tmp < -FG_PI) {
-	do tmp += FG_2PI;
-	while (tmp < -FG_PI);
-    } else if (tmp > FG_PI) {
-	do tmp -= FG_2PI;
-	while (tmp < -FG_PI);
+//    tmp = alpha - (SG_2PI/24)*GST(ssue);
+    tmp = alpha - (SG_2PI/24)*gst;	
+    if (tmp < -SG_PI) {
+	do tmp += SG_2PI;
+	while (tmp < -SG_PI);
+    } else if (tmp > SG_PI) {
+	do tmp -= SG_2PI;
+	while (tmp < -SG_PI);
     }
 
     *lon = tmp;

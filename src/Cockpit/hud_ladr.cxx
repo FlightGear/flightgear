@@ -276,8 +276,8 @@ void HudLadder :: draw( void )
 	//  velocity vector
 	glBegin(GL_LINE_LOOP);  // Use polygon to approximate a circle 
         for(count=0; count<50; count++) {             
-	    cosine = 6 * cos(count * 2 * FG_PI/50.0); 
-            sine =   6 * sin(count * 2 * FG_PI/50.0); 
+	    cosine = 6 * cos(count * 2 * SG_PI/50.0); 
+            sine =   6 * sin(count * 2 * SG_PI/50.0); 
             glVertex2f(cosine+vel_x, sine+vel_y);
 	}     
 	glEnd(); 

@@ -68,18 +68,18 @@ operator = (const fgTBI_instr & rhs )
 
      bank_angle     = current_ch2();  // Roll limit +/- 30 degrees
      
-     if( bank_angle < -FG_PI_2/3 ) {
-         bank_angle = -FG_PI_2/3;
-     } else if( bank_angle > FG_PI_2/3 ) {
-             bank_angle = FG_PI_2/3;
+     if( bank_angle < -SG_PI_2/3 ) {
+         bank_angle = -SG_PI_2/3;
+     } else if( bank_angle > SG_PI_2/3 ) {
+             bank_angle = SG_PI_2/3;
      }
      
      sideslip_angle = current_ch1(); // Sideslip limit +/- 20 degrees
      
-     if( sideslip_angle < -FG_PI/9 ) {
-         sideslip_angle = -FG_PI/9;
-     } else if( sideslip_angle > FG_PI/9 ) {
-             sideslip_angle = FG_PI/9;
+     if( sideslip_angle < -SG_PI/9 ) {
+         sideslip_angle = -SG_PI/9;
+     } else if( sideslip_angle > SG_PI/9 ) {
+             sideslip_angle = SG_PI/9;
      }
 
      cen_x = centroid.x;
@@ -88,7 +88,7 @@ operator = (const fgTBI_instr & rhs )
      tee   = -tee_height;
      fspan = span;
      hole  = scr_hole;
-     ss_const = 2 * sideslip_angle * fspan/(FG_2PI/9);  // width represents 40 degrees
+     ss_const = 2 * sideslip_angle * fspan/(SG_2PI/9);  // width represents 40 degrees
      
 //   printf("side_slip: %f   fspan: %f\n", sideslip_angle, fspan);
 //   printf("ss_const: %f   hole: %f\n", ss_const, hole);

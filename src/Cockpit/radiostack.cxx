@@ -253,10 +253,10 @@ double FGRadioStack::adjustNavRange( double stationElev, double aircraftElev,
     // cout << "aircraft elev = " << aircraftElev * METER_TO_FEET
     //      << " station elev = " << stationElev << endl;
 
-    if ( nominalRange < 25.0 + FG_EPSILON ) {
+    if ( nominalRange < 25.0 + SG_EPSILON ) {
 	// Standard Terminal Service Volume
 	return term_tbl->interpolate( alt ) * usability_factor;
-    } else if ( nominalRange < 50.0 + FG_EPSILON ) {
+    } else if ( nominalRange < 50.0 + SG_EPSILON ) {
 	// Standard Low Altitude Service Volume
 	// table is based on range of 40, scale to actual range
 	return low_tbl->interpolate( alt ) * nominalRange / 40.0

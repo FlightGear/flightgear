@@ -321,7 +321,7 @@ static double LinearExtrapolate( double x, double x1, double y1, double x2, doub
 	// Could be
 	// static double y = 0.0;
 	// double dx = x2 -x1;
-	// if( (dx < -FG_EPSILON ) || ( dx > FG_EPSILON ) )
+	// if( (dx < -SG_EPSILON ) || ( dx > SG_EPSILON ) )
 	// {
 
     double m, b, y;          // the constants to find in y=mx+b
@@ -955,13 +955,13 @@ void FGAutopilot::AltitudeAdjust( double inc )
     // cout << "target_agl / inc = " << target_agl / inc << endl;
     // cout << "(int)(target_agl / inc) = " << (int)(target_agl / inc) << endl;
 
-    if ( fabs((int)(target_alt / inc) * inc - target_alt) < FG_EPSILON ) {
+    if ( fabs((int)(target_alt / inc) * inc - target_alt) < SG_EPSILON ) {
 	target_alt += inc;
     } else {
 	target_alt = ( int ) ( target_alt / inc ) * inc + inc;
     }
 
-    if ( fabs((int)(target_agl / inc) * inc - target_agl) < FG_EPSILON ) {
+    if ( fabs((int)(target_agl / inc) * inc - target_agl) < SG_EPSILON ) {
 	target_agl += inc;
     } else {
 	target_agl = ( int ) ( target_agl / inc ) * inc + inc;

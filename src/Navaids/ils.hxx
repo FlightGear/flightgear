@@ -148,7 +148,7 @@ operator >> ( istream& in, FGILS& i )
     i.y = cart.y();
     i.z = cart.z();
 
-    if ( i.gslon < FG_EPSILON && i.gslat < FG_EPSILON ) {
+    if ( i.gslon < SG_EPSILON && i.gslat < SG_EPSILON ) {
 	i.has_gs = false;
     } else {
 	i.has_gs = true;
@@ -161,7 +161,7 @@ operator >> ( istream& in, FGILS& i )
 	// cout << "gs = " << cart << endl;
     }
 
-    if ( i.dmelon < FG_EPSILON && i.dmelat < FG_EPSILON ) {
+    if ( i.dmelon < SG_EPSILON && i.dmelat < SG_EPSILON ) {
 	i.has_dme = false;
     } else {
 	i.has_dme = true;

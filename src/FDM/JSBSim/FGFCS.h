@@ -89,7 +89,7 @@ CLASS DOCUMENTATION
     &lt COMPONENT NAME="Pitch Trim Sum" TYPE="SUMMER"&gt
       ID            0
       INPUT        FG_ELEVATOR_CMD
-      INPUT        FG_PITCH_TRIM_CMD
+      INPUT        SG_PITCH_TRIM_CMD
       CLIPTO       -1 1
     &lt/COMPONENT&gt
 

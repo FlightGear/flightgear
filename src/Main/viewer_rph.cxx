@@ -326,7 +326,7 @@ void FGViewerRPH::update() {
     sgNegateVec3(world_down, world_up);
     sgVectorProductVec3(surface_east, surface_south, world_down);
 #else
-    sgMakeRotMat4( TMP, FG_PI_2 * RAD_TO_DEG, world_up );
+    sgMakeRotMat4( TMP, SG_PI_2 * RAD_TO_DEG, world_up );
     // cout << "sgMat4 TMP" << endl;
     // print_sgMat4( TMP );
     sgXformVec3(surface_east, surface_south, TMP);

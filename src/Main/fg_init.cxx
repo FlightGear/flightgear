@@ -377,12 +377,12 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 			azimuth, found_r.length * FEET_TO_METER * 0.5 - 5.0,
 			&lat2, &lon2, &az2 );
 
-    if ( fabs( fgGetDouble("/sim/startup/offset-distance") ) > FG_EPSILON ) {
+    if ( fabs( fgGetDouble("/sim/startup/offset-distance") ) > SG_EPSILON ) {
 	double olat, olon;
 	double odist = fgGetDouble("/sim/startup/offset-distance");
 	odist *= NM_TO_METER;
 	double oaz = azimuth;
-	if ( fabs(fgGetDouble("/sim/startup/offset-azimuth")) > FG_EPSILON ) {
+	if ( fabs(fgGetDouble("/sim/startup/offset-azimuth")) > SG_EPSILON ) {
 	    oaz = fgGetDouble("/sim/startup/offset-azimuth") + 180;
 	}
 	while ( oaz >= 360.0 ) { oaz -= 360.0; }

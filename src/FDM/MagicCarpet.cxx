@@ -62,16 +62,16 @@ bool FGMagicCarpet::update( int multiloop ) {
     _set_V_ground_speed( kts );
 
     // angle of turn
-    double turn_rate = controls.get_aileron() * FG_PI_4; // radians/sec
+    double turn_rate = controls.get_aileron() * SG_PI_4; // radians/sec
     double turn = turn_rate * time_step;
 
     // update euler angles
-    _set_Euler_Angles( get_Phi(), get_Theta(), fmod(get_Psi() + turn, FG_2PI) );
+    _set_Euler_Angles( get_Phi(), get_Theta(), fmod(get_Psi() + turn, SG_2PI) );
     _set_Euler_Rates(0,0,0);
 
     // update (lon/lat) position
     double lat2, lon2, az2;
-    if ( speed > FG_EPSILON ) {
+    if ( speed > SG_EPSILON ) {
 	geo_direct_wgs_84 ( get_Altitude(),
 			    get_Latitude() * RAD_TO_DEG,
 			    get_Longitude() * RAD_TO_DEG,

@@ -820,9 +820,9 @@ parse_option (const string& arg)
 	string woffset = arg.substr( 14 );
 	double default_view_offset = 0.0;
 	if ( woffset == "LEFT" ) {
-	       default_view_offset = FG_PI * 0.25;
+	       default_view_offset = SG_PI * 0.25;
 	} else if ( woffset == "RIGHT" ) {
-	    default_view_offset = FG_PI * 1.75;
+	    default_view_offset = SG_PI * 1.75;
 	} else if ( woffset == "CENTER" ) {
 	    default_view_offset = 0.00;
 	} else {
