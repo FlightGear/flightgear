@@ -383,20 +383,39 @@ int FGAutopilot::run() {
 	    // leave target heading alone
 	} else if ( heading_mode == FG_HEADING_NAV1 ) {
 	    // track the NAV1 heading needle deflection
+
+	    // determine our current radial position relative to the
+	    // navaid in "true" heading.
 	    double cur_radial = current_radiostack->get_nav1_heading() +
 		current_radiostack->get_nav1_magvar();
 	    if ( current_radiostack->get_nav1_from_flag() ) {
 		cur_radial += 180.0;
 		while ( cur_radial >= 360.0 ) { cur_radial -= 360.0; }
 	    }
+
+	    // determine the target radial in "true" heading
+	    double tgt_radial = current_radiostack->get_nav1_radial();
+	    if ( current_radiostack->get_nav1_loc() ) {
+		// ILS localizers radials are already "true" in our
+		// database
+	    } else {
+		// VOR radials need to have that vor's offset added in
+		tgt_radial += current_radiostack->get_nav1_magvar();
+	    }
+
+	    // determine the heading adjustment needed.
 	    double adjustment = 
 		current_radiostack->get_nav1_heading_needle_deflection()
 		* (current_radiostack->get_nav1_loc_dist() * METER_TO_NM);
 	    if ( adjustment < -30.0 ) { adjustment = -30.0; }
 	    if ( adjustment >  30.0 ) { adjustment =  30.0; }
-	    TargetHeading = cur_radial + adjustment; 
+
+	    // determine the target heading to fly to intercept the
+	    // tgt_radial
+	    TargetHeading = tgt_radial + adjustment; 
 	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
 	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
+
 #if 0
 	    if ( current_radiostack->get_nav1_to_flag() ||
 		 current_radiostack->get_nav1_from_flag() ) {
@@ -650,8 +669,8 @@ int FGAutopilot::run() {
 	//      << " fpm" << endl;
 
 	error = FGBFI::getVerticalSpeed() * FEET_TO_METER - TargetClimbRate;
-	cout << "climb rate = " << FGBFI::getVerticalSpeed()
-	     << "  vsi rate = " << FGSteam::get_VSI_fps() << endl;
+	// cout << "climb rate = " << FGBFI::getVerticalSpeed()
+	//      << "  vsi rate = " << FGSteam::get_VSI_fps() << endl;
 
 	// accumulate the error under the curve ... this really should
 	// be *= delta t
