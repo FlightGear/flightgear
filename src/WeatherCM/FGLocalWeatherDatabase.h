@@ -60,11 +60,13 @@ HISTORY
 
 #include <plib/sg.h>
 
+#include <simgear/misc/props.hxx>
+#include <simgear/constants.h>
+
 #include "sphrintp.h"
 
 #include "FGPhysicalProperties.h"
 #include "FGPhysicalProperty.h"
-
 
 #include "FGWeatherFeature.h"
 #include "FGWeatherDefs.h"

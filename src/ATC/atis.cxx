@@ -39,7 +39,8 @@ SG_USING_STD(cout);
 #include <simgear/misc/sg_path.hxx>
 
 //#ifndef FG_OLD_WEATHER
-//#include <WeatherCM/FGLocalWeatherDatabase.h>
+//sorry, that works only with the new weather system
+#include <WeatherCM/FGLocalWeatherDatabase.h>
 //#else
 //#  include <Weather/weather.hxx>
 //#endif
@@ -97,13 +98,14 @@ string FGATIS::get_transmission() {
 
     string transmission = "";
     double visibility;
-    double temperature;
     char buf[10];
     int phonetic_id;
     string phonetic_id_string;
     string time_str = fgGetString("sim/time/gmt-string");
     int hours;
-    int minutes;
+    // int minutes;
+    sgVec3 position = { lat, lon, elev };
+    FGPhysicalProperty stationweather = WeatherDatabase->get(position);
 
 // Only update every so-many loops - FIXME - possibly register this with the event scheduler
 // Ack this doesn't work since the static counter is shared between all instances of FGATIS
@@ -137,13 +139,13 @@ string FGATIS::get_transmission() {
 	// Get the temperature
 	// (Hardwire it for now since the global property returns the temperature at the current altitude
 	//temperature = fgGetDouble("/environment/weather/temperature-K");
-	temperature = 15 + 273.15;
-	sprintf(buf, "%i", int(temperature - 273.15));
+	sprintf(buf, "%i", int(stationweather.Temperature - 273.15));
 	transmission += "  Temperature ";
 	transmission += buf;
 	transmission += " degrees Celcius";
 
 	// Get the pressure / altimeter
+        // pressure is: stationweather.AirPressure in Pascal
 
 	// Get the visibility
 	visibility = fgGetDouble("/environment/visibility-m");
@@ -170,16 +172,24 @@ string FGATIS::get_transmission() {
 	FGRunways runways( path.c_str() );
 
 	//Set the heading to into the wind
-	double hdg = fgGetDouble("/environment/wind-from-heading-deg");
-	double speed = fgGetDouble("/environment/wind-speed-knots");
+        double wind_x = stationweather.Wind[0];
+        double wind_y = stationweather.Wind[1];
 
-	//cout << "in atis.cxx, hdg = " << hdg << " speed = " << speed << endl;
+        double speed = sqrt( wind_x*wind_x + wind_y*wind_y ) * SG_METER_TO_NM / (60.0*60.0);
+        double hdg;
 
 	//If no wind use 270degrees
 	if(speed == 0) {
 	    hdg = 270;
 	    transmission += "  Winds light and variable";
 	} else {
+            // //normalize the wind to get the direction
+            //wind_x /= speed; wind_y /= speed;
+
+            hdg = - atan2 ( wind_x, wind_y ) * SG_RADIANS_TO_DEGREES ;
+            if (hdg < 0.0)
+              hdg += 360.0;
+
 	    //add a description of the wind to the transmission
 	    char buf2[72];
 	    sprintf(buf2, "%s %i %s %i %s", "  Winds ", int(speed), " knots from ", int(hdg), " degrees");
