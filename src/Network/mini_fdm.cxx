@@ -35,7 +35,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
-#include "native_fdm_mini.hxx"
+#include "mini_fdm.hxx"
 
 // FreeBSD works better with this included last ... (?)
 #if defined(WIN32) && !defined(__CYGWIN__)
@@ -71,15 +71,15 @@ static void htond (double &x)
 }
 
 
-FGNativeFDMmini::FGNativeFDMmini() {
+FGMiniFDM::FGMiniFDM() {
 }
 
-FGNativeFDMmini::~FGNativeFDMmini() {
+FGMiniFDM::~FGMiniFDM() {
 }
 
 
 // open hailing frequencies
-bool FGNativeFDMmini::open() {
+bool FGMiniFDM::open() {
     if ( is_enabled() ) {
 	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
 		<< "is already in use, ignoring" );
@@ -100,7 +100,7 @@ bool FGNativeFDMmini::open() {
 }
 
 
-void FGProps2NetFDMmini( FGNetFDMmini *net ) {
+void FGProps2NetMiniFDM( FGNetMiniFDM *net ) {
     int i;
 
     // Version sanity checking
@@ -115,7 +115,7 @@ void FGProps2NetFDMmini( FGNetFDMmini *net ) {
     net->psi = cur_fdm_state->get_Psi();
 
     // Consumables
-    net->num_tanks = FGNetFDMmini::FG_MAX_TANKS;
+    net->num_tanks = FGNetMiniFDM::FG_MAX_TANKS;
     for ( i = 0; i < net->num_tanks; ++i ) {
         SGPropertyNode *node = fgGetNode("/consumables/fuel/tank", i, true);
         net->fuel_quantity[i] = node->getDoubleValue("level-gal_us");
@@ -145,7 +145,7 @@ void FGProps2NetFDMmini( FGNetFDMmini *net ) {
 }
 
 
-void FGNetFDMmini2Props( FGNetFDMmini *net ) {
+void FGNetMiniFDM2Props( FGNetMiniFDM *net ) {
     int i;
 
     // Convert to the net buffer from network format
@@ -191,7 +191,7 @@ void FGNetFDMmini2Props( FGNetFDMmini *net ) {
         globals->set_warp( net->warp );
     } else {
 	SG_LOG( SG_IO, SG_ALERT,
-                "Error: version mismatch in FGNetFDMmini2Props()" );
+                "Error: version mismatch in FGNetMiniFDM2Props()" );
 	SG_LOG( SG_IO, SG_ALERT,
 		"\tread " << net->version << " need " << FG_NET_FDM_MINI_VERSION );
 	SG_LOG( SG_IO, SG_ALERT,
@@ -201,13 +201,13 @@ void FGNetFDMmini2Props( FGNetFDMmini *net ) {
 
 
 // process work for this port
-bool FGNativeFDMmini::process() {
+bool FGMiniFDM::process() {
     SGIOChannel *io = get_io_channel();
     int length = sizeof(buf);
 
     if ( get_direction() == SG_IO_OUT ) {
 	// cout << "size of cur_fdm_state = " << length << endl;
-	FGProps2NetFDMmini( &buf );
+	FGProps2NetMiniFDM( &buf );
 	if ( ! io->write( (char *)(& buf), length ) ) {
 	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
@@ -216,12 +216,12 @@ bool FGNativeFDMmini::process() {
 	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetFDMmini2Props( &buf );
+		FGNetMiniFDM2Props( &buf );
 	    }
 	} else {
 	    while ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetFDMmini2Props( &buf );
+		FGNetMiniFDM2Props( &buf );
 	    }
 	}
     }
@@ -231,7 +231,7 @@ bool FGNativeFDMmini::process() {
 
 
 // close the channel
-bool FGNativeFDMmini::close() {
+bool FGMiniFDM::close() {
     SGIOChannel *io = get_io_channel();
 
     set_enabled( false );

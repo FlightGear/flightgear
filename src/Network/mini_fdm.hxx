@@ -1,4 +1,4 @@
-// native_fdm_mini.hxx -- FGFS "Mini-Native" flight dynamics protocal class
+// mini_fdm.hxx -- FGFS "mini" flight dynamics protocal class
 //
 // Written by Curtis Olson, started January 2002.
 //
@@ -21,8 +21,8 @@
 // $Id$
 
 
-#ifndef _FG_NATIVE_FDM_MINI_HXX
-#define _FG_NATIVE_FDM_MINI_HXX
+#ifndef _FG_MINI_FDM_HXX
+#define _FG_MINI_FDM_HXX
 
 
 #include <simgear/compiler.h>
@@ -33,15 +33,15 @@
 #include "net_fdm_mini.hxx"
 
 
-class FGNativeFDMmini : public FGProtocol, public FGInterface {
+class FGMiniFDM : public FGProtocol, public FGInterface {
 
-    FGNetFDMmini buf;
+    FGNetMiniFDM buf;
     int length;
 
 public:
 
-    FGNativeFDMmini();
-    ~FGNativeFDMmini();
+    FGMiniFDM();
+    ~FGMiniFDM();
 
     // open hailing frequencies
     bool open();
@@ -56,13 +56,13 @@ public:
 
 // Helper functions which may be useful outside this class
 
-// Populate the FGNetFDMmini structure from the property tree.
-void FGProps2NetFDMmini( FGNetFDMmini *net );
+// Populate the FGNetMiniFDM structure from the property tree.
+void FGProps2NetMiniFDM( FGNetMiniFDM *net );
 
-// Update the property tree from the FGNetFDMmini structure.
-void FGNetFDMmini2Props( FGNetFDMmini *net );
+// Update the property tree from the FGNetMiniFDM structure.
+void FGNetMiniFDM2Props( FGNetMiniFDM *net );
 
 
-#endif // _FG_NATIVE_FDM_MINI_HXX
+#endif // _FG_MINI_FDM_HXX
 
 

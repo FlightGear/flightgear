@@ -37,7 +37,7 @@ const int FG_NET_FDM_MINI_VERSION = 1;
 // Define a structure containing the top level flight dynamics model
 // parameters
 
-class FGNetFDMmini {
+class FGNetMiniFDM {
 
 public:
 

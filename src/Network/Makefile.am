@@ -14,10 +14,10 @@ libNetwork_a_SOURCES = \
         httpd.cxx httpd.hxx \
         $(JPEG_SERVER) \
 	joyclient.cxx joyclient.hxx \
+	mini_fdm.cxx mini_fdm.hxx \
 	native.cxx native.hxx \
 	native_ctrls.cxx native_ctrls.hxx \
 	native_fdm.cxx native_fdm.hxx \
-	native_fdm_mini.cxx native_fdm_mini.hxx \
 	net_ctrls.hxx net_fdm.hxx net_fdm_mini.hxx \
         nmea.cxx nmea.hxx \
         opengc.cxx opengc.hxx opengc_data.hxx \

@@ -46,6 +46,7 @@
 #  include <Network/jpg-httpd.hxx>
 #endif
 #include <Network/joyclient.hxx>
+#include <Network/mini_fdm.hxx>
 #include <Network/native.hxx>
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
@@ -136,6 +137,9 @@ FGIO::parse_port_config( const string& config )
 	} else if ( protocol == "native_fdm" ) {
 	    FGNativeFDM *native_fdm = new FGNativeFDM;
 	    io = native_fdm;
+	} else if ( protocol == "mini_fdm" ) {
+	    FGMiniFDM *mini_fdm = new FGMiniFDM;
+	    io = mini_fdm;
 	} else if ( protocol == "nmea" ) {
 	    FGNMEA *nmea = new FGNMEA;
 	    io = nmea;
