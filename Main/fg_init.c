@@ -86,10 +86,12 @@ void fgInitSubsystems( void ) {
     double cur_elev;
 
     struct fgFLIGHT *f;
+    struct fgLIGHT *l;
     struct fgTIME *t;
     struct fgVIEW *v;
 
     f = &current_aircraft.flight;
+    l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
 
@@ -179,11 +181,18 @@ void fgInitSubsystems( void ) {
     fgTimeInit(t);
     fgTimeUpdate(f, t);
 
-    /* Initialize shared sun position and sun_vec */
-    fgEventRegister( "fgUpdateSunPos()", fgUpdateSunPos, FG_EVENT_READY, 1000 );
+    /* fgViewUpdate() needs the sun in the right place, while
+     * fgUpdateSunPos() needs to know the view position.  I'll get
+     * around this interdependency for now by calling fgUpdateSunPos()
+     * once, then moving on with normal initialization. */
+    fgUpdateSunPos();
 
     /* Initialize view parameters */
     fgViewInit(v);
+    fgViewUpdate(f, v, l);
+
+    /* Initialize shared sun position and sun_vec */
+    fgEventRegister( "fgUpdateSunPos()", fgUpdateSunPos, FG_EVENT_READY, 1000 );
 
     /* Initialize the weather modeling subsystem */
     fgWeatherInit();
@@ -258,9 +267,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.25  1997/12/30 22:22:33  curt
-/* Further integration of event manager.
+/* Revision 1.26  1997/12/30 23:09:04  curt
+/* Tweaking initialization sequences.
 /*
+ * Revision 1.25  1997/12/30 22:22:33  curt
+ * Further integration of event manager.
+ *
  * Revision 1.24  1997/12/30 20:47:44  curt
  * Integrated new event manager with subsystem initializations.
  *
