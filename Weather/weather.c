@@ -59,7 +59,8 @@ void fgWeatherInit( void ) {
     /* Configure some wind */
     /* FG_V_north_airmass = 15; */ /* ft/s =~ 10mph */
 
-    fgWeatherSetVisibility(45000.0);    /* in meters */
+    // fgWeatherSetVisibility(45000.0);    /* in meters */
+    fgWeatherSetVisibility(32000.0);    /* about 20 miles (in meters) */
 }
 
 
@@ -107,12 +108,15 @@ void fgWeatherSetVisibility( float visibility ) {
 
 
 /* $Log$
-/* Revision 1.16  1998/06/12 01:00:59  curt
-/* Build only static libraries.
-/* Declare memmove/memset for Sloaris.
-/* Added support for exponetial fog, which solves for the proper density to
-/* achieve the desired visibility range.
+/* Revision 1.17  1998/07/20 12:51:57  curt
+/* Default visibility to about 20 miles.
 /*
+ * Revision 1.16  1998/06/12 01:00:59  curt
+ * Build only static libraries.
+ * Declare memmove/memset for Sloaris.
+ * Added support for exponetial fog, which solves for the proper density to
+ * achieve the desired visibility range.
+ *
  * Revision 1.15  1998/04/25 22:06:34  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *
