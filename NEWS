@@ -1,3 +1,99 @@
+New in 0.7.9
+* February 16, 2002
+
+* MSVC fixes.
+* IRIX fixes.
+* FreeBSD fixes.
+* Mac OS X fixes.
+* Better cygwin and mingwin support.
+* Better support for gcc-3.0
+
+* Added an autogen.sh script for those compiling from CVS code.
+* Attempt to support more incompatible varients of the
+  automake/autoconf tools.
+* Added basic man pages.
+* Removed old remnants of plib-1.2.x support.  Plib-1.4.x is now required.
+* Added support for building mandrake packages (other packaging system
+  contributions welcom.)
+* Various initialization and startup sequence fixes and tweaks.
+  This helps get the flight dynamics model going reliably and robustly.
+  It also helps get initial time of day effects correct.
+* Fixed a config problem that could lead to bogus builds for people with
+  Voodoo cards.
+* Better support for running with an alternate time/date for when we
+  are being slaved to an external data source.
+* Fixed (simplistic) terrain following autopilot mode.
+* Fixes to problems with window aspect ratio that could surface if the
+  window was resized.
+* Fix several off by one errors in hud_card.cxx
+* Fix gauge spelling error.
+* Modified FGSubsystem::update() to take an int parameter for delta time.
+* Many internal fixes and enhancements to the core code that manages
+  instrument panel modeling and rendering.
+* Fixed a bug preventing the LaRCsim engine from starting.
+* EGT doesn't show 'running' values while cranking.
+* Fixes to JSBSim so that the slip/skid ball is much more realistically modelled
+* Added support for an unlimited number of fuel tanks.
+* Multi-engine throttle fixes.
+* A round of updates to the UIUC flight dynamics model.
+* Fixed an annoying tile cache scheduling bug.  This makes tile paging
+  much more robust even with teleporting and reseting.
+* Fixed a potential mouse freeze up condition on windows.
+* Converted the materials file to xml.
+* Tweaked and updated initial option and config file parsing to be
+  more intuitive and robust.
+* Check for the proper version of the base file and exit gracefully
+  if not found.
+* Fixed a problem with the initial view offset being lost.
+* Various floating point / initial value bug fixes
+* Added support for tracing property manager reads and writes (for
+  debugging purposes.)
+* Fixed the problem where the simulator clock time would go goofy
+  when scenery was being loaded.
+* Make the tile cache system more tolerant of situations where the tile
+  cache is full, but no entry qualifies for removal.
+
+* Added an entirely new set of flight dynamics modeling code by Andy Ross.
+  Includes several aircraft such as a 747, A4, and DC-3.
+  This is (Y)et (A)nother Flight Dynamics (Sim)ulator.  It is a first cut
+  of a "different take" on FDM design.  It's intended to be very simple
+  to use, producing reasonable results for aircraft of all sorts and sizes,
+  while maintaining simulation plausibility even in odd flight conditions
+  like spins and aerobatics.  It's at the point now where one can
+  actually fly the planes around.
+* Added an optional embedded http server that provides a property
+  manager interface to external programs and scripts.
+* Added an optional embedded http server that can serve out live
+  screen shots to anyone on the web.
+* Sync with the latest JSBSim code.
+* Added simple ATIS support.
+* More flexible autopilot that can be tuned per aircraft.
+* Many updates to the HUD to allow it to handle a much bigger set of
+  symbology and functionality
+* Support for back course ILS approaches.
+* Implimented DME ETE and speed.
+* Added support for rudder and aileron trim.
+* Many improvents with piston engine and propeller modeling.  Engine
+  startup procedures work, and engine guages work.
+* Added support for retractable gear.
+* Added 'master freeze' and 'fuel freeze' modes.  Would like to add
+  other freeze modes soon.
+* Added a 'high' level aircraft config file that specifies things like
+  the FDM code to use, the aircraft config file, the 3d model, the
+  instrument panel, autopilot config, etc.
+* Added a neat external 'chase' view control panel.
+* Added a GUI interface to the property manager system.
+* Moved keybinding definitions to a config file.
+* Many additions and improvements to the sound effects including
+  stall horn, tire squeek, ground rumble, wind noise, flaps, etc.
+* Enable introduction music in windows (off by default on all platforms)
+* Added support for the OpenGC glass cockpit project.
+* Added support for flying ILS approaches in both runway directions if the
+  same frequency is used in both cases.
+
+
+
+
 New in 0.7.8
 * July 13, 2001
 * Updated to the latest JSBSim flight dynamics model (http://jsbsim.sf.net)
