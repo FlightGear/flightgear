@@ -253,7 +253,8 @@ int FGAIManager::createShip( string path, FGAIFlightPlan* flightplan ) {
 
 int FGAIManager::createBallistic( string path, double latitude, double longitude,
                                   double altitude, double azimuth, double elevation,
-                                  double speed, double eda, double life, double buoyancy ) {
+                                  double speed, double eda, double life, double buoyancy,
+								  double wind_from_east, double wind_from_north, bool wind ) {
 
         FGAIBallistic* ai_ballistic = new FGAIBallistic(this);
         ai_list.push_back(ai_ballistic);
@@ -269,6 +270,9 @@ int FGAIManager::createBallistic( string path, double latitude, double longitude
         ai_ballistic->setDragArea(eda);
         ai_ballistic->setLife(life);
         ai_ballistic->setBuoyancy(buoyancy);
+		ai_ballistic->setWind_from_east(wind_from_east);
+		ai_ballistic->setWind_from_north(wind_from_north);
+		ai_ballistic->setWind(wind);
         ai_ballistic->init();
         ai_ballistic->bind();
         return ai_ballistic->getID();
@@ -307,7 +311,6 @@ int FGAIManager::createThermal( double latitude, double longitude,
         ai_thermal->bind();
         return ai_thermal->getID();
 }
-
 
 void FGAIManager::destroyObject( int ID ) {
         ai_list_itr = ai_list.begin();
@@ -387,7 +390,8 @@ void FGAIManager::processScenario( string filename ) {
       } else if (en->aitype == "ballistic"){
         createBallistic( en->model_path, en->latitude, en->longitude,
                          en->altitude, en->azimuth, en->elevation, en->speed,
-                         en->eda, en->life, en->buoyancy );
+                         en->eda, en->life, en->buoyancy, en->wind_from_east,
+						 en-> wind_from_north, en->wind);
       }      
     }
   }

@@ -71,7 +71,10 @@ FGAIScenario::FGAIScenario(string filename)
      en->diameter       = entry_node->getDoubleValue("diameter-ft", 0.0);
      en->eda            = entry_node->getDoubleValue("eda", 0.007);
      en->life           = entry_node->getDoubleValue("life", 900.0);
-     en->buoyancy       = entry_node->getDoubleValue("buoyancy", 0); 
+	 en->buoyancy       = entry_node->getDoubleValue("buoyancy", 0);
+	 en->wind_from_east = entry_node->getDoubleValue("wind_from_east", 0);
+	 en->wind_from_north = entry_node->getDoubleValue("wind_from_north", 0);
+	 en->wind            = entry_node->getBoolValue("wind", false);
    }
 
   entry_iterator = entries.begin();

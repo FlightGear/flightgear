@@ -91,17 +91,20 @@ public:
     int createShip(     string path,        // path to exterior model
                         FGAIFlightPlan *flightplan );
 
-    int createBallistic( string path,       // path to exterior model
-                         double latitude,   // in degrees -90 to 90
-                         double longitude,  // in degrees -180 to 180
-                         double altitude,   // in feet
-                         double azimuth,    // in degrees (same as heading)
-                         double elevation,  // in degrees (same as pitch)
-                         double speed,      // in feet per second
-                         double eda,        // equivalent drag area, ft2
-                         double life,       // life span in seconds
-                         double buoyancy    // acceleration in ft per second2
-                         );
+    int createBallistic( string path,           // path to exterior model
+                         double latitude,       // in degrees -90 to 90
+                         double longitude,      // in degrees -180 to 180
+                         double altitude,       // in feet
+                         double azimuth,        // in degrees (same as heading)
+                         double elevation,      // in degrees (same as pitch)
+                         double speed,          // in feet per second
+                         double eda,            // equivalent drag area, ft2
+                         double life,           // life span in seconds
+                         double buoyancy,       // acceleration due to buoyancy feet per second2
+                         double wind_from_east, // in feet per second
+						 double wind_from_north,  // in feet per second
+						 bool wind               // val
+						 );
      
     int createStorm( string path,        // path to exterior model
                      double latitude,    // in degrees -90 to 90
@@ -115,7 +118,19 @@ public:
                        double strength,    // in feet per second
                        double diameter );  // in feet
 
-        
+    int createSmoke     ( string path,       // path to exterior model
+                         double latitude,   // in degrees -90 to 90
+                         double longitude,  // in degrees -180 to 180
+                         double altitude,   // in feet
+                         double azimuth,    // in degrees (same as heading)
+                         double elevation,  // in degrees (same as pitch)
+                         double speed,      // in feet per second
+                         double eda,        // equivalent drag area, ft2
+                        double life,        // life span in seconds
+                        double buoyancy    // acceleration due to buoyancy feet per second2
+                         );
+
+                 
     void destroyObject( int ID );
 
     inline double get_user_latitude() { return user_latitude; }

@@ -33,8 +33,9 @@ FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
     _otype = otBallistic;
     drag_area = 0.007;
     life_timer = 0.0;
-    gravity = 32;
-    }
+	gravity = 32;
+//	buoyancy = 64;
+	}
 
 FGAIBallistic::~FGAIBallistic() {
 }
@@ -91,7 +92,17 @@ void FGAIBallistic::setBuoyancy(double fpss) {
    buoyancy = fpss;
 }
 
+void FGAIBallistic::setWind_from_east(double fps) {
+   wind_from_east = fps;
+}
 
+void FGAIBallistic::setWind_from_north(double fps) {
+   wind_from_north = fps;
+}
+
+void FGAIBallistic::setWind(bool val) {
+   wind = val;
+}
 void FGAIBallistic::Run(double dt) {
 
    life_timer += dt;
@@ -99,7 +110,9 @@ void FGAIBallistic::Run(double dt) {
 
    double speed_north_deg_sec;
    double speed_east_deg_sec;
-
+   double wind_speed_from_north_deg_sec;
+   double wind_speed_from_east_deg_sec;
+      
    // the two drag calculations below assume sea-level density, 
    // mass of 0.03 slugs,  drag coeff of 0.295
    // adjust speed due to drag 
@@ -111,10 +124,27 @@ void FGAIBallistic::Run(double dt) {
    // convert horizontal speed (fps) to degrees per second
    speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lat;
    speed_east_deg_sec  = sin(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lon;
+   
+   // convert wind speed (fps) to degrees per second
+   
+   if (!wind){
+      wind_from_north = 0;
+      wind_from_east = 0;
+	  }
 
+   wind_speed_from_north_deg_sec = wind_from_north / ft_per_deg_lat;
+   wind_speed_from_east_deg_sec  = wind_from_east / ft_per_deg_lon;
+   
+ 
    // set new position
-   pos.setlat( pos.lat() + speed_north_deg_sec * dt);
-   pos.setlon( pos.lon() + speed_east_deg_sec * dt); 
+//   pos.setlat( pos.lat() + (speed_north_deg_sec * dt)  );
+//   pos.setlon( pos.lon() + (speed_east_deg_sec * dt)  ); 
+ 
+ 
+   // set new position
+   
+   pos.setlat( pos.lat() + (speed_north_deg_sec - wind_speed_from_north_deg_sec) * dt );
+   pos.setlon( pos.lon() + (speed_east_deg_sec - wind_speed_from_east_deg_sec) * dt ); 
 
    // adjust vertical speed for acceleration of gravity
    vs -= (gravity - buoyancy) * dt;

@@ -30,7 +30,7 @@ SubmodelSystem::init ()
 {
     load();
     _serviceable_node = fgGetNode("/sim/systems/submodels/serviceable", true);
-	
+
     _user_lat_node = fgGetNode("/position/latitude-deg", true);
     _user_lon_node = fgGetNode("/position/longitude-deg", true);
     _user_alt_node = fgGetNode("/position/altitude-ft", true);
@@ -41,7 +41,9 @@ SubmodelSystem::init ()
     _user_yaw_node =     fgGetNode("/orientation/yaw-deg", true);
 
     _user_speed_node = fgGetNode("/velocities/uBody-fps", true);
-	
+
+    _user_wind_from_east_node  = fgGetNode("/environment/wind-from-east-fps",true);
+    _user_wind_from_north_node = fgGetNode("/environment/wind-from-north-fps",true);
 
     ai = (FGAIManager*)globals->get_subsystem("ai_model");
 }
@@ -86,12 +88,15 @@ SubmodelSystem::release (submodel* sm, double dt)
   if (sm->timer < sm->delay) return false;
   sm->timer = 0.0;
 
-  transform(sm);  // calculate submodel's initial conditions in world-coordinates
+  // calculate submodel's initial conditions in world-coordinates
+  transform(sm);
 
   //cout << "Creating a submodel." << endl; 
   int rval = ai->createBallistic( sm->model, IC.lat, IC.lon, IC.alt, IC.azimuth,
-                                  IC.elevation, IC.speed, sm->drag_area, sm->life,
-				  sm-> buoyancy );
+                                  IC.elevation, IC.speed, 
+				  sm->drag_area, sm->life,
+				  sm->buoyancy,
+				  IC.wind_from_east, IC.wind_from_north, sm->wind);
   //cout << "Submodel created." << endl;
   if (sm->count > 0) (sm->count)--; 
 
@@ -141,6 +146,7 @@ SubmodelSystem::load ()
      sm->drag_area      = entry_node->getDoubleValue("eda", 0.007);
      sm->life           = entry_node->getDoubleValue("life", 900.0);
      sm->buoyancy       = entry_node->getDoubleValue("buoyancy", 0);
+     sm->wind           = entry_node->getBoolValue  ("wind", false); 
 
      sm->trigger->setBoolValue(false);
      sm->timer = sm->delay;
@@ -159,15 +165,18 @@ SubmodelSystem::load ()
 void
 SubmodelSystem::transform( submodel* sm) 
 {
-  IC.lat =            _user_lat_node->getDoubleValue();
-  IC.lon =            _user_lon_node->getDoubleValue();
-  IC.alt =            _user_alt_node->getDoubleValue();
-  IC.azimuth =        _user_heading_node->getDoubleValue() + sm->yaw_offset;
-  IC.elevation =      _user_pitch_node->getDoubleValue() + sm->pitch_offset;
-  IC.speed =          _user_speed_node->getDoubleValue() + sm->speed;
-  
-}
+  IC.lat =             _user_lat_node->getDoubleValue();
+  IC.lon =             _user_lon_node->getDoubleValue();
+  IC.alt =             _user_alt_node->getDoubleValue();
+  IC.azimuth =         _user_heading_node->getDoubleValue() + sm->yaw_offset;
+  IC.elevation =       _user_pitch_node->getDoubleValue() + sm->pitch_offset;
+  IC.speed =           _user_speed_node->getDoubleValue() + sm->speed;
+  IC.wind_from_east =  _user_wind_from_east_node->getDoubleValue();
+  IC.wind_from_north = _user_wind_from_north_node->getDoubleValue();
+//  IC.wind_from_east =  4;
+//   IC.wind_from_north = 5;
 
+}
 
 // end of submodel.cxx
 
