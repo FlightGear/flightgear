@@ -257,6 +257,7 @@ David Megginson <david@megginson.com>
   Updates to README.running.
   Working on getting fgfs and ssg to work without textures.
   Also added the new 2D panel and the save/load support.
+  Reorganization of the GUI to make it XML configurable.
   Property manager
   Generalized input module
   3D model animation module
@@ -321,8 +322,6 @@ Tony Peden <apeden@earthlink.net>
   Contributions on the flight model front, including a LaRCsim based 
   Cessna 172.  JSBsim: the initial conditions code, a more complete 
   standard atmosphere model, and other bugfixes/additions. 
-  His Flight Dynamics page can be found at: 
-  http://www.nwlink.com/~apeden
 
 
 Robin Peel <robin@cpwd.com>
@@ -337,6 +336,11 @@ Alex Perry <alex.perry@ieee.org>
 
 Friedemann Reinhard <mpt218@faupt212.physik.uni-erlangen.de>
   Contributed beginnings of a textured instrument panel.
+
+
+Frederic Bouvier <frbouvi@wanadoo.fr>
+   Added French language support
+   Keeps FlightGear MSVC compatible.
 
 
 Petter Reinholdtsen <pere@games.no>
@@ -355,6 +359,8 @@ William Riley <riley@technologist.com>
 Andy Ross <andy@plausible.org>
   Contributed a new configurable FDM, "YASim", based on geometry
   information rather than aerodynamic coefficients.
+  Added support for placing 2D panel objects in 3D space.
+  Modified the HUD code to make it more accurate and added 3D support.
 
 
 Paul Schlyter <pausch@saaf.se>  
@@ -394,6 +400,11 @@ Michael Smith <msmith99@flash.net>
 
 Martin Spott <Martin.Spott@uni-duisburg.de>
   Contributed to the installation / user guide.
+
+
+Martin Dressler <dr@musicabona.cz>
+  Created some outstanding panel instrumentation textures
+  for use in full-screen mode.
 
 
 U.S. Geological Survey
@@ -476,6 +487,13 @@ Darrell Walisser <dwaliss1@purdue.edu>
   Provides MacOS-specific info in the docs.
 
 
+Davud Culp <davidculp2@attbi.com>
+  Changed the layout of the conbtrolls section and added a great number
+  of extra controls which will prove to be usefull no and for the future.
+  Contributed a number of aircraft configuration files, including a T-38 and
+  Boeing 737.
+
+
 Ed Williams <Ed_Williams@compuserve.com>
   Contributed magnetic variation code (impliments Nima WMM 2000)
   We've also borrowed from Ed's wonderful aviation formulary at various
@@ -488,6 +506,8 @@ Jim Wilson <jimw@kelcomaine.com>
   and modular.  Contributed many small fixes and bug reports.
   Contributed the the pui property browser.
   Contributed to the autopilot.
+  Created several excellent 3D aircraft models, including the p-51 and
+  Boeing 747.
 
 
 Jean-Claude Wippler <jcw@equi4.com>
@@ -501,6 +521,20 @@ Jean-Claude Wippler <jcw@equi4.com>
 John Wojnaroski <castle@mminternet.com>
   Open Glass Cockpit project
   3d clouds
+
+
+Space Imaging, Inc
+  Space Imaging has allowed us to use the images in their archive for
+  commercial and non-commercial use, provided the original image can't be
+  extracted  from the textures.
+  Some (if not all) of the best textures in use by FlightGear wouldn't be
+  possible without the satellite images provided by them.
+
+
+Airservices Australia
+  Duncan McCreanor and Diarmuid Tyson created a multiplayer engine for
+  FlightGear when putting together a demonstration to show the possibilities
+  of using Flightgear as the basis for an Air Traffic 
 
 
 WoodSoup Project  http://www.woodsoup.org
@@ -532,3 +566,4 @@ Oliver Delise  <delise@mail.isis.de>
 
 
 Updated 2001-12-11 by David Megginson, david@megginson.com
+Updated 2003-04-17 by Erik Hofman, erik@ehofman.com
