@@ -52,7 +52,10 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v) {
 
     /* calculate the cartesion coords of the current lat/lon/0 elev */
     v->cur_zero_elev = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
-				     FG_Sea_level_radius);
+				     FG_Sea_level_radius * FEET_TO_METER);
+    v->cur_zero_elev.x -= scenery.center.x;
+    v->cur_zero_elev.y -= scenery.center.y;
+    v->cur_zero_elev.z -= scenery.center.z;
 
     /* calculate view position in current FG view coordinate system */
     v->view_pos = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
@@ -137,9 +140,12 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v) {
 
 
 /* $Log$
-/* Revision 1.4  1997/12/17 23:13:36  curt
-/* Began working on rendering a sky.
+/* Revision 1.5  1997/12/18 04:07:02  curt
+/* Worked on properly translating and positioning the sky dome.
 /*
+ * Revision 1.4  1997/12/17 23:13:36  curt
+ * Began working on rendering a sky.
+ *
  * Revision 1.3  1997/12/15 23:54:50  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

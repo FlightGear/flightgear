@@ -42,16 +42,17 @@
 
 #include "../Time/fg_time.h"
 
+#include "../Aircraft/aircraft.h"
+#include "../Flight/flight.h"
 #include "../Include/constants.h"
 #include "../Main/views.h"
 /*
 #include "../Include/general.h"
-#include "../Aircraft/aircraft.h"
 */
 
 /* in meters of course */
 #define INNER_RADIUS  50000.0
-#define INNER_ELEV    20000.0
+#define INNER_ELEV    8000.0 /* was 20000 */
 #define MIDDLE_RADIUS 70000.0
 #define MIDDLE_ELEV   10000.0
 #define OUTER_RADIUS  80000.0
@@ -110,11 +111,14 @@ void fgSkyInit() {
     /* Draw inner section */
     xglBegin( GL_TRIANGLE_FAN );
 
+    xglColor3f(0.0, 0.0, 1.0);
     xglVertex3f(0.0, 0.0, INNER_ELEV);
 
+    xglColor3f(0.2, 0.2, 1.0);
     for ( i = 0; i < 12; i++ ) {
 	xglVertex3fv( sky_center[i] );
     }
+    xglVertex3fv( sky_center[0] );
 
     xglEnd();
 
@@ -124,17 +128,17 @@ void fgSkyInit() {
 
 /* Draw the Sky */
 void fgSkyRender() {
+    struct fgFLIGHT *f;
     struct fgVIEW *v;
     /*
-    struct fgFLIGHT *f;
     struct fgLIGHT *l;
     struct fgTIME *t;
     int i;
     */
 
+    f = &current_aircraft.flight;
     v = &current_view;
     /*
-    f = &current_aircraft.flight;
     l = &cur_light_params;
     t = &cur_time_params;
     */
@@ -151,6 +155,13 @@ void fgSkyRender() {
 
     /* Translate to view position */
     xglTranslatef( v->cur_zero_elev.x, v->cur_zero_elev.y, v->cur_zero_elev.z );
+    /* printf("  Translated to %.2f %.2f %.2f\n", 
+	   v->cur_zero_elev.x, v->cur_zero_elev.y, v->cur_zero_elev.z ); */
+
+    printf("  lon = %.2f  lat = %.2f\n", FG_Longitude * RAD_TO_DEG,
+	   FG_Latitude * RAD_TO_DEG);
+    xglRotatef( FG_Longitude * RAD_TO_DEG, 0.0, 0.0, 1.0 );
+    xglRotatef( 90.0 - FG_Latitude * RAD_TO_DEG, 0.0, 1.0, 0.0 );
 
     xglCallList( sky );
 
@@ -161,8 +172,11 @@ void fgSkyRender() {
 
 
 /* $Log$
-/* Revision 1.1  1997/12/17 23:14:30  curt
-/* Initial revision.
-/* Begin work on rendering the sky. (Rather than just using a clear screen.)
+/* Revision 1.2  1997/12/18 04:07:03  curt
+/* Worked on properly translating and positioning the sky dome.
 /*
+ * Revision 1.1  1997/12/17 23:14:30  curt
+ * Initial revision.
+ * Begin work on rendering the sky. (Rather than just using a clear screen.)
+ *
  */
