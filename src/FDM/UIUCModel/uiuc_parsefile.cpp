@@ -80,7 +80,7 @@ ParseFile :: ~ParseFile ()
 
 void ParseFile :: removeComments(string& inputLine)
 {
-  unsigned int pos = inputLine.find_first_of(COMMENT);
+  int pos = inputLine.find_first_of(COMMENT);
   
   if (pos != inputLine.npos) // a "#" exists in the line 
   {
@@ -94,8 +94,8 @@ void ParseFile :: removeComments(string& inputLine)
 
 string ParseFile :: getToken(string inputLine, int tokenNo)
 {
-  unsigned int pos = 0;
-  unsigned int pos1 = 0;
+  int pos = 0;
+  int pos1 = 0;
   int tokencounter = 0;
 
   while (tokencounter < tokenNo)
@@ -118,7 +118,7 @@ string ParseFile :: getToken(string inputLine, int tokenNo)
 
 void ParseFile :: storeCommands(string inputLine)
 {
-  unsigned int pos;
+  int pos;
   int pos1;
   // int wordlength;
   string line;

@@ -698,7 +698,7 @@ int FGAutopilot::run() {
 	    total_adj = -1.0;
 	}
 
-	globals->get_controls()->set_elevator( total_adj );
+	globals->get_controls()->set_elevator_trim( total_adj );
     }
 
     // auto throttle
