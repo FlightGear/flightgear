@@ -1296,9 +1296,11 @@ int main( int argc, char **argv ) {
     // seed the random number generater
     fg_srandom();
 
+    // AIRCRAFT defined in uiuc_aircraft.h
     // AIRCRAFTDIR defined in uiuc_aircraftdir.h
     aircraft_ = new AIRCRAFT;
     aircraftdir_ = new AIRCRAFTDIR;
+    aircraft_dir = ""; // Initialize the Aircraft directory to "" (UIUC)
 
     // Load the configuration parameters
     if ( !fgInitConfig(argc, argv) ) {

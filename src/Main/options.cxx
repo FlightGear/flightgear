@@ -195,8 +195,6 @@ fgOPTIONS::fgOPTIONS() :
 
     network_olk(false)
 {
-    aircraft_dir = ""; // Initialize the Aircraft directory to "" (UIUC)
-
     // set initial values/defaults
     time_offset_type=FG_TIME_SYS_OFFSET;
     char* envp = ::getenv( "FG_ROOT" );
