@@ -8,6 +8,8 @@
 #include "uiuc_parsefile.h"
 #include "uiuc_aircraft.h"
 
+FG_USING_STD(istrstream);
+
 void uiuc_2DdataFileReader( string file_name, 
                             double x[100][100], 
                             double y[100], 

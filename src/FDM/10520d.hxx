@@ -139,4 +139,4 @@ public:
 };
 
 
-#endif _10520D_HXX_
+#endif // _10520D_HXX_

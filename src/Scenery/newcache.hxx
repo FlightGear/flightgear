@@ -68,7 +68,7 @@ class FGNewCache {
     tile_map_iterator current;
 
     // Free a tile cache entry
-    void FGNewCache::entry_free( long cache_index );
+    void entry_free( long cache_index );
 
 public:
 
@@ -85,7 +85,7 @@ public:
     bool exists( const SGBucket& b );
 
     // Ensure at least one entry is free in the cache
-    void FGNewCache::make_space();
+    void make_space();
 
     // Fill in a tile cache entry with real data for the specified bucket 
     void fill_in( const SGBucket& b );

@@ -25,6 +25,8 @@
 */ 
  
 
+#include <simgear/compiler.h>
+
 #include <math.h>
 #include <iostream>
 
@@ -35,6 +37,10 @@
 #include <FDM/LaRCsim/atmos_62.h>
 #include <FDM/LaRCsim/ls_constants.h>
 #include <FDM/LaRCsim/ls_geodesy.h>
+
+FG_USING_STD(cout);
+FG_USING_STD(endl);
+
 
 LaRCsimIC::LaRCsimIC(void) {
   vt=vtg=vw=vc=ve=0;

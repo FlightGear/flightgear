@@ -113,8 +113,13 @@ struct button {
 struct joystick {
     virtual ~joystick () {
 	delete js;
+#ifndef macintosh
 	delete axes;
 	delete buttons;
+#else
+	delete[] axes;
+	delete[] buttons;
+#endif
     }
     int naxes;
     int nbuttons;

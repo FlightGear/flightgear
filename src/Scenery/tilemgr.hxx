@@ -84,7 +84,7 @@ private:
     void load_tile( const SGBucket& b );
 
     // schedule a needed buckets for loading
-    void FGTileMgr::schedule_needed();
+    void schedule_needed();
 
     // see comment at prep_ssg_nodes()
     void prep_ssg_node( int idx );

@@ -23,7 +23,7 @@
 
 #include <simgear/io/sg_socket.hxx>
 
-#include "flight.hxx"
+#include <FDM/flight.hxx>
 
 
 class FGADA: public FGInterface {

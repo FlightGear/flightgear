@@ -91,12 +91,21 @@
 
 #include <simgear/compiler.h>
 
-#include "uiuc_menu.h"
+#if defined( __MWERKS__ )
+// -dw- optimizer chokes (big-time) trying to optimize humongous
+// loop/switch statements
+#pragma optimization_level 0
+#endif
+
+#include <stdlib.h>
 #include <iostream>
+
+#include "uiuc_menu.h"
 
 FG_USING_STD(cerr);
 FG_USING_STD(cout);
 FG_USING_STD(endl);
+FG_USING_STD(exit);
 
 bool check_float(string  &token)
 {

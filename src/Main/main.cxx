@@ -123,12 +123,8 @@ int objc=0;
 #include "keyboard.hxx"
 #include "splash.hxx"
 
-// -dw- use custom sioux settings so I can see output window
 #ifdef macintosh
-#  ifndef FG_NDEBUG
-#    include <sioux.h> // settings for output window
-#  endif
-#  include <console.h>
+#  include <console.h>		// -dw- for command line dialog
 #endif
 
 
@@ -452,7 +448,7 @@ void fgRenderFrame( void ) {
 	// ssg does to set up the model view matrix
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	ssgSetCamera( (sgMat4)globals->get_current_view()->get_VIEW() );
+	ssgSetCamera( (sgVec4 *)globals->get_current_view()->get_VIEW() );
 
 	// set the opengl state to known default values
 	default_state->force();
@@ -1274,7 +1270,7 @@ int fgGlutInit( int *argc, char **argv ) {
     general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
     FG_LOG( FG_GENERAL, FG_INFO, general.get_glRenderer() );
 
-    int tmp;
+    GLint tmp;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
     general.set_glMaxTexSize( tmp );
     FG_LOG ( FG_GENERAL, FG_INFO, "Max texture size = " << tmp );
@@ -1685,7 +1681,7 @@ void fgLoadDCS(void) {
     char c;
     while ( ! in.eof() ) 
     {
-       in >> skipws;
+       in >> ::skipws;
        if ( in.get( c ) && c == '#' )
        { 
             in >> skipeol;

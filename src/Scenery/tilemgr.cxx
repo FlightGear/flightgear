@@ -313,7 +313,7 @@ int FGTileMgr::update( double lon, double lat ) {
     }
 
     if ( state == Running ) {
-	if( current_bucket != previous_bucket) {
+	if ( !(current_bucket == previous_bucket) ) {
 	    // We've moved to a new bucket, we need to schedule any
 	    // needed tiles for loading.
 	    schedule_needed();
