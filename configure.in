@@ -95,7 +95,11 @@ dnl Enable serial support on Unix type systems
 AM_CONDITIONAL(ENABLE_UNIX_SERIAL, true)
 
 dnl extra library and include directories
-EXTRA_DIRS="/usr/local /usr/X11R6 /opt/X11R6"
+EXTRA_DIRS="/usr/local /usr/X11R6"
+
+if test -d /opt/X11R6 ; then
+     EXTRA_DIRS="$EXTRA_DIRS /opt/X11R6"
+fi
 
 if test "x$ac_cv_header_windows_h" = "xyes" ; then
     EXTRA_DIRS="${EXTRA_DIRS} `pwd`/Win32"
@@ -115,7 +119,7 @@ AC_CHECK_LIB(m, cos)
 
 base_LIBS="$LIBS"
 
-# AC_CHECK_LIB(socket, socket)
+AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(X11, XCreateWindow)
 AC_CHECK_LIB(Xext, XShmCreateImage)
 AC_CHECK_LIB(Xi, XGetExtensionVersion)
@@ -218,6 +222,22 @@ else
     ac_cv_lib_glut_glutGameModeString="yes"
 fi
 
+if test "x$ac_cv_lib_glut_glutGetModifiers" = "xno"; then
+    echo 
+    echo "Unable to find the necessary OpenGL or GLUT libraries."
+    echo "See config.log for automated test details and results ..."
+    exit 1
+fi
+
+if test "x$ac_cv_lib_glut_glutGameModeString" = "xno"; then
+    echo
+    echo "Your version of glut doesn't support game mode."
+    echo "You need to fetch and install the latest version of glut from:"
+    echo
+    echo "    http://reality.sgi.com/opengl/glut3/glut3.html"
+    exit 1
+fi
+
 opengl_LIBS="$LIBS"
 LIBS="$base_LIBS"
 
@@ -242,22 +262,6 @@ AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS( ftime gettimeofday memcpy bcopy mktime strstr rand random \
 	setitimer getitimer signal GetLocalTime rint getrusage )
-
-if test "x$ac_cv_lib_glut_glutGetModifiers" = "xno"; then
-    echo 
-    echo "Unable to find the necessary OpenGL or GLUT libraries."
-    echo "See config.log for automated test details and results ..."
-    exit 1
-fi
-
-if test "x$ac_cv_lib_glut_glutGameModeString" = "xno"; then
-    echo
-    echo "Your version of glut doesn't support game mode."
-    echo "You need to fetch and install the latest version of glut from:"
-    echo
-    echo "    http://reality.sgi.com/opengl/glut3/glut3.html"
-    exit 1
-fi
 
 AM_CONFIG_HEADER(Include/config.h)
 

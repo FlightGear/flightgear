@@ -26,6 +26,10 @@ Steve Baker <sbaker@link.com>
     most of the more sophisticated features of Flight Gear.
 
 
+Michael Basler <pmb@knUUt.de>
+  Coauthor of the Getting Started guide.
+
+
 Paul Bleisch <pbleisch@acm.org>
   Paul redid the "debug" system so that it would be much more
   flexible, so it could be easily disabled for production system, and
