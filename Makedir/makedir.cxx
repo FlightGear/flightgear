@@ -107,5 +107,13 @@ int main(int argc, char **argv)
 	
 	return(0);
 }
+#else
+
+int main(int argc, char **argv)
+{
+	cout << "This program is intended to work with windoze\n";
+	cout << "Other platforms can use mkdir\n";
+}
+
 #endif // WIN32
 
