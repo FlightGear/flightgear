@@ -30,6 +30,7 @@
 
 #include <simgear/compiler.h>
 
+#include <simgear/misc/commands.hxx>
 #include <simgear/misc/props.hxx>
 
 #include <Main/fgfs.hxx>
@@ -52,28 +53,14 @@ class FGBinding
 {
 public:
 
-  enum Action {
-    ACTION_NONE,
-    ACTION_SWITCH,
-    ACTION_ADJUST,
-    ACTION_ASSIGN
-  };
-
   FGBinding ();
   FGBinding (const SGPropertyNode * node);
   virtual ~FGBinding ();
 
-  virtual Action getAction () const { return _action; }
-  virtual SGPropertyNode * getProperty () { return _node; }
-  virtual const SGPropertyNode * getProperty () const { return _node; }
-  virtual const SGValue * getAdjustStep () const { return _adjust_step; }
-  virtual const SGValue * getAssignValue () const { return _assign_value; }
+  virtual const string &getCommandName () const { return _command_name; }
+  virtual SGCommandMgr::command_t getCommand () const { return _command; }
+  virtual const SGPropertyNode * getArg () { return _arg; }
   
-  virtual void setAction (Action action);
-  virtual void setProperty (SGPropertyNode * node);
-  virtual void setAdjustStep (const SGValue * step);
-  virtual void setAssignValue (const SGValue * value);
-
   virtual void read (const SGPropertyNode * node);
 
   virtual void fire () const;
@@ -81,10 +68,9 @@ public:
 //   virtual void fire (int xdelta, int ydelta);
 
 private:
-  Action _action;
-  SGPropertyNode * _node;
-  const SGValue * _adjust_step;
-  const SGValue * _assign_value;
+  string _command_name;
+  SGCommandMgr::command_t _command;
+  const SGPropertyNode * _arg;
 };
 
 
@@ -135,42 +121,6 @@ public:
    */
   virtual void doKey (int k, int modifiers, int x, int y);
 
-
-  /**
-   * Fire off a single-trigger action.
-   *
-   * <p>This method fires an action triggered by a key or button
-   * press, with no additional quantity information.</p> 
-   *
-   * @param binding The property node with the binding.
-   */
-  virtual void action (const SGPropertyNode * binding);
-
-
-  /**
-   * Fire off a quantity action.
-   *
-   * <p>This method fires an action triggered by a change in value,
-   * such as a slider or axis.</p>
-   *
-   * @param action The property node with the binding.
-   * @param value The new value.
-   */
-//   virtual void action (const SGPropertyNode * binding, double value);
-
-
-  /**
-   * Fire off a movement action.
-   *
-   * <p>This method fires an action triggered by relative movement
-   * rather than an absolute value; it is especially applicable to
-   * mouse-movement bindings.</p>
-   *
-   * @param binding The property node containing the binding.
-   * @param xdelta The amount of X movement.
-   * @param ydelta The amount of Y movement.
-   */
-//   virtual void action (const SGPropertyNode * binding, int xdelta, int ydelta);
 
 private:
 
