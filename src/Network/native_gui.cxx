@@ -46,6 +46,9 @@
 #endif
 
 
+// #define FG_USE_NETWORK_BYTE_ORDER
+#if defined( FG_USE_NETWORK_BYTE_ORDER )
+
 // The function htond is defined this way due to the way some
 // processors and OSes treat floating point values.  Some will raise
 // an exception whenever a "bad" floating point value is loaded into a
@@ -84,6 +87,7 @@ static void htonf (float &x)
         return;
     }
 }
+#endif
 
 
 FGNativeGUI::FGNativeGUI() {
@@ -145,7 +149,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     net->warp = globals->get_warp();
 
     // Approach
-    net->dist_nm = current_radiostack->get_dme()->get_dist();
+    net->dist_nm = current_radiostack->get_navcom1()->get_nav_gs_dist();
     net->course_deviation_deg
         = current_radiostack->get_navcom1()->get_nav_heading()
         - current_radiostack->get_navcom1()->get_nav_radial();
@@ -164,6 +168,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
         = current_radiostack->get_navcom1()->get_nav_gs_needle_deflection()
         / 5.0;
 
+#if defined( FG_USE_NETWORK_BYTE_ORDER )
     // Convert the net buffer to network format
     net->version = htonl(net->version);
 
@@ -187,12 +192,14 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     htonf(net->dist_nm);
     htonf(net->course_deviation_deg);
     htonf(net->gs_deviation_deg);
+#endif
 }
 
 
 void FGNetGUI2Props( FGNetGUI *net ) {
     int i;
 
+#if defined( FG_USE_NETWORK_BYTE_ORDER )
     // Convert to the net buffer from network format
     net->version = ntohl(net->version);
 
@@ -216,6 +223,7 @@ void FGNetGUI2Props( FGNetGUI *net ) {
     htonf(net->dist_nm);
     htonf(net->course_deviation_deg);
     htonf(net->gs_deviation_deg);
+#endif
 
     if ( net->version == FG_NET_GUI_VERSION ) {
         // cout << "pos = " << net->longitude << " " << net->latitude << endl;
