@@ -1,15 +1,17 @@
 A very special thanks is due to the following people and groups.
 
-Note, as hard as I've tried, I've found it impossible to perfectly
-maintain this file.  If you are aware of someone who you think might
-be included here, PLEASE let me know.  Projects like this are made
+Note: as hard as we've tried, it is impossible to perfectly maintain
+this file.  If you are aware of someone who you think should be
+included here, PLEASE let me know.  Projects like this are made
 possible only by the help and hard work of others.  I want to properly
 credit everyone who has contributed to this project.
 
 
-Raoul Alonzo <amil@las.es>.  Mr. Alonzo is the author of Ssystem and
-  provided his kind permission for using the moon texture. I also used
-  parts of his code as a template when adding the texture.
+Raul Alonzo <amil@las.es>
+  Mr. Alonzo is the author of Ssystem and provided his kind permission 
+  for using the moon texture. I also used parts of his code as a template
+  when adding the texture.  Ssystem Homepage can be found at:
+  http://www1.las.es/~amil/ssystem
 
 
 Michele America <nomimarketing@mail.telepac.pt>
@@ -17,36 +19,40 @@ Michele America <nomimarketing@mail.telepac.pt>
 
 
 Michael Basler <pmb@knUUt.de>
-  Coauthor of the Getting Started guide.
+  Author of the Getting Started guide.
 
 
 Jon S. Berndt <jsb@hal-pc.org>
   Working on a complete C++ rewrite/reimplimentation of the core FDM.
   Initially he is using X15 data to test his code, but once things are
   all in place we should be able to simulator arbitrary aircraft.
+  Maintains a page dealing with Flight Dynamics at:
+  http://www.hal-pc.org/~jsb/flightsim.html
+  Special attention to X15 is paid in seperate pages.
 
 
 Paul Bleisch <pbleisch@acm.org>
-  Paul redid the "debug" system so that it would be much more
-  flexible, so it could be easily disabled for production system, and
-  so that messages for certain subsystems could be selectively
-  enabled.
-
+  Paul redid the "debug" system so that it would be much more flexible,
+  so it could be easily disabled for production system, and so that 
+  messages for certain subsystems could be selectively enabled.
   Also contributed a first stab at a config file/command line parsing
   system.
 
 
-Jim Brennan <jjb@foothill.net>
+Jim Brennan <jj@kingmont.com>
   Provided a big chunk of online space to store USA scenery for Flight Gear.
 
 
 Bernie Bright <bbright@c031.aone.net.au>
-  Many C++ style, usage, and implimentation improvements.  STL portability,
-  tons o' stuff. :-)
+  Many C++ style, usage, and implementation improvements.  
+  STL portability, tons o' stuff. :-)
+  Currently trying to get a BeOS port together but life keeps getting 
+  in the way!
 
 
-Bernhard H. Buckel <buckel@wmad95.mathematik.uni-wuerzburg.de>
+Bernhard H. Buckel <buckel@mail.uni-wuerzburg.de>
   Contributed the README.Linux
+  Co-Author of the "Getting Started Manual"
 
 
 Gene Buckle <geneb@nwlink.com>
@@ -62,15 +68,18 @@ Didier Chauveau <chauveau@math.univ-mlv.fr>
   http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html
 
 
-Oliver Delise <delise@rp-plus.de>
-  FAQ Maintainer.
+Oliver Delise <delise@mail.isis.de>
+  FAQ Maintainer, Documentation, Public Relations.
   Working on adding some networking / multi-user support.
+  Founder of the FlightGear MultiPilot Project :
+  http://www.isis.de/members/~odelise/progs/flightgear
 
 
-Dave Eberly <eberly@magic-software.com>  http://www.magic-software.com
+Dave Eberly <eberly@magic-software.com>
   Contributed some sphere interpolation code used by Christian Mayer's
   weather data base system.  Go to Dave's web site.  He has a ton of
   really useful looking code available there.
+  http://www.magic-software.com
 
 
 Jean-Francois Doue
@@ -80,8 +89,8 @@ Jean-Francois Doue
 
 
 Francine Evans <evans@cs.sunysb.edu>
-  http://www.cs.sunysb.edu/~evans/stripe.html
   Wrote the @#$@#$@% GPL'd tri-striper we use and "love". :-)
+  http://www.cs.sunysb.edu/~evans/stripe.html
 
 
 Oscar Everitt <bigoc@premier.net>
@@ -90,7 +99,7 @@ Oscar Everitt <bigoc@premier.net>
   them to our little project.
 
 
-Jean-loup Gailly and Mark Adler <zlib@quest.jpl.nasa.gov>
+Jean-loup Gailly and Mark Adler <zlib@gzip.org>
   Authors of the zlib library.  Used for on-the-fly compression and
   decompression routines.
   http://www.cdrom.com/pub/infozip/zlib/
@@ -106,39 +115,49 @@ Jeff Goeke-Smith <jgoeke@voyager.net>
   #include <time.h>
 
 
-Michael I. Gold <gold@puck.asd.sgi.com> -- Patiently answered my endless
-  "newbie" OpenGL questions.  His effort alone has made me a great SGI
-  fan.
+Michael I. Gold <gold@puck.asd.sgi.com>
+  Patiently answered my endless "newbie" OpenGL questions.
+  His effort alone has made me a great SGI fan.
 
 
-Charlie Hotchkiss <chotchkiss@namg.us.anritsu.com> -- Worked on improving
-  and enhancing the HUD code.  Lots of code style tips and code tweaks ...
+Charlie Hotchkiss <clhotch@pacbell.net> 
+  Worked on improving and enhancing the HUD code.
+  Lots of code style tips and code tweaks ...
 
 
 Bruce Jackson of NASA <e.b.jackson@larc.nasa.gov> 
-  http://agcbwww.larc.nasa.gov/People/ebj.html -- Developed the
-  LaRCsim code under funding by NASA which we use to provide the 
-  flight model.  Bruce has patiently answered my many, many questions.
+  Developed the LaRCsim code under funding by NASA which we use to provide
+  the flight model. Bruce has patiently answered my many, many questions.
+  http://dcb.larc.nasa.gov/www/DCBStaff/ebj/ebj.html
 
 
 Richard Kaszeta <bofh@me.umn.edu>
   Contributed screen buffer to ppm screen shot routine.
+  Rich has also helped in the early development of the Flight Gear "altitude 
+  hold autopilot module" by teaching Curt Olson the basics of Control Theory 
+  and helping him code and debug early versions. Curt's "Boss" Bob Hain
+  also contributed <bob@me.umn.edu>.  Further details available at:
+  http://www.menet.umn.edu/~curt/fgfs/Docs/Autopilot/AltitudeHold/AltitudeHold.html
+  Rich's Homepage: http://www.menet.umn.edu/~kaszeta
 
 
-Tom Knienieder <knienieder@ms.netwing.at>
-  Ported Steve's Audio library to Win32
+Tom Knienieder <tom@knienieder.com>
+  Ported Steve's Audio library first to OpenBSD and IRIX and
+  after that also to Win32
 
 
-Reto Koradi <kor@mol.biol.ethz.ch> http://www.mol.biol.ethz.ch/~kor
+Reto Koradi <kor@mol.biol.ethz.ch>
   Helped me get on track with setting up fog effects.
+  http://www.mol.biol.ethz.ch/wuthrich/people/kor
 
 
-Bob Kuehne <rpk@sgi.com>
+Bob Kuehne <rpk@who.net>
   Redid the Makefile system so it is simpler and more robust.
 
 
-Christian Mayer <Vader@t-online.de>
-  Working on a multi-lingual conversion tools for fgfs.
+Christian Mayer <flightgear@christianmayer.de>
+  Working on a multi-lingual conversion tools for fgfs 
+  as a demonstration of technology ;-)
   Contributed code to read msfs formated texture files.
   Working on a completely new weather subsystem.
   Working on a balloon simulator.
@@ -147,18 +166,25 @@ Christian Mayer <Vader@t-online.de>
 David Megginson <david@megginson.com>
   Contributed a patch to allow mouse input to control view direction.
   Contributed a patch to allow mouse input to control the yoke.
-  Contributed financially towards hard drive space for use by the flight
-  gear project.
+  Contributed financially towards hard drive space for use by the 
+  flight gear project.
   Updates to README.running.
   Working on getting fgfs and ssg to work without textures.
+  Also added the new 2D panel and the save/load support.
 
 
 Eric Mitchell <mitchell@mars.ark.com>
-  Contributed some topnotch scenery textures.
+  Contributed some topnotch scenery textures. His textures were 
+  all original creations.
 
 
 Anders Morken <amrken@online.no>
-  Maintains the European mirror of the FG web pages.
+  Maintained the European mirror of the FG web pages.
+  Unfortunately this mirror has been taken down due to reglementation
+  changes including an enforcement to 10 MB space per subscriber limit 
+  which was way too small for the evergrowing FGFS Project's Files.
+  He'd be happy to maintain a new one if he could find a place to put it,
+  so if you have an idea, contact him!
 
 
 Alan Murta <amurta@cs.man.ac.uk>
@@ -167,25 +193,30 @@ Alan Murta <amurta@cs.man.ac.uk>
 
 
 Alexei Novikov <anovikov@heron.itep.ru>
-  Contributed a script to turn fgfs scenery into beautifully rendered
+  Created European Scenery
+  Contributed a script to turn fgfs scenery into beautifully rendered 
   2d maps.
   Contributed a first draft of a scenery creation howto.
 
 
 Curt Olson <curt@flightgear.org>
-  Curt is the one that "herds that cats".  Lately Curt has been concetrating
-  on building better scenery.
+  Curt is responsible for overall project and source code management.
+  He has his hands in many of the areas, but is primarily responsible
+  for the scenery subsystem, as well as much of the infrastructure in
+  the sim.
 
 
 Tony Peden <apeden@earthlink.net>
   Contributions on the flight model front, including a LaRCsim based 
-  Cessna 172.  JSBsim: the initial conditions code, a more complete standard 
-  atmosphere model, and other bugfixes/additions.
+  Cessna 172.  JSBsim: the initial conditions code, a more complete 
+  standard atmosphere model, and other bugfixes/additions. 
+  His Flight Dynamics page can be found at: 
+  http://www.nwlink.com/~apeden
 
 
-Robin Peel <robinp@mindspring.com>
-  Maintains the ever growing worldwide airport and runway database for
-  the Flight Gear project as well as for X-Plane.
+Robin Peel <robin@cpwd.com>
+  Maintains the ever growing worldwide airport, runway, and navigation
+  aid database for the Flight Gear project as well as for X-Plane.
 
 
 Friedemann Reinhard <mpt218@faupt212.physik.uni-erlangen.de>
@@ -200,12 +231,15 @@ Petter Reinholdtsen <pere@games.no>
 
 
 William Riley <riley@technologist.com>
-  Contributed code to add "brakes".  Patch to support a first joystick
-  with more than two axes.
+  Contributed code to add "brakes". 
+  Patch to support a first joystick with more than two axes.
 
 
-Paul Schlyter <pausch@saaf.se>.  Mr. Schlyter provided Durk Talsma with 
-  all the information he needed to write the astro code.
+Paul Schlyter <pausch@saaf.se>  
+  Mr. Schlyter provided Durk Talsma with all the information 
+  he needed to write the astro code. Mr. S. is also willing 
+  to answer astro-related questions whenever one needs to.
+  http://welcome.to/pausch
 
 
 Chris Schoeneman <crs@millpond.engr.sgi.com>
@@ -214,9 +248,10 @@ Chris Schoeneman <crs@millpond.engr.sgi.com>
   will have an influence on the development of our own audio library.
 
 
-Phil Schubert <philings@zedley.com>
-  Contributed various textures.
-
+Phil Schubert <philip@zedley.com>
+  Contributed various textures and engine modelling.
+  http://www.zedley.com/Philip/index.htm
+ 
 
 Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
   Author of the Triangle program.  Triangle is used to calculate the
@@ -224,8 +259,9 @@ Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
 
 
 Gordan Sikic <gsikic@public.srce.hr>
-  Contributed a cherokee flight model for LaRCsim.  Currently is not
-  working and needs to be debugged.  Use configure --with-flight-model=cherokee
+  Contributed a cherokee flight model for LaRCsim.  
+  Currently is not working and needs to be debugged.  
+  Use configure  --with-flight-model=cherokee
   to build the cherokee instead of the navion.
 
 
@@ -234,16 +270,19 @@ Michael Smith <msmith99@flash.net>
   Project Bonanza - http://members.xoom.com/ConceptSim/index.html
 
 
-U.S. Geological Survey - http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
+U.S. Geological Survey
   Provided geographic data used by this project
+  http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
 
 
-Durk Talsma <pn_talsma@macmail.psy.uva.nl>
-  Accurate Sun, Moon, and Planets.  Sun changes color based on
-  position in sky.  Moon has correct phase and blends well into the
-  sky.  Planets are correctly positioned and have proper magnitude.
+Durk Talsma <d.talsma@chello.nl>
+  Accurate Sun, Moon, and Planets. 
+  Sun changes color based on position in sky.
+  Moon has correct phase and blends well into the sky.
+  Planets are correctly positioned and have proper magnitude.
   Help with time functions, gui, and other misc stuff.
   2D Cloud layers (nifty).
+  http://people.a2000.nl/dtals
 
 
 Mark Vallevand <Mark.Vallevand@UNISYS.com>
@@ -253,22 +292,32 @@ Mark Vallevand <Mark.Vallevand@UNISYS.com>
 
 Gary R. Van Sickle <tiberius@braemarinc.com>
   Contributed some initial GameGLUT support and other fixes.
+  Has done some interesting preliminary work on a binary file format
+  http://www.woodsoup.org/projs/ORKiD/fgfs.htm
+
+  Has set up a 'Cygwin Tips' site that has been very helpful to many 
+  people in getting a Cygwin Unix-on-Windows build environment set up
+  so they can build FG effectively. 
+  http://www.woodsoup.org/projs/ORKiD/cygwin.htm
 
 
-Norman Vine <nhv@laserplot.com>
-  Many performance optimizations throughout the code.  Many contributions
-  and much advice for the scenery generation section.  Lots of windoze
-  related contributions.
+Norman Vine <nhv@yahoo.com>
+  Provided more than uncountable URL's to the "FlightGear Community".
+  Many performance optimizations throughout the code.  
+  Many contributions and much advice for the scenery generation section.
+  Lots of windoze related contributions.
   Contributed wgs84 distance and course routines.
   Contributed a great circle route autopilot mode based on wgs84 routines.
   Many other GUI, HUD, and autopilot contributions.
 
 
-Roland Voegtli <webmaster@sanw.unibe.ch>
+Roland Voegtli <voegtli@sanw.unibe.ch>
   Great photorealistic textures.
+  Founder of European Scenery Project for X-Plane
+  http://www.g-point.com/xpcity/esp/
 
 
-Carmelo Volpe <carmelo.volpe@csb.ki.se>
+Carmelo Volpe <carmelo.volpe@mednut.ki.se>
   Contributed some work to porting Flight Gear to the Metro Works 
   development environment (PC/Mac)
 
@@ -277,12 +326,13 @@ Darrell Walisser <dwaliss1@purdue.edu>
   Contributed a large number of MacOS changes and has somehow managed
   to get a pile of code written by a bunch of people who've never seen
   a Mac to compile and run on said platform.
+  Provides MacOS-specific info in the docs.
 
 
 WoodSoup Project  http://www.woodsoup.org
   Provided computing resources and services so that the Flight Gear 
-  project could have real home.  This includes, web services, ftp services
-  shell accounts, email lists, dns services, etc.
+  project could have real home.  This includes, web services, 
+  ftp services, shell accounts, email lists, dns services, etc.
 
 
 Robert Allan Zeh <raz@cmg.FCNBD.COM>
@@ -290,3 +340,16 @@ Robert Allan Zeh <raz@cmg.FCNBD.COM>
   how to link with .dll's.  With out him the first runable win32
   version of FG would have been impossible.
 
+
+
+NOTE:
+----
+
+THIS DOCUMENT WAS INITIALLY WRITTEN BY 
+
+Curt L. Olson  <curt@flightgear.org>
+
+
+THE CONTENTS WERE LASTLY RESEARCHED AND UPDATED MARCH, 8 2000
+
+Oliver Delise  <delise@mail.isis.de>
