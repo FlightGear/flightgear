@@ -80,6 +80,7 @@
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
 #include <Include/general.hxx>
+#include <Input/input.hxx>
 #include <Joystick/joystick.hxx>
 #include <Objects/matlib.hxx>
 #include <Navaids/fixlist.hxx>
@@ -752,6 +753,14 @@ bool fgInitSubsystems( void ) {
 
     controls.init();
     controls.bind();
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the input subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    current_input.init();
+    current_input.bind();
 
 
     ////////////////////////////////////////////////////////////////////////

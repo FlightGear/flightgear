@@ -1,8 +1,8 @@
-// fg_props.cxx -- support for
+// fg_props.cxx -- support for FlightGear properties.
 //
-// Written by David Megginson, started November 1999.
+// Written by David Megginson, started 2000.
 //
-// Copyright (C) 1999, 2000 David Megginson - david@megginson.com
+// Copyright (C) 2000, 2001 David Megginson - david@megginson.com
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as

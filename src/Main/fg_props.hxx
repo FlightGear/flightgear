@@ -19,13 +19,28 @@ extern bool fgLoadFlight (istream &input);
 // Convenience functions for getting property values.
 ////////////////////////////////////////////////////////////////////////
 
+
+/**
+ * Get a property node.
+ *
+ * @param path The path of the node, relative to root.
+ * @param create true to create the node if it doesn't exist.
+ */
+inline SGPropertyNode * 
+fgGetNode (const string &path, bool create = false)
+{
+  return globals->get_props()->getNode(path, create);
+}
+
+
 /**
  * Get an SGValue pointer that can be queried repeatedly.
  *
  * If the property value is going to be accessed within the loop,
  * it is best to use this method for maximum efficiency.
  */
-inline SGValue * fgGetValue (const string &name, bool create = false)
+inline SGValue * 
+fgGetValue (const string &name, bool create = false)
 {
   return globals->get_props()->getValue(name, create);
 }

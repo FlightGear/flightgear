@@ -19,6 +19,7 @@ SUBDIRS = \
         Controls \
         FDM \
         GUI \
+	Input \
         Joystick \
 	Navaids \
         $(NETWORK_DIRS) \
