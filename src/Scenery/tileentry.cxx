@@ -128,33 +128,20 @@ FGTileEntry::free_tile()
 }
 
 
-// when a tile is still in the cache, but not in the immediate draw l
-// ist, it can still remain in the scene graph, but we use a range
+// when a tile is still in the cache, but not in the immediate draw
+// list, it can still remain in the scene graph, but we use a range
 // selector to disable it from ever being drawn.
 void 
 FGTileEntry::ssg_disable() {
     cout << "TILE STATE = " << state << endl;
     if ( state == Scheduled_for_use ) {
 	state = Scheduled_for_cache;
+    } else if ( state == Scheduled_for_cache ) {
+	// do nothing
     } else if ( (state == Loaded) || (state == Cached) ) {
 	state = Cached;
 	cout << "DISABLING SSG NODE" << endl;
 	select_ptr->select(0);
-
-#if 0
-	// set a really tiny range
-	// cout << "SETTING TINY RANGE" << endl;
-	float ranges[2];
-	ranges[0] = 0.0f;
-	ranges[1] = 0.00001f;
-	range_ptr->setRanges( ranges, 2 );
-
-	// transform to a long way away
-	// cout << "MOVING FAR AWAY" << endl;
-	sgCoord sgcoord;
-	sgSetCoord( &sgcoord, 999999.0, 999999.0, 999999.0, 0.0, 0.0, 0.0 );
-	transform_ptr->setTransform( &sgcoord );
-#endif 
     } else {
 	FG_LOG( FG_TERRAIN, FG_ALERT,
 		"Trying to disable an unused tile!  Dying" );
