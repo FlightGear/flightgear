@@ -107,7 +107,6 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
     vBodyAccel(3)
 {
   Name = "FGAircraft";
-  GearUp = false;
   alphaclmin = alphaclmax = 0;
   HTailArea = VTailArea = HTailArm = VTailArm = 0.0;
   lbarh = lbarv = vbarh = vbarv = 0.0;

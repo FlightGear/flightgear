@@ -82,6 +82,7 @@ class FGAtmosphere;
 class FGOutput;
 class FGPosition;
 class FGFDMExec;
+class FGGroundReactions;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
@@ -329,6 +330,7 @@ private:
   FGAtmosphere* Atmosphere;
   FGFCS* FCS;
   FGAerodynamics* Aerodynamics;
+  FGGroundReactions* GroundReactions;
 
   typedef map<string, eParam> CoeffMap;
   CoeffMap coeffdef;
@@ -347,6 +349,7 @@ private:
 #include "FGAerodynamics.h"
 #include "FGOutput.h"
 #include "FGAircraft.h"
+#include "FGGroundReactions.h"
 
 #endif
 

@@ -152,7 +152,7 @@ FGFX::update ()
 	  // volume corresponds to manifold pressure
 
     double rpm_factor;
-    if (cur_fdm_state->get_engine(0) != NULL)
+    if ( cur_fdm_state->get_num_engines() > 0 )
       rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() / 2500.0;
     else
       rpm_factor = 1.0;
@@ -167,7 +167,7 @@ FGFX::update ()
       pitch = 5.0;
 
     double mp_factor;
-    if (cur_fdm_state->get_engine(0) != NULL)
+    if ( cur_fdm_state->get_num_engines() > 0 )
       mp_factor = cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 100;
     else
       mp_factor = 0.3;

@@ -113,9 +113,9 @@ FGJSBsim::FGJSBsim( double dt )
         add_engine( FGEngInterface() );
     }  
     
-    if ( fdmex->GetAircraft()->GetNumGearUnits() <= 0 ) {
+    if ( fdmex->GetGroundReactions()->GetNumGearUnits() <= 0 ) {
         SG_LOG( SG_FLIGHT, SG_ALERT, "num gear units = "
-                << fdmex->GetAircraft()->GetNumGearUnits() );
+                << fdmex->GetGroundReactions()->GetNumGearUnits() );
         SG_LOG( SG_FLIGHT, SG_ALERT, "This is a very bad thing because with 0 gear units, the ground trimming");
          SG_LOG( SG_FLIGHT, SG_ALERT, "routine (coming up later in the code) will core dump.");
          SG_LOG( SG_FLIGHT, SG_ALERT, "Halting the sim now, and hoping a solution will present itself soon!");
@@ -225,7 +225,7 @@ bool FGJSBsim::update( int multiloop ) {
     trimmed->setBoolValue(false);
 
     if ( needTrim && startup_trim->getBoolValue() ) {
-        cout << "num gear units = " << fdmex->GetAircraft()->GetNumGearUnits() << endl;
+        cout << "num gear units = " << fdmex->GetGroundReactions()->GetNumGearUnits() << endl;
         //fgic->SetSeaLevelRadiusFtIC( get_Sea_level_radius() );
         //fgic->SetTerrainAltitudeFtIC( scenery.cur_elev * SG_METER_TO_FEET );
 
