@@ -18,13 +18,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#include <simgear/compiler.h>
+
+#include <math.h>
+
+#include STL_IOSTREAM
+#include STL_FSTREAM
+#include STL_STRING
 
 #include <jssuper.h>
 #include <jsinput.h>
-#include <iostream>
-#include <fstream>
-#include <math.h>
-#include <string>
+
+SG_USING_STD(string);
+
 
 string axes_humannames[8] = { "elevator", "ailerons", "rudder", "throttle", 
                               "mixture","propller pitch", "lateral view", 
