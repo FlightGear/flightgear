@@ -241,11 +241,19 @@ private:
     SGPropertyNode *rudder_trim;
     SGPropertyNode *stall_warning;
     
-    SGPropertyNode *elevator_pos;
-    SGPropertyNode *left_aileron_pos;
-    SGPropertyNode *right_aileron_pos;
-    SGPropertyNode *rudder_pos;
-    SGPropertyNode *flap_pos;
+    SGPropertyNode *elevator_pos_deg;
+    SGPropertyNode *left_aileron_pos_deg;
+    SGPropertyNode *right_aileron_pos_deg;
+    SGPropertyNode *rudder_pos_deg;
+    SGPropertyNode *flap_pos_deg;
+    
+    SGPropertyNode *elevator_pos_pct;
+    SGPropertyNode *left_aileron_pos_pct;
+    SGPropertyNode *right_aileron_pos_pct;
+    SGPropertyNode *rudder_pos_pct;
+    SGPropertyNode *flap_pos_pct;
+    
+    SGPropertyNode *gear_pos_pct;
     
     void init_gear(void);
     void update_gear(void);
