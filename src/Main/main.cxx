@@ -501,10 +501,11 @@ void fgRenderFrame() {
             glEnable(GL_BLEND);
             glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
             posit =  globals->get_scenery()->get_center();
-            if ( _bcloud_orig ) {
-                sgClouds3d->Set_Cloud_Orig( _posit );
-                _bcloud_orig = false;
-            }
+            // if ( _bcloud_orig ) {
+            //    sgClouds3d->Set_Cloud_Orig( _posit );
+            //    _bcloud_orig = false;
+            // }
+            sgClouds3d->Set_Cloud_Orig(&(globals->get_scenery()->get_center()));
             sgClouds3d->Update( current__view->get_absolute_view_pos() );
         }
 
@@ -776,9 +777,6 @@ void fgRenderFrame() {
             }
 	}
 
-	globals->get_model_mgr()->draw();
-	globals->get_aircraft_model()->draw();
-
         if ( fgGetBool("/sim/rendering/clouds3d") ) {
             glDisable( GL_FOG );
             glEnable(GL_BLEND);
@@ -792,6 +790,9 @@ void fgRenderFrame() {
             // default_state->force();
             sgClouds3d->Draw((sgVec4 *)current__view->get_VIEW());
         }
+
+	globals->get_model_mgr()->draw();
+	globals->get_aircraft_model()->draw();
 
 	// display HUD && Panel
 	glDisable( GL_FOG );
