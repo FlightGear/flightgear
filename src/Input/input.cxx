@@ -699,7 +699,7 @@ FGInput::_update_joystick (double dt)
   float axis_values[MAX_JOYSTICK_AXES];
 
   // update the joystick 20 times per second.
-  if ((dt += dt) > 50)
+  if ((_last_dt += dt) > 50)
     _last_dt = 0.0;
   else
     return;
