@@ -56,7 +56,7 @@ class FGNav {
     int range;
     bool has_dme;
     string ident;		// to avoid a core dump with corrupt data
-    int offset;			// offset from true north (negative = W)
+    double magvar;		// magvar from true north (negative = W)
 
 public:
 
@@ -74,7 +74,7 @@ public:
     inline int get_range() const { return range; }
     inline bool get_has_dme() const { return has_dme; }
     inline const char *get_ident() { return ident.c_str(); }
-    inline int get_offset () const { return offset; }
+    inline double get_magvar () const { return magvar; }
 
     /* inline void set_type( char t ) { type = t; }
     inline void set_lon( double l ) { lon = l; }
@@ -93,11 +93,11 @@ inline istream&
 operator >> ( istream& in, FGNav& n )
 {
     double f;
-    char c /* , offset_dir */ ;
-    string offset_s;
+    char c /* , magvar_dir */ ;
+    string magvar_s;
     
     in >> n.type >> n.lat >> n.lon >> n.elev >> f >> n.range 
-       >> c >> n.ident >> offset_s;
+       >> c >> n.ident >> magvar_s;
 
     n.freq = (int)(f*100.0 + 0.5);
     if ( c == 'Y' ) {
@@ -106,29 +106,35 @@ operator >> ( istream& in, FGNav& n )
 	n.has_dme = false;
     }
 
-    // Calculate the offset from true north.
-    // cout << "Calculating offset for navaid " << n.ident << endl;
-    if (offset_s == "XXX") {
+    // Calculate the magvar from true north.
+    // cout << "Calculating magvar for navaid " << n.ident << endl;
+    if (magvar_s == "XXX") {
 	// default to mag var as of 1990-01-01 (Julian 2447892.5)
-	double var = sgGetMagVar(n.lon * DEG_TO_RAD, n.lat * DEG_TO_RAD,
-				 n.elev * FEET_TO_METER,
-				 2447892.5) * RAD_TO_DEG;
+	n.magvar = -sgGetMagVar(n.lon * DEG_TO_RAD, n.lat * DEG_TO_RAD,
+				n.elev * FEET_TO_METER,
+				2447892.5) * RAD_TO_DEG;
 	// cout << "Default variation at " << n.lon << ',' << n.lat
 	// 	<< " is " << var << endl;
+#if 0
+	// I don't know what this is for - CLO 1 Feb 2001
 	if (var - int(var) >= 0.5)
-	    n.offset = int(var) + 1;
+	    n.magvar = int(var) + 1;
 	else if (var - int(var) <= -0.5)
-	    n.offset = int(var) - 1;
+	    n.magvar = int(var) - 1;
 	else
-	    n.offset = int(var);
-	// cout << "Defaulted to offset of " << n.offset << endl;
+	    n.magvar = int(var);
+#endif
+	// cout << "Defaulted to magvar of " << n.magvar << endl;
     } else {
 	char direction;
-	sscanf(offset_s.c_str(), "%d%c", &(n.offset), &direction);
-	if (direction == 'W')
-	    n.offset = 0 - n.offset;
-	// cout << "Explicit offset of " << n.offset << endl;
+	int var;
+	sscanf(magvar_s.c_str(), "%d%c", &var, &direction);
+	n.magvar = var;
+	if (direction == 'E')
+	    n.magvar = 0 - n.magvar;
+	// cout << "Explicit magvar of " << n.magvar << endl;
     }
+    cout << n.ident << " " << n.magvar << endl;
 
     // generate cartesian coordinates
     Point3D geod( n.lon * DEG_TO_RAD, n.lat * DEG_TO_RAD, n.elev );

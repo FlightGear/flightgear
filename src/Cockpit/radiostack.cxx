@@ -209,7 +209,8 @@ FGRadioStack::update()
 	    geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
 				nav1_loclat, nav1_loclon,
 				&az1, &az2, &s );
-	    nav1_heading = az1 - nav1_offset;
+	    cout << "az1 = " << az1 << " magvar = " << nav1_magvar << endl;
+	    nav1_heading = az1 - nav1_magvar;
 	    // Alex: nav1_heading = - (az1 - FGBFI::getMagVar() / RAD_TO_DEG);
 
 	    // cout << " heading = " << nav1_heading
@@ -254,7 +255,7 @@ FGRadioStack::update()
 	    geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
 				nav2_loclat, nav2_loclon,
 				&az1, &az2, &s );
-	    nav2_heading = az1 - nav2_offset;
+	    nav2_heading = az1 - nav2_magvar;
 	    // Alex: nav2_heading = - (az1 - FGBFI::getMagVar() / RAD_TO_DEG);
 
 	    // cout << " heading = " << nav2_heading
@@ -321,7 +322,7 @@ void FGRadioStack::search ()
 	nav1_dmelon = ils.get_dmelon();
 	nav1_dmelat = ils.get_dmelat();
 	nav1_elev = ils.get_gselev();
-	nav1_offset = 0;
+	nav1_magvar = 0;
 	nav1_effective_range = FG_ILS_DEFAULT_RANGE;
 	nav1_target_gs = ils.get_gsangle();
 	nav1_radial = ils.get_locheading();
@@ -346,7 +347,7 @@ void FGRadioStack::search ()
 	nav1_loclon = nav.get_lon();
 	nav1_loclat = nav.get_lat();
 	nav1_elev = nav.get_elev();
-	nav1_offset = nav.get_offset();
+	nav1_magvar = nav.get_magvar();
 	nav1_effective_range = kludgeRange(nav1_elev, elev, nav.get_range());
 	nav1_target_gs = 0.0;
 	nav1_radial = nav1_sel_radial;
@@ -371,7 +372,7 @@ void FGRadioStack::search ()
 	nav2_loclon = ils.get_loclon();
 	nav2_loclat = ils.get_loclat();
 	nav2_elev = ils.get_gselev();
-	nav2_offset = 0;
+	nav2_magvar = 0;
 	nav2_effective_range = FG_ILS_DEFAULT_RANGE;
 	nav2_target_gs = ils.get_gsangle();
 	nav2_radial = ils.get_locheading();
@@ -396,7 +397,7 @@ void FGRadioStack::search ()
 	nav2_loclon = nav.get_lon();
 	nav2_loclat = nav.get_lat();
 	nav2_elev = nav.get_elev();
-	nav2_offset = nav.get_offset();
+	nav2_magvar = nav.get_magvar();
 	nav2_effective_range = kludgeRange(nav2_elev, elev, nav.get_range());
 	nav2_target_gs = 0.0;
 	nav2_radial = nav2_sel_radial;

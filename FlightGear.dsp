@@ -2501,7 +2501,7 @@ SOURCE=.\src\Network\protocol.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\Network\native.cxx
+SOURCE=.\src\Network\atlas.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2517,6 +2517,36 @@ SOURCE=.\src\Network\native.cxx
 # Begin Source File
 
 SOURCE=.\src\Network\garmin.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\joyclient.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\native.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2592,21 +2622,6 @@ SOURCE=.\src\Network\ray.cxx
 # Begin Source File
 
 SOURCE=.\src\Network\rul.cxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Network"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Network"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\Network\joyclient.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
