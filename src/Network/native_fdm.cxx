@@ -168,7 +168,7 @@ static void net2global( FGNetFDM *net, FGInterface *global ) {
         cur_fdm_state->_set_V_calibrated_kts( net->vcas );
         cur_fdm_state->_set_Climb_Rate( net->climb_rate );
 
-	if ( ! net->cur_time ) {
+	if ( net->cur_time ) {
 	    fgSetLong("/sim/time/cur-time-override", net->cur_time);
 	}
 
