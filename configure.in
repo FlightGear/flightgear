@@ -5,7 +5,7 @@ dnl
 AC_INIT(Simulator/Aircraft/aircraft.c)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.50)
+AM_INIT_AUTOMAKE(FlightGear, 0.51)
 
 dnl Checks for programs.
 
@@ -44,13 +44,13 @@ AC_EXT_TIMEZONE
 AM_CONDITIONAL(HAVE_TIMEZONE, test "$have_timezone" = yes )
 
 dnl Check for Linux style audio support
-AM_CONDITIONAL(HAVE_AUDIO_SUPPORT, \
+AM_CONDITIONAL(ENABLE_AUDIO_SUPPORT, \
 	test -r /usr/include/soundcard.h \
 		-o -r /usr/include/linux/soundcard.h \
 		-o -r /usr/include/machine/soundcard.h \
 		-o "x$ac_cv_header_windows_h" = "xyes" )
 
-AM_CONDITIONAL(HAVE_WIN32_AUDIO, test "x$ac_cv_header_windows_h" = "xyes")
+AM_CONDITIONAL(ENABLE_WIN32_AUDIO, test "x$ac_cv_header_windows_h" = "xyes")
 
 dnl extra library and include directories
 EXTRA_DIRS="/usr/local /usr/X11R6 /opt/X11R6"
@@ -91,6 +91,12 @@ if test "x$ac_cv_lib_GLcore_glNewList" = "xno" ; then
 else
     dnl if GLcore found, then also check for GL
     AC_CHECK_LIB(GL, glXCreateContext)
+fi
+
+dnl if using mesa, check for xmesa.h
+if test "x$ac_cv_lib_MesaGL_glNewList" = "xyes" ; then
+    AC_CHECK_HEADER(GL/xmesa.h)
+    AM_CONDITIONAL(ENABLE_XMESA_FX, test "x$ac_cv_header_GL_xmesa_h" = "xyes")
 fi
 
 AC_CHECK_LIB(GLU, gluLookAt)
