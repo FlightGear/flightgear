@@ -1399,20 +1399,18 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     for ( i = 0; i < pts_v.size(); ++i ) {
         // cout << "pts_v.size() = " << pts_v.size() << endl;
 	if ( pt_materials[i].substr(0, 3) == "RWY" ) {
-            material = "GROUND_LIGHTS";
-            is_lighting = true;
             sgVec3 up;
             sgSetVec3( up, center->x(), center->y(), center->z() );
             ssgBranch *branch = gen_directional_lights( nodes, normals,
                                                         pts_v[i], pts_n[i],
                                                         up );
             float ranges[] = { 0, 12000 };
-            // branch->setCallback( SSG_CALLBACK_PREDRAW, runway_lights_predraw );
+            branch->setCallback( SSG_CALLBACK_PREDRAW, runway_lights_predraw );
             ssgRangeSelector * lod = new ssgRangeSelector;
             lod->setRanges( ranges, 2 );
             lod->addKid( branch );
             rwy_lights->addKid( lod );
-       } else {
+        } else {
             material = pt_materials[i];
             tex_index.clear();
             ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
@@ -1420,9 +1418,6 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                                       pts_v[i], pts_n[i], tex_index,
                                       false, ground_lights );
             geometry->addKid( leaf );
-       }
-
-        if ( is_lighting ) {
         }
     }
 
