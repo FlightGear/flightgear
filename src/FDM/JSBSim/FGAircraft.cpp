@@ -168,35 +168,20 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
 FGAircraft::~FGAircraft(void) { 
   unsigned int i,j;
 
-  cout << " ~FGAircraft" << endl;
   if (Engine != NULL) {
     for (i=0; i<numEngines; i++)
       delete Engine[i];
   }    
-  cout << "  Engine" << endl;
-
   if (Tank != NULL) {
     for (i=0; i<numTanks; i++)
       delete Tank[i];
   }    
-  cout << "  Tank" << endl;
-
-  cout << "  NumAxes: " << 6 << endl;
   for (i=0; i<6; i++) {
-    cout << "  NumCoeffs: " << Coeff[i].size() << "  " << &Coeff[i] << endl;
     for (j=0; j<Coeff[i].size(); j++) {
-      
-      cout << "  Coeff[" << i << "][" << j << "]: " << Coeff[i][j] << endl;
       delete Coeff[i][j];
     }
   }
-
   delete[] Coeff;
-  cout << "  Coeffs" << endl;
-
-  for (i=0; i<lGear.size(); i++) {
-      delete lGear[i];
-  }  
 }
 
 /******************************************************************************/
@@ -409,21 +394,15 @@ void FGAircraft::FMAero(void) {
 
 void FGAircraft::FMGear(void) {
 
-  if (GearUp) {
-    // crash routine
-  } else {
-
-//  iGear = lGear.begin();
-//  while (iGear != lGear.end()) {
-//    vForces  += iGear->Force();
-//    vMoments += iGear->Moment();
-//    iGear++;
-//  }
-
-    for (unsigned int i=0;i<lGear.size();i++) {
-      vForces  += lGear[i]->Force();
-      vMoments += lGear[i]->Moment();
+  if ( !GearUp ) {
+    vector <FGLGear>::iterator iGear = lGear.begin();
+    while (iGear != lGear.end()) {
+      vForces  += iGear->Force();
+      vMoments += iGear->Moment();
+      iGear++;
     }
+  } else {
+    // Crash Routine
   }
 }
 
@@ -581,7 +560,7 @@ void FGAircraft::ReadUndercarriage(FGConfigFile* AC_cfg) {
   AC_cfg->GetNextConfigLine();
 
   while ((token = AC_cfg->GetValue()) != "/UNDERCARRIAGE") {
-    lGear.push_back(new FGLGear(AC_cfg, FDMExec));
+    lGear.push_back(FGLGear(AC_cfg, FDMExec));
   }
 }
 
@@ -737,10 +716,10 @@ string FGAircraft::GetGroundReactionStrings(void) {
 
   for (unsigned int i=0;i<lGear.size();i++) {
     if (!firstime) GroundReactionStrings += ", ";
-    GroundReactionStrings += (lGear[i]->GetName() + "_WOW, ");
-    GroundReactionStrings += (lGear[i]->GetName() + "_compressLength, ");
-    GroundReactionStrings += (lGear[i]->GetName() + "_compressSpeed, ");
-    GroundReactionStrings += (lGear[i]->GetName() + "_Force");
+    GroundReactionStrings += (lGear[i].GetName() + "_WOW, ");
+    GroundReactionStrings += (lGear[i].GetName() + "_compressLength, ");
+    GroundReactionStrings += (lGear[i].GetName() + "_compressSpeed, ");
+    GroundReactionStrings += (lGear[i].GetName() + "_Force");
 
     firstime = false;
   }
@@ -758,10 +737,10 @@ string FGAircraft::GetGroundReactionValues(void) {
 
   for (unsigned int i=0;i<lGear.size();i++) {
     if (!firstime) GroundReactionValues += ", ";
-    GroundReactionValues += string( lGear[i]->GetWOW()?"1":"0" ) + ", ";
-    GroundReactionValues += (string(gcvt(lGear[i]->GetCompLen(),    5, buff)) + ", ");
-    GroundReactionValues += (string(gcvt(lGear[i]->GetCompVel(),    6, buff)) + ", ");
-    GroundReactionValues += (string(gcvt(lGear[i]->GetCompForce(), 10, buff)));
+    GroundReactionValues += string( lGear[i].GetWOW()?"1":"0" ) + ", ";
+    GroundReactionValues += (string(gcvt(lGear[i].GetCompLen(),    5, buff)) + ", ");
+    GroundReactionValues += (string(gcvt(lGear[i].GetCompVel(),    6, buff)) + ", ");
+    GroundReactionValues += (string(gcvt(lGear[i].GetCompForce(), 10, buff)));
 
     firstime = false;
   }

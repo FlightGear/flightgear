@@ -80,7 +80,7 @@ int FGJSBsim::init( double dt ) {
                                        current_options.get_aircraft() );
 
   if (result) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" << current_options.get_aircraft() );
+    FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft " << current_options.get_aircraft() );
   } else {
     FG_LOG( FG_FLIGHT, FG_INFO, "  aircraft" << current_options.get_aircraft()
                                 << " does not exist");
@@ -103,7 +103,7 @@ int FGJSBsim::init( double dt ) {
   FG_LOG( FG_FLIGHT, FG_INFO, "  Initializing JSBSim with:" );
   
   FGInitialCondition *fgic = new FGInitialCondition(&FDMExec);
-  fgic->SetAltitudeAGLFtIC(get_Altitude());
+  fgic->SetAltitudeFtIC(get_Altitude());
   if((current_options.get_mach() < 0) && (current_options.get_vc() < 0 )) {
     fgic->SetUBodyFpsIC(current_options.get_uBody());
     fgic->SetVBodyFpsIC(current_options.get_vBody());

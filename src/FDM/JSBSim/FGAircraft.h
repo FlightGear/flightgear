@@ -125,6 +125,14 @@ INCLUDES
 DEFINITIONS
 *******************************************************************************/
 
+/** Encapsulates an Aircraft and its systems.
+    Owns all the parts (other classes) which make
+    up this aircraft. This includes the Engines, Tanks, Propellers, Nozzles,
+    aerodynamic and mass properties, landing gear, etc.
+    @author Jon S. Berndt
+    @version $Id$
+  */
+
 /*******************************************************************************
 CLASS DECLARATION
 *******************************************************************************/
@@ -136,16 +144,31 @@ class FGAircraft : public FGModel {
   enum {ePhi=1, eTht, ePsi};
 
 public:
-  FGAircraft(FGFDMExec*);
+  /** Constructor
+      @param Executive a pointer to the parent executive object
+    */
+  FGAircraft(FGFDMExec *Executive);
+  /// Destructor
   ~FGAircraft(void);
 
+  /** Runs the model; called by the Executive
+      @see JSBSim.cpp documentation
+      @return bool returns false if no error
+    */
   bool Run(void);
-  bool LoadAircraft(string, string, string);
+  /** Loads the aircraft.
+      The executive calls this method to load the aircraft into JSBSim.
+      @param apath path to the aircraft files (e.g. "aircraft/X15/")
+      @param epath path to engine files (e.g. "engine/")
+      @param acname name of aircraft (e.g. "X15")
+      @return true if succesful
+    */
+  bool LoadAircraft(string apath, string epath, string acname);
   inline string GetAircraftName(void) { return AircraftName; }
   inline void SetGearUp(bool tt) { GearUp = tt; }
   inline bool GetGearUp(void) { return GearUp; }
   inline int GetNumGearUnits(void) { return lGear.size(); }
-  inline FGLGear* GetGearUnit(int ii) { return lGear[ii]; }
+  inline FGLGear* GetGearUnit(int ii) { return &(lGear[ii]); }
   inline float GetWingArea(void) { return WingArea; }
   inline float GetWingSpan(void) { return WingSpan; }
   inline float Getcbar(void) { return cbar; }
@@ -176,8 +199,6 @@ public:
   string GetCoefficientValues(void);
   string GetGroundReactionStrings(void);
   string GetGroundReactionValues(void);
-
-  vector <FGLGear>::iterator iGear;
 
   enum { ssSimulation      = 1,
          ssAerosurfaces    = 2,
@@ -235,7 +256,7 @@ private:
   bool GearUp;
 
   string Axis[6];
-  vector <FGLGear*> lGear;
+  vector <FGLGear> lGear;
 
   string AircraftPath;
   string EnginePath;

@@ -51,8 +51,8 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.16  2000/10/09 19:16:22  curt
-// Oct. 9, 2000 - synced with latest JSBsim code.
+// Revision 1.17  2000/10/10 15:44:35  curt
+// Oct. 10, 2000 sync with JSBSim master repository.
 //
 // Revision 1.3  2000/04/26 10:55:57  jsb
 // Made changes as required by Curt to install JSBSim into FGFS
