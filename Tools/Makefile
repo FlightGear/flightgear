@@ -59,15 +59,15 @@ clean:
 
 source-tar: clean
 	(cd ..; \
-	tar cvzf demtools-$(VERSION).tar.gz Tools/Makefile Tools/README \
-	Tools/TODO Tools/make.inc Tools/AssemTris Tools/Dem2node \
+	tar cvzf demtools-$(FG_VERSION).tar.gz Tools/Makefile Tools/README \
+	Tools/Todo Tools/make.inc Tools/AssemTris Tools/Dem2node \
 	Tools/FixNode Tools/FixObj Tools/SplitTris Tools/Stripe_u \
 	Tools/Tri2obj Tools/Triangle)
 
 source-zip: clean
 	(cd ..; \
-	zip -r demtools-$(VERSION).zip Tools/Makefile Tools/README \
-	Tools/TODO Tools/make.inc Tools/AssemTris Tools/Dem2node \
+	zip -r demtools-$(FG_VERSION).zip Tools/Makefile Tools/README \
+	Tools/Todo Tools/make.inc Tools/AssemTris Tools/Dem2node \
 	Tools/FixNode Tools/FixObj Tools/SplitTris Tools/Stripe_u \
 	Tools/Tri2obj Tools/Triangle)
 
@@ -75,20 +75,23 @@ bin-tar: all
 	echo "need to fix this"
 #	cp GLUT/fg0 GLUT/runfg ..
 #	(cd ../..; \
-#	tar cvzf bin-$(VERSION).tar.gz FlightGear/fgtop FlightGear/fg0 \
+#	tar cvzf bin-$(FG_VERSION).tar.gz FlightGear/fgtop FlightGear/fg0 \
 #	FlightGear/runfg FlightGear/COPYING FlightGear/Docs FlightGear/Thanks)
 
 bin-zip: 
 	echo "need to fix this"
 #	cp GLUT/fg0.exe GLUT/runfg.bat GLUT/cygwin.dll ..
 #	(cd ../..; \
-#	zip -r bin-$(VERSION).zip FlightGear/fgtop FlightGear/fg0.exe \
+#	zip -r bin-$(FG_VERSION).zip FlightGear/fgtop FlightGear/fg0.exe \
 #	FlightGear/runfg.bat FlightGear/cygwin.dll FlightGear/COPYING \
 #	FlightGear/Docs FlightGear/Thanks)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1998/01/27 18:36:53  curt
+# Lots of updates to get back in sync with changes made over in .../Src/
+#
 # Revision 1.6  1998/01/21 02:55:42  curt
 # Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
 #

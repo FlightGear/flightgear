@@ -189,7 +189,7 @@ if ( $do_assemtris ) {
     foreach $file ( @FILES ) {
 	chop($file);
 	if ( $file =~ m/\.1\.body$/ ) {
-	    $file =~ s/\.body$//;  # strip off the ".node"
+	    $file =~ s/\.body$//;  # strip off the ".body"
 	
 	    $command = "./AssemTris/assemtris $subdir/$file";
 	    print "Running '$command'\n";
@@ -199,6 +199,7 @@ if ( $do_assemtris ) {
 	    }
 	    close(OUT);
 	}
+	unlink("$subdir/$file.body");
     }
 }
 
@@ -328,6 +329,9 @@ if ( $do_fixobj ) {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.9  1998/01/27 18:36:54  curt
+# Lots of updates to get back in sync with changes made over in .../Src/
+#
 # Revision 1.8  1998/01/21 17:59:05  curt
 # Uncomment lines to remove several intermediate files.
 #

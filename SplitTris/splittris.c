@@ -34,12 +34,12 @@
 
 #include "splittris.h"
 
-#include "../../Src/Include/constants.h"
-#include "../../Src/Include/types.h"
-#include "../../Src/Math/fg_geodesy.h"
-#include "../../Src/Math/mat3.h"
-#include "../../Src/Math/polar.h"
-#include "../../Src/Scenery/tileutils.h"
+#include <Include/fg_constants.h>
+#include <Include/fg_types.h>
+#include <Math/fg_geodesy.h>
+#include <Math/mat3.h>
+#include <Math/polar.h>
+#include <Scenery/bucketutils.h>
 
 
 int nodecount, tricount;
@@ -51,8 +51,8 @@ int new_tris[MAX_TRIS][3];
 
 struct fgCartesianPoint nodes_cart[MAX_NODES];
 
-struct bucket ne_index, nw_index, sw_index, se_index;
-struct bucket north_index, south_index, east_index, west_index;
+struct fgBUCKET ne_index, nw_index, sw_index, se_index;
+struct fgBUCKET north_index, south_index, east_index, west_index;
 
 /* convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to
  * a cartesian point */
@@ -260,20 +260,20 @@ int shared_object_exists(char *basepath, char *ext) {
     long int index;
 
     if ( strcmp(ext, ".sw") == 0 ) {
-	gen_base_path(&west_index, scene_path);
-	index = gen_index(&west_index);
+	fgBucketGenBasePath(&west_index, scene_path);
+	index = fgBucketGenIndex(&west_index);
 	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
 	}
-	gen_base_path(&sw_index, scene_path);
-	index = gen_index(&sw_index);
+	fgBucketGenBasePath(&sw_index, scene_path);
+	index = fgBucketGenIndex(&sw_index);
 	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
 	}
-	gen_base_path(&south_index, scene_path);
-	index = gen_index(&south_index);
+	fgBucketGenBasePath(&south_index, scene_path);
+	index = fgBucketGenIndex(&south_index);
 	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
@@ -281,20 +281,20 @@ int shared_object_exists(char *basepath, char *ext) {
     }
 
     if ( strcmp(ext, ".se") == 0 ) {
-	gen_base_path(&east_index, scene_path);
-	index = gen_index(&east_index);
+	fgBucketGenBasePath(&east_index, scene_path);
+	index = fgBucketGenIndex(&east_index);
 	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
 	}
-	gen_base_path(&se_index, scene_path);
-	index = gen_index(&se_index);
+	fgBucketGenBasePath(&se_index, scene_path);
+	index = fgBucketGenIndex(&se_index);
 	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
 	}
-	gen_base_path(&south_index, scene_path);
-	index = gen_index(&south_index);
+	fgBucketGenBasePath(&south_index, scene_path);
+	index = fgBucketGenIndex(&south_index);
 	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
@@ -302,20 +302,20 @@ int shared_object_exists(char *basepath, char *ext) {
     }
 
     if ( strcmp(ext, ".ne") == 0 ) {
-	gen_base_path(&east_index, scene_path);
-	index = gen_index(&east_index);
+	fgBucketGenBasePath(&east_index, scene_path);
+	index = fgBucketGenIndex(&east_index);
 	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
 	}
-	gen_base_path(&ne_index, scene_path);
-	index = gen_index(&ne_index);
+	fgBucketGenBasePath(&ne_index, scene_path);
+	index = fgBucketGenIndex(&ne_index);
 	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
 	}
-	gen_base_path(&north_index, scene_path);
-	index = gen_index(&north_index);
+	fgBucketGenBasePath(&north_index, scene_path);
+	index = fgBucketGenIndex(&north_index);
 	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
@@ -323,20 +323,20 @@ int shared_object_exists(char *basepath, char *ext) {
     }
 
     if ( strcmp(ext, ".nw") == 0 ) {
-	gen_base_path(&west_index, scene_path);
-	index = gen_index(&west_index);
+	fgBucketGenBasePath(&west_index, scene_path);
+	index = fgBucketGenIndex(&west_index);
 	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
 	}
-	gen_base_path(&nw_index, scene_path);
-	index = gen_index(&nw_index);
+	fgBucketGenBasePath(&nw_index, scene_path);
+	index = fgBucketGenIndex(&nw_index);
 	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
 	}
-	gen_base_path(&north_index, scene_path);
-	index = gen_index(&north_index);
+	fgBucketGenBasePath(&north_index, scene_path);
+	index = fgBucketGenIndex(&north_index);
 	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
@@ -344,8 +344,8 @@ int shared_object_exists(char *basepath, char *ext) {
     }
 
     if ( strcmp(ext, ".south") == 0 ) {
-	gen_base_path(&south_index, scene_path);
-	index = gen_index(&south_index);
+	fgBucketGenBasePath(&south_index, scene_path);
+	index = fgBucketGenIndex(&south_index);
 	sprintf(file, "%s/%s/%ld.1.north", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
@@ -353,8 +353,8 @@ int shared_object_exists(char *basepath, char *ext) {
     }
 
     if ( strcmp(ext, ".north") == 0 ) {
-	gen_base_path(&north_index, scene_path);
-	index = gen_index(&north_index);
+	fgBucketGenBasePath(&north_index, scene_path);
+	index = fgBucketGenIndex(&north_index);
 	sprintf(file, "%s/%s/%ld.1.south", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
@@ -362,8 +362,8 @@ int shared_object_exists(char *basepath, char *ext) {
     }
 
     if ( strcmp(ext, ".west") == 0 ) {
-	gen_base_path(&west_index, scene_path);
-	index = gen_index(&west_index);
+	fgBucketGenBasePath(&west_index, scene_path);
+	index = fgBucketGenIndex(&west_index);
 	sprintf(file, "%s/%s/%ld.1.east", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
@@ -371,8 +371,8 @@ int shared_object_exists(char *basepath, char *ext) {
     }
 
     if ( strcmp(ext, ".east") == 0 ) {
-	gen_base_path(&east_index, scene_path);
-	index = gen_index(&east_index);
+	fgBucketGenBasePath(&east_index, scene_path);
+	index = fgBucketGenIndex(&east_index);
 	sprintf(file, "%s/%s/%ld.1.west", basepath, scene_path, index);
 	if ( file_exists(file) ) {
 	    return(1);
@@ -557,7 +557,7 @@ void dump_obj(char *basename, char *basepath) {
 
 int main(int argc, char **argv) {
     char basename[256], basepath[256], temp[256];
-    struct bucket p;
+    struct fgBUCKET p;
     long int index;
     int len;
 
@@ -577,19 +577,19 @@ int main(int argc, char **argv) {
     }
     index = atoi(temp);
     printf("%ld\n", index);
-    parse_index(index, &p);
+    fgBucketParseIndex(index, &p);
 
     printf("bucket = %d %d %d %d\n", p.lon, p.lat, p.x, p.y);
     /* generate the indexes of the neighbors */
-    offset_bucket(&p, &ne_index,  1,  1);
-    offset_bucket(&p, &nw_index, -1,  1);
-    offset_bucket(&p, &se_index,  1, -1);
-    offset_bucket(&p, &sw_index, -1, -1);
+    fgBucketOffset(&p, &ne_index,  1,  1);
+    fgBucketOffset(&p, &nw_index, -1,  1);
+    fgBucketOffset(&p, &se_index,  1, -1);
+    fgBucketOffset(&p, &sw_index, -1, -1);
 
-    offset_bucket(&p, &north_index,  0,  1);
-    offset_bucket(&p, &south_index,  0, -1);
-    offset_bucket(&p, &east_index,  1,  0);
-    offset_bucket(&p, &west_index, -1,  0);
+    fgBucketOffset(&p, &north_index,  0,  1);
+    fgBucketOffset(&p, &south_index,  0, -1);
+    fgBucketOffset(&p, &east_index,  1,  0);
+    fgBucketOffset(&p, &west_index, -1,  0);
 
     /*
     printf("Corner indexes = %ld %ld %ld %ld\n", 
@@ -609,9 +609,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.2  1998/01/14 15:54:43  curt
-/* Initial revision completed.
+/* Revision 1.3  1998/01/27 18:37:04  curt
+/* Lots of updates to get back in sync with changes made over in .../Src/
 /*
+ * Revision 1.2  1998/01/14 15:54:43  curt
+ * Initial revision completed.
+ *
  * Revision 1.1  1998/01/14 02:11:31  curt
  * Initial revision.
  *
