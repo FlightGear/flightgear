@@ -84,15 +84,15 @@ FGEnvironment::bind ()
 	&FGEnvironment::get_wind_speed_kt, &FGEnvironment::set_wind_speed_kt);
   fgTie("/environment/wind-from-north-fps", this,
 	&FGEnvironment::get_wind_from_north_fps,
-	&FGEnvironment::set_wind_from_north_fps, false);
+	&FGEnvironment::set_wind_from_north_fps);
   fgSetArchivable("/environment/wind-from-north-fps");
   fgTie("/environment/wind-from-east-fps", this,
 	&FGEnvironment::get_wind_from_east_fps,
-	&FGEnvironment::set_wind_from_east_fps, false);
+	&FGEnvironment::set_wind_from_east_fps);
   fgSetArchivable("/environment/wind-from-east-fps");
   fgTie("/environment/wind-from-down-fps", this,
 	&FGEnvironment::get_wind_from_down_fps,
-	&FGEnvironment::set_wind_from_down_fps, false);
+	&FGEnvironment::set_wind_from_down_fps);
   fgSetArchivable("/environment/wind-from-down-fps");
 }
 
@@ -176,7 +176,13 @@ FGEnvironment::set_wind_from_down_fps (double d)
 void
 FGEnvironment::_recalc_hdgspd ()
 {
-  double angle_rad = atan(wind_from_north_fps/wind_from_east_fps);
+  double angle_rad;
+
+  if (wind_from_east_fps == 0) {
+    angle_rad = (wind_from_north_fps >= 0 ? SGD_PI/2 : -SGD_PI/2);
+  } else {
+    angle_rad = atan(wind_from_north_fps/wind_from_east_fps);
+  }
   wind_from_heading_deg = angle_rad * SGD_RADIANS_TO_DEGREES;
   if (wind_from_east_fps >= 0)
     wind_from_heading_deg = 90 - wind_from_heading_deg;
