@@ -238,7 +238,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
   SGPropertyNode * target = 0;
 
   if (type.empty()) {
-    SG_LOG( SG_COCKPIT, SG_ALERT,
+    SG_LOG( SG_COCKPIT, SG_INFO,
             "No type supplied for transformation " << name
             << " assuming \"rotation\"" );
     type = "rotation";
@@ -418,7 +418,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
 
 
   if (type.empty()) {
-    SG_LOG( SG_COCKPIT, SG_ALERT,
+    SG_LOG( SG_COCKPIT, SG_INFO,
             "No type supplied for layer " << name
             << " assuming \"texture\"" );
     type = "texture";
