@@ -525,7 +525,7 @@ tri_out_of_range_callback (ssgEntity * entity, int mask)
 
 
 /**
- * Singleton ssgEntity with a dummy bounding sphere, to fool culling.
+ * ssgEntity with a dummy bounding sphere, to fool culling.
  *
  * This forces the in-range and out-of-range branches to be visited
  * when appropriate, even if they have no children.  It's ugly, but
@@ -535,40 +535,20 @@ tri_out_of_range_callback (ssgEntity * entity, int mask)
 class DummyBSphereEntity : public ssgEntity
 {
 public:
+  DummyBSphereEntity (float radius)
+  {
+    bsphere.setCenter(0, 0, 0);
+    bsphere.setRadius(radius);
+  }
   virtual ~DummyBSphereEntity () {}
   virtual void recalcBSphere () { bsphere_is_invalid = false; }
   virtual void cull (sgFrustum *f, sgMat4 m, int test_needed) {}
   virtual void isect (sgSphere *s, sgMat4 m, int test_needed) {}
   virtual void hot (sgVec3 s, sgMat4 m, int test_needed) {}
   virtual void los (sgVec3 s, sgMat4 m, int test_needed) {}
-  static ssgEntity * get_entity ();
-private:
-  DummyBSphereEntity ()
-  {
-    bsphere.setCenter(0, 0, 0);
-    bsphere.setRadius(1000);
-  }
-  static DummyBSphereEntity * entity;
+  static ssgEntity * get_tri_entity ();
+  static ssgEntity * get_tile_entity ();
 };
-
-
-DummyBSphereEntity * DummyBSphereEntity::entity = 0;
-
-
-/**
- * Ensure that only one copy of the dummy entity exists.
- *
- * @return The singleton copy of the DummyBSphereEntity.
- */
-ssgEntity *
-DummyBSphereEntity::get_entity ()
-{
-  if (entity == 0) {
-    entity = new DummyBSphereEntity;
-    entity->ref();
-  }
-  return entity;
-}
 
 
 /**
@@ -672,7 +652,7 @@ setup_triangle (float * p1, float * p2, float * p3,
 	out_of_range->setUserData(data);
 	out_of_range->setTravCallback(SSG_CALLBACK_PRETRAV,
 				      tri_out_of_range_callback);
-	out_of_range->addKid(DummyBSphereEntity::get_entity());
+	out_of_range->addKid(new DummyBSphereEntity(bounding_radius));
 	lod->addKid(out_of_range);
     }
 }
@@ -831,7 +811,8 @@ gen_random_surface_objects (ssgLeaf *leaf,
     out_of_range->setUserData(data);
     out_of_range->setTravCallback(SSG_CALLBACK_PRETRAV,
 				   tile_out_of_range_callback);
-    out_of_range->addKid(DummyBSphereEntity::get_entity());
+    out_of_range
+      ->addKid(new DummyBSphereEntity(leaf->getBSphere()->getRadius()));
 }
 
 
