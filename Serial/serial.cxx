@@ -186,12 +186,27 @@ string fgSERIAL::read_port() {
 }
 
 int fgSERIAL::write_port(const string& value) {
+    static bool error = false;
     int count;
+
+    if ( error ) {
+	// attempt some sort of error recovery
+	count = write(fd, "\n", 1);
+	if ( count == 1 ) {
+	    // cout << "Serial error recover successful!\n";
+	    error = false;
+	} else {
+	    return 0;
+	}
+    }
 
     count = write(fd, value.c_str(), value.length());
     // cout << "write '" << value << "'  " << count << " bytes" << endl;
 
-    if ( (int)count != (int)value.length() ) {
+    if ( (int)count == (int)value.length() ) {
+	error = false;
+    } else {
+	error = true;
 	if ( errno == EAGAIN ) {
 	    // ok ... in our context we don't really care if we can't
 	    // write a string, we'll just get it the next time around
@@ -206,6 +221,10 @@ int fgSERIAL::write_port(const string& value) {
 
 
 // $Log$
+// Revision 1.8  1999/01/20 13:42:21  curt
+// Tweaked FDM interface.
+// Testing check sum support for NMEA serial output.
+//
 // Revision 1.7  1998/12/04 01:24:35  curt
 // Tweak for SGI portability.
 //
