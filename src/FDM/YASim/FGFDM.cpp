@@ -241,6 +241,8 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         g->setSpring(attrf(a, "spring", 1));
         g->setDamping(attrf(a, "damp", 1));
 	_airplane.addGear(g);
+    } else if(eq(name, "hook")) {
+    } else if(eq(name, "launchbar")) {
     } else if(eq(name, "fuselage")) {
 	float b[3];
 	v[0] = attrf(a, "ax");
@@ -772,6 +774,8 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "BRAKE"))     return ControlMap::BRAKE;
     if(eq(name, "STEER"))     return ControlMap::STEER;
     if(eq(name, "EXTEND"))    return ControlMap::EXTEND;
+    if(eq(name, "HEXTEND"))   return ControlMap::HEXTEND;
+    if(eq(name, "LEXTEND"))   return ControlMap::LEXTEND;
     if(eq(name, "INCIDENCE")) return ControlMap::INCIDENCE;
     if(eq(name, "FLAP0"))     return ControlMap::FLAP0;
     if(eq(name, "FLAP1"))     return ControlMap::FLAP1;
