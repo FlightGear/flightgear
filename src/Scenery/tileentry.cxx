@@ -37,6 +37,7 @@
 
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sgstream.hxx>
 
@@ -364,15 +365,72 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 	string token, name;
 
 	while ( ! in.eof() ) {
-	    in >> token >> name >> ::skipws;
-	    SG_LOG( SG_TERRAIN, SG_DEBUG, "token = " << token
-		    << " name = " << name );
+	    in >> token;
 
-	    SGPath custom_path = tile_path;
-	    custom_path.append( name );
-	    ssgBranch *custom_obj = obj_load( custom_path.str(), NULL, false );
-	    if ( (new_tile != NULL) && (custom_obj != NULL) ) {
-		new_tile -> addKid( custom_obj );
+	    if ( token == "OBJECT" ) {
+		in >> name >> ::skipws;
+		SG_LOG( SG_TERRAIN, SG_DEBUG, "token = " << token
+			<< " name = " << name );
+
+		SGPath custom_path = tile_path;
+		custom_path.append( name );
+		ssgBranch *custom_obj
+		    = obj_load( custom_path.str(), NULL, false );
+		if ( (new_tile != NULL) && (custom_obj != NULL) ) {
+		    new_tile -> addKid( custom_obj );
+		}
+	    } else if ( token == "OBJECT_STATIC" ) {
+		// load object info
+		double lon, lat, elev, hdg;
+		in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
+		SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+			<< " name = " << name 
+			<< " pos = " << lon << ", " << lat
+			<< " elevation = " << elev
+			<< " heading = " << hdg );
+
+		// load the object itself
+		SGPath custom_path = tile_path;
+		custom_path.append( name );
+		ssgEntity *obj_model = ssgLoad( (char *)custom_path.c_str() );
+
+		// setup transforms
+		Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
+			      lat *  SGD_DEGREES_TO_RADIANS,
+			      elev );
+		Point3D world_pos = sgGeodToCart( geod );
+		Point3D offset = world_pos - center;
+		sgMat4 POS;
+		sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
+
+		sgVec3 obj_rt, obj_up;
+		sgSetVec3( obj_rt, 0.0, 1.0, 0.0); // Y axis
+		sgSetVec3( obj_up, 0.0, 0.0, 1.0); // Z axis
+
+		sgMat4 ROT_lon, ROT_lat, ROT_hdg;
+		sgMakeRotMat4( ROT_lon, lon, obj_up );
+		sgMakeRotMat4( ROT_lat, 90 - lat, obj_rt );
+		sgMakeRotMat4( ROT_hdg, hdg, obj_up );
+	
+		sgMat4 TUX;
+		sgCopyMat4( TUX, ROT_hdg );
+		sgPostMultMat4( TUX, ROT_lat );
+		sgPostMultMat4( TUX, ROT_lon );
+		sgPostMultMat4( TUX, POS );
+
+		sgCoord obj_pos;
+		sgSetCoord( &obj_pos, TUX );
+		ssgTransform *obj_trans = new ssgTransform;
+		obj_trans->setTransform( &obj_pos );
+
+		// wire the scene graph together
+		obj_trans->addKid( obj_model );
+		new_tile->addKid( obj_trans );
+	    } else {
+		SG_LOG( SG_TERRAIN, SG_ALERT,
+			"Unknown token " << token << " in "
+			<< index_path.str() );
+		in >> ::skipws;
 	    }
 	}
     }
@@ -414,6 +472,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     }
     /* end of ground light section */
 }
+
 
 void
 FGTileEntry::add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground )
