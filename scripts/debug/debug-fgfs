@@ -53,7 +53,7 @@ while true; do
 	-i)	cmd=""; gdb="" ;;
 	-b)	gdb="" ;;
 	-x)	extra="--single-step=yes --optimise=no --cleanup=no --dump-error=1" ;;
-	-c)	core=$(ls -t core*|head -1)
+	-c)	core=$(ls -t core* 2>/dev/null|head -1)
 		if test -z $core; then
 			echo "$0: there's no core file"
 			exit 1
@@ -66,7 +66,7 @@ while true; do
 done
 
 if ! test -e "$fgfs"; then
-	echo "$0: there's no fgfs exectuable $fgfs"
+	echo "$0: there's no fgfs executable $fgfs"
 	exit 2
 fi
 

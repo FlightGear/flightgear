@@ -4,7 +4,7 @@
 # {
 #     name_of_suppression
 #     kind: one of Param Value1 Value2 Value4 Value8
-#               Cond Free Addr1 Addr2 Addr4 Addr8
+#               Cond Free PThread Addr1 Addr2 Addr4 Addr8
 #     (if Param: name of system call param, if Free: name of free-ing fn)
 #     caller0 name, or /name/of/so/file.so
 #     caller1 name, or ditto
@@ -89,3 +89,12 @@
     Cond
     fun:removeEntity__7ssgListUi
 }
+
+{
+    zlib/pthread-bug(PThread)
+    PThread
+    fun:pthread_error
+    fun:__pthread_mutex_destroy
+    fun:_IO_default_finish
+}
+

@@ -2,3 +2,4 @@ Makefile
 Makefile.in
 core*
 fgfs.supp
+.gdbinit
