@@ -1,11 +1,12 @@
 EXTRA_DIST = process-dem.pl
 
 SUBDIRS = \
+	DEM \
 	Areas \
 	AssemTris \
-	Clipper \
 	DEM \
 	Polygon \
+	Clipper \
 	Dem2node \
 	DemInfo \
 	DemRaw2ascii \
