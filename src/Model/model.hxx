@@ -293,6 +293,3 @@ private:
 };
 
 #endif // __MODEL_HXX
-
-
-
