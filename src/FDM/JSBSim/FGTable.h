@@ -105,7 +105,7 @@ private:
   int colCounter;
   int rowCounter;
   double** Allocate(void);
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -198,7 +198,7 @@ private:
   FGColumnVector3 vForces;
   FGColumnVector3 vMoments;
   FGColumnVector3 vXYZtank;
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

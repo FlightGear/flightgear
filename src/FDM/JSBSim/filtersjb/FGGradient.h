@@ -66,7 +66,7 @@ public:
 
 private:
   FGConfigFile* AC_cfg;
-  void Debug(void);
+  void Debug(int from);
 };
 
 #endif

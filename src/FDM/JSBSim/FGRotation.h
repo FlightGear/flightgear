@@ -129,7 +129,7 @@ private:
 
   void GetState(void);
 
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

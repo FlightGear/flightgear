@@ -111,7 +111,7 @@ class FGFactorGroup: public FGCoefficient {
     typedef vector<FGCoefficient*> CoeffArray;
     CoeffArray sum;
     double SDtotal;
-    void Debug(void);
+    void Debug(int from);
 };
     
 #endif 

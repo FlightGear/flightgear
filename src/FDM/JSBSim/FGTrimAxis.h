@@ -167,7 +167,7 @@ private:
   
   double computeHmgt(void);
   
-  void Debug(void);
+  void Debug(int from);
 };
 
 #endif

@@ -203,7 +203,7 @@ double FGAerodynamics::GetLoD(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAerodynamics::Debug(void)
+void FGAerodynamics::Debug(int from)
 {
     //TODO: Add your source code here
 }

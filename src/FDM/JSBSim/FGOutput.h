@@ -105,7 +105,7 @@ private:
   enum {otNone, otCSV, otTab, otSocket, otTerminal, otUnknown} Type;
   ofstream datafile;
   FGfdmSocket* socket;
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -156,7 +156,7 @@ private:
   double HP;
   double combustion_efficiency;
 
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

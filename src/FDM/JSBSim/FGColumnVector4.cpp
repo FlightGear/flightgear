@@ -273,7 +273,7 @@ FGColumnVector4& FGColumnVector4::operator<<(const double ff)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGColumnVector4::Debug(void)
+void FGColumnVector4::Debug(int from)
 {
     //TODO: Add your source code here
 }

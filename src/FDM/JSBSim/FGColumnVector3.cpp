@@ -285,7 +285,7 @@ FGColumnVector3& FGColumnVector3::operator<<(const double ff)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGColumnVector3::Debug(void)
+void FGColumnVector3::Debug(int from)
 {
     //TODO: Add your source code here
 }

@@ -82,7 +82,7 @@ private:
   int Rows;
   eParam ScheduledBy;
 
-  void Debug(void);
+  void Debug(int from);
 };
 
 #endif

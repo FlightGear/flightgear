@@ -54,18 +54,11 @@ INCLUDES
 #ifdef FGFS
 #include <simgear/compiler.h>
 #include STL_IOSTREAM
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <ctime>
-#  else
-#    include <time.h>
-#  endif
 #else
 #  if defined(sgi) && !defined(__GNUC__)
 #    include <iostream.h>
-#    include <time.h>
 #  else
 #    include <iostream>
-#    include <ctime>
 #  endif
 #endif
 
@@ -151,6 +144,10 @@ int main(int argc, char** argv)
       exit(-1);
     }
   }
+
+//
+// RUN loop. MESSAGES are read inside the Run() loop and output as necessary.
+//
 
   FGJSBBase::Message* msg;
   while (FDMExec->Run()) {

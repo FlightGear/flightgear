@@ -268,6 +268,7 @@ private:
   string name;
   string sSteerType;
   string sBrakeGroup;
+  string Retractable;
   
   BrakeGroup eBrakeGrp;
   SteerType  eSteerType;
@@ -282,7 +283,7 @@ private:
   FGMassBalance* MassBalance;
 
   void Report(void);
-  void Debug(void);
+  void Debug(int from);
 };
 
 #include "FGAircraft.h"

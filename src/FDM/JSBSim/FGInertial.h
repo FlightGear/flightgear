@@ -83,7 +83,6 @@ public:
   double RefRadius(void) {return RadiusReference;}
 
 private:
-  void Debug(void);
   FGColumnVector3 vOmegaLocal;
   FGColumnVector3 vForces;
   FGColumnVector3 vRadius;
@@ -93,6 +92,7 @@ private:
   double RadiusReference;
   double RotationRate;
   double GM;
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

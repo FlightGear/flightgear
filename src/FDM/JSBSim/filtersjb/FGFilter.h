@@ -115,7 +115,7 @@ private:
   double PreviousOutput1;
   double PreviousOutput2;
   FGConfigFile* AC_cfg;
-  void Debug(void);
+  void Debug(int from);
 };
 
 #endif

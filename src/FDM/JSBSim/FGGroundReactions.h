@@ -69,7 +69,7 @@ class FGGroundReactions : public FGModel
 {
 public:
   FGGroundReactions(FGFDMExec*);
-  ~FGGroundReactions() {};
+  ~FGGroundReactions(void);
 
   bool Run(void);
   bool Load(FGConfigFile* AC_cfg);
@@ -93,7 +93,7 @@ private:
   FGColumnVector3 vMaxStaticGrip;
   FGColumnVector3 vMaxMomentResist;
 
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

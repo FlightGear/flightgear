@@ -115,7 +115,7 @@ protected:
   eParam OutputIdx;
   double Output;
   bool IsOutput;
-  virtual void Debug(void);
+  virtual void Debug(int from);
 };
 
 #include "../FGFCS.h"

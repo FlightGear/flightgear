@@ -262,7 +262,7 @@ protected:
   
   static queue <Message*> Messages;
 
-  virtual void Debug(void) {};
+  virtual void Debug(int from) {};
 
   static short debug_lvl;
   static unsigned int frame;

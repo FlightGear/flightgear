@@ -232,7 +232,7 @@ private:
   bool ReadUndercarriage(FGConfigFile*);
   bool ReadPrologue(FGConfigFile*);
   bool ReadOutput(FGConfigFile*);
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

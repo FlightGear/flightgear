@@ -92,7 +92,7 @@ protected:
   double Thrust;
   double PowerRequired;
   double deltaT;
-  virtual void Debug(void);
+  virtual void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

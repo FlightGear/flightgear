@@ -146,7 +146,7 @@ private:
   FGColumnVector3 vLastFs;
   FGColumnVector3 vDXYZcg;
 
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

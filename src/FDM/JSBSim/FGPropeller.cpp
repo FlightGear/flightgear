@@ -45,6 +45,10 @@ static const char *IdHdr = ID_PROPELLER;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+// This class currently makes certain assumptions when calculating torque and 
+// p-factor. That is, that the axis of rotation is the X axis of the aircraft -
+// not just the X-axis of the engine/propeller. This may or may not work for a 
+// helicopter.
 
 FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(exec)
 {
@@ -90,24 +94,11 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
     }
   }
 
-  if (debug_lvl > 0) {
-    cout << "\n    Propeller Name: " << Name << endl;
-    cout << "      IXX = " << Ixx << endl;
-    cout << "      Diameter = " << Diameter << " ft." << endl;
-    cout << "      Number of Blades  = " << numBlades << endl;
-    cout << "      Minimum Pitch  = " << MinPitch << endl;
-    cout << "      Maximum Pitch  = " << MaxPitch << endl;
-    cout << "      Thrust Coefficient: " <<  endl;
-    cThrust->Print();
-    cout << "      Power Coefficient: " <<  endl;
-    cPower->Print();
-  }
-
   Type = ttPropeller;
   RPM = 0;
   vTorque.InitMatrix();
 
-  if (debug_lvl & 2) cout << "Instantiated: FGPropeller" << endl;
+  Debug(0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,7 +107,7 @@ FGPropeller::~FGPropeller()
 {
   if (cThrust)    delete cThrust;
   if (cPower)     delete cPower;
-  if (debug_lvl & 2) cout << "Destroyed:    FGPropeller" << endl;
+  Debug(1);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -224,8 +215,62 @@ double FGPropeller::GetPowerRequired(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropeller::Debug(void)
+FGColumnVector3 FGPropeller::GetPFactor()
 {
-    //TODO: Add your source code here
+  double px=0.0, py, pz;
+
+  py = Thrust * Sense * (GetActingLocationY() - GetLocationY()) / 12.0;
+  pz = Thrust * Sense * (GetActingLocationZ() - GetLocationZ()) / 12.0;
+
+  return FGColumnVector3(px, py, pz);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//    The bitmasked value choices are as follows:
+//    unset: In this case (the default) JSBSim would only print
+//       out the normally expected messages, essentially echoing
+//       the config files as they are read. If the environment
+//       variable is not set, debug_lvl is set to 1 internally
+//    0: This requests JSBSim not to output any messages
+//       whatsoever.
+//    1: This value explicity requests the normal JSBSim
+//       startup messages
+//    2: This value asks for a message to be printed out when
+//       a class is instantiated
+//    4: When this value is set, a message is displayed when a
+//       FGModel object executes its Run() method
+//    8: When this value is set, various runtime state variables
+//       are printed out periodically
+//    16: When set various parameters are sanity checked and
+//       a message is printed out when they go out of bounds
+
+void FGPropeller::Debug(int from)
+{
+  if (debug_lvl <= 0) return;
+
+  if (debug_lvl & 1) { // Standard console startup message output
+    if (from == 0) { // Constructor
+      cout << "\n    Propeller Name: " << Name << endl;
+      cout << "      IXX = " << Ixx << endl;
+      cout << "      Diameter = " << Diameter << " ft." << endl;
+      cout << "      Number of Blades  = " << numBlades << endl;
+      cout << "      Minimum Pitch  = " << MinPitch << endl;
+      cout << "      Maximum Pitch  = " << MaxPitch << endl;
+      cout << "      Thrust Coefficient: " <<  endl;
+      cThrust->Print();
+      cout << "      Power Coefficient: " <<  endl;
+      cPower->Print();
+    }
+  }
+  if (debug_lvl & 2 ) { // Instantiation/Destruction notification
+    if (from == 0) cout << "Instantiated: FGPropeller" << endl;
+    if (from == 1) cout << "Destroyed:    FGPropeller" << endl;
+  }
+  if (debug_lvl & 4 ) { // Run() method entry print for FGModel-derived objects
+  }
+  if (debug_lvl & 8 ) { // Runtime state variables
+  }
+  if (debug_lvl & 16) { // Sanity checking
+  }
 }
 

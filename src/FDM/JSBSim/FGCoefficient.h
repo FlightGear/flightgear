@@ -126,6 +126,9 @@ private:
   string description;
   string name;
   string method;
+  string multparms;
+  string multparmsRow;
+  string multparmsCol;
   double Value(double, double);
   double Value(double);
   double Value(void);
@@ -148,7 +151,7 @@ private:
   FGAuxiliary*    Auxiliary;
   FGOutput*       Output;
 
-  virtual void Debug(void);
+  virtual void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -134,7 +134,7 @@ private:
   bool     CommentsOn;
   bool     Opened;
   unsigned int      CurrentIndex;
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

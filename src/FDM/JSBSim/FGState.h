@@ -340,8 +340,8 @@ private:
 
   typedef map<string, eParam> CoeffMap;
   CoeffMap coeffdef;
-  void Debug(void);
   int ActiveEngine;
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

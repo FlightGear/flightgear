@@ -82,7 +82,7 @@ private:
   double OutputPos;
   bool  InTransit;
 
-  void Debug(void);
+  void Debug(int from);
 };
 
 #endif

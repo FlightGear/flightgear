@@ -213,7 +213,7 @@ void FGAuxiliary::GetState(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAuxiliary::Debug(void)
+void FGAuxiliary::Debug(int from)
 {
     //TODO: Add your source code here
 }

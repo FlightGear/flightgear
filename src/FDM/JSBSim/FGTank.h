@@ -95,13 +95,14 @@ public:
 
 private:
   TankType Type;
+  string type;
   double X, Y, Z;
   double Capacity;
   double Radius;
   double PctFull;
   double Contents;
   bool  Selected;
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

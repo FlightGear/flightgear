@@ -234,7 +234,7 @@ protected:
   FGOutput*       Output;
 
   vector <int> SourceTanks;
-  void Debug(void);
+  virtual void Debug(int from);
 };
 
 #include "FGState.h"

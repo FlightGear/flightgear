@@ -426,7 +426,7 @@ private:
   double GearCmd,GearPos;
 
   vector <FGFCSComponent*> Components;
-  void Debug(void);
+  void Debug(int from);
 };
 
 #include "FGState.h"

@@ -176,7 +176,7 @@ private:
 
   void Calculate(double altitude);
   void Turbulence(void);
-  void Debug(void);
+  void Debug(int from);
 };
 
 /******************************************************************************/

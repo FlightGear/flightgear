@@ -106,6 +106,9 @@ public:
       @param rpm the rotational velocity of the propeller */
   void SetRPM(double rpm) {RPM = rpm;}
 
+  /// Returns true of this propeller is variable pitch
+  bool IsVPitch(void) {return MaxPitch != MinPitch;}
+
   /** This commands the pitch of the blade to change to the value supplied.
       This call is meant to be issued either from the cockpit or by the flight
       control system (perhaps to maintain constant RPM for a constant-speed
@@ -114,9 +117,14 @@ public:
       indices to the power and thrust tables for variable-pitch propellers.
       @param pitch the pitch of the blade in degrees. */
   void SetPitch(double pitch) {Pitch = pitch;}
-  
+
+  /// Sets the P-Factor constant
   void SetPFactor(double pf) {P_Factor = pf;}
-  
+
+  /** Sets the rotation sense of the propeller.
+      @param s this value should be +/- 1 ONLY. +1 indicates clockwise rotation as
+               viewed by someone standing behind the engine looking forward into
+               the direction of flight. */
   void SetSense(double s) { Sense = s;}
 
   /// Retrieves the pitch of the propeller in degrees.
@@ -146,6 +154,7 @@ public:
       would be slowed.
       @return the thrust in pounds */
   double Calculate(double PowerAvailable);
+  FGColumnVector3 GetPFactor(void);
 
 private:
   int   numBlades;
@@ -163,7 +172,7 @@ private:
   FGColumnVector3 vTorque;
   FGTable *cThrust;
   FGTable *cPower;
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

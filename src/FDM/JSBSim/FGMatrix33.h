@@ -128,7 +128,7 @@ protected:
 private:
   void TransposeSquare(void);
   unsigned int rowCtr, colCtr;
-  void Debug(void);
+  void Debug(int from);
 };
 
 #endif

@@ -316,8 +316,6 @@ protected:
   FGColumnVector3 vMn;
   FGColumnVector3 vH;
   
-  virtual void Debug(void);
-
 private:
   FGColumnVector3 vFb;
   FGColumnVector3 vM;
@@ -327,6 +325,8 @@ private:
   FGColumnVector3 vSense;
 
   FGMatrix33 mT;
+
+  virtual void Debug(int from);
 };
 
 #endif

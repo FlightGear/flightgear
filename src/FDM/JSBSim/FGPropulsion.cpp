@@ -61,7 +61,6 @@ static const char *IdHdr = ID_PROPULSION;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-
 FGPropulsion::FGPropulsion(FGFDMExec* exec) : FGModel(exec)
 {
   Name = "FGPropulsion";
@@ -69,7 +68,7 @@ FGPropulsion::FGPropulsion(FGFDMExec* exec) : FGModel(exec)
   numTanks = numEngines = numThrusters = 0;
   numOxiTanks = numFuelTanks = 0;
 
-  if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
+  Debug(0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,7 +77,7 @@ FGPropulsion::~FGPropulsion()
 {
   for (unsigned int i=0; i<Engines.size(); i++) delete Engines[i];
   Engines.clear();
-  if (debug_lvl & 2) cout << "Destroyed:    FGPropulsion" << endl;
+  Debug(1);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -148,7 +147,6 @@ bool FGPropulsion::GetSteadyState(void)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 bool FGPropulsion::ICEngineStart(void)
 {
@@ -318,9 +316,9 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
         Thrusters[numThrusters]->SetAnglesToBody(0, Pitch, Yaw);
         if (thrType == "FG_PROPELLER" && P_Factor > 0.001) {
           ((FGPropeller*)Thrusters[numThrusters])->SetPFactor(P_Factor);
-          cout << "      P-Factor: " << P_Factor << endl;
+          if (debug_lvl > 0) cout << "      P-Factor: " << P_Factor << endl;
           ((FGPropeller*)Thrusters[numThrusters])->SetSense(Sense);
-          cout << "      Sense: " << Sense <<  endl;
+          if (debug_lvl > 0) cout << "      Sense: " << Sense <<  endl;
         }
         Thrusters[numThrusters]->SetdeltaT(dt*rate);
         Thrusters[numThrusters]->SetThrusterNumber(numThrusters);
@@ -373,6 +371,7 @@ string FGPropulsion::GetPropulsionStrings(void)
 
     PropulsionStrings += ", ";
 
+    FGPropeller* Propeller = (FGPropeller*)Thrusters[i];
     switch(Thrusters[i]->GetType()) {
     case FGThruster::ttNozzle:
       PropulsionStrings += (Thrusters[i]->GetName() + "_Thrust[" + buffer + "]");
@@ -381,7 +380,12 @@ string FGPropulsion::GetPropulsionStrings(void)
       break;
     case FGThruster::ttPropeller:
       PropulsionStrings += (Thrusters[i]->GetName() + "_Torque[" + buffer + "], ");
+      PropulsionStrings += (Thrusters[i]->GetName() + "_PFactor_Roll[" + buffer + "], ");
+      PropulsionStrings += (Thrusters[i]->GetName() + "_PFactor_Pitch[" + buffer + "], ");
+      PropulsionStrings += (Thrusters[i]->GetName() + "_PFactor_Yaw[" + buffer + "], ");
       PropulsionStrings += (Thrusters[i]->GetName() + "_Thrust[" + buffer + "], ");
+      if (Propeller->IsVPitch())
+        PropulsionStrings += (Thrusters[i]->GetName() + "_Pitch[" + buffer + "], ");
       PropulsionStrings += (Thrusters[i]->GetName() + "_RPM[" + buffer + "]");
       break;
     default:
@@ -427,9 +431,16 @@ string FGPropulsion::GetPropulsionValues(void)
     case FGThruster::ttRotor:
       break;
     case FGThruster::ttPropeller:
-      PropulsionValues += (string(gcvt(((FGPropeller*)Thrusters[i])->GetTorque(), 10, buff)) + ", ");
-      PropulsionValues += (string(gcvt(((FGPropeller*)Thrusters[i])->GetThrust(), 10, buff)) + ", ");
-      PropulsionValues += (string(gcvt(((FGPropeller*)Thrusters[i])->GetRPM(), 10, buff)));
+      FGPropeller* Propeller = (FGPropeller*)Thrusters[i];
+      FGColumnVector3 vPFactor = Propeller->GetPFactor();
+      PropulsionValues += string(gcvt(Propeller->GetTorque(), 10, buff)) + ", ";
+      PropulsionValues += string(gcvt(vPFactor(eRoll), 10, buff)) + ", ";
+      PropulsionValues += string(gcvt(vPFactor(ePitch), 10, buff)) + ", ";
+      PropulsionValues += string(gcvt(vPFactor(eYaw), 10, buff)) + ", ";
+      PropulsionValues += string(gcvt(Propeller->GetThrust(), 10, buff)) + ", ";
+      if (Propeller->IsVPitch())
+        PropulsionValues += string(gcvt(Propeller->GetPitch(), 10, buff)) + ", ";
+      PropulsionValues += string(gcvt(Propeller->GetRPM(), 10, buff));
       break;
     }
   }
@@ -532,9 +543,42 @@ double FGPropulsion::GetTanksIxy(const FGColumnVector3& vXYZcg)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//    The bitmasked value choices are as follows:
+//    unset: In this case (the default) JSBSim would only print
+//       out the normally expected messages, essentially echoing
+//       the config files as they are read. If the environment
+//       variable is not set, debug_lvl is set to 1 internally
+//    0: This requests JSBSim not to output any messages
+//       whatsoever.
+//    1: This value explicity requests the normal JSBSim
+//       startup messages
+//    2: This value asks for a message to be printed out when
+//       a class is instantiated
+//    4: When this value is set, a message is displayed when a
+//       FGModel object executes its Run() method
+//    8: When this value is set, various runtime state variables
+//       are printed out periodically
+//    16: When set various parameters are sanity checked and
+//       a message is printed out when they go out of bounds
 
-void FGPropulsion::Debug(void)
+void FGPropulsion::Debug(int from)
 {
-    //TODO: Add your source code here
+  if (debug_lvl <= 0) return;
+
+  if (debug_lvl & 1) { // Standard console startup message output
+    if (from == 0) { // Constructor
+
+    }
+  }
+  if (debug_lvl & 2 ) { // Instantiation/Destruction notification
+    if (from == 0) cout << "Instantiated: FGPropulsion" << endl;
+    if (from == 1) cout << "Destroyed:    FGPropulsion" << endl;
+  }
+  if (debug_lvl & 4 ) { // Run() method entry print for FGModel-derived objects
+  }
+  if (debug_lvl & 8 ) { // Runtime state variables
+  }
+  if (debug_lvl & 16) { // Sanity checking
+  }
 }
 

@@ -63,9 +63,9 @@ public:
   bool Run(void);
 
 private:
-  void Debug(void);
   FGFCS* fcs;
   FGConfigFile* AC_cfg;
+  void Debug(int from);
 };
 
 #endif

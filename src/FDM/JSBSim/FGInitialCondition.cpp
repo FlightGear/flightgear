@@ -366,6 +366,8 @@ void FGInitialCondition::calcWindUVW(void) {
         wnorth=whead*cos(psi) + wcross*cos(psi+M_PI/2);
         weast=whead*sin(psi) + wcross*sin(psi+M_PI/2);
       break;
+      case setwned:
+      break;
     }    
     uw=wnorth*ctheta*cpsi +
        weast*ctheta*spsi -

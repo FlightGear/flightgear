@@ -80,7 +80,7 @@ private:
   vector <int> InputTypes;
   bool clip;
   double clipmin,clipmax;
-  void Debug(void);
+  void Debug(int from);
 };
 
 #endif

@@ -377,7 +377,7 @@ bool FGAircraft::ReadOutput(FGConfigFile* AC_cfg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::Debug(void)
+void FGAircraft::Debug(int from)
 {
     //TODO: Add your source code here
 }

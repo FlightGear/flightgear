@@ -108,7 +108,7 @@ private:
   vector <FGColumnVector3> PointMassLoc;
   vector <double> PointMassWeight;
   FGColumnVector3 PointMassCG;
-  void Debug(void);
+  void Debug(int from);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
