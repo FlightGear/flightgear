@@ -118,6 +118,11 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : Exec(fdmex)
 
   vLocalGear = State->GetTb2l() * vWhlBodyVec;
 
+  compressLength  = 0.0;
+  compressSpeed   = 0.0;
+  brakePct        = 0.0;
+  maxCompLen      = 0.0;
+
   Debug(0);
 }
 
@@ -261,12 +266,12 @@ FGColumnVector3& FGLGear::Force(void)
 
       switch (eBrakeGrp) {
       case bgLeft:
-        SteerGain = -0.10;
+        SteerGain = -1.0;
         BrakeFCoeff = rollingFCoeff*(1.0 - FCS->GetBrake(bgLeft)) +
                                               staticFCoeff*FCS->GetBrake(bgLeft);
         break;
       case bgRight:
-        SteerGain = -0.10;
+        SteerGain = -1.0;
         BrakeFCoeff = rollingFCoeff*(1.0 - FCS->GetBrake(bgRight)) +
                                              staticFCoeff*FCS->GetBrake(bgRight);
         break;
@@ -276,15 +281,15 @@ FGColumnVector3& FGLGear::Force(void)
                                              staticFCoeff*FCS->GetBrake(bgCenter);
         break;
       case bgNose:
-        SteerGain = 0.10;
+        SteerGain = 1.0;
         BrakeFCoeff = rollingFCoeff;
         break;
       case bgTail:
-        SteerGain = -0.10;
+        SteerGain = -1.0;
         BrakeFCoeff = rollingFCoeff;
         break;
       case bgNone:
-        SteerGain = -0.10;
+        SteerGain = -1.0;
         BrakeFCoeff = rollingFCoeff;
         break;
       default:
@@ -413,7 +418,7 @@ FGColumnVector3& FGLGear::Force(void)
         vMoment.Magnitude() > 5000000000.0 ||
         SinkRate > 1.4666*30)
     {
-      PutMessage("Crash Detected");
+      PutMessage("Crash Detected: Simulation FREEZE.");
       Exec->Freeze();
     }
   } 
