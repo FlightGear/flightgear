@@ -73,7 +73,9 @@ typedef struct {
    list<string> wire_objects;     // List of wire object names
    list<string> catapult_objects; // List of catapult object names
    double radius;             // used by ship ojects, in feet
-    
+   double x_offset;           // used by ship ojects, in meters
+   double y_offset;           // used by ship ojects, in meters
+   double z_offset;           // used by ship ojects, in meters    
 } FGAIModelEntity;
 
 
@@ -102,6 +104,10 @@ public:
     void setLongitude( double longitude );
     void setBank( double bank );
     void setRadius ( double radius );
+    void setXoffset( double x_offset );
+    void setYoffset( double y_offset );
+    void setZoffset( double z_offset );
+
 
     void* getID();
     void setDie( bool die );
@@ -122,6 +128,12 @@ protected:
     double vs;          // vertical speed, feet per minute  
     double turn_radius_ft; // turn radius ft at 15 kts rudder angle 15 degrees
 
+    // these describe the flols 
+    Point3D flolspos; // WGS84 lat & lon in degrees, elev above sea-level in meters
+    double flols_x_offset;	// longitudinal distance, in meters
+    double flols_y_offset;	// lateral distance, in meters
+    double flols_z_offset;	// height, in meters
+    
     double ft_per_deg_lon;
     double ft_per_deg_lat;
 
@@ -223,6 +235,17 @@ inline void FGAIBase::setRadius( double radius ) {
   turn_radius_ft = radius;
 }
 
+inline void FGAIBase::setXoffset( double x_offset ) {
+  flols_x_offset = x_offset;
+}
+
+inline void FGAIBase::setYoffset( double y_offset ) {
+  flols_y_offset = y_offset;
+}
+
+inline void FGAIBase::setZoffset( double z_offset ) {
+  flols_z_offset = z_offset;
+}
 inline void FGAIBase::setHeading( double heading ) {
   hdg = tgt_heading = heading;
 }
@@ -250,6 +273,8 @@ inline bool FGAIBase::getDie() { return delete_me; }
 inline FGAIBase::object_type FGAIBase::getType() { return _otype; }
 
 inline void* FGAIBase::getID() { return this; }
+
+
 
 #endif	// _FG_AIBASE_HXX
 

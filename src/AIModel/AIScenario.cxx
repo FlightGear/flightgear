@@ -40,24 +40,32 @@ FGAIScenario::FGAIScenario(string &filename)
 {
   int i;
   SGPath path( globals->get_fg_root() );
-  //cout << "/Data/AI/" << filename << endl;
+  
+  cout << "/Data/AI/" << filename << endl;
+  
   path.append( ("/Data/AI/" + filename + ".xml").c_str() );
   SGPropertyNode root;
   readProperties(path.str(), &root);
-  //cout <<"path " << path.str() << endl;
+  
+  cout <<"path " << path.str() << endl;
+  
   try {
       readProperties(path.str(), &root);
   } catch (const sg_exception &e) {
       SG_LOG(SG_GENERAL, SG_ALERT,
        "Incorrect path specified for AI scenario: ");
-       //cout << path.str() << endl;
+       
+       cout << path.str() << endl;
+      
       return;
   }
 
   entries.clear();
   SGPropertyNode * node = root.getNode("scenario");
   for (i = 0; i < node->nChildren(); i++) { 
-     //cout << "Reading entity data entry " << i << endl;        
+     
+     cout << "Reading entity data entry " << i << endl;        
+     
      SGPropertyNode * entry_node = node->getChild(i);
 
      FGAIModelEntity* en = new FGAIModelEntity;
@@ -88,12 +96,10 @@ FGAIScenario::FGAIScenario(string &filename)
      en->cd              = entry_node->getDoubleValue("cd", 0.029); 
      en->mass            = entry_node->getDoubleValue("mass", 0.007); 
      en->radius          = entry_node->getDoubleValue("turn-radius-ft", 2000);
-
- /*    en->name            = entry_node->getStringValue("name", "");
-    en->x_pivot         = entry_node->getDoubleValue("x-pivot", 0.0); 
-     en->y_pivot         = entry_node->getDoubleValue("y-pivot", 0.0); 
-     en->z_pivot         = entry_node->getDoubleValue("z-pivot", 0.0); */
-     
+     en->x_offset        = entry_node->getDoubleValue("x-offset-m", 5.5); 
+     en->y_offset        = entry_node->getDoubleValue("y-offset-m", 1.0); 
+     en->z_offset        = entry_node->getDoubleValue("z-offset-m", 1.0); 
+ /*  en->name            = entry_node->getStringValue("name", "");*/
      en->wire_objects     = getAllNodeVals("wire", entry_node);
      en->catapult_objects = getAllNodeVals("catapult", entry_node);
      en->solid_objects    = getAllNodeVals("solid", entry_node);

@@ -24,6 +24,12 @@
 #include <string>
 #include <vector>
 
+#include <simgear/math/point3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
+#include <math.h>
+#include <Main/util.hxx>
+#include <Main/viewer.hxx>
+
 #include "AICarrier.hxx"
 
 
@@ -50,6 +56,7 @@ void FGAICarrier::getVelocityWrtEarth(sgVec3 v) {
 }
 
 void FGAICarrier::update(double dt) {
+   UpdateFlols(dt);
    FGAIShip::update(dt);
 
    // Update the velocity information stored in those nodes.
@@ -89,7 +96,23 @@ bool FGAICarrier::init() {
 
    return true;
 }
+void FGAICarrier::bind() {
+   FGAIBase::bind();
 
+   props->tie("controls/flols/source-lights",
+                SGRawValuePointer<int>(&source));
+   props->tie("controls/flols/distance-m",
+                SGRawValuePointer<double>(&dist));                            
+   props->setBoolValue("controls/flols/cut-lights", false);
+   props->setBoolValue("controls/flols/wave-off-lights", false);
+   props->setBoolValue("controls/flols/cond-datum-lights", true);  
+   }
+
+void FGAICarrier::unbind() {
+    FGAIBase::unbind();
+    props->untie("controls/flols/source-lights");
+}
+   
 void FGAICarrier::mark_nohot(ssgEntity* e) {
   if (e->isAKindOf(ssgTypeBranch())) {
     ssgBranch* br = (ssgBranch*)e;
@@ -183,7 +206,7 @@ bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects) {
           SG_LOG(SG_GENERAL, SG_ALERT,
                  "AICarrier: Found a cat not modelled with exactly one line!");
         }
-        // Now some special code to make shure the cat points in the right
+        // Now some special code to make sure the cat points in the right
         // direction. The 0 index must be the backward end, the 1 index
         // the forward end.
         // Forward is positive x-direction in our 3D model, also the model
@@ -207,5 +230,164 @@ bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects) {
   }
   return found;
 }
+
+void FGAICarrier::UpdateFlols( double dt) {
+/*    cout << "x_offset " << flols_x_offset 
+          << " y_offset " << flols_y_offset 
+          << " z_offset " << flols_z_offset << endl;
+        
+     cout << "roll " << roll 
+          << " heading " << hdg
+          << " pitch " << pitch << endl;
+        
+     cout << "carrier lon " << pos[0] 
+          << " lat " <<  pos[1]
+          << " alt " << pos[2] << endl;*/
+        
+// set the Flols intitial position to the carrier position
+ 
+  flolspos = pos;
+  
+/*  cout << "flols lon " << flolspos[0] 
+          << " lat " <<  flolspos[1]
+          << " alt " << flolspos[2] << endl;*/
+          
+// set the offsets in metres
+
+/*  cout << "flols_x_offset " << flols_x_offset << endl
+       << "flols_y_offset " << flols_y_offset << endl
+       << "flols_z_offset " << flols_z_offset << endl;*/
+     
+  in[0] = flols_x_offset;  
+  in[1] = flols_y_offset;
+  in[2] = flols_z_offset;    
+
+// pre-process the trig functions
+
+    cosRx = cos(roll * SG_DEGREES_TO_RADIANS);
+    sinRx = sin(roll * SG_DEGREES_TO_RADIANS);
+    cosRy = cos(pitch * SG_DEGREES_TO_RADIANS);
+    sinRy = sin(pitch * SG_DEGREES_TO_RADIANS);
+    cosRz = cos(hdg * SG_DEGREES_TO_RADIANS);
+    sinRz = sin(hdg * SG_DEGREES_TO_RADIANS);
+
+// set up the transform matrix
+
+    trans[0][0] =  cosRy * cosRz;
+    trans[0][1] =  -1 * cosRx * sinRz + sinRx * sinRy * cosRz ;
+    trans[0][2] =  sinRx * sinRz + cosRx * sinRy * cosRz;
+
+    trans[1][0] =  cosRy * sinRz;
+    trans[1][1] =  cosRx * cosRz + sinRx * sinRy * sinRz;
+    trans[1][2] =  -1 * sinRx * cosRx + cosRx * sinRy * sinRz;
+
+    trans[2][0] =  -1 * sinRy;
+    trans[2][1] =  sinRx * cosRy;
+    trans[2][2] =  cosRx * cosRy;
+
+// multiply the input and transform matrices
+
+   out[0] = in[0] * trans[0][0] + in[1] * trans[0][1] + in[2] * trans[0][2];
+   out[1] = in[0] * trans[1][0] + in[1] * trans[1][1] + in[2] * trans[1][2];
+   out[2] = in[0] * trans[2][0] + in[1] * trans[2][1] + in[2] * trans[2][2];
+ 
+// convert meters to ft to degrees of latitude
+   out[0] = (out[0] * 3.28083989501) /(366468.96 - 3717.12 * cos(flolspos[0] * SG_DEGREES_TO_RADIANS));
+
+// convert meters to ft to degrees of longitude
+   out[1] = (out[1] * 3.28083989501)/(365228.16 * cos(flolspos[1] * SG_DEGREES_TO_RADIANS));
+
+//print out the result
+/*   cout  << "lat adjust deg" << out[0] 
+        << " lon adjust deg " << out[1] 
+        << " alt adjust m " << out[2]  << endl;*/
+
+// adjust Flols position    
+   flolspos[0] += out[0];
+   flolspos[1] += out[1];
+   flolspos[2] += out[2];   
+
+// convert flols position to cartesian co-ordinates 
+
+  sgGeodToCart(flolspos[1] * SG_DEGREES_TO_RADIANS,
+               flolspos[0] * SG_DEGREES_TO_RADIANS,
+               flolspos[2] , flolsXYZ );
+
+
+/*  cout << "flols X " << flolsXYZ[0] 
+       << " Y " <<  flolsXYZ[1]
+       << " Z " << flolsXYZ[2] << endl; 
+
+// check the conversion
+         
+  sgCartToGeod(flolsXYZ, &lat, &lon, &alt);
+ 
+  cout << "flols check lon " << lon   
+        << " lat " << lat 
+        << " alt " << alt << endl;      */
+               
+//get the current position of the pilot's eyepoint (cartesian cordinates)
+
+  sgdCopyVec3( eyeXYZ, globals->get_current_view()->get_absolute_view_pos() );
+  
+ /* cout  << "Eye_X "  << eyeXYZ[0] 
+        << " Eye_Y " << eyeXYZ[1] 
+        << " Eye_Z " << eyeXYZ[2]  << endl; */
+        
+  sgCartToGeod(eyeXYZ, &lat, &lon, &alt);
+  
+  eyepos[0] = lon * SG_RADIANS_TO_DEGREES;
+  eyepos[1] = lat * SG_RADIANS_TO_DEGREES;
+  eyepos[2] = alt;
+  
+/*  cout << "eye lon " << eyepos[0]
+        << " eye lat " << eyepos[1] 
+        << " eye alt " << eyepos[2] << endl; */
+
+//calculate the ditance from eye to flols
+      
+  dist = sgdDistanceVec3( flolsXYZ, eyeXYZ );
+  
+  //cout << "distance " << dist << endl; 
+  
+  if ( dist < 5000 ) {
+       // calculate height above FLOLS 
+       double y = eyepos[2] - flolspos[2];
+       
+       // calculate the angle from the flols to eye
+       // above the horizontal
+       double angle;
+       if ( dist != 0 ) {
+           angle = asin( y / dist );
+         } else {
+           angle = 0.0;
+         }
+        
+       angle *= SG_RADIANS_TO_DEGREES;
+        
+      
+  // cout << " height " << y << " angle " << angle ;
+
+// set the value of source  
+        
+       if ( angle <= 4.35 && angle > 4.01 )
+         { source = 1; }
+         else if ( angle <= 4.01 && angle > 3.670 )
+         { source = 2; }
+         else if ( angle <= 3.670 && angle > 3.330 )
+         { source = 3; }
+         else if ( angle <= 3.330 && angle > 2.990 )
+         { source = 4; }
+         else if ( angle <= 2.990 && angle > 2.650 )
+         { source = 5; }
+         else if ( angle <= 2.650  )
+         { source = 6; }
+         else
+         { source = 0; }
+         
+//         cout << " source " << source << endl;
+                     
+   }   
+} // end updateflols
 
 int FGAICarrierHardware::unique_id = 1;

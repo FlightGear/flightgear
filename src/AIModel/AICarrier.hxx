@@ -80,6 +80,9 @@ public:
         void setCatapultObjects(const list<string>& catapult_objects);
 
 	void getVelocityWrtEarth(sgVec3 v);
+	virtual void bind();
+    virtual void unbind();
+    void UpdateFlols ( double dt );
 	
 	bool init();
 
@@ -97,6 +100,25 @@ private:
 
 	// Velocity wrt earth.
 	sgVec3 vel_wrt_earth;
+    
+    float trans[3][3];
+    float in[3];
+    float out[3];
+
+    double Rx, Ry, Rz;
+    double Sx, Sy, Sz;
+    double Tx, Ty, Tz;
+
+    float cosRx, sinRx;
+    float cosRy, sinRy;
+    float cosRz, sinRz;
+        
+    double flolsXYZ[3], eyeXYZ[3]; 
+    double lat, lon, alt;
+    double dist;
+    int source;
+    Point3D eyepos;
+    Point3D flolspos;	
 };
 
 #endif  // _FG_AICARRIER_HXX
