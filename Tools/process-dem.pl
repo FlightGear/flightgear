@@ -252,9 +252,9 @@ if ( $do_tri2obj ) {
 	    }
 	    close(OUT);
 	    
-	    # unlink("$subdir/$file.node");
-	    # unlink("$subdir/$file.node.orig");
-	    # unlink("$subdir/$file.ele");
+	    unlink("$subdir/$file.node");
+	    unlink("$subdir/$file.node.orig");
+	    unlink("$subdir/$file.ele");
 	}
     }
 }
@@ -294,7 +294,7 @@ if ( $do_strips ) {
 	    close(IN);
 	    close(OUT);
 	    
-	    # unlink("$subdir/$file");
+	    unlink("$subdir/$file");
 	}
     }
 }
@@ -328,6 +328,9 @@ if ( $do_fixobj ) {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.8  1998/01/21 17:59:05  curt
+# Uncomment lines to remove several intermediate files.
+#
 # Revision 1.7  1998/01/19 19:51:06  curt
 # A couple final pre-release tweaks.
 #
