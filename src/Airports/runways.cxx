@@ -90,6 +90,47 @@ FGRunways::FGRunways( const string& file ) {
 }
 
 
+// Return reverse rwy number
+// eg 01 -> 19
+// 03L -> 21R
+static string GetReverseRunwayNo(string rwyno) {	
+    // cout << "Original rwyno = " << rwyNo << '\n';
+    
+    // standardize input number
+    string tmp = rwyno.substr(1, 1);
+    if (( tmp == "L" || tmp == "R" || tmp == "C" ) || (rwyno.size() == 1)) {
+	tmp = rwyno;
+	cout << "Standardising rwy number from " << tmp;
+	rwyno = "0" + tmp;
+	cout << " to " << rwyno << '\n';
+    }
+    
+    char buf[4];
+    int rn = atoi(rwyno.substr(0,2).c_str());
+    rn += 18;
+    while(rn > 36) {
+	rn -= 36;
+    }
+    sprintf(buf, "%02i", rn);
+    if(rwyno.size() == 3) {
+	if(rwyno.substr(2,1) == "L") {
+	    buf[2] = 'R';
+	    buf[3] = '\0';
+	} else if (rwyno.substr(2,1) == "R") {
+	    buf[2] = 'L';
+	    buf[3] = '\0';
+	} else if (rwyno.substr(2,1) == "C") {
+	    buf[2] = 'C';
+	    buf[3] = '\0';
+	} else {
+	    SG_LOG(SG_GENERAL, SG_ALERT, "Unknown runway code "
+	    << rwyno << " passed to GetReverseRunwayNo(...)");
+	}
+    }
+    return((string)buf);
+}
+
+
 // search for the specified apt id
 bool FGRunways::search( const string& aptid, FGRunway* r ) {
     c4_StringProp pID ("ID");
@@ -132,6 +173,7 @@ bool FGRunways::search( const string& aptid, FGRunway* r ) {
 // search for the specified apt id and runway no
 bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
 {
+    string runwayno = rwyno;
     c4_StringProp pID ("ID");
     c4_StringProp pRwy ("Rwy");
     c4_FloatProp pLon ("Longitude");
@@ -149,6 +191,15 @@ bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
     if ( index == -1 ) {
 	return false;
     }
+    
+    // standardize input number
+    string tmp = runwayno.substr(1, 1);
+    if (( tmp == "L" || tmp == "R" || tmp == "C" ) || (runwayno.size() == 1)) {
+	tmp = runwayno;
+	cout << "Standardising rwy number from " << tmp;
+	runwayno = "0" + tmp;
+	cout << " to " << runwayno << '\n';
+    }
 
     c4_RowRef row = vRunway->GetAt(index);
     string rowid = (const char *) pID(row);
@@ -156,7 +207,7 @@ bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
     while ( rowid == aptid ) {
         next_index = index + 1;
 
-        if ( rowrwyno == rwyno ) {
+        if ( rowrwyno == runwayno ) {
             r->id =      (const char *) pID(row);
             r->rwy_no =  (const char *) pRwy(row);
             r->lon =     (double) pLon(row);
@@ -171,34 +222,11 @@ bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
             return true;
         }
 	
-	// Check reverse rwy number
-	// eg 01 -> 19
-	// 03L -> 21R
-	// cout << "Original rowrwyno = " << rowrwyno << '\n';
-	char buf[4];
-	int rn = atoi(rowrwyno.substr(0,2).c_str());
-	rn += 18;
-	while(rn > 36) {
-	    rn -= 36;
-	}
-	sprintf(buf, "%02i", rn);
-	if(rowrwyno.size() == 3) {
-	    if(rowrwyno.substr(2,1) == "L") {
-		buf[2] = 'R';
-		buf[3] = '\0';
-	    } else if (rowrwyno.substr(2,1) == "R") {
-		buf[2] = 'L';
-		buf[3] = '\0';
-	    } else {
-		SG_LOG(SG_GENERAL, SG_ALERT, "Unknown runway code "
-                       << rowrwyno << " found in FGRunways.search(...)");
-	    }
-	}
-	rowrwyno = buf;
-	// cout << "New rowrwyno = " << rowrwyno << '\n';
 	// Search again with the other-end runway number
-	// Remember we have to munge the heading result if this one matches
-	if ( rowrwyno == rwyno ) {
+	// Remember we have to munge the heading and rwy_no results if this one matches
+	rowrwyno = GetReverseRunwayNo(rowrwyno);
+	// cout << "New rowrwyno = " << rowrwyno << '\n';
+	if ( rowrwyno == runwayno ) {
 	    r->id =      (const char *) pID(row);
 	    r->rwy_no =  rowrwyno;
 	    r->lon =     (double) pLon(row);
@@ -285,10 +313,11 @@ bool FGRunways::search( const string& aptid, const int tgt_hdg,
 // Return the runway number of the runway closest to a given heading
 string FGRunways::search( const string& aptid, const int tgt_hdg ) {
     FGRunway r;
+    FGRunway tmp_r;	
     string rn;
     double found_dir = 0.0;  
  
-    if ( !search( aptid, &r ) ) {
+    if ( !search( aptid, &tmp_r ) ) {
 	SG_LOG( SG_GENERAL, SG_ALERT,
                 "Failed to find " << aptid << " in database." );
 	return "NN";
@@ -297,7 +326,9 @@ string FGRunways::search( const string& aptid, const int tgt_hdg ) {
     double diff;
     double min_diff = 360.0;
     
-    while ( r.id == aptid ) {
+    while ( tmp_r.id == aptid ) {
+	r = tmp_r;
+	
 	// forward direction
 	diff = tgt_hdg - r.heading;
 	while ( diff < -180.0 ) { diff += 360.0; }
@@ -327,22 +358,16 @@ string FGRunways::search( const string& aptid, const int tgt_hdg ) {
 	    found_dir = 180.0;
 	}
 	
-	next( &r );
+	next( &tmp_r );
     }
     
     // SG_LOG( SG_GENERAL, SG_INFO, "closest runway = " << r.rwy_no
     //	       << " + " << found_dir );
-    // rn = r.rwy_no;
+    rn = r.rwy_no;
     // cout << "In search, rn = " << rn << endl;
     if ( found_dir == 180 ) {
-	int irn = atoi(rn.c_str());
-	irn += 18;
-	if ( irn > 36 ) {
-	    irn -= 36;
-	}
-	char buf[4];            // 2 chars + string terminator + 1 for safety
-	sprintf(buf, "%i", irn);
-	rn = buf;
+	rn = GetReverseRunwayNo(rn);
+	//cout << "New rn = " << rn << '\n';
     }	
     
     return rn;
