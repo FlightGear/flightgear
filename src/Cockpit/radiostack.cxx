@@ -274,7 +274,7 @@ FGRadioStack::update()
 		    globals->get_soundmgr()->play_once( "nav1-vor-ident" );
 		    ++nav1_play_count;
 		}
-	    } else if ( nav1_play_count < 5 ) {
+	    } else if ( nav1_play_count < 5 && nav1_has_dme ) {
 		// play DME ident
 		if ( !globals->get_soundmgr()->is_playing("nav1-vor-ident") &&
 		     !globals->get_soundmgr()->is_playing("nav1-dme-ident") ) {

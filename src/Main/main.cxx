@@ -1192,10 +1192,10 @@ static void fgIdleFunction ( void ) {
 		    << "  Bps = " << s1->get_sample()->getBps()
 		    << "  Stereo = " << s1->get_sample()->getStereo() );
 
-	    // s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
-	    FGMorse mmm;
-	    mmm.init();
-	    s2 = mmm.make_ident( "JLI" );
+	    s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
+	    // FGMorse mmm;
+	    // mmm.init();
+	    // s2 = mmm.make_ident( "JLI" );
 	    s2->set_volume( 0.3 );
 	    globals->get_soundmgr()->add( s2, "flaps" );
 	}
