@@ -702,6 +702,10 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
             while ( ! in.eof() ) {
                 in >> token;
 
+                if ( token[0] == '#' ) {
+                   in >> ::skipeol;
+                   continue;
+                }
                                 // Load only once (first found)
                 if ( token == "OBJECT_BASE" ) {
                     in >> name >> ::skipws;
