@@ -154,7 +154,7 @@ int fgInitPosition( void ) {
 	} else {
 	    FG_Longitude = ( a.longitude ) * DEG_TO_RAD;
 	    FG_Latitude  = ( a.latitude ) * DEG_TO_RAD;
-	    FG_Runway_altitude = ( a.elevation + 200 );
+	    FG_Runway_altitude = ( a.elevation );
 	    FG_Altitude = FG_Runway_altitude + 3.758099;
 	}
     }
@@ -207,8 +207,6 @@ int fgInitGeneral( void ) {
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
 int fgInitSubsystems( void ) {
-    double cur_elev;
-
     fgFLIGHT *f;
     fgLIGHT *l;
     fgTIME *t;
@@ -339,7 +337,6 @@ int fgInitSubsystems( void ) {
     	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Scenery initialization!\n" );
     }
 
-
     if( fgTileMgrInit() ) {
 	// Load the local scenery data
 	fgTileMgrUpdate();
@@ -350,25 +347,36 @@ int fgInitSubsystems( void ) {
 
     // I'm just sticking this here for now, it should probably move
     // eventually
-        cur_elev = FG_Runway_altitude * FEET_TO_METER;
-        if ( cur_elev > -9990.0 ) {
-	    FG_Runway_altitude = cur_elev * METER_TO_FEET;
-        }
+    scenery.cur_elev = FG_Runway_altitude * FEET_TO_METER;
 
-        if ( FG_Altitude < FG_Runway_altitude ) {
-	    FG_Altitude = FG_Runway_altitude + 3.758099;
-        }
+    if ( FG_Altitude < FG_Runway_altitude + 3.758099) {
+	FG_Altitude = FG_Runway_altitude + 3.758099;
+    }
 
-        fgPrintf( FG_GENERAL, FG_INFO,
-	     "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n",
-	     FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG,
-	     FG_Altitude * FEET_TO_METER);
+    fgPrintf( FG_GENERAL, FG_INFO,
+	      "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n",
+	      FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG,
+	      FG_Altitude * FEET_TO_METER);
     // end of thing that I just stuck in that I should probably move
 		
     // Initialize the flight model subsystem data structures base on
     // above values
 
     fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
+
+    // I'm just sticking this here for now, it should probably move
+    // eventually
+    scenery.cur_elev = FG_Runway_altitude * FEET_TO_METER;
+
+    if ( FG_Altitude < FG_Runway_altitude + 3.758099) {
+	FG_Altitude = FG_Runway_altitude + 3.758099;
+    }
+
+    fgPrintf( FG_GENERAL, FG_INFO,
+	      "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n",
+	      FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG,
+	      FG_Altitude * FEET_TO_METER);
+    // end of thing that I just stuck in that I should probably move
 
     // Joystick support
     if (fgJoystickInit(0) ) {
@@ -387,6 +395,18 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.23  1998/07/12 03:14:43  curt
+// Added ground collision detection.
+// Did some serious horsing around to be able to "hug" the ground properly
+//   and still be able to take off.
+// Set the near clip plane to 1.0 meters when less than 10 meters above the
+//   ground.
+// Did some serious horsing around getting the initial airplane position to be
+//   correct based on rendered terrain elevation.
+// Added a little cheat/hack that will prevent the view position from ever
+//   dropping below the terrain, even when the flight model doesn't quite
+//   put you as high as you'd like.
+//
 // Revision 1.22  1998/07/04 00:52:25  curt
 // Add my own version of gluLookAt() (which is nearly identical to the
 // Mesa/glu version.)  But, by calculating the Model View matrix our selves

@@ -197,7 +197,12 @@ static void fgUpdateViewParams( void ) {
     // Tell GL we are about to modify the projection parameters
     xglMatrixMode(GL_PROJECTION);
     xglLoadIdentity();
-    gluPerspective(o->fov, v->win_ratio, 10.0, 100000.0);
+    if ( FG_Altitude * FEET_TO_METER - scenery.cur_elev > 10.0 ) {
+	gluPerspective(o->fov, v->win_ratio, 10.0, 100000.0);
+    } else {
+	gluPerspective(o->fov, v->win_ratio, 1.0, 100000.0);
+	// printf("Near ground, minimizing near clip plane\n");
+    }
     // }
 
     xglMatrixMode(GL_MODELVIEW);
@@ -286,6 +291,7 @@ static void fgUpdateInstrViewParams( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 static void fgRenderFrame( void ) {
+    fgFLIGHT *f;
     fgLIGHT *l;
     fgOPTIONS *o;
     fgTIME *t;
@@ -295,6 +301,7 @@ static void fgRenderFrame( void ) {
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
 	
+    f = current_aircraft.flight;
     l = &cur_light_params;
     o = &current_options;
     t = &cur_time_params;
@@ -310,6 +317,9 @@ static void fgRenderFrame( void ) {
 	// initializations and are running the main loop, so this will
 	// now work without seg faulting the system.
 
+	// printf("Ground = %.2f  Altitude = %.2f\n", scenery.cur_elev, 
+	//        FG_Altitude * FEET_TO_METER);
+    
 	// this is just a temporary hack, to make me understand Pui
 	timerText -> setLabel (ctime (&t->cur_time));
 	// end of hack
@@ -483,25 +493,54 @@ void fgInitTimeDepCalcs( void ) {
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
-    fgAIRCRAFT *a;
     fgFLIGHT *f;
     fgGENERAL *g;
     fgTIME *t;
     static int remainder = 0;
     int elapsed, multi_loop;
-    double cur_elev;
     int i;
     double accum;
     // double joy_x, joy_y;
     // int joy_b1, joy_b2;
 
-    a = &current_aircraft;
-    f = a->flight;
+    f = current_aircraft.flight;
     g = &general;
     t = &cur_time_params;
 
     fgPrintf( FG_ALL, FG_DEBUG, "Running Main Loop\n");
     fgPrintf( FG_ALL, FG_DEBUG, "======= ==== ====\n");
+
+    // Fix elevation.  I'm just sticking this here for now, it should
+    // probably move eventually
+
+    /* printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
+	   scenery.cur_elev,
+	   FG_Runway_altitude * FEET_TO_METER,
+	   FG_Altitude * FEET_TO_METER); */
+
+    if ( scenery.cur_elev > -9990 ) {
+	if ( FG_Altitude * FEET_TO_METER < 
+	     (scenery.cur_elev + 3.758099 * FEET_TO_METER - 1.0) ) {
+	    // now set aircraft altitude above ground
+	    printf("Current Altitude = %.2f < %.2f forcing to %.2f\n", 
+		   FG_Altitude * FEET_TO_METER,
+		   scenery.cur_elev + 3.758099 * FEET_TO_METER - 1.0,
+		   scenery.cur_elev + 3.758099 * FEET_TO_METER);
+	    fgFlightModelSetAltitude( FG_LARCSIM, f, 
+				      scenery.cur_elev + 
+				      3.758099 * FEET_TO_METER);
+
+	    fgPrintf( FG_ALL, FG_BULK, 
+		      "<*> resetting altitude to %.0f meters\n", 
+		      FG_Altitude * FEET_TO_METER);
+	}
+	FG_Runway_altitude = scenery.cur_elev * METER_TO_FEET;
+    }
+
+    /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
+	   scenery.cur_elev,
+	   FG_Runway_altitude * FEET_TO_METER,
+	   FG_Altitude * FEET_TO_METER); */
 
     // update "time"
     fgTimeUpdate(f, t);
@@ -545,35 +584,23 @@ static void fgMainLoop( void ) {
 	      "Model iterations needed = %d, new remainder = %d\n", 
 	      multi_loop, remainder);
 	
+    /* printf("right before fm - ground = %.2f  runway = %.2f  alt = %.2f\n",
+	   scenery.cur_elev,
+	   FG_Runway_altitude * FEET_TO_METER,
+	   FG_Altitude * FEET_TO_METER); */
+
     // Run flight model
     if ( ! use_signals ) {
 	// flight model
 	fgUpdateTimeDepCalcs(multi_loop);
     }
 
-    // I'm just sticking this here for now, it should probably move
-    // eventually
-    /* cur_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC, 
-			       FG_Latitude  * RAD_TO_ARCSEC); */
-    // there is no ground collision detection really, so for now I
-    // just hard code the ground elevation to be 0 */
-    cur_elev = 0;
+    /* printf("After fm - ground = %.2f  runway = %.2f  alt = %.2f\n",
+	   scenery.cur_elev,
+	   FG_Runway_altitude * FEET_TO_METER,
+	   FG_Altitude * FEET_TO_METER); */
 
-    // printf("Ground elevation is %.2f meters here.\n", cur_elev);
-    // FG_Runway_altitude = cur_elev * METER_TO_FEET;
-
-    if ( FG_Altitude * FEET_TO_METER < cur_elev + 3.758099) {
-	// set this here, otherwise if we set runway height above our
-	// current height we get a really nasty bounce.
-	FG_Runway_altitude = FG_Altitude - 3.758099;
-
-	// now set aircraft altitude above ground
-	FG_Altitude = cur_elev * METER_TO_FEET + 3.758099;
-	fgPrintf( FG_ALL, FG_BULK, "<*> resetting altitude to %.0f meters\n", 
-	       FG_Altitude * FEET_TO_METER);
-    }
-
-    fgAircraftOutputCurrent(a);
+    // fgAircraftOutputCurrent(a);
 
     // see if we need to load any new scenery tiles
     fgTileMgrUpdate();
@@ -871,6 +898,18 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.33  1998/07/12 03:14:42  curt
+// Added ground collision detection.
+// Did some serious horsing around to be able to "hug" the ground properly
+//   and still be able to take off.
+// Set the near clip plane to 1.0 meters when less than 10 meters above the
+//   ground.
+// Did some serious horsing around getting the initial airplane position to be
+//   correct based on rendered terrain elevation.
+// Added a little cheat/hack that will prevent the view position from ever
+//   dropping below the terrain, even when the flight model doesn't quite
+//   put you as high as you'd like.
+//
 // Revision 1.32  1998/07/08 14:45:07  curt
 // polar3d.h renamed to polar3d.hxx
 // vector.h renamed to vector.hxx

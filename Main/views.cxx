@@ -106,6 +106,9 @@ void fgVIEW::Update( fgFLIGHT *f ) {
     scenery.center.y = scenery.next_center.y;
     scenery.center.z = scenery.next_center.z;
 
+    // printf("scenery center = %.2f %.2f %.2f\n", scenery.center.x,
+    //        scenery.center.y, scenery.center.z);
+
     // calculate the cartesion coords of the current lat/lon/0 elev
     p.lon = FG_Longitude;
     p.lat = FG_Lat_geocentric;
@@ -118,8 +121,14 @@ void fgVIEW::Update( fgFLIGHT *f ) {
     cur_zero_elev.z -= scenery.center.z;
 
     // calculate view position in current FG view coordinate system
-    // p.lon & p.lat are already defined earlier
-    p.radius = FG_Radius_to_vehicle * FEET_TO_METER + 1.0;
+    // p.lon & p.lat are already defined earlier, p.radius was set to
+    // the sea level radius, so now we add in our altitude.
+    if ( FG_Altitude * FEET_TO_METER > 
+	 (scenery.cur_elev + 3.758099 * METER_TO_FEET) ) {
+	p.radius += FG_Altitude * FEET_TO_METER;
+    } else {
+	p.radius += scenery.cur_elev + 3.758099 * METER_TO_FEET;
+    }
 
     abs_view_pos = fgPolarToCart3d(p);
 
@@ -455,6 +464,18 @@ void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 
 
 // $Log$
+// Revision 1.15  1998/07/12 03:14:43  curt
+// Added ground collision detection.
+// Did some serious horsing around to be able to "hug" the ground properly
+//   and still be able to take off.
+// Set the near clip plane to 1.0 meters when less than 10 meters above the
+//   ground.
+// Did some serious horsing around getting the initial airplane position to be
+//   correct based on rendered terrain elevation.
+// Added a little cheat/hack that will prevent the view position from ever
+//   dropping below the terrain, even when the flight model doesn't quite
+//   put you as high as you'd like.
+//
 // Revision 1.14  1998/07/08 14:45:08  curt
 // polar3d.h renamed to polar3d.hxx
 // vector.h renamed to vector.hxx
