@@ -35,13 +35,13 @@
 #include "../general.h"
 
 #include "moon.h"
-#include "parsevrml.h"
+#include "obj.h"
 #include "scenery.h"
 #include "stars.h"
 
 
 /* Temporary hack until we get the scenery management system running */
-GLint mesh_hack;
+GLint area_terrain;
 
 
 /* Shared structure to hold current scenery parameters */
@@ -70,18 +70,18 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
     path[0] = '\0';
     strcat(path, g->root_dir);
     strcat(path, "/Scenery/");
-    strcat(path, "mesa-e.wrl");
+    strcat(path, "mesa-e.obj");
 
     printf("Loading Scenery: %s\n", path);
 
-    fgParseVRML(path);
+    area_terrain = fgObjLoad(path);
 }
 
 
 /* Render out the current scene */
 void fgSceneryRender() {
     glPushMatrix();
-    glCallList(mesh_hack);
+    glCallList(area_terrain);
     glPopMatrix();
     fgStarsRender();
 
@@ -90,9 +90,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.21  1997/10/25 03:24:24  curt
-/* Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
+/* Revision 1.22  1997/10/28 21:00:22  curt
+/* Changing to new terrain format.
 /*
+ * Revision 1.21  1997/10/25 03:24:24  curt
+ * Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
+ *
  * Revision 1.20  1997/10/25 03:18:27  curt
  * Incorporated sun, moon, and planet position and rendering code contributed
  * by Durk Talsma.

@@ -26,8 +26,8 @@
 
 TARGET = libScenery.a
 
-CFILES = chunkmgr.c common.c geometry.c mesh.c moon.c orbits.c parser.c \
-	planets.c scanner.c scenery.c stars.c sun.c
+CFILES = common.c geometry.c mesh.c moon.c obj.c orbits.c planets.c \
+	scenery.c stars.c sun.c
 
 OFILES = $(CFILES:.c=.o)
 
@@ -52,7 +52,6 @@ clean:
 	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
 
 realclean: clean
-	rm -f scanner.c parser.c parser.h parser.output
 
 
 #---------------------------------------------------------------------------
@@ -60,24 +59,6 @@ realclean: clean
 #---------------------------------------------------------------------------
 
 include depend
-
-scanner.c: scanner.l parser.h
-	$(FLEX) -oscanner.c scanner.l
-
-parser.h: parser.y
-	$(BISON) -o parser.c -d parser.y
-
-parser.c: parser.y 
-	$(BISON) -o parser.c parser.y
-
-scanner.o: scanner.c
-	$(CC) $(CFLAGS) -c scanner.c -o $@
-
-parser.o: parser.c
-	$(CC) $(CFLAGS) -c parser.c -o $@
-
-chunkmgr.o:
-	$(CC) $(CFLAGS) -c chunkmgr.c -o $@
 
 common.o:
 	$(CC) $(CFLAGS) -c common.c -o $@
@@ -90,6 +71,9 @@ mesh2GL.o:
 
 moon.o:
 	$(CC) $(CFLAGS) -c moon.c -o $@
+
+obj.o:
+	$(CC) $(CFLAGS) -c obj.c -o $@
 
 orbits.o:
 	$(CC) $(CFLAGS) -c orbits.c -o $@
@@ -112,6 +96,9 @@ geometry.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.23  1997/10/28 21:00:20  curt
+# Changing to new terrain format.
+#
 # Revision 1.22  1997/10/25 03:30:07  curt
 # Misc. tweaks.
 #

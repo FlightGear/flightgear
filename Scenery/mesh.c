@@ -51,7 +51,7 @@
 
 
 /* Temporary hack until we get the scenery management system running */
-extern GLint mesh_hack;
+extern GLint area_terrain;
 extern struct MESH eg;
 
 /* initialize the non-array mesh values */
@@ -161,7 +161,7 @@ void mesh_set_option_value(struct MESH *m, char *value) {
 /* do whatever needs to be done with the mesh now that it's been
    loaded, such as generating the OpenGL call list. */
 void mesh_do_it(struct MESH *m) {
-    mesh_hack = mesh_to_OpenGL(m);
+    area_terrain = mesh_to_OpenGL(m);
 }
 
 
@@ -395,9 +395,12 @@ GLint mesh_to_OpenGL(struct MESH *m) {
 
 
 /* $Log$
-/* Revision 1.21  1997/08/27 03:30:27  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.22  1997/10/28 21:00:21  curt
+/* Changing to new terrain format.
 /*
+ * Revision 1.21  1997/08/27 03:30:27  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.20  1997/08/19 23:55:08  curt
  * Worked on better simulating real lighting.
  *

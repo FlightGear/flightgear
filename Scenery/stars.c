@@ -42,8 +42,8 @@
 #include "../constants.h"
 #include "../general.h"
 
-#include "../GLUT/views.h"
 #include "../Aircraft/aircraft.h"
+#include "../Main/views.h"
 #include "../Time/fg_time.h"
 
 
@@ -271,10 +271,13 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.13  1997/10/25 03:18:28  curt
-/* Incorporated sun, moon, and planet position and rendering code contributed
-/* by Durk Talsma.
+/* Revision 1.14  1997/10/28 21:00:22  curt
+/* Changing to new terrain format.
 /*
+ * Revision 1.13  1997/10/25 03:18:28  curt
+ * Incorporated sun, moon, and planet position and rendering code contributed
+ * by Durk Talsma.
+ *
  * Revision 1.12  1997/09/23 00:29:43  curt
  * Tweaks to get things to compile with gcc-win32.
  *

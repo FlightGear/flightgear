@@ -1,4 +1,3 @@
-chunkmgr.o: chunkmgr.c chunkmgr.h mesh.h
 common.o: common.c common.h
 geometry.o: geometry.c geometry.h mesh.h
 mesh.o: mesh.c ../constants.h ../types.h ../Math/fg_geodesy.h \
@@ -7,31 +6,32 @@ mesh.o: mesh.c ../constants.h ../types.h ../Math/fg_geodesy.h \
 moon.o: moon.c orbits.h ../Time/fg_time.h ../Time/../types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h moon.h ../GLUT/views.h \
- ../GLUT/../types.h ../GLUT/../Flight/flight.h ../GLUT/../Math/mat3.h \
+ ../Time/../Flight/LaRCsim/../flight.h moon.h ../Main/views.h \
+ ../Main/../types.h ../Main/../Flight/flight.h ../Main/../Math/mat3.h \
  ../general.h
+obj.o: obj.c obj.h
 orbits.o: orbits.c orbits.h ../Time/fg_time.h ../Time/../types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
  ../Time/../Flight/LaRCsim/../flight.h ../general.h
-parser.o: parser.c parsevrml.h geometry.h common.h mesh.h scenery.h \
- ../types.h
 planets.o: planets.c ../Time/fg_time.h ../Time/../types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
  ../Time/../Flight/LaRCsim/../flight.h orbits.h planets.h sun.h
-scanner.o: scanner.c parser.h
-scenery.o: scenery.c ../general.h scenery.h ../types.h parsevrml.h \
+scenery.o: scenery.c ../general.h moon.h orbits.h ../Time/fg_time.h \
+ ../Time/../types.h ../Time/../Flight/flight.h \
+ ../Time/../Flight/Slew/slew.h \
+ ../Time/../Flight/LaRCsim/ls_interface.h \
+ ../Time/../Flight/LaRCsim/../flight.h obj.h scenery.h ../types.h \
  stars.h
 stars.o: stars.c orbits.h ../Time/fg_time.h ../Time/../types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
  ../Time/../Flight/LaRCsim/../flight.h planets.h stars.h \
- ../constants.h ../general.h ../GLUT/views.h ../GLUT/../types.h \
- ../GLUT/../Flight/flight.h ../GLUT/../Math/mat3.h \
- ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
- ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../limits.h
+ ../constants.h ../general.h ../Aircraft/aircraft.h \
+ ../Aircraft/../Flight/flight.h ../Aircraft/../Controls/controls.h \
+ ../Aircraft/../Controls/../limits.h ../Main/views.h \
+ ../Main/../types.h ../Main/../Flight/flight.h ../Main/../Math/mat3.h
 sun.o: sun.c ../Time/fg_time.h ../Time/../types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \

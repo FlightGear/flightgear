@@ -26,8 +26,8 @@
 #include "orbits.h"
 #include "moon.h"
 
+#include "../Main/views.h"
 #include "../Time/fg_time.h"
-#include "../GLUT/views.h"
 /* #include "../Aircraft/aircraft.h"*/
 #include "../general.h"
 
@@ -165,7 +165,10 @@ void fgMoonRender()
 
 
 /* $Log$
-/* Revision 1.1  1997/10/25 03:16:08  curt
-/* Initial revision of code contributed by Durk Talsma.
+/* Revision 1.2  1997/10/28 21:00:21  curt
+/* Changing to new terrain format.
 /*
+ * Revision 1.1  1997/10/25 03:16:08  curt
+ * Initial revision of code contributed by Durk Talsma.
+ *
  */
