@@ -219,10 +219,10 @@ void GLUTspecialkey(int k, int x, int y) {
 	    fgAileronMove(0.05);
 	    return;
 	case GLUT_KEY_HOME: /* numeric keypad 1 */
-	    fgElevTrimMove(-0.001);
+	    fgElevTrimMove(0.001);
 	    return;
 	case GLUT_KEY_END: /* numeric keypad 7 */
-	    fgElevTrimMove(0.001);
+	    fgElevTrimMove(-0.001);
 	    return;
 	case GLUT_KEY_INSERT: /* numeric keypad Ins */
 	    fgRudderMove(-0.05);
@@ -247,9 +247,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.30  1998/04/03 22:09:02  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.31  1998/04/08 23:34:05  curt
+/* Patch from Durk to fix trim reversal with numlock key active.
 /*
+ * Revision 1.30  1998/04/03 22:09:02  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.29  1998/02/07 15:29:40  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>
