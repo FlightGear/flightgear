@@ -38,6 +38,7 @@
 #include <Network/garmin.hxx>
 #include <Network/joyclient.hxx>
 #include <Network/native.hxx>
+#include <Network/native_ctrls.hxx>
 #include <Network/nmea.hxx>
 #include <Network/props.hxx>
 #include <Network/pve.hxx>
@@ -85,6 +86,9 @@ static FGProtocol *parse_port_config( const string& config )
     } else if ( protocol == "native" ) {
 	FGNative *native = new FGNative;
 	io = native;
+    } else if ( protocol == "native_ctrls" ) {
+	FGNativeCtrls *native_ctrls = new FGNativeCtrls;
+	io = native_ctrls;
     } else if ( protocol == "nmea" ) {
 	FGNMEA *nmea = new FGNMEA;
 	io = nmea;

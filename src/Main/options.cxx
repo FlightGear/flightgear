@@ -792,6 +792,8 @@ parse_option (const string& arg)
 	parse_channel( "atlas", arg.substr(8) );
     } else if ( arg.find( "--native=" ) == 0 ) {
 	parse_channel( "native", arg.substr(9) );
+    } else if ( arg.find( "--native-ctrls=" ) == 0 ) {
+	parse_channel( "native_ctrls", arg.substr(15) );
     } else if ( arg.find( "--garmin=" ) == 0 ) {
 	parse_channel( "garmin", arg.substr(9) );
     } else if ( arg.find( "--nmea=" ) == 0 ) {
