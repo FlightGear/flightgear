@@ -1,0 +1,25 @@
+This is what [Norman Vine <nhv@cape.com>] recommends for general
+Cygwin development.
+
+Note: This will be a Unix like system and not a Windows IDE It is
+expected that the user is comfortable using a unix development
+environment, the gnu gcc compiler, and its asociated tools.
+Alternatively if you don't mind typing commands from a command line
+and reading instrunctions you should have a very good chance of
+success.
+
+1) Latest Cygwin release
+
+   Install the Cygwin toolkit by clicking on the "Install Cygwin Now"
+   link at http://www.cygwin.com
+
+2) Building from source
+
+   Follow the instructions for building on Linux.
+
+   <Note> 
+   Your OpenGl libraries will be automatically installed
+   and you can ignore that section of the Linux readme.
+
+Any additional questions can be directed to Norman Vine <nhv@cape.com>
+since he thinks this terse document is all you'll need. :-)
