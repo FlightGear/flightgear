@@ -56,7 +56,7 @@
 
 
 /* top level reserved words */
-%token IncludeSym ShapeSym GeometrySym ElevationGridSym
+%token IncludeSym ShapeSym GeometrySym
 
 /* basic tokens */
 %token Identifier Number StringLiteral 
