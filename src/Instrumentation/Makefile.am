@@ -1,6 +1,7 @@
 noinst_LIBRARIES = libInstrumentation.a
 
 libInstrumentation_a_SOURCES = instrument_mgr.cxx instrument_mgr.hxx \
+                               dme.cxx dme.hxx \
                                gyro.cxx gyro.hxx \
                                airspeed_indicator.cxx airspeed_indicator.hxx \
                                attitude_indicator.cxx attitude_indicator.hxx \
