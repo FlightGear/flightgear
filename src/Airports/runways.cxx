@@ -145,15 +145,17 @@ bool FGRunways::search( const string& aptid, FGRunway* r ) {
     c4_StringProp pEnd2 ("End2Flags");
 
     int index = vRunway->Find(pID[aptid.c_str()]);
-    // cout << "index = " << index << endl;
+    c4_RowRef row = vRunway->GetAt(index);
 
-    if ( index == -1 ) {
+    // cout << "index = " << index " row = " << row << endl;
+
+    // explicitly check if we got what we were asking for
+    // because metakit is canse insensitive!
+    if ( strcmp(aptid.c_str(), pID(row)) ) {
 	return false;
     }
 
     next_index = index + 1;
-
-    c4_RowRef row = vRunway->GetAt(index);
 
     r->id =      (const char *) pID(row);
     r->rwy_no =  (const char *) pRwy(row);
@@ -186,10 +188,13 @@ bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
     c4_StringProp pEnd2 ("End2Flags");
 
     int index = vRunway->Find(pID[aptid.c_str()]);
-    // cout << "index = " << index << endl;
+    c4_RowRef row = vRunway->GetAt(index);
+    // cout << "index = " << index " row = " << row << endl;
 
-    if ( index == -1 ) {
-	return false;
+    // explicitly check if we got what we were asking for
+    // because metakit is canse insensitive!
+    if ( strcmp(aptid.c_str(), pID(row)) ) {
+        return false;
     }
     
     // standardize input number
@@ -201,7 +206,6 @@ bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
                                      << " to " << runwayno );
     }
 
-    c4_RowRef row = vRunway->GetAt(index);
     string rowid = (const char *) pID(row);
     string rowrwyno = (const char *) pRwy(row);
     while ( rowid == aptid ) {
@@ -504,7 +508,9 @@ bool FGRunwaysUtil::dump_mk4( const string& file ) {
 bool
 FGRunwaysUtil::search( const string& id, FGRunway* a ) const
 {
+cout << "ID " << id << endl;
     const_iterator it = runways.find( FGRunway(id) );
+cout << "it = " << it << " end = " << runways.end() << endl;
     if ( it != runways.end() )
     {
 	*a = *it;
