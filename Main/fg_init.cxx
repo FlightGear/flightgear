@@ -347,10 +347,6 @@ int fgInitSubsystems( void )
     // Initialize the weather modeling subsystem
     fgWeatherInit();
 
-    // update the weather for our current position
-    global_events.Register( "fgWeatherUpdate()", fgWeatherUpdate,
-			    fgEVENT::FG_EVENT_READY, 120000 );
-
     // Initialize the Cockpit subsystem
     if( fgCockpitInit( &current_aircraft )) {
 	// Cockpit initialized ok.
@@ -398,6 +394,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.40  1998/10/02 12:46:49  curt
+// Added an "auto throttle"
+//
 // Revision 1.39  1998/09/29 02:03:39  curt
 // Autopilot mods.
 //

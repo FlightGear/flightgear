@@ -475,6 +475,8 @@ static void fgMainLoop( void ) {
     fgPrintf( FG_ALL, FG_DEBUG, "Running Main Loop\n");
     fgPrintf( FG_ALL, FG_DEBUG, "======= ==== ====\n");
 
+    fgWeatherUpdate();
+
     // Fix elevation.  I'm just sticking this here for now, it should
     // probably move eventually
 
@@ -892,6 +894,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.56  1998/10/02 12:46:47  curt
+// Added an "auto throttle"
+//
 // Revision 1.55  1998/09/29 14:58:18  curt
 // Use working() instead of !not_working() for audio.
 //

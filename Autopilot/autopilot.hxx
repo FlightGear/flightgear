@@ -42,13 +42,15 @@ typedef struct {
     int heading_hold;   // the current state of the heading hold
     int altitude_hold;  // the current state of the altitude hold
     int terrain_follow; // the current state of the terrain follower
+    int auto_throttle;  // the current state of the auto throttle
 
     double TargetHeading;     // the heading the AP should steer to.
     double TargetAltitude;    // altitude to hold
-    double TargetClimbRate;   // climb rate to shoot for
-    double alt_error_accum;   // altitude error accumulator
-
     double TargetAGL;         // the terrain separation
+    double TargetClimbRate;   // climb rate to shoot for
+    double TargetSpeed;       // speed to shoot for
+    double alt_error_accum;   // altitude error accumulator
+    double speed_error_accum; // speed error accumulator
 
     double TargetSlope; // the glide slope hold value
     
@@ -73,6 +75,7 @@ int fgAPRun( void );
 void fgAPToggleHeading( void );
 void fgAPToggleAltitude( void );
 void fgAPToggleTerrainFollow( void );
+void fgAPToggleAutoThrottle( void );
 
 
 #ifdef __cplusplus

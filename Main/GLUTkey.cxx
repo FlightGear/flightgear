@@ -94,6 +94,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 8: // Ctrl-H key
 	    fgAPToggleHeading();
 	    return;
+	case 19: // Ctrl-S key
+	    fgAPToggleAutoThrottle();
+	    return;
 	case 20: // Ctrl-T key
 	    fgAPToggleTerrainFollow();
 	    return;
@@ -378,6 +381,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.27  1998/10/02 12:46:46  curt
+// Added an "auto throttle"
+//
 // Revision 1.26  1998/10/01 00:38:04  curt
 // More altitude hold tweaks.
 //

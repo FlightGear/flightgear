@@ -69,7 +69,7 @@ void fgWeatherUpdate( void ) {
 
     /* temporarily remove the code of this do-nothing routine */
 
-#ifdef FG_WEATHER_UPDATE
+// #ifdef FG_WEATHER_UPDATE
     fgFLIGHT *f;
     struct fgWEATHER *w;
 
@@ -77,10 +77,10 @@ void fgWeatherUpdate( void ) {
     w = &current_weather;
 
     /* Add some random turbulence */
-    /* FG_U_gust = fg_random() * 1.0 - 0.5;
-    FG_V_gust = fg_random() * 1.0 - 0.5;
-    FG_W_gust = fg_random() * 1.0 - 0.5; */
-#endif FG_WEATHER_UPDATE
+    // FG_U_gust = fg_random() * 5.0 - 2.5;
+    // FG_V_gust = fg_random() * 5.0 - 2.5;
+    // FG_W_gust = fg_random() * 5.0 - 2.5;
+// #endif FG_WEATHER_UPDATE
 }
 
 
@@ -108,9 +108,12 @@ void fgWeatherSetVisibility( float visibility ) {
 
 
 /* $Log$
-/* Revision 1.17  1998/07/20 12:51:57  curt
-/* Default visibility to about 20 miles.
+/* Revision 1.18  1998/10/02 12:46:50  curt
+/* Added an "auto throttle"
 /*
+ * Revision 1.17  1998/07/20 12:51:57  curt
+ * Default visibility to about 20 miles.
+ *
  * Revision 1.16  1998/06/12 01:00:59  curt
  * Build only static libraries.
  * Declare memmove/memset for Sloaris.

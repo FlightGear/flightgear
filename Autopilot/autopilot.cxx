@@ -333,18 +333,9 @@ int fgAPRun( void )
 
 	error = fgAPget_climb() - APData->TargetClimbRate;
 
-	// push current error onto queue and add into accumulator
-	// alt_error_queue.push_back(error);
+	// accumulate the error under the curve ... this really should
+	// be *= delta t
 	APData->alt_error_accum += error;
-
-	// if queue size larger than 60 ... pop front and subtract
-	// from accumulator
-	// size = alt_error_queue.size();
-	// if ( size > 300 ) {
-	    // APData->alt_error_accum -= alt_error_queue.front();
-	    // alt_error_queue.pop_front();
-	    // size--;
-	// }
 
 	// calculate integral error, and adjustment amount
 	int_error = APData->alt_error_accum;
@@ -362,7 +353,42 @@ int fgAPRun( void )
 	fgElevSet( total_adj );
     }
 
-    /*
+    // auto throttle enabled?
+    if ( APData->auto_throttle == 1 ) {
+	double error;
+	double prop_error, int_error;
+	double prop_adj, int_adj, total_adj;
+
+	error = APData->TargetSpeed - get_speed();
+
+	// accumulate the error under the curve ... this really should
+	// be *= delta t
+	APData->speed_error_accum += error;
+	if ( APData->speed_error_accum > 2000.0 ) {
+	    APData->speed_error_accum = 2000.0;
+	}
+	if ( APData->speed_error_accum < -2000.0 ) {
+	    APData->speed_error_accum = -2000.0;
+	}
+
+	// calculate integral error, and adjustment amount
+	int_error = APData->speed_error_accum;
+
+	// printf("error = %.2f  int_error = %.2f\n", error, int_error);
+	int_adj = int_error / 200.0;
+	
+	// caclulate proportional error
+	prop_error = error;
+	prop_adj = 0.5 + prop_error / 50.0;
+
+	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
+	if ( total_adj > 1.0 ) { total_adj = 1.0; }
+	if ( total_adj < 0.0 ) { total_adj = 0.0; }
+
+	fgThrottleSet( 0, total_adj );
+    }
+
+     /*
     if (APData->Mode == 2) // Glide slope hold
     {
 	double RelSlope;
@@ -458,6 +484,29 @@ void fgAPToggleAltitude( void )
 	      APData->TargetAltitude);
 }
 	         
+
+void fgAPToggleAutoThrottle ( void )
+{
+    // Remove at a later date
+    fgAPDataPtr APData;
+
+    APData = APDataGlobal;
+    // end section
+
+    if ( APData->auto_throttle ) {
+	// turn off altitude hold
+	APData->auto_throttle = 0;
+    } else {
+	// turn on terrain follow, lock at current agl
+	APData->auto_throttle = 1;
+	APData->TargetSpeed = get_speed();
+	APData->speed_error_accum = 0.0;
+    }
+
+    fgPrintf( FG_COCKPIT, FG_INFO, " fgAPSetAutoThrottle: (%d) %.2f\n",
+	      APData->auto_throttle,
+	      APData->TargetSpeed);
+}
 
 void fgAPToggleTerrainFollow( void )
 {
