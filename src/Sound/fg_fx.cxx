@@ -1,4 +1,4 @@
-// fgfx.cxx -- Sound effect management class implementation
+// fg_fx.cxx -- Sound effect management class implementation
 //
 // Started by David Megginson, October 2001
 // (Reuses some code from main.cxx, probably by Curtis Olson)
@@ -102,8 +102,8 @@ FGFX::init ()
 				// Starter
     _crank[i] = new FGSimpleSound(fgGetString("/sim/sounds/cranking/path",
 					      "Sounds/cranking.wav"));
-    _crank[i]->set_volume(fgGetFloat("/sim/sounds/cranking/volume", 0.175));
-    _crank[i]->set_pitch(fgGetFloat("/sim/sounds/cranking/pitch", 1.25));
+    _crank[i]->set_volume(fgGetFloat("/sim/sounds/cranking/volume", 0.5));
+    _crank[i]->set_pitch(fgGetFloat("/sim/sounds/cranking/pitch", 1.00));
     mgr->add(_crank[i], crank_names[i]);
   }
 
@@ -142,7 +142,7 @@ FGFX::init ()
   //
   _flaps = new FGSimpleSound(fgGetString("/sim/sounds/flaps/path",
 					 "Sounds/flaps.wav"));
-  _flaps->set_volume(fgGetFloat("/sim/sounds/flaps/volume", 0.5));
+  _flaps->set_volume(fgGetFloat("/sim/sounds/flaps/volume", 0.25));
   _flaps->set_pitch(fgGetFloat("/sim/sounds/flaps/pitch", 1.0));
   mgr->add(_flaps, "flaps");
 
@@ -276,13 +276,16 @@ FGFX::update (int dt)
   // Update the wind noise.
   ////////////////////////////////////////////////////////////////////
 
+				// The wind sound is airspeed and altitude
+				// dependent. The wind noise should become
+				// silent at about 65000 feet, and is based
+				// on a logarithmic scale.
   float rel_wind = cur_fdm_state->get_V_rel_wind(); // FPS
-  float airspeed_kt = cur_fdm_state->get_V_equiv_kts();
-  if (rel_wind > 60.0) {	// a little off 30kt
-    // float volume = rel_wind/600.0;	// FIXME!!!
-    float volume = rel_wind/937.0;      // FIXME!!!
-    double pitch = 1.0+(airspeed_kt/113.0);
-    _wind->set_volume(volume);
+  float alt_vol = 1-log(cur_fdm_state->get_Altitude()/65000.0)/4.81;
+  if ((rel_wind > 2.0)  && (alt_vol > 0.2)) {
+    float volume = rel_wind/937;
+    double pitch = 1.0+(rel_wind/53.0);
+    _wind->set_volume(volume*alt_vol/2);
     _wind->set_pitch(pitch);
     set_playing("wind", true);
   } else {
@@ -367,13 +370,14 @@ FGFX::update (int dt)
 
 				// Now, if any of the gear is in
 				// contact with the ground play the
-				// rumble sound.  The volume is the
-				// absolute velocity in knots divided
-				// by 120.0.  No rumble will be played
-				// if the velocity is under 6kt.
+				// rumble sound.  The volume is a
+				// logarthmic scale of the absolute
+				// velocity in knots divided by 12.0.
+				// No rumble will be played if the
+				// velocity is under ~0.25 kt.
   double speed = cur_fdm_state->get_V_equiv_kts();
-  if (gearOnGround > 0 && speed >= 6.0) {
-    double volume = 2.0 * (gearOnGround/totalGear) * (speed/60.0);
+  if (gearOnGround > 0  && speed > 0.5) {
+    double volume = 2.0 * (gearOnGround/totalGear) * log(speed)/12; //(speed/60.0);
     _rumble->set_volume(volume);
     set_playing("rumble", true);
   } else {

@@ -1,4 +1,4 @@
-// fgfx.hxx -- Sound effect management class
+// fg_fx.hxx -- Sound effect management class
 //
 // Started by David Megginson, October 2001
 // (Reuses some code from main.cxx, probably by Curtis Olson)
@@ -97,4 +97,4 @@ private:
 
 #endif
 
-// end of fgfx.hxx
+// end of fg_fx.hxx
