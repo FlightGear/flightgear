@@ -244,7 +244,6 @@ void fgLIGHT::UpdateAdjFog( void ) {
     float *sun_color = thesky->get_sun_color();
 
     gamma_restore_rgb( fog_color );
-    gamma_restore_rgb( cloud_color );
 
     // Calculate the fog color in the direction of the sun for
     // sunrise/sunset effects.
@@ -277,7 +276,6 @@ void fgLIGHT::UpdateAdjFog( void ) {
     // used by the rest of the program.
     //
     gamma_correct_rgb( fog_color );
-    gamma_correct_rgb( cloud_color );
 }
 
 
