@@ -150,6 +150,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
 
     // Approach
     net->tuned_freq = current_radiostack->get_navcom1()->get_nav_freq();
+    net->nav_radial = current_radiostack->get_navcom1()->get_nav_radial();
     net->in_range = current_radiostack->get_navcom1()->get_nav_inrange();
 
     if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
@@ -210,6 +211,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     net->warp = htonl( net->warp );
 
     htonf(net->tuned_freq);
+    htonf(net->nav_radial);
     net->in_range = htonl(net->in_range);
     htonf(net->dist_nm);
     htonf(net->course_deviation_deg);
