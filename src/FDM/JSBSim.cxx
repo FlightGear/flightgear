@@ -60,10 +60,6 @@
 // Initialize the JSBsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
 
-static bool trimmed = false;
-static bool trim_elev = false;
-static bool trim_throttle = false;
-
 int FGJSBsim::init( double dt ) {
 
   bool result;

@@ -20,35 +20,45 @@ dist-hook:
 # make the base distribution with textures, sounds and a bit of
 # scenery, and all the other associated files
 
-fgfs-base: fgfs-base-tar fgfs-base-zip fgfs-base-patch
+fgfs-base: fgfs-base-tar fgfs-base-zip fgfs-base-patch fgfs-textures-high
 
 fgfs-base-tar:
 	(cd $(HOME); \
-	tar czvf fgfs-base-$(VERSION)b.tar.gz \
+	tar czvf fgfs-base-$(VERSION).tar.gz \
 	FlightGear/A[A-su-z]* \
 	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
-	FlightGear/[T-W]* FlightGear/[c-m]*)
+	FlightGear/Textures \
+	FlightGear/T[A-Za-df-z]* \
+	FlightGear/[U-W]* FlightGear/[c-m]*)
 
 fgfs-base-zip:
 	(cd $(HOME); \
-	zip -rv fgfs-base-$(VERSION)b.zip \
+	zip -rv fgfs-base-$(VERSION).zip \
 	FlightGear/A[A-su-z]* \
 	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
-	FlightGear/Textures FlightGear/Thanks \
-	FlightGear/[T-W]* FlightGear/[c-z]*)
+	FlightGear/Textures \
+	FlightGear/T[A-Za-df-z]* \
+	FlightGear/[U-W]* FlightGear/[c-z]*)
 
 fgfs-base-patch:
 	(cd $(HOME); \
-	tar --newer 9/18/2000 -czvf fgfs-base-patch-$(VERSION)a.tar.gz \
+	tar --newer 9/18/2000 -czvf fgfs-base-patch-$(VERSION)b.tar.gz \
 	FlightGear/A[A-su-z]* \
 	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
-	FlightGear/[T-W]* FlightGear/[c-m]*)
+	FlightGear/Textures \
+	FlightGear/T[A-Za-df-z]* \
+	FlightGear/[U-W]* FlightGear/[c-m]*)
+
+fgfs-textures-high:
+	(cd $(HOME); \
+	tar -czvf fgfs-textures-high-$(VERSION)b.tar.gz \
+	FlightGear/Textures.high)
 
 # make the mini JSBsim data distribution
 jsbsim-data:

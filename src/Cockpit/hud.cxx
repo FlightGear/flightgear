@@ -1300,23 +1300,34 @@ void fgUpdateHUD( void ) {
 //  HUD_TextList.add( fgText( "AUTOPILOT", 20, apY) );
 //  apY -= 15;
   if( current_autopilot->get_HeadingEnabled() ) {
-	  HUD_TextList.add( fgText( 40, apY, 
-			    current_autopilot->get_TargetHeadingStr()) );
-	  apY -= 15;
+      HUD_TextList.add( fgText( 40, apY, 
+				current_autopilot->get_TargetHeadingStr()) );
+      apY -= 15;
   }
   if( current_autopilot->get_AltitudeEnabled() ) {
-	  HUD_TextList.add( fgText( 40, apY, 
-			    current_autopilot->get_TargetAltitudeStr()) );
-	  apY -= 15;
+      HUD_TextList.add( fgText( 40, apY, 
+				current_autopilot->get_TargetAltitudeStr()) );
+      apY -= 15;
   }
   if( current_autopilot->get_HeadingMode() == 
-      FGAutopilot::FG_HEADING_WAYPOINT ) {
-	  HUD_TextList.add( fgText( 40, apY, 
-			    current_autopilot->get_TargetLatLonStr()) );
+      FGAutopilot::FG_HEADING_WAYPOINT )
+  {
+      char *wpstr;
+      wpstr = current_autopilot->get_TargetWP1Str();
+      if ( strlen( wpstr ) ) {
+	  HUD_TextList.add( fgText( 40, apY, wpstr ) );
 	  apY -= 15;
-	  HUD_TextList.add( fgText( 40, apY,
-			    current_autopilot->get_TargetDistanceStr() ) );
+      }
+      wpstr = current_autopilot->get_TargetWP2Str();
+      if ( strlen( wpstr ) ) {
+	  HUD_TextList.add( fgText( 40, apY, wpstr ) );
 	  apY -= 15;
+      }
+      wpstr = current_autopilot->get_TargetWP3Str();
+      if ( strlen( wpstr ) ) {
+	  HUD_TextList.add( fgText( 40, apY, wpstr ) );
+	  apY -= 15;
+      }
   }
   
   HUD_TextList.draw();

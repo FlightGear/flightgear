@@ -1,5 +1,5 @@
 Users Guide to FlightGear panel configuration
-Version 0.3, October 5 2000
+Version 0.4, October 11 2000
 Author: John Check <j4strngs@rockfish.net>  
 
 This document is an attempt to describe the configuration of 
@@ -111,6 +111,15 @@ An action is a hotspot on an instrument where something will happen
 when the user clicks the left or center mouse button.  Actions are
 always tied to properties: they can toggle a boolean property, adjust
 the value of a numeric property, or swap the values of two properties.
+
+About Transformations and Needle Placement:
+
+When describing placement of instrument needles, an transformation offset must 
+be applied to shift the needle's fulcrum or else the needle will rotate around it's 
+middle. The offset will be of <type> x-shift or y-shift depending on the orientation of 
+the needle section in the cropped texture.
+Offsets applied to shift the needle from the center of the instrument face must be 
+applied *before* the transformation that describes the needle movement.
 
 About Textures:
 

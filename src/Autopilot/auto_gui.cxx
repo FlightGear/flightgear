@@ -590,7 +590,7 @@ void TgtAptDialog_OK (puObject *)
 
     string tmp = s;
     double alt = 0.0;
-    int pos = tmp.find( "," );
+    int pos = tmp.find( "@" );
     if ( pos != string::npos ) {
 	TgtAptId = tmp.substr( 0, pos );
 	string alt_str = tmp.substr( pos + 1 );
@@ -654,6 +654,18 @@ void AddWayPoint(puObject *cb)
 void PopWayPoint(puObject *cb)
 {
     globals->get_route()->delete_first();
+
+    // see if there are more waypoints on the list
+    if ( globals->get_route()->size() ) {
+	// more waypoints
+	current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
+    } else {
+	// end of the line
+	current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_LOCK );
+
+	// use current heading
+	current_autopilot->set_TargetHeading( FGBFI::getHeading() );
+    }
 }
 
 void ClearRoute(puObject *cb)

@@ -51,8 +51,10 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.17  2000/10/10 15:44:35  curt
-// Oct. 10, 2000 sync with JSBSim master repository.
+// Revision 1.18  2000/10/13 21:34:57  curt
+// Panel tweaks to support "shaped" panels.
+// Additional HUD support for waypoints.
+// JSBSim updates.
 //
 // Revision 1.3  2000/04/26 10:55:57  jsb
 // Made changes as required by Curt to install JSBSim into FGFS

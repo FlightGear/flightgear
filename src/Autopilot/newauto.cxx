@@ -107,25 +107,80 @@ static inline double get_ground_speed() {
 }
 
 
-void FGAutopilot::MakeTargetDistanceStr( double distance ) {
-    double eta = distance*METER_TO_NM / get_ground_speed();
-    if ( eta >= 100.0 ) { eta = 99.999; }
-    int major, minor;
-    if ( eta < (1.0/6.0) ) {
-	// within 10 minutes, bump up to min/secs
-	eta *= 60.0;
+void FGAutopilot::MakeTargetWPStr( double distance ) {
+    double accum = 0.0;
+
+    int size = globals->get_route()->size();
+
+    // start by wiping the strings
+    TargetWP1Str[0] = 0;
+    TargetWP2Str[0] = 0;
+    TargetWP3Str[0] = 0;
+
+    // current route
+    if ( size > 0 ) {
+	SGWayPoint wp1 = globals->get_route()->get_waypoint( 0 );
+	accum += distance;
+	double eta = accum * METER_TO_NM / get_ground_speed();
+	if ( eta >= 100.0 ) { eta = 99.999; }
+	int major, minor;
+	if ( eta < (1.0/6.0) ) {
+	    // within 10 minutes, bump up to min/secs
+	    eta *= 60.0;
+	}
+	major = (int)eta;
+	minor = (int)((eta - (int)eta) * 60.0);
+	sprintf( TargetWP1Str, "%s %.2f NM  ETA %d:%02d",
+		 wp1.get_id().c_str(),
+		 accum*METER_TO_NM, major, minor );
+	// cout << "distance = " << distance*METER_TO_NM
+	//      << "  gndsp = " << get_ground_speed() 
+	//      << "  time = " << eta
+	//      << "  major = " << major
+	//      << "  minor = " << minor
+	//      << endl;
     }
-    major = (int)eta;
-    minor = (int)((eta - (int)eta) * 60.0);
-    sprintf( TargetDistanceStr, "%s %.2f NM  ETA %d:%02d",
-	     waypoint.get_id().c_str(),
-	     distance*METER_TO_NM, major, minor );
-    // cout << "distance = " << distance*METER_TO_NM
-    //      << "  gndsp = " << get_ground_speed() 
-    //      << "  time = " << eta
-    //      << "  major = " << major
-    //      << "  minor = " << minor
-    //      << endl;
+
+    // next route
+    if ( size > 1 ) {
+	SGWayPoint wp2 = globals->get_route()->get_waypoint( 1 );
+	accum += wp2.get_distance();
+	
+	double eta = accum * METER_TO_NM / get_ground_speed();
+	if ( eta >= 100.0 ) { eta = 99.999; }
+	int major, minor;
+	if ( eta < (1.0/6.0) ) {
+	    // within 10 minutes, bump up to min/secs
+	    eta *= 60.0;
+	}
+	major = (int)eta;
+	minor = (int)((eta - (int)eta) * 60.0);
+	sprintf( TargetWP2Str, "%s %.2f NM  ETA %d:%02d",
+		 wp2.get_id().c_str(),
+		 accum*METER_TO_NM, major, minor );
+    }
+
+    // next route
+    if ( size > 2 ) {
+	for ( int i = 2; i < size; ++i ) {
+	    accum += globals->get_route()->get_waypoint( i ).get_distance();
+	}
+	
+	SGWayPoint wpn = globals->get_route()->get_waypoint( size - 1 );
+
+	double eta = accum * METER_TO_NM / get_ground_speed();
+	if ( eta >= 100.0 ) { eta = 99.999; }
+	int major, minor;
+	if ( eta < (1.0/6.0) ) {
+	    // within 10 minutes, bump up to min/secs
+	    eta *= 60.0;
+	}
+	major = (int)eta;
+	minor = (int)((eta - (int)eta) * 60.0);
+	sprintf( TargetWP3Str, "%s %.2f NM  ETA %d:%02d",
+		 wpn.get_id().c_str(),
+		 accum*METER_TO_NM, major, minor );
+    }
 }
 
 
@@ -217,7 +272,7 @@ void FGAutopilot::reset() {
 	
     // TargetLatitude = FGBFI::getLatitude();
     // TargetLongitude = FGBFI::getLongitude();
-    // s<et_WayPoint( FGBFI::getLongitude(), FGBFI::getLatitude(), 0.0, "reset" );
+    // set_WayPoint( FGBFI::getLongitude(), FGBFI::getLatitude(), 0.0, "reset" );
 
     MakeTargetLatLonStr( get_TargetLatitude(), get_TargetLongitude() );
 }
@@ -355,8 +410,9 @@ int FGAutopilot::run() {
 
 	    // compute course to way_point
 	    // need to test for iter
-	    waypoint.CourseAndDistance( lon, lat, alt, 
-					&wp_course, &wp_distance );
+	    SGWayPoint wp = globals->get_route()->get_first();
+	    wp.CourseAndDistance( lon, lat, alt, 
+				  &wp_course, &wp_distance );
 
 #ifdef DO_fgAP_CORRECTED_COURSE
 	    corrected_course = course - wp_course;
@@ -392,7 +448,7 @@ int FGAutopilot::run() {
 	    MakeTargetHeadingStr( TargetHeading );
 	    // Force this just in case
 	    TargetDistance = wp_distance;
-	    MakeTargetDistanceStr( wp_distance );
+	    MakeTargetWPStr( wp_distance );
 	}
 
 	double RelHeading;
@@ -654,7 +710,7 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 	    TargetDistance = distance;
 	    MakeTargetLatLonStr( waypoint.get_target_lat(),
 				 waypoint.get_target_lon() );
-	    MakeTargetDistanceStr( distance );
+	    MakeTargetWPStr( distance );
 
 	    if ( waypoint.get_target_alt() > 0.0 ) {
 		TargetAltitude = waypoint.get_target_alt();

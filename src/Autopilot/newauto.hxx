@@ -100,7 +100,9 @@ private:
     char TargetLatitudeStr[64];
     char TargetLongitudeStr[64];
     char TargetLatLonStr[64];
-    char TargetDistanceStr[64];
+    char TargetWP1Str[64];
+    char TargetWP2Str[64];
+    char TargetWP3Str[64];
     char TargetHeadingStr[64];
     char TargetAltitudeStr[64];
 
@@ -156,7 +158,9 @@ public:
 
     inline char *get_TargetLatitudeStr() { return TargetLatitudeStr; }
     inline char *get_TargetLongitudeStr() { return TargetLongitudeStr; }
-    inline char *get_TargetDistanceStr() { return TargetDistanceStr; }
+    inline char *get_TargetWP1Str() { return TargetWP1Str; }
+    inline char *get_TargetWP2Str() { return TargetWP2Str; }
+    inline char *get_TargetWP3Str() { return TargetWP3Str; }
     inline char *get_TargetHeadingStr() { return TargetHeadingStr; }
     inline char *get_TargetAltitudeStr() { return TargetAltitudeStr; }
     inline char *get_TargetLatLonStr() { return TargetLatLonStr; }
@@ -165,7 +169,7 @@ public:
     void MakeTargetLatLonStr( double lat, double lon );
     void MakeTargetAltitudeStr( double altitude );
     void MakeTargetHeadingStr( double bearing );
-    void MakeTargetDistanceStr( double distance );
+    void MakeTargetWPStr( double distance );
     void update_old_control_values();
 
     // accessors

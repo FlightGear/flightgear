@@ -202,9 +202,9 @@ FGPanel::update () const
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   glBegin(GL_POLYGON);
   glTexCoord2f(0.0, 0.0); glVertex3f(_winx, _winy, 0);
-  glTexCoord2f(10.0, 0.0); glVertex3f(_winx + _width, _winy, 0);
-  glTexCoord2f(10.0, 5.0); glVertex3f(_winx + _width, _winy + _height, 0);
-  glTexCoord2f(0.0, 5.0); glVertex3f(_winx, _winy + _height, 0);
+  glTexCoord2f(1.0, 0.0); glVertex3f(_winx + _width, _winy, 0);
+  glTexCoord2f(1.0, 1.0); glVertex3f(_winx + _width, _winy + _height, 0);
+  glTexCoord2f(0.0, 1.0); glVertex3f(_winx, _winy + _height, 0);
   glEnd();
 
 				// Draw the instruments.

@@ -596,7 +596,7 @@ bool fgOPTIONS::parse_wp( const string& arg ) {
     string id, alt_str;
     double alt = 0.0;
 
-    int pos = arg.find( "," );
+    int pos = arg.find( "@" );
     if ( pos != string::npos ) {
 	id = arg.substr( 0, pos );
 	alt_str = arg.substr( pos + 1 );
@@ -1164,7 +1164,7 @@ void fgOPTIONS::usage ( void ) {
 
     cout << endl;
     cout << "Route/Way Point Options:" << endl;
-    cout << "\t--wp=ID[,alt]:  specify a waypoint for the GC autopilot" << endl;
+    cout << "\t--wp=ID[@alt]:  specify a waypoint for the GC autopilot" << endl;
     cout << "\t\tYou can specify multiple waypoints (a route) with multiple"
 	 << endl;
     cout << "\t\tinstances of --wp=" << endl;

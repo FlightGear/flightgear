@@ -177,8 +177,10 @@ extern FGControls controls;
 
 
 // $Log$
-// Revision 1.16  2000/10/10 15:44:35  curt
-// Oct. 10, 2000 sync with JSBSim master repository.
+// Revision 1.17  2000/10/13 21:34:58  curt
+// Panel tweaks to support "shaped" panels.
+// Additional HUD support for waypoints.
+// JSBSim updates.
 //
 // Revision 1.6  2000/06/03 13:59:52  jsb
 // Changes for compatibility with MSVC

@@ -34,6 +34,9 @@ class FGJSBsim: public FGInterface {
 
     // The aircraft for this instance
     FGFDMExec FDMExec;
+    bool trimmed;
+    float trim_elev;
+    float trim_throttle;
 
 public:
 

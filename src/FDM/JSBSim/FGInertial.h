@@ -60,6 +60,8 @@ INCLUDES
 CLASS DECLARATION
 *******************************************************************************/
 
+const char *Id_Inertial = "JSBSim $Header$";
+
 class FGInertial : public FGModel {
 
 public:
