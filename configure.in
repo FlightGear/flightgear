@@ -234,7 +234,6 @@ AC_OUTPUT( \
 	Lib/Debug/Makefile \
 	Lib/DEM/Makefile \
 	Lib/Math/Makefile \
-	Lib/Misc/Makefile \
 	Lib/PUI/Makefile \
 	Lib/XGL/Makefile \
 	Lib/zlib/Makefile \
