@@ -105,7 +105,7 @@ FGControls::bind ()
     fgTie(name, this, index,
 	 &FGControls::get_mixture, &FGControls::set_mixture);
     fgSetArchivable(name);
-    sprintf(name, "/controls/propellor-pitch[%d]", index);
+    sprintf(name, "/controls/propeller-pitch[%d]", index);
     fgTie(name, this, index,
 	 &FGControls::get_prop_advance, &FGControls::set_prop_advance);
     fgSetArchivable(name);
@@ -147,7 +147,7 @@ FGControls::unbind ()
     fgUntie(name);
     sprintf(name, "/controls/mixture[%d]", index);
     fgUntie(name);
-    sprintf(name, "/controls/propellor-pitch[%d]", index);
+    sprintf(name, "/controls/propeller-pitch[%d]", index);
     fgUntie(name);
     sprintf(name, "/controls/magnetos[%d]", index);
     fgUntie(name);
