@@ -224,8 +224,9 @@ FGIO::init()
 
     // parse the configuration strings and store the results in the
     // appropriate FGIOChannel structures
-    vector< string >::iterator i = globals->get_channel_options_list()->begin();
-    vector< string >::iterator end = globals->get_channel_options_list()->end();
+    typedef vector<string> container;
+    container::iterator i = globals->get_channel_options_list()->begin();
+    container::iterator end = globals->get_channel_options_list()->end();
     for (; i != end; ++i )
     {
 	p = parse_port_config( *i );
@@ -264,8 +265,9 @@ FGIO::update( double delta_time_sec )
 	last = current;
     }
 
-    vector< FGProtocol* >::iterator i = io_channels.begin();
-    vector< FGProtocol* >::iterator end = io_channels.end();
+    typedef vector< FGProtocol* > container;
+    container::iterator i = io_channels.begin();
+    container::iterator end = io_channels.end();
     for (; i != end; ++i )
     {
 	FGProtocol* p = *i;
@@ -287,8 +289,9 @@ FGIO::shutdown_all() {
 
     // cout << "processing I/O channels" << endl;
 
-    vector< FGProtocol* >::iterator i = io_channels.begin();
-    vector< FGProtocol* >::iterator end = io_channels.end();
+    typedef vector< FGProtocol* > container;
+    container::iterator i = io_channels.begin();
+    container::iterator end = io_channels.end();
     for (; i != end; ++i )
     {
 	p = *i;
