@@ -26,7 +26,7 @@
 
 TARGET=fg0
 
-CFILES = fg_init.c $(INTERFACE_FILES)
+CFILES = fg_init.c views.c $(INTERFACE_FILES)
 OFILES = $(CFILES:.c=.o)
 AFILES = ../Aircraft/libAircraft.a ../Cockpit/libCockpit.a \
 	../Controls/libControls.a ../Flight/libFlight.a \
@@ -73,6 +73,9 @@ GLTKkey.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.32  1997/08/27 21:31:27  curt
+# Added views.[ch]
+#
 # Revision 1.31  1997/08/25 20:27:23  curt
 # Merged in initial HUD and Joystick code.
 #
