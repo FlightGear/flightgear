@@ -323,12 +323,33 @@ FGNavCom::update(double dt)
 	if ( nav_has_gs ) {
 	    station = Point3D( nav_gs_x, nav_gs_y, nav_gs_z );
 	    nav_gs_dist = aircraft.distance3D( station );
+            // wgs84 heading to glide slope
+            geo_inverse_wgs_84( elev,
+                                lat * SGD_RADIANS_TO_DEGREES,
+                                lon * SGD_RADIANS_TO_DEGREES, 
+                                nav_gslat, nav_gslon,
+                                &az1, &az2, &s );
+            double r = az1 - nav_radial;
+            while ( r >  180.0 ) { r -= 360.0;}
+            while ( r < -180.0 ) { r += 360.0;}
+            if ( r >= -90.0 && r <= 90.0 ) {
+                nav_gs_dist_signed = nav_gs_dist;
+            } else {
+                nav_gs_dist_signed = -nav_gs_dist;
+            }
+            /* cout << "Target Radial = " << nav_radial 
+                 << "  Bearing = " << az1
+                 << "  dist (signed) = " << nav_gs_dist_signed
+                 << endl; */
+            
 	} else {
 	    nav_gs_dist = 0.0;
 	}
 	
-	// wgs84 heading
-	geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES, lon * SGD_RADIANS_TO_DEGREES, 
+	// wgs84 heading to localizer
+	geo_inverse_wgs_84( elev,
+                            lat * SGD_RADIANS_TO_DEGREES,
+                            lon * SGD_RADIANS_TO_DEGREES, 
 			    nav_loclat, nav_loclon,
 			    &az1, &az2, &s );
 	// cout << "az1 = " << az1 << " magvar = " << nav_magvar << endl;

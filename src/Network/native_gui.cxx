@@ -154,8 +154,9 @@ void FGProps2NetGUI( FGNetGUI *net ) {
 
     if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
         // is an ILS
-        net->dist_nm = current_radiostack->get_navcom1()->get_nav_gs_dist()
-            * SG_METER_TO_NM;
+        net->dist_nm
+            = current_radiostack->get_navcom1()->get_nav_gs_dist_signed()
+              * SG_METER_TO_NM;
     } else {
         // is a VOR
         net->dist_nm = current_radiostack->get_navcom1()->get_nav_loc_dist()

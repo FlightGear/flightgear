@@ -103,6 +103,7 @@ class FGNavCom : public FGSubsystem
     double nav_gs_y;
     double nav_gs_z;
     double nav_gs_dist;
+    double nav_gs_dist_signed;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;
     double nav_elev;
@@ -208,6 +209,7 @@ public:
     inline double get_nav_gslon() const { return nav_gslon; }
     inline double get_nav_gslat() const { return nav_gslat; }
     inline double get_nav_gs_dist() const { return nav_gs_dist; }
+    inline double get_nav_gs_dist_signed() const { return nav_gs_dist_signed; }
     inline double get_nav_elev() const { return nav_elev; }
     inline double get_nav_heading() const { return nav_heading; }
     inline double get_nav_radial() const { return nav_radial; }
