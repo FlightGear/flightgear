@@ -35,6 +35,7 @@
 #include <ssg.h>		// plib include
 
 #include <Debug/logstream.hxx>
+#include <Misc/fgstream.hxx>
 #include <Airports/genapt.hxx>
 #include <Bucket/newbucket.hxx>
 #include <Clouds/cloudobj.hxx>
@@ -42,6 +43,7 @@
 #include <Main/views.hxx>
 #include <Misc/fgpath.hxx>
 #include <Objects/obj.hxx>
+#include <Scenery/scenery.hxx>  // for scenery.center
 
 #include "tilecache.hxx"
 #include "tileentry.hxx"
@@ -162,29 +164,74 @@ FGTileCache::fill_in( int index, const FGBucket& p )
 	exit(-1);
     }
 
-    // Load the appropriate data file and build tile fragment list
-    FGPath tile_path( current_options.get_fg_root() );
-    tile_path.append( "Scenery" );
-    tile_path.append( p.gen_base_path() );
-    tile_path.append( p.gen_index_str() );
-
-    tile_cache[index].tile_bucket = p;
-
     tile_cache[index].select_ptr = new ssgSelector;
     tile_cache[index].transform_ptr = new ssgTransform;
     tile_cache[index].range_ptr = new ssgRangeSelector;
+    tile_cache[index].tile_bucket = p;
 
-    ssgBranch *new_tile = fgObjLoad( tile_path.str(), &tile_cache[index] );
-    if ( current_options.get_clouds() ) {
-	ssgLeaf *cloud_layer = fgGenCloudLayer( &tile_cache[index],
-					 current_options.get_clouds_asl() );
-	new_tile -> addKid( cloud_layer );
-    }
+    FGPath tile_path( current_options.get_fg_root() );
+    tile_path.append( "Scenery" );
+    tile_path.append( p.gen_base_path() );
+    
+    // Load the appropriate data file and build tile fragment list
+    FGPath tile_base = tile_path;
+    tile_base.append( p.gen_index_str() );
+    ssgBranch *new_tile = fgObjLoad( tile_base.str(), &tile_cache[index], 
+				     true );
 
     if ( new_tile != NULL ) {
 	tile_cache[index].range_ptr->addKid( new_tile );
     }
+  
+    // load custom objects
+    cout << "CUSTOM OBJECTS" << endl;
+
+    FGPath index_path = tile_path;
+    index_path.append( p.gen_index_str() );
+    index_path.concat( ".ind" );
+
+    cout << "Looking in " << index_path.str() << endl;
+
+    fg_gzifstream in( index_path.str() );
+
+    if ( in.is_open() ) {
+	string token, name;
+
+	while ( ! in.eof() ) {
+	    in >> token;
+	    in >> name;
+	    in >> skipws;
+	    cout << "token = " << token << " name = " << name << endl;
+
+	    FGPath custom_path = tile_path;
+	    custom_path.append( name );
+	    ssgBranch *custom_obj = fgObjLoad( custom_path.str(),
+					       &tile_cache[index], false );
+	    if ( (new_tile != NULL) && (custom_obj != NULL) ) {
+		new_tile -> addKid( custom_obj );
+	    }
+	}
+    }
+
+    // generate cloud layer
+    if ( current_options.get_clouds() ) {
+	ssgLeaf *cloud_layer = fgGenCloudLayer( &tile_cache[index],
+					 current_options.get_clouds_asl() );
+	cloud_layer->clrTraversalMaskBits( SSGTRAV_HOT );
+	new_tile -> addKid( cloud_layer );
+    }
+
     tile_cache[index].transform_ptr->addKid( tile_cache[index].range_ptr );
+
+    // calculate initial tile offset
+    tile_cache[index].SetOffset( scenery.center );
+    sgCoord sgcoord;
+    sgSetCoord( &sgcoord,
+		tile_cache[index].offset.x(), 
+		tile_cache[index].offset.y(), tile_cache[index].offset.z(),
+		0.0, 0.0, 0.0 );
+    tile_cache[index].transform_ptr->setTransform( &sgcoord );
+
     tile_cache[index].select_ptr->addKid( tile_cache[index].transform_ptr );
     terrain->addKid( tile_cache[index].select_ptr );
 

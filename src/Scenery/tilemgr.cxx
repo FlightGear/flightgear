@@ -369,6 +369,319 @@ FGTileMgr::current_elev( double lon, double lat, const Point3D& abs_view_pos ) {
 }
 
 
+inline int fg_sign( const double x ) {
+    return x < 0 ? -1 : 1;
+}
+
+inline double fg_min( const double a, const double b ) {
+    return b < a ? b : a;
+}
+
+inline double fg_max( const double a, const double b ) {
+    return a < b ? b : a;
+}
+
+// return the minimum of the three values
+inline double fg_min3( const double a, const double b, const double c ) {
+    return a > b ? fg_min(b, c) : fg_min(a, c);
+}
+
+// return the maximum of the three values
+inline double fg_max3 (const double a, const double b, const double c ) {
+    return a < b ? fg_max(b, c) : fg_max(a, c);
+}
+
+
+// check for an instersection with the individual triangles of a leaf
+static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgMat4 m,
+				    const sgVec3 p, const sgVec3 dir,
+				    sgVec3 result )
+{
+    sgVec3 v1, v2, n;
+    sgVec3 p1, p2, p3;
+    double x, y, z;  // temporary holding spot for result
+    double a, b, c, d;
+    double x0, y0, z0, x1, y1, z1, a1, b1, c1;
+    double t1, t2, t3;
+    double xmin, xmax, ymin, ymax, zmin, zmax;
+    double dx, dy, dz, min_dim, x2, y2, x3, y3, rx, ry;
+    float *tmp;
+    int side1, side2;
+    short i1, i2, i3;
+
+    cout << s << "Intersecting" << endl;
+
+    // traverse the triangle list for this leaf
+    for ( int i = 0; i < leaf->getNumTriangles(); ++i ) {
+	cout << s << "testing triangle = " << i << endl;
+
+	leaf->getTriangle( i, &i1, &i2, &i3 );
+
+	// get triangle vertex coordinates
+
+	tmp = leaf->getVertex( i1 );
+	cout << s << "orig point 1 = " << tmp[0] << " " << tmp[1] 
+	     << " " << tmp[2] << endl;
+	sgXformPnt3( p1, tmp, m ) ;
+
+	tmp = leaf->getVertex( i2 );
+	cout << s << "orig point 2 = " << tmp[0] << " " << tmp[1] 
+	     << " " << tmp[2] << endl;
+	sgXformPnt3( p2, tmp, m ) ;
+
+	tmp = leaf->getVertex( i3 );
+	cout << s << "orig point 3 = " << tmp[0] << " " << tmp[1] 
+	     << " " << tmp[2] << endl;
+	sgXformPnt3( p3, tmp, m ) ;
+
+	cout << s << "point 1 = " << p1[0] << " " << p1[1] << " " << p1[2]
+	     << endl;
+	cout << s << "point 2 = " << p2[0] << " " << p2[1] << " " << p2[2]
+	     << endl;
+	cout << s << "point 3 = " << p3[0] << " " << p3[1] << " " << p3[2]
+	     << endl;
+
+	// calculate two edge vectors, and the face normal
+	sgSubVec3(v1, p2, p1);
+	sgSubVec3(v2, p3, p1);
+	sgVectorProductVec3(n, v1, v2);
+
+	// calculate the plane coefficients for the plane defined by
+	// this face.  If n is the normal vector, n = (a, b, c) and p1
+	// is a point on the plane, p1 = (x0, y0, z0), then the
+	// equation of the line is a(x-x0) + b(y-y0) + c(z-z0) = 0
+	a = n[0];
+	b = n[1];
+	c = n[2];
+	d = a * p1[0] + b * p1[1] + c * p1[2];
+	// printf("a, b, c, d = %.2f %.2f %.2f %.2f\n", a, b, c, d);
+
+	// printf("p1(d) = %.2f\n", a * p1[0] + b * p1[1] + c * p1[2]);
+	// printf("p2(d) = %.2f\n", a * p2[0] + b * p2[1] + c * p2[2]);
+	// printf("p3(d) = %.2f\n", a * p3[0] + b * p3[1] + c * p3[2]);
+
+	// calculate the line coefficients for the specified line
+	x0 = p[0];  x1 = p[0] + dir[0];
+	y0 = p[1];  y1 = p[1] + dir[1];
+	z0 = p[2];  z1 = p[2] + dir[2];
+
+	if ( fabs(x1 - x0) > FG_EPSILON ) {
+	    a1 = 1.0 / (x1 - x0);
+	} else {
+	    // we got a big divide by zero problem here
+	    a1 = 0.0;
+	}
+	b1 = y1 - y0;
+	c1 = z1 - z0;
+
+	// intersect the specified line with this plane
+	t1 = b * b1 * a1;
+	t2 = c * c1 * a1;
+
+	// printf("a = %.2f  t1 = %.2f  t2 = %.2f\n", a, t1, t2);
+
+	if ( fabs(a + t1 + t2) > FG_EPSILON ) {
+	    x = (t1*x0 - b*y0 + t2*x0 - c*z0 + d) / (a + t1 + t2);
+	    t3 = a1 * (x - x0);
+	    y = b1 * t3 + y0;
+	    z = c1 * t3 + z0;	    
+	    // printf("result(d) = %.2f\n", a * x + b * y + c * z);
+	} else {
+	    // no intersection point
+	    continue;
+	}
+
+#if 0
+	if ( side_flag ) {
+	    // check to see if end0 and end1 are on opposite sides of
+	    // plane
+	    if ( (x - x0) > FG_EPSILON ) {
+		t1 = x;
+		t2 = x0;
+		t3 = x1;
+	    } else if ( (y - y0) > FG_EPSILON ) {
+		t1 = y;
+		t2 = y0;
+		t3 = y1;
+	    } else if ( (z - z0) > FG_EPSILON ) {
+		t1 = z;
+		t2 = z0;
+		t3 = z1;
+	    } else {
+		// everything is too close together to tell the difference
+		// so the current intersection point should work as good
+		// as any
+		sgSetVec3( result, x, y, z );
+		return true;
+	    }
+	    side1 = fg_sign (t1 - t2);
+	    side2 = fg_sign (t1 - t3);
+	    if ( side1 == side2 ) {
+		// same side, punt
+		continue;
+	    }
+	}
+#endif
+
+	// check to see if intersection point is in the bounding
+	// cube of the face
+#ifdef XTRA_DEBUG_STUFF
+	xmin = fg_min3 (p1[0], p2[0], p3[0]);
+	xmax = fg_max3 (p1[0], p2[0], p3[0]);
+	ymin = fg_min3 (p1[1], p2[1], p3[1]);
+	ymax = fg_max3 (p1[1], p2[1], p3[1]);
+	zmin = fg_min3 (p1[2], p2[2], p3[2]);
+	zmax = fg_max3 (p1[2], p2[2], p3[2]);
+	printf("bounding cube = %.2f,%.2f,%.2f  %.2f,%.2f,%.2f\n",
+	       xmin, ymin, zmin, xmax, ymax, zmax);
+#endif
+	// punt if outside bouding cube
+	if ( x < (xmin = fg_min3 (p1[0], p2[0], p3[0])) ) {
+	    continue;
+	} else if ( x > (xmax = fg_max3 (p1[0], p2[0], p3[0])) ) {
+	    continue;
+	} else if ( y < (ymin = fg_min3 (p1[1], p2[1], p3[1])) ) {
+	    continue;
+	} else if ( y > (ymax = fg_max3 (p1[1], p2[1], p3[1])) ) {
+	    continue;
+	} else if ( z < (zmin = fg_min3 (p1[2], p2[2], p3[2])) ) {
+	    continue;
+	} else if ( z > (zmax = fg_max3 (p1[2], p2[2], p3[2])) ) {
+	    continue;
+	}
+
+	// (finally) check to see if the intersection point is
+	// actually inside this face
+
+	//first, drop the smallest dimension so we only have to work
+	//in 2d.
+	dx = xmax - xmin;
+	dy = ymax - ymin;
+	dz = zmax - zmin;
+	min_dim = fg_min3 (dx, dy, dz);
+	if ( fabs(min_dim - dx) <= FG_EPSILON ) {
+	    // x is the smallest dimension
+	    x1 = p1[1];
+	    y1 = p1[2];
+	    x2 = p2[1];
+	    y2 = p2[2];
+	    x3 = p3[1];
+	    y3 = p3[2];
+	    rx = y;
+	    ry = z;
+	} else if ( fabs(min_dim - dy) <= FG_EPSILON ) {
+	    // y is the smallest dimension
+	    x1 = p1[0];
+	    y1 = p1[2];
+	    x2 = p2[0];
+	    y2 = p2[2];
+	    x3 = p3[0];
+	    y3 = p3[2];
+	    rx = x;
+	    ry = z;
+	} else if ( fabs(min_dim - dz) <= FG_EPSILON ) {
+	    // z is the smallest dimension
+	    x1 = p1[0];
+	    y1 = p1[1];
+	    x2 = p2[0];
+	    y2 = p2[1];
+	    x3 = p3[0];
+	    y3 = p3[1];
+	    rx = x;
+	    ry = y;
+	} else {
+	    // all dimensions are really small so lets call it close
+	    // enough and return a successful match
+	    sgSetVec3( result, x, y, z );
+	    return true;
+	}
+
+	// check if intersection point is on the same side of p1 <-> p2 as p3
+	t1 = (y1 - y2) / (x1 - x2);
+	side1 = fg_sign (t1 * ((x3) - x2) + y2 - (y3));
+	side2 = fg_sign (t1 * ((rx) - x2) + y2 - (ry));
+	if ( side1 != side2 ) {
+	    // printf("failed side 1 check\n");
+	    continue;
+	}
+
+	// check if intersection point is on correct side of p2 <-> p3 as p1
+	t1 = (y2 - y3) / (x2 - x3);
+	side1 = fg_sign (t1 * ((x1) - x3) + y3 - (y1));
+	side2 = fg_sign (t1 * ((rx) - x3) + y3 - (ry));
+	if ( side1 != side2 ) {
+	    // printf("failed side 2 check\n");
+	    continue;
+	}
+
+	// check if intersection point is on correct side of p1 <-> p3 as p2
+	t1 = (y1 - y3) / (x1 - x3);
+	side1 = fg_sign (t1 * ((x2) - x3) + y3 - (y2));
+	side2 = fg_sign (t1 * ((rx) - x3) + y3 - (ry));
+	if ( side1 != side2 ) {
+	    // printf("failed side 3  check\n");
+	    continue;
+	}
+
+	// printf( "intersection point = %.2f %.2f %.2f\n", x, y, z);
+	sgSetVec3( result, x, y, z );
+	return true;
+    }
+
+    // printf("\n");
+
+    return false;
+}
+
+
+void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgMat4 m, 
+			    const sgVec3 p, const sgVec3 dir )
+{
+    sgSphere *bsphere;
+    for ( ssgEntity *kid = branch->getKid( 0 );
+	  kid != NULL; 
+	  kid = branch->getNextKid() )
+    {
+	if ( kid->getTraversalMask() & SSGTRAV_HOT ) {
+	    bsphere = kid->getBSphere();
+	    sgVec3 center;
+	    sgCopyVec3( center, bsphere->getCenter() );
+	    sgXformPnt3( center, m ) ;
+	    cout << s << "entity bounding sphere:" << endl;
+	    cout << s << "center = " << center[0] << " "
+		 << center[1] << " " << center[2] << endl;
+    	    cout << s << "radius = " << bsphere->getRadius() << endl;
+	    double radius_sqd = bsphere->getRadius() * bsphere->getRadius();
+	    if ( sgPointLineDistSquared( center, p, dir ) < radius_sqd ) {
+		// possible intersections
+		if ( kid->isAKindOf ( ssgTypeBranch() ) ) {
+		    sgMat4 m_new;
+		    sgCopyMat4(m_new, m);
+		    if ( kid->isA( ssgTypeTransform() ) ) {
+			sgMat4 xform;
+			((ssgTransform *)kid)->getTransform( xform );
+			sgPreMultMat4( m_new, xform );
+		    }
+		    my_ssg_los( s + " ", (ssgBranch *)kid, m_new, p, dir );
+		} else if ( kid->isAKindOf ( ssgTypeLeaf() ) ) {
+		    sgVec3 result;
+		    if ( my_ssg_instersect_leaf( s, (ssgLeaf *)kid, m, p, dir, 
+						 result ) )
+			{
+			    cout << "sgLOS hit: " << result[0] << "," 
+				 << result[1] << "," << result[2] << endl;
+			}
+		}
+	    } else {
+		// end of the line for this branch
+	    }
+	} else {
+	    // branch requested not to be traversed
+	}
+    }
+}
+
+
 // Determine scenery altitude via ssg.  Normally this just happens
 // when we render the scene, but we'd also like to be able to do this
 // explicitely.  lat & lon are in radians.  view_pos in current world
@@ -378,28 +691,18 @@ double
 FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos, 
 			     const Point3D& view_pos )
 {
-    ssgHit *results ;
-
-    // cout << "view pos = " << view_pos << endl;
-    // cout << "abs view pos = " << abs_view_pos << endl;
+    hitcount = 0;
 
     sgMat4 m;
-    sgMakeTransMat4( m, view_pos.x(), view_pos.y(), view_pos.z() );
+    sgMakeIdentMat4 ( m ) ;
 
-    sgVec3 s;
-    sgSetVec3(s, -abs_view_pos.x(), -abs_view_pos.y(), -abs_view_pos.z() );
+    sgVec3 sgavp, sgvp;
+    sgSetVec3(sgavp, abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z() );
+    sgSetVec3(sgvp, view_pos.x(), view_pos.y(), view_pos.z() );
 
-    int num_hits = ssgLOS ( scene, s, m, &results ) ;
-
-    for ( int i = 0 ; i < num_hits ; i++ ) {
-	ssgHit *h = &(results [ i ]) ;
-	// cout << "got a hit!" << endl;
-	/* Do something with 'h' */
-    }
-
-    FG_LOG( FG_TERRAIN, FG_INFO, "(ssg) no terrain intersection found" );
-
-    return 0.0;
+    cout << "starting ssg_los, view pos = " << view_pos[0] << " "
+	 << view_pos[1] << " " << view_pos[2] << endl;
+    my_ssg_los( "", scene, m, sgvp, sgavp );
 }
 
 
@@ -595,10 +898,10 @@ int FGTileMgr::update( void ) {
 
     scenery.cur_elev = 
 	current_elev( f->get_Longitude(), f->get_Latitude(), tmp_abs_view_pos );
-    // cout << "current elevation == " << scenery.cur_elev << endl;
-    // double junk = current_elev_ssg( current_view.abs_view_pos,
-    //                                 current_view.view_pos );
-    // cout << "current elevation (ssg) == " << 
+    cout << "current elevation == " << scenery.cur_elev << endl;
+    double junk = current_elev_ssg( current_view.abs_view_pos,
+                                    current_view.view_pos );
+    cout << "current elevation (ssg) == " << junk << endl;
 	
     p_last = p1;
     last_lon = f->get_Longitude() * RAD_TO_DEG;
