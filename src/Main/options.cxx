@@ -1293,9 +1293,9 @@ parse_option (const string& arg)
                     break;
                 case OPTION_FUNC:
                     if ( pt->has_param && pos != string::npos ) {
-                        pt->func( arg.substr( pos + 1 ).c_str() );
+                        return pt->func( arg.substr( pos + 1 ).c_str() );
                     } else if ( !pt->has_param && pos == string::npos ) {
-                        pt->func( 0 );
+                        return pt->func( 0 );
                     } else if ( pt->has_param ) {
                         SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
                         return FG_OPTIONS_ERROR;

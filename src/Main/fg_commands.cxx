@@ -706,7 +706,7 @@ static bool
 do_dialog_close (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    gui->closeActiveDialog();
+    return gui->closeActiveDialog();
 }
 
 

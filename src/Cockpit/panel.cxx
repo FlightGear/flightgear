@@ -582,7 +582,7 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
 
   // Having fixed up the coordinates, fall through to the local
   // coordinate handler.
-  doLocalMouseAction(button, updown, x, y);
+  return doLocalMouseAction(button, updown, x, y);
 } 
 
 
