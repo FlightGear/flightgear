@@ -35,6 +35,15 @@ fg_gzifstream::fg_gzifstream( const string& name, int io_mode )
 
 //-----------------------------------------------------------------------------
 //
+// Attach a stream to an already opened file descriptor.
+//
+fg_gzifstream::fg_gzifstream( int fd, int io_mode )
+    : gzstream( fd, io_mode )
+{
+}
+
+//-----------------------------------------------------------------------------
+//
 // Open a possibly gzipped file for reading.
 // If the initial open fails and the filename has a ".gz" extension then
 // remove the extension and try again.
@@ -51,7 +60,8 @@ fg_gzifstream::open( const string& name, int io_mode )
 	if ( s.substr( s.length() - 3, 3 ) == ".gz" )
 	{
 	    // remove ".gz" suffix
-	    s.erase( s.length() - 3, 3 );
+	    s.replace( s.length() - 3, 3, "" );
+// 	    s.erase( s.length() - 3, 3 );
 	}
 	else
 	{
@@ -106,14 +116,68 @@ fg_gzifstream::eat_comments()
 	}
 
 	// skip to end of line.
-	while ( gzstream.get(c) && c != '\n' )
+	while ( gzstream.get(c) && (c != '\n' && c != '\r') )
 	    ;
     }
     return gzstream;
 }
 
+//
+// Manipulators
+//
+
+istream&
+skipeol( istream& in )
+{
+    char c = 0;
+    // skip to end of line.
+    while ( in.get(c) && (c != '\n' && c != '\r') )
+	;
+
+    // \r\n ?
+    return in;
+}
+
+istream&
+skipws( istream& in )
+{
+    char c;
+    while ( in.get(c) )
+    {
+	if ( ! isspace( c ) )
+	{
+	    // put pack the non-space character
+	    in.putback(c);
+	    break;
+	}
+    }
+    return in;
+}
+
+istream&
+skipcomment( istream& in )
+{
+    while ( in )
+    {
+	// skip whitespace
+	in >> skipws;
+
+	char c;
+	if ( in.get( c ) && c != '#' )
+	{
+	    // not a comment
+	    in.putback(c);
+	    break;
+	}
+	in >> skipeol;
+    }
+    return in;
+}
 
 // $Log$
+// Revision 1.2  1998/09/24 15:22:17  curt
+// Additional enhancements.
+//
 // Revision 1.1  1998/09/01 19:06:29  curt
 // Initial revision.
 //

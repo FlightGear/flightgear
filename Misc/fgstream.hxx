@@ -50,6 +50,9 @@ public:
     fg_gzifstream( const string& name,
 		   int io_mode = ios::in|ios::binary );
 
+    // 
+    fg_gzifstream( int fd, int io_mode = ios::in|ios::binary );
+
     // Attempt to open a file with and without ".gz" extension.
     void open( const string& name,
 	       int io_mode = ios::in|ios::binary );
@@ -86,9 +89,22 @@ private:
     fg_gzifstream( const fg_gzifstream& );    
 };
 
+// istream manipulator that skips to end of line.
+istream& skipeol( istream& in );
+
+// istream manipulator that skips over white space.
+istream& skipws( istream& in );
+
+// istream manipulator that skips comments and white space.
+// A comment starts with '#'.
+istream& skipcomment( istream& in );
+
 #endif /* _FGSTREAM_HXX */
 
 // $Log$
+// Revision 1.2  1998/09/24 15:22:18  curt
+// Additional enhancements.
+//
 // Revision 1.1  1998/09/01 19:06:29  curt
 // Initial revision.
 //
