@@ -1,5 +1,5 @@
 //
-// getapt.cxx -- generate airport scenery from the given definition file
+// genapt.cxx -- generate airport scenery from the given definition file
 //
 // Written by Curtis Olson, started September 1998.
 //
@@ -149,7 +149,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 
     i = 1;
     tex = calc_tex_coords( t->nodes[i], t->center );
-    dist = cart.distance3D(average);
+    dist = cart.distance3Dsquared(average);
     if ( dist > max_dist ) {
 	max_dist = dist;
     }
@@ -169,7 +169,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 	fragment.add_face(center_num, i - 1, i);
 
 	tex = calc_tex_coords( t->nodes[i], t->center );
-	dist = cart.distance3D(average);
+	dist = cart.distance3Dsquared(average);
 	if ( dist > max_dist ) {
 	    max_dist = dist;
 	}
@@ -191,7 +191,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
     xglEnd();
     xglEndList();
 
-    fragment.bounding_radius = max_dist;
+    fragment.bounding_radius = sqrt(max_dist);
     fragment.display_list = display_list;
 
     t->fragment_list.push_back(fragment);
@@ -290,6 +290,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.12  1999/02/01 21:08:33  curt
+// Optimizations from Norman Vine.
+//
 // Revision 1.11  1998/11/23 21:48:09  curt
 // Borland portability tweaks.
 //
@@ -330,5 +333,3 @@ fgAptGenerate(const string& path, fgTILE *tile)
 // Revision 1.1  1998/09/14 02:14:01  curt
 // Initial revision of genapt.[ch]xx for generating airport scenery.
 //
-//
-
