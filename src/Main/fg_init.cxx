@@ -226,6 +226,7 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 	    // forward direction
 	    diff = tgt_hdg - r.heading;
 	    while ( diff < -180.0 ) { diff += 360.0; }
+	    while ( diff >  180.0 ) { diff -= 360.0; }
 	    diff = fabs(diff);
 	    FG_LOG( FG_GENERAL, FG_INFO,
 		    "Runway " << r.rwy_no << " heading = " << r.heading <<
@@ -239,6 +240,7 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 	    // reverse direction
 	    diff = tgt_hdg - r.heading - 180.0;
 	    while ( diff < -180.0 ) { diff += 360.0; }
+	    while ( diff >  180.0 ) { diff -= 360.0; }
 	    diff = fabs(diff);
 	    FG_LOG( FG_GENERAL, FG_INFO,
 		    "Runway -" << r.rwy_no << " heading = " <<
