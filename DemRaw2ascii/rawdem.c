@@ -23,6 +23,10 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <math.h>      /* rint() */
 #include <stdio.h>
 #include <stdlib.h>    /* atoi() atof() */
@@ -82,16 +86,32 @@ void rawReadDemHdr( fgRAWDEM *raw, char *hdr_file ) {
 	    raw->ncols = atoi(value);
 	} else if ( strcmp(key, "ULXMAP") == 0 ) {
 	    tmp = atof(value);
+#ifdef HAVE_RINT
 	    raw->ulxmap = (int)rint(tmp * 3600.0); /* convert to arcsec */
+#else
+#  error Port me rint()
+#endif
 	} else if ( strcmp(key, "ULYMAP") == 0 ) {
 	    tmp = atof(value);
+#ifdef HAVE_RINT
 	    raw->ulymap = (int)rint(tmp * 3600.0); /* convert to arcsec */
+#else
+#  error Port me rint()
+#endif
 	} else if ( strcmp(key, "XDIM") == 0 ) {
 	    tmp = atof(value);
+#ifdef HAVE_RINT
 	    raw->xdim = (int)rint(tmp * 3600.0);   /* convert to arcsec */
+#else
+#  error Port me rint()
+#endif
 	} else if ( strcmp(key, "YDIM") == 0 ) {
 	    tmp = atof(value);
+#ifdef HAVE_RINT
 	    raw->ydim = (int)rint(tmp * 3600.0);   /* convert to arcsec */
+#else
+#  error Port me rint()
+#endif
 	} else {
 	    /* ignore for now */
 	}
@@ -442,9 +462,12 @@ void rawProcessStrip( fgRAWDEM *raw, int lat_degrees, char *path ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/04/18 03:59:46  curt
-/* Incorporated into gnu automake/autoconf system.
+/* Revision 1.6  1998/04/27 03:32:03  curt
+/* Wrapped rint()'s in #ifdef HAVE_RINT
 /*
+ * Revision 1.5  1998/04/18 03:59:46  curt
+ * Incorporated into gnu automake/autoconf system.
+ *
  * Revision 1.4  1998/04/06 21:09:43  curt
  * Additional win32 support.
  * Fixed a bad bug in dem file parsing that was causing the output to be
