@@ -283,7 +283,7 @@ int main( int argc, char **argv ) {
     system( command.c_str() );
 
     // initialize persistant polygon counter
-    string counter_file = work_dir + "/polygon.counter";
+    string counter_file = work_dir + "/../work.counter";
     poly_index_init( counter_file );
 
     fg_gzifstream in( argv[1] );
@@ -344,6 +344,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.10  1999/03/17 23:51:25  curt
+// Changed polygon index counter file.
+//
 // Revision 1.9  1999/03/12 22:54:19  curt
 // Rearrange a bit of code ...
 //

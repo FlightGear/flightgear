@@ -73,7 +73,7 @@ int main( int argc, char **argv ) {
     system( command.c_str() );
 
     // initialize persistant polygon counter
-    string counter_file = work_dir + "/polygon.counter";
+    string counter_file = work_dir + "/../work.counter";
     poly_index_init( counter_file );
 
     // initialize structure for building gpc polygons
@@ -265,6 +265,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.7  1999/03/17 23:51:29  curt
+// Changed polygon index counter file.
+//
 // Revision 1.6  1999/03/02 01:04:28  curt
 // Don't crash when work directory doesn't exist ... create it.
 //
