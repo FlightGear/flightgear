@@ -41,19 +41,23 @@ void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
 				    MAT3vec result);
 
 // Given a point p, and a line through p0 with direction vector d,
-// find the shortest distance from the point to the line
-double fgPointLine(MAT3vec p, MAT3vec p0, MAT3vec d);
+// find the shortest distance (squared) from the point to the line
+double fgPointLineSquared(MAT3vec p, MAT3vec p0, MAT3vec d);
 
 
 #endif /* _VECTOR_HXX */
 
 
 /* $Log$
-/* Revision 1.1  1998/07/08 14:40:10  curt
-/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-/* Updated fg_geodesy comments to reflect that routines expect and produce
-/*   meters.
+/* Revision 1.2  1998/07/24 21:34:38  curt
+/* fgPointLine() rewritten into fgPointLineSquared() ... this ultimately saves
+/* us from doing a sqrt().
 /*
+ * Revision 1.1  1998/07/08 14:40:10  curt
+ * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+ * Updated fg_geodesy comments to reflect that routines expect and produce
+ *   meters.
+ *
  * Revision 1.4  1998/04/21 17:03:51  curt
  * Prepairing for C++ integration.
  *

@@ -81,10 +81,10 @@ void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
 
 
 // Given a point p, and a line through p0 with direction vector d,
-// find the shortest distance from the point to the line
-double fgPointLine(MAT3vec p, MAT3vec p0, MAT3vec d) {
+// find the shortest distance (squared) from the point to the line
+double fgPointLineSquared(MAT3vec p, MAT3vec p0, MAT3vec d) {
     MAT3vec u, u1, v;
-    double ud, dd, tmp, dist;
+    double ud, dd, tmp;
     
     // u = p - p0
     MAT3_SUB_VEC(u, p, p0);
@@ -101,18 +101,20 @@ double fgPointLine(MAT3vec p, MAT3vec p0, MAT3vec d) {
     // original point, p.
     MAT3_SUB_VEC(v, u, u1);
 
-    dist = sqrt(MAT3_DOT_PRODUCT(v, v));
-
-    return( dist );
+    return ( MAT3_DOT_PRODUCT(v, v) );
 }
 
 
 /* $Log$
-/* Revision 1.1  1998/07/08 14:40:10  curt
-/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-/* Updated fg_geodesy comments to reflect that routines expect and produce
-/*   meters.
+/* Revision 1.2  1998/07/24 21:34:38  curt
+/* fgPointLine() rewritten into fgPointLineSquared() ... this ultimately saves
+/* us from doing a sqrt().
 /*
+ * Revision 1.1  1998/07/08 14:40:10  curt
+ * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+ * Updated fg_geodesy comments to reflect that routines expect and produce
+ *   meters.
+ *
  * Revision 1.3  1998/05/07 23:04:28  curt
  * Added a blank formating line!
  *
