@@ -1,4 +1,14 @@
 
+OpenAL setup for general use (Linux)
+-------------------------------------
+As of July 2004 it is best to add at least the following line to your
+~/.fgfsrc file on Linux because it wil find out what audio backend to
+use, starting with the most appropriate:
+
+(define devices '(native alsa sdl esd arts null))
+
+
+
 ALSA surround sound (5.1) setup
 -------------------------------------
 (taken from http://floam.ascorbic.com/how-to/alsa5.1)
@@ -10,6 +20,33 @@ we want to use ALSA instead of OSS.
 (define devices '(alsa))
 (define alsa-out-device "surround40:0,0")
 
+
+
+IRIX surround sound (5.1) setup
+-------------------------------------
+To add 4 channel surround sound on IRIX hardware that supports in
+directly you can just add the following line to your ~/.fgfsrc file:
+
+(define speaker-num 4)
+
+To add 4 channel surround sound to IRIX systems that have more than one 
+stereo output you can add the following section to your ~/.fgfsrc file
+(for a typical O2 configuration):
+
+(define speaker-num 4)
+(define native-out-device "Analog Out")
+(define native-rear-out-device "Analog Out 2")
+
+or alternatively:
+
+(define speaker-num 4)
+(define native-out-device "A3.Speaker")
+(define native-rear-out-device "A3.LineOut2")
+
+
+
+(Note the following section is obsolete as of July 2004m since your could
+command OpenAL to use ALSA or Arts directly)
 
 ALSA and Arts
 -------------------------------------
@@ -46,7 +83,8 @@ flightgear 0.9.4
 simgear 0.3.5
 plib 1.8.3
 
-soundcard is onboard an asus p4p800-e deluxe mobo (using snd-intel8x0), alsa, related modules from lsmod:
+soundcard is onboard an asus p4p800-e deluxe mobo (using snd-intel8x0), alsa,
+related modules from lsmod:
 Module                  Size  Used by
 snd_pcm_oss            53252  1
 snd_mixer_oss          19968  1 snd_pcm_oss
