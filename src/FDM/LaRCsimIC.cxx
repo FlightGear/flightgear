@@ -99,15 +99,11 @@ void LaRCsimIC::SetClimbRateFpmIC( SCALAR tt) {
 
 void LaRCsimIC::SetClimbRateFpsIC( SCALAR tt) {
   vtg=vt+vw;
-  cout << "vtg: " << vtg << endl;
   if(vtg > 0.1) {
     hdot = tt - vdownwind;
     gamma=asin(hdot/vtg);
     getTheta();
     vdown=-1*hdot;
-    cout << "hdot: " << hdot << endl;
-    cout << "gamma: " << gamma*SGD_RADIANS_TO_DEGREES << endl;
-    cout << "vdown: " << vdown << endl;
   }
 }
 
@@ -116,7 +112,6 @@ void LaRCsimIC::SetFlightPathAngleRadIC( SCALAR tt) {
   getTheta();
   vtg=vt+vw;
   hdot=vtg*sin(tt);
-  cout << "hdot: " << hdot << endl;
   vdown=-1*hdot;
 }
 

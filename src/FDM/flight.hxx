@@ -513,8 +513,6 @@ public:
     virtual void set_Gamma_vert_rad( double gamma);
     
     // Earth
-    virtual void set_Sea_level_radius(double slr);
-    virtual void set_Runway_altitude(double ralt);
     
     virtual void set_Static_pressure(double p);
     virtual void set_Static_temperature(double T);
@@ -693,7 +691,7 @@ public:
     //    n_pilot_body_v[2] = z;
     // }
 
-    inline double get_Nlf(void) { return nlf; }
+    inline double get_Nlf(void) const { return nlf; }
 
     // inline double * get_Omega_dot_body_v() { return omega_dot_body_v; }
     // inline double get_P_dot_body() const { return omega_dot_body_v[0]; }
@@ -912,7 +910,9 @@ public:
     // }
 
     inline double get_Alpha() const { return alpha; }
+    inline double get_Alpha_deg() const { return alpha * SGD_RADIANS_TO_DEGREES; }
     inline double get_Beta() const { return beta; }
+    inline double get_Beta_deg() const { return beta * SGD_RADIANS_TO_DEGREES; }
     inline double get_Alpha_dot() const { return alpha_dot; }
     // inline void set_Alpha_dot( double ad ) { alpha_dot = ad; }
     inline double get_Beta_dot() const { return beta_dot; }
@@ -1081,8 +1081,6 @@ extern FGInterface * cur_fdm_state;
 
 // General interface to the flight model routines
 
-// Set the altitude (force)
-void fgFDMForceAltitude(const string &model, double alt_meters);
 
 // Toggle data logging on/off
 void fgToggleFDMdataLogging(void);

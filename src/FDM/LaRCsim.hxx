@@ -80,7 +80,6 @@ public:
     void set_Gamma_vert_rad( double gamma);
     
     // Earth
-    void set_Runway_altitude(double ralt);
     void set_Static_pressure(double p);
     void set_Static_temperature(double T); 
     void set_Density(double rho); 

@@ -883,7 +883,7 @@ void fgUpdateTimeDepCalcs() {
     static const SGPropertyNode *master_freeze
 	= fgGetNode("/sim/freeze/master");
 
-    // cout << "Updating time dep calcs()" << endl;
+    //SG_LOG(SG_FLIGHT,SG_INFO, "Updating time dep calcs()");
 
     fgLIGHT *l = &cur_light_params;
     int i;
@@ -897,7 +897,8 @@ void fgUpdateTimeDepCalcs() {
     //      << " cur_elev = " << scenery.get_cur_elev() << endl;
 
     if ( !cur_fdm_state->get_inited() && scenery.get_cur_elev() > -9990 ) {
-	cout << "Finally initializing fdm" << endl;
+  SG_LOG(SG_FLIGHT,SG_INFO, "Finally initializing fdm");  
+	
 	cur_fdm_state->init();
 	if ( cur_fdm_state->get_bound() ) {
 	    cur_fdm_state->unbind();
@@ -1061,8 +1062,8 @@ static void fgMainLoop( void ) {
 		   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
 		   scenery.get_cur_elev() + alt_adjust_m - 3.0,
 		   scenery.get_cur_elev() + alt_adjust_m );
-	    fgFDMForceAltitude( fgGetString("/sim/flight-model"), 
-				scenery.get_cur_elev() + alt_adjust_m );
+	    cur_fdm_state->set_Altitude( scenery.get_cur_elev() 
+                                                + alt_adjust_m );
 
 	    SG_LOG( SG_ALL, SG_DEBUG, 
 		    "<*> resetting altitude to " 
@@ -1716,7 +1717,7 @@ int mainLoop( int argc, char **argv ) {
 
     // build our custom render states
     fgBuildRenderStates();
-
+    
     // pass control off to the master GLUT event handler
     glutMainLoop();
 

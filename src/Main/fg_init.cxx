@@ -1017,6 +1017,10 @@ void fgReInitSubsystems( void )
 #endif
 
     fgInitFDM();
+    
+    // allocates structures so must happen before any of the flight
+    // model or control parameters are set
+    fgAircraftInit();   // In the future this might not be the case.
 
     fgInitView();
 

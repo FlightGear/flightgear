@@ -79,8 +79,6 @@ FGLaRCsim::~FGLaRCsim(void) {
 void FGLaRCsim::init() {
    //do init common to all FDM's
    common_init();
-
-   //now do any specific to LaRCsim
 }
 
 
@@ -566,20 +564,6 @@ void FGLaRCsim::set_ls(void) {
     V_down_airmass = lsic->GetVdownAirmassFpsIC();
     ls_loop(0.0,-1);
     copy_from_LaRCsim();
-    SG_LOG( SG_FLIGHT, SG_INFO, "  FGLaRCsim::set_ls(): "  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     Phi: " <<  Phi  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     Theta: " <<  Theta  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     Psi: " <<  Psi  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     V_north: " <<  V_north  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     V_east: " <<  V_east  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     V_down: " <<  V_down  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     Altitude: " <<  Altitude  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     Latitude: " <<  Latitude  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     Longitude: " <<  Longitude  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     Runway_altitude: " <<  Runway_altitude  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     V_north_airmass: " <<  V_north_airmass  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     V_east_airmass: " <<  V_east_airmass  );
-    SG_LOG( SG_FLIGHT, SG_INFO, "     V_down_airmass: " <<  V_down_airmass  );
 }
 
 void FGLaRCsim::snap_shot(void) {
@@ -601,6 +585,7 @@ void FGLaRCsim::snap_shot(void) {
 void FGLaRCsim::set_Latitude(double lat) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Latitude: " << lat  );
     snap_shot();
+    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
     lsic->SetLatitudeGDRadIC(lat);
     set_ls();
     copy_from_LaRCsim(); //update the bus
@@ -609,6 +594,8 @@ void FGLaRCsim::set_Latitude(double lat) {
 void FGLaRCsim::set_Longitude(double lon) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Longitude: " << lon  );
     snap_shot();
+    
+    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
     lsic->SetLongitudeRadIC(lon);
     set_ls();
     copy_from_LaRCsim(); //update the bus
@@ -617,6 +604,7 @@ void FGLaRCsim::set_Longitude(double lon) {
 void FGLaRCsim::set_Altitude(double alt) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Altitude: " << alt  );
     snap_shot();
+    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
     lsic->SetAltitudeFtIC(alt);
     set_ls();
     copy_from_LaRCsim(); //update the bus
@@ -683,14 +671,6 @@ void FGLaRCsim::set_Gamma_vert_rad( double gamma) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Gamma_vert_rad: " << gamma  );
     snap_shot();
     lsic->SetFlightPathAngleRadIC(gamma);
-    set_ls();
-    copy_from_LaRCsim(); //update the bus
-}
-
-void FGLaRCsim::set_Runway_altitude(double ralt) {
-    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Runway_altitude: " << ralt  );
-    snap_shot();
-    lsic->SetRunwayAltitudeFtIC(ralt);
     set_ls();
     copy_from_LaRCsim(); //update the bus
 }

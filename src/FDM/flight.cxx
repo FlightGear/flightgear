@@ -188,10 +188,6 @@ FGInterface::common_init ()
     SG_LOG( SG_FLIGHT, SG_INFO,
             "...initializing ground elevation to " << ground_elev_ft
             << "ft..." );
-    SG_LOG( SG_FLIGHT, SG_INFO, "common_init(): set ground elevation "
-            << ground_elev_ft );
-    base_fdm_state.set_Runway_altitude( ground_elev_ft );
-    set_Runway_altitude( ground_elev_ft );
 
     // Set sea-level radius
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing sea-level radius..." );
@@ -204,7 +200,7 @@ FGInterface::common_init ()
                     * SGD_DEGREES_TO_RADIANS,
                   fgGetDouble("/position/altitude-ft") * SG_FEET_TO_METER,
                   &sea_level_radius_meters, &lat_geoc );
-    set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET );
+    _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET );
 
     // Set initial velocities
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing velocities..." );
@@ -358,6 +354,14 @@ FGInterface::bind ()
 	&FGInterface::get_Climb_Rate); // read-only
   fgTie("/velocities/side-slip-rad", this,
 	&FGInterface::get_Beta); // read-only
+  fgTie("/velocities/side-slip-deg", this,
+  &FGInterface::get_Beta_deg); // read-only
+  fgTie("/velocities/alpha-deg", this,
+  &FGInterface::get_Alpha_deg); // read-only
+  fgTie("/accelerations/nlf", this,
+  &FGInterface::get_Nlf); // read-only
+  
+  
 }
 
 
@@ -392,6 +396,10 @@ FGInterface::unbind ()
   fgUntie("/velocities/wBody-fps");
   fgUntie("/velocities/vertical-speed-fps");
   fgUntie("/velocities/side-slip-rad");
+  fgUntie("/velocities/side-slip-deg");
+  fgUntie("/velocities/alpha-deg");
+  fgUntie("/accelerations/nlf");
+  
 }
 
 /**
@@ -540,35 +548,6 @@ void FGInterface::extrapolate( int time_offset ) {
     geocentric_position_v[2] = radius;
 }
 
-
-// Set the altitude (force)
-void fgFDMForceAltitude(const string &model, double alt_meters) {
-    SG_LOG(SG_FLIGHT,SG_INFO, "fgFDMForceAltitude: " << alt_meters );
-
-    double sea_level_radius_meters;
-    double lat_geoc;
-
-    // Set the FG variables first
-    sgGeodToGeoc( base_fdm_state.get_Latitude(), alt_meters, 
-		  &sea_level_radius_meters, &lat_geoc);
-
-    base_fdm_state.set_Altitude( alt_meters * SG_METER_TO_FEET );
-    base_fdm_state.set_Sea_level_radius( sea_level_radius_meters *
-					 SG_METER_TO_FEET ); 
-		
-    cur_fdm_state->set_Altitude( alt_meters * SG_METER_TO_FEET );
-    cur_fdm_state->set_Sea_level_radius( sea_level_radius_meters * 
-                                         SG_METER_TO_FEET );
-    cur_fdm_state->set_Runway_altitude( scenery.get_cur_elev() *
-					SG_METER_TO_FEET );	
-
-    // additional work needed for some flight models
-    if ( model == "larcsim" ) {
-	ls_ForceAltitude( base_fdm_state.get_Altitude() );
-    }
-}
-
-
 // Positions
 void FGInterface::set_Latitude(double lat) {
     geodetic_position_v[0] = lat;
@@ -627,15 +606,6 @@ void FGInterface::set_Climb_Rate( double roc) {
 
 void FGInterface::set_Gamma_vert_rad( double gamma) {
     gamma_vert_rad = gamma;
-}
-
-// Earth
-void FGInterface::set_Sea_level_radius(double slr) {
-    sea_level_radius = slr;
-}
-
-void FGInterface::set_Runway_altitude(double ralt) {
-    runway_altitude = ralt;
 }
 
 void FGInterface::set_Static_pressure(double p) { static_pressure = p; }
