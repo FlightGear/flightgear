@@ -231,7 +231,7 @@ void FGDME::search()
         lat = dme->get_lat();
         elev = dme->get_elev_ft();
         bias = dme->get_multiuse();
-        range = FG_ILS_DEFAULT_RANGE;
+        range = FG_LOC_DEFAULT_RANGE;
         effective_range = kludgeRange(elev, elev, range);
         x = dme->get_x();
         y = dme->get_y();
