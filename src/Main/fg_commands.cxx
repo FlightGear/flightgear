@@ -28,6 +28,74 @@ SG_USING_STD(ofstream);
 #include "globals.hxx"
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Saved command states.
+////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * Base saved state for property commands.
+ *
+ * Since this class isn't publicly visible, it is simply an aggregate
+ * of all the stuff any property command needs.
+ */
+class PropertyCommandState : public SGCommandState
+{
+public:
+  PropertyCommandState (const SGPropertyNode * arg);
+  virtual SGPropertyNode * getProp () const { return _prop; }
+  virtual SGPropertyNode * getProp2 () const { return _prop2; }
+  virtual const SGPropertyNode * getValue () const
+    { return _value ? _value : &_dummy_0; }
+  virtual const SGPropertyNode * getStep () const 
+    { return _step ? _step : &_dummy_0; }
+  virtual const SGPropertyNode * getFactor () const 
+    { return _factor ? _factor : &_dummy_1; }
+  virtual const SGPropertyNode * getSetting () const 
+    { return _setting ? _setting : &_dummy_0; }
+  virtual const SGPropertyNode * getOffset () const
+    { return _offset ? _offset : &_dummy_0; }
+private:
+  static SGPropertyNode _dummy_0;
+  static SGPropertyNode _dummy_1;
+  mutable SGPropertyNode * _prop;
+  mutable SGPropertyNode * _prop2;
+  const SGPropertyNode * _value;
+  const SGPropertyNode * _step;
+  const SGPropertyNode * _factor;
+  const SGPropertyNode * _setting;
+  const SGPropertyNode * _offset;
+};
+
+SGPropertyNode PropertyCommandState::_dummy_0;
+SGPropertyNode PropertyCommandState::_dummy_1;
+
+PropertyCommandState::PropertyCommandState (const SGPropertyNode * arg)
+  : SGCommandState(arg),
+    _prop(fgGetNode(arg->getStringValue("property[0]", "/null"), true)),
+    _prop2(fgGetNode(arg->getStringValue("property[1]", "/null"), true)),
+    _value(arg->getNode("value")),
+    _step(arg->getNode("step")),
+    _factor(arg->getNode("factor")),
+    _setting(arg->getNode("setting")),
+    _offset(arg->getNode("offset"))
+{
+				// It would be better not to do this
+				// every time, but it's not that big
+				// a deal.  I don't know enough about
+				// C++ static initialization to fix it.
+  _dummy_1.setDoubleValue(1.0);
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Command implementations.
+////////////////////////////////////////////////////////////////////////
+
+
 /**
  * Built-in command: do nothing.
  */
@@ -220,12 +288,10 @@ do_lighting_update (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_toggle (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  const string & propname = arg->getStringValue("property", "");
-  if (propname == "")
-    return false;
-
-  SGPropertyNode * node = fgGetNode(propname);
-  return node->setBoolValue(!node->getBoolValue());
+  if (*state == 0)
+    *state = new PropertyCommandState(arg);
+  SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
+  return prop->setBoolValue(!prop->getBoolValue());
 }
 
 
@@ -238,27 +304,27 @@ do_property_toggle (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_assign (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  const string & propname = arg->getStringValue("property", "");
-  if (propname == "")
-    return false;
+  if (*state == 0)
+    *state = new PropertyCommandState(arg);
+  SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
+  const SGPropertyNode * value =
+    ((PropertyCommandState *)(*state))->getValue();
 
-  SGPropertyNode * node = fgGetNode(propname, true);
-
-  switch (node->getType()) {
+  switch (prop->getType()) {
   case SGPropertyNode::BOOL:
-    return node->setBoolValue(arg->getBoolValue("value"));
+    return prop->setBoolValue(value->getBoolValue());
   case SGPropertyNode::INT:
-    return node->setIntValue(arg->getIntValue("value"));
+    return prop->setIntValue(value->getIntValue());
   case SGPropertyNode::LONG:
-    return node->setLongValue(arg->getLongValue("value"));
+    return prop->setLongValue(value->getLongValue());
   case SGPropertyNode::FLOAT:
-    return node->setFloatValue(arg->getFloatValue("value"));
+    return prop->setFloatValue(value->getFloatValue());
   case SGPropertyNode::DOUBLE:
-    return node->setDoubleValue(arg->getDoubleValue("value"));
+    return prop->setDoubleValue(value->getDoubleValue());
   case SGPropertyNode::STRING:
-    return node->setStringValue(arg->getStringValue("value"));
+    return prop->setStringValue(value->getStringValue());
   default:
-    return node->setUnspecifiedValue(arg->getStringValue("value"));
+    return prop->setUnspecifiedValue(value->getStringValue());
   }
 }
 
@@ -272,31 +338,30 @@ do_property_assign (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  const string & propname = arg->getStringValue("property", "");
-  if (propname == "")
-    return false;
+  if (*state == 0)
+    *state = new PropertyCommandState(arg);
+  SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
+  const SGPropertyNode * step = ((PropertyCommandState *)(*state))->getStep();
 
-  SGPropertyNode * node = fgGetNode(propname, true);
-
-  switch (node->getType()) {
+  switch (prop->getType()) {
   case SGPropertyNode::BOOL:
-    if (arg->getBoolValue("step"))
-      return node->setBoolValue(!node->getBoolValue());
+    if (step->getBoolValue())
+      return prop->setBoolValue(!prop->getBoolValue());
     else
       return true;
   case SGPropertyNode::INT:
-    return node->setIntValue(node->getIntValue()
-			     + arg->getIntValue("step"));
+    return prop->setIntValue(prop->getIntValue()
+			     + step->getIntValue());
   case SGPropertyNode::LONG:
-    return node->setLongValue(node->getLongValue()
-			      + arg->getLongValue("step"));
+    return prop->setLongValue(prop->getLongValue()
+			      + step->getLongValue());
   case SGPropertyNode::FLOAT:
-    return node->setFloatValue(node->getFloatValue()
-			       + arg->getFloatValue("step"));
+    return prop->setFloatValue(prop->getFloatValue()
+			       + step->getFloatValue());
   case SGPropertyNode::DOUBLE:
   case SGPropertyNode::UNSPECIFIED:
-    return node->setDoubleValue(node->getDoubleValue()
-				+ arg->getDoubleValue("step"));
+    return prop->setDoubleValue(prop->getDoubleValue()
+				+ step->getDoubleValue());
   default:			// doesn't make sense with strings
     return false;
   }
@@ -304,7 +369,6 @@ do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
 
 
 /**
-<<<<<<< fg_commands.cxx
  * Built-in command: multiply a property value.
  *
  * property: the name of the property to multiply.
@@ -313,68 +377,29 @@ do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_multiply (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  const string & propname = arg->getStringValue("property", "");
-  if (propname == "")
-    return false;
+  if (*state == 0)
+    *state = new PropertyCommandState(arg);
+  SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
+  const SGPropertyNode * factor =
+    ((PropertyCommandState *)(*state))->getFactor();
 
-  SGPropertyNode * node = fgGetNode(propname, true);
-
-  switch (node->getType()) {
+  switch (prop->getType()) {
   case SGPropertyNode::BOOL:
-    return node->setBoolValue(node->getBoolValue() &&
-			      arg->getBoolValue("factor"));
+    return prop->setBoolValue(prop->getBoolValue() &&
+			      factor->getBoolValue());
   case SGPropertyNode::INT:
-    return node->setIntValue(int(node->getIntValue()
-				 * arg->getDoubleValue("factor")));
+    return prop->setIntValue(int(prop->getIntValue()
+				 * factor->getDoubleValue()));
   case SGPropertyNode::LONG:
-    return node->setLongValue(long(node->getLongValue()
-				   * arg->getDoubleValue("factor")));
+    return prop->setLongValue(long(prop->getLongValue()
+				   * factor->getDoubleValue()));
   case SGPropertyNode::FLOAT:
-    return node->setFloatValue(float(node->getFloatValue()
-				     * arg->getDoubleValue("factor")));
+    return prop->setFloatValue(float(prop->getFloatValue()
+				     * factor->getDoubleValue()));
   case SGPropertyNode::DOUBLE:
   case SGPropertyNode::UNSPECIFIED:
-    return node->setDoubleValue(node->getDoubleValue()
-				* arg->getDoubleValue("factor"));
-  default:			// doesn't make sense with strings
-    return false;
-  }
-}
-
-
-/**
-=======
- * Built-in command: multiply a property value.
- *
- * property: the name of the property to multiply.
- * factor: the amount by which to multiply.
- */
-static bool
-do_property_multiply (const SGPropertyNode * arg)
-{
-  const string & propname = arg->getStringValue("property", "");
-  if (propname == "")
-    return false;
-
-  SGPropertyNode * node = fgGetNode(propname, true);
-
-  switch (node->getType()) {
-  case SGPropertyNode::BOOL:
-    return node->setBoolValue(node->getBoolValue() &&
-			      arg->getBoolValue("factor"));
-  case SGPropertyNode::INT:
-    return node->setIntValue(int(node->getIntValue()
-				 * arg->getDoubleValue("factor")));
-  case SGPropertyNode::LONG:
-    return node->setLongValue(long(node->getLongValue()
-				   * arg->getDoubleValue("factor")));
-  case SGPropertyNode::FLOAT:
-    return node->setFloatValue(float(node->getFloatValue()
-				     * arg->getDoubleValue("factor")));
-  case SGPropertyNode::DOUBLE:
-  case SGPropertyNode::UNSPECIFIED:
-    return node->setDoubleValue(node->getDoubleValue()
-				* arg->getDoubleValue("factor"));
+    return prop->setDoubleValue(prop->getDoubleValue()
+				* factor->getDoubleValue());
   default:			// doesn't make sense with strings
     return false;
   }
@@ -390,16 +415,15 @@ do_property_multiply (const SGPropertyNode * arg)
 static bool
 do_property_swap (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  const string &propname1 = arg->getStringValue("property[0]", "");
-  const string &propname2 = arg->getStringValue("property[1]", "");
-  if (propname1 == "" || propname2 == "")
-    return false;
+  if (*state == 0)
+    *state = new PropertyCommandState(arg);
+  SGPropertyNode * prop1 = ((PropertyCommandState *)(*state))->getProp();
+  SGPropertyNode * prop2 = ((PropertyCommandState *)(*state))->getProp2();
 
-  SGPropertyNode * node1 = fgGetNode(propname1, true);
-  SGPropertyNode * node2 = fgGetNode(propname2, true);
-  const string & tmp = node1->getStringValue();
-  return (node1->setUnspecifiedValue(node2->getStringValue()) &&
-	  node2->setUnspecifiedValue(tmp));
+				// FIXME: inefficient
+  const string & tmp = prop1->getStringValue();
+  return (prop1->setUnspecifiedValue(prop2->getStringValue()) &&
+	  prop2->setUnspecifiedValue(tmp));
 }
 
 
@@ -414,15 +438,26 @@ do_property_swap (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_scale (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  const string &propname = arg->getStringValue("property");
-  double setting = arg->getDoubleValue("setting", 0.0);
-  double offset = arg->getDoubleValue("offset", 0.0);
-  double factor = arg->getDoubleValue("factor", 1.0);
-  return fgSetDouble(propname, (setting + offset) * factor);
+  if (*state == 0)
+    *state = new PropertyCommandState(arg);
+  SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
+  double setting =
+    ((PropertyCommandState *)(*state))->getSetting()->getDoubleValue();
+  double offset =
+    ((PropertyCommandState *)(*state))->getOffset()->getDoubleValue();
+  double factor =
+    ((PropertyCommandState *)(*state))->getFactor()->getDoubleValue();
+
+  return prop->setDoubleValue((setting + offset) * factor);
 }
 
 
 
+////////////////////////////////////////////////////////////////////////
+// Command setup.
+////////////////////////////////////////////////////////////////////////
+
+
 /**
  * Table of built-in commands.
  *
