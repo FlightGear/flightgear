@@ -69,13 +69,16 @@ int result;
 
 //extern const char *const sys_errlist[];
 
+/* -dlw- I fixed a few of the cases, but please make non externally used */
+/*  symbols static to avoid possible linker conflicts */
 int current_port  = 10000; 
 u_short base_port = 10000;
 u_short end_port  = 10010;
-int verbose = 0;
-struct hostent *host_info, *f_host_info;
-struct servent *service_info;
-struct utsname myname;
+
+static int verbose = 0;
+static struct hostent *host_info, *f_host_info;
+static struct servent *service_info;
+static struct utsname myname;
 
 /* Program-stuff */
 int i, j;
