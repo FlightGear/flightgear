@@ -27,41 +27,39 @@
 
 #include <string>
 #include <FL/Fl.H>
+#include <FL/filename.H>
 
 #include "fgadmin.h"
 
-std::string def_fg_exe = "";
-std::string def_fg_root = "";
-std::string def_fg_scenery = "";
+using std::string;
+
+string def_install_source;
+string def_scenery_dest;
+bool silent = false;
 
 /**
- * --fg-exe=<PATH>
- * --fg-root=<DIR>
- * --fg-scenery=<DIR>
+ * --silent
+ * --install-source=<DIR>
+ * --scenery-dest=<DIR>
  */
 static int
 parse_args( int, char** argv, int& i )
 {
-    if (strncmp( argv[i], "--fg-exe=", 9 ) == 0)
+    if (strcmp( argv[i], "--silent" ) == 0)
     {
-	def_fg_exe.assign( &argv[i][9] );
+	silent = true;
 	++i;
 	return 1;
     }
-
-    if (strncmp( argv[i], "--fg-root=", 10 ) == 0)
+    else if (strncmp( argv[i], "--install-source=", 17 ) == 0)
     {
-	def_fg_root.assign( &argv[i][10] );
-	def_fg_scenery = def_fg_root;
-	def_fg_scenery += "/Scenery";
-
+	def_install_source.assign( &argv[i][17] );
 	++i;
 	return 1;
     }
-
-    if (strncmp( argv[i], "--fg-scenery=", 13 ) == 0)
+    else if (strncmp( argv[i], "--scenery-dest=", 15 ) == 0)
     {
-	def_fg_scenery.assign( &argv[i][13] );
+	def_scenery_dest.assign( &argv[i][15] );
 	++i;
 	return 1;
     }
@@ -75,7 +73,21 @@ main( int argc, char* argv[] )
     int i = 0;
     if (Fl::args( argc, argv, i, parse_args ) < argc)
     {
-	Fl::fatal("Options are:\n --fg-exe=<PATH>\n --fg-root=<DIR>\n --fg-scenery=<DIR>\n%s", Fl::help );
+	Fl::fatal("Options are:\n --silent\n --install-source=<DIR>\n --scenery-dest=<DIR>\n%s", Fl::help );
+    }
+
+    if ( silent )
+    {
+        Fl_Preferences prefs( Fl_Preferences::USER, "flightgear.org", "fgadmin" );
+	char abs_name[ FL_PATH_MAX ];
+
+	fl_filename_absolute( abs_name, def_install_source.c_str() );
+	prefs.set( "install-source", abs_name );
+
+	fl_filename_absolute( abs_name, def_scenery_dest.c_str() );
+        prefs.set( "scenery-dest", abs_name );
+
+	return 0;
     }
 
     FGAdminUI ui;

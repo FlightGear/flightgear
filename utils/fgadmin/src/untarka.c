@@ -101,6 +101,8 @@
 
 static void error OF((const char *msg));
 
+static unsigned long total_read;
+
 /* #define TAR_GZ 1 */
 
 typedef struct Readable {
@@ -117,10 +119,11 @@ typedef struct Readable {
 enum { FMT_U=1, FMT_Z=2, FMT_GZ=3, FMT_BZ2=4 };
 
 /* #define xFILE FILE* */
-static int xU_Open4Read(struct Readable* self, char const* filename) { return NULL==(self->f=fopen(filename,"rb")); }
+static int xU_Open4Read(struct Readable* self, char const* filename) { total_read=0; return NULL==(self->f=fopen(filename,"rb")); }
 static int xU_Close(struct Readable* self) { return fclose((FILE*)self->f); }
 static unsigned xU_Read(struct Readable* self, void* buf, unsigned len) {
   unsigned got=fread(buf,1,len,(FILE*)self->f);
+  total_read+=got;
   return got>0 ? got : ferror((FILE*)self->f) ? 0U-1 : 0;
 }
 static char const* xU_Error(struct Readable* self, int *errnum_ret) { return (*errnum_ret=ferror((FILE*)self->f))?"I/O error":"OK"; }
@@ -154,9 +157,9 @@ static char const* xZ_Error(struct Readable* self, int *errnum_ret) {
 #if HAVE_ZLIB
 #include "zlib.h"
 /* #define xFILE gzFile */
-static int xGZ_Open4Read(struct Readable* self, char const* filename) { return NULL==(self->f=gzopen(filename,"rb")); }
+static int xGZ_Open4Read(struct Readable* self, char const* filename) { total_read=0; return NULL==(self->f=gzopen(filename,"rb")); }
 static int xGZ_Close(struct Readable* self) { return gzclose((gzFile)self->f); }
-static unsigned xGZ_Read(struct Readable* self, void* buf, unsigned len) { return gzread((gzFile)self->f,buf,len); }
+static unsigned xGZ_Read(struct Readable* self, void* buf, unsigned len) { unsigned l=gzread((gzFile)self->f,buf,len); total_read=((z_streamp)self->f)->total_in; return l; }
 static char const* xGZ_Error(struct Readable* self, int *errnum_ret) { return gzerror((gzFile)self->f, errnum_ret); }
 #endif
 
@@ -1166,7 +1169,7 @@ static int matchname (int arg,int argc,char **argv,char *fname)
 
 /* Tar file list or extract */
 
-static int tar (Readable* rin,int action,int arg,int argc,char **argv, char const* TGZfile, int verbose, void (*step)(void *), void *data) {
+static int tar (Readable* rin,int action,int arg,int argc,char **argv, char const* TGZfile, int verbose, void (*step)(void *,int), void *data) {
   union  tar_buffer buffer;
   int    is_tar_ok=0;
   int    len;
@@ -1176,6 +1179,7 @@ static int tar (Readable* rin,int action,int arg,int argc,char **argv, char cons
   FILE   *outfile = NULL;
   char   fname[BLOCKSIZE];
   time_t tartime;
+  unsigned long last_read;
 
 #if 0
   while (0<(len=rin->xRead(rin, &buffer, BLOCKSIZE))) {
@@ -1184,6 +1188,7 @@ static int tar (Readable* rin,int action,int arg,int argc,char **argv, char cons
   exit(0);
 #endif
 
+  last_read = 0;
   if (action == TGZ_LIST)
     printf("     day      time     size                       file\n"
 	   " ---------- -------- --------- -------------------------------------\n");
@@ -1191,6 +1196,7 @@ static int tar (Readable* rin,int action,int arg,int argc,char **argv, char cons
       len = rin->xRead(rin, &buffer, BLOCKSIZE);
       if (len+1 == 0)
 	error (rin->xError(rin, &err));
+      if (step) { step(data,total_read - last_read); last_read = total_read; }
       if (!is_tar_ok && !(is_tar_ok=is_tar(buffer.buffer, len))) {
         fprintf(stderr, "%s: compressed file not tared: %s\n", prog, TGZfile);
         if (action == TGZ_EXTRACT) {
@@ -1341,7 +1347,6 @@ static int tar (Readable* rin,int action,int arg,int argc,char **argv, char cons
 		  outfile = NULL;
 		  utime(fname,&settime);
 #endif
-                  if (step) step(data);
 		}
 	    }
 	}

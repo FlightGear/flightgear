@@ -24,6 +24,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <sys/stat.h>
 
 #ifdef _MSC_VER
 #  include <direct.h>
@@ -42,6 +43,9 @@ using std::endl;
 using std::vector;
 using std::string;
 
+extern string def_install_source;
+extern string def_scenery_dest;
+
 static const float min_progress = 0.0;
 static const float max_progress = 5000.0;
 
@@ -57,11 +61,11 @@ void FGAdminUI::init() {
                                 "flightgear.org",
                                 "fgadmin" );
     char buf[FL_PATH_MAX];
-    prefs->get( "install-source", buf, "", FL_PATH_MAX );
+    prefs->get( "install-source", buf, def_install_source.c_str(), FL_PATH_MAX );
     source_text->value( buf );
     source = buf;
 
-    prefs->get( "scenery-dest", buf, "", FL_PATH_MAX );
+    prefs->get( "scenery-dest", buf, def_scenery_dest.c_str(), FL_PATH_MAX );
     dest_text->value( buf );
     dest = buf;
 
@@ -69,6 +73,8 @@ void FGAdminUI::init() {
 
     progress->minimum( min_progress );
     progress->maximum( max_progress );
+
+    main_window->size_range( 465, 435 );
 }
 
 // show our UI
@@ -249,6 +255,7 @@ void FGAdminUI::install_selected() {
 
     install_b->deactivate();
     remove_b->deactivate();
+    quit_b->deactivate();
 
     // traverse install box and install each item
     for ( int i = 0; i <= install_box->nitems(); ++i ) {
@@ -256,14 +263,23 @@ void FGAdminUI::install_selected() {
             f = install_box->text( i );
             SGPath file( source );
             file.append( f );
-            cout << "installing " << file.str() << endl;
+            struct stat info;
+            stat( file.str().c_str(), &info );
+            float old_max = progress->maximum();
+            progress->maximum( info.st_size );
+            progress_label = "Installing ";
+            progress_label += f;
+            progress->label( progress_label.c_str() );
             progress->value( min_progress );
             main_window->cursor( FL_CURSOR_WAIT );
             tarextract( (char *)file.c_str(), (char *)dest.c_str(), true, &FGAdminUI::step, this );
             progress->value( min_progress );
             main_window->cursor( FL_CURSOR_DEFAULT );
+            progress->label( "" );
+            progress->maximum( old_max );
         }
     }
+    quit_b->activate();
     install_b->activate();
     remove_b->activate();
 
@@ -271,7 +287,28 @@ void FGAdminUI::install_selected() {
 }
 
 
-static void remove_dir( const char *dir_name, void (*step)(void*), void *data ) {
+static unsigned long count_dir( const char *dir_name ) {
+    ulDir *dir = ulOpenDir( dir_name ) ;
+    ulDirEnt *ent;
+    unsigned long cnt = 0L;
+    while ( ent = ulReadDir( dir ) ) {
+        if ( strcmp( ent->d_name, "." ) == 0 ) {
+            // ignore "."
+        } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
+            // ignore ".."
+        } else if ( ent->d_isdir ) {
+            SGPath child( dir_name );
+            child.append( ent->d_name );
+            cnt += count_dir( child.c_str() );
+        } else {
+            cnt += 1;
+        }
+    }
+    ulCloseDir( dir );
+    return cnt;
+}
+
+static void remove_dir( const char *dir_name, void (*step)(void*,int), void *data ) {
     ulDir *dir = ulOpenDir( dir_name ) ;
     ulDirEnt *ent;
     while ( ent = ulReadDir( dir ) ) {
@@ -287,7 +324,7 @@ static void remove_dir( const char *dir_name, void (*step)(void*), void *data ) 
             SGPath child( dir_name );
             child.append( ent->d_name );
             unlink( child.c_str() );
-            if (step) step( data );
+            if (step) step( data, 1 );
         }
     }
     ulCloseDir( dir );
@@ -301,27 +338,34 @@ void FGAdminUI::remove_selected() {
 
     install_b->deactivate();
     remove_b->deactivate();
+    quit_b->deactivate();
     // traverse remove box and recursively remove each item
     for ( int i = 0; i <= remove_box->nitems(); ++i ) {
         if ( remove_box->checked( i ) ) {
             f = remove_box->text( i );
             SGPath dir( dest );
             dir.append( f );
+            float old_max = progress->maximum();
+            progress_label = "Removing ";
+            progress_label += f;
+            progress->label( progress_label.c_str() );
             progress->value( min_progress );
             main_window->cursor( FL_CURSOR_WAIT );
-            cout << "removing " << dir.str() << endl;
+            progress->maximum( count_dir( dir.c_str() ) );
             remove_dir( dir.c_str(), &FGAdminUI::step, this );
             progress->value( min_progress );
             main_window->cursor( FL_CURSOR_DEFAULT );
+            progress->label( "" );
+            progress->maximum( old_max );
         }
     }
+    quit_b->activate();
     install_b->activate();
     remove_b->activate();
 
     refresh_lists();
    
 }
-
 
 void FGAdminUI::step(void *data)
 {
@@ -334,6 +378,16 @@ void FGAdminUI::step(void *data)
    if ( tmp > max_progress ) {
        tmp = 0.0;
    }
+   p->value( tmp );
+
+   Fl::check();
+}
+
+void FGAdminUI::step(void *data, int n)
+{
+   Fl_Progress *p = ((FGAdminUI*)data)->progress;
+
+   float tmp = p->value() + n;
    p->value( tmp );
 
    Fl::check();

@@ -8,6 +8,8 @@ decl {\#include <string>} {public
 decl {\#include <FL/Fl_Preferences.H>} {public
 } 
 
+decl {\#include <FL/fl_ask.H>} {} 
+
 decl {using std::string;} {public
 } 
 
@@ -19,8 +21,9 @@ class FGAdminUI {open
   Function {FGAdminUI()} {open
   } {
     Fl_Window main_window {
-      label {FlightGear Admin Wizard} open
-      xywh {294 195 465 435} type Double visible
+      label {FlightGear Admin Wizard}
+      callback {fl_alert("Use the Quit button to exit fgadmin");} open
+      xywh {500 247 465 435} type Double resizable visible
     } {
       Fl_Button quit_b {
         label Quit
@@ -45,13 +48,17 @@ refresh_lists();}
       Fl_Input dest_text {
         xywh {235 35 225 25}
       }
-      Fl_Check_Browser install_box {
-        label {Select Files to Install}
-        xywh {5 65 225 270}
-      }
-      Fl_Check_Browser remove_box {
-        label {Select Files to Remove}
-        xywh {235 65 225 270}
+      Fl_Group {} {open
+        xywh {5 65 455 270} resizable
+      } {
+        Fl_Check_Browser install_box {
+          label {Select Files to Install}
+          xywh {5 65 225 270}
+        }
+        Fl_Check_Browser remove_box {
+          label {Select Files to Remove}
+          xywh {235 65 225 270}
+        }
       }
       Fl_Button install_b {
         label {Install Selected Files}
@@ -63,8 +70,8 @@ refresh_lists();}
         callback {remove_selected();}
         xywh {250 360 195 35} labelfont 1
       }
-      Fl_Progress progress {selected
-        xywh {20 405 195 25} color 49 selection_color 175
+      Fl_Progress progress {
+        xywh {5 405 345 25} color 49 selection_color 175
       }
     }
   }
@@ -74,7 +81,9 @@ refresh_lists();}
   }
   decl {void show();} {public
   }
-  decl {static void step( void * );} {public
+  decl {static void step( void * );} {selected public
+  }
+  decl {static void step( void *, int );} {public
   }
   decl {void refresh_lists();} {}
   decl {void quit();} {}
@@ -87,4 +96,5 @@ refresh_lists();}
   decl {Fl_Preferences *prefs;} {}
   decl {string source;} {}
   decl {string dest;} {}
+  decl {string progress_label;} {}
 } 

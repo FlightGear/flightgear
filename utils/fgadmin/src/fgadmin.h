@@ -9,6 +9,7 @@ using std::string;
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Input.H>
+#include <FL/Fl_Group.H>
 #include <FL/Fl_Check_Browser.H>
 #include <FL/Fl_Progress.H>
 
@@ -16,6 +17,10 @@ class FGAdminUI {
 public:
   FGAdminUI();
   Fl_Double_Window *main_window;
+private:
+  inline void cb_main_window_i(Fl_Double_Window*, void*);
+  static void cb_main_window(Fl_Double_Window*, void*);
+public:
   Fl_Button *quit_b;
 private:
   inline void cb_quit_b_i(Fl_Button*, void*);
@@ -50,6 +55,7 @@ public:
   void init();
   void show();
   static void step( void * );
+  static void step( void *, int );
 private:
   void refresh_lists();
   void quit();
@@ -62,5 +68,6 @@ private:
   Fl_Preferences *prefs;
   string source;
   string dest;
+  string progress_label;
 };
 #endif
