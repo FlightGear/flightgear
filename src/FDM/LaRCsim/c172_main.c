@@ -262,7 +262,7 @@ int wave_stats(float *var,float *var_rate,int N,FILE *out)
 	if(Nmaxima > 2)
 	{
 	  ld=log(varmaxima[1]/varmaxima[2]);   //logarithmic decrement
-	  zeta=ld/sqrt(4*PI*PI +ld*ld);        //damping ratio
+	  zeta=ld/sqrt(4*LS_PI*LS_PI +ld*ld);        //damping ratio
 	  omegad=1/(vm_times[2]-vm_times[1]);  //damped natural frequency Hz
 	  if(zeta < 1)
 	  {

@@ -29,14 +29,19 @@
 
 #include "IO360.hxx"
 #include "flight.hxx"
-
+#include <FDM/LaRCsimIC.hxx>
 
 class FGLaRCsim: public FGInterface {
 
     FGNewEngine eng;
-
+    LaRCsimIC* lsic;
+    void set_ls(void);
+    double time_step;
+    
 public:
-
+    FGLaRCsim(void);
+    ~FGLaRCsim(void);
+    
     // copy FDM state to LaRCsim structures
     bool copy_to_LaRCsim();
 
@@ -48,6 +53,35 @@ public:
 
     // update position based on inputs, positions, velocities, etc.
     bool update( int multiloop );
+    
+    // Positions
+    void set_Latitude(double lat);  //geocentric
+    void set_Longitude(double lon);    
+    void set_Altitude(double alt);        // triggers re-calc of AGL altitude
+    void set_AltitudeAGL(double altagl); // and vice-versa
+    
+    // Speeds -- setting any of these will trigger a re-calc of the rest
+    void set_V_calibrated_kts(double vc);
+    void set_Mach_number(double mach);
+    void set_Velocities_Local( double north, double east, double down );
+    void set_Velocities_Wind_Body( double u, double v, double w);
+    
+    // Euler angles 
+    void set_Euler_Angles( double phi, double theta, double psi );
+    
+    // Flight Path
+    void set_Climb_Rate( double roc);
+    void set_Gamma_vert_rad( double gamma);
+    
+    // Earth
+    void set_Runway_altitude(double ralt);
+    void set_Static_pressure(double p);
+    void set_Static_temperature(double T); 
+    void set_Density(double rho); 
+
+    void set_Velocities_Local_Airmass (double wnorth, 
+				       double weast, 
+				       double wdown );
 };
 
 

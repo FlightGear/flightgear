@@ -265,7 +265,7 @@ void fgUpdateWeatherDatabase(void)
        
     // get the data on 'the bus' for the FDM
 
-    FGPhysicalProperty porperty = WeatherDatabase->get(position);
+   /*  FGPhysicalProperty porperty = WeatherDatabase->get(position);
 
     current_aircraft.fdm_state->set_Static_temperature( Kelvin2Rankine(porperty.Temperature) );
     current_aircraft.fdm_state->set_Static_pressure( Pascal2psf(porperty.AirPressure) );
@@ -275,7 +275,8 @@ void fgUpdateWeatherDatabase(void)
 #define MSTOFPS  3.2808 //m/s to ft/s
     current_aircraft.fdm_state->set_Velocities_Local_Airmass(porperty.Wind[1]*MSTOFPS,
         porperty.Wind[0]*MSTOFPS,
-        porperty.Wind[2]*MSTOFPS);
+        porperty.Wind[2]*MSTOFPS); */
+
     
 }
 

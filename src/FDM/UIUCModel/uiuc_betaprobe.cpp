@@ -91,36 +91,36 @@ void uiuc_betaprobe()
   Gamma_clean_tail = Lift_clean_tail / (Density * V_rel_wind);
   Gamma_iced_tail = Lift_iced_tail / (Density * V_rel_wind);
 
-  w_clean_wing = Gamma_clean_wing / (2 * PI * x_probe_wing);
-  w_iced_wing = Gamma_iced_wing / (2 * PI * x_probe_wing);
-  w_clean_tail = Gamma_clean_tail / (2 * PI * x_probe_tail);
-  w_iced_tail = Gamma_iced_tail / (2 * PI * x_probe_tail);
+  w_clean_wing = Gamma_clean_wing / (2 * LS_PI * x_probe_wing);
+  w_iced_wing = Gamma_iced_wing / (2 * LS_PI * x_probe_wing);
+  w_clean_tail = Gamma_clean_tail / (2 * LS_PI * x_probe_tail);
+  w_iced_tail = Gamma_iced_tail / (2 * LS_PI * x_probe_tail);
 
   V_total_clean_wing = sqrt(w_clean_wing*w_clean_wing + 
 			    V_rel_wind*V_rel_wind - 
 			    2*w_clean_wing*V_rel_wind * 
-			    cos(PI/2 + Alpha));
+			    cos(LS_PI/2 + Alpha));
   V_total_iced_wing = sqrt(w_iced_wing*w_iced_wing + 
 			   V_rel_wind*V_rel_wind - 
 			   2*w_iced_wing*V_rel_wind * 
-			   cos(PI/2 + Alpha));
+			   cos(LS_PI/2 + Alpha));
   V_total_clean_tail = sqrt(w_clean_tail*w_clean_tail + 
 			    V_rel_wind*V_rel_wind - 
 			    2*w_clean_tail*V_rel_wind * 
-			    cos(PI/2 + Alpha));
+			    cos(LS_PI/2 + Alpha));
   V_total_iced_tail = sqrt(w_iced_tail*w_iced_tail + 
 			   V_rel_wind*V_rel_wind - 
 			   2*w_iced_tail*V_rel_wind * 
-			   cos(PI/2 + Alpha));
+			   cos(LS_PI/2 + Alpha));
 
   beta_flow_clean_wing = asin((w_clean_wing / V_total_clean_wing) * 
-			      sin (PI/2 + Alpha));
+			      sin (LS_PI/2 + Alpha));
   beta_flow_iced_wing = asin((w_iced_wing / V_total_iced_wing) * 
-			     sin (PI/2 + Alpha));
+			     sin (LS_PI/2 + Alpha));
   beta_flow_clean_tail = asin((w_clean_tail / V_total_clean_tail) * 
-			      sin (PI/2 + Alpha));
+			      sin (LS_PI/2 + Alpha));
   beta_flow_iced_tail = asin((w_iced_tail / V_total_iced_tail) * 
-			     sin (PI/2 + Alpha));
+			     sin (LS_PI/2 + Alpha));
 
   Dbeta_flow_wing = fabs(beta_flow_clean_wing - beta_flow_iced_wing);
   Dbeta_flow_tail = fabs(beta_flow_clean_tail - beta_flow_iced_tail);

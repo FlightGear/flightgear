@@ -829,8 +829,8 @@ static void fgMainLoop( void ) {
 		    << cur_fdm_state->get_Altitude() * FEET_TO_METER
 		    << " meters" );
 	}
-	fgFDMSetGroundElevation( globals->get_options()->get_flight_model(),
-				 scenery.cur_elev );  // meters
+	//fgFDMSetGroundElevation( globals->get_options()->get_flight_model(),
+	//			 scenery.cur_elev );  // meters
     }
 
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",

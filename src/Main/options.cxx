@@ -150,7 +150,10 @@ FGOptions::FGOptions() :
     pitch(0.424),        // pitch angle in degrees (Theta)
 
     // Initialize current options velocities to 0.0
-    uBody(0.0), vBody(0.0), wBody(0.0), vkcas(0.0), mach(0.0),
+    speedset(FG_VC),
+    uBody(0.0), vBody(0.0), wBody(0.0), 
+    vNorth(0.0),vEast(0.0), vDown(0.0),
+    vkcas(0.0), mach(0.0),
 
     // Miscellaneous
     game_mode(0),
@@ -696,35 +699,58 @@ int FGOptions::parse_option( const string& arg ) {
 	}
 	current_properties.setDoubleValue("/position/altitude", altitude);
     } else if ( arg.find( "--uBody=" ) != string::npos ) {
-	vkcas=mach=-1;
+	speedset = FG_VTUVW;
 	if ( units == FG_UNITS_FEET ) {
 	    uBody = atof( arg.substr(8) );
 	} else {
 	    uBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
-	current_properties.setDoubleValue("/velocities/speed-north", uBody);
+	//current_properties.setDoubleValue("/velocities/speed-north", uBody);
     } else if ( arg.find( "--vBody=" ) != string::npos ) {
-	vkcas=mach=-1;
+	speedset = FG_VTUVW;
 	if ( units == FG_UNITS_FEET ) {
 	    vBody = atof( arg.substr(8) );
 	} else {
 	    vBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
-	current_properties.setDoubleValue("/velocities/speed-east", vBody);
+	//current_properties.setDoubleValue("/velocities/speed-east", vBody);
     } else if ( arg.find( "--wBody=" ) != string::npos ) {
-	vkcas=mach=-1;
+	speedset = FG_VTUVW;
 	if ( units == FG_UNITS_FEET ) {
 	    wBody = atof( arg.substr(8) );
 	} else {
 	    wBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
-	current_properties.setDoubleValue("/velocities/speed-down", wBody);
+    } else if ( arg.find( "--vNorth=" ) != string::npos ) {
+	speedset = FG_VTNED;
+	if ( units == FG_UNITS_FEET ) {
+	    vNorth = atof( arg.substr(9) );
+	} else {
+	    vNorth = atof( arg.substr(9) ) * FEET_TO_METER;
+	}
+	current_properties.setDoubleValue("/velocities/speed-north", vNorth);
+    } else if ( arg.find( "--vEast=" ) != string::npos ) {
+	speedset = FG_VTNED;
+	if ( units == FG_UNITS_FEET ) {
+	    vEast = atof( arg.substr(8) );
+	} else {
+	    vEast = atof( arg.substr(8) ) * FEET_TO_METER;
+	}
+	current_properties.setDoubleValue("/velocities/speed-east", vEast);
+    } else if ( arg.find( "--vDown=" ) != string::npos ) {
+	speedset = FG_VTNED;
+	if ( units == FG_UNITS_FEET ) {
+	    vDown = atof( arg.substr(8) );
+	} else {
+	    vDown = atof( arg.substr(8) ) * FEET_TO_METER;
+	}
+	current_properties.setDoubleValue("/velocities/speed-down", vDown);
     } else if ( arg.find( "--vc=" ) != string::npos) {
-	mach=-1;
+	speedset = FG_VC;
 	vkcas=atof( arg.substr(5) );
 	cout << "Got vc: " << vkcas << endl;
     } else if ( arg.find( "--mach=" ) != string::npos) {
-	vkcas=-1;
+	speedset = FG_MACH;
 	mach=atof( arg.substr(7) );
     } else if ( arg.find( "--heading=" ) != string::npos ) {
 	heading = atof( arg.substr(10) );
@@ -926,7 +952,6 @@ int FGOptions::parse_option( const string& arg ) {
 // just that.
 int FGOptions::scan_command_line_for_root( int argc, char **argv ) {
     int i = 1;
-    int result;
 
     FG_LOG(FG_GENERAL, FG_INFO, "Processing command line arguments");
 

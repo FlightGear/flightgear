@@ -84,10 +84,7 @@
 	systems of measure)	*/
 
 /* Value of Pi from ref [3] */
-#ifdef PI
-#  undef PI /* avoid a harmless compiler warning */
-#endif
-#define	PI 3.14159265358979323846264338327950288419716939967511
+#define	LS_PI 3.14159265358979323846264338327950288419716939967511
 
 /* Value of earth radius from [8], ft */
 #define	EQUATORIAL_RADIUS 20925650.

@@ -768,7 +768,6 @@ void
 FGBFI::setSpeedNorth (double speed)
 {
   if (getSpeedNorth() != speed) {
-    globals->get_options()->set_uBody(speed);
     current_aircraft.fdm_state->set_Velocities_Local(speed,
 						     getSpeedEast(),
 						     getSpeedDown());
@@ -794,7 +793,6 @@ void
 FGBFI::setSpeedEast (double speed)
 {
   if (getSpeedEast() != speed) {
-    globals->get_options()->set_vBody(speed);
     current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
 						     speed,
 						     getSpeedDown());
@@ -820,7 +818,6 @@ void
 FGBFI::setSpeedDown (double speed)
 {
   if (getSpeedDown() != speed) {
-    globals->get_options()->set_wBody(speed);
     current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
 						     getSpeedEast(),
 						     speed);

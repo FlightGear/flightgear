@@ -122,6 +122,13 @@ public:
 	FG_TIME_GMT_ABSOLUTE = 4,
 	FG_TIME_LAT_ABSOLUTE = 5
     };
+    
+    enum fgSpeedSet {
+	FG_VC    = 1,
+	FG_MACH  = 2,
+	FG_VTUVW  = 3,
+	FG_VTNED = 4
+    };
 
 private:
 
@@ -139,9 +146,13 @@ private:
     double heading;     // heading (yaw) angle in degress (Psi)
     double roll;        // roll angle in degrees (Phi)
     double pitch;       // pitch angle in degrees (Theta)
+    fgSpeedSet speedset; // which speed does the user want
     double uBody;       // Body axis X velocity (U)
     double vBody;       // Body axis Y velocity (V)
     double wBody;       // Body axis Z velocity (W)
+    double vNorth;      // North component of vt
+    double vEast;       // East component of vt
+    double vDown;       // Down component of vt
     double vkcas;       // Calibrated airspeed, knots
     double mach;        // Mach number
 
@@ -245,9 +256,13 @@ public:
     inline double get_heading() const { return heading; }
     inline double get_roll() const { return roll; }
     inline double get_pitch() const { return pitch; }
+    inline fgSpeedSet get_speedset() const { return speedset; }
     inline double get_uBody() const {return uBody;}
     inline double get_vBody() const {return vBody;}
     inline double get_wBody() const {return wBody;}
+    inline double get_vNorth() const {return vNorth;}
+    inline double get_vEast() const {return vEast;}
+    inline double get_vDown() const {return vDown;}
     inline double get_vc() const {return vkcas;}
     inline double get_mach() const {return mach;}
 	

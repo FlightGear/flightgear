@@ -141,7 +141,7 @@ void cherokee_aero()
 		Cz = Cz0 + Cza*Alpha + Czat*(Alpha_dot*c/2.0/V) + Czq*(q*c/2.0/V) + Czde * elevator;
 		Cm = Cm0 + Cma*Alpha + Cmat*(Alpha_dot*c/2.0/V) + Cmq*(q*c/2.0/V) + Cmde * elevator; 
 
-		Cx = Cx0 - (Cza*Alpha)*(Cza*Alpha)/(PI*5.71*0.6);
+		Cx = Cx0 - (Cza*Alpha)*(Cza*Alpha)/(LS_PI*5.71*0.6);
 		Cl = Clb*Beta + Clp*(p*b/2.0/V) + Clr*(r*b/2.0/V) + Clda * aileron;
 
 		Cy = Cyb*Beta + Cyr*(r*b/2.0/V); 

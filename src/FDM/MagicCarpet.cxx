@@ -52,28 +52,30 @@ bool FGMagicCarpet::update( int multiloop ) {
     double speed = controls.get_throttle( 0 ) * 2000; // meters/sec
     double dist = speed * time_step;
     double kts = speed * METER_TO_NM * 3600.0;
-    set_V_equiv_kts( kts );
-    set_V_calibrated_kts( kts );
-    set_V_ground_speed( kts );
-    set_Mach_number(0);
+    _set_V_equiv_kts( kts );
+    _set_V_calibrated_kts( kts );
+    _set_V_ground_speed( kts );
 
     // angle of turn
     double turn_rate = controls.get_aileron() * FG_PI_4; // radians/sec
     double turn = turn_rate * time_step;
 
     // update euler angles
-    set_Euler_Angles( get_Phi(), get_Theta(), fmod(get_Psi() + turn, FG_2PI) );
-    set_Euler_Rates(0,0,0);
+    _set_Euler_Angles( get_Phi(), get_Theta(), fmod(get_Psi() + turn, FG_2PI) );
+    _set_Euler_Rates(0,0,0);
 
     // update (lon/lat) position
     double lat2, lon2, az2;
-    geo_direct_wgs_84 ( get_Altitude(),
-			get_Latitude() * RAD_TO_DEG,
-			get_Longitude() * RAD_TO_DEG,
-			get_Psi() * RAD_TO_DEG,
-			dist, &lat2, &lon2, &az2 );
-    set_Longitude( lon2 * DEG_TO_RAD );
-    set_Latitude( lat2 * DEG_TO_RAD );
+    if ( speed > FG_EPSILON ) {
+	geo_direct_wgs_84 ( get_Altitude(),
+			    get_Latitude() * RAD_TO_DEG,
+			    get_Longitude() * RAD_TO_DEG,
+			    get_Psi() * RAD_TO_DEG,
+			    dist, &lat2, &lon2, &az2 );
+
+	_set_Longitude( lon2 * DEG_TO_RAD );
+	_set_Latitude( lat2 * DEG_TO_RAD );
+    }
 
     // cout << "lon error = " << fabs(end.x()*RAD_TO_DEG - lon2)
     //      << "  lat error = " << fabs(end.y()*RAD_TO_DEG - lat2)
@@ -84,15 +86,15 @@ bool FGMagicCarpet::update( int multiloop ) {
 
     // update altitude
     double real_climb_rate = -controls.get_elevator() * 5000; // feet/sec
-    set_Climb_Rate( real_climb_rate / 500.0 );
+    _set_Climb_Rate( real_climb_rate / 500.0 );
     double climb = real_climb_rate * time_step;
 
-    set_Geocentric_Position( lat_geoc, get_Longitude(), 
+    _set_Geocentric_Position( lat_geoc, get_Longitude(), 
 			     sl_radius + get_Altitude() + climb );
     // cout << "sea level radius (ft) = " << sl_radius << endl;
     // cout << "(setto) sea level radius (ft) = " << get_Sea_level_radius() << endl;
-    set_Sea_level_radius( sl_radius * METER_TO_FEET);
-    set_Altitude( get_Altitude() + climb );
+    _set_Sea_level_radius( sl_radius * METER_TO_FEET);
+    _set_Altitude( get_Altitude() + climb );
 
     return true;
 }

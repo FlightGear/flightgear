@@ -25,6 +25,7 @@
 #define _JSBSIM_HXX
 
 #include <FDM/JSBSim/FGFDMExec.h>
+#include <FDM/JSBSim/FGInitialCondition.h>
 #undef MAX_ENGINES
 
 #include <Aircraft/aircraft.hxx>
@@ -34,12 +35,18 @@
 class FGJSBsim: public FGInterface {
 
     // The aircraft for this instance
-    FGFDMExec FDMExec;
+    FGFDMExec *fdmex;
+    FGInitialCondition *fgic;
+    bool needTrim;
+    
     bool trimmed;
     float trim_elev;
     float trim_throttle;
 
 public:
+
+    FGJSBsim::FGJSBsim(void);
+    FGJSBsim::~FGJSBsim();
 
     // copy FDM state to LaRCsim structures
     bool copy_to_JSBsim();
@@ -49,6 +56,37 @@ public:
 
     // reset flight params to a specific position 
     bool init( double dt );
+    
+    // Positions
+    void set_Latitude(double lat);  // geocentric
+    void set_Longitude(double lon);    
+    void set_Altitude(double alt);        // triggers re-calc of AGL altitude
+    //void set_AltitudeAGL(double altagl); // and vice-versa
+    
+    // Speeds -- setting any of these will trigger a re-calc of the rest
+    void set_V_calibrated_kts(double vc);
+    void set_Mach_number(double mach);
+    void set_Velocities_Local( double north, double east, double down );
+    void set_Velocities_Wind_Body( double u, double v, double w);
+    
+    // Euler angles 
+    void set_Euler_Angles( double phi, double theta, double psi );
+    
+    // Flight Path
+    void set_Climb_Rate( double roc);
+    void set_Gamma_vert_rad( double gamma);
+    
+    // Earth
+    void set_Sea_level_radius(double slr);
+    void set_Runway_altitude(double ralt);
+    
+    // Atmosphere
+    void set_Static_pressure(double p);
+    void set_Static_temperature(double T);
+    void set_Density(double rho);
+    void set_Velocities_Local_Airmass (double wnorth, 
+				       double weast, 
+				       double wdown );
 
     // update position based on inputs, positions, velocities, etc.
     bool update( int multiloop );

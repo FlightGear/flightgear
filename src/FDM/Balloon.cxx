@@ -168,11 +168,11 @@ bool FGBalloonSim::copy_from_BalloonSim() {
 
     // Velocities
     current_balloon.getVelocity( temp );
-    set_Velocities_Local( temp[0], temp[1], temp[2] );
+    _set_Velocities_Local( temp[0], temp[1], temp[2] );
 
-    /* ***FIXME*** */ set_V_equiv_kts( sgLengthVec3 ( temp ) );
+    /* ***FIXME*** */ _set_V_equiv_kts( sgLengthVec3 ( temp ) );
 
-    set_Omega_Body( 0.0, 0.0, 0.0 );
+    _set_Omega_Body( 0.0, 0.0, 0.0 );
 
     // Positions
     current_balloon.getPosition( temp );
@@ -192,27 +192,22 @@ bool FGBalloonSim::copy_from_BalloonSim() {
 	    << " sl_radius2 = " << sl_radius2 * METER_TO_FEET
 	    << " Equator = " << EQUATORIAL_RADIUS_FT );
 	    
-    set_Geocentric_Position( lat_geoc, lon, 
+    _set_Geocentric_Position( lat_geoc, lon, 
 			       sl_radius2 * METER_TO_FEET + alt );
-    set_Geodetic_Position( lat_geod, lon, alt );
+    _set_Geodetic_Position( lat_geod, lon, alt );
 
     current_balloon.getHPR( temp );
-    set_Euler_Angles( temp[0], temp[1], temp[2] );
-    set_Euler_Rates(0,0,0);
+    /* **FIXME*** */ _set_Sea_level_radius( sl_radius2 * METER_TO_FEET );
+    /* **FIXME*** */ _set_Earth_position_angle( 0.0 );
 
-    set_Alpha( 0.0/*FDMExec.GetTranslation()->Getalpha()*/ );
-    set_Beta( 0.0/*FDMExec.GetTranslation()->Getbeta()*/ );
+    /* ***FIXME*** */ _set_Runway_altitude( 0.0 );
 
-    /* **FIXME*** */ set_Sea_level_radius( sl_radius2 * METER_TO_FEET );
-    /* **FIXME*** */ set_Earth_position_angle( 0.0 );
-
-    /* ***FIXME*** */ set_Runway_altitude( 0.0 );
-
-    set_sin_lat_geocentric( lat_geoc );
-    set_cos_lat_geocentric( lat_geoc );
-    set_sin_cos_longitude( lon );
-    set_sin_cos_latitude( lat_geod );
-
+    _set_sin_lat_geocentric( lat_geoc );
+    _set_cos_lat_geocentric( lat_geoc );
+  
+    _set_sin_cos_longitude( lon );
+    _set_sin_cos_latitude( lat_geod );
+    
     return true;
 }
 

@@ -342,8 +342,8 @@ bool fgInitPosition( void ) {
 	    "starting altitude is = " << globals->get_options()->get_altitude() );
 
     f->set_Altitude( globals->get_options()->get_altitude() * METER_TO_FEET );
-    fgFDMSetGroundElevation( globals->get_options()->get_flight_model(),
-			     f->get_Altitude() * FEET_TO_METER );
+    // fgFDMSetGroundElevation( globals->get_options()->get_flight_model(),
+    //	                        f->get_Altitude() * FEET_TO_METER );
 
 #if 0
     current_properties.setDoubleValue("/position/longitude",
@@ -404,6 +404,36 @@ bool fgInitGeneral( void ) {
 }
 
 
+// set initial aircraft speed
+bool fgVelocityInit( void ) {
+  switch(globals->get_options()->get_speedset()) {
+    case 1: //FG_VC
+      current_aircraft.fdm_state->set_V_calibrated_kts( 
+                                    globals->get_options()->get_vc() );
+      break;
+    case 2: //FG_MACH
+      current_aircraft.fdm_state->set_Mach_number(
+                                    globals->get_options()->get_mach() );
+      break;
+    case 3: //FG_VTUVW
+      current_aircraft.fdm_state->set_Velocities_Wind_Body(
+                                    globals->get_options()->get_uBody(),
+                                    globals->get_options()->get_vBody(),
+                                    globals->get_options()->get_wBody() );
+      break;
+    case 4: //FG_VTNED
+      current_aircraft.fdm_state->set_Velocities_Local(
+                                    globals->get_options()->get_vNorth(),
+                                    globals->get_options()->get_vEast(),
+                                    globals->get_options()->get_vDown() );
+      break;
+    default:
+      current_aircraft.fdm_state->set_V_calibrated_kts( 0.0 );
+    }
+    return true;  
+}             
+
+        
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
@@ -469,6 +499,9 @@ bool fgInitSubsystems( void ) {
     // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
 
+    fgFDMSetGroundElevation( globals->get_options()->get_flight_model(),
+			     scenery.cur_elev );
+    
     // set the initial position
     fgInitPosition();
 
@@ -495,9 +528,6 @@ bool fgInitSubsystems( void ) {
 	    "Altitude after update " << scenery.cur_elev );
     */
 
-    fgFDMSetGroundElevation( globals->get_options()->get_flight_model(),
-			     scenery.cur_elev );
-
     // Reset our altitude if we are below ground
     FG_LOG( FG_GENERAL, FG_DEBUG, "Current altitude = " << cur_fdm_state->get_Altitude() );
     FG_LOG( FG_GENERAL, FG_DEBUG, "Current runway altitude = " <<
@@ -522,24 +552,27 @@ bool fgInitSubsystems( void ) {
     // Set the FG variables first
     sgGeodToGeoc( cur_fdm_state->get_Latitude(), cur_fdm_state->get_Altitude(),
 		  &sea_level_radius_meters, &lat_geoc);
-    cur_fdm_state->set_Geocentric_Position( lat_geoc, cur_fdm_state->get_Longitude(),
+    /* cur_fdm_state->set_Geocentric_Position( lat_geoc, cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Altitude() +
 				(sea_level_radius_meters * METER_TO_FEET) );
+     */
     cur_fdm_state->set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET );
 
-    cur_fdm_state->set_sin_cos_longitude(cur_fdm_state->get_Longitude());
+    /* cur_fdm_state->set_sin_cos_longitude(cur_fdm_state->get_Longitude());
     cur_fdm_state->set_sin_cos_latitude(cur_fdm_state->get_Latitude());
 	
     cur_fdm_state->set_sin_lat_geocentric(sin(lat_geoc));
-    cur_fdm_state->set_cos_lat_geocentric(cos(lat_geoc));
+    cur_fdm_state->set_cos_lat_geocentric(cos(lat_geoc)); */
+
 
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
 
     // Initial Velocity
-    cur_fdm_state->set_Velocities_Local( globals->get_options()->get_uBody(),
-                             globals->get_options()->get_vBody(),
-                             globals->get_options()->get_wBody());
+    //cur_fdm_state->set_Velocities_Local( globals->get_options()->get_uBody(),
+    //                         globals->get_options()->get_vBody(),
+    //                         globals->get_options()->get_wBody());
+    fgVelocityInit();
 
     // Initial Orientation
     cur_fdm_state->set_Euler_Angles( globals->get_options()->get_roll() * DEG_TO_RAD,
@@ -547,16 +580,16 @@ bool fgInitSubsystems( void ) {
 			 globals->get_options()->get_heading() * DEG_TO_RAD );
 
     // Initial Angular Body rates
-    cur_fdm_state->set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
+    //cur_fdm_state->set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
 
-    cur_fdm_state->set_Earth_position_angle( 0.0 );
+    //cur_fdm_state->set_Earth_position_angle( 0.0 );
 
     // Mass properties and geometry values
-    cur_fdm_state->set_Inertias( 8.547270E+01,
-		     1.048000E+03, 3.000000E+03, 3.530000E+03, 0.000000E+00 );
+    //cur_fdm_state->set_Inertias( 8.547270E+01,
+	  //    1.048000E+03, 3.000000E+03, 3.530000E+03, 0.000000E+00 );
 
     // CG position w.r.t. ref. point
-    cur_fdm_state->set_CG_Position( 0.0, 0.0, 0.0 );
+    //cur_fdm_state->set_CG_Position( 0.0, 0.0, 0.0 );
 
     // Initialize the event manager
     global_events.Init();
@@ -805,24 +838,26 @@ void fgReInitSubsystems( void )
     // Set the FG variables first
     sgGeodToGeoc( cur_fdm_state->get_Latitude(), cur_fdm_state->get_Altitude(), 
 		  &sea_level_radius_meters, &lat_geoc);
-    cur_fdm_state->set_Geocentric_Position( lat_geoc, cur_fdm_state->get_Longitude(), 
+   /*  cur_fdm_state->set_Geocentric_Position( lat_geoc, cur_fdm_state->get_Longitude(), 
 				cur_fdm_state->get_Altitude() + 
 				(sea_level_radius_meters * METER_TO_FEET) );
+     */
     cur_fdm_state->set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET );
 	
-    cur_fdm_state->set_sin_cos_longitude(cur_fdm_state->get_Longitude());
-    cur_fdm_state->set_sin_cos_latitude(cur_fdm_state->get_Latitude());
+    //cur_fdm_state->set_sin_cos_longitude(cur_fdm_state->get_Longitude());
+    //cur_fdm_state->set_sin_cos_latitude(cur_fdm_state->get_Latitude());
 	
-    cur_fdm_state->set_sin_lat_geocentric(sin(lat_geoc));
-    cur_fdm_state->set_cos_lat_geocentric(cos(lat_geoc));
+    //cur_fdm_state->set_sin_lat_geocentric(sin(lat_geoc));
+    //cur_fdm_state->set_cos_lat_geocentric(cos(lat_geoc));
 
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
 
     // Initial Velocity
-    cur_fdm_state->set_Velocities_Local( globals->get_options()->get_uBody(),
-                             globals->get_options()->get_vBody(),
-                             globals->get_options()->get_wBody());
+    //cur_fdm_state->set_Velocities_Local( globals->get_options()->get_uBody(),
+    //                         globals->get_options()->get_vBody(),
+    //                         globals->get_options()->get_wBody());
+    fgVelocityInit();
 
     // Initial Orientation
     cur_fdm_state->set_Euler_Angles( globals->get_options()->get_roll() * DEG_TO_RAD,
@@ -830,16 +865,16 @@ void fgReInitSubsystems( void )
 			 globals->get_options()->get_heading() * DEG_TO_RAD );
 
     // Initial Angular Body rates
-    cur_fdm_state->set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
+    //cur_fdm_state->set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
 
-    cur_fdm_state->set_Earth_position_angle( 0.0 );
+    //cur_fdm_state->set_Earth_position_angle( 0.0 );
 
     // Mass properties and geometry values
-    cur_fdm_state->set_Inertias( 8.547270E+01, 
-		     1.048000E+03, 3.000000E+03, 3.530000E+03, 0.000000E+00 );
+    //cur_fdm_state->set_Inertias( 8.547270E+01, 
+		//    1.048000E+03, 3.000000E+03, 3.530000E+03, 0.000000E+00 );
 
     // CG position w.r.t. ref. point
-    cur_fdm_state->set_CG_Position( 0.0, 0.0, 0.0 );
+    //cur_fdm_state->set_CG_Position( 0.0, 0.0, 0.0 );
 
     // Initialize view parameters
     globals->get_current_view()->set_view_offset( 0.0 );

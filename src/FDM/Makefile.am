@@ -10,6 +10,7 @@ libFlight_a_SOURCES = \
 	IO360.cxx IO360.hxx \
 	JSBSim.cxx JSBSim.hxx \
 	LaRCsim.cxx LaRCsim.hxx \
+	LaRCsimIC.cxx LaRCsimIC.hxx \
 	MagicCarpet.cxx MagicCarpet.hxx
 
 bin_PROGRAMS = engine pstest

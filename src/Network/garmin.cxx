@@ -268,6 +268,7 @@ bool FGGarmin::parse_message() {
 	    cur_fdm_state->set_Longitude( lon * DEG_TO_RAD );
 	    FG_LOG( FG_IO, FG_INFO, "  lon = " << lon );
 
+#if 0
 	    double sl_radius, lat_geoc;
 	    sgGeodToGeoc( cur_fdm_state->get_Latitude(), 
 			  cur_fdm_state->get_Altitude(), 
@@ -275,6 +276,7 @@ bool FGGarmin::parse_message() {
 	    cur_fdm_state->set_Geocentric_Position( lat_geoc, 
 			   cur_fdm_state->get_Longitude(), 
 	     	           sl_radius + cur_fdm_state->get_Altitude() );
+#endif
 
 	    // speed
 	    end = msg.find(",", begin);
@@ -285,8 +287,8 @@ bool FGGarmin::parse_message() {
 	    string speed_str = msg.substr(begin, end - begin);
 	    begin = end + 1;
 	    speed = atof( speed_str.c_str() );
-	    cur_fdm_state->set_V_equiv_kts( speed );
-	    cur_fdm_state->set_V_ground_speed( speed );
+	    cur_fdm_state->set_V_calibrated_kts( speed );
+	    // cur_fdm_state->set_V_ground_speed( speed );
 	    FG_LOG( FG_IO, FG_INFO, "  speed = " << speed );
 
 	    // heading

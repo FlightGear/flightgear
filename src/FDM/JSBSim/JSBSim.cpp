@@ -101,6 +101,7 @@ USEUNIT("FGAerodynamics.cpp");
 #include "FGPosition.h"
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
+#include "FGInitialCondition.h"
 
 #ifdef FGFS
 #include <simgear/compiler.h>
@@ -131,17 +132,38 @@ int main(int argc, char** argv)
 
   FDMExec = new FGFDMExec();
 
-  result = FDMExec->LoadModel("aircraft", "engine", string(argv[1]));
+  result = FDMExec->LoadModel("/home/tony/FlightGear/Aircraft", 
+                                "/home/tony/FlightGear/Engine", 
+                                  string(argv[1]));
   
   if (!result) {
   	cerr << "Aircraft file " << argv[1] << " was not found" << endl;
 	  exit(-1);
   }
   
-  if ( ! FDMExec->GetState()->Reset("aircraft", string(argv[1]), string(argv[2])))
+  if ( ! FDMExec->GetState()->Reset("/home/tony/FlightGear/Aircraft", 
+                                       string(argv[1]), string(argv[2])))
     FDMExec->GetState()->Initialize(2000,0,0,0,0,0,0.5,0.5,40000);
-
-  float cmd = 0.0;
+  
+  FGInitialCondition *fgic= new FGInitialCondition(FDMExec);
+  fgic->SetUBodyFpsIC(170);
+  fgic->SetTrueHeadingDegIC(275);
+  FDMExec->RunIC(fgic);
+  cout << "FDMExec->GetTranslation()->GetVt(): " << FDMExec->GetTranslation()->GetVt() << endl;
+  cout << "FDMExec->GetPosition()->GetVn(): " << FDMExec->GetPosition()->GetVn() << endl;
+  cout << "FDMExec->GetPosition()->GetVe(): " << FDMExec->GetPosition()->GetVe() << endl;
+  cout << "FDMExec->GetAuxiliary()->GetVcalibratedKTS(): " << FDMExec->GetAuxiliary()->GetVcalibratedKTS() << endl; 
+  fgic->SetVnorthFpsIC(170);
+  cout << "fgic->GetUBodyFpsIC(): " << fgic->GetUBodyFpsIC() << endl;
+  cout << "fgic->GetVBodyFpsIC(): " << fgic->GetVBodyFpsIC() << endl;
+  cout << "fgic->GetWBodyFpsIC(): " << fgic->GetWBodyFpsIC() << endl;
+  FDMExec->RunIC(fgic);
+  cout << "FDMExec->GetTranslation()->GetVt(): " << FDMExec->GetTranslation()->GetVt() << endl;
+  cout << "FDMExec->GetPosition()->GetVn(): " << FDMExec->GetPosition()->GetVn() << endl;
+  cout << "FDMExec->GetPosition()->GetVe(): " << FDMExec->GetPosition()->GetVe() << endl;
+  cout << "FDMExec->GetAuxiliary()->GetVcalibratedKTS(): " << FDMExec->GetAuxiliary()->GetVcalibratedKTS() << endl; 
+  
+  /* float cmd = 0.0;
 
   while (FDMExec->GetState()->Getsim_time() <= 10.0)
   {
@@ -166,6 +188,7 @@ int main(int argc, char** argv)
     
     FDMExec->Run();
   }
+ */
 
   delete FDMExec;
 

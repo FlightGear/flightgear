@@ -59,7 +59,10 @@ INCLUDES
 CLASS DECLARATION
 *******************************************************************************/
 
-typedef enum { setvt, setvc, setve, setmach } speedset;
+typedef enum { setvt, setvc, setve, setmach, setuvw, setned } speedset;
+
+#define jsbFPSTOKTS 0.5924838
+#define jsbKTSTOFPS 1.6878099
 
 
 /* USAGE NOTES
@@ -105,12 +108,13 @@ typedef enum { setvt, setvc, setve, setmach } speedset;
 	 considered equivalent to setting gamma.
  
 */
-
 class FGInitialCondition {
 public:
 
   FGInitialCondition(FGFDMExec *fdmex);
   ~FGInitialCondition(void);
+  
+  inline speedset GetSpeedSet(void) { return lastSpeedSet; }
 
   void SetVcalibratedKtsIC(float tt);
   void SetVequivalentKtsIC(float tt);
@@ -127,7 +131,10 @@ public:
   
   void SetAltitudeFtIC(float tt);
   void SetAltitudeAGLFtIC(float tt);
-
+  
+  void SetSeaLevelRadiusFtIC(double tt);
+  void SetTerrainAltitudeFtIC(double tt);
+  
   //"vertical" flight path, recalculate theta
   inline void SetFlightPathAngleDegIC(float tt) { SetFlightPathAngleRadIC(tt*DEGTORAD); }
   void SetFlightPathAngleRadIC(float tt);
@@ -147,8 +154,8 @@ public:
   inline void SetRollAngleDegIC(float tt) { phi=tt*DEGTORAD; getTheta(); }
   inline void SetRollAngleRadIC(float tt) { phi=tt; getTheta(); }
 
-  inline void SetHeadingDegIC(float tt)   { psi=tt*DEGTORAD; }
-  inline void SetHeadingRadIC(float tt)   { psi=tt; }
+  inline void SetTrueHeadingDegIC(float tt)   { psi=tt*DEGTORAD; }
+  inline void SetTrueHeadingRadIC(float tt)   { psi=tt; }
 
   inline void SetLatitudeDegIC(float tt)  { latitude=tt*DEGTORAD; }
   inline void SetLatitudeRadIC(float tt)  { latitude=tt; }
@@ -156,9 +163,9 @@ public:
   inline void SetLongitudeDegIC(float tt) { longitude=tt*DEGTORAD; }
   inline void SetLongitudeRadIC(float tt) { longitude=tt; }
 
-  inline float GetVcalibratedKtsIC(void) { return vc*FPSTOKTS; }
-  inline float GetVequivalentKtsIC(void) { return ve*FPSTOKTS; }
-  inline float GetVtrueKtsIC(void) { return vt*FPSTOKTS; }
+  inline float GetVcalibratedKtsIC(void) { return vc*jsbFPSTOKTS; }
+  inline float GetVequivalentKtsIC(void) { return ve*jsbFPSTOKTS; }
+  inline float GetVtrueKtsIC(void) { return vt*jsbFPSTOKTS; }
   inline float GetVtrueFpsIC(void) { return vt; }
   inline float GetMachIC(void) { return mach; }
 
@@ -210,6 +217,9 @@ private:
   float latitude,longitude;
   float u,v,w;
   float vnorth,veast,vdown;
+  double sea_level_radius;
+  double terrain_altitude;
+  double radius_to_vehicle;
   
   float xlo, xhi,xmin,xmax;
   

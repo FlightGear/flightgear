@@ -213,12 +213,12 @@ bool FGADA::copy_to_FGADA () {
 bool FGADA::copy_from_FGADA() {
 
     // Velocities
-    set_Velocities_Local( V_north, V_east, V_down );
-    set_V_calibrated_kts( V_calibrated_kts );
+    _set_Velocities_Local( V_north, V_east, V_down );
+    _set_V_calibrated_kts( V_calibrated_kts );
 
     // Angular rates 
-    set_Omega_Body( P_body, Q_body, R_body );
-    set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
+    _set_Omega_Body( P_body, Q_body, R_body );
+    _set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 
     //    FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << Longitude 
     //	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
@@ -226,25 +226,26 @@ bool FGADA::copy_from_FGADA() {
     //	    << " radius_to_vehicle = " << Radius_to_vehicle );
 	    
     // Positions
-    set_Geocentric_Position( Lat_geocentric, Lon_geocentric,Radius_to_vehicle );
-    set_Geodetic_Position( Latitude, Longitude, Altitude );
-    set_Euler_Angles( Phi, Theta, Psi );
+    _set_Geocentric_Position( Lat_geocentric, Lon_geocentric,
+			      Radius_to_vehicle );
+    _set_Geodetic_Position( Latitude, Longitude, Altitude );
+    _set_Euler_Angles( Phi, Theta, Psi );
 
     // Miscellaneous quantities
-    set_Alpha( Alpha );
-    set_Beta( Beta );
-    set_Gamma_vert_rad( Gamma_vert_rad );
-    set_Sea_level_radius( Sea_level_radius );
-    set_Earth_position_angle( Earth_position_angle );
-    set_Runway_altitude( Runway_altitude );
-    set_sin_lat_geocentric(Lat_geocentric);
-    set_cos_lat_geocentric(Lat_geocentric);
-    set_sin_cos_longitude(Longitude);
-    set_sin_cos_latitude(Latitude);
-    set_Accels_Local( U_dot_local, V_dot_local, W_dot_local );
-    set_Velocities_Ground( U_local, V_local, W_local );
-    set_Accels_CG_Body_N( anxg,anyg,anzg);
-    set_Mach_number( Machno);
+    _set_Alpha( Alpha );
+    _set_Beta( Beta );
+    _set_Gamma_vert_rad( Gamma_vert_rad );
+    _set_Sea_level_radius( Sea_level_radius );
+    _set_Earth_position_angle( Earth_position_angle );
+    _set_Runway_altitude( Runway_altitude );
+    _set_sin_lat_geocentric(Lat_geocentric);
+    _set_cos_lat_geocentric(Lat_geocentric);
+    _set_sin_cos_longitude(Longitude);
+    _set_sin_cos_latitude(Latitude);
+    _set_Accels_Local( U_dot_local, V_dot_local, W_dot_local );
+    _set_Velocities_Ground( U_local, V_local, W_local );
+    _set_Accels_CG_Body_N( anxg,anyg,anzg);
+    _set_Mach_number( Machno);
 
     //    printf("sr=%f\n",Sea_level_radius);
     //    printf("psi = %f %f\n",Psi,Psi*RAD_TO_DEG);    

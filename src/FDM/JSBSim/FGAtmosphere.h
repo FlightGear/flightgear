@@ -82,6 +82,7 @@ public:
 
   inline void UseExternal(void)          { useExternal=true;  }
   inline void UseInternal(void)          { useExternal=false; } //this is the default
+  bool External(void) { return useExternal; }
 
   inline void SetExTemperature(float t)  { exTemperature=t; }
   inline void SetExDensity(float d)      { exDensity=d; }
