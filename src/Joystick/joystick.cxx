@@ -31,6 +31,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
+#include <Main/options.hxx>
 
 #if defined( ENABLE_PLIB_JOYSTICK )
 #  include <js.h>		// plib include
@@ -160,6 +161,21 @@ int fgJoystickInit( void ) {
 	FG_LOG ( FG_INPUT, FG_INFO, "  No joysticks detected" );
 	return 0;
     }
+
+    // I hate doing this sort of thing, but it's overridable from the
+    // command line/config file.  If the user hasn't specified an
+    // autocoordination preference, and if they have a single 2 axis
+    // joystick, then automatical enable auto_coordination.
+
+    if ( (current_options.get_auto_coordination() == 
+	  fgOPTIONS::FG_AUTO_COORD_NOT_SPECIFIED) &&
+	 (!js0->notWorking() && js1->notWorking() && (js0->getNumAxes() < 3)
+	  )
+	 )
+    {
+	current_options.set_auto_coordination(fgOPTIONS::FG_AUTO_COORD_ENABLED);
+    }
+
 
 #elif defined( ENABLE_GLUT_JOYSTICK )
 
