@@ -1,3 +1,44 @@
+New in 0.7.6
+* December 15, 2000
+* Added night ground cover lights with user controllable densities on
+  a per texture basis.  Lights have a bit of a "fog punch through" effect.
+* Support added for "shaped" instrument panels.
+* Added support for virtual panels that are larger than the screen
+  space which can scroll.
+* Added waypoint and route flying support to the autopilot and HUD.
+* New highly detailed runway textures with accurate markings.
+* Added a basic piston engine model, with support for rpm, egt, cht, mp,
+  and mixture.
+* Many tweaks and improvements to the c172 instrument panel.
+* Corrections and additions to the airport and navaid database.
+* Added an external interface to the property manager so you can
+  "telnet" into a running copy of FlightGear, cd through the property
+  tree and examine and even change values, all from a remote computer.
+* Improvements to flight model initialization.
+* Fixes and improvements to the save/restore code.
+* Added a load/save dialog box for saving/restoring your current flight.
+* Program notes max texture size for your card/driver so it can load
+  higher resultion textures if they are available and if you can use
+  them.
+* Added a visibility= command line option for setting intial visibility
+  distance.
+* Range of tiles loaded and drawn are now directly calculated from the current
+  visibility distance so that the ground always blends smoothly into sky.
+* Rewrote the tile caching scheme so it is now more flexible, more dynamic,
+  simpler, and more robust.
+* Updates to the FDM bus.
+* Many clean ups with the view code to prepare the way for a greater
+  variety of external views.
+* MSVC project files now included in the source distribution.
+* Fixed a view bug that could make the aircraft model appear rotated
+  incorrectly
+* Fixed a bug with the autopilot rate of climb hold.
+* Internal property manager tweaks.
+* Additional materials can be aliased to an existing material to save
+  texture space (at the expense of less texture variety)
+* MSVC tweaks.
+* MacOS tweaks.
+
 New in 0.7.5
 * September 18, 2000
 * Aircraft now starts at end of runway closest to desired heading.
