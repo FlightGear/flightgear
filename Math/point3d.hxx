@@ -25,23 +25,16 @@
 #ifndef _POINT3D_HXX
 #define _POINT3D_HXX
 
+
 #ifndef __cplusplus                                                          
 # error This library requires C++
 #endif                                   
 
 
-#include <Misc/fgstream.hxx>
-
-#include "Include/fg_stl_config.h"
-
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
-
+#include <iostream>
 #include <assert.h>
 
-#include <Include/fg_constants.h>
-
+const double fgPoint3_Epsilon = 0.0000001;
 
 enum {PX, PY, PZ};		    // axes
 
@@ -64,7 +57,7 @@ public:
 
     Point3D();
     Point3D(const double x, const double y, const double z);
-    Point3D(const double d);
+    explicit Point3D(const double d);
     Point3D(const Point3D &p);
 
     // Assignment operators
@@ -72,7 +65,7 @@ public:
     Point3D& operator = ( const Point3D& p );	 // assignment of a Point3D
     Point3D& operator += ( const Point3D& p );	 // incrementation by a Point3D
     Point3D& operator -= ( const Point3D& p );	 // decrementation by a Point3D
-    Point3D& operator *= ( const double d );	 // multiplication by a constant
+    Point3D& operator *= ( const double d );     // multiplication by a constant
     Point3D& operator /= ( const double d );	 // division by a constant
 
     void setx(const double x);
@@ -94,44 +87,23 @@ public:
     double elev() const;   // geodetic elevation (if specifying a surface point)
 
     // friends
-
     friend Point3D operator - (const Point3D& p);	            // -p1
-    friend Point3D operator + (const Point3D& a, const Point3D& b); // p1 + p2
-    friend Point3D operator - (const Point3D& a, const Point3D& b); // p1 - p2
-    friend Point3D operator * (const Point3D& a, const double d);   // p1 * 3.0
-    friend Point3D operator * (const double d, const Point3D& a);   // 3.0 * p1
-    friend Point3D operator / (const Point3D& a, const double d);   // p1 / 3.0
-    friend bool operator == (const Point3D& a, const Point3D& b);   // p1 == p2?
-    friend bool operator != (const Point3D& a, const Point3D& b);   // p1 != p2?
+    friend bool operator == (const Point3D& a, const Point3D& b);  // p1 == p2?
+    friend istream& operator>> ( istream&, Point3D& );
+    friend ostream& operator<< ( ostream&, const Point3D& );
 
     // Special functions
-    double distance3D(const Point3D& a, const Point3D& b); // distance between
+    double distance3D(const Point3D& a) const; // distance between
 };
 
-
-// output to stream
-inline ostream&
-operator << ( ostream& out, Point3D& p)
-{
-    double x, y, z;
-
-    x = p.x();
-    y = p.y();
-    z = p.z();
-
-    out << x << " " << y << " " << z;
-
-    return out;
-}
 
 // input from stream
 inline istream&
 operator >> ( istream& in, Point3D& p)
 {
-    double x, y, z;
     char c;
 
-    in >> x;
+    in >> p.n[PX];
 
     // read past optional comma
     while ( in.get(c) ) {
@@ -142,7 +114,7 @@ operator >> ( istream& in, Point3D& p)
 	}
     }
 	
-    in >> y;
+    in >> p.n[PY];
 
     // read past optional comma
     while ( in.get(c) ) {
@@ -153,11 +125,15 @@ operator >> ( istream& in, Point3D& p)
 	}
     }
 	
-    in >> z;
-
-    p = Point3D(x, y, z);
+    in >> p.n[PZ];
 
     return in;
+}
+
+inline ostream&
+operator<< ( ostream& out, const Point3D& p )
+{
+    return out << p.n[PX] << ',' << p.n[PY] << ',' << p.n[PZ];
 }
 
 ///////////////////////////
@@ -263,17 +239,17 @@ inline Point3D operator - (const Point3D& a)
 
 inline Point3D operator + (const Point3D& a, const Point3D& b)
 {
-    return Point3D(a.n[PX]+ b.n[PX], a.n[PY] + b.n[PY], a.n[PZ] + b.n[PZ]);
+    return Point3D(a) += b;
 }
 
 inline Point3D operator - (const Point3D& a, const Point3D& b)
 {
-    return Point3D(a.n[PX]-b.n[PX], a.n[PY]-b.n[PY], a.n[PZ]-b.n[PZ]);
+    return Point3D(a) -= b;
 }
 
 inline Point3D operator * (const Point3D& a, const double d)
 {
-    return Point3D(d*a.n[PX], d*a.n[PY], d*a.n[PZ]);
+    return Point3D(a) *= d;
 }
 
 inline Point3D operator * (const double d, const Point3D& a)
@@ -283,16 +259,15 @@ inline Point3D operator * (const double d, const Point3D& a)
 
 inline Point3D operator / (const Point3D& a, const double d)
 {
-    double d_inv = 1./d;
-    return Point3D(a.n[PX]*d_inv, a.n[PY]*d_inv, a.n[PZ]*d_inv);
+    return Point3D(a) *= (1.0 / d );
 }
 
 inline bool operator == (const Point3D& a, const Point3D& b)
 {
     return
-	(a.n[PX] - b.n[PX]) < FG_EPSILON &&
-	(a.n[PY] - b.n[PY]) < FG_EPSILON &&
-	(a.n[PZ] - b.n[PZ]) < FG_EPSILON;
+	(a.n[PX] - b.n[PX]) < fgPoint3_Epsilon &&
+	(a.n[PY] - b.n[PY]) < fgPoint3_Epsilon &&
+	(a.n[PZ] - b.n[PZ]) < fgPoint3_Epsilon;
 }
 
 inline bool operator != (const Point3D& a, const Point3D& b)
@@ -302,13 +277,14 @@ inline bool operator != (const Point3D& a, const Point3D& b)
 
 // Special functions
 
-inline double distance3D(const Point3D& a, const Point3D& b)
+inline double
+Point3D::distance3D(const Point3D& a ) const
 {
     double x, y, z;
 
-    x = a[PX] - b[PX];
-    y = a[PY] - b[PY];
-    z = a[PZ] - b[PZ];
+    x = n[PX] - a.n[PX];
+    y = n[PY] - a.n[PY];
+    z = n[PZ] - a.n[PZ];
 
     return sqrt(x*x + y*y + z*z);
 }
@@ -317,6 +293,9 @@ inline double distance3D(const Point3D& a, const Point3D& b)
 
 
 // $Log$
+// Revision 1.3  1998/10/20 18:21:49  curt
+// Tweaks from Bernie Bright.
+//
 // Revision 1.2  1998/10/18 01:17:12  curt
 // Point3D tweaks.
 //
