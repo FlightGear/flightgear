@@ -4,6 +4,7 @@
 #include <Main/fg_props.hxx>
 
 #include "Jet.hpp"
+#include "SimpleJet.hpp"
 #include "Gear.hpp"
 #include "Atmosphere.hpp"
 #include "PropEngine.hpp"
@@ -23,6 +24,8 @@ static const float LBS2KG = 0.45359237;
 static const float CM2GALS = 264.172037284;
 static const float HP2W = 745.700;
 static const float INHG2PA = 3386.389;
+static const float K2DEGF = 1.8;
+static const float CIN2CM = 1.6387064e-5;
 
 // Stubs, so that this can be compiled without the FlightGear
 // binary.  What's the best way to handle this?
@@ -43,16 +46,10 @@ FGFDM::~FGFDM()
 	delete[] a->name;
 	delete a;
     }
-    for(i=0; i<_pistons.size(); i++) {
-	EngRec* er = (EngRec*)_pistons.get(i);
+    for(i=0; i<_thrusters.size(); i++) {
+	EngRec* er = (EngRec*)_thrusters.get(i);
 	delete[] er->prefix;
-	delete (PropEngine*)er->eng;
-	delete er;
-    }
-    for(i=0; i<_jets.size(); i++) {
-	EngRec* er = (EngRec*)_pistons.get(i);
-	delete[] er->prefix;
-	delete (Jet*)er->eng;
+	delete er->eng;
 	delete er;
     }
     for(i=0; i<_weights.size(); i++) {
@@ -77,12 +74,8 @@ Airplane* FGFDM::getAirplane()
 
 void FGFDM::init()
 {
-    // We don't want to use these ties (we set the values ourselves)
-    fgUntie("/consumables/fuel/tank[0]/level-gal_us");
-    fgUntie("/consumables/fuel/tank[1]/level-gal_us");
-
     // Allows the user to start with something other than full fuel
-    _airplane.setFuelFraction(fgGetFloat("/yasim/fuel-fraction", 1));
+    _airplane.setFuelFraction(fgGetFloat("/sim/fuel-fraction", 1));
 
     // This has a nasty habit of being false at startup.  That's not
     // good.
@@ -122,6 +115,15 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	_airplane.addVStab(parseWing(a, name));
     } else if(eq(name, "propeller")) {
 	parsePropeller(a);
+    } else if(eq(name, "thruster")) {
+	SimpleJet* j = new SimpleJet();
+	_currObj = j;
+	v[0] = attrf(a, "x"); v[1] = attrf(a, "y"); v[2] = attrf(a, "z");
+	j->setPosition(v);
+	_airplane.addThruster(j, 0, v);
+	v[0] = attrf(a, "vx"); v[1] = attrf(a, "vy"); v[2] = attrf(a, "vz");
+	j->setDirection(v);
+	j->setThrust(attrf(a, "thrust") * LBS2N);
     } else if(eq(name, "jet")) {
 	Jet* j = new Jet();
 	_currObj = j;
@@ -129,15 +131,29 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	v[1] = attrf(a, "y");
 	v[2] = attrf(a, "z");
 	float mass = attrf(a, "mass") * LBS2KG;
-	j->setDryThrust(attrf(a, "thrust") * LBS2N);
-	j->setReheatThrust(attrf(a, "afterburner", 0) * LBS2N);
+	j->setMaxThrust(attrf(a, "thrust") * LBS2N,
+			attrf(a, "afterburner", 0) * LBS2N);
+	j->setVectorAngle(attrf(a, "rotate", 0) * DEG2RAD);
+
+ 	float n1min = attrf(a, "n1-idle", 55);
+	float n1max = attrf(a, "n1-max", 102);
+ 	float n2min = attrf(a, "n2-idle", 73);
+	float n2max = attrf(a, "n2-max", 103);
+	j->setRPMs(n1min, n1max, n2min, n2max);
+
+	if(a->hasAttribute("tsfc")) j->setTSFC(attrf(a, "tsfc"));
+	if(a->hasAttribute("egt"))  j->setEGT(attrf(a, "egt"));
+	if(a->hasAttribute("epr"))  j->setEPR(attrf(a, "epr"));
+	if(a->hasAttribute("exhaust-speed"))
+	    j->setVMax(attrf(a, "exhaust-speed") * KTS2MPS);
+	
 	j->setPosition(v);
 	_airplane.addThruster(j, mass, v);
 	sprintf(buf, "/engines/engine[%d]", _nextEngine++);
 	EngRec* er = new EngRec();
 	er->eng = j;
 	er->prefix = dup(buf);
-	_jets.add(er);
+	_thrusters.add(er);
     } else if(eq(name, "gear")) {
 	Gear* g = new Gear();
 	_currObj = g;
@@ -151,6 +167,8 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	g->setCompression(v);
 	g->setStaticFriction(attrf(a, "sfric", 0.8));
 	g->setDynamicFriction(attrf(a, "dfric", 0.7));
+	if(a->hasAttribute("castering"))
+	    g->setCastering(true);
         float transitionTime = attrf(a, "retract-time", 0);
 	_airplane.addGear(g, transitionTime);
     } else if(eq(name, "fuselage")) {
@@ -161,14 +179,16 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	b[0] = attrf(a, "bx");
 	b[1] = attrf(a, "by");
 	b[2] = attrf(a, "bz");
-	_airplane.addFuselage(v, b, attrf(a, "width"));
+        float taper = attrf(a, "taper", 1);
+        float mid = attrf(a, "midpoint", 0.5);
+	_airplane.addFuselage(v, b, attrf(a, "width"), taper, mid);
     } else if(eq(name, "tank")) {
 	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
 	v[2] = attrf(a, "z");
 	float density = 6.0; // gasoline, in lbs/gal
 	if(a->hasAttribute("jet")) density = 6.72; 
-	density *= LBS2KG/CM2GALS;
+	density *= LBS2KG*CM2GALS;
 	_airplane.addTank(v, attrf(a, "capacity") * LBS2KG, density);
     } else if(eq(name, "ballast")) {
 	v[0] = attrf(a, "x");
@@ -213,10 +233,17 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	    opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
 	    opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
 	    opt |= a->hasAttribute("square") ? ControlMap::OPT_SQUARE : 0;
-	    _airplane.getControlMap()->addMapping(parseAxis(axis),
-						  parseOutput(output),
-						  _currObj,
-						  opt);
+
+	    ControlMap* cm = _airplane.getControlMap();
+	    if(a->hasAttribute("src0")) {
+		cm->addMapping(parseAxis(axis), parseOutput(output),
+			       _currObj, opt,
+			       attrf(a, "src0"), attrf(a, "src1"), 
+			       attrf(a, "dst0"), attrf(a, "dst1"));
+	    } else {
+		cm->addMapping(parseAxis(axis), parseOutput(output),
+			       _currObj, opt);
+	    }
 	} else {
 	    // assert: must be under a "cruise" or "approach" tag
 	    float value = attrf(a, "value", 0);
@@ -257,29 +284,52 @@ void FGFDM::setOutputProperties()
 {
     char buf[256];
     int i;
+    float fuelDensity = 718.95; // default to gasoline: ~6 lb/gal
     for(i=0; i<_airplane.numTanks(); i++) {
+        fuelDensity = _airplane.getFuelDensity(i);
 	sprintf(buf, "/consumables/fuel/tank[%d]/level-gal_us", i);
-	fgSetFloat(buf,
-		   CM2GALS*_airplane.getFuel(i)/_airplane.getFuelDensity(i));
+	fgSetFloat(buf, CM2GALS*_airplane.getFuel(i)/fuelDensity);
     }
 
-    for(i=0; i<_pistons.size(); i++) {
-	EngRec* er = (EngRec*)_pistons.get(i);
-	PropEngine* p = (PropEngine*)er->eng;
-
-	sprintf(buf, "%s/rpm", er->prefix);
-	fgSetFloat(buf, p->getOmega() / RPM2RAD);
+    for(i=0; i<_thrusters.size(); i++) {
+	EngRec* er = (EngRec*)_thrusters.get(i);
+        Thruster* t = er->eng;
 
 	sprintf(buf, "%s/fuel-flow-gph", er->prefix);
-	fgSetFloat(buf, p->getFuelFlow() * (3600*2.2/5)); // FIXME, wrong
-    }
+	fgSetFloat(buf, (t->getFuelFlow()/fuelDensity) * 3600 * CM2GALS);
 
-    for(i=0; i<_jets.size(); i++) {
-	EngRec* er = (EngRec*)_jets.get(i);
-	Jet* j = (Jet*)er->eng;
-	
-	sprintf(buf, "%s/fuel-flow-gph", er->prefix);
-	fgSetFloat(buf, j->getFuelFlow() * (3600*2.2/6)); // FIXME, wrong
+	if(t->getPropEngine()) {
+            PropEngine* p = t->getPropEngine();
+
+            sprintf(buf, "%s/rpm", er->prefix);
+            fgSetFloat(buf, p->getOmega() / RPM2RAD);
+        }
+
+        if(t->getPistonEngine()) {
+            PistonEngine* p = t->getPistonEngine();
+	    
+            sprintf(buf, "%s/mp-osi", er->prefix);
+	    fgSetFloat(buf, p->getMP() * (1/INHG2PA));
+
+	    sprintf(buf, "%s/egt-degf", er->prefix);
+	    fgSetFloat(buf, p->getEGT() * K2DEGF + 459.4);
+        }
+
+        if(t->getJet()) {
+            Jet* j = t->getJet();
+
+            sprintf(buf, "%s/n1", er->prefix);
+            fgSetFloat(buf, j->getN1());
+
+            sprintf(buf, "%s/n2", er->prefix);
+            fgSetFloat(buf, j->getN2());
+
+            sprintf(buf, "%s/epr", er->prefix);
+            fgSetFloat(buf, j->getEPR());
+
+            sprintf(buf, "%s/egt-degf", er->prefix);
+            fgSetFloat(buf, j->getEGT() * K2DEGF + 459.4);
+        }
     }
 }
 
@@ -337,6 +387,12 @@ void FGFDM::parsePropeller(XMLAttributes* a)
     PropEngine* thruster = new PropEngine(prop, eng, moment);
     _airplane.addThruster(thruster, mass, cg);
 
+    if(a->hasAttribute("displacement"))
+        eng->setDisplacement(attrf(a, "displacement") * CIN2CM);
+
+    if(a->hasAttribute("compression"))
+        eng->setCompression(attrf(a, "compression"));        
+
     if(a->hasAttribute("turbo-mul")) {
         float mul = attrf(a, "turbo-mul");
         float mp = attrf(a, "wastegate-mp", 1e6) * INHG2PA;
@@ -360,7 +416,7 @@ void FGFDM::parsePropeller(XMLAttributes* a)
     EngRec* er = new EngRec();
     er->eng = thruster;
     er->prefix = dup(buf);
-    _pistons.add(er);
+    _thrusters.add(er);
 
     _currObj = thruster;
 }
@@ -391,6 +447,8 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "MIXTURE"))   return ControlMap::MIXTURE;
     if(eq(name, "ADVANCE"))   return ControlMap::ADVANCE;
     if(eq(name, "REHEAT"))    return ControlMap::REHEAT;
+    if(eq(name, "BOOST"))     return ControlMap::BOOST;
+    if(eq(name, "VECTOR"))    return ControlMap::VECTOR;
     if(eq(name, "PROP"))      return ControlMap::PROP;
     if(eq(name, "BRAKE"))     return ControlMap::BRAKE;
     if(eq(name, "STEER"))     return ControlMap::STEER;
@@ -401,7 +459,7 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "SLAT"))      return ControlMap::SLAT;
     if(eq(name, "SPOILER"))   return ControlMap::SPOILER;
     // error here...
-    return -1;
+    return *(int*)0;
 }
 
 void FGFDM::parseWeight(XMLAttributes* a)

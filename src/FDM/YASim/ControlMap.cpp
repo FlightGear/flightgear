@@ -1,6 +1,7 @@
 #include "Jet.hpp"
 #include "Thruster.hpp"
 #include "PropEngine.hpp"
+#include "PistonEngine.hpp"
 #include "Gear.hpp"
 #include "Wing.hpp"
 #include "Math.hpp"
@@ -19,17 +20,29 @@ ControlMap::~ControlMap()
 	delete v;
     }
 
-    for(i=0; i<_outputs.size(); i++) {
-	OutRec* o = (OutRec*)_outputs.get(i);
-	delete[] o->values;
-	delete o;
-    }
+    for(i=0; i<_outputs.size(); i++)
+	delete (OutRec*)_outputs.get(i);
 }
 
 int ControlMap::newInput()
 {
     Vector* v = new Vector();
     return _inputs.add(v);
+}
+
+void ControlMap::addMapping(int input, int type, void* object, int options,
+			    float src0, float src1, float dst0, float dst1)
+{
+    addMapping(input, type, object, options);
+
+    // The one we just added is last in the list (ugly, awful hack!)
+    Vector* maps = (Vector*)_inputs.get(input);
+    MapRec* m = (MapRec*)maps->get(maps->size() - 1);
+
+    m->src0 = src0;
+    m->src1 = src1;
+    m->dst0 = dst0;
+    m->dst1 = dst1;
 }
 
 void ControlMap::addMapping(int input, int type, void* object, int options)
@@ -50,25 +63,22 @@ void ControlMap::addMapping(int input, int type, void* object, int options)
 	out = new OutRec();
 	out->type = type;
 	out->object = object;
-	out->n = 0;
-	out->values = 0;
 	_outputs.add(out);
     }
-
-    // Make space for the new input value
-    int idx = out->n++;
-    delete[] out->values;
-    out->values = new float[out->n];
-
-    // Add the new option tag
-    out->options.add((void*)options);
-
+    
     // Make a new input record
     MapRec* map = new MapRec();
     map->out = out;
-    map->idx = idx;
+    map->opt = options;
+    map->idx = out->maps.add(map);
 
-    // And add it to the approproate vector.
+    // The default ranges differ depending on type!
+    map->src1 = map->dst1 = 1;
+    map->src0 = map->dst0 = 0;
+    if(type==FLAP0 || type==FLAP1 || type==STEER)
+	map->src0 = map->dst0 = -1;
+
+    // And add it to the approproate vectors.
     Vector* maps = (Vector*)_inputs.get(input);
     maps->add(map);
 }
@@ -76,22 +86,29 @@ void ControlMap::addMapping(int input, int type, void* object, int options)
 void ControlMap::reset()
 {
     // Set all the values to zero
-    int i;
-    for(i=0; i<_outputs.size(); i++) {
+    for(int i=0; i<_outputs.size(); i++) {
 	OutRec* o = (OutRec*)_outputs.get(i);
-	int j;
-	for(j=0; j<o->n; j++)
-	    o->values[j] = 0;
+	for(int j=0; j<o->maps.size(); j++)
+	    ((MapRec*)o->maps.get(j))->val = 0;
     }
 }
 
-void ControlMap::setInput(int input, float value)
+void ControlMap::setInput(int input, float val)
 {
     Vector* maps = (Vector*)_inputs.get(input);
-    int i;
-    for(i=0; i<maps->size(); i++) {
-	MapRec* map = (MapRec*)maps->get(i);
-	map->out->values[map->idx] = value;
+    for(int i=0; i<maps->size(); i++) {
+	MapRec* m = (MapRec*)maps->get(i);
+
+	float val2 = val;
+
+	// Do the scaling operation.  Clamp to [src0:src1], rescale to
+	// [0:1] within that range, then map to [dst0:dst1].
+	if(val2 < m->src0) val2 = m->src0;
+	if(val2 > m->src1) val2 = m->src1;
+	val2 = (val2 - m->src0) / (m->src1 - m->src0);
+	val2 = m->dst0 + val2 * (m->dst1 - m->dst0);
+
+	m->val = val2;
     }
 }
 
@@ -105,15 +122,16 @@ void ControlMap::applyControls()
 	// control axes like ailerons.
 	float lval = 0, rval = 0;
 	int i;
-	for(i=0; i<o->n; i++) {
-	    float val = o->values[i];
-	    int opt = (int)o->options.get(i);
-	    if(opt & OPT_SQUARE)
+	for(i=0; i<o->maps.size(); i++) {
+	    MapRec* m = (MapRec*)o->maps.get(i);
+	    float val = m->val;
+
+	    if(m->opt & OPT_SQUARE)
 		val = val * Math::abs(val);
- 	    if(opt & OPT_INVERT)
+ 	    if(m->opt & OPT_INVERT)
 		val = -val;
 	    lval += val;
-	    if(opt & OPT_SPLIT)
+	    if(m->opt & OPT_SPLIT)
 		rval -= val;
 	    else
 		rval += val;
@@ -125,6 +143,7 @@ void ControlMap::applyControls()
 	case MIXTURE:  ((Thruster*)obj)->setMixture(lval);     break;
 	case ADVANCE:  ((PropEngine*)obj)->setAdvance(lval);   break;
 	case REHEAT:   ((Jet*)obj)->setReheat(lval);           break;
+	case VECTOR:   ((Jet*)obj)->setRotation(lval);         break;
 	case BRAKE:    ((Gear*)obj)->setBrake(lval);           break;
 	case STEER:    ((Gear*)obj)->setRotation(lval);        break;
 	case EXTEND:   ((Gear*)obj)->setExtension(lval);       break;
@@ -132,6 +151,9 @@ void ControlMap::applyControls()
 	case FLAP0:    ((Wing*)obj)->setFlap0(lval, rval);     break;
 	case FLAP1:    ((Wing*)obj)->setFlap1(lval, rval);     break;
 	case SPOILER:  ((Wing*)obj)->setSpoiler(lval, rval);   break;
+	case BOOST:
+	    ((Thruster*)obj)->getPistonEngine()->setBoost(lval);
+	    break;
 	}
     }
 }

@@ -19,6 +19,7 @@ public:
     ~FGFDM();
     void init();
     void iterate(float dt);
+    void getExternalInput(float dt=1e6);
 
     Airplane* getAirplane();
 
@@ -27,10 +28,9 @@ public:
 
 private:
     struct AxisRec { char* name; int handle; };
-    struct EngRec { char* prefix; void* eng; };
+    struct EngRec { char* prefix; Thruster* eng; };
     struct WeightRec { char* prop; float size; int handle; };
 
-    void getExternalInput(float dt);
     void setOutputProperties();
 
     Wing* parseWing(XMLAttributes* a, const char* name);
@@ -56,8 +56,7 @@ private:
     Vector _weights;
 
     // Engine types.  Contains an EngRec structure.
-    Vector _jets;
-    Vector _pistons;
+    Vector _thrusters;
 
     // Parsing temporaries
     void* _currObj;

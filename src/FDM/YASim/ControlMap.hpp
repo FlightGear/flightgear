@@ -11,7 +11,8 @@ public:
 
     enum OutputType { THROTTLE, MIXTURE, ADVANCE, REHEAT, PROP,
 		      BRAKE, STEER, EXTEND,
-		      INCIDENCE, FLAP0, FLAP1, SLAT, SPOILER };
+		      INCIDENCE, FLAP0, FLAP1, SLAT, SPOILER, VECTOR,
+                      BOOST };
 
     enum { OPT_SPLIT  = 0x01,
            OPT_INVERT = 0x02,
@@ -26,6 +27,12 @@ public:
     // of object!
     void addMapping(int input, int output, void* object, int options=0);
 
+    // An additional form to specify a mapping range.  Input values
+    // outside of [src0:src1] are clamped, and are then mapped to
+    // [dst0:dst1] before being set on the object.
+    void addMapping(int input, int output, void* object, int options,
+		    float src0, float src1, float dst0, float dst1);
+
     // Resets our accumulated input values.  Call before any
     // setInput() invokations.
     void reset();
@@ -38,9 +45,9 @@ public:
     void applyControls();
 
 private:
-    struct OutRec { int type; void* object; int n;
-	            float* values; Vector options; };
-    struct MapRec  { OutRec* out; int idx; };
+    struct OutRec { int type; void* object; Vector maps; };
+    struct MapRec  { OutRec* out; int idx; int opt; float val;
+                     float src0; float src1; float dst0; float dst1; };
 
     // A list of (sub)Vectors containing a bunch of MapRec objects for
     // each input handle.

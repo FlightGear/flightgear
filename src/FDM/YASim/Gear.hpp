@@ -37,7 +37,8 @@ public:
     void setBrake(float brake);
     void setRotation(float rotation);
     void setExtension(float extension);
-    
+    void setCastering(bool castering);
+
     void getPosition(float* out);
     void getCompression(float* out);
     float getSpring();
@@ -47,6 +48,7 @@ public:
     float getBrake();
     float getRotation();
     float getExtension();
+    bool getCastering();
 
     // Takes a velocity of the aircraft relative to ground, a rotation
     // vector, and a ground plane (all specified in local coordinates)
@@ -63,6 +65,7 @@ public:
 private:
     float calcFriction(float wgt, float v);
 
+    bool _castering;
     float _pos[3];
     float _cmpr[3];
     float _spring;

@@ -32,7 +32,8 @@ public:
     void setTail(Wing* tail);
     void addVStab(Wing* vstab);
 
-    void addFuselage(float* front, float* back, float width);
+    void addFuselage(float* front, float* back, float width,
+                     float taper=1, float mid=0.5);
     int addTank(float* pos, float cap, float fuelDensity);
     void addGear(Gear* g, float transitionTime);
     void addThruster(Thruster* t, float mass, float* cg);
@@ -58,6 +59,7 @@ public:
     float getFuelDensity(int tank); // kg/m^3
 
     void compile(); // generate point masses & such, then solve
+    void stabilizeThrust();
 
     // Solution output values
     int getSolutionIterations();
@@ -70,7 +72,7 @@ public:
 private:
     struct Tank { float pos[3]; float cap; float fill;
 	          float density; int handle; };
-    struct Fuselage { float front[3], back[3], width; };
+    struct Fuselage { float front[3], back[3], width, taper, mid; };
     struct GearRec { Gear* gear; Surface* surf; float wgt; float time; };
     struct ThrustRec { Thruster* thruster;
 	               int handle; float cg[3]; float mass; };
@@ -85,7 +87,6 @@ private:
     float compileWing(Wing* w);
     float compileFuselage(Fuselage* f);
     void compileGear(GearRec* gr);
-    void stabilizeThrust();
     void applyDragFactor(float factor);
     void applyLiftRatio(float factor);
     float clamp(float val, float min, float max);

@@ -13,6 +13,13 @@ public:
     static float calcVEAS(float spd, float pressure, float temp);
     static float calcMach(float spd, float temp);
     static float calcDensity(float pressure, float temp);
+    
+    // Given ambient ("0") pressure/density/temperature values,
+    // calculate the properties of static air (air accelerated to the
+    // aircraft's speed) at a given velocity.  Includes
+    // compressibility, but not shock effects.
+    static void calcStaticAir(float p0, float t0, float d0, float v,
+                              float* pOut, float* tOut, float* dOut);
 
 private:
     static float getRecord(float alt, int idx);

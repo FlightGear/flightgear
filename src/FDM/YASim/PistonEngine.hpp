@@ -8,33 +8,43 @@ public:
     // Initializes an engine from known "takeoff" parameters.
     PistonEngine(float power, float spd);
     void setTurboParams(float mul, float maxMP);
+    void setDisplacement(float d);
+    void setCompression(float c);
 
     void setThrottle(float throttle);
     void setMixture(float mixture);
+    void setBoost(float boost); // fraction of turbo-mul used
 
-    float getPower();
+    float getMaxPower(); // max sea-level power
 
-    // Calculates power output and fuel flow, based on a given
-    // throttle setting (0-1 corresponding to the fraction of
-    // "available" manifold pressure), mixture (fuel flux per rpm,
-    // 0-1, where 1 is "max rich", or a little bit more than needed
-    // for rated power at sea level)
-    void calc(float pressure, float temp, float speed,
-	      float* powerOut, float* fuelFlowOut);
+    void calc(float pressure, float temp, float speed);
+    float getTorque();
+    float getFuelFlow();
+    float getMP();
+    float getEGT();
 
 private:
+    // Static configuration:
     float _power0;   // reference power setting
     float _omega0;   //   "       engine speed
     float _rho0;     //   "       manifold air density
     float _f0;       // "ideal" fuel flow at P0/omega0
     float _mixCoeff; // fuel flow per omega at full mixture
+    float _turbo;    // (or super-)charger pressure multiplier
+    float _maxMP;    // wastegate setting
+    float _displacement; // piston stroke volume
+    float _compression;  // compression ratio (>1)
 
     // Runtime settables:
     float _throttle;
     float _mixture;
+    float _boost;
 
-    float _turbo;
-    float _maxMP;
+    // Runtime state/output:
+    float _mp;
+    float _torque;
+    float _fuelFlow;
+    float _egt;
 };
 
 }; // namespace yasim

@@ -207,7 +207,8 @@ void Airplane::addVStab(Wing* vstab)
     _vstabs.add(vstab);
 }
 
-void Airplane::addFuselage(float* front, float* back, float width)
+void Airplane::addFuselage(float* front, float* back, float width,
+                           float taper, float mid)
 {
     Fuselage* f = new Fuselage();
     int i;
@@ -216,6 +217,8 @@ void Airplane::addFuselage(float* front, float* back, float width)
 	f->back[i]  = back[i];
     }
     f->width = width;
+    f->taper = taper;
+    f->mid = mid;
     _fuselages.add(f);
 }
 
@@ -358,12 +361,18 @@ float Airplane::compileWing(Wing* w)
     int i;
     for(i=0; i<w->numSurfaces(); i++) {
         Surface* s = (Surface*)w->getSurface(i);
+
+	float td = s->getTotalDrag();
+	s->setTotalDrag(td);
+
         _model.addSurface(s);
 
+        float mass = w->getSurfaceWeight(i);
+        mass = mass * Math::sqrt(mass);
         float pos[3];
         s->getPosition(pos);
-        _model.getBody()->addMass(w->getSurfaceWeight(i), pos);
-        wgt += w->getSurfaceWeight(i);
+        _model.getBody()->addMass(mass, pos);
+        wgt += mass;
     }
     return wgt;
 }
@@ -380,11 +389,22 @@ float Airplane::compileFuselage(Fuselage* f)
     int j;
     for(j=0; j<segs; j++) {
         float frac = (j+0.5) / segs;
+
+        float scale = 1;
+        if(frac < f->mid)
+            scale = f->taper+(1-f->taper) * (frac / f->mid);
+        else
+            scale = f->taper+(1-f->taper) * (frac - f->mid) / (1 - f->mid);
+
+        // Where are we?
         float pos[3];
         Math::mul3(frac, fwd, pos);
         Math::add3(f->back, pos, pos);
-        _model.getBody()->addMass(segWgt, pos);
-        wgt += segWgt;
+
+        // _Mass_ weighting goes as surface area^(3/2)
+        float mass = scale*segWgt * Math::sqrt(scale*segWgt);
+        _model.getBody()->addMass(mass, pos);
+        wgt += mass;
 
         // Make a Surface too
         Surface* s = new Surface();
@@ -392,7 +412,7 @@ float Airplane::compileFuselage(Fuselage* f)
 	float sideDrag = len/wid;
         s->setYDrag(sideDrag);
         s->setZDrag(sideDrag);
-        s->setTotalDrag(segWgt);
+        s->setTotalDrag(scale*segWgt);
 
         // FIXME: fails for fuselages aligned along the Y axis
         float o[9];

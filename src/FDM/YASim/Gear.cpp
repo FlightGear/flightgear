@@ -16,6 +16,7 @@ Gear::Gear()
     _brake = 0;
     _rot = 0;
     _extension = 1;
+    _castering = false;
 }
 
 void Gear::setPosition(float* position)
@@ -63,6 +64,11 @@ void Gear::setRotation(float rotation)
 void Gear::setExtension(float extension)
 {
     _extension = Math::clamp(extension, 0, 1);
+}
+
+void Gear::setCastering(bool c)
+{
+    _castering = c;
 }
 
 void Gear::getPosition(float* out)
@@ -128,6 +134,11 @@ float Gear::getCompressFraction()
     return _frac;
 }
 
+bool Gear::getCastering()
+{
+    return _castering;
+}
+
 void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
 {
     // Init the return values
@@ -191,6 +202,10 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
     _wow = (fmag - damp) * -Math::dot3(cmpr, ground);
     Math::mul3(-_wow, ground, _force);
 
+    // Castering gear feel no force in the ground plane
+    if(_castering)
+	return;
+
     // Wheels are funky.  Split the velocity along the ground plane
     // into rolling and skidding components.  Assuming small angles,
     // we generate "forward" and "left" unit vectors (the compression
@@ -237,8 +252,8 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
 
 float Gear::calcFriction(float wgt, float v)
 {
-    // How slow is stopped?  50 cm/second?
-    const float STOP = 0.5;
+    // How slow is stopped?  10 cm/second?
+    const float STOP = 0.1;
     const float iSTOP = 1/STOP;
     v = Math::abs(v);
     if(v < STOP) return v*iSTOP * wgt * _sfric;

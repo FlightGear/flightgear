@@ -11,6 +11,7 @@ public:
 
     // Load externally set stuff into the FDM
     virtual void init();
+    virtual void bind();
 
     // Run an iteration
     virtual void update(int iterations);
@@ -23,7 +24,6 @@ public:
     void printDEBUG();
 
     yasim::FGFDM* _fdm;
-    int _updateCount;
     float _dt;
 };
 

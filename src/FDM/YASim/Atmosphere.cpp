@@ -35,6 +35,9 @@ float Atmosphere::data[][4] = {{ 0,     288.20, 101325, 1.22500 },
 // P in pascals (N/m^2), rho is kg/m^3, T in kelvin.
 const float R = 287.1;
 
+// Specific heat ratio for air, at "low" temperatures.  
+const float GAMMA = 1.4;
+
 float Atmosphere::getStdTemperature(float alt)
 {
     return getRecord(alt, 1);
@@ -95,7 +98,18 @@ float Atmosphere::calcDensity(float pressure, float temp)
 
 float Atmosphere::calcMach(float spd, float temp)
 {
-    return spd / Math::sqrt(1.4 * R * temp);
+    return spd / Math::sqrt(GAMMA * R * temp);
+}
+
+void Atmosphere::calcStaticAir(float p0, float t0, float d0, float v,
+                               float* pOut, float* tOut, float* dOut)
+{
+    const static float C0 = ((GAMMA-1)/(2*R*GAMMA));
+    const static float C1 = 1/(GAMMA-1);
+
+    *tOut = t0 + (v*v) * C0;
+    *dOut = d0 * Math::pow(*tOut / t0, C1);
+    *pOut = (*dOut) * R * (*tOut);
 }
 
 float Atmosphere::getRecord(float alt, int recNum)

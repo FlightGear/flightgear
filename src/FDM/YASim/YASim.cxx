@@ -39,9 +39,12 @@ void YASim::printDEBUG()
     if(debugCount >= 3) {
 	debugCount = 0;
 
-// 	printf("RPM %.1f FF %.1f\n",
-// 	       fgGetFloat("/engines/engine[0]/rpm"),
-// 	       fgGetFloat("/engines/engine[0]/fuel-flow-gph"));
+//  	printf("N1 %5.1f N2 %5.1f FF %7.1f EPR %4.2f EGT %6.1f\n",
+//  	       fgGetFloat("/engines/engine[0]/n1"),
+//  	       fgGetFloat("/engines/engine[0]/n2"),
+//  	       fgGetFloat("/engines/engine[0]/fuel-flow-gph"),
+//  	       fgGetFloat("/engines/engine[0]/epr"),
+//  	       fgGetFloat("/engines/engine[0]/egt"));
 
 // 	printf("gear: %f\n", fgGetFloat("/controls/gear-down"));
 
@@ -59,14 +62,9 @@ YASim::YASim(double dt)
     set_delta_t(dt);
     _fdm = new FGFDM();
 
-    // Because the integration method is via fourth-order Runge-Kutta,
-    // we only get an "output" state for every 4 times the internal
-    // forces are calculated.  So divide dt by four to account for
-    // this, and only run an iteration every fourth time through
-    // update.
-    _dt = dt * 4;
+    _dt = dt;
+
     _fdm->getAirplane()->getModel()->getIntegrator()->setInterval(_dt);
-    _updateCount = 0;
 }
 
 void YASim::report()
@@ -95,6 +93,25 @@ void YASim::report()
         SG_LOG(SG_FLIGHT, SG_ALERT, a->getFailureMsg());
         exit(1);
     }
+}
+
+void YASim::bind()
+{
+    // Run the superclass bind to set up a bunch of property ties
+    FGInterface::bind();
+
+    // Now UNtie the ones that we are going to set ourselves.
+    fgUntie("/consumables/fuel/tank[0]/level-gal_us");
+    fgUntie("/consumables/fuel/tank[1]/level-gal_us");
+
+    char buf[256];
+    for(int i=0; i<_fdm->getAirplane()->getModel()->numThrusters(); i++) {
+	sprintf(buf, "/engines/engine[%d]/fuel-flow-gph", i); fgUntie(buf);
+	sprintf(buf, "/engines/engine[%d]/rpm", i);           fgUntie(buf);
+	sprintf(buf, "/engines/engine[%d]/mp-osi", i);        fgUntie(buf);
+	sprintf(buf, "/engines/engine[%d]/egt-degf", i);      fgUntie(buf);
+    }
+
 }
 
 void YASim::init()
@@ -141,7 +158,9 @@ void YASim::init()
 	sprintf(buf, "/controls/propeller-pitch[%d]", i); fgSetFloat(buf, 1);
 	sprintf(buf, "/controls/afterburner[%d]", i);     fgSetFloat(buf, 0);
     }
-    
+
+    fgSetFloat("/controls/slats", 0);
+    fgSetFloat("/controls/spoilers", 0);
 
     // Are we at ground level?  If so, lift the plane up so the gear
     // clear the ground
@@ -167,8 +186,11 @@ void YASim::init()
     // Blank the state, and copy in ours
     State s;
     m->setState(&s);
-
     copyToYASim(true);
+
+    _fdm->getExternalInput();
+    _fdm->getAirplane()->stabilizeThrust();
+
     set_inited(true);
 }
 
@@ -180,18 +202,11 @@ void YASim::update(int iterations)
 
     int i;
     for(i=0; i<iterations; i++) {
-        // Remember, update only every 4th call
-        _updateCount++;
-        if(_updateCount >= 4) {
-
 	    copyToYASim(false);
 	    _fdm->iterate(_dt);
 	    copyFromYASim();
 
 	    printDEBUG();
-
-            _updateCount = 0;
-        }
     }
 }
 
@@ -420,7 +435,7 @@ void YASim::copyFromYASim()
 
             pe->getTorque(tmp);
             float power = Math::mag3(tmp) * pe->getOmega();
-            float maxPower = pe->getPistonEngine()->getPower();
+            float maxPower = pe->getPistonEngine()->getMaxPower();
 
             fge->set_MaxHP(maxPower * W2HP);
             fge->set_Percentage_Power(100 * power/maxPower);

@@ -79,9 +79,10 @@ void PropEngine::stabilize()
     bool goingUp = false;
     float step = 10;
     while(true) {
-	float etau, ptau, dummy;
+	float ptau, dummy;
 	_prop->calc(_rho, speed, _omega, &dummy, &ptau);
-	_eng->calc(_pressure, _temp, _omega, &etau, &dummy);
+	_eng->calc(_pressure, _temp, _omega);
+        float etau = _eng->getTorque();
 	float tdiff = etau - ptau;
 
 	if(Math::abs(tdiff/_moment) < 0.1)
@@ -110,9 +111,10 @@ void PropEngine::integrate(float dt)
     _eng->setThrottle(_throttle);
     _eng->setMixture(_mixture);
     
-    _prop->calc(_rho, speed, _omega,
-		&thrust, &propTorque);
-    _eng->calc(_pressure, _temp, _omega, &engTorque, &_fuelFlow);
+    _prop->calc(_rho, speed, _omega, &thrust, &propTorque);
+    _eng->calc(_pressure, _temp, _omega);
+    engTorque = _eng->getTorque();
+    _fuelFlow = _eng->getFuelFlow();
 
     // Turn the thrust into a vector and save it
     Math::mul3(thrust, _dir, _thrust);
