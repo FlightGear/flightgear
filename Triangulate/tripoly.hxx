@@ -71,6 +71,8 @@ public:
     // assigning attribute areas
     void calc_point_inside( const FGTriNodes& trinodes );
     inline Point3D get_point_inside() const { return inside; }
+
+    inline void erase() { poly.erase( poly.begin(), poly.end() ); }
 };
 
 
@@ -78,6 +80,14 @@ public:
 
 
 // $Log$
+// Revision 1.3  1999/03/21 14:02:07  curt
+// Added a mechanism to dump out the triangle structures for viewing.
+// Fixed a couple bugs in first pass at triangulation.
+// - needed to explicitely initialize the polygon accumulator in triangle.cxx
+//   before each polygon rather than depending on the default behavior.
+// - Fixed a problem with region attribute propagation where I wasn't generating
+//   the hole points correctly.
+//
 // Revision 1.2  1999/03/20 20:32:58  curt
 // First mostly successful tile triangulation works.  There's plenty of tweaking
 // to do, but we are marching in the right direction.

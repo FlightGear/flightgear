@@ -40,7 +40,13 @@ int
 FGTriangle::build( const fitnode_list& fit_list, 
 		   const FGgpcPolyList& gpc_polys )
 {
+    FGTriPoly poly;
     int index;
+
+    // Point3D junkp;
+    // int junkc = 0;
+    // char junkn[256];
+    // FILE *junkfp;
 
     // traverse the dem fit list and gpc_polys building a unified node
     // list and converting the polygons so that they reference the
@@ -69,8 +75,6 @@ FGTriangle::build( const fitnode_list& fit_list,
 	    cout << "processing a polygon, contours = " 
 		 << gpc_poly->num_contours << endl;
 
-	    FGTriPoly poly;
-
 	    if (gpc_poly->num_contours <= 0 ) {
 		cout << "FATAL ERROR! no contours in this polygon" << endl;
 		exit(-1);
@@ -83,14 +87,27 @@ FGTriangle::build( const fitnode_list& fit_list,
 	    }
 
 	    for ( int j = 0; j < gpc_poly->num_contours; j++ ) {
+
+		poly.erase();
+
+		// sprintf(junkn, "g.%d", junkc++);
+		// junkfp = fopen(junkn, "w");
+
 		for ( int k = 0; k < gpc_poly->contour[j].num_vertices; k++ ) {
 		    Point3D p( gpc_poly->contour[j].vertex[k].x,
 			       gpc_poly->contour[j].vertex[k].y,
 			       0 );
 		    index = trinodes.unique_add( p );
+		    // junkp = trinodes.get_node( index );
+		    // fprintf(junkfp, "%.4f %.4f\n", junkp.x(), junkp.y());
 		    poly.add_node(index);
 		    // cout << index << endl;
 		}
+		// fprintf(junkfp, "%.4f %.4f\n", 
+		//    gpc_poly->contour[j].vertex[0].x, 
+		//    gpc_poly->contour[j].vertex[0].y);
+		// fclose(junkfp);
+
 		poly.calc_point_inside( trinodes );
 
 		polylist[i].push_back(poly);
@@ -108,7 +125,6 @@ FGTriangle::build( const fitnode_list& fit_list,
     // traverse the polygon lists and build the segment (edge) list
     // that is used by the "Triangle" lib.
 
-    FGTriPoly poly;
     int i1, i2;
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	cout << "area type = " << i << endl;
@@ -132,6 +148,55 @@ FGTriangle::build( const fitnode_list& fit_list,
     }
 
     return 0;
+}
+
+
+static void write_out_data(struct triangulateio *out) {
+    FILE *node = fopen("tile.node", "w");
+    fprintf(node, "%d 2 %d 0\n", 
+	    out->numberofpoints, out->numberofpointattributes);
+    for (int i = 0; i < out->numberofpoints; i++) {
+	fprintf(node, "%d %.6f %.6f %.2f\n", 
+		i, out->pointlist[2*i], out->pointlist[2*i + 1], 0.0);
+    }
+    fclose(node);
+
+    FILE *ele = fopen("tile.ele", "w");
+    fprintf(ele, "%d 3 0\n", out->numberoftriangles);
+    for (int i = 0; i < out->numberoftriangles; i++) {
+        fprintf(ele, "%d ", i);
+        for (int j = 0; j < out->numberofcorners; j++) {
+	    fprintf(ele, "%d ", out->trianglelist[i * out->numberofcorners + j]);
+        }
+        for (int j = 0; j < out->numberoftriangleattributes; j++) {
+	    fprintf(ele, "%.6f ", 
+		    out->triangleattributelist[i 
+					      * out->numberoftriangleattributes
+					      + j]
+		    );
+        }
+	fprintf(ele, "\n");
+    }
+    fclose(ele);
+
+    FILE *fp = fopen("tile.poly", "w");
+    fprintf(fp, "0 2 1 0\n");
+    fprintf(fp, "%d 0\n", out->numberofsegments);
+    for (int i = 0; i < out->numberofsegments; ++i) {
+	fprintf(fp, "%d %d %d\n", 
+		i, out->segmentlist[2*i], out->segmentlist[2*i + 1]);
+    }
+    fprintf(fp, "%d\n", out->numberofholes);
+    for (int i = 0; i < out->numberofholes; i++) {
+	fprintf(fp, "%d %.6f %.6f\n", 
+		i, out->holelist[2*i], out->holelist[2*i + 1]);
+    }
+    fprintf(fp, "%d\n", out->numberofregions);
+    for (int i = 0; i < out->numberofregions; i++) {
+	fprintf(fp, "%d %.6f %.6f %.6f\n", 
+		i, out->regionlist[4*i], out->regionlist[4*i + 1],
+		out->regionlist[4*i + 2]);
+    }
 }
 
 
@@ -169,6 +234,9 @@ int FGTriangle::run_triangulate() {
 	in.pointmarkerlist[i] = 0;
     }
 
+    // triangle list
+    in.numberoftriangles = 0;
+
     // segment list
     triseg_list seg_list = trisegs.get_seg_list();
     in.numberofsegments = seg_list.size();
@@ -205,11 +273,11 @@ int FGTriangle::run_triangulate() {
     }
 
     in.regionlist = (REAL *) malloc(in.numberofregions * 4 * sizeof(REAL));
+    counter = 0;
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	tripoly_list_iterator h_current, h_last;
-	h_current = polylist[(int)AirportIgnoreArea].begin();
-	h_last = polylist[(int)AirportIgnoreArea].end();
-	counter = 0;
+	h_current = polylist[(int)i].begin();
+	h_last = polylist[(int)i].end();
 	for ( ; h_current != h_last; ++h_current ) {
 	    poly = *h_current;
 	    p = poly.get_point_inside();
@@ -242,6 +310,9 @@ int FGTriangle::run_triangulate() {
     vorout.edgelist = (int *) NULL;       // Needed only if -v switch used.
     vorout.normlist = (REAL *) NULL;      // Needed only if -v switch used.
     
+    // TEMPORARY
+    // write_out_data(&in);
+
     // Triangulate the points.  Switches are chosen to read and write
     // a PSLG (p), preserve the convex hull (c), number everything
     // from zero (z), assign a regional attribute to each element (A),
@@ -250,30 +321,7 @@ int FGTriangle::run_triangulate() {
     triangulate("pczAen", &in, &out, &vorout);
 
     // TEMPORARY
-    //
-
-    // Write out the triangulated data to files so we can check
-    // visually that things seem reasonable
-
-    FILE *node = fopen("tile.node", "w");
-    fprintf(node, "%d 2 %d 0\n", 
-	    out.numberofpoints, out.numberofpointattributes);
-    for (int i = 0; i < out.numberofpoints; i++) {
-	fprintf(node, "%d %.6f %.6f %.2f\n", 
-		i, out.pointlist[2*i], out.pointlist[2*i + 1], 0.0);
-    }
-    fclose(node);
-
-    FILE *ele = fopen("tile.ele", "w");
-    fprintf(ele, "%d 3 0\n", out.numberoftriangles);
-    for (int i = 0; i < out.numberoftriangles; i++) {
-        fprintf(ele, "%d ", i);
-        for (int j = 0; j < out.numberofcorners; j++) {
-	    fprintf(ele, "%d ", out.trianglelist[i * out.numberofcorners + j]);
-        }
-        fprintf(ele, "\n");
-    }
-    fclose(ele);
+    write_out_data(&out);
 
     // free mem allocated to the "Triangle" structures
     free(in.pointlist);
@@ -301,6 +349,14 @@ int FGTriangle::run_triangulate() {
 
 
 // $Log$
+// Revision 1.8  1999/03/21 14:02:06  curt
+// Added a mechanism to dump out the triangle structures for viewing.
+// Fixed a couple bugs in first pass at triangulation.
+// - needed to explicitely initialize the polygon accumulator in triangle.cxx
+//   before each polygon rather than depending on the default behavior.
+// - Fixed a problem with region attribute propagation where I wasn't generating
+//   the hole points correctly.
+//
 // Revision 1.7  1999/03/20 20:32:55  curt
 // First mostly successful tile triangulation works.  There's plenty of tweaking
 // to do, but we are marching in the right direction.

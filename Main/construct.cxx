@@ -166,9 +166,11 @@ main(int argc, char **argv) {
 
     string work_base = argv[1];
    
-    lon = -146.248360; lat = 61.133950;  // PAVD (Valdez, AK)
-    // lon = -110.664244; lat = 33.352890;  // P13
-    lon = -89.744682312011719; lat= 29.314495086669922;
+    // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
+    // lon = -110.664244; lat = 33.352890;     // P13
+    // lon = -93.211389; lat = 45.145000;      // KANE
+    lon = -92.486188; lat = 44.590190;      // KRGK
+    // lon = -89.744682312011719; lat= 29.314495086669922;
 
     FGBucket b( lon, lat );
 
@@ -187,6 +189,14 @@ main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.5  1999/03/21 14:02:05  curt
+// Added a mechanism to dump out the triangle structures for viewing.
+// Fixed a couple bugs in first pass at triangulation.
+// - needed to explicitely initialize the polygon accumulator in triangle.cxx
+//   before each polygon rather than depending on the default behavior.
+// - Fixed a problem with region attribute propagation where I wasn't generating
+//   the hole points correctly.
+//
 // Revision 1.4  1999/03/20 20:32:54  curt
 // First mostly successful tile triangulation works.  There's plenty of tweaking
 // to do, but we are marching in the right direction.
