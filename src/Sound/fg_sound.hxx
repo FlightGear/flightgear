@@ -42,11 +42,6 @@ class FGSound : public FGSubsystem
 
 public:
 
-  enum { MAXPROP=5 };
-  enum { LIN=0, LOG, LN };
-  enum { ONCE=0, LOOPED };
-  enum { LEVEL=0, INVERTED, FLIPFLOP };
-
   FGSound(const SGPropertyNode *);
   virtual ~FGSound();
 
@@ -54,6 +49,34 @@ public:
   virtual void bind ();
   virtual void unbind ();
   virtual void update (int dt);
+
+protected:
+
+  enum { MAXPROP=5 };
+  enum { ONCE=0, LOOPED };
+  enum { LEVEL=0, INVERTED, FLIPFLOP, RAISE, FALL };
+
+
+  // Sound properties
+  typedef struct {
+        const SGPropertyNode * prop;
+        double (*fn)(double);
+        double factor;
+        double offset;
+        double min;
+        double max;
+        bool subtract;
+  } _snd_prop;
+
+#if 0
+  // Sound source (distance, horizontal position in degrees and
+  // vertical position in degrees)
+  typedef struct {
+        float dist;
+        float hor;
+        float vert;
+  } _pos_prop;
+#endif
 
 private:
 
@@ -67,28 +90,8 @@ private:
   int _mode;
   int _type;
   string _name;
-  float _factor;
-
-#if 0
-  // Sound source (distance, horizontal position in degrees and 
-  // vertical position in degrees)
-  struct {
- 	float dist;
-	float hor;
-	float vert;
-  } _pos;
-#endif
-
-  // Sound properties
-  typedef struct {
-        const SGPropertyNode * prop;
-        float factor;
-        int type;
-        float offset;
-        float min;
-        float max;
-	bool subtract;
-  } _snd_prop;
+  double _factor;
+  double _offset;
 
   vector<_snd_prop> _volume;
   vector<_snd_prop> _pitch;

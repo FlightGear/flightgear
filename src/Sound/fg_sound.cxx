@@ -28,6 +28,7 @@
 #else
 #  include <math.h>
 #endif
+#include STL_STRING
 
 #include <simgear/debug/logstream.hxx>
 
@@ -35,9 +36,36 @@
 
 #include "fg_sound.hxx"
 
+SG_USING_STD(string);
+
+
+// static double _fg_lin(double v)   { return v; };
+static double _fg_inv(double v)   { return (v == 0) ? 1e99 : 1/v; };
+static double _fg_abs(double v)   { return (v >= 0) ? v : -v; };
+static double _fg_sqrt(double v)  { return (v < 0) ? sqrt(-v) : sqrt(v); };
+static double _fg_log10(double v) { return (v < 1) ? 0 : log10(v+1); };
+static double _fg_log(double v)   { return (v < 1) ? 0 : log(v+1); };
+// static double _fg_sqr(double v)   { return pow(v, 2); };
+// static double _fg_pow3(double v)  { return pow(v, 3); };
+
+static const struct {
+	string name;
+	double (*fn)(double);
+} __fg_snd_fn[] = {
+//	{"lin", _fg_lin},
+	{"inv", _fg_inv},
+	{"abs", _fg_abs},
+	{"sqrt", _fg_sqrt},
+	{"log", _fg_log10},
+	{"ln", _fg_log},
+//	{"sqr", _fg_sqr},
+//	{"pow3", _fg_pow3},
+	{"", NULL}
+};
+
 FGSound::FGSound(const SGPropertyNode * node)
   : _name(""),
-    _sample(0),
+    _sample(NULL),
     _factor(1.0),
     _active(false),
     _mode(FGSound::ONCE),
@@ -54,10 +82,6 @@ FGSound::~FGSound()
 void
 FGSound::init()
 {
-   vector<const SGPropertyNode *> kids;
-   float p = 0.0;
-   float v = 0.0;
-   int i;
 
    _property = fgGetNode(_node->getStringValue("property"), true);
 
@@ -68,6 +92,9 @@ FGSound::init()
 
    if ((_factor = _node->getFloatValue("factor")) == 0.0)
       _factor = 1.0;
+
+   if ((_offset = _node->getFloatValue("offset")) == 0.0)
+      _offset = 0.0;
 
    SG_LOG(SG_GENERAL, SG_INFO,
     "Loading sound information for: " << _name );
@@ -82,8 +109,16 @@ FGSound::init()
 
    if (_node->getStringValue("type") == "flipflop") {
       _type = FGSound::FLIPFLOP;
+
    } else if (_node->getStringValue("type") == "inverted") {
       _type = FGSound::INVERTED;
+
+   } else if (_node->getStringValue("type") == "raise") {
+      _type = FGSound::RAISE;
+
+   } else if (_node->getStringValue("type") == "fall") {
+      _type = FGSound::FALL;
+
    } else {
       _type = FGSound::LEVEL;
       if (_node->getStringValue("type") != (string)"level")
@@ -103,7 +138,9 @@ FGSound::init()
    //
    // set volume properties
    //
-   kids = _node->getChildren("volume");
+   int i;
+   float v = 0.0;
+   vector<const SGPropertyNode *> kids = _node->getChildren("volume");
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
       _snd_prop volume;
 
@@ -120,18 +157,15 @@ FGSound::init()
          } else
             volume.subtract = false;
 
-      if (kids[i]->getStringValue("type") == "log")
-         volume.type = FGSound::LOG;
-
-      else if (kids[i]->getStringValue("type") == "ln")
-         volume.type = FGSound::LN;
-
-      else  {
-         volume.type = FGSound::LIN;
-         if (kids[i]->getStringValue("type") != (string)"lin")
-            SG_LOG( SG_GENERAL, SG_INFO,
-             "Unknown volume type, default to 'lin'");
+      volume.fn = NULL;
+      for (int j=0; __fg_snd_fn[j].fn; j++)
+         if (__fg_snd_fn[j].name == kids[i]->getStringValue("type")) {
+            volume.fn = __fg_snd_fn[j].fn;
+            break;
       }
+
+      if (!volume.fn)
+         SG_LOG( SG_GENERAL, SG_INFO, "Unknown volume type, default to 'lin'");
 
       if ((volume.offset = kids[i]->getFloatValue("offset")) == 0.0)
          volume.offset = 0.0;
@@ -157,8 +191,8 @@ FGSound::init()
    //
    // set pitch properties
    //
+   float p = 0.0;
    kids = _node->getChildren("pitch");
-
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
       _snd_prop pitch;
 
@@ -169,19 +203,16 @@ FGSound::init()
       if ((pitch.factor = kids[i]->getFloatValue("factor")) == 0.0)
          pitch.factor = 1.0;
 
-      if (kids[i]->getStringValue("type") == "log")
-         pitch.type = FGSound::LOG;
-
-      else if (kids[i]->getStringValue("type") == "ln")
-         pitch.type = FGSound::LN;
-
-      else {
-         pitch.type = FGSound::LIN;
-         if (kids[i]->getStringValue("type") != (string)"lin")
-            SG_LOG( SG_GENERAL, SG_INFO,
-             "Unknown pitch type, default to 'lin'");
+      pitch.fn = NULL;
+      for (int j=0; __fg_snd_fn[j].fn; j++) 
+         if(__fg_snd_fn[j].name == kids[i]->getStringValue("type")) {
+            pitch.fn = __fg_snd_fn[j].fn;
+            break;
       }
 
+      if (!pitch.fn)
+         SG_LOG( SG_GENERAL, SG_INFO, "Unknown pitch type, default to 'lin'");
+     
       if ((pitch.offset = kids[i]->getFloatValue("offset")) == 0.0)
          pitch.offset = 1.0;
 
@@ -205,9 +236,16 @@ FGSound::init()
    // Initialize the sample
    //
    FGSoundMgr * mgr = globals->get_soundmgr();
-   _sample = mgr->add(_name, _node->getStringValue("path"));
-   _sample->set_volume(v);
-   _sample->set_pitch(p);
+   if (mgr->find(_name) == NULL) {
+      _sample = mgr->add(_name, _node->getStringValue("path"));
+      _sample->set_volume(v);
+      _sample->set_pitch(p);
+
+   } else {
+      _sample = mgr->find(_name);
+      _sample->set_volume(_sample->get_volume() + v);
+      _sample->set_pitch(_sample->get_pitch() + p);
+   }
 }
 
 void
@@ -223,7 +261,6 @@ FGSound::unbind ()
 void
 FGSound::update (int dt)
 {
-   int i;
    FGSoundMgr * mgr = globals->get_soundmgr();
 
    //
@@ -235,13 +272,7 @@ FGSound::update (int dt)
 
    if ((_type == FGSound::LEVEL)  || (_type == FGSound::INVERTED)) {
 
-      //
-      // If the sound is already playing we have nothing to do.
-      //
-      if (_active && (_mode == FGSound::ONCE))
-         return;
-
-      int check = _property->getFloatValue() * _factor;
+      int check = (_offset + _property->getFloatValue() * _factor);
       if (_type == FGSound::INVERTED)
          check = !check;
 
@@ -258,11 +289,17 @@ FGSound::update (int dt)
          return;
       }
 
-   } else {		// FGSound::FLIPFLOP
-
-      bool check = _property->getFloatValue() * _factor;
-      if (check == _active)
+      //
+      // If the sound is already playing we have nothing to do.
+      //
+      if (_active && (_mode == FGSound::ONCE))
          return;
+
+   } else {		// FLIPFLOP, RAISE, FALL
+
+      int check = (_offset + _property->getFloatValue() * _factor);
+      if ((bool)check == _active)
+            return;
 
       //
       // Check for state changes.
@@ -272,6 +309,10 @@ FGSound::update (int dt)
          SG_LOG(SG_GENERAL, SG_INFO, "Stopping sound: " << _name);
          mgr->stop(_name);
       }
+
+      if ( ((_type == FGSound::RAISE) && !check) ||
+           ((_type == FGSound::FALL) && check) )
+         return;
    }
 
    //
@@ -279,15 +320,13 @@ FGSound::update (int dt)
    //
    int max = _volume.size();
 
+   int i;
    double volume = 1.0, volume_offset = 0.0;
    for(i = 0; i < max; i++) {
       double v = _volume[i].prop->getDoubleValue();
 
-      if (_volume[i].type == FGSound::LOG)
-         v = log10(1+v);
-      else
-         if (_volume[i].type == FGSound::LN)
-            v = log(1+v);
+      if (_volume[i].fn)
+         v = _volume[i].fn(v);
 
       v *= _volume[i].factor;
 
@@ -313,11 +352,8 @@ FGSound::update (int dt)
    for(i = 0; i < max; i++) {
       double p = _pitch[i].prop->getDoubleValue();
 
-      if (_pitch[i].type == FGSound::LOG)
-         p = log10(1+p);
-      else
-         if (_pitch[i].type == FGSound::LN)
-            p = log(1+p);
+      if (_pitch[i].fn)
+         p = _pitch[i].fn(p);
 
       p *= _pitch[i].factor;
 
@@ -327,8 +363,12 @@ FGSound::update (int dt)
          if (p < _pitch[i].min) 
             p = _pitch[i].min;
 
-      pitch *= p;
-      pitch_offset += _pitch[i].offset;
+      if (_pitch[i].subtract)				// Hack!
+         pitch = _pitch[i].offset - p;
+      else {
+         pitch_offset += _pitch[i].offset;
+         pitch *= p;
+      }
    }
 
    //
@@ -340,22 +380,23 @@ FGSound::update (int dt)
    //
    // Do we need to start playing the sample?
    //
-   if ((!_active) || (_type == FGSound::FLIPFLOP)) {
-      //
-      // This is needed for FGSound::FLIPFLOP and it works for 
-      // FGSound::LEVEl. Doing it this way saves an extra 'if'.
-      //
-      _active = !_active;
+   if (_active && ((_type == FGSound::LEVEL) || (_type == FGSound::INVERTED)))
+      return;
 
-      if (_mode == FGSound::ONCE)
-         mgr->play_once(_name);
-      else
-         mgr->play_looped(_name);
+   //
+   // This is needed for FGSound::FLIPFLOP and it works for 
+   // FGSound::LEVEl. Doing it this way saves an extra 'if'.
+   //
+   _active = !_active;
 
-      SG_LOG(SG_GENERAL, SG_INFO, "Starting audio playback for: " << _name);
-      SG_LOG(SG_GENERAL, SG_BULK,
-       "Playing " << ((_mode == ONCE) ? "once" : "looped"));
-      SG_LOG(SG_GENERAL, SG_BULK, "Initial volume: " << volume_offset);
-      SG_LOG(SG_GENERAL, SG_BULK, "Initial pitch: " << pitch_offset);
-   }
+   if (_mode == FGSound::ONCE)
+      mgr->play_once(_name);
+   else
+      mgr->play_looped(_name);
+
+   SG_LOG(SG_GENERAL, SG_INFO, "Starting audio playback for: " << _name);
+   SG_LOG(SG_GENERAL, SG_BULK,
+    "Playing " << ((_mode == ONCE) ? "once" : "looped"));
+   SG_LOG(SG_GENERAL, SG_BULK, "Initial volume: " << volume_offset);
+   SG_LOG(SG_GENERAL, SG_BULK, "Initial pitch: " << pitch_offset);
 }
