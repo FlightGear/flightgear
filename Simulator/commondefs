@@ -131,7 +131,7 @@ FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 # INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
 # FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS) -DWIN32 -DUSE_RAND
-# LN = ren
+# LN = cp
 #---------------------------------------------------------------------------
 
 

@@ -43,14 +43,16 @@
 
 1/17/98 -  Change all "type function();" to "type function( void );"
 
+1/19/98 -  Compile with c++
+
 
 --------------------------------------------------------------------------
 | Todo 
 --------------------------------------------------------------------------
 
-1/17/98 -  Compile with c++
-
 1/17/98 -  in all .h's change #ifdef FILE_H -> #ifdef _FILE_H
+
+1/21/98 -  Fix warning when compiling with c++
 
 1/17/98 -  Remove some of the unused files such as ls_sync.c
 
