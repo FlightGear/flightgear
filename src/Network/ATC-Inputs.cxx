@@ -222,7 +222,8 @@ bool FGATCInput::open() {
 /////////////////////////////////////////////////////////////////////
 
 // scale a number between min and max (with center defined) to a scale
-// from -1.0 to 1.0
+// from -1.0 to 1.0.  The deadband value is symmetric, so specifying
+// '1' will give you a deadband of +/-1
 static double scale( int center, int deadband, int min, int max, int value ) {
     // cout << center << " " << min << " " << max << " " << value << " ";
     double result;
@@ -231,9 +232,11 @@ static double scale( int center, int deadband, int min, int max, int value ) {
     if ( value <= (center - deadband) ) {
         range = (center - deadband) - min;
         result = (value - (center - deadband)) / range;
-    } else {
+    } else if ( value >= (center + deadband) ) {
         range = max - (center + deadband);
         result = (value - (center + deadband)) / range;            
+    } else {
+        result = 0.0;
     }
 
     if ( result < -1.0 ) result = -1.0;
