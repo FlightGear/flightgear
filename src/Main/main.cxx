@@ -145,6 +145,10 @@ ssgBranch *terrain = NULL;
 ssgSelector *penguin_sel = NULL;
 ssgTransform *penguin_pos = NULL;
 
+// the sky needs to be drawn in a specific order, thus we use several
+// "roots" so we can explicitely control this.
+ssgRoot *sky = NULL;
+
 #ifdef FG_NETWORK_OLK
 ssgSelector *fgd_sel = NULL;
 ssgTransform *fgd_pos = NULL;
@@ -325,9 +329,25 @@ void fgRenderFrame( void ) {
 	} */
 
 	xglShadeModel( GL_SMOOTH );
-	if ( current_options.get_skyblend() ) {
-	    fgSkyRender();
-	}
+
+	// if ( current_options.get_skyblend() ) {
+	//    fgSkyRender();
+	// }
+	sgVec3 zero_elev;
+	sgSetVec3( zero_elev,
+		   current_view.get_cur_zero_elev().x(),
+		   current_view.get_cur_zero_elev().y(),
+		   current_view.get_cur_zero_elev().z() );
+
+	current_sky.reposition( zero_elev, 
+				cur_fdm_state->get_Longitude(),
+				cur_fdm_state->get_Latitude(),
+				cur_light_params.sun_rotation );
+
+	xglPushMatrix();
+	ssgSetCamera( current_view.VIEW );
+	ssgCullAndDraw( sky );
+	xglPopMatrix();
 
 	// xglDisable( GL_FOG );
 
@@ -1306,12 +1326,24 @@ int main( int argc, char **argv ) {
     ssgModelPath( (char *)modelpath.c_str() );
     ssgTexturePath( (char *)texturepath.c_str() );
 
+    // Scene graph root
     scene = new ssgRoot;
+    scene->setName( "Scene" );
+
+    // Terrain branch
     terrain = new ssgBranch;
     terrain->setName( "Terrain" );
+    scene->addKid( terrain );
+
+    // Sky branch
+    sky = new ssgRoot;
+    sky->setName( "Sky" );
+    current_sky.initialize( sky );
+    scene->addKid( sky );
+
+    // temporary visible aircraft "own ship"
     penguin_sel = new ssgSelector;
     penguin_pos = new ssgTransform;
-
     ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
     // ssgEntity *tux_obj = ssgLoadAC( "Tower1x.ac" );
     penguin_pos->addKid( tux_obj );
@@ -1319,6 +1351,7 @@ int main( int argc, char **argv ) {
     ssgFlatten( tux_obj );
     ssgStripify( penguin_sel );
     penguin_sel->clrTraversalMaskBits( SSGTRAV_HOT );
+    scene->addKid( penguin_sel );
 
 #ifdef FG_NETWORK_OLK
     // Do the network intialization
@@ -1326,9 +1359,6 @@ int main( int argc, char **argv ) {
 	printf("Multipilot mode %s\n", fg_net_init( scene ) );
     }
 #endif
-
-    scene->addKid( terrain );
-    scene->addKid( penguin_sel );
 
     // pass control off to the master GLUT event handler
     glutMainLoop();

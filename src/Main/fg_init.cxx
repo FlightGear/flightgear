@@ -472,9 +472,6 @@ bool fgInitSubsystems( void ) {
 	exit(-1);
     }
 
-    // Initialize the "sky"
-    fgSkyInit();
-
     // Initialize the flight model subsystem data structures base on
     // above values
 

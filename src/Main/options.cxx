@@ -82,6 +82,7 @@ atoi( const string& str )
 #endif
 }
 
+
 // Defined the shared options class here
 fgOPTIONS current_options;
 

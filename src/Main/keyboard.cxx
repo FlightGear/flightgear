@@ -75,7 +75,9 @@ static void local_update_sky_and_lighting_params( void ) {
     // fgSunInit();
     SolarSystem::theSolarSystem->rebuild();
     cur_light_params.Update();
-    fgSkyColorsInit();
+    current_sky.repaint( cur_light_params.sky_color,
+			 cur_light_params.fog_color,
+			 cur_light_params.sun_angle );
 }
 
 
