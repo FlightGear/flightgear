@@ -48,7 +48,7 @@ $(TARGET): $(OFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) lib*.a *~ core
+	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
 
 
 #---------------------------------------------------------------------------
@@ -58,11 +58,14 @@ clean:
 include depend
 
 weather.o:
-	$(CC) $(CFLAGS) -c weather.c
+	$(CC) $(CFLAGS) -c weather.c -o $@
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1997/07/20 02:19:12  curt
+# First stab at a system to generate os2 makefiles automatically.
+#
 # Revision 1.1  1997/07/19 23:03:57  curt
 # Initial revision.
 #

@@ -44,7 +44,7 @@ simtest: $(TARGET) LaRCsim.o
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) lib*.a *~ core
+	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
 
 
 #---------------------------------------------------------------------------
@@ -53,9 +53,54 @@ clean:
 
 include depend
 
+atmos_62.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+default_model_routines.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+ls_accel.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+ls_aux.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+ls_geodesy.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+ls_gravity.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+ls_init.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+ls_interface.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+ls_model.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+ls_step.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+navion_aero.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+navion_engine.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+navion_gear.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+navion_init.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.10  1997/07/20 02:19:10  curt
+# First stab at a system to generate os2 makefiles automatically.
+#
 # Revision 1.9  1997/07/18 23:41:23  curt
 # Tweaks for building with Cygnus Win32 compiler.
 #

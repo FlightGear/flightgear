@@ -52,7 +52,7 @@ $(TARGET): $(OFILES) $(AFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) $(TARGET).exe lib*.a *~ core
+	rm -f *.o $(TARGET) $(TARGET).exe lib*.a *.os2 *~ core
 
 
 #---------------------------------------------------------------------------
@@ -62,20 +62,23 @@ clean:
 include depend
 
 GLmain.o:
-	$(CC) $(CFLAGS) -c GLmain.c
+	$(CC) $(CFLAGS) -c GLmain.c -o $@
 
 GLUTkey.o:
-	$(CC) $(CFLAGS) -c GLUTkey.c
+	$(CC) $(CFLAGS) -c GLUTkey.c -o $@
 
 GLTKkey.o:
-	$(CC) $(CFLAGS) -c GLTKkey.c
+	$(CC) $(CFLAGS) -c GLTKkey.c -o $@
 
 mesh2GL.o:
-	$(CC) $(CFLAGS) -c mesh2GL.c
+	$(CC) $(CFLAGS) -c mesh2GL.c -o $@
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.25  1997/07/20 02:19:11  curt
+# First stab at a system to generate os2 makefiles automatically.
+#
 # Revision 1.24  1997/07/19 23:04:47  curt
 # Added an initial weather section.
 #

@@ -48,7 +48,7 @@ $(TARGET): $(OFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) lib*.a *~ core
+	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
 
 
 #---------------------------------------------------------------------------
@@ -58,11 +58,14 @@ clean:
 include depend
 
 fg_timer.o:
-	$(CC) $(CFLAGS) -c fg_timer.c
+	$(CC) $(CFLAGS) -c fg_timer.c -o $@
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.9  1997/07/20 02:19:12  curt
+# First stab at a system to generate os2 makefiles automatically.
+#
 # Revision 1.8  1997/07/14 16:26:05  curt
 # Testing/playing -- placed objects randomly across the entire terrain.
 #

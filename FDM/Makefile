@@ -47,7 +47,7 @@ $(TARGET): $(OFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) lib*.a *~ core
+	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
 
 
 #---------------------------------------------------------------------------
@@ -57,11 +57,14 @@ clean:
 include depend
 
 flight.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c flight.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c flight.c -o $@
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.10  1997/07/20 02:19:10  curt
+# First stab at a system to generate os2 makefiles automatically.
+#
 # Revision 1.9  1997/07/12 02:24:46  curt
 # Added ranlib.
 #

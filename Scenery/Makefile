@@ -48,7 +48,7 @@ $(TARGET): $(OFILES) $(HFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) lib*.a *~ core
+	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
 
 realclean: clean
 	rm -f scanner.c parser.c parser.h parser.output
@@ -70,25 +70,28 @@ parser.c: parser.y
 	$(BISON) -o parser.c parser.y
 
 scanner.o: scanner.c
-	$(CC) $(CFLAGS) -c scanner.c
+	$(CC) $(CFLAGS) -c scanner.c -o $@
 
 parser.o: parser.c
-	$(CC) $(CFLAGS) -c parser.c
+	$(CC) $(CFLAGS) -c parser.c -o $@
 
 common.o:
-	$(CC) $(CFLAGS) -c common.c
+	$(CC) $(CFLAGS) -c common.c -o $@
 
 mesh.o:
-	$(CC) $(CFLAGS) -c mesh.c
+	$(CC) $(CFLAGS) -c mesh.c -o $@
 
 scenery.o:
-	$(CC) $(CFLAGS) -c scenery.c
+	$(CC) $(CFLAGS) -c scenery.c -o $@
 
 geometry.o:
-	$(CC) $(CFLAGS) -c geometry.c
+	$(CC) $(CFLAGS) -c geometry.c -o $@
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.16  1997/07/20 02:19:11  curt
+# First stab at a system to generate os2 makefiles automatically.
+#
 # Revision 1.15  1997/07/12 02:24:47  curt
 # Added ranlib.
 #

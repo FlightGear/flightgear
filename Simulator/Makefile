@@ -43,8 +43,16 @@ depend:
 	      cd $$dir; $(CC) -MM *.c > depend ) ; \
 	done
 
+Makefile-os2:
+	cat Makefile | perl mkmfos2.pl > Makefile.os2; \
+	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
+	    ( echo "Making Makefile.os2 in $$dir"; \
+	      cat $$dir/Makefile | perl mkmfos2.pl > $$dir/Makefile.os2; \
+	      cat $$dir/depend   | perl mkmfos2.pl > $$dir/depend.os2) ; \
+	done
+
 clean:
-	-rm -f *~
+	-rm -f *.os2 *~
 	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
 	    (cd $$dir; $(MAKE) clean) ; \
 	done
@@ -63,6 +71,9 @@ zip: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.20  1997/07/20 02:19:09  curt
+# First stab at a system to generate os2 makefiles automatically.
+#
 # Revision 1.19  1997/07/19 23:04:46  curt
 # Added an initial weather section.
 #
