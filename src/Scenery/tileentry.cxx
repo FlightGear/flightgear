@@ -398,9 +398,9 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         }
         
         if ( general.get_glDepthBits() > 16 ) {
-            sgScaleVec3( lift_vec, 0.0 + agl / 500.0 );
+            sgScaleVec3( lift_vec, 0.25 + agl / 400.0 + agl*agl / 5000000.0 );
         } else {
-            sgScaleVec3( lift_vec, 0.0 + agl / 150.0 );
+            sgScaleVec3( lift_vec, 0.25 + agl / 150.0 );
         }
 
         sgVec3 lt_trans;
@@ -432,9 +432,9 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         }
         
         if ( general.get_glDepthBits() > 16 ) {
-            sgScaleVec3( lift_vec, 0.0 + agl / 500.0 );
+            sgScaleVec3( lift_vec, 0.01 + agl / 400.0 + agl*agl / 5000000.0 );
         } else {
-            sgScaleVec3( lift_vec, 0.0 + agl / 150.0 );
+            sgScaleVec3( lift_vec, 0.25 + agl / 150.0 );
         }
 
         sgVec3 lt_trans;
@@ -472,9 +472,9 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         }
         
         if ( general.get_glDepthBits() > 16 ) {
-            sgScaleVec3( lift_vec, 0.0 + agl / 500.0 );
+            sgScaleVec3( lift_vec, 0.01 + agl / 400.0 + agl*agl / 5000000.0 );
         } else {
-            sgScaleVec3( lift_vec, 0.0 + agl / 150.0 );
+            sgScaleVec3( lift_vec, 0.25 + agl / 150.0 );
         }
 
         sgVec3 lt_trans;
@@ -514,21 +514,21 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 
                     double dist = sgdDistanceVec3( s, d );
 
-                    double cur_alt = globals->get_current_view()->getAltitudeASL_ft() * SG_FEET_TO_METER;
+                    if ( dist < 10000 ) {
+                        double cur_alt
+                            = globals->get_current_view()->getAltitudeASL_ft()
+                            * SG_FEET_TO_METER;
 
-                    double y = cur_alt - vasi->get_alt_m();
+                        double y = cur_alt - vasi->get_alt_m();
 
-                    double angle;
-                    if ( dist != 0 ) {
-                        angle = asin( y / dist );
-                    } else {
-                        angle = 0.0;
-                    }
+                        double angle;
+                        if ( dist != 0 ) {
+                            angle = asin( y / dist );
+                        } else {
+                            angle = 0.0;
+                        }
 
-                    if ( angle * SG_RADIANS_TO_DEGREES < 3.0 ) {
-                        vasi->set_color(0.0);
-                    } else {
-                        vasi->set_color(1.0);
+                        vasi->set_color(angle * SG_RADIANS_TO_DEGREES);
                     }
                     // cout << "    dist = " << dist
                     //      << " angle = " << angle * SG_RADIANS_TO_DEGREES
