@@ -26,12 +26,14 @@ void
 SubmodelSystem::init ()
 {
     _serviceable_node = fgGetNode("/systems/submodel/serviceable", true);
-    _serviceable_node->setBoolValue(true);
+    _serviceable_node->setBoolValue(false);
+	
     _trigger_node = fgGetNode("/systems/submodel/trigger", true);
     _trigger_node->setBoolValue(false);
+	
     _amount_node = fgGetNode("/systems/submodel/amount", true);
-    _amount_node->setIntValue(60);
-
+    _amount_node->setIntValue(0);
+	 
     _user_lat_node = fgGetNode("/position/latitude-deg", true);
     _user_lon_node = fgGetNode("/position/longitude-deg", true);
     _user_alt_node = fgGetNode("/position/altitude-ft", true);
@@ -85,7 +87,7 @@ SubmodelSystem::release (double dt)
   if (elapsed_time < 0.25) return false;
   elapsed_time = 0.0;
 
-  int rval = ai->createBallistic( "Models/Geometry/tracer.xml",
+  int rval = ai->createBallistic( "Models/Geometry/tracer.ac",
         _user_lat_node->getDoubleValue(),
         _user_lon_node->getDoubleValue(),
         _user_alt_node->getDoubleValue() + z_offset,
