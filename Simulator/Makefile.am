@@ -11,5 +11,4 @@ SUBDIRS = Aircraft \
 	Time \
 	Weather \
 	XGL \
-	Main \
-	Include
+	Main
