@@ -1,6 +1,10 @@
 #ifndef _SSG_ENTITY_ARRAY_HXX
 #define _SSG_ENTITY_ARRAY_HXX
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <plib/ssg.h>
 
 
@@ -50,7 +54,9 @@ public:
     virtual void hot           ( sgVec3     s, sgMat4 m, int test_needed ) ;
     virtual void los           ( sgVec3     s, sgMat4 m, int test_needed ) ;
     virtual void print         ( FILE *fd = stderr, char *indent = "", int how_much = 2 ) ;
+#ifdef HAVE_PLIB_PSL
     virtual void getStats ( int *num_branches, int *num_leaves, int *num_tris, int *num_vertices ) ;
+#endif
     virtual int load ( FILE *fd ) ;
     virtual int save ( FILE *fd ) ;
     virtual void recalcBSphere () ;

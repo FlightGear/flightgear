@@ -21,6 +21,9 @@
      $Id$
 */
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include "ssgEntityArray.hxx"
 
@@ -179,6 +182,7 @@ void ssgEntityArray::print ( FILE *fd, char *indent, int how_much )
 }
 
 
+#ifdef HAVE_PLIB_PSL
 void ssgEntityArray::getStats ( int *num_branches, int *num_leaves, int *num_tris, int *num_verts )
 {
   int nb, nl, nt, nv ;
@@ -194,6 +198,7 @@ void ssgEntityArray::getStats ( int *num_branches, int *num_leaves, int *num_tri
   *num_tris     += nt * locations->getNum() ;
   *num_verts    += nv * locations->getNum() ;
 }
+#endif
 
 
 void ssgEntityArray::cull ( sgFrustum *f, sgMat4 m, int test_needed )

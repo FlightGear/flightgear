@@ -390,6 +390,10 @@ int main() {
   AC_MSG_RESULT(no)
 )
 AM_CONDITIONAL(HAVE_PLIB_PSL, test "x$have_plib_psl" = "xyes")
+if test "x$have_plib_psl" = "xyes"; then
+   AC_DEFINE([HAVE_PLIB_PSL], 1,
+             [Define if plib version is new enough to provide "PSL"])
+fi
 
 dnl Check for MetaKit
 AC_CHECK_HEADER(mk4.h)
