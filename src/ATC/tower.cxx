@@ -163,6 +163,10 @@ FGTower::FGTower() {
 	
 	timeSinceLastDeparture = 9999;
 	departed = false;
+	
+	nominal_downwind_leg_pos = 1000.0;
+	nominal_base_leg_pos = -1000.0;
+	// TODO - set nominal crosswind leg pos based on minimum distance from takeoff end of rwy.
 }
 
 FGTower::~FGTower() {
@@ -363,6 +367,12 @@ void FGTower::Update(double dt) {
 	//cout << "Done T" << endl;
 }
 
+void FGTower::ReceiveUserCallback(int code) {
+	if(code == (int)USER_REQUEST_DEPARTURE) {
+		cout << "User requested departure\n";
+	}
+}
+
 void FGTower::Respond() {
 	//cout << "Entering Respond..." << endl;
 	TowerPlaneRec* t = FindPlane(responseID);
@@ -418,6 +428,8 @@ void FGTower::Respond() {
 		} else if(t->finalReported && !(t->finalAcknowledged)) {
 			bool disp = true;
 			string trns = t->plane.callsign;
+			cout << (t->nextOnRwy ? "Next on rwy " : "Not next!! ");
+			cout << (rwyOccupied ? "RWY OCCUPIED!!\n" : "Rwy not occupied\n");
 			if(t->nextOnRwy && !rwyOccupied) {
 				if(t->landingType == FULL_STOP) {
 					trns += " cleared to land ";
@@ -867,7 +879,7 @@ bool FGTower::GetCrosswindConstraint(double& cpos) {
 	}
 }
 bool FGTower::GetDownwindConstraint(double& dpos) {
-	if(downwind_leg_pos != 0.0) {
+	if(fabs(downwind_leg_pos) > nominal_downwind_leg_pos) {
 		dpos = downwind_leg_pos;
 		return(true);
 	} else {
@@ -876,11 +888,11 @@ bool FGTower::GetDownwindConstraint(double& dpos) {
 	}
 }
 bool FGTower::GetBaseConstraint(double& bpos) {
-	if(base_leg_pos != 0.0) {
+	if(base_leg_pos < nominal_base_leg_pos) {
 		bpos = base_leg_pos;
 		return(true);
 	} else {
-		bpos = 0.0;
+		bpos = nominal_base_leg_pos;
 		return(false);
 	}
 }
@@ -1133,7 +1145,7 @@ void FGTower::CalcETA(TowerPlaneRec* tpr, bool printout) {
 	
 	Point3D op = ortho.ConvertToLocal(tpr->pos);
 	//if(printout) {
-	//	cout << "Orthopos is " << op.x() << ", " << op.y() << '\n';
+	//if(!tpr->isUser) cout << "Orthopos is " << op.x() << ", " << op.y() << ' ';
 	//	cout << "opType is " << tpr->opType << '\n';
 	//}
 	double dist_out_m = op.y();
@@ -1167,6 +1179,7 @@ void FGTower::CalcETA(TowerPlaneRec* tpr, bool printout) {
 			if(!GetBaseConstraint(current_base_dist_out_m)) {
 				current_base_dist_out_m = nominal_base_dist_out_m;
 			}
+			//cout << "current_base_dist_out_m = " << current_base_dist_out_m << '\n';
 			double nominal_dist_across_m = 1000;	// Hardwired value from AILocalTraffic
 			double current_dist_across_m;
 			if(!GetDownwindConstraint(current_dist_across_m)) {
@@ -1174,12 +1187,12 @@ void FGTower::CalcETA(TowerPlaneRec* tpr, bool printout) {
 			}
 			double nominal_cross_dist_out_m = 2000;	// Bit of a guess - AI plane turns to crosswind at 600ft agl.
 			tpr->eta = fabs(current_base_dist_out_m) / final_ias;	// final
-			//if(printout) cout << "a = " << tpr->eta << '\n';
+			//cout << "a = " << tpr->eta << '\n';
 			if((tpr->leg == DOWNWIND) || (tpr->leg == TURN2)) {
 				tpr->eta += dist_across_m / circuit_ias;
-				//if(printout) cout << "b = " << tpr->eta << '\n';
+				//cout << "b = " << tpr->eta << '\n';
 				tpr->eta += fabs(current_base_dist_out_m - dist_out_m) / circuit_ias;
-				//if(printout) cout << "c = " << tpr->eta << '\n';
+				//cout << "c = " << tpr->eta << '\n';
 			} else if((tpr->leg == CROSSWIND) || (tpr->leg == TURN1)) {
 				if(dist_across_m > nominal_dist_across_m) {
 					tpr->eta += dist_across_m / circuit_ias;
@@ -1208,6 +1221,7 @@ void FGTower::CalcETA(TowerPlaneRec* tpr, bool printout) {
 		//if(printout) {
 		//	cout << "ETA = " << tpr->eta << '\n';
 		//}
+		//if(!tpr->isUser) cout << tpr->plane.callsign << '\t' << tpr->eta << '\n';
 	} else {
 		tpr->eta = 99999;
 	}	

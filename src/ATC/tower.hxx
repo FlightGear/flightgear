@@ -53,6 +53,11 @@ enum tower_traffic_type {
 
 ostream& operator << (ostream& os, tower_traffic_type ttt);
 
+enum tower_callback_type {
+	USER_REQUEST_DEPARTURE = 1,
+	USER_REQUEST_ARRIVAL = 2
+};
+
 // TODO - need some differentiation of IFR and VFR traffic in order to give the former priority.
 
 // Structure for holding details of a plane under tower control.
@@ -113,6 +118,8 @@ public:
 	void Init();
 	
 	void Update(double dt);
+	
+	void ReceiveUserCallback(int code);
 
 	void RequestLandingClearance(string ID);
 	void RequestDepartureClearance(string ID);	
@@ -301,6 +308,10 @@ private:
 	double downwind_leg_pos;	// Actual offset distance in meters from the runway that planes are flying the downwind leg
 	// Currently not sure whether the above should be always +ve or just take the natural orthopos sign (+ve for RH circuit, -ve for LH).
 	double base_leg_pos;		// Actual offset distance from the threshold (-ve) that planes are turning to base leg.
+	
+	double nominal_crosswind_leg_pos;
+	double nominal_downwind_leg_pos;
+	double nominal_base_leg_pos;
 	
 	friend istream& operator>> ( istream&, FGTower& );
 };
