@@ -59,29 +59,6 @@ int parse_option(char **args, int n) {
    return 1;
 }
 
-GLubyte *make_map( GLubyte *data, int width, int height, int colors )
-{
-   GLubyte *map = (GLubyte *)malloc (width * height * 3);
-   
-   for (int y=0; y<height; y++)
-      for (int x=0; x<width; x++)
-      {
-         int mpos = (x + y*width)*3;
-         int dpos = (x + y*width)*colors;
-
-         int xp1 = (x < (width-1)) ? x+1 : 0;
-         int yp1 = (y < (height-1)) ? y+1 : 0;
-         int posxp1 = (xp1 + y*width)*colors;
-         int posyp1 = (x + yp1*width)*colors;
-         
-         map[mpos+0] = (128+(data[posxp1]-data[dpos])/2);
-         map[mpos+1] = (128+(data[posyp1]-data[dpos])/2);
-         map[mpos+2] = 128 + GLubyte(128*brightness);
-      }
-
-   return map;
-}
-
 int main (int argc, char **argv)
 {
    int i;
@@ -115,7 +92,6 @@ int main (int argc, char **argv)
       memcpy(normalmap_file+i, "_n.rgb\0", 7);
    }
 
-   // texture.make_grayscale();
    texture.make_normalmap();
    texture.write_texture(normalmap_file);
 
