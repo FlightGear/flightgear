@@ -26,41 +26,6 @@
 
 TARGET=fgfs0
 
-CC = gcc
-
-
-#---------------------------------------------------------------------------
-# This is overridden in the top level Makefile, if make is run from there.
-#---------------------------------------------------------------------------
-
-# For GLUT
-INTERFACE_FLAGS = -DGLUT
-INTERFACE_LIBS = -lglut
-INTERFACE_FILES = GLUTkey.c
-
-# For MESA_TK (Tk interface to Mesa)
-# INCLUDES = -I/usr/include/mesa
-# INTERFACE_FLAGS = -DMESA_TK
-# INTERFACE_LIBS = -L/usr/lib/mesa -lMesatk
-# INTERFACE_FILES = GLTKkey.c
-
-
-#---------------------------------------------------------------------------
-# Define main GL libraries
-#---------------------------------------------------------------------------
-
-# For OpenGL
-# GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
-
-# For Mesa
-MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
-X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
-
-
-CFLAGS = $(FG_CFLAGS) $(INTERFACE_FLAGS)
-LIBS =  $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
-
 CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
 OFILES = $(CFILES:.c=.o)
 AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
@@ -68,6 +33,13 @@ AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/Slew/libSlew.a ../mat3/libmat3.a \
 	../Scenery/ParseVRML/libParseVRML.a ../Scenery/libScenery.a \
 	../Timer/libTimer.a
+
+
+include ../make.inc
+
+
+CFLAGS = $(FG_CFLAGS) $(INTERFACE_FLAGS)
+LIBS =  $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
 
 
 #---------------------------------------------------------------------------
@@ -78,9 +50,6 @@ $(TARGET): $(OFILES) $(AFILES)
 	$(CC) -o $(TARGET) $(OFILES) $(AFILES) $(LIBS)
 
 all: $(TARGET)
-
-# depend:
-# 	$(CC) -MM *.c > depend
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
@@ -107,6 +76,9 @@ mesh2GL.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.19  1997/06/27 21:38:09  curt
+# Working on Makefile structure.
+#
 # Revision 1.18  1997/06/27 20:03:36  curt
 # Working on Makefile structure.
 #

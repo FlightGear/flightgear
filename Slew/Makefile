@@ -29,14 +29,11 @@ TARGET=libSlew.a
 CFILES = slew.c
 OFILES = $(CFILES:.c=.o)
 
-CC = gcc
+
+include ../../make.inc
+
+
 CFLAGS = $(FG_CFLAGS)
-
-AR = ar
-
-INCLUDES = 
-
-LIBS = 
 
 
 #---------------------------------------------------------------------------
@@ -47,9 +44,6 @@ $(TARGET): $(OFILES)
 	$(AR) rv $(TARGET) $(OFILES)
 
 all: $(TARGET)
-
-# depend:
-# 	$(CC) -MM *.c > depend                     
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
@@ -67,6 +61,9 @@ slew.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1997/06/27 21:38:07  curt
+# Working on Makefile structure.
+#
 # Revision 1.5  1997/06/27 20:03:36  curt
 # Working on Makefile structure.
 #

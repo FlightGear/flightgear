@@ -1,0 +1,3 @@
+common.o: common.c common.h
+mesh.o: mesh.c mesh.h common.h
+scenery.o: scenery.c scenery.h ParseVRML/parsevrml.h

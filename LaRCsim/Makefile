@@ -21,12 +21,11 @@ CFILES =  $(LaRCsimFILES) $(NavionFILES) $(InterfaceFILES)
 
 OFILES = $(CFILES:.c=.o)
 
-CC = gcc
+
+include ../../make.inc
+
+
 CFLAGS = $(FG_CFLAGS)
-
-AR = ar
-
-INCLUDES = 
 
 LIBS = -lm
 
@@ -43,9 +42,6 @@ simtest: $(TARGET) LaRCsim.o
 
 all: $(TARGET)
 
-# depend:
-# 	$(CC) -MM *.c > depend
-
 clean:
 	rm -f *.o $(TARGET) *~ core
 
@@ -59,6 +55,9 @@ include depend
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1997/06/27 21:38:06  curt
+# Working on Makefile structure.
+#
 # Revision 1.5  1997/06/27 20:03:34  curt
 # Working on Makefile structure.
 #

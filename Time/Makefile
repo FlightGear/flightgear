@@ -30,14 +30,11 @@ CFILES = fg_timer.c
 HFILES = fg_timer.h
 OFILES = $(CFILES:.c=.o)
 
-CC = gcc
+
+include ../make.inc
+
+
 CFLAGS = $(FG_CFLAGS)
-
-AR = ar
-
-INCLUDES = 
-
-LIBS = 
 
 
 #---------------------------------------------------------------------------
@@ -48,9 +45,6 @@ $(TARGET): $(OFILES)
 	$(AR) rv $(TARGET) $(OFILES)
 
 all: $(TARGET)
-
-# depend:
-# 	$(CC) -MM *.c > depend                     
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
@@ -68,6 +62,9 @@ fg_timer.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1997/06/27 21:38:13  curt
+# Working on Makefile structure.
+#
 # Revision 1.5  1997/06/27 20:03:40  curt
 # Working on Makefile structure.
 #

@@ -1,0 +1,5 @@
+controls.o: controls.c controls.h ../limits.h ../Aircraft/aircraft.h \
+ ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
+ ../Aircraft/../Flight/LaRCsim/ls_interface.h \
+ ../Aircraft/../Flight/LaRCsim/../flight.h \
+ ../Aircraft/../Controls/controls.h

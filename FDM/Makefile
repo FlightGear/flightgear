@@ -29,14 +29,11 @@ TARGET=libFlight.a
 CFILES = flight.c
 OFILES = $(CFILES:.c=.o)
 
-CC = gcc
+
+include ../make.inc
+
+
 CFLAGS = $(FG_CFLAGS)
-
-AR = ar
-
-INCLUDES = 
-
-LIBS = 
 
 
 #---------------------------------------------------------------------------
@@ -47,11 +44,6 @@ $(TARGET): $(OFILES)
 	$(AR) rv $(TARGET) $(OFILES)
 
 all: $(TARGET)
-
-# depend:
-# 	$(CC) -MM *.c > depend                     
-
-dep: depend
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
@@ -69,6 +61,9 @@ flight.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.8  1997/06/27 21:38:05  curt
+# Working on Makefile structure.
+#
 # Revision 1.7  1997/06/27 20:03:34  curt
 # Working on Makefile structure.
 #

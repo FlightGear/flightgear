@@ -1,0 +1,21 @@
+GLTKkey.o: GLTKkey.c /usr/include/gltk.h GLTKkey.h \
+ ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
+ ../Aircraft/../Flight/Slew/slew.h \
+ ../Aircraft/../Flight/LaRCsim/ls_interface.h \
+ ../Aircraft/../Flight/LaRCsim/../flight.h \
+ ../Aircraft/../Controls/controls.h \
+ ../Aircraft/../Controls/../limits.h
+GLUTkey.o: GLUTkey.c GLUTkey.h ../Aircraft/aircraft.h \
+ ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
+ ../Aircraft/../Flight/LaRCsim/ls_interface.h \
+ ../Aircraft/../Flight/LaRCsim/../flight.h \
+ ../Aircraft/../Controls/controls.h \
+ ../Aircraft/../Controls/../limits.h
+GLmain.o: GLmain.c ../Aircraft/aircraft.h \
+ ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
+ ../Aircraft/../Flight/LaRCsim/ls_interface.h \
+ ../Aircraft/../Flight/LaRCsim/../flight.h \
+ ../Aircraft/../Controls/controls.h \
+ ../Aircraft/../Controls/../limits.h ../Scenery/scenery.h \
+ ../mat3/mat3.h ../Timer/fg_timer.h
+mesh2GL.o: mesh2GL.c ../Scenery/mesh.h ../mat3/mat3.h

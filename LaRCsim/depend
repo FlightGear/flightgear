@@ -1,0 +1,25 @@
+LaRCsim.o: LaRCsim.c ls_types.h ls_constants.h ls_generic.h \
+ ls_sim_control.h ls_cockpit.h
+atmos_62.o: atmos_62.c ls_types.h ls_constants.h
+default_model_routines.o: default_model_routines.c
+ls_accel.o: ls_accel.c ls_types.h ls_generic.h ls_constants.h
+ls_aux.o: ls_aux.c ls_types.h ls_constants.h ls_generic.h
+ls_geodesy.o: ls_geodesy.c ls_types.h ls_constants.h
+ls_gravity.o: ls_gravity.c ls_types.h ls_constants.h
+ls_init.o: ls_init.c ls_types.h ls_sym.h ls_generic.h
+ls_interface.o: ls_interface.c ls_types.h ls_constants.h ls_generic.h \
+ ls_sim_control.h ls_cockpit.h ls_interface.h ../flight.h \
+ ../Slew/slew.h ../LaRCsim/ls_interface.h ../../Aircraft/aircraft.h \
+ ../../Aircraft/../Flight/flight.h \
+ ../../Aircraft/../Controls/controls.h \
+ ../../Aircraft/../Controls/../limits.h
+ls_model.o: ls_model.c ls_types.h
+ls_step.o: ls_step.c ls_types.h ls_constants.h ls_generic.h
+ls_sync.o: ls_sync.c ls_types.h ls_sim_control.h
+mymain.o: mymain.c ls_types.h ls_cockpit.h ls_generic.h
+navion_aero.o: navion_aero.c ls_types.h ls_generic.h ls_cockpit.h
+navion_engine.o: navion_engine.c ls_types.h ls_constants.h \
+ ls_generic.h ls_cockpit.h ls_sim_control.h
+navion_gear.o: navion_gear.c ls_types.h ls_constants.h ls_generic.h \
+ ls_cockpit.h
+navion_init.o: navion_init.c ls_types.h ls_generic.h ls_cockpit.h

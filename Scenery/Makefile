@@ -30,12 +30,11 @@ CFILES = common.c mesh.c scenery.c
 HFILES = 
 OFILES = $(CFILES:.c=.o)
 
-CC = gcc
+
+include ../make.inc
+
+
 CFLAGS = $(FG_CFLAGS)
-
-AR = ar
-
-INCLUDES = 
 
 
 #---------------------------------------------------------------------------
@@ -46,9 +45,6 @@ $(TARGET): $(OFILES) $(HFILES)
 	$(AR) rv $(TARGET) $(OFILES)
 
 all: $(TARGET)
-
-# depend:
-# 	$(CC) -MM *.c > depend                     
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
@@ -72,6 +68,9 @@ scenery.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.13  1997/06/27 21:38:10  curt
+# Working on Makefile structure.
+#
 # Revision 1.12  1997/06/27 20:03:37  curt
 # Working on Makefile structure.
 #
