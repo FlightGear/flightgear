@@ -509,24 +509,30 @@ bool fgInitSubsystems( void ) {
 
     aircraft_dir = fgGetString("/sim/aircraft-dir");
     const string &model = fgGetString("/sim/flight-model");
-    if (model == "larcsim") {
-	cur_fdm_state = new FGLaRCsim( dt );
-    } else if (model == "jsb") {
-	cur_fdm_state = new FGJSBsim( dt );
-    } else if (model == "ada") {
-	cur_fdm_state = new FGADA( dt );
-    } else if (model == "balloon") {
-	cur_fdm_state = new FGBalloonSim( dt );
-    } else if (model == "magic") {
-	cur_fdm_state = new FGMagicCarpet( dt );
-    } else if (model == "external") {
-	cur_fdm_state = new FGExternal( dt );
-    } else {
-	SG_LOG(SG_GENERAL, SG_ALERT,
-	       "Unrecognized flight model '" << model
-	       << ", can't init aircraft");
+    try {
+	if (model == "larcsim") {
+	    cur_fdm_state = new FGLaRCsim( dt );
+	} else if (model == "jsb") {
+	    cur_fdm_state = new FGJSBsim( dt );
+	} else if (model == "ada") {
+	    cur_fdm_state = new FGADA( dt );
+	} else if (model == "balloon") {
+	    cur_fdm_state = new FGBalloonSim( dt );
+	} else if (model == "magic") {
+	    cur_fdm_state = new FGMagicCarpet( dt );
+	} else if (model == "external") {
+	    cur_fdm_state = new FGExternal( dt );
+	} else {
+	    SG_LOG(SG_GENERAL, SG_ALERT,
+		   "Unrecognized flight model '" << model
+		   << ", can't init aircraft");
+	    exit(-1);
+	}
+    } catch ( ... ) {
+	SG_LOG(SG_GENERAL, SG_ALERT, "FlightGear aborting\n\n");
 	exit(-1);
     }
+
     cur_fdm_state->init();
     cur_fdm_state->bind();
     
