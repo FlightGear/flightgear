@@ -206,12 +206,12 @@ bool FGPropulsion::LoadPropulsion(FGConfigFile* AC_cfg)
           } else cerr << "Unknown identifier: " << token << " in engine file: "
                                                         << engineFileName << endl;
         }
-        
+
         Engines[numEngines]->SetPlacement(xLoc, yLoc, zLoc, Pitch, Yaw);
         numEngines++;
 
       } else {
-      
+
         cerr << "Could not read engine config file: " << fullpath
                                                   + engineFileName + ".xml" << endl;
         return false;
@@ -231,7 +231,7 @@ bool FGPropulsion::LoadPropulsion(FGConfigFile* AC_cfg)
         numOxiTanks++;
         break;
       }
-      
+
       numTanks++;
 
     } else if (token == "AC_THRUSTER") {          // ========== READING THRUSTERS
@@ -281,6 +281,87 @@ bool FGPropulsion::LoadPropulsion(FGConfigFile* AC_cfg)
   }
 
   return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string FGPropulsion::GetPropulsionStrings(void)
+{
+  string PropulsionStrings = "";
+  bool firstime = true;
+
+  for (unsigned int i=0;i<Engines.size();i++) {
+    if (!firstime) {
+      PropulsionStrings += ", ";
+      firstime = false;
+    }
+/*
+    switch(Engines[i].GetType()) {
+    case etPiston:
+      PropulsionStrings += (Engines[i].GetName() + "_PwrAvail, ");
+      break;
+    case etRocket:
+      break;
+    case etTurboJet:
+    case etTurboProp:
+    case etTurboShaft:
+      break;
+    }
+
+    switch(Thrusters[i].GetType()) {
+    case ttNozzle:
+      PropulsionStrings += (Thrusters[i].GetName() + "_Thrust, ");
+      break;
+    case ttRotor:
+      break;
+    case ttPropeller:
+      break;
+    }
+*/    
+  }
+
+  return PropulsionStrings;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string FGPropulsion::GetPropulsionValues(void)
+{
+  char buff[20];
+  string PropulsionValues = "";
+  bool firstime = true;
+
+  for (unsigned int i=0;i<Engines.size();i++) {
+    if (!firstime) {
+      PropulsionValues += ", ";
+      firstime = false;
+    }
+/*
+    switch(Engines[i].GetType()) {
+    case etPiston:
+      PropulsionValues += (string(gcvt(Thrusters[i].GetPowerAvailable(), 10, buff)) + ", ");
+      break;
+    case etRocket:
+      break;
+    case etTurboJet:
+    case etTurboProp:
+    case etTurboShaft:
+      break;
+    }
+
+    switch(Thrusters[i].GetType()) {
+    case ttNozzle:
+      PropulsionValues += (string(gcvt(Thrusters[i].GetThrust(), 10, buff)) + ", ");
+      break;
+    case ttRotor:
+      break;
+    case ttPropeller:
+      break;
+    }
+*/
+  }
+
+  return PropulsionValues;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

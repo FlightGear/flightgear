@@ -63,6 +63,7 @@ public:
   void SetName(string name) {Name = name;}
   virtual float GetPowerRequired(void) {return 0.0;}
   virtual void SetdeltaT(float dt) {deltaT = dt;}
+  float GetThrust(void) {return Thrust;}
 
 protected:
   string Name;

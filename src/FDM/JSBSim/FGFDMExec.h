@@ -299,6 +299,7 @@ private:
   bool frozen;
   bool terminate;
   int  Error;
+  int  Frame;
   bool modelLoaded;
   bool Scripted;
 

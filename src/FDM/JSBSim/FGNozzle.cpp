@@ -73,6 +73,8 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, FGConfigFile* Nzl_cfg) : FGThruster(FDMEx
     }
   }
 
+  Thrust = 0;
+
   if (debug_lvl & 2) cout << "Instantiated: FGNozzle" << endl;
 }
 
@@ -87,7 +89,6 @@ FGNozzle::~FGNozzle()
 
 float FGNozzle::Calculate(float CfPc)
 {
-  float Thrust;
   float pAtm = fdmex->GetAtmosphere()->GetPressure();
   
   Thrust = (CfPc + (PE - pAtm)*ExpR) * (Diameter / ExpR) * nzlEff;

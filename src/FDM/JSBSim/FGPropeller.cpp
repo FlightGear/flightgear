@@ -52,8 +52,8 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
   string token;
   int rows, cols;
 
-  PropName = Prop_cfg->GetValue("NAME");
-  cout << "\n    Propeller Name: " << PropName << endl;
+  Name = Prop_cfg->GetValue("NAME");
+  cout << "\n    Propeller Name: " << Name << endl;
   Prop_cfg->GetNextConfigLine();
   while (Prop_cfg->GetValue() != "/FG_PROPELLER") {
     *Prop_cfg >> token;

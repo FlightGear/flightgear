@@ -124,9 +124,6 @@ public:
   /// Retrieves the propeller moment of inertia
   float GetIxx(void)           { return Ixx;           }
   
-  /// Retrieves the Thrust in pounds
-  float GetThrust(void)        { return Thrust;        }
-  
   /// Retrieves the Torque in foot-pounds (Don't you love the English system?)
   float GetTorque(void)        { return Torque;        }
   
@@ -147,7 +144,6 @@ public:
   float Calculate(float PowerAvailable);
 
 private:
-  string PropName;
   int   numBlades;
   float RPM;
   float Ixx;
@@ -155,7 +151,6 @@ private:
   float MaxPitch;
   float MinPitch;
   float Pitch;
-  float Thrust;
   float Torque;
   FGTable *Efficiency;
   FGTable *cThrust;

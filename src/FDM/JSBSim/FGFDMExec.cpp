@@ -117,6 +117,7 @@ CLASS IMPLEMENTATION
 
 FGFDMExec::FGFDMExec(void)
 {
+  Frame       = 0;
   FirstModel  = 0;
   Error       = 0;
   State       = 0;
@@ -304,13 +305,16 @@ bool FGFDMExec::Run(void)
     if (State->Getsim_time() >= EndTime) return false;
   }
 
-  if (debug_lvl & 4) cout << "=========================" << endl;
+  if (debug_lvl & 4)
+    cout << "================== Frame: " << Frame << "  Time: "
+         << State->Getsim_time() << endl;
 
   while (!model_iterator->Run()) {
     model_iterator = model_iterator->NextModel;
     if (model_iterator == 0L) break;
   }
 
+  Frame++;
   State->IncrTime();
 
   return true;

@@ -48,7 +48,11 @@ INCLUDES
 #include "FGState.h"
 #include "FGFDMExec.h"
 
-#include <iomanip.h>
+#ifndef FGFS
+#  include <iomanip.h>
+#else
+#  include STL_IOMANIP
+#endif
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = "ID_COEFFICIENT";

@@ -23,6 +23,12 @@ INCLUDES
 #include <stdlib.h>
 #ifdef FGFS
 #  include <simgear/compiler.h>
+#  include STL_STRING
+   SG_USING_STD(string);
+   SG_USING_STD(ostream);
+   SG_USING_STD(istream);
+   SG_USING_STD(cerr);
+   SG_USING_STD(endl);
 #  ifdef FG_HAVE_STD_INCLUDES
 #    include <fstream>
 #    include <cmath>
@@ -36,21 +42,20 @@ INCLUDES
 #  include <fstream>
 #  include <cmath>
 #  include <iostream>
+#  include <string>
+   using std::string;
+   using std::ostream;
+   using std::istream;
+   using std::cerr;
+   using std::endl;
 #endif
 
-#include <string>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_MATRIX "$Id$"
-
-using std::string;
-using std::ostream;
-using std::istream;
-using std::cerr;
-using std::endl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -148,44 +153,11 @@ public:
   friend FGColumnVector operator*(const FGMatrix& M, const FGColumnVector& V);
 
   double& operator()(int m) const;
-  
+
   FGColumnVector& multElementWise(const FGColumnVector& V);
 
 private:
   void Debug(void);
-};
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DECLARATION: FGMatrix3x3
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-class FGMatrix3x3 : public FGMatrix
-{
-public:
-  FGMatrix3x3(void) {FGMatrix(3,3);}
-//  ~FGMatrix3x3(void) {~FGMatrix();}
-};
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DECLARATION: FGColumnVector4
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-class FGColumnVector4 : public FGColumnVector
-{
-public:
-  FGColumnVector4(void) {FGColumnVector(4);}
-//  ~FGColumnVector4(void) {~FGColumnVector();}
-};
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DECLARATION: FGColumnVector3
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-class FGColumnVector3 : public FGColumnVector
-{
-public:
-  FGColumnVector3(void) {FGColumnVector(3);}
-//  ~FGColumnVector3(void) {~FGColumnVector();}
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

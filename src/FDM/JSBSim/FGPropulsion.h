@@ -157,6 +157,8 @@ public:
 
   bool GetSteadyState(void);
 
+  string GetPropulsionStrings(void);
+  string GetPropulsionValues(void);
 
   inline FGColumnVector& GetForces(void)  {return *Forces; }
   inline FGColumnVector& GetMoments(void) {return *Moments;}

@@ -46,6 +46,9 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
+#  include STL_STRING
+   SG_USING_STD(cout);
+   SG_USING_STD(endl);
 #  ifdef FG_HAVE_STD_INCLUDES
 #    include <iostream>
 #    include <fstream>
@@ -56,9 +59,11 @@ INCLUDES
 #else
 #  include <iostream>
 #  include <fstream>
+#  include <string>
+   using std::cout;
+   using std::endl;
 #endif
 
-#include <string>
 #include <sys/types.h>
 
 #if defined(__BORLANDC__) || defined(_MSC_VER)
@@ -75,9 +80,6 @@ DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_FDMSOCKET "$Id$"
-
-using std::cout;
-using std::endl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION

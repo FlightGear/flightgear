@@ -53,8 +53,8 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.22  2001/03/29 23:04:51  curt
-// Latest round of JSBSim updates.
+// Revision 1.23  2001/04/02 01:12:38  curt
+// Latest jsbsim updates.
 //
 // Revision 1.7  2001/03/22 14:10:24  jberndt
 // Fixed ID comment

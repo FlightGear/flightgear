@@ -186,7 +186,7 @@ FGColumnVector FGLGear::Force(void)
   FGColumnVector vLocalForce(3);
   //FGColumnVector vLocalGear(3);     // Vector: CG to this wheel (Local)
   FGColumnVector vWhlVelVec(3);     // Velocity of this wheel (Local)
-  
+
   vWhlBodyVec     = (vXYZ - Aircraft->GetXYZcg()) / 12.0;
   vWhlBodyVec(eX) = -vWhlBodyVec(eX);
   vWhlBodyVec(eZ) = -vWhlBodyVec(eZ);
@@ -259,7 +259,7 @@ FGColumnVector FGLGear::Force(void)
 
     switch (eSteerType) {
     case stSteer:
-      SteerAngle = SteerGain*RudderPedal;
+      SteerAngle = SteerGain*FCS->GetDrCmd();
       break;
     case stFixed:
       SteerAngle = 0.0;
@@ -322,7 +322,10 @@ FGColumnVector FGLGear::Force(void)
 
 // Compute the forces in the wheel ground plane.
 
-    RollingForce = vLocalForce(eZ) * BrakeFCoeff * fabs(RollingWhlVel)/RollingWhlVel;
+    RollingForce = 0;
+    if(fabs(RollingWhlVel) > 1E-3) { 
+      RollingForce = vLocalForce(eZ) * BrakeFCoeff * fabs(RollingWhlVel)/RollingWhlVel;
+    }
     SideForce    = vLocalForce(eZ) * FCoeff;
 
 // Transform these forces back to the local reference frame.
