@@ -81,7 +81,11 @@ FGAutopilot::FGAutopilot()
         = fgGetNode("/autopilot/config/elevator-adj-factor", true);
     integral_contrib
         = fgGetNode("/autopilot/config/integral-contribution", true);
-    cout << "elevadj = " << elevator_adj_factor->getFloatValue() << endl;
+    zero_pitch_throttle
+        = fgGetNode("/autopilot/config/zero-pitch-throttle", true);
+    zero_pitch_trim_full_throttle
+        = fgGetNode("/autopilot/config/zero-pitch-trim-full-throttle", true);
+    current_throttle = fgGetNode("/controls/throttle");
     // initialize with defaults (in case config isn't there)
     if ( TargetClimbRate->getFloatValue() < 1 )
         fgSetFloat( "/autopilot/config/target-climb-rate-fpm", 500);
@@ -95,6 +99,10 @@ FGAutopilot::FGAutopilot()
         fgSetFloat( "/autopilot/config/elevator-adj-factor", 5000 );
     if ( integral_contrib->getFloatValue() < 0.0000001 )
         fgSetFloat( "/autopilot/config/integral-contribution", 0.01 );
+    if ( zero_pitch_throttle->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/zero-pitch-throttle", 0.60 );
+    if ( zero_pitch_trim_full_throttle->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/zero-pitch-trim-full-throttle", 0.15 );
 }
 
 // destructor
@@ -265,7 +273,7 @@ void FGAutopilot::init() {
 	
     TargetHeading = 0.0;	// default direction, due north
     TargetAltitude = 3000;	// default altitude in meters
-    alt_error_accum = 0.0;
+    alt_error_accum = 0;    
     climb_error_accum = 0.0;
 
     MakeTargetAltitudeStr( TargetAltitude );
@@ -320,7 +328,8 @@ void FGAutopilot::reset() {
     // TargetAltitude = 3000;   // default altitude in meters
     MakeTargetAltitudeStr( TargetAltitude );
 	
-    alt_error_accum = 0.0;
+    alt_error_accum = 0;    
+
     climb_error_accum = 0.0;
 	
     update_old_control_values();
@@ -695,7 +704,7 @@ int FGAutopilot::run() {
                 = -fabs(TargetDescentRate->getFloatValue() * SG_FEET_TO_METER);
 	}
 
-	// cout << "Target climb rate = " << TargetClimbRate << endl;
+	// cout << "Target climb rate = " << TargetClimbRate->getFloatValue() << endl;
 	// cout << "given our speed, modified desired climb rate = "
 	//      << climb_rate * SG_METER_TO_FEET 
 	//      << " fpm" << endl;
@@ -716,20 +725,29 @@ int FGAutopilot::run() {
 
 	// caclulate proportional error
 	prop_error = error;
-	prop_adj = prop_error / elevator_adj_factor->getFloatValue();
+	prop_adj = prop_error / elevator_adj_factor->getDoubleValue();
 
-	total_adj = (1.0 - integral_contrib->getFloatValue()) * prop_adj
-            + integral_contrib->getFloatValue() * int_adj;
-	// if ( total_adj > 0.6 ) {
-	//     total_adj = 0.6;
-	// } else if ( total_adj < -0.2 ) {
-	//     total_adj = -0.2;
-	// }
-	if ( total_adj > 1.0 ) {
-	    total_adj = 1.0;
-	} else if ( total_adj < -1.0 ) {
-	    total_adj = -1.0;
-	}
+        // cout << "Error=" << error << endl;
+        // cout << "integral_error=" << int_error << endl;
+        // cout << "integral_contrib=" << integral_contrib->getFloatValue() << endl;
+        // cout << "Proportional Adj=" << prop_adj << endl;
+        // cout << "Integral Adj" << int_adj << endl;
+	total_adj = ((double) 1.0 - (double) integral_contrib->getFloatValue()) * prop_adj
+            + (double) integral_contrib->getFloatValue() * int_adj;
+
+        // stop on autopilot trim at 30% +/-
+	if ( total_adj > 0.3 ) {
+	     total_adj = 0.3;
+	 } else if ( total_adj < -0.3 ) {
+	     total_adj = -0.3;
+	 }
+
+        // adjust for throttle pitch gain
+        total_adj += ((current_throttle->getFloatValue() - zero_pitch_throttle->getFloatValue())
+                     / (1 - zero_pitch_throttle->getFloatValue()))
+                     * zero_pitch_trim_full_throttle->getFloatValue();
+
+        // cout << "Total Adj" << total_adj << endl;
 
 	globals->get_controls()->set_elevator_trim( total_adj );
     }
@@ -876,7 +894,8 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     altitude_mode = mode;
 
-    alt_error_accum = 0.0;
+    alt_error_accum = 0;    
+
 
     if ( altitude_mode == FG_ALTITUDE_LOCK ) {
 	if ( TargetAltitude < altitude_agl_node->getDoubleValue()

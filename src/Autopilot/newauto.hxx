@@ -76,10 +76,13 @@ private:
     SGPropertyNode *elevator_adj_factor; // factor to optimize altitude hold adjustments
     SGPropertyNode *integral_contrib;    // amount of contribution of the integral
                                 // component of the pid
+    SGPropertyNode *zero_pitch_throttle; // amount of throttle at which the aircraft does not pitch up
+    SGPropertyNode *zero_pitch_trim_full_throttle; // amount of trim required to level at full throttle
     SGPropertyNode *TargetClimbRate;	// target climb rate
     SGPropertyNode *TargetDescentRate;	// target decent rate
+    SGPropertyNode *current_throttle; // current throttle (engine 0)
     double TargetSpeed;		// speed to shoot for
-    double alt_error_accum;	// altitude error accumulator
+    double alt_error_accum;     // altitude error accumulator
     double climb_error_accum;	// climb error accumulator (for GS)
     double speed_error_accum;	// speed error accumulator
 
