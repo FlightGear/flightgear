@@ -1,4 +1,6 @@
 New in 0.55
+* New version of gpc (generic polygon clipping library) from 
+  http://www.cs.man.ac.uk/aig/staff/alan/software/
 * Brakes (use "b" to toggle)
 * Added an altitude hold module to the autopilot.  Lock your current altitude
   with "ctrl-a", "cntr-a" again will deactivate.  (Also lock your current 
@@ -6,6 +8,9 @@ New in 0.55
 * Added a terrain following module ... "ctrl-t" to activate.
 * Added an autothrottle ... "ctrl-s" to activate.
 * Fixes so that terrain tools will work in windoze.
+* More STL & Compiler compatibility fixes.
+* Changes to use a Point3 class.
+* Fixed win95/98 time problem that limited fps to about 18.3
 
 New in 0.54
 * Implimented audio envelopes so that pitch of engine changes with throttle

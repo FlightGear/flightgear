@@ -61,6 +61,12 @@ Didier Chauveau <chauveau@math.univ-mlv.fr>
   http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html
 
 
+Jean-Francois Doue
+  Vector 2D, 3D, 4D and Matrix 3D and 4D inlined C++ classes.  (Based on
+  Graphics Gems IV ed. Paul S. Heckbert)
+  http://www.animats.com/simpleppp/ftp/public_html/topics/developers.html
+
+
 Francine Evans <evans@cs.sunysb.edu>
   http://www.cs.sunysb.edu/~evans/stripe.html
   Wrote the @#$@#$@% GPL'd tri-striper we use and "love". :-)
