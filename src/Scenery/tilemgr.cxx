@@ -154,6 +154,7 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
 
 // schedule a needed buckets for loading
 void FGTileMgr::schedule_needed() {
+    cout << "scheduling needed tiles for " << longitude << " " << latitude << endl;
 #ifndef FG_OLD_WEATHER
     if ( WeatherDatabase != NULL ) {
 	vis = WeatherDatabase->getWeatherVisibility();
@@ -250,13 +251,8 @@ void FGTileMgr::initialize_queue()
 // chunks.  If the chunk isn't already in the cache, then read it from
 // disk.
 int FGTileMgr::update( double lon, double lat ) {
-    SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for" << lon << " " << lat );
 
-    // FGInterface *f = current_aircraft.fdm_state;
-
-    // lonlat for this update 
-    // longitude = f->get_Longitude() * SGD_RADIANS_TO_DEGREES;
-    // latitude = f->get_Latitude() * SGD_RADIANS_TO_DEGREES;
     longitude = lon;
     latitude = lat;
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "lon "<< lonlat[LON] <<
@@ -267,25 +263,27 @@ int FGTileMgr::update( double lon, double lat ) {
 
     if ( tile_cache.exists( current_bucket ) ) {
         current_tile = tile_cache.get_tile( current_bucket );
-        scenery.next_center = current_tile->center;
+        scenery.set_next_center( current_tile->center );
     } else {
         SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
     }
 
     if ( state == Running ) {
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
 	if ( !(current_bucket == previous_bucket) ) {
 	    // We've moved to a new bucket, we need to schedule any
 	    // needed tiles for loading.
 	    schedule_needed();
 	}
     } else if ( state == Start || state == Inited ) {
+	SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
 	initialize_queue();
 	state = Running;
-    }
 
-    // load the next tile in the load queue (or authorize the next
-    // load in the case of the threaded tile pager)
-    loader.update();
+	// load the next tile in the load queue (or authorize the next
+	// load in the case of the threaded tile pager)
+	loader.update();
+    }
 
     // load the next model in the load queue.  Currently this must
     // happen in the render thread because model loading can trigger
@@ -311,7 +309,7 @@ int FGTileMgr::update( double lon, double lat ) {
 	delete dm;
     }
 
-    // cout << "current elevation (ssg) == " << scenery.cur_elev << endl;
+    // cout << "current elevation (ssg) == " << scenery.get_cur_elev() << endl;
 
     previous_bucket = current_bucket;
     last_longitude = longitude;
@@ -320,23 +318,29 @@ int FGTileMgr::update( double lon, double lat ) {
     // activate loader thread one out of every 5 frames
     if ( counter_hack == 0 ) {
         // Notify the tile loader that it can load another tile
-        // loader.update();
+        loader.update();
 
-	if ( !attach_queue.empty() ) {
-#ifdef ENABLE_THREADS
-	    FGTileEntry* e = attach_queue.pop();
-#else
-	    FGTileEntry* e = attach_queue.front();
-            attach_queue.pop();
-#endif
-	    e->add_ssg_nodes( terrain, ground );
-	    // cout << "Adding ssg nodes for "
-	}
     }
     counter_hack = (counter_hack + 1) % 5;
-    sgdVec3 sc;
-    sgdSetVec3( sc, scenery.center[0], scenery.center[1], scenery.center[2] );
 
+    if ( !attach_queue.empty() ) {
+#ifdef ENABLE_THREADS
+	FGTileEntry* e = attach_queue.pop();
+#else
+	FGTileEntry* e = attach_queue.front();
+	attach_queue.pop();
+#endif
+	e->add_ssg_nodes( terrain, ground );
+	// cout << "Adding ssg nodes for "
+    }
+
+    sgdVec3 sc;
+    sgdSetVec3( sc,
+		scenery.get_center()[0],
+		scenery.get_center()[1],
+		scenery.get_center()[2] );
+
+#if 0
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
 	cout << "initializing scenery current elevation ... " << endl;
@@ -356,24 +360,31 @@ int FGTileMgr::update( double lon, double lat ) {
 	if ( fgCurrentElev(tmp_abs_view_pos, sc, &hit_list,
 			   &tmp_elev, &scenery.cur_radius, scenery.cur_normal) )
 	{
-	    scenery.cur_elev = tmp_elev;
+	    scenery.set_cur_elev( tmp_elev );
 	} else {
-	    scenery.cur_elev = 0.0;
+	    scenery.set_cur_elev( 0.0 );
 	}
-	cout << "result = " << scenery.cur_elev << endl;
+	cout << "result = " << scenery.get_cur_elev() << endl;
     } else {
+#endif
 	// cout << "abs view pos = " << current_view.abs_view_pos
 	//      << " view pos = " << current_view.view_pos << endl;
 	double tmp_elev;
+	double tmp_radius;
+	sgdVec3 tmp_normal;
 	if ( fgCurrentElev(globals->get_current_view()->get_abs_view_pos(),
 			   sc, &hit_list,
-			   &tmp_elev, &scenery.cur_radius, scenery.cur_normal) )
+			   &tmp_elev, &tmp_radius, tmp_normal) )
 	{
-	    scenery.cur_elev = tmp_elev;
+	    scenery.set_cur_elev( tmp_elev );
+	    scenery.set_cur_radius( tmp_radius );
+	    scenery.set_cur_normal( tmp_normal );
 	} else {
-	    scenery.cur_elev = 0.0;
+	    scenery.set_cur_elev( -9999.0 );
 	}  
+#if 0
     }
+#endif
 
     return 1;
 }
@@ -402,7 +413,7 @@ void FGTileMgr::prep_ssg_nodes() {
     while ( ! tile_cache.at_end() ) {
         // cout << "processing a tile" << endl;
         if ( (e = tile_cache.get_current()) ) {
-	    e->prep_ssg_node( scenery.center, vis);
+	    e->prep_ssg_node( scenery.get_center(), vis);
         } else {
             cout << "warning ... empty tile in cache" << endl;
         }

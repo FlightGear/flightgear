@@ -294,7 +294,7 @@ bool FGJSBsim::copy_to_JSBsim() {
     }
 
     Position->SetSeaLevelRadius( get_Sea_level_radius() );
-    Position->SetRunwayRadius( scenery.cur_elev*SG_METER_TO_FEET
+    Position->SetRunwayRadius( scenery.get_cur_elev()*SG_METER_TO_FEET
                                + get_Sea_level_radius() );
 
     Atmosphere->SetExTemperature(get_Static_temperature());

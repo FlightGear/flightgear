@@ -185,7 +185,7 @@ bool FGLaRCsim::update( int multiloop ) {
 
     // Inform LaRCsim of the local terrain altitude
     // Runway_altitude = get_Runway_altitude();
-    Runway_altitude = scenery.cur_elev * SG_METER_TO_FEET;
+    Runway_altitude = scenery.get_cur_elev() * SG_METER_TO_FEET;
 
     // Weather
     /* V_north_airmass = get_V_north_airmass();

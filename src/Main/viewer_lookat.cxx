@@ -34,6 +34,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
 
 #include <Scenery/scenery.hxx>
@@ -107,21 +108,24 @@ void FGViewerLookAt::update() {
     Point3D tmp;
     sgVec3 minus_z;
 
-    // calculate the cartesion coords of the current lat/lon/0 elev
-    Point3D p = Point3D( geod_view_pos[0], 
-			 geod_view_pos[1], 
-			 sea_level_radius );
+    // convert to geocentric coordinates
+    double geoc_lat;
+    sgGeodToGeoc( geod_view_pos[1], geod_view_pos[2],
+		  &sea_level_radius, &geoc_lat );
 
-    tmp = sgPolarToCart3d(p) - scenery.center;
+    // calculate the cartesion coords of the current lat/lon/0 elev
+    Point3D p = Point3D( geod_view_pos[0], geoc_lat, sea_level_radius );
+
+    tmp = sgPolarToCart3d(p) - scenery.get_center();
     sgSetVec3( zero_elev, tmp[0], tmp[1], tmp[2] );
 
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier, p.radius was set to
     // the sea level radius, so now we add in our altitude.
-    if ( geod_view_pos[2] > (scenery.cur_elev + 0.5 * SG_METER_TO_FEET) ) {
+    if ( geod_view_pos[2] > (scenery.get_cur_elev() + 0.5 * SG_METER_TO_FEET) ) {
 	p.setz( p.radius() + geod_view_pos[2] );
     } else {
-	p.setz( p.radius() + scenery.cur_elev + 0.5 * SG_METER_TO_FEET );
+	p.setz( p.radius() + scenery.get_cur_elev() + 0.5 * SG_METER_TO_FEET );
     }
 
     tmp = sgPolarToCart3d(p);
@@ -129,7 +133,10 @@ void FGViewerLookAt::update() {
 
     // view_pos = abs_view_pos - scenery.center;
     sgdVec3 sc;
-    sgdSetVec3( sc, scenery.center.x(), scenery.center.y(), scenery.center.z());
+    sgdSetVec3( sc,
+		scenery.get_center().x(),
+		scenery.get_center().y(),
+		scenery.get_center().z() );
     sgdVec3 vp;
     sgdSubVec3( vp, abs_view_pos, sc );
     sgSetVec3( view_pos, vp );

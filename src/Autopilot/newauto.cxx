@@ -913,7 +913,7 @@ static inline double fgAPget_agl( void ) {
     double agl;
 
     agl = cur_fdm_state->get_Altitude() * SG_FEET_TO_METER
-	- scenery.cur_elev;
+	- scenery.get_cur_elev();
 
     return( agl );
 }
@@ -929,8 +929,8 @@ void FGAutopilot::AltitudeSet( double new_altitude ) {
 	target_alt = new_altitude * SG_FEET_TO_METER;
     }
 
-    if( target_alt < scenery.cur_elev ) {
-	target_alt = scenery.cur_elev;
+    if( target_alt < scenery.get_cur_elev() ) {
+	target_alt = scenery.get_cur_elev();
     }
 
     TargetAltitude = target_alt;

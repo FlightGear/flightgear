@@ -78,7 +78,6 @@ FGInterface::FGInterface() {
 }  
 
 FGInterface::FGInterface( double dt ) {
-    
     _setup();
     delta_t = dt;
     remainder = elapsed = multi_loop = 0;
@@ -98,6 +97,9 @@ FGInterface::~FGInterface() {
 void
 FGInterface::_setup ()
 {
+    inited = false;
+    bound = false;
+
     init_vec( d_pilot_rp_body_v );
     init_vec( d_cg_rp_body_v );
     init_vec( f_body_total_v );
@@ -179,6 +181,8 @@ FGInterface::init ()
 {
   SG_LOG(SG_FLIGHT, SG_INFO, "Start initializing FGInterface");
 
+  inited = true;
+
   stamp();
   set_remainder(0);
 
@@ -186,7 +190,7 @@ FGInterface::init ()
   SG_LOG(SG_FLIGHT, SG_INFO, "...initializing position...");
   set_Longitude(fgGetDouble("/position/longitude-deg") * SGD_DEGREES_TO_RADIANS);
   set_Latitude(fgGetDouble("/position/latitude-deg") * SGD_DEGREES_TO_RADIANS);
-  double ground_elev_m = scenery.cur_elev + 1;
+  double ground_elev_m = scenery.get_cur_elev() + 1;
   double ground_elev_ft = ground_elev_m * METERS_TO_FEET;
   if (fgGetBool("/sim/startup/onground") ||
       fgGetDouble("/position/altitude-ft") < ground_elev_ft)
@@ -201,6 +205,8 @@ FGInterface::init ()
 
 				// Set sea-level radius
   SG_LOG(SG_FLIGHT, SG_INFO, "...initializing sea-level radius...");
+  SG_LOG(SG_FLIGHT, SG_INFO, " lat = " << get_Latitude() << " alt = "
+	 << get_Altitude() );
   double sea_level_radius_meters;
   double lat_geoc;
   sgGeodToGeoc(get_Latitude(), get_Altitude(),
@@ -255,6 +261,8 @@ FGInterface::init ()
 void
 FGInterface::bind ()
 {
+  bound = true;
+
                                 // Time management (read-only)
   fgTie("/fdm/time/delta_t", this, 
 	&FGInterface::get_delta_t); // read-only
@@ -364,6 +372,8 @@ FGInterface::bind ()
 void
 FGInterface::unbind ()
 {
+  bound = false;
+
   fgUntie("/fdm/time/delta_t");
   fgUntie("/fdm/time/elapsed");
   fgUntie("/fdm/time/remainder");
@@ -371,9 +381,10 @@ FGInterface::unbind ()
   fgUntie("/position/latitude-deg");
   fgUntie("/position/longitude-deg");
   fgUntie("/position/altitude-ft");
-  fgUntie("/position/heading");
-  fgUntie("/position/pitch");
-  fgUntie("/position/roll");
+  fgUntie("/position/altitude-agl-ft");
+  fgUntie("/orientation/heading-deg");
+  fgUntie("/orientation/pitch-deg");
+  fgUntie("/orientation/roll-deg");
   fgUntie("/velocities/airspeed-kt");
   fgUntie("/velocities/speed-north-fps");
   fgUntie("/velocities/speed-east-fps");
@@ -426,7 +437,7 @@ void FGInterface::_updatePosition( double lat_geoc, double lon, double alt ) {
     _set_Geodetic_Position( lat_geod, lon, alt );
 	
     _set_Sea_level_radius( sl_radius2 * SG_METER_TO_FEET );
-    _set_Runway_altitude( scenery.cur_elev*METERS_TO_FEET ); 
+    _set_Runway_altitude( scenery.get_cur_elev()*METERS_TO_FEET ); 
 	
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );

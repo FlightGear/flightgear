@@ -306,7 +306,7 @@ void fgUpdateSunPos( void ) {
     Point3D vp( v->get_view_pos()[0],
 		v->get_view_pos()[1],
 		v->get_view_pos()[2] );
-    rel_sunpos = l->fg_sunpos - ( vp + scenery.center );
+    rel_sunpos = l->fg_sunpos - ( vp + scenery.get_center() );
     sgSetVec3( to_sun, rel_sunpos.x(), rel_sunpos.y(), rel_sunpos.z() );
     // printf( "Vector to sun = %.2f %.2f %.2f\n",
     //         v->to_sun[0], v->to_sun[1], v->to_sun[2]);

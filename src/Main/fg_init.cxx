@@ -455,7 +455,7 @@ bool fgInitGeneral( void ) {
     if ( ! root.length() ) {
 	// No root path set? Then bail ...
 	SG_LOG( SG_GENERAL, SG_ALERT,
-		"Cannot continue without environment variable FG_ROOT"
+		"Cannot continue without a path to the base package "
 		<< "being defined." );
 	exit(-1);
     }
@@ -508,12 +508,8 @@ bool fgInitSubsystems( void ) {
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    if ( fgSceneryInit() ) {
-	// Material lib initialized ok.
-    } else {
-    	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Scenery initialization!" );
-	exit(-1);
-    }
+    scenery.init();
+    scenery.bind();
 
     if ( global_tile_mgr.init() ) {
 	// Load the local scenery data
@@ -526,7 +522,7 @@ bool fgInitSubsystems( void ) {
 
     SG_LOG( SG_GENERAL, SG_DEBUG,
     	    "Current terrain elevation after tile mgr init " <<
-	    scenery.cur_elev );
+	    scenery.get_cur_elev() );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -562,8 +558,10 @@ bool fgInitSubsystems( void ) {
 	exit(-1);
     }
 
-    cur_fdm_state->init();
-    cur_fdm_state->bind();
+    // Actual fdm initialization is delayed until we get a proper
+    // scenery elevation hit.  This is checked for in main.cxx
+    // cur_fdm_state->init();
+    // cur_fdm_state->bind();
     
     // allocates structures so must happen before any of the flight
     // model or control parameters are set
@@ -839,26 +837,61 @@ bool fgInitSubsystems( void ) {
 
 void fgReInitSubsystems( void )
 {
+    static const SGPropertyNode *longitude
+	= fgGetNode("/position/longitude-deg");
+    static const SGPropertyNode *latitude
+	= fgGetNode("/position/latitude-deg");
+    static const SGPropertyNode *altitude
+	= fgGetNode("/position/altitude-ft");
+
     SG_LOG( SG_GENERAL, SG_INFO,
-	    "/position/altitude = " << fgGetDouble("/position/altitude-ft") );
+	    "/position/altitude = " << altitude->getDoubleValue() );
 
     bool freeze = globals->get_freeze();
-    if( !freeze )
+    if( !freeze ) {
         globals->set_freeze( true );
+    }
     
     // Initialize the Scenery Management subsystem
-    if ( ! fgSceneryInit() ) {
-    	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Scenery initialization!" );
-	exit(-1);
-    }
+    scenery.init();
 
-    if( global_tile_mgr.init() ) {
+    // if( global_tile_mgr.init() ) {
 	// Load the local scenery data
-	global_tile_mgr.update( fgGetDouble("/position/longitude-deg"),
-				fgGetDouble("/position/latitude-deg") );
-    } else {
-    	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
-		exit(-1);
+	global_tile_mgr.update( longitude->getDoubleValue(),
+				latitude->getDoubleValue() );
+    // } else {
+    	// SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
+		// exit(-1);
+    // }
+
+    // Delete then Initialize the flight model subsystem.
+    delete cur_fdm_state;
+
+    double dt = 1.0 / fgGetInt("/sim/model-hz");
+    aircraft_dir = fgGetString("/sim/aircraft-dir");
+    const string &model = fgGetString("/sim/flight-model");
+    try {
+	if (model == "larcsim") {
+	    cur_fdm_state = new FGLaRCsim( dt );
+	} else if (model == "jsb") {
+	    cur_fdm_state = new FGJSBsim( dt );
+	} else if (model == "ada") {
+	    cur_fdm_state = new FGADA( dt );
+	} else if (model == "balloon") {
+	    cur_fdm_state = new FGBalloonSim( dt );
+	} else if (model == "magic") {
+	    cur_fdm_state = new FGMagicCarpet( dt );
+	} else if (model == "external") {
+	    cur_fdm_state = new FGExternal( dt );
+	} else {
+	    SG_LOG(SG_GENERAL, SG_ALERT,
+		   "Unrecognized flight model '" << model
+		   << ", can't init aircraft");
+	    exit(-1);
+	}
+    } catch ( ... ) {
+	SG_LOG(SG_GENERAL, SG_ALERT, "FlightGear aborting\n\n");
+	exit(-1);
     }
 
     // Initialize view parameters
@@ -868,12 +901,12 @@ void fgReInitSubsystems( void )
     pilot_view->set_view_offset( 0.0 );
     pilot_view->set_goal_view_offset( 0.0 );
 
-    pilot_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
-				   cur_fdm_state->get_Lat_geocentric(), 
-				   cur_fdm_state->get_Altitude() *
-				   SG_FEET_TO_METER );
-    pilot_view->set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
-				      SG_FEET_TO_METER ); 
+    pilot_view->set_geod_view_pos( longitude->getDoubleValue()
+				     * SGD_DEGREES_TO_RADIANS, 
+				   latitude->getDoubleValue()
+				     * SGD_DEGREES_TO_RADIANS, 
+				   cur_fdm_state->get_Altitude()
+				     * SG_FEET_TO_METER );
     pilot_view->set_rph( cur_fdm_state->get_Phi(),
 			 cur_fdm_state->get_Theta(),
 			 cur_fdm_state->get_Psi() );
@@ -883,8 +916,6 @@ void fgReInitSubsystems( void )
 
     SG_LOG( SG_GENERAL, SG_DEBUG, "  abs_view_pos = "
 	    << globals->get_current_view()->get_abs_view_pos());
-
-    cur_fdm_state->init();
 
     globals->get_controls()->reset_all();
     current_autopilot->reset();

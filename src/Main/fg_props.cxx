@@ -394,7 +394,7 @@ getHeadingMag ()
 static double
 getRPM ()
 {
-  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
       return current_aircraft.fdm_state->get_engine(0)->get_RPM();
   } else {
       return 0.0;
@@ -408,7 +408,7 @@ getRPM ()
 static double
 getEGT ()
 {
-  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
       return current_aircraft.fdm_state->get_engine(0)->get_EGT();
   } else {
       return 0.0;
@@ -421,7 +421,7 @@ getEGT ()
 static double
 getCHT ()
 {
-  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
       return current_aircraft.fdm_state->get_engine(0)->get_CHT();
   } else {
       return 0.0;
@@ -434,7 +434,7 @@ getCHT ()
 static double
 getOilTemp ()
 {
-  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
       return current_aircraft.fdm_state->get_engine(0)->get_Oil_Temp();
   } else {
       return 0.0;
@@ -447,7 +447,7 @@ getOilTemp ()
 static double
 getMP ()
 {
-  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
       return current_aircraft.fdm_state->get_engine(0)->get_Manifold_Pressure();
   } else {
       return 0.0;
@@ -461,7 +461,7 @@ getMP ()
 static double
 getFuelFlow ()
 {
-  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
       return current_aircraft.fdm_state->get_engine(0)->get_Fuel_Flow();
   } else {
       return 0.0;
@@ -474,7 +474,7 @@ getFuelFlow ()
 static bool
 getRunningFlag ()
 {
-  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
       return current_aircraft.fdm_state->get_engine(0)->get_Running_Flag();
   } else {
       return false;
@@ -487,7 +487,7 @@ getRunningFlag ()
 static bool
 getCrankingFlag ()
 {
-  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
       return current_aircraft.fdm_state->get_engine(0)->get_Cranking_Flag();
   } else {
       return false;
@@ -924,7 +924,7 @@ setWindDown (double speed)
 static void
 setRunningFlag (bool flag)
 {
-  if(current_aircraft.fdm_state->get_engine(0) != NULL) {
+  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
     current_aircraft.fdm_state->get_engine(0)->set_Running_Flag( flag );
   }
 }
@@ -938,7 +938,7 @@ setRunningFlag (bool flag)
 static void
 setCrankingFlag (bool flag)
 {
-  if(current_aircraft.fdm_state->get_engine(0) != NULL) {
+  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
     current_aircraft.fdm_state->get_engine(0)->set_Cranking_Flag( flag );
   }
 }

@@ -198,10 +198,10 @@ float get_agl( void )
 
     if ( fgGetString("/sim/startup/units") == "feet" ) {
         agl = (current_aircraft.fdm_state->get_Altitude()
-               - scenery.cur_elev * SG_METER_TO_FEET);
+               - scenery.get_cur_elev() * SG_METER_TO_FEET);
     } else {
         agl = (current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-               - scenery.cur_elev);
+               - scenery.get_cur_elev());
     }
 
     return agl;

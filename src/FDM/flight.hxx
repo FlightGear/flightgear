@@ -183,6 +183,14 @@ class FGInterface : public FGSubsystem {
 
 private:
   
+    // Has the init() method been called.  This is used to delay
+    // initialization until scenery can be loaded and we know the true
+    // ground elevation.
+    bool inited;
+
+    // Have we bound to the property system
+    bool bound; 
+
     // periodic update management variable.  This is a scheme to run
     // the fdm with a fixed delta-t.  We control how many iteration of
     // the fdm to run with the fixed dt based on the elapsed time from
@@ -506,6 +514,12 @@ public:
 	// Driven externally via a serial port, net, file, etc.
 	FG_EXTERNAL = 10
     };
+
+    // initialization
+    inline bool get_inited() const { return inited; }
+    inline void set_inited( bool value ) { inited = value; }
+
+    inline bool get_bound() const { return bound; }
 
     // time and update management values
     inline double get_delta_t() const { return delta_t; }

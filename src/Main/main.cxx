@@ -56,10 +56,6 @@
 #  include <unistd.h>		// for stat()
 #endif
 
-// #ifdef HAVE_LIBX11
-// #  include <GL/glext.h>
-// #endif
-
 #include <plib/netChat.h>
 #include <plib/pu.h>
 #include <plib/ssg.h>
@@ -160,9 +156,6 @@ FGGeneral general;
 // splash screen up and running right away.
 static int idle_state = 0;
 static long global_multi_loop;
-
-// attempt to avoid a large bounce at startup
-static bool initial_freeze = true;
 
 // forward declaration
 void fgReshape( int width, int height );
@@ -404,6 +397,13 @@ void trRenderFrame( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 void fgRenderFrame( void ) {
+    static const SGPropertyNode *longitude
+	= fgGetNode("/position/longitude-deg");
+    static const SGPropertyNode *latitude
+	= fgGetNode("/position/latitude-deg");
+    static const SGPropertyNode *altitude
+	= fgGetNode("/position/altitude-ft");
+
     // Update the default (kludged) properties.
     fgUpdateProps();
 
@@ -431,7 +431,7 @@ void fgRenderFrame( void ) {
 	// initializations and are running the main loop, so this will
 	// now work without seg faulting the system.
 
-	// printf("Ground = %.2f  Altitude = %.2f\n", scenery.cur_elev, 
+	// printf("Ground = %.2f  Altitude = %.2f\n", scenery.get_cur_elev(), 
 	//        FG_Altitude * SG_FEET_TO_METER);
     
 	// this is just a temporary hack, to make me understand Pui
@@ -439,20 +439,19 @@ void fgRenderFrame( void ) {
 	// end of hack
 
 	// calculate our current position in cartesian space
-	scenery.center = scenery.next_center;
+	scenery.set_center( scenery.get_next_center() );
 	// printf("scenery center = %.2f %.2f %.2f\n", scenery.center.x(),
 	//        scenery.center.y(), scenery.center.z());
 
 	FGViewerRPH *pilot_view =
 	    (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
 
-	pilot_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
-				       cur_fdm_state->get_Lat_geocentric(), 
-				       cur_fdm_state->get_Altitude() *
-				       SG_FEET_TO_METER );
-	pilot_view->set_sea_level_radius( cur_fdm_state->
-					  get_Sea_level_radius() *
-					  SG_FEET_TO_METER ); 
+	pilot_view->set_geod_view_pos( longitude->getDoubleValue()
+				         * SGD_DEGREES_TO_RADIANS, 
+				       latitude->getDoubleValue()
+				         * SGD_DEGREES_TO_RADIANS,
+				       altitude->getDoubleValue()
+				         * SG_FEET_TO_METER );
 	pilot_view->set_rph( cur_fdm_state->get_Phi(),
 			     cur_fdm_state->get_Theta(),
 			     cur_fdm_state->get_Psi() );
@@ -479,13 +478,12 @@ void fgRenderFrame( void ) {
 	sgXformVec3( po, *pPO, pilot_view->get_UP() );
 	sgXformVec3( npo, po, CXFM );
 
-	chase_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
-				       cur_fdm_state->get_Lat_geocentric(), 
-				       cur_fdm_state->get_Altitude() *
-				       SG_FEET_TO_METER );
-	chase_view->set_sea_level_radius( cur_fdm_state->
-					  get_Sea_level_radius() *
-					  SG_FEET_TO_METER );
+	chase_view->set_geod_view_pos( longitude->getDoubleValue()
+				         * SGD_DEGREES_TO_RADIANS, 
+				       latitude->getDoubleValue()
+				         * SGD_DEGREES_TO_RADIANS,
+				       altitude->getDoubleValue()
+				         * SG_FEET_TO_METER );
 	chase_view->set_pilot_offset( npo[0], npo[1], npo[2] );
 	chase_view->set_view_forward( pilot_view->get_view_pos() ); 
 	chase_view->set_view_up( wup );
@@ -643,9 +641,11 @@ void fgRenderFrame( void ) {
 	    thesky->reposition( globals->get_current_view()->get_view_pos(),
 				globals->get_current_view()->get_zero_elev(),
 				globals->get_current_view()->get_world_up(),
-				cur_fdm_state->get_Longitude(),
-				cur_fdm_state->get_Latitude(),
-				cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
+				longitude->getDoubleValue()
+				  * SGD_DEGREES_TO_RADIANS,
+				latitude->getDoubleValue()
+				  * SGD_DEGREES_TO_RADIANS,
+				altitude->getDoubleValue() * SG_FEET_TO_METER,
 				cur_light_params.sun_rotation,
 				globals->get_time_params()->getGst(),
 				globals->get_ephem()->getSunRightAscension(),
@@ -689,7 +689,7 @@ void fgRenderFrame( void ) {
  	ssgSetFOV(fov, fov * globals->get_current_view()->get_fov_ratio());
 
 	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-	    - scenery.cur_elev;
+	    - scenery.get_cur_elev();
 
 	// SG_LOG( SG_ALL, SG_INFO, "visibility is " 
 	//         << current_weather.get_visibility() );
@@ -874,8 +874,9 @@ void fgRenderFrame( void ) {
 	fgCockpitUpdate();
 
 	// update the panel subsystem
-	if (current_panel != 0)
-	  current_panel->update();
+	if ( current_panel != NULL ) {
+	    current_panel->update();
+	}
 
 	// We can do translucent menus, so why not. :-)
 	menus->apply();
@@ -894,13 +895,40 @@ void fgRenderFrame( void ) {
 void fgUpdateTimeDepCalcs() {
     static bool inited = false;
 
+    // cout << "Updating time dep calcs()" << endl;
+
     fgLIGHT *l = &cur_light_params;
     int i;
 
     long multi_loop = 1;
 
-    if ( !globals->get_freeze() && !initial_freeze ) {
-	// conceptually, this could be done for each fdm instance ...
+    // Initialize the FDM here if it hasn't been and if we have a
+    // scenery elevation hit.
+
+    // cout << "cur_fdm_state->get_inited() = " << cur_fdm_state->get_inited() 
+    //      << " cur_elev = " << scenery.get_cur_elev() << endl;
+
+    if ( !cur_fdm_state->get_inited() && scenery.get_cur_elev() > -9990 ) {
+	cout << "Finally initializing fdm" << endl;
+	cur_fdm_state->init();
+	if ( cur_fdm_state->get_bound() ) {
+	    cur_fdm_state->unbind();
+	}
+	cur_fdm_state->bind();
+    }
+
+    // conceptually, the following block could be done for each fdm
+    // instance ...
+    if ( !cur_fdm_state->get_inited() ) {
+	// do nothing, fdm isn't inited yet
+    } else if ( globals->get_freeze() ) {
+	// we are frozen, run the fdm's with 0 time slices in case
+	// they want to do something with that.
+
+	cur_fdm_state->update( 0 );
+	FGSteam::update( 0 );
+    } else {
+	// we have been inited, and we are not frozen, we are good to go ...
 
 	if ( !inited ) {
 	    cur_fdm_state->stamp();
@@ -938,13 +966,6 @@ void fgUpdateTimeDepCalcs() {
 	    cur_fdm_state->update( 1 );
 	}
 	FGSteam::update( multi_loop * fgGetInt("/sim/speed-up") );
-    } else {
-	cur_fdm_state->update( 0 );
-	FGSteam::update( 0 );
-
-	//if ( global_tile_mgr.queue_size() == 0 ) {
-	    initial_freeze = false;
-	    //}
     }
 
     if ( fgGetString("/sim/view-mode") == "pilot" ) {
@@ -1024,6 +1045,13 @@ static const double alt_adjust_m = alt_adjust_ft * SG_FEET_TO_METER;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
+    static const SGPropertyNode *longitude
+	= fgGetNode("/position/longitude-deg");
+    static const SGPropertyNode *latitude
+	= fgGetNode("/position/latitude-deg");
+    static const SGPropertyNode *altitude
+	= fgGetNode("/position/altitude-ft");
+
     static long remainder = 0;
     long elapsed;
 #ifdef FANCY_FRAME_COUNTER
@@ -1069,20 +1097,20 @@ static void fgMainLoop( void ) {
     // probably move eventually
 
     /* printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
-	   scenery.cur_elev,
+	   scenery.get_cur_elev(),
 	   cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
 	   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
-    if ( scenery.cur_elev > -9990 ) {
+    if ( scenery.get_cur_elev() > -9990 ) {
 	if ( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER < 
-	     (scenery.cur_elev + alt_adjust_m - 3.0) ) {
+	     (scenery.get_cur_elev() + alt_adjust_m - 3.0) ) {
 	    // now set aircraft altitude above ground
 	    printf("(*) Current Altitude = %.2f < %.2f forcing to %.2f\n", 
 		   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
-		   scenery.cur_elev + alt_adjust_m - 3.0,
-		   scenery.cur_elev + alt_adjust_m );
+		   scenery.get_cur_elev() + alt_adjust_m - 3.0,
+		   scenery.get_cur_elev() + alt_adjust_m );
 	    fgFDMForceAltitude( fgGetString("/sim/flight-model"), 
-				scenery.cur_elev + alt_adjust_m );
+				scenery.get_cur_elev() + alt_adjust_m );
 
 	    SG_LOG( SG_ALL, SG_DEBUG, 
 		    "<*> resetting altitude to " 
@@ -1092,7 +1120,7 @@ static void fgMainLoop( void ) {
     }
 
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
-	   scenery.cur_elev,
+	   scenery.get_cur_elev(),
 	   cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
 	   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
@@ -1103,8 +1131,8 @@ static void fgMainLoop( void ) {
 	globals->inc_warp( globals->get_warp_delta() );
     }
 
-    t->update( cur_fdm_state->get_Longitude(),
-	       cur_fdm_state->get_Latitude(),
+    t->update( longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
+	       latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
 	       globals->get_warp() );
 
     if ( globals->get_warp_delta() != 0 ) {
@@ -1112,9 +1140,11 @@ static void fgMainLoop( void ) {
     }
 
     // update magvar model
-    globals->get_mag()->update( cur_fdm_state->get_Longitude(),
-				cur_fdm_state->get_Latitude(),
-				cur_fdm_state->get_Altitude()* SG_FEET_TO_METER,
+    globals->get_mag()->update( longitude->getDoubleValue()
+				  * SGD_DEGREES_TO_RADIANS,
+				latitude->getDoubleValue()
+				  * SGD_DEGREES_TO_RADIANS,
+				altitude->getDoubleValue() * SG_FEET_TO_METER,
 				globals->get_time_params()->getJD() );
 
     // Get elapsed time (in usec) for this past frame
@@ -1177,7 +1207,7 @@ static void fgMainLoop( void ) {
     if ( global_multi_loop > 0 ) {
 	fgUpdateTimeDepCalcs();
     } else {
-	SG_LOG( SG_ALL, SG_DEBUG, 
+	SG_LOG( SG_ALL, SG_INFO, 
 		"Elapsed time is zero ... we're zinging" );
     }
 
@@ -1187,10 +1217,8 @@ static void fgMainLoop( void ) {
 #endif
 
     // see if we need to load any new scenery tiles
-    global_tile_mgr.update( cur_fdm_state->get_Longitude()
-                            * SGD_RADIANS_TO_DEGREES,
-			    cur_fdm_state->get_Latitude()
-                            * SGD_RADIANS_TO_DEGREES );
+    global_tile_mgr.update( longitude->getDoubleValue(),
+			    latitude->getDoubleValue() );
 
     // see if we need to load any deferred-load textures
     material_lib.load_next_deferred();
@@ -1512,7 +1540,6 @@ int fgGlutInitEvents( void ) {
 
 // Main loop
 int mainLoop( int argc, char **argv ) {
-
 #if defined( macintosh )
     freopen ("stdout.txt", "w", stdout );
     freopen ("stderr.txt", "w", stderr );
@@ -1629,11 +1656,21 @@ int mainLoop( int argc, char **argv ) {
 				     fgGetDouble("/orientation/heading-deg") );
     }
 
+    // Any time after globals is created we are ready to use the
+    // property system
+    static const SGPropertyNode *longitude
+	= fgGetNode("/position/longitude-deg", true);
+    static const SGPropertyNode *latitude
+	= fgGetNode("/position/latitude-deg", true);
+
+
     // Initialize time
     SGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
-    SGTime *t = new SGTime( fgGetDouble("/position/longitude-deg") * SGD_DEGREES_TO_RADIANS,
-			    fgGetDouble("/position/latitude-deg") * SGD_DEGREES_TO_RADIANS,
+    SGTime *t = new SGTime( longitude->getDoubleValue()
+			      * SGD_DEGREES_TO_RADIANS,
+			    latitude->getDoubleValue()
+			      * SGD_DEGREES_TO_RADIANS,
 			    zone.str() );
 
     // Handle potential user specified time offsets
@@ -2099,7 +2136,7 @@ void fgUpdateDCS (void) {
         Point3D obj_pos = sgGeodToCart( obj_posn );
 
         // Translate moving object w.r.t eye
-        Point3D Objtrans = obj_pos-scenery.center;
+        Point3D Objtrans = obj_pos-scenery.get_center();
         bz[0]=Objtrans.x();
         bz[1]=Objtrans.y();
         bz[2]=Objtrans.z();

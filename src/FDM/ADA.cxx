@@ -228,8 +228,7 @@ bool FGADA::update( int multiloop ) {
 
 // Convert from the FGInterface struct to the FGADA struct (output)
 bool FGADA::copy_to_FGADA () {
-
-	ground_elevation = scenery.cur_elev;
+    ground_elevation = scenery.get_cur_elev();
     return true;
 }
 

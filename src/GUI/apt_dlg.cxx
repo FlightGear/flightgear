@@ -51,6 +51,11 @@ void AptDialog_Cancel(puObject *)
 
 void AptDialog_OK (puObject *)
 {
+    static const SGPropertyNode *longitude
+	= fgGetNode("/position/longitude-deg");
+    static const SGPropertyNode *latitude
+	= fgGetNode("/position/latitude-deg");
+
     SGPath path( globals->get_fg_root() );
     path.append( "Airports" );
     path.append( "simple.mk4" );
@@ -78,6 +83,11 @@ void AptDialog_OK (puObject *)
 
         if ( airports.search( AptId, &a ) )
             {
+		// unbind the current fdm state so property changes
+		// don't get lost when we subsequently delete this fdm
+		// and create a new one.
+		cur_fdm_state->unbind();
+
                 AptId = a.id.c_str();  /// NHV fix wrong case crash
                 fgSetString("/sim/startup/airport-id",  AptId.c_str() );
                 // fgSetDouble("/position/altitude-ft", -9999.0 );
@@ -87,26 +97,24 @@ void AptDialog_OK (puObject *)
                                              SGD_RADIANS_TO_DEGREES);
                 BusyCursor(0);
                 fgReInitSubsystems();
-                if ( global_tile_mgr.init() ) {
+                // if ( global_tile_mgr.init() ) {
                     // Load the local scenery data
-                    global_tile_mgr.update( 
-                                           cur_fdm_state->get_Longitude()
-                                           * SGD_RADIANS_TO_DEGREES,
-                                           cur_fdm_state->get_Latitude()
-                                           * SGD_RADIANS_TO_DEGREES );
-                } else {
-                    SG_LOG( SG_GENERAL, SG_ALERT, 
-                            "Error in Tile Manager initialization!" );
-                    exit(-1);
-                }
+                    global_tile_mgr.update( longitude->getDoubleValue(),
+                                            longitude->getDoubleValue() );
+	        // } else {
+                    // SG_LOG( SG_GENERAL, SG_ALERT, 
+                            // "Error in Tile Manager initialization!" );
+                    // exit(-1);
+                // }
                 BusyCursor(1);
             } else {
                 AptId  += " not in database.";
                 mkDialog(AptId.c_str());
             }
     }
-    if(!freeze)
+    if ( !freeze ) {
         globals->set_freeze( false );
+    }
 }
 
 

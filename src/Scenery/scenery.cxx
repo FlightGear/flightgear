@@ -37,19 +37,38 @@
 
 #include <simgear/debug/logstream.hxx>
 
+#include <Main/fg_props.hxx>
+
 #include "scenery.hxx"
 
 
 // Shared structure to hold current scenery parameters
-struct fgSCENERY scenery;
+FGScenery scenery;
 
 
-// Initialize the Scenery Management system
-int fgSceneryInit( void ) {
+// Scenery Management system
+FGScenery::FGScenery() {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing scenery subsystem" );
 
-    scenery.center = Point3D(0.0);
-    scenery.cur_elev = -9999;
+    center = Point3D(0.0);
+    cur_elev = -9999;
+}
 
-    return 1;
+// Initialize the Scenery Management system
+FGScenery::~FGScenery() {
+}
+
+void FGScenery::init() {
+}
+
+void FGScenery::update() {
+}
+
+void FGScenery::bind() {
+    fgTie("/environment/ground-elevation-m", this,
+	  &FGScenery::get_cur_elev, &FGScenery::set_cur_elev);
+}
+
+void FGScenery::unbind() {
+    fgUntie("/environment/ground-elevation-m");
 }

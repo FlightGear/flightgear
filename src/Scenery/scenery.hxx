@@ -33,9 +33,11 @@
 #include <plib/sg.h>
 #include <simgear/math/point3d.hxx>
 
+#include <Main/fgfs.hxx>
+
 
 // Define a structure containing global scenery parameters
-struct fgSCENERY {
+class FGScenery : public FGSubsystem {
     // center of current scenery chunk
     Point3D center;
 
@@ -55,9 +57,33 @@ struct fgSCENERY {
 
     // unit normal at point used to determine current elevation
     sgdVec3 cur_normal;
+
+public:
+
+    FGScenery();
+    ~FGScenery();
+
+    // Implementation of FGSubsystem.
+    void init ();
+    void bind ();
+    void unbind ();
+    void update ();
+
+    inline double get_cur_elev() const { return cur_elev; }
+    inline void set_cur_elev( double e ) { cur_elev = e; }
+
+    inline Point3D get_center() const { return center; }
+    inline void set_center( Point3D p ) { center = p; }
+
+    inline Point3D get_next_center() const { return next_center; }
+    inline void set_next_center( Point3D p ) { next_center = p; }
+
+    inline void set_cur_radius( double r ) { cur_radius = r; }
+    inline void set_cur_normal( sgdVec3 n ) { sgdCopyVec3( cur_normal, n ); }
 };
 
-extern struct fgSCENERY scenery;
+
+extern FGScenery scenery;
 
 
 // Initialize the Scenery Management system
