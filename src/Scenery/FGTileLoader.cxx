@@ -45,7 +45,7 @@ FGTileLoader::FGTileLoader()
     for (int i = 0; i < MAX_THREADS; ++i)
     {
 	threads[i] = new LoaderThread(this);
-	threads[i]->start();
+	threads[i]->start( 1 );
     }
 #endif // ENABLE_THREADS
 }

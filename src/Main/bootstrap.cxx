@@ -116,18 +116,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 #if defined( sgi )
 #include <sys/fpu.h>
+#include <sys/sysmp.h>
 
 /*
-    set the special "flush zero" bit (FS, bit 24) in the Control Status
-    Register of the FPU of R4k and beyond so that the result of any
-    underflowing operation will be clamped to zero, and no exception of
-    any kind will be generated on the CPU.  This has no effect on an
-    R3000.
-
-    the FS bit is inherited by processes fork()ed out of this one,
-    but it is not inherited across an exec().  so anytime you exec()
-    a process, you must re-set the FS bit in that process.
-  */
+ *  set the special "flush zero" bit (FS, bit 24) in the Control Status
+ *  Register of the FPU of R4k and beyond so that the result of any
+ *  underflowing operation will be clamped to zero, and no exception of
+ *  any kind will be generated on the CPU.  This has no effect on an
+ *  R3000.
+ */
 void flush_fpe(void)
 {
     union fpc_csr f;
@@ -151,6 +148,16 @@ int main ( int argc, char **argv ) {
 
 #if defined(sgi)
     flush_fpe();
+
+    // Bind all non-rendering threads to CPU1
+    // This will reduce the jitter caused by them to an absolute minimum,
+    // but it will only work with superuser authority.
+    if ( geteuid() == 0 )
+    {
+       sysmp(MP_CLOCK, 0);		// bind the timer only to CPU0
+       sysmp(MP_ISOLATE, 1 );		// Isolate CPU1
+       sysmp(MP_NONPREEMPTIVE, 1 );	// disable process time slicing on CPU1
+    }
 #endif
 
     // Enable floating-point exceptions for Windows

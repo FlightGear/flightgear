@@ -329,7 +329,7 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
 {
 #if defined(ENABLE_THREADS) && ENABLE_THREADS
     thread = new MetarThread(this);
-    thread->start();
+    thread->start( 1 );
 #endif // ENABLE_THREADS
 }
 
