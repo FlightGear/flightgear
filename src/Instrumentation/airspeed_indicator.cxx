@@ -54,13 +54,17 @@ AirspeedIndicator::unbind ()
 # define FPSTOKTS 0.592484
 #endif
 
+#ifndef INHGTOPSF
+# define INHGTOPSF (2116.217/29.9212)
+#endif
+
 void
 AirspeedIndicator::update (double dt)
 {
     if (_serviceable_node->getBoolValue()) {
         double pt = _total_pressure_node->getDoubleValue();
         double p = _static_pressure_node->getDoubleValue();
-        double q = pt - p;      // dynamic pressure
+        double q = ( pt - p ) * INHGTOPSF;      // dynamic pressure
 
                                 // Now, reverse the equation
         double v_fps = sqrt((2 * q) / SEA_LEVEL_DENSITY_SLUGFT3);
