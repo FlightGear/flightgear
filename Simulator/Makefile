@@ -27,37 +27,20 @@
 include make.inc
 
 
-#---------------------------------------------------------------------------
-# You shouldn't need to modify anything beyond this point
-#---------------------------------------------------------------------------
-
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew Scenery/ParseScn Scenery/ParseVRML
 SUBDIRS = Aircraft Controls Flight mat3 Scenery Timer
 MAIN = OpenGL
 
 
 all: 
-	for dir in $(SUBSUBDIRS) $(SUBDIRS); do \
-	    ( cd $$dir; $(MAKE) ) ; \
-	done
-	for dir in $(MAIN); do \
+	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
 	    ( cd $$dir; $(MAKE) ) ; \
 	done
 
 depend:
-	for dir in $(SUBSUBDIRS) $(SUBDIRS); do \
-	    ( cd $$dir; $(MAKE) depend ) ; \
-	done
-	for dir in $(MAIN); do \
-	    ( cd $$dir; $(MAKE) depend ) ; \
-	done
-
-dep:
-	for dir in $(SUBSUBDIRS) $(SUBDIRS); do \
-	    ( cd $$dir; $(CC) -MM *.c > depend ) ; \
-	done
-	for dir in $(MAIN); do \
-	    ( cd $$dir; $(CC) -MM *.c > depend ) ; \
+	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
+	    ( echo "Making depend in $$dir"; \
+	      cd $$dir; $(CC) -MM *.c > depend ) ; \
 	done
 
 clean:
@@ -75,6 +58,9 @@ tar: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.13  1997/06/28 00:49:02  curt
+# Tweaking Makefile structure ..
+#
 # Revision 1.12  1997/06/27 21:37:59  curt
 # Working on Makefile structure.
 #
