@@ -63,6 +63,7 @@ class FGScenery : public SGSubsystem {
     ssgRoot *scene_graph;
     ssgBranch *terrain_branch;
     ssgRoot *gnd_lights_root;
+    ssgRoot *vasi_lights_root;
     ssgRoot *rwy_lights_root;
     ssgRoot *taxi_lights_root;
     ssgBranch *models_branch;
@@ -102,6 +103,13 @@ public:
     }
     inline void set_gnd_lights_root (ssgRoot *r) {
         gnd_lights_root = r;
+    }
+
+    inline ssgRoot *get_vasi_lights_root () const {
+        return vasi_lights_root;
+    }
+    inline void set_vasi_lights_root (ssgRoot *r) {
+        vasi_lights_root = r;
     }
 
     inline ssgRoot *get_rwy_lights_root () const {

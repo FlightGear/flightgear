@@ -341,6 +341,7 @@ void trRenderFrame( void ) {
     // draw the lights
     glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
     ssgSetNearFar( scene_nearplane, scene_farplane );
+    ssgCullAndDraw( globals->get_scenery()->get_vasi_lights_root() );
     ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
 
     ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
@@ -711,6 +712,7 @@ void fgRenderFrame() {
 
         // draw runway lighting
         if ( draw_otw ) {
+            ssgCullAndDraw( globals->get_scenery()->get_vasi_lights_root() );
             ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
         }
 

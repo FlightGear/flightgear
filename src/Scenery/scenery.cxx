@@ -72,6 +72,9 @@ void FGScenery::init() {
     gnd_lights_root = new ssgRoot;
     gnd_lights_root->setName( "Ground Lighting Root" );
 
+    vasi_lights_root = new ssgRoot;
+    vasi_lights_root->setName( "VASI/PAPI Lighting Root" );
+
     rwy_lights_root = new ssgRoot;
     rwy_lights_root->setName( "Runway Lighting Root" );
 

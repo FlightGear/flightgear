@@ -6,7 +6,7 @@ use strict;
 
 my( $airport_id ) = "KSNA";
 my( $rwy_no ) = "19R";
-my( $reset_sec ) = 30;
+my( $reset_sec ) = 300;
 
 my( $server ) = "localhost";
 my( $port ) = 5401;
