@@ -116,7 +116,7 @@ void mesh_set_option_value(struct mesh *m, char *value) {
 	/* mesh data is a pseudo 2d array */
 	/* printf("Setting mesh_data[%d][%d] to %s\n", m->cur_row, m->cur_col, 
 	       value); */
-	m->mesh_data[m->cur_row * m->rows + m->cur_col] = atof(value);
+	m->mesh_data[m->cur_row * m->cols + m->cur_col] = atof(value);
 	m->cur_col++;
 	if ( m->cur_col >= m->cols ) {
 	    m->cur_col = 0;
@@ -193,15 +193,15 @@ double mesh_altitude(double lon, double lat) {
 
 	x1 = xindex; 
 	y1 = yindex; 
-	z1 = eg.mesh_data[x1 * eg.rows + y1];
+	z1 = eg.mesh_data[y1 * eg.cols + x1];
 
 	x2 = xindex + skip; 
 	y2 = yindex; 
-	z2 = eg.mesh_data[x2 * eg.rows + y2];
+	z2 = eg.mesh_data[y2 * eg.cols + x2];
 				  
 	x3 = xindex + skip; 
 	y3 = yindex + skip; 
-	z3 = eg.mesh_data[x3 * eg.rows + y3];
+	z3 = eg.mesh_data[y3 * eg.cols + x3];
 
 	/* printf("  dx = %.2f  dy = %.2f\n", dx, dy);
 	printf("  (x1,y1,z1) = (%d,%d,%d)\n", x1, y1, z1);
@@ -220,15 +220,15 @@ double mesh_altitude(double lon, double lat) {
 
 	x1 = xindex; 
 	y1 = yindex; 
-	z1 = eg.mesh_data[x1 * eg.rows + y1];
+	z1 = eg.mesh_data[y1 * eg.cols + x1];
 
 	x2 = xindex; 
 	y2 = yindex + skip; 
-	z2 = eg.mesh_data[x2 * eg.rows + y2];
+	z2 = eg.mesh_data[y2 * eg.cols + x2];
 				  
 	x3 = xindex + skip; 
 	y3 = yindex + skip; 
-	z3 = eg.mesh_data[x3 * eg.rows + y3];
+	z3 = eg.mesh_data[y3 * eg.cols + x3];
 
 	/* printf("  dx = %.2f  dy = %.2f\n", dx, dy);
 	printf("  (x1,y1,z1) = (%d,%d,%d)\n", x1, y1, z1);
@@ -249,9 +249,13 @@ double mesh_altitude(double lon, double lat) {
 
 
 /* $Log$
-/* Revision 1.11  1997/07/11 01:30:02  curt
-/* More tweaking of terrian floor.
+/* Revision 1.12  1997/07/11 03:23:19  curt
+/* Solved some scenery display/orientation problems.  Still have a positioning
+/* (or transformation?) problem.
 /*
+ * Revision 1.11  1997/07/11 01:30:02  curt
+ * More tweaking of terrian floor.
+ *
  * Revision 1.10  1997/07/10 04:26:38  curt
  * We now can interpolated ground elevation for any position in the grid.  We
  * can use this to enforce a "hard" ground.  We still need to enforce some

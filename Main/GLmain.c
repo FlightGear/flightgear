@@ -173,7 +173,7 @@ static void fgUpdateViewParams() {
     /* MAT3mult_vec(vec, vec, R); */
     /* MAT3rotate(TMP, vec, M_PI + M_PI_2 + FG_Psi + view_offset); */
     MAT3rotate(TMP, vec, FG_Psi - M_PI_2);
-    /* printf("Yaw matrix\n");
+ /* printf("Yaw matrix\n");
     MAT3print(TMP, stdout); */
     MAT3mult(R, R, TMP);
 
@@ -496,10 +496,11 @@ int main( int argc, char *argv[] ) {
     /* Initial Position */
     FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
     FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
-    /* FG_Latitude  = 0.0;
-    FG_Longitude = 0.0; */
     FG_Altitude = FG_Runway_altitude + 3.758099;
-    FG_Altitude = 15000.0;
+
+    /* FG_Latitude  = 0.0; */
+    /* FG_Longitude = 0.0; */
+    /* FG_Altitude = 15000.0; */
 
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", FG_Latitude, 
 	   FG_Longitude, FG_Altitude);
@@ -512,7 +513,7 @@ int main( int argc, char *argv[] ) {
     /* Initial Orientation */
     FG_Phi   = -2.658474E-06;
     FG_Theta =  7.401790E-03;
-    FG_Psi   =  282.0 * DEG_TO_RAD;
+    FG_Psi   =  270.0 * DEG_TO_RAD;
 
     /* Initial Angular B rates */
     FG_P_body = 7.206685E-05;
@@ -611,9 +612,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.31  1997/07/11 01:29:58  curt
-/* More tweaking of terrian floor.
+/* Revision 1.32  1997/07/11 03:23:18  curt
+/* Solved some scenery display/orientation problems.  Still have a positioning
+/* (or transformation?) problem.
 /*
+ * Revision 1.31  1997/07/11 01:29:58  curt
+ * More tweaking of terrian floor.
+ *
  * Revision 1.30  1997/07/10 04:26:37  curt
  * We now can interpolated ground elevation for any position in the grid.  We
  * can use this to enforce a "hard" ground.  We still need to enforce some

@@ -86,10 +86,10 @@ GLint mesh2GL(struct mesh *m) {
 	    p22 = fgGeodetic2Cartesian(x2*ARCSEC_TO_RAD, y2*ARCSEC_TO_RAD);
 	    p22 = fgRotateCartesianPoint(p22);
 
-	    z11 = 0.001 * m->mesh_data[j         * m->rows + i        ];
-	    z12 = 0.001 * m->mesh_data[j         * m->rows + (i+istep)];
-	    z21 = 0.001 * m->mesh_data[(j+jstep) * m->rows + i        ];
-	    z22 = 0.001 * m->mesh_data[(j+jstep) * m->rows + (i+istep)];
+	    z11 = 0.001 * m->mesh_data[i         * m->cols + j        ];
+	    z12 = 0.001 * m->mesh_data[(i+istep) * m->cols + j        ];
+	    z21 = 0.001 * m->mesh_data[i         * m->cols + (j+jstep)];
+	    z22 = 0.001 * m->mesh_data[(i+istep) * m->cols + (j+jstep)];
 
 	    v1[0] = p22.y - p11.y; v1[1] = p22.z - p11.z; v1[2] = z22 - z11;
 	    v2[0] = p12.y - p11.y; v2[1] = p12.z - p11.z; v2[2] = z12 - z11;
@@ -101,8 +101,8 @@ GLint mesh2GL(struct mesh *m) {
 	    
 	    if ( j == 0 ) {
 		/* first time through */
-		glVertex3d(p11.y, p11.z, z11);
 		glVertex3d(p12.y, p12.z, z12);
+		glVertex3d(p11.y, p11.z, z11);
 	    }
 	    
 	    glVertex3d(p22.y, p22.z, z22);
@@ -116,13 +116,13 @@ GLint mesh2GL(struct mesh *m) {
 
 	    glVertex3d(p21.y, p21.z, z21);
 
-	    x1 = x2;
-	    x2 = x1 + (m->row_step * jstep);
+	    x1 += m->row_step * jstep;
+	    x2 += m->row_step * jstep;
 	}
 	glEnd();
 
-	y1 = y2;
-	y2 = y1 + (m->col_step * istep);
+	y1 += m->col_step * istep;
+	y2 += m->col_step * istep;
     }
 
     glEndList();
@@ -133,9 +133,13 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.29  1997/07/11 01:29:58  curt
-/* More tweaking of terrian floor.
+/* Revision 1.30  1997/07/11 03:23:18  curt
+/* Solved some scenery display/orientation problems.  Still have a positioning
+/* (or transformation?) problem.
 /*
+ * Revision 1.29  1997/07/11 01:29:58  curt
+ * More tweaking of terrian floor.
+ *
  * Revision 1.28  1997/07/10 04:26:37  curt
  * We now can interpolated ground elevation for any position in the grid.  We
  * can use this to enforce a "hard" ground.  We still need to enforce some
