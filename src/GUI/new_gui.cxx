@@ -17,46 +17,26 @@ SG_USING_STD(vector);
 // Callbacks.
 ////////////////////////////////////////////////////////////////////////
 
-
 /**
- * Callback to update all property values.
+ * Action callback.
  */
 static void
-update_callback (puObject * object)
+action_callback (puObject * object)
 {
-    ((GUIWidget *)object->getUserData())->updateProperties();
+    GUIData * action = (GUIData *)object->getUserData();
+    action->widget->action(action->command);
 }
 
 
-/**
- * Callback to close the dialog.
- */
-static void
-close_callback (puObject * object)
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of GUIData.
+////////////////////////////////////////////////////////////////////////
+
+GUIData::GUIData (GUIWidget * w, const char * c)
+    : widget(w),
+      command(c)
 {
-    delete ((GUIWidget *)object->getUserData());
-}
-
-
-/**
- * Callback to apply the property value for every field.
- */
-static void
-apply_callback (puObject * object)
-{
-    ((GUIWidget *)object->getUserData())->applyProperties();
-    update_callback(object);
-}
-
-
-/**
- * Callback to apply the property values and close the dialog.
- */
-static void
-close_apply_callback (puObject * object)
-{
-    apply_callback(object);
-    close_callback(object);
 }
 
 
@@ -95,6 +75,21 @@ GUIWidget::display (SGPropertyNode_ptr props)
     }
 }
 
+void
+GUIWidget::action (const string &command)
+{
+    if (command == "close") {
+        delete this;
+    } else if (command == "apply") {
+        applyProperties();
+        updateProperties();
+    } else if (command == "update") {
+        updateProperties();
+    } else if (command == "close-apply") {
+        applyProperties();
+        delete this;
+    }
+}
 
 void
 GUIWidget::applyProperties ()
@@ -170,8 +165,6 @@ GUIWidget::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight
 void
 GUIWidget::setupObject (puObject * object, SGPropertyNode * props)
 {
-    object->setUserData(this);
-
     if (props->hasValue("legend"))
         object->setLegend(props->getStringValue("legend"));
 
@@ -186,17 +179,9 @@ GUIWidget::setupObject (puObject * object, SGPropertyNode * props)
     }
 
     if (props->hasValue("action")) {
-        string action = props->getStringValue("action");
-        if (action == "update")
-            object->setCallback(update_callback);
-        else if (action == "close")
-            object->setCallback(close_callback);
-        else if (action == "apply")
-            object->setCallback(apply_callback);
-        else if (action == "close-apply")
-            object->setCallback(close_apply_callback);
-        else
-            SG_LOG(SG_GENERAL, SG_ALERT, "Unknown GUI action " + action);
+        _actions.push_back(GUIData(this, props->getStringValue("action")));
+        object->setUserData(&_actions[_actions.size()-1]);
+        object->setCallback(action_callback);
     }
 
     object->makeReturnDefault(props->getBoolValue("default"));
