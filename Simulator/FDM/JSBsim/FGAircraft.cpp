@@ -34,6 +34,8 @@ name of a valid, registered aircraft, and the data file is parsed.
 HISTORY
 --------------------------------------------------------------------------------
 12/12/98   JSB   Created
+04/03/99   JSB   Changed Aero() method to correct body axis force calculation
+                 from wind vector. Fix provided by Tony Peden.
 
 ********************************************************************************
 COMMENTS, REFERENCES,  and NOTES
@@ -390,9 +392,9 @@ void FGAircraft::FAero(void)
     for (int ctr=0; ctr < coeff_ctr[axis_ctr]; ctr++)
       F[axis_ctr] += Coeff[axis_ctr][ctr]->Value();
 
-  Forces[0] +=  F[LiftCoeff]*sin(alpha) - F[DragCoeff]*cos(alpha) - F[SideCoeff]*sin(beta);
-  Forces[1] +=  F[SideCoeff]*cos(beta);
-  Forces[2] += -F[LiftCoeff]*cos(alpha) - F[DragCoeff]*sin(alpha);
+  Forces[0] +=  F[DragCoeff]*cos(alpha)*cos(beta) - F[SideCoeff]*cos(alpha)*sin(beta) - F[LiftCoeff]*sin(alpha);
+  Forces[1] +=  F[DragCoeff]*sin(beta)            + F[SideCoeff]*cos(beta);
+  Forces[2] +=  F[DragCoeff]*sin(alpha)*cos(beta) - F[SideCoeff]*sin(alpha)*sin(beta) + F[LiftCoeff]*cos(alpha);
 }
 
 
@@ -461,4 +463,3 @@ void FGAircraft::GetState(void)
 void FGAircraft::PutState(void)
 {
 }
-
