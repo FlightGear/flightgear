@@ -31,6 +31,8 @@
 
 #include "nmea.hxx"
 
+SG_USING_NAMESPACE(std);
+
 
 FGNMEA::FGNMEA() {
 }
@@ -145,7 +147,7 @@ bool FGNMEA::gen_message() {
     nmea_sentence += gga_sum;
     nmea_sentence += "\n";
 
-    std::cout << nmea_sentence;
+    cout << nmea_sentence;
 
     length = nmea_sentence.length();
     strncpy( buf, nmea_sentence.c_str(), length );

@@ -57,6 +57,7 @@
 
 #include "globals.hxx"
 
+SG_USING_NAMESPACE(std);
 SG_USING_STD(string);
 
 
@@ -90,7 +91,7 @@ static FGProtocol *parse_port_config( const string& config )
 	FGATC610x *atc610x = new FGATC610x;
 	io = atc610x;
         short_circuit = true;
-	std::cout << "here ..." << endl;
+	cout << "here ..." << endl;
     } else if ( protocol == "atlas" ) {
 	FGAtlas *atlas = new FGAtlas;
 	io = atlas;

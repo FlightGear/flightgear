@@ -44,8 +44,8 @@ CLASS DECLARATION
 #define DEFAULT_AGL_ALT 3.758099
 #define DEFAULT_PITCH_ON_GROUND 0.0074002
 
-typedef enum lsspeedset { lssetvt, lssetvc, lssetve, lssetmach, lssetuvw, lssetned };
-typedef enum lsaltset { lssetasl, lssetagl };
+enum lsspeedset { lssetvt, lssetvc, lssetve, lssetmach, lssetuvw, lssetned };
+enum lsaltset { lssetasl, lssetagl };
 
 
 class LaRCsimIC {

@@ -31,6 +31,7 @@
 
 #include "garmin.hxx"
 
+SG_USING_NAMESPACE(std);
 
 FGGarmin::FGGarmin() {
 }
@@ -145,7 +146,7 @@ bool FGGarmin::gen_message() {
     garmin_sentence += rmz_sum;
     garmin_sentence += "\n";
 
-    std::cout << garmin_sentence;
+    cout << garmin_sentence;
 
     length = garmin_sentence.length();
     strncpy( buf, garmin_sentence.c_str(), length );
