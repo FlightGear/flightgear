@@ -199,7 +199,7 @@ void HttpdChannel::foundTerminator (void) {
                 if ( child->nChildren() > 0 ) {
                     line += "<B><A HREF=\"";
                     line += request;
-                    if ( request.substr(request.length() - 1, 1) != (string)"/" ) {
+                    if ( request.substr(request.length() - 1, 1) != "/" ) {
                         line += "/";
                     }
                     line += urlEncode(name);
@@ -213,7 +213,7 @@ void HttpdChannel::foundTerminator (void) {
                     line += name;
                     line += "</B> <A HREF=\"";
                     line += request;
-                    if ( request.substr(request.length() - 1, 1) != (string)"/" ) {
+                    if ( request.substr(request.length() - 1, 1) != "/" ) {
                         line += "/";
                     }
                     line += urlEncode(name);

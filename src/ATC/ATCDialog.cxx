@@ -18,6 +18,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#include <simgear/compiler.h>
+
 #include <simgear/structure/commands.hxx>
 
 #include <Main/globals.hxx>
@@ -337,7 +339,7 @@ void FGATCDialog::DoDialog() {
 				string dum;
 				sprintf( buf, "%i", kk+1 );
 				buf[1] = '\0';
-				dum = (string)(buf);
+				dum = buf;
 				mentry[kk] = dum + ". " + current->menuentry;
 				optList[kk] = new char[strlen(mentry[kk].c_str()) + 1];
 				strcpy(optList[kk], mentry[kk].c_str());
@@ -523,7 +525,8 @@ void FGATCDialog::FreqDisplay(string ident) {
 				if((*itr).ident == ident) {
 					if((*itr).type != INVALID) {
 						ostr << (*itr).type;
-						freqs[n] = ostr.str() + "     -     ";
+						freqs[n] = ostr.str();
+                                                freqs[n].append("     -     ");
 						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
 						// Hack alert!
 						if(buf[5] == '3') buf[5] = '2';

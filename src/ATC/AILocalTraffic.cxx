@@ -168,7 +168,7 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	AirportATC a;
 	if(ATC->GetAirportATCDetails(airportID, &a)) {
 		if(a.tower_freq) {	// Has a tower
-			tower = (FGTower*)ATC->GetATCPointer((string)airportID, TOWER);	// Maybe need some error checking here
+			tower = (FGTower*)ATC->GetATCPointer(airportID, TOWER);	// Maybe need some error checking here
 			if(tower == NULL) {
 				// Something has gone wrong - abort or carry on with un-towered operation?
 				return(false);

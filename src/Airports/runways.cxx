@@ -126,7 +126,7 @@ static string GetReverseRunwayNo(string rwyno) {
 	    << rwyno << " passed to GetReverseRunwayNo(...)");
 	}
     }
-    return((string)buf);
+    return(buf);
 }
 
 

@@ -261,7 +261,7 @@ void FGATIS::UpdateTransmission() {
 	#endif
 	
 	string rwy_no = globals->get_runways()->search(ident, int(hdg));
-	if(rwy_no != (string)"NN") {
+	if(rwy_no != "NN") {
 		transmission += " / Landing_and_departing_runway ";
 		transmission += ConvertRwyNumToSpokenString(atoi(rwy_no.c_str()));
 		//cout << "in atis.cxx, r.rwy_no = " << rwy_no << " r.id = " << r->id << " r.heading = " << r->heading << endl;

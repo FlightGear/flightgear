@@ -114,7 +114,7 @@ ADF::update (double delta_time_sec)
 
                                 // If it's off, don't bother.
     string mode = _mode_node->getStringValue();
-    if (!_transmitter_valid || (mode != string("bfo") && mode != string("adf")))
+    if (!_transmitter_valid || (mode != "bfo" && mode != "adf"))
     {
         set_bearing(delta_time_sec, 90);
         _ident_node->setStringValue("");

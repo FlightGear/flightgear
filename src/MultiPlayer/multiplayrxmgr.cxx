@@ -243,7 +243,7 @@ void FGMultiplayRxMgr::ProcessData(void) {
                     sCallsign = MsgHdr->sCallsign;
 
                     // Process the player data unless we generated it
-                    if (m_sCallsign != string(MsgHdr->sCallsign)) {
+                    if (m_sCallsign != MsgHdr->sCallsign) {
 
 
                         // Process messages
@@ -283,7 +283,7 @@ void FGMultiplayRxMgr::ProcessData(void) {
                                             if (m_Player[iPlayerCnt] == NULL) {
                                                 SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayRxMgr::ProcessRxData - Add new player. IP: " << sIpAddress << ", Call: " <<  sCallsign << ", model: " << sModelName );
                                                 m_Player[iPlayerCnt] = new MPPlayer;
-                                                m_Player[iPlayerCnt]->Open(string(sIpAddress), iPort, string(sCallsign), string(sModelName), false);
+                                                m_Player[iPlayerCnt]->Open(sIpAddress, iPort, sCallsign, sModelName, false);
                                                 m_Player[iPlayerCnt]->SetPosition(PosMsg->PlayerPos);
                                                 bActivePlayer = true;
                                             }
