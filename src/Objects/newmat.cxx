@@ -119,7 +119,7 @@ FGNewMat::read_properties (const SGPropertyNode * props)
   wrapu = props->getBoolValue("wrapu", true);
   wrapv = props->getBoolValue("wrapv", true);
   mipmap = props->getBoolValue("mipmap", true);
-  light_coverage = props->getDoubleValue("light-coverage");
+  light_coverage = props->getDoubleValue("light-coverage", 0.0);
 
   ambient[0] = props->getDoubleValue("ambient/r", 0.0);
   ambient[1] = props->getDoubleValue("ambient/g", 0.0);
@@ -160,6 +160,7 @@ FGNewMat::init ()
   wrapu = true;
   wrapv = true;
   mipmap = true;
+  light_coverage = 0.0;
   texture_loaded = false;
   refcount = 0;
   for (int i = 0; i < 4; i++)

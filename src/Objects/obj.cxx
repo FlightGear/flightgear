@@ -942,6 +942,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 	    material = tmp_mat;
 	}
 	vertex_index = pts_v[i];
+	normal_index = pts_n[i];
 	tex_index.clear();
 	ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
 				  nodes, normals, texcoords,
