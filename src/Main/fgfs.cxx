@@ -115,16 +115,13 @@ FGSubsystemGroup::unbind ()
 void
 FGSubsystemGroup::update (double delta_time_sec)
 {
-    if (!is_suspended()) {
-        for (int i = 0; i < _members.size(); i++)
-            _members[i]->update(delta_time_sec); // indirect call
-    }
+    for (int i = 0; i < _members.size(); i++)
+        _members[i]->update(delta_time_sec); // indirect call
 }
 
 void
 FGSubsystemGroup::suspend ()
 {
-    FGSubsystem::suspend();
     for (int i = 0; i < _members.size(); i++)
         _members[i]->subsystem->suspend();
 }
@@ -132,7 +129,6 @@ FGSubsystemGroup::suspend ()
 void
 FGSubsystemGroup::resume ()
 {
-    FGSubsystem::resume();
     for (int i = 0; i < _members.size(); i++)
         _members[i]->subsystem->resume();
 }
@@ -140,7 +136,7 @@ FGSubsystemGroup::resume ()
 bool
 FGSubsystemGroup::is_suspended () const
 {
-    return FGSubsystem::is_suspended();
+    return false;
 }
 
 void
@@ -229,8 +225,10 @@ FGSubsystemGroup::Member::update (double delta_time_sec)
 {
     elapsed_sec += delta_time_sec;
     if (elapsed_sec >= min_step_sec) {
-        subsystem->update(delta_time_sec);
-        elapsed_sec -= min_step_sec;
+        if (!subsystem->is_suspended()) {
+            subsystem->update(delta_time_sec);
+            elapsed_sec -= min_step_sec;
+        }
     }
 }
 
@@ -280,16 +278,14 @@ FGSubsystemMgr::unbind ()
 void
 FGSubsystemMgr::update (double delta_time_sec)
 {
-    if (!is_suspended()) {
-        for (int i = 0; i < MAX_GROUPS; i++)
-            _groups[i].update(delta_time_sec);
+    for (int i = 0; i < MAX_GROUPS; i++) {
+        _groups[i].update(delta_time_sec);
     }
 }
 
 void
 FGSubsystemMgr::suspend ()
 {
-    FGSubsystem::suspend();
     for (int i = 0; i < MAX_GROUPS; i++)
         _groups[i].suspend();
 }
@@ -297,7 +293,6 @@ FGSubsystemMgr::suspend ()
 void
 FGSubsystemMgr::resume ()
 {
-    FGSubsystem::resume();
     for (int i = 0; i < MAX_GROUPS; i++)
         _groups[i].resume();
 }
@@ -305,7 +300,7 @@ FGSubsystemMgr::resume ()
 bool
 FGSubsystemMgr::is_suspended () const
 {
-    return FGSubsystem::is_suspended();
+    return false;
 }
 
 void
