@@ -179,7 +179,7 @@ FGILS *FGILSList::findByFreq( double freq,
                                 &reciprocal_bearing, &dummy, &dummy );
             angle_to_beam_deg = fabs(reciprocal_bearing - s_ils_deg);
             if ( angle_to_beam_deg <= best_angle ) {
-                *ils = *stations[i];
+                ils = stations[i];
                 best_angle = angle_to_beam_deg;
             }
 	}
