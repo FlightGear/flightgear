@@ -24,8 +24,10 @@
 #include <Include/compiler.h>
 
 #ifdef FG_HAVE_STD_INCLUDES
+#  include <cmath>
 #  include <cstdlib>    // atoi()
 #else
+#  include <math.h>
 #  include <stdlib.h>   // atoi()
 #endif
 

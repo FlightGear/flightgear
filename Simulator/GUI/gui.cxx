@@ -26,11 +26,15 @@
 #  include <config.h>
 #endif
 
+#include <Include/compiler.h>
+
+#ifdef FG_MATH_EXCEPTION_CLASH
+#  include <math.h>
+#endif
+
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
-
-#include <Include/compiler.h>
 
 #include <GL/glut.h>
 #include <XGL/xgl.h>

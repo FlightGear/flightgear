@@ -25,6 +25,10 @@
 #  include <config.h>
 #endif
 
+#ifdef FG_MATH_EXCEPTION_CLASH
+#  include <math.h>
+#endif
+
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif

@@ -28,25 +28,22 @@
 
 #include <Include/compiler.h>
 
-#include STL_STRING
-
 #ifdef FG_HAVE_STD_INCLUDES
+#  include <cmath>
 #  include <cstdio> // sprintf()
 #  include <iostream>
 #else
+#  include <math.h>
 #  include <stdio.h> // sprintf()
 #  include <iostream.h>
 #endif
+
+#include STL_STRING
 
 FG_USING_STD(string);
 
 #if ! defined( FG_HAVE_NATIVE_SGI_COMPILERS )
 FG_USING_STD(ostream);
-#endif
-
-#ifdef __MWERKS__
-#include <math.h>
-#include <stdio.h>
 #endif
 
 #include <Include/fg_constants.h>

@@ -23,6 +23,10 @@
 
 #include <Include/compiler.h>
 
+#ifdef FG_MATH_EXCEPTION_CLASH
+#  include <math.h>
+#endif
+
 #include STL_FUNCTIONAL
 #include STL_ALGORITHM
 

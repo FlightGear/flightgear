@@ -27,6 +27,11 @@
 #  include <config.h>
 #endif
 
+// For BC 5.01 this must be included before OpenGL includes.
+#ifdef FG_MATH_EXCEPTION_CLASH
+#  include <math.h>
+#endif
+
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 

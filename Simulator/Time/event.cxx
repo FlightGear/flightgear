@@ -25,12 +25,15 @@
 #  include <config.h>
 #endif
 
-#include <string>
-
 #include "Include/compiler.h"
+
+#ifdef FG_MATH_EXCEPTION_CLASH
+#  include <math.h>
+#endif
 
 #include STL_ALGORITHM
 #include STL_FUNCTIONAL
+#include STL_STRING
 
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <cstdio>
@@ -56,6 +59,7 @@
 
 FG_USING_STD(for_each);
 FG_USING_STD(mem_fun);
+FG_USING_STD(string);
 
 fgEVENT_MGR global_events;
 

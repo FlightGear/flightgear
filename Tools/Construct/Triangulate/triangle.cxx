@@ -402,7 +402,7 @@ int FGTriangle::run_triangulate( int pass ) {
     vorout.normlist = (REAL *) NULL;      // Needed only if -v switch used.
     
     // TEMPORARY
-    // write_out_data(&in);
+    write_out_data(&in);
 
     // Triangulate the points.  Switches are chosen to read and write
     // a PSLG (p), preserve the convex hull (c), number everything
