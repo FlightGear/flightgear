@@ -43,6 +43,7 @@ class FGKT_70 : public FGSubsystem
     SGPropertyNode *lon_node;
     SGPropertyNode *lat_node;
     SGPropertyNode *alt_node;
+    SGPropertyNode *bus_power;
 
     // internal values
     double r_flash_time;
@@ -81,9 +82,9 @@ public:
     void search () { /* empty placeholder */ }
 
     // internal values
-
-    // modes
-    // inline int get_stby_mode() const { return stby_mode; }
+    inline bool has_power() const {
+        return (func_knob > 0) && (bus_power->getDoubleValue() > 1.0);
+    }
 
     // input and buttons
     inline bool get_ident_btn() const { return ident_btn; }

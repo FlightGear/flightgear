@@ -40,6 +40,7 @@ FGKT_70::FGKT_70() :
     lon_node(fgGetNode("/position/longitude-deg", true)),
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
+    bus_power(fgGetNode("/systems/electrical/outputs/transponder", true)),
     r_flash_time(0.0),
     ident_mode(false),
     ident_btn(false),
@@ -138,42 +139,6 @@ void FGKT_70::unbind () {
 
 // Update the various nav values based on position and valid tuned in navs
 void FGKT_70::update( double dt ) {
-    // double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    // double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    // double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
-    // Point3D aircraft = sgGeodToCart( Point3D( acft_lon, acft_lat,
-    //                                           acft_elev ) );
-
-    // sanity checks
-    if ( digit1 < 0 ) { digit1 = 0; }
-    if ( digit1 > 7 ) { digit1 = 7; }
-    if ( digit2 < 0 ) { digit2 = 0; }
-    if ( digit2 > 7 ) { digit2 = 7; }
-    if ( digit3 < 0 ) { digit3 = 0; }
-    if ( digit3 > 7 ) { digit3 = 7; }
-    if ( digit4 < 0 ) { digit4 = 0; }
-    if ( digit4 > 7 ) { digit4 = 7; }
-
-    id_code = digit1 * 1000 + digit2 * 100 + digit3 * 10 + digit4;
-
-    // flight level computation
-
-    // FIXME!!!! This needs to be computed relative to 29.92 inHg, but
-    // for the moment, until I figure out how to do that, I'll just
-    // use true altitude.
-    flight_level = (int)( (alt_node->getDoubleValue() + 50.0) / 100.0);
-
-    // ident button
-    if ( ident_btn && !last_ident_btn ) {
-        // ident button depressed
-        r_flash_time = 0.0;
-        ident_mode = true;
-    }
-    r_flash_time += dt;
-    if ( r_flash_time > 18.0 ) {
-        ident_mode = false;
-    }
-    
     // start with all annunciators off (reply ann is handled
     // separately) and then turn on the ones we want
     fl_ann = false;
@@ -181,32 +146,62 @@ void FGKT_70::update( double dt ) {
     gnd_ann = false;
     on_ann = false;
     sby_ann = false;
+    reply_ann = false;
 
-    if ( ident_mode ) {
-        reply_ann = true;
-    } else {
-        reply_ann = false;
+    if ( has_power() ) {
+        // sanity checks
+        if ( digit1 < 0 ) { digit1 = 0; }
+        if ( digit1 > 7 ) { digit1 = 7; }
+        if ( digit2 < 0 ) { digit2 = 0; }
+        if ( digit2 > 7 ) { digit2 = 7; }
+        if ( digit3 < 0 ) { digit3 = 0; }
+        if ( digit3 > 7 ) { digit3 = 7; }
+        if ( digit4 < 0 ) { digit4 = 0; }
+        if ( digit4 > 7 ) { digit4 = 7; }
+
+        id_code = digit1 * 1000 + digit2 * 100 + digit3 * 10 + digit4;
+
+        // flight level computation
+
+        // FIXME!!!! This needs to be computed relative to 29.92 inHg,
+        // but for the moment, until I figure out how to do that, I'll
+        // just use true altitude.
+        flight_level = (int)( (alt_node->getDoubleValue() + 50.0) / 100.0);
+
+        // ident button
+        if ( ident_btn && !last_ident_btn ) {
+            // ident button depressed
+            r_flash_time = 0.0;
+            ident_mode = true;
+        }
+        r_flash_time += dt;
+        if ( r_flash_time > 18.0 ) {
+            ident_mode = false;
+        }
+    
+        if ( ident_mode ) {
+            reply_ann = true;
+        } else {
+            reply_ann = false;
+        }
+
+        if ( func_knob == 1 ) {
+            sby_ann = true;
+        } else if ( func_knob == 2 ) {
+            fl_ann = true;
+            alt_ann = true;
+            gnd_ann = true;
+            on_ann = true;
+            sby_ann = true;
+            reply_ann = true;
+        } else if ( func_knob == 3 ) {
+            fl_ann = true;
+            gnd_ann = true;
+        } else if ( func_knob == 4 ) {
+            on_ann = true;
+        } else if ( func_knob == 5 ) {
+            fl_ann = true;
+            alt_ann = true;
+        }
     }
-
-    if ( func_knob == 0 ) {
-        // leave everything off
-    } else if ( func_knob == 1 ) {
-        sby_ann = true;
-    } else if ( func_knob == 2 ) {
-        fl_ann = true;
-        alt_ann = true;
-        gnd_ann = true;
-        on_ann = true;
-        sby_ann = true;
-        reply_ann = true;
-    } else if ( func_knob == 3 ) {
-        fl_ann = true;
-        gnd_ann = true;
-    } else if ( func_knob == 4 ) {
-        on_ann = true;
-    } else if ( func_knob == 5 ) {
-        fl_ann = true;
-        alt_ann = true;
-    }
-
 }
