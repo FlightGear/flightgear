@@ -2,7 +2,8 @@ noinst_LIBRARIES = libInput.a
 
 libInput_a_SOURCES = input.cxx input.hxx
 
-bin_PROGRAMS = js_demo fgjs
+# bin_PROGRAMS = js_demo fgjs
+bin_PROGRAMS = js_demo
 
 js_demo_SOURCES = js_demo.cxx
 
