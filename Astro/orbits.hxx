@@ -23,12 +23,12 @@
  **************************************************************************/
 
 
-#ifndef _ORBITS_H
-#define _ORBITS_H
+#ifndef _ORBITS_HXX
+#define _ORBITS_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -84,18 +84,16 @@ int  fgSolarSystemInit(struct fgTIME t);
 void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _ORBITS_H */
+#endif /* _ORBITS_HXX */
 
 
 /* $Log$
-/* Revision 1.7  1998/04/21 17:02:31  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:21:30  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.7  1998/04/21 17:02:31  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.6  1998/02/23 19:07:55  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
  * calculation code between sun display, and other FG sections that use this

@@ -28,12 +28,12 @@
 #define _COCKPIT_H
 
 
+#include <Cockpit/hud.h>
+
+
 #ifdef __cplusplus                                                          
 extern "C" {                            
 #endif                                   
-
-
-#include <Cockpit/hud.h>
 
 
 // And in the future (near future i hope).
@@ -60,9 +60,12 @@ void fgCockpitUpdate( void );
 
 
 /* $Log$
-/* Revision 1.7  1998/04/21 17:02:34  curt
-/* Prepairing for C++ integration.
+/* Revision 1.8  1998/04/22 13:26:19  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.7  1998/04/21 17:02:34  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.6  1998/02/07 15:29:33  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

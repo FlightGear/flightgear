@@ -1,5 +1,5 @@
 /**************************************************************************
- * stars.h -- data structures and routines for managing and rendering stars.
+ * stars.hxx -- data structures and routines for managing and rendering stars.
  *
  * Written by Curtis Olson, started August 1997.
  *
@@ -24,12 +24,12 @@
  **************************************************************************/
 
 
-#ifndef _STARS_H
-#define _STARS_H
+#ifndef _STARS_HXX
+#define _STARS_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -46,18 +46,16 @@ extern struct OrbElements pltOrbElements[9];
 extern struct fgTIME cur_time_params;
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _STARS_H */
+#endif /* _STARS_HXX */
 
 
 /* $Log$
-/* Revision 1.5  1998/04/21 17:02:33  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:21:35  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.5  1998/04/21 17:02:33  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.4  1998/02/12 21:59:39  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

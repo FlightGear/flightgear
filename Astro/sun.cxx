@@ -32,13 +32,15 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Astro/orbits.h>
-#include <Astro/sun.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-#include <Main/views.h>
+#include <Main/views.hxx>
 #include <Time/fg_time.h>
-#include <Time/sunpos.h>
+#include <Time/sunpos.hxx>
+
+#include "orbits.hxx"
+#include "sun.hxx"
+
 
 GLint sun_obj = 0;
 
@@ -188,9 +190,12 @@ void fgSunRender( void ) {
 
 
 /* $Log$
-/* Revision 1.10  1998/04/18 04:13:58  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.1  1998/04/22 13:21:36  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.10  1998/04/18 04:13:58  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.9  1998/04/03 21:52:51  curt
  * Converting to Gnu autoconf system.
  *

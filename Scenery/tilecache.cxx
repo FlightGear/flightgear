@@ -37,9 +37,10 @@
 
 #include <Bucket/bucketutils.h>
 #include <Debug/fg_debug.h>
-#include <Main/views.h>
-#include <Scenery/obj.h>
-#include <Scenery/tilecache.h>
+#include <Main/views.hxx>
+
+#include "obj.h"
+#include "tilecache.hxx"
 
 
 /* tile cache */
@@ -197,9 +198,12 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.11  1998/04/18 04:14:07  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.1  1998/04/22 13:22:46  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.11  1998/04/18 04:14:07  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.10  1998/04/14 02:23:17  curt
  * Code reorganizations.  Added a Lib/ directory for more general libraries.
  *

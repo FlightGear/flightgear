@@ -36,7 +36,7 @@
 
 #include <Scenery/scenery.h>
 #include <Scenery/obj.h>
-#include <Scenery/tilecache.h>
+#include <Scenery/tilecache.hxx>
 
 #include <Aircraft/aircraft.h>
 #include <Bucket/bucketutils.h>
@@ -219,9 +219,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.25  1998/04/18 04:14:07  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.1  1998/04/22 13:22:48  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.25  1998/04/18 04:14:07  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.24  1998/04/14 02:23:18  curt
  * Code reorganizations.  Added a Lib/ directory for more general libraries.
  *

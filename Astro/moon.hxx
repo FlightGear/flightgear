@@ -22,19 +22,20 @@
  **************************************************************************/
 
 
-#ifndef _MOON_H
-#define _MOON_H
+#ifndef _MOON_HXX
+#define _MOON_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
-#include <Astro/orbits.h>
+#include <math.h>
 
 #include <Time/fg_time.h>
-#include <math.h>
+
+#include "orbits.hxx"
 
 
 /* Initialize the Moon Display management Subsystem */
@@ -50,18 +51,16 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements Params,
 extern struct OrbElements pltOrbElements[9];
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _MOON_H */
+#endif /* _MOON_HXX */
 
 
 /* $Log$
-/* Revision 1.7  1998/04/21 17:02:30  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:21:28  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.7  1998/04/21 17:02:30  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.6  1998/02/23 19:07:54  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
  * calculation code between sun display, and other FG sections that use this

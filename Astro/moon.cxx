@@ -31,15 +31,16 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Astro/orbits.h>
-#include <Astro/moon.h>
-
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
-#include <Main/views.h>
+#include <Main/views.hxx>
 #include <Time/fg_time.h>
+
+#include "orbits.hxx"
+#include "moon.hxx"
+
 
 struct CelestialCoord moonPos;
 
@@ -213,9 +214,12 @@ void fgMoonRender( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/04/18 04:13:56  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.1  1998/04/22 13:21:28  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.9  1998/04/18 04:13:56  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.8  1998/04/03 21:52:49  curt
  * Converting to Gnu autoconf system.
  *

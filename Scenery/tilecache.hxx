@@ -28,8 +28,8 @@
 #define _TILECACHE_H
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -82,18 +82,16 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 			   struct fgCartesianPoint *local_ref );
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
 #endif /* _TILECACHE_H */
 
 
 /* $Log$
-/* Revision 1.10  1998/04/21 17:02:45  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:22:47  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.10  1998/04/21 17:02:45  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.9  1998/04/14 02:23:17  curt
  * Code reorganizations.  Added a Lib/ directory for more general libraries.
  *

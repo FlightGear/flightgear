@@ -1,5 +1,5 @@
 /**************************************************************************
- * planets.h
+ * planets.hxx
  *
  * Written 1997 by Durk Talsma, started October, 1997.  For the flight gear
  * project.
@@ -23,12 +23,12 @@
  **************************************************************************/
 
 
-#ifndef _PLANETS_H
-#define _PLANETS_H
+#ifndef _PLANETS_HXX
+#define _PLANETS_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -41,18 +41,16 @@ void fgPlanetsInit( void );
 void fgPlanetsRender( void );
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* PLANETS_H */
+#endif /* PLANETS_HXX */
 
 
 /* $Log$
-/* Revision 1.5  1998/04/21 17:02:31  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:21:32  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.5  1998/04/21 17:02:31  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.4  1998/02/12 21:59:38  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

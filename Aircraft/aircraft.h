@@ -28,13 +28,13 @@
 #define _AIRCRAFT_H
 
 
+#include <Flight/flight.h>
+#include <Controls/controls.h>
+
+
 #ifdef __cplusplus                                                          
 extern "C" {                            
 #endif                                   
-
-
-#include <Flight/flight.h>
-#include <Controls/controls.h>
 
 
 /* Define a structure containing all the parameters for an aircraft */
@@ -66,9 +66,12 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
 /* $Log$
-/* Revision 1.11  1998/04/21 17:02:27  curt
-/* Prepairing for C++ integration.
+/* Revision 1.12  1998/04/22 13:26:15  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.11  1998/04/21 17:02:27  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.10  1998/02/07 15:29:32  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>
@@ -85,9 +88,12 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
 /* $Log$
-/* Revision 1.11  1998/04/21 17:02:27  curt
-/* Prepairing for C++ integration.
+/* Revision 1.12  1998/04/22 13:26:15  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.11  1998/04/21 17:02:27  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.10  1998/02/07 15:29:32  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

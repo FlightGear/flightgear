@@ -1,5 +1,5 @@
 /**************************************************************************
- * sky.h -- model sky with an upside down "bowl"
+ * sky.hxx -- model sky with an upside down "bowl"
  *
  * Written by Curtis Olson, started December 1997.
  *
@@ -24,12 +24,12 @@
  **************************************************************************/
 
 
-#ifndef _SKY_H
-#define _SKY_H
+#ifndef _SKY_HXX
+#define _SKY_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -43,18 +43,16 @@ void fgSkyColorsInit( void );
 void fgSkyRender( void );
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _SKY_H */
+#endif /* _SKY_HXX */
 
 
 /* $Log$
-/* Revision 1.4  1998/04/21 17:02:32  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:21:33  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.4  1998/04/21 17:02:32  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.3  1998/01/22 02:59:28  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

@@ -26,11 +26,16 @@
 #ifndef _AUTOPILOT_H
 #define _AUTOPILOT_H
                        
+
 #include <Aircraft/aircraft.h>
 #include <Flight/flight.h>
 #include <Controls/controls.h>
                        
                        
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
 
 typedef struct {
 		int Mode ; // the current mode the AP is operating in
@@ -50,5 +55,10 @@ int fgAPRun( void );
 void fgAPSetMode( int mode);
 
 
+#ifdef __cplusplus
+}
 #endif
+
+
+#endif // _AUTOPILOT_H
 		

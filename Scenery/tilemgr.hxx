@@ -1,5 +1,5 @@
 /**************************************************************************
- * tilemgr.h -- routines to handle dynamic management of scenery tiles
+ * tilemgr.hxx -- routines to handle dynamic management of scenery tiles
  *
  * Written by Curtis Olson, started January 1998.
  *
@@ -24,12 +24,12 @@
  **************************************************************************/
 
 
-#ifndef _TILEMGR_H
-#define _TILEMGR_H
+#ifndef _TILEMGR_HXX
+#define _TILEMGR_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -46,18 +46,16 @@ int fgTileMgrUpdate( void );
 void fgTileMgrRender( void );
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _TILEMGR_H */
+#endif /* _TILEMGR_HXX */
 
 
 /* $Log$
-/* Revision 1.6  1998/04/21 17:02:45  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:22:49  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.6  1998/04/21 17:02:45  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.5  1998/02/12 21:59:53  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

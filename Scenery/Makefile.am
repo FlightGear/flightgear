@@ -6,8 +6,8 @@ libScenery_la_SOURCES = \
 	obj.c obj.h \
 	scenery.c scenery.h \
 	texload.c texload.h \
-	tilecache.c tilecache.h \
-	tilemgr.c tilemgr.h
+	tilecache.cxx tilecache.hxx \
+	tilemgr.cxx tilemgr.hxx
 
 INCLUDES += \
 	-I$(top_builddir) \

@@ -28,12 +28,12 @@
 #define _SCENERY_H
 
 
+#include <Include/fg_types.h>
+
+
 #ifdef __cplusplus                                                          
 extern "C" {                            
 #endif                                   
-
-
-#include <Include/fg_types.h>
 
 
 /* Define a structure containing global scenery parameters */
@@ -76,9 +76,12 @@ void fgSceneryRender( void );
 
 
 /* $Log$
-/* Revision 1.19  1998/04/21 17:02:43  curt
-/* Prepairing for C++ integration.
+/* Revision 1.20  1998/04/22 13:22:45  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.19  1998/04/21 17:02:43  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.18  1998/03/14 00:30:51  curt
  * Beginning initial terrain texturing experiments.
  *

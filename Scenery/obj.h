@@ -28,11 +28,6 @@
 #define _OBJ_H
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
-#endif                                   
-
-
 #include <config.h>
 
 #ifdef HAVE_WINDOWS_H
@@ -42,6 +37,11 @@ extern "C" {
 #include <GL/glut.h>
 
 #include <Include/fg_types.h>
+
+
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
 
 
 /* Load a .obj file and generate the GL call list */
@@ -57,9 +57,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius);
 
 
 /* $Log$
-/* Revision 1.8  1998/04/21 17:02:43  curt
-/* Prepairing for C++ integration.
+/* Revision 1.9  1998/04/22 13:22:45  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.8  1998/04/21 17:02:43  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.7  1998/04/03 22:11:37  curt
  * Converting to Gnu autoconf system.
  *

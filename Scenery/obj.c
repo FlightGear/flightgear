@@ -96,7 +96,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint tile;
-    gzFile *f;
+    gzFile f;
     int first, ncount, vncount, n1, n2, n3, n4;
     static int use_per_vertex_norms = 1;
     int winding;
@@ -398,9 +398,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.27  1998/04/18 04:13:17  curt
-/* Added zlib on the fly decompression support for loading scenery objects.
+/* Revision 1.28  1998/04/22 13:22:44  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.27  1998/04/18 04:13:17  curt
+ * Added zlib on the fly decompression support for loading scenery objects.
+ *
  * Revision 1.26  1998/04/03 22:11:36  curt
  * Converting to Gnu autoconf system.
  *

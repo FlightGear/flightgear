@@ -35,16 +35,16 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Astro/sky.h>
-
-#include <Time/event.h>
-#include <Time/fg_time.h>
-
 #include <Aircraft/aircraft.h>
 #include <Flight/flight.h>
 #include <Include/fg_constants.h>
-#include <Main/views.h>
+#include <Main/views.hxx>
 #include <Math/fg_random.h>
+#include <Time/event.h>
+#include <Time/fg_time.h>
+
+#include "sky.hxx"
+
 
 /*
 #include <Include/general.h>
@@ -351,9 +351,12 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/04/03 21:52:50  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.1  1998/04/22 13:21:32  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.9  1998/04/03 21:52:50  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.8  1998/03/09 22:47:25  curt
  * Incorporated Durk's updates.
  *

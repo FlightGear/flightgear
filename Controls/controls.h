@@ -28,12 +28,12 @@
 #define _CONTROLS_H
 
 
+#include <Include/fg_limits.h>
+
+
 #ifdef __cplusplus                                                          
 extern "C" {                            
 #endif                                   
-
-
-#include <Include/fg_limits.h>
 
 
 /* Define a structure containing the control parameters */
@@ -92,9 +92,12 @@ void fgThrottleSet(int engine, double pos);
 
 
 /* $Log$
-/* Revision 1.13  1998/04/21 17:02:35  curt
-/* Prepairing for C++ integration.
+/* Revision 1.14  1998/04/22 13:26:19  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.13  1998/04/21 17:02:35  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.12  1998/02/09 22:56:48  curt
  * Removed "depend" files from cvs control.  Other minor make tweaks.
  *

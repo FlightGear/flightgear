@@ -32,12 +32,14 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Astro/orbits.h>
-#include <Astro/planets.h>
-#include <Astro/sun.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Time/fg_time.h>
+#include <Time/light.hxx>
+
+#include "orbits.hxx"
+#include "planets.hxx"
+#include "sun.hxx"
 
 GLint planets = 0;
 
@@ -206,9 +208,12 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/04/18 04:13:57  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.1  1998/04/22 13:21:31  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.9  1998/04/18 04:13:57  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.8  1998/04/03 21:52:50  curt
  * Converting to Gnu autoconf system.
  *

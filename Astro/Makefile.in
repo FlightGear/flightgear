@@ -74,12 +74,12 @@ libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libAstro.la
 libAstro_la_SOURCES = \
-	moon.c moon.h \
-	orbits.c orbits.h \
-	planets.c planets.h \
-	sky.c sky.h \
-	stars.c stars.h \
-	sun.c sun.h
+	moon.cxx moon.hxx \
+	orbits.cxx orbits.hxx \
+	planets.cxx planets.hxx \
+	sky.cxx sky.hxx \
+	stars.cxx stars.hxx \
+	sun.cxx sun.hxx
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Include/config.h
 CONFIG_CLEAN_FILES = 
@@ -98,10 +98,10 @@ libAstro_la_LDFLAGS =
 libAstro_la_LIBADD = 
 libAstro_la_OBJECTS =  moon.lo orbits.lo planets.lo sky.lo stars.lo \
 sun.lo
-CFLAGS = @CFLAGS@
-COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
-LINK = $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(LDFLAGS) -o $@
+CXXFLAGS = @CXXFLAGS@
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
+CXXLINK = $(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@
 DIST_COMMON =  Makefile.am Makefile.in
 
 
@@ -111,13 +111,14 @@ TAR = tar
 GZIP = --best
 DEP_FILES =  .deps/moon.P .deps/orbits.P .deps/planets.P .deps/sky.P \
 .deps/stars.P .deps/sun.P
+CXXMKDEP = $(CXX) -M $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 SOURCES = $(libAstro_la_SOURCES)
 OBJECTS = $(libAstro_la_OBJECTS)
 
 all: Makefile $(LTLIBRARIES)
 
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .cxx .lo .o .s
 $(srcdir)/Makefile.in: @MAINT@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && $(AUTOMAKE) --gnu Simulator/Astro/Makefile
 
@@ -184,7 +185,11 @@ distclean-libtool:
 maintainer-clean-libtool:
 
 libAstro.la: $(libAstro_la_OBJECTS) $(libAstro_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libAstro_la_LDFLAGS) $(libAstro_la_OBJECTS) $(libAstro_la_LIBADD) $(LIBS)
+	$(CXXLINK) -rpath $(libdir) $(libAstro_la_LDFLAGS) $(libAstro_la_OBJECTS) $(libAstro_la_LIBADD) $(LIBS)
+.cxx.o:
+	$(CXXCOMPILE) -c $<
+.cxx.lo:
+	$(LTCXXCOMPILE) -c $<
 
 tags: TAGS
 
@@ -248,6 +253,17 @@ maintainer-clean-depend:
 %.lo: %.c
 	@echo '$(LTCOMPILE) -c $<'; \
 	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).p -c $<
+	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \
+	  < .deps/$(*F).p > .deps/$(*F).P
+	@-rm -f .deps/$(*F).p
+
+%.o: %.cxx
+	@echo '$(CXXCOMPILE) -c $<'; \
+	$(CXXCOMPILE) -Wp,-MD,.deps/$(*F).P -c $<
+
+%.lo: %.cxx
+	@echo '$(LTCXXCOMPILE) -c $<'; \
+	$(LTCXXCOMPILE) -Wp,-MD,.deps/$(*F).p -c $<
 	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \
 	  < .deps/$(*F).p > .deps/$(*F).P
 	@-rm -f .deps/$(*F).p

@@ -1,5 +1,5 @@
 /**************************************************************************
- * sun.h
+ * sun.hxx
  *
  * Written 1997 by Durk Talsma, started October, 1997.  For the flight gear
  * project.
@@ -23,12 +23,12 @@
  **************************************************************************/
 
 
-#ifndef _SUN_H
-#define _SUN_H
+#ifndef _SUN_HXX
+#define _SUN_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -38,25 +38,25 @@ extern fgSUNPOS solarPosition;
 void fgCalcSunPos (struct OrbElements sunParams);
 extern struct OrbElements pltOrbElements[9];
 
+
 /* Initialize the Sun */
 void fgSunInit( void );
+
 
 /* Draw the Sun */
 void fgSunRender( void );
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _SUN_H */
+#endif /* _SUN_HXX */
 
 
 /* $Log$
-/* Revision 1.6  1998/04/21 17:02:33  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:21:37  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.6  1998/04/21 17:02:33  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.5  1998/03/09 22:47:26  curt
  * Incorporated Durk's updates.
  *

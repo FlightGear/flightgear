@@ -28,17 +28,30 @@
 #define _JOYSTICK_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 int fgJoystickInit( int joy_num );
 int fgJoystickRead( double *joy_x, double *joy_y, int *joy_b1, int *joy_b2 );
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* _JOYSTICK_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/22 02:59:36  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.3  1998/04/22 13:26:21  curt
+/* C++ - ifing the code a bit.
 /*
+ * Revision 1.2  1998/01/22 02:59:36  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.1  1997/08/29 18:06:55  curt
  * Initial revision.
  *

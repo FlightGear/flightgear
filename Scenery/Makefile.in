@@ -78,8 +78,8 @@ libScenery_la_SOURCES = \
 	obj.c obj.h \
 	scenery.c scenery.h \
 	texload.c texload.h \
-	tilecache.c tilecache.h \
-	tilemgr.c tilemgr.h
+	tilecache.cxx tilecache.hxx \
+	tilemgr.cxx tilemgr.hxx
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Include/config.h
 CONFIG_CLEAN_FILES = 
@@ -98,6 +98,10 @@ libScenery_la_LDFLAGS =
 libScenery_la_LIBADD = 
 libScenery_la_OBJECTS =  obj.lo scenery.lo texload.lo tilecache.lo \
 tilemgr.lo
+CXXFLAGS = @CXXFLAGS@
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
+CXXLINK = $(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
@@ -111,13 +115,14 @@ TAR = tar
 GZIP = --best
 DEP_FILES =  .deps/obj.P .deps/scenery.P .deps/texload.P \
 .deps/tilecache.P .deps/tilemgr.P
+CXXMKDEP = $(CXX) -M $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 SOURCES = $(libScenery_la_SOURCES)
 OBJECTS = $(libScenery_la_OBJECTS)
 
 all: Makefile $(LTLIBRARIES)
 
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .cxx .lo .o .s
 $(srcdir)/Makefile.in: @MAINT@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && $(AUTOMAKE) --gnu Simulator/Scenery/Makefile
 
@@ -184,7 +189,11 @@ distclean-libtool:
 maintainer-clean-libtool:
 
 libScenery.la: $(libScenery_la_OBJECTS) $(libScenery_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libScenery_la_LDFLAGS) $(libScenery_la_OBJECTS) $(libScenery_la_LIBADD) $(LIBS)
+	$(CXXLINK) -rpath $(libdir) $(libScenery_la_LDFLAGS) $(libScenery_la_OBJECTS) $(libScenery_la_LIBADD) $(LIBS)
+.cxx.o:
+	$(CXXCOMPILE) -c $<
+.cxx.lo:
+	$(LTCXXCOMPILE) -c $<
 
 tags: TAGS
 
@@ -248,6 +257,17 @@ maintainer-clean-depend:
 %.lo: %.c
 	@echo '$(LTCOMPILE) -c $<'; \
 	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).p -c $<
+	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \
+	  < .deps/$(*F).p > .deps/$(*F).P
+	@-rm -f .deps/$(*F).p
+
+%.o: %.cxx
+	@echo '$(CXXCOMPILE) -c $<'; \
+	$(CXXCOMPILE) -Wp,-MD,.deps/$(*F).P -c $<
+
+%.lo: %.cxx
+	@echo '$(LTCXXCOMPILE) -c $<'; \
+	$(LTCXXCOMPILE) -Wp,-MD,.deps/$(*F).p -c $<
 	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \
 	  < .deps/$(*F).p > .deps/$(*F).P
 	@-rm -f .deps/$(*F).p
