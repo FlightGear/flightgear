@@ -98,8 +98,8 @@ if test "x$with_threads" = "xyes"; then
     AC_DEFINE([ENABLE_THREADS], 1, [Define to enable threaded tile paging])
     CXXFLAGS="$CXXFLAGS -D_REENTRANT"
     CFLAGS="$CFLAGS -D_REENTRANT"
-    AC_CHECK_HEADER(pthread.h)
 fi
+AC_CHECK_HEADER(pthread.h)
 AM_CONDITIONAL(WITH_THREADS, test "x$with_threads" = "xyes")
 
 # specify the plib location
@@ -204,6 +204,23 @@ base_LIBS="$LIBS"
 
 dnl Thread related checks
 AC_CHECK_LIB(pthread, pthread_exit)
+if test "x$ac_cv_lib_pthread_pthread_exit" != "xyes" \
+   -a "x$ac_cv_header_pthread_h" = "xyes"; then
+    dnl FreeBSD: System has pthread.h, but -lpthread library check
+    dnl fails.  See if we need -pthread instead of -lpthread and look
+    dnl for the functions in libc_r.
+    save_CXXFLAGS="$CXXFLAGS"
+    save_CFLAGS="$FLAGS"
+    CXXFLAGS="-pthread $CXXFLAGS"
+    CFLAGS="-pthread $FLAGS"
+    save_LIBS=$LIBS
+    AC_CHECK_LIB(c_r, pthread_exit)
+    if test "x$ac_cv_lib_c_r_pthread_exit" != "xyes"; then
+        CXXFLAGS=$save_CXXFLAGS
+        CFLAGS=$save_CFLAGS
+    fi
+    LIBS=$save_LIBS
+fi
 AC_CHECK_LIB(socket, socket)
 
 dnl check for glut location
