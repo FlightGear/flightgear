@@ -83,7 +83,7 @@ ADF::init ()
         fgGetNode("/instrumentation/adf/indicated-bearing-deg", true);
     _ident_node = fgGetNode("/instrumentation/adf/ident", true);
     _volume_node = fgGetNode("/instrumentation/adf/volume-norm", true);
-    _ident_audible = fgGetNode("/instrumentation/adf/ident-audible", true);
+    _ident_audible_node = fgGetNode("/instrumentation/adf/ident-audible", true);
     morse.init();
 }
 
@@ -155,7 +155,7 @@ ADF::update (double delta_time_sec)
 
         // adf ident sound
         double volume;
-        if ( _ident_audible->getBoolValue() )
+        if ( _ident_audible_node->getBoolValue() )
             volume = _volume_node->getDoubleValue();
         else
             volume = 0.0;
@@ -171,7 +171,7 @@ ADF::update (double delta_time_sec)
                 SG_LOG( SG_GENERAL, SG_ALERT, "Can't find adf-ident sound" );
         }
 
-        double cur_time = globals->get_time_params()->get_cur_time();
+        time_t cur_time = globals->get_time_params()->get_cur_time();
         if ( _last_ident_time < cur_time - 30 ) {
             _last_ident_time = cur_time;
             _ident_count = 0;
@@ -221,14 +221,14 @@ ADF::search (double frequency_khz, double longitude_rad,
         _ident_node->setStringValue(ident.c_str());
 
         if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
+            // stop is required! -- remove alone wouldn't stop immediately
             globals->get_soundmgr()->stop( "adf-ident" );
             globals->get_soundmgr()->remove( "adf-ident" );
         }
 
         SGSoundSample *sound;
         sound = morse.make_ident( ident, LO_FREQUENCY );
-        sound->set_volume(0);
-        _last_volume = -1;
+        sound->set_volume(_last_volume = 0);
         globals->get_soundmgr()->add( sound, "adf-ident" );
 
         int offset = (int)(sg_random() * 30.0);

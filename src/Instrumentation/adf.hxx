@@ -76,13 +76,8 @@ private:
     SGPropertyNode_ptr _in_range_node;
     SGPropertyNode_ptr _bearing_node;
     SGPropertyNode_ptr _ident_node;
-    SGPropertyNode_ptr _ident_audible;
+    SGPropertyNode_ptr _ident_audible_node;
     SGPropertyNode_ptr _volume_node;
-
-    FGMorse morse;
-    int _ident_count;
-    time_t _last_ident_time;
-    double _last_volume;
 
     double _time_before_search_sec;
 
@@ -95,6 +90,10 @@ private:
     double _transmitter_elevation_ft;
     double _transmitter_range_nm;
 
+    FGMorse morse;
+    int _ident_count;
+    time_t _last_ident_time;
+    double _last_volume;
 };
 
 
