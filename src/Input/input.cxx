@@ -479,7 +479,7 @@ FGInput::_init_joystick ()
           n_axis = num_node->getIntValue(TGT_PLATFORM,n_axis);
       }
 
-      if (n_axis >= naxes) {
+      if (n_axis >= (size_t)naxes) {
           SG_LOG(SG_INPUT, SG_DEBUG, "Dropping bindings for axis " << n_axis);
           continue;
       }
@@ -517,7 +517,7 @@ FGInput::_init_joystick ()
           n_but = num_node->getIntValue(TGT_PLATFORM,n_but);
       }
 
-      if (n_but >= nbuttons) {
+      if (n_but >= (size_t)nbuttons) {
           SG_LOG(SG_INPUT, SG_DEBUG, "Dropping bindings for button " << n_but);
           continue;
       }
