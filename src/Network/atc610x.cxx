@@ -1251,21 +1251,31 @@ bool FGATC610x::do_radio_switches() {
 
 
     // ADF buttons 
+#define CURT_HARDWARE
     fgSetInt( "/radios/kr-87/inputs/adf-btn",
               (radio_switch_data[23] & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/bfo-btn",
               (radio_switch_data[23] >> 1 & 0x01) );
-#ifdef CURT_HARDWARE
-    fgSetInt( "/radios/kr-87/inputs/frq-btn",
-              !(radio_switch_data[23] >> 2 & 0x01) );
-#else
+
     fgSetInt( "/radios/kr-87/inputs/frq-btn",
               (radio_switch_data[23] >> 2 & 0x01) );
-#endif
+
+#ifdef CURT_HARDWARE
+    fgSetInt( "/radios/kr-87/inputs/flt-et-btn",
+              !(radio_switch_data[23] >> 3 & 0x01) );
+#else
     fgSetInt( "/radios/kr-87/inputs/flt-et-btn",
               (radio_switch_data[23] >> 3 & 0x01) );
+#endif
+
+#ifdef CURT_HARDWARE
+    fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
+              !(radio_switch_data[23] >> 4 & 0x01) );
+#else
     fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
               (radio_switch_data[23] >> 4 & 0x01) );
+#endif
+
     fgSetInt( "/radios/kr-87/inputs/power-btn",
               radio_switch_data[23] >> 5 & 0x01 );
     /* cout << "adf = " << !(radio_switch_data[23] & 0x01)
@@ -1767,6 +1777,18 @@ bool FGATC610x::do_switches() {
     update_switch_matrix( board, switch_data, switch_matrix );
 
     // master switches
+#define CURT_HARDWARE
+#ifdef CURT_HARDWARE
+    fgSetBool( "/controls/engines/engine[0]/master-bat",
+               switch_matrix[board][5][1] );
+    fgSetBool( "/controls/engines/engine[1]/master-bat",
+               switch_matrix[board][5][1] );
+
+    fgSetBool( "/controls/engines/engine[0]/master-alt",
+               switch_matrix[board][4][1] );
+    fgSetBool( "/controls/engines/engine[1]/master-alt",
+               switch_matrix[board][4][1] );
+#else
     fgSetBool( "/controls/engines/engine[0]/master-bat",
                switch_matrix[board][4][1] );
     fgSetBool( "/controls/engines/engine[1]/master-bat",
@@ -1776,6 +1798,7 @@ bool FGATC610x::do_switches() {
                switch_matrix[board][5][1] );
     fgSetBool( "/controls/engines/engine[1]/master-alt",
                switch_matrix[board][5][1] );
+#endif
 
     fgSetBool( "/controls/switches/master-avionics",
                switch_matrix[board][0][3] );

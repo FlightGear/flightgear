@@ -299,7 +299,8 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
 
     // Control surface positions (normalized values)
     result.fdm.elevator = weight( fdm1.elevator, fdm2.elevator, ratio );
-    result.fdm.flaps = weight( fdm1.flaps, fdm2.flaps, ratio );
+    result.fdm.left_flap = weight( fdm1.left_flap, fdm2.left_flap, ratio );
+    result.fdm.right_flap = weight( fdm1.right_flap, fdm2.right_flap, ratio );
     result.fdm.left_aileron
         = weight( fdm1.left_aileron, fdm2.left_aileron, ratio );
     result.fdm.right_aileron

@@ -205,7 +205,9 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     net->elevator = node->getDoubleValue( "elevator-pos-norm" );
     net->elevator_trim_tab
         = node->getDoubleValue( "elevator-trim-tab-pos-norm" );
-    net->flaps = node->getDoubleValue( "flap-pos-norm" );
+    // FIXME: CLO 10/28/04 - This really should be separated out into 2 values
+    net->left_flap = node->getDoubleValue( "flap-pos-norm" );
+    net->right_flap = node->getDoubleValue( "flap-pos-norm" );
     net->left_aileron = node->getDoubleValue( "left-aileron-pos-norm" );
     net->right_aileron = node->getDoubleValue( "right-aileron-pos-norm" );
     net->rudder = node->getDoubleValue( "rudder-pos-norm" );
@@ -276,7 +278,8 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
 
         htonf(net->elevator);
         htonf(net->elevator_trim_tab);
-        htonf(net->flaps);
+        htonf(net->left_flap);
+        htonf(net->right_flap);
         htonf(net->left_aileron);
         htonf(net->right_aileron);
         htonf(net->rudder);
@@ -353,7 +356,8 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 
         htonf(net->elevator);
         htonf(net->elevator_trim_tab);
-        htonf(net->flaps);
+        htonf(net->left_flap);
+        htonf(net->right_flap);
         htonf(net->left_aileron);
         htonf(net->right_aileron);
         htonf(net->rudder);
@@ -457,7 +461,10 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         node->setDoubleValue("elevator-pos-norm", net->elevator);
         node->setDoubleValue("elevator-trim-tab-pos-norm",
                              net->elevator_trim_tab);
-        node->setDoubleValue("flap-pos-norm", net->flaps);
+	// FIXME: CLO 10/28/04 - This really should be separated out
+	// into 2 values
+        node->setDoubleValue("flap-pos-norm", net->left_flap);
+        node->setDoubleValue("flap-pos-norm", net->right_flap);
         node->setDoubleValue("left-aileron-pos-norm", net->left_aileron);
         node->setDoubleValue("right-aileron-pos-norm", net->right_aileron);
         node->setDoubleValue("rudder-pos-norm", net->rudder);
