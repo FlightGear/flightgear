@@ -48,12 +48,6 @@
 FGAutopilot *current_autopilot;
 
 
-// Climb speed constants
-// const double min_climb = 70.0;	// kts
-// const double best_climb = 75.0;	// kts
-// const double ideal_climb_rate = 500.0 * SG_FEET_TO_METER; // fpm -> mpm
-// const double ideal_decent_rate = 1000.0 * SG_FEET_TO_METER; // fpm -> mpm
-
 /// These statics will eventually go into the class
 /// they are just here while I am experimenting -- NHV :-)
 // AutoPilot Gain Adjuster members
@@ -72,38 +66,6 @@ extern char *coord_format_lon(float);
 // constructor
 FGAutopilot::FGAutopilot()
 {
-    TargetClimbRate
-        = fgGetNode("/autopilot/config/target-climb-rate-fpm", true);
-    TargetDescentRate
-        = fgGetNode("/autopilot/config/target-descent-rate-fpm", true);
-    min_climb = fgGetNode("/autopilot/config/min-climb-speed-kt", true);
-    best_climb = fgGetNode("/autopilot/config/best-climb-speed-kt", true);
-    elevator_adj_factor
-        = fgGetNode("/autopilot/config/elevator-adj-factor", true);
-    integral_contrib
-        = fgGetNode("/autopilot/config/integral-contribution", true);
-    zero_pitch_throttle
-        = fgGetNode("/autopilot/config/zero-pitch-throttle", true);
-    zero_pitch_trim_full_throttle
-        = fgGetNode("/autopilot/config/zero-pitch-trim-full-throttle", true);
-    current_throttle = fgGetNode("/controls/throttle");
-    // initialize with defaults (in case config isn't there)
-    if ( TargetClimbRate->getFloatValue() < 1 )
-        fgSetFloat( "/autopilot/config/target-climb-rate-fpm", 500);
-    if ( TargetDescentRate->getFloatValue() < 1 )
-        fgSetFloat( "/autopilot/config/target-descent-rate-fpm", 1000 );
-    if ( min_climb->getFloatValue() < 1)
-        fgSetFloat( "/autopilot/config/min-climb-speed-kt", 70 );
-    if (best_climb->getFloatValue() < 1)
-        fgSetFloat( "/autopilot/config/best-climb-speed-kt", 120 );
-    if (elevator_adj_factor->getFloatValue() < 1)
-        fgSetFloat( "/autopilot/config/elevator-adj-factor", 5000 );
-    if ( integral_contrib->getFloatValue() < 0.0000001 )
-        fgSetFloat( "/autopilot/config/integral-contribution", 0.01 );
-    if ( zero_pitch_throttle->getFloatValue() < 0.0000001 )
-        fgSetFloat( "/autopilot/config/zero-pitch-throttle", 0.60 );
-    if ( zero_pitch_trim_full_throttle->getFloatValue() < 0.0000001 )
-        fgSetFloat( "/autopilot/config/zero-pitch-trim-full-throttle", 0.15 );
 }
 
 // destructor
@@ -249,6 +211,43 @@ void FGAutopilot::update_old_control_values() {
 void FGAutopilot::init() {
     SG_LOG( SG_AUTOPILOT, SG_INFO, "Init AutoPilot Subsystem" );
 
+    // Autopilot control property static get/set bindings
+    fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
+    fgSetArchivable("/autopilot/locks/altitude");
+    fgTie("/autopilot/settings/altitude-ft", getAPAltitude, setAPAltitude);
+    fgSetArchivable("/autopilot/settings/altitude-ft");
+    fgTie("/autopilot/locks/glide-slope", getAPGSLock, setAPGSLock);
+    fgSetDouble("/autopilot/settings/altitude-ft", 3000.0f);
+    fgSetArchivable("/autopilot/locks/glide-slope");
+    fgTie("/autopilot/locks/terrain", getAPTerrainLock, setAPTerrainLock);
+    fgSetArchivable("/autopilot/locks/terrain");
+    fgTie("/autopilot/settings/climb-rate-fpm", getAPClimb, setAPClimb, false);
+    fgSetArchivable("/autopilot/settings/climb-rate-fpm");
+    fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
+    fgSetArchivable("/autopilot/locks/heading");
+    fgTie("/autopilot/settings/heading-bug-deg",
+	getAPHeadingBug, setAPHeadingBug);
+    fgSetArchivable("/autopilot/settings/heading-bug-deg");
+    fgSetDouble("/autopilot/settings/heading-bug-deg", 0.0f);
+    fgTie("/autopilot/locks/wing-leveler", getAPWingLeveler, setAPWingLeveler);
+    fgSetArchivable("/autopilot/locks/wing-leveler");
+    fgTie("/autopilot/locks/nav[0]", getAPNAV1Lock, setAPNAV1Lock);
+    fgSetArchivable("/autopilot/locks/nav[0]");
+    fgTie("/autopilot/locks/auto-throttle",
+  	getAPAutoThrottleLock, setAPAutoThrottleLock);
+    fgSetArchivable("/autopilot/locks/auto-throttle");
+    fgTie("/autopilot/control-overrides/rudder",
+	getAPRudderControl, setAPRudderControl);
+    fgSetArchivable("/autopilot/control-overrides/rudder");
+    fgTie("/autopilot/control-overrides/elevator",
+	getAPElevatorControl, setAPElevatorControl);
+    fgSetArchivable("/autopilot/control-overrides/elevator");
+    fgTie("/autopilot/control-overrides/throttle",
+	getAPThrottleControl, setAPThrottleControl);
+    fgSetArchivable("/autopilot/control-overrides/throttle");
+
+
+    // bind data input property nodes...
     latitude_node = fgGetNode("/position/latitude-deg", true);
     longitude_node = fgGetNode("/position/longitude-deg", true);
     altitude_node = fgGetNode("/position/altitude-ft", true);
@@ -256,14 +255,52 @@ void FGAutopilot::init() {
     vertical_speed_node = fgGetNode("/velocities/vertical-speed-fps", true);
     heading_node = fgGetNode("/orientation/heading-deg", true);
     roll_node = fgGetNode("/orientation/roll-deg", true);
+    pitch_node = fgGetNode("/orientation/pitch-deg", true);
 
+    // bind config property nodes...
+    TargetClimbRate
+        = fgGetNode("/autopilot/config/target-climb-rate-fpm", true);
+    TargetDescentRate
+        = fgGetNode("/autopilot/config/target-descent-rate-fpm", true);
+    min_climb = fgGetNode("/autopilot/config/min-climb-speed-kt", true);
+    best_climb = fgGetNode("/autopilot/config/best-climb-speed-kt", true);
+    elevator_adj_factor
+        = fgGetNode("/autopilot/config/elevator-adj-factor", true);
+    integral_contrib
+        = fgGetNode("/autopilot/config/integral-contribution", true);
+    zero_pitch_throttle
+        = fgGetNode("/autopilot/config/zero-pitch-throttle", true);
+    zero_pitch_trim_full_throttle
+        = fgGetNode("/autopilot/config/zero-pitch-trim-full-throttle", true);
+    current_throttle = fgGetNode("/controls/throttle");
+
+    // initialize config properties with defaults (in case config isn't there)
+    if ( TargetClimbRate->getFloatValue() < 1 )
+        fgSetFloat( "/autopilot/config/target-climb-rate-fpm", 500);
+    if ( TargetDescentRate->getFloatValue() < 1 )
+        fgSetFloat( "/autopilot/config/target-descent-rate-fpm", 1000 );
+    if ( min_climb->getFloatValue() < 1)
+        fgSetFloat( "/autopilot/config/min-climb-speed-kt", 70 );
+    if (best_climb->getFloatValue() < 1)
+        fgSetFloat( "/autopilot/config/best-climb-speed-kt", 120 );
+    if (elevator_adj_factor->getFloatValue() < 1)
+        fgSetFloat( "/autopilot/config/elevator-adj-factor", 5000 );
+    if ( integral_contrib->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/integral-contribution", 0.01 );
+    if ( zero_pitch_throttle->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/zero-pitch-throttle", 0.60 );
+    if ( zero_pitch_trim_full_throttle->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/zero-pitch-trim-full-throttle", 0.15 );
+
+    /* set defaults */
     heading_hold = false ;      // turn the heading hold off
     altitude_hold = false ;     // turn the altitude hold off
     auto_throttle = false ;	// turn the auto throttle off
     heading_mode = DEFAULT_AP_HEADING_LOCK;
 
-    sg_srandom_time();
-    DGTargetHeading = sg_random() * 360.0;
+    DGTargetHeading = fgGetDouble("/autopilot/settings/heading-bug-deg");
+    TargetHeading = fgGetDouble("/autopilot/settings/heading-bug-deg");
+    TargetAltitude = fgGetDouble("/autopilot/settings/altitude-ft") * SG_FEET_TO_METER;
 
     // Initialize target location to startup location
     old_lat = latitude_node->getDoubleValue();
@@ -272,8 +309,6 @@ void FGAutopilot::init() {
 
     MakeTargetLatLonStr( get_TargetLatitude(), get_TargetLongitude() );
 	
-    TargetHeading = 0.0;	// default direction, due north
-    TargetAltitude = 3000;	// default altitude in meters
     alt_error_accum = 0.0;
     climb_error_accum = 0.0;
 
@@ -726,11 +761,11 @@ int FGAutopilot::run() {
             + (double) integral_contrib->getFloatValue() * int_adj;
 
         // stop on autopilot trim at 30% +/-
-	if ( total_adj > 0.3 ) {
-	     total_adj = 0.3;
-	 } else if ( total_adj < -0.3 ) {
-	     total_adj = -0.3;
-	 }
+//	if ( total_adj > 0.3 ) {
+//	     total_adj = 0.3;
+//	 } else if ( total_adj < -0.3 ) {
+//	     total_adj = -0.3;
+//	 }
 
         // adjust for throttle pitch gain
         total_adj += ((current_throttle->getFloatValue() - zero_pitch_throttle->getFloatValue())

@@ -50,8 +50,10 @@ public:
 	FG_ALTITUDE_LOCK = 0,     // lock to a specific altitude
 	FG_ALTITUDE_TERRAIN = 1,  // try to maintain a specific AGL
 	FG_ALTITUDE_GS1 = 2,      // follow glide slope 1
-	FG_ALTITUDE_GS2 = 3       // follow glide slope 2
+	FG_ALTITUDE_GS2 = 3,      // follow glide slope 2
+        FG_ALTITUDE_ARM = 4       // ascend to selected altitude
     };
+
 
 private:
 
@@ -71,16 +73,7 @@ private:
     double TargetHeading;	// the true heading the AP should steer to.
     double TargetAltitude;	// altitude to hold
     double TargetAGL;		// the terrain separation
-    SGPropertyNode *min_climb;           // minimum climb speed
-    SGPropertyNode *best_climb;          // best climb speed
-    SGPropertyNode *elevator_adj_factor; // factor to optimize altitude hold adjustments
-    SGPropertyNode *integral_contrib;    // amount of contribution of the integral
-                                // component of the pid
-    SGPropertyNode *zero_pitch_throttle; // amount of throttle at which the aircraft does not pitch up
-    SGPropertyNode *zero_pitch_trim_full_throttle; // amount of trim required to level at full throttle
-    SGPropertyNode *TargetClimbRate;	// target climb rate
-    SGPropertyNode *TargetDescentRate;	// target decent rate
-    SGPropertyNode *current_throttle; // current throttle (engine 0)
+
     double TargetSpeed;		// speed to shoot for
     double alt_error_accum;     // altitude error accumulator
     double climb_error_accum;	// climb error accumulator (for GS)
@@ -120,6 +113,7 @@ private:
     char TargetHeadingStr[64];
     char TargetAltitudeStr[64];
 
+    // property nodes
     SGPropertyNode *latitude_node;
     SGPropertyNode *longitude_node;
     SGPropertyNode *altitude_node;
@@ -127,6 +121,18 @@ private:
     SGPropertyNode *vertical_speed_node;
     SGPropertyNode *heading_node;
     SGPropertyNode *roll_node;
+    SGPropertyNode *pitch_node;
+
+    SGPropertyNode *min_climb;           // minimum climb speed
+    SGPropertyNode *best_climb;          // best climb speed
+    SGPropertyNode *elevator_adj_factor; // factor to optimize altitude hold adjustments
+    SGPropertyNode *integral_contrib;    // amount of contribution of the integral
+                                // component of the pid
+    SGPropertyNode *zero_pitch_throttle; // amount of throttle at which the aircraft does not pitch up
+    SGPropertyNode *zero_pitch_trim_full_throttle; // amount of trim required to level at full throttle
+    SGPropertyNode *TargetClimbRate;	// target climb rate
+    SGPropertyNode *TargetDescentRate;	// target decent rate
+    SGPropertyNode *current_throttle; // current throttle (engine 0)
 
 public:
 
@@ -228,5 +234,310 @@ extern FGAutopilot *current_autopilot;
 
 #define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_DG_HEADING_LOCK
 // #define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_TRUE_HEADING_LOCK
+
+
+/**
+ * static functions for autopilot properties
+ */
+
+/**
+ * Get the autopilot altitude lock (true=on).
+ */
+static bool
+getAPAltitudeLock ()
+{
+    return (current_autopilot->get_AltitudeEnabled() &&
+	    current_autopilot->get_AltitudeMode()
+	    == FGAutopilot::FG_ALTITUDE_LOCK);
+}
+
+
+/**
+ * Set the autopilot altitude lock (true=on).
+ */
+static void
+setAPAltitudeLock (bool lock)
+{
+  if (lock)
+    current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_LOCK);
+  if (current_autopilot->get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_LOCK)
+    current_autopilot->set_AltitudeEnabled(lock);
+}
+
+
+/**
+ * Get the autopilot target altitude in feet.
+ */
+static double
+getAPAltitude ()
+{
+  return current_autopilot->get_TargetAltitude() * SG_METER_TO_FEET;
+}
+
+
+/**
+ * Set the autopilot target altitude in feet.
+ */
+static void
+setAPAltitude (double altitude)
+{
+  current_autopilot->set_TargetAltitude( altitude * SG_FEET_TO_METER );
+}
+
+/**
+ * Get the autopilot altitude lock (true=on).
+ */
+static bool
+getAPGSLock ()
+{
+    return (current_autopilot->get_AltitudeEnabled() &&
+	    (current_autopilot->get_AltitudeMode()
+	     == FGAutopilot::FG_ALTITUDE_GS1));
+}
+
+
+/**
+ * Set the autopilot altitude lock (true=on).
+ */
+static void
+setAPGSLock (bool lock)
+{
+  if (lock)
+    current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_GS1);
+  if (current_autopilot->get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_GS1)
+    current_autopilot->set_AltitudeEnabled(lock);
+}
+
+
+/**
+ * Get the autopilot terrain lock (true=on).
+ */
+static bool
+getAPTerrainLock ()
+{
+    return (current_autopilot->get_AltitudeEnabled() &&
+	    (current_autopilot->get_AltitudeMode()
+	     == FGAutopilot::FG_ALTITUDE_TERRAIN));
+}
+
+
+/**
+ * Set the autopilot terrain lock (true=on).
+ */
+static void
+setAPTerrainLock (bool lock)
+{
+  if (lock) {
+    current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_TERRAIN);
+    current_autopilot
+      ->set_TargetAGL(fgGetFloat("/position/altitude-agl-ft") *
+		      SG_FEET_TO_METER);
+    cout << "Target AGL = "
+	 << fgGetFloat("/position/altitude-agl-ft") * SG_FEET_TO_METER
+	 << endl;
+  }
+  if (current_autopilot->get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_TERRAIN)
+    current_autopilot->set_AltitudeEnabled(lock);
+}
+
+
+/**
+ * Get the autopilot target altitude in feet.
+ */
+static double
+getAPClimb ()
+{
+  return current_autopilot->get_TargetClimbRate() * SG_METER_TO_FEET;
+}
+
+
+/**
+ * Set the autopilot target altitude in feet.
+ */
+static void
+setAPClimb (double rate)
+{
+    current_autopilot->set_TargetClimbRate( rate * SG_FEET_TO_METER );
+}
+
+
+/**
+ * Get the autopilot heading lock (true=on).
+ */
+static bool
+getAPHeadingLock ()
+{
+    return
+      (current_autopilot->get_HeadingEnabled() &&
+       current_autopilot->get_HeadingMode() == DEFAULT_AP_HEADING_LOCK);
+}
+
+
+/**
+ * Set the autopilot heading lock (true=on).
+ */
+static void
+setAPHeadingLock (bool lock)
+{
+  if (lock)
+    current_autopilot->set_HeadingMode(DEFAULT_AP_HEADING_LOCK);
+  if (current_autopilot->get_HeadingMode() == DEFAULT_AP_HEADING_LOCK)
+    current_autopilot->set_HeadingEnabled(lock);
+}
+
+
+/**
+ * Get the autopilot heading bug in degrees.
+ */
+static double
+getAPHeadingBug ()
+{
+  return current_autopilot->get_DGTargetHeading();
+}
+
+
+/**
+ * Set the autopilot heading bug in degrees.
+ */
+static void
+setAPHeadingBug (double heading)
+{
+  current_autopilot->set_DGTargetHeading( heading );
+}
+
+
+/**
+ * Get the autopilot wing leveler lock (true=on).
+ */
+static bool
+getAPWingLeveler ()
+{
+    return
+      (current_autopilot->get_HeadingEnabled() &&
+       current_autopilot->get_HeadingMode() == FGAutopilot::FG_TC_HEADING_LOCK);
+}
+
+
+/**
+ * Set the autopilot wing leveler lock (true=on).
+ */
+static void
+setAPWingLeveler (bool lock)
+{
+    if (lock)
+	current_autopilot->set_HeadingMode(FGAutopilot::FG_TC_HEADING_LOCK);
+    if (current_autopilot->get_HeadingMode() == FGAutopilot::FG_TC_HEADING_LOCK)
+      current_autopilot->set_HeadingEnabled(lock);
+}
+
+/**
+ * Return true if the autopilot is locked to NAV1.
+ */
+static bool
+getAPNAV1Lock ()
+{
+  return
+    (current_autopilot->get_HeadingEnabled() &&
+     current_autopilot->get_HeadingMode() == FGAutopilot::FG_HEADING_NAV1);
+}
+
+
+/**
+ * Set the autopilot NAV1 lock.
+ */
+static void
+setAPNAV1Lock (bool lock)
+{
+  if (lock)
+    current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_NAV1);
+  if (current_autopilot->get_HeadingMode() == FGAutopilot::FG_HEADING_NAV1)
+    current_autopilot->set_HeadingEnabled(lock);
+}
+
+/**
+ * Get the autopilot autothrottle lock.
+ */
+static bool
+getAPAutoThrottleLock ()
+{
+  return current_autopilot->get_AutoThrottleEnabled();
+}
+
+
+/**
+ * Set the autothrottle lock.
+ */
+static void
+setAPAutoThrottleLock (bool lock)
+{
+  current_autopilot->set_AutoThrottleEnabled(lock);
+}
+
+
+// kludge
+static double
+getAPRudderControl ()
+{
+    if (getAPHeadingLock())
+        return current_autopilot->get_TargetHeading();
+    else
+        return globals->get_controls()->get_rudder();
+}
+
+// kludge
+static void
+setAPRudderControl (double value)
+{
+    if (getAPHeadingLock()) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "setAPRudderControl " << value );
+        value -= current_autopilot->get_TargetHeading();
+        current_autopilot->HeadingAdjust(value < 0.0 ? -1.0 : 1.0);
+    } else {
+        globals->get_controls()->set_rudder(value);
+    }
+}
+
+// kludge
+static double
+getAPElevatorControl ()
+{
+  if (getAPAltitudeLock())
+      return current_autopilot->get_TargetAltitude();
+  else
+    return globals->get_controls()->get_elevator();
+}
+
+// kludge
+static void
+setAPElevatorControl (double value)
+{
+    if (value != 0 && getAPAltitudeLock()) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "setAPElevatorControl " << value );
+        value -= current_autopilot->get_TargetAltitude();
+        current_autopilot->AltitudeAdjust(value < 0.0 ? 100.0 : -100.0);
+    } else {
+        globals->get_controls()->set_elevator(value);
+    }
+}
+
+// kludge
+static double
+getAPThrottleControl ()
+{
+  if (getAPAutoThrottleLock())
+    return 0.0;			// always resets
+  else
+    return globals->get_controls()->get_throttle(0);
+}
+
+// kludge
+static void
+setAPThrottleControl (double value)
+{
+  if (getAPAutoThrottleLock())
+    current_autopilot->AutoThrottleAdjust(value < 0.0 ? -0.01 : 0.01);
+  else
+    globals->get_controls()->set_throttle(FGControls::ALL_ENGINES, value);
+}
 
 #endif // _NEWAUTO_HXX
