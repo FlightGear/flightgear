@@ -43,11 +43,7 @@ $do_fixobj =     1;
 # set the FG_ROOT environment variable if it hasn't already been set.
 if ( $ENV{FG_ROOT} eq "" ) {
     # look for a file called fgtop as a place marker
-    if ( -e "fgtop" ) {
-        $ENV{FG_ROOT} = ".";
-    } elsif ( -e "../fgtop" ) {
-        $ENV{FG_ROOT} = "..";
-    }
+    die "You must remember to set the FG_ROOT environment variable!\n";
 }
 
 
@@ -124,11 +120,7 @@ sub file_root {
 #     irregularly fitted vertices
 
 sub dem2node {
-    if ( $dem_file =~ m/.gz$/ ) {
-	$command = "gzip -dc $dem_file | Dem2node/dem2node $ENV{FG_ROOT} - $error";
-    } else {
-	$command = "Dem2node/dem2node $ENV{FG_ROOT} $dem_file $error";
-    }
+    $command = "Dem2node/dem2node $ENV{FG_ROOT} $dem_file $error";
     $command = fix_command($command);
     print "Running '$command'\n";
 
@@ -179,11 +171,7 @@ sub triangle_1 {
 #     fixed file.1.node
 
 sub fixnode {
-    if ( $dem_file =~ m/.gz$/ ) {
-	$command = "gzip -dc $dem_file | FixNode/fixnode - $subdir";
-    } else {
-	$command = "FixNode/fixnode $dem_file $subdir";
-    }
+    $command = "FixNode/fixnode $dem_file $subdir";
     $command = fix_command($command);
     print "Running '$command'\n";
     open(OUT, "$command |");
@@ -387,6 +375,9 @@ sub fixobj {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.16  1998/04/18 03:57:53  curt
+# Added zlib library support.
+#
 # Revision 1.15  1998/04/08 23:24:07  curt
 # Adopted Gnu automake/autoconf system.
 #
