@@ -23,20 +23,37 @@ SG_USING_STD(vector);
 static void
 action_callback (puObject * object)
 {
-    GUIData * action = (GUIData *)object->getUserData();
-    action->widget->action(action->command);
+    GUIInfo * info = (GUIInfo *)object->getUserData();
+    NewGUI * gui =
+        (NewGUI *)globals->get_subsystem_mgr()
+          ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
+    gui->setCurrentWidget(info->widget);
+    for (int i = 0; i < info->bindings.size(); i++) {
+        std::cerr << "Firing binding " << i << ": " << info->bindings[i]->getCommandName() << std::endl;
+        info->bindings[i]->fire();
+        std::cerr << "done\n";
+    }
+    std::cerr << "All bindings fired\n";
+    gui->setCurrentWidget(0);
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of GUIData.
+// Implementation of GUIInfo.
 ////////////////////////////////////////////////////////////////////////
 
-GUIData::GUIData (GUIWidget * w, const char * c)
-    : widget(w),
-      command(c)
+GUIInfo::GUIInfo (GUIWidget * w)
+    : widget(w)
 {
+}
+
+GUIInfo::~GUIInfo ()
+{
+    for (int i = 0; i < bindings.size(); i++) {
+        delete bindings[i];
+        bindings[i] = 0;
+    }
 }
 
 
@@ -53,7 +70,60 @@ GUIWidget::GUIWidget (SGPropertyNode_ptr props)
 
 GUIWidget::~GUIWidget ()
 {
+    std::cerr << "Destroying widget\n";
     delete _object;
+
+    int i;
+    for (i = 0; i < _info.size(); i++) {
+        delete _info[i];
+        _info[i] = 0;
+    }
+
+    for (i = 0; i < _propertyObjects.size(); i++) {
+        delete _propertyObjects[i];
+        _propertyObjects[i] = 0;
+    }
+}
+
+void
+GUIWidget::updateValue (const char * objectName)
+{
+    for (int i = 0; i < _propertyObjects.size(); i++) {
+        if (_propertyObjects[i]->name == objectName)
+            _propertyObjects[i]->object
+                ->setValue(_propertyObjects[i]->node->getStringValue());
+    }
+}
+
+void
+GUIWidget::applyValue (const char * objectName)
+{
+    for (int i = 0; i < _propertyObjects.size(); i++) {
+        if (_propertyObjects[i]->name == objectName)
+            _propertyObjects[i]->node
+                ->setStringValue(_propertyObjects[i]
+                                 ->object->getStringValue());
+    }
+}
+
+void
+GUIWidget::updateValues ()
+{
+    for (int i = 0; i < _propertyObjects.size(); i++) {
+        puObject * object = _propertyObjects[i]->object;
+        SGPropertyNode_ptr node = _propertyObjects[i]->node;
+        object->setValue(node->getStringValue());
+    }
+}
+
+void
+GUIWidget::applyValues ()
+{
+    for (int i = 0; i < _propertyObjects.size(); i++) {
+        puObject * object = _propertyObjects[i]->object;
+        SGPropertyNode_ptr node = _propertyObjects[i]->node;
+        node->setStringValue(object->getStringValue());
+    }
 }
 
 void
@@ -72,42 +142,6 @@ GUIWidget::display (SGPropertyNode_ptr props)
         SG_LOG(SG_GENERAL, SG_ALERT, "Widget "
                << props->getStringValue("name", "[unnamed]")
                << " does not contain a proper GUI definition");
-    }
-}
-
-void
-GUIWidget::action (const string &command)
-{
-    if (command == "close") {
-        delete this;
-    } else if (command == "apply") {
-        applyProperties();
-        updateProperties();
-    } else if (command == "update") {
-        updateProperties();
-    } else if (command == "close-apply") {
-        applyProperties();
-        delete this;
-    }
-}
-
-void
-GUIWidget::applyProperties ()
-{
-    for (int i = 0; i < _propertyObjects.size(); i++) {
-        puObject * object = _propertyObjects[i].object;
-        SGPropertyNode_ptr node = _propertyObjects[i].node;
-        node->setStringValue(object->getStringValue());
-    }
-}
-
-void
-GUIWidget::updateProperties ()
-{
-    for (int i = 0; i < _propertyObjects.size(); i++) {
-        puObject * object = _propertyObjects[i].object;
-        SGPropertyNode_ptr node = _propertyObjects[i].node;
-        object->setValue(node->getStringValue());
     }
 }
 
@@ -171,17 +205,26 @@ GUIWidget::setupObject (puObject * object, SGPropertyNode * props)
     if (props->hasValue("label"))
         object->setLabel(props->getStringValue("label"));
 
-    if (props->hasValue("default-value-prop")) {
-        const char * name = props->getStringValue("default-value-prop");
-        SGPropertyNode_ptr node = fgGetNode(name, true);
+    if (props->hasValue("property")) {
+        const char * name = props->getStringValue("name");
+        if (name == 0)
+            name = "";
+        const char * propname = props->getStringValue("property");
+        SGPropertyNode_ptr node = fgGetNode(propname, true);
         object->setValue(node->getStringValue());
-        _propertyObjects.push_back(PropertyObject(object, node));
+        if (name != 0)
+            _propertyObjects.push_back(new PropertyObject(name, object, node));
     }
 
-    if (props->hasValue("action")) {
-        _actions.push_back(GUIData(this, props->getStringValue("action")));
-        object->setUserData(&_actions[_actions.size()-1]);
+    vector<SGPropertyNode_ptr> nodes = props->getChildren("binding");
+    if (nodes.size() > 0) {
+        GUIInfo * info = new GUIInfo(this);
+
+        for (int i = 0; i < nodes.size(); i++)
+            info->bindings.push_back(new FGBinding(nodes[i]));
         object->setCallback(action_callback);
+        object->setUserData(info);
+        _info.push_back(info);
     }
 
     object->makeReturnDefault(props->getBoolValue("default"));
@@ -202,9 +245,12 @@ GUIWidget::setupGroup (puGroup * group, SGPropertyNode * props,
     group->close();
 }
 
-GUIWidget::PropertyObject::PropertyObject (puObject * o, SGPropertyNode_ptr n)
-    : object(o),
-      node(n)
+GUIWidget::PropertyObject::PropertyObject (const char * n,
+                                           puObject * o,
+                                           SGPropertyNode_ptr p)
+    : name(n),
+      object(o),
+      node(p)
 {
 }
 
@@ -216,6 +262,7 @@ GUIWidget::PropertyObject::PropertyObject (puObject * o, SGPropertyNode_ptr n)
 
 
 NewGUI::NewGUI ()
+    : _current_widget(0)
 {
 }
 
@@ -243,7 +290,19 @@ NewGUI::display (const string &name)
     if (_widgets.find(name) == _widgets.end())
         SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name << " not defined");
     else
-        new GUIWidget(_widgets[name]); // PUI will delete it
+        new GUIWidget(_widgets[name]);
+}
+
+void
+NewGUI::setCurrentWidget (GUIWidget * widget)
+{
+    _current_widget = widget;
+}
+
+GUIWidget *
+NewGUI::getCurrentWidget ()
+{
+    return _current_widget;
 }
 
 void
