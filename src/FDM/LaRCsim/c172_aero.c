@@ -239,14 +239,15 @@ void aero( SCALAR dt, int Initialize ) {
   {  Weight=1500; }
   
   
-  if(Dx_cg > 0.5586)
-  {  Dx_cg = 0.5586; }
-  else if(Dx_cg < -0.4655)
-  {  Dx_cg = -0.4655; }
+  if(Dx_cg > 0.43)
+  {  Dx_cg = 0.43; }
+  else if(Dx_cg < -0.6)
+  {  Dx_cg = -0.6; }
   
-  Cg=Dx_cg/cbar +0.25;
+  Cg=0.25 - Dx_cg/cbar;
   
   Dz_cg=Zcg*cbar;
+  Dy_cg=0;
   
 
   if(Flap_handle < flap_ind[0])

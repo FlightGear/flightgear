@@ -38,9 +38,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
-
-
 void do_trims(int kmax,FILE *out,InitialConditions IC)
 {
 	int bad_trim=0,i,j;
@@ -216,14 +213,77 @@ int fgLaRCsimInit(double dt) {
     return(1);
 }
 
-
+int wave_stats(float *var,float *var_rate,int N,FILE *out)
+{	
+	int Nc,i,Nmaxima;
+	float varmax,slope,intercept,time,ld,zeta,omegad,omegan;
+	float varmaxima[100],vm_times[100];
+	/*adjust N so that any constant slope region at the end is cut off */
+	i=N;
+	while((fabs(var_rate[N]-var_rate[i]) < 0.1) && (i >= 0))
+	{ 
+       i--;
+	}
+	Nc=N-i;
+	slope=(var[N]-var[Nc])/(N*0.01 - Nc*0.01);
+	intercept=var[N]-slope*N*0.01;
+	printf("\tRotating constant decay out of data using:\n");
+	printf("\tslope: %g, intercept: %g\n",slope,intercept);	
+	printf("\tUsing first %d points for dynamic response analysis\n",Nc);
+	varmax=0;
+	Nmaxima=0;i=0;
+	while((i <= Nc) && (i <= 801))
+	{
+		
+		fprintf(out,"%g\t%g",i*0.01,var[i]);
+		var[i]-=slope*i*0.01+intercept;
+		/* printf("%g\n",var[i]); */
+        fprintf(out,"\t%g\n",var[i]);
+		if(var[i] > varmax)
+	    {
+		   varmax=var[i];
+		   time=i*0.01;
+		   
+		}   
+	    if((var[i-1]*var[i] < 0) && (var[i] > 0))
+		{
+		   varmaxima[Nmaxima]=varmax;
+		   vm_times[Nmaxima]=time;
+		   printf("\t%6.2f: %8.4f\n",vm_times[Nmaxima],varmaxima[Nmaxima]);
+		   varmax=0;Nmaxima++;
+		   
+		}   
+		
+		i++;
+    }	  			
+	varmaxima[Nmaxima]=varmax;
+    vm_times[Nmaxima]=time;
+    Nmaxima++;
+	if(Nmaxima > 2)
+	{
+	  ld=log(varmaxima[1]/varmaxima[2]);   //logarithmic decrement
+	  zeta=ld/sqrt(4*PI*PI +ld*ld);        //damping ratio
+	  omegad=1/(vm_times[2]-vm_times[1]);  //damped natural frequency Hz
+	  if(zeta < 1)
+	  {
+	  	omegan=omegad/sqrt(1-zeta*zeta);   //natural frequency Hz
+	  }	
+	  printf("\tDamping Ratio: %g\n",zeta);
+	  printf("\tDamped Freqency: %g Hz\n\tNatural Freqency: %g Hz\n",omegad,omegan);
+	}
+	else
+	  printf("\tNot enough points to take log decrement\n");  
+/* 	printf("w: %g, u: %g, q: %g\n",W_body,U_body,Q_body);
+ */
+	return 1;
+}	
 
 // Run an iteration of the EOM (equations of motion)
 int main(int argc, char *argv[]) {
     
 	
 	double save_alt = 0.0;
-    int multiloop=1,k=0,i,j;
+    int multiloop=1,k=0,i,j,touchdown,N;
 	double time=0,elev_trim,elev_trim_save,elevator,speed,cmcl;
 	FILE *out;
 	double hgain,hdiffgain,herr,herrprev,herr_diff,htarget;
@@ -232,7 +292,8 @@ int main(int argc, char *argv[]) {
     SCALAR *control[7];
 	SCALAR *state[7];
 	float old_state,effectiveness,tol,delta_state,lctrim;
-	float newcm,lastcm,cmalpha;
+	float newcm,lastcm,cmalpha,td_vspeed,td_time,stop_time;
+	float h[801],hdot[801],altmin,lastAlt,theta[800],theta_dot[800];
 	
     if(argc < 6)
 	{
@@ -252,31 +313,92 @@ int main(int argc, char *argv[]) {
 	IC.beta=0;
 	IC.theta=strtod(argv[3],NULL);
 	IC.use_gamma_tmg=0;
-	IC.phi=strtod(argv[4],NULL);
+	IC.phi=0;
 	IC.psi=0;
 	IC.weight=2400;
 	IC.cg=0.25;
-	IC.flap_handle=0;
+	IC.flap_handle=30;
 	IC.long_control=0;
 	IC.rudder_pedal=0;
     
-	printf("IC.vc: %g\n",IC.vc);
+	
 	ls_ForceAltitude(IC.altitude);  
     fgLaRCsimInit(0.01);
 	setIC(IC);
+	printf("Dx_cg: %g\n",Dx_cg);
+	V_down=strtod(argv[4],NULL);;
 	ls_loop(0,-1);
-	printf("\nAltitude: %g\n\n",Altitude);
-	i=0;
-	while(i <= 1) 
+	i=0;time=0;
+	IC.long_control=0;
+	altmin=Altitude;
+    printf("\tAltitude: %g, Theta: %g, V_down: %g\n\n",Altitude,Theta*RAD_TO_DEG,V_down);
+    
+	printf("%12s %10s %10s\n","Alpha (deg)","Alpha","Drag");
+	for(i=-5;i<=22;i++)
+	{
+		IC.alpha=i;
+		setIC(IC);
+		ls_loop(0,-1);
+		printf("%12f %10f %10f\n",Alpha*RAD_TO_DEG,Alpha,cd);
+	}	
+		
+	
+	
+	
+	/*out=fopen("drop.out","w");
+	N=800;touchdown=0;
+	
+	while(i <= N) 
 	{ 
-	  if(i > 0)
-	     Brake_pct=1;
-	  ls_update(1); 
-	  printf("\tAltitude: %g, Theta: %g, Phi: %g\n\n",Altitude,Theta*RAD_TO_DEG,Phi*RAD_TO_DEG);
+	  ls_update(1);
+	  printf("\tAltitude: %g, Theta: %g, V_down: %g\n\n",D_cg_above_rwy,Theta*RAD_TO_DEG,V_down);
+	  fprintf(out,"%g\t%g\t%g\t%g\t%g\t%g\n",time,D_cg_above_rwy,Theta*RAD_TO_DEG,V_down,F_Z_gear/1000.0,V_rel_ground);
+	  h[i]=D_cg_above_rwy;hdot[i]=V_down;
+	  theta[i]=Theta; theta_dot[i]=Theta_dot;
+	  if(D_cg_above_rwy < altmin)
+	  	altmin=D_cg_above_rwy;
+	  if((F_Z_gear < -10) && (! touchdown))
+	  {
+	  	 	touchdown=1;
+			td_vspeed=V_down;
+			td_time=time;
+	  }
+	  time+=0.01; 	
 	  i++; 
 	}
-	printf("w: %g, u: %g, q: %g\n",W_body,U_body,Q_body);
-    
+	while(V_rel_ground > 1)
+	{
+		if(Brake_pct < 1)
+		{
+		   Brake_pct+=0.02;
+		}   
+		ls_update(1);
+		time=i*0.01;
+	    fprintf(out,"%g\t%g\t%g\t%g\t%g\t%g\n",time,D_cg_above_rwy,Theta*RAD_TO_DEG,V_down,F_Z_gear/1000.0,V_rel_ground);
+		i++;
+    }
+	stop_time=time;
+    while((time-stop_time) < 5.0)
+	{
+		ls_update(1);
+		time=i*0.01;
+	    fprintf(out,"%g\t%g\t%g\t%g\t%g\t%g\n",time,D_cg_above_rwy,Theta*RAD_TO_DEG,V_down,F_Z_gear/1000.0,V_rel_ground);
+		i++;
+	}		
+	fclose(out);
+	
+	printf("Min Altitude: %g, Final Alitutde: %g, Delta: %g\n",altmin, h[N],  D_cg_above_rwy-altmin);
+	printf("Vertical Speed at touchdown: %g, Time at touchdown: %g\n",td_vspeed,td_time);
+    printf("\nAltitude response:\n");
+	out=fopen("alt.out","w");
+	wave_stats(h,hdot,N,out);
+	fclose(out);
+	out=fopen("theta.out","w");
+	printf("\nPitch Attitude response:\n");
+	wave_stats(theta,theta_dot,N,out);
+    fclose(out);*/
+
+
 
 	/*printf("Flap_handle: %g, Flap_Position: %g\n",Flap_handle,Flap_Position);
 	printf("k: %d, %g knots, %g lbs, %g %%MAC\n",k,V_calibrated_kts,Weight,Cg);

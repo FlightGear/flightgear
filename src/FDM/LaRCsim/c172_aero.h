@@ -66,10 +66,13 @@
 
   
   SCALAR elevator, aileron, rudder;
+
   
   SCALAR Flap_Position;
-  /* float Flap_Handle; */
+ 
   int Flaps_In_Transit;
   
+
+
 #endif
 
