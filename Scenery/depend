@@ -9,7 +9,8 @@ moon.o: moon.c orbits.h ../Time/fg_time.h ../Time/../types.h \
  ../Time/../Flight/LaRCsim/../flight.h moon.h ../Main/views.h \
  ../Main/../types.h ../Main/../Flight/flight.h ../Main/../Math/mat3.h \
  ../general.h
-obj.o: obj.c obj.h
+obj.o: obj.c obj.h scenery.h ../types.h ../constants.h \
+ ../Math/fg_geodesy.h ../Math/polar.h ../Math/../types.h
 orbits.o: orbits.c orbits.h ../Time/fg_time.h ../Time/../types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \

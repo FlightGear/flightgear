@@ -274,7 +274,8 @@ double mesh_altitude(double lon, double lat) {
 GLint mesh_to_OpenGL(struct MESH *m) {
     GLint mesh;
     /* static GLfloat color[4] = { 0.5, 0.4, 0.25, 1.0 }; */ /* dark desert */
-    static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
+    /* static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 }; */
+    static GLfloat color[4] = { 1.0, 0.0, 0.0, 1.0 };
     double centerx, centery;
     double randx, randy;
 
@@ -395,9 +396,12 @@ GLint mesh_to_OpenGL(struct MESH *m) {
 
 
 /* $Log$
-/* Revision 1.22  1997/10/28 21:00:21  curt
-/* Changing to new terrain format.
+/* Revision 1.23  1997/10/30 12:38:44  curt
+/* Working on new scenery subsystem.
 /*
+ * Revision 1.22  1997/10/28 21:00:21  curt
+ * Changing to new terrain format.
+ *
  * Revision 1.21  1997/08/27 03:30:27  curt
  * Changed naming scheme of basic shared structures.
  *

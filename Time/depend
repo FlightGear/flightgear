@@ -2,7 +2,7 @@ fg_time.o: fg_time.c fg_time.h ../types.h ../Flight/flight.h \
  ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
  ../Flight/LaRCsim/../flight.h ../constants.h ../Time/fg_time.h
 fg_timer.o: fg_timer.c fg_timer.h
-sptest.o: sptest.c sunpos.h ../types.h ../constants.h
+sidereal.o: sidereal.c ../constants.h
 sunpos.o: sunpos.c sunpos.h ../types.h fg_time.h ../Flight/flight.h \
  ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
  ../Flight/LaRCsim/../flight.h ../constants.h ../Main/views.h \

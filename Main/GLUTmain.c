@@ -143,7 +143,8 @@ static void fgUpdateViewParams() {
     struct VIEW *v;
     double x_2, x_4, x_8, x_10;
     double ambient, diffuse, sky;
-    GLfloat color[4] = { 1.0, 1.0, 0.50, 1.0 };
+    /* GLfloat color[4] = { 1.0, 1.0, 0.50, 1.0 };*/
+    GLfloat color[4] = { 1.0, 0.0, 0.00, 1.0 };
     GLfloat amb[3], diff[3], fog[4], clear[4];
 
     f = &current_aircraft.flight;
@@ -577,9 +578,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.21  1997/09/23 00:29:38  curt
-/* Tweaks to get things to compile with gcc-win32.
+/* Revision 1.22  1997/10/30 12:38:41  curt
+/* Working on new scenery subsystem.
 /*
+ * Revision 1.21  1997/09/23 00:29:38  curt
+ * Tweaks to get things to compile with gcc-win32.
+ *
  * Revision 1.20  1997/09/22 14:44:19  curt
  * Continuing to try to align stars correctly.
  *

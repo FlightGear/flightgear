@@ -28,8 +28,7 @@ include make.inc
 
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
-SUBDIRS = Aircraft Cockpit Controls Flight Joystick Math Scenery \
-	Time Weather
+SUBDIRS = Aircraft Cockpit Controls Flight Joystick Math Scenery Time Weather
 MAIN = Main
 
 
@@ -93,6 +92,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.29  1997/10/30 12:38:35  curt
+# Working on new scenery subsystem.
+#
 # Revision 1.28  1997/10/28 19:35:40  curt
 # Organizational changes.
 #
