@@ -24,7 +24,10 @@ bool LayoutWidget::eq(const char* a, const char* b)
 int LayoutWidget::padding()
 {
     int pad = isType("group") ? 0 : 4;
-    if(isType("dialog")) pad = 2;
+    // As comments above note,  this was being set to 2.  For some
+    // reason this causes the dialogs to shrink on subsequent pops
+    // so for now we'll make "dialog" padding 0.
+    if(isType("dialog")) pad = 0;
     if(hasParent() && parent().hasField("default-padding"))
         pad = parent().getNum("default-padding");
     if(hasField("padding"))
