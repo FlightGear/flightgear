@@ -125,15 +125,18 @@ void FGApproach::Update(double dt) {
 				// loop over all transmissions for station
 				for ( j=0; j<=num_trans-1; j++ ) {
 					code = tmissions[j].get_code();
+					//cout << "code is " << code.c1 << "  " << code.c2 << "  " << code.c3 << '\n';
 					// select proper transmissions
-					if ( ( code.c2 == -1 && planes[i].lmc.c3 == 0 ) || 
-						( code.c1 == 0  && code.c2 == planes[i].lmc.c2 ) ) {
-						mentry = current_transmissionlist->gen_text(station, code, tpars, false);
-						transm = current_transmissionlist->gen_text(station, code, tpars, true);
-						// is the transmission already registered?
-						if (!current_atcdialog->trans_reg( ident, transm )) {
-							current_atcdialog->add_entry( ident, transm, mentry );
-						}
+					if(code.c3 != 2) {    // DCL - hack to prevent request crossing airspace being displayed since this isn't implemented yet.
+					    if ( ( code.c2 == -1 && planes[i].lmc.c3 == 0 ) || 
+						    ( code.c1 == 0  && code.c2 == planes[i].lmc.c2 ) ) {
+						    mentry = current_transmissionlist->gen_text(station, code, tpars, false);
+						    transm = current_transmissionlist->gen_text(station, code, tpars, true);
+						    // is the transmission already registered?
+						    if (!current_atcdialog->trans_reg( ident, transm )) {
+							    current_atcdialog->add_entry( ident, transm, mentry );
+						    }
+					    }
 					}
 				}
 			}
