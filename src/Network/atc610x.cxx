@@ -287,6 +287,8 @@ bool FGATC610x::open() {
 
 #if defined( _MSC_VER )
 	ulMilliSecondSleep(33);
+#elif defined (WIN32) && !defined(__CYGWIN__)
+        Sleep (33);
 #else
 	usleep(33);
 #endif
