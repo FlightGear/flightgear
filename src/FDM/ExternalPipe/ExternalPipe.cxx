@@ -116,8 +116,10 @@ static int write_fifo( char cmd_type, int pd, char *cmd, int len ) {
     char *buf = new char[len + 3];
 
     // write 2 byte command length + command type + command
-    char hi = (len + 1) / 256;
-    char lo = (len + 1) - (hi * 256);
+    unsigned char hi = (len + 1) / 256;
+    unsigned char lo = (len + 1) - (hi * 256);
+
+    // cout << "len = " << len << " hi = " << (int)hi << " lo = " << (int)lo << endl;
 
     buf[0] = hi;
     buf[1] = lo;
