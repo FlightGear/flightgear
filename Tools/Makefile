@@ -27,7 +27,7 @@
 include $(FG_ROOT_SRC)/commondefs
 
 
-SUBDIRS = AssemTris Dem2node DemRaw2Ascii FixNode FixObj SplitTris \
+SUBDIRS = gpc2.01 AssemTris Dem2node DemRaw2Ascii FixNode FixObj SplitTris \
 	Stripe_u Tri2obj Triangle
 ORDEREDDIRS = $(SUBDIRS)
 
@@ -90,6 +90,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.12  1998/03/19 01:48:34  curt
+# Added gpc-2.01 (generic polygon clipping library)
+#
 # Revision 1.11  1998/03/03 21:54:43  curt
 # Changes to process 30 arcsec binary DEM files.
 #

@@ -75,7 +75,7 @@ while ( $dem_file = shift(@ARGV) ) {
 	$subdir = "../Scenery/w100n040/w093n045";
 	print "WARNING:  Hardcoding subdir = $subdir\n";
     }
-    
+
     triangle_1() if ( $do_triangle_1 );
     fixnode() if ( $do_fixnode );
     splittris() if ( $do_splittris );
@@ -364,6 +364,9 @@ sub fixobj {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.12  1998/03/19 01:48:35  curt
+# Added gpc-2.01 (generic polygon clipping library)
+#
 # Revision 1.11  1998/03/03 03:36:57  curt
 # Cumulative tweaks.
 #
