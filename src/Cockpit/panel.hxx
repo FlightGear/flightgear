@@ -195,7 +195,6 @@ private:
   int _x_offset;
   int _y_offset;
   int _view_height;
-  bool _bound;
   float _jitter;
 
   const SGPropertyNode * _xsize_node;

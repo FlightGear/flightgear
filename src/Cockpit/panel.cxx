@@ -180,7 +180,6 @@ FGPanel::FGPanel ()
     _mouseInstrument(0),
     _width(WIN_W), _height(int(WIN_H * 0.5768 + 1)),
     _x_offset(0), _y_offset(0), _view_height(int(WIN_H * 0.4232)),
-    _bound(false),
     _jitter(0.0),
     _xsize_node(fgGetNode("/sim/startup/xsize", true)),
     _ysize_node(fgGetNode("/sim/startup/ysize", true))
@@ -194,8 +193,6 @@ FGPanel::FGPanel ()
  */
 FGPanel::~FGPanel ()
 {
-  if (_bound)
-    unbind();
   for (instrument_list_type::iterator it = _instruments.begin();
        it != _instruments.end();
        it++) {
@@ -252,15 +249,10 @@ FGPanel::init ()
 void
 FGPanel::bind ()
 {
-  fgTie("/sim/panel/visibility", &_visibility);
   fgSetArchivable("/sim/panel/visibility");
-  fgTie("/sim/panel/x-offset", &_x_offset);
   fgSetArchivable("/sim/panel/x-offset");
-  fgTie("/sim/panel/y-offset", &_y_offset);
   fgSetArchivable("/sim/panel/y-offset");
-  fgTie("/sim/panel/jitter", &_jitter);
   fgSetArchivable("/sim/panel/jitter");
-  _bound = true;
 }
 
 
@@ -270,10 +262,6 @@ FGPanel::bind ()
 void
 FGPanel::unbind ()
 {
-  fgUntie("/sim/panel/visibility");
-  fgUntie("/sim/panel/x-offset");
-  fgUntie("/sim/panel/y-offset");
-  _bound = false;
 }
 
 
@@ -283,6 +271,12 @@ FGPanel::unbind ()
 void
 FGPanel::update (int dt)
 {
+				// TODO: cache the nodes
+    _visibility = fgGetBool("/sim/panel/visibility");
+    _x_offset = fgGetInt("/sim/panel/x-offset");
+    _y_offset = fgGetInt("/sim/panel/y-offset");
+    _jitter = fgGetFloat("/sim/panel/jitter");
+
 				// Do nothing if the panel isn't visible.
     if ( !fgPanelVisible() ) {
         return;
