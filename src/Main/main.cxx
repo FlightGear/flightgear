@@ -1213,7 +1213,7 @@ static void fgMainLoop( void ) {
                                 acmodel_location->get_absolute_view_pos(),
                                 acmodel_location->get_current_bucket(),
                                 acmodel_location->get_previous_bucket(),
-                                acmodel_location->get_tile_center()
+                                globals->get_scenery()->get_center()
                                 );
         // save results of update in FGLocation for fdm...
         if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
@@ -1236,7 +1236,7 @@ static void fgMainLoop( void ) {
                             current_view->get_absolute_view_pos(),
                             current_view->getFGLocation()->get_current_bucket(),
                             current_view->getFGLocation()->get_previous_bucket(),
-                            current_view->getFGLocation()->get_tile_center()
+                            globals->get_scenery()->get_center()
                             );
     // save results of update in FGLocation for fdm...
     if ( globals->get_scenery()->get_cur_elev() > -9990 ) {

@@ -267,20 +267,6 @@ void FGTileMgr::initialize_queue()
 }
 
 
-// given the current lon/lat (in degrees), fill in the array of local
-// chunks.  If the chunk isn't already in the cache, then read it from
-// disk.
-int FGTileMgr::update( double visibility_meters ) {
-    FGLocation *location = globals->get_current_view()->getFGLocation();
-    sgdVec3 abs_pos_vector;
-    sgdCopyVec3( abs_pos_vector,
-                 globals->get_current_view()->get_absolute_view_pos() );
-    return update( location, visibility_meters, abs_pos_vector,
-                   current_bucket, previous_bucket,
-                   globals->get_scenery()->get_center() );
-}
-
-
 /**
  * Update the various queues maintained by the tilemagr (private
  * internal function, do not call directly.)
@@ -369,9 +355,25 @@ void FGTileMgr::update_queues()
 }
 
 
+// given the current lon/lat (in degrees), fill in the array of local
+// chunks.  If the chunk isn't already in the cache, then read it from
+// disk.
+int FGTileMgr::update( double visibility_meters )
+{
+    FGLocation *location = globals->get_current_view()->getFGLocation();
+    sgdVec3 abs_pos_vector;
+    sgdCopyVec3( abs_pos_vector,
+                 globals->get_current_view()->get_absolute_view_pos() );
+    return update( location, visibility_meters, abs_pos_vector,
+                   current_bucket, previous_bucket,
+                   globals->get_scenery()->get_center() );
+}
+
+
 int FGTileMgr::update( FGLocation *location, double visibility_meters,
                        sgdVec3 abs_pos_vector, SGBucket p_current,
-                       SGBucket p_previous, Point3D center ) {
+                       SGBucket p_previous, Point3D center )
+{
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
     //         << lon << " " << lat );
 
@@ -414,12 +416,7 @@ int FGTileMgr::update( FGLocation *location, double visibility_meters,
     // no reason to update this if we haven't moved...
     if ( longitude != last_longitude || latitude != last_latitude ) {
         // update current elevation... 
-        if ( updateCurrentElevAtPos( abs_pos_vector, center )
-             )
-            /*if ( updateCurrentElevAtPos( abs_pos_vector,
-                                     globals->get_scenery()->get_next_center() )
-                                     )*/
-        {
+        if ( updateCurrentElevAtPos( abs_pos_vector, center ) ) {
             last_longitude = longitude;
             last_latitude = latitude;
         }
