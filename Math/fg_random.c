@@ -29,7 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>         /* for random(), srandom() */
 #include <time.h>           /* for time() to seed srandom() */        
-#include <Main/fg_debug.h>
+
+#include <Debug/fg_debug.h>
 
 #include "fg_random.h"
 
@@ -72,9 +73,12 @@ double fg_random(void) {
 
 
 /* $Log$
-/* Revision 1.5  1998/04/03 22:10:29  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.6  1998/04/18 03:53:42  curt
+/* Miscellaneous Tweaks.
 /*
+ * Revision 1.5  1998/04/03 22:10:29  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.4  1998/02/03 23:20:28  curt
  * Lots of little tweaks to fix various consistency problems discovered by
  * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper

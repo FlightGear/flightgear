@@ -12,4 +12,4 @@ libMath_la_SOURCES = \
 	polar.c polar.h \
 	vector.c vector.h
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Simulator
