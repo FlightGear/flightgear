@@ -870,6 +870,66 @@ int fgOPTIONS::parse_option( const string& arg ) {
 }
 
 
+// Scan the command line options for an fg_root definition and set
+// just that.
+int fgOPTIONS::scan_command_line_for_root( int argc, char **argv ) {
+    int i = 1;
+    int result;
+
+    FG_LOG(FG_GENERAL, FG_INFO, "Processing command line arguments");
+
+    while ( i < argc ) {
+	FG_LOG( FG_GENERAL, FG_DEBUG, "argv[" << i << "] = " << argv[i] );
+
+	string arg = argv[i];
+	if ( arg.find( "--fg-root=" ) != string::npos ) {
+	    fg_root = arg.substr( 10 );
+	}
+
+	i++;
+    }
+    
+    return FG_OPTIONS_OK;
+}
+
+
+// Scan the config file for an fg_root definition and set just that.
+int fgOPTIONS::scan_config_file_for_root( const string& path ) {
+    fg_gzifstream in( path );
+    if ( !in.is_open() )
+	return(FG_OPTIONS_ERROR);
+
+    FG_LOG( FG_GENERAL, FG_INFO, "Processing config file: " << path );
+
+    in >> skipcomment;
+#ifndef __MWERKS__
+    while ( ! in.eof() ) {
+#else
+    char c = '\0';
+    while ( in.get(c) && c != '\0' ) {
+	in.putback(c);
+#endif
+	string line;
+
+#ifdef GETLINE_NEEDS_TERMINATOR
+        getline( in, line, '\n' );
+#elif defined( macintosh )
+	getline( in, line, '\r' );
+#else
+        getline( in, line );
+#endif
+
+	if ( line.find( "--fg-root=" ) != string::npos ) {
+	    fg_root = line.substr( 10 );
+	}
+
+	in >> skipcomment;
+    }
+
+    return FG_OPTIONS_OK;
+}
+
+
 // Parse the command line options
 int fgOPTIONS::parse_command_line( int argc, char **argv ) {
     int i = 1;
@@ -888,7 +948,7 @@ int fgOPTIONS::parse_command_line( int argc, char **argv ) {
 	i++;
     }
     
-    return(FG_OPTIONS_OK);
+    return FG_OPTIONS_OK;
 }
 
 

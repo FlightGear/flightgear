@@ -1326,10 +1326,11 @@ int main( int argc, char **argv ) {
     // seed the random number generater
     fg_srandom();
 
-    // Read global preferences from $FG_ROOT/preferences.xml
-    // FIXME: this will *not* work with an --fg_root option because
-    // we have not read the command-line yet.  Suggestions?
+    // Scan the config file(s) and command line options to see if
+    // fg_root was specified (ignore all other options for now)
+    fgInitFGRoot(argc, argv);
 
+    // Read global preferences from $FG_ROOT/preferences.xml
     FGPath props_path(current_options.get_fg_root());
     props_path.append("preferences.xml");
     FG_LOG(FG_INPUT, FG_INFO, "Reading global preferences");

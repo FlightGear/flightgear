@@ -31,6 +31,10 @@
 #endif                                   
 
 
+// Read in configuration (file and command line) and just set fg_root
+bool fgInitFGRoot ( int argc, char **argv );
+
+
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv );
 

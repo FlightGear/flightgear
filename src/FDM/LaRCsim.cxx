@@ -92,10 +92,10 @@ int FGLaRCsim::update( int multiloop ) {
     eng.set_IAS( V_calibrated_kts );
     eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
     eng.set_Propeller_Lever_Pos( 100 );
-    if ( controls.get_mixture( 0 ) > 0.51 ) {
+    if ( controls.get_mixture( 0 ) > 0.60 ) {
 	eng.set_Mixture_Lever_Pos( controls.get_mixture( 0 ) * 100.0 );
     } else {
-	eng.set_Mixture_Lever_Pos( 51.0 );
+	eng.set_Mixture_Lever_Pos( 60.0 );
     }
 
     // update engine model
@@ -113,9 +113,8 @@ int FGLaRCsim::update( int multiloop ) {
     e->set_EGT( eng.get_EGT() );
     e->set_prop_thrust( eng.get_prop_thrust_SI() );
     
-#if 0
     cout << "Throttle = " << controls.get_throttle( 0 ) * 100.0;
-    cout << " Mixture = " << 80;
+    cout << " Mixture = " << controls.get_mixture( 0 ) * 100.0;
     cout << " RPM = " << eng.get_RPM();
     cout << " MP = " << eng.get_Manifold_Pressure();
     cout << " HP = " << ( eng.get_MaxHP() * eng.get_Percentage_Power()
@@ -123,7 +122,6 @@ int FGLaRCsim::update( int multiloop ) {
     cout << " EGT = " << eng.get_EGT();
     cout << " Thrust (N) " << eng.get_prop_thrust_SI();	// Thrust in Newtons
     cout << '\n';
-#endif // 0
     
     F_X_engine = eng.get_prop_thrust_SI() * 0.07;
 #endif // USE_NEW_ENGINE_CODE

@@ -216,6 +216,14 @@ public:
     // Parse a single option
     int parse_option( const string& arg );
 
+    // Scan the command line options for an fg_root definition and set
+    // just that.
+    int scan_command_line_for_root( int argc, char **argv );
+
+    // Scan the config file for an fg_root definition and set just
+    // that.
+    int scan_config_file_for_root( const string& path );
+
     // Parse the command line options
     int parse_command_line( int argc, char **argv );
 

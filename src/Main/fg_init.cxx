@@ -105,6 +105,30 @@ FG_USING_STD(string);
 extern const char *default_root;
 
 
+// Read in configuration (file and command line) and just set fg_root
+bool fgInitFGRoot ( int argc, char **argv ) {
+    // Attempt to locate and parse a config file
+    // First check fg_root
+    FGPath config( current_options.get_fg_root() );
+    config.append( "system.fgfsrc" );
+    current_options.scan_config_file_for_root( config.str() );
+
+    // Next check home directory
+    char* envp = ::getenv( "HOME" );
+    if ( envp != NULL ) {
+	config.set( envp );
+	config.append( ".fgfsrc" );
+	current_options.scan_config_file_for_root( config.str() );
+    }
+
+    // Parse remaining command line options
+    // These will override anything specified in a config file
+    current_options.scan_command_line_for_root(argc, argv);
+
+    return true;
+}
+
+
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv ) {
     // Attempt to locate and parse a config file
@@ -133,7 +157,7 @@ bool fgInitConfig ( int argc, char **argv ) {
 	return false;
     }
 
-   return true;
+    return true;
 }
 
 
