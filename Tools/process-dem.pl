@@ -58,6 +58,7 @@ $fg_root = shift(@ARGV);
 $work_dir = shift(@ARGV);
 $error = shift(@ARGV);
 $error += 0.0;
+$system_name = `uname -s`; chop($system_name);
 
 while ( $dem_file = shift(@ARGV) ) {
     print "Source file = $dem_file  Error tolerance = $error\n";
@@ -94,11 +95,7 @@ exit(0);
 # replace all unix forward slashes with windoze backwards slashes if
 # running on a cygwin32 system
 sub fix_slashes { my($in) = @_;
-
-    $system = `uname -s`;
-    chop($system);
-
-    if ( $system =~ m/CYGWIN32/ ) { 
+    if ( $system_name =~ m/CYGWIN32/ ) { 
         $in =~ s/\/+/\//g;
         $in =~ s/\//\\/g;
     }
@@ -474,10 +471,7 @@ sub install {
     $install_dir =~ s/\/+/\//g;
     print "Install dir = $install_dir\n";
 
-    $system = `uname -s`;
-    chop($system);
-
-    if ( $system !~ m/CYGWIN32/ ) {
+    if ( $system_name !~ m/CYGWIN32/ ) {
 	$command = "mkdir -p $install_dir";
     } else {
         $command = "Makedir/makedir $install_dir";
@@ -491,13 +485,12 @@ sub install {
     }
     close(OUT);
 
-
     # write out version and info record
     $version_file = "$install_dir/VERSION";
     open(VERSION, ">$version_file") || 
 	die "Cannot open $version_file for writing\n";
     print VERSION "FGFS Scenery Version $scenery_format_version\n";
-    if ( $system !~ m/CYGWIN32/ ) {
+    if ( $system_name !~ m/CYGWIN32/ ) {
 	$date = `date`; chop($date);
     } else {
 	# ???
@@ -551,6 +544,9 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.32  1998/11/20 01:02:55  curt
+# Speedups for win32.
+#
 # Revision 1.31  1998/10/28 19:39:06  curt
 # Changes to better support win32 scenery development.
 #
