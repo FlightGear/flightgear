@@ -34,6 +34,8 @@
 #  include <math.h>
 #endif
 
+class SGInterpTable;
+
 
 /**
  * Model the natural environment.
@@ -53,10 +55,14 @@ public:
   virtual ~FGEnvironment();
   
   virtual double get_visibility_m () const;
+
   virtual double get_temperature_sea_level_degc () const;
   virtual double get_temperature_degc () const;
   virtual double get_pressure_sea_level_inhg () const;
   virtual double get_pressure_inhg () const;
+  virtual double get_density_sea_level_slugft3 () const;
+  virtual double get_density_slugft3 () const;
+
   virtual double get_wind_from_heading_deg () const;
   virtual double get_wind_speed_kt () const;
   virtual double get_wind_from_north_fps () const;
@@ -64,10 +70,14 @@ public:
   virtual double get_wind_from_down_fps () const;
 
   virtual void set_visibility_m (double v);
+
   virtual void set_temperature_sea_level_degc (double t);
   virtual void set_temperature_degc (double t);
   virtual void set_pressure_sea_level_inhg (double p);
   virtual void set_pressure_inhg (double p);
+  virtual void set_density_sea_level_slugft3 (double d);
+  virtual void set_density_slugft3 (double d);
+
   virtual void set_wind_from_heading_deg (double h);
   virtual void set_wind_speed_kt (double s);
   virtual void set_wind_from_north_fps (double n);
@@ -83,20 +93,33 @@ protected:
 
 private:
 
+  void _setup_tables ();
+
   void _recalc_hdgspd ();
   void _recalc_ne ();
-  void _recalc_sl_temp ();
-  void _recalc_alt_temp ();
-  void _recalc_sl_press ();
-  void _recalc_alt_press ();
+
+  void _recalc_sl_temperature ();
+  void _recalc_alt_temperature ();
+  void _recalc_sl_pressure ();
+  void _recalc_alt_pressure ();
+  void _recalc_sl_density ();
+  void _recalc_alt_density ();
+
+  SGInterpTable * _temperature_degc_table;
+  SGInterpTable * _pressure_inhg_table;
+  SGInterpTable * _density_slugft3_table;
 
   double elevation_ft;
 
   double visibility_m;
+
+				// Atmosphere
   double temperature_sea_level_degc;
   double temperature_degc;
   double pressure_sea_level_inhg;
   double pressure_inhg;
+  double density_sea_level_slugft3;
+  double density_slugft3;
 
   double wind_from_heading_deg;
   double wind_speed_kt;

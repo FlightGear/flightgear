@@ -72,6 +72,14 @@ FGEnvironmentMgr::bind ()
 	&FGEnvironment::get_pressure_inhg,
 	&FGEnvironment::set_pressure_inhg);
   fgSetArchivable("/environment/pressure-inhg");
+  fgTie("/environment/density-sea-level-slugft3", _environment,
+	&FGEnvironment::get_density_sea_level_slugft3,
+	&FGEnvironment::set_density_sea_level_slugft3);
+  fgSetArchivable("/environment/density-sea-level-slugft3");
+  fgTie("/environment/density-slugft3", _environment,
+	&FGEnvironment::get_density_slugft3,
+	&FGEnvironment::set_density_slugft3);
+  fgSetArchivable("/environment/density-inhg");
   fgTie("/environment/wind-from-heading-deg", _environment,
 	&FGEnvironment::get_wind_from_heading_deg,
 	&FGEnvironment::set_wind_from_heading_deg);
