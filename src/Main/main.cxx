@@ -557,7 +557,7 @@ void fgRenderFrame() {
         thesky->set_visibility(visibility_meters);
 
         thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
-                        ( global_multi_loop * fgGetInt("/sim/speed-up") )
+                            ( global_multi_loop * fgGetInt("/sim/speed-up") )
                             / (double)fgGetInt("/sim/model-hz") );
 
         // Set correct opengl fog density
@@ -971,13 +971,14 @@ void fgUpdateTimeDepCalcs() {
         }
 
         if ( ! replay_master->getBoolValue() ) {
-            globals->get_autopilot()->update(delta_time_sec);
-            cur_fdm_state->update(delta_time_sec);
+            globals->get_autopilot()->update( delta_time_sec );
+            cur_fdm_state->update( delta_time_sec );
         } else {
             FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
             r->replay( replay_time->getDoubleValue() );
             replay_time->setDoubleValue( replay_time->getDoubleValue()
-                                         + delta_time_sec );
+                                         + ( delta_time_sec
+                                             * fgGetInt("/sim/speed-up") ) );
         }
     } else {
         // do nothing, fdm isn't inited yet
@@ -1643,7 +1644,7 @@ static bool fgMainInit( int argc, char **argv ) {
 
     // Initialize the various GLUT Event Handlers.
     if( !fgGlutInitEvents() ) {
- SG_LOG( SG_GENERAL, SG_ALERT, 
+        SG_LOG( SG_GENERAL, SG_ALERT, 
         	"GLUT event handler initialization failed ..." );
         exit(-1);
     }
@@ -1743,7 +1744,6 @@ static bool fgMainInit( int argc, char **argv ) {
     ////////////////////////////////////////////////////////////////////
     // Initialize the view manager subsystem.
     ////////////////////////////////////////////////////////////////////
-
     FGViewMgr *viewmgr = new FGViewMgr;
     globals->set_viewmgr( viewmgr );
     viewmgr->init();
