@@ -123,6 +123,7 @@ FGRadioStack::FGRadioStack() :
 FGRadioStack::~FGRadioStack() 
 {
     adf.unbind();
+    xponder.unbind();
     unbind();			// FIXME: should be called externally
 
     delete term_tbl;
@@ -135,6 +136,7 @@ void
 FGRadioStack::init ()
 {
     adf.init();
+    xponder.init();
 
     morse.init();
     beacon.init();
@@ -142,9 +144,11 @@ FGRadioStack::init ()
 
     search();
     adf.search();
+    xponder.search();
 
     update(0);			// FIXME: use dt
     adf.update(0);
+    xponder.update(0);
 
     // Search radio database once per second
     global_events.Register( "fgRadioSearch()",
@@ -265,6 +269,7 @@ FGRadioStack::bind ()
 	  &FGRadioStack::get_outer_blink);
 
     adf.bind();
+    xponder.bind();
 }
 
 void
@@ -317,6 +322,7 @@ FGRadioStack::unbind ()
     fgUntie("/radios/marker-beacon/outer");
 
     adf.unbind();
+    xponder.unbind();
 }
 
 
@@ -685,6 +691,7 @@ FGRadioStack::update(double dt)
     // cout << outer_blink << " " << middle_blink << " " << inner_blink << endl;
 
     adf.update( dt );
+    xponder.update( dt );
 }
 
 
@@ -1085,6 +1092,7 @@ void FGRadioStack::search()
     last_beacon = beacon_type;
 
     adf.search();
+    xponder.search();
 }
 
 

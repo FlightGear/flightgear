@@ -39,6 +39,7 @@
 #include <Sound/morse.hxx>
 
 #include "kr_87.hxx"            // ADF
+#include "kt_70.hxx"            // Transponder
 
 class FGRadioStack : public FGSubsystem
 {
@@ -178,6 +179,7 @@ class FGRadioStack : public FGSubsystem
     bool inner_blink;
 
     FGKR_87 adf;                // King KR 87 Digital ADF model
+    FGKT_70 xponder;            // Bendix/King KT 70 Panel-Mounted Transponder
 
     // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
     double adjustNavRange( double stationElev, double aircraftElev,

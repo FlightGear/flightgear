@@ -392,75 +392,9 @@ void FGSteam::_CatchUp()
 // Everything below is a transient hack; expect it to disappear
 ////////////////////////////////////////////////////////////////////////
 
-
-#if 0
-
-double FGSteam::get_HackGS_deg () {
-    if ( current_radiostack->get_nav1_inrange() && 
-	 current_radiostack->get_nav1_has_gs() )
-    {
-	double x = current_radiostack->get_nav1_gs_dist();
-	double y = (fgGetDouble("/position/altitude-ft")
-                    - current_radiostack->get_nav1_elev())
-	    * SG_FEET_TO_METER;
-	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
-	return (current_radiostack->get_nav1_target_gs() - angle) * 5.0;
-    } else {
-	return 0.0;
-    }
-}
-
-
-double FGSteam::get_HackVOR1_deg () {
-    double r;
-
-    if ( current_radiostack->get_nav1_inrange() ) {
-        r = current_radiostack->get_nav1_heading()
-	    - current_radiostack->get_nav1_radial();
-	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
-	//      << "  Bearing = " << current_radiostack->get_nav1_heading()
-	//      << endl;
-    
-	if (r> 180.0) r-=360.0; else
-	    if (r<-180.0) r+=360.0;
-	if ( fabs(r) > 90.0 )
-	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-	// According to Robin Peel, the ILS is 4x more sensitive than a vor
-	if ( current_radiostack->get_nav1_loc() ) r *= 4.0;
-    } else {
-	r = 0.0;
-    }
-
-    return r;
-}
-
-
-double FGSteam::get_HackVOR2_deg () {
-    double r;
-
-    if ( current_radiostack->get_nav2_inrange() ) {
-        r = current_radiostack->get_nav2_heading()
-	    - current_radiostack->get_nav2_radial();
-	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
-	// << "  Bearing = " << current_radiostack->get_nav1_heading() << endl;
-    
-	if (r> 180.0) r-=360.0; else
-	    if (r<-180.0) r+=360.0;
-	if ( fabs(r) > 90.0 )
-	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-    } else {
-	r = 0.0;
-    }
-
-    return r;
-}
-#endif
-
-
 double FGSteam::get_HackOBS1_deg () {
     return current_radiostack->get_nav1_radial(); 
 }
-
 
 double FGSteam::get_HackOBS2_deg () {
     return current_radiostack->get_nav2_radial(); 
