@@ -201,7 +201,7 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
     int iw = inst->getWidth() / 2;
     int ih = inst->getHeight() / 2;
     if (x >= ix - iw && x < ix + iw && y >= iy - ih && y < iy + ih) {
-      cout << "Do mouse action for component " << i << '\n';
+//       cout << "Do mouse action for component " << i << '\n';
       _mouseDown = true;
       _mouseDelay = 20;
       _mouseInstrument = inst;
@@ -213,7 +213,7 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
       return true;
     }
   }
-  cout << "Did not click on an instrument\n";
+//   cout << "Did not click on an instrument\n";
   return false;
 }
 
@@ -224,7 +224,7 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
 ////////////////////////////////////////////////////////////////////////
 
 FGAdjustAction::FGAdjustAction (getter_type getter, setter_type setter,
-				double increment, double min, double max,
+				float increment, float min, float max,
 				bool wrap=false)
   : _getter(getter), _setter(setter), _increment(increment),
     _min(min), _max(max), _wrap(wrap)
@@ -238,15 +238,15 @@ FGAdjustAction::~FGAdjustAction ()
 void
 FGAdjustAction::doAction ()
 {
-  double value = (*_getter)();
-  cout << "Do action; value=" << value << '\n';
+  float value = (*_getter)();
+//   cout << "Do action; value=" << value << '\n';
   value += _increment;
   if (value < _min) {
     value = (_wrap ? _max : _min);
   } else if (value > _max) {
     value = (_wrap ? _min : _max);
   }
-  cout << "New value is " << value << '\n';
+//   cout << "New value is " << value << '\n';
   (*_setter)(value);
 }
 
@@ -270,7 +270,7 @@ FGSwapAction::~FGSwapAction ()
 void
 FGSwapAction::doAction ()
 {
-  double value = (*_getter1)();
+  float value = (*_getter1)();
   (*_setter1)((*_getter2)());
   (*_setter2)(value);
 }
@@ -382,10 +382,10 @@ FGPanelInstrument::doMouseAction (int button, int x, int y)
 {
   action_list_type::iterator it = _actions.begin();
   action_list_type::iterator last = _actions.end();
-  cout << "Mouse action at " << x << ',' << y << '\n';
+//   cout << "Mouse action at " << x << ',' << y << '\n';
   for ( ; it != last; it++) {
-    cout << "Trying action at " << it->x << ',' << it->y << ','
-	 << it->w <<',' << it->h << '\n';
+//     cout << "Trying action at " << it->x << ',' << it->y << ','
+// 	 << it->w <<',' << it->h << '\n';
     if (button == it->button &&
 	x >= it->x && x < it->x + it->w && y >= it->y && y < it->y + it->h) {
       it->action->doAction();
@@ -431,16 +431,25 @@ FGLayeredInstrument::addLayer (FGInstrumentLayer *layer)
 }
 
 int
-FGLayeredInstrument::addLayer (ssgTexture * texture)
+FGLayeredInstrument::addLayer (ssgTexture * texture,
+			       int w = -1, int h = -1,
+			       float texX1 = 0.0, float texY1 = 0.0,
+			       float texX2 = 1.0, float texY2 = 1.0)
 {
-  return addLayer(new FGTexturedLayer(texture, _w, _h));
+  if (w == -1)
+    w = _w;
+  if (h == -1)
+    h = _h;
+  FGTexturedLayer * layer = new FGTexturedLayer(texture, w, h);
+  layer->setTextureCoords(texX1, texY1, texX2, texY2);
+  return addLayer(layer);
 }
 
 void
 FGLayeredInstrument::addTransformation (FGInstrumentLayer::transform_type type,
 					FGInstrumentLayer::transform_func func,
-					double min, double max,
-					double factor, double offset)
+					float min, float max,
+					float factor, float offset)
 {
   int layer = _layers.size() - 1;
   _layers[layer]->addTransformation(type, func, min, max, factor, offset);
@@ -448,7 +457,7 @@ FGLayeredInstrument::addTransformation (FGInstrumentLayer::transform_type type,
 
 void
 FGLayeredInstrument::addTransformation (FGInstrumentLayer::transform_type type,
-					double offset)
+					float offset)
 {
   addTransformation(type, 0, 0.0, 0.0, 1.0, offset);
 }
@@ -482,7 +491,7 @@ FGInstrumentLayer::transform () const
   transformation_list::const_iterator last = _transformations.end();
   while (it != last) {
     transformation *t = *it;
-    double value = (t->func == 0 ? 0.0 : (*(t->func))());
+    float value = (t->func == 0 ? 0.0 : (*(t->func))());
     if (value < t->min) {
       value = t->min;
     } else if (value > t->max) {
@@ -508,8 +517,8 @@ FGInstrumentLayer::transform () const
 void
 FGInstrumentLayer::addTransformation (transform_type type,
 				      transform_func func,
-				      double min, double max,
-				      double factor, double offset)
+				      float min, float max,
+				      float factor, float offset)
 {
   transformation *t = new transformation;
   t->type = type;
@@ -528,8 +537,8 @@ FGInstrumentLayer::addTransformation (transform_type type,
 ////////////////////////////////////////////////////////////////////////
 
 FGTexturedLayer::FGTexturedLayer (ssgTexture * texture, int w, int h,
-				  double texX1 = 0.0, double texY1 = 0.0,
-				  double texX2 = 1.0, double texY2 = 1.0)
+				  float texX1 = 0.0, float texY1 = 0.0,
+				  float texX2 = 1.0, float texY2 = 1.0)
   : FGInstrumentLayer(w, h),
     _texX1(texX1), _texY1(texY1), _texX2(texX2), _texY2(texY2)
 {
@@ -648,7 +657,7 @@ FGTextLayer::Chunk::Chunk (text_func func, char * fmt = "%s")
 }
 
 FGTextLayer::Chunk::Chunk (double_func func, char * fmt = "%.2f",
-			   double mult = 1.0)
+			   float mult = 1.0)
   : _type(FGTextLayer::DOUBLE_FUNC), _fmt(fmt), _mult(mult)
 {
   _value._dfunc = func;

@@ -505,7 +505,8 @@ void fgCockpitUpdate( void ) {
         glColor3f (0.9, 0.4, 0.2);
 
         guiFnt.drawString( buf,
-                           width/2 - guiFnt.getStringWidth(buf)/2,
+			   // width/2 - guiFnt.getStringWidth(buf)/2,
+			   int(width - guiFnt.getStringWidth(buf) - 10),
                            10 );
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_LIGHTING);

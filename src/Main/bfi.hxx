@@ -77,7 +77,8 @@ public:
 
 
 				// Attitude
-  static double getHeading ();
+  static double getHeading ();	  // true heading
+  static double getHeadingMag (); // exact magnetic heading
   static double getPitch ();
   static double getRoll ();
 
@@ -137,12 +138,16 @@ public:
   static double getNAV1Radial ();
   static double getNAV1SelRadial ();
   static double getNAV1DistDME ();
+  static bool getNAV1InRange ();
+  static bool getNAV1DMEInRange ();
 
   static double getNAV2Freq ();
   static double getNAV2AltFreq ();
   static double getNAV2Radial ();
   static double getNAV2SelRadial ();
   static double getNAV2DistDME ();
+  static bool getNAV2InRange ();
+  static bool getNAV2DMEInRange ();
 
   static double getADFFreq ();
   static double getADFAltFreq ();

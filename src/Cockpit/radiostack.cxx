@@ -70,7 +70,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	    nav1_gs_dist = 0.0;
 	}
 	
-	if ( nav1_dme_dist < nav1_effective_range * NM_TO_METER ) {
+	if ( nav1_loc_dist < nav1_effective_range * NM_TO_METER ) {
 	    nav1_inrange = true;
 	    
 	    // wgs84 heading
@@ -113,7 +113,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	    nav2_gs_dist = 0.0;
 	}
 
-	if ( nav2_dme_dist < nav2_effective_range * NM_TO_METER ) {
+	if ( nav2_loc_dist < nav2_effective_range * NM_TO_METER ) {
 	    nav2_inrange = true;
 
 	    // wgs84 heading

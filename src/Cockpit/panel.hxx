@@ -142,17 +142,17 @@ public:
   typedef double (*getter_type)();
   typedef void (*setter_type)(double);
 
-  FGAdjustAction (getter_type getter, setter_type setter, double increment,
-		  double min, double max, bool wrap=false);
+  FGAdjustAction (getter_type getter, setter_type setter, float increment,
+		  float min, float max, bool wrap=false);
   virtual ~FGAdjustAction ();
   virtual void doAction ();
 
 private:
   getter_type _getter;
   setter_type _setter;
-  double _increment;
-  double _min;
-  double _max;
+  float _increment;
+  float _min;
+  float _max;
   bool _wrap;
 };
 
@@ -293,8 +293,8 @@ public:
   virtual void transform () const;
 
   virtual void addTransformation (transform_type type, transform_func func,
-				  double min, double max,
-				  double factor = 1.0, double offset = 0.0);
+				  float min, float max,
+				  float factor = 1.0, float offset = 0.0);
 
 protected:
   int _w, _h;
@@ -302,10 +302,10 @@ protected:
   typedef struct {
     transform_type type;
     transform_func func;
-    double min;
-    double max;
-    double factor;
-    double offset;
+    float min;
+    float max;
+    float factor;
+    float offset;
   } transformation;
   typedef vector<transformation *> transformation_list;
   transformation_list _transformations;
@@ -341,13 +341,16 @@ public:
 
 				// Transfer pointer ownership!!
   virtual int addLayer (FGInstrumentLayer *layer);
-  virtual int addLayer (ssgTexture * texture);
+  virtual int addLayer (ssgTexture * texture,
+			int w = -1, int h = -1,
+			float texX1 = 0.0, float texY1 = 0.0,
+			float texX2 = 1.0, float texY2 = 1.0);
   virtual void addTransformation (FGInstrumentLayer::transform_type type,
 				  FGInstrumentLayer::transform_func func,
-				  double min, double max,
-				  double factor = 1.0, double offset = 0.0);
+				  float min, float max,
+				  float factor = 1.0, float offset = 0.0);
   virtual void addTransformation (FGInstrumentLayer::transform_type type,
-				  double offset);
+				  float offset);
 
 protected:
   layer_list _layers;
@@ -367,17 +370,28 @@ class FGTexturedLayer : public FGInstrumentLayer
 {
 public:
   FGTexturedLayer (ssgTexture * texture, int w, int h,
-		   double texX1 = 0.0, double texY1 = 0.0,
-		   double texX2 = 1.0, double texY2 = 1.0);
+		   float texX1 = 0.0, float texY1 = 0.0,
+		   float texX2 = 1.0, float texY2 = 1.0);
   virtual ~FGTexturedLayer ();
 
   virtual void draw () const;
 
   virtual void setTexture (ssgTexture * texture) { _texture = texture; }
+  virtual void setTextureCoords (float x1, float y1, float x2, float y2) {
+    _texX1 = x1; _texY1 = y1; _texX2 = x2; _texY2 = y2;
+  }
+
+protected:
+  
+  virtual void setTextureCoords (float x1, float y1,
+				 float x2, float y2) const {
+    _texX1 = x1; _texY1 = y1; _texX2 = x2; _texY2 = y2;
+  }
+
 
 private:
   ssgTexture * _texture;
-  double _texX1, _texY1, _texX2, _texY2;
+  mutable float _texX1, _texY1, _texX2, _texY2;
 };
 
 
@@ -405,7 +419,7 @@ public:
   public:
     Chunk (char * text, char * fmt = "%s");
     Chunk (text_func func, char * fmt = "%s");
-    Chunk (double_func func, char * fmt = "%.2f", double mult = 1.0);
+    Chunk (double_func func, char * fmt = "%.2f", float mult = 1.0);
 
     char * getValue () const;
   private:
@@ -416,7 +430,7 @@ public:
       double_func _dfunc;
     } _value;
     char * _fmt;
-    double _mult;
+    float _mult;
     mutable char _buf[1024];
   };
 

@@ -396,6 +396,16 @@ FGBFI::getHeading ()
 
 
 /**
+ * Return the current heading in degrees.
+ */
+double
+FGBFI::getHeadingMag ()
+{
+  return current_aircraft.fdm_state->get_Psi() * RAD_TO_DEG - getMagVar();
+}
+
+
+/**
  * Set the current heading in degrees.
  */
 void
@@ -773,8 +783,14 @@ void
 FGBFI::setAPHeadingLock (bool lock)
 {
   if (lock) {
+				// We need to do this so that
+				// it's possible to lock onto a
+				// heading other than the current
+				// heading.
+    double heading = getAPHeadingMag();
     current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_LOCK);
     current_autopilot->set_HeadingEnabled(true);
+    setAPHeadingMag(heading);
   } else if (current_autopilot->get_HeadingMode() ==
 	     FGAutopilot::FG_HEADING_LOCK) {
     current_autopilot->set_HeadingEnabled(false);
@@ -865,6 +881,19 @@ FGBFI::getNAV1DistDME ()
   return current_radiostack->get_nav1_dme_dist();
 }
 
+bool
+FGBFI::getNAV1InRange ()
+{
+  return current_radiostack->get_nav1_inrange();
+}
+
+bool
+FGBFI::getNAV1DMEInRange ()
+{
+  return (current_radiostack->get_nav1_inrange() &&
+	  current_radiostack->get_nav1_has_dme());
+}
+
 double
 FGBFI::getNAV2Freq ()
 {
@@ -893,6 +922,19 @@ double
 FGBFI::getNAV2DistDME ()
 {
   return current_radiostack->get_nav2_dme_dist();
+}
+
+bool
+FGBFI::getNAV2InRange ()
+{
+  return current_radiostack->get_nav2_inrange();
+}
+
+bool
+FGBFI::getNAV2DMEInRange ()
+{
+  return (current_radiostack->get_nav2_inrange() &&
+	  current_radiostack->get_nav2_has_dme());
 }
 
 double
