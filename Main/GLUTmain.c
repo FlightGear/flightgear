@@ -62,6 +62,7 @@ struct fgGENERAL general;
 
 /* view parameters */
 static GLfloat win_ratio = 1.0;
+static GLint winWidth, winHeight;
 
 /* temporary hack */
 /* pointer to scenery structure */
@@ -74,6 +75,9 @@ int use_signals = 0;
 
 /* Yet another hack. This one used by the HUD code. Michele */
 int show_hud;
+
+/* Yet another other hack. Used for my prototype instrument code. (Durk) */
+int displayInstruments; 
 
 
 /**************************************************************************
@@ -135,10 +139,22 @@ static void fgUpdateViewParams() {
 
     fgViewUpdate(f, v, l);
 
-    /* Tell GL we are about to modify the projection parameters */
-    xglMatrixMode(GL_PROJECTION);
-    xglLoadIdentity();
-    gluPerspective(55.0, 1.0/win_ratio, 1.0, 100000.0);
+    if (displayInstruments)
+      {
+	xglViewport(0, (GLint)(winHeight / 2 ) , (GLint)winWidth, (GLint)winHeight / 2);
+	/* Tell GL we are about to modify the projection parameters */    
+	xglMatrixMode(GL_PROJECTION);
+	xglLoadIdentity();
+	gluPerspective(55.0, 2.0/win_ratio, 1.0, 100000.0);
+      }
+    else
+      {
+	xglViewport(0, 0 , (GLint)winWidth, (GLint) winHeight);
+	/* Tell GL we are about to modify the projection parameters */    
+	xglMatrixMode(GL_PROJECTION);
+	xglLoadIdentity();
+	gluPerspective(55.0, 1.0/win_ratio, 1.0, 100000.0);
+      }
 
     xglMatrixMode(GL_MODELVIEW);
     xglLoadIdentity();
@@ -212,6 +228,47 @@ static void fgUpdateViewParams() {
 
     /* mental note: this should really be done every 10-30 seconds I suppose */
     fgSkyColorsInit();
+}
+
+
+/*************************************************************************
+ * Draw a basic instrument panel
+ ************************************************************************/
+static void fgUpdateInstrViewParams() {
+    xglViewport(0, 0 , (GLint)winWidth, (GLint)winHeight / 2);
+  
+    xglMatrixMode(GL_PROJECTION);
+    xglPushMatrix();
+  
+    xglLoadIdentity();
+    gluOrtho2D(0, 640, 0, 480);
+    xglMatrixMode(GL_MODELVIEW);
+    xglPushMatrix();
+    xglLoadIdentity();
+    
+    xglColor3f(1.0, 1.0, 1.0);
+    xglIndexi(7);
+  
+    xglDisable(GL_DEPTH_TEST);
+    xglDisable(GL_LIGHTING);
+  
+    xglLineWidth(1);
+    xglColor3f (0.5, 0.5, 0.5);
+
+    xglBegin(GL_QUADS);
+    xglVertex2f(0.0, 0.00);
+    xglVertex2f(0.0, 480.0);
+    xglVertex2f(640.0,480.0);
+    xglVertex2f(640.0, 0.0);
+    xglEnd();
+
+    xglRectf(0.0,0.0, 640, 480);
+    xglEnable(GL_DEPTH_TEST);
+    xglEnable(GL_LIGHTING);
+    xglMatrixMode(GL_PROJECTION);
+    xglPopMatrix();
+    xglMatrixMode(GL_MODELVIEW);
+    xglPopMatrix();
 }
 
 
@@ -291,8 +348,14 @@ static void fgRenderFrame( void ) {
     fgSceneryRender();
 
     /* display HUD */
-    /* if( show_hud )
-     	fgCockpitUpdate(); */
+    /* if( show_hud ) {
+     	fgCockpitUpdate();
+    } */
+
+    /* display instruments */
+    if (displayInstruments) {
+	fgUpdateInstrViewParams();
+    }
 
     #ifdef GLUT
       xglutSwapBuffers();
@@ -533,8 +596,11 @@ static void fgReshape( int width, int height ) {
 	win_ratio = (GLfloat) height / (GLfloat) width;
     }
 
-    /* Inform gl of our view window size */
-    xglViewport(0, 0, (GLint)width, (GLint)height);
+    winWidth = width;
+    winHeight = height;
+
+    /* Inform gl of our view window size (now handled elsewhere) */
+    /* xglViewport(0, 0, (GLint)width, (GLint)height); */
 
     fgUpdateViewParams();
     
@@ -623,9 +689,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.41  1997/12/30 13:06:56  curt
-/* A couple lighting tweaks ...
+/* Revision 1.42  1997/12/30 16:36:47  curt
+/* Merged in Durk's changes ...
 /*
+ * Revision 1.41  1997/12/30 13:06:56  curt
+ * A couple lighting tweaks ...
+ *
  * Revision 1.40  1997/12/30 01:38:37  curt
  * Switched back to per vertex normals and smooth shading for terrain.
  *

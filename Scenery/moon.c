@@ -28,6 +28,7 @@
 #include "orbits.h"
 #include "moon.h"
 
+#include "../Aircraft/aircraft.h"
 #include "../Include/general.h"
 #include "../Main/views.h"
 #include "../Time/fg_time.h"
@@ -148,80 +149,110 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
                                       struct OrbElements sunParams,
                                       struct fgTIME t)
 {
-    struct CelestialCoord
-	result;
-    
-    double
-	eccAnom, ecl, lonecl, latecl, actTime,
-        xv, yv, v, r, xh, yh, zh, xg, yg, zg, xe, ye, ze,
-        Ls, Lm, D, F;
+  struct CelestialCoord
+    geocCoord, topocCoord; 
+  
+  
+  double
+    eccAnom, ecl, lonecl, latecl, actTime,
+    xv, yv, v, r, xh, yh, zh, xg, yg, zg, xe, ye, ze,
+    Ls, Lm, D, F, mpar, gclat, rho, HA, g;
+  
+  struct fgAIRCRAFT *a;
+  struct fgFLIGHT *f;
 
-    /* calculate the angle between ecliptic and equatorial coordinate system */
-    actTime = fgCalcActTime(t);
-    ecl = fgDegToRad(23.4393 - 3.563E-7 * actTime);  // in radians of course
+  a = &current_aircraft;
+  f = &a->flight;
+  
+/* calculate the angle between ecliptic and equatorial coordinate system */
+  actTime = fgCalcActTime(t);
+  ecl = fgDegToRad(23.4393 - 3.563E-7 * actTime);  // in radians of course
+							
+  /* calculate the eccentric anomaly */
+  eccAnom = fgCalcEccAnom(params.M, params.e);
 
-    /* calculate the eccentric anomaly */
-    eccAnom = fgCalcEccAnom(params.M, params.e);
+  /* calculate the moon's distance (d) and  true anomaly (v) */
+  xv = params.a * ( cos(eccAnom) - params.e);
+  yv = params.a * ( sqrt(1.0 - params.e*params.e) * sin(eccAnom));
+  v =atan2(yv, xv);
+  r = sqrt(xv*xv + yv*yv);
+  
+  /* estimate the geocentric rectangular coordinates here */
+  xh = r * (cos(params.N) * cos(v + params.w) - sin(params.N) * sin(v + params.w) * cos(params.i));
+  yh = r * (sin(params.N) * cos(v + params.w) + cos(params.N) * sin(v + params.w) * cos(params.i));
+  zh = r * (sin(v + params.w) * sin(params.i));
+  
+  /* calculate the ecliptic latitude and longitude here */
+  lonecl = atan2( yh, xh);
+  latecl = atan2( zh, sqrt( xh*xh + yh*yh));
 
-    /* calculate the moon's distance (d) and  true anomaly (v) */
-	 xv = params.a * ( cos(eccAnom) - params.e);
-    yv = params.a * ( sqrt(1.0 - params.e*params.e) * sin(eccAnom));
-    v =atan2(yv, xv);
-    r = sqrt(xv*xv + yv*yv);
+  /* calculate a number of perturbations */
+  Ls = sunParams.M + sunParams.w;
+  Lm =    params.M +    params.w + params.N;
+  D = Lm - Ls;
+  F = Lm - params.N;
+  
+  lonecl += fgDegToRad(
+		       - 1.274 * sin (params.M - 2*D)    			// the Evection
+		       + 0.658 * sin (2 * D)							// the Variation
+		       - 0.186 * sin (sunParams.M)					// the yearly variation
+		       - 0.059 * sin (2*params.M - 2*D)
+		       - 0.057 * sin (params.M - 2*D + sunParams.M)
+		       + 0.053 * sin (params.M + 2*D)
+		       + 0.046 * sin (2*D - sunParams.M)
+		       + 0.041 * sin (params.M - sunParams.M)
+		       - 0.035 * sin (D)                             // the Parallactic Equation
+		       - 0.031 * sin (params.M + sunParams.M)
+		       - 0.015 * sin (2*F - 2*D)
+		       + 0.011 * sin (params.M - 4*D)
+		       ); /* Pheeuuwwww */
+  latecl += fgDegToRad(
+		       - 0.173 * sin (F - 2*D)
+		       - 0.055 * sin (params.M - F - 2*D)
+		       - 0.046 * sin (params.M + F - 2*D)
+		       + 0.033 * sin (F + 2*D)
+		       + 0.017 * sin (2 * params.M + F)
+		       );  /* Yep */
 
-    /* estimate the geocentric rectangular coordinates here */
-    xh = r * (cos(params.N) * cos(v + params.w) - sin(params.N) * sin(v + params.w) * cos(params.i));
-    yh = r * (sin(params.N) * cos(v + params.w) + cos(params.N) * sin(v + params.w) * cos(params.i));
-    zh = r * (sin(v + params.w) * sin(params.i));
+  r += (
+	- 0.58 * cos(params.M - 2*D)
+	- 0.46 * cos(2*D)
+	); /* Ok! */
 
-    /* calculate the ecliptic latitude and longitude here */
-    lonecl = atan2( yh, xh);
-    latecl = atan2( zh, sqrt( xh*xh + yh*yh));
+  xg = r * cos(lonecl) * cos(latecl);
+  yg = r * sin(lonecl) * cos(latecl);
+  zg = r *               sin(latecl);
 
-    /* calculate a number of perturbations */
-    Ls = sunParams.M + sunParams.w;
-    Lm =    params.M +    params.w + params.N;
-    D = Lm - Ls;
-    F = Lm - params.N;
+  xe  = xg;
+  ye = yg * cos(ecl) - zg * sin(ecl);
+  ze = yg * sin(ecl) + zg * cos(ecl);
+  
 
-    lonecl += fgDegToRad(
-    			    - 1.274 * sin (params.M - 2*D)    			// the Evection
-                + 0.658 * sin (2 * D)							// the Variation
-                - 0.186 * sin (sunParams.M)					// the yearly variation
-                - 0.059 * sin (2*params.M - 2*D)
-                - 0.057 * sin (params.M - 2*D + sunParams.M)
-                + 0.053 * sin (params.M + 2*D)
-                + 0.046 * sin (2*D - sunParams.M)
-                + 0.041 * sin (params.M - sunParams.M)
-                - 0.035 * sin (D)                             // the Parallactic Equation
-                - 0.031 * sin (params.M + sunParams.M)
-                - 0.015 * sin (2*F - 2*D)
-                + 0.011 * sin (params.M - 4*D)
-              ); /* Pheeuuwwww */
-    latecl += fgDegToRad(
-                - 0.173 * sin (F - 2*D)
-                - 0.055 * sin (params.M - F - 2*D)
-                - 0.046 * sin (params.M + F - 2*D)
-                + 0.033 * sin (F + 2*D)
-                + 0.017 * sin (2 * params.M + F)
-              );  /* Yep */
+  
 
-    r += (
-    		     - 0.58 * cos(params.M - 2*D)
-              - 0.46 * cos(2*D)
-          ); /* Ok! */
+  geocCoord.RightAscension = atan2(ye, xe);
+  geocCoord.Declination = atan2(ze, sqrt(xe*xe + ye*ye));
+  
+  /* New since 25 december 1997 */
+  /* Calculate the moon's topocentric position instead of it's geocentric! */
 
-    xg = r * cos(lonecl) * cos(latecl);
-    yg = r * sin(lonecl) * cos(latecl);
-    zg = r *               sin(latecl);
+  mpar = asin( 1 / r); /* calculate the moon's parrallax, i.e. the apparent size of the
+			  (equatorial) radius of the Earth, as seen from the moon */
+  gclat = FG_Latitude - 0.083358 * sin (2 * fgDegToRad( FG_Latitude));
+  rho = 0.99883 + 0.00167 * cos(2 * fgDegToRad(FG_Latitude));
 
-    xe  = xg;
-    ye = yg * cos(ecl) - zg * sin(ecl);
-    ze = yg * sin(ecl) + zg * cos(ecl);
+  if (geocCoord.RightAscension < 0)
+    geocCoord.RightAscension += (2*M_PI);
 
-	 result.RightAscension = atan2(ye, xe);
-    result.Declination = atan2(ze, sqrt(xe*xe + ye*ye));
-    return result;
+  HA = t.lst - (3.8197186 * geocCoord.RightAscension);
+
+  g = atan (tan(gclat) / cos( (HA / 3.8197186))); 
+
+     
+
+  topocCoord.RightAscension = geocCoord.RightAscension - mpar * rho * cos(gclat) * sin(HA) / cos(geocCoord.Declination);
+  topocCoord.Declination = geocCoord.Declination - mpar * rho * sin(gclat) * sin(g - geocCoord.Declination) / sin(g);
+  return topocCoord;
 }
 
 

@@ -40,6 +40,7 @@
 struct SunPos {
     double xs;
     double ys;
+    double dist;
 };
 
 struct OrbElements {
@@ -63,6 +64,7 @@ struct CelestialCoord {
     double RightAscension;
     double Declination;
     double distance;
+    double magnitude;
 };
 
 
@@ -79,7 +81,10 @@ void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
 
 
 /* $Log$
-/* Revision 1.1  1997/10/25 03:16:10  curt
-/* Initial revision of code contributed by Durk Talsma.
+/* Revision 1.2  1997/12/30 16:36:52  curt
+/* Merged in Durk's changes ...
 /*
+ * Revision 1.1  1997/10/25 03:16:10  curt
+ * Initial revision of code contributed by Durk Talsma.
+ *
  */

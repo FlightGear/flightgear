@@ -31,7 +31,7 @@
 
 struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
                                         struct OrbElements theSun,
-                                        struct fgTIME t)
+                                        struct fgTIME t, int idx)
 {
    struct CelestialCoord
 		result;
@@ -40,7 +40,7 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
     	SolarPosition;
 
 	double
-        eccAnom, r, v, ecl, actTime,
+        eccAnom, r, v, ecl, actTime, R, s, ir, Nr, B, FV, ring_magn,
         xv, yv, xh, yh, zh, xg, yg, zg, xe, ye, ze;
 
       actTime = fgCalcActTime(t);
@@ -77,18 +77,69 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 
     xe = xg;
     ye = yg * cos(ecl) - zg * sin(ecl);
-	 ze = yg * sin(ecl) + zg * cos(ecl);
+    ze = yg * sin(ecl) + zg * cos(ecl);
+
     result.RightAscension = atan2(ye,xe);
     result.Declination = atan2(ze, sqrt(xe*xe + ye*ye));
+
+	 
+    /* Let's calculate the brightness of the planet */
+    R = sqrt ( xg*xg + yg*yg + zg*zg);
+    s = SolarPosition.dist;
+    FV = acos(  (r*r + R*R - s*s) / (2*r*R));
+    FV  *= 57.29578;  /* convert radians to degrees */ 
+    switch(idx)
+      {
+      case 2: /* mercury */
+	result.magnitude = -0.36 + 5*log10( r*R ) + 0.027 * FV + 2.2E-13 * pow(FV, 6);
+	break;
+      case 3: /*venus */
+	result.magnitude = -4.34 + 5*log10( r*R ) + 0.013 * FV + 4.2E-07 * pow(FV,3);
+	break;
+      case 4: /* mars */
+	result.magnitude = -1.51 + 5*log10( r*R ) + 0.016 * FV;
+	break;
+      case 5: /* Jupiter */
+	result.magnitude = -9.25 + 5*log10( r*R ) + 0.014 * FV;
+	break;
+      case 6: /* Saturn */
+	
+	ir = 0.4897394;
+	Nr = 2.9585076 + 6.6672E-7*actTime;
+	
+	B = asin ( sin (result.Declination) * cos(ir) - cos(result.Declination) * sin (ir) * sin (result.RightAscension - Nr));
+	ring_magn = -2.6 * sin (abs(B)) + 1.2 * pow(sin(B),2);
+	result.magnitude = -9.0 + 5*log10( r*R ) + 0.044 * FV + ring_magn;
+	break;
+      case 7: /* Uranus */
+	result.magnitude = -7.15 + 5*log10( r*R) + 0.001 * FV;
+	break;
+      case 8:  /* Neptune */
+	result.magnitude = -6.90 + 5*log10 (r*R) + 0.001 *FV;
+	break;
+      default:
+	printf("index %d out of range !!!!\n", idx);
+      }
+    printf("Geocentric dist     %f\n"
+           "Heliocentric dist   %f\n"
+	   "Distance to the sun %f\n"
+	   "Phase angle         %f\n"
+	   "Brightness          %f\n", R, r, s, FV, result.magnitude);
     return result;
 }
 
 
+
 /* $Log$
-/* Revision 1.2  1997/12/12 21:41:29  curt
-/* More light/material property tweaking ... still a ways off.
+/* Revision 1.3  1997/12/30 16:36:52  curt
+/* Merged in Durk's changes ...
 /*
+ * Revision 1.2  1997/12/12 21:41:29  curt
+ * More light/material property tweaking ... still a ways off.
+ *
  * Revision 1.1  1997/10/25 03:16:10  curt
  * Initial revision of code contributed by Durk Talsma.
  *
  */
+
+

@@ -24,6 +24,10 @@
  **************************************************************************/
 
 
+#ifndef HUD_H
+#define HUD_H
+
+
 #include "../Aircraft/aircraft.h"
 #include "../Flight/flight.h"
 #include "../Controls/controls.h"
@@ -225,11 +229,17 @@ void fgUpdateHUD();
 void fgUpdateHUD2( struct HUD *hud );
 
 
+#endif /* HUD_H */
+
+
 /* $Log$
-/* Revision 1.2  1997/12/10 22:37:40  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.3  1997/12/30 16:36:41  curt
+/* Merged in Durk's changes ...
 /*
+ * Revision 1.2  1997/12/10 22:37:40  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.1  1997/08/29 18:03:22  curt
  * Initial revision.
  *

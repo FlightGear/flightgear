@@ -60,6 +60,7 @@ struct SunPos fgCalcSunPos(struct OrbElements params)
       coordinates (xs, ys) */
     solarPosition.xs = r * cos(lonSun);
     solarPosition.ys = r * sin(lonSun);
+    solarPosition.dist = r;
     return solarPosition;
 }
 
@@ -126,23 +127,27 @@ void fgSunInit() {
 void fgSunRender() {
     struct fgVIEW *v;
     struct fgTIME *t;
-    GLfloat color[4] = { 0.85, 0.65, 0.05, 1.0 };
-    /* double x_2, x_4, x_8, x_10; */
-    /* GLfloat ambient; */
-    /* GLfloat amb[3], diff[3]; */
+    struct fgLIGHT *l;
+    /* GLfloat color[4] = { 0.85, 0.65, 0.05, 1.0 }; */
+    GLfloat color[4] = { 1.00, 1.00, 1.00, 1.00 };
+    double x_2, x_4, x_8, x_10;
+    GLfloat ambient;
+    GLfloat amb[3], diff[3];
 
 
     t = &cur_time_params;
     v = &current_view;
+    l = &cur_light_params;
 
-    /* x_2 = t->sun_angle * t->sun_angle;
+    x_2 = l->sun_angle * l->sun_angle;
     x_4 = x_2 * x_2;
     x_8 = x_4 * x_4;
-    x_10 = x_8 * x_2; */
+    x_10 = x_8 * x_2;
 
-    /* ambient = (0.4 * pow(1.1, -x_10 / 30.0));
+    ambient = (0.4 * pow(1.1, -x_10 / 30.0));
     if ( ambient < 0.3 ) ambient = 0.3;
     if ( ambient > 1.0 ) ambient = 1.0;
+
     amb[0] = 0.50 + ((ambient * 6.66) - 1.6);
     amb[1] = 0.00 + ((ambient * 6.66) - 1.6);
     amb[2] = 0.00 + ((ambient * 6.66) - 1.6);
@@ -155,34 +160,40 @@ void fgSunRender() {
     diff[0] = 0.0;
     diff[1] = 0.0;
     diff[2] = 0.0;
-    diff[3] = 0.0; */
+    diff[3] = 1.0;
 
     /* set lighting parameters */
-    /* xglLightfv(GL_LIGHT0, GL_AMBIENT, color );
+    xglLightfv(GL_LIGHT0, GL_AMBIENT, color );
     xglLightfv(GL_LIGHT0, GL_DIFFUSE, color );
     xglMaterialfv(GL_FRONT, GL_AMBIENT, amb);
-    xglMaterialfv(GL_FRONT, GL_DIFFUSE, diff); */
+    xglMaterialfv(GL_FRONT, GL_DIFFUSE, diff); 
+    xglMaterialfv(GL_FRONT, GL_SHININESS, diff);
+    xglMaterialfv(GL_FRONT, GL_EMISSION, diff);
+    xglMaterialfv(GL_FRONT, GL_SPECULAR, diff);
 
-    xglDisable( GL_LIGHTING );
+    /* xglDisable( GL_LIGHTING ); */
 
     xglPushMatrix();
     xglTranslatef(xSun, ySun, zSun);
     xglScalef(1400, 1400, 1400);
 
-    xglColor4f(0.85, 0.65, 0.05, 1.0);
+    xglColor3f(0.85, 0.65, 0.05);
 
     xglCallList(sun_obj);
 
     xglPopMatrix();
 
-    xglEnable( GL_LIGHTING );
+    /* xglEnable( GL_LIGHTING ); */
 }
 
 
 /* $Log$
-/* Revision 1.8  1997/12/19 23:35:00  curt
-/* Lot's of tweaking with sky rendering and lighting.
+/* Revision 1.9  1997/12/30 16:36:54  curt
+/* Merged in Durk's changes ...
 /*
+ * Revision 1.8  1997/12/19 23:35:00  curt
+ * Lot's of tweaking with sky rendering and lighting.
+ *
  * Revision 1.7  1997/12/17 23:12:16  curt
  * Fixed so moon and sun display lists aren't recreate periodically.
  *

@@ -42,6 +42,7 @@
 
 
 extern int show_hud;             /* HUD state */
+extern int displayInstruments;
 
 
 /* Handle keyboard events */
@@ -85,6 +86,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 72: /* H key */
 	    show_hud = !show_hud;
+	    return;
+	case 87: /* W key */
+	    displayInstruments = !displayInstruments;
 	    return;
 	case 90: /* Z key */
 	    w->visibility /= 1.10;
@@ -225,10 +229,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.23  1997/12/15 23:54:44  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.24  1997/12/30 16:36:46  curt
+/* Merged in Durk's changes ...
 /*
+ * Revision 1.23  1997/12/15 23:54:44  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.22  1997/12/10 22:37:45  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

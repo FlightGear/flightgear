@@ -1,9 +1,11 @@
+event.o: event.c event.h
 fg_time.o: fg_time.c fg_time.h ../Include/types.h ../Flight/flight.h \
  ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
  ../Flight/LaRCsim/../flight.h ../Include/constants.h \
  ../Time/fg_time.h
 fg_timer.o: fg_timer.c fg_timer.h
-sptest.o: sptest.c sunpos.h ../Include/types.h ../Include/constants.h
+scheduler.o: scheduler.c
+sidereal.o: sidereal.c ../Include/constants.h
 sunpos.o: sunpos.c sunpos.h ../Include/types.h fg_time.h \
  ../Flight/flight.h ../Flight/Slew/slew.h \
  ../Flight/LaRCsim/ls_interface.h ../Flight/LaRCsim/../flight.h \

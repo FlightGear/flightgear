@@ -29,15 +29,18 @@
 
 struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
                                          struct OrbElements theSun,
-                                         struct fgTIME t);
+                                         struct fgTIME t, int idx);
 
 #endif /* PLANETS_H */
 
 
 /* $Log$
-/* Revision 1.2  1997/12/12 21:41:30  curt
-/* More light/material property tweaking ... still a ways off.
+/* Revision 1.3  1997/12/30 16:36:53  curt
+/* Merged in Durk's changes ...
 /*
+ * Revision 1.2  1997/12/12 21:41:30  curt
+ * More light/material property tweaking ... still a ways off.
+ *
  * Revision 1.1  1997/10/25 03:16:11  curt
  * Initial revision of code contributed by Durk Talsma.
  *

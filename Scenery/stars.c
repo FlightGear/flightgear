@@ -167,11 +167,24 @@ void fgStarsInit() {
 	/* Add the planets to all four display lists */
 	for ( j = 2; j < 9; j++ ) {
 	    pltPos = fgCalculatePlanet(pltOrbElements[j], 
-				       pltOrbElements[0], cur_time_params);
+				       pltOrbElements[0], cur_time_params, j);
 	    printf("Planet found at %f (ra), %f (dec)\n", 
 		   pltPos.RightAscension, pltPos.Declination);
 	    /* give the planets a temporary color, for testing purposes */
-	    xglColor3f( 1.0, 0.0, 0.0);
+	    /* xglColor3f( 1.0, 0.0, 0.0); */
+
+	    /* scale magnitudes to (0.0 - 1.0) */
+	    magnitude = (0.0 - pltPos.magnitude) / 5.0 + 1.0;
+	    
+	    /* scale magnitudes again so they look ok */
+	    if ( magnitude > 1.0 ) { magnitude = 1.0; }
+	    if ( magnitude < 0.0 ) { magnitude = 0.0; }
+	    magnitude = 
+	      magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.1);	   
+	    
+
+	    xglColor3f(magnitude, magnitude, magnitude);
+
 	    xglVertex3f( 50000.0 * cos(pltPos.RightAscension) * 
 			 cos(pltPos.Declination),
 			 50000.0 * sin(pltPos.RightAscension) * 
@@ -265,9 +278,12 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.21  1997/12/19 23:35:00  curt
-/* Lot's of tweaking with sky rendering and lighting.
+/* Revision 1.22  1997/12/30 16:36:53  curt
+/* Merged in Durk's changes ...
 /*
+ * Revision 1.21  1997/12/19 23:35:00  curt
+ * Lot's of tweaking with sky rendering and lighting.
+ *
  * Revision 1.20  1997/12/15 23:55:03  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

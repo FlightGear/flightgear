@@ -49,6 +49,7 @@
 
 
 extern int show_hud;             /* HUD state */
+extern int displayInstruments;
 
 
 /* General house keeping initializations */
@@ -228,15 +229,21 @@ void fgInitSubsystems( void ) {
     /* To HUD or not to HUD */
     show_hud = 1;
 
+    /* Let's show the instrument panel */
+    displayInstruments = 1;
+
     /* Joystick support */
     fgJoystickInit( 0 );
 }
 
 
 /* $Log$
-/* Revision 1.22  1997/12/19 23:34:05  curt
-/* Lot's of tweaking with sky rendering and lighting.
+/* Revision 1.23  1997/12/30 16:36:50  curt
+/* Merged in Durk's changes ...
 /*
+ * Revision 1.22  1997/12/19 23:34:05  curt
+ * Lot's of tweaking with sky rendering and lighting.
+ *
  * Revision 1.21  1997/12/19 16:45:00  curt
  * Working on scene rendering order and options.
  *

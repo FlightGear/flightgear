@@ -37,6 +37,7 @@ fg_init.o: fg_init.c fg_init.h views.h ../Include/types.h \
  ../Scenery/scenery.h ../Scenery/../Include/types.h ../Scenery/sky.h \
  ../Scenery/stars.h ../Scenery/sun.h ../Time/sunpos.h \
  ../Weather/weather.h
+probdemo.o: probdemo.c ../XGL/xgl.h
 views.o: views.c views.h ../Include/types.h ../Flight/flight.h \
  ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
  ../Flight/LaRCsim/../flight.h ../Math/mat3.h ../Time/fg_time.h \
