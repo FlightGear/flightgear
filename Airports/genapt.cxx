@@ -50,18 +50,6 @@ typedef container::iterator iterator;
 typedef container::const_iterator const_iterator;
 
 
-/*
-// Calculate distance between to Point3D's
-static double calc_dist(const Point3D& p1, const Point3D& p2) {
-    double x, y, z;
-    x = p1.x() - p2.x();
-    y = p1.y() - p2.y();
-    z = p1.z() - p2.z();
-    return sqrt(x*x + y*y + z*z);
-}
-*/
-
-
 #define FG_APT_BASE_TEX_CONSTANT 2000.0
 
 // Calculate texture coordinates for a given point.
@@ -153,7 +141,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 
     i = 1;
     tex = calc_tex_coords( t->nodes[i], t->center );
-    dist = distance3D(average, cart);
+    dist = cart.distance3D(average);
     if ( dist > max_dist ) {
 	max_dist = dist;
     }
@@ -173,7 +161,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 	fragment.add_face(center_num, i - 1, i);
 
 	tex = calc_tex_coords( t->nodes[i], t->center );
-	dist = distance3D(average, cart);
+	dist = cart.distance3D(average);
 	if ( dist > max_dist ) {
 	    max_dist = dist;
 	}
@@ -294,6 +282,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.7  1998/10/20 18:26:06  curt
+// Updates to point3d.hxx
+//
 // Revision 1.6  1998/10/18 01:17:16  curt
 // Point3D tweaks.
 //
