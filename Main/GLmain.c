@@ -141,9 +141,32 @@ static void fgUpdateViewParams() {
     glLoadIdentity();
     
     /* calculate view position in current FG view coordinate system */
-    view_pos = fgPolarToCart(FG_Lon_geocentric, FG_Lat_geocentric, 
+    view_pos = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
 			     FG_Radius_to_vehicle * FEET_TO_METER + 1.0);
     printf("View pos = %.4f, %.4f, %.4f\n", view_pos.x, view_pos.y, view_pos.z);
+
+    /* Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw) */
+    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
+    MAT3rotate(R, vec, FG_Phi);
+    /* printf("Roll matrix\n"); */
+    /* MAT3print(R, stdout); */
+
+    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
+    /* MAT3mult_vec(vec, vec, R); */
+    MAT3rotate(TMP, vec, FG_Theta);
+    /* printf("Pitch matrix\n"); */
+    /* MAT3print(TMP, stdout); */
+    MAT3mult(R, R, TMP);
+
+    MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
+    /* MAT3mult_vec(vec, vec, R); */
+    /* MAT3rotate(TMP, vec, FG_Psi - FG_PI_2); */
+    MAT3rotate(TMP, vec, -FG_Psi);
+    /* printf("Yaw matrix\n");
+    MAT3print(TMP, stdout); */
+    MAT3mult(LOCAL, R, TMP);
+    /* printf("LOCAL matrix\n"); */
+    /* MAT3print(LOCAL, stdout); */
 
     /* Derive the local UP transformation matrix based on *geodetic*
      * coordinates */
@@ -159,8 +182,8 @@ static void fgUpdateViewParams() {
     /* MAT3print(TMP, stdout); */
 
     MAT3mult(UP, R, TMP);
-    printf("Local up matrix\n");
-    MAT3print(UP, stdout);
+    /* printf("Local up matrix\n"); */
+    /* MAT3print(UP, stdout); */
 
     MAT3_SET_VEC(local_up, 1.0, 0.0, 0.0);
     MAT3mult_vec(local_up, local_up, UP);
@@ -174,39 +197,16 @@ static void fgUpdateViewParams() {
     /* printf("    Alt Up = (%.4f, %.4f, %.4f)\n", 
        alt_up.x, alt_up.y, alt_up.z); */
 
-    /* Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw) */
-    MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-    MAT3rotate(R, vec, FG_Phi);
-    /* printf("Roll matrix\n"); */
-    /* MAT3print(R, stdout); */
-
-    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
-    /* MAT3mult_vec(vec, vec, R); */
-    MAT3rotate(TMP, vec, -FG_Theta);
-    /* printf("Pitch matrix\n"); */
-    /* MAT3print(TMP, stdout); */
-    MAT3mult(R, R, TMP);
-
-    MAT3_SET_VEC(vec, 0.0, 0.0, -1.0);
-    /* MAT3mult_vec(vec, vec, R); */
-    /* MAT3rotate(TMP, vec, FG_PI + FG_PI_2 + FG_Psi + view_offset); */
-    MAT3rotate(TMP, vec, FG_Psi - FG_PI_2);
-    /* printf("Yaw matrix\n");
-    MAT3print(TMP, stdout); */
-    MAT3mult(LOCAL, R, TMP);
-    printf("LOCAL matrix\n");
-    MAT3print(LOCAL, stdout);
-
     /* Derive the VIEW matrix */
-    MAT3mult(VIEW, UP, LOCAL);
-    printf("VIEW matrix\n");
-    MAT3print(VIEW, stdout);
+    MAT3mult(VIEW, LOCAL, UP);
+    /* printf("VIEW matrix\n"); */
+    /* MAT3print(VIEW, stdout); */
 
     /* generate the current up, forward, and fwrd-view vectors */
     MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
     MAT3mult_vec(view_up, vec, VIEW);
 
-    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
+    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
     MAT3mult_vec(forward, vec, VIEW);
     printf("Forward vector is (%.2f,%.2f,%.2f)\n", forward[0], forward[1], 
 	   forward[2]);
@@ -217,7 +217,7 @@ static void fgUpdateViewParams() {
     gluLookAt(view_pos.x, view_pos.y, view_pos.z,
 	      view_pos.x + view_forward[0], view_pos.y + view_forward[1], 
 	      view_pos.z + view_forward[2],
-	      local_up[0], local_up[1], local_up[2]);
+	      view_up[0], view_up[1], view_up[2]);
 
     glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
 }
@@ -542,7 +542,8 @@ int main( int argc, char *argv[] ) {
     /* Initial Orientation */
     FG_Phi   = -2.658474E-06;
     FG_Theta =  7.401790E-03;
-    FG_Psi   =  270.0 * DEG_TO_RAD;
+    /* FG_Psi   =  270.0 * DEG_TO_RAD; */
+    FG_Psi   =  0.0 * DEG_TO_RAD;
 
     /* Initial Angular B rates */
     FG_P_body = 7.206685E-05;
@@ -580,7 +581,9 @@ int main( int argc, char *argv[] ) {
     rough_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
 			       FG_Latitude  * RAD_TO_DEG * 3600.0);
     printf("Ground elevation is %.2f meters here.\n", rough_elev);
-    FG_Runway_altitude = rough_elev * METER_TO_FEET;
+    if ( rough_elev > -9990.0 ) {
+	FG_Runway_altitude = rough_elev * METER_TO_FEET;
+    }
 
     if ( FG_Altitude < FG_Runway_altitude ) {
 	FG_Altitude = FG_Runway_altitude + 3.758099;
@@ -652,9 +655,12 @@ int printf (const char *format, ...) {
 
 
 /* $Log$
-/* Revision 1.41  1997/07/31 22:52:37  curt
-/* Working on redoing internal coordinate systems & scenery transformations.
+/* Revision 1.42  1997/08/01 19:43:33  curt
+/* Making progress with coordinate system overhaul.
 /*
+ * Revision 1.41  1997/07/31 22:52:37  curt
+ * Working on redoing internal coordinate systems & scenery transformations.
+ *
  * Revision 1.40  1997/07/30 16:12:42  curt
  * Moved fg_random routines from Util/ to Math/
  *
