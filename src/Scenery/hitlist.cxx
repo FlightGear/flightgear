@@ -11,39 +11,12 @@
 #include <GL/glut.h>
 
 #include <simgear/constants.h>
+#include <simgear/inlines.h>
 #include <simgear/math/vector.hxx>
 #include <simgear/xgl/xgl.h>
 
 #include "hitlist.hxx"
 
-template <class T>
-   inline const int FG_SIGN(const T x) {
-    return x < T(0) ? -1 : 1;
-}
-
-template <class T>
-   inline const T FG_MIN(const T a, const T b) {
-    return a < b ? a : b;
-}
-
-// return the minimum of three values
-template <class T>
-   inline const T FG_MIN3( const T a, const T b, const T c)
-{
-    return (a < b ? FG_MIN (a, c) : FG_MIN (b, c));
-}
-
-template <class T>
-   inline const T FG_MAX(const T a, const T b) {
-    return  a > b ? a : b;
-}
-
-// return the maximum of three values
-template <class T>
-   inline const T FG_MAX3 (const T a, const T b, const T c)
-{
-    return (a > b ? FG_MAX (a, c) : FG_MAX (b, c));
-}
 
 // check to see if the intersection point is
 // actually inside this face
@@ -52,17 +25,17 @@ static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     double xmin, xmax, ymin, ymax, zmin, zmax;
 	
     // punt if outside bouding cube
-    if ( point[0] < (xmin = FG_MIN3 (tri[0][0], tri[1][0], tri[2][0])) ) {
+    if ( point[0] < (xmin = SG_MIN3 (tri[0][0], tri[1][0], tri[2][0])) ) {
         return false;
-    } else if ( point[0] > (xmax = FG_MAX3 (tri[0][0], tri[1][0], tri[2][0])) ) {
+    } else if ( point[0] > (xmax = SG_MAX3 (tri[0][0], tri[1][0], tri[2][0])) ) {
         return false;
-    } else if ( point[1] < (ymin = FG_MIN3 (tri[0][1], tri[1][1], tri[2][1])) ) {
+    } else if ( point[1] < (ymin = SG_MIN3 (tri[0][1], tri[1][1], tri[2][1])) ) {
         return false;
-    } else if ( point[1] > (ymax = FG_MAX3 (tri[0][1], tri[1][1], tri[2][1])) ) {
+    } else if ( point[1] > (ymax = SG_MAX3 (tri[0][1], tri[1][1], tri[2][1])) ) {
         return false;
-    } else if ( point[2] < (zmin = FG_MIN3 (tri[0][2], tri[1][2], tri[2][2])) ) {
+    } else if ( point[2] < (zmin = SG_MIN3 (tri[0][2], tri[1][2], tri[2][2])) ) {
         return false;
-    } else if ( point[2] > (zmax = FG_MAX3 (tri[0][2], tri[1][2], tri[2][2])) ) {
+    } else if ( point[2] > (zmax = SG_MAX3 (tri[0][2], tri[1][2], tri[2][2])) ) {
         return false;
     }
 
@@ -74,7 +47,7 @@ static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     double dx = xmax - xmin;
     double dy = ymax - ymin;
     double dz = zmax - zmin;
-    double min_dim = FG_MIN3 (dx, dy, dz);
+    double min_dim = SG_MIN3 (dx, dy, dz);
 
     //first, drop the smallest dimension so we only have to work
     //in 2d.
@@ -117,8 +90,8 @@ static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     
     // check if intersection point is on the same side of p1 <-> p2 as p3
     double tmp = (y2 - y3) / (x2 - x3);
-    int side1 = FG_SIGN (tmp * (rx - x3) + y3 - ry);
-    int side2 = FG_SIGN (tmp * (x1 - x3) + y3 - y1);
+    int side1 = SG_SIGN (tmp * (rx - x3) + y3 - ry);
+    int side2 = SG_SIGN (tmp * (x1 - x3) + y3 - y1);
     if ( side1 != side2 ) {
         // printf("failed side 1 check\n");
         return false;
@@ -126,8 +99,8 @@ static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
 
     // check if intersection point is on correct side of p2 <-> p3 as p1
     tmp = (y3 - ry) / (x3 - rx);
-    side1 = FG_SIGN (tmp * (x2 - rx) + ry - y2);
-    side2 = FG_SIGN (tmp * (x1 - rx) + ry - y1);
+    side1 = SG_SIGN (tmp * (x2 - rx) + ry - y2);
+    side2 = SG_SIGN (tmp * (x1 - rx) + ry - y1);
     if ( side1 != side2 ) {
         // printf("failed side 2 check\n");
         return false;
@@ -135,8 +108,8 @@ static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
 
     // check if intersection point is on correct side of p1 <-> p3 as p2
     tmp = (y2 - ry) / (x2 - rx);
-    side1 = FG_SIGN (tmp * (x3 - rx) + ry - y3);
-    side2 = FG_SIGN (tmp * (x1 - rx) + ry - y1);
+    side1 = SG_SIGN (tmp * (x3 - rx) + ry - y3);
+    side2 = SG_SIGN (tmp * (x1 - rx) + ry - y1);
     if ( side1 != side2 ) {
         // printf("failed side 3  check\n");
         return false;
