@@ -98,9 +98,16 @@ local_file_exists( const string& path ) {
 
 FGNewMat::Object::Object (const SGPropertyNode * node, double range_m)
   : _models_loaded(false),
-    _coverage_m2(node->getDoubleValue("coverage-m2", 100000)),
+    _coverage_m2(node->getDoubleValue("coverage-m2", 1000000)),
     _range_m(range_m)
 {
+				// Sanity check
+  if (_coverage_m2 < 1000) {
+    SG_LOG(SG_INPUT, SG_ALERT, "Random object coverage " << _coverage_m2
+	   << " is too small, forcing, to 1000");
+    _coverage_m2 = 1000;
+  }
+
 				// Note all the model paths
   vector <SGPropertyNode_ptr> path_nodes = node->getChildren("path");
   for (int i = 0; i < path_nodes.size(); i++)
