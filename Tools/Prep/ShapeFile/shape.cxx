@@ -93,6 +93,7 @@ static void clip_and_write_poly( string root, long int p_index, AreaType area,
 
     base.num_contours = 0;
     base.contour = NULL;
+    base.hole = NULL;
     gpc_add_contour( &base, &v_list, 0 );
 
     // FG_LOG( FG_GENERAL, FG_DEBUG, "base = 4 vertices" );
@@ -150,6 +151,7 @@ bool shape_utils_init() {
 void init_shape(gpc_polygon *shape) {
     shape->num_contours = 0;
     shape->contour = NULL;
+    shape->hole = NULL;
 }
 
 
@@ -284,10 +286,12 @@ void process_shape(string path, AreaType area, gpc_polygon *master_gpc_shape) {
 
 	    row.num_contours = 0;
 	    row.contour = NULL;
+	    row.hole = NULL;
 	    gpc_add_contour( &row, &v_list, 0 );
 
 	    clip_row.num_contours = 0;
 	    clip_row.contour = NULL;
+	    clip_row.hole = NULL;
 	    
 	    gpc_polygon_clip(GPC_INT, &row, master_gpc_shape, &clip_row);
 
