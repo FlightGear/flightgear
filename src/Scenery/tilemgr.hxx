@@ -108,7 +108,6 @@ private:
      * Queue tiles for loading.
      */
     FGTileLoader loader;
-    int counter_hack;
 
     /**
      * Work queues.

@@ -61,8 +61,7 @@ bool FGTileMgr::tile_filter = true;
 FGTileMgr::FGTileMgr():
     state( Start ),
     current_tile( NULL ),
-    vis( 16000 ),
-    counter_hack(0)
+    vis( 16000 )
 {
 }
 
@@ -305,13 +304,8 @@ void FGTileMgr::update_queues()
     
     // cout << "current elevation (ssg) == " << scenery.get_cur_elev() << endl;
 
-    // activate loader thread one out of every 5 frames
-    if ( counter_hack == 0 ) {
-        // Notify the tile loader that it can load another tile
-        loader.update();
-    } else {
-        counter_hack = (counter_hack + 1) % 5;
-    }
+    // Notify the tile loader that it can load another tile
+    loader.update();
 
     if ( !attach_queue.empty() ) {
 #if defined(ENABLE_THREADS) && ENABLE_THREADS
