@@ -90,7 +90,7 @@ class fgDEM {
     double next_double();
 
     // return next exponential num from input stream
-    int next_exp();
+    double next_exp();
 
 public:
 
@@ -145,6 +145,9 @@ public:
 
 
 // $Log$
+// Revision 1.9  1998/10/16 19:08:14  curt
+// Portability updates from Bernie Bright.
+//
 // Revision 1.8  1998/09/19 17:59:46  curt
 // Use c++ streams (fg_gzifstream).  Also converted many character arrays to
 // the string class.

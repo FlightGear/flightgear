@@ -34,13 +34,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h> // stat()
-#include <unistd.h>   // stat()
-
+#include <errno.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>   // stat()
+#endif
 #include <string>
 
 // #include <zlib/zlib.h>
 #include <Misc/fgstream.hxx>
 #include <Misc/strutils.hxx>
+#include <Include/compiler.h>
+FG_USING_NAMESPACE(std);
 
 #include "dem.hxx"
 #include "leastsqs.hxx"
@@ -51,7 +55,12 @@
 #define MAX_EX_NODES 10000
 
 #ifdef WIN32
-#  define MKDIR(a) mkdir(a,S_IRWXU)     // I am just guessing at this flag (NHV)
+# ifdef __BORLANDC__
+#  include <dir.h>
+#  define MKDIR(a) mkdir(a)
+# else
+#  define MKDIR(a) mkdir(a,S_IRWXU)  // I am just guessing at this flag (NHV)
+# endif // __BORLANDC__
 #endif // WIN32
 
 
@@ -65,7 +74,7 @@ fgDEM::fgDEM( void ) {
 #ifdef WIN32
 
 // return the file path name ( foo/bar/file.ext = foo/bar )
-static void extract_path (char *in, char *base) {
+static void extract_path ( const char *in, char *base) {
     int len, i;
     
     len = strlen (in);
@@ -81,7 +90,7 @@ static void extract_path (char *in, char *base) {
 
 
 // Make a subdirectory
-static int my_mkdir (char *dir) {
+static int my_mkdir (const char *dir) {
     struct stat stat_buf;
     int result;
 
@@ -118,11 +127,11 @@ int fgDEM::open ( const string& file ) {
 	return 0;
     } else {
 	in = new fg_gzifstream( file );
-	if ( !in ) {
-	    cout << "Cannot open " + file + "\n";
+	if ( !(*in) ) {
+	    cout << "Cannot open " << file << endl;
 	    return 0;
 	}
-	cout << "Loading DEM data file: " + file + "\n";
+	cout << "Loading DEM data file: " << file << endl;
     }
 
     return 1;
@@ -133,7 +142,7 @@ int fgDEM::open ( const string& file ) {
 int fgDEM::close () {
     // the fg_gzifstream doesn't seem to have a close()
 
-    delete(in);
+    delete in;
 
     return 1;
 }
@@ -172,7 +181,7 @@ double fgDEM::next_double() {
 
 
 // return next exponential num from input stream
-int fgDEM::next_exp() {
+double fgDEM::next_exp() {
     string token;
     double mantissa;
     int exp, acc;
@@ -180,6 +189,21 @@ int fgDEM::next_exp() {
 
     token = next_token();
 
+#if 1
+    const char* p = token.c_str();
+    char buf[64];
+    char* bp = buf;
+    
+    for ( ; *p != 0; ++p )
+    {
+	if ( *p == 'D' )
+	    *bp++ = 'E';
+	else
+	    *bp++ = *p;
+    }
+    *bp = 0;
+    return ::atof( buf );
+#else
     sscanf(token.c_str(), "%lfD%d", &mantissa, &exp);
 
     // cout << "    Mantissa = " << mantissa << "  Exp = " << exp << "\n";
@@ -196,6 +220,7 @@ int fgDEM::next_exp() {
     }
 
     return( (int)rint(mantissa * (double)acc) );
+#endif
 }
 
 
@@ -214,8 +239,8 @@ int fgDEM::read_a_record() {
     }
   
     // clean off the trailing whitespace
-    name = trim(name);
-    cout << "    Quad name field: " + name + "\n";
+    name = trim(name, " ");
+    cout << "    Quad name field: " << name << endl;
 
     // DEM level code, 3 reflects processing by DMA
     inum = next_int();
@@ -301,10 +326,16 @@ int fgDEM::read_a_record() {
     // I will eventually have to do something with this for data at
     // higher latitudes */
     token = next_token();
-    cout << "    accuracy & spacial resolution string = " + token + "\n";
+    cout << "    accuracy & spacial resolution string = " << token << endl;
     i = token.length();
     cout << "    length = " << i << "\n";
 
+#if 1
+    inum = atoi( token.substr( 0, 1 ) );
+    row_step = atof( token.substr( 1, 12 ) );
+    col_step = atof( token.substr( 13, 12 ) );
+    //token.substr( 25, 12 )
+#else
     ptr = token.c_str() + i - 12;
     cout << "    last field = " << ptr << " = " << atof(ptr) << "\n";
     ptr[0] = '\0';
@@ -322,6 +353,7 @@ int fgDEM::read_a_record() {
     // accuracy code = atod(token)
     ptr = ptr - 12;
     inum = atoi(ptr);
+#endif
     cout << "    Accuracy code = " << inum << "\n";
 
     cout << "    column step = " << col_step << 
@@ -682,7 +714,6 @@ void fgDEM::outputmesh_set_pt( int i, int j, double value ) {
 // since they are referenced by position from the .poly file.
 void fgDEM::outputmesh_output_nodes( const string& fg_root, fgBUCKET *p ) {
     double exnodes[MAX_EX_NODES][3];
-    double junk1, junk2, junk3;
     struct stat stat_buf;
     string dir;
     char base_path[256], file[256], exfile[256];
@@ -705,14 +736,15 @@ void fgDEM::outputmesh_output_nodes( const string& fg_root, fgBUCKET *p ) {
 
     // generate the base directory
     fgBucketGenBasePath(p, base_path);
-    cout << "fg_root = " + fg_root + "  Base Path = " + base_path + "\n";
+    cout << "fg_root = " << fg_root << "  Base Path = " << base_path << endl;
     dir = fg_root + "/Scenery/" + base_path;
-    cout << "Dir = " + dir + "\n";
+    cout << "Dir = " << dir << endl;
     
     // stat() directory and create if needed
+    errno = 0;
     result = stat(dir.c_str(), &stat_buf);
-    if ( result != 0 ) {
-	cout << "Stat error need to create directory\n";
+    if ( result != 0 && errno == ENOENT ) {
+	cout << "Creating directory\n";
 
 #ifndef WIN32
 
@@ -753,7 +785,8 @@ void fgDEM::outputmesh_output_nodes( const string& fg_root, fgBUCKET *p ) {
     // load extra nodes if they exist
     excount = 0;
     if ( (fd = fopen(exfile, "r")) != NULL ) {
-	fscanf(fd, "%d %d %d %d", &excount, &junk1, &junk2, &junk3);
+	int junki;
+	fscanf(fd, "%d %d %d %d", &excount, &junki, &junki, &junki);
 
 	if ( excount > MAX_EX_NODES - 1 ) {
 	    printf("Error, too many 'extra' nodes, increase array size\n");
@@ -763,7 +796,7 @@ void fgDEM::outputmesh_output_nodes( const string& fg_root, fgBUCKET *p ) {
 	}
 
 	for ( i = 1; i <= excount; i++ ) {
-	    fscanf(fd, "%d %lf %lf %lf\n", &junk1, 
+	    fscanf(fd, "%d %lf %lf %lf\n", &junki, 
 		   &exnodes[i][0], &exnodes[i][1], &exnodes[i][2]);
 	    printf("(extra) %d %.2f %.2f %.2f\n", 
 		    i, exnodes[i][0], exnodes[i][1], exnodes[i][2]);
@@ -813,12 +846,15 @@ void fgDEM::outputmesh_output_nodes( const string& fg_root, fgBUCKET *p ) {
 
 fgDEM::~fgDEM( void ) {
     // printf("class fgDEM DEstructor called.\n");
-    delete(dem_data);
-    delete(output_data);
+    delete [] dem_data;
+    delete [] output_data;
 }
 
 
 // $Log$
+// Revision 1.17  1998/10/16 19:08:12  curt
+// Portability updates from Bernie Bright.
+//
 // Revision 1.16  1998/10/02 21:41:39  curt
 // Fixes for win32.
 //
