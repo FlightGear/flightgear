@@ -1092,8 +1092,9 @@ FGTextLayer::Chunk::Chunk (const string &text, const string &fmt)
 }
 
 FGTextLayer::Chunk::Chunk (ChunkType type, const SGPropertyNode * node,
-			   const string &fmt, float mult, float offs)
-  : _type(type), _fmt(fmt), _mult(mult), _offs(offs)
+			   const string &fmt, float mult, float offs,
+                           bool truncation)
+  : _type(type), _fmt(fmt), _mult(mult), _offs(offs), _trunc(truncation)
 {
   if (_fmt.empty()) {
     if (type == TEXT_VALUE)
@@ -1117,7 +1118,9 @@ FGTextLayer::Chunk::getValue () const
       sprintf(_buf, _fmt.c_str(), _node->getStringValue());
       break;
     case DOUBLE_VALUE:
-      sprintf(_buf, _fmt.c_str(), _offs + _node->getFloatValue() * _mult);
+      double d = _offs + _node->getFloatValue() * _mult;
+      if (_trunc)  d = truncf(d);
+      sprintf(_buf, _fmt.c_str(), d);
       break;
     }
     return _buf;
