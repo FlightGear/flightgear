@@ -72,6 +72,7 @@ void FGMPSMessageBuf::writed(double data)
 
 void FGMPSMessageBuf::writes(string data)
 {
+	put(data.length());
 	for (int i=0; i<data.length(); i++) put(data[i]);
 }
 
