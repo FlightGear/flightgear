@@ -164,7 +164,7 @@ FGInterface::bind ()
 {
                                 // Time management
   fgTie("/fdm/time/delta_t", this, 
-	&(FGInterface::get_delta_t));
+	&FGInterface::get_delta_t);
 
   // The following two can't be uncommented until we have support for
   // the "long" data type in the property manager

@@ -569,6 +569,7 @@ void fgRenderFrame( void ) {
         // scene.  Thus instead of playing with GL_AMBIENT, we just
         // set that to black and instead modify GL_LIGHT_MODEL_AMBIENT.
 	GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
+	GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 	ssgGetLight( 0 ) -> setColour( GL_AMBIENT, black );
 
 	glLightModelfv( GL_LIGHT_MODEL_AMBIENT, l->scene_ambient );
@@ -678,7 +679,14 @@ void fgRenderFrame( void ) {
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky backdrop
+
+            // we need a white diffuse light for the phase of the moon
+            ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
+
 	    thesky->preDraw();
+
+            // return to the desired diffuse color
+            ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
 	}
 
 	// draw the ssg scene
