@@ -70,6 +70,8 @@ private:
     bool fuel_pump[MAX_ENGINES];
     double prop_advance[MAX_ENGINES];
     double parking_brake;
+    double speed_brake;
+    double spoilers;
     double brake[MAX_WHEELS];
     int magnetos[MAX_ENGINES];
     bool throttle_idle;
@@ -108,6 +110,8 @@ public:
 	return prop_advance[engine];
     }
     inline double get_parking_brake() const { return parking_brake; }
+    inline double get_speed_brake() const { return speed_brake; }
+    inline double get_spoilers() const { return spoilers; }
     inline double get_brake(int wheel) const { return brake[wheel]; }
     inline int get_magnetos(int engine) const { return magnetos[engine]; }
     inline bool get_starter(int engine) const { return starter[engine]; }
@@ -143,6 +147,8 @@ public:
     void set_starter( int engine, bool flag );
     void set_fuel_selector( int tank, bool pos );
     void set_parking_brake( double pos );
+    void set_speed_brake( double pos );
+    void set_spoilers( double pos );
     void set_brake( int wheel, double pos );
     void move_brake( int wheel, double amt );
     void set_gear_down( bool gear );

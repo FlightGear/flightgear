@@ -61,6 +61,8 @@ FGControls::FGControls() :
     rudder_trim( 0.0 ),
     flaps( 0.0 ),
     parking_brake( 0.0 ),
+    speed_brake( 0.0 ),
+    spoilers( 0.0 ),
     throttle_idle( true ),
     gear_down( false )
 {
@@ -164,7 +166,13 @@ FGControls::bind ()
   }
   fgTie("/controls/parking-brake", this,
 	&FGControls::get_parking_brake, &FGControls::set_parking_brake);
-  fgSetArchivable("/controls/parking-brake");
+  fgSetArchivable("/controls/speed-brake");
+  fgTie("/controls/speed-brake", this,
+        &FGControls::get_speed_brake, &FGControls::set_speed_brake);
+  fgSetArchivable("/controls/speed-brake");
+  fgTie("/controls/spoilers", this,
+        &FGControls::get_spoilers, &FGControls::set_spoilers);
+  fgSetArchivable("/controls/spoilers");
   for (index = 0; index < MAX_WHEELS; index++) {
       char name[32];
       sprintf(name, "/controls/brakes[%d]", index);
@@ -517,6 +525,20 @@ FGControls::set_parking_brake( double pos )
 {
     parking_brake = pos;
     CLAMP(&parking_brake, 0.0, 1.0);
+}
+
+void
+FGControls::set_speed_brake( double pos )
+{
+    speed_brake = pos;
+    CLAMP(&speed_brake, 0.0, 1.0);
+}
+
+void
+FGControls::set_spoilers( double pos )
+{
+    spoilers = pos;
+    CLAMP(&spoilers, 0.0, 1.0);
 }
 
 void

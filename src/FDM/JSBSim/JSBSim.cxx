@@ -371,8 +371,8 @@ bool FGJSBsim::copy_to_JSBsim() {
     FCS->SetDrCmd( -globals->get_controls()->get_rudder() );
     FCS->SetYawTrimCmd( -globals->get_controls()->get_rudder_trim() );
     FCS->SetDfCmd(  globals->get_controls()->get_flaps() );
-    FCS->SetDsbCmd( 0.0 ); //speedbrakes
-    FCS->SetDspCmd( 0.0 ); //spoilers
+    FCS->SetDsbCmd( globals->get_controls()->get_speed_brake() );
+    FCS->SetDspCmd( globals->get_controls()->get_spoilers() );
 
 				// Parking brake sets minimum braking
 				// level for mains.
