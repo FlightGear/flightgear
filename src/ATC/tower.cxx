@@ -2036,11 +2036,16 @@ void FGTower::ReportDownwind(string ID) {
 		// the moment that would b&gg?r up the constraint position calculations.
 		RemoveFromAppList(ID);
 		t->leg = DOWNWIND;
-		t->pos = t->planePtr->GetPos();
+		if(t->isUser) {
+			t->pos.setlon(user_lon_node->getDoubleValue());
+			t->pos.setlat(user_lat_node->getDoubleValue());
+			t->pos.setelev(user_elev_node->getDoubleValue());
+		} else {
+			// ASSERT(t->planePtr != NULL);
+			t->pos = t->planePtr->GetPos();
+		}
 		CalcETA(t);
-		//cout << "DDDDDDDDDDDDDDDDdddddddd" << endl;
 		AddToCircuitList(t);
-		//cout << "EEEEEEEEEEEEEEEEEEEEeeeeee" << endl;
 	} else {
 		SG_LOG(SG_ATC, SG_WARN, "WARNING: Unable to find plane " << ID << " in FGTower::ReportDownwind(...)");
 	}
