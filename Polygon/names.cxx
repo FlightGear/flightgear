@@ -30,7 +30,9 @@
 
 // return area type from text name
 AreaType get_area_type( string area ) {
-    if ( area == "AirportKeep" ) {
+    if ( area == "Default" ) {
+	return DefaultArea;
+    } else if ( area == "AirportKeep" ) {
 	return AirportKeepArea;
     } else if ( area == "AirportIgnore" ) {
 	return AirportIgnoreArea;
@@ -42,7 +44,8 @@ AreaType get_area_type( string area ) {
 	return OceanArea;
     } else if ( area == "Lake" ) {
 	return LakeArea;
-    } else if ( area == "Lake   Dry" ) {
+    } else if ( (area == "Lake   Dry")
+		|| (area == "DryLake") ) {
 	return DryLakeArea;
     } else if ( (area == "Lake   Intermittent")
 		|| (area == "IntermittentLake") ) {
@@ -74,7 +77,9 @@ AreaType get_area_type( string area ) {
 
 // return text from of area name
 string get_area_name( AreaType area ) {
-    if ( area == AirportKeepArea ) {
+    if ( area == DefaultArea ) {
+	return "Default";
+    } else if ( area == AirportKeepArea ) {
 	return "AirportKeep";
     } else if ( area == AirportIgnoreArea ) {
 	return "AirportIgnore";
@@ -110,6 +115,10 @@ string get_area_name( AreaType area ) {
 
 
 // $Log$
+// Revision 1.6  1999/03/27 05:31:24  curt
+// Make 0 the default area type since this corresponds well with the conventions
+//   used by the triangulator.
+//
 // Revision 1.5  1999/03/22 23:49:29  curt
 // Moved AreaType get_shapefile_type(GDBFile *dbf, int rec) to where it
 // belongs in ShapeFile/

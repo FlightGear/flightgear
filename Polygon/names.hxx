@@ -26,22 +26,30 @@
 #define _NAMES_HXX
 
 
+#include <Include/compiler.h>
+
+#include STL_STRING
+
+FG_USING_STD(string);
+
+
 // Posible shape file types.  Note the order of these is important and
 // defines the priority of these shapes if they should intersect.  The
 // smaller the number, the higher the priority.
 enum AreaType {
-    AirportKeepArea   = 0,
-    AirportIgnoreArea = 1,
-    OceanArea         = 2,
-    LakeArea          = 3,
-    DryLakeArea       = 4,
-    IntLakeArea       = 5,
-    ReservoirArea     = 6,
-    IntReservoirArea  = 7,
-    StreamArea        = 8,
-    CanalArea         = 9,
-    GlacierArea       = 10,
-    MarshArea         = 11,
+    DefaultArea       = 0,
+    AirportKeepArea   = 1,
+    AirportIgnoreArea = 2,
+    OceanArea         = 3,
+    LakeArea          = 4,
+    DryLakeArea       = 5,
+    IntLakeArea       = 6,
+    ReservoirArea     = 7,
+    IntReservoirArea  = 8,
+    StreamArea        = 9,
+    CanalArea         = 10,
+    GlacierArea       = 11,
+    MarshArea         = 12,
     VoidArea          = 9997,
     NullArea          = 9998,
     UnknownArea       = 9999
@@ -59,6 +67,10 @@ string get_area_name( AreaType area );
 
 
 // $Log$
+// Revision 1.5  1999/03/27 05:31:25  curt
+// Make 0 the default area type since this corresponds well with the conventions
+//   used by the triangulator.
+//
 // Revision 1.4  1999/03/22 23:49:30  curt
 // Moved AreaType get_shapefile_type(GDBFile *dbf, int rec) to where it
 // belongs in ShapeFile/
