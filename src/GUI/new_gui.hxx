@@ -33,6 +33,8 @@ public:
     NewGUI ();
     virtual ~NewGUI ();
     virtual void init ();
+    virtual void bind ();
+    virtual void unbind ();
     virtual void update (double delta_time_sec);
     virtual void display (const string &name);
 
@@ -40,6 +42,11 @@ public:
     virtual FGDialog * getCurrentWidget ();
 
     virtual FGMenuBar * getMenuBar ();
+
+protected:
+
+    virtual bool getMenuBarVisible () const;
+    virtual void setMenuBarVisible (bool visible);
 
 
 private:

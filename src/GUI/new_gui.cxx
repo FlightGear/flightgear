@@ -43,6 +43,19 @@ NewGUI::init ()
 }
 
 void
+NewGUI::bind ()
+{
+    fgTie("/sim/menubar/visibility", this,
+          &NewGUI::getMenuBarVisible, &NewGUI::setMenuBarVisible);
+}
+
+void
+NewGUI::unbind ()
+{
+    fgUntie("/sim/menubar/visibility");
+}
+
+void
 NewGUI::update (double delta_time_sec)
 {
     // NO OP
@@ -73,6 +86,21 @@ FGMenuBar *
 NewGUI::getMenuBar ()
 {
     return _menubar;
+}
+
+bool
+NewGUI::getMenuBarVisible () const
+{
+    return _menubar->isVisible();
+}
+
+void
+NewGUI::setMenuBarVisible (bool visible)
+{
+    if (visible)
+        _menubar->show();
+    else
+        _menubar->hide();
 }
 
 void
