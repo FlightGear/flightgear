@@ -59,7 +59,7 @@ struct aircraft_params current_aircraft;
 static GLfloat win_ratio = 1.0;
 
 /* sun direction */
-static GLfloat sun_vec[4] = {-3.0, 1.0, 2.0, 0.0 };
+static GLfloat sun_vec[4] = {0.2948, 0.7816, -0.5498, 0.0 };
 
 /* temporary hack */
 /* extern struct mesh *mesh_ptr; */
@@ -655,9 +655,12 @@ int printf (const char *format, ...) {
 
 
 /* $Log$
-/* Revision 1.42  1997/08/01 19:43:33  curt
-/* Making progress with coordinate system overhaul.
+/* Revision 1.43  1997/08/02 16:23:47  curt
+/* Misc. tweaks.
 /*
+ * Revision 1.42  1997/08/01 19:43:33  curt
+ * Making progress with coordinate system overhaul.
+ *
  * Revision 1.41  1997/07/31 22:52:37  curt
  * Working on redoing internal coordinate systems & scenery transformations.
  *
