@@ -29,10 +29,6 @@ SG_USING_STD(string);
 
 class FGAIBase {
 
-private:
-
-    static FGAIBase *_self;
-
 public:
 
     FGAIBase();
@@ -81,7 +77,10 @@ protected:
 
     void Transform();
 
+    static FGAIBase *_self;
+
 private:
+
     static void _setLongitude( double longitude );
     static void _setLatitude ( double latitude );
     static double _getLongitude();

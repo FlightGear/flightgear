@@ -65,8 +65,12 @@ void FGAIBase::Transform() {
 
 bool FGAIBase::init() {
 
-   props = globals->get_props()->getNode("ai/model", true);
+   SGPropertyNode *root = globals->get_props()->getNode("ai/modeles", true);
+   vector<SGPropertyNode_ptr> p_vec = root->getChildren("model");
+   unsigned num = p_vec.size();
+   p_vec.clear();
 
+   props = root->getNode("model", num, true);
    ssgBranch *model = sgLoad3DModel( globals->get_fg_root(),
 	                             model_path.c_str(),
                                      props,

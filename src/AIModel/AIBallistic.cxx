@@ -83,8 +83,8 @@ void FGAIBallistic::Run(double dt) {
    double ft_per_deg_lat;
 
    // get size of a degree at this latitude
-   ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat() / 57.2958 );
-   ft_per_deg_lon = 365228.16 * cos(pos.lat() / 57.2958);
+   ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()/SG_RADIANS_TO_DEGREES);
+   ft_per_deg_lon = 365228.16 * cos(pos.lat() / SG_RADIANS_TO_DEGREES);
 
    // the two drag calculations below assume sea-level density, 
    // mass of 0.03 slugs,  drag coeff of 0.295, frontal area of 0.007 ft2 
@@ -100,8 +100,8 @@ void FGAIBallistic::Run(double dt) {
    }
    
    // convert horizontal speed (fps) to degrees per second
-   speed_north_deg_sec = cos( hdg / 57.29577951 ) * hs / ft_per_deg_lat;
-   speed_east_deg_sec  = sin( hdg / 57.29577951 ) * hs / ft_per_deg_lon;
+   speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lat;
+   speed_east_deg_sec  = sin(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lon;
 
    // set new position
    pos.setlat( pos.lat() + speed_north_deg_sec * dt);
@@ -111,11 +111,11 @@ void FGAIBallistic::Run(double dt) {
    vs -= 32.17 * dt;
 
    // adjust altitude (meters)
-   altitude += vs * dt * 0.3048;
+   altitude += vs * dt * SG_FEET_TO_METER;
    pos.setelev(altitude); 
 
    // adjust pitch if aerostabilized
-   if (aero_stabilized) pitch = atan2( vs, hs ) * 57.29577951;
+   if (aero_stabilized) pitch = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
 
    // set destruction flag if altitude less than sea level -1000
    if (altitude < -1000.0) setDie(true);

@@ -42,6 +42,9 @@ bool FGAIShip::init() {
 
 void FGAIShip::bind() {
     FGAIBase::bind();
+
+    props->tie("surface-positions/rudder-pos-norm",
+                SGRawValuePointer<double>(&rudder));
 }
 
 void FGAIShip::unbind() {
@@ -69,8 +72,8 @@ void FGAIShip::Run(double dt) {
    double alpha;
 
    // get size of a degree at this latitude
-   ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat() / 57.2958 );
-   ft_per_deg_lon = 365228.16 * cos(pos.lat() / 57.2958);
+   ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()/SG_RADIANS_TO_DEGREES);
+   ft_per_deg_lon = 365228.16 * cos(pos.lat() / SG_RADIANS_TO_DEGREES);
 
    // adjust speed
    double speed_diff = tgt_speed - speed;
@@ -80,8 +83,10 @@ void FGAIShip::Run(double dt) {
    } 
    
    // convert speed to degrees per second
-   speed_north_deg_sec = cos( hdg / 57.29577951 ) * speed * 1.686 / ft_per_deg_lat;
-   speed_east_deg_sec  = sin( hdg / 57.29577951 ) * speed * 1.686 / ft_per_deg_lon;
+   speed_north_deg_sec = cos( hdg / SG_RADIANS_TO_DEGREES )
+                          * speed * 1.686 / ft_per_deg_lat;
+   speed_east_deg_sec  = sin( hdg / SG_RADIANS_TO_DEGREES )
+                          * speed * 1.686 / ft_per_deg_lon;
 
    // set new position
    pos.setlat( pos.lat() + speed_north_deg_sec * dt);
@@ -89,8 +94,9 @@ void FGAIShip::Run(double dt) {
 
    // adjust heading based on current rudder angle
    if (rudder != 0.0) {
-     turn_radius_ft = 0.088362 * speed * speed / tan( fabs(rudder) / 57.2958 );
-     turn_circum_ft = 6.2831853 * turn_radius_ft;
+     turn_radius_ft = 0.088362 * speed * speed
+                       / tan( fabs(rudder) / SG_RADIANS_TO_DEGREES );
+     turn_circum_ft = SGD_2PI * turn_radius_ft;
      dist_covered_ft = speed * 1.686 * dt; 
      alpha = dist_covered_ft / turn_circum_ft * 360.0;
      hdg += alpha * sign( rudder );
