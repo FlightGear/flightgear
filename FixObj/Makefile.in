@@ -347,8 +347,8 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.11  1998/05/13 18:30:20  curt
-# Updated ...
+# Revision 1.12  1998/05/16 13:11:25  curt
+# Fixed an off by one error in node, normal, and face counters.
 #
 # Revision 1.4  1998/04/24 00:44:05  curt
 # Added zlib support.

@@ -202,9 +202,9 @@ void obj_fix(char *infile, char *outfile) {
     /* I start counting at one because that is how the triangle
        program refers to nodes and normals */
     first = 1;
-    ncount = 1;
-    vncount = 1;
-    fcount = 1;
+    ncount = 0;
+    vncount = 0;
+    fcount = 0;
 
     printf("Reading file:  %s\n", infile);
 
@@ -380,9 +380,12 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.11  1998/04/27 15:59:24  curt
-/* Fixed an off by one error.
+/* Revision 1.12  1998/05/16 13:11:26  curt
+/* Fixed an off by one error in node, normal, and face counters.
 /*
+ * Revision 1.11  1998/04/27 15:59:24  curt
+ * Fixed an off by one error.
+ *
  * Revision 1.10  1998/04/27 03:33:11  curt
  * Code now calculates a center reference points and outputs everything
  * relative to that.  This is useful in the rendering engine to keep everything
