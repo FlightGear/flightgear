@@ -2,6 +2,14 @@
 /*               -- for CSci 5502 */
 
 
+#ifdef HAVE_CONFIG_H
+#  include <Include/config.h>
+#endif
+
+#ifdef HAVE_SYS_PARAM_H
+#  include <sys/param.h>	// BSD macro definitions
+#endif
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -45,7 +53,7 @@ void check_master_switch() {
 
 // check if the host system is free of interactive users
 int system_free() {
-#ifndef __FreeBSD__
+#ifndef BSD
     struct utmp *uptr;
 
     setutent();

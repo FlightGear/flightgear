@@ -57,6 +57,7 @@
 
 FG_USING_STD(deque);
 FG_USING_STD(vector);
+FG_USING_NAMESPACE(std);
 
 #ifndef WIN32
   typedef struct {
