@@ -392,6 +392,12 @@ int fgOPTIONS::parse_config_file( char *path ) {
 	    line[len-1] = '\0';
 	}
 
+        // strip dos ^M if it exists
+	len = strlen(line);
+	if ( line[len-1] == '\r' ) {
+	    line[len-1] = '\0';
+	}
+
 	result = parse_option(line);
 	if ( result == FG_OPTIONS_ERROR ) {
 	    fgPrintf( FG_GENERAL, FG_EXIT, 
@@ -488,6 +494,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.18  1998/07/22 01:27:03  curt
+// Strip out \r when parsing config file in case we are on a windoze system.
+//
 // Revision 1.17  1998/07/16 17:33:38  curt
 // "H" / "h" now control hud brightness as well with off being one of the
 //   states.
