@@ -47,7 +47,6 @@ FGATISList::~FGATISList( void ) {
 
 // load the navaids and build the map
 bool FGATISList::init( SGPath path ) {
-    FGATIS a;
 
     atislist.erase( atislist.begin(), atislist.end() );
 
@@ -59,54 +58,49 @@ bool FGATISList::init( SGPath path ) {
 
     // read in each line of the file
 
-    in >> skipeol;
+    // in >> skipeol;
     in >> skipcomment;
 
+    // double min = 100000;
+    // double max = 0;
+
 #ifdef __MWERKS__
-
     char c = 0;
-    while ( in.get(c) && c != '\0' && a.get_type() != '[' ) {
+    while ( in.get(c) && c != '\0' ) {
         in.putback(c);
-        in >> a;
-	if ( a.get_type() != '[' ) {
-	    atislist[a.get_freq()].push_back(a);
-	}
-        in >> skipcomment;
-    }
-
 #else
-
-    double min = 100000;
-    double max = 0;
-
-    while ( ! in.eof() && a.get_type() != '[' ) {
+    while ( ! in.eof() ) {
+#endif
+    
+        FGATIS a;
         in >> a;
-	//cout << "id = " << a.get_ident() << endl;
-	//cout << " type = " << a.get_type() << endl;
-	//cout << " lon = " << a.get_lon() << endl;
-	//cout << " lat = " << a.get_lat() << endl;
-	//cout << " elev = " << a.get_elev() << endl;
-	//cout << " freq = " << a.get_freq() << endl;
- 	//cout << " range = " << a.get_range() << endl;
-	if ( a.get_type() != '[' ) {
-	    atislist[a.get_freq()].push_back(a);
-	}
+	if ( a.get_type() == '[' ) {
+            break;
+        }
+	
+	/* cout << "id = " << a.GetIdent() << endl;
+	cout << " type = " << a.get_type() << endl;
+	cout << " lon = " << a.get_lon() << endl;
+	cout << " lat = " << a.get_lat() << endl;
+	cout << " elev = " << a.get_elev() << endl;
+	cout << " freq = " << a.get_freq() << endl;
+ 	cout << " range = " << a.get_range() << endl << endl; */
+
+        atislist[a.get_freq()].push_back(a);
         in >> skipcomment;
 
-	if ( a.get_type() != 'N' ) {
+	/* if ( a.get_type() != 'N' ) {
 	    if ( a.get_freq() < min ) {
 		min = a.get_freq();
 	    }
 	    if ( a.get_freq() > max ) {
 		max = a.get_freq();
 	    }
-	}
+	} */
     }
 
     // cout << "min freq = " << min << endl;
     // cout << "max freq = " << max << endl;
-
-#endif
 
     return true;
 }

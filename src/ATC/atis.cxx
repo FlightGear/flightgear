@@ -90,10 +90,21 @@ string GetPhoneticIdent(int i) {
 }
 
 // Constructor
-FGATIS::FGATIS() {
-    transmission = "";
-    display = false;
-    displaying = false;
+FGATIS::FGATIS()
+  : type(0),
+    lon(0.0), lat(0.0),
+    elev(0.0),
+    x(0.0), y(0.0), z(0.0),
+    freq(0),
+    range(0),
+    display(false),
+    displaying(false),
+    ident(""),
+    name(""),
+    transmission(""),
+    trans_ident(""),
+    atis_failed(false)
+{
 }
 
 // Destructor
