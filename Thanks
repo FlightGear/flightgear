@@ -164,6 +164,8 @@ Mike Hill <mikehill@flightsim.com>
 
 
 Erik Hofman <erik@ehofman.com>
+  Major overhaul and parameterization of the sound module, to allow
+  aircraft-specific sound configuration at runtime.
   Irix port.
 
 
