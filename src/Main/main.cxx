@@ -470,8 +470,23 @@ void fgRenderFrame() {
 	fgReshape( fgGetInt("/sim/startup/xsize"),
 		   fgGetInt("/sim/startup/ysize") );
 
-	// set the sun position (done later with ssg calls)
-	// glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
+        if ( fgGetBool("/sim/rendering/clouds3d") ) {
+            glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+            cloud3d_imposter_state->force();
+            glDisable( GL_FOG );
+            glColor4f( 1.0, 1.0, 1.0, 1.0 );
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
+            if ( _bcloud_orig ) {
+                Point3D c = globals->get_scenery()->get_center();
+                sgClouds3d->Set_Cloud_Orig( &c );
+                _bcloud_orig = false;
+            }
+            sgClouds3d->Update( current__view->get_absolute_view_pos() );
+            glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
+            glDisable(GL_DEPTH_TEST);
+        }
 
 	clear_mask = GL_DEPTH_BUFFER_BIT;
 	if ( fgGetBool("/sim/rendering/wireframe") ) {
@@ -491,21 +506,6 @@ void fgRenderFrame() {
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
 	}
 	glClear( clear_mask );
-
-        if ( fgGetBool("/sim/rendering/clouds3d") ) {
-            cloud3d_imposter_state->force();
-            glDisable( GL_FOG );
-            glColor4f( 1.0, 1.0, 1.0, 1.0 );
-            glEnable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);
-            glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
-            if ( _bcloud_orig ) {
-                Point3D c = globals->get_scenery()->get_center();
-                sgClouds3d->Set_Cloud_Orig( &c );
-                _bcloud_orig = false;
-            }
-            sgClouds3d->Update( current__view->get_absolute_view_pos() );
-        }
 
 	// Tell GL we are switching to model view parameters
 
@@ -777,16 +777,13 @@ void fgRenderFrame() {
 
         if ( fgGetBool("/sim/rendering/clouds3d") ) {
             glDisable( GL_FOG );
-            glEnable(GL_BLEND);
-            glEnable(GL_TEXTURE_2D);
-            glEnable(GL_ALPHA_TEST);
-            glBlendFunc ( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
-            glDisable( GL_DEPTH_TEST );
             glDisable( GL_LIGHTING );
             // cout << "drawing new clouds" << endl;
-            // set the opengl state to known default values
-            // default_state->force();
             sgClouds3d->Draw((sgVec4 *)current__view->get_VIEW());
+            glEnable( GL_FOG );
+            glEnable( GL_LIGHTING );
+            glEnable( GL_DEPTH_TEST );
+            glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
         }
 
 	globals->get_model_mgr()->draw();
