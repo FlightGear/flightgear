@@ -39,6 +39,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/math/sg_types.hxx>
+#include <simgear/misc/commands.hxx>
 #include <simgear/misc/props.hxx>
 
 #include <Main/fg_props.hxx>
@@ -62,7 +63,7 @@ bool FGHttpd::open() {
 
     server = new HttpdServer( port );
     
-    set_hz( 5 );                // default to processing requests @ 5Hz
+    set_hz( 15 );                // default to processing requests @ 15Hz
     set_enabled( true );
 
     return true;
@@ -132,9 +133,26 @@ void HttpdChannel::foundTerminator (void) {
                     string a = arg.substr( 0, apos );
                     string b = arg.substr( apos + 1 );
                     printf("    a = %s  b = %s\n", a.c_str(), b.c_str() );
-                    if ( a == "value" ) {
-                        fgSetString( request.c_str(), urlDecode(b).c_str() );
-                    } 
+                    if ( request == "/run.cgi" ) {
+                        // execute a command
+                        if ( a == "value" ) {
+                            SGPropertyNode args;
+                            if ( !globals->get_commands()
+                                 ->execute(urlDecode(b).c_str(), &args) )
+                            {
+                                SG_LOG( SG_GENERAL, SG_ALERT,
+                                        "Command " << urlDecode(b)
+                                        << " failed.");
+                            }
+
+                        }
+                    } else {
+                        if ( a == "value" ) {
+                            // update a property value
+                            fgSetString( request.c_str(),
+                                         urlDecode(b).c_str() );
+                        }
+                    }
                 }
             }
         } else {

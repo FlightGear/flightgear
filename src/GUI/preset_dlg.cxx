@@ -31,22 +31,10 @@
 #  include <windows.h>
 #endif
 
-// #include <stdlib.h>
-
-// #include <simgear/constants.h>
-// #include <simgear/debug/logstream.hxx>
+#include <simgear/misc/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-// #include <Include/general.hxx>
-
-// #include <GL/glut.h>
-// #include <GL/gl.h>
-
-#include <Airports/simple.hxx>
-#include <FDM/flight.hxx>
-#include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>
-#include <Scenery/tilemgr.hxx>
 
 #include "gui.h"
 #include "preset_dlg.hxx"
@@ -239,52 +227,10 @@ void fgPresetAirspeed(puObject *cb)
 
 void fgPresetCommit(puObject *)
 {
-    static const SGPropertyNode *longitude
-	= fgGetNode("/sim/presets/longitude-deg");
-    static const SGPropertyNode *latitude
-	= fgGetNode("/sim/presets/latitude-deg");
-    static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
-
-    SGPath path( globals->get_fg_root() );
-    path.append( "Airports" );
-    path.append( "simple.mk4" );
-    FGAirports airports( path.c_str() );
-
-    FGAirport a;
-
-    bool freeze = master_freeze->getBoolValue();
-    if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", true);
-    }
-
-    // unbind the current fdm state so property changes
-    // don't get lost when we subsequently delete this fdm
-    // and create a new one.
-    cur_fdm_state->unbind();
-        
-    // invalidate lon/lat if an airport is specified in the presets
-    string apt = fgGetString("/sim/presets/airport-id");
-    if ( !apt.empty() ) {
-        fgSetDouble("/sim/presets/longitude-deg", -9999.0 );
-        fgSetDouble("/sim/presets/latitude-deg", -9999.0 );
-    }
-
-    // set position from presets
-    fgInitPosition();
-
-    // BusyCursor(0);
-    fgReInitSubsystems();
-
-    cout << "before tile_mgr init " << longitude->getDoubleValue() << " "
-         << latitude->getDoubleValue() << endl;
-
-    double visibility_meters = fgGetDouble("/environment/visibility-m");
-    global_tile_mgr.update( visibility_meters );
-    // BusyCursor(1);
-
-    if ( !freeze ) {
-        fgSetBool("/sim/freeze/master", false);
+    SGPropertyNode args;
+    if ( !globals->get_commands()->execute("presets_commit", &args) )
+    {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Command: presets_commit failed.");
     }
 }
 

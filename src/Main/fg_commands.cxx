@@ -12,13 +12,15 @@
 #include <simgear/misc/commands.hxx>
 #include <simgear/misc/props.hxx>
 
-#include <GUI/gui.h>
-#include <GUI/new_gui.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
+#include <FDM/flight.hxx>
+#include <GUI/gui.h>
+#include <GUI/new_gui.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/tmp.hxx>
 
+#include "fg_init.hxx"
 #include "fg_commands.hxx"
 
 SG_USING_STD(string);
@@ -588,6 +590,34 @@ do_gui (const SGPropertyNode * arg)
 }
 
 
+/**
+ * Built-in command: commit presets (read from in /sim/presets/)
+ */
+static bool
+do_presets_commit (const SGPropertyNode * arg)
+{
+    // unbind the current fdm state so property changes
+    // don't get lost when we subsequently delete this fdm
+    // and create a new one.
+    cur_fdm_state->unbind();
+        
+    // set position from presets
+    fgInitPosition();
+
+    // BusyCursor(0);
+    fgReInitSubsystems();
+
+    global_tile_mgr.update( fgGetDouble("/environment/visibility-m") );
+
+    if ( ! fgGetBool("/sim/presets/onground") ) {
+        fgSetBool( "/sim/freeze/master", true );
+        fgSetBool( "/sim/freeze/clock", true );
+    }
+
+    return true;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
@@ -622,6 +652,7 @@ static struct {
     { "property-swap", do_property_swap },
     { "property-scale", do_property_scale },
     { "gui", do_gui },
+    { "presets_commit", do_presets_commit },
     { 0, 0 }			// zero-terminated
 };
 

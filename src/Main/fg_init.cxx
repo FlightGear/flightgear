@@ -576,6 +576,22 @@ bool fgFindAirportID( const string& id, FGAirport *a ) {
 }
 
 
+// get airport elevation
+static double fgGetAirportElev( const string& id ) {
+    FGAirport a;
+    // double lon, lat;
+
+    SG_LOG( SG_GENERAL, SG_INFO,
+            "Finding elevation for airport: " << id );
+
+    if ( fgFindAirportID( id, &a ) ) {
+        return a.elevation;
+    } else {
+        return -9999.0;
+    }
+}
+
+
 // Preset lon/lat given an airport id
 static bool fgSetPosFromAirportID( const string& id ) {
     FGAirport a;
@@ -602,9 +618,7 @@ static bool fgSetPosFromAirportID( const string& id ) {
     } else {
         return false;
     }
-
 }
-
 
 
 // Set current tower position lon/lat given an airport id
@@ -895,21 +909,32 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
 
 
 static void fgSetDistOrAltFromGlideSlope() {
+    string apt_id = fgGetString("/sim/presets/airport-id");
     double gs = fgGetDouble("/sim/presets/glideslope-deg")
         * SG_DEGREES_TO_RADIANS ;
     double od = fgGetDouble("/sim/presets/offset-distance");
     double alt = fgGetDouble("/sim/presets/altitude-ft");
-    
+
+    double apt_elev = 0.0;
+    if ( ! apt_id.empty() ) {
+        apt_elev = fgGetAirportElev( apt_id );
+        if ( apt_elev < -9990.0 ) {
+            apt_elev = 0.0;
+        }
+    } else {
+        apt_elev = 0.0;
+    }
+
     if( fabs(gs) > 0.01 && fabs(od) > 0.1 && alt < -9990 ) {
         // set altitude from glideslope and offset-distance
         od *= SG_NM_TO_METER * SG_METER_TO_FEET;
-        alt = fabs(od*tan(gs));
+        alt = fabs(od*tan(gs)) + apt_elev;
         fgSetDouble("/sim/presets/altitude-ft", alt);
         fgSetBool("/sim/presets/onground", false);
         SG_LOG(SG_GENERAL,SG_INFO, "Calculated altitude as: " << alt  << " ft");
     } else if( fabs(gs) > 0.01 && alt > 0 && fabs(od) < 0.1) {
         // set offset-distance from glideslope and altitude
-        od  = alt/tan(gs);
+        od  = (alt - apt_elev) / tan(gs);
         od *= -1*SG_FEET_TO_METER * SG_METER_TO_NM;
         fgSetDouble("/sim/presets/offset-distance", od);
         SG_LOG(SG_GENERAL, SG_INFO, "Calculated offset distance as: " 
@@ -919,6 +944,7 @@ static void fgSetDistOrAltFromGlideSlope() {
                 "Glideslope given but not altitude or offset-distance." );
         SG_LOG( SG_GENERAL, SG_ALERT, "Resetting glideslope to zero" );
         fgSetDouble("/sim/presets/glideslope-deg", 0);
+        fgSetBool("/sim/presets/onground", true);
     }                              
 }                       
 
