@@ -85,7 +85,7 @@ typedef struct {
 extern fgTIME cur_time_params;
 
 
-typedef struct fg_timestamp_t {
+typedef struct {
     long seconds;
     long millis;
 } fg_timestamp;
@@ -115,6 +115,12 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t);
 
 
 // $Log$
+// Revision 1.5  1998/05/22 21:14:54  curt
+// Rewrote event.cxx in C++ as a class using STL for the internal event list
+// and run queue this removes the arbitrary list sizes and makes things much
+// more dynamic.  Because this is C++-classified we can now have multiple
+// event_tables if we'd ever want them.
+//
 // Revision 1.4  1998/04/28 01:22:17  curt
 // Type-ified fgTIME and fgVIEW.
 //
