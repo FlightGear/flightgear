@@ -68,11 +68,6 @@
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
 
-#if defined( WIN32 ) && !defined( __CYGWIN__ )
-#  include <simgear/screen/win32-printer.h>
-#  include <simgear/screen/GlBitmaps.h>
-#endif
-
 #include "gui.h"
 #include "gui_local.hxx"
 

@@ -75,7 +75,7 @@
 #include <NetworkOLK/network.h>
 #endif
    
-#if defined( WIN32 ) && !defined( __CYGWIN__ )
+#if defined( WIN32 ) && !defined( __CYGWIN__ ) && !defined(__MINGW32__)
 #  include <simgear/screen/win32-printer.h>
 #  include <simgear/screen/GlBitmaps.h>
 #endif
@@ -92,7 +92,7 @@ SG_USING_STD(string);
 SG_USING_STD(cout);
 #endif
 
-#ifdef  _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define  snprintf    _snprintf
 #endif   /* _MSC_VER */
 
@@ -672,7 +672,7 @@ void fgHiResDump()
 #endif // #if defined( TR_HIRES_SNAP)
 
 
-#if defined( WIN32 ) && !defined( __CYGWIN__)
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
 
 static void rotateView( double roll, double pitch, double yaw )
 {
@@ -711,7 +711,7 @@ GLubyte *hiResScreenCapture( int multiplier )
 #endif
 
 
-#if defined( WIN32 ) && !defined( __CYGWIN__)
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
 // win32 print screen function
 void printScreen ( puObject *obj ) {
     bool show_pu_cursor = false;
@@ -843,7 +843,7 @@ The menu stuff
 ---------------------------------------------------------------------*/
 char *fileSubmenu               [] = {
     "Exit", /* "Close", "---------", */
-#if defined( WIN32 ) && !defined( __CYGWIN__)
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
     "Print",
 #endif
     "Snap Shot",
@@ -856,7 +856,7 @@ char *fileSubmenu               [] = {
 };
 puCallback fileSubmenuCb        [] = {
     MayBeGoodBye, /* hideMenuCb, NULL, */
-#if defined( WIN32 ) && !defined( __CYGWIN__)
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
     printScreen, 
 #endif
     /* NULL, notCb, */
