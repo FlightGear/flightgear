@@ -129,15 +129,15 @@ void FGLight::update( double dt ) {
     update_adj_fog_color();
 
     _dt_total += dt;
-    if (_dt_total > 0.5) {
+    if (_dt_total >= 0.5) {
         _dt_total -= 0.5;
         fgUpdateSunPos();
         fgUpdateMoonPos();
     }
 
     if (_prev_sun_angle != _sun_angle) {
+	_prev_sun_angle = _sun_angle;
         update_sky_color();
-        _prev_sun_angle = _sun_angle;
     }
 }
 

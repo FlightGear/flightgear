@@ -1103,6 +1103,11 @@ static void fgMainLoop( void ) {
                cur_time_override->getLongValue(),
                globals->get_warp() );
 
+    if (globals->get_warp_delta() != 0) {
+	FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
+	l->update( 0.5 );
+    }
+
     // update magvar model
     globals->get_mag()->update( longitude->getDoubleValue()
                               * SGD_DEGREES_TO_RADIANS,
