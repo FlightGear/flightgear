@@ -112,12 +112,12 @@ AIRCRAFTDIR *aircraftdir_ = new AIRCRAFTDIR;
 // SendArray testarray(4950);
 
 /* Convert float to string */
-string ftoa(double in)
-{
-  static char temp[20];
-  sprintf(temp,"%g",in);
-  return (string)temp;
-}
+//string ftoa(double in)
+//{
+//  static char temp[20];
+//  sprintf(temp,"%g",in);
+//  return (string)temp;
+//}
 
 void uiuc_initial_init ()
 {
@@ -244,21 +244,21 @@ void uiuc_force_moment(double dt)
 
   /* Send data on the network to the Glass Cockpit */
  
-  string input="";
+   //  string input="";
 
-  input += " stick_right " + ftoa(Lat_control);
-  input += " rudder_left " + ftoa(-Rudder_pedal);
-  input += " stick_forward " + ftoa(Long_control);
-  input += " stick_trim_forward " + ftoa(Long_trim);
-  input += " vehicle_pitch " + ftoa(Theta * 180.0 / 3.14);
-  input += " vehicle_roll " + ftoa(Phi * 180.0 / 3.14);
-  input += " vehicle_speed " + ftoa(V_rel_wind);
-  input += " throttle_forward " + ftoa(Throttle_pct);
-  input += " altitude " + ftoa(Altitude);
-  input += " climb_rate " + ftoa(-1.0*V_down_rel_ground);
+   //  input += " stick_right " + ftoa(Lat_control);
+   //  input += " rudder_left " + ftoa(-Rudder_pedal);
+   //  input += " stick_forward " + ftoa(Long_control);
+   //  input += " stick_trim_forward " + ftoa(Long_trim);
+   //  input += " vehicle_pitch " + ftoa(Theta * 180.0 / 3.14);
+   //  input += " vehicle_roll " + ftoa(Phi * 180.0 / 3.14);
+   //  input += " vehicle_speed " + ftoa(V_rel_wind);
+   //  input += " throttle_forward " + ftoa(Throttle_pct);
+   //  input += " altitude " + ftoa(Altitude);
+   //  input += " climb_rate " + ftoa(-1.0*V_down_rel_ground);
  
-  // testarray.getHello();
-  // testarray.sendData(input);
+   //  testarray.getHello();
+   //  testarray.sendData(input);
   
   /* End of Networking */ 
 
