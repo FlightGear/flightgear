@@ -181,12 +181,15 @@ FGNewMat::read_properties (const SGPropertyNode * props)
       ssgTexturePath((char *)path.dir().c_str());
       ssgEntity * model = load_object((char *)path.c_str());
       if (model != 0) {
+	float ranges[] = {0, object_node->getDoubleValue("range-m", 2000)};
+	object.model = new ssgRangeSelector;
+	((ssgRangeSelector *)object.model)->setRanges(ranges, 2);
 	if (object_node->getBoolValue("billboard", false)) {
 	  ssgCutout * cutout = new ssgCutout(false);
 	  cutout->addKid(model);
-	  object.model = cutout;
+	  ((ssgBranch *)object.model)->addKid(cutout);
 	} else {
-            object.model = model;
+	  ((ssgBranch *)object.model)->addKid(model);
 	}
 	object.model->ref();
 	object.coverage = object_node->getDoubleValue("coverage", 100000);

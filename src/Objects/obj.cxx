@@ -503,6 +503,29 @@ DummyBSphereEntity::get_entity ()
 
 
 /**
+ * Calculate the bounding radius of a triangle from its center.
+ *
+ * @param center The triangle center.
+ * @param p1 The first point in the triangle.
+ * @param p2 The second point in the triangle.
+ * @param p3 The third point in the triangle.
+ * @return The greatest distance any point lies from the center.
+ */
+static float
+get_bounding_radius (sgVec3 center, float *p1, float *p2, float *p3)
+{
+  float result = sgDistanceVec3(center, p1);
+  float length = sgDistanceVec3(center, p2);
+  if (length > result)
+    result = length;
+  length = sgDistanceVec3(center, p3);
+  if (length > result)
+    result = length;
+  return result;
+}
+
+
+/**
  * Set up a triangle for randomly-placed objects.
  *
  * No objects will be added unless the triangle comes into range.
@@ -526,6 +549,9 @@ setup_triangle (float * p1, float * p2, float * p3,
 	      (p1[1] + p2[1] + p3[1]) / 3.0,
 	      (p1[2] + p2[2] + p3[2]) / 3.0);
       
+				// maximum radius of an object from center.
+    double bounding_radius = get_bounding_radius(center, p1, p2, p3);
+
 				// Set up a transformation to the center
 				// point, so that everything else can
 				// be specified relative to it.
@@ -535,17 +561,17 @@ setup_triangle (float * p1, float * p2, float * p3,
     location->setTransform(TRANS);
     branch->addKid(location);
 
-				// Calculate the triangle area.
-    double area = sgTriArea(p1, p2, p3);
-
 				// Iterate through all the object types.
     int num_objects = mat->get_object_count();
     for (int i = 0; i < num_objects; i++) {
 
-				// Set up the range selector.  Note that
-				// we provide only two ranges, so the
-				// upper limit will be infinity.
-	float ranges[] = {0, mat->get_object_lod(i), 9999999};
+				// Set up the range selector for the entire
+				// triangle; note that we use the object
+				// range plus the bounding radius here, to
+				// allow for objects far from the center.
+	float ranges[] = {0,
+			  mat->get_object_lod(i) + bounding_radius,
+                          500000};
 	ssgRangeSelector * lod = new ssgRangeSelector;
 	lod->setRanges(ranges, 3);
 	location->addKid(lod);
