@@ -33,7 +33,6 @@ fgfs_SOURCES = \
 
 fgfs_LDADD = \
 	$(top_builddir)/Simulator/Aircraft/libAircraft.a \
-	$(top_builddir)/Simulator/Airports/libAirports.a \
 	$(top_builddir)/Simulator/Astro/libAstro.a \
 	$(top_builddir)/Simulator/Autopilot/libAutopilot.a \
 	$(top_builddir)/Simulator/Cockpit/libCockpit.a \
@@ -43,6 +42,7 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/Flight/Slew/libSlew.a \
 	$(top_builddir)/Simulator/GUI/libGUI.a \
 	$(top_builddir)/Simulator/Scenery/libScenery.a \
+	$(top_builddir)/Simulator/Airports/libAirports.a \
 	$(top_builddir)/Simulator/Objects/libObjects.a \
 	$(top_builddir)/Simulator/Time/libTime.a \
 	$(top_builddir)/Simulator/Weather/libWeather.a \
