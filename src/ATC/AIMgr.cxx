@@ -56,6 +56,8 @@ FGAIMgr::FGAIMgr() {
 }
 
 FGAIMgr::~FGAIMgr() {
+	_defaultModel->deRef();
+	_piperModel->deRef();
 }
 
 void FGAIMgr::init() {
@@ -83,6 +85,10 @@ void FGAIMgr::init() {
 	                             planepath.c_str(),
 	                             globals->get_props(),
 	                             globals->get_sim_time_sec() );
+
+	// We need to keep one ref of the models open to stop ssg deleting them behind our back!
+	_defaultModel->ref();
+	_piperModel->ref();
 
 	// go through the $FG_ROOT/ATC directory and find all *.taxi files
 	SGPath path(globals->get_fg_root());
