@@ -78,8 +78,9 @@ FGLaRCsim::FGLaRCsim( double dt ) {
 }
 
 FGLaRCsim::~FGLaRCsim(void) {
-    if(lsic != NULL) {
+    if ( lsic != NULL ) {
 	delete lsic;
+	lsic = NULL;
     }
 }    
 
