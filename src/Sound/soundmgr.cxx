@@ -31,6 +31,8 @@
 
 #include "soundmgr.hxx"
 
+#define FG_SOUND_SAFETY_MULT 3
+#define FG_MAX_SOUND_SAFETY ( 1.0 / FG_SOUND_SAFETY_MULT )
 
 // constructor
 FGSimpleSound::FGSimpleSound( string file ) {
@@ -88,10 +90,10 @@ FGSoundMgr::~FGSoundMgr() {
 // initialize the sound manager
 bool FGSoundMgr::init() {
     last.stamp();
-    safety = 0.5;
+    safety = FG_MAX_SOUND_SAFETY;
 
     audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
-    audio_sched -> setSafetyMargin ( 2 * safety ) ;
+    audio_sched -> setSafetyMargin ( FG_SOUND_SAFETY_MULT * safety ) ;
 
     sound_map_iterator current = sounds.begin();
     sound_map_iterator end = sounds.end();
@@ -123,11 +125,11 @@ bool FGSoundMgr::update() {
     } else {
 	safety = safety * 0.99 + elapsed * 0.01;
     }
-    if ( safety > 0.5 ) {
-	safety = 0.5;
+    if ( safety > FG_MAX_SOUND_SAFETY ) {
+	safety = FG_MAX_SOUND_SAFETY;
     }
     // cout << "safety = " << safety << endl;
-    audio_sched -> setSafetyMargin ( 2 * safety ) ;
+    audio_sched -> setSafetyMargin ( FG_SOUND_SAFETY_MULT * safety ) ;
 
     if ( !audio_sched->not_working() ) {
 	audio_sched -> update();
