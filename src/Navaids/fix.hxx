@@ -57,7 +57,7 @@ class FGFix {
 
 public:
 
-    inline FGFix(void) {}
+    inline FGFix(void);
     inline ~FGFix(void) {}
 
     inline string get_ident() const { return ident; }
@@ -68,15 +68,28 @@ public:
 };
 
 
+inline
+FGFix::FGFix()
+  : ident(""),
+    lon(0.0),
+    lat(0.0)
+{
+}
+
+
 inline istream&
 operator >> ( istream& in, FGFix& f )
 {
-    in >> f.ident >> f.lat >> f.lon;
+    in >> f.ident;
+
+    if ( f.ident[0] == '[' )
+        return in >> skipeol;
+
+    in >> f.lat >> f.lon;
 
     // cout << "id = " << f.ident << endl;
 
-    // return in >> skipeol;
-    return in;
+    return in >> skipeol;
 }
 
 

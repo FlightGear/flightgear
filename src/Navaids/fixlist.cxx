@@ -47,7 +47,6 @@ FGFixList::~FGFixList( void ) {
 
 // load the navaids and build the map
 bool FGFixList::init( SGPath path ) {
-    FGFix fix;
 
     fixlist.erase( fixlist.begin(), fixlist.end() );
 
@@ -63,36 +62,27 @@ bool FGFixList::init( SGPath path ) {
     in >> skipcomment;
 
 #ifdef __MWERKS__
-
     char c = 0;
-    while ( in.get(c) && c != '\0' && fix.get_ident() != (string)"[End]" ) {
+    while ( in.get(c) && c != '\0' ) {
         in.putback(c);
-        in >> fix;
-	if ( fix.get_ident() != (string)"[End]" ) {
-	    fixlist[fix.get_ident()] = fix;
-	}
-        in >> skipcomment;
-    }
-
-#else
-
-    while ( ! in.eof() && fix.get_ident() != (string)"[End]" ) {
-        in >> fix;
-	/* cout << "id = " << n.get_ident() << endl;
-	cout << " type = " << n.get_type() << endl;
-	cout << " lon = " << n.get_lon() << endl;
-	cout << " lat = " << n.get_lat() << endl;
-	cout << " elev = " << n.get_elev() << endl;
-	cout << " freq = " << n.get_freq() << endl;
- 	cout << " range = " << n.get_range() << endl; */
-	if ( fix.get_ident() != (string)"[End]" ) {
-	    fixlist[fix.get_ident()] = fix;
-	}
-        in >> skipcomment;
-    }
-
+#else	
+    while ( ! in.eof() ) {
 #endif
 
+        FGFix fix;
+        in >> fix;
+        if ( fix.get_ident() == "[End]" ) {
+            break;
+        }
+
+        /* cout << "ident=" << fix.get_ident()
+             << ", lat=" << fix.get_lat()
+             << ", lon=" << fix.get_lon() << endl; */
+
+        fixlist[fix.get_ident()] = fix;
+        in >> skipcomment;
+    }
+    
     return true;
 }
 
