@@ -25,6 +25,10 @@
 #  include <config.h>
 #endif
 
+#if defined(__linux__) && defined(__386__)
+#  include <fpu_control.h>
+#endif
+
 #include <simgear/compiler.h>
 #include <simgear/misc/exception.hxx>
 
@@ -974,48 +978,8 @@ void fgUpdateTimeDepCalcs() {
     }
 
     // update the view angle
-    FGViewer *v = globals->get_current_view();
-    for ( i = 0; i < multi_loop; i++ ) {
-	if ( fabs(v->get_goal_view_offset() - v->get_view_offset()) < 0.05 ) {
-	    v->set_view_offset( v->get_goal_view_offset() );
-	    break;
-	} else {
-	    // move current_view.view_offset towards
-	    // current_view.goal_view_offset
-	    if ( v->get_goal_view_offset() > v->get_view_offset() )
-            {
-		if ( v->get_goal_view_offset() - v->get_view_offset() < SGD_PI ){
-		    v->inc_view_offset( 0.01 );
-		} else {
-		    v->inc_view_offset( -0.01 );
-		}
-	    } else {
-		if ( v->get_view_offset() - v->get_goal_view_offset() < SGD_PI ){
-		    v->inc_view_offset( -0.01 );
-		} else {
-		    v->inc_view_offset( 0.01 );
-		}
-	    }
-	    if ( v->get_view_offset() > SGD_2PI ) {
-		v->inc_view_offset( -SGD_2PI );
-	    } else if ( v->get_view_offset() < 0 ) {
-		v->inc_view_offset( SGD_2PI );
-	    }
-	}
-    }
+    globals->get_current_view()->update(multi_loop);
 
-    double tmp = -(l->sun_rotation + SGD_PI) 
-	- (cur_fdm_state->get_Psi() -
-	   globals->get_current_view()->get_view_offset() );
-    while ( tmp < 0.0 ) {
-	tmp += SGD_2PI;
-    }
-    while ( tmp > SGD_2PI ) {
-	tmp -= SGD_2PI;
-    }
-    /* printf("Psi = %.2f, viewoffset = %.2f sunrot = %.2f rottosun = %.2f\n",
-	   FG_Psi * SGD_RADIANS_TO_DEGREES, current_view.view_offset * SGD_RADIANS_TO_DEGREES, 
-	   -(l->sun_rotation+SGD_PI) * SGD_RADIANS_TO_DEGREES, tmp * SGD_RADIANS_TO_DEGREES); */
     l->UpdateAdjFog();
 
     // Update solar system
@@ -1024,7 +988,7 @@ void fgUpdateTimeDepCalcs() {
 				  cur_fdm_state->get_Latitude() );
 
     // Update radio stack model
-    current_radiostack->update(1); // FIXME: use dt
+    current_radiostack->update(multi_loop);
 }
 
 
@@ -1809,6 +1773,19 @@ int mainLoop( int argc, char **argv ) {
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
 
+    // Enable floating-point exceptions for Linux/x86
+#if defined(__linux__) && defined(__386__)
+    int fpe_flags = 0;
+//      fpe_flags |= _FPU_MASK_IM;	// invalid operation
+//      fpe_flags |= _FPU_MASK_DM;	// denormalized operand
+    fpe_flags |= _FPU_MASK_ZM;	// zero-divide
+//      fpe_flags |= _FPU_MASK_OM;	// overflow
+//      fpe_flags |= _FPU_MASK_UM;	// underflow
+//      fpe_flags |= _FPU_MASK_PM;	// precision (inexact result)
+    _FPU_SETCW(fpe_flags);
+#endif
+
+    // Enable floating-point exceptions for Windows
 #if defined( _MSC_VER ) && defined( DEBUG )
     // Christian, we should document what this does
     _control87( _EM_INEXACT, _MCW_EM );
