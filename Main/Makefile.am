@@ -24,9 +24,7 @@ bin_PROGRAMS = fgfs
 bin_SCRIPTS = runfgfs runfgfs.bat
 
 fgfs_SOURCES = \
-	GLUTkey.cxx GLUTkey.hxx \
-	GLUTmain.cxx \
-	airports.cxx airports.hxx \
+	GLUTkey.cxx GLUTkey.hxx GLUTmain.cxx \
 	fg_config.h \
 	fg_init.cxx fg_init.hxx \
 	options.cxx options.hxx \
@@ -35,6 +33,7 @@ fgfs_SOURCES = \
 
 fgfs_LDADD = \
 	$(top_builddir)/Simulator/Aircraft/libAircraft.a \
+	$(top_builddir)/Simulator/Airports/libAirports.a \
 	$(top_builddir)/Simulator/Astro/libAstro.a \
 	$(top_builddir)/Simulator/Autopilot/libAutopilot.a \
 	$(top_builddir)/Simulator/Cockpit/libCockpit.a \
