@@ -1,10 +1,8 @@
-// -*- Mode: C++ -*-
-//
-// dem.c -- DEM management class
+// dem.cxx -- DEM management class
 //
 // Written by Curtis Olson, started March 1998.
 //
-// Copyright (C) 1998  Curtis L. Olson  - curt@me.umn.edu
+// Copyright (C) 1998  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -35,32 +33,26 @@
 #include <math.h>     // rint()
 #include <stdio.h>
 #include <string.h>
+
 #ifdef HAVE_SYS_STAT_H
 #  include <sys/stat.h> // stat()
 #endif
+
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <cerrno>
 #else
 #  include <errno.h>
 #endif
+
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>   // stat()
 #endif
-#include <string>
 
-#include STL_IOSTREAM
-
-// #include <zlib/zlib.h>
 #include <Misc/fgstream.hxx>
 #include <Misc/strutils.hxx>
-#include <Include/compiler.h>
-
-FG_USING_NAMESPACE(std);
+#include <Include/fg_constants.h>
 
 #include "dem.hxx"
-// #include "leastsqs.hxx"
-
-#include <Include/fg_constants.h>
 
 
 #define MAX_EX_NODES 10000
@@ -166,13 +158,9 @@ FGDem::next_double() {
 double
 FGDem::next_exp() {
     string token;
-    double mantissa;
-    int exp, acc;
-    int i;
 
     token = next_token();
 
-#if 1
     const char* p = token.c_str();
     char buf[64];
     char* bp = buf;
@@ -186,24 +174,6 @@ FGDem::next_exp() {
     }
     *bp = 0;
     return ::atof( buf );
-#else
-    sscanf(token.c_str(), "%lfD%d", &mantissa, &exp);
-
-    // cout << "    Mantissa = " << mantissa << "  Exp = " << exp << "\n";
-
-    acc = 1;
-    if ( exp > 0 ) {
-	for ( i = 1; i <= exp; i++ ) {
-	    acc *= 10;
-	}
-    } else if ( exp < 0 ) {
-	for ( i = -1; i >= exp; i-- ) {
-	    acc /= 10;
-	}
-    }
-
-    return( (int)rint(mantissa * (double)acc) );
-#endif
 }
 
 
@@ -214,7 +184,6 @@ FGDem::read_a_record() {
     double dnum;
     string name, token;
     char c;
-    char *ptr;
 
     // get the name field (144 characters)
     for ( i = 0; i < 144; i++ ) {
@@ -434,7 +403,7 @@ FGDem::write_area( const string& root, FGBucket& b, bool compress ) {
 	 || ( max_y > originy + rows * row_step ) ) {
 	cout << "  ERROR: bucket at least partially outside DEM data range!" <<
 	    endl;
-	return -1;
+	return 0;
     }
 
     // generate output file name
@@ -470,6 +439,8 @@ FGDem::write_area( const string& root, FGBucket& b, bool compress ) {
 	string command = "gzip --best -f " + demfile;
 	system( command.c_str() );
     }
+
+    return 1;
 }
 
 
@@ -898,6 +869,11 @@ FGDem::~FGDem( void ) {
 
 
 // $Log$
+// Revision 1.26  1999/03/13 17:40:37  curt
+// Moved point interpolation and least squares fitting to contruction program
+// area.
+// Moved leastsqs.* to Lib/Math/
+//
 // Revision 1.25  1999/03/12 22:53:07  curt
 // Added a routine to dump out the portion of the dem data covered by a
 // specified bucket.  Other changes related to needs of scenery tools overhaul.

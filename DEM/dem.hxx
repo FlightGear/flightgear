@@ -1,10 +1,8 @@
-// -*- Mode: C++ -*-
-//
-// dem.h -- DEM management class
+// dem.hxx -- DEM management class
 //
 // Written by Curtis Olson, started March 1998.
 //
-// Copyright (C) 1998  Curtis L. Olson  - curt@me.umn.edu
+// Copyright (C) 1998  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -24,16 +22,14 @@
 // (Log is kept at end of this file)
 
 
-#ifndef _DEM_H
-#define _DEM_H
+#ifndef _DEM_HXX
+#define _DEM_HXX
 
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
 #endif                                   
 
-
-#include <stdio.h>
 
 #include <Bucket/newbucket.hxx>
 #include <Misc/fgstream.hxx>
@@ -154,10 +150,15 @@ public:
 };
 
 
-#endif // _DEM_H
+#endif // _DEM_HXX
 
 
 // $Log$
+// Revision 1.13  1999/03/13 17:40:39  curt
+// Moved point interpolation and least squares fitting to contruction program
+// area.
+// Moved leastsqs.* to Lib/Math/
+//
 // Revision 1.12  1999/03/12 22:53:09  curt
 // Added a routine to dump out the portion of the dem data covered by a
 // specified bucket.  Other changes related to needs of scenery tools overhaul.
