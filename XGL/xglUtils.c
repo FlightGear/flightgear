@@ -24,6 +24,7 @@
 #endif
 
 int   xglTraceOn = TRUE ;
+
 #ifndef WIN32
     FILE *xglTraceFd = stdout ;
 #else /* WIN32 */

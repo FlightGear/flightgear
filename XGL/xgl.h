@@ -474,10 +474,6 @@ glNormal3fv(f);\
 
 #else
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 GLboolean xglIsEnabled  ( GLenum cap ) ; 
 GLboolean xglIsList     ( GLuint list ) ; 
 GLenum    xglGetError   () ; 
