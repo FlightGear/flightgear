@@ -805,9 +805,11 @@ FGInput::_read_bindings (const SGPropertyNode * node,
   SG_LOG(SG_INPUT, SG_DEBUG, "Reading all bindings");
   vector<SGPropertyNode_ptr> bindings = node->getChildren("binding");
   for (unsigned int i = 0; i < bindings.size(); i++) {
-    SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding "
-           << bindings[i]->getStringValue("command"));
-    binding_list[modifiers].push_back(new FGBinding(bindings[i]));
+    if (bindings[i]->nChildren() > 0) {
+      SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding "
+             << bindings[i]->getStringValue("command"));
+      binding_list[modifiers].push_back(new FGBinding(bindings[i]));
+    }
   }
 
                                 // Read nested bindings for modifiers
