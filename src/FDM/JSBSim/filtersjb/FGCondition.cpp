@@ -3,7 +3,7 @@
  Module:       FGCondition.cpp
  Author:       Jon S. Berndt
  Date started: 1/2/2003
- 
+
  -------------- Copyright (C) 2003 Jon S. Berndt (jsb@hal-pc.org) --------------
 
  This program is free software; you can redistribute it and/or modify it under
@@ -93,7 +93,7 @@ FGCondition::FGCondition(FGConfigFile* AC_cfg, FGPropertyManager* PropertyManage
 
     AC_cfg->GetNextConfigLine();
     while (AC_cfg->GetValue() != string("/CONDITION_GROUP")) {
-      conditions.push_back(*(new FGCondition(AC_cfg, PropertyManager)));
+      conditions.push_back(FGCondition(AC_cfg, PropertyManager));
     }
     isGroup = true;
     AC_cfg->GetNextConfigLine();
@@ -175,7 +175,6 @@ void FGCondition::PrintCondition(void )
 {
   vector <FGCondition>::iterator iConditions;
   string scratch;
-  bool first = false;
 
   if (isGroup) {
     switch(Logic) {
@@ -203,7 +202,7 @@ void FGCondition::PrintCondition(void )
   } else {
     if (TestParam2 != 0L)
       cout << TestParam1->GetName() << " " << conditional << " " << TestParam2->GetName();
-    else  
+    else
       cout << TestParam1->GetName() << " " << conditional << " " << TestValue;
   }
 }

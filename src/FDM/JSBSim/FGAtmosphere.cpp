@@ -50,16 +50,9 @@ INCLUDES
 #include "FGAtmosphere.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
-#include "FGFCS.h"
 #include "FGAircraft.h"
-#include "FGTranslation.h"
-#include "FGRotation.h"
 #include "FGPosition.h"
-#include "FGAuxiliary.h"
-#include "FGOutput.h"
-#include "FGMatrix33.h"
-#include "FGColumnVector3.h"
-#include "FGColumnVector4.h"
+#include "FGInertial.h"
 #include "FGPropertyManager.h"
 
 namespace JSBSim {
@@ -151,8 +144,6 @@ bool FGAtmosphere::Run(void)
     if (psiw < 0) psiw += 2*M_PI;
 
     soundspeed = sqrt(SHRatio*Reng*(*temperature));
-
-    State->Seta(soundspeed);
 
     Debug(2);
 
@@ -308,13 +299,18 @@ void FGAtmosphere::Turbulence(void)
     vTurbulenceGrad = TurbGain*MagnitudeAccel * vDirection;
 
     vBodyTurbGrad = State->GetTl2b()*vTurbulenceGrad;
-    vTurbPQR(eP) = vBodyTurbGrad(eY)/Aircraft->GetWingSpan();
+    
+    if (Aircraft->GetWingSpan() > 0) {
+      vTurbPQR(eP) = vBodyTurbGrad(eY)/Aircraft->GetWingSpan();
+    } else {
+      vTurbPQR(eP) = vBodyTurbGrad(eY)/30.0;
+    }
 //     if (Aircraft->GetHTailArm() != 0.0)
 //       vTurbPQR(eQ) = vBodyTurbGrad(eZ)/Aircraft->GetHTailArm();
 //     else
 //       vTurbPQR(eQ) = vBodyTurbGrad(eZ)/10.0;
 
-    if (Aircraft->GetVTailArm())
+    if (Aircraft->GetVTailArm() > 0)
       vTurbPQR(eR) = vBodyTurbGrad(eX)/Aircraft->GetVTailArm();
     else
       vTurbPQR(eR) = vBodyTurbGrad(eX)/10.0;
@@ -356,12 +352,12 @@ void FGAtmosphere::Turbulence(void)
 
     vBodyTurbGrad = State->GetTl2b()*vTurbulenceGrad;
     vTurbPQR(eP) = vBodyTurbGrad(eY)/Aircraft->GetWingSpan();
-    if (Aircraft->GetHTailArm() != 0.0)
+    if (Aircraft->GetHTailArm() > 0)
       vTurbPQR(eQ) = vBodyTurbGrad(eZ)/Aircraft->GetHTailArm();
     else
       vTurbPQR(eQ) = vBodyTurbGrad(eZ)/10.0;
 
-    if (Aircraft->GetVTailArm())
+    if (Aircraft->GetVTailArm() > 0)
       vTurbPQR(eR) = vBodyTurbGrad(eX)/Aircraft->GetVTailArm();
     else
       vTurbPQR(eR) = vBodyTurbGrad(eX)/10.0;

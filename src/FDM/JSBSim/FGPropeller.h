@@ -40,8 +40,6 @@ INCLUDES
 
 #include "FGThruster.h"
 #include "FGTable.h"
-#include "FGTranslation.h"
-#include "FGRotation.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

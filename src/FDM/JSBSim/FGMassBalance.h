@@ -39,7 +39,8 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGModel.h"
-#include "FGPropulsion.h"
+#include "FGColumnVector3.h"
+#include "FGMatrix33.h"
 #include <vector>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -76,39 +77,53 @@ public:
 
   inline double GetMass(void) const {return Mass;}
   inline double GetWeight(void) const {return Weight;}
-  inline double GetIxx(void) const {return Ixx;}
-  inline double GetIyy(void) const {return Iyy;}
-  inline double GetIzz(void) const {return Izz;}
-  inline double GetIxy(void) const {return Ixy;}
-  inline double GetIxz(void) const {return Ixz;}
   inline FGColumnVector3& GetXYZcg(void) {return vXYZcg;}
   inline double GetXYZcg(int axis) const  {return vXYZcg(axis);}
 
+  /** Computes the inertia contribution of a pointmass.
+      Computes and returns the inertia matrix of a pointmass of mass
+      slugs at the given vector r in the structural frame. The units
+      should be for the mass in slug and the vector in the structural
+      frame as usual in inches.
+      @param slugs the mass of this single pointmass given in slugs
+      @param r the location of this single pointmass in the structural frame
+   */
+  FGMatrix33 GetPointmassInertia(double slugs, const FGColumnVector3& r) const
+  {
+    FGColumnVector3 v = StructuralToBody( r );
+    FGColumnVector3 sv = slugs*v;
+    double xx = sv(1)*v(1);
+    double yy = sv(2)*v(2);
+    double zz = sv(3)*v(3);
+    double xy = -sv(1)*v(2);
+    double xz = -sv(1)*v(3);
+    double yz = -sv(2)*v(3);
+    return FGMatrix33( yy+zz, xy, xz,
+                       xy, xx+zz, yz,
+                       xz, yz, xx+yy );
+  }
+
   /** Conversion from the structural frame to the body frame.
-   * Converts the argument \parm r given in the reference frame
-   * coordinate system to the body frame. The units of the structural
-   * frame are assumed to be in inches. The unit of the result is in
-   * ft.
+      Converts the location given in the structural frame
+      coordinate system to the body frame. The units of the structural
+      frame are assumed to be in inches. The unit of the result is in
+      ft.
+      @param r vector coordinate in the structural reference frame (X positive
+               aft, measurements in inches).
+      @return vector coordinate in the body frame, in feet.
    */
   FGColumnVector3 StructuralToBody(const FGColumnVector3& r) const;
 
   inline void SetEmptyWeight(double EW) { EmptyWeight = EW;}
-  inline void SetBaseIxx(double bixx)   { baseIxx = bixx;}
-  inline void SetBaseIyy(double biyy)   { baseIyy = biyy;}
-  inline void SetBaseIzz(double bizz)   { baseIzz = bizz;}
-  inline void SetBaseIxy(double bixy)   { baseIxy = bixy;}
-  inline void SetBaseIxz(double bixz)   { baseIxz = bixz;}
-  inline void SetBaseCG(const FGColumnVector3& CG) {vbaseXYZcg = CG;}
-  
+  inline void SetBaseCG(const FGColumnVector3& CG) {vbaseXYZcg = vXYZcg = CG;}
+
   void AddPointMass(double weight, double X, double Y, double Z);
   double GetPointMassWeight(void);
   FGColumnVector3& GetPointMassMoment(void);
-  double GetPMIxx(void);
-  double GetPMIyy(void);
-  double GetPMIzz(void);
-  double GetPMIxy(void);
-  double GetPMIxz(void);
-  
+  FGMatrix33& GetJ(void) {return mJ;}
+  FGMatrix33& GetJinv(void) {return mJinv;}
+  void SetAircraftBaseInertias(FGMatrix33 BaseJ) {baseJ = BaseJ;}
+
   void bind(void);
   void unbind(void);
 
@@ -116,22 +131,19 @@ private:
   double Weight;
   double EmptyWeight;
   double Mass;
-  double Ixx;
-  double Iyy;
-  double Izz;
-  double Ixy;
-  double Ixz;
-  double baseIxx;
-  double baseIyy;
-  double baseIzz;
-  double baseIxy;
-  double baseIxz;
+  FGMatrix33 mJ;
+  FGMatrix33 mJinv;
+  FGMatrix33 pmJ;
+  FGMatrix33 baseJ;
   FGColumnVector3 vXYZcg;
   FGColumnVector3 vXYZtank;
   FGColumnVector3 vbaseXYZcg;
+  FGColumnVector3 vPMxyz;
   vector <FGColumnVector3> PointMassLoc;
   vector <double> PointMassWeight;
   FGColumnVector3 PointMassCG;
+  FGMatrix33& CalculatePMInertias(void);
+
   void Debug(int from);
 };
 }

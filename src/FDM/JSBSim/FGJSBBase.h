@@ -240,6 +240,8 @@ protected:
   static const double in3tom3;
   static double Reng;         // Specific Gas Constant,ft^2/(sec^2*R)
   static const double SHRatio;
+  static const double lbtoslug;
+  static const double slugtolb;
   static const string needed_cfg_version;
   static const string JSBSim_version;
 };

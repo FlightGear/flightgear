@@ -28,7 +28,7 @@
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 This is the place where you create output routines to dump data for perusal
-later. 
+later.
 
 HISTORY
 --------------------------------------------------------------------------------
@@ -51,6 +51,7 @@ INCLUDES
 #include "FGRotation.h"
 #include "FGPosition.h"
 #include "FGAuxiliary.h"
+#include "FGInertial.h"
 
 namespace JSBSim {
 
@@ -71,7 +72,7 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
   SubSystems = 0;
   enabled = true;
   outputInFileName = "";
-  
+
   Debug(0);
 }
 
@@ -80,7 +81,7 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
 FGOutput::~FGOutput()
 {
   if (socket) delete socket;
-  for (int i=0; i<OutputProperties.size(); i++) delete OutputProperties[i];
+  for (unsigned int i=0; i<OutputProperties.size(); i++) delete OutputProperties[i];
 
   Debug(1);
 }
@@ -103,9 +104,9 @@ bool FGOutput::Run(void)
       } else {
         // Not a valid type of output
       }
-	  return false;
+    return false;
     } else {
-	  return true;
+    return true;
     }
   }
   return false;
@@ -134,6 +135,7 @@ void FGOutput::SetType(string type)
 void FGOutput::DelimitedOutput(string fname)
 {
   streambuf* buffer;
+  string scratch = "";
 
   if (fname == "COUT" || fname == "cout") {
     buffer = cout.rdbuf();
@@ -159,7 +161,7 @@ void FGOutput::DelimitedOutput(string fname)
       outstream << "Right Aileron Pos, ";
       outstream << "Elevator Pos, ";
       outstream << "Rudder Pos, ";
-      outstream << "Flap Pos"; 
+      outstream << "Flap Pos";
     }
     if (SubSystems & ssRates) {
       outstream << ", ";
@@ -195,9 +197,14 @@ void FGOutput::DelimitedOutput(string fname)
     if (SubSystems & ssMassProps) {
       outstream << ", ";
       outstream << "Ixx, ";
-      outstream << "Iyy, ";
-      outstream << "Izz, ";
+      outstream << "Ixy, ";
       outstream << "Ixz, ";
+      outstream << "Iyx, ";
+      outstream << "Iyy, ";
+      outstream << "Iyz, ";
+      outstream << "Izx, ";
+      outstream << "Izy, ";
+      outstream << "Izz, ";
       outstream << "Mass, ";
       outstream << "Xcg, Ycg, Zcg";
     }
@@ -213,12 +220,12 @@ void FGOutput::DelimitedOutput(string fname)
       outstream << "Runway Radius";
     }
     if (SubSystems & ssCoefficients) {
-      outstream << ", ";
-      outstream << Aerodynamics->GetCoefficientStrings();
+      scratch = Aerodynamics->GetCoefficientStrings();
+      if (scratch.length() != 0) outstream << ", " << scratch;
     }
     if (SubSystems & ssFCS) {
-      outstream << ", ";
-      outstream << FCS->GetComponentStrings();
+      scratch = FCS->GetComponentStrings();
+      if (scratch.length() != 0) outstream << ", " << scratch;
     }
     if (SubSystems & ssGroundReactions) {
       outstream << ", ";
@@ -229,7 +236,7 @@ void FGOutput::DelimitedOutput(string fname)
       outstream << Propulsion->GetPropulsionStrings();
     }
     if (OutputProperties.size() > 0) {
-      for (int i=0;i<OutputProperties.size();i++) {
+      for (unsigned int i=0;i<OutputProperties.size();i++) {
         outstream << ", " << OutputProperties[i]->GetName();
       }
     }
@@ -286,10 +293,7 @@ void FGOutput::DelimitedOutput(string fname)
   }
   if (SubSystems & ssMassProps) {
     outstream << ", ";
-    outstream << MassBalance->GetIxx() << ", ";
-    outstream << MassBalance->GetIyy() << ", ";
-    outstream << MassBalance->GetIzz() << ", ";
-    outstream << MassBalance->GetIxz() << ", ";
+    outstream << MassBalance->GetJ() << ", ";
     outstream << MassBalance->GetMass() << ", ";
     outstream << MassBalance->GetXYZcg();
   }
@@ -305,12 +309,12 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << Position->GetRunwayRadius();
   }
   if (SubSystems & ssCoefficients) {
-    outstream << ", ";
-    outstream << Aerodynamics->GetCoefficientValues();
+    scratch = Aerodynamics->GetCoefficientValues();
+    if (scratch.length() != 0) outstream << ", " << scratch;
   }
   if (SubSystems & ssFCS) {
-    outstream << ", ";
-    outstream << FCS->GetComponentValues();
+    scratch = FCS->GetComponentValues();
+    if (scratch.length() != 0) outstream << ", " << scratch;
   }
   if (SubSystems & ssGroundReactions) {
     outstream << ", ";
@@ -321,7 +325,7 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << Propulsion->GetPropulsionValues();
   }
 
-  for (int i=0;i<OutputProperties.size();i++) {
+  for (unsigned int i=0;i<OutputProperties.size();i++) {
     outstream << ", " << OutputProperties[i]->getDoubleValue();
   }
 
@@ -604,7 +608,7 @@ void FGOutput::Debug(int from)
         cout << "  No log output" << endl;
         break;
       }
-      
+
       if (SubSystems & ssSimulation)      cout << "    Simulation parameters logged" << endl;
       if (SubSystems & ssAerosurfaces)    cout << "    Aerosurface parameters logged" << endl;
       if (SubSystems & ssRates)           cout << "    Rate parameters logged" << endl;

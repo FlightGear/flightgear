@@ -51,9 +51,7 @@ INCLUDES
 
 #include "FGModel.h"
 #include "FGConfigFile.h"
-#include "FGMatrix33.h"
 #include "FGColumnVector3.h"
-#include "FGColumnVector4.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

@@ -47,14 +47,8 @@ INCLUDES
 #include "FGAtmosphere.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
-#include "FGFCS.h"
 #include "FGAircraft.h"
-#include "FGPosition.h"
-#include "FGOutput.h"
 #include "FGInertial.h"
-#include "FGMatrix33.h"
-#include "FGColumnVector3.h"
-#include "FGColumnVector4.h"
 #include "FGPropertyManager.h"
 
 namespace JSBSim {

@@ -37,6 +37,7 @@ INCLUDES
 
 #include "FGInertial.h"
 #include "FGPosition.h"
+#include "FGState.h"
 #include "FGMassBalance.h"
 
 namespace JSBSim {
@@ -63,7 +64,7 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
   vCoriolis.InitMatrix();
   vCentrifugal.InitMatrix();
   vGravity.InitMatrix();
-    
+
   bind();
 
   Debug(0);
@@ -110,8 +111,9 @@ bool FGInertial::Run(void)
     vRadius(eDown) = Position->GetRadius();
     vCentrifugal(eDown) = -vOmegaLocal.Magnitude() * vOmegaLocal.Magnitude() * vRadius(eDown);
 
-    vForces = State->GetTl2b() * MassBalance->GetMass() * (vCoriolis + vCentrifugal + vGravity);
-    
+//    vForces = State->GetTl2b() * MassBalance->GetMass() * (vCoriolis + vCentrifugal + vGravity);
+    vForces = State->GetTl2b() * MassBalance->GetMass() * vGravity;
+
     return false;
   } else {
     return true;

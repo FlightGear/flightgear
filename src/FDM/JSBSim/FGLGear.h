@@ -42,13 +42,11 @@ INCLUDES
 #  include <simgear/compiler.h>
 #endif
 
+#include "FGJSBBase.h"
+#include "FGFDMExec.h"
 #include <string>
 #include "FGConfigFile.h"
-#include "FGMatrix33.h"
 #include "FGColumnVector3.h"
-#include "FGColumnVector4.h"
-#include "FGFDMExec.h"
-#include "FGJSBBase.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

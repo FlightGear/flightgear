@@ -59,13 +59,8 @@ INCLUDES
 #include "FGAtmosphere.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
-#include "FGFCS.h"
 #include "FGAircraft.h"
 #include "FGMassBalance.h"
-#include "FGTranslation.h"
-#include "FGPosition.h"
-#include "FGAuxiliary.h"
-#include "FGOutput.h"
 #include "FGPropertyManager.h"
 
 
@@ -92,7 +87,7 @@ FGRotation::FGRotation(FGFDMExec* fdmex) : FGModel(fdmex)
   vPQRdot_prev[3].InitMatrix();
 
   bind();
-  
+
   Debug(0);
 }
 
@@ -108,22 +103,14 @@ FGRotation::~FGRotation()
 
 bool FGRotation::Run(void)
 {
-  double L2, N1;
   double tTheta;
 
   if (!FGModel::Run()) {
     GetState();
 
-    L2 = vMoments(eL) + Ixz*vPQR(eP)*vPQR(eQ) - (Izz-Iyy)*vPQR(eR)*vPQR(eQ);
-    N1 = vMoments(eN) - (Iyy-Ixx)*vPQR(eP)*vPQR(eQ) - Ixz*vPQR(eR)*vPQR(eQ);
-
-    vPQRdot(eP) = (L2*Izz - N1*Ixz) / (Ixx*Izz - Ixz*Ixz);
-    vPQRdot(eQ) = (vMoments(eM) - (Ixx-Izz)*vPQR(eP)*vPQR(eR)
-                          - Ixz*(vPQR(eP)*vPQR(eP) - vPQR(eR)*vPQR(eR)))/Iyy;
-    vPQRdot(eR) = (N1*Ixx + L2*Ixz) / (Ixx*Izz - Ixz*Ixz);
-
+    vPQRdot = MassBalance->GetJinv()*(vMoments - vPQR*(MassBalance->GetJ()*vPQR));
     vPQR += State->Integrate(FGState::TRAPZ, dt*rate, vPQRdot, vPQRdot_prev);
-    
+
     vAeroPQR = vPQR + Atmosphere->GetTurbPQR();
 
     State->IntegrateQuat(vPQR, rate);
@@ -155,11 +142,6 @@ void FGRotation::GetState(void)
 {
   dt = State->Getdt();
   vMoments = Aircraft->GetMoments();
-
-  Ixx = MassBalance->GetIxx();
-  Iyy = MassBalance->GetIyy();
-  Izz = MassBalance->GetIzz();
-  Ixz = MassBalance->GetIxz();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

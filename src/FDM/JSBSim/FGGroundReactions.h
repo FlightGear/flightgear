@@ -52,8 +52,7 @@ INCLUDES
 #include "FGModel.h"
 #include "FGConfigFile.h"
 #include "FGLGear.h"
-#include "FGInertial.h"
-#include "FGMatrix33.h"
+#include "FGColumnVector3.h"
 
 #define ID_GROUNDREACTIONS "$Id$"
 

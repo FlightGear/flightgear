@@ -120,7 +120,7 @@ whatever value fcs/roll-ap-error-summer is.
 @author Jon S. Berndt
 @version $Id$
 */
-   
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -133,12 +133,12 @@ public:
 
   bool Run(void);
 
+  enum eLogic {elUndef=0, eAND, eOR, eDefault};
+  enum eComparison {ecUndef=0, eEQ, eNE, eGT, eGE, eLT, eLE};
+
 private:
   FGFCS* fcs;
   FGConfigFile* AC_cfg;
-
-  enum eLogic {elUndef=0, eAND, eOR, eDefault};
-  enum eComparison {ecUndef=0, eEQ, eNE, eGT, eGE, eLT, eLE};
 
   struct test {
     vector <FGCondition> conditions;
@@ -146,7 +146,7 @@ private:
     double OutputVal;
     FGPropertyManager *OutputProp;
     float sign;
-    
+
     double GetValue(void) {
       if (OutputProp == 0L) return OutputVal;
       else                  return OutputProp->getDoubleValue()*sign;
@@ -162,7 +162,7 @@ private:
   };
 
   vector <test> tests;
-  
+
   void Debug(int from);
 };
 }

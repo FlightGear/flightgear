@@ -53,12 +53,8 @@ INCLUDES
 #endif
 
 #include "FGModel.h"
-#include "FGPropulsion.h"
 #include "FGConfigFile.h"
-#include "FGMatrix33.h"
 #include "FGColumnVector3.h"
-#include "FGColumnVector4.h"
-#include "FGLGear.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -169,7 +165,6 @@ private:
   FGColumnVector3 vXYZrp;
   FGColumnVector3 vXYZvrp;
   FGColumnVector3 vXYZep;
-  FGColumnVector3 vEuler;
   FGColumnVector3 vDXYZcg;
   FGColumnVector3 vBodyAccel;
   FGColumnVector3 vNcg;

@@ -43,9 +43,8 @@ and the cg.
 #include "FGFDMExec.h"
 #include "FGAircraft.h"
 #include "FGTranslation.h"
-#include "FGMatrix33.h"
-#include "FGColumnVector3.h"
-#include "FGColumnVector4.h"
+#include "FGMassBalance.h"
+#include "FGState.h"
 #include "FGForce.h"
 
 namespace JSBSim {
@@ -100,7 +99,6 @@ FGMatrix33 FGForce::Transform(void)
   case tLocalBody:
     return fdmex->GetState()->GetTl2b();
   case tCustom:
-
   case tNone:
     return mT;
   default:

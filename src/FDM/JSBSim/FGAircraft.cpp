@@ -1,49 +1,49 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- 
+
  Module:       FGAircraft.cpp
  Author:       Jon S. Berndt
- Date started: 12/12/98                                   
+ Date started: 12/12/98
  Purpose:      Encapsulates an aircraft
  Called by:    FGFDMExec
 
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
- 
+
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
- 
+
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
  details.
- 
+
  You should have received a copy of the GNU General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
- 
+
  Further information about the GNU General Public License can also be found on
  the world wide web at http://www.gnu.org.
- 
+
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 Models the aircraft reactions and forces. This class is instantiated by the
-FGFDMExec class and scheduled as an FDM entry. 
- 
+FGFDMExec class and scheduled as an FDM entry.
+
 HISTORY
 --------------------------------------------------------------------------------
 12/12/98   JSB   Created
 04/03/99   JSB   Changed Aero() method to correct body axis force calculation
                  from wind vector. Fix provided by Tony Peden.
 05/03/99   JSB   Changed (for the better?) the way configurations are read in.
-9/17/99     TP   Combined force and moment functions. Added aero reference 
-                 point to config file. Added calculations for moments due to 
+9/17/99     TP   Combined force and moment functions. Added aero reference
+                 point to config file. Added calculations for moments due to
                  difference in cg and aero reference point
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES,  and NOTES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -73,15 +73,9 @@ INCLUDES
 #include "FGInertial.h"
 #include "FGGroundReactions.h"
 #include "FGAerodynamics.h"
-#include "FGTranslation.h"
-#include "FGRotation.h"
-#include "FGAtmosphere.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
-#include "FGFCS.h"
 #include "FGPosition.h"
-#include "FGAuxiliary.h"
-#include "FGOutput.h"
 #include "FGPropertyManager.h"
 
 namespace JSBSim {
@@ -139,14 +133,14 @@ bool FGAircraft::Run(void)
     vMoments += Aerodynamics->GetMoments();
     vMoments += Propulsion->GetMoments();
     vMoments += GroundReactions->GetMoments();
-    
+
     vBodyAccel = vForces/MassBalance->GetMass();
-    
+
     vNcg = vBodyAccel/Inertial->gravity();
 
     vNwcg = State->GetTb2s() * vNcg;
     vNwcg(3) = -1*vNwcg(3) + 1;
-    
+
     return false;
   } else {                               // skip Run() execution this time
     return true;
@@ -166,9 +160,11 @@ bool FGAircraft::Load(FGConfigFile* AC_cfg)
 {
   string token = "";
   string parameter;
-  double EW, bixx, biyy, bizz, bixy, bixz;
+  double EW, bixx, biyy, bizz, bixy, bixz, biyz;
   double pmWt, pmX, pmY, pmZ;
   FGColumnVector3 vbaseXYZcg;
+
+  bixx = biyy = bizz = bixy = bixz = biyz = 0.0;
 
   AC_cfg->GetNextConfigLine();
 
@@ -182,7 +178,7 @@ bool FGAircraft::Load(FGConfigFile* AC_cfg)
       if (debug_lvl > 0) cout << "    WingSpan: " << WingSpan  << endl;
     } else if (parameter == "AC_WINGINCIDENCE") {
       *AC_cfg >> WingIncidence;
-      if (debug_lvl > 0) cout << "    Chord: " << cbar << endl;
+      if (debug_lvl > 0) cout << "    Incidence: " << WingIncidence << endl;
     } else if (parameter == "AC_CHORD") {
       *AC_cfg >> cbar;
       if (debug_lvl > 0) cout << "    Chord: " << cbar << endl;
@@ -200,28 +196,26 @@ bool FGAircraft::Load(FGConfigFile* AC_cfg)
       if (debug_lvl > 0) cout << "    V. Tail Arm: " << VTailArm << endl;
     } else if (parameter == "AC_IXX") {
       *AC_cfg >> bixx;
-      if (debug_lvl > 0) cout << "    baseIxx: " << bixx << endl;
-      MassBalance->SetBaseIxx(bixx);
+      if (debug_lvl > 0) cout << "    baseIxx: " << bixx << " slug-ft2" << endl;
     } else if (parameter == "AC_IYY") {
       *AC_cfg >> biyy;
-      if (debug_lvl > 0) cout << "    baseIyy: " << biyy << endl;
-      MassBalance->SetBaseIyy(biyy);
+      if (debug_lvl > 0) cout << "    baseIyy: " << biyy << " slug-ft2" << endl;
     } else if (parameter == "AC_IZZ") {
       *AC_cfg >> bizz;
-      if (debug_lvl > 0) cout << "    baseIzz: " << bizz << endl;
-      MassBalance->SetBaseIzz(bizz);
+      if (debug_lvl > 0) cout << "    baseIzz: " << bizz << " slug-ft2" << endl;
     } else if (parameter == "AC_IXY") {
       *AC_cfg >> bixy;
-      if (debug_lvl > 0) cout << "    baseIxy: " << bixy  << endl;
-      MassBalance->SetBaseIxy(bixy);
+      if (debug_lvl > 0) cout << "    baseIxy: " << bixy << " slug-ft2" << endl;
     } else if (parameter == "AC_IXZ") {
       *AC_cfg >> bixz;
-      if (debug_lvl > 0) cout << "    baseIxz: " << bixz  << endl;
-      MassBalance->SetBaseIxz(bixz);
+      if (debug_lvl > 0) cout << "    baseIxz: " << bixz << " slug-ft2" << endl;
+    } else if (parameter == "AC_IYZ") {
+      *AC_cfg >> biyz;
+      if (debug_lvl > 0) cout << "    baseIyz: " << biyz << " slug-ft2" << endl;
     } else if (parameter == "AC_EMPTYWT") {
       *AC_cfg >> EW;
       MassBalance->SetEmptyWeight(EW);
-      if (debug_lvl > 0) cout << "    EmptyWeight: " << EW  << endl;
+      if (debug_lvl > 0) cout << "    EmptyWeight: " << EW << " lbm" << endl;
     } else if (parameter == "AC_CGLOC") {
       *AC_cfg >> vbaseXYZcg(eX) >> vbaseXYZcg(eY) >> vbaseXYZcg(eZ);
       MassBalance->SetBaseCG(vbaseXYZcg);
@@ -244,7 +238,11 @@ bool FGAircraft::Load(FGConfigFile* AC_cfg)
                          << endl;
     }
   }
-  
+
+  MassBalance->SetAircraftBaseInertias(FGMatrix33(  bixx,  -bixy,  -bixz,
+                                                    -bixy,  biyy,  -biyz,
+                                                    -bixz,  -biyz,  bizz ));
+
   // calculate some derived parameters
   if (cbar != 0.0) {
     lbarh = HTailArm/cbar;
@@ -253,7 +251,7 @@ bool FGAircraft::Load(FGConfigFile* AC_cfg)
       vbarh = HTailArm*HTailArea / (cbar*WingArea);
       vbarv = VTailArm*VTailArea / (cbar*WingArea);
     }
-  }     
+  }
   return true;
 }
 
@@ -298,17 +296,17 @@ void FGAircraft::bind(void)
                        (PMF)&FGAircraft::GetForces);
   PropertyManager->Tie("forces/fbz-total-lbs", this,3,
                        (PMF)&FGAircraft::GetForces);
-  PropertyManager->Tie("metrics/aero-rp-x-ft", this,1,
+  PropertyManager->Tie("metrics/aero-rp-x-in", this,1,
                        (PMF)&FGAircraft::GetXYZrp);
-  PropertyManager->Tie("metrics/aero-rp-y-ft", this,2,
+  PropertyManager->Tie("metrics/aero-rp-y-in", this,2,
                        (PMF)&FGAircraft::GetXYZrp);
-  PropertyManager->Tie("metrics/aero-rp-z-ft", this,3,
+  PropertyManager->Tie("metrics/aero-rp-z-in", this,3,
                        (PMF)&FGAircraft::GetXYZrp);
-  PropertyManager->Tie("metrics/eyepoint-x-ft", this,1,
+  PropertyManager->Tie("metrics/eyepoint-x-in", this,1,
                        (PMF)&FGAircraft::GetXYZep);
-  PropertyManager->Tie("metrics/eyepoint-y-ft", this,2,
+  PropertyManager->Tie("metrics/eyepoint-y-in", this,2,
                        (PMF)&FGAircraft::GetXYZep);
-  PropertyManager->Tie("metrics/eyepoint-z-ft", this,3,
+  PropertyManager->Tie("metrics/eyepoint-z-in", this,3,
                        (PMF)&FGAircraft::GetXYZep);
   PropertyManager->Tie("metrics/visualrefpoint-x-in", this,1,
                        (PMF)&FGAircraft::GetXYZvrp);
@@ -340,12 +338,12 @@ void FGAircraft::unbind(void)
   PropertyManager->Untie("forces/fbx-total-lbs");
   PropertyManager->Untie("forces/fby-total-lbs");
   PropertyManager->Untie("forces/fbz-total-lbs");
-  PropertyManager->Untie("metrics/aero-rp-x-ft");
-  PropertyManager->Untie("metrics/aero-rp-y-ft");
-  PropertyManager->Untie("metrics/aero-rp-z-ft");
-  PropertyManager->Untie("metrics/eyepoint-x-ft");
-  PropertyManager->Untie("metrics/eyepoint-y-ft");
-  PropertyManager->Untie("metrics/eyepoint-z-ft");
+  PropertyManager->Untie("metrics/aero-rp-x-in");
+  PropertyManager->Untie("metrics/aero-rp-y-in");
+  PropertyManager->Untie("metrics/aero-rp-z-in");
+  PropertyManager->Untie("metrics/eyepoint-x-in");
+  PropertyManager->Untie("metrics/eyepoint-y-in");
+  PropertyManager->Untie("metrics/eyepoint-z-in");
   PropertyManager->Untie("metrics/visualrefpoint-x-in");
   PropertyManager->Untie("metrics/visualrefpoint-y-in");
   PropertyManager->Untie("metrics/visualrefpoint-z-in");

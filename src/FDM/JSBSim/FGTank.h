@@ -44,8 +44,9 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGConfigFile.h"
 #include "FGJSBBase.h"
+#include "FGConfigFile.h"
+#include "FGColumnVector3.h"
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
@@ -98,9 +99,8 @@ public:
   bool GetSelected(void) {return Selected;}
   double GetPctFull(void) {return PctFull;}
   double GetContents(void) {return Contents;}
-  double inline GetX(void) {return X;}
-  double inline GetY(void) {return Y;}
-  double inline GetZ(void) {return Z;}
+  const FGColumnVector3& GetXYZ(void) {return vXYZ;}
+  double GetXYZ(int idx) {return vXYZ(idx);}
 
   void SetContents(double contents) { Contents = contents; }
 
@@ -109,7 +109,7 @@ public:
 private:
   TankType Type;
   string type;
-  double X, Y, Z;
+  FGColumnVector3 vXYZ;
   double Capacity;
   double Radius;
   double PctFull;

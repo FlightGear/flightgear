@@ -82,18 +82,15 @@ public:
   
   double GetOutputPct() const { return OutputPct; }
     
-  bool Run (void );
+  bool Run (void);
   
 private:
   FGConfigFile* AC_cfg;
   vector<double> Detents;
   vector<double> TransitionTimes;
-  int NumDetents,fi;
-  double lastInputCmd;
-  double InputCmd;
-  double OutputPos;
+  int NumDetents;
   double OutputPct;
-  bool  InTransit;
+  bool  DoScale;
 
   void Debug(int from);
 };

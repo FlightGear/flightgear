@@ -303,6 +303,7 @@ double FGSimTurbine::Seek(double *var, double target, double accel, double decel
 void FGSimTurbine::SetDefaults(void)
 {
   Name = "Not defined";
+  N1 = N2 = 0.0;
   Type = etSimTurbine;
   MilThrust = 10000.0;
   MaxThrust = 10000.0;

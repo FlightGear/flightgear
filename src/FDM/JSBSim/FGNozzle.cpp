@@ -43,6 +43,7 @@ INCLUDES
 #endif
 
 #include "FGNozzle.h"
+#include "FGAtmosphere.h"
 
 namespace JSBSim {
 

@@ -31,6 +31,7 @@ INCLUDES
    SG_USING_STD(cerr);
    SG_USING_STD(cout);
    SG_USING_STD(endl);
+   SG_USING_STD(sqrt);
 #else
 #  include <string>
 #  if defined (sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
@@ -50,6 +51,7 @@ INCLUDES
      using std::cerr;
      using std::cout;
      using std::endl;
+     using std::sqrt;
 #  endif
    using std::string;
 #endif
@@ -88,22 +90,22 @@ public:
   FGColumnVector4(double A, double B, double C, double D);
   FGColumnVector4(const FGColumnVector4& b);
   ~FGColumnVector4(void);
-  
+
   FGColumnVector4 operator=(const FGColumnVector4& b);
-  
+
   FGColumnVector4 operator*(const double scalar);
   FGColumnVector4 operator/(const double scalar);
   FGColumnVector4 operator+(const FGColumnVector4& B); // must not return reference
   FGColumnVector4 operator-(const FGColumnVector4& B);
-  
+
   void operator-=(const FGColumnVector4 &B);
   void operator+=(const FGColumnVector4 &B);
   void operator*=(const double scalar);
   void operator/=(const double scalar);
-  
+
   inline double operator()(int m) const { return data[m]; }
   inline double& operator()(int m) { return data[m]; }
-  
+
   FGColumnVector4& operator<<(const double ff);
 
   inline void InitMatrix(void) { data[1]=0; data[2]=0; data[3]=0; data[4]=0; }

@@ -36,7 +36,10 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGPropeller.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
 #include "FGFCS.h"
+#include "FGAtmosphere.h"
 
 namespace JSBSim {
 

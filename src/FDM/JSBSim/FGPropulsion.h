@@ -3,30 +3,30 @@
  Header:       FGPropulsion.h
  Author:       Jon S. Berndt
  Date started: 08/20/00
- 
+
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
- 
+
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
- 
+
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
  details.
- 
+
  You should have received a copy of the GNU General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
- 
+
  Further information about the GNU General Public License can also be found on
  the world wide web at http://www.gnu.org.
- 
+
 HISTORY
 --------------------------------------------------------------------------------
 08/20/00   JSB   Created
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -53,14 +53,10 @@ INCLUDES
 #endif
 
 #include "FGModel.h"
-
-#include "FGRocket.h"
-#include "FGPiston.h"
-#include "FGTurbine.h"
-#include "FGSimTurbine.h"
+#include "FGEngine.h"
 #include "FGTank.h"
-#include "FGPropeller.h"
-#include "FGNozzle.h"
+#include "FGThruster.h"
+#include "FGMatrix33.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -177,11 +173,11 @@ public:
 
   /** Loops the engines/thrusters until thrust output steady (used for trimming) */
   bool GetSteadyState(void);
-  
+
   /** starts the engines in IC mode (dt=0).  All engine-specific setup must
       be done before calling this (i.e. magnetos, starter engage, etc.) */
   bool ICEngineStart(void);
-  
+
   string GetPropulsionStrings(void);
   string GetPropulsionValues(void);
 
@@ -189,15 +185,9 @@ public:
   inline double GetForces(int n) const { return vForces(n);}
   inline FGColumnVector3& GetMoments(void) {return vMoments;}
   inline double GetMoments(int n) const {return vMoments(n);}
-  
+
   FGColumnVector3& GetTanksMoment(void);
   double GetTanksWeight(void);
-
-  double GetTanksIxx(const FGColumnVector3& vXYZcg);
-  double GetTanksIyy(const FGColumnVector3& vXYZcg);
-  double GetTanksIzz(const FGColumnVector3& vXYZcg);
-  double GetTanksIxz(const FGColumnVector3& vXYZcg);
-  double GetTanksIxy(const FGColumnVector3& vXYZcg);
 
   inline int GetActiveEngine(void) const
   {
@@ -210,10 +200,11 @@ public:
   void SetStarter(int setting);
   void SetCutoff(int setting=0);
   void SetActiveEngine(int engine);
-  
+  FGMatrix33& CalculateTankInertias(void);
+
   void bind();
   void unbind();
-   
+
 private:
   vector <FGEngine*>   Engines;
   vector <FGTank*>     Tanks;
@@ -230,7 +221,9 @@ private:
   double dt;
   FGColumnVector3 vForces;
   FGColumnVector3 vMoments;
-  FGColumnVector3 vXYZtank;
+  FGColumnVector3 vTankXYZ;
+  FGColumnVector3 vXYZtank_arm;
+  FGMatrix33 tankJ;
   void Debug(int from);
 };
 }

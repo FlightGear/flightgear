@@ -54,11 +54,8 @@ INCLUDES
 
 #include "FGModel.h"
 #include "FGConfigFile.h"
-#include "FGState.h"
-#include "FGMassBalance.h"
-#include "FGTranslation.h"
 #include "FGCoefficient.h"
-#include "FGFactorGroup.h"
+#include "FGColumnVector3.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

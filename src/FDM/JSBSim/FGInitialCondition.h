@@ -49,10 +49,7 @@ INCLUDES
 
 #include "FGFDMExec.h"
 #include "FGJSBBase.h"
-#include "FGAtmosphere.h"
-#include "FGMatrix33.h"
 #include "FGColumnVector3.h"
-#include "FGColumnVector4.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

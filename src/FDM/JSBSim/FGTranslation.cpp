@@ -115,17 +115,7 @@ bool FGTranslation::Run(void)
 {
   if (!FGModel::Run()) {
 
-    mVel(1,1) =  0.0;
-    mVel(1,2) = -vUVW(eW);
-    mVel(1,3) =  vUVW(eV);
-    mVel(2,1) =  vUVW(eW);
-    mVel(2,2) =  0.0;
-    mVel(2,3) = -vUVW(eU);
-    mVel(3,1) = -vUVW(eV);
-    mVel(3,2) =  vUVW(eU);
-    mVel(3,3) =  0.0;
-
-    vUVWdot = mVel*Rotation->GetPQR() + Aircraft->GetBodyAccel();
+    vUVWdot = vUVW*Rotation->GetPQR() + Aircraft->GetBodyAccel();
 
     vUVW += State->Integrate(FGState::TRAPZ, State->Getdt()*rate, vUVWdot, vUVWdot_prev);
 
@@ -139,7 +129,6 @@ bool FGTranslation::Run(void)
         beta = vAeroUVW(eU)*vAeroUVW(eU)+vAeroUVW(eW)*vAeroUVW(eW) > 0.0 ? atan2(vAeroUVW(eV),
                sqrt(vAeroUVW(eU)*vAeroUVW(eU) + vAeroUVW(eW)*vAeroUVW(eW))) : 0.0;
 
-      // stolen, quite shamelessly, from LaRCsim
       double mUW = (vAeroUVW(eU)*vAeroUVW(eU) + vAeroUVW(eW)*vAeroUVW(eW));
       double signU=1;
       if (vAeroUVW(eU) != 0.0)
@@ -160,10 +149,10 @@ bool FGTranslation::Run(void)
     qbar = 0.5*Atmosphere->GetDensity()*Vt*Vt;
     qbarUW = 0.5*Atmosphere->GetDensity()*(vAeroUVW(eU)*vAeroUVW(eU) + vAeroUVW(eW)*vAeroUVW(eW));
     qbarUV = 0.5*Atmosphere->GetDensity()*(vAeroUVW(eU)*vAeroUVW(eU) + vAeroUVW(eV)*vAeroUVW(eV));
-    Mach = Vt / State->Geta();
-    vMachUVW(eU) = vAeroUVW(eU) / State->Geta();
-    vMachUVW(eV) = vAeroUVW(eV) / State->Geta();
-    vMachUVW(eW) = vAeroUVW(eW) / State->Geta();
+    Mach = Vt / Atmosphere->GetSoundSpeed();
+    vMachUVW(eU) = vAeroUVW(eU) / Atmosphere->GetSoundSpeed();
+    vMachUVW(eV) = vAeroUVW(eV) / Atmosphere->GetSoundSpeed();
+    vMachUVW(eW) = vAeroUVW(eW) / Atmosphere->GetSoundSpeed();
 
     if (debug_lvl > 1) Debug(1);
 

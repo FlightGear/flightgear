@@ -61,7 +61,6 @@ INCLUDES
 #include "FGJSBBase.h"
 #include "FGMatrix33.h"
 #include "FGColumnVector3.h"
-#include "FGColumnVector4.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

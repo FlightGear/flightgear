@@ -39,7 +39,6 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGLGear.h"
-//#include <algorithm>
 
 namespace JSBSim {
 
@@ -113,6 +112,7 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : Exec(fdmex)
   TakeoffReported = LandingReported = false;
   LandingDistanceTraveled = TakeoffDistanceTraveled = TakeoffDistanceTraveled50ft = 0.0;
   MaximumStrutForce = MaximumStrutTravel = 0.0;
+  SideForce = RollingForce = 0.0;
   SinkRate = GroundSpeed = 0.0;
 
   vWhlBodyVec = MassBalance->StructuralToBody(vXYZ);
@@ -163,6 +163,8 @@ FGLGear::FGLGear(const FGLGear& lgear)
   TakeoffDistanceTraveled50ft   = lgear.TakeoffDistanceTraveled50ft;
   MaximumStrutForce  = lgear.MaximumStrutForce;
   MaximumStrutTravel = lgear.MaximumStrutTravel;
+  SideForce          = lgear.SideForce;
+  RollingForce       = lgear.RollingForce;
 
   kSpring         = lgear.kSpring;
   bDamp           = lgear.bDamp;
@@ -208,7 +210,6 @@ FGColumnVector3& FGLGear::Force(void)
   double SinWheel, CosWheel;
   double deltaSlip;
   double deltaT = State->Getdt()*Aircraft->GetRate();
-  double maxdeltaSlip = 0.5*deltaT;
 
   vForce.InitMatrix();
   vMoment.InitMatrix();
@@ -262,9 +263,7 @@ FGColumnVector3& FGLGear::Force(void)
 // wheel velocity.
 
       vWhlVelVec      =  State->GetTb2l() * (Rotation->GetPQR() * vWhlBodyVec);
-
       vWhlVelVec     +=  Position->GetVel();
-
       compressSpeed   =  vWhlVelVec(eZ);
 
 // If this is the first time the wheel has made contact, remember some values
@@ -360,6 +359,8 @@ FGColumnVector3& FGLGear::Force(void)
         WheelSlip = radtodeg*atan2(SideWhlVel, RollingWhlVel);
       }
 /*
+      double maxdeltaSlip = 0.5*deltaT;
+
       if (RollingWhlVel == 0.0 && SideWhlVel == 0.0) {
         WheelSlip = 0.0;
       } else if (RollingWhlVel < 1.0) {

@@ -37,8 +37,11 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGAerodynamics.h"
+#include "FGTranslation.h"
+#include "FGAircraft.h"
+#include "FGState.h"
+#include "FGMassBalance.h"
 #include "FGFactorGroup.h"
-#include "FGCoefficient.h"
 #include "FGPropertyManager.h"
 
 namespace JSBSim {
