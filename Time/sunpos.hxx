@@ -1,5 +1,5 @@
 /*
- * sunpos.h
+ * sunpos.hxx
  * kirk johnson
  * july 1993
  *
@@ -36,12 +36,12 @@
  */
 
 
-#ifndef _SUNPOS_H
-#define _SUNPOS_H
+#ifndef _SUNPOS_HXX
+#define _SUNPOS_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -53,11 +53,6 @@ extern "C" {
 void fgUpdateSunPos( void );
 
 void fgSunPosition(time_t ssue, double *lon, double *lat);
-
-
-#ifdef __cplusplus
-}
-#endif
 
 
 #endif /* _SUNPOS_H */

@@ -28,11 +28,6 @@
 #define _FG_TIME_H
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
-#endif                                   
-
-
 #include <config.h>
 
 #ifdef HAVE_WINDOWS_H
@@ -44,6 +39,11 @@ extern "C" {
 
 #include <Include/fg_types.h>
 #include <Flight/flight.h>
+
+
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
 
 
 /* Define a structure containing global time parameters */
@@ -73,26 +73,6 @@ struct fgTIME {
 
 extern struct fgTIME cur_time_params;
 
-
-/* Lighting is time dependent so it shows up here */
-/* Define a structure containing the global lighting parameters */
-struct fgLIGHT {
-    /* position of the sun in various forms */
-    double sun_lon, sun_gc_lat;         /* in geocentric coordinates */
-    struct fgCartesianPoint fg_sunpos;  /* in cartesian coordiantes */
-    GLfloat sun_vec[4];                 /* (in view coordinates) */
-    GLfloat sun_vec_inv[4];             /* inverse (in view coordinates) */
-    double sun_angle;                   /* the angle between the sun and the 
-					   local horizontal */
-
-    /* Derived lighting values */
-    GLfloat scene_ambient[3];           /* ambient component */
-    GLfloat scene_diffuse[3];           /* diffuse component */
-    GLfloat fog_color[4];               /* fog color */
-    GLfloat sky_color[4];               /* clear screen color */
-};
-
-extern struct fgLIGHT cur_light_params;
 
 typedef struct fg_timestamp_t {
     long seconds;
@@ -125,13 +105,17 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.19  1998/04/21 17:01:44  curt
-/* Fixed a problems where a pointer to a function was being passed around.  In
-/* one place this functions arguments were defined as ( void ) while in another
-/* place they were defined as ( int ).  The correct answer was ( int ).
+/* Revision 1.20  1998/04/22 13:24:05  curt
+/* C++ - ifiing the code a bit.
+/* Starting to reorginize some of the lighting calcs to use a table lookup.
 /*
-/* Prepairing for C++ integration.
-/*
+ * Revision 1.19  1998/04/21 17:01:44  curt
+ * Fixed a problems where a pointer to a function was being passed around.  In
+ * one place this functions arguments were defined as ( void ) while in another
+ * place they were defined as ( int ).  The correct answer was ( int ).
+ *
+ * Prepairing for C++ integration.
+ *
  * Revision 1.18  1998/04/08 23:35:40  curt
  * Tweaks to Gnu automake/autoconf system.
  *
