@@ -13,9 +13,8 @@
 #include <stdlib.h>  // atoi()
 #include <string.h>  // bcopy()
 
-#include "remote_exec.h"
-
-char *determine_port(char *host);
+#include <iostream>
+#include <string>
 
 
 int make_socket (char *host, unsigned short int port) {
@@ -53,46 +52,71 @@ int make_socket (char *host, unsigned short int port) {
 }
 
 
-main(int argc, char *argv[]) {
+// connect to the server and get the next task
+long int get_next_task( const string& host, int port ) {
+    long int tile;
     int sock, len;
     fd_set ready;
-    int port;
     char message[256];
 
-    /* Check usage */
+    sock = make_socket( host.c_str(), port );
+
+    // build a command string from the argv[]'s
+    strcpy(message, "hello world!\n");
+
+    // send command and arguments to remote server
+    // if ( write(sock, message, sizeof(message)) < 0 ) {
+    //    perror("Cannot write to stream socket");
+    // }
+
+    // loop until remote program finishes
+    cout << "looping ..." << endl;
+
+    FD_ZERO(&ready);
+    FD_SET(sock, &ready);
+
+    // block until input from sock
+    select(32, &ready, 0, 0, NULL);
+    cout << "unblocking ... " << endl;
+
+    if ( FD_ISSET(sock, &ready) ) {
+	/* input coming from socket */
+	if ( (len = read(sock, message, 1024)) > 0 ) {
+	    message[len] = '\0';
+	    tile = atoi(message);
+	    cout << "tile to construct = " << tile << endl;
+	    close(sock);
+	    return tile;
+	} else {
+	    close(sock);
+	    return -1;
+	}
+    }
+
+    close(sock);
+    return -1;
+}
+
+
+// build the specified tile
+void run_task( long int tile ) {
+}
+
+
+main(int argc, char *argv[]) {
+    long int tile;
+
+    // Check usage
     if ( argc < 3 ) {
 	printf("Usage: %s remote_machine port\n", argv[0]);
 	exit(1);
     }
 
-    port = atoi(argv[2]);
-    sock = make_socket(argv[1], port);
+    string host = argv[1];
+    int port = atoi( argv[2] );
 
-    /* build a command string from the argv[]'s */
-    strcpy(message, "hello world!\n");
-
-    /* send command and arguments to remote server */
-    if ( write(sock, message, sizeof(message)) < 0 ) {
-	perror("Cannot write to stream socket");
+    while ( true ) {
+	tile = get_next_task( host, port );
+	run_task( tile );
     }
-
-    for ( ;; ) {
-	/* loop until remote program finishes */
-
-        FD_ZERO(&ready);
-        FD_SET(sock, &ready);
-
-	/* block until input from sock or stdin */
-	select(32, &ready, 0, 0, NULL);
-
-	if ( FD_ISSET(sock, &ready) ) {
-	    /* input coming from socket */
-	    if ( (len = read(sock, message, 1024)) > 0 ) {
-		write(1, message, len);
-	    } else {
-		exit(0);
-	    }
-	}
-    }
-    close(sock);
 }

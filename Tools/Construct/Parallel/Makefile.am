@@ -2,7 +2,9 @@ bin_PROGRAMS = server client
 
 server_SOURCES = server.cxx
 
-server_LDADD = 
+server_LDADD = \
+	$(top_builddir)/Lib/Bucket/libBucket.a \
+	$(top_builddir)/Lib/Misc/libMisc.a
 
 client_SOURCES = client.cxx
 
