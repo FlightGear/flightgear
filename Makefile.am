@@ -41,7 +41,7 @@ fgfs-base-zip:
 
 fgfs-base-patch:
 	(cd $(HOME); \
-	tar --newer 5/18/2000 -czvf fgfs-base-patch-$(VERSION)b.tar.gz \
+	tar --newer 7/19/2000 -czvf fgfs-base-patch-$(VERSION).tar.gz \
 	FlightGear/[A-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
