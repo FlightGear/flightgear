@@ -383,7 +383,8 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		    // sanity check
 		    if ( (int)nodes.size() != vncount ) {
 			FG_LOG( FG_TERRAIN, FG_ALERT, 
-				"Tile has mismatched nodes and normals: " 
+				"Tile has mismatched nodes = " << nodes.size()
+				<< " and normals = " << vncount << " : " 
 				<< path );
 			// exit(-1);
 		    }

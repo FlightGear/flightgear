@@ -52,7 +52,7 @@ FG_USING_STD(string);
 
 
 // duplicated from the TerraGear tools
-#define FG_MAX_NODES 2000
+#define FG_MAX_NODES 4000
 
 
 // Load a .obj file
