@@ -184,11 +184,6 @@ null_LIBS="$LIBS"
 
 AC_CHECK_LIB(m, cos)
 
-dnl MINGW requires libwsock32
-if test  "x$is_mingw" = "xyes" ; then
-    LIBS="$LIBS -lws2_32"
-fi
-
 base_LIBS="$LIBS"
 
 dnl Thread related checks
@@ -224,7 +219,8 @@ case "${host}" in
     dnl add -lwsock32 for mingwin
     case "${host}" in
     *-*-mingw32*)
-        LIBS="$LIBS -lws2_32"
+        echo "********** BUILDING FOR MINGW32 *************"
+        base_LIBS="$base_LIBS -lws2_32"
         ;;
     esac
 
