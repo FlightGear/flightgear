@@ -94,7 +94,7 @@ fgEVENT::~fgEVENT()
 void
 fgEVENT::run()
 {
-    printf("Running %s\n", description.c_str() );
+    FG_LOG(FG_TIME, FG_INFO, "Running " << description );
 
     // record starting time
     timestamp( &last_run );
@@ -131,11 +131,14 @@ fgEVENT::run()
 int
 fgEVENT::PrintStats() const
 {
-    printf("  %-30s int=%.2fs cum=%ld min=%ld max=%ld count=%ld ave=%.2f\n",
-	   description.c_str(), 
-	   interval / 1000.0,
-	   cum_time, min_time, max_time, count, 
-	   cum_time / (double)count);
+    FG_LOG( FG_TIME, FG_INFO, 
+	    "  " << description 
+	    << " int=" << interval / 1000.0
+	    << " cum=" << cum_time
+	    << " min=" << min_time
+	    << " max=" <<  max_time
+	    << " count=" << count
+	    << " ave=" << cum_time / (double)count );
     return 0;
 }
 
@@ -146,7 +149,7 @@ fgEVENT_MGR::fgEVENT_MGR( void ) {
 
 // Initialize the scheduling subsystem
 void fgEVENT_MGR::Init( void ) {
-    printf("Initializing event manager\n");
+    FG_LOG(FG_TIME, FG_INFO, "Initializing event manager" );
 
     run_queue.erase( run_queue.begin(), run_queue.end() );
     event_table.erase( event_table.begin(), event_table.end() );
@@ -162,7 +165,7 @@ fgEVENT_MGR::Register( const string& desc,
 {
     fgEVENT e( desc, cb, status, interval );
 
-    printf("Registering event: %s\n", desc.c_str() );
+    FG_LOG( FG_TIME, FG_INFO, "Registering event: " << desc );
 
     // Actually run the event
     e.run();
@@ -195,15 +198,15 @@ void fgEVENT_MGR::Resume( void ) {
 void
 fgEVENT_MGR::PrintStats()
 {
-    printf("\n");
-    printf("Event Stats\n");
-    printf("-----------\n");
+    FG_LOG( FG_TIME, FG_INFO, "" );
+    FG_LOG( FG_TIME, FG_INFO, "Event Stats" );
+    FG_LOG( FG_TIME, FG_INFO, "-----------" );
 
     for_each( event_table.begin(),
 	      event_table.end(),
 	      mem_fun_ref( &fgEVENT::PrintStats ));
 
-    printf("\n");
+    FG_LOG( FG_TIME, FG_INFO, "");
 }
 
 
@@ -258,6 +261,11 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 
 
 // $Log$
+// Revision 1.10  1998/11/07 19:07:13  curt
+// Enable release builds using the --without-logging option to the configure
+// script.  Also a couple log message cleanups, plus some C to C++ comment
+// conversion.
+//
 // Revision 1.9  1998/11/06 21:18:24  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

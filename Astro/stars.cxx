@@ -104,8 +104,9 @@ int fgStarsInit( void ) {
     }
 
     timer.stop();
-    cerr << "Loaded " << starcount << " stars in "
-	 << timer.elapsedSeconds() << " seconds" << endl;
+    FG_LOG( FG_ASTRO, FG_INFO, 
+	    "Loaded " << starcount << " stars in "
+	    << timer.elapsedSeconds() << " seconds" );
 
     min_magnitude[0] = 4.2;
     min_magnitude[1] = 3.6;
@@ -254,6 +255,11 @@ void fgStarsRender( void ) {
 
 
 // $Log$
+// Revision 1.22  1998/11/07 19:07:07  curt
+// Enable release builds using the --without-logging option to the configure
+// script.  Also a couple log message cleanups, plus some C to C++ comment
+// conversion.
+//
 // Revision 1.21  1998/11/06 21:17:42  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

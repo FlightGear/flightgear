@@ -105,7 +105,8 @@ int fgInitPosition( void ) {
 	FG_Longitude = current_options.get_lon() * DEG_TO_RAD;
 	FG_Latitude  = current_options.get_lat() * DEG_TO_RAD;
     }
-    printf("starting altitude is = %.2f\n", current_options.get_altitude());
+    FG_LOG( FG_GENERAL, FG_INFO, 
+	    "starting altitude is = " << current_options.get_altitude() );
 
     FG_Altitude = current_options.get_altitude() * METER_TO_FEET;
     FG_Runway_altitude = FG_Altitude - 3.758099;
@@ -376,6 +377,11 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.48  1998/11/07 19:07:10  curt
+// Enable release builds using the --without-logging option to the configure
+// script.  Also a couple log message cleanups, plus some C to C++ comment
+// conversion.
+//
 // Revision 1.47  1998/11/06 21:18:10  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

@@ -45,6 +45,7 @@
 
 //#include <Astro/orbits.hxx>
 #include <Astro/solarsystem.hxx>
+#include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Main/views.hxx>
 #include <Math/fg_geodesy.hxx>
@@ -193,7 +194,8 @@ static double julian_date(int y, int m, int d) {
 
     /* lazy test to ensure gregorian calendar */
     if (y < 1583) {
-	printf("WHOOPS! Julian dates only valid for 1582 oct 15 or later\n");
+	FG_LOG( FG_TIME, FG_ALERT, 
+		"WHOOPS! Julian dates only valid for 1582 oct 15 or later" );
     }
 
     if ((m == 1) || (m == 2)) {
@@ -338,7 +340,7 @@ void fgUpdateSunPos( void ) {
     t = &cur_time_params;
     v = &current_view;
 
-    printf("  Updating Sun position\n");
+    FG_LOG( FG_TIME, FG_INFO, "  Updating Sun position" );
 
     // (not sure why there was two)
     // fgSunPosition(t->cur_time, &l->sun_lon, &sun_gd_lat);
@@ -349,9 +351,10 @@ void fgUpdateSunPos( void ) {
     p = Point3D( l->sun_lon, l->sun_gc_lat, sl_radius );
     l->fg_sunpos = fgPolarToCart3d(p);
 
-    printf( "    t->cur_time = %ld\n", t->cur_time);
-    printf( "    Sun Geodetic lat = %.5f Geocentric lat = %.5f\n",
-	    sun_gd_lat, l->sun_gc_lat);
+    FG_LOG( FG_TIME, FG_INFO, "    t->cur_time = " << t->cur_time );
+    FG_LOG( FG_TIME, FG_INFO, 
+	    "    Sun Geodetic lat = " << sun_gd_lat
+	    << " Geocentric lat = " << l->sun_gc_lat );
 
     // I think this will work better for generating the sun light vector
     l->sun_vec[0] = l->fg_sunpos.x();
@@ -423,6 +426,11 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.16  1998/11/07 19:07:14  curt
+// Enable release builds using the --without-logging option to the configure
+// script.  Also a couple log message cleanups, plus some C to C++ comment
+// conversion.
+//
 // Revision 1.15  1998/10/18 01:17:24  curt
 // Point3D tweaks.
 //

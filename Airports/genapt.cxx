@@ -90,7 +90,8 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 
     max_dist = 0.0;
 
-    cout << "generating airport base for size = " << perimeter.size() << "\n";
+    FG_LOG( FG_TERRAIN, FG_INFO, 
+	    "generating airport base for size = " << perimeter.size() );
 
     fragment.init();
     fragment.tile_ptr = t;
@@ -102,10 +103,12 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 		<< " in fgAptGenerat()" );
     }
 
-    printf(" tile center = %.2f %.2f %.2f\n", 
-	   t->center.x(), t->center.y(), t->center.z() );
-    printf(" airport center = %.2f %.2f %.2f\n", 
-	   average.x(), average.y(), average.z());
+    FG_LOG( FG_TERRAIN, FG_INFO, 
+	    " tile center = " 
+	    << t->center.x() << " " << t->center.y() << " " << t->center.z() );
+    FG_LOG( FG_TERRAIN, FG_INFO, 
+	    " airport center = "
+	    << average.x() << " " << average.y() << " " << average.z() );
     fragment.center = average;
 
     normal[0] = average.x();
@@ -233,7 +236,7 @@ fgAptGenerate(const string& path, fgTILE *tile)
 		gen_base(average, perimeter, tile);
 	    }
 
-	    cout << "Reading airport record\n";
+	    FG_LOG( FG_TERRAIN, FG_INFO, "Reading airport record" );
 	    in >> apt_id;
 	    apt_name = "";
 	    i = 1;
@@ -243,7 +246,8 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	    while ( in.get(c) && c != '\n' ) {
 		apt_name += c;
 	    }
-	    cout << "\tID = " + apt_id + "  Name = " + apt_name + "\n";
+	    FG_LOG( FG_TERRAIN, FG_INFO, 
+		    "\tID = " << apt_id << "  Name = " << apt_name );
 	} else if ( token == "p" ) {
 	    // airport area bounding polygon coordinate.  These
 	    // specify a convex hull that should already have been cut
@@ -281,6 +285,11 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.10  1998/11/07 19:07:06  curt
+// Enable release builds using the --without-logging option to the configure
+// script.  Also a couple log message cleanups, plus some C to C++ comment
+// conversion.
+//
 // Revision 1.9  1998/11/06 21:17:32  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

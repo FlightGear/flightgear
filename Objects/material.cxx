@@ -293,7 +293,8 @@ fgMATERIAL_MGR::load_lib ( void )
 	in >> material_name >> token;
 
 	if ( token == '{' ) {
-	    printf( "  Loading material %s\n", material_name.c_str() );
+	    FG_LOG( FG_TERRAIN, FG_INFO,
+		    "  Loading material " << material_name );
 	    fgMATERIAL m;
 	    in >> m;
 
@@ -355,6 +356,11 @@ fgMATERIAL_MGR::render_fragments()
 
 
 // $Log$
+// Revision 1.11  1998/11/07 19:07:12  curt
+// Enable release builds using the --without-logging option to the configure
+// script.  Also a couple log message cleanups, plus some C to C++ comment
+// conversion.
+//
 // Revision 1.10  1998/11/06 21:18:17  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

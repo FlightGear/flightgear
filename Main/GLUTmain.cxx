@@ -693,8 +693,10 @@ static void fgIdleFunction ( void ) {
 	string slfile = current_options.get_fg_root() + "/Sounds/wasp.wav";
 
 	s1 = new slSample ( (char *)slfile.c_str() );
-	printf("Rate = %d  Bps = %d  Stereo = %d\n", 
-	       s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
+	FG_LOG( FG_GENERAL, FG_INFO,
+		"Rate = " << s1 -> getRate()
+		<< "  Bps = " << s1 -> getBps()
+		<< "  Stereo = " << s1 -> getStereo() );
 	audio_sched -> loopSample ( s1 );
 
 	if ( audio_sched->working() ) {
@@ -897,6 +899,11 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.64  1998/11/07 19:07:09  curt
+// Enable release builds using the --without-logging option to the configure
+// script.  Also a couple log message cleanups, plus some C to C++ comment
+// conversion.
+//
 // Revision 1.63  1998/11/06 21:18:08  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using
