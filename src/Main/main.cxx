@@ -999,6 +999,8 @@ static void fgMainLoop( void ) {
 	= fgGetNode("/position/latitude-deg");
     static const SGPropertyNode *altitude
 	= fgGetNode("/position/altitude-ft");
+    static const SGPropertyNode *clock_freeze
+	= fgGetNode("/sim/freeze/clock", true);
     static const SGPropertyNode *cur_time_override
 	= fgGetNode("/sim/time/cur-time-override", true);
 
@@ -1077,9 +1079,31 @@ static void fgMainLoop( void ) {
     // cout << "Warp = " << globals->get_warp() << endl;
 
     // update "time"
-    if ( globals->get_warp_delta() != 0 ) {
-	globals->inc_warp( globals->get_warp_delta() );
+    static bool last_clock_freeze = false;
+
+    if ( clock_freeze->getBoolValue() ) {
+	// clock freeze requested
+	if ( cur_time_override->getLongValue() == 0 ) {
+	    fgSetLong( "/sim/time/cur-time-override",
+		       t->get_cur_time() + globals->get_warp() );
+	    globals->set_warp( 0 );
+	}
+    } else {
+	// no clock freeze requested
+	if ( last_clock_freeze == true ) {
+	    // clock just unfroze, let's set warp as the difference
+	    // between frozen time and current time so we don't get a
+	    // time jump (and corresponding sky object and lighting
+	    // jump.)
+	    globals->set_warp( cur_time_override->getLongValue() - time(NULL) );
+	    fgSetLong( "/sim/time/cur-time-override", 0 );
+	}
+	if ( globals->get_warp_delta() != 0 ) {
+	    globals->inc_warp( globals->get_warp_delta() );
+	}
     }
+
+    last_clock_freeze = clock_freeze->getBoolValue();
 
     t->update( longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
 	       latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
