@@ -181,6 +181,30 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 }
 
 
+// Return the current base package version
+string fgBasePackageVersion() {
+    SGPath base_path( globals->get_fg_root() );
+    base_path.append("version");
+
+    sg_gzifstream in( base_path.str() );
+    if ( !in.is_open() ) {
+	SGPath old_path( globals->get_fg_root() );
+	old_path.append( "Thanks" );
+	sg_gzifstream old( old_path.str() );
+	if ( !old.is_open() ) {
+	    return "[none found]";
+	} else {
+	    return "[old version, please upgrade]";
+	}
+    }
+
+    string version;
+    in >> version;
+
+    return version;
+}
+
+
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv ) {
 

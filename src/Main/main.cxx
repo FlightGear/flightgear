@@ -1481,6 +1481,14 @@ int main( int argc, char **argv ) {
     // fg_root was specified (ignore all other options for now)
     fgInitFGRoot(argc, argv);
 
+    // Check for the correct base package version
+    string base_version = fgBasePackageVersion();
+    if ( !(base_version == "0.7.9") ) {
+	SG_LOG( SG_GENERAL, SG_ALERT, "Base package check failed ... "
+		<< base_version);
+	exit(-1);
+    }
+
     // Initialize the Aircraft directory to "" (UIUC)
     aircraft_dir = "";
 

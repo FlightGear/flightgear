@@ -31,11 +31,25 @@
 #endif                                   
 
 
+#ifdef HAVE_CONFIG
+#  include <config.h>
+#endif
+
+#include <simgear/compiler.h>
+
+#include STL_STRING
+
 #include <Airports/simple.hxx>
+
+SG_USING_STD(string);
 
 
 // Read in configuration (file and command line) and just set fg_root
 bool fgInitFGRoot ( int argc, char **argv );
+
+
+// Return the current base package version
+string fgBasePackageVersion();
 
 
 // Read in configuration (file and command line)
