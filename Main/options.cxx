@@ -29,7 +29,7 @@
 
 #include <math.h>            // rint()
 #include <stdio.h>
-#include <stdlib.h>          // atof()
+#include <stdlib.h>          // atof(), atoi()
 #include <string.h>
 
 #include <Debug/fg_debug.h>
@@ -57,6 +57,9 @@ fgOPTIONS::fgOPTIONS( void ) {
     skyblend = 1;
     textures = 1;
     wireframe = 0;
+
+    // Scenery options
+    tile_radius = 7;
 
     // Time options
     time_offset = 0;
@@ -157,7 +160,24 @@ static int parse_time_offset(char *time_str) {
     printf("parse_time_offset(): %d\n", result);
 
     return( result );
+}
 
+
+// Parse an int out of a --foo-bar=n type option 
+static int parse_int(char *arg, int min, int max) {
+    int result;
+
+    // advance past the '='
+    while ( (arg[0] != '=') && (arg[0] != '\0') ) {
+	arg++;
+    }
+	
+    result = atoi(arg);
+
+    if ( result < min ) { result = min; }
+    if ( result > max ) { result = max; }
+
+    return(result);
 }
 
 
@@ -206,6 +226,8 @@ int fgOPTIONS::parse( int argc, char **argv ) {
 	    wireframe = 0;	
 	} else if ( strcmp(argv[i], "--enable-wireframe") == 0 ) {
 	    wireframe = 1;	
+	} else if ( strncmp(argv[i], "--tile-radius=", 14) == 0 ) {
+	    tile_radius = parse_int(argv[i], 3, 7);
 	} else if ( strncmp(argv[i], "--time-offset=", 14) == 0 ) {
 	    time_offset = parse_time_offset(argv[i]);
 	} else {
@@ -252,6 +274,10 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--enable-wireframe:  enable wireframe drawing mode\n");
     printf("\n");
 
+    printf("Scenery Options:\n");
+    printf("\t--tile-radius=n:  specify tile radius, must be odd 3, 5, or 7\n");
+    printf("\n");
+
     printf("Time Options:\n");
     printf("\t--time-offset=[+-]hh:mm:ss:  offset local time by this amount\n");
 }
@@ -263,6 +289,10 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.7  1998/05/06 03:16:25  curt
+// Added an averaged global frame rate counter.
+// Added an option to control tile radius.
+//
 // Revision 1.6  1998/05/03 00:47:32  curt
 // Added an option to enable/disable full-screen mode.
 //

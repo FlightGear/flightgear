@@ -505,21 +505,25 @@ void fgInitTimeDepCalcs( void ) {
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
+    fgAIRCRAFT *a;
+    fgFLIGHT *f;
+    fgGENERAL *g;
+    fgTIME *t;
     static int remainder = 0;
     int elapsed, multi_loop;
     double cur_elev;
+    int i;
+    double accum;
     // double joy_x, joy_y;
     // int joy_b1, joy_b2;
-    fgAIRCRAFT *a;
-    fgFLIGHT *f;
-    fgTIME *t;
-
-    fgPrintf( FG_ALL, FG_DEBUG, "Running Main Loop\n");
-    fgPrintf( FG_ALL, FG_DEBUG, "======= ==== ====\n");
 
     a = &current_aircraft;
     f = a->flight;
+    g = &general;
     t = &cur_time_params;
+
+    fgPrintf( FG_ALL, FG_DEBUG, "Running Main Loop\n");
+    fgPrintf( FG_ALL, FG_DEBUG, "======= ==== ====\n");
 
     // update "time"
     fgTimeUpdate(f, t);
@@ -531,13 +535,25 @@ static void fgMainLoop( void ) {
     fgElevSet( -joy_y );
     fgAileronSet( joy_x ); */
 
-    // Calculate model iterations needed
+    // Get elapsed time for this past frame
     elapsed = fgGetTimeInterval();
     fgPrintf( FG_ALL, FG_BULK, 
 	      "Time interval is = %d, previous remainder is = %d\n", 
 	      elapsed, remainder);
-    fgPrintf( FG_ALL, FG_BULK, 
-	      "--> Frame rate is = %.2f\n", 1000.0 / (float)elapsed);
+
+    // Calculate frame rate average
+    accum = 0.0;
+    for ( i = FG_FRAME_RATE_HISTORY - 2; i >= 0; i-- ) {
+	accum += g->frames[i];
+	g->frames[i+1] = g->frames[i];
+    }
+    g->frames[0] = 1000.0 / (float)elapsed;
+    accum += g->frames[0];
+    g->frame_rate = accum / (float)FG_FRAME_RATE_HISTORY;
+
+    // Calculate model iterations needed for next frame
+    fgPrintf( FG_ALL, FG_DEBUG, 
+	      "--> Frame rate is = %.2f\n", g->frame_rate);
     elapsed += remainder;
 
     multi_loop = (int)(((float)elapsed * 0.001) * DEFAULT_MODEL_HZ);
@@ -609,14 +625,10 @@ static void fgReshape( int width, int height ) {
 
 
 // Initialize GLUT and define a main window
-int fgGlutInit( int argc, char **argv ) {
-    fgOPTIONS *o;
-
-    o = &current_options;
-
+int fgGlutInit( int *argc, char **argv ) {
     // GLUT will extract all glut specific options so later on we only
     // need wory about our own.
-    xglutInit(&argc, argv);
+    xglutInit(argc, argv);
 
     // Define Display Parameters
     xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
@@ -664,7 +676,7 @@ int main( int argc, char **argv ) {
     fgPrintf(FG_GENERAL, FG_INFO, "Flight Gear:  Version %s\n\n", VERSION);
 
     // Initialize the Window/Graphics environment.
-    if( !fgGlutInit(argc, argv) ) {
+    if( !fgGlutInit(&argc, argv) ) {
 	fgPrintf( FG_GENERAL, FG_EXIT, "GLUT initialization failed ...\n" );
     }
 
@@ -725,6 +737,10 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.11  1998/05/06 03:16:23  curt
+// Added an averaged global frame rate counter.
+// Added an option to control tile radius.
+//
 // Revision 1.10  1998/05/03 00:47:31  curt
 // Added an option to enable/disable full-screen mode.
 //

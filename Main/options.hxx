@@ -55,6 +55,12 @@ public:
     int textures;      // Textures enabled/disabled
     int wireframe;     // Wireframe mode enabled/disabled
 
+    // Scenery options
+    int tile_radius;   // Square radius of rendered tiles.  for instance
+                       // if tile_radius = 3 then a 3 x 3 grid of tiles will 
+                       // be drawn.  Increase this to see terrain that is 
+                       // further away.
+
     // Time options
     int time_offset;   // Offset true time by this many seconds
 
@@ -80,6 +86,10 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.6  1998/05/06 03:16:26  curt
+// Added an averaged global frame rate counter.
+// Added an option to control tile radius.
+//
 // Revision 1.5  1998/05/03 00:47:32  curt
 // Added an option to enable/disable full-screen mode.
 //

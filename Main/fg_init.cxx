@@ -131,9 +131,9 @@ int fgInitPosition( void ) {
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Test Position
-    // FG_Longitude = ( -110.5 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  34.5 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = (2646 + 6000);
+    // FG_Longitude = (  8.5 ) * DEG_TO_RAD;
+    // FG_Latitude  = ( 47.5 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = ( 6000 );
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     if ( strlen(o->airport_id) ) {
@@ -154,7 +154,7 @@ int fgInitPosition( void ) {
 	    FG_Latitude  = ( a.latitude ) * DEG_TO_RAD;
 	    FG_Runway_altitude = ( a.elevation + 300 );
 	    FG_Altitude = FG_Runway_altitude + 3.758099;
-	}	    
+	}
     }
     
     fgPrintf( FG_GENERAL, FG_INFO, 
@@ -381,6 +381,10 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.10  1998/05/06 03:16:24  curt
+// Added an averaged global frame rate counter.
+// Added an option to control tile radius.
+//
 // Revision 1.9  1998/05/03 00:47:31  curt
 // Added an option to enable/disable full-screen mode.
 //

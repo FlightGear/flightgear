@@ -84,6 +84,8 @@ int fgAIRPORTS::load( char *file ) {
     }
 
     fgclose(f);
+
+    return(1);
 }
 
 
@@ -109,6 +111,10 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/05/06 03:16:24  curt
+// Added an averaged global frame rate counter.
+// Added an option to control tile radius.
+//
 // Revision 1.2  1998/04/28 21:42:50  curt
 // Wrapped zlib calls up so we can conditionally comment out zlib support.
 //
