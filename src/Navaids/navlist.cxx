@@ -241,7 +241,8 @@ FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft,
             // (squared) which is further than matching stations would
             // ever be placed from each other.
             if ( fabs(az1) > 90.0 ) {
-                d2 += 5000*5000;
+                double dist = sqrt(d2);
+                d2 = (dist + 5000) * (dist + 5000);
             }
         }
 
