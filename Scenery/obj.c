@@ -1,4 +1,5 @@
-/**************************************************************************
+/* -*- Mode: C++ -*-
+ *
  * obj.c -- routines to handle WaveFront .obj format files.
  *
  * Written by Curtis Olson, started October 1997.
@@ -33,8 +34,10 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <Include/fg_constants.h>
 #include <Main/fg_debug.h>
 #include <Math/mat3.h>
+#include <Math/fg_random.h>
 #include <Scenery/obj.h>
 #include <Scenery/scenery.h>
 
@@ -63,11 +66,33 @@ void calc_normal(double p1[3], double p2[3], double p3[3], double normal[3])
 }
 
 
+#define FG_TEX_CONSTANT 64.0
+
+float calc_lon(double x, double y, double z) {
+    float tmp;
+    tmp = (RAD_TO_DEG*atan2(y, x)) * FG_TEX_CONSTANT;
+
+    // printf("lon = %.2f\n", (float)tmp);
+    return (float)tmp;
+}
+
+
+float calc_lat(double x, double y, double z) {
+    float tmp;
+
+    tmp = (90.0 - RAD_TO_DEG*atan2( sqrt(x*x + y*y), z )) * FG_TEX_CONSTANT;
+
+    // printf("lat = %.2f\n", (float)tmp);
+    return (float)tmp;
+}
+
+
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     char line[256], winding_str[256];
     double approx_normal[3], normal[3], scale;
     double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
+    GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint tile;
     FILE *f;
     int first, ncount, vncount, n1, n2, n3, n4;
@@ -82,6 +107,17 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
     tile = xglGenLists(1);
     xglNewList(tile, GL_COMPILE);
+
+    /*
+    xglTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+    xglTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+    xglTexGenfv(GL_S, GL_OBJECT_PLANE, sgenparams);
+    xglTexGenfv(GL_T, GL_OBJECT_PLANE, sgenparams);
+    // xglTexGenfv(GL_S, GL_SPHERE_MAP, 0);
+    // xglTexGenfv(GL_T, GL_SPHERE_MAP, 0);
+    xglEnable(GL_TEXTURE_GEN_S);
+    xglEnable(GL_TEXTURE_GEN_T);
+    */
 
     first = 1;
     ncount = 1;
@@ -182,14 +218,17 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    if ( use_per_vertex_norms ) {
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
+		xglTexCoord2f(calc_lon(nodes[n1][0], nodes[n1][1], nodes[n1][2]), calc_lat(nodes[n1][0], nodes[n1][1], nodes[n1][2]));
 		xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
 
 		MAT3_SCALE_VEC(normal, normals[n2], scale);
 		xglNormal3dv(normal);
+		xglTexCoord2f(calc_lon(nodes[n2][0], nodes[n2][1], nodes[n2][2]), calc_lat(nodes[n2][0], nodes[n2][1], nodes[n2][2]));
 		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 
 		MAT3_SCALE_VEC(normal, normals[n3], scale);
 		xglNormal3dv(normal);
+		xglTexCoord2f(calc_lon(nodes[n3][0], nodes[n3][1], nodes[n3][2]), calc_lat(nodes[n3][0], nodes[n3][1], nodes[n3][2]));
 		xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	    } else {
 		if ( odd ) {
@@ -200,8 +239,11 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		MAT3_SCALE_VEC(normal, approx_normal, scale);
 		xglNormal3dv(normal);
 
+		xglTexCoord2f(calc_lon(nodes[n1][0], nodes[n1][1], nodes[n1][2]), calc_lat(nodes[n1][0], nodes[n1][1], nodes[n1][2]));
 		xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
+		xglTexCoord2f(calc_lon(nodes[n2][0], nodes[n2][1], nodes[n2][2]), calc_lat(nodes[n2][0], nodes[n2][1], nodes[n2][2]));
 		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
+		xglTexCoord2f(calc_lon(nodes[n3][0], nodes[n3][1], nodes[n3][2]), calc_lat(nodes[n3][0], nodes[n3][1], nodes[n3][2]));
 		xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	    }
 
@@ -217,6 +259,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
 		xglNormal3dv(normal);
+		xglTexCoord2f(calc_lon(nodes[n4][0], nodes[n4][1], nodes[n4][2]), calc_lat(nodes[n4][0], nodes[n4][1], nodes[n4][2]));
 		xglVertex3d(nodes[n4][0], nodes[n4][1], nodes[n4][2]);
 
 		odd = 1 - odd;
@@ -239,12 +282,15 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
 
             xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
+	    xglTexCoord2f(calc_lon(nodes[n1][0], nodes[n1][1], nodes[n1][2]), calc_lat(nodes[n1][0], nodes[n1][1], nodes[n1][2]));
 	    xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
 
             xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+	    xglTexCoord2f(calc_lon(nodes[n2][0], nodes[n2][1], nodes[n2][2]), calc_lat(nodes[n2][0], nodes[n2][1], nodes[n2][2]));
 	    xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
-
+		
             xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
+	    xglTexCoord2f(calc_lon(nodes[n3][0], nodes[n3][1], nodes[n3][2]), calc_lat(nodes[n3][0], nodes[n3][1], nodes[n3][2]));
 	    xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	} else if ( line[0] == 'q' ) {
 	    /* continue a triangle strip */
@@ -270,8 +316,9 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		xglNormal3dv(normal);
 	    }
 
+	    xglTexCoord2f(calc_lon(nodes[n1][0], nodes[n1][1], nodes[n1][2]), calc_lat(nodes[n1][0], nodes[n1][1], nodes[n1][2]));
 	    xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
-	    
+    
 	    odd = 1 - odd;
 	    last1 = last2;
 	    last2 = n1;
@@ -294,6 +341,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		    xglNormal3dv(normal);
 		}
 
+		xglTexCoord2f(calc_lon(nodes[n2][0], nodes[n2][1], nodes[n2][2]), calc_lat(nodes[n2][0], nodes[n2][1], nodes[n2][2]));
 		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 
 		odd = 1 -odd;
@@ -323,6 +371,9 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     xglEnd();
     */
 
+    // xglDisable(GL_TEXTURE_GEN_S);
+    // xglDisable(GL_TEXTURE_GEN_T);
+
     xglFrontFace ( GL_CCW );
 
     xglEndList();
@@ -339,9 +390,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.24  1998/02/09 21:30:18  curt
-/* Fixed a nagging problem with terrain tiles not "quite" matching up perfectly.
+/* Revision 1.25  1998/03/14 00:30:50  curt
+/* Beginning initial terrain texturing experiments.
 /*
+ * Revision 1.24  1998/02/09 21:30:18  curt
+ * Fixed a nagging problem with terrain tiles not "quite" matching up perfectly.
+ *
  * Revision 1.23  1998/02/09 15:07:52  curt
  * Minor tweaks.
  *

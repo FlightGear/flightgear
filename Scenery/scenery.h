@@ -50,7 +50,7 @@ extern struct fgSCENERY scenery;
 
 
 /* Initialize the Scenery Management system */
-void fgSceneryInit( void );
+int fgSceneryInit( void );
 
 
 /* Tell the scenery manager where we are so it can load the proper data, and
@@ -66,9 +66,12 @@ void fgSceneryRender( void );
 
 
 /* $Log$
-/* Revision 1.17  1998/02/20 00:16:24  curt
-/* Thursday's tweaks.
+/* Revision 1.18  1998/03/14 00:30:51  curt
+/* Beginning initial terrain texturing experiments.
 /*
+ * Revision 1.17  1998/02/20 00:16:24  curt
+ * Thursday's tweaks.
+ *
  * Revision 1.16  1998/01/27 00:48:03  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

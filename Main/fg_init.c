@@ -60,7 +60,7 @@ extern const char *default_root;
 /* General house keeping initializations */
 
 int fgInitGeneral( void ) {
-    struct fgGENERAL *g;
+    fgGENERAL *g;
 
     g = &general;
 
@@ -136,7 +136,7 @@ int fgInitSubsystems( void ) {
     FG_Longitude = ( -110.6642444 ) * DEG_TO_RAD;
     FG_Latitude  = (  33.3528917 ) * DEG_TO_RAD;
     FG_Runway_altitude = (3234.5 + 300);
-    FG_Altitude = FG_Runway_altitude + 3.758099;
+    FG_Altitude = FG_Runway_altitude + 3.758099 + 30000;
 
     // Initial Position at (E81) Superior, AZ
     // FG_Longitude = ( -111.1270650 ) * DEG_TO_RAD;
@@ -196,7 +196,7 @@ int fgInitSubsystems( void ) {
     // Initial Position: Somewhere near the Grand Canyon
     // FG_Longitude = ( -112.5 ) * DEG_TO_RAD;
     // FG_Latitude  = (  36.5 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 5000.0;
+    // FG_Runway_altitude = 8000.0;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position: (GCN) Grand Canyon Airport, AZ
@@ -233,10 +233,10 @@ int fgInitSubsystems( void ) {
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Test Position
-    FG_Longitude = ( -122.1469647 ) * DEG_TO_RAD;
-    FG_Latitude  = (   35.9523539 ) * DEG_TO_RAD;
-    FG_Runway_altitude = 2000.0;
-    FG_Altitude = FG_Runway_altitude + 3.758099;
+    // FG_Longitude = ( -122.1469647 ) * DEG_TO_RAD;
+    // FG_Latitude  = (   35.9523539 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 2000.0;
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // A random test position
     // FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD;
@@ -339,6 +339,13 @@ int fgInitSubsystems( void ) {
     fgSkyInit();
 
     // Initialize the Scenery Management subsystem
+    if ( fgSceneryInit() ) {
+	// Scenery initialized ok.
+    } else {
+    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Scenery initialization!\n" );
+    }
+
+
     if( fgTileMgrInit() ) {
 	// Load the local scenery data
 	fgTileMgrUpdate();
@@ -399,9 +406,12 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.50  1998/03/09 22:46:19  curt
-/* Minor tweaks.
+/* Revision 1.51  1998/03/14 00:31:22  curt
+/* Beginning initial terrain texturing experiments.
 /*
+ * Revision 1.50  1998/03/09 22:46:19  curt
+ * Minor tweaks.
+ *
  * Revision 1.49  1998/02/23 19:07:59  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
  * calculation code between sun display, and other FG sections that use this

@@ -1,4 +1,5 @@
-/**************************************************************************
+/* -*- Mode: C++ -*-
+ *
  * tilemgr.c -- routines to handle dynamic management of scenery tiles
  *
  * Written by Curtis Olson, started January 1998.
@@ -180,23 +181,12 @@ int fgTileMgrUpdate( void ) {
 void fgTileMgrRender( void ) {
     fgFLIGHT *f;
     struct fgBUCKET p;
-    static GLfloat terrain_color[4] = { 0.6, 0.8, 0.4, 1.0 };
-    static GLfloat terrain_ambient[4];
-    static GLfloat terrain_diffuse[4];
     struct fgCartesianPoint local_ref;
     GLint display_list;
     int i;
     int index;
 
     f = current_aircraft.flight;
-
-    for ( i = 0; i < 4; i++ ) {
-	terrain_ambient[i] = terrain_color[i] * 0.5;
-	terrain_diffuse[i] = terrain_color[i];
-    }
-
-    xglMaterialfv(GL_FRONT, GL_AMBIENT, terrain_ambient);
-    xglMaterialfv(GL_FRONT, GL_DIFFUSE, terrain_diffuse);
 
     /* Find current translation offset */
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
@@ -225,9 +215,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.19  1998/02/20 00:16:25  curt
-/* Thursday's tweaks.
+/* Revision 1.20  1998/03/14 00:30:51  curt
+/* Beginning initial terrain texturing experiments.
 /*
+ * Revision 1.19  1998/02/20 00:16:25  curt
+ * Thursday's tweaks.
+ *
  * Revision 1.18  1998/02/19 13:05:54  curt
  * Incorporated some HUD tweaks from Michelle America.
  * Tweaked the sky's sunset/rise colors.

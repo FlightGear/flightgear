@@ -35,7 +35,7 @@
 
 
 static int             fg_DebugSem      = 1;
-fgDebugClass           fg_DebugClass    = FG_ALL;  // Need visibility for
+fgDebugClass           fg_DebugClass    = FG_NONE;  // Need visibility for
 fgDebugPriority        fg_DebugPriority = FG_INFO; // command line processing.
 static fgDebugCallback fg_DebugCallback = NULL;
 
@@ -265,9 +265,12 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/03/09 22:44:58  curt
-/* Modified so that you can specify FG_DEBUGCLASS ***or*** FG_DEBUG_PRIORITY
+/* Revision 1.10  1998/03/14 00:31:21  curt
+/* Beginning initial terrain texturing experiments.
 /*
+ * Revision 1.9  1998/03/09 22:44:58  curt
+ * Modified so that you can specify FG_DEBUGCLASS ***or*** FG_DEBUG_PRIORITY
+ *
  * Revision 1.8  1998/03/09 22:11:00  curt
  * Processed through the format-o-matic.
  *

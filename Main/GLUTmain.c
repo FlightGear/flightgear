@@ -69,7 +69,7 @@
 
 
 /* This is a record containing global housekeeping information */
-struct fgGENERAL general;
+fgGENERAL general;
 
 /* view parameters */
 static GLfloat win_ratio = 1.0;
@@ -404,8 +404,19 @@ static void fgRenderFrame( void ) {
     /* set lighting parameters */
     xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
     xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
+    /* texture parameters */
+    xglEnable( GL_TEXTURE_2D );
+    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
+    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
+    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) ;
+    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
+		      GL_LINEAR /* GL_LINEAR_MIPMAP_LINEAR */ ) ;
+    xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
+    xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
+
     fgTileMgrRender();
-    /* fgSceneryRender(); */
+
+    xglDisable( GL_TEXTURE_2D );
 
     /* display HUD */
     if( show_hud ) {
@@ -800,9 +811,12 @@ extern "C" {
 #endif
 
 /* $Log$
-/* Revision 1.65  1998/03/09 22:45:57  curt
-/* Minor tweaks for building on sparc platform.
+/* Revision 1.66  1998/03/14 00:31:20  curt
+/* Beginning initial terrain texturing experiments.
 /*
+ * Revision 1.65  1998/03/09 22:45:57  curt
+ * Minor tweaks for building on sparc platform.
+ *
  * Revision 1.64  1998/02/20 00:16:23  curt
  * Thursday's tweaks.
  *

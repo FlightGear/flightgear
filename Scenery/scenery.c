@@ -1,4 +1,5 @@
-/**************************************************************************
+/* -*- Mode: C++ -*-
+ *
  * scenery.c -- data structures and routines for managing scenery.
  *
  * Written by Curtis Olson, started May 1997.
@@ -38,10 +39,11 @@
 #include <Main/fg_debug.h>
 #include <Scenery/obj.h>
 #include <Scenery/scenery.h>
+#include <Scenery/texload.h>
 
 
-/* Temporary hack until we get the scenery management system running */
-GLint area_terrain;
+/* Temporary hack until we get a better texture management system running */
+GLint area_texture;
 
 
 /* Shared structure to hold current scenery parameters */
@@ -49,18 +51,43 @@ struct fgSCENERY scenery;
 
 
 /* Initialize the Scenery Management system */
-void fgSceneryInit( void ) {
+int fgSceneryInit( void ) {
+    fgGENERAL *g;
+    char path[1024];
+    GLubyte *texbuf;
+    int width, height;
+
+    g = &general;
+
     fgPrintf(FG_TERRAIN, FG_INFO, "Initializing scenery subsystem\n");
 
     /* set the default terrain detail level */
-    scenery.terrain_skip = 6;
+    // scenery.terrain_skip = 6;
+
+    /* temp: load in a demo texture */
+    path[0] = '\0';
+    strcat(path, g->root_dir);
+    strcat(path, "/Textures/");
+    strcat(path, "desert.rgb");
+
+    if ( (texbuf = read_rgb_texture(path, &width, &height)) == NULL ) {
+    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in loading textures!\n" );
+	return(0);
+    } 
+
+    /* xglTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, height, width, 0,
+		  GL_LUMINANCE, GL_UNSIGNED_BYTE, texbuf); */
+    xglTexImage2D(GL_TEXTURE_2D, 0, 3, height, width, 0,
+		  GL_RGB, GL_UNSIGNED_BYTE, texbuf);
+
+    return(1);
 }
 
 
 /* Tell the scenery manager where we are so it can load the proper data, and
  * build the proper structures. */
 void fgSceneryUpdate(double lon, double lat, double elev) {
-    struct fgGENERAL *g;
+    fgGENERAL *g;
     double max_radius;
     char path[1024];
 
@@ -75,35 +102,24 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
     strcat(path, "/Scenery/");
     strcat(path, "mesa-e.obj");
 
-    fgPrintf(FG_TERRAIN, FG_DEBUG, "  Loading Scenery: %s\n", path);
+    // fgPrintf(FG_TERRAIN, FG_DEBUG, "  Loading Scenery: %s\n", path);
 
-    area_terrain = fgObjLoad(path, &scenery.center, &max_radius);
+    // area_terrain = fgObjLoad(path, &scenery.center, &max_radius);
 }
 
 
 /* Render out the current scene */
 void fgSceneryRender( void ) {
-    static GLfloat terrain_color[4] = { 0.6, 0.8, 0.4, 1.0 };
-    static GLfloat terrain_ambient[4];
-    static GLfloat terrain_diffuse[4];
-    int i;
-
-    for ( i = 0; i < 4; i++ ) {
-	terrain_ambient[i] = terrain_color[i] * 0.5;
-	terrain_diffuse[i] = terrain_color[i];
-    }
-
-    xglMaterialfv(GL_FRONT, GL_AMBIENT, terrain_ambient);
-    xglMaterialfv(GL_FRONT, GL_DIFFUSE, terrain_diffuse);
-
-    xglCallList(area_terrain);
 }
 
 
 /* $Log$
-/* Revision 1.35  1998/01/31 00:43:26  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.36  1998/03/14 00:30:50  curt
+/* Beginning initial terrain texturing experiments.
 /*
+ * Revision 1.35  1998/01/31 00:43:26  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.34  1998/01/27 03:26:43  curt
  * Playing with new fgPrintf command.
  *
