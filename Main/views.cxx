@@ -32,7 +32,7 @@
 #include <Flight/flight.h>
 #include <Include/fg_constants.h>
 #include <Math/mat3.h>
-#include <Math/polar.h>
+#include <Math/polar3d.h>
 #include <Math/vector.h>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_time.hxx>
@@ -55,6 +55,7 @@ void fgViewInit(fgVIEW *v) {
 
 // Update the view parameters
 void fgViewUpdate(fgFLIGHT *f, fgVIEW *v, fgLIGHT *l) {
+    fgPolarPoint3d p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
@@ -64,15 +65,22 @@ void fgViewUpdate(fgFLIGHT *f, fgVIEW *v, fgLIGHT *l) {
     scenery.center.z = scenery.next_center.z;
 
     // calculate the cartesion coords of the current lat/lon/0 elev
-    v->cur_zero_elev = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
-				     FG_Sea_level_radius * FEET_TO_METER);
+    p.lon = FG_Longitude;
+    p.lat = FG_Lat_geocentric;
+    p.radius = FG_Sea_level_radius * FEET_TO_METER;
+
+    v->cur_zero_elev = fgPolarToCart3d(p);
+
     v->cur_zero_elev.x -= scenery.center.x;
     v->cur_zero_elev.y -= scenery.center.y;
     v->cur_zero_elev.z -= scenery.center.z;
 
     // calculate view position in current FG view coordinate system
-    v->abs_view_pos = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
-			     FG_Radius_to_vehicle * FEET_TO_METER + 1.0);
+    // p.lon & p.lat are already defined earlier
+    p.radius = FG_Radius_to_vehicle * FEET_TO_METER + 1.0;
+
+    v->abs_view_pos = fgPolarToCart3d(p);
+
     v->view_pos.x = v->abs_view_pos.x - scenery.center.x;
     v->view_pos.y = v->abs_view_pos.y - scenery.center.y;
     v->view_pos.z = v->abs_view_pos.z - scenery.center.z;
@@ -200,6 +208,9 @@ void fgViewUpdate(fgFLIGHT *f, fgVIEW *v, fgLIGHT *l) {
 
 
 // $Log$
+// Revision 1.8  1998/05/02 01:51:01  curt
+// Updated polartocart conversion routine.
+//
 // Revision 1.7  1998/04/30 12:34:20  curt
 // Added command line rendering options:
 //   enable/disable fog/haze

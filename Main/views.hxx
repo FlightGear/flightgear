@@ -43,14 +43,14 @@
 /* Define a structure containing view information */
 typedef struct {
     /* absolute view position */
-    struct fgCartesianPoint abs_view_pos;
+    fgCartesianPoint3d abs_view_pos;
 
     /* view position translated to scenery.center */
-    struct fgCartesianPoint view_pos;
+    fgCartesianPoint3d view_pos;
 
     /* cartesion coordinates of current lon/lat if at sea level
      * translated to scenery.center*/
-    struct fgCartesianPoint cur_zero_elev;
+    fgCartesianPoint3d cur_zero_elev;
 
     /* vector in cartesian coordinates from current position to the
      * postion on the earth's surface the sun is directly over */
@@ -98,10 +98,13 @@ void fgViewUpdate(fgFLIGHT *f, fgVIEW *v, fgLIGHT *l);
 
 
 /* $Log$
-/* Revision 1.4  1998/04/28 01:20:24  curt
-/* Type-ified fgTIME and fgVIEW.
-/* Added a command line option to disable textures.
+/* Revision 1.5  1998/05/02 01:51:02  curt
+/* Updated polartocart conversion routine.
 /*
+ * Revision 1.4  1998/04/28 01:20:24  curt
+ * Type-ified fgTIME and fgVIEW.
+ * Added a command line option to disable textures.
+ *
  * Revision 1.3  1998/04/25 22:06:31  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *
