@@ -43,6 +43,7 @@ CFLAGS = $(FG_CFLAGS)
 
 $(TARGET): $(OFILES) $(HFILES) 
 	$(AR) rv $(TARGET) $(OFILES)
+	$(RANLIB) $(TARGET)
 
 all: $(TARGET)
 
@@ -88,6 +89,9 @@ geometry.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.15  1997/07/12 02:24:47  curt
+# Added ranlib.
+#
 # Revision 1.14  1997/06/29 21:16:47  curt
 # More twiddling with the Scenery Management system.
 #

@@ -43,6 +43,7 @@ CFLAGS = $(FG_CFLAGS)
 
 $(TARGET): $(OFILES) $(HFILES)
 	$(AR) rv $(TARGET) $(OFILES)
+	$(RANLIB) $(TARGET)
 
 all: $(TARGET)
 
@@ -62,6 +63,9 @@ aircraft.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.8  1997/07/12 02:24:37  curt
+# Added ranlib.
+#
 # Revision 1.7  1997/06/27 21:38:02  curt
 # Working on Makefile structure.
 #

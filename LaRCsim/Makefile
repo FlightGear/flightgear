@@ -36,6 +36,7 @@ LIBS = -lm
 
 $(TARGET): $(OFILES)
 	$(AR) rv $(TARGET) $(OFILES)
+	$(RANLIB) $(TARGET)
 
 simtest: $(TARGET) LaRCsim.o
 	$(CC) -o simtest LaRCsim.o libLaRCsim.a $(LIBS)
@@ -55,6 +56,9 @@ include depend
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.8  1997/07/12 02:24:48  curt
+# Added ranlib.
+#
 # Revision 1.7  1997/07/07 20:59:48  curt
 # Working on scenery transformations to enable us to fly fluidly over the
 # poles with no discontinuity/distortion in scenery.

@@ -30,12 +30,10 @@
 #---------------------------------------------------------------------------
 
 CC = gcc
-
 FLEX = flex -f -L
-
 BISON = bison -v --no-lines
-
 AR = ar
+RANLIB = echo
 
 
 #---------------------------------------------------------------------------
@@ -105,6 +103,9 @@ GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1997/07/12 02:25:53  curt
+# Added ranlib.
+#
 # Revision 1.4  1997/07/12 02:13:04  curt
 # Add ftime() support for those that don't have gettimeofday()
 #

@@ -42,6 +42,7 @@ CFLAGS = $(FG_CFLAGS)
 
 $(TARGET): $(OFILES)
 	$(AR) rv $(TARGET) $(OFILES)
+	$(RANLIB) $(TARGET)
 
 all: $(TARGET)
 
@@ -61,6 +62,9 @@ slew.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1997/07/12 02:24:49  curt
+# Added ranlib.
+#
 # Revision 1.6  1997/06/27 21:38:07  curt
 # Working on Makefile structure.
 #
