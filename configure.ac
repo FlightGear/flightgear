@@ -168,7 +168,9 @@ case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
     audio_LIBS="$audio_LIBS -lwinmm"
     ;;
-
+*-apple-darwin*)
+    audio_LIBS="$audio_LIBS -framework IOKit -framework CoreFoundation"
+    ;;
 *-*-irix* )
     audio_LIBS="$audio_LIBS -laudio"
     ;;
@@ -230,7 +232,7 @@ if test "x$ac_cv_header_GL_glut_h" = "xyes"; then
 else
     AC_CHECK_HEADER(GLUT/glut.h)
     if test "x$ac_cv_header_GLUT_glut_h" = "xyes"; then
-        AC_DEFINE([GLUT_H], "GLUT/glut.h", [Define as glut.h include location])
+        AC_DEFINE([GLUT_H], <GLUT/glut.h>, [Define as glut.h include location])
     else
         echo "Neither GL/glut.h nor GLUT/glut.h found.  Cannot continue"
         exit
