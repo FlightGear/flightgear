@@ -24,6 +24,7 @@
 using namespace yasim;
 
 static const float RAD2DEG = 180/3.14159265358979323846;
+static const float PI2 = 3.14159265358979323846*2;
 static const float RAD2RPM = 9.54929658551;
 static const float M2FT = 3.2808399;
 static const float FT2M = 0.3048;
@@ -466,6 +467,8 @@ void YASim::copyFromYASim()
     Math::mmul33(s->orient, tmp, tmp);
     float roll, pitch, hdg;
     Glue::orient2euler(tmp, &roll, &pitch, &hdg);
+    // make heading positive value
+    if(hdg < 0.0) hdg += PI2;
     _set_Euler_Angles(roll, pitch, hdg);
 
     // rotation
