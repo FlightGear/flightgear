@@ -85,13 +85,17 @@ static void calc_normal(double p1[3], double p2[3],
 }
 
 
-#define FG_TEX_CONSTANT 8.0
+#define FG_TEX_CONSTANT 69.0
 
 
 // Calculate texture coordinates for a given point.
 static Point3D calc_tex_coords(double *node, const Point3D& ref) {
     Point3D cp;
     Point3D pp;
+    // double tmplon, tmplat;
+
+    // cout << "-> " << node[0] << " " << node[1] << " " << node[2] << endl;
+    // cout << "-> " << ref.x() << " " << ref.y() << " " << ref.z() << endl;
 
     cp = Point3D( node[0] + ref.x(),
 		  node[1] + ref.y(),
@@ -99,18 +103,22 @@ static Point3D calc_tex_coords(double *node, const Point3D& ref) {
 
     pp = fgCartToPolar3d(cp);
 
-    // cout << pp << endl;
+    // tmplon = pp.lon() * RAD_TO_DEG;
+    // tmplat = pp.lat() * RAD_TO_DEG;
+    // cout << tmplon << " " << tmplat << endl;
 
-    pp.setx( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.x(), 1.0) );
-    pp.sety( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.y(), 1.0) );
+    pp.setx( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.x(), 11.0) );
+    pp.sety( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.y(), 11.0) );
 
     if ( pp.x() < 0.0 ) {
-	pp.setx( pp.x() + 1.0 );
+	pp.setx( pp.x() + 11.0 );
     }
 
     if ( pp.y() < 0.0 ) {
-	pp.sety( pp.y() + 1.0 );
+	pp.sety( pp.y() + 11.0 );
     }
+
+    // cout << pp << endl;
 
     return(pp);
 }
@@ -173,15 +181,11 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	{
 	    // reference point (center offset)
 	    in.stream() >> t->center >> t->bounding_radius;
+	    center = t->center;
 	}
 	else if ( token == "bs" )
 	{
 	    // reference point (center offset)
-	    /*
-	    in.stream() >> fragment.center.x
-			>> fragment.center.y
-			>> fragment.center.z
-	    */
 	    in.stream() >> fragment.center;
 	    in.stream() >> fragment.bounding_radius;
 	}
@@ -549,6 +553,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.8  1998/10/20 18:33:55  curt
+// Tweaked texture coordinates, but we still have some problems. :-(
+//
 // Revision 1.7  1998/10/20 15:48:44  curt
 // Removed an extraneous output message.
 //
