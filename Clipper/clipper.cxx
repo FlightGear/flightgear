@@ -25,25 +25,26 @@
  
 
 
-#include "clipper.hxx"
-
 #include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Misc/fgstream.hxx>
 #include <Polygon/names.hxx>
 
+#include "clipper.hxx"
 
-#define EXTRA_SAFETY_CLIP
 
-#define FG_MAX_VERTICES 100000
+// Constructor
+FGClipper::FGClipper( void ) {
+}
 
-static gpc_vertex_list v_list;
-// static gpc_polygon poly;
-static FGPolyList polys_in, polys_out;
+
+// Destructor
+FGClipper::~FGClipper( void ) {
+}
 
 
 // Initialize Clipper (allocate and/or connect structures)
-bool fgClipperInit() {
+bool FGClipper::init() {
     v_list.num_vertices = 0;
     v_list.vertex = new gpc_vertex[FG_MAX_VERTICES];;
 
@@ -52,7 +53,7 @@ bool fgClipperInit() {
 
 
 // Load a polygon definition file
-bool fgClipperLoadPolygons(const string& path) {
+bool FGClipper::load_polys(const string& path) {
     string poly_name;
     AreaType poly_type;
     int contours, count, i, j;
@@ -141,7 +142,7 @@ bool fgClipperLoadPolygons(const string& path) {
 
 
 // Do actually clipping work
-bool fgClipperMaster(const point2d& min, const point2d& max) {
+bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     gpc_polygon accum, result_diff, result_union, tmp;
     polylist_iterator current, last;
 
@@ -221,6 +222,10 @@ bool fgClipperMaster(const point2d& min, const point2d& max) {
 
 
 // $Log$
+// Revision 1.2  1999/03/13 23:51:33  curt
+// Renamed main.cxx to testclipper.cxx
+// Converted clipper routines to a class FGClipper.
+//
 // Revision 1.1  1999/03/01 15:39:39  curt
 // Initial revision.
 //

@@ -23,10 +23,10 @@
  
 
 
-#include "clipper.hxx"
-
 #include <Debug/logstream.hxx>
 #include <Bucket/newbucket.hxx>
+
+#include "clipper.hxx"
 
 
 int main( int argc, char **argv ) {
@@ -37,7 +37,8 @@ int main( int argc, char **argv ) {
     global_min.x = global_min.y = 200;
     global_max.y = global_max.x = -200;
 
-    fgClipperInit();
+    FGClipper clipper;
+    clipper.init();
 
     if ( argc < 2 ) {
 	FG_LOG( FG_CLIPPER, FG_ALERT, "Usage: " << argv[0] 
@@ -97,11 +98,11 @@ int main( int argc, char **argv ) {
 	if ( max.y > global_max.y ) global_max.y = max.y;
 
 	// finally, load the polygon(s) from this file
-	fgClipperLoadPolygons( full_path );
+	clipper.load_polys( full_path );
     }
 
     // do the clipping
-    fgClipperMaster(global_min, global_max);
+    clipper.clip_all(global_min, global_max);
 
     FG_LOG( FG_CLIPPER, FG_INFO, "finished main" );
 
@@ -109,6 +110,10 @@ int main( int argc, char **argv ) {
 }
 
 // $Log$
+// Revision 1.1  1999/03/13 23:51:36  curt
+// Renamed main.cxx to testclipper.cxx
+// Converted clipper routines to a class FGClipper.
+//
 // Revision 1.1  1999/03/01 15:39:39  curt
 // Initial revision.
 //

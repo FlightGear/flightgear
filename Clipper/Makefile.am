@@ -4,7 +4,7 @@ libClipper_a_SOURCES = clipper.cxx clipper.hxx
 
 bin_PROGRAMS = testclipper
 
-testclipper_SOURCES = main.cxx
+testclipper_SOURCES = testclipper.cxx
 
 testclipper_LDADD = $(top_builddir)/Tools/Construct/Clipper/libClipper.a \
 	$(top_builddir)/Tools/Lib/Polygon/libPolygon.a \

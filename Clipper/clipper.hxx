@@ -52,6 +52,8 @@ typedef vector < gpc_polygon * > polylist;
 typedef polylist::iterator polylist_iterator;
 
 #define FG_MAX_AREAS 20
+#define EXTRA_SAFETY_CLIP
+#define FG_MAX_VERTICES 100000
 
 class point2d {
 public:
@@ -66,22 +68,41 @@ public:
 };
 
 
-// Initialize Clipper (allocate and/or connect structures)
-bool fgClipperInit();
+class FGClipper {
 
+private:
 
-// Load a polygon definition file
-bool fgClipperLoadPolygons(const string& path);
+    gpc_vertex_list v_list;
+    // static gpc_polygon poly;
+    FGPolyList polys_in, polys_out;
 
+public:
 
-// Do actually clipping work
-bool fgClipperMaster(const point2d& min, const point2d& max);
+    // Constructor
+    FGClipper( void );
+
+    // Destructor
+    ~FGClipper( void );
+
+    // Initialize Clipper (allocate and/or connect structures)
+    bool init();
+
+    // Load a polygon definition file
+    bool load_polys(const string& path);
+
+    // Do actually clipping work
+    bool clip_all(const point2d& min, const point2d& max);
+};
 
 
 #endif // _CLIPPER_HXX
 
 
 // $Log$
+// Revision 1.2  1999/03/13 23:51:34  curt
+// Renamed main.cxx to testclipper.cxx
+// Converted clipper routines to a class FGClipper.
+//
 // Revision 1.1  1999/03/01 15:39:39  curt
 // Initial revision.
 //
