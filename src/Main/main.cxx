@@ -942,35 +942,37 @@ static void fgMainLoop( void ) {
 
 	double pitch = log((controls.get_throttle(0) * 14.0) + 1.0);
 	//fprintf(stderr, "pitch1: %f ", pitch);
-	if (controls.get_throttle(0) > 0.0 || cur_fdm_state->v_rel_wind > 40.0) {
-	    //fprintf(stderr, "rel_wind: %f ", cur_fdm_state->v_rel_wind);
-	    // only add relative wind and AoA if prop is moving
-	    // or we're really flying at idle throttle
-	    if (pitch < 5.4) {  // this needs tuning
-		// prop tips not breaking sound barrier
-		pitch += log(cur_fdm_state->v_rel_wind + 0.8)/2;
-	    } else {
-		// prop tips breaking sound barrier
-		pitch += log(cur_fdm_state->v_rel_wind + 0.8)/10;
-	    }
-	    //fprintf(stderr, "pitch2: %f ", pitch);
-	    //fprintf(stderr, "AoA: %f ", FG_Gamma_vert_rad);
+	// if (controls.get_throttle(0) > 0.0 || 
+	//     cur_fdm_state->v_rel_wind > 40.0) {
 
-	    // Angle of Attack next... -x^3(e^x) is my best guess Just
-	    // need to calculate some reasonable scaling factor and
-	    // then clamp it on the positive aoa (neg adj) side
-	    double aoa = cur_fdm_state->get_Gamma_vert_rad() * 2.2;
-	    double tmp = 3.0;
-	    double aoa_adj = pow(-aoa, tmp) * pow(M_E, aoa);
-	    if (aoa_adj < -0.8) aoa_adj = -0.8;
-	    pitch += aoa_adj;
-	    //fprintf(stderr, "pitch3: %f ", pitch);
-
-	    // don't run at absurdly slow rates -- not realistic
-	    // and sounds bad to boot.  :-)
-	    if (pitch < 0.8) pitch = 0.8;
+	//fprintf(stderr, "rel_wind: %f ", cur_fdm_state->v_rel_wind);
+	// only add relative wind and AoA if prop is moving
+	// or we're really flying at idle throttle
+	if (pitch < 5.4) {  // this needs tuning
+	    // prop tips not breaking sound barrier
+	    pitch += log(cur_fdm_state->v_rel_wind + 0.8)/2;
+	} else {
+	    // prop tips breaking sound barrier
+	    pitch += log(cur_fdm_state->v_rel_wind + 0.8)/10;
 	}
-	//fprintf(stderr, "pitch4: %f\n", pitch);
+	//fprintf(stderr, "pitch2: %f ", pitch);
+	//fprintf(stderr, "AoA: %f ", FG_Gamma_vert_rad);
+
+	// Angle of Attack next... -x^3(e^x) is my best guess Just
+	// need to calculate some reasonable scaling factor and
+	// then clamp it on the positive aoa (neg adj) side
+	double aoa = cur_fdm_state->get_Gamma_vert_rad() * 2.2;
+	double tmp = 3.0;
+	double aoa_adj = pow(-aoa, tmp) * pow(M_E, aoa);
+	if (aoa_adj < -0.8) aoa_adj = -0.8;
+	pitch += aoa_adj;
+	//fprintf(stderr, "pitch3: %f ", pitch);
+
+	// don't run at absurdly slow rates -- not realistic
+	// and sounds bad to boot.  :-)
+	if (pitch < 0.8) pitch = 0.8;
+	// }
+	// fprintf(stderr, "pitch4: %f\n", pitch);
 
 	double volume = controls.get_throttle(0) * 1.15 + 0.3 +
 	    log(cur_fdm_state->v_rel_wind + 1.0)/14.0;

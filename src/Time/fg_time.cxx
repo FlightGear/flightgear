@@ -187,7 +187,7 @@ void FGTime::init( double lon, double lat ) {
 	    //printf("warp = %d\n", warp); 
 	    break;
 	case fgOPTIONS::FG_TIME_GMT_ABSOLUTE:
-	    warp = timeOffset - (currGMT - systemLocalTime) - cur_time;
+	    warp = timeOffset - currGMT;
 	    break;
 	case fgOPTIONS::FG_TIME_LAT_ABSOLUTE:
 	    warp = timeOffset - (aircraftLocalTime - systemLocalTime) - 

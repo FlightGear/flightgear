@@ -249,8 +249,7 @@ FGBFI::setAircraftDir (const string &dir)
 time_t
 FGBFI::getTimeGMT ()
 {
-				// FIXME: inefficient
-  return mktime(FGTime::cur_time_params->getGmt());
+  return FGTime::cur_time_params->get_cur_time();
 }
 
 

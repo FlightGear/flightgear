@@ -464,7 +464,7 @@ InstrumentData instruments[] =
     {new MyTexturedLayer("turnBall",
        int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0))), {
       {TransData::Rotation, FGSteam::get_TC_rad,
-	 -0.1, 0.1, -450.0, 0.0},
+	 -0.1, 0.1, -2000.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -(SIX_W/4)+4}
     }}
   }},
