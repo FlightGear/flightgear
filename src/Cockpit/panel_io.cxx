@@ -290,7 +290,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
   string propName = node->getStringValue("property", "");
   SGPropertyNode * target = 0;
 
-  if (type == "") {
+  if (type.empty()) {
     SG_LOG( SG_COCKPIT, SG_ALERT,
             "No type supplied for transformation " << name
             << " assuming \"rotation\"" );
@@ -392,7 +392,7 @@ readTextChunk (const SGPropertyNode * node)
   string format = node->getStringValue("format");
 
 				// Default to literal text.
-  if (type == "") {
+  if (type.empty()) {
     SG_LOG( SG_COCKPIT, SG_INFO, "No type provided for text chunk " << name
             << " assuming \"literal\"");
     type = "literal";
@@ -467,7 +467,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
     h = int(h * h_scale);
 
 
-  if (type == "") {
+  if (type.empty()) {
     SG_LOG( SG_COCKPIT, SG_ALERT,
             "No type supplied for layer " << name
             << " assuming \"texture\"" );
@@ -550,7 +550,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
       layer = new FGMagRibbon(w, h);
     }
 
-    else if (layerclass == "") {
+    else if (layerclass.empty()) {
       SG_LOG( SG_COCKPIT, SG_ALERT, "No class provided for built-in layer "
               << name );
       return 0;
@@ -717,7 +717,7 @@ readPanel (const SGPropertyNode * root)
   // Assign the background texture, if any, or a bogus chequerboard.
   //
   string bgTexture = root->getStringValue("background");
-  if (bgTexture == "")
+  if (bgTexture.empty())
     bgTexture = "FOO";
   panel->setBackground(FGTextureManager::createTexture(bgTexture.c_str()));
   SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << bgTexture );
@@ -731,43 +731,43 @@ readPanel (const SGPropertyNode * root)
     SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[1]");
-    if (mbgTexture == "")
+    if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 1);
     SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[2]");
-    if (mbgTexture == "")
+    if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 2);
     SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[3]");
-    if (mbgTexture == "")
+    if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 3);
     SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[4]");
-    if (mbgTexture == "")
+    if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 4);
     SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[5]");
-    if (mbgTexture == "")
+    if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 5);
     SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[6]");
-    if (mbgTexture == "")
+    if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 6);
     SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[7]");
-    if (mbgTexture == "")
+    if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 7);
     SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
