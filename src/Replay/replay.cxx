@@ -343,10 +343,12 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
     }
 
     // Brake controls
-    for ( i = 0; i < ctrls1.num_wheels; ++i ) {
-        result.ctrls.brake[i]
-            = weight( ctrls1.brake[i], ctrls2.brake[i], ratio );
-    }
+    result.ctrls.brake_left
+            = weight( ctrls1.brake_left, ctrls2.brake_right, ratio );
+    result.ctrls.brake_right
+            = weight( ctrls1.brake_right, ctrls2.brake_right, ratio );
+    result.ctrls.brake_parking
+            = weight( ctrls1.brake_parking, ctrls2.brake_parking, ratio );
 
     // Landing Gear
     result.ctrls.gear_handle = ctrls1.gear_handle;

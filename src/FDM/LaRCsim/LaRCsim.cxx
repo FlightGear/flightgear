@@ -281,8 +281,8 @@ void FGLaRCsim::update( double dt ) {
 
     Throttle_pct = globals->get_controls()->get_throttle( 0 ) * 1.0;
 
-    Brake_pct[0] = globals->get_controls()->get_brake( 1 );
-    Brake_pct[1] = globals->get_controls()->get_brake( 0 );
+    Brake_pct[0] = globals->get_controls()->get_brake_right();
+    Brake_pct[1] = globals->get_controls()->get_brake_left();
 
     // Inform LaRCsim of the local terrain altitude
     // Runway_altitude = get_Runway_altitude();

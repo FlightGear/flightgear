@@ -87,7 +87,7 @@ class FlightGear:
     # Connect to flightgear telnet server.
     fg = FlightGear('myhost', 5500)
     # parking brake on
-    fg['/controls/parking-brake'] = 1
+    fg['/controls/gear/brake-parking'] = 1
     # Get current heading
     heading = fg['/orientation/heading-deg']
 

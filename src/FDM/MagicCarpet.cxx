@@ -61,7 +61,9 @@ void FGMagicCarpet::update( double dt ) {
 
     // speed and distance traveled
     double speed = globals->get_controls()->get_throttle( 0 ) * 2000; // meters/sec
-    if ( globals->get_controls()->get_brake( 0 ) ) {
+    if ( globals->get_controls()->get_brake_left() > 0.0
+         || globals->get_controls()->get_brake_right() > 0.0 )
+    {
         speed = -speed;
     }
 

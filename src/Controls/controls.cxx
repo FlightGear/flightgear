@@ -72,7 +72,9 @@ FGControls::FGControls() :
     drag_chute( false ),
     throttle_idle( true ),
     dump_valve( false ),
-    parking_brake( 0.0 ),
+    brake_left( 0.0 ),
+    brake_right( 0.0 ),
+    brake_parking( 0.0 ),
     steering( 0.0 ),
     gear_down( true ),
     antiskid( true ),
@@ -202,8 +204,8 @@ FGControls::init ()
         condition[engine] = 0;
     }
 
+    brake_left = brake_right = brake_parking = 0.0;
     for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {
-        brake[wheel] = 0.0;
         alternate_extension[wheel] = false;
     }
 
@@ -420,10 +422,20 @@ FGControls::bind ()
   }
 
   // gear
-  fgTie("/controls/gear/parking-brake", this,
-	&FGControls::get_parking_brake, 
-        &FGControls::set_parking_brake);
-  fgSetArchivable("/controls/gear/parking-brake");
+  fgTie("/controls/gear/brake-left", this,
+	&FGControls::get_brake_left, 
+        &FGControls::set_brake_left);
+  fgSetArchivable("/controls/gear/brake-left");
+
+  fgTie("/controls/gear/brake-right", this,
+	&FGControls::get_brake_right, 
+        &FGControls::set_brake_right);
+  fgSetArchivable("/controls/gear/brake-right");
+
+  fgTie("/controls/gear/brake-parking", this,
+	&FGControls::get_brake_parking, 
+        &FGControls::set_brake_parking);
+  fgSetArchivable("/controls/gear/brake-parking");
 
   fgTie("/controls/gear/steering", this,
 	&FGControls::get_steering, &FGControls::set_steering);
@@ -448,11 +460,6 @@ FGControls::bind ()
 
   for (index = 0; index < MAX_WHEELS; index++) {
       char name[MAX_NAME_LEN];
-      snprintf(name, MAX_NAME_LEN, "/controls/gear/wheel[%d]/brake", index);
-      fgTie(name, this, index,
-            &FGControls::get_brake, &FGControls::set_brake);
-      fgSetArchivable(name);
-
       snprintf(name, MAX_NAME_LEN,
                "/controls/gear/wheel[%d]/alternate-extension", index);
       fgTie(name, this, index,
@@ -868,7 +875,9 @@ void FGControls::unbind ()
       fgUntie(name);
     }
   }
-  fgUntie("/controls/gear/parking_brake");
+  fgUntie("/controls/gear/brake-left");
+  fgUntie("/controls/gear/brake-right");
+  fgUntie("/controls/gear/brake-parking");
   fgUntie("/controls/gear/steering");
   fgUntie("/controls/gear/gear_down");
   fgUntie("/controls/gear/antiskid");
@@ -876,8 +885,6 @@ void FGControls::unbind ()
   fgUntie("/controls/gear/tailwheel-lock");
   for (index = 0; index < MAX_WHEELS; index++) {
     char name[MAX_NAME_LEN];
-    snprintf(name, MAX_NAME_LEN, "/controls/gear/wheel[%d]/brakes", index);
-    fgUntie(name);
     snprintf(name, MAX_NAME_LEN, 
        "/controls/gear/wheel[%d]/alternate-extension", index);
     fgUntie(name);
@@ -1594,10 +1601,38 @@ FGControls::set_boost_pump( int index, bool val )
 
 
 void
-FGControls::set_parking_brake( double pos )
+FGControls::set_brake_left( double pos )
 {
-    parking_brake = pos;
-    CLAMP(&parking_brake, 0.0, 1.0);
+    brake_left = pos;
+    CLAMP(&brake_left, 0.0, 1.0);
+}
+
+void
+FGControls::move_brake_left( double amt )
+{
+    brake_left += amt;
+    CLAMP( &brake_left, 0.0, 1.0 );
+}
+
+void
+FGControls::set_brake_right( double pos )
+{
+    brake_right = pos;
+    CLAMP(&brake_right, 0.0, 1.0);
+}
+
+void
+FGControls::move_brake_right( double amt )
+{
+    brake_right += amt;
+    CLAMP( &brake_right, 0.0, 1.0 );
+}
+
+void
+FGControls::set_brake_parking( double pos )
+{
+    brake_parking = pos;
+    CLAMP(&brake_parking, 0.0, 1.0);
 }
 
 void
@@ -1638,38 +1673,6 @@ FGControls::set_tailwheel_lock( bool state )
   tailwheel_lock = state;
 }
 
-
-void
-FGControls::set_brake( int wheel, double pos )
-{
-    if ( wheel == ALL_WHEELS ) {
-	for ( int i = 0; i < MAX_WHEELS; i++ ) {
-	    brake[i] = pos;
-	    CLAMP( &brake[i], 0.0, 1.0 );
-	}
-    } else {
-	if ( (wheel >= 0) && (wheel < MAX_WHEELS) ) {
-	    brake[wheel] = pos;
-	    CLAMP( &brake[wheel], 0.0, 1.0 );
-	}
-    }
-}
-
-void
-FGControls::move_brake( int wheel, double amt )
-{
-    if ( wheel == ALL_WHEELS ) {
-	for ( int i = 0; i < MAX_WHEELS; i++ ) {
-	    brake[i] += amt;
-	    CLAMP( &brake[i], 0.0, 1.0 );
-	}
-    } else {
-	if ( (wheel >= 0) && (wheel < MAX_WHEELS) ) {
-	    brake[wheel] += amt;
-	    CLAMP( &brake[wheel], 0.0, 1.0 );
-	}
-    }
-}
 
 void
 FGControls::set_alternate_extension( int wheel, bool val )

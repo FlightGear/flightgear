@@ -289,9 +289,7 @@ while ( <MASTER> ) {
 	print OUT "</A>\n";
 
 	if ( -f "$mdir/$linkname.txt" ) {
-	    if ( $twidth < $swidth ) {
-		print OUT "<BR>\n";
-	    }
+            print OUT "<BR>\n";
 	    print OUT "<FONT SIZE=-1 id=\"fgfs\">\n";
 	    open( IN, "<$mdir/$linkname.txt" );
 	    while ( <IN> ) {
@@ -300,9 +298,7 @@ while ( <MASTER> ) {
 	    close( IN );
 	    print OUT "</FONT>\n";
 	} else {
-	    if ( $twidth < $swidth ) {
-	        print OUT "<BR>\n";
-            }
+            print OUT "<BR>\n";
 	    print OUT "<FONT SIZE=-1 id=\"fgfs\">\n";
 	    print OUT "$linkname\n";
 	    print OUT "</FONT>\n";

@@ -198,7 +198,8 @@ static inline float get_goal_view_offset() {
 }
 
 static inline void move_brake(float offset) {
-	globals->get_controls()->move_brake(FGControls::ALL_WHEELS, offset);
+	globals->get_controls()->move_brake_left(offset);
+	globals->get_controls()->move_brake_right(offset);
 }
 
 static inline void move_throttle(float offset) {

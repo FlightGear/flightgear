@@ -413,10 +413,10 @@ bool FGJSBsim::copy_to_JSBsim() {
 
 				// Parking brake sets minimum braking
 				// level for mains.
-    double parking_brake = globals->get_controls()->get_parking_brake();
-    FCS->SetLBrake(FMAX(globals->get_controls()->get_brake(0), parking_brake));
-    FCS->SetRBrake(FMAX(globals->get_controls()->get_brake(1), parking_brake));
-    FCS->SetCBrake( globals->get_controls()->get_brake(2) );
+    double parking_brake = globals->get_controls()->get_brake_parking();
+    FCS->SetLBrake(FMAX(globals->get_controls()->get_brake_left(), parking_brake));
+    FCS->SetRBrake(FMAX(globals->get_controls()->get_brake_right(), parking_brake));
+    FCS->SetCBrake( 0.0 );
 
     FCS->SetGearCmd( globals->get_controls()->get_gear_down());
     for (i = 0; i < Propulsion->GetNumEngines(); i++) {

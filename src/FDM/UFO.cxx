@@ -68,7 +68,9 @@ void FGUFO::update( double dt ) {
 
     // read the throttle
     double th = globals->get_controls()->get_throttle( 0 );
-    if (globals->get_controls()->get_brake(0)) {
+    if ( globals->get_controls()->get_brake_left() > 0.0 
+         || globals->get_controls()->get_brake_right() > 0.0 )
+    {
         th = -th;
     }
     Throttle = th * throttle_damp + Throttle * (1 - throttle_damp);

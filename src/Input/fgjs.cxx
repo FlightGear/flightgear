@@ -48,22 +48,24 @@ string axes_propnames[8]={ "/controls/flight/elevator","/controls/flight/aileron
 bool half_range[8]={ false,false,false,true,true,true,false,false };
 
 
-string button_humannames[7]= { "apply all brakes", "apply left brake", 
+string button_humannames[6]= { "apply left brake", 
                                "apply right brake", "step flaps up", 
                                "step flaps down","apply nose-up trim",
                                "apply nose-down trim"
                              }; 
 
-string button_propnames[7]={ "/controls/gear/wheel[-1]/brake", "/controls/gear/wheel[0]/brake",
-                             "/controls/gear/wheel[1]/brake", "/controls/flight/flaps",
-                             "/controls/flight/flaps","/controls/flight/elevator-trim",
+string button_propnames[6]={ "/controls/gear/brake-left",
+                             "/controls/gear/brake-right",
+                             "/controls/flight/flaps",
+                             "/controls/flight/flaps",
+                             "/controls/flight/elevator-trim",
                              "/controls/flight/elevator-trim" 
                            };                                                   
  
 
-float button_step[7]={ 1.0, 1.0, 1.0, 0.34, -0.34, 0.001, -0.001 };
+float button_step[6]={ 1.0, 1.0, 0.34, -0.34, 0.001, -0.001 };
 
-string button_repeat[7]={ "false", "false", "false", "false", "false", 
+string button_repeat[6]={ "false", "false", "false", "false", 
                           "true", "true" };
 
 
@@ -166,7 +168,7 @@ int main(void) {
       cout << endl;
   }
   
-  for(control=0;control<=6;control++) {
+  for(control=0;control<=5;control++) {
       cout << "Press the button you wish to use to " 
            << button_humannames[control]
            << endl;

@@ -154,7 +154,9 @@ private:
     bool boost_pump[MAX_TANKS * MAX_BOOSTPUMPS];
 
     // controls/gear/
-    double parking_brake;
+    double brake_left;
+    double brake_right;
+    double brake_parking;
     double steering;
     bool gear_down;
     bool antiskid;
@@ -162,7 +164,6 @@ private:
     bool tailwheel_lock;
 
     // controls/gear/wheel[n]/
-    double brake[MAX_WHEELS];
     bool alternate_extension[MAX_WHEELS];
 
     // controls/anti-ice/
@@ -333,7 +334,9 @@ public:
     }
 
     // controls/gear/
-    inline double get_parking_brake() const { return parking_brake; }
+    inline double get_brake_left() const { return brake_left; }
+    inline double get_brake_right() const { return brake_right; }
+    inline double get_brake_parking() const { return brake_parking; }
     inline double get_steering() const { return steering; }
     inline bool get_gear_down() const { return gear_down; }
     inline bool get_antiskid() const { return antiskid; }
@@ -341,7 +344,6 @@ public:
     inline bool get_tailwheel_lock() const { return tailwheel_lock; }
 
     // controls/gear/wheel[n]/
-    inline double get_brake(int wheel) const { return brake[wheel]; }
     inline bool get_alternate_extension(int wheel) const {
         return alternate_extension[wheel];
     }
@@ -513,7 +515,11 @@ public:
     void set_boost_pump( int index, bool val );
 
     // controls/gear/
-    void set_parking_brake( double pos );
+    void set_brake_left( double pos );
+    void move_brake_left( double amt );
+    void set_brake_right( double pos );
+    void move_brake_right( double amt );
+    void set_brake_parking( double pos );
     void set_steering( double pos );
     void move_steering( double amt );
     void set_gear_down( bool gear );
@@ -522,8 +528,6 @@ public:
     void set_tailwheel_lock( bool val );
 
     // controls/gear/wheel[n]/
-    void set_brake( int wheel, double pos );
-    void move_brake( int wheel, double amt );
     void set_alternate_extension( int wheel, bool val );
 
     // controls/anti-ice/

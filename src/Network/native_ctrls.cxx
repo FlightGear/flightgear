@@ -164,21 +164,10 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
             net->fuel_selector[i] = false;
         }
     }
-    net->num_wheels = FGNetCtrls::FG_MAX_WHEELS;
-    tempnode = fgGetNode("/controls/gear", true);
-    for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
-        node = fgGetNode("/controls/gear/wheel", i);
-        if ( node != NULL && node->getChild("brake") != NULL ) {
-            if ( tempnode->getChild("parking-brake")->getDoubleValue() > 0.0 ) {
-                net->brake[i] = 1.0;
-           } else {
-                net->brake[i]
-                    = node->getChild("brake")->getDoubleValue();
-            }
-        } else {
-            net->brake[i] = 0.0;
-        }
-    }
+    node = fgGetNode("/controls/gear", true);
+    net->brake_left = node->getChild("brake-left")->getDoubleValue();
+    net->brake_right = node->getChild("brake-right")->getDoubleValue();
+    net->brake_parking = node->getChild("brake-parking")->getDoubleValue();
 
     node = fgGetNode("/controls/switches", true);
     tempnode = node->getChild("master-bat");
@@ -252,10 +241,9 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
             net->fuel_selector[i] = htonl(net->fuel_selector[i]);
         }
         net->num_tanks = htonl(net->num_tanks);
-        for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
-            htond(net->brake[i]);
-        }
-        net->num_wheels = htonl(net->num_wheels);
+        htond(net->brake_left);
+        htond(net->brake_right);
+        htond(net->brake_parking);
         net->gear_handle = htonl(net->gear_handle);
         net->master_bat = htonl(net->master_bat);
         net->master_alt = htonl(net->master_alt);
@@ -310,10 +298,9 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         for ( i = 0; i < net->num_tanks; ++i ) {
             net->fuel_selector[i] = htonl(net->fuel_selector[i]);
         }
-        net->num_wheels = htonl(net->num_wheels);
-        for ( i = 0; i < net->num_wheels; ++i ) {
-            htond(net->brake[i]);
-        }
+        htond(net->brake_left);
+        htond(net->brake_right);
+        htond(net->brake_parking);
         net->gear_handle = htonl(net->gear_handle);
         net->master_bat = htonl(net->master_bat);
         net->master_alt = htonl(net->master_alt);
@@ -377,11 +364,11 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         node->getChild( "fuel_selector" )
             ->setBoolValue( net->fuel_selector[i] );
     }
-    for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
-        node = fgGetNode( "/controls/gear/wheel", i );
-        if ( node != NULL ) {
-            node->getChild( "brake" )->setDoubleValue( net->brake[i] );
-        }
+    node = fgGetNode( "/controls/gear" );
+    if ( node != NULL ) {
+        node->getChild( "brake-left" )->setDoubleValue( net->brake_left );
+        node->getChild( "brake-right" )->setDoubleValue( net->brake_right );
+        node->getChild( "brake-parking" )->setDoubleValue( net->brake_parking );
     }
 
     node = fgGetNode( "/controls/gear", true );

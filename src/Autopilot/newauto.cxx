@@ -756,15 +756,23 @@ FGAutopilot::update (double dt)
 	    double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 
 	    double target_angle = current_radiostack->get_navcom1()->get_nav_target_gs();
-
 	    double gs_diff = target_angle - current_angle;
 
 	    // convert desired vertical path angle into a climb rate
 	    double des_angle = current_angle - 10 * gs_diff;
 
-	    // convert to meter/min
-	    double horiz_vel = cur_fdm_state->get_V_ground_speed()
-		* SG_FEET_TO_METER * 60.0;
+            // estimate horizontal speed towards ILS in meters per minute
+            static double horiz_vel = 0.0;
+            static double last_x = 0.0;
+            double dist = last_x - x;
+            last_x = x;
+            double new_vel = ( dist / dt ) * 60.0;
+            horiz_vel = 0.75 * horiz_vel + 0.25 * new_vel;
+	    // double horiz_vel = cur_fdm_state->get_V_ground_speed()
+            //    * SG_FEET_TO_METER * 60.0;
+            // double horiz_vel = airspeed_node->getFloatValue()
+            //    * SG_FEET_TO_METER * 60.0;
+
 	    climb_rate = -sin( des_angle * SGD_DEGREES_TO_RADIANS ) * horiz_vel;
 	    /* climb_error_accum += gs_diff * 2.0; */
 	    /* climb_rate = gs_diff * 200.0 + climb_error_accum; */

@@ -16,7 +16,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 18;
+const int FG_NET_CTRLS_VERSION = 19;
 
 
 // Define a structure containing the control parameters
@@ -66,8 +66,9 @@ public:
     bool fuel_selector[FG_MAX_TANKS];    // false = off, true = on
 
     // Brake controls
-    int num_wheels;		         // number of valid wheels
-    double brake[FG_MAX_WHEELS];         //  0 ... 1
+    double brake_left;
+    double brake_right;
+    double brake_parking;
     
     // Landing Gear
     bool gear_handle; // true=gear handle down; false= gear handle up

@@ -744,11 +744,11 @@ bool FGATC610x::do_analog_in() {
         tmp = scale( brake_left_min->getIntValue(),
                      brake_left_max->getIntValue(),
                      analog_in_data[20] );
-        fgSetFloat( "/controls/gear/wheel[0]/brake", tmp );
+        fgSetFloat( "/controls/gear/brake-left", tmp );
         tmp = scale( brake_right_min->getIntValue(),
                      brake_right_max->getIntValue(),
                      analog_in_data[21] );
-        fgSetFloat( "/controls/gear/wheel[1]/brake", tmp );
+        fgSetFloat( "/controls/gear/brake-right", tmp );
     }
 
     // nav1 volume
@@ -1888,7 +1888,7 @@ bool FGATC610x::do_switches() {
     fgSetBool( "/controls/circuit-breakers/annunciators", true );
 #endif
 
-    fgSetDouble( "/controls/gear/parking-brake",
+    fgSetDouble( "/controls/gear/brake-parking",
                  switch_matrix[board][7][3] );
     fgSetDouble( "/radios/marker-beacon/power-btn",
                  switch_matrix[board][6][1] );
