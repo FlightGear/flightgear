@@ -32,7 +32,28 @@
 #endif                                   
 
 
+#include <Math/point3d.hxx>
 #include <Triangulate/triangle.hxx>
+
+
+typedef vector < Point3D > wgs84_node_list;
+typedef wgs84_node_list::iterator wgs84_node_list_iterator;
+typedef wgs84_node_list::const_iterator const_wgs84_node_list_iterator;
+
+typedef vector < Point3D > normal_list;
+typedef normal_list::iterator normal_list_iterator;
+typedef normal_list::const_iterator const_normal_list_iterator;
+
+class FGGenOutput {
+
+private:
+
+    wgs84_node_list wgs84_nodes;
+    normal_list normals;
+
+public:
+    
+};
 
 
 // generate the flight gear format from the triangulation
@@ -43,6 +64,9 @@ int fgGenOutput( const FGTriangle& t );
 
 
 // $Log$
+// Revision 1.2  1999/03/23 17:44:49  curt
+// Beginning work on generating output scenery.
+//
 // Revision 1.1  1999/03/22 23:51:51  curt
 // Initial revision.
 //
