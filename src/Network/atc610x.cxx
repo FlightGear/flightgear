@@ -285,7 +285,7 @@ bool FGATC610x::open() {
 
 	ATC610xRelease( lock_fd );
 
-#if defined( _MSCVER_ )
+#if defined( _MSC_VER )
 	ulMilliSecondSleep(33);
 #else
 	usleep(33);
