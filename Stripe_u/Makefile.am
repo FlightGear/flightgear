@@ -27,3 +27,4 @@ strips_SOURCES = \
 	triangulate.h triangulatex.h \
 	util.c util.h
 
+strips_LDADD = $(base_LIBS)

@@ -32,13 +32,18 @@ tri2obj_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Math/libMath.a \
         $(top_builddir)/Lib/Debug/libDebug.a \
-        $(top_builddir)/Lib/zlib/libz.a
+        $(top_builddir)/Lib/zlib/libz.a \
+	$(base_LIBS)
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1998/11/04 23:02:02  curt
+# Changes to the automake/autoconf system to reduce the number of libraries
+# that are unnecessarily linked into the various executables.
+#
 # Revision 1.6  1998/07/30 23:49:26  curt
 # Removed libtool support.
 #

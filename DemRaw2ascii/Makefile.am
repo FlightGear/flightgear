@@ -28,13 +28,17 @@ bin_PROGRAMS = raw2ascii
 
 raw2ascii_SOURCES = main.c rawdem.c rawdem.h
 
-raw2ascii_LDADD = 
+raw2ascii_LDADD = $(base_LIBS)
 
 INCLUDES += 
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/11/04 23:01:50  curt
+# Changes to the automake/autoconf system to reduce the number of libraries
+# that are unnecessarily linked into the various executables.
+#
 # Revision 1.2  1998/04/24 00:44:04  curt
 # Added zlib support.
 #

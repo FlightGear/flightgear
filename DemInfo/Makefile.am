@@ -33,7 +33,8 @@ deminfo_LDADD = \
 	$(top_builddir)/Lib/DEM/libDEM.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Misc/libMisc.a \
-	$(top_builddir)/Lib/zlib/libz.a
+	$(top_builddir)/Lib/zlib/libz.a \
+	$(base_LIBS)
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
@@ -45,6 +46,10 @@ CXXFLAGS = -g
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1998/11/04 23:01:48  curt
+# Changes to the automake/autoconf system to reduce the number of libraries
+# that are unnecessarily linked into the various executables.
+#
 # Revision 1.3  1998/09/19 18:01:21  curt
 # Support for changes to libDEM.a
 #

@@ -34,13 +34,18 @@ genapts_SOURCES = \
 
 genapts_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
-	$(top_builddir)/Lib/zlib/libz.a
+	$(top_builddir)/Lib/zlib/libz.a \
+	$(base_LIBS)
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/11/04 23:01:54  curt
+# Changes to the automake/autoconf system to reduce the number of libraries
+# that are unnecessarily linked into the various executables.
+#
 # Revision 1.2  1998/09/04 23:04:47  curt
 # Beginning of convex hull genereration routine.
 #

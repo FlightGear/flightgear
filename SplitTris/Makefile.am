@@ -33,13 +33,18 @@ splittris_LDADD = \
 	$(top_builddir)/Lib/Math/libMath.a \
         $(top_builddir)/Lib/Debug/libDebug.a \
 	$(top_builddir)/Lib/Misc/libMisc.a \
-        $(top_builddir)/Lib/zlib/libz.a
+        $(top_builddir)/Lib/zlib/libz.a \
+	$(base_LIBS)
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.8  1998/11/04 23:01:57  curt
+# Changes to the automake/autoconf system to reduce the number of libraries
+# that are unnecessarily linked into the various executables.
+#
 # Revision 1.7  1998/10/18 01:17:25  curt
 # Point3D tweaks.
 #

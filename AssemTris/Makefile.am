@@ -29,13 +29,18 @@ bin_PROGRAMS = assemtris
 assemtris_SOURCES = assemtris.cxx assemtris.hxx
 
 assemtris_LDADD = \
-	$(top_builddir)/Lib/Bucket/libBucket.a
+	$(top_builddir)/Lib/Bucket/libBucket.a \
+	$(base_LIBS)
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1998/11/04 23:01:45  curt
+# Changes to the automake/autoconf system to reduce the number of libraries
+# that are unnecessarily linked into the various executables.
+#
 # Revision 1.4  1998/09/25 19:35:25  curt
 # Renamed assemtris.[ch] to assemtris.[ch]xx
 #

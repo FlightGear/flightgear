@@ -34,7 +34,8 @@ fixnode_LDADD = \
 	$(top_builddir)/Lib/DEM/libDEM.a \
         $(top_builddir)/Lib/Bucket/libBucket.a \
         $(top_builddir)/Lib/Misc/libMisc.a \
-        $(top_builddir)/Lib/zlib/libz.a
+        $(top_builddir)/Lib/zlib/libz.a \
+	$(base_LIBS)
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
@@ -46,6 +47,10 @@ CXXFLAGS = -g
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1998/11/04 23:01:51  curt
+# Changes to the automake/autoconf system to reduce the number of libraries
+# that are unnecessarily linked into the various executables.
+#
 # Revision 1.6  1998/09/19 20:43:50  curt
 # C++-ified and STL-ified the code.  Combined triload.* and fixnode.* into
 # a single file.

@@ -15,4 +15,6 @@ bin_PROGRAMS = triangle # showme
 
 triangle_SOURCES = triangle.c triangle.h
 
+triangle_LDADD = $(base_LIBS)
+
 # showme_SOURCES = showme.c

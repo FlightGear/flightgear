@@ -28,13 +28,19 @@ bin_PROGRAMS = areas
 
 areas_SOURCES = area.cxx area.hxx main.cxx
 
-areas_LDADD = $(top_builddir)/Lib/Bucket/libBucket.a
+areas_LDADD = \
+	$(top_builddir)/Lib/Bucket/libBucket.a \
+	$(base_LIBS)
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/11/04 23:01:43  curt
+# Changes to the automake/autoconf system to reduce the number of libraries
+# that are unnecessarily linked into the various executables.
+#
 # Revision 1.2  1998/07/30 23:49:18  curt
 # Removed libtool support.
 #
