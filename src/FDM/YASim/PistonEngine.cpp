@@ -130,7 +130,7 @@ float PistonEngine::getEGT()
 
 void PistonEngine::calc(float pressure, float temp, float speed)
 {
-    if(_magnetos == 0 || speed < 200*RPM2RADPS)
+    if(_magnetos == 0 || speed < 60*RPM2RADPS)
 	_running = false;
     else if(_fuel == false)
         _running = false;
@@ -191,20 +191,25 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     float power = _power0 * burned/_f0;
     _torque = power/speed;
 
-    // Figure that the starter motor produces 60% of the engine's
-    // cruise torque.  That sounds like a lot to me, but it's
-    // necessary to produce the right acceleration.  Someone should
-    // find a good reference for this...
+    // Figure that the starter motor produces 15% of the engine's
+    // cruise torque.  Assuming 60RPM starter speed vs. 1800RPM cruise
+    // speed on a 160HP engine, that comes out to about 160*.15/30 ==
+    // 0.8 HP starter motor.  Which sounds about right to me.  I think
+    // I've finally got this tuned. :)
     if(_cranking && !_running)
-	_torque += 0.60f * _power0/_omega0;
+	_torque += 0.15f * _power0/_omega0;
 
-    // Also, add a negative torque of 10% of cruise, to represent
+    // Also, add a negative torque of 8% of cruise, to represent
     // internal friction.  Propeller aerodynamic friction is too low
     // at low RPMs to provide a good deceleration.  Interpolate it
-    // away as we approach cruise RPMs, though, to prevent interaction
-    // with the power computations.  Ugly.
-    if(speed > 0 && speed < _omega0)
-	_torque -= 0.16f * (_power0/_omega0) * (1 - speed/_omega0);
+    // away as we approach cruise RPMs (full at 50%, zero at 100%),
+    // though, to prevent interaction with the power computations.
+    // Ugly.
+    if(speed > 0 && speed < _omega0) {
+        float interp = 2 - 2*speed/_omega0;
+        interp = (interp > 1) ? 1 : interp;
+	_torque -= 0.08f * (_power0/_omega0) * interp;
+    }
 
     // Now EGT.  This one gets a little goofy.  We can calculate the
     // work done by an isentropically expanding exhaust gas as the
