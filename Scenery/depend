@@ -1,5 +1,3 @@
-areamgr.o: areamgr.c ../XGL/xgl.h ../Include/constants.h \
- ../Math/fg_random.h
 common.o: common.c common.h
 geometry.o: geometry.c geometry.h mesh.h
 mesh.o: mesh.c ../Include/constants.h ../Include/types.h \
@@ -9,3 +7,10 @@ obj.o: obj.c ../XGL/xgl.h obj.h scenery.h ../Include/types.h \
  ../Math/mat3.h
 scenery.o: scenery.c ../XGL/xgl.h ../Include/general.h obj.h scenery.h \
  ../Include/types.h
+tilemgr.o: tilemgr.c ../XGL/xgl.h tileutils.h ../Aircraft/aircraft.h \
+ ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
+ ../Aircraft/../Flight/LaRCsim/ls_interface.h \
+ ../Aircraft/../Flight/LaRCsim/../flight.h \
+ ../Aircraft/../Controls/controls.h \
+ ../Aircraft/../Controls/../Include/limits.h
+tileutils.o: tileutils.c tileutils.h ../Include/constants.h

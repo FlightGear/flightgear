@@ -208,7 +208,7 @@ void find_bucket(double lon, double lat, struct bucket *p) {
 
 
 /* Given a lat/lon, fill in the local tile index array */
-void gen_idx_array(struct bucket *p1, long int *tile, 
+void gen_idx_array(struct bucket *p1, long int *tiles, 
 			  int width, int height) {
     struct bucket p2;
     int dw, dh, i, j;
@@ -218,9 +218,9 @@ void gen_idx_array(struct bucket *p1, long int *tile,
     for ( j = 0; j < height; j++ ) {
 	for ( i = 0; i < width; i++ ) {
 	    offset_bucket(p1, &p2, i - dw, j - dh);
-	    tile[(j*width)+i] = gen_index(&p2);
+	    tiles[(j*width)+i] = gen_index(&p2);
 	    printf("  bucket = %d %d %d %d  index = %ld\n", 
-		   p2.lon, p2.lat, p2.x, p2.y, tile[(j*width)+i]);
+		   p2.lon, p2.lat, p2.x, p2.y, tiles[(j*width)+i]);
 	}
     }
 }
@@ -268,9 +268,12 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 23:50:52  curt
-/* "area" renamed to "tile"
+/* Revision 1.2  1998/01/08 02:22:28  curt
+/* Continue working on basic features.
 /*
+ * Revision 1.1  1998/01/07 23:50:52  curt
+ * "area" renamed to "tile"
+ *
  * Revision 1.1  1998/01/07 23:23:40  curt
  * Initial revision.
  *

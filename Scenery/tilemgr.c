@@ -34,6 +34,7 @@
 #include "tileutils.h"
 
 #include "../Aircraft/aircraft.h"
+#include "../Include/constants.h"
 
 
 /* here's where we keep the array of closest (potentially viewable) tiles */
@@ -55,15 +56,20 @@ void fgTileMgrUpdate() {
 
     f = &current_aircraft.flight;
 
-    find_bucket(FG_Longitude, FG_Latitude, &p);
+    find_bucket(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
+    printf("Updating Tile list for %d,%d %d,%d\n", p.lon, p.lat, p.x, p.y);
+
     gen_idx_array(&p, tile, 7, 7);
 }
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 23:50:51  curt
-/* "area" renamed to "tile"
+/* Revision 1.2  1998/01/08 02:22:27  curt
+/* Continue working on basic features.
 /*
+ * Revision 1.1  1998/01/07 23:50:51  curt
+ * "area" renamed to "tile"
+ *
  * Revision 1.2  1998/01/07 03:29:29  curt
  * Given an arbitrary lat/lon, we can now:
  *   generate a unique index for the chunk containing the lat/lon

@@ -65,14 +65,17 @@ void find_bucket(double lon, double lat, struct bucket *p);
 
 
 /* Given a lat/lon, fill in the local tile index array */
-void gen_idx_array(struct bucket *p1, long int *tile, 
+void gen_idx_array(struct bucket *p1, long int *tiles, 
 			  int width, int height);
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 23:50:52  curt
-/* "area" renamed to "tile"
+/* Revision 1.2  1998/01/08 02:22:28  curt
+/* Continue working on basic features.
 /*
+ * Revision 1.1  1998/01/07 23:50:52  curt
+ * "area" renamed to "tile"
+ *
  * Revision 1.1  1998/01/07 23:23:40  curt
  * Initial revision.
  *

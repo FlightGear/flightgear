@@ -26,7 +26,7 @@
 
 TARGET = libScenery.a
 
-CFILES = common.c geometry.c mesh.c obj.c scenery.c
+CFILES = common.c geometry.c mesh.c obj.c scenery.c tilemgr.c tileutils.c
 
 OFILES = $(CFILES:.c=.o)
 
@@ -59,45 +59,33 @@ realclean: clean
 
 include depend
 
-astro.o:
-	$(CC) $(CFLAGS) -c astro.c -o $@
-
 common.o:
 	$(CC) $(CFLAGS) -c common.c -o $@
-
-mesh.o:
-	$(CC) $(CFLAGS) -c mesh.c -o $@
-
-mesh2GL.o:
-	$(CC) $(CFLAGS) -c mesh2GL.c -o $@
-
-moon.o:
-	$(CC) $(CFLAGS) -c moon.c -o $@
-
-obj.o:
-	$(CC) $(CFLAGS) -c obj.c -o $@
-
-orbits.o:
-	$(CC) $(CFLAGS) -c orbits.c -o $@
-
-planets.o:
-	$(CC) $(CFLAGS) -c planets.c -o $@
-
-scenery.o:
-	$(CC) $(CFLAGS) -c scenery.c -o $@
-
-stars.c:
-	$(CC) $(CFLAGS) -c stars.c -o $@
-
-sun.o:
-	$(CC) $(CFLAGS) -c sun.c -o $@
 
 geometry.o:
 	$(CC) $(CFLAGS) -c geometry.c -o $@
 
+mesh.o:
+	$(CC) $(CFLAGS) -c mesh.c -o $@
+
+obj.o:
+	$(CC) $(CFLAGS) -c obj.c -o $@
+
+scenery.o:
+	$(CC) $(CFLAGS) -c scenery.c -o $@
+
+tilemgr.o:
+	$(CC) $(CFLAGS) -c tilemgr.c -o $@
+
+tileutils.o:
+	$(CC) $(CFLAGS) -c tileutils.c -o $@
+
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.28  1998/01/08 02:22:26  curt
+# Continue working on basic features.
+#
 # Revision 1.27  1998/01/07 03:22:28  curt
 # Moved astro stuff to .../Src/Astro/
 #
