@@ -46,7 +46,7 @@
 #include "sunpos.h"
 #include "fg_time.h"
 #include "../constants.h"
-#include "../GLUT/views.h"
+#include "../Main/views.h"
 #include "../Math/fg_geodesy.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
@@ -303,10 +303,13 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
 
 
 /* $Log$
-/* Revision 1.10  1997/09/13 02:00:09  curt
-/* Mostly working on stars and generating sidereal time for accurate star
-/* placement.
+/* Revision 1.11  1997/10/28 21:07:21  curt
+/* Changed GLUT/ -> Main/
 /*
+ * Revision 1.10  1997/09/13 02:00:09  curt
+ * Mostly working on stars and generating sidereal time for accurate star
+ * placement.
+ *
  * Revision 1.9  1997/09/05 14:17:31  curt
  * More tweaking with stars.
  *

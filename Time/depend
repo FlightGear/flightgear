@@ -5,8 +5,8 @@ fg_timer.o: fg_timer.c fg_timer.h
 sptest.o: sptest.c sunpos.h ../types.h ../constants.h
 sunpos.o: sunpos.c sunpos.h ../types.h fg_time.h ../Flight/flight.h \
  ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
- ../Flight/LaRCsim/../flight.h ../constants.h ../GLUT/views.h \
- ../GLUT/../types.h ../GLUT/../Flight/flight.h ../GLUT/../Math/mat3.h \
+ ../Flight/LaRCsim/../flight.h ../constants.h ../Main/views.h \
+ ../Main/../types.h ../Main/../Flight/flight.h ../Main/../Math/mat3.h \
  ../Math/fg_geodesy.h ../Math/mat3.h ../Math/polar.h \
  ../Math/../types.h
 ttest.o: ttest.c
