@@ -53,10 +53,6 @@ FGMatrix33::FGMatrix33(int r, int c)
 FGMatrix33::FGMatrix33(const FGMatrix33& M)
 {
   rowCtr = colCtr = 1;
-  width  = M.width;
-  prec   = M.prec;
-  delim  = M.delim;
-  origin = M.origin;
 
   data[1][1] = M.data[1][1];
   data[1][2] = M.data[1][2];
@@ -125,11 +121,6 @@ istream& operator>>(istream& is, FGMatrix33& M)
 FGMatrix33& FGMatrix33::operator=(const FGMatrix33& M)
 {
   if (&M != this) {
-    width  = M.width;
-    prec   = M.prec;
-    delim  = M.delim;
-    origin = M.origin;
-    
     data[1][1] = M.data[1][1];
     data[1][2] = M.data[1][2];
     data[1][3] = M.data[1][3];
@@ -139,19 +130,8 @@ FGMatrix33& FGMatrix33::operator=(const FGMatrix33& M)
     data[3][1] = M.data[3][1];
     data[3][2] = M.data[3][2];
     data[3][3] = M.data[3][3];
-
   }
   return *this;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGMatrix33::SetOParams(char delim,int width,int prec,int origin)
-{
-  FGMatrix33::delim  = delim;
-  FGMatrix33::width  = width;
-  FGMatrix33::prec   = prec;
-  FGMatrix33::origin = origin;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -196,7 +176,6 @@ FGMatrix33 FGMatrix33::operator-(const FGMatrix33& M)
   Diff(3,2) = data[3][2] - M(3,2);
   Diff(3,3) = data[3][3] - M(3,3);
 
-  
   return Diff;
 }
 
@@ -213,7 +192,6 @@ void FGMatrix33::operator-=(const FGMatrix33 &M)
   data[3][1] -= M(3,1);
   data[3][2] -= M(3,2);
   data[3][3] -= M(3,3);
-
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -248,7 +226,6 @@ void FGMatrix33::operator+=(const FGMatrix33 &M)
   data[3][1] += M(3,1);
   data[3][2] += M(3,2);
   data[3][3] += M(3,3);
-
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -293,7 +270,6 @@ FGMatrix33 operator*(double scalar, FGMatrix33 &M)
 
 void FGMatrix33::operator*=(const double scalar)
 {
-
   data[1][1] *= scalar;
   data[1][2] *= scalar;
   data[1][3] *= scalar;
@@ -303,7 +279,6 @@ void FGMatrix33::operator*=(const double scalar)
   data[3][1] *= scalar;
   data[3][2] *= scalar;
   data[3][3] *= scalar;
-
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -345,7 +320,6 @@ void FGMatrix33::operator*=(const FGMatrix33& M)
   data[3][1] = a*M(1,1) + b*M(2,1) + c*M(3,1);
   data[3][2] = a*M(1,2) + b*M(2,2) + c*M(3,2);
   data[3][3] = a*M(1,3) + b*M(2,3) + c*M(3,3);
-
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -378,7 +352,7 @@ FGMatrix33 FGMatrix33::operator/(const double scalar)
 void FGMatrix33::operator/=(const double scalar)
 {
   if( scalar != 0 ) {
-	  double tmp = 1.0/scalar;
+    double tmp = 1.0/scalar;
     data[1][1] *= tmp;
     data[1][2] *= tmp;
     data[1][3] *= tmp;

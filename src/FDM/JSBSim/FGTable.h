@@ -92,15 +92,18 @@ public:
        </pre>
        */
   void operator<<(FGConfigFile&);
+  FGTable& operator<<(const float n);
+  FGTable& operator<<(const int n);
+  FGTable& operator<<(const double n);
   inline float GetElement(int r, int c) {return Data[r][c];}
   void Print(void);
   
 private:
   enum type {tt1D, tt2D} Type;
-  unsigned int rowCounter;
-  unsigned int colCounter;
   float** Data;
   int nRows, nCols;
+  unsigned int colCounter;
+  unsigned int rowCounter;
   float** Allocate(void);
   void Debug(void);
 };

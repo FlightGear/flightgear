@@ -56,16 +56,14 @@ FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg)
     Displacement(360),
     MaxHP(200),
     Cycles(2),
-    IdleRPM(900),
+    IdleRPM(600),
     // Set constants
     CONVERT_CUBIC_INCHES_TO_METERS_CUBED(1.638706e-5),
     R_air(287.3),
     rho_fuel(800),                 // estimate
     calorific_value_fuel(47.3e6),
     Cp_air(1005),
-    Cp_fuel(1700),
-    running(true),		// FIXME: FGEngine already has 'Running'
-    cranking(false)
+    Cp_fuel(1700)
 {
   string token;
 
@@ -107,6 +105,46 @@ FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg)
   // Initialisation
   volumetric_efficiency = 0.8;  // Actually f(speed, load) but this will get us running
 
+  // First column is thi, second is neta (combustion efficiency)
+  Lookup_Combustion_Efficiency = new FGTable(12);
+  *Lookup_Combustion_Efficiency << 0.00 << 0.980;
+  *Lookup_Combustion_Efficiency << 0.90 << 0.980;
+  *Lookup_Combustion_Efficiency << 1.00 << 0.970;
+  *Lookup_Combustion_Efficiency << 1.05 << 0.950;
+  *Lookup_Combustion_Efficiency << 1.10 << 0.900;
+  *Lookup_Combustion_Efficiency << 1.15 << 0.850;
+  *Lookup_Combustion_Efficiency << 1.20 << 0.790;
+  *Lookup_Combustion_Efficiency << 1.30 << 0.700;
+  *Lookup_Combustion_Efficiency << 1.40 << 0.630;
+  *Lookup_Combustion_Efficiency << 1.50 << 0.570;
+  *Lookup_Combustion_Efficiency << 1.60 << 0.525;
+  *Lookup_Combustion_Efficiency << 2.00 << 0.345;
+
+  cout << endl;
+  cout << "      Combustion Efficiency table:" << endl;
+  Lookup_Combustion_Efficiency->Print();
+  cout << endl;
+
+  Power_Mixture_Correlation = new FGTable(13);
+  *Power_Mixture_Correlation << (14.7/1.6) << 78.0;
+  *Power_Mixture_Correlation << 10 <<  86.0;
+  *Power_Mixture_Correlation << 11 <<  93.5;
+  *Power_Mixture_Correlation << 12 <<  98.0;
+  *Power_Mixture_Correlation << 13 << 100.0;
+  *Power_Mixture_Correlation << 14 <<  99.0;
+  *Power_Mixture_Correlation << 15 <<  96.4;
+  *Power_Mixture_Correlation << 16 <<  92.5;
+  *Power_Mixture_Correlation << 17 <<  88.0;
+  *Power_Mixture_Correlation << 18 <<  83.0;
+  *Power_Mixture_Correlation << 19 <<  78.5;
+  *Power_Mixture_Correlation << 20 <<  74.0;
+  *Power_Mixture_Correlation << (14.7/0.6) << 58;
+
+  cout << endl;
+  cout << "      Power Mixture Correlation table:" << endl;
+  Power_Mixture_Correlation->Print();
+  cout << endl;
+
   if (debug_lvl & 2) cout << "Instantiated: FGPiston" << endl;
 }
 
@@ -132,14 +170,14 @@ float FGPiston::Calculate(float PowerRequired)
   //
   // Input values.
   //
-        // convert from lbs/ft2 to Pa
-  p_amb = Atmosphere->GetPressure() * 48;
+
+  p_amb = Atmosphere->GetPressure() * 48;              // convert from lbs/ft2 to Pa
   p_amb_sea_level = Atmosphere->GetPressureSL() * 48;
-        // convert from Rankine to Kelvin
-  T_amb = Atmosphere->GetTemperature() * (5.0 / 9.0);
+  T_amb = Atmosphere->GetTemperature() * (5.0 / 9.0);  // convert from Rankine to Kelvin
+
   RPM = Propulsion->GetThruster(EngineNumber)->GetRPM();
-  if (RPM < IdleRPM)    // kludge
-    RPM = IdleRPM;
+  //if (RPM < IdleRPM) RPM = IdleRPM;  // kludge
+    
   IAS = Auxiliary->GetVcalibratedKTS();
 
   if (Mixture >= 0.5) {
@@ -162,98 +200,6 @@ float FGPiston::Calculate(float PowerRequired)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 /**
- * Look up the power/mixture correlation.
- *
- * FIXME: this should use JSBSim's interpolation support.
- */
-
-static float Power_Mixture_Correlation(float thi_actual)
-{
-  float AFR_actual = 14.7 / thi_actual;
-  const int NUM_ELEMENTS = 13;
-  float AFR[NUM_ELEMENTS] = 
-    {(14.7/1.6), 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, (14.7/0.6)};
-  float mixPerPow[NUM_ELEMENTS] = 
-    {78, 86, 93.5, 98, 100, 99, 96.4, 92.5, 88, 83, 78.5, 74, 58};
-  float mixPerPow_actual = 0.0f;
-  float factor;
-  float dydx;
-
-  int i;
-  int j = NUM_ELEMENTS;
-
-  for (i=0;i<j;i++) {
-    if (i == (j-1)) {
-      dydx = (mixPerPow[i] - mixPerPow[i-1]) / (AFR[i] - AFR[i-1]);
-      mixPerPow_actual = mixPerPow[i] + dydx * (AFR_actual - AFR[i]);
-      return mixPerPow_actual;
-    }
-    if ((i == 0) && (AFR_actual < AFR[i])) {
-      dydx = (mixPerPow[i] - mixPerPow[i-1]) / (AFR[i] - AFR[i-1]);
-      mixPerPow_actual = mixPerPow[i] + dydx * (AFR_actual - AFR[i]);
-      return mixPerPow_actual;
-    }
-    if (AFR_actual == AFR[i]) {
-      mixPerPow_actual = mixPerPow[i];
-      return mixPerPow_actual;
-    }
-    if ((AFR_actual > AFR[i]) && (AFR_actual < AFR[i + 1])) {
-      factor = (AFR_actual - AFR[i]) / (AFR[i+1] - AFR[i]);
-      mixPerPow_actual = (factor * (mixPerPow[i+1] - mixPerPow[i])) + mixPerPow[i];
-      return mixPerPow_actual;
-    }
-  }
-
-  cerr << "ERROR: error in FGNewEngine::Power_Mixture_Correlation\n";
-  return mixPerPow_actual;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-/**
- * Look up the combustion efficiency.
- *
- *
- * FIXME: this should use JSBSim's interpolation support.
- */
-
-static float Lookup_Combustion_Efficiency(float thi_actual)
-{
-  const int NUM_ELEMENTS = 11;
-  float thi[NUM_ELEMENTS] = {0.0, 0.9, 1.0, 1.05, 1.1, 1.15, 1.2, 1.3, 1.4, 1.5, 1.6};  //array of equivalence ratio values
-  float neta_comb[NUM_ELEMENTS] = {0.98, 0.98, 0.97, 0.95, 0.9, 0.85, 0.79, 0.7, 0.63, 0.57, 0.525};  //corresponding array of combustion efficiency values
-  //combustion efficiency values from Heywood, "Internal Combustion Engine Fundamentals", ISBN 0-07-100499-8
-  float neta_comb_actual = 0.0f;
-  float factor;
-
-  int i;
-  int j = NUM_ELEMENTS;  //This must be equal to the number of elements in the lookup table arrays
-
-  for (i=0;i<j;i++) {
-    if(i == (j-1)) {
-      // Assume linear extrapolation of the slope between the last two points beyond the last point
-      float dydx = (neta_comb[i] - neta_comb[i-1]) / (thi[i] - thi[i-1]);
-      neta_comb_actual = neta_comb[i] + dydx * (thi_actual - thi[i]);
-      return neta_comb_actual;
-    }
-    if(thi_actual == thi[i]) {
-      neta_comb_actual = neta_comb[i];
-      return neta_comb_actual;
-    }
-    if((thi_actual > thi[i]) && (thi_actual < thi[i + 1])) {
-      //do linear interpolation between the two points
-      factor = (thi_actual - thi[i]) / (thi[i+1] - thi[i]);
-      neta_comb_actual = (factor * (neta_comb[i+1] - neta_comb[i])) + neta_comb[i];
-      return neta_comb_actual;
-    }
-  }
-
-  //if we get here something has gone badly wrong
-  cerr << "ERROR: error in FGNewEngine::Lookup_Combustion_Efficiency\n";
-  return neta_comb_actual;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-/**
  * Start or stop the engine.
  */
 
@@ -261,6 +207,87 @@ void FGPiston::doEngineStartup(void)
 {
   // TODO: check magnetos, spark, starter, etc. and decide whether
   // engine is running
+
+  // Check parameters that may alter the operating state of the engine. 
+  // (spark, fuel, starter motor etc)
+  bool spark;
+  bool fuel;
+  static int crank_counter = 0;
+
+  // Check for spark
+  Magneto_Left = false;
+  Magneto_Right = false;
+  // Magneto positions:
+  // 0 -> off
+  // 1 -> left only
+  // 2 -> right only
+  // 3 -> both
+  if (Magnetos != 0) {
+    spark = true;
+  } else {
+    spark = false;
+  }  // neglects battery voltage, master on switch, etc for now.
+  
+  if ((Magnetos == 1) || (Magnetos > 2)) Magneto_Left = true;
+  if (Magnetos > 1)  Magneto_Right = true;
+
+  // Assume we have fuel for now
+  fuel = true;
+
+  // Check if we are turning the starter motor
+  if (Cranking != Starter) {
+    // This check saves .../cranking from getting updated every loop - they
+    // only update when changed.
+    Cranking = Starter;
+    crank_counter = 0;
+  }
+
+  //Check mode of engine operation
+  // ACK - unfortunately this hack doesn't work in JSBSim since the RPM is reset
+  // each iteration by the propeller :-(
+  if (Cranking) {
+    crank_counter++;
+    if (RPM <= 480) {
+      RPM += 100;
+      if (RPM > 480)
+        RPM = 480;
+    } else {
+      // consider making a horrible noise if the starter is engaged with
+      // the engine running
+    }
+    // TODO - find a better guess at cranking speed
+  }
+  
+  // if ((!Running) && (spark) && (fuel) && (crank_counter > 120)) {
+
+  if ((!Running) && (spark) && (fuel)) {
+  // start the engine if revs high enough
+    if (RPM > 450) {
+      // For now just instantaneously start but later we should maybe crank for
+      // a bit
+      Running = true;
+      // RPM = 600;
+    }
+  }
+
+  if ( (Running) && ((!spark)||(!fuel)) ) {
+    // Cut the engine
+    // note that we only cut the power - the engine may continue to
+    // spin if the prop is in a moving airstream
+    Running = false;
+  }
+
+  // And finally a last check for stalling
+  if (Running) { 
+    //Check if we have stalled the engine
+    if (RPM == 0) {
+      Running = false;
+    } else if ((RPM <= 480) && (Cranking)) {
+      // Make sure the engine noise dosn't play if the engine won't
+	    // start due to eg mixture lever pulled out.
+      Running = false;
+    }
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -351,7 +378,7 @@ void FGPiston::doEnginePower(void)
   Percentage_Power =
     Percentage_Power + ((T_amb_sea_lev_degF - T_amb_degF) * 7 /120);
   float Percentage_of_best_power_mixture_power =
-    Power_Mixture_Correlation(equivalence_ratio);
+    Power_Mixture_Correlation->GetValue(14.7 / equivalence_ratio);
   Percentage_Power =
     Percentage_Power * Percentage_of_best_power_mixture_power / 100.0;
   if (Percentage_Power < 0.0)
@@ -359,6 +386,23 @@ void FGPiston::doEnginePower(void)
   else if (Percentage_Power > 100.0)
     Percentage_Power = 100.0;
   HP = Percentage_Power * MaxHP / 100.0;
+
+  //Hack
+  if (!Running) {
+    if (Cranking) {
+      if (RPM < 480) {
+        HP = 3.0 + ((480 - RPM) / 10.0);
+      } else {
+        HP = 3.0;
+      }
+    } else {
+      // Quick hack until we port the FMEP stuff
+      if (RPM > 0.0)
+        HP = -1.5;
+      else
+        HP = 0.0;
+    }
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -373,7 +417,7 @@ void FGPiston::doEnginePower(void)
 
 void FGPiston::doEGT(void)
 {
-  combustion_efficiency = Lookup_Combustion_Efficiency(equivalence_ratio);
+  combustion_efficiency = Lookup_Combustion_Efficiency->GetValue(equivalence_ratio);
   float enthalpy_exhaust = m_dot_fuel * calorific_value_fuel * 
     combustion_efficiency * 0.33;
   float heat_capacity_exhaust = (Cp_air * m_dot_air) + (Cp_fuel * m_dot_fuel);
@@ -433,15 +477,16 @@ void FGPiston::doOilTemperature(void)
   float target_oil_temp;        // Steady state oil temp at the current engine conditions
   float time_constant;          // The time constant for the differential equation
 
-  if (running) {
+  if (Running) {
     target_oil_temp = 363;
     time_constant = 500;        // Time constant for engine-on idling.
     if (Percentage_Power > idle_percentage_power) {
-      time_constant /= ((Percentage_Power / idle_percentage_power) / 10.0);       // adjust for power 
+      time_constant /= ((Percentage_Power / idle_percentage_power) / 10.0); // adjust for power 
     }
   } else {
     target_oil_temp = 298;
-    time_constant = 1000;  // Time constant for engine-off; reflects the fact that oil is no longer getting circulated
+    time_constant = 1000;  // Time constant for engine-off; reflects the fact
+                           // that oil is no longer getting circulated
   }
 
   float dOilTempdt = (target_oil_temp - OilTemp_degK) / time_constant;
@@ -463,7 +508,7 @@ void FGPiston::doOilPressure(void)
   float Oil_Press_Relief_Valve = 60; // FIXME: may vary by engine
   float Oil_Press_RPM_Max = 1800;    // FIXME: may vary by engine
   float Design_Oil_Temp = 85;        // FIXME: may vary by engine
-				     // FIXME: WRONG!!! (85 degK???)
+             // FIXME: WRONG!!! (85 degK???)
   float Oil_Viscosity_Index = 0.25;
 
   OilPressure_psi = (Oil_Press_Relief_Valve / Oil_Press_RPM_Max) * RPM;

@@ -45,6 +45,7 @@ INCLUDES
 
 #include "FGEngine.h"
 #include "FGConfigFile.h"
+#include "FGTable.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -96,10 +97,6 @@ private:
   // timestep
   float dt;
 
-  // engine state
-  bool running;
-  bool cranking;
-
   void doEngineStartup(void);
   void doManifoldPressure(void);
   void doAirFlow(void);
@@ -120,6 +117,9 @@ private:
   const float calorific_value_fuel;  // W/Kg (approximate)
   const float Cp_air;      // J/KgK
   const float Cp_fuel;     // J/KgK
+
+  FGTable *Lookup_Combustion_Efficiency;
+  FGTable *Power_Mixture_Correlation;
 
   //
   // Configuration
@@ -143,6 +143,8 @@ private:
   //
   // Outputs (in addition to those in FGEngine).
   //
+  bool Magneto_Left;
+  bool Magneto_Right;
   float rho_air;
   float volumetric_efficiency;
   float m_dot_air;

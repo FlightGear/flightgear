@@ -117,6 +117,7 @@ public:
   string GetNextConfigLine(void);
   string GetValue(string);
   string GetValue(void);
+  string GetCommentString(void);
   bool IsCommentLine(void);
   bool IsOpen(void) {return Opened;}
   FGConfigFile& operator>>(double&);
@@ -129,6 +130,7 @@ public:
 private:
   ifstream cfgfile;
   string   CurrentLine;
+  string   CommentString;
   bool     CommentsOn;
   bool     Opened;
   unsigned int      CurrentIndex;

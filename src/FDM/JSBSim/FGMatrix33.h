@@ -122,14 +122,10 @@ public:
   void operator*=(const double scalar);
   void operator/=(const double scalar);
 
-  void SetOParams(char delim,int width,int prec, int origin=0);
-
 protected:
   double data[4][4];
 
 private:
-  char delim;
-  int width,prec,origin;
   void TransposeSquare(void);
   unsigned int rowCtr, colCtr;
   void Debug(void);

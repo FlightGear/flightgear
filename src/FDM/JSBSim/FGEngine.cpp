@@ -78,9 +78,11 @@ FGEngine::FGEngine(FGFDMExec* exec) {
   Output      = FDMExec->GetOutput();
 
   Mixture = 1.0;		// FIXME: get actual value
+
   Thrust = PctPower = 0.0;
   Starved = Flameout = false;
-  Running = true;
+  Running = false;
+  Cranking = false;
 
   if (debug_lvl & 2) cout << "Instantiated: FGEngine" << endl;
   TrimMode = false;
