@@ -909,8 +909,7 @@ parse_option (const string& arg)
         apath.append( arg.substr(11) );
         apath.concat( "-set.xml" );
         try {
-            SGPropertyNode *sim = fgGetNode("/sim");
-            readProperties( apath.str(), sim );
+            readProperties( apath.str(), globals->get_props() );
         } catch (const sg_exception &e) {
             string message = "Error loading aircraft file: ";
             message += e.getFormattedMessage();
