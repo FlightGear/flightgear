@@ -101,8 +101,6 @@ private:
     double longitude;
     double latitude;
     double altitude_m;
-    double last_longitude;
-    double last_latitude;
 
     /**
      * tile cache

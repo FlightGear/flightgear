@@ -108,7 +108,6 @@ int FGTileMgr::init() {
     current_bucket.make_bad();
 
     longitude = latitude = -1000.0;
-    last_longitude = last_latitude = -1000.0;
 
     return 1;
 }
@@ -417,16 +416,8 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters,
     // save bucket...
     previous_bucket = current_bucket;
 
-    // no reason to update this if we haven't moved...
-    if ( longitude != last_longitude || latitude != last_latitude ) {
-        // update current elevation... 
-        if ( updateCurrentElevAtPos( abs_pos_vector, altitude_m,
-                                     location->get_tile_center() ) )
-        {
-            last_longitude = longitude;
-            last_latitude = latitude;
-        }
-    }
+    updateCurrentElevAtPos( abs_pos_vector, altitude_m,
+                            location->get_tile_center() );
 
     return 1;
 }

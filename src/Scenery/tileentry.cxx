@@ -34,6 +34,7 @@
 
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sgstream.hxx>
@@ -41,6 +42,7 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/tgdb/apt_signs.hxx>
 #include <simgear/scene/tgdb/obj.hxx>
+#include <simgear/scene/tgdb/vasi.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
@@ -488,6 +490,53 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
             taxi_lights_selector->select(0x01);
         } else {
             taxi_lights_selector->select(0x00);
+        }
+    }
+
+    if ( vasi_lights_transform ) {
+        // now we need to traverse the list of vasi lights and update
+        // their coloring
+        for ( int i = 0; i < vasi_lights_transform->getNumKids(); ++i ) {
+            // cout << "vasi root = " << i << endl;
+            ssgBranch *v = (ssgBranch *)vasi_lights_transform->getKid(i);
+            for ( int j = 0; j < v->getNumKids(); ++j ) {
+                // cout << "  vasi branch = " << j << endl;
+                ssgTransform *kid = (ssgTransform *)v->getKid(j);
+                SGVASIUserData *vasi = (SGVASIUserData *)kid->getUserData();
+
+                if ( vasi != NULL ) {
+                    sgdVec3 s;
+                    sgdCopyVec3( s, vasi->get_abs_pos() );
+                    Point3D start(s[0], s[1], s[2]);
+
+                    sgdVec3 d;
+                    sgdCopyVec3( d, globals->get_current_view()->get_absolute_view_pos() );
+
+                    double dist = sgdDistanceVec3( s, d );
+
+                    double cur_alt = globals->get_current_view()->getAltitudeASL_ft() * SG_FEET_TO_METER;
+
+                    double y = cur_alt - vasi->get_alt_m();
+
+                    double angle;
+                    if ( dist != 0 ) {
+                        angle = asin( y / dist );
+                    } else {
+                        angle = 0.0;
+                    }
+
+                    if ( angle * SG_RADIANS_TO_DEGREES < 3.0 ) {
+                        vasi->set_color(0.0);
+                    } else {
+                        vasi->set_color(1.0);
+                    }
+                    // cout << "    dist = " << dist
+                    //      << " angle = " << angle * SG_RADIANS_TO_DEGREES
+                    //      << endl;
+                } else {
+                    SG_LOG( SG_TERRAIN, SG_ALERT, "no vasi data!" );
+                }
+            }
         }
     }
 }
