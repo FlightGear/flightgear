@@ -184,7 +184,8 @@ void fgLIGHT::UpdateAdjFog( void ) {
 	/* 0.0 - 0.6 */
 	param1[0] = (10.0 - fabs(90.0 - sun_angle_deg)) / 20.0;
 	param1[1] = (10.0 - fabs(90.0 - sun_angle_deg)) / 40.0;
-	param2[2] = -(10.0 - fabs(90.0 - sun_angle)) / 30.0;
+	param1[2] = (10.0 - fabs(90.0 - sun_angle_deg)) / 30.0;
+	// param2[2] = -(10.0 - fabs(90.0 - sun_angle)) / 30.0;
     } else {
 	param1[0] = param1[1] = param1[2] = 0.0;
     }
@@ -220,6 +221,9 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.27  1999/04/05 02:14:40  curt
+// Fixed a fog coloring bug.
+//
 // Revision 1.26  1999/02/05 21:29:20  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //
