@@ -1276,6 +1276,7 @@ void fgInitTimeOffset() {
         = fgGetNode("/sim/time/cur-time-override", true);
 
     // Handle potential user specified time offsets
+    int orig_warp = globals->get_warp();
     SGTime *t = globals->get_time_params();
     time_t cur_time = t->get_cur_time();
     time_t currGMT = sgTimeGetGMT( gmtime(&cur_time) );
@@ -1328,8 +1329,10 @@ void fgInitTimeOffset() {
                 "FG_TIME::Unsupported offset type " << offset_type );
         exit( -1 );
     }
-    globals->set_warp( warp );
-    t->update( 0.0, 0.0, cur_time_override->getLongValue(),
+    globals->set_warp( orig_warp + warp );
+    t->update( longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
+               latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
+               cur_time_override->getLongValue(),
                globals->get_warp() );
 
     SG_LOG( SG_GENERAL, SG_INFO, "After fgInitTimeOffset(): warp = " 

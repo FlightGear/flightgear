@@ -35,7 +35,9 @@
 #include "sunsolver.hxx"
 
 
-const time_t day_secs = 86400;
+static const time_t day_secs = 86400;
+static const time_t half_day_secs = day_secs / 2;
+static const time_t step_secs = 60;
 
 static double sun_angle( const SGTime &t, sgVec3 world_up,
                          double lon_rad, double lat_rad ) {
@@ -96,7 +98,10 @@ time_t fgTimeSecondsUntilNoon( time_t cur_time,
     double best_angle = 180.0;
     time_t best_time = cur_time;
 
-    for ( time_t secs = cur_time; secs < cur_time + day_secs; secs += 300 ) {
+    for ( time_t secs = cur_time - half_day_secs;
+          secs < cur_time + half_day_secs;
+          secs += step_secs )
+    {
         t.update( lon_rad, lat_rad, secs, 0 );
         double angle = sun_angle( t, world_up, lon_rad, lat_rad );
         if ( angle < best_angle ) {
@@ -105,10 +110,6 @@ time_t fgTimeSecondsUntilNoon( time_t cur_time,
             best_angle = angle;
             best_time = secs;
         }
-    }
-
-    if ( best_time > day_secs / 2 ) {
-        best_time -= day_secs;
     }
 
     return best_time - cur_time;
@@ -133,7 +134,10 @@ time_t fgTimeSecondsUntilMidnight( time_t cur_time,
     double best_angle = 0.0;
     time_t best_time = cur_time;
 
-    for ( time_t secs = cur_time; secs < cur_time + day_secs; secs += 300 ) {
+    for ( time_t secs = cur_time - half_day_secs;
+          secs < cur_time + half_day_secs;
+          secs += step_secs )
+    {
         t.update( lon_rad, lat_rad, secs, 0 );
         double angle = sun_angle( t, world_up, lon_rad, lat_rad );
         if ( angle > best_angle ) {
@@ -142,10 +146,6 @@ time_t fgTimeSecondsUntilMidnight( time_t cur_time,
             best_angle = angle;
             best_time = secs;
         }
-    }
-
-    if ( best_time > day_secs / 2 ) {
-        best_time -= day_secs;
     }
 
     return best_time - cur_time;
@@ -171,7 +171,10 @@ time_t fgTimeSecondsUntilDusk( time_t cur_time,
     double last_angle = -99999.0;
     time_t best_time = cur_time;
 
-    for ( time_t secs = cur_time; secs < cur_time + day_secs; secs += 300 ) {
+    for ( time_t secs = cur_time - half_day_secs;
+          secs < cur_time + half_day_secs;
+          secs += step_secs )
+    {
         t.update( lon_rad, lat_rad, secs, 0 );
         double angle = sun_angle( t, world_up, lon_rad, lat_rad );
         double diff = fabs( angle - 90.0 );
@@ -185,10 +188,6 @@ time_t fgTimeSecondsUntilDusk( time_t cur_time,
         }
 
         last_angle = angle;
-    }
-
-    if ( best_time > day_secs / 2 ) {
-        best_time -= day_secs;
     }
 
     return best_time - cur_time;
@@ -214,7 +213,10 @@ time_t fgTimeSecondsUntilDawn( time_t cur_time,
     double last_angle = -99999.0;
     time_t best_time = cur_time;
 
-    for ( time_t secs = cur_time; secs < cur_time + day_secs; secs += 300 ) {
+    for ( time_t secs = cur_time - half_day_secs;
+          secs < cur_time + half_day_secs;
+          secs += step_secs )
+    {
         t.update( lon_rad, lat_rad, secs, 0 );
         double angle = sun_angle( t, world_up, lon_rad, lat_rad );
         double diff = fabs( angle - 90.0 );
@@ -228,10 +230,6 @@ time_t fgTimeSecondsUntilDawn( time_t cur_time,
         }
 
         last_angle = angle;
-    }
-
-    if ( best_time > day_secs / 2 ) {
-        best_time -= day_secs;
     }
 
     return best_time - cur_time;
