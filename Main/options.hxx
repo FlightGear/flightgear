@@ -44,14 +44,18 @@ public:
     // ID of initial starting airport
     char airport_id[5];
 
-    // HUD on/off
-    int hud_status;
+    // Features
+    int hud_status;    // HUD on/off
 
-    // Offset true time by this many seconds
-    int time_offset;
+    // Rendering options
+    int fog;           // Fog enabled/disabled
+    int shading;       // shading method, 0 = Flat, 1 = Smooth
+    int skyblend;      // Blend sky to haze (using polygons) or just clear
+    int textures;      // Textures enabled/disabled
+    int wireframe;     // Wireframe mode enabled/disabled
 
-    // Textures enabled/disabled
-    int use_textures;
+    // Time options
+    int time_offset;   // Offset true time by this many seconds
 
     // Constructor
     fgOPTIONS( void );
@@ -75,6 +79,13 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.4  1998/04/30 12:34:19  curt
+// Added command line rendering options:
+//   enable/disable fog/haze
+//   specify smooth/flat shading
+//   disable sky blending and just use a solid color
+//   enable wireframe drawing mode
+//
 // Revision 1.3  1998/04/28 01:20:23  curt
 // Type-ified fgTIME and fgVIEW.
 // Added a command line option to disable textures.

@@ -46,9 +46,19 @@ fgOPTIONS::fgOPTIONS( void ) {
     // set initial values/defaults
 
     strcpy(airport_id, "");
+
+    // Features
     hud_status = 0;
+
+    // Rendering options
+    fog = 1;
+    shading = 1;
+    skyblend = 1;
+    textures = 1;
+    wireframe = 0;
+
+    // Time options
     time_offset = 0;
-    use_textures = 1;
 }
 
 
@@ -171,10 +181,26 @@ int fgOPTIONS::parse( int argc, char **argv ) {
 	} else if ( strncmp(argv[i], "--airport-id=", 13) == 0 ) {
 	    argv[i] += 13;
 	    strncpy(airport_id, argv[i], 4);
+	} else if ( strcmp(argv[i], "--disable-fog") == 0 ) {
+	    fog = 0;	
+	} else if ( strcmp(argv[i], "--enable-fog") == 0 ) {
+	    fog = 1;	
+	} else if ( strcmp(argv[i], "--shading-flat") == 0 ) {
+	    shading = 0;	
+	} else if ( strcmp(argv[i], "--shading-smooth") == 0 ) {
+	    shading = 1;	
+	} else if ( strcmp(argv[i], "--disable-skyblend") == 0 ) {
+	    skyblend = 0;	
+	} else if ( strcmp(argv[i], "--enable-skyblend") == 0 ) {
+	    skyblend = 1;	
 	} else if ( strcmp(argv[i], "--disable-textures") == 0 ) {
-	    use_textures = 0;	
+	    textures = 0;	
 	} else if ( strcmp(argv[i], "--enable-textures") == 0 ) {
-	    use_textures = 1;	
+	    textures = 1;	
+	} else if ( strcmp(argv[i], "--disable-wireframe") == 0 ) {
+	    wireframe = 0;	
+	} else if ( strcmp(argv[i], "--enable-wireframe") == 0 ) {
+	    wireframe = 1;	
 	} else if ( strncmp(argv[i], "--time-offset=", 14) == 0 ) {
 	    time_offset = parse_time_offset(argv[i]);
 	} else {
@@ -207,8 +233,16 @@ void fgOPTIONS::usage ( void ) {
     printf("\n");
 
     printf("Rendering Options:\n");
+    printf("\t--disable-fog:  disable fog/haze\n");
+    printf("\t--enable-fog:  enable fog/haze\n");
+    printf("\t--shading-flat:  enable flat shading\n");
+    printf("\t--shading-smooth:  enable smooth shading\n");
+    printf("\t--disable-skyblend:  disable sky blending\n");
+    printf("\t--enable-skyblend:  enable sky blending\n");
     printf("\t--disable-textures:  disable textures\n");
     printf("\t--enable-textures:  enable textures\n");
+    printf("\t--disable-wireframe:  disable wireframe drawing mode\n");
+    printf("\t--enable-wireframe:  enable wireframe drawing mode\n");
     printf("\n");
 
     printf("Time Options:\n");
@@ -222,6 +256,13 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.5  1998/04/30 12:34:19  curt
+// Added command line rendering options:
+//   enable/disable fog/haze
+//   specify smooth/flat shading
+//   disable sky blending and just use a solid color
+//   enable wireframe drawing mode
+//
 // Revision 1.4  1998/04/28 01:20:22  curt
 // Type-ified fgTIME and fgVIEW.
 // Added a command line option to disable textures.

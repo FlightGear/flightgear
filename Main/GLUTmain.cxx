@@ -54,7 +54,7 @@
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
-#include <Scenery/scenery.h>
+#include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
 #include <Time/fg_time.hxx>
@@ -184,9 +184,11 @@ const int   DefaultViewMode = HUD_VIEW;
 // fgInitVisuals() -- Initialize various GL/view parameters
 static void fgInitVisuals( void ) {
     fgLIGHT *l;
+    fgOPTIONS *o;
     struct fgWEATHER *w;
 
     l = &cur_light_params;
+    o = &current_options;
     w = &current_weather;
 
     // xglDisable( GL_DITHER );
@@ -205,8 +207,10 @@ static void fgInitVisuals( void ) {
     // xglFogf (GL_FOG_DENSITY, w->visibility);
     xglHint (GL_FOG_HINT, GL_NICEST /* GL_FASTEST */ );
 
-    // draw wire frame
-    // xglPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    if ( o->wireframe ) {
+	// draw wire frame
+	xglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    }
 }
 
 
@@ -319,6 +323,7 @@ static void fgRenderFrame( void ) {
     fgTIME *t;
     fgVIEW *v;
     double angle;
+    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat color[4] = { 0.54, 0.44, 0.29, 1.0 };
 
@@ -330,6 +335,12 @@ static void fgRenderFrame( void ) {
     // update view volume parameters
     fgUpdateViewParams();
 
+    if ( o->skyblend ) {
+	glClearColor(black[0], black[1], black[2], black[3]);
+    } else {
+	glClearColor(l->sky_color[0], l->sky_color[1], 
+		     l->sky_color[2], l->sky_color[3]);
+    }
     xglClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
     // Tell GL we are switching to model view parameters
@@ -342,7 +353,9 @@ static void fgRenderFrame( void ) {
     xglDisable( GL_CULL_FACE );
     xglDisable( GL_FOG );
     xglShadeModel( GL_SMOOTH );
-    fgSkyRender();
+    if ( o->skyblend ) {
+	fgSkyRender();
+    }
 
     // setup transformation for drawing astronomical objects
     xglPushMatrix();
@@ -376,15 +389,21 @@ static void fgRenderFrame( void ) {
     xglPopMatrix();
 
     // draw scenery
-    xglShadeModel( /* GL_FLAT */ GL_SMOOTH ); 
+    if ( o->shading ) {
+	xglShadeModel( GL_SMOOTH ); 
+    } else {
+	xglShadeModel( GL_FLAT ); 
+    }
     xglEnable( GL_DEPTH_TEST );
-    xglEnable( GL_FOG );
-    xglFogfv (GL_FOG_COLOR, l->fog_color);
+    if ( o->fog ) {
+	xglEnable( GL_FOG );
+	xglFogfv (GL_FOG_COLOR, l->fog_color);
+    }
     // set lighting parameters
     xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
     xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
 
-    if ( o->use_textures ) {
+    if ( o->textures ) {
 	// texture parameters
 	xglEnable( GL_TEXTURE_2D );
 	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
@@ -699,6 +718,13 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.9  1998/04/30 12:34:17  curt
+// Added command line rendering options:
+//   enable/disable fog/haze
+//   specify smooth/flat shading
+//   disable sky blending and just use a solid color
+//   enable wireframe drawing mode
+//
 // Revision 1.8  1998/04/28 01:20:21  curt
 // Type-ified fgTIME and fgVIEW.
 // Added a command line option to disable textures.

@@ -45,7 +45,7 @@
 #include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_random.h>
-#include <Scenery/scenery.h>
+#include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
 #include <Time/fg_time.hxx>
@@ -96,6 +96,18 @@ int fgInitPosition( void ) {
     // FG_Latitude  = (  45.15 ) * DEG_TO_RAD;
     // FG_Runway_altitude = 950.0;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
+
+    // Initial Position near KHSP (Hot Springs, VA)
+    // FG_Longitude = (-79.8338964 + 0.01) * DEG_TO_RAD;
+    // FG_Latitude  = ( 37.9514564 + 0.008) * DEG_TO_RAD;
+    // FG_Runway_altitude = (3792 + 2800);
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
+
+    // Initial Position at (SEZ) SEDONA airport
+    FG_Longitude = (-111.7884614 + 0.01) * DEG_TO_RAD;
+    FG_Latitude  = (  34.8486289 - 0.015) * DEG_TO_RAD;
+    FG_Runway_altitude = (4827 + 450);
+    FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position: Somewhere near the Grand Canyon
     // FG_Longitude = ( -112.5 ) * DEG_TO_RAD;
@@ -369,6 +381,13 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.8  1998/04/30 12:34:18  curt
+// Added command line rendering options:
+//   enable/disable fog/haze
+//   specify smooth/flat shading
+//   disable sky blending and just use a solid color
+//   enable wireframe drawing mode
+//
 // Revision 1.7  1998/04/28 01:20:22  curt
 // Type-ified fgTIME and fgVIEW.
 // Added a command line option to disable textures.

@@ -34,7 +34,7 @@
 #include <Math/mat3.h>
 #include <Math/polar.h>
 #include <Math/vector.h>
-#include <Scenery/scenery.h>
+#include <Scenery/scenery.hxx>
 #include <Time/fg_time.hxx>
 
 #include "views.hxx"
@@ -200,6 +200,13 @@ void fgViewUpdate(fgFLIGHT *f, fgVIEW *v, fgLIGHT *l) {
 
 
 // $Log$
+// Revision 1.7  1998/04/30 12:34:20  curt
+// Added command line rendering options:
+//   enable/disable fog/haze
+//   specify smooth/flat shading
+//   disable sky blending and just use a solid color
+//   enable wireframe drawing mode
+//
 // Revision 1.6  1998/04/28 01:20:23  curt
 // Type-ified fgTIME and fgVIEW.
 // Added a command line option to disable textures.
