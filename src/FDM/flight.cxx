@@ -196,10 +196,11 @@ FGInterface::common_init ()
     _set_Runway_altitude ( ground_elev_ft );
     if ( fgGetBool("/sim/presets/onground")
          || fgGetDouble("/sim/presets/altitude-ft") < ground_elev_ft ) {
-        fgSetDouble("/sim/presets/altitude-ft", ground_elev_ft);
         fgSetDouble("/position/altitude-ft", ground_elev_ft);
+        set_Altitude( ground_elev_ft );
+    } else {
+        set_Altitude( fgGetDouble("/sim/presets/altitude-ft") );
     }
-    set_Altitude( fgGetDouble("/sim/presets/altitude-ft") );
 
     // Set ground elevation
     SG_LOG( SG_FLIGHT, SG_INFO,
@@ -210,12 +211,12 @@ FGInterface::common_init ()
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing sea-level radius..." );
     SG_LOG( SG_FLIGHT, SG_INFO, " lat = "
             << fgGetDouble("/sim/presets/latitude-deg")
-            << " alt = " << fgGetDouble("/sim/presets/altitude-ft") );
+            << " alt = " << get_Altitude() );
     double sea_level_radius_meters;
     double lat_geoc;
     sgGeodToGeoc( fgGetDouble("/sim/presets/latitude-deg")
                     * SGD_DEGREES_TO_RADIANS,
-                  fgGetDouble("/sim/presets/altitude-ft") * SG_FEET_TO_METER,
+                  get_Altitude() * SG_FEET_TO_METER,
                   &sea_level_radius_meters, &lat_geoc );
     _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET );
 
