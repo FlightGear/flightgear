@@ -23,6 +23,7 @@
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/sg_inlines.h>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -592,6 +593,123 @@ void FGPredictor::update( double dt ) {
 }
 
 
+FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node)
+{
+    samples = 1;
+
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "debug" ) {
+            debug = child->getBoolValue();
+        } else if ( cname == "type" ) {
+            filterType = cval;
+        } else if ( cname == "input" ) {
+            input_prop = fgGetNode( child->getStringValue(), true );
+        } else if ( cname == "filter-time" ) {
+            Tf = child->getDoubleValue();
+        } else if ( cname == "samples" ) {
+            samples = child->getIntValue();
+        } else if ( cname == "max-rate-of-change" ) {
+            rateOfChange = child->getDoubleValue();
+        } else if ( cname == "output" ) {
+            SGPropertyNode *tmp = fgGetNode( child->getStringValue(), true );
+            output_list.push_back( tmp );
+        }
+    }
+
+    output.resize(2, 0.0);
+    input.resize(samples, 0.0);
+}
+
+void FGDigitalFilter::update(double dt)
+{
+    if ( input_prop != NULL ) {
+        input.push_front(input_prop->getDoubleValue());
+        input.resize(samples, 0.0);
+        // no sense if there isn't an input :-)
+        enabled = true;
+    } else {
+        enabled = false;
+    }
+
+    if ( enabled && dt > 0.0 ) {
+        /*
+         * Exponential filter
+         *
+         * Output[n] = alpha*Input[n] + (1-alpha)*Output[n-1]
+         *
+         */
+
+        if (filterType == "exponential")
+        {
+            double alpha = 1 / ((Tf/dt) + 1);
+            output.push_front(alpha * input[0] + 
+                              (1 - alpha) * output[0]);
+            unsigned int i;
+            for ( i = 0; i < output_list.size(); ++i ) {
+                output_list[i]->setDoubleValue( output[0] );
+            }
+            output.resize(1);
+        } 
+        else if (filterType == "double-exponential")
+        {
+            double alpha = 1 / ((Tf/dt) + 1);
+            output.push_front(alpha * alpha * input[0] + 
+                              2 * (1 - alpha) * output[0] -
+                              (1 - alpha) * (1 - alpha) * output[1]);
+            unsigned int i;
+            for ( i = 0; i < output_list.size(); ++i ) {
+                output_list[i]->setDoubleValue( output[0] );
+            }
+            output.resize(2);
+        }
+        else if (filterType == "moving-average")
+        {
+            output.push_front(output[0] + 
+                              (input[0] - input.back()) / samples);
+            unsigned int i;
+            for ( i = 0; i < output_list.size(); ++i ) {
+                output_list[i]->setDoubleValue( output[0] );
+            }
+            output.resize(1);
+        }
+        else if (filterType == "noise-spike")
+        {
+            double maxChange = rateOfChange * dt;
+
+            if ((output[0] - input[0]) > maxChange)
+            {
+                output.push_front(output[0] - maxChange);
+            }
+            else if ((output[0] - input[0]) < -maxChange)
+            {
+                output.push_front(output[0] + maxChange);
+            }
+            else if (fabs(input[0] - output[0]) <= maxChange)
+            {
+                output.push_front(input[0]);
+            }
+
+            unsigned int i;
+            for ( i = 0; i < output_list.size(); ++i ) {
+                output_list[i]->setDoubleValue( output[0] );
+            }
+            output.resize(1);
+        }
+        if (debug)
+        {
+            cout << "input:" << input[0] 
+                 << "\toutput:" << output[0] << endl;
+        }
+    }
+}
+
+
 FGXMLAutopilot::FGXMLAutopilot() {
 }
 
@@ -665,6 +783,9 @@ bool FGXMLAutopilot::build() {
             components.push_back( c );
         } else if ( name == "predict-simple" ) {
             FGXMLAutoComponent *c = new FGPredictor( node );
+            components.push_back( c );
+        } else if ( name == "filter" ) {
+            FGXMLAutoComponent *c = new FGDigitalFilter( node );
             components.push_back( c );
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
@@ -768,6 +889,19 @@ static void update_helper( double dt ) {
     if ( diff > 180.0 ) { diff -= 360.0; }
     true_track_nav1->setDoubleValue( diff );
 
+    // Calculate nav1 selected course error normalized to +/- 180.0
+    // (based on DG indicated heading)
+    static SGPropertyNode *nav1_course_error
+        = fgGetNode( "/autopilot/internal/nav1-course-error", true );
+    static SGPropertyNode *nav1_selected_course
+        = fgGetNode( "/radios/nav[0]/radials/selected-deg", true );
+
+    diff = nav1_selected_course->getDoubleValue() - ind_hdg->getDoubleValue();
+//    if ( diff < -180.0 ) { diff += 360.0; }
+//    if ( diff > 180.0 ) { diff -= 360.0; }
+    SG_NORMALIZE_RANGE( diff, -180.0, 180.0 );
+    nav1_course_error->setDoubleValue( diff );
+
     // Calculate vertical speed in fpm
     static SGPropertyNode *vs_fps
         = fgGetNode( "/velocities/vertical-speed-fps", true );
@@ -783,31 +917,18 @@ static void update_helper( double dt ) {
 	= fgGetNode( "/systems/static[0]/pressure-inhg", true );
     static SGPropertyNode *pressure_rate
 	= fgGetNode( "/autopilot/internal/pressure-rate", true );
-    static SGPropertyNode *filter_time 
-	= fgGetNode( "/autopilot/internal/ft", true );
 
     static double last_static_pressure = 0.0;
-    static double last_pressure_rate = 0.0;
 
-    double Tf = filter_time->getDoubleValue();
-
-    if ( dt > 0.0 && Tf > 0.0) {
+    if ( dt > 0.0 ) {
 	double current_static_pressure = static_pressure->getDoubleValue();
 
 	double current_pressure_rate = 
 	    ( current_static_pressure - last_static_pressure ) / dt;
 
-	double W = dt/Tf;
-
-        // Low Pass Filter
-	current_pressure_rate =
-	    (1.0/(W + 1.0))*last_pressure_rate +
-	    ((W)/(W + 1.0))*current_pressure_rate;
-
 	pressure_rate->setDoubleValue(current_pressure_rate);
 
 	last_static_pressure = current_static_pressure;
-	last_pressure_rate = current_pressure_rate;
     }
 
 }

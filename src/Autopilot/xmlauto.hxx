@@ -36,9 +36,11 @@
 
 #include STL_STRING
 #include <vector>
+#include <deque>
 
 SG_USING_STD(string);
 SG_USING_STD(vector);
+SG_USING_STD(deque);
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -207,6 +209,37 @@ public:
     void update( double dt );
 };
 
+
+/**
+ * FGDigitalFilter - a selection of digital filters
+ *
+ * Exponential filter
+ * Double exponential filter
+ * Moving average filter
+ * Noise spike filter
+ *
+ * All these filters are low-pass filters.
+ *
+ */
+
+class FGDigitalFilter : public FGXMLAutoComponent
+{
+private:
+    double Tf;            // Filter time [s]
+    unsigned int samples; // Number of input samples to average
+    double rateOfChange;  // The maximum allowable rate of change [1/s]
+    deque <double> output;
+    deque <double> input;
+    string filterType;
+
+    bool debug;
+
+public:
+    FGDigitalFilter(SGPropertyNode *node);
+    ~FGDigitalFilter() {}
+
+    void update(double dt);
+};
 
 /**
  * Model an autopilot system.
