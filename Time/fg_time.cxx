@@ -177,7 +177,7 @@ double utc_gst (double mjd) {
     x /= 3600.0;
     gst = (1.0/SIDRATE)*hr + x;
 
-   fgPrintf( FG_EVENT, FG_DEBUG, "  gst => %.4f\n", gst);
+    fgPrintf( FG_EVENT, FG_DEBUG, "  gst => %.4f\n", gst);
 
     return(gst);
 }
@@ -217,25 +217,26 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     long int offset;
     double diff, part, days, hours, lst;
 
+#ifdef __CYGWIN32__
+    int daylight;       // not used but need to keep the compiler happy
+    long int timezone;  // not used but need to keep the compiler happy
+    int mktime_is_gmt = 1;
+#else
+    int mktime_is_gmt = 0;
+#endif
+
     // ftime() needs a little extra help finding the current timezone
 #if defined( HAVE_GETTIMEOFDAY )
-#elif defined( HAVE_GETLOCALTIME )
 #elif defined( HAVE_FTIME )
     struct timeb current;
 #else
 # error Port me
 #endif
 
-#ifdef __CYGWIN32__
-    int daylight;
-    long int timezone;
-#endif // __CYGWIN32__
-
-    /*
-    printf("  COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
-           gmt->tm_mon, gmt->tm_mday, gmt->tm_year,
-           gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
-    */
+    fgPrintf(FG_EVENT, FG_DEBUG, 
+	     "  COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
+	     gmt->tm_mon, gmt->tm_mday, gmt->tm_year,
+	     gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
 
     mt.tm_mon = 2;
     mt.tm_mday = 21;
@@ -245,54 +246,52 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     mt.tm_sec = 0;
     mt.tm_isdst = -1; // let the system determine the proper time zone
 
-    start = mktime(&mt);
+    if ( mktime_is_gmt ) {
+	start_gmt = mktime(&mt);
+    } else {
+	start = mktime(&mt);
+	daylight = mt.tm_isdst;
 
-    /* printf("start1 = %ld\n", start);
-       fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s", ctime(&start));
-       fgPrintf( FG_EVENT, FG_DEBUG, "start3 = %ld\n", start); */
+	fgPrintf( FG_EVENT, FG_DEBUG, "start1 = %ld\n", start);
+	fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s (tz = %d)", 
+		  ctime(&start), mt.tm_isdst);
 
-#ifndef __CYGWIN32__
-    daylight = mt.tm_isdst;
-#else
-    // Yargs ... I'm just hardcoding this arbitrarily so it doesn't
-    // jump around for win32 people
-    daylight = 0;
-    fgPrintf( FG_EVENT, FG_WARN, 
-	      "no daylight savings info ... being hardcoded to %d\n", daylight);
-#endif
-
-    // ftime() needs a little extra help finding the current timezone
+	// ftime() needs a little extra help finding the current timezone
 #if defined( HAVE_GETTIMEOFDAY )
-#elif defined( HAVE_GETLOCALTIME )
 #elif defined( HAVE_FTIME )
-    ftime(&current);
-    timezone = current.timezone * 60;
+	ftime(&current);
+	timezone = current.timezone * 60;
 #else
 # error Port me
 #endif
 
-    if ( daylight > 0 ) {
-	daylight = 1;
-    } else if ( daylight < 0 ) {
-	fgPrintf( FG_EVENT, FG_WARN, 
-	   "OOOPS, big time problem in fg_time.c, no daylight savings info.\n");
+	if ( daylight > 0 ) {
+	    daylight = 1;
+	} else if ( daylight < 0 ) {
+	    fgPrintf( FG_EVENT, FG_WARN, 
+		      "OOOPS, big time problem in fg_time.c, no daylight savings info.\n");
+	}
+
+	offset = -(timezone / 3600 - daylight);
+
+	fgPrintf( FG_EVENT, FG_DEBUG,
+		  "  Raw time zone offset = %ld\n", timezone);
+	fgPrintf( FG_EVENT, FG_DEBUG,
+		  "  Daylight Savings = %d\n", daylight);
+	fgPrintf( FG_EVENT, FG_DEBUG,
+		  "  Local hours from GMT = %ld\n", offset);
+
+	start_gmt = start - timezone + (daylight * 3600);
+
+	fgPrintf( FG_EVENT, FG_DEBUG, "  March 21 noon (CST) = %ld\n", start);
     }
 
-    offset = -(timezone / 3600 - daylight);
-
-    // printf("  Raw time zone offset = %ld\n", timezone);
-    // printf("  Daylight Savings = %d\n", daylight);
-
-    // printf("  Local hours from GMT = %ld\n", offset);
-
-    start_gmt = start - timezone + (daylight * 3600);
-
-    // printf("  March 21 noon (CST) = %ld\n", start);
-    // printf("  March 21 noon (GMT) = %ld\n", start_gmt);
+    fgPrintf( FG_EVENT, FG_DEBUG, "  March 21 noon (GMT) = %ld\n", start_gmt);
 
     diff = (now - start_gmt) / (3600.0 * 24.0);
-
-    // printf("  Time since 3/21/%2d GMT = %.2f\n", gmt->tm_year, diff);
+    
+    fgPrintf( FG_EVENT, FG_DEBUG, 
+	      "  Time since 3/21/%2d GMT = %.2f\n", gmt->tm_year, diff);
 
     part = fmod(diff, 1.0);
     days = diff - part;
@@ -304,8 +303,9 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 	lst += 24.0;
     }
 
-    /* printf("  days = %.1f  hours = %.2f  lon = %.2f  lst = %.2f\n", 
-	   days, hours, lng, lst); */
+    fgPrintf( FG_EVENT, FG_DEBUG,
+	      "  days = %.1f  hours = %.2f  lon = %.2f  lst = %.2f\n", 
+	      days, hours, lng, lst);
 
     return(lst);
 }
@@ -375,6 +375,11 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.5  1998/04/28 21:45:34  curt
+// Fixed a horible bug that cause the time to be *WAY* off when compiling
+// with the CygWin32 compiler.  This may not yet completely address other
+// Win32 compilers, but we'll have to take them on a case by case basis.
+//
 // Revision 1.4  1998/04/28 01:22:16  curt
 // Type-ified fgTIME and fgVIEW.
 //
