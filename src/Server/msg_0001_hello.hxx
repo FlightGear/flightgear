@@ -25,19 +25,25 @@
 
 #include "message.hxx"
 
-class FGMPSMsg0001Hello
+#define FGMPSMsg0001HelloID 0x0001
+
+class FGMPSMsg0001Hello: public FGMPSMessage
 {
 private:
 	FGMPSMsgElementEntry	 	elements[5];
-	unsigned int			msgid;
 public:
+
+	static void registerme() 
+	{ 
+		FGMPSMessage::registermsg(FGMPSMsg0001HelloID, &FGMPSMsg0001Hello::instance);
+	}
+
+	static FGMPSMessage* instance() { return (FGMPSMessage*) new FGMPSMsg0001Hello; }
+
+	virtual FGMPSMsgElementEntry*	getelements() { return elements; }
+
 	FGMPSMsg0001Hello();
 	~FGMPSMsg0001Hello() {}
-
-	virtual string			encodemsg() {}
-	virtual FGMPSMessage*		decodemsg(string msg) {}
-	virtual FGMPSMsgElementEntry*	getelements() { return elements; }
-	virtual unsigned int		getmessageid() { return msgid; }
 
 	unsigned int	vermajor;
 	unsigned int	verminor;

@@ -24,11 +24,11 @@
 
 FGMPSMsg0001Hello::FGMPSMsg0001Hello() 
 {
-	msgid = 0x0001;
-	elements[0].type = fgmps_uint;		elements[0].data = &this->vermajor;	
-	elements[1].type = fgmps_uint;		elements[0].data = &this->verminor;	
-	elements[2].type = fgmps_uint;		elements[0].data = &this->verpatch;	
-	elements[3].type = fgmps_string;	elements[0].data = &this->servname;	
+	msgid = FGMPSMsg0001HelloID;
+	elements[0].type = fgmps_uint;		elements[0].data = &vermajor;	
+	elements[1].type = fgmps_uint;		elements[1].data = &verminor;	
+	elements[2].type = fgmps_uint;		elements[2].data = &verpatch;	
+	elements[3].type = fgmps_string;	elements[3].data = &servname;	
 	elements[4].type = fgmps_null;		elements[4].data = NULL;	
 }
 

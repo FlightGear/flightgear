@@ -27,9 +27,11 @@
 
 #include STL_STRING
 #include <stdexcept>
+#include <map>
 
 SG_USING_STD(string);
 SG_USING_STD(invalid_argument);
+SG_USING_STD(map);
 
 #include "messagebuf.hxx"
 
@@ -62,22 +64,35 @@ typedef struct
 
 #define FGMPSMsgElementArrayEnd {fgmps_null, 0}
 
+class FGMPSMessage;
+
+typedef FGMPSMessage* FGMPSMessagePtr;
+typedef FGMPSMessagePtr (*FGMPSMsgInstanceFunc)(void);
+
+typedef map<unsigned int, FGMPSMsgInstanceFunc> FGMPSInstanceFuncMap;
+
 class FGMPSMessage
 {
 private:
+	static FGMPSInstanceFuncMap	funcmap;
 	FGMPSMsgElementEntry 		elements[1];
-	static unsigned int		msgid;
 protected:
-	FGMPSMessageBuf			msg;
+	FGMPSMessageBuf		buf;
+	unsigned int		msgid;
 public:
+	static int registermsg(int msgid, FGMPSMsgInstanceFunc func)
+	{
+		funcmap[msgid] = func;
+	}
+
 	FGMPSMessage();
 	~FGMPSMessage() {}
 
-	virtual string			encodemsg() {}
-	virtual FGMPSMessage*		decodemsg(string msg) {}
-	virtual FGMPSMsgElementEntry*	getelements() { return elements; }
-	virtual unsigned int		getmessageid() { return msgid; }
+	string			encodemsg();
+	static FGMPSMessage*	decodemsg(string msg);
+	unsigned int		getmessageid() { return msgid; }
 
+	virtual FGMPSMsgElementEntry*	getelements() { return elements; }
 };
 
 #endif
