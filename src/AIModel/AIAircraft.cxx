@@ -315,8 +315,7 @@ void FGAIAircraft::Run(double dt) {
      rotation = hdg - user_heading;
      if (rotation < 0.0) rotation += 360.0; 
 
-   } else
-      props->setBoolValue("radar/in-range", false);
+   }
 
    //************************************//
    // Tanker code                        //
