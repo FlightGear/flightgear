@@ -20,8 +20,12 @@ action_callback (puObject * object)
     GUIInfo * info = (GUIInfo *)object->getUserData();
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
     gui->setCurrentWidget(info->widget);
-    for (int i = 0; i < info->bindings.size(); i++)
+    int nBindings = info->bindings.size();
+    for (int i = 0; i < nBindings; i++) {
         info->bindings[i]->fire();
+        if (gui->getCurrentWidget() == 0)
+            break;
+    }
     gui->setCurrentWidget(0);
 }
 
@@ -226,6 +230,20 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
             b = new puButton(x, y, legend);
         setupObject(b, props);
         return b;
+    } else if (type == "combo") {
+        vector<SGPropertyNode_ptr> value_nodes = props->getChildren("value");
+        char ** entries = new char*[value_nodes.size()+1];
+        for (int i = 0, j = value_nodes.size() - 1;
+             i < value_nodes.size();
+             i++, j--)
+            entries[i] = (char *)value_nodes[i]->getStringValue();
+        entries[value_nodes.size()] = 0;
+        puComboBox * combo =
+            new puComboBox(x, y, x + width, y + height, entries,
+                           props->getBoolValue("editable", false));
+//         delete entries;
+        setupObject(combo, props);
+        return combo;
     } else {
         return 0;
     }
