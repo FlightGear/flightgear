@@ -111,7 +111,7 @@ FGBinding::read (const SGPropertyNode * node)
 
   _command_name = node->getStringValue("command", "");
   if (_command_name.empty()) {
-    SG_LOG(SG_INPUT, SG_ALERT, "No command supplied for binding.");
+    SG_LOG(SG_INPUT, SG_WARN, "No command supplied for binding.");
     _command = 0;
     return;
   }
@@ -134,11 +134,23 @@ FGBinding::fire () const
 {
   if (test()) {
     if (_command == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No command attached to binding");
+      SG_LOG(SG_INPUT, SG_WARN, "No command attached to binding");
     } else if (!(*_command)(_arg, &_command_state)) {
       SG_LOG(SG_INPUT, SG_ALERT, "Failed to execute command "
 	     << _command_name);
     }
+  }
+}
+
+void
+FGBinding::fire (int x, int y) const
+{
+  if (test()) {
+    if (x >= 0)
+      _arg->setIntValue("x-pos", x);
+    if (y >= 0)
+      _arg->setIntValue("y-pos", y);
+    fire();
   }
 }
 
@@ -168,6 +180,7 @@ FGInput current_input;
 
 
 FGInput::FGInput ()
+  : _mouse_mode(0)
 {
   // no op
 }
@@ -182,6 +195,7 @@ FGInput::init ()
 {
   _init_keyboard();
   _init_joystick();
+  _init_mouse();
 }
 
 void
@@ -201,17 +215,18 @@ FGInput::update (int dt)
 {
   _update_keyboard();
   _update_joystick();
+  _update_mouse();
 }
 
 void
 FGInput::doKey (int k, int modifiers, int x, int y)
 {
-    // SG_LOG( SG_INPUT, SG_INFO, "User pressed key " << k
-    // 	       << " with modifiers " << modifiers );
+  SG_LOG( SG_INPUT, SG_DEBUG, "User pressed key " << k
+	  << " with modifiers " << modifiers );
 
 				// Sanity check.
   if (k < 0 || k >= MAX_KEYS) {
-    SG_LOG(SG_INPUT, SG_ALERT, "Key value " << k << " out of range");
+    SG_LOG(SG_INPUT, SG_WARN, "Key value " << k << " out of range");
     return;
   }
 
@@ -219,8 +234,8 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
 				// Key pressed.
   if (modifiers&FG_MOD_UP == 0) {
-    // SG_LOG( SG_INPUT, SG_INFO, "User pressed key " << k
-    //         << " with modifiers " << modifiers );
+    SG_LOG( SG_INPUT, SG_DEBUG, "User pressed key " << k
+	    << " with modifiers " << modifiers );
     if (!b.last_state || b.is_repeatable) {
       const binding_list_t &bindings =
 	_find_key_bindings(k, modifiers);
@@ -235,8 +250,8 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
 				// Key released.
   else {
-    // SG_LOG(SG_INPUT, SG_INFO, "User released key " << k
-    //        << " with modifiers " << modifiers);
+    SG_LOG(SG_INPUT, SG_DEBUG, "User released key " << k
+	   << " with modifiers " << modifiers);
     if (b.last_state) {
       const binding_list_t &bindings =
 	_find_key_bindings(k, modifiers);
@@ -251,7 +266,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
 
 				// Use the old, default actions.
-  // SG_LOG( SG_INPUT, SG_INFO, "(No user binding.)" );
+  SG_LOG( SG_INPUT, SG_DEBUG, "(No user binding.)" );
   if (modifiers&FG_MOD_UP)
     return;
 
@@ -330,22 +345,36 @@ FGInput::doKey (int k, int modifiers, int x, int y)
     }
 }
 
+void
+FGInput::doMouseClick (int b, int updown, int x, int y)
+{
+  std::cout << "Mouse click " << b << ',' << updown << std::endl;
+  int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
+
+  _update_button(_mouse_bindings[0].buttons[b], modifiers, updown, x, y);
+}
+
+void
+FGInput::doMouseMotion (int x, int y)
+{
+  // TODO
+}
 
 void
 FGInput::_init_keyboard ()
 {
 				// TODO: zero the old bindings first.
-  SG_LOG(SG_INPUT, SG_INFO, "Initializing key bindings");
+  SG_LOG(SG_INPUT, SG_DEBUG, "Initializing key bindings");
   SGPropertyNode * key_nodes = fgGetNode("/input/keyboard");
   if (key_nodes == 0) {
-    SG_LOG(SG_INPUT, SG_ALERT, "No key bindings (/input/keyboard)!!");
-    return;
+    SG_LOG(SG_INPUT, SG_WARN, "No key bindings (/input/keyboard)!!");
+    key_nodes = fgGetNode("/input/keyboard", true);
   }
   
   vector<SGPropertyNode *> keys = key_nodes->getChildren("key");
   for (unsigned int i = 0; i < keys.size(); i++) {
     int index = keys[i]->getIndex();
-    SG_LOG(SG_INPUT, SG_INFO, "Binding key " << index);
+    SG_LOG(SG_INPUT, SG_DEBUG, "Binding key " << index);
     _key_bindings[index].is_repeatable = keys[i]->getBoolValue("repeatable");
     _read_bindings(keys[i], _key_bindings[index].bindings, FG_MOD_NONE);
   }
@@ -356,45 +385,45 @@ void
 FGInput::_init_joystick ()
 {
 				// TODO: zero the old bindings first.
-  SG_LOG(SG_INPUT, SG_INFO, "Initializing joystick bindings");
+  SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick bindings");
   SGPropertyNode * js_nodes = fgGetNode("/input/joysticks");
   if (js_nodes == 0) {
-    SG_LOG(SG_INPUT, SG_ALERT, "No joystick bindings (/input/joysticks)!!");
-    return;
+    SG_LOG(SG_INPUT, SG_WARN, "No joystick bindings (/input/joysticks)!!");
+    js_nodes = fgGetNode("/input/joysticks", true);
   }
 
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
-    const SGPropertyNode * js_node = js_nodes->getChild("js", i);
+    SGPropertyNode * js_node = js_nodes->getChild("js", i);
     if (js_node == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No bindings for joystick " << i);
-      continue;
+      SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for joystick " << i);
+      js_node = js_nodes->getChild("js", i, true);
     }
     jsJoystick * js = new jsJoystick(i);
     _joystick_bindings[i].js = js;
     if (js->notWorking()) {
-      SG_LOG(SG_INPUT, SG_INFO, "Joystick " << i << " not found");
+      SG_LOG(SG_INPUT, SG_WARN, "Joystick " << i << " not found");
       continue;
     }
 #ifdef WIN32
     JOYCAPS jsCaps ;
     joyGetDevCaps( i, &jsCaps, sizeof(jsCaps) );
     int nbuttons = jsCaps.wNumButtons;
-    if (nbuttons > MAX_BUTTONS) nbuttons = MAX_BUTTONS;
+    if (nbuttons > MAX_JOYSTICK_BUTTONS) nbuttons = MAX_JOYSTICK_BUTTONS;
 #else
-    int nbuttons = MAX_BUTTONS;
+    int nbuttons = MAX_JOYSTICK_BUTTONS;
 #endif
 	
     int naxes = js->getNumAxes();
-    if (naxes > MAX_AXES) naxes = MAX_AXES;
+    if (naxes > MAX_JOYSTICK_AXES) naxes = MAX_JOYSTICK_AXES;
     _joystick_bindings[i].naxes = naxes;
     _joystick_bindings[i].nbuttons = nbuttons;
 
-    SG_LOG(SG_INPUT, SG_INFO, "Initializing joystick " << i);
+    SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick " << i);
 
 				// Set up range arrays
-    float minRange[MAX_AXES];
-    float maxRange[MAX_AXES];
-    float center[MAX_AXES];
+    float minRange[MAX_JOYSTICK_AXES];
+    float maxRange[MAX_JOYSTICK_AXES];
+    float center[MAX_JOYSTICK_AXES];
 
 				// Initialize with default values
     js->getMinRange(minRange);
@@ -413,8 +442,8 @@ FGInput::_init_joystick ()
     for (j = 0; j < naxes; j++) {
       const SGPropertyNode * axis_node = js_node->getChild("axis", j);
       if (axis_node == 0) {
-	SG_LOG(SG_INPUT, SG_INFO, "No bindings for axis " << j);
-	continue;
+	SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for axis " << j);
+	axis_node = js_node->getChild("axis", j, true);
       }
       
       axis &a = _joystick_bindings[i].axes[j];
@@ -442,7 +471,7 @@ FGInput::_init_joystick ()
     char buf[8];
     for (j = 0; j < nbuttons; j++) {
       sprintf(buf, "%d", j);
-      SG_LOG(SG_INPUT, SG_INFO, "Initializing button " << j);
+      SG_LOG(SG_INPUT, SG_DEBUG, "Initializing button " << j);
       _init_button(js_node->getChild("button", j),
 		   _joystick_bindings[i].buttons[j],
 		   buf);
@@ -456,14 +485,44 @@ FGInput::_init_joystick ()
 }
 
 
-inline void
+void
+FGInput::_init_mouse ()
+{
+  SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse bindings");
+
+  SGPropertyNode * mouse_nodes = fgGetNode("/input/mice");
+  if (mouse_nodes == 0) {
+    SG_LOG(SG_INPUT, SG_WARN, "No mouse bindings (/input/mice)!!");
+    mouse_nodes = fgGetNode("/input/mice", true);
+  }
+
+  for (int i = 0; i < MAX_MICE; i++) {
+    const SGPropertyNode * mouse_node = mouse_nodes->getChild("mouse", i);
+    _mouse_bindings[i].buttons = new button[MAX_MOUSE_BUTTONS];
+    if (mouse_node == 0) {
+      SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for mouse " << i);
+      mouse_node = mouse_nodes->getChild("mouse", i, true);
+    }
+    char buf[8];
+    for (int j = 0; j < MAX_MOUSE_BUTTONS; j++) {
+      sprintf(buf, "%d", j);
+      SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse button " << j);
+      _init_button(mouse_node->getChild("button", j),
+		   _mouse_bindings[i].buttons[j],
+		   buf);
+    }
+  }
+}
+
+
+void
 FGInput::_init_button (const SGPropertyNode * node,
 		       button &b,
 		       const string name)
 {	
-  if (node == 0)
-    SG_LOG(SG_INPUT, SG_INFO, "No bindings for button " << name);
-  else {
+  if (node == 0) {
+    SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for button " << name);
+  } else {
     b.is_repeatable = node->getBoolValue("repeatable", b.is_repeatable);
     
     		// Get the bindings for the button
@@ -485,7 +544,7 @@ FGInput::_update_joystick ()
   int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
   int buttons;
   // float js_val, diff;
-  float axis_values[MAX_AXES];
+  float axis_values[MAX_JOYSTICK_AXES];
 
   int i;
   int j;
@@ -507,10 +566,10 @@ FGInput::_update_joystick ()
 				// is unchanged; only a change in
 				// position fires the bindings.
       if (fabs(axis_values[j] - a.last_value) > a.tolerance) {
-// 	SG_LOG(SG_INPUT, SG_INFO, "Axis " << j << " has moved");
+// 	SG_LOG(SG_INPUT, SG_DEBUG, "Axis " << j << " has moved");
 	SGPropertyNode node;
 	a.last_value = axis_values[j];
-// 	SG_LOG(SG_INPUT, SG_INFO, "There are "
+// 	SG_LOG(SG_INPUT, SG_DEBUG, "There are "
 // 	       << a.bindings[modifiers].size() << " bindings");
 	for (unsigned int k = 0; k < a.bindings[modifiers].size(); k++)
 	  a.bindings[modifiers][k]->fire(axis_values[j]);
@@ -520,40 +579,49 @@ FGInput::_update_joystick ()
       if (a.low.bindings[modifiers].size())
 	_update_button(_joystick_bindings[i].axes[j].low,
 		       modifiers,
-		       axis_values[j] < a.low_threshold);
+		       axis_values[j] < a.low_threshold,
+		       -1, -1);
       
       if (a.high.bindings[modifiers].size())
 	_update_button(_joystick_bindings[i].axes[j].high,
 		       modifiers,
-		       axis_values[j] > a.high_threshold);
+		       axis_values[j] > a.high_threshold,
+		       -1, -1);
     }
 
 				// Fire bindings for the buttons.
     for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
       _update_button(_joystick_bindings[i].buttons[j],
 		     modifiers,
-		     (buttons & (1 << j)) > 0);
+		     (buttons & (1 << j)) > 0,
+		     -1, -1);
     }
   }
 }
 
+void
+FGInput::_update_mouse ()
+{
+  // no-op
+}
 
 void
-FGInput::_update_button (button &b, int modifiers, bool pressed)
+FGInput::_update_button (button &b, int modifiers, bool pressed,
+			 int x, int y)
 {
   if (pressed) {
 				// The press event may be repeated.
     if (!b.last_state || b.is_repeatable) {
-      // SG_LOG( SG_INPUT, SG_INFO, "Button has been pressed" );
+      SG_LOG( SG_INPUT, SG_DEBUG, "Button has been pressed" );
       for (unsigned int k = 0; k < b.bindings[modifiers].size(); k++)
-	b.bindings[modifiers][k]->fire();
+	b.bindings[modifiers][k]->fire(x, y);
     }
   } else {
 				// The release event is never repeated.
     if (b.last_state) {
-      // SG_LOG( SG_INPUT, SG_INFO, "Button has been released" );
+      SG_LOG( SG_INPUT, SG_DEBUG, "Button has been released" );
       for (unsigned int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
-	b.bindings[modifiers|FG_MOD_UP][k]->fire();
+	b.bindings[modifiers|FG_MOD_UP][k]->fire(x, y);
     }
   }
 	  
@@ -566,10 +634,10 @@ FGInput::_read_bindings (const SGPropertyNode * node,
 			 binding_list_t * binding_list,
 			 int modifiers)
 {
-  SG_LOG(SG_INPUT, SG_INFO, "Reading all bindings");
+  SG_LOG(SG_INPUT, SG_DEBUG, "Reading all bindings");
   vector<const SGPropertyNode *> bindings = node->getChildren("binding");
   for (unsigned int i = 0; i < bindings.size(); i++) {
-    SG_LOG(SG_INPUT, SG_INFO, "Reading binding "
+    SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding "
 	   << bindings[i]->getStringValue("command"));
     binding_list[modifiers].push_back(new FGBinding(bindings[i]));
   }
@@ -678,8 +746,23 @@ FGInput::joystick::joystick ()
 FGInput::joystick::~joystick ()
 {
 //   delete js;
-//   delete[] axes;
-//   delete[] buttons;
+  delete[] axes;
+  delete[] buttons;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGInput::mouse
+////////////////////////////////////////////////////////////////////////
+
+FGInput::mouse::mouse ()
+{
+}
+
+FGInput::mouse::~mouse ()
+{
+  delete [] buttons;
 }
 
 
@@ -708,68 +791,51 @@ static inline int get_mods ()
 }
 
 
-/**
- * Key-down event handler for Glut.
- *
- * <p>Pass the value on to the FGInput module unless PUI wants it.</p>
- *
- * @param k The integer value for the key pressed.
- * @param x (unused)
- * @param y (unused)
- */
-void GLUTkey(unsigned char k, int x, int y)
+
+////////////////////////////////////////////////////////////////////////
+// GLUT C callbacks.
+////////////////////////////////////////////////////////////////////////
+
+void
+GLUTkey(unsigned char k, int x, int y)
 {
 				// Give PUI a chance to grab it first.
   if (!puKeyboard(k, PU_DOWN))
     current_input.doKey(k, get_mods(), x, y);
 }
 
-
-/**
- * Key-up event handler for GLUT.
- *
- * <p>PUI doesn't use this, so always pass it to the input manager.</p>
- *
- * @param k The integer value for the key pressed.
- * @param x (unused)
- * @param y (unused)
- */
-void GLUTkeyup(unsigned char k, int x, int y)
+void
+GLUTkeyup(unsigned char k, int x, int y)
 {
   current_input.doKey(k, get_mods()|FGInput::FG_MOD_UP, x, y);
 }
 
-
-/**
- * Special key-down handler for Glut.
- *
- * <p>Pass the value on to the FGInput module unless PUI wants it.
- * The key value will have 256 added to it.</p>
- *
- * @param k The integer value for the key pressed (will have 256 added
- * to it).
- * @param x (unused)
- * @param y (unused)
- */
-void GLUTspecialkey(int k, int x, int y)
+void
+GLUTspecialkey(int k, int x, int y)
 {
 				// Give PUI a chance to grab it first.
   if (!puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN))
     current_input.doKey(k + 256, get_mods(), x, y);
 }
 
-
-/**
- * Special key-up handler for Glut.
- *
- * @param k The integer value for the key pressed (will have 256 added
- * to it).
- * @param x (unused)
- * @param y (unused)
- */
-void GLUTspecialkeyup(int k, int x, int y)
+void
+GLUTspecialkeyup(int k, int x, int y)
 {
   current_input.doKey(k + 256, get_mods()|FGInput::FG_MOD_UP, x, y);
+}
+
+void
+GLUTmouse (int button, int updown, int x, int y)
+{
+  current_input.doMouseClick(button, updown == GLUT_DOWN, x, y);
+}
+
+void
+GLUTmotion (int x, int y)
+{
+  puMouse(x, y);
+//   glutPostRedisplay();
+  current_input.doMouseMotion(x, y);
 }
 
 // end of input.cxx

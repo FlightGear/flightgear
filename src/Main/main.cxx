@@ -1265,10 +1265,16 @@ int fgGlutInitEvents( void ) {
     glutSpecialFunc(GLUTspecialkey);
     glutSpecialUpFunc(GLUTspecialkeyup);
 
+#if FG_NEW_MOUSE
+    glutMouseFunc (GLUTmouse);
+    glutMotionFunc (GLUTmotion);
+    glutPassiveMotionFunc (GLUTmotion);
+#else
     // call guiMouseFunc() whenever our little rodent is used
     glutMouseFunc ( guiMouseFunc );
     glutMotionFunc (guiMotionFunc );
     glutPassiveMotionFunc (guiMotionFunc );
+#endif
 
     // call fgMainLoop() whenever there is
     // nothing else to do

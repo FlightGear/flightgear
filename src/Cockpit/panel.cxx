@@ -582,7 +582,7 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   if (updown == 1) {
     _mouseDown = false;
     _mouseInstrument = 0;
-    return true;
+    return false;
   }
 
 				// Scale for the real window size.
@@ -613,8 +613,7 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
       _mouseX = x - ix;
       _mouseY = y - iy;
 				// Always do the action once.
-      _mouseInstrument->doMouseAction(_mouseButton, _mouseX, _mouseY);
-      return true;
+      return _mouseInstrument->doMouseAction(_mouseButton, _mouseX, _mouseY);
     }
   }
   return false;

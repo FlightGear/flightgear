@@ -185,6 +185,47 @@ do_save (const SGPropertyNode * arg, SGCommandState ** state)
 
 
 /**
+ * Built-in command: let PUI handle a mouse click.
+ *
+ * button: the mouse button number, zero-based.
+ * is-down: true if the button is down, false if it is up.
+ * x-pos: the x position of the mouse click.
+ * y-pos: the y position of the mouse click.
+ */
+static bool
+do_pui_mouse_click (const SGPropertyNode * arg, SGCommandState ** state)
+{
+  return puMouse(arg->getIntValue("button"),
+		 arg->getBoolValue("is-down") ? PU_DOWN : PU_UP,
+		 arg->getIntValue("x-pos"),
+		 arg->getIntValue("y-pos"));
+}
+
+
+/**
+ * Built-in command: let PUI *or* the panel handle a mouse click.
+ *
+ * button: the mouse button number, zero-based.
+ * is-down: true if the button is down, false if it is up.
+ * x-pos: the x position of the mouse click.
+ * y-pos: the y position of the mouse click.
+ */
+static bool
+do_pui_or_panel_mouse_click (const SGPropertyNode * arg,
+			     SGCommandState ** state)
+{
+  int button = arg->getIntValue("button");
+  bool is_down = arg->getBoolValue("is-down");
+  int x = arg->getIntValue("x-pos");
+  int y = arg->getIntValue("y-pos");
+  return (puMouse(button, is_down ? PU_DOWN : PU_UP, x, y) ||
+	  (current_panel != 0 &&
+	   current_panel->doMouseAction(button,
+					is_down ? PU_DOWN : PU_UP, x, y)));
+}
+
+
+/**
  * Built-in command: (re)load the panel.
  *
  * path (optional): the file name to load the panel from 
@@ -210,6 +251,28 @@ do_panel_load (const SGPropertyNode * arg, SGCommandState ** state)
   current_panel = new_panel;
   current_panel->bind();
   return true;
+}
+
+
+/**
+ * Built-in command: pass a mouse click to the panel.
+ *
+ * button: the mouse button number, zero-based.
+ * is-down: true if the button is down, false if it is up.
+ * x-pos: the x position of the mouse click.
+ * y-pos: the y position of the mouse click.
+ */
+static bool
+do_panel_mouse_click (const SGPropertyNode * arg, SGCommandState ** state)
+{
+  if (current_panel != 0)
+    return current_panel
+      ->doMouseAction(arg->getIntValue("button"),
+		      arg->getBoolValue("is-down") ? PU_DOWN : PU_UP,
+		      arg->getIntValue("x-pos"),
+		      arg->getIntValue("y-pos"));
+  else
+    return false;
 }
 
 
@@ -574,7 +637,10 @@ static struct {
     { "exit", do_exit },
     { "load", do_load },
     { "save", do_save },
+    { "pui-mouse-click", do_pui_mouse_click },
+    { "pui-or-panel-mouse-click", do_pui_or_panel_mouse_click },
     { "panel-load", do_panel_load },
+    { "panel-mouse-click", do_panel_mouse_click },
     { "preferences-load", do_preferences_load },
     { "view-cycle", do_view_cycle },
     { "screen-capture", do_screen_capture },

@@ -123,6 +123,12 @@ public:
 
 
   /**
+   * Fire a binding with x and y positions.
+   */
+  virtual void fire (int x, int y) const;
+
+
+  /**
    * Fire a binding with a setting (i.e. joystick axis).
    *
    * A double 'setting' property will be added to the arguments.
@@ -205,6 +211,26 @@ public:
   virtual void doKey (int k, int modifiers, int x, int y);
 
 
+  /**
+   * Handle a mouse click event.
+   *
+   * @param button The mouse button selected.
+   * @param updown Button status.
+   * @param x The X position of the mouse event, in screen coordinates.
+   * @param y The Y position of the mouse event, in screen coordinates.
+   */
+  virtual void doMouseClick (int button, int updown, int x, int y);
+
+
+  /**
+   * Handle mouse motion.
+   *
+   * @param x The new mouse x position, in screen coordinates.
+   * @param y The new mouse y position, in screen coordinates.
+   */
+  virtual void doMouseMotion (int x, int y);
+
+
 private:
 				// Constants
   enum 
@@ -216,8 +242,11 @@ private:
   #else
     MAX_JOYSTICKS = 10,
   #endif
-    MAX_AXES = _JS_MAX_AXES,
-    MAX_BUTTONS = 32
+    MAX_JOYSTICK_AXES = _JS_MAX_AXES,
+    MAX_JOYSTICK_BUTTONS = 32,
+
+    MAX_MICE = 1,
+    MAX_MOUSE_BUTTONS
   };
 
 
@@ -267,6 +296,16 @@ private:
 
 
   /**
+   * Settings for a mouse.
+   */
+  struct mouse {
+    mouse ();
+    virtual ~mouse ();
+    button * buttons;
+  };
+
+
+  /**
    * Initialize key bindings.
    */
   void _init_keyboard ();
@@ -276,6 +315,12 @@ private:
    * Initialize joystick bindings.
    */
   void _init_joystick ();
+
+
+  /**
+   * Initialize mouse bindings.
+   */
+  void _init_mouse ();
 
 
   /**
@@ -299,9 +344,16 @@ private:
 
 
   /**
+   * Update the mouse.
+   */
+  void _update_mouse ();
+
+
+  /**
    * Update a single button.
    */
-  inline void _update_button (button &b, int modifiers, bool pressed);
+  inline void _update_button (button &b, int modifiers, bool pressed,
+			      int x, int y);
 
 
   /**
@@ -319,6 +371,9 @@ private:
 
   button _key_bindings[MAX_KEYS];
   joystick _joystick_bindings[MAX_JOYSTICKS];
+  mouse _mouse_bindings[MAX_MICE];
+
+  int _mouse_mode;
 
 };
 
@@ -331,10 +386,77 @@ extern FGInput current_input;
 // GLUT callbacks.
 ////////////////////////////////////////////////////////////////////////
 
-// Handle keyboard events
-void GLUTkey(unsigned char k, int x, int y);
-void GLUTkeyup(unsigned char k, int x, int y);
-void GLUTspecialkey(int k, int x, int y);
-void GLUTspecialkeyup(int k, int x, int y);
+// Handle GLUT events.
+extern "C" {
 
-#endif // _CONTROLS_HXX
+/**
+ * Key-down event handler for Glut.
+ *
+ * <p>Pass the value on to the FGInput module unless PUI wants it.</p>
+ *
+ * @param k The integer value for the key pressed.
+ * @param x (unused)
+ * @param y (unused)
+ */
+void GLUTkey (unsigned char k, int x, int y);
+
+
+/**
+ * Key-up event handler for GLUT.
+ *
+ * <p>PUI doesn't use this, so always pass it to the input manager.</p>
+ *
+ * @param k The integer value for the key pressed.
+ * @param x (unused)
+ * @param y (unused)
+ */
+void GLUTkeyup (unsigned char k, int x, int y);
+
+
+/**
+ * Special key-down handler for Glut.
+ *
+ * <p>Pass the value on to the FGInput module unless PUI wants it.
+ * The key value will have 256 added to it.</p>
+ *
+ * @param k The integer value for the key pressed (will have 256 added
+ * to it).
+ * @param x (unused)
+ * @param y (unused)
+ */
+void GLUTspecialkey (int k, int x, int y);
+
+
+/**
+ * Special key-up handler for Glut.
+ *
+ * @param k The integer value for the key pressed (will have 256 added
+ * to it).
+ * @param x (unused)
+ * @param y (unused)
+ */
+void GLUTspecialkeyup (int k, int x, int y);
+
+
+/**
+ * Mouse click handler for Glut.
+ *
+ * @param button The mouse button pressed.
+ * @param updown Press or release flag.
+ * @param x The x-location of the click.
+ * @param y The y-location of the click.
+ */
+void GLUTmouse (int button, int updown, int x, int y);
+
+
+/**
+ * Mouse motion handler for Glut.
+ *
+ * @param x The new x-location of the mouse.
+ * @param y The new y-location of the mouse.
+ */
+void GLUTmotion (int x, int y);
+
+} // extern "C"
+
+#endif // _INPUT_HXX

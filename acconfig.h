@@ -66,6 +66,9 @@
    
 /* Define to avoid Christian's new weather code */
 #undef FG_NEW_ENVIRONMENT
+
+/* Define to use new experimental mouse input code */
+#undef FG_NEW_MOUSE
    
 /* Define if we are building FGFS (should always be defined) */
 #undef FGFS
