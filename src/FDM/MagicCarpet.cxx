@@ -1,0 +1,84 @@
+// MagicCarpet.cxx -- interface to the "Magic Carpet" flight model
+//
+// Written by Curtis Olson, started October 1999.
+//
+// Copyright (C) 1999  Curtis L. Olson  - curt@flightgear.org
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+
+
+#include <Controls/controls.hxx>
+#include <Main/options.hxx>
+#include <Math/fg_geodesy.hxx>
+#include <Math/point3d.hxx>
+#include <Math/polar3d.hxx>
+
+#include "MagicCarpet.hxx"
+
+
+// Initialize the Magic Carpet flight model, dt is the time increment
+// for each subsequent iteration through the EOM
+int FGMagicCarpet::init( double dt ) {
+    // set valid time for this record
+    stamp_time();
+
+    return 1;
+}
+
+
+// Run an iteration of the EOM (equations of motion)
+int FGMagicCarpet::update( int multiloop ) {
+    // cout << "FGLaRCsim::update()" << endl;
+
+    double time_step = (1.0 / current_options.get_model_hz()) * multiloop;
+
+    // speed and distance traveled
+    double speed = controls.get_throttle( 0 ) * 2000; // meters/sec
+    double dist = speed * time_step;
+    double kts = speed * METER_TO_NM * 3600.0;
+    set_V_equiv_kts( kts );
+    set_V_ground_speed( kts );
+
+    // angle of turn
+    double turn_rate = controls.get_aileron() * FG_PI_4; // radians/sec
+    double turn = turn_rate * time_step;
+
+    // update euler angles
+    set_Euler_Angles( get_Phi(), get_Theta(), fmod(get_Psi() + turn, FG_2PI) );
+
+    // update (lon/lat) position
+    Point3D start( get_Longitude(), get_Latitude(), 0.0 );
+    Point3D end = calc_lon_lat( start, -get_Psi(), dist );
+
+    set_Longitude( end.x() );
+    set_Latitude( end.y() );
+
+    double sl_radius, lat_geoc;
+    fgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );
+
+    // update altitude
+    double real_climb_rate = -controls.get_elevator() * 5000; // feet/sec
+    set_Climb_Rate( real_climb_rate / 500.0 );
+    double climb = real_climb_rate * time_step;
+
+    set_Geocentric_Position( lat_geoc, get_Longitude(), 
+			     sl_radius + get_Altitude() + climb );
+    set_Geodetic_Position( end.y(), end.x(), 
+			   get_Altitude() + climb );
+
+    return 1;
+}
