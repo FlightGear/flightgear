@@ -74,7 +74,9 @@ public:
 
     inline int get_type() const { return type; }
     inline double get_lon() const { return lon; }
+    inline void set_lon( double l ) { lon = l; }
     inline double get_lat() const { return lat; }
+    inline void set_lat( double l ) { lat = l; }
     inline double get_elev_ft() const { return elev_ft; }
     inline double get_x() const { return x; }
     inline double get_y() const { return y; }
@@ -82,6 +84,7 @@ public:
     inline int get_freq() const { return freq; }
     inline int get_range() const { return range; }
     inline double get_multiuse() const { return multiuse; }
+    inline void set_multiuse( double m ) { multiuse = m; }
     inline const char *get_ident() { return ident.c_str(); }
     inline string get_name() { return name; }
     inline bool get_serviceable() { return serviceable; }
@@ -127,8 +130,8 @@ operator >> ( istream& in, FGNavRecord& n )
         n.freq *= 100;
     }
 
-    // Remove the space before the name
-    if ( n.name.substr(0,1) == " " ) {
+    // Remove any leading spaces before the name
+    while ( n.name.substr(0,1) == " " ) {
         n.name = n.name.erase(0,1);
     }
 

@@ -45,4 +45,12 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
                   FGNavList *dmelist, FGNavList *mkrbeacons );
 
 
+// This routines traverses the localizer list and attempts to match
+// each entry with it's corresponding runway.  When it is successful,
+// it then "moves" the localizer and updates it's heading so it
+// *perfectly* aligns with the runway, but is still the same distance
+// from the runway threshold.
+void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist );
+
+
 #endif // _FG_NAVDB_HXX

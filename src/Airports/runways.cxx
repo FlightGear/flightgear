@@ -100,8 +100,8 @@ static string GetReverseRunwayNo(string rwyno) {
     if (( tmp == "L" || tmp == "R" || tmp == "C" ) || (rwyno.size() == 1)) {
 	tmp = rwyno;
 	rwyno = "0" + tmp;
-        SG_LOG( SG_GENERAL, SG_INFO, "Standardising rwy number from " << tmp
-                                     << " to " << rwyno );
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "Standardising rwy number from " << tmp << " to " << rwyno );
     }
     
     char buf[4];
@@ -120,6 +120,9 @@ static string GetReverseRunwayNo(string rwyno) {
 	    buf[3] = '\0';
 	} else if (rwyno.substr(2,1) == "C") {
 	    buf[2] = 'C';
+	    buf[3] = '\0';
+	} else if (rwyno.substr(2,1) == "T") {
+	    buf[2] = 'T';
 	    buf[3] = '\0';
 	} else {
 	    SG_LOG(SG_GENERAL, SG_ALERT, "Unknown runway code "

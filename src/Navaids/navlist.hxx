@@ -61,7 +61,7 @@ class FGNavList {
     // Given a point and a list of stations, return the closest one to
     // the specified point.
     FGNavRecord *findNavFromList( const Point3D &aircraft, 
-                            const nav_list_type &stations );
+                                  const nav_list_type &stations );
 	
 public:
 
@@ -97,6 +97,7 @@ public:
     // returns the closest entry to the give lon/lat/elev
     FGNavRecord *findClosest( double lon_rad, double lat_rad, double elev_m );
 
+    inline nav_map_type get_navaids() const { return navaids; }
 };
 
 

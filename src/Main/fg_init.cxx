@@ -1062,6 +1062,14 @@ fgInitNav ()
                 "Problems loading one or more navigational database" );
     }
 
+    if ( fgGetBool("/sim/navdb/auto-align-localizers", true) ) {
+        // align all the localizers with their corresponding runways
+        // since data sources are good for cockpit navigation
+        // purposes, but not always to the error tolerances needed to
+        // exactly place these items.
+        fgNavDBAlignLOCwithRunway( runways, loclist );
+    }
+
     SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
     SGPath p_fix( globals->get_fg_root() );
     p_fix.append( "Navaids/fix.dat" );
