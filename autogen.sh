@@ -36,7 +36,7 @@ echo "Running autoconf"
 autoconf
 
 # fixup Makefiles for Irix
-if test "$OS" = "IRIX" -o "$OS" = "IRIX64"; then
+if test "$OSTYPE" = "IRIX" -o "$OSTYPE" = "IRIX64"; then
     echo "Fixing Makefiles for Irix"
     for n in `find . -name Makefile.in`; do \
         mv -f $n $n.ar-new; \
