@@ -6,6 +6,12 @@ else
 JPEG_SERVER =
 endif
 
+if ENABLE_MPLAYER_AS
+MPLAYER_AS = multiplay.cxx multiplay.hxx
+else
+MPLAYER_AS =
+endif
+
 libNetwork_a_SOURCES = \
 	protocol.cxx protocol.hxx \
 	atc610x.cxx atc610x.hxx \
@@ -21,7 +27,7 @@ libNetwork_a_SOURCES = \
 	net_ctrls.hxx net_fdm.hxx net_fdm_mini.hxx \
         nmea.cxx nmea.hxx \
         opengc.cxx opengc.hxx opengc_data.hxx \
-	multiplay.cxx multiplay.hxx \
+	$(MPLAYER_AS) \
 	props.cxx props.hxx \
 	pve.cxx pve.hxx \
 	ray.cxx ray.hxx \
