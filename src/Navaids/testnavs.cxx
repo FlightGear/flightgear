@@ -1,5 +1,6 @@
 #include <simgear/misc/fgpath.hxx>
 
+#include "fixlist.hxx"
 #include "ilslist.hxx"
 #include "navlist.hxx"
 
@@ -31,5 +32,18 @@ int main() {
 	cout << " heading = " << heading << " dist = " << dist << endl;
     } else {
 	cout << "not picking up ils. :-(" << endl;
+    }
+
+    FGFixList fixlist;
+    FGPath p_fix( "/home/curt/FlightGear/Navaids/default.fix" );
+    fixlist.init( p_fix );
+    FGFix fix;
+    if ( fixlist.query( "GONER", -82, 41, 3000,
+			&fix, &heading, &dist) ) {
+	cout << "Found a matching fix" << endl;
+	cout << " id = " << fix.get_ident() << endl;
+	cout << " heading = " << heading << " dist = " << dist << endl;
+    } else {
+	cout << "did not find fix. :-(" << endl;
     }
 }

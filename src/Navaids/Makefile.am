@@ -3,6 +3,7 @@ noinst_LIBRARIES = libNavAids.a
 noinst_PROGRAMS = testnavs
 
 libNavAids_a_SOURCES = \
+	fix.hxx fixlist.hxx fixlist.cxx \
 	ils.hxx ilslist.hxx ilslist.cxx \
 	nav.hxx navlist.hxx navlist.cxx
 
