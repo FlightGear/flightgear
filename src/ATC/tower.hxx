@@ -164,6 +164,10 @@ private:
 
 	void CheckApproachList(double dt);
 	
+	// Currently this assumes we *are* next on the runway and doesn't check for planes about to land - 
+	// this should be done prior to calling this function.
+	void ClearHoldingPlane(TowerPlaneRec* t);
+	
 	// Find a pointer to plane of callsign ID within the internal data structures
 	TowerPlaneRec* FindPlane(string ID);
 	
