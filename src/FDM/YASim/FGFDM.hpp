@@ -2,6 +2,7 @@
 #define _FGFDM_HPP
 
 #include <simgear/xml/easyxml.hxx>
+#include <simgear/misc/props.hxx>
 
 #include "Airplane.hpp"
 #include "Vector.hpp"

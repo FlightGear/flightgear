@@ -8,6 +8,7 @@
 #include "Thruster.hpp"
 
 #include "Airplane.hpp"
+
 namespace yasim {
 
 // gadgets
@@ -794,6 +795,16 @@ void Airplane::solve()
     _solutionIterations = 0;
     _failureMsg = 0;
     while(1) {
+#if 0
+        printf("%d %f %f %f %f %f\n", //DEBUG
+               _solutionIterations,
+               1000*_dragFactor,
+               _liftRatio,
+               _cruiseAoA,
+               _tailIncidence,
+               _approachElevator.val);
+#endif
+
 	if(_solutionIterations++ > 10000) {
             _failureMsg = "Solution failed to converge after 10000 iterations";
 	    return;
@@ -816,7 +827,7 @@ void Airplane::solve()
 	runApproach();
 
 	_model.getBody()->getAngularAccel(tmp);
-	float apitch0 = tmp[1];
+	double apitch0 = tmp[1];
 
 	_model.getBody()->getAccel(tmp);
 	float alift = _approachWeight * tmp[2];
@@ -858,13 +869,13 @@ void Airplane::solve()
         // like the tail incidence computation (it's solving for the
         // same thing -- pitching moment -- by diddling a different
         // variable).
-        const float ELEVDIDDLE = 0.0001f;
+        const float ELEVDIDDLE = 0.001f;
         _approachElevator.val += ELEVDIDDLE;
         runApproach();
         _approachElevator.val -= ELEVDIDDLE;
 
 	_model.getBody()->getAngularAccel(tmp);
-	float apitch1 = tmp[1];
+	double apitch1 = tmp[1];
         float elevDelta = -apitch0 * (ELEVDIDDLE/(apitch1-apitch0));
 
         // Now apply the values we just computed.  Note that the
@@ -875,8 +886,8 @@ void Airplane::solve()
 	applyLiftRatio(liftFactor);
 
 	// DON'T do the following until the above are sane
-	if(normFactor(dragFactor) > 1.1
-	   || normFactor(liftFactor) > 1.1)
+	if(normFactor(dragFactor) > 1.0001
+	   || normFactor(liftFactor) > 1.0001)
 	{
 	    continue;
 	}
@@ -884,19 +895,25 @@ void Airplane::solve()
 	// OK, now we can adjust the minor variables:
 	_cruiseAoA += 0.5f*aoaDelta;
 	_tailIncidence += 0.5f*tailDelta;
-        _approachElevator.val += 0.5f*elevDelta;
 	
-	_cruiseAoA = clamp(_cruiseAoA, -0.174f, 0.174f);
-	_tailIncidence = clamp(_tailIncidence, -0.174f, 0.174f);
-        _approachElevator.val = clamp(_approachElevator.val, -1.f, 1.f);
+	_cruiseAoA = clamp(_cruiseAoA, -0.175f, 0.175f);
+	_tailIncidence = clamp(_tailIncidence, -0.175f, 0.175f);
 
         if(norm(dragFactor) < 1.00001 &&
            norm(liftFactor) < 1.00001 &&
            abs(aoaDelta) < .000017 &&
-           abs(tailDelta) < .000017 &&
-           abs(elevDelta) < 0.00001)
+           abs(tailDelta) < .000017)
         {
-            break;
+            // If this finaly value is OK, then we're all done
+            if(abs(elevDelta) < 0.0001)
+                break;
+
+            // Otherwise, adjust and do the next iteration
+            _approachElevator.val += 0.8 * elevDelta;
+            if(abs(_approachElevator.val) > 1) {
+                _failureMsg = "Insufficient elevator to trim for approach";
+                break;
+            }
         }
     }
 
@@ -906,10 +923,10 @@ void Airplane::solve()
     } else if(_liftRatio < 1e-04 || _liftRatio > 1e4) {
 	_failureMsg = "Lift ratio beyond reasonable bounds.";
 	return;
-    } else if(Math::abs(_cruiseAoA) >= .174) {
+    } else if(Math::abs(_cruiseAoA) >= .17453293) {
 	_failureMsg = "Cruise AoA > 10 degrees";
 	return;
-    } else if(Math::abs(_tailIncidence) >= .174) {
+    } else if(Math::abs(_tailIncidence) >= .17453293) {
 	_failureMsg = "Tail incidence > 10 degrees";
 	return;
     }

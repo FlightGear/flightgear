@@ -354,6 +354,10 @@ void Wing::compile()
             }
         }
     }
+
+    // Last of all, re-set the incidence in case setIncidence() was
+    // called before we were compiled.
+    setIncidence(_incidence);
 }
 
 float Wing::getDragScale()
