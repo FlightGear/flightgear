@@ -12,6 +12,8 @@ else
 MPLAYER_AS =
 endif
 
+EXTRA_DIST = net_gui.hxx
+
 libNetwork_a_SOURCES = \
 	protocol.cxx protocol.hxx \
 	atc610x.cxx atc610x.hxx \
