@@ -1,6 +1,7 @@
 noinst_LIBRARIES = libModel.a
 
 libModel_a_SOURCES = model.cxx model.hxx \
+                     modelmgr.cxx modelmgr.hxx \
                      acmodel.cxx acmodel.hxx
 
 if OLD_AUTOMAKE

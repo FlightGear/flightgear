@@ -97,6 +97,7 @@ SG_USING_STD(endl);
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
 #include <Model/acmodel.hxx>
+#include <Model/modelmgr.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -383,6 +384,7 @@ void trRenderFrame( void ) {
 
     thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 
+    globals->get_model_mgr()->draw();
     globals->get_aircraft_model()->draw();
 
     // need to do this here as hud_and_panel state is static to
@@ -719,6 +721,7 @@ void fgRenderFrame( void ) {
 	    thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 	}
 
+	globals->get_model_mgr()->draw();
 	globals->get_aircraft_model()->draw();
 
 	// display HUD && Panel
@@ -846,6 +849,7 @@ void fgUpdateTimeDepCalcs() {
     }
 
 
+    globals->get_model_mgr()->update(multi_loop);
     globals->get_aircraft_model()->update(multi_loop);
 
     // update the view angle
@@ -1479,6 +1483,14 @@ int mainLoop( int argc, char **argv ) {
     SGPath modelpath( globals->get_fg_root() );
     ssgModelPath( (char *)modelpath.c_str() );
   
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the general model subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->set_model_mgr(new FGModelMgr);
+    globals->get_model_mgr()->init();
+    globals->get_model_mgr()->bind();
+
     ////////////////////////////////////////////////////////////////////
     // Initialize the 3D aircraft model subsystem.
     ////////////////////////////////////////////////////////////////////

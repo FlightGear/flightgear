@@ -43,12 +43,18 @@ public:
   virtual double getLatitudeDeg () const { return _lat_deg; }
   virtual double getElevationFt () const { return _elev_ft; }
 
+  virtual void setLongitudeDeg (double lon_deg);
+  virtual void setLatitudeDeg (double lat_deg);
+  virtual void setElevationFt (double elev_ft);
   virtual void setPosition (double lon_deg, double lat_deg, double elev_ft);
 
-  virtual double getRoll () const { return _roll_deg; }
-  virtual double getPitch () const { return _pitch_deg; }
-  virtual double getHeading () const { return _heading_deg; }
+  virtual double getRollDeg () const { return _roll_deg; }
+  virtual double getPitchDeg () const { return _pitch_deg; }
+  virtual double getHeadingDeg () const { return _heading_deg; }
 
+  virtual void setRollDeg (double roll_deg);
+  virtual void setPitchDeg (double pitch_deg);
+  virtual void setHeadingDeg (double heading_deg);
   virtual void setOrientation (double roll_deg, double pitch_deg,
 			       double heading_deg);
 

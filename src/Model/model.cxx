@@ -258,11 +258,47 @@ FG3DModel::setVisible (bool visible)
 }
 
 void
+FG3DModel::setLongitudeDeg (double lon_deg)
+{
+  _lon_deg = lon_deg;
+}
+
+void
+FG3DModel::setLatitudeDeg (double lat_deg)
+{
+  _lat_deg = lat_deg;
+}
+
+void
+FG3DModel::setElevationFt (double elev_ft)
+{
+  _elev_ft = elev_ft;
+}
+
+void
 FG3DModel::setPosition (double lon_deg, double lat_deg, double elev_ft)
 {
   _lon_deg = lon_deg;
   _lat_deg = lat_deg;
   _elev_ft = elev_ft;
+}
+
+void
+FG3DModel::setRollDeg (double roll_deg)
+{
+  _roll_deg = roll_deg;
+}
+
+void
+FG3DModel::setPitchDeg (double pitch_deg)
+{
+  _pitch_deg = pitch_deg;
+}
+
+void
+FG3DModel::setHeadingDeg (double heading_deg)
+{
+  _heading_deg = heading_deg;
 }
 
 void

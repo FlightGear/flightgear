@@ -65,6 +65,7 @@ class FGATCMgr;
 class FGATCDisplay;
 class FGAIMgr;
 class FGAircraftModel;
+class FGModelMgr;
 
 
 /**
@@ -151,6 +152,8 @@ private:
     SGCommandMgr *commands;
 
     FGAircraftModel *acmodel;
+
+    FGModelMgr * model_mgr;
 
     // list of serial port-like configurations
     string_list *channel_options_list;
@@ -249,6 +252,13 @@ public:
     inline void set_aircraft_model (FGAircraftModel * model)
     {
         acmodel = model;
+    }
+
+    inline FGModelMgr *get_model_mgr () { return model_mgr; }
+
+    inline void set_model_mgr (FGModelMgr * mgr)
+    {
+      model_mgr = mgr;
     }
 
     inline string_list *get_channel_options_list () {
