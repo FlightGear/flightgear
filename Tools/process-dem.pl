@@ -26,6 +26,9 @@
 #---------------------------------------------------------------------------
 
 
+# format version number
+$scenery_format_version = "0.1";
+
 $max_area = 10000;            # maximum triangle area
 $remove_tmps = 0;
 
@@ -132,6 +135,15 @@ sub dem2node {
 	    $subdir = $_;
 	    $subdir =~ s/^Dir = //;
 	    chop($subdir);
+	}
+	if ( m/Quad name field/ ) {
+	    $quad_name = $_;
+	    # strip header
+	    $quad_name =~ s/.*Quad name field: //;
+	    # crunch consequetive spaces
+	    $quad_name =~ s/  +/ /g;
+	    chop($quad_name);
+	    print "QUAD NAME = $quad_name\n";
 	}
     }
     close(OUT);
@@ -429,6 +441,18 @@ sub install {
     print "Install dir = $install_dir\n";
     system("mkdir -p $install_dir");
 
+    # write out version and info record
+    open(VERSION, ">$install_dir/VERSION") || 
+	die "Cannot open $install_dir/VERSION for writing\n";
+    print VERSION "FGFS Scenery Version $scenery_format_version\n";
+    $date = `date`; chop($date);
+    print VERSION "Created by $ENV{LOGNAME} on $date\n";
+    print VERSION "\n";
+    print VERSION "DEM File Name = $dem_file\n";
+    print VERSION "DEM Label = $quad_name\n";
+    print VERSION "Error Tolerance = $error (this value is squared)\n";
+    close(VERSION);
+
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
 	chop($file);
@@ -454,6 +478,10 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.26  1998/08/26 22:31:29  curt
+# Write out version and "meta" info into each dem's subdirectory containing
+# all the tiles.
+#
 # Revision 1.25  1998/07/22 21:46:09  curt
 # minor tweaks.
 #
