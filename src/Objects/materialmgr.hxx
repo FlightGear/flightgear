@@ -145,6 +145,9 @@ public:
     // Load a library of material properties
     int load_lib ( void );
 
+    // Add the named texture with default properties
+    bool add_item( const string &name );
+
     inline bool loaded() const { return materials_loaded; }
 
     // Initialize the transient list of fragments for each material property

@@ -262,6 +262,103 @@ fgMATERIAL_MGR::load_lib ( void )
 }
 
 
+// Load a library of material properties
+bool
+fgMATERIAL_MGR::add_item ( const string &path )
+{
+    string material_name = path;
+    int pos = path.rfind( "/" );
+    material_name = material_name.substr( pos + 1 );
+
+    FGMaterial m( material_name );
+
+    FGMaterialSlot m_slot;
+    m_slot.set_m( m );
+
+    // build the ssgSimpleState
+    FGPath tex_file( path );
+
+    FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material " 
+	    << material_name << " (" << tex_file.c_str() << ")");
+
+#if EXTRA_DEBUG
+    m.dump_info();
+#endif
+	    
+    ssgStateSelector *state = new ssgStateSelector(2);
+    ssgSimpleState *textured = new ssgSimpleState();
+    ssgSimpleState *nontextured = new ssgSimpleState();
+
+    // Set up the textured state
+    textured->enable( GL_LIGHTING );
+    if ( current_options.get_shading() == 1 ) {
+	textured->setShadeModel( GL_SMOOTH );
+    } else {
+	textured->setShadeModel( GL_FLAT );
+    }
+
+    textured->enable ( GL_CULL_FACE ) ;
+    textured->enable( GL_TEXTURE_2D );
+    textured->disable( GL_BLEND );
+    textured->disable( GL_ALPHA_TEST );
+    textured->setTexture( (char *)tex_file.c_str() );
+    textured->enable( GL_COLOR_MATERIAL );
+    textured->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
+    textured->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
+    textured->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
+
+    // Set up the coloured state
+    nontextured->enable( GL_LIGHTING );
+    if ( current_options.get_shading() == 1 ) {
+	nontextured->setShadeModel( GL_SMOOTH );
+    } else {
+	nontextured->setShadeModel( GL_FLAT );
+    }
+
+    nontextured->enable ( GL_CULL_FACE      ) ;
+    nontextured->disable( GL_TEXTURE_2D );
+    nontextured->disable( GL_BLEND );
+    nontextured->disable( GL_ALPHA_TEST );
+    nontextured->disable( GL_COLOR_MATERIAL );
+    GLfloat *ambient, *diffuse, *specular, *emission;
+    ambient = m.get_ambient();
+    diffuse = m.get_diffuse();
+    specular = m.get_specular();
+    emission = m.get_emission();
+
+    /* cout << "ambient = " << ambient[0] << "," << ambient[1] 
+       << "," << ambient[2] << endl; */
+    nontextured->setMaterial ( GL_AMBIENT, 
+			       ambient[0], ambient[1], 
+			       ambient[2], ambient[3] ) ;
+    nontextured->setMaterial ( GL_DIFFUSE, 
+			       diffuse[0], diffuse[1], 
+			       diffuse[2], diffuse[3] ) ;
+    nontextured->setMaterial ( GL_SPECULAR, 
+			       specular[0], specular[1], 
+			       specular[2], specular[3] ) ;
+    nontextured->setMaterial ( GL_EMISSION, 
+			       emission[0], emission[1], 
+			       emission[2], emission[3] ) ;
+
+    state->setStep( 0, textured );    // textured
+    state->setStep( 1, nontextured ); // untextured
+
+    // Choose the appropriate starting state.
+    if ( current_options.get_textures() ) {
+	state->selectStep(0);
+    } else {
+	state->selectStep(1);
+    }
+
+    m_slot.set_state( state );
+
+    material_mgr.material_map[material_name] = m_slot;
+
+    return 1;
+}
+
+
 // Initialize the transient list of fragments for each material property
 void
 fgMATERIAL_MGR::init_transient_material_lists( void )

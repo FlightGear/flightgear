@@ -78,6 +78,7 @@ public:
 
     // Constructor
     FGMaterial ( void );
+    FGMaterial ( const string& name );
 
     // Destructor
     ~FGMaterial ( void );

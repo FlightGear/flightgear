@@ -458,9 +458,27 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		
 		// find this material in the properties list
 		if ( ! material_mgr.find( material, fragment.material_ptr )) {
-		    FG_LOG( FG_TERRAIN, FG_ALERT, 
-			    "Ack! unknown usemtl name = " << material 
-			    << " in " << path );
+		    // see if this is an on the fly texture
+		    string file = path;
+		    int pos = file.rfind( "/" );
+		    file = file.substr( 0, pos );
+		    cout << "current file = " << file << endl;
+		    file += "/";
+		    file += material;
+		    cout << "current file = " << file << endl;
+		    if ( ! material_mgr.add_item( file ) ) {
+			FG_LOG( FG_TERRAIN, FG_ALERT, 
+				"Ack! unknown usemtl name = " << material 
+				<< " in " << path );
+		    } else {
+			// locate our newly created material
+			if ( !material_mgr.find( material, fragment.material_ptr ) ) {
+			    FG_LOG( FG_TERRAIN, FG_ALERT, 
+				    "Ack! bad on the fly materia create = "
+				    << material << " in " << path );
+			}
+			    
+		    }
 		}
 
 		// set the texture width and height values for this
