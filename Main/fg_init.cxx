@@ -157,7 +157,6 @@ int fgInitSubsystems( void )
     fgLIGHT *l = &cur_light_params;
     fgTIME *t = &cur_time_params;
     FGView *v = &current_view;
-    Point3D geod_pos, tmp_abs_view_pos;
 
     FG_LOG( FG_GENERAL, FG_INFO, "Initialize Subsystems");
     FG_LOG( FG_GENERAL, FG_INFO, "========== ==========");
@@ -392,6 +391,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.64  1999/02/01 21:15:43  curt
+// Removed unused variables.
+//
 // Revision 1.63  1999/01/27 04:49:19  curt
 // Game mode fixes from Norman Vine.
 // Initial altitude setting tweaks and fixes (especially for when starting
