@@ -856,19 +856,39 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
   // For now lets just hardcode the hud here.
   // In the future, hud information has to come from the same place
   // aircraft information came from.
+  
+  fgHUDSetTimeMode( hud, NIGHT );
+  fgHUDSetBrightness( hud, BRT_LIGHT ); 
 
+  // Small, original HUD configuration
+  // fgHUDAddHorizon( hud, 590, 50, 40, 20, get_roll );
+  // fgHUDAddLadder ( hud, 330, 190, 90, 180, 70, 10,
+  //                  NONE, 45, get_roll, get_pitch );
+  // fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 220, 100, 280, 5, 10,
+  //                     LEFT,    0, 100, 50, get_speed );
+  // fgHUDAddScale  ( hud, VERTICAL,   NOLIMIT, 440, 100, 280, 1,  5, RIGHT,
+  //                     -40, 50, 25, get_aoa );
+  // fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 280, 220, 440, 5, 10,
+  //                     TOP,     0,  50, 50, get_heading );
+  // fgHUDAddLabel  ( hud, 180, 85, SMALL, NOBLINK,
+  //                  RIGHT_JUST, NULL, " Kts", "%5.0f", get_speed );
+  // fgHUDAddLabel  ( hud, 180, 73, SMALL, NOBLINK,
+  //                  RIGHT_JUST, NULL, " m", "%5.0f", get_altitude );
+  // fgHUDAddControlSurfaces( hud, 10, 10, NULL );
+  
+  // Bigger and placed a bit higher HUD configuration
   fgHUDAddHorizon( hud, 590, 50, 40, 20, get_roll );
-  fgHUDAddLadder ( hud, 330, 190, 90, 180, 70, 10,
+  fgHUDAddLadder ( hud, 330, 270, 120, 180, 70, 10,
                    NONE, 45, get_roll, get_pitch );
-  fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 220, 100, 280, 5, 10,
+  fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 200, 180, 380, 5, 10,
                       LEFT,    0, 100, 50, get_speed );
-  fgHUDAddScale  ( hud, VERTICAL,   NOLIMIT, 440, 100, 280, 1,  5,
+  fgHUDAddScale  ( hud, VERTICAL,   NOLIMIT, 460, 180, 380, 1,  5,
                       RIGHT, -40,  50, 25, get_aoa );
-  fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 280, 220, 440, 5, 10,
+  fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 380, 200, 460, 5, 10,
                       TOP,     0,  50, 50, get_heading );
-  fgHUDAddLabel  ( hud, 180, 85, SMALL, NOBLINK,
+  fgHUDAddLabel  ( hud, 160, 165, SMALL, NOBLINK,
                    RIGHT_JUST, NULL, " Kts", "%5.0f", get_speed );
-  fgHUDAddLabel  ( hud, 180, 73, SMALL, NOBLINK,
+  fgHUDAddLabel  ( hud, 160, 153, SMALL, NOBLINK,
                    RIGHT_JUST, NULL, " m", "%5.0f", get_altitude );
   fgHUDAddControlSurfaces( hud, 10, 10, NULL );
 
@@ -878,7 +898,6 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
 
   return( hud );
 }
-
 
 // add_instrument
 //
@@ -1254,7 +1273,31 @@ void fgUpdateHUD( Hptr hud ) {
     glDisable(GL_LIGHTING);
 
     glLineWidth(1);
-    glColor3f (0.1, 0.9, 0.1);
+    
+    if( hud->time_of_day==DAY) {
+      switch (hud->brightness) {
+         case BRT_LIGHT:
+           glColor3f (0.1, 0.9, 0.1);
+           break;
+         case BRT_MEDIUM:
+           glColor3f (0.1, 0.7, 0.0);
+           break;
+         case BRT_DARK:
+           glColor3f (0.0, 0.5, 0.0);
+         }
+      }
+    else if( hud->time_of_day==NIGHT) {
+      switch (hud->brightness) {
+         case BRT_LIGHT:
+           glColor3f (0.9, 0.1, 0.1);
+           break;
+         case BRT_MEDIUM:
+           glColor3f (0.7, 0.0, 0.1);
+           break;
+         case BRT_DARK:
+           glColor3f (0.5, 0.0, 0.0);
+         }
+      }
 
     fgPrintf( FG_COCKPIT, FG_DEBUG, "HUD Code %d  Status %d\n",
               hud->code, hud->status );
@@ -1302,11 +1345,29 @@ void fgUpdateHUD( Hptr hud ) {
   glPopMatrix();
 }
 
+void fgHUDSetTimeMode( Hptr hud, int time_of_day )
+{
+
+  hud->time_of_day = time_of_day;
+
+}
+
+void fgHUDSetBrightness( Hptr hud, int brightness )
+{
+
+  hud->brightness = brightness;
+
+}
 
 /* $Log$
-/* Revision 1.15  1998/02/16 13:38:39  curt
-/* Integrated changes from Charlie Hotchkiss.
+/* Revision 1.16  1998/02/19 13:05:49  curt
+/* Incorporated some HUD tweaks from Michelle America.
+/* Tweaked the sky's sunset/rise colors.
+/* Other misc. tweaks.
 /*
+ * Revision 1.15  1998/02/16 13:38:39  curt
+ * Integrated changes from Charlie Hotchkiss.
+ *
  * Revision 1.14  1998/02/12 21:59:41  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

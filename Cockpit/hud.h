@@ -36,6 +36,15 @@
 
 enum VIEW_MODES { HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
 
+// Hud general constants
+#define DAY                1
+#define NIGHT              2
+#define BRT_DARK           3
+#define BRT_MEDIUM         4
+#define BRT_LIGHT          5
+#define SIZE_SMALL         6
+#define SIZE_LARGE         7
+
 // Instrument types
 #define ARTIFICIAL_HORIZON	1
 #define SCALE              2
@@ -240,9 +249,15 @@ typedef struct  {
 	int code;
 	HIptr instruments;
 	int status;
+	int time_of_day;
+	int brightness;
+	int size; // possibly another name for this ? (michele)
 }HUD, *Hptr;
 
 Hptr fgHUDInit      ( fgAIRCRAFT *cur_aircraft );
+
+void fgHUDSetTimeMode( Hptr hud, int time_of_day );
+void fgHUDSetBrightness( Hptr hud, int brightness );
 
 Hptr fgHUDAddHorizon( Hptr hud,
                       int x_pos,
@@ -335,13 +350,17 @@ Hptr fgHUDAddNumDisp( Hptr hud,
 void fgUpdateHUD ( Hptr hud );
 void fgUpdateHUD2( Hptr hud ); // Future use?
 
-
 #endif // _HUD_H  
 
 /* $Log$
-/* Revision 1.11  1998/02/16 13:38:42  curt
-/* Integrated changes from Charlie Hotchkiss.
+/* Revision 1.12  1998/02/19 13:05:52  curt
+/* Incorporated some HUD tweaks from Michelle America.
+/* Tweaked the sky's sunset/rise colors.
+/* Other misc. tweaks.
 /*
+ * Revision 1.11  1998/02/16 13:38:42  curt
+ * Integrated changes from Charlie Hotchkiss.
+ *
  * Revision 1.10  1998/02/12 21:59:42  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

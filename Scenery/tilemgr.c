@@ -42,9 +42,9 @@
 #include <Main/fg_debug.h>
 
 
-#define FG_LOCAL_X           5   /* should be odd */
-#define FG_LOCAL_Y           5   /* should be odd */
-#define FG_LOCAL_X_Y         25   /* At least FG_LOCAL_X times FG_LOCAL_Y */
+#define FG_LOCAL_X           7   /* should be odd */
+#define FG_LOCAL_Y           7   /* should be odd */
+#define FG_LOCAL_X_Y         49  /* At least FG_LOCAL_X times FG_LOCAL_Y */
 
 
 /* closest (potentially viewable) tiles, centered on current tile.
@@ -225,10 +225,15 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.17  1998/02/16 13:39:46  curt
-/* Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
-/* tiles to occasionally be missing.
+/* Revision 1.18  1998/02/19 13:05:54  curt
+/* Incorporated some HUD tweaks from Michelle America.
+/* Tweaked the sky's sunset/rise colors.
+/* Other misc. tweaks.
 /*
+ * Revision 1.17  1998/02/16 13:39:46  curt
+ * Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
+ * tiles to occasionally be missing.
+ *
  * Revision 1.16  1998/02/12 21:59:53  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

@@ -130,11 +130,11 @@ void fgSkyColorsInit( void ) {
     if ( (sun_angle > 80.0) && (sun_angle < 100.0) ) {
 	/* 0.0 - 0.4 */
 	outer_param[0] = (10.0 - fabs(90.0 - sun_angle)) / 25.0;
-	outer_param[1] = (10.0 - fabs(90.0 - sun_angle)) / 45.0;
+	outer_param[1] = (10.0 - fabs(90.0 - sun_angle)) / 35.0;
 	outer_param[2] = 0.0;
 
-	middle_param[0] = (10.0 - fabs(90.0 - sun_angle)) / 40.0;
-	middle_param[1] = (10.0 - fabs(90.0 - sun_angle)) / 60.0;
+	middle_param[0] = (10.0 - fabs(90.0 - sun_angle)) / 20.0;
+	middle_param[1] = (10.0 - fabs(90.0 - sun_angle)) / 40.0;
 	middle_param[2] = 0.0;
 
 	outer_diff[0] = outer_param[0] / 6.0;
@@ -353,10 +353,15 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/02/07 15:29:32  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.7  1998/02/19 13:05:49  curt
+/* Incorporated some HUD tweaks from Michelle America.
+/* Tweaked the sky's sunset/rise colors.
+/* Other misc. tweaks.
 /*
+ * Revision 1.6  1998/02/07 15:29:32  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.5  1998/01/27 00:47:48  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

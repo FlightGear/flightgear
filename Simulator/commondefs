@@ -85,12 +85,12 @@ GLOBAL_CFLAGS = -Wall -DVERSION=\"$(FG_VERSION)\"
 #---------------------------------------------------------------------------
 # Linux/Mesa
 #
-# INTERFACE_LIBS = -lglut
-# MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
-# X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-# GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
-# FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
-# EXT =
+INTERFACE_LIBS = -lglut
+MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
+EXT =
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
@@ -121,16 +121,16 @@ GLOBAL_CFLAGS = -Wall -DVERSION=\"$(FG_VERSION)\"
 #
 #   -*- Experimental -*-
 #
-# May also work for compiling against IHV OpenGL drivers
+# Currently builds without fatal error, but can't seem to run correctly.
+# Eventually may also work for compiling against IHV OpenGL drivers
 #
-INTERFACE_LIBS = -lglut
-GRAPHICS_LIBS = -lglu -lopengl -luser32 -lgdi32
-FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS) \
-	-I$(FG_ROOT)/Win32/include \
-	-DWIN32 -DUSE_RAND 
-LLDFLAGS = -L$(FG_ROOT)/Win32/lib
-EXT = .exe
-LN = cp
+# INTERFACE_LIBS = -lglut
+# GRAPHICS_LIBS = -lglu -lopengl -luser32 -lgdi32
+# FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS) -I$(FG_ROOT)/Win32/include \
+# 	-DWIN32 -DUSE_RAND
+# LLDFLAGS = -L$(FG_ROOT)/Win32/lib
+# EXT = .exe
+# LN = cp
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------

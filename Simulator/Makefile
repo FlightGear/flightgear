@@ -53,14 +53,14 @@ Makefile-os2:
 
 clean:
 	-rm -f *.os2 *~
-	-rm -f $(FG_ROOT_LIB)/stamp_libs
+	-rm -f $(FG_ROOT_LIB)/*.a $(FG_ROOT_LIB)/stamp_libs
 	for dir in $(ORDEREDDIRS); do \
 	    (cd $$dir; $(MAKE) clean) ; \
 	done
 
 clobber:
 	-rm -f *.os2 *~
-	-rm -f $(FG_ROOT_LIB)/stamp_libs
+	-rm -f $(FG_ROOT_LIB)/*.a $(FG_ROOT_LIB)/stamp_libs
 	for dir in $(ORDEREDDIRS); do \
 	    (cd $$dir; $(MAKE) clobber) ; \
 	done
@@ -104,19 +104,24 @@ bin-zip:
 	FlightGear/cygwin.dll FlightGear/COPYING FlightGear/Docs \
 	FlightGear/README FlightGear/Thanks)
 
-new-bin-zip: 
+bin-exp-zip: 
 	cp Main/fg$(FG_VERSION_MAJOR).exe Main/cygwin.dll README Thanks \
 	runfg.bat ../Win32/*.dll ..
 	(cd ../..; \
-	zip -r bin-$(FG_VERSION).zip FlightGear/fgtop \
+	zip -r bin-exp-$(FG_VERSION).zip FlightGear/fgtop \
 	FlightGear/fg$(FG_VERSION_MAJOR).exe FlightGear/runfg.bat \
 	FlightGear/cygwin.dll FlightGear/COPYING FlightGear/Docs \
 	FlightGear/README FlightGear/Thanks FlightGear/glu.dll \
-	FlightGear/glut.dll FlightGear/opengl.dll)
+	FlightGear/glut.dll FlightGear/msvcrt.dll FlightGear/opengl.dll)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.43  1998/02/19 13:05:43  curt
+# Incorporated some HUD tweaks from Michelle America.
+# Tweaked the sky's sunset/rise colors.
+# Other misc. tweaks.
+#
 # Revision 1.42  1998/02/18 15:07:02  curt
 # Tweaks to build with SGI OpenGL (and therefor hopefully other accelerated
 # drivers will work.)
