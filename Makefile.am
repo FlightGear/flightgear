@@ -2,9 +2,11 @@ SUBDIRS = \
 	tests \
 	src
 
-EXTRA_DIST = Thanks VERSION acsite.m4 acconfig.h irix-hack.pl
+EXTRA_DIST = Thanks VERSION acsite.m4 acconfig.h irix-hack.pl \
+	FlightGear.dsp FlightGear.dsw
 
 dist-hook:
+	(cd $(top_srcdir); ../admin/am2dsp.pl)
 	tar --exclude docs-mini/CVS --exclude hints/CVS -cf - docs-mini hints \
 		| (cd $(distdir); tar xvf -)
 	# tar cf - Simulator/FDM/JSBsim/aircraft Simulator/FDM/JSBsim/engine | (cd $(distdir); tar xvf -)
