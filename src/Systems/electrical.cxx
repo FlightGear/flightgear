@@ -350,12 +350,17 @@ void FGElectricalSystem::update (double dt) {
     if ( fgGetBool("/controls/engines/engine[0]/master-bat") ) {
         volts = 24.0;
     }
-    if ( fgGetBool("/controls/engines/engine[0]/master-alt") &&
-         fgGetDouble("/engines/engine[0]/rpm") > 800 )
-    {
-        double alt_contrib = 28.0;
-        if ( alt_contrib > volts ) {
-            volts = alt_contrib;
+    if ( fgGetBool("/controls/engines/engine[0]/master-alt") ) {
+        if ( fgGetDouble("/engines/engine[0]/rpm") > 800 ) {
+            double alt_contrib = 28.0;
+            if ( alt_contrib > volts ) {
+                volts = alt_contrib;
+            }
+        } else if ( fgGetDouble("/engines/engine[0]/rpm") > 200 ) {
+            double alt_contrib = 20.0;
+            if ( alt_contrib > volts ) {
+                volts = alt_contrib;
+            }
         }
     }
     _volts_out->setDoubleValue( volts );
