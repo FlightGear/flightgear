@@ -1,5 +1,5 @@
 /**************************************************************************
- * moon.hxx
+ * mars.cxx
  * Written by Durk Talsma. Originally started October 1997, for distribution  
  * with the FlightGear project. Version 2 was written in August and 
  * September 1998. This code is based upon algorithms and data kindly 
@@ -22,32 +22,33 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
-#ifndef _MOON_HXX_
-#define _MOON_HXX_
+#include "mars.hxx"
 
-#include <Aircraft/aircraft.h>
-#include <Debug/fg_debug.h>
-#include <Include/fg_constants.h>
-#include <Include/general.h>
-#include <Main/views.hxx>
-#include <Time/fg_time.hxx>
-
-#include "celestialBody.hxx"
-#include "star.hxx"
-
-class Moon : public CelestialBody
+/*************************************************************************
+ * Mars::Mars(fgTIME *t)
+ * Public constructor for class Mars
+ * Argument: The current time.
+ * the hard coded orbital elements for Mars are passed to 
+ * CelestialBody::CelestialBody();
+ ************************************************************************/
+Mars::Mars(fgTIME *t) :
+  CelestialBody(49.55740,  2.1108100E-5,
+		1.8497,   -1.78E-8,
+		286.5016,  2.9296100E-5,
+		1.5236880, 0.000000,
+		0.093405,  2.516E-9,
+		18.60210,  0.52402077660, t)
 {
-private:
-  void TexInit();  // This should move to the constructor eventually.
-
-  GLUquadricObj *Object;
-  GLuint Sphere;
-  
-public:
-  Moon ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
-  void newImage(float, float);
-};
-
-
-#endif // _MOON_HXX_
+}
+/*************************************************************************
+ * void Mars::updatePosition(fgTIME *t, Star *ourSun)
+ * 
+ * calculates the current position of Mars, by calling the base class,
+ * CelestialBody::updatePosition(); The current magnitude is calculated using 
+ * a Mars specific equation
+ *************************************************************************/
+void Mars::updatePosition(fgTIME *t, Star *ourSun)
+{
+  CelestialBody::updatePosition(t, ourSun);
+  magnitude = -1.51 + 5*log10( r*R ) + 0.016 * FV;
+}

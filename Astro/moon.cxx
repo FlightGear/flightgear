@@ -1,6 +1,9 @@
 /**************************************************************************
- * moon.c
- * Written by Durk Talsma. Started October 1997, for the flight gear project.
+ * moon.cxx
+ * Written by Durk Talsma. Originally started October 1997, for distribution  
+ * with the FlightGear project. Version 2 was written in August and 
+ * September 1998. This code is based upon algorithms and data kindly 
+ * provided by Mr. Paul Schlyter. (pausch@saaf.se). 
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -19,268 +22,209 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
+#include <Flight/flight.h>
 
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#include <math.h>
-#include <GL/glut.h>
-#include <XGL/xgl.h>
-
-#include <Aircraft/aircraft.h>
-#include <Debug/fg_debug.h>
-#include <Include/fg_constants.h>
-#include <Include/general.h>
-#include <Main/views.hxx>
-#include <Time/fg_time.hxx>
-
-#include "orbits.hxx"
+#include <string.h>
 #include "moon.hxx"
+#include <Debug/fg_debug.h>
+#include <Objects/texload.h>
 
+static GLuint moon_texid;
+static GLubyte *moon_texbuf;
 
-struct CelestialCoord moonPos;
-
-static float xMoon, yMoon, zMoon;
-static GLint moon = 0;
-
-
-
-/* --------------------------------------------------------------
-      This section contains the code that calculates the actual
-      position of the moon in the night sky.
-----------------------------------------------------------------*/
-struct CelestialCoord fgCalculateMoon(struct OrbElements params,
-                                      struct OrbElements sunParams,
-                                      fgTIME t)
+/*************************************************************************
+ * Moon::Moon(fgTIME *t)
+ * Public constructor for class Moon. Initializes the orbital elements and 
+ * sets up the moon texture.
+ * Argument: The current time.
+ * the hard coded orbital elements for Moon are passed to 
+ * CelestialBody::CelestialBody();
+ ************************************************************************/
+Moon::Moon(fgTIME *t) :
+  CelestialBody(125.1228, -0.0529538083,
+		5.1454,    0.00000,
+		318.0634,  0.1643573223,
+		60.266600, 0.000000,
+		0.054900,  0.000000,
+		115.3654,  13.0649929509, t)
 {
-  struct CelestialCoord
-    geocCoord, topocCoord; 
+  string tpath, fg_tpath;
+  int width, height;
   
-  double
+  fgPrintf( FG_GENERAL, FG_INFO, "Initializing Moon Texture\n");
+#ifdef GL_VERSION_1_1
+  xglGenTextures(1, &moon_texid);
+  xglBindTexture(GL_TEXTURE_2D, moon_texid);
+#elif GL_EXT_texture_object
+  xglGenTexturesEXT(1, &moon_texid);
+  xglBindTextureEXT(GL_TEXTURE_2D, moon_texid);
+#else
+#  error port me
+#endif
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  // load in the texture data
+  tpath = current_options.get_fg_root() + "/Textures/" + "moon.rgb";
+  
+  if ( (moon_texbuf = read_rgb_texture(tpath.c_str(), &width, &height)) 
+       == NULL )
+  {
+    // Try compressed
+    fg_tpath = tpath + ".gz";
+    if ( (moon_texbuf = read_rgb_texture(fg_tpath.c_str(), &width, &height)) 
+	 == NULL )
+    {
+      fgPrintf( FG_GENERAL, FG_EXIT, 
+		"Error in loading moon texture %s\n", tpath );
+      exit(1);
+    } 
+  } 
+
+  glTexImage2D( GL_TEXTURE_2D,
+		0,
+		GL_RGB,
+		256, 256,
+		0,
+		GL_RGB, GL_UNSIGNED_BYTE,
+		moon_texbuf);
+}
+/*****************************************************************************
+ * void Moon::updatePosition(fgTIME *t, Star *ourSun)
+ * this member function calculates the actual topocentric position (i.e.) 
+ * the position of the moon as seen from the current position on the surface
+ * of the moon. 
+ ****************************************************************************/
+void Moon::updatePosition(fgTIME *t, Star *ourSun)
+{
+  double 
     eccAnom, ecl, lonecl, latecl, actTime,
     xv, yv, v, r, xh, yh, zh, xg, yg, zg, xe, ye, ze,
-    Ls, Lm, D, F, mpar, gclat, rho, HA, g;
+    Ls, Lm, D, F, mpar, gclat, rho, HA, g,
+    geoRa, geoDec;
   
-  fgAIRCRAFT *a;
+  fgAIRCRAFT *air;
   fgFLIGHT *f;
 
-  a = &current_aircraft;
-  f = a->flight;
-  
-  /* calculate the angle between ecliptic and equatorial coordinate
-   * system, in Radians */
+  air = &current_aircraft;
+  f = air->flight;
+ 
+  updateOrbElements(t);
   actTime = fgCalcActTime(t);
-  ecl = ((DEG_TO_RAD * 23.4393) - (DEG_TO_RAD * 3.563E-7) * actTime);
-  /*ecl = 0.409093 - 6.2186E-9 * actTime; */
-							
-  /* calculate the eccentric anomaly */
-  eccAnom = fgCalcEccAnom(params.M, params.e);
 
-  /* calculate the moon's distance (r) and  true anomaly (v) */
-  xv = params.a * ( cos(eccAnom) - params.e);
-  yv = params.a * ( sqrt(1.0 - params.e*params.e) * sin(eccAnom));
-  v =atan2(yv, xv);
-  r = sqrt(xv*xv + yv*yv);
+  // calculate the angle between ecliptic and equatorial coordinate system
+  // in Radians
+  ecl = ((DEG_TO_RAD * 23.4393) - (DEG_TO_RAD * 3.563E-7) * actTime);  
+  eccAnom = fgCalcEccAnom(M, e);  // Calculate the eccentric anomaly
+  xv = a * (cos(eccAnom) - e);
+  yv = a * (sqrt(1.0 - e*e) * sin(eccAnom));
+  v = atan2(yv, xv);               // the moon's true anomaly
+  r = sqrt (xv*xv + yv*yv);       // and its distance
   
-  /* estimate the geocentric rectangular coordinates here */
-  xh = r * (cos (params.N) * cos (v + params.w) -
-	    sin (params.N) * sin (v + params.w) * cos (params.i));
-  yh = r * (sin (params.N) * cos (v + params.w) +
-	    cos (params.N) * sin (v + params.w) * cos (params.i));
-  zh = r * (sin(v + params.w) * sin(params.i));
-  
-  /* calculate the ecliptic latitude and longitude here */
-  lonecl = atan2( yh, xh);
-  latecl = atan2( zh, sqrt( xh*xh + yh*yh));
+  // estimate the geocentric rectangular coordinates here
+  xh = r * (cos(N) * cos (v+w) - sin (N) * sin(v+w) * cos(i));
+  yh = r * (sin(N) * cos (v+w) + cos (N) * sin(v+w) * cos(i));
+  zh = r * (sin(v+w) * sin(i));
 
-  /* calculate a number of perturbations, i.e. disturbances caused by
-   * the gravitational influence of the sun and the other mayor
-   * planets. The largest of these even have their own names */
-  Ls = sunParams.M + sunParams.w;
-  Lm =    params.M +    params.w + params.N;
+  // calculate the ecliptic latitude and longitude here
+  lonecl = atan2 (yh, xh);
+  latecl = atan2(zh, sqrt(xh*xh + yh*yh));
+
+  /* Calculate a number of perturbatioin, i.e. disturbances caused by the 
+   * gravitational infuence of the sun and the other major planets.
+   * The largest of these even have a name */
+  Ls = ourSun->getM() + ourSun->getw();
+  Lm = M + w + N;
   D = Lm - Ls;
-  F = Lm - params.N;
+  F = Lm - N;
   
-  lonecl += DEG_TO_RAD * (
-			  - 1.274 * sin (params.M - 2*D)    			/* the Evection         */
-			  + 0.658 * sin (2 * D)				        /* the Variation        */
-			  - 0.186 * sin (sunParams.M)				/* the yearly variation */
-			  - 0.059 * sin (2*params.M - 2*D)
-			  - 0.057 * sin (params.M - 2*D + sunParams.M)
-			  + 0.053 * sin (params.M + 2*D)
-			  + 0.046 * sin (2*D - sunParams.M)
-			  + 0.041 * sin (params.M - sunParams.M)
-			  - 0.035 * sin (D)                                      /* the Parallactic Equation */
-			  - 0.031 * sin (params.M + sunParams.M)
-			  - 0.015 * sin (2*F - 2*D)
-			  + 0.011 * sin (params.M - 4*D)
+  lonecl += DEG_TO_RAD * (-1.274 * sin (M - 2*D)
+			  +0.658 * sin (2*D)
+			  -0.186 * sin(ourSun->getM())
+			  -0.059 * sin(2*M - 2*D)
+			  -0.057 * sin(M - 2*D + ourSun->getM())
+			  +0.053 * sin(M + 2*D)
+			  +0.046 * sin(2*D - ourSun->getM())
+			  +0.041 * sin(M - ourSun->getM())
+			  -0.035 * sin(D)
+			  -0.031 * sin(M + ourSun->getM())
+			  -0.015 * sin(2*F - 2*D)
+			  +0.011 * sin(M - 4*D)
 			  );
-  latecl += DEG_TO_RAD * (
-			  - 0.173 * sin (F - 2*D)
-			  - 0.055 * sin (params.M - F - 2*D)
-			  - 0.046 * sin (params.M + F - 2*D)
-			  + 0.033 * sin (F + 2*D)
-			  + 0.017 * sin (2 * params.M + F)
+  latecl += DEG_TO_RAD * (-0.173 * sin(F-2*D)
+			  -0.055 * sin(M - F - 2*D)
+			  -0.046 * sin(M + F - 2*D)
+			  +0.033 * sin(F + 2*D)
+			  +0.017 * sin(2*M + F)
 			  );
-  
-  r += (
-	- 0.58 * cos(params.M - 2*D)
-	- 0.46 * cos(2*D)
+  r += (-0.58 * cos(M - 2*D)
+	-0.46 * cos(2*D)
 	);
-  
+  fgPrintf(FG_GENERAL, FG_INFO, "Running moon update\n");
   xg = r * cos(lonecl) * cos(latecl);
   yg = r * sin(lonecl) * cos(latecl);
   zg = r *               sin(latecl);
-
-  xe  = xg;
-  ye = yg * cos(ecl) - zg * sin(ecl);
-  ze = yg * sin(ecl) + zg * cos(ecl);
   
+  xe = xg;
+  ye = yg * cos(ecl) -zg * sin(ecl);
+  ze = yg * sin(ecl) +zg * cos(ecl);
 
-  
+  geoRa  = atan2(ye, xe);
+  geoDec = atan2(ze, sqrt(xe*xe + ye*ye));
 
-  geocCoord.RightAscension = atan2(ye, xe);
-  geocCoord.Declination = atan2(ze, sqrt(xe*xe + ye*ye));
-  
-  /* New since 25 december 1997 */
-  /* Calculate the moon's topocentric position instead of it's geocentric! */
+  // Given the moon's geocentric ra and dec, calculate its 
+  // topocentric ra and dec. i.e. the position as seen from the
+  // surface of the earth, instead of the center of the earth
 
-  /* calculate the moon's parrallax, i.e. the apparent size of the
-   * (equatorial) radius of the Earth, as seen from the moon */
-  mpar = asin( 1 / r); 
-  gclat = FG_Latitude - 0.083358 * sin (2 * DEG_TO_RAD *  FG_Latitude);
+  // First calculates the moon's parrallax, that is, the apparent size of the 
+  // (equatorial) radius of the earth, as seen from the moon 
+  mpar = asin ( 1 / r);
+  gclat = FG_Latitude - 0.003358 * sin (2 * DEG_TO_RAD * FG_Latitude);
   rho = 0.99883 + 0.00167 * cos(2 * DEG_TO_RAD * FG_Latitude);
-
-  if (geocCoord.RightAscension < 0)
-    geocCoord.RightAscension += (2*FG_PI);
-
-  HA = t.lst - (3.8197186 * geocCoord.RightAscension);
-
-  g = atan (tan(gclat) / cos( (HA / 3.8197186))); 
-
-     
-
-  topocCoord.RightAscension = geocCoord.RightAscension -
-      mpar * rho * cos (gclat) * sin (HA) / cos (geocCoord.Declination);
-  topocCoord.Declination = geocCoord.Declination -
-      mpar * rho * sin (gclat) * sin (g - geocCoord.Declination) / sin (g);
-  return topocCoord;
-}
-
-
-void fgMoonInit( void ) {
-    fgPrintf( FG_ASTRO, FG_INFO, "Initializing the Moon\n");
-    fgSolarSystemUpdate(&(pltOrbElements[1]), cur_time_params);
-    moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], 
-			      cur_time_params);
-    fgPrintf( FG_ASTRO, FG_DEBUG, 
-	      "Moon found at %f (ra), %f (dec)\n", moonPos.RightAscension, 
-	      moonPos.Declination);
-
-    xMoon = 60000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
-    yMoon = 60000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
-    zMoon = 60000.0 * sin(moonPos.Declination);
-
-    if (moon) {
- 	xglDeleteLists (moon, 1);
-    }
-
-    moon = xglGenLists (1);
-    xglNewList (moon, GL_COMPILE);
+  if (geoRa < 0)
+    geoRa += (2*FG_PI);
   
-    xglPushMatrix ();
-    xglTranslatef (xMoon, yMoon, zMoon);
-    // xglScalef (1400, 1400, 1400);
-  
-    // glutSolidSphere (1.0, 10, 10);
-    glutSolidSphere (1200.0, 10, 10);
-    xglPopMatrix ();
-    xglEndList ();
+  HA = t->lst - (3.8197186 * geoRa);
+  g = atan (tan(gclat) / cos ((HA / 3.8197186)));
+  rightAscension = geoRa - mpar * rho * cos(gclat) * sin(HA) / cos (geoDec);
+  declination = geoDec - mpar * rho * sin (gclat) * sin (g - geoDec) / sin(g);
 }
 
 
-/* Draw the moon */
-void fgMoonRender( void ) {
-    GLfloat moonColor[4] = {0.85, 0.75, 0.35, 1.0};
-    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
+/************************************************************************
+ * void Moon::newImage(float ra, float dec)
+ *
+ * This function regenerates a new visual image of the moon, which is added to
+ * solarSystem display list.
+ *
+ * Arguments: Right Ascension and declination
+ *
+ * return value: none
+ **************************************************************************/
+void Moon::newImage(float ra, float dec)
+{
+  glEnable(GL_TEXTURE_2D);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); 
+  glBindTexture(GL_TEXTURE_2D, moon_texid);
 
-    xglMaterialfv (GL_FRONT, GL_AMBIENT, black);
-    xglMaterialfv (GL_FRONT, GL_DIFFUSE, moonColor);
+  //xglRotatef(-90, 0.0, 0.0, 1.0);
+  xglRotatef(((RAD_TO_DEG * ra)- 90.0), 0.0, 0.0, 1.0);
+  xglRotatef((RAD_TO_DEG * dec), 1.0, 0.0, 0.0);
 
-    xglCallList(moon);
+  fgPrintf( FG_GENERAL, FG_INFO, 
+	   "Ra = (%f), Dec= (%f)", (RAD_TO_DEG *ra), (RAD_TO_DEG *dec) );
+  xglTranslatef(0.0, 58600.0, 0.0);
+  Object = gluNewQuadric();
+  gluQuadricTexture( Object, GL_TRUE );   
+  gluSphere( Object,  1367, 12, 12 );
+  glDisable(GL_TEXTURE_2D);
 }
 
 
-/* $Log$
-/* Revision 1.6  1998/09/03 21:25:39  curt
-/* log file tweak.
-/*
- * Revision 1.5  1998/07/30 23:43:30  curt
- * Eliminated glScale call so that glutSolidSphere normals are preserved
- * correctly.  Also made the sun & moon a bit smaller.
- *
- * Revision 1.4  1998/04/28 01:18:59  curt
- * Type-ified fgTIME and fgVIEW
- *
- * Revision 1.3  1998/04/25 22:06:24  curt
- * Edited cvs log messages in source files ... bad bad bad!
- *
- * Revision 1.2  1998/04/24 00:45:00  curt
- * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
- * Fixed a bug when generating sky colors.
- *
- * Revision 1.1  1998/04/22 13:21:28  curt
- * C++ - ifing the code a bit.
- *
- * Revision 1.9  1998/04/18 04:13:56  curt
- * Moved fg_debug.c to it's own library.
- *
- * Revision 1.8  1998/04/03 21:52:49  curt
- * Converting to Gnu autoconf system.
- *
- * Revision 1.7  1998/02/23 19:07:54  curt
- * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
- * calculation code between sun display, and other FG sections that use this
- * for things like lighting.
- *
- * Revision 1.6  1998/02/07 15:29:32  curt
- * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
- * <chotchkiss@namg.us.anritsu.com>
- *
- * Revision 1.5  1998/02/02 20:53:21  curt
- * To version 0.29
- *
- * Revision 1.4  1998/01/27 00:47:46  curt
- * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
- * system and commandline/config file processing code.
- *
- * Revision 1.3  1998/01/19 19:26:57  curt
- * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
- * This should simplify things tremendously.
- *
- * Revision 1.2  1998/01/19 18:40:16  curt
- * Tons of little changes to clean up the code and to remove fatal errors
- * when building with the c++ compiler.
- *
- * Revision 1.1  1998/01/07 03:16:16  curt
- * Moved from .../Src/Scenery/ to .../Src/Astro/
- *
- * Revision 1.16  1998/01/06 01:20:24  curt
- * Tweaks to help building with MSVC++
- *
- * Revision 1.15  1998/01/05 18:44:35  curt
- * Add an option to advance/decrease time from keyboard.
- *
- * Revision 1.14  1997/12/30 20:47:50  curt
- * Integrated new event manager with subsystem initializations.
- *
- * Revision 1.13  1997/12/30 16:41:00  curt
- * Added log at end of file.
- *
- */
+
+
+
+
+

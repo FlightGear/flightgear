@@ -1,5 +1,5 @@
 /**************************************************************************
- * moon.hxx
+ * solarsystem.hxx
  * Written by Durk Talsma. Originally started October 1997, for distribution  
  * with the FlightGear project. Version 2 was written in August and 
  * September 1998. This code is based upon algorithms and data kindly 
@@ -22,32 +22,85 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
-#ifndef _MOON_HXX_
-#define _MOON_HXX_
+#ifndef _SOLARSYSTEM_H_
+#define _SOLARSYSTEM_H_
 
-#include <Aircraft/aircraft.h>
-#include <Debug/fg_debug.h>
-#include <Include/fg_constants.h>
-#include <Include/general.h>
-#include <Main/views.hxx>
+#include <Time/light.hxx>
 #include <Time/fg_time.hxx>
+#include <Main/views.hxx>
 
-#include "celestialBody.hxx"
 #include "star.hxx"
+#include "moon.hxx"
+#include "mercury.hxx"
+#include "venus.hxx"
+#include "mars.hxx"
+#include "jupiter.hxx"
+#include "saturn.hxx"
+#include "uranus.hxx"
+#include "neptune.hxx"
+#include "pluto.hxx"
 
-class Moon : public CelestialBody
+
+extern fgLIGHT cur_light_params;
+extern fgTIME  cur_time_params;
+extern fgVIEW  current_view;
+
+
+
+class SolarSystem
 {
 private:
-  void TexInit();  // This should move to the constructor eventually.
-
-  GLUquadricObj *Object;
-  GLuint Sphere;
+  Star*    ourSun;
+  Moon*    earthsMoon;
+  Mercury* mercury;
+  Venus*   venus;
+  Mars*    mars;
+  Jupiter* jupiter;
+  Saturn*  saturn;
+  Uranus*  uranus;
+  Neptune* neptune;
+  //Pluto*   pluto;
   
+  GLint displayList;
+  double scaleMagnitude(double magn);
+  void addPlanetToList(double ra, double dec, double magn);
+
+
 public:
-  Moon ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
-  void newImage(float, float);
+  SolarSystem(fgTIME *t);
+  Star *getSun();
+  ~SolarSystem();
+
+  static SolarSystem *theSolarSystem;  // thanks to Bernie Bright!
+  void rebuild();
+  friend void solarSystemRebuild();
+  void draw();
+  
 };
 
+inline Star * SolarSystem::getSun()
+{
+  return ourSun;
+}
 
-#endif // _MOON_HXX_
+inline void SolarSystem::draw()
+{
+  xglCallList(displayList);
+}
+  
+extern void solarSystemRebuild();
+
+#endif // _SOLARSYSTEM_H_
+
+
+
+
+
+
+
+
+
+
+
+
+

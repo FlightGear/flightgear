@@ -1,5 +1,5 @@
 /**************************************************************************
- * moon.hxx
+ * uranus.cxx
  * Written by Durk Talsma. Originally started October 1997, for distribution  
  * with the FlightGear project. Version 2 was written in August and 
  * September 1998. This code is based upon algorithms and data kindly 
@@ -22,32 +22,34 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
-#ifndef _MOON_HXX_
-#define _MOON_HXX_
+#include "uranus.hxx"
 
-#include <Aircraft/aircraft.h>
-#include <Debug/fg_debug.h>
-#include <Include/fg_constants.h>
-#include <Include/general.h>
-#include <Main/views.hxx>
-#include <Time/fg_time.hxx>
-
-#include "celestialBody.hxx"
-#include "star.hxx"
-
-class Moon : public CelestialBody
+/*************************************************************************
+ * Uranus::Uranus(fgTIME *t)
+ * Public constructor for class Uranus
+ * Argument: The current time.
+ * the hard coded orbital elements for Uranus are passed to 
+ * CelestialBody::CelestialBody();
+ ************************************************************************/
+Uranus::Uranus(fgTIME *t) :
+  CelestialBody(74.00050,   1.3978000E-5,
+		0.7733,     1.900E-8,
+		96.66120,   3.0565000E-5,
+		19.181710, -1.55E-8,
+		0.047318,   7.450E-9,
+		142.5905,   0.01172580600, t)
 {
-private:
-  void TexInit();  // This should move to the constructor eventually.
+}
 
-  GLUquadricObj *Object;
-  GLuint Sphere;
-  
-public:
-  Moon ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
-  void newImage(float, float);
-};
-
-
-#endif // _MOON_HXX_
+/*************************************************************************
+ * void Uranus::updatePosition(fgTIME *t, Star *ourSun)
+ * 
+ * calculates the current position of Uranus, by calling the base class,
+ * CelestialBody::updatePosition(); The current magnitude is calculated using 
+ * a Uranus specific equation
+ *************************************************************************/
+void Uranus::updatePosition(fgTIME *t, Star *ourSun)
+{
+  CelestialBody::updatePosition(t, ourSun);
+  magnitude = -7.15 + 5*log10( r*R) + 0.001 * FV;
+}

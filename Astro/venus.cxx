@@ -1,5 +1,5 @@
 /**************************************************************************
- * moon.hxx
+ * venus.cxx
  * Written by Durk Talsma. Originally started October 1997, for distribution  
  * with the FlightGear project. Version 2 was written in August and 
  * September 1998. This code is based upon algorithms and data kindly 
@@ -22,32 +22,34 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
-#ifndef _MOON_HXX_
-#define _MOON_HXX_
+#include "venus.hxx"
 
-#include <Aircraft/aircraft.h>
-#include <Debug/fg_debug.h>
-#include <Include/fg_constants.h>
-#include <Include/general.h>
-#include <Main/views.hxx>
-#include <Time/fg_time.hxx>
-
-#include "celestialBody.hxx"
-#include "star.hxx"
-
-class Moon : public CelestialBody
+/*************************************************************************
+ * Venus::Venus(fgTIME *t)
+ * Public constructor for class Venus
+ * Argument: The current time.
+ * the hard coded orbital elements for Venus are passed to 
+ * CelestialBody::CelestialBody();
+ ************************************************************************/
+Venus::Venus(fgTIME *t) :
+  CelestialBody(76.67990,  2.4659000E-5, 
+		3.3946,    2.75E-8,
+		54.89100,  1.3837400E-5,
+		0.7233300, 0.000000,
+		0.006773, -1.302E-9,
+		48.00520,  1.60213022440, t)
 {
-private:
-  void TexInit();  // This should move to the constructor eventually.
+}
 
-  GLUquadricObj *Object;
-  GLuint Sphere;
-  
-public:
-  Moon ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
-  void newImage(float, float);
-};
-
-
-#endif // _MOON_HXX_
+/*************************************************************************
+ * void Venus::updatePosition(fgTIME *t, Star *ourSun)
+ * 
+ * calculates the current position of Venus, by calling the base class,
+ * CelestialBody::updatePosition(); The current magnitude is calculated using 
+ * a Venus specific equation
+ *************************************************************************/
+void Venus::updatePosition(fgTIME *t, Star *ourSun)
+{
+  CelestialBody::updatePosition(t, ourSun);
+  magnitude = -4.34 + 5*log10( r*R ) + 0.013 * FV + 4.2E-07 * pow(FV,3);
+}

@@ -1,5 +1,5 @@
 /**************************************************************************
- * moon.hxx
+ * mercury.hxx
  * Written by Durk Talsma. Originally started October 1997, for distribution  
  * with the FlightGear project. Version 2 was written in August and 
  * September 1998. This code is based upon algorithms and data kindly 
@@ -22,32 +22,18 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
-#ifndef _MOON_HXX_
-#define _MOON_HXX_
+#ifndef _MERCURY_HXX_
+#define _MERCURY_HXX_
 
-#include <Aircraft/aircraft.h>
-#include <Debug/fg_debug.h>
-#include <Include/fg_constants.h>
-#include <Include/general.h>
-#include <Main/views.hxx>
 #include <Time/fg_time.hxx>
-
 #include "celestialBody.hxx"
 #include "star.hxx"
 
-class Moon : public CelestialBody
+class Mercury : public CelestialBody
 {
-private:
-  void TexInit();  // This should move to the constructor eventually.
-
-  GLUquadricObj *Object;
-  GLuint Sphere;
-  
 public:
-  Moon ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
-  void newImage(float, float);
+  Mercury ( fgTIME *t);
+  void updatePosition(fgTIME *t, Star* ourSun);
 };
 
-
-#endif // _MOON_HXX_
+#endif // _MERURY_HXX_

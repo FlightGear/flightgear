@@ -1,5 +1,5 @@
 /**************************************************************************
- * moon.hxx
+ * star.hxx
  * Written by Durk Talsma. Originally started October 1997, for distribution  
  * with the FlightGear project. Version 2 was written in August and 
  * September 1998. This code is based upon algorithms and data kindly 
@@ -22,32 +22,76 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
-#ifndef _MOON_HXX_
-#define _MOON_HXX_
+#ifndef _STAR_HXX_
+#define _STAR_HXX_
 
-#include <Aircraft/aircraft.h>
-#include <Debug/fg_debug.h>
-#include <Include/fg_constants.h>
-#include <Include/general.h>
-#include <Main/views.hxx>
 #include <Time/fg_time.hxx>
-
 #include "celestialBody.hxx"
-#include "star.hxx"
 
-class Moon : public CelestialBody
+
+class Star : public CelestialBody
 {
 private:
-  void TexInit();  // This should move to the constructor eventually.
-
-  GLUquadricObj *Object;
-  GLuint Sphere;
-  
+  double longitude;  // the sun's true longitude
+  double xs, ys;     // the sun's rectangular geocentric coordinates
+  double distance;   // the sun's distance to the earth
+ 
 public:
-  Moon ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
-  void newImage(float, float);
+  Star (fgTIME *t);
+  void updatePosition(fgTIME *t);
+  double getM();
+  double getw();
+  double getLon();
+  double getxs();
+  double getys();
+  double getDistance();
 };
 
 
-#endif // _MOON_HXX_
+
+inline double Star::getM()
+{
+  return M;
+}
+
+inline double Star::getw()
+{
+  return w;
+}
+
+inline double Star::getLon()
+{
+  return longitude;
+}
+
+inline double Star::getxs()
+{
+  return xs;
+}
+
+inline double Star::getys()
+{
+  return ys;
+}
+
+inline double Star::getDistance()
+{
+  return distance;
+}
+
+
+#endif // _STAR_HXX_
+
+
+
+
+
+
+
+
+
+
+
+
+
+

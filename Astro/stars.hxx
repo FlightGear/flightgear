@@ -32,6 +32,7 @@
 # error This library requires C++
 #endif                                   
 
+#include <Time/fg_time.hxx>
 
 #define FG_STAR_LEVELS 8         /* how many star transitions */
 
@@ -49,10 +50,14 @@ extern fgTIME cur_time_params;
 
 
 /* $Log$
-/* Revision 1.3  1998/08/06 12:45:20  curt
-/* Modified to bring in stars in 8 increments based on magnitude, not number
-/* of stars.
+/* Revision 1.4  1998/09/15 04:26:23  curt
+/* New textured moon and rewritten/restructured Astro code contributed by Durk
+/* Talsma.
 /*
+ * Revision 1.3  1998/08/06 12:45:20  curt
+ * Modified to bring in stars in 8 increments based on magnitude, not number
+ * of stars.
+ *
  * Revision 1.2  1998/04/28 01:19:03  curt
  * Type-ified fgTIME and fgVIEW
  *

@@ -1,5 +1,5 @@
 /**************************************************************************
- * moon.hxx
+ * jupiter.cxx
  * Written by Durk Talsma. Originally started October 1997, for distribution  
  * with the FlightGear project. Version 2 was written in August and 
  * September 1998. This code is based upon algorithms and data kindly 
@@ -22,32 +22,39 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
-#ifndef _MOON_HXX_
-#define _MOON_HXX_
 
-#include <Aircraft/aircraft.h>
-#include <Debug/fg_debug.h>
-#include <Include/fg_constants.h>
-#include <Include/general.h>
-#include <Main/views.hxx>
-#include <Time/fg_time.hxx>
+#include "jupiter.hxx"
 
-#include "celestialBody.hxx"
-#include "star.hxx"
-
-class Moon : public CelestialBody
+/*************************************************************************
+ * Jupiter::Jupiter(fgTIME *t)
+ * Public constructor for class Jupiter
+ * Argument: The current time.
+ * the hard coded orbital elements for Jupiter are passed to 
+ * CelestialBody::CelestialBody();
+ ************************************************************************/
+Jupiter::Jupiter(fgTIME *t) :
+  CelestialBody(100.4542,  2.7685400E-5,	
+		1.3030,   -1.557E-7,
+		273.8777,  1.6450500E-5,
+		5.2025600, 0.000000,
+		0.048498,  4.469E-9,
+		19.89500,  0.08308530010, t)
 {
-private:
-  void TexInit();  // This should move to the constructor eventually.
+}
 
-  GLUquadricObj *Object;
-  GLuint Sphere;
-  
-public:
-  Moon ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
-  void newImage(float, float);
-};
+/*************************************************************************
+ * void Jupiter::updatePosition(fgTIME *t, Star *ourSun)
+ * 
+ * calculates the current position of Jupiter, by calling the base class,
+ * CelestialBody::updatePosition(); The current magnitude is calculated using 
+ * a Jupiter specific equation
+ *************************************************************************/
+void Jupiter::updatePosition(fgTIME *t, Star *ourSun)
+{
+  CelestialBody::updatePosition(t, ourSun);
+  magnitude = -9.25 + 5*log10( r*R ) + 0.014 * FV;
+}
 
 
-#endif // _MOON_HXX_
+
+
