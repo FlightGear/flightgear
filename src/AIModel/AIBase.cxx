@@ -43,7 +43,12 @@
 #include "AIBase.hxx"
 #include "AIManager.hxx"
 
-FGAIBase::FGAIBase() {
+FGAIBase::FGAIBase()
+ :  fp( NULL ),
+    model( NULL ),
+    props( NULL ),
+    manager( NULL )
+{
     _type_str = "model";
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
     bearing = elevation = range = rdot = 0.0;
@@ -53,12 +58,9 @@ FGAIBase::FGAIBase() {
     no_roll = true;
     life = 900;
     model_path = "";
-    model = 0;
     _otype = otNull;
     index = 0;
-    fp = (FGAIFlightPlan*)0;
     delete_me = false;
-    manager = NULL;
 }
 
 FGAIBase::~FGAIBase() {
@@ -67,6 +69,7 @@ FGAIBase::~FGAIBase() {
     SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
     root->removeChild(_type_str.c_str(), index);
     if (fp) delete fp;
+    fp = NULL;
 }
 
 void FGAIBase::update(double dt) {

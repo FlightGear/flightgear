@@ -199,10 +199,10 @@ FGAIManager::createBallistic( FGAIModelEntity *entity ) {
         ai_ballistic->setDragArea(entity->eda);
         ai_ballistic->setLife(entity->life);
         ai_ballistic->setBuoyancy(entity->buoyancy);
-	    ai_ballistic->setWind_from_east(entity->wind_from_east);
-	    ai_ballistic->setWind_from_north(entity->wind_from_north);
-	    ai_ballistic->setWind(entity->wind);
-		ai_ballistic->setRoll(entity->roll);
+        ai_ballistic->setWind_from_east(entity->wind_from_east);
+        ai_ballistic->setWind_from_north(entity->wind_from_north);
+        ai_ballistic->setWind(entity->wind);
+        ai_ballistic->setRoll(entity->roll);
         ai_ballistic->init();
         ai_ballistic->bind();
         return ai_ballistic;
