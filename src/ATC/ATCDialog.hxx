@@ -62,6 +62,13 @@ public:
 	void add_entry( string station, string transmission, string menutext );
 	
 	bool trans_reg( const string &station, const string &trans );
+	
+	// Display a frequency search dialog for nearby stations
+	void FreqDialog();
+	
+	// Display the comm ATC frequencies for airport ident
+	// where ident is a valid ICAO code.
+	void FreqDisplay(string ident);
 
 private:
 
@@ -69,6 +76,7 @@ private:
   
 	int  freq;
 	bool reset;
+	
 };
 	
 extern FGATCDialog *current_atcdialog;	

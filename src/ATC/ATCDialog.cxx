@@ -26,12 +26,20 @@
 #include "ATCDialog.hxx"
 #include "ATC.hxx"
 #include "ATCmgr.hxx"
+#include "commlist.hxx"
+#include "ATCutils.hxx"
+#include <Airports/simple.hxx>
 
 FGATCDialog *current_atcdialog;
 
 // For the command manager - maybe eventually this should go in the built in command list
 static bool do_ATC_dialog(const SGPropertyNode* arg) {
 	globals->get_ATC_mgr()->doPopupDialog();
+	return(true);
+}
+
+static bool do_ATC_freq_search(const SGPropertyNode* arg) {
+	current_atcdialog->FreqDialog();
 	return(true);
 }
 
@@ -243,6 +251,8 @@ void ATCDoDialog(atc_type type) {
 }
 
 void FGATCDialog::Init() {
+	// Add ATC-freq-search to the command list
+	globals->get_commands()->addCommand("ATC-freq-search", do_ATC_freq_search);
 }
 
 // AK
@@ -389,5 +399,250 @@ void FGATCDialog::DoDialog() {
 		}
 		*/	
 	}
+}
+
+//////////////////////////////////////////////////////
+//
+//  STUFF FOR THE FREQUENCY SEARCH DIALOG
+//
+//////////////////////////////////////////////////////
+
+static puDialogBox*		atcFreqDialog;
+static puFrame*			atcFreqDialogFrame;
+static puText*			atcFreqDialogMessage;
+static puInput*			atcFreqDialogInput;
+static puOneShot*		atcFreqDialogOkButton;
+static puOneShot*		atcFreqDialogCancelButton;
+//static puButtonBox*		atcFreqDialogCommunicationOptions;
+
+static puText* atcFreqDisplayText[20];
+	
+static void FreqDialogCancel(puObject*) {
+	FG_POP_PUI_DIALOG(atcFreqDialog);
+	delete atcFreqDialog;
+}
+
+static void FreqDialogOK(puObject*) {
+	string tmp = atcFreqDialogInput->getStringValue();
+	FG_POP_PUI_DIALOG(atcFreqDialog);
+	delete atcFreqDialog;
+	current_atcdialog->FreqDisplay(tmp);
+}
+
+static void FreqDisplayOK(puObject*) {
+	FG_POP_PUI_DIALOG(atcFreqDialog);
+	delete atcFreqDialog;
+}
+
+void FGATCDialog::FreqDialog() {
+
+	// Find the ATC stations within a reasonable range (about 40 miles?)
+	//comm_list_type atc_stations;
+	//comm_list_iterator atc_stat_itr;
+	
+	//double lon = fgGetDouble("/position/longitude-deg");
+	//double lat = fgGetDouble("/position/latitude-deg");
+	//double elev = fgGetDouble("/position/altitude-ft");
+	
+	/*
+	// search stations in range
+	int num_stat = current_commlist->FindByPos(lon, lat, elev, 40.0, &atc_stations);
+	if (num_stat != 0) {
+	} else {
+		// Make up a message saying no things in range
+	}
+	*/
+	
+	//char defaultATCLabel[] = "Enter desired option to communicate with ATC:";
+	char *s;
+	
+	int hsize = 150;
+	atcFreqDialog = new puDialogBox (150, 50);
+	{
+		atcFreqDialogFrame   = new puFrame (0, 0, 300, hsize);
+		
+		atcFreqDialogMessage = new puText          (40, (hsize - 30));
+		atcFreqDialogMessage    -> setDefaultValue ("Enter airport identifier:");
+		atcFreqDialogMessage    -> getDefaultValue (&s);
+		atcFreqDialogMessage    -> setLabel        (s);
+		//atcFreqDialogMessage    -> setLabelPlace   (PUPLACE_TOP_CENTERED);
+		//atcFreqDialogMessage    -> setLabelPlace   (0);
+
+		atcFreqDialogInput = new puInput (50, (hsize - 75), 150, (hsize - 45));
+		atcFreqDialogInput->acceptInput();
+		
+		atcFreqDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
+		atcFreqDialogOkButton     ->     setLegend         (gui_msg_OK);
+		atcFreqDialogOkButton     ->     makeReturnDefault (TRUE);
+		atcFreqDialogOkButton     ->     setCallback       (FreqDialogOK);
+		
+		atcFreqDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
+		atcFreqDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
+		atcFreqDialogCancelButton ->     setCallback       (FreqDialogCancel);
+		
+	}
+	FG_FINALIZE_PUI_DIALOG(atcFreqDialog);
+	
+	FG_PUSH_PUI_DIALOG(atcFreqDialog);
+	
+}
+
+static void atcUppercase(string &s)
+{
+	for(unsigned int i=0; i<s.size(); ++i) {
+		s[i] = toupper(s[i]);
+	}
+}
+
+void FGATCDialog::FreqDisplay(string ident) {
+
+	// Find the ATC stations within a reasonable range (about 40 miles?)
+	//comm_list_type atc_stations;
+	//comm_list_iterator atc_stat_itr;
+	
+	//double lon = fgGetDouble("/position/longitude-deg");
+	//double lat = fgGetDouble("/position/latitude-deg");
+	//double elev = fgGetDouble("/position/altitude-ft");
+	
+	/*
+	// search stations in range
+	int num_stat = current_commlist->FindByPos(lon, lat, elev, 40.0, &atc_stations);
+	if (num_stat != 0) {
+	} else {
+		// Make up a message saying no things in range
+	}
+	*/
+	
+	atcUppercase(ident);
+	
+	//char defaultATCLabel[] = "Enter desired option to communicate with ATC:";
+	string label = "Frequencies for airport ";
+	label += ident;
+	label += ":";
+	char *s;
+	
+	int n = 0;	// Number of ATC frequencies at this airport
+	string freqs[20];
+	char buf[8];
+
+    FGAirport a;
+    if ( dclFindAirportID( ident, &a ) ) {
+		comm_list_type stations;
+		int found = current_commlist->FindByPos(a.longitude, a.latitude, a.elevation, 20.0, &stations);
+		if(found) {
+			comm_list_iterator itr = stations.begin();
+			while(itr != stations.end()) {
+				if((*itr).ident == ident) {
+					switch((*itr).type) {
+					case ATIS:
+						freqs[n] = "ATIS     -     ";
+						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
+						// Hack alert!
+						if(buf[5] == '3') buf[5] = '2';
+						if(buf[5] == '8') buf[5] = '7';
+						freqs[n] += buf;
+						n++;
+						//cout << "ATIS\n";
+						break;
+					case TOWER:
+						freqs[n] = "TOWER    -     ";
+						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
+						// Hack alert!
+						if(buf[5] == '3') buf[5] = '2';
+						if(buf[5] == '8') buf[5] = '7';
+						freqs[n] += buf;
+						n++;
+						//cout << "TOWER\n";
+						break;
+					case GROUND:
+						freqs[n] = "GROUND   -     ";
+						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
+						// Hack alert!
+						if(buf[5] == '3') buf[5] = '2';
+						if(buf[5] == '8') buf[5] = '7';
+						freqs[n] += buf;
+						n++;
+						//cout << "GROUND\n";
+						break;
+					case APPROACH:
+						freqs[n] = "APPROACH  -     ";
+						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
+						// Hack alert!
+						if(buf[5] == '3') buf[5] = '2';
+						if(buf[5] == '8') buf[5] = '7';
+						freqs[n] += buf;
+						n++;
+						//cout << "APPROACH\n";
+						break;
+					case DEPARTURE:
+						freqs[n] = "DEPARTURE  -     ";
+						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
+						// Hack alert!
+						if(buf[5] == '3') buf[5] = '2';
+						if(buf[5] == '8') buf[5] = '7';
+						freqs[n] += buf;
+						n++;
+						//cout << "DEPARTURE\n";
+						break;
+					case ENROUTE:	// not really associated with an airport possibly.
+						freqs[n] = "ENROUTE  -     ";
+						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
+						// Hack alert!
+						if(buf[5] == '3') buf[5] = '2';
+						if(buf[5] == '8') buf[5] = '7';
+						freqs[n] += buf;
+						n++;
+						//cout << "ENROUTE\n";
+						break;
+					case INVALID:	// need to include this to stop the compiler complaining.
+						break;
+					}
+				}
+				++itr;
+			}
+		}
+    } else {
+		label = "Airport ";
+		label += ident;
+		label += " not found in database.";
+		n = -1;
+	}
+	
+	if(n == 0) {
+		label = "No frequencies found for airport ";
+		label += ident;
+	}
+
+	int hsize = (n < 0 ? 100 : 105 + (n * 30));
+	atcFreqDialog = new puDialogBox (250, 50);
+	{
+		atcFreqDialogFrame   = new puFrame (0, 0, 400, hsize);
+		
+		atcFreqDialogMessage = new puText          (40, (hsize - 30));
+		atcFreqDialogMessage    -> setDefaultValue (label.c_str());
+		atcFreqDialogMessage    -> getDefaultValue (&s);
+		atcFreqDialogMessage    -> setLabel        (s);
+		
+		for(int i=0; i<n; ++i) {
+			atcFreqDisplayText[i] = new puText(40, hsize - 65 - (30 * i));
+			atcFreqDisplayText[i]->setDefaultValue(freqs[i].c_str());
+			atcFreqDisplayText[i]-> getDefaultValue (&s);
+			atcFreqDisplayText[i]-> setLabel        (s);
+		}
+		
+		atcFreqDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
+		atcFreqDialogOkButton     ->     setLegend         (gui_msg_OK);
+		atcFreqDialogOkButton     ->     makeReturnDefault (TRUE);
+		atcFreqDialogOkButton     ->     setCallback       (FreqDisplayOK);
+		
+		atcFreqDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
+		atcFreqDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
+		atcFreqDialogCancelButton ->     setCallback       (FreqDialogCancel);
+		
+	}
+	FG_FINALIZE_PUI_DIALOG(atcFreqDialog);
+	
+	FG_PUSH_PUI_DIALOG(atcFreqDialog);
+	
 }
 
