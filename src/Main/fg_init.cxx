@@ -590,7 +590,7 @@ void fgInitFDM() {
 	} else if (model == "external") {
 	    cur_fdm_state = new FGExternal( dt );
 	} else if (model == "network") {
-	    cur_fdm_state = new FGExternalNet( dt, 5501, 5502, 5503, "localhost" );
+	    cur_fdm_state = new FGExternalNet( dt, 5501, 5502, 5503, "10.0.2.4" );
 	} else if (model == "null") {
 	    cur_fdm_state = new FGNullFDM( dt );
 	} else if (model == "yasim") {
@@ -1030,15 +1030,6 @@ bool fgInitSubsystems( void ) {
     current_input.bind();
 
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the 3D aircraft model subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    globals->set_aircraft_model(new FGAircraftModel);
-    globals->get_aircraft_model()->init();
-    globals->get_aircraft_model()->bind();
-
-
     ////////////////////////////////////////////////////////////////////////
     // End of subsystem initialization.
     ////////////////////////////////////////////////////////////////////
@@ -1106,4 +1097,5 @@ void fgReInitSubsystems( void )
 	fgSetBool("/sim/freeze/master", false);
     }
 }
+
 

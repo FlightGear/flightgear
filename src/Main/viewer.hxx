@@ -39,21 +39,20 @@
 
 #include "fgfs.hxx"
 
+#include <Main/location.hxx>
 
 #define FG_FOV_MIN 0.1
 #define FG_FOV_MAX 179.9
 
+enum fgViewType {
+ FG_LOOKFROM = 0,
+ FG_LOOKAT = 1,
+};
 
 // Define a structure containing view information
 class FGViewer : public FGSubsystem {
 
 public:
-
-    enum fgViewType {
-	FG_RPH = 0,
-	FG_LOOKAT = 1,
-	FG_HPR = 2
-    };
 
     enum fgScalingType {  // nominal Field Of View actually applies to ...
 	FG_SCALING_WIDTH,       // window width
@@ -63,7 +62,7 @@ public:
     };
 
     // Constructor
-    FGViewer( void );
+    FGViewer( fgViewType Type, bool from_model, int from_model_index, bool at_model, int at_model_index );
 
     // Destructor
     virtual ~FGViewer( void );
@@ -214,8 +213,6 @@ public:
 
     // Matrices...
     virtual const sgVec4 *get_VIEW() { if ( _dirty ) { recalc(); } return VIEW; }
-    virtual const sgVec4 *get_VIEW_ROT() { if ( _dirty ) { recalc(); }	return VIEW_ROT; }
-    virtual const sgVec4 *get_LOCAL_ROT() { if ( _dirty ) { recalc(); }	return LOCAL_ROT; }
     virtual const sgVec4 *get_UP() { if ( _dirty ) { recalc(); } return UP; }
 
     //////////////////////////////////////////////////////////////////////
@@ -233,6 +230,14 @@ public:
 	_aspect_ratio = r;
     }
     virtual double get_aspect_ratio() const { return _aspect_ratio; }
+
+    //////////////////////////////////////////////////////////////////////
+    // Part 5: misc setters and getters
+    //////////////////////////////////////////////////////////////////////
+
+    inline void set_dirty() { _dirty = true; }
+    inline void set_clean() { _dirty = false; }
+
 
 private:
 
@@ -279,6 +284,17 @@ private:
     fgViewType _type;
     fgScalingType _scaling_type;
 
+    // view is looking from a model
+    bool _from_model;
+    int _from_model_index;  // number of model (for multi model)
+
+    // view is looking at a model
+    bool _at_model;
+    int _at_model_index;  // number of model (for multi model)
+
+    FGLocation * _location;
+    FGLocation * _target_location;
+
     // the nominal field of view (angle, in degrees)
     double _fov_deg; 
 
@@ -310,11 +326,8 @@ private:
     // top of the aircraft
     sgVec3 _view_up;
 
-//    // the vector pointing straight out the nose of the aircraft
-//    sgVec3 _view_forward;
-
     // sg versions of our friendly matrices
-    sgMat4 VIEW, VIEW_ROT, UP, LOCAL_ROT;
+    sgMat4 VIEW, UP;
     sgMat4 LOCAL, TRANS, LARC_TO_SSG;
 
     // Transformation matrix for the view direction offset relative to
@@ -327,9 +340,9 @@ private:
 
     void recalc ();
     void recalcPositionVectors (double lon_deg, double lat_deg, double alt_ft) const;
-
-    inline void set_dirty() { _dirty = true; }
-    inline void set_clean() { _dirty = false; }
+    void updateFromModelLocation (FGLocation * location);
+    void recalcOurOwnLocation (double lon_deg, double lat_deg, double alt_ft,
+                 double roll_deg, double pitch_deg, double heading_deg);
 
     // add to _heading_offset_deg
     inline void incHeadingOffset_deg( double amt ) {
@@ -351,13 +364,3 @@ private:
 
 
 #endif // _VIEWER_HXX
-
-
-
-
-
-
-
-
-
-

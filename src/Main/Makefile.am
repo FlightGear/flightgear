@@ -51,7 +51,8 @@ fgfs_SOURCES = \
 	options.cxx options.hxx \
 	splash.cxx splash.hxx \
 	viewer.cxx viewer.hxx \
-	viewmgr.cxx viewmgr.hxx
+	viewmgr.cxx viewmgr.hxx \
+        location.cxx location.hxx
 
 fgfs_LDADD = \
 	$(top_builddir)/src/Aircraft/libAircraft.a \
@@ -94,4 +95,5 @@ INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
 else
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 endif
+
 

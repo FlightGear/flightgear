@@ -376,14 +376,14 @@ void trRenderFrame( void ) {
     ssgSetNearFar( scene_nearplane, scene_farplane );
     ssgCullAndDraw( scene );
 
-    globals->get_aircraft_model()->update(0);
-
     // draw the lights
     glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
     ssgSetNearFar( scene_nearplane, scene_farplane );
     ssgCullAndDraw( lighting );
 
     thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
+
+    globals->get_aircraft_model()->draw();
 
     // need to do this here as hud_and_panel state is static to
     // main.cxx  and HUD and Panel routines have to be called with
@@ -655,8 +655,6 @@ void fgRenderFrame( void ) {
         ssgSetNearFar( scene_nearplane, scene_farplane );
 	ssgCullAndDraw( scene );
 
-	globals->get_aircraft_model()->update(dt_ms);
-
 	// change state for lighting here
 
 	// draw lighting
@@ -721,6 +719,8 @@ void fgRenderFrame( void ) {
 	    thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 	}
 
+	globals->get_aircraft_model()->draw();
+
 	// display HUD && Panel
 	glDisable( GL_FOG );
 	glDisable( GL_DEPTH_TEST );
@@ -780,7 +780,7 @@ void fgUpdateTimeDepCalcs() {
     //      << " cur_elev = " << scenery.get_cur_elev() << endl;
 
     if ( !cur_fdm_state->get_inited() && scenery.get_cur_elev() > -9990 ) {
-  SG_LOG(SG_FLIGHT,SG_INFO, "Finally initializing fdm");  
+	SG_LOG(SG_FLIGHT,SG_INFO, "Finally initializing fdm");  
 	
 	cur_fdm_state->init();
 	if ( cur_fdm_state->get_bound() ) {
@@ -844,6 +844,9 @@ void fgUpdateTimeDepCalcs() {
 	cur_view_fdm = *cur_fdm_state;
 	// do nothing
     }
+
+
+    globals->get_aircraft_model()->update(multi_loop);
 
     // update the view angle
     globals->get_viewmgr()->update(multi_loop);
@@ -1476,10 +1479,23 @@ int mainLoop( int argc, char **argv ) {
     SGPath modelpath( globals->get_fg_root() );
     ssgModelPath( (char *)modelpath.c_str() );
   
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the 3D aircraft model subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->set_aircraft_model(new FGAircraftModel);
+    globals->get_aircraft_model()->init();
+    globals->get_aircraft_model()->bind();
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the view manager subsystem.
+    ////////////////////////////////////////////////////////////////////
+
     FGViewMgr *viewmgr = new FGViewMgr;
     globals->set_viewmgr( viewmgr );
     viewmgr->init();
     viewmgr->bind();
+
 
     // Scene graph root
     scene = new ssgRoot;
@@ -1941,6 +1957,8 @@ void fgUpdateDCS (void) {
 
 // $$$ end - added VS Renganathan, 15 Oct 2K
 //           added Venky         , 12 Nov 2K
+
+
 
 
 

@@ -106,9 +106,8 @@ public:
     // setters
     inline void clear() { views.clear(); }
     inline void set_view( const int v ) { current = v; }
-    inline void add_view( FGViewer * v, int type ) {
+    inline void add_view( FGViewer * v ) {
 	views.push_back(v);
-        v->setType(type);
         v->init();
     }
 
@@ -147,7 +146,3 @@ private:
 
 
 #endif // _VIEWMGR_HXX
-
-
-
-

@@ -50,17 +50,55 @@ void
 FGViewMgr::init ()
 {
   char stridx [ 20 ];
+  bool from_model = false;
+  bool at_model = false;
+  int from_model_index = 0;
+  int at_model_index = 0;
+
   for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
-    nodepath = "/sim/view";
+    viewpath = "/sim/view";
     sprintf(stridx, "[%d]", i);
-    nodepath += stridx;
+    viewpath += stridx;
+
+    // find out what type of view this is...
+    nodepath = viewpath;
     nodepath += "/type";
     strdata = fgGetString(nodepath.c_str());
-    // supporting two types now "lookat" = 1 and "lookfrom" = 1
+
+    // FIXME:
+    // this is assumed to be an aircraft model...we will need to read
+    // model-from-type as well.
+    // find out if this is a model we are looking from...
+    nodepath = viewpath;
+    nodepath += "/config/from-model";
+    from_model = fgGetBool(nodepath.c_str());
+
+    // get model index (which model)
+    if (from_model) {
+      nodepath = viewpath;
+      nodepath += "/config/from-model-idx";
+      from_model_index = fgGetInt(nodepath.c_str());     
+    }
+
+    if ( strcmp("lookat",strdata.c_str()) == 0 ) {
+      // find out if this is a model we are looking at...
+      nodepath = viewpath;
+      nodepath += "/config/at-model";
+      at_model = fgGetBool(nodepath.c_str());
+
+      // get model index (which model)
+      if (at_model) {
+        nodepath = viewpath;
+        nodepath += "/config/at-model-idx";
+        at_model_index = fgGetInt(nodepath.c_str());     
+      }
+    }
+
+    // supporting two types now "lookat" = 1 and "lookfrom" = 0
     if ( strcmp("lookat",strdata.c_str()) == 0 )
-      add_view(new FGViewer, 1);
+      add_view(new FGViewer ( FG_LOOKAT, from_model, from_model_index, at_model, at_model_index ));
     else
-      add_view(new FGViewer, 0);
+      add_view(new FGViewer ( FG_LOOKFROM, from_model, from_model_index, false, 0 ));
   }
 }
 
@@ -122,44 +160,56 @@ void
 FGViewMgr::update (int dt)
 {
   char stridx [20];
+  double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
 
   FGViewer * view = get_current_view();
   if (view == 0)
     return;
 
-  for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
-    viewpath = "/sim/view";
-    sprintf(stridx, "[%d]", i);
-    viewpath += stridx;
+  // 
+  int i = current;
+  viewpath = "/sim/view";
+  sprintf(stridx, "[%d]", i);
+  viewpath += stridx;
 
 
-    FGViewer *loop_view = (FGViewer *)get_view( i );
+  FGViewer *loop_view = (FGViewer *)get_view( i );
 
-		// Set up view
+		// Set up view location and orientation
+
+  nodepath = viewpath;
+  nodepath += "/config/from-model";
+  if (!fgGetBool(nodepath.c_str())) {
     nodepath = viewpath;
     nodepath += "/config/eye-lon-deg-path";
-    double lon_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+    lon_deg = fgGetDouble(fgGetString(nodepath.c_str()));
     nodepath = viewpath;
     nodepath += "/config/eye-lat-deg-path";
-    double lat_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+    lat_deg = fgGetDouble(fgGetString(nodepath.c_str()));
     nodepath = viewpath;
     nodepath += "/config/eye-alt-ft-path";
-    double alt_ft = fgGetDouble(fgGetString(nodepath.c_str()));
+    alt_ft = fgGetDouble(fgGetString(nodepath.c_str()));
     nodepath = viewpath;
     nodepath += "/config/eye-roll-deg-path";
-    double roll_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+    roll_deg = fgGetDouble(fgGetString(nodepath.c_str()));
     nodepath = viewpath;
     nodepath += "/config/eye-pitch-deg-path";
-    double pitch_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+    pitch_deg = fgGetDouble(fgGetString(nodepath.c_str()));
     nodepath = viewpath;
     nodepath += "/config/eye-heading-deg-path";
-    double heading_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-  
+    heading_deg = fgGetDouble(fgGetString(nodepath.c_str()));
     loop_view->setPosition(lon_deg, lat_deg, alt_ft);
     loop_view->setOrientation(roll_deg, pitch_deg, heading_deg);
+  } else {
+    // force recalc in viewer
+    loop_view->set_dirty();
+  }
 
-    // if lookat (type 1) then get target data...
-    if (loop_view->getType() == 1) {
+  // if lookat (type 1) then get target data...
+  if (loop_view->getType() == 1) {
+    nodepath = viewpath;
+    nodepath += "/config/from-model";
+    if (!fgGetBool(nodepath.c_str())) {
       nodepath = viewpath;
       nodepath += "/config/target-lon-deg-path";
       lon_deg = fgGetDouble(fgGetString(nodepath.c_str()));
@@ -178,9 +228,11 @@ FGViewMgr::update (int dt)
       nodepath = viewpath;
       nodepath += "/config/target-heading-deg-path";
       heading_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-    
+     
       loop_view ->setTargetPosition(lon_deg, lat_deg, alt_ft);
       loop_view->setTargetOrientation(roll_deg, pitch_deg, heading_deg);
+    } else {
+      loop_view->set_dirty();
     }
   }
 
@@ -197,7 +249,7 @@ FGViewMgr::update (int dt)
   sgVec3 *pPO = PilotOffsetGet();
   sgVec3 zPO;
   sgCopyVec3( zPO, *pPO );
-  chase_view->setPositionOffsets(zPO[1], zPO[0], zPO[2] );
+  chase_view->setPositionOffsets(zPO[1], zPO[2], zPO[0] );
 
 				// Update the current view
   do_axes();
