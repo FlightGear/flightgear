@@ -74,7 +74,7 @@ private:
     triele_list tri_elements;
 
     // fan list
-    fan_list fans;
+    fan_list fans[FG_MAX_AREA_TYPES];
 
     // for each node, a list of triangle indices that contain this node
     belongs_to_list reverse_ele_lookup;
@@ -105,7 +105,7 @@ private:
     void calc_gbs();
 
     // caclulate the bounding sphere for a list of triangle faces
-    void calc_group_bounding_sphere( const triele_list& tris, 
+    void calc_group_bounding_sphere( const fan_list& fans, 
 				     Point3D *center, double *radius );
 
     // caclulate the bounding sphere for the specified triangle face
@@ -131,6 +131,9 @@ public:
 
 
 // $Log$
+// Revision 1.8  1999/03/30 23:50:44  curt
+// Modifications to fanify by attribute.
+//
 // Revision 1.7  1999/03/29 13:11:04  curt
 // Shuffled stl type names a bit.
 // Began adding support for tri-fanning (or maybe other arrangments too.)

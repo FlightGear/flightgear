@@ -191,8 +191,26 @@ int FGGenOutput::build( const FGArray& array, const FGTriangle& t ) {
     tri_elements = t.get_elelist();
 
     // build the trifan list
+    cout << "total triangles = " << tri_elements.size() << endl;
     FGGenFans f;
-    fans = f.greedy_build( tri_elements );
+    for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
+	cout << "generating fans for area = " << i << endl;
+
+	triele_list area_tris;
+	area_tris.erase( area_tris.begin(), area_tris.end() );
+
+	const_triele_list_iterator t_current = tri_elements.begin();
+	const_triele_list_iterator t_last = tri_elements.end();
+	for ( ; t_current != t_last; ++t_current ) {
+	    if ( (int)t_current->get_attribute() == i ) {
+		area_tris.push_back( *t_current );
+	    }
+	}
+
+	if ( (int)area_tris.size() > 0 ) {
+	    fans[i] = f.greedy_build( area_tris );
+	}
+    }
 
     // generate the point list in wgs-84 coordinates
     gen_wgs84_points( array );
@@ -215,25 +233,24 @@ int FGGenOutput::build( const FGArray& array, const FGTriangle& t ) {
 
 
 // caclulate the bounding sphere for a list of triangle faces
-void FGGenOutput::calc_group_bounding_sphere( const triele_list& tris, 
+void FGGenOutput::calc_group_bounding_sphere( const fan_list& fans, 
 					      Point3D *center, double *radius )
 {
-    cout << "calculate group bounding sphere for " << tris.size() << " tris." 
+    cout << "calculate group bounding sphere for " << fans.size() << " fans." 
 	 << endl;
 
     // generate a list of unique points from the triangle list
     FGTriNodes nodes;
 
-    const_triele_list_iterator t_current = tris.begin();
-    const_triele_list_iterator t_last = tris.end();
-    for ( ; t_current != t_last; ++t_current ) {
-	Point3D p1 = wgs84_nodes[ t_current->get_n1() ];
-	Point3D p2 = wgs84_nodes[ t_current->get_n2() ];
-	Point3D p3 = wgs84_nodes[ t_current->get_n3() ];
-
-	nodes.unique_add(p1);
-	nodes.unique_add(p2);
-	nodes.unique_add(p3);
+    const_fan_list_iterator f_current = fans.begin();
+    const_fan_list_iterator f_last = fans.end();
+    for ( ; f_current != f_last; ++f_current ) {
+	const_int_list_iterator i_current = f_current->begin();
+	const_int_list_iterator i_last = f_current->end();
+	for ( ; i_current != i_last; ++i_current ) {
+	    Point3D p1 = wgs84_nodes[ *i_current ];
+	    nodes.unique_add(p1);
+	}
     }
 
     // find average of point list
@@ -357,42 +374,52 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
     // write triangles (grouped by type for now)
     Point3D center;
     double radius;
-    fprintf(fp, "# triangle list\n");
+    fprintf(fp, "# triangle groups\n");
     fprintf(fp, "\n");
 
+    int total_tris = 0;
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	triele_list area_tris;
-	area_tris.erase( area_tris.begin(), area_tris.end() );
-
-	const_triele_list_iterator t_current = tri_elements.begin();
-	const_triele_list_iterator t_last = tri_elements.end();
-	for ( ; t_current != t_last; ++t_current ) {
-	    if ( (int)t_current->get_attribute() == i ) {
-		area_tris.push_back( *t_current );
-	    }
-	}
-
-	if ( (int)area_tris.size() > 0 ) {
+	if ( (int)fans[i].size() > 0 ) {
 	    string attr_name = get_area_name( (AreaType)i );
-	    calc_group_bounding_sphere( area_tris, &center, &radius );
-	    cout << "writing " << (int)area_tris.size() << " faces for " 
+	    calc_group_bounding_sphere( fans[i], &center, &radius );
+	    cout << "writing " << (int)fans[i].size() << " fans for " 
 		 << attr_name << endl;
 
 	    fprintf(fp, "# usemtl %s\n", attr_name.c_str() );
 	    fprintf(fp, "# bs %.4f %.4f %.4f %.2f\n", 
 		    center.x(), center.y(), center.z(), radius);
 
-	    triele_list_iterator a_current = area_tris.begin();
-	    triele_list_iterator a_last = area_tris.end();
-	    for ( ; a_current != a_last; ++a_current ) {
-		fprintf( fp, "f %d %d %d\n", 
-			 a_current->get_n1(), 
-			 a_current->get_n2(),
-			 a_current->get_n3() );
+	    fan_list_iterator f_current = fans[i].begin();
+	    fan_list_iterator f_last = fans[i].end();
+	    for ( ; f_current != f_last; ++f_current ) {
+		fprintf( fp, "tf" );
+		int_list_iterator i_current = f_current->begin();
+		int_list_iterator i_last = f_current->end();
+		for ( ; i_current != i_last; ++i_current ) {
+		    fprintf( fp, " %d", *i_current );
+		}
+		fprintf( fp, "\n" );
+
+		{
+		int_list_iterator i_current = f_current->begin();
+		int_list_iterator i_last = f_current->end();
+		int center = *i_current;
+		++i_current;
+		int n2 = *i_current;
+		++i_current;
+		for ( ; i_current != i_last; ++i_current ) {
+		    int n3 = *i_current;
+		    fprintf( fp, "f %d %d %d\n", center, n2, n3 );
+		    ++total_tris;
+		    n2 = n3;
+		}
+		}
 	    }
+
 	    fprintf( fp, "\n" );
 	}
     }
+    cout << "wrote " << total_tris << " tris to output file" << endl;
 
     fclose(fp);
 
@@ -404,6 +431,9 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
 
 
 // $Log$
+// Revision 1.7  1999/03/30 23:50:43  curt
+// Modifications to fanify by attribute.
+//
 // Revision 1.6  1999/03/29 13:11:03  curt
 // Shuffled stl type names a bit.
 // Began adding support for tri-fanning (or maybe other arrangments too.)
