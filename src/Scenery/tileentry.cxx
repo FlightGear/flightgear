@@ -453,8 +453,8 @@ static int fgLightsPredraw( ssgEntity *e ) {
 #if 0
     if (glPointParameterIsSupported) {
         static float quadratic[3] = {1.0, 0.01, 0.0001};
-        glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
-        glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
+        glPointParameterfvProc(GL_DISTANCE_ATTENUATION_EXT, quadratic);
+        glPointParameterfProc(GL_POINT_SIZE_MIN_EXT, 1.0); 
         glPointSize(4.0);
     }
 #endif
@@ -465,7 +465,7 @@ static int fgLightsPostdraw( ssgEntity *e ) {
 #if 0
     if (glPointParameterIsSupported) {
         static float default_attenuation[3] = {1.0, 0.0, 0.0};
-        glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
+        glPointParameterfvProc(GL_DISTANCE_ATTENUATION_EXT,
                               default_attenuation);
         glPointSize(1.0);
     }
