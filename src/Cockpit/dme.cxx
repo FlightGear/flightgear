@@ -31,8 +31,6 @@
 #include <simgear/math/sg_random.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <Navaids/ilslist.hxx>
-#include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
 
 #include "dme.hxx"
@@ -80,6 +78,7 @@ FGDME::FGDME() :
     navcom2_freq(fgGetNode("/radios/nav[1]/frequencies/selected-mhz", true)),
     need_update(true),
     freq(0.0),
+    bias(0.0),
     dist(0.0),
     prev_dist(0.0),
     spd(0.0),
@@ -161,6 +160,11 @@ FGDME::update(double dt)
             SGTimeStamp current_time;
             station = Point3D( x, y, z );
             dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
+            cout << "dist = " << dist << endl;
+            dist -= bias;
+            cout << "  bias = " << bias << endl;
+            cout << "    dist = " << dist << endl;
+
             current_time.stamp();
             long dMs = (current_time - last_time) / 1000;
 				// Update every second
@@ -218,33 +222,20 @@ void FGDME::search()
         inrange = false;
     }
 
-    FGILS *ils;
-    FGNav *nav;
+    FGNavRecord *dme
+        = globals->get_dmelist()->findByFreq( freq, lon, lat, elev );
 
-    if ( (ils = globals->get_ilslist()->findByFreq( freq, lon, lat, elev )) != NULL ) {
-        if ( ils->get_has_dme() ) {
-            valid = true;
-            lon = ils->get_loclon();
-            lat = ils->get_loclat();
-            elev = ils->get_gselev();
-            range = FG_ILS_DEFAULT_RANGE;
-            effective_range = kludgeRange(elev, elev, range);
-            x = ils->get_dme_x();
-            y = ils->get_dme_y();
-            z = ils->get_dme_z();
-        }
-    } else if ( (nav = globals->get_navlist()->findByFreq(freq, lon, lat, elev)) != NULL ) {
-        if (nav->get_has_dme()) {
-            valid = true;
-            lon = nav->get_lon();
-            lat = nav->get_lat();
-            elev = nav->get_elev_ft();
-            range = nav->get_range();
-            effective_range = kludgeRange(elev, elev, range);
-            x = nav->get_x();
-            y = nav->get_y();
-            z = nav->get_z();
-        }
+    if ( dme != NULL ) {
+        valid = true;
+        lon = dme->get_lon();
+        lat = dme->get_lat();
+        elev = dme->get_elev_ft();
+        bias = dme->get_multiuse();
+        range = FG_ILS_DEFAULT_RANGE;
+        effective_range = kludgeRange(elev, elev, range);
+        x = dme->get_x();
+        y = dme->get_y();
+        z = dme->get_z();
     } else {
         valid = false;
         dist = 0;

@@ -97,8 +97,8 @@ FGKR_87::FGKR_87() :
     last_flt_et_btn(false),
     set_rst_btn(false),
     last_set_rst_btn(false),
-    freq(0.0),
-    stby_freq(0.0),
+    freq(0),
+    stby_freq(0),
     needle_deg(0.0),
     flight_timer(0.0),
     elapsed_timer(0.0),
@@ -255,9 +255,10 @@ void FGKR_87::update( double dt ) {
         } else {
             ant_mode = 0;
         }
+        // cout << "ant_mode = " << ant_mode << endl;
 
         if ( frq_btn && frq_btn != last_frq_btn && stby_mode == 0 ) {
-            double tmp = freq;
+            int tmp = freq;
             freq = stby_freq;
             stby_freq = tmp;
         } else if ( frq_btn ) {
@@ -286,7 +287,7 @@ void FGKR_87::update( double dt ) {
             // cout << "tmp_timer = " << tmp_timer << endl;
             if ( tmp_timer > 2.0 ) {
                 // button held depressed for 2 seconds
-                cout << "entering elapsed count down mode" << endl;
+                // cout << "entering elapsed count down mode" << endl;
                 timer_mode = 1;
                 count_mode = 2;
                 elapsed_timer = 0.0;
@@ -342,6 +343,7 @@ void FGKR_87::update( double dt ) {
         }
 
         if ( valid ) {
+            // cout << "adf is valid" << endl;
             // staightline distance
             station = Point3D( x, y, z );
             dist = aircraft.distance3D( station );
@@ -366,6 +368,8 @@ void FGKR_87::update( double dt ) {
             } else {
                 inrange = false;
             }
+
+            // cout << "inrange = " << inrange << endl;
 
             if ( inrange ) {
                 goal_needle_deg = heading
@@ -487,28 +491,28 @@ void FGKR_87::search() {
     // ADF.
     ////////////////////////////////////////////////////////////////////////
 
-    FGNav *nav
-        = globals->get_navlist()->findByFreq(freq, acft_lon, acft_lat, acft_elev);
-
-    if ( nav != NULL ) {
+    FGNavRecord *adf
+        = globals->get_navlist()->findByFreq( freq, acft_lon, acft_lat,
+                                              acft_elev );
+    if ( adf != NULL ) {
 	char sfreq[128];
-	snprintf( sfreq, 10, "%.0f", freq );
+	snprintf( sfreq, 10, "%d", freq );
 	ident = sfreq;
-	ident += nav->get_ident();
+	ident += adf->get_ident();
         // cout << "adf ident = " << ident << endl;
 	valid = true;
 	if ( last_ident != ident ) {
 	    last_ident = ident;
 
-	    trans_ident = nav->get_trans_ident();
-	    stn_lon = nav->get_lon();
-	    stn_lat = nav->get_lat();
-	    stn_elev = nav->get_elev_ft();
-	    range = nav->get_range();
+	    trans_ident = adf->get_trans_ident();
+	    stn_lon = adf->get_lon();
+	    stn_lat = adf->get_lat();
+	    stn_elev = adf->get_elev_ft();
+	    range = adf->get_range();
 	    effective_range = kludgeRange(stn_elev, acft_elev, range);
-	    x = nav->get_x();
-	    y = nav->get_y();
-	    z = nav->get_z();
+	    x = adf->get_x();
+	    y = adf->get_y();
+	    z = adf->get_z();
 
 	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
 		globals->get_soundmgr()->remove( "adf-ident" );
@@ -541,14 +545,14 @@ void FGKR_87::search() {
 }
 
 
-double FGKR_87::get_stby_freq() const {
+int FGKR_87::get_stby_freq() const {
     if ( stby_mode == 0 ) {
         return stby_freq;
     } else {
         if ( timer_mode == 0 ) {
-            return flight_timer;
+            return (int)flight_timer;
         } else {
-            return elapsed_timer;
+            return (int)elapsed_timer;
         }
     }
 }

@@ -326,12 +326,11 @@ GPS::update (double delta_time_sec)
                 }
             }
             else if (waypont_type == "nav") {
-                FGNav *n;
-                if ( (n = globals->get_navlist()->findByIdent(wp0_ID.c_str(), 
-                                                              longitude_deg, 
-                                                              latitude_deg))
-                     != NULL)
-                {
+                FGNavRecord *n
+                    = globals->get_navlist()->findByIdent(wp0_ID.c_str(), 
+                                                          longitude_deg, 
+                                                          latitude_deg);
+                if ( n != NULL ) {
                     //cout << "Nav found" << endl;
                     wp0_longitude_deg = n->get_lon();
                     wp0_latitude_deg = n->get_lat();
@@ -366,12 +365,11 @@ GPS::update (double delta_time_sec)
                 }
             }
             else if (waypont_type == "nav") {
-                FGNav * n;
-                if ( (n = globals->get_navlist()->findByIdent(wp1_ID.c_str(), 
-                                                              longitude_deg, 
-                                                              latitude_deg))
-                     != NULL)
-                {
+                FGNavRecord *n
+                    = globals->get_navlist()->findByIdent(wp1_ID.c_str(), 
+                                                          longitude_deg, 
+                                                          latitude_deg);
+                if ( n != NULL ) {
                     //cout << "Nav found" << endl;
                     wp1_longitude_deg = n->get_lon();
                     wp1_latitude_deg = n->get_lat();

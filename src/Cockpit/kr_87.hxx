@@ -88,8 +88,8 @@ class FGKR_87 : public SGSubsystem
     bool last_set_rst_btn;      // 0 = normal, 1 = depressed
 
     // outputs
-    double freq;
-    double stby_freq;
+    int freq;
+    int stby_freq;
     double needle_deg;
     double flight_timer;
     double elapsed_timer;
@@ -163,13 +163,13 @@ public:
     inline void set_set_rst_btn( bool val ) { set_rst_btn = val; }
 
     // outputs
-    inline double get_freq () const { return freq; }
-    inline void set_freq( double f ) {
+    inline int get_freq () const { return freq; }
+    inline void set_freq( int f ) {
 	freq = f;
         need_update = true;
     }
-    double get_stby_freq () const;
-    inline void set_stby_freq( double freq ) { stby_freq = freq; }
+    int get_stby_freq () const;
+    inline void set_stby_freq( int f ) { stby_freq = f; }
     inline double get_needle_deg() const { return needle_deg; }
     inline double get_flight_timer() const { return flight_timer; }
     inline double get_elapsed_timer() const { return elapsed_timer; }

@@ -31,7 +31,7 @@
 #include <simgear/math/sg_random.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <Navaids/mkrbeacons.hxx>
+#include <Navaids/navlist.hxx>
 
 #include "marker_beacon.hxx"
 
@@ -160,37 +160,94 @@ FGMarkerBeacon::update(double dt)
 }
 
 
+static bool check_beacon_range( double lon_rad, double lat_rad, double elev_m,
+                                FGNavRecord *b )
+{
+    Point3D aircraft = sgGeodToCart( Point3D(lon_rad, lat_rad, elev_m) );
+    Point3D station = Point3D( b->get_x(), b->get_y(), b->get_z() );
+    // cout << "    aircraft = " << aircraft << " station = " << station 
+    //      << endl;
+
+    double d = aircraft.distance3Dsquared( station ); // meters^2
+    // cout << "  distance = " << d << " (" 
+    //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
+    //         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
+    //      << ")" << endl;
+    
+    // cout << "  range = " << sqrt(d) << endl;
+
+    // cout << "elev = " << elev * SG_METER_TO_FEET
+    //      << " current->get_elev() = " << current->get_elev() << endl;
+    double elev_ft = elev_m * SG_METER_TO_FEET;
+    double delev = elev_ft - b->get_elev_ft();
+
+    // max range is the area under r = 2.4 * alt or r^2 = 4000^2 - alt^2
+    // whichever is smaller.  The intersection point is 1538 ...
+    double maxrange2;	// feet^2
+    if ( delev < 1538.0 ) {
+        maxrange2 = 2.4 * 2.4 * delev * delev;
+    } else if ( delev < 4000.0 ) {
+        maxrange2 = 4000 * 4000 - delev * delev;
+    } else {
+        maxrange2 = 0.0;
+    }
+    maxrange2 *= SG_FEET_TO_METER * SG_FEET_TO_METER; // convert to meter^2
+    // cout << "delev = " << delev << " maxrange = " << maxrange << endl;
+
+    // match up to twice the published range so we can model
+    // reduced signal strength
+    if ( d < maxrange2 ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 // Update current nav/adf radio stations based on current postition
 void FGMarkerBeacon::search() 
 {
-    static FGMkrBeacon::fgMkrBeacType last_beacon = FGMkrBeacon::NOBEACON;
+    static fgMkrBeacType last_beacon = NOBEACON;
 
-    double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
+    double lon_rad = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double lat_rad = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double elev_m = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
     ////////////////////////////////////////////////////////////////////////
     // Beacons.
     ////////////////////////////////////////////////////////////////////////
 
-    FGMkrBeacon::fgMkrBeacType beacon_type
-	= globals->get_beacons()->query( lon * SGD_RADIANS_TO_DEGREES,
-                                         lat * SGD_RADIANS_TO_DEGREES, elev );
+    // get closest marker beacon
+    FGNavRecord *b
+	= globals->get_mkrlist()->findClosest( lon_rad, lat_rad, elev_m );
+
+    // cout << "marker beacon = " << b << " (" << b->get_type() << ")" << endl;
+
+    fgMkrBeacType beacon_type = NOBEACON;
+    bool inrange = false;
+    if ( b != NULL ) {
+        if ( b->get_type() == 7 ) {
+            beacon_type = OUTER;
+        } else if ( b->get_type() == 8 ) {
+            beacon_type = MIDDLE;
+        } else if ( b->get_type() == 9 ) {
+            beacon_type = INNER;
+        }
+        inrange = check_beacon_range( lon_rad, lat_rad, elev_m, b );
+        // cout << "  inrange = " << inrange << endl;
+    }
 
     outer_marker = middle_marker = inner_marker = false;
 
-    if ( beacon_type == FGMkrBeacon::NOBEACON
-         || !has_power() || !serviceable->getBoolValue() )
+    if ( b == NULL || !inrange || !has_power() || !serviceable->getBoolValue() )
     {
 	// cout << "no marker" << endl;
-        beacon_type = FGMkrBeacon::NOBEACON;
 	globals->get_soundmgr()->stop( "outer-marker" );
 	globals->get_soundmgr()->stop( "middle-marker" );
 	globals->get_soundmgr()->stop( "inner-marker" );
-    } else if ( beacon_type == FGMkrBeacon::OUTER ) {
+    } else if ( beacon_type == OUTER ) {
 	outer_marker = true;
 	// cout << "OUTER MARKER" << endl;
-        if ( last_beacon != FGMkrBeacon::OUTER ) {
+        if ( last_beacon != OUTER ) {
             if ( ! globals->get_soundmgr()->exists( "outer-marker" ) ) {
                 SGSoundSample *sound = beacon.get_outer();
                 sound->set_volume( 0.3 );
@@ -204,10 +261,10 @@ void FGMarkerBeacon::search()
         } else {
             globals->get_soundmgr()->stop( "outer-marker" );
         }
-    } else if ( beacon_type == FGMkrBeacon::MIDDLE ) {
+    } else if ( beacon_type == MIDDLE ) {
 	middle_marker = true;
 	// cout << "MIDDLE MARKER" << endl;
-	if ( last_beacon != FGMkrBeacon::MIDDLE ) {
+	if ( last_beacon != MIDDLE ) {
 	    if ( ! globals->get_soundmgr()->exists( "middle-marker" ) ) {
 		SGSoundSample *sound = beacon.get_middle();
 		sound->set_volume( 0.3 );
@@ -221,10 +278,10 @@ void FGMarkerBeacon::search()
         } else {
             globals->get_soundmgr()->stop( "middle-marker" );
         }
-    } else if ( beacon_type == FGMkrBeacon::INNER ) {
+    } else if ( beacon_type == INNER ) {
 	inner_marker = true;
 	// cout << "INNER MARKER" << endl;
-	if ( last_beacon != FGMkrBeacon::INNER ) {
+	if ( last_beacon != INNER ) {
 	    if ( ! globals->get_soundmgr()->exists( "inner-marker" ) ) {
 		SGSoundSample *sound = beacon.get_inner();
 		sound->set_volume( 0.3 );
@@ -239,5 +296,10 @@ void FGMarkerBeacon::search()
             globals->get_soundmgr()->stop( "inner-marker" );
         }
     }
-    last_beacon = beacon_type;
+
+    if ( inrange ) {
+        last_beacon = beacon_type;
+    } else {
+        last_beacon = NOBEACON;
+    }
 }

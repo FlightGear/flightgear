@@ -32,9 +32,6 @@
 #include "navlist.hxx"
 
 
-FGNavList *current_navlist;
-
-
 // Constructor
 FGNavList::FGNavList( void ) {
 }
@@ -46,64 +43,88 @@ FGNavList::~FGNavList( void ) {
 
 
 // load the navaids and build the map
-bool FGNavList::init( SGPath path ) {
+bool FGNavList::init() {
 
+    // FIXME: leaves all the individual navaid entries leaked
     navaids.erase( navaids.begin(), navaids.end() );
+    navaids_by_tile.erase( navaids_by_tile.begin(), navaids_by_tile.end() );
+    ident_navaids.erase( ident_navaids.begin(), ident_navaids.end() );
 
-    sg_gzifstream in( path.str() );
-    if ( !in.is_open() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
-        exit(-1);
+    return true;
+}
+
+
+// real add a marker beacon
+static void real_add( nav_map_type &navmap, const int master_index,
+                      FGNavRecord *n )
+{
+    navmap[master_index].push_back( n );
+}
+
+
+// front end for add a marker beacon
+static void tile_add( nav_map_type &navmap, FGNavRecord *n ) {
+    double diff;
+
+    double lon = n->get_lon();
+    double lat = n->get_lat();
+
+    int lonidx = (int)lon;
+    diff = lon - (double)lonidx;
+    if ( (lon < 0.0) && (fabs(diff) > SG_EPSILON) ) {
+	lonidx -= 1;
     }
+    double lonfrac = lon - (double)lonidx;
+    lonidx += 180;
 
-    // read in each line of the file
-
-    in >> skipeol;
-    in >> skipcomment;
-
-    // double min = 100000;
-    // double max = 0;
-
-#ifdef __MWERKS__
-    char c = 0;
-    while ( in.get(c) && c != '\0'  ) {
-        in.putback(c);
-#else
-    while ( ! in.eof() ) {
-#endif
-
-        FGNav *n = new FGNav;
-        in >> (*n);
-        if ( n->get_type() == '[' ) {
-            break;
-        }
-
-	/* cout << "id = " << n.get_ident() << endl;
-	cout << " type = " << n.get_type() << endl;
-	cout << " lon = " << n.get_lon() << endl;
-	cout << " lat = " << n.get_lat() << endl;
-	cout << " elev = " << n.get_elev() << endl;
-	cout << " freq = " << n.get_freq() << endl;
- 	cout << " range = " << n.get_range() << endl << endl; */
-
-        navaids      [n->get_freq() ].push_back(n);
-        ident_navaids[n->get_ident()].push_back(n);
-		
-        in >> skipcomment;
-
-	/* if ( n.get_type() != 'N' ) {
-	    if ( n.get_freq() < min ) {
-		min = n.get_freq();
-	    }
-	    if ( n.get_freq() > max ) {
-		max = n.get_freq();
-	    }
-	} */
+    int latidx = (int)lat;
+    diff = lat - (double)latidx;
+    if ( (lat < 0.0) && (fabs(diff) > SG_EPSILON) ) {
+	latidx -= 1;
     }
+    double latfrac = lat - (double)latidx;
+    latidx += 90;
 
-    // cout << "min freq = " << min << endl;
-    // cout << "max freq = " << max << endl;
+    int master_index = lonidx * 1000 + latidx;
+    // cout << "lonidx = " << lonidx << " latidx = " << latidx << "  ";
+    // cout << "Master index = " << master_index << endl;
 
+    // add to the actual bucket
+    real_add( navmap, master_index, n );
+
+    // if we are close to the edge, add to adjacent buckets so we only
+    // have to search one bucket at run time
+
+    // there are 8 cases since there are 8 adjacent tiles
+
+    if ( lonfrac < 0.2 ) {
+	real_add( navmap, master_index - 1000, n );
+	if ( latfrac < 0.2 ) {
+	    real_add( navmap, master_index - 1000 - 1, n );
+	} else if ( latfrac > 0.8 ) {
+	    real_add( navmap, master_index - 1000 + 1, n );
+	}
+    } else if ( lonfrac > 0.8 ) {
+	real_add( navmap, master_index + 1000, n );
+	if ( latfrac < 0.2 ) {
+	    real_add( navmap, master_index + 1000 - 1, n );
+	} else if ( latfrac > 0.8 ) {
+	    real_add( navmap, master_index + 1000 + 1, n );
+	}
+    } else if ( latfrac < 0.2 ) {
+	real_add( navmap, master_index - 1, n );
+    } else if ( latfrac > 0.8 ) {
+	real_add( navmap, master_index + 1, n );
+    }
+}
+
+
+
+// add an entry to the lists
+bool FGNavList::add( FGNavRecord *n ) {
+    navaids[n->get_freq()].push_back(n);
+    ident_navaids[n->get_ident()].push_back(n);
+    tile_add( navaids_by_tile, n );
     return true;
 }
 
@@ -112,7 +133,7 @@ bool FGNavList::init( SGPath path ) {
 // there will be multiple stations with matching frequencies so a
 // position must be specified.  Lon and lat are in degrees, elev is in
 // meters.
-FGNav *FGNavList::findByFreq( double freq, double lon, double lat, double elev )
+FGNavRecord *FGNavList::findByFreq( double freq, double lon, double lat, double elev )
 {
     nav_list_type stations = navaids[(int)(freq*100.0 + 0.5)];
     Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
@@ -121,7 +142,7 @@ FGNav *FGNavList::findByFreq( double freq, double lon, double lat, double elev )
 }
 
 
-FGNav *FGNavList::findByIdent( const char* ident,
+FGNavRecord *FGNavList::findByIdent( const char* ident,
                                const double lon, const double lat )
 {
     nav_list_type stations = ident_navaids[ident];
@@ -133,7 +154,7 @@ FGNav *FGNavList::findByIdent( const char* ident,
 
 // Given an Ident and optional freqency, return the first matching
 // station.
-FGNav *FGNavList::findByIdentAndFreq( const char* ident, const double freq )
+FGNavRecord *FGNavList::findByIdentAndFreq( const char* ident, const double freq )
 {
     nav_list_type stations = ident_navaids[ident];
 
@@ -156,10 +177,10 @@ FGNav *FGNavList::findByIdentAndFreq( const char* ident, const double freq )
 
 // Given a point and a list of stations, return the closest one to the
 // specified point.
-FGNav *FGNavList::findNavFromList( const Point3D &aircraft, 
-                                   const nav_list_type &stations )
+FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft, 
+                                         const nav_list_type &stations )
 {
-    FGNav *nav = NULL;
+    FGNavRecord *nav = NULL;
     Point3D station;
     double d2;
     double min_dist = 999999999.0;
@@ -191,4 +212,71 @@ FGNav *FGNavList::findNavFromList( const Point3D &aircraft,
     }
 
     return nav;
+}
+
+
+// returns the closest entry to the give lon/lat/elev
+FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
+                                     double elev_m )
+{
+    FGNavRecord *result = NULL;
+    double diff;
+
+    double lon_deg = lon_rad * SG_RADIANS_TO_DEGREES;
+    double lat_deg = lat_rad * SG_RADIANS_TO_DEGREES;
+    int lonidx = (int)lon_deg;
+    diff = lon_deg - (double)lonidx;
+    if ( (lon_deg < 0.0) && (fabs(diff) > SG_EPSILON) ) {
+	lonidx -= 1;
+    }
+    lonidx += 180;
+
+    int latidx = (int)lat_deg;
+    diff = lat_deg - (double)latidx;
+    if ( (lat_deg < 0.0) && (fabs(diff) > SG_EPSILON) ) {
+	latidx -= 1;
+    }
+    latidx += 90;
+
+    int master_index = lonidx * 1000 + latidx;
+    
+    nav_list_type navs = navaids_by_tile[ master_index ];
+    // cout << "Master index = " << master_index << endl;
+    // cout << "beacon search length = " << beacons.size() << endl;
+
+    nav_list_iterator current = navs.begin();
+    nav_list_iterator last = navs.end();
+
+    Point3D aircraft = sgGeodToCart( Point3D(lon_rad,
+                                             lat_rad,
+                                             elev_m) );
+
+    double min_dist = 999999999.0;
+
+    for ( ; current != last ; ++current ) {
+	// cout << "  testing " << (*current)->get_ident() << endl;
+	Point3D station = Point3D( (*current)->get_x(),
+				   (*current)->get_y(),
+				   (*current)->get_z() );
+	// cout << "    aircraft = " << aircraft << " station = " << station 
+	//      << endl;
+
+	double d = aircraft.distance3Dsquared( station ); // meters^2
+	// cout << "  distance = " << d << " (" 
+	//      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
+	//         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
+	//      << ")" << endl;
+
+	// cout << "  range = " << sqrt(d) << endl;
+
+	if ( d < min_dist ) {
+	    min_dist = d;
+            result = (*current);
+	}
+    }
+
+    // cout << "lon = " << lon << " lat = " << lat
+    //      << "  closest beacon = " << sqrt( min_dist ) << endl;
+
+    return result;
 }

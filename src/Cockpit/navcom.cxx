@@ -319,7 +319,7 @@ double FGNavCom::adjustNavRange( double stationElev, double aircraftElev,
 
 // model standard ILS service volumes as per AIM 1-1-9
 double FGNavCom::adjustILSRange( double stationElev, double aircraftElev,
-				     double offsetDegrees, double distance )
+                                 double offsetDegrees, double distance )
 {
     // assumptions we model the standard service volume, plus
 
@@ -423,10 +423,11 @@ FGNavCom::update(double dt)
 	    while ( offset < -180.0 ) { offset += 360.0; }
 	    while ( offset > 180.0 ) { offset -= 360.0; }
 	    // cout << "ils offset = " << offset << endl;
-	    nav_effective_range = adjustILSRange(nav_elev, elev, offset,
-						  nav_loc_dist * SG_METER_TO_NM );
+	    nav_effective_range
+                = adjustILSRange( nav_elev, elev, offset,
+                                  nav_loc_dist * SG_METER_TO_NM );
 	} else {
-	    nav_effective_range = adjustNavRange(nav_elev, elev, nav_range);
+	    nav_effective_range = adjustNavRange( nav_elev, elev, nav_range );
 	}
 	// cout << "nav range = " << nav_effective_range
 	//      << " (" << nav_range << ")" << endl;
@@ -597,58 +598,73 @@ void FGNavCom::search()
     double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
-    FGILS *ils;
-    FGNav *nav;
+    FGNavRecord *nav = NULL;
+    FGNavRecord *loc = NULL;
+    FGNavRecord *dme = NULL;
+    FGNavRecord *gs = NULL;
 
     ////////////////////////////////////////////////////////////////////////
     // Nav.
     ////////////////////////////////////////////////////////////////////////
 
-    if ( (ils = globals->get_ilslist()->findByFreq(nav_freq, lon, lat, elev)) != NULL ) {
-	nav_id = ils->get_locident();
+    nav = globals->get_navlist()->findByFreq(nav_freq, lon, lat, elev);
+    dme = globals->get_dmelist()->findByFreq(nav_freq, lon, lat, elev);
+    if ( nav == NULL ) {
+        loc = globals->get_loclist()->findByFreq(nav_freq, lon, lat, elev);
+        gs = globals->get_gslist()->findByFreq(nav_freq, lon, lat, elev);
+    }
+        
+
+    if ( loc != NULL ) {
+	nav_id = loc->get_ident();
 	nav_valid = true;
 	if ( last_nav_id != nav_id || last_nav_vor ) {
-	    nav_trans_ident = ils->get_trans_ident();
+	    nav_trans_ident = loc->get_trans_ident();
 	    last_nav_id = nav_id;
 	    last_nav_vor = false;
 	    nav_loc = true;
-	    nav_has_dme = ils->get_has_dme();
-	    nav_has_gs = ils->get_has_gs();
+	    nav_has_dme = (dme != NULL);
+            nav_has_gs = (gs != NULL);
+            if ( nav_has_gs ) {
+                nav_gslon = gs->get_lon();
+                nav_gslat = gs->get_lat();
+                int tmp = (int)(gs->get_multiuse() / 1000.0);
+                nav_target_gs = (double)tmp / 100.0;
+                nav_gs_x = gs->get_x();
+                nav_gs_y = gs->get_y();
+                nav_gs_z = gs->get_z();
 
-	    nav_loclon = ils->get_loclon();
-	    nav_loclat = ils->get_loclat();
-	    nav_gslon = ils->get_gslon();
-	    nav_gslat = ils->get_gslat();
-	    nav_elev = ils->get_gselev();
+                // derive GS baseline
+                double tlon, tlat, taz;
+                geo_direct_wgs_84 ( 0.0, nav_gslat, nav_gslon,
+                                    nav_target_radial + 90,  
+                                    100.0, &tlat, &tlon, &taz );
+                // cout << nav_gslon << "," << nav_gslat << "  "
+                //      << tlon << "," << tlat << "  (" << nav_elev << ")"
+                //      << endl;
+                Point3D p1 = sgGeodToCart( Point3D(tlon*SGD_DEGREES_TO_RADIANS,
+                                                   tlat*SGD_DEGREES_TO_RADIANS,
+                                                   nav_elev*SG_FEET_TO_METER) );
+                // cout << nav_gs_x << "," << nav_gs_y << "," << nav_gs_z
+                //      << endl;
+                // cout << p1 << endl;
+                sgdSetVec3( gs_base_vec,
+                            p1.x()-nav_gs_x, p1.y()-nav_gs_y, p1.z()-nav_gs_z );
+                // cout << gs_base_vec[0] << "," << gs_base_vec[1] << ","
+                //      << gs_base_vec[2] << endl;
+            }
+	    nav_loclon = loc->get_lon();
+	    nav_loclat = loc->get_lat();
+	    nav_elev = loc->get_elev_ft();
 	    nav_twist = 0;
-	    nav_range = FG_ILS_DEFAULT_RANGE;
+	    nav_range = FG_LOC_DEFAULT_RANGE;
 	    nav_effective_range = nav_range;
-	    nav_target_gs = ils->get_gsangle();
-	    nav_target_radial = ils->get_locheading();
+	    nav_target_radial = loc->get_multiuse();
 	    while ( nav_target_radial <   0.0 ) { nav_target_radial += 360.0; }
 	    while ( nav_target_radial > 360.0 ) { nav_target_radial -= 360.0; }
-	    nav_x = ils->get_x();
-	    nav_y = ils->get_y();
-	    nav_z = ils->get_z();
-	    nav_gs_x = ils->get_gs_x();
-	    nav_gs_y = ils->get_gs_y();
-	    nav_gs_z = ils->get_gs_z();
-
-            // derive GS baseline
-            double tlon, tlat, taz;
-            geo_direct_wgs_84 ( 0.0, nav_gslat, nav_gslon, nav_target_radial + 90,  
-                                100.0, &tlat, &tlon, &taz );
-            // cout << nav_gslon << "," << nav_gslat << "  "
-            //      << tlon << "," << tlat << "  (" << nav_elev << ")" << endl;
-            Point3D p1 = sgGeodToCart( Point3D(tlon*SGD_DEGREES_TO_RADIANS,
-                                               tlat*SGD_DEGREES_TO_RADIANS,
-                                               nav_elev*SG_FEET_TO_METER) );
-            // cout << nav_gs_x << "," << nav_gs_y << "," << nav_gs_z << endl;
-            // cout << p1 << endl;
-            sgdSetVec3( gs_base_vec,
-                        p1.x()-nav_gs_x, p1.y()-nav_gs_y, p1.z()-nav_gs_z );
-            // cout << gs_base_vec[0] << "," << gs_base_vec[1] << ","
-            //      << gs_base_vec[2] << endl;
+	    nav_x = loc->get_x();
+	    nav_y = loc->get_y();
+	    nav_z = loc->get_z();
 
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
@@ -675,23 +691,23 @@ void FGNavCom::search()
 	    //      << " current time = "
 	    //      << globals->get_time_params()->get_cur_time() << endl;
 
-	    // cout << "Found an ils station in range" << endl;
-	    // cout << " id = " << ils->get_locident() << endl;
+	    // cout << "Found an loc station in range" << endl;
+	    // cout << " id = " << loc->get_locident() << endl;
 	}
-    } else if ( (nav = globals->get_navlist()->findByFreq(nav_freq, lon, lat, elev)) != NULL ) {
+    } else if ( nav != NULL ) {
 	nav_id = nav->get_ident();
-	nav_valid = (nav->get_type() == 'V');
+	nav_valid = true;
 	if ( last_nav_id != nav_id || !last_nav_vor ) {
 	    last_nav_id = nav_id;
 	    last_nav_vor = true;
 	    nav_trans_ident = nav->get_trans_ident();
 	    nav_loc = false;
-	    nav_has_dme = nav->get_has_dme();
+	    nav_has_dme = (dme != NULL);
 	    nav_has_gs = false;
 	    nav_loclon = nav->get_lon();
 	    nav_loclat = nav->get_lat();
 	    nav_elev = nav->get_elev_ft();
-	    nav_twist = nav->get_magvar();
+	    nav_twist = nav->get_multiuse();
 	    nav_range = nav->get_range();
 	    nav_effective_range = adjustNavRange(nav_elev, elev, nav_range);
 	    nav_target_gs = 0.0;

@@ -98,9 +98,7 @@
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Model/acmodel.hxx>
 #include <AIModel/AIManager.hxx>
-#include <Navaids/fixlist.hxx>
-#include <Navaids/ilslist.hxx>
-#include <Navaids/mkrbeacons.hxx>
+#include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
 #include <Replay/replay.hxx>
 #include <Scenery/scenery.hxx>
@@ -906,7 +904,8 @@ static void fgSetDistOrAltFromGlideSlope() {
 
 // Set current_options lon/lat given an airport id and heading (degrees)
 static bool fgSetPosFromNAV( const string& id, const double& freq ) {
-    FGNav *nav = globals->get_navlist()->findByIdentAndFreq( id.c_str(), freq );
+    FGNavRecord *nav
+        = globals->get_navlist()->findByIdentAndFreq( id.c_str(), freq );
 
     // set initial position from runway and heading
     if ( nav != NULL ) {
@@ -1046,29 +1045,27 @@ fgInitNav ()
     FGRunwayList *runways = new FGRunwayList( p_runway.str() );
     globals->set_runways( runways );
 
-    SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaids");
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  VOR/NDB");
     FGNavList *navlist = new FGNavList;
-    SGPath p_nav( globals->get_fg_root() );
-    p_nav.append( "Navaids/default.nav" );
-    navlist->init( p_nav );
-    globals->set_navlist( navlist );
+    FGNavList *loclist = new FGNavList;
+    FGNavList *gslist = new FGNavList;
+    FGNavList *dmelist = new FGNavList;
+    FGNavList *mkrlist = new FGNavList;
 
-    SG_LOG(SG_GENERAL, SG_INFO, "  ILS and Marker Beacons");
-    FGMarkerBeacons *beacons = new FGMarkerBeacons;
-    beacons->init();
-    globals->set_beacons( beacons );
-    FGILSList *ilslist = new FGILSList;
-    SGPath p_ils( globals->get_fg_root() );
-    p_ils.append( "Navaids/default.ils" );
-    ilslist->init( p_ils );
-    globals->set_ilslist( ilslist );
+    globals->set_navlist( navlist );
+    globals->set_loclist( loclist );
+    globals->set_gslist( gslist );
+    globals->set_dmelist( dmelist );
+    globals->set_mkrlist( mkrlist );
+
+    if ( !fgNavDBInit( navlist, loclist, gslist, dmelist, mkrlist ) ) {
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Problems loading one or more navigational database" );
+    }
 
     SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
-    FGFixList *fixlist = new FGFixList;
     SGPath p_fix( globals->get_fg_root() );
     p_fix.append( "Navaids/fix.dat" );
+    FGFixList *fixlist = new FGFixList;
     fixlist->init( p_fix );
     globals->set_fixlist( fixlist );
 

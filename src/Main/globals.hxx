@@ -72,8 +72,6 @@ class FGControls;
 class FGIO;
 class FGNavList;
 class FGFixList;
-class FGILSList;
-class FGMarkerBeacons;
 class FGLight;
 class FGModelMgr;
 class FGRouteMgr;
@@ -197,9 +195,11 @@ private:
 
     // Navigational Aids
     FGNavList *navlist;
+    FGNavList *loclist;
+    FGNavList *gslist;
+    FGNavList *dmelist;
+    FGNavList *mkrlist;
     FGFixList *fixlist;
-    FGILSList *ilslist;
-    FGMarkerBeacons *beacons;
 
 #ifdef FG_MPLAYER_AS
     //Mulitplayer managers
@@ -359,16 +359,17 @@ public:
 
     inline FGNavList *get_navlist() const { return navlist; }
     inline void set_navlist( FGNavList *n ) { navlist = n; }
+    inline FGNavList *get_loclist() const { return loclist; }
+    inline void set_loclist( FGNavList *n ) { loclist = n; }
+    inline FGNavList *get_gslist() const { return gslist; }
+    inline void set_gslist( FGNavList *n ) { gslist = n; }
+    inline FGNavList *get_dmelist() const { return dmelist; }
+    inline void set_dmelist( FGNavList *n ) { dmelist = n; }
+    inline FGNavList *get_mkrlist() const { return mkrlist; }
+    inline void set_mkrlist( FGNavList *n ) { mkrlist = n; }
 
     inline FGFixList *get_fixlist() const { return fixlist; }
     inline void set_fixlist( FGFixList *f ) { fixlist = f; }
-
-    inline FGILSList *get_ilslist() const { return ilslist; }
-    inline void set_ilslist( FGILSList *i ) { ilslist = i; }
-
-    inline FGMarkerBeacons *get_beacons() const { return beacons; }
-    inline void set_beacons( FGMarkerBeacons *b ) { beacons = b; }
-
 
    /**
      * Save the current state as the initial state.

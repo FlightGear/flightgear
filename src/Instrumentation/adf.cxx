@@ -163,22 +163,20 @@ ADF::search (double frequency_khz, double longitude_rad,
     _time_before_search_sec = 1.0;
 
                                 // try the ILS list first
-    FGNav *nav =
+    FGNavRecord *nav =
         globals->get_navlist()->findByFreq(frequency_khz, longitude_rad,
                                            latitude_rad, altitude_m);
 
-    if (nav !=0) {
-        _transmitter_valid = true;
+    _transmitter_valid = (nav != NULL);
+    if ( _transmitter_valid ) {
         ident = nav->get_trans_ident();
-        if (ident !=_last_ident) {
+        if ( ident != _last_ident ) {
             _transmitter_lon_deg = nav->get_lon();
             _transmitter_lat_deg = nav->get_lat();
             _transmitter = Point3D(nav->get_x(), nav->get_y(), nav->get_z());
             _transmitter_elevation_ft = nav->get_elev_ft();
             _transmitter_range_nm = nav->get_range();
         }
-    } else {
-        _transmitter_valid = false;
     }
     _last_ident = ident;
     _ident_node->setStringValue(ident.c_str());

@@ -44,29 +44,30 @@ SG_USING_STD(istream);
 
 
 class FGNav {
-
-    char type;
+    int type;
     double lon, lat;
     double elev_ft;
     double x, y, z;
     int freq;
-    int range;
-    bool has_dme;
-    string ident;		// to avoid a core dump with corrupt data
+    double range;
+    string ident;
     double magvar;		// magvar from true north (negative = W)
     string name;
 
     // for failure modeling
+    bool serviceable;
     string trans_ident;		// transmitted ident
-    bool nav_failed;		// nav failed?
-    bool dme_failed;		// dme failed?
 
 public:
 
-    inline FGNav(void);
-    inline ~FGNav(void) {}
+    inline FGNav();
+    inline FGNav( int _type, double _lat, double _lon, double _elev_ft,
+                  int _freq, double _range, double _magvar,
+                  string _ident, string _name,
+                  bool _serviceable );
+    inline ~FGNav() {}
 
-    inline char get_type() const { return type; }
+    inline int get_type() const { return type; }
     inline double get_lon() const { return lon; }
     inline double get_lat() const { return lat; }
     inline double get_elev_ft() const { return elev_ft; }
@@ -74,118 +75,71 @@ public:
     inline double get_y() const { return y; }
     inline double get_z() const { return z; }
     inline int get_freq() const { return freq; }
-    inline int get_range() const { return range; }
-    inline bool get_has_dme() const { return has_dme; }
+    inline double get_range() const { return range; }
+    // inline bool get_has_dme() const { return has_dme; }
     inline const char *get_ident() { return ident.c_str(); }
     inline string get_trans_ident() { return trans_ident; }
-    inline double get_magvar () const { return magvar; }
-    inline string get_name () { return name; }
-
-    friend istream& operator>> ( istream&, FGNav& );
+    inline double get_magvar() const { return magvar; }
+    inline string get_name() { return name; }
 };
 
 
 inline
-FGNav::FGNav(void) :
+FGNav::FGNav() :
     type(0),
     lon(0.0), lat(0.0),
     elev_ft(0.0),
     x(0.0), y(0.0), z(0.0),
     freq(0),
-    range(0),
-    has_dme(false),
+    range(0.0),
+    // has_dme(false),
     ident(""),
     magvar(0.0),
     name(""),
-    trans_ident(""),
-    nav_failed(false),
-    dme_failed(false)
+    serviceable(true),
+    trans_ident("")
 {
 }
 
 
-inline istream&
-operator >> ( istream& in, FGNav& n )
+inline
+FGNav::FGNav( int _type, double _lat, double _lon, double _elev_ft,
+              int _freq, double _range, double _magvar,
+              string _ident, string _name,
+              bool _serviceable ) :
+    type(0),
+    lon(0.0), lat(0.0),
+    elev_ft(0.0),
+    x(0.0), y(0.0), z(0.0),
+    freq(0),
+    range(0.0),
+    // has_dme(false),
+    ident(""),
+    magvar(0.0),
+    name(""),
+    serviceable(true),
+    trans_ident("")
 {
-    double f;
-    char c /* , magvar_dir */ ;
-    string magvar_s;
-
-    static bool first_time = true;
-    static double julian_date = 0;
-    static const double MJD0    = 2415020.0;
-    if ( first_time ) {
-	julian_date = sgTimeCurrentMJD(0,0) + MJD0;
-	first_time = false;
-    }
-
-    in >> n.type;
-    
-    if ( n.type == '[' )
-      return in >> skipeol;
-
-    in >> n.lat >> n.lon >> n.elev_ft >> f >> n.range 
-       >> c >> n.ident >> magvar_s;
-
-    getline(in,n.name);
-    // Remove the space before the name
-    if ( n.name.substr(0,1) == " " ) {
-        n.name = n.name.erase(0,1);
-    }
-
-    n.freq = (int)(f*100.0 + 0.5);
-    if ( c == 'Y' ) {
-	n.has_dme = true;
-    } else {
-	n.has_dme = false;
-    }
-
-    // Calculate the magvar from true north.
-    // cout << "Calculating magvar for navaid " << n.ident << endl;
-    if (magvar_s == "XXX") {
-	// default to mag var as of 1990-01-01 (Julian 2447892.5)
-	// cout << "lat = " << n.lat << " lon = " << n.lon << " elev_ft = " 
-	//      << n.elev_ft << " JD = " 
-	//      << julian_date << endl;
-	n.magvar = sgGetMagVar( n.lon * SGD_DEGREES_TO_RADIANS,
-                                n.lat * SGD_DEGREES_TO_RADIANS,
-                                n.elev_ft * SG_FEET_TO_METER,
-                                julian_date )
-            * SGD_RADIANS_TO_DEGREES;
-	// cout << "Default variation at " << n.lon << ',' << n.lat
-	// 	<< " is " << var << endl;
-#if 0
-	// I don't know what this is for - CLO 1 Feb 2001
-	if (var - int(var) >= 0.5)
-	    n.magvar = int(var) + 1;
-	else if (var - int(var) <= -0.5)
-	    n.magvar = int(var) - 1;
-	else
-	    n.magvar = int(var);
-#endif
-	// cout << "Defaulted to magvar of " << n.magvar << endl;
-    } else {
-	char direction;
-	int var;
-	sscanf(magvar_s.c_str(), "%d%c", &var, &direction);
-	n.magvar = var;
-	if (direction == 'W')
-	    n.magvar = -n.magvar;
-	// cout << "Explicit magvar of " << n.magvar << endl;
-    }
-    // cout << n.ident << " " << n.magvar << endl;
+    type = _type;
+    lat = _lat;
+    lon = _lon;
+    elev_ft = _elev_ft;
+    freq = _freq;
+    range = _range;
+    magvar = _magvar;
+    ident = _ident;
+    name = _name;
+    trans_ident = _ident;
+    serviceable = _serviceable;
 
     // generate cartesian coordinates
-    Point3D geod( n.lon * SGD_DEGREES_TO_RADIANS, n.lat * SGD_DEGREES_TO_RADIANS, n.elev_ft * SG_FEET_TO_METER );
+    Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
+                  lat * SGD_DEGREES_TO_RADIANS,
+                  elev_ft * SG_FEET_TO_METER );
     Point3D cart = sgGeodToCart( geod );
-    n.x = cart.x();
-    n.y = cart.y();
-    n.z = cart.z();
-
-    n.trans_ident = n.ident;
-    n.nav_failed = n.dme_failed = false;
-
-    return in;
+    x = cart.x();
+    y = cart.y();
+    z = cart.z();
 }
 
 

@@ -65,6 +65,7 @@ class FGDME : public SGSubsystem
     double x;
     double y;
     double z;
+    double bias;
     double dist;
     double prev_dist;
     double spd;

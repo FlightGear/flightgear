@@ -3,11 +3,13 @@ noinst_LIBRARIES = libNavaids.a
 # noinst_PROGRAMS = testnavs
 
 libNavaids_a_SOURCES = \
+	navdb.hxx navdb.cxx \
 	fix.hxx fixlist.hxx fixlist.cxx \
-	ils.hxx ilslist.hxx ilslist.cxx \
-	mkrbeacons.hxx mkrbeacons.cxx \
 	nav.hxx navlist.hxx navlist.cxx \
 	navrecord.hxx
+
+#	ils.hxx ilslist.hxx ilslist.cxx \
+#	mkrbeacons.hxx mkrbeacons.cxx \
 
 # testnavs_SOURCES = testnavs.cxx
 # testnavs_LDADD = \

@@ -43,7 +43,8 @@ DME::DME ()
       _time_before_search_sec(0),
       _transmitter_valid(false),
       _transmitter_elevation_ft(0),
-      _transmitter_range_nm(0)
+      _transmitter_range_nm(0),
+      _transmitter_bias(0.0)
 {
 }
 
@@ -128,7 +129,7 @@ DME::update (double delta_time_sec)
         _last_distance_nm = distance_nm;
 
         _in_range_node->setBoolValue(true);
-        _distance_node->setDoubleValue(distance_nm);
+        _distance_node->setDoubleValue(distance_nm - _transmitter_bias);
         _speed_node->setDoubleValue(speed_kt);
         _time_node->setDoubleValue(distance_nm/speed_kt*60.0);
         
@@ -145,40 +146,22 @@ void
 DME::search (double frequency_mhz, double longitude_rad,
              double latitude_rad, double altitude_m)
 {
-                                // reset search time
+    // reset search time
     _time_before_search_sec = 1.0;
 
-                                // try the ILS list first
-    FGILS *ils = globals->get_ilslist()->findByFreq(frequency_mhz,
-                                                    longitude_rad,
-                                                    latitude_rad,
-                                                    altitude_m);
-    if (ils !=0 && ils->get_has_dme()) {
-        _transmitter_valid = true;
-        _transmitter = Point3D(ils->get_dme_x(),
-                               ils->get_dme_y(),
-                               ils->get_dme_z());
-        _transmitter_elevation_ft = ils->get_gselev() * SG_METER_TO_FEET;
-        _transmitter_range_nm = 50; // arbitrary
-        return;
-    }
+    // try the ILS list first
+    FGNavRecord *dme
+        = globals->get_dmelist()->findByFreq( frequency_mhz, longitude_rad,
+                                              latitude_rad, altitude_m);
 
-                                // try the VORs next
-    FGNav *nav = globals->get_navlist()->findByFreq(frequency_mhz,
-                                                    longitude_rad,
-                                                    latitude_rad,
-                                                    altitude_m);
-    if (nav != 0 && nav->get_has_dme()) {
-        _transmitter_valid = true;
-        _transmitter = Point3D(nav->get_x(),
-                               nav->get_y(),
-                               nav->get_z());
-        _transmitter_elevation_ft = nav->get_elev_ft();
-        _transmitter_range_nm = nav->get_range(); // fixme
-        return;
-    }
+    _transmitter_valid = (dme != NULL);
 
-    _transmitter_valid = false;
+    if ( _transmitter_valid ) {
+        _transmitter = Point3D(dme->get_x(), dme->get_y(), dme->get_z());
+        _transmitter_elevation_ft = dme->get_elev_ft();
+        _transmitter_range_nm = dme->get_range();
+        _transmitter_bias = dme->get_multiuse();
+    }
 }
 
 // end of dme.cxx

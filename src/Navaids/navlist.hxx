@@ -32,31 +32,35 @@
 #include <vector>
 #include STL_STRING
 
-#include "nav.hxx"
+#include "navrecord.hxx"
 
 SG_USING_STD(map);
 SG_USING_STD(vector);
 SG_USING_STD(string);
 
+
+// convenience types
+typedef vector < FGNavRecord* > nav_list_type;
+typedef nav_list_type::iterator nav_list_iterator;
+typedef nav_list_type::const_iterator nav_list_const_iterator;
+
+typedef map < int, nav_list_type > nav_map_type;
+typedef nav_map_type::iterator nav_map_iterator;
+typedef nav_map_type::const_iterator nav_map_const_iterator;
+
+typedef map < string, nav_list_type > nav_ident_map_type;
+
+
 class FGNavList {
 
-    // convenience types
-    typedef vector < FGNav* > nav_list_type;
-    typedef nav_list_type::iterator nav_list_iterator;
-    typedef nav_list_type::const_iterator nav_list_const_iterator;
-
-    typedef map < int, nav_list_type > nav_map_type;
-    typedef nav_map_type::iterator nav_map_iterator;
-    typedef nav_map_type::const_iterator nav_map_const_iterator;
-
-    typedef map < string, nav_list_type > nav_ident_map_type;
-	
+    nav_list_type navlist;
     nav_map_type navaids;
+    nav_map_type navaids_by_tile;
     nav_ident_map_type ident_navaids;
 	
     // Given a point and a list of stations, return the closest one to
     // the specified point.
-    FGNav *findNavFromList( const Point3D &aircraft, 
+    FGNavRecord *findNavFromList( const Point3D &aircraft, 
                             const nav_list_type &stations );
 	
 public:
@@ -64,21 +68,35 @@ public:
     FGNavList();
     ~FGNavList();
 
-    // load the navaids and build the map
-    bool init( SGPath path );
+    // initialize the nav list
+    bool init();
+
+    // add an entry
+    bool add( FGNavRecord *n );
 
     // Query the database for the specified frequency.  It is assumed
     // that there will be multiple stations with matching frequencies
     // so a position must be specified.  Lon and lat are in degrees,
     // elev is in meters.
-    FGNav *findByFreq( double freq, double lon, double lat, double elev );
+    FGNavRecord *findByFreq( double freq, double lon, double lat, double elev );
+
+    // Query the database for the specified frequency.  It is assumed
+    // that there will be multiple stations with matching frequencies
+    // so a position must be specified.  Lon and lat are in degrees,
+    // elev is in meters.
+    FGNavRecord *findByLoc( double lon, double lat, double elev );
 
     // locate closest item in the DB matching the requested ident
-    FGNav *findByIdent( const char* ident, const double lon, const double lat );
+    FGNavRecord *findByIdent( const char* ident, const double lon, const double lat );
 
     // Given an Ident and optional freqency, return the first matching
     // station.
-    FGNav *findByIdentAndFreq( const char* ident, const double freq = 0.0 );
+    FGNavRecord *findByIdentAndFreq( const char* ident,
+                                     const double freq = 0.0 );
+
+    // returns the closest entry to the give lon/lat/elev
+    FGNavRecord *findClosest( double lon_rad, double lat_rad, double elev_m );
+
 };
 
 

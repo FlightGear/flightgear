@@ -77,9 +77,11 @@ FGGlobals::FGGlobals() :
     tile_mgr( NULL ),
     io( new FGIO ),
     navlist( NULL ),
-    fixlist( NULL ),
-    ilslist( NULL ),
-    beacons( NULL )
+    loclist( NULL ),
+    gslist( NULL ),
+    dmelist( NULL ),
+    mkrlist( NULL ),
+    fixlist( NULL )
 {
 }
 

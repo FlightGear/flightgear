@@ -73,6 +73,7 @@ private:
     Point3D _transmitter;
     double _transmitter_elevation_ft;
     double _transmitter_range_nm;
+    double _transmitter_bias;
 
 };
 
