@@ -147,22 +147,20 @@ void FGATIS::UpdateTransmission() {
 	transmission = transmission + " / Weather " + ConvertNumToSpokenDigits((time_str.substr(0,3) + "00")) + " hours zulu";
 	
 	// Get the temperature
-	// (Hardwire it for now since the global property returns the temperature at the current altitude
-	//temperature = fgGetDouble("/environment/weather/temperature-K");
+	int temp;
 	#ifdef FG_WEATHERCM
-	sprintf(buf, "%i", int(stationweather.Temperature - 273.15));
+	temp = int(stationweather.Temperature - 273.15);
 	#else
+	temp = (int)stationweather.get_temperature_degc();
+	#endif
+	
 	// HACK ALERT - at the moment the new environment subsystem returns bogus temperatures
 	// FIXME - take out this hack when this gets fixed upstream
-	int temp = (int)stationweather.get_temperature_degc();
 	if((temp < -50) || (temp > 60)) {
 		temp = 15;
 	}
-	// original:
-	//sprintf(buf, "%d", int(stationweather.get_temperature_degc()));
-	// hack:
-	sprintf(buf, "%d", temp);
-	#endif
+
+	sprintf(buf, "%i", abs(temp));
 	transmission += " / Temperature ";
 	if(temp < 0) {
 		transmission += "minus ";
