@@ -1058,18 +1058,18 @@ static void fgMainLoop( void ) {
 	    double mp_factor;
 	    if ( cur_fdm_state->get_engine(0) != NULL ) {
 		mp_factor = 
-		    cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 28;
+		    cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 100;
 	    } else {
-		mp_factor = 1.0;
+		mp_factor = 0.3;
 	    }
-	    // cout << "mp = " 
-	    //      << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
-	    //      << endl;
+	    /* cout << "mp = " 
+	         << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
+	         << endl; */
 
-	    double volume = mp_factor;
+	    double volume = 0.3 + mp_factor;
 
 	    if ( volume < 0.3 ) { volume = 0.3; }
-	    if ( volume > 2.0 ) { volume = 2.0; }
+	    if ( volume > 1.0 ) { volume = 1.0; }
 	    // cout << "volume = " << volume << endl;
 
 	    pitch_envelope.setStep  ( 0, 0.01, pitch );

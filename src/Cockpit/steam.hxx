@@ -72,6 +72,10 @@ public:
 				// Engine Gauges
   static double get_VACUUM_inhg ();
 
+				// Atmosphere
+  static double get_ALT_datum_mb ();
+  static void set_ALT_datum_mb(double datum_mb);
+
 				// Hacks ... temporary stuff
   static double get_HackVOR1_deg ();
   static double get_HackOBS1_deg ();
@@ -83,6 +87,7 @@ public:
 
 private:
 	static double	the_ALT_ft;
+        static double	the_ALT_datum_mb;
         static double   the_TC_rad, the_TC_std;
 	static double	the_STATIC_inhg, the_VACUUM_inhg;
 	static double	the_VSI_fps, the_VSI_case;

@@ -53,8 +53,15 @@ static bool isTied = false;
 
 
 double FGSteam::the_STATIC_inhg = 29.92;
-double FGSteam::the_ALT_ft = 0.0;
+double FGSteam::the_ALT_ft = 0.0;  // Indicated altitude
 double FGSteam::get_ALT_ft() { _CatchUp(); return the_ALT_ft; }
+
+double FGSteam::the_ALT_datum_mb = 1013.0;
+double FGSteam::get_ALT_datum_mb() { return the_ALT_datum_mb; }
+
+void FGSteam::set_ALT_datum_mb ( double datum_mb ) {
+    the_ALT_datum_mb = datum_mb;
+}
 
 double FGSteam::get_ASI_kias() { return FGBFI::getAirspeed(); }
 
@@ -104,6 +111,9 @@ void FGSteam::update ( int timesteps )
 	  isTied = true;
 	  fgTie("/steam/airspeed", FGSteam::get_ASI_kias);
 	  fgTie("/steam/altitude", FGSteam::get_ALT_ft);
+	  fgTie("/steam/altimeter-datum-mb",
+		FGSteam::get_ALT_datum_mb, FGSteam::set_ALT_datum_mb,
+		false);  /* don't modify the value */
 	  fgTie("/steam/turn-rate", FGSteam::get_TC_std);
 	  fgTie("/steam/slip-skid", FGSteam::get_TC_rad);
 	  fgTie("/steam/vertical-speed", FGSteam::get_VSI_fps);
@@ -124,6 +134,7 @@ void FGSteam::update ( int timesteps )
 #undef DF2
 
 
+/* tc should be (elapsed_time_between_updates / desired_smoothing_time) */
 void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )
 {
 	if ( tc < 0.0 )
@@ -135,7 +146,7 @@ void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )
 		}
 	} else
 	if ( tc < 0.2 )
-	{	/* Normal mode of operation */
+	{	/* Normal mode of operation; fast approximation to exp(-tc) */
 		(*outthe) = (*outthe) * ( 1.0 - tc )
 			  +    inthe  * tc;
 	} else
@@ -149,6 +160,24 @@ void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )
 		(*outthe) = (*outthe) * keep
 			  +    inthe  * ( 1.0 - keep );
 	}
+}
+
+
+#define INHG_TO_MB 33.86388  /* Inches_of_mercury * INHG_TO_MB == millibars. */
+
+// Convert air pressure to altitude by ICAO Standard Atmosphere
+double pressInHgToAltFt(double p_inhg)
+{
+    // Ref. Aviation Formulary, Ed Williams, www.best.com/~williams/avform.htm
+    const double P_0 = 29.92126;  // Std. MSL pressure, inHg. (=10135.25 mb)
+    const double p_Tr = 0.2233609 * P_0;  // Pressure at tropopause, same units.
+    const double h_Tr = 36089.24;  // Alt of tropopause, ft. (=11.0 km)
+
+    // return (P_0 - p_inhg) * 1000.0;  // ### crude approx. for low alt's
+    if (p_inhg > p_Tr)  // 0.0 to 11.0 km
+	return (1.0 - pow((p_inhg / P_0), 1.0 / 5.2558797)) / 6.8755856e-6;
+    return h_Tr + log10(p_inhg / p_Tr) / -4.806346e-5;  // 11.0 to 20.0 km
+    // We could put more code for higher altitudes here.
 }
 
 
@@ -288,29 +317,40 @@ void FGSteam::_CatchUp()
 	the_ENGINE_rpm = controls.get_throttle(0) * 26.0;
 
 	/**************************
-	This is just temporary, until the static source works,
-	so we just filter the actual value by one second to
-	account for the line impedance of the plumbing.
-	*/
-	set_lowpass ( & the_ALT_ft, FGBFI::getAltitude(), dt );
-
-	/**************************
 	First, we need to know what the static line is reporting,
 	which is a whole simulation area in itself.  For now, we cheat.
+	We filter the actual value by one second to
+	account for the line impedance of the plumbing.
 	*/
-	the_STATIC_inhg = 29.92; 
-	i = (int) the_ALT_ft;
+	double static_inhg = 29.92; 
+	i = (int) FGBFI::getAltitude();
 	while ( i > 9000 )
-	{	the_STATIC_inhg *= 0.707;
+	{	static_inhg *= 0.707;
 		i -= 9000;
 	}
-	the_STATIC_inhg *= ( 1.0 - 0.293 * i / 9000.0 );
+	static_inhg *= ( 1.0 - 0.293 * i / 9000.0 );
+	set_lowpass ( & the_STATIC_inhg, static_inhg, dt ); 
 
 	/*
 	NO alternate static source error (student feature), 
 	NO possibility of blockage (instructor feature),
 	NO slip-induced error, important for C172 for example.
 	*/
+
+	/**************************
+	Altimeter.
+	ICAO standard atmosphere MSL pressure is 1013.25 mb, and pressure
+	gradient is about 28 ft per mb at MSL increasing to about 32 at
+	5000 and 38 at 10000 ft.
+	Standard altimeters apply the subscale offset to the output altitude,
+	not to the input pressure; I don't know exactly what pressure gradient
+	they assume for this.  I choose to make it accurate at low altitudes.
+	Remember, we are trying to simulate a real altimeter, not an ideal one.
+	*/
+	set_lowpass ( & the_ALT_ft,
+	    pressInHgToAltFt(the_STATIC_inhg) +
+	    (the_ALT_datum_mb - 1013.25) * 28.0, /* accurate at low alt. */
+	    dt * 10 ); /* smoothing time 0.1 s */
 
 	/**************************
 	The VSI case is a low-pass filter of the static line pressure.
