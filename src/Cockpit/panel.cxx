@@ -53,13 +53,6 @@
 // my hardware/driver requires many more.
 #define POFF_UNITS 4
 
-#ifndef HAVE_TRUNCF
-inline float truncf (float d) {
-    return (d < 0) ? -floorf(-d) : floorf(d);
-}
-#endif
-
-
 ////////////////////////////////////////////////////////////////////////
 // Local functions.
 ////////////////////////////////////////////////////////////////////////
@@ -1125,7 +1118,7 @@ FGTextLayer::Chunk::getValue () const
       break;
     case DOUBLE_VALUE:
       double d = _offs + _node->getFloatValue() * _mult;
-      if (_trunc)  d = truncf(d);
+      if (_trunc)  d = (d < 0) ? -floorf(-d) : floorf(d);
       sprintf(_buf, _fmt.c_str(), d);
       break;
     }
