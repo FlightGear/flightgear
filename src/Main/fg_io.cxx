@@ -38,7 +38,7 @@
 #include <simgear/misc/strutils.hxx>
 
 #include <Network/protocol.hxx>
-#include <Network/atc610x.hxx>
+#include <Network/ATC-Main.hxx>
 #include <Network/atlas.hxx>
 #include <Network/garmin.hxx>
 #include <Network/httpd.hxx>
@@ -107,7 +107,7 @@ FGIO::parse_port_config( const string& config )
     try
     {
 	if ( protocol == "atcsim" ) {
-            FGATC610x *atcsim = new FGATC610x;
+            FGATCMain *atcsim = new FGATCMain;
 	    atcsim->set_hz( 30 );
             if ( tokens.size() != 6 ) {
                 SG_LOG( SG_IO, SG_ALERT, "Usage: --atcsim=[no-]pedals,"
