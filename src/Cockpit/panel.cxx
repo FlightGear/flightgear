@@ -400,7 +400,6 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   for ( ; current != end; current++) {
     FGPanelInstrument * instr = *current;
     glPushMatrix();
-    glTranslated(x_offset, y_offset, 0);
     glTranslated(instr->getXPos(), instr->getYPos(), 0);
     instr->draw();
     glPopMatrix();
@@ -419,52 +418,25 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 
-// Yanked from the YASim codebase.  Should probably be replaced with
-// the 4x4 routine from plib, which is more appropriate here.
-static void invert33Matrix(float* m)
-{
-    // Compute the inverse as the adjoint matrix times 1/(det M).
-    // A, B ... I are the cofactors of a b c
-    //                                 d e f
-    //                                 g h i
-    float a=m[0], b=m[1], c=m[2];
-    float d=m[3], e=m[4], f=m[5];
-    float g=m[6], h=m[7], i=m[8];
-
-    float A =  (e*i - h*f);
-    float B = -(d*i - g*f);
-    float C =  (d*h - g*e);
-    float D = -(b*i - h*c);
-    float E =  (a*i - g*c);
-    float F = -(a*h - g*b);
-    float G =  (b*f - e*c);
-    float H = -(a*f - d*c);
-    float I =  (a*e - d*b);
-
-    float id = 1/(a*A + b*B + c*C);
-
-    m[0] = id*A; m[1] = id*D; m[2] = id*G;
-    m[3] = id*B; m[4] = id*E; m[5] = id*H;
-    m[6] = id*C; m[7] = id*F; m[8] = id*I;     
-}
-
 void
 FGPanel::setupVirtualCockpit()
 {
     int i;
     FGViewer* view = globals->get_current_view();
 
-    // Corners for the panel quad.  These numbers put a "standard"
-    // panel at 1m from the eye, with a horizontal size of 60 degrees,
-    // and with its center 5 degrees down.  This will work well for
-    // most typical screen-space panel definitions.  In principle,
-    // these should be settable per-panel, so that you can have lots
-    // of panel objects plastered about the cockpit in realistic
+    // Generate corners for the panel quad.  Put the top edge of the
+    // panel 1m in and 6 degrees down from the forward direction, and
+    // make the whole thing 60 degrees wide.  In principle, these
+    // should be settable per-panel, so that you can have lots of
+    // panel objects plastered about the cockpit in realistic
     // positions and orientations.
-    float DY = .0875; // tan(5 degrees)
-    float a[] = { -0.5773503, -0.4330172 - DY, -1 }; // bottom left
-    float b[] = {  0.5773503, -0.4330172 - DY, -1 }; // bottom right
-    float c[] = { -0.5773503,  0.4330172 - DY, -1 }; // top left
+    float a[3], b[3], c[3];
+    float pw = tan(30*SGD_DEGREES_TO_RADIANS);
+    float ph = 2 * pw * (float)_height/(float)_width;
+    float ptop = -tan(6*SGD_DEGREES_TO_RADIANS);
+    a[0] = -pw; a[1] = ptop-ph; a[2] = -1; // bottom left
+    b[0] =  pw; b[1] = ptop-ph; b[2] = -1; // bottom right
+    c[0] = -pw; c[1] = ptop;    c[2] = -1; // top left
 
     // A standard projection, in meters, with especially close clip
     // planes.
@@ -476,6 +448,7 @@ FGPanel::setupVirtualCockpit()
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
+    glLoadIdentity();
 
     // Generate a "look at" matrix using OpenGL (!) coordinate
     // conventions.
@@ -492,42 +465,29 @@ FGPanel::setupVirtualCockpit()
     glTranslatef(a[0], a[1], a[2]);
  
     // Generate a matrix to translate unit square coordinates from the
-    // panel to real world coordinates.  Use a basis for the panel
-    // quad and invert.  Note: this matrix is relatively expensive to
+    // panel to real world coordinates.  Use a transposed basis for
+    // the panel quad.  Note: this matrix is relatively expensive to
     // compute, and is invariant.  Consider precomputing and storing
     // it.  Also, consider using the plib vector math routines, so the
     // reuse junkies don't yell at me.  (Fine, I hard-coded a cross
     // product.  Just shoot me and be done with it.)
-    float u[3], v[3], w[3], m[9];
+    float u[3], v[3], w[3], m[16];
     for(i=0; i<3; i++) u[i] = b[i] - a[i]; // U = B - A
     for(i=0; i<3; i++) v[i] = c[i] - a[i]; // V = C - A
     w[0] = u[1]*v[2] - v[1]*u[2];          // W = U x V
     w[1] = u[2]*v[0] - v[2]*u[0];
     w[2] = u[0]*v[1] - v[0]*u[1];
-    for(int i=0; i<3; i++) {               //    |Ux Uy Uz|-1
-	m[i] = u[i];                       // m =|Vx Vy Vz|
-	m[i+3] = v[i];                     //    |Wx Wy Wz|
-	m[i+6] = w[i];
-    }
-    invert33Matrix(m);
 
-    float glm[16]; // Expand to a 4x4 OpenGL matrix.
-    glm[0] = m[0]; glm[4] = m[1]; glm[8]  = m[2]; glm[12] = 0;
-    glm[1] = m[3]; glm[5] = m[4]; glm[9]  = m[5]; glm[13] = 0;
-    glm[2] = m[6]; glm[6] = m[7]; glm[10] = m[8]; glm[14] = 0;
-    glm[3] = 0;    glm[7] = 0;    glm[11] = 0;    glm[15] = 1;
-    glMultMatrixf(glm);
+    m[0] = u[0]; m[4] = v[0]; m[8]  = w[0]; m[12] = 0; //     |Ux Vx Wx|
+    m[1] = u[1]; m[5] = v[1]; m[9]  = w[1]; m[13] = 0; // m = |Uy Vy Wy|
+    m[2] = u[2]; m[6] = v[2]; m[10] = w[2]; m[14] = 0; //     |Uz Vz Wz|
+    m[3] = 0;    m[7] = 0;    m[11] = 0;    m[15] = 1;
+    glMultMatrixf(m);
 
-    // Finally, a scaling factor to convert the 1024x768 range the
-    // panel uses to a unit square mapped to the panel quad.
-    glScalef(1./1024, 1./768, 1);
+    // Finally, a scaling factor to map the panel's width and height
+    // to the unit square.
+    glScalef(1./_width, 1./_height, 1);
 
-    // Scale to the appropriate vertical size.  I'm not quite clear on
-    // this yet; an identical scaling is not appropriate for
-    // _width, for example.  This should probably go away when panel
-    // coordinates get sanified for virtual cockpits.
-    glScalef(1, _height/768.0, 1);
-    
     // Now, turn off the Z buffer.  The panel code doesn't need
     // it, and we're using different clip planes anyway (meaning we
     // can't share it without glDepthRange() hackery or much
