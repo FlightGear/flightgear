@@ -7,8 +7,12 @@
 ;
 ;     http://www.jrsoftware.org/isinfo.php
 ;
-; You can use something like the following to help the script find
-; your official flightgear tree location:
+; Note: the files must appear in the X: drive.
+; You can do this with the command below:
+;
+;     subst X: path_to_files
+;
+; For example:
 ;
 ;     C:\> subst X: F:\Path\to\FlightGear\root
 ;
@@ -20,7 +24,7 @@ AppPublisher=The FlightGear Organization
 AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
-DefaultDirName={sd}\FlightGear\FlightGear-0.9.3
+DefaultDirName={pf}\FlightGear-0.9.3
 DefaultGroupName=FlightGear-0.9.3
 LicenseFile=X:\data\COPYING
 Uninstallable=yes
@@ -34,12 +38,12 @@ Source: "X:\*.*"; DestDir: "{app}"; Flags: ignoreversion
 Source: "X:\bin\*.*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs
 Source: "X:\data\*.*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs
 Source: "X:\docs\*.*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs
-Source: "X:\bin\Win32\fgrun.prefs"; DestDir: "{userappdata}\flightgear.org"; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall
+Source: "X:\bin\Win32\fgrun.prefs"; DestDir: "{userappdata}\flightgear.org"; Flags: ignoreversion
 ; Source: "X:\src\*.*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\FlightGear-0.9.3"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
+Name: "{group}\FlightGear"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
 Name: "{group}\Fgrun FlightGear"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}";
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\docs\index.html"
 Name: "{group}\Explore Documentation Folder"; Filename: "{app}\docs"
@@ -49,6 +53,8 @@ Name: "{userdesktop}\FlightGear-0.9.3"; Filename: "{app}\bin\Win32\fgrun.exe"; W
 ; Name: "{userdesktop}\FlightGear-0.9.3"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
+; Put installation directory in the fgrun.prefs
+filename: "{app}\bin\win32\mkfgrunp.bat"; WorkingDir: "{app}\bin\win32"; Parameters: """{app}"" ""{userappdata}"""
 ; NOTE: The following entry contains an English phrase ("Launch"). You are free to translate it into another language if required.
 Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
 ; For running flightgear directly
