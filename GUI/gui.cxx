@@ -211,7 +211,8 @@ void guiInit()
 
     // puSetDefaultStyle         ( PUSTYLE_SMALL_BEVELLED );
     puSetDefaultStyle         ( PUSTYLE_DEFAULT );
-    puSetDefaultColourScheme  (0.2, 0.4, 0.8, 0.5);
+    // puSetDefaultColourScheme  (0.2, 0.4, 0.8, 0.5);
+    puSetDefaultColourScheme  (0.8, 0.8, 0.8, 0.5);
       
     /* OK the rest is largerly put in here to mimick Steve Baker's
        "complex" example It should change in future versions */
