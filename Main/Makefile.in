@@ -10,6 +10,8 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
+# bindir = ${exec_prefix}/japhar/bin
+
 
 SHELL = /bin/sh
 
@@ -18,6 +20,8 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
+
+bindir = @bindir@
 sbindir = @sbindir@
 libexecdir = @libexecdir@
 datadir = @datadir@
@@ -69,8 +73,6 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 VERSION = @VERSION@
 
-bindir = ${exec_prefix}/japhar/bin
-
 bin_PROGRAMS	= fg
 fg_SOURCES	= \
 	fg_debug.c \
@@ -82,25 +84,25 @@ fg_SOURCES	= \
 
 # Need $(INTERFACE_LIBS) $(GRAPHICS_LIBS)
 fg_LDADD	= \
-	$(top_builddir)/Src/Aircraft/libAircraft.la \
-	$(top_builddir)/Src/Astro/libAstro.la \
-	$(top_builddir)/Src/Cockpit/libCockpit.la \
-	$(top_builddir)/Src/Controls/libControls.la \
-	$(top_builddir)/Src/Flight/libFlight.la \
-	$(top_builddir)/Src/Flight/LaRCsim/libLaRCsim.la \
-	$(top_builddir)/Src/Flight/Slew/libSlew.la \
-	$(top_builddir)/Src/Scenery/libScenery.la \
-	$(top_builddir)/Src/Time/libTime.la \
-	$(top_builddir)/Src/Weather/libWeather.la \
-        $(top_builddir)/Src/Joystick/libJoystick.la \
-	$(top_builddir)/Src/Math/libMath.la
+	$(top_builddir)/Simulator/Aircraft/libAircraft.la \
+	$(top_builddir)/Simulator/Astro/libAstro.la \
+	$(top_builddir)/Simulator/Cockpit/libCockpit.la \
+	$(top_builddir)/Simulator/Controls/libControls.la \
+	$(top_builddir)/Simulator/Flight/libFlight.la \
+	$(top_builddir)/Simulator/Flight/LaRCsim/libLaRCsim.la \
+	$(top_builddir)/Simulator/Flight/Slew/libSlew.la \
+	$(top_builddir)/Simulator/Scenery/libScenery.la \
+	$(top_builddir)/Simulator/Time/libTime.la \
+	$(top_builddir)/Simulator/Weather/libWeather.la \
+        $(top_builddir)/Simulator/Joystick/libJoystick.la \
+	$(top_builddir)/Simulator/Math/libMath.la
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_HEADER = ../../Src/Include/config.h
+CONFIG_HEADER = ../../Simulator/Include/config.h
 CONFIG_CLEAN_FILES = 
 PROGRAMS =  $(bin_PROGRAMS)
 
 
-DEFS = @DEFS@ -I. -I$(srcdir) -I../../Src/Include
+DEFS = @DEFS@ -I. -I$(srcdir) -I../../Simulator/Include
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -110,18 +112,18 @@ X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 fg_OBJECTS =  fg_debug.o fg_getopt.o fg_init.o views.o GLUTkey.o \
 GLUTmain.o
-fg_DEPENDENCIES =  $(top_builddir)/Src/Aircraft/libAircraft.la \
-$(top_builddir)/Src/Astro/libAstro.la \
-$(top_builddir)/Src/Cockpit/libCockpit.la \
-$(top_builddir)/Src/Controls/libControls.la \
-$(top_builddir)/Src/Flight/libFlight.la \
-$(top_builddir)/Src/Flight/LaRCsim/libLaRCsim.la \
-$(top_builddir)/Src/Flight/Slew/libSlew.la \
-$(top_builddir)/Src/Scenery/libScenery.la \
-$(top_builddir)/Src/Time/libTime.la \
-$(top_builddir)/Src/Weather/libWeather.la \
-$(top_builddir)/Src/Joystick/libJoystick.la \
-$(top_builddir)/Src/Math/libMath.la
+fg_DEPENDENCIES =  $(top_builddir)/Simulator/Aircraft/libAircraft.la \
+$(top_builddir)/Simulator/Astro/libAstro.la \
+$(top_builddir)/Simulator/Cockpit/libCockpit.la \
+$(top_builddir)/Simulator/Controls/libControls.la \
+$(top_builddir)/Simulator/Flight/libFlight.la \
+$(top_builddir)/Simulator/Flight/LaRCsim/libLaRCsim.la \
+$(top_builddir)/Simulator/Flight/Slew/libSlew.la \
+$(top_builddir)/Simulator/Scenery/libScenery.la \
+$(top_builddir)/Simulator/Time/libTime.la \
+$(top_builddir)/Simulator/Weather/libWeather.la \
+$(top_builddir)/Simulator/Joystick/libJoystick.la \
+$(top_builddir)/Simulator/Math/libMath.la
 fg_LDFLAGS = 
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
@@ -144,7 +146,7 @@ all: Makefile $(PROGRAMS)
 .SUFFIXES:
 .SUFFIXES: .S .c .lo .o .s
 $(srcdir)/Makefile.in: @MAINT@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4)
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu Src/Main/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu Simulator/Main/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
@@ -239,14 +241,14 @@ maintainer-clean-tags:
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
-subdir = Src/Main
+subdir = Simulator/Main
 
 distdir: $(DISTFILES)
 	here=`cd $(top_builddir) && pwd`; \
 	top_distdir=`cd $(top_distdir) && pwd`; \
 	distdir=`cd $(distdir) && pwd`; \
 	cd $(top_srcdir) \
-	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu Src/Main/Makefile
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu Simulator/Main/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  test -f $(distdir)/$$file \

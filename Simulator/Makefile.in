@@ -84,10 +84,9 @@ SUBDIRS = Aircraft \
 	Time \
 	Weather \
 	XGL \
-	Main \
-	Include
+	Main
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_HEADER = ../Src/Include/config.h
+CONFIG_HEADER = ../Simulator/Include/config.h
 CONFIG_CLEAN_FILES = 
 DIST_COMMON =  README Makefile.am Makefile.in
 
@@ -100,7 +99,7 @@ all: all-recursive all-am
 
 .SUFFIXES:
 $(srcdir)/Makefile.in: @MAINT@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4)
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu Src/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu Simulator/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
@@ -174,14 +173,14 @@ maintainer-clean-tags:
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
-subdir = Src
+subdir = Simulator
 
 distdir: $(DISTFILES)
 	here=`cd $(top_builddir) && pwd`; \
 	top_distdir=`cd $(top_distdir) && pwd`; \
 	distdir=`cd $(distdir) && pwd`; \
 	cd $(top_srcdir) \
-	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu Src/Makefile
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu Simulator/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  test -f $(distdir)/$$file \
