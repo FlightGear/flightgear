@@ -379,6 +379,7 @@ FGPanel::draw()
   glEnable(GL_COLOR_MATERIAL);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
+  glDepthMask(GL_FALSE);
   sgVec4 panel_color;
   sgCopyVec4( panel_color, cur_light_params.scene_diffuse );
   if ( fgGetDouble("/systems/electrical/outputs/instrument-lights") > 1.0 ) {
@@ -428,7 +429,7 @@ FGPanel::draw()
   // Don't let the instruments be visible trhought the roof of the c310-3d
   // This does hurt the magnetic compass in the default c172-3d,
   //  but we need a real 3d compass anyway.
-  glDepthMask(GL_FALSE);
+  glPolygonOffset(-1, -5*POFF_UNITS);
   for ( ; current != end; current++) {
     FGPanelInstrument * instr = *current;
     glPushMatrix();
@@ -783,7 +784,7 @@ FGLayeredInstrument::draw ()
   
   for (int i = 0; i < (int)_layers.size(); i++) {
     glPushMatrix();
-    glPolygonOffset(-1, -POFF_UNITS*(i+2));
+    // glPolygonOffset(-1, -POFF_UNITS*(i+2));
     _layers[i]->draw();
     glPopMatrix();
   }
