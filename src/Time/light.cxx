@@ -105,7 +105,11 @@ void fgLIGHT::Update( void ) {
     // if the 4th field is 0.0, this specifies a direction ...
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     // base sky color
+#if defined (sgi)
     GLfloat base_sky_color[4] = { 0.20, 0.32, 0.50, 1.0 };
+#else // PC
+    GLfloat base_sky_color[4] = { 0.38, 0.57, 0.82, 1.0 };
+#endif
     // base fog color
     GLfloat base_fog_color[4] = { 0.65, 0.62, 0.70, 1.0 };
     double deg, ambient, diffuse, specular, sky_brightness;
