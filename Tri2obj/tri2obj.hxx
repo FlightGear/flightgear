@@ -44,9 +44,12 @@ void triload(char *basename, char *basepath);
 
 
 /* $Log$
-/* Revision 1.5  1998/03/03 16:01:00  curt
-/* More c++ compile tweaks.
+/* Revision 1.1  1998/07/08 14:54:54  curt
+/* renamed *.[ch] to *.[ch]xx
 /*
+ * Revision 1.5  1998/03/03 16:01:00  curt
+ * More c++ compile tweaks.
+ *
  * Revision 1.4  1998/01/17 01:25:40  curt
  * Added support for shared normals.
  *
