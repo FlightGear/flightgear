@@ -62,8 +62,11 @@ TurnIndicator::update (double dt)
     else if (rate > 2.5)
         rate = 2.5;
 
+                                // Lag left, based on gyro spin
+    rate = -2.5 + (factor * (rate + 2.5));
+
                                 // Add a lag, based on gyro spin
-    rate = fgGetLowPass(_last_rate, rate, dt/(factor*3));
+    rate = fgGetLowPass(_last_rate, rate, dt/factor);
     _last_rate = rate;
     
                                 // Publish the indicated rate
