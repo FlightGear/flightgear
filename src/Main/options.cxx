@@ -175,7 +175,7 @@ fgOPTIONS::fgOPTIONS() :
     wireframe(0),
     xsize(640),
     ysize(480),
-    view_mode(FG_VIEW_FIRST_PERSON),
+    view_mode(FG_VIEW_PILOT),
 
     // Scenery options
     tile_diameter(5),

@@ -106,8 +106,14 @@ public:
 
     enum fgViewMode
     {
-	FG_VIEW_FIRST_PERSON = 0,
-	FG_VIEW_FOLLOW  = 1
+	FG_VIEW_PILOT = 0,	// Pilot perspective
+	FG_VIEW_FOLLOW  = 1,	// Following in the "foot steps" so to speak
+	FG_VIEW_CHASE = 2,	// Chase
+	FG_VIEW_CIRCLING = 3,	// Circling
+	FG_VIEW_SATELLITE = 4,	// From high above
+	FG_VIEW_ANCHOR = 5,	// Drop an anchor and watch from there
+	FG_VIEW_TOWER = 6,	// From nearest tower?
+	FG_VIEW_SPOTTER = 7	// Fron a ground spotter
     };
 
     enum fgAutoCoordMode
@@ -287,10 +293,10 @@ public:
     inline void set_xsize( int x ) { xsize = x; }
     inline void set_ysize( int y ) { ysize = y; }
     inline void cycle_view_mode() { 
-	if ( view_mode == FG_VIEW_FIRST_PERSON ) {
+	if ( view_mode == FG_VIEW_PILOT ) {
 	    view_mode = FG_VIEW_FOLLOW;
 	} else if ( view_mode == FG_VIEW_FOLLOW ) {
-	    view_mode = FG_VIEW_FIRST_PERSON;
+	    view_mode = FG_VIEW_PILOT;
 	}
     }
 

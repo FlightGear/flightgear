@@ -384,7 +384,7 @@ void fgRenderFrame( void ) {
 	}
 
 	if ( current_options.get_view_mode() == 
-	     fgOPTIONS::FG_VIEW_FIRST_PERSON )
+	     fgOPTIONS::FG_VIEW_PILOT )
         {
 	    // disable TuX
 	    penguin_sel->select(0);
@@ -491,7 +491,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	fdm_list.pop_front();
     }
 
-    if ( current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FIRST_PERSON ) {
+    if ( current_options.get_view_mode() == fgOPTIONS::FG_VIEW_PILOT ) {
 	cur_view_fdm = *cur_fdm_state;
 	// do nothing
     } else if ( current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW ) {

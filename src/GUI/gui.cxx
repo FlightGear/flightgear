@@ -582,8 +582,8 @@ void printScreen ( puObject *obj ) {
 #endif // #ifdef WIN32
 
 
-// do a screen dump
-void dumpScreen ( puObject *obj ) {
+// do a screen snap shot
+void dumpSnapShot ( puObject *obj ) {
     bool show_pu_cursor = false;
 
     mainMenuBar->hide();
@@ -606,7 +606,7 @@ void dumpScreen ( puObject *obj ) {
 		     current_options.get_xsize(), 
 		     current_options.get_ysize() );
     
-    mkDialog ("Screen dump saved to fgfs-screen.ppm");
+    mkDialog ("Snap shot saved to fgfs-screen.ppm");
 
     if ( show_pu_cursor ) {
 	puShowCursor();
@@ -835,7 +835,7 @@ char *fileSubmenu               [] = {
 #ifdef WIN32
     "Print",
 #endif
-    "Screen Dump",
+    "Snap Shot",
     /* "---------", "Save", */ 
     "Reset", NULL
 };
@@ -845,7 +845,7 @@ puCallback fileSubmenuCb        [] = {
     printScreen, 
 #endif
     /* NULL, notCb, */
-    dumpScreen,
+    dumpSnapShot,
     reInit, NULL
 };
 
