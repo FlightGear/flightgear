@@ -36,9 +36,6 @@
 
 #include <GUI/gui.h>
 
-static puDialogBox  *ATCMenuBox = 0;
-static puFrame      *ATCMenuFrame = 0;
-static puText       *ATCMenuBoxMessage = 0;
 
 FGTransmissionList *current_transmissionlist;
 
@@ -185,7 +182,7 @@ string FGTransmissionList::gen_text(const int &station, const TransCode code,
   char crej = '@';
   char mes[cmax];
   char dum[cmax];
-  char buf[10];
+  //char buf[10];
   char *pos;
   int len;
   FGTransmission t;
@@ -206,7 +203,7 @@ string FGTransmissionList::gen_text(const int &station, const TransCode code,
       
       while ( strchr(&mes[0], crej) != NULL  ) {
 	pos = strchr( &mes[0], crej );
-	bcopy(pos, &tag, 3);
+	bcopy(pos, &tag[0], 3);
 	tag[3] = '\0';
 	int i;
 	len = 0;
