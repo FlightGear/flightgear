@@ -54,7 +54,7 @@
 
 #if defined(FX) && defined(XMESA)
 #  include <GL/xmesa.h>
-   static int fullscreen = 1;
+static int fullscreen = 1;
 #endif
 
 
@@ -176,10 +176,18 @@ void GLUTkey(unsigned char k, int x, int y) {
 	FG_LOG( FG_INPUT, FG_DEBUG, "" );
 	switch (k) {
 	case 50: // numeric keypad 2
-	    controls.move_elevator(-0.05);
+	    if( fgAPAltitudeEnabled() ) {
+		fgAPAltitudeAdjust( 100 );
+	    } else {
+		controls.move_elevator(-0.05);
+	    }
 	    return;
 	case 56: // numeric keypad 8
-	    controls.move_elevator(0.05);
+	    if( fgAPAltitudeEnabled() ) {
+		fgAPAltitudeAdjust( -100 );
+	    } else {
+		controls.move_elevator(0.05);
+	    }
 	    return;
 	case 49: // numeric keypad 1
 	    controls.move_elevator_trim(-0.001);
@@ -194,10 +202,18 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    controls.move_aileron(0.05);
 	    return;
 	case 48: // numeric keypad Ins
-	    controls.move_rudder(-0.05);
+	    if( fgAPHeadingEnabled() ) {
+		fgAPHeadingAdjust( -1 );
+	    } else {
+		controls.move_rudder(-0.05);
+	    }
 	    return;
 	case 13: // numeric keypad Enter
-	    controls.move_rudder(0.05);
+	    if( fgAPHeadingEnabled() ) {
+		fgAPHeadingAdjust( 1 );
+	    } else {
+		controls.move_rudder(0.05);
+	    }
 	    return;
 	case 53: // numeric keypad 5
 	    controls.set_aileron(0.0);
@@ -346,10 +362,18 @@ void GLUTspecialkey(int k, int x, int y) {
 	    //exit(1);
 	    return;
 	case GLUT_KEY_UP:
-	    controls.move_elevator(0.05);
+	    if( fgAPAltitudeEnabled() ) {
+		fgAPAltitudeAdjust( -100 );
+	    } else {
+		controls.move_elevator(0.05);
+	    }
 	    return;
 	case GLUT_KEY_DOWN:
-	    controls.move_elevator(-0.05);
+	    if( fgAPAltitudeEnabled() ) {
+		fgAPAltitudeAdjust( 100 );
+	    } else {
+		controls.move_elevator(-0.05);
+	    }
 	    return;
 	case GLUT_KEY_LEFT:
 	    controls.move_aileron(-0.05);
@@ -364,10 +388,18 @@ void GLUTspecialkey(int k, int x, int y) {
 	    controls.move_elevator_trim(-0.001);
 	    return;
 	case GLUT_KEY_INSERT: // numeric keypad Ins
-	    controls.move_rudder(-0.05);
+	    if( fgAPHeadingEnabled() ) {
+		fgAPHeadingAdjust( -1 );
+	    } else {
+		controls.move_rudder(-0.05);
+	    }
 	    return;
 	case 13: // numeric keypad Enter
-	    controls.move_rudder(0.05);
+	    if( fgAPHeadingEnabled() ) {
+		fgAPHeadingAdjust( 1 );
+	    } else {
+		controls.move_rudder(0.05);
+	    }
 	    return;
 	case 53: // numeric keypad 5
 	    controls.set_aileron(0.0);
@@ -386,6 +418,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.40  1999/02/12 22:17:59  curt
+// Changes to allow adjustment of the autopilot settings while it is activated.
+//
 // Revision 1.39  1999/02/05 21:29:07  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //
