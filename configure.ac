@@ -12,7 +12,7 @@ AC_CONFIG_SRCDIR([src/Aircraft/aircraft.cxx])
 AC_PREREQ(2.52)
 
 # Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.8.0)
+AM_INIT_AUTOMAKE(FlightGear, 0.9.0)
 
 # Checks for programs.
 AC_PROG_MAKE_SET
