@@ -221,7 +221,7 @@ bool fgSetPosFromAirportID( const string& id ) {
 bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     FGRunway r;
     FGRunway found_r;
-    double found_dir;
+    double found_dir = 0.0;
 
     if ( id.length() ) {
 	// set initial position from runway and heading
@@ -564,10 +564,12 @@ bool fgInitSubsystems( void ) {
 						   &fgEVENT_MGR::PrintStats),
 			    fgEVENT::FG_EVENT_READY, 60000 );
 
-    // Initialize win ratio parameters
-    globals->get_options()->set_win_ratio( globals->get_options()->get_xsize() /
-					   globals->get_options()->get_ysize()
-					   );
+    // Initialize win_ratio parameters
+    for ( int i = 0; i < globals->get_viewmgr()->size(); ++i ) {
+	globals->get_viewmgr()->get_view(i)->
+	    set_win_ratio( globals->get_options()->get_xsize() /
+			   globals->get_options()->get_ysize() );
+    }
 
     // Initialize pilot view
     FGViewerRPH *pilot_view =

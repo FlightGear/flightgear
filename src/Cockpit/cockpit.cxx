@@ -235,7 +235,7 @@ float get_frame_rate( void )
 
 float get_fov( void )
 {
-    float fov = globals->get_options()->get_fov(); 
+    float fov = globals->get_current_view()->get_fov(); 
     return (fov);
 }
 

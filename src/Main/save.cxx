@@ -68,7 +68,7 @@ fgLoadFlight (istream &input)
 				// it would be better if FGFS just
 				// noticed the new lat/lon.
   if (retval) {
-    bool freeze;
+    bool freeze = globals->get_freeze();
     FG_LOG(FG_INPUT, FG_INFO, "ReIniting TileCache");
     if ( !freeze ) 
       globals->set_freeze( true );

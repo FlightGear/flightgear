@@ -387,6 +387,12 @@ void fgRenderFrame( void ) {
 #endif
 
 	// update view port
+	fgReshape( globals->get_options()->get_xsize(),
+		   globals->get_options()->get_ysize() );
+
+#if 0
+	// swing and a miss
+
 	if ( ! fgPanelVisible() ) {
 	    xglViewport( 0, 0 ,
 			 (GLint)(globals->get_options()->get_xsize()),
@@ -401,6 +407,7 @@ void fgRenderFrame( void ) {
 			(GLint)(globals->get_options()->get_xsize()),
 			(GLint)(view_h) );
 	}
+#endif
 
 	// set the sun position
 	glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
@@ -554,8 +561,8 @@ void fgRenderFrame( void ) {
 
 	// glMatrixMode( GL_PROJECTION );
 	// glLoadIdentity();
- 	float fov = globals->get_options()->get_fov();
- 	ssgSetFOV(fov, fov * globals->get_options()->get_win_ratio());
+ 	float fov = globals->get_current_view()->get_fov();
+ 	ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
 
 	double agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
 	    - scenery.cur_elev;
@@ -1165,16 +1172,27 @@ static void fgIdleFunction ( void ) {
 // options.cxx needs to see this for toggle_panel()
 // Handle new window size or exposure
 void fgReshape( int width, int height ) {
+    // for all views
+    for ( int i = 0; i < globals->get_viewmgr()->size(); ++i ) {
+	if ( ! fgPanelVisible() || idle_state != 1000 ) {
+	    globals->get_viewmgr()->get_view(i)->
+		set_win_ratio( (float)height / (float)width );
+	} else {
+	    int view_h =
+		int((current_panel->getViewHeight() -
+		     current_panel->getYOffset())
+		    * (height / 768.0)) + 1;
+	    globals->get_viewmgr()->get_view(i)->
+		set_win_ratio( (float)view_h / (float)width );
+	}
+    }
+
     if ( ! fgPanelVisible() || idle_state != 1000 ) {
-	globals->get_options()->set_win_ratio( (float)height /
-					       (float)width );
 	glViewport(0, 0 , (GLint)(width), (GLint)(height) );
     } else {
         int view_h =
-	  int((current_panel->getViewHeight() - current_panel->getYOffset())
-	      * (height / 768.0)) + 1;
-	globals->get_options()->set_win_ratio( (float)view_h /
-					       (float)width );
+	    int((current_panel->getViewHeight() - current_panel->getYOffset())
+		* (height / 768.0)) + 1;
 	glViewport(0, (GLint)(height - view_h),
 		   (GLint)(width), (GLint)(view_h) );
     }
@@ -1182,8 +1200,8 @@ void fgReshape( int width, int height ) {
     globals->get_options()->set_xsize( width );
     globals->get_options()->set_ysize( height );
 
-    float fov = globals->get_options()->get_fov();
-    ssgSetFOV(fov, fov * globals->get_options()->get_win_ratio());
+    float fov = globals->get_current_view()->get_fov();
+    ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
 
     fgHUDReshape();
 }
@@ -1545,8 +1563,8 @@ int main( int argc, char **argv ) {
     sgMat4 tux_matrix;
     float h_rot =
       current_properties.getFloatValue("/sim/model/h-rotation", 0.0);
-    float p_rot =
-      current_properties.getFloatValue("/sim/model/p-rotation", 0.0);
+    /* float p_rot =
+      current_properties.getFloatValue("/sim/model/p-rotation", 0.0); */
     float r_rot =
       current_properties.getFloatValue("/sim/model/r-rotation", 0.0);
     sgMakeRotMat4(tux_matrix, h_rot, h_rot, r_rot);

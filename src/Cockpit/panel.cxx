@@ -45,7 +45,6 @@ bool
 fgPanelVisible ()
 {
   return ((globals->get_options()->get_panel_status()) &&
-	  (globals->get_options()->get_view_mode() == FGOptions::FG_VIEW_PILOT) &&
 	  (globals->get_current_view()->get_view_offset() == 0.0));
 }
 

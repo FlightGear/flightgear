@@ -102,8 +102,7 @@ static void print_sgMat4( sgMat4 &in) {
 // Update the view parameters
 void FGViewerLookAt::update() {
     Point3D tmp;
-    sgVec3 minus_z, forward;
-    sgMat4 VIEWo;
+    sgVec3 minus_z;
 
     // calculate the cartesion coords of the current lat/lon/0 elev
     Point3D p = Point3D( geod_view_pos[0], 

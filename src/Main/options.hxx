@@ -56,8 +56,6 @@ FG_USING_STD(vector);
 FG_USING_STD(string);
 
 #define NEW_DEFAULT_MODEL_HZ 120
-#define FG_FOV_MIN 0.1
-#define FG_FOV_MAX 179.9
 
 
 class FGOptions {
@@ -186,14 +184,12 @@ private:
     fgFogKind fog;      // Fog nicest/fastest/disabled
     bool clouds;        // Enable clouds
     double clouds_asl;  // Cloud layer height above sea level
-    double fov;         // Field of View
     bool fullscreen;    // Full screen mode enabled/disabled
     int shading;        // shading method, 0 = Flat, 1 = Smooth
     bool skyblend;      // Blend sky to haze (using polygons) or just clear
     bool textures;      // Textures enabled/disabled
     bool wireframe;     // Wireframe mode enabled/disabled
     int xsize, ysize;   // window size derived from geometry string
-    double win_ratio;	// ratio of x and y fov's; fov(y) = fov(x) * win_ratio
     int bpp;            // bits per pixel
     fgViewMode view_mode; // view mode
     double default_view_offset;	// default forward view offset (for use by
@@ -296,7 +292,6 @@ public:
     inline fgFogKind get_fog() const { return fog; }
     inline bool get_clouds() const { return clouds; }
     inline double get_clouds_asl() const { return clouds_asl; }
-    inline double get_fov() const { return fov; }
     inline bool get_fullscreen() const { return fullscreen; }
     inline int get_shading() const { return shading; }
     inline bool get_skyblend() const { return skyblend; }
@@ -304,7 +299,6 @@ public:
     inline bool get_wireframe() const { return wireframe; }
     inline int get_xsize() const { return xsize; }
     inline int get_ysize() const { return ysize; }
-    inline double get_win_ratio() const { return win_ratio; }
     inline int get_bpp() const { return bpp; }
     inline fgViewMode get_view_mode() const { return view_mode; }
     inline double get_default_view_offset() const {
@@ -359,7 +353,6 @@ public:
     inline void set_fog (fgFogKind value) { fog = value; }
     inline void set_clouds( bool value ) { clouds = value; }
     inline void set_clouds_asl( double value ) { clouds_asl = value; }
-    inline void set_fov( double amount ) { fov = amount; }
     inline void set_fullscreen (bool value) { fullscreen = value; }
     inline void set_shading (int value) { shading = value; }
     inline void set_skyblend (bool value) { skyblend = value; }
@@ -379,7 +372,6 @@ public:
     void toggle_panel();
     inline void set_xsize( int x ) { xsize = x; }
     inline void set_ysize( int y ) { ysize = y; }
-    inline void set_win_ratio( double r ) { win_ratio = r; }
     inline void set_view_mode (fgViewMode value) { view_mode = value; }
     inline void set_tile_radius (int value) { tile_radius = value; }
     inline void set_tile_diameter (int value) { tile_diameter = value; }

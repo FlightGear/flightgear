@@ -20,7 +20,7 @@ NETWORK_LIBS = \
 endif
 
 if OLD_AUTOMAKE
-CXXFLAGS += -DPKGLIBDIR=\"$(pkglibdir)\"
+# nothing CXXFLAGS += -DPKGLIBDIR=\"$(pkglibdir)\"
 else
 AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkglibdir)\"
 endif

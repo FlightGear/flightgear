@@ -34,7 +34,8 @@
 
 
 // Constructor
-FGViewer::FGViewer( void )
+FGViewer::FGViewer( void ):
+fov(55.0)
 {
 }
 

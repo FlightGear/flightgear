@@ -213,12 +213,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 #endif
 	    return;
 	case 88: // X key
-	    fov = globals->get_options()->get_fov();
+	    fov = globals->get_current_view()->get_fov();
 	    fov *= 1.05;
 	    if ( fov > FG_FOV_MAX ) {
 		fov = FG_FOV_MAX;
 	    }
-	    globals->get_options()->set_fov(fov);
+	    globals->get_current_view()->set_fov(fov);
 	    // v->force_update_fov_math();
 	    return;
 	case 90: // Z key
@@ -375,12 +375,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 		       globals->get_options()->get_ysize() );
 	    return;
 	case 120: // x key
-	    fov = globals->get_options()->get_fov();
+	    fov = globals->get_current_view()->get_fov();
 	    fov /= 1.05;
 	    if ( fov < FG_FOV_MIN ) {
 		fov = FG_FOV_MIN;
 	    }
-	    globals->get_options()->set_fov(fov);
+	    globals->get_current_view()->set_fov(fov);
 	    // v->force_update_fov_math();
 	    return;
 	case 122: // z key
@@ -519,7 +519,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	switch (k) {
 	case GLUT_KEY_F2: // F2 Reload Tile Cache...
 	    {
-		bool freeze;
+		bool freeze = globals->get_freeze();
 		FG_LOG(FG_INPUT, FG_INFO, "ReIniting TileCache");
 		if ( !freeze ) 
 		    globals->set_freeze( true );

@@ -180,7 +180,6 @@ FGOptions::FGOptions() :
     fog(FG_FOG_NICEST),  // nicest
     clouds(true),
     clouds_asl(5000*FEET_TO_METER),
-    fov(55.0),
     fullscreen(0),
     shading(1),
     skyblend(1),
@@ -547,9 +546,11 @@ FGOptions::parse_fov( const string& arg ) {
     if ( fov < FG_FOV_MIN ) { fov = FG_FOV_MIN; }
     if ( fov > FG_FOV_MAX ) { fov = FG_FOV_MAX; }
 
+    globals->get_current_view()->set_fov( fov );
+
     // printf("parse_fov(): result = %.4f\n", fov);
 
-    return(fov);
+    return fov;
 }
 
 
@@ -670,7 +671,6 @@ int FGOptions::parse_option( const string& arg ) {
 	current_properties.setBoolValue("/sim/panel/visibility", true);
 	if ( current_panel != NULL )
 	    current_panel->setVisibility(true);
-	// fov *= 0.4232; /* NO!!! */
     } else if ( arg == "--disable-sound" ) {
 	sound = false;
     } else if ( arg == "--enable-sound" ) {
@@ -798,7 +798,7 @@ int FGOptions::parse_option( const string& arg ) {
 	    clouds_asl = atof( arg.substr(13) );
 	}
     } else if ( arg.find( "--fov=" ) != string::npos ) {
-	fov = parse_fov( arg.substr(6) );
+	parse_fov( arg.substr(6) );
     } else if ( arg == "--disable-fullscreen" ) {
 	fullscreen = false;	
     } else if ( arg== "--enable-fullscreen") {

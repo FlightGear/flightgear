@@ -35,6 +35,10 @@
 #include <plib/sg.h>		// plib include
 
 
+#define FG_FOV_MIN 0.1
+#define FG_FOV_MAX 179.9
+
+
 // Define a structure containing view information
 class FGViewer {
 
@@ -54,6 +58,12 @@ private:
 protected:
 
     fgViewType _type;
+
+    // the field of view in the x (width) direction
+    double fov; 
+
+    // ratio of x and y fov's; fov(y) = fov(x) * win_ratio
+    double win_ratio;
 
     // the current view offset angle from forward (rotated about the
     // view_up vector)
@@ -115,6 +125,8 @@ public:
     //////////////////////////////////////////////////////////////////////
     // setter functions
     //////////////////////////////////////////////////////////////////////
+    inline void set_fov( double amount ) { fov = amount; }
+    inline void set_win_ratio( double r ) { win_ratio = r; }
     inline void set_view_offset( double a ) {
 	set_dirty();
 	view_offset = a;
@@ -150,6 +162,8 @@ public:
     inline int get_type() const { return _type ; }
     inline int is_a( int t ) const { return get_type() == t ; }
     inline bool is_dirty() const { return dirty; }
+    inline double get_fov() const { return fov; }
+    inline double get_win_ratio() const { return win_ratio; }
     inline double get_view_offset() const { return view_offset; }
     inline double get_goal_view_offset() const { return goal_view_offset; }
     inline double *get_geod_view_pos() { return geod_view_pos; }

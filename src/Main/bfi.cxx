@@ -107,8 +107,8 @@ reinit ()
   double apAltitude = FGBFI::getAPAltitude();
   const string &targetAirport = FGBFI::getTargetAirport();
   bool gpsLock = FGBFI::getGPSLock();
-  double gpsLatitude = FGBFI::getGPSTargetLatitude();
-  double gpsLongitude = FGBFI::getGPSTargetLongitude();
+  // double gpsLatitude = FGBFI::getGPSTargetLatitude();
+  // double gpsLongitude = FGBFI::getGPSTargetLongitude();
 
   FGBFI::setTargetAirport("");
   cout << "Target airport is " << globals->get_options()->get_airport_id() << endl;
@@ -753,6 +753,8 @@ FGBFI::getEGT ()
 {
   if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
       return current_aircraft.fdm_state->get_engine(0)->get_EGT();
+  } else {
+      return 0.0;
   }
 }
 
@@ -765,6 +767,8 @@ FGBFI::getCHT ()
 {
   if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
       return current_aircraft.fdm_state->get_engine(0)->get_CHT();
+  } else {
+      return 0.0;
   }
 }
 
@@ -777,6 +781,8 @@ FGBFI::getMP ()
 {
   if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
       return current_aircraft.fdm_state->get_engine(0)->get_Manifold_Pressure();
+  } else {
+      return 0.0;
   }
 }
 
