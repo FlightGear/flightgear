@@ -164,7 +164,7 @@
 
 
 // Maximum nodes per tile
-#define MAX_NODES 2000
+#define FG_MAX_NODES 2000
 
 
 #endif // _FG_CONSTANTS_H

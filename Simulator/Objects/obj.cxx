@@ -62,7 +62,7 @@
 FG_USING_STD(string);
 
 
-static double normals[MAX_NODES][3];
+static double normals[FG_MAX_NODES][3];
 
 
 // given three points defining a triangle, calculate the normal
@@ -259,7 +259,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 	    if ( token == "vn" ) {
 		// vertex normal
-		if ( vncount < MAX_NODES ) {
+		if ( vncount < FG_MAX_NODES ) {
 		    in >> normals[vncount][0]
 		       >> normals[vncount][1]
 		       >> normals[vncount][2];
@@ -271,7 +271,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		}
 	    } else if ( token == "v" ) {
 		// node (vertex)
-		if ( t->ncount < MAX_NODES ) {
+		if ( t->ncount < FG_MAX_NODES ) {
 		    in >> t->nodes[t->ncount][0]
 		       >> t->nodes[t->ncount][1]
 		       >> t->nodes[t->ncount][2];
