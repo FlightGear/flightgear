@@ -35,7 +35,7 @@
 
 #include <Include/compiler.h>
 
-
+#if 0
 // include Generic Polygon Clipping Library
 //
 //    http://www.cs.man.ac.uk/aig/staff/alan/software/
@@ -43,6 +43,9 @@
 extern "C" {
 #include <gpc.h>
 }
+#endif
+
+#include <Triangulate/polygon.hxx>
 
 #include STL_STRING
 #include <vector>
@@ -51,14 +54,14 @@ FG_USING_STD(string);
 FG_USING_STD(vector);
 
 
-typedef vector < gpc_polygon * > gpcpoly_container;
-typedef gpcpoly_container::iterator gpcpoly_iterator;
-typedef gpcpoly_container::const_iterator const_gpcpoly_iterator;
+// typedef vector < gpc_polygon * > gpcpoly_container;
+// typedef gpcpoly_container::iterator gpcpoly_iterator;
+// typedef gpcpoly_container::const_iterator const_gpcpoly_iterator;
 
 
 #define FG_MAX_AREA_TYPES 20
 #define EXTRA_SAFETY_CLIP
-#define FG_MAX_VERTICES 100000
+// #define FG_MAX_VERTICES 100000
 
 
 class point2d {
@@ -67,10 +70,10 @@ public:
 };
 
 
-class FGgpcPolyList {
+class FGPolyList {
 public:
-    gpcpoly_container polys[FG_MAX_AREA_TYPES];
-    gpc_polygon safety_base;
+    poly_list polys[FG_MAX_AREA_TYPES];
+    FGPolygon safety_base;
 };
 
 
@@ -78,9 +81,9 @@ class FGClipper {
 
 private:
 
-    gpc_vertex_list v_list;
+    // gpc_vertex_list v_list;
     // static gpc_polygon poly;
-    FGgpcPolyList polys_in, polys_clipped;
+    FGPolyList polys_in, polys_clipped;
 
 public:
 
@@ -98,13 +101,13 @@ public:
 
     // merge any slivers in the specified polygon with larger
     // neighboring polygons of higher priorigy
-    void merge_slivers(gpc_polygon *poly);
+    void merge_slivers( FGPolygon& poly);
     
     // Do actually clipping work
     bool clip_all(const point2d& min, const point2d& max);
 
     // return output poly list
-    inline FGgpcPolyList get_polys_clipped() const { return polys_clipped; }
+    inline FGPolyList get_polys_clipped() const { return polys_clipped; }
 };
 
 

@@ -97,3 +97,27 @@ int FGTriNodes::course_add( const Point3D& p ) {
 }
 
 
+// Find the index of the specified point (compair to the same
+// tolerance as unique_add().  Returns -1 if not found.
+int FGTriNodes::find( const Point3D& p ) const {
+    const_point_list_iterator current, last;
+    int counter = 0;
+
+    // cout << p.x() << "," << p.y() << endl;
+
+    // see if point already exists
+    current = node_list.begin();
+    last = node_list.end();
+    for ( ; current != last; ++current ) {
+	if ( close_enough(p, *current) ) {
+	    // cout << "found an existing match!" << endl;
+	    return counter;
+	}
+	
+	++counter;
+    }
+
+    return -1;
+}
+
+

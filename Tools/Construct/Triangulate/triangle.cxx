@@ -38,7 +38,7 @@ FGTriangle::~FGTriangle( void ) {
 int 
 FGTriangle::build( const point_list& corner_list,
 		   const point_list& fit_list, 
-		   const FGgpcPolyList& gpc_polys )
+		   const FGPolyList& gpc_polys )
 {
     int debug_counter = 0;
     FGPolygon poly;
@@ -66,8 +66,8 @@ FGTriangle::build( const point_list& corner_list,
     }
 
     // next process the polygons
-    gpc_polygon *gpc_poly;
-    const_gpcpoly_iterator current, last;
+    FGPolygon gpc_poly;
+    const_poly_list_iterator current, last;
 
     // process polygons in priority order
     cout << "prepairing node list and polygons" << endl;
@@ -82,9 +82,9 @@ FGTriangle::build( const point_list& corner_list,
 	for ( ; current != last; ++current ) {
 	    gpc_poly = *current;
 	    cout << "processing a polygon, contours = " 
-		 << gpc_poly->num_contours << endl;
+		 << gpc_poly.contours() << endl;
 
-	    if (gpc_poly->num_contours <= 0 ) {
+	    if (gpc_poly.contours() <= 0 ) {
 		cout << "FATAL ERROR! no contours in this polygon" << endl;
 		exit(-1);
 	    }
@@ -93,22 +93,20 @@ FGTriangle::build( const point_list& corner_list,
 
 	    int j;
 
-	    for ( j = 0; j < gpc_poly->num_contours; ++j ) {
+	    for ( j = 0; j < gpc_poly.contours(); ++j ) {
 		cout << "  processing contour = " << j << ", nodes = " 
-		     << gpc_poly->contour[j].num_vertices << ", hole = "
-		     << gpc_poly->hole[j] << endl;
+		     << gpc_poly.contour_size( j ) << ", hole = "
+		     << gpc_poly.get_hole_flag( j ) << endl;
 
 		// sprintf(junkn, "g.%d", junkc++);
 		// junkfp = fopen(junkn, "w");
 
-		for ( int k = 0; k < gpc_poly->contour[j].num_vertices; k++ ) {
-		    Point3D p( gpc_poly->contour[j].vertex[k].x,
-			       gpc_poly->contour[j].vertex[k].y,
-			       0 );
+		for ( int k = 0; k < gpc_poly.contour_size( j ); k++ ) {
+		    Point3D p = gpc_poly.get_pt( j, k );
 		    index = in_nodes.unique_add( p );
 		    // junkp = in_nodes.get_node( index );
 		    // fprintf(junkfp, "%.4f %.4f\n", junkp.x(), junkp.y());
-		    poly.add_node(j, index);
+		    poly.add_node(j, p);
 		    // cout << "  - " << index << endl;
 		}
 		// fprintf(junkfp, "%.4f %.4f\n", 
@@ -116,10 +114,10 @@ FGTriangle::build( const point_list& corner_list,
 		//    gpc_poly->contour[j].vertex[0].y);
 		// fclose(junkfp);
 
-		poly.set_hole_flag( j, gpc_poly->hole[j] );
+		poly.set_hole_flag( j, gpc_poly.get_hole_flag( j ) );
 	    }
 
-	    for ( j = 0; j < gpc_poly->num_contours; ++j ) {
+	    for ( j = 0; j < gpc_poly.contours(); ++j ) {
 		poly.calc_point_inside( j, in_nodes );
 	    }
 
@@ -129,15 +127,12 @@ FGTriangle::build( const point_list& corner_list,
 		char pname[256];
 		sprintf(pname, "poly%02d-%02d-%02d", i, debug_counter, j);
 		FILE *fp = fopen( pname, "w" );
-		int index;
 		Point3D point;
 		for ( int k = 0; k < poly.contour_size( j ); ++k ) {
-		    index = poly.get_pt_index( j, k );
-		    point = in_nodes.get_node( index );
+		    point = poly.get_pt( j, k );
 		    fprintf( fp, "%.6f %.6f\n", point.x(), point.y() );
 		}
-		index = poly.get_pt_index( j, 0 );
-		point = in_nodes.get_node( index );
+		point = poly.get_pt( j, 0 );
 		fprintf( fp, "%.6f %.6f\n", point.x(), point.y() );
 		fclose(fp);
 
@@ -174,6 +169,7 @@ FGTriangle::build( const point_list& corner_list,
     // that is used by the "Triangle" lib.
 
     int i1, i2;
+    Point3D p1, p2;
     point_list node_list = in_nodes.get_node_list();
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	// cout << "area type = " << i << endl;
@@ -186,14 +182,18 @@ FGTriangle::build( const point_list& corner_list,
 	    poly = *tp_current;
 
 	    for ( int j = 0; j < (int)poly.contours(); ++j) {
-		for ( int k = 0; k < (int)(poly.contour_size(j)) - 1; ++k ) {
-		    i1 = poly.get_pt_index( j, k );
-		    i2 = poly.get_pt_index( j, k + 1 );
+		for ( int k = 0; k < (int)(poly.contour_size(j) - 1); ++k ) {
+		    p1 = poly.get_pt( j, k );
+		    p2 = poly.get_pt( j, k + 1 );
+		    i1 = in_nodes.find( p1 );
+		    i2 = in_nodes.find( p2 );
 		    // calc_line_params(i1, i2, &m, &b);
 		    in_segs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
 		}
-		i1 = poly.get_pt_index( j, 0 );
-		i2 = poly.get_pt_index( j, poly.contour_size(j) - 1 );
+		p1 = poly.get_pt( j, 0 );
+		p2 = poly.get_pt( j, poly.contour_size(j) - 1 );
+		i1 = in_nodes.find( p1 );
+		i2 = in_nodes.find( p2 );
 		// calc_line_params(i1, i2, &m, &b);
 		in_segs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
 	    }

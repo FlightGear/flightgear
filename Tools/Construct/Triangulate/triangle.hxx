@@ -79,7 +79,7 @@ public:
     // populate this class based on the specified gpc_polys list
     int build( const point_list& corner_list, 
 	       const point_list& fit_list,
-	       const FGgpcPolyList& gpc_polys );
+	       const FGPolyList& gpc_polys );
 
     // populate this class based on the specified gpc_polys list
     int rebuild( FGConstruct& c );

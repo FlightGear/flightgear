@@ -49,7 +49,7 @@ private:
 
     // return true of the two points are "close enough" as defined by
     // FG_PROXIMITY_EPSILON
-    bool close_enough( const Point3D& p, const Point3D& p );
+    bool close_enough( const Point3D& p, const Point3D& p ) const;
 
     // return true of the two points are "close enough" as defined by
     // FG_COURSE_EPSILON
@@ -76,7 +76,11 @@ public:
     // Use a course proximity check
     int course_add( const Point3D& p );
 
-    // return the master node list
+    // Find the index of the specified point (compair to the same
+    // tolerance as unique_add().  Returns -1 if not found.
+    int find( const Point3D& p ) const;
+
+     // return the master node list
     inline point_list get_node_list() const { return node_list; }
 
     // return the ith point
@@ -89,7 +93,9 @@ public:
 
 // return true of the two points are "close enough" as defined by
 // FG_PROXIMITY_EPSILON
-inline bool FGTriNodes::close_enough( const Point3D& p1, const Point3D& p2 ) {
+inline bool FGTriNodes::close_enough( const Point3D& p1, const Point3D& p2 )
+    const
+{
     if ( ( fabs(p1.x() - p2.x()) < FG_PROXIMITY_EPSILON ) &&
 	 ( fabs(p1.y() - p2.y()) < FG_PROXIMITY_EPSILON ) ) {
 	return true;

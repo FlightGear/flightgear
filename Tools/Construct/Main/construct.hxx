@@ -69,7 +69,7 @@ private:
     FGBucket bucket;
 
     // clipped polygons (gpc format)
-    FGgpcPolyList clipped_polys;
+    FGPolyList clipped_polys;
 
     // raw node list (after triangulation)
     FGTriNodes tri_nodes;
@@ -125,8 +125,8 @@ public:
     inline void set_bucket( const FGBucket b ) { bucket = b; } 
 
     // clipped polygons
-    inline FGgpcPolyList get_clipped_polys() const { return clipped_polys; }
-    inline void set_clipped_polys( FGgpcPolyList p ) { clipped_polys = p; }
+    inline FGPolyList get_clipped_polys() const { return clipped_polys; }
+    inline void set_clipped_polys( FGPolyList p ) { clipped_polys = p; }
 
     // node list (after triangulation)
     inline FGTriNodes get_tri_nodes() const { return tri_nodes; }

@@ -107,24 +107,22 @@ void FGPolygon::calc_point_inside( const int contour,
     // min.y() starts greater than the biggest possible lat (degrees)
     min.sety( 100.0 );
 
-    int_list_iterator current, last;
+    point_list_iterator current, last;
     current = poly[contour].begin();
     last = poly[contour].end();
 
-    int counter = 0;
-    for ( ; current != last; ++current ) {
-	tmp = trinodes.get_node( *current );
+    for ( int i = 0; i < contour_size( contour ); ++i ) {
+	tmp = get_pt( contour, i );
 	if ( tmp.y() < min.y() ) {
 	    min = tmp;
-	    min_index = *current;
-	    min_node_index = counter;
+	    min_index = trinodes.find( min );
+	    min_node_index = i;
 
 	    // cout << "min index = " << *current 
 	    //      << " value = " << min_y << endl;
 	} else {
 	    // cout << "  index = " << *current << endl;
 	}
-	++counter;
     }
 
     cout << "min node index = " << min_node_index << endl;
@@ -136,17 +134,17 @@ void FGPolygon::calc_point_inside( const int contour,
     // fabs(slope)
 
     if ( min_node_index == 0 ) {
-	p1_index = poly[contour][1];
-	p2_index = poly[contour][poly[contour].size() - 1];
+	p1 = poly[contour][1];
+	p2 = poly[contour][poly[contour].size() - 1];
     } else if ( min_node_index == (int)(poly[contour].size()) - 1 ) {
-	p1_index = poly[contour][0];
-	p2_index = poly[contour][poly[contour].size() - 2];
+	p1 = poly[contour][0];
+	p2 = poly[contour][poly[contour].size() - 2];
     } else {
-	p1_index = poly[contour][min_node_index - 1];
-	p2_index = poly[contour][min_node_index + 1];
+	p1 = poly[contour][min_node_index - 1];
+	p2 = poly[contour][min_node_index + 1];
     }
-    p1 = trinodes.get_node( p1_index );
-    p2 = trinodes.get_node( p2_index );
+    p1_index = trinodes.find( p1 );
+    p2_index = trinodes.find( p2 );
 
     double s1 = fabs( slope(min, p1) );
     double s2 = fabs( slope(min, p2) );
@@ -175,10 +173,10 @@ void FGPolygon::calc_point_inside( const int contour,
 	for ( int j = 0; j < (int)(poly[i].size() - 1); ++j ) {
 	    // cout << "  p1 = " << poly[i][j] << " p2 = " 
 	    //      << poly[i][j+1] << endl;
-	    p1_index = poly[i][j];
-	    p2_index = poly[i][j+1];
-	    p1 = trinodes.get_node( p1_index );
-	    p2 = trinodes.get_node( p2_index );
+	    p1 = poly[i][j];
+	    p2 = poly[i][j+1];
+	    p1_index = trinodes.find( p1 );
+	    p2_index = trinodes.find( p2 );
 	
 	    if ( intersects(p1, p2, m.x(), &result) ) {
 		// cout << "intersection = " << result << endl;
@@ -191,10 +189,10 @@ void FGPolygon::calc_point_inside( const int contour,
 	}
 	// cout << "  p1 = " << poly[i][0] << " p2 = " 
 	//      << poly[i][poly[i].size() - 1] << endl;
-	p1_index = poly[i][0];
-	p2_index = poly[i][poly[i].size() - 1];
-	p1 = trinodes.get_node( p1_index );
-	p2 = trinodes.get_node( p2_index );
+	p1 = poly[i][0];
+	p2 = poly[i][poly[i].size() - 1];
+	p1_index = trinodes.find( p1 );
+	p2_index = trinodes.find( p2 );
 	if ( intersects(p1, p2, m.x(), &result) ) {
 	    // cout << "intersection = " << result << endl;
 	    if ( ( result.y() < p3.y() ) &&
@@ -220,34 +218,140 @@ void FGPolygon::calc_point_inside( const int contour,
 }
 
 
+//
 // wrapper functions for gpc polygon clip routines
+//
 
-// Difference
-FGPolygon polygon_diff(	const FGPolygon& subject, const FGPolygon& clip ) {
-    FGPolygon result;
-
-    gpc_polygon *poly = new gpc_polygon;
-    poly->num_contours = 0;
-    poly->contour = NULL;
-
+// Make a gpc_poly from an FGPolygon
+void make_gpc_poly( const FGPolygon& in, gpc_polygon *out ) {
     gpc_vertex_list v_list;
     v_list.num_vertices = 0;
     v_list.vertex = new gpc_vertex[FG_MAX_VERTICES];
 
-    // free allocated memory
-    gpc_free_polygon( poly );
+    cout << "making a gpc_poly" << endl;
+    cout << "  input contours = " << in.contours() << endl;
+
+    Point3D p;
+    // build the gpc_polygon structures
+    for ( int i = 0; i < in.contours(); ++i ) {
+	cout << "    contour " << i << " = " << in.contour_size( i ) << endl;
+	for ( int j = 0; j < in.contour_size( i ); ++j ) {
+	    p = in.get_pt( i, j );
+	    v_list.vertex[j].x = p.x();
+	    v_list.vertex[j].y = p.y();
+	}
+	v_list.num_vertices = in.contour_size( i );
+	gpc_add_contour( out, &v_list, in.get_hole_flag( i ) );
+    }
+
+    // free alocated memory
     delete v_list.vertex;
+}
+
+
+// Set operation type
+typedef enum {
+    POLY_DIFF,			// Difference
+    POLY_INT,			// Intersection
+    POLY_XOR,			// Exclusive or
+    POLY_UNION			// Union
+} clip_op;
+
+
+// Generic clipping routine
+FGPolygon polygon_clip( clip_op poly_op, const FGPolygon& subject, 
+			const FGPolygon& clip )
+{
+    FGPolygon result;
+
+    gpc_polygon *gpc_subject = new gpc_polygon;
+    gpc_subject->num_contours = 0;
+    gpc_subject->contour = NULL;
+    gpc_subject->hole = NULL;
+    make_gpc_poly( subject, gpc_subject );
+
+    gpc_polygon *gpc_clip = new gpc_polygon;
+    gpc_clip->num_contours = 0;
+    gpc_clip->contour = NULL;
+    gpc_clip->hole = NULL;
+    make_gpc_poly( clip, gpc_clip );
+
+    gpc_polygon *gpc_result = new gpc_polygon;
+    gpc_result->num_contours = 0;
+    gpc_result->contour = NULL;
+    gpc_result->hole = NULL;
+
+    gpc_op op;
+    if ( poly_op == POLY_DIFF ) {
+	op = GPC_DIFF;
+    } else if ( poly_op == POLY_INT ) {
+	op = GPC_INT;
+    } else if ( poly_op == POLY_XOR ) {
+	op = GPC_XOR;
+    } else if ( poly_op == POLY_UNION ) {
+	op = GPC_UNION;
+    } else {
+	cout << "Unknown polygon op, exiting." << endl;
+	exit(-1);
+    }
+
+    gpc_polygon_clip( op, gpc_subject, gpc_clip, gpc_result );
+
+    for ( int i = 0; i < gpc_result->num_contours; ++i ) {
+	// cout << "  processing contour = " << i << ", nodes = " 
+	//      << gpc_result->contour[i].num_vertices << ", hole = "
+	//      << gpc_result->hole[i] << endl;
+	
+	// sprintf(junkn, "g.%d", junkc++);
+	// junkfp = fopen(junkn, "w");
+
+	for ( int j = 0; j < gpc_result->contour[i].num_vertices; j++ ) {
+	    Point3D p( gpc_result->contour[i].vertex[j].x,
+		       gpc_result->contour[i].vertex[j].y,
+		       0 );
+	    // junkp = in_nodes.get_node( index );
+	    // fprintf(junkfp, "%.4f %.4f\n", junkp.x(), junkp.y());
+	    result.add_node(i, p);
+	    // cout << "  - " << index << endl;
+	}
+	// fprintf(junkfp, "%.4f %.4f\n", 
+	//    gpc_result->contour[i].vertex[0].x, 
+	//    gpc_result->contour[i].vertex[0].y);
+	// fclose(junkfp);
+
+	result.set_hole_flag( i, gpc_result->hole[i] );
+    }
+
+    // free allocated memory
+    gpc_free_polygon( gpc_subject );
+    gpc_free_polygon( gpc_clip );
+    gpc_free_polygon( gpc_result );
 
     return result;
 }
 
+
+// Difference
+FGPolygon polygon_diff(	const FGPolygon& subject, const FGPolygon& clip ) {
+    return polygon_clip( POLY_DIFF, subject, clip );
+}
+
 // Intersection
-FGPolygon polygon_int( const FGPolygon& subject, const FGPolygon& clip );
+FGPolygon polygon_int( const FGPolygon& subject, const FGPolygon& clip ) {
+    return polygon_clip( POLY_INT, subject, clip );
+}
+
 
 // Exclusive or
-FGPolygon polygon_xor( const FGPolygon& subject, const FGPolygon& clip );
+FGPolygon polygon_xor( const FGPolygon& subject, const FGPolygon& clip ) {
+    return polygon_clip( POLY_XOR, subject, clip );
+}
+
 
 // Union
-FGPolygon polygon_union( const FGPolygon& subject, const FGPolygon& clip );
+FGPolygon polygon_union( const FGPolygon& subject, const FGPolygon& clip ) {
+    return polygon_clip( POLY_UNION, subject, clip );
+}
+
 
 

@@ -44,8 +44,8 @@ FGClipper::~FGClipper( void ) {
 
 // Initialize Clipper (allocate and/or connect structures)
 bool FGClipper::init() {
-    v_list.num_vertices = 0;
-    v_list.vertex = new gpc_vertex[FG_MAX_VERTICES];;
+    // v_list.num_vertices = 0;
+    // v_list.vertex = new gpc_vertex[FG_MAX_VERTICES];;
 
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	polys_in.polys[i].clear();
@@ -72,10 +72,12 @@ bool FGClipper::load_polys(const string& path) {
 	exit(-1);
     }
 
-    gpc_polygon *poly = new gpc_polygon;
-    poly->num_contours = 0;
-    poly->contour = NULL;
+    // gpc_polygon *poly = new gpc_polygon;
+    // poly->num_contours = 0;
+    // poly->contour = NULL;
+    FGPolygon poly;
 
+    Point3D p;
     in >> skipcomment;
     while ( !in.eof() ) {
 	in >> poly_name;
@@ -84,6 +86,8 @@ bool FGClipper::load_polys(const string& path) {
 	cout << "poly type (int) = " << (int)poly_type << endl;
 	in >> contours;
 	cout << "num contours = " << contours << endl;
+
+	poly.erase();
 
 	for ( i = 0; i < contours; ++i ) {
 	    in >> count;
@@ -98,19 +102,18 @@ bool FGClipper::load_polys(const string& path) {
 
 	    in >> startx;
 	    in >> starty;
-	    v_list.vertex[0].x = startx;
-	    v_list.vertex[0].y = starty;
+	    p = Point3D(startx, starty, 0.0);
+	    poly.add_node( i, p );
 	    FG_LOG( FG_CLIPPER, FG_BULK, "0 = " 
 		    << startx << ", " << starty );
 
 	    for ( j = 1; j < count - 1; ++j ) {
 		in >> x;
 		in >> y;
-		v_list.vertex[j].x = x;
-		v_list.vertex[j].y = y;
+		p = Point3D( x, y, 0.0 );
+		poly.add_node( i, p );
 		FG_LOG( FG_CLIPPER, FG_BULK, j << " = " << x << ", " << y );
 	    }
-	    v_list.num_vertices = count - 1;
 
 	    in >> lastx;
 	    in >> lasty;
@@ -119,14 +122,13 @@ bool FGClipper::load_polys(const string& path) {
 		 && (fabs(starty - lasty) < FG_EPSILON) ) {
 		// last point same as first, discard
 	    } else {
-		v_list.vertex[count - 1].x = lastx;
-		v_list.vertex[count - 1].y = lasty;
-		++v_list.num_vertices;
+		p = Point3D( lastx, lasty, 0.0 );
+		poly.add_node( i, p );
 		FG_LOG( FG_CLIPPER, FG_BULK, count - 1 << " = " 
 			<< lastx << ", " << lasty );
 	    }
 
-	    gpc_add_contour( poly, &v_list, hole_flag );
+	    // gpc_add_contour( poly, &v_list, hole_flag );
 	}
 
 	in >> skipcomment;
@@ -152,15 +154,15 @@ bool FGClipper::load_polys(const string& path) {
 
 // merge any slivers in the specified polygon with larger
 // neighboring polygons of higher priorigy
-void FGClipper::merge_slivers(gpc_polygon *poly) {
+void FGClipper::merge_slivers(FGPolygon& poly) {
     cout << "Begin merge slivers" << endl;
     // traverse each contour of the polygon and attempt to identify
     // likely slivers
-    for ( int i = 0; i < poly->num_contours; i++ ) {
+    for ( int i = 0; i < poly.contours(); ++i ) {
 	cout << "contour " << i << endl;
-	for (int j = 0; j < poly->contour[i].num_vertices; j++ ) {
-	    cout << poly->contour[i].vertex[j].x << ","
-		 << poly->contour[i].vertex[j].y << endl;
+	for (int j = 0; j < poly.contour_size( i ); ++j ) {
+	    // cout << poly->contour[i].vertex[j].x << ","
+	    //      << poly->contour[i].vertex[j].y << endl;
 	}
     }
 }
@@ -168,62 +170,53 @@ void FGClipper::merge_slivers(gpc_polygon *poly) {
 
 // Do actually clipping work
 bool FGClipper::clip_all(const point2d& min, const point2d& max) {
-    gpc_polygon accum, result_union, tmp;
-    gpc_polygon *result_diff, *remains;
-    gpcpoly_iterator current, last;
+    FGPolygon accum, result_union, tmp;
+    FGPolygon result_diff, remains;
+    // gpcpoly_iterator current, last;
 
     FG_LOG( FG_CLIPPER, FG_INFO, "Running master clipper" );
 
-    accum.num_contours = 0;
+    accum.erase();
 
     cout << "  (" << min.x << "," << min.y << ") (" 
 	 << max.x << "," << max.y << ")" << endl;
 
     // set up clipping tile
-    v_list.vertex[0].x = min.x;
-    v_list.vertex[0].y = min.y;
-
-    v_list.vertex[1].x = max.x;
-    v_list.vertex[1].y = min.y;
-
-    v_list.vertex[2].x = max.x;
-    v_list.vertex[2].y = max.y;
-
-    v_list.vertex[3].x = min.x;
-    v_list.vertex[3].y = max.y;
-
-    v_list.num_vertices = 4;
-
-    polys_in.safety_base.num_contours = 0;
-    polys_in.safety_base.contour = NULL;
-    gpc_add_contour( &polys_in.safety_base, &v_list, 0 );
+    polys_in.safety_base.erase();
+    polys_in.safety_base.add_node( 0, Point3D(min.x, min.y, 0.0) );
+    polys_in.safety_base.add_node( 0, Point3D(max.x, min.y, 0.0) );
+    polys_in.safety_base.add_node( 0, Point3D(max.x, max.y, 0.0) );
+    polys_in.safety_base.add_node( 0, Point3D(min.x, max.y, 0.0) );
 
     // int count = 0;
     // process polygons in priority order
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	cout << "num polys of type (" << i << ") = " 
 	     << polys_in.polys[i].size() << endl;
-	current = polys_in.polys[i].begin();
-	last = polys_in.polys[i].end();
-	for ( ; current != last; ++current ) {
+	// current = polys_in.polys[i].begin();
+	// last = polys_in.polys[i].end();
+	// for ( ; current != last; ++current ) {
+	for( int j = 0; j < (int)polys_in.polys[i].size(); ++j ) {
+	    FGPolygon current = polys_in.polys[i][j];
 	    FG_LOG( FG_CLIPPER, FG_DEBUG, get_area_name( (AreaType)i ) 
-		    << " = " << (*current)->contour->num_vertices );
+		    << " = " << current.contours() );
 
 #ifdef EXTRA_SAFETY_CLIP
 	    // clip to base tile
-	    gpc_polygon_clip(GPC_INT, *current, &polys_in.safety_base, &tmp);
+	    tmp = polygon_int( current, polys_in.safety_base );
 #else
-	    tmp = *current;
+	    tmp = current;
 #endif
 
 	    // clip current polygon against previous higher priority
 	    // stuff
-	    result_diff = new gpc_polygon;
-	    result_diff->num_contours = 0;
-	    result_diff->contour = NULL;
 
-	    if ( accum.num_contours == 0 ) {
-		*result_diff = tmp;
+	    // result_diff = new gpc_polygon;
+	    // result_diff->num_contours = 0;
+	    // result_diff->contour = NULL;
+
+	    if ( accum.contours() == 0 ) {
+		result_diff = tmp;
 		result_union = tmp;
 	    } else {
    		// cout << "DIFF: tmp.num_contours = " << tmp.num_contours
@@ -239,8 +232,8 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 		// gpc_write_polygon(ofp, 1, &accum);
 		// fclose(ofp);
 
-		gpc_polygon_clip(GPC_DIFF, &tmp, &accum, result_diff);
-		gpc_polygon_clip(GPC_UNION, &tmp, &accum, &result_union);
+		result_diff = polygon_diff( tmp, accum);
+		result_union = polygon_union( tmp, accum);
 	    }
 
 	    /*
@@ -264,7 +257,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 	      */
 
 	    // only add to output list if the clip left us with a polygon
-	    if ( result_diff->num_contours > 0 ) {
+	    if ( result_diff.contours() > 0 ) {
 		// merge any slivers with larger neighboring polygons
 		merge_slivers(result_diff);
 
@@ -283,15 +276,16 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     // finally, what ever is left over goes to ocean
 
     // clip to accum against original base tile
-    remains = new gpc_polygon;
-    remains->num_contours = 0;
-    remains->contour = NULL;
-    gpc_polygon_clip(GPC_DIFF, &polys_in.safety_base, &accum, 
-		     remains);
-    if ( remains->num_contours > 0 ) {
+    // remains = new gpc_polygon;
+    // remains->num_contours = 0;
+    // remains->contour = NULL;
+    remains = polygon_diff( polys_in.safety_base, accum );
+
+    if ( remains.contours() > 0 ) {
 	polys_clipped.polys[(int)OceanArea].push_back(remains);
     }
 
+#if 0
     FILE *ofp;
 
     // tmp output accum
@@ -307,6 +301,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 	gpc_write_polygon(ofp, 1, remains);
 	fclose(ofp);
     }
+#endif
 
     return true;
 }

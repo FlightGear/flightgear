@@ -44,7 +44,7 @@ FG_USING_STD(vector);
 #define FG_MAX_VERTICES 100000
 
 
-typedef vector < int_list > polytype;
+typedef vector < point_list > polytype;
 typedef polytype::iterator polytype_iterator;
 typedef polytype::const_iterator const_polytype_iterator;
 
@@ -64,10 +64,10 @@ public:
     ~FGPolygon( void );
 
     // Add the specified node (index) to the polygon
-    inline void add_node( int contour, int index ) {
+    inline void add_node( int contour, Point3D p ) {
 	if ( contour >= (int)poly.size() ) {
 	    // extend polygon
-	    int_list empty_contour;
+	    point_list empty_contour;
 	    empty_contour.clear();
 	    for ( int i = 0; i < contour - (int)poly.size() + 1; ++i ) {
 		poly.push_back( empty_contour );
@@ -75,7 +75,7 @@ public:
 		hole_list.push_back( 0 );
 	    }
 	}
-	poly[contour].push_back( index );
+	poly[contour].push_back( p );
     }
 
     // return size
@@ -85,7 +85,7 @@ public:
     }
 
     // return the ith polygon point index from the specified contour
-    inline int get_pt_index( int contour, int i ) const { 
+    inline Point3D get_pt( int contour, int i ) const { 
 	return poly[contour][i];
     }
 

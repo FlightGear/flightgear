@@ -164,7 +164,7 @@ void first_triangulate( FGConstruct& c, const FGArray& array,
 
     point_list corner_list = array.get_corner_node_list();
     point_list fit_list = array.get_fit_node_list();
-    FGgpcPolyList gpc_polys = c.get_clipped_polys();
+    FGPolyList gpc_polys = c.get_clipped_polys();
 
     cout << "ready to build node list and polygons" << endl;
     t.build( corner_list, fit_list, gpc_polys );
@@ -604,5 +604,3 @@ main(int argc, char **argv) {
 
     cout << "[Finished successfully]" << endl;
 }
-
-
