@@ -37,7 +37,7 @@ could try something like:
 
     MACH="-mpentium"   # -m486 -mpentiumpro etc.
     export CC=egcc     # for Linux
-    export CFLAGS="-O5 -fomit-frame-pointer -ffast-math -funroll-loops $MACH"
-    export CXXFLAGS="-O5 -fomit-frame-pointer -ffast-math -funroll-loops $MACH"
+    export CFLAGS="-Wall -O5 -fomit-frame-pointer -ffast-math -funroll-loops $MACH"
+    export CXXFLAGS="-Wall -O5 -fomit-frame-pointer -ffast-math -funroll-loops $MACH"
     ./configure
 
