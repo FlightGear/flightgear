@@ -322,6 +322,7 @@ void FGAIMgr::ActivateAirport(string ident) {
 	ATC->AIRegisterAirport(ident);
 	// TODO - need to start the traffic more randomly
 	FGAILocalTraffic* local_traffic = new FGAILocalTraffic;
+	local_traffic->SetModel(_defaultModel);	// currently hardwired to cessna.
 	//local_traffic->Init(ident, IN_PATTERN, TAKEOFF_ROLL);
 	local_traffic->Init(GenerateShortForm(GenerateUniqueCallsign()), ident);
 	local_traffic->FlyCircuits(1, true);	// Fly 2 circuits with touch & go in between
