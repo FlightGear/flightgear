@@ -95,7 +95,8 @@ public:
 	bool finalAcknowledged;
 	bool rwyVacatedReported;
 	bool rwyVacatedAcknowledged;
-	bool instructedToGoAround;	// set true if told by tower to go around
+	bool goAroundReported;		// set true if plane informs tower that it's going around.
+	bool instructedToGoAround;	// set true if plane told by tower to go around.
 	bool onRwy;		// is physically on the runway
 	bool nextOnRwy;		// currently projected by tower to be the next on the runway
 	
@@ -145,10 +146,10 @@ public:
 	void ReportOuterMarker(string ID);
 	void ReportMiddleMarker(string ID);
 	void ReportInnerMarker(string ID);
-	void ReportGoingAround(string ID);
 	void ReportRunwayVacated(string ID);
 	void ReportReadyForDeparture(string ID);
 	void ReportDownwind(string ID);
+	void ReportGoingAround(string ID);
 	
 	// Contact tower when at a hold short for departure - for now we'll assume plane - maybe vehicles might want to cross runway eventually?
 	void ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_traffic_type operation);

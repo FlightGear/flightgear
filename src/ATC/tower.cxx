@@ -58,6 +58,7 @@ TowerPlaneRec::TowerPlaneRec() :
 	finalAcknowledged(false),
 	rwyVacatedReported(false),
 	rwyVacatedAcknowledged(false),
+	goAroundReported(false),
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
@@ -84,6 +85,7 @@ TowerPlaneRec::TowerPlaneRec(PlaneRec p) :
 	finalAcknowledged(false),
 	rwyVacatedReported(false),
 	rwyVacatedAcknowledged(false),
+	goAroundReported(false),
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
@@ -110,6 +112,7 @@ TowerPlaneRec::TowerPlaneRec(Point3D pt) :
 	finalAcknowledged(false),
 	rwyVacatedReported(false),
 	rwyVacatedAcknowledged(false),
+	goAroundReported(false),
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
@@ -137,6 +140,7 @@ TowerPlaneRec::TowerPlaneRec(PlaneRec p, Point3D pt) :
 	finalAcknowledged(false),
 	rwyVacatedReported(false),
 	rwyVacatedAcknowledged(false),
+	goAroundReported(false),
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
@@ -168,8 +172,6 @@ will break when planes start queueing. (CRITICAL)
 
 Report-Runway-Vacated is left as only user ATC option following a go-around. (MAJOR)
 
-Report Go-Around should be added to user options following reporting final or downwind. (MEDIUM).
-
 Report-Downwind is not added as ATC option when user takes off to fly a circuit. (MAJOR)
 
 eta of USER can be calculated very wrongly in circuit if flying straight out and turn4 etc are with +ve ortho y. 
@@ -183,6 +185,8 @@ GetPos() of the AI planes is called erratically - either too much or not enough.
 GO-AROUND is instructed very late at < 12s to landing - possibly make more dependent on chance of rwy clearing before landing (FEATURE)
 
 Need to make clear when TowerPlaneRecs do or don't get deleted in RemoveFromCircuitList etc. (MINOR until I misuse it - then CRITICAL!)
+
+FGTower::RemoveAllUserDialogOptions() really ought to be replaced by an ATCDialog::clear_entries() function. (MINOR - efficiency).
 *******************************************/
 
 FGTower::FGTower() {
@@ -312,6 +316,7 @@ void FGTower::Init() {
 		// For now assume that this means the user is not at the airport and is in the air.
 		// TODO FIXME - this will break when user starts on apron, at hold short, etc.
 		if(!OnAnyRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0))) {
+			//cout << ident << "  ADD 0\n";
 			current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with the ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
 		}
 	}
@@ -419,6 +424,7 @@ void FGTower::Update(double dt) {
 	// Call the base class update for the response time handling.
 	FGATC::Update(dt);
 
+	/*
 	if(ident == "KEMT") {	
 		// For AI debugging convienience - may be removed
 		Point3D user_pos;
@@ -430,6 +436,7 @@ void FGTower::Update(double dt) {
 		fgSetDouble("/AI/user/ortho-y", user_ortho_pos.y());
 		fgSetDouble("/AI/user/elev", user_elev_node->getDoubleValue());
 	}
+	*/
 	
 	//cout << "Done T" << endl;
 }
@@ -450,6 +457,8 @@ void FGTower::ReceiveUserCallback(int code) {
 		ReportFinal("USER");
 	} else if(code == (int)USER_REPORT_RWY_VACATED) {
 		ReportRunwayVacated("USER");
+	} else if(code == (int)USER_REPORT_GOING_AROUND) {
+		ReportGoingAround("USER");
 	}
 }
 
@@ -522,8 +531,11 @@ void FGTower::Respond() {
 			}
 			if(t->isUser) {
 				if(t->opType == TTT_UNKNOWN) t->opType = CIRCUIT;
+				//cout << "ADD VACATED A\n";
+				// Put going around at the top (and hence default) since that'll be more desperate,
+				// or put rwy vacated at the top since that'll be more common?
+				current_atcdialog->add_entry(ident, "@CS Going Around", "Report going around", TOWER, USER_REPORT_GOING_AROUND);
 				current_atcdialog->add_entry(ident, "@CS Clear of the runway", "Report runway vacated", TOWER, USER_REPORT_RWY_VACATED);
-				// TODO - add report going around as an option
 			}
 		} else if(t->holdShortReported) {
 			//cout << "Tower " << ident << " is reponding to holdShortReported...\n";
@@ -572,8 +584,11 @@ void FGTower::Respond() {
 				t->clearedToLand = true;
 				// Maybe remove report downwind from menu here as well incase user didn't bother to?
 				if(t->isUser) {
+					//cout << "ADD VACATED B\n";
+					// Put going around at the top (and hence default) since that'll be more desperate,
+					// or put rwy vacated at the top since that'll be more common?
+					current_atcdialog->add_entry(ident, "@CS Going Around", "Report going around", TOWER, USER_REPORT_GOING_AROUND);
 					current_atcdialog->add_entry(ident, "@CS Clear of the runway", "Report runway vacated", TOWER, USER_REPORT_RWY_VACATED);
-					// TODO - add report going around as an option.
 				} else {
 					t->planePtr->RegisterTransmission(7);
 				}
@@ -603,6 +618,7 @@ void FGTower::Respond() {
 
 void FGTower::ProcessRunwayVacatedReport(TowerPlaneRec* t) {
 	//cout << "Processing rwy vacated...\n";
+	current_atcdialog->remove_entry(ident, USER_REPORT_GOING_AROUND, TOWER);
 	string trns = t->plane.callsign;
 	if(separateGround) {
 		trns += " Contact ground on ";
@@ -1149,6 +1165,7 @@ void FGTower::CheckDepartureList(double dt) {
 			if(t->isUser) {
 				// Change the communication options
 				RemoveAllUserDialogOptions();
+				//cout << "ADD A\n";
 				current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with the ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
 			} else {
 				// Send a clear-of-airspace signal
@@ -1768,9 +1785,7 @@ void FGTower::RegisterAIPlane(PlaneRec plane, FGAIPlane* ai, tower_traffic_type 
 	CalcETA(t);
 	
 	if(op == CIRCUIT && lg != LEG_UNKNOWN) {
-		cout << "AAAAAAAAAAAAAAAaa" << endl;
 		AddToCircuitList(t);
-		cout << "BBBBBBBBBBBBBBbbb" << endl;
 	} else {
 		// FLAG A WARNING
 	}
@@ -1909,7 +1924,6 @@ void FGTower::ReportLongFinal(string ID) {
 //void FGTower::ReportOuterMarker(string ID);
 //void FGTower::ReportMiddleMarker(string ID);
 //void FGTower::ReportInnerMarker(string ID);
-//void FGTower::ReportGoingAround(string ID);
 
 void FGTower::ReportRunwayVacated(string ID) {
 	//cout << "Report Runway Vacated Called at tower " << ident << " by plane " << ID << '\n';
@@ -2036,6 +2050,34 @@ void FGTower::ReportDownwind(string ID) {
 		// the moment that would b&gg?r up the constraint position calculations.
 		RemoveFromAppList(ID);
 		t->leg = DOWNWIND;
+		if(t->isUser) {
+			t->pos.setlon(user_lon_node->getDoubleValue());
+			t->pos.setlat(user_lat_node->getDoubleValue());
+			t->pos.setelev(user_elev_node->getDoubleValue());
+		} else {
+			// ASSERT(t->planePtr != NULL);
+			t->pos = t->planePtr->GetPos();
+		}
+		CalcETA(t);
+		AddToCircuitList(t);
+	} else {
+		SG_LOG(SG_ATC, SG_WARN, "WARNING: Unable to find plane " << ID << " in FGTower::ReportDownwind(...)");
+	}
+}
+
+void FGTower::ReportGoingAround(string ID) {
+	if(ID == "USER") {
+		ID = fgGetString("/sim/user/callsign");
+		RemoveAllUserDialogOptions();	// TODO - it would be much more efficient if ATCDialog simply had a clear() function!!!
+		current_atcdialog->add_entry(ident, "@AP Tower @CS Downwind @RW", "Report Downwind", TOWER, (int)USER_REPORT_DOWNWIND);
+	}
+	TowerPlaneRec* t = FindPlane(ID);
+	if(t) {
+		//t->goAroundReported = true;  // No need to set this until we start responding to it.
+		responseReqd = false;	// might change in the future but for now we'll not distract them during the go-around.
+		// If the plane is in the app list, remove it and put it in the circuit list instead.
+		RemoveFromAppList(ID);
+		t->leg = CLIMBOUT;
 		if(t->isUser) {
 			t->pos.setlon(user_lon_node->getDoubleValue());
 			t->pos.setlat(user_lat_node->getDoubleValue());
