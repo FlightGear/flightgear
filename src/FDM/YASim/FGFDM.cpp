@@ -175,6 +175,8 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         g->setBrake(attrf(a, "skid", 0));
 	g->setStaticFriction(attrf(a, "sfric", 0.8));
 	g->setDynamicFriction(attrf(a, "dfric", 0.7));
+        g->setSpring(attrf(a, "spring", 1));
+        g->setDamping(attrf(a, "damp", 1));
 	_airplane.addGear(g);
     } else if(eq(name, "fuselage")) {
 	float b[3];

@@ -637,10 +637,11 @@ void Airplane::solveGear()
         // Energy in a spring: e = 0.5 * k * len^2
         float k = 2 * e / (len*len);
 
-        gr->gear->setSpring(k);
+        gr->gear->setSpring(k * gr->gear->getSpring());
 
         // Critically damped (too damped, too!)
-        gr->gear->setDamping(2*Math::sqrt(k*_approachWeight*gr->wgt));
+        gr->gear->setDamping(2*Math::sqrt(k*_approachWeight*gr->wgt)
+                             * gr->gear->getDamping());
 
         // These are pretty generic
         gr->gear->setStaticFriction(0.8f);
