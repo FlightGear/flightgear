@@ -261,8 +261,8 @@ if test "x$ac_cv_header_gpc_h" != "xyes"; then
     echo
     echo "Please see README.gpc for more details."
     echo
-    echo "(pausing 5 seconds)"
-    sleep 5
+    echo "(pausing 2 seconds)"
+    sleep 2
 fi
 
 dnl Check if  Geographic Foundation Classes library is installed
@@ -273,10 +273,17 @@ if test "x$ac_cv_header_gfc_gdbf_h" != "xyes"; then
     echo "You need to have the GFC library installed on your system to build"
     echo "some of the scenery generation tools, otherwise, they may fail."
     echo
-    echo "You can get the library from:"
+    echo "You can get the original library from:"
     echo 
     echo "    http://www.geog.psu.edu/~qian/gfc/index.html"
     echo
+    echo "However, I recommend you grab a copy with a couple modifications I"
+    echo "have made which should eliminate several gfc build problems:"
+    echo 
+    echo "    ftp://ftp.flightgear.org/pub/fgfs/Source/gfc-0.8.8.1a.tar.gz"
+    echo
+    echo "(pausing 5 seconds)"
+    sleep 5
 fi
 
 dnl Checks for header files.

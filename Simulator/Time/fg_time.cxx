@@ -1,4 +1,3 @@
-//
 // fg_time.cxx -- data structures and routines for managing time related stuff.
 //
 // Written by Curtis Olson, started August 1997.
@@ -399,8 +398,14 @@ void fgTimeUpdate(FGInterface *f, fgTIME *t) {
 
 
 // $Log$
-// Revision 1.1  1999/04/05 21:32:47  curt
-// Initial revision
+// Revision 1.2  1999/04/06 16:58:34  curt
+// Clean ups and reorganizations:
+// - Additional Thanks entry
+// - more info on getting gfc library
+// - converted some C style comments to C++ style.
+//
+// Revision 1.1.1.1  1999/04/05 21:32:47  curt
+// Start of 0.6.x branch.
 //
 // Revision 1.32  1999/02/26 22:10:10  curt
 // Added initial support for native SGI compilers.

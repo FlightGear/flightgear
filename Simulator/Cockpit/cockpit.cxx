@@ -1,4 +1,3 @@
-//*************************************************************************
 // cockpit.cxx -- routines to draw a cockpit (initial draft)
 //
 // Written by Michele America, started September 1997.
@@ -21,7 +20,6 @@
 //
 // $Id$
 // (Log is kept at end of this file)
-//*************************************************************************/
 
 
 #ifdef HAVE_CONFIG_H
@@ -63,7 +61,6 @@ static pCockpit ac_cockpit;
 // The following routines obtain information concerntin the aircraft's
 // current state and return it to calling instrument display routines.
 // They should eventually be member functions of the aircraft.
-//
 
 double get_latitude( void )
 {
@@ -261,8 +258,14 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
-// Revision 1.1  1999/04/05 21:32:48  curt
-// Initial revision
+// Revision 1.2  1999/04/06 16:58:29  curt
+// Clean ups and reorganizations:
+// - Additional Thanks entry
+// - more info on getting gfc library
+// - converted some C style comments to C++ style.
+//
+// Revision 1.1.1.1  1999/04/05 21:32:48  curt
+// Start of 0.6.x branch.
 //
 // Revision 1.31  1999/03/08 21:56:08  curt
 // Added panel changes sent in by Friedemann.
