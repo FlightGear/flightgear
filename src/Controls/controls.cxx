@@ -169,7 +169,7 @@ FGControls::bind ()
   }
   fgTie("/controls/fuel-selector", this,
 	&FGControls::get_fuel_selector, &FGControls::set_fuel_selector);
-  fgSetArchivable("/controls/gear-down");
+  fgSetArchivable("/controls/fuel-selector");
   fgTie("/controls/gear-down", this,
 	&FGControls::get_gear_down, &FGControls::set_gear_down);
   fgSetArchivable("/controls/gear-down");
