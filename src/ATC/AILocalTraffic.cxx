@@ -129,7 +129,7 @@ void FGAILocalTraffic::GetAirportDetails(string id) {
 	AirportATC a;
 	if(ATC->GetAirportATCDetails(airportID, &a)) {
 		if(a.tower_freq) {	// Has a tower - TODO - check the opening hours!!!
-			tower = (FGTower*)ATC->GetATCPointer(airportID, TOWER);	// Maybe need some error checking here
+			tower = (FGTower*)ATC->GetATCPointer(airportID, TOWER);
 			if(tower == NULL) {
 				// Something has gone wrong - abort or carry on with un-towered operation?
 				SG_LOG(SG_ATC, SG_ALERT, "ERROR - can't get a tower pointer from tower control for " << airportID << " in FGAILocalTraffic::GetAirportDetails() :-(");
@@ -164,11 +164,12 @@ void FGAILocalTraffic::GetAirportDetails(string id) {
 void FGAILocalTraffic::GetRwyDetails(string id) {
 	//cout << "GetRwyDetails called" << endl;
 	
-	rwy.rwyID = tower->GetActiveRunway();
-	//cout << "id = " << id << '\n';
-	//cout << "Returned id is " << tower->get_ident() << '\n';
-	//cout << "Returned name is " << tower->get_name() << '\n';
-	//cout << "rwy.rwyID = " << rwy.rwyID << '\n';
+	if(_controlled) {
+		rwy.rwyID = tower->GetActiveRunway();
+	} else {
+		// TODO - get a proper runway ID from uncontrolled airports
+		rwy.rwyID = "00";
+	}
 	
 	// Now we need to get the threshold position and rwy heading
 	
@@ -244,11 +245,15 @@ bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState 
 		patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
 	}
 	
-	// TODO - this assumes a controlled airport - make sure we revert to CTAF etc if uncontrolled or after-hours.
-	if((initialState == PARKED) || (initialState == TAXIING)) {
-		freq = (double)ground->get_freq() / 100.0;
+	if(_controlled) {
+		if((initialState == PARKED) || (initialState == TAXIING)) {
+			freq = (double)ground->get_freq() / 100.0;
+		} else {
+			freq = (double)tower->get_freq() / 100.0;
+		}
 	} else {
-		freq = (double)tower->get_freq() / 100.0;
+		freq = 122.8;
+		// TODO - find the proper freq if CTAF or unicom or after-hours.
 	}
 
 	//cout << "In Init(), initialState = " << initialState << endl;
@@ -284,7 +289,11 @@ bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState 
 		// FIXME - implement this case properly
 		// For now we'll assume that the plane should start at the hold short in this case
 		// and that we're working without ground network elements.  Ie. an airport with no facility file.
-		tuned_station = tower;
+		if(_controlled) {
+			tuned_station = tower;
+		} else {
+			tuned_station = NULL;
+		}
 		freeTaxi = true;
 		// Set a position and orientation in an approximate place for hold short.
 		//cout << "rwy.width = " << rwy.width << '\n';
@@ -321,7 +330,11 @@ bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState 
 		
 		//cout << "Starting in pattern...\n";
 		
-		tuned_station = tower;
+		if(_controlled) {
+			tuned_station = tower;
+		} else {
+			tuned_station = NULL;
+		}
 		
 		circuitsToFly = 0;		// ie just fly this circuit and then stop
 		touchAndGo = false;
@@ -340,7 +353,9 @@ bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState 
 			IAS = 90.0;
 			descending = false;
 			_aip.setVisible(true);
-			tower->RegisterAIPlane(plane, this, CIRCUIT, DOWNWIND);
+			if(_controlled) {
+				tower->RegisterAIPlane(plane, this, CIRCUIT, DOWNWIND);
+			}
 			Transform();
 		} else {			
 			// Default to initial position on threshold for now
@@ -495,7 +510,9 @@ void FGAILocalTraffic::Update(double dt) {
 		//double f = globals->get_ATC_mgr()->GetFrequency(airportID, GROUND) / 100.0;	
 		pending_transmission = trns;
 		ConditionalTransmit(5.0);
-		tower->DeregisterAIPlane(plane.callsign);
+		if(_controlled) {
+			tower->DeregisterAIPlane(plane.callsign);
+		}
 		_taxiToGA = false;
 		// HACK - check if we are at a simple airport or not first
 		globals->get_AI_mgr()->ScheduleRemoval(plane.callsign);
@@ -504,6 +521,10 @@ void FGAILocalTraffic::Update(double dt) {
 	if((changeFreq) && (responseCounter > 8.0)) {
 		switch(changeFreqType) {
 		case TOWER:
+			if(!tower) {
+				SG_LOG(SG_ATC, SG_ALERT, "ERROR: Trying to change frequency to tower in FGAILocalTraffic, but tower is NULL!!!");
+				break;
+			}
 			tuned_station = tower;
 			freq = (double)tower->get_freq() / 100.0;
 			//Transmit("DING!");
@@ -521,6 +542,14 @@ void FGAILocalTraffic::Update(double dt) {
 			Transmit(2);
 			break;
 		case GROUND:
+			if(!tower) {
+				SG_LOG(SG_ATC, SG_ALERT, "ERROR: Trying to change frequency to ground in FGAILocalTraffic, but tower is NULL!!!");
+				break;
+			}
+			if(!ground) {
+				SG_LOG(SG_ATC, SG_ALERT, "ERROR: Trying to change frequency to ground in FGAILocalTraffic, but ground is NULL!!!");
+				break;
+			}
 			tower->DeregisterAIPlane(plane.callsign);
 			tuned_station = ground;
 			freq = (double)ground->get_freq() / 100.0;
@@ -670,8 +699,13 @@ void FGAILocalTraffic::Update(double dt) {
 				// Do some communication
 				// airport name + tower + airplane callsign + location + request taxi for + operation type + ?
 				string trns = "";
-				trns += tower->get_name();
-				trns += " tower ";
+				if(_controlled) {
+					trns += tower->get_name();
+					trns += " tower ";
+				} else {
+					trns += "Traffic ";
+					// TODO - get the airport name somehow if uncontrolled
+				}
 				trns += plane.callsign;
 				trns += " on apron parking request taxi for traffic pattern";
 				//cout << "trns = " << trns << endl;

@@ -170,9 +170,13 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 				//cout << "_" << flush;
 				GetAirportDetails(airportID);
 				//cout << "L" << flush;
-				// TODO FIXME TODO - need to check that tower is valid before this else if problem -> BOOM!
-				freq = (double)tower->get_freq() / 100.0;
-				tuned_station = tower;
+				if(_controlled) {
+					freq = (double)tower->get_freq() / 100.0;
+					tuned_station = tower;
+				} else {
+					freq = 122.8;	// TODO - need to get the correct CTAF/Unicom frequency if no tower
+					tuned_station = NULL;
+				}
 				//cout << "freq = " << freq << endl;
 				GetRwyDetails(airportID);
 				//"@AP Tower @CS @MI miles @CD of the airport for full stop with the ATIS"
@@ -180,8 +184,13 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 				if(rwy.rwyID.size() == 3) {
 					patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
 				}
-				pending_transmission = tower->get_name();
-				pending_transmission += " Tower ";
+				if(_controlled) {
+					pending_transmission = tower->get_name();
+					pending_transmission += " Tower ";
+				} else {
+					pending_transmission = "Traffic ";
+					// TODO - find some way of getting uncontrolled airport name
+				}
 				pending_transmission += plane.callsign;
 				//char buf[10];
 				int dist_miles = (int)dclGetHorizontalSeparation(_pos, _destPos) / 1600;
@@ -392,7 +401,10 @@ void FGAIGAVFRTraffic::ProcessCallback(int code) {
 	if(code < 14) {
 		FGAILocalTraffic::ProcessCallback(code);
 	} else if(code == 14) {
-		tower->VFRArrivalContact(plane, this, FULL_STOP);
+		if(_controlled) {
+			tower->VFRArrivalContact(plane, this, FULL_STOP);
+		}
+		// TODO else possibly announce arrival intentions at uncontrolled airport?
 	}
 }
 
