@@ -1261,6 +1261,7 @@ int main( int argc, char **argv ) {
 
     ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
     // ssgEntity *tux_obj = ssgLoadAC( "Tower1x.ac" );
+    tux_obj->clrTraversalMaskBits( SSGTRAV_HOT );
     penguin_pos->addKid( tux_obj );
     penguin_sel->addKid( penguin_pos );
     ssgFlatten( tux_obj );
