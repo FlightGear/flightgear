@@ -85,14 +85,18 @@ FGRadioStack::FGRadioStack() :
     need_update(true),
     comm1_freq(0.0),
     comm1_alt_freq(0.0),
+    comm1_vol_btn(0.0),
     comm2_freq(0.0),
     comm2_alt_freq(0.0),
+    comm2_vol_btn(0.0),
     nav1_freq(0.0),
     nav1_alt_freq(0.0),
     nav1_radial(0.0),
+    nav1_vol_btn(0.0),
     nav2_freq(0.0),
     nav2_alt_freq(0.0),
     nav2_radial(0.0),
+    nav2_vol_btn(0.0),
     dme_freq(0.0),
     dme_dist(0.0),
     dme_prev_dist(0.0),
@@ -102,7 +106,8 @@ FGRadioStack::FGRadioStack() :
     middle_blink(false),
     inner_blink(false),
     adf_freq(0.0),
-    adf_alt_freq(0.0)
+    adf_alt_freq(0.0),
+    adf_vol_btn(0.0)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
