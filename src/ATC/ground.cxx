@@ -31,6 +31,7 @@
 #include "ground.hxx"
 
 SG_USING_STD(ifstream);
+SG_USING_STD(cout);
 
 FGGround::FGGround() {
 	display = false;
@@ -89,7 +90,7 @@ bool FGGround::LoadNetwork() {
 		// Node, arc, or [End]?
 		//cout << "Read in ground network element type = " << buf << endl;
 		if(!strcmp(buf, "[End]")) {		// TODO - maybe make this more robust to spelling errors by just looking for '['
-			cout << "Done reading " << path.c_str() << endl;
+			SG_LOG(SG_GENERAL, SG_INFO, "Done reading " << path.c_str() << endl);
 			break;
 		} else if(!strcmp(buf, "N")) {
 			// Node
