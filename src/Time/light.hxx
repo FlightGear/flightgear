@@ -53,6 +53,7 @@ class fgLIGHT {
     // Lighting look up tables (based on sun angle with local horizon)
     SGInterpTable *ambient_tbl;
     SGInterpTable *diffuse_tbl;
+    SGInterpTable *specular_tbl;
     SGInterpTable *sky_tbl;
 
 public:
@@ -117,6 +118,9 @@ public:
 
     // diffuse component
     GLfloat scene_diffuse[4];
+
+    // diffuse component
+    GLfloat scene_specular[4];
 
     // fog color
     GLfloat fog_color[4];

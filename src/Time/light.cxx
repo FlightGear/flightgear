@@ -81,6 +81,8 @@ void fgLIGHT::Init( void ) {
     ambient.append( "Lighting/ambient" );
     SGPath diffuse = path;
     diffuse.append( "Lighting/diffuse" );
+    SGPath specular = path;
+    specular.append( "Lighting/specular" );
     SGPath sky = path;
     sky.append( "Lighting/sky" );
 
@@ -89,6 +91,9 @@ void fgLIGHT::Init( void ) {
 
     // initialize diffuse table
     diffuse_tbl = new SGInterpTable( diffuse.str() );
+    
+    // initialize diffuse table
+    specular_tbl = new SGInterpTable( specular.str() );
     
     // initialize sky table
     sky_tbl = new SGInterpTable( sky.str() );
@@ -104,7 +109,7 @@ void fgLIGHT::Update( void ) {
     GLfloat base_sky_color[4] = { 0.60, 0.60, 0.90, 1.0 };
     // base fog color
     GLfloat base_fog_color[4] = { 0.90, 0.90, 1.00, 1.0 };
-    double deg, ambient, diffuse, sky_brightness;
+    double deg, ambient, diffuse, specular, sky_brightness;
 
     f = current_aircraft.fdm_state;
 
@@ -118,11 +123,12 @@ void fgLIGHT::Update( void ) {
 
     ambient = ambient_tbl->interpolate( deg );
     diffuse = diffuse_tbl->interpolate( deg );
+    specular = specular_tbl->interpolate( deg );
     sky_brightness = sky_tbl->interpolate( deg );
 
     SG_LOG( SG_EVENT, SG_INFO, 
 	    "  ambient = " << ambient << "  diffuse = " << diffuse 
-	    << "  sky = " << sky_brightness );
+	    << "  specular = " << specular << "  sky = " << sky_brightness );
 
     // sky_brightness = 0.15;  // used to force a dark sky (when testing)
 
@@ -139,6 +145,11 @@ void fgLIGHT::Update( void ) {
     scene_diffuse[1] = white[1] * diffuse;
     scene_diffuse[2] = white[2] * diffuse;
     scene_diffuse[3] = 1.0;
+
+    scene_specular[0] = white[0] * specular;
+    scene_specular[1] = white[1] * specular;
+    scene_specular[2] = white[2] * specular;
+    scene_specular[3] = 1.0;
 
     // set sky color
     sky_color[0] = base_sky_color[0] * sky_brightness;

@@ -572,7 +572,7 @@ void fgRenderFrame() {
 
 	ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
 	ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
-	// ssgGetLight( 0 ) -> setColour( GL_SPECULAR, l->scene_white );
+	ssgGetLight( 0 ) -> setColour( GL_SPECULAR, l->scene_specular );
 
 	// texture parameters
 	// glEnable( GL_TEXTURE_2D );
