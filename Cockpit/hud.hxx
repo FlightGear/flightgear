@@ -144,6 +144,7 @@ extern double get_heading     ( void );
 extern double get_altitude    ( void );
 extern double get_sideslip    ( void );
 extern double get_frame_rate  ( void );
+extern double get_fov         ( void );
 
 enum  hudinstype{ HUDno_instr,
               HUDscale,
@@ -439,9 +440,12 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.2  1998/05/11 18:13:12  curt
-/* Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
+/* Revision 1.3  1998/05/13 18:27:55  curt
+/* Added an fov to hud display.
 /*
+ * Revision 1.2  1998/05/11 18:13:12  curt
+ * Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
+ *
  * Revision 1.15  1998/02/23 19:07:57  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
  * calculation code between sun display, and other FG sections that use this

@@ -1473,7 +1473,7 @@ void HudLadder :: draw( void )
 // mustange and the engine readouts of a B36!
 //
 
-#define INSTRDEFS 15
+#define INSTRDEFS 16
 
 int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 {
@@ -1762,6 +1762,22 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                 TRUE );
         break;
 
+      case 16:
+        loc.left   = 10;
+        loc.top    = 100; // Ignore
+        loc.right  = 500; // Ignore
+        loc.bottom =  25;
+        HIptr = (instr_item *) new instr_label( loc, get_fov,
+                                                "%.1f",
+                                                "FOV = ",
+                                                NULL,
+                                                ReadTOP,
+                                                RIGHT_JUST,
+                                                SMALL,
+                                                0,
+                                                TRUE );
+        break;
+
       //  fgHUDAddControlSurfaces( hud, 10, 10, NULL );
 //        loc.left   =  250;
 //        loc.top    =  190;
@@ -1883,9 +1899,12 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.7  1998/05/11 18:13:11  curt
-/* Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
+/* Revision 1.8  1998/05/13 18:27:54  curt
+/* Added an fov to hud display.
 /*
+ * Revision 1.7  1998/05/11 18:13:11  curt
+ * Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
+ *
  * Revision 1.22  1998/04/18 04:14:02  curt
  * Moved fg_debug.c to it's own library.
  *

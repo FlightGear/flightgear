@@ -40,6 +40,7 @@
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
+#include <Main/options.hxx>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.h>
@@ -170,6 +171,15 @@ double get_frame_rate( void )
     return g->frame_rate;                                                      
 }
 
+double get_fov( void )
+{
+    fgOPTIONS *o;                                                               
+ 
+    o = &current_options;                     
+ 
+    return o->fov;                                                      
+}
+
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 {
 	fgPrintf( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem\n");
@@ -207,9 +217,12 @@ void fgCockpitUpdate( void )
 }
 
 /* $Log$
-/* Revision 1.5  1998/05/11 18:13:10  curt
-/* Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
+/* Revision 1.6  1998/05/13 18:27:53  curt
+/* Added an fov to hud display.
 /*
+ * Revision 1.5  1998/05/11 18:13:10  curt
+ * Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
+ *
  * Revision 1.4  1998/05/03 00:46:45  curt
  * polar.h -> polar3d.h
  *
