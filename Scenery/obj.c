@@ -65,7 +65,7 @@ void calc_normal(float p1[3], float p2[3], float p3[3], double normal[3])
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path) {
     char line[256], winding_str[256];
-    double v1[3], v2[3], approx_normal[3], dot_prod, temp;
+    double v1[3], v2[3], approx_normal[3], normal[3], dot_prod, scale, temp;
     struct fgCartesianPoint ref;
     GLint area;
     FILE *f;
@@ -133,7 +133,7 @@ GLint fgObjLoad(char *path) {
 		xglFrontFace( GL_CW );
 		winding = 0;
 	    } else {
-		xglFrontFace ( GL_CCW );
+		glFrontFace ( GL_CCW );
 		winding = 1;
 	    }
 	} else if ( line[0] == 't' ) {
@@ -157,20 +157,25 @@ GLint fgObjLoad(char *path) {
 
 	    if ( winding ) {
 		odd = 1; 
+		scale = 1.0;
 	    } else {
 		odd = 0;
+		scale = 1.0;
 	    }
 
 	    if ( use_vertex_norms ) {
-		xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
+		MAT3_SCALE_VEC(normal, normals[n1], scale);
+		xglNormal3dv(normal);
 		xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
 			    nodes[n1][2] - ref.z);
 
-		xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+		MAT3_SCALE_VEC(normal, normals[n2], scale);
+		xglNormal3dv(normal);
 		xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
 			    nodes[n2][2] - ref.z);
 
-		xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
+		MAT3_SCALE_VEC(normal, normals[n3], scale);
+		xglNormal3dv(normal);
 		xglVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
 			    nodes[n3][2] - ref.z);
 	    } else {
@@ -179,7 +184,8 @@ GLint fgObjLoad(char *path) {
 		} else {
 		    calc_normal(nodes[n2], nodes[n1], nodes[n3], approx_normal);
 		}
-		xglNormal3dv(approx_normal);
+		MAT3_SCALE_VEC(normal, approx_normal, scale);
+		xglNormal3dv(normal);
 
 		xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
 			    nodes[n1][2] - ref.z);
@@ -195,11 +201,12 @@ GLint fgObjLoad(char *path) {
 
 	    if ( n4 > 0 ) {
 		if ( use_vertex_norms ) {
-		    xglNormal3d(normals[n4][0], normals[n4][1], normals[n4][2]);
+		    MAT3_SCALE_VEC(normal, normals[n4], scale);
 		} else {
 		    calc_normal(nodes[n3], nodes[n2], nodes[n4], approx_normal);
-		    xglNormal3dv(approx_normal);
+		    MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
+		xglNormal3dv(normal);
 		xglVertex3d(nodes[n4][0] - ref.x, nodes[n4][1] - ref.y, 
 			    nodes[n4][2] - ref.z);
 
@@ -242,7 +249,8 @@ GLint fgObjLoad(char *path) {
 	    /* printf("read %d %d\n", n1, n2); */
 
 	    if ( use_vertex_norms ) {
-		xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
+		MAT3_SCALE_VEC(normal, normals[n1], scale);
+		xglNormal3dv(normal);
 	    } else {
 		if ( odd ) {
 		    calc_normal(nodes[last1], nodes[last2], nodes[n1], 
@@ -251,7 +259,8 @@ GLint fgObjLoad(char *path) {
 		    calc_normal(nodes[last2], nodes[last1], nodes[n1], 
 				approx_normal);
 		}
-		xglNormal3dv(approx_normal);
+		MAT3_SCALE_VEC(normal, approx_normal, scale);
+		xglNormal3dv(normal);
 	    }
 
 	    xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
@@ -265,7 +274,8 @@ GLint fgObjLoad(char *path) {
 		/* printf(" (cont)\n"); */
 
 		if ( use_vertex_norms ) {
-		    xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+		    MAT3_SCALE_VEC(normal, normals[n2], scale);
+		    xglNormal3dv(normal);
 		} else {
 		    if ( odd ) {
 			calc_normal(nodes[last1], nodes[last2], nodes[n2], 
@@ -274,7 +284,8 @@ GLint fgObjLoad(char *path) {
 			calc_normal(nodes[last2], nodes[last1], nodes[n2], 
 				    approx_normal);
 		    }
-		    xglNormal3dv(approx_normal);
+		    MAT3_SCALE_VEC(normal, approx_normal, scale);
+		    xglNormal3dv(normal);
 		}
 
 		xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
@@ -317,9 +328,13 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.15  1997/12/30 20:47:51  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.16  1997/12/30 23:09:40  curt
+/* Worked on winding problem without luck, so back to calling glFrontFace()
+/* 3 times for each scenery area.
 /*
+ * Revision 1.15  1997/12/30 20:47:51  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.14  1997/12/30 01:38:46  curt
  * Switched back to per vertex normals and smooth shading for terrain.
  *
