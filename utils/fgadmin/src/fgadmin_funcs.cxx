@@ -143,10 +143,10 @@ void FGAdminUI::update_install_box() {
 
     install_box->clear();
 
-    if ( source.length() && fl_filename_isdir(source.c_str()) ) {
+    if ( source.length() ) {
         ulDir *dir = ulOpenDir( source.c_str() ) ;
         ulDirEnt *ent;
-        while ( ent = ulReadDir( dir ) ) {
+        while ( dir != 0 && ( ent = ulReadDir( dir ) ) ) {
             // find base name of archive file
             char base[FL_PATH_MAX];
             strncpy( base, ent->d_name, FL_PATH_MAX );
@@ -166,7 +166,7 @@ void FGAdminUI::update_install_box() {
             }
 
             if ( strlen(ent->d_name) != 14 ) {
-                // simple heuristic to ingore non-scenery files
+                // simple heuristic to ignore non-scenery files
             } else if ( ent->d_name[0] != 'e' && ent->d_name[0] != 'w' ) {
                 // further sanity checks on name
             } else if ( ent->d_name[4] != 'n' && ent->d_name[4] != 's' ) {
@@ -213,12 +213,12 @@ void FGAdminUI::update_remove_box() {
 
     remove_box->clear();
 
-    if ( dest.length() && fl_filename_isdir(dest.c_str()) ) {
+    if ( dest.length() ) {
         ulDir *dir = ulOpenDir( dest.c_str() ) ;
         ulDirEnt *ent;
-        while ( ent = ulReadDir( dir ) ) {
+        while ( dir != 0 && ( ent = ulReadDir( dir ) ) ) {
             if ( strlen(ent->d_name) != 7 ) {
-                // simple heuristic to ingore non-scenery directories
+                // simple heuristic to ignore non-scenery directories
             } else if ( ent->d_name[0] != 'e' && ent->d_name[0] != 'w' ) {
                 // further sanity checks on name
             } else if ( ent->d_name[4] != 'n' && ent->d_name[4] != 's' ) {
