@@ -274,7 +274,7 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
         return;
     } else {
         _rollSpeed = vsteer;
-        _casterAngle = 0;
+        _casterAngle = _rot;
     }
 
     float fsteer = _brake * calcFriction(wgt, vsteer);
