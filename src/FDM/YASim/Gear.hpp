@@ -52,6 +52,8 @@ public:
     float getRotation();
     float getExtension();
     bool getCastering();
+    float getCasterAngle() { return _casterAngle; }
+    float getRollSpeed() { return _rollSpeed; }
 
     // Takes a velocity of the aircraft relative to ground, a rotation
     // vector, and a ground plane (all specified in local coordinates)
@@ -84,6 +86,8 @@ private:
     float _frac;
     double _global_ground[4];
     float _global_vel[3];
+    float _casterAngle;
+    float _rollSpeed;
 };
 
 }; // namespace yasim

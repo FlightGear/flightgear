@@ -230,10 +230,6 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     _wow = (fmag - damp) * -Math::dot3(cmpr, ground);
     Math::mul3(-_wow, ground, _force);
 
-    // Castering gear feel no force in the ground plane
-    if(_castering)
-	return;
-
     // Wheels are funky.  Split the velocity along the ground plane
     // into rolling and skidding components.  Assuming small angles,
     // we generate "forward" and "left" unit vectors (the compression
@@ -271,6 +267,15 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     float vsteer = Math::dot3(cv, steer);
     float vskid  = Math::dot3(cv, skid);
     float wgt = Math::dot3(_force, gup); // force into the ground
+
+    if(_castering) {
+        _rollSpeed = Math::sqrt(vsteer*vsteer + vskid*vskid);
+        _casterAngle = Math::atan2(vskid, vsteer);
+        return;
+    } else {
+        _rollSpeed = vsteer;
+        _casterAngle = 0;
+    }
 
     float fsteer = _brake * calcFriction(wgt, vsteer);
     float fskid  = calcFriction(wgt, vskid);

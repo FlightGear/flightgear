@@ -24,6 +24,8 @@
 
 #include "YASim.hxx"
 
+#include <fenv.h> // SIGFPE DEBUG
+
 using namespace yasim;
 
 static const float YASIM_PI = 3.14159265358979323846;
@@ -459,6 +461,8 @@ void YASim::copyFromYASim()
 	node->setBoolValue("has-brake", g->getBrake() != 0);
 	node->setBoolValue("wow", g->getCompressFraction() != 0);
 	node->setFloatValue("compression-norm", g->getCompressFraction());
+        node->setFloatValue("caster-angle-deg", g->getCasterAngle() * RAD2DEG);
+        node->setFloatValue("rollspeed-ms", g->getRollSpeed());
     }
 
     Hook* h = airplane->getHook();
