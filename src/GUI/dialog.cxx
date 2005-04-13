@@ -390,6 +390,15 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     int x = props->getIntValue("x", (parentWidth - width) / 2);
     int y = props->getIntValue("y", (parentHeight - height) / 2);
 
+    sgVec4 color = {0.8, 0.8, 0.9, 0.85};
+    SGPropertyNode *ncs = props->getNode("color", false);
+    if ( ncs ) {
+       color[0] = ncs->getFloatValue("red", 0.8);
+       color[1] = ncs->getFloatValue("green", 0.8);
+       color[2] = ncs->getFloatValue("blue", 0.9);
+       color[3] = ncs->getFloatValue("alpha", 0.85);
+    }
+
     string type = props->getName();
     if (type == "")
         type = "dialog";
@@ -400,11 +409,11 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
             dialog = new puDialogBox(x, y);
         else
             dialog = new fgPopup(x, y);
-        setupGroup(dialog, props, width, height, true);
+        setupGroup(dialog, props, width, height, color, true);
         return dialog;
     } else if (type == "group") {
         puGroup * group = new puGroup(x, y);
-        setupGroup(group, props, width, height, false);
+        setupGroup(group, props, width, height, color, false);
         return group;
     } else if (type == "list") {
         puList * list = new puList(x, y, x + width, y + height);
@@ -561,13 +570,13 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 
 void
 FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
-                    int width, int height, bool makeFrame)
+                    int width, int height, sgVec4 color, bool makeFrame)
 {
     setupObject(group, props);
 
     if (makeFrame) {
         puFrame* f = new puFrame(0, 0, width, height);
-        f->setColorScheme(0.8, 0.8, 0.9, 0.85);
+        f->setColorScheme(color[0], color[1], color[2], color[3]);
     }
 
     int nChildren = props->nChildren();

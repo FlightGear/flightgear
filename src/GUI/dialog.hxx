@@ -8,6 +8,7 @@
 #endif
 
 #include <plib/pu.h>
+#include <plib/sg.h>
 
 #include <simgear/compiler.h>	// for SG_USING_STD
 #include <simgear/props/props.hxx>
@@ -113,7 +114,8 @@ private:
 
     // Common configuration for all GUI group objects.
     void setupGroup (puGroup * group, SGPropertyNode * props,
-                     int width, int height, bool makeFrame = false);
+                     int width, int height, sgVec4 color,
+                     bool makeFrame = false);
 
     // The top-level PUI object.
     puObject * _object;
