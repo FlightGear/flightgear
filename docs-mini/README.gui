@@ -116,6 +116,12 @@ properties, though they will ignore any that are not relevant:
  height - the height of the object, in pseudo-pixels.  The default is
    the width of the parent container.
 
+ color - a subgroup to specify the dialogs color:
+  red   - specify the red color compnent of the color scheme.
+  green - specify the green color compnent of the color scheme.
+  blue  - specify the blue color compnent of the color scheme.
+  alpha - specify the alpha color compnent of the color scheme.
+
  legend - the text legend to display in the object.
 
  label - the text label to display near the object.
