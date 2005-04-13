@@ -12,7 +12,7 @@ TurbineEngine::TurbineEngine(float power, float omega, float alt,
     _rho0 = Atmosphere::getStdDensity(0);
     _maxTorque = (power/omega) * _rho0 / Atmosphere::getStdDensity(alt);
     _flatRating = flatRating;
-    _bsfc = 0.047; // == 0.5 lb/hr per hp
+    _bsfc = 8.47e-08; // in kg/s per watt == 0.5 lb/hr per hp
     _n2LowIdle = 50;
     _n2HighIdle = 70;
     _n2Max = 100;
