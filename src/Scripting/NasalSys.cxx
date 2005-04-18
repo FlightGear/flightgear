@@ -116,11 +116,11 @@ void FGNasalSys::hashset(naRef hash, const char* key, naRef val)
 // is the utility function that walks the property tree.
 // Future enhancement: support integer arguments to specify array
 // elements.
-static SGPropertyNode* findnode(naContext c, naRef vec, int len)
+static SGPropertyNode* findnode(naContext c, naRef* vec, int len)
 {
     SGPropertyNode* p = globals->get_props();
     for(int i=0; i<len; i++) {
-        naRef a = naVec_get(vec, i);
+        naRef a = vec[i];
         if(!naIsString(a)) return 0;
         p = p->getNode(naStr_data(a));
         if(p == 0) return 0;
@@ -131,9 +131,9 @@ static SGPropertyNode* findnode(naContext c, naRef vec, int len)
 // getprop() extension function.  Concatenates its string arguments as
 // property names and returns the value of the specified property.  Or
 // nil if it doesn't exist.
-static naRef f_getprop(naContext c, naRef args)
+static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
 {
-    const SGPropertyNode* p = findnode(c, args, naVec_size(args));
+    const SGPropertyNode* p = findnode(c, args, argc);
     if(!p) return naNil();
 
     switch(p->getType()) {
@@ -159,16 +159,15 @@ static naRef f_getprop(naContext c, naRef args)
 // setprop() extension function.  Concatenates its string arguments as
 // property names and sets the value of the specified property to the
 // final argument.
-static naRef f_setprop(naContext c, naRef args)
+static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
 {
 #define BUFLEN 1024
-    int argc = naVec_size(args);
     char buf[BUFLEN + 1];
     buf[BUFLEN] = 0;
     char* p = buf;
     int buflen = BUFLEN;
     for(int i=0; i<argc-1; i++) {
-        naRef s = naStringValue(c, naVec_get(args, i));
+        naRef s = naStringValue(c, args[i]);
         if(naIsNil(s)) return naNil();
         strncpy(p, naStr_data(s), buflen);
         p += naStr_len(s);
@@ -180,7 +179,7 @@ static naRef f_setprop(naContext c, naRef args)
     }
 
     SGPropertyNode* props = globals->get_props();
-    naRef val = naVec_get(args, argc-1);
+    naRef val = args[argc-1];
     if(naIsString(val)) props->setStringValue(buf, naStr_data(val));
     else                props->setDoubleValue(buf, naNumValue(val).num);
     return naNil();
@@ -190,7 +189,7 @@ static naRef f_setprop(naContext c, naRef args)
 // print() extension function.  Concatenates and prints its arguments
 // to the FlightGear log.  Uses the highest log level (SG_ALERT), to
 // make sure it appears.  Is there better way to do this?
-static naRef f_print(naContext c, naRef args)
+static naRef f_print(naContext c, naRef me, int argc, naRef* args)
 {
 #define BUFLEN 1024
     char buf[BUFLEN + 1];
@@ -198,9 +197,9 @@ static naRef f_print(naContext c, naRef args)
     buf[0] = 0; // Zero-length in case there are no arguments
     char* p = buf;
     int buflen = BUFLEN;
-    int n = naVec_size(args);
+    int n = argc;
     for(int i=0; i<n; i++) {
-        naRef s = naStringValue(c, naVec_get(args, i));
+        naRef s = naStringValue(c, args[i]);
         if(naIsNil(s)) continue;
         strncpy(p, naStr_data(s), buflen);
         p += naStr_len(s);
@@ -215,11 +214,11 @@ static naRef f_print(naContext c, naRef args)
 // fgcommand() extension function.  Executes a named command via the
 // FlightGear command manager.  Takes a single property node name as
 // an argument.
-static naRef f_fgcommand(naContext c, naRef args)
+static naRef f_fgcommand(naContext c, naRef me, int argc, naRef* args)
 {
-    naRef cmd = naVec_get(args, 0);
-    naRef props = naVec_get(args, 1);
-    if(!naIsString(cmd) || !naIsGhost(props)) return naNil();
+    if(argc < 2 || !naIsString(args[0]) || !naIsGhost(args[1]))
+        naRuntimeError(c, "bad arguments to fgcommand()");
+    naRef cmd = args[0], props = args[1];
     SGPropertyNode_ptr* node = (SGPropertyNode_ptr*)naGhost_ptr(props);
     globals->get_commands()->execute(naStr_data(cmd), *node);
     return naNil();
@@ -228,16 +227,16 @@ static naRef f_fgcommand(naContext c, naRef args)
 
 // settimer(func, dt, simtime) extension function.  Falls through to
 // FGNasalSys::setTimer().  See there for docs.
-static naRef f_settimer(naContext c, naRef args)
+static naRef f_settimer(naContext c, naRef me, int argc, naRef* args)
 {
     FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
-    nasal->setTimer(args);
+    nasal->setTimer(argc, args);
     return naNil();
 }
 
 // Returns a ghost handle to the argument to the currently executing
 // command
-static naRef f_cmdarg(naContext c, naRef args)
+static naRef f_cmdarg(naContext c, naRef me, int argc, naRef* args)
 {
     FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
     return nasal->cmdArgGhost();
@@ -247,15 +246,15 @@ static naRef f_cmdarg(naContext c, naRef args)
 // ghost (SGPropertyNode_ptr*) or a string (global property path) to
 // interpolate.  The second argument is a vector of pairs of
 // value/delta numbers.
-static naRef f_interpolate(naContext c, naRef args)
+static naRef f_interpolate(naContext c, naRef me, int argc, naRef* args)
 {
     SGPropertyNode* node;
-    naRef prop = naVec_get(args, 0);
+    naRef prop = argc > 0 ? args[0] : naNil();
     if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
     else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
     else return naNil();
 
-    naRef curve = naVec_get(args, 1);
+    naRef curve = argc > 1 ? args[1] : naNil();
     if(!naIsVector(curve)) return naNil();
     int nPoints = naVec_size(curve) / 2;
     double* values = new double[nPoints];
@@ -271,7 +270,10 @@ static naRef f_interpolate(naContext c, naRef args)
     return naNil();
 }
 
-static naRef f_rand(naContext c, naRef args)
+// This is a better RNG than the one in the default Nasal distribution
+// (which is based on the C library rand() implementation). It will
+// override.
+static naRef f_rand(naContext c, naRef me, int argc, naRef* args)
 {
     return naNum(sg_random());
 }
@@ -502,17 +504,17 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
 // "saved" somehow lest they be inadvertently cleaned.  In this case,
 // they are inserted into a globals.__gcsave hash and removed on
 // expiration.
-void FGNasalSys::setTimer(naRef args)
+void FGNasalSys::setTimer(int argc, naRef* args)
 {
     // Extract the handler, delta, and simtime arguments:
-    naRef handler = naVec_get(args, 0);
+    naRef handler = argc > 0 ? args[0] : naNil();
     if(!(naIsCode(handler) || naIsCCode(handler) || naIsFunc(handler)))
         return;
 
-    naRef delta = naNumValue(naVec_get(args, 1));
+    naRef delta = argc > 1 ? args[1] : naNil();
     if(naIsNil(delta)) return;
     
-    bool simtime = naTrue(naVec_get(args, 2)) ? true : false;
+    bool simtime = (argc > 2 && naTrue(args[2])) ? true : false;
 
     // Generate and register a C++ timer handler
     NasalTimer* t = new NasalTimer;

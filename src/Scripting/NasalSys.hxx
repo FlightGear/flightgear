@@ -30,7 +30,7 @@ public:
     FGNasalScript* parseScript(const char* src, const char* name=0);
 
     // Implementation of the settimer extension function
-    void setTimer(naRef args);
+    void setTimer(int argc, naRef* args);
 
     // Returns a ghost wrapper for the current _cmdArg
     naRef cmdArgGhost();

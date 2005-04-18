@@ -44,17 +44,14 @@ naRef FGNasalSys::propNodeGhost(SGPropertyNode* handle)
 // array.  This allows the Nasal handlers to do things like:
 //   Node.getChild = func { _getChild(me.ghost, arg) }
 //
-#define NODEARG() \
-    naRef ghost = naVec_get(args, 0); \
-    SGPropertyNode_ptr* node = (SGPropertyNode_ptr*)naGhost_ptr(ghost); \
-    if(!node || naGhost_type(ghost) != &PropNodeGhostType) \
-        return naNil(); \
-    if(naVec_size(args) > 1) { \
-        args = naVec_get(args, 1); \
-        if(!naIsVector(args)) return naNil(); \
-    } else { args = naNil(); }
+#define NODEARG()                                                       \
+    if(argc < 2 || !naIsGhost(args[0]) ||                               \
+       naGhost_type(args[0]) != &PropNodeGhostType)                       \
+        naRuntimeError(c, "bad argument to props function");            \
+    SGPropertyNode_ptr* node = (SGPropertyNode_ptr*)naGhost_ptr(args[0]); \
+    naRef argv = args[1]
 
-static naRef f_getType(naContext c, naRef args)
+static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     char* t = "unknown";
@@ -72,19 +69,19 @@ static naRef f_getType(naContext c, naRef args)
     return NASTR(t);
 }
 
-static naRef f_getName(naContext c, naRef args)
+static naRef f_getName(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     return NASTR((*node)->getName());
 }
 
-static naRef f_getIndex(naContext c, naRef args)
+static naRef f_getIndex(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     return naNum((*node)->getIndex());
 }
 
-static naRef f_getValue(naContext c, naRef args)
+static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     switch((*node)->getType()) {
@@ -99,23 +96,23 @@ static naRef f_getValue(naContext c, naRef args)
     return naNil();
 }
 
-static naRef f_setValue(naContext c, naRef args)
+static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
-    naRef val = naVec_get(args, 0);
+    naRef val = naVec_get(argv, 0);
     if(naIsString(val)) (*node)->setStringValue(naStr_data(val));
     else                (*node)->setDoubleValue(naNumValue(val).num);
     return naNil();
 }
 
-static naRef f_setIntValue(naContext c, naRef args)
+static naRef f_setIntValue(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     // Original code:
-    //   int iv = (int)naNumValue(naVec_get(args, 0)).num;
+    //   int iv = (int)naNumValue(naVec_get(argv, 0)).num;
 
     // Junk to pacify the gcc-2.95.3 optimizer:
-    naRef tmp0 = naVec_get(args, 0);
+    naRef tmp0 = naVec_get(argv, 0);
     naRef tmp1 = naNumValue(tmp0);
     double tmp2 = tmp1.num;
     int iv = (int)tmp2;
@@ -124,22 +121,22 @@ static naRef f_setIntValue(naContext c, naRef args)
     return naNil();
 }
 
-static naRef f_setBoolValue(naContext c, naRef args)
+static naRef f_setBoolValue(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
-    naRef val = naVec_get(args, 0);
+    naRef val = naVec_get(argv, 0);
     (*node)->setBoolValue(naTrue(val) ? true : false);
     return naNil();
 }
 
-static naRef f_setDoubleValue(naContext c, naRef args)
+static naRef f_setDoubleValue(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
-    (*node)->setDoubleValue(naNumValue(naVec_get(args, 0)).num);
+    (*node)->setDoubleValue(naNumValue(naVec_get(argv, 0)).num);
     return naNil();
 }
 
-static naRef f_getParent(naContext c, naRef args)
+static naRef f_getParent(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     SGPropertyNode* n = (*node)->getParent();
@@ -147,12 +144,12 @@ static naRef f_getParent(naContext c, naRef args)
     return propNodeGhostCreate(c, n);
 }
 
-static naRef f_getChild(naContext c, naRef args)
+static naRef f_getChild(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
-    naRef child = naVec_get(args, 0);
+    naRef child = naVec_get(argv, 0);
     if(!naIsString(child)) return naNil();
-    naRef idx = naNumValue(naVec_get(args, 1));
+    naRef idx = naNumValue(naVec_get(argv, 1));
     SGPropertyNode* n;
     if(naIsNil(idx) || !naIsNum(idx)) {
         n = (*node)->getChild(naStr_data(child));
@@ -163,17 +160,17 @@ static naRef f_getChild(naContext c, naRef args)
     return propNodeGhostCreate(c, n);
 }
 
-static naRef f_getChildren(naContext c, naRef args)
+static naRef f_getChildren(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     naRef result = naNewVector(c);
-    if(naIsNil(args) || naVec_size(args) == 0) {
+    if(naIsNil(argv) || naVec_size(argv) == 0) {
         // Get all children
         for(int i=0; i<(*node)->nChildren(); i++)
             naVec_append(result, propNodeGhostCreate(c, (*node)->getChild(i)));
     } else {
         // Get all children of a specified name
-        naRef name = naVec_get(args, 0);
+        naRef name = naVec_get(argv, 0);
         if(!naIsString(name)) return naNil();
         vector<SGPropertyNode_ptr> children
             = (*node)->getChildren(naStr_data(name));
@@ -183,32 +180,32 @@ static naRef f_getChildren(naContext c, naRef args)
     return result;
 }
 
-static naRef f_removeChild(naContext c, naRef args)
+static naRef f_removeChild(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
-    naRef child = naVec_get(args, 0);
-    naRef index = naVec_get(args, 1);
+    naRef child = naVec_get(argv, 0);
+    naRef index = naVec_get(argv, 1);
     if(!naIsString(child) || !naIsNum(index)) return naNil();
     (*node)->removeChild(naStr_data(child), (int)index.num);
     return naNil();
 }
 
-static naRef f_getNode(naContext c, naRef args)
+static naRef f_getNode(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
-    naRef path = naVec_get(args, 0);
-    bool create = naTrue(naVec_get(args, 1));
+    naRef path = naVec_get(argv, 0);
+    bool create = naTrue(naVec_get(argv, 1));
     if(!naIsString(path)) return naNil();
     SGPropertyNode* n = (*node)->getNode(naStr_data(path), create);
     return propNodeGhostCreate(c, n);
 }
 
-static naRef f_new(naContext c, naRef args)
+static naRef f_new(naContext c, naRef me, int argc, naRef* args)
 {
     return propNodeGhostCreate(c, new SGPropertyNode());
 }
 
-static naRef f_globals(naContext c, naRef args)
+static naRef f_globals(naContext c, naRef me, int argc, naRef* args)
 {
     return propNodeGhostCreate(c, globals->get_props());
 }
