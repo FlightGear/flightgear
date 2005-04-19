@@ -3,8 +3,8 @@
 #
 #
 #  To use this script you need
-#  - a Linux 2.4 system with libc 2.2.* and at least XFree86 4.1
-#  - the valgrind debugger (http://developer.kde.org/~sewardj/)
+#  - a Linux system >=2.4 with libc >=2.2.*
+#  - the valgrind debugger (http://www.valgrind.org/)
 #  - lots of memory (RAM + swap space > 600MB!) and
 #  - a fast computer =or= a lot of patience.
 #
@@ -25,11 +25,9 @@
 #  adapt the following two entries to your needs:
 #
 fgfs="../../src/Main/fgfs"
-opt="--disable-game-mode --disable-fullscreen --fdm=magic"
+opt="--log-level=info --disable-game-mode --aircraft=ufo --geometry=800x600"
 
-
-
-gdb="--gdb-attach=yes"
+gdb="--db-attach=yes"
 cmd=
 extra=
 
@@ -39,20 +37,27 @@ while true; do
 		debug [-r] [-g] [-i] [-b] [-c] [-x] [-h]
 
 		-r	run fgfs
-		-g	run fgfs with gdb
+		-g|-d	run fgfs with gdb
+		-D	run fgfs with ddd
 		-i	interactive valgrind run (default)
+		-p	calltree profile run
 		-b	valgrind batch run
 		-c	start gdb with most recent core dump
-		-x	add some extra pedantic valgrind parameters
+		-s	print suppression info
+		-l	enable leak/reachable check
 		-h	show this help screen
 		EOF
 		exit 0
 		;;
 	-r)	cmd="$fgfs $opt" ;;
-	-g)	cmd="gdb -x .gdbinit $fgfs" ;;
+	-g|-d)	cmd="gdb -x .gdbinit $fgfs" ;;
+	-D)	cmd="ddd -x .gdbinit $fgfs" ;;
+	-m)	cmd="make -C ../.." ;;
 	-i)	cmd=""; gdb="" ;;
+	-p)	cmd="calltree $fgfs"; gdb="" ;;
 	-b)	gdb="" ;;
-	-x)	extra="--single-step=yes --optimise=no --cleanup=no --dump-error=1" ;;
+	-s)	extra="$extra --gen-suppressions=yes" ;;
+	-l)	extra="$extra --leak-check=yes --show-reachable=yes" ;;
 	-c)	core=$(ls -t core* 2>/dev/null|head -1)
 		if test -z $core; then
 			echo "$0: there's no core file"
@@ -74,8 +79,14 @@ echo "set args $opt" > .gdbinit
 
 test -e fgfs.supp || head -14 sample.fgfs.supp > fgfs.supp
 
-test -z "$cmd" && cmd="nice valgrind $gdb --num-callers=10 --suppressions=fgfs.supp $extra $* $fgfs $opt"
+test -z "$cmd" && cmd="nice valgrind \
+	--tool=memcheck $gdb --num-callers=64 \
+	--suppressions=fgfs.supp \
+	--error-limit=no \
+	$extra $* $fgfs $opt"
 
 echo "command: $cmd"
+#export LD_PRELOAD='/usr/lib/GL/libGL.so.1.3.mesasoft'
+#export __GL_FORCE_GENERIC_CPU=1
 exec $cmd
 
