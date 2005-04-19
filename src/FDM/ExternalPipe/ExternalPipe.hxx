@@ -23,6 +23,8 @@
 #ifndef _EXTERNAL_PIPE_HXX
 #define _EXTERNAL_PIPE_HXX
 
+#include <stdio.h>              // FILE*, fopen(), fread(), fwrite(), et. al.
+
 #include <simgear/timing/timestamp.hxx> // fine grained timing measurements
 
 #include <Network/net_ctrls.hxx>
@@ -37,8 +39,9 @@ private:
 
     string fifo_name_1;
     string fifo_name_2;
-    int pd1; 
-    int pd2; 
+    FILE *pd1;
+    FILE *pd2;
+    string _protocol;
 
     FGNetCtrls ctrls;
     FGNetFDM fdm;
@@ -47,10 +50,21 @@ private:
     double last_weight;
     double last_cg_offset;
 
+    vector <string> property_names;
+    vector <SGPropertyNode *> nodes;
+
+    // Protocol specific init routines
+    void init_binary();
+    void init_property();
+
+    // Protocol specific update routines
+    void update_binary( double dt );
+    void update_property( double dt );
+
 public:
 
     // Constructor
-    FGExternalPipe( double dt, string fifo_name );
+    FGExternalPipe( double dt, string fifo_name, string protocol );
 
     // Destructor
     ~FGExternalPipe();

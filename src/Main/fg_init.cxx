@@ -1315,8 +1315,22 @@ void fgInitFDM() {
             }
             cur_fdm_state = new FGExternalNet( dt, host, port1, port2, port3 );
         } else if ( model.find("pipe") == 0 ) {
-            string pipe_path = model.substr(5);
-            cur_fdm_state = new FGExternalPipe( dt, pipe_path );
+            // /* old */ string pipe_path = model.substr(5);
+            // /* old */ cur_fdm_state = new FGExternalPipe( dt, pipe_path );
+            string pipe_path = "";
+            string pipe_protocol = "";
+            string pipe_options = model.substr(5);
+            string::size_type begin, end;
+            begin = 0;
+            // pipe file path
+            end = pipe_options.find( ",", begin );
+            if ( end != string::npos ) {
+                pipe_path = pipe_options.substr(begin, end - begin);
+                begin = end + 1;
+            }
+            // protocol (last option)
+            pipe_protocol = pipe_options.substr(begin);
+            cur_fdm_state = new FGExternalPipe( dt, pipe_path, pipe_protocol );
         } else if ( model == "null" ) {
             cur_fdm_state = new FGNullFDM( dt );
         } else if ( model == "yasim" ) {

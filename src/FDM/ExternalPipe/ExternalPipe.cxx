@@ -25,31 +25,38 @@
 #endif
 
 #ifdef HAVE_MKFIFO
-#  include <sys/types.h>        // mkfifo() open() umask()
-#  include <sys/stat.h>         // mkfifo() open() umask()
+#  include <sys/types.h>        // mkfifo() umask()
+#  include <sys/stat.h>         // mkfifo() umask()
 #  include <errno.h>            // perror()
-#  include <fcntl.h>            // open()
 #  include <unistd.h>           // unlink()
 #endif
 
+#include <stdio.h>              // FILE*, fopen(), fread(), fwrite(), et. al.
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/lowlevel.hxx> // endian tests
+#include <simgear/misc/strutils.hxx> // split()
 
 #include <Main/fg_props.hxx>
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
+#include <Scenery/scenery.hxx>
 
 #include "ExternalPipe.hxx"
 
 
 static const int MAX_BUF = 32768;
 
-FGExternalPipe::FGExternalPipe( double dt, string name ) {
+FGExternalPipe::FGExternalPipe( double dt, string name, string protocol ) {
     valid = true;
     last_weight = 0.0;
     last_cg_offset = -9999.9;
 
     buf = new char[MAX_BUF];
+
+    // clear property request list
+    property_names.clear();
+    nodes.clear();
 
 #ifdef HAVE_MKFIFO
     fifo_name_1 = name + "1";
@@ -73,17 +80,26 @@ FGExternalPipe::FGExternalPipe( double dt, string name ) {
         perror( "ExternalPipe()" );
     }
 
-    pd1 = open( fifo_name_1.c_str(), O_RDWR );
-    if ( pd1 == -1 ) {
+    pd1 = fopen( fifo_name_1.c_str(), "w" );
+    if ( pd1 == NULL ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to open named pipe: " << fifo_name_1 );
         valid = false;
     }
-    pd2 = open( fifo_name_2.c_str(), O_RDWR );
-    if ( pd2 == -1 ) {
+    pd2 = fopen( fifo_name_2.c_str(), "r" );
+    if ( pd2 == NULL ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to open named pipe: " << fifo_name_2 );
         valid = false;
     }
 #endif
+
+    _protocol = protocol;
+
+    if ( _protocol != "binary" && _protocol != "property" ) {
+        SG_LOG( SG_IO, SG_ALERT, "Constructor(): Unknown ExternalPipe protocol."
+                << "  Must be 'binary' or 'property'."
+                << "  (assuming binary)" );
+        _protocol = "binary";
+    }
 }
 
 
@@ -95,14 +111,14 @@ FGExternalPipe::~FGExternalPipe() {
 #ifdef HAVE_MKFIFO
     // close
     int result;
-    result = close( pd1 );
-    if ( result == -1 ) {
+    result = fclose( pd1 );
+    if ( result ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to close named pipe: "
                 << fifo_name_1 );
         perror( "~FGExternalPipe()" );
     }
-    result = close( pd2 );
-    if ( result == -1 ) {
+    result = fclose( pd2 );
+    if ( result ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to close named pipe: "
                 << fifo_name_2 );
         perror( "~FGExternalPipe()" );
@@ -111,7 +127,7 @@ FGExternalPipe::~FGExternalPipe() {
 }
 
 
-static int write_fifo( char cmd_type, int pd, char *cmd, int len ) {
+static int write_binary( char cmd_type, FILE *pd, char *cmd, int len ) {
 #ifdef HAVE_MKFIFO
     char *buf = new char[len + 3];
 
@@ -119,21 +135,25 @@ static int write_fifo( char cmd_type, int pd, char *cmd, int len ) {
     unsigned char hi = (len + 1) / 256;
     unsigned char lo = (len + 1) - (hi * 256);
 
-    // cout << "len = " << len << " hi = " << (int)hi << " lo = " << (int)lo << endl;
+    // cout << "len = " << len << " hi = " << (int)hi << " lo = "
+    //      << (int)lo << endl;
 
     buf[0] = hi;
     buf[1] = lo;
     buf[2] = cmd_type;
 
-    // strncpy( buf + 3, cmd, len );
     memcpy( buf + 3, cmd, len );
 
     if ( cmd_type == '1' ) {
-        // cout << "writing '" << cmd << "'" << endl;
+        cout << "writing '";
+        for ( int i = 0; i < len + 3; ++i ) {
+            cout << buf[i];
+        }
+        cout << "' (" << cmd << ")" << endl;
     } else if ( cmd_type == '2' ) {
-        // cout << "writing controls packet" << endl;
+        cout << "writing controls packet" << endl;
     } else {
-        // cout << "writing unknown command?" << endl;
+        cout << "writing unknown command?" << endl;
     }
 
     // for ( int i = 0; i < len + 3; ++i ) {
@@ -141,9 +161,9 @@ static int write_fifo( char cmd_type, int pd, char *cmd, int len ) {
     // }
     // cout << endl;
 
-    int result = ::write( pd, buf, len + 3 );
-    if ( result == -1 ) {
-        perror( "write_fifo()" );
+    int result = fwrite( buf, len + 3, 1, pd  );
+    if ( result != 1 ) {
+        perror( "write_binary()" );
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << pd );
     }
     // cout << "wrote " << len + 3 << " bytes." << endl;
@@ -157,12 +177,55 @@ static int write_fifo( char cmd_type, int pd, char *cmd, int len ) {
 }
 
 
-// Initialize the ExternalPipe flight model, dt is the time increment
-// for each subsequent iteration through the EOM
+static int write_property( FILE *pd, char *cmd ) {
+    int len = strlen(cmd);
+
+#ifdef HAVE_MKFIFO
+    char *buf = new char[len + 1];
+
+    memcpy( buf, cmd, len );
+    buf[len] = '\n';
+
+    int result = fwrite( buf, len + 1, 1, pd );
+    if ( result == len + 1 ) {
+        perror( "write_property()" );
+        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << pd );
+    }
+    // cout << "wrote " << len + 1 << " bytes." << endl;
+
+    delete [] buf;
+
+    return result;
+#else
+    return 0;
+#endif
+}
+
+
+// Wrapper for the ExternalPipe flight model initialization.  dt is
+// the time increment for each subsequent iteration through the EOM
 void FGExternalPipe::init() {
     // Explicitly call the superclass's
     // init method first.
     common_init();
+
+    if ( _protocol == "binary" ) {
+        init_binary();
+    } else if ( _protocol == "property" ) {
+        init_property();
+    } else {
+        SG_LOG( SG_IO, SG_ALERT, "Init():  Unknown ExternalPipe protocol."
+                << "  Must be 'binary' or 'property'."
+                << "  (assuming binary)" );
+    }
+}
+
+
+// Initialize the ExternalPipe flight model using the binary protocol,
+// dt is the time increment for each subsequent iteration through the
+// EOM
+void FGExternalPipe::init_binary() {
+    cout << "init_binary()" << endl;
 
     double lon = fgGetDouble( "/sim/presets/longitude-deg" );
     double lat = fgGetDouble( "/sim/presets/latitude-deg" );
@@ -173,38 +236,36 @@ void FGExternalPipe::init() {
     double weight = fgGetDouble( "/sim/aircraft-weight-lbs" );
     double cg_offset = fgGetDouble( "/sim/aircraft-cg-offset-inches" );
 
-#ifdef HAVE_MKFIFO
-
     char cmd[256];
     int result;
 
     sprintf( cmd, "longitude-deg=%.8f", lon );
-    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+    result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
     sprintf( cmd, "latitude-deg=%.8f", lat );
-    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+    result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
     sprintf( cmd, "altitude-ft=%.8f", alt );
-    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+    result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
     sprintf( cmd, "ground-m=%.8f", ground );
-    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+    result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
     sprintf( cmd, "speed-kts=%.8f", speed );
-    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+    result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
     sprintf( cmd, "heading-deg=%.8f", heading );
-    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+    result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
     if ( weight > 1000.0 ) {
         sprintf( cmd, "aircraft-weight-lbs=%.2f", weight );
-        result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+        result = write_binary( '1', pd1, cmd, strlen(cmd) );
     }
     last_weight = weight;
 
     if ( cg_offset > -5.0 || cg_offset < 5.0 ) {
         sprintf( cmd, "aircraft-cg-offset-inches=%.2f", cg_offset );
-        result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+        result = write_binary( '1', pd1, cmd, strlen(cmd) );
     }
     last_cg_offset = cg_offset;
 
@@ -215,17 +276,96 @@ void FGExternalPipe::init() {
     } else {
         sprintf( cmd, "reset=air" );
     }
-    result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+    result = write_binary( '1', pd1, cmd, strlen(cmd) );
+
+    fflush( pd1 );
 
     SG_LOG( SG_IO, SG_ALERT, "Remote FDM init() finished." );
-#endif
+}
+
+
+// Initialize the ExternalPipe flight model using the property
+// protocol, dt is the time increment for each subsequent iteration
+// through the EOM
+void FGExternalPipe::init_property() {
+    cout << "init_property()" << endl;
+
+    double lon = fgGetDouble( "/sim/presets/longitude-deg" );
+    double lat = fgGetDouble( "/sim/presets/latitude-deg" );
+    double alt = fgGetDouble( "/sim/presets/altitude-ft" );
+    double ground = fgGetDouble( "/environment/ground-elevation-m" );
+    double heading = fgGetDouble("/sim/presets/heading-deg");
+    double speed = fgGetDouble( "/sim/presets/airspeed-kt" );
+    double weight = fgGetDouble( "/sim/aircraft-weight-lbs" );
+    double cg_offset = fgGetDouble( "/sim/aircraft-cg-offset-inches" );
+
+    char cmd[256];
+    int result;
+
+    sprintf( cmd, "init longitude-deg=%.8f", lon );
+    result = write_property( pd1, cmd );
+
+    sprintf( cmd, "init latitude-deg=%.8f", lat );
+    result = write_property( pd1, cmd );
+
+    sprintf( cmd, "init altitude-ft=%.8f", alt );
+    result = write_property( pd1, cmd );
+
+    sprintf( cmd, "init ground-m=%.8f", ground );
+    result = write_property( pd1, cmd );
+
+    sprintf( cmd, "init speed-kts=%.8f", speed );
+    result = write_property( pd1, cmd );
+
+    sprintf( cmd, "init heading-deg=%.8f", heading );
+    result = write_property( pd1, cmd );
+
+    if ( weight > 1000.0 ) {
+        sprintf( cmd, "init aircraft-weight-lbs=%.2f", weight );
+        result = write_property( pd1, cmd );
+    }
+    last_weight = weight;
+
+    if ( cg_offset > -5.0 || cg_offset < 5.0 ) {
+        sprintf( cmd, "init aircraft-cg-offset-inches=%.2f", cg_offset );
+        result = write_property( pd1, cmd );
+    }
+    last_cg_offset = cg_offset;
+
+    SG_LOG( SG_IO, SG_ALERT, "before sending reset command." );
+
+    if( fgGetBool("/sim/presets/onground") ) {
+        sprintf( cmd, "reset ground" );
+    } else {
+        sprintf( cmd, "reset air" );
+    }
+    result = write_property( pd1, cmd );
+
+    fflush( pd1 );
+
+    SG_LOG( SG_IO, SG_ALERT, "Remote FDM init() finished." );
+}
+
+
+// Wrapper for the ExternalPipe update routines.  dt is the time
+// increment for each subsequent iteration through the EOM
+void FGExternalPipe::update( double dt ) {
+    if ( _protocol == "binary" ) {
+        update_binary(dt);
+    } else if ( _protocol == "property" ) {
+        update_property(dt);
+    } else {
+        SG_LOG( SG_IO, SG_ALERT, "Init():  Unknown ExternalPipe protocol."
+                << "  Must be 'binary' or 'property'."
+                << "  (assuming binary)" );
+    }
 }
 
 
 // Run an iteration of the EOM.
-void FGExternalPipe::update( double dt ) {
+void FGExternalPipe::update_binary( double dt ) {
 #ifdef HAVE_MKFIFO
-    // SG_LOG( SG_IO, SG_INFO, "Start FGExternalPipe::udpate()" );
+    SG_LOG( SG_IO, SG_INFO, "Start FGExternalPipe::udpate_binary()" );
 
     int length;
     int result;
@@ -241,7 +381,7 @@ void FGExternalPipe::update( double dt ) {
     if ( fabs( weight - last_weight ) > 0.01 ) {
         char cmd[256];
         sprintf( cmd, "aircraft-weight-lbs=%.2f", weight );
-        result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+        result = write_binary( '1', pd1, cmd, strlen(cmd) );
     }
     last_weight = weight;
 
@@ -249,7 +389,7 @@ void FGExternalPipe::update( double dt ) {
     if ( fabs( cg_offset - last_cg_offset ) > 0.01 ) {
         char cmd[256];
         sprintf( cmd, "aircraft-cg-offset-inches=%.2f", cg_offset );
-        result = write_fifo( '1', pd1, cmd, strlen(cmd) );
+        result = write_binary( '1', pd1, cmd, strlen(cmd) );
     }
     last_cg_offset = cg_offset;
 
@@ -261,21 +401,166 @@ void FGExternalPipe::update( double dt ) {
     // cout << "iterations = " << iterations << endl;
     ptr += sizeof(int);
     memcpy( ptr, (char *)(&ctrls), length );
-    // cout << "writing control structure, size = "
-    //      << length + sizeof(int) << endl;
+    cout << "writing control structure, size = "
+         << length + sizeof(int) << endl;
 
-    result = write_fifo( '2', pd1, buf, length + sizeof(int) );
+    result = write_binary( '2', pd1, buf, length + sizeof(int) );
+    fflush( pd1 );
 
     // Read fdm values
     length = sizeof(fdm);
-    // cout << "about to read fdm data from remote fdm." << endl;
-    result = read( pd2, (char *)(& fdm), length );
-    if ( result == -1 ) {
+    cout << "about to read fdm data from remote fdm." << endl;
+    result = fread( (char *)(& fdm), length, 1, pd2 );
+    if ( result != length ) {
         SG_LOG( SG_IO, SG_ALERT, "Read error from named pipe: "
                 << fifo_name_2 );
     } else {
-        // cout << "  read successful." << endl;
+        cout << "  read successful." << endl;
     }
     FGNetFDM2Props( &fdm, false );
 #endif
 }
+
+
+// Process remote FDM "set" commands
+static void process_set_command( const string_list &tokens ) {
+    if ( tokens[1] == "geodetic_position" ) {
+        double lat_rad = atof( tokens[2].c_str() );
+        double lon_rad = atof( tokens[3].c_str() );
+        double alt_m   = atof( tokens[4].c_str() );
+        cur_fdm_state->_updateGeodeticPosition( lat_rad, lon_rad,
+                                                alt_m * SG_METER_TO_FEET );
+
+        double agl_m = alt_m - globals->get_scenery()->get_cur_elev();
+        cur_fdm_state->_set_Altitude_AGL( agl_m * SG_METER_TO_FEET );
+    } else if ( tokens[1] == "euler_angles" ) {
+        double phi_rad   = atof( tokens[2].c_str() );
+        double theta_rad = atof( tokens[3].c_str() );
+        double psi_rad   = atof( tokens[4].c_str() );
+        cur_fdm_state->_set_Euler_Angles( phi_rad, theta_rad, psi_rad );
+    } else if ( tokens[1] == "euler_rates" ) {
+        double phidot   = atof( tokens[2].c_str() );
+        double thetadot = atof( tokens[3].c_str() );
+        double psidot   = atof( tokens[4].c_str() );
+        cur_fdm_state->_set_Euler_Rates( phidot, thetadot, psidot );
+    } else if ( tokens[1] == "alpha" ) {
+        cur_fdm_state->_set_Alpha( atof(tokens[2].c_str()) );
+    } else if ( tokens[1] == "beta" ) {
+        cur_fdm_state->_set_Beta( atof(tokens[2].c_str()) );
+
+#if 0
+    cur_fdm_state->_set_V_calibrated_kts( net->vcas );
+    cur_fdm_state->_set_Climb_Rate( net->climb_rate );
+    cur_fdm_state->_set_Velocities_Local( net->v_north,
+                                          net->v_east,
+                                          net->v_down );
+    cur_fdm_state->_set_Velocities_Wind_Body( net->v_wind_body_north,
+                                              net->v_wind_body_east,
+                                              net->v_wind_body_down );
+
+    cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
+                                           net->A_Y_pilot,
+                                           net->A_Z_pilot );
+#endif
+    } else {
+        fgSetString( tokens[1].c_str(), tokens[2].c_str() );
+    }
+}
+
+
+// Run an iteration of the EOM.
+void FGExternalPipe::update_property( double dt ) {
+    // cout << "update_property()" << endl;
+
+#ifdef HAVE_MKFIFO
+    // SG_LOG( SG_IO, SG_INFO, "Start FGExternalPipe::udpate()" );
+
+    int result;
+    char cmd[256];
+
+    if ( is_suspended() ) {
+        return;
+    }
+
+    int iterations = _calc_multiloop(dt);
+
+    double weight = fgGetDouble( "/sim/aircraft-weight-lbs" );
+    static double last_weight = 0.0;
+    if ( fabs( weight - last_weight ) > 0.01 ) {
+        sprintf( cmd, "init aircraft-weight-lbs=%.2f", weight );
+        result = write_property( pd1, cmd );
+    }
+    last_weight = weight;
+
+    double cg_offset = fgGetDouble( "/sim/aircraft-cg-offset-inches" );
+    if ( fabs( cg_offset - last_cg_offset ) > 0.01 ) {
+        sprintf( cmd, "init aircraft-cg-offset-inches=%.2f", cg_offset );
+        result = write_property( pd1, cmd );
+    }
+    last_cg_offset = cg_offset;
+
+    // Send requested property values to fdm
+    for ( unsigned int i = 0; i < nodes.size(); i++ ) {
+        sprintf( cmd, "set %s %s", property_names[i].c_str(),
+                 nodes[i]->getStringValue() );
+        // cout << "  sending " << cmd << endl;
+        result = write_property( pd1, cmd );
+    }
+
+    sprintf( cmd, "update %d", iterations );
+    write_property( pd1, cmd );
+
+    fflush( pd1 );
+
+    // Read FDM response
+    // cout << "ready to read fdm response" << endl;
+    bool done = false;
+    while ( !done ) {
+        if ( fgets( cmd, 256, pd2 ) == NULL ) {
+            cout << "Error reading data" << endl;
+        } else {
+            // cout << "  read " << strlen(cmd) << " bytes" << endl;
+        }
+
+        // chop trailing newline
+        cmd[strlen(cmd)-1] = '\0';
+
+        // cout << cmd << endl;
+        string_list tokens = simgear::strutils::split( cmd, " " );
+    
+        if ( tokens[0] == "request" ) {
+            // save the long form name
+            property_names.push_back( tokens[1] );
+
+            // now do the property name lookup and cache the pointer
+            SGPropertyNode *node = fgGetNode( tokens[1].c_str() );
+            if ( node == NULL ) {
+                // node doesn't exist so create with requested type
+                node = fgGetNode( tokens[1].c_str(), true );
+                if ( tokens[2] == "bool" ) {
+                    node->setBoolValue(true);
+                } else if ( tokens[2] == "int" ) {
+                    node->setIntValue(0);
+                } else if ( tokens[2] == "double" ) {
+                    node->setDoubleValue(0.0);
+                } else if ( tokens[2] == "string" ) {
+                    node->setStringValue("");
+                } else {
+                    cout << "Unknown data type: " << tokens[2]
+                         << " for " << tokens[1] << endl;
+                }
+            }
+            nodes.push_back( node );
+        } else if ( tokens[0] == "set" ) {
+            process_set_command( tokens );
+        } else if ( tokens[0] == "update" ) {
+            done = true;
+        } else {
+            cout << "unknown command = " << cmd << endl;
+        }
+    }
+
+#endif
+}
+
+
