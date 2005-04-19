@@ -74,6 +74,13 @@ void FGAIManager::init() {
       return;
 
   wind_from_down_node = fgGetNode("/environment/wind-from-down-fps", true);
+  user_latitude_node  = fgGetNode("/position/latitude-deg", true);
+  user_longitude_node = fgGetNode("/position/longitude-deg", true);
+  user_altitude_node  = fgGetNode("/position/altitude-ft", true);
+  user_heading_node   = fgGetNode("/orientation/heading-deg", true);
+  user_pitch_node     = fgGetNode("/orientation/pitch-deg", true);
+  user_yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
+  user_speed_node     = fgGetNode("/velocities/uBody-fps", true);
  
   scenario_filename = root->getNode("scenario", true)->getStringValue();
   if (scenario_filename != "") processScenario( scenario_filename );
@@ -293,6 +300,7 @@ FGAIManager::createThermal( FGAIModelEntity *entity ) {
         ai_thermal->setLatitude(entity->latitude);
         ai_thermal->setMaxStrength(entity->strength);
         ai_thermal->setDiameter(entity->diameter / 6076.11549);
+        ai_thermal->setHeight(entity->height_msl);
         ai_thermal->init();
         ai_thermal->bind();
         ai_list.push_back(ai_thermal);
@@ -315,19 +323,15 @@ void FGAIManager::destroyObject( void* ID ) {
         }
 }
 
-// fetch the user's state every 10 sim cycles
+
 void FGAIManager::fetchUserState( void ) {
-   ++dt_count;
-   if (dt_count == 10) {
-     user_latitude  = fgGetDouble("/position/latitude-deg");
-     user_longitude = fgGetDouble("/position/longitude-deg");
-     user_altitude  = fgGetDouble("/position/altitude-ft");
-     user_heading   = fgGetDouble("/orientation/heading-deg");
-     user_pitch     = fgGetDouble("/orientation/pitch-deg");
-     user_yaw       = fgGetDouble("/orientation/side-slip-deg");
-     user_speed     = fgGetDouble("/velocities/uBody-fps") * 0.592484;
-     dt_count = 0;
-   }
+     user_latitude  = user_latitude_node->getDoubleValue();
+     user_longitude = user_longitude_node->getDoubleValue();
+     user_altitude  = user_altitude_node->getDoubleValue();
+     user_heading   = user_heading_node->getDoubleValue();
+     user_pitch     = user_pitch_node->getDoubleValue();
+     user_yaw       = user_yaw_node->getDoubleValue();
+     user_speed     = user_speed_node->getDoubleValue() * 0.592484;
 }
 
 

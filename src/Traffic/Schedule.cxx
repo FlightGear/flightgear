@@ -391,6 +391,9 @@ bool FGAISchedule::update(time_t now)
 	  return true;
 	} 
     }
+
+    // EMH: prevent a warning, should this be 'true' instead?
+    return false;
 }
 
 

@@ -114,6 +114,14 @@ private:
     int numObjects[FGAIBase::MAX_OBJECTS];
     SGPropertyNode* root;
     SGPropertyNode* wind_from_down_node;
+    SGPropertyNode* user_latitude_node;
+    SGPropertyNode* user_longitude_node;
+    SGPropertyNode* user_altitude_node;
+    SGPropertyNode* user_heading_node;
+    SGPropertyNode* user_pitch_node;
+    SGPropertyNode* user_yaw_node;
+    SGPropertyNode* user_speed_node;
+
     string scenario_filename;
 
     double user_latitude;
