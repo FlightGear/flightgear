@@ -117,10 +117,10 @@ properties, though they will ignore any that are not relevant:
    the width of the parent container.
 
  color - a subgroup to specify the dialogs color:
-  red   - specify the red color compnent of the color scheme.
-  green - specify the green color compnent of the color scheme.
-  blue  - specify the blue color compnent of the color scheme.
-  alpha - specify the alpha color compnent of the color scheme.
+  red   - specify the red color component of the color scheme.
+  green - specify the green color component of the color scheme.
+  blue  - specify the blue color component of the color scheme.
+  alpha - specify the alpha color component of the color scheme.
 
  legend - the text legend to display in the object.
 
@@ -229,6 +229,14 @@ Example:
    <x>10</x>
    <y>200</y>
    <label>Heading</label>
+  </text>
+
+  <text>
+   <x>10</x>
+   <y>200</y>
+   <label>-9.9999</label> <!-- placeholder for width -->
+   <format>%-0.4f m</format>
+   <property>/foo/altitude</property>
   </text>
 
 
@@ -382,6 +390,7 @@ property tree, like:
     <property>/gui/path-to-text-node/contents</property>
 
     <slider>15</slider> <!--width for slider -->
+    <wrap>false</wrap> <!-- don't wrap text; default: true -->
 
     <editable>true</editable> <!-- whether the puLargeInput is supposed to be editable -->
 </textbox>  
