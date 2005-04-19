@@ -191,12 +191,9 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         = node->getChild("copilot-brake-right")->getDoubleValue();
     net->brake_parking = node->getChild("brake-parking")->getDoubleValue();
 
-    net->gear_handle = fgGetBool( "controls/gear/gear-down" );
+    net->gear_handle = fgGetBool( "/controls/gear/gear-down" );
 
-    tempnode = node->getChild("master-avionics");
-    if ( tempnode != NULL ) {
-        net->master_avionics = tempnode->getBoolValue();
-    }
+    net->master_avionics = fgGetBool("/controls/switches/master-avionics");
 
     net->wind_speed_kt = fgGetDouble("/environment/wind-speed-kt");
     net->wind_dir_deg = fgGetDouble("/environment/wind-from-heading-deg");
