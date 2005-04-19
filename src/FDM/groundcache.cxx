@@ -151,8 +151,14 @@ FGGroundCache::addAndFlattenLeaf(GLenum ty, ssgLeaf *l, ssgIndexArray *ia,
   // Apply transform. We won't store transforms in our cache.
   vtxa->transform( xform );
   // Check for magic texture names object names and such ...
-  vtxa->setUserData( extractGroundProperty( l ) );
+  GroundProperty *gp = extractGroundProperty( l );
+  // Assertation???
+  if ( !gp ) {
+    cerr << "Newly created cache leaf where userdata is not a Ground property!" << endl;
+  }
+  vtxa->setUserData( gp );
   vtxa->setCullFace( l->getCullFace() );
+  
   // Finally append to cache.
   cache_root.addKid((ssgEntity*)vtxa);
 }
@@ -348,33 +354,34 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
   cache_ref_time = ref_time;
 
   // The center of the cache.
-  Point3D psc = globals->get_tile_mgr()->get_current_center();
-  sgdSetVec3(cache_center, psc[0], psc[1], psc[2]);
+  sgdCopyVec3(cache_center, pt);
   
+  sgVec3 zero;
+  sgZeroVec3(zero);
   // Prepare sphere around the aircraft.
   sgSphere acSphere;
   acSphere.setRadius(rad);
-
-  // Compute the postion of the aircraft relative to the scenery center.
-  sgdVec3 doffset;
-  sgdSubVec3( doffset, pt, cache_center );
-  sgVec3 offset;
-  sgSetVec3( offset, doffset[0], doffset[1], doffset[2] );
-  acSphere.setCenter( offset );
+  acSphere.setCenter(zero);
 
   // Prepare bigger sphere around the aircraft.
   // This one is required for reliably finding wires we have caught but
   // have already left the hopefully smaller sphere for the ground reactions.
   const double max_wire_dist = 300.0;
   sgSphere wireSphere;
-  wireSphere.setRadius( max_wire_dist < rad ? rad : max_wire_dist );
-  wireSphere.setCenter( offset );
+  wireSphere.setRadius(max_wire_dist < rad ? rad : max_wire_dist);
+  wireSphere.setCenter(zero);
 
   // Down vector. Is used for croase agl computations when we are far enough
   // from ground that we have an empty cache.
   sgVec3 down;
   sgSetVec3(down, -pt[0], -pt[1], -pt[2]);
   sgNormalizeVec3(down);
+
+  // We need the offset to the scenery scenery center.
+  sgdVec3 doffset;
+  Point3D psc = globals->get_tile_mgr()->get_current_center();
+  sgdSetVec3(doffset, psc[0], psc[1], psc[2]);
+  sgdSubVec3(doffset, doffset, pt);
 
   // We collaps all transforms we need to reach a particular leaf.
   // The leafs itself will be then transformed later.
@@ -383,8 +390,11 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
   // we will later store a speed in the GroundType class. We can then apply
   // some translations to that nodes according to the time which has passed
   // compared to that snapshot.
+  sgVec3 offset;
+  sgSetVec3(offset, doffset[0], doffset[1], doffset[2]);
   sgMat4 xform;
-  sgMakeIdentMat4(xform);
+  sgMakeTransMat4(xform, offset);
+
 
   // Walk the terrain branch for now.
   ssgBranch *terrain = globals->get_scenery()->get_scene_graph();
@@ -432,10 +442,7 @@ FGGroundCache::get_cat(double t, const double dpt[3],
     // Only lines are interresting ...
     if (va->getPrimitiveType() != GL_LINES)
       continue;
-    GroundProperty *gp = dynamic_cast<GroundProperty*>(va->getUserData());
-    // Assertation???
-    if ( !gp )
-      continue;
+    GroundProperty *gp = static_cast<GroundProperty*>(va->getUserData());
     // Check if we have a catapult ...
     if ( gp->type != FGInterface::Catapult )
       continue;
@@ -509,10 +516,13 @@ FGGroundCache::get_agl(double t, const double dpt[3],
     // AGL computations are done with triangle/surface leafs.
     if (va->getPrimitiveType() != GL_TRIANGLES)
       continue;
-    GroundProperty *gp = dynamic_cast<GroundProperty*>(va->getUserData());
+    ssgBase *gpb = va->getUserData();
     // Assertation???
-    if ( !gp )
+    if ( !gpb ) {
+      cerr << "Found cache leaf without userdata!" << endl;
       continue;
+    }
+    GroundProperty *gp = static_cast<GroundProperty*>(gpb);
 
     int nt = va->getNumTriangles();
     for (int i=0; i < nt; ++i) {
@@ -549,6 +559,10 @@ FGGroundCache::get_agl(double t, const double dpt[3],
           sgdAddVec3( contact, cache_center );
           // The first three values in the vector are the plane normal.
           sgdSetVec3( normal, plane );
+          // Remormalize that as double, else it *can* have surprising effects
+          // when used as plane normal together with a 6000000m offset in a
+          // plane equation.
+          sgdNormalizeVec3( normal );
           // The velocity wrt earth.
           /// FIXME: only true for non rotating objects!!!!
           sgdCopyVec3( vel, dvel[0] );
@@ -606,10 +620,7 @@ bool FGGroundCache::caught_wire(double t, const double cpt[4][3])
     // Only lines are interresting ...
     if (va->getPrimitiveType() != GL_LINES)
       continue;
-    GroundProperty *gp = dynamic_cast<GroundProperty*>(va->getUserData());
-    // Assertation???
-    if ( !gp )
-      continue;
+    GroundProperty *gp = static_cast<GroundProperty*>(va->getUserData());
     // Check if we have a catapult ...
     if ( gp->type != FGInterface::Wire )
       continue;
@@ -680,10 +691,7 @@ bool FGGroundCache::get_wire_ends(double t, double end[2][3], double vel[2][3])
     // Only lines are interresting ...
     if (va->getPrimitiveType() != GL_LINES)
       continue;
-    GroundProperty *gp = dynamic_cast<GroundProperty*>(va->getUserData());
-    // Assertation???
-    if ( !gp )
-      continue;
+    GroundProperty *gp = static_cast<GroundProperty*>(va->getUserData());
     // Check if we have a catapult ...
     if ( gp->type != FGInterface::Wire )
       continue;
