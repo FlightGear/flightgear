@@ -1556,10 +1556,12 @@ FGControls::set_condition( int engine, double val )
     if ( engine == ALL_ENGINES ) {
 	for ( int i = 0; i < MAX_ENGINES; i++ ) {
 	    condition[i] = val;
+	    CLAMP( &condition[i], 0.0, 1.0 );
 	}
     } else {
 	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
 	    condition[engine] = val;
+	    CLAMP( &condition[engine], 0.0, 1.0 );
 	}
     }
 }
