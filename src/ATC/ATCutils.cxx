@@ -253,7 +253,7 @@ Point3D dclUpdatePosition(Point3D pos, double heading, double angle, double dist
 
 // Get a heading in degrees from one lat/lon to another.
 // This function assumes the world is spherical.  If geodetic accuracy is required use the functions is sg_geodesy instead!
-// Warning - at the moment we are not checking for identical points - currently it returns 90 in this instance.
+// Warning - at the moment we are not checking for identical points - currently it returns 0 in this instance.
 double GetHeadingFromTo(Point3D A, Point3D B) {
 	double latA = A.lat() * DCL_DEGREES_TO_RADIANS;
 	double lonA = A.lon() * DCL_DEGREES_TO_RADIANS;
@@ -261,24 +261,8 @@ double GetHeadingFromTo(Point3D A, Point3D B) {
 	double lonB = B.lon() * DCL_DEGREES_TO_RADIANS;
 	double xdist = sin(lonB - lonA) * (double)SG_EQUATORIAL_RADIUS_M * cos((latA+latB)/2.0);
 	double ydist = sin(latB - latA) * (double)SG_EQUATORIAL_RADIUS_M;
-	
-	if(xdist >= 0) {
-		if(ydist > 0) {
-			return(atan(xdist/ydist) * DCL_RADIANS_TO_DEGREES);
-		} else if (ydist == 0) {
-			return(90.0);
-		} else {
-			return(180.0 - atan(xdist/fabs(ydist)) * DCL_RADIANS_TO_DEGREES);
-		}
-	} else {
-		if(ydist > 0) {
-			return(360.0 - atan(fabs(xdist)/ydist) * DCL_RADIANS_TO_DEGREES);
-		} else if (ydist == 0) {
-			return(270.0);
-		} else {
-			return(180.0 + atan(xdist/ydist) * DCL_RADIANS_TO_DEGREES);
-		}
-	}
+	double heading = atan2(xdist, ydist) * DCL_RADIANS_TO_DEGREES;
+	return heading < 0.0 ? heading + 360 : heading;
 }
 
 // Given a heading (in degrees), bound it from 0 -> 360
