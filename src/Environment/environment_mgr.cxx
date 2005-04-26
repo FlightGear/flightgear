@@ -26,12 +26,16 @@
 
 #include <Main/main.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/renderer.hxx>
 #include <Aircraft/aircraft.hxx>
 
 #include "environment.hxx"
 #include "environment_ctrl.hxx"
 #include "environment_mgr.hxx"
+
+
+class SGSky;
+extern SGSky *thesky;
+
 
 
 FGEnvironmentMgr::FGEnvironmentMgr ()
@@ -161,6 +165,9 @@ FGEnvironmentMgr::bind ()
   fgTie("/sim/rendering/clouds3d-cache-size", &sgEnviro,
 	  &SGEnviro::get_clouds_CacheSize,
 	  &SGEnviro::set_clouds_CacheSize);
+  fgTie("/sim/rendering/clouds3d-cache-resolution", &sgEnviro,
+	  &SGEnviro::get_CacheResolution,
+	  &SGEnviro::set_CacheResolution);
   fgTie("/sim/rendering/precipitation-enable", &sgEnviro,
 	  &SGEnviro::get_precipitation_enable_state,
 	  &SGEnviro::set_precipitation_enable_state);
