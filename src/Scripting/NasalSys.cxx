@@ -431,8 +431,6 @@ void FGNasalSys::readScriptFile(SGPath file, const char* module)
 void FGNasalSys::initModule(const char* moduleName, const char* fileName,
                             const char* src, int len)
 {
-    if(len == 0) len = strlen(src);
-
     naRef code = parse(fileName, src, len);
     if(naIsNil(code))
         return;
