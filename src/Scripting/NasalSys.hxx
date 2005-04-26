@@ -59,7 +59,7 @@ private:
     void readScriptFile(SGPath file, const char* lib);
     void hashset(naRef hash, const char* key, naRef val);
     void logError();
-    naRef parse(const char* filename, const char* buf, int len=0);
+    naRef parse(const char* filename, const char* buf, int len);
     naRef genPropsModule();
     naRef propNodeGhost(SGPropertyNode* handle);
 

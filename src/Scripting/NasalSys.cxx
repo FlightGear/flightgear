@@ -90,7 +90,7 @@ FGNasalScript* FGNasalSys::parseScript(const char* src, const char* name)
         name = buf;
     }
 
-    script->_code = parse(name, src);
+    script->_code = parse(name, src, strlen(src));
     if(naIsNil(script->_code)) {
         delete script;
         return 0;
@@ -454,7 +454,6 @@ void FGNasalSys::initModule(const char* moduleName, const char* fileName,
 
 naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
 {
-    if(len == 0) len = strlen(buf);
     int errLine = -1;
     naRef srcfile = naNewString(_context);
     naStr_fromdata(srcfile, (char*)filename, strlen(filename));
@@ -477,7 +476,7 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     // location in the property tree.  arg->getPath() returns an empty
     // string.
     const char* nasal = arg->getStringValue("script");
-    naRef code = parse("<command>", nasal);
+    naRef code = parse("<command>", nasal, strlen(nasal));
     if(naIsNil(code)) return false;
     
     // Cache the command argument for inspection via cmdarg().  For
