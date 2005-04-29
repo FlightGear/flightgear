@@ -11,6 +11,7 @@
 #endif
 
 #include <vector>
+#include <string>
 
 SG_USING_STD(string);
 SG_USING_STD(vector);

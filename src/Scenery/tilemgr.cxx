@@ -410,15 +410,6 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters,
     //         << current_bucket );
     fgSetInt( "/environment/current-tile-id", current_bucket.gen_index() );
 
-    // set global scenery center from current tile center
-    current_tile = tile_cache.get_tile( current_bucket );
-    if ( current_tile != NULL ) {
-        globals->get_scenery()->set_next_center( current_tile->center );
-    } else {
-        SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
-        globals->get_scenery()->set_next_center( Point3D(0.0) );
-    }
-
     // do tile load scheduling. 
     // Note that we need keep track of both viewer buckets and fdm buckets.
     if ( state == Running ) {
@@ -517,7 +508,6 @@ void FGTileMgr::prep_ssg_nodes( SGLocation *location, float vis ) {
     Point3D center = location->get_tile_center();
     if (center == Point3D(0.0))
       return;
-    current_center = center;
     float *up = location->get_world_up();
 
     FGTileEntry *e;

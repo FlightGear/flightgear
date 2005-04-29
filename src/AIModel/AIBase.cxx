@@ -69,6 +69,9 @@ FGAIBase::FGAIBase()
 }
 
 FGAIBase::~FGAIBase() {
+    // Unregister that one at the scenery manager
+    globals->get_scenery()->unregister_placement_transform(aip.getTransform());
+  
     globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
     // unbind();
     SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
@@ -146,6 +149,8 @@ bool FGAIBase::init() {
      aip.setVisible(true);
      invisible = false;
      globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
+     // Register that one at the scenery manager
+     globals->get_scenery()->register_placement_transform(aip.getTransform());
    } else {
      if (model_path != "") { 
        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model.");

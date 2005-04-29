@@ -48,6 +48,9 @@ FGAIEntity::~FGAIEntity() {
 	_model->deRef();	// Ought to check valid?
 	//cout << "Removing model from scene graph..." << endl;
 	globals->get_scenery()->get_scene_graph()->removeKid(_aip.getSceneGraph());
+        // Unregister that one at the scenery manager
+        globals->get_scenery()->unregister_placement_transform(_aip.getTransform());
+
 	//cout << "Done!" << endl;
 }
 
@@ -57,6 +60,9 @@ void FGAIEntity::SetModel(ssgBranch* model) {
 	_aip.init(_model);
 	_aip.setVisible(false);
 	globals->get_scenery()->get_scene_graph()->addKid(_aip.getSceneGraph());
+        // Register that one at the scenery manager
+        globals->get_scenery()->register_placement_transform(_aip.getTransform());
+
 }
 
 void FGAIEntity::Update(double dt) {

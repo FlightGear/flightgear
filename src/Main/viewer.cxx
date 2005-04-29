@@ -542,14 +542,15 @@ FGViewer::getZeroElevViewPos ()
 void
 FGViewer::updateFromModelLocation (SGLocation * location)
 {
-  sgCopyMat4(LOCAL, location->getCachedTransformMatrix());
+  Point3D center = globals->get_scenery()->get_next_center();
+  sgCopyMat4(LOCAL, location->getTransformMatrix(center));
 }
 
 void
 FGViewer::updateAtModelLocation (SGLocation * location)
 {
-  sgCopyMat4(ATLOCAL, 
-             location->getCachedTransformMatrix());
+  Point3D center = globals->get_scenery()->get_next_center();
+  sgCopyMat4(ATLOCAL, location->getTransformMatrix(center));
 }
 
 void
@@ -560,8 +561,20 @@ FGViewer::recalcOurOwnLocation (SGLocation * location, double lon_deg, double la
   dampEyeData(roll_deg, pitch_deg, heading_deg);
   location->setPosition( lon_deg, lat_deg, alt_ft );
   location->setOrientation( roll_deg, pitch_deg, heading_deg );
-  sgCopyMat4(LOCAL,
-             location->getTransformMatrix(globals->get_scenery()->get_center()));
+  Point3D center = globals->get_scenery()->get_next_center();
+  sgCopyMat4(LOCAL, location->getTransformMatrix(center));
+}
+
+void
+FGViewer::set_scenery_center(const Point3D& center)
+{
+  _location->set_tile_center(center);
+  _location->getTransformMatrix(center);
+  if (_type == FG_LOOKAT) {
+    _target_location->set_tile_center(center);
+    _target_location->getTransformMatrix(center);
+  }
+  set_dirty();
 }
 
 // recalc() is done every time one of the setters is called (making the 
@@ -670,10 +683,11 @@ FGViewer::recalcLookAt ()
           _target_roll_deg, _target_pitch_deg, _target_heading_deg );
   }
   // calculate the "at" target object positon relative to eye or view's tile center...
+  Point3D center = globals->get_scenery()->get_next_center();
   sgdVec3 dVec3;
-  sgdSetVec3(dVec3,  _location->get_tile_center()[0], _location->get_tile_center()[1], _location->get_tile_center()[2]);
+  sgdSetVec3(dVec3, center[0], center[1], center[2]);
   sgdSubVec3(dVec3,
-             _target_location->get_absolute_view_pos(globals->get_scenery()->get_center()),
+             _target_location->get_absolute_view_pos(center),
              dVec3 );
   sgSetVec3(at_pos, dVec3[0], dVec3[1], dVec3[2]);
 
@@ -739,10 +753,10 @@ void
 FGViewer::copyLocationData()
 {
   // Get our friendly vectors from the eye location...
+  sgdCopyVec3(_absolute_view_pos,
+              _location->get_absolute_view_pos(globals->get_scenery()->get_next_center()));
   sgCopyVec3(_zero_elev_view_pos,  _location->get_zero_elev());
   sgCopyVec3(_relative_view_pos, _location->get_view_pos());
-  sgdCopyVec3(_absolute_view_pos,
-              _location->get_absolute_view_pos(globals->get_scenery()->get_center()));
   sgCopyMat4(UP, _location->getCachedUpMatrix());
   sgCopyVec3(_world_up, _location->get_world_up());
   // these are the vectors that the sun and moon code like to get...

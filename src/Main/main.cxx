@@ -500,6 +500,28 @@ static void fgMainLoop( void ) {
     double visibility_meters = fgGetDouble("/environment/visibility-m");
     FGViewer *current_view = globals->get_current_view();
 
+    // Let the scenery center follow the current view position with
+    // 30m increments.
+    //
+    // Having the scenery center near the view position will eliminate
+    // jitter of objects which are placed very near the view position
+    // and haveing it's center near that view position.
+    // So the 3d insruments of the aircraft will not jitter with this.
+    // 
+    // Following the view position exactly would introduce jitter of
+    // the scenery tiles (they would be from their center up to 10000m
+    // to the view and this will introduce roundoff too). By stepping
+    // at 30m incements the roundoff error of the scenery tiles is
+    // still present, but we will make exactly the same roundoff error
+    // at each frame until the center is switched to a new
+    // position. This roundoff is still visible but you will most
+    // propably not notice.
+    double *vp = globals->get_current_view()->get_absolute_view_pos();
+    Point3D cntr(vp[0], vp[1], vp[2]);
+    if (30.0*30.0 < cntr.distance3Dsquared(globals->get_scenery()->get_center())) {
+      globals->get_scenery()->set_next_center( cntr );
+    }
+
     // get the location data for the primary FDM (now hardcoded to ac model)...
     SGLocation *acmodel_loc = NULL;
     acmodel_loc = (SGLocation *)globals->
@@ -517,6 +539,8 @@ static void fgMainLoop( void ) {
                         acmodel_loc->
                         get_absolute_view_pos(globals->
                                               get_scenery()->get_center()) );
+            globals->get_scenery()->set_center( cntr );
+
             // save results of update in SGLocation for fdm...
             if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
                 acmodel_loc->
@@ -539,6 +563,7 @@ static void fgMainLoop( void ) {
     SGLocation *view_location = globals->get_current_view()->getSGLocation();
     globals->get_tile_mgr()->update( view_location, visibility_meters,
                                      current_view->get_absolute_view_pos() );
+    globals->get_scenery()->set_center( cntr );
     // save results of update in SGLocation for fdm...
     if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
         current_view->getSGLocation()->

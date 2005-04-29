@@ -306,7 +306,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
         FGViewer *current__view = globals->get_current_view();
 
         // calculate our current position in cartesian space
-        globals->get_scenery()->set_center( globals->get_scenery()->get_next_center() );
+        Point3D cntr = globals->get_scenery()->get_next_center();
+        globals->get_scenery()->set_center(cntr);
+        current__view->set_scenery_center(cntr);
 
         if ( refresh_camera_settings ) {
             // update view port

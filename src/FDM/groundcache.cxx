@@ -342,6 +342,10 @@ bool
 FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
                                       double rad)
 {
+  Point3D old_cntr = globals->get_scenery()->get_center();
+  Point3D cntr(pt[0], pt[1], pt[2]);
+  globals->get_scenery()->set_center( cntr );
+
   // Empty cache.
   cache_root.removeAllKids();
   ground_radius = 0.0;
@@ -379,7 +383,7 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
 
   // We need the offset to the scenery scenery center.
   sgdVec3 doffset;
-  Point3D psc = globals->get_tile_mgr()->get_current_center();
+  Point3D psc = globals->get_scenery()->get_center();
   sgdSetVec3(doffset, psc[0], psc[1], psc[2]);
   sgdSubVec3(doffset, doffset, pt);
 
@@ -396,7 +400,7 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
   sgMakeTransMat4(xform, offset);
 
 
-  // Walk the terrain branch for now.
+  // Walk the scene graph and extract solid ground triangles and carrier data.
   ssgBranch *terrain = globals->get_scenery()->get_scene_graph();
   cache_fill(terrain, xform, &acSphere, down, &wireSphere);
 
@@ -411,6 +415,8 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
   if (!found_ground)
     SG_LOG(SG_FLIGHT, SG_WARN, "prepare_ground_cache(): trying to build cache "
            "without any scenery below the aircraft" );
+
+  globals->get_scenery()->set_center( old_cntr );
 
   return found_ground;
 }

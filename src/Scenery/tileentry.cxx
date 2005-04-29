@@ -43,6 +43,7 @@
 #include <simgear/scene/tgdb/apt_signs.hxx>
 #include <simgear/scene/tgdb/obj.hxx>
 #include <simgear/scene/tgdb/vasi.hxx>
+#include <simgear/scene/model/placementtrans.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
@@ -62,10 +63,10 @@ SG_USING_STD(string);
 FGTileEntry::FGTileEntry ( const SGBucket& b )
     : center( Point3D( 0.0 ) ),
       tile_bucket( b ),
-      terra_transform( new ssgTransform ),
-      vasi_lights_transform( new ssgTransform ),
-      rwy_lights_transform( new ssgTransform ),
-      taxi_lights_transform( new ssgTransform ),
+      terra_transform( new ssgPlacementTransform ),
+      vasi_lights_transform( new ssgPlacementTransform ),
+      rwy_lights_transform( new ssgPlacementTransform ),
+      taxi_lights_transform( new ssgPlacementTransform ),
       terra_range( new ssgRangeSelector ),
       vasi_lights_selector( new ssgSelector ),
       rwy_lights_selector( new ssgSelector ),
@@ -316,8 +317,6 @@ bool FGTileEntry::free_tile() {
 void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
     if ( !loaded ) return;
 
-    SetOffset( p );
-
     // visibility can change from frame to frame so we update the
     // range selector cutoff's each time.
     terra_range->setRange( 0, SG_ZERO );
@@ -328,9 +327,8 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         gnd_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
     }
 
-    sgVec3 sgTrans;
-    sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
-    terra_transform->setTransform( sgTrans );
+    sgdVec3 sgdTrans;
+    sgdSetVec3( sgdTrans, center.x(), center.y(), center.z() );
 
     FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
     if ( gnd_lights_transform ) {
@@ -348,12 +346,8 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         agl = globals->get_current_view()->getAltitudeASL_ft()
             * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev();
 
-        // sgTrans just happens to be the
-        // vector from scenery center to the center of this tile which
-        // is what we want to calculate the distance of
-        sgVec3 to;
-        sgCopyVec3( to, sgTrans );
-        double dist = sgLengthVec3( to );
+        // Compute the distance of the scenery center from the view position.
+        double dist = center.distance3D(p);
 
         if ( general.get_glDepthBits() > 16 ) {
             sgScaleVec3( lift_vec, 10.0 + agl / 100.0 + dist / 10000 );
@@ -361,11 +355,12 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
             sgScaleVec3( lift_vec, 10.0 + agl / 20.0 + dist / 5000 );
         }
 
-        sgVec3 lt_trans;
-        sgCopyVec3( lt_trans, sgTrans );
-
-        sgAddVec3( lt_trans, lift_vec );
-        gnd_lights_transform->setTransform( lt_trans );
+        sgdVec3 dlt_trans;
+        sgdCopyVec3( dlt_trans, sgdTrans );
+        sgdVec3 dlift_vec;
+        sgdSetVec3( dlift_vec, lift_vec );
+        sgdAddVec3( dlt_trans, dlift_vec );
+        gnd_lights_transform->setTransform( dlt_trans );
 
         // select which set of lights based on sun angle
         float sun_angle = l->get_sun_angle() * SGD_RADIANS_TO_DEGREES;
@@ -404,11 +399,12 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
             sgScaleVec3( lift_vec, 0.25 + agl / 150.0 );
         }
 
-        sgVec3 lt_trans;
-        sgCopyVec3( lt_trans, sgTrans );
-
-        sgAddVec3( lt_trans, lift_vec );
-        vasi_lights_transform->setTransform( lt_trans );
+        sgdVec3 dlt_trans;
+        sgdCopyVec3( dlt_trans, sgdTrans );
+        sgdVec3 dlift_vec;
+        sgdSetVec3( dlift_vec, lift_vec );
+        sgdAddVec3( dlt_trans, dlift_vec );
+        vasi_lights_transform->setTransform( dlt_trans );
 
         // generally, vasi lights are always on
         vasi_lights_selector->select(0x01);
@@ -438,11 +434,12 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
             sgScaleVec3( lift_vec, 0.25 + agl / 150.0 );
         }
 
-        sgVec3 lt_trans;
-        sgCopyVec3( lt_trans, sgTrans );
-
-        sgAddVec3( lt_trans, lift_vec );
-        rwy_lights_transform->setTransform( lt_trans );
+        sgdVec3 dlt_trans;
+        sgdCopyVec3( dlt_trans, sgdTrans );
+        sgdVec3 dlift_vec;
+        sgdSetVec3( dlift_vec, lift_vec );
+        sgdAddVec3( dlt_trans, dlift_vec );
+        rwy_lights_transform->setTransform( dlt_trans );
 
         // turn runway lights on/off based on sun angle and visibility
         float sun_angle = l->get_sun_angle() * SGD_RADIANS_TO_DEGREES;
@@ -478,11 +475,12 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
             sgScaleVec3( lift_vec, 0.25 + agl / 150.0 );
         }
 
-        sgVec3 lt_trans;
-        sgCopyVec3( lt_trans, sgTrans );
-
-        sgAddVec3( lt_trans, lift_vec );
-        taxi_lights_transform->setTransform( lt_trans );
+        sgdVec3 dlt_trans;
+        sgdCopyVec3( dlt_trans, sgdTrans );
+        sgdVec3 dlift_vec;
+        sgdSetVec3( dlift_vec, lift_vec );
+        sgdAddVec3( dlt_trans, dlift_vec );
+        taxi_lights_transform->setTransform( dlt_trans );
 
         // turn taxi lights on/off based on sun angle and visibility
         float sun_angle = l->get_sun_angle() * SGD_RADIANS_TO_DEGREES;
@@ -938,12 +936,16 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
     terra_transform->addKid( terra_range );
 
     // calculate initial tile offset
-    SetOffset( globals->get_scenery()->get_center() );
-    sgCoord sgcoord;
-    sgSetCoord( &sgcoord,
-                offset.x(), offset.y(), offset.z(),
-                0.0, 0.0, 0.0 );
-    terra_transform->setTransform( &sgcoord );
+    sgdVec3 sgdTrans;
+    sgdSetVec3( sgdTrans, center.x(), center.y(), center.z() );
+    terra_transform->setTransform( sgdTrans );
+
+    sgdVec3 sgdCenter;
+    Point3D p = globals->get_scenery()->get_center();
+    sgdSetVec3( sgdCenter, p.x(), p.y(), p.z() );
+    terra_transform->setSceneryCenter( sgdCenter );
+    globals->get_scenery()->register_placement_transform(terra_transform);
+
     // terrain->addKid( terra_transform );
 
     // Add ground lights to scene graph if any exist
@@ -951,7 +953,7 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
     gnd_lights_range = NULL;
     if ( light_pts->getNum() ) {
         SG_LOG( SG_TERRAIN, SG_DEBUG, "generating lights" );
-        gnd_lights_transform = new ssgTransform;
+        gnd_lights_transform = new ssgPlacementTransform;
         gnd_lights_range = new ssgRangeSelector;
         gnd_lights_brightness = new ssgSelector;
         ssgLeaf *lights;
@@ -967,22 +969,30 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
 
         gnd_lights_range->addKid( gnd_lights_brightness );
         gnd_lights_transform->addKid( gnd_lights_range );
-        gnd_lights_transform->setTransform( &sgcoord );
+        gnd_lights_transform->setTransform( sgdTrans );
+        gnd_lights_transform->setSceneryCenter( sgdCenter );
+        globals->get_scenery()->register_placement_transform(gnd_lights_transform);
     }
 
     // Update vasi lights transform
     if ( vasi_lights_transform->getNumKids() > 0 ) {
-        vasi_lights_transform->setTransform( &sgcoord );
+        vasi_lights_transform->setTransform( sgdTrans );
+        vasi_lights_transform->setSceneryCenter( sgdCenter );
+        globals->get_scenery()->register_placement_transform(vasi_lights_transform);
     }
 
     // Update runway lights transform
     if ( rwy_lights_transform->getNumKids() > 0 ) {
-        rwy_lights_transform->setTransform( &sgcoord );
+        rwy_lights_transform->setTransform( sgdTrans );
+        rwy_lights_transform->setSceneryCenter( sgdCenter );
+        globals->get_scenery()->register_placement_transform(rwy_lights_transform);
     }
 
      // Update taxi lights transform
     if ( taxi_lights_transform->getNumKids() > 0 ) {
-        taxi_lights_transform->setTransform( &sgcoord );
+        taxi_lights_transform->setTransform( sgdTrans );
+        taxi_lights_transform->setSceneryCenter( sgdCenter );
+        globals->get_scenery()->register_placement_transform(taxi_lights_transform);
     }
 }
 
@@ -1070,6 +1080,9 @@ FGTileEntry::disconnect_ssg_nodes()
         SG_LOG( SG_TERRAIN, SG_DEBUG, "removing a fully loaded tile!  terra_transform = " << terra_transform );
     }
         
+    // Unregister that one at the scenery manager
+    globals->get_scenery()->unregister_placement_transform(terra_transform);
+
     // find the terrain branch parent
     int pcount = terra_transform->getNumParents();
     if ( pcount > 0 ) {
@@ -1092,6 +1105,8 @@ FGTileEntry::disconnect_ssg_nodes()
 
     // find the ground lighting branch
     if ( gnd_lights_transform ) {
+        // Unregister that one at the scenery manager
+        globals->get_scenery()->unregister_placement_transform(gnd_lights_transform);
         pcount = gnd_lights_transform->getNumParents();
         if ( pcount > 0 ) {
             // find the first parent (should only be one)
@@ -1114,6 +1129,8 @@ FGTileEntry::disconnect_ssg_nodes()
 
     // find the vasi lighting branch
     if ( vasi_lights_transform ) {
+        // Unregister that one at the scenery manager
+        globals->get_scenery()->unregister_placement_transform(vasi_lights_transform);
         pcount = vasi_lights_transform->getNumParents();
         if ( pcount > 0 ) {
             // find the first parent (should only be one)
@@ -1136,6 +1153,8 @@ FGTileEntry::disconnect_ssg_nodes()
 
     // find the runway lighting branch
     if ( rwy_lights_transform ) {
+        // Unregister that one at the scenery manager
+        globals->get_scenery()->unregister_placement_transform(rwy_lights_transform);
         pcount = rwy_lights_transform->getNumParents();
         if ( pcount > 0 ) {
             // find the first parent (should only be one)
@@ -1158,6 +1177,8 @@ FGTileEntry::disconnect_ssg_nodes()
 
     // find the taxi lighting branch
     if ( taxi_lights_transform ) {
+        // Unregister that one at the scenery manager
+        globals->get_scenery()->unregister_placement_transform(taxi_lights_transform);
         pcount = taxi_lights_transform->getNumParents();
         if ( pcount > 0 ) {
             // find the first parent (should only be one)

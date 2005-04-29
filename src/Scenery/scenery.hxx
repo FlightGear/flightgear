@@ -29,15 +29,19 @@
 # error This library requires C++
 #endif                                   
 
+#include <list>
 
 #include <plib/sg.h>
 
+#include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/point3d.hxx>
 
+SG_USING_STD(list);
 
 class ssgRoot;
 class ssgBranch;
+class ssgPlacementTransform;
 
 
 // Define a structure containing global scenery parameters
@@ -72,6 +76,10 @@ class FGScenery : public SGSubsystem {
     ssgBranch *models_branch;
     ssgBranch *aircraft_branch;
 
+    // list of all placement transform, used to move the scenery center on the fly.
+    typedef list<ssgPlacementTransform*> placement_list_type;
+    placement_list_type _placement_list;
+
 public:
 
     FGScenery();
@@ -87,7 +95,7 @@ public:
     inline void set_cur_elev( double e ) { cur_elev = e; }
 
     inline Point3D get_center() const { return center; }
-    inline void set_center( Point3D p ) { center = p; }
+    void set_center( Point3D p );
 
     inline Point3D get_next_center() const { return next_center; }
     inline void set_next_center( Point3D p ) { next_center = p; }
@@ -142,6 +150,9 @@ public:
     inline void set_aircraft_branch (ssgBranch *t) {
         aircraft_branch = t;
     }
+
+    void register_placement_transform(ssgPlacementTransform *trans);
+    void unregister_placement_transform(ssgPlacementTransform *trans);
 };
 
 

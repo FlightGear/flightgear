@@ -58,6 +58,7 @@ typedef point_list::const_iterator const_point_list_iterator;
 class ssgLeaf;
 class ssgBranch;
 class ssgTransform;
+class ssgPlacementTransform;
 class ssgSelector;
 class ssgRangeSelector;
 class ssgVertexArray;
@@ -109,7 +110,6 @@ public:
     // global tile culling data
     Point3D center;
     double bounding_radius;
-    Point3D offset;
 
     // this tile's official location in the world
     SGBucket tile_bucket;
@@ -128,11 +128,11 @@ private:
     //                 - kidn(fan)
 
     // pointer to ssg transform for this tile
-    ssgTransform *terra_transform;
-    ssgTransform *vasi_lights_transform;
-    ssgTransform *rwy_lights_transform;
-    ssgTransform *taxi_lights_transform;
-    ssgTransform *gnd_lights_transform;
+    ssgPlacementTransform *terra_transform;
+    ssgPlacementTransform *vasi_lights_transform;
+    ssgPlacementTransform *rwy_lights_transform;
+    ssgPlacementTransform *taxi_lights_transform;
+    ssgPlacementTransform *gnd_lights_transform;
 
     // pointer to ssg range selector for this tile
     ssgRangeSelector *terra_range;
@@ -218,15 +218,6 @@ public:
     // completely freed.
     bool free_tile();
 
-    // Calculate this tile's offset
-    void SetOffset( const Point3D& p)
-    {
-	offset = center - p;
-    }
-
-    // Return this tile's offset
-    inline Point3D get_offset() const { return offset; }
-
     // Update the ssg transform node for this tile so it can be
     // properly drawn relative to our (0,0,0) point
     void prep_ssg_node( const Point3D& p, sgVec3 up, float vis);
@@ -283,7 +274,7 @@ public:
     /**
      * return the SSG Transform node for the terrain
      */
-    inline ssgTransform *get_terra_transform() { return terra_transform; }
+    inline ssgPlacementTransform *get_terra_transform() { return terra_transform; }
 
     inline double get_timestamp() const { return timestamp; }
     inline void set_timestamp( double time_ms ) { timestamp = time_ms; }

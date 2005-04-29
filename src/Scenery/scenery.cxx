@@ -30,6 +30,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
+#include <simgear/scene/model/placementtrans.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -99,4 +100,34 @@ void FGScenery::bind() {
 
 void FGScenery::unbind() {
     fgUntie("/environment/ground-elevation-m");
+}
+
+void FGScenery::set_center( Point3D p ) {
+    center = p;
+    sgdVec3 c;
+    sgdSetVec3(c, p.x(), p.y(), p.z());
+    placement_list_type::iterator it = _placement_list.begin();
+    while (it != _placement_list.end()) {
+        (*it)->setSceneryCenter(c);
+        ++it;
+    }
+}
+
+void FGScenery::register_placement_transform(ssgPlacementTransform *trans) {
+    trans->ref();
+    _placement_list.push_back(trans);        
+    sgdVec3 c;
+    sgdSetVec3(c, center.x(), center.y(), center.z());
+    trans->setSceneryCenter(c);
+}
+
+void FGScenery::unregister_placement_transform(ssgPlacementTransform *trans) {
+    placement_list_type::iterator it = _placement_list.begin();
+    while (it != _placement_list.end()) {
+        if ((*it) == trans) {
+            (*it)->deRef();
+            it = _placement_list.erase(it);        
+        } else
+            ++it;
+    }
 }

@@ -90,18 +90,11 @@ public:
 	return views[i];
     }
     inline FGViewer *next_view() {
-	++current;
-	if ( current >= (int)views.size() ) {
-	    current = 0;
-	}
-        copyToCurrent();
+	setView((current+1 < (int)views.size()) ? (current + 1) : 0);
 	return views[current];
     }
     inline FGViewer *prev_view() {
-	--current;
-	if ( current < 0 ) {
-	    current = views.size() - 1;
-	}
+	setView((0 < current) ? (current - 1) : (views.size() - 1));
 	return views[current];
     }
 

@@ -24,6 +24,11 @@
 #include <string.h>		// strcmp
 
 #include <plib/sg.h>
+#include <plib/ssg.h>
+
+#include <simgear/compiler.h>
+
+#include <Model/acmodel.hxx>
 
 #include "viewmgr.hxx"
 #include "fg_props.hxx"
@@ -724,6 +729,12 @@ FGViewMgr::setView (int newview )
   set_view( newview );
   // copy in view data
   copyToCurrent ();
+
+  // Copy the fdm's position into the SGLocation which is shared with
+  // some views ...
+  globals->get_aircraft_model()->update(0);
+  // Do the update ...
+  update(0);
 }
 
 

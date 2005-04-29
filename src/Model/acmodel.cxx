@@ -46,6 +46,10 @@ FGAircraftModel::FGAircraftModel ()
 
 FGAircraftModel::~FGAircraftModel ()
 {
+  // Unregister that one at the scenery manager
+  if (_aircraft)
+    globals->get_scenery()->unregister_placement_transform(_aircraft->getTransform());
+
   delete _aircraft;
   delete _scene;
 				// SSG will delete it
@@ -75,6 +79,9 @@ FGAircraftModel::init ()
   _scene->addKid(_aircraft->getSceneGraph());
   _selector->addKid(_aircraft->getSceneGraph());
   globals->get_scenery()->get_aircraft_branch()->addKid(_selector);
+
+  // Register that one at the scenery manager
+  globals->get_scenery()->register_placement_transform(_aircraft->getTransform());
 }
 
 void 
