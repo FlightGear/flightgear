@@ -167,7 +167,7 @@ FGNavRecord *FGNavList::findByIdentAndFreq( const char* ident, const double freq
                 return stations[i];
             }
         }
-    } else {
+    } else if (stations.size()) {
         return stations[0];
     }
 
