@@ -546,6 +546,30 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
     if (props->hasValue("label"))
         object->setLabel(props->getStringValue("label"));
 
+#if 0
+    if (props->hasValue("style")) {
+       int style = PUSTYLE_DEFAULT;
+       string s = props->getStringValue("style");
+       if (s == "underline")            style = PUSTYLE_SPECIAL_UNDERLINED;
+       else if (s == "small-bevelled")  style = PUSTYLE_SMALL_BEVELLED;
+       else if (s == "small-shaded")    style = PUSTYLE_SMALL_SHADED;
+       else if (s == "boxed")           style = PUSTYLE_BOXED;
+       else if (s == "bevelled")        style = PUSTYLE_BEVELLED;
+       else if (s == "shaded")          style = PUSTYLE_SHADED;
+       else if (s == "dropshadow")      style = PUSTYLE_DROPSHADOW;
+       object->setStyle(style);
+    }
+#endif
+
+    if ( SGPropertyNode *ncs = props->getNode("color", false) ) {
+       sgVec4 color;
+       color[0] = ncs->getFloatValue("red", 0.0);
+       color[1] = ncs->getFloatValue("green", 0.0);
+       color[2] = ncs->getFloatValue("blue", 0.0);
+       color[3] = ncs->getFloatValue("alpha", 1.0);
+       object->setColor(PUCOL_LABEL, color[0], color[1], color[2], color[3]);
+    }
+
     if (props->hasValue("property")) {
         const char * name = props->getStringValue("name");
         if (name == 0)
