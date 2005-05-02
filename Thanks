@@ -444,6 +444,7 @@ Durk Talsma <d.talsma@chello.nl>
   Moon has correct phase and blends well into the sky.
   Planets are correctly positioned and have proper magnitude.
   Help with time functions, gui, and other misc stuff.
+  Added the AirTraffic module for scheduled AI airliners and other aircraft.
   2D Cloud layers (nifty).
   http://people.a2000.nl/dtals
 
@@ -568,6 +569,19 @@ Vivian Meazza <vivian.meazza@lineone.net>
   Added a number of excellent aircraft models including the Hawker Hunter
   and Seahawk.
 
+Mathias Fröhlich <Mathias.Froehlich@gmx.net>
+  Implemented the groundcache code which made it possible for aircraft
+  to follow the ground precisely and, as a result, made it possible to
+  land on aircraft carriers.
+  Modified both YASim and JSBSim to support the groundcache code.
+  Reorganized the code to eliminate the viewer jitter for close by objects.
+
+
+Harald Johnsen <hjohnsen@evc.net>
+  Added a new 3D cloud implementation which also works on big-endian machines.
+  This code allows for clouds of any types and any shapes (and even deformation
+  while moving).
+
 
 Space Imaging, Inc  http://www.spaceimaging.com/
   Space Imaging has allowed us to use the images in their archive for
@@ -617,5 +631,6 @@ Oliver Delise  <delise@mail.isis.de>
 
 
 Updated 2001-12-11 by David Megginson, david@megginson.com
-Updated 2003-04-17 by Erik Hofman, erik@ehofman.com
-Updated 2004-06-01 by Erik Hofman, erik@ehofman.com
+Updated 2003-04-17,
+Updated 2004-06-01,
+Updated 2005-04-02 by Erik Hofman, erik@ehofman.com
