@@ -98,11 +98,7 @@ FGGlobals::~FGGlobals()
     delete commands;
     delete io;
     delete renderer;
-  
-    // make sure only to delete the initial waypoints list if it acually
-    // still exists. 
-    if (initial_waypoints)
-        delete initial_waypoints;
+    delete initial_waypoints;
 }
 
 
