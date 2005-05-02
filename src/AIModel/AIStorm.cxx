@@ -28,6 +28,7 @@
 #include <Scenery/scenery.hxx>
 #include <string>
 #include <math.h>
+#include <cstdlib>
 
 SG_USING_STD(string);
 
@@ -38,6 +39,23 @@ FGAIStorm::FGAIStorm(FGAIManager* mgr) {
    manager = mgr;   
    _type_str = "thunderstorm";
    _otype = otStorm;
+   delay = 3.6;
+   subflashes = 1;
+   timer = 0.0;
+   random_delay = 3.6;
+   flash_node = fgGetNode("/environment/lightning/flash", true);
+   flash_node->setBoolValue(false);
+   flashed = 0; 
+   flashing = false;
+   subflash_index = -1;
+   subflash_array[0] =  1;
+   subflash_array[1] =  2;
+   subflash_array[2] =  1;
+   subflash_array[3] =  3;
+   subflash_array[4] =  2;
+   subflash_array[5] =  1;
+   subflash_array[6] =  1;
+   subflash_array[7] =  2;
 }
 
 
@@ -82,9 +100,42 @@ void FGAIStorm::Run(double dt) {
    pos.setlat( pos.lat() + speed_north_deg_sec * dt);
    pos.setlon( pos.lon() + speed_east_deg_sec * dt); 
 
-   //###########################//
    // do calculations for radar //
-   //###########################//
    UpdateRadar(manager);
+
+   // do lightning
+   if (timer > random_delay) {
+     srand((unsigned)time(0));
+     random_delay = delay + (rand()%3) - 1.0;
+     //cout << "random_delay = " << random_delay << endl;
+     timer = 0.0;
+     flashing = true;
+     subflash_index++;
+     if (subflash_index == 8) subflash_index = 0; 
+     subflashes = subflash_array[subflash_index]; 
+   }
+
+   if (flashing) {
+     if (flashed < subflashes) {
+         timer += dt;
+         if (timer < 0.2) { 
+         flash_node->setBoolValue(true);
+         } else {
+            flash_node->setBoolValue(false);
+            if (timer > 0.4) {
+              timer = 0.0;
+              flashed++;
+            }
+         }
+     } else {
+       flashing = false;
+       timer = 0.0;
+       flashed = 0;
+     }
+   }
+   else {
+     timer += dt;
+   }  
+     
 }
 

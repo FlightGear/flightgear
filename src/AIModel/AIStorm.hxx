@@ -44,6 +44,16 @@ private:
 
         double dt; 
 	void Run(double dt);
+
+        double delay;   // average time (sec) between lightning flashes
+        int subflashes; // number of subflashes per flash
+        double random_delay;  // delay +/- random number
+        double timer; 
+        SGPropertyNode* flash_node; 
+        int flashed;    // number of subflashes already done this flash
+        bool flashing;  // true if currently flashing;
+        int subflash_array[8];
+        int subflash_index;
 };
 
 
