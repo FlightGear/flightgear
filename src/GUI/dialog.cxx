@@ -15,6 +15,9 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
 {
     int result = puPopup::checkHit(button, updown, x, y);
 
+    if ( !_draggable)
+       return result;
+
     // This is annoying.  We would really want a true result from the
     // superclass to indicate "handled by child object", but all it
     // tells us is that the pointer is inside the dialog.  So do the
@@ -405,10 +408,11 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 
     if (type == "dialog") {
         puPopup * dialog;
+        bool draggable = props->getBoolValue("draggable", true);
         if (props->getBoolValue("modal", false))
             dialog = new puDialogBox(x, y);
         else
-            dialog = new fgPopup(x, y);
+            dialog = new fgPopup(x, y, draggable);
         setupGroup(dialog, props, width, height, color, true);
         return dialog;
     } else if (type == "group") {

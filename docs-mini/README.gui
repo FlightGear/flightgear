@@ -74,6 +74,7 @@ a simple, "hello world" dialog:
    <width>150</width>
    <height>100</height>
    <modal>false</modal>
+   <draggable>true</draggable>
 
    <text>
     <x>10</x>
@@ -151,6 +152,8 @@ file, since the root element is named PropertyList.
 
   modal - true if the dialog is modal (it blocks the rest of the
     program), false otherwise.  The default is false.
+
+  draggable - false if the dialog is not draggable. The default is true.
 
 Example:
 
