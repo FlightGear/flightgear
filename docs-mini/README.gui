@@ -123,6 +123,11 @@ properties, though they will ignore any that are not relevant:
   blue  - specify the blue color component of the color scheme.
   alpha - specify the alpha color component of the color scheme.
 
+ font - a subgroup to specify a specific font type
+  name - the name of the font (excluding it's .txf extension)
+  size - size of the font
+  slant -  the slant of the font (in pixels)
+
  legend - the text legend to display in the object.
 
  label - the text label to display near the object.
