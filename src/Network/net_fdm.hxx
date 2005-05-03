@@ -36,7 +36,7 @@ typedef unsigned __int64 uint64_t;
 # error "Port me! Platforms that don't have <stdint.h> need to define int8_t, et. al."
 #endif
 
-const uint16_t FG_NET_FDM_VERSION = 21;
+const uint32_t FG_NET_FDM_VERSION = 22;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -52,7 +52,7 @@ public:
         FG_MAX_TANKS = 4
     };
 
-    uint16_t version;		// increment when data values change
+    uint32_t version;		// increment when data values change
 
     // Positions
     double longitude;		// geodetic (radians)
@@ -93,8 +93,8 @@ public:
     // Pressure
     
     // Engine status
-    uint8_t num_engines;	     // Number of valid engines
-    uint8_t eng_state[FG_MAX_ENGINES];// Engine state (off, cranking, running)
+    uint32_t num_engines;	     // Number of valid engines
+    uint32_t eng_state[FG_MAX_ENGINES];// Engine state (off, cranking, running)
     float rpm[FG_MAX_ENGINES];	     // Engine RPM rev/min
     float fuel_flow[FG_MAX_ENGINES]; // Fuel flow gallons/hr
     float egt[FG_MAX_ENGINES];	     // Exhuast gas temp deg F
@@ -105,12 +105,12 @@ public:
     float oil_px[FG_MAX_ENGINES];    // Oil pressure psi
 
     // Consumables
-    uint8_t num_tanks;		// Max number of fuel tanks
+    uint32_t num_tanks;		// Max number of fuel tanks
     float fuel_quantity[FG_MAX_TANKS];
 
     // Gear status
-    uint8_t num_wheels;
-    uint8_t wow[FG_MAX_WHEELS];
+    uint32_t num_wheels;
+    uint32_t wow[FG_MAX_WHEELS];
     float gear_pos[FG_MAX_WHEELS];
     float gear_steer[FG_MAX_WHEELS];
     float gear_compression[FG_MAX_WHEELS];
@@ -118,7 +118,7 @@ public:
     // Environment
     uint32_t cur_time;           // current unix time
                                  // FIXME: make this uint64_t before 2038
-    uint32_t warp;               // offset in seconds to unix time
+    int32_t warp;                // offset in seconds to unix time
     float visibility;            // visibility in meters (for env. effects)
 
     // Control surface positions (normalized values)

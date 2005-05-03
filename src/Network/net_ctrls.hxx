@@ -34,7 +34,7 @@ typedef unsigned __int64 uint64_t;
 # error "Port me! Platforms that don't have <stdint.h> need to define int8_t, et. al."
 #endif
 
-const uint16_t FG_NET_CTRLS_VERSION = 25;
+const uint32_t FG_NET_CTRLS_VERSION = 26;
 
 
 // Define a structure containing the control parameters
@@ -49,7 +49,7 @@ public:
         FG_MAX_TANKS = 6
     };
 
-    uint16_t version;		         // increment when data values change
+    uint32_t version;		         // increment when data values change
 
     // Aero controls
     double aileron;		         // -1 ... 1
@@ -61,33 +61,33 @@ public:
     double flaps;		         //  0 ... 1
 
     // Aero control faults
-    uint8_t flaps_power;                 // true = power available
-    uint8_t flap_motor_ok;
+    uint32_t flaps_power;                 // true = power available
+    uint32_t flap_motor_ok;
 
     // Engine controls
-    uint8_t num_engines;		 // number of valid engines
-    uint8_t master_bat[FG_MAX_ENGINES];
-    uint8_t master_alt[FG_MAX_ENGINES];
-    uint8_t magnetos[FG_MAX_ENGINES];
-    uint8_t starter_power[FG_MAX_ENGINES];// true = starter power
+    uint32_t num_engines;		 // number of valid engines
+    uint32_t master_bat[FG_MAX_ENGINES];
+    uint32_t master_alt[FG_MAX_ENGINES];
+    uint32_t magnetos[FG_MAX_ENGINES];
+    uint32_t starter_power[FG_MAX_ENGINES];// true = starter power
     double throttle[FG_MAX_ENGINES];     //  0 ... 1
     double mixture[FG_MAX_ENGINES];      //  0 ... 1
     double condition[FG_MAX_ENGINES];    //  0 ... 1
-    uint8_t fuel_pump_power[FG_MAX_ENGINES];// true = on
+    uint32_t fuel_pump_power[FG_MAX_ENGINES];// true = on
     double prop_advance[FG_MAX_ENGINES]; //  0 ... 1
 
     // Engine faults
-    uint8_t engine_ok[FG_MAX_ENGINES];
-    uint8_t mag_left_ok[FG_MAX_ENGINES];
-    uint8_t mag_right_ok[FG_MAX_ENGINES];
-    uint8_t spark_plugs_ok[FG_MAX_ENGINES];  // false = fouled plugs
-    uint8_t oil_press_status[FG_MAX_ENGINES];// 0 = normal, 1 = low, 2 = full fail
-    uint8_t fuel_pump_ok[FG_MAX_ENGINES];
+    uint32_t engine_ok[FG_MAX_ENGINES];
+    uint32_t mag_left_ok[FG_MAX_ENGINES];
+    uint32_t mag_right_ok[FG_MAX_ENGINES];
+    uint32_t spark_plugs_ok[FG_MAX_ENGINES];  // false = fouled plugs
+    uint32_t oil_press_status[FG_MAX_ENGINES];// 0 = normal, 1 = low, 2 = full fail
+    uint32_t fuel_pump_ok[FG_MAX_ENGINES];
 
     // Fuel management
-    uint8_t num_tanks;                      // number of valid tanks
-    uint8_t fuel_selector[FG_MAX_TANKS];    // false = off, true = on
-    uint8_t cross_feed;                     // false = off, true = on
+    uint32_t num_tanks;                      // number of valid tanks
+    uint32_t fuel_selector[FG_MAX_TANKS];    // false = off, true = on
+    uint32_t cross_feed;                     // false = off, true = on
 
     // Brake controls
     double brake_left;
@@ -97,10 +97,10 @@ public:
     double brake_parking;
     
     // Landing Gear
-    uint8_t gear_handle; // true=gear handle down; false= gear handle up
+    uint32_t gear_handle; // true=gear handle down; false= gear handle up
 
     // Switches
-    uint8_t master_avionics;
+    uint32_t master_avionics;
 
     // wind and turbulance
     double wind_speed_kt;
@@ -116,13 +116,13 @@ public:
     double magvar;		         // local magnetic variation in degs.
 
     // hazards
-    uint8_t icing;                       // icing status could me much
+    uint32_t icing;                       // icing status could me much
                                          // more complex but I'm
                                          // starting simple here.
 
     // simulation control
-    uint8_t speedup;		         // integer speedup multiplier
-    uint8_t freeze;		         // 0=normal
+    uint32_t speedup;		         // integer speedup multiplier
+    uint32_t freeze;		         // 0=normal
 				         // 0x01=master
 				         // 0x02=position
 				         // 0x04=fuel
