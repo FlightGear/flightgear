@@ -12,6 +12,7 @@
 
 #include <simgear/compiler.h>	// for SG_USING_STD
 #include <simgear/props/props.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <vector>
 SG_USING_STD(vector);
@@ -141,6 +142,8 @@ private:
     // dialog closes.
     char ** make_char_array (int size);
     vector<char **> _char_arrays;
+
+    SGPath _font_path;
 };
 
 //

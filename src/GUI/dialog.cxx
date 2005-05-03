@@ -546,20 +546,21 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
     if (props->hasValue("label"))
         object->setLabel(props->getStringValue("label"));
 
-#if 0
-    if (props->hasValue("style")) {
-       int style = PUSTYLE_DEFAULT;
-       string s = props->getStringValue("style");
-       if (s == "underline")            style = PUSTYLE_SPECIAL_UNDERLINED;
-       else if (s == "small-bevelled")  style = PUSTYLE_SMALL_BEVELLED;
-       else if (s == "small-shaded")    style = PUSTYLE_SMALL_SHADED;
-       else if (s == "boxed")           style = PUSTYLE_BOXED;
-       else if (s == "bevelled")        style = PUSTYLE_BEVELLED;
-       else if (s == "shaded")          style = PUSTYLE_SHADED;
-       else if (s == "dropshadow")      style = PUSTYLE_DROPSHADOW;
-       object->setStyle(style);
+    if ( SGPropertyNode *nft = props->getNode("font", false) ) {
+       SGPath path( _font_path );
+       string name = props->getStringValue("name");
+       float size = props->getFloatValue("size", 13.0);
+       float slant = props->getFloatValue("slant", 0.0);
+       if ( name.empty() ) name = "typewriter";
+       path.append( name );
+       path.concat( ".txf" );
+
+       fntFont *font = new fntTexFont;
+       font->load( (char *)path.c_str() );
+
+       puFont lfnt(font, size, slant);
+       object->setLabelFont( lfnt );
     }
-#endif
 
     if ( SGPropertyNode *ncs = props->getNode("color", false) ) {
        sgVec4 color;
