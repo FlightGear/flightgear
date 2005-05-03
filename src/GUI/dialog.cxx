@@ -556,10 +556,9 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 
     if ( SGPropertyNode *nft = props->getNode("font", false) ) {
        SGPath path( _font_path );
-       string name = props->getStringValue("name");
-       float size = props->getFloatValue("size", 13.0);
-       float slant = props->getFloatValue("slant", 0.0);
-       if ( name.empty() ) name = "typewriter";
+       const char *name = nft->getStringValue("name", "default");
+       float size = nft->getFloatValue("size", 13.0);
+       float slant = nft->getFloatValue("slant", 0.0);
        path.append( name );
        path.concat( ".txf" );
 
