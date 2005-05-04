@@ -216,9 +216,5 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
     glutIdleFunc(GLUTidle);
     glutDisplayFunc(GLUTdraw);
     glutReshapeFunc(GLUTreshape);
-
-    glutShowWindow();
-    glClear(GL_COLOR_BUFFER_BIT);
-    glutSwapBuffers();
-    glutPostRedisplay();
 }
+
