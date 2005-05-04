@@ -212,7 +212,6 @@ void fgExitCleanup() {
     if (_bootstrap_OSInit != 0)
         fgSetMouseCursor(MOUSE_CURSOR_POINTER);
 
-    if (globals)
-        delete globals;
+    delete globals;
 }
 
