@@ -136,7 +136,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
 	= fgGetNode("/instrumentation/nav/radials/reciprocal-radial-deg", true);
     static SGPropertyNode *nav_gs_deflection
 	= fgGetNode("/instrumentation/nav/gs-needle-deflection", true);
-    int i;
+    unsigned int i;
 
     // Version sanity checking
     net->version = FG_NET_GUI_VERSION;
@@ -215,7 +215,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
 
 #if defined( FG_USE_NETWORK_BYTE_ORDER )
     // Convert the net buffer to network format
-    net->version = htons(net->version);
+    net->version = htonl(net->version);
 
     htond(net->longitude);
     htond(net->latitude);
@@ -229,6 +229,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     for ( i = 0; i < net->num_tanks; ++i ) {
         htonf(net->fuel_quantity[i]);
     }
+    net->num_tanks = htonl(net->num_tanks);
 
     net->cur_time = htonl( net->cur_time );
     net->warp = htonl( net->warp );
@@ -236,6 +237,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
 
     htonf(net->tuned_freq);
     htonf(net->nav_radial);
+    net->in_range = htonl( net->in_range );
     htonf(net->dist_nm);
     htonf(net->course_deviation_deg);
     htonf(net->gs_deviation_deg);
@@ -244,11 +246,11 @@ void FGProps2NetGUI( FGNetGUI *net ) {
 
 
 void FGNetGUI2Props( FGNetGUI *net ) {
-    int i;
+    unsigned int i;
 
 #if defined( FG_USE_NETWORK_BYTE_ORDER )
     // Convert to the net buffer from network format
-    net->version = ntohs(net->version);
+    net->version = ntohl(net->version);
 
     htond(net->longitude);
     htond(net->latitude);
@@ -259,6 +261,7 @@ void FGNetGUI2Props( FGNetGUI *net ) {
     htonf(net->vcas);
     htonf(net->climb_rate);
 
+    net->num_tanks = htonl(net->num_tanks);
     for ( i = 0; i < net->num_tanks; ++i ) {
 	htonf(net->fuel_quantity[i]);
     }
@@ -268,6 +271,8 @@ void FGNetGUI2Props( FGNetGUI *net ) {
     net->ground_elev = htonl( net->ground_elev );
 
     htonf(net->tuned_freq);
+    htonf(net->nav_radial);
+    net->in_range = htonl( net->in_range );
     htonf(net->dist_nm);
     htonf(net->course_deviation_deg);
     htonf(net->gs_deviation_deg);

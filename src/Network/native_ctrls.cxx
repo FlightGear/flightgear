@@ -229,7 +229,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
 
     if ( net_byte_order ) {
         // convert to network byte order
-        net->version = htons(net->version);
+        net->version = htonl(net->version);
         htond(net->aileron);
         htond(net->elevator);
         htond(net->rudder);
@@ -237,17 +237,38 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         htond(net->elevator_trim);
         htond(net->rudder_trim);
         htond(net->flaps);
+        net->flaps_power = htonl(net->flaps_power);
+        net->flap_motor_ok = htonl(net->flap_motor_ok);
         for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
+            net->master_bat[i] = htonl(net->master_bat[i]);
+            net->master_alt[i] = htonl(net->master_alt[i]);
+            net->magnetos[i] = htonl(net->magnetos[i]);
+            net->starter_power[i] = htonl(net->starter_power[i]);
             htond(net->throttle[i]);
             htond(net->mixture[i]);
+            net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
             htond(net->prop_advance[i]);
             htond(net->condition[i]);
+            net->engine_ok[i] = htonl(net->engine_ok[i]);
+            net->mag_left_ok[i] = htonl(net->mag_left_ok[i]);
+            net->mag_right_ok[i] = htonl(net->mag_right_ok[i]);
+            net->spark_plugs_ok[i] = htonl(net->spark_plugs_ok[i]);
+            net->oil_press_status[i] = htonl(net->oil_press_status[i]);
+            net->fuel_pump_ok[i] = htonl(net->fuel_pump_ok[i]);
         }
+        net->num_engines = htonl(net->num_engines);
+        for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
+            net->fuel_selector[i] = htonl(net->fuel_selector[i]);
+        }
+        net->num_tanks = htonl(net->num_tanks);
+        net->cross_feed = htonl(net->cross_feed);
         htond(net->brake_left);
         htond(net->brake_right);
         htond(net->copilot_brake_left);
         htond(net->copilot_brake_right);
         htond(net->brake_parking);
+        net->gear_handle = htonl(net->gear_handle);
+        net->master_avionics = htonl(net->master_avionics);
         htond(net->wind_speed_kt);
         htond(net->wind_dir_deg);
         htond(net->turbulence_norm);
@@ -255,6 +276,9 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         htond(net->press_inhg);
 	htond(net->hground);
         htond(net->magvar);
+        net->icing = htonl(net->icing);
+        net->speedup = htonl(net->speedup);
+        net->freeze = htonl(net->freeze);
     }
 }
 
@@ -269,7 +293,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
 
     if ( net_byte_order ) {
         // convert from network byte order
-        net->version = htons(net->version);
+        net->version = htonl(net->version);
         htond(net->aileron);
         htond(net->elevator);
         htond(net->rudder);
@@ -277,17 +301,38 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         htond(net->elevator_trim);
         htond(net->rudder_trim);
         htond(net->flaps);
-        for ( i = 0; i < net->num_engines; ++i ) {
+        net->flaps_power = htonl(net->flaps_power);
+        net->flap_motor_ok = htonl(net->flap_motor_ok);
+        net->num_engines = htonl(net->num_engines);
+        for ( i = 0; i < (int)net->num_engines; ++i ) {
+            net->master_bat[i] = htonl(net->master_bat[i]);
+            net->master_alt[i] = htonl(net->master_alt[i]);
+            net->magnetos[i] = htonl(net->magnetos[i]);
+            net->starter_power[i] = htonl(net->starter_power[i]);
             htond(net->throttle[i]);
             htond(net->mixture[i]);
+            net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
             htond(net->prop_advance[i]);
             htond(net->condition[i]);
+            net->engine_ok[i] = htonl(net->engine_ok[i]);
+            net->mag_left_ok[i] = htonl(net->mag_left_ok[i]);
+            net->mag_right_ok[i] = htonl(net->mag_right_ok[i]);
+            net->spark_plugs_ok[i] = htonl(net->spark_plugs_ok[i]);
+            net->oil_press_status[i] = htonl(net->oil_press_status[i]);
+            net->fuel_pump_ok[i] = htonl(net->fuel_pump_ok[i]);
         }
+        net->num_tanks = htonl(net->num_tanks);
+        for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
+            net->fuel_selector[i] = htonl(net->fuel_selector[i]);
+        }
+        net->cross_feed = htonl(net->cross_feed);
         htond(net->brake_left);
         htond(net->brake_right);
         htond(net->copilot_brake_left);
         htond(net->copilot_brake_right);
         htond(net->brake_parking);
+        net->gear_handle = htonl(net->gear_handle);
+        net->master_avionics = htonl(net->master_avionics);
         htond(net->wind_speed_kt);
         htond(net->wind_dir_deg);
         htond(net->turbulence_norm);
@@ -295,6 +340,9 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         htond(net->press_inhg);
         htond(net->hground);
         htond(net->magvar);
+        net->icing = htonl(net->icing);
+        net->speedup = htonl(net->speedup);
+        net->freeze = htonl(net->freeze);
     }
 
     if ( net->version != FG_NET_CTRLS_VERSION ) {

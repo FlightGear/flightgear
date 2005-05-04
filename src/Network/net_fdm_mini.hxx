@@ -1,7 +1,8 @@
 // net_fdm_mini.hxx -- defines a simple subset I/O interface to the flight
 //                     dynamics model variables
 //
-// Written by Curtis Olson - curt@flightgear.com, started January 2002.
+// Written by Curtis Olson - http://www.flightgear.org/~curt
+// Started January 2002.
 //
 // This file is in the Public Domain, and comes with no warranty.
 //
@@ -17,7 +18,29 @@
 #endif                                   
 
 
-const int FG_NET_FDM_MINI_VERSION = 1;
+// NOTE: this file defines an external interface structure.  Due to
+// variability between platforms and architectures, we only used fixed
+// length types here.  Specifically, integer types can vary in length.
+// I am not aware of any platforms that don't use 4 bytes for float
+// and 8 bytes for double.
+
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#elif defined( _MSC_VER ) || defined(__MINGW32__)
+typedef signed char      int8_t;
+typedef signed short     int16_t;
+typedef signed int       int32_t;
+typedef signed __int64   int64_t;
+typedef unsigned char    uint8_t;
+typedef unsigned short   uint16_t;
+typedef unsigned int     uint32_t;
+typedef unsigned __int64 uint64_t;
+#else
+# error "Port me! Platforms that don't have <stdint.h> need to define int8_t, et. al."
+#endif
+
+
+const uint32_t FG_NET_FDM_MINI_VERSION = 2;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -33,11 +56,7 @@ public:
         FG_MAX_TANKS = 4
     };
 
-    int version;		// increment when data values change
-    int pad;                    // keep doubles 64-bit aligned for some
-                                // hardware platforms, such as the Sun
-                                // SPARC, which don't like misaligned
-                                // data
+    uint32_t version;		// increment when data values change
 
     // Positions
     double longitude;		// geodetic (radians)
@@ -53,12 +72,12 @@ public:
     double climb_rate;		// feet per second
 
     // Consumables
-    int num_tanks;		// Max number of fuel tanks
+    uint32_t num_tanks;		// Max number of fuel tanks
     double fuel_quantity[FG_MAX_TANKS];
 
     // Environment
-    time_t cur_time;            // current unix time
-    long int warp;              // offset in seconds to unix time
+    uint32_t cur_time;            // current unix time
+    int32_t warp;                 // offset in seconds to unix time
 };
 
 

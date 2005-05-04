@@ -33,7 +33,7 @@ typedef unsigned __int64 uint64_t;
 # error "Port me! Platforms that don't have <stdint.h> need to define int8_t, et. al."
 #endif
 
-const uint16_t FG_NET_GUI_VERSION = 6;
+const uint32_t FG_NET_GUI_VERSION = 7;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -49,7 +49,7 @@ public:
         FG_MAX_TANKS = 4
     };
 
-    uint16_t version;		// increment when data values change
+    uint32_t version;		// increment when data values change
 
     // Positions
     double longitude;		// geodetic (radians)
@@ -65,7 +65,7 @@ public:
     float climb_rate;		// feet per second
 
     // Consumables
-    uint8_t num_tanks;		// Max number of fuel tanks
+    uint32_t num_tanks;		// Max number of fuel tanks
     float fuel_quantity[FG_MAX_TANKS];
 
     // Environment
@@ -77,7 +77,7 @@ public:
     // Approach
     float tuned_freq;           // currently tuned frequency
     float nav_radial;           // target nav radial
-    uint8_t in_range;           // tuned navaid is in range?
+    uint32_t in_range;           // tuned navaid is in range?
     float dist_nm;              // distance to tuned navaid in nautical miles
     float course_deviation_deg; // degrees off target course
     float gs_deviation_deg;     // degrees off target glide slope
