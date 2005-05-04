@@ -1292,6 +1292,7 @@ do_save_xml_from_proptree(const SGPropertyNode * node)
     return true;
 }
 
+
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
 ////////////////////////////////////////////////////////////////////////
@@ -1342,7 +1343,6 @@ static struct {
     { "dialog-new", do_dialog_new },
     { "dialog-show", do_dialog_show },
     { "dialog-close", do_dialog_close },
-    { "dialog-show", do_dialog_show },
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
     { "presets-commit", do_presets_commit },
