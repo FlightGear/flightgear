@@ -34,8 +34,8 @@
 // Initialize the splash screen
 void fgSplashInit ( const char *splash_texture );
 
-// Update the splash screen with progress specified from 0.0 to 1.0
-void fgSplashUpdate ( double progress, float alpha );
+// Update the splash screen with alpha specified from 0.0 to 1.0
+void fgSplashUpdate ( float alpha );
 
 
 #endif // _SPLASH_HXX

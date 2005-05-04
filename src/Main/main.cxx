@@ -651,13 +651,201 @@ static void fgIdleFunction ( void ) {
     // printf("idle state == %d\n", idle_state);
 
     if ( idle_state == 0 ) {
-        // Initialize the splash screen right away
-        if ( fgGetBool("/sim/startup/splash-screen") ) {
-            fgSplashInit(fgGetString("/sim/startup/splash-texture"));
-        }
-        
         idle_state++;
+
+        // This seems to be the absolute earliest in the init sequence
+        // that these calls will return valid info.  Too bad it's after
+        // we've already created and sized out window. :-(
+        general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
+        general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
+        general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
+        SG_LOG( SG_GENERAL, SG_INFO, general.get_glRenderer() );
+
+        GLint tmp;
+        glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
+        general.set_glMaxTexSize( tmp );
+        SG_LOG ( SG_GENERAL, SG_INFO, "Max texture size = " << tmp );
+
+        glGetIntegerv( GL_DEPTH_BITS, &tmp );
+        general.set_glDepthBits( tmp );
+        SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
+
+        // Initialize ssg (from plib).  Needs to come before we do any
+        // other ssg stuff, but after opengl has been initialized.
+        ssgInit();
+
+        // Initialize the user interface (we need to do this before
+        // passing off control to the OS main loop and before
+         // fgInitGeneral to get our fonts !!!
+        guiInit();
+
+
     } else if ( idle_state == 1 ) {
+        idle_state++;
+        // Read the list of available aircrafts
+        fgReadAircraft();
+
+#ifdef GL_EXT_texture_lod_bias
+        glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
+#endif
+
+        // get the address of our OpenGL extensions
+        if ( fgGetBool("/sim/rendering/distance-attenuation") ) {
+            if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ) {
+                glPointParameterIsSupported = true;
+                glPointParameterfPtr = (glPointParameterfProc)
+                                       SGLookupFunction("glPointParameterfEXT");
+                glPointParameterfvPtr = (glPointParameterfvProc)
+                                        SGLookupFunction("glPointParameterfvEXT");
+
+            } else if ( SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) {
+                glPointParameterIsSupported = true;
+                glPointParameterfPtr = (glPointParameterfProc)
+                                       SGLookupFunction("glPointParameterfARB");
+                glPointParameterfvPtr = (glPointParameterfvProc)
+                                        SGLookupFunction("glPointParameterfvARB");
+            } else
+                glPointParameterIsSupported = false;
+        }
+
+
+    } else if ( idle_state == 2 ) {
+        idle_state++;
+        fgInitNav();
+
+
+    } else if ( idle_state == 3 ) {
+        idle_state++;
+        // based on the requested presets, calculate the true starting
+        // lon, lat
+        fgInitPosition();
+
+        SGTime *t = fgInitTime();
+        globals->set_time_params( t );
+
+        // Do some quick general initializations
+        if( !fgInitGeneral()) {
+            SG_LOG( SG_GENERAL, SG_ALERT, 
+                "General initializations failed ..." );
+            exit(-1);
+        }
+
+        ////////////////////////////////////////////////////////////////////
+        // Initialize the property-based built-in commands
+        ////////////////////////////////////////////////////////////////////
+        fgInitCommands();
+
+
+        ////////////////////////////////////////////////////////////////////
+        // Initialize the material manager
+        ////////////////////////////////////////////////////////////////////
+        globals->set_matlib( new SGMaterialLib );
+        globals->set_model_lib(new SGModelLib);
+
+
+        ////////////////////////////////////////////////////////////////////
+        // Initialize the TG scenery subsystem.
+        ////////////////////////////////////////////////////////////////////
+        globals->set_scenery( new FGScenery );
+        globals->get_scenery()->init();
+        globals->get_scenery()->bind();
+        globals->set_tile_mgr( new FGTileMgr );
+
+
+        ////////////////////////////////////////////////////////////////////
+        // Initialize the general model subsystem.
+        ////////////////////////////////////////////////////////////////////
+        globals->set_model_mgr(new FGModelMgr);
+        globals->get_model_mgr()->init();
+        globals->get_model_mgr()->bind();
+
+
+    } else if ( idle_state == 4 ) {
+        idle_state++;
+        ////////////////////////////////////////////////////////////////////
+        // Initialize the 3D aircraft model subsystem (has a dependency on
+        // the scenery subsystem.)
+        ////////////////////////////////////////////////////////////////////
+        globals->set_aircraft_model(new FGAircraftModel);
+        globals->get_aircraft_model()->init();
+        globals->get_aircraft_model()->bind();
+
+        ////////////////////////////////////////////////////////////////////
+        // Initialize the view manager subsystem.
+        ////////////////////////////////////////////////////////////////////
+        FGViewMgr *viewmgr = new FGViewMgr;
+        globals->set_viewmgr( viewmgr );
+        viewmgr->init();
+        viewmgr->bind();
+
+
+    } else if ( idle_state == 5 ) {
+        idle_state++;
+        // Initialize the sky
+        SGPath ephem_data_path( globals->get_fg_root() );
+        ephem_data_path.append( "Astro" );
+        SGEphemeris *ephem = new SGEphemeris( ephem_data_path.c_str() );
+        ephem->update( globals->get_time_params()->getMjd(),
+                       globals->get_time_params()->getLst(),
+                       0.0 );
+        globals->set_ephem( ephem );
+
+        // TODO: move to environment mgr
+        thesky = new SGSky;
+        SGPath texture_path(globals->get_fg_root());
+        texture_path.append("Textures");
+        texture_path.append("Sky");
+        for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
+            SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
+            thesky->add_cloud_layer(layer);
+        }
+
+        SGPath sky_tex_path( globals->get_fg_root() );
+        sky_tex_path.append( "Textures" );
+        sky_tex_path.append( "Sky" );
+        thesky->texture_path( sky_tex_path.str() );
+
+        // The sun and moon diameters are scaled down numbers of the
+        // actual diameters. This was needed to fit bot the sun and the
+        // moon within the distance to the far clip plane.
+        // Moon diameter:    3,476 kilometers
+        // Sun diameter: 1,390,000 kilometers
+        thesky->build( 80000.0, 80000.0,
+                       463.3, 361.8,
+                       globals->get_ephem()->getNumPlanets(), 
+                       globals->get_ephem()->getPlanets(),
+                       globals->get_ephem()->getNumStars(),
+                       globals->get_ephem()->getStars() );
+
+        // Initialize MagVar model
+        SGMagVar *magvar = new SGMagVar();
+        globals->set_mag( magvar );
+
+
+                                    // kludge to initialize mag compass
+                                    // (should only be done for in-flight
+                                    // startup)
+        // update magvar model
+        globals->get_mag()->update( fgGetDouble("/position/longitude-deg")
+                                    * SGD_DEGREES_TO_RADIANS,
+                                    fgGetDouble("/position/latitude-deg")
+                                    * SGD_DEGREES_TO_RADIANS,
+                                    fgGetDouble("/position/altitude-ft")
+                                    * SG_FEET_TO_METER,
+                                    globals->get_time_params()->getJD() );
+        double var = globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
+        fgSetDouble("/instrumentation/heading-indicator/offset-deg", -var);
+
+        // airport = new ssgBranch;
+        // airport->setName( "Airport Lighting" );
+        // lighting->addKid( airport );
+
+        // build our custom render states
+        globals->get_renderer()->build_states();
+
+
+    } else if ( idle_state == 6 ) {
+        idle_state++;
         // Initialize audio support
 #ifdef ENABLE_AUDIO_SUPPORT
 
@@ -681,8 +869,6 @@ static void fgIdleFunction ( void ) {
         }
 #endif
 
-        idle_state++;
-    } else if ( idle_state == 2 ) {
         // These are a few miscellaneous things that aren't really
         // "subsystems" but still need to be initialized.
 
@@ -692,8 +878,6 @@ static void fgIdleFunction ( void ) {
         }
 #endif
 
-        idle_state++;
-    } else if ( idle_state == 3 ) {
         // This is the top level init routine which calls all the
         // other subsystem initialization routines.  If you are adding
         // a subsystem to flightgear, its initialization call should
@@ -704,8 +888,9 @@ static void fgIdleFunction ( void ) {
             exit(-1);
         }
 
+
+    } else if ( idle_state == 7 ) {
         idle_state++;
-    } else if ( idle_state == 4 ) {
         // Initialize the time offset (warp) after fgInitSubsystem
         // (which initializes the lighting interpolation tables.)
         fgInitTimeOffset();
@@ -716,31 +901,25 @@ static void fgIdleFunction ( void ) {
         // Read the list of available aircrafts
         fgReadAircraft();
 
-        idle_state++;
-    } else if ( idle_state == 5 ) {
 
-        idle_state++;
-    } else if ( idle_state == 6 ) {
-        // sleep(1);
-
+    } else if ( idle_state == 8 ) {
         idle_state = 1000;
 
         SG_LOG( SG_GENERAL, SG_INFO, "Panel visible = " << fgPanelVisible() );
         globals->get_renderer()->resize( fgGetInt("/sim/startup/xsize"),
                                          fgGetInt("/sim/startup/ysize") );
 
-    } 
 
-    if ( idle_state == 1000 ) {
+    }
+
+    if ( idle_state < 1000 ) {
+        fgSplashUpdate( 1.0 );
+
+    } else {
         // We've finished all our initialization steps, from now on we
         // run the main loop.
         fgSetBool("sim/sceneryloaded",false);
-
-        fgRegisterIdleHandler(fgMainLoop);
-    } else {
-        if ( fgGetBool("/sim/startup/splash-screen") ) {
-            fgSplashUpdate(0.0, 1.0);
-        }
+        fgRegisterIdleHandler( fgMainLoop );
     }
 }
 
@@ -835,6 +1014,9 @@ bool fgMainInit( int argc, char **argv ) {
     bool get_stencil_buffer = false;
 #endif
 
+    // Initialize plib net interface
+    netInit( &argc, argv );
+
     // Clouds3D requires an alpha channel
     // clouds may require stencil buffer
     fgOSOpenWindow( fgGetInt("/sim/startup/xsize"),
@@ -844,182 +1026,8 @@ bool fgMainInit( int argc, char **argv ) {
                     get_stencil_buffer,
                     fgGetBool("/sim/startup/fullscreen") );
 
-    // This seems to be the absolute earliest in the init sequence
-    // that these calls will return valid info.  Too bad it's after
-    // we've already created and sized out window. :-(
-    general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
-    general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
-    general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
-    SG_LOG( SG_GENERAL, SG_INFO, general.get_glRenderer() );
-
-    GLint tmp;
-    glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
-    general.set_glMaxTexSize( tmp );
-    SG_LOG ( SG_GENERAL, SG_INFO, "Max texture size = " << tmp );
-
-    glGetIntegerv( GL_DEPTH_BITS, &tmp );
-    general.set_glDepthBits( tmp );
-    SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
-
-    // Initialize plib net interface
-    netInit( &argc, argv );
-
-    // Initialize ssg (from plib).  Needs to come before we do any
-    // other ssg stuff, but after opengl has been initialized.
-    ssgInit();
-
-    // Initialize the user interface (we need to do this before
-    // passing off control to the OS main loop and before
-    // fgInitGeneral to get our fonts !!!
-    guiInit();
-
-    // Read the list of available aircrafts
-    fgReadAircraft();
-
-#ifdef GL_EXT_texture_lod_bias
-    glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
-#endif
-
-            // get the address of our OpenGL extensions
-    if ( fgGetBool("/sim/rendering/distance-attenuation") )
-    {
-        if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ) {
-            glPointParameterIsSupported = true;
-            glPointParameterfPtr = (glPointParameterfProc)
-                                   SGLookupFunction("glPointParameterfEXT");
-            glPointParameterfvPtr = (glPointParameterfvProc)
-                                    SGLookupFunction("glPointParameterfvEXT");
-
-        } else if ( SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) {
-            glPointParameterIsSupported = true;
-            glPointParameterfPtr = (glPointParameterfProc)
-                                   SGLookupFunction("glPointParameterfARB");
-            glPointParameterfvPtr = (glPointParameterfvProc)
-                                    SGLookupFunction("glPointParameterfvARB");
-        } else
-            glPointParameterIsSupported = false;
-   }
-
-    // based on the requested presets, calculate the true starting
-    // lon, lat
-    fgInitNav();
-    fgInitPosition();
-
-    SGTime *t = fgInitTime();
-    globals->set_time_params( t );
-
-    // Do some quick general initializations
-    if( !fgInitGeneral()) {
-        SG_LOG( SG_GENERAL, SG_ALERT, 
-            "General initializations failed ..." );
-        exit(-1);
-    }
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the property-based built-in commands
-    ////////////////////////////////////////////////////////////////////
-    fgInitCommands();
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the material manager
-    ////////////////////////////////////////////////////////////////////
-    globals->set_matlib( new SGMaterialLib );
-
-    globals->set_model_lib(new SGModelLib);
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the TG scenery subsystem.
-    ////////////////////////////////////////////////////////////////////
-    globals->set_scenery( new FGScenery );
-    globals->get_scenery()->init();
-    globals->get_scenery()->bind();
-    globals->set_tile_mgr( new FGTileMgr );
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the general model subsystem.
-    ////////////////////////////////////////////////////////////////////
-    globals->set_model_mgr(new FGModelMgr);
-    globals->get_model_mgr()->init();
-    globals->get_model_mgr()->bind();
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the 3D aircraft model subsystem (has a dependency on
-    // the scenery subsystem.)
-    ////////////////////////////////////////////////////////////////////
-    globals->set_aircraft_model(new FGAircraftModel);
-    globals->get_aircraft_model()->init();
-    globals->get_aircraft_model()->bind();
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the view manager subsystem.
-    ////////////////////////////////////////////////////////////////////
-    FGViewMgr *viewmgr = new FGViewMgr;
-    globals->set_viewmgr( viewmgr );
-    viewmgr->init();
-    viewmgr->bind();
-
-
-    // Initialize the sky
-    SGPath ephem_data_path( globals->get_fg_root() );
-    ephem_data_path.append( "Astro" );
-    SGEphemeris *ephem = new SGEphemeris( ephem_data_path.c_str() );
-    ephem->update( globals->get_time_params()->getMjd(),
-                   globals->get_time_params()->getLst(),
-                   0.0 );
-    globals->set_ephem( ephem );
-
-    // TODO: move to environment mgr
-    thesky = new SGSky;
-    SGPath texture_path(globals->get_fg_root());
-    texture_path.append("Textures");
-    texture_path.append("Sky");
-    for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-        SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
-        thesky->add_cloud_layer(layer);
-    }
-
-    SGPath sky_tex_path( globals->get_fg_root() );
-    sky_tex_path.append( "Textures" );
-    sky_tex_path.append( "Sky" );
-    thesky->texture_path( sky_tex_path.str() );
-
-    // The sun and moon diameters are scaled down numbers of the
-    // actual diameters. This was needed to fit bot the sun and the
-    // moon within the distance to the far clip plane.
-    // Moon diameter:    3,476 kilometers
-    // Sun diameter: 1,390,000 kilometers
-    thesky->build( 80000.0, 80000.0,
-                   463.3, 361.8,
-                   globals->get_ephem()->getNumPlanets(), 
-                   globals->get_ephem()->getPlanets(),
-                   globals->get_ephem()->getNumStars(),
-                   globals->get_ephem()->getStars() );
-
-    // Initialize MagVar model
-    SGMagVar *magvar = new SGMagVar();
-    globals->set_mag( magvar );
-
-
-                                // kludge to initialize mag compass
-                                // (should only be done for in-flight
-                                // startup)
-    // update magvar model
-    globals->get_mag()->update( fgGetDouble("/position/longitude-deg")
-                                * SGD_DEGREES_TO_RADIANS,
-                                fgGetDouble("/position/latitude-deg")
-                                * SGD_DEGREES_TO_RADIANS,
-                                fgGetDouble("/position/altitude-ft")
-                                * SG_FEET_TO_METER,
-                                globals->get_time_params()->getJD() );
-    double var = globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
-    fgSetDouble("/instrumentation/heading-indicator/offset-deg", -var);
-
-    // airport = new ssgBranch;
-    // airport->setName( "Airport Lighting" );
-    // lighting->addKid( airport );
-
-    // build our custom render states
-    globals->get_renderer()->build_states();
+    // Initialize the splash screen right away
+    fgSplashInit(fgGetString("/sim/startup/splash-texture"));
 
     // pass control off to the master event handler
     fgOSMainLoop();
@@ -1030,4 +1038,3 @@ bool fgMainInit( int argc, char **argv ) {
 }
 
 
-// end of main.cxx

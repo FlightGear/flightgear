@@ -57,6 +57,9 @@ static SGTexture splash;
 
 // Initialize the splash screen
 void fgSplashInit ( const char *splash_texture ) {
+    if (!fgGetBool("/sim/startup/splash-screen"))
+        return;
+
     SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
 
     splash.bind();
@@ -94,8 +97,8 @@ void fgSplashInit ( const char *splash_texture ) {
 }
 
 
-// Update the splash screen with progress specified from 0.0 to 1.0
-void fgSplashUpdate ( double progress, float alpha ) {
+// Update the splash screen with alpha specified from 0.0 to 1.0
+void fgSplashUpdate ( float alpha ) {
     int xmin, ymin, xmax, ymax;
     int xsize = 512;
     int ysize = 512;
@@ -133,17 +136,19 @@ void fgSplashUpdate ( double progress, float alpha ) {
     glEnd();
 
     // now draw the logo
-    glEnable(GL_TEXTURE_2D);
-    splash.bind();
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    if (fgGetBool("/sim/startup/splash-screen") && splash.usable()) {
+        glEnable(GL_TEXTURE_2D);
+        splash.bind();
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-    glColor4f( 1.0, 1.0, 1.0, alpha );
-    glBegin(GL_POLYGON);
-    glTexCoord2f(0.0, 0.0); glVertex2f(xmin, ymin);
-    glTexCoord2f(1.0, 0.0); glVertex2f(xmax, ymin);
-    glTexCoord2f(1.0, 1.0); glVertex2f(xmax, ymax);
-    glTexCoord2f(0.0, 1.0); glVertex2f(xmin, ymax); 
-    glEnd();
+        glColor4f( 1.0, 1.0, 1.0, alpha );
+        glBegin(GL_POLYGON);
+        glTexCoord2f(0.0, 0.0); glVertex2f(xmin, ymin);
+        glTexCoord2f(1.0, 0.0); glVertex2f(xmax, ymin);
+        glTexCoord2f(1.0, 1.0); glVertex2f(xmax, ymax);
+        glTexCoord2f(0.0, 1.0); glVertex2f(xmin, ymax); 
+        glEnd();
+    }
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);

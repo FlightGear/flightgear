@@ -133,6 +133,7 @@
 #include "options.hxx"
 #include "globals.hxx"
 #include "logger.hxx"
+#include "splash.hxx"
 #include "viewmgr.hxx"
 
 #if defined(FX) && defined(XMESA)
@@ -1059,6 +1060,8 @@ fgInitNav ()
 
     fgAirportDBLoad( airports, runways, aptdb.str(), p_metar.str() );
 
+    fgSplashUpdate( 1.0 );
+
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;
     FGNavList *gslist = new FGNavList;
@@ -1075,6 +1078,8 @@ fgInitNav ()
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "Problems loading one or more navigational database" );
     }
+
+    fgSplashUpdate( 1.0 );
 
     if ( fgGetBool("/sim/navdb/localizers/auto-align", true) ) {
         // align all the localizers with their corresponding runways
@@ -1616,6 +1621,7 @@ bool fgInitSubsystems() {
     // update the current timezone each 30 minutes
     globals->get_event_mgr()->addTask( "fgUpdateLocalTime()",
                                        &fgUpdateLocalTime, 30*60 );
+    fgInitTimeOffset();		// the environment subsystem needs this
 
 
     ////////////////////////////////////////////////////////////////////
