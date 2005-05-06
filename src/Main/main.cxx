@@ -710,7 +710,7 @@ static void fgIdleFunction ( void ) {
             } else
                 glPointParameterIsSupported = false;
         }
-        fgSplashProgress("reading navigation data");
+        fgSplashProgress("reading airport & navigation data");
 
 
     } else if ( idle_state == 3 ) {
