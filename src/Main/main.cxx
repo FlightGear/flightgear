@@ -895,7 +895,7 @@ static void fgIdleFunction ( void ) {
                 "Subsystem initializations failed ..." );
             exit(-1);
         }
-        fgSplashProgress("setup time & renderer");
+        fgSplashProgress("setting up time & renderer");
 
 
     } else if ( idle_state == 8 ) {
