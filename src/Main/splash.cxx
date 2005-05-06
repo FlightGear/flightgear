@@ -30,12 +30,13 @@
 #  include <math.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H          
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
 #include <string.h>
 
+#include <plib/pu.h>
 #include <simgear/compiler.h>
 
 #include SG_GLU_H
@@ -50,17 +51,42 @@
 #include "splash.hxx"
 #include "fg_os.hxx"
 
+static const int fontsize = 19;
+static const char fontname[] = "default.txf";
+static const char *text = 0;
 
 
 static SGTexture splash;
+static fntTexFont font;
+static fntRenderer info;
 
 
 // Initialize the splash screen
 void fgSplashInit ( const char *splash_texture ) {
+    fgRequestRedraw();
+
     if (!fgGetBool("/sim/startup/splash-screen"))
         return;
 
     SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
+
+
+    SGPath fontpath;
+    char* envp = ::getenv("FG_FONTS");
+    if (envp != NULL) {
+        fontpath.set(envp);
+    } else {
+        fontpath.set(globals->get_fg_root());
+        fontpath.append("Fonts");
+    }
+    SGPath path(fontpath);
+    path.append(fontname);
+
+    font.load((char *)path.c_str());
+
+    info.setFont(&font);
+    info.setPointSize(fontsize);
+
 
     splash.bind();
 
@@ -80,45 +106,54 @@ void fgSplashInit ( const char *splash_texture ) {
     splash.read_rgb_texture(tpath.c_str());
     if (!splash.usable())
     {
-	// Try compressed
-	SGPath fg_tpath = tpath;
-	fg_tpath.concat( ".gz" );
+        // Try compressed
+        SGPath fg_tpath = tpath;
+        fg_tpath.concat( ".gz" );
 
         splash.read_rgb_texture(fg_tpath.c_str());
-	if ( !splash.usable() )
-	{
-	    SG_LOG( SG_GENERAL, SG_ALERT, 
-		    "Error in loading splash screen texture " << tpath.str() );
-	    exit(-1);
-	} 
-    } 
+        if ( !splash.usable() )
+        {
+            SG_LOG( SG_GENERAL, SG_ALERT,
+                    "Error in loading splash screen texture " << tpath.str() );
+            exit(-1);
+        }
+    }
 
     splash.select();
 }
 
 
+void fgSplashProgress ( const char *s )
+{
+    text = s;
+    fgRequestRedraw();
+}
+
+
 // Update the splash screen with alpha specified from 0.0 to 1.0
 void fgSplashUpdate ( float alpha ) {
+    int screen_width = fgGetInt("/sim/startup/xsize", 0);
+    int screen_height = fgGetInt("/sim/startup/ysize", 0);
+
+    if (!screen_width || !screen_height)
+        return;
+
+    int size = screen_width < (screen_height - 5 * fontsize)
+            ? screen_width : screen_height - 5 * fontsize;
+    if (size > 512)
+        size = 512;
+
     int xmin, ymin, xmax, ymax;
-    int xsize = 512;
-    int ysize = 512;
+    xmin = (screen_width - size) / 2;
+    xmax = xmin + size;
 
-    if ( !fgGetInt("/sim/startup/xsize")
-	 || !fgGetInt("/sim/startup/ysize") ) {
-	return;
-    }
-
-    xmin = (fgGetInt("/sim/startup/xsize") - xsize) / 2;
-    xmax = xmin + xsize;
-
-    ymin = (fgGetInt("/sim/startup/ysize") - ysize) / 2;
-    ymax = ymin + ysize;
+    ymin = (screen_height - size) / 2;
+    ymax = ymin + size;
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    gluOrtho2D(0, fgGetInt("/sim/startup/xsize"),
-	       0, fgGetInt("/sim/startup/ysize"));
+    gluOrtho2D(0, screen_width, 0, screen_height);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
@@ -130,13 +165,13 @@ void fgSplashUpdate ( float alpha ) {
     glColor4f( 0.0, 0.0, 0.0, alpha );
     glBegin(GL_POLYGON);
     glVertex2f(0.0, 0.0);
-    glVertex2f(fgGetInt("/sim/startup/xsize"), 0.0);
-    glVertex2f(fgGetInt("/sim/startup/xsize"), fgGetInt("/sim/startup/ysize"));
-    glVertex2f(0.0, fgGetInt("/sim/startup/ysize")); 
+    glVertex2f(screen_width, 0.0);
+    glVertex2f(screen_width, screen_height);
+    glVertex2f(0.0, screen_height);
     glEnd();
 
     // now draw the logo
-    if (fgGetBool("/sim/startup/splash-screen") && splash.usable()) {
+    if (fgGetBool("/sim/startup/splash-screen", true)) {
         glEnable(GL_TEXTURE_2D);
         splash.bind();
         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -146,8 +181,30 @@ void fgSplashUpdate ( float alpha ) {
         glTexCoord2f(0.0, 0.0); glVertex2f(xmin, ymin);
         glTexCoord2f(1.0, 0.0); glVertex2f(xmax, ymin);
         glTexCoord2f(1.0, 1.0); glVertex2f(xmax, ymax);
-        glTexCoord2f(0.0, 1.0); glVertex2f(xmin, ymax); 
+        glTexCoord2f(0.0, 1.0); glVertex2f(xmin, ymax);
         glEnd();
+    }
+
+    if (text && fgGetBool("/sim/startup/splash-progress", true)) {
+        glEnable(GL_ALPHA_TEST);
+        glEnable(GL_BLEND);
+        glAlphaFunc(GL_GREATER, 0.1f);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_CULL_FACE);
+
+        float left, right, bot, top;
+
+        info.begin();
+        glColor3f(1.0, 0.9, 0.0);
+        font.getBBox(text, fontsize, 0, &left, &right, &bot, &top);
+        info.start2f((screen_width - right) / 2.0, 10.0 - bot);
+        info.puts(text);
+
+        const char *s = fgGetString("/sim/startup/splash-title", "");
+        font.getBBox(s, fontsize, 0, &left, &right, &bot, &top);
+        info.start2f((screen_width - right) / 2.0, screen_height - top - bot - 10.0);
+        info.puts(s);
+        info.end();
     }
 
     glEnable(GL_DEPTH_TEST);

@@ -648,11 +648,13 @@ static void fgMainLoop( void ) {
 // then on.
 
 static void fgIdleFunction ( void ) {
-    // printf("idle state == %d\n", idle_state);
-
     if ( idle_state == 0 ) {
         idle_state++;
+        fgSplashProgress("setting up scenegraph & user interface");
 
+
+    } else if ( idle_state == 1 ) {
+        idle_state++;
         // This seems to be the absolute earliest in the init sequence
         // that these calls will return valid info.  Too bad it's after
         // we've already created and sized out window. :-(
@@ -678,9 +680,10 @@ static void fgIdleFunction ( void ) {
         // passing off control to the OS main loop and before
          // fgInitGeneral to get our fonts !!!
         guiInit();
+        fgSplashProgress("reading aircraft list");
 
 
-    } else if ( idle_state == 1 ) {
+    } else if ( idle_state == 2 ) {
         idle_state++;
         // Read the list of available aircrafts
         fgReadAircraft();
@@ -707,14 +710,16 @@ static void fgIdleFunction ( void ) {
             } else
                 glPointParameterIsSupported = false;
         }
-
-
-    } else if ( idle_state == 2 ) {
-        idle_state++;
-        fgInitNav();
+        fgSplashProgress("reading navigation data");
 
 
     } else if ( idle_state == 3 ) {
+        idle_state++;
+        fgInitNav();
+        fgSplashProgress("setting up scenery");
+
+
+    } else if ( idle_state == 4 ) {
         idle_state++;
         // based on the requested presets, calculate the true starting
         // lon, lat
@@ -758,9 +763,10 @@ static void fgIdleFunction ( void ) {
         globals->set_model_mgr(new FGModelMgr);
         globals->get_model_mgr()->init();
         globals->get_model_mgr()->bind();
+        fgSplashProgress("loading aircraft");
 
 
-    } else if ( idle_state == 4 ) {
+    } else if ( idle_state == 5 ) {
         idle_state++;
         ////////////////////////////////////////////////////////////////////
         // Initialize the 3D aircraft model subsystem (has a dependency on
@@ -777,9 +783,10 @@ static void fgIdleFunction ( void ) {
         globals->set_viewmgr( viewmgr );
         viewmgr->init();
         viewmgr->bind();
+        fgSplashProgress("generating sky elements");
 
 
-    } else if ( idle_state == 5 ) {
+    } else if ( idle_state == 6 ) {
         idle_state++;
         // Initialize the sky
         SGPath ephem_data_path( globals->get_fg_root() );
@@ -842,9 +849,10 @@ static void fgIdleFunction ( void ) {
 
         // build our custom render states
         globals->get_renderer()->build_states();
+        fgSplashProgress("initializing subsystems");
 
 
-    } else if ( idle_state == 6 ) {
+    } else if ( idle_state == 7 ) {
         idle_state++;
         // Initialize audio support
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -887,10 +895,11 @@ static void fgIdleFunction ( void ) {
                 "Subsystem initializations failed ..." );
             exit(-1);
         }
+        fgSplashProgress("setup time & renderer");
 
 
-    } else if ( idle_state == 7 ) {
-        idle_state++;
+    } else if ( idle_state == 8 ) {
+        idle_state = 1000;
         // Initialize the time offset (warp) after fgInitSubsystem
         // (which initializes the lighting interpolation tables.)
         fgInitTimeOffset();
@@ -898,27 +907,18 @@ static void fgIdleFunction ( void ) {
         // setup OpenGL view parameters
         globals->get_renderer()->init();
 
-        // Read the list of available aircrafts
-        fgReadAircraft();
-
-
-    } else if ( idle_state == 8 ) {
-        idle_state = 1000;
-
         SG_LOG( SG_GENERAL, SG_INFO, "Panel visible = " << fgPanelVisible() );
         globals->get_renderer()->resize( fgGetInt("/sim/startup/xsize"),
                                          fgGetInt("/sim/startup/ysize") );
 
+        fgSplashProgress("loading scenery objects");
 
     }
 
-    if ( idle_state < 1000 ) {
-        fgSplashUpdate( 1.0 );
-
-    } else {
+    if ( idle_state == 1000 ) {
         // We've finished all our initialization steps, from now on we
         // run the main loop.
-        fgSetBool("sim/sceneryloaded",false);
+        fgSetBool("sim/sceneryloaded", false);
         fgRegisterIdleHandler( fgMainLoop );
     }
 }

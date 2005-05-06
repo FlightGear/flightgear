@@ -26,9 +26,9 @@
 #define _SPLASH_HXX
 
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
-#endif                                   
+#endif
 
 
 // Initialize the splash screen
@@ -36,6 +36,9 @@ void fgSplashInit ( const char *splash_texture );
 
 // Update the splash screen with alpha specified from 0.0 to 1.0
 void fgSplashUpdate ( float alpha );
+
+// Set progress information
+void fgSplashProgress( const char *text );
 
 
 #endif // _SPLASH_HXX
