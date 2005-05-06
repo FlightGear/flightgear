@@ -80,6 +80,11 @@ a simple, "hello world" dialog:
     <x>10</x>
     <y>50</y>
     <label>Hello, world</label>
+    <color>
+     <red>1.0</red>
+     <green>0.0</green>
+     <blue>0.0</blue>
+    </color>
    </text>
 
    <button>
@@ -117,6 +122,8 @@ properties, though they will ignore any that are not relevant:
  height - the height of the object, in pseudo-pixels.  The default is
    the width of the parent container.
 
+ border - the border thickness, in pseudo-pixels.  The default is 2.
+
  color - a subgroup to specify the dialogs color:
   red   - specify the red color component of the color scheme.
   green - specify the green color component of the color scheme.
@@ -126,7 +133,7 @@ properties, though they will ignore any that are not relevant:
  font - a subgroup to specify a specific font type
   name - the name of the font (excluding it's .txf extension)
   size - size of the font
-  slant -  the slant of the font (in pixels)
+  slant -  the slant of the font (in pseudo-pixels)
 
  legend - the text legend to display in the object.
 
@@ -142,8 +149,8 @@ properties, though they will ignore any that are not relevant:
    presses the [RETURN] key.
 
 Objects may appear nested within the top-level dialog or a "group"
-object.  Here are all the object types allowed, with their special
-properties:
+or a "frame" object.  Here are all the object types allowed, with their
+special properties:
 
 
 dialog
@@ -180,13 +187,16 @@ Example:
 </PropertyList>
 
 
-group
------
+group and frame
+---------------
 
 A group of subobjects.  This object does not draw anything on the
 screen, but all of its children specify their coordinates relative to
 the group; using groups makes it easy to move parts of a dialog
 around.
+
+A frame is a visual representation of a group and has  a border and an
+adjustable background color.
 
 Example:
 

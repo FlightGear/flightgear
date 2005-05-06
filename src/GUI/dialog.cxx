@@ -427,6 +427,13 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puGroup * group = new puGroup(x, y);
         setupGroup(group, props, width, height, color, false);
         return group;
+    } else if (type == "frame") {
+        puFrame * frame = new puFrame(x, y,  width, height);
+        frame->setBorderThickness(1);
+        frame->setColorScheme(color[0], color[1], color[2], color[3]);
+        puGroup * group = new puGroup(x, y);
+        setupGroup(group, props, width, height, color, false);
+        return group;
     } else if (type == "list") {
         puList * list = new puList(x, y, x + width, y + height);
         setupObject(list, props);
@@ -553,6 +560,9 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 
     if (props->hasValue("label"))
         object->setLabel(props->getStringValue("label"));
+
+    if (props->hasValue("border"))
+        object->setBorderThickness( props->getIntValue("border", 2) );
 
     if ( SGPropertyNode *nft = props->getNode("font", false) ) {
        SGPath path( _font_path );
