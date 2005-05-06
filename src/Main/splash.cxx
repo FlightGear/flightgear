@@ -53,7 +53,7 @@
 
 static const int fontsize = 19;
 static const char fontname[] = "default.txf";
-static const char *text = 0;
+static const char *progress_text = 0;
 
 
 static SGTexture splash;
@@ -125,7 +125,7 @@ void fgSplashInit ( const char *splash_texture ) {
 
 void fgSplashProgress ( const char *s )
 {
-    text = s;
+    progress_text = s;
     fgRequestRedraw();
 }
 
@@ -185,7 +185,7 @@ void fgSplashUpdate ( float alpha ) {
         glEnd();
     }
 
-    if (text && fgGetBool("/sim/startup/splash-progress", true)) {
+    if (progress_text && fgGetBool("/sim/startup/splash-progress", true)) {
         glEnable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
         glAlphaFunc(GL_GREATER, 0.1f);
@@ -195,10 +195,10 @@ void fgSplashUpdate ( float alpha ) {
         float left, right, bot, top;
 
         info.begin();
-        glColor3f(1.0, 0.9, 0.0);
-        font.getBBox(text, fontsize, 0, &left, &right, &bot, &top);
+        glColor4f(1.0, 0.9, 0.0, alpha);
+        font.getBBox(progress_text, fontsize, 0, &left, &right, &bot, &top);
         info.start2f((screen_width - right) / 2.0, 10.0 - bot);
-        info.puts(text);
+        info.puts(progress_text);
 
         const char *s = fgGetString("/sim/startup/splash-title", "");
         font.getBBox(s, fontsize, 0, &left, &right, &bot, &top);
