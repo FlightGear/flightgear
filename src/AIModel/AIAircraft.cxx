@@ -36,6 +36,8 @@
 #ifdef _MSC_VER
 #  include <float.h>
 #  define finite _finite
+#elif defined(sun) || defined(sgi)
+#  include <ieeefp.h>
 #endif
 
 SG_USING_STD(string);
