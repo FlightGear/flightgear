@@ -1027,6 +1027,7 @@ bool fgMainInit( int argc, char **argv ) {
                     fgGetBool("/sim/startup/fullscreen") );
 
     // Initialize the splash screen right away
+    fntInit();
     fgSplashInit(fgGetString("/sim/startup/splash-texture"));
 
     // pass control off to the master event handler
