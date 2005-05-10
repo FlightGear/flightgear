@@ -83,7 +83,7 @@ FGControls::FGControls() :
     tailhook( false ),
     launchbar( false ),
     catapult_launch_cmd( false ),
-    tailwheel_lock( false ),
+    tailwheel_lock( true ),
     wing_heat( false ),
     pitot_heat( true ),
     wiper( 0 ),
@@ -161,7 +161,7 @@ void FGControls::reset_all()
     tailhook = false;
     launchbar = false;
     catapult_launch_cmd = false;
-    tailwheel_lock = false;
+    tailwheel_lock = true;
     set_carb_heat( ALL_ENGINES, false );
     set_inlet_heat( ALL_ENGINES, false );
     wing_heat = false;
