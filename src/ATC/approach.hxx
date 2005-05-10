@@ -61,7 +61,7 @@ SG_USING_STD(string);
 const int    max_planes = 20;  // max number of planes on the stack
 const int    max_wp = 10;      // max number of waypoints for approach phase
 const double max_ta = 130;     // max turning angle for plane during approach
-const double tbm    = 20000.0; // min time (in ms) between two messages
+const double tbm    = 2.0;     // min time (in sec) between two messages
 const double lfl    = 10.0;    // length of final leg
 
 struct PlaneApp {

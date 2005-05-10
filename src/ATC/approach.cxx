@@ -47,7 +47,7 @@ FGApproach::FGApproach(){
   elev_node  = fgGetNode("/position/altitude-ft", true);
   hdg_node   = fgGetNode("/orientation/heading-deg", true);
   speed_node = fgGetNode("/velocities/airspeed-kt", true);
-  etime_node = fgGetNode("/sim/time/elapsed-ms", true);
+  etime_node = fgGetNode("/sim/time/elapsed-sec", true);
 
   first = true;
   active_runway = "";
