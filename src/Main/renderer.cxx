@@ -742,7 +742,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
     // Use the hud_and_panel ssgSimpleState for rendering the ATC output
     // This only works properly if called before the panel call
-    if((fgGetBool("/sim/ATC/enabled")) || (fgGetBool("/sim/ai-traffic/enabled")))
+    if((fgGetBool("/sim/atc/enabled")) || (fgGetBool("/sim/ai-traffic/enabled")))
         globals->get_ATC_display()->update(delta_time_sec);
 
     // update the panel subsystem

@@ -435,7 +435,7 @@ static void fgMainLoop( void ) {
 #endif
 
     // Run ATC subsystem
-    if (fgGetBool("/sim/ATC/enabled"))
+    if (fgGetBool("/sim/atc/enabled"))
         globals->get_ATC_mgr()->update(delta_time_sec);
 
     // Run the AI subsystem
