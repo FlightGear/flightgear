@@ -65,9 +65,6 @@ static fntRenderer info;
 void fgSplashInit ( const char *splash_texture ) {
     fgRequestRedraw();
 
-    if (!fgGetBool("/sim/startup/splash-screen"))
-        return;
-
     SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
 
 
@@ -82,11 +79,16 @@ void fgSplashInit ( const char *splash_texture ) {
     SGPath path(fontpath);
     path.append(fontname);
 
-    font.load((char *)path.c_str());
+    if (!font.load((char *)path.c_str())) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Error loading font " << path.str() );
+        return;
+    }
 
     info.setFont(&font);
     info.setPointSize(fontsize);
 
+    if (!fgGetBool("/sim/startup/splash-screen"))
+        return;
 
     splash.bind();
 
@@ -185,7 +187,7 @@ void fgSplashUpdate ( float alpha ) {
         glEnd();
     }
 
-    if (progress_text && fgGetBool("/sim/startup/splash-progress", true)) {
+    if (info.getFont() && progress_text && fgGetBool("/sim/startup/splash-progress", true)) {
         glEnable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
         glAlphaFunc(GL_GREATER, 0.1f);
