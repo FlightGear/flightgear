@@ -53,6 +53,7 @@ class FGMarkerBeacon : public SGSubsystem
     SGPropertyNode *power_btn;
     SGPropertyNode *audio_btn;
     SGPropertyNode *serviceable;
+    SGPropertyNode *sound_pause;
 
     bool need_update;
 

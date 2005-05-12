@@ -98,6 +98,7 @@ FGMarkerBeacon::init ()
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
     // Inputs
+    sound_pause = fgGetNode("/sim/sound/pause", false);
     lon_node = fgGetNode("/position/longitude-deg", true);
     lat_node = fgGetNode("/position/latitude-deg", true);
     alt_node = fgGetNode("/position/altitude-ft", true);
@@ -151,7 +152,8 @@ FGMarkerBeacon::update(double dt)
 {
     need_update = false;
 
-    if ( has_power() && serviceable->getBoolValue() ) {
+    if ( has_power() && serviceable->getBoolValue()
+            && !sound_pause->getBoolValue()) {
 
 	// On timeout, scan again
 	_time_before_search_sec -= dt;
