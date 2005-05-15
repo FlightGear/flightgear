@@ -36,6 +36,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/interpolater.hxx>
+#include <simgear/environment/visual_enviro.hxx>
 
 #include <Main/fg_props.hxx>
 #include "environment.hxx"
@@ -297,6 +298,9 @@ FGEnvironment::get_wind_from_down_fps () const
 double
 FGEnvironment::get_turbulence_magnitude_norm () const
 {
+  if( sgEnviro.get_turbulence_enable_state() )
+    if (fgGetBool("/environment/params/real-world-weather-fetch") == true)
+      return sgEnviro.get_cloud_turbulence();
   return turbulence_magnitude_norm;
 }
 

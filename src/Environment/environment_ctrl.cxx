@@ -494,6 +494,7 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         result_queue.pop();
         if ( result.m != NULL ) {
             update_metar_properties( result.m );
+            fgSetString("/environment/metar/last-metar", result.m->getData());
             delete result.m;
             update_env_config();
             env->reinit();

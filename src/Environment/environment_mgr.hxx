@@ -34,7 +34,7 @@
 
 class FGEnvironment;
 class FGEnvironmentCtrl;
-
+class FGClouds;
 
 /**
  * Manage environment information.
@@ -87,6 +87,7 @@ private:
   FGEnvironment * _environment;	// always the same, for now
   FGEnvironmentCtrl * _controller; // always the same, for now
 
+  FGClouds *fgClouds;
 };
 
 #endif // _ENVIRONMENT_MGR_HXX

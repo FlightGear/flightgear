@@ -31,7 +31,7 @@
 #include "environment.hxx"
 #include "environment_ctrl.hxx"
 #include "environment_mgr.hxx"
-
+#include "fgclouds.hxx"
 
 class SGSky;
 extern SGSky *thesky;
@@ -49,12 +49,14 @@ FGEnvironmentMgr::FGEnvironmentMgr ()
 
   _controller->setEnvironment(_environment);
   set_subsystem("controller", _controller, 0.5);
+  fgClouds = new FGClouds;
 }
 
 FGEnvironmentMgr::~FGEnvironmentMgr ()
 {
   delete _environment;
   delete _controller;
+  delete fgClouds;
 }
 
 void
@@ -171,6 +173,15 @@ FGEnvironmentMgr::bind ()
   fgTie("/sim/rendering/precipitation-enable", &sgEnviro,
 	  &SGEnviro::get_precipitation_enable_state,
 	  &SGEnviro::set_precipitation_enable_state);
+  fgTie("/environment/rebuild_layers", fgClouds,
+      &FGClouds::get_update_event,
+      &FGClouds::set_update_event);
+  fgTie("/sim/rendering/lightning-enable", &sgEnviro,
+      &SGEnviro::get_lightning_enable_state,
+      &SGEnviro::set_lightning_enable_state);
+  fgTie("/environment/turbulence/use-cloud-turbulence", &sgEnviro,
+      &SGEnviro::get_turbulence_enable_state,
+      &SGEnviro::set_turbulence_enable_state);
 }
 
 void
@@ -200,6 +211,15 @@ FGEnvironmentMgr::unbind ()
     sprintf(buf, "/environment/clouds/layer[%d]/type", i);
     fgUntie(buf);
   }
+  fgUntie("/sim/rendering/clouds3d-enable");
+  fgUntie("/sim/rendering/clouds3d-vis-range");
+  fgUntie("/sim/rendering/clouds3d-density");
+  fgUntie("/sim/rendering/clouds3d-cache-size");
+  fgUntie("/sim/rendering/clouds3d-cache-resolution");
+  fgUntie("/sim/rendering/precipitation-enable");
+  fgUntie("/environment/rebuild_layers");
+  fgUntie("/sim/rendering/lightning-enable");
+  fgUntie("/environment/turbulence/use-cloud-turbulence");
 }
 
 void

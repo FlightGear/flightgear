@@ -53,6 +53,7 @@
 #  include <simgear/scene/sky/clouds3d/SkySceneLoader.hpp>
 #  include <simgear/scene/sky/clouds3d/SkyUtil.hpp>
 #endif
+#include <simgear/environment/visual_enviro.hxx>
 
 #include <Scenery/tileentry.hxx>
 #include <Time/light.hxx>
@@ -249,8 +250,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
     bool skyblend = fgGetBool("/sim/rendering/skyblend");
     bool enhanced_lighting = fgGetBool("/sim/rendering/enhanced-lighting");
     bool distance_attenuation = fgGetBool("/sim/rendering/distance-attenuation");
+    bool volumetric_clouds = sgEnviro.get_clouds_enable_state();
 #ifdef FG_ENABLE_MULTIPASS_CLOUDS
     bool multi_pass_clouds = fgGetBool("/sim/rendering/multi-pass-clouds") && 
+                                !volumetric_clouds &&
                                 !SGCloudLayer::enable_bump_mapping;  // ugly artefact now
 #else
     bool multi_pass_clouds = false;
@@ -490,6 +493,8 @@ FGRenderer::update( bool refresh_camera_settings ) {
     ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse() );
     ssgGetLight( 0 ) -> setColour( GL_SPECULAR, l->scene_specular() );
 
+    sgEnviro.setLight(l->adj_fog_color());
+
     // texture parameters
     // glEnable( GL_TEXTURE_2D );
     glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
@@ -508,6 +513,13 @@ FGRenderer::update( bool refresh_camera_settings ) {
     }
 
     setNearFar( scene_nearplane, scene_farplane );
+
+    sgEnviro.startOfFrame(current__view->get_view_pos(), 
+        current__view->get_world_up(),
+        current__view->getLongitude_deg(),
+        current__view->getLatitude_deg(),
+        current__view->getAltitudeASL_ft() * SG_FEET_TO_METER,
+        delta_time_sec);
 
     if ( draw_otw && skyblend ) {
         // draw the sky backdrop
@@ -538,7 +550,8 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
             // Disable depth buffer update, draw the clouds
             glDepthMask( GL_FALSE );
-            thesky->drawUpperClouds();
+            if( !volumetric_clouds )
+                thesky->drawUpperClouds();
             if ( multi_pass_clouds ) {
                 thesky->drawLowerClouds();
             }
@@ -692,6 +705,8 @@ FGRenderer::update( bool refresh_camera_settings ) {
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
     }
 
+    sgEnviro.drawLightning();
+
     if ( draw_otw && draw_clouds ) {
         if ( multi_pass_clouds ) {
             // Disable depth buffer update, draw the clouds where the
@@ -706,10 +721,19 @@ FGRenderer::update( bool refresh_camera_settings ) {
             glDisable( GL_STENCIL_TEST );
         } else {
             glDepthMask( GL_FALSE );
+            if( volumetric_clouds )
+                thesky->drawUpperClouds();
             thesky->drawLowerClouds();
             glDepthMask( GL_TRUE );
         }
     }
+    sgEnviro.drawPrecipitation(
+        fgGetDouble("/environment/metar/rain-norm", 0.0),
+        fgGetDouble("/environment/metar/snow-norm", 0.0),
+        fgGetDouble("/environment/metar/hail-norm", 0.0),
+        fgGetDouble("/orientation/pitch-deg", 0.0),
+        fgGetDouble("/orientation/roll-deg", 0.0),
+        fgGetDouble("/velocities/airspeed-kt", 0.0));
 
     if ( draw_otw ) {
         FGTileMgr::set_tile_filter( false );
@@ -904,6 +928,7 @@ void FGRenderer::setFOV( float w, float h ) {
     ssgSetFOV( w, h );
     ssgSetNearFar( fov_near, fov_far );
     fgHackFrustum();
+    sgEnviro.setFOV( w, h );
 }
 
 
@@ -921,5 +946,6 @@ void FGRenderer::setNearFar( float n, float f ) {
 
     fgHackFrustum();
 }
+
 
 // end of renderer.cxx
