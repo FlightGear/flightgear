@@ -39,12 +39,22 @@ public:
         virtual void bind();
         virtual void unbind();
 	void update(double dt);
+        inline void setStrengthNorm( double s ) { strength_norm = s; };
+        inline void setDiameter( double d ) { diameter = d; };
+        inline void setHeight( double h ) { height = h; };
+        inline double getStrengthNorm() const { return strength_norm; };
+        inline double getDiameter() const { return diameter; };
+        inline double getHeight() const { return height; };
 
 private:
 
-        double dt; 
+        double dt;
+        double diameter;      // diameter of turbulence zone, in nm
+        double height;        // top of turbulence zone, in feet MSL
+        double strength_norm; // strength of turbulence
 	void Run(double dt);
 
+        // lightning stuff
         double delay;   // average time (sec) between lightning flashes
         int subflashes; // number of subflashes per flash
         double random_delay;  // delay +/- random number
@@ -54,6 +64,11 @@ private:
         bool flashing;  // true if currently flashing;
         int subflash_array[8];
         int subflash_index;
+
+        // turbulence stuff
+        SGPropertyNode* turb_mag_node;
+        SGPropertyNode* turb_rate_node;
+
 };
 
 

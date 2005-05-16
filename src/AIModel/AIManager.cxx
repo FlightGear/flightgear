@@ -137,7 +137,7 @@ void FGAIManager::update(double dt) {
                 }
                 ++ai_list_itr;
         }
-        wind_from_down_node->setDoubleValue( strength );
+        wind_from_down_node->setDoubleValue( strength ); // for thermals
 
 }
 
@@ -281,7 +281,10 @@ FGAIManager::createStorm( FGAIModelEntity *entity ) {
         ai_storm->setHeading(entity->heading);
         ai_storm->setSpeed(entity->speed);
         ai_storm->setPath(entity->path.c_str());
-        ai_storm->setAltitude(entity->altitude);
+        ai_storm->setAltitude(entity->altitude); 
+        ai_storm->setDiameter(entity->diameter / 6076.11549); 
+        ai_storm->setHeight(entity->height_msl); 
+        ai_storm->setStrengthNorm(entity->strength); 
         ai_storm->setLongitude(entity->longitude);
         ai_storm->setLatitude(entity->latitude);
         ai_storm->init();

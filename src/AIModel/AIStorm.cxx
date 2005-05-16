@@ -56,6 +56,9 @@ FGAIStorm::FGAIStorm(FGAIManager* mgr) {
    subflash_array[5] =  1;
    subflash_array[6] =  1;
    subflash_array[7] =  2;
+
+   turb_mag_node = fgGetNode("/environment/turbulence/magnitude-norm", true);
+   turb_rate_node = fgGetNode("/environment/turbulence/rate-hz", true);
 }
 
 
@@ -100,10 +103,13 @@ void FGAIStorm::Run(double dt) {
    pos.setlat( pos.lat() + speed_north_deg_sec * dt);
    pos.setlon( pos.lon() + speed_east_deg_sec * dt); 
 
-   // do calculations for radar //
+   // do calculations for weather radar display 
    UpdateRadar(manager);
 
-   // do lightning
+   // **************************************************
+   // *     do lightning                               *
+   // **************************************************
+
    if (timer > random_delay) {
      srand((unsigned)time(0));
      random_delay = delay + (rand()%3) - 1.0;
@@ -118,11 +124,11 @@ void FGAIStorm::Run(double dt) {
    if (flashing) {
      if (flashed < subflashes) {
          timer += dt;
-         if (timer < 0.2) { 
+         if (timer < 0.1) { 
          flash_node->setBoolValue(true);
          } else {
             flash_node->setBoolValue(false);
-            if (timer > 0.4) {
+            if (timer > 0.2) {
               timer = 0.0;
               flashed++;
             }
@@ -136,6 +142,28 @@ void FGAIStorm::Run(double dt) {
    else {
      timer += dt;
    }  
+
+   // ***************************************************
+   // *      do turbulence                              *
+   // ***************************************************
+
+   // copy user's position from the AIManager
+   double user_latitude  = manager->get_user_latitude();
+   double user_longitude = manager->get_user_longitude();
+   double user_altitude  = manager->get_user_altitude();
+
+   // calculate range to target in feet and nautical miles
+   double lat_range = fabs(pos.lat() - user_latitude) * ft_per_deg_lat;
+   double lon_range = fabs(pos.lon() - user_longitude) * ft_per_deg_lon;
+   double range_ft = sqrt(lat_range*lat_range + lon_range*lon_range);
+   range = range_ft / 6076.11549;
+
+   if (range < (diameter * 0.5) &&
+       user_altitude > (altitude - 1000.0) &&
+       user_altitude < height) {
+              turb_mag_node->setDoubleValue(strength_norm);
+              turb_rate_node->setDoubleValue(0.5);
+   } 
      
 }
 

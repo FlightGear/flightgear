@@ -58,9 +58,9 @@ typedef struct {
    double azimuth;            // used by ballistic objects
    double elevation;          // used by ballistic objects
    double rudder;             // used by ship objects
-   double strength;           // used by thermal objects
-   double diameter;           // used by thermal objects
-   double height_msl;         // used by thermal objects
+   double strength;           // used by thermal and storm objects
+   double diameter;           // used by thermal and storm objects
+   double height_msl;         // used by thermal and storm objects
    double eda;                // used by ballistic objects
    double life;               // life span in seconds
    double buoyancy;           // acceleration in ft per sec2
