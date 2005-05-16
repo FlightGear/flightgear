@@ -361,8 +361,8 @@ FGDialog::display (SGPropertyNode * props)
 
     // bool userx = props->hasValue("x");
     // bool usery = props->hasValue("y");
-    // bool userw = props->hasValue("width");
-    // bool userh = props->hasValue("height");
+    bool userw = props->hasValue("width");
+    bool userh = props->hasValue("height");
 
     LayoutWidget wid(props);
     int pw=0, ph=0;
