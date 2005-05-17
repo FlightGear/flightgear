@@ -359,12 +359,14 @@ FGDialog::display (SGPropertyNode * props)
     int screenw = globals->get_props()->getIntValue("/sim/startup/xsize");
     int screenh = globals->get_props()->getIntValue("/sim/startup/ysize");
 
-    // bool userx = props->hasValue("x");
-    // bool usery = props->hasValue("y");
+    bool userx = props->hasValue("x");
+    bool usery = props->hasValue("y");
     bool userw = props->hasValue("width");
     bool userh = props->hasValue("height");
 
+     // Let the layout widget work in the same property subtree.
     LayoutWidget wid(props);
+
     int pw=0, ph=0;
     if(!userw || !userh)
         wid.calcPrefSize(&pw, &ph);
@@ -372,18 +374,21 @@ FGDialog::display (SGPropertyNode * props)
     ph = props->getIntValue("height", ph);
     int px = props->getIntValue("x", (screenw - pw) / 2);
     int py = props->getIntValue("y", (screenh - ph) / 2);
+
+    // Define "x", "y", "width" and/or "height" in the property tree if they
+    // are not specified in the configuration file.
     wid.layout(px, py, pw, ph);
 
+    // Use the dimension and location properties as specified in the
+    // configuration file or from the layout widget.
     _object = makeObject(props, screenw, screenh);
 
     // Remove automatically generated properties, so the layout looks
-    // EMH - this isn't needed anymore since the layout remains in
-    //       the poprty tree now.
     // the same next time around.
-    // if(!userx) props->removeChild("x");
-    // if(!usery) props->removeChild("y");
-    // if(!userw) props->removeChild("width");
-    // if(!userh) props->removeChild("height");
+    if(!userx) props->removeChild("x");
+    if(!usery) props->removeChild("y");
+    if(!userw) props->removeChild("width");
+    if(!userh) props->removeChild("height");
 
     if (_object != 0) {
         _object->reveal();
