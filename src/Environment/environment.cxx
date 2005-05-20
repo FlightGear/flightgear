@@ -236,6 +236,12 @@ FGEnvironment::get_temperature_degc () const
 }
 
 double
+FGEnvironment::get_temperature_degf () const
+{
+  return (temperature_degc * 9.0 / 5.0) + 32.0;
+}
+
+double
 FGEnvironment::get_dewpoint_sea_level_degc () const
 {
   return dewpoint_sea_level_degc;

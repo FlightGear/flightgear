@@ -58,6 +58,7 @@ public:
 
   virtual double get_temperature_sea_level_degc () const;
   virtual double get_temperature_degc () const;
+  virtual double get_temperature_degf () const;
   virtual double get_dewpoint_sea_level_degc () const;
   virtual double get_dewpoint_degc () const;
   virtual double get_pressure_sea_level_inhg () const;

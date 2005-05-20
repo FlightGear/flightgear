@@ -87,6 +87,8 @@ FGEnvironmentMgr::bind ()
   fgSetArchivable("/environment/temperature-sea-level-degc");
   fgTie("/environment/temperature-degc", _environment,
 	&FGEnvironment::get_temperature_degc); // FIXME: read-only for now
+  fgTie("/environment/temperature-degf", _environment,
+	&FGEnvironment::get_temperature_degf); // FIXME: read-only for now
   fgTie("/environment/dewpoint-sea-level-degc", _environment,
 	&FGEnvironment::get_dewpoint_sea_level_degc,
 	&FGEnvironment::set_dewpoint_sea_level_degc);
