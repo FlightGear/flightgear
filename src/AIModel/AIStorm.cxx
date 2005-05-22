@@ -29,6 +29,7 @@
 #include <string>
 #include <math.h>
 #include <cstdlib>
+#include <time.h>
 
 SG_USING_STD(string);
 
