@@ -148,7 +148,7 @@ bool FGAircraft::Run(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGAircraft::GetNlf(void)
+double FGAircraft::GetNlf(void)
 {
   return -1*Aerodynamics->GetvFs(3)/MassBalance->GetWeight();
 }

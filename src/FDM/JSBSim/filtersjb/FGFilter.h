@@ -195,6 +195,7 @@ public:
   /** When true, causes previous values to be set to current values. This
       is particularly useful for first pass. */
   bool Initialize;
+  void convert(void);
 
   enum {eLag, eLeadLag, eOrder2, eWashout, eIntegrator, eUnknown} FilterType;
 

@@ -73,6 +73,7 @@ FGFactorGroup::FGFactorGroup( FGFDMExec* fdmex ) : FGCoefficient( fdmex)
 {
   FDMExec = fdmex;
   totalValue = 0;
+  IsFactor = true;
   Debug(0);
 }  
 

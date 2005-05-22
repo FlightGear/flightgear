@@ -101,7 +101,8 @@ public:
       The routine doing the work.
    */
   bool Run (void);
-  
+  void convert(void);
+
 private:
   FGConfigFile* AC_cfg;
   vector<double> Detents;

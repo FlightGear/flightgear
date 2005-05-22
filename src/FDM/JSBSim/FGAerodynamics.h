@@ -169,6 +169,7 @@ public:
   void bind(void);
   void bindModel(void);
   void unbind(void);
+  void convert(void);
   
 private:
   typedef map<string,int> AxisIndex;

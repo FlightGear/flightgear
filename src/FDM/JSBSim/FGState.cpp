@@ -165,8 +165,8 @@ FGMatrix33& FGState::GetTs2b(void)
 
 FGMatrix33& FGState::GetTb2s(void)
 {
-  float alpha,beta;
-  float ca, cb, sa, sb;
+  double alpha,beta;
+  double ca, cb, sa, sb;
 
   alpha = Auxiliary->Getalpha();
   beta  = Auxiliary->Getbeta();

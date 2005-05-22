@@ -287,7 +287,7 @@ public:
   */
   inline void DebugState(State state) { debug_axis=state; }
 
-  inline void SetTargetNlf(float nlf) { targetNlf=nlf; }
+  inline void SetTargetNlf(double nlf) { targetNlf=nlf; }
   inline double GetTargetNlf(void) { return targetNlf; }
 
 };

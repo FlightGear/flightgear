@@ -110,9 +110,15 @@ bool FGGroundReactions::Load(FGConfigFile* AC_cfg)
   AC_cfg->GetNextConfigLine();
 
   while ((token = AC_cfg->GetValue()) != string("/UNDERCARRIAGE")) {
-    int num = lGear.size();
-    lGear.push_back(FGLGear(AC_cfg, FDMExec, num));
-    FCS->AddGear();
+    string type;
+    *AC_cfg >> type;
+    if (type == "AC_GEAR") {
+      int num = lGear.size();
+      lGear.push_back(FGLGear(AC_cfg, FDMExec, num));
+      FCS->AddGear();
+    } else {
+      cerr << "Unknown undercarriage type \"" << type << "\"" << endl;
+    }
   }
 
   return true;

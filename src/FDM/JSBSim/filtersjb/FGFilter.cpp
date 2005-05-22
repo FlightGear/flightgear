@@ -206,6 +206,30 @@ bool FGFilter::Run(void)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFilter::convert(void)
+{
+  cout << endl;
+  cout << "        <component name=\"" << Name << "\" type=\"" << Type << "\">" << endl;
+
+  cout << "            <input>" << (InputNodes[0]->GetFullyQualifiedName()).substr(12) << "</input>" << endl;
+
+  if (C1 != 0) cout << "            <c1>" << C1 << "</c1>" << endl;
+  if (C2 != 0) cout << "            <c2>" << C2 << "</c2>" << endl;
+  if (C3 != 0) cout << "            <c3>" << C3 << "</c3>" << endl;
+  if (C4 != 0) cout << "            <c4>" << C4 << "</c4>" << endl;
+  if (C5 != 0) cout << "            <c5>" << C5 << "</c5>" << endl;
+  if (C6 != 0) cout << "            <c6>" << C6 << "</c6>" << endl;
+
+  if (Trigger != 0) cout << "            <trigger>" << Trigger << "</trigger>" << endl;
+
+  if (IsOutput)
+    cout << "            <output>" << (OutputNode->GetFullyQualifiedName()).substr(12) << "</output>" << endl;
+
+  cout << "        </component>" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print
 //       out the normally expected messages, essentially echoing

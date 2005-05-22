@@ -116,9 +116,9 @@ public:
       zero if JSBSim is running in standalone mode.
       @return distance of the runway from the center of the earth.
       @units feet */
-  double GetRunwayRadius(void) const { return RunwayRadius; }
+  double GetRunwayRadius(void) const;
   double GetSeaLevelRadius(void) const { return SeaLevelRadius; }
-  double GetDistanceAGL(void)  const { return VState.vLocation.GetRadius()-RunwayRadius; }
+  double GetDistanceAGL(void)  const;
   double GetRadius(void) const { return VState.vLocation.GetRadius(); }
   double GetLongitude(void) const { return VState.vLocation.GetLongitude(); }
   double GetLatitude(void) const { return VState.vLocation.GetLatitude(); }
@@ -139,10 +139,11 @@ public:
   void SetRadius(double r) { VState.vLocation.SetRadius(r); }
   void SetLocation(const FGLocation& l) { VState.vLocation = l; }
   void Seth(double tt);
-  void SetRunwayRadius(double tt) { RunwayRadius = tt; }
   void SetSeaLevelRadius(double tt) { SeaLevelRadius = tt; }
   void SetDistanceAGL(double tt);
   void SetInitialState(const FGInitialCondition *);
+
+  void RecomputeRunwayRadius(void);
 
   void bind(void);
   void unbind(void);

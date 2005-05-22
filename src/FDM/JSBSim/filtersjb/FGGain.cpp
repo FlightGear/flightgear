@@ -176,6 +176,40 @@ bool FGGain::Run(void )
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGGain::convert(void)
+{
+  cout << endl;
+  cout << "        <component name=\"" << Name << "\" type=\"" << Type << "\">" << endl;
+
+  cout << "            <input>" << (InputNodes[0]->GetFullyQualifiedName()).substr(12) << "</input>" << endl;
+
+  if (Gain != 1.0)
+    cout << "            <gain>" << Gain << "</gain>" << endl;
+
+  if (Type == "PURE_GAIN") {                       // PURE_GAIN
+  } else if (Type == "SCHEDULED_GAIN") {           // SCHEDULED_GAIN
+  } else if (Type == "AEROSURFACE_SCALE") {        // AEROSURFACE_SCALE
+    cout << "            <limit>" << endl;
+    cout << "                <min>" << Min << "</min>" << endl;
+    cout << "                <max>" << Max << "</max>" << endl;
+    cout << "            </limit>" << endl;
+  }
+
+  if (clip) {
+    cout << "            <clip>" << endl;
+    cout << "                <min>" << clipmin << "</min>" << endl;
+    cout << "                <max>" << clipmax << "</max>" << endl;
+    cout << "            </clip>" << endl;
+  }
+
+  if (IsOutput)
+    cout << "            <output>" << (OutputNode->GetFullyQualifiedName()).substr(12) << "</output>" << endl;
+
+  cout << "        </component>" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print
 //       out the normally expected messages, essentially echoing

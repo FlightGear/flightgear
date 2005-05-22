@@ -133,6 +133,7 @@ public:
   ~FGSwitch();
 
   bool Run(void);
+  void convert(void);
 
   enum eLogic {elUndef=0, eAND, eOR, eDefault};
   enum eComparison {ecUndef=0, eEQ, eNE, eGT, eGE, eLT, eLE};

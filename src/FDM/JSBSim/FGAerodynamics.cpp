@@ -50,8 +50,10 @@ static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_AERODYNAMICS;
 
 const unsigned NAxes=6;
-const char* AxisNames[] = { "drag", "side-force", "lift", "rolling-moment",
-                            "pitching-moment","yawing-moment" };
+const char* AxisNames[] = { "drag", "side", "lift", "roll",
+                            "pitch","yaw" };
+const char* AxisNamesUpper[] = { "DRAG", "SIDE", "LIFT", "ROLL",
+                                 "PITCH","YAW" };
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -356,6 +358,23 @@ void FGAerodynamics::unbind(void)
 
      }
   }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGAerodynamics::convert(void)
+{
+
+  for (int axis=0; axis<6; axis++) {
+    if (Coeff[axis].size()>0) {
+      cout << endl << "        <axis name=\"" << AxisNamesUpper[axis] << "\">" << endl;
+      for (int c=0; c<Coeff[axis].size(); c++) {
+        Coeff[axis][c]->convert();
+      }
+      cout << "        </axis>" << endl;
+    }
+  }
+
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

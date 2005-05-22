@@ -173,7 +173,7 @@ public:
   ~FGGain();
 
   double GetOutputPct() const { return OutputPct; }
-
+  void convert(void);
   bool Run (void);
 
 private:

@@ -244,7 +244,7 @@ public:
   FGTable& operator<<(const int n);
   inline double GetElement(int r, int c) {return Data[r][c];}
   inline double GetElement(int r, int c, int t);
-  void Print(void);
+  void Print(int spaces=0);
 
 private:
   enum type {tt1D, tt2D, tt3D} Type;

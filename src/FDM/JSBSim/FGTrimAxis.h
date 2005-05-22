@@ -135,8 +135,8 @@ public:
   void SetThetaOnGround(double ff);
   void SetPhiOnGround(double ff);
   
-  inline void SetStateTarget(float target) { state_target=target; }
-  inline float GetStateTarget(void) { return state_target; }
+  inline void SetStateTarget(double target) { state_target=target; }
+  inline double GetStateTarget(void) { return state_target; }
   
   bool initTheta(void);
   
@@ -151,10 +151,10 @@ private:
   State   state;
   Control control;
   
-  float state_target;
+  double state_target;
   
-  float state_value;
-  float control_value;
+  double state_value;
+  double control_value;
 
   double control_min;
   double control_max;

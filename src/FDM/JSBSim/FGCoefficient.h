@@ -150,9 +150,13 @@ public:
 
   virtual void bind(FGPropertyManager *parent);
   virtual void unbind(void);
+  void convert(string prop="");
 
 protected:
   FGFDMExec* FDMExec;
+  bool IsFactor;
+  typedef vector<FGCoefficient*> CoeffArray;
+  CoeffArray sum;
 
 private:
   int numInstances;

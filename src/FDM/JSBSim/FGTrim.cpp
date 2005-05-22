@@ -554,7 +554,7 @@ bool FGTrim::checkLimits(void) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGTrim::setupPullup() {
-  float g,q,cgamma;
+  double g,q,cgamma;
   g=fdmex->GetInertial()->gravity();
   cgamma=cos(fgic->GetFlightPathAngleRadIC());
   cout << "setPitchRateInPullup():  " << g << ", " << cgamma << ", "
@@ -601,7 +601,7 @@ void FGTrim::updateRates(void){
     fgic->SetQRadpsIC(q);
     fgic->SetRRadpsIC(r);
   } else if( mode == tPullup && fabs(targetNlf-1) > 0.01) {
-      float g,q,cgamma;
+      double g,q,cgamma;
       g=fdmex->GetInertial()->gravity();
       cgamma=cos(fgic->GetFlightPathAngleRadIC());
       q=g*(targetNlf-cgamma)/fgic->GetVtrueFpsIC();

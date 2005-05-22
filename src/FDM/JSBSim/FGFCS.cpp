@@ -829,6 +829,15 @@ void FGFCS::unbind(FGPropertyManager *node)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFCS::convert(void)
+{
+  for (int i=0; i<FCSComponents.size(); i++) {
+    FCSComponents[i]->convert();
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print
 //       out the normally expected messages, essentially echoing

@@ -179,6 +179,30 @@ bool FGKinemat::Run(void )
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGKinemat::convert(void)
+{
+  cout << endl;
+  cout << "        <component name=\"" << Name << "\" type=\"" << Type << "\">" << endl;
+
+  cout << "            <input>" << (InputNodes[0]->GetFullyQualifiedName()).substr(12) << "</input>" << endl;
+
+  cout << "            <traverse>" << endl;
+  for (int i=0; i<Detents.size(); i++) {
+    cout << "                <setting>" << endl;
+    cout << "                    <position>" << Detents[i] << "</position>" << endl;
+    cout << "                    <time>" << TransitionTimes[i] << "</time>" << endl;
+    cout << "                </setting>" << endl;
+  }
+  cout << "            </traverse>" << endl;
+
+  if (IsOutput)
+    cout << "            <output>" << (OutputNode->GetFullyQualifiedName()).substr(12) << "</output>" << endl;
+
+  cout << "        </component>" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print
 //       out the normally expected messages, essentially echoing

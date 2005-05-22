@@ -152,7 +152,7 @@ public:
   inline double GetXYZep(int idx) const { return vXYZep(idx); }
   inline void SetAircraftName(string name) {AircraftName = name;}
 
-  float GetNlf(void);
+  double GetNlf(void);
 
   inline FGColumnVector3& GetNwcg(void) { return vNwcg; }
 

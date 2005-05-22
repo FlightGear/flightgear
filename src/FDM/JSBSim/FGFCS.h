@@ -611,6 +611,7 @@ public:
   void AddGear(void);
 
   FGPropertyManager* GetPropertyManager(void) { return PropertyManager; }
+  void convert(void);
 
   void bind(void);
   void bindModel(void);

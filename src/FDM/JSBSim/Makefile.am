@@ -47,6 +47,7 @@ libJSBSim_a_SOURCES = \
 	FGLocation.cpp FGLocation.h \
 	FGQuaternion.cpp FGQuaternion.h \
 	FGElectric.cpp FGElectric.h \
+	FGGroundCallback.cpp FGGroundCallback.h \
 	JSBSim.cxx JSBSim.hxx
 
 

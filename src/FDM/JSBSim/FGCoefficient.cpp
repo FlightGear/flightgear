@@ -75,6 +75,7 @@ FGCoefficient::FGCoefficient( FGFDMExec* fdex )
   FDMExec = fdex;
   State   = FDMExec->GetState();
   Table   = 0;
+  IsFactor = false;
 
   PropertyManager = FDMExec->GetPropertyManager();
 
@@ -382,6 +383,72 @@ FGPropertyManager* FGCoefficient::resolveSymbol(string name)
     exit(1);
   }
   return tmpn;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGCoefficient::convert(string prop)
+{
+  if (IsFactor)
+    cout << "            <function name=\"aero/function/" << name << "\">" << endl;
+  else
+    cout << "            <function name=\"aero/coefficient/" << name << "\">" << endl;
+
+  cout << "                <description>" << description << "</description>" << endl;
+  cout << "                <product>" << endl;
+
+  for (int i=0; i<multipliers.size(); i++)
+    cout << "                    <property>" << (multipliers[i]->GetFullyQualifiedName()).substr(12) << "</property>" << endl;
+
+  if (!prop.empty())
+    cout << "                    <property>aero/function/" << prop << "</property>" << endl;
+
+  switch (type) {
+  case VALUE:
+  cout << "                    <value>" << StaticValue << "</value>" << endl;
+    break;
+
+  case VECTOR:
+    cout << "                      <table>" << endl;
+    cout << "                          <independentVar>" << (LookupR->GetFullyQualifiedName()).substr(12) << "</independentVar>" << endl;
+    cout << "                          <tableData>" << endl;
+    Table->Print(30);
+    cout << "                          </tableData>" << endl;
+    cout << "                      </table>" << endl;
+    break;
+
+  case TABLE:
+    cout << "                      <table>" << endl;
+    cout << "                          <independentVar lookup=\"row\">" << (LookupR->GetFullyQualifiedName()).substr(12) << "</independentVar>" << endl;
+    cout << "                          <independentVar lookup=\"column\">" << (LookupC->GetFullyQualifiedName()).substr(12) << "</independentVar>" << endl;
+    cout << "                          <tableData>" << endl;
+    Table->Print(30);
+    cout << "                          </tableData>" << endl;
+    cout << "                      </table>" << endl;
+    break;
+
+  case TABLE3D:
+    cout << "                      <table>" << endl;
+    cout << "                          <independentVar lookup=\"row\">" << (LookupR->GetFullyQualifiedName()).substr(12) << "</independentVar>" << endl;
+    cout << "                          <independentVar lookup=\"column\">" << (LookupC->GetFullyQualifiedName()).substr(12) << "</independentVar>" << endl;
+    cout << "                          <independentVar lookup=\"table\">" << (LookupT->GetFullyQualifiedName()).substr(12) << "</independentVar>" << endl;
+    cout << "                          <tableData>" << endl;
+    Table->Print(30);
+    cout << "                          </tableData>" << endl;
+    cout << "                      </table>" << endl;
+    break;
+
+  }
+
+  cout << "                </product>" << endl;
+  cout << "            </function>" << endl;
+
+  if (IsFactor) {
+  cout << " === MOVE THE ABOVE FACTOR " << name << " OUTSIDE OF AND BEFORE ANY <AXIS> DEFINITION ===" << endl;
+    for (int i=0; i<sum.size(); i++) {
+      sum[i]->convert(name);
+    }
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

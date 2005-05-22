@@ -125,6 +125,9 @@ public:
                the direction of flight. */
   void SetSense(double s) { Sense = s;}
 
+  double GetSense(void) {return Sense;}
+  double GetPFactorValue(void) {return P_Factor;}
+
   /// Retrieves the pitch of the propeller in degrees.
   double GetPitch(void)         { return Pitch;         }
 

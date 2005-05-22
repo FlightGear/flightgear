@@ -222,8 +222,8 @@ private:
     FGGroundReactions *GroundReactions;
 
     int runcount;
-    float trim_elev;
-    float trim_throttle;
+    double trim_elev;
+    double trim_throttle;
 
     SGPropertyNode *startup_trim;
     SGPropertyNode *trimmed;

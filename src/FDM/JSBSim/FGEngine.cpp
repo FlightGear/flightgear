@@ -131,27 +131,35 @@ void FGEngine::ConsumeFuel(void)
 {
   if (FuelFreeze) return;
   unsigned int i;
-  double Fshortage, Oshortage, TanksWithFuel;
+  double Fshortage, Oshortage, TanksWithFuel, TanksWithOxidizer;
   FGTank* Tank;
+  bool haveOxTanks = false;
 
   if (TrimMode) return;
-  Fshortage = Oshortage = TanksWithFuel = 0.0;
+  Fshortage = Oshortage = TanksWithFuel = TanksWithOxidizer = 0.0;
 
-  // count how many assigned tanks have fuel
+  // count how many assigned tanks have fuel or oxidizer
   for (i=0; i<SourceTanks.size(); i++) {
     Tank = Propulsion->GetTank(SourceTanks[i]);
-    if (Tank->GetContents() > 0.0) {
-      ++TanksWithFuel;
+    if (Tank->GetType() == FGTank::ttFUEL){
+      if (Tank->GetContents() > 0.0) {
+        ++TanksWithFuel;
+      }
+    } else if (Tank->GetType() == FGTank::ttOXIDIZER) {
+      haveOxTanks = true;
+      if (Tank->GetContents() > 0.0) {
+        ++TanksWithOxidizer;
+      }
     }
   }
-  if (!TanksWithFuel) return;
+  if (!TanksWithFuel || (haveOxTanks && !TanksWithOxidizer)) return;
 
   for (i=0; i<SourceTanks.size(); i++) {
     Tank = Propulsion->GetTank(SourceTanks[i]);
     if (Tank->GetType() == FGTank::ttFUEL) {
        Fshortage += Tank->Drain(CalcFuelNeed()/TanksWithFuel);
-    } else {
-       Oshortage += Tank->Drain(CalcOxidizerNeed()/TanksWithFuel);
+    } else if (Tank->GetType() == FGTank::ttOXIDIZER) {
+       Oshortage += Tank->Drain(CalcOxidizerNeed()/TanksWithOxidizer);
     }
   }
 
@@ -212,7 +220,7 @@ FGColumnVector3& FGEngine::GetMoments(void)
 bool FGEngine::LoadThruster(FGConfigFile* AC_cfg)
 {
   string token, fullpath, localpath;
-  string thrusterFileName, thrType, engineFileName;
+  string thrType, engineFileName;
   FGConfigFile* Cfg_ptr = 0;
   double xLoc, yLoc, zLoc, Pitch, Yaw;
   double P_Factor = 0, Sense = 0.0;

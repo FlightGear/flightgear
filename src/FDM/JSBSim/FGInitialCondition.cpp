@@ -423,9 +423,7 @@ void FGInitialCondition::SetAltitudeFtIC(double tt) {
 //******************************************************************************
 
 void FGInitialCondition::SetAltitudeAGLFtIC(double tt) {
-  fdmex->GetPropagate()->SetDistanceAGL(tt);
-  altitude=fdmex->GetPropagate()->Geth();
-  SetAltitudeFtIC(altitude);
+  SetAltitudeFtIC(terrain_altitude + tt);
 }
 
 //******************************************************************************

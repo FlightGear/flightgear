@@ -214,6 +214,7 @@ public:
   /// Gets the gear compression force in pounds
   inline double  GetCompForce(void) {return Force()(3);    }
   inline double  GetBrakeFCoeff(void) {return BrakeFCoeff;}
+  inline double GetXYZ(int i) {return vXYZ(i);}
 
   /// Gets the current normalized tire pressure
   inline double  GetTirePressure(void) { return TirePressureNorm; }
@@ -232,20 +233,28 @@ public:
   double GetSteerNorm(void) const { return radtodeg/maxSteerAngle*SteerAngle; }
   double GetDefaultSteerAngle(double cmd) const { return cmd*maxSteerAngle; }
   double GetstaticFCoeff(void) { return staticFCoeff; }
+  double GetdynamicFCoeff(void) { return dynamicFCoeff; }
+  double GetrollingFCoeff(void) { return rollingFCoeff; }
 
   inline int GetBrakeGroup(void) { return (int)eBrakeGrp; }
   inline int GetSteerType(void)  { return (int)eSteerType; }
 
   bool GetSteerable(void) const { return eSteerType != stFixed; }
-  inline bool GetRetractable(void)         { return isRetractable;   }
-  inline bool GetGearUnitUp(void)          { return GearUp;          }
-  inline bool GetGearUnitDown(void)        { return GearDown;        }
-  inline double GetWheelSideForce(void)    { return SideForce;       }
-  inline double GetWheelRollForce(void)    { return RollingForce;    }
-  inline double GetBodyXForce(void)        { return vLocalForce(eX); }
-  inline double GetBodyYForce(void)        { return vLocalForce(eY); }
-  inline double GetWheelSlipAngle(void)    { return WheelSlip;       }
-  double GetWheelVel(int axis)             { return vWhlVelVec(axis);}
+  inline bool GetRetractable(void)      const  { return isRetractable;   }
+  inline bool GetGearUnitUp(void)       const  { return GearUp;          }
+  inline bool GetGearUnitDown(void)     const  { return GearDown;        }
+  inline double GetWheelSideForce(void) const  { return SideForce;       }
+  inline double GetWheelRollForce(void) const  { return RollingForce;    }
+  inline double GetBodyXForce(void)     const  { return vLocalForce(eX); }
+  inline double GetBodyYForce(void)     const  { return vLocalForce(eY); }
+  inline double GetWheelSlipAngle(void) const  { return WheelSlip;       }
+  double GetWheelVel(int axis)          const  { return vWhlVelVec(axis);}
+  double GetkSpring(void)               const  { return kSpring;         }
+  double GetbDamp(void)                 const  { return bDamp;           }
+  double GetmaxSteerAngle(void)         const  { return maxSteerAngle;   }
+  string GetsBrakeGroup(void)           const  { return sBrakeGroup;     }
+  string GetsRetractable(void)          const  { return sRetractable;    }
+  string GetsSteerType(void)            const  { return sSteerType;      }
 
 private:
   int GearNumber;

@@ -114,6 +114,9 @@ public:
 
   EngineType      GetType(void) { return Type; }
   virtual string  GetName(void) { return Name; }
+  string GetThrusterFileName(void) {return thrusterFileName;}
+  void SetEngineFileName(string eng) {engineFileName = eng;}
+  string GetEngineFileName(void) {return engineFileName;}
 
   // Engine controls
   virtual double  GetThrottleMin(void) { return MinThrottle; }
@@ -164,6 +167,11 @@ public:
 
   /// Sets engine placement information
   virtual void SetPlacement(double x, double y, double z, double pitch, double yaw);
+  double GetPlacementX(void) const {return X;}
+  double GetPlacementY(void) const {return Y;}
+  double GetPlacementZ(void) const {return Z;}
+  double GetPitch(void) const {return EnginePitch;}
+  double GetYaw(void) const {return EngineYaw;}
 
   virtual double GetPowerAvailable(void) {return 0.0;};
 
@@ -178,10 +186,14 @@ public:
 
   virtual string GetEngineLabels(string delimeter) = 0;
   virtual string GetEngineValues(string delimeter) = 0;
+  int GetNumSourceTanks(void) {return SourceTanks.size();}
+  int GetSourceTank(int t) {return SourceTanks[t];}
 
 protected:
   FGPropertyManager* PropertyManager;
   string Name;
+  string thrusterFileName;
+  string engineFileName;
   const int   EngineNumber;
   EngineType Type;
   double X, Y, Z;

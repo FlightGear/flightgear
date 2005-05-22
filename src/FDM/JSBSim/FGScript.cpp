@@ -212,13 +212,13 @@ bool FGScript::LoadScript( string script )
     cerr << "Initialization unsuccessful" << endl;
     exit(-1);
   }
-
+/* comment this out for conversion capability
   FGTrim fgt(FDMExec, tFull);
   if ( !fgt.DoTrim() ) {
     cout << "Trim Failed" << endl;
   }
   fgt.Report();
-
+*/
   return true;
 }
 

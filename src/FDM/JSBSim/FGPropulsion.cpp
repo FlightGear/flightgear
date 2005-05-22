@@ -255,6 +255,8 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
           return false;
         }
 
+        Engines.back()->SetEngineFileName(engineFileName);
+
         AC_cfg->GetNextConfigLine();
         while ((token = AC_cfg->GetValue()) != string("/AC_ENGINE")) {
           *AC_cfg >> token;

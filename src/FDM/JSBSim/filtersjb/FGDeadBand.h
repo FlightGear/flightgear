@@ -88,6 +88,7 @@ public:
   ~FGDeadBand();
 
   bool Run(void);
+  void convert(void);
 
 private:
   FGConfigFile* AC_cfg;

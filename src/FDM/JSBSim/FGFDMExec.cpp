@@ -58,6 +58,7 @@ INCLUDES
 #include "FGState.h"
 #include "FGAtmosphere.h"
 #include "FGFCS.h"
+#include "FGGroundCallback.h"
 #include "FGPropulsion.h"
 #include "FGMassBalance.h"
 #include "FGGroundReactions.h"
@@ -120,6 +121,7 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root)
   Inertial        = 0;
   GroundReactions = 0;
   Aircraft        = 0;
+  GroundCallback  = 0;
   Propagate       = 0;
   Auxiliary       = 0;
   Output          = 0;
@@ -190,6 +192,7 @@ bool FGFDMExec::Allocate(void)
   Inertial        = new FGInertial(this);
   GroundReactions = new FGGroundReactions(this);
   Aircraft        = new FGAircraft(this);
+  GroundCallback  = new FGGroundCallback();
   Propagate       = new FGPropagate(this);
   Auxiliary       = new FGAuxiliary(this);
   Output          = new FGOutput(this);
@@ -280,6 +283,8 @@ bool FGFDMExec::DeAllocate(void)
   delete IC;
   delete Trim;
 
+  delete GroundCallback;
+
   FirstModel  = 0L;
   Error       = 0;
 
@@ -365,6 +370,14 @@ bool FGFDMExec::RunIC(void)
   State->Resume();
 
   return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFDMExec::SetGroundCallback(FGGroundCallback* p) {
+  if (GroundCallback)
+    delete GroundCallback;
+  GroundCallback = p;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -502,7 +515,7 @@ bool FGFDMExec::ReadPrologue(FGConfigFile* AC_cfg)
     return false;
   }
 
-  if (Release == "ALPHA") {
+  if (Release == "ALPHA" && debug_lvl > 0) {
 #ifndef _MSC_VER
     system("banner ALPHA");
 #endif
@@ -513,7 +526,7 @@ bool FGFDMExec::ReadPrologue(FGConfigFile* AC_cfg)
          << " will not fly as expected." << endl << endl
          << fgred << highint << "Use this model for development purposes ONLY!!!"
          << normint << reset << endl << endl;
-  } else if (Release == "BETA") {
+  } else if (Release == "BETA" && debug_lvl > 0) {
 #ifndef _MSC_VER
     system("banner BETA");
 #endif

@@ -104,7 +104,7 @@ public:
   inline string GetName(void) const {return Name;}
   inline string GetType(void) const { return Type; }
   virtual double GetOutputPct(void) const { return 0; }
-  
+  virtual void convert(void) {};  
   virtual void bind();
   FGPropertyManager* resolveSymbol(string token);
   

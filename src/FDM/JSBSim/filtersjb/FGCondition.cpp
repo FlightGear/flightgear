@@ -51,8 +51,6 @@ string FGCondition::indent = "        ";
 FGCondition::FGCondition(FGConfigFile* AC_cfg, FGPropertyManager* PropertyManager) :
   PropertyManager(PropertyManager)
 {
-  string property1, property2;
-
   mComparison["EQ"] = eEQ;
   mComparison["NE"] = eNE;
   mComparison["GT"] = eGT;
@@ -205,6 +203,16 @@ void FGCondition::PrintCondition(void )
     else
       cout << TestParam1->GetName() << " " << conditional << " " << TestValue;
   }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGCondition::convert(void)
+{
+  if (conditions.empty())
+    cout << "                " << property1 << " " << conditional << " " << property2 << endl;
+  else
+    for (int i; i<conditions.size(); i++) conditions[i].convert();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

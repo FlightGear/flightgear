@@ -72,6 +72,7 @@ public:
 
   bool Evaluate(void);
   void PrintCondition(void);
+  void convert(void);
 
 private:
   FGConfigFile* AC_cfg;
@@ -86,7 +87,8 @@ private:
   eComparison Comparison;
   bool isGroup;
   string conditional;
-  
+  string property1, property2;
+
   static string indent;
 
   vector <FGCondition> conditions;

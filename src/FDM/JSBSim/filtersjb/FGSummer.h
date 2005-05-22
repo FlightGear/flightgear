@@ -115,6 +115,7 @@ public:
 
   /// The execution method for this FCS component.
   bool Run(void);
+  void convert(void);
 
 private:
   FGConfigFile* AC_cfg;

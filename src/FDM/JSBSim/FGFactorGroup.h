@@ -102,8 +102,8 @@ public:
   void unbind(void);
 
 private:
-  typedef vector<FGCoefficient*> CoeffArray;
-  CoeffArray sum;
+//  typedef vector<FGCoefficient*> CoeffArray;
+//  CoeffArray sum;
   double SDtotal;
   double totalValue;
   string description;
