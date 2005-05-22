@@ -37,6 +37,7 @@ SG_USING_STD(string);
 class SGNewCloud;
 class SGCloudField;
 class FGMetar;
+class FGEnvironmentCtrl;
 
 class FGClouds {
 
@@ -56,11 +57,11 @@ private:
 
 	int update_event;
 	SGSoundSample *snd_lightning;
-
+	FGEnvironmentCtrl * _controller;
 	float station_elevation_ft;
 
 public:
-	FGClouds();
+	FGClouds(FGEnvironmentCtrl * controller);
 	~FGClouds();
 
 	void build(void);

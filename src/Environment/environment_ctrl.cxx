@@ -494,7 +494,6 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         result_queue.pop();
         if ( result.m != NULL ) {
             update_metar_properties( result.m );
-            fgSetString("/environment/metar/last-metar", result.m->getData());
             delete result.m;
             update_env_config();
             env->reinit();
@@ -579,6 +578,11 @@ FGMetarEnvironmentCtrl::update_metar_properties( FGMetar *m )
     double d;
     char s[128];
 
+    fgSetString("/environment/metar/real-metar", m->getData());
+	// don't update with real weather when we use a custom weather scenario
+	if( strcmp(fgGetString("/environment/weather-scenario", "METAR"), "METAR") )
+		return;
+    fgSetString("/environment/metar/last-metar", m->getData());
     fgSetString("/environment/metar/station-id", m->getId());
     fgSetDouble("/environment/metar/min-visibility-m",
                 m->getMinVisibility().getVisibility_m() );

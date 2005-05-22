@@ -49,7 +49,7 @@ FGEnvironmentMgr::FGEnvironmentMgr ()
 
   _controller->setEnvironment(_environment);
   set_subsystem("controller", _controller, 0.5);
-  fgClouds = new FGClouds;
+  fgClouds = new FGClouds( _controller );
 }
 
 FGEnvironmentMgr::~FGEnvironmentMgr ()

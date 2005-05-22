@@ -33,6 +33,7 @@
 #include <Airports/simple.hxx>
 #include <Main/util.hxx>
 
+#include "environment_ctrl.hxx"
 #include "environment_mgr.hxx"
 #include "fgmetar.hxx"
 #include "fgclouds.hxx"
@@ -40,8 +41,9 @@
 extern SGSky *thesky;
 
 
-FGClouds::FGClouds() :
+FGClouds::FGClouds(FGEnvironmentCtrl * controller) :
 	station_elevation_ft(0.0),
+	_controller( controller ),
 	snd_lightning(NULL)
 {
 	update_event = 0;
@@ -413,6 +415,9 @@ void FGClouds::buildScenario( string scenario ) {
 	FGMetar *m = new FGMetar( station + fakeMetar );
 	update_metar_properties( m );
 	update_env_config();
+	// propagate aloft tables
+	_controller->reinit();
+
 	fgSetString("/environment/metar/last-metar", m->getData());
 	// TODO:desactivate real metar updates
 	if( scenario == "Fair weather" ) {
@@ -425,11 +430,14 @@ void FGClouds::build(void) {
 	string scenario = fgGetString("/environment/weather-scenario", "METAR");
 
 	if( scenario == "METAR" ) {
-		string realMetar = fgGetString("/environment/metar/last-metar", "");
+		string realMetar = fgGetString("/environment/metar/real-metar", "");
 		if( realMetar != "" ) {
+			fgSetString("/environment/metar/last-metar", realMetar.c_str());
 			FGMetar *m = new FGMetar( realMetar );
 			update_metar_properties( m );
 			update_env_config();
+			// propagate aloft tables
+			_controller->reinit();
 		}
 		buildMETAR();
 	}

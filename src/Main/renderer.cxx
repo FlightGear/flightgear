@@ -731,8 +731,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
         fgGetDouble("/environment/metar/rain-norm", 0.0),
         fgGetDouble("/environment/metar/snow-norm", 0.0),
         fgGetDouble("/environment/metar/hail-norm", 0.0),
-        fgGetDouble("/orientation/pitch-deg", 0.0),
-        fgGetDouble("/orientation/roll-deg", 0.0),
+        current__view->getPitch_deg() - current__view->getPitchOffset_deg(),
+        current__view->getRoll_deg() + current__view->getRollOffset_deg(),
+        - current__view->getHeadingOffset_deg(),
         fgGetDouble("/velocities/airspeed-kt", 0.0));
 
     if ( draw_otw ) {
