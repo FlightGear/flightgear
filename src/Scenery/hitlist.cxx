@@ -469,7 +469,7 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
                     if ( first_time ) {
                         sgdTransposeNegateMat4( m_leaf, m );
                         sgdXformPnt3( orig_leaf, orig, m_leaf );
-                        sgdXformPnt3( dir_leaf,  dir,  m_leaf );
+                        sgdXformVec3( dir_leaf,  dir,  m_leaf );
                         first_time = 0;
                     }
                     // GLenum primType = ((ssgLeaf *)kid)->getPrimitiveType();
