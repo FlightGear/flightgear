@@ -1149,6 +1149,26 @@ void FGAirport::chooseRunwayFallback(string *runway)
  * FGAirportList
  *****************************************************************************/
 
+// Populates a list of subdirectories of $FG_ROOT/Airports/AI so that
+// the add() method doesn't have to try opening 2 XML files in each of
+// thousands of non-existent directories.  FIXME: should probably add
+// code to free this list after parsing of apt.dat is finished;
+// non-issue at the moment, however, as there are no AI subdirectories
+// in the base package.
+FGAirportList::FGAirportList()
+{
+    ulDir* d;
+    ulDirEnt* dent;
+    SGPath aid( globals->get_fg_root() );
+    aid.append( "/Airports/AI" );
+    if((d = ulOpenDir(aid.c_str())) == NULL)
+        return;
+    while((dent = ulReadDir(d)) != NULL) {
+        cerr << "Dent: " << dent->d_name; // DEBUG
+        ai_dirs.insert(dent->d_name);
+    }
+    ulCloseDir(d);
+}
 
 // add an entry to the list
 void FGAirportList::add( const string id, const double longitude,
@@ -1172,7 +1192,8 @@ void FGAirportList::add( const string id, const double longitude,
     rwyPrefPath.append( "/Airports/AI/" );
     rwyPrefPath.append(id);
     rwyPrefPath.append("rwyuse.xml");
-    if (parkpath.exists()) 
+    if (ai_dirs.find(parkpath.str()) != ai_dirs.end()
+        && parkpath.exists()) 
       {
 	try {
 	  readXML(parkpath.str(),a);
@@ -1181,7 +1202,8 @@ void FGAirportList::add( const string id, const double longitude,
 	  //cerr << "unable to read " << parkpath.str() << endl;
 	}
       }
-    if (rwyPrefPath.exists()) 
+    if (ai_dirs.find(rwyPrefPath.str()) != ai_dirs.end()
+        && rwyPrefPath.exists()) 
       {
 	try {
 	  readXML(rwyPrefPath.str(), rwyPrefs);

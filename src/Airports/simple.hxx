@@ -42,10 +42,12 @@
 
 #include STL_STRING
 #include <map>
+#include <set>
 #include <vector>
 
 SG_USING_STD(string);
 SG_USING_STD(map);
+SG_USING_STD(set);
 SG_USING_STD(vector);
 
 typedef vector<string> stringVec;
@@ -306,11 +308,12 @@ private:
 
     airport_map airports_by_id;
     airport_list airports_array;
+    set < string > ai_dirs;
 
 public:
 
     // Constructor (new)
-    FGAirportList() {}
+    FGAirportList();
 
     // Destructor
     ~FGAirportList();
