@@ -29,6 +29,7 @@
 #include <simgear/compiler.h>
 
 #include <stdlib.h> // atof(), atoi()
+#include <strings.h> // memchr()
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -68,6 +69,8 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
     string line;
     char tmp[2048];
 
+    char sp_pos = 0, lid = 0;
+
     double rwy_lon_accum = 0.0;
     double rwy_lat_accum = 0.0;
     int rwy_count = 0;
@@ -75,34 +78,41 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
     while ( ! in.eof() ) {
 	in.getline(tmp, 2048);
 	line = tmp;
-	SG_LOG( SG_GENERAL, SG_BULK, "-> '" << line << "'" );
-        if ( line.length() ) {
-            token = simgear::strutils::split( line );
-            if ( token.size() ) {
-                SG_LOG( SG_GENERAL, SG_BULK, "token[0] " << token[0] );
-            }
-        } else {
-            token.clear();
+
+        SG_LOG( SG_GENERAL, SG_BULK, "-> '" << line << "'" );
+        if ( !line.size() )
+            continue;
+
+        if (line.size() > 3) {
+            char *p = (char *)memchr(tmp, ' ', 3);
+            if ( p )
+                *p = 0;
         }
 
-        if ( !line.length() || !token.size() ) {
-            // empty line, skip
-        } else if ( (token[0] == "#") || (token[0] == "//") ) {
+        lid = atoi(tmp);
+        if ( tmp[0] == '#' || (tmp[0] == '/' && tmp[1] == '/') ) {
 	    // comment, skip
-        } else if ( token[0] == "I" ) {
+        } else if ( tmp[0] == 'I' ) {
             // First line, indicates IBM (i.e. DOS line endings I
             // believe.)
 
             // move past this line and read and discard the next line
             // which is the version and copyright information
             in.getline(tmp, 2048);
-            vector<string> vers_token = simgear::strutils::split( tmp );
+            // vector<string> vers_token = simgear::strutils::split( tmp );
+            if ( strnlen(tmp, 2048) > 4 ) {
+               char *p = (char *)memchr(tmp, ' ', 4);
+               if ( p )
+                  *p = 0;
+            }
             SG_LOG( SG_GENERAL, SG_INFO, "Data file version = "
-                    << vers_token[0] );
-	} else if ( token[0] == "1" /* Airport */ ||
-                    token[0] == "16" /* Seaplane base */ ||
-                    token[0] == "17" /* Heliport */ ) {
+                    << tmp );
+	} else if ( lid == 1 /* Airport */ ||
+                    lid == 16 /* Seaplane base */ ||
+                    lid == 17 /* Heliport */ ) {
 
+            token.clear();
+            token = simgear::strutils::split(line);
             string id = token[4];
             double elev = atof( token[1].c_str() );
             SG_LOG( SG_GENERAL, SG_BULK, "Next airport = " << id << " "
@@ -141,7 +151,10 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
             rwy_lon_accum = 0.0;
             rwy_lat_accum = 0.0;
             rwy_count = 0;
-        } else if ( token[0] == "10" ) {
+        } else if ( lid == 10 ) {
+            token.clear();
+            token = simgear::strutils::split(line);
+
             // runway entry
             double lat = atof( token[1].c_str() );
             double lon = atof( token[2].c_str() );
@@ -179,20 +192,17 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
                           stopway1, stopway2, lighting_flags, surface_code,
                           shoulder_code, marking_code, smoothness,
                           dist_remaining );
-        } else if ( token[0] == "18" ) {
+        } else if ( lid == 18 ) {
             // beacon entry (ignore)
-        } else if ( token[0] == "14" ) {
+        } else if ( lid == 14 ) {
             // control tower entry (ignore)
-        } else if ( token[0] == "19" ) {
+        } else if ( lid == 19 ) {
             // windsock entry (ignore)
-        } else if ( token[0] == "15" ) {
+        } else if ( lid == 15 ) {
             // custom startup locations (ignore)
-        } else if ( token[0] == "50" || token[0] == "51" || token[0] == "52" 
-                    || token[0] == "53" || token[0] == "54" || token[0] == "55" 
-                    || token[0] == "56" )
-        {
+        } else if ( lid >= 50 && lid <= 56 ) {
             // frequency entries (ignore)
-        } else if ( token[0] == "99" ) {
+        } else if ( lid == 99 ) {
             SG_LOG( SG_GENERAL, SG_DEBUG, "End of file reached" );
         } else {
             SG_LOG( SG_GENERAL, SG_ALERT, 
