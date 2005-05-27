@@ -30,6 +30,7 @@
 
 #include <stdlib.h> // atof(), atoi()
 #include <strings.h> // memchr()
+#include <ctype.h> // isspace()
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -80,7 +81,7 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
 	line = tmp;
 
         SG_LOG( SG_GENERAL, SG_BULK, "-> '" << line << "'" );
-        if ( !line.size() )
+        if ( !line.size() || isspace(tmp[0]))
             continue;
 
         if (line.size() > 3) {
@@ -100,7 +101,7 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
             // which is the version and copyright information
             in.getline(tmp, 2048);
             // vector<string> vers_token = simgear::strutils::split( tmp );
-            if ( strnlen(tmp, 2048) > 4 ) {
+            if ( strlen(tmp) > 4 ) {
                char *p = (char *)memchr(tmp, ' ', 4);
                if ( p )
                   *p = 0;
