@@ -29,7 +29,7 @@
 #include <simgear/compiler.h>
 
 #include <stdlib.h> // atof(), atoi()
-#include <strings.h> // memchr()
+#include <string.h> // memchr()
 #include <ctype.h> // isspace()
 
 #include <simgear/constants.h>
@@ -68,10 +68,11 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
     string last_apt_info = "";
     string last_apt_type = "";
     string line;
-    char tmp[2048];
+    char tmp[2049];
+    tmp[2048] = 0;
 
-    char sp_pos = 0, lid = 0;
-
+    unsigned int line_id = 0;
+    unsigned int line_num = 0;
     double rwy_lon_accum = 0.0;
     double rwy_lat_accum = 0.0;
     int rwy_count = 0;
@@ -79,21 +80,20 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
     while ( ! in.eof() ) {
 	in.getline(tmp, 2048);
 	line = tmp;
+        line_num++;
 
-        SG_LOG( SG_GENERAL, SG_BULK, "-> '" << line << "'" );
+        SG_LOG( SG_GENERAL, SG_BULK, "#" << line_num << " '" << line << "'" );
         if ( !line.size() || isspace(tmp[0]))
             continue;
 
-        if (line.size() > 3) {
+        if (line.size() >= 3) {
             char *p = (char *)memchr(tmp, ' ', 3);
             if ( p )
                 *p = 0;
         }
 
-        lid = atoi(tmp);
-        if ( tmp[0] == '#' || (tmp[0] == '/' && tmp[1] == '/') ) {
-	    // comment, skip
-        } else if ( tmp[0] == 'I' ) {
+        line_id = atoi(tmp);
+        if ( tmp[0] == 'I' ) {
             // First line, indicates IBM (i.e. DOS line endings I
             // believe.)
 
@@ -108,9 +108,9 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
             }
             SG_LOG( SG_GENERAL, SG_INFO, "Data file version = "
                     << tmp );
-	} else if ( lid == 1 /* Airport */ ||
-                    lid == 16 /* Seaplane base */ ||
-                    lid == 17 /* Heliport */ ) {
+	} else if ( line_id == 1 /* Airport */ ||
+                    line_id == 16 /* Seaplane base */ ||
+                    line_id == 17 /* Heliport */ ) {
 
             token.clear();
             token = simgear::strutils::split(line);
@@ -152,7 +152,7 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
             rwy_lon_accum = 0.0;
             rwy_lat_accum = 0.0;
             rwy_count = 0;
-        } else if ( lid == 10 ) {
+        } else if ( line_id == 10 ) {
             token.clear();
             token = simgear::strutils::split(line);
 
@@ -193,21 +193,21 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
                           stopway1, stopway2, lighting_flags, surface_code,
                           shoulder_code, marking_code, smoothness,
                           dist_remaining );
-        } else if ( lid == 18 ) {
+        } else if ( line_id == 18 ) {
             // beacon entry (ignore)
-        } else if ( lid == 14 ) {
+        } else if ( line_id == 14 ) {
             // control tower entry (ignore)
-        } else if ( lid == 19 ) {
+        } else if ( line_id == 19 ) {
             // windsock entry (ignore)
-        } else if ( lid == 15 ) {
+        } else if ( line_id == 15 ) {
             // custom startup locations (ignore)
-        } else if ( lid >= 50 && lid <= 56 ) {
+        } else if ( line_id >= 50 && line_id <= 56 ) {
             // frequency entries (ignore)
-        } else if ( lid == 99 ) {
+        } else if ( line_id == 99 ) {
             SG_LOG( SG_GENERAL, SG_DEBUG, "End of file reached" );
         } else {
             SG_LOG( SG_GENERAL, SG_ALERT, 
-                    "Unknown line in file: " << line );
+                    "Unknown line(#" << line_num << ") in file: " << line );
             exit(-1);
         }
     }
