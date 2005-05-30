@@ -82,9 +82,30 @@ public:
     void release_wire(void);
 
 private:
-    // Holds the private ground triangle cache ...
-    // The surface cache itself.
-    ssgRoot cache_root;
+    struct Triangle {
+      // The edge vertices.
+      sgdVec3 vertices[3];
+      // The surface normal.
+      sgdVec4 plane;
+      // The bounding shpere.
+      sgdSphere sphere;
+      // The linear velocity.
+      sgdVec3 velocity;
+      // Ground type
+      int type;
+    };
+    struct Catapult {
+      sgdVec3 start;
+      sgdVec3 end;
+      sgdVec3 velocity;
+    };
+    struct Wire {
+      sgdVec3 ends[2];
+      sgdVec3 velocity;
+      int wire_id;
+    };
+
+
     // The center of the cache.
     sgdVec3 cache_center;
     // Approximate ground radius.
@@ -96,6 +117,11 @@ private:
     // The wire identifier to track.
     int wire_id;
 
+    // Containers which hold all the essential information about this cache.
+    std::vector<Triangle> triangles;
+    std::vector<Catapult> catapults;
+    std::vector<Wire> wires;
+
     // The point and radius where the cache is built around.
     // That are the arguments that were given to prepare_ground_cache.
     sgdVec3 reference_wgs84_point;
@@ -104,13 +130,18 @@ private:
 
 
     // Fills the environment cache with everything inside the sphere sp.
-    void cache_fill(ssgBranch *branch, sgMat4 xform,
-                    sgSphere* sp, sgVec3 down, sgSphere* wsp);
+    void cache_fill(ssgBranch *branch, sgdMat4 xform,
+                    sgdSphere* sp, sgdVec3 down, sgdSphere* wsp);
+
+    // compute the ground property of this leaf.
+    void putSurfaceLeafIntoCache(const sgdSphere *sp, const sgdMat4 xform,
+                                 bool sphIsec, sgdVec3 down, ssgLeaf *l);
+
+    void putLineLeafIntoCache(const sgdSphere *wsp, const sgdMat4 xform,
+                              ssgLeaf *l);
 
     // Helper class to hold some properties of the ground triangle.
-    class GroundProperty
-      : public ssgBase {
-    public:
+    struct GroundProperty {
       GroundProperty() : type(0) {}
       int type;
       int wire_id;
@@ -120,28 +151,11 @@ private:
     };
 
     // compute the ground property of this leaf.
-    static GroundProperty *extractGroundProperty( ssgLeaf* leaf );
+    static GroundProperty extractGroundProperty( ssgLeaf* leaf );
 
 
-    // compute the ground property of this leaf.
-    void putSurfaceLeafIntoCache(const sgSphere *sp, const sgMat4 xform,
-                                 bool sphIsec, sgVec3 down, ssgLeaf *l);
-
-    void putLineLeafIntoCache(const sgSphere *wsp, const sgMat4 xform,
-                              ssgLeaf *l);
-
-    void addAndFlattenLeaf(GLenum ty, ssgLeaf *l, ssgIndexArray *ia,
-                           const sgMat4 xform);
-
-
-    void extractCacheRelativeVertex(double t, ssgVtxArray *va,
-                                    GroundProperty *gp,
-                                    short i, sgVec3 rel_pos,
-                                    sgdVec3 wgs84_vel);
-
-    void extractWgs84Vertex(double t, ssgVtxArray *va,
-                            GroundProperty *gp, short i,
-                            sgdVec3 wgs84_pos, sgdVec3 wgs84_vel);
+    static void velocityTransformTriangle(double dt, Triangle& dst,
+                                          const Triangle& src);
 };
 
 #endif

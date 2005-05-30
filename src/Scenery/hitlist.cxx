@@ -124,20 +124,23 @@ static inline bool fgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
 {
     sgdVec3 dif;
 
+    // Some tolerance in meters we accept a point to be outside of the triangle
+    // and still return that it is inside.
+    SGDfloat eps = 1e-4;
     SGDfloat min, max;
     // punt if outside bouding cube
     SG_MIN_MAX3 ( min, max, tri[0][0], tri[1][0], tri[2][0] );
-    if( (point[0] < min) || (point[0] > max) )
+    if( (point[0] < min - eps) || (point[0] > max + eps) )
         return false;
     dif[0] = max - min;
 
     SG_MIN_MAX3 ( min, max, tri[0][1], tri[1][1], tri[2][1] );
-    if( (point[1] < min) || (point[1] > max) )
+    if( (point[1] < min - eps) || (point[1] > max + eps) )
         return false;
     dif[1] = max - min;
 
     SG_MIN_MAX3 ( min, max, tri[0][2], tri[1][2], tri[2][2] );
-    if( (point[2] < min) || (point[2] > max) )
+    if( (point[2] < min - eps) || (point[2] > max + eps) )
         return false;
     dif[2] = max - min;
 
@@ -181,27 +184,30 @@ static inline bool fgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     }
 
     // check if intersection point is on the same side of p1 <-> p2 as p3
-    SGDfloat tmp = (y2 - y3) / (x2 - x3);
-    int side1 = SG_SIGN (tmp * (rx - x3) + y3 - ry);
-    int side2 = SG_SIGN (tmp * (x1 - x3) + y3 - y1);
+    SGDfloat tmp = (y2 - y3);
+    SGDfloat tmpn = (x2 - x3);
+    int side1 = SG_SIGN (tmp * (rx - x3) + (y3 - ry) * tmpn);
+    int side2 = SG_SIGN (tmp * (x1 - x3) + (y3 - side1*eps - y1) * tmpn);
     if ( side1 != side2 ) {
         // printf("failed side 1 check\n");
         return false;
     }
 
     // check if intersection point is on correct side of p2 <-> p3 as p1
-    tmp = (y3 - ry) / (x3 - rx);
-    side1 = SG_SIGN (tmp * (x2 - rx) + ry - y2);
-    side2 = SG_SIGN (tmp * (x1 - rx) + ry - y1);
+    tmp = (y3 - ry);
+    tmpn = (x3 - rx);
+    side1 = SG_SIGN (tmp * (x2 - rx) + (ry - y2) * tmpn);
+    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - side1*eps - y1) * tmpn);
     if ( side1 != side2 ) {
         // printf("failed side 2 check\n");
         return false;
     }
 
     // check if intersection point is on correct side of p1 <-> p3 as p2
-    tmp = (y2 - ry) / (x2 - rx);
-    side1 = SG_SIGN (tmp * (x3 - rx) + ry - y3);
-    side2 = SG_SIGN (tmp * (x1 - rx) + ry - y1);
+    tmp = (y2 - ry);
+    tmpn = (x2 - rx);
+    side1 = SG_SIGN (tmp * (x3 - rx) + (ry - y3) * tmpn);
+    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - side1*eps - y1) * tmpn);
     if ( side1 != side2 ) {
         // printf("failed side 3  check\n");
         return false;

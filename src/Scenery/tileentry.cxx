@@ -940,14 +940,6 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
     sgdSetVec3( sgdTrans, center.x(), center.y(), center.z() );
     terra_transform->setTransform( sgdTrans );
 
-    sgdVec3 sgdCenter;
-    Point3D p = globals->get_scenery()->get_center();
-    sgdSetVec3( sgdCenter, p.x(), p.y(), p.z() );
-    terra_transform->setSceneryCenter( sgdCenter );
-    globals->get_scenery()->register_placement_transform(terra_transform);
-
-    // terrain->addKid( terra_transform );
-
     // Add ground lights to scene graph if any exist
     gnd_lights_transform = NULL;
     gnd_lights_range = NULL;
@@ -970,29 +962,21 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
         gnd_lights_range->addKid( gnd_lights_brightness );
         gnd_lights_transform->addKid( gnd_lights_range );
         gnd_lights_transform->setTransform( sgdTrans );
-        gnd_lights_transform->setSceneryCenter( sgdCenter );
-        globals->get_scenery()->register_placement_transform(gnd_lights_transform);
     }
 
     // Update vasi lights transform
     if ( vasi_lights_transform->getNumKids() > 0 ) {
         vasi_lights_transform->setTransform( sgdTrans );
-        vasi_lights_transform->setSceneryCenter( sgdCenter );
-        globals->get_scenery()->register_placement_transform(vasi_lights_transform);
     }
 
     // Update runway lights transform
     if ( rwy_lights_transform->getNumKids() > 0 ) {
         rwy_lights_transform->setTransform( sgdTrans );
-        rwy_lights_transform->setSceneryCenter( sgdCenter );
-        globals->get_scenery()->register_placement_transform(rwy_lights_transform);
     }
 
      // Update taxi lights transform
     if ( taxi_lights_transform->getNumKids() > 0 ) {
         taxi_lights_transform->setTransform( sgdTrans );
-        taxi_lights_transform->setSceneryCenter( sgdCenter );
-        globals->get_scenery()->register_placement_transform(taxi_lights_transform);
     }
 }
 
@@ -1027,6 +1011,7 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
 
     terra_transform->ref();
     terrain_branch->addKid( terra_transform );
+    globals->get_scenery()->register_placement_transform(terra_transform);
 
     SG_LOG( SG_TERRAIN, SG_DEBUG,
             "connected a tile into scene graph.  terra_transform = "
@@ -1039,6 +1024,7 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
         // having ssg try to free the memory.
         gnd_lights_transform->ref();
         gnd_lights_branch->addKid( gnd_lights_transform );
+        globals->get_scenery()->register_placement_transform(gnd_lights_transform);
     }
 
     if ( vasi_lights_transform != NULL ) {
@@ -1046,6 +1032,7 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
         // having ssg try to free the memory.
         vasi_lights_selector->ref();
         vasi_lights_selector->addKid( vasi_lights_transform );
+        globals->get_scenery()->register_placement_transform(vasi_lights_transform);
         vasi_lights_branch->addKid( vasi_lights_selector );
     }
 
@@ -1054,6 +1041,7 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
         // having ssg try to free the memory.
         rwy_lights_selector->ref();
         rwy_lights_selector->addKid( rwy_lights_transform );
+        globals->get_scenery()->register_placement_transform(rwy_lights_transform);
         rwy_lights_branch->addKid( rwy_lights_selector );
     }
 
@@ -1062,6 +1050,7 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
         // having ssg try to free the memory.
         taxi_lights_selector->ref();
         taxi_lights_selector->addKid( taxi_lights_transform );
+        globals->get_scenery()->register_placement_transform(taxi_lights_transform);
         taxi_lights_branch->addKid( taxi_lights_selector );
     }
 

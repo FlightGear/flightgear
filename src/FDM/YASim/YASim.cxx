@@ -192,13 +192,13 @@ void YASim::update(double dt)
     // ground.  Calculate a cartesian coordinate for the ground under
     // us, find the (geodetic) up vector normal to the ground, then
     // use that to find the final (radius) term of the plane equation.
-    float v[3] = { get_uBody()*FT2M, get_vBody()*FT2M, get_wBody()*FT2M };
+    float v[3] = { get_uBody(), get_vBody(), get_wBody() };
     float lat = get_Latitude(); float lon = get_Longitude();
-    double xyz[3];
-    sgGeodToCart(lat, lon, 0.0, xyz);
+    float alt = get_Altitude() * FT2M; double xyz[3];
+    sgGeodToCart(lat, lon, alt, xyz);
     // build the environment cache.
     float vr = _fdm->getVehicleRadius();
-    vr += 2.0*dt*Math::mag3(v);
+    vr += 2.0*FT2M*dt*Math::mag3(v);
     prepare_ground_cache_m( 0.0, xyz, vr );
 
     // Track time increments.

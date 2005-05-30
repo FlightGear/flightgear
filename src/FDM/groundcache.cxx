@@ -25,6 +25,7 @@
 
 #include <plib/sg.h>
 
+#include <simgear/sg_inlines.h>
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -36,6 +37,147 @@
 
 #include "flight.hxx"
 #include "groundcache.hxx"
+
+// Specialized version of sgMultMat4 needed because of mixed matrix
+// types
+static inline void fgMultMat4(sgdMat4 dst, sgdMat4 m1, sgMat4 m2) {
+    for ( int j = 0 ; j < 4 ; j++ ) {
+        dst[0][j] = m2[0][0] * m1[0][j] +
+                    m2[0][1] * m1[1][j] +
+                    m2[0][2] * m1[2][j] +
+                    m2[0][3] * m1[3][j] ;
+
+        dst[1][j] = m2[1][0] * m1[0][j] +
+                    m2[1][1] * m1[1][j] +
+                    m2[1][2] * m1[2][j] +
+                    m2[1][3] * m1[3][j] ;
+
+        dst[2][j] = m2[2][0] * m1[0][j] +
+                    m2[2][1] * m1[1][j] +
+                    m2[2][2] * m1[2][j] +
+                    m2[2][3] * m1[3][j] ;
+
+        dst[3][j] = m2[3][0] * m1[0][j] +
+                    m2[3][1] * m1[1][j] +
+                    m2[3][2] * m1[2][j] +
+                    m2[3][3] * m1[3][j] ;
+    }
+}
+
+static inline bool fgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
+{
+    sgdVec3 dif;
+
+    // Some tolerance in meters we accept a point to be outside of the triangle
+    // and still return that it is inside.
+    SGDfloat eps = 1e-2;
+    SGDfloat min, max;
+    // punt if outside bouding cube
+    SG_MIN_MAX3 ( min, max, tri[0][0], tri[1][0], tri[2][0] );
+    if( (point[0] < min - eps) || (point[0] > max + eps) )
+        return false;
+    dif[0] = max - min;
+
+    SG_MIN_MAX3 ( min, max, tri[0][1], tri[1][1], tri[2][1] );
+    if( (point[1] < min - eps) || (point[1] > max + eps) )
+        return false;
+    dif[1] = max - min;
+
+    SG_MIN_MAX3 ( min, max, tri[0][2], tri[1][2], tri[2][2] );
+    if( (point[2] < min - eps) || (point[2] > max + eps) )
+        return false;
+    dif[2] = max - min;
+
+    // drop the smallest dimension so we only have to work in 2d.
+    SGDfloat min_dim = SG_MIN3 (dif[0], dif[1], dif[2]);
+    SGDfloat x1, y1, x2, y2, x3, y3, rx, ry;
+    if ( fabs(min_dim-dif[0]) <= DBL_EPSILON ) {
+        // x is the smallest dimension
+        x1 = point[1];
+        y1 = point[2];
+        x2 = tri[0][1];
+        y2 = tri[0][2];
+        x3 = tri[1][1];
+        y3 = tri[1][2];
+        rx = tri[2][1];
+        ry = tri[2][2];
+    } else if ( fabs(min_dim-dif[1]) <= DBL_EPSILON ) {
+        // y is the smallest dimension
+        x1 = point[0];
+        y1 = point[2];
+        x2 = tri[0][0];
+        y2 = tri[0][2];
+        x3 = tri[1][0];
+        y3 = tri[1][2];
+        rx = tri[2][0];
+        ry = tri[2][2];
+    } else if ( fabs(min_dim-dif[2]) <= DBL_EPSILON ) {
+        // z is the smallest dimension
+        x1 = point[0];
+        y1 = point[1];
+        x2 = tri[0][0];
+        y2 = tri[0][1];
+        x3 = tri[1][0];
+        y3 = tri[1][1];
+        rx = tri[2][0];
+        ry = tri[2][1];
+    } else {
+        // all dimensions are really small so lets call it close
+        // enough and return a successful match
+        return true;
+    }
+
+    // check if intersection point is on the same side of p1 <-> p2 as p3
+    SGDfloat tmp = (y2 - y3);
+    SGDfloat tmpn = (x2 - x3);
+    int side1 = SG_SIGN (tmp * (rx - x3) + (y3 - ry) * tmpn);
+    int side2 = SG_SIGN (tmp * (x1 - x3) + (y3 - side1*eps - y1) * tmpn);
+    if ( side1 != side2 ) {
+        // printf("failed side 1 check\n");
+        return false;
+    }
+
+    // check if intersection point is on correct side of p2 <-> p3 as p1
+    tmp = (y3 - ry);
+    tmpn = (x3 - rx);
+    side1 = SG_SIGN (tmp * (x2 - rx) + (ry - y2) * tmpn);
+    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - side1*eps - y1) * tmpn);
+    if ( side1 != side2 ) {
+        // printf("failed side 2 check\n");
+        return false;
+    }
+
+    // check if intersection point is on correct side of p1 <-> p3 as p2
+    tmp = (y2 - ry);
+    tmpn = (x2 - rx);
+    side1 = SG_SIGN (tmp * (x3 - rx) + (ry - y3) * tmpn);
+    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - side1*eps - y1) * tmpn);
+    if ( side1 != side2 ) {
+        // printf("failed side 3  check\n");
+        return false;
+    }
+
+    return true;
+}
+
+// Test if the line given by the point on the line pt_on_line and the
+// line direction dir intersects the sphere sp.
+// Adapted from plib.
+static inline bool
+fgdIsectSphereInfLine(const sgdSphere& sp,
+                      const sgdVec3 pt_on_line, const sgdVec3 dir)
+{
+  sgdVec3 r;
+  sgdSubVec3( r, sp.getCenter(), pt_on_line ) ;
+
+  SGDfloat projectedDistance = sgdScalarProductVec3(r, dir);
+ 
+  SGDfloat dist = sgdScalarProductVec3 ( r, r ) -
+    projectedDistance * projectedDistance;
+
+  SGDfloat radius = sp.getRadius();
+  return dist < radius*radius;
+}
 
 FGGroundCache::FGGroundCache()
 {
@@ -50,10 +192,9 @@ FGGroundCache::FGGroundCache()
 
 FGGroundCache::~FGGroundCache()
 {
-  cache_root.removeAllKids();
 }
 
-FGGroundCache::GroundProperty*
+FGGroundCache::GroundProperty
 FGGroundCache::extractGroundProperty( ssgLeaf* l )
 {
   // FIXME: Do more ...
@@ -62,33 +203,33 @@ FGGroundCache::extractGroundProperty( ssgLeaf* l )
   // from property tree or whatever ...
   
   // Get ground dependent data.
-  GroundProperty *gp = new GroundProperty;
-  gp->wire_id = -1;
+  GroundProperty gp;
+  gp.wire_id = -1;
   
   FGAICarrierHardware *ud =
     dynamic_cast<FGAICarrierHardware*>(l->getUserData());
   if (ud) {
     switch (ud->type) {
     case FGAICarrierHardware::Wire:
-      gp->type = FGInterface::Wire;
-      gp->wire_id = ud->id;
+      gp.type = FGInterface::Wire;
+      gp.wire_id = ud->id;
       break;
     case FGAICarrierHardware::Catapult:
-      gp->type = FGInterface::Catapult;
+      gp.type = FGInterface::Catapult;
       break;
     default:
-      gp->type = FGInterface::Solid;
+      gp.type = FGInterface::Solid;
       break;
     }
 
     // Copy the velocity from the carrier class.
-    ud->carrier->getVelocityWrtEarth( gp->vel );
+    ud->carrier->getVelocityWrtEarth( gp.vel );
   }
 
   else {
 
     // Initialize velocity field.
-    sgSetVec3( gp->vel, 0.0, 0.0, 0.0 );
+    sgSetVec3( gp.vel, 0.0, 0.0, 0.0 );
   }
   
   // Get the texture name and decide what ground type we have.
@@ -100,208 +241,173 @@ FGGroundCache::extractGroundProperty( ssgLeaf* l )
     SGPath dirPath(fullPath.dir());
     string category = dirPath.file();
     
-    SG_LOG(SG_FLIGHT,SG_INFO,
-           "New triangle in cache: " << category << " " << file );
-    
     if (category == "Runway")
-      gp->type = FGInterface::Solid;
+      gp.type = FGInterface::Solid;
     else {
       if (file == "asphault.rgb" || file == "airport.rgb")
-        gp->type = FGInterface::Solid;
+        gp.type = FGInterface::Solid;
       else if (file == "water.rgb" || file == "water-lake.rgb")
-        gp->type = FGInterface::Water;
+        gp.type = FGInterface::Water;
       else if (file == "forest.rgb" || file == "cropwood.rgb")
-        gp->type = FGInterface::Forest;
+        gp.type = FGInterface::Forest;
     }
   }
   
   return gp;
 }
 
-// Test if the line given by the point on the line pt_on_line and the
-// line direction dir intersects the sphere sp.
-// Adapted from plib.
-static bool
-sgIsectSphereInfLine(const sgSphere *sp,
-                     const sgVec3 pt_on_line, const sgVec3 dir)
-{
-  sgVec3 r ;
-  sgSubVec3 ( r, sp->getCenter(), pt_on_line ) ;
-
-  SGfloat projectedDistance = sgScalarProductVec3(r, dir);
- 
-  SGfloat dist = sgScalarProductVec3 ( r, r ) -
-    projectedDistance * projectedDistance; 
-
-  SGfloat radius = sp->getRadius();
-  return dist < radius*radius;
-}
-
 void
-FGGroundCache::addAndFlattenLeaf(GLenum ty, ssgLeaf *l, ssgIndexArray *ia,
-                                 const sgMat4 xform)
-{
-  // Extract data from the leaf which is just copied.
-  ssgVertexArray *va = ((ssgVtxTable *)l)->getVertices();
-  ssgNormalArray *na = ((ssgVtxTable *)l)->getNormals();
-  // Create a new leaf.
-  ssgVtxArray *vtxa = new ssgVtxArray( ty, va, na, 0, 0, ia );
-  // Clones data ...
-  vtxa->removeUnusedVertices();
-  // Apply transform. We won't store transforms in our cache.
-  vtxa->transform( xform );
-  // Check for magic texture names object names and such ...
-  GroundProperty *gp = extractGroundProperty( l );
-  // Assertation???
-  if ( !gp ) {
-    cerr << "Newly created cache leaf where userdata is not a Ground property!" << endl;
-  }
-  vtxa->setUserData( gp );
-  vtxa->setCullFace( l->getCullFace() );
-  
-  // Finally append to cache.
-  cache_root.addKid((ssgEntity*)vtxa);
-}
-
-void
-FGGroundCache::putLineLeafIntoCache(const sgSphere *wsp, const sgMat4 xform,
+FGGroundCache::putLineLeafIntoCache(const sgdSphere *wsp, const sgdMat4 xform,
                                     ssgLeaf *l)
 {
-  ssgIndexArray *ia = 0;
-  
+  GroundProperty gp = extractGroundProperty(l);
+
   // Lines must have special meanings.
   // Wires and catapults are done with lines.
   int nl = l->getNumLines();
   for (int i = 0; i < nl; ++i) {
-    sgSphere tmp;
+    sgdSphere sphere;
+    sphere.empty();
+    sgdVec3 ends[2];
     short v[2];
     l->getLine(i, v, v+1 );
-    for (int k=0; k<2; ++k)
-      tmp.extend( l->getVertex( v[k] ) );
-    tmp.orthoXform(xform);
-    
-    if (wsp->intersects( &tmp )) {
-      if (ia == 0)
-        ia = new ssgIndexArray();
-        
-      ia->add( v[0] );
-      ia->add( v[1] );
+    for (int k=0; k<2; ++k) {
+      sgdSetVec3(ends[k], l->getVertex(v[k]));
+      sgdXformPnt3(ends[k], xform);
+      sphere.extend(ends[k]);
+    }
+
+    if (wsp->intersects( &sphere )) {
+      if (gp.type == FGInterface::Wire) {
+        Wire wire;
+        sgdCopyVec3(wire.ends[0], ends[0]);
+        sgdCopyVec3(wire.ends[1], ends[1]);
+        sgdSetVec3(wire.velocity, gp.vel);
+        wire.wire_id = gp.wire_id;
+
+        wires.push_back(wire);
+      }
+      if (gp.type == FGInterface::Catapult) {
+        Catapult cat;
+        sgdCopyVec3(cat.start, ends[0]);
+        sgdCopyVec3(cat.end, ends[1]);
+        sgdSetVec3(cat.velocity, gp.vel);
+
+        catapults.push_back(cat);
+      }
     }
   }
-  if (!ia)
-    return;
-  
-  addAndFlattenLeaf(GL_LINES, l, ia, xform);
 }
 
 void
-FGGroundCache::putSurfaceLeafIntoCache(const sgSphere *sp, const sgMat4 xform,
-                                       bool sphIsec, sgVec3 down, ssgLeaf *l)
+FGGroundCache::putSurfaceLeafIntoCache(const sgdSphere *sp,
+                                       const sgdMat4 xform, bool sphIsec,
+                                       sgdVec3 down, ssgLeaf *l)
 {
-  ssgIndexArray *ia = 0;
-  
+  GroundProperty gp = extractGroundProperty(l);
+
   int nt = l->getNumTriangles();
   for (int i = 0; i < nt; ++i) {
-    // Build up a sphere around that particular triangle-
-    sgSphere tmp;
+    Triangle t;
+    t.sphere.empty();
     short v[3];
-    l->getTriangle(i, v, v+1, v+2 );
-    for (int k=0; k<3; ++k)
-      tmp.extend( l->getVertex( v[k] ) );
-    tmp.orthoXform(xform);
+    l->getTriangle(i, &v[0], &v[1], &v[2]);
+    for (int k = 0; k < 3; ++k) {
+      sgdSetVec3(t.vertices[k], l->getVertex(v[k]));
+      sgdXformPnt3(t.vertices[k], xform);
+      t.sphere.extend(t.vertices[k]);
+    }
+
+    sgdMakePlane(t.plane, t.vertices[0], t.vertices[1], t.vertices[2]);
+    SGDfloat dot = sgdScalarProductVec3(down, t.plane);
+    if (dot > 0) {
+      if (!l->getCullFace()) {
+        // Surface points downwards, ignore for altitude computations.
+        continue;
+      } else
+        sgdScaleVec4( t.plane, -1 );
+    }
 
     // Check if the sphere around the vehicle intersects the sphere
     // around that triangle. If so, put that triangle into the cache.
-    if (sphIsec && sp->intersects( &tmp )) {
-      if (ia == 0)
-        ia = new ssgIndexArray();
-      
-      ia->add( v[0] );
-      ia->add( v[1] );
-      ia->add( v[2] );
+    if (sphIsec && sp->intersects(&t.sphere)) {
+      sgdSetVec3(t.velocity, gp.vel);
+      t.type = gp.type;
+      triangles.push_back(t);
     }
     
     // In case the cache is empty, we still provide agl computations.
     // But then we use the old way of having a fixed elevation value for
     // the whole lifetime of this cache.
-    if ( sgIsectSphereInfLine(&tmp, sp->getCenter(), down) ) {
-      sgVec3 tri[3];
-      for (int k=0; k<3; ++k) {
-        sgCopyVec3( tri[k], l->getVertex( v[k] ) );
-        sgXformPnt3( tri[k], xform );
-      }
-      
-      sgVec4 plane;
-      sgMakePlane( plane, tri[0], tri[1], tri[2]  );
-      sgVec3 ac_cent;
-      sgCopyVec3(ac_cent, sp->getCenter());
-      sgVec3 dst;
-      sgIsectInfLinePlane( dst, ac_cent, down, plane );
-      if ( sgPointInTriangle ( dst, tri ) ) {
+    if ( fgdIsectSphereInfLine(t.sphere, sp->getCenter(), down) ) {
+      sgdVec3 tmp;
+      sgdSetVec3(tmp, sp->center[0], sp->center[1], sp->center[2]);
+      sgdVec3 isectpoint;
+      if ( sgdIsectInfLinePlane( isectpoint, tmp, down, t.plane ) &&
+           fgdPointInTriangle( isectpoint, t.vertices ) ) {
         found_ground = true;
-        sgdVec3 ddst;
-        sgdSetVec3(ddst, dst);
-        sgdAddVec3(ddst, cache_center);
-        double this_radius = sgdLengthVec3(ddst);
+        sgdAddVec3(isectpoint, cache_center);
+        double this_radius = sgdLengthVec3(isectpoint);
         if (ground_radius < this_radius)
           ground_radius = this_radius;
       }
     }
   }
-  if (!ia)
-    return;
+}
+
+inline void
+FGGroundCache::velocityTransformTriangle(double dt,
+                                         FGGroundCache::Triangle& dst,
+                                         const FGGroundCache::Triangle& src)
+{
+  sgdCopyVec3(dst.vertices[0], src.vertices[0]);
+  sgdCopyVec3(dst.vertices[1], src.vertices[1]);
+  sgdCopyVec3(dst.vertices[2], src.vertices[2]);
+
+  sgdCopyVec4(dst.plane, src.plane);
   
-  addAndFlattenLeaf(GL_TRIANGLES, l, ia, xform);
+  sgdCopyVec3(dst.sphere.center, src.sphere.center);
+  dst.sphere.radius = src.sphere.radius;
+
+  sgdCopyVec3(dst.velocity, src.velocity);
+
+  dst.type = src.type;
+
+  if (dt*sgdLengthSquaredVec3(src.velocity) != 0) {
+    sgdAddScaledVec3(dst.vertices[0], src.velocity, dt);
+    sgdAddScaledVec3(dst.vertices[1], src.velocity, dt);
+    sgdAddScaledVec3(dst.vertices[2], src.velocity, dt);
+    
+    dst.plane[3] += dt*sgdScalarProductVec3(dst.plane, src.velocity);
+
+    sgdAddScaledVec3(dst.sphere.center, src.velocity, dt);
+  }
 }
 
-// Here is the point where rotation should be handled
 void
-FGGroundCache::extractCacheRelativeVertex(double t, ssgVtxArray *va,
-                                          GroundProperty *gp,
-                                          short i, sgVec3 rel_pos,
-                                          sgdVec3 wgs84_vel)
-{
-  sgCopyVec3( rel_pos, va->getVertex( i ) );
-  sgAddScaledVec3( rel_pos, gp->vel, t );
-
-  // Set velocity.
-  sgdSetVec3( wgs84_vel, gp->vel );
-}
-
-void
-FGGroundCache::extractWgs84Vertex(double t, ssgVtxArray *va,
-                                  GroundProperty *gp, short i,
-                                  sgdVec3 wgs84_pos, sgdVec3 wgs84_vel)
-{
-  sgVec3 rel_pos;
-  extractCacheRelativeVertex(t, va, gp, i, rel_pos, wgs84_vel);
-  sgdSetVec3( wgs84_pos, rel_pos );
-  sgdAddVec3( wgs84_pos, cache_center );
-}
-
-
-void
-FGGroundCache::cache_fill(ssgBranch *branch, sgMat4 xform,
-                          sgSphere* sp, sgVec3 down, sgSphere* wsp)
+FGGroundCache::cache_fill(ssgBranch *branch, sgdMat4 xform,
+                          sgdSphere* sp, sgdVec3 down, sgdSphere* wsp)
 {
   // Travel through all kids.
   ssgEntity *e;
   for ( e = branch->getKid(0); e != NULL ; e = branch->getNextKid() ) {
-    if ( !( e->getTraversalMask() & SSGTRAV_HOT) )
+    if ( !(e->getTraversalMask() & SSGTRAV_HOT) )
       continue;
     if ( e->getBSphere()->isEmpty() )
       continue;
     
-    // Wee need to check further if either the sphere around the branch
+    // We need to check further if either the sphere around the branch
     // intersects the sphere around the aircraft or the line downwards from
     // the aircraft intersects the branchs sphere.
-    sgSphere esphere = *(e->getBSphere());
+    sgdSphere esphere;
+    sgdSetVec3(esphere.center, e->getBSphere()->center);
+    esphere.radius = e->getBSphere()->radius;
     esphere.orthoXform(xform);
     bool wspIsec = wsp->intersects(&esphere);
-    bool downIsec = sgIsectSphereInfLine(&esphere, sp->getCenter(), down);
+    bool downIsec = fgdIsectSphereInfLine(esphere, sp->getCenter(), down);
     if (!wspIsec && !downIsec)
       continue;
-      
+
     // For branches collect up the transforms to reach that branch and
     // call cache_fill recursively.
     if ( e->isAKindOf( ssgTypeBranch() ) ) {
@@ -313,8 +419,9 @@ FGGroundCache::cache_fill(ssgBranch *branch, sgMat4 xform,
         sgMakeIdentMat4( xform2 );
         ssgTransform *t = (ssgTransform*)b;
         t->getTransform( xform2 );
-        sgPostMultMat4( xform2, xform );
-        cache_fill( b, xform2, sp, down, wsp );
+        sgdMat4 xform3;
+        fgMultMat4(xform3, xform, xform2);
+        cache_fill( b, xform3, sp, down, wsp );
       } else
         cache_fill( b, xform, sp, down, wsp );
     }
@@ -340,16 +447,14 @@ FGGroundCache::cache_fill(ssgBranch *branch, sgMat4 xform,
 
 bool
 FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
-                                      double rad)
+                                    double rad)
 {
-  Point3D old_cntr = globals->get_scenery()->get_center();
-  Point3D cntr(pt[0], pt[1], pt[2]);
-  globals->get_scenery()->set_center( cntr );
-
   // Empty cache.
-  cache_root.removeAllKids();
   ground_radius = 0.0;
   found_ground = false;
+  triangles.resize(0);
+  catapults.resize(0);
+  wires.resize(0);
 
   // Store the parameters we used to build up that cache.
   sgdCopyVec3(reference_wgs84_point, pt);
@@ -357,35 +462,38 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
   // Store the time reference used to compute movements of moving triangles.
   cache_ref_time = ref_time;
 
+  // Decide where we put the scenery center.
+  Point3D old_cntr = globals->get_scenery()->get_center();
+  Point3D cntr(pt[0], pt[1], pt[2]);
+  // Only move the cache center if it is unaccaptable far away.
+  if (40*40 < old_cntr.distance3Dsquared(cntr))
+    globals->get_scenery()->set_center(cntr);
+  else
+    cntr = old_cntr;
+
   // The center of the cache.
-  sgdCopyVec3(cache_center, pt);
+  sgdSetVec3(cache_center, cntr[0], cntr[1], cntr[2]);
   
-  sgVec3 zero;
-  sgZeroVec3(zero);
+  sgdVec3 ptoff;
+  sgdSubVec3(ptoff, pt, cache_center);
   // Prepare sphere around the aircraft.
-  sgSphere acSphere;
+  sgdSphere acSphere;
   acSphere.setRadius(rad);
-  acSphere.setCenter(zero);
+  acSphere.setCenter(ptoff);
 
   // Prepare bigger sphere around the aircraft.
   // This one is required for reliably finding wires we have caught but
   // have already left the hopefully smaller sphere for the ground reactions.
   const double max_wire_dist = 300.0;
-  sgSphere wireSphere;
+  sgdSphere wireSphere;
   wireSphere.setRadius(max_wire_dist < rad ? rad : max_wire_dist);
-  wireSphere.setCenter(zero);
+  wireSphere.setCenter(ptoff);
 
   // Down vector. Is used for croase agl computations when we are far enough
   // from ground that we have an empty cache.
-  sgVec3 down;
-  sgSetVec3(down, -pt[0], -pt[1], -pt[2]);
-  sgNormalizeVec3(down);
-
-  // We need the offset to the scenery scenery center.
-  sgdVec3 doffset;
-  Point3D psc = globals->get_scenery()->get_center();
-  sgdSetVec3(doffset, psc[0], psc[1], psc[2]);
-  sgdSubVec3(doffset, doffset, pt);
+  sgdVec3 down;
+  sgdSetVec3(down, -pt[0], -pt[1], -pt[2]);
+  sgdNormalizeVec3(down);
 
   // We collaps all transforms we need to reach a particular leaf.
   // The leafs itself will be then transformed later.
@@ -394,10 +502,8 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
   // we will later store a speed in the GroundType class. We can then apply
   // some translations to that nodes according to the time which has passed
   // compared to that snapshot.
-  sgVec3 offset;
-  sgSetVec3(offset, doffset[0], doffset[1], doffset[2]);
-  sgMat4 xform;
-  sgMakeTransMat4(xform, offset);
+  sgdMat4 xform;
+  sgdMakeIdentMat4( xform );
 
 
   // Walk the scene graph and extract solid ground triangles and carrier data.
@@ -406,7 +512,9 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
 
   // some stats
   SG_LOG(SG_FLIGHT,SG_INFO, "prepare_ground_cache(): ac radius = " << rad
-         << ", # leafs = " << cache_root.getNumKids()
+         << ", # triangles = " << triangles.size()
+         << ", # wires = " << wires.size()
+         << ", # catapults = " << catapults.size()
          << ", ground_radius = " << ground_radius );
 
   // If the ground radius is still below 5e6 meters, then we do not yet have
@@ -416,7 +524,8 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
     SG_LOG(SG_FLIGHT, SG_WARN, "prepare_ground_cache(): trying to build cache "
            "without any scenery below the aircraft" );
 
-  globals->get_scenery()->set_center( old_cntr );
+  if (cntr != old_cntr)
+    globals->get_scenery()->set_center(old_cntr);
 
   return found_ground;
 }
@@ -432,7 +541,7 @@ FGGroundCache::is_valid(double *ref_time, double pt[3], double *rad)
 
 double
 FGGroundCache::get_cat(double t, const double dpt[3],
-                         double end[2][3], double vel[2][3])
+                       double end[2][3], double vel[2][3])
 {
   // start with a distance of 1e10 meters...
   double dist = 1e10;
@@ -440,40 +549,29 @@ FGGroundCache::get_cat(double t, const double dpt[3],
   // Time difference to the reference time.
   t -= cache_ref_time;
 
-  // We know that we have a flat cache ...
-  ssgEntity *e;
-  for ( e = cache_root.getKid(0); e != NULL ; e = cache_root.getNextKid() ) {
-    // We just know that, because we build that ourselfs ...
-    ssgVtxArray *va = (ssgVtxArray *)e;
-    // Only lines are interresting ...
-    if (va->getPrimitiveType() != GL_LINES)
-      continue;
-    GroundProperty *gp = static_cast<GroundProperty*>(va->getUserData());
-    // Check if we have a catapult ...
-    if ( gp->type != FGInterface::Catapult )
-      continue;
+  size_t sz = catapults.size();
+  for (size_t i = 0; i < sz; ++i) {
+    sgdLineSegment3 ls;
+    sgdCopyVec3(ls.a, catapults[i].start);
+    sgdCopyVec3(ls.b, catapults[i].end);
 
-    int nl = va->getNumLines();
-    for (int i=0; i < nl; ++i) {
-      sgdLineSegment3 ls;
-      sgdVec3 lsVel[2];
-      short vi[2];
-      va->getLine(i, vi, vi+1 );
-      extractWgs84Vertex(t, va, gp, vi[0], ls.a, lsVel[0]);
-      extractWgs84Vertex(t, va, gp, vi[1], ls.b, lsVel[1]);
-      
-      double this_dist = sgdDistSquaredToLineSegmentVec3( ls, dpt );
-      if (this_dist < dist) {
-        dist = this_dist;
+    sgdAddVec3(ls.a, cache_center);
+    sgdAddVec3(ls.b, cache_center);
+
+    sgdAddScaledVec3(ls.a, catapults[i].velocity, t);
+    sgdAddScaledVec3(ls.b, catapults[i].velocity, t);
+    
+    double this_dist = sgdDistSquaredToLineSegmentVec3( ls, dpt );
+    if (this_dist < dist) {
+      SG_LOG(SG_FLIGHT,SG_INFO, "Found catapult "
+             << this_dist << " meters away");
+      dist = this_dist;
         
-        // end[0] is the end where the cat starts.
-        // end[1] is the end where the cat ends.
-        // The carrier code takes care of that ordering.
-        sgdCopyVec3( end[0], ls.a );
-        sgdCopyVec3( end[1], ls.b );
-        sgdCopyVec3( vel[0], lsVel[0] );
-        sgdCopyVec3( vel[1], lsVel[1] );
-      }
+      // The carrier code takes care of that ordering.
+      sgdCopyVec3( end[0], ls.a );
+      sgdCopyVec3( end[1], ls.b );
+      sgdCopyVec3( vel[0], catapults[i].velocity );
+      sgdCopyVec3( vel[1], catapults[i].velocity );
     }
   }
 
@@ -501,85 +599,49 @@ FGGroundCache::get_agl(double t, const double dpt[3],
   t -= cache_ref_time;
 
   // The double valued point we start to search for intersection.
-  sgdVec3 tmp;
-  sgdSubVec3( tmp, dpt, cache_center );
-  sgVec3 pt;
-  sgSetVec3( pt, tmp );
+  sgdVec3 pt;
+  sgdSubVec3( pt, dpt, cache_center );
 
   // The search direction
-  sgVec3 dir;
-  sgSetVec3( dir, -dpt[0], -dpt[1], -dpt[2] );
+  sgdVec3 dir;
+  sgdSetVec3( dir, -dpt[0], -dpt[1], -dpt[2] );
 
   // Initialize to something sensible
   double sqdist = DBL_MAX;
 
-  // We know that we have a flat cache ...
-  // We just know that, because we build that ourselfs ...
-  ssgEntity *e;
-  for ( e = cache_root.getKid(0) ; e != NULL ; e = cache_root.getNextKid() ) {
-    // We just know that, because we build that ourselfs ...
-    ssgVtxArray *va = (ssgVtxArray *)e;
-    // AGL computations are done with triangle/surface leafs.
-    if (va->getPrimitiveType() != GL_TRIANGLES)
+  size_t sz = triangles.size();
+  for (size_t i = 0; i < sz; ++i) {
+    Triangle triangle;
+    velocityTransformTriangle(t, triangle, triangles[i]);
+    if (!fgdIsectSphereInfLine(triangle.sphere, pt, dir))
       continue;
-    ssgBase *gpb = va->getUserData();
-    // Assertation???
-    if ( !gpb ) {
-      cerr << "Found cache leaf without userdata!" << endl;
-      continue;
-    }
-    GroundProperty *gp = static_cast<GroundProperty*>(gpb);
 
-    int nt = va->getNumTriangles();
-    for (int i=0; i < nt; ++i) {
-      short vi[3];
-      va->getTriangle( i, vi, vi+1, vi+2 );
-      
-      sgVec3 tri[3];
-      sgdVec3 dvel[3];
-      for (int k=0; k<3; ++k)
-        extractCacheRelativeVertex(t, va, gp, vi[k], tri[k], dvel[k]);
-      sgVec4 plane;
-      sgMakePlane( plane, tri[0], tri[1], tri[2] );
-      
-      // Check for intersection.
-      sgVec3 isecpoint;
-      if ( sgIsectInfLinePlane( isecpoint, pt, dir, plane ) &&
-           sgPointInTriangle3( isecpoint, tri ) ) {
-        // Only accept surfaces with the normal pointing upwards.
-        // For double sided surfaces flip the normal in this case.
-        float dirDot = sgScalarProductVec3(plane, dir);
-        if ( dirDot >= 0 && va->getCullFace() == 1 ) {
-          sgScaleVec4( plane, -1 );
-          dirDot = -dirDot;
-        }
+    // Check for intersection.
+    sgdVec3 isecpoint;
+    if ( sgdIsectInfLinePlane( isecpoint, pt, dir, triangle.plane ) &&
+         sgdPointInTriangle( isecpoint, triangle.vertices ) ) {
 
-        // Check for the closest intersection point.
-        // FIXME: is this the right one?
-        double newSqdist = sgDistanceSquaredVec3( isecpoint, pt );
-        if ( newSqdist < sqdist && dirDot < 0 ) {
-          sqdist = newSqdist;
-          ret = true;
-          // Save the new potential intersection point.
-          sgdSetVec3( contact, isecpoint );
-          sgdAddVec3( contact, cache_center );
-          // The first three values in the vector are the plane normal.
-          sgdSetVec3( normal, plane );
-          // Remormalize that as double, else it *can* have surprising effects
-          // when used as plane normal together with a 6000000m offset in a
-          // plane equation.
-          sgdNormalizeVec3( normal );
-          // The velocity wrt earth.
-          /// FIXME: only true for non rotating objects!!!!
-          sgdCopyVec3( vel, dvel[0] );
-          // Save the ground type.
-          *type = gp->type;
-          // FIXME: figure out how to get that sign ...
+      // Check for the closest intersection point.
+      // FIXME: is this the right one?
+      SGDfloat newSqdist = sgdDistanceSquaredVec3( isecpoint, pt );
+      if ( newSqdist < sqdist ) {
+        sqdist = newSqdist;
+        ret = true;
+        // Save the new potential intersection point.
+        sgdCopyVec3( contact, isecpoint );
+        sgdAddVec3( contact, cache_center );
+        // The first three values in the vector are the plane normal.
+        sgdCopyVec3( normal, triangle.plane );
+        // The velocity wrt earth.
+        /// FIXME: only true for non rotating objects!!!!
+        sgdCopyVec3( vel, triangle.velocity );
+        // Save the ground type.
+        *type = triangle.type;
+        // FIXME: figure out how to get that sign ...
 //           *agl = sqrt(sqdist);
-          *agl = sgdLengthVec3( dpt ) - sgdLengthVec3( contact );
+        *agl = sgdLengthVec3( dpt ) - sgdLengthVec3( contact );
 //           *loadCapacity = DBL_MAX;
 //           *frictionFactor = 1.0;
-        }
       }
     }
   }
@@ -607,75 +669,55 @@ FGGroundCache::get_agl(double t, const double dpt[3],
   return ret;
 }
 
-bool FGGroundCache::caught_wire(double t, const double cpt[4][3])
+bool FGGroundCache::caught_wire(double t, const double pt[4][3])
 {
-  bool ret = false;
+  size_t sz = wires.size();
+  if (sz == 0)
+    return false;
 
   // Time difference to the reference time.
   t -= cache_ref_time;
 
-  bool firsttime = true;
-  sgVec4 plane[2];
-  sgVec3 tri[2][3];
+  // Build the two triangles spanning the area where the hook has moved
+  // during the past step.
+  sgdVec4 plane[2];
+  sgdVec3 tri[2][3];
+  sgdMakePlane( plane[0], pt[0], pt[1], pt[2] );
+  sgdCopyVec3( tri[0][0], pt[0] );
+  sgdCopyVec3( tri[0][1], pt[1] );
+  sgdCopyVec3( tri[0][2], pt[2] );
+  sgdMakePlane( plane[1], pt[0], pt[2], pt[3] );
+  sgdCopyVec3( tri[1][0], pt[0] );
+  sgdCopyVec3( tri[1][1], pt[2] );
+  sgdCopyVec3( tri[1][2], pt[3] );
 
-  // We know that we have a flat cache ...
-  ssgEntity *e;
-  for ( e = cache_root.getKid(0); e != NULL ; e = cache_root.getNextKid() ) {
-    // We just know that, because we build that ourselfs ...
-    ssgVtxArray *va = (ssgVtxArray *)e;
-    // Only lines are interresting ...
-    if (va->getPrimitiveType() != GL_LINES)
-      continue;
-    GroundProperty *gp = static_cast<GroundProperty*>(va->getUserData());
-    // Check if we have a catapult ...
-    if ( gp->type != FGInterface::Wire )
-      continue;
+  // Intersect the wire lines with each of these triangles.
+  // You have cautght a wire if they intersect.
+  for (size_t i = 0; i < sz; ++i) {
+    sgdVec3 le[2];
+    sgdCopyVec3(le[0], wires[i].ends[0]);
+    sgdCopyVec3(le[1], wires[i].ends[1]);
 
-    // Lazy compute the values required for intersectiion tests.
-    // Since we normally do not have wires in the cache this is a
-    // huge benefit.
-    if (firsttime) {
-      firsttime = false;
-      sgVec3 pt[4];
-      for (int k=0; k<4; ++k) {
-        sgdVec3 tmp;
-        sgdSubVec3( tmp, cpt[k], cache_center );
-        sgSetVec3( pt[k], tmp );
-      }
-      sgMakePlane( plane[0], pt[0], pt[1], pt[2] );
-      sgCopyVec3( tri[0][0], pt[0] );
-      sgCopyVec3( tri[0][1], pt[1] );
-      sgCopyVec3( tri[0][2], pt[2] );
-      sgMakePlane( plane[1], pt[0], pt[2], pt[3] );
-      sgCopyVec3( tri[1][0], pt[0] );
-      sgCopyVec3( tri[1][1], pt[2] );
-      sgCopyVec3( tri[1][2], pt[3] );
-    }
+    sgdAddVec3(le[0], cache_center);
+    sgdAddVec3(le[1], cache_center);
+
+    sgdAddScaledVec3(le[0], wires[i].velocity, t);
+    sgdAddScaledVec3(le[1], wires[i].velocity, t);
     
-    int nl = va->getNumLines();
-    for (int i=0; i < nl; ++i) {
-      short vi[2];
-      va->getLine(i, vi, vi+1 );
-      sgVec3 le[2];
-      sgdVec3 dummy;
-      extractCacheRelativeVertex(t, va, gp, vi[0], le[0], dummy);
-      extractCacheRelativeVertex(t, va, gp, vi[1], le[1], dummy);
-      
-      for (int k=0; k<2; ++k) {
-        sgVec3 isecpoint;
-        float isecval = sgIsectLinesegPlane( isecpoint, le[0], le[1], plane[k] );
-        
-        if ( 0.0 <= isecval && isecval <= 1.0 &&
-             sgPointInTriangle( isecpoint, tri[k] ) ) {
-          // Store the wire id.
-          wire_id = gp->wire_id;
-          ret = true;
-        }
+    for (int k=0; k<2; ++k) {
+      sgdVec3 isecpoint;
+      double isecval = sgdIsectLinesegPlane(isecpoint, le[0], le[1], plane[k]);
+      if ( 0.0 <= isecval && isecval <= 1.0 &&
+           sgdPointInTriangle( isecpoint, tri[k] ) ) {
+        SG_LOG(SG_FLIGHT,SG_INFO, "Caught wire");
+        // Store the wire id.
+        wire_id = wires[i].wire_id;
+        return true;
       }
     }
   }
 
-  return ret;
+  return false;
 }
 
 bool FGGroundCache::get_wire_ends(double t, double end[2][3], double vel[2][3])
@@ -684,36 +726,29 @@ bool FGGroundCache::get_wire_ends(double t, double end[2][3], double vel[2][3])
   if (wire_id < 0)
     return false;
 
-  bool ret = false;
-
-  // Time difference to th reference time.
+  // Time difference to the reference time.
   t -= cache_ref_time;
 
-  // We know that we have a flat cache ...
-  ssgEntity *e;
-  for ( e = cache_root.getKid(0); e != NULL ; e = cache_root.getNextKid() ) {
-    // We just know that, because we build that ourselfs ...
-    ssgVtxArray *va = (ssgVtxArray *)e;
-    // Only lines are interresting ...
-    if (va->getPrimitiveType() != GL_LINES)
-      continue;
-    GroundProperty *gp = static_cast<GroundProperty*>(va->getUserData());
-    // Check if we have a catapult ...
-    if ( gp->type != FGInterface::Wire )
-      continue;
-    if ( gp->wire_id != wire_id )
-      continue;
-
-    // Get the line ends, that are the wire endpoints.
-    short vi[2];
-    va->getLine(0, vi, vi+1 );
-    extractWgs84Vertex(t, va, gp, vi[0], end[0], vel[0]);
-    extractWgs84Vertex(t, va, gp, vi[1], end[1], vel[1]);
-
-    ret = true;
+  // Search for the wire with the matching wire id.
+  size_t sz = wires.size();
+  for (size_t i = 0; i < sz; ++i) {
+    if (wires[i].wire_id == wire_id) {
+      sgdCopyVec3(end[0], wires[i].ends[0]);
+      sgdCopyVec3(end[1], wires[i].ends[1]);
+      
+      sgdAddVec3(end[0], cache_center);
+      sgdAddVec3(end[1], cache_center);
+      
+      sgdAddScaledVec3(end[0], wires[i].velocity, t);
+      sgdAddScaledVec3(end[1], wires[i].velocity, t);
+      
+      sgdCopyVec3(vel[0], wires[i].velocity);
+      sgdCopyVec3(vel[1], wires[i].velocity);
+      return true;
+    }
   }
 
-  return ret;
+  return false;
 }
 
 void FGGroundCache::release_wire(void)
