@@ -66,6 +66,7 @@ FGTable::FGTable(int NRows, int NCols, int NTables)
   Data = Allocate(); // this data array will contain the keys for the associated tables
   Tables.reserve(nTables);
   for (int i=0; i<nTables; i++) Tables.push_back(FGTable(NRows, NCols));
+  lastRowIndex=lastColumnIndex=2;
 
   Debug(0);
 }
@@ -282,7 +283,7 @@ double FGTable::GetValue(double rowKey, double colKey, double tableKey)
   }
 
   Value = Factor*(Tables[r-1].GetValue(rowKey, colKey) - Tables[r-2].GetValue(rowKey, colKey))
-                              + Tables[r-1].GetValue(rowKey, colKey);
+                              + Tables[r-2].GetValue(rowKey, colKey);
 
   return Value;
 }

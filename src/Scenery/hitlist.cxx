@@ -187,7 +187,8 @@ static inline bool fgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     SGDfloat tmp = (y2 - y3);
     SGDfloat tmpn = (x2 - x3);
     int side1 = SG_SIGN (tmp * (rx - x3) + (y3 - ry) * tmpn);
-    int side2 = SG_SIGN (tmp * (x1 - x3) + (y3 - side1*eps - y1) * tmpn);
+    int side2 = SG_SIGN (tmp * (x1 - x3) + (y3 - y1) * tmpn
+                         + side1 * eps * fabs(tmpn));
     if ( side1 != side2 ) {
         // printf("failed side 1 check\n");
         return false;
@@ -197,7 +198,8 @@ static inline bool fgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     tmp = (y3 - ry);
     tmpn = (x3 - rx);
     side1 = SG_SIGN (tmp * (x2 - rx) + (ry - y2) * tmpn);
-    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - side1*eps - y1) * tmpn);
+    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - y1) * tmpn
+                     + side1 * eps * fabs(tmpn));
     if ( side1 != side2 ) {
         // printf("failed side 2 check\n");
         return false;
@@ -207,7 +209,8 @@ static inline bool fgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     tmp = (y2 - ry);
     tmpn = (x2 - rx);
     side1 = SG_SIGN (tmp * (x3 - rx) + (ry - y3) * tmpn);
-    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - side1*eps - y1) * tmpn);
+    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - y1) * tmpn
+                     + side1 * eps * fabs(tmpn));
     if ( side1 != side2 ) {
         // printf("failed side 3  check\n");
         return false;

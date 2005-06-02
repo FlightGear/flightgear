@@ -182,13 +182,22 @@ void FGGain::convert(void)
   cout << endl;
   cout << "        <component name=\"" << Name << "\" type=\"" << Type << "\">" << endl;
 
-  cout << "            <input>" << (InputNodes[0]->GetFullyQualifiedName()).substr(12) << "</input>" << endl;
+  if (invert)
+    cout << "            <input>-" << (InputNodes[0]->GetFullyQualifiedName()).substr(12) << "</input>" << endl;
+  else
+    cout << "            <input>" << (InputNodes[0]->GetFullyQualifiedName()).substr(12) << "</input>" << endl;
 
   if (Gain != 1.0)
     cout << "            <gain>" << Gain << "</gain>" << endl;
 
   if (Type == "PURE_GAIN") {                       // PURE_GAIN
   } else if (Type == "SCHEDULED_GAIN") {           // SCHEDULED_GAIN
+    cout << "            <table>" << endl;
+    cout << "                <independentVar>" << ScheduledBy->GetFullyQualifiedName().substr(12) << "</independentVar>" << endl;
+    cout << "                <tableData>" << endl;
+    Table->Print(20);
+    cout << "                </tableData>" << endl;
+    cout << "            </table>" << endl;
   } else if (Type == "AEROSURFACE_SCALE") {        // AEROSURFACE_SCALE
     cout << "            <limit>" << endl;
     cout << "                <min>" << Min << "</min>" << endl;
