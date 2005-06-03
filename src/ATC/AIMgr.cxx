@@ -353,8 +353,13 @@ void FGAIMgr::GenerateSimpleAirportTraffic(string ident, double min_dist) {
 	bool cessna = true;
 	
 	// Get the time and only operate VFR in the (approximate) daytime.
-	time_t now = globals->get_time_params()->get_cur_time() + time_t(aptpos.lon() * 240.0);
-	int loc_time = gmtime(&now)->tm_hour;
+	struct tm *t = globals->get_time_params()->getGmt();
+	int loc_time = t->tm_hour + int(aptpos.lon() / (360.0 / 24.0));
+	while (loc_time < 0)
+		loc_time += 24;
+	while (loc_time >= 24)
+		loc_time -= 24;
+
 	//cout << "loc_time = " << loc_time << '\n';
 	if(loc_time < 7 || loc_time > 19) return;
 	
