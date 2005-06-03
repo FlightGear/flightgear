@@ -250,7 +250,6 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->stall_warning);
         htonf(net->slip_deg);
 
-        net->num_engines = htonl(net->num_engines);
         for ( i = 0; i < net->num_engines; ++i ) {
             net->eng_state[i] = htonl(net->eng_state[i]);
             htonf(net->rpm[i]);
@@ -262,19 +261,20 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
             htonf(net->oil_temp[i]);
             htonf(net->oil_px[i]);
         }
+        net->num_engines = htonl(net->num_engines);
 
-        net->num_tanks = htonl(net->num_tanks);
         for ( i = 0; i < net->num_tanks; ++i ) {
             htonf(net->fuel_quantity[i]);
         }
+        net->num_tanks = htonl(net->num_tanks);
 
-        net->num_wheels = htonl(net->num_wheels);
         for ( i = 0; i < net->num_wheels; ++i ) {
             net->wow[i] = htonl(net->wow[i]);
             htonf(net->gear_pos[i]);
             htonf(net->gear_steer[i]);
             htonf(net->gear_compression[i]);
         }
+        net->num_wheels = htonl(net->num_wheels);
 
         net->cur_time = htonl( net->cur_time );
         net->warp = htonl( net->warp );
@@ -330,6 +330,7 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->stall_warning);
         htonf(net->slip_deg);
 
+        net->num_engines = htonl(net->num_engines);
         for ( i = 0; i < net->num_engines; ++i ) {
             net->eng_state[i] = htonl(net->eng_state[i]);
             htonf(net->rpm[i]);
@@ -341,20 +342,19 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
             htonf(net->oil_temp[i]);
             htonf(net->oil_px[i]);
         }
-        net->num_engines = htonl(net->num_engines);
 
+        net->num_tanks = htonl(net->num_tanks);
         for ( i = 0; i < net->num_tanks; ++i ) {
             htonf(net->fuel_quantity[i]);
         }
-        net->num_tanks = htonl(net->num_tanks);
 
+        net->num_wheels = htonl(net->num_wheels);
         for ( i = 0; i < net->num_wheels; ++i ) {
             net->wow[i] = htonl(net->wow[i]);
             htonf(net->gear_pos[i]);
             htonf(net->gear_steer[i]);
             htonf(net->gear_compression[i]);
         }
-        net->num_wheels = htonl(net->num_wheels);
 
         net->cur_time = htonl(net->cur_time);
         net->warp = ntohl(net->warp);
