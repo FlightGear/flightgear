@@ -11,6 +11,7 @@ libAIModel_a_SOURCES = \
 	AIThermal.hxx AIThermal.cxx \
 	AIFlightPlan.hxx AIFlightPlan.cxx AIFlightPlanCreate.cxx \
 	AIScenario.hxx AIScenario.cxx \
-        AICarrier.hxx AICarrier.cxx
+        AICarrier.hxx AICarrier.cxx \
+        AIStatic.hxx AIStatic.cxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

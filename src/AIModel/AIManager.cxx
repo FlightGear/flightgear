@@ -36,6 +36,7 @@
 #include "AIStorm.hxx"
 #include "AIThermal.hxx"
 #include "AICarrier.hxx"
+#include "AIStatic.hxx"
 
 SG_USING_STD(list);
 
@@ -176,7 +177,9 @@ FGAIManager::createAircraft( FGAIModelEntity *entity,   FGAISchedule *ref) {
         if ( entity->fp ) {
           ai_plane->SetFlightPlan(entity->fp);
         }
-
+        if (entity->repeat) {
+          ai_plane->GetFlightPlan()->setRepeat(true);
+        }
         ai_plane->init();
         ai_plane->bind();
         return ai_plane;
@@ -310,6 +313,25 @@ FGAIManager::createThermal( FGAIModelEntity *entity ) {
         return ai_thermal;
 }
 
+void*
+FGAIManager::createStatic( FGAIModelEntity *entity ) {
+     
+     // cout << "creating static object" << endl;    
+
+        FGAIStatic* ai_static = new FGAIStatic(this);
+        ai_list.push_back(ai_static);
+        ++numObjects[0];
+        ++numObjects[FGAIBase::otStatic];
+        ai_static->setHeading(entity->heading);
+        ai_static->setPath(entity->path.c_str());
+        ai_static->setAltitude(entity->altitude);
+        ai_static->setLongitude(entity->longitude);
+        ai_static->setLatitude(entity->latitude);
+        ai_static->init();
+        ai_static->bind();
+        return ai_static;
+}
+
 void FGAIManager::destroyObject( void* ID ) {
         ai_list_iterator ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
@@ -371,7 +393,10 @@ void FGAIManager::processScenario( string &filename ) {
 
       } else if ( en->m_type == "ballistic") {
         createBallistic( en );
-      }      
+
+      } else if ( en->m_type == "static") {
+        createStatic( en );
+      }            
     }
   }
 

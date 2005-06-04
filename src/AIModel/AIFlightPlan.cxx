@@ -50,6 +50,7 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
   SGPath path( globals->get_fg_root() );
   path.append( ("/Data/AI/FlightPlans/" + filename).c_str() );
   SGPropertyNode root;
+  repeat = false;
 
   try {
       readProperties(path.str(), &root);
@@ -471,4 +472,10 @@ void FGAIFlightPlan::resetWaypoints()
       deleteWaypoints();
       waypoints.push_back(wpt);
     }
+}
+
+// Start flightplan over from the beginning
+void FGAIFlightPlan::restart()
+{
+  wpt_iterator = waypoints.begin();
 }

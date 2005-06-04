@@ -1,4 +1,4 @@
-// AIManager.hxx - experimental! - David Culp - based on:
+// AIManager.hxx - David Culp - based on:
 // AIMgr.hxx - definition of FGAIMgr 
 // - a global management class for FlightGear generated AI traffic
 //
@@ -87,6 +87,7 @@ public:
     void* createStorm( FGAIModelEntity *entity );
     void* createShip( FGAIModelEntity *entity );
     void* createCarrier( FGAIModelEntity *entity );
+    void* createStatic( FGAIModelEntity *entity );
 
     void destroyObject( void* ID );
 

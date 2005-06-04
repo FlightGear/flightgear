@@ -85,18 +85,23 @@ public:
   double getLeadInAngle() { return leadInAngle; };
   string getRunway() { return rwy._rwy_no; };
   string getRunwayId() { return rwy._id; };
+  void setRepeat(bool r) { repeat = r; };
+  bool getRepeat(void) { return repeat; };
+  void restart(void);
+
 private:
   FGRunway rwy;
-    typedef vector <waypoint*> wpt_vector_type;
-    typedef wpt_vector_type::iterator wpt_vector_iterator;
+  typedef vector <waypoint*> wpt_vector_type;
+  typedef wpt_vector_type::iterator wpt_vector_iterator;
 
-    wpt_vector_type       waypoints;
-    wpt_vector_iterator   wpt_iterator;
+  wpt_vector_type       waypoints;
+  wpt_vector_iterator   wpt_iterator;
 
-    double distance_to_go;
-    double lead_distance;
+  bool repeat;
+  double distance_to_go;
+  double lead_distance;
   double leadInAngle;
-    time_t start_time;
+   time_t start_time;
   int leg;
   int gateId;
 

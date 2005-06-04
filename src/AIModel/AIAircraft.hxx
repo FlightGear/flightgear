@@ -61,6 +61,7 @@ public:
 
         void SetPerformance(const PERF_STRUCT *ps);
         void SetFlightPlan(FGAIFlightPlan *f);
+        FGAIFlightPlan* GetFlightPlan() { return fp; };
         void AccelTo(double speed);
         void PitchTo(double angle);
         void RollTo(double angle);

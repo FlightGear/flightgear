@@ -584,7 +584,12 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now )
     // Current waypoint's elevation according to Terrain Elevation
     if (curr->finished) {  //end of the flight plan
       {
-	setDie(true);
+         if (fp->getRepeat()) {
+           fp->restart();
+         } else {   
+ 	  setDie(true);
+         } 
+
 	//cerr << "Done die end of fp" << endl;
       }
       return;

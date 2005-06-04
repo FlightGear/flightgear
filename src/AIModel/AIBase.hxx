@@ -40,7 +40,7 @@ class FGAIFlightPlan;
 typedef struct {
    string callsign;
 
-   // can be aircraft, ship, storm, thermal or ballistic
+   // can be aircraft, ship, storm, thermal, static or ballistic
    string m_type;
    string m_class;
    string path;
@@ -93,7 +93,7 @@ public:
     inline Point3D GetPos() { return(pos); }
 
     enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
-                       otRocket, otStorm, otThermal, 
+                       otRocket, otStorm, otThermal, otStatic,
                        MAX_OBJECTS };	// Needs to be last!!!
 
     virtual bool init();
@@ -167,7 +167,7 @@ protected:
     FGAIFlightPlan *fp;
 
     void Transform();
-
+    void CalculateMach();
     double UpdateRadar(FGAIManager* manager);
 
     string _type_str;

@@ -81,41 +81,11 @@ FGAIBase::~FGAIBase() {
 }
 
 void FGAIBase::update(double dt) {
+    if (_otype == otStatic) return;
+    if (_otype == otBallistic) CalculateMach();
+
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()*SGD_DEGREES_TO_RADIANS);
     ft_per_deg_lon = 365228.16 * cos(pos.lat()*SGD_DEGREES_TO_RADIANS);
-
-    // Calculate rho at altitude, using standard atmosphere
-    // For the temperature T and the pressure p,
-
-    if (altitude < 36152) {		// curve fits for the troposphere
-      T = 59 - 0.00356 * altitude;
-      p = 2116 * pow( ((T + 459.7) / 518.6) , 5.256);
-
-    } else if ( 36152 < altitude && altitude < 82345 ) {    // lower stratosphere
-      T = -70;
-      p = 473.1 * pow( e , 1.73 - (0.000048 * altitude) );
-
-    } else {                                    //  upper stratosphere
-      T = -205.05 + (0.00164 * altitude);
-      p = 51.97 * pow( ((T + 459.7) / 389.98) , -11.388);
-    }
-
-    rho = p / (1718 * (T + 459.7));
-	
-	// calculate the speed of sound at altitude
-	// a = sqrt ( g * R * (T + 459.7))
-	// where:
-	// a = speed of sound [ft/s]
-	// g = specific heat ratio, which is usually equal to 1.4  
-	// R = specific gas constant, which equals 1716 ft-lb/slug/°R 
-	
-	a = sqrt ( 1.4 * 1716 * (T + 459.7));
-	
-	// calculate Mach number
-	
-	Mach = speed/a;
-	
-//	cout  << "Speed(ft/s) "<< speed <<" Altitude(ft) "<< altitude << " Mach " << Mach;
 }
 
 void FGAIBase::Transform() {
@@ -393,3 +363,39 @@ bool FGAIBase::_isNight() {
 int FGAIBase::_getID() const {
     return (int)(this);
 }
+
+void FGAIBase::CalculateMach() {
+     // Calculate rho at altitude, using standard atmosphere
+     // For the temperature T and the pressure p,
+ 
+     if (altitude < 36152) {		// curve fits for the troposphere
+       T = 59 - 0.00356 * altitude;
+       p = 2116 * pow( ((T + 459.7) / 518.6) , 5.256);
+ 
+     } else if ( 36152 < altitude && altitude < 82345 ) {    // lower stratosphere
+       T = -70;
+       p = 473.1 * pow( e , 1.73 - (0.000048 * altitude) );
+ 
+     } else {                                    //  upper stratosphere
+       T = -205.05 + (0.00164 * altitude);
+       p = 51.97 * pow( ((T + 459.7) / 389.98) , -11.388);
+     }
+ 
+     rho = p / (1718 * (T + 459.7));
+ 	
+ 	// calculate the speed of sound at altitude
+ 	// a = sqrt ( g * R * (T + 459.7))
+ 	// where:
+ 	// a = speed of sound [ft/s]
+ 	// g = specific heat ratio, which is usually equal to 1.4  
+ 	// R = specific gas constant, which equals 1716 ft-lb/slug/°R 
+ 	
+ 	a = sqrt ( 1.4 * 1716 * (T + 459.7));
+ 	
+ 	// calculate Mach number
+ 	
+ 	Mach = speed/a;
+ 	
+ //	cout  << "Speed(ft/s) "<< speed <<" Altitude(ft) "<< altitude << " Mach " << Mach;
+}
+
