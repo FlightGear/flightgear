@@ -1841,6 +1841,8 @@ bool fgInitSubsystems() {
     ///////////////////////////////////////////////////////////////////
     parseWaypoints();
 
+    // initialize methods that depend on other subsystems.
+    globals->get_subsystem_mgr()->postinit();
 
     ////////////////////////////////////////////////////////////////////////
     // End of subsystem initialization.
