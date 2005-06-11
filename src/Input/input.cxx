@@ -438,7 +438,7 @@ FGInput::_init_joystick ()
   int js_named_index = 1000;
   _scan_joystick_dir(&path, js_nodes, &js_named_index);
 
-  // build name->node map for each <name> (reverse order)
+  // build name->node map with each <name> (reverse order)
   map<string, SGPropertyNode_ptr> jsmap;
   vector<SGPropertyNode_ptr> js_named = js_nodes->getChildren("js-named");
 
@@ -469,20 +469,16 @@ FGInput::_init_joystick ()
       SGPropertyNode_ptr named;
 
       if ((named = jsmap[name])) {
-        string source = named->getStringValue("source", "");
-        if (source.empty())
-          SG_LOG(SG_INPUT, SG_INFO, "... found joystick (user defined)");
-        else
-          SG_LOG(SG_INPUT, SG_INFO, "... found joystick: \"" << source << '"');
+        string source = named->getStringValue("source", "user defined");
+        SG_LOG(SG_INPUT, SG_INFO, "... found joystick: \"" << source << '"');
 
       } else if ((named = jsmap["default"])) {
-        string source = named->getStringValue("source", "");
+        string source = named->getStringValue("source", "user defined");
         SG_LOG(SG_INPUT, SG_INFO, "No config found for joystick \"" << name
             << "\"\nUsing default: \"" << source << '"');
 
       } else {
-        SG_LOG(SG_INPUT, SG_ALERT, "No default joystick found! (<name>default</name>)");
-        continue;
+        throw sg_throwable(string("No default joystick found! (<name>default</name>)"));
       }
 
       js_node = js_nodes->getChild("js", i, true);
