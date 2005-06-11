@@ -33,6 +33,7 @@
 
 #include <simgear/compiler.h>
 
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/props/condition.hxx>
@@ -195,6 +196,7 @@ public:
   //
   virtual void init ();
   virtual void reinit ();
+  virtual void postinit ();
   virtual void update (double dt);
   virtual void suspend ();
   virtual void resume ();
@@ -360,6 +362,13 @@ private:
 
 
   /**
+   * Scan directory recursively for "named joystick" configuration files,
+   * and read them into /input/joysticks/js-named[index]++.
+   */
+  void _scan_joystick_dir (SGPath *path, SGPropertyNode* node, int *index);
+
+
+  /**
    * Initialize mouse bindings.
    */
   void _init_mouse ();
@@ -372,6 +381,11 @@ private:
 			    button &b,
 			    const string name);
 
+  /**
+   * Initialize nasal parts that had to wait for the nasal to get
+   * functional.
+   */
+  void _postinit_joystick ();
 
   /**
    * Update the keyboard.

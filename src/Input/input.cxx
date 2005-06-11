@@ -25,7 +25,7 @@
 #endif
 
 #ifdef HAVE_WINDOWS_H
-#  include <windows.h>                     
+#  include <windows.h>
 #endif
 
 #include <simgear/compiler.h>
@@ -50,6 +50,7 @@
 #include <Cockpit/panel_io.hxx>
 #include <GUI/gui.h>
 #include <Model/panelnode.hxx>
+#include <Scripting/NasalSys.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -183,6 +184,12 @@ void
 FGInput::reinit ()
 {
     init();
+}
+
+void
+FGInput::postinit ()
+{
+  _postinit_joystick();
 }
 
 void 
@@ -389,6 +396,31 @@ FGInput::_init_keyboard ()
 
 
 void
+FGInput::_scan_joystick_dir(SGPath *path, SGPropertyNode* node, int *index)
+{
+  ulDir *dir = ulOpenDir(path->c_str());
+  if (dir) {
+    ulDirEnt* dent;
+    while ((dent = ulReadDir(dir)) != 0) {
+      if (dent->d_name[0] == '.')
+        continue;
+
+      SGPath p(path->str());
+      p.append(dent->d_name);
+      _scan_joystick_dir(&p, node, index);
+    }
+    ulCloseDir(dir);
+
+  } else if (path->extension() == "xml") {
+    SG_LOG(SG_INPUT, SG_DEBUG, "Reading joystick file " << path->str());
+    SGPropertyNode *n = node->getChild("js-named", (*index)++, true);
+    readProperties(path->str(), n);
+    n->setStringValue("source", path->c_str());
+  }
+}
+
+
+void
 FGInput::_init_joystick ()
 {
   jsInit();
@@ -400,40 +432,65 @@ FGInput::_init_joystick ()
     js_nodes = fgGetNode("/input/joysticks", true);
   }
 
+  // read all joystick xml files into /input/joysticks/js_named[1000++]
+  SGPath path(globals->get_fg_root());
+  path.append("Input/Joysticks");
+  int js_named_index = 1000;
+  _scan_joystick_dir(&path, js_nodes, &js_named_index);
+
+  // build name->node map for each <name> (reverse order)
+  map<string, SGPropertyNode_ptr> jsmap;
+  vector<SGPropertyNode_ptr> js_named = js_nodes->getChildren("js-named");
+
+  for (int k = (int)js_named.size() - 1; k >= 0; k--) {
+    SGPropertyNode *n = js_named[k];
+    vector<SGPropertyNode_ptr> names = n->getChildren("name");
+    if (names.size() && (n->getChildren("axis").size() || n->getChildren("button").size()))
+      for (unsigned int j = 0; j < names.size(); j++)
+        jsmap[names[j]->getStringValue()] = n;
+  }
+
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
-    SGPropertyNode_ptr js_node = js_nodes->getChild("js", i);
-    if (js_node == 0) {
-      SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for joystick " << i);
-      js_node = js_nodes->getChild("js", i, true);
-    }
     jsJoystick * js = new jsJoystick(i);
     _joystick_bindings[i].js = js;
     if (js->notWorking()) {
       SG_LOG(SG_INPUT, SG_DEBUG, "Joystick " << i << " not found");
       continue;
-    } else {
-      bool found_js = false;
-      const char * name = js->getName();
-      SG_LOG(SG_INPUT, SG_INFO, "Looking for bindings for joystick \""
-             << name << '"');
-      vector<SGPropertyNode_ptr> nodes = js_nodes->getChildren("js-named");
-      for (unsigned int i = 0; i < nodes.size(); i++) {
-        SGPropertyNode_ptr node = nodes[i];
-        vector<SGPropertyNode_ptr> name_nodes = node->getChildren("name");
-        for (unsigned int j = 0; j < name_nodes.size(); j++) {
-            const char * js_name = name_nodes[j]->getStringValue();
-            SG_LOG(SG_INPUT, SG_INFO, "  Trying \"" << js_name << '"');
-            if (!strcmp(js_name, name)) {
-                SG_LOG(SG_INPUT, SG_INFO, "  Found bindings");
-                js_node = node;
-                found_js = true;
-                break;
-            }
-        }
-        if (found_js)
-            break;
-      }
     }
+
+    const char * name = js->getName();
+    SGPropertyNode_ptr js_node = js_nodes->getChild("js", i);
+
+    if (js_node) {
+      SG_LOG(SG_INPUT, SG_INFO, "Using existing bindings for joystick " << i);
+
+    } else {
+      SG_LOG(SG_INPUT, SG_INFO, "Looking for bindings for joystick \"" << name << '"');
+      SGPropertyNode_ptr named;
+
+      if ((named = jsmap[name])) {
+        string source = named->getStringValue("source", "");
+        if (source.empty())
+          SG_LOG(SG_INPUT, SG_INFO, "... found joystick (user defined)");
+        else
+          SG_LOG(SG_INPUT, SG_INFO, "... found joystick: \"" << source << '"');
+
+      } else if ((named = jsmap["default"])) {
+        string source = named->getStringValue("source", "");
+        SG_LOG(SG_INPUT, SG_INFO, "No config found for joystick \"" << name
+            << "\"\nUsing default: \"" << source << '"');
+
+      } else {
+        SG_LOG(SG_INPUT, SG_ALERT, "No default joystick found! (<name>default</name>)");
+        continue;
+      }
+
+      js_node = js_nodes->getChild("js", i, true);
+      copyProperties(named, js_node);
+      js_node->setStringValue("id", name);
+    }
+
+
 #ifdef WIN32
     JOYCAPS jsCaps ;
     joyGetDevCaps( i, &jsCaps, sizeof(jsCaps) );
@@ -442,7 +499,7 @@ FGInput::_init_joystick ()
 #else
     int nbuttons = MAX_JOYSTICK_BUTTONS;
 #endif
-        
+
     int naxes = js->getNumAxes();
     if (naxes > MAX_JOYSTICK_AXES) naxes = MAX_JOYSTICK_AXES;
     _joystick_bindings[i].naxes = naxes;
@@ -484,7 +541,7 @@ FGInput::_init_joystick ()
              continue;
       }
 
-      if (n_axis >= (size_t)naxes) {
+      if (n_axis >= naxes) {
           SG_LOG(SG_INPUT, SG_DEBUG, "Dropping bindings for axis " << n_axis);
           continue;
       }
@@ -502,7 +559,7 @@ FGInput::_init_joystick ()
       // Initialize the virtual axis buttons.
       _init_button(axis_node->getChild("low"), a.low, "low");
       a.low_threshold = axis_node->getDoubleValue("low-threshold", -0.9);
-      
+
       _init_button(axis_node->getChild("high"), a.high, "high");
       a.high_threshold = axis_node->getDoubleValue("high-threshold", 0.9);
       a.interval_sec = axis_node->getDoubleValue("interval-sec",0.0);
@@ -532,8 +589,8 @@ FGInput::_init_joystick ()
       _init_button(button_node,
                    _joystick_bindings[i].buttons[n_but],
                    buf);
-      
-      // get interval-sec property             
+
+      // get interval-sec property
       button &b = _joystick_bindings[i].buttons[n_but];
       if (button_node != 0) {
         b.interval_sec = button_node->getDoubleValue("interval-sec",0.0);
@@ -545,7 +602,23 @@ FGInput::_init_joystick ()
     js->setMaxRange(maxRange);
     js->setCenter(center);
   }
+
+  for (unsigned int m = 0; m < js_named.size(); m++)
+    js_nodes->removeChild("js-named", js_named[m]->getIndex(), false);
 }
+
+
+void
+FGInput::_postinit_joystick()
+{
+  vector<SGPropertyNode_ptr> js = fgGetNode("/input/joysticks")->getChildren("js");
+  for (unsigned int i = 0; i < js.size(); i++) {
+    vector<SGPropertyNode_ptr> nasal = js[i]->getChildren("nasal");
+    for (unsigned int j = 0; j < nasal.size(); j++)
+      ((FGNasalSys*)globals->get_subsystem("nasal"))->handleCommand(nasal[j]);
+  }
+}
+
 
 // 
 // Map of all known cursor names
@@ -696,7 +769,6 @@ FGInput::_update_joystick (double dt)
                                 // position fires the bindings.
       if (fabs(axis_values[j] - a.last_value) > a.tolerance) {
 //      SG_LOG(SG_INPUT, SG_DEBUG, "Axis " << j << " has moved");
-        SGPropertyNode node;
         a.last_value = axis_values[j];
 //      SG_LOG(SG_INPUT, SG_DEBUG, "There are "
 //             << a.bindings[modifiers].size() << " bindings");
