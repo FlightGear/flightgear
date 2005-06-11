@@ -133,8 +133,12 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root)
   modelLoaded = false;
   IsSlave = false;
 
+  // Multiple FDM's are stopped for now.  We need to ensure that
+  // the "user" instance always gets the zeroeth instance number,
+  // because there may be instruments or scripts tied to properties
+  // in the jsbsim[0] node.
   IdFDM = FDMctr;
-  FDMctr++;
+  //FDMctr++;
 
   try {
     char* num = getenv("JSBSIM_DEBUG");

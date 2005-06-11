@@ -142,6 +142,10 @@ FGJSBsim::FGJSBsim( double dt )
         }
     }
 
+    reset_on_crash = fgGetBool("/sim/reset-on-crash", false);
+    crashed = false;
+    fgSetBool("/sim/crashed", false);
+
     fdmex = new FGFDMExec( (FGPropertyManager*)globals->get_props() );
 
     // Register ground callback.
@@ -813,11 +817,10 @@ bool FGJSBsim::copy_from_JSBsim()
     speedbrake_pos_pct->setDoubleValue( FCS->GetDsbPos(ofNorm) );
     spoilers_pos_pct->setDoubleValue( FCS->GetDspPos(ofNorm) );
 
-    // force a sim reset if crashed (altitude AGL < 0)
+    // crashed (altitude AGL < 0)
     if (get_Altitude_AGL() < 0.0) {
-         fgSetBool("/sim/crashed", true);
-         SGPropertyNode* node = fgGetNode("/sim/presets", true);
-         globals->get_commands()->execute("old-reinit-dialog", node);
+      crash_message = "Attempted to fly under ground.";
+      crash_handler();
     }
 
     return true;
@@ -1093,3 +1096,17 @@ void FGJSBsim::update_ic(void)
    }
 }
 
+void FGJSBsim::crash_handler(void)
+{
+   if (crashed) return;  // we already crashed
+   crashed = true;
+   fgSetBool("/sim/crashed", true);
+   SG_LOG( SG_FLIGHT, SG_WARN, "  Crash: " << crash_message );
+   if (reset_on_crash) {
+     SGPropertyNode* node = fgGetNode("/sim/presets", true);
+     globals->get_commands()->execute("old-reinit-dialog", node);   
+   } else {
+     fgSetBool("/sim/freeze/master", true);
+     fgSetBool("/sim/freeze/clock", true);
+   }
+}

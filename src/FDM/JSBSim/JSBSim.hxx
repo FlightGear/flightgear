@@ -205,6 +205,9 @@ public:
     void do_trim(void);
     void update_ic(void);
 
+    //** Handle a crash of the user aircraft. */
+    void crash_handler();
+
 private:
     FGFDMExec *fdmex;
     FGInitialCondition *fgic;
@@ -262,6 +265,10 @@ private:
 
     void init_gear(void);
     void update_gear(void);
+
+    bool reset_on_crash;
+    bool crashed;
+    string crash_message;
 
 };
 
