@@ -1192,7 +1192,7 @@ void FGAirportList::add( const string id, const double longitude,
     rwyPrefPath.append( "/Airports/AI/" );
     rwyPrefPath.append(id);
     rwyPrefPath.append("rwyuse.xml");
-    if (ai_dirs.find(parkpath.str()) != ai_dirs.end()
+    if (ai_dirs.find(id.c_str()) != ai_dirs.end()
         && parkpath.exists()) 
       {
 	try {
@@ -1202,7 +1202,7 @@ void FGAirportList::add( const string id, const double longitude,
 	  //cerr << "unable to read " << parkpath.str() << endl;
 	}
       }
-    if (ai_dirs.find(rwyPrefPath.str()) != ai_dirs.end()
+    if (ai_dirs.find(id.c_str()) != ai_dirs.end()
         && rwyPrefPath.exists()) 
       {
 	try {
