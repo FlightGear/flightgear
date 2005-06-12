@@ -466,7 +466,7 @@ FGInput::_init_joystick ()
 
       if ((named = jsmap[name])) {
         string source = named->getStringValue("source", "user defined");
-        SG_LOG(SG_INPUT, SG_INFO, "... found joystick: \"" << source << '"');
+        SG_LOG(SG_INPUT, SG_INFO, "... found joystick: " << source);
 
       } else if ((named = jsmap["default"])) {
         string source = named->getStringValue("source", "user defined");
@@ -474,7 +474,8 @@ FGInput::_init_joystick ()
             << "\"\nUsing default: \"" << source << '"');
 
       } else {
-        throw sg_throwable(string("No joystick configuration file with <name>default</name> entry found!"));
+        throw sg_throwable(string("No joystick configuration file with "
+            "<name>default</name> entry found!"));
       }
 
       js_node = js_nodes->getChild("js", i, true);
@@ -603,12 +604,17 @@ FGInput::_init_joystick ()
 void
 FGInput::_postinit_joystick()
 {
-  vector<SGPropertyNode_ptr> js = fgGetNode("/input/joysticks")->getChildren("js");
+  SGPropertyNode *js_nodes = fgGetNode("/input/joysticks");
+  vector<SGPropertyNode_ptr> js = js_nodes->getChildren("js");
   for (unsigned int i = 0; i < js.size(); i++) {
+    // leave temporary hint for the nasal init block
+    js_nodes->setStringValue("this", js[i]->getPath());
+
     vector<SGPropertyNode_ptr> nasal = js[i]->getChildren("nasal");
     for (unsigned int j = 0; j < nasal.size(); j++)
       ((FGNasalSys*)globals->get_subsystem("nasal"))->handleCommand(nasal[j]);
   }
+  js_nodes->removeChild("this", 0);
 }
 
 
