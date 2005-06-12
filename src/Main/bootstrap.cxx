@@ -195,8 +195,10 @@ int main ( int argc, char **argv ) {
                             // We must use cerr rather than
                             // logging, since logging may be
                             // disabled.
-        cerr << "Fatal error: " << t.getFormattedMessage()
-             << "\n (received from " << t.getOrigin() << ')' << endl;
+        cerr << "Fatal error: " << t.getFormattedMessage() << endl;
+        if (!t.getOrigin().empty())
+            cerr << " (received from " << t.getOrigin() << ')' << endl;
+
     } catch (...) {
         cerr << "Unknown exception in the main loop. Aborting..." << endl;
         perror("Possible cause");
