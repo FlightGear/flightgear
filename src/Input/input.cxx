@@ -426,11 +426,7 @@ FGInput::_init_joystick ()
   jsInit();
                                 // TODO: zero the old bindings first.
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick bindings");
-  SGPropertyNode * js_nodes = fgGetNode("/input/joysticks");
-  if (js_nodes == 0) {
-    SG_LOG(SG_INPUT, SG_WARN, "No joystick bindings (/input/joysticks)!!");
-    js_nodes = fgGetNode("/input/joysticks", true);
-  }
+  SGPropertyNode * js_nodes = fgGetNode("/input/joysticks", true);
 
   // read all joystick xml files into /input/joysticks/js_named[1000++]
   SGPath path(globals->get_fg_root());
