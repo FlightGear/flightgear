@@ -427,6 +427,7 @@ FGInput::_init_joystick ()
                                 // TODO: zero the old bindings first.
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick bindings");
   SGPropertyNode * js_nodes = fgGetNode("/input/joysticks", true);
+  _which_joystick = js_nodes->getNode("which", true);
 
   // read all joystick xml files into /input/joysticks/js_named[1000++]
   SGPath path(globals->get_fg_root());
@@ -607,14 +608,12 @@ FGInput::_postinit_joystick()
   SGPropertyNode *js_nodes = fgGetNode("/input/joysticks");
   vector<SGPropertyNode_ptr> js = js_nodes->getChildren("js");
   for (unsigned int i = 0; i < js.size(); i++) {
-    // leave temporary hint for the nasal init block
-    js_nodes->setStringValue("this", js[i]->getPath());
+    _which_joystick->setIntValue(i);
 
     vector<SGPropertyNode_ptr> nasal = js[i]->getChildren("nasal");
     for (unsigned int j = 0; j < nasal.size(); j++)
       ((FGNasalSys*)globals->get_subsystem("nasal"))->handleCommand(nasal[j]);
   }
-  js_nodes->removeChild("this", 0);
 }
 
 
@@ -755,8 +754,8 @@ FGInput::_update_joystick (double dt)
     if (js == 0 || js->notWorking())
       continue;
 
+    _which_joystick->setIntValue(i);
     js->read(&buttons, axis_values);
-
 
                                 // Fire bindings for the axes.
     for ( j = 0; j < _joystick_bindings[i].naxes; j++) {

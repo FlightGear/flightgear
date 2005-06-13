@@ -429,6 +429,7 @@ private:
   joystick _joystick_bindings[MAX_JOYSTICKS];
   mouse _mouse_bindings[MAX_MICE];
 
+  SGPropertyNode *_which_joystick;
 };
 
 #endif // _INPUT_HXX
