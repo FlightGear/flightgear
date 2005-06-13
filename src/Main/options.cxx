@@ -1535,9 +1535,11 @@ fgParseOptions (const string& path) {
 #endif
 
         // catch extraneous (DOS) line ending character
-        if ( line[line.length() - 1] < 32 ) {
-            line = line.substr( 0, line.length()-1 );
-        }
+        int i;
+        for (i = line.length(); i > 0; i--)
+            if (line[i - 1] > 32)
+                break;
+        line = line.substr( 0, i );
 
 	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
             cerr << endl << "Config file parse error: " << path << " '" 
