@@ -24,8 +24,6 @@
 
 FGSystemMgr::FGSystemMgr ()
 {
-    set_subsystem( "electrical", new FGElectricalSystem );
-
     config_props = new SGPropertyNode;
 
     SGPropertyNode *path_n = fgGetNode("/sim/systems/path");
@@ -78,7 +76,10 @@ bool FGSystemMgr::build ()
         string name = node->getName();
         std::ostringstream temp;
         temp << i;
-        if ( name == "pitot" ) {
+        if ( name == "electrical" ) {
+            set_subsystem( "electrical" + temp.str(),
+                           new FGElectricalSystem( node ) );
+        } else if ( name == "pitot" ) {
             set_subsystem( "system" + temp.str(), 
                            new PitotSystem( node ) );
         } else if ( name == "static" ) {
