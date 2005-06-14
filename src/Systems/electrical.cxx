@@ -48,16 +48,21 @@ FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
     // cout << "_model = " << _model << endl;
     if ( _model == "battery" ) {
         model = FG_BATTERY;
+        amp_hours = node->getFloatValue("amp-hours", 40.0);
+        percent_remaining = node->getFloatValue("percent-remaining", 1.0);
+        charge_amps = node->getFloatValue("charge-amps", 7.0);
     } else if ( _model == "alternator" ) {
         model = FG_ALTERNATOR;
+        rpm_src = node->getStringValue("rpm-source");
+        rpm_threshold = node->getFloatValue("rpm-threshold", 600.0);
+        ideal_amps = node->getFloatValue("amps", 60.0);
     } else if ( _model == "external" ) {
         model = FG_EXTERNAL;
+        ideal_amps = node->getFloatValue("amps", 60.0);
     } else {
         model = FG_UNKNOWN;
     }
-    volts = node->getDoubleValue("volts");
-    amps = node->getDoubleValue("amps");
-    rpm_src = node->getStringValue("rpm-source");
+    ideal_volts = node->getFloatValue("volts");
 
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
@@ -67,7 +72,7 @@ FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
             string prop = child->getStringValue();
             // cout << "  Adding prop = " << prop << endl;
             add_prop( prop );
-            fgSetDouble( prop.c_str(), amps );
+            fgSetFloat( prop.c_str(), ideal_amps );
         }
     }
 
@@ -75,24 +80,97 @@ FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
 }  
 
 
-double FGElectricalSupplier::get_output() {
+float FGElectricalSupplier::apply_load( float amps, float dt ) {
     if ( model == FG_BATTERY ) {
-        // cout << "battery amps = " << amps << endl;
-        return amps;
+        // calculate amp hours used
+        float amphrs_used = amps * dt / 3600.0;
+
+        // calculate percent of total available capacity
+        float percent_used = amphrs_used / amp_hours;
+        percent_remaining -= percent_used;
+        if ( percent_remaining < 0.0 ) {
+            percent_remaining = 0.0;
+        } else if ( percent_remaining > 1.0 ) {
+            percent_remaining = 1.0;
+        }
+        // cout << "battery percent = " << percent_remaining << endl;
+        return amp_hours * percent_remaining;
     } else if ( model == FG_ALTERNATOR ) {
         // scale alternator output for rpms < 600.  For rpms >= 600
         // give full output.  This is just a WAG, and probably not how
         // it really works but I'm keeping things "simple" to start.
-        double rpm = _rpm_node->getDoubleValue();
-        double factor = rpm / 600.0;
+        float rpm = _rpm_node->getFloatValue();
+        float factor = rpm / rpm_threshold;
         if ( factor > 1.0 ) {
             factor = 1.0;
         }
         // cout << "alternator amps = " << amps * factor << endl;
-        return amps * factor;
+        float available_amps = ideal_amps * factor;
+        return available_amps - amps;
     } else if ( model == FG_EXTERNAL ) {
         // cout << "external amps = " << 0.0 << endl;
-        return 0.0;
+        return available_amps - amps;
+    } else {
+        SG_LOG( SG_ALL, SG_ALERT, "unknown supplier type" );
+    }
+
+    return 0.0;
+}
+
+
+float FGElectricalSupplier::get_output_volts() {
+    if ( model == FG_BATTERY ) {
+        // cout << "battery amps = " << amps << endl;
+        float x = 1.0 - percent_remaining;
+        float tmp = -(3.0 * x - 1.0);
+        float factor = (tmp*tmp*tmp*tmp*tmp + 32) / 32;
+        // cout << "battery % = " << percent_remaining <<
+        //         " factor = " << factor << endl;
+        // percent_remaining -= 0.001;
+        return ideal_volts * factor;
+    } else if ( model == FG_ALTERNATOR ) {
+        // scale alternator output for rpms < 600.  For rpms >= 600
+        // give full output.  This is just a WAG, and probably not how
+        // it really works but I'm keeping things "simple" to start.
+        float rpm = _rpm_node->getFloatValue();
+        float factor = rpm / rpm_threshold;
+        if ( factor > 1.0 ) {
+            factor = 1.0;
+        }
+        // cout << "alternator amps = " << amps * factor << endl;
+        return ideal_volts * factor;
+    } else if ( model == FG_EXTERNAL ) {
+        // cout << "external amps = " << 0.0 << endl;
+        return ideal_volts;
+    } else {
+        SG_LOG( SG_ALL, SG_ALERT, "unknown supplier type" );
+    }
+
+    return 0.0;
+}
+
+
+float FGElectricalSupplier::get_output_amps() {
+    if ( model == FG_BATTERY ) {
+        // cout << "battery amp_hours = " << amp_hours << endl;
+
+        // This is a WAG, but produce enough amps to burn the entire
+        // battery in one minute.
+        return amp_hours * 60.0;
+    } else if ( model == FG_ALTERNATOR ) {
+        // scale alternator output for rpms < 600.  For rpms >= 600
+        // give full output.  This is just a WAG, and probably not how
+        // it really works but I'm keeping things "simple" to start.
+        float rpm = _rpm_node->getFloatValue();
+        float factor = rpm / rpm_threshold;
+        if ( factor > 1.0 ) {
+            factor = 1.0;
+        }
+        // cout << "alternator amps = " << ideal_amps * factor << endl;
+        return ideal_amps * factor;
+    } else if ( model == FG_EXTERNAL ) {
+        // cout << "external amps = " << 0.0 << endl;
+        return ideal_amps;
     } else {
         SG_LOG( SG_ALL, SG_ALERT, "unknown supplier type" );
     }
@@ -118,12 +196,12 @@ FGElectricalBus::FGElectricalBus ( SGPropertyNode *node ) {
 
 FGElectricalOutput::FGElectricalOutput ( SGPropertyNode *node ) {
     kind = FG_OUTPUT;
-    output_amps = 0.1;          // arbitrary default value
+    load_amps = 0.1;            // arbitrary default value
 
     name = node->getStringValue("name");
     SGPropertyNode *draw = node->getNode("rated-draw");
     if ( draw != NULL ) {
-        output_amps = draw->getDoubleValue();
+        load_amps = draw->getFloatValue();
     }
     // cout << "rated draw = " << output_amps << endl;
 
@@ -204,6 +282,10 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
                     s->add_input( this );
                 } else if ( s->get_kind() == FG_OUTPUT ) {
                     s->add_input( this );
+                } else if ( s->get_kind() == FG_SUPPLIER &&
+                            ((FGElectricalSupplier *)s)->get_model()
+                            == FGElectricalSupplier::FG_BATTERY ) {
+                    s->add_output( this );
                 } else {
                     SG_LOG( SG_ALL, SG_ALERT,
                             "Attempt to connect to something that can't provide an input: " 
@@ -246,9 +328,31 @@ bool FGElectricalConnector::get_state() {
 }
 
 
-FGElectricalSystem::FGElectricalSystem () :
+FGElectricalSystem::FGElectricalSystem ( SGPropertyNode *node ) :
+    name("electrical"),
+    num(0),
+    path(""),
     enabled(false)
 {
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else if ( cname == "path" ) {
+            path = cval;
+        } else {
+            SG_LOG( SG_SYSTEMS, SG_WARN,
+                    "Error in electrical system config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_SYSTEMS, SG_WARN, "Section = " << name );
+            }
+        }
+    }
 }
 
 
@@ -259,15 +363,31 @@ FGElectricalSystem::~FGElectricalSystem () {
 void FGElectricalSystem::init () {
     config_props = new SGPropertyNode;
 
-    SGPropertyNode *path_n = fgGetNode("/sim/systems/electrical/path");
     _volts_out = fgGetNode( "/systems/electrical/volts", true );
     _amps_out = fgGetNode( "/systems/electrical/amps", true );
 
-    if (path_n) {
-        SGPath config( globals->get_fg_root() );
-        config.append( path_n->getStringValue() );
+    // allow the electrical system to be specified via the
+    // aircraft-set.xml file (for backwards compatibility) or through
+    // the aircraft-systems.xml file.  If a -set.xml entry is
+    // specified, that overrides the system entry.
+    SGPropertyNode *path_n = fgGetNode("/sim/systems/electrical/path");
+    if ( path_n ) {
+        if ( path.length() ) {
+            SG_LOG( SG_ALL, SG_ALERT,
+                    "NOTICE: System manager configuration specifies an " <<
+                    "electrical system model from: " << path << " but it is " <<
+                    "being overridden by the one specified in the -set.xml " <<
+                    "file: " << path_n->getStringValue() );
+        }
 
-        SG_LOG( SG_ALL, SG_INFO, "Reading electrical system model from "
+        path = path_n->getStringValue();
+    }
+
+    if ( path.length() ) {
+        SGPath config( globals->get_fg_root() );
+        config.append( path );
+
+        SG_LOG( SG_ALL, SG_ALERT, "Reading electrical system model from "
                 << config.str() );
         try {
             readProperties( config.str(), config_props );
@@ -290,7 +410,11 @@ void FGElectricalSystem::init () {
 
     } else {
         SG_LOG( SG_ALL, SG_WARN,
-                "No electrical model specified for this model!");
+                "No xml-based electrical model specified for this model!");
+    }
+
+    if ( !enabled ) {
+        _amps_out->setDoubleValue(0);
     }
 
     delete config_props;
@@ -307,71 +431,118 @@ void FGElectricalSystem::unbind () {
 
 void FGElectricalSystem::update (double dt) {
     if ( !enabled ) {
-        _amps_out->setDoubleValue(0);
         return;
     }
 
-    // cout << "Updating electrical system" << endl;
+    // cout << "Updating electrical system, dt = " << dt << endl;
 
     unsigned int i;
 
-    // zero everything out before we start
+    // zero out the voltage before we start, but don't clear the
+    // requested load values.
     for ( i = 0; i < suppliers.size(); ++i ) {
         suppliers[i]->set_volts( 0.0 );
-        suppliers[i]->set_load_amps( 0.0 );
     }
     for ( i = 0; i < buses.size(); ++i ) {
         buses[i]->set_volts( 0.0 );
-        buses[i]->set_load_amps( 0.0 );
     }
     for ( i = 0; i < outputs.size(); ++i ) {
         outputs[i]->set_volts( 0.0 );
-        outputs[i]->set_load_amps( 0.0 );
     }
     for ( i = 0; i < connectors.size(); ++i ) {
         connectors[i]->set_volts( 0.0 );
-        connectors[i]->set_load_amps( 0.0 );
     }
 
-    // for each supplier, propagate the electrical current
+    // for each "external" supplier, propagate the electrical current
     for ( i = 0; i < suppliers.size(); ++i ) {
-        // cout << " Updating: " << suppliers[i]->get_name() << endl;
-        propagate( suppliers[i], 0.0, " " );
+        FGElectricalSupplier *node = (FGElectricalSupplier *)suppliers[i];
+        if ( node->get_model() == FGElectricalSupplier::FG_EXTERNAL ) {
+            float load;
+            // cout << "Starting propagation: " << suppliers[i]->get_name()
+            //      << endl;
+            load = propagate( suppliers[i], dt,
+                              node->get_output_volts(),
+                              node->get_output_amps(),
+                              " " );
+
+            if ( node->apply_load( load, dt ) < 0.0 ) {
+                cout << "Error drawing more current than available!" << endl;
+            }
+        }     
     }
 
-    double alt_norm
-        = fgGetDouble("/systems/electrical/suppliers/alternator") / 60.0;
+    // for each "alternator" supplier, propagate the electrical
+    // current
+    for ( i = 0; i < suppliers.size(); ++i ) {
+        FGElectricalSupplier *node = (FGElectricalSupplier *)suppliers[i];
+        if ( node->get_model() == FGElectricalSupplier::FG_ALTERNATOR) {
+            float load;
+            // cout << "Starting propagation: " << suppliers[i]->get_name()
+            //      << endl;
+            load = propagate( suppliers[i], dt,
+                              node->get_output_volts(),
+                              node->get_output_amps(),
+                              " " );
+
+            if ( node->apply_load( load, dt ) < 0.0 ) {
+                cout << "Error drawing more current than available!" << endl;
+            }
+        }     
+    }
+
+    // for each "battery" supplier, propagate the electrical
+    // current
+    for ( i = 0; i < suppliers.size(); ++i ) {
+        FGElectricalSupplier *node = (FGElectricalSupplier *)suppliers[i];
+        if ( node->get_model() == FGElectricalSupplier::FG_BATTERY ) {
+            float load;
+            // cout << "Starting propagation: " << suppliers[i]->get_name()
+            //      << endl;
+            load = propagate( suppliers[i], dt,
+                              node->get_output_volts(),
+                              node->get_output_amps(),
+                              " " );
+            // cout << "battery load = " << load << endl;
+
+            if ( node->apply_load( load, dt ) < 0.0 ) {
+                cout << "Error drawing more current than available!" << endl;
+            }
+        }     
+    }
+
+    float alt_norm
+        = fgGetFloat("/systems/electrical/suppliers/alternator") / 60.0;
 
     // impliment an extremely simplistic voltage model (assumes
     // certain naming conventions in electrical system config)
     // FIXME: we probably want to be able to feed power from all
     // engines if they are running and the master-alt is switched on
-    double volts = 0.0;
+    float volts = 0.0;
     if ( fgGetBool("/controls/engines/engine[0]/master-bat") ) {
         volts = 24.0;
     }
     if ( fgGetBool("/controls/engines/engine[0]/master-alt") ) {
-        if ( fgGetDouble("/engines/engine[0]/rpm") > 800 ) {
-            double alt_contrib = 28.0;
+        if ( fgGetFloat("/engines/engine[0]/rpm") > 800 ) {
+            float alt_contrib = 28.0;
             if ( alt_contrib > volts ) {
                 volts = alt_contrib;
             }
-        } else if ( fgGetDouble("/engines/engine[0]/rpm") > 200 ) {
-            double alt_contrib = 20.0;
+        } else if ( fgGetFloat("/engines/engine[0]/rpm") > 200 ) {
+            float alt_contrib = 20.0;
             if ( alt_contrib > volts ) {
                 volts = alt_contrib;
             }
         }
     }
-    _volts_out->setDoubleValue( volts );
+    _volts_out->setFloatValue( volts );
 
     // impliment an extremely simplistic amps model (assumes certain
     // naming conventions in the electrical system config) ... FIXME:
     // make this more generic
-    double amps = 0.0;
+    float amps = 0.0;
     if ( fgGetBool("/controls/engines/engine[0]/master-bat") ) {
         if ( fgGetBool("/controls/engines/engine[0]/master-alt") &&
-             fgGetDouble("/engines/engine[0]/rpm") > 800 )
+             fgGetFloat("/engines/engine[0]/rpm") > 800 )
         {
             amps += 40.0 * alt_norm;
         }
@@ -386,7 +557,7 @@ void FGElectricalSystem::update (double dt) {
             amps = 7.0;
         }
     }
-    _amps_out->setDoubleValue( amps );
+    _amps_out->setFloatValue( amps );
 }
 
 
@@ -428,66 +599,99 @@ bool FGElectricalSystem::build () {
 
 // propagate the electrical current through the network, returns the
 // total current drawn by the children of this node.
-float FGElectricalSystem::propagate( FGElectricalComponent *node, double val,
-                                    string s ) {
+float FGElectricalSystem::propagate( FGElectricalComponent *node, double dt,
+                                     float input_volts, float input_amps,
+                                     string s ) {
     s += " ";
     
-    float current_amps = 0.0;
+    float total_load = 0.0;
 
     // determine the current to carry forward
-    double volts = 0.0;
+    float volts = 0.0;
     if ( !fgGetBool("/systems/electrical/serviceable") ) {
         volts = 0;
-    } else if ( node->get_kind() == FG_SUPPLIER ) {
-        // cout << s << " is a supplier" << endl;
-        volts = ((FGElectricalSupplier *)node)->get_output();
-    } else if ( node->get_kind() == FG_BUS ) {
-        // cout << s << " is a bus" << endl;
-        volts = val;
-    } else if ( node->get_kind() == FG_OUTPUT ) {
-        // cout << s << " is an output" << endl;
-        volts = val;
+    } else if ( node->get_kind() == FGElectricalComponent::FG_SUPPLIER ) {
+        // cout << s << "is a supplier (" << node->get_name() << ")" << endl;
+        FGElectricalSupplier *supplier = (FGElectricalSupplier *)node;
+        if ( supplier->get_model() == FGElectricalSupplier::FG_BATTERY ) {
+            // cout << s << " (and is a battery)" << endl;
+            float battery_volts = supplier->get_output_volts();
+            if ( battery_volts < (input_volts - 0.1) ) {
+                // special handling of a battery charge condition
+                // cout << s << "  (and is being charged) in v = "
+                //      << input_volts << " current v = " << battery_volts
+                //      << endl;
+                supplier->apply_load( -supplier->get_charge_amps(), dt );
+                return supplier->get_charge_amps();
+            }
+        }
+        volts = input_volts;
+    } else if ( node->get_kind() == FGElectricalComponent::FG_BUS ) {
+        // cout << s << "is a bus (" << node->get_name() << ")" << endl;
+        volts = input_volts;
+    } else if ( node->get_kind() == FGElectricalComponent::FG_OUTPUT ) {
+        // cout << s << "is an output (" << node->get_name() << ")" << endl;
+        volts = input_volts;
         if ( volts > 1.0 ) {
             // draw current if we have voltage
-            current_amps = ((FGElectricalOutput *)node)->get_output_amps();
+            total_load = node->get_load_amps();
         }
-    } else if ( node->get_kind() == FG_CONNECTOR ) {
-        // cout << s << " is a connector" << endl;
+    } else if ( node->get_kind() == FGElectricalComponent::FG_CONNECTOR ) {
+        // cout << s << "is a connector (" << node->get_name() << ")" << endl;
         if ( ((FGElectricalConnector *)node)->get_state() ) {
-            volts = val;
+            volts = input_volts;
         } else {
             volts = 0.0;
         }
-        // cout << s << "  val = " << volts << endl;
+        // cout << s << "  input_volts = " << volts << endl;
     } else {
         SG_LOG( SG_ALL, SG_ALERT, "unkown node type" );
     }
 
-    if ( volts > node->get_volts() ) {
-        node->set_volts( volts );
-    }
-
     int i;
 
-    // publish values to specified properties
-    for ( i = 0; i < node->get_num_props(); ++i ) {
-        fgSetDouble( node->get_prop(i).c_str(), node->get_volts() );
-    }
-    // cout << s << node->get_name() << " -> " << node->get_value() << endl;
+    // if this node has found a stronger power source, update the
+    // value and propagate to all children
+    if ( volts > node->get_volts() ) {
+        node->set_volts( volts );
+        for ( i = 0; i < node->get_num_outputs(); ++i ) {
+            FGElectricalComponent *child = node->get_output(i);
+            // send current equal to load
+            total_load += propagate( child, dt,
+                                     volts, child->get_load_amps(),
+                                     s );
+        }
 
-    // propagate to all children
-    for ( i = 0; i < node->get_num_outputs(); ++i ) {
-        current_amps += propagate( node->get_output(i), volts, s );
-    }
+        // if not an output node, register the downstream current draw
+        // (sum of all children) with this node.  If volts are zero,
+        // current draw should be zero.
+        if ( node->get_kind() != FGElectricalComponent::FG_OUTPUT ) {
+            node->set_load_amps( total_load );
+        }
 
-    // if not an output node, register the downstream current draw
-    // with this node.  If volts are zero, current draw should be zero.
-    if ( node->get_kind() != FG_OUTPUT ) {
-        node->set_load_amps( current_amps );
-    }
-    // cout << s << node->get_name() << " -> " << current_amps << endl;
+        node->set_available_amps( input_amps - total_load );
 
-    return current_amps;
+        // publish values to specified properties
+        for ( i = 0; i < node->get_num_props(); ++i ) {
+            fgSetFloat( node->get_prop(i).c_str(), node->get_volts() );
+        }
+
+        /*
+        cout << s << node->get_name() << " -> (volts) " << node->get_volts()
+             << endl;
+        cout << s << node->get_name() << " -> (load amps) " << total_load
+             << endl;
+        cout << s << node->get_name() << " -> (input amps) " << input_amps
+             << endl;
+        cout << s << node->get_name() << " -> (extra amps) "
+             << node->get_available_amps() << endl;
+        */
+
+        return total_load;
+    } else {
+        // cout << s << "no further propagation" << endl;
+        return 0.0;
+    }
 }
 
 

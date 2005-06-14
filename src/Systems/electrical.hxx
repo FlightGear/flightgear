@@ -46,14 +46,18 @@ SG_USING_STD(vector);
 class FGElectricalSystem;
 
 
-#define FG_UNKNOWN  -1
-#define FG_SUPPLIER  0
-#define FG_BUS       1
-#define FG_OUTPUT    2
-#define FG_CONNECTOR 3
-
 // Base class for other electrical components
 class FGElectricalComponent {
+
+public:
+
+enum FGElectricalComponentType {
+    FG_UNKNOWN,
+    FG_SUPPLIER,
+    FG_BUS,
+    FG_OUTPUT,
+    FG_CONNECTOR
+};
 
 protected:
 
@@ -63,7 +67,10 @@ protected:
     int kind;
     string name;
     float volts;
-    float load_amps;
+    float load_amps;            // sum of current draw (load) due to
+                                // this node and all it's children
+    float available_amps;       // available current (after the load
+                                // is subtracted)
 
     comp_list inputs;
     comp_list outputs;
@@ -83,6 +90,9 @@ public:
 
     inline float get_load_amps() const { return load_amps; }
     inline void set_load_amps( float val ) { load_amps = val; }
+
+    inline float get_available_amps() const { return available_amps; }
+    inline void set_available_amps( float val ) { available_amps = val; }
 
     inline int get_num_inputs() const { return outputs.size(); }
     inline FGElectricalComponent *get_input( const int i ) {
@@ -114,25 +124,44 @@ public:
 // Electrical supplier
 class FGElectricalSupplier : public FGElectricalComponent {
 
-    SGPropertyNode_ptr _rpm_node;
+public:
 
     enum FGSupplierType {
-        FG_BATTERY = 0,
-        FG_ALTERNATOR = 1,
-        FG_EXTERNAL = 2
+        FG_BATTERY,
+        FG_ALTERNATOR,
+        FG_EXTERNAL,
+        FG_UNKNOWN
     };
 
-    string rpm_src;
-    int model;
-    double volts;
-    double amps;
+private:
+
+    SGPropertyNode_ptr _rpm_node;
+
+    FGSupplierType model;       // store supplier type
+    float ideal_volts;          // ideal volts
+
+    // alternator fields
+    string rpm_src;             // property name of alternator power source
+    float rpm_threshold;        // minimal rpm to generate full power
+
+    // alt & ext supplier fields
+    float ideal_amps;           // total amps produced (above rpm threshold).
+
+    // battery fields
+    float amp_hours;            // fully charged battery capacity
+    float percent_remaining;    // percent of charge remaining
+    float charge_amps;          // maximum charge load battery can draw
 
 public:
 
     FGElectricalSupplier ( SGPropertyNode *node );
     ~FGElectricalSupplier () {}
 
-    double get_output();
+    inline FGSupplierType get_model() const { return model; }
+    float apply_load( float amps, float dt );
+    float get_output_volts();
+    float get_output_amps();
+    float get_charge_amps() const { return charge_amps; }
 };
 
 
@@ -151,18 +180,10 @@ public:
 // flexibility
 class FGElectricalOutput : public FGElectricalComponent {
 
-private:
-
-    // number of amps drawn by this output
-    float output_amps;
-
 public:
 
     FGElectricalOutput ( SGPropertyNode *node );
     ~FGElectricalOutput () {}
-
-    inline float get_output_amps() const { return output_amps; }
-    inline void set_output_amps( float val ) { output_amps = val; }
 };
 
 
@@ -222,7 +243,7 @@ class FGElectricalSystem : public SGSubsystem
 
 public:
 
-    FGElectricalSystem ();
+    FGElectricalSystem ( SGPropertyNode *node );
     virtual ~FGElectricalSystem ();
 
     virtual void init ();
@@ -231,7 +252,9 @@ public:
     virtual void update (double dt);
 
     bool build ();
-    float propagate( FGElectricalComponent *node, double val, string s = "" );
+    float propagate( FGElectricalComponent *node, double dt,
+                     float input_volts, float input_amps,
+                     string s = "" );
     FGElectricalComponent *find ( const string &name );
 
 protected:
@@ -240,6 +263,9 @@ protected:
 
 private:
 
+    string name;
+    int num;
+    string path;
     SGPropertyNode *config_props;
 
     bool enabled;
