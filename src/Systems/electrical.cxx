@@ -24,6 +24,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#include <Scripting/NasalSys.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
@@ -373,9 +374,9 @@ void FGElectricalSystem::init () {
     SGPropertyNode *path_n = fgGetNode("/sim/systems/electrical/path");
     if ( path_n ) {
         if ( path.length() ) {
-            SG_LOG( SG_ALL, SG_ALERT,
+            SG_LOG( SG_ALL, SG_INFO,
                     "NOTICE: System manager configuration specifies an " <<
-                    "electrical system model from: " << path << " but it is " <<
+                    "electrical system: " << path << " but it is " <<
                     "being overridden by the one specified in the -set.xml " <<
                     "file: " << path_n->getStringValue() );
         }
@@ -387,7 +388,9 @@ void FGElectricalSystem::init () {
         SGPath config( globals->get_fg_root() );
         config.append( path );
 
-        SG_LOG( SG_ALL, SG_ALERT, "Reading electrical system model from "
+        // load an obsolete xml configuration
+        SG_LOG( SG_ALL, SG_ALERT,
+                "Reading xml electrical system model from "
                 << config.str() );
         try {
             readProperties( config.str(), config_props );
@@ -396,20 +399,20 @@ void FGElectricalSystem::init () {
                 enabled = true;
             } else {
                 SG_LOG( SG_ALL, SG_ALERT,
-                        "Detected an internal inconsistancy in the electrical");
+                        "Detected a logic error in the electrical system ");
                 SG_LOG( SG_ALL, SG_ALERT,
-                        " system specification file.  See earlier errors for" );
+                        "specification file.  See earlier errors for " );
                 SG_LOG( SG_ALL, SG_ALERT,
-                        " details.");
+                        "details.");
                 exit(-1);
             }        
         } catch (const sg_exception& exc) {
-            SG_LOG( SG_ALL, SG_ALERT, "Failed to load electrical system model: "
+            SG_LOG( SG_ALL, SG_ALERT,
+                    "Failed to load electrical system model: "
                     << config.str() );
         }
-
     } else {
-        SG_LOG( SG_ALL, SG_WARN,
+        SG_LOG( SG_ALL, SG_INFO,
                 "No xml-based electrical model specified for this model!");
     }
 
