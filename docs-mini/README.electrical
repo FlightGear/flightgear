@@ -4,36 +4,77 @@ Specifying and Configuring and Aircraft Electrical System
 Written by Curtis L. Olson <http://www.flightgear.org/~curt>
 
 February 3, 2003 - Initial revision.
+June 14, 2005 - Important update
+
+UPDATE - June 14, 2005
+======================
+
+The xml data driven electrical system described in this document has
+severe flaws and is (or should be) obsolete.  It is still supported
+for backwards compatibility, but new electrical systems should not be
+modeled with this system.  Instead you should make a procedural
+electrical system model using nasal, or wait for a better data driven
+electrical system model to be developed "some time" in the future.
+
+Currently the old/depricated electrical system has been made into a
+proper subsystem.  Most aircraft will load the default "systems"
+configuration via the "/sim/systems/path" property which is set in the
+top level preferences.xml file and which defaults to a value of
+"Aircraft/Generic/generic-systems.xml".  The generic-systems.xml file
+in turn specifies an electrical system based on the old/obsolete
+system.  The default electrical system configuration file named in
+"generic-systems.xml" is "generic-electrical.xml".  This mechanism
+provides a generic electrical system to any aircraft that doesn't
+define their own electrical system.  Also note that you can still
+specify a path to an "old" xml config file using
+"/sim/systems/electrical" in your aircraft-set.xml file.  This is
+again for backwards compatibility.
+
+
+
+What follows here is a description of the "old" "depricated"
+"obsolete" electrical system.
+
 
 
 Introduction
 ============
 
-The FlightGear electrical system model is an approximation.  We don't
-model down to the level of individual electrons, but we do try to
-model a rich enough subset of components so that a realistic (from the
-pilot's perspective) electrical system may be implemented.  We try to
-model enough of the general flow so that typical electrical system
-failures can be implimented and so that the pilot can practice
-realistic troubleshooting techniques and learn the basic structure and
-relationships of the real aircraft electrical system.
+The FlightGear electrical system model is a simplification of reality.
+We don't model down to the level of individual electrons, but we do
+try to model a rich enough subset of components so that a realistic
+electrical system may be implemented (at least from the pilot's
+perspective.)  We try to model enough of the general flow so that
+typical electrical system failures can be implimented and so that the
+pilot can practice realistic troubleshooting techniques and learn the
+basic structure and relationships of the real aircraft electrical
+system.
 
-An electrical system can be built from 4 major components: suppliers,
-buses, outputs, and connectors.  Suppliers are things like batteries
-and generators.  Buses collect input from multiple suppliers and feed
-multiple outputs.  Outputs are not strictly necessary, but are
-included so we can name generic output types and provide a consistent
-naming scheme to other FlightGear subsystems.  Finally connectors
-connect a supplier to a bus, or a bus to an output, and optionally can
-specify a switch property (either a physical switch or a circuit
-breaker.)
+The FlightGear electrical system is essentially a directed graph built
+of 4 major components: suppliers, buses, outputs, and connectors.
+Suppliers are the power sources such as batteries and alternators.
+Buses collect input from multiple suppliers and feed multiple outputs.
+Outputs are not strictly necessary, but are included so we can assign
+current draws, and name generic output types, as well as provide a
+consistent naming scheme to other FlightGear subsystems.  Finally
+connectors connect a supplier to a bus, or a bus to an output, and
+optionally can specify a switch property (either a physical switch or
+a circuit breaker.)
 
-At run time, the structure specified in the electrical system config
-file is parsed and a directional graph (in the computer science sense)
-is built.  Each frame, the current is propagated through the system,
-starting at the suppliers, flowing through the buses, and finally to
-the outputs.  The system follows the path of connectors laid out in
-the config file and honors the state of any connector switch.
+At run time, FlightGear parses the electrical system config file and
+builds a directed graph (in the computer science sense.).  Each time
+step, the current is propagated forward through the system, starting
+at the suppliers, flowing through the buses, and finally to the
+outputs.  The system follows the path specified by connectors and
+honors the state of any connector switches.
+
+FlightGear uses a depth first recursive decent algorithm to propagate
+the current through the system.  As the recursive calls complete, the
+current draw of the "leaf nodes" can be summed up and back-propagated
+through the system.  This allows us to compute the total downstream
+current draw at each component of the system.  This allows us to
+discharge the battery based on actual loads, and allows us to build an
+accurate functioning ammeter model.
 
 
 Suppliers
@@ -164,7 +205,10 @@ Summary
 =======
 
 The electrical system has a lot of power and flexibility to model a
-variety of electrical systems.  However, it is not yet perfect or
-finished.  One major weakness is that it doesn't yet model degraded
-battery or generator power, and it doesn't model the "charge" of the
-batteries in case of a generator failure.
+variety of electrical systems.  However, it is hopelessly flawed and
+cannot model a lot of more complex electrical behavior needed for the
+advanced electrical systems found on larger and more complex aircraft.
+Please consider writing a procedural model for your electrical system
+in nasal or wait for a better data driven electrical system model to
+be developed.  If you know something about electrical systems, please
+volunteer to write a better data driven model! :-)
