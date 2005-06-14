@@ -411,9 +411,9 @@ void FGExternalPipe::update_binary( double dt ) {
     length = sizeof(fdm);
     cout << "about to read fdm data from remote fdm." << endl;
     result = fread( (char *)(& fdm), length, 1, pd2 );
-    if ( result != length ) {
+    if ( result != 1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Read error from named pipe: "
-                << fifo_name_2 );
+                << fifo_name_2 << " expected 1 item, but got " << result );
     } else {
         cout << "  read successful." << endl;
     }
