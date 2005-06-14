@@ -15,6 +15,10 @@ public:
     virtual void init();
     virtual void update(double dt) { /* noop */ }
 
+    // Loads a nasal script from an external file and inserts it as a
+    // global module of the specified name.
+    void loadModule(SGPath file, const char* moduleName);
+
     // Simple hook to run arbitrary source code.  Returns a bool to
     // indicate successful execution.  Does *not* return any Nasal
     // values, because handling garbage-collected objects from C space
@@ -56,7 +60,6 @@ private:
     void loadPropertyScripts();
     void initModule(const char* moduleName, const char* fileName,
                     const char* src, int len);
-    void readScriptFile(SGPath file, const char* lib);
     void hashset(naRef hash, const char* key, naRef val);
     void logError();
     naRef parse(const char* filename, const char* buf, int len);

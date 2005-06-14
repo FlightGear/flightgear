@@ -86,7 +86,7 @@ FGNasalScript* FGNasalSys::parseScript(const char* src, const char* name)
 
     char buf[256];
     if(!name) {
-        sprintf(buf, "FGNasalScript@%8.8x", (int)script);
+        sprintf(buf, "FGNasalScript@%p", script);
         name = buf;
     }
 
@@ -337,7 +337,7 @@ void FGNasalSys::init()
         fullpath.append(dent->d_name);
         SGPath file(dent->d_name);
         if(file.extension() != "nas") continue;
-        readScriptFile(fullpath, file.base().c_str());
+        loadModule(fullpath, file.base().c_str());
     }
 
     // Pull scripts out of the property tree, too
@@ -367,7 +367,7 @@ void FGNasalSys::loadPropertyScripts()
             const char* file = fn->getStringValue();
             SGPath p(globals->get_fg_root());
             p.append(file);
-            readScriptFile(p, module);
+            loadModule(p, module);
             j++;
         }
 
@@ -378,7 +378,7 @@ void FGNasalSys::loadPropertyScripts()
         if(file) {
             SGPath p(globals->get_fg_root());
             p.append(file);
-            readScriptFile(p, module);
+            loadModule(p, module);
         }
         */
         
@@ -411,7 +411,7 @@ void FGNasalSys::logError()
 // Reads a script file, executes it, and places the resulting
 // namespace into the global namespace under the specified module
 // name.
-void FGNasalSys::readScriptFile(SGPath file, const char* module)
+void FGNasalSys::loadModule(SGPath file, const char* module)
 {
     int len = 0;
     char* buf = readfile(file.c_str(), &len);
