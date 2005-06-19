@@ -42,6 +42,9 @@ public:
     // Callbacks for command and timer bindings
     virtual bool handleCommand(const SGPropertyNode* arg);
 
+    void createModule(const char* moduleName, const char* fileName,
+                    const char* src, int len);
+
 private:
     friend class FGNasalScript;
 
@@ -58,8 +61,6 @@ private:
     };
 
     void loadPropertyScripts();
-    void initModule(const char* moduleName, const char* fileName,
-                    const char* src, int len);
     void hashset(naRef hash, const char* key, naRef val);
     void logError();
     naRef parse(const char* filename, const char* buf, int len);

@@ -385,7 +385,7 @@ void FGNasalSys::loadPropertyScripts()
         const char* src = n->getStringValue("script");
         if(!n->hasChild("script")) src = 0; // Hrm...
         if(src)
-            initModule(module, n->getPath(), src, strlen(src));
+            createModule(module, n->getPath(), src, strlen(src));
 
         if(!file_specified && !src)
             SG_LOG(SG_NASAL, SG_ALERT, "Nasal error: " <<
@@ -422,14 +422,14 @@ void FGNasalSys::loadModule(SGPath file, const char* module)
         return;
     }
 
-    initModule(module, file.c_str(), buf, len);
+    createModule(module, file.c_str(), buf, len);
     delete[] buf;
 }
 
 // Parse and run.  Save the local variables namespace, as it will
 // become a sub-object of globals.
-void FGNasalSys::initModule(const char* moduleName, const char* fileName,
-                            const char* src, int len)
+void FGNasalSys::createModule(const char* moduleName, const char* fileName,
+                              const char* src, int len)
 {
     naRef code = parse(fileName, src, len);
     if(naIsNil(code))
@@ -476,16 +476,24 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     // location in the property tree.  arg->getPath() returns an empty
     // string.
     const char* nasal = arg->getStringValue("script");
+    const char* moduleName = arg->getStringValue("module");
     naRef code = parse("<command>", nasal, strlen(nasal));
     if(naIsNil(code)) return false;
-    
+
+    naRef locals = naNil();
+    if (moduleName[0]) {
+        naRef modname = naNewString(_context);
+        naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
+        if(!naHash_get(_globals, modname, &locals))
+            locals = naNewHash(_context);
+    }
     // Cache the command argument for inspection via cmdarg().  For
     // performance reasons, we won't bother with it if the invoked
     // code doesn't need it.
     _cmdArg = (SGPropertyNode*)arg;
 
     // Call it!
-    naRef result = naCall(_context, code, naNil(), naNil(), naNil());
+    naRef result = naCall(_context, code, naNil(), naNil(), locals);
     if(!naGetError(_context)) return true;
     logError();
     return false;
