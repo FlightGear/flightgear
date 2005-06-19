@@ -429,7 +429,10 @@ private:
   joystick _joystick_bindings[MAX_JOYSTICKS];
   mouse _mouse_bindings[MAX_MICE];
 
-  SGPropertyNode *_which_joystick;
+  /**
+   * Nasal module name/namespace.
+   */
+  char _module[32];
 };
 
 #endif // _INPUT_HXX

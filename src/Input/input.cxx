@@ -377,6 +377,7 @@ void
 FGInput::_init_keyboard ()
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing key bindings");
+  _module[0] = 0;
   SGPropertyNode * key_nodes = fgGetNode("/input/keyboard");
   if (key_nodes == 0) {
     SG_LOG(SG_INPUT, SG_WARN, "No key bindings (/input/keyboard)!!");
@@ -427,7 +428,6 @@ FGInput::_init_joystick ()
                                 // TODO: zero the old bindings first.
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick bindings");
   SGPropertyNode * js_nodes = fgGetNode("/input/joysticks", true);
-  _which_joystick = js_nodes->getNode("which", true);
 
   // read all joystick xml files into /input/joysticks/js_named[1000++]
   SGPath path(globals->get_fg_root());
@@ -447,9 +447,11 @@ FGInput::_init_joystick ()
         jsmap[names[j]->getStringValue()] = n;
   }
 
+  // set up js[] nodes
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
     jsJoystick * js = new jsJoystick(i);
     _joystick_bindings[i].js = js;
+
     if (js->notWorking()) {
       SG_LOG(SG_INPUT, SG_DEBUG, "Joystick " << i << " not found");
       continue;
@@ -483,7 +485,25 @@ FGInput::_init_joystick ()
       copyProperties(named, js_node);
       js_node->setStringValue("id", name);
     }
+  }
 
+  // get rid of unused config nodes
+  for (unsigned int m = 0; m < js_named.size(); m++)
+    js_nodes->removeChild("js-named", js_named[m]->getIndex(), false);
+}
+
+
+void
+FGInput::_postinit_joystick()
+{
+  FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
+  SGPropertyNode *js_nodes = fgGetNode("/input/joysticks");
+
+  for (int i = 0; i < MAX_JOYSTICKS; i++) {
+    SGPropertyNode_ptr js_node = js_nodes->getChild("js", i);
+    jsJoystick *js = _joystick_bindings[i].js;
+    if (!js_node || js->notWorking())
+      continue;
 
 #ifdef WIN32
     JOYCAPS jsCaps ;
@@ -515,6 +535,19 @@ FGInput::_init_joystick ()
     _joystick_bindings[i].axes = new axis[naxes];
     _joystick_bindings[i].buttons = new button[nbuttons];
 
+    //
+    // Initialize nasal groups.
+    //
+    string init;
+    init = "this=\"" + string(js_node->getPath()) + "\"";
+    sprintf(_module, "__js%d", i);
+    nasalsys->createModule(_module, _module, init.c_str(), init.size());
+
+    vector<SGPropertyNode_ptr> nasal = js_node->getChildren("nasal");
+    for (unsigned int j = 0; j < nasal.size(); j++) {
+      nasal[j]->setStringValue("module", _module);
+      nasalsys->handleCommand(nasal[j]);
+    }
 
     //
     // Initialize the axes.
@@ -596,24 +629,6 @@ FGInput::_init_joystick ()
     js->setMaxRange(maxRange);
     js->setCenter(center);
   }
-
-  for (unsigned int m = 0; m < js_named.size(); m++)
-    js_nodes->removeChild("js-named", js_named[m]->getIndex(), false);
-}
-
-
-void
-FGInput::_postinit_joystick()
-{
-  SGPropertyNode *js_nodes = fgGetNode("/input/joysticks");
-  vector<SGPropertyNode_ptr> js = js_nodes->getChildren("js");
-  for (unsigned int i = 0; i < js.size(); i++) {
-    _which_joystick->setIntValue(i);
-
-    vector<SGPropertyNode_ptr> nasal = js[i]->getChildren("nasal");
-    for (unsigned int j = 0; j < nasal.size(); j++)
-      ((FGNasalSys*)globals->get_subsystem("nasal"))->handleCommand(nasal[j]);
-  }
 }
 
 
@@ -642,6 +657,7 @@ void
 FGInput::_init_mouse ()
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse bindings");
+  _module[0] = 0;
 
   SGPropertyNode * mouse_nodes = fgGetNode("/input/mice");
   if (mouse_nodes == 0) {
@@ -754,7 +770,6 @@ FGInput::_update_joystick (double dt)
     if (js == 0 || js->notWorking())
       continue;
 
-    _which_joystick->setIntValue(i);
     js->read(&buttons, axis_values);
 
                                 // Fire bindings for the axes.
@@ -873,8 +888,11 @@ FGInput::_read_bindings (const SGPropertyNode * node,
   SG_LOG(SG_INPUT, SG_DEBUG, "Reading all bindings");
   vector<SGPropertyNode_ptr> bindings = node->getChildren("binding");
   for (unsigned int i = 0; i < bindings.size(); i++) {
-    SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding "
-           << bindings[i]->getStringValue("command"));
+    const char *cmd = bindings[i]->getStringValue("command");
+    SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding " << cmd);
+
+    if (!strcmp(cmd, "nasal") && _module[0])
+      bindings[i]->setStringValue("module", _module);
     binding_list[modifiers].push_back(new FGBinding(bindings[i]));
   }
 
