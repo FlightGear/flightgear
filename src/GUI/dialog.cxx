@@ -435,12 +435,14 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         setupGroup(group, props, width, height, color, false);
         return group;
     } else if (type == "frame") {
-        puFrame * frame = new puFrame(x, y,  width, height);
-        frame->setBorderThickness(1);
-        frame->setColorScheme(color[0], color[1], color[2], color[3]);
         puGroup * group = new puGroup(x, y);
-        setupGroup(group, props, width, height, color, false);
+        setupGroup(group, props, width, height, color, true);
         return group;
+    } else if (type == "hrule") {
+        puFrame * rule = new puFrame(3, y, parentWidth - 4, y + (height ? height : 1));
+        rule->setBorderThickness(0);
+        rule->setColorScheme(color[0], color[1], color[2], color[3]);
+        return rule;
     } else if (type == "list") {
         puList * list = new puList(x, y, x + width, y + height);
         setupObject(list, props);
@@ -522,7 +524,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return dial;
     } else if (type == "textbox") {
        int slider_width = props->getIntValue("slider", parentHeight);
-       int wrap = props->getBoolValue("wrap", true)==true;
+       int wrap = props->getBoolValue("wrap", true);
        if (slider_width==0) slider_width=20;
        puLargeInput * puTextBox =
                      new puLargeInput(x, y, x+width, x+height, 2, slider_width, wrap);
