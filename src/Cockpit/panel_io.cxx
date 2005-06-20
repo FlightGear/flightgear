@@ -182,19 +182,34 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
   FGPanelAction * action = new FGPanelAction(button, x, y, w, h, repeatable);
 
   vector<SGPropertyNode_ptr>bindings = node->getChildren("binding");
+  SGPropertyNode * dest = fgGetNode("/sim/bindings", true);
 
-  unsigned int i;
+  SGPropertyNode *binding;
+  unsigned int i, j;
   for (i = 0; i < bindings.size(); i++) {
     SG_LOG(SG_INPUT, SG_INFO, "Reading binding "
-	   << bindings[i]->getStringValue("command"));
-    action->addBinding(new FGBinding(bindings[i]), 0);
+      << bindings[i]->getStringValue("command"));
+
+    j = 0;
+    while (dest->getChild("binding", j))
+      j++;
+
+    binding = dest->getChild("binding", j, true);
+    copyProperties(bindings[i], binding);
+    action->addBinding(new FGBinding(binding), 0);
   }
 
   if (node->hasChild("mod-up")) {
-      bindings = node->getChild("mod-up")->getChildren("binding");
-      for (i = 0; i < bindings.size(); i++) {
-          action->addBinding(new FGBinding(bindings[i]), 1);
-      }
+    bindings = node->getChild("mod-up")->getChildren("binding");
+    for (i = 0; i < bindings.size(); i++) {
+      j = 0;
+      while (dest->getChild("binding", j))
+        j++;
+
+      binding = dest->getChild("binding", j, true);
+      copyProperties(bindings[i], binding);
+      action->addBinding(new FGBinding(binding), 1);
+    }
   }
 
   readConditions(action, node);

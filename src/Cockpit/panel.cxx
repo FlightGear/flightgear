@@ -598,14 +598,14 @@ FGPanelAction::FGPanelAction (int button, int x, int y, int w, int h,
                               bool repeatable)
     : _button(button), _x(x), _y(y), _w(w), _h(h), _repeatable(repeatable)
 {
-  for (unsigned int i = 0; i < 2; i++) {
-      for (unsigned int j = 0; j < _bindings[i].size(); j++)
-          delete _bindings[i][j];
-  }
 }
 
 FGPanelAction::~FGPanelAction ()
 {
+  for (unsigned int i = 0; i < 2; i++) {
+      for (unsigned int j = 0; j < _bindings[i].size(); j++)
+          delete _bindings[i][j];
+  }
 }
 
 void
