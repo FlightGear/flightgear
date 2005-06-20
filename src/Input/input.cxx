@@ -93,6 +93,11 @@ FGBinding::FGBinding (const SGPropertyNode * node)
   read(node);
 }
 
+FGBinding::~FGBinding ()
+{
+  _arg->getParent()->removeChild(_arg->getName(), _arg->getIndex());
+}
+
 void
 FGBinding::read (const SGPropertyNode * node)
 {
@@ -107,9 +112,8 @@ FGBinding::read (const SGPropertyNode * node)
     return;
   }
 
-  _arg = new SGPropertyNode;
+  _arg = (SGPropertyNode *)node;
   _setting = 0;
-  copyProperties(node, _arg);  // FIXME: don't use whole node!!!
 }
 
 void

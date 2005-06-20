@@ -95,7 +95,7 @@ public:
   /**
    * Destructor.
    */
-  virtual ~FGBinding () {}
+  virtual ~FGBinding ();
 
 
   /**
