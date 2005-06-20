@@ -471,13 +471,9 @@ naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
 
 bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
 {
-    // Parse the Nasal source.  I'd love to use the property name of
-    // the argument, but it's actually a *clone* of the original
-    // location in the property tree.  arg->getPath() returns an empty
-    // string.
     const char* nasal = arg->getStringValue("script");
     const char* moduleName = arg->getStringValue("module");
-    naRef code = parse("<command>", nasal, strlen(nasal));
+    naRef code = parse(arg->getPath(true), nasal, strlen(nasal));
     if(naIsNil(code)) return false;
 
     naRef locals = naNil();
