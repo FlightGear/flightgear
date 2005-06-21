@@ -23,7 +23,7 @@ bool LayoutWidget::eq(const char* a, const char* b)
 // <default-padding> property, or per widget with <padding>.
 int LayoutWidget::padding()
 {
-    int pad = isType("group") ? 0 : 4;
+    int pad = (isType("group") || isType("frame")) ? 0 : 4;
     // As comments above note,  this was being set to 2.  For some
     // reason this causes the dialogs to shrink on subsequent pops
     // so for now we'll make "dialog" padding 0.
@@ -42,7 +42,7 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
     int legw = stringLength(getStr("legend"));
     int labw = stringLength(getStr("label"));
 
-    if(isType("dialog") || isType("group")) {
+    if(isType("dialog") || isType("group") || isType("frame")) {
         if(!hasField("layout")) {
             // Legacy support for groups without layout managers.
             if(hasField("width")) *w = getNum("width");
@@ -55,7 +55,7 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
         }
     } else if (isType("text")) {
         *w = labw;
-        *h = 4*UNIT; // FIXME: multi line height?
+        *h = 3*UNIT; // FIXME: multi line height?
     } else if (isType("button")) {
         *w = legw + 6*UNIT + (labw ? labw + UNIT : 0);
         *h = 6*UNIT;
@@ -111,7 +111,7 @@ void LayoutWidget::layout(int x, int y, int w, int h)
     if(hasField("_psw")) prefw = getNum("_psw");
     if(hasField("_psh")) prefh = getNum("_psh");
 
-    bool isGroup = isType("dialog") || isType("group");
+    bool isGroup = isType("dialog") || isType("group") || isType("frame");
 
     // Correct our box for alignment.  The values above correspond to
     // a "fill" alignment.
