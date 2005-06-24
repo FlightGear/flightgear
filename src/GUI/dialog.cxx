@@ -610,12 +610,21 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
             _liveObjects.push_back(po);
     }
 
-    vector<SGPropertyNode_ptr> nodes = props->getChildren("binding");
-    if (nodes.size() > 0) {
+    SGPropertyNode * dest = fgGetNode("/sim/bindings", true);
+    vector<SGPropertyNode_ptr> bindings = props->getChildren("binding");
+    if (bindings.size() > 0) {
         GUIInfo * info = new GUIInfo(this);
 
-        for (unsigned int i = 0; i < nodes.size(); i++)
-            info->bindings.push_back(new FGBinding(nodes[i]));
+        for (unsigned int i = 0; i < bindings.size(); i++) {
+            unsigned int j = 0;
+            SGPropertyNode *binding;
+            while (dest->getChild("binding", j))
+                j++;
+
+            binding = dest->getChild("binding", j, true);
+            copyProperties(bindings[i], binding);
+            info->bindings.push_back(new FGBinding(binding));
+        }
         object->setCallback(action_callback);
         object->setUserData(info);
         _info.push_back(info);
