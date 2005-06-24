@@ -182,7 +182,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
   FGPanelAction * action = new FGPanelAction(button, x, y, w, h, repeatable);
 
   vector<SGPropertyNode_ptr>bindings = node->getChildren("binding");
-  SGPropertyNode * dest = fgGetNode("/sim/bindings", true);
+  SGPropertyNode * dest = fgGetNode("/sim/bindings/panel", true);
 
   SGPropertyNode *binding;
   unsigned int i, j;

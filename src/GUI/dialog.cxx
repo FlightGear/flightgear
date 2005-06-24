@@ -610,7 +610,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
             _liveObjects.push_back(po);
     }
 
-    SGPropertyNode * dest = fgGetNode("/sim/bindings", true);
+    SGPropertyNode * dest = fgGetNode("/sim/bindings/gui", true);
     vector<SGPropertyNode_ptr> bindings = props->getChildren("binding");
     if (bindings.size() > 0) {
         GUIInfo * info = new GUIInfo(this);
