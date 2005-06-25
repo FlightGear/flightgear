@@ -35,6 +35,7 @@
 #include "transponder.hxx"
 #include "turn_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
+#include "inst_vertical_speed_indicator.hxx" // (TJ)
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
@@ -147,6 +148,9 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "vertical-speed-indicator" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new VerticalSpeedIndicator( node ) );
+        } else if ( name == "inst-vertical-speed-indicator" ) { // (TJ)
+            set_subsystem( "instrument" + temp.str(), 
+                           new InstVerticalSpeedIndicator( node ) );
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
                     << name );
