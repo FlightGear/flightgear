@@ -354,7 +354,7 @@ int main( int argc, char *argv[] ) {
   }
 
   fstream fs;
-  fstream xfs[jss->getNumJoysticks()];
+  fstream *xfs = new fstream[jss->getNumJoysticks()];
   if (!usexml) {
     fs.open("fgfsrc.js",ios::out);
   }
@@ -470,6 +470,7 @@ int main( int argc, char *argv[] ) {
     fs.close();
   }
   delete jsi;
+  delete[] xfs;
   delete jss;
 
   cout << "Your joystick settings are in ";
