@@ -60,11 +60,6 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
-#ifdef FG_USE_CLOUDS_3D
-#  include <simgear/scene/sky/clouds3d/SkySceneLoader.hpp>
-#  include <simgear/scene/sky/clouds3d/SkyUtil.hpp>
-#  include <simgear/screen/texture.hxx>
-#endif
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
 
@@ -145,11 +140,6 @@ SG_USING_STD(string);
 class Sound;
 extern const char *default_root;
 float init_volume;
-
-
-#ifdef FG_USE_CLOUDS_3D
-  SkySceneLoader *sgCloud3d;
-#endif
 
 
 // Scan the command line options for the specified option and return
@@ -1637,40 +1627,6 @@ bool fgInitSubsystems() {
     // Initialize the 2D cloud subsystem.
     ////////////////////////////////////////////////////////////////////
     fgGetBool("/sim/rendering/bump-mapping", false);
-
-#ifdef FG_USE_CLOUDS_3D
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the 3D cloud subsystem.
-    ////////////////////////////////////////////////////////////////////
-    if ( fgGetBool("/sim/rendering/clouds3d") ) {
-        static const SGPropertyNode *longitude
-           = fgGetNode("/sim/presets/longitude-deg");
-        static const SGPropertyNode *latitude
-           = fgGetNode("/sim/presets/latitude-deg");
-        // static const SGPropertyNode *altitude
-        //    = fgGetNode("/sim/presets/altitude-ft");
-
-        SGPath cloud_path(globals->get_fg_root());
-#if 0
-        cloud_path.append("Textures/Sky/scattered.rgba");
-        SG_LOG(SG_GENERAL, SG_INFO, "Loading CLOUDS3d from: " << cloud_path.c_str());
-
-        SGTexture tx;
-        tx.read_rgba_texture(cloud_path.c_str());
-        if ( !sgCloud3d->Load( tx.texture(), tx.width(),
-#else
-        cloud_path.append("large.sky");
-        if ( !sgCloud3d->Load( cloud_path.str(),
-#endif
-                               latitude->getDoubleValue(),
-                               longitude->getDoubleValue()) )
-        {
-            fgSetBool("/sim/rendering/clouds3d", false);
-            SG_LOG(SG_GENERAL, SG_INFO, "CLOUDS3d FAILED: ");
-        }
-        SG_LOG(SG_GENERAL, SG_INFO, "CLOUDS3d Loaded: ");
-    }
-#endif
 
 #ifdef ENABLE_AUDIO_SUPPORT
     ////////////////////////////////////////////////////////////////////

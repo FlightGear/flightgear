@@ -1258,10 +1258,8 @@ struct OptionDesc {
     {"enable-specular-highlight",    false, OPTION_BOOL,   "/sim/rendering/specular-highlight", true, "", 0 },
     {"disable-clouds",               false, OPTION_BOOL,   "/environment/clouds/status", false, "", 0 },
     {"enable-clouds",                false, OPTION_BOOL,   "/environment/clouds/status", true, "", 0 },
-#ifdef FG_USE_CLOUDS_3D
-    {"disable-clouds3d",             false, OPTION_BOOL,   "/sim/rendering/clouds3d", false, "", 0 },
-    {"enable-clouds3d",              false, OPTION_BOOL,   "/sim/rendering/clouds3d", true, "", 0 },
-#endif
+    {"disable-clouds3d",             false, OPTION_BOOL,   "/sim/rendering/clouds3d-enable", false, "", 0 },
+    {"enable-clouds3d",              false, OPTION_BOOL,   "/sim/rendering/clouds3d-enable", true, "", 0 },
     {"fov",                          true,  OPTION_FUNC,   "", false, "", fgOptFov },
     {"aspect-ratio-multiplier",      true,  OPTION_DOUBLE, "/sim/current-view/aspect-ratio-multiplier", false, "", 0 },
     {"disable-fullscreen",           false, OPTION_BOOL,   "/sim/startup/fullscreen", false, "", 0 },

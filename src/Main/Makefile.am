@@ -25,12 +25,6 @@ else
 GFX_CODE = fg_os.cxx fg_os.hxx
 endif
 
-if FG_USE_CLOUDS_3D
-CLOUD3D_LIBS = -lsgclouds3d
-else
-CLOUD3D_LIBS = 
-endif
-
 AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkgdatadir)\"
 
 bin_PROGRAMS = fgfs metar
@@ -94,7 +88,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Time/libTime.a \
 	$(top_builddir)/src/Traffic/libTraffic.a \
 	$(top_builddir)/src/Environment/libEnvironment.a \
-	$(CLOUD3D_LIBS) \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgmaterial -lsgtgdb -lsgmodel \
 	-lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket -lsgprops -lsgdebug \
 	-lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound -lsgserial \

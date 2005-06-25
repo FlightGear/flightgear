@@ -49,10 +49,6 @@
 #include <simgear/screen/jpgfactory.hxx>
 #endif
 
-#ifdef FG_USE_CLOUDS_3D
-#  include <simgear/scene/sky/clouds3d/SkySceneLoader.hpp>
-#  include <simgear/scene/sky/clouds3d/SkyUtil.hpp>
-#endif
 #include <simgear/environment/visual_enviro.hxx>
 
 #include <Scenery/tileentry.hxx>
@@ -104,11 +100,6 @@ static GLfloat ground_exp2_punch_through;
 
 // Sky structures
 SGSky *thesky;
-
-#ifdef FG_USE_CLOUDS_3D
-  SkySceneLoader *sgClouds3d;
-  bool _bcloud_orig = true;
-#endif
 
 // hack
 sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
@@ -325,27 +316,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         ssgSetCamera( (sgVec4 *)current__view->get_VIEW() );
-    }
-
-    if ( fgGetBool("/sim/rendering/clouds3d") ) {
-        glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
-        cloud3d_imposter_state->force();
-        glDisable( GL_FOG );
-        glColor4f( 1.0, 1.0, 1.0, 1.0 );
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
-
-#ifdef FG_USE_CLOUDS_3D
-        if ( _bcloud_orig ) {
-            Point3D c = globals->get_scenery()->get_center();
-            sgClouds3d->Set_Cloud_Orig( &c );
-            _bcloud_orig = false;
-        }
-        sgClouds3d->Update( current__view->get_absolute_view_pos() );
-#endif
-        glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-        glDisable(GL_DEPTH_TEST);
     }
 
     clear_mask = GL_DEPTH_BUFFER_BIT;
@@ -679,32 +649,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
         ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
     }
 
-    if ( draw_otw && fgGetBool("/sim/rendering/clouds3d") ) {
-        glDisable( GL_FOG );
-        glDisable( GL_LIGHTING );
-        // cout << "drawing new clouds" << endl;
-
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
-
-        /*
-        glEnable( GL_TEXTURE_2D );
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        */
-
-#ifdef FG_USE_CLOUDS_3D
-        sgClouds3d->Draw((sgVec4 *)current__view->get_VIEW());
-#endif
-        glEnable( GL_FOG );
-        glEnable( GL_LIGHTING );
-        glEnable( GL_DEPTH_TEST );
-        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-    }
-
     sgEnviro.drawLightning();
 
     if ( draw_otw && draw_clouds ) {
@@ -827,10 +771,6 @@ FGRenderer::resize( int width, int height ) {
       //      << ", " << viewmgr->get_current_view()->get_v_fov() << ")"
       //      << endl;
 
-#ifdef FG_USE_CLOUDS_3D
-      sgClouds3d->Resize( viewmgr->get_current_view()->get_h_fov(),
-                          viewmgr->get_current_view()->get_v_fov() );
-#endif
     }
 
     fgHUDReshape();
