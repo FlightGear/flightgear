@@ -133,17 +133,17 @@ static double altitude_data[][2] = {
 InstVerticalSpeedIndicator::InstVerticalSpeedIndicator ( SGPropertyNode *node ) :
                             _internal_pressure_inhg( SEA_LEVEL_INHG ),
 			    _internal_sea_inhg( SEA_LEVEL_INHG ),
+	                    _speed_ft_per_s( 0 ),
 	                    _pressure_table(new SGInterpTable),
-                            _altitude_table(new SGInterpTable),
-	                    _speed_ft_per_s( 0 )
+                            _altitude_table(new SGInterpTable)
 {
-    for (int i = 0; pressure_data[i][0] != -1; i++)
+    int i;
+    for ( i = 0; pressure_data[i][0] != -1; i++)
         _pressure_table->addEntry( pressure_data[i][0], pressure_data[i][1] );
 
-    for (int i = 0; altitude_data[i][0] != -1; i++)
+    for ( i = 0; altitude_data[i][0] != -1; i++)
         _altitude_table->addEntry( altitude_data[i][0], altitude_data[i][1] );
 
-    int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
