@@ -39,7 +39,7 @@ public:
     // even know what many of them do, but they're pure virtual and
     // require implementation.
     //
-    virtual int getNumTriangles() { die(); return 0; }
+    virtual int getNumTriangles() { return 0; }
     virtual void getTriangle(int n, short* v1, short* v2, short* v3) { die(); }
     virtual int getNumLines() { die(); return 0; }
     virtual void getLine(int n, short* v1, short* v2) { die(); }

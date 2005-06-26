@@ -35,6 +35,7 @@
 #include <simgear/math/vector.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/scene/model/modellib.hxx>
+#include <simgear/scene/model/shadowvolume.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -56,6 +57,8 @@ queue<FGDeferredModel *> FGTileMgr::model_queue;
 queue<FGTileEntry *> FGTileMgr::delete_queue;
 
 bool FGTileMgr::tile_filter = true;
+
+extern SGShadowVolume *shadows;
 
 // Constructor
 FGTileMgr::FGTileMgr():
@@ -124,6 +127,7 @@ void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring ) {
             long index = tile_cache.get_oldest_tile();
             if ( index >= 0 ) {
                 FGTileEntry *old = tile_cache.get_tile( index );
+                shadows->deleteOccluderFromTile( (ssgBranch *) old->get_terra_transform() );
                 old->disconnect_ssg_nodes();
                 delete_queue.push( old );
                 tile_cache.clear_entry( index );
@@ -315,6 +319,9 @@ void FGTileMgr::update_queues()
                                                   globals->get_sim_time_sec() );
                     if ( obj_model != NULL ) {
                         dm->get_obj_trans()->addKid( obj_model );
+                        shadows->addOccluder( (ssgBranch *) obj_model->getParent(0),
+                            SGShadowVolume::occluderTypeTileObject,
+                            (ssgBranch *) dm->get_tile()->get_terra_transform());
                     }
                 } catch (const sg_exception& exc) {
                     SG_LOG( SG_ALL, SG_ALERT, exc.getMessage() );

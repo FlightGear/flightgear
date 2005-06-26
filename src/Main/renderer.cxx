@@ -51,6 +51,8 @@
 
 #include <simgear/environment/visual_enviro.hxx>
 
+#include <simgear/scene/model/shadowvolume.hxx>
+
 #include <Scenery/tileentry.hxx>
 #include <Time/light.hxx>
 #include <Time/light.hxx>
@@ -115,6 +117,8 @@ ssgSimpleState *default_state;
 ssgSimpleState *hud_and_panel;
 ssgSimpleState *menus;
 
+SGShadowVolume *shadows;
+
 FGRenderer::FGRenderer()
 {
 #ifdef FG_JPEG_SERVER
@@ -170,6 +174,11 @@ FGRenderer::build_states( void ) {
     menus->disable( GL_CULL_FACE );
     menus->disable( GL_TEXTURE_2D );
     menus->enable( GL_BLEND );
+
+    shadows = new SGShadowVolume;
+    shadows->init( fgGetNode("/sim/rendering", true) );
+    shadows->addOccluder( globals->get_scenery()->get_aircraft_branch(), SGShadowVolume::occluderTypeAircraft );
+
 }
 
 
@@ -441,6 +450,14 @@ FGRenderer::update( bool refresh_camera_settings ) {
         sstate.moon_dist = 40000.0 * moon_horiz_eff;
 
         thesky->reposition( sstate, delta_time_sec );
+
+        shadows->setupShadows( 
+          current__view->getLongitude_deg(),
+          current__view->getLatitude_deg(),
+          globals->get_time_params()->getGst(),
+          globals->get_ephem()->getSunRightAscension(),
+          globals->get_ephem()->getSunDeclination(),
+          l->get_sun_angle());
     }
 
     glEnable( GL_DEPTH_TEST );
@@ -680,6 +697,13 @@ FGRenderer::update( bool refresh_camera_settings ) {
         - current__view->getHeadingOffset_deg(),
         fgGetDouble("/velocities/airspeed-kt", 0.0));
 
+    // compute shadows and project them on screen
+    bool is_internal = globals->get_current_view()->getInternal();
+    // draw before ac because ac internal rendering clear the depth buffer
+
+    if( is_internal )
+        shadows->endOfFrame();
+
     if ( draw_otw ) {
         FGTileMgr::set_tile_filter( false );
         sgSetModelFilter( false );
@@ -696,6 +720,8 @@ FGRenderer::update( bool refresh_camera_settings ) {
         sgSetModelFilter( true );
         globals->get_aircraft_model()->select( true );
     }
+	if( !is_internal )
+		shadows->endOfFrame();
 
     // display HUD && Panel
     glDisable( GL_FOG );
