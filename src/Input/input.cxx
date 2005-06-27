@@ -243,18 +243,15 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   button &b = _key_bindings[k];
 
                                 // Key pressed.
-  if (modifiers&KEYMOD_RELEASED == 0) {
+  if (!(modifiers & KEYMOD_RELEASED)) {
     SG_LOG( SG_INPUT, SG_DEBUG, "User pressed key " << k
             << " with modifiers " << modifiers );
     if (!b.last_state || b.is_repeatable) {
-      const binding_list_t &bindings =
-        _find_key_bindings(k, modifiers);
-      int max = bindings.size();
-      if (max > 0) {
-        for (int i = 0; i < max; i++)
-          bindings[i]->fire();
-        return;
-      }
+      const binding_list_t &bindings = _find_key_bindings(k, modifiers);
+
+      for (int i = 0; i < bindings.size(); i++)
+        bindings[i]->fire();
+      b.last_state = 1;
     }
   }
                                 // Key released.
@@ -262,14 +259,10 @@ FGInput::doKey (int k, int modifiers, int x, int y)
     SG_LOG(SG_INPUT, SG_DEBUG, "User released key " << k
            << " with modifiers " << modifiers);
     if (b.last_state) {
-      const binding_list_t &bindings =
-        _find_key_bindings(k, modifiers);
-      int max = bindings.size();
-      if (max > 0) {
-        for (int i = 0; i < max; i++)
-          bindings[i]->fire();
-        return;
-      }
+      const binding_list_t &bindings = _find_key_bindings(k, modifiers);
+      for (int i = 0; i < bindings.size(); i++)
+        bindings[i]->fire();
+      b.last_state = 0;
     }
   }
 }
@@ -395,6 +388,7 @@ FGInput::_init_keyboard ()
 
     _key_bindings[index].bindings->clear();
     _key_bindings[index].is_repeatable = keys[i]->getBoolValue("repeatable");
+    _key_bindings[index].last_state = 0;
     _read_bindings(keys[i], _key_bindings[index].bindings, KEYMOD_NONE);
   }
 }
@@ -512,10 +506,10 @@ FGInput::_postinit_joystick()
 #ifdef WIN32
     JOYCAPS jsCaps ;
     joyGetDevCaps( i, &jsCaps, sizeof(jsCaps) );
-    int nbuttons = jsCaps.wNumButtons;
+    unsigned int nbuttons = jsCaps.wNumButtons;
     if (nbuttons > MAX_JOYSTICK_BUTTONS) nbuttons = MAX_JOYSTICK_BUTTONS;
 #else
-    int nbuttons = MAX_JOYSTICK_BUTTONS;
+    unsigned int nbuttons = MAX_JOYSTICK_BUTTONS;
 #endif
 
     int naxes = js->getNumAxes();
@@ -548,7 +542,8 @@ FGInput::_postinit_joystick()
     nasalsys->createModule(_module, _module, init.c_str(), init.size());
 
     vector<SGPropertyNode_ptr> nasal = js_node->getChildren("nasal");
-    for (unsigned int j = 0; j < nasal.size(); j++) {
+    unsigned int j;
+    for (j = 0; j < nasal.size(); j++) {
       nasal[j]->setStringValue("module", _module);
       nasalsys->handleCommand(nasal[j]);
     }
@@ -558,8 +553,7 @@ FGInput::_postinit_joystick()
     //
     vector<SGPropertyNode_ptr> axes = js_node->getChildren("axis");
     size_t nb_axes = axes.size();
-    int j;
-    for (j = 0; j < (int)nb_axes; j++) {
+    for (j = 0; j < nb_axes; j++ ) {
       const SGPropertyNode * axis_node = axes[j];
       const SGPropertyNode * num_node = axis_node->getChild("number");
       int n_axis = axis_node->getIndex();
@@ -602,7 +596,7 @@ FGInput::_postinit_joystick()
     //
     vector<SGPropertyNode_ptr> buttons = js_node->getChildren("button");
     char buf[32];
-    for (j = 0; (j < (int)buttons.size()) && (j < nbuttons); j++) {
+    for (j = 0; j < buttons.size() && j < nbuttons; j++) {
       const SGPropertyNode * button_node = buttons[j];
       const SGPropertyNode * num_node = button_node->getChild("number");
       size_t n_but = button_node->getIndex();
@@ -610,7 +604,7 @@ FGInput::_postinit_joystick()
           n_but = num_node->getIntValue(TGT_PLATFORM,n_but);
       }
 
-      if (n_but >= (size_t)nbuttons) {
+      if (n_but >= nbuttons) {
           SG_LOG(SG_INPUT, SG_DEBUG, "Dropping bindings for button " << n_but);
           continue;
       }
