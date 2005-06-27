@@ -249,7 +249,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
     if (!b.last_state || b.is_repeatable) {
       const binding_list_t &bindings = _find_key_bindings(k, modifiers);
 
-      for (int i = 0; i < bindings.size(); i++)
+      for (unsigned int i = 0; i < bindings.size(); i++)
         bindings[i]->fire();
       b.last_state = 1;
     }
@@ -260,7 +260,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
            << " with modifiers " << modifiers);
     if (b.last_state) {
       const binding_list_t &bindings = _find_key_bindings(k, modifiers);
-      for (int i = 0; i < bindings.size(); i++)
+      for (unsigned int i = 0; i < bindings.size(); i++)
         bindings[i]->fire();
       b.last_state = 0;
     }
@@ -484,10 +484,6 @@ FGInput::_init_joystick ()
       js_node->setStringValue("id", name);
     }
   }
-
-  // get rid of unused config nodes
-  for (unsigned int m = 0; m < js_named.size(); m++)
-    js_nodes->removeChild("js-named", js_named[m]->getIndex(), false);
 }
 
 
@@ -496,6 +492,7 @@ FGInput::_postinit_joystick()
 {
   FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
   SGPropertyNode *js_nodes = fgGetNode("/input/joysticks");
+  js_nodes->removeChildren("js-named");
 
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
     SGPropertyNode_ptr js_node = js_nodes->getChild("js", i);
