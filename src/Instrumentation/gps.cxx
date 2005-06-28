@@ -710,7 +710,7 @@ GPS::update (double delta_time_sec)
             popWp->setBoolValue(false);
 
             route->delete_first();
-	    _route->removeChild("Waypoint", 0, false);
+	    _route->removeChild("Waypoint", 0);
         }
 
     } else {
