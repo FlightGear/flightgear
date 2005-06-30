@@ -119,7 +119,7 @@ public:
 
 protected:
 
-    SGPropertyNode *props;
+    SGPropertyNode_ptr props;
     FGAIManager* manager;
 
     // these describe the model's actual state
