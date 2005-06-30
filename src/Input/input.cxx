@@ -484,6 +484,10 @@ FGInput::_init_joystick ()
       js_node->setStringValue("id", name);
     }
   }
+
+  // get rid of unused config nodes
+  for (unsigned int m = 0; m < js_named.size(); m++)
+    js_nodes->removeChild("js-named", js_named[m]->getIndex(), false);
 }
 
 
@@ -492,7 +496,6 @@ FGInput::_postinit_joystick()
 {
   FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
   SGPropertyNode *js_nodes = fgGetNode("/input/joysticks");
-  js_nodes->removeChildren("js-named");
 
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
     SGPropertyNode_ptr js_node = js_nodes->getChild("js", i);
