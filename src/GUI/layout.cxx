@@ -71,6 +71,10 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
         else                    *h = 4*UNIT;
     } else if (isType("list") || isType("airport-list") || isType("dial")) {
         *w = *h = 12*UNIT;
+    } else if (isType("hrule")) {
+        *h = 1;
+    } else if (isType("vrule")) {
+        *w = 1;
     }
 
     // Throw it all out if the user specified a fixed preference
@@ -115,7 +119,7 @@ void LayoutWidget::layout(int x, int y, int w, int h)
 
     // Correct our box for alignment.  The values above correspond to
     // a "fill" alignment.
-    const char* halign = isGroup ? "fill" : "center";
+    const char* halign = (isGroup || isType("hrule")) ? "fill" : "center";
     if(hasField("halign")) halign = getStr("halign");
     if(eq(halign, "left")) {
         w = prefw;
@@ -126,7 +130,7 @@ void LayoutWidget::layout(int x, int y, int w, int h)
         x += (w - prefw)/2;
         w = prefw;
     }
-    const char* valign = isGroup ? "fill" : "center";
+    const char* valign = (isGroup || isType("vrule")) ? "fill" : "center";
     if(hasField("valign")) valign = getStr("valign");
     if(eq(valign, "bottom")) {
         h = prefh;
@@ -172,7 +176,10 @@ void LayoutWidget::layout(int x, int y, int w, int h)
         if     (eq(layout, "hbox" )) doHVBox(true, false);
         else if(eq(layout, "vbox" )) doHVBox(true, true);
         else if(eq(layout, "table")) doTable(true);
-    }
+    } else if(isType("hrule"))
+        doHVBox(true, false);
+    else if(isType("vrule"))
+        doHVBox(true, true);
 }
 
 // Convention: the "A" cooridinate refers to the major axis of the

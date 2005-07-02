@@ -364,7 +364,7 @@ FGDialog::display (SGPropertyNode * props)
     bool userw = props->hasValue("width");
     bool userh = props->hasValue("height");
 
-     // Let the layout widget work in the same property subtree.
+    // Let the layout widget work in the same property subtree.
     LayoutWidget wid(props);
 
     int pw=0, ph=0;
@@ -407,17 +407,25 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     int height = props->getIntValue("height", parentHeight);
     int x = props->getIntValue("x", (parentWidth - width) / 2);
     int y = props->getIntValue("y", (parentHeight - height) / 2);
+    string type = props->getName();
 
-    sgVec4 color = {0.8, 0.8, 0.9, 0.85};
+    const sgVec4 background = {0.8, 0.8, 0.9, 0.85};
+    const sgVec4 foreground = {0, 0, 0, 1};
+    sgVec4 color;
+
+    if (type == "hrule" || type == "vrule")
+        sgCopyVec4(color, foreground);
+    else
+        sgCopyVec4(color, background);
+
     SGPropertyNode *ncs = props->getNode("color", false);
     if ( ncs ) {
-       color[0] = ncs->getFloatValue("red", 0.8);
-       color[1] = ncs->getFloatValue("green", 0.8);
-       color[2] = ncs->getFloatValue("blue", 0.9);
-       color[3] = ncs->getFloatValue("alpha", 0.85);
+       color[0] = ncs->getFloatValue("red", color[0]);
+       color[1] = ncs->getFloatValue("green", color[1]);
+       color[2] = ncs->getFloatValue("blue", color[2]);
+       color[3] = ncs->getFloatValue("alpha", color[3]);
     }
 
-    string type = props->getName();
     if (type == "")
         type = "dialog";
 
@@ -438,8 +446,8 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puGroup * group = new puGroup(x, y);
         setupGroup(group, props, width, height, color, true);
         return group;
-    } else if (type == "hrule") {
-        puFrame * rule = new puFrame(3, y, parentWidth - 4, y + (height ? height : 1));
+    } else if (type == "hrule" || type == "vrule") {
+        puFrame * rule = new puFrame(x, y, x + width, y + height);
         rule->setBorderThickness(0);
         rule->setColorScheme(color[0], color[1], color[2], color[3]);
         return rule;

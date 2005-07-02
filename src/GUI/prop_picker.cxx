@@ -530,7 +530,7 @@ void fgPropPicker::updateTextForEntry(int index)
     if (dotFiles) index +=2;
 		
     // don't leak everywhere if we're updating
-    if (files[index]) delete[] files[index];
+    delete[] files[index];
 		
     files[index] = new char[ strlen(line.c_str())+2 ] ;
     strcpy ( files [ index ], line.c_str() ) ;
