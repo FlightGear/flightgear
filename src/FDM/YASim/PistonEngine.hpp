@@ -19,6 +19,7 @@ public:
     float getMP();
     float getEGT();
     float getMaxPower(); // max sea-level power
+    float getBoost() { return _boostPressure; }
 
     virtual void calc(float pressure, float temp, float speed);
     virtual float getTorque();
@@ -41,6 +42,7 @@ private:
     float _torque;
     float _fuelFlow;
     float _egt;
+    float _boostPressure;
 };
 
 }; // namespace yasim

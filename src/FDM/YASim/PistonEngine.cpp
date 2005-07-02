@@ -12,6 +12,7 @@ PistonEngine::PistonEngine(float power, float speed)
     _boost = 1;
     _running = false;
     _fuel = true;
+    _boostPressure = 0;
 
     // Presume a BSFC (in lb/hour per HP) of 0.45.  In SI that becomes
     // (2.2 lb/kg, 745.7 W/hp, 3600 sec/hour) 7.62e-08 kg/Ws.
@@ -101,24 +102,40 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     else
 	_running = true;
 
-    // Calculate manifold pressure as ambient pressure modified for
-    // turbocharging and reduced by the throttle setting.  According
-    // to Dave Luff, minimum throttle at sea level corresponds to 6"
-    // manifold pressure.  Assume that this means that minimum MP is
-    // always 20% of ambient pressure. (But that's too much idle
-    // power, so use 10% instead!) But we need to produce _zero_
-    // thrust at that setting, so hold onto the "output" value
-    // separately.  Ick.
-    _mp = pressure * (1 + _boost*(_turbo-1)); // turbocharger
-    float mp = _mp * (0.1f + 0.9f * _throttle); // throttle
-    _mp *= _throttle;
-    if(mp > _maxMP) mp = _maxMP;              // wastegate
+    // Calculate the factor required to modify supercharger output for 
+    // rpm. Assume that the normalized supercharger output ~= 1 when
+    // the engine is at the nominated peak-power rpm (normalised).
+    // A power equation of the form  (A * B^x * x^C)  has been  
+    // derived empirically from some representative supercharger data.
+    // This provides near-linear output over the normal operating range, 
+    // with fall-off in the over-speed situation.
+    float rpm_norm = (speed / _omega0);
+    float A = 1.795206541;
+    float B = 0.55620178;
+    float C = 1.246708471;
+    float rpm_factor = A * Math::pow(B, rpm_norm) * Math::pow(rpm_norm, C);
+
+    // We need to adjust the minimum manifold pressure to get a
+    // reasonable idle speed (a "closed" throttle doesn't suck a total
+    // vacuum in real manifolds).  This is a hack.
+    float _minMP = (-0.008 * _turbo ) + 0.1;
+
+    // Scale to throttle setting, clamp to wastegate
+    if(_running) {
+        _mp = pressure * (1 + (_boost * (_turbo-1) * rpm_factor));
+        _mp *= _minMP + (1 -_minMP) * _throttle;
+    }
+    if(_mp > _maxMP) _mp = _maxMP;
+
+    // The "boost" is the delta above ambient
+    _boostPressure = _mp - pressure;
 
     // Air entering the manifold does so rapidly, and thus the
     // pressure change can be assumed to be adiabatic.  Calculate a
     // temperature change, and use that to get the density.
-    float T = temp * Math::pow(mp/pressure, 2.0/7.0);
-    float rho = mp / (287.1f * T);
+    // Note: need to model intercoolers here...
+    float T = temp * Math::pow(_mp/pressure, 2.0/7.0);
+    float rho = _mp / (287.1f * T);
 
     // The actual fuel flow is determined only by engine RPM and the
     // mixture setting.  Not all of this will burn with the same
