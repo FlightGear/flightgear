@@ -543,9 +543,10 @@ AC_CONFIG_FILES([ \
 	src/Traffic/Makefile \
 	tests/Makefile \
 	utils/Makefile \
-	utils/TerraSync/Makefile \
-	utils/Modeller/Makefile \
+	utils/GPSsmooth/Makefile \
 	utils/js_server/Makefile \
+	utils/Modeller/Makefile \
+	utils/TerraSync/Makefile \
 ])
 AC_OUTPUT
 
