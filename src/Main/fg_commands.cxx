@@ -1009,7 +1009,7 @@ do_data_logging_commit (const SGPropertyNode * arg)
 
 
 static bool
-do_menu_reload (const SGPropertyNode *)
+do_gui_reload (const SGPropertyNode *)
 {
     globals->get_subsystem("gui")->reinit();
     return true;
@@ -1349,7 +1349,7 @@ static struct {
     { "property-cycle", do_property_cycle },
     { "property-randomize", do_property_randomize },
     { "data-logging-commit", do_data_logging_commit },
-    { "menu-reload", do_menu_reload },
+    { "gui-reload", do_gui_reload },
     { "dialog-new", do_dialog_new },
     { "dialog-show", do_dialog_show },
     { "dialog-close", do_dialog_close },
