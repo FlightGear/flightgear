@@ -1007,15 +1007,6 @@ do_data_logging_commit (const SGPropertyNode * arg)
     return true;
 }
 
-
-static bool
-do_gui_reload (const SGPropertyNode *)
-{
-    globals->get_subsystem("gui")->reinit();
-    return true;
-}
-
-
 /**
  * Built-in command: Add a dialog to the GUI system.  Does *not*
  * display the dialog.  The property node should have the same format
@@ -1349,7 +1340,6 @@ static struct {
     { "property-cycle", do_property_cycle },
     { "property-randomize", do_property_randomize },
     { "data-logging-commit", do_data_logging_commit },
-    { "gui-reload", do_gui_reload },
     { "dialog-new", do_dialog_new },
     { "dialog-show", do_dialog_show },
     { "dialog-close", do_dialog_close },
