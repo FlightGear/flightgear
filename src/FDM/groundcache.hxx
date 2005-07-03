@@ -56,16 +56,15 @@ public:
   
 
     // Return the altitude above ground below the wgs84 point pt
-    // Search for the nearest triangle to pt.
+    // Search for highest triangle not higher than pt + max_altoff.
     // Return ground properties like the ground type, the maximum load
     // this kind kind of ground can carry, the friction factor between
     // 0 and 1 which can be used to model lower friction with wet runways
     // and finally the altitude above ground.
-    bool get_agl(double t, const double pt[3],
+    bool get_agl(double t, const double pt[3], double max_altoff,
                  double contact[3], double normal[3], double vel[3],
                  int *type, double *loadCapacity,
                  double *frictionFactor, double *agl);
-
 
     // Return 1 if the hook intersects with a wire.
     // That test is done by checking if the quad spanned by the points pt*

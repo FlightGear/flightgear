@@ -103,10 +103,13 @@ public:
       return (0 < ot && ot < FGAIBase::MAX_OBJECTS) ? numObjects[ot] : numObjects[0];
     }
 
-    void processScenario( string &filename );
+    void processScenario( const string &filename );
 
   ssgBranch * getModel(const string& path);
   void setModel(const string& path, ssgBranch *model);
+
+  static bool getStartPosition(const string& id, const string& pid,
+                               Point3D& geodPos, double& hdng, sgdVec3 uvw);
 
 private:
 

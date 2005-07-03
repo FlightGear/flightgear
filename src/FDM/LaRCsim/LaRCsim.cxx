@@ -285,8 +285,10 @@ void FGLaRCsim::update( double dt ) {
     Brake_pct[1] = globals->get_controls()->get_brake_left();
 
     // Inform LaRCsim of the local terrain altitude
-    // Runway_altitude = get_Runway_altitude();
-    Runway_altitude = fgGetDouble("/position/ground-elev-m") * SG_METER_TO_FEET;
+    Runway_altitude
+      = get_groundlevel_m(Latitude, Longitude, Altitude * SG_FEET_TO_METER)
+      * SG_METER_TO_FEET;
+
     // Weather
     /* V_north_airmass = get_V_north_airmass();
        V_east_airmass =  get_V_east_airmass();

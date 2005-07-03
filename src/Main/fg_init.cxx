@@ -68,6 +68,7 @@
 #include <Airports/apt_loader.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
+#include <AIModel/AIManager.hxx>
 #include <ATC/ATCdisplay.hxx>
 #include <ATC/ATCmgr.hxx>
 #include <ATC/AIMgr.hxx>
@@ -954,7 +955,49 @@ static bool fgSetPosFromNAV( const string& id, const double& freq ) {
     }
 }
 
+// Set current_options lon/lat given an aircraft carrier id
+static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
 
+    // set initial position from runway and heading
+    Point3D geodPos;
+    double heading;
+    sgdVec3 uvw;
+    if (FGAIManager::getStartPosition(carrier, posid, geodPos, heading, uvw)) {
+        double lon = geodPos.lon() * SGD_RADIANS_TO_DEGREES;
+        double lat = geodPos.lat() * SGD_RADIANS_TO_DEGREES;
+        double alt = geodPos.elev() * SG_METER_TO_FEET;
+
+        SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
+                << carrier << " at lat = " << lat << ", lon = " << lon
+                << ", alt = " << alt << ", heading = " << heading);
+
+        fgSetDouble("/sim/presets/longitude-deg",  lon);
+        fgSetDouble("/sim/presets/latitude-deg",  lat);
+        fgSetDouble("/sim/presets/altitude-ft", alt);
+        fgSetDouble("/sim/presets/heading-deg", heading);
+        fgSetDouble("/position/longitude-deg",  lon);
+        fgSetDouble("/position/latitude-deg",  lat);
+        fgSetDouble("/position/altitude-ft", alt);
+        fgSetDouble("/orientation/heading-deg", heading);
+
+        fgSetString("/sim/presets/speed-set", "UVW");
+        fgSetDouble("/velocities/uBody-fps", uvw[0]);
+        fgSetDouble("/velocities/vBody-fps", uvw[1]);
+        fgSetDouble("/velocities/wBody-fps", uvw[2]);
+        fgSetDouble("/sim/presets/uBody-fps", uvw[0]);
+        fgSetDouble("/sim/presets/vBody-fps", uvw[1]);
+        fgSetDouble("/sim/presets/wBody-fps", uvw[2]);
+
+        fgSetBool("/sim/presets/onground", true);
+
+        return true;
+    } else {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carroer = "
+                << carrier );
+        return false;
+    }
+}
+ 
 // Set current_options lon/lat given an airport id and heading (degrees)
 static bool fgSetPosFromFix( const string& id ) {
     FGFix fix;
@@ -1127,6 +1170,8 @@ bool fgInitPosition() {
     double vor_freq = fgGetDouble("/sim/presets/vor-freq");
     string ndb = fgGetString("/sim/presets/ndb-id");
     double ndb_freq = fgGetDouble("/sim/presets/ndb-freq");
+    string carrier = fgGetString("/sim/presets/carrier");
+    string parkpos = fgGetString("/sim/presets/parkpos");
     string fix = fgGetString("/sim/presets/fix");
 
     if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
@@ -1163,6 +1208,13 @@ bool fgInitPosition() {
         }
     }
 
+    if ( !set_pos && !carrier.empty() ) {
+        // an aircraft carrier is requested
+        if ( fgSetPosFromCarrier( carrier, parkpos ) ) {
+            set_pos = true;
+        }
+    }
+
     if ( !set_pos && !fix.empty() ) {
         // a Fix is requested
         if ( fgSetPosFromFix( fix ) ) {
@@ -1185,7 +1237,7 @@ bool fgInitPosition() {
                  fgGetDouble("/sim/presets/heading-deg") );
 
     // determine if this should be an on-ground or in-air start
-    if ( fabs(gs) > 0.01 || fabs(od) > 0.1 || alt > 0.1 ) {
+    if ((fabs(gs) > 0.01 || fabs(od) > 0.1 || alt > 0.1) && carrier.empty()) {
         fgSetBool("/sim/presets/onground", false);
     } else {
         fgSetBool("/sim/presets/onground", true);

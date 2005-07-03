@@ -36,6 +36,17 @@ SG_USING_STD(list);
 class FGAIManager;
 class FGAIFlightPlan;
 
+struct ParkPosition {
+  ParkPosition(const ParkPosition& pp)
+    : name(pp.name), offset(pp.offset), heading_deg(pp.heading_deg)
+  {}
+  ParkPosition(const string& n, const Point3D& off = Point3D(), double heading = 0)
+    : name(n), offset(off), heading_deg(heading)
+  {}
+  string name;
+  Point3D offset;
+  double heading_deg;
+};
 
 typedef struct {
    string callsign;
@@ -73,7 +84,7 @@ typedef struct {
    list<string> solid_objects;    // List of solid object names
    list<string> wire_objects;     // List of wire object names
    list<string> catapult_objects; // List of catapult object names
-   list<Point3D> ppositions;  // List of positions on a carrier where an aircraft can start.
+   list<ParkPosition> ppositions; // List of positions on a carrier where an aircraft can start.
    Point3D flols_offset;      // used by carrier objects, in meters
    double radius;             // used by ship objects, in feet
    string name;               // used by carrier objects
@@ -116,6 +127,9 @@ public:
     void* getID();
     void setDie( bool die );
     bool getDie();
+
+    Point3D getCartPosAt(const Point3D& off) const;
+    Point3D getGeocPosAt(const Point3D& off) const;
 
 protected:
 

@@ -188,20 +188,23 @@ FGInterface::common_init ()
 
     // Set initial position
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing position..." );
-    set_Longitude( fgGetDouble("/sim/presets/longitude-deg")
-                   * SGD_DEGREES_TO_RADIANS );
-    set_Latitude( fgGetDouble("/sim/presets/latitude-deg")
-                  * SGD_DEGREES_TO_RADIANS );
-    double ground_elev_m = globals->get_scenery()->get_cur_elev();
+    double lon = fgGetDouble("/sim/presets/longitude-deg")
+      * SGD_DEGREES_TO_RADIANS;
+    double lat = fgGetDouble("/sim/presets/latitude-deg")
+      * SGD_DEGREES_TO_RADIANS;
+    double alt_ft = fgGetDouble("/sim/presets/altitude-ft");
+    double alt_m = alt_ft * SG_FEET_TO_METER;
+    set_Longitude( lon );
+    set_Latitude( lat );
+
+    double ground_elev_m = get_groundlevel_m(lat, lon, alt_m);
     double ground_elev_ft = ground_elev_m * SG_METER_TO_FEET;
-    fgSetDouble("/position/ground-elev-m", ground_elev_m);
     _set_Runway_altitude ( ground_elev_ft );
-    if ( fgGetBool("/sim/presets/onground")
-         || fgGetDouble("/sim/presets/altitude-ft") < ground_elev_ft ) {
-        fgSetDouble("/position/altitude-ft", ground_elev_ft);
-        set_Altitude( ground_elev_ft );
+    if ( fgGetBool("/sim/presets/onground") || alt_ft < ground_elev_ft ) {
+        fgSetDouble("/position/altitude-ft", ground_elev_ft + 0.1);
+        set_Altitude( ground_elev_ft + 0.1);
     } else {
-        set_Altitude( fgGetDouble("/sim/presets/altitude-ft") );
+        set_Altitude( alt_ft );
     }
 
     // Set ground elevation
@@ -305,6 +308,15 @@ FGInterface::bind ()
   fgSetArchivable("/position/altitude-ft");
   fgTie("/position/altitude-agl-ft", this,
         &FGInterface::get_Altitude_AGL); // read-only
+  fgSetArchivable("/position/ground-elev-ft");
+  fgTie("/position/ground-elev-ft", this,
+        &FGInterface::get_Runway_altitude); // read-only
+  fgSetArchivable("/position/ground-elev-m");
+  fgTie("/position/ground-elev-m", this,
+        &FGInterface::get_Runway_altitude_m); // read-only
+  fgSetArchivable("/position/sea-level-radius-ft");
+  fgTie("/position/sea-level-radius-ft", this,
+        &FGInterface::get_Sea_level_radius); // read-only
 
 				// Orientation
   fgTie("/orientation/roll-deg", this,
@@ -438,6 +450,9 @@ FGInterface::unbind ()
   fgUntie("/position/longitude-deg");
   fgUntie("/position/altitude-ft");
   fgUntie("/position/altitude-agl-ft");
+  fgUntie("/position/ground-elev-ft");
+  fgUntie("/position/ground-elev-m");
+  fgUntie("/position/sea-level-radius-ft");
   fgUntie("/orientation/roll-deg");
   fgUntie("/orientation/pitch-deg");
   fgUntie("/orientation/heading-deg");
@@ -497,7 +512,9 @@ void FGInterface::_updateGeodeticPosition( double lat, double lon, double alt )
     _set_Geodetic_Position( lat, lon, alt );
 
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET );
-    _set_Runway_altitude( fgGetDouble("/position/ground-elev-m") * SG_METER_TO_FEET );
+    double alt_m = alt*SG_FEET_TO_METER;
+    double groundlevel_m = get_groundlevel_m(lat, lon, alt_m);
+    _set_Runway_altitude( groundlevel_m * SG_METER_TO_FEET );
 
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );
@@ -505,25 +522,6 @@ void FGInterface::_updateGeodeticPosition( double lat, double lon, double alt )
     _set_sin_cos_longitude( lon );
 
     _set_sin_cos_latitude( lat );
-
-    /* Norman's code for slope of the terrain */
-    /* needs to be tested -- get it on the HUD and taxi around */
-    /* double *tnorm = scenery.cur_normal;
-
-       double sy = sin ( -get_Psi() ) ;
-       double cy = cos ( -get_Psi() ) ;
-
-       double phitb, thetatb, psitb;
-       if ( tnorm[1] != 0.0 ) {
-           psitb = -atan2 ( tnorm[0], tnorm[1] );
-       }
-       if ( tnorm[2] != 0.0 ) {	
-	   thetatb =  atan2 ( tnorm[0] * cy - tnorm[1] * sy, tnorm[2] );
-	   phitb = -atan2 ( tnorm[1] * cy + tnorm[0] * sy, tnorm[2] );  
-       }	
-	
-       _set_terrain_slope(phitb, thetatb, psitb) 
-     */
 }
 
 
@@ -553,7 +551,9 @@ void FGInterface::_updateGeocentricPosition( double lat_geoc, double lon,
     _set_Geodetic_Position( lat_geod, lon, alt );
 
     _set_Sea_level_radius( sl_radius2 * SG_METER_TO_FEET );
-    _set_Runway_altitude(  fgGetDouble("/position/ground-elev-m") * SG_METER_TO_FEET );
+    double alt_m = alt*SG_FEET_TO_METER;
+    double groundlevel_m = get_groundlevel_m(lat_geod, lon, alt_m);
+    _set_Runway_altitude( groundlevel_m * SG_METER_TO_FEET );
 
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );
@@ -561,25 +561,6 @@ void FGInterface::_updateGeocentricPosition( double lat_geoc, double lon,
     _set_sin_cos_longitude( lon );
 
     _set_sin_cos_latitude( lat_geod );
-
-    /* Norman's code for slope of the terrain */
-    /* needs to be tested -- get it on the HUD and taxi around */
-    /* double *tnorm = scenery.cur_normal;
-
-       double sy = sin ( -get_Psi() ) ;
-       double cy = cos ( -get_Psi() ) ;
-
-       double phitb, thetatb, psitb;
-       if ( tnorm[1] != 0.0 ) {
-           psitb = -atan2 ( tnorm[0], tnorm[1] );
-       }
-       if ( tnorm[2] != 0.0 ) {	
-	   thetatb =  atan2 ( tnorm[0] * cy - tnorm[1] * sy, tnorm[2] );
-	   phitb = -atan2 ( tnorm[1] * cy + tnorm[0] * sy, tnorm[2] );  
-       }	
-	
-       _set_terrain_slope(phitb, thetatb, psitb) 
-     */
 }
 
 
@@ -848,7 +829,7 @@ FGInterface::get_agl_m(double t, const double pt[3],
                        int *type, double *loadCapacity,
                        double *frictionFactor, double *agl)
 {
-  return ground_cache.get_agl(t, pt, contact, normal, vel, type,
+  return ground_cache.get_agl(t, pt, 2.0, contact, normal, vel, type,
                               loadCapacity, frictionFactor, agl);
 }
 
@@ -861,7 +842,7 @@ FGInterface::get_agl_ft(double t, const double pt[3],
   // Convert units and do the real work.
   sgdVec3 pt_m;
   sgdScaleVec3( pt_m, pt, SG_FEET_TO_METER );
-  bool ret = ground_cache.get_agl(t, pt_m, contact, normal, vel,
+  bool ret = ground_cache.get_agl(t, pt_m, 2.0, contact, normal, vel,
                                   type, loadCapacity, frictionFactor, agl);
   // Convert units back ...
   sgdScaleVec3( contact, SG_METER_TO_FEET );
@@ -872,6 +853,63 @@ FGInterface::get_agl_ft(double t, const double pt[3],
   return ret;
 }
 
+bool
+FGInterface::get_agl_m(double t, const double pt[3], double max_altoff,
+                       double contact[3], double normal[3], double vel[3],
+                       int *type, double *loadCapacity,
+                       double *frictionFactor, double *agl)
+{
+  return ground_cache.get_agl(t, pt, max_altoff, contact, normal, vel, type,
+                              loadCapacity, frictionFactor, agl);
+}
+
+bool
+FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
+                        double contact[3], double normal[3], double vel[3],
+                        int *type, double *loadCapacity,
+                        double *frictionFactor, double *agl)
+{
+  // Convert units and do the real work.
+  sgdVec3 pt_m;
+  sgdScaleVec3( pt_m, pt, SG_FEET_TO_METER );
+  bool ret = ground_cache.get_agl(t, pt_m, SG_FEET_TO_METER * max_altoff,
+                                  contact, normal, vel,
+                                  type, loadCapacity, frictionFactor, agl);
+  // Convert units back ...
+  sgdScaleVec3( contact, SG_METER_TO_FEET );
+  sgdScaleVec3( vel, SG_METER_TO_FEET );
+  *agl *= SG_METER_TO_FEET;
+  // FIXME: scale the load limit to something in the english unit system.
+  // Be careful with the DBL_MAX which is returned by default.
+  return ret;
+}
+
+
+double
+FGInterface::get_groundlevel_m(double lat, double lon, double alt)
+{
+  // First compute the sea level radius,
+  sgdVec3 pos, cpos;
+  sgGeodToCart(lat, lon, 0, pos);
+  double slr = sgdLengthVec3(pos);
+  // .. then the cartesian position of the given lat/lon/alt.
+  sgGeodToCart(lat, lon, alt, pos);
+
+  // FIXME: how to handle t - ref_time differences ???
+  double ref_time, radius;
+  // Prepare the ground cache for that position.
+  if (!is_valid_m(&ref_time, cpos, &radius))
+    prepare_ground_cache_m(ref_time, pos, 10);
+  else if (radius*radius <= sgdDistanceSquaredVec3(pos, cpos))
+    prepare_ground_cache_m(ref_time, pos, radius);
+  
+  double contact[3], normal[3], vel[3], lc, ff, agl;
+  int type;
+  get_agl_m(ref_time, pos, 2.0, contact, normal, vel, &type, &lc, &ff, &agl);
+
+  return sgdLengthVec3(contact) - slr;
+}
+  
 bool
 FGInterface::caught_wire_m(double t, const double pt[4][3])
 {

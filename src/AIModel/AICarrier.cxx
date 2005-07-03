@@ -33,6 +33,9 @@
 #include "AICarrier.hxx"
 
 
+#include "AIScenario.hxx"
+
+
 FGAICarrier::FGAICarrier(FGAIManager* mgr) : FGAIShip(mgr) {
   _type_str = "carrier";
   _otype = otCarrier;
@@ -53,7 +56,7 @@ void FGAICarrier::setCatapultObjects(const list<string>& co) {
   catapult_objects = co;
 }
 
-void FGAICarrier::setParkingPositions(const list<Point3D>& p) {
+void FGAICarrier::setParkingPositions(const list<ParkPosition>& p) {
   ppositions = p;
 }
 
@@ -133,6 +136,28 @@ void FGAICarrier::unbind() {
     props->untie("controls/flols/source-lights");
     props->untie("controls/flols/distance-m");
     props->untie("controls/flols/angle-degs");
+}
+
+bool FGAICarrier::getParkPosition(const string& id, Point3D& geodPos,
+                                  double& hdng, sgdVec3 uvw)
+{
+  list<ParkPosition>::iterator it = ppositions.begin();
+  while (it != ppositions.end()) {
+    // Take either the specified one or the first one ...
+    if ((*it).name == id || id.empty()) {
+      ParkPosition ppos = *it;
+      geodPos = getGeocPosAt(ppos.offset);
+      hdng = hdg + ppos.heading_deg;
+      double shdng = sin(ppos.heading_deg * SGD_DEGREES_TO_RADIANS);
+      double chdng = cos(ppos.heading_deg * SGD_DEGREES_TO_RADIANS);
+      double speed_fps = speed*1.6878099;
+      sgdSetVec3(uvw, chdng*speed_fps, shdng*speed_fps, 0);
+      return true;
+    }
+    ++it;
+  }
+
+  return false;
 }
 
 void FGAICarrier::mark_nohot(ssgEntity* e) {

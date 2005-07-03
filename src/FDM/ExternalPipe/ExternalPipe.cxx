@@ -431,7 +431,7 @@ static void process_set_command( const string_list &tokens ) {
         cur_fdm_state->_updateGeodeticPosition( lat_rad, lon_rad,
                                                 alt_m * SG_METER_TO_FEET );
 
-        double agl_m = alt_m - globals->get_scenery()->get_cur_elev();
+        double agl_m = alt_m - cur_fdm_state->get_Runway_altitude_m();
         cur_fdm_state->_set_Altitude_AGL( agl_m * SG_METER_TO_FEET );
     } else if ( tokens[1] == "euler_angles" ) {
         double phi_rad   = atof( tokens[2].c_str() );

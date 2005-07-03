@@ -977,6 +977,7 @@ public:
     }
 
     inline double get_Runway_altitude() const { return runway_altitude; }
+    inline double get_Runway_altitude_m() const { return SG_FEET_TO_METER * runway_altitude; }
     // inline double get_Runway_latitude() const { return runway_latitude; }
     // inline void set_Runway_latitude( double lat ) { runway_latitude = lat; }
     // inline double get_Runway_longitude() const { return runway_longitude; }
@@ -1132,6 +1133,15 @@ public:
                     double contact[3], double normal[3], double vel[3],
                     int *type, double *loadCapacity,
                     double *frictionFactor, double *agl);
+    bool get_agl_m(double t, const double pt[3], double max_altoff,
+                   double contact[3], double normal[3], double vel[3],
+                   int *type, double *loadCapacity,
+                   double *frictionFactor, double *agl);
+    bool get_agl_ft(double t, const double pt[3], double max_altoff,
+                    double contact[3], double normal[3], double vel[3],
+                    int *type, double *loadCapacity,
+                    double *frictionFactor, double *agl);
+    double get_groundlevel_m(double lat, double lon, double alt);
 
 
     // Return 1 if the hook intersects with a wire.

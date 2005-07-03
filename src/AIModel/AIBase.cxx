@@ -30,6 +30,7 @@
 #include <plib/ssg.h>
 
 #include <simgear/math/point3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/location.hxx>
 #include <simgear/scene/model/model.hxx>
@@ -70,9 +71,10 @@ FGAIBase::FGAIBase()
 
 FGAIBase::~FGAIBase() {
     // Unregister that one at the scenery manager
-    globals->get_scenery()->unregister_placement_transform(aip.getTransform());
-  
-    globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
+    if (globals->get_scenery()) {
+        globals->get_scenery()->unregister_placement_transform(aip.getTransform());
+        globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
+    }
     // unbind();
     SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
     root->removeChild(_type_str.c_str(), index);
@@ -322,6 +324,36 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
    return range_ft2;
 }
 
+Point3D
+FGAIBase::getCartPosAt(const Point3D& off) const
+{
+  // The offset converted to the usual body fixed coordinate system.
+  sgdVec3 sgdOff;
+  sgdSetVec3(sgdOff, -off.x(), off.z(), -off.y());
+
+  // Transform that one to the horizontal local coordinate system.
+  sgdMat4 hlTrans;
+  sgdMakeRotMat4(hlTrans, hdg, pitch, roll);
+  sgdXformPnt3(sgdOff, hlTrans);
+
+  // Now transform to the wgs84 earth centeres system.
+  Point3D pos2(pos.lon()* SGD_DEGREES_TO_RADIANS,
+               pos.lat() * SGD_DEGREES_TO_RADIANS,
+               pos.elev() * SG_FEET_TO_METER);
+  Point3D cartPos3D = sgGeodToCart(pos2);
+  sgdMat4 ecTrans;
+  sgdMakeCoordMat4(ecTrans, cartPos3D.x(), cartPos3D.y(), cartPos3D.z(),
+                   pos.lon(), 0, - 90 - pos.lat());
+  sgdXformPnt3(sgdOff, ecTrans);
+
+  return Point3D(sgdOff[0], sgdOff[1], sgdOff[2]);
+}
+
+Point3D
+FGAIBase::getGeocPosAt(const Point3D& off) const
+{
+  return sgCartToGeod(getCartPosAt(off));
+}
 
 /*
  * getters and Setters

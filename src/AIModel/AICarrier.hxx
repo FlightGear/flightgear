@@ -78,7 +78,7 @@ public:
         void setSolidObjects(const list<string>& solid_objects);
         void setWireObjects(const list<string>& wire_objects);
         void setCatapultObjects(const list<string>& catapult_objects);
-        void setParkingPositions(const list<Point3D>& p);
+        void setParkingPositions(const list<ParkPosition>& p);
         void setSign(const string& );
         void setFlolsOffset(const Point3D& off);
 
@@ -89,7 +89,8 @@ public:
 	
 	bool init();
 
-        static SGPropertyNode* getStartPosition(const string& id);
+        bool getParkPosition(const string& id, Point3D& geodPos,
+                             double& hdng, sgdVec3 uvw);
 
 private:
 
@@ -102,7 +103,7 @@ private:
 	list<string> solid_objects;       // List of solid object names
 	list<string> wire_objects;        // List of wire object names
 	list<string> catapult_objects;    // List of catapult object names
-	list<Point3D> ppositions;         // List of positions where an aircraft can start.
+	list<ParkPosition> ppositions;    // List of positions where an aircraft can start.
 	string sign;                      // The sign of this carrier.
 
 	// Velocity wrt earth.

@@ -370,7 +370,7 @@ void FGAIManager::processThermal( FGAIThermal* thermal ) {
 }
 
 
-void FGAIManager::processScenario( string &filename ) {
+void FGAIManager::processScenario( const string &filename ) {
   FGAIScenario* s = new FGAIScenario( filename );
   for (int i=0;i<s->nEntries();i++) {
     FGAIModelEntity* en = s->getNextEntry();
@@ -423,5 +423,42 @@ void FGAIManager::setModel(const string& path, ssgBranch *model)
   loadedModels.push_back(FGModelID(path,model));
 }
 
+bool FGAIManager::getStartPosition(const string& id, const string& pid,
+                                   Point3D& geodPos, double& heading,
+                                   sgdVec3 uvw)
+{
+  SGPropertyNode* root = fgGetNode("sim/ai", true);
+  if (!root->getNode("enabled", true)->getBoolValue())
+      return 0;
+
+  bool found = false;
+  string filename = root->getNode("scenario", true)->getStringValue();
+  FGAIScenario* s = new FGAIScenario( filename );
+  for (int i=0; i<s->nEntries(); i++) {
+    FGAIModelEntity* en = s->getNextEntry();
+    if (en && en->m_type == "carrier" &&
+        (en->pennant_number == id || en->name == id)) {
+      FGAICarrier* ai_carrier = new FGAICarrier(0);
+      ai_carrier->setHeading(en->heading);
+      ai_carrier->setSpeed(en->speed);
+      ai_carrier->setAltitude(en->altitude);
+      ai_carrier->setLongitude(en->longitude);
+      ai_carrier->setLatitude(en->latitude);
+      ai_carrier->setBank(en->rudder);
+      ai_carrier->setParkingPositions(en->ppositions);
+
+      if (ai_carrier->getParkPosition(pid, geodPos, heading, uvw)) {
+        delete ai_carrier;
+        found = true;
+        break;
+      }
+
+      delete ai_carrier;
+    }
+  }
+  delete s;
+
+  return found;
+}
 
 //end AIManager.cxx

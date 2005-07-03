@@ -583,10 +583,10 @@ FGGroundCache::get_cat(double t, const double dpt[3],
 }
 
 bool
-FGGroundCache::get_agl(double t, const double dpt[3],
-                         double contact[3], double normal[3], double vel[3],
-                         int *type, double *loadCapacity,
-                         double *frictionFactor, double *agl)
+FGGroundCache::get_agl(double t, const double dpt[3], double max_altoff,
+                       double contact[3], double normal[3], double vel[3],
+                       int *type, double *loadCapacity,
+                       double *frictionFactor, double *agl)
 {
   bool ret = false;
 
@@ -608,9 +608,10 @@ FGGroundCache::get_agl(double t, const double dpt[3],
   // The search direction
   sgdVec3 dir;
   sgdSetVec3( dir, -dpt[0], -dpt[1], -dpt[2] );
+  sgdNormaliseVec3( dir );
 
   // Initialize to something sensible
-  double sqdist = DBL_MAX;
+  double current_radius = 0.0;
 
   size_t sz = triangles.size();
   for (size_t i = 0; i < sz; ++i) {
@@ -623,28 +624,33 @@ FGGroundCache::get_agl(double t, const double dpt[3],
     sgdVec3 isecpoint;
     if ( sgdIsectInfLinePlane( isecpoint, pt, dir, triangle.plane ) &&
          sgdPointInTriangle( isecpoint, triangle.vertices ) ) {
-
-      // Check for the closest intersection point.
-      // FIXME: is this the right one?
-      SGDfloat newSqdist = sgdDistanceSquaredVec3( isecpoint, pt );
-      if ( newSqdist < sqdist ) {
-        sqdist = newSqdist;
-        ret = true;
-        // Save the new potential intersection point.
-        sgdCopyVec3( contact, isecpoint );
-        sgdAddVec3( contact, cache_center );
-        // The first three values in the vector are the plane normal.
-        sgdCopyVec3( normal, triangle.plane );
-        // The velocity wrt earth.
-        /// FIXME: only true for non rotating objects!!!!
-        sgdCopyVec3( vel, triangle.velocity );
-        // Save the ground type.
-        *type = triangle.type;
-        // FIXME: figure out how to get that sign ...
+      // Transform to the wgs system
+      sgdAddVec3( isecpoint, cache_center );
+      // compute the radius, good enough approximation to take the geocentric radius
+      SGDfloat radius = sgdLengthSquaredVec3(isecpoint);
+      if (current_radius < radius) {
+        // Compute the vector from pt to the intersection point ...
+        sgdVec3 off;
+        sgdSubVec3(off, pt, isecpoint);
+        // ... and check if it is too high or not
+        if (-max_altoff < sgdScalarProductVec3( off, dir )) {
+          current_radius = radius;
+          ret = true;
+          // Save the new potential intersection point.
+          sgdCopyVec3( contact, isecpoint );
+          // The first three values in the vector are the plane normal.
+          sgdCopyVec3( normal, triangle.plane );
+          // The velocity wrt earth.
+          /// FIXME: only true for non rotating objects!!!!
+          sgdCopyVec3( vel, triangle.velocity );
+          // Save the ground type.
+          *type = triangle.type;
+          // FIXME: figure out how to get that sign ...
 //           *agl = sqrt(sqdist);
-        *agl = sgdLengthVec3( dpt ) - sgdLengthVec3( contact );
+          *agl = sgdLengthVec3( dpt ) - sgdLengthVec3( contact );
 //           *loadCapacity = DBL_MAX;
 //           *frictionFactor = 1.0;
+        }
       }
     }
   }

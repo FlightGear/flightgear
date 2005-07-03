@@ -35,10 +35,10 @@
 
 static list<string>
 getAllStringNodeVals(const char* name, SGPropertyNode * entry_node);
-static list<Point3D>
+static list<ParkPosition>
 getAllOffsetNodeVals(const char* name, SGPropertyNode * entry_node);
 
-FGAIScenario::FGAIScenario(string &filename)
+FGAIScenario::FGAIScenario(const string &filename)
 {
   int i;
   SGPath path( globals->get_fg_root() );
@@ -105,8 +105,8 @@ FGAIScenario::FGAIScenario(string &filename)
      en->catapult_objects = getAllStringNodeVals("catapult", entry_node);
      en->solid_objects    = getAllStringNodeVals("solid", entry_node);
      en->ppositions       = getAllOffsetNodeVals("parking-pos", entry_node);
-     list<Point3D> flolspos = getAllOffsetNodeVals("flols-pos", entry_node);
-     en->flols_offset     = flolspos.front();
+     list<ParkPosition> flolspos = getAllOffsetNodeVals("flols-pos", entry_node);
+     en->flols_offset     = flolspos.front().offset;
 
      en->fp             = NULL;
      if (en->flightplan != ""){
@@ -161,18 +161,21 @@ getAllStringNodeVals(const char* name, SGPropertyNode * entry_node)
   return retval;
 }
 
-static list<Point3D>
+static list<ParkPosition>
 getAllOffsetNodeVals(const char* name, SGPropertyNode * entry_node)
 {
-  list<Point3D> retval;
+  list<ParkPosition> retval;
 
   vector<SGPropertyNode_ptr>::iterator it;
   vector<SGPropertyNode_ptr> children = entry_node->getChildren(name);
   for (it = children.begin(); it != children.end(); ++it) {
+    string name = (*it)->getStringValue("name", "unnamed");
     double offset_x = (*it)->getDoubleValue("x-offset-m", 0);
     double offset_y = (*it)->getDoubleValue("y-offset-m", 0);
     double offset_z = (*it)->getDoubleValue("z-offset-m", 0);
-    retval.push_back(Point3D(offset_x, offset_y, offset_z));
+    double hd = (*it)->getDoubleValue("heading-offset-deg", 0);
+    ParkPosition pp(name, Point3D(offset_x, offset_y, offset_z), hd);
+    retval.push_back(pp);
   }
 
   return retval;

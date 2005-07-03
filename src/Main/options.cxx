@@ -597,6 +597,8 @@ clearLocation ()
     fgSetString("/sim/presets/airport-id", "");
     fgSetString("/sim/presets/vor-id", "");
     fgSetString("/sim/presets/ndb-id", "");
+    fgSetString("/sim/presets/carrier", "");
+    fgSetString("/sim/presets/parkpos", "");
     fgSetString("/sim/presets/fix", "");
 }
 
@@ -613,6 +615,21 @@ fgOptNDB( const char * arg )
 {
     clearLocation();
     fgSetString("/sim/presets/ndb-id", arg);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptCarrier( const char * arg )
+{
+    clearLocation();
+    fgSetString("/sim/presets/carrier", arg);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptParkpos( const char * arg )
+{
+    fgSetString("/sim/presets/parkpos", arg);
     return FG_OPTIONS_OK;
 }
 
@@ -1215,6 +1232,8 @@ struct OptionDesc {
     {"runway",                       true,  OPTION_STRING, "/sim/presets/runway", false, "", 0 },
     {"vor",                          true,  OPTION_FUNC,   "", false, "", fgOptVOR },
     {"ndb",                          true,  OPTION_FUNC,   "", false, "", fgOptNDB },
+    {"carrier",                      true,  OPTION_FUNC,   "", false, "", fgOptCarrier },
+    {"parkpos",                      true,  OPTION_FUNC,   "", false, "", fgOptParkpos },
     {"fix",                          true,  OPTION_FUNC,   "", false, "", fgOptFIX },
     {"offset-distance",              true,  OPTION_DOUBLE, "/sim/presets/offset-distance", false, "", 0 },
     {"offset-azimuth",               true,  OPTION_DOUBLE, "/sim/presets/offset-azimuth", false, "", 0 },
