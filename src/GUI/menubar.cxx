@@ -270,17 +270,25 @@ FGMenuBar::make_menu (SGPropertyNode * node)
     for (unsigned int i = 0, j = item_nodes.size() - 1;
          i < item_nodes.size();
          i++, j--) {
-        
+
                                 // Set up the PUI entries for this item
         items[j] = strdup((char *)item_nodes[i]->getStringValue("label"));
         callbacks[j] = menu_callback;
 
                                 // Load all the bindings for this item
-        vector<SGPropertyNode_ptr> binding_nodes =
-            item_nodes[i]->getChildren("binding");
+        vector<SGPropertyNode_ptr> bindings = item_nodes[i]->getChildren("binding");
+        SGPropertyNode * dest = fgGetNode("/sim/bindings/menu", true);
 
-        for (unsigned int k = 0; k < binding_nodes.size(); k++)
-            _bindings[items[j]].push_back(new FGBinding(binding_nodes[k]));
+        for (unsigned int k = 0; k < bindings.size(); k++) {
+            unsigned int m = 0;
+            SGPropertyNode *binding;
+            while (dest->getChild("binding", m))
+                m++;
+
+            binding = dest->getChild("binding", m, true);
+            copyProperties(bindings[k], binding);
+            _bindings[items[j]].push_back(new FGBinding(binding));
+        }
     }
 
     _menuBar->add_submenu(name, items, callbacks);
