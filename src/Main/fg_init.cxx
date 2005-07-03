@@ -531,7 +531,7 @@ static string fgFindAircraftPath( const SGPath &path, const string &aircraft ) {
     ulDirEnt* dire;
     ulDir *dirp = ulOpenDir(path.str().c_str());
     if (dirp == NULL) {
-        cerr << "Unable to open aircraft directory." << endl;
+        cerr << "Unable to open aircraft directory '" << path.str() << '\'' << endl;
         exit(-1);
     }
 
