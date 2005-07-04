@@ -266,6 +266,10 @@ FGDialog::FGDialog (SGPropertyNode * props)
         _font_path.append( "Fonts" );
     }
 
+    const sgVec4 background = {0.8, 0.8, 0.9, 0.85};
+    const sgVec4 foreground = {0, 0, 0, 1};
+    sgCopyVec4(_bgcolor, background);
+    sgCopyVec4(_fgcolor, foreground);
     display(props);
 }
 
@@ -409,22 +413,14 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     int y = props->getIntValue("y", (parentHeight - height) / 2);
     string type = props->getName();
 
-    const sgVec4 background = {0.8, 0.8, 0.9, 0.85};
-    const sgVec4 foreground = {0, 0, 0, 1};
     sgVec4 color;
 
     if (type == "hrule" || type == "vrule")
-        sgCopyVec4(color, foreground);
+        sgCopyVec4(color, _fgcolor);
     else
-        sgCopyVec4(color, background);
+        sgCopyVec4(color, _bgcolor);
 
-    SGPropertyNode *ncs = props->getNode("color", false);
-    if ( ncs ) {
-       color[0] = ncs->getFloatValue("red", color[0]);
-       color[1] = ncs->getFloatValue("green", color[1]);
-       color[2] = ncs->getFloatValue("blue", color[2]);
-       color[3] = ncs->getFloatValue("alpha", color[3]);
-    }
+    getColor(props->getNode("color"), color);
 
     if (type == "")
         type = "dialog";
@@ -596,14 +592,10 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
        object->setLabelFont( lfnt );
     }
 
-    if ( SGPropertyNode *ncs = props->getNode("color", false) ) {
-       sgVec4 color;
-       color[0] = ncs->getFloatValue("red", 0.0);
-       color[1] = ncs->getFloatValue("green", 0.0);
-       color[2] = ncs->getFloatValue("blue", 0.0);
-       color[3] = ncs->getFloatValue("alpha", 1.0);
-       object->setColor(PUCOL_LABEL, color[0], color[1], color[2], color[3]);
-    }
+    sgVec4 color;
+    sgCopyVec4(color, _fgcolor);
+    getColor(props->getNode("color"), color);
+    object->setColor(PUCOL_LABEL, color[0], color[1], color[2], color[3]);
 
     if (props->hasValue("property")) {
         const char * name = props->getStringValue("name");
@@ -656,6 +648,23 @@ FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
     for (int i = 0; i < nChildren; i++)
         makeObject(props->getChild(i), width, height);
     group->close();
+}
+
+void
+FGDialog::getColor (const SGPropertyNode * prop, sgVec4 color)
+{
+    if (!prop)
+        return;
+
+    const SGPropertyNode *p;
+    if ((p = prop->getChild("red")))
+        color[0] = p->getFloatValue();
+    if ((p = prop->getChild("green")))
+        color[1] = p->getFloatValue();
+    if ((p = prop->getChild("blue")))
+        color[2] = p->getFloatValue();
+    if ((p = prop->getChild("alpha")))
+        color[3] = p->getFloatValue();
 }
 
 char **

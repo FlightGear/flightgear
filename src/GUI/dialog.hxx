@@ -118,6 +118,9 @@ private:
                      int width, int height, sgVec4 color,
                      bool makeFrame = false);
 
+    // Read color properties and merge them into color vector.
+    void getColor(const SGPropertyNode * prop, sgVec4 color);
+
     // The top-level PUI object.
     puObject * _object;
 
@@ -144,6 +147,8 @@ private:
     vector<char **> _char_arrays;
 
     SGPath _font_path;
+    sgVec4 _fgcolor;
+    sgVec4 _bgcolor;
 };
 
 //
