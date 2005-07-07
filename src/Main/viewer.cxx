@@ -114,7 +114,7 @@ static void MakeVIEW_OFFSET( sgMat4 dst,
     mat3[0][1] = tmp * axis3[1] + s * axis3[2] ;
     mat3[0][2] = tmp * axis3[2] - s * axis3[1] ;
 
-    tmp = t * axis2[1];
+    tmp = t * axis3[1];
     mat3[1][0] = tmp * axis3[0] - s * axis3[2] ;
     mat3[1][1] = tmp * axis3[1] + c ;
     mat3[1][2] = tmp * axis3[2] + s * axis3[0] ;
