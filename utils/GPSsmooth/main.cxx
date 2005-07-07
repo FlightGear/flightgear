@@ -128,7 +128,7 @@ static void gps2fg( const GPSPoint p, FGNetFDM *fdm, FGNetCtrls *ctrls )
     diff = p.altitude_msl - last_alt;
     if ( diff < -SGD_PI ) { diff += 2.0*SGD_PI; }
     if ( diff > SGD_PI ) { diff -= 2.0*SGD_PI; }
-    double theta = diff;
+    double theta = diff * 2.0;
     if ( theta > 0.5*SGD_PI ) { theta = 0.5*SGD_PI; }
     if ( theta < -0.5*SGD_PI ) { theta = -0.5*SGD_PI; }
     theta_filter = 0.99*theta_filter + 0.01*theta;
@@ -187,6 +187,17 @@ static void gps2fg( const GPSPoint p, FGNetFDM *fdm, FGNetCtrls *ctrls )
     // cout << "Flap deflection = " << aero->dflap << endl;
     fdm->left_flap = 0.0;
     fdm->right_flap = 0.0;
+
+    fdm->elevator = -theta_filter * 5.0;
+    fdm->elevator_trim_tab = 0.0;
+    fdm->left_flap = 0.0;
+    fdm->right_flap = 0.0;
+    fdm->left_aileron = phi_filter * 1.5;
+    fdm->right_aileron = phi_filter * 1.5;
+    fdm->rudder = 0.0;
+    fdm->nose_wheel = 0.0;
+    fdm->speedbrake = 0.0;
+    fdm->spoilers = 0.0;
 
     // Convert the net buffer to network format
     fdm->version = htonl(fdm->version);
@@ -428,12 +439,19 @@ int main( int argc, char **argv ) {
         // cout << "p0 = " << p0.get_time() << " p1 = " << p1.get_time()
         //      << endl;
 
-        double percent =
-            (current_time - p0.get_time()) /
-            (p1.get_time() - p0.get_time());
+        double percent;
+        if ( fabs(p1.get_time() - p0.get_time()) < 0.0001 ) {
+            percent = 0.0;
+        } else {
+            percent =
+                (current_time - p0.get_time()) /
+                (p1.get_time() - p0.get_time());
+        }
         // cout << "Percent = " << percent << endl;
 
         GPSPoint p = GPSInterpolate( p0, p1, percent );
+        // cout << current_time << " " << p0.lat_deg << ", " << p0.lon_deg << endl;
+        // cout << current_time << " " << p1.lat_deg << ", " << p1.lon_deg << endl;
         cout << current_time << " " << p.lat_deg << ", " << p.lon_deg << endl;
 
         send_data( p );
