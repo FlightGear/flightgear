@@ -15,16 +15,32 @@
 
 SG_USING_STD(map);
 
+extern puFont FONT_HELVETICA_14;
+extern puFont FONT_VERA_12B;
+
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of NewGUI.
 ////////////////////////////////////////////////////////////////////////
 
 
+
 NewGUI::NewGUI ()
-    : _menubar(new FGMenuBar),
+    : _font(FONT_HELVETICA_14),
+      _menubar(new FGMenuBar),
       _active_dialog(0)
 {
+    // set up the traditional colors as default
+    _colors["background"] = FGColor(0.8f, 0.8f, 0.9f, 0.85f);
+    _colors["foreground"] = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["highlight"]  = FGColor(0.7f, 0.7f, 0.7f, 1.0f);
+    _colors["label"]      = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["legend"]     = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["misc"]       = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    setStyle();
 }
 
 NewGUI::~NewGUI ()
@@ -46,11 +62,24 @@ NewGUI::init ()
 void
 NewGUI::reinit ()
 {
+    map<string,FGDialog *>::iterator iter;
+    vector<string> dlg;
+    // close all open dialogs and remember them ...
+    for (iter = _active_dialogs.begin(); iter != _active_dialogs.end(); iter++) {
+        dlg.push_back(iter->first);
+        closeDialog(iter->first);
+    }
+
     unbind();
     clear();
+    setStyle();
     _menubar = new FGMenuBar;
     init();
     bind();
+
+    // open remembered dialogs again (no nasal generated ones, unfortunately)
+    for (unsigned int i = 0; i < dlg.size(); i++)
+        showDialog(dlg[i]);
 }
 
 void
@@ -169,7 +198,7 @@ test_extension (const char * path, const char * ext)
 {
     int pathlen = strlen(path);
     int extlen = strlen(ext);
-    
+
     for (int i = 1; i <= pathlen && i <= extlen; i++) {
         if (path[pathlen-i] != ext[extlen-i])
             return false;
@@ -234,6 +263,127 @@ NewGUI::readDir (const char * path)
         }
     }
     ulCloseDir(dir);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Style handling.
+////////////////////////////////////////////////////////////////////////
+
+void
+NewGUI::setStyle (void)
+{
+    setupFont();
+
+    //puSetDefaultStyle();
+
+    SGPropertyNode *n = fgGetNode("/sim/gui/colors");
+    if (!n)
+        return;
+
+    for (int i = 0; i < n->nChildren(); i++) {
+        SGPropertyNode *child = n->getChild(i);
+        _colors[child->getName()] = FGColor(child);
+    }
+
+    FGColor c = _colors["background"];
+    puSetDefaultColourScheme(c.red(), c.green(), c.blue(), c.alpha());
+}
+
+
+
+
+static const struct {
+    char *name;
+    puFont font;
+} guifonts[] = {
+    "default",      FONT_HELVETICA_14,
+    "FIXED_8x13",   PUFONT_8_BY_13,
+    "FIXED_9x15",   PUFONT_9_BY_15,
+    "TIMES_10",     PUFONT_TIMES_ROMAN_10,
+    "TIMES_24",     PUFONT_TIMES_ROMAN_24,
+    "HELVETICA_10", PUFONT_HELVETICA_10,
+    "HELVETICA_12", PUFONT_HELVETICA_12,
+    "HELVETICA_14", FONT_HELVETICA_14,
+    "HELVETICA_18", PUFONT_HELVETICA_18,
+    "VERA_12B",     FONT_VERA_12B,
+    0, 0,
+};
+
+void
+NewGUI::setupFont ()
+{
+    SGPropertyNode *node = fgGetNode("/sim/gui/font", true);
+    string fontname = node->getStringValue("name", "Helvetica.txf");
+    float size = node->getFloatValue("size", 15.0);
+    float slant = node->getFloatValue("slant", 0.0);
+
+    int i;
+    for (i = 0; guifonts[i].name; i++)
+        if (fontname == guifonts[i].name)
+            break;
+    if (guifonts[i].name)
+        _font = guifonts[i].font;
+    else {
+        SGPath fontpath;
+        char* envp = ::getenv("FG_FONTS");
+        if (envp != NULL) {
+            fontpath.set(envp);
+        } else {
+            fontpath.set(globals->get_fg_root());
+            fontpath.append("Fonts");
+        }
+
+        SGPath path(fontpath);
+        path.append(fontname);
+
+        if (_tex_font.load((char *)path.c_str())) {
+            _font.initialize((fntFont *)&_tex_font, size, slant);
+        } else {
+            _font = guifonts[0].font;
+            fontname = "default";
+        }
+    }
+    puSetDefaultFonts(_font, _font);
+    fgSetString("/sim/gui/font", fontname.c_str());
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+// FGColor class.
+////////////////////////////////////////////////////////////////////////
+
+void
+FGColor::merge(const SGPropertyNode *node)
+{
+    if (!node)
+        return;
+
+    const SGPropertyNode * n;
+    if ((n = node->getNode("red")))
+        _red = n->getFloatValue();
+    if ((n = node->getNode("green")))
+        _green = n->getFloatValue();
+    if ((n = node->getNode("blue")))
+        _blue = n->getFloatValue();
+    if ((n = node->getNode("alpha")))
+        _alpha = n->getFloatValue();
+}
+
+void
+FGColor::merge(const FGColor& color)
+{
+    if (color._red >= 0.0)
+        _red = color._red;
+    if (color._green >= 0.0)
+        _green = color._green;
+    if (color._blue >= 0.0)
+        _blue = color._blue;
+    if (color._alpha >= 0.0)
+        _alpha = color._alpha;
 }
 
 // end of new_gui.cxx
