@@ -19,6 +19,8 @@ SG_USING_STD(vector);
 
 class FGDialog;
 class FGBinding;
+class NewGUI;
+class FGColor;
 
 
 /**
@@ -100,6 +102,15 @@ public:
 
 private:
 
+    enum {
+        BACKGROUND = 0x01,
+        FOREGROUND = 0x02,
+        HIGHLIGHT = 0x04,
+        LABEL = 0x08,
+        LEGEND = 0x10,
+        MISC = 0x20
+    };
+
     // Private copy constructor to avoid unpleasant surprises.
     FGDialog (const FGDialog &);
 
@@ -115,14 +126,20 @@ private:
 
     // Common configuration for all GUI group objects.
     void setupGroup (puGroup * group, SGPropertyNode * props,
-                     int width, int height, sgVec4 color,
-                     bool makeFrame = false);
+                     int width, int height, bool makeFrame = false);
 
-    // Read color properties and merge them into color vector.
-    void getColor(const SGPropertyNode * prop, sgVec4 color);
+    // Set object colors: the "which" argument defines which color qualities
+    // (PUCOL_LABEL, etc.) should pick up the <color> property.
+    void setColor(puObject * object, SGPropertyNode * props, int which = 0);
+
+    // Expand some elements according to style templates.
+    void preprocess (SGPropertyNode * props);
 
     // The top-level PUI object.
     puObject * _object;
+
+    // The GUI subsystem.
+    NewGUI * _gui;
 
     // PUI provides no way for userdata to be deleted automatically
     // with a GUI object, so we have to keep track of all the special
@@ -147,8 +164,6 @@ private:
     vector<char **> _char_arrays;
 
     SGPath _font_path;
-    sgVec4 _fgcolor;
-    sgVec4 _bgcolor;
 };
 
 //

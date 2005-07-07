@@ -256,7 +256,8 @@ GUIInfo::~GUIInfo ()
 ////////////////////////////////////////////////////////////////////////
 
 FGDialog::FGDialog (SGPropertyNode * props)
-    : _object(0)
+    : _object(0),
+      _gui((NewGUI *)globals->get_subsystem("gui"))
 {
     char* envp = ::getenv( "FG_FONTS" );
     if ( envp != NULL ) {
@@ -266,10 +267,6 @@ FGDialog::FGDialog (SGPropertyNode * props)
         _font_path.append( "Fonts" );
     }
 
-    const sgVec4 background = {0.8, 0.8, 0.9, 0.85};
-    const sgVec4 foreground = {0, 0, 0, 1};
-    sgCopyVec4(_bgcolor, background);
-    sgCopyVec4(_fgcolor, foreground);
     display(props);
 }
 
@@ -368,6 +365,9 @@ FGDialog::display (SGPropertyNode * props)
     bool userw = props->hasValue("width");
     bool userh = props->hasValue("height");
 
+    // Expand some elements. Has to be done before the layouter sees them.
+//    preprocess(props);
+
     // Let the layout widget work in the same property subtree.
     LayoutWidget wid(props);
 
@@ -413,91 +413,101 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     int y = props->getIntValue("y", (parentHeight - height) / 2);
     string type = props->getName();
 
-    sgVec4 color;
-
-    if (type == "hrule" || type == "vrule")
-        sgCopyVec4(color, _fgcolor);
-    else
-        sgCopyVec4(color, _bgcolor);
-
-    getColor(props->getNode("color"), color);
-
     if (type == "")
         type = "dialog";
 
     if (type == "dialog") {
-        puPopup * dialog;
+        puPopup * obj;
         bool draggable = props->getBoolValue("draggable", true);
         if (props->getBoolValue("modal", false))
-            dialog = new puDialogBox(x, y);
+            obj = new puDialogBox(x, y);
         else
-            dialog = new fgPopup(x, y, draggable);
-        setupGroup(dialog, props, width, height, color, true);
-        return dialog;
+            obj = new fgPopup(x, y, draggable);
+        setupGroup(obj, props, width, height, true);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "group") {
-        puGroup * group = new puGroup(x, y);
-        setupGroup(group, props, width, height, color, false);
-        return group;
+        puGroup * obj = new puGroup(x, y);
+        setupGroup(obj, props, width, height, false);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "frame") {
-        puGroup * group = new puGroup(x, y);
-        setupGroup(group, props, width, height, color, true);
-        return group;
+        puGroup * obj = new puGroup(x, y);
+        setupGroup(obj, props, width, height, true);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "hrule" || type == "vrule") {
-        puFrame * rule = new puFrame(x, y, x + width, y + height);
-        rule->setBorderThickness(0);
-        rule->setColorScheme(color[0], color[1], color[2], color[3]);
-        return rule;
+        puFrame * obj = new puFrame(x, y, x + width, y + height);
+        obj->setBorderThickness(0);
+        setColor(obj, props, FOREGROUND);
+        return obj;
+
     } else if (type == "list") {
-        puList * list = new puList(x, y, x + width, y + height);
-        setupObject(list, props);
-        return list;
+        puList * obj = new puList(x, y, x + width, y + height);
+        setupObject(obj, props);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "airport-list") {
-        AirportList * list = new AirportList(x, y, x + width, y + height);
-        setupObject(list, props);
-        return list;
+        AirportList * obj = new AirportList(x, y, x + width, y + height);
+        setupObject(obj, props);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "input") {
-        puInput * input = new puInput(x, y, x + width, y + height);
-        setupObject(input, props);
-        return input;
+        puInput * obj = new puInput(x, y, x + width, y + height);
+        setupObject(obj, props);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "text") {
-        puText * text = new puText(x, y);
-        setupObject(text, props);
+        puText * obj = new puText(x, y);
+        setupObject(obj, props);
 
         if (props->getNode("format")) {
             SGPropertyNode *live = props->getNode("live");
             if (live && live->getBoolValue())
-                text->setRenderCallback(format_callback, props);
+                obj->setRenderCallback(format_callback, props);
             else
-                format_callback(text, x, y, props);
+                format_callback(obj, x, y, props);
         }
         // Layed-out objects need their size set, and non-layout ones
         // get a different placement.
-        if(presetSize) text->setSize(width, height);
-        else text->setLabelPlace(PUPLACE_LABEL_DEFAULT);
-        return text;
+        if(presetSize) obj->setSize(width, height);
+        else obj->setLabelPlace(PUPLACE_LABEL_DEFAULT);
+        setColor(obj, props, LABEL);
+        return obj;
+
     } else if (type == "checkbox") {
-        puButton * b;
-        b = new puButton(x, y, x + width, y + height, PUBUTTON_XCHECK);
-        b->setColourScheme(.8, .7, .7); // matches "PUI input pink"
-        setupObject(b, props);
-        return b;
+        puButton * obj;
+        obj = new puButton(x, y, x + width, y + height, PUBUTTON_XCHECK);
+        setupObject(obj, props);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "radio") {
-        puButton * b;
-        b = new puButton(x, y, x + width, y + height, PUBUTTON_CIRCLE);
-        b->setColourScheme(.8, .7, .7); // matches "PUI input pink"
-        setupObject(b, props);
-        return b;
+        puButton * obj;
+        obj = new puButton(x, y, x + width, y + height, PUBUTTON_CIRCLE);
+        setupObject(obj, props);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "button") {
-        puButton * b;
+        puButton * obj;
         const char * legend = props->getStringValue("legend", "[none]");
         if (props->getBoolValue("one-shot", true))
-            b = new puOneShot(x, y, legend);
+            obj = new puOneShot(x, y, legend);
         else
-            b = new puButton(x, y, legend);
+            obj = new puButton(x, y, legend);
         if(presetSize)
-            b->setSize(width, height);
-        setupObject(b, props);
-        return b;
+            obj->setSize(width, height);
+        setupObject(obj, props);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "combo") {
         vector<SGPropertyNode_ptr> value_nodes = props->getChildren("value");
         char ** entries = make_char_array(value_nodes.size());
@@ -505,42 +515,49 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
              i < value_nodes.size();
              i++, j--)
             entries[i] = strdup((char *)value_nodes[i]->getStringValue());
-        puComboBox * combo =
-            new puComboBox(x, y, x + width, y + height, entries,
+        puComboBox * obj = new puComboBox(x, y, x + width, y + height, entries,
                            props->getBoolValue("editable", false));
-        setupObject(combo, props);
-        return combo;
+        setupObject(obj, props);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "slider") {
         bool vertical = props->getBoolValue("vertical", false);
-        puSlider * slider = new puSlider(x, y, (vertical ? height : width));
-        slider->setMinValue(props->getFloatValue("min", 0.0));
-        slider->setMaxValue(props->getFloatValue("max", 1.0));
-        setupObject(slider, props);
+        puSlider * obj = new puSlider(x, y, (vertical ? height : width));
+        obj->setMinValue(props->getFloatValue("min", 0.0));
+        obj->setMaxValue(props->getFloatValue("max", 1.0));
+        setupObject(obj, props);
         if(presetSize)
-            slider->setSize(width, height);
-        return slider;
+            obj->setSize(width, height);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "dial") {
-        puDial * dial = new puDial(x, y, width);
-        dial->setMinValue(props->getFloatValue("min", 0.0));
-        dial->setMaxValue(props->getFloatValue("max", 1.0));
-        dial->setWrap(props->getBoolValue("wrap", true));
-        setupObject(dial, props);
-        return dial;
+        puDial * obj = new puDial(x, y, width);
+        obj->setMinValue(props->getFloatValue("min", 0.0));
+        obj->setMaxValue(props->getFloatValue("max", 1.0));
+        obj->setWrap(props->getBoolValue("wrap", true));
+        setupObject(obj, props);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "textbox") {
-       int slider_width = props->getIntValue("slider", parentHeight);
-       int wrap = props->getBoolValue("wrap", true);
-       if (slider_width==0) slider_width=20;
-       puLargeInput * puTextBox =
-                     new puLargeInput(x, y, x+width, x+height, 2, slider_width, wrap);
-       if  (props->hasValue("editable"))
-       {
-          if (props->getBoolValue("editable")==false)
-             puTextBox->disableInput();
-          else
-             puTextBox->enableInput();
-       }
-       setupObject(puTextBox,props);
-       return puTextBox;
+        int slider_width = props->getIntValue("slider", parentHeight);
+        int wrap = props->getBoolValue("wrap", true);
+        if (slider_width==0) slider_width=20;
+        puLargeInput * obj = new puLargeInput(x, y,
+                x+width, x+height, 2, slider_width, wrap);
+
+        if  (props->hasValue("editable")) {
+            if (props->getBoolValue("editable")==false)
+                obj->disableInput();
+            else
+                obj->enableInput();
+        }
+        setupObject(obj, props);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
+
     } else if (type == "select") {
         vector<SGPropertyNode_ptr> value_nodes;
         SGPropertyNode * selection_node =
@@ -554,10 +571,11 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
              i < value_nodes.size();
              i++, j--)
             entries[i] = strdup((char *)value_nodes[i]->getName());
-        puSelectBox * select =
+        puSelectBox * obj =
             new puSelectBox(x, y, x + width, y + height, entries);
-        setupObject(select, props);
-        return select;
+        setupObject(obj, props);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        return obj;
     } else {
         return 0;
     }
@@ -591,11 +609,6 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
        puFont lfnt(font, size, slant);
        object->setLabelFont( lfnt );
     }
-
-    sgVec4 color;
-    sgCopyVec4(color, _fgcolor);
-    getColor(props->getNode("color"), color);
-    object->setColor(PUCOL_LABEL, color[0], color[1], color[2], color[3]);
 
     if (props->hasValue("property")) {
         const char * name = props->getStringValue("name");
@@ -635,13 +648,13 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 
 void
 FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
-                    int width, int height, sgVec4 color, bool makeFrame)
+                    int width, int height, bool makeFrame)
 {
     setupObject(group, props);
 
     if (makeFrame) {
         puFrame* f = new puFrame(0, 0, width, height);
-        f->setColorScheme(color[0], color[1], color[2], color[3]);
+        setColor(f, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
     }
 
     int nChildren = props->nChildren();
@@ -651,20 +664,62 @@ FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
 }
 
 void
-FGDialog::getColor (const SGPropertyNode * prop, sgVec4 color)
+FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
 {
-    if (!prop)
-        return;
+    string type = props->getName();
+    // first set whole color scheme (see below for a description)
+    FGColor c = _gui->getColor("background");
+    c.merge(_gui->getColor(type));
+    c.merge(props->getNode("color"));
+    object->setColourScheme(c.red(), c.green(), c.blue(), c.alpha());
 
-    const SGPropertyNode *p;
-    if ((p = prop->getChild("red")))
-        color[0] = p->getFloatValue();
-    if ((p = prop->getChild("green")))
-        color[1] = p->getFloatValue();
-    if ((p = prop->getChild("blue")))
-        color[2] = p->getFloatValue();
-    if ((p = prop->getChild("alpha")))
-        color[3] = p->getFloatValue();
+    // now look for the 6 plib color qualities
+    const int numcol = 6;
+    const struct {
+        int mask;
+        int id;
+        const char *name;
+    } pucol[numcol] = {
+        BACKGROUND, PUCOL_BACKGROUND, "background",
+        FOREGROUND, PUCOL_FOREGROUND, "foreground",
+        HIGHLIGHT,  PUCOL_HIGHLIGHT,  "highlight",
+        LABEL,      PUCOL_LABEL,      "label",
+        LEGEND,     PUCOL_LEGEND,     "legend",
+        MISC,       PUCOL_MISC,       "misc",
+    };
+
+    for (int i = 0; i < numcol; i++) {
+        // merge in object color quality components (e.g. "button-background")
+        FGColor c(_gui->getColor(type));
+        c.merge(_gui->getColor(type + '-' + pucol[i].name));
+        if (c.isValid()) {
+            // merge in explicit color components from the XML structure (<color>)
+            if (which & pucol[i].mask)
+                c.merge(props->getNode("color"));
+            object->setColor(pucol[i].id, c.red(), c.green(), c.blue(), c.alpha());
+        }
+    }
+}
+
+void
+FGDialog::preprocess (SGPropertyNode * prop)
+{
+    for (int i = 0; i < prop->nChildren(); i++) {
+        SGPropertyNode *child = prop->getChild(i);
+        const char *name = child->getName();
+
+        if (!strcmp(name, "title")) {
+            prop->removeChild("title", child->getIndex(), false);
+            SGPropertyNode *tit = fgGetNode("/sim/gui/title");
+            if (!tit) {
+                fprintf(stderr, "no tits here!\n");
+                continue;
+            }
+            copyProperties(tit, prop->getChild(child->getIndex()));
+            writeProperties(cerr, prop, true);
+        } else
+            preprocess(prop->getChild(i));
+    }
 }
 
 char **
