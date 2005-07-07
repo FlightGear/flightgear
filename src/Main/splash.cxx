@@ -46,6 +46,8 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 
+#include <GUI/new_gui.hxx>
+
 #include "globals.hxx"
 #include "fg_props.hxx"
 #include "splash.hxx"
@@ -197,7 +199,10 @@ void fgSplashUpdate ( float alpha ) {
         float left, right, bot, top;
 
         info.begin();
-        glColor4f(1.0, 0.9, 0.0, alpha);
+        FGColor c(1.0, 0.9, 0.0);
+        c.merge(fgGetNode("/sim/gui/colors/splash"));
+        glColor4f(c.red(), c.green(), c.blue(), alpha);
+
         font.getBBox(progress_text, fontsize, 0, &left, &right, &bot, &top);
         info.start2f((screen_width - right) / 2.0, 10.0 - bot);
         info.puts(progress_text);
