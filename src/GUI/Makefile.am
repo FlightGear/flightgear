@@ -7,7 +7,7 @@ libGUI_a_SOURCES = \
 	menubar.cxx menubar.hxx \
 	gui.cxx gui.h gui_funcs.cxx \
 	gui_local.cxx gui_local.hxx \
-	mouse.cxx \
+	mouse.cxx fonts.cxx \
 	preset_dlg.cxx preset_dlg.hxx \
 	prop_picker.cxx prop_picker.hxx \
 	sgVec3Slider.cxx sgVec3Slider.hxx \
