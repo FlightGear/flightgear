@@ -6,6 +6,6 @@ GPSsmooth_SOURCES = \
 
 GPSsmooth_LDADD = \
 	-lsgtiming -lsgmisc -lsgdebug -lplibnet -lplibul \
-	$(joystick_LIBS) $(base_LIBS) -lz
+	$(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
 INCLUDES = -I$(top_srcdir)/src
