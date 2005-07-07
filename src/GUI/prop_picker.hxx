@@ -62,6 +62,8 @@ protected:
   puArrowButton *down_arrow ;
   puArrowButton *up_arrow ;
 
+  NewGUI * _gui;
+
 public:
   puText    *proppath      ;
   void find_props () ;
@@ -88,6 +90,8 @@ protected:
   puFrame   *frame         ;
   puOneShot *cancel_button ;
   puOneShot *ok_button     ;
+
+  NewGUI * _gui;
 
 public:
   puText    *propname     ;

@@ -41,7 +41,7 @@
 #include STL_STRING
 
 #include <Main/globals.hxx>
-
+#include "new_gui.hxx"
 #include "prop_picker.hxx"
 
 SG_USING_STD(string);
@@ -346,10 +346,15 @@ fgPropPicker::~fgPropPicker ()
 */
 
 fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
-                                      const char *dir, const char *title ) : fgPopup ( x,y )
+                                      const char *dir, const char *title ) :
+  fgPopup ( x,y ),
+  _gui((NewGUI *)globals->get_subsystem("gui"))
 {
   puFont LegendFont, LabelFont;
   puGetDefaultFonts ( &LegendFont, &LabelFont );
+  FGColor txtcol(_gui->getColor("label"));
+  txtcol.merge(_gui->getColor("text"));
+  txtcol.merge(_gui->getColor("text-label"));
 
   files = NULL ;
   num_files = 0 ;
@@ -366,6 +371,8 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
 
   proppath = new puText            (10, h-30);
   proppath ->    setLabel          (startDir);
+  proppath ->    setColor(PUCOL_LABEL, txtcol.red(), txtcol.green(),
+                          txtcol.blue(), txtcol.alpha());
 
   slider = new puSlider (w-30,40+20*arrows,h-100-40*arrows,TRUE,20);
   slider->setValue(1.0f);
@@ -377,6 +384,8 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
   list_box -> setUserData ( this ) ;
   list_box -> setCallback ( handle_select ) ;
   list_box -> setValue ( 0 ) ;
+  list_box -> setColor(PUCOL_LABEL, txtcol.red(), txtcol.green(),
+                       txtcol.blue(), txtcol.alpha());
 
   ok_button = new puOneShot ( 10, 10, (w<170)?(w/2-5):80, 30 ) ;
   ok_button -> setLegend ( "Ok" ) ;
@@ -570,11 +579,15 @@ void fgPropEdit::fgPropEditHandleOK ( puObject* b )
   FG_POP_PUI_DIALOG( prop_edit );
 }
 
-fgPropEdit::fgPropEdit ( const char *name, const char *value, char *proppath ) : fgPopup ( 0, 0 )
-
+fgPropEdit::fgPropEdit ( const char *name, const char *value, char *proppath ) :
+    fgPopup ( 0, 0 ),
+    _gui((NewGUI *)globals->get_subsystem("gui"))
 {
     puFont LegendFont, LabelFont;
     puGetDefaultFonts ( &LegendFont, &LabelFont );
+    FGColor txtcol(_gui->getColor("label"));
+    txtcol.merge(_gui->getColor("text"));
+    txtcol.merge(_gui->getColor("text-label"));
 
     // locate in relation to picker widget...
     int fx = PROPPICK_X;
@@ -587,6 +600,8 @@ fgPropEdit::fgPropEdit ( const char *name, const char *value, char *proppath ) :
 
     propname = new puText            (fx+10, fy+90);
     propname ->    setLabel          (name);
+    propname ->    setColor(PUCOL_LABEL, txtcol.red(), txtcol.green(),
+                            txtcol.blue(), txtcol.alpha());
         
     propinput   = new puInput           (fx+10, fy+50, fx+480, fy+80);
     propinput   ->    setValue          (value);
