@@ -16,7 +16,7 @@
 SG_USING_STD(map);
 
 extern puFont FONT_HELVETICA_14;
-extern puFont FONT_VERA_12B;
+extern puFont FONT_SANS_12B;
 
 
 
@@ -307,7 +307,7 @@ static const struct {
     "HELVETICA_12", &PUFONT_HELVETICA_12,
     "HELVETICA_14", &FONT_HELVETICA_14,
     "HELVETICA_18", &PUFONT_HELVETICA_18,
-    "VERA_12B",     &FONT_VERA_12B,
+    "SANS_12B",     &FONT_SANS_12B,
     0, 0,
 };
 
