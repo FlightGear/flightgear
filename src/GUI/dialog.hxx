@@ -132,9 +132,6 @@ private:
     // (PUCOL_LABEL, etc.) should pick up the <color> property.
     void setColor(puObject * object, SGPropertyNode * props, int which = 0);
 
-    // Expand some elements according to style templates.
-    void preprocess (SGPropertyNode * props);
-
     // The top-level PUI object.
     puObject * _object;
 

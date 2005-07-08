@@ -365,9 +365,6 @@ FGDialog::display (SGPropertyNode * props)
     bool userw = props->hasValue("width");
     bool userh = props->hasValue("height");
 
-    // Expand some elements. Has to be done before the layouter sees them.
-//    preprocess(props);
-
     // Let the layout widget work in the same property subtree.
     LayoutWidget wid(props);
 
@@ -698,27 +695,6 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
                 c.merge(props->getNode("color"));
             object->setColor(pucol[i].id, c.red(), c.green(), c.blue(), c.alpha());
         }
-    }
-}
-
-void
-FGDialog::preprocess (SGPropertyNode * prop)
-{
-    for (int i = 0; i < prop->nChildren(); i++) {
-        SGPropertyNode *child = prop->getChild(i);
-        const char *name = child->getName();
-
-        if (!strcmp(name, "title")) {
-            prop->removeChild("title", child->getIndex(), false);
-            SGPropertyNode *tit = fgGetNode("/sim/gui/title");
-            if (!tit) {
-                fprintf(stderr, "no tits here!\n");
-                continue;
-            }
-            copyProperties(tit, prop->getChild(child->getIndex()));
-            writeProperties(cerr, prop, true);
-        } else
-            preprocess(prop->getChild(i));
     }
 }
 
