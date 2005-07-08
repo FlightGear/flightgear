@@ -296,18 +296,18 @@ NewGUI::setStyle (void)
 
 static const struct {
     char *name;
-    puFont font;
+    puFont *font;
 } guifonts[] = {
-    "default",      FONT_HELVETICA_14,
-    "FIXED_8x13",   PUFONT_8_BY_13,
-    "FIXED_9x15",   PUFONT_9_BY_15,
-    "TIMES_10",     PUFONT_TIMES_ROMAN_10,
-    "TIMES_24",     PUFONT_TIMES_ROMAN_24,
-    "HELVETICA_10", PUFONT_HELVETICA_10,
-    "HELVETICA_12", PUFONT_HELVETICA_12,
-    "HELVETICA_14", FONT_HELVETICA_14,
-    "HELVETICA_18", PUFONT_HELVETICA_18,
-    "VERA_12B",     FONT_VERA_12B,
+    "default",      &FONT_HELVETICA_14,
+    "FIXED_8x13",   &PUFONT_8_BY_13,
+    "FIXED_9x15",   &PUFONT_9_BY_15,
+    "TIMES_10",     &PUFONT_TIMES_ROMAN_10,
+    "TIMES_24",     &PUFONT_TIMES_ROMAN_24,
+    "HELVETICA_10", &PUFONT_HELVETICA_10,
+    "HELVETICA_12", &PUFONT_HELVETICA_12,
+    "HELVETICA_14", &FONT_HELVETICA_14,
+    "HELVETICA_18", &PUFONT_HELVETICA_18,
+    "VERA_12B",     &FONT_VERA_12B,
     0, 0,
 };
 
@@ -324,7 +324,7 @@ NewGUI::setupFont ()
         if (fontname == guifonts[i].name)
             break;
     if (guifonts[i].name)
-        _font = guifonts[i].font;
+        _font = *guifonts[i].font;
     else {
         SGPath fontpath;
         char* envp = ::getenv("FG_FONTS");
@@ -341,7 +341,7 @@ NewGUI::setupFont ()
         if (_tex_font.load((char *)path.c_str())) {
             _font.initialize((fntFont *)&_tex_font, size, slant);
         } else {
-            _font = guifonts[0].font;
+            _font = *guifonts[0].font;
             fontname = "default";
         }
     }
