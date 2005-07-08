@@ -78,8 +78,8 @@ NewGUI::reinit ()
     bind();
 
     // open remembered dialogs again (no nasal generated ones, unfortunately)
-    for (unsigned int i = 0; i < dlg.size(); i++)
-        showDialog(dlg[i]);
+//    for (unsigned int i = 0; i < dlg.size(); i++)
+//        showDialog(dlg[i]);
 }
 
 void
