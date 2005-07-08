@@ -368,6 +368,9 @@ FGDialog::display (SGPropertyNode * props)
     // Let the layout widget work in the same property subtree.
     LayoutWidget wid(props);
 
+    puFont *fnt = _gui->getDefaultFont();
+    wid.setDefaultFont(fnt, fnt->getPointSize());
+
     int pw=0, ph=0;
     if(!userw || !userh)
         wid.calcPrefSize(&pw, &ph);

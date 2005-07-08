@@ -151,8 +151,10 @@ public:
      */
     virtual FGDialog * getActiveDialog ();
 
-    const FGColor& getColor (const char * which) { return _colors[which]; }
-    const FGColor& getColor (string which) { return _colors[which.c_str()]; }
+    virtual const FGColor& getColor (const char * which) { return _colors[which]; }
+    virtual const FGColor& getColor (string which) { return _colors[which.c_str()]; }
+
+    virtual puFont *getDefaultFont() { return &_font; }
 
 protected:
 
