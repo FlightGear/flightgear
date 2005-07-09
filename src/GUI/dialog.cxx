@@ -369,7 +369,7 @@ FGDialog::display (SGPropertyNode * props)
     LayoutWidget wid(props);
 
     puFont *fnt = _gui->getDefaultFont();
-    wid.setDefaultFont(fnt, int(fnt->getPointSize());
+    wid.setDefaultFont(fnt, int(fnt->getPointSize()));
 
     int pw=0, ph=0;
     if(!userw || !userh)
