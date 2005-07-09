@@ -196,52 +196,52 @@ private:
 
 class FGColor {
 public:
-	FGColor() { clear(); }
-	FGColor(float r, float g, float b, float a = 1.0f) { set(r, g, b, a); }
-	FGColor(const SGPropertyNode *prop) { set(prop); }
+    FGColor() { clear(); }
+    FGColor(float r, float g, float b, float a = 1.0f) { set(r, g, b, a); }
+    FGColor(const SGPropertyNode *prop) { set(prop); }
 
-	FGColor& operator=(const FGColor& c) {
-		_red = c._red;
-		_green = c._green;
-		_blue = c._blue;
-		_alpha = c._alpha;
-		return *this;
-	}
+    FGColor& operator=(const FGColor& c) {
+        _red = c._red;
+        _green = c._green;
+        _blue = c._blue;
+        _alpha = c._alpha;
+        return *this;
+    }
 
-	inline void clear() { _red = _green = _blue = -1.0f; _alpha = 1.0f; }
-	// merges in non-negative components from property with children <red> etc.
-	void merge(const SGPropertyNode *prop);
-	void merge(const FGColor& color);
+    inline void clear() { _red = _green = _blue = _alpha = -1.0f; }
+    // merges in non-negative components from property with children <red> etc.
+    void merge(const SGPropertyNode *prop);
+    void merge(const FGColor& color);
 
-	void set(const SGPropertyNode *prop) { clear(); merge(prop); };
-	void set(const FGColor& color) { clear(); merge(color); }
-	void set(float r, float g, float b, float a = 1.0f) {
-		_red = clamp(r), _green = clamp(g), _blue = clamp(b), _alpha = clamp(a);
-	}
-	bool isValid() const {
-		return _red >= 0.0 && _green >= 0.0 && _blue >= 0.0
-				&& _alpha >= 0.0;
-	}
-	void print() const {
-		std::cerr << "red=" << _red << ", green=" << _green
-		<< ", blue=" << _blue << ", alpha=" << _alpha << std::endl;
-	}
+    void set(const SGPropertyNode *prop) { clear(); merge(prop); };
+    void set(const FGColor& color) { clear(); merge(color); }
+    void set(float r, float g, float b, float a = 1.0f) {
+        _red = clamp(r), _green = clamp(g), _blue = clamp(b), _alpha = clamp(a);
+    }
+    bool isValid() const {
+        return _red >= 0.0 && _green >= 0.0 && _blue >= 0.0
+                && _alpha >= 0.0;
+    }
+    void print() const {
+        std::cerr << "red=" << _red << ", green=" << _green
+        << ", blue=" << _blue << ", alpha=" << _alpha << std::endl;
+    }
 
-	inline void setRed(float red) { _red = clamp(red); }
-	inline void setGreen(float green) { _green = clamp(green); }
-	inline void setBlue(float blue) { _blue = clamp(blue); }
-	inline void setAlpha(float alpha) { _alpha = clamp(alpha); }
+    inline void setRed(float red) { _red = clamp(red); }
+    inline void setGreen(float green) { _green = clamp(green); }
+    inline void setBlue(float blue) { _blue = clamp(blue); }
+    inline void setAlpha(float alpha) { _alpha = clamp(alpha); }
 
-	inline float red() const { return _red; }
-	inline float green() const { return _green; }
-	inline float blue() const { return _blue; }
-	inline float alpha() const { return _alpha; }
+    inline float red() const { return _red; }
+    inline float green() const { return _green; }
+    inline float blue() const { return _blue; }
+    inline float alpha() const { return _alpha; }
 
 protected:
-	float _red, _green, _blue, _alpha;
+    float _red, _green, _blue, _alpha;
 
 private:
-	float clamp(float f) { return f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f; }
+    float clamp(float f) { return f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f; }
 };
 
 
