@@ -424,43 +424,43 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         else
             obj = new fgPopup(x, y, draggable);
         setupGroup(obj, props, width, height, true);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props);
         return obj;
 
     } else if (type == "group") {
         puGroup * obj = new puGroup(x, y);
         setupGroup(obj, props, width, height, false);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props);
         return obj;
 
     } else if (type == "frame") {
         puGroup * obj = new puGroup(x, y);
         setupGroup(obj, props, width, height, true);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props);
         return obj;
 
     } else if (type == "hrule" || type == "vrule") {
         puFrame * obj = new puFrame(x, y, x + width, y + height);
         obj->setBorderThickness(0);
-        setColor(obj, props, FOREGROUND);
+        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
         return obj;
 
     } else if (type == "list") {
         puList * obj = new puList(x, y, x + width, y + height);
         setupObject(obj, props);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props);
         return obj;
 
     } else if (type == "airport-list") {
         AirportList * obj = new AirportList(x, y, x + width, y + height);
         setupObject(obj, props);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props);
         return obj;
 
     } else if (type == "input") {
         puInput * obj = new puInput(x, y, x + width, y + height);
         setupObject(obj, props);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props, FOREGROUND|LABEL);
         return obj;
 
     } else if (type == "text") {
@@ -485,14 +485,14 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puButton * obj;
         obj = new puButton(x, y, x + width, y + height, PUBUTTON_XCHECK);
         setupObject(obj, props);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props, FOREGROUND|LABEL);
         return obj;
 
     } else if (type == "radio") {
         puButton * obj;
         obj = new puButton(x, y, x + width, y + height, PUBUTTON_CIRCLE);
         setupObject(obj, props);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props, FOREGROUND|LABEL);
         return obj;
 
     } else if (type == "button") {
@@ -505,7 +505,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         if(presetSize)
             obj->setSize(width, height);
         setupObject(obj, props);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props);
         return obj;
 
     } else if (type == "combo") {
@@ -518,7 +518,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puComboBox * obj = new puComboBox(x, y, x + width, y + height, entries,
                            props->getBoolValue("editable", false));
         setupObject(obj, props);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props, FOREGROUND|LABEL);
         return obj;
 
     } else if (type == "slider") {
@@ -529,7 +529,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         setupObject(obj, props);
         if(presetSize)
             obj->setSize(width, height);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props, FOREGROUND|LABEL);
         return obj;
 
     } else if (type == "dial") {
@@ -538,7 +538,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         obj->setMaxValue(props->getFloatValue("max", 1.0));
         obj->setWrap(props->getBoolValue("wrap", true));
         setupObject(obj, props);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props, FOREGROUND|LABEL);
         return obj;
 
     } else if (type == "textbox") {
@@ -548,14 +548,14 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puLargeInput * obj = new puLargeInput(x, y,
                 x+width, x+height, 2, slider_width, wrap);
 
-        if  (props->hasValue("editable")) {
+        if (props->hasValue("editable")) {
             if (props->getBoolValue("editable")==false)
                 obj->disableInput();
             else
                 obj->enableInput();
         }
         setupObject(obj, props);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props, FOREGROUND|LABEL);
         return obj;
 
     } else if (type == "select") {
@@ -574,7 +574,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puSelectBox * obj =
             new puSelectBox(x, y, x + width, y + height, entries);
         setupObject(obj, props);
-        setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(obj, props, FOREGROUND|LABEL);
         return obj;
     } else {
         return 0;
@@ -654,7 +654,7 @@ FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
 
     if (makeFrame) {
         puFrame* f = new puFrame(0, 0, width, height);
-        setColor(f, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
+        setColor(f, props);
     }
 
     int nChildren = props->nChildren();
@@ -666,38 +666,43 @@ FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
 void
 FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
 {
+    string label = props->getStringValue("label", "--");
     string type = props->getName();
-    // first set whole color scheme (see below for a description)
-    FGColor c = _gui->getColor("background");
+    string watch = "button";
+    FGColor c(_gui->getColor("background"));
     c.merge(_gui->getColor(type));
     c.merge(props->getNode("color"));
-    object->setColourScheme(c.red(), c.green(), c.blue(), c.alpha());
+    if (c.isValid())
+        object->setColourScheme(c.red(), c.green(), c.blue(), c.alpha());
 
-    // now look for the 6 plib color qualities
     const int numcol = 6;
     const struct {
         int mask;
         int id;
         const char *name;
+        const char *cname;
     } pucol[numcol] = {
-        BACKGROUND, PUCOL_BACKGROUND, "background",
-        FOREGROUND, PUCOL_FOREGROUND, "foreground",
-        HIGHLIGHT,  PUCOL_HIGHLIGHT,  "highlight",
-        LABEL,      PUCOL_LABEL,      "label",
-        LEGEND,     PUCOL_LEGEND,     "legend",
-        MISC,       PUCOL_MISC,       "misc",
+        BACKGROUND, PUCOL_BACKGROUND, "background", "color-background",
+        FOREGROUND, PUCOL_FOREGROUND, "foreground", "color-foreground",
+        HIGHLIGHT,  PUCOL_HIGHLIGHT,  "highlight",  "color-highlight",
+        LABEL,      PUCOL_LABEL,      "label",      "color-label",
+        LEGEND,     PUCOL_LEGEND,     "legend",     "color-legend",
+        MISC,       PUCOL_MISC,       "misc",       "color-misc",
     };
 
     for (int i = 0; i < numcol; i++) {
-        // merge in object color quality components (e.g. "button-background")
-        FGColor c(_gui->getColor(type));
-        c.merge(_gui->getColor(type + '-' + pucol[i].name));
-        if (c.isValid()) {
-            // merge in explicit color components from the XML structure (<color>)
-            if (which & pucol[i].mask)
-                c.merge(props->getNode("color"));
+        bool dirty = false;
+        c.clear();
+        c.setAlpha(1.0);
+        dirty |= c.merge(_gui->getColor(type + '-' + pucol[i].name));
+        if (which & pucol[i].mask)
+            dirty |= c.merge(props->getNode("color"));
+
+        if ((pucol[i].mask == LABEL) && !c.isValid())
+            dirty |= c.merge(_gui->getColor("label"));
+
+        if (c.isValid() && dirty)
             object->setColor(pucol[i].id, c.red(), c.green(), c.blue(), c.alpha());
-        }
     }
 }
 

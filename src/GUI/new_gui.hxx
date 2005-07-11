@@ -210,13 +210,14 @@ public:
 
     inline void clear() { _red = _green = _blue = _alpha = -1.0f; }
     // merges in non-negative components from property with children <red> etc.
-    void merge(const SGPropertyNode *prop);
-    void merge(const FGColor& color);
+    bool merge(const SGPropertyNode *prop);
+    bool merge(const FGColor& color);
 
-    void set(const SGPropertyNode *prop) { clear(); merge(prop); };
-    void set(const FGColor& color) { clear(); merge(color); }
-    void set(float r, float g, float b, float a = 1.0f) {
+    bool set(const SGPropertyNode *prop) { clear(); return merge(prop); };
+    bool set(const FGColor& color) { clear(); return merge(color); }
+    bool set(float r, float g, float b, float a = 1.0f) {
         _red = clamp(r), _green = clamp(g), _blue = clamp(b), _alpha = clamp(a);
+        return true;
     }
     bool isValid() const {
         return _red >= 0.0 && _green >= 0.0 && _blue >= 0.0

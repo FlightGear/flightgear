@@ -356,34 +356,42 @@ NewGUI::setupFont ()
 // FGColor class.
 ////////////////////////////////////////////////////////////////////////
 
-void
+bool
 FGColor::merge(const SGPropertyNode *node)
 {
     if (!node)
-        return;
+        return false;
 
+    bool dirty = false;
     const SGPropertyNode * n;
     if ((n = node->getNode("red")))
-        _red = n->getFloatValue();
+        _red = n->getFloatValue(), dirty = true;
     if ((n = node->getNode("green")))
-        _green = n->getFloatValue();
+        _green = n->getFloatValue(), dirty = true;
     if ((n = node->getNode("blue")))
-        _blue = n->getFloatValue();
+        _blue = n->getFloatValue(), dirty = true;
     if ((n = node->getNode("alpha")))
-        _alpha = n->getFloatValue();
+        _alpha = n->getFloatValue(), dirty = true;
+    else
+        _alpha = 1.0;
+    return dirty;
 }
 
-void
+bool
 FGColor::merge(const FGColor& color)
 {
+    bool dirty = false;
     if (color._red >= 0.0)
-        _red = color._red;
+        _red = color._red, dirty = true;
     if (color._green >= 0.0)
-        _green = color._green;
+        _green = color._green, dirty = true;
     if (color._blue >= 0.0)
-        _blue = color._blue;
+        _blue = color._blue, dirty = true;
     if (color._alpha >= 0.0)
-        _alpha = color._alpha;
+        _alpha = color._alpha, dirty = true;
+    else
+        _alpha = 1.0;
+    return dirty;
 }
 
 // end of new_gui.cxx
