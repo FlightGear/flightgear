@@ -666,7 +666,6 @@ FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
 void
 FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
 {
-    string label = props->getStringValue("label", "--");
     string type = props->getName();
     string watch = "button";
     FGColor c(_gui->getColor("background"));
@@ -694,6 +693,7 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
         bool dirty = false;
         c.clear();
         c.setAlpha(1.0);
+
         dirty |= c.merge(_gui->getColor(type + '-' + pucol[i].name));
         if (which & pucol[i].mask)
             dirty |= c.merge(props->getNode("color"));

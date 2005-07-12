@@ -216,7 +216,7 @@ public:
     bool set(const SGPropertyNode *prop) { clear(); return merge(prop); };
     bool set(const FGColor& color) { clear(); return merge(color); }
     bool set(float r, float g, float b, float a = 1.0f) {
-        _red = clamp(r), _green = clamp(g), _blue = clamp(b), _alpha = clamp(a);
+        _red = r, _green = g, _blue = b, _alpha = a;
         return true;
     }
     bool isValid() const {
@@ -228,21 +228,21 @@ public:
         << ", blue=" << _blue << ", alpha=" << _alpha << std::endl;
     }
 
-    inline void setRed(float red) { _red = clamp(red); }
-    inline void setGreen(float green) { _green = clamp(green); }
-    inline void setBlue(float blue) { _blue = clamp(blue); }
-    inline void setAlpha(float alpha) { _alpha = clamp(alpha); }
+    inline void setRed(float red) { _red = red; }
+    inline void setGreen(float green) { _green = green; }
+    inline void setBlue(float blue) { _blue = blue; }
+    inline void setAlpha(float alpha) { _alpha = alpha; }
 
-    inline float red() const { return _red; }
-    inline float green() const { return _green; }
-    inline float blue() const { return _blue; }
-    inline float alpha() const { return _alpha; }
+    inline float red() const { return clamp(_red); }
+    inline float green() const { return clamp(_green); }
+    inline float blue() const { return clamp(_blue); }
+    inline float alpha() const { return clamp(_alpha); }
 
 protected:
     float _red, _green, _blue, _alpha;
 
 private:
-    float clamp(float f) { return f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f; }
+    float clamp(float f) const { return f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f; }
 };
 
 
