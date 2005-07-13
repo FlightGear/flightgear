@@ -683,12 +683,12 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
         const char *name;
         const char *cname;
     } pucol[numcol] = {
-        BACKGROUND, PUCOL_BACKGROUND, "background", "color-background",
-        FOREGROUND, PUCOL_FOREGROUND, "foreground", "color-foreground",
-        HIGHLIGHT,  PUCOL_HIGHLIGHT,  "highlight",  "color-highlight",
-        LABEL,      PUCOL_LABEL,      "label",      "color-label",
-        LEGEND,     PUCOL_LEGEND,     "legend",     "color-legend",
-        MISC,       PUCOL_MISC,       "misc",       "color-misc",
+        { BACKGROUND, PUCOL_BACKGROUND, "background", "color-background" },
+        { FOREGROUND, PUCOL_FOREGROUND, "foreground", "color-foreground" },
+        { HIGHLIGHT,  PUCOL_HIGHLIGHT,  "highlight",  "color-highlight" },
+        { LABEL,      PUCOL_LABEL,      "label",      "color-label" },
+        { LEGEND,     PUCOL_LEGEND,     "legend",     "color-legend" },
+        { MISC,       PUCOL_MISC,       "misc",       "color-misc" }
     };
 
     for (int i = 0; i < numcol; i++) {

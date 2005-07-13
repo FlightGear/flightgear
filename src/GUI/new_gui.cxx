@@ -303,17 +303,17 @@ static const struct {
     char *name;
     puFont *font;
 } guifonts[] = {
-    "default",      &FONT_HELVETICA_14,
-    "FIXED_8x13",   &PUFONT_8_BY_13,
-    "FIXED_9x15",   &PUFONT_9_BY_15,
-    "TIMES_10",     &PUFONT_TIMES_ROMAN_10,
-    "TIMES_24",     &PUFONT_TIMES_ROMAN_24,
-    "HELVETICA_10", &PUFONT_HELVETICA_10,
-    "HELVETICA_12", &PUFONT_HELVETICA_12,
-    "HELVETICA_14", &FONT_HELVETICA_14,
-    "HELVETICA_18", &PUFONT_HELVETICA_18,
-    "SANS_12B",     &FONT_SANS_12B,
-    0, 0,
+    { "default",      &FONT_HELVETICA_14 },
+    { "FIXED_8x13",   &PUFONT_8_BY_13 },
+    { "FIXED_9x15",   &PUFONT_9_BY_15 },
+    { "TIMES_10",     &PUFONT_TIMES_ROMAN_10 },
+    { "TIMES_24",     &PUFONT_TIMES_ROMAN_24 },
+    { "HELVETICA_10", &PUFONT_HELVETICA_10 },
+    { "HELVETICA_12", &PUFONT_HELVETICA_12 },
+    { "HELVETICA_14", &FONT_HELVETICA_14 },
+    { "HELVETICA_18", &PUFONT_HELVETICA_18 },
+    { "SANS_12B",     &FONT_SANS_12B },
+    { 0, 0 }
 };
 
 void
