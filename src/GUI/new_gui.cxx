@@ -372,8 +372,6 @@ FGColor::merge(const SGPropertyNode *node)
         _blue = n->getFloatValue(), dirty = true;
     if ((n = node->getNode("alpha")))
         _alpha = n->getFloatValue(), dirty = true;
-    else
-        _alpha = 1.0;
     return dirty;
 }
 
@@ -389,8 +387,6 @@ FGColor::merge(const FGColor& color)
         _blue = color._blue, dirty = true;
     if (color._alpha >= 0.0)
         _alpha = color._alpha, dirty = true;
-    else
-        _alpha = 1.0;
     return dirty;
 }
 

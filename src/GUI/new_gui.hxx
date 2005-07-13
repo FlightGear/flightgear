@@ -220,8 +220,7 @@ public:
         return true;
     }
     bool isValid() const {
-        return _red >= 0.0 && _green >= 0.0 && _blue >= 0.0
-                && _alpha >= 0.0;
+        return _red >= 0.0 && _green >= 0.0 && _blue >= 0.0;
     }
     void print() const {
         std::cerr << "red=" << _red << ", green=" << _green
@@ -236,7 +235,7 @@ public:
     inline float red() const { return clamp(_red); }
     inline float green() const { return clamp(_green); }
     inline float blue() const { return clamp(_blue); }
-    inline float alpha() const { return clamp(_alpha); }
+    inline float alpha() const { return _alpha < 0.0 ? 1.0 : clamp(_alpha); }
 
 protected:
     float _red, _green, _blue, _alpha;
