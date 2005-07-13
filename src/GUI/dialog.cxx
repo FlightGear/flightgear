@@ -667,6 +667,9 @@ void
 FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
 {
     string type = props->getName();
+    if (type == "")
+        type = "dialog";
+
     FGColor c(_gui->getColor("background"));
     c.merge(_gui->getColor(type));
     c.merge(props->getNode("color"));
