@@ -32,15 +32,6 @@ NewGUI::NewGUI ()
       _menubar(new FGMenuBar),
       _active_dialog(0)
 {
-    // set up the traditional colors as default
-    _colors["background"] = FGColor(0.8f, 0.8f, 0.9f, 0.85f);
-    _colors["foreground"] = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
-    _colors["highlight"]  = FGColor(0.7f, 0.7f, 0.7f, 1.0f);
-    _colors["label"]      = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
-    _colors["legend"]     = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
-    _colors["misc"]       = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    setStyle();
 }
 
 NewGUI::~NewGUI ()
@@ -51,6 +42,7 @@ NewGUI::~NewGUI ()
 void
 NewGUI::init ()
 {
+    setStyle();
     char path1[1024];
     char path2[1024];
     ulMakePath(path1, globals->get_fg_root().c_str(), "gui");
@@ -274,13 +266,26 @@ NewGUI::readDir (const char * path)
 void
 NewGUI::setStyle (void)
 {
-    setupFont();
+    _colors.clear();
+
+    // set up the traditional colors as default
+    _colors["background"] = FGColor(0.8f, 0.8f, 0.9f, 0.85f);
+    _colors["foreground"] = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["highlight"]  = FGColor(0.7f, 0.7f, 0.7f, 1.0f);
+    _colors["label"]      = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["legend"]     = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["misc"]       = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     //puSetDefaultStyle();
 
-    SGPropertyNode *n = fgGetNode("/sim/gui/colors");
-    if (!n)
-        return;
+    string path = fgGetString("/sim/current-gui", "/sim/gui");
+    string p;
+
+    p = path + "/font";
+    setupFont(fgGetNode(p.c_str(), true));
+
+    p = path + "/colors";
+    SGPropertyNode *n = fgGetNode(p.c_str(), true);
 
     for (int i = 0; i < n->nChildren(); i++) {
         SGPropertyNode *child = n->getChild(i);
@@ -312,9 +317,8 @@ static const struct {
 };
 
 void
-NewGUI::setupFont ()
+NewGUI::setupFont (SGPropertyNode *node)
 {
-    SGPropertyNode *node = fgGetNode("/sim/gui/font", true);
     string fontname = node->getStringValue("name", "Helvetica.txf");
     float size = node->getFloatValue("size", 15.0);
     float slant = node->getFloatValue("slant", 0.0);
@@ -346,7 +350,7 @@ NewGUI::setupFont ()
         }
     }
     puSetDefaultFonts(_font, _font);
-    fgSetString("/sim/gui/font", fontname.c_str());
+    node->setStringValue("name", fontname.c_str());
 }
 
 

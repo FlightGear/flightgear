@@ -173,7 +173,7 @@ protected:
     virtual void setMenuBarVisible (bool visible);
 
     virtual void setStyle ();
-    virtual void setupFont ();
+    virtual void setupFont (SGPropertyNode *);
 
 private:
     fntTexFont _tex_font;
