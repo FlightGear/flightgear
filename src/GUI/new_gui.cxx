@@ -278,14 +278,14 @@ NewGUI::setStyle (void)
 
     //puSetDefaultStyle();
 
-    string path = fgGetString("/sim/current-gui", "/sim/gui");
-    string p;
+    int which = fgGetInt("/sim/current-gui", 0);
+    SGPropertyNode *sim = globals->get_props()->getNode("sim");
+    SGPropertyNode *n = sim->getChild("gui", which);
+    if (!n)
+        n = sim->getChild("gui", 0, true);
 
-    p = path + "/font";
-    setupFont(fgGetNode(p.c_str(), true));
-
-    p = path + "/colors";
-    SGPropertyNode *n = fgGetNode(p.c_str(), true);
+    setupFont(n->getNode("font", true));
+    n = n->getNode("colors", true);
 
     for (int i = 0; i < n->nChildren(); i++) {
         SGPropertyNode *child = n->getChild(i);
