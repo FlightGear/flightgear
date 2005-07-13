@@ -28,22 +28,6 @@
 // user-configured dialogs and new commands where necessary.
 ////////////////////////////////////////////////////////////////////////
 
-extern void saveFlight (puObject *);
-static bool
-do_save_dialog (const SGPropertyNode * arg)
-{
-    saveFlight(0);
-    return true;
-}
-
-extern void loadFlight (puObject *);
-static bool
-do_load_dialog (const SGPropertyNode * arg)
-{
-    loadFlight(0);
-    return true;
-}
-
 extern void reInit (puObject *);
 static bool
 do_reinit_dialog (const SGPropertyNode * arg)
@@ -71,14 +55,6 @@ do_print_dialog (const SGPropertyNode * arg)
     return true;
 }
 #endif
-
-extern void PilotOffsetAdjust (puObject *);
-static bool
-do_pilot_offset_dialog (const SGPropertyNode * arg)
-{
-    PilotOffsetAdjust(0);
-    return true;
-}
 
 extern void fgHUDalphaAdjust (puObject *);
 static bool
@@ -150,8 +126,6 @@ static struct {
     const char * name;
     SGCommandMgr::command_t command;
 } deprecated_dialogs [] = {
-    { "old-save-dialog", do_save_dialog },
-    { "old-load-dialog", do_load_dialog },
     { "old-reinit-dialog", do_reinit_dialog },
 #if defined(TR_HIRES_SNAP)
     { "old-hires-snapshot-dialog", do_hires_snapshot_dialog },
@@ -159,7 +133,6 @@ static struct {
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
     { "old-print-dialog", do_print_dialog },
 #endif
-    { "old-pilot-offset-dialog", do_pilot_offset_dialog },
     { "old-hud-alpha-dialog", do_hud_alpha_dialog },
     { "old-properties-dialog", do_properties_dialog },
     { "old-ap-add-waypoint-dialog", do_ap_add_waypoint_dialog },

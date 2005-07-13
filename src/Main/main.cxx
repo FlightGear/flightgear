@@ -300,7 +300,7 @@ static void fgMainLoop( void ) {
     }
 
 
-    if ( clock_freeze->getBoolValue() ) {
+    if (clock_freeze->getBoolValue() || !scenery_loaded) {
         delta_time_sec = 0;
     } else {
         delta_time_sec = real_delta_time_sec;
@@ -469,9 +469,7 @@ static void fgMainLoop( void ) {
     if ( global_multi_loop > 0) {
         // first run the flight model each frame until it is intialized
         // then continue running each frame only after initial scenery load is complete.
-        if (!cur_fdm_state->get_inited() || scenery_loaded) {
-            fgUpdateTimeDepCalcs();
-        }
+        fgUpdateTimeDepCalcs();
     } else {
         SG_LOG( SG_ALL, SG_DEBUG, 
             "Elapsed time is zero ... we're zinging" );

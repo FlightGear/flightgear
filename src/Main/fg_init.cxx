@@ -1887,6 +1887,10 @@ void fgReInitSubsystems()
     }
     fgSetBool("/sim/crashed", false);
 
+    // Force reupdating the positions of the ai 3d models. They are used for
+    // initializing ground level for the FDM.
+    globals->get_subsystem("ai_model")->reinit();
+
     // Initialize the FDM
     fgInitFDM();
     

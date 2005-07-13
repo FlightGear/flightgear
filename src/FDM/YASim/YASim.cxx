@@ -207,7 +207,7 @@ void YASim::update(double dt)
 
     int i;
     for(i=0; i<iterations; i++) {
-        gr->setTimeOffset(iterations*_dt);
+        gr->setTimeOffset(i*_dt);
         copyToYASim(false);
         _fdm->iterate(_dt);
         copyFromYASim();

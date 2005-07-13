@@ -90,6 +90,11 @@ void FGAIManager::init() {
 }
 
 
+void FGAIManager::reinit() {
+   update(0.0);
+}
+
+
 void FGAIManager::bind() {
    root = globals->get_props()->getNode("ai/models", true);
    root->tie("count", SGRawValuePointer<int>(&numObjects[0]));
