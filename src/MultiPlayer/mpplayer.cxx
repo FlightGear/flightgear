@@ -107,9 +107,12 @@ bool MPPlayer::Open(const string &sAddress, const int &iPort, const string &sCal
 
         // If the player is remote then load the model
         if (!bLocalPlayer) {
-
-             LoadModel();
-
+             try {
+                 LoadModel();
+             } catch (...) {
+                 SG_LOG( SG_NETWORK, SG_ALERT, "Failed to load remote model '" << sModelName << "'." );
+                 return false;
+             }
         }
 
         m_bInitialised = bSuccess;
