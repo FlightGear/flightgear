@@ -156,11 +156,11 @@ public:
 
     virtual FGColor *getColor (const char * name) const {
         _itt_t it = _colors.find(name);
-        return it->second;
+        return (it != _colors.end()) ? it->second : NULL;
     }
     virtual FGColor *getColor (const string &name) const {
         _itt_t it = _colors.find(name.c_str());
-        return it->second;
+        return (it != _colors.end()) ? it->second : NULL;
     }
 
     virtual puFont *getDefaultFont() { return &_font; }
@@ -217,15 +217,17 @@ public:
     FGColor() { clear(); }
     FGColor(float r, float g, float b, float a = 1.0f) { set(r, g, b, a); }
     FGColor(const SGPropertyNode *prop) { set(prop); }
-    FGColor(FGColor *c) { set(c->_red, c->_green, c->_blue, c->_alpha); }
+    FGColor(FGColor *c) { 
+        if (c) set(c->_red, c->_green, c->_blue, c->_alpha);
+    }
 
     inline void clear() { _red = _green = _blue = _alpha = -1.0f; }
     // merges in non-negative components from property with children <red> etc.
     bool merge(const SGPropertyNode *prop);
-    bool merge(const FGColor& color);
+    bool merge(const FGColor *color);
 
     bool set(const SGPropertyNode *prop) { clear(); return merge(prop); };
-    bool set(const FGColor& color) { clear(); return merge(color); }
+    bool set(const FGColor *color) { clear(); return merge(color); }
     bool set(float r, float g, float b, float a = 1.0f) {
         _red = r, _green = g, _blue = b, _alpha = a;
         return true;

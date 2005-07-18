@@ -379,17 +379,17 @@ FGColor::merge(const SGPropertyNode *node)
 }
 
 bool
-FGColor::merge(const FGColor& color)
+FGColor::merge(const FGColor *color)
 {
     bool dirty = false;
-    if (color._red >= 0.0)
-        _red = color._red, dirty = true;
-    if (color._green >= 0.0)
-        _green = color._green, dirty = true;
-    if (color._blue >= 0.0)
-        _blue = color._blue, dirty = true;
-    if (color._alpha >= 0.0)
-        _alpha = color._alpha, dirty = true;
+    if (color && color->_red >= 0.0)
+        _red = color->_red, dirty = true;
+    if (color && color->_green >= 0.0)
+        _green = color->_green, dirty = true;
+    if (color && color->_blue >= 0.0)
+        _blue = color->_blue, dirty = true;
+    if (color && color->_alpha >= 0.0)
+        _alpha = color->_alpha, dirty = true;
     return dirty;
 }
 
