@@ -16,12 +16,14 @@
 #include <simgear/compiler.h>	// for SG_USING_STD
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <vector>
-SG_USING_STD(vector);
-
 #include <map>
+
+SG_USING_STD(vector);
 SG_USING_STD(map);
+SG_USING_STD(string);
 
 #include <Main/fg_props.hxx>
 
@@ -29,6 +31,7 @@ class FGMenuBar;
 class FGDialog;
 class FGBinding;
 class FGColor;
+class FGFontCache;
 
 
 /**
@@ -151,12 +154,26 @@ public:
      */
     virtual FGDialog * getActiveDialog ();
 
-    virtual const FGColor& getColor (const char * which) { return _colors[which]; }
-    virtual const FGColor& getColor (string which) { return _colors[which.c_str()]; }
+    virtual FGColor *getColor (const char * name) const {
+        _itt_t it = _colors.find(name);
+        return it->second;
+    }
+    virtual FGColor *getColor (const string &name) const {
+        _itt_t it = _colors.find(name.c_str());
+        return it->second;
+    }
 
     virtual puFont *getDefaultFont() { return &_font; }
 
+
+    /**
+     * menu wide font cache, accessible from other classes as well.
+     */
+    FGFontCache *get_fontcache() { return _fontcache; }
+
 protected:
+
+    FGFontCache * _fontcache;
 
     /**
      * Test if the menubar is visible.
@@ -178,7 +195,8 @@ protected:
 private:
     fntTexFont _tex_font;
     puFont _font;
-    map<string,FGColor> _colors;
+    map<const char*,FGColor*> _colors;
+    typedef map<const char*,FGColor*>::const_iterator _itt_t;
 
     // Free all allocated memory.
     void clear ();
@@ -199,14 +217,7 @@ public:
     FGColor() { clear(); }
     FGColor(float r, float g, float b, float a = 1.0f) { set(r, g, b, a); }
     FGColor(const SGPropertyNode *prop) { set(prop); }
-
-    FGColor& operator=(const FGColor& c) {
-        _red = c._red;
-        _green = c._green;
-        _blue = c._blue;
-        _alpha = c._alpha;
-        return *this;
-    }
+    FGColor(FGColor *c) { set(c->_red, c->_green, c->_blue, c->_alpha); }
 
     inline void clear() { _red = _green = _blue = _alpha = -1.0f; }
     // merges in non-negative components from property with children <red> etc.
@@ -242,6 +253,27 @@ protected:
 
 private:
     float clamp(float f) const { return f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f; }
+};
+
+
+
+/**
+ * A small class to keep all fonts available for future use.
+ * This also assures a font isn't resident more than once.
+ */
+class FGFontCache {
+private:
+    SGPath _path;
+
+    map<const char*,puFont*> _fonts;
+    typedef map<const char*,puFont*>::iterator _itt_t;
+
+public:
+    FGFontCache();
+    ~FGFontCache();
+
+    puFont *get(const char *name, float size=15.0, float slant=0.0);
+    puFont *get(SGPropertyNode *node);
 };
 
 

@@ -13,8 +13,6 @@
 #include "menubar.hxx"
 #include "dialog.hxx"
 
-SG_USING_STD(map);
-
 extern puFont FONT_HELVETICA_14;
 extern puFont FONT_SANS_12B;
 
@@ -183,6 +181,7 @@ NewGUI::clear ()
     delete _menubar;
     _menubar = 0;
     _dialog_props.clear();
+    _colors.clear();
 }
 
 static bool
@@ -269,12 +268,12 @@ NewGUI::setStyle (void)
     _colors.clear();
 
     // set up the traditional colors as default
-    _colors["background"] = FGColor(0.8f, 0.8f, 0.9f, 0.85f);
-    _colors["foreground"] = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
-    _colors["highlight"]  = FGColor(0.7f, 0.7f, 0.7f, 1.0f);
-    _colors["label"]      = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
-    _colors["legend"]     = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
-    _colors["misc"]       = FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["background"] = new FGColor(0.8f, 0.8f, 0.9f, 0.85f);
+    _colors["foreground"] = new FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["highlight"]  = new FGColor(0.7f, 0.7f, 0.7f, 1.0f);
+    _colors["label"]      = new FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["legend"]     = new FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["misc"]       = new FGColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     //puSetDefaultStyle();
 
@@ -289,11 +288,11 @@ NewGUI::setStyle (void)
 
     for (int i = 0; i < n->nChildren(); i++) {
         SGPropertyNode *child = n->getChild(i);
-        _colors[child->getName()] = FGColor(child);
+        _colors[child->getName()] = new FGColor(child);
     }
 
-    FGColor c = _colors["background"];
-    puSetDefaultColourScheme(c.red(), c.green(), c.blue(), c.alpha());
+    FGColor *c = _colors["background"];
+    puSetDefaultColourScheme(c->red(), c->green(), c->blue(), c->alpha());
 }
 
 
@@ -392,6 +391,69 @@ FGColor::merge(const FGColor& color)
     if (color._alpha >= 0.0)
         _alpha = color._alpha, dirty = true;
     return dirty;
+}
+
+
+//
+FGFontCache::FGFontCache()
+{
+    char *envp = ::getenv("FG_FONTS");
+    if (envp != NULL) {
+        _path.set(envp);
+    } else {
+        _path.set(globals->get_fg_root());
+        _path.append("Fonts");
+    }
+
+    for (int i=0; guifonts[i].name; i++)
+        _fonts[guifonts[i].name] = guifonts[i].font;
+}
+
+FGFontCache::~FGFontCache()
+{
+   _fonts.clear();
+}
+
+puFont *
+FGFontCache::get(const char *name, float size, float slant)
+{
+    puFont *font;
+    _itt_t it;
+
+    if ((it = _fonts.find(name)) == _fonts.end())
+    {
+        SGPath path(_path);
+        path.append(name);
+
+        fntTexFont tex_font;
+        if (tex_font.load((char *)path.c_str()))
+        {
+            font = new puFont;
+            font->initialize((fntFont *)&tex_font, size, slant);
+            _fonts[name] = font;
+        }
+        else
+        {
+            font = _fonts["default"];
+            // puSetDefaultFonts(font, font);
+        }
+    }
+    else
+    {
+        font = it->second;
+    }
+
+    return font;
+}
+
+puFont *
+FGFontCache::get(SGPropertyNode *node)
+{
+    const char *name = node->getStringValue("name", "Helvetica.txf");
+    float size = node->getFloatValue("size", 15.0);
+    float slant = node->getFloatValue("slant", 0.0);
+
+    return get(name, size, slant);
 }
 
 // end of new_gui.cxx
