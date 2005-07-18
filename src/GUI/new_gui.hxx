@@ -193,10 +193,17 @@ protected:
     virtual void setupFont (SGPropertyNode *);
 
 private:
+    struct ltstr
+    {
+        bool operator()(const char* s1, const char* s2) const {
+            return strcmp(s1, s2) < 0;
+        }
+    };
+
     fntTexFont _tex_font;
     puFont _font;
-    map<const char*,FGColor*> _colors;
-    typedef map<const char*,FGColor*>::const_iterator _itt_t;
+    map<const char*,FGColor*, ltstr> _colors;
+    typedef map<const char*,FGColor*, ltstr>::const_iterator _itt_t;
 
     // Free all allocated memory.
     void clear ();
