@@ -175,7 +175,7 @@ FGRenderer::build_states( void ) {
     menus->disable( GL_TEXTURE_2D );
     menus->enable( GL_BLEND );
 
-    shadows = new SGShadowVolume;
+    shadows = new SGShadowVolume( globals->get_scenery()->get_scene_graph() );
     shadows->init( fgGetNode("/sim/rendering", true) );
     shadows->addOccluder( globals->get_scenery()->get_aircraft_branch(), SGShadowVolume::occluderTypeAircraft );
 
@@ -701,6 +701,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
     bool is_internal = globals->get_current_view()->getInternal();
     // draw before ac because ac internal rendering clear the depth buffer
 
+	globals->get_aircraft_model()->select( true );
     if( is_internal )
         shadows->endOfFrame();
 
@@ -715,11 +716,19 @@ FGRenderer::update( bool refresh_camera_settings ) {
         //  the aircraft in the global scenegraph
         // Otherwise, it just enables the aircraft: The scenegraph
         //  must be drawn again to see the plane.
+        ssgBranch *branch = globals->get_scenery()->get_aircraft_branch();
+        // in external view the shadows are drawn before the transparent parts of the ac
+        if( ! is_internal )
+            branch->setTravCallback( SSG_CALLBACK_POSTTRAV, SGShadowVolume::ACpostTravCB);
         ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+        branch->setTravCallback( SSG_CALLBACK_POSTTRAV, 0);
         FGTileMgr::set_tile_filter( true );
         sgSetModelFilter( true );
         globals->get_aircraft_model()->select( true );
     }
+	// in 'external' view the ac can be culled, so shadows have not been draw in the
+	// posttrav callback, this would be a rare case if the getInternal was acting
+	// as expected (ie in internal view, getExternal returns false)
 	if( !is_internal )
 		shadows->endOfFrame();
 

@@ -2154,6 +2154,7 @@ void FGTower::RemovePlane(string ID) {
 		if((*twrItr)->plane.callsign == ID) {
 			t = *twrItr;
 			twrItr = depList.erase(twrItr);
+			twrItr--;
 			depListItr = depList.begin();
 		}
 	}
