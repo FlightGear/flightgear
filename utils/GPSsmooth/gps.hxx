@@ -20,25 +20,25 @@ class GPSTime {
 
 public:
 
-    int seconds;
+    double seconds;
 
-    inline GPSTime( const int hh, const int mm, const int ss ) {
+    inline GPSTime( const int hh, const int mm, const double ss ) {
         seconds = hh*3600 + mm*60 + ss;
     }
-    inline GPSTime( const int gpstime ) {
-        int tmp = gpstime;
-        int hh = tmp / 10000;
+    inline GPSTime( const double gpstime ) {
+        double tmp = gpstime;
+        int hh = (int)(tmp / 10000);
         tmp -= hh * 10000;
-        int mm = tmp / 100;
+        int mm = (int)(tmp / 100);
         tmp -= mm * 100;
-        int ss = tmp;
+        double ss = tmp;
         seconds = hh*3600 + mm*60 + ss;
         // cout << gpstime << " = " << seconds << endl;
     }
     inline ~GPSTime() {}
 
-    inline int get_time() const { return seconds; }
-    inline int diff_sec( const GPSTime t ) const {
+    inline double get_time() const { return seconds; }
+    inline double diff_sec( const GPSTime t ) const {
         return seconds - t.seconds;        
     }
 };
@@ -72,7 +72,7 @@ public:
         course_true(0.0)
     { }
 
-    inline int get_time() const { return gps_time.get_time(); }
+    inline double get_time() const { return gps_time.get_time(); }
 };
 
 

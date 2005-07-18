@@ -42,7 +42,7 @@ int GPSTrack::load( const string &file ) {
         double raw, min;
 
         if ( tokens[0] == "$GPRMC" && tokens.size() == 13 ) {
-            int raw_time = atoi(tokens[1].c_str());
+            double raw_time = atof(tokens[1].c_str());
             GPSTime gps_time = GPSTime( raw_time );
             if ( (gps_time.get_time() > p.gps_time.get_time()) &&
                  (p.gps_time.get_time() > 1.0) )
@@ -78,9 +78,9 @@ int GPSTrack::load( const string &file ) {
             p.course_true = atof( tokens[8].c_str() ) * SGD_DEGREES_TO_RADIANS;
 
         } else if ( tokens[0] == "$GPGGA" && tokens.size() == 15 ) {
-            int raw_time = atoi(tokens[1].c_str());
+            double raw_time = atof(tokens[1].c_str());
             GPSTime gps_time = GPSTime( raw_time );
-            if ( (gps_time.get_time() != p.gps_time.get_time()) &&
+            if ( fabs(gps_time.get_time() - p.gps_time.get_time()) < 0.0001 &&
                  (p.gps_time.get_time() > 1.0) ) {
                 // new data cycle store last data before continuing
                 data.push_back( p );
