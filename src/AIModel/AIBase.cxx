@@ -111,10 +111,14 @@ bool FGAIBase::init() {
    props = root->getNode(_type_str.c_str(), index, true);
 
    if (model_path != "") {
+    try {
       model = load3DModel( globals->get_fg_root(),
 	                     SGPath(model_path).c_str(),
                              props,
 	                     globals->get_sim_time_sec() );
+    } catch (const sg_exception &e) {
+       model = NULL;
+    }
    }
    if (model) {
      aip.init( model );
@@ -125,7 +129,7 @@ bool FGAIBase::init() {
      globals->get_scenery()->register_placement_transform(aip.getTransform());
    } else {
      if (model_path != "") { 
-       SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model.");
+       SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
      }
    } 
 

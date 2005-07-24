@@ -82,10 +82,14 @@ void FGAIManager::init() {
   user_pitch_node     = fgGetNode("/orientation/pitch-deg", true);
   user_yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
   user_speed_node     = fgGetNode("/velocities/uBody-fps", true);
- 
-  scenario_filename = root->getNode("scenario", true)->getStringValue();
-  if (scenario_filename != "") processScenario( scenario_filename );
 
+  for(int i = 0 ; i < root->nChildren() ; i++) {
+    SGPropertyNode *aiEntry = root->getChild( i );
+	if( !strcmp( aiEntry->getName(), "scenario" ) ) {
+      scenario_filename = aiEntry->getStringValue();
+      if (scenario_filename != "") processScenario( scenario_filename );
+	}
+  }
   initDone = true;
 }
 
@@ -169,8 +173,8 @@ FGAIManager::createAircraft( FGAIModelEntity *entity,   FGAISchedule *ref) {
         } else {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
         }
-	ai_plane->setAcType(entity->acType);
-	ai_plane->setCompany(entity->company);
+        ai_plane->setAcType(entity->acType);
+        ai_plane->setCompany(entity->company);
         ai_plane->setHeading(entity->heading);
         ai_plane->setSpeed(entity->speed);
         ai_plane->setPath(entity->path.c_str());
@@ -437,32 +441,36 @@ bool FGAIManager::getStartPosition(const string& id, const string& pid,
       return 0;
 
   bool found = false;
-  string filename = root->getNode("scenario", true)->getStringValue();
-  FGAIScenario* s = new FGAIScenario( filename );
-  for (int i=0; i<s->nEntries(); i++) {
-    FGAIModelEntity* en = s->getNextEntry();
-    if (en && en->m_type == "carrier" &&
-        (en->pennant_number == id || en->name == id)) {
-      FGAICarrier* ai_carrier = new FGAICarrier(0);
-      ai_carrier->setHeading(en->heading);
-      ai_carrier->setSpeed(en->speed);
-      ai_carrier->setAltitude(en->altitude);
-      ai_carrier->setLongitude(en->longitude);
-      ai_carrier->setLatitude(en->latitude);
-      ai_carrier->setBank(en->rudder);
-      ai_carrier->setParkingPositions(en->ppositions);
+  for(int i = 0 ; (!found) && i < root->nChildren() ; i++) {
+    SGPropertyNode *aiEntry = root->getChild( i );
+	if( !strcmp( aiEntry->getName(), "scenario" ) ) {
+        string filename = aiEntry->getStringValue();
+        FGAIScenario* s = new FGAIScenario( filename );
+        for (int i=0; i<s->nEntries(); i++) {
+            FGAIModelEntity* en = s->getNextEntry();
+            if (en && en->m_type == "carrier" &&
+                (en->pennant_number == id || en->name == id)) {
+            FGAICarrier* ai_carrier = new FGAICarrier(0);
+            ai_carrier->setHeading(en->heading);
+            ai_carrier->setSpeed(en->speed);
+            ai_carrier->setAltitude(en->altitude);
+            ai_carrier->setLongitude(en->longitude);
+            ai_carrier->setLatitude(en->latitude);
+            ai_carrier->setBank(en->rudder);
+            ai_carrier->setParkingPositions(en->ppositions);
 
-      if (ai_carrier->getParkPosition(pid, geodPos, heading, uvw)) {
-        delete ai_carrier;
-        found = true;
-        break;
+            if (ai_carrier->getParkPosition(pid, geodPos, heading, uvw)) {
+                delete ai_carrier;
+                found = true;
+                break;
+            }
+
+            delete ai_carrier;
+        }
       }
-
-      delete ai_carrier;
+      delete s;
     }
   }
-  delete s;
-
   return found;
 }
 

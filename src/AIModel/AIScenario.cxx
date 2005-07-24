@@ -47,7 +47,6 @@ FGAIScenario::FGAIScenario(const string &filename)
   
   path.append( ("/Data/AI/" + filename + ".xml").c_str() );
   SGPropertyNode root;
-  readProperties(path.str(), &root);
   
 //   cout <<"path " << path.str() << endl;
   
