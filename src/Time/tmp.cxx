@@ -34,7 +34,6 @@
 #include <Main/globals.hxx>
 
 #include "light.hxx"
-#include "moonpos.hxx"
 #include "sunpos.hxx"
 #include "tmp.hxx"
 
