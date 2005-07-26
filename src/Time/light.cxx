@@ -127,7 +127,6 @@ void FGLight::reinit () {
     init();
 
     fgUpdateSunPos();
-    fgUpdateMoonPos();
 
     update_sky_color();
     update_adj_fog_color();
@@ -151,7 +150,6 @@ void FGLight::update( double dt ) {
     if (_dt_total >= 0.5) {
         _dt_total -= 0.5;
         fgUpdateSunPos();
-        fgUpdateMoonPos();
     }
 
     update_adj_fog_color();
