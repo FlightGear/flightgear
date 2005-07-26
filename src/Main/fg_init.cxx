@@ -109,7 +109,6 @@
 #include <Sound/morse.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/light.hxx>
-#include <Time/moonpos.hxx>
 #include <Time/sunpos.hxx>
 #include <Time/sunsolver.hxx>
 #include <Time/tmp.hxx>
