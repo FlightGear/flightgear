@@ -149,6 +149,10 @@ Melchior Franz <mfranz@aon.at>
   Created the led.txf font.
   Ruthlessly hunted down memory leaks in FlightGear, SimGear, and JSBSim.
   Maintains the only fully working helicopter model in FlightGear (Bolkow 105).
+  Made the GUI code fully XML configurable and added support for themes.
+  Started the Nasal library for easy model animation.
+  Reorganized the joystick code so it won't leave configuration data resident
+  for joysticks that aren't present.
 
 
 Jean-loup Gailly and Mark Adler <zlib@gzip.org>
@@ -569,11 +573,20 @@ Vivian Meazza <vivian.meazza@lineone.net>
   Added a number of excellent aircraft models including the Hawker Hunter
   and Seahawk.
 
+
+David Culp <davidculp2@comcast.net>
+  Added the AI model and scenario code which allows non interactive models
+  (like aircraft, ships, ballistic models, storms and thermals) to move
+  around the scenery in a predefined way. Every model can have it's own
+  special characteristics. The thermal model for instance is a non-visible
+  model that creates an updraft around it's center.
+
+
 Mathias Fröhlich <Mathias.Froehlich@gmx.net>
   Implemented the groundcache code which made it possible for aircraft
   to follow the ground precisely and, as a result, made it possible to
   land on aircraft carriers.
-  Modified both YASim and JSBSim to support the groundcache code.
+  Modified YASim, JSBSim  and LaRCsim to support the groundcache code.
   Reorganized the code to eliminate the viewer jitter for close by objects.
 
 
@@ -581,6 +594,18 @@ Harald Johnsen <hjohnsen@evc.net>
   Added a new 3D cloud implementation which also works on big-endian machines.
   This code allows for clouds of any types and any shapes (and even deformation
   while moving).
+  Implemented volumetric shadowing.
+
+
+Roy Vegard Ovesen <rvovesen@tiscali.no>
+  Implemented the KAP140 autopilot.
+  Added a generic, XML configurable, autopilot framework.
+  Added an Altitude encoder.
+  Added a transponder.
+  Made the instruments code much more configurable, it is now possible to only
+  include instruments that are actually present.
+  Added several high level, configurable filter implementations for use by
+  autopilot designers.
 
 
 Space Imaging, Inc  http://www.spaceimaging.com/
