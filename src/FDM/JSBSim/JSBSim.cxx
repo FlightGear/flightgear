@@ -487,6 +487,12 @@ void FGJSBsim::update( double dt )
     // translate JSBsim back to FG structure so that the
     // autopilot (and the rest of the sim can use the updated values
     copy_from_JSBsim();
+
+    // crashed (altitude AGL < 0)
+    if (get_Altitude_AGL() < 0.0) {
+      crash_message = "Attempted to fly under ground.";
+      crash_handler();
+    }
 }
 
 /******************************************************************************/
@@ -816,12 +822,6 @@ bool FGJSBsim::copy_from_JSBsim()
     flap_pos_pct->setDoubleValue( FCS->GetDfPos(ofNorm) );
     speedbrake_pos_pct->setDoubleValue( FCS->GetDsbPos(ofNorm) );
     spoilers_pos_pct->setDoubleValue( FCS->GetDspPos(ofNorm) );
-
-    // crashed (altitude AGL < 0)
-    if (get_Altitude_AGL() < 0.0) {
-      crash_message = "Attempted to fly under ground.";
-      crash_handler();
-    }
 
     return true;
 }
