@@ -698,7 +698,7 @@ private:
 
 	sgdVec3 points3d[6],points2d[6];
 	double mm[16],pm[16], arrowScale, arrowRad, lnScale, scaleDist, default_pitch, default_heading;
-	int view[4];
+	GLint view[4];
 	FGRunway runway;
 	FGViewer* cockpit_view;	
 	unsigned short stippleOut,stippleCen;
