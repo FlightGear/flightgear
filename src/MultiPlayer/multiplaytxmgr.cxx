@@ -189,14 +189,15 @@ void FGMultiplayTxMgr::Close(void) {
 * Name: SendMyPosition
 * Description: Sends the position data for the local position.
 ******************************************************************/
-void FGMultiplayTxMgr::SendMyPosition(const sgMat4 PlayerPosMat4) {
+void FGMultiplayTxMgr::SendMyPosition(const sgQuat PlayerOrientation,
+                                      const sgdVec3 PlayerPosition) {
 
     T_MsgHdr MsgHdr;
     T_PositionMsg PosMsg;
     char sMsg[sizeof(T_MsgHdr) + sizeof(T_PositionMsg)];
 
     if (m_bInitialised) {
-        mLocalPlayer->SetPosition(PlayerPosMat4);
+        mLocalPlayer->SetPosition(PlayerOrientation, PlayerPosition);
         mLocalPlayer->FillPosMsg(&MsgHdr, &PosMsg);
         memcpy(sMsg, &MsgHdr, sizeof(T_MsgHdr));
         memcpy(sMsg + sizeof(T_MsgHdr), &PosMsg, sizeof(T_PositionMsg));

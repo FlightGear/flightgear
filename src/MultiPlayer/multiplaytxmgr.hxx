@@ -70,7 +70,7 @@ public:
     /** Sends the position data for the local player
     * @param PlayerPosMat4 Transformation matrix for the player's position
     */
-    void SendMyPosition(const sgMat4 PlayerPosMat4);
+    void SendMyPosition(const sgQuat PlayerOrientation, const sgdVec3 PlayerPosition);
     
     /** Sends a tex chat message.
     * @param sMsgText Message text to send

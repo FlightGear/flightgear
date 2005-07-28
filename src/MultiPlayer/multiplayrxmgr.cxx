@@ -269,7 +269,7 @@ void FGMultiplayRxMgr::ProcessData(void) {
                                             if (m_Player[iPlayerCnt]->CompareCallsign(MsgHdr->sCallsign)) {
 
                                                 // Player found. Update the data for the player.
-                                                m_Player[iPlayerCnt]->SetPosition(PosMsg->PlayerPos);
+                                                m_Player[iPlayerCnt]->SetPosition(PosMsg->PlayerOrientation, PosMsg->PlayerPosition);
                                                 bActivePlayer = true;
 
                                             }
@@ -284,7 +284,7 @@ void FGMultiplayRxMgr::ProcessData(void) {
                                                 SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayRxMgr::ProcessRxData - Add new player. IP: " << sIpAddress << ", Call: " <<  sCallsign << ", model: " << sModelName );
                                                 m_Player[iPlayerCnt] = new MPPlayer;
                                                 m_Player[iPlayerCnt]->Open(sIpAddress, iPort, sCallsign, sModelName, false);
-                                                m_Player[iPlayerCnt]->SetPosition(PosMsg->PlayerPos);
+                                                m_Player[iPlayerCnt]->SetPosition(PosMsg->PlayerOrientation, PosMsg->PlayerPosition);
                                                 bActivePlayer = true;
                                             }
                                             iPlayerCnt++;

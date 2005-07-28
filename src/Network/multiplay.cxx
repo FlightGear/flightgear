@@ -30,6 +30,8 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/model/placement.hxx>
 
+#include <Scenery/scenery.hxx>
+
 #include "multiplay.hxx"
 
 SG_USING_STD(string);
@@ -105,8 +107,16 @@ bool FGMultiplay::process() {
 
   } else if (get_direction() == SG_IO_OUT) {
 
-    globals->get_multiplayer_tx_mgr()->
-    SendMyPosition(globals->get_aircraft_model()->get3DModel()->get_POS());
+    sgMat4 posTrans;
+    sgCopyMat4(posTrans, globals->get_aircraft_model()->get3DModel()->get_POS());
+    Point3D center = globals->get_scenery()->get_center();
+    sgdVec3 PlayerPosition;
+    sgdSetVec3(PlayerPosition, posTrans[3][0] + center[0],
+               posTrans[3][1] + center[1], posTrans[3][2] + center[2]);
+    sgQuat PlayerOrientation;
+    sgMatrixToQuat(PlayerOrientation, posTrans);
+
+    globals->get_multiplayer_tx_mgr()->SendMyPosition(PlayerOrientation, PlayerPosition);
 
   }
 

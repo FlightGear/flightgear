@@ -53,6 +53,7 @@
 #include <plib/sg.h>
 
 #include <simgear/scene/model/modellib.hxx>
+#include <simgear/scene/model/placementtrans.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
@@ -140,6 +141,7 @@ void MPPlayer::Close(void) {
 
         // Disconnect the model from the transform, then the transform from the scene.
         m_ModelTrans->removeKid(m_Model);
+        globals->get_scenery()->unregister_placement_transform(m_ModelTrans);
         globals->get_scenery()->get_aircraft_branch()->removeKid( m_ModelTrans);
 
         // Flush the model loader so that it erases the model from its list of
@@ -164,12 +166,14 @@ void MPPlayer::Close(void) {
 * Description: Updates position data held for this player and resets
 * the last update time.
 ******************************************************************/
-void MPPlayer::SetPosition(const sgMat4 PlayerPosMat4) {
+void MPPlayer::SetPosition(const sgQuat PlayerOrientation,
+                           const sgdVec3 PlayerPosition) {
 
 
     // Save the position matrix and update time
     if (m_bInitialised) {
-        sgCopyMat4(m_ModelPos, PlayerPosMat4);
+        sgdCopyVec3(m_ModelPosition, PlayerPosition);
+        sgCopyVec4(m_ModelOrientation, PlayerOrientation);
         time(&m_LastUpdate);
         m_bUpdated = true;
     }
@@ -187,16 +191,16 @@ MPPlayer::TPlayerDataState MPPlayer::Draw(void) {
 
     MPPlayer::TPlayerDataState eResult = PLAYER_DATA_NOT_AVAILABLE;
 
-    sgCoord sgPlayerCoord;
-
     if (m_bInitialised && !m_bLocalPlayer) {
         if ((time(NULL) - m_LastUpdate < TIME_TO_LIVE)) {
             // Peform an update if it has changed since the last update
             if (m_bUpdated) {
 
                 // Transform and update player model
-                sgSetCoord( &sgPlayerCoord, m_ModelPos);
-                m_ModelTrans->setTransform( &sgPlayerCoord );
+                sgMat4 orMat;
+                sgMakeIdentMat4(orMat);
+                sgQuatToMatrix(orMat, m_ModelOrientation);
+                m_ModelTrans->setTransform(m_ModelPosition, orMat);
 
                 eResult = PLAYER_DATA_AVAILABLE;
 
@@ -247,7 +251,7 @@ bool MPPlayer::CompareCallsign(const char *sCallsign) const {
 void MPPlayer::LoadModel(void) {
 
 
-    m_ModelTrans = new ssgTransform;
+    m_ModelTrans = new ssgPlacementTransform;
 
     // Load the model
     m_Model = globals->get_model_lib()->load_model( globals->get_fg_root(),
@@ -265,6 +269,7 @@ void MPPlayer::LoadModel(void) {
 
     // Place on scene under aircraft branch
     globals->get_scenery()->get_aircraft_branch()->addKid( m_ModelTrans );
+    globals->get_scenery()->register_placement_transform( m_ModelTrans);
 
 
 }
@@ -280,7 +285,8 @@ void MPPlayer::FillPosMsg(T_MsgHdr *MsgHdr, T_PositionMsg *PosMsg) {
 
     strncpy(PosMsg->sModel, m_sModelName.c_str(), MAX_MODEL_NAME_LEN);
     PosMsg->sModel[MAX_MODEL_NAME_LEN - 1] = '\0';
-    sgCopyMat4(PosMsg->PlayerPos, m_ModelPos);
+    sgdCopyVec3(PosMsg->PlayerPosition, m_ModelPosition);
+    sgCopyQuat(PosMsg->PlayerOrientation, m_ModelOrientation);
 
 
 }

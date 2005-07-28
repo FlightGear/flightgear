@@ -54,7 +54,7 @@ SG_USING_STD(string);
 
 
 class ssgEntity;
-class ssgTransform;
+class ssgPlacementTransform;
 
 
 class MPPlayer {
@@ -89,7 +89,8 @@ public:
     /** Sets the positioning matrix held for this player
     * @param PlayerPosMat4 Matrix for positioning player's aircraft
     */
-    void SetPosition(const sgMat4 PlayerPosMat4);
+    void SetPosition(const sgQuat PlayerOrientation,
+                     const sgdVec3 PlayerPosition);
 
     /** Transform and place model for player
     */
@@ -127,8 +128,11 @@ private:
     /** True if object is initialised */
     bool m_bInitialised;
 
-    /** Position matrix for the player's aircraft */
-    sgMat4 m_ModelPos;
+    /** Position of the player's aircraft wrt the earth fixed global system */
+    sgdVec3 m_ModelPosition;
+
+    /** Orientation the player's aircraft wrt the earth fixed global system */
+    sgQuat m_ModelOrientation;
 
     /** Used to remove player if no activity */
     time_t m_LastUpdate;
@@ -146,7 +150,7 @@ private:
     ssgEntity *m_Model;
 
     /** Model transform */
-    ssgTransform *m_ModelTrans;
+    ssgPlacementTransform *m_ModelTrans;
 
     /** True if this player is the local player */
     bool m_bLocalPlayer;

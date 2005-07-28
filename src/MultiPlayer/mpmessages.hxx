@@ -35,34 +35,36 @@
 *
 ******************************************************************/
 
+#include <stdint.h>
 #include <plib/sg.h>
 
 // Message identifiers
 #define CHAT_MSG_ID 1
-#define POS_DATA_ID 2
-
-#define MAX_CALLSIGN_LEN 10
+#define UNUSABLE_POS_DATA_ID 2
+#define POS_DATA_ID 3
+/* should be a multiple of 8! */
+#define MAX_CALLSIGN_LEN 8
 /** Header for use with all messages sent */
 typedef struct {
 
-    /** Message identifier */
-    char MsgId;
+    /** Message identifier, multiple of 8! */
+    uint32_t MsgId;
 
     /** Length of the message inclusive of this header */
-    unsigned int iMsgLen;
+    uint32_t iMsgLen;
 
     /** IP address for reply to message (player's receiver address) */
-    unsigned long int lReplyAddress;
+    uint32_t lReplyAddress;
 
     /** Port for replies (player's receiver port) */
-    unsigned int iReplyPort;
+    uint32_t iReplyPort;
 
     /** Callsign used by the player */
     char sCallsign[MAX_CALLSIGN_LEN];
 
 } T_MsgHdr;
 
-#define MAX_CHAT_MSG_LEN 50
+#define MAX_CHAT_MSG_LEN 48
 /** Chat message */
 typedef struct {
 
@@ -71,8 +73,8 @@ typedef struct {
 
 } T_ChatMsg;
 
-
-#define MAX_MODEL_NAME_LEN 50
+/* should be a multiple of 8! */
+#define MAX_MODEL_NAME_LEN 48
 /** Aircraft position message */
 typedef struct {
 
@@ -80,10 +82,10 @@ typedef struct {
     char sModel[MAX_MODEL_NAME_LEN];
 
     /** Position data for the aircraft */
-    sgMat4 PlayerPos;
+    sgdVec3 PlayerPosition;
+    sgQuat PlayerOrientation;
 
 } T_PositionMsg;
-
 
 
 #endif
