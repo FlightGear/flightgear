@@ -146,7 +146,7 @@ void MPPlayer::Close(void) {
 
         // Flush the model loader so that it erases the model from its list of
         // models.
-        globals->get_model_lib()->flush1();
+//        globals->get_model_lib()->flush1();
 
         // Assume that plib/ssg deletes the model and transform as their
         // refcounts should be zero.
@@ -262,10 +262,6 @@ void MPPlayer::LoadModel(void) {
 
     // Add model to transform
     m_ModelTrans->addKid( m_Model );
-
-    // Optimise model and transform
-    ssgFlatten( m_Model );
-    ssgStripify( m_ModelTrans );
 
     // Place on scene under aircraft branch
     globals->get_scenery()->get_aircraft_branch()->addKid( m_ModelTrans );

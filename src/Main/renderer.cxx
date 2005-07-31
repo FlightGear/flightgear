@@ -383,7 +383,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         */
 
         static SGSkyColor scolor;
-        FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
+//        FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
 
         scolor.sky_color   = l->sky_color();
         scolor.fog_color   = l->adj_fog_color();
@@ -711,17 +711,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         globals->get_aircraft_model()->select( true );
         globals->get_model_mgr()->draw();
         globals->get_aircraft_model()->draw();
-        // If the view is internal, the previous line draw the 
-        //  cockpit with modified near/far clip planes and deselect
-        //  the aircraft in the global scenegraph
-        // Otherwise, it just enables the aircraft: The scenegraph
-        //  must be drawn again to see the plane.
-        ssgBranch *branch = globals->get_scenery()->get_aircraft_branch();
-        // in external view the shadows are drawn before the transparent parts of the ac
-        if( ! is_internal )
-            branch->setTravCallback( SSG_CALLBACK_POSTTRAV, SGShadowVolume::ACpostTravCB);
-        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
-        branch->setTravCallback( SSG_CALLBACK_POSTTRAV, 0);
+
         FGTileMgr::set_tile_filter( true );
         sgSetModelFilter( true );
         globals->get_aircraft_model()->select( true );

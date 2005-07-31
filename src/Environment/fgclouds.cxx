@@ -108,8 +108,8 @@ void FGClouds::buildLayer(SGCloudField *layer, string name, double alt, double c
 	int CloudVarietyCount = 0;
 	double totalCount = 0.0;
 
-	SGPropertyNode *cloud_def_root = fgGetNode("/environment/config/cloudlayers/clouds", false);
-	SGPropertyNode *layer_def_root = fgGetNode("/environment/config/cloudlayers/layers", false);
+	SGPropertyNode *cloud_def_root = fgGetNode("/environment/cloudlayers/clouds", false);
+	SGPropertyNode *layer_def_root = fgGetNode("/environment/cloudlayers/layers", false);
 
 	layer->clear();
 	// when we don't generate clouds the layer is rendered in 2D
@@ -395,8 +395,12 @@ void FGClouds::buildScenario( string scenario ) {
 	string station = fgGetString("/environment/metar/station-id", "XXXX");
 
 	// fetch station elevation if exists
-    FGAirport a = globals->get_airports()->search( station );
-    station_elevation_ft = a.getElevation();
+    if( station == "XXXX" )
+        station_elevation_ft = fgGetDouble("/position/ground-elev-m", 0.0);
+    else {
+        FGAirport a = globals->get_airports()->search( station );
+        station_elevation_ft = a.getElevation();
+    }
 
 	for(int iLayer = 0 ; iLayer < thesky->get_cloud_layer_count(); iLayer++) {
 		thesky->get_cloud_layer(iLayer)->get_layer3D()->clear();

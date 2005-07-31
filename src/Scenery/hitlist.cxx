@@ -240,6 +240,85 @@ FGHitList::FGHitList() :
 FGHitList::~FGHitList() {}
 
 
+// http://www.cs.lth.se/home/Tomas_Akenine_Moller/raytri/raytri.c
+// http://little3d.free.fr/ressources/jgt%20Fast,%20Minumum%20Storage%20Ray-Triangle%20Intersection.htm
+// http://www.acm.org/jgt/papers/MollerTrumbore97/
+
+/* Ray-Triangle Intersection Test Routines          */
+/* Different optimizations of my and Ben Trumbore's */
+/* code from journals of graphics tools (JGT)       */
+/* http://www.acm.org/jgt/                          */
+/* by Tomas Moller, May 2000                        */
+
+/* code rewritten to do tests on the sign of the determinant */
+/* the division is at the end in the code                    */
+// cosmetics change by H.J :
+// make u & v locals since we don't use them, use sg functions
+static bool intersect_triangle(const double orig[3], const double dir[3],
+			const double vert0[3], const double vert1[3], const double vert2[3],
+			double *t)
+{
+   double u, v;
+   double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
+
+   const SGDfloat eps = 1e-4;
+
+   /* find vectors for two edges sharing vert0 */
+   sgdSubVec3(edge1, vert1, vert0);
+   sgdSubVec3(edge2, vert2, vert0);
+
+   /* begin calculating determinant - also used to calculate U parameter */
+   sgdVectorProductVec3(pvec, dir, edge2);
+
+   /* if determinant is near zero, ray lies in plane of triangle */
+   double det = sgdScalarProductVec3(edge1, pvec);
+
+   if (det > eps)
+   {
+      /* calculate distance from vert0 to ray origin */
+      sgdSubVec3(tvec, orig, vert0);
+
+      /* calculate U parameter and test bounds */
+      u = sgdScalarProductVec3(tvec, pvec);
+      if (u < 0.0 || u > det)
+        return false;
+
+      /* prepare to test V parameter */
+      sgdVectorProductVec3(qvec, tvec, edge1);
+
+      /* calculate V parameter and test bounds */
+      v = sgdScalarProductVec3(dir, qvec);
+      if (v < 0.0 || u + v > det)
+        return false;
+
+   }
+   else if(det < -eps)
+   {
+      /* calculate distance from vert0 to ray origin */
+      sgdSubVec3(tvec, orig, vert0);
+
+      /* calculate U parameter and test bounds */
+      u = sgdScalarProductVec3(tvec, pvec);
+      if (u > 0.0 || u < det)
+        return false;
+
+      /* prepare to test V parameter */
+      sgdVectorProductVec3(qvec, tvec, edge1);
+
+      /* calculate V parameter and test bounds */
+      v = sgdScalarProductVec3(dir, qvec) ;
+      if (v > 0.0 || u + v < det)
+        return false;
+   }
+   else return false;  /* ray is parallell to the plane of the triangle */
+
+   /* calculate t, ray intersects triangle */
+   *t = sgdScalarProductVec3(edge2, qvec) / det;
+
+   return true;
+}
+
+
 /*
 Find the intersection of an infinite line with a leaf the line being
 defined by a point and direction.
@@ -280,7 +359,21 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
         sgdSetVec3( tri[0], leaf->getVertex( i1 ) );
         sgdSetVec3( tri[1], leaf->getVertex( i2 ) );
         sgdSetVec3( tri[2], leaf->getVertex( i3 ) );
-
+#if 1
+        sgdFloat t;
+        if( intersect_triangle( orig, dir, tri[0], tri[1], tri[2], &t) ) {
+            sgdVec4 plane;
+            sgdMakePlane( plane, tri[0], tri[1], tri[2] );
+            // t is the distance to the triangle plane
+            // so P = Orig + t*dir
+            sgdVec3 point;
+            sgdAddScaledVec3( point, orig, dir, t );
+            sgdXformPnt3( point, point, m );
+            sgdXformPnt4(plane,plane,m);
+            add(leaf,i,point,plane);
+            num_hits++;
+        }
+#else
         if( isZeroAreaTri( tri ) )
             continue;
 
@@ -292,11 +385,12 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
             if( fgdPointInTriangle( point, tri ) ) {
                 // transform point into passed into desired coordinate frame
                 sgdXformPnt3( point, point, m );
-		sgdXformPnt4(plane,plane,m);
+                sgdXformPnt4(plane,plane,m);
                 add(leaf,i,point,plane);
                 num_hits++;
             }
         }
+#endif
     }
     return num_hits;
 }
@@ -443,18 +537,18 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
              && !kid->getBSphere()->isEmpty() )
         {
             sgdVec3 center;
+            const sgFloat *BSCenter = kid->getBSphere()->getCenter();
             sgdSetVec3( center,
-                        kid->getBSphere()->getCenter()[0],
-                        kid->getBSphere()->getCenter()[1],
-                        kid->getBSphere()->getCenter()[2] );
+                        BSCenter[0],
+                        BSCenter[1],
+                        BSCenter[2] );
             sgdXformPnt3( center, m ) ;
 
             // sgdClosestPointToLineDistSquared( center, orig, dir )
             // inlined here because because of profiling results
             sgdVec3 u, u1, v;
             sgdSubVec3(u, center, orig);
-            sgdScaleVec3( u1, dir, sgdScalarProductVec3(u,dir)
-                          / sgdScalarProductVec3(dir,dir) );
+            sgdScaleVec3( u1, dir, sgdScalarProductVec3(u,dir)  );
             sgdSubVec3(v, u, u1);
 
             // double because of possible overflow
@@ -533,6 +627,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
     sgdCopyVec3(orig, view_pos );
     sgdCopyVec3(dir, abs_view_pos );
 
+    sgdNormaliseVec3( dir );
     hit_list->Intersect( globals->get_scenery()->get_terrain_branch(),
                          orig, dir );
 

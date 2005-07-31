@@ -84,7 +84,7 @@ void FGReplay::init() {
  */
 
 void FGReplay::bind() {
-    // nothing to bind
+    disable_replay = fgGetNode( "/sim/replay/disable", true );
 }
 
 
@@ -104,6 +104,9 @@ void FGReplay::unbind() {
 void FGReplay::update( double dt ) {
     static SGPropertyNode *replay_master
         = fgGetNode( "/sim/freeze/replay", true );
+
+    if( disable_replay->getBoolValue() )
+        return;
 
     if ( replay_master->getBoolValue() ) {
         // don't record the replay session
@@ -259,7 +262,7 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
     result.fdm.A_Y_pilot = weight( fdm1.A_Y_pilot, fdm2.A_Y_pilot, ratio );
     result.fdm.A_Z_pilot = weight( fdm1.A_Z_pilot, fdm2.A_Z_pilot, ratio );
 
-    int i;
+    unsigned int i;
 
     // Engine status
     for ( i = 0; i < fdm1.num_engines; ++i ) {

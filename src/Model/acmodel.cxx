@@ -17,6 +17,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/placement.hxx>
+#include <simgear/scene/model/shadowvolume.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -133,6 +134,10 @@ FGAircraftModel::draw ()
     _selector->select(0);
   } else {
     _selector->select(1);
+    // in external view the shadows are drawn before the transparent parts of the ac
+    _scene->setTravCallback( SSG_CALLBACK_POSTTRAV, SGShadowVolume::ACpostTravCB);
+    ssgCullAndDraw(_scene);
+    _scene->setTravCallback( SSG_CALLBACK_POSTTRAV, 0);
   }
 
 }

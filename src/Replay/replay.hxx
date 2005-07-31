@@ -94,6 +94,7 @@ private:
     replay_list_type short_term;
     replay_list_type medium_term;
     replay_list_type long_term;
+    SGPropertyNode_ptr disable_replay;
 };
 
 
