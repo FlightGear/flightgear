@@ -29,7 +29,7 @@ jsInput::jsInput(jsSuper *j) {
 
 jsInput::~jsInput(void) {}
 
-int jsInput::getInput(void){
+int jsInput::getInput(){
       
       bool gotit=false;
       
@@ -37,6 +37,7 @@ int jsInput::getInput(void){
       int i, current_button = 0, button_bits = 0;
 
       joystick=axis=button=-1;
+      axis_positive=false;
       
       if(pretty_display) {
           printf ( "+----------------------------------------------\n" ) ;
@@ -79,6 +80,7 @@ int jsInput::getInput(void){
                 gotit=true;
                 joystick=jss->getCurrentJoystickId();
                 axis=i;
+		axis_positive=(delta>0);
               } else if( current_button != 0 ) {
                 gotit=true;
                 joystick=jss->getCurrentJoystickId();  
@@ -102,7 +104,7 @@ int jsInput::getInput(void){
         ulMilliSecondSleep(1);
       }
       if(button_bits != 0) {
-        for(int i=1;i<=31;i++) {
+        for(int i=0;i<=31;i++) {
           if( ( button_bits & (1 << i) ) > 0 ) {
              button=i;
              break;

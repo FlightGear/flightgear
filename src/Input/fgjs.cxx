@@ -50,15 +50,18 @@ string axes_propnames[8]={ "/controls/flight/aileron","/controls/flight/elevator
                            "/sim/current-view/goal-pitch-offset-deg"
                          };
 
+string axis_posdir[8]= { "right", "down/forward", "right", "forward", "forward", "forward", "left", "upward" };
+
+
 bool half_range[8]={ false,false,false,true,true,true,false,false };
 
 bool repeatable[8]={ false,false,false,false,false,false,true,true };
 
-bool invert[8]= { false,true,false,false,false,false,false,true };
+bool invert[8]= { false,false,false,false,false,false,false,false };
 
 string button_humannames[8]= { "Left Brake", "Right Brake",
                                "Flaps Up", "Flaps Down",
-                               "Elevator Trim Up", "Elevator Trim Down",
+                               "Elevator Trim Forward", "Elevator Trim Backward",
                                "Landing Gear Up", "Landing Gear Down"
                              };
 
@@ -76,7 +79,7 @@ bool button_modup[8]={ true,true,false,false,false,false,false,false };
 
 bool button_boolean[8]={ false,false,false,false,false,false,true,true };
 
-float button_step[8]={ 1.0, 1.0, 0.34, -0.34, 0.001, -0.001, 0.0, 1.0 };
+float button_step[8]={ 1.0, 1.0, -0.34, 0.34, 0.001, -0.001, 0.0, 1.0 };
 
 string button_repeat[8]={ "false", "false", "false", "false", "true", "true", "false", "false" };
 
@@ -379,7 +382,8 @@ int main( int argc, char *argv[] ) {
 
   for(control=0;control<=7;control++) {
       cout << "Move the control you wish to use for " << axes_humannames[control]
-           << endl;
+           << " " << axis_posdir[control] << endl;
+      cout << "Pressing a button skips this axis\n";
       fflush( stdout );
       jsi->getInput();
 
@@ -397,6 +401,7 @@ int main( int argc, char *argv[] ) {
          if (strcmp(answer,"n")==0) {
            control--;
          } else {
+	   invert[control]=!jsi->getInputAxisPositive();
            if (usexml) {
              writeAxisXML( xfs[jsi->getInputJoystick()], control, jsi->getInputAxis() );
            } else {
@@ -424,6 +429,7 @@ int main( int argc, char *argv[] ) {
       } else {
         cout << "Press the button you wish to use for " << button_humannames[control] << endl;
       }
+      cout << "Moving a joystick axis skips this button\n";
       fflush( stdout );
       jsi->getInput();
       if(jsi->getInputButton() != -1) {

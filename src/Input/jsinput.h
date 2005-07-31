@@ -34,6 +34,7 @@ class jsInput {
     int button_iv[MAX_JOYSTICKS];
     
     int joystick,axis,button;
+    bool axis_positive;
     
     float axis_threshold;
     
@@ -48,6 +49,7 @@ class jsInput {
     inline int getInputJoystick(void) { return joystick; }
     inline int getInputAxis(void)     { return axis; }
     inline int getInputButton(void)   { return button; }
+    inline bool getInputAxisPositive(void) { return axis_positive; }
     
     inline float getReturnThreshold(void) { return axis_threshold; }
     inline void setReturnThreshold(float ff) 
