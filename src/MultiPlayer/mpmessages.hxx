@@ -35,7 +35,16 @@
 *
 ******************************************************************/
 
-#include <stdint.h>
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#elif defined( _MSC_VER ) || defined(__MINGW32__) || defined(sun)
+typedef signed short     int16_t;
+typedef signed int       int32_t;
+typedef unsigned short   uint16_t;
+typedef unsigned int     uint32_t;
+#else
+# error "Port me! Platforms that don't have <stdint.h> need to define int8_t, et. al."
+#endif
 #include <plib/sg.h>
 
 // Message identifiers
