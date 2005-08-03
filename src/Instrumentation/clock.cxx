@@ -17,6 +17,8 @@ Clock::Clock ( SGPropertyNode *node )
       _gmt_time_sec(0),
       _offset_sec(0),
       _indicated_sec(0),
+      _indicated_min(0),
+      _indicated_hour(0),
       _standstill_offset(0),
       name("clock"),
       num(0)
@@ -49,6 +51,7 @@ Clock::Clock ()
       _standstill_offset(0)
 {
     _indicated_string[0] = '\0';
+    _indicated_short_string[0] = '\0';
 }
 
 Clock::~Clock ()
@@ -65,7 +68,10 @@ Clock::init ()
     _serviceable_node = node->getChild("serviceable", 0, true);
     _offset_node = node->getChild("offset-sec", 0, true);
     _sec_node = node->getChild("indicated-sec", 0, true);
+    _min_node = node->getChild("indicated-min", 0, true);
+    _hour_node = node->getChild("indicated-hour", 0, true);
     _string_node = node->getChild("indicated-string", 0, true);
+    _string_node1 = node->getChild("indicated-short-string", 0, true);
 }
 
 void
@@ -122,7 +128,14 @@ Clock::update (double delta_time_sec)
 
     sprintf(_indicated_string, "%02d:%02d:%02d", hour, min, sec);
     _string_node->setStringValue(_indicated_string);
+    sprintf(_indicated_short_string, "%02d:%02d", hour, min);
+    _string_node1->setStringValue(_indicated_short_string);
     _is_serviceable = true;
+
+   _indicated_min = min;
+    _min_node->setLongValue(_indicated_min);
+   _indicated_hour = hour;
+    _hour_node->setLongValue(_indicated_hour);
 }
 
 

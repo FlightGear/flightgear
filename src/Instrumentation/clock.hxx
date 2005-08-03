@@ -48,7 +48,10 @@ private:
     long _gmt_time_sec;
     long _offset_sec;
     long _indicated_sec;
+    long _indicated_min;
+    long _indicated_hour;
     char _indicated_string[16];
+    char _indicated_short_string[16];
     long _standstill_offset;
 
     string name;
@@ -57,7 +60,10 @@ private:
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _sec_node;
+    SGPropertyNode_ptr _hour_node;
+    SGPropertyNode_ptr _min_node;
     SGPropertyNode_ptr _string_node;
+    SGPropertyNode_ptr _string_node1;
 
 };
 
