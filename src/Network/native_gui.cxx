@@ -163,7 +163,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     // Environment
     net->cur_time = globals->get_time_params()->get_cur_time();
     net->warp = globals->get_warp();
-    net->ground_elev = globals->get_scenery()->get_cur_elev();
+    net->ground_elev = cur_fdm_state->get_Runway_altitude_m();
 
     // Approach
     net->tuned_freq = nav_freq->getDoubleValue();
@@ -304,7 +304,6 @@ void FGNetGUI2Props( FGNetGUI *net ) {
 	}
 
         globals->set_warp( net->warp );
-        globals->get_scenery()->set_cur_elev( net->ground_elev );
 
         // Approach
         fgSetDouble( "/instrumentation/nav[0]/frequencies/selected-mhz",

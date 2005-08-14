@@ -235,7 +235,7 @@ void FGADA::update( double dt ) {
 
 // Convert from the FGInterface struct to the FGADA struct (output)
 bool FGADA::copy_to_FGADA () {
-    ground_elevation = globals->get_scenery()->get_cur_elev();
+    ground_elevation = get_Runway_altitude_m();
     return true;
 }
 

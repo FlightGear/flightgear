@@ -314,6 +314,8 @@ FGInterface::bind ()
   fgSetArchivable("/position/ground-elev-m");
   fgTie("/position/ground-elev-m", this,
         &FGInterface::get_Runway_altitude_m); // read-only
+  fgTie("/environment/ground-elevation-m", this,
+        &FGInterface::get_Runway_altitude_m); // read-only
   fgSetArchivable("/position/sea-level-radius-ft");
   fgTie("/position/sea-level-radius-ft", this,
         &FGInterface::get_Sea_level_radius); // read-only
@@ -452,6 +454,7 @@ FGInterface::unbind ()
   fgUntie("/position/altitude-agl-ft");
   fgUntie("/position/ground-elev-ft");
   fgUntie("/position/ground-elev-m");
+  fgUntie("/environment/ground-elevation-m");
   fgUntie("/position/sea-level-radius-ft");
   fgUntie("/orientation/roll-deg");
   fgUntie("/orientation/pitch-deg");

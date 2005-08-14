@@ -333,8 +333,6 @@ void FGTileMgr::update_queues()
         }
     }
     
-    // cout << "current elevation (ssg) == " << scenery.get_cur_elev() << endl;
-
     // Notify the tile loader that it can load another tile
     loader.update();
 
@@ -386,15 +384,11 @@ void FGTileMgr::update_queues()
 int FGTileMgr::update( double visibility_meters )
 {
     SGLocation *location = globals->get_current_view()->getSGLocation();
-    sgdVec3 abs_pos_vector;
-    sgdCopyVec3( abs_pos_vector,
-                 globals->get_current_view()->get_absolute_view_pos() );
-    return update( location, visibility_meters, abs_pos_vector );
+    return update( location, visibility_meters );
 }
 
 
-int FGTileMgr::update( SGLocation *location, double visibility_meters,
-                       sgdVec3 abs_pos_vector )
+int FGTileMgr::update( SGLocation *location, double visibility_meters )
 {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
 
@@ -442,9 +436,6 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters,
     // save bucket...
     previous_bucket = current_bucket;
 
-    updateCurrentElevAtPos( abs_pos_vector, altitude_m,
-                            location->get_tile_center() );
-
     return 1;
 }
 
@@ -460,52 +451,6 @@ void FGTileMgr::refresh_view_timestamps() {
         schedule_needed(fgGetDouble("/environment/visibility-m"), current_bucket);
     }
 }
-
-
-int FGTileMgr::updateCurrentElevAtPos( sgdVec3 abs_pos_vector,
-                                       double max_alt_m,
-                                       Point3D center)
-{
-    sgdVec3 sc;
-
-    sgdSetVec3( sc, center[0], center[1], center[2]);
-
-    // overridden with actual values if a terrain intersection is
-    // found
-    double hit_elev = -9999.0;
-    double hit_radius = 0.0;
-    sgdVec3 hit_normal = { 0.0, 0.0, 0.0 };
-    
-    bool hit = false;
-    if ( fabs(sc[0]) > 1.0 || fabs(sc[1]) > 1.0 || fabs(sc[2]) > 1.0 ) {
-        // scenery center has been properly defined so any hit should
-        // be valid (and not just luck)
-        hit = fgCurrentElev(abs_pos_vector,
-                            max_alt_m,
-                            sc,
-		// uncomment next paramater to fly under
-		// bridges and a slightly faster algorithm
-		// but you won't be able to land on aircraft carriers
-                            // current_tile->get_terra_transform(),
-                            &hit_list,
-                            &hit_elev,
-                            &hit_radius,
-                            hit_normal);
-    }
-
-    if ( hit ) {
-        // cout << "elev = " << hit_elev << " " << hit_radius << endl;
-        globals->get_scenery()->set_cur_elev( hit_elev );
-        globals->get_scenery()->set_cur_radius( hit_radius );
-        globals->get_scenery()->set_cur_normal( hit_normal );
-    } else {
-        globals->get_scenery()->set_cur_elev( -9999.0 );
-        globals->get_scenery()->set_cur_radius( 0.0 );
-        globals->get_scenery()->set_cur_normal( hit_normal );
-    }
-    return hit;
-}
-
 
 void FGTileMgr::prep_ssg_nodes( SGLocation *location, float vis ) {
 
@@ -540,4 +485,39 @@ bool FGTileMgr::set_tile_filter( bool f ) {
 int FGTileMgr::tile_filter_cb( ssgEntity *, int )
 {
   return tile_filter ? 1 : 0;
+}
+
+bool FGTileMgr::scenery_available(double lat, double lon, double range_m)
+{
+  // sanity check (unfortunately needed!)
+  if ( lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0 )
+    return false;
+  
+  SGBucket bucket(lon, lat);
+  FGTileEntry *te = tile_cache.get_tile(bucket);
+  if (!te || !te->is_loaded())
+    return false;
+
+  // Traverse all tiles required to be there for the given visibility.
+  // This uses exactly the same algorithm like the tile scheduler.
+  double tile_width = bucket.get_width_m();
+  double tile_height = bucket.get_height_m();
+  
+  int xrange = (int)fabs(range_m / tile_width) + 1;
+  int yrange = (int)fabs(range_m / tile_height) + 1;
+  
+  for ( int x = -xrange; x <= xrange; ++x ) {
+    for ( int y = -yrange; y <= yrange; ++y ) {
+      // We have already checked for the center tile.
+      if ( x != 0 || y != 0 ) {
+        SGBucket b = sgBucketOffset( lon, lat, x, y );
+        FGTileEntry *te = tile_cache.get_tile(b);
+        if (!te || !te->is_loaded())
+          return false;
+      }
+    }
+  }
+
+  // Survived all tests.
+  return true;
 }

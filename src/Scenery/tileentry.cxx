@@ -343,8 +343,8 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         sgCopyVec3( lift_vec, up );
 
         double agl;
-        agl = globals->get_current_view()->getAltitudeASL_ft()
-            * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev();
+        agl = globals->get_current_view()->getAltitudeASL_ft()*SG_FEET_TO_METER
+          - globals->get_current_view()->getSGLocation()->get_cur_elev_m();
 
         // Compute the distance of the scenery center from the view position.
         double dist = center.distance3D(p);
@@ -386,9 +386,9 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         // we fudge agl by 30 meters so that the lifting function
         // doesn't phase in until we are > 30m agl.
         double agl;
-        agl = globals->get_current_view()->getAltitudeASL_ft()
-            * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev()
-            - 30.0;
+        agl = globals->get_current_view()->getAltitudeASL_ft()*SG_FEET_TO_METER
+          - globals->get_current_view()->getSGLocation()->get_cur_elev_m()
+          - 30.0;
         if ( agl < 0.0 ) {
             agl = 0.0;
         }
@@ -421,9 +421,9 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         // we fudge agl by 30 meters so that the lifting function
         // doesn't phase in until we are > 30m agl.
         double agl;
-        agl = globals->get_current_view()->getAltitudeASL_ft()
-            * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev()
-            - 30.0;
+        agl = globals->get_current_view()->getAltitudeASL_ft()*SG_FEET_TO_METER
+          - globals->get_current_view()->getSGLocation()->get_cur_elev_m()
+          - 30.0;
         if ( agl < 0.0 ) {
             agl = 0.0;
         }
@@ -462,9 +462,9 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         // we fudge agl by 30 meters so that the lifting function
         // doesn't phase in until we are > 30m agl.
         double agl;
-        agl = globals->get_current_view()->getAltitudeASL_ft()
-            * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev()
-            - 30.0;
+        agl = globals->get_current_view()->getAltitudeASL_ft()*SG_FEET_TO_METER
+          - globals->get_current_view()->getSGLocation()->get_cur_elev_m()
+          - 30.0;
         if ( agl < 0.0 ) {
             agl = 0.0;
         }

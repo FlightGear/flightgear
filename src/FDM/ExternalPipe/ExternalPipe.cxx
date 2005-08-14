@@ -230,7 +230,7 @@ void FGExternalPipe::init_binary() {
     double lon = fgGetDouble( "/sim/presets/longitude-deg" );
     double lat = fgGetDouble( "/sim/presets/latitude-deg" );
     double alt = fgGetDouble( "/sim/presets/altitude-ft" );
-    double ground = fgGetDouble( "/environment/ground-elevation-m" );
+    double ground = get_Runway_altitude_m();
     double heading = fgGetDouble("/sim/presets/heading-deg");
     double speed = fgGetDouble( "/sim/presets/airspeed-kt" );
     double weight = fgGetDouble( "/sim/aircraft-weight-lbs" );
@@ -293,7 +293,7 @@ void FGExternalPipe::init_property() {
     double lon = fgGetDouble( "/sim/presets/longitude-deg" );
     double lat = fgGetDouble( "/sim/presets/latitude-deg" );
     double alt = fgGetDouble( "/sim/presets/altitude-ft" );
-    double ground = fgGetDouble( "/environment/ground-elevation-m" );
+    double ground = get_Runway_altitude_m();
     double heading = fgGetDouble("/sim/presets/heading-deg");
     double speed = fgGetDouble( "/sim/presets/airspeed-kt" );
     double weight = fgGetDouble( "/sim/aircraft-weight-lbs" );

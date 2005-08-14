@@ -1607,10 +1607,6 @@ bool fgInitSubsystems() {
                                        &FGTileMgr::refresh_view_timestamps,
                                        15 );
 
-    SG_LOG( SG_GENERAL, SG_DEBUG,
-            "Current terrain elevation after tile mgr init " <<
-            globals->get_scenery()->get_cur_elev() );
-
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the flight model subsystem.

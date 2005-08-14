@@ -207,10 +207,10 @@ float get_agl( void )
 
     if ( !strcmp(startup_units_node->getStringValue(), "feet") ) {
         agl = (current_aircraft.fdm_state->get_Altitude()
-               - globals->get_scenery()->get_cur_elev() * SG_METER_TO_FEET);
+               - current_aircraft.fdm_state->get_Runway_altitude());
     } else {
-        agl = (current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-               - globals->get_scenery()->get_cur_elev());
+        agl = (current_aircraft.fdm_state->get_Altitude()
+               - current_aircraft.fdm_state->get_Runway_altitude()) * SG_FEET_TO_METER;
     }
 
     return agl;

@@ -1580,24 +1580,19 @@ void FGAILocalTraffic::DoGroundElev() {
 		_aip.getSGLocation()->set_cur_elev_m(aptElev);
 		return;
 	}
-	
-	
-	//globals->get_tile_mgr()->prep_ssg_nodes( acmodel_location,
-	globals->get_tile_mgr()->prep_ssg_nodes( _aip.getSGLocation(),	visibility_meters );
-	Point3D scenery_center = globals->get_scenery()->get_center();
-	globals->get_tile_mgr()->update( _aip.getSGLocation(), visibility_meters, (_aip.getSGLocation())->get_absolute_view_pos( scenery_center ) );
-	// save results of update in SGLocation for fdm...
-	
-	//if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
-	//	acmodel_location->
-	//	set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
-	//}
-	
-	// The need for this here means that at least 2 consecutive passes are needed :-(
-	_aip.getSGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
-	
-	//cout << "Transform Elev is " << globals->get_scenery()->get_cur_elev() << '\n';
-	_aip.getSGLocation()->set_cur_elev_m(globals->get_scenery()->get_cur_elev());
-	//return(globals->get_scenery()->get_cur_elev());
+
+        // FIXME: make shure the pos.lat/pos.lon values are in degrees ...
+        double range = 500.0;
+        double lat = _aip.getSGLocation()->getLatitude_deg();
+        double lon = _aip.getSGLocation()->getLongitude_deg();
+        if (!globals->get_tile_mgr()->scenery_available(lat, lon, range)) {
+          // Try to shedule tiles for that position.
+          globals->get_tile_mgr()->update( _aip.getSGLocation(), range );
+        }
+
+        // FIXME: make shure the pos.lat/pos.lon values are in degrees ...
+        double alt;
+        if (globals->get_scenery()->get_elevation_m(lat, lon, 20000.0, alt))
+          _aip.getSGLocation()->set_cur_elev_m(alt);
 }
 

@@ -166,22 +166,7 @@ public:
     // local chunks.  If the chunk isn't already in the cache, then
     // read it from disk.
     int update( double visibility_meters );
-    int update( SGLocation *location, double visibility_meters,
-                sgdVec3 abs_pos_vector );
-
-    int updateCurrentElevAtPos( sgdVec3 abs_pos_vector, double altitude_m,
-                                Point3D center );
-
-    // Determine scenery altitude.  Normally this just happens when we
-    // render the scene, but we'd also like to be able to do this
-    // explicitely.  lat & lon are in radians.  abs_view_pos in
-    // meters.  Returns result in meters.
-    void my_ssg_los( string s, ssgBranch *branch, sgdMat4 m, 
-		     const sgdVec3 p, const sgdVec3 dir, sgdVec3 normal );
-	
-    void my_ssg_los( ssgBranch *branch, sgdMat4 m, 
-		     const sgdVec3 p, const sgdVec3 dir,
-		     FGHitList *list );
+    int update( SGLocation *location, double visibility_meters);
 
     // Prepare the ssg nodes corresponding to each tile.  For each
     // tile, set the ssg transform and update it's range selector
@@ -198,6 +183,11 @@ public:
 
     static bool set_tile_filter( bool f );
     static int tile_filter_cb( ssgEntity *, int );
+
+    /// Returns true if scenery is avaliable for the given lat, lon position
+    /// within a range of range_m.
+    /// lat and lon are expected to be in degrees.
+    bool scenery_available(double lat, double lon, double range_m);
 };
 
 

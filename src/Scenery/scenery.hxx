@@ -52,19 +52,9 @@ class FGScenery : public SGSubsystem {
     // next center of current scenery chunk
     Point3D next_center;
 
+    // FIXME this should be a views property
     // angle of sun relative to current local horizontal
     double sun_angle;
-
-    // elevation of terrain at our current lat/lon (based on the
-    // actual drawn polygons)
-    double cur_elev;
-
-    // the distance (radius) from the center of the earth to the
-    // current scenery elevation point
-    double cur_radius;
-
-    // unit normal at point used to determine current elevation
-    sgdVec3 cur_normal;
 
     // SSG scene graph
     ssgRoot *scene_graph;
@@ -91,17 +81,38 @@ public:
     void unbind ();
     void update (double dt);
 
-    inline double get_cur_elev() const { return cur_elev; }
-    inline void set_cur_elev( double e ) { cur_elev = e; }
+    /// Compute the elevation of the scenery at geodetic latitude lat,
+    /// geodetic longitude lon and not higher than max_alt.
+    /// If the exact flag is set to true, the scenery center is moved to
+    /// gain a higher accuracy of that query. The center is restored past
+    /// that to the original value.
+    /// The altitude hit is returned in the alt argument.
+    /// The method returns true if the scenery is available for the given
+    /// lat/lon pair. If there is no scenery for that point, the altitude
+    /// value is undefined. 
+    /// All values are meant to be in meters or degrees.
+    bool get_elevation_m(double lat, double lon, double max_alt,
+                         double& alt, bool exact = false);
+
+    /// Compute the elevation of the scenery beow the cartesian point pos.
+    /// you the returned scenery altitude is not higher than the position
+    /// pos plus an ofset given with max_altoff.
+    /// If the exact flag is set to true, the scenery center is moved to
+    /// gain a higher accuracy of that query. The center is restored past
+    /// that to the original value.
+    /// The altitude hit is returned in the alt argument.
+    /// The method returns true if the scenery is available for the given
+    /// lat/lon pair. If there is no scenery for that point, the altitude
+    /// value is undefined.
+    /// All values are meant to be in meters.
+    bool get_cart_elevation_m(const sgdVec3 pos, double max_altoff,
+                              double& radius, bool exact = false);
 
     inline Point3D get_center() const { return center; }
     void set_center( Point3D p );
 
     inline Point3D get_next_center() const { return next_center; }
     inline void set_next_center( Point3D p ) { next_center = p; }
-
-    inline void set_cur_radius( double r ) { cur_radius = r; }
-    inline void set_cur_normal( sgdVec3 n ) { sgdCopyVec3( cur_normal, n ); }
 
     inline ssgRoot *get_scene_graph () const { return scene_graph; }
     inline void set_scene_graph (ssgRoot * s) { scene_graph = s; }
