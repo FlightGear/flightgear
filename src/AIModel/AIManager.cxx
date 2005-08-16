@@ -75,6 +75,9 @@ void FGAIManager::init() {
       return;
 
   wind_from_down_node = fgGetNode("/environment/wind-from-down-fps", true);
+  wind_from_east_node  = fgGetNode("/environment/wind-from-east-fps",true);
+  wind_from_north_node = fgGetNode("/environment/wind-from-north-fps",true);
+
   user_latitude_node  = fgGetNode("/position/latitude-deg", true);
   user_longitude_node = fgGetNode("/position/longitude-deg", true);
   user_altitude_node  = fgGetNode("/position/altitude-ft", true);
@@ -209,7 +212,7 @@ FGAIManager::createShip( FGAIModelEntity *entity ) {
         ai_ship->setAltitude(entity->altitude);
         ai_ship->setLongitude(entity->longitude);
         ai_ship->setLatitude(entity->latitude);
-        ai_ship->setBank(entity->rudder);
+        ai_ship->setRudder(entity->rudder);
         ai_ship->setName(entity->name);
 
         if ( entity->fp ) {
@@ -236,7 +239,7 @@ FGAIManager::createCarrier( FGAIModelEntity *entity ) {
         ai_carrier->setAltitude(entity->altitude);
         ai_carrier->setLongitude(entity->longitude);
         ai_carrier->setLatitude(entity->latitude);
-        ai_carrier->setBank(entity->rudder);
+        ai_carrier->setRudder(entity->rudder);
         ai_carrier->setSolidObjects(entity->solid_objects);
         ai_carrier->setWireObjects(entity->wire_objects);
         ai_carrier->setCatapultObjects(entity->catapult_objects);
@@ -245,6 +248,14 @@ FGAIManager::createCarrier( FGAIModelEntity *entity ) {
         ai_carrier->setSign(entity->pennant_number);
         ai_carrier->setName(entity->name);
         ai_carrier->setFlolsOffset(entity->flols_offset);
+        ai_carrier->setWind_from_east(entity->wind_from_east);
+        ai_carrier->setWind_from_north(entity->wind_from_north);
+        ai_carrier->setTACANChannelID(entity->TACAN_channel_ID);
+        ai_carrier->setMaxLat(entity->max_lat);
+        ai_carrier->setMinLat(entity->min_lat);
+        ai_carrier->setMaxLong(entity->max_long);
+        ai_carrier->setMinLong(entity->min_long);
+        
 
         if ( entity->fp ) {
            ai_carrier->setFlightPlan(entity->fp);
@@ -366,6 +377,10 @@ void FGAIManager::fetchUserState( void ) {
      user_pitch     = user_pitch_node->getDoubleValue();
      user_yaw       = user_yaw_node->getDoubleValue();
      user_speed     = user_speed_node->getDoubleValue() * 0.592484;
+     wind_from_east = wind_from_east_node->getDoubleValue();
+     wind_from_north = wind_from_north_node->getDoubleValue();
+     
+     
 }
 
 
@@ -458,6 +473,9 @@ bool FGAIManager::getStartPosition(const string& id, const string& pid,
             ai_carrier->setLatitude(en->latitude);
             ai_carrier->setBank(en->rudder);
             ai_carrier->setParkingPositions(en->ppositions);
+      ai_carrier->setWind_from_east(en->wind_from_east);
+      ai_carrier->setWind_from_north(en->wind_from_north);
+      //ai_carrier->setTACANFreq(en->TACAN_freq);
 
             if (ai_carrier->getParkPosition(pid, geodPos, heading, uvw)) {
                 delete ai_carrier;

@@ -56,6 +56,7 @@ FGAIBase::FGAIBase()
     manager( NULL )
 {
     _type_str = "model";
+    tgt_heading = tgt_altitude = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
     bearing = elevation = range = rdot = 0.0;
     x_shift = y_shift = rotation = 0.0;
@@ -343,7 +344,7 @@ FGAIBase::getCartPosAt(const Point3D& off) const
   // Now transform to the wgs84 earth centeres system.
   Point3D pos2(pos.lon()* SGD_DEGREES_TO_RADIANS,
                pos.lat() * SGD_DEGREES_TO_RADIANS,
-               pos.elev() * SG_FEET_TO_METER);
+               pos.elev());
   Point3D cartPos3D = sgGeodToCart(pos2);
   sgdMat4 ecTrans;
   sgdMakeCoordMat4(ecTrans, cartPos3D.x(), cartPos3D.y(), cartPos3D.z(),

@@ -47,6 +47,7 @@ FGAIScenario::FGAIScenario(const string &filename)
   
   path.append( ("/Data/AI/" + filename + ".xml").c_str() );
   SGPropertyNode root;
+  readProperties(path.str(), &root);
   
 //   cout <<"path " << path.str() << endl;
   
@@ -84,7 +85,7 @@ FGAIScenario::FGAIScenario(const string &filename)
      en->roll           = entry_node->getDoubleValue("roll", 0.0); 
      en->azimuth        = entry_node->getDoubleValue("azimuth", 0.0); 
      en->elevation      = entry_node->getDoubleValue("elevation", 0.0); 
-     en->rudder         = entry_node->getDoubleValue("rudder", 0.0);
+     en->rudder         = entry_node->getFloatValue("rudder", 0.0);
      en->strength       = entry_node->getDoubleValue("strength-fps", 8.0);
      en->strength       = entry_node->getDoubleValue("strength-norm", 1.0);  
      en->diameter       = entry_node->getDoubleValue("diameter-ft", 0.0);
@@ -98,12 +99,17 @@ FGAIScenario::FGAIScenario(const string &filename)
      en->cd              = entry_node->getDoubleValue("cd", 0.029); 
      en->mass            = entry_node->getDoubleValue("mass", 0.007); 
      en->radius          = entry_node->getDoubleValue("turn-radius-ft", 2000);
+     en->TACAN_channel_ID= entry_node->getStringValue("TACAN-channel-ID", "017X");
      en->name            = entry_node->getStringValue("name", "");
      en->pennant_number  = entry_node->getStringValue("pennant-number", "");
      en->wire_objects     = getAllStringNodeVals("wire", entry_node);
      en->catapult_objects = getAllStringNodeVals("catapult", entry_node);
      en->solid_objects    = getAllStringNodeVals("solid", entry_node);
      en->ppositions       = getAllOffsetNodeVals("parking-pos", entry_node);
+     en->max_lat          = entry_node->getDoubleValue("max-lat", 0);
+     en->min_lat          = entry_node->getDoubleValue("min-lat",0);
+     en->max_long          = entry_node->getDoubleValue("max-long", 0);
+     en->min_long          = entry_node->getDoubleValue("min-long", 0);
      list<ParkPosition> flolspos = getAllOffsetNodeVals("flols-pos", entry_node);
      en->flols_offset     = flolspos.front().offset;
 

@@ -37,6 +37,9 @@ public:
 	void update(double dt);
         void setFlightPlan(FGAIFlightPlan* f);
         void setName(const string&);
+        void setRudder(float r);
+        void setRoll(double rl);
+        
         void ProcessFlightPlan( double dt );
 
         void AccelTo(double speed);
@@ -45,6 +48,7 @@ public:
         void YawTo(double angle);
         void ClimbTo(double altitude);
         void TurnTo(double heading);
+	    bool hdg_lock;
 	
 protected:
 
@@ -52,8 +56,8 @@ protected:
 
 private:
 
-        bool hdg_lock;
-        double rudder;
+        float rudder, tgt_rudder;
+        double rudder_constant, roll_constant, speed_constant, hdg_constant;
 
 	void Run(double dt);
         double sign(double x);	

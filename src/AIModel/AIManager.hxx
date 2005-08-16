@@ -99,6 +99,8 @@ public:
     inline double get_user_pitch() { return user_pitch; }
     inline double get_user_yaw() { return user_yaw; }
     inline double get_user_speed() {return user_speed; }
+    inline double get_wind_from_east() {return wind_from_east; }
+    inline double get_wind_from_north() {return wind_from_north; }
 
     inline int getNum( FGAIBase::object_type ot ) {
       return (0 < ot && ot < FGAIBase::MAX_OBJECTS) ? numObjects[ot] : numObjects[0];
@@ -126,6 +128,8 @@ private:
     SGPropertyNode* user_pitch_node;
     SGPropertyNode* user_yaw_node;
     SGPropertyNode* user_speed_node;
+    SGPropertyNode* wind_from_east_node ;
+    SGPropertyNode* wind_from_north_node ;
 
     string scenario_filename;
 
@@ -136,6 +140,8 @@ private:
     double user_pitch;
     double user_yaw;
     double user_speed;
+    double wind_from_east;
+    double wind_from_north;
     double _dt;
     int dt_count;
     void fetchUserState( void );

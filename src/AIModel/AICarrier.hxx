@@ -30,6 +30,10 @@ SG_USING_STD(string);
 SG_USING_STD(list);
 
 #include "AIShip.hxx"
+
+#include "AIManager.hxx"
+#include "AIBase.hxx"
+
 class FGAIManager;
 class FGAICarrier;
 
@@ -81,11 +85,27 @@ public:
         void setParkingPositions(const list<ParkPosition>& p);
         void setSign(const string& );
         void setFlolsOffset(const Point3D& off);
+        void setTACANChannelID(const string &);
 
-	void getVelocityWrtEarth(sgVec3 v);
+	void getVelocityWrtEarth(sgdVec3 v, sgdVec3 omega, sgdVec3 pivot);
 	virtual void bind();
     virtual void unbind();
-    void UpdateFlols ( double dt );
+    void UpdateFlols ( sgdMat3 trans );
+    void UpdateWind ( double dt );
+    void UpdateTACAN( double dt );
+    void setWind_from_east( double fps );
+    void setWind_from_north( double fps );
+    void setMaxLat( double deg );
+    void setMinLat( double deg );
+    void setMaxLong( double deg );
+    void setMinLong( double deg );
+    void TurnToLaunch();
+    void TurnToBase();
+    void ReturnToBox();
+    float Horizon(float h);
+    double TACAN_freq;
+	bool OutsideBox();
+    
 	
 	bool init();
 
@@ -96,9 +116,15 @@ private:
 
 	void update(double dt);
 	void mark_nohot(ssgEntity*);
+	
 	bool mark_wires(ssgEntity*, const list<string>&, bool = false);
 	bool mark_cat(ssgEntity*, const list<string>&, bool = false);
 	bool mark_solid(ssgEntity*, const list<string>&, bool = false);
+	double wind_from_east;  // fps
+    double wind_from_north; // fps
+    double rel_wind_speed_kts;
+    double rel_wind_from_deg;
+    
 
 	list<string> solid_objects;       // List of solid object names
 	list<string> wire_objects;        // List of wire object names
@@ -107,7 +133,10 @@ private:
 	string sign;                      // The sign of this carrier.
 
 	// Velocity wrt earth.
-	sgVec3 vel_wrt_earth;
+	sgdVec3 vel_wrt_earth;
+	sgdVec3 rot_wrt_earth;
+	sgdVec3 rot_pivot_wrt_earth;
+
 
         // these describe the flols 
         Point3D flols_off;
@@ -115,6 +144,36 @@ private:
         double dist;            // the distance of the eyepoint from the flols
         double angle;
         int source;             // the flols light which is visible at the moment
+    bool wave_off_lights;
+    
+    // these are for manoeuvring the carrier
+    Point3D carrierpos;
+    Point3D initialpos;
+    
+    double wind_speed_from_north_kts ;
+    double wind_speed_from_east_kts  ;
+    double wind_speed_kts;  //true wind speed
+    double wind_from_deg;   //true wind direction
+    double rel_wind;
+    double max_lat, min_lat, max_long, min_long;
+    double base_course, base_speed;
+    
+    bool turn_to_launch_hdg;
+    bool returning;      // set if the carrier is returning to an operating box
+    bool InToWind();     // set if the carrier is in to wind   
+    SGPropertyNode_ptr _longitude_node;
+    SGPropertyNode_ptr _latitude_node;
+    SGPropertyNode_ptr _altitude_node;
+    SGPropertyNode_ptr _surface_wind_from_deg_node;
+    SGPropertyNode_ptr _surface_wind_speed_node;
+       
+    // these are for TACAN
+    SGPropertyNode_ptr _dme_freq_node;
+    
+    double bearing, az2, range;
+    string TACAN_channel_id;
+    
+    
 };
 
 #endif  // _FG_AICARRIER_HXX

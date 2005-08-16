@@ -32,8 +32,6 @@ FGAIShip::FGAIShip(FGAIManager* mgr) {
    _type_str = "ship";
    _otype = otShip;
 
-   hdg_lock = false;
-   rudder = 0.0;
 }
 
 FGAIShip::~FGAIShip() {
@@ -41,6 +39,16 @@ FGAIShip::~FGAIShip() {
 
 
 bool FGAIShip::init() {
+   
+   hdg_lock = false;
+   rudder = 0.0;
+   no_roll = false;
+    
+   rudder_constant = 0.5;
+   roll_constant = 0.001;
+   speed_constant = 0.05;
+   hdg_constant = 0.01;
+   
    return FGAIBase::init();
 }
 
@@ -48,7 +56,21 @@ void FGAIShip::bind() {
     FGAIBase::bind();
 
     props->tie("surface-positions/rudder-pos-deg",
-                SGRawValuePointer<double>(&rudder));
+                SGRawValuePointer<float>(&rudder));
+    props->tie("controls/heading-lock",
+                SGRawValuePointer<bool>(&hdg_lock));
+    props->tie("controls/tgt-speed-kts",
+                SGRawValuePointer<double>(&tgt_speed));
+    props->tie("controls/tgt-heading-degs",
+                SGRawValuePointer<double>(&tgt_heading)); 
+    props->tie("controls/constants/rudder",
+                SGRawValuePointer<double>(&rudder_constant));
+    props->tie("controls/constants/roll",
+                SGRawValuePointer<double>(&roll_constant));
+    props->tie("controls/constants/rudder",
+                SGRawValuePointer<double>(&rudder_constant));
+    props->tie("controls/constants/speed",
+                SGRawValuePointer<double>(&speed_constant)); 
 
     props->setStringValue("name", name.c_str());
 }
@@ -56,6 +78,13 @@ void FGAIShip::bind() {
 void FGAIShip::unbind() {
     FGAIBase::unbind();
     props->untie("surface-positions/rudder-pos-deg");
+    props->untie("controls/heading-lock");
+    props->untie("controls/tgt-speed-kts");
+    props->untie("controls/tgt-heading-degs");
+    props->untie("controls/constants/roll");
+    props->untie("controls/constants/rudder");
+    props->untie("controls/constants/speed");           
+
 }
 
 void FGAIShip::update(double dt) {
@@ -77,12 +106,14 @@ void FGAIShip::Run(double dt) {
    double speed_east_deg_sec;
    double dist_covered_ft;
    double alpha;
+   double rudder_limit;
+   double raw_roll;   
 
    // adjust speed
    double speed_diff = tgt_speed - speed;
    if (fabs(speed_diff) > 0.1) {
-     if (speed_diff > 0.0) speed += 0.1 * dt;
-     if (speed_diff < 0.0) speed -= 0.1 * dt;
+     if (speed_diff > 0.0) speed += speed_constant * dt;
+     if (speed_diff < 0.0) speed -= speed_constant * dt;
    } 
    
    // convert speed to degrees per second
@@ -97,7 +128,7 @@ void FGAIShip::Run(double dt) {
 
    
    // adjust heading based on current rudder angle
-   if (rudder != 0.0)  {
+   if (rudder <= -0.25 or rudder >= 0.25)  {
    /*  turn_radius_ft = 0.088362 * speed * speed
                        / tan( fabs(rudder) / SG_RADIANS_TO_DEGREES );
      turn_circum_ft = SGD_2PI * turn_radius_ft;
@@ -105,32 +136,46 @@ void FGAIShip::Run(double dt) {
      alpha = dist_covered_ft / turn_circum_ft * 360.0;*/
      
      if (turn_radius_ft <= 0) turn_radius_ft = 0; // don't allow nonsense values
-     
-//     cout << "speed " << speed << " turn radius " << turn_radius_ft << endl;
+     if (rudder > 45) rudder = 45;
+     if (rudder < -45) rudder = -45;
 
 // adjust turn radius for speed. The equation is very approximate.
      sp_turn_radius_ft = 10 * pow ((speed - 15),2) + turn_radius_ft;
-//     cout << "speed " << speed << " speed turn radius " << sp_turn_radius_ft << endl; 
+//     cout << " speed turn radius " << sp_turn_radius_ft ; 
 
 // adjust turn radius for rudder angle. The equation is even more approximate.     
-     rd_turn_radius_ft = -130 * (rudder - 15) + sp_turn_radius_ft;
-//     cout << "rudder " << rudder << " rudder turn radius " << rd_turn_radius_ft << endl;
+     float a = 19;
+     float b = -0.2485;
+     float c = 0.543;
+     
+     rd_turn_radius_ft = (a * exp(b * fabs(rudder)) + c) * sp_turn_radius_ft;
+     
+//     cout <<" rudder turn radius " << rd_turn_radius_ft << endl;
           
 // calculate the angle, alpha, subtended by the arc traversed in time dt        
      alpha = ((speed * 1.686 * dt)/rd_turn_radius_ft) * SG_RADIANS_TO_DEGREES;
 
-// make sure that alpha is applied in the right direction   
    
+// make sure that alpha is applied in the right direction   
      hdg += alpha * sign( rudder );
-
      if ( hdg > 360.0 ) hdg -= 360.0;
      if ( hdg < 0.0) hdg += 360.0;
 
-//adjust roll for rudder angle and speed     
-     roll = - (  speed / 2 - rudder / 6 );
-     
-//    cout << " hdg " << hdg  << "roll "<< roll << endl;
+//adjust roll for rudder angle and speed. Another bit of voodoo    
+     raw_roll =  -0.0166667 * speed * rudder;
    }
+   else
+   {
+// rudder angle is 0  
+     raw_roll = 0;
+//     cout << " roll "<< roll << endl;
+   }
+
+    //low pass filter
+     roll = (raw_roll * roll_constant) + (roll * (1 - roll_constant));
+         
+     cout  << " rudder: " << rudder << " raw roll: "<< raw_roll<<" roll: " << roll ;
+     cout  << " hdg: " << hdg << endl ;
 
    // adjust target rudder angle if heading lock engaged
    if (hdg_lock) {
@@ -144,23 +189,42 @@ void FGAIShip::Run(double dt) {
      } else {
        rudder_sense = -1.0;
      } 
-     if (diff < 30) tgt_roll = diff * rudder_sense; 
+     if (diff < 15){ 
+         tgt_rudder = diff * rudder_sense;
+         }
+         else
+         {
+         tgt_rudder = 45 * rudder_sense;
+     }     
    }
 
    // adjust rudder angle
-   double rudder_diff = tgt_roll - rudder;
-   if (fabs(rudder_diff) > 0.1) {
-     if (rudder_diff > 0.0) rudder += 5.0 * dt;
-     if (rudder_diff < 0.0) rudder -= 5.0 * dt;
+    double rudder_diff = tgt_rudder - rudder;
+    // set the rudder limit by speed
+    if (speed <= 40 ){
+       rudder_limit = (-0.825 * speed) + 35;
+    }else{
+       rudder_limit = 2;
    }
 
+    if (fabs(rudder_diff) > 0.1) {
+        if (rudder_diff > 0.0){
+            rudder += rudder_constant * dt;
+            if (rudder > rudder_limit) rudder = rudder_limit;// apply the rudder limit
+        } else if (rudder_diff < 0.0){
+            rudder -= rudder_constant * dt;
+            if (rudder < -rudder_limit) rudder = -rudder_limit;
+        }
 }
+
+
+
+}//end function
 
 
 void FGAIShip::AccelTo(double speed) {
    tgt_speed = speed;
 }
-
 
 void FGAIShip::PitchTo(double angle) {
    tgt_pitch = angle;
@@ -204,3 +268,10 @@ void FGAIShip::ProcessFlightPlan(double dt) {
   // not implemented yet
 }
 
+void FGAIShip::setRudder(float r) {
+  rudder = r;
+}
+
+void FGAIShip::setRoll(double rl) {
+   roll = rl;
+}

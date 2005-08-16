@@ -32,16 +32,45 @@
 
 #include "AICarrier.hxx"
 
-
 #include "AIScenario.hxx"
+
+/** Value of earth radius (meters) */
+#define RADIUS_M   SG_EQUATORIAL_RADIUS_M
+
 
 
 FGAICarrier::FGAICarrier(FGAIManager* mgr) : FGAIShip(mgr) {
   _type_str = "carrier";
   _otype = otCarrier;
+  
+  
 }
 
 FGAICarrier::~FGAICarrier() {
+}
+
+void FGAICarrier::setWind_from_east(double fps) {
+   wind_from_east = fps;
+}
+
+void FGAICarrier::setWind_from_north(double fps) {
+   wind_from_north = fps;
+}
+
+void FGAICarrier::setMaxLat(double deg) {
+   max_lat = fabs(deg);
+}
+
+void FGAICarrier::setMinLat(double deg) {
+   min_lat = fabs(deg);
+}
+
+void FGAICarrier::setMaxLong(double deg) {
+   max_long = fabs(deg);
+}
+
+void FGAICarrier::setMinLong(double deg) {
+   min_long = fabs(deg);
 }
 
 void FGAICarrier::setSolidObjects(const list<string>& so) {
@@ -64,17 +93,28 @@ void FGAICarrier::setSign(const string& s) {
   sign = s;
 }
 
+void FGAICarrier::setTACANChannelID(const string& id) {
+   TACAN_channel_id = id;
+}
+
 void FGAICarrier::setFlolsOffset(const Point3D& off) {
   flols_off = off;
 }
 
-void FGAICarrier::getVelocityWrtEarth(sgVec3 v) {
-  sgCopyVec3(v, vel_wrt_earth );
+void FGAICarrier::getVelocityWrtEarth(sgdVec3 v, sgdVec3 omega, sgdVec3 pivot) {
+  sgdCopyVec3(v, vel_wrt_earth );
+  sgdCopyVec3(omega, rot_wrt_earth );
+  sgdCopyVec3(pivot, rot_pivot_wrt_earth );
 }
 
 void FGAICarrier::update(double dt) {
-   UpdateFlols(dt);
-   FGAIShip::update(dt);
+   
+   // For computation of rotation speeds we just use finite differences her.
+   // That is perfectly valid since this thing is not driven by accelerations
+   // but by just apply discrete changes at its velocity variables.
+   double old_hdg = hdg;
+   double old_roll = roll;
+   double old_pitch = pitch;
 
    // Update the velocity information stored in those nodes.
    double v_north = 0.51444444*speed*cos(hdg * SGD_DEGREES_TO_RADIANS);
@@ -84,12 +124,105 @@ void FGAICarrier::update(double dt) {
    double cos_lat = cos(pos.lat() * SGD_DEGREES_TO_RADIANS);
    double sin_lon = sin(pos.lon() * SGD_DEGREES_TO_RADIANS);
    double cos_lon = cos(pos.lon() * SGD_DEGREES_TO_RADIANS);
-   sgSetVec3( vel_wrt_earth,
+   double sin_roll = sin(roll * SGD_DEGREES_TO_RADIANS);
+   double cos_roll = cos(roll * SGD_DEGREES_TO_RADIANS);
+   double sin_pitch = sin(pitch * SGD_DEGREES_TO_RADIANS);
+   double cos_pitch = cos(pitch * SGD_DEGREES_TO_RADIANS);
+   double sin_hdg = sin(hdg * SGD_DEGREES_TO_RADIANS);
+   double cos_hdg = cos(hdg * SGD_DEGREES_TO_RADIANS);
+
+   // Transform this back the the horizontal local frame.
+   sgdMat3 trans;
+   
+   // set up the transform matrix
+   trans[0][0] =          cos_pitch*cos_hdg;
+   trans[0][1] = sin_roll*sin_pitch*cos_hdg - cos_roll*sin_hdg;
+   trans[0][2] = cos_roll*sin_pitch*cos_hdg + sin_roll*sin_hdg;
+   
+   trans[1][0] =          cos_pitch*sin_hdg;
+   trans[1][1] = sin_roll*sin_pitch*sin_hdg + cos_roll*cos_hdg;
+   trans[1][2] = cos_roll*sin_pitch*sin_hdg - sin_roll*cos_hdg;
+   
+   trans[2][0] =         -sin_pitch;
+   trans[2][1] = sin_roll*cos_pitch;
+   trans[2][2] = cos_roll*cos_pitch;
+   
+   sgdSetVec3( vel_wrt_earth,
               - cos_lon*sin_lat*v_north - sin_lon*v_east,
               - sin_lon*sin_lat*v_north + cos_lon*v_east,
                 cos_lat*v_north );
+   sgGeodToCart(pos.lat() * SGD_DEGREES_TO_RADIANS,
+                pos.lon() * SGD_DEGREES_TO_RADIANS,
+                pos.elev(), rot_pivot_wrt_earth);
 
-}
+   // Now update the position and heading. This will compute new hdg and
+   // roll values required for the rotation speed computation.
+   FGAIShip::update(dt);
+   
+   
+   //automatic turn into wind with a target wind of 25 kts otd
+   if(turn_to_launch_hdg){
+       TurnToLaunch();
+   } else if(OutsideBox() || returning) {// check that the carrier is inside the operating box
+       ReturnToBox();
+   } else {                   //if(!returning
+       TurnToBase();
+   }  //end if  
+
+   // Only change these values if we are able to compute them safely
+   if (dt < DBL_MIN)
+     sgdSetVec3( rot_wrt_earth, 0.0, 0.0, 0.0);
+   else {
+     // Compute the change of the euler angles.
+     double hdg_dot = SGD_DEGREES_TO_RADIANS * (hdg-old_hdg)/dt;
+     // Allways assume that the movement was done by the shorter way.
+     if (hdg_dot < - SGD_DEGREES_TO_RADIANS * 180)
+       hdg_dot += SGD_DEGREES_TO_RADIANS * 360;
+     if (hdg_dot > SGD_DEGREES_TO_RADIANS * 180)
+       hdg_dot -= SGD_DEGREES_TO_RADIANS * 360;
+     double pitch_dot = SGD_DEGREES_TO_RADIANS * (pitch-old_pitch)/dt;
+     // Allways assume that the movement was done by the shorter way.
+     if (pitch_dot < - SGD_DEGREES_TO_RADIANS * 180)
+       pitch_dot += SGD_DEGREES_TO_RADIANS * 360;
+     if (pitch_dot > SGD_DEGREES_TO_RADIANS * 180)
+       pitch_dot -= SGD_DEGREES_TO_RADIANS * 360;
+     double roll_dot = SGD_DEGREES_TO_RADIANS * (roll-old_roll)/dt;
+     // Allways assume that the movement was done by the shorter way.
+     if (roll_dot < - SGD_DEGREES_TO_RADIANS * 180)
+       roll_dot += SGD_DEGREES_TO_RADIANS * 360;
+     if (roll_dot > SGD_DEGREES_TO_RADIANS * 180)
+       roll_dot -= SGD_DEGREES_TO_RADIANS * 360;
+     /*cout << "euler derivatives = "
+          << roll_dot << " " << pitch_dot << " " << hdg_dot << endl;*/
+
+     // Now Compute the rotation vector in the carriers coordinate frame
+     // originating from the euler angle changes.
+     sgdVec3 body;
+     body[0] = roll_dot - hdg_dot*sin_pitch;
+     body[1] = pitch_dot*cos_roll + hdg_dot*sin_roll*cos_pitch;
+     body[2] = -pitch_dot*sin_roll + hdg_dot*cos_roll*cos_pitch;
+
+     // Transform that back to the horizontal local frame.
+     sgdVec3 hl;
+     hl[0] = body[0]*trans[0][0] + body[1]*trans[0][1] + body[2]*trans[0][2];
+     hl[1] = body[0]*trans[1][0] + body[1]*trans[1][1] + body[2]*trans[1][2];
+     hl[2] = body[0]*trans[2][0] + body[1]*trans[2][1] + body[2]*trans[2][2];
+
+     // Now we need to project out rotation components ending in speeds in y
+     // direction in the hoirizontal local frame.
+     hl[1] = 0;
+
+     // Transform that to the earth centered frame.
+     sgdSetVec3(rot_wrt_earth,
+               - cos_lon*sin_lat*hl[0] - sin_lon*hl[1] - cos_lat*cos_lon*hl[2],
+               - sin_lon*sin_lat*hl[0] + cos_lon*hl[1] - cos_lat*sin_lon*hl[2],
+                 cos_lat*hl[0] - sin_lat*hl[2]);
+   }
+
+   UpdateWind(dt);
+   UpdateTACAN(dt);
+   UpdateFlols(trans);
+} //end update
 
 bool FGAICarrier::init() {
    if (!FGAIShip::init())
@@ -111,36 +244,103 @@ bool FGAICarrier::init() {
    mark_cat(sel, catapult_objects);
    mark_solid(sel, solid_objects);
 
+   _longitude_node = fgGetNode("/position/longitude-deg", true);
+   _latitude_node = fgGetNode("/position/latitude-deg", true);
+   _altitude_node = fgGetNode("/position/altitude-ft", true);
+   _dme_freq_node = fgGetNode("/instrumentation/dme/frequencies/selected-mhz", true);
+   _surface_wind_from_deg_node = 
+              fgGetNode("/environment/config/boundary/entry[0]/wind-from-heading-deg", true);
+   _surface_wind_speed_node = 
+              fgGetNode("/environment/config/boundary/entry[0]/wind-speed-kt", true);
+   
+  
+   turn_to_launch_hdg = false;
+   returning = false;
+  
+   initialpos = pos;
+   base_course = hdg;
+   base_speed = speed;
+   
    return true;
 }
 
 void FGAICarrier::bind() {
    FGAIShip::bind();
 
+   props->untie("velocities/true-airspeed-kt");
+   
    props->tie("controls/flols/source-lights",
                 SGRawValuePointer<int>(&source));
    props->tie("controls/flols/distance-m",
                 SGRawValuePointer<double>(&dist));
    props->tie("controls/flols/angle-degs",
                 SGRawValuePointer<double>(&angle));
+   props->tie("controls/turn-to-launch-hdg",
+                SGRawValuePointer<bool>(&turn_to_launch_hdg));
+   props->tie("controls/in-to-wind",
+                SGRawValuePointer<bool>(&turn_to_launch_hdg));
+   props->tie("controls/base-course-deg",
+                SGRawValuePointer<double>(&base_course));
+   props->tie("controls/base-speed-kts",
+                SGRawValuePointer<double>(&base_speed));
+   props->tie("controls/start-pos-lat-deg",
+                SGRawValuePointer<double>(&initialpos[1]));
+   props->tie("controls/start-pos-long-deg",
+                SGRawValuePointer<double>(&initialpos[0]));
+   props->tie("velocities/speed-kts",  
+                SGRawValuePointer<double>(&speed));
+   props->tie("environment/surface-wind-speed-true-kts",  
+                SGRawValuePointer<double>(&wind_speed_kts));
+   props->tie("environment/surface-wind-from-true-degs",  
+                SGRawValuePointer<double>(&wind_from_deg));
+   props->tie("environment/rel-wind-from-degs",  
+                SGRawValuePointer<double>(&rel_wind_from_deg));
+   props->tie("environment/rel-wind-from-carrier-hdg-degs",  
+                SGRawValuePointer<double>(&rel_wind));
+   props->tie("environment/rel-wind-speed-kts",  
+                SGRawValuePointer<double>(&rel_wind_speed_kts));
+   props->tie("controls/flols/wave-off-lights",  
+                SGRawValuePointer<bool>(&wave_off_lights));
+   props->tie("instrumentation/TACAN/bearing-true-deg",  
+                SGRawValuePointer<double>(&bearing));
+   props->tie("instrumentation/TACAN/range-nm",  
+                SGRawValuePointer<double>(&range));
+                    
    props->setBoolValue("controls/flols/cut-lights", false);
    props->setBoolValue("controls/flols/wave-off-lights", false);
    props->setBoolValue("controls/flols/cond-datum-lights", true);
    props->setBoolValue("controls/crew", false);
 
+   props->setStringValue("instrumentation/TACAN/channel-ID", TACAN_channel_id.c_str());
+  
    props->setStringValue("sign", sign.c_str());
 }
 
 void FGAICarrier::unbind() {
     FGAIShip::unbind();
+    
+    props->untie("velocities/true-airspeed-kt");
+    
     props->untie("controls/flols/source-lights");
     props->untie("controls/flols/distance-m");
     props->untie("controls/flols/angle-degs");
+    props->untie("controls/turn-to-launch-hdg");
+    props->untie("velocities/speed-kts");
+    props->untie("environment/wind-speed-true-kts");
+    props->untie("environment/wind-from-true-degs");
+    props->untie("environment/rel-wind-from-degs");
+    props->untie("environment/rel-wind-speed-kts");
+    props->untie("controls/flols/wave-off-lights");
+    props->untie("instrumentation/TACAN/bearing-true-deg");
+    props->untie("instrumentation/TACAN/range-nm");
+    props->untie("instrumentation/TACAN/channel-ID");
 }
 
 bool FGAICarrier::getParkPosition(const string& id, Point3D& geodPos,
                                   double& hdng, sgdVec3 uvw)
 {
+
+  // FIXME: does not yet cover rotation speeds.
   list<ParkPosition>::iterator it = ppositions.begin();
   while (it != ppositions.end()) {
     // Take either the specified one or the first one ...
@@ -341,16 +541,11 @@ bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects, bool m
   return found;
 }
 
-void FGAICarrier::UpdateFlols( double dt) {
+void FGAICarrier::UpdateFlols(sgdMat3 trans) {
     
-    float trans[3][3];
     float in[3];
     float out[3];
 
-    float cosRx, sinRx;
-    float cosRy, sinRy;
-    float cosRz, sinRz;
-        
     double flolsXYZ[3], eyeXYZ[3]; 
     double lat, lon, alt;
     Point3D eyepos;
@@ -385,29 +580,6 @@ void FGAICarrier::UpdateFlols( double dt) {
   in[0] = flols_off.x();  
   in[1] = flols_off.y();
   in[2] = flols_off.z();    
-
-// pre-process the trig functions
-
-    cosRx = cos(roll * SG_DEGREES_TO_RADIANS);
-    sinRx = sin(roll * SG_DEGREES_TO_RADIANS);
-    cosRy = cos(pitch * SG_DEGREES_TO_RADIANS);
-    sinRy = sin(pitch * SG_DEGREES_TO_RADIANS);
-    cosRz = cos(hdg * SG_DEGREES_TO_RADIANS);
-    sinRz = sin(hdg * SG_DEGREES_TO_RADIANS);
-
-// set up the transform matrix
-
-    trans[0][0] =  cosRy * cosRz;
-    trans[0][1] =  -1 * cosRx * sinRz + sinRx * sinRy * cosRz ;
-    trans[0][2] =  sinRx * sinRz + cosRx * sinRy * cosRz;
-
-    trans[1][0] =  cosRy * sinRz;
-    trans[1][1] =  cosRx * cosRz + sinRx * sinRy * sinRz;
-    trans[1][2] =  -1 * sinRx * cosRx + cosRx * sinRy * sinRz;
-
-    trans[2][0] =  -1 * sinRy;
-    trans[2][1] =  sinRx * cosRy;
-    trans[2][2] =  cosRx * cosRy;
 
 // multiply the input and transform matrices
 
@@ -519,4 +691,216 @@ void FGAICarrier::UpdateFlols( double dt) {
    }   
 } // end updateflols
 
+// find relative wind
+
+
+
+
+void FGAICarrier::UpdateWind( double dt) {
+
+    double recip;
+    
+    //calculate the reciprocal hdg
+    
+    if (hdg >= 180){
+        recip = hdg - 180;
+    }
+    else{
+        recip = hdg + 180;
+    }
+    
+    //cout <<" heading: " << hdg << "recip: " << recip << endl;
+    
+    //get the surface wind speed and direction
+    wind_from_deg = _surface_wind_from_deg_node->getDoubleValue();
+    wind_speed_kts  = _surface_wind_speed_node->getDoubleValue();
+    
+    //calculate the surface wind speed north and east in kts   
+    double wind_speed_from_north_kts = cos( wind_from_deg / SGD_RADIANS_TO_DEGREES )* wind_speed_kts ;
+    double wind_speed_from_east_kts  = sin( wind_from_deg / SGD_RADIANS_TO_DEGREES )* wind_speed_kts ;
+    
+    //calculate the carrier speed north and east in kts   
+    double speed_north_kts = cos( hdg / SGD_RADIANS_TO_DEGREES )* speed ;
+    double speed_east_kts  = sin( hdg / SGD_RADIANS_TO_DEGREES )* speed ;
+    
+    //calculate the relative wind speed north and east in kts
+    double rel_wind_speed_from_east_kts = wind_speed_from_east_kts + speed_east_kts;
+    double rel_wind_speed_from_north_kts = wind_speed_from_north_kts + speed_north_kts;
+    
+    //combine relative speeds north and east to get relative windspeed in kts                          
+    rel_wind_speed_kts = sqrt((rel_wind_speed_from_east_kts * rel_wind_speed_from_east_kts) 
+    + (rel_wind_speed_from_north_kts * rel_wind_speed_from_north_kts));
+    
+    //calculate the relative wind direction
+    rel_wind_from_deg = atan(rel_wind_speed_from_east_kts/rel_wind_speed_from_north_kts) 
+                            * SG_RADIANS_TO_DEGREES;
+    
+    // rationalise the output
+    if (rel_wind_speed_from_north_kts <= 0){
+        rel_wind_from_deg = 180 + rel_wind_from_deg;
+    }
+    else{
+        if(rel_wind_speed_from_east_kts <= 0){
+            rel_wind_from_deg = 360 + rel_wind_from_deg;
+        }    
+    }
+    
+    //calculate rel wind
+    rel_wind = rel_wind_from_deg - hdg  ;
+    if (rel_wind > 180) rel_wind -= 360;
+    
+    //switch the wave-off lights
+    if (InToWind()){
+       wave_off_lights = false;
+    }else{
+       wave_off_lights = true;
+    }    
+       
+    cout << "rel wind: " << rel_wind << endl;
+
+}// end update wind
+
+void FGAICarrier::TurnToLaunch(){
+    
+     //calculate tgt speed
+       double tgt_speed = 25 - wind_speed_kts;
+       if (tgt_speed < 10) tgt_speed = 10;
+       
+     //turn the carrier
+       FGAIShip::TurnTo(wind_from_deg); 
+       FGAIShip::AccelTo(tgt_speed); 
+           
+     
+        
+}  // end turn to launch
+   
+void FGAICarrier::TurnToBase(){
+    
+    //turn the carrier
+       FGAIShip::TurnTo(base_course); 
+       FGAIShip::AccelTo(base_speed); 
+    
+} //  end turn to base  
+
+void FGAICarrier::ReturnToBox(){
+    double course, distance;
+        
+    //get the carrier position
+    carrierpos = pos;
+    
+    //cout << "lat: " << carrierpos[1] << " lon: " << carrierpos[0] << endl;
+    
+    //calculate the bearing and range of the initial position from the carrier
+    geo_inverse_wgs_84(carrierpos[2],
+                       carrierpos[1],
+                       carrierpos[0],
+                       initialpos[1],
+                       initialpos[0],
+                       &course, &az2, &distance);
+                     
+    distance *= SG_METER_TO_NM;
+
+    cout << "return course: " << course << " distance: " << distance << endl;
+    //turn the carrier
+       FGAIShip::TurnTo(course); 
+       FGAIShip::AccelTo(base_speed);
+       if (distance >= 1 ){
+           returning = true;
+       }else{
+           returning = false;
+       }        
+    
+} //  end turn to base  
+ 
+    
+void FGAICarrier::UpdateTACAN(double dt){ //update the TACAN 
+
+  //cout << "TACAN: " << TACAN_channel_id << endl;
+
+  double max_range_nm = 100; //nm
+  
+  double dme_freq = _dme_freq_node->getDoubleValue();
+  
+  //cout << "dme_freq: " << dme_freq << endl; 
+  
+  if (TACAN_channel_id == "017X"){
+  
+      //get the aircraft position  
+      double longitude_deg = _longitude_node->getDoubleValue();
+      double latitude_deg  = _latitude_node->getDoubleValue();
+      double altitude_m    = _altitude_node->getDoubleValue() * SG_FEET_TO_METER;
+    
+      //get the carrier position
+      carrierpos = pos;
+      
+      //cout << "lat: " << carrierpos[1] << " lon: " << carrierpos[0] << endl;
+      
+      //calculate the bearing and range of the carrier from the aircraft
+      geo_inverse_wgs_84(altitude_m,
+                         latitude_deg,
+                         longitude_deg,
+                         carrierpos[1],
+                         carrierpos[0],
+                         &bearing, &az2, &range);
+                         
+      range *= SG_METER_TO_NM;
+      
+      
+      
+       double aircraft_horizon_nm = Horizon(altitude_m) * SG_METER_TO_NM;
+       double carrier_horizon_nm = Horizon(50) * SG_METER_TO_NM;
+       double horizon_nm = aircraft_horizon_nm + carrier_horizon_nm;
+                         
+       if (range > horizon_nm || range > max_range_nm) {
+           range = 0;
+           bearing = 0 ;
+        }    
+    /*cout << "bearing: " << bearing << " range: " << range << " altitude: " << altitude_m
+      <<  " horizon: " << horizon_nm << endl; */
+  } else {
+      range = 0;
+      bearing = 0 ;
+  }  // end if
+        
+}// end update TACAN
+
+bool FGAICarrier::OutsideBox(){ //returns true if the carrier is outside operating box
+
+    if ( max_lat == 0 && min_lat == 0 && max_long == 0 && min_long == 0) {
+       SG_LOG(SG_GENERAL, SG_INFO,"AICarrier: No Operating Box defined" );
+       return false;
+    }        
+     
+    if (initialpos[1] >= 0){//northern hemisphere
+        if (pos[1] >= initialpos[1] + max_lat) {return true;}
+        else if (pos[1] <= initialpos[1] - min_lat) {return true;}
+    }else{                  //southern hemisphere
+        if (pos[1] <= initialpos[1] - max_lat) {return true;}
+        else if (pos[1] >= initialpos[1] + min_lat) {return true;}
+    }
+    
+    if (initialpos[0] >=0) {//eastern hemisphere
+        if (pos[0] >= initialpos[0] + max_long) {return true;}
+        else if (pos[0] <= initialpos[0] - min_long) {return true;}
+    }else{                 //western hemisphere
+        if (pos[0] <= initialpos[0] - max_long) {return true;}
+        else if (pos[0] >= initialpos[0] + min_long) {return true;}
+    }
+    
+    SG_LOG(SG_GENERAL, SG_INFO,"AICarrier: Inside Operating Box" );
+   
+    return false;   
+
+} // end OutsideBox
+
+// return the distance to the horizon, given the altitude and the radius of the earth
+float FGAICarrier::Horizon(float h) { return RADIUS_M * acos(RADIUS_M / (RADIUS_M + h)); }
+    
+bool FGAICarrier::InToWind(){
+    
+    // test
+    if ( fabs(rel_wind) < 5 ) return true;
+    return false;
+    
+} //end InToWind     
 int FGAICarrierHardware::unique_id = 1;

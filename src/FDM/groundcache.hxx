@@ -88,8 +88,10 @@ private:
       sgdVec4 plane;
       // The bounding shpere.
       sgdSphere sphere;
-      // The linear velocity.
+      // The linear and angular velocity.
       sgdVec3 velocity;
+      sgdVec3 rotation;
+      sgdVec3 rotation_pivot;
       // Ground type
       int type;
     };
@@ -97,10 +99,14 @@ private:
       sgdVec3 start;
       sgdVec3 end;
       sgdVec3 velocity;
+      sgdVec3 rotation;
+      sgdVec3 rotation_pivot;
     };
     struct Wire {
       sgdVec3 ends[2];
       sgdVec3 velocity;
+      sgdVec3 rotation;
+      sgdVec3 rotation_pivot;
       int wire_id;
     };
 
@@ -144,7 +150,9 @@ private:
       GroundProperty() : type(0) {}
       int type;
       int wire_id;
-      sgVec3 vel;
+      sgdVec3 vel;
+      sgdVec3 rot;
+      sgdVec3 pivot;
       // not yet implemented ...
 //       double loadCapacity;
     };

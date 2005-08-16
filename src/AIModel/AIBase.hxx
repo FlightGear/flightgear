@@ -91,6 +91,12 @@ typedef struct {
    string pennant_number;     // used by carrier objects
    string acType;             // used by aircraft objects
    string company;            // used by aircraft objects
+   string TACAN_channel_ID;   // used by carrier objects
+   double max_lat;            // used by carrier objects
+   double min_lat;            // used by carrier objects
+   double max_long;            // used by carrier objects
+   double min_long;            // used by carrier objects
+   
 } FGAIModelEntity;
 
 

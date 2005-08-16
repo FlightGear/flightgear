@@ -226,13 +226,15 @@ FGGroundCache::extractGroundProperty( ssgLeaf* l )
     }
 
     // Copy the velocity from the carrier class.
-    ud->carrier->getVelocityWrtEarth( gp.vel );
+    ud->carrier->getVelocityWrtEarth( gp.vel, gp.rot, gp.pivot );
   }
 
   else {
 
     // Initialize velocity field.
-    sgSetVec3( gp.vel, 0.0, 0.0, 0.0 );
+    sgdSetVec3( gp.vel, 0.0, 0.0, 0.0 );
+    sgdSetVec3( gp.rot, 0.0, 0.0, 0.0 );
+    sgdSetVec3( gp.pivot, 0.0, 0.0, 0.0 );
   }
   
   // Get the texture name and decide what ground type we have.
@@ -285,7 +287,9 @@ FGGroundCache::putLineLeafIntoCache(const sgdSphere *wsp, const sgdMat4 xform,
         Wire wire;
         sgdCopyVec3(wire.ends[0], ends[0]);
         sgdCopyVec3(wire.ends[1], ends[1]);
-        sgdSetVec3(wire.velocity, gp.vel);
+        sgdCopyVec3(wire.velocity, gp.vel);
+        sgdCopyVec3(wire.rotation, gp.rot);
+        sgdSubVec3(wire.rotation_pivot, gp.pivot, cache_center);
         wire.wire_id = gp.wire_id;
 
         wires.push_back(wire);
@@ -294,7 +298,9 @@ FGGroundCache::putLineLeafIntoCache(const sgdSphere *wsp, const sgdMat4 xform,
         Catapult cat;
         sgdCopyVec3(cat.start, ends[0]);
         sgdCopyVec3(cat.end, ends[1]);
-        sgdSetVec3(cat.velocity, gp.vel);
+        sgdCopyVec3(cat.velocity, gp.vel);
+        sgdCopyVec3(cat.rotation, gp.rot);
+        sgdSubVec3(cat.rotation_pivot, gp.pivot, cache_center);
 
         catapults.push_back(cat);
       }
@@ -334,7 +340,9 @@ FGGroundCache::putSurfaceLeafIntoCache(const sgdSphere *sp,
     // Check if the sphere around the vehicle intersects the sphere
     // around that triangle. If so, put that triangle into the cache.
     if (sphIsec && sp->intersects(&t.sphere)) {
-      sgdSetVec3(t.velocity, gp.vel);
+      sgdCopyVec3(t.velocity, gp.vel);
+      sgdCopyVec3(t.rotation, gp.rot);
+      sgdSubVec3(t.rotation_pivot, gp.pivot, cache_center);
       t.type = gp.type;
       triangles.push_back(t);
     }
@@ -373,15 +381,25 @@ FGGroundCache::velocityTransformTriangle(double dt,
   dst.sphere.radius = src.sphere.radius;
 
   sgdCopyVec3(dst.velocity, src.velocity);
+  sgdCopyVec3(dst.rotation, src.rotation);
+  sgdCopyVec3(dst.rotation_pivot, src.rotation_pivot);
 
   dst.type = src.type;
 
   if (dt*sgdLengthSquaredVec3(src.velocity) != 0) {
-    sgdAddScaledVec3(dst.vertices[0], src.velocity, dt);
-    sgdAddScaledVec3(dst.vertices[1], src.velocity, dt);
-    sgdAddScaledVec3(dst.vertices[2], src.velocity, dt);
+    sgdVec3 pivotoff, vel;
+    for (int i = 0; i < 3; ++i) {
+      sgdSubVec3(pivotoff, src.vertices[i], src.rotation_pivot);
+      sgdVectorProductVec3(vel, src.rotation, pivotoff);
+      sgdAddVec3(vel, src.velocity);
+      sgdAddScaledVec3(dst.vertices[i], vel, dt);
+    }
     
-    dst.plane[3] += dt*sgdScalarProductVec3(dst.plane, src.velocity);
+    // Transform the plane equation
+    sgdSubVec3(pivotoff, dst.plane, src.rotation_pivot);
+    sgdVectorProductVec3(vel, src.rotation, pivotoff);
+    sgdAddVec3(vel, src.velocity);
+    dst.plane[3] += dt*sgdScalarProductVec3(dst.plane, vel);
 
     sgdAddScaledVec3(dst.sphere.center, src.velocity, dt);
   }
@@ -554,15 +572,23 @@ FGGroundCache::get_cat(double t, const double dpt[3],
 
   size_t sz = catapults.size();
   for (size_t i = 0; i < sz; ++i) {
+    sgdVec3 pivotoff, rvel[2];
     sgdLineSegment3 ls;
     sgdCopyVec3(ls.a, catapults[i].start);
     sgdCopyVec3(ls.b, catapults[i].end);
 
+    sgdSubVec3(pivotoff, ls.a, catapults[i].rotation_pivot);
+    sgdVectorProductVec3(rvel[0], catapults[i].rotation, pivotoff);
+    sgdAddVec3(rvel[0], catapults[i].velocity);
+    sgdSubVec3(pivotoff, ls.b, catapults[i].rotation_pivot);
+    sgdVectorProductVec3(rvel[1], catapults[i].rotation, pivotoff);
+    sgdAddVec3(rvel[1], catapults[i].velocity);
+
     sgdAddVec3(ls.a, cache_center);
     sgdAddVec3(ls.b, cache_center);
 
-    sgdAddScaledVec3(ls.a, catapults[i].velocity, t);
-    sgdAddScaledVec3(ls.b, catapults[i].velocity, t);
+    sgdAddScaledVec3(ls.a, rvel[0], t);
+    sgdAddScaledVec3(ls.b, rvel[1], t);
     
     double this_dist = sgdDistSquaredToLineSegmentVec3( ls, dpt );
     if (this_dist < dist) {
@@ -573,8 +599,8 @@ FGGroundCache::get_cat(double t, const double dpt[3],
       // The carrier code takes care of that ordering.
       sgdCopyVec3( end[0], ls.a );
       sgdCopyVec3( end[1], ls.b );
-      sgdCopyVec3( vel[0], catapults[i].velocity );
-      sgdCopyVec3( vel[1], catapults[i].velocity );
+      sgdCopyVec3( vel[0], rvel[0] );
+      sgdCopyVec3( vel[1], rvel[1] );
     }
   }
 
@@ -641,8 +667,10 @@ FGGroundCache::get_agl(double t, const double dpt[3], double max_altoff,
           // The first three values in the vector are the plane normal.
           sgdCopyVec3( normal, triangle.plane );
           // The velocity wrt earth.
-          /// FIXME: only true for non rotating objects!!!!
-          sgdCopyVec3( vel, triangle.velocity );
+          sgdVec3 pivotoff;
+          sgdSubVec3(pivotoff, pt, triangle.rotation_pivot);
+          sgdVectorProductVec3(vel, triangle.rotation, pivotoff);
+          sgdAddVec3(vel, triangle.velocity);
           // Save the ground type.
           *type = triangle.type;
           // FIXME: figure out how to get that sign ...
@@ -704,14 +732,15 @@ bool FGGroundCache::caught_wire(double t, const double pt[4][3])
   // You have cautght a wire if they intersect.
   for (size_t i = 0; i < sz; ++i) {
     sgdVec3 le[2];
-    sgdCopyVec3(le[0], wires[i].ends[0]);
-    sgdCopyVec3(le[1], wires[i].ends[1]);
-
-    sgdAddVec3(le[0], cache_center);
-    sgdAddVec3(le[1], cache_center);
-
-    sgdAddScaledVec3(le[0], wires[i].velocity, t);
-    sgdAddScaledVec3(le[1], wires[i].velocity, t);
+    for (int k = 0; k < 2; ++k) {
+      sgdVec3 pivotoff, vel;
+      sgdCopyVec3(le[k], wires[i].ends[k]);
+      sgdSubVec3(pivotoff, le[k], wires[i].rotation_pivot);
+      sgdVectorProductVec3(vel, wires[i].rotation, pivotoff);
+      sgdAddVec3(vel, wires[i].velocity);
+      sgdAddScaledVec3(le[k], vel, t);
+      sgdAddVec3(le[k], cache_center);
+    }
     
     for (int k=0; k<2; ++k) {
       sgdVec3 isecpoint;
@@ -742,17 +771,15 @@ bool FGGroundCache::get_wire_ends(double t, double end[2][3], double vel[2][3])
   size_t sz = wires.size();
   for (size_t i = 0; i < sz; ++i) {
     if (wires[i].wire_id == wire_id) {
-      sgdCopyVec3(end[0], wires[i].ends[0]);
-      sgdCopyVec3(end[1], wires[i].ends[1]);
-      
-      sgdAddVec3(end[0], cache_center);
-      sgdAddVec3(end[1], cache_center);
-      
-      sgdAddScaledVec3(end[0], wires[i].velocity, t);
-      sgdAddScaledVec3(end[1], wires[i].velocity, t);
-      
-      sgdCopyVec3(vel[0], wires[i].velocity);
-      sgdCopyVec3(vel[1], wires[i].velocity);
+      for (size_t k = 0; k < 2; ++k) {
+        sgdVec3 pivotoff;
+        sgdCopyVec3(end[k], wires[i].ends[k]);
+        sgdSubVec3(pivotoff, end[k], wires[i].rotation_pivot);
+        sgdVectorProductVec3(vel[k], wires[i].rotation, pivotoff);
+        sgdAddVec3(vel[k], wires[i].velocity);
+        sgdAddScaledVec3(end[k], vel[k], t);
+        sgdAddVec3(end[k], cache_center);
+      }
       return true;
     }
   }
