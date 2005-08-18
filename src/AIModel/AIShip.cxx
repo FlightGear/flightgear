@@ -128,7 +128,7 @@ void FGAIShip::Run(double dt) {
 
    
    // adjust heading based on current rudder angle
-   if (rudder <= -0.25 or rudder >= 0.25)  {
+   if (rudder <= -0.25 || rudder >= 0.25)  {
    /*  turn_radius_ft = 0.088362 * speed * speed
                        / tan( fabs(rudder) / SG_RADIANS_TO_DEGREES );
      turn_circum_ft = SGD_2PI * turn_radius_ft;
