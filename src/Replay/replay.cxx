@@ -105,8 +105,13 @@ void FGReplay::update( double dt ) {
     static SGPropertyNode *replay_master
         = fgGetNode( "/sim/freeze/replay", true );
 
-    if( disable_replay->getBoolValue() )
+    if( disable_replay->getBoolValue() ) {
+        if( sim_time != 0.0 ) {
+            // we were recording data
+            init();
+        }
         return;
+    }
 
     if ( replay_master->getBoolValue() ) {
         // don't record the replay session

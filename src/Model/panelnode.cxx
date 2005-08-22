@@ -47,6 +47,8 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
     // panels).  This is a memory leak and should be fixed!`
     _panel->init();
 
+    _panel->setDepthTest( props->getBoolValue("depth-test") );
+
     // Initialize the matrices to the identity.  PLib prints warnings
     // when trying to invert singular matrices (e.g. when not using a
     // 3D panel).

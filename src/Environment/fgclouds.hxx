@@ -59,6 +59,8 @@ private:
 	SGSoundSample *snd_lightning;
 	FGEnvironmentCtrl * _controller;
 	float station_elevation_ft;
+    string last_scenario;
+    SGPropertyNode *last_env_config, *last_env_clouds;
 
 public:
 	FGClouds(FGEnvironmentCtrl * controller);

@@ -71,7 +71,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     last_x(0.0),
     name("nav"),
     num(0),
-    _time_before_search_sec(0.0)
+    _time_before_search_sec(-1.0)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;

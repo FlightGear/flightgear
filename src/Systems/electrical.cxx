@@ -110,6 +110,7 @@ float FGElectricalSupplier::apply_load( float amps, float dt ) {
         return available_amps - amps;
     } else if ( model == FG_EXTERNAL ) {
         // cout << "external amps = " << 0.0 << endl;
+        float available_amps = ideal_amps;
         return available_amps - amps;
     } else {
         SG_LOG( SG_ALL, SG_ALERT, "unknown supplier type" );

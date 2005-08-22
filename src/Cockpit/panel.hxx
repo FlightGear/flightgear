@@ -183,6 +183,8 @@ public:
   virtual bool doMouseAction (int button, int updown, int x, int y);
   virtual bool doLocalMouseAction(int button, int updown, int x, int y);
 
+  virtual void setDepthTest (bool enable);
+
 private:
   void setupVirtualCockpit();
   void cleanupVirtualCockpit();
@@ -209,6 +211,7 @@ private:
   ssgTexture * _mbg[8];
 				// List of instruments in panel.
   instrument_list_type _instruments;
+  bool _enable_depth_test;
 };
 
 

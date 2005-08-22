@@ -168,6 +168,7 @@ FGCroppedTexture::getTexture ()
 static fntRenderer text_renderer;
 static fntTexFont *default_font = 0;
 static fntTexFont *led_font = 0;
+static sgVec4 panel_color;
 
 /**
  * Constructor.
@@ -183,7 +184,8 @@ FGPanel::FGPanel ()
     _jitter(fgGetNode("/sim/panel/jitter", true)),
     _flipx(fgGetNode("/sim/panel/flip-x", true)),
     _xsize_node(fgGetNode("/sim/startup/xsize", true)),
-    _ysize_node(fgGetNode("/sim/startup/ysize", true))
+    _ysize_node(fgGetNode("/sim/startup/ysize", true)),
+    _enable_depth_test(false)
 {
 }
 
@@ -382,8 +384,10 @@ FGPanel::draw()
   glEnable(GL_COLOR_MATERIAL);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
-  glDisable(GL_DEPTH_TEST);
-  sgVec4 panel_color;
+  if( _enable_depth_test )
+      glDepthFunc(GL_ALWAYS);
+  else
+    glDisable(GL_DEPTH_TEST);
 
   FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
   sgCopyVec4( panel_color, l->scene_diffuse());
@@ -451,6 +455,8 @@ FGPanel::draw()
 
 
   // restore some original state
+  if( _enable_depth_test )
+    glDepthFunc(GL_LESS);
   glPopAttrib();
   glPolygonOffset(0, 0);
   glDisable(GL_POLYGON_OFFSET_FILL);
@@ -583,6 +589,10 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   // coordinate handler.
   return doLocalMouseAction(button, updown, x, y);
 } 
+
+void FGPanel::setDepthTest (bool enable) {
+    _enable_depth_test = enable;
+}
 
 
 
@@ -947,15 +957,6 @@ FGTexturedLayer::draw ()
     
 				// From Curt: turn on the panel
 				// lights after sundown.
-    sgVec4 panel_color;
-
-    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
-    sgCopyVec4( panel_color, l->scene_diffuse());
-    if ( fgGetDouble("/systems/electrical/outputs/instrument-lights") > 1.0 ) {
-        if ( panel_color[0] < 0.7 ) panel_color[0] = 0.7;
-        if ( panel_color[1] < 0.2 ) panel_color[1] = 0.2;
-        if ( panel_color[2] < 0.2 ) panel_color[2] = 0.2;
-    }
     glColor4fv( panel_color );
 
     glTexCoord2f(_texture.getMinX(), _texture.getMinY()); glVertex2f(-w2, -h2);

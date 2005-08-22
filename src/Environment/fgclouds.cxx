@@ -44,10 +44,13 @@ extern SGSky *thesky;
 FGClouds::FGClouds(FGEnvironmentCtrl * controller) :
 	station_elevation_ft(0.0),
 	_controller( controller ),
-	snd_lightning(NULL)
+	snd_lightning(NULL),
+    last_scenario( "none" ),
+    last_env_config( new SGPropertyNode() ),
+    last_env_clouds( new SGPropertyNode() )
 {
 	update_event = 0;
-	fgSetString("/environment/weather-scenario", "METAR");
+	fgSetString("/environment/weather-scenario", last_scenario.c_str());
 }
 FGClouds::~FGClouds() {
 }
@@ -433,6 +436,15 @@ void FGClouds::buildScenario( string scenario ) {
 void FGClouds::build(void) {
 	string scenario = fgGetString("/environment/weather-scenario", "METAR");
 
+    if( scenario == last_scenario)
+        return;
+    if( last_scenario == "none" ) {
+        // save clouds and weather conditions
+        SGPropertyNode *param = fgGetNode("/environment/config", true);
+        copyProperties( param, last_env_config );
+        param = fgGetNode("/environment/clouds", true);
+        copyProperties( param, last_env_clouds );
+    }
 	if( scenario == "METAR" ) {
 		string realMetar = fgGetString("/environment/metar/real-metar", "");
 		if( realMetar != "" ) {
@@ -445,8 +457,22 @@ void FGClouds::build(void) {
 		}
 		buildMETAR();
 	}
+    else if( scenario == "none" ) {
+        // restore clouds and weather conditions
+        SGPropertyNode *param = fgGetNode("/environment/config", true);
+        copyProperties( last_env_config, param );
+        param = fgGetNode("/environment/clouds", true);
+        copyProperties( last_env_clouds, param );
+        fgSetDouble("/environment/metar/rain-norm", 0.0);
+        fgSetDouble("/environment/metar/snow-norm", 0.0);
+//	    update_env_config();
+	    // propagate aloft tables
+	    _controller->reinit();
+		buildMETAR();
+    }
 	else
 		buildScenario( scenario );
+    last_scenario = scenario;
 
 	// ...
 	if( snd_lightning == NULL )
