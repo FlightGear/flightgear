@@ -151,7 +151,7 @@ static int write_binary( char cmd_type, FILE *pd, char *cmd, int len ) {
         }
         cout << "' (" << cmd << ")" << endl;
     } else if ( cmd_type == '2' ) {
-        cout << "writing controls packet" << endl;
+        // cout << "writing controls packet" << endl;
     } else {
         cout << "writing unknown command?" << endl;
     }
@@ -401,21 +401,21 @@ void FGExternalPipe::update_binary( double dt ) {
     // cout << "iterations = " << iterations << endl;
     ptr += sizeof(int);
     memcpy( ptr, (char *)(&ctrls), length );
-    cout << "writing control structure, size = "
-         << length + sizeof(int) << endl;
+    // cout << "writing control structure, size = "
+    //      << length + sizeof(int) << endl;
 
     result = write_binary( '2', pd1, buf, length + sizeof(int) );
     fflush( pd1 );
 
     // Read fdm values
     length = sizeof(fdm);
-    cout << "about to read fdm data from remote fdm." << endl;
+    // cout << "about to read fdm data from remote fdm." << endl;
     result = fread( (char *)(& fdm), length, 1, pd2 );
     if ( result != 1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Read error from named pipe: "
                 << fifo_name_2 << " expected 1 item, but got " << result );
     } else {
-        cout << "  read successful." << endl;
+        // cout << "  read successful." << endl;
     }
     FGNetFDM2Props( &fdm, false );
 #endif
