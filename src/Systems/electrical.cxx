@@ -24,7 +24,6 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#include <Scripting/NasalSys.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
