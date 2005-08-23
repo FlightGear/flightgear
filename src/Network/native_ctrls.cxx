@@ -307,6 +307,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         net->flaps_power = htonl(net->flaps_power);
         net->flap_motor_ok = htonl(net->flap_motor_ok);
 
+        net->num_engines = htonl(net->num_engines);
         for ( i = 0; i < (int)net->num_engines; ++i ) {
             net->master_bat[i] = htonl(net->master_bat[i]);
             net->master_alt[i] = htonl(net->master_alt[i]);
@@ -324,12 +325,11 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
             net->oil_press_status[i] = htonl(net->oil_press_status[i]);
             net->fuel_pump_ok[i] = htonl(net->fuel_pump_ok[i]);
         }
-        net->num_engines = htonl(net->num_engines);
 
+        net->num_tanks = htonl(net->num_tanks);
         for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
             net->fuel_selector[i] = htonl(net->fuel_selector[i]);
         }
-        net->num_tanks = htonl(net->num_tanks);
 
         net->cross_feed = htonl(net->cross_feed);
         htond(net->brake_left);
