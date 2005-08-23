@@ -416,8 +416,8 @@ void FGExternalPipe::update_binary( double dt ) {
                 << fifo_name_2 << " expected 1 item, but got " << result );
     } else {
         // cout << "  read successful." << endl;
+        FGNetFDM2Props( &fdm, false );
     }
-    FGNetFDM2Props( &fdm, false );
 #endif
 }
 
