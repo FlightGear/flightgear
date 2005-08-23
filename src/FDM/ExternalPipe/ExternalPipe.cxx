@@ -145,8 +145,10 @@ static int write_binary( char cmd_type, FILE *pd, char *cmd, int len ) {
     memcpy( buf + 3, cmd, len );
 
     if ( cmd_type == '1' ) {
-        cout << "writing '";
-        for ( int i = 0; i < len + 3; ++i ) {
+        cout << "writing ";
+        cout << (int)hi << " ";
+        cout << (int)lo << " '";
+        for ( int i = 2; i < len + 3; ++i ) {
             cout << buf[i];
         }
         cout << "' (" << cmd << ")" << endl;
