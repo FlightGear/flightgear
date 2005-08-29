@@ -258,6 +258,9 @@ void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
         vely = (int32_t)read_swab( buf, 20, 4 );
         velz = (int32_t)read_swab( buf, 24, 4 );
         // cout << "  vel = " << velx << "," << vely << "," << velz << endl;
+        double vel_cms = sqrt( velx*velx + vely*vely + velz*velz );
+        double vel_ms = vel_cms / 100.0;
+        pos->speed_kts = vel_ms * SG_METER_TO_NM * 3600;
 
         // flags
         flags = (uint8_t)read_swab( buf, 28, 1 );

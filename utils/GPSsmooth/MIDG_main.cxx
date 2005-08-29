@@ -8,7 +8,9 @@
 #include <plib/net.h>
 #include <plib/sg.h>
 
+#include <simgear/constants.h>
 #include <simgear/io/lowlevel.hxx> // endian tests
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Network/net_ctrls.hxx>
@@ -37,6 +39,7 @@ static string file = "";
 
 // Master time counter
 float sim_time = 0.0f;
+double frame_us = 0.0f;
 
 // sim control
 SGTimeStamp last_time_stamp;
@@ -44,6 +47,10 @@ SGTimeStamp current_time_stamp;
 
 // altitude offset
 double alt_offset = 0.0;
+
+// for speed estimate
+// double last_lat = 0.0, last_lon = 0.0;
+// double kts_filter = 0.0;
 
 bool inited = false;
 
@@ -110,7 +117,19 @@ static void midg2fg( const MIDGpos pos, const MIDGatt att,
     fdm->phidot = 0.0;
     fdm->thetadot = 0.0;
     fdm->psidot = 0.0;
+
+    // estimate speed
+    // double az1, az2, dist;
+    // geo_inverse_wgs_84( pos.altitude_msl, last_lat, last_lon,
+    //                     pos.lat_deg, pos.lon_deg, &az1, &az2, &dist );
+    // double v_ms = dist / (frame_us / 1000000);
+    // double v_kts = v_ms * SG_METER_TO_NM * 3600;
+    // kts_filter = (0.99 * kts_filter) + (0.01 * v_kts);
     fdm->vcas = pos.speed_kts;
+    // last_lat = pos.lat_deg;
+    // last_lon = pos.lon_deg;
+    // cout << "kts_filter = " << kts_filter << " vel = " << pos.speed_kts << endl;
+
     fdm->climb_rate = 0; // fps
     // cout << "climb rate = " << aero->hdota << endl;
     fdm->v_north = 0.0;
@@ -396,7 +415,7 @@ int main( int argc, char **argv ) {
     cout << "Track end time is " << end_time << endl;
     cout << "Duration = " << end_time - current_time << endl;
 
-    double frame_us = 1000000.0 / hertz;
+    frame_us = 1000000.0 / hertz;
     if ( frame_us < 0.0 ) {
         frame_us = 0.0;
     }
