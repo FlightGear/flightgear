@@ -143,7 +143,7 @@ FGModelMgr::update (double dt)
     if (instance->heading_deg_node != 0)
       model->setHeadingDeg(instance->heading_deg_node->getDoubleValue());
 
-    instance->model->update( globals->get_scenery()->get_center() );
+    instance->model->update();
   }
 }
 

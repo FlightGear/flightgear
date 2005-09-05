@@ -115,8 +115,7 @@ FGAircraftModel::update (double dt)
   _aircraft->setOrientation(fgGetDouble("/orientation/roll-deg"),
 			    fgGetDouble("/orientation/pitch-deg"),
 			    fgGetDouble("/orientation/heading-deg"));
-  _aircraft->update( globals->get_scenery()->get_center() );
-
+  _aircraft->update();
 }
 
 void

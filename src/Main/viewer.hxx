@@ -219,8 +219,6 @@ public:
     virtual float *get_world_up() {if ( _dirty ) { recalc(); } return _world_up; }
     // Get the relative (to scenery center) view position in fgfs coordinates.
     virtual float * getRelativeViewPos ();
-    // Get the absolute zero-elevation view position in fgfs coordinates.
-    virtual float * getZeroElevViewPos ();
     // Get surface east vector
     virtual float *get_surface_east() {	if ( _dirty ) { recalc(); } return _surface_east; }
     // Get surface south vector
@@ -258,8 +256,6 @@ public:
         _ground_level_nearplane_m = near_m;
     }
 
-    void set_scenery_center(const Point3D& center);
-
     //////////////////////////////////////////////////////////////////////
     // Part 5: misc setters and getters
     //////////////////////////////////////////////////////////////////////
@@ -282,7 +278,6 @@ private:
 
     mutable sgdVec3 _absolute_view_pos;
     mutable sgVec3 _relative_view_pos;
-    mutable sgVec3 _zero_elev_view_pos;
 
     double _lon_deg;
     double _lat_deg;

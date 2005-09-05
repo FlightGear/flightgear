@@ -80,5 +80,5 @@ void FGAIEntity::RegisterTransmission(int code) {
 void FGAIEntity::Transform() {
     _aip.setPosition(_pos.lon(), _pos.lat(), _pos.elev() * SG_METER_TO_FEET);
     _aip.setOrientation(_roll, _pitch, _hdg);
-    _aip.update( globals->get_scenery()->get_center() );    
+    _aip.update();    
 }

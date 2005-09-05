@@ -12,6 +12,7 @@
 #ifndef _NET_CTRLS_HXX
 #define _NET_CTRLS_HXX
 
+#include <simgear/compiler.h>
 
 // NOTE: this file defines an external interface structure.  Due to
 // variability between platforms and architectures, we only used fixed
@@ -21,13 +22,6 @@
 
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
-#elif defined( _MSC_VER ) || defined(__MINGW32__) || defined(sun)
-typedef signed short     int16_t;
-typedef signed int       int32_t;
-typedef unsigned short   uint16_t;
-typedef unsigned int     uint32_t;
-#else
-# error "Port me! Platforms that don't have <stdint.h> need to define int8_t, et. al."
 #endif
 
 const uint32_t FG_NET_CTRLS_VERSION = 26;

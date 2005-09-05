@@ -558,8 +558,6 @@ static void fgMainLoop( void ) {
       }
     }
 
-    view_location->set_tile_center( globals->get_scenery()->get_next_center() );
-
 #ifdef ENABLE_AUDIO_SUPPORT
     // Right now we make a simplifying assumption that the primary
     // aircraft is the source of all sounds and that all sounds are
@@ -573,10 +571,13 @@ static void fgMainLoop( void ) {
         get_aircraft_model()->get3DModel()->getSGLocation();
 
     // set positional offset for sources
-    sgVec3 source_pos_offset;
-    sgSubVec3( source_pos_offset,
-               view_location->get_view_pos(), acmodel_loc->get_view_pos() );
+    sgdVec3 dsource_pos_offset;
+    sgdSubVec3( dsource_pos_offset,
+                view_location->get_absolute_view_pos(),
+                acmodel_loc->get_absolute_view_pos() );
     // cout << "pos all = " << source_pos_offset[0] << " " << source_pos_offset[1] << " " << source_pos_offset[2] << endl;
+    sgVec3 source_pos_offset;
+    sgSetVec3(source_pos_offset, dsource_pos_offset);
     globals->get_soundmgr()->set_source_pos_all( source_pos_offset );
 
     // set the velocity

@@ -457,18 +457,17 @@ void FGTileMgr::prep_ssg_nodes( SGLocation *location, float vis ) {
     // traverse the potentially viewable tile list and update range
     // selector and transform
 
-    Point3D center = location->get_tile_center();
-    if (center == Point3D(0.0))
-      return;
     float *up = location->get_world_up();
 
     FGTileEntry *e;
     tile_cache.reset_traversal();
 
+    const double *vp = location->get_absolute_view_pos();
+    Point3D viewpos(vp[0], vp[1], vp[2]);
     while ( ! tile_cache.at_end() ) {
         // cout << "processing a tile" << endl;
         if ( (e = tile_cache.get_current()) ) {
-            e->prep_ssg_node( center, up, vis);
+            e->prep_ssg_node( viewpos, up, vis);
         } else {
             SG_LOG(SG_INPUT, SG_ALERT, "warning ... empty tile in cache");
         }

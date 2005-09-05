@@ -99,7 +99,7 @@ void FGAIBase::Transform() {
       } else {
          aip.setOrientation(roll, pitch, hdg);
       }
-      aip.update( globals->get_scenery()->get_center() );    
+      aip.update();    
     }
 }
 

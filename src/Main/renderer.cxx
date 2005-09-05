@@ -314,7 +314,8 @@ FGRenderer::update( bool refresh_camera_settings ) {
     // calculate our current position in cartesian space
     Point3D cntr = globals->get_scenery()->get_next_center();
     globals->get_scenery()->set_center(cntr);
-    current__view->set_scenery_center(cntr);
+    // Force update of center dependent values ...
+    current__view->set_dirty();
 
     if ( refresh_camera_settings ) {
         // update view port
