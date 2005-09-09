@@ -28,6 +28,7 @@ class FGATCProjection {
 
 public:
     FGATCProjection();
+    FGATCProjection(Point3D centre);
     ~FGATCProjection();
 
     void Init(Point3D centre);

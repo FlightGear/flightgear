@@ -37,6 +37,11 @@ FGATCProjection::FGATCProjection() {
     correction_factor = cos(origin.lat() * DCL_DEGREES_TO_RADIANS);
 }
 
+FGATCProjection::FGATCProjection(Point3D centre) {
+    origin = centre;
+    correction_factor = cos(origin.lat() * DCL_DEGREES_TO_RADIANS);
+}
+
 FGATCProjection::~FGATCProjection() {
 }
 
