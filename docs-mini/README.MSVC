@@ -1,10 +1,20 @@
-How to compile FlightGear with Microsoft Visual C++ 6.0
+How to compile FlightGear with Microsoft Visual C++ 7.0
 ======================================================
 
-FlightGear ships with MSVC project files.  That hopefully is a good start,
-but these instructions really need to be filled in and updated by an MSVC 
-developer.
+I am receiving an increasing number of request for working 
+project files for MSVC. While I can't reply specifically 
+to everybody, I packed my current, unedited, project files
+here :
+ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/
 
-For now, there are several MSVC developers on the FlightGear-devel mailing
-list, so if you do run into problems or issues, please post your questions
-there.
+They are for MSVC 7. I am not trying to compile with MSVC 6
+anymore because it is an old compiler ( released 5 years ago )
+that has serious bugs and limitations that would make the 
+source ugly. For those that want to try, there are already 
+.dsp files in plib, SimGear and FlightGear source trees.
+
+Support request must be directed to the mailing list.
+
+
+Pthread support for Windows can be obtained here:
+http://sourceware.org/pthreads-win32/
