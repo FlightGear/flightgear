@@ -229,7 +229,7 @@ case "${host}" in
     case "${host}" in
     *-*-mingw32*)
         echo "********** BUILDING FOR MINGW32 *************"
-        base_LIBS="$base_LIBS -lws2_32"
+        network_LIBS="$network_LIBS -lws2_32"
         ;;
     esac
 

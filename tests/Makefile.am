@@ -3,6 +3,7 @@ bin_PROGRAMS = est-epsilon gl-info
 noinst_PROGRAMS = test-gethostname test-mktime test-text test-up test-env-map
 
 est_epsilon_SOURCES = est-epsilon.c
+est_epsilon_LDADD =  $(opengl_LIBS)
 
 gl_info_SOURCES = gl-info.c
 gl_info_LDADD = $(opengl_LIBS)

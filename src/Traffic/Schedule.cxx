@@ -447,7 +447,7 @@ void FGAISchedule::setClosestDistanceToUser()
 
   FGAirport *dep;
   
-#ifdef __CYGWIN__
+#if defined( __CYGWIN__) || defined( __MINGW32__)
   #define HUGE HUGE_VAL
 #endif
   distanceToUser = HUGE;
