@@ -309,6 +309,7 @@ case "${host}" in
     save_LIBS=$LIBS
     LIBS="$LIBS $thread_LIBS"
     AC_SEARCH_LIBS(alGenBuffers, openal)
+    AC_SEARCH_LIBS(alutInit, [ alut openal ] )
     OPENAL_OK="$ac_cv_search_alGenBuffers"
     openal_LIBS="$LIBS"
     LIBS=$save_LIBS
