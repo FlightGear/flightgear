@@ -651,14 +651,14 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node)
     }
 
     output.resize(2, 0.0);
-    input.resize(samples, 0.0);
+    input.resize(samples + 1, 0.0);
 }
 
 void FGDigitalFilter::update(double dt)
 {
     if ( input_prop != NULL ) {
         input.push_front(input_prop->getDoubleValue());
-        input.resize(samples, 0.0);
+        input.resize(samples + 1, 0.0);
         // no sense if there isn't an input :-)
         enabled = true;
     } else {
