@@ -326,6 +326,7 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) ),
       metar_max_age( fgGetNode("/environment/params/metar-max-age-min", true) ),
       _error_count( 0 ),
+      _dt( 0.0 ),
       _error_dt( 0.0 )
 {
 #if defined(ENABLE_THREADS) && ENABLE_THREADS
@@ -394,6 +395,11 @@ FGMetarEnvironmentCtrl::init ()
         = fgGetNode( "/position/latitude-deg", true );
 
     bool found_metar = false;
+    long max_age = metar_max_age->getLongValue();
+    // Don't check max age during init so that we don't loop over a lot
+    // of airports metar if there is a problem.
+    // The update() calls will find a correct metar if things went wrong here
+    metar_max_age->setLongValue(60 * 24 * 7);
 
     while ( !found_metar && (_error_count < 3) ) {
         FGAirport a = globals->get_airports()
@@ -418,6 +424,7 @@ FGMetarEnvironmentCtrl::init ()
             globals->get_airports()->no_metar( a.getId() );
         }
     }
+    metar_max_age->setLongValue(max_age);
 }
 
 void
@@ -580,7 +587,8 @@ FGMetarEnvironmentCtrl::update_metar_properties( FGMetar *m )
 
     fgSetString("/environment/metar/real-metar", m->getData());
 	// don't update with real weather when we use a custom weather scenario
-	if( strcmp(fgGetString("/environment/weather-scenario", "METAR"), "METAR") )
+	const char *current_scenario = fgGetString("/environment/weather-scenario", "METAR");
+	if( strcmp(current_scenario, "METAR") && strcmp(current_scenario, "none"))
 		return;
     fgSetString("/environment/metar/last-metar", m->getData());
     fgSetString("/environment/metar/station-id", m->getId());
