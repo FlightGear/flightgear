@@ -30,10 +30,6 @@
 #include "mpplayer.hxx"
 #include "mpmessages.hxx"
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include STL_STRING
 SG_USING_STD(string);
 
@@ -71,6 +67,8 @@ public:
     /** Initiates processing of any data waiting at the rx socket.
     */
     void ProcessData(void);
+    void ProcessPosMsg ( const char *Msg );
+    void ProcessChatMsg ( const char *Msg );
 
     /** Updates the model positions for the players
     */

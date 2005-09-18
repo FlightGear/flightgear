@@ -105,6 +105,8 @@ bool MPPlayer::Open(const string &sAddress, const int &iPort, const string &sCal
         m_sCallsign = sCallsign;
         m_sModelName = sModelName;
         m_bLocalPlayer = bLocalPlayer;
+        SG_LOG( SG_NETWORK, SG_ALERT, "Initialising " << m_sCallsign
+           << " using '" << m_sModelName << "'" );
 
         // If the player is remote then load the model
         if (!bLocalPlayer) {
@@ -169,7 +171,6 @@ void MPPlayer::Close(void) {
 void MPPlayer::SetPosition(const sgQuat PlayerOrientation,
                            const sgdVec3 PlayerPosition) {
 
-
     // Save the position matrix and update time
     if (m_bInitialised) {
         sgdCopyVec3(m_ModelPosition, PlayerPosition);
@@ -177,7 +178,6 @@ void MPPlayer::SetPosition(const sgQuat PlayerOrientation,
         time(&m_LastUpdate);
         m_bUpdated = true;
     }
-
 
 }
 
@@ -281,10 +281,17 @@ void MPPlayer::FillPosMsg(T_MsgHdr *MsgHdr, T_PositionMsg *PosMsg) {
 
     strncpy(PosMsg->sModel, m_sModelName.c_str(), MAX_MODEL_NAME_LEN);
     PosMsg->sModel[MAX_MODEL_NAME_LEN - 1] = '\0';
+    /*
     sgdCopyVec3(PosMsg->PlayerPosition, m_ModelPosition);
     sgCopyQuat(PosMsg->PlayerOrientation, m_ModelOrientation);
-
-
+    */
+    PosMsg->PlayerPosition[0] = XDR_encode_double (m_ModelPosition[0]);
+    PosMsg->PlayerPosition[1] = XDR_encode_double (m_ModelPosition[1]);
+    PosMsg->PlayerPosition[2] = XDR_encode_double (m_ModelPosition[2]);
+    PosMsg->PlayerOrientation[0] = XDR_encode_float (m_ModelOrientation[0]);
+    PosMsg->PlayerOrientation[1] = XDR_encode_float (m_ModelOrientation[1]);
+    PosMsg->PlayerOrientation[2] = XDR_encode_float (m_ModelOrientation[2]);
+    PosMsg->PlayerOrientation[3] = XDR_encode_float (m_ModelOrientation[3]);
 }
 
 
@@ -294,30 +301,31 @@ void MPPlayer::FillPosMsg(T_MsgHdr *MsgHdr, T_PositionMsg *PosMsg) {
 ******************************************************************/
 void MPPlayer::FillMsgHdr(T_MsgHdr *MsgHdr, const int iMsgId) {
 
-    struct in_addr address;
-
-    MsgHdr->MsgId = iMsgId;
+    struct in_addr  address;
+    uint32_t        len;
 
     switch (iMsgId) {
         case CHAT_MSG_ID:
-            MsgHdr->iMsgLen = sizeof(T_MsgHdr) + sizeof(T_ChatMsg);
+            len = sizeof(T_MsgHdr) + sizeof(T_ChatMsg);
             break;
         case POS_DATA_ID:
-            MsgHdr->iMsgLen = sizeof(T_MsgHdr) + sizeof(T_PositionMsg);
+            len = sizeof(T_MsgHdr) + sizeof(T_PositionMsg);
             break;
         default:
-            MsgHdr->iMsgLen = sizeof(T_MsgHdr);
+            len = sizeof(T_MsgHdr);
             break;
     }
-
-    address.s_addr = inet_addr( m_PlayerAddress.getHost() );
-    MsgHdr->lReplyAddress = address.s_addr;
-
-    MsgHdr->iReplyPort = m_PlayerAddress.getPort();
+    MsgHdr->Magic           = XDR_encode_uint32 (MSG_MAGIC);
+    MsgHdr->Version         = XDR_encode_uint32 (PROTO_VER);
+    MsgHdr->MsgId           = XDR_encode_uint32 (iMsgId);
+    MsgHdr->iMsgLen         = XDR_encode_uint32 (len);
+    // inet_addr returns address in network byte order
+    // no need to encode it
+    MsgHdr->lReplyAddress   = inet_addr( m_PlayerAddress.getHost() );
+    MsgHdr->iReplyPort      = XDR_encode_uint32 (m_PlayerAddress.getPort());
 
     strncpy(MsgHdr->sCallsign, m_sCallsign.c_str(), MAX_CALLSIGN_LEN);
     MsgHdr->sCallsign[MAX_CALLSIGN_LEN - 1] = '\0';
-
 
 }
 

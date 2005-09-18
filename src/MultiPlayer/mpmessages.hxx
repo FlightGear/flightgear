@@ -36,61 +36,55 @@
 ******************************************************************/
 
 #include <simgear/compiler.h>
-
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
+#include "tiny_xdr.hpp"
 #include <plib/sg.h>
 
+// magic value for messages
+const uint32_t MSG_MAGIC = 0x46474653;  // "FGFS"
+// protocoll version
+const uint32_t PROTO_VER = 0x00010001;  // 1.1
+
 // Message identifiers
-#define CHAT_MSG_ID 1
-#define UNUSABLE_POS_DATA_ID 2
-#define POS_DATA_ID 3
-/* should be a multiple of 8! */
-#define MAX_CALLSIGN_LEN 8
-/** Header for use with all messages sent */
-typedef struct {
+#define CHAT_MSG_ID             1
+#define UNUSABLE_POS_DATA_ID    2
+#define POS_DATA_ID             3
 
-    /** Message identifier, multiple of 8! */
-    uint32_t MsgId;
+// XDR demands 4 byte alignment, but some compilers use8 byte alignment
+// so it's safe to let the overall size of a netmork message be a 
+// multiple of 8!
+#define MAX_CALLSIGN_LEN        8
+#define MAX_CHAT_MSG_LEN        48
+#define MAX_MODEL_NAME_LEN      48
 
-    /** Length of the message inclusive of this header */
-    uint32_t iMsgLen;
-
-    /** IP address for reply to message (player's receiver address) */
-    uint32_t lReplyAddress;
-
-    /** Port for replies (player's receiver port) */
-    uint32_t iReplyPort;
-
-    /** Callsign used by the player */
-    char sCallsign[MAX_CALLSIGN_LEN];
-
-} T_MsgHdr;
-
-#define MAX_CHAT_MSG_LEN 48
-/** Chat message */
-typedef struct {
-
-    /** Text of chat message */
-    char sText[MAX_CHAT_MSG_LEN];
-
-} T_ChatMsg;
-
-/* should be a multiple of 8! */
-#define MAX_MODEL_NAME_LEN 48
 /** Aircraft position message */
-typedef struct {
+typedef xdr_data2_t xdrPosition[3];
+typedef xdr_data_t  xdrOrientation[4];
 
-    /** Name of the aircraft model */
-    char sModel[MAX_MODEL_NAME_LEN];
+// Header for use with all messages sent 
+class T_MsgHdr {
+public:  
+    xdr_data_t  Magic;                  // Magic Value
+    xdr_data_t  Version;                // Protocoll version
+    xdr_data_t  MsgId;                  // Message identifier 
+    xdr_data_t  iMsgLen;                // absolue length of message
+    xdr_data_t  lReplyAddress;          // (player's receiver address
+    xdr_data_t  iReplyPort;             // player's receiver port
+    char sCallsign[MAX_CALLSIGN_LEN];   // Callsign used by the player
+};
 
-    /** Position data for the aircraft */
-    sgdVec3 PlayerPosition;
-    sgQuat PlayerOrientation;
+// Chat message 
+class T_ChatMsg {
+public:    
+    char sText[MAX_CHAT_MSG_LEN];       // Text of chat message
+};
 
-} T_PositionMsg;
-
+// Position message
+class T_PositionMsg {
+public:
+    char sModel[MAX_MODEL_NAME_LEN];    // Name of the aircraft model
+    xdrPosition     PlayerPosition;     // players position
+    xdrOrientation  PlayerOrientation;  // players orientation
+};
 
 #endif
 

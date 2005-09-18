@@ -210,123 +210,161 @@ void FGMultiplayRxMgr::ProcessData(void) {
     char sMsg[MAX_PACKET_SIZE];         // Buffer for received message
     int iBytes;                         // Bytes received
     T_MsgHdr *MsgHdr;                   // Pointer to header in received data
-    T_ChatMsg *ChatMsg;                 // Pointer to chat message in received data
-    T_PositionMsg *PosMsg;              // Pointer to position message in received data
-    char *sIpAddress;                   // Address information from header
-    char *sModelName;                   // Model that the remote player is using
-    char *sCallsign;                    // Callsign of the remote player
-    struct in_addr PlayerAddress;       // Used for converting the player's address into dot notation
-    int iPlayerCnt;                     // Count of players in player array
-    bool bActivePlayer = false;         // The state of the player that sent the data
-    int iPort;                          // Port that the remote player receives on
 
 
-    if (m_bInitialised) {
-
-        // Read the receive socket and process any data
-        do {
-
-            // Although the recv call asks for MAX_PACKET_SIZE of data,
-            // the number of bytes returned will only be that of the next
-            // packet waiting to be processed.
-            iBytes = mDataRxSocket->recv(sMsg, MAX_PACKET_SIZE, 0);
-
-            // Data received
-            if (iBytes > 0) {
-                if (iBytes >= (int)sizeof(MsgHdr)) {
-
-                    // Read header
-                    MsgHdr = (T_MsgHdr *)sMsg;
-                    PlayerAddress.s_addr = MsgHdr->lReplyAddress;
-                    sIpAddress = inet_ntoa(PlayerAddress);
-                    iPort = MsgHdr->iReplyPort;
-                    sCallsign = MsgHdr->sCallsign;
-
-                    // Process the player data unless we generated it
-                    if (m_sCallsign != MsgHdr->sCallsign) {
-
-
-                        // Process messages
-                        switch(MsgHdr->MsgId) {
-                            case CHAT_MSG_ID:
-                                if (MsgHdr->iMsgLen == sizeof(T_MsgHdr) + sizeof(T_ChatMsg)) {
-                                    ChatMsg = (T_ChatMsg *)(sMsg + sizeof(T_MsgHdr));
-                                    SG_LOG( SG_NETWORK, SG_BULK, "Chat [" << MsgHdr->sCallsign << "]" << " " << ChatMsg->sText );
-                                } else {
-                                    SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::MP_ProcessData - Chat message received with insufficient data" );
-                                }
-                                break;
-
-                            case POS_DATA_ID:
-                                if (MsgHdr->iMsgLen == sizeof(T_MsgHdr) + sizeof(T_PositionMsg)) {
-                                    PosMsg = (T_PositionMsg *)(sMsg + sizeof(T_MsgHdr));
-                                    sModelName = PosMsg->sModel;
-
-                                    // Check if the player is already in the game by using the Callsign.
-                                    bActivePlayer = false;
-                                    for (iPlayerCnt = 0; iPlayerCnt < MAX_PLAYERS; iPlayerCnt++) {
-                                        if (m_Player[iPlayerCnt] != NULL) {
-                                            if (m_Player[iPlayerCnt]->CompareCallsign(MsgHdr->sCallsign)) {
-
-                                                // Player found. Update the data for the player.
-                                                m_Player[iPlayerCnt]->SetPosition(PosMsg->PlayerOrientation, PosMsg->PlayerPosition);
-                                                bActivePlayer = true;
-
-                                            }
-                                        }
-                                    }
-
-                                    // Player not active, so add as new player
-                                    if (!bActivePlayer) {
-                                        iPlayerCnt = 0;
-                                        do {
-                                            if (m_Player[iPlayerCnt] == NULL) {
-                                                SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayRxMgr::ProcessRxData - Add new player. IP: " << sIpAddress << ", Call: " <<  sCallsign << ", model: " << sModelName );
-                                                m_Player[iPlayerCnt] = new MPPlayer;
-                                                m_Player[iPlayerCnt]->Open(sIpAddress, iPort, sCallsign, sModelName, false);
-                                                m_Player[iPlayerCnt]->SetPosition(PosMsg->PlayerOrientation, PosMsg->PlayerPosition);
-                                                bActivePlayer = true;
-                                            }
-                                            iPlayerCnt++;
-                                        } while (iPlayerCnt < MAX_PLAYERS && !bActivePlayer);
-
-                                        // Check if the player was added
-                                        if (!bActivePlayer) {
-                                            if (iPlayerCnt == MAX_PLAYERS) {
-                                                SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::MP_ProcessData - Unable to add new player (" << sCallsign << "). Too many players." );
-                                            }
-                                        }
-                                    }
-
-                                } else {
-                                    SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::MP_ProcessData - Position message received with insufficient data" );
-                                }
-                                break;
-
-                            default:
-                                SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::MP_ProcessData - Unknown message Id received: " << MsgHdr->MsgId );
-                                break;
-
-
-                        }
-                    }
-                }
-
-
-            // Error or no data
-            } else if (iBytes == -1) {
-                if (errno != EAGAIN) {
-                    perror("FGMultiplayRxMgr::MP_ProcessData");
-                }
-            }
-
-        } while (iBytes > 0);
-
+    if (! m_bInitialised) {
+        return;
     }
 
+    // Read the receive socket and process any data
+    do {
+
+        // Although the recv call asks for MAX_PACKET_SIZE of data,
+        // the number of bytes returned will only be that of the next
+        // packet waiting to be processed.
+        iBytes = mDataRxSocket->recv(sMsg, MAX_PACKET_SIZE, 0);
+
+        // no Data received
+        if (iBytes <= 0) {
+            if (errno != EAGAIN) {
+                perror("FGMultiplayRxMgr::MP_ProcessData");
+            }
+            return;
+        }
+        if (iBytes <= (int)sizeof(MsgHdr)) {
+            SG_LOG( SG_NETWORK, SG_ALERT,
+              "FGMultiplayRxMgr::MP_ProcessData - received message with insufficient data" );
+            return;
+        }
+        // Read header
+        MsgHdr = (T_MsgHdr *)sMsg;
+        MsgHdr->Magic           = XDR_decode_uint32 (MsgHdr->Magic);
+        MsgHdr->Version         = XDR_decode_uint32 (MsgHdr->Version);
+        MsgHdr->MsgId           = XDR_decode_uint32 (MsgHdr->MsgId);
+        MsgHdr->iMsgLen         = XDR_decode_uint32 (MsgHdr->iMsgLen);
+        MsgHdr->iReplyPort      = XDR_decode_uint32 (MsgHdr->iReplyPort);
+        if (MsgHdr->Magic != MSG_MAGIC) {
+            SG_LOG( SG_NETWORK, SG_ALERT,
+              "FGMultiplayRxMgr::MP_ProcessData - message has invalid magic number!" );
+        }
+        if (MsgHdr->Version != PROTO_VER) {
+            SG_LOG( SG_NETWORK, SG_ALERT,
+              "FGMultiplayRxMgr::MP_ProcessData - message has invalid protocoll number!" );
+        }
+
+        // Process the player data unless we generated it
+        if (m_sCallsign == MsgHdr->sCallsign) {
+            return;
+        }
+        
+        // Process messages
+        switch(MsgHdr->MsgId) {
+            case CHAT_MSG_ID:
+                ProcessChatMsg ((char*) & sMsg);
+                break;
+
+            case POS_DATA_ID:
+                ProcessPosMsg ((char*) & sMsg);
+                break;
+
+            default:
+                SG_LOG( SG_NETWORK, SG_ALERT,
+                  "FGMultiplayRxMgr::MP_ProcessData - Unknown message Id received: " 
+                  << MsgHdr->MsgId );
+                break;
+        } // switch
+    } while (iBytes > 0);
 
 }
 
+void FGMultiplayRxMgr::ProcessPosMsg ( const char *Msg ) {
+
+    T_PositionMsg *PosMsg;              // Pointer to position message in received data
+    T_MsgHdr *MsgHdr;                   // Pointer to header in received data
+    int iPlayerCnt;                     // Count of players in player array
+    bool bActivePlayer = false;         // The state of the player that sent the data
+    sgQuat  Orientation;
+    sgdVec3 Position;
+    char *sIpAddress;                   // Address information from header
+    struct in_addr PlayerAddress;       // Used for converting the player's address into dot notation
+
+    MsgHdr = (T_MsgHdr *)Msg;
+    if (MsgHdr->iMsgLen != sizeof(T_MsgHdr) + sizeof(T_PositionMsg)) {
+        SG_LOG( SG_NETWORK, SG_ALERT,
+          "FGMultiplayRxMgr::MP_ProcessData - Position message received with insufficient data" );
+        return;
+    }
+
+    PosMsg = (T_PositionMsg *)(Msg + sizeof(T_MsgHdr));
+    Position[0] = XDR_decode_double (PosMsg->PlayerPosition[0]);
+    Position[1] = XDR_decode_double (PosMsg->PlayerPosition[1]);
+    Position[2] = XDR_decode_double (PosMsg->PlayerPosition[2]);
+    Orientation[0] = XDR_decode_float (PosMsg->PlayerOrientation[0]);
+    Orientation[1] = XDR_decode_float (PosMsg->PlayerOrientation[1]);
+    Orientation[2] = XDR_decode_float (PosMsg->PlayerOrientation[2]);
+    Orientation[3] = XDR_decode_float (PosMsg->PlayerOrientation[3]);
+
+    // Check if the player is already in the game by using the Callsign.
+    for (iPlayerCnt = 0; iPlayerCnt < MAX_PLAYERS; iPlayerCnt++) {
+        if (m_Player[iPlayerCnt] != NULL) {
+            if (m_Player[iPlayerCnt]->CompareCallsign(MsgHdr->sCallsign)) {
+                // Player found. Update the data for the player.
+                m_Player[iPlayerCnt]->SetPosition(Orientation, Position);
+                bActivePlayer = true;
+            }
+        }
+    }
+
+    if (bActivePlayer) {
+        // nothing more to do
+        return;
+    }
+    // Player not active, so add as new player
+    iPlayerCnt = 0;
+    do {
+        if (m_Player[iPlayerCnt] == NULL) {
+            PlayerAddress.s_addr = MsgHdr->lReplyAddress;	// which is unecoded
+            sIpAddress  = inet_ntoa(PlayerAddress);
+            SG_LOG( SG_NETWORK, SG_ALERT,
+              "FGMultiplayRxMgr::ProcessRxData - Add new player. IP: " << sIpAddress 
+              << ", Call: " <<  MsgHdr->sCallsign 
+              << ", model: " << PosMsg->sModel);
+            m_Player[iPlayerCnt] = new MPPlayer;
+            m_Player[iPlayerCnt]->Open(sIpAddress, MsgHdr->iReplyPort,
+			    MsgHdr->sCallsign, PosMsg->sModel, false);
+            m_Player[iPlayerCnt]->SetPosition(Orientation, Position);
+            bActivePlayer = true;
+        }
+        iPlayerCnt++;
+    } while (iPlayerCnt < MAX_PLAYERS && !bActivePlayer);
+
+    // Check if the player was added
+    if (!bActivePlayer) {
+        if (iPlayerCnt == MAX_PLAYERS) {
+            SG_LOG( SG_NETWORK, SG_ALERT,
+              "FGMultiplayRxMgr::MP_ProcessData - Unable to add new player ("
+              << MsgHdr->sCallsign 
+              << "). Too many players." );
+        }
+    }
+
+}
+
+void FGMultiplayRxMgr::ProcessChatMsg ( const char *Msg ) {
+
+    T_ChatMsg *ChatMsg;                 // Pointer to chat message in received data
+    T_MsgHdr *MsgHdr;                   // Pointer to header in received data
+
+    MsgHdr = (T_MsgHdr *)Msg;
+    if (MsgHdr->iMsgLen != sizeof(T_MsgHdr) + sizeof(T_ChatMsg)) {
+        SG_LOG( SG_NETWORK, SG_ALERT,
+                "FGMultiplayRxMgr::MP_ProcessData - Chat message received with insufficient data" );
+        return;
+    }
+
+    ChatMsg = (T_ChatMsg *)(Msg + sizeof(T_MsgHdr));
+    SG_LOG( SG_NETWORK, SG_BULK, "Chat [" << MsgHdr->sCallsign << "]" << " " << ChatMsg->sText );
+}
 
 /******************************************************************
 * Name: Update
