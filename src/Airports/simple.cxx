@@ -1170,19 +1170,21 @@ FGAirportList::FGAirportList()
     ulCloseDir(d);
 }
 
+
+FGAirportList::~FGAirportList( void ) {
+    for(unsigned int i = 0; i < airports_array.size(); ++i) {
+        delete airports_array[i];
+    }
+}
+
+
 // add an entry to the list
 void FGAirportList::add( const string id, const double longitude,
                          const double latitude, const double elevation,
                          const string name, const bool has_metar )
 {
-  FGRunwayPreference rwyPrefs;
-    FGAirport a(id, longitude, latitude, elevation, name, has_metar);
-    //a._id = id;
-    //a._longitude = longitude;
-    //a._latitude = latitude;
-    //a._elevation = elevation;
-    //a._name = name;
-    //a._has_metar = has_metar;
+    FGRunwayPreference rwyPrefs;
+    FGAirport* a = new FGAirport(id, longitude, latitude, elevation, name, has_metar);
     SGPath parkpath( globals->get_fg_root() );
     parkpath.append( "/Airports/AI/" );
     parkpath.append(id);
@@ -1194,52 +1196,63 @@ void FGAirportList::add( const string id, const double longitude,
     rwyPrefPath.append("rwyuse.xml");
     if (ai_dirs.find(id.c_str()) != ai_dirs.end()
         && parkpath.exists()) 
-      {
-	try {
-	  readXML(parkpath.str(),a);
-	} 
-	catch  (const sg_exception &e) {
-	  //cerr << "unable to read " << parkpath.str() << endl;
-	}
-      }
+    {
+        try {
+            readXML(parkpath.str(),*a);
+        } 
+        catch  (const sg_exception &e) {
+            //cerr << "unable to read " << parkpath.str() << endl;
+        }
+    }
     if (ai_dirs.find(id.c_str()) != ai_dirs.end()
         && rwyPrefPath.exists()) 
-      {
-	try {
-	  readXML(rwyPrefPath.str(), rwyPrefs);
-	  a.setRwyUse(rwyPrefs);
-	}
-	catch  (const sg_exception &e) {
-	  //cerr << "unable to read " << rwyPrefPath.str() << endl;
-	  //exit(1);
-	}
-      }
+    {
+        try {
+            readXML(rwyPrefPath.str(), rwyPrefs);
+            a->setRwyUse(rwyPrefs);
+        }
+        catch  (const sg_exception &e) {
+            //cerr << "unable to read " << rwyPrefPath.str() << endl;
+            //exit(1);
+        }
+    }
     
-    airports_by_id[a.getId()] = a;
+    airports_by_id[a->getId()] = a;
     // try and read in an auxilary file
-   
-    airports_array.push_back( &airports_by_id[a.getId()] );
+    
+    airports_array.push_back( a );
     SG_LOG( SG_GENERAL, SG_BULK, "Adding " << id << " pos = " << longitude
             << ", " << latitude << " elev = " << elevation );
 }
 
 
 // search for the specified id
-FGAirport FGAirportList::search( const string& id) {
-    return airports_by_id[id];
+FGAirport* FGAirportList::search( const string& id) {
+    airport_map_iterator itr = airports_by_id.find(id); 
+    return(itr == airports_by_id.end() ? NULL : itr->second);
 }
 
-// search for the specified id and return a pointer
-FGAirport* FGAirportList::search( const string& id, FGAirport *result) {
-  FGAirport* retval = airports_by_id[id].getAddress();
-  //cerr << "Returning Airport of string " << id << " results in " << retval->getId();
-  return retval;
+
+// search for first subsequent alphabetically to supplied id
+const FGAirport* FGAirportList::findFirstById( const string& id, bool exact ) {
+    airport_map_iterator itr;
+    if(exact) {
+        itr = airports_by_id.find(id);
+    } else {
+        itr = airports_by_id.lower_bound(id);
+    }
+    if(itr == airports_by_id.end()) {
+        return(NULL);
+    } else {
+        return(itr->second);
+    }
 }
+
 
 // search for the airport nearest the specified position
-FGAirport FGAirportList::search( double lon_deg, double lat_deg,
+FGAirport* FGAirportList::search( double lon_deg, double lat_deg,
                                  bool with_metar ) {
-    int closest = 0;
+    int closest = -1;
     double min_dist = 360.0;
     unsigned int i;
     for ( i = 0; i < airports_array.size(); ++i ) {
@@ -1254,13 +1267,9 @@ FGAirport FGAirportList::search( double lon_deg, double lat_deg,
         }
     }
 
-    return *airports_array[closest];
+    return ( closest > -1 ? airports_array[closest] : NULL );
 }
 
-
-// Destructor
-FGAirportList::~FGAirportList( void ) {
-}
 
 int
 FGAirportList::size () const
@@ -1268,9 +1277,13 @@ FGAirportList::size () const
     return airports_array.size();
 }
 
-const FGAirport *FGAirportList::getAirport( int index ) const
+const FGAirport *FGAirportList::getAirport( unsigned int index ) const
 {
-    return airports_array[index];
+    if(index < airports_array.size()) {
+        return(airports_array[index]);
+    } else {
+        return(NULL);
+    }
 }
 
 
@@ -1278,7 +1291,9 @@ const FGAirport *FGAirportList::getAirport( int index ) const
  * Mark the specified airport record as not having metar
  */
 void FGAirportList::no_metar( const string &id ) {
-    airports_by_id[id].setMetar(false);
+    if(airports_by_id.find(id) != airports_by_id.end()) { 
+        airports_by_id[id]->setMetar(false);
+    }
 }
 
 
@@ -1286,5 +1301,7 @@ void FGAirportList::no_metar( const string &id ) {
  * Mark the specified airport record as (yes) having metar
  */
 void FGAirportList::has_metar( const string &id ) {
-    airports_by_id[id].setMetar(true);
+    if(airports_by_id.find(id) != airports_by_id.end()) { 
+        airports_by_id[id]->setMetar(true);
+    }
 }

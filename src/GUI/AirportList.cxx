@@ -15,7 +15,7 @@ AirportList::AirportList (int x, int y, int width, int height)
     _nAirports = _airports->size();
 
     _content = new char *[_nAirports+1];
-    for (int i = 0; i < _nAirports; i++) {
+    for (unsigned int i = 0; i < _nAirports; i++) {
         const FGAirport *airport = _airports->getAirport(i);
         snprintf(buf, 1023, "%s  %s",
                  airport->getId().c_str(),
@@ -33,7 +33,7 @@ AirportList::AirportList (int x, int y, int width, int height)
 
 AirportList::~AirportList ()
 {
-    for (int i = 0; i < _nAirports; i++) {
+    for (unsigned int i = 0; i < _nAirports; i++) {
         delete _content[i];
         _content[i] = 0;
     }

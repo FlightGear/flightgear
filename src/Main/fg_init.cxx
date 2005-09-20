@@ -620,22 +620,22 @@ bool fgInitConfig ( int argc, char **argv ) {
 
 // find basic airport location info from airport database
 bool fgFindAirportID( const string& id, FGAirport *a ) {
-    FGAirport result;
+    const FGAirport* result;
     if ( id.length() ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
 
         result = globals->get_airports()->search( id );
 
-        if ( result.getId().empty() ) {
+        if ( result == NULL ) {
             SG_LOG( SG_GENERAL, SG_ALERT,
-                    "Failed to find " << id << " in basic.dat.gz" );
+                    "Failed to find " << id << " in apt.dat.gz" );
             return false;
         }
     } else {
         return false;
     }
 
-    *a = result;
+    *a = *result;
 
     SG_LOG( SG_GENERAL, SG_INFO,
             "Position for " << id << " is ("

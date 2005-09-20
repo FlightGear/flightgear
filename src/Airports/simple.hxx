@@ -236,16 +236,16 @@ typedef vector<FGParking>::const_iterator FGParkingVecConstIterator;
 class FGAirport : public XMLVisitor{
 private:
   string _id;
-  double _longitude;
-  double _latitude;
-  double _elevation;
+  double _longitude;    // degrees
+  double _latitude;     // degrees
+  double _elevation;    // ft
   string _code;               // depricated and can be removed
   string _name;
   bool _has_metar;
   FGParkingVec parkings;
   FGRunwayPreference rwyPrefs;
 
- time_t lastUpdate;
+  time_t lastUpdate;
   string prevTrafficType;
   stringVec landing;
   stringVec takeoff;
@@ -270,13 +270,15 @@ public:
   FGParking *getParking(int i); // { if (i < parkings.size()) return parkings[i]; else return 0;};
   void releaseParking(int id);
   string getParkingName(int i); 
-  const string getId() const { return _id;};
+  string getId() const { return _id;};
   const string &getName() const { return _name;};
-  FGAirport *getAddress() { return this; };
-  double getLongitude() { return _longitude;};
-  double getLatitude()  { return _latitude; };
-  double getElevation() { return _elevation;};
-  bool   getMetar()     { return _has_metar;};
+  // Returns degrees
+  double getLongitude() const { return _longitude;};
+  // Returns degrees
+  double getLatitude()  const { return _latitude; };
+  // Returns ft
+  double getElevation() const { return _elevation;};
+  bool   getMetar()     const { return _has_metar;};
   
 
   void setId(string id) { _id = id;};
@@ -295,7 +297,7 @@ public:
   virtual void error (const char * message, int line, int column);
 };
 
-typedef map < string, FGAirport > airport_map;
+typedef map < string, FGAirport* > airport_map;
 typedef airport_map::iterator airport_map_iterator;
 typedef airport_map::const_iterator const_airport_map_iterator;
 
@@ -323,31 +325,33 @@ public:
               const double elevation, const string name, const bool has_metar );
 
     // search for the specified id.
-    // Returns true if successful, otherwise returns false.
-    // On success, airport data is returned thru "airport" pointer.
-    // "airport" is not changed if "apt" is not found.
-    FGAirport search( const string& id );
+    // Returns NULL if unsucessfull.
+    FGAirport* search( const string& id );
+	
+	// Search for the next airport in ASCII sequence to the supplied id.
+	// eg. id = "KDC" or "KDCA" would both return "KDCA".
+	// If exact = true then only exact matches are returned.
+	// NOTE: Numbers come prior to A-Z in ASCII sequence so id = "LD" would return "LD57", not "LDDP"
+	// Implementation assumes airport codes are unique.
+	// Returns NULL if unsucessfull.
+	const FGAirport* findFirstById( const string& id, bool exact = false );
 
     // search for the airport closest to the specified position
     // (currently a linear inefficient search so it's probably not
     // best to use this at runtime.)  If with_metar is true, then only
     // return station id's marked as having metar data.
-    FGAirport search( double lon_deg, double lat_deg, bool with_metar );
-
-    // search and return a pointer;
-    FGAirport* search( const string& id, FGAirport *result);
+	// Returns NULL if fails (unlikely unless none have metar and with_metar spec'd!)
+    FGAirport* search( double lon_deg, double lat_deg, bool with_metar );
 
     /**
      * Return the number of airports in the list.
      */
     int size() const;
 
-
     /**
      * Return a specific airport, by position.
      */
-    const FGAirport *getAirport( int index ) const;
-
+    const FGAirport *getAirport( unsigned int index ) const;
 
     /**
      * Mark the specified airport record as not having metar

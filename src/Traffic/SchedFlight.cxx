@@ -257,14 +257,14 @@ FGAirport * FGScheduledFlight::getArrivalAirport  ()
 bool FGScheduledFlight::initializeAirports()
 {
   //cerr << "Initializing using : " << depId << " " << arrId << endl;
-  departurePort = globals->get_airports()->search( depId, departurePort );
-  if(departurePort->getId().empty())
+  departurePort = globals->get_airports()->search(depId);
+  if(departurePort == NULL)
     {
       cerr << "Could not find " << depId << endl; 
       return false;
     }
-  arrivalPort = globals->get_airports()->search(arrId, arrivalPort);
-  if(arrivalPort->getId().empty())
+  arrivalPort = globals->get_airports()->search(arrId);
+  if(arrivalPort == NULL)
     {
       cerr << "Could not find " << arrId << endl;
       return false;

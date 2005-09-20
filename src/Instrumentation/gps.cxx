@@ -340,15 +340,15 @@ GPS::update (double delta_time_sec)
         // If the get-nearest-airport-node is true.
         // Get the nearest airport, and set it as waypoint 1.
         if (_get_nearest_airport_node->getBoolValue()) {
-            FGAirport a;
-            //cout << "Airport found" << endl;
-            a = globals->get_airports()->search(longitude_deg, latitude_deg, false);
-            _wp1_ID_node->setStringValue(a.getId().c_str());
-            wp1_longitude_deg = a.getLongitude();
-            wp1_latitude_deg = a.getLatitude();
-            _wp1_name_node->setStringValue(a.getName().c_str());
-            _get_nearest_airport_node->setBoolValue(false);
-            _last_wp1_ID = wp1_ID = a.getId().c_str();
+            const FGAirport* a = globals->get_airports()->search(longitude_deg, latitude_deg, false);
+            if(a) {
+                _wp1_ID_node->setStringValue(a->getId().c_str());
+                wp1_longitude_deg = a->getLongitude();
+                wp1_latitude_deg = a->getLatitude();
+                _wp1_name_node->setStringValue(a->getName().c_str());
+                _get_nearest_airport_node->setBoolValue(false);
+                _last_wp1_ID = wp1_ID = a->getId().c_str();
+            }
         }
         
         // If the waypoint 0 ID has changed, try to find the new ID
@@ -357,13 +357,11 @@ GPS::update (double delta_time_sec)
             string waypont_type =
                 _wp0_waypoint_type_node->getStringValue();
             if (waypont_type == "airport") {
-                FGAirport a;
-                a = globals->get_airports()->search( wp0_ID );
-                if ( a.getId() == wp0_ID ) {
-                    //cout << "Airport found" << endl;
-                    wp0_longitude_deg = a.getLongitude();
-                    wp0_latitude_deg = a.getLatitude();
-                    _wp0_name_node->setStringValue(a.getName().c_str());
+                const FGAirport* a = globals->get_airports()->search( wp0_ID );
+                if ( a ) {
+                    wp0_longitude_deg = a->getLongitude();
+                    wp0_latitude_deg = a->getLatitude();
+                    _wp0_name_node->setStringValue(a->getName().c_str());
                 }
             }
             else if (waypont_type == "nav") {
@@ -396,13 +394,11 @@ GPS::update (double delta_time_sec)
             string waypont_type =
                 _wp1_waypoint_type_node->getStringValue();
             if (waypont_type == "airport") {
-                FGAirport a;
-                a = globals->get_airports()->search( wp1_ID );
-                if ( a.getId() == wp1_ID ) {
-                    //cout << "Airport found" << endl;
-                    wp1_longitude_deg = a.getLongitude();
-                    wp1_latitude_deg = a.getLatitude();
-                    _wp1_name_node->setStringValue(a.getName().c_str());
+                const FGAirport* a = globals->get_airports()->search( wp1_ID );
+                if ( a ) {
+                    wp1_longitude_deg = a->getLongitude();
+                    wp1_latitude_deg = a->getLatitude();
+                    _wp1_name_node->setStringValue(a->getName().c_str());
                 }
             }
             else if (waypont_type == "nav") {

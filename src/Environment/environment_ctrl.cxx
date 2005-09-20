@@ -402,26 +402,30 @@ FGMetarEnvironmentCtrl::init ()
     metar_max_age->setLongValue(60 * 24 * 7);
 
     while ( !found_metar && (_error_count < 3) ) {
-        FGAirport a = globals->get_airports()
-            ->search( longitude->getDoubleValue(),
-                      latitude->getDoubleValue(),
-                      true );
-        FGMetarResult result = fetch_data( a.getId() );
-        if ( result.m != NULL ) {
-            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a.getId());
-            last_apt = a;
-            _icao = a.getId();
-            search_elapsed = 0.0;
-            fetch_elapsed = 0.0;
-            update_metar_properties( result.m );
-            update_env_config();
-            env->init();
-            found_metar = true;
-        } else {
-            // mark as no metar so it doesn't show up in subsequent
-            // searches.
-            SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = " << a.getId() );
-            globals->get_airports()->no_metar( a.getId() );
+        const FGAirport* a = globals->get_airports()
+                   ->search( longitude->getDoubleValue(),
+                             latitude->getDoubleValue(),
+                             true );
+        if ( a ) {  
+            FGMetarResult result = fetch_data( a->getId() );
+            if ( result.m != NULL ) {
+                SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
+                        << a->getId());
+                last_apt = *a;
+                _icao = a->getId();
+                search_elapsed = 0.0;
+                fetch_elapsed = 0.0;
+                update_metar_properties( result.m );
+                update_env_config();
+                env->init();
+                found_metar = true;
+            } else {
+                // mark as no metar so it doesn't show up in subsequent
+                // searches.
+                SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = "
+                        << a->getId() );
+                globals->get_airports()->no_metar( a->getId() );
+            }
         }
     }
     metar_max_age->setLongValue(max_age);
@@ -460,23 +464,29 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
     // if time for a new search request, push it onto the request
     // queue
     if ( search_elapsed > search_interval_sec ) {
-        FGAirport a = globals->get_airports()
-            ->search( longitude->getDoubleValue(),
-                      latitude->getDoubleValue(),
-                      true );
-        if ( last_apt.getId() != a.getId()
-             || fetch_elapsed > same_station_interval_sec )
-        {
-            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a.getId());
-            request_queue.push( a.getId() );
-            last_apt = a;
-            _icao = a.getId();
-            search_elapsed = 0.0;
-            fetch_elapsed = 0.0;
+        const FGAirport* a = globals->get_airports()
+                   ->search( longitude->getDoubleValue(),
+                             latitude->getDoubleValue(),
+                             true );
+        if ( a ) {
+            if ( last_apt.getId() != a->getId()
+                 || fetch_elapsed > same_station_interval_sec )
+            {
+                SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
+                        << a->getId());
+                request_queue.push( a->getId() );
+                last_apt = *a;
+                _icao = a->getId();
+                search_elapsed = 0.0;
+                fetch_elapsed = 0.0;
+            } else {
+                search_elapsed = 0.0;
+                SG_LOG( SG_GENERAL, SG_INFO, "same station, waiting = "
+                        << same_station_interval_sec - fetch_elapsed );
+            }
         } else {
-            search_elapsed = 0.0;
-            SG_LOG( SG_GENERAL, SG_INFO, "same station, waiting = "
-                 << same_station_interval_sec - fetch_elapsed );
+            SG_LOG( SG_GENERAL, SG_WARN,
+                    "Unable to find any airports with metar" );
         }
     }
 
@@ -541,8 +551,10 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
     }
 
     // fetch station elevation if exists
-    FGAirport a = globals->get_airports()->search( icao );
-    station_elevation_ft = a.getElevation();
+    const FGAirport* a = globals->get_airports()->search( icao );
+    if ( a ) {
+        station_elevation_ft = a->getElevation();
+    }
 
     // fetch current metar data
     try {

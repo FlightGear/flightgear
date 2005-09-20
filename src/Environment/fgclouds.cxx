@@ -401,8 +401,8 @@ void FGClouds::buildScenario( string scenario ) {
     if( station == "XXXX" )
         station_elevation_ft = fgGetDouble("/position/ground-elev-m", 0.0);
     else {
-        FGAirport a = globals->get_airports()->search( station );
-        station_elevation_ft = a.getElevation();
+        const FGAirport* a = globals->get_airports()->search( station );
+        station_elevation_ft = (a ? a->getElevation() : 0.0);
     }
 
 	for(int iLayer = 0 ; iLayer < thesky->get_cloud_layer_count(); iLayer++) {
