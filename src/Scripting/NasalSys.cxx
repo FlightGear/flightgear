@@ -71,7 +71,7 @@ bool FGNasalSys::parseAndRun(const char* sourceCode)
     if(naIsNil(code))
         return false;
 
-    naCall(_context, code, naNil(), naNil(), naNil());
+    naCall(_context, code, 0, 0, naNil(), naNil());
 
     if(!naGetError(_context)) return true;
     logError();
@@ -444,7 +444,7 @@ void FGNasalSys::createModule(const char* moduleName, const char* fileName,
     if(!naHash_get(_globals, modname, &locals))
         locals = naNewHash(_context);
 
-    naCall(_context, code, naNil(), naNil(), locals);
+    naCall(_context, code, 0, 0, naNil(), locals);
     if(naGetError(_context)) {
         logError();
         return;
@@ -489,7 +489,7 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     _cmdArg = (SGPropertyNode*)arg;
 
     // Call it!
-    naRef result = naCall(_context, code, naNil(), naNil(), locals);
+    naRef result = naCall(_context, code, 0, 0, naNil(), locals);
     if(!naGetError(_context)) return true;
     logError();
     return false;
@@ -530,7 +530,7 @@ void FGNasalSys::setTimer(int argc, naRef* args)
 
 void FGNasalSys::handleTimer(NasalTimer* t)
 {
-    naCall(_context, t->handler, naNil(), naNil(), naNil());
+    naCall(_context, t->handler, 0, 0, naNil(), naNil());
     if(naGetError(_context))
         logError();
     gcRelease(t->gcKey);

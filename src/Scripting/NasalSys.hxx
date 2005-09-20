@@ -92,7 +92,7 @@ public:
     ~FGNasalScript() { _nas->gcRelease(_gcKey); }
 
     bool call() {
-        naCall(_nas->_context, _code, naNil(), naNil(), naNil());
+        naCall(_nas->_context, _code, 0, 0, naNil(), naNil());
         return naGetError(_nas->_context) == 0;
     }
 
