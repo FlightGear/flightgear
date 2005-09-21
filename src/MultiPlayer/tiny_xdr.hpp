@@ -57,11 +57,22 @@ inline uint32_t bswap_32(unsigned int b) {
 }
 
 inline uint64_t bswap_64(unsigned long long b) {
+#if __WORDSIZE == 64
     uint64_t x = b;
-    x = ((x >> 32) & 0x00000000FFFFFFFFLL) | ((x << 32) & 0xFFFFFFFF00000000LL);
-    x = ((x >> 16) & 0x0000FFFF0000FFFFLL) | ((x << 16) & 0xFFFF0000FFFF0000LL);
     x = ((x >>  8) & 0x00FF00FF00FF00FFLL) | ((x <<  8) & 0xFF00FF00FF00FF00LL);
+    x = ((x >> 16) & 0x0000FFFF0000FFFFLL) | ((x << 16) & 0xFFFF0000FFFF0000LL);
+    x = (x >> 32) | (x << 32);
     return x;
+#else
+    union { 
+         uint64_t ll;
+         uint32_t l[2]; 
+     } w, r;
+     w.ll = b;
+     r.l[0] = bswap_32 (w.l[1]);
+     r.l[1] = bswap_32 (w.l[0]);
+     return r.ll;
+#endif
 }
 
 #if BYTE_ORDER == BIG_ENDIAN
