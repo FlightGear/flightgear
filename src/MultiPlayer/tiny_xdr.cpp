@@ -17,50 +17,50 @@
 
 /* XDR 8bit integers */
 xdr_data_t
-XDR_encode_int8 ( int8_t  n_Val )
+XDR_encode_int8 ( const int8_t & n_Val )
 {
     return (SWAP32(static_cast<xdr_data_t> (n_Val)));
 }
 
 xdr_data_t
-XDR_encode_uint8 ( uint8_t n_Val )
+XDR_encode_uint8 ( const uint8_t & n_Val )
 {
     return (SWAP32(static_cast<xdr_data_t> (n_Val)));
 }
 
 int8_t
-XDR_decode_int8 ( xdr_data_t n_Val )
+XDR_decode_int8 ( const xdr_data_t & n_Val )
 {
     return (static_cast<int8_t> (SWAP32(n_Val)));
 }
 
 uint8_t
-XDR_decode_uint8 ( xdr_data_t n_Val )
+XDR_decode_uint8 ( const xdr_data_t & n_Val )
 {
     return (static_cast<uint8_t> (SWAP32(n_Val)));
 }
 
 /* XDR 16bit integers */
 xdr_data_t
-XDR_encode_int16 ( int16_t  n_Val )
+XDR_encode_int16 ( const int16_t & n_Val )
 {
     return (SWAP32(static_cast<xdr_data_t> (n_Val)));
 }
 
 xdr_data_t
-XDR_encode_uint16 ( uint16_t n_Val )
+XDR_encode_uint16 ( const uint16_t & n_Val )
 {
     return (SWAP32(static_cast<xdr_data_t> (n_Val)));
 }
 
 int16_t
-XDR_decode_int16 ( xdr_data_t  n_Val )
+XDR_decode_int16 ( const xdr_data_t & n_Val )
 {
     return (static_cast<int16_t> (SWAP32(n_Val)));
 }
 
 uint16_t
-XDR_decode_uint16 ( xdr_data_t  n_Val )
+XDR_decode_uint16 ( const xdr_data_t & n_Val )
 {
     return (static_cast<uint16_t> (SWAP32(n_Val)));
 }
@@ -68,25 +68,25 @@ XDR_decode_uint16 ( xdr_data_t  n_Val )
 
 /* XDR 32bit integers */
 xdr_data_t
-XDR_encode_int32 ( int32_t  n_Val )
+XDR_encode_int32 ( const int32_t & n_Val )
 {
     return (SWAP32(static_cast<xdr_data_t> (n_Val)));
 }
 
 xdr_data_t
-XDR_encode_uint32 ( uint32_t n_Val )
+XDR_encode_uint32 ( const uint32_t & n_Val )
 {
     return (SWAP32(static_cast<xdr_data_t> (n_Val)));
 }
 
 int32_t
-XDR_decode_int32 ( xdr_data_t  n_Val )
+XDR_decode_int32 ( const xdr_data_t & n_Val )
 {
     return (static_cast<int32_t> (SWAP32(n_Val)));
 }
 
 uint32_t
-XDR_decode_uint32 ( xdr_data_t  n_Val )
+XDR_decode_uint32 ( const xdr_data_t & n_Val )
 {
     return (static_cast<uint32_t> (SWAP32(n_Val)));
 }
@@ -94,25 +94,25 @@ XDR_decode_uint32 ( xdr_data_t  n_Val )
 
 /* XDR 64bit integers */
 xdr_data2_t
-XDR_encode_int64 ( int64_t n_Val )
+XDR_encode_int64 ( const int64_t & n_Val )
 {
     return (SWAP64(static_cast<xdr_data2_t> (n_Val)));
 }
 
 xdr_data2_t
-XDR_encode_uint64 ( uint64_t n_Val )
+XDR_encode_uint64 ( const uint64_t & n_Val )
 {
     return (SWAP64(static_cast<xdr_data2_t> (n_Val)));
 }
 
 int64_t
-XDR_decode_int64 ( xdr_data2_t n_Val )
+XDR_decode_int64 ( const xdr_data2_t & n_Val )
 {
     return (static_cast<int64_t> (SWAP64(n_Val)));
 }
 
 uint64_t
-XDR_decode_uint64 ( xdr_data2_t n_Val )
+XDR_decode_uint64 ( const xdr_data2_t & n_Val )
 {
     return (static_cast<uint64_t> (SWAP64(n_Val)));
 }
@@ -120,7 +120,7 @@ XDR_decode_uint64 ( xdr_data2_t n_Val )
 
 /* float */
 xdr_data_t
-XDR_encode_float ( float f_Val )
+XDR_encode_float ( const float & f_Val )
 {
     xdr_data_t* tmp;
 
@@ -129,7 +129,7 @@ XDR_encode_float ( float f_Val )
 }
 
 float
-XDR_decode_float ( xdr_data_t f_Val )
+XDR_decode_float ( const xdr_data_t & f_Val )
 {
     float* tmp;
     xdr_data_t dummy;
@@ -141,7 +141,7 @@ XDR_decode_float ( xdr_data_t f_Val )
 
 /* double */
 xdr_data2_t
-XDR_encode_double ( double d_Val )
+XDR_encode_double ( const double & d_Val )
 {
     xdr_data2_t* tmp;
 
@@ -150,7 +150,7 @@ XDR_encode_double ( double d_Val )
 }
 
 double
-XDR_decode_double ( xdr_data2_t d_Val )
+XDR_decode_double ( const xdr_data2_t & d_Val )
 {
     double* tmp;
     xdr_data2_t dummy;

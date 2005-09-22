@@ -12,17 +12,13 @@
 #ifndef _NET_CTRLS_HXX
 #define _NET_CTRLS_HXX
 
-#include <simgear/compiler.h>
+#include <simgear/misc/stdint.hxx>
 
 // NOTE: this file defines an external interface structure.  Due to
 // variability between platforms and architectures, we only used fixed
 // length types here.  Specifically, integer types can vary in length.
 // I am not aware of any platforms that don't use 4 bytes for float
 // and 8 bytes for double.
-
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 
 const uint32_t FG_NET_CTRLS_VERSION = 26;
 
