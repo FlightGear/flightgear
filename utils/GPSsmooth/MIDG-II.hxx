@@ -8,8 +8,6 @@
 
 #include <simgear/compiler.h>
 
-#include <stdio.h>
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -25,6 +23,7 @@ typedef unsigned int     uint32_t;
 # error "Port me! Platforms that don't have <stdint.h> need to define int8_t, et. al."
 #endif
 
+#include <simgear/io/iochannel.hxx>
 
 SG_USING_STD(cout);
 SG_USING_STD(endl);
@@ -130,7 +129,6 @@ private:
 
     vector <MIDGpos> pos_data;
     vector <MIDGatt> att_data;
-    FILE *fd;
 
     // parse message and put current data into vector if message has a
     // newer time stamp than existing data.
@@ -143,7 +141,7 @@ public:
 
     // read/parse the next message from the specified data stream,
     // returns id # if a valid message found.
-    int next_message( FILE *fd, MIDGpos *pos, MIDGatt *att );
+    int next_message( SGIOChannel *ch, MIDGpos *pos, MIDGatt *att );
 
     // load the named file into internal buffers
     bool load( const string &file );

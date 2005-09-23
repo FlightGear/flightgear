@@ -3,6 +3,7 @@
 #include <plib/ul.h>
 
 #include <simgear/constants.h>
+#include <simgear/io/sg_file.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
@@ -319,6 +320,7 @@ void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
 
 // load the specified file, return the number of records loaded
 bool MIDGTrack::load( const string &file ) {
+    int count = 0;
 
     MIDGpos pos;
     MIDGatt att;
@@ -329,16 +331,17 @@ bool MIDGTrack::load( const string &file ) {
     pos_data.clear();
     att_data.clear();
 
-    // openg the file
-    fd = fopen( file.c_str(), "r" );
-
-    if ( fd == NULL ) {
+    // open the file
+    SGFile input( file );
+    if ( !input.open( SG_IO_IN ) ) {
         cout << "Cannot open file: " << file << endl;
         return false;
     }
 
-    while ( ! feof( fd ) ) {
-        int id = next_message( fd, &pos, &att );
+    while ( ! input.eof() ) {
+        // cout << "looking for next message ..." << endl;
+        int id = next_message( &input, &pos, &att );
+        count++;
 
         if ( id == 10 ) {
             if ( att.get_msec() > att_time ) {
@@ -357,38 +360,41 @@ bool MIDGTrack::load( const string &file ) {
         }
     }
 
+    cout << "processed " << count << " messages" << endl;
     return true;
 }
 
 
 // load the next message of a real time data stream
-int MIDGTrack::next_message( FILE *fd, MIDGpos *pos, MIDGatt *att ) {
+int MIDGTrack::next_message( SGIOChannel *ch, MIDGpos *pos, MIDGatt *att ) {
+    char tmpbuf[256];
+    char savebuf[256];
+
     // scan for sync characters
-    int sync0, sync1;
-    sync0 = fgetc( fd );
-    sync1 = fgetc( fd );
-    while ( (sync0 != 129 || sync1 != 161) && !feof(fd) ) {
+    uint8_t sync0, sync1;
+    ch->read( tmpbuf, 1 ); sync0 = (unsigned char)tmpbuf[0];
+    ch->read( tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
+    while ( (sync0 != 129 || sync1 != 161) && !ch->eof() ) {
         sync0 = sync1;
-        sync1 = fgetc( fd );
+        ch->read( tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
     }
 
     // cout << "start of message ..." << endl;
 
     // read message id and size
-    int id = fgetc( fd );
-    int size = fgetc( fd );
-    // cout << "message = " << id << " size = " << size << endl;
+    ch->read( tmpbuf, 1 ); uint8_t id = (unsigned char)tmpbuf[0];
+    ch->read( tmpbuf, 1 ); uint8_t size = (unsigned char)tmpbuf[0];
+    // cout << "message = " << (int)id << " size = " << (int)size << endl;
 
     // load message
-    char buf[256];
-    fread( buf, size, 1, fd );
+    ch->read( savebuf, size );
 
     // read checksum
-    int cksum0 = fgetc( fd );
-    int cksum1 = fgetc( fd );
+    ch->read( tmpbuf, 1 ); uint8_t cksum0 = (unsigned char)tmpbuf[0];
+    ch->read( tmpbuf, 1 ); uint8_t cksum1 = (unsigned char)tmpbuf[0];
     
-    if ( validate_cksum( id, size, buf, cksum0, cksum1 ) ) {
-        parse_msg( id, buf, pos, att );
+    if ( validate_cksum( id, size, savebuf, cksum0, cksum1 ) ) {
+        parse_msg( id, savebuf, pos, att );
         return id;
     }
 

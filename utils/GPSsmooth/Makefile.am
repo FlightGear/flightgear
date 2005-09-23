@@ -13,7 +13,7 @@ MIDGsmooth_SOURCES = \
 	MIDG_main.cxx
 
 MIDGsmooth_LDADD = \
-	-lsgtiming -lsgmath -lsgmisc -lsgdebug -lplibnet -lplibul \
+	-lsgio -lsgtiming -lsgmath -lsgmisc -lsgdebug -lplibnet -lplibul \
 	$(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
 INCLUDES = -I$(top_srcdir)/src
