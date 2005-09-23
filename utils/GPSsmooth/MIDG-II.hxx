@@ -128,8 +128,8 @@ class MIDGTrack {
 
 private:
 
-    vector <MIDGpos> posdata;
-    vector <MIDGatt> attdata;
+    vector <MIDGpos> pos_data;
+    vector <MIDGatt> att_data;
     FILE *fd;
 
     // parse message and put current data into vector if message has a
@@ -141,23 +141,28 @@ public:
     MIDGTrack();
     ~MIDGTrack();
 
-    int load( const string &file );
+    // read/parse the next message from the specified data stream,
+    // returns id # if a valid message found.
+    int next_message( FILE *fd, MIDGpos *pos, MIDGatt *att );
 
-    inline int possize() const { return posdata.size(); }
-    inline int attsize() const { return attdata.size(); }
+    // load the named file into internal buffers
+    bool load( const string &file );
+
+    inline int pos_size() const { return pos_data.size(); }
+    inline int att_size() const { return att_data.size(); }
 
     inline MIDGpos get_pospt( const unsigned int i )
     {
-        if ( i < posdata.size() ) {
-            return posdata[i];
+        if ( i < pos_data.size() ) {
+            return pos_data[i];
         } else {
             return MIDGpos();
         }
     }
     inline MIDGatt get_attpt( const unsigned int i )
     {
-        if ( i < attdata.size() ) {
-            return attdata[i];
+        if ( i < att_data.size() ) {
+            return att_data[i];
         } else {
             return MIDGatt();
         }

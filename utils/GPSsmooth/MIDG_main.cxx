@@ -48,6 +48,9 @@ SGTimeStamp current_time_stamp;
 // altitude offset
 double alt_offset = 0.0;
 
+// skip initial seconds
+double skip = 0.0;
+
 // for speed estimate
 // double last_lat = 0.0, last_lon = 0.0;
 // double kts_filter = 0.0;
@@ -267,7 +270,6 @@ static void midg2fg( const MIDGpos pos, const MIDGatt att,
 
 static void send_data( const MIDGpos pos, const MIDGatt att ) {
     int len;
-    int ctrlsize = sizeof( FGNetCtrls );
     int fdmsize = sizeof( FGNetFDM );
 
     // cout << "Running main loop" << endl;
@@ -290,6 +292,7 @@ void usage( const string &argv0 ) {
     cout << "\t[ --fdm-port <fdm output port #> ]" << endl;
     cout << "\t[ --ctrls-port <ctrls output port #> ]" << endl;
     cout << "\t[ --altitude-offset <meters> ]" << endl;
+    cout << "\t[ --skip-seconds <seconds> ]" << endl;
 }
 
 
@@ -353,6 +356,14 @@ int main( int argc, char **argv ) {
                 usage( argv[0] );
                 exit( -1 );
             }
+        } else if ( strcmp( argv[i], "--skip-seconds" ) == 0 ) {
+            ++i;
+            if ( i < argc ) {
+                skip = atof( argv[i] );
+            } else {
+                usage( argv[0] );
+                exit( -1 );
+            }
         } else {
             usage( argv[0] );
             exit( -1 );
@@ -365,8 +376,8 @@ int main( int argc, char **argv ) {
         exit(-1);
     }
     track.load( file );
-    cout << "Loaded " << track.possize() << " position records." << endl;
-    cout << "Loaded " << track.attsize() << " attitude records." << endl;
+    cout << "Loaded " << track.pos_size() << " position records." << endl;
+    cout << "Loaded " << track.att_size() << " attitude records." << endl;
 
     // Setup up outgoing network connections
 
@@ -407,13 +418,16 @@ int main( int argc, char **argv ) {
     }
     cout << "connected outgoing ctrls socket" << endl;
 
-    int size = track.possize();
+    int size = track.pos_size();
 
     double current_time = track.get_pospt(0).get_seconds();
     cout << "Track begin time is " << current_time << endl;
     double end_time = track.get_pospt(size-1).get_seconds();
     cout << "Track end time is " << end_time << endl;
     cout << "Duration = " << end_time - current_time << endl;
+
+    // advance skip seconds forward
+    current_time += skip;
 
     frame_us = 1000000.0 / hertz;
     if ( frame_us < 0.0 ) {
@@ -436,7 +450,9 @@ int main( int argc, char **argv ) {
         //      << end_time << endl;
 
         // Advance position pointer
-        if ( current_time > pos1.get_seconds() ) {
+        while ( current_time > pos1.get_seconds()
+                && pos_count < track.pos_size() )
+        {
             pos0 = pos1;
             ++pos_count;
             // cout << "count = " << count << endl;
@@ -446,14 +462,16 @@ int main( int argc, char **argv ) {
         //      << endl;
 
         // Advance attitude pointer
-        if ( current_time > att1.get_seconds() ) {
+        while ( current_time > att1.get_seconds()
+                && att_count < track.att_size() )
+        {
             att0 = att1;
             ++att_count;
             // cout << "count = " << count << endl;
             att1 = track.get_attpt( att_count );
         }
-        // cout << "p0 = " << p0.get_time() << " p1 = " << p1.get_time()
-        //      << endl;
+        //  cout << "pos0 = " << pos0.get_seconds()
+        // << " pos1 = " << pos1.get_seconds() << endl;
 
         double pos_percent;
         if ( fabs(pos1.get_seconds() - pos0.get_seconds()) < 0.00001 ) {

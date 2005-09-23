@@ -166,15 +166,8 @@ void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
 
         // timestamp
         ts = (uint32_t)read_swab( buf, 0, 4 );
-        // cout << "  time stamp = " << ts << endl;
-        if ( ts > att->get_msec() && att->get_msec() > 1.0 ) {
-            attdata.push_back( *att );
-        }
-        if ( ts < att->get_msec() ) {
-            cout << "OOOPS moving back in time!!! " << ts << " < " << att->get_msec() << endl;
-        } else {
-            att->midg_time = MIDGTime( ts );
-        }
+        // cout << "  att time stamp = " << ts << endl;
+        att->midg_time = MIDGTime( ts );
 
         // p, q, r
         p = (int16_t)read_swab( buf, 4, 2 );
@@ -227,15 +220,8 @@ void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
 
         // timestamp
         ts = (uint32_t)read_swab( buf, 0, 4 );
-        // cout << "  time stamp = " << ts << endl;
-        if ( ts > pos->get_msec() && pos->get_msec() > 1.0 ) {
-            posdata.push_back( *pos );
-        }
-        if ( ts < pos->get_msec() ) {
-            cout << "OOOPS moving back in time!!! " << ts << " < " << pos->get_msec() << endl;
-        } else {
-            pos->midg_time = MIDGTime( ts );
-        }
+        // cout << "  pos time stamp = " << ts << endl;
+        pos->midg_time = MIDGTime( ts );
 
         // posx, posy, posz
         posx = (int32_t)read_swab( buf, 4, 4 );
@@ -258,7 +244,8 @@ void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
         vely = (int32_t)read_swab( buf, 20, 4 );
         velz = (int32_t)read_swab( buf, 24, 4 );
         // cout << "  vel = " << velx << "," << vely << "," << velz << endl;
-        double vel_cms = sqrt( velx*velx + vely*vely + velz*velz );
+        double tmp1 = velx*velx + vely*vely + velz*velz;
+        double vel_cms = sqrt( tmp1 );
         double vel_ms = vel_cms / 100.0;
         pos->speed_kts = vel_ms * SG_METER_TO_NM * 3600;
 
@@ -288,14 +275,7 @@ void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
         // previous data or not, just roll it into the current data
         // independent of time stamp.
         gps_ts = (uint32_t)read_swab( buf, 0, 4 );
-        // if ( ts > pt->get_msec() && pt->get_msec() > 1.0 ) {
-        //     data.push_back( *pt );
-        // }
-        // if ( ts < pt->get_msec() ) {
-        //     cout << "OOOPS moving back in time!!! " << ts << " < " << pt->get_msec() << endl;
-        // } else {
-        //     pt->midg_time = MIDGTime( ts );
-        // }
+        // pt->midg_time = MIDGTime( ts );
 
         gps_week = (uint16_t)read_swab( buf, 4, 2 );
         // cout << "  gps time stamp = " << gps_ts << " week = " << gps_week
@@ -338,57 +318,82 @@ void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
 
 
 // load the specified file, return the number of records loaded
-int MIDGTrack::load( const string &file ) {
-    int count = 0;
+bool MIDGTrack::load( const string &file ) {
 
-    posdata.clear();
-    attdata.clear();
+    MIDGpos pos;
+    MIDGatt att;
+
+    uint32_t pos_time = 1;
+    uint32_t att_time = 1;
+
+    pos_data.clear();
+    att_data.clear();
 
     // openg the file
     fd = fopen( file.c_str(), "r" );
 
     if ( fd == NULL ) {
         cout << "Cannot open file: " << file << endl;
-        return 0;
+        return false;
     }
-
-    vector <string> tokens;
-    MIDGpos pos;
-    MIDGatt att;
 
     while ( ! feof( fd ) ) {
-        // scan for sync characters
-        int sync0, sync1;
-        sync0 = fgetc( fd );
-        sync1 = fgetc( fd );
-        while ( (sync0 != 129 || sync1 != 161) && !feof(fd) ) {
-            sync0 = sync1;
-            sync1 = fgetc( fd );
-        }
+        int id = next_message( fd, &pos, &att );
 
-        // cout << "start of message ..." << endl;
-
-        // read message id and size
-        int id = fgetc( fd );
-        int size = fgetc( fd );
-        // cout << "message = " << id << " size = " << size << endl;
-
-        // load message
-        char buf[256];
-        fread( buf, size, 1, fd );
-
-        // read checksum
-        int cksum0 = fgetc( fd );
-        int cksum1 = fgetc( fd );
-    
-        if ( validate_cksum( id, size, buf, cksum0, cksum1 ) ) {
-            parse_msg( id, buf, &pos, &att );
-        } else {
-            cout << "Check sum failure!" << endl;
+        if ( id == 10 ) {
+            if ( att.get_msec() > att_time ) {
+                att_data.push_back( att );
+                att_time = att.get_msec();
+            } else {
+                cout << "oops att back in time" << endl;
+            }
+        } else if ( id == 12 ) {
+            if ( pos.get_msec() > pos_time ) {
+                pos_data.push_back( pos );
+                pos_time = pos.get_msec();
+            } else {
+                cout << "oops pos back in time" << endl;
+            }
         }
     }
 
-    return count;
+    return true;
+}
+
+
+// load the next message of a real time data stream
+int MIDGTrack::next_message( FILE *fd, MIDGpos *pos, MIDGatt *att ) {
+    // scan for sync characters
+    int sync0, sync1;
+    sync0 = fgetc( fd );
+    sync1 = fgetc( fd );
+    while ( (sync0 != 129 || sync1 != 161) && !feof(fd) ) {
+        sync0 = sync1;
+        sync1 = fgetc( fd );
+    }
+
+    // cout << "start of message ..." << endl;
+
+    // read message id and size
+    int id = fgetc( fd );
+    int size = fgetc( fd );
+    // cout << "message = " << id << " size = " << size << endl;
+
+    // load message
+    char buf[256];
+    fread( buf, size, 1, fd );
+
+    // read checksum
+    int cksum0 = fgetc( fd );
+    int cksum1 = fgetc( fd );
+    
+    if ( validate_cksum( id, size, buf, cksum0, cksum1 ) ) {
+        parse_msg( id, buf, pos, att );
+        return id;
+    }
+
+    cout << "Check sum failure!" << endl;
+    return -1;
 }
 
 
