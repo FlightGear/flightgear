@@ -548,6 +548,7 @@ AC_CONFIG_FILES([ \
 	utils/js_server/Makefile \
 	utils/Modeller/Makefile \
 	utils/TerraSync/Makefile \
+	utils/xmlgrep/Makefile \
 ])
 AC_OUTPUT
 
