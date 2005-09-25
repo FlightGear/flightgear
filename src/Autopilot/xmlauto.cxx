@@ -306,9 +306,6 @@ void FGPIDController::update( double dt ) {
             delta_u_n = Kp * ( (ep_n - ep_n_1)
                                + ((Ts/Ti) * e_n)
                                + ((Td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
-        } else if ( Ti <= 0.0 ) {
-            delta_u_n = Kp * ( (ep_n - ep_n_1)
-                               + ((Td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
         }
 
         if ( debug ) {
@@ -321,10 +318,10 @@ void FGPIDController::update( double dt ) {
 
         // Integrator anti-windup logic:
         if ( delta_u_n > (u_max - u_n_1) ) {
-            delta_u_n = 0;
+            delta_u_n = u_max - u_n_1;
             if ( debug ) cout << " max saturation " << endl;
         } else if ( delta_u_n < (u_min - u_n_1) ) {
-            delta_u_n = 0;
+            delta_u_n = u_min - u_n_1;
             if ( debug ) cout << " min saturation " << endl;
         }
 
