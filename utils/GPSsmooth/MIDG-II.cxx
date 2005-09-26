@@ -56,13 +56,17 @@ static bool validate_cksum( uint8_t id, uint8_t size, char *buf,
 
     c0 += id;
     c1 += c0;
+    // cout << "c0 = " << (unsigned int)c0 << " c1 = " << (unsigned int)c1 << endl;
 
     c0 += size;
     c1 += c0;
+    // cout << "c0 = " << (unsigned int)c0 << " c1 = " << (unsigned int)c1 << endl;
 
     for ( uint8_t i = 0; i < size; i++ ) {
         c0 += (uint8_t)buf[i];
         c1 += c0;
+        // cout << "c0 = " << (unsigned int)c0 << " c1 = " << (unsigned int)c1
+        //      << " [" << (unsigned int)buf[i] << "]" << endl;
     }
 
     // cout << "c0 = " << (unsigned int)c0 << " (" << (unsigned int)cksum0
@@ -365,33 +369,65 @@ bool MIDGTrack::load( const string &file ) {
 }
 
 
+// attempt to work around some system dependent issues.  Our read can
+// return < data than we want.
+int myread( SGIOChannel *ch, char *buf, int length ) {
+    bool myeof = false;
+    int result = 0;
+    while ( result != length && !myeof ) {
+        result = ch->read( buf, length );
+        if ( ch->get_type() == sgFileType ) {
+            myeof = ((SGFile *)ch)->eof();
+        }
+    }
+
+    return result;
+}
+
 // load the next message of a real time data stream
 int MIDGTrack::next_message( SGIOChannel *ch, MIDGpos *pos, MIDGatt *att ) {
     char tmpbuf[256];
     char savebuf[256];
 
+    // cout << "in next_message()" << endl;
+
+    bool myeof = false;
+
     // scan for sync characters
     uint8_t sync0, sync1;
-    ch->read( tmpbuf, 1 ); sync0 = (unsigned char)tmpbuf[0];
-    ch->read( tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
-    while ( (sync0 != 129 || sync1 != 161) && !ch->eof() ) {
+    myread( ch, tmpbuf, 1 ); sync0 = (unsigned char)tmpbuf[0];
+    myread( ch, tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
+    while ( (sync0 != 129 || sync1 != 161) && !myeof ) {
         sync0 = sync1;
-        ch->read( tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
+        myread( ch, tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
+        // cout << "scanning for start of message, eof = " << ch->eof() << endl;
+        if ( ch->get_type() == sgFileType ) {
+            myeof = ((SGFile *)ch)->eof();
+        }
     }
 
-    // cout << "start of message ..." << endl;
+    // cout << "found start of message ..." << endl;
 
     // read message id and size
-    ch->read( tmpbuf, 1 ); uint8_t id = (unsigned char)tmpbuf[0];
-    ch->read( tmpbuf, 1 ); uint8_t size = (unsigned char)tmpbuf[0];
+    myread( ch, tmpbuf, 1 ); uint8_t id = (unsigned char)tmpbuf[0];
+    myread( ch, tmpbuf, 1 ); uint8_t size = (unsigned char)tmpbuf[0];
     // cout << "message = " << (int)id << " size = " << (int)size << endl;
 
     // load message
-    ch->read( savebuf, size );
+    if ( ch->get_type() == sgFileType ) {
+        int count = myread( ch, savebuf, size );
+        if ( count != size ) {
+            cout << "ERROR: didn't read enough bytes!" << endl;
+        }
+    } else {
+        for ( int i = 0; i < size; ++i ) {
+            myread( ch, tmpbuf, 1 ); savebuf[i] = tmpbuf[0];
+        }
+    }
 
     // read checksum
-    ch->read( tmpbuf, 1 ); uint8_t cksum0 = (unsigned char)tmpbuf[0];
-    ch->read( tmpbuf, 1 ); uint8_t cksum1 = (unsigned char)tmpbuf[0];
+    myread( ch, tmpbuf, 1 ); uint8_t cksum0 = (unsigned char)tmpbuf[0];
+    myread( ch, tmpbuf, 1 ); uint8_t cksum1 = (unsigned char)tmpbuf[0];
     
     if ( validate_cksum( id, size, savebuf, cksum0, cksum1 ) ) {
         parse_msg( id, savebuf, pos, att );

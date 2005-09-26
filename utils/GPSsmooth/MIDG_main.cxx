@@ -10,6 +10,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/io/lowlevel.hxx> // endian tests
+#include <simgear/io/sg_serial.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -36,6 +37,7 @@ static int ctrls_port = 5506;
 
 // Default path
 static string file = "";
+static string serialdev = "";
 
 // Master time counter
 float sim_time = 0.0f;
@@ -322,6 +324,14 @@ int main( int argc, char **argv ) {
                 usage( argv[0] );
                 exit( -1 );
             }
+        } else if ( strcmp( argv[i], "--serial" ) == 0 ) {
+            ++i;
+            if ( i < argc ) {
+                serialdev = argv[i];
+            } else {
+                usage( argv[0] );
+                exit( -1 );
+            }
         } else if ( strcmp( argv[i], "--host" ) == 0 ) {
             ++i;
             if ( i < argc ) {
@@ -370,15 +380,6 @@ int main( int argc, char **argv ) {
         }
     }
 
-    // Load the track data
-    if ( file == "" ) {
-        cout << "No track file specified" << endl;
-        exit(-1);
-    }
-    track.load( file );
-    cout << "Loaded " << track.pos_size() << " position records." << endl;
-    cout << "Loaded " << track.att_size() << " attitude records." << endl;
-
     // Setup up outgoing network connections
 
     netInit( &argc,argv ); // We must call this before any other net stuff
@@ -418,122 +419,179 @@ int main( int argc, char **argv ) {
     }
     cout << "connected outgoing ctrls socket" << endl;
 
-    int size = track.pos_size();
+    if ( file.length() ) {
+        // Load data from a track data
+        track.load( file );
+        cout << "Loaded " << track.pos_size() << " position records." << endl;
+        cout << "Loaded " << track.att_size() << " attitude records." << endl;
 
-    double current_time = track.get_pospt(0).get_seconds();
-    cout << "Track begin time is " << current_time << endl;
-    double end_time = track.get_pospt(size-1).get_seconds();
-    cout << "Track end time is " << end_time << endl;
-    cout << "Duration = " << end_time - current_time << endl;
+        int size = track.pos_size();
 
-    // advance skip seconds forward
-    current_time += skip;
+        double current_time = track.get_pospt(0).get_seconds();
+        cout << "Track begin time is " << current_time << endl;
+        double end_time = track.get_pospt(size-1).get_seconds();
+        cout << "Track end time is " << end_time << endl;
+        cout << "Duration = " << end_time - current_time << endl;
 
-    frame_us = 1000000.0 / hertz;
-    if ( frame_us < 0.0 ) {
-        frame_us = 0.0;
-    }
+        // advance skip seconds forward
+        current_time += skip;
 
-    SGTimeStamp start_time;
-    start_time.stamp();
-    int pos_count = 0;
-    int att_count = 0;
+        frame_us = 1000000.0 / hertz;
+        if ( frame_us < 0.0 ) {
+            frame_us = 0.0;
+        }
 
-    MIDGpos pos0, pos1;
-    pos0 = pos1 = track.get_pospt( 0 );
+        SGTimeStamp start_time;
+        start_time.stamp();
+        int pos_count = 0;
+        int att_count = 0;
+
+        MIDGpos pos0, pos1;
+        pos0 = pos1 = track.get_pospt( 0 );
     
-    MIDGatt att0, att1;
-    att0 = att1 = track.get_attpt( 0 );
+        MIDGatt att0, att1;
+        att0 = att1 = track.get_attpt( 0 );
     
-    while ( current_time < end_time ) {
-        // cout << "current_time = " << current_time << " end_time = "
-        //      << end_time << endl;
+        while ( current_time < end_time ) {
+            // cout << "current_time = " << current_time << " end_time = "
+            //      << end_time << endl;
 
-        // Advance position pointer
-        while ( current_time > pos1.get_seconds()
-                && pos_count < track.pos_size() )
-        {
-            pos0 = pos1;
-            ++pos_count;
-            // cout << "count = " << count << endl;
-            pos1 = track.get_pospt( pos_count );
-        }
-        // cout << "p0 = " << p0.get_time() << " p1 = " << p1.get_time()
-        //      << endl;
+            // Advance position pointer
+            while ( current_time > pos1.get_seconds()
+                    && pos_count < track.pos_size() )
+            {
+                pos0 = pos1;
+                ++pos_count;
+                // cout << "count = " << count << endl;
+                pos1 = track.get_pospt( pos_count );
+            }
+            // cout << "p0 = " << p0.get_time() << " p1 = " << p1.get_time()
+            //      << endl;
 
-        // Advance attitude pointer
-        while ( current_time > att1.get_seconds()
-                && att_count < track.att_size() )
-        {
-            att0 = att1;
-            ++att_count;
-            // cout << "count = " << count << endl;
-            att1 = track.get_attpt( att_count );
-        }
-        //  cout << "pos0 = " << pos0.get_seconds()
-        // << " pos1 = " << pos1.get_seconds() << endl;
+            // Advance attitude pointer
+            while ( current_time > att1.get_seconds()
+                    && att_count < track.att_size() )
+            {
+                att0 = att1;
+                ++att_count;
+                // cout << "count = " << count << endl;
+                att1 = track.get_attpt( att_count );
+            }
+            //  cout << "pos0 = " << pos0.get_seconds()
+            // << " pos1 = " << pos1.get_seconds() << endl;
 
-        double pos_percent;
-        if ( fabs(pos1.get_seconds() - pos0.get_seconds()) < 0.00001 ) {
-            pos_percent = 0.0;
-        } else {
-            pos_percent =
-                (current_time - pos0.get_seconds()) /
-                (pos1.get_seconds() - pos0.get_seconds());
-        }
-        // cout << "Percent = " << percent << endl;
-        double att_percent;
-        if ( fabs(att1.get_seconds() - att0.get_seconds()) < 0.00001 ) {
-            att_percent = 0.0;
-        } else {
-            att_percent =
-                (current_time - att0.get_seconds()) /
-                (att1.get_seconds() - att0.get_seconds());
-        }
-        // cout << "Percent = " << percent << endl;
+            double pos_percent;
+            if ( fabs(pos1.get_seconds() - pos0.get_seconds()) < 0.00001 ) {
+                pos_percent = 0.0;
+            } else {
+                pos_percent =
+                    (current_time - pos0.get_seconds()) /
+                    (pos1.get_seconds() - pos0.get_seconds());
+            }
+            // cout << "Percent = " << percent << endl;
+            double att_percent;
+            if ( fabs(att1.get_seconds() - att0.get_seconds()) < 0.00001 ) {
+                att_percent = 0.0;
+            } else {
+                att_percent =
+                    (current_time - att0.get_seconds()) /
+                    (att1.get_seconds() - att0.get_seconds());
+            }
+            // cout << "Percent = " << percent << endl;
 
-        MIDGpos pos = MIDGInterpPos( pos0, pos1, pos_percent );
-        MIDGatt att = MIDGInterpAtt( att0, att1, att_percent );
-        // cout << current_time << " " << p0.lat_deg << ", " << p0.lon_deg
-        //      << endl;
-        // cout << current_time << " " << p1.lat_deg << ", " << p1.lon_deg
-        //      << endl;
-        // cout << (double)current_time << " " << pos.lat_deg << ", "
-        //      << pos.lon_deg << " " << att.yaw_deg << endl;
-        printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
-                current_time,
-                pos.lat_deg, pos.lon_deg, pos.altitude_msl,
-                att.yaw_rad * 180.0 / SG_PI,
-                att.pitch_rad * 180.0 / SG_PI,
-                att.roll_rad * 180.0 / SG_PI );
+            MIDGpos pos = MIDGInterpPos( pos0, pos1, pos_percent );
+            MIDGatt att = MIDGInterpAtt( att0, att1, att_percent );
+            // cout << current_time << " " << p0.lat_deg << ", " << p0.lon_deg
+            //      << endl;
+            // cout << current_time << " " << p1.lat_deg << ", " << p1.lon_deg
+            //      << endl;
+            // cout << (double)current_time << " " << pos.lat_deg << ", "
+            //      << pos.lon_deg << " " << att.yaw_deg << endl;
+            printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
+                    current_time,
+                    pos.lat_deg, pos.lon_deg, pos.altitude_msl,
+                    att.yaw_rad * 180.0 / SG_PI,
+                    att.pitch_rad * 180.0 / SG_PI,
+                    att.roll_rad * 180.0 / SG_PI );
 
-        send_data( pos, att );
+            send_data( pos, att );
 
-        // Update the elapsed time.
-        static bool first_time = true;
-        if ( first_time ) {
-            last_time_stamp.stamp();
-            first_time = false;
-        }
+            // Update the elapsed time.
+            static bool first_time = true;
+            if ( first_time ) {
+                last_time_stamp.stamp();
+                first_time = false;
+            }
 
-        current_time_stamp.stamp();
-        /* Convert to ms */
-        double elapsed_us = current_time_stamp - last_time_stamp;
-        if ( elapsed_us < (frame_us - 2000) ) {
-            double requested_us = (frame_us - elapsed_us) - 2000 ;
-            ulMilliSecondSleep ( (int)(requested_us / 1000.0) ) ;
-        }
-        current_time_stamp.stamp();
-        while ( current_time_stamp - last_time_stamp < frame_us ) {
             current_time_stamp.stamp();
+            /* Convert to ms */
+            double elapsed_us = current_time_stamp - last_time_stamp;
+            if ( elapsed_us < (frame_us - 2000) ) {
+                double requested_us = (frame_us - elapsed_us) - 2000 ;
+                ulMilliSecondSleep ( (int)(requested_us / 1000.0) ) ;
+            }
+            current_time_stamp.stamp();
+            while ( current_time_stamp - last_time_stamp < frame_us ) {
+                current_time_stamp.stamp();
+            }
+
+            current_time += (frame_us / 1000000.0);
+            last_time_stamp = current_time_stamp;
         }
 
-        current_time += (frame_us / 1000000.0);
-        last_time_stamp = current_time_stamp;
-    }
+        cout << "Processed " << pos_count << " entries in "
+             << (current_time_stamp - start_time) / 1000000 << " seconds."
+             << endl;
+    } else if ( serialdev.length() ) {
+        // process incoming data from the serial port
 
-    cout << "Processed " << pos_count << " entries in "
-         << (current_time_stamp - start_time) / 1000000 << " seconds." << endl;
+        int count = 0;
+        double current_time = 0.0;
+
+        MIDGpos pos;
+        MIDGatt att;
+
+        uint32_t pos_time = 1;
+        uint32_t att_time = 1;
+
+        // open the file
+        SGSerial input( serialdev, "115200" );
+        if ( !input.open( SG_IO_IN ) ) {
+            cout << "Cannot open file: " << file << endl;
+            return false;
+        }
+
+        while ( ! input.eof() ) {
+            // cout << "looking for next message ..." << endl;
+            int id = track.next_message( &input, &pos, &att );
+            count++;
+
+            if ( id == 10 ) {
+                if ( att.get_msec() > att_time ) {
+                    att_time = att.get_msec();
+                    current_time = att_time;
+                } else {
+                    cout << "oops att back in time" << endl;
+                }
+            } else if ( id == 12 ) {
+                if ( pos.get_msec() > pos_time ) {
+                    pos_time = pos.get_msec();
+                    current_time = pos_time;
+                } else {
+                    cout << "oops pos back in time" << endl;
+                }
+            }
+
+            printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
+                    current_time,
+                    pos.lat_deg, pos.lon_deg, pos.altitude_msl,
+                    att.yaw_rad * 180.0 / SG_PI,
+                    att.pitch_rad * 180.0 / SG_PI,
+                    att.roll_rad * 180.0 / SG_PI );
+
+            send_data( pos, att );
+        }
+    }
 
     return 0;
 }
