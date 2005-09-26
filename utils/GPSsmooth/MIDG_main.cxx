@@ -10,6 +10,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/io/lowlevel.hxx> // endian tests
+#include <simgear/io/sg_file.hxx>
 #include <simgear/io/sg_serial.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -36,8 +37,9 @@ static int fdm_port = 5505;
 static int ctrls_port = 5506;
 
 // Default path
-static string file = "";
+static string infile = "";
 static string serialdev = "";
+static string outfile = "";
 
 // Master time counter
 float sim_time = 0.0f;
@@ -287,7 +289,9 @@ static void send_data( const MIDGpos pos, const MIDGatt att ) {
 void usage( const string &argv0 ) {
     cout << "Usage: " << argv0 << endl;
     cout << "\t[ --help ]" << endl;
-    cout << "\t[ --file <file_name>" << endl;
+    cout << "\t[ --infile <infile_name>" << endl;
+    cout << "\t[ --serial <dev_name>" << endl;
+    cout << "\t[ --outfile <outfile_name> (capture the data to a file)" << endl;
     cout << "\t[ --hertz <hertz> ]" << endl;
     cout << "\t[ --host <hostname> ]" << endl;
     cout << "\t[ --broadcast ]" << endl;
@@ -316,10 +320,18 @@ int main( int argc, char **argv ) {
                 usage( argv[0] );
                 exit( -1 );
             }
-        } else if ( strcmp( argv[i], "--file" ) == 0 ) {
+        } else if ( strcmp( argv[i], "--infile" ) == 0 ) {
             ++i;
             if ( i < argc ) {
-                file = argv[i];
+                infile = argv[i];
+            } else {
+                usage( argv[0] );
+                exit( -1 );
+            }
+        } else if ( strcmp( argv[i], "--outfile" ) == 0 ) {
+            ++i;
+            if ( i < argc ) {
+                outfile = argv[i];
             } else {
                 usage( argv[0] );
                 exit( -1 );
@@ -419,9 +431,9 @@ int main( int argc, char **argv ) {
     }
     cout << "connected outgoing ctrls socket" << endl;
 
-    if ( file.length() ) {
+    if ( infile.length() ) {
         // Load data from a track data
-        track.load( file );
+        track.load( infile );
         cout << "Loaded " << track.pos_size() << " position records." << endl;
         cout << "Loaded " << track.att_size() << " attitude records." << endl;
 
@@ -554,16 +566,28 @@ int main( int argc, char **argv ) {
         uint32_t pos_time = 1;
         uint32_t att_time = 1;
 
-        // open the file
+        // open the serial port device
         SGSerial input( serialdev, "115200" );
         if ( !input.open( SG_IO_IN ) ) {
-            cout << "Cannot open file: " << file << endl;
+            cout << "Cannot open: " << serialdev << endl;
+            return false;
+        }
+
+        // open up the data log file if requested
+        if ( !outfile.length() ) {
+            cout << "no --outfile <name> specified, cannot capture data!"
+                 << endl;
+            return false;
+        }
+        SGFile output( outfile );
+        if ( !output.open( SG_IO_OUT ) ) {
+            cout << "Cannot open: " << outfile << endl;
             return false;
         }
 
         while ( ! input.eof() ) {
             // cout << "looking for next message ..." << endl;
-            int id = track.next_message( &input, &pos, &att );
+            int id = track.next_message( &input, &output, &pos, &att );
             count++;
 
             if ( id == 10 ) {
