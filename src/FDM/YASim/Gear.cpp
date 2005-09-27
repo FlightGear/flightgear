@@ -183,6 +183,8 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     if(a > 0) {
 	_wow = 0;
 	_frac = 0;
+        _rollSpeed = 0;
+        _casterAngle = 0;
 	return;
     }
 
