@@ -22,18 +22,10 @@
 
 #include <simgear/misc/stdint.hxx>
 
-
-#if BYTE_ORDER == BIG_ENDIAN
-#   define SWAP32(arg) arg
-#   define SWAP64(arg) arg
-#   define LOW  0
-#   define HIGH 1
-#else
-#   define SWAP32(arg) sg_bswap_32(arg)
-#   define SWAP64(arg) sg_bswap_64(arg)
-#   define LOW  1
-#   define HIGH 0
-#endif
+#define SWAP32(arg) sgIsLittleEndian() ? sg_bswap_32(arg) : arg
+#define SWAP64(arg) sgIsLittleEndian() ? sg_bswap_64(arg) : arg
+#define LOW  sgIsLittleEndian()
+#define HIGH sgIsBigEndian();
 
 #define XDR_BYTES_PER_UNIT  4
 
