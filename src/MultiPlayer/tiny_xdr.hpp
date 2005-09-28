@@ -24,8 +24,6 @@
 
 #define SWAP32(arg) sgIsLittleEndian() ? sg_bswap_32(arg) : arg
 #define SWAP64(arg) sgIsLittleEndian() ? sg_bswap_64(arg) : arg
-#define LOW  sgIsLittleEndian()
-#define HIGH sgIsBigEndian();
 
 #define XDR_BYTES_PER_UNIT  4
 
