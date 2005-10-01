@@ -41,19 +41,22 @@ SG_USING_STD(string);
 
 // convenience types
 typedef vector < FGNavRecord* > nav_list_type;
+typedef vector < FGTACANRecord* > tacan_list_type;
 typedef nav_list_type::iterator nav_list_iterator;
 typedef nav_list_type::const_iterator nav_list_const_iterator;
 
 typedef map < int, nav_list_type > nav_map_type;
+typedef map < int, tacan_list_type > tacan_map_type;
 typedef nav_map_type::iterator nav_map_iterator;
 typedef nav_map_type::const_iterator nav_map_const_iterator;
 
 typedef map < string, nav_list_type > nav_ident_map_type;
-
+typedef map < string, tacan_list_type > tacan_ident_map_type;
 
 class FGNavList {
 
     nav_list_type navlist;
+    nav_list_type carrierlist;
     nav_map_type navaids;
     nav_map_type navaids_by_tile;
     nav_ident_map_type ident_navaids;
@@ -73,6 +76,7 @@ public:
 
     // add an entry
     bool add( FGNavRecord *n );
+    //bool add( FGTACANRecord *r );
 
     // Query the database for the specified frequency.  It is assumed
     // that there will be multiple stations with matching frequencies
@@ -97,8 +101,40 @@ public:
     // returns the closest entry to the give lon/lat/elev
     FGNavRecord *findClosest( double lon_rad, double lat_rad, double elev_m );
 
+    // given a frequency returns the first matching entry
+    FGNavRecord *findStationByFreq( double frequency );
+
     inline nav_map_type get_navaids() const { return navaids; }
 };
 
+class FGTACANList {
 
+    tacan_list_type channellist;
+    //nav_list_type carrierlist;
+    tacan_map_type channels;
+    //nav_map_type navaids_by_tile;
+    tacan_ident_map_type ident_channels;
+	
+    // Given a point and a list of stations, return the closest one to
+    // the specified point.
+    /*FGNavRecord *findNavFromList( const Point3D &aircraft, 
+                                  const nav_list_type &stations );*/
+	
+public:
+
+    FGTACANList();
+    ~FGTACANList();
+
+    // initialize the TACAN list
+    bool init();
+
+    // add an entry
+    
+    bool add( FGTACANRecord *r );
+    
+    // Given a TACAN Channel, return the appropriate frequency.  
+    FGTACANRecord *findByChannel( string channel );
+
+    
+};
 #endif // _FG_NAVLIST_HXX

@@ -172,5 +172,36 @@ operator >> ( istream& in, FGNavRecord& n )
     return in;
 }
 
+class FGTACANRecord {
 
+    string channel;		
+    int freq;
+     
+public:
+    
+    inline FGTACANRecord(void);
+    inline ~FGTACANRecord(void) {}
+
+    inline string get_channel() { return channel; }
+    inline int get_freq() const { return freq; }
+    friend istream& operator>> ( istream&, FGTACANRecord& );
+    };
+
+
+inline
+FGTACANRecord::FGTACANRecord(void) :
+    channel(""),
+    freq(0)
+    
+{
+}
+
+inline istream&
+operator >> ( istream& in, FGTACANRecord& n )
+{
+    in >> n.channel >> n.freq ;
+    //getline( in, n.name );
+
+    return in;
+}
 #endif // _FG_NAVRECORD_HXX

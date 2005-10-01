@@ -40,7 +40,9 @@ SG_USING_STD( string );
 // load and initialize the navigational databases
 bool fgNavDBInit( FGAirportList *airports,
                   FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
-                  FGNavList *dmelist, FGNavList *mkrlist )
+                  FGNavList *dmelist, FGNavList *mkrlist, 
+                  FGNavList *tacanlist, FGNavList *carrierlist,
+                  FGTACANList *channellist)
 {
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaid Databases");
     // SG_LOG(SG_GENERAL, SG_INFO, "  VOR/NDB");
@@ -83,13 +85,14 @@ bool fgNavDBInit( FGAirportList *airports,
             break;
         }
 
-	/* cout << "id = " << n.get_ident() << endl;
-	cout << " type = " << n.get_type() << endl;
-	cout << " lon = " << n.get_lon() << endl;
-	cout << " lat = " << n.get_lat() << endl;
-	cout << " elev = " << n.get_elev() << endl;
-	cout << " freq = " << n.get_freq() << endl;
- 	cout << " range = " << n.get_range() << endl << endl; */
+	/*cout << "id = " << r->get_ident() << endl;
+	cout << " type = " << r->get_type() << endl;
+	cout << " lon = " << r->get_lon() << endl;
+	cout << " lat = " << r->get_lat() << endl;
+	cout << " elev = " <<r->get_elev_ft() << endl;
+	cout << " freq = " << r->get_freq() << endl;
+	cout << " range = " << r->get_range() << endl;
+ 	cout << " name = " << r->get_name() << endl << endl; */
 
         // fudge elevation to the field elevation if it's not specified
         if ( fabs(r->get_elev_ft()) < 0.01 && r->get_apt_id().length() ) {
@@ -118,14 +121,105 @@ bool fgNavDBInit( FGAirportList *airports,
             mkrlist->add( r );
         } else if ( r->get_type() == 12 ) {
             // DME=12
+            string str1( r->get_name() );
+            unsigned int loc1= str1.find( "TACAN", 0 );
+            unsigned int loc2 = str1.find( "VORTAC", 0 );
+                       
+            if( loc1 != string::npos || loc2 != string::npos ){
+                 //cout << " name = " << r->get_name() ;
+                 //cout << " freq = " << r->get_freq() ;
+                 tacanlist->add( r );
+                 }
+                
             dmelist->add( r );
+            
         }
 		
         in >> skipcomment;
     }
 
-    // cout << "min freq = " << min << endl;
-    // cout << "max freq = " << max << endl;
+// load the carrier navaids file
+    
+    string file, name;
+    path = "";
+    path = globals->get_fg_root() ;
+    path.append( "Navaids/carrier_nav.dat" );
+    
+    file = path.str();
+    SG_LOG( SG_GENERAL, SG_ALERT, "opening file: " << path.str() );
+    
+    sg_gzifstream incarrier( path.str() );
+    
+    if ( !incarrier.is_open() ) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
+        exit(-1);
+    }
+    
+    // skip first two lines
+    //incarrier >> skipeol;
+    //incarrier >> skipeol;
+    
+#ifdef __MWERKS__
+    char c = 0;
+    while ( incarrier.get(c) && c != '\0'  ) {
+        incarrier.putback(c);
+#else
+    while ( ! incarrier.eof() ) {
+#endif
+        
+        FGNavRecord *r = new FGNavRecord;
+        incarrier >> (*r);
+        carrierlist->add ( r );
+        /*cout << " carrier lon: "<<  r->get_lon() ;
+        cout << " carrier lat: "<<  r->get_lat() ;
+        cout << " freq: " << r->get_freq() ;
+        cout << " carrier name: "<<  r->get_name() << endl;*/
+                
+        //if ( r->get_type() > 95 ) {
+        //   break;}
+    } // end while
+
+// end loading the carrier navaids file
+
+// load the channel/freqency file
+    string channel, freq;
+    path="";
+    path = globals->get_fg_root();
+    path.append( "Navaids/TACAN_freq.dat" );
+    
+    file = path.str();
+    cout << file << endl;
+    //
+    sg_gzifstream inchannel( path.str() );
+    
+    if ( !inchannel.is_open() ) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
+        exit(-1);
+    }
+    
+    // skip first two lines
+    inchannel >> skipeol;
+    inchannel >> skipeol;
+    
+#ifdef __MWERKS__
+    char c = 0;
+    while ( inchannel.get(c) && c != '\0'  ) {
+        in.putback(c);
+#else
+    while ( ! inchannel.eof() ) {
+#endif
+
+        FGTACANRecord *r = new FGTACANRecord;
+        inchannel >> (*r);
+        channellist->add ( r );
+       	//cout << "channel = " << r->get_channel() ;
+       	//cout << " freq = " << r->get_freq() << endl;
+ 	
+    } // end while
+
+ 
+ // end ReadChanFile
+
 
     return true;
 }
@@ -219,3 +313,4 @@ void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist,
         ++freq;
     }
 }
+

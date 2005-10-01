@@ -82,6 +82,8 @@ FGGlobals::FGGlobals() :
     gslist( NULL ),
     dmelist( NULL ),
     mkrlist( NULL ),
+    tacanlist( NULL ),
+    carrierlist( NULL ), 
     fixlist( NULL )
 {
 }

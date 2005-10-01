@@ -301,18 +301,13 @@ void FGAICarrier::bind() {
                 SGRawValuePointer<double>(&rel_wind_speed_kts));
    props->tie("controls/flols/wave-off-lights",  
                 SGRawValuePointer<bool>(&wave_off_lights));
-   props->tie("instrumentation/TACAN/bearing-true-deg",  
-                SGRawValuePointer<double>(&bearing));
-   props->tie("instrumentation/TACAN/range-nm",  
-                SGRawValuePointer<double>(&range));
                     
    props->setBoolValue("controls/flols/cut-lights", false);
    props->setBoolValue("controls/flols/wave-off-lights", false);
    props->setBoolValue("controls/flols/cond-datum-lights", true);
    props->setBoolValue("controls/crew", false);
 
-   props->setStringValue("instrumentation/TACAN/channel-ID", TACAN_channel_id.c_str());
-  
+   props->setStringValue("navaids/tacan/channel-ID", TACAN_channel_id.c_str());
    props->setStringValue("sign", sign.c_str());
 }
 
@@ -331,9 +326,7 @@ void FGAICarrier::unbind() {
     props->untie("environment/rel-wind-from-degs");
     props->untie("environment/rel-wind-speed-kts");
     props->untie("controls/flols/wave-off-lights");
-    props->untie("instrumentation/TACAN/bearing-true-deg");
-    props->untie("instrumentation/TACAN/range-nm");
-    props->untie("instrumentation/TACAN/channel-ID");
+    
 }
 
 bool FGAICarrier::getParkPosition(const string& id, Point3D& geodPos,
@@ -756,7 +749,7 @@ void FGAICarrier::UpdateWind( double dt) {
        wave_off_lights = true;
     }    
        
-    cout << "rel wind: " << rel_wind << endl;
+    // cout << "rel wind: " << rel_wind << endl;
 
 }// end update wind
 
@@ -800,7 +793,7 @@ void FGAICarrier::ReturnToBox(){
                      
     distance *= SG_METER_TO_NM;
 
-    cout << "return course: " << course << " distance: " << distance << endl;
+    //cout << "return course: " << course << " distance: " << distance << endl;
     //turn the carrier
        FGAIShip::TurnTo(course); 
        FGAIShip::AccelTo(base_speed);

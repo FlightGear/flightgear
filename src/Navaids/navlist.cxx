@@ -36,11 +36,16 @@
 FGNavList::FGNavList( void ) {
 }
 
+FGTACANList::FGTACANList( void ){
+}
+
 
 // Destructor
 FGNavList::~FGNavList( void ) {
 }
 
+FGTACANList::~FGTACANList( void ){
+}
 
 // load the navaids and build the map
 bool FGNavList::init() {
@@ -53,6 +58,10 @@ bool FGNavList::init() {
     return true;
 }
 
+bool FGTACANList::init() {
+    
+    return true;      
+}
 
 // real add a marker beacon
 static void real_add( nav_map_type &navmap, const int master_index,
@@ -128,6 +137,11 @@ bool FGNavList::add( FGNavRecord *n ) {
     return true;
 }
 
+// add an entry to the lists
+bool FGTACANList::add( FGTACANRecord *c ) {
+    ident_channels[c->get_channel()].push_back(c);
+    return true;
+}
 
 // Query the database for the specified frequency.  It is assumed that
 // there will be multiple stations with matching frequencies so a
@@ -137,6 +151,7 @@ FGNavRecord *FGNavList::findByFreq( double freq, double lon, double lat, double 
 {
     nav_list_type stations = navaids[(int)(freq*100.0 + 0.5)];
     Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
+    SG_LOG( SG_INSTR, SG_DEBUG, "findbyFreq " << freq << " size " << stations.size()  );
 
     return findNavFromList( aircraft, stations );
 }
@@ -157,7 +172,7 @@ FGNavRecord *FGNavList::findByIdent( const char* ident,
 FGNavRecord *FGNavList::findByIdentAndFreq( const char* ident, const double freq )
 {
     nav_list_type stations = ident_navaids[ident];
-
+    SG_LOG( SG_INSTR, SG_DEBUG, "findByIdent " << ident<< " size " << stations.size()  );
     if ( freq > 0.0 ) {
         // sometimes there can be duplicated idents.  If a freq is
         // specified, use it to refine the search.
@@ -320,4 +335,29 @@ FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
     //      << "  closest beacon = " << sqrt( min_dist ) << endl;
 
     return result;
+}
+
+// Given a TACAN Channel return the first matching frequency
+FGTACANRecord *FGTACANList::findByChannel( string channel )
+{
+    tacan_list_type stations = ident_channels[channel];
+    SG_LOG( SG_INSTR, SG_DEBUG, "findByChannel " << channel<< " size " << stations.size()  );
+    
+    if (stations.size()) {
+        return stations[0];
+    }    
+    return NULL;
+}
+
+// Given a frequency, return the first matching station.
+FGNavRecord *FGNavList::findStationByFreq( double freq )
+{
+    nav_list_type stations = navaids[(int)(freq*100.0 + 0.5)];
+   
+    SG_LOG( SG_INSTR, SG_DEBUG, "findStationByFreq " << freq << " size " << stations.size()  );
+    
+    if (stations.size()) {
+        return stations[0];
+    }    
+    return NULL;
 }

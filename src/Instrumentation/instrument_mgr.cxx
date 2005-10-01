@@ -36,6 +36,7 @@
 #include "turn_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
 #include "inst_vertical_speed_indicator.hxx" // (TJ)
+#include "tacan.hxx" 
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
@@ -92,6 +93,7 @@ bool FGInstrumentMgr::build ()
     for ( i = 0; i < count; ++i ) {
         node = config_props->getChild(i);
         string name = node->getName();
+        cout<< "instrument name: " << name << endl;
         std::ostringstream temp;
         temp << i;
         if ( name == "adf" ) {
@@ -151,6 +153,10 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "inst-vertical-speed-indicator" ) { // (TJ)
             set_subsystem( "instrument" + temp.str(), 
                            new InstVerticalSpeedIndicator( node ) );
+        } else if ( name == "tacan" ) { 
+            set_subsystem( "instrument" + temp.str(), 
+                           new TACAN( node ) );
+                           
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
                     << name );

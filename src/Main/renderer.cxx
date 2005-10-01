@@ -244,7 +244,13 @@ FGRenderer::update( bool refresh_camera_settings ) {
         SGAnimation::set_sim_time_sec( 0.0 );
         return;
     }
+//    return; 
 
+	// TODO:TEST only, don't commit that !!
+//	sgFXperFrameInit();
+
+    extern void sgShaderFrameInit(double delta_time_sec);
+    sgShaderFrameInit(delta_time_sec);
 
     bool draw_otw = fgGetBool("/sim/rendering/draw-otw");
     bool skyblend = fgGetBool("/sim/rendering/skyblend");

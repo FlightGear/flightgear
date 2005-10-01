@@ -174,8 +174,8 @@ void FGAIShip::Run(double dt) {
     //low pass filter
      roll = (raw_roll * roll_constant) + (roll * (1 - roll_constant));
          
-     cout  << " rudder: " << rudder << " raw roll: "<< raw_roll<<" roll: " << roll ;
-     cout  << " hdg: " << hdg << endl ;
+     /*cout  << " rudder: " << rudder << " raw roll: "<< raw_roll<<" roll: " << roll ;
+     cout  << " hdg: " << hdg << endl ;*/
 
    // adjust target rudder angle if heading lock engaged
    if (hdg_lock) {

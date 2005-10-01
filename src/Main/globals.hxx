@@ -73,6 +73,7 @@ class FGControls;
 class FGFlightPlanDispatcher;
 class FGIO;
 class FGNavList;
+class FGTACANList;
 class FGFixList;
 class FGLight;
 class FGModelMgr;
@@ -205,7 +206,11 @@ private:
     FGNavList *gslist;
     FGNavList *dmelist;
     FGNavList *mkrlist;
+    FGNavList *tacanlist;
+    FGNavList *carrierlist;
+    FGTACANList *channellist;
     FGFixList *fixlist;
+
 
 #ifdef FG_MPLAYER_AS
     //Mulitplayer managers
@@ -371,11 +376,16 @@ public:
     inline void set_gslist( FGNavList *n ) { gslist = n; }
     inline FGNavList *get_dmelist() const { return dmelist; }
     inline void set_dmelist( FGNavList *n ) { dmelist = n; }
+    inline FGNavList *get_tacanlist() const { return tacanlist; }
+    inline void set_tacanlist( FGNavList *n ) { tacanlist = n; }
+    inline FGNavList *get_carrierlist() const { return carrierlist; }
+    inline void set_carrierlist( FGNavList *n ) { carrierlist = n; }
     inline FGNavList *get_mkrlist() const { return mkrlist; }
     inline void set_mkrlist( FGNavList *n ) { mkrlist = n; }
-
     inline FGFixList *get_fixlist() const { return fixlist; }
     inline void set_fixlist( FGFixList *f ) { fixlist = f; }
+    inline FGTACANList *get_channellist() const { return channellist; }
+    inline void set_channellist( FGTACANList *c ) { channellist = c; }
 
    /**
      * Save the current state as the initial state.

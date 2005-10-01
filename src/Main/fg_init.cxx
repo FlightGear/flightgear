@@ -1096,14 +1096,20 @@ fgInitNav ()
     FGNavList *gslist = new FGNavList;
     FGNavList *dmelist = new FGNavList;
     FGNavList *mkrlist = new FGNavList;
+    FGNavList *tacanlist = new FGNavList;
+    FGNavList *carrierlist = new FGNavList;
+    FGTACANList *channellist = new FGTACANList;
 
     globals->set_navlist( navlist );
     globals->set_loclist( loclist );
     globals->set_gslist( gslist );
     globals->set_dmelist( dmelist );
     globals->set_mkrlist( mkrlist );
+    globals->set_tacanlist( tacanlist );
+    globals->set_carrierlist( carrierlist );
+    globals->set_channellist( channellist );
 
-    if ( !fgNavDBInit(airports, navlist, loclist, gslist, dmelist, mkrlist) ) {
+    if ( !fgNavDBInit(airports, navlist, loclist, gslist, dmelist, mkrlist, tacanlist, carrierlist, channellist) ) {
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "Problems loading one or more navigational database" );
     }

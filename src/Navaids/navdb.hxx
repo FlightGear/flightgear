@@ -43,8 +43,9 @@
 // load and initialize the navigational databases
 bool fgNavDBInit( FGAirportList *airports,
                   FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
-                  FGNavList *dmelist, FGNavList *mkrbeacons );
-
+                  FGNavList *dmelist, FGNavList *mkrbeacons,
+                  FGNavList *tacanlist, FGNavList *carrierlist,
+                  FGTACANList *channellist );
 
 // This routines traverses the localizer list and attempts to match
 // each entry with it's corresponding runway.  When it is successful,
@@ -53,6 +54,5 @@ bool fgNavDBInit( FGAirportList *airports,
 // from the runway threshold.
 void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist,
                                 double threshold );
-
 
 #endif // _FG_NAVDB_HXX

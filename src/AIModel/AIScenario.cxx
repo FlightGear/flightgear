@@ -99,8 +99,8 @@ FGAIScenario::FGAIScenario(const string &filename)
      en->cd              = entry_node->getDoubleValue("cd", 0.029); 
      en->mass            = entry_node->getDoubleValue("mass", 0.007); 
      en->radius          = entry_node->getDoubleValue("turn-radius-ft", 2000);
-     en->TACAN_channel_ID= entry_node->getStringValue("TACAN-channel-ID", "017X");
-     en->name            = entry_node->getStringValue("name", "");
+     en->TACAN_channel_ID= entry_node->getStringValue("TACAN-channel-ID", "029Y");
+     en->name            = entry_node->getStringValue("name", "Nimitz");
      en->pennant_number  = entry_node->getStringValue("pennant-number", "");
      en->wire_objects     = getAllStringNodeVals("wire", entry_node);
      en->catapult_objects = getAllStringNodeVals("catapult", entry_node);

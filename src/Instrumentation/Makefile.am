@@ -22,6 +22,7 @@ libInstrumentation_a_SOURCES = \
 	transponder.cxx transponder.hxx \
         turn_indicator.cxx turn_indicator.hxx \
         vertical_speed_indicator.cxx vertical_speed_indicator.hxx \
-	inst_vertical_speed_indicator.cxx inst_vertical_speed_indicator.hxx
+	inst_vertical_speed_indicator.cxx inst_vertical_speed_indicator.hxx \
+	tacan.cxx tacan.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
