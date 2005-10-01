@@ -1,0 +1,108 @@
+// dme.hxx - distance-measuring equipment.
+// Written by David Megginson, started 2003.
+//
+// This file is in the Public Domain and comes with no warranty.
+
+
+#ifndef __INSTRUMENTS_TACAN_HXX
+#define __INSTRUMENTS_TACAN_HXX 1
+
+#ifndef __cplusplus
+# error This library requires C++
+#endif
+
+#include <simgear/math/point3d.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+
+
+/**
+ * Model a TACAN radio.
+ *
+ * Input properties:
+ *
+ * /position/longitude-deg
+ * /position/latitude-deg
+ * /position/altitude-ft
+ * /systems/electrical/outputs/TACAN
+ * /instrumentation/"name"/serviceable
+ * /instrumentation/"name"/frequencies/source
+ * /instrumentation/"name"/frequencies/selected-mhz
+ *
+ * Output properties:
+ *
+ * /instrumentation/"name"/in-range
+ * /instrumentation/"name"/indicated-distance-nm
+ * /instrumentation/"name"/indicated-ground-speed-kt
+ * /instrumentation/"name"/indicated-time-kt
+ */
+class TACAN : public SGSubsystem
+{
+
+public:
+
+    TACAN ( SGPropertyNode *node );
+    TACAN ();
+    virtual ~TACAN ();
+
+    virtual void init ();
+    virtual void update (double delta_time_sec);
+
+private:
+
+    void search (double frequency, double longitude_rad,
+                 double latitude_rad, double altitude_m);
+    double searchChannel (string _channel);
+
+    SGPropertyNode_ptr _longitude_node;
+    SGPropertyNode_ptr _latitude_node;
+    SGPropertyNode_ptr _altitude_node;
+    SGPropertyNode_ptr _serviceable_node;
+    SGPropertyNode_ptr _electrical_node;
+    SGPropertyNode_ptr _source_node;
+    SGPropertyNode_ptr _frequency_node;
+
+    SGPropertyNode_ptr _in_range_node;
+    SGPropertyNode_ptr _distance_node;
+    SGPropertyNode_ptr _speed_node;
+    SGPropertyNode_ptr _time_node;
+    SGPropertyNode_ptr _bearing_node;
+    SGPropertyNode_ptr _ident_node;
+    SGPropertyNode_ptr _name_node;
+    
+    SGPropertyNode_ptr _carrier_lat_node;
+    SGPropertyNode_ptr _carrier_lon_node;
+    SGPropertyNode_ptr _carrier_name_node;
+    
+    SGPropertyNode_ptr _channel_node;
+   
+
+    double _last_distance_nm;
+    double _last_frequency_mhz;
+    double _time_before_search_sec;
+    
+    bool _carrier_valid;
+    bool _transmitter_valid;
+    
+    Point3D _transmitter;
+    double _transmitter_lat, _transmitter_lon;
+    double _transmitter_elevation_ft;
+    double _transmitter_range_nm;
+    double _transmitter_bearing_deg;
+    double _transmitter_bias;
+    string _transmitter_name;
+    
+    double _carrier_lat, _carrier_lon;
+    double _carrier_elevation_ft;
+    double _carrier_range_nm;
+    double _carrier_bearing_deg;
+    double _carrier_bias;
+    string _carrier_name;
+
+    string name;
+    int num;
+
+};
+
+
+#endif // __INSTRUMENTS_TACAN_HXX
