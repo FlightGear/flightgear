@@ -197,8 +197,7 @@ bool fgNavDBInit( FGAirportList *airports,
         exit(-1);
     }
     
-    // skip first two lines
-    inchannel >> skipeol;
+    // skip first line
     inchannel >> skipeol;
     
 #ifdef __MWERKS__
