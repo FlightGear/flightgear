@@ -498,7 +498,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
         - cur_fdm_state->get_Runway_altitude_m();
 
-    if ( agl > 10.0 ) {
+    if ( agl > 50.0 ) {
         scene_nearplane = 10.0f;
         scene_farplane = 120000.0f;
     } else {
