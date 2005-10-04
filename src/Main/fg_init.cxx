@@ -991,7 +991,7 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
 
         return true;
     } else {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carroer = "
+        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate aircraft carrier = "
                 << carrier );
         return false;
     }
