@@ -36,7 +36,7 @@
 #ifdef _MSC_VER
 #  include <float.h>
 #  define finite _finite
-#elif defined(sun) || defined(sgi)
+#elif defined(__sun) || defined(sgi)
 #  include <ieeefp.h>
 #endif
 

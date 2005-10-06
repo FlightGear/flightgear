@@ -58,7 +58,7 @@
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 
-#if defined ( __sun__ ) || defined ( __sgi )
+#if defined (__sun) || defined ( __sgi )
 extern "C" {
     extern void *memmove(void *, const void *, size_t);
 }
