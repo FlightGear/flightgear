@@ -186,7 +186,7 @@ TACAN::update (double delta_time_sec)
                                           
                                 // On timeout, scan again
     _time_before_search_sec -= delta_time_sec;
-    if (_time_before_search_sec < 0 and frequency_mhz > 0)
+    if (_time_before_search_sec < 0 && frequency_mhz > 0)
         search(frequency_mhz, longitude_rad,
                latitude_rad, altitude_m);
 
@@ -215,7 +215,7 @@ TACAN::update (double delta_time_sec)
     
                      
      //select the nearer
-     if ( carrier_distance <= distance and _carrier_valid) { 
+     if ( carrier_distance <= distance && _carrier_valid) { 
          SG_LOG( SG_INSTR, SG_DEBUG, "carrier_distance_nm " << carrier_distance);
          SG_LOG( SG_INSTR, SG_DEBUG, "distance_nm " << distance);
          bearing = carrier_bearing;
@@ -298,7 +298,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         string str2 ( _carrier_name_node->getStringValue());
         SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 2 " << str2 );
         unsigned int loc1= str1.find( str2, 0 );
-          if( loc1 != string::npos and str2 != "" ){
+          if( loc1 != string::npos && str2 != "" ){
               SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
               _carrier_lat = _carrier_lat_node->getDoubleValue();
               _carrier_lon = _carrier_lon_node->getDoubleValue();
