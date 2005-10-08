@@ -31,6 +31,37 @@
 #include "acmodel.hxx"
 
 
+class fgLoaderOptions : ssgLoaderOptions {
+
+public:
+    virtual void makeTexturePath ( char* path, const char *fname ) const ;
+    string livery_path;
+
+};
+
+void fgLoaderOptions::makeTexturePath ( char *path, const char *fname ) const
+{
+  /* Remove all leading path information. */
+  const char* seps = "\\/" ;
+  const char* fn = & fname [ strlen ( fname ) - 1 ] ;
+  for ( ; fn != fname && strchr(seps,*fn) == NULL ; fn-- )
+    /* Search back for a seperator */ ;
+  if ( strchr(seps,*fn) != NULL )
+    fn++ ;
+  fname = fn ;
+  // if we have a livery path and the texture is found there then we use that
+  // path in priority, if the texture was not found or we add no additional 
+  // livery path then we use the current model path or model/texture-path
+  if( livery_path.size() ) {
+      make_path( path, livery_path.c_str(), fname );
+      if( ulFileExists( path ) )
+          return;
+  }
+  make_path ( path, texture_dir, fname ) ;
+}
+
+static fgLoaderOptions _fgLoaderOptions;
+
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGAircraftModel
@@ -60,8 +91,21 @@ FGAircraftModel::~FGAircraftModel ()
 void 
 FGAircraftModel::init ()
 {
+  ssgLoaderOptions *currLoaderOptions = ssgGetCurrentOptions();
+  ssgSetCurrentOptions( (ssgLoaderOptions*)&_fgLoaderOptions );
   _aircraft = new SGModelPlacement;
   string path = fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
+  string texture_path = fgGetString("/sim/model/texture-path");
+  if( texture_path.size() ) {
+      SGPath temp_path;
+      if ( !ulIsAbsolutePathName( texture_path.c_str() ) ) {
+          temp_path = globals->get_fg_root();
+          temp_path.append( SGPath( path ).dir() );
+          temp_path.append( texture_path );
+          _fgLoaderOptions.livery_path = temp_path.str();
+      } else
+          _fgLoaderOptions.livery_path = texture_path;
+  }
   try {
     ssgBranch *model = fgLoad3DModelPanel( globals->get_fg_root(),
                                            path,
@@ -83,6 +127,7 @@ FGAircraftModel::init ()
 
   // Register that one at the scenery manager
   globals->get_scenery()->register_placement_transform(_aircraft->getTransform());
+  ssgSetCurrentOptions( currLoaderOptions );
 }
 
 void 

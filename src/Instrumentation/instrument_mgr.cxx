@@ -36,12 +36,15 @@
 #include "turn_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
 #include "inst_vertical_speed_indicator.hxx" // (TJ)
+#include "od_gauge.hxx"
+#include "wxradar.hxx"
 #include "tacan.hxx" 
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
 {
     set_subsystem("annunciator", new Annunciator);
+    set_subsystem("od_gauge", new FGODGauge, 1.0);
 
     config_props = new SGPropertyNode;
 
@@ -150,6 +153,9 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "vertical-speed-indicator" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new VerticalSpeedIndicator( node ) );
+        } else if ( name == "wxradar" ) {
+            set_subsystem( "instrument" + temp.str(), 
+                           new wxRadarBg ( node ), 0.5 );
         } else if ( name == "inst-vertical-speed-indicator" ) { // (TJ)
             set_subsystem( "instrument" + temp.str(), 
                            new InstVerticalSpeedIndicator( node ) );

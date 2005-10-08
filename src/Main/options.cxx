@@ -1152,6 +1152,15 @@ fgOptDME( const char *arg )
     return FG_OPTIONS_OK;
 }
 
+static int
+fgOptLivery( const char *arg )
+{
+    string opt = arg;
+    string livery_path = "livery/" + opt;
+    fgSetString("/sim/model/texture-path", livery_path.c_str() );
+    return FG_OPTIONS_OK;
+}
+
 static map<string,size_t> fgOptionMap;
 
 /*
@@ -1352,6 +1361,7 @@ struct OptionDesc {
     {"adf",                          true,  OPTION_FUNC,   "", false, "", fgOptADF },
     {"dme",                          true,  OPTION_FUNC,   "", false, "", fgOptDME },
     {"min-status",                   true,  OPTION_STRING,  "/sim/aircraft-min-status", false, "all", 0 },
+    {"livery",                       true,  OPTION_FUNC,   "", false, "", fgOptLivery },
     {0}
 };
 
