@@ -366,6 +366,7 @@ void YASim::copyFromYASim()
     double lat, lon, alt;
     sgCartToGeod(s->pos, &lat, &lon, &alt);
     _set_Geodetic_Position(lat, lon, alt*M2FT);
+    _update_ground_elev_at_pos();
 
     // UNUSED
     //_set_Geocentric_Position(Glue::geod2geocLat(lat), lon, alt*M2FT);

@@ -193,7 +193,8 @@ network_LIBS="$LIBS"
 LIBS=""
 
 dnl check for some default libraries
-AC_SEARCH_LIBS(cos, [fastm m])
+AC_SEARCH_LIBS(sqrt, [am ffm fm fastm m])
+AC_SEARCH_LIBS(ceil, m)
 AC_SEARCH_LIBS(dlclose, dl)
 
 base_LIBS="$LIBS"

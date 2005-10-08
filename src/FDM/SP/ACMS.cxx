@@ -103,6 +103,7 @@ void FGACMS::update( double dt ) {
     _set_Euler_Rates(0,0,0);
 
     _set_Geocentric_Position( lat_geoc, get_Longitude(), sl_radius);
+    _update_ground_elev_at_pos();
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
 
 }

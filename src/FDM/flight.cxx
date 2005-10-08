@@ -515,9 +515,7 @@ void FGInterface::_updateGeodeticPosition( double lat, double lon, double alt )
     _set_Geodetic_Position( lat, lon, alt );
 
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET );
-    double alt_m = alt*SG_FEET_TO_METER;
-    double groundlevel_m = get_groundlevel_m(lat, lon, alt_m);
-    _set_Runway_altitude( groundlevel_m * SG_METER_TO_FEET );
+    _update_ground_elev_at_pos();
 
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );
@@ -554,9 +552,7 @@ void FGInterface::_updateGeocentricPosition( double lat_geoc, double lon,
     _set_Geodetic_Position( lat_geod, lon, alt );
 
     _set_Sea_level_radius( sl_radius2 * SG_METER_TO_FEET );
-    double alt_m = alt*SG_FEET_TO_METER;
-    double groundlevel_m = get_groundlevel_m(lat_geod, lon, alt_m);
-    _set_Runway_altitude( groundlevel_m * SG_METER_TO_FEET );
+    _update_ground_elev_at_pos();
 
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );
@@ -566,6 +562,13 @@ void FGInterface::_updateGeocentricPosition( double lat_geoc, double lon,
     _set_sin_cos_latitude( lat_geod );
 }
 
+void FGInterface::_update_ground_elev_at_pos( void ) {
+    double lat = get_Latitude();
+    double lon = get_Longitude();
+    double alt_m = get_Altitude()*SG_FEET_TO_METER;
+    double groundlevel_m = get_groundlevel_m(lat, lon, alt_m);
+    _set_Runway_altitude( groundlevel_m * SG_METER_TO_FEET );
+}
 
 // Extrapolate fdm based on time_offset (in usec)
 void FGInterface::extrapolate( int time_offset ) {
