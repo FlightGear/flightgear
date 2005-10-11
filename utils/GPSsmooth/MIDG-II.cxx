@@ -1,12 +1,11 @@
 #include <iostream>
 
-#include <plib/ul.h>
-
 #include <simgear/constants.h>
 #include <simgear/io/sg_file.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/misc/stdint.hxx>
 
 #include "MIDG-II.hxx"
 
@@ -26,11 +25,11 @@ static uint32_t read_swab( char *buf, size_t offset, size_t size ) {
     char *ptr = buf + offset;
 
     // MIDG data is big endian so swap if needed.
-    if ( ulIsLittleEndian ) {
+    if ( sgIsLittleEndian() ) {
         if ( size == 4 ) {
-            ulEndianSwap( (uint32_t *)ptr );
+            sgEndianSwap( (uint32_t *)ptr );
         } else if ( size == 2 ) {
-            ulEndianSwap( (uint16_t *)ptr );
+            sgEndianSwap( (uint16_t *)ptr );
         }
     }
 
