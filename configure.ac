@@ -119,7 +119,7 @@ case "${host}" in
     if test -d /opt/X11R6 ; then
         EXTRA_DIR2="/opt/X11R6"
     fi
-    EXTRA_DIRS="${EXTRA_DIRS} $EXTRA_DIR1 $EXTRA_DIR2 /usr/local/"
+    EXTRA_DIRS="${EXTRA_DIRS} $EXTRA_DIR1 $EXTRA_DIR2 /usr/local"
     ;;
 
 esac
@@ -177,7 +177,7 @@ AC_SEARCH_LIBS(pthread_cancel, [pthread c_r])
 if test "x$ac_cv_header_pthread_h" = "xyes"; then
   if test "x$ac_cv_search_pthread_exit" = "x-lc_r"; then
     CXXFLAGS="-pthread $CXXFLAGS"
-    CFLAGS="-pthread $FLAGS"
+    CFLAGS="-pthread $CFLAGS"
   fi
 fi
 
