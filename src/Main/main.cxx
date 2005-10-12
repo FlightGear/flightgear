@@ -65,7 +65,6 @@
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 #include <FDM/flight.hxx>
-#include <FDM/UIUCModel/uiuc_aircraftdir.h>
 // #include <FDM/ADA.hxx>
 #include <ATC/ATCdisplay.hxx>
 #include <ATC/ATCmgr.hxx>
@@ -961,9 +960,6 @@ bool fgMainInit( int argc, char **argv ) {
     }
 
     sgUseDisplayList = fgGetBool( "/sim/rendering/use-display-list", true );
-
-    // Initialize the Aircraft directory to "" (UIUC)
-    aircraft_dir = "";
 
     // Load the configuration parameters.  (Command line options
     // overrides config file options.  Config file options override

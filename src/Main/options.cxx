@@ -47,7 +47,6 @@
 // #include <Airports/simple.hxx>
 // #include <Cockpit/cockpit.hxx>
 // #include <FDM/flight.hxx>
-// #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 
 #include <Autopilot/route_mgr.hxx>
 #include <GUI/gui.h>

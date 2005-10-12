@@ -36,7 +36,6 @@
 #include <ATC/ATCdisplay.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Time/tmp.hxx>
-#include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <Environment/environment.hxx>
 
 #include <GUI/gui.h>
@@ -235,26 +234,6 @@ setFreeze (bool f)
             s->resume();
         }
     }
-}
-
-
-/**
- * Return the current aircraft directory (UIUC) as a string.
- */
-static const char *
-getAircraftDir ()
-{
-  return aircraft_dir.c_str();
-}
-
-
-/**
- * Set the current aircraft directory (UIUC).
- */
-static void
-setAircraftDir (const char * dir)
-{
-  aircraft_dir = dir;
 }
 
 
@@ -477,7 +456,6 @@ FGProperties::bind ()
   fgTie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
   fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
   fgTie("/sim/freeze/master", getFreeze, setFreeze);
-  fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
 
   fgTie("/sim/time/elapsed-sec", getElapsedTime_sec);
   fgTie("/sim/time/gmt", getDateString, setDateString);
@@ -506,7 +484,6 @@ FGProperties::unbind ()
   fgUntie("/sim/logging/priority");
   fgUntie("/sim/logging/classes");
   fgUntie("/sim/freeze/master");
-  fgUntie("/sim/aircraft-dir");
 
   fgUntie("/sim/time/elapsed-sec");
   fgUntie("/sim/time/gmt");

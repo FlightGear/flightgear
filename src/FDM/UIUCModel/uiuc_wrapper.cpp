@@ -89,7 +89,6 @@
 #include <Main/fg_props.hxx>
 
 #include "uiuc_aircraft.h"
-#include "uiuc_aircraftdir.h"
 #include "uiuc_coefficients.h"
 #include "uiuc_getwind.h"
 #include "uiuc_engine.h"
@@ -120,7 +119,6 @@ extern "C" void uiuc_network_recv_routine();
 extern "C" void uiuc_network_send_routine();
 
 AIRCRAFT *aircraft_ = new AIRCRAFT;
-AIRCRAFTDIR *aircraftdir_ = new AIRCRAFTDIR;
 
 // SendArray testarray(4950);
 
@@ -321,7 +319,7 @@ void uiuc_init_aeromodel ()
   // Initializes the UIUC aircraft model.
   // Called once from uiuc_init_2_wrapper
   SGPath path(globals->get_fg_root());
-  path.append(aircraft_dir);
+  path.append(fgGetString("/sim/aircraft-dir"));
   path.append("aircraft.dat");
   cout << "We are using "<< path.str() << endl;
   uiuc_initializemaps(); // Initialize the <string,int> maps

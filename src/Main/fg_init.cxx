@@ -64,7 +64,6 @@
 #include <simgear/timing/lowleveltime.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <Airports/apt_loader.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
@@ -1304,8 +1303,7 @@ void fgInitFDM() {
     }
 
     double dt = 1.0 / fgGetInt("/sim/model-hz");
-    aircraft_dir = fgGetString("/sim/aircraft-dir");
-    const string &model = fgGetString("/sim/flight-model");
+    string model = fgGetString("/sim/flight-model");
 
     try {
         if ( model == "larcsim" ) {
@@ -1466,7 +1464,7 @@ void fgInitTimeOffset() {
 
     // Okay, we now have several possible scenarios
     int offset = fgGetInt("/sim/startup/time-offset");
-    const string &offset_type = fgGetString("/sim/startup/time-offset-type");
+    string offset_type = fgGetString("/sim/startup/time-offset-type");
 
     int warp = 0;
     if ( offset_type == "real" ) {
