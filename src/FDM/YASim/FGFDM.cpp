@@ -238,9 +238,18 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         float nrm = Math::mag3(v);
         if (_vehicle_radius < nrm)
             _vehicle_radius = nrm;
-	v[0] = 0;
-	v[1] = 0;
-	v[2] = attrf(a, "compression", 1);
+        if(a->hasAttribute("upx")) {
+            v[0] = attrf(a, "upx");
+            v[1] = attrf(a, "upy");
+            v[2] = attrf(a, "upz");
+            Math::unit3(v, v);
+        } else {
+            v[0] = 0;
+            v[1] = 0;
+            v[2] = 1;
+        }
+        for(int i=0; i<3; i++)
+            v[i] *= attrf(a, "compression", 1);
 	g->setCompression(v);
         g->setBrake(attrf(a, "skid", 0));
 	g->setStaticFriction(attrf(a, "sfric", 0.8));
