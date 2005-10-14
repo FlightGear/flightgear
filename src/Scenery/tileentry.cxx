@@ -978,6 +978,8 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
     if ( taxi_lights_transform->getNumKids() > 0 ) {
         taxi_lights_transform->setTransform( sgdTrans );
     }
+
+    delete light_pts;
 }
 
 void

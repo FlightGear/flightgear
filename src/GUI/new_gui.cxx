@@ -181,6 +181,9 @@ NewGUI::clear ()
     delete _menubar;
     _menubar = 0;
     _dialog_props.clear();
+    _itt_t it;
+    for (it = _colors.begin(); it != _colors.end(); ++it)
+      delete it->second;
     _colors.clear();
 }
 
@@ -265,6 +268,9 @@ NewGUI::readDir (const char * path)
 void
 NewGUI::setStyle (void)
 {
+    _itt_t it;
+    for (it = _colors.begin(); it != _colors.end(); ++it)
+      delete it->second;
     _colors.clear();
 
     // set up the traditional colors as default

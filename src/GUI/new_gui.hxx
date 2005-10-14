@@ -155,11 +155,11 @@ public:
     virtual FGDialog * getActiveDialog ();
 
     virtual FGColor *getColor (const char * name) const {
-        _itt_t it = _colors.find(name);
+        _citt_t it = _colors.find(name);
         return (it != _colors.end()) ? it->second : NULL;
     }
     virtual FGColor *getColor (const string &name) const {
-        _itt_t it = _colors.find(name.c_str());
+        _citt_t it = _colors.find(name.c_str());
         return (it != _colors.end()) ? it->second : NULL;
     }
 
@@ -203,7 +203,8 @@ private:
     fntTexFont _tex_font;
     puFont _font;
     map<const char*,FGColor*, ltstr> _colors;
-    typedef map<const char*,FGColor*, ltstr>::const_iterator _itt_t;
+    typedef map<const char*,FGColor*, ltstr>::iterator _itt_t;
+    typedef map<const char*,FGColor*, ltstr>::const_iterator _citt_t;
 
     // Free all allocated memory.
     void clear ();
