@@ -367,7 +367,8 @@ bool FGAISchedule::update(time_t now)
 	      
 	      // Fixme: A non-existent model path results in an
 	      // abort, due to an unhandled exeption, in fg main loop.
-	      AIManagerRef = aimgr->createAircraft( &entity, this);
+              FGAIBase *aircraft = (FGAIBase*)aimgr->createAircraft( &entity, this);
+	      AIManagerRef = aircraft->getID();
 	      //cerr << "Class: " << m_class << ". acType: " << acType << ". Airline: " << airline << ". Speed = " << speed << ". From " << dep->getId() << " to " << arr->getId() << ". Time Fraction = " << (remainingTimeEnroute/(double) totalTimeEnroute) << endl;
 	      //cerr << "Latitude : " << lat << ". Longitude : " << lon << endl;
 	      //cerr << "Dep      : " << dep->getLatitude()<< ", "<< dep->getLongitude() << endl;

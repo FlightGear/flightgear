@@ -36,6 +36,7 @@ SG_USING_STD(list);
 class FGAIManager;
 class FGAIFlightPlan;
 
+
 struct ParkPosition {
   ParkPosition(const ParkPosition& pp)
     : name(pp.name), offset(pp.offset), heading_deg(pp.heading_deg)
@@ -129,8 +130,8 @@ public:
     void setYoffset( double y_offset );
     void setZoffset( double z_offset );
 
+    int getID() const;
 
-    void* getID();
     void setDie( bool die );
     bool getDie();
 
@@ -194,6 +195,11 @@ protected:
     object_type _otype;
     int index;
 
+    static int _newAIModelID();
+
+private:
+    const int _refID;
+
 public:
 
     object_type getType();
@@ -228,8 +234,6 @@ public:
 	
     static const double e;
     static const double lbs_to_slugs;
-
-    int _getID() const;
 
     inline double _getRange() { return range; };
   ssgBranch * load3DModel(const string& fg_root, 
@@ -278,8 +282,6 @@ inline void FGAIBase::setDie( bool die ) { delete_me = die; }
 inline bool FGAIBase::getDie() { return delete_me; }
 
 inline FGAIBase::object_type FGAIBase::getType() { return _otype; }
-
-inline void* FGAIBase::getID() { return this; }
 
 
 

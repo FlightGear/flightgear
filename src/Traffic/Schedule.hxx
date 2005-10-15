@@ -49,7 +49,7 @@ class FGAISchedule
   double radius;
   double groundOffset;
   double distanceToUser;
-  void* AIManagerRef;
+  int AIManagerRef;
   bool firstRun;
 
 

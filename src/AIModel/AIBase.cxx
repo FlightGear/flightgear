@@ -50,10 +50,11 @@ const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
 
 FGAIBase::FGAIBase()
- :  fp( NULL ),
+  : fp( NULL ),
     model( NULL ),
     props( NULL ),
-    manager( NULL )
+    manager( NULL ),
+    _refID( _newAIModelID() )
 {
     _type_str = "model";
     tgt_heading = tgt_altitude = tgt_speed = 0.0;
@@ -179,7 +180,7 @@ bool FGAIBase::isa( object_type otype ) {
 
 void FGAIBase::bind() {
    props->tie("id", SGRawValueMethods<FGAIBase,int>(*this,
-                                         &FGAIBase::_getID));
+                                         &FGAIBase::getID));
    props->tie("velocities/true-airspeed-kt",  SGRawValuePointer<double>(&speed));
    props->tie("velocities/vertical-speed-fps",
                SGRawValueMethods<FGAIBase,double>(*this,
@@ -399,8 +400,8 @@ bool FGAIBase::_isNight() {
     return (fgGetFloat("/sim/time/sun-angle-rad") > 1.57);
 }
 
-int FGAIBase::_getID() const {
-    return (int)(this);
+int FGAIBase::getID() const {
+    return  _refID;
 }
 
 void FGAIBase::CalculateMach() {
@@ -436,5 +437,11 @@ void FGAIBase::CalculateMach() {
  	Mach = speed/a;
  	
  //	cout  << "Speed(ft/s) "<< speed <<" Altitude(ft) "<< altitude << " Mach " << Mach;
+}
+
+int FGAIBase::_newAIModelID() {
+   static int id = 0;
+   if (!++id) id++;	// id = 0 is not allowed.
+   return id;
 }
 

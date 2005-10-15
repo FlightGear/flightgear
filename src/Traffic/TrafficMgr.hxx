@@ -34,8 +34,8 @@
 #include "Schedule.hxx"
 
 
-typedef vector<void *> IdList;
-typedef vector<void *>::iterator IdListIterator;
+typedef vector<int> IdList;
+typedef vector<int>::iterator IdListIterator;
 
 
 class FGTrafficManager : public SGSubsystem, public XMLVisitor
@@ -61,8 +61,8 @@ public:
   
   void init();
   void update(double time);
-  void release(void *ref);
-  bool isReleased(void *id);
+  void release(int ref);
+  bool isReleased(int id);
 
   // Some overloaded virtual XMLVisitor members
   virtual void startXML (); 

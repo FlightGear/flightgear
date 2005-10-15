@@ -116,12 +116,12 @@ void FGTrafficManager::update(double something)
   currAircraft++;
 }
 
-void FGTrafficManager::release(void *id)
+void FGTrafficManager::release(int id)
 {
   releaseList.push_back(id);
 }
 
-bool FGTrafficManager::isReleased(void *id)
+bool FGTrafficManager::isReleased(int id)
 {
   IdListIterator i = releaseList.begin();
   while (i != releaseList.end())

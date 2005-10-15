@@ -90,7 +90,7 @@ public:
     void* createCarrier( FGAIModelEntity *entity );
     void* createStatic( FGAIModelEntity *entity );
 
-    void destroyObject( void* ID );
+    void destroyObject( int ID );
 
     inline double get_user_latitude() { return user_latitude; }
     inline double get_user_longitude() { return user_longitude; }

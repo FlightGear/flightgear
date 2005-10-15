@@ -352,7 +352,7 @@ FGAIManager::createStatic( FGAIModelEntity *entity ) {
         return ai_static;
 }
 
-void FGAIManager::destroyObject( void* ID ) {
+void FGAIManager::destroyObject( int ID ) {
         ai_list_iterator ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
             if ((*ai_list_itr)->getID() == ID) {
