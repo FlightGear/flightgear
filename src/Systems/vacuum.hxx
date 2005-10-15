@@ -11,6 +11,7 @@
 # error This library requires C++
 #endif
 
+#include <simgear/math/sg_types.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
@@ -18,11 +19,13 @@
 /**
  * Model a vacuum-pump system.
  *
- * This first, simple draft is hard-wired to engine #1.
+ * Multiple pumps (i.e. for a multiengine aircraft) can be specified.
  *
  * Input properties:
  *
- * "rpm"
+ * "rpm1"
+ * "rpm2"
+ * "..."
  * /environment/pressure-inhg
  * /systems/"name"/serviceable
  *
@@ -48,10 +51,10 @@ private:
 
     string name;
     int num;
-    string rpm;
+    string_list rpms;
     double scale;
     SGPropertyNode_ptr _serviceable_node;
-    SGPropertyNode_ptr _rpm_node;
+    vector<SGPropertyNode_ptr> _rpm_nodes;
     SGPropertyNode_ptr _pressure_node;
     SGPropertyNode_ptr _suction_node;
     

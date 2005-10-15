@@ -11,10 +11,10 @@ VacuumSystem::VacuumSystem ( SGPropertyNode *node )
     :
     name("vacuum"),
     num(0),
-    rpm("/engines/engine[0]/rpm"),
     scale(1.0)
 
 {
+    rpms.clear();
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
@@ -25,7 +25,7 @@ VacuumSystem::VacuumSystem ( SGPropertyNode *node )
         } else if ( cname == "number" ) {
             num = child->getIntValue();
         } else if ( cname == "rpm" ) {
-            rpm = cval;
+            rpms.push_back(cval);
         } else if ( cname == "scale" ) {
             scale = child->getDoubleValue();
         } else {
@@ -41,7 +41,7 @@ VacuumSystem::VacuumSystem( int i )
 {
     name = "vacuum";
     num = i;
-    rpm = "/engines/engine[0]/rpm";
+    rpms.clear();
     scale = 1.0;
 }
 
@@ -52,12 +52,16 @@ VacuumSystem::~VacuumSystem ()
 void
 VacuumSystem::init()
 {
+    unsigned int i;
     string branch;
     branch = "/systems/" + name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
-    _rpm_node = fgGetNode(rpm.c_str(), true);
+    for ( i = 0; i < rpms.size(); i++ ) {
+      SGPropertyNode_ptr _rpm_node = fgGetNode(rpms[i].c_str(), true);
+      _rpm_nodes.push_back( _rpm_node );
+    }
     _pressure_node = fgGetNode("/environment/pressure-inhg", true);
     _suction_node = node->getChild("suction-inhg", 0, true);
 }
@@ -78,11 +82,19 @@ VacuumSystem::update (double dt)
     // Model taken from steam.cxx
 
     double suction;
+    unsigned int i;
 
     if (!_serviceable_node->getBoolValue()) {
         suction = 0.0;
     } else {
-        double rpm = _rpm_node->getDoubleValue() * scale;
+	// select the source with the max rpm
+        double rpm = 0.0;
+	for ( i = 0; i < _rpm_nodes.size(); i++ ) {
+	  double tmp = _rpm_nodes[i]->getDoubleValue() * scale;
+	  if ( tmp > rpm ) {
+	    rpm = tmp;
+	  }
+	}
         double pressure = _pressure_node->getDoubleValue();
         // This magic formula yields about 4 inhg at 700 rpm
         suction = pressure * rpm / (rpm + 4875.0);
