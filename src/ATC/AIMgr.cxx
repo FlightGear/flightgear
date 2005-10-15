@@ -57,8 +57,8 @@ FGAIMgr::FGAIMgr() {
 }
 
 FGAIMgr::~FGAIMgr() {
-	_defaultModel->deRef();
-	if(_havePiperModel) _piperModel->deRef();
+        ssgDeRefDelete(_defaultModel);
+	if(_havePiperModel) ssgDeRefDelete(_piperModel);
 }
 
 void FGAIMgr::init() {

@@ -45,7 +45,7 @@ FGAIEntity::FGAIEntity() {
 
 FGAIEntity::~FGAIEntity() {
 	//cout << "FGAIEntity dtor called..." << endl;
-	_model->deRef();	// Ought to check valid?
+        ssgDeRefDelete(_model);	// Ought to check valid?
 	//cout << "Removing model from scene graph..." << endl;
 	globals->get_scenery()->get_scene_graph()->removeKid(_aip.getSceneGraph());
         // Unregister that one at the scenery manager

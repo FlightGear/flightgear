@@ -123,8 +123,8 @@ void FGScenery::unregister_placement_transform(ssgPlacementTransform *trans) {
     placement_list_type::iterator it = _placement_list.begin();
     while (it != _placement_list.end()) {
         if ((*it) == trans) {
-            (*it)->deRef();
             it = _placement_list.erase(it);        
+            ssgDeRefDelete(trans);
         } else
             ++it;
     }

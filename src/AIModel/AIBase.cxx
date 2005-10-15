@@ -81,6 +81,8 @@ FGAIBase::~FGAIBase() {
     root->removeChild(_type_str.c_str(), index);
     delete fp;
     fp = NULL;
+    ssgDeRefDelete(model);
+    model = 0;
 }
 
 void FGAIBase::update(double dt) {

@@ -70,6 +70,8 @@ wxRadarBg::wxRadarBg ()
 
 wxRadarBg::~wxRadarBg ()
 {
+    ssgDeRefDelete(resultTexture);
+    ssgDeRefDelete(wxEcho);
 }
 
 void
