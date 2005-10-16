@@ -15,6 +15,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/point3d.hxx>
+#include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -633,7 +634,6 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
 
     int this_hit = -1;
     int max_hit = -1;
-    Point3D geoc;
     double hit_elev = -9999;
     double max_elev = -9999;
     Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
@@ -668,7 +668,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
 
     if ( hit_elev > -9000 ) {
         *terrain_elev = hit_elev;
-        *radius = geoc.radius();
+        *radius = sgCartToPolar3d(sc + hit_list->get_point(this_hit)).radius();
         sgVec3 tmp;
         sgSetVec3(tmp, hit_list->get_normal(this_hit));
         // cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "  << tmp[2] << endl;
@@ -726,7 +726,6 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
 
     int this_hit = -1;
     int max_hit = -1;
-    Point3D geoc;
     double hit_elev = -9999;
     double max_elev = -9999;
     Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
@@ -752,6 +751,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
             max_hit = i;
         }
     }
+    
 
     if ( this_hit < 0 ) {
         // no hits below us, take the max hit 
@@ -761,7 +761,8 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
 
     if ( hit_elev > -9000 ) {
         *terrain_elev = hit_elev;
-        *radius = geoc.radius();
+        *radius = sgCartToPolar3d(sc + hit_list->get_point(this_hit)).radius();
+
         sgVec3 tmp;
         sgSetVec3(tmp, hit_list->get_normal(this_hit));
         // cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "  << tmp[2] << endl;

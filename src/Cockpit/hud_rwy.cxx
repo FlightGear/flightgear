@@ -352,6 +352,8 @@ bool runway_instr::boundOutsidePoints(sgdVec3 v, sgdVec3 m) {
 
 void runway_instr::drawArrow() {
 	Point3D ac,rwy;
+	memset(&ac,0,sizeof(ac));
+	memset(&rwy,0,sizeof(rwy));
 	ac.setlat(current_aircraft.fdm_state->get_Latitude_deg());
 	ac.setlon(current_aircraft.fdm_state->get_Longitude_deg());
 	rwy.setlat(runway._lat);

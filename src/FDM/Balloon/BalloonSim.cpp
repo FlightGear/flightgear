@@ -201,8 +201,8 @@ void balloon::update()
 
     sgScaleVec3(fTotal, gravity_vector, mTotal);
    
-    sgAddVec3(fTotal, fLift);
-    sgAddVec3(fTotal, fFriction);
+    //sgAddVec3(fTotal, fLift);     //FIXME: uninitialized fLift 
+    //sgAddVec3(fTotal, fFriction); //FIXME: uninitialized fFriction
     
     //claculate acceleration: a = F / m
     sgVec3 aTotal, vTotal, dTotal;
