@@ -58,13 +58,13 @@ For use with a server:
 ----------------------
 Oliver Schroeder has created a server for multiplayer flightgear use.
 The server acts as a packet forwarding mechanism. When it
-receives a packet, it sends it to all other active players.
-Future versions might be more scalable, only forwarding information
-on the planes in the receiving player's vicinity.
+receives a packet, it sends it to all other active players
+in the vicinity (the server is configured to use 100nm by default).
 
 Check out the server homepage <http://www.o-schroeder.de/fg_server/>
 for the current status. You can either download the server for
-some local use, or join the developers on the existing servers.
+some local use, or join the developers flying at the existing servers.
+As with flightgear, the server is free software, released under GPL.
 
 Pigeon <http://pigeond.net> has created a web page monitoring
 two such servers, showing the traffic in a Google map environment.
