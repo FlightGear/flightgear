@@ -25,6 +25,7 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/environment/visual_enviro.hxx>
 
 class ssgTexture;
 class FGODGauge;
@@ -53,6 +54,7 @@ private:
     string last_switchKnob;
     bool sim_init_done;
     FGODGauge *odg;
+    list_of_SGWxRadarEcho radarEchoBuffer;
 };
 
 #endif // _INST_WXRADAR_HXX

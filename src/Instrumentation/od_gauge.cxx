@@ -2,7 +2,7 @@
 //
 // Written by Harald JOHNSEN, started May 2005.
 //
-// Copyright (C) 2005  Harald JOHNSEN - hjohnsen@evc.net
+// Copyright (C) 2005  Harald JOHNSEN
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -130,11 +130,15 @@ void FGODGauge::Clear(void) {
 
 void FGODGauge::endCapture(GLuint texID) {
     glBindTexture(GL_TEXTURE_2D, texID);
+    // don't use mimaps if we don't update them
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, textureWH, textureWH);
     if(rtAvailable)
         rt->EndCapture();
     else
         set3D();
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void FGODGauge::setSize(int viewSize) {
@@ -149,19 +153,39 @@ bool FGODGauge::serviceable(void) {
 /**
  * Locate a texture SSG node in a branch.
  */
-static ssgTexture *
+static const char *strip_path(const char *name) {
+    /* Remove all leading path information. */
+    const char* seps = "\\/" ;
+    const char* fn = & name [ strlen ( name ) - 1 ] ;
+    for ( ; fn != name && strchr(seps,*fn) == NULL ; fn-- )
+        /* Search back for a seperator */ ;
+    if ( strchr(seps,*fn) != NULL )
+        fn++ ;
+    return fn ;
+}
+
+static ssgSimpleState *
 find_texture_node (ssgEntity * node, const char * name)
 {
-  if( node->isA( ssgTypeTexture() ) ) {
-    ssgTexture *tex = (ssgTexture *) node;
-    char * texture_name = tex->getFilename();
-    if (texture_name != 0 && !strcmp(name, texture_name))
-      return tex;
+  if( node->isAKindOf( ssgTypeLeaf() ) ) {
+    ssgLeaf *leaf = (ssgLeaf *) node;
+    ssgSimpleState *state = (ssgSimpleState *) leaf->getState();
+    if( state ) {
+        ssgTexture *tex = state->getTexture();
+        if( tex ) {
+            const char * texture_name = tex->getFilename();
+            if (texture_name) {
+                texture_name = strip_path( texture_name );
+                if ( !strcmp(name, texture_name) )
+                    return state;
+            }
+        }
+    }
   }
-  else if (node->isAKindOf(ssgTypeBranch())) {
+  else {
     int nKids = node->getNumKids();
     for (int i = 0; i < nKids; i++) {
-      ssgTexture * result =
+      ssgSimpleState * result =
         find_texture_node(((ssgBranch*)node)->getKid(i), name);
       if (result != 0)
         return result;
@@ -172,9 +196,10 @@ find_texture_node (ssgEntity * node, const char * name)
 
 void FGODGauge::set_texture(const char * name, GLuint new_texture) {
     ssgEntity * root = globals->get_scenery()->get_aircraft_branch();
-    ssgTexture * node = find_texture_node( root, name );
+    name = strip_path( name );
+    ssgSimpleState * node = find_texture_node( root, name );
     if( node )
-        node->setHandle( new_texture );
+        node->setTexture( new_texture );
 }
 
 void FGODGauge::set2D() {

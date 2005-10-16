@@ -2,7 +2,7 @@
 //
 // Written by Harald JOHNSEN, started May 2005.
 //
-// Copyright (C) 2005  Harald JOHNSEN - hjohnsen@evc.net
+// Copyright (C) 2005  Harald JOHNSEN
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -134,8 +134,18 @@ wxRadarBg::update (double delta_time_sec)
             odg->set_texture( odgauge_name, resultTexture->getHandle());
         last_switchKnob = switchKnob;
     }
+    FGViewer *current__view = globals->get_current_view();
+    if( current__view->getInternal() && 
+        (current__view->getHeadingOffset_deg() <= 15.0 || current__view->getHeadingOffset_deg() >= 345.0) &&
+        (current__view->getPitchOffset_deg() <= 15.0 || current__view->getPitchOffset_deg() >= 350.0) ) {
+
+        // we don't update the radar echo if the pilot looks around
+        // this is a copy
+        radarEchoBuffer = *sgEnviro.get_radar_echo();
+    }
     odg->beginCapture(256);
     odg->Clear();
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glPushMatrix();
@@ -172,7 +182,7 @@ wxRadarBg::update (double delta_time_sec)
             const float rot_x = cos ( view_heading );
             const float rot_y = sin ( view_heading );
 
-            list_of_SGWxRadarEcho *radarEcho = sgEnviro.get_radar_echo();
+            list_of_SGWxRadarEcho *radarEcho = &radarEchoBuffer;
             list_of_SGWxRadarEcho::iterator iradarEcho;
             const float LWClevel[] = { 0.1f, 0.5f, 2.1f };
             const float symbolSize = 1.0f / 8.0f ;
