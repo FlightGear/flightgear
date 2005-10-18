@@ -160,7 +160,6 @@ ssgBranch * FGAIBase::load3DModel(const string& fg_root,
 			    prop_root,
 			    sim_time_sec);
       manager->setModel(path, model);
-      model->ref();
     }
   //else
   //  {
@@ -169,6 +168,10 @@ ssgBranch * FGAIBase::load3DModel(const string& fg_root,
   //    aip.setVisible(false);
   //    globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
   // do some setModel stuff.
+  
+  if (model)
+    model->ref();
+
   return model;
 }
 
