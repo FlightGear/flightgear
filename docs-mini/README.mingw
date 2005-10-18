@@ -1,0 +1,148 @@
+How to compile FlightGear with mingw
+====================================
+
+
+MinGW & MSYS
+============
+
+You need to install mingw & msys: 
+
+http://www.mingw.org
+
+You need at least:
+
+MinGW: binutils, gcc-core, gcc-g++, mingw-runtime, mingw-utils, w32api
+I would recommed the gcc-3.4.4 versions.
+MSYS: msys-1.0.10.exe, msys-autoconf, msys-automake, msys-libtool, msys-DTK.
+
+Please read instructions carefully.
+
+Set the follwing environment variables within msys shell.
+
+export CFLAGS="-I/usr/local/include -O2"
+export CXXFLAGS="-I/usr/local/include -O2"
+export CPPFLAGS=-I/usr/local/include
+export LDFLAGS=-L/usr/local/lib
+
+Pthread-win32
+=============
+
+http://sources.redhat.com/pthreads-win32/
+
+compile:
+make  GCE-inlined
+
+Install:
+cp pthread.h sched.h semaphore.h /usr/local/include
+cp linpthreadGCE2.a  /usr/local/lib/libpthread.a
+cp pthread-GCE.dll /usr/local/bin
+
+patch header:
+
+--- pthread.h   Sat Oct  1 20:56:43 2005
+***************
+*** 210,218 ****
+   * -----------------
+   */
+  
+! #if HAVE_CONFIG_H
+! #include "config.h"
+! #endif /* HAVE_CONFIG_H */
+  
+  #ifndef NEED_FTIME
+  #include <time.h>
+--- 210,218 ----
+   * -----------------
+   */
+  
+! //#if HAVE_CONFIG_H
+! //#include "config.h"
+! //#endif /* HAVE_CONFIG_H */
+  
+  #ifndef NEED_FTIME
+  #include <time.h>
+
+GLUT
+====
+
+use precompiled in order to avoid conflicts with glut32.dll already installed.
+
+http://www.xmission.com/~nate/glut.html
+http://www.xmission.com/~nate/glut/glut-3.7.6-bin.zip
+
+The header has to be updated with respect to MINGW.
+
+*** glut.h      Tue Dec 12 22:22:52 2000
+--- /local_old/include/GL/glut.h        Thu Aug 18 20:41:15 2005
+***************
+*** 20,26 ****
+     /* XXX This is from Win32's <windef.h> */
+  #  ifndef APIENTRY
+  #   define GLUT_APIENTRY_DEFINED
+! #   if (_MSC_VER >= 800) || defined(_STDCALL_SUPPORTED) || defined(__BORLANDC__) || defined(__LCC__)
+  #    define APIENTRY    __stdcall
+  #   else
+  #    define APIENTRY
+--- 20,26 ----
+     /* XXX This is from Win32's <windef.h> */
+  #  ifndef APIENTRY
+  #   define GLUT_APIENTRY_DEFINED
+! #   if (_MSC_VER >= 800) || defined(_STDCALL_SUPPORTED) || defined(__BORLANDC__) || defined(__LCC__) || defined(__MINGW32__)
+  #    define APIENTRY    __stdcall
+  #   else
+  #    define APIENTRY
+
+
+install:
+cp glut.h /usr/local/include
+cp glut32.dll /usr/local/bin
+
+reimp glut32.lib 
+cp libglut32.a /usr/local/lib
+
+OpenAL
+======
+
+Get OpenAL for instance from Creative
+
+OpenAL win32 package
+install Redist
+
+
+install:
+
+cd libs
+reimp  OpenAL32.lib
+cp libopenal32.a  /usr/local/lib
+cp alut.lib  /usr/local/lib/libalut.a
+cd ..
+mkdir /usr/local/include/AL
+cp Include/* /usr/local/include/AL
+
+
+zlib-1.2.3
+==========
+
+configure --prefix=/usr/local
+make
+make install
+
+plib-1.6.8
+==========
+configure --prefix=/usr/local
+make 
+make install
+
+simgear
+=======
+get simgear from CVS
+configure --prefix=/usr/local
+make
+make  install
+
+flightgear
+=========
+configure --prefix=/usr/local --with-threads
+make 
+make install
+
