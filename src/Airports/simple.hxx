@@ -36,7 +36,8 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-
+#include <simgear/math/point3d.hxx>
+#include <simgear/route/waypoint.hxx>
 #include <simgear/compiler.h>
 #include <simgear/xml/easyxml.hxx>
 
@@ -56,6 +57,8 @@ typedef vector<string>::const_iterator stringVecConstIterator;
 
 typedef vector<time_t> timeVec;
 typedef vector<time_t>::const_iterator timeVecConstIterator;
+
+
 /***************************************************************************/
 class ScheduleTime {
 private:
@@ -177,6 +180,8 @@ public:
   virtual void error (const char * message, int line, int column);
 };
 
+double processPosition(string pos);
+
 class FGParking {
 private:
   double latitude;
@@ -188,10 +193,9 @@ private:
   string type;
   string airlineCodes;
  
-
   bool available;
 
-  double processPosition(string pos);
+  
 
 public:
   FGParking() { available = true;};
@@ -232,7 +236,138 @@ typedef vector<FGParking> FGParkingVec;
 typedef vector<FGParking>::iterator FGParkingVecIterator;
 typedef vector<FGParking>::const_iterator FGParkingVecConstIterator;
 
+class FGTaxiSegment; // forward reference
 
+typedef vector<FGTaxiSegment>  FGTaxiSegmentVector;
+typedef vector<FGTaxiSegment*> FGTaxiSegmentPointerVector;
+typedef vector<FGTaxiSegment>::iterator FGTaxiSegmentVectorIterator;
+typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentPointerVectorIterator;
+
+/**************************************************************************************
+ * class FGTaxiNode
+ *************************************************************************************/
+class FGTaxiNode 
+{
+private:
+  double lat;
+  double lon;
+  int index;
+  FGTaxiSegmentPointerVector next; // a vector to all the segments leaving from this node
+  
+public:
+  FGTaxiNode();
+  FGTaxiNode(double, double, int);
+
+  void setIndex(int idx)                  { index = idx;};
+  void setLatitude (double val)           { lat = val;};
+  void setLongitude(double val)           { lon = val;};
+  void setLatitude (string val)           { lat = processPosition(val);  };
+  void setLongitude(string val)           { lon = processPosition(val);  };
+  void addSegment(FGTaxiSegment *segment) { next.push_back(segment); };
+  
+  double getLatitude() { return lat;};
+  double getLongitude(){ return lon;};
+
+  int getIndex() { return index; };
+  FGTaxiNode *getAddress() { return this;};
+  FGTaxiSegmentPointerVectorIterator getBeginRoute() { return next.begin(); };
+  FGTaxiSegmentPointerVectorIterator getEndRoute()   { return next.end();   }; 
+};
+
+typedef vector<FGTaxiNode> FGTaxiNodeVector;
+typedef vector<FGTaxiNode>::iterator FGTaxiNodeVectorIterator;
+
+/***************************************************************************************
+ * class FGTaxiSegment
+ **************************************************************************************/
+class FGTaxiSegment
+{
+private:
+  int startNode;
+  int endNode;
+  double length;
+  FGTaxiNode *start;
+  FGTaxiNode *end;
+  int index;
+
+public:
+  FGTaxiSegment();
+  FGTaxiSegment(FGTaxiNode *, FGTaxiNode *, int);
+
+  void setIndex        (int val) { index     = val; };
+  void setStartNodeRef (int val) { startNode = val; };
+  void setEndNodeRef   (int val) { endNode   = val; };
+
+  void setStart(FGTaxiNodeVector *nodes);
+  void setEnd  (FGTaxiNodeVector *nodes);
+  void setTrackDistance();
+
+  FGTaxiNode * getEnd() { return end;};
+  double getLength() { return length; };
+  int getIndex() { return index; };
+
+  
+};
+
+
+typedef vector<int> intVec;
+typedef vector<int>::iterator intVecIterator;
+
+class FGTaxiRoute
+{
+private:
+  intVec nodes;
+  double distance;
+  intVecIterator currNode;
+
+public:
+  FGTaxiRoute() { distance = 0; currNode = nodes.begin(); };
+  FGTaxiRoute(intVec nds, double dist) { nodes = nds; distance = dist; currNode = nodes.begin();};
+  bool operator< (const FGTaxiRoute &other) const {return distance < other.distance; };
+  bool empty () { return nodes.begin() == nodes.end(); };
+  bool next(int *val); 
+  
+  void first() { currNode = nodes.begin(); };
+};
+
+typedef vector<FGTaxiRoute> TaxiRouteVector;
+typedef vector<FGTaxiRoute>::iterator TaxiRouteVectorIterator;
+
+/**************************************************************************************
+ * class FGGroundNetWork
+ *************************************************************************************/
+class FGGroundNetwork
+{
+private:
+  bool hasNetwork;
+  FGTaxiNodeVector    nodes;
+  FGTaxiSegmentVector segments;
+  //intVec route;
+  intVec traceStack;
+  TaxiRouteVector routes;
+  
+  bool foundRoute;
+  double totalDistance, maxDistance;
+  
+public:
+  FGGroundNetwork();
+
+  void addNode   (FGTaxiNode node);
+  void addNodes  (FGParkingVec *parkings);
+  void addSegment(FGTaxiSegment seg); 
+
+  void init();
+  bool exists() { return hasNetwork; };
+  int findNearestNode(double lat, double lon);
+  FGTaxiNode *findNode(int idx);
+  FGTaxiRoute findShortestRoute(int start, int end);
+  void trace(FGTaxiNode *, int, int, double dist);
+ 
+};
+
+/***************************************************************************************
+ *
+ **************************************************************************************/
 class FGAirport : public XMLVisitor{
 private:
   string _id;
@@ -244,6 +379,7 @@ private:
   bool _has_metar;
   FGParkingVec parkings;
   FGRunwayPreference rwyPrefs;
+  FGGroundNetwork groundNetwork;
 
   time_t lastUpdate;
   string prevTrafficType;
@@ -262,6 +398,8 @@ public:
   FGAirport(const FGAirport &other);
   //operator= (FGAirport &other);
   FGAirport(string id, double lon, double lat, double elev, string name, bool has_metar);
+
+  void init();
   void getActiveRunway(string trafficType, int action, string *runway);
   void chooseRunwayFallback(string *runway);
   bool getAvailableParking(double *lat, double *lon, double *heading, int *gate, double rad, string fltype, 
@@ -272,6 +410,8 @@ public:
   string getParkingName(int i); 
   string getId() const { return _id;};
   const string &getName() const { return _name;};
+  //FGAirport *getAddress() { return this; };
+  //const string &getName() const { return _name;};
   // Returns degrees
   double getLongitude() const { return _longitude;};
   // Returns degrees
@@ -279,6 +419,7 @@ public:
   // Returns ft
   double getElevation() const { return _elevation;};
   bool   getMetar()     const { return _has_metar;};
+ FGGroundNetwork* getGroundNetwork() { return &groundNetwork; };
   
 
   void setId(string id) { _id = id;};
@@ -325,7 +466,7 @@ public:
               const double elevation, const string name, const bool has_metar );
 
     // search for the specified id.
-    // Returns NULL if unsucessfull.
+      // Returns NULL if unsucessfull.
     FGAirport* search( const string& id );
 	
 	// Search for the next airport in ASCII sequence to the supplied id.

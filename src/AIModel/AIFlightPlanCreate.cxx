@@ -50,7 +50,7 @@ void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, int legNr, double al
       break;
     case 2: 
       //cerr << "Creating Taxi" << endl;
-      createTaxi(firstFlight, 1, dep, radius, fltType, aircraftType, airline);
+      createTaxi(firstFlight, 1, dep, latitude, longitude, radius, fltType, aircraftType, airline);
       break;
     case 3: 
       //cerr << "Creating TAkeoff" << endl;
@@ -74,7 +74,7 @@ void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, int legNr, double al
       break;
     case 8: 
       //cerr << "Creating Taxi 2" << endl;
-      createTaxi(false, 2, arr, radius, fltType, aircraftType, airline);
+      createTaxi(false, 2, arr, latitude, longitude, radius, fltType, aircraftType, airline);
       break;
     case 9: 
       //cerr << "Creating Parking" << endl;
@@ -161,7 +161,7 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
   wpt->on_ground = true;
   waypoints.push_back(wpt); 
   geo_direct_wgs_84 ( 0, lat, lon, heading, 
-		      100, 
+		      radius,                 // push back one entire aircraft radius
 		      &lat2, &lon2, &az2 );
   wpt = new waypoint;
   wpt->name      = "taxiStart";
@@ -176,22 +176,14 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
   wpt->on_ground = true;
   waypoints.push_back(wpt); 
 
-  //wpt = new waypoint;
-  //wpt->name = "END";
-  //wpt->finished = false;
-  //waypoints.push_back(wpt);  // add one more to prevent a segfault.  
-  //waypoints.push_back(wpt);  // add one more to prevent a segfault. 
-  //wpt_iterator = waypoints.begin();
-  //if (!firstFlight)
-  //  wpt_iterator++;
-  //wpt_iterator = waypoints.begin()+currWpt;
+  
 }
 
 /*******************************************************************
  * createCreate Taxi. 
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt, double radius, string fltType, string acType, string airline)
+void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt, double latitude, double longitude, double radius, string fltType, string acType, string airline)
 {
   double wind_speed;
   double wind_heading;
@@ -208,29 +200,13 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
   //int currWpt = wpt_iterator - waypoints.begin();
   if (direction == 1)
     {
-      
-      
-
-     
-      // Get the current active runway, based on code from David Luff
-      // This should actually be unified and extended to include 
-      // Preferential runway use schema's 
-      //FGEnvironment 
-      //stationweather = ((FGEnvironmentMgr *) globals->get_subsystem("environment"))
-      //->getEnvironment(apt->getLatitude(), apt->getLongitude(), apt->getElevation());
-      
-      //wind_speed = stationweather.get_wind_speed_kt();
-      //wind_heading = stationweather.get_wind_from_heading_deg();
-      //if (wind_speed == 0) {
-      //wind_heading = 270;	// This forces West-facing rwys to be used in no-wind situations
-	// which is consistent with Flightgear's initial setup.
-      //}
-      
-      //string rwy_no = globals->get_runways()->search(apt->getId(), int(wind_heading));
-      string name;
-      apt->getActiveRunway("com", 1, &name);
+      //string name;
+      // "NOTE: this is currently fixed to "com" for commercial traffic
+      // Should be changed to be used dynamically to allow "gen" and "mil"
+      // as well
+      apt->getActiveRunway("com", 1, &activeRunway);
       if (!(globals->get_runways()->search(apt->getId(), 
-					    name, 
+					    activeRunway, 
 					    &rwy)))
 	{
 	  cout << "Failed to find runway for " << apt->getId() << endl;
@@ -247,49 +223,137 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
       geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
 			  rwy._length * SG_FEET_TO_METER * 0.5 - 5.0,
 			  &lat2, &lon2, &az2 );
-      
-      //Add the runway startpoint;
-      wpt = new waypoint;
-      wpt->name      = "Airport Center";
-      wpt->latitude  = apt->getLatitude();
-      wpt->longitude = apt->getLongitude();
-      wpt->altitude  = apt->getElevation();
-      wpt->speed     = 15; 
-      wpt->crossat   = -10000;
-      wpt->gear_down = true;
-      wpt->flaps_down= true;
-      wpt->finished  = false;
-      wpt->on_ground = true;
-      waypoints.push_back(wpt);
-       
-      //Add the runway startpoint;
-      wpt = new waypoint;
-      wpt->name      = "Runway Takeoff";
-      wpt->latitude  = lat2;
-      wpt->longitude = lon2;
-      wpt->altitude  = apt->getElevation();
-      wpt->speed     = 15; 
-      wpt->crossat   = -10000;
-      wpt->gear_down = true;
-      wpt->flaps_down= true;
-      wpt->finished  = false;
-      wpt->on_ground = true;
-      waypoints.push_back(wpt);
-      //wpt = new waypoint;
-      //wpt->finished = false;
-      //waypoints.push_back(wpt);  // add one more to prevent a segfault. 
+      if (apt->getGroundNetwork()->exists())
+	{
+	  intVec ids;
+	  int runwayId = apt->getGroundNetwork()->findNearestNode(lat2, lon2);
+	  //int currId   = apt->getGroundNetwork()->findNearestNode(latitude,longitude);
+	  //exit(1);
+	  
+	  // A negative gateId indicates an overflow parking, use a
+	  // fallback mechanism for this. 
+	  // Starting from gate 0 is a bit of a hack...
+	  FGTaxiRoute route;
+	  if (gateId >= 0)
+	    route = apt->getGroundNetwork()->findShortestRoute(gateId, runwayId);
+	  else
+	    route = apt->getGroundNetwork()->findShortestRoute(0, runwayId);
+	  intVecIterator i;
+	  //cerr << "creating route : ";
+	  // No route found: go from gate directly to runway
+	  if (route.empty()) {
+	    //Add the runway startpoint;
+	    wpt = new waypoint;
+	    wpt->name      = "Airport Center";
+	    wpt->latitude  = latitude;
+	    wpt->longitude = longitude;
+	    wpt->altitude  = apt->getElevation();
+	    wpt->speed     = 15; 
+	    wpt->crossat   = -10000;
+	    wpt->gear_down = true;
+	    wpt->flaps_down= true;
+	    wpt->finished  = false;
+	    wpt->on_ground = true;
+	    waypoints.push_back(wpt);
+	    
+	    //Add the runway startpoint;
+	    wpt = new waypoint;
+	    wpt->name      = "Runway Takeoff";
+	    wpt->latitude  = lat2;
+	    wpt->longitude = lon2;
+	    wpt->altitude  = apt->getElevation();
+	    wpt->speed     = 15; 
+	    wpt->crossat   = -10000;
+	    wpt->gear_down = true;
+	    wpt->flaps_down= true;
+	    wpt->finished  = false;
+	    wpt->on_ground = true;
+	    waypoints.push_back(wpt);	
+	  } else {
+	    int node;
+	    route.first();
+	    while(route.next(&node))
+	      {
+		//i = ids.end()-1;
+		//cerr << "Creating Node: " << node << endl;
+		FGTaxiNode *tn = apt->getGroundNetwork()->findNode(node);
+		//ids.pop_back();  
+		wpt = new waypoint;
+		wpt->name      = "taxiway"; // fixme: should be the name of the taxiway
+		wpt->latitude  = tn->getLatitude();
+		wpt->longitude = tn->getLongitude();
+		wpt->altitude  = apt->getElevation(); // should maybe be tn->elev too
+		wpt->speed     = 15; 
+		wpt->crossat   = -10000;
+		wpt->gear_down = true;
+		wpt->flaps_down= true;
+		wpt->finished  = false;
+		wpt->on_ground = true;
+		waypoints.push_back(wpt);
+	      }
+	    cerr << endl;
+	  }
+	  //exit(1);
+	}
+      else 
+	{
+	  //Add the runway startpoint;
+	  wpt = new waypoint;
+	  wpt->name      = "Airport Center";
+	  wpt->latitude  = apt->getLatitude();
+	  wpt->longitude = apt->getLongitude();
+	  wpt->altitude  = apt->getElevation();
+	  wpt->speed     = 15; 
+	  wpt->crossat   = -10000;
+	  wpt->gear_down = true;
+	  wpt->flaps_down= true;
+	  wpt->finished  = false;
+	  wpt->on_ground = true;
+	  waypoints.push_back(wpt);
+	  
+	  //Add the runway startpoint;
+	  wpt = new waypoint;
+	  wpt->name      = "Runway Takeoff";
+	  wpt->latitude  = lat2;
+	  wpt->longitude = lon2;
+	  wpt->altitude  = apt->getElevation();
+	  wpt->speed     = 15; 
+	  wpt->crossat   = -10000;
+	  wpt->gear_down = true;
+	  wpt->flaps_down= true;
+	  wpt->finished  = false;
+	  wpt->on_ground = true;
+	  waypoints.push_back(wpt);
+	  //wpt = new waypoint;
+	  //wpt->finished = false;
+	  //waypoints.push_back(wpt);  // add one more to prevent a segfault. 
+	}
     }
-  else
+  else  // Landing taxi
     {
-      //direction = (rand() % 360);
-      //geo_direct_wgs_84 ( 0, arr->getLatitude(), arr->getLongitude(), direction, 
-      //100,
-      //&lat2, &lon2, &az2 );
+      //string name;
+      // "NOTE: this is currently fixed to "com" for commercial traffic
+      // Should be changed to be used dynamically to allow "gen" and "mil"
+      // as well
+      //apt->getActiveRunway("com", 1, &name);
+      //if (!(globals->get_runways()->search(apt->getId(), 
+      //				    name, 
+      //			    &rwy)))
+      //{//
+      //cout << "Failed to find runway for " << apt->getId() << endl;
+      // Hmm, how do we handle a potential error like this?
+      // exit(1);
+      //	}
+      //string test;
+      //apt->getActiveRunway(string("com"), 1, &test);
+      //exit(1);
       
-      // This next statement really requires the flight plan to be
-      // split up into smaller sections, because 
-      // gate assignments will typically not be known until minutes before 
-      // landing, and certainly not at the start of a 10 hour flight.
+      //heading = rwy._heading;
+      //double azimuth = heading + 180.0;
+      //while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
+      //geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
+      //		  rwy._length * SG_FEET_TO_METER * 0.5 - 5.0,
+      //		  &lat2, &lon2, &az2 );
       apt->getAvailableParking(&lat, &lon, &heading, &gateId, radius, fltType, acType, airline);
       heading += 180.0;
       if (heading > 360)
@@ -297,23 +361,105 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
       geo_direct_wgs_84 ( 0, lat, lon, heading, 
 			  100,
 			  &lat2, &lon2, &az2 );
-      //Add the runway center
-      wpt = new waypoint;
-      wpt->name      = "Airport Center";
-      wpt->latitude  = apt->getLatitude();
-      wpt->longitude = apt->getLongitude();
-      wpt->altitude  = apt->getElevation();
-      wpt->speed     = 15; 
-      wpt->crossat   = -10000;
-      wpt->gear_down = true;
-      wpt->flaps_down= true;
-      wpt->finished  = false;
-      wpt->on_ground = true;
-      waypoints.push_back(wpt);
+      double lat3 = (*(waypoints.end()-1))->latitude;
+      double lon3 = (*(waypoints.end()-1))->longitude;
+      cerr << (*(waypoints.end()-1))->name << endl;
+      if (apt->getGroundNetwork()->exists())
+	{
+	  intVec ids;
+	  int runwayId = apt->getGroundNetwork()->findNearestNode(lat3, lon3);
+	  //int currId   = apt->getGroundNetwork()->findNearestNode(latitude,longitude);
+	  //exit(1);
+	  
+	  // A negative gateId indicates an overflow parking, use a
+	  // fallback mechanism for this. 
+	  // Starting from gate 0 is a bit of a hack...
+	  FGTaxiRoute route;
+	  if (gateId >= 0)
+	    route = apt->getGroundNetwork()->findShortestRoute(runwayId, gateId);
+	  else
+	    route = apt->getGroundNetwork()->findShortestRoute(runwayId, 0);
+	  intVecIterator i;
+	  //cerr << "creating route : ";
+	  // No route found: go from gate directly to runway
+	  if (route.empty()) {
+	    //Add the runway startpoint;
+	    wpt = new waypoint;
+	    wpt->name      = "Airport Center";
+	    wpt->latitude  = latitude;
+	    wpt->longitude = longitude;
+	    wpt->altitude  = apt->getElevation();
+	    wpt->speed     = 15; 
+	    wpt->crossat   = -10000;
+	    wpt->gear_down = true;
+	    wpt->flaps_down= true;
+	    wpt->finished  = false;
+	    wpt->on_ground = true;
+	    waypoints.push_back(wpt);
+	    
+	    //Add the runway startpoint;
+	    wpt = new waypoint;
+	    wpt->name      = "Runway Takeoff";
+	    wpt->latitude  = lat2;
+	    wpt->longitude = lon2;
+	    wpt->altitude  = apt->getElevation();
+	    wpt->speed     = 15; 
+	    wpt->crossat   = -10000;
+	    wpt->gear_down = true;
+	    wpt->flaps_down= true;
+	    wpt->finished  = false;
+	    wpt->on_ground = true;
+	    waypoints.push_back(wpt);	
+	  } else {
+	    int node;
+	    route.first();
+	    while(route.next(&node))
+	      {
+		//i = ids.end()-1;
+		//cerr << "Creating Node: " << node << endl;
+		FGTaxiNode *tn = apt->getGroundNetwork()->findNode(node);
+		//ids.pop_back();  
+		wpt = new waypoint;
+		wpt->name      = "taxiway"; // fixme: should be the name of the taxiway
+		wpt->latitude  = tn->getLatitude();
+		wpt->longitude = tn->getLongitude();
+		wpt->altitude  = apt->getElevation(); // should maybe be tn->elev too
+		wpt->speed     = 15; 
+		wpt->crossat   = -10000;
+		wpt->gear_down = true;
+		wpt->flaps_down= true;
+		wpt->finished  = false;
+		wpt->on_ground = true;
+		waypoints.push_back(wpt);
+	      }
+	    cerr << endl;
+	  }
+	  //exit(1);
+	}
+      else
+	{
+	  //Add the runway startpoint;
+	  wpt = new waypoint;
+	  wpt->name      = "Airport Center";
+	  wpt->latitude  = apt->getLatitude();
+	  wpt->longitude = apt->getLongitude();
+	  wpt->altitude  = apt->getElevation();
+	  wpt->speed     = 15; 
+	  wpt->crossat   = -10000;
+	  wpt->gear_down = true;
+	  wpt->flaps_down= true;
+	  wpt->finished  = false;
+	  wpt->on_ground = true;
+	  waypoints.push_back(wpt);
+	  
+	}
+
+
+
 
       // Add the final destination waypoint
       wpt = new waypoint;
-      wpt->name      = "Begin Parkingg"; //apt->getId(); //wpt_node->getStringValue("name", "END");
+      wpt->name      = "Begin Parking"; //apt->getId(); //wpt_node->getStringValue("name", "END");
       wpt->latitude  = lat2;
       wpt->longitude = lon2;
       wpt->altitude  = apt->getElevation();
@@ -364,10 +510,13 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   // Preferential runway use schema's 
   if (firstFlight)
     {
-      string name;
-      apt->getActiveRunway("com", 1, &name);
+      //string name;
+       // "NOTE: this is currently fixed to "com" for commercial traffic
+      // Should be changed to be used dynamically to allow "gen" and "mil"
+      // as well
+      apt->getActiveRunway("com", 1, &activeRunway);
 	if (!(globals->get_runways()->search(apt->getId(), 
-					      name, 
+					      activeRunway, 
 					      &rwy)))
 	  {
 	    cout << "Failed to find runway for " << apt->getId() << endl;
@@ -456,10 +605,13 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
   // Preferential runway use schema's 
   if (firstFlight)
     {
-      string name;
-      apt->getActiveRunway("com", 1, &name);
+      //string name;
+      // "NOTE: this is currently fixed to "com" for commercial traffic
+      // Should be changed to be used dynamically to allow "gen" and "mil"
+      // as well
+      apt->getActiveRunway("com", 1, &activeRunway);
 	if (!(globals->get_runways()->search(apt->getId(), 
-					      name, 
+					      activeRunway, 
 					      &rwy)))
 	  {
 	    cout << "Failed to find runway for " << apt->getId() << endl;
@@ -554,10 +706,11 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep, FGAirport *a
   waypoints.push_back(wpt); 
   //Beginning of Decent
  
-  string name;
-  arr->getActiveRunway("com", 2, &name);
+  //string name;
+  // should be changed dynamically to allow "gen" and "mil"
+  arr->getActiveRunway("com", 2, &activeRunway);
   if (!(globals->get_runways()->search(arr->getId(), 
-				       name, 
+				       activeRunway, 
 				       &rwy)))
     {
       cout << "Failed to find runway for " << arr->getId() << endl;
@@ -632,10 +785,11 @@ void FGAIFlightPlan::createDecent(FGAirport *apt)
   //resetWaypoints();
 
   //Beginning of Decent
-  string name;
-  apt->getActiveRunway("com", 2, &name);
+  //string name;
+  // allow "mil" and "gen" as well
+  apt->getActiveRunway("com", 2, &activeRunway);
     if (!(globals->get_runways()->search(apt->getId(), 
-					  name, 
+					  activeRunway, 
 					  &rwy)))
       {
 	cout << "Failed to find runway for " << apt->getId() << endl;

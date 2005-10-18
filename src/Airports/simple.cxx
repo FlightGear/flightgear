@@ -37,6 +37,7 @@
 #include <simgear/compiler.h>
 
 #include <plib/sg.h>
+#include <plib/ul.h>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
@@ -53,6 +54,7 @@
 #include "simple.hxx"
 
 SG_USING_STD(sort);
+SG_USING_STD(random_shuffle);
 
 /******************************************************************************
  * ScheduleTime
@@ -563,28 +565,10 @@ void  FGRunwayPreference::error (const char * message, int line, int column) {
        << endl;
 }
 
-/*********************************************************************************
- * FGParking
- ********************************************************************************/
-FGParking::FGParking(double lat,
-		     double lon,
-		     double hdg,
-		     double rad,
-		     int idx,
-		     string name,
-		     string tpe,
-		     string codes)
-{
-  latitude     = lat;
-  longitude    = lon;
-  heading      = hdg;
-  parkingName  = name;
-  index        = idx;
-  type         = tpe;
-  airlineCodes = codes;
-}
-
-double FGParking::processPosition(string pos)
+/*****************************************************************************
+ * Helper function for parsing position string
+ ****************************************************************************/
+double processPosition(string pos)
 {
   string prefix;
   string subs;
@@ -607,6 +591,29 @@ double FGParking::processPosition(string pos)
   //exit(1);
   return value;
 }
+
+
+/*********************************************************************************
+ * FGParking
+ ********************************************************************************/
+FGParking::FGParking(double lat,
+		     double lon,
+		     double hdg,
+		     double rad,
+		     int idx,
+		     string name,
+		     string tpe,
+		     string codes)
+{
+  latitude     = lat;
+  longitude    = lon;
+  heading      = hdg;
+  parkingName  = name;
+  index        = idx;
+  type         = tpe;
+  airlineCodes = codes;
+}
+
 
 /***************************************************************************
  * FGAirport
@@ -662,6 +669,22 @@ FGAirport::FGAirport(string id, double lon, double lat, double elev, string name
       avWindSpeed   [i] = 0;
     }
  
+}
+
+// Initialization required after XMLRead
+void FGAirport::init() 
+{
+  // This may seem a bit weird to first randomly shuffle the parkings
+  // and then sort them again. However, parkings are sorted here by ascending 
+  // radius. Since many parkings have similar radii, with each radius class they will
+  // still be allocated relatively systematically. Randomizing prior to sorting will
+  // prevent any initial orderings to be destroyed, leading (hopefully) to a more 
+  // naturalistic gate assignment. 
+  random_shuffle(parkings.begin(), parkings.end());
+  sort(parkings.begin(), parkings.end());
+  // add the gate positions to the ground network. 
+  groundNetwork.addNodes(&parkings);
+  groundNetwork.init();
 }
 
 bool FGAirport::getAvailableParking(double *lat, double *lon, double *heading, int *gateId, double rad, string flType, string acType, string airline)
@@ -893,6 +916,10 @@ void  FGAirport::endXML () {
 void  FGAirport::startElement (const char * name, const XMLAttributes &atts) {
   // const char *attval;
   FGParking park;
+  FGTaxiNode taxiNode;
+  FGTaxiSegment taxiSegment;
+  int index = 0;
+  taxiSegment.setIndex(index);
   //cout << "Start element " << name << endl;
   string attname;
   string value;
@@ -932,9 +959,35 @@ void  FGAirport::startElement (const char * name, const XMLAttributes &atts) {
 	}
       park.setName((gateName+gateNumber));
       parkings.push_back(park);
-    }  
+    }
+  if (name == string("node")) 
+    {
+      for (int i = 0; i < atts.size() ; i++)
+	{
+	  attname = atts.getName(i);
+	  if (attname == string("index"))
+	    taxiNode.setIndex(atoi(atts.getValue(i)));
+	  if (attname == string("lat"))
+	    taxiNode.setLatitude(atts.getValue(i));
+	  if (attname == string("lon"))
+	    taxiNode.setLongitude(atts.getValue(i));
+	}
+      groundNetwork.addNode(taxiNode);
+    }
+  if (name == string("arc")) 
+    {
+      taxiSegment.setIndex(++index);
+      for (int i = 0; i < atts.size() ; i++)
+	{
+	  attname = atts.getName(i);
+	  if (attname == string("begin"))
+	    taxiSegment.setStartNodeRef(atoi(atts.getValue(i)));
+	  if (attname == string("end"))
+	    taxiSegment.setEndNodeRef(atoi(atts.getValue(i)));
+	}
+      groundNetwork.addSegment(taxiSegment);
+    }
   // sort by radius, in asending order, so that smaller gates are first in the list
-  sort(parkings.begin(), parkings.end());
 }
 
 void  FGAirport::endElement (const char * name) {
@@ -1145,6 +1198,290 @@ void FGAirport::chooseRunwayFallback(string *runway)
   return; // generic fall back goes here
 }
 
+
+
+/**************************************************************************
+ * FGTaxiNode
+ *************************************************************************/
+FGTaxiNode::FGTaxiNode()
+{
+}
+
+/***************************************************************************
+ * FGTaxiSegment
+ **************************************************************************/
+FGTaxiSegment::FGTaxiSegment()
+{
+}
+
+void FGTaxiSegment::setStart(FGTaxiNodeVector *nodes)
+{
+  FGTaxiNodeVectorIterator i = nodes->begin();
+  while (i != nodes->end())
+    {
+      if (i->getIndex() == startNode)
+	{
+	  start = i->getAddress();
+	  i->addSegment(this);
+	  return;
+	}
+      i++;
+    }
+}
+
+void FGTaxiSegment::setEnd(FGTaxiNodeVector *nodes)
+{
+  FGTaxiNodeVectorIterator i = nodes->begin();
+  while (i != nodes->end())
+    {
+      if (i->getIndex() == endNode)
+	{
+	  end = i->getAddress();
+	  return;
+	}
+      i++;
+    }
+}
+
+// There is probably a computationally cheaper way of 
+// doing this.
+void FGTaxiSegment::setTrackDistance()
+{
+  double course;
+  SGWayPoint first  (start->getLongitude(),
+		     start->getLatitude(),
+		     0);
+  SGWayPoint second (end->getLongitude(),
+		     end->getLatitude(),
+		     0);
+  first.CourseAndDistance(second, &course, &length);
+  
+}
+
+bool FGTaxiRoute::next(int *val) 
+{ 
+  //for (intVecIterator i = nodes.begin(); i != nodes.end(); i++)
+  //  cerr << "FGTaxiRoute contains : " << *(i) << endl;
+  //cerr << "Offset from end: " << nodes.end() - currNode << endl;
+  //if (currNode != nodes.end())
+  //  cerr << "true" << endl;
+  //else
+  //  cerr << "false" << endl;
+      
+  if (currNode == nodes.end())
+    return false;
+  *val = *(currNode); 
+  currNode++;
+  return true;
+};
+/***************************************************************************
+ * FGGroundNetwork()
+ **************************************************************************/
+
+FGGroundNetwork::FGGroundNetwork()
+{
+  hasNetwork = false;
+}
+
+void FGGroundNetwork::addSegment(FGTaxiSegment seg)
+{
+  segments.push_back(seg);
+}
+
+void FGGroundNetwork::addNode(FGTaxiNode node)
+{
+  nodes.push_back(node);
+}
+
+void FGGroundNetwork::addNodes(FGParkingVec *parkings)
+{
+  FGTaxiNode n;
+  FGParkingVecIterator i = parkings->begin();
+  while (i != parkings->end())
+    {
+      n.setIndex(i->getIndex());
+      n.setLatitude(i->getLatitude());
+      n.setLongitude(i->getLongitude());
+      nodes.push_back(n);
+
+      i++;
+    }
+}
+
+
+
+void FGGroundNetwork::init()
+{
+  hasNetwork = true;
+  FGTaxiSegmentVectorIterator i = segments.begin();
+  while(i != segments.end()) {
+    //cerr << "initializing node " << i->getIndex() << endl;
+    i->setStart(&nodes);
+    i->setEnd  (&nodes);
+    i->setTrackDistance();
+    //cerr << "Track distance = " << i->getLength() << endl;
+    //cerr << "Track ends at"      << i->getEnd()->getIndex() << endl;
+    i++;
+  }
+  //exit(1);
+}
+
+int FGGroundNetwork::findNearestNode(double lat, double lon)
+{
+  double minDist = HUGE;
+  double course, dist;
+  int index;
+  SGWayPoint first  (lon,
+		     lat,
+		     0);
+  
+  for (FGTaxiNodeVectorIterator 
+	 itr = nodes.begin();
+       itr != nodes.end(); itr++)
+    {
+      double course;
+      SGWayPoint second (itr->getLongitude(),
+			 itr->getLatitude(),
+			 0);
+      first.CourseAndDistance(second, &course, &dist);
+      if (dist < minDist)
+	{
+	  minDist = dist;
+	  index = itr->getIndex();
+	  //cerr << "Minimum distance of " << minDist << " for index " << index << endl;
+	}
+    }
+  return index;
+}
+
+FGTaxiNode *FGGroundNetwork::findNode(int idx)
+{
+  for (FGTaxiNodeVectorIterator 
+	 itr = nodes.begin();
+       itr != nodes.end(); itr++)
+    {
+      if (itr->getIndex() == idx)
+	return itr->getAddress();
+    }
+  return 0;
+}
+
+FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end) 
+{
+  foundRoute = false;
+  totalDistance = 0;
+  FGTaxiNode *firstNode = findNode(start);
+  FGTaxiNode *lastNode  = findNode(end);
+  //prevNode = prevPrevNode = -1;
+  //prevNode = start;
+  routes.clear();
+  traceStack.clear();
+  trace(firstNode, end, 0, 0);
+  FGTaxiRoute empty;
+  
+  if (!foundRoute)
+    {
+      cerr << "Failed to find route from waypoint " << start << " to " << end << endl;
+      exit(1);
+    }
+  sort(routes.begin(), routes.end());
+  //for (intVecIterator i = route.begin(); i != route.end(); i++)
+  //  {
+  //    rte->push_back(*i);
+  //  }
+  
+  if (routes.begin() != routes.end())
+    return *(routes.begin());
+  else
+    return empty;
+}
+
+
+void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double distance)
+{
+  traceStack.push_back(currNode->getIndex());
+  totalDistance += distance;
+  //cerr << "Starting trace " << depth << " total distance: " << totalDistance<< endl;
+  //<< currNode->getIndex() << endl;
+
+  // If the current route matches the required end point we found a valid route
+  // So we can add this to the routing table
+  if (currNode->getIndex() == end)
+    {
+      //cerr << "Found route : " <<  totalDistance << "" << " " << *(traceStack.end()-1) << endl;
+      routes.push_back(FGTaxiRoute(traceStack,totalDistance));
+      traceStack.pop_back();
+      if (!(foundRoute))
+	maxDistance = totalDistance;
+      else
+	if (totalDistance < maxDistance)
+	  maxDistance = totalDistance;
+      foundRoute = true;
+      totalDistance -= distance;
+      return;
+    }
+ 
+
+  // search if the currentNode has been encountered before
+  // if so, we should step back one level, because it is
+  // rather rediculous to proceed further from here. 
+  // if the current node has not been encountered before,
+  // i should point to traceStack.end()-1; and we can continue
+  // if i is not traceStack.end, the previous node was found, 
+  // and we should return. 
+  // This only works at trace levels of 1 or higher though
+  if (depth > 0) {
+    intVecIterator i = traceStack.begin();
+    while ((*i) != currNode->getIndex()) {
+      //cerr << "Route so far : " << (*i) << endl;
+      i++;
+    }
+    if (i != traceStack.end()-1) {
+      traceStack.pop_back();
+      totalDistance -= distance;
+      return;
+    }
+    // If the total distance from start to the current waypoint
+    // is longer than that of a route we can also stop this trace 
+    // and go back one level. 
+    if ((totalDistance > maxDistance) && foundRoute)
+      {
+	//cerr << "Stopping rediculously long trace: " << totalDistance << endl;
+	traceStack.pop_back();
+	totalDistance -= distance;
+	return;
+      }
+  }
+  
+  //cerr << "2" << endl;
+  if (currNode->getBeginRoute() != currNode->getEndRoute())
+    {
+      //cerr << "3" << endl;
+      for (FGTaxiSegmentPointerVectorIterator 
+	     i = currNode->getBeginRoute();
+	   i != currNode->getEndRoute();
+	   i++)
+	{
+	  //cerr << (*i)->getLenght() << endl;
+	  trace((*i)->getEnd(), end, depth+1, (*i)->getLength());
+	//  {
+	//      // cerr << currNode -> getIndex() << " ";
+	//      route.push_back(currNode->getIndex());
+	//      return true;
+	//    }
+	}
+    }
+  else
+    {
+      cerr << "4" << endl;
+    }
+  traceStack.pop_back();
+  totalDistance -= distance;
+  return;
+}
+
+
+
 /******************************************************************************
  * FGAirportList
  *****************************************************************************/
@@ -1199,6 +1536,7 @@ void FGAirportList::add( const string id, const double longitude,
     {
         try {
             readXML(parkpath.str(),*a);
+	    a->init();
         } 
         catch  (const sg_exception &e) {
             //cerr << "unable to read " << parkpath.str() << endl;

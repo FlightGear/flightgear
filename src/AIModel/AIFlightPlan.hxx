@@ -104,9 +104,10 @@ private:
    time_t start_time;
   int leg;
   int gateId;
+  string activeRunway;
 
   void createPushBack(bool, FGAirport*, double, double, double, string, string, string);
-  void createTaxi(bool, int, FGAirport *, double, string, string, string);
+  void createTaxi(bool, int, FGAirport *, double, double, double, string, string, string);
   void createTakeOff(bool, FGAirport *, double);
   void createClimb(bool, FGAirport *, double, double);
   void createCruise(bool, FGAirport*, FGAirport*, double, double, double, double);

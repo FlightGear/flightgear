@@ -392,9 +392,15 @@ bool FGAISchedule::update(time_t now)
 	  return true;
 	} 
     }
-
+  //cerr << "Traffic schedule got to beyond last clause" << endl;
     // EMH: prevent a warning, should this be 'true' instead?
-    return false;
+    // DT: YES. Originally, this code couldn't be reached, but
+    // when the "if(!(AIManagerManager))" clause is false we
+    // fall through right to the end. This is a valid flow.
+    // the actual value is pretty innocent, only it triggers
+    // warning in TrafficManager::update().
+    // (which was added as a sanity check for myself in the first place. :-)
+    return true;
 }
 
 
