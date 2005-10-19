@@ -91,10 +91,11 @@ void YASim::bind()
 
     char buf[256];
     for(int i=0; i<_fdm->getAirplane()->getModel()->numThrusters(); i++) {
-	sprintf(buf, "/engines/engine[%d]/fuel-flow-gph", i); fgUntie(buf);
-	sprintf(buf, "/engines/engine[%d]/rpm", i);           fgUntie(buf);
-	sprintf(buf, "/engines/engine[%d]/mp-osi", i);        fgUntie(buf);
-	sprintf(buf, "/engines/engine[%d]/egt-degf", i);      fgUntie(buf);
+	sprintf(buf, "/engines/engine[%d]/fuel-flow-gph", i);        fgUntie(buf);
+	sprintf(buf, "/engines/engine[%d]/rpm", i);                  fgUntie(buf);
+	sprintf(buf, "/engines/engine[%d]/mp-osi", i);               fgUntie(buf);
+	sprintf(buf, "/engines/engine[%d]/egt-degf", i);             fgUntie(buf);
+	sprintf(buf, "/engines/engine[%d]/oil-temperature-degf", i); fgUntie(buf);
     }
 }
 

@@ -529,6 +529,8 @@ void FGFDM::setOutputProperties(float dt)
                 node->setFloatValue("mp-inhg", pe->getMP() * (1/INHG2PA));
                 node->setFloatValue("egt-degf",
                                     pe->getEGT() * K2DEGF + K2DEGFOFFSET);
+                node->setFloatValue("oil-temperature-degf",
+                                    pe->getOilTemp() * K2DEGF + K2DEGFOFFSET);
                 node->setFloatValue("boost-gauge-inhg",
                                     pe->getBoost() * (1/INHG2PA));
             } else if(p->getEngine()->isTurbineEngine()) {

@@ -20,8 +20,11 @@ public:
     float getEGT();
     float getMaxPower(); // max sea-level power
     float getBoost() { return _boostPressure; }
+    float getOilTemp() { return _oilTemp; }
 
     virtual void calc(float pressure, float temp, float speed);
+    virtual void stabilize();
+    virtual void integrate(float dt);
     virtual float getTorque();
     virtual float getFuelFlow();
 
@@ -43,6 +46,9 @@ private:
     float _fuelFlow;
     float _egt;
     float _boostPressure;
+    float _oilTemp;
+    float _oilTempTarget;
+    float _dOilTempdt;
 };
 
 }; // namespace yasim

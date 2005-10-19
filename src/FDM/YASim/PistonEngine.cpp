@@ -13,6 +13,10 @@ PistonEngine::PistonEngine(float power, float speed)
     _running = false;
     _fuel = true;
     _boostPressure = 0;
+    
+    _oilTemp = Atmosphere::getStdTemperature(0);
+    _oilTempTarget = _oilTemp;
+    _dOilTempdt = 0;
 
     // Presume a BSFC (in lb/hour per HP) of 0.45.  In SI that becomes
     // (2.2 lb/kg, 745.7 W/hp, 3600 sec/hour) 7.62e-08 kg/Ws.
@@ -91,6 +95,16 @@ float PistonEngine::getMP()
 float PistonEngine::getEGT()
 {
     return _egt;
+}
+
+void PistonEngine::stabilize()
+{
+    _oilTemp = _oilTempTarget;
+}
+
+void PistonEngine::integrate(float dt) 
+{
+    _oilTemp += (_dOilTempdt * dt);
 }
 
 void PistonEngine::calc(float pressure, float temp, float speed)
@@ -208,12 +222,31 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // what we'd expect.  And diddle the work done by the gas a bit to
     // account for non-thermodynamic losses like internal friction;
     // 10% should do it.
-
     float massFlow = _fuelFlow + (rho * 0.5f * _displacement * speed);
     float specHeat = 1300;
     float corr = 1.0f/(Math::pow(_compression, 0.4f) - 1.0f);
     _egt = corr * (power * 1.1f) / (massFlow * specHeat);
     if(_egt < temp) _egt = temp;
+    
+    
+    // Oil temperature.
+    // Assume a linear variation between ~90degC at idle and ~120degC
+    // at full power.  No attempt to correct for airflow over the
+    // engine is made.  Make the time constant to attain target steady-
+    // state oil temp greater at engine off than on to reflect no
+    // circulation.  Nothing fancy, but populates the guage with a
+    // plausible value.
+    float tau;	// secs 
+    if(_running) {
+	_oilTempTarget = 363.0f + (30.0f * (power/_power0));
+	tau = 600;
+	// Reduce tau linearly to 300 at max power
+	tau -= (power/_power0) * 300.0f;
+    } else {
+	_oilTempTarget = temp;
+	tau = 1500;		
+    }
+    _dOilTempdt = (_oilTempTarget - _oilTemp) / tau;
 }
 
 }; // namespace yasim
