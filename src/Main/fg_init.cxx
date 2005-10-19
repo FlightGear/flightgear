@@ -717,6 +717,18 @@ static bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
 
 }
 
+struct FGTowerLocationListener : SGPropertyChangeListener {
+    void valueChanged(SGPropertyNode* node) {
+        const double hdg = fgGetDouble( "/orientation/heading-deg", 0);
+        const string id(node->getStringValue());
+        fgSetTowerPosFromAirportID(id, hdg);
+    }
+};
+
+static void fgInitTowerLocationListener() {
+    fgGetNode("/sim/tower/airport-id",  true)
+	->addChangeListener( new FGTowerLocationListener() );
+}
 
 // Set current_options lon/lat given an airport id and heading (degrees)
 static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
@@ -1178,12 +1190,15 @@ bool fgInitPosition() {
     string parkpos = fgGetString("/sim/presets/parkpos");
     string fix = fgGetString("/sim/presets/fix");
 
+    fgSetDouble( "/orientation/heading-deg", hdg );
+    fgInitTowerLocationListener();
+
     if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
         // An airport + runway is requested
         if ( fgSetPosFromAirportIDandRwy( apt, rwy_no ) ) {
             // set tower position (a little off the heading for single
             // runway airports)
-            fgSetTowerPosFromAirportID( apt, hdg );
+	    fgSetString("/sim/tower/airport-id",  apt.c_str());
             set_pos = true;
         }
     }
@@ -1193,7 +1208,7 @@ bool fgInitPosition() {
         if ( fgSetPosFromAirportIDandHdg( apt, hdg ) ) {
             // set tower position (a little off the heading for single
             // runway airports)
-            fgSetTowerPosFromAirportID( apt, hdg );
+	    fgSetString("/sim/tower/airport-id",  apt.c_str());
             set_pos = true;
         }
     }
@@ -1237,8 +1252,6 @@ bool fgInitPosition() {
                  fgGetDouble("/sim/presets/longitude-deg") );
     fgSetDouble( "/position/latitude-deg",
                  fgGetDouble("/sim/presets/latitude-deg") );
-    fgSetDouble( "/orientation/heading-deg",
-                 fgGetDouble("/sim/presets/heading-deg") );
 
     // determine if this should be an on-ground or in-air start
     if ((fabs(gs) > 0.01 || fabs(od) > 0.1 || alt > 0.1) && carrier.empty()) {
