@@ -45,7 +45,6 @@ extern void guiInit();
 extern void mkDialog(const char *txt);
 extern void guiErrorMessage(const char *txt);
 extern void guiErrorMessage(const char *txt, const sg_throwable &throwable);
-extern void ConfirmExitDialog(void);
 
 extern void fgDumpSnapShot();
 
@@ -65,7 +64,6 @@ extern void fgHiResDump();
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
 extern void printScreen(puObject *);
 #endif
-extern void MayBeGoodBye(puObject *);
 extern void guiTogglePanel(puObject *);
 extern void PilotOffsetAdjust(puObject *);
 extern void fgHUDalphaAdjust(puObject *);

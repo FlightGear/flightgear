@@ -81,6 +81,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/renderer.hxx>
 #include <Main/viewmgr.hxx>
+#include <GUI/new_gui.hxx>
 
 #if defined( WIN32 ) && !defined( __CYGWIN__ ) && !defined(__MINGW32__)
 #  include <simgear/screen/win32-printer.h>
@@ -107,30 +108,14 @@ extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
                          GLfloat x_end, GLfloat y_end );
 #endif
 
-puDialogBox  *dialogBox = 0;
-puFrame      *dialogFrame = 0;
-puText       *dialogBoxMessage = 0;
-puOneShot    *dialogBoxOkButton = 0;
 
-puDialogBox  *YNdialogBox = 0;
-puFrame      *YNdialogFrame = 0;
-puText       *YNdialogBoxMessage = 0;
-puOneShot    *YNdialogBoxOkButton = 0;
-puOneShot    *YNdialogBoxNoButton = 0;
+// TODO: remove after the last hardcoded dialog has died
+char *gui_msg_OK     = "OK";
+char *gui_msg_NO     = "NO";
+char *gui_msg_YES    = "YES";
+char *gui_msg_CANCEL = "CANCEL";
+char *gui_msg_RESET  = "RESET";
 
-char *gui_msg_OK;     // "OK"
-char *gui_msg_NO;     // "NO"
-char *gui_msg_YES;    // "YES"
-char *gui_msg_CANCEL; // "CANCEL"
-char *gui_msg_RESET;  // "RESET"
-
-char msg_OK[]     = "OK";
-char msg_NO[]     = "NO";
-char msg_YES[]    = "YES";
-char msg_CANCEL[] = "Cancel";
-char msg_RESET[]  = "Reset";
-
-char global_dialog_string[256];
 
 const __fg_gui_fn_t __fg_gui_fn[] = {
 
@@ -143,7 +128,6 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
         {"printScreen", printScreen},
 #endif
-        {"MayBeGoodBye", MayBeGoodBye},
 
         //View
         {"guiTogglePanel", guiTogglePanel},
@@ -177,29 +161,26 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
 
 /* ================ General Purpose Functions ================ */
 
-void initDialog(void) {
-    // Initialize our GLOBAL GUI STRINGS
-    gui_msg_OK     = msg_OK;     // "OK"
-    gui_msg_NO     = msg_NO;     // "NO"
-    gui_msg_YES    = msg_YES;    // "YES"
-    gui_msg_CANCEL = msg_CANCEL; // "CANCEL"
-    gui_msg_RESET  = msg_RESET;  // "RESET"
-}
-
 // General Purpose Message Box
 void mkDialog (const char *txt)
 {
-    strncpy(global_dialog_string, txt, 256);
-    dialogBoxMessage->setLabel(global_dialog_string);
-    FG_PUSH_PUI_DIALOG( dialogBox );
+    NewGUI *gui = (NewGUI *)globals->get_subsystem("gui");
+    SGPropertyNode_ptr dlg = gui->getDialog("message");
+    if (!dlg) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "'message' dialog missing");
+        return;
+    }
+
+    dlg->setStringValue("text/label", txt);
+    dlg->setStringValue("button/legend", "OK");
+    gui->showDialog("message");
 }
 
 // Message Box to report an error.
 void guiErrorMessage (const char *txt)
 {
     SG_LOG(SG_GENERAL, SG_ALERT, txt);
-    if (dialogBox != 0)
-      mkDialog(txt);
+    mkDialog(txt);
 }
 
 // Message Box to report a throwable (usually an exception).
@@ -214,14 +195,7 @@ void guiErrorMessage (const char *txt, const sg_throwable &throwable)
       msg += ')';
     }
     SG_LOG(SG_GENERAL, SG_ALERT, msg);
-    if (dialogBox != 0)
-      mkDialog(msg.c_str());
-}
-
-// Intercept the Escape Key
-void ConfirmExitDialog(void)
-{
-    FG_PUSH_PUI_DIALOG( YNdialogBox );
+    mkDialog(msg.c_str());
 }
 
 
@@ -246,86 +220,6 @@ void guiTogglePanel(puObject *cb)
 
   globals->get_renderer()->resize(fgGetInt("/sim/startup/xsize"),
                                   fgGetInt("/sim/startup/ysize"));
-}
-
-void goodBye(puObject *)
-{
-    // SG_LOG( SG_INPUT, SG_ALERT,
-    //      "Program exiting normally at user request." );
-    cout << "Program exiting normally at user request." << endl;
-
-    exit(0);
-}
-
-
-void goAwayCb (puObject *me)
-{
-    FG_POP_PUI_DIALOG( dialogBox );
-}
-
-void mkDialogInit (void)
-{
-    //  printf("mkDialogInit\n");
-    int x = (fgGetInt("/sim/startup/xsize")/2 - 400/2);
-    int y = (fgGetInt("/sim/startup/ysize")/2 - 100/2);
-    dialogBox = new puDialogBox (x, y); // 150, 50
-    {
-        dialogFrame = new puFrame (0,0,400,100);
-        dialogBoxMessage  =  new puText         (10, 70);
-        dialogBoxMessage  -> setLabel           ("");
-        dialogBoxOkButton =  new puOneShot      (180, 10, 240, 50);
-        dialogBoxOkButton -> setLegend          (gui_msg_OK);
-        dialogBoxOkButton -> makeReturnDefault  (TRUE );
-        dialogBoxOkButton -> setCallback        (goAwayCb);
-    }
-    FG_FINALIZE_PUI_DIALOG( dialogBox );
-}
-
-void MayBeGoodBye(puObject *)
-{
-    ConfirmExitDialog(); 
-}
-
-void goAwayYesNoCb(puObject *me)
-{
-    FG_POP_PUI_DIALOG( YNdialogBox);
-}
-
-void ConfirmExitDialogInit(void)
-{
-    char msg[] = "Really Quit";
-    char *s;
-
-    //  printf("ConfirmExitDialogInit\n");
-    int len = 200 - puGetDefaultLabelFont().getStringWidth ( msg ) / 2;
-
-    int x = (fgGetInt("/sim/startup/xsize")/2 - 400/2);
-    int y = (fgGetInt("/sim/startup/ysize")/2 - 100/2);
-	
-    YNdialogBox = new puDialogBox (x, y); // 150, 50
-    {
-        YNdialogFrame = new puFrame (0,0,400, 100);
-        
-        YNdialogBoxMessage  =  new puText         (len, 70);
-        YNdialogBoxMessage  -> setDefaultValue    (msg);
-        YNdialogBoxMessage  -> getDefaultValue    (&s);
-        YNdialogBoxMessage  -> setLabel           (s);
-        
-        YNdialogBoxOkButton =  new puOneShot      (100, 10, 160, 50);
-        YNdialogBoxOkButton -> setLegend          (gui_msg_OK);
-        YNdialogBoxOkButton -> makeReturnDefault  (TRUE );
-        YNdialogBoxOkButton -> setCallback        (goodBye);
-        
-        YNdialogBoxNoButton =  new puOneShot      (240, 10, 300, 50);
-        YNdialogBoxNoButton -> setLegend          (gui_msg_NO);
-        YNdialogBoxNoButton -> setCallback        (goAwayYesNoCb);
-    }
-    FG_FINALIZE_PUI_DIALOG( YNdialogBox );
-}
-
-void notCb (puObject *)
-{
-    mkDialog ("This function isn't implemented yet");
 }
 
 void helpCb (puObject *)

@@ -51,10 +51,6 @@
 #include "preset_dlg.hxx"
 #include "layout.hxx"
 
-extern void initDialog (void);
-extern void mkDialogInit (void);
-extern void ConfirmExitDialogInit(void);
-
 
 puFont guiFnt = 0;
 fntTexFont *guiFntHandle = 0;
@@ -73,8 +69,6 @@ void guiInit()
     puInit();
     puSetDefaultStyle         ( PUSTYLE_SMALL_SHADED ); //PUSTYLE_DEFAULT
     puSetDefaultColourScheme  (0.8, 0.8, 0.9, 1);
-
-    initDialog();
 
     // Next check home directory
     SGPath fntpath;
@@ -124,8 +118,5 @@ void guiInit()
 	initMouseQuat();
 
     // Set up our Dialog Boxes
-    ConfirmExitDialogInit();
     fgPresetInit();
-	
-    mkDialogInit();
 }
