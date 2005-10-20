@@ -56,9 +56,6 @@
 SG_USING_STD(sort);
 SG_USING_STD(random_shuffle);
 
-#ifdef __CYGWIN__
-#define HUGE HUGE_VAL
-#endif
 
 /******************************************************************************
  * ScheduleTime
@@ -1332,7 +1329,7 @@ void FGGroundNetwork::init()
 
 int FGGroundNetwork::findNearestNode(double lat, double lon)
 {
-  double minDist = HUGE;
+  double minDist = HUGE_VAL;
   double course, dist;
   int index;
   SGWayPoint first  (lon,
