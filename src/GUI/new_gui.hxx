@@ -134,6 +134,13 @@ public:
     virtual bool closeDialog (const string &name);
 
     /**
+     * Get dialog property tree's root node.
+     * @param name The name of the dialog box.
+     * @return node pointer if the dialog was found, zero otherwise.
+     */
+    virtual SGPropertyNode_ptr getDialog (const string &name);
+
+    /**
      * Return a pointer to the current menubar.
      */
     virtual FGMenuBar * getMenuBar ();

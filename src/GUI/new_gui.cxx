@@ -142,6 +142,15 @@ NewGUI::closeDialog (const string& name)
     return false; // dialog wasn't open...
 }
 
+SGPropertyNode_ptr
+NewGUI::getDialog (const string &name)
+{
+    if(_dialog_props.find(name) != _dialog_props.end())
+        return _dialog_props[name];
+    else
+        return 0;
+}
+
 void
 NewGUI::setActiveDialog (FGDialog * dialog)
 {
