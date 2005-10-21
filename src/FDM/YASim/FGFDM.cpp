@@ -220,6 +220,8 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	if(a->hasAttribute("epr"))  j->setEPR(attrf(a, "epr"));
 	if(a->hasAttribute("exhaust-speed"))
 	    j->setVMax(attrf(a, "exhaust-speed") * KTS2MPS);
+	if(a->hasAttribute("spool-time"))
+	    j->setSpooling(attrf(a, "spool-time"));
 	
 	j->setPosition(v);
 	_airplane.addThruster(j, mass, v);
