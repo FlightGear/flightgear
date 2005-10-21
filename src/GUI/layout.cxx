@@ -39,6 +39,9 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
 {
     *w = *h = 0; // Ask for nothing by default
 
+    if (getBool("hide"))
+        return;
+
     int legw = stringLength(getStr("legend"));
     int labw = stringLength(getStr("label"));
 
@@ -94,6 +97,9 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
 // Set up geometry such that the widget lives "inside" the specified 
 void LayoutWidget::layout(int x, int y, int w, int h)
 {
+    if (getBool("hide"))
+        return;
+
     setNum("__bx", x);
     setNum("__by", y);
     setNum("__bw", w);
@@ -192,6 +198,9 @@ void LayoutWidget::doHVBox(bool doLayout, bool vertical, int* w, int* h)
     int nEq = 0, eqA = 0, eqB = 0, eqTotalA = 0;
     for(i=0; i<nc; i++) {
         LayoutWidget child = getChild(i);
+        if (child.getBool("hide"))
+            continue;
+
         int a, b;
         child.calcPrefSize(vertical ? &b : &a, vertical ? &a : &b);
         if(doLayout) prefA[i] = a;
@@ -227,6 +236,9 @@ void LayoutWidget::doHVBox(bool doLayout, bool vertical, int* w, int* h)
         // from top to bottom instead of along the cartesian Y axis.
         int idx = vertical ? (nc-i-1) : i;
         LayoutWidget child = getChild(idx);
+        if (child.getBool("hide"))
+            continue;
+
         if(child.getBool("equal")) {
             int pad = child.padding();
             prefA[idx] = eqA + 2*pad;
