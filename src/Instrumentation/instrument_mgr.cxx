@@ -63,13 +63,13 @@ FGInstrumentMgr::FGInstrumentMgr ()
                 enabled = true;
             } else {
                 SG_LOG( SG_ALL, SG_ALERT,
-                        "Detected an internal inconsistancy in the instrumentation");
+                        "Detected an internal inconsistency in the instrumentation");
                 SG_LOG( SG_ALL, SG_ALERT,
                         " system specification file.  See earlier errors for" );
                 SG_LOG( SG_ALL, SG_ALERT,
                         " details.");
                 exit(-1);
-            }        
+            }
         } catch (const sg_exception& exc) {
             SG_LOG( SG_ALL, SG_ALERT, "Failed to load instrumentation system model: "
                     << config.str() );
@@ -162,7 +162,6 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "tacan" ) { 
             set_subsystem( "instrument" + temp.str(), 
                            new TACAN( node ) );
-                           
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
                     << name );
