@@ -427,16 +427,13 @@ void fgHiResDump()
 
     fclose(f);
 
-    message = "Snap shot saved to ";
+    message = "Snapshot saved to \"";
     message += filename;
+    message += '".';
     mkDialog (message.c_str());
 
     free(tile);
     free(buffer);
-
-    //	message = "Snap shot saved to ";
-    //	message += filename;
-    //	mkDialog (message.c_str());
 
     delete [] filename;
 
@@ -569,11 +566,13 @@ void fgDumpSnapShot () {
     if ( sg_glDumpWindow( filename,
 			  fgGetInt("/sim/startup/xsize"), 
 			  fgGetInt("/sim/startup/ysize")) ) {
-	message = "Snap shot saved to ";
+	message = "Snapshot saved to \"";
 	message += filename;
+	message += "\".";
     } else {
-        message = "Failed to save to ";
+        message = "Failed to save to \"";
 	message += filename;
+	message += "\".";
     }
 
     mkDialog (message.c_str());
