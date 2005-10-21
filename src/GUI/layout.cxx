@@ -153,7 +153,10 @@ void LayoutWidget::layout(int x, int y, int w, int h)
     // the x/y/w/h box we have calculated.
     if (isType("text")) {
         // puText labels are layed out to the right of the box, so
-        // zero the width.
+        // zero the width. Also subtract PUSTR_RGAP from the x
+        // coordinate to compensate for the added gap between the
+        // label and its empty puObject.
+        x -= 5;
         w = 0;
     } else if (isType("input") || isType("combo") || isType("select")) {
         // Fix the height to a constant
