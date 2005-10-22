@@ -532,7 +532,7 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
   cache_fill(terrain, xform, &acSphere, down, &wireSphere);
 
   // some stats
-  SG_LOG(SG_FLIGHT,SG_INFO, "prepare_ground_cache(): ac radius = " << rad
+  SG_LOG(SG_FLIGHT,SG_DEBUG, "prepare_ground_cache(): ac radius = " << rad
          << ", # triangles = " << triangles.size()
          << ", # wires = " << wires.size()
          << ", # catapults = " << catapults.size()

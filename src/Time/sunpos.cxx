@@ -260,8 +260,8 @@ void fgUpdateSunPos( void ) {
     SGTime *t = globals->get_time_params();
     FGViewer *v = globals->get_current_view();
 
-    SG_LOG( SG_EVENT, SG_INFO, "  Updating Sun position" );
-    SG_LOG( SG_EVENT, SG_INFO, "  Gst = " << t->getGst() );
+    SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
+    SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t->getGst() );
 
     double sun_l;
     fgSunPositionGST(t->getGst(), &sun_l, &sun_gd_lat);
@@ -273,8 +273,8 @@ void fgUpdateSunPos( void ) {
     Point3D p = Point3D( l->get_sun_lon(), l->get_sun_gc_lat(), sl_radius );
     l->set_sunpos( sgPolarToCart3d(p) );
 
-    SG_LOG( SG_EVENT, SG_INFO, "    t->cur_time = " << t->get_cur_time() );
-    SG_LOG( SG_EVENT, SG_INFO, 
+    SG_LOG( SG_EVENT, SG_DEBUG, "    t->cur_time = " << t->get_cur_time() );
+    SG_LOG( SG_EVENT, SG_DEBUG,
 	    "    Sun Geodetic lat = " << sun_gd_lat
 	    << " Geocentric lat = " << l->get_sun_gc_lat() );
 
@@ -302,7 +302,7 @@ void fgUpdateSunPos( void ) {
     //      << nsun[2] << endl;
 
     l->set_sun_angle( acos( sgScalarProductVec3 ( nup, nsun ) ) );
-    SG_LOG( SG_EVENT, SG_INFO, "sun angle relative to current location = "
+    SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "
 	    << l->get_sun_angle() );
     
     // calculate vector to sun's position on the earth's surface

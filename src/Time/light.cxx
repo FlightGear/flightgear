@@ -166,20 +166,20 @@ void FGLight::update_sky_color () {
     const GLfloat base_sky_color[4] = { 0.31, 0.43, 0.69, 1.0 };
     const GLfloat base_fog_color[4] = { 0.84, 0.87, 1.0,  1.0 };
 
-    SG_LOG( SG_EVENT, SG_INFO, "Updating light parameters." );
+    SG_LOG( SG_EVENT, SG_DEBUG, "Updating light parameters." );
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
 
     float deg = _sun_angle * SGD_RADIANS_TO_DEGREES;
-    SG_LOG( SG_EVENT, SG_INFO, "  Sun angle = " << deg );
+    SG_LOG( SG_EVENT, SG_DEBUG, "  Sun angle = " << deg );
 
     float ambient = _ambient_tbl->interpolate( deg );
     float diffuse = _diffuse_tbl->interpolate( deg );
     float specular = _specular_tbl->interpolate( deg );
     float sky_brightness = _sky_tbl->interpolate( deg );
 
-    SG_LOG( SG_EVENT, SG_INFO, 
+    SG_LOG( SG_EVENT, SG_DEBUG,
 	    "  ambient = " << ambient << "  diffuse = " << diffuse 
 	    << "  specular = " << specular << "  sky = " << sky_brightness );
 
