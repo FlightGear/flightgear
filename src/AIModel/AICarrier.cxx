@@ -860,7 +860,7 @@ void FGAICarrier::UpdateTACAN(double dt){ //update the TACAN
 bool FGAICarrier::OutsideBox(){ //returns true if the carrier is outside operating box
 
     if ( max_lat == 0 && min_lat == 0 && max_long == 0 && min_long == 0) {
-       SG_LOG(SG_GENERAL, SG_INFO,"AICarrier: No Operating Box defined" );
+       SG_LOG(SG_GENERAL, SG_BULK,"AICarrier: No Operating Box defined" );
        return false;
     }        
      
