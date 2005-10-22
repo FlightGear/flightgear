@@ -147,8 +147,9 @@ NewGUI::getDialog (const string &name)
 {
     if(_dialog_props.find(name) != _dialog_props.end())
         return _dialog_props[name];
-    else
-        return 0;
+
+    SG_LOG(SG_GENERAL, SG_ALERT, "dialog '" << name << "' missing");
+    return 0;
 }
 
 void

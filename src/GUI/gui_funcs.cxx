@@ -166,10 +166,8 @@ void mkDialog (const char *txt)
 {
     NewGUI *gui = (NewGUI *)globals->get_subsystem("gui");
     SGPropertyNode_ptr dlg = gui->getDialog("message");
-    if (!dlg) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "'message' dialog missing");
+    if (!dlg)
         return;
-    }
 
     dlg->setStringValue("text/label", txt);
     dlg->setStringValue("button/legend", "OK");
