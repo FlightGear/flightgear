@@ -20,6 +20,9 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/commands.hxx>
