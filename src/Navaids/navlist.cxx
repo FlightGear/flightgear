@@ -143,10 +143,6 @@ bool FGTACANList::add( FGTACANRecord *c ) {
     return true;
 }
 
-// Query the database for the specified frequency.  It is assumed that
-// there will be multiple stations with matching frequencies so a
-// position must be specified.  Lon and lat are in degrees, elev is in
-// meters.
 FGNavRecord *FGNavList::findByFreq( double freq, double lon, double lat, double elev )
 {
     nav_list_type stations = navaids[(int)(freq*100.0 + 0.5)];

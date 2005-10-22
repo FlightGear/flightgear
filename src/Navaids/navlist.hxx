@@ -78,17 +78,12 @@ public:
     bool add( FGNavRecord *n );
     //bool add( FGTACANRecord *r );
 
-    // Query the database for the specified frequency.  It is assumed
-    // that there will be multiple stations with matching frequencies
-    // so a position must be specified.  Lon and lat are in degrees,
-    // elev is in meters.
+    /** Query the database for the specified station.  It is assumed
+      * that there will be multiple stations with matching frequencies
+      * so a position must be specified.  Lon and lat are in radians,
+      * elev is in meters.
+	  */
     FGNavRecord *findByFreq( double freq, double lon, double lat, double elev );
-
-    // Query the database for the specified frequency.  It is assumed
-    // that there will be multiple stations with matching frequencies
-    // so a position must be specified.  Lon and lat are in degrees,
-    // elev is in meters.
-    FGNavRecord *findByLoc( double lon, double lat, double elev );
 
     // locate closest item in the DB matching the requested ident
     FGNavRecord *findByIdent( const char* ident, const double lon, const double lat );

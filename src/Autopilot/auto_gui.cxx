@@ -51,6 +51,8 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Navaids/fixlist.hxx>
+#include <Navaids/navlist.hxx>
+#include <Navaids/navrecord.hxx>
 
 #include "auto_gui.hxx"
 #include "route_mgr.hxx"
@@ -691,7 +693,45 @@ int NewWaypoint( string Tgt_Alt )
       fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
       return 2;
   } else {
-      return 0;
+	  // Try finding a nav matching the ID
+	  double lat, lon;
+	  // The base lon/lat are determined by the last WP,
+	  // or the current pos if the WP list is empty.
+	  const int wps = rm->size();
+	  if (wps > 0) {
+		  SGWayPoint wp = rm->get_waypoint(wps-1);
+		  lat = wp.get_target_lat();
+		  lon = wp.get_target_lon();
+	  }
+	  else {
+		  lat = fgGetNode("/position/latitude-deg")->getDoubleValue();
+		  lon = fgGetNode("/position/longitude-deg")->getDoubleValue();
+	  }
+
+	  lat *= SGD_DEGREES_TO_RADIANS;
+	  lon *= SGD_DEGREES_TO_RADIANS;
+
+	  SG_LOG( SG_GENERAL, SG_INFO,
+			  "Looking for nav " << TgtAptId << " at " << lon << " " << lat);
+	  if (FGNavRecord* nav =
+			  globals->get_navlist()->findByIdent(TgtAptId.c_str(), lon, lat))
+	  {
+		  SG_LOG( SG_GENERAL, SG_INFO,
+				  "Adding waypoint (nav) = " << TgtAptId );
+
+		  sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
+
+		  SGWayPoint wp( nav->get_lon(), nav->get_lat(), alt,
+						 SGWayPoint::WGS84, TgtAptId );
+		  rm->add_waypoint( wp );
+
+		  /* and turn on the autopilot */
+		  fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+		  return 3;
+	  }
+	  else {
+		  return 0;
+	  }
   }
 }
 
