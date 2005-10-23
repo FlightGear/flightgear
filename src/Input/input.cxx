@@ -486,8 +486,7 @@ FGInput::_init_joystick ()
   }
 
   // get rid of unused config nodes
-  for (unsigned int m = 0; m < js_named.size(); m++)
-    js_nodes->removeChild("js-named", js_named[m]->getIndex(), false);
+  js_nodes->removeChildren("js-named", false);
 }
 
 
