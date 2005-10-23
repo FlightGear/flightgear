@@ -190,6 +190,26 @@ static naRef f_removeChild(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
+static naRef f_removeChildren(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    naRef result = naNewVector(c);
+    if(naIsNil(argv) || naVec_size(argv) == 0) {
+        // Remove all children
+        for(int i = (*node)->nChildren() - 1; i >=0; i--)
+            naVec_append(result, propNodeGhostCreate(c, (*node)->removeChild(i)));
+    } else {
+        // Remove all children of a specified name
+        naRef name = naVec_get(argv, 0);
+        if(!naIsString(name)) return naNil();
+        vector<SGPropertyNode_ptr> children
+            = (*node)->removeChildren(naStr_data(name));
+        for(unsigned int i=0; i<children.size(); i++)
+            naVec_append(result, propNodeGhostCreate(c, children[i]));
+    }
+    return result;
+}
+
 static naRef f_getNode(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
@@ -226,6 +246,7 @@ static struct {
     { f_getChild, "_getChild" },
     { f_getChildren, "_getChildren" },
     { f_removeChild, "_removeChild" },
+    { f_removeChildren, "_removeChildren" },
     { f_getNode, "_getNode" },
     { f_new, "_new" },
     { f_globals, "_globals" },
