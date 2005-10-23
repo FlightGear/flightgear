@@ -96,7 +96,6 @@ bool FGInstrumentMgr::build ()
     for ( i = 0; i < count; ++i ) {
         node = config_props->getChild(i);
         string name = node->getName();
-        cout<< "instrument name: " << name << endl;
         std::ostringstream temp;
         temp << i;
         if ( name == "adf" ) {
