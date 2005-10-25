@@ -38,7 +38,7 @@ SG_USING_STD(string);
 ********************************/
 
 // Convert any number to spoken digits
-string ConvertNumToSpokenDigits(string n);
+string ConvertNumToSpokenDigits(const string &n);
 
 // Convert an integer to spoken digits
 string ConvertNumToSpokenDigits(int n);
@@ -48,10 +48,10 @@ string ConvertRwyNumToSpokenString(int n);
 
 // Convert rwy number string to a spoken-style string
 // eg "05L" to "zero five left"
-// Assumes we get a two-digit string optionally appended with R or L
+// Assumes we get a two-digit string optionally appended with R, L, or C
 // eg 01 07L 29R 36
 // Anything else is not guaranteed to be handled correctly!
-string ConvertRwyNumToSpokenString(string s);
+string ConvertRwyNumToSpokenString(const string &s);
 
 // Return the phonetic letter of a letter represented as an integer 1->26
 string GetPhoneticIdent(int i);
@@ -72,7 +72,7 @@ string GetCompassDirection(double h);
 ********************************/
 
 // Given two positions (lat & lon in degrees), get the HORIZONTAL separation (in meters)
-double dclGetHorizontalSeparation(Point3D pos1, Point3D pos2);
+double dclGetHorizontalSeparation(const Point3D pos1, const Point3D pos2);
 
 // Given a point and a line, get the HORIZONTAL shortest distance from the point to a point on the line.
 // Expects to be fed orthogonal co-ordinates, NOT lat & lon !
@@ -80,10 +80,10 @@ double dclGetLinePointSeparation(double px, double py, double x1, double y1, dou
 
 // Given a position (lat/lon/elev), heading, vertical angle, and distance, calculate the new position.
 // Assumes that the ground is not hit!!!  Expects heading and angle in degrees, distance in meters.
-Point3D dclUpdatePosition(Point3D pos, double heading, double angle, double distance);
+Point3D dclUpdatePosition(const Point3D pos, double heading, double angle, double distance);
 
 // Get a heading from one lat/lon to another (in degrees)
-double GetHeadingFromTo(Point3D A, Point3D B);
+double GetHeadingFromTo(const Point3D A, const Point3D B);
 
 // Given a heading (in degrees), bound it from 0 -> 360
 void dclBoundHeading(double &hdg);
@@ -118,5 +118,5 @@ Point3D dclGetAirportPos( const string& id );
 ****************/
 
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
-bool OnRunway(Point3D pt, const FGRunway& rwy);
+bool OnRunway(const Point3D pt, const FGRunway& rwy);
 

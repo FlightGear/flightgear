@@ -22,6 +22,8 @@
 #  include <config.h>
 #endif
 
+#include <sstream>
+
 #include <math.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/constants.h>
@@ -36,11 +38,12 @@
 #include "ATCutils.hxx"
 #include "ATCProjection.hxx"
 
+static const string nums[10] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "niner"};
+
 // Convert any number to spoken digits
-string ConvertNumToSpokenDigits(string n) {
+string ConvertNumToSpokenDigits(const string &n) {
 	//cout << "n = " << n << endl;
-	string nums[10] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
-	string pt = "decimal";
+	static const string pt = "decimal";
 	string str = "";
 	
 	for(unsigned int i=0; i<n.length(); ++i) {
@@ -62,16 +65,14 @@ string ConvertNumToSpokenDigits(string n) {
 
 // Convert an integer to spoken digits
 string ConvertNumToSpokenDigits(int n) {
-	char buf[12];	// should be big enough!!
-	sprintf(buf, "%i", n);
-	string tempstr1 = buf;
-	return(ConvertNumToSpokenDigits(tempstr1));
+	std::ostringstream buf;
+	buf << n;
+	return(ConvertNumToSpokenDigits(buf.str()));
 }
 
 
 // Convert a 2 digit rwy number to a spoken-style string
 string ConvertRwyNumToSpokenString(int n) {
-	string nums[10] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"};
 	// Basic error/sanity checking
 	while(n < 0) {
 		n += 36;
@@ -96,7 +97,7 @@ string ConvertRwyNumToSpokenString(int n) {
 // Assumes we get a two-digit string optionally appended with L, R or C
 // eg 01 07L 29R 36
 // Anything else is not guaranteed to be handled correctly!
-string ConvertRwyNumToSpokenString(string s) {
+string ConvertRwyNumToSpokenString(const string &s) {
 	if(s.size() < 3) {
 		return(ConvertRwyNumToSpokenString(atoi(s.c_str())));
 	} else {
@@ -186,7 +187,7 @@ string GetCompassDirection(double h) {
 //================================================================================================================
 
 // Given two positions (lat & lon in degrees), get the HORIZONTAL separation (in meters)
-double dclGetHorizontalSeparation(Point3D pos1, Point3D pos2) {
+double dclGetHorizontalSeparation(const Point3D pos1, const Point3D pos2) {
 	double x;	//East-West separation
 	double y;	//North-South separation
 	double z;	//Horizontal separation - z = sqrt(x^2 + y^2)
@@ -225,7 +226,7 @@ double dclGetLinePointSeparation(double px, double py, double x1, double y1, dou
 // Given a position (lat/lon/elev), heading and vertical angle (degrees), and distance (meters), calculate the new position.
 // This function assumes the world is spherical.  If geodetic accuracy is required use the functions is sg_geodesy instead!
 // Assumes that the ground is not hit!!!  Expects heading and angle in degrees, distance in meters. 
-Point3D dclUpdatePosition(Point3D pos, double heading, double angle, double distance) {
+Point3D dclUpdatePosition(const Point3D pos, double heading, double angle, double distance) {
 	//cout << setprecision(10) << pos.lon() << ' ' << pos.lat() << '\n';
 	heading *= DCL_DEGREES_TO_RADIANS;
 	angle *= DCL_DEGREES_TO_RADIANS;
@@ -258,7 +259,7 @@ Point3D dclUpdatePosition(Point3D pos, double heading, double angle, double dist
 // Get a heading in degrees from one lat/lon to another.
 // This function assumes the world is spherical.  If geodetic accuracy is required use the functions is sg_geodesy instead!
 // Warning - at the moment we are not checking for identical points - currently it returns 0 in this instance.
-double GetHeadingFromTo(Point3D A, Point3D B) {
+double GetHeadingFromTo(const Point3D A, const Point3D B) {
 	double latA = A.lat() * DCL_DEGREES_TO_RADIANS;
 	double lonA = A.lon() * DCL_DEGREES_TO_RADIANS;
 	double latB = B.lat() * DCL_DEGREES_TO_RADIANS;
@@ -353,7 +354,7 @@ Point3D dclGetAirportPos( const string& id ) {
 
 // Runway stuff
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
-bool OnRunway(Point3D pt, const FGRunway& rwy) {
+bool OnRunway(const Point3D pt, const FGRunway& rwy) {
 	FGATCAlignedProjection ortho;
 	Point3D centre(rwy._lon, rwy._lat, 0.0);	// We don't need the elev
 	ortho.Init(centre, rwy._heading);
