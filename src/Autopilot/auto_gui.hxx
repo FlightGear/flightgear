@@ -49,7 +49,7 @@ void fgAPAdjustInit() ;
 void NewHeadingInit();
 void NewAltitudeInit();
 
-int NewWaypoint( string Tgt_Alt );
+int NewWaypoint( const string& Tgt_Alt );
 
 
 #endif // _AUTO_GUI_HXX

@@ -70,7 +70,7 @@ void FGMPSMessageBuf::writed(double data)
 	write8(&data);
 }
 
-void FGMPSMessageBuf::writes(string data)
+void FGMPSMessageBuf::writes(const string& data)
 {
 	put(data.length());
 	for (int i=0; i<data.length(); i++) put(data[i]);

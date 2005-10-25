@@ -44,7 +44,7 @@ SG_USING_STD(multimap);
 
 
 struct ltstr {
-    bool operator()(const string s1, const string s2) const {
+    bool operator()(const string& s1, const string& s2) const {
         return s1 < s2;
     }
 };
@@ -94,13 +94,13 @@ public:
     ~FGRunwayList();
 
     // add an entry to the list
-    void add( const string id, const string rwy_no,
+    void add( const string& id, const string& rwy_no,
               const double longitude, const double latitude,
               const double heading, const double length, const double width,
               const double displ_thresh1, const double displ_thresh2,
               const double stopway1, const double stopway2,
-              const string lighting_flags, const int surface_code,
-              const string shoulder_code, const int marking_code,
+              const string& lighting_flags, const int surface_code,
+              const string& shoulder_code, const int marking_code,
               const double smoothness, const bool dist_remaining );
 
     // search for the specified apt id.

@@ -83,7 +83,7 @@ public:
 	virtual LandingType GetLandingOption();
 	
 	// Return the callsign
-	inline string GetCallsign() {return plane.callsign;}
+	inline const string& GetCallsign() {return plane.callsign;}
 
 protected:
 	PlaneRec plane;
@@ -143,11 +143,11 @@ private:
 	// Outputs the transmission either on screen or as audio depending on user preference
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
-	void Render(string refname, bool repeating);
+	void Render(const string& refname, bool repeating);
 
 	// Cease rendering a transmission.
 	// Requires the sound manager refname if audio, else "".
-	void NoRender(string refname);
+	void NoRender(const string& refname);
 	
 	// Rendering related stuff
 	bool voice;			// Flag - true if we are using voice

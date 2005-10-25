@@ -245,7 +245,7 @@ void FGATCDialog::Update(double dt) {
 }
 
 // Add an entry
-void FGATCDialog::add_entry(string station, string transmission, string menutext, atc_type type, int code) {
+void FGATCDialog::add_entry(const string& station, const string& transmission, const string& menutext, atc_type type, int code) {
 
   ATCMenuEntry a;
 
@@ -446,7 +446,7 @@ void FGATCDialog::FreqDialog() {
 	FG_PUSH_PUI_DIALOG(atcFreqDialog);
 }
 
-void FGATCDialog::FreqDisplay(string ident) {
+void FGATCDialog::FreqDisplay(string& ident) {
 
 	atcUppercase(ident);
 	

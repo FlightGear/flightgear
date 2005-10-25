@@ -117,7 +117,7 @@ public:
 	virtual void ReceiveUserCallback(int code);
 	
 	// Add plane to a stack
-	virtual void AddPlane(string pid);
+	virtual void AddPlane(const string& pid);
 	
 	// Remove plane from stack
 	virtual int RemovePlane();
@@ -136,9 +136,9 @@ public:
 	// Indicate that the frequency is in use
 	inline void SetFreqInUse() { freqClear = false; receiving = true; }
 	// Transmission to the ATC is finished and a response is required
-	void SetResponseReqd(string rid);
+	void SetResponseReqd(const string& rid);
 	// Transmission finished - let ATC decide if a response is reqd and clear freq if necessary
-	void NotifyTransmissionFinished(string rid);
+	void NotifyTransmissionFinished(const string& rid);
 	// Transmission finished and no response required
 	inline void ReleaseFreq() { freqClear = true; receiving = false; }	// TODO - check that the plane releasing the freq is the right one etc.
 	// The above 3 funcs under development!!
@@ -169,10 +169,10 @@ public:
 	inline void set_freq(const int fq) {freq = fq;}
 	inline int get_range() const { return range; }
 	inline void set_range(const int rg) {range = rg;}
-	inline string get_ident() { return ident; }
-	inline void set_ident(const string id) { ident = id; }
-	inline string get_name() { return name; }
-	inline void set_name(const string nm) { name = nm; }
+	inline const string& get_ident() { return ident; }
+	inline void set_ident(const string& id) { ident = id; }
+	inline const string& get_name() { return name; }
+	inline void set_name(const string& nm) { name = nm; }
 	
 protected:
 	
@@ -180,11 +180,11 @@ protected:
 	// Outputs the transmission either on screen or as audio depending on user preference
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
-	void Render(string msg, string refname = "", bool repeating = false);
+	void Render(string& msg, const string& refname = "", bool repeating = false);
 	
 	// Cease rendering all transmission from this station.
 	// Requires the sound manager refname if audio, else "".
-	void NoRender(string refname);
+	void NoRender(const string& refname);
 	
 	// Transmit a message when channel becomes free of other dialog
     void Transmit(int callback_code = 0);

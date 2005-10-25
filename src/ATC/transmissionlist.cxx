@@ -54,7 +54,7 @@ FGTransmissionList::~FGTransmissionList( void ) {
 
 
 // load default.transmissions
-bool FGTransmissionList::init( SGPath path ) {
+bool FGTransmissionList::init( const SGPath& path ) {
     FGTransmission a;
 
     transmissionlist_station.erase( transmissionlist_station.begin(), transmissionlist_station.end() );

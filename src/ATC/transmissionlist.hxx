@@ -58,7 +58,7 @@ public:
   ~FGTransmissionList();
   
   // load the transmission data and build the map
-  bool init( SGPath path );
+  bool init( const SGPath& path );
   
   // query the database for the specified code,
   bool query_station( const atc_type &station, FGTransmission *a, int max_trans, int &num_trans );

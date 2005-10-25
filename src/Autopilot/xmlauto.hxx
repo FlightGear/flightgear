@@ -78,9 +78,9 @@ public:
 
     virtual ~FGXMLAutoComponent() {}
 
-    virtual void update (double dt) {}
+    virtual void update (double dt)=0;
     
-    inline string get_name() { return name; }
+    inline const string& get_name() { return name; }
 };
 
 

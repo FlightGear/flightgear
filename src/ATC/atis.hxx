@@ -79,8 +79,8 @@ class FGATIS : public FGATC {
 	void Update(double dt);
 	
 	//inline void set_type(const atc_type tp) {type = tp;}
-	inline string get_trans_ident() { return trans_ident; }
-	inline void set_refname(string r) { refname = r; } 
+	inline const string& get_trans_ident() { return trans_ident; }
+	inline void set_refname(const string& r) { refname = r; } 
 	
 	private:
 	

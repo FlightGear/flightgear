@@ -417,7 +417,7 @@ public:
 
 				// Transfer pointer ownership!!
   virtual int addLayer (FGInstrumentLayer *layer);
-  virtual int addLayer (FGCroppedTexture &texture, int w = -1, int h = -1);
+  virtual int addLayer (const FGCroppedTexture &texture, int w = -1, int h = -1);
 
 				// Transfer pointer ownership!!
   virtual void addTransformation (FGPanelTransformation * transformation);
@@ -467,11 +467,10 @@ public:
   virtual void setTexture (const FGCroppedTexture &texture) {
     _texture = texture;
   }
-  virtual FGCroppedTexture &getTexture () { return _texture; }
   virtual const FGCroppedTexture &getTexture () const { return _texture; }
 
 private:
-  mutable FGCroppedTexture _texture;
+  FGCroppedTexture _texture;
 };
 
 

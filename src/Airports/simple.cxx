@@ -128,8 +128,8 @@ string ScheduleTime::getName(time_t dayStart)
   	}
       //couldn't find one so return 0;
       //cerr << "Returning 0 " << endl;
-      return string(0);
     }
+    return string(0);
 }			      
 /******************************************************************************
  * RunwayList
@@ -151,7 +151,7 @@ RunwayList& RunwayList::operator= (const RunwayList &other)
     preferredRunways.push_back(*i);
   return *this;
 }
-void RunwayList::set(string tp, string lst)
+void RunwayList::set(const string &tp, const string &lst)
 {
   //weekday          = atoi(timeCopy.substr(0,1).c_str());
   //    timeOffsetInDays = weekday - currTimeDate->getGmt()->tm_wday;
@@ -205,7 +205,7 @@ RunwayGroup& RunwayGroup:: operator= (const RunwayGroup &other)
   return *this;
 }
 
-void RunwayGroup::setActive(string aptId, 
+void RunwayGroup::setActive(const string &aptId, 
 			    double windSpeed, 
 			    double windHeading, 
 			    double maxTail, 
@@ -335,7 +335,7 @@ void RunwayGroup::setActive(string aptId,
 
 }
 
-void RunwayGroup::getActive(int i, string *name, string *type)
+void RunwayGroup::getActive(int i, string &name, string &type)
 {
   if (i == -1)
     {
@@ -343,13 +343,13 @@ void RunwayGroup::getActive(int i, string *name, string *type)
     }
   if (nrActive == (int)rwyList.size())
     {
-      *name = rwyList[i].getRwyList(active);
-      *type = rwyList[i].getType();
+      name = rwyList[i].getRwyList(active);
+      type = rwyList[i].getType();
     }
   else
     { 
-      *name = rwyList[choice[i]].getRwyList(active);
-      *type = rwyList[choice[i]].getType();
+      name = rwyList[choice[i]].getRwyList(active);
+      type = rwyList[choice[i]].getType();
     }
 }
 /*****************************************************************************
@@ -413,7 +413,7 @@ ScheduleTime *FGRunwayPreference::getSchedule(const char *trafficType)
   return 0;
 }
 
-RunwayGroup *FGRunwayPreference::getGroup(const string groupName)
+RunwayGroup *FGRunwayPreference::getGroup(const string &groupName)
 {
   PreferenceListIterator i = preferences.begin();
   if (preferences.begin() == preferences.end())
@@ -492,7 +492,7 @@ void  FGRunwayPreference::startElement (const char * name, const XMLAttributes &
 }
 
 //based on a string containing hour and minute, return nr seconds since day start.
-time_t FGRunwayPreference::processTime(string tme)
+time_t FGRunwayPreference::processTime(const string &tme)
 {
   string hour   = tme.substr(0, tme.find(":",0));
   string minute = tme.substr(tme.find(":",0)+1, tme.length());
@@ -569,7 +569,7 @@ void  FGRunwayPreference::error (const char * message, int line, int column) {
 /*****************************************************************************
  * Helper function for parsing position string
  ****************************************************************************/
-double processPosition(string pos)
+double processPosition(const string &pos)
 {
   string prefix;
   string subs;
@@ -602,9 +602,9 @@ FGParking::FGParking(double lat,
 		     double hdg,
 		     double rad,
 		     int idx,
-		     string name,
-		     string tpe,
-		     string codes)
+		     const string &name,
+		     const string &tpe,
+		     const string &codes)
 {
   latitude     = lat;
   longitude    = lon;
@@ -655,7 +655,7 @@ FGAirport::FGAirport(const FGAirport& other)
     }
 }
 
-FGAirport::FGAirport(string id, double lon, double lat, double elev, string name, bool has_metar)
+FGAirport::FGAirport(const string &id, double lon, double lat, double elev, const string &name, bool has_metar)
 {
   _id = id;
   _longitude = lon;
@@ -688,7 +688,7 @@ void FGAirport::init()
   groundNetwork.init();
 }
 
-bool FGAirport::getAvailableParking(double *lat, double *lon, double *heading, int *gateId, double rad, string flType, string acType, string airline)
+bool FGAirport::getAvailableParking(double *lat, double *lon, double *heading, int *gateId, double rad, const string &flType, const string &acType, const string &airline)
 {
   bool found = false;
   bool available = false;
@@ -1019,13 +1019,13 @@ void  FGAirport::error (const char * message, int line, int column) {
        << endl;
 }
 
-void FGAirport::setRwyUse(FGRunwayPreference& ref)
+void FGAirport::setRwyUse(const FGRunwayPreference& ref)
 {
   rwyPrefs = ref;
   //cerr << "Exiting due to not implemented yet" << endl;
   //exit(1);
 }
-void FGAirport::getActiveRunway(string trafficType, int action, string *runway)
+void FGAirport::getActiveRunway(const string &trafficType, int action, string &runway)
 {
   double windSpeed;
   double windHeading;
@@ -1036,7 +1036,7 @@ void FGAirport::getActiveRunway(string trafficType, int action, string *runway)
 
   if (!(rwyPrefs.available()))
     {
-      chooseRunwayFallback(runway);
+      runway = chooseRunwayFallback();
       return; // generic fall back goes here
     }
   else
@@ -1137,7 +1137,7 @@ void FGAirport::getActiveRunway(string trafficType, int action, string *runway)
 	  for (int i = 0; i < nrActiveRunways; i++)
 	    {
 	      type = "unknown"; // initialize to something other than landing or takeoff
-	      currRunwayGroup->getActive(i, &name, &type);
+	      currRunwayGroup->getActive(i, name, type);
 	      if (type == "landing")
 		{
 		  landing.push_back(name);
@@ -1155,11 +1155,11 @@ void FGAirport::getActiveRunway(string trafficType, int action, string *runway)
 	  int nr = takeoff.size();
 	  if (nr)
 	    {
-	      *runway = takeoff[(rand() %  nr)];
+	      runway = takeoff[(rand() %  nr)];
 	    }
 	  else
 	    { // Fallback
-	      chooseRunwayFallback(runway);
+	      runway = chooseRunwayFallback();
 	    }
 	} 
       if (action == 2) // landing
@@ -1167,20 +1167,20 @@ void FGAirport::getActiveRunway(string trafficType, int action, string *runway)
 	  int nr = landing.size();
 	  if (nr)
 	    {
-	      *runway = landing[(rand() % nr)];
+	      runway = landing[(rand() % nr)];
 	    }
 	  else
 	    {  //fallback
-	       chooseRunwayFallback(runway);
+	       runway = chooseRunwayFallback();
 	    }
 	}
       
-      //*runway = globals->get_runways()->search(_id, int(windHeading));
-      //cerr << "Seleceted runway: " << *runway << endl;
+      //runway = globals->get_runways()->search(_id, int(windHeading));
+      //cerr << "Seleceted runway: " << runway << endl;
     }
 }
 
-void FGAirport::chooseRunwayFallback(string *runway)
+string FGAirport::chooseRunwayFallback()
 {   
   FGEnvironment 
     stationweather = ((FGEnvironmentMgr *) globals->get_subsystem("environment"))
@@ -1195,8 +1195,7 @@ void FGAirport::chooseRunwayFallback(string *runway)
     //which is consistent with Flightgear's initial setup.
   }
   
-  *runway = globals->get_runways()->search(_id, int(windHeading));
-  return; // generic fall back goes here
+   return globals->get_runways()->search(_id, int(windHeading));
 }
 
 
@@ -1284,12 +1283,12 @@ FGGroundNetwork::FGGroundNetwork()
   hasNetwork = false;
 }
 
-void FGGroundNetwork::addSegment(FGTaxiSegment seg)
+void FGGroundNetwork::addSegment(const FGTaxiSegment &seg)
 {
   segments.push_back(seg);
 }
 
-void FGGroundNetwork::addNode(FGTaxiNode node)
+void FGGroundNetwork::addNode(const FGTaxiNode &node)
 {
   nodes.push_back(node);
 }
@@ -1517,9 +1516,9 @@ FGAirportList::~FGAirportList( void ) {
 
 
 // add an entry to the list
-void FGAirportList::add( const string id, const double longitude,
+void FGAirportList::add( const string &id, const double longitude,
                          const double latitude, const double elevation,
-                         const string name, const bool has_metar )
+                         const string &name, const bool has_metar )
 {
     FGRunwayPreference rwyPrefs;
     FGAirport* a = new FGAirport(id, longitude, latitude, elevation, name, has_metar);

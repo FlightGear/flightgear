@@ -64,7 +64,7 @@ public:
 
   virtual void setEnvironment (FGEnvironment * environment);
 
-  virtual FGEnvironment * getEnvironment () const { return _environment; }
+  virtual const FGEnvironment * getEnvironment () const { return _environment; }
 
   virtual void setLongitudeDeg (double lon_deg);
   virtual void setLatitudeDeg (double lat_deg);
@@ -180,7 +180,7 @@ private:
     SGPropertyNode *metar_max_age;
 
     FGMetarResult fetch_data( const string &icao );
-    virtual void update_metar_properties( FGMetar *m );
+    virtual void update_metar_properties( const FGMetar *m );
     void update_env_config();
 
 private:

@@ -52,7 +52,7 @@ private:
 
     void search (double frequency, double longitude_rad,
                  double latitude_rad, double altitude_m);
-    double searchChannel (string _channel);
+    double searchChannel (const string& _channel);
 
     SGPropertyNode_ptr _longitude_node;
     SGPropertyNode_ptr _latitude_node;

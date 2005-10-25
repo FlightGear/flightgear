@@ -334,7 +334,7 @@ FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
 }
 
 // Given a TACAN Channel return the first matching frequency
-FGTACANRecord *FGTACANList::findByChannel( string channel )
+FGTACANRecord *FGTACANList::findByChannel( const string& channel )
 {
     tacan_list_type stations = ident_channels[channel];
     SG_LOG( SG_INSTR, SG_DEBUG, "findByChannel " << channel<< " size " << stations.size()  );

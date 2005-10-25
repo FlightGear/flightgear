@@ -63,7 +63,7 @@ public:
     inline FGNav();
     inline FGNav( int _type, double _lat, double _lon, double _elev_ft,
                   int _freq, double _range, double _magvar,
-                  string _ident, string _name,
+                  const string& _ident, const string& _name,
                   bool _serviceable );
     inline ~FGNav() {}
 
@@ -78,9 +78,9 @@ public:
     inline double get_range() const { return range; }
     // inline bool get_has_dme() const { return has_dme; }
     inline const char *get_ident() { return ident.c_str(); }
-    inline string get_trans_ident() { return trans_ident; }
+    inline const string& get_trans_ident() { return trans_ident; }
     inline double get_magvar() const { return magvar; }
-    inline string get_name() { return name; }
+    inline const string& get_name() { return name; }
 };
 
 
@@ -105,7 +105,7 @@ FGNav::FGNav() :
 inline
 FGNav::FGNav( int _type, double _lat, double _lon, double _elev_ft,
               int _freq, double _range, double _magvar,
-              string _ident, string _name,
+              const string& _ident, const string& _name,
               bool _serviceable ) :
     type(0),
     lon(0.0), lat(0.0),

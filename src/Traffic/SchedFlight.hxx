@@ -67,14 +67,14 @@ public:
   FGScheduledFlight();
   FGScheduledFlight(const FGScheduledFlight &other);
   //  FGScheduledFlight(const string);
-  FGScheduledFlight::FGScheduledFlight(string cs,
-		     string fr,
-		     string depPrt,
-		     string arrPrt,
+  FGScheduledFlight::FGScheduledFlight(const string& cs,
+		     const string& fr,
+		     const string& depPrt,
+		     const string& arrPrt,
 		     int cruiseAlt,
-		     string deptime,
-		     string arrtime,
-		     string rep
+		     const string& deptime,
+		     const string& arrtime,
+		     const string& rep
 		     );
   ~FGScheduledFlight();
 
@@ -96,8 +96,8 @@ public:
     return (departureTime < other.departureTime); 
   };
 
-  time_t processTimeString(string time);
-  string getCallSign() {return callsign; };
+  time_t processTimeString(const string& time);
+  const string& getCallSign() {return callsign; };
 };
 
 typedef vector<FGScheduledFlight>           FGScheduledFlightVec;

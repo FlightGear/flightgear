@@ -44,9 +44,6 @@
 #  include <math.h>
 #endif
 
-#include <string>
-SG_USING_STD(string);
-
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/interpolater.hxx>

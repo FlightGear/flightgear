@@ -76,7 +76,7 @@ public:
   void clear();
   void addStartTime(time_t time)     { start.push_back(time);            };
   void addEndTime  (time_t time)     { end.  push_back(time);            };
-  void addScheduleName(string sched) { scheduleNames.push_back(sched);   };
+  void addScheduleName(const string& sched) { scheduleNames.push_back(sched);   };
   void setTailWind(double wnd)  { tailWind = wnd;                        };
   void setCrossWind(double wnd) { tailWind = wnd;                        };
 
@@ -97,7 +97,7 @@ public:
   RunwayList(const RunwayList &other);
   RunwayList& operator= (const RunwayList &other);
 
-  void set(string, string);
+  void set(const string&, const string&);
   void clear();
 
   string getType() { return type; };
@@ -128,10 +128,10 @@ public:
 
   void setName(string nm) { name = nm;                };
   void add(RunwayList list) { rwyList.push_back(list);};
-  void setActive(string aptId, double windSpeed, double windHeading, double maxTail, double maxCross);
+  void setActive(const string& aptId, double windSpeed, double windHeading, double maxTail, double maxCross);
 
   int getNrActiveRunways() { return nrActive;};
-  void getActive(int i, string *name, string *type);
+  void getActive(int i, string& name, string& type);
 
   string getName() { return name; };
   void clear() { rwyList.clear(); }; 
@@ -157,7 +157,7 @@ private:
   RunwayGroup rwyGroup;
   PreferenceList preferences;
 
-  time_t processTime(string);
+  time_t processTime(const string&);
   bool initialized;
 
 public:
@@ -166,7 +166,7 @@ public:
   
   FGRunwayPreference & operator= (const FGRunwayPreference &other);
   ScheduleTime *getSchedule(const char *trafficType);
-  RunwayGroup *getGroup(const string groupName);
+  RunwayGroup *getGroup(const string& groupName);
   bool available() { return initialized; };
 
  // Some overloaded virtual XMLVisitor members
@@ -180,7 +180,7 @@ public:
   virtual void error (const char * message, int line, int column);
 };
 
-double processPosition(string pos);
+double processPosition(const string& pos);
 
 class FGParking {
 private:
@@ -205,17 +205,17 @@ public:
 	    double hdg,
 	    double rad,
 	    int idx,
-	    string name,
-	    string tpe,
-	    string codes);
-  void setLatitude (string lat)  { latitude    = processPosition(lat);  };
-  void setLongitude(string lon)  { longitude   = processPosition(lon);  };
+	    const string& name,
+	    const string& tpe,
+	    const string& codes);
+  void setLatitude (const string& lat)  { latitude    = processPosition(lat);  };
+  void setLongitude(const string& lon)  { longitude   = processPosition(lon);  };
   void setHeading  (double hdg)  { heading     = hdg;  };
   void setRadius   (double rad)  { radius      = rad;  };
   void setIndex    (int    idx)  { index       = idx;  };
-  void setName     (string name) { parkingName = name; };
-  void setType     (string tpe)  { type        = tpe;  };
-  void setCodes    (string codes){ airlineCodes= codes;};
+  void setName     (const string& name) { parkingName = name; };
+  void setType     (const string& tpe)  { type        = tpe;  };
+  void setCodes    (const string& codes){ airlineCodes= codes;};
 
   bool isAvailable ()         { return available;};
   void setAvailable(bool val) { available = val; };
@@ -261,8 +261,8 @@ public:
   void setIndex(int idx)                  { index = idx;};
   void setLatitude (double val)           { lat = val;};
   void setLongitude(double val)           { lon = val;};
-  void setLatitude (string val)           { lat = processPosition(val);  };
-  void setLongitude(string val)           { lon = processPosition(val);  };
+  void setLatitude (const string& val)           { lat = processPosition(val);  };
+  void setLongitude(const string& val)           { lon = processPosition(val);  };
   void addSegment(FGTaxiSegment *segment) { next.push_back(segment); };
   
   double getLatitude() { return lat;};
@@ -352,9 +352,9 @@ private:
 public:
   FGGroundNetwork();
 
-  void addNode   (FGTaxiNode node);
+  void addNode   (const FGTaxiNode& node);
   void addNodes  (FGParkingVec *parkings);
-  void addSegment(FGTaxiSegment seg); 
+  void addSegment(const FGTaxiSegment& seg); 
 
   void init();
   bool exists() { return hasNetwork; };
@@ -393,17 +393,18 @@ private:
   double avWindHeading [10];
   double avWindSpeed   [10];
 
+  string chooseRunwayFallback();
+
 public:
   FGAirport();
   FGAirport(const FGAirport &other);
   //operator= (FGAirport &other);
-  FGAirport(string id, double lon, double lat, double elev, string name, bool has_metar);
+  FGAirport(const string& id, double lon, double lat, double elev, const string& name, bool has_metar);
 
   void init();
-  void getActiveRunway(string trafficType, int action, string *runway);
-  void chooseRunwayFallback(string *runway);
-  bool getAvailableParking(double *lat, double *lon, double *heading, int *gate, double rad, string fltype, 
-			   string acType, string airline);
+  void getActiveRunway(const string& trafficType, int action, string& runway);
+  bool getAvailableParking(double *lat, double *lon, double *heading, int *gate, double rad, const string& fltype, 
+			   const string& acType, const string& airline);
   void getParking         (int id, double *lat, double* lon, double *heading);
   FGParking *getParking(int i); // { if (i < parkings.size()) return parkings[i]; else return 0;};
   void releaseParking(int id);
@@ -422,10 +423,10 @@ public:
  FGGroundNetwork* getGroundNetwork() { return &groundNetwork; };
   
 
-  void setId(string id) { _id = id;};
+  void setId(const string& id) { _id = id;};
   void setMetar(bool value) { _has_metar = value; };
 
-  void setRwyUse(FGRunwayPreference& ref);
+  void setRwyUse(const FGRunwayPreference& ref);
 
  // Some overloaded virtual XMLVisitor members
   virtual void startXML (); 
@@ -462,8 +463,8 @@ public:
     ~FGAirportList();
 
     // add an entry to the list
-    void add( const string id, const double longitude, const double latitude,
-              const double elevation, const string name, const bool has_metar );
+    void add( const string& id, const double longitude, const double latitude,
+              const double elevation, const string& name, const bool has_metar );
 
     // search for the specified id.
       // Returns NULL if unsucessfull.

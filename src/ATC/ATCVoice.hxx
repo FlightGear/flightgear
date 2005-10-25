@@ -65,7 +65,7 @@ public:
 
 	// Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).
 	// Return true if successful.	
-	bool LoadVoice(string voice);
+	bool LoadVoice(const string& voice);
 	
 	// Given a desired message, return a pointer to the data buffer and write the buffer length into len.
 	// Sets dataOK = true if the returned buffer is valid.

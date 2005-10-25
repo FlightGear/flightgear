@@ -74,7 +74,7 @@ void FGClouds::init(void) {
 	}
 }
 
-SGNewCloud *FGClouds::buildCloud(SGPropertyNode *cloud_def_root, string name) {
+SGNewCloud *FGClouds::buildCloud(SGPropertyNode *cloud_def_root, const string& name) {
 	SGPropertyNode *cld_def=NULL;
 
 	cld_def = cloud_def_root->getChild(name.c_str());
@@ -103,7 +103,7 @@ SGNewCloud *FGClouds::buildCloud(SGPropertyNode *cloud_def_root, string name) {
 	return cld;
 }
 
-void FGClouds::buildLayer(SGCloudField *layer, string name, double alt, double coverage) {
+void FGClouds::buildLayer(SGCloudField *layer, const string& name, double alt, double coverage) {
 	struct {
 		string name;
 		double count;
@@ -275,7 +275,7 @@ FGClouds::update_metar_properties( FGMetar *m )
     fgSetDouble("/environment/metar/max-visibility-m",
                 m->getMaxVisibility().getVisibility_m() );
 
-    SGMetarVisibility *dirvis = m->getDirVisibility();
+    const SGMetarVisibility *dirvis = m->getDirVisibility();
     for (i = 0; i < 8; i++, dirvis++) {
         const char *min = "/environment/metar/visibility[%d]/min-m";
         const char *max = "/environment/metar/visibility[%d]/max-m";
@@ -378,7 +378,7 @@ FGClouds::update_env_config ()
 }
 
 
-void FGClouds::setLayer( int iLayer, float alt_ft, string coverage, string layer_type ) {
+void FGClouds::setLayer( int iLayer, float alt_ft, const string& coverage, const string& layer_type ) {
 	double coverage_norm = 0.0;
 	if( coverage == "few" )
 		coverage_norm = 2.0/8.0;	// <1-2
@@ -393,7 +393,7 @@ void FGClouds::setLayer( int iLayer, float alt_ft, string coverage, string layer
 	buildLayer(layer3D, layer_type, station_elevation_ft + alt_ft * SG_FEET_TO_METER, coverage_norm);
 }
 
-void FGClouds::buildScenario( string scenario ) {
+void FGClouds::buildScenario( const string& scenario ) {
 	string fakeMetar="";
 	string station = fgGetString("/environment/metar/station-id", "XXXX");
 

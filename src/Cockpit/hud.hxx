@@ -251,7 +251,7 @@ public:
 
     ~fgLineSeg2D() {}
     
-    void draw()
+    void draw() const
     {
         glVertex2f(x0, y0);
         glVertex2f(x1, y1);
@@ -260,7 +260,7 @@ public:
 
 class DrawLineSeg2D {
     public:
-        void operator() (fgLineSeg2D elem) const {
+        void operator() (const fgLineSeg2D& elem) const {
             elem.draw();
         }
 };
@@ -375,7 +375,7 @@ class fgLineList {
 public:
     fgLineList( void ) {}
     ~fgLineList( void ) {}
-    void add( fgLineSeg2D seg ) { List.push_back(seg); }
+    void add( const fgLineSeg2D& seg ) { List.push_back(seg); }
     void erase( void ) { List.erase( List.begin(), List.end() ); }
     void draw( void ) {
         glBegin(GL_LINES);
@@ -392,7 +392,7 @@ public:
     ~fgTextList( void ) {}
     
     void setFont( fntRenderer *Renderer ) { Font = Renderer; }
-    void add( fgText String ) { List.push_back(String); }
+    void add( const fgText& String ) { List.push_back(String); }
     void erase( void ) { List.erase( List.begin(), List.end() ); }
     
     void draw( void ) {
@@ -424,7 +424,7 @@ inline void Text( fgTextList &List, float x, float y, char *s)
     List.add( fgText( x, y, s) );
 }
 
-inline void Text( fgTextList &List, fgText &me)
+inline void Text( fgTextList &List, const fgText &me)
 {
     List.add(me);
 }
@@ -688,9 +688,9 @@ typedef lon_label * pLonlabel;
 class runway_instr : public instr_item 
 {
 private:	
-	void boundPoint(sgdVec3 v, sgdVec3 m);
-	bool boundOutsidePoints(sgdVec3 v, sgdVec3 m);
-	bool drawLine(sgdVec3 a1, sgdVec3 a2, sgdVec3 p1, sgdVec3 p2);
+	void boundPoint(const sgdVec3& v, sgdVec3& m);
+	bool boundOutsidePoints(sgdVec3& v, sgdVec3& m);
+	bool drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& p1, const sgdVec3& p2);
 	void drawArrow();
 	bool get_active_runway(FGRunway& rwy);
 	void get_rwy_points(sgdVec3 *points);
@@ -974,7 +974,7 @@ private:
     fgLineList         StippleLineList;
 
 public:
-    HudLadder( string    name,
+    HudLadder( const string&    name,
 	       int       x,
                int       y,
                UINT      width,

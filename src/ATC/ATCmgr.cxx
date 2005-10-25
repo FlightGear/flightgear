@@ -199,7 +199,7 @@ void FGATCMgr::update(double dt) {
 
 
 // Returns frequency in KHz - should I alter this to return in MHz?
-unsigned short int FGATCMgr::GetFrequency(string ident, atc_type tp) {
+unsigned short int FGATCMgr::GetFrequency(const string& ident, const atc_type& tp) {
 	ATCData test;
 	bool ok = current_commlist->FindByCode(ident, test, tp);
 	return(ok ? test.freq : 0);
@@ -208,7 +208,7 @@ unsigned short int FGATCMgr::GetFrequency(string ident, atc_type tp) {
 
 // Register the fact that the AI system wants to activate an airport
 // Might need more sophistication in this in the future - eg registration by aircraft call-sign.
-bool FGATCMgr::AIRegisterAirport(string ident) {
+bool FGATCMgr::AIRegisterAirport(const string& ident) {
 	SG_LOG(SG_ATC, SG_BULK, "AI registered airport " << ident << " with the ATC system");
 	//cout << "AI registered airport " << ident << " with the ATC system" << '\n';
 	if(airport_atc_map.find(ident) != airport_atc_map.end()) {
@@ -248,7 +248,7 @@ bool FGATCMgr::AIRegisterAirport(string ident) {
 
 // Register the fact that the comm radio is tuned to an airport
 // Channel is zero based
-bool FGATCMgr::CommRegisterAirport(string ident, int chan, atc_type tp) {
+bool FGATCMgr::CommRegisterAirport(const string& ident, int chan, const atc_type& tp) {
 	SG_LOG(SG_ATC, SG_BULK, "Comm channel " << chan << " registered airport " << ident);
 	//cout << "Comm channel " << chan << " registered airport " << ident << ' ' << tp << '\n';
 	if(airport_atc_map.find(ident) != airport_atc_map.end()) {
@@ -302,7 +302,7 @@ bool FGATCMgr::CommRegisterAirport(string ident, int chan, atc_type tp) {
 
 // Remove from list only if not needed by the AI system or the other comm channel
 // Note that chan is zero based.
-void FGATCMgr::CommRemoveFromList(string id, atc_type tp, int chan) {
+void FGATCMgr::CommRemoveFromList(const string& id, const atc_type& tp, int chan) {
 	SG_LOG(SG_ATC, SG_BULK, "CommRemoveFromList called for airport " << id << " " << tp << " by channel " << chan);
 	//cout << "CommRemoveFromList called for airport " << id << " " << tp << " by channel " << chan << '\n';
 	if(airport_atc_map.find(id) != airport_atc_map.end()) {
@@ -366,7 +366,7 @@ void FGATCMgr::CommRemoveFromList(string id, atc_type tp, int chan) {
 
 // Remove from list - should only be called from above or similar
 // This function *will* remove it from the list regardless of who else might want it.
-void FGATCMgr::RemoveFromList(string id, atc_type tp) {
+void FGATCMgr::RemoveFromList(const string& id, const atc_type& tp) {
 	//cout << "FGATCMgr::RemoveFromList called..." << endl;
 	//cout << "Requested type = " << tp << endl;
 	//cout << "id = " << id << endl;
@@ -393,7 +393,7 @@ void FGATCMgr::RemoveFromList(string id, atc_type tp) {
 // Find in list - return a currently active ATC pointer given ICAO code and type
 // Return NULL if the given service is not in the list
 // - *** THE CALLING FUNCTION MUST CHECK FOR THIS ***
-FGATC* FGATCMgr::FindInList(string id, atc_type tp) {
+FGATC* FGATCMgr::FindInList(const string& id, const atc_type& tp) {
 	//cout << "Entering FindInList for " << id << ' ' << tp << endl;
 	atc_list_iterator it = atc_list.begin();
 	while(it != atc_list.end()) {
@@ -409,7 +409,7 @@ FGATC* FGATCMgr::FindInList(string id, atc_type tp) {
 }
 
 // Returns true if the airport is found in the map
-bool FGATCMgr::GetAirportATCDetails(string icao, AirportATC* a) {
+bool FGATCMgr::GetAirportATCDetails(const string& icao, AirportATC* a) {
 	if(airport_atc_map.find(icao) != airport_atc_map.end()) {
 		*a = *airport_atc_map[icao];
 		return(true);
@@ -423,7 +423,7 @@ bool FGATCMgr::GetAirportATCDetails(string icao, AirportATC* a) {
 // Returns NULL if service doesn't exist - calling function should check for this.
 // We really ought to make this private and call it from the CommRegisterAirport / AIRegisterAirport functions
 // - at the moment all these GetATC... functions exposed are just too complicated.
-FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
+FGATC* FGATCMgr::GetATCPointer(const string& icao, const atc_type& type) {
 	if(airport_atc_map.find(icao) == airport_atc_map.end()) {
 		//cout << "Unable to find " << icao << ' ' << type << " in the airport_atc_map" << endl;
 		return NULL;
@@ -500,7 +500,7 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 // TODO - in the future this will get more complex and dole out country/airport
 // specific voices, and possible make sure that the same voice doesn't get used
 // at different airports in quick succession if a large enough selection are available.
-FGATCVoice* FGATCMgr::GetVoicePointer(atc_type type) {
+FGATCVoice* FGATCMgr::GetVoicePointer(const atc_type& type) {
 	// TODO - implement me better - maintain a list of loaded voices and other voices!!
 	if(voice) {
 		switch(type) {

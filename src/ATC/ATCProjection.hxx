@@ -28,16 +28,16 @@ class FGATCProjection {
 
 public:
     FGATCProjection();
-    FGATCProjection(Point3D centre);
+    FGATCProjection(const Point3D& centre);
     ~FGATCProjection();
 
-    void Init(Point3D centre);
+    void Init(const Point3D& centre);
 
     // Convert a lat/lon co-ordinate (degrees) to the local projection (meters)
-    Point3D ConvertToLocal(Point3D pt);
+    Point3D ConvertToLocal(const Point3D& pt);
 
     // Convert a local projection co-ordinate (meters) to lat/lon (degrees)
-    Point3D ConvertFromLocal(Point3D pt);
+    Point3D ConvertFromLocal(const Point3D& pt);
 
 private:
     Point3D origin;	// lat/lon of local area origin
@@ -54,13 +54,13 @@ public:
     FGATCAlignedProjection();
     ~FGATCAlignedProjection();
 
-    void Init(Point3D centre, double heading);
+    void Init(const Point3D& centre, double heading);
 
     // Convert a lat/lon co-ordinate (degrees) to the local projection (meters)
-    Point3D ConvertToLocal(Point3D pt);
+    Point3D ConvertToLocal(const Point3D& pt);
 
     // Convert a local projection co-ordinate (meters) to lat/lon (degrees)
-    Point3D ConvertFromLocal(Point3D pt);
+    Point3D ConvertFromLocal(const Point3D& pt);
 
 private:
     Point3D origin;	// lat/lon of local area origin (the threshold)

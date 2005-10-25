@@ -70,7 +70,7 @@ FGGround::FGGround() {
 	aptElev = 0.0;
 }
 
-FGGround::FGGround(string id) {
+FGGround::FGGround(const string& id) {
 	ATCmgr = globals->get_ATC_mgr();
 	networkLoadOK = false;
 	ground_traffic.erase(ground_traffic.begin(), ground_traffic.end());
@@ -456,7 +456,7 @@ Gate* FGGround::GetGateNode() {
 }
 
 
-node* FGGround::GetHoldShortNode(string rwyID) {
+node* FGGround::GetHoldShortNode(const string& rwyID) {
 	return(NULL);	// TODO - either implement me or remove me!!!
 }
 
@@ -464,7 +464,7 @@ node* FGGround::GetHoldShortNode(string rwyID) {
 // WARNING - This is hardwired to my prototype logical network format
 // and will almost certainly change when Bernie's stuff comes on-line.
 // Returns NULL if it can't find a valid node.
-node* FGGround::GetThresholdNode(string rwyID) {
+node* FGGround::GetThresholdNode(const string& rwyID) {
 	// For now go through all the nodes and parse their names
 	// Maybe in the future we'll map threshold nodes by ID
 	//cout << "Size of network is " << network.size() << '\n';
@@ -499,7 +499,7 @@ ground_network_path_type FGGround::GetPath(node* A, node* B) {
 };
 
 // Get a path from a node to a runway threshold
-ground_network_path_type FGGround::GetPath(node* A, string rwyID) {
+ground_network_path_type FGGround::GetPath(node* A, const string& rwyID) {
 	node* b = GetThresholdNode(rwyID);
 	if(b == NULL) {
 		SG_LOG(SG_ATC, SG_ALERT, "ERROR - unable to find path to runway theshold in ground.cxx for airport " << ident << '\n');
@@ -512,7 +512,7 @@ ground_network_path_type FGGround::GetPath(node* A, string rwyID) {
 
 // Get a path from a node to a runway hold short point
 // Bit of a hack this at the moment!
-ground_network_path_type FGGround::GetPathToHoldShort(node* A, string rwyID) {
+ground_network_path_type FGGround::GetPathToHoldShort(node* A, const string& rwyID) {
 	ground_network_path_type path = GetPath(A, rwyID);
 	path.pop_back();	// That should be the threshold stripped of 
 	path.pop_back();	// and that should be the arc from hold short to threshold
@@ -661,12 +661,12 @@ ground_network_path_type FGGround::GetShortestPath(node* A, node* B) {
 
 // Return a list of exits from a given runway
 // It is up to the calling function to check for non-zero size of returned array before use
-node_array_type FGGround::GetExits(string rwyID) {
+node_array_type FGGround::GetExits(const string& rwyID) {
 	// FIXME - get a 07L or similar in here and we're stuffed!!!
 	return(runways[atoi(rwyID.c_str())].exits);
 }
 
-void FGGround::RequestDeparture(PlaneRec plane, FGAIEntity* requestee) {
+void FGGround::RequestDeparture(const PlaneRec& plane, FGAIEntity* requestee) {
 	// For now we'll just automatically clear all planes to the runway hold.
 	// This communication needs to be delayed 20 sec or so from receiving the request.
 	// Even if display=false we still need to start the timer in case display=true when communication starts.

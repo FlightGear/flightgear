@@ -62,7 +62,7 @@ public:
 	~FGAILocalTraffic();
 	
 	// Initialise
-	bool Init(const string& callsign, string ICAO, OperatingState initialState = PARKED, PatternLeg initialLeg = DOWNWIND);
+	bool Init(const string& callsign, const string& ICAO, OperatingState initialState = PARKED, PatternLeg initialLeg = DOWNWIND);
 	
 	// Run the internal calculations
 	void Update(double dt);
@@ -119,9 +119,9 @@ protected:
 	FGATCAlignedProjection ortho;	// Orthogonal mapping of the local area with the threshold at the origin
 	// and the runway aligned with the y axis.
 	
-	void GetAirportDetails(string id);
+	void GetAirportDetails(const string& id);
 	
-	void GetRwyDetails(string id);
+	void GetRwyDetails(const string& id);
 	
 	double responseCounter;		// timer in seconds to allow response to requests to be a little while after them
 	// Will almost certainly get moved to FGAIPlane.	
@@ -213,7 +213,7 @@ private:
 
 	void CalculateSoD(double base_leg_pos, double downwind_leg_pos, bool pattern_direction);
 
-	void ExitRunway(Point3D orthopos);
+	void ExitRunway(const Point3D& orthopos);
 
 	void StartTaxi();
 

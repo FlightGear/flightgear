@@ -642,7 +642,7 @@ void TgtAptDialog_OK (puObject *)
 
 /* add new waypoint (either from above popup window 'ok button or telnet session) */
 
-int NewWaypoint( string Tgt_Alt )
+int NewWaypoint( const string& Tgt_Alt )
 {
   string TgtAptId;
   FGAirport a;

@@ -187,7 +187,7 @@ string GetCompassDirection(double h) {
 //================================================================================================================
 
 // Given two positions (lat & lon in degrees), get the HORIZONTAL separation (in meters)
-double dclGetHorizontalSeparation(const Point3D pos1, const Point3D pos2) {
+double dclGetHorizontalSeparation(const Point3D& pos1, const Point3D& pos2) {
 	double x;	//East-West separation
 	double y;	//North-South separation
 	double z;	//Horizontal separation - z = sqrt(x^2 + y^2)
@@ -226,7 +226,7 @@ double dclGetLinePointSeparation(double px, double py, double x1, double y1, dou
 // Given a position (lat/lon/elev), heading and vertical angle (degrees), and distance (meters), calculate the new position.
 // This function assumes the world is spherical.  If geodetic accuracy is required use the functions is sg_geodesy instead!
 // Assumes that the ground is not hit!!!  Expects heading and angle in degrees, distance in meters. 
-Point3D dclUpdatePosition(const Point3D pos, double heading, double angle, double distance) {
+Point3D dclUpdatePosition(const Point3D& pos, double heading, double angle, double distance) {
 	//cout << setprecision(10) << pos.lon() << ' ' << pos.lat() << '\n';
 	heading *= DCL_DEGREES_TO_RADIANS;
 	angle *= DCL_DEGREES_TO_RADIANS;
@@ -259,7 +259,7 @@ Point3D dclUpdatePosition(const Point3D pos, double heading, double angle, doubl
 // Get a heading in degrees from one lat/lon to another.
 // This function assumes the world is spherical.  If geodetic accuracy is required use the functions is sg_geodesy instead!
 // Warning - at the moment we are not checking for identical points - currently it returns 0 in this instance.
-double GetHeadingFromTo(const Point3D A, const Point3D B) {
+double GetHeadingFromTo(const Point3D& A, const Point3D& B) {
 	double latA = A.lat() * DCL_DEGREES_TO_RADIANS;
 	double lonA = A.lon() * DCL_DEGREES_TO_RADIANS;
 	double latB = B.lat() * DCL_DEGREES_TO_RADIANS;
@@ -354,7 +354,7 @@ Point3D dclGetAirportPos( const string& id ) {
 
 // Runway stuff
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
-bool OnRunway(const Point3D pt, const FGRunway& rwy) {
+bool OnRunway(const Point3D& pt, const FGRunway& rwy) {
 	FGATCAlignedProjection ortho;
 	Point3D centre(rwy._lon, rwy._lat, 0.0);	// We don't need the elev
 	ortho.Init(centre, rwy._heading);

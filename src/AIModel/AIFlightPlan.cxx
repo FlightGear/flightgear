@@ -41,7 +41,7 @@
 #include "AIFlightPlan.hxx"
 
 
-FGAIFlightPlan::FGAIFlightPlan(string filename)
+FGAIFlightPlan::FGAIFlightPlan(const string& filename)
 {
   int i;
   start_time = 0;
@@ -100,9 +100,9 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
 			       FGAirport *arr,
 			       bool firstLeg,
 			       double radius,
-			       string fltType,
-			       string acType,
-			       string airline)
+			       const string& fltType,
+			       const string& acType,
+			       const string& airline)
 {
   leg = 10;
   gateId=0;

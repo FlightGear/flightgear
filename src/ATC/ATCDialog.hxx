@@ -66,10 +66,10 @@ public:
 	
 	void PopupCallback();
 	
-	void add_entry( string station, string transmission, string menutext, atc_type type, int code);
+	void add_entry( const string& station, const string& transmission, const string& menutext, atc_type type, int code);
 	
 	void remove_entry( const string &station, const string &trans, atc_type type );
-	
+
 	void remove_entry( const string &station, int code, atc_type type );
 	
 	// query the database whether the transmission is already registered; 
@@ -83,7 +83,7 @@ public:
 	
 	// Display the comm ATC frequencies for airport ident
 	// where ident is a valid ICAO code.
-	void FreqDisplay(string ident);
+	void FreqDisplay(string& ident);
 
 private:
 

@@ -72,7 +72,7 @@ string GetCompassDirection(double h);
 ********************************/
 
 // Given two positions (lat & lon in degrees), get the HORIZONTAL separation (in meters)
-double dclGetHorizontalSeparation(const Point3D pos1, const Point3D pos2);
+double dclGetHorizontalSeparation(const Point3D& pos1, const Point3D& pos2);
 
 // Given a point and a line, get the HORIZONTAL shortest distance from the point to a point on the line.
 // Expects to be fed orthogonal co-ordinates, NOT lat & lon !
@@ -80,10 +80,10 @@ double dclGetLinePointSeparation(double px, double py, double x1, double y1, dou
 
 // Given a position (lat/lon/elev), heading, vertical angle, and distance, calculate the new position.
 // Assumes that the ground is not hit!!!  Expects heading and angle in degrees, distance in meters.
-Point3D dclUpdatePosition(const Point3D pos, double heading, double angle, double distance);
+Point3D dclUpdatePosition(const Point3D& pos, double heading, double angle, double distance);
 
 // Get a heading from one lat/lon to another (in degrees)
-double GetHeadingFromTo(const Point3D A, const Point3D B);
+double GetHeadingFromTo(const Point3D& A, const Point3D& B);
 
 // Given a heading (in degrees), bound it from 0 -> 360
 void dclBoundHeading(double &hdg);
@@ -118,5 +118,5 @@ Point3D dclGetAirportPos( const string& id );
 ****************/
 
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
-bool OnRunway(const Point3D pt, const FGRunway& rwy);
+bool OnRunway(const Point3D& pt, const FGRunway& rwy);
 

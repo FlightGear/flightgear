@@ -591,7 +591,7 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
 
 
 void
-FGMetarEnvironmentCtrl::update_metar_properties( FGMetar *m )
+FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
 {
     int i;
     double d;
@@ -609,7 +609,7 @@ FGMetarEnvironmentCtrl::update_metar_properties( FGMetar *m )
     fgSetDouble("/environment/metar/max-visibility-m",
                 m->getMaxVisibility().getVisibility_m() );
 
-    SGMetarVisibility *dirvis = m->getDirVisibility();
+    const SGMetarVisibility *dirvis = m->getDirVisibility();
     for (i = 0; i < 8; i++, dirvis++) {
         const char *min = "/environment/metar/visibility[%d]/min-m";
         const char *max = "/environment/metar/visibility[%d]/max-m";

@@ -90,7 +90,7 @@ public:
 
     bool build ();
 
-    void add_waypoint( SGWayPoint wp ) {
+    void add_waypoint( const SGWayPoint& wp ) {
         route->add_waypoint( wp );
     }
 

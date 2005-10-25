@@ -95,9 +95,9 @@ public:
   void Init();
 
   inline atc_type  get_station()   const { return StationType; }
-  inline TransCode get_code()      { return Code; }
-  inline string    get_transtext() { return TransText; }
-  inline string    get_menutext()  { return MenuText; }
+  inline const TransCode& get_code()      { return Code; }
+  inline const string&    get_transtext() { return TransText; }
+  inline const string&    get_menutext()  { return MenuText; }
 
   // Return the parsed logic of the transmission  
   TransPar Parse();

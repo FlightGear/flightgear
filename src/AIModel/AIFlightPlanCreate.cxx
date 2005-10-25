@@ -38,7 +38,7 @@
 // Check lat/lon values during initialization;
 void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, int legNr, double alt, double speed, 
 			    double latitude, double longitude, bool firstFlight,
-			    double radius, string fltType, string aircraftType, string airline)
+			    double radius, const string& fltType, const string& aircraftType, const string& airline)
 { 
   int currWpt = wpt_iterator - waypoints.begin();
   switch(legNr)
@@ -96,9 +96,9 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
 				    double latitude,
 				    double longitude,
 				    double radius,
-				    string fltType,
-				    string aircraftType,
-				    string airline)
+				    const string& fltType,
+				    const string& aircraftType,
+				    const string& airline)
 {
   double heading;
   double lat;
@@ -183,7 +183,7 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
  * createCreate Taxi. 
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt, double latitude, double longitude, double radius, string fltType, string acType, string airline)
+void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt, double latitude, double longitude, double radius, const string& fltType, const string& acType, const string& airline)
 {
   double wind_speed;
   double wind_heading;
@@ -204,7 +204,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
       // "NOTE: this is currently fixed to "com" for commercial traffic
       // Should be changed to be used dynamically to allow "gen" and "mil"
       // as well
-      apt->getActiveRunway("com", 1, &activeRunway);
+      apt->getActiveRunway("com", 1, activeRunway);
       if (!(globals->get_runways()->search(apt->getId(), 
 					    activeRunway, 
 					    &rwy)))
@@ -214,7 +214,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
 	  exit(1);
 	}
       //string test;
-      //apt->getActiveRunway(string("com"), 1, &test);
+      //apt->getActiveRunway(string("com"), 1, test);
       //exit(1);
       
       heading = rwy._heading;
@@ -335,7 +335,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
       // "NOTE: this is currently fixed to "com" for commercial traffic
       // Should be changed to be used dynamically to allow "gen" and "mil"
       // as well
-      //apt->getActiveRunway("com", 1, &name);
+      //apt->getActiveRunway("com", 1, name);
       //if (!(globals->get_runways()->search(apt->getId(), 
       //				    name, 
       //			    &rwy)))
@@ -345,7 +345,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
       // exit(1);
       //	}
       //string test;
-      //apt->getActiveRunway(string("com"), 1, &test);
+      //apt->getActiveRunway(string("com"), 1, test);
       //exit(1);
       
       //heading = rwy._heading;
@@ -514,7 +514,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
        // "NOTE: this is currently fixed to "com" for commercial traffic
       // Should be changed to be used dynamically to allow "gen" and "mil"
       // as well
-      apt->getActiveRunway("com", 1, &activeRunway);
+      apt->getActiveRunway("com", 1, activeRunway);
 	if (!(globals->get_runways()->search(apt->getId(), 
 					      activeRunway, 
 					      &rwy)))
@@ -524,7 +524,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
 	    exit(1);
 	  }
 	//string test;
-      //apt->getActiveRunway(string("com"), 1, &test);
+      //apt->getActiveRunway(string("com"), 1, test);
       //exit(1);
     }
   
@@ -609,7 +609,7 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
       // "NOTE: this is currently fixed to "com" for commercial traffic
       // Should be changed to be used dynamically to allow "gen" and "mil"
       // as well
-      apt->getActiveRunway("com", 1, &activeRunway);
+      apt->getActiveRunway("com", 1, activeRunway);
 	if (!(globals->get_runways()->search(apt->getId(), 
 					      activeRunway, 
 					      &rwy)))
@@ -619,7 +619,7 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
 	    exit(1);
 	  }
 	//string test;
-	//apt->getActiveRunway(string("com"), 1, &test);
+	//apt->getActiveRunway(string("com"), 1, test);
       //exit(1);
     }
   
@@ -708,7 +708,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep, FGAirport *a
  
   //string name;
   // should be changed dynamically to allow "gen" and "mil"
-  arr->getActiveRunway("com", 2, &activeRunway);
+  arr->getActiveRunway("com", 2, activeRunway);
   if (!(globals->get_runways()->search(arr->getId(), 
 				       activeRunway, 
 				       &rwy)))
@@ -718,7 +718,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep, FGAirport *a
       exit(1);
     }
   //string test;
-  //arr->getActiveRunway(string("com"), 1, &test);
+  //arr->getActiveRunway(string("com"), 1, test);
   //exit(1);
   
   //cerr << "Altitude = " << alt << endl;
@@ -787,7 +787,7 @@ void FGAIFlightPlan::createDecent(FGAirport *apt)
   //Beginning of Decent
   //string name;
   // allow "mil" and "gen" as well
-  apt->getActiveRunway("com", 2, &activeRunway);
+  apt->getActiveRunway("com", 2, activeRunway);
     if (!(globals->get_runways()->search(apt->getId(), 
 					  activeRunway, 
 					  &rwy)))
@@ -797,7 +797,7 @@ void FGAIFlightPlan::createDecent(FGAirport *apt)
 	exit(1);
       }
     //string test;
-    //apt->getActiveRunway(string("com"), 1, &test);
+    //apt->getActiveRunway(string("com"), 1, test);
   //exit(1);
 
   //cerr << "Done" << endl;

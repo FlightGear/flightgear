@@ -153,14 +153,14 @@ public:
   // Add new plane to stack if not already registered 
   // Input:  pid - id of plane (name) 
   // Output: "true" if added; "false" if already existend
-  void AddPlane(string pid);
+  void AddPlane(const string& pid);
 
   // Remove plane from stack if out of range
   int RemovePlane();
   
   inline double get_bucket() const { return bucket; }
   inline int get_pnum() const { return num_planes; }
-  inline string get_trans_ident() { return trans_ident; }
+  inline const string& get_trans_ident() { return trans_ident; }
   
 private:
 

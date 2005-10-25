@@ -81,7 +81,7 @@ public:
     FGElectricalComponent();
     virtual ~FGElectricalComponent() {}
 
-    inline string get_name() { return name; }
+    inline const string& get_name() { return name; }
 
     inline int get_kind() const { return kind; }
 
@@ -111,7 +111,7 @@ public:
     }
 
     inline int get_num_props() const { return props.size(); }
-    inline string get_prop( const int i ) {
+    inline const string& get_prop( const int i ) {
         return props[i];
     }
     inline void add_prop( const string &s ) {

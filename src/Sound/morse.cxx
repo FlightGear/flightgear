@@ -87,7 +87,7 @@ void make_tone( unsigned char *buf, int freq,
     int i, j;
 
     for ( i = 0; i < trans_len; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (BYTES_PER_SECOND / freq) ) )
+	float level = ( sin( (double) i * SGD_2PI / (BYTES_PER_SECOND / freq) ) )
 	    * ((double)i / trans_len) / 2.0 + 0.5;
 
 	/* Convert to unsigned byte */
@@ -95,7 +95,7 @@ void make_tone( unsigned char *buf, int freq,
     }
 
     for ( i = trans_len; i < len - trans_len; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (BYTES_PER_SECOND / freq) ) )
+	float level = ( sin( (double) i * SGD_2PI / (BYTES_PER_SECOND / freq) ) )
 	    / 2.0 + 0.5;
 
 	/* Convert to unsigned byte */
@@ -103,7 +103,7 @@ void make_tone( unsigned char *buf, int freq,
     }
     j = trans_len;
     for ( i = len - trans_len; i < len; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (BYTES_PER_SECOND / freq) ) )
+	float level = ( sin( (double) i * SGD_2PI / (BYTES_PER_SECOND / freq) ) )
 	    * ((double)j / trans_len) / 2.0 + 0.5;
 	--j;
 

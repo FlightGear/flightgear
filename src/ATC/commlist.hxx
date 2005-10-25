@@ -68,7 +68,7 @@ public:
     ~FGCommList();
 
     // load all comm frequencies and build the map
-    bool init( SGPath path );
+    bool init( const SGPath& path );
 
     // query the database for the specified frequency, lon and lat are
     // in degrees, elev is in meters.
@@ -97,11 +97,11 @@ public:
 	double FindClosest( double lon, double lat, double elev, ATCData& ad, atc_type tp = INVALID, double max_range = 100.0 );
 	
 	// Find by Airport code.
-	bool FindByCode( string ICAO, ATCData& ad, atc_type tp = INVALID );
+	bool FindByCode( const string& ICAO, ATCData& ad, atc_type tp = INVALID );
 
     // Return the callsign for an ATIS transmission given transmission time and airport id
 	// This maybe should get moved somewhere else!!
-    int GetCallSign( string apt_id, int hours, int mins );
+    int GetCallSign( const string& apt_id, int hours, int mins );
 	
 private:
 	
@@ -112,7 +112,7 @@ private:
 	comm_map_type commlist_bck;
 
 	// Load comms from a specified path (which must include the filename)	
-	bool LoadComms(SGPath path);
+	bool LoadComms(const SGPath& path);
 
 //----------- This stuff is left over from atislist.[ch]xx and maybe should move somewhere else
 	// Add structure and map for storing a log of atis transmissions

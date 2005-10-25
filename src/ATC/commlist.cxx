@@ -50,7 +50,7 @@ FGCommList::~FGCommList( void ) {
 
 
 // load the navaids and build the map
-bool FGCommList::init( SGPath path ) {
+bool FGCommList::init( const SGPath& path ) {
 
 	SGPath temp = path;
     commlist_freq.erase(commlist_freq.begin(), commlist_freq.end());
@@ -70,7 +70,7 @@ bool FGCommList::init( SGPath path ) {
 }
 	
 
-bool FGCommList::LoadComms(SGPath path) {
+bool FGCommList::LoadComms(const SGPath& path) {
 
     sg_gzifstream fin( path.str() );
     if ( !fin.is_open() ) {
@@ -272,7 +272,7 @@ double FGCommList::FindClosest( double lon, double lat, double elev, ATCData& ad
 // Find by Airport code.
 // This is basically a wrapper for a call to the airport database to get the airport
 // position followed by a call to FindByPos(...)
-bool FGCommList::FindByCode( string ICAO, ATCData& ad, atc_type tp ) {
+bool FGCommList::FindByCode( const string& ICAO, ATCData& ad, atc_type tp ) {
     FGAirport a;
     if ( dclFindAirportID( ICAO, &a ) ) {
 		comm_list_type stations;
@@ -296,7 +296,7 @@ bool FGCommList::FindByCode( string ICAO, ATCData& ad, atc_type tp ) {
 
 // TODO - this function should move somewhere else eventually!
 // Return an appropriate call-sign for an ATIS transmission.
-int FGCommList::GetCallSign( string apt_id, int hours, int mins )
+int FGCommList::GetCallSign( const string& apt_id, int hours, int mins )
 {
 	atis_transmission_type tran;
 	

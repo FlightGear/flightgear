@@ -100,7 +100,7 @@ void FGScenery::bind() {
 void FGScenery::unbind() {
 }
 
-void FGScenery::set_center( Point3D p ) {
+void FGScenery::set_center( const Point3D& p ) {
     center = p;
     sgdVec3 c;
     sgdSetVec3(c, p.x(), p.y(), p.z());
@@ -146,7 +146,7 @@ FGScenery::get_elevation_m(double lat, double lon, double max_alt,
 }
 
 bool
-FGScenery::get_cart_elevation_m(const sgdVec3 pos, double max_altoff,
+FGScenery::get_cart_elevation_m(const sgdVec3& pos, double max_altoff,
                                 double& alt, bool exact)
 {
   Point3D saved_center = center;

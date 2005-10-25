@@ -181,7 +181,7 @@ void FGAIPlane::ProcessCallback(int code) {
 // Outputs the transmission either on screen or as audio depending on user preference
 // The refname is a string to identify this sample to the sound manager
 // The repeating flag indicates whether the message should be repeated continuously or played once.
-void FGAIPlane::Render(string refname, bool repeating) {
+void FGAIPlane::Render(const string& refname, bool repeating) {
 #ifdef ENABLE_AUDIO_SUPPORT
 	voice = (voiceOK && fgGetBool("/sim/sound/voice"));
 	if(voice) {
@@ -216,7 +216,7 @@ void FGAIPlane::Render(string refname, bool repeating) {
 
 
 // Cease rendering a transmission.
-void FGAIPlane::NoRender(string refname) {
+void FGAIPlane::NoRender(const string& refname) {
 	if(playing) {
 		if(voice) {
 #ifdef ENABLE_AUDIO_SUPPORT		

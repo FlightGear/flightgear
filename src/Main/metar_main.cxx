@@ -27,6 +27,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/environment/metar.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/scene/sky/sky.hxx>
 
 using namespace std;
 
@@ -79,7 +80,7 @@ double rnd(double r, int g = 0)
 }
 
 
-ostream& operator<<(ostream& s, SGMetarVisibility& v)
+ostream& operator<<(ostream& s, const SGMetarVisibility& v)
 {
 	ostringstream buf;
 	int m = v.getModifier();
@@ -154,7 +155,7 @@ void printReport(SGMetar *m)
 
 
 	// directed visibility
-	SGMetarVisibility *dirvis = m->getDirVisibility();
+	const SGMetarVisibility *dirvis = m->getDirVisibility();
 	for (i = 0; i < 8; i++, dirvis++)
 		if (dirvis->getVisibility_m() != NaN)
 			cout << "\t\t\t" << *dirvis << endl;
@@ -484,6 +485,7 @@ void usage()
 	);
 }
 
+SGSky* thesky = new SGSky;
 
 int main(int argc, char *argv[])
 {

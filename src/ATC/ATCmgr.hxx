@@ -160,11 +160,11 @@ public:
     void update(double dt);
 
     // Returns true if the airport is found in the map
-    bool GetAirportATCDetails(string icao, AirportATC* a);
+    bool GetAirportATCDetails(const string& icao, AirportATC* a);
 
     // Return a pointer to a given sort of ATC at a given airport and activate if necessary
 	// Returns NULL if service doesn't exist - calling function should check for this.
-    FGATC* GetATCPointer(string icao, atc_type type);
+    FGATC* GetATCPointer(const string& icao, const atc_type& type);
 	
 	// Return a pointer to an appropriate voice for a given type of ATC
 	// creating the voice if necessary - ie. make sure exactly one copy
@@ -173,7 +173,7 @@ public:
 	// TODO - in the future this will get more complex and dole out country/airport
 	// specific voices, and possible make sure that the same voice doesn't get used
 	// at different airports in quick succession if a large enough selection are available.
-	FGATCVoice* GetVoicePointer(atc_type type);
+	FGATCVoice* GetVoicePointer(const atc_type& type);
 	
 	atc_type GetComm1ATCType() { return(comm_type[0]); }
 	FGATC* GetComm1ATCPointer() { return(comm_atc_ptr[0]); }
@@ -182,29 +182,29 @@ public:
 	
 	// Get the frequency of a given service at a given airport
 	// Returns zero if not found
-	unsigned short int GetFrequency(string ident, atc_type tp);
+	unsigned short int GetFrequency(const string& ident, const atc_type& tp);
 	
 	// Register the fact that the AI system wants to activate an airport
-	bool AIRegisterAirport(string ident);
+	bool AIRegisterAirport(const string& ident);
 	
 	// Register the fact that the comm radio is tuned to an airport
-	bool CommRegisterAirport(string ident, int chan, atc_type tp);
+	bool CommRegisterAirport(const string& ident, int chan, const atc_type& tp);
 	
 private:
 
     // Remove a class from the atc_list and delete it from memory
 	// *if* no other comm channel or AI plane is using it.
-    void CommRemoveFromList(string id, atc_type tp, int chan);
+    void CommRemoveFromList(const string& id, const atc_type& tp, int chan);
 
     // Remove a class from the atc_list and delete it from memory
 	// Should be called from the above - not directly!!
-    void RemoveFromList(string id, atc_type tp);
+    void RemoveFromList(const string& id, const atc_type& tp);
 
     // Return a pointer to a class in the list given ICAO code and type
 	// (external interface to this is through GetATCPointer) 
 	// Return NULL if the given service is not in the list
 	// - *** THE CALLING FUNCTION MUST CHECK FOR THIS ***
-    FGATC* FindInList(string id, atc_type tp);
+    FGATC* FindInList(const string& id, const atc_type& tp);
 
     // Search the specified channel for stations on the same frequency and in range.
     void FreqSearch(int channel);

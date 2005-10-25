@@ -99,7 +99,7 @@ public:
     // given a frequency returns the first matching entry
     FGNavRecord *findStationByFreq( double frequency );
 
-    inline nav_map_type get_navaids() const { return navaids; }
+    inline const nav_map_type& get_navaids() const { return navaids; }
 };
 
 class FGTACANList {
@@ -128,7 +128,7 @@ public:
     bool add( FGTACANRecord *r );
     
     // Given a TACAN Channel, return the appropriate frequency.  
-    FGTACANRecord *findByChannel( string channel );
+    FGTACANRecord *findByChannel( const string& channel );
 
     
 };

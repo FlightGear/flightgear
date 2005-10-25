@@ -225,19 +225,19 @@ class FGGround : public FGATC {
 
 public:
 	FGGround();
-	FGGround(string id);
+	FGGround(const string& id);
 	~FGGround();
     void Init();
 
     void Update(double dt);
 	
-	inline string get_trans_ident() { return trans_ident; }
+	inline const string& get_trans_ident() { return trans_ident; }
 
     // Contact ground control on arrival, assumed to request any gate
     //void NewArrival(plane_rec plane);
 
     // Contact ground control on departure, assumed to request currently active runway.
-    void RequestDeparture(PlaneRec plane, FGAIEntity* requestee);
+    void RequestDeparture(const PlaneRec& plane, FGAIEntity* requestee);
 
     // Contact ground control when the calling routine doesn't know if arrival
     // or departure is appropriate.
@@ -256,22 +256,22 @@ public:
 	Gate* GetGateNode();
 	
 	// Return a pointer to a hold short node
-	node* GetHoldShortNode(string rwyID);
+	node* GetHoldShortNode(const string& rwyID);
 	
 	// Runway stuff - this might change in the future.
 	// Get a list of exits from a given runway
 	// It is up to the calling function to check for non-zero size of returned array before use
-	node_array_type GetExits(string rwyID);
+	node_array_type GetExits(const string& rwyID);
 	
 	// Get a path from one node to another
 	ground_network_path_type GetPath(node* A, node* B);
 	
 	// Get a path from a node to a runway threshold
-	ground_network_path_type GetPath(node* A, string rwyID);
+	ground_network_path_type GetPath(node* A, const string& rwyID);
 	
 	// Get a path from a node to a runway hold short point
 	// Bit of a hack this at the moment!
-	ground_network_path_type GetPathToHoldShort(node* A, string rwyID);
+	ground_network_path_type GetPathToHoldShort(node* A, const string& rwyID);
 
 private:
 	FGATCMgr* ATCmgr;	
@@ -351,7 +351,7 @@ private:
 	
 	// Return a pointer to the node at a runway threshold
 	// Returns NULL if unsuccessful.
-	node* GetThresholdNode(string rwyID);
+	node* GetThresholdNode(const string& rwyID);
 	
 	// A shortest path algorithm from memory (I can't find the bl&*dy book again!)
 	ground_network_path_type GetShortestPath(node* A, node* B); 

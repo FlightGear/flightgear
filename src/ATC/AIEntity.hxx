@@ -47,15 +47,15 @@ public:
 	void SetModel(ssgBranch* model);
 
     // Run the internal calculations
-    virtual void Update(double dt);
+    virtual void Update(double dt)=0;
 	
     // Send a transmission *TO* the AIEntity.
     // FIXME int code is a hack - eventually this will receive Alexander's coded messages.
-    virtual void RegisterTransmission(int code);
+    virtual void RegisterTransmission(int code)=0;
 	
-	inline Point3D GetPos() { return(_pos); }
+	inline const Point3D& GetPos() const { return(_pos); }
 	
-	virtual string GetCallsign();
+	virtual const string& GetCallsign()=0;
 	
 protected:
 

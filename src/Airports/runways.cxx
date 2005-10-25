@@ -43,14 +43,14 @@ SG_USING_STD(multimap);
 
 
 // add an entry to the list
-void FGRunwayList::add( const string id, const string rwy_no,
+void FGRunwayList::add( const string& id, const string& rwy_no,
                         const double longitude, const double latitude,
                         const double heading, const double length,
                         const double width,
                         const double displ_thresh1, const double displ_thresh2,
                         const double stopway1, const double stopway2,
-                        const string lighting_flags, const int surface_code,
-                        const string shoulder_code, const int marking_code,
+                        const string& lighting_flags, const int surface_code,
+                        const string& shoulder_code, const int marking_code,
                         const double smoothness, const bool dist_remaining )
 {
     FGRunway rwy;
@@ -93,7 +93,7 @@ void FGRunwayList::add( const string id, const string rwy_no,
 // Return reverse rwy number
 // eg 01 -> 19
 // 03L -> 21R
-static string GetReverseRunwayNo(string rwyno) {	
+static string GetReverseRunwayNo(string& rwyno) {	
     // cout << "Original rwyno = " << rwyNo << '\n';
     
     // standardize input number

@@ -105,14 +105,14 @@ public:
     /// lat/lon pair. If there is no scenery for that point, the altitude
     /// value is undefined.
     /// All values are meant to be in meters.
-    bool get_cart_elevation_m(const sgdVec3 pos, double max_altoff,
+    bool get_cart_elevation_m(const sgdVec3& pos, double max_altoff,
                               double& radius, bool exact = false);
 
-    inline Point3D get_center() const { return center; }
-    void set_center( Point3D p );
+    inline const Point3D& get_center() const { return center; }
+    void set_center( const Point3D& p );
 
-    inline Point3D get_next_center() const { return next_center; }
-    inline void set_next_center( Point3D p ) { next_center = p; }
+    inline const Point3D& get_next_center() const { return next_center; }
+    inline void set_next_center( const Point3D& p ) { next_center = p; }
 
     inline ssgRoot *get_scene_graph () const { return scene_graph; }
     inline void set_scene_graph (ssgRoot * s) { scene_graph = s; }

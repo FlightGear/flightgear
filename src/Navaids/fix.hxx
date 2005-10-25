@@ -59,7 +59,7 @@ public:
     inline FGFix(void);
     inline ~FGFix(void) {}
 
-    inline string get_ident() const { return ident; }
+    inline const string& get_ident() const { return ident; }
     inline double get_lon() const { return lon; }
     inline double get_lat() const { return lat; }
 

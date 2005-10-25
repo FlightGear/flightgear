@@ -73,11 +73,11 @@ class FGAISchedule
   int         getCruiseAlt        () { return flights.begin()->getCruiseAlt       (); };
   double      getRadius           () { return radius; };
   double      getGroundOffset     () { return groundOffset;};
-  string      getFlightType       () { return flightType;};
-  string      getAirline          () { return airline; };
-  string      getAircraft         () { return acType; };
-  string      getCallSign         () { return flights.begin()->getCallSign (); };
-  string      getRegistration     () { return registration;};
+  const string& getFlightType     () { return flightType;};
+  const string& getAirline        () { return airline; };
+  const string& getAircraft       () { return acType; };
+  const string& getCallSign       () { return flights.begin()->getCallSign (); };
+  const string& getRegistration   () { return registration;};
   bool getHeavy                   () { return heavy; };
   bool operator< (const FGAISchedule &other) const { return (distanceToUser < other.distanceToUser); };
   //void * getAiRef                 () { return AIManagerRef; };

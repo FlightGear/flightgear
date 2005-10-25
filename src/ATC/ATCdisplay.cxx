@@ -202,7 +202,7 @@ void FGATCDisplay::update(double dt) {
 	}
 }
 
-void FGATCDisplay::RegisterSingleMessage(string msg, double delay) {
+void FGATCDisplay::RegisterSingleMessage(const string& msg, double delay) {
 	//cout << msg << '\n';
 	atcMessage m;
 	m.msg = msg;
@@ -218,13 +218,13 @@ void FGATCDisplay::RegisterSingleMessage(string msg, double delay) {
 	//cout << "Single message registered\n";
 }
 
-void FGATCDisplay::RegisterRepeatingMessage(string msg) {
+void FGATCDisplay::RegisterRepeatingMessage(const string& msg) {
 	rep_msg = true;
 	rep_msg_str = msg;
 	return;
 }
 
-void FGATCDisplay::ChangeRepeatingMessage(string newmsg) {
+void FGATCDisplay::ChangeRepeatingMessage(const string& newmsg) {
 	rep_msg_str = newmsg;
 	change_msg_flag = true;
 	return;

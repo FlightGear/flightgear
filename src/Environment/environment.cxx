@@ -443,7 +443,7 @@ FGEnvironment::_recalc_hdgspd ()
   double angle_rad;
 
   if (wind_from_east_fps == 0) {
-    angle_rad = (wind_from_north_fps >= 0 ? SGD_PI/2 : -SGD_PI/2);
+    angle_rad = (wind_from_north_fps >= 0 ? SGD_PI_2 : -SGD_PI_2);
   } else {
     angle_rad = atan(wind_from_north_fps/wind_from_east_fps);
   }

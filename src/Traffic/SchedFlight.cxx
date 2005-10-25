@@ -91,14 +91,14 @@ FGScheduledFlight::FGScheduledFlight(const FGScheduledFlight &other)
   initialized     = other.initialized;
 }
 
-FGScheduledFlight::FGScheduledFlight(string cs,
-		   string fr,
-		   string depPrt,
-		   string arrPrt,
+FGScheduledFlight::FGScheduledFlight(const string& cs,
+		   const string& fr,
+		   const string& depPrt,
+		   const string& arrPrt,
 		   int cruiseAlt,
-		   string deptime,
-		   string arrtime,
-		   string rep)
+		   const string& deptime,
+		   const string& arrtime,
+		   const string& rep)
 {
   callsign          = cs;
   fltRules          = fr;
@@ -142,7 +142,7 @@ FGScheduledFlight:: ~FGScheduledFlight()
 {
 }
 
-time_t FGScheduledFlight::processTimeString(string theTime)
+time_t FGScheduledFlight::processTimeString(const string& theTime)
 {
   int weekday;
   int timeOffsetInDays;

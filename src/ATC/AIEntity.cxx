@@ -68,8 +68,9 @@ void FGAIEntity::SetModel(ssgBranch* model) {
 void FGAIEntity::Update(double dt) {
 }
 
-string FGAIEntity::GetCallsign() {
-	return("");
+const string &FGAIEntity::GetCallsign() {
+	static string s = "";
+	return(s);
 }
 
 void FGAIEntity::RegisterTransmission(int code) {

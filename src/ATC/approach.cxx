@@ -29,6 +29,7 @@
 #include "ATCDialog.hxx"
 
 #include <Airports/runways.hxx>
+#include <simgear/constants.h>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/sg_path.hxx>
 
@@ -611,7 +612,7 @@ void FGApproach::update_plane_dat() {
 // =======================================================================
 // Add plane to Approach list
 // =======================================================================
-void FGApproach::AddPlane(string pid) {
+void FGApproach::AddPlane(const string& pid) {
 
   int i;
   for ( i=0; i<num_planes; i++) {
@@ -654,8 +655,8 @@ double FGApproach::calc_psl_dist(const double &h1, const double &d1,
   x3 *= sqrt(val2);
   y3 *= sqrt(val2);
   double da = fabs(atan2(y3,x3) - atan2(y1-y2,x1-x2));
-  if ( da > SGD_PI ) da -= 2*SGD_PI;
-  if ( fabs(da) > SGD_PI/2.) {
+  if ( da > SGD_PI ) da -= SGD_2PI;
+  if ( fabs(da) > SGD_PI_2) {
     //if ( x3*(x1-x2) < 0.0 && y3*(y1-y2) < 0.0) {
     x3 *= -1.0;
     y3 *= -1.0;
@@ -665,7 +666,7 @@ double FGApproach::calc_psl_dist(const double &h1, const double &d1,
   double dis2   = y1-y2-y3;
   dis = sqrt(dis);
   da = atan2(dis2,dis1);
-  if ( da < 0.0 ) da  += 2*SGD_PI;
+  if ( da < 0.0 ) da  += SGD_2PI;
   if ( da < a3 )  dis *= -1.0;
   //cout << dis1 << " " << dis2 << " " << da*SGD_RADIANS_TO_DEGREES << " " << h3
   //     << " " << sqrt(dis1*dis1 + dis2*dis2) << " " << dis << endl;

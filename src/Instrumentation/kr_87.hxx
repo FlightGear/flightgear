@@ -120,7 +120,7 @@ public:
     void search ();
 
     // internal values
-    inline string get_ident() const { return ident; }
+    inline const string& get_ident() const { return ident; }
     inline bool get_valid() const { return valid; }
     inline bool get_inrange() const { return inrange; }
     inline double get_stn_lon() const { return stn_lon; }

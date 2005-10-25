@@ -49,20 +49,20 @@ private:
 public:
 
 	FGMPSMessageBuf()		{ init(""); }
-	FGMPSMessageBuf(string data)	{ init(data); }
+	FGMPSMessageBuf(const string& data)	{ init(data); }
 
 	~FGMPSMessageBuf() {}
 
-	void init(string data)
+	void init(const string& data)
 	{
 		buf = data;
 		pos = 0;
 	}
 
 	void	clr()			{ buf = ""; }
-	void	add(string data)	{ buf += data; }
-	void	set(string data)	{ buf = data; }
-	string&	str()			{ return buf; }
+	void	add(const string& data)	{ buf += data; }
+	void	set(const string& data)	{ buf = data; }
+	const string&	str()		{ return buf; }
 	size_t	ofs()			{ return pos; }
 	void	ofs(size_t val)		{ pos = val; }
 
@@ -86,7 +86,7 @@ public:
 	double	readd();
 	string	reads(size_t length);
 
-	string&	buffer() { return buf; }
+	const string&	buffer() { return buf; }
 };
 
 #endif

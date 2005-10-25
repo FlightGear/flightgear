@@ -193,7 +193,7 @@ void runway_instr::get_rwy_points(sgdVec3 *points3d) {
 	center = currentCenter;
 }
 
-bool runway_instr::drawLine(sgdVec3 a1, sgdVec3 a2, sgdVec3 point1, sgdVec3 point2) {
+bool runway_instr::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& point1, const sgdVec3& point2) {
 	sgdVec3 p1, p2;
 	sgdCopyVec3(p1, point1);
 	sgdCopyVec3(p2, point2);
@@ -254,7 +254,7 @@ bool runway_instr::drawLine(sgdVec3 a1, sgdVec3 a2, sgdVec3 point1, sgdVec3 poin
     return (p1Valid && p2Valid);
 }
 
-void runway_instr::boundPoint(sgdVec3 v, sgdVec3 m) {
+void runway_instr::boundPoint(const sgdVec3& v, sgdVec3& m) {
 	double y = v[1];
 	if(m[1] < v[1]) {
 		y = location.bottom;
@@ -279,7 +279,7 @@ void runway_instr::boundPoint(sgdVec3 v, sgdVec3 m) {
 	}
 }
 
-bool runway_instr::boundOutsidePoints(sgdVec3 v, sgdVec3 m) {
+bool runway_instr::boundOutsidePoints(sgdVec3& v, sgdVec3& m) {
 	bool pointsInvalid = (v[1]>location.top && m[1]>location.top) ||
 		               (v[1]<location.bottom && m[1]<location.bottom) ||
 					   (v[0]>location.right && m[0]>location.right) ||

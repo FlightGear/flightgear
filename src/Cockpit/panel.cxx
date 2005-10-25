@@ -811,7 +811,7 @@ FGLayeredInstrument::addLayer (FGInstrumentLayer *layer)
 }
 
 int
-FGLayeredInstrument::addLayer (FGCroppedTexture &texture,
+FGLayeredInstrument::addLayer (const FGCroppedTexture &texture,
 			       int w, int h)
 {
   return addLayer(new FGTexturedLayer(texture, w, h));

@@ -49,7 +49,7 @@ public:
    bool on_ground;
   } waypoint;
 
-   FGAIFlightPlan(string filename);
+   FGAIFlightPlan(const string& filename);
   FGAIFlightPlan(FGAIModelEntity *entity,
 		 double course,
 		 time_t start,
@@ -57,9 +57,9 @@ public:
 		 FGAirport *arr,
 		 bool firstLeg,
 		 double radius,
-		 string fltType,
-		 string acType,
-		 string airline);
+		 const string& fltType,
+		 const string& acType,
+		 const string& airline);
    ~FGAIFlightPlan();
 
    waypoint* getPreviousWaypoint( void );
@@ -77,14 +77,14 @@ public:
   time_t getStartTime() { return start_time; }; 
 
   void    create(FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
-		 bool firstLeg, double radius, string fltType, string aircraftType, string airline);
+		 bool firstLeg, double radius, const string& fltType, const string& aircraftType, const string& airline);
 
   void setLeg(int val) { leg = val;};
   void setTime(time_t st) { start_time = st; };
   int getGate() { return gateId; };
   double getLeadInAngle() { return leadInAngle; };
-  string getRunway() { return rwy._rwy_no; };
-  string getRunwayId() { return rwy._id; };
+  const string& getRunway() { return rwy._rwy_no; };
+  const string& getRunwayId() { return rwy._id; };
   void setRepeat(bool r) { repeat = r; };
   bool getRepeat(void) { return repeat; };
   void restart(void);
@@ -106,8 +106,8 @@ private:
   int gateId;
   string activeRunway;
 
-  void createPushBack(bool, FGAirport*, double, double, double, string, string, string);
-  void createTaxi(bool, int, FGAirport *, double, double, double, string, string, string);
+  void createPushBack(bool, FGAirport*, double, double, double, const string&, const string&, const string&);
+  void createTaxi(bool, int, FGAirport *, double, double, double, const string&, const string&, const string&);
   void createTakeOff(bool, FGAirport *, double);
   void createClimb(bool, FGAirport *, double, double);
   void createCruise(bool, FGAirport*, FGAirport*, double, double, double, double);

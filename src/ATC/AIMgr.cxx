@@ -298,13 +298,13 @@ void FGAIMgr::update(double dt) {
 	//cout << "Size of AI list is " << ai_list.size() << '\n';
 }
 
-void FGAIMgr::ScheduleRemoval(string s) {
+void FGAIMgr::ScheduleRemoval(const string& s) {
 	//cout << "Scheduling removal of plane " << s << " from AIMgr\n";
 	removalList.push_back(s);
 }
 
 // Activate AI traffic at an airport
-void FGAIMgr::ActivateAirport(string ident) {
+void FGAIMgr::ActivateAirport(const string& ident) {
 	ATC->AIRegisterAirport(ident);
 	// TODO - need to start the traffic more randomly
 	FGAILocalTraffic* local_traffic = new FGAILocalTraffic;
@@ -319,7 +319,7 @@ void FGAIMgr::ActivateAirport(string ident) {
 }
 
 // Hack - Generate AI traffic at an airport with no facilities file
-void FGAIMgr::GenerateSimpleAirportTraffic(string ident, double min_dist) {
+void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist) {
 	// Ugly hack - don't let VFR Cessnas operate at a hardwired list of major airports
 	// This will go eventually once airport .xml files specify the traffic profile
 	if(ident == "KSFO" || ident == "KDFW" || ident == "EGLL" || ident == "KORD" || ident == "KJFK" 
@@ -481,7 +481,7 @@ void FGAIMgr::GenerateSimpleAirportTraffic(string ident, double min_dist) {
 
 /*
 // Generate a VFR arrival at airport apt, at least distance d (meters) out.
-void FGAIMgr::GenerateVFRArrival(string apt, double d) {
+void FGAIMgr::GenerateVFRArrival(const string& apt, double d) {
 }
 */
 
@@ -608,7 +608,7 @@ string FGAIMgr::GenerateUniqueCallsign() {
 }
 
 // This will be moved somewhere else eventually!!!!
-string FGAIMgr::GenerateShortForm(string callsign, string plane_str, bool local) {
+string FGAIMgr::GenerateShortForm(const string& callsign, const string& plane_str, bool local) {
 	//cout << callsign << '\n';
 	string s;
 	if(local) s = "Trainer-";

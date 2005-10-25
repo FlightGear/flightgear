@@ -138,7 +138,7 @@ void FGATC::ReceiveUserCallback(int code) {
 	SG_LOG(SG_ATC, SG_WARN, "WARNING - whichever ATC class was intended to receive callback code " << code << " didn't get it!!!");
 }
 
-void FGATC::SetResponseReqd(string rid) {
+void FGATC::SetResponseReqd(const string& rid) {
 	receiving = false;
 	responseReqd = true;
 	respond = false;	// TODO - this ignores the fact that more than one plane could call this before response
@@ -149,7 +149,7 @@ void FGATC::SetResponseReqd(string rid) {
 	responseTime = 1.8;		// TODO - randomize this slightly.
 }
 
-void FGATC::NotifyTransmissionFinished(string rid) {
+void FGATC::NotifyTransmissionFinished(const string& rid) {
 	//cout << "Transmission finished, callsign = " << rid << '\n';
 	receiving = false;
 	responseID = rid;
@@ -195,7 +195,7 @@ void FGATC::ImmediateTransmit(int callback_code) {
 void FGATC::ProcessCallback(int code) {
 }
 
-void FGATC::AddPlane(string pid) {
+void FGATC::AddPlane(const string& pid) {
 }
 
 int FGATC::RemovePlane() {
@@ -219,7 +219,7 @@ void FGATC::SetData(ATCData* d) {
 // Outputs the transmission either on screen or as audio depending on user preference
 // The refname is a string to identify this sample to the sound manager
 // The repeating flag indicates whether the message should be repeated continuously or played once.
-void FGATC::Render(string msg, string refname, bool repeating) {
+void FGATC::Render(string& msg, const string& refname, bool repeating) {
 	#ifdef ENABLE_AUDIO_SUPPORT
 	_voice = (_voiceOK && fgGetBool("/sim/sound/voice"));
 	if(_voice) {
@@ -259,7 +259,7 @@ void FGATC::Render(string msg, string refname, bool repeating) {
 
 
 // Cease rendering a transmission.
-void FGATC::NoRender(string refname) {
+void FGATC::NoRender(const string& refname) {
 	if(_playing) {
 		if(_voice) {
 			#ifdef ENABLE_AUDIO_SUPPORT		

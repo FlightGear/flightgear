@@ -72,7 +72,7 @@ TowerPlaneRec::TowerPlaneRec() :
 	plane.callsign = "UNKNOWN";
 }
 
-TowerPlaneRec::TowerPlaneRec(PlaneRec p) :
+TowerPlaneRec::TowerPlaneRec(const PlaneRec& p) :
 	planePtr(NULL),
 	clearedToLand(false),
 	clearedToLineUp(false),
@@ -99,7 +99,7 @@ TowerPlaneRec::TowerPlaneRec(PlaneRec p) :
 	plane = p;
 }
 
-TowerPlaneRec::TowerPlaneRec(Point3D pt) :
+TowerPlaneRec::TowerPlaneRec(const Point3D& pt) :
 	planePtr(NULL),
 	clearedToLand(false),
 	clearedToLineUp(false),
@@ -127,7 +127,7 @@ TowerPlaneRec::TowerPlaneRec(Point3D pt) :
 	pos = pt;
 }
 
-TowerPlaneRec::TowerPlaneRec(PlaneRec p, Point3D pt) :
+TowerPlaneRec::TowerPlaneRec(const PlaneRec& p, const Point3D& pt) :
 	planePtr(NULL),
 	clearedToLand(false),
 	clearedToLineUp(false),
@@ -1435,7 +1435,7 @@ void FGTower::DoRwyDetails() {
 
 // Figure out if a given position lies on the active runway
 // Might have to change when we consider more than one active rwy.
-bool FGTower::OnActiveRunway(Point3D pt) {
+bool FGTower::OnActiveRunway(const Point3D& pt) {
 	// TODO - check that the centre calculation below isn't confused by displaced thesholds etc.
 	Point3D xyc((rwy.end1ortho.x() + rwy.end2ortho.x())/2.0, (rwy.end1ortho.y() + rwy.end2ortho.y())/2.0, 0.0);
 	Point3D xyp = ortho.ConvertToLocal(pt);
@@ -1454,7 +1454,7 @@ bool FGTower::OnActiveRunway(Point3D pt) {
 
 // Figure out if a given position lies on any runway or not
 // Only call this at startup - reading the runways database is expensive and needs to be fixed!
-bool FGTower::OnAnyRunway(Point3D pt) {
+bool FGTower::OnAnyRunway(const Point3D& pt) {
 	ATCData ad;
 	double dist = current_commlist->FindClosest(lon, lat, elev, ad, TOWER, 10.0);
 	if(dist < 0.0) {
@@ -1482,7 +1482,7 @@ bool FGTower::OnAnyRunway(Point3D pt) {
 
 
 // Returns true if successful
-bool FGTower::RemoveFromTrafficList(string id) {
+bool FGTower::RemoveFromTrafficList(const string& id) {
 	tower_plane_rec_list_iterator twrItr;
 	for(twrItr = trafficList.begin(); twrItr != trafficList.end(); twrItr++) {
 		TowerPlaneRec* tpr = *twrItr;
@@ -1498,7 +1498,7 @@ bool FGTower::RemoveFromTrafficList(string id) {
 
 
 // Returns true if successful
-bool FGTower::RemoveFromAppList(string id) {
+bool FGTower::RemoveFromAppList(const string& id) {
 	tower_plane_rec_list_iterator twrItr;
 	for(twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
 		TowerPlaneRec* tpr = *twrItr;
@@ -1513,7 +1513,7 @@ bool FGTower::RemoveFromAppList(string id) {
 }
 
 // Returns true if successful
-bool FGTower::RemoveFromRwyList(string id) {
+bool FGTower::RemoveFromRwyList(const string& id) {
 	tower_plane_rec_list_iterator twrItr;
 	for(twrItr = rwyList.begin(); twrItr != rwyList.end(); twrItr++) {
 		TowerPlaneRec* tpr = *twrItr;
@@ -1900,7 +1900,7 @@ double FGTower::GetTrafficETA(unsigned int list_pos, bool printout) {
 }
 	
 
-void FGTower::ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_traffic_type operation) {
+void FGTower::ContactAtHoldShort(const PlaneRec& plane, FGAIPlane* requestee, tower_traffic_type operation) {
 	// HACK - assume that anything contacting at hold short is new for now - FIXME LATER
 	TowerPlaneRec* t = new TowerPlaneRec;
 	t->plane = plane;
@@ -1934,7 +1934,7 @@ void FGTower::ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_tra
 
 // Register the presence of an AI plane at a point where contact would already have been made in real life
 // CAUTION - currently it is assumed that this plane's callsign is unique - it is up to AIMgr to generate unique callsigns.
-void FGTower::RegisterAIPlane(PlaneRec plane, FGAIPlane* ai, tower_traffic_type op, PatternLeg lg) {
+void FGTower::RegisterAIPlane(const PlaneRec& plane, FGAIPlane* ai, const tower_traffic_type& op, const PatternLeg& lg) {
 	// At the moment this is only going to be tested with inserting an AI plane on downwind
 	TowerPlaneRec* t = new TowerPlaneRec;
 	t->plane = plane;
@@ -1954,7 +1954,7 @@ void FGTower::RegisterAIPlane(PlaneRec plane, FGAIPlane* ai, tower_traffic_type 
 	doThresholdUseOrder();
 }
 
-void FGTower::DeregisterAIPlane(string id) {
+void FGTower::DeregisterAIPlane(const string& id) {
 	RemovePlane(id);
 }
 
@@ -1962,7 +1962,7 @@ void FGTower::DeregisterAIPlane(string id) {
 // eg "Cessna Charlie Foxtrot Golf Foxtrot Sierra eight miles South of the airport for full stop with Bravo"
 // This function probably only called via user interaction - AI planes will have an overloaded function taking a planerec.
 // opt defaults to AIP_LT_UNKNOWN
-void FGTower::VFRArrivalContact(string ID, LandingType opt) {
+void FGTower::VFRArrivalContact(const string& ID, const LandingType& opt) {
 	//cout << "USER Request Landing Clearance called for ID " << ID << '\n';
 	
 	// For now we'll assume that the user is a light plane and can get him/her to join the circuit if necessary.
@@ -2013,7 +2013,7 @@ void FGTower::VFRArrivalContact(string ID, LandingType opt) {
 }
 
 // landingType defaults to AIP_LT_UNKNOWN
-void FGTower::VFRArrivalContact(PlaneRec plane, FGAIPlane* requestee, LandingType lt) {
+void FGTower::VFRArrivalContact(const PlaneRec& plane, FGAIPlane* requestee, const LandingType& lt) {
 	//cout << "VFRArrivalContact called for plane " << plane.callsign << " at " << ident << '\n';
 	// Possible hack - assume this plane is new for now - TODO - should check really
 	TowerPlaneRec* t = new TowerPlaneRec;
@@ -2038,17 +2038,18 @@ void FGTower::VFRArrivalContact(PlaneRec plane, FGAIPlane* requestee, LandingTyp
 	AddToTrafficList(t);
 }
 
-void FGTower::RequestDepartureClearance(string ID) {
+void FGTower::RequestDepartureClearance(const string& ID) {
 	//cout << "Request Departure Clearance called...\n";
 }
 	
-void FGTower::ReportFinal(string ID) {
+void FGTower::ReportFinal(const string& ID) {
 	//cout << "Report Final Called at tower " << ident << " by plane " << ID << '\n';
+	string uid=ID;
 	if(ID == "USER") {
-		ID = fgGetString("/sim/user/callsign");
+		uid = fgGetString("/sim/user/callsign");
 		current_atcdialog->remove_entry(ident, USER_REPORT_3_MILE_FINAL, TOWER);
 	}
-	TowerPlaneRec* t = FindPlane(ID);
+	TowerPlaneRec* t = FindPlane(uid);
 	if(t) {
 		t->finalReported = true;
 		t->finalAcknowledged = false;
@@ -2065,12 +2066,13 @@ void FGTower::ReportFinal(string ID) {
 	}
 }
 
-void FGTower::ReportLongFinal(string ID) {
+void FGTower::ReportLongFinal(const string& ID) {
+	string uid=ID;
 	if(ID == "USER") {
-		ID = fgGetString("/sim/user/callsign");
+		uid = fgGetString("/sim/user/callsign");
 		current_atcdialog->remove_entry(ident, USER_REPORT_3_MILE_FINAL, TOWER);
 	}
-	TowerPlaneRec* t = FindPlane(ID);
+	TowerPlaneRec* t = FindPlane(uid);
 	if(t) {
 		t->longFinalReported = true;
 		t->longFinalAcknowledged = false;
@@ -2086,13 +2088,14 @@ void FGTower::ReportLongFinal(string ID) {
 //void FGTower::ReportMiddleMarker(string ID);
 //void FGTower::ReportInnerMarker(string ID);
 
-void FGTower::ReportRunwayVacated(string ID) {
+void FGTower::ReportRunwayVacated(const string& ID) {
 	//cout << "Report Runway Vacated Called at tower " << ident << " by plane " << ID << '\n';
+	string uid=ID;
 	if(ID == "USER") {
-		ID = fgGetString("/sim/user/callsign");
+		uid = fgGetString("/sim/user/callsign");
 		current_atcdialog->remove_entry(ident, USER_REPORT_RWY_VACATED, TOWER);
 	}
-	TowerPlaneRec* t = FindPlane(ID);
+	TowerPlaneRec* t = FindPlane(uid);
 	if(t) {
 		//cout << "Found it...\n";
 		t->rwyVacatedReported = true;
@@ -2104,7 +2107,7 @@ void FGTower::ReportRunwayVacated(string ID) {
 	}
 }
 
-TowerPlaneRec* FGTower::FindPlane(string ID) {
+TowerPlaneRec* FGTower::FindPlane(const string& ID) {
 	//cout << "FindPlane called for " << ID << "...\n";
 	tower_plane_rec_list_iterator twrItr;
 	// Do the approach list first
@@ -2137,7 +2140,7 @@ TowerPlaneRec* FGTower::FindPlane(string ID) {
 	return(NULL);
 }
 
-void FGTower::RemovePlane(string ID) {
+void FGTower::RemovePlane(const string& ID) {
 	//cout << ident << " RemovePlane called for " << ID << '\n';
 	// We have to be careful here - we want to erase the plane from all lists it is in,
 	// but we can only delete it once, AT THE END.
@@ -2197,13 +2200,14 @@ void FGTower::RemovePlane(string ID) {
 	if(t) delete t;
 }
 
-void FGTower::ReportDownwind(string ID) {
+void FGTower::ReportDownwind(const string& ID) {
 	//cout << "ReportDownwind(...) called\n";
+	string uid=ID;
 	if(ID == "USER") {
-		ID = fgGetString("/sim/user/callsign");
+		uid = fgGetString("/sim/user/callsign");
 		current_atcdialog->remove_entry(ident, USER_REPORT_DOWNWIND, TOWER);
 	}
-	TowerPlaneRec* t = FindPlane(ID);
+	TowerPlaneRec* t = FindPlane(uid);
 	if(t) {
 		t->downwindReported = true;
 		responseReqd = true;
@@ -2227,13 +2231,14 @@ void FGTower::ReportDownwind(string ID) {
 	}
 }
 
-void FGTower::ReportGoingAround(string ID) {
+void FGTower::ReportGoingAround(const string& ID) {
+	string uid=ID;
 	if(ID == "USER") {
-		ID = fgGetString("/sim/user/callsign");
+		uid = fgGetString("/sim/user/callsign");
 		RemoveAllUserDialogOptions();	// TODO - it would be much more efficient if ATCDialog simply had a clear() function!!!
 		current_atcdialog->add_entry(ident, "@AP Tower @CS Downwind @RW", "Report Downwind", TOWER, (int)USER_REPORT_DOWNWIND);
 	}
-	TowerPlaneRec* t = FindPlane(ID);
+	TowerPlaneRec* t = FindPlane(uid);
 	if(t) {
 		//t->goAroundReported = true;  // No need to set this until we start responding to it.
 		responseReqd = false;	// might change in the future but for now we'll not distract them during the go-around.

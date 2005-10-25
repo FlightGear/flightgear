@@ -353,7 +353,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
 }
 
 double
-TACAN::searchChannel (string _channel){
+TACAN::searchChannel (const string& _channel){
     
     double frequency_khz = 0;
     

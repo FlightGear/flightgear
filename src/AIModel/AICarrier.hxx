@@ -87,10 +87,10 @@ public:
         void setFlolsOffset(const Point3D& off);
         void setTACANChannelID(const string &);
 
-	void getVelocityWrtEarth(sgdVec3 v, sgdVec3 omega, sgdVec3 pivot);
+	void getVelocityWrtEarth(sgdVec3& v, sgdVec3& omega, sgdVec3& pivot);
 	virtual void bind();
     virtual void unbind();
-    void UpdateFlols ( sgdMat3 trans );
+    void UpdateFlols ( const sgdMat3& trans );
     void UpdateWind ( double dt );
     void UpdateTACAN( double dt );
     void setWind_from_east( double fps );

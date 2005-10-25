@@ -43,7 +43,7 @@ FGATCVoice::~FGATCVoice() {
 
 // Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).
 // Return true if successful.
-bool FGATCVoice::LoadVoice(string voice) {
+bool FGATCVoice::LoadVoice(const string& voice) {
     // FIXME CLO: disabled to try to see if this is causign problemcs
     // return false;
 

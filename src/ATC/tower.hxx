@@ -73,9 +73,9 @@ class TowerPlaneRec {
 public:
 	
 	TowerPlaneRec();
-	TowerPlaneRec(PlaneRec p);
-	TowerPlaneRec(Point3D pt);
-	TowerPlaneRec(PlaneRec p, Point3D pt);
+	TowerPlaneRec(const PlaneRec& p);
+	TowerPlaneRec(const Point3D& pt);
+	TowerPlaneRec(const PlaneRec& p, const Point3D& pt);
 	
 	FGAIPlane* planePtr;	// This might move to the planeRec eventually
 	PlaneRec plane;
@@ -110,7 +110,6 @@ public:
 	PatternLeg leg;
 	
 	LandingType landingType;
-	
 	bool isUser;	// true if this plane is the user
 };
 
@@ -136,39 +135,39 @@ public:
 	// Contact tower for VFR approach
 	// eg "Cessna Charlie Foxtrot Golf Foxtrot Sierra eight miles South of the airport for full stop with Bravo"
 	// This function probably only called via user interaction - AI planes will have an overloaded function taking a planerec.
-	void VFRArrivalContact(string ID, LandingType opt = AIP_LT_UNKNOWN);
+	void VFRArrivalContact(const string& ID, const LandingType& opt = AIP_LT_UNKNOWN);
 	// For the AI planes...
-	void VFRArrivalContact(PlaneRec plane, FGAIPlane* requestee, LandingType lt = AIP_LT_UNKNOWN);
+	void VFRArrivalContact(const PlaneRec& plane, FGAIPlane* requestee, const LandingType& lt = AIP_LT_UNKNOWN);
 	
-	void RequestDepartureClearance(string ID);	
-	void ReportFinal(string ID);
-	void ReportLongFinal(string ID);
-	void ReportOuterMarker(string ID);
-	void ReportMiddleMarker(string ID);
-	void ReportInnerMarker(string ID);
-	void ReportRunwayVacated(string ID);
-	void ReportReadyForDeparture(string ID);
-	void ReportDownwind(string ID);
-	void ReportGoingAround(string ID);
+	void RequestDepartureClearance(const string& ID);
+	void ReportFinal(const string& ID);
+	void ReportLongFinal(const string& ID);
+	void ReportOuterMarker(const string& ID);
+	void ReportMiddleMarker(const string& ID);
+	void ReportInnerMarker(const string& ID);
+	void ReportRunwayVacated(const string& ID);
+	void ReportReadyForDeparture(const string& ID);
+	void ReportDownwind(const string& ID);
+	void ReportGoingAround(const string& ID);
 	
 	// Contact tower when at a hold short for departure - for now we'll assume plane - maybe vehicles might want to cross runway eventually?
-	void ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_traffic_type operation);
+	void ContactAtHoldShort(const PlaneRec& plane, FGAIPlane* requestee, tower_traffic_type operation);
 	
 	// Register the presence of an AI plane at a point where contact would already have been made in real life
 	// CAUTION - currently it is assumed that this plane's callsign is unique - it is up to AIMgr to generate unique callsigns.
-	void RegisterAIPlane(PlaneRec plane, FGAIPlane* ai, tower_traffic_type op, PatternLeg lg = LEG_UNKNOWN);
+	void RegisterAIPlane(const PlaneRec& plane, FGAIPlane* ai, const tower_traffic_type& op, const PatternLeg& lg = LEG_UNKNOWN);
 	
 	// Deregister and remove an AI plane.
-	void DeregisterAIPlane(string id);
+	void DeregisterAIPlane(const string& id);
 	
 	// Public interface to the active runway - this will get more complex 
 	// in the future and consider multi-runway use, airplane weight etc.
-	inline string GetActiveRunway() { return activeRwy; }
-	inline RunwayDetails GetActiveRunwayDetails() { return rwy; }
+	inline const string& GetActiveRunway() { return activeRwy; }
+	inline const RunwayDetails& GetActiveRunwayDetails() { return rwy; }
 	// Get the pattern direction of the active rwy.
 	inline int GetPatternDirection() { return rwy.patternDirection; }
 	
-	inline string get_trans_ident() { return trans_ident; }
+	inline const string& get_trans_ident() { return trans_ident; }
 	
 	inline FGGround* GetGroundPtr() { return ground; }
 	
@@ -205,17 +204,17 @@ private:
 	void ClearHoldingPlane(TowerPlaneRec* t);
 	
 	// Find a pointer to plane of callsign ID within the internal data structures
-	TowerPlaneRec* FindPlane(string ID);
+	TowerPlaneRec* FindPlane(const string& ID);
 	
 	// Remove and delete all instances of a plane with a given ID
-	void RemovePlane(string ID);
+	void RemovePlane(const string& ID);
 	
 	// Figure out if a given position lies on the active runway
 	// Might have to change when we consider more than one active rwy.
-	bool OnActiveRunway(Point3D pt);
+	bool OnActiveRunway(const Point3D& pt);
 	
 	// Figure out if a given position lies on a runway or not
-	bool OnAnyRunway(Point3D pt);
+	bool OnAnyRunway(const Point3D& pt);
 	
 	// Calculate the eta of a plane to the threshold.
 	// For ground traffic this is the fastest they can get there.
@@ -305,9 +304,9 @@ private:
 	tower_plane_rec_list_iterator vacatedListItr;
 	
 	// Returns true if successful
-	bool RemoveFromTrafficList(string id);
-	bool RemoveFromAppList(string id);
-	bool RemoveFromRwyList(string id);
+	bool RemoveFromTrafficList(const string& id);
+	bool RemoveFromAppList(const string& id);
+	bool RemoveFromRwyList(const string& id);
 	
 	// Return the ETA of plane no. list_pos (1-based) in the traffic list.
 	// i.e. list_pos = 1 implies next to use runway.

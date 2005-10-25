@@ -76,16 +76,16 @@ public:
 
     // Register a single message for display after a delay of delay seconds
     // Will automatically stop displaying after a suitable interval.
-    void RegisterSingleMessage(string msg, double delay = 0.0);	// OK - I know passing a string in and out is probably not good but it will have to do for now.
+    void RegisterSingleMessage(const string& msg, double delay = 0.0);
 
     // For now we will assume only one repeating message at once
     // This is not really robust
 
     // Register a continuously repeating message
-    void RegisterRepeatingMessage(string msg);
+    void RegisterRepeatingMessage(const string& msg);
 
     // Change a repeating message - assume that the message changes after the string has finished for now
-    void ChangeRepeatingMessage(string newmsg); 
+    void ChangeRepeatingMessage(const string& newmsg); 
 
     // Cancel the current repeating message
     void CancelRepeatingMessage();

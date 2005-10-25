@@ -105,7 +105,7 @@ public:
 	
 	// Signal that it is OK to remove a plane of callsign s
 	// (To be called by the plane itself).
-	void ScheduleRemoval(string s);
+	void ScheduleRemoval(const string& s);
 
 private:
 	
@@ -118,10 +118,10 @@ private:
     //void RemoveFromList(const char* id, atc_type tp);
 	
 	// Activate AI traffic at an airport
-	void ActivateAirport(string ident);
+	void ActivateAirport(const string& ident);
 	
 	// Hack - Generate AI traffic at an airport with no facilities file, with the first plane being at least min_dist out.
-	void GenerateSimpleAirportTraffic(string ident, double min_dist = 0.0);
+	void GenerateSimpleAirportTraffic(const string& ident, double min_dist = 0.0);
 	
 	// Search for valid airports in the vicinity of the user and activate them if necessary
 	void SearchByPos(double range);
@@ -130,7 +130,7 @@ private:
 	
 	string GenerateUniqueCallsign();
 	
-	string GenerateShortForm(string callsign, string plane_str = "Cessna-", bool local = false);
+	string GenerateShortForm(const string& callsign, const string& plane_str = "Cessna-", bool local = false);
 	
 	// TODO - implement a proper robust system for registering and loading AI GA aircraft models
 	bool _havePiperModel;

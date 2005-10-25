@@ -82,7 +82,7 @@ private:
 public:
 
     inline FGDeferredModel() { }
-    inline FGDeferredModel( const string mp, const string tp, SGBucket b,
+    inline FGDeferredModel( const string& mp, const string& tp, SGBucket b,
 		     FGTileEntry *t, ssgTransform *ot )
     {
 	model_path = mp;
@@ -92,9 +92,9 @@ public:
 	obj_trans = ot;
     }
     inline ~FGDeferredModel() { }
-    inline string get_model_path() const { return model_path; }
-    inline string get_texture_path() const { return texture_path; }
-    inline SGBucket get_bucket() const { return bucket; }
+    inline const string& get_model_path() const { return model_path; }
+    inline const string& get_texture_path() const { return texture_path; }
+    inline const SGBucket& get_bucket() const { return bucket; }
     inline FGTileEntry *get_tile() const { return tile; }
     inline ssgTransform *get_obj_trans() const { return obj_trans; }
 };
@@ -248,7 +248,7 @@ public:
     /**
      * Return the "bucket" for this tile
      */
-    inline SGBucket get_tile_bucket() const { return tile_bucket; }
+    inline const SGBucket& get_tile_bucket() const { return tile_bucket; }
 
     /**
      * Apply ssgLeaf::makeDList to all leaf of a branch

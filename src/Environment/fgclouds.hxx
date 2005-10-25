@@ -42,14 +42,14 @@ class FGEnvironmentCtrl;
 class FGClouds {
 
 private:
-	SGNewCloud *buildCloud(SGPropertyNode *cloud_def_root, string name);
-	void buildLayer(SGCloudField *layer, string name, double alt, double coverage);
+	SGNewCloud *buildCloud(SGPropertyNode *cloud_def_root, const string& name);
+	void buildLayer(SGCloudField *layer, const string& name, double alt, double coverage);
 
 	void buildMETAR(void);
 
-	void buildScenario( string scenario );
+	void buildScenario( const string& scenario );
 
-	void setLayer( int iLayer, float alt_m, string coverage, string layer_type );
+	void setLayer( int iLayer, float alt_m, const string& coverage, const string& layer_type );
 
 	void update_metar_properties( FGMetar *m );
 

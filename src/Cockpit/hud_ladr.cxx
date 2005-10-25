@@ -1,11 +1,13 @@
 
+#include <simgear/constants.h>
+
 #include "hud.hxx"
 #include "panel.hxx"
 
 #define DO_PANEL_HACK
 
 //====================== Top of HudLadder Class =======================
-HudLadder ::   HudLadder(  string name,
+HudLadder ::   HudLadder(  const string& name,
 			   int       x,
 			   int       y,
 			   UINT      width,
@@ -292,8 +294,8 @@ void HudLadder :: draw( void )
 	//  velocity vector
 	glBegin(GL_LINE_LOOP);  // Use polygon to approximate a circle 
         for(count=0; count<50; count++) {             
-	    cosine = 6 * cos(count * 2 * SGD_PI/50.0); 
-            sine =   6 * sin(count * 2 * SGD_PI/50.0); 
+	    cosine = 6 * cos(count * SGD_2PI/50.0); 
+            sine =   6 * sin(count * SGD_2PI/50.0); 
             glVertex2f(cosine+vel_x, sine+vel_y);
 	}     
 	glEnd(); 

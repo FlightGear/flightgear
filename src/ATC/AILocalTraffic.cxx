@@ -128,7 +128,7 @@ FGAILocalTraffic::~FGAILocalTraffic() {
 	//_model->deRef();
 }
 
-void FGAILocalTraffic::GetAirportDetails(string id) {
+void FGAILocalTraffic::GetAirportDetails(const string& id) {
 	AirportATC a;
 	if(ATC->GetAirportATCDetails(airportID, &a)) {
 		if(a.tower_freq) {	// Has a tower - TODO - check the opening hours!!!
@@ -164,7 +164,7 @@ void FGAILocalTraffic::GetAirportDetails(string id) {
 
 // Get details of the active runway
 // It is assumed that by the time this is called the tower control and airport code will have been set up.
-void FGAILocalTraffic::GetRwyDetails(string id) {
+void FGAILocalTraffic::GetRwyDetails(const string& id) {
 	//cout << "GetRwyDetails called" << endl;
 	
 	if(_controlled) {
@@ -226,7 +226,7 @@ To a certain extent it's FGAIMgr that has to worry about this, but we need to pr
 sufficient initialisation functionality within the plane classes to allow the manager
 to initially position them where and how required.
 */
-bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState initialState, PatternLeg initialLeg) {
+bool FGAILocalTraffic::Init(const string& callsign, const string& ICAO, OperatingState initialState, PatternLeg initialLeg) {
 	//cout << "FGAILocalTraffic.Init(...) called" << endl;
 	airportID = ICAO;
 	
@@ -1314,7 +1314,7 @@ void FGAILocalTraffic::ProcessCallback(int code) {
 	}
 }
 
-void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
+void FGAILocalTraffic::ExitRunway(const Point3D& orthopos) {
 	//cout << "In ExitRunway" << endl;
 	//cout << "Runway ID is " << rwy.ID << endl;
 	

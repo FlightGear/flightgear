@@ -101,7 +101,7 @@ void FGAICarrier::setFlolsOffset(const Point3D& off) {
   flols_off = off;
 }
 
-void FGAICarrier::getVelocityWrtEarth(sgdVec3 v, sgdVec3 omega, sgdVec3 pivot) {
+void FGAICarrier::getVelocityWrtEarth(sgdVec3& v, sgdVec3& omega, sgdVec3& pivot) {
   sgdCopyVec3(v, vel_wrt_earth );
   sgdCopyVec3(omega, rot_wrt_earth );
   sgdCopyVec3(pivot, rot_pivot_wrt_earth );
@@ -534,7 +534,7 @@ bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects, bool m
   return found;
 }
 
-void FGAICarrier::UpdateFlols(sgdMat3 trans) {
+void FGAICarrier::UpdateFlols(const sgdMat3& trans) {
     
     float in[3];
     float out[3];
