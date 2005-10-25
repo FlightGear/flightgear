@@ -27,7 +27,6 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/environment/metar.hxx>
 #include <simgear/structure/exception.hxx>
-#include <simgear/scene/sky/sky.hxx>
 
 using namespace std;
 
@@ -484,8 +483,6 @@ void usage()
 		"\n"
 	);
 }
-
-SGSky* thesky = new SGSky;
 
 int main(int argc, char *argv[])
 {
