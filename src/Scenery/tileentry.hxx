@@ -274,7 +274,7 @@ public:
     /**
      * return the SSG Transform node for the terrain
      */
-    inline ssgPlacementTransform *get_terra_transform() { return terra_transform; }
+    inline ssgPlacementTransform *get_terra_transform() const { return terra_transform; }
 
     inline double get_timestamp() const { return timestamp; }
     inline void set_timestamp( double time_ms ) { timestamp = time_ms; }

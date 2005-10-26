@@ -131,7 +131,7 @@ FGAIScenario::~FGAIScenario()
 }
 
 
-FGAIModelEntity*
+FGAIModelEntity* const
 FGAIScenario::getNextEntry( void )
 {
   if (entries.size() == 0) return 0;
@@ -171,7 +171,7 @@ getAllOffsetNodeVals(const char* name, SGPropertyNode * entry_node)
 {
   list<ParkPosition> retval;
 
-  vector<SGPropertyNode_ptr>::iterator it;
+  vector<SGPropertyNode_ptr>::const_iterator it;
   vector<SGPropertyNode_ptr> children = entry_node->getChildren(name);
   for (it = children.begin(); it != children.end(); ++it) {
     string name = (*it)->getStringValue("name", "unnamed");

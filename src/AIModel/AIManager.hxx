@@ -46,12 +46,12 @@ private:
   string path;
 public:
   FGModelID(const string& pth, ssgBranch * mdl) { path =pth; model=mdl;};
-  ssgBranch *getModelId() { return model;};
-  const string & getPath() { return path;};
+  ssgBranch * const getModelId() const { return model;};
+  const string & getPath() const { return path;};
 };
 
 typedef vector<FGModelID> ModelVec;
-typedef vector<FGModelID>::iterator ModelVecIterator;
+typedef vector<FGModelID>::const_iterator ModelVecIterator;
 
 class FGAIThermal;
 
@@ -92,23 +92,23 @@ public:
 
     void destroyObject( int ID );
 
-    inline double get_user_latitude() { return user_latitude; }
-    inline double get_user_longitude() { return user_longitude; }
-    inline double get_user_altitude() { return user_altitude; }
-    inline double get_user_heading() { return user_heading; }
-    inline double get_user_pitch() { return user_pitch; }
-    inline double get_user_yaw() { return user_yaw; }
-    inline double get_user_speed() {return user_speed; }
-    inline double get_wind_from_east() {return wind_from_east; }
-    inline double get_wind_from_north() {return wind_from_north; }
+    inline double get_user_latitude() const { return user_latitude; }
+    inline double get_user_longitude() const { return user_longitude; }
+    inline double get_user_altitude() const { return user_altitude; }
+    inline double get_user_heading() const { return user_heading; }
+    inline double get_user_pitch() const { return user_pitch; }
+    inline double get_user_yaw() const { return user_yaw; }
+    inline double get_user_speed() const {return user_speed; }
+    inline double get_wind_from_east() const {return wind_from_east; }
+    inline double get_wind_from_north() const {return wind_from_north; }
 
-    inline int getNum( FGAIBase::object_type ot ) {
+    inline int getNum( FGAIBase::object_type ot ) const {
       return (0 < ot && ot < FGAIBase::MAX_OBJECTS) ? numObjects[ot] : numObjects[0];
     }
 
     void processScenario( const string &filename );
 
-  ssgBranch * getModel(const string& path);
+  ssgBranch * getModel(const string& path) const;
   void setModel(const string& path, ssgBranch *model);
 
   static bool getStartPosition(const string& id, const string& pid,

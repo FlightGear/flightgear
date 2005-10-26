@@ -156,7 +156,7 @@ void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring ) {
 
 
 // schedule a needed buckets for loading
-void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
+void FGTileMgr::schedule_needed( double vis, const SGBucket& curr_bucket) {
     // sanity check (unfortunately needed!)
     if ( longitude < -180.0 || longitude > 180.0 
          || latitude < -90.0 || latitude > 90.0 )

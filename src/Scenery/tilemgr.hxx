@@ -80,7 +80,7 @@ private:
     void sched_tile( const SGBucket& b, const bool is_inner_ring );
 
     // schedule a needed buckets for loading
-    void schedule_needed(double visibility_meters, SGBucket curr_bucket);
+    void schedule_needed(double visibility_meters, const SGBucket& curr_bucket);
 
     FGHitList hit_list;
 
@@ -178,8 +178,8 @@ public:
     // tiles...
     void refresh_view_timestamps();
 
-    inline SGBucket get_current_bucket () { return current_bucket; }
-    inline SGBucket get_previous_bucket () { return previous_bucket; }
+    inline const SGBucket& get_current_bucket () const { return current_bucket; }
+    inline const SGBucket& get_previous_bucket () const { return previous_bucket; }
 
     static bool set_tile_filter( bool f );
     static int tile_filter_cb( ssgEntity *, int );

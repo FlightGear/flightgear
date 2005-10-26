@@ -162,14 +162,14 @@ public:
 	
 	// Public interface to the active runway - this will get more complex 
 	// in the future and consider multi-runway use, airplane weight etc.
-	inline const string& GetActiveRunway() { return activeRwy; }
-	inline const RunwayDetails& GetActiveRunwayDetails() { return rwy; }
+	inline const string& GetActiveRunway() const { return activeRwy; }
+	inline const RunwayDetails& GetActiveRunwayDetails() const { return rwy; }
 	// Get the pattern direction of the active rwy.
-	inline int GetPatternDirection() { return rwy.patternDirection; }
+	inline int GetPatternDirection() const { return rwy.patternDirection; }
 	
-	inline const string& get_trans_ident() { return trans_ident; }
+	inline const string& get_trans_ident() const { return trans_ident; }
 	
-	inline FGGround* GetGroundPtr() { return ground; }
+	inline FGGround* const GetGroundPtr() const { return ground; }
 	
 	// Returns true if positions of crosswind/downwind/base leg turns should be constrained by previous traffic
 	// plus the constraint position as a rwy orientated orthopos (meters)

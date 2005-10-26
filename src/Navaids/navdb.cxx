@@ -291,10 +291,10 @@ void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist,
                                 double threshold ) {
     nav_map_type navmap = loclist->get_navaids();
 
-    nav_map_iterator freq = navmap.begin();
+    nav_map_const_iterator freq = navmap.begin();
     while ( freq != navmap.end() ) {
         nav_list_type locs = freq->second;
-        nav_list_iterator loc = locs.begin();
+        nav_list_const_iterator loc = locs.begin();
         while ( loc != locs.end() ) {
             string name = (*loc)->get_name();
             string::size_type pos1 = name.find(" ");

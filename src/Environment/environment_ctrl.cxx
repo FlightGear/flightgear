@@ -640,7 +640,7 @@ FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
                 m->getPressure_inHg() );
 
     vector<SGMetarCloud> cv = m->getClouds();
-    vector<SGMetarCloud>::iterator cloud;
+    vector<SGMetarCloud>::const_iterator cloud;
 
     const char *cl = "/environment/clouds/layer[%i]";
     for (i = 0, cloud = cv.begin(); cloud != cv.end(); cloud++, i++) {

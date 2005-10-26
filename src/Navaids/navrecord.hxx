@@ -88,11 +88,11 @@ public:
     inline int get_range() const { return range; }
     inline double get_multiuse() const { return multiuse; }
     inline void set_multiuse( double m ) { multiuse = m; }
-    inline const char *get_ident() { return ident.c_str(); }
-    inline string get_name() { return name; }
-    inline string get_apt_id() { return apt_id; }
-    inline bool get_serviceable() { return serviceable; }
-    inline const char *get_trans_ident() { return trans_ident.c_str(); }
+    inline const char *get_ident() const { return ident.c_str(); }
+    inline const string& get_name() const { return name; }
+    inline const string& get_apt_id() const { return apt_id; }
+    inline bool get_serviceable() const { return serviceable; }
+    inline const char *get_trans_ident() const { return trans_ident.c_str(); }
 
     friend istream& operator>> ( istream&, FGNavRecord& );
 };
@@ -182,7 +182,7 @@ public:
     inline FGTACANRecord(void);
     inline ~FGTACANRecord(void) {}
 
-    inline string get_channel() { return channel; }
+    inline const string& get_channel() const { return channel; }
     inline int get_freq() const { return freq; }
     friend istream& operator>> ( istream&, FGTACANRecord& );
     };

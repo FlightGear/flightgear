@@ -397,7 +397,7 @@ void FGAIManager::processThermal( FGAIThermal* thermal ) {
 void FGAIManager::processScenario( const string &filename ) {
   FGAIScenario* s = new FGAIScenario( filename );
   for (int i=0;i<s->nEntries();i++) {
-    FGAIModelEntity* en = s->getNextEntry();
+   FGAIModelEntity* const en = s->getNextEntry();
 
     if (en) {
       if ( en->m_type == "aircraft") {
@@ -430,7 +430,7 @@ void FGAIManager::processScenario( const string &filename ) {
 // This code keeps track of models that have already been loaded
 // Eventually we'd prbably need to find a way to keep track of models
 // that are unloaded again
-ssgBranch * FGAIManager::getModel(const string& path)
+ssgBranch * FGAIManager::getModel(const string& path) const
 {
   ModelVecIterator i = loadedModels.begin();
   while (i != loadedModels.end())

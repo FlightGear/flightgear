@@ -296,8 +296,8 @@ FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
     // cout << "Master index = " << master_index << endl;
     // cout << "beacon search length = " << beacons.size() << endl;
 
-    nav_list_iterator current = navs.begin();
-    nav_list_iterator last = navs.end();
+    nav_list_const_iterator current = navs.begin();
+    nav_list_const_iterator last = navs.end();
 
     Point3D aircraft = sgGeodToCart( Point3D(lon_rad,
                                              lat_rad,

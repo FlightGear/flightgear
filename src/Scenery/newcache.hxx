@@ -97,8 +97,8 @@ public:
     void clear_cache();
 
     // Return a pointer to the specified tile cache entry 
-    inline FGTileEntry *get_tile( const long tile_index ) {
-	tile_map_iterator it = tile_cache.find( tile_index );
+    inline FGTileEntry *get_tile( const long tile_index ) const {
+	const_tile_map_iterator it = tile_cache.find( tile_index );
 	if ( it != tile_cache.end() ) {
 	    it->second->set_timestamp(globals->get_sim_time_sec());
 	    return it->second;
@@ -108,7 +108,7 @@ public:
     }
 
     // Return a pointer to the specified tile cache entry 
-    inline FGTileEntry *get_tile( const SGBucket& b ) {
+    inline FGTileEntry *get_tile( const SGBucket& b ) const {
 	return get_tile( b.gen_index() );
     }
 
@@ -118,7 +118,7 @@ public:
     // External linear traversal of cache
     inline void reset_traversal() { current = tile_cache.begin(); }
     inline bool at_end() { return current == tile_cache.end(); }
-    inline FGTileEntry *get_current() {
+    inline FGTileEntry *get_current() const {
 	// cout << "index = " << current->first << endl;
 	return current->second;
     }

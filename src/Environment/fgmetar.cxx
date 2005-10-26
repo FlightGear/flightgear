@@ -128,7 +128,7 @@ FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, co
 
 	// snow cover
 	map<string, SGMetarRunway> rm = getRunways();
-	map<string, SGMetarRunway>::iterator runway;
+	map<string, SGMetarRunway>::const_iterator runway;
 	for (runway = rm.begin(); runway != rm.end(); runway++) {
 		SGMetarRunway rwy = runway->second;
 		if (rwy.getDeposit() >= 3 ) {

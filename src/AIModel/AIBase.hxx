@@ -108,7 +108,7 @@ public:
     FGAIBase();
     virtual ~FGAIBase();
     virtual void update(double dt);
-    inline Point3D GetPos() { return(pos); }
+    inline const Point3D& GetPos() const { return(pos); }
 
     enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
                        otRocket, otStorm, otThermal, otStatic,

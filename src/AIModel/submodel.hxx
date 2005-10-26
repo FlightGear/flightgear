@@ -89,7 +89,7 @@ public:
 private:
 
     typedef vector <submodel*> submodel_vector_type;
-    typedef submodel_vector_type::iterator submodel_vector_iterator;
+    typedef submodel_vector_type::const_iterator submodel_vector_iterator;
 
     submodel_vector_type       submodels;
     submodel_vector_iterator   submodel_iterator;

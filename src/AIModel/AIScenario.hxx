@@ -37,13 +37,13 @@ public:
    FGAIScenario(const string &filename);
    ~FGAIScenario();
 
-   FGAIModelEntity* getNextEntry( void );
+   FGAIModelEntity* const getNextEntry( void );
    int nEntries( void );
 
 private:
 
     typedef vector <FGAIModelEntity*> entry_vector_type;
-    typedef entry_vector_type::iterator entry_vector_iterator;
+    typedef entry_vector_type::const_iterator entry_vector_iterator;
 
     entry_vector_type       entries;
     entry_vector_iterator   entry_iterator;

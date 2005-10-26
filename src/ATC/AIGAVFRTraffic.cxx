@@ -72,7 +72,7 @@ FGAIGAVFRTraffic::~FGAIGAVFRTraffic() {
 
 // Init en-route to destID at point pt.
 // TODO - no idea what to do if pt is above planes ceiling due mountains!!
-bool FGAIGAVFRTraffic::Init(Point3D pt, string destID, const string& callsign) {
+bool FGAIGAVFRTraffic::Init(const Point3D& pt, const string& destID, const string& callsign) {
 	FGAILocalTraffic::Init(callsign, destID, EN_ROUTE);
 	// TODO FIXME - to get up and running we're going to ignore elev and get FGAIMgr to 
 	// pass in known good values for the test location.  Need to fix this!!! (or at least canonically decide who has responsibility for setting elev).
@@ -101,7 +101,7 @@ bool FGAIGAVFRTraffic::Init(Point3D pt, string destID, const string& callsign) {
 }
 
 // Init at srcID to fly to destID
-bool FGAIGAVFRTraffic::Init(string srcID, string destID, const string& callsign, OperatingState state) {
+bool FGAIGAVFRTraffic::Init(const string& srcID, const string& destID, const string& callsign, OperatingState state) {
 	_enroute = false;
 	FGAILocalTraffic::Init(callsign, srcID, PARKED);
 	return(true);

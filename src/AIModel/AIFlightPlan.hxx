@@ -62,37 +62,37 @@ public:
 		 const string& airline);
    ~FGAIFlightPlan();
 
-   waypoint* getPreviousWaypoint( void );
-   waypoint* getCurrentWaypoint( void );
-   waypoint* getNextWaypoint( void );
+   waypoint* const getPreviousWaypoint( void ) const;
+   waypoint* const getCurrentWaypoint( void ) const;
+   waypoint* const getNextWaypoint( void ) const;
    void IncrementWaypoint( bool erase );
 
-   double getDistanceToGo(double lat, double lon, waypoint* wp);
-   int getLeg () { return leg;};
+   double getDistanceToGo(double lat, double lon, waypoint* wp) const;
+   int getLeg () const { return leg;};
    void setLeadDistance(double speed, double bearing, waypoint* current, waypoint* next);
    void setLeadDistance(double distance_ft);
    double getLeadDistance( void ) const {return lead_distance;}
-   double getBearing(waypoint* previous, waypoint* next);
-   double getBearing(double lat, double lon, waypoint* next);
-  time_t getStartTime() { return start_time; }; 
+   double getBearing(waypoint* previous, waypoint* next) const;
+   double getBearing(double lat, double lon, waypoint* next) const;
+  time_t getStartTime() const { return start_time; }; 
 
   void    create(FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
 		 bool firstLeg, double radius, const string& fltType, const string& aircraftType, const string& airline);
 
   void setLeg(int val) { leg = val;};
   void setTime(time_t st) { start_time = st; };
-  int getGate() { return gateId; };
-  double getLeadInAngle() { return leadInAngle; };
-  const string& getRunway() { return rwy._rwy_no; };
-  const string& getRunwayId() { return rwy._id; };
+  int getGate() const { return gateId; };
+  double getLeadInAngle() const { return leadInAngle; };
+  const string& getRunway() const { return rwy._rwy_no; };
+  const string& getRunwayId() const { return rwy._id; };
   void setRepeat(bool r) { repeat = r; };
-  bool getRepeat(void) { return repeat; };
+  bool getRepeat(void) const { return repeat; };
   void restart(void);
 
 private:
   FGRunway rwy;
   typedef vector <waypoint*> wpt_vector_type;
-  typedef wpt_vector_type::iterator wpt_vector_iterator;
+  typedef wpt_vector_type::const_iterator wpt_vector_iterator;
 
   wpt_vector_type       waypoints;
   wpt_vector_iterator   wpt_iterator;
@@ -121,4 +121,3 @@ private:
 
 
 #endif  // _FG_AIFLIGHTPLAN_HXX
-

@@ -32,18 +32,18 @@ public:
     ssgEntityArray (void) ;
     virtual ~ssgEntityArray (void) ;
 
-    ssgEntity *getModel () { return model ; }
+    ssgEntity *getModel () const { return model ; }
     void setModel        ( ssgEntity *entity ) { model = entity; }
     void removeModel     () ;
     void replaceModel    ( ssgEntity *new_entity ) ;
 
-    ssgVertexArray *getLocations () { return locations; }
-    ssgVertexArray *getOrientations () { return orientations; }
+    ssgVertexArray *getLocations () const { return locations; }
+    ssgVertexArray *getOrientations () const { return orientations; }
 
-    float *getLocation ( int i ) { return locations->get( i ); }
-    float *getOrientation ( int i ) { return orientations->get( i ); }
+    float *getLocation ( int i ) const { return locations->get( i ); }
+    float *getOrientation ( int i ) const { return orientations->get( i ); }
     void addPlacement ( sgVec3 loc, sgVec3 orient );
-    virtual int getNumPlacements() { return locations->getNum(); }
+    virtual int getNumPlacements() const { return locations->getNum(); }
     void removeAllPlacements();
 
     ssgTransform *getPosTransform() { return pos; }

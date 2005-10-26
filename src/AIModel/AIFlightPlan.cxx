@@ -295,8 +295,8 @@ FGAIFlightPlan::~FGAIFlightPlan()
 }
 
 
-FGAIFlightPlan::waypoint*
-FGAIFlightPlan::getPreviousWaypoint( void )
+FGAIFlightPlan::waypoint* const
+FGAIFlightPlan::getPreviousWaypoint( void ) const
 {
   if (wpt_iterator == waypoints.begin()) {
     return 0;
@@ -306,14 +306,14 @@ FGAIFlightPlan::getPreviousWaypoint( void )
   }
 }
 
-FGAIFlightPlan::waypoint*
-FGAIFlightPlan::getCurrentWaypoint( void )
+FGAIFlightPlan::waypoint* const
+FGAIFlightPlan::getCurrentWaypoint( void ) const
 {
   return *wpt_iterator;
 }
 
-FGAIFlightPlan::waypoint*
-FGAIFlightPlan::getNextWaypoint( void )
+FGAIFlightPlan::waypoint* const
+FGAIFlightPlan::getNextWaypoint( void ) const
 {
   wpt_vector_iterator i = waypoints.end();
   i--;  // end() points to one element after the last one. 
@@ -344,7 +344,7 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 }
 
 // gives distance in feet from a position to a waypoint
-double FGAIFlightPlan::getDistanceToGo(double lat, double lon, waypoint* wp){
+double FGAIFlightPlan::getDistanceToGo(double lat, double lon, waypoint* wp) const{
    // get size of a degree2 at the present latitude
    // this won't work over large distances
    double ft_per_deg_lat = 366468.96 - 3717.12 * cos(lat / SG_RADIANS_TO_DEGREES);
@@ -386,12 +386,12 @@ void FGAIFlightPlan::setLeadDistance(double distance_ft){
 }
 
 
-double FGAIFlightPlan::getBearing(waypoint* first, waypoint* second){
+double FGAIFlightPlan::getBearing(waypoint* first, waypoint* second) const{
   return getBearing(first->latitude, first->longitude, second);
 }
 
 
-double FGAIFlightPlan::getBearing(double lat, double lon, waypoint* wp){
+double FGAIFlightPlan::getBearing(double lat, double lon, waypoint* wp) const{
   double course, distance;
  //  double latd = lat;
 //   double lond = lon;

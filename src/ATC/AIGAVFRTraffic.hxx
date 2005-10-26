@@ -42,9 +42,9 @@ public:
 	~FGAIGAVFRTraffic();
 	
 	// Init en-route to destID at point pt. (lat, lon, elev) (elev in meters, lat and lon in degrees).
-	bool Init(Point3D pt, string destID, const string& callsign);
+	bool Init(const Point3D& pt, const string& destID, const string& callsign);
 	// Init at srcID to fly to destID
-	bool Init(string srcID, string destID, const string& callsign, OperatingState state = PARKED);
+	bool Init(const string& srcID, const string& destID, const string& callsign, OperatingState state = PARKED);
 	
 	// Run the internal calculations
 	void Update(double dt);
