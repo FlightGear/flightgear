@@ -2196,8 +2196,8 @@ void FGTower::RemovePlane(const string& ID) {
 			trafficListItr = trafficList.begin();
 		}
 	}
-	// And finally, delete the record if we found it.
-	if(t) delete t;
+	// And finally, delete the record.
+	delete t;
 }
 
 void FGTower::ReportDownwind(const string& ID) {

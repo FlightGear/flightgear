@@ -25,6 +25,8 @@
 
 #include "ATC.hxx"
 
+class NewGUI;
+
 // ATCMenuEntry - an encapsulation of an entry in the ATC dialog
 struct ATCMenuEntry {
 
@@ -64,7 +66,7 @@ public:
 	
 	void PopupDialog();
 	
-	void PopupCallback();
+	void PopupCallback(int);
 	
 	void add_entry( const string& station, const string& transmission, const string& menutext, atc_type type, int code);
 	
@@ -97,6 +99,8 @@ private:
 	double _callbackWait;
 	FGATC* _callbackPtr;
 	int _callbackCode;
+
+	NewGUI *_gui;
 };
 	
 extern FGATCDialog *current_atcdialog;	

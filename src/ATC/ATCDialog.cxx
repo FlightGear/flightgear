@@ -23,7 +23,8 @@
 #include <simgear/structure/commands.hxx>
 
 #include <Main/globals.hxx>
-#include <GUI/gui.h>
+#include <GUI/gui.h>		// mkDialog
+#include <GUI/new_gui.hxx>
 
 #include "ATCDialog.hxx"
 #include "ATC.hxx"
@@ -34,8 +35,10 @@
 #include <Airports/simple.hxx>
 
 #include <sstream>
+#include <map>
 
 SG_USING_STD(ostringstream);
+SG_USING_STD(map);
 
 FGATCDialog *current_atcdialog;
 
@@ -67,59 +70,16 @@ static void atcUppercase(string &s) {
 	}
 }
 
-// ----------------------- Popup Dialog Statics------------------
-static puDialogBox*     atcDialog;
-static puFrame*         atcDialogFrame;
-static puText*          atcDialogMessage;
-static puOneShot*       atcDialogOkButton;
-static puOneShot*       atcDialogCancelButton;
-static puButtonBox*     atcDialogCommunicationOptions;
-// --------------------------------------------------------------
-
-// ----------------------- Freq Dialog Statics-------------------
-static const int ATC_MAX_FREQ_DISPLAY = 20;		// Maximum number of frequencies that can be displayed for any one airport
-
-static puDialogBox*     atcFreqDialog;
-static puFrame*         atcFreqDialogFrame;
-static puText*          atcFreqDialogMessage;
-static puInput*         atcFreqDialogInput;
-static puOneShot*       atcFreqDialogOkButton;
-static puOneShot*       atcFreqDialogCancelButton;
-
-static puDialogBox*     atcFreqDisplay;
-static puFrame*         atcFreqDisplayFrame;
-static puText*          atcFreqDisplayMessage;
-static puOneShot*       atcFreqDisplayOkButton;
-static puText*          atcFreqDisplayText[ATC_MAX_FREQ_DISPLAY];
-// --------------------------------------------------------------
-
-//////////////// Popup callbacks ///////////////////
-static void ATCDialogOK(puObject*) {
-	current_atcdialog->PopupCallback();
-	FG_POP_PUI_DIALOG( atcDialog );
+// find child whose <name>...</name> entry matches 'name'
+static SGPropertyNode_ptr namedNode(const vector<SGPropertyNode_ptr> &children, const char *name) {
+	SGPropertyNode_ptr ret;
+	for (int i = 0; i < children.size(); i++)
+		if (!strcmp(children[i]->getStringValue("name"), name)) {
+			ret = children[i];
+			break;
+		}
+	return ret;
 }
-
-static void ATCDialogCancel(puObject*) {
-    FG_POP_PUI_DIALOG( atcDialog );
-}
-//////////////////////////////////////////////////
-
-
-///////////////// Freq search callbacks ///////////
-static void FreqDialogCancel(puObject*) {
-	FG_POP_PUI_DIALOG(atcFreqDialog);
-}
-
-static void FreqDialogOK(puObject*) {
-	string tmp = atcFreqDialogInput->getStringValue();
-	FG_POP_PUI_DIALOG(atcFreqDialog);
-	current_atcdialog->FreqDisplay(tmp);
-}
-
-static void FreqDisplayOK(puObject*) {
-	FG_POP_PUI_DIALOG(atcFreqDisplay);
-}
-//////////////////////////////////////////////////
 
 
 FGATCDialog::FGATCDialog() {
@@ -128,12 +88,10 @@ FGATCDialog::FGATCDialog() {
 	_callbackWait = 0.0;
 	_callbackPtr = NULL;
 	_callbackCode = 0;
+	_gui = (NewGUI *)globals->get_subsystem("gui");
 }
 
 FGATCDialog::~FGATCDialog() {
-	if(atcDialog) puDeleteObject(atcDialog);
-	if(atcFreqDialog) puDeleteObject(atcFreqDialog);
-	if(atcFreqDisplay) puDeleteObject(atcFreqDisplay);
 }
 
 void FGATCDialog::Init() {
@@ -141,98 +99,27 @@ void FGATCDialog::Init() {
 	globals->get_commands()->addCommand("ATC-dialog", do_ATC_dialog);
 	// Add ATC-freq-search to the command list
 	globals->get_commands()->addCommand("ATC-freq-search", do_ATC_freq_search);
-	
-	int w;
-	int h;
-	int x;
-	int y;
-	
-	// Init the freq-search dialog
-	w = 300;
-	h = 150;
-	x = (fgGetInt("/sim/startup/xsize") / 2) - (w / 2);
-	y = 50;
-	char *s;
-	atcFreqDialog = new puDialogBox (x, y);
-	{
-		atcFreqDialogFrame = new puFrame (0, 0, w, h);
-		atcFreqDialogMessage = new puText          (40, (h - 30));
-		atcFreqDialogMessage->setDefaultValue ("Enter airport identifier:");
-		atcFreqDialogMessage->getDefaultValue (&s);
-		atcFreqDialogMessage->setLabel(s);
-	
-		atcFreqDialogInput = new puInput (50, (h - 75), 150, (h - 45));
-			
-		atcFreqDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
-		atcFreqDialogOkButton     ->     setLegend         (gui_msg_OK);
-		atcFreqDialogOkButton     ->     makeReturnDefault (TRUE);
-		atcFreqDialogOkButton     ->     setCallback       (FreqDialogOK);
-			
-		atcFreqDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
-		atcFreqDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
-		atcFreqDialogCancelButton ->     setCallback       (FreqDialogCancel);
-		
-		atcFreqDialogInput->acceptInput();
-	}
-	
-	FG_FINALIZE_PUI_DIALOG(atcFreqDialog);
-	
-	// Init the freq-display dialog
-	w = 400;
-	h = 100;
-	x = (fgGetInt("/sim/startup/xsize") / 2) - (w / 2);
-	y = 50;
-	atcFreqDisplay = new puDialogBox (x, y);
-	{
-		atcFreqDisplayFrame   = new puFrame (0, 0, w, h);
-		
-		atcFreqDisplayMessage = new puText          (40, (h - 30));
-		atcFreqDisplayMessage    -> setDefaultValue ("No freqencies found");
-		atcFreqDisplayMessage    -> getDefaultValue (&s);
-		atcFreqDisplayMessage    -> setLabel        (s);
-		
-		for(int i=0; i<ATC_MAX_FREQ_DISPLAY; ++i) {
-			atcFreqDisplayText[i] = new puText(40, h - 65 - (30 * i));
-			atcFreqDisplayText[i]->setDefaultValue("");
-			atcFreqDisplayText[i]-> getDefaultValue (&s);
-			atcFreqDisplayText[i]-> setLabel        (s);
-			atcFreqDisplayText[i]->hide();
-		}
-		
-		atcFreqDisplayOkButton     =  new puOneShot         (50, 10, 110, 50);
-		atcFreqDisplayOkButton     ->     setLegend         (gui_msg_OK);
-		atcFreqDisplayOkButton     ->     makeReturnDefault (TRUE);
-		atcFreqDisplayOkButton     ->     setCallback       (FreqDisplayOK);
-	}
-	FG_FINALIZE_PUI_DIALOG(atcFreqDisplay);
-	
-	// Init AK's interactive ATC menus
-	w = 500;
-	h = 110;
-	x = (fgGetInt("/sim/startup/xsize") / 2) - (w / 2);
-	//y = (fgGetInt("/sim/startup/ysize") / 2) - (h / 2);
-	y = 50;
-	atcDialog = new puDialogBox (x, y);
-	{
-		atcDialogFrame = new puFrame (0,0,w,h);
-		atcDialogMessage = new puText (w / 2, h - 30);
-		atcDialogMessage -> setLabel( "No transmission available" );
-		atcDialogMessage -> setLabelPlace(PUPLACE_TOP_CENTERED);
-		atcDialogCommunicationOptions = new puButtonBox (50, 60, 450, 50, NULL, true);
-		atcDialogCommunicationOptions -> hide();
-		atcDialogOkButton     =  new puOneShot         ((w/2)-85, 10, (w/2)-25, 50);
-		atcDialogOkButton     ->     setLegend         (gui_msg_OK);
-		atcDialogOkButton     ->     makeReturnDefault (TRUE);
-		atcDialogOkButton     ->     setCallback       (ATCDialogOK);
-		
-		atcDialogCancelButton =  new puOneShot         ((w/2)+25, 10, (w/2)+85, 50);
-		atcDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
-		atcDialogCancelButton ->     setCallback       (ATCDialogCancel);
-	}
-	FG_FINALIZE_PUI_DIALOG(atcDialog);
+
+	// initialize properties polled in Update()
+	globals->get_props()->setStringValue("/sim/atc/freq-airport", "");
+	globals->get_props()->setIntValue("/sim/atc/transmission-num", -1);
 }
 
 void FGATCDialog::Update(double dt) {
+	static SGPropertyNode_ptr airport = globals->get_props()->getNode("/sim/atc/freq-airport", true);
+	string s = airport->getStringValue();
+	if (!s.empty()) {
+		airport->setStringValue("");
+		FreqDisplay(s);
+	}
+
+	static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+	int n = trans_num->getIntValue();
+	if (n >= 0) {
+		trans_num->setIntValue(-1);
+		PopupCallback(n);
+	}
+
 	if(_callbackPending) {
 		if(_callbackTimer > _callbackWait) {
 			_callbackPtr->ReceiveUserCallback(_callbackCode);
@@ -260,7 +147,7 @@ void FGATCDialog::add_entry(const string& station, const string& transmission, c
 
 void FGATCDialog::remove_entry( const string &station, const string &trans, atc_type type ) {
   atcmentry_vec_type* p = &((available_dialog[type])[station]);
-  atcmentry_vec_iterator current = p->begin();  
+  atcmentry_vec_iterator current = p->begin();
   while(current != p->end()) {
     if(current->transmission == trans) current = p->erase(current);
 	else ++current;
@@ -276,7 +163,7 @@ void FGATCDialog::remove_entry( const string &station, int code, atc_type type )
   }
 }
 
-// query the database whether the transmission is already registered; 
+// query the database whether the transmission is already registered;
 bool FGATCDialog::trans_reg( const string &station, const string &trans, atc_type type ) {
   atcmentry_vec_type* p = &((available_dialog[type])[station]);
   atcmentry_vec_iterator current = p->begin();
@@ -286,7 +173,7 @@ bool FGATCDialog::trans_reg( const string &station, const string &trans, atc_typ
   return false;
 }
 
-// query the database whether the transmission is already registered; 
+// query the database whether the transmission is already registered;
 bool FGATCDialog::trans_reg( const string &station, int code, atc_type type ) {
   atcmentry_vec_type* p = &((available_dialog[type])[station]);
   atcmentry_vec_iterator current = p->begin();
@@ -298,225 +185,233 @@ bool FGATCDialog::trans_reg( const string &station, int code, atc_type type ) {
 
 // Display the ATC popup dialog box with options relevant to the users current situation.
 void FGATCDialog::PopupDialog() {
-	
-	static string mentry[10];
-	static string mtrans[10];
-	char   buf[10];
-	TransPar TPar;
+	const char *dialog_name = "atc-dialog";
+	SGPropertyNode_ptr dlg = _gui->getDialog(dialog_name);
+	if (!dlg)
+		return;
+
+	_gui->closeDialog(dialog_name);
+
+	SGPropertyNode_ptr button_group = namedNode(dlg->getChildren("group"), "transmission-choice");
+	// remove all transmission buttons
+	button_group->removeChildren("button", false);
+
+	string label;
 	FGATC* atcptr = globals->get_ATC_mgr()->GetComm1ATCPointer();	// Hardwired to comm1 at the moment
-	
-	int w = 500;
-	int h = 100;
-	if(atcptr) {
-		if(atcptr->GetType() == ATIS) {
-			atcDialogCommunicationOptions->hide();
-			atcDialogMessage -> setLabel( "Tuned to ATIS - no communication possible" );
-			atcDialogFrame->setSize(w, h);
-			atcDialogMessage -> setPosition(w / 2, h - 30);
-		} else {
-			
-			atcmentry_vec_type atcmlist = (available_dialog[atcptr->GetType()])[atcptr->get_ident()];
-			atcmentry_vec_iterator current = atcmlist.begin();
-			atcmentry_vec_iterator last = atcmlist.end();
-			
-			// Set all opt flags to false before displaying box
-			fgSetBool("/sim/atc/opt0",false);
-			fgSetBool("/sim/atc/opt1",false);
-			fgSetBool("/sim/atc/opt2",false);
-			fgSetBool("/sim/atc/opt3",false);
-			fgSetBool("/sim/atc/opt4",false);
-			fgSetBool("/sim/atc/opt5",false);
-			fgSetBool("/sim/atc/opt6",false);
-			fgSetBool("/sim/atc/opt7",false);
-			fgSetBool("/sim/atc/opt8",false);
-			fgSetBool("/sim/atc/opt9",false);
-			
-			int k = atcmlist.size();
-			h += k * 25;
-			//cout << "k = " << k << '\n';
-			
-			atcDialogFrame->setSize(w, h); 
-			
-			if(k) { 
-				// loop over all entries in atcmentrylist
-				char** optList = new char*[k+1];
-				int kk = 0;
-				for ( ; current != last ; ++current ) {
-					string dum;
-					sprintf( buf, "%i", kk+1 );
-					buf[1] = '\0';
-					dum = buf;
-					mentry[kk] = dum + ". " + current->menuentry;
-					optList[kk] = new char[strlen(mentry[kk].c_str()) + 1];
-					strcpy(optList[kk], mentry[kk].c_str());
-					//cout << "optList[" << kk << "] = " << optList[kk] << endl; 
-					mtrans[kk] =              current->transmission;
-					++kk;
-				} 
-				optList[k] = NULL;
-				atcDialogCommunicationOptions->newList(optList);
-				atcDialogCommunicationOptions->setSize(w-100, h-90);
-				atcDialogCommunicationOptions->reveal();
-				atcDialogMessage -> setLabel( "ATC Menu" );
-				atcDialogMessage -> setPosition(w / 2, h - 30);
-			} else {
-				atcDialogCommunicationOptions->hide();
-				atcDialogMessage -> setLabel( "No transmission available" );
-				atcDialogMessage -> setPosition(w / 2, h - 30);
-			}
-		}
-	} else {
-		atcDialogCommunicationOptions->hide();
-		atcDialogMessage -> setLabel( "Not currently tuned to any ATC service" );
-		atcDialogFrame->setSize(w, h);
-		atcDialogMessage -> setPosition(w / 2, h - 30);
+
+	if (!atcptr) {
+		label = "Not currently tuned to any ATC service";
+		mkDialog(label.c_str());
+		return;
 	}
-		
-	FG_PUSH_PUI_DIALOG(atcDialog);
+
+	if(atcptr->GetType() == ATIS) {
+		label = "Tuned to ATIS - no communication possible";
+		mkDialog(label.c_str());
+		return;
+	}
+
+	atcmentry_vec_type atcmlist = (available_dialog[atcptr->GetType()])[atcptr->get_ident()];
+	atcmentry_vec_iterator current = atcmlist.begin();
+	atcmentry_vec_iterator last = atcmlist.end();
+	
+	if(!atcmlist.size()) {
+		label = "No transmission available";
+		mkDialog(label.c_str());
+		return;
+	}
+
+	const int bufsize = 32;
+	char buf[bufsize];
+	// loop over all entries in atcmentrylist
+	for (int n = 0; n < 10; ++n) {
+		snprintf(buf, bufsize, "/sim/atc/opt[%d]", n);
+		fgSetBool(buf, false);
+
+		if (current == last)
+			continue;
+
+		// add transmission button (modified copy of <button-template>)
+		SGPropertyNode *entry = button_group->getNode("button", n, true);
+		copyProperties(button_group->getNode("button-template", true), entry);
+		entry->removeChildren("hide", false);
+		entry->setStringValue("property", buf);
+		if (n == 0)
+			entry->setBoolValue("default", true);
+
+		snprintf(buf, bufsize, "%d", n + 1);
+		string legend = string(buf) + ". " + current->menuentry;
+		entry->setStringValue("legend", legend.c_str());
+		entry->setIntValue("binding/value", n);
+		current++;
+	}
+
+	_gui->showDialog(dialog_name);
+	return;
 }
 
-void FGATCDialog::PopupCallback() {
+void FGATCDialog::PopupCallback(int num) {
 	FGATC* atcptr = globals->get_ATC_mgr()->GetComm1ATCPointer();	// FIXME - Hardwired to comm1 at the moment
 
-	if(atcptr) {
-		if(atcptr->GetType() == APPROACH) {
-			switch(atcDialogCommunicationOptions->getValue()) {
-			case 0:
-				fgSetBool("/sim/atc/opt0",true);
-				break;
-			case 1:
-				fgSetBool("/sim/atc/opt1",true);
-				break;
-			case 2:
-				fgSetBool("/sim/atc/opt2",true);
-				break;
-			case 3:
-				fgSetBool("/sim/atc/opt3",true);
-				break;
-			default:
-				break;
-			}
-		} else if(atcptr->GetType() == TOWER) {
-			//cout << "TOWER " << endl;
-			//cout << "ident is " << atcptr->get_ident() << endl;
-			atcmentry_vec_type atcmlist = (available_dialog[TOWER])[atcptr->get_ident()];
-			if(atcmlist.size()) {
-				//cout << "Doing callback...\n";
-				ATCMenuEntry a = atcmlist[atcDialogCommunicationOptions->getValue()];
-				atcptr->SetFreqInUse();
-				// This is the user's speech getting displayed.
-				globals->get_ATC_display()->RegisterSingleMessage(atcptr->GenText(a.transmission, a.callback_code));
-				_callbackPending = true;
-				_callbackTimer = 0.0;
-				_callbackWait = 5.0;
-				_callbackPtr = atcptr;
-				_callbackCode = a.callback_code;
-			} else {
-				//cout << "No options available...\n";
-			}
-			//cout << "Donded" << endl;
+	if (!atcptr)
+		return;
+
+	if (atcptr->GetType() == TOWER) {
+		//cout << "TOWER " << endl;
+		//cout << "ident is " << atcptr->get_ident() << endl;
+		atcmentry_vec_type atcmlist = (available_dialog[TOWER])[atcptr->get_ident()];
+		if(atcmlist.size()) {
+			//cout << "Doing callback...\n";
+			ATCMenuEntry a = atcmlist[num];
+			atcptr->SetFreqInUse();
+			// This is the user's speech getting displayed.
+			globals->get_ATC_display()->RegisterSingleMessage(atcptr->GenText(a.transmission, a.callback_code));
+			_callbackPending = true;
+			_callbackTimer = 0.0;
+			_callbackWait = 5.0;
+			_callbackPtr = atcptr;
+			_callbackCode = a.callback_code;
+		} else {
+			//cout << "No options available...\n";
 		}
+		//cout << "Donded" << endl;
 	}
 }
 
+// map() key data type (removes duplicates and sorts by distance)
+struct atcdata {
+	atcdata() {}
+	atcdata(const string i, const string n, const double d) {
+		id = i, name = n, distance = d;
+	}
+	bool operator<(const atcdata& a) const {
+		return a.id != id && a.distance > distance;
+	}
+	bool operator==(const atcdata& a) const {
+		return a.distance == distance && a.id == id;
+	}
+	string id;
+	string name;
+	double distance;
+};
+
 void FGATCDialog::FreqDialog() {
+	const char *dialog_name = "atc-freq-search";
+	SGPropertyNode_ptr dlg = _gui->getDialog(dialog_name);
+	if (!dlg)
+		return;
+
+	_gui->closeDialog(dialog_name);
+
+	SGPropertyNode_ptr button_group = namedNode(dlg->getChildren("group"), "quick-buttons");
+	// remove all dynamic ATC buttons
+	button_group->removeChildren("button", false);
 
 	// Find the ATC stations within a reasonable range (about 40 miles?)
-	//comm_list_type atc_stations;
-	//comm_list_iterator atc_stat_itr;
+	comm_list_type atc_stations;
+	comm_list_iterator atc_stat_itr;
 	
-	//double lon = fgGetDouble("/position/longitude-deg");
-	//double lat = fgGetDouble("/position/latitude-deg");
-	//double elev = fgGetDouble("/position/altitude-ft");
-	
-	/*
+	double lon = fgGetDouble("/position/longitude-deg");
+	double lat = fgGetDouble("/position/latitude-deg");
+	double elev = fgGetDouble("/position/altitude-ft");
+	Point3D aircraft = sgGeodToCart(Point3D(lon * SGD_DEGREES_TO_RADIANS,
+		lat * SGD_DEGREES_TO_RADIANS, elev));
+
 	// search stations in range
 	int num_stat = current_commlist->FindByPos(lon, lat, elev, 40.0, &atc_stations);
 	if (num_stat != 0) {
-	} else {
-		// Make up a message saying no things in range
+		map<atcdata, bool> uniq;
+		// fill map (sorts by distance)
+		comm_list_iterator itr = atc_stations.begin();
+		for (; itr != atc_stations.end(); ++itr) {
+			Point3D station = Point3D(itr->x, itr->y, itr->z);
+			double distance = aircraft.distance3Dsquared(station);
+			uniq[atcdata(itr->ident, itr->name, distance)] = true;
+		}
+		// create button per map entry (modified copy of <button-template>)
+		map<atcdata, bool>::iterator uit = uniq.begin();
+		for (int n = 0; uit != uniq.end() && n < 6; ++uit, ++n) { // max 6 buttons
+			SGPropertyNode *entry = button_group->getNode("button", n, true);
+			copyProperties(button_group->getNode("button-template", true), entry);
+			entry->removeChildren("hide", false);
+			entry->setStringValue("legend", uit->first.id.c_str());
+			entry->setStringValue("binding[0]/value", uit->first.id.c_str());
+		}
 	}
-	*/
-	
-	// TODO - it would be nice to display a drop-down list of airports within the general vicinity of the user
-	//        in addition to the general input box (started above).
-	
-	atcFreqDialogInput->setValue("");
-	atcFreqDialogInput->acceptInput();
-	FG_PUSH_PUI_DIALOG(atcFreqDialog);
+
+	// (un)hide message saying no things in range
+	SGPropertyNode_ptr range_error = namedNode(dlg->getChildren("text"), "no-atc-in-range");
+	range_error->setBoolValue("hide", num_stat);
+
+	_gui->showDialog(dialog_name);
 }
 
 void FGATCDialog::FreqDisplay(string& ident) {
+	const char *dialog_name = "atc-freq-display";
+	SGPropertyNode_ptr dlg = _gui->getDialog(dialog_name);
+	if (!dlg)
+		return;
+
+	_gui->closeDialog(dialog_name);
+
+	SGPropertyNode_ptr freq_group = namedNode(dlg->getChildren("group"), "frequency-list");
+	// remove all frequency entries
+	freq_group->removeChildren("group", false);
 
 	atcUppercase(ident);
-	
 	string label;
-	char *s;
-	
+
+	FGAirport a;
+	if (!dclFindAirportID(ident, &a)) {
+		label = "Airport " + ident + " not found in database.";
+		mkDialog(label.c_str());
+		return;
+	}
+
+	// set title
+	label = ident + " Frequencies";
+	dlg->setStringValue("text/label", label.c_str());
+
 	int n = 0;	// Number of ATC frequencies at this airport
-	string freqs[ATC_MAX_FREQ_DISPLAY];
-	char buf[8];
 
-    FGAirport a;
-    if ( dclFindAirportID( ident, &a ) ) {
-		comm_list_type stations;
-		int found = current_commlist->FindByPos(a.getLongitude(), a.getLatitude(), a.getElevation(), 20.0, &stations);
-		if(found) {
-			ostringstream ostr;
-			comm_list_iterator itr = stations.begin();
-			while(itr != stations.end()) {
-				if((*itr).ident == ident) {
-					if((*itr).type != INVALID) {
-						ostr << (*itr).type;
-						freqs[n] = ostr.str();
-                                                freqs[n].append("     -     ");
-						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
-						// Hack alert!
-						if(buf[5] == '3') buf[5] = '2';
-						if(buf[5] == '8') buf[5] = '7';
-						freqs[n] += buf;
-						ostr.seekp(0);
-						n++;
-					}
-				}
-				++itr;
-			}
+	comm_list_type stations;
+	int found = current_commlist->FindByPos(a.getLongitude(), a.getLatitude(), a.getElevation(), 20.0, &stations);
+	if(found) {
+		ostringstream ostr;
+		comm_list_iterator itr = stations.begin();
+		for (n = 0; itr != stations.end(); ++itr) {
+			if(itr->ident != ident)
+				continue;
+
+			if(itr->type == INVALID)
+				continue;
+
+			// add frequency line (modified copy of <group-template>)
+			SGPropertyNode *entry = freq_group->getNode("group", n, true);
+			copyProperties(freq_group->getNode("group-template", true), entry);
+			entry->removeChildren("hide", false);
+
+			ostr << itr->type;
+			entry->setStringValue("text[0]/label", ostr.str().c_str());
+
+			char buf[8];
+			snprintf(buf, 8, "%.2f", (itr->freq / 100.0));	// Convert from KHz to MHz
+			if(buf[5] == '3') buf[5] = '2';
+			if(buf[5] == '8') buf[5] = '7';
+			buf[7] = '\0';
+
+			entry->setStringValue("text[1]/label", buf);
+
+			ostr.seekp(0);
+			n++;
 		}
-		if(n == 0) {
-			label = "No frequencies found for airport ";
-			label += ident;
-		} else {
-			label = "Frequencies for airport ";
-			label += ident;
-			label += ":";
-		}
-    } else {
-		label = "Airport ";
-		label += ident;
-		label += " not found in database.";
+	}
+	if(n == 0) {
+		label = "No frequencies found for airport " + ident;
+		mkDialog(label.c_str());
+		return;
 	}
 
-	int hsize = 105 + (n * 30);
-	
-	atcFreqDisplayFrame->setSize(400, hsize);
-	
-	atcFreqDisplayMessage -> setPosition (40, (hsize - 30));
-	atcFreqDisplayMessage -> setValue    (label.c_str());
-	atcFreqDisplayMessage -> getValue    (&s);
-	atcFreqDisplayMessage -> setLabel    (s);
-	
-	for(int i=0; i<n; ++i) {
-		atcFreqDisplayText[i] -> setPosition(40, hsize - 65 - (30 * i));
-		atcFreqDisplayText[i] -> setValue(freqs[i].c_str());
-		atcFreqDisplayText[i] -> getValue (&s);
-		atcFreqDisplayText[i] -> setLabel (s);
-		atcFreqDisplayText[i] -> reveal();
-	}
-	for(int j=n; j<ATC_MAX_FREQ_DISPLAY; ++j) {
-		atcFreqDisplayText[j] -> hide();
-	}
-	
-	FG_PUSH_PUI_DIALOG(atcFreqDisplay);
-	
+	_gui->showDialog(dialog_name);
 }
 
