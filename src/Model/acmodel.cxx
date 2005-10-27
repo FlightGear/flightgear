@@ -71,7 +71,7 @@ FGAircraftModel::FGAircraftModel ()
   : _aircraft(0),
     _selector(new ssgSelector),
     _scene(new ssgRoot),
-    _nearplane(0.01f),
+    _nearplane(0.10f),
     _farplane(1000.0f)
 {
 }
