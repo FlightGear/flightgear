@@ -443,7 +443,7 @@ int MIDGTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
         return id;
     }
 
-    cout << "Check sum failure!" << endl;
+    // cout << "Check sum failure!" << endl;
     return -1;
 }
 

@@ -519,12 +519,14 @@ int main( int argc, char **argv ) {
             //      << endl;
             // cout << (double)current_time << " " << pos.lat_deg << ", "
             //      << pos.lon_deg << " " << att.yaw_deg << endl;
+            if ( pos.lat_deg > 50 ) {
             printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
                     current_time,
                     pos.lat_deg, pos.lon_deg, pos.altitude_msl,
                     att.yaw_rad * 180.0 / SG_PI,
                     att.pitch_rad * 180.0 / SG_PI,
                     att.roll_rad * 180.0 / SG_PI );
+	    }
 
             send_data( pos, att );
 
@@ -606,12 +608,14 @@ int main( int argc, char **argv ) {
                 }
             }
 
+	    if ( pos.lat_deg > 50 ) {
             printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
                     current_time,
                     pos.lat_deg, pos.lon_deg, pos.altitude_msl,
                     att.yaw_rad * 180.0 / SG_PI,
                     att.pitch_rad * 180.0 / SG_PI,
                     att.roll_rad * 180.0 / SG_PI );
+	    }
 
             send_data( pos, att );
         }
