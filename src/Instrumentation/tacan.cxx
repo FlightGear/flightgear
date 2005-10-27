@@ -365,7 +365,7 @@ TACAN::searchChannel (const string& _channel){
         frequency_khz = freq->get_freq();
         SG_LOG( SG_INSTR, SG_DEBUG, "freq output " << frequency_khz  );
         //check sanity
-        if (frequency_khz >9620 and  frequency_khz <= 12130)return frequency_khz/100;
+        if (frequency_khz >9620 && frequency_khz <= 12130)return frequency_khz/100;
     }
     return frequency_khz = 0;
 } // end TACAN::searchChannel
