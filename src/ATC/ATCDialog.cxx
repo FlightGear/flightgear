@@ -71,14 +71,18 @@ static void atcUppercase(string &s) {
 }
 
 // find child whose <name>...</name> entry matches 'name'
-static SGPropertyNode_ptr namedNode(const vector<SGPropertyNode_ptr> &children, const char *name) {
-	SGPropertyNode_ptr ret;
-	for (int i = 0; i < children.size(); i++)
-		if (!strcmp(children[i]->getStringValue("name"), name)) {
-			ret = children[i];
-			break;
-		}
-	return ret;
+static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name) {
+	SGPropertyNode* p;
+
+	for (int i = 0; i < prop->nChildren(); i++)
+		if ((p = getNamedNode(prop->getChild(i), name)))
+			return p;
+
+
+	if (!strcmp(prop->getStringValue("name"), name))
+		return prop;
+
+	return 0;
 }
 
 
@@ -192,7 +196,7 @@ void FGATCDialog::PopupDialog() {
 
 	_gui->closeDialog(dialog_name);
 
-	SGPropertyNode_ptr button_group = namedNode(dlg->getChildren("group"), "transmission-choice");
+	SGPropertyNode_ptr button_group = getNamedNode(dlg, "transmission-choice");
 	// remove all transmission buttons
 	button_group->removeChildren("button", false);
 
@@ -303,7 +307,7 @@ void FGATCDialog::FreqDialog() {
 
 	_gui->closeDialog(dialog_name);
 
-	SGPropertyNode_ptr button_group = namedNode(dlg->getChildren("group"), "quick-buttons");
+	SGPropertyNode_ptr button_group = getNamedNode(dlg, "quick-buttons");
 	// remove all dynamic ATC buttons
 	button_group->removeChildren("button", false);
 
@@ -340,7 +344,7 @@ void FGATCDialog::FreqDialog() {
 	}
 
 	// (un)hide message saying no things in range
-	SGPropertyNode_ptr range_error = namedNode(dlg->getChildren("text"), "no-atc-in-range");
+	SGPropertyNode_ptr range_error = getNamedNode(dlg, "no-atc-in-range");
 	range_error->setBoolValue("hide", num_stat);
 
 	_gui->showDialog(dialog_name);
@@ -354,7 +358,7 @@ void FGATCDialog::FreqDisplay(string& ident) {
 
 	_gui->closeDialog(dialog_name);
 
-	SGPropertyNode_ptr freq_group = namedNode(dlg->getChildren("group"), "frequency-list");
+	SGPropertyNode_ptr freq_group = getNamedNode(dlg, "frequency-list");
 	// remove all frequency entries
 	freq_group->removeChildren("group", false);
 
