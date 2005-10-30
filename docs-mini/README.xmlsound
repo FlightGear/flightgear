@@ -1,24 +1,9 @@
 Users Guide to FlightGear sound configuration
-Version 0.7.11, apr 27 2002
-Author: Erik Hofman <erik@ehofman.com>
+Version 0.9.8, October 30, 2005
+Author: Erik Hofman <erik at ehofman dot com>
 
 This document is an attempt to describe the configuration of
-FlightGear flight simulator's aircraft sound via XML.
-
-Some History:
-------------
-Older versions of FGFS had a hard coded audio layer.  This was a
-than ideal state of affairs due to FGFS ability to use different
-aircraft models. Being primarily developed on UNIX type systems, a
-modular approach is taken towards the simulation. To date, most
-alternatives to the default Cessna 172 aircraft are the product
-of research institutions interested in the flight characteristics and
-not cosmetics.  The result of this was that one could fly the X-15 or
-a Boeing 747 but be limited to C172 sounds.
-
-A rewrite of the sound code was done around v0.7.10 by Erik Hofman
-allowing for configuration of the sounds via XML to address this
-limitation.
+FlightGear flight simulator's aircraft sound in XML.
 
 Sound Architecture:
 ------------------
@@ -33,8 +18,8 @@ The top level sound configuration file is composed of a <fx>, a
 <name>, a <path> sound file and zero or more <volume> and/or <pitch>
 definitions.
 
-[ Paths are relative to $FG_ROOT (the installed location of FGFS data files.) ]
-[ Absolute paths may be used.Comments are bracketed with <!-- -->.            ]
+[ Paths are relative to $FG_ROOT (the root of the installed base package .) ]
+[ Absolute paths may be used. Comments are bracketed with <!-- -->.         ]
 
 A limited sound configuration file would look something like this:
 
@@ -71,8 +56,8 @@ and is named wasp.wav. The event is started when the property
 /engines/engine/running becomes non zero. 
 
 When that happens, the sound will be played looped (see <mode>) until the
-property returns zero again. As you can see the volume is mp-osi dependant,
-and the pitch of the sound depents on the engine rpm.
+property returns zero again. As you can see the volume is mp-osi dependent,
+and the pitch of the sound depends on the engine rpm.
 
 Configuration description:
 -------------------------
@@ -81,8 +66,8 @@ Configuration description:
  	Named FX subtree living under /sim/sound
  
  < ... >
- 	This is the event seperator. The text inside the brackets
- 	can be anything. Bit it is adviced to give it a meaningfull name
+ 	This is the event separator. The text inside the brackets
+ 	can be anything. Bit it is advised to give it a meaningful name
 	like: crank, engine, rumble, gear, squeal, flap, wind or stall
  
  	The value can be defined multiple times, thus anything which is
@@ -96,7 +81,7 @@ Configuration description:
 	Multiple definitions of the same name will allow multiple sections
 	to interfere in the starting and stopping of the sample.
 
-	This method can't be used to controll the pitch or volume of the 
+	This method can't be used to control the pitch or volume of the 
 	sample, but instead multiple volume or pitch section should be
 	included inside the same event.
 
@@ -125,7 +110,7 @@ Configuration description:
 	An event should define either a condition or a property.
  
    <property>
- 	Define which property triggers the event, and reffers to a node
+ 	Define which property triggers the event, and refers to a node
  	in the FlightGear property tree. Action is taken when the property
 	is non zero.
 
@@ -154,13 +139,13 @@ Configuration description:
 	but instead will be used in the multiplication section.
  
      <property>
- 	Defins which property supplies the value for the calculation.
+ 	Defines which property supplies the value for the calculation.
 	Either a <property> or an <internal> should be defined.
- 	The value is treatened as a floating point number.
+ 	The value is threated as a floating point number.
 
      <internal>
-	Defins which internal variable should be used for the calculation.
-	The value is treatened as a floating point number.
+	Defines which internal variable should be used for the calculation.
+	The value is threated as a floating point number.
 	The following internals are available at this time:
 
 	dt_play:	the number of seconds since the sound started playing.
@@ -171,7 +156,7 @@ Configuration description:
 	Defines the function that should be used upon the property
 	before it is used for calculating the net result:
 
- 	lin:		lineair handling of the property value.
+ 	lin:		linear handling of the property value.
  			this is the default.
  
  	ln:		convert the property value to a natural logarithmic
@@ -182,7 +167,7 @@ Configuration description:
  			value before scaling it. Anything below 1 will return
 			zero.
 
-	inv:		inverse lineair handling (1/x).
+	inv:		inverse linear handling (1/x).
 
 	abs:		absolute handling of the value (always positive).
 
@@ -197,16 +182,16 @@ Configuration description:
  
      <offset>
  	The initial value for this sound. This value is also used as an
- 	offset value for calulating the end result.
+ 	offset value for calculating the end result.
  
      <min>
  	Minimum allowed value.
- 	This is usefull if sounds start to sound funny. Anything lower
+ 	This is useful if sounds start to sound funny. Anything lower
  	will be truncated to this value.
  
      <max>
  	Maximum allowed value.
- 	This is usefull if sounds gets to loud. Anything higher will be
+ 	This is useful if sounds gets to loud. Anything higher will be
  	truncated to this value.
 
    <position>
@@ -262,10 +247,10 @@ Configuration description:
         This can be useful for limiting cockpit sounds to the cockpit.
 
 
-Creating a configrationfile:
----------------------------
+Creating a configration file:
+----------------------------
 
-To make things easy, there is a default falue for most entries to allow a
+To make things easy, there is a default value for most entries to allow a
 sane configuration when a certain entry is omitted.
 
 Default values are:
