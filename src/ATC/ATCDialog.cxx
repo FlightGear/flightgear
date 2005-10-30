@@ -78,7 +78,6 @@ static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name) {
 		if ((p = getNamedNode(prop->getChild(i), name)))
 			return p;
 
-
 	if (!strcmp(prop->getStringValue("name"), name))
 		return prop;
 
@@ -289,10 +288,10 @@ struct atcdata {
 		id = i, name = n, distance = d;
 	}
 	bool operator<(const atcdata& a) const {
-		return a.id != id && a.distance > distance;
+		return id != a.id && distance < a.distance;
 	}
 	bool operator==(const atcdata& a) const {
-		return a.distance == distance && a.id == id;
+		return distance == a.distance && id == a.id;
 	}
 	string id;
 	string name;
