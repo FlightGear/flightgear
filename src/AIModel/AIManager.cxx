@@ -444,6 +444,8 @@ ssgBranch * FGAIManager::getModel(const string& path) const
 
 void FGAIManager::setModel(const string& path, ssgBranch *model)
 {
+  if (model)
+    model->ref();
   loadedModels.push_back(FGModelID(path,model));
 }
 
