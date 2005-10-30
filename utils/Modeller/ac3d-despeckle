@@ -1,0 +1,194 @@
+#!/usr/bin/perl -w
+# $Id$
+# Melchior FRANZ  < mfranz # aon : at >  Public Domain
+#
+# Older nVidia cards like the GF4 MX440 don't like UV faces
+# where all cooridnates are equal, and thus don't have an area.
+# This leads to grey spots that are constantly going on and off.
+# The script fixes UV faces with 3 and 4 references by assigning
+# a one (half)pixel sized area, and moves coordinates into the
+# texture area if necessary.
+#
+use strict;
+use POSIX qw(floor);
+
+my $SELF = $0;
+$SELF =~ s,.*\/,,;
+
+my $VERBOSE = 0;
+my $NOOP = 0;
+my $TEXPATH = ".";
+
+my $help = <<EOF;
+Usage:
+	$SELF [-v] [-n] [-t <path>] <infile.ac >outfile.ac
+
+Options:
+	-h          this help
+	-v          verbose output (also shows line numbers if used twice: -v -v)
+	-n          dry run
+	-t <path>   texture directory (default $TEXPATH)
+
+Output:
+	#           BAD    (face with identical UV coords; will be fixed)
+	?           CHECK  (only two UV coordinates or more than 4; could be a problem)
+	.           OK     (wrong coordinates, but no texture assigned; ignore)
+EOF
+
+
+my $OBJECTNAME;
+my $TEXTURE;
+my $PIXW = 0;
+my $PIXH = 0;
+
+sub fatal($) {
+	die shift;
+}
+
+sub report($) {
+	print STDERR shift;
+	print STDERR "[$.] " if $VERBOSE > 1;
+}
+
+
+sub parse_args() {
+	while (@ARGV) {
+		my $arg = shift @ARGV;
+		if ($arg eq '-h' or $arg eq '--help') {
+			print STDERR $help;
+			exit 0;
+
+		} elsif ($arg eq '-v' or $arg eq '--verbose') {
+			$VERBOSE++;
+
+		} elsif ($arg eq '-n' or $arg eq '--dry-run') {
+			$NOOP = 1;
+
+		} elsif ($arg eq '-t') {
+			$arg = shift @ARGV;
+			defined $arg or fatal('-t option without <text> argument');
+			$TEXPATH = $arg;
+		}
+	}
+}
+
+
+sub sgisize($) {
+	my $name = shift;
+	my $i;
+	-f $name or fatal("cannot find texture '$name'");
+	-s $name > 512 or fatal("'$name' cannot be an SGI image (too small)");
+	open(IMG, "<$name") || fatal("cannot open file '$name': $!");
+	read(IMG, $i, 2);
+	unpack("n", $i) == 474 or fatal("'$name' cannot be an SGI image (wrong magic number)");
+
+	my ($x, $y);
+	seek(IMG, 6, 0);
+	read(IMG, $x, 2);
+	read(IMG, $y, 2);
+	close IMG or fatal("cannot close file '$name': $!");
+	return (unpack("n", $x), unpack("n", $y));
+}
+
+
+
+
+# main()
+
+parse_args();
+print STDERR "\033[35mTEXTURE PATH: $TEXPATH\033[m" if $VERBOSE;
+
+
+while (<>) {
+	if (/^OBJECT /) {
+		undef $TEXTURE;
+
+	} elsif (/^name\s+(.*)/) {
+		$OBJECTNAME = $1;
+		$OBJECTNAME =~ /"(.*)"/ and $OBJECTNAME = $1;
+		print STDERR "\033[35;1m\nNAME: $OBJECTNAME\033[m " if $VERBOSE;
+
+	} elsif (/^texture\s+(.*)/) {
+		$TEXTURE = $1;
+		$TEXTURE =~ /"(.*)"/ and $TEXTURE = $1;
+		my ($WIDTH, $HEIGHT) = sgisize($TEXPATH . '/' . $TEXTURE);
+		print STDERR "\033[33;1m\nTEXTURE: $TEXTURE  ($WIDTH x $HEIGHT)\033[m " if $VERBOSE;
+		$PIXW = 1.0 / $WIDTH;
+		$PIXH = 1.0 / $HEIGHT;
+
+	} elsif (/^SURF /) {
+		print $_ unless $NOOP;
+
+		my $mat = <>;
+		$mat =~ /^mat / or fatal("line $.: mat entry missing");
+		print $mat unless $NOOP;
+
+		my $refs = <>;
+		$refs =~ /^refs\s+(\d+)/ or fatal("line $.: refs entry missing");
+		print $refs unless $NOOP;
+		my $n = $1;
+
+		if ($n < 3 or $n > 4) {
+			report("?") if $VERBOSE;
+			unless ($NOOP) {
+				print scalar(<>) foreach (0 .. $n);
+			}
+			next;
+		}
+
+		my (@ref0, @ref1, @ref2, @ref3);
+		@ref0 = split /\s+/, <>;
+		@ref1 = split /\s+/, <>;
+		@ref2 = split /\s+/, <>;
+		@ref3 = split /\s+/, <> if $n == 4;
+
+		goto writeuv if $ref0[1] != $ref1[1] or $ref0[2] != $ref1[2] or $ref1[1] != $ref2[1] or $ref1[2] != $ref2[2];
+		goto writeuv if $1 == 4 and ($ref2[1] != $ref3[1] or $ref2[2] != $ref3[2]);
+
+
+		if (defined $TEXTURE) {
+			report("#") if $VERBOSE;
+
+			my ($x, $y) = @ref0[1, 2];
+
+			$x = -0.5 if $x < -0.5;
+			$x = 0.5 - $PIXW if $x > 0.5 - $PIXW;
+			$y = -0.5 if $y < -0.5;
+			$y = 0.5 - $PIXH if $y > 0.5 - $PIXH;
+
+			$x -= $x - POSIX::floor($x / $PIXW) * $PIXW;
+			$y -= $y - POSIX::floor($y / $PIXH) * $PIXH;
+
+			$ref0[1] = $x, $ref0[2] = $y;
+			$ref1[1] = $x + $PIXW;
+			$ref2[1] = $x + $PIXW, $ref2[2] = $y + $PIXH;
+			$ref3[2] = $y + $PIXH if $n == 4;
+
+		} else {
+			report(".") if $VERBOSE;
+		}
+
+
+writeuv:
+		unless ($NOOP) {
+			print join " ", @ref0;
+			print "\n";
+			print join " ", @ref1;
+			print "\n";
+			print join " ", @ref2;
+			print "\n";
+			if ($n == 4) {
+				print join " ", @ref3;
+				print "\n";
+			}
+		}
+		next;
+	}
+	print unless $NOOP;
+}
+
+print STDERR "\n" if $VERBOSE;
+exit 0;
+
+
+
