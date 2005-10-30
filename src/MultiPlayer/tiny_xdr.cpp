@@ -2,7 +2,7 @@
 //
 //	Tiny XDR implementation for flightgear
 //	written by Oliver Schroeder
-//	released to the puiblic domain
+//	released to the public domain
 //
 //	This implementation is not complete, but implements
 //	everything we need.

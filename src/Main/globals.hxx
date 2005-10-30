@@ -80,8 +80,7 @@ class FGModelMgr;
 class FGRouteMgr;
 class FGScenery;
 #ifdef FG_MPLAYER_AS
-class FGMultiplayRxMgr;
-class FGMultiplayTxMgr;
+class FGMultiplayMgr;
 #endif
 class FGPanel;
 class FGTileMgr;
@@ -214,9 +213,7 @@ private:
 
 #ifdef FG_MPLAYER_AS
     //Mulitplayer managers
-    FGMultiplayTxMgr *multiplayer_tx_mgr;
-
-    FGMultiplayRxMgr *multiplayer_rx_mgr;
+    FGMultiplayMgr *multiplayer_mgr;
 #endif
 
 public:
@@ -330,19 +327,13 @@ public:
     }
 
 #ifdef FG_MPLAYER_AS
-    inline FGMultiplayTxMgr *get_multiplayer_tx_mgr () { return multiplayer_tx_mgr; }
+    inline FGMultiplayMgr *get_multiplayer_mgr () { return multiplayer_mgr; }
 
-    inline void set_multiplayer_tx_mgr (FGMultiplayTxMgr * mgr)
+    inline void set_multiplayer_mgr (FGMultiplayMgr * mgr)
     {
-      multiplayer_tx_mgr = mgr;
+      multiplayer_mgr = mgr;
     }
 
-    inline FGMultiplayRxMgr *get_multiplayer_rx_mgr () { return multiplayer_rx_mgr; }
-
-    inline void set_multiplayer_rx_mgr (FGMultiplayRxMgr * mgr)
-    {
-      multiplayer_rx_mgr = mgr;
-    }
 #endif
 
     inline string_list *get_channel_options_list () {

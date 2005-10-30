@@ -76,8 +76,7 @@
 #include <GUI/new_gui.hxx>
 
 #ifdef FG_MPLAYER_AS
-#include <MultiPlayer/multiplaytxmgr.hxx>
-#include <MultiPlayer/multiplayrxmgr.hxx>
+#include <MultiPlayer/multiplaymgr.hpp>
 #endif
 
 
@@ -449,7 +448,7 @@ static void fgMainLoop( void ) {
 
 #ifdef FG_MPLAYER_AS
     // Update any multiplayer models
-    globals->get_multiplayer_rx_mgr()->Update();
+    globals->get_multiplayer_mgr()->Update();
 #endif
 
     // Run flight model

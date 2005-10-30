@@ -66,22 +66,22 @@ public:
     xdr_data_t  Magic;                  // Magic Value
     xdr_data_t  Version;                // Protocoll version
     xdr_data_t  MsgId;                  // Message identifier 
-    xdr_data_t  iMsgLen;                // absolue length of message
-    xdr_data_t  lReplyAddress;          // (player's receiver address
-    xdr_data_t  iReplyPort;             // player's receiver port
-    char sCallsign[MAX_CALLSIGN_LEN];   // Callsign used by the player
+    xdr_data_t  MsgLen;                 // absolue length of message
+    xdr_data_t  ReplyAddress;           // (player's receiver address
+    xdr_data_t  ReplyPort;              // player's receiver port
+    char Callsign[MAX_CALLSIGN_LEN];    // Callsign used by the player
 };
 
 // Chat message 
 class T_ChatMsg {
 public:    
-    char sText[MAX_CHAT_MSG_LEN];       // Text of chat message
+    char Text[MAX_CHAT_MSG_LEN];       // Text of chat message
 };
 
 // Position message
 class T_PositionMsg {
 public:
-    char sModel[MAX_MODEL_NAME_LEN];    // Name of the aircraft model
+    char Model[MAX_MODEL_NAME_LEN];    // Name of the aircraft model
     xdrPosition     PlayerPosition;     // players position
     xdrOrientation  PlayerOrientation;  // players orientation
 };

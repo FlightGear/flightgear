@@ -107,7 +107,7 @@ bool FGMultiplay::process() {
 
   if (get_direction() == SG_IO_IN) {
 
-    globals->get_multiplayer_rx_mgr()->ProcessData();
+    globals->get_multiplayer_mgr()->ProcessData();
 
   } else if (get_direction() == SG_IO_OUT) {
 
@@ -120,7 +120,7 @@ bool FGMultiplay::process() {
     sgQuat PlayerOrientation;
     sgMatrixToQuat(PlayerOrientation, posTrans);
 
-    globals->get_multiplayer_tx_mgr()->SendMyPosition(PlayerOrientation, PlayerPosition);
+    globals->get_multiplayer_mgr()->SendMyPosition(PlayerOrientation, PlayerPosition);
 
   }
 
@@ -137,11 +137,11 @@ bool FGMultiplay::close() {
 
   if (get_direction() == SG_IO_IN) {
 
-    globals->get_multiplayer_rx_mgr()->Close();
+    globals->get_multiplayer_mgr()->Close();
 
   } else if (get_direction() == SG_IO_OUT) {
 
-    globals->get_multiplayer_tx_mgr()->Close();
+//    globals->get_multiplayer_mgr()->Close();
 
   }
 

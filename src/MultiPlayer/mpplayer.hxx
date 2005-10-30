@@ -52,26 +52,23 @@ SG_USING_STD(string);
 // Number of seconds before a player is consider to be lost
 #define TIME_TO_LIVE 10
 
-
 class ssgEntity;
 class ssgPlacementTransform;
 
-
-class MPPlayer {
+class MPPlayer 
+{
 public:
-
-    /** Constructor */
     MPPlayer();
-
-    /** Destructor. */
     ~MPPlayer();
-
     /** Enumeration of the states for the player's data */
-    enum PlayerDataState {PLAYER_DATA_NOT_AVAILABLE = 0, PLAYER_DATA_AVAILABLE, PLAYER_DATA_EXPIRED};
-
+    enum PlayerDataState
+    {
+        PLAYER_DATA_NOT_AVAILABLE = 0, 
+        PLAYER_DATA_AVAILABLE, 
+        PLAYER_DATA_EXPIRED
+    };
     /** Player data state */
     typedef enum PlayerDataState TPlayerDataState;
-
     /** Initialises the class.
     * @param sIP IP address or host name for sending data to the player
     * @param sPort Port number for sending data to the player
@@ -80,84 +77,50 @@ public:
     * @param bLocalPlayer True if this player is the local player, else false
     * @return True if class opens successfully, else false
     */
-    bool Open(const string &sIP, const int &iPort, const string &sCallsign,
-              const string &sModelName, const bool bLocalPlayer);
-
+    bool Open(const string &IP, const int &Port, const string &Callsign,
+              const string &ModelName, const bool LocalPlayer);
     /** Closes the player connection */
     void Close(void);
-
     /** Sets the positioning matrix held for this player
     * @param PlayerPosMat4 Matrix for positioning player's aircraft
     */
     void SetPosition(const sgQuat PlayerOrientation,
                      const sgdVec3 PlayerPosition);
-
     /** Transform and place model for player
     */
     TPlayerDataState Draw(void);
-
     /** Returns the callsign for the player
     * @return Aircraft's callsign
     */
     string Callsign(void) const;
-
     /** Compares the player's callsign with the given callsign
     * @param sCallsign Callsign to compare
     * @return True if callsign matches
     */
-    bool CompareCallsign(const char *sCallsign) const;
-
+    bool CompareCallsign(const char *Callsign) const;
     /** Populates a position message for the player
     * @param MsgHdr Header to be populated
     * @param PosMsg Position message to be populated
     */
     void FillPosMsg(T_MsgHdr *MsgHdr, T_PositionMsg *PosMsg);
-
     /** Populates a mesage header with information for the player
     * @param MsgHdr Header to be populated
     * @param iMsgId Message type identifier to insert into header
     */
     void FillMsgHdr(T_MsgHdr *MsgHdr, const int iMsgId);
-
-
 private:
-
-    /** Loads the model of the aircraft */
-    void LoadModel(void);
-
-    /** True if object is initialised */
-    bool m_bInitialised;
-
-    /** Position of the player's aircraft wrt the earth fixed global system */
-    sgdVec3 m_ModelPosition;
-
-    /** Orientation the player's aircraft wrt the earth fixed global system */
-    sgQuat m_ModelOrientation;
-
-    /** Used to remove player if no activity */
-    time_t m_LastUpdate;
-
-    /** Set when the player data is updated and cleared when read */
-    bool m_bUpdated;
-
-    /** Player's callsign */
-    string m_sCallsign;
-
-    /** Aircraft model name for player */
-    string m_sModelName;
-
-    /** The player's loaded model */
-    ssgEntity *m_Model;
-
-    /** Model transform */
-    ssgPlacementTransform *m_ModelTrans;
-
-    /** True if this player is the local player */
-    bool m_bLocalPlayer;
-
-    /** Address information for the player */
-    netAddress m_PlayerAddress;
-
+    void    LoadModel(void);    // Loads the model of the aircraft
+    bool    m_Initialised;      // True if object is initialised 
+    sgdVec3 m_ModelPosition;    // players global position on earth
+    sgQuat  m_ModelOrientation; // players global orientation
+    time_t  m_LastUpdate;       // last time update data received
+    bool    m_Updated;          // Set when the player data is updated
+    string  m_Callsign;         // players callsign
+    bool    m_LocalPlayer;      // true if player is the local player
+    string  m_ModelName;        // Aircraft model name for player
+    ssgEntity *m_Model;         // The player's loaded model
+    netAddress m_PlayerAddress; // Address information for the player
+    ssgPlacementTransform *m_ModelTrans;    // Model transform
 };
 
 #endif

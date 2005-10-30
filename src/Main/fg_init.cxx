@@ -114,8 +114,7 @@
 #include <Traffic/TrafficMgr.hxx>
 
 #ifdef FG_MPLAYER_AS
-#include <MultiPlayer/multiplaytxmgr.hxx>
-#include <MultiPlayer/multiplayrxmgr.hxx>
+#include <MultiPlayer/multiplaymgr.hpp>
 #endif
 
 #include <Environment/environment_mgr.hxx>
@@ -1842,11 +1841,8 @@ bool fgInitSubsystems() {
     // Initialize multiplayer subsystem
     ////////////////////////////////////////////////////////////////////
 
-    globals->set_multiplayer_tx_mgr(new FGMultiplayTxMgr);
-    globals->get_multiplayer_tx_mgr()->init();
-
-    globals->set_multiplayer_rx_mgr(new FGMultiplayRxMgr);
-    globals->get_multiplayer_rx_mgr()->init();
+    globals->set_multiplayer_mgr(new FGMultiplayMgr);
+    globals->get_multiplayer_mgr()->init();
 #endif
 
     ////////////////////////////////////////////////////////////////////////

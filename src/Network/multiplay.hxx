@@ -34,8 +34,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Model/acmodel.hxx>
-#include <MultiPlayer/multiplaytxmgr.hxx>
-#include <MultiPlayer/multiplayrxmgr.hxx>
+#include <MultiPlayer/multiplaymgr.hpp>
 
 #include "protocol.hxx"
 
