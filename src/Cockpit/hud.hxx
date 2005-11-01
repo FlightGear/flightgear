@@ -54,8 +54,8 @@
 
 #include <Include/fg_typedefs.h>
 #include <Aircraft/aircraft.hxx>
+#include <Aircraft/controls.hxx>
 #include <FDM/flight.hxx>
-#include <Controls/controls.hxx>
 #include <GUI/gui.h>
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>

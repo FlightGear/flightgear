@@ -29,7 +29,7 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 
-#include <Controls/controls.hxx>
+#include <Aircraft/controls.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 

@@ -57,6 +57,7 @@
 #include <Time/light.hxx>
 #include <Time/light.hxx>
 #include <Aircraft/aircraft.hxx>
+// #include <Aircraft/replay.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/hud.hxx>
@@ -66,7 +67,6 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <ATC/ATCdisplay.hxx>
-#include <Replay/replay.hxx>
 #include <GUI/new_gui.hxx>
 
 #include "splash.hxx"

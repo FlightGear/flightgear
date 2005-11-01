@@ -512,7 +512,6 @@ AC_CONFIG_FILES([ \
 	src/Autopilot/Makefile \
 	src/Cockpit/Makefile \
 	src/Cockpit/built_in/Makefile \
-	src/Controls/Makefile \
 	src/Environment/Makefile \
 	src/FDM/Balloon/Makefile \
 	src/FDM/ExternalNet/Makefile \
@@ -535,8 +534,6 @@ AC_CONFIG_FILES([ \
 	src/MultiPlayer/Makefile \
 	src/Navaids/Makefile \
 	src/Network/Makefile \
-	src/Objects/Makefile \
-	src/Replay/Makefile \
 	src/Scenery/Makefile \
 	src/Scripting/Makefile \
 	src/Sound/Makefile \

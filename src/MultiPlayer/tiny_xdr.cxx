@@ -13,7 +13,7 @@
 
 #include <plib/ul.h>
 
-#include "tiny_xdr.hpp"
+#include "tiny_xdr.hxx"
 
 /* XDR 8bit integers */
 xdr_data_t

@@ -660,7 +660,6 @@ FGControls::bind ()
 	&FGControls::get_dome_norm, &FGControls::set_dome_norm);
   fgSetArchivable("/controls/lighting/dome-norm"); 
  
-#ifdef FG_HAVE_ARMAMENT
   // armament
   fgTie("/controls/armament/master-arm", this,
 	&FGControls::get_master_arm, &FGControls::set_master_arm);
@@ -702,8 +701,6 @@ FGControls::bind ()
 	&FGControls::get_jettison_all, &FGControls::set_jettison_all);
       fgSetArchivable(name);
   }
-
-#endif
 
   // seat
   fgTie("/controls/seat/vertical-adjust", this,
@@ -979,7 +976,6 @@ void FGControls::unbind ()
   fgUntie("/controls/lighting/instruments-norm");  
   fgUntie("/controls/lighting/dome-norm");
 
-#ifdef FG_HAVE_ARMAMENT
   fgUntie("/controls/armament/master-arm");  
   fgUntie("/controls/armament/station-select");  
   fgUntie("/controls/armament/release-all");  
@@ -998,7 +994,7 @@ void FGControls::unbind ()
        "/controls/armament/station[%d]/jettison-all", index);
     fgUntie(name);
   }
-#endif
+
   fgUntie("/controls/seat/vertical-adjust");  
   fgUntie("/controls/seat/fore-aft-adjust");  
   for (index = 0; index < MAX_EJECTION_SEATS; index++) {
@@ -2014,8 +2010,6 @@ FGControls::move_dome_norm( double amt )
   CLAMP( &dome_norm, 0.0, 1.0 );
 }
 
-#ifdef FG_HAVE_ARMAMENT
-
 void
 FGControls::set_master_arm( bool val )
 {
@@ -2092,8 +2086,6 @@ FGControls::set_jettison_all( int station, bool val )
 	}
     }
 }
-
-#endif
 
 void
 FGControls::set_vertical_adjust( double pos )

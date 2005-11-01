@@ -38,13 +38,17 @@
 #   include <netinet/in.h>
 #   include <arpa/inet.h>
 #endif
-#include <plib/netSocket.h>
 #include <stdlib.h>
+
+#include <plib/netSocket.h>
+
 #include <simgear/debug/logstream.hxx>
+
 #include <Main/fg_props.hxx>
-#include "multiplaymgr.hpp"
+#include "multiplaymgr.hxx"
 #include "mpmessages.hxx"
 #include "mpplayer.hxx"
+
 #define MAX_PACKET_SIZE 1024
 
 // These constants are provided so that the ident 

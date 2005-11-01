@@ -69,10 +69,10 @@
 
 #include <Include/general.hxx>
 #include <Aircraft/aircraft.hxx>
+#include <Aircraft/controls.hxx>
 #include <Airports/simple.hxx>
 #include <Autopilot/auto_gui.hxx>
 #include <Cockpit/panel.hxx>
-#include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
 #include <Main/main.hxx>
 #include <Main/fg_init.hxx>
@@ -427,7 +427,7 @@ void fgHiResDump()
 
     message = "Snapshot saved to \"";
     message += filename;
-    message += '".';
+    message += "\".";
     mkDialog (message.c_str());
 
     free(tile);

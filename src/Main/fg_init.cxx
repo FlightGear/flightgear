@@ -64,6 +64,7 @@
 #include <simgear/timing/lowleveltime.h>
 
 #include <Aircraft/aircraft.hxx>
+#include <Aircraft/replay.hxx>
 #include <Airports/apt_loader.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
@@ -99,7 +100,6 @@
 #include <AIModel/AIManager.hxx>
 #include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
-#include <Replay/replay.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
@@ -114,7 +114,7 @@
 #include <Traffic/TrafficMgr.hxx>
 
 #ifdef FG_MPLAYER_AS
-#include <MultiPlayer/multiplaymgr.hpp>
+#include <MultiPlayer/multiplaymgr.hxx>
 #endif
 
 #include <Environment/environment_mgr.hxx>

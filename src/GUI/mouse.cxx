@@ -55,10 +55,10 @@
 
 #include <Include/general.hxx>
 #include <Aircraft/aircraft.hxx>
+#include <Aircraft/controls.hxx>
 #include <Airports/simple.hxx>
 #include <Autopilot/auto_gui.hxx>
 #include <Cockpit/panel.hxx>
-#include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>

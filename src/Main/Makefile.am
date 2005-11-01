@@ -59,7 +59,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/ATC/libATC.a \
 	$(top_builddir)/src/Cockpit/libCockpit.a \
 	$(top_builddir)/src/Cockpit/built_in/libBuilt_in.a \
-	$(top_builddir)/src/Controls/libControls.a \
 	$(top_builddir)/src/FDM/libFlight.a \
 	$(top_builddir)/src/FDM/Balloon/libBalloon.a \
 	$(top_builddir)/src/FDM/ExternalNet/libExternalNet.a \
@@ -83,7 +82,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
 	$(MPLAYER_LIBS) \
-	$(top_builddir)/src/Replay/libReplay.a \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(top_builddir)/src/Traffic/libTraffic.a \

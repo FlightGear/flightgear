@@ -407,7 +407,6 @@ public:
     inline double get_instruments_norm() const { return instruments_norm; }
     inline double get_dome_norm() const { return dome_norm; }
 
-#ifdef FG_HAVE_ARMAMENT
     // controls/armament/
     inline bool get_master_arm() const { return master_arm; }
     inline int get_station_select() const { return station_select; }
@@ -418,7 +417,6 @@ public:
     inline bool get_release_stick(int station) const { return release_stick[station]; }
     inline bool get_release_all(int station) const { return release_all[station]; }
     inline bool get_jettison_all(int station) const { return jettison_all[station]; }
-#endif
 
     // controls/seat/
     inline double get_vertical_adjust() const { return vertical_adjust; }
@@ -595,7 +593,6 @@ public:
     void set_dome_norm( double intensity );
     void move_dome_norm( double amt );
 
-#ifdef FG_HAVE_ARMAMENT
     // controls/armament/
     void set_master_arm( bool val );
     void set_station_select( int station );
@@ -606,7 +603,6 @@ public:
     void set_release_stick( int station, bool val );
     void set_release_all( int station, bool val );
     void set_jettison_all( int station, bool val );
-#endif
 
     // controls/seat/
     void set_vertical_adjust( double pos );

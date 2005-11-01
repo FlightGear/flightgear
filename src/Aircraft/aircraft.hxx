@@ -33,8 +33,9 @@
 
 
 #include <FDM/flight.hxx>
-#include <Controls/controls.hxx>
 #include <Main/fg_init.hxx>
+
+#include "controls.hxx"
 
 
 // Define a structure containing all the parameters for an aircraft

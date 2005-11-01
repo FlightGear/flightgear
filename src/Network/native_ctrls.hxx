@@ -29,13 +29,11 @@
 
 #include STL_STRING
 
-#include <Controls/controls.hxx>
-
+#include <Aircraft/controls.hxx>
 #include "protocol.hxx"
 #include "net_ctrls.hxx"
 
 SG_USING_STD(string);
-
 
 class FGNativeCtrls : public FGProtocol {
 

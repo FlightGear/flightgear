@@ -1,9 +1,3 @@
-if ENABLE_MPLAYER_AS
-MPLAYER_DIRS = MultiPlayer
-else
-MPLAYER_DIRS =
-endif
-
 SUBDIRS = \
         Include \
         Aircraft \
@@ -11,7 +5,6 @@ SUBDIRS = \
         ATC \
         Autopilot \
         Cockpit \
-        Controls \
         Environment \
         FDM \
         GUI \
@@ -21,9 +14,7 @@ SUBDIRS = \
 	AIModel \
         Navaids \
         Network \
-	$(MPLAYER_DIRS) \
-        Objects \
-	Replay \
+	MultiPlayer \
         Scenery \
 	Scripting \
         Sound \

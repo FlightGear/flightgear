@@ -29,7 +29,7 @@
 #include <simgear/scene/model/placement.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Controls/controls.hxx>
+#include <Aircraft/controls.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/UIUCModel/uiuc_aircraft.h>
 #include <Main/fg_props.hxx>

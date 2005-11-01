@@ -26,11 +26,10 @@
 #include <simgear/io/sg_socket.hxx>
 #include <simgear/constants.h>
 
-#include <Controls/controls.hxx>
-#include <Main/globals.hxx>
-
-#include <Main/fg_props.hxx> //to get ID of window (left/right or center)
+#include <Aircraft/controls.hxx>
 #include <Scenery/scenery.hxx> //to pass ground elevation to FDM
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx> //to get ID of window (left/right or center)
 
 #include "ADA.hxx"
 

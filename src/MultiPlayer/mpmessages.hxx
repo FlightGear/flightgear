@@ -35,9 +35,9 @@
 *
 ******************************************************************/
 
-#include <simgear/compiler.h>
-#include "tiny_xdr.hpp"
 #include <plib/sg.h>
+#include <simgear/compiler.h>
+#include "tiny_xdr.hxx"
 
 // magic value for messages
 const uint32_t MSG_MAGIC = 0x46474653;  // "FGFS"

@@ -55,6 +55,7 @@
 #include <simgear/scene/sky/sky.hxx>
 #include <Time/light.hxx>
 #include <Include/general.hxx>
+#include <Aircraft/replay.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/hud.hxx>
 #include <Model/panelnode.hxx>
@@ -69,14 +70,13 @@
 #include <ATC/ATCdisplay.hxx>
 #include <ATC/ATCmgr.hxx>
 #include <ATC/AIMgr.hxx>
-#include <Replay/replay.hxx>
 #include <Time/tmp.hxx>
 #include <Time/fg_timer.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <GUI/new_gui.hxx>
 
 #ifdef FG_MPLAYER_AS
-#include <MultiPlayer/multiplaymgr.hpp>
+#include <MultiPlayer/multiplaymgr.hxx>
 #endif
 
 

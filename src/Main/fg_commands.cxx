@@ -22,7 +22,7 @@
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
 #include <GUI/dialog.hxx>
-#include <Replay/replay.hxx>
+#include <Aircraft/replay.hxx>
 #include <Scenery/tilemgr.hxx>
 #if defined(HAVE_PLIB_PSL)
 #  include <Scripting/scriptmgr.hxx>

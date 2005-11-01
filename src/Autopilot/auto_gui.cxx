@@ -36,7 +36,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <FDM/flight.hxx>
-#include <Controls/controls.hxx>
 #include <Scenery/scenery.hxx>
 
 #include <simgear/constants.h>

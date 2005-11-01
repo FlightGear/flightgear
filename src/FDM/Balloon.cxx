@@ -55,7 +55,6 @@ HISTORY
 #include <simgear/misc/sg_path.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Controls/controls.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
