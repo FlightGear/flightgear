@@ -177,7 +177,10 @@ class fgPopup : public puPopup {
 public:
     fgPopup(int x, int y, bool d = true) : puPopup(x, y) { _dragging = false; _draggable = d;}
     int checkHit(int b, int up, int x, int y);
+    int checkKey(int key, int updown);
     int getHitObjects(puObject *, int x, int y);
+    puObject *getKeyObject(puObject *, int key);
+    puObject *getActiveInputField(puObject *);
 private:
     bool _draggable;
     bool _dragging;

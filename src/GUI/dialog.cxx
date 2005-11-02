@@ -11,6 +11,73 @@
 #include "AirportList.hxx"
 #include "layout.hxx"
 
+/**
+ * User data for a GUI object.
+ */
+struct GUIInfo
+{
+    GUIInfo (FGDialog * d);
+    virtual ~GUIInfo ();
+
+    FGDialog * dialog;
+    vector <FGBinding *> bindings;
+    int key;
+};
+
+
+/**
+ * Key handler.
+ */
+int fgPopup::checkKey(int key, int updown)
+{
+    if (updown == PU_UP || !isVisible() || !isActive() || window != puGetWindow())
+        return false;
+
+    puObject *input = getActiveInputField(this);
+    if (input)
+        return input->checkKey(key, updown);
+
+    puObject *object = getKeyObject(this, key);
+    if (!object)
+        return puPopup::checkKey(key, updown);
+
+    object->invokeCallback() ;
+    return true;
+}
+
+puObject *fgPopup::getKeyObject(puObject *object, int key)
+{
+    puObject *ret;
+    if(object->getType() & PUCLASS_GROUP)
+        for (puObject *obj = ((puGroup *)object)->getFirstChild();
+                obj; obj = obj->getNextObject())
+            if ((ret = getKeyObject(obj, key)))
+                return ret;
+
+    GUIInfo *info = (GUIInfo *)object->getUserData();
+    if (info && info->key == key)
+       return object;
+
+    return 0;
+}
+
+puObject *fgPopup::getActiveInputField(puObject *object)
+{
+    if(object->getType() & PUCLASS_GROUP)
+        for (puObject *obj = ((puGroup *)object)->getFirstChild();
+                obj; obj = obj->getNextObject())
+            if (getActiveInputField(obj))
+                return obj;
+
+    if (object->getType() & PUCLASS_INPUT && ((puInput *)object)->isAcceptingInput())
+        return object;
+
+    return 0;
+}
+
+/**
+ * Mouse handler.
+ */
 int fgPopup::checkHit(int button, int updown, int x, int y)
 {
     int result = puPopup::checkHit(button, updown, x, y);
@@ -66,19 +133,6 @@ int fgPopup::getHitObjects(puObject *object, int x, int y)
 ////////////////////////////////////////////////////////////////////////
 // Callbacks.
 ////////////////////////////////////////////////////////////////////////
-
-/**
- * User data for a GUI object.
- */
-struct GUIInfo
-{
-    GUIInfo (FGDialog * d);
-    virtual ~GUIInfo ();
-
-    FGDialog * dialog;
-    vector <FGBinding *> bindings;
-};
-
 
 /**
  * Action callback.
@@ -237,7 +291,8 @@ copy_from_pui (puObject * object, SGPropertyNode * node)
 ////////////////////////////////////////////////////////////////////////
 
 GUIInfo::GUIInfo (FGDialog * d)
-    : dialog(d)
+    : dialog(d),
+      key(-1)
 {
 }
 
@@ -630,6 +685,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
     vector<SGPropertyNode_ptr> bindings = props->getChildren("binding");
     if (bindings.size() > 0) {
         GUIInfo * info = new GUIInfo(this);
+        info->key = props->getIntValue("keynum", -1);
 
         for (unsigned int i = 0; i < bindings.size(); i++) {
             unsigned int j = 0;
@@ -679,13 +735,12 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
     if (c->isValid())
         object->setColourScheme(c->red(), c->green(), c->blue(), c->alpha());
 
-    const int numcol = 6;
     const struct {
         int mask;
         int id;
         const char *name;
         const char *cname;
-    } pucol[numcol] = {
+    } pucol[] = {
         { BACKGROUND, PUCOL_BACKGROUND, "background", "color-background" },
         { FOREGROUND, PUCOL_FOREGROUND, "foreground", "color-foreground" },
         { HIGHLIGHT,  PUCOL_HIGHLIGHT,  "highlight",  "color-highlight" },
@@ -693,6 +748,8 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
         { LEGEND,     PUCOL_LEGEND,     "legend",     "color-legend" },
         { MISC,       PUCOL_MISC,       "misc",       "color-misc" }
     };
+
+    const int numcol = sizeof(pucol) / sizeof(pucol[0]);
 
     for (int i = 0; i < numcol; i++) {
         bool dirty = false;
