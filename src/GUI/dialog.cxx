@@ -11,6 +11,10 @@
 #include "AirportList.hxx"
 #include "layout.hxx"
 
+////////////////////////////////////////////////////////////////////////
+// Implementation of GUIInfo.
+////////////////////////////////////////////////////////////////////////
+
 /**
  * User data for a GUI object.
  */
@@ -24,7 +28,21 @@ struct GUIInfo
     int key;
 };
 
+GUIInfo::GUIInfo (FGDialog * d)
+    : dialog(d),
+      key(-1)
+{
+}
 
+GUIInfo::~GUIInfo ()
+{
+    for (unsigned int i = 0; i < bindings.size(); i++) {
+        delete bindings[i];
+        bindings[i] = 0;
+    }
+}
+
+
 /**
  * Key handler.
  */
@@ -281,26 +299,6 @@ copy_from_pui (puObject * object, SGPropertyNode * node)
             node->setStringValue(object->getStringValue());
         }
         break;
-    }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Implementation of GUIInfo.
-////////////////////////////////////////////////////////////////////////
-
-GUIInfo::GUIInfo (FGDialog * d)
-    : dialog(d),
-      key(-1)
-{
-}
-
-GUIInfo::~GUIInfo ()
-{
-    for (unsigned int i = 0; i < bindings.size(); i++) {
-        delete bindings[i];
-        bindings[i] = 0;
     }
 }
 
