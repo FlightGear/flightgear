@@ -239,6 +239,7 @@ void FGATCDialog::PopupDialog() {
 		copyProperties(button_group->getNode("button-template", true), entry);
 		entry->removeChildren("hide", false);
 		entry->setStringValue("property", buf);
+		entry->setIntValue("keynum", '1' + n);
 		if (n == 0)
 			entry->setBoolValue("default", true);
 
@@ -291,7 +292,7 @@ struct atcdata {
 		return id != a.id && distance < a.distance;
 	}
 	bool operator==(const atcdata& a) const {
-		return distance == a.distance && id == a.id;
+		return id == a.id && distance == a.distance;
 	}
 	string id;
 	string name;
@@ -307,7 +308,7 @@ void FGATCDialog::FreqDialog() {
 	_gui->closeDialog(dialog_name);
 
 	SGPropertyNode_ptr button_group = getNamedNode(dlg, "quick-buttons");
-	// remove all dynamic ATC buttons
+	// remove all dynamic airport/ATC buttons
 	button_group->removeChildren("button", false);
 
 	// Find the ATC stations within a reasonable range (about 40 miles?)
@@ -324,7 +325,7 @@ void FGATCDialog::FreqDialog() {
 	int num_stat = current_commlist->FindByPos(lon, lat, elev, 40.0, &atc_stations);
 	if (num_stat != 0) {
 		map<atcdata, bool> uniq;
-		// fill map (sorts by distance)
+		// fill map (sorts by distance and removes duplicates)
 		comm_list_iterator itr = atc_stations.begin();
 		for (; itr != atc_stations.end(); ++itr) {
 			Point3D station = Point3D(itr->x, itr->y, itr->z);
