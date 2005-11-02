@@ -272,7 +272,11 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
 
     if(_castering) {
         _rollSpeed = Math::sqrt(vsteer*vsteer + vskid*vskid);
-        _casterAngle = Math::atan2(vskid, vsteer);
+        // Don't modify caster angle when the wheel isn't moving,
+        // or else the angle will animate the "jitter" of a stopped
+        // gear.
+        if(_rollSpeed > 0.05)
+            _casterAngle = Math::atan2(vskid, vsteer);
         return;
     } else {
         _rollSpeed = vsteer;
