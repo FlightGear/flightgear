@@ -81,11 +81,12 @@ puObject *fgPopup::getKeyObject(puObject *object, int key)
 
 puObject *fgPopup::getActiveInputField(puObject *object)
 {
+    puObject *ret;
     if(object->getType() & PUCLASS_GROUP)
         for (puObject *obj = ((puGroup *)object)->getFirstChild();
                 obj; obj = obj->getNextObject())
-            if (getActiveInputField(obj))
-                return obj;
+            if ((ret = getActiveInputField(obj)))
+                return ret;
 
     if (object->getType() & PUCLASS_INPUT && ((puInput *)object)->isAcceptingInput())
         return object;
