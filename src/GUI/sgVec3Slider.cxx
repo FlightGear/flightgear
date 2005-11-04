@@ -129,9 +129,9 @@ FloatSlider::FloatSlider ( int x, int y, int sz, float f, const char *title,
 	setCBMode   ( PUSLIDER_DELTA ) ;
 	strcpy      ( _title, title);
 	setLabel    ( _title );
-	setLabelPlace ( PUPLACE_LEFT );
+	setLabelPlace ( PUPLACE_LOWER_LEFT );
 	setLegend(_text);
-	// setLegendPlace( PUPLACE_RIGHT );
+	// setLegendPlace( PUPLACE_LOWER_RIGHT );
 }
 
 
@@ -211,9 +211,9 @@ FloatDial::FloatDial ( int x, int y, int sz, float f, const char *title,
 	setCBMode   ( PUSLIDER_DELTA ) ;
 	strcpy      ( _title, title);
 	setLabel    ( _title );
-	setLabelPlace ( PUPLACE_LEFT  );
+	setLabelPlace ( PUPLACE_LOWER_LEFT  );
 	setLegend(_text);
-	// setLegendPlace( PUPLACE_RIGHT );
+	// setLegendPlace( PUPLACE_LOWER_RIGHT );
 }
 
 
@@ -329,7 +329,7 @@ sgVec3Slider::sgVec3Slider ( int x, int y, sgVec3 cart, const char *title,
 
 	new puFrame ( 0, 0, DialogWidth, DialogHeight );
 
-	setLabelPlace( PUPLACE_DEFAULT /*PUPLACE_CENTERED*/ );
+	setLabelPlace( PUPLACE_DEFAULT /*PUPLACE_CENTERED_CENTERED*/ );
 	setLabel( Label );
 
         /* heading */

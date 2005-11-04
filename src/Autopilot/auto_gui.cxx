@@ -852,7 +852,7 @@ void NewTgtAirportInit()
         
         TgtAptDialogWPList = new puListBox ( 50, 130, 300, 320 ) ;
         TgtAptDialogWPList -> setLabel ( "Flight Plan" );
-        TgtAptDialogWPList -> setLabelPlace ( PUPLACE_ABOVE ) ;
+        TgtAptDialogWPList -> setLabelPlace ( PUPLACE_TOP_LEFT ) ;
         TgtAptDialogWPList -> setStyle ( -PUSTYLE_SMALL_SHADED ) ;
         TgtAptDialogWPList -> setValue ( 0 ) ;
 
@@ -872,7 +872,7 @@ void NewTgtAirportInit()
 
         TgtAptDialogInput   = new puInput           (50, 70, 300, 100);
         TgtAptDialogInput -> setLabel ( NewTgtAirportLabel );
-        TgtAptDialogInput -> setLabelPlace ( PUPLACE_ABOVE ) ;
+        TgtAptDialogInput -> setLabelPlace ( PUPLACE_TOP_LEFT ) ;
         TgtAptDialogInput   ->    setValue          (NewTgtAirportId);
         TgtAptDialogInput   ->    acceptInput();
         

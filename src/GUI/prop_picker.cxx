@@ -379,7 +379,7 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
   
   list_box = new puListBox ( 10, 40, w-40, h-60 ) ;
   list_box -> setLabel ( title );
-  list_box -> setLabelPlace ( PUPLACE_ABOVE ) ;
+  list_box -> setLabelPlace ( PUPLACE_TOP_LEFT ) ;
   list_box -> setStyle ( -PUSTYLE_SMALL_SHADED ) ;
   list_box -> setUserData ( this ) ;
   list_box -> setCallback ( handle_select ) ;
