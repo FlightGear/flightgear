@@ -356,11 +356,18 @@ FGGroundCache::putSurfaceLeafIntoCache(const sgdSphere *sp,
       sgdVec3 isectpoint;
       if ( sgdIsectInfLinePlane( isectpoint, tmp, down, t.plane ) &&
            fgdPointInTriangle( isectpoint, t.vertices ) ) {
-        found_ground = true;
-        sgdAddVec3(isectpoint, cache_center);
-        double this_radius = sgdLengthVec3(isectpoint);
-        if (ground_radius < this_radius)
-          ground_radius = this_radius;
+        // Compute the offset to the ground cache midpoint
+        sgdVec3 off;
+        sgdSubVec3(off, isectpoint, tmp);
+        // Only accept the altitude if the intersection point is below the
+        // ground cache midpoint
+        if (0 < sgdScalarProductVec3( off, down ) || !found_ground) {
+          found_ground = true;
+          sgdAddVec3(isectpoint, cache_center);
+          double this_radius = sgdLengthVec3(isectpoint);
+          if (ground_radius < this_radius)
+            ground_radius = this_radius;
+        }
       }
     }
   }
@@ -650,16 +657,16 @@ FGGroundCache::get_agl(double t, const double dpt[3], double max_altoff,
     sgdVec3 isecpoint;
     if ( sgdIsectInfLinePlane( isecpoint, pt, dir, triangle.plane ) &&
          sgdPointInTriangle( isecpoint, triangle.vertices ) ) {
-      // Transform to the wgs system
-      sgdAddVec3( isecpoint, cache_center );
-      // compute the radius, good enough approximation to take the geocentric radius
-      SGDfloat radius = sgdLengthSquaredVec3(isecpoint);
-      if (current_radius < radius) {
-        // Compute the vector from pt to the intersection point ...
-        sgdVec3 off;
-        sgdSubVec3(off, pt, isecpoint);
-        // ... and check if it is too high or not
-        if (-max_altoff < sgdScalarProductVec3( off, dir )) {
+      // Compute the vector from pt to the intersection point ...
+      sgdVec3 off;
+      sgdSubVec3(off, isecpoint, pt);
+      // ... and check if it is too high or not
+      if (-max_altoff < sgdScalarProductVec3( off, dir )) {
+        // Transform to the wgs system
+        sgdAddVec3( isecpoint, cache_center );
+        // compute the radius, good enough approximation to take the geocentric radius
+        SGDfloat radius = sgdLengthSquaredVec3(isecpoint);
+        if (current_radius < radius) {
           current_radius = radius;
           ret = true;
           // Save the new potential intersection point.
