@@ -102,7 +102,7 @@ public:
     double magvar;		         // local magnetic variation in degs.
 
     // hazards
-    uint32_t icing;                       // icing status could me much
+    uint32_t icing;                      // icing status could me much
                                          // more complex but I'm
                                          // starting simple here.
 
