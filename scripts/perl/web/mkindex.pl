@@ -37,7 +37,7 @@ $mdir = "Movies";
 
 $columns = 3;
 
-$wwidth = 170;
+$swidth = 170;
 $sheight = 128;
 
 $lwidth = 1024;
@@ -285,7 +285,11 @@ while ( <MASTER> ) {
         print "movie thumb geom = $geom  $twidth  $theight\n";
 
 	print OUT "<A HREF=\"$mdir/$i\">";
-	print OUT "<IMG WIDTH=$twidth HEIGHT=$theight SRC=\"$mdir/$linkname.jpg\" ALT=\"$linkname\">";
+	if ( -f "$mdir/$linkname.jpg" ) {
+	    print OUT "<IMG WIDTH=$twidth HEIGHT=$theight SRC=\"$mdir/$linkname.jpg\" ALT=\"$linkname\">";
+	} else {
+	    print OUT "$linkname";
+	}
 	print OUT "</A>\n";
 
 	if ( -f "$mdir/$linkname.txt" ) {

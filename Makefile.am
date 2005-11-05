@@ -43,47 +43,23 @@ fgfs-base-tar:
 	-cvf - \
 		data/ATC \
 		data/AUTHORS \
-                data/Aircraft/737 \
-                data/Aircraft/747 \
-                data/Aircraft/A-10 \
-                data/Aircraft/A320 \
-                data/Aircraft/AN-225 \
-                data/Aircraft/B-52F \
-                data/Aircraft/BAC-TSR2 \
-                data/Aircraft/ComperSwift \
                 data/Aircraft/Generic \
-                data/Aircraft/Hunter \
                 data/Aircraft/Instruments \
                 data/Aircraft/Instruments-3d \
-                data/Aircraft/OV10 \
-                data/Aircraft/Spitfire \
-                data/Aircraft/T38 \
                 data/Aircraft/UIUC \
-                data/Aircraft/X15 \
-                data/Aircraft/YF-23 \
-                data/Aircraft/a4 \
-                data/Aircraft/beech99 \
+                data/Aircraft/737 \
+                data/Aircraft/A-10 \
                 data/Aircraft/bo105 \
                 data/Aircraft/c172 \
-                data/Aircraft/c172-fs-set.xml \
-                data/Aircraft/c172-le \
                 data/Aircraft/c172p \
-                data/Aircraft/c172r \
-                data/Aircraft/c172x \
-                data/Aircraft/c182 \
                 data/Aircraft/c310 \
                 data/Aircraft/c310u3a \
-                data/Aircraft/dc3 \
+                data/Aircraft/Citation \
                 data/Aircraft/f16 \
-                data/Aircraft/j22 \
                 data/Aircraft/j3cub \
-                data/Aircraft/ornithopter \
+                data/Aircraft/Hunter \
                 data/Aircraft/p51d \
                 data/Aircraft/pa28-161 \
-                data/Aircraft/seahawk \
-                data/Aircraft/sgs233 \
-                data/Aircraft/t6texan2 \
-                data/Aircraft/tu154 \
                 data/Aircraft/ufo \
                 data/Aircraft/wrightFlyer1903 \
 		data/Airports \
