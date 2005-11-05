@@ -59,7 +59,13 @@ int fgPopup::checkKey(int key, int updown)
     if (!object)
         return puPopup::checkKey(key, updown);
 
-    object->invokeCallback() ;
+    // invokeCallback() isn't enough; we need to simulate a mouse button press
+    object->checkHit(PU_LEFT_BUTTON, PU_DOWN,
+            (object->getABox()->min[0] + object->getABox()->max[0]) / 2,
+            (object->getABox()->min[1] + object->getABox()->max[1]) / 2);
+    object->checkHit(PU_LEFT_BUTTON, PU_UP,
+            (object->getABox()->min[0] + object->getABox()->max[0]) / 2,
+            (object->getABox()->min[1] + object->getABox()->max[1]) / 2);
     return true;
 }
 
@@ -74,7 +80,7 @@ puObject *fgPopup::getKeyObject(puObject *object, int key)
 
     GUIInfo *info = (GUIInfo *)object->getUserData();
     if (info && info->key == key)
-       return object;
+        return object;
 
     return 0;
 }
@@ -685,6 +691,8 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
     if (bindings.size() > 0) {
         GUIInfo * info = new GUIInfo(this);
         info->key = props->getIntValue("keynum", -1);
+        if (props->hasValue("key"))
+            info->key = getKeyCode(props->getStringValue("key", ""));
 
         for (unsigned int i = 0; i < bindings.size(); i++) {
             unsigned int j = 0;
@@ -765,6 +773,100 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
         if (c->isValid() && dirty)
             object->setColor(pucol[i].id, c->red(), c->green(), c->blue(), c->alpha());
     }
+}
+
+
+static struct {
+    const char *name;
+    int key;
+} keymap[] = {
+    {"tab", 9},
+    {"return", 13},
+    {"enter", 13},
+    {"esc", 27},
+    {"escape", 27},
+    {"space", ' '},
+    {"&amp;", '&'},
+    {"and", '&'},
+    {"&lt;", '<'},
+    {"&gt;", '>'},
+    {"f1", PU_KEY_F1},
+    {"f2", PU_KEY_F2},
+    {"f3", PU_KEY_F3},
+    {"f4", PU_KEY_F4},
+    {"f5", PU_KEY_F5},
+    {"f6", PU_KEY_F6},
+    {"f7", PU_KEY_F7},
+    {"f8", PU_KEY_F8},
+    {"f9", PU_KEY_F9},
+    {"f10", PU_KEY_F10},
+    {"f11", PU_KEY_F11},
+    {"f12", PU_KEY_F12},
+    {"left", PU_KEY_LEFT},
+    {"up", PU_KEY_UP},
+    {"right", PU_KEY_RIGHT},
+    {"down", PU_KEY_DOWN},
+    {"pageup", PU_KEY_PAGE_UP},
+    {"pagedn", PU_KEY_PAGE_DOWN},
+    {"home", PU_KEY_HOME},
+    {"end", PU_KEY_END},
+    {"insert", PU_KEY_INSERT},
+    {0, -1},
+};
+
+int
+FGDialog::getKeyCode(const char *str)
+{
+    enum {
+        CTRL = 0x1,
+        SHIFT = 0x2,
+        ALT = 0x4,
+    };
+
+    while (*str == ' ')
+        str++;
+
+    char *buf = new char[strlen(str) + 1];
+    strcpy(buf, str);
+    char *s = buf + strlen(buf);
+    while (s > str && s[-1] == ' ')
+        s--;
+    *s = 0;
+    s = buf;
+
+    int mod = 0;
+    while (1) {
+        if (!strncmp(s, "Ctrl-", 5) || !strncmp(s, "CTRL-", 5))
+            s += 5, mod |= CTRL;
+        else if (!strncmp(s, "Shift-", 6) || !strncmp(s, "SHIFT-", 6))
+            s += 6, mod |= SHIFT;
+        else if (!strncmp(s, "Alt-", 4) || !strncmp(s, "ALT-", 4))
+            s += 4, mod |= ALT;
+        else
+            break;
+    }
+
+    int key = -1;
+    if (strlen(s) == 1 && isascii(*s)) {
+        key = *s;
+        if (mod & SHIFT)
+            key = toupper(key);
+        if (mod & CTRL)
+            key = toupper(key) - 64;
+        if (mod & ALT)
+            ;   // Alt not propagated to the gui
+    } else {
+        for (char *t = s; *t; t++)
+            *t = tolower(*t);
+        for (int i = 0; keymap[i].name; i++) {
+            if (!strcmp(s, keymap[i].name)) {
+                key = keymap[i].key;
+                break;
+            }
+        }
+    }
+    delete[] buf;
+    return key;
 }
 
 char **

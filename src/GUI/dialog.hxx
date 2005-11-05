@@ -132,6 +132,9 @@ private:
     // (PUCOL_LABEL, etc.) should pick up the <color> property.
     void setColor(puObject * object, SGPropertyNode * props, int which = 0);
 
+    // return key code number for keystring
+    int getKeyCode(const char *keystring);
+
     // The top-level PUI object.
     puObject * _object;
 
