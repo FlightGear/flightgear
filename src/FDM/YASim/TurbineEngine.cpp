@@ -30,7 +30,7 @@ void TurbineEngine::setOutputFromN2()
 {
     float frac = (_n2 - _n2Min) / (_n2Max - _n2Min);
     _torque = frac * _maxTorque * (_rho / _rho0);
-    _fuelFlow = _bsfc * _torque * _omega;
+    _fuelFlow = _running ? _bsfc * _torque * _omega : 0;
 }
 
 void TurbineEngine::stabilize()
