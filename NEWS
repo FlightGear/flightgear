@@ -9,13 +9,18 @@ New in 0.9.9-pre1
 * Better support for redoing livery textures on an individual aircraft.
 * Support for seasonal terrain textures.  (Updates to summer textures
   plus new winter textures added.)
+* Enhanced weather modeling (lightning and rain.)
+* Support for high G redout/blackout effects.
 * Add status updates to the initial splash/startup screen.
 * Allow switching the tower view location at any time.
 * Add support for configuring views with asymmetric view frustums.
 * Many updates to gui/dialog box infrastructure.  Ability to alter
   border thickness, change fonts, dialog boxes are draggable across
   the screen, you can enable automatic line wrapping, select
-  colors, allow key presses to be bound to widgets, .
+  colors, and allow key presses to be bound to widgets.
+* Support for xml configurable gui themes.
+* Help dialog boxes supported for each aircraft listing special keys,
+  global keys, procedures and performance data.
 * Updates and enhancements to many of the dialog boxes to fix problems,
   expose new features, enhance usability, etc.
 
@@ -28,6 +33,11 @@ New in 0.9.9-pre1
   autopilot stages.
 
 * Support TACAN instruments.  And an IVSI instrument.
+* Support for new animations and effects such as heat-haze and chrome.
+* Dynamic taxiway following at airports equipped with a logical ground
+  network.
+* Ability to define "AI" scenarios with scripted moving objects that
+  interact intelligently with the environment and the simulator state.
 * Depricated old (somewhat less the spectacularly conceived)
   electrical system model in favor of a much more flexible script based
   system that can be tailored to any individual aircraft.
@@ -39,7 +49,10 @@ New in 0.9.9-pre1
   joysticks directly supported.
 
 * Removed all lingering dependencies on plib's SL sound library.
-* Add support for OpenAL 1.1 and alut.
+* Add support for OpenAL 1.1 and alut.  OpenAL is a 3d sound system supporting
+  directional sound and doppler effects.
+  
+  
 * Better cross platform compatibility with our standard network structures.
 * More cpu friendly frame rate throttling code that can leave more cpu
   available for other apps.
