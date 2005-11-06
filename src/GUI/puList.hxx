@@ -7,10 +7,9 @@
 #  include <config.h>
 #endif
 
-#include <plib/pu.h>
+#include <plib/puAux.h>
 
-# define PUCLASS_LIST   0x80000000  // Hopefully this value will never be used by plib
-# define PUCLASS_LIST   0x80000000  // Hopefully this value will never be used by plib
+//# define PUCLASS_LIST   0x80000000  // Hopefully this value will never be used by plib
 
 /**
  * A scrolling list for PUI.
