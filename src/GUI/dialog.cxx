@@ -432,12 +432,20 @@ FGDialog::display (SGPropertyNode * props)
     wid.setDefaultFont(fnt, int(fnt->getPointSize()));
 
     int pw=0, ph=0;
+    int px, py, savex, savey;
     if(!userw || !userh)
         wid.calcPrefSize(&pw, &ph);
     pw = props->getIntValue("width", pw);
     ph = props->getIntValue("height", ph);
-    int px = props->getIntValue("x", (screenw - pw) / 2);
-    int py = props->getIntValue("y", (screenh - ph) / 2);
+    px = savex = props->getIntValue("x", (screenw - pw) / 2);
+    py = savey = props->getIntValue("y", (screenh - ph) / 2);
+
+    // Negative x/y coordinates are interpreted as distance from the top/right
+    // corner rather than bottom/left.
+    if (px < 0)
+        px = screenw - pw + px;
+    if (py < 0)
+        py = screenh - ph + py;
 
     // Define "x", "y", "width" and/or "height" in the property tree if they
     // are not specified in the configuration file.
@@ -448,9 +456,17 @@ FGDialog::display (SGPropertyNode * props)
     _object = makeObject(props, screenw, screenh);
 
     // Remove automatically generated properties, so the layout looks
-    // the same next time around.
-    if(!userx) props->removeChild("x");
-    if(!usery) props->removeChild("y");
+    // the same next time around, or restore x and y to preserve negative coords.
+    if(userx)
+        props->setIntValue("x", savex);
+    else
+        props->removeChild("x");
+
+    if(usery)
+        props->setIntValue("y", savey);
+    else
+        props->removeChild("y");
+
     if(!userw) props->removeChild("width");
     if(!userh) props->removeChild("height");
 
