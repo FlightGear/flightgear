@@ -13,7 +13,7 @@ EXTRA_DIST = \
 	FlightGear.dsw
 
 dist-hook:
-	(cd $(top_srcdir); $(HOME)/Projects/FlightGear-0.9/admin/am2dsp.pl)
+	(cd $(top_srcdir); $(HOME)/Projects/FlightGear/admin/am2dsp.pl)
 	(cd $(top_srcdir); tar --exclude docs-mini/CVS --exclude hints/CVS \
 		-cf - docs-mini ) | (cd $(distdir); tar xvf -)
 

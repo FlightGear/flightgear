@@ -1,3 +1,63 @@
+New in 0.9.9-pre1
+* November 5, 2005
+
+* New well integrated volumetric clouds by Harald Johnsen
+* Removed 'old' 3D clouds code.
+* Fixed the jitter problem with 3d cockpits.
+* Volumetric shadows are now supported so that aircraft can cast
+  shadows upon themselves as well as the ground.
+* Better support for redoing livery textures on an individual aircraft.
+* Support for seasonal terrain textures.  (Updates to summer textures
+  plus new winter textures added.)
+* Add status updates to the initial splash/startup screen.
+* Allow switching the tower view location at any time.
+* Add support for configuring views with asymmetric view frustums.
+* Many updates to gui/dialog box infrastructure.  Ability to alter
+  border thickness, change fonts, dialog boxes are draggable across
+  the screen, you can enable automatic line wrapping, select
+  colors, allow key presses to be bound to widgets, .
+* Updates and enhancements to many of the dialog boxes to fix problems,
+  expose new features, enhance usability, etc.
+
+* Updated JSBSim version since the last release.  (More updates
+  pending after this release.)
+* YASim: expose "spool-time" of a jet engine as a config parameter,
+  add an oil temp model, support gear compression along any arbitrary axis,
+  reworked MP calculations for super/turbochargers.
+* Allow setting individual sample/update rates for any of the PID
+  autopilot stages.
+
+* Support TACAN instruments.  And an IVSI instrument.
+* Depricated old (somewhat less the spectacularly conceived)
+  electrical system model in favor of a much more flexible script based
+  system that can be tailored to any individual aircraft.
+* Include an external utility that can feed saved nmea tracks back
+  into FlightGear.  If you take a gps on a real flight with you and
+  capture the output, you can replay your flight in FlightGear.
+
+* Many updates and fixes to the joystick configuration files, many new
+  joysticks directly supported.
+
+* Removed all lingering dependencies on plib's SL sound library.
+* Add support for OpenAL 1.1 and alut.
+* Better cross platform compatibility with our standard network structures.
+* More cpu friendly frame rate throttling code that can leave more cpu
+  available for other apps.
+* Various Nasal (scripting) bug fixes and language improvements.
+* Various bug fixes, various platform/compiler compatibility fixes,
+  several memory leaks fixed.
+
+* New aircraft available (in various stages of developement): A380,
+  Boeing 314 (seaplane), Citation Bravo (glass cockpit), F-8E
+  Crusader, Hurricane IIb, MiG-15bis, TU-114, B29, C150, and SR20.
+
+* Aircraft that have had updates since the last release: 737, A-10,
+  AN-225, B-52F, BAC-TSR2, Citation-II (550), Comper Swift, Concorde,
+  Hunter, OV10, Spitfire, T37, B1900d, bo105, C172 et. al., DHC2F
+  (Beaver), F16, Fokker DR1 Triplane, Fokker 50 (turboprop), Fokker
+  100 (jet), J3 Cub, P51, Santa, Seahawk, and 1903 Wright Flyer.
+  
+
 New in 0.9.8
 * January 18, 2005
 

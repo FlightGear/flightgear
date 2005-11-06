@@ -48,15 +48,15 @@ AC_CHECK_HEADER(windows.h)
 
 dnl Checks for libraries.
 
-AC_CHECK_LIB(fltk,main,LIBS="$LIBS `fltk-config --use-images --ldflags`"
-             LDFLAGS="$LDFLAGS `fltk-config --use-images --ldflags`"
-	     CPPFLAGS="$CPPFLAGS `fltk-config --cxxflags`",
-  AC_MSG_ERROR(fltk library required get it at http://www.fltk.org))
-
 # The following are C++ items that need to be tested for with the c++
 # compiler
 
 AC_LANG_PUSH(C++)
+
+AC_CHECK_LIB(fltk,main,LIBS="$LIBS `fltk-config --use-images --ldflags`"
+             LDFLAGS="$LDFLAGS `fltk-config --use-images --ldflags`"
+	     CPPFLAGS="$CPPFLAGS `fltk-config --cxxflags`",
+  AC_MSG_ERROR(fltk library required get it at http://www.fltk.org))
 
 # Check for "plib" without which we cannot go on
 AC_CHECK_HEADER(plib/ul.h)
