@@ -91,7 +91,7 @@ fgfs_LDADD = \
 	-lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound -lsgserial \
 	-lsgstructure -lsgenvironment \
 	$(THREAD_LIBS) \
-	-lplibpuaux -lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
+	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
 	$(network_LIBS) \
 	-lz \
 	$(opengl_LIBS) \
