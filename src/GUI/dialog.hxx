@@ -7,7 +7,7 @@
 # error This library requires C++
 #endif
 
-#include <plib/puAux.h>
+#include <plib/pu.h>
 #include <plib/sg.h>
 
 #include <simgear/compiler.h>	// for SG_USING_STD

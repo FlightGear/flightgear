@@ -578,7 +578,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
              i < value_nodes.size();
              i++, j--)
             entries[i] = strdup((char *)value_nodes[i]->getStringValue());
-        puaComboBox * obj = new puaComboBox(x, y, x + width, y + height, entries,
+        puComboBox * obj = new puComboBox(x, y, x + width, y + height, entries,
                            props->getBoolValue("editable", false));
         setupObject(obj, props);
         setColor(obj, props, FOREGROUND|LABEL);
@@ -608,7 +608,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         int slider_width = props->getIntValue("slider", parentHeight);
         int wrap = props->getBoolValue("wrap", true);
         if (slider_width==0) slider_width=20;
-        puaLargeInput * obj = new puaLargeInput(x, y,
+        puLargeInput * obj = new puLargeInput(x, y,
                 x+width, x+height, 2, slider_width, wrap);
 
         if (props->hasValue("editable")) {
@@ -634,8 +634,8 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
              i < value_nodes.size();
              i++, j--)
             entries[i] = strdup((char *)value_nodes[i]->getName());
-        puaSelectBox * obj =
-            new puaSelectBox(x, y, x + width, y + height, entries);
+        puSelectBox * obj =
+            new puSelectBox(x, y, x + width, y + height, entries);
         setupObject(obj, props);
         setColor(obj, props, FOREGROUND|LABEL);
         return obj;
