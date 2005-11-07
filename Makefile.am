@@ -40,6 +40,7 @@ fgfs-base-tar:
 	--exclude='*/Textures.high/*.save' \
 	--exclude='*/Textures.high/*.new' \
 	--exclude='*/Docs/source' \
+        --exclude='*/Models/MNUAV' \
 	-cvf - \
 		data/ATC \
 		data/AUTHORS \

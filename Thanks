@@ -230,6 +230,12 @@ Richard Kaszeta <bofh@me.umn.edu>
   Rich's Homepage: http://www.menet.umn.edu/~kaszeta
 
 
+Vassilii Khachaturov <vassilii@tarunz.org>
+  Support of navaids as autopilot waypoints.
+  Switching the tower view to a different tower at any time.
+  Various code, GUI, and documentation fixes and updates.
+
+
 Tom Knienieder <tom@knienieder.com>
   Ported Steve's Audio library first to OpenBSD and IRIX and
   after that also to Win32
