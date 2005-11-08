@@ -9,6 +9,10 @@ New in 0.9.9-pre1
 * Better support for redoing livery textures on an individual aircraft.
 * Support for seasonal terrain textures.  (Updates to summer textures
   plus new winter textures added.)
+* Carrier - added working arrester wires and catapults. The carrier is
+  selectable as a starting position. AI has been added to the 
+  carrier in the form of an operating box and an automated turn
+  into/out of wind. TACAN beacon added.
 * Enhanced weather modeling (lightning and rain.)
 * Support for high G redout/blackout effects.
 * Add status updates to the initial splash/startup screen.
@@ -23,6 +27,15 @@ New in 0.9.9-pre1
   global keys, procedures and performance data.
 * Updates and enhancements to many of the dialog boxes to fix problems,
   expose new features, enhance usability, etc.
+* Added a generic, XML configurable, autopilot framework, and several
+  high level, configurable filter implementations for use by autopilot
+  designers.
+* Added a transponder and Altitude encoder.
+* Made the instruments code much more configurable, it is now possible to
+  only include instruments that are actually present.
+* Implemented the groundcache code which made it possible for aircraft
+  to follow the ground precisely and, as a result, made it possible to
+  land on aircraft carriers. 
 
 * Updated JSBSim version since the last release.  (More updates
   pending after this release.)
