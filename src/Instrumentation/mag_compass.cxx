@@ -94,11 +94,19 @@ MagCompass::update (double delta_time_sec)
     if (!_serviceable_node->getBoolValue())
         return;
 
-                                // jam on excessive sideslip
+    /*
+     * Vassilii: commented out because this way, even when parked,
+     * w/o any accelerations and level, the compass is jammed.
+     * If somebody wants to model jamming, real forces (i.e. accelerations)
+     * and not sideslip angle must be considered.
+     */
+#if 0
+				// jam on excessive sideslip
     if (fabs(_beta_node->getDoubleValue()) > 12.0) {
         _rate_degps = 0.0;
         return;
     }
+#endif
 
 
     /*
