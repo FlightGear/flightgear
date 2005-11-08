@@ -55,21 +55,24 @@ NewGUI::reinit ()
     map<string,FGDialog *>::iterator iter;
     vector<string> dlg;
     // close all open dialogs and remember them ...
-    for (iter = _active_dialogs.begin(); iter != _active_dialogs.end(); iter++) {
+    for (iter = _active_dialogs.begin(); iter != _active_dialogs.end(); ++iter)
         dlg.push_back(iter->first);
-        closeDialog(iter->first);
-    }
+
+    unsigned int i;
+    for (i = 0; i < dlg.size(); i++)
+        closeDialog(dlg[i]);
 
     unbind();
     clear();
     setStyle();
+    delete _menubar;
     _menubar = new FGMenuBar;
     init();
     bind();
 
     // open remembered dialogs again (no nasal generated ones, unfortunately)
-//    for (unsigned int i = 0; i < dlg.size(); i++)
-//        showDialog(dlg[i]);
+    for (i = 0; i < dlg.size(); i++)
+        showDialog(dlg[i]);
 }
 
 void
