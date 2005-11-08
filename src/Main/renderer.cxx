@@ -472,7 +472,8 @@ FGRenderer::update( bool refresh_camera_settings ) {
         glEnable( GL_FOG );
         glFogi( GL_FOG_MODE, GL_EXP2 );
         glFogfv( GL_FOG_COLOR, l->adj_fog_color() );
-    }
+    } else
+        glDisable( GL_FOG ); 
 
     // set sun/lighting parameters
     ssgGetLight( 0 ) -> setPosition( l->sun_vec() );
