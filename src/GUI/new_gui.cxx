@@ -219,7 +219,7 @@ NewGUI::newDialog (SGPropertyNode* props)
         return;
     }
     string name = cname;
-    if(!_active_dialogs[name])
+    if(_active_dialogs.find(name) == _active_dialogs.end())
         _dialog_props[name] = props;
 }
 
