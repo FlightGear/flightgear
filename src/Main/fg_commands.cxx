@@ -1107,6 +1107,17 @@ do_dialog_apply (const SGPropertyNode * arg)
 
 
 /**
+ * Redraw GUI (applying new widget colors). Doesn't reload the dialogs,
+ * unlike reinit().
+ */
+static bool
+do_gui_redraw (const SGPropertyNode * arg)
+{
+    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    gui->redraw();
+}
+
+/**
  * Built-in command: commit presets (read from in /sim/presets/)
  */
 static bool
@@ -1345,6 +1356,7 @@ static struct {
     { "dialog-close", do_dialog_close },
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
+    { "gui-redraw", do_gui_redraw },
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },

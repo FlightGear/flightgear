@@ -63,7 +63,7 @@ public:
     virtual void init ();
 
     /**
-     * Reinitialize the GUI subsystem.
+     * Reinitialize the GUI subsystem. Reloads all XML dialogs.
      */
     virtual void reinit ();
 
@@ -87,6 +87,11 @@ public:
      * subsystem does is time-dependent.
      */
     virtual void update (double delta_time_sec);
+
+    /**
+     * Redraw the GUI picking up new GUI colors.
+     */
+    virtual void redraw ();
 
     /**
      * Creates a new dialog box, using the same property format as the
@@ -145,7 +150,6 @@ public:
      */
     virtual FGMenuBar * getMenuBar ();
 
-
     /**
      * Ignore this method.
      *
@@ -199,6 +203,15 @@ protected:
     virtual void setStyle ();
     virtual void setupFont (SGPropertyNode *);
 
+    /**
+     * Used by reinit() and redraw() to close all dialogs and to apply
+     * current GUI colors. If "reload" is false, reopens all dialogs.
+     * Otherwise reloads all XML dialog files from disk and reopens all
+     * but Nasal * generated dialogs, omitting dynamic widgets. (This
+     * is only useful for GUI development.)
+     */
+    virtual void reset (bool reload);
+
 private:
     struct ltstr
     {
@@ -213,8 +226,7 @@ private:
     typedef map<const char*,FGColor*, ltstr>::iterator _itt_t;
     typedef map<const char*,FGColor*, ltstr>::const_iterator _citt_t;
 
-    // Free all allocated memory.
-    void clear ();
+    void clear_colors();
 
     // Read all the configuration files in a directory.
     void readDir (const char * path);

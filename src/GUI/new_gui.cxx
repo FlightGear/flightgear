@@ -34,7 +34,8 @@ NewGUI::NewGUI ()
 
 NewGUI::~NewGUI ()
 {
-    clear();
+    delete _menubar;
+    _dialog_props.clear();
 }
 
 void
@@ -52,6 +53,18 @@ NewGUI::init ()
 void
 NewGUI::reinit ()
 {
+    reset(true);
+}
+
+void
+NewGUI::redraw ()
+{
+    reset(false);
+}
+
+void
+NewGUI::reset (bool reload)
+{
     map<string,FGDialog *>::iterator iter;
     vector<string> dlg;
     // close all open dialogs and remember them ...
@@ -62,15 +75,22 @@ NewGUI::reinit ()
     for (i = 0; i < dlg.size(); i++)
         closeDialog(dlg[i]);
 
-    unbind();
-    clear();
     setStyle();
+
+    unbind();
     delete _menubar;
     _menubar = new FGMenuBar;
-    init();
+
+    if (reload) {
+        _dialog_props.clear();
+        init();
+    } else {
+        _menubar->init();
+    }
+
     bind();
 
-    // open remembered dialogs again (no nasal generated ones, unfortunately)
+    // open dialogs again
     for (i = 0; i < dlg.size(); i++)
         showDialog(dlg[i]);
 }
@@ -188,18 +208,6 @@ NewGUI::setMenuBarVisible (bool visible)
         _menubar->hide();
 }
 
-void
-NewGUI::clear ()
-{
-    delete _menubar;
-    _menubar = 0;
-    _dialog_props.clear();
-    _itt_t it;
-    for (it = _colors.begin(); it != _colors.end(); ++it)
-      delete it->second;
-    _colors.clear();
-}
-
 static bool
 test_extension (const char * path, const char * ext)
 {
@@ -293,6 +301,7 @@ NewGUI::setStyle (void)
     _colors["label"]      = new FGColor(0.0f, 0.0f, 0.0f, 1.0f);
     _colors["legend"]     = new FGColor(0.0f, 0.0f, 0.0f, 1.0f);
     _colors["misc"]       = new FGColor(0.0f, 0.0f, 0.0f, 1.0f);
+    _colors["inputfield"] = new FGColor(0.8f, 0.7f, 0.7f, 1.0f);
 
     //puSetDefaultStyle();
 
