@@ -56,14 +56,6 @@ do_print_dialog (const SGPropertyNode * arg)
 }
 #endif
 
-extern void fgHUDalphaAdjust (puObject *);
-static bool
-do_hud_alpha_dialog (const SGPropertyNode * arg)
-{
-    fgHUDalphaAdjust(0);
-    return true;
-}
-
 extern void prop_pickerView (puObject *);
 static bool
 do_properties_dialog (const SGPropertyNode * arg)
@@ -133,7 +125,6 @@ static struct {
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
     { "old-print-dialog", do_print_dialog },
 #endif
-    { "old-hud-alpha-dialog", do_hud_alpha_dialog },
     { "old-properties-dialog", do_properties_dialog },
     { "old-ap-add-waypoint-dialog", do_ap_add_waypoint_dialog },
     { "old-ap-pop-waypoint-dialog", do_ap_pop_waypoint_dialog },

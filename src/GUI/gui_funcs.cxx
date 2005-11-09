@@ -97,8 +97,6 @@
 SG_USING_STD(string);
 SG_USING_STD(cout);
 
-extern void fgHUDalphaAdjust( puObject * );
-
 // from cockpit.cxx
 extern void fgLatLonFormatToggle( puObject *);
 
@@ -131,7 +129,6 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
 
         //View
         {"guiTogglePanel", guiTogglePanel},
-        {"fgHUDalphaAdjust", fgHUDalphaAdjust},
         {"prop_pickerView", prop_pickerView},
 
         // Environment
