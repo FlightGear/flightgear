@@ -1578,7 +1578,7 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
 
     globals->get_event_mgr()->init();
-    globals->get_event_mgr()->setFreezeProperty(fgGetNode("/sim/freeze/clock"));
+    globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the property interpolator subsystem

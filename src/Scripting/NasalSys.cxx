@@ -498,7 +498,7 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
 // settimer(func, dt, simtime) extension function.  The first argument
 // is a Nasal function to call, the second is a delta time (from now),
 // in seconds.  The third, if present, is a boolean value indicating
-// that "simulator" time (rather than real time) is to be used.
+// that "real world" time (rather than simulator time) is to be used.
 //
 // Implementation note: the FGTimer objects don't live inside the
 // garbage collector, so the Nasal handler functions have to be
@@ -515,7 +515,7 @@ void FGNasalSys::setTimer(int argc, naRef* args)
     naRef delta = argc > 1 ? args[1] : naNil();
     if(naIsNil(delta)) return;
     
-    bool simtime = (argc > 2 && naTrue(args[2])) ? true : false;
+    bool simtime = (argc > 2 && naTrue(args[2])) ? false : true;
 
     // Generate and register a C++ timer handler
     NasalTimer* t = new NasalTimer;
