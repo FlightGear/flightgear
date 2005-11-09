@@ -759,6 +759,8 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
     string type = props->getName();
     if (type == "")
         type = "dialog";
+    if (type == "textbox" && props->getBoolValue("editable"))
+        type += "-editable";
 
     FGColor *c = new FGColor(_gui->getColor("background"));
     c->merge(_gui->getColor(type));
