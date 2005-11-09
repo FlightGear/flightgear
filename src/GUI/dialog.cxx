@@ -597,7 +597,11 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puComboBox * obj = new puComboBox(x, y, x + width, y + height, entries,
                            props->getBoolValue("editable", false));
         setupObject(obj, props);
+#ifdef PUCOL_EDITFIELD  // plib > 0.8.4
+        setColor(obj, props, EDITFIELD);
+#else
         setColor(obj, props, FOREGROUND|LABEL);
+#endif
         return obj;
 
     } else if (type == "slider") {
@@ -653,7 +657,11 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puSelectBox * obj =
             new puSelectBox(x, y, x + width, y + height, entries);
         setupObject(obj, props);
+#ifdef PUCOL_EDITFIELD  // plib > 0.8.4
+        setColor(obj, props, EDITFIELD);
+#else
         setColor(obj, props, FOREGROUND|LABEL);
+#endif
         return obj;
     } else {
         return 0;
@@ -769,7 +777,10 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
         { HIGHLIGHT,  PUCOL_HIGHLIGHT,  "highlight",  "color-highlight" },
         { LABEL,      PUCOL_LABEL,      "label",      "color-label" },
         { LEGEND,     PUCOL_LEGEND,     "legend",     "color-legend" },
-        { MISC,       PUCOL_MISC,       "misc",       "color-misc" }
+        { MISC,       PUCOL_MISC,       "misc",       "color-misc" },
+#ifdef PUCOL_EDITFIELD  // plib > 0.8.4
+        { EDITFIELD,  PUCOL_EDITFIELD,  "editfield",  "color-editfield" },
+#endif
     };
 
     const int numcol = sizeof(pucol) / sizeof(pucol[0]);

@@ -108,7 +108,8 @@ private:
         HIGHLIGHT = 0x04,
         LABEL = 0x08,
         LEGEND = 0x10,
-        MISC = 0x20
+        MISC = 0x20,
+        EDITFIELD = 0x40
     };
 
     // Private copy constructor to avoid unpleasant surprises.
