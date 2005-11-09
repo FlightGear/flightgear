@@ -186,3 +186,74 @@ FGScenery::get_cart_elevation_m(const sgdVec3& pos, double max_altoff,
   
   return hit;
 }
+
+
+bool
+FGScenery::get_cart_ground_intersection(const sgdVec3& pos,
+                                        const sgdVec3& dir,
+                                        sgdVec3& nearestHit, bool exact)
+{
+  // We assume that starting positions in the center of the earth are invalid
+  if ( fabs(pos[0]) < 1.0 && fabs(pos[1]) < 1.0 && fabs(pos[2]) < 1.0 )
+    return false;
+
+  // Well that 'exactness' is somehow problematic, but makes at least sure
+  // that we don't compute that with a cenery center at the other side of
+  // the world ...
+  Point3D saved_center = center;
+  bool replaced_center = false;
+  if (exact) {
+    Point3D ppos(pos[0], pos[1], pos[2]);
+    if (30.0*30.0 < ppos.distance3Dsquared(center)) {
+      set_center( ppos );
+      replaced_center = true;
+    }
+  }
+
+  // Not yet found any hit ...
+  bool result = false;
+
+  // Make really sure the direction is normalized, is really cheap compared to
+  // computation of ground intersection.
+  sgdVec3 normalizedDir;
+  sgdCopyVec3(normalizedDir, dir);
+  sgdNormaliseVec3(normalizedDir);
+
+  sgdVec3 sceneryCenter;
+  sgdSetVec3(sceneryCenter, center[0], center[1], center[2]);
+  sgdVec3 relativePos;
+  sgdSubVec3(relativePos, pos, sceneryCenter);
+
+  // At the moment only intersection with the terrain?
+  FGHitList hit_list;
+  hit_list.Intersect(globals->get_scenery()->get_terrain_branch(),
+                     relativePos, normalizedDir);
+
+  double dist = DBL_MAX;
+  int hitcount = hit_list.num_hits();
+  for (int i = 0; i < hitcount; ++i) {
+    // Check for the nearest hit
+    sgdVec3 diff;
+    sgdSubVec3(diff, hit_list.get_point(i), relativePos);
+    
+    // We only want hits in front of us ...
+    if (sgdScalarProductVec3(normalizedDir, diff) < 0)
+      continue;
+
+    // find the nearest hit
+    double nDist = sgdScalarProductVec3(diff, diff);
+    if (dist < nDist)
+      continue;
+
+    // Store the hit point
+    dist = nDist;
+    sgdAddVec3(nearestHit, hit_list.get_point(i), sceneryCenter);
+    result = true;
+  }
+
+  if (replaced_center)
+    set_center( saved_center );
+
+  return result;
+}
+

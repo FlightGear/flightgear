@@ -108,6 +108,14 @@ public:
     bool get_cart_elevation_m(const sgdVec3& pos, double max_altoff,
                               double& radius, bool exact = false);
 
+    /// Compute the nearest intersection point of the line starting from 
+    /// start going in direction dir with the terrain.
+    /// The input and output values should be in cartesian coordinates in the
+    /// usual earth centered wgs84 coordiante system. Units are meters.
+    /// On success, true is returned.
+    bool get_cart_ground_intersection(const sgdVec3& start, const sgdVec3& dir,
+                                      sgdVec3& nearestHit, bool exact = false);
+
     inline const Point3D& get_center() const { return center; }
     void set_center( const Point3D& p );
 
