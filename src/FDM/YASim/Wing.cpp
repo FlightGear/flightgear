@@ -433,7 +433,7 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
     int i;
     for(i=2; i<4; i++) {
         s->setStall(i, 0.2267f);
-        s->setStallWidth(i, 1);
+        s->setStallWidth(i, 0.01);
     }
     
     if(flap0)   s->setFlapParams(_flap0Lift, _flap0Drag);
