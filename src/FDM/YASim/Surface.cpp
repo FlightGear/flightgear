@@ -218,6 +218,31 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     Math::mul3(scale, torque, torque);
 }
 
+#if 0
+void Surface::test()
+{
+    static const float DEG2RAD = 0.0174532925199;
+    float v[3], force[3], torque[3];
+    float rho = Atmosphere::getStdDensity(0);
+    float spd = 30;
+
+    setFlap(0);
+    setSlat(0);
+    setSpoiler(0);
+
+    for(float angle = -90; angle<90; angle += 0.01) {
+        float rad = angle * DEG2RAD;
+        v[0] = spd * -Math::cos(rad);
+        v[1] = 0;
+        v[2] = spd * Math::sin(rad);
+        calcForce(v, rho, force, torque);
+        float lift = force[2] * Math::cos(rad) + force[0] * Math::sin(rad);
+        //__builtin_printf("%f %f\n", angle, lift);
+        __builtin_printf("%f %f\n", angle, torque[2]);
+    }
+}
+#endif
+
 // Returns a multiplier for the "plain" force equations that
 // approximates an airfoil's lift/stall curve.
 float Surface::stallFunc(float* v)
@@ -229,7 +254,7 @@ float Surface::stallFunc(float* v)
 
     // Wacky use of indexing, see setStall*() methods.
     int fwdBak = v[0] > 0; // set if this is "backward motion"
-    int posNeg = v[2] < 0; // set if the lift is toward -z
+    int posNeg = v[2] < 0; // set if the airflow is toward -z
     int i = (fwdBak<<1) | posNeg;
 
     float stallAlpha = _stalls[i];
