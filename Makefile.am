@@ -39,11 +39,10 @@ fgfs-base-tar:
 	--exclude='*/Textures/Unused' \
 	--exclude='*/Textures.high/*.save' \
 	--exclude='*/Textures.high/*.new' \
+	--exclude='*/Data' \
 	--exclude='*/Docs/source' \
         --exclude='*/Models/MNUAV' \
 	-cvf - \
-		data/ATC \
-		data/AUTHORS \
                 data/Aircraft/Generic \
                 data/Aircraft/Instruments \
                 data/Aircraft/Instruments-3d \
@@ -65,12 +64,15 @@ fgfs-base-tar:
                 data/Aircraft/wrightFlyer1903 \
 		data/Airports \
 		data/Astro \
+		data/ATC \
+		data/AUTHORS \
 		data/[C-H]* \
 		data/Input \
 		data/[J-R]* \
 		data/Scenery \
 		data/Sounds \
-		data/[T-W]* \
+		data/T \
+		data/cloudlayers.xml \
 		data/gui \
 		data/[j-p]* \
 		data/version \
