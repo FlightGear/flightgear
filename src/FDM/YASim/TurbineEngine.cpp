@@ -51,7 +51,7 @@ void TurbineEngine::integrate(float dt)
 
 void TurbineEngine::calc(float pressure, float temp, float omega)
 {
-    _running = _fuel && _cond_lever > 0.001
+    _running = _fuel && _cond_lever > 0.001;
 
     _n2Min = _n2LowIdle + (_n2HighIdle - _n2LowIdle) * _cond_lever;
     _omega = omega;
