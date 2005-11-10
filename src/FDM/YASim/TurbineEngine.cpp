@@ -51,11 +51,7 @@ void TurbineEngine::integrate(float dt)
 
 void TurbineEngine::calc(float pressure, float temp, float omega)
 {
-    if ( _cond_lever < 0.001 ) {
-        _running = false;
-    } else {
-        _running = true;
-    }
+    _running = _fuel && _cond_lever > 0.001
 
     _n2Min = _n2LowIdle + (_n2HighIdle - _n2LowIdle) * _cond_lever;
     _omega = omega;
@@ -68,11 +64,7 @@ void TurbineEngine::calc(float pressure, float temp, float omega)
 
     float frac = torque / (_maxTorque * (_rho / _rho0));
 
-    if ( _running ) {
-        _n2Target = _n2Min + (_n2Max - _n2Min) * frac;
-    } else {
-        _n2Target = 0;
-    }
+    _n2Target = _running ? _n2Min + (_n2Max - _n2Min) * frac : 0;
 }
 
 }; // namespace yasim
