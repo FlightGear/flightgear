@@ -363,7 +363,7 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
 
     // Brake controls
     result.ctrls.brake_left
-            = weight( ctrls1.brake_left, ctrls2.brake_right, ratio );
+            = weight( ctrls1.brake_left, ctrls2.brake_left, ratio );
     result.ctrls.brake_right
             = weight( ctrls1.brake_right, ctrls2.brake_right, ratio );
     result.ctrls.brake_parking
