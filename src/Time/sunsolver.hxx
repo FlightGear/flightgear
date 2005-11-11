@@ -54,4 +54,11 @@ time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
                                    double target_angle_deg,
                                    bool ascending );
 
+/**
+ * given a particular time expressed in side real time at prime
+ * meridian (GST), compute position on the earth (lat, lon) such that
+ * sun is directly overhead.  (lat, lon are reported in radians
+ */
+void fgSunPositionGST(double gst, double *lon, double *lat);
+
 #endif /* _SUNSOLVER_HXX */

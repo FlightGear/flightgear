@@ -38,6 +38,8 @@
 // periodic time updater
 void fgUpdateLocalTime();
 
+// update the cur_time_params structure with the current sun position
+void fgUpdateSunPos( void );
 
 #endif // _LIGHT_HXX
 

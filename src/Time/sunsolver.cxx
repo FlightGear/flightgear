@@ -23,21 +23,69 @@
  * $Id$
  */
 
+#ifdef SG_HAVE_STD_INCLUDES
+#  include <cmath>
+// #  include <cstdio>
+#  include <ctime>
+#  ifdef macintosh
+     SG_USING_STD(time_t);
+#  endif
+#else
+#  include <math.h>
+// #  include <stdio.h>
+#  include <time.h>
+#endif
 
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/timing/sg_time.hxx>
 
 #include <Main/globals.hxx>
 
-#include "sunpos.hxx"
-
+#include "tmp.hxx"
 #include "sunsolver.hxx"
 
 
 static const time_t day_secs = 86400;
 static const time_t half_day_secs = day_secs / 2;
 static const time_t step_secs = 60;
+
+/* given a particular time expressed in side real time at prime
+ * meridian (GST), compute position on the earth (lat, lon) such that
+ * sun is directly overhead.  (lat, lon are reported in radians */
+
+void fgSunPositionGST(double gst, double *lon, double *lat) {
+    /* time_t  ssue;           seconds since unix epoch */
+    /* double *lat;            (return) latitude        */
+    /* double *lon;            (return) longitude       */
+
+    /* double lambda; */
+    double alpha, delta;
+    double tmp;
+
+    double beta = globals->get_ephem()->get_sun()->getLat();
+    double r = globals->get_ephem()->get_sun()->getDistance();
+    double xs = globals->get_ephem()->get_sun()->getxs();
+    double ys = globals->get_ephem()->get_sun()->getys();
+    double ye = globals->get_ephem()->get_sun()->getye();
+    double ze = globals->get_ephem()->get_sun()->getze();
+    alpha = atan2(ys - tan(beta)*ze/ys, xs);
+    delta = asin(sin(beta)*ye/ys + cos(beta)*ze);
+
+    // tmp = alpha - (SGD_2PI/24)*GST(ssue);
+    tmp = alpha - (SGD_2PI/24)*gst;
+    if (tmp < -SGD_PI) {
+        do tmp += SGD_2PI;
+        while (tmp < -SGD_PI);
+    } else if (tmp > SGD_PI) {
+        do tmp -= SGD_2PI;
+        while (tmp < -SGD_PI);
+    }
+
+    *lon = tmp;
+    *lat = delta;
+}
 
 static double sun_angle( const SGTime &t, sgVec3 world_up,
                          double lon_rad, double lat_rad ) {

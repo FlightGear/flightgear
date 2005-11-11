@@ -59,7 +59,7 @@
 #include <Main/viewer.hxx>
 
 #include "light.hxx"
-#include "sunpos.hxx"
+#include "tmp.hxx"
 
 
 // Constructor
