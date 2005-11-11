@@ -1115,6 +1115,7 @@ do_gui_redraw (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
     gui->redraw();
+    return true;
 }
 
 /**
