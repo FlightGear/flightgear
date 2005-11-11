@@ -71,7 +71,7 @@ fgfs-base-tar:
 		data/[J-R]* \
 		data/Scenery \
 		data/Sounds \
-		data/T \
+		data/T* \
 		data/cloudlayers.xml \
 		data/gui \
 		data/[j-p]* \

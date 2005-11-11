@@ -220,6 +220,10 @@ Maik Justus <fg@mjustus.de>
   Wrote the Bo105 helicopter FDM configuration file.
 
 
+Ove Kaaven
+  Debian packaging of SimGear/FlightGear
+
+
 Richard Kaszeta <bofh@me.umn.edu>
   Contributed screen buffer to ppm screen shot routine.
   Rich has also helped in the early development of the Flight Gear "altitude 
