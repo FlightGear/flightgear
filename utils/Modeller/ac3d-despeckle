@@ -130,7 +130,7 @@ while (<>) {
 		if ($n < 3 or $n > 4) {
 			report("?") if $VERBOSE;
 			unless ($NOOP) {
-				print scalar(<>) foreach (0 .. $n);
+				print scalar(<>) foreach (1 .. $n);
 			}
 			next;
 		}
