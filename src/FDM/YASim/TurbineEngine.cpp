@@ -35,6 +35,7 @@ void TurbineEngine::setOutputFromN2()
 
 void TurbineEngine::stabilize()
 {
+    _fuel = true;
     _n2 = _n2Target;
     setOutputFromN2();
 }
