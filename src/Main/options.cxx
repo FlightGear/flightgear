@@ -171,10 +171,12 @@ fgSetDefaults ()
     // fgSetString("/sim/startup/mouse-pointer", "disabled");
     fgSetString("/sim/control-mode", "joystick");
     fgSetBool("/sim/auto-coordination", false);
-#if !defined(WIN32)
-    fgSetString("/sim/startup/browser-app", "netscape");
-#else
+#if defined(WIN32)
     fgSetString("/sim/startup/browser-app", "webrun.bat");
+#elif defined(__APPLE__)
+    fgSetString("/sim/startup/browser-app", "open");
+#else
+    fgSetString("/sim/startup/browser-app", "netscape");
 #endif
     fgSetString("/sim/logging/priority", "alert");
 
