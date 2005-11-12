@@ -162,6 +162,8 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
 void mkDialog (const char *txt)
 {
     NewGUI *gui = (NewGUI *)globals->get_subsystem("gui");
+    if (!gui)
+        return;
     SGPropertyNode_ptr dlg = gui->getDialog("message");
     if (!dlg)
         return;
