@@ -110,7 +110,7 @@ string ScheduleTime::getName(time_t dayStart)
 {
   if ((start.size() != end.size()) || (start.size() != scheduleNames.size()))
     {
-      cerr << "Unable to parse schedule times" << endl;
+      SG_LOG( SG_GENERAL, SG_INFO, "Unable to parse schedule times" );
       exit(1);
     }
   else
@@ -252,7 +252,7 @@ void RunwayGroup::setActive(const string &aptId,
 		  if ((tailWind > maxTail) || (crossWind > maxCross))
 		    validSelection = false;
 		}else {
-		  cerr << "Failed to find runway " << name << " at " << aptId << endl;
+		  SG_LOG( SG_GENERAL, SG_INFO, "Failed to find runway " << name << " at " << aptId );
 		  exit(1);
 		}
 
@@ -305,7 +305,7 @@ void RunwayGroup::setActive(const string &aptId,
 		  if ((tailWind > maxTail) || (crossWind > maxCross))
 		    validSelection = false;
 		}else {
-		  cerr << "Failed to find runway " << name << " at " << aptId << endl;
+		  SG_LOG( SG_GENERAL, SG_INFO, "Failed to find runway " << name << " at " << aptId );
 		  exit(1);
 		}
 
@@ -1381,7 +1381,7 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end)
   
   if (!foundRoute)
     {
-      cerr << "Failed to find route from waypoint " << start << " to " << end << endl;
+      SG_LOG( SG_GENERAL, SG_INFO, "Failed to find route from waypoint " << start << " to " << end );
       exit(1);
     }
   sort(routes.begin(), routes.end());
@@ -1473,7 +1473,7 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
     }
   else
     {
-      cerr << "4" << endl;
+      SG_LOG( SG_GENERAL, SG_DEBUG, "4" );
     }
   traceStack.pop_back();
   totalDistance -= distance;
@@ -1501,7 +1501,7 @@ FGAirportList::FGAirportList()
     if((d = ulOpenDir(aid.c_str())) == NULL)
         return;
     while((dent = ulReadDir(d)) != NULL) {
-        cerr << "Dent: " << dent->d_name; // DEBUG
+        SG_LOG( SG_GENERAL, SG_DEBUG, "Dent: " << dent->d_name );
         ai_dirs.insert(dent->d_name);
     }
     ulCloseDir(d);
