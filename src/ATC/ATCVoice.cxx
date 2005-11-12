@@ -54,9 +54,9 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 
         string file = voice + ".wav";
 	
-	SoundData = new SGSoundSample( path.c_str(), file.c_str(), false );
+	SoundData = new SGSoundSample();
+        rawSoundData = (char *)SoundData->load_file(path.c_str(), file.c_str());
 	rawDataSize = SoundData->get_size();
-	rawSoundData = SoundData->get_data();
 	
 	path = globals->get_fg_root();
 	string wordPath = "ATC/" + voice + ".vce";
