@@ -995,7 +995,7 @@ bool fgMainInit( int argc, char **argv ) {
     fgOSOpenWindow( fgGetInt("/sim/startup/xsize"),
                     fgGetInt("/sim/startup/ysize"),
                     fgGetInt("/sim/rendering/bits-per-pixel"),
-                    fgGetBool("/sim/rendering/clouds3d"),
+                    fgGetBool("/sim/rendering/clouds3d-enable"),
                     get_stencil_buffer,
                     fgGetBool("/sim/startup/fullscreen") );
 
