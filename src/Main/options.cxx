@@ -175,8 +175,12 @@ fgSetDefaults ()
     fgSetString("/sim/startup/browser-app", "webrun.bat");
 #elif defined(__APPLE__)
     fgSetString("/sim/startup/browser-app", "open");
+#elif defined(sgi)
+    fgSetString("/sim/startup/browser-app", "launchWebJumper");
 #else
-    fgSetString("/sim/startup/browser-app", "netscape");
+    char *envp = ::getenv( "WEBBROWSER" );
+    if (!envp) envp = "netscape";
+    fgSetString("/sim/startup/browser-app", envp);
 #endif
     fgSetString("/sim/logging/priority", "alert");
 
