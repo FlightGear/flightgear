@@ -573,7 +573,8 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
 
             if (++_stale_count > 10) {
                 _error_count = 1000;
-                throw sg_io_exception("More than 10 stale METAR messages in a row.");
+                throw sg_io_exception("More than 10 stale METAR messages in a row."
+                        " Check your system time!");
             }
         } else
             _stale_count = 0;
