@@ -326,6 +326,7 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) ),
       metar_max_age( fgGetNode("/environment/params/metar-max-age-min", true) ),
       _error_count( 0 ),
+      _stale_count( 0 ),
       _dt( 0.0 ),
       _error_dt( 0.0 )
 {
@@ -399,7 +400,7 @@ FGMetarEnvironmentCtrl::init ()
     // Don't check max age during init so that we don't loop over a lot
     // of airports metar if there is a problem.
     // The update() calls will find a correct metar if things went wrong here
-    metar_max_age->setLongValue(60 * 24 * 7);
+    metar_max_age->setLongValue(0);
 
     while ( !found_metar && (_error_count < 3) ) {
         const FGAirport* a = globals->get_airports()
@@ -564,11 +565,18 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
         result.m = new FGMetar( icao, host, port, auth);
 
         long max_age = metar_max_age->getLongValue();
-        if (max_age && result.m->getAge_min() > max_age) {
-            SG_LOG( SG_GENERAL, SG_WARN, "METAR data too old");
+        long age = result.m->getAge_min();
+        if (max_age &&  age > max_age) {
+            SG_LOG( SG_GENERAL, SG_WARN, "METAR data too old (" << age << " min).");
             delete result.m;
             result.m = NULL;
-        }
+
+            if (++_stale_count > 10) {
+                _error_count = 1000;
+                throw sg_io_exception("More than 10 stale METAR messages in a row.");
+            }
+        } else
+            _stale_count = 0;
 
     } catch (const sg_io_exception& e) {
         SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "

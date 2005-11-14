@@ -254,6 +254,7 @@ private:
 #endif // ENABLE_THREADS
 
     int _error_count;
+    int _stale_count;
     double _dt;
     double _error_dt;
 };
