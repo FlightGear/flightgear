@@ -23,7 +23,7 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
+#include <set>
 #include <sys/stat.h>
 
 #ifdef _MSC_VER
@@ -40,7 +40,7 @@
 
 using std::cout;
 using std::endl;
-using std::vector;
+using std::set;
 using std::string;
 
 extern string def_install_source;
@@ -137,9 +137,7 @@ static int stringCompare(const void *string1, const void *string2)
 
 
 void FGAdminUI::update_install_box() {
-    int i;
-    vector<string> file_list;
-    file_list.clear();
+    set<string> file_list;
 
     install_box->clear();
 
@@ -183,28 +181,17 @@ void FGAdminUI::update_install_box() {
                 install.append( base );
                 if ( ! fl_filename_isdir( install.c_str() ) ) {
                     // cout << install.str() << " install candidate." << endl;
-                    file_list.push_back( ent->d_name );
+                    file_list.insert( ent->d_name );
                 } else {
                     // cout << install.str() << " exists." << endl;
                 }
             }
         }
+
         ulCloseDir( dir );
-
-        // convert to a qsort()'able array
-        string *sort_list = new string[file_list.size()];
-        for ( i = 0; i < file_list.size(); ++i ) {
-            sort_list[i] = fl_filename_name( file_list[i].c_str() );
+        for ( set<string>::iterator it = file_list.begin(); it != file_list.end(); ++it ) {
+            install_box->add( it->c_str() );
         }
-
-        // Sort the file list into display order
-        qsort(sort_list, file_list.size(), sizeof(string), stringCompare);
-
-        for ( int i = 0; i < file_list.size(); ++i ) {
-            install_box->add( sort_list[i].c_str() );
-        }
-
-        delete [] sort_list;
 
         install_box->redraw();
     }
@@ -213,42 +200,39 @@ void FGAdminUI::update_install_box() {
 
 // scan the source directory and update the install_box contents
 void FGAdminUI::update_remove_box() {
-    int i;
-    vector<string> dir_list;
-    dir_list.clear();
 
     remove_box->clear();
 
     if ( dest.length() ) {
-        ulDir *dir = ulOpenDir( dest.c_str() ) ;
-        ulDirEnt *ent;
-        while ( dir != 0 && ( ent = ulReadDir( dir ) ) ) {
-            if ( strlen(ent->d_name) != 7 ) {
-                // simple heuristic to ignore non-scenery directories
-            } else if ( ent->d_name[0] != 'e' && ent->d_name[0] != 'w' ) {
-                // further sanity checks on name
-            } else if ( ent->d_name[4] != 'n' && ent->d_name[4] != 's' ) {
-                // further sanity checks on name
-            } else {
-                dir_list.push_back( ent->d_name );
+        string path[2];
+        path[0] = dest + "/Terrain";
+        path[1] = dest + "/Objects";
+        if ( !fl_filename_isdir( path[0].c_str() ) ) {
+            path[0] = dest;
+            path[1] = "";
+        } else if ( !fl_filename_isdir( path[1].c_str() ) ) {
+            path[1] = "";
+        }
+
+        set<string> dir_list;
+        for ( int i = 0; i < 2; i++ ) {
+            if ( !path[i].empty() ) {
+                ulDir *dir = ulOpenDir( path[i].c_str() ) ;
+                ulDirEnt *ent;
+                while ( dir != 0 && ( ent = ulReadDir( dir ) ) ) {
+                    if ( strlen(ent->d_name) == 7 &&
+                            ( ent->d_name[0] == 'e' || ent->d_name[0] == 'w' ) &&
+                            ( ent->d_name[4] == 'n' || ent->d_name[4] == 's' ) ) {
+                        dir_list.insert( ent->d_name );
+                    }
+                }
+                ulCloseDir( dir );
             }
         }
-        ulCloseDir( dir );
 
-        // convert to a qsort()'able array
-        string *sort_list = new string[dir_list.size()];
-        for ( i = 0; i < dir_list.size(); ++i ) {
-            sort_list[i] = fl_filename_name( dir_list[i].c_str() );
+        for ( set<string>::iterator it = dir_list.begin(); it != dir_list.end(); ++it ) {
+            remove_box->add( it->c_str() );
         }
-
-        // Sort the file list into display order
-        qsort(sort_list, dir_list.size(), sizeof(string), stringCompare);
-
-        for ( int i = 0; i < dir_list.size(); ++i ) {
-            remove_box->add( sort_list[i].c_str() );
-        }
-
-        delete [] sort_list;
 
         remove_box->redraw();
     }
@@ -293,48 +277,70 @@ void FGAdminUI::install_selected() {
 }
 
 
-static unsigned long count_dir( const char *dir_name ) {
-    ulDir *dir = ulOpenDir( dir_name ) ;
-    ulDirEnt *ent;
+static unsigned long count_dir( const char *dir_name, bool top = true ) {
     unsigned long cnt = 0L;
-    while ( ent = ulReadDir( dir ) ) {
-        if ( strcmp( ent->d_name, "." ) == 0 ) {
-            // ignore "."
-        } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
-            // ignore ".."
-        } else if ( ent->d_isdir ) {
-            SGPath child( dir_name );
-            child.append( ent->d_name );
-            cnt += count_dir( child.c_str() );
-        } else {
-            cnt += 1;
+    ulDir *dir = ulOpenDir( dir_name ) ;
+    if ( dir ) {
+        ulDirEnt *ent;
+        while ( ent = ulReadDir( dir ) ) {
+            if ( strcmp( ent->d_name, "." ) == 0 ) {
+                // ignore "."
+            } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
+                // ignore ".."
+            } else if ( ent->d_isdir ) {
+                SGPath child( dir_name );
+                child.append( ent->d_name );
+                cnt += count_dir( child.c_str(), false );
+            } else {
+                cnt += 1;
+            }
         }
+        ulCloseDir( dir );
+    } else if ( top ) {
+        string base = dir_name;
+        size_t pos = base.rfind('/');
+        string file = base.substr( pos );
+        base.erase( pos );
+        string path = base + "/Terrain" + file;
+        cnt = count_dir( path.c_str(), false );
+        path = base + "/Objects" + file;
+        cnt += count_dir( path.c_str(), false );
     }
-    ulCloseDir( dir );
     return cnt;
 }
 
-static void remove_dir( const char *dir_name, void (*step)(void*,int), void *data ) {
+static void remove_dir( const char *dir_name, void (*step)(void*,int), void *data, bool top = true ) {
     ulDir *dir = ulOpenDir( dir_name ) ;
-    ulDirEnt *ent;
-    while ( ent = ulReadDir( dir ) ) {
-        if ( strcmp( ent->d_name, "." ) == 0 ) {
-            // ignore "."
-        } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
-            // ignore ".."
-        } else if ( ent->d_isdir ) {
-            SGPath child( dir_name );
-            child.append( ent->d_name );
-            remove_dir( child.c_str(), step, data );
-        } else {
-            SGPath child( dir_name );
-            child.append( ent->d_name );
-            unlink( child.c_str() );
-            if (step) step( data, 1 );
+    if ( dir ) {
+        ulDirEnt *ent;
+        while ( ent = ulReadDir( dir ) ) {
+            if ( strcmp( ent->d_name, "." ) == 0 ) {
+                // ignore "."
+            } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
+                // ignore ".."
+            } else if ( ent->d_isdir ) {
+                SGPath child( dir_name );
+                child.append( ent->d_name );
+                remove_dir( child.c_str(), step, data, false );
+            } else {
+                SGPath child( dir_name );
+                child.append( ent->d_name );
+                unlink( child.c_str() );
+                if (step) step( data, 1 );
+            }
         }
+        ulCloseDir( dir );
+        rmdir( dir_name );
+    } else if ( top ) {
+        string base = dir_name;
+        size_t pos = base.rfind('/');
+        string file = base.substr( pos );
+        base.erase( pos );
+        string path = base + "/Terrain" + file;
+        remove_dir( path.c_str(), step, data, false );
+        path = base + "/Objects" + file;
+        remove_dir( path.c_str(), step, data, false );
     }
-    ulCloseDir( dir );
-    rmdir( dir_name );
 }
 
 
