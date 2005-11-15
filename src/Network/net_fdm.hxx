@@ -22,7 +22,7 @@
 // I am not aware of any platforms that don't use 4 bytes for float
 // and 8 bytes for double.
 
-const uint32_t FG_NET_FDM_VERSION = 22;
+const uint32_t FG_NET_FDM_VERSION = 23;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -39,6 +39,7 @@ public:
     };
 
     uint32_t version;		// increment when data values change
+    uint32_t padding;		// padding
 
     // Positions
     double longitude;		// geodetic (radians)
