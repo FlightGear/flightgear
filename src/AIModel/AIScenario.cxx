@@ -87,7 +87,7 @@ FGAIScenario::FGAIScenario(const string &filename)
      en->elevation      = entry_node->getDoubleValue("elevation", 0.0); 
      en->rudder         = entry_node->getFloatValue("rudder", 0.0);
      en->strength       = entry_node->getDoubleValue("strength-fps", 8.0);
-     en->strength       = entry_node->getDoubleValue("strength-norm", 1.0);  
+     en->turb_strength  = entry_node->getDoubleValue("strength-norm", 1.0);  
      en->diameter       = entry_node->getDoubleValue("diameter-ft", 0.0);
      en->height_msl     = entry_node->getDoubleValue("height-msl", 5000.0);
      en->eda            = entry_node->getDoubleValue("eda", 0.007);

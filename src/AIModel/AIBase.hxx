@@ -70,7 +70,8 @@ typedef struct {
    double azimuth;            // used by ballistic objects
    double elevation;          // used by ballistic objects
    double rudder;             // used by ship objects
-   double strength;           // used by thermal and storm objects
+   double strength;           // used by thermal 
+   double turb_strength;      // used by storm objects
    double diameter;           // used by thermal and storm objects
    double height_msl;         // used by thermal and storm objects
    double eda;                // used by ballistic objects
