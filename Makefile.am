@@ -39,7 +39,6 @@ fgfs-base-tar:
 	--exclude='*/Textures/Unused' \
 	--exclude='*/Textures.high/*.save' \
 	--exclude='*/Textures.high/*.new' \
-	--exclude='*/Data' \
 	--exclude='*/Docs/source' \
         --exclude='*/Models/MNUAV' \
 	-cvf - \
