@@ -11023,36 +11023,6 @@ SOURCE=.\src\Time\light.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\Time\sunpos.cxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Time"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Time"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\Time\sunpos.hxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Time"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Time"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\src\Time\sunsolver.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
