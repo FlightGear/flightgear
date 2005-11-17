@@ -509,7 +509,7 @@ void
 FGProperties::update (double dt)
 {
                                 // Date and time
-    struct tm * t = globals->get_time_params()->getGmt();
+    struct tm *t = globals->get_time_params()->getGmt();
 
     fgSetInt("/sim/time/utc/year", t->tm_year + 1900);
     fgSetInt("/sim/time/utc/month", t->tm_mon + 1);
@@ -522,6 +522,9 @@ FGProperties::update (double dt)
                 t->tm_hour * 3600 +
                 t->tm_min * 60 +
                 t->tm_sec);
+
+    fgSetInt("/sim/time/local-offset",
+             globals->get_time_params()->get_local_offset());
 }
 
 
