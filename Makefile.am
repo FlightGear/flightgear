@@ -59,6 +59,7 @@ fgfs-base-tar:
                 data/Aircraft/Hunter \
                 data/Aircraft/p51d \
                 data/Aircraft/pa28-161 \
+                data/Aircraft/T38 \
                 data/Aircraft/ufo \
                 data/Aircraft/wrightFlyer1903 \
 		data/Airports \
