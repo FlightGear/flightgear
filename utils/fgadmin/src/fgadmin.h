@@ -2,10 +2,11 @@
 
 #ifndef fgadmin_h
 #define fgadmin_h
-#include <FL/Fl.H>
 #include <string>
-#include <FL/Fl_Preferences.H>
 using std::string;
+
+#include <FL/Fl.H>
+#include <FL/Fl_Preferences.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Group.H>
 #include <FL/Fl_Button.H>
