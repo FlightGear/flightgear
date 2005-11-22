@@ -546,7 +546,7 @@ void FGFDM::setOutputProperties(float dt)
             node->setFloatValue("n1", j->getN1());
             node->setFloatValue("n2", j->getN2());
             node->setFloatValue("epr", j->getEPR());
-            node->setFloatValue("egr-degf",
+            node->setFloatValue("egt-degf",
                                 j->getEGT() * K2DEGF + K2DEGFOFFSET);
 
             // These are "unmodeled" values that are still needed for
