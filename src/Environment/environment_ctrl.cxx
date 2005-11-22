@@ -330,7 +330,7 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       _dt( 0.0 ),
       _error_dt( 0.0 )
 {
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
     thread = new MetarThread(this);
     thread->start( 1 );
 #endif // ENABLE_THREADS
@@ -338,7 +338,7 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
 
 FGMetarEnvironmentCtrl::~FGMetarEnvironmentCtrl ()
 {
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
    thread->cancel();
    thread->join();
 #endif // ENABLE_THREADS
@@ -491,7 +491,7 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         }
     }
 
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if !defined(ENABLE_THREADS)
     // No loader thread running so manually fetch the data
     string id = "";
     while ( !request_queue.empty() ) {
@@ -582,7 +582,7 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
     } catch (const sg_io_exception& e) {
         SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "
                 << e.getFormattedMessage().c_str() );
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
         if (_error_count++ >= 3) {
            SG_LOG( SG_GENERAL, SG_WARN, "Stop fetching data permanently.");
            thread->cancel();
@@ -701,7 +701,7 @@ FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
 }
 
 
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
 /**
  *
  */

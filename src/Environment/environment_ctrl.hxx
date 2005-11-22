@@ -27,7 +27,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/environment/metar.hxx>
 
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
 # include <simgear/threads/SGThread.hxx>
 # include <simgear/threads/SGQueue.hxx>
 #endif
@@ -185,7 +185,7 @@ private:
 
 private:
 
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
      */
@@ -207,7 +207,7 @@ private:
     queue < FGMetarResult > result_queue;
 #endif
 
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
     /**
      * This class represents the thread of execution responsible for
      * fetching the metar data.

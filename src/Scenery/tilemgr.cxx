@@ -47,7 +47,7 @@
 
 #define TEST_LAST_HIT_CACHE
 
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
 SGLockedQueue<FGTileEntry *> FGTileMgr::attach_queue;
 SGLockedQueue<FGDeferredModel *> FGTileMgr::model_queue;
 #else
@@ -92,7 +92,7 @@ int FGTileMgr::init() {
     }
 
     while ( ! model_queue.empty() ) {
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
         FGDeferredModel* dm = model_queue.pop();
 #else
         FGDeferredModel* dm = model_queue.front();
@@ -299,7 +299,7 @@ void FGTileMgr::update_queues()
 
             // cout << "loading next model ..." << endl;
             // load the next tile in the queue
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
             FGDeferredModel* dm = model_queue.pop();
 #else
             FGDeferredModel* dm = model_queue.front();
@@ -337,7 +337,7 @@ void FGTileMgr::update_queues()
     loader.update();
 
     if ( !attach_queue.empty() ) {
-#if defined(ENABLE_THREADS) && ENABLE_THREADS
+#if defined(ENABLE_THREADS)
         FGTileEntry* e = attach_queue.pop();
 #else
         FGTileEntry* e = attach_queue.front();
@@ -364,7 +364,7 @@ void FGTileMgr::update_queues()
                 // get real serious and agressively free up some tiles so
                 // we don't explode our memory usage.
 
-                SG_LOG( SG_TERRAIN, SG_WARN,
+                SG_LOG( SG_TERRAIN, SG_ALERT,
                         "Warning: catching up on tile delete queue" );
             }
 
