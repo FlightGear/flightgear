@@ -53,7 +53,7 @@ dnl Checks for libraries.
 
 AC_LANG_PUSH(C++)
 
-AC_CHECK_LIB(fltk,main,LIBS="$LIBS `fltk-config --use-images --ldflags`"
+AC_CHECK_LIB(fltk,fl_yes,LIBS="$LIBS `fltk-config --use-images --ldflags`"
              LDFLAGS="$LDFLAGS `fltk-config --use-images --ldflags`"
 	     CPPFLAGS="$CPPFLAGS `fltk-config --cxxflags`",
   AC_MSG_ERROR(fltk library required get it at http://www.fltk.org))
