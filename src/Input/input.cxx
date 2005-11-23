@@ -265,19 +265,13 @@ FGInput::doKey (int k, int modifiers, int x, int y)
       b.last_state = 0;
     } else {
       if (k >= 1 && k <= 26) {
-        if (_key_bindings[k + '@'].last_state)
           doKey(k + '@', KEYMOD_RELEASED, x, y);
-        if (_key_bindings[k + '`'].last_state)
           doKey(k + '`', KEYMOD_RELEASED, x, y);
       } else if (k >= 'A' && k <= 'Z') {
-        if (_key_bindings[k - '@'].last_state)
           doKey(k - '@', KEYMOD_RELEASED, x, y);
-        if (_key_bindings[tolower(k)].last_state)
-           doKey(tolower(k), KEYMOD_RELEASED, x, y);
+          doKey(tolower(k), KEYMOD_RELEASED, x, y);
       } else if (k >= 'a' && k <= 'z') {
-        if (_key_bindings[k - '`'].last_state)
           doKey(k - '`', KEYMOD_RELEASED, x, y);
-        if (_key_bindings[toupper(k)].last_state)
           doKey(toupper(k), KEYMOD_RELEASED, x, y);
       }
     }
