@@ -180,9 +180,11 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     // First off, make sure that the gear "tip" is below the ground.
     // If it's not, there's no force.
     float a = ground[3] - Math::dot3(_pos, ground);
+    _compressDist = -a;
     if(a > 0) {
 	_wow = 0;
 	_frac = 0;
+        _compressDist = 0;
         _rollSpeed = 0;
         _casterAngle = 0;
 	return;

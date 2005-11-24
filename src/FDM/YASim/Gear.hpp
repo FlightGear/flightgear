@@ -66,6 +66,7 @@ public:
     void getForce(float* force, float* contact);
     float getWoW();
     float getCompressFraction();
+    float getCompressDist() { return _compressDist; }
 
 private:
     float calcFriction(float wgt, float v);
@@ -84,6 +85,7 @@ private:
     float _contact[3];
     float _wow;
     float _frac;
+    float _compressDist;
     double _global_ground[4];
     float _global_vel[3];
     float _casterAngle;

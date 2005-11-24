@@ -461,6 +461,7 @@ void YASim::copyFromYASim()
 	node->setBoolValue("has-brake", g->getBrake() != 0);
 	node->setBoolValue("wow", g->getCompressFraction() != 0);
 	node->setFloatValue("compression-norm", g->getCompressFraction());
+	node->setFloatValue("compression-m", g->getCompressDist());
         node->setFloatValue("caster-angle-deg", g->getCasterAngle() * RAD2DEG);
         node->setFloatValue("rollspeed-ms", g->getRollSpeed());
     }
