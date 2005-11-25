@@ -9,8 +9,11 @@
 
 #include <Main/fg_props.hxx>
 #include <Navaids/navlist.hxx>
+#include <vector>
 
 #include "tacan.hxx"
+
+SG_USING_STD(vector);
 
 
 /**
@@ -117,8 +120,10 @@ TACAN::init ()
     _bearing_node = node->getChild("indicated-bearing-true-deg", 0, true);
     _carrier_lat_node = fgGetNode("/ai/models/carrier/position/latitude-deg", true);
     _carrier_lon_node = fgGetNode("/ai/models/carrier/position/longitude-deg", true);
-    _carrier_name_node = fgGetNode("/ai/models/carrier/name", true);
+//    _carrier_name_node = fgGetNode("/ai/models/carrier/name", true);
    
+    SGPropertyNode *cnode = fgGetNode("/ai/models/carrier", num, true );
+    _carrier_name_node = cnode->getChild("name", 0, true);
 }
 
 void
@@ -295,7 +300,21 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         SG_LOG( SG_INSTR, SG_DEBUG, "carrier transmitter valid " << _carrier_valid  );
          
         string str1( carrier_tacan->get_name() );
-        string str2 ( _carrier_name_node->getStringValue());
+
+        SGPropertyNode * branch = fgGetNode("ai/models", true);
+        vector<SGPropertyNode_ptr> carrier = branch->getChildren("carrier");
+
+        int number = carrier.size();
+
+        SG_LOG( SG_INSTR, SG_DEBUG, "carrier " << number );
+
+        int i;
+        for ( i = 0; i < number; ++i ) {
+                string str2 ( carrier[i]->getStringValue("name", ""));
+ //               SG_LOG( SG_INSTR, SG_DEBUG, "carrier name " << str2 );
+
+
+            //string str2 ( _carrier_name_node->getStringValue());
         SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 2 " << str2 );
         unsigned int loc1= str1.find( str2, 0 );
           if( loc1 != string::npos && str2 != "" ){
@@ -306,18 +325,21 @@ TACAN::search (double frequency_mhz, double longitude_rad,
               _carrier_range_nm = carrier_tacan->get_range();
               _carrier_bias = carrier_tacan->get_multiuse();
               _carrier_name = carrier_tacan->get_name();
+                  _carrier_valid = 1;
+                  SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter valid " << _carrier_valid );
+                  break;
               }
           else{
               _carrier_valid = 0;
               SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter invalid " << _carrier_valid );
           }    
-              
+         }
               
         //_name_node->setStringValue(_transmitter_name.c_str());
         
+        SG_LOG( SG_INSTR, SG_DEBUG, "name " << _carrier_name);
         SG_LOG( SG_INSTR, SG_DEBUG, "lat " << _carrier_lat << "lon " << _carrier_lon);
         SG_LOG( SG_INSTR, SG_DEBUG, "elev " << _carrier_elevation_ft);
-        SG_LOG( SG_INSTR, SG_DEBUG, "name " << _carrier_name);
         
     } else {
          SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter invalid " << _carrier_valid  );
@@ -342,9 +364,9 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         _transmitter_name = tacan->get_name();
         _name_node->setStringValue(_transmitter_name.c_str());
         
+        SG_LOG( SG_INSTR, SG_DEBUG, "name " << _transmitter_name);
         SG_LOG( SG_INSTR, SG_DEBUG, "lat " << _transmitter_lat << "lon " << _transmitter_lon);
         SG_LOG( SG_INSTR, SG_DEBUG, "elev " << _transmitter_elevation_ft);
-        SG_LOG( SG_INSTR, SG_DEBUG, "name " << _transmitter_name);
         
     } else {
          SG_LOG( SG_INSTR, SG_DEBUG, "transmitter invalid " << _transmitter_valid  );
