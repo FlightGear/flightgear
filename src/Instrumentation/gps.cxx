@@ -162,7 +162,7 @@ GPS::init ()
     _true_track_node =
         node->getChild("indicated-track-true-deg", 0, true);
     _magnetic_track_node =
-        node->getChild("indicated-track_magnetic-deg", 0, true);
+        node->getChild("indicated-track-magnetic-deg", 0, true);
     _speed_node =
         node->getChild("indicated-ground-speed-kt", 0, true);
     _odometer_node =
