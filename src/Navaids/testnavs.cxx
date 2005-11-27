@@ -16,7 +16,7 @@ int main() {
 
     current_navlist->init( p_nav );
 	
-    FGNav *n;
+    FGNavRecord *n;
     if ( (n = current_navlist->findByFreq( -93.2 * SG_DEGREES_TO_RADIANS,
                                            45.14 * SG_DEGREES_TO_RADIANS,
                                            3000, 117.30)) != NULL )
@@ -27,7 +27,7 @@ int main() {
 	cout << "not picking up vor. :-(" << endl;
     }
 
-    FGNav *dcs;
+    FGNavRecord *dcs;
     if ( (dcs = current_navlist->findByIdent( "DCS",
                                               -3.3 * SG_DEGREES_TO_RADIANS,
                                               55.9 * SG_DEGREES_TO_RADIANS))
