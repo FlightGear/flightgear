@@ -198,8 +198,14 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
     if(!fgGetBool("/sim/startup/game-mode")) {
         glutCreateWindow("FlightGear");
     } else {
-        char game_mode_str[256];
-        sprintf(game_mode_str, "width=%d height=%d bpp=%d", w, h, bpp);
+        char game_mode_str[20];
+        SGPropertyNode *p = fgGetNode("/sim/frame-rate-throttle-hz", false);
+        if (p) {
+            int hz = p->getIntValue();
+            snprintf(game_mode_str, 20, "%dx%d:%d@%d", w, h, bpp, hz);
+        } else {
+            snprintf(game_mode_str, 20, "%dx%d:%d", w, h, bpp);
+        }
         glutGameModeString( game_mode_str );
         glutEnterGameMode();
     }
