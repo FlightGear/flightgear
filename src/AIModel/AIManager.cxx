@@ -63,6 +63,7 @@ FGAIManager::~FGAIManager() {
   while (i != loadedModels.end())
     {
       i->getModelId()->deRef();
+      ++i;
     }
 }
 
