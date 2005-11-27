@@ -120,3 +120,18 @@ bool FGFixList::query_and_offset( const string& ident, double lon, double lat,
     *dist = s;
     return true;
 }
+
+const FGFix* FGFixList::findFirstByIdent( const string& ident, bool exact)
+{
+    fix_map_iterator itr;
+    if(exact) {
+        itr = fixlist.find(ident);
+    } else {
+        itr = fixlist.lower_bound(ident);
+    }
+    if(itr == fixlist.end()) {
+        return(NULL);
+    } else {
+        return(&(itr->second));
+    }
+}
