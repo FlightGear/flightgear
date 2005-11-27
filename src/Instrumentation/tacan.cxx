@@ -118,11 +118,9 @@ TACAN::init ()
     _time_node = node->getChild("indicated-time-min", 0, true);
     _name_node = node->getChild("name", 0, true);
     _bearing_node = node->getChild("indicated-bearing-true-deg", 0, true);
-    _carrier_lat_node = fgGetNode("/ai/models/carrier/position/latitude-deg", true);
-    _carrier_lon_node = fgGetNode("/ai/models/carrier/position/longitude-deg", true);
-
     SGPropertyNode *cnode = fgGetNode("/ai/models/carrier", num, true );
     _carrier_name_node = cnode->getChild("name", 0, true);
+    
 }
 
 void
@@ -309,8 +307,8 @@ TACAN::search (double frequency_mhz, double longitude_rad,
             unsigned int loc1= str1.find( str2, 0 );
             if ( loc1 != string::npos && str2 != "" ) {
                 SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
-                _carrier_lat = _carrier_lat_node->getDoubleValue();
-                _carrier_lon = _carrier_lon_node->getDoubleValue();
+                _carrier_lat = carrier[i]->getDoubleValue("position/latitude-deg");
+                _carrier_lon = carrier[i]->getDoubleValue("position/longitude-deg");
                 _carrier_elevation_ft = carrier_tacan->get_elev_ft();
                 _carrier_range_nm = carrier_tacan->get_range();
                 _carrier_bias = carrier_tacan->get_multiuse();
@@ -323,8 +321,6 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                 SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter invalid " << _carrier_valid );
             }
         }
-
-        //_name_node->setStringValue(_transmitter_name.c_str());
 
         SG_LOG( SG_INSTR, SG_DEBUG, "name " << _carrier_name);
         SG_LOG( SG_INSTR, SG_DEBUG, "lat " << _carrier_lat << "lon " << _carrier_lon);

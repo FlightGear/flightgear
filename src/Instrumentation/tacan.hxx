@@ -69,13 +69,9 @@ private:
     SGPropertyNode_ptr _bearing_node;
     SGPropertyNode_ptr _ident_node;
     SGPropertyNode_ptr _name_node;
-    
-    SGPropertyNode_ptr _carrier_lat_node;
-    SGPropertyNode_ptr _carrier_lon_node;
+
     SGPropertyNode_ptr _carrier_name_node;
-    
     SGPropertyNode_ptr _channel_node;
-   
 
     double _last_distance_nm;
     double _last_frequency_mhz;
