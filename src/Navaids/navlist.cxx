@@ -32,6 +32,18 @@
 #include "navlist.hxx"
 
 
+// Return true if the nav record matches the type
+static bool isTypeMatch(const FGNavRecord* n, fg_nav_types type) {
+    switch(type) {
+    case FG_NAV_ANY: return(true);
+    case FG_NAV_VOR: return(n->get_type() == 3);
+    case FG_NAV_NDB: return(n->get_type() == 2);
+    case FG_NAV_ILS: return(n->get_type() == 4);	// Note - very simplified, only matches loc as part of full ILS.
+    default: return false;
+    }
+}
+
+
 // Constructor
 FGNavList::FGNavList( void ) {
 }
@@ -163,6 +175,72 @@ FGNavRecord *FGNavList::findByIdent( const char* ident,
 }
 
 
+nav_list_type FGNavList::findFirstByIdent( string ident, fg_nav_types type, bool exact)
+{
+    nav_list_type n2;
+    n2.clear();
+    
+    int iType;
+    if(type == FG_NAV_VOR) iType = 3;
+    else if(type == FG_NAV_NDB) iType = 2;
+    else return(n2);
+    
+    nav_ident_map_iterator it;
+    if(exact) {
+	it = ident_navaids.find(ident);
+    } else {
+	bool typeMatch = false;
+	int safety_count = 0;
+	it = ident_navaids.lower_bound(ident);
+	while(!typeMatch) {
+	    nav_list_type n0 = it->second;	
+	    // local copy, so we should be able to do anything with n0.
+	    // Remove the types that don't match request.
+	    for(nav_list_iterator it0 = n0.begin(); it0 != n0.end();) {
+		FGNavRecord* nv = *it0;
+		if(nv->get_type() == iType) {
+		    typeMatch = true;
+		    ++it0;
+		} else {
+		    it0 = n0.erase(it0);
+		}
+	    }
+	    if(typeMatch) {
+		return(n0);
+	    }
+	    if(it == ident_navaids.begin()) {
+		// We didn't find a match before reaching the beginning of the map
+		n0.clear();
+		return(n0);		
+	    }
+	    safety_count++;
+	    if(safety_count == 1000000) {
+		SG_LOG(SG_INSTR, SG_ALERT,
+		       "safety_count triggered exit from while loop in findFirstByIdent!");
+		break;
+	    }
+	    ++it;
+	    if(it == ident_navaids.end()) {
+		n0.clear();
+		return(n0);
+	    }
+	}
+    }
+    if(it == ident_navaids.end()) {
+	n2.clear();
+	return(n2);
+    } else {
+	nav_list_type n1 = it->second;
+	n2.clear();
+	for(nav_list_iterator it2 = n1.begin(); it2 != n1.end(); ++it2) {
+	    FGNavRecord* nv = *it2;
+	    if(nv->get_type() == iType) n2.push_back(nv);
+	}
+	return(n2);
+    }
+}
+
+
 // Given an Ident and optional freqency, return the first matching
 // station.
 FGNavRecord *FGNavList::findByIdentAndFreq( const char* ident, const double freq )
@@ -269,7 +347,7 @@ FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft,
 
 // returns the closest entry to the give lon/lat/elev
 FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
-                                     double elev_m )
+                                     double elev_m, fg_nav_types type)
 {
     FGNavRecord *result = NULL;
     double diff;
@@ -291,7 +369,7 @@ FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
     latidx += 90;
 
     int master_index = lonidx * 1000 + latidx;
-    
+
     nav_list_type navs = navaids_by_tile[ master_index ];
     // cout << "Master index = " << master_index << endl;
     // cout << "beacon search length = " << beacons.size() << endl;
@@ -306,24 +384,26 @@ FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
     double min_dist = 999999999.0;
 
     for ( ; current != last ; ++current ) {
-	// cout << "  testing " << (*current)->get_ident() << endl;
-	Point3D station = Point3D( (*current)->get_x(),
-				   (*current)->get_y(),
-				   (*current)->get_z() );
-	// cout << "    aircraft = " << aircraft << " station = " << station 
-	//      << endl;
-
-	double d = aircraft.distance3Dsquared( station ); // meters^2
-	// cout << "  distance = " << d << " (" 
-	//      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
-	//         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
-	//      << ")" << endl;
-
-	// cout << "  range = " << sqrt(d) << endl;
-
-	if ( d < min_dist ) {
-	    min_dist = d;
-            result = (*current);
+	if(isTypeMatch(*current, type)) {
+	    // cout << "  testing " << (*current)->get_ident() << endl;
+	    Point3D station = Point3D( (*current)->get_x(),
+				       (*current)->get_y(),
+				       (*current)->get_z() );
+	    // cout << "    aircraft = " << aircraft << " station = " << station 
+	    //      << endl;
+    
+	    double d = aircraft.distance3Dsquared( station ); // meters^2
+	    // cout << "  distance = " << d << " (" 
+	    //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
+	    //         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
+	    //      << ")" << endl;
+    
+	    // cout << "  range = " << sqrt(d) << endl;
+    
+	    if ( d < min_dist ) {
+		min_dist = d;
+		result = (*current);
+	    }
 	}
     }
 

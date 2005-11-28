@@ -51,11 +51,13 @@ typedef nav_map_type::iterator nav_map_iterator;
 typedef nav_map_type::const_iterator nav_map_const_iterator;
 
 typedef map < string, nav_list_type > nav_ident_map_type;
+typedef nav_ident_map_type::iterator nav_ident_map_iterator;
 typedef map < string, tacan_list_type > tacan_ident_map_type;
 
 class FGNavList {
 
-    nav_list_type navlist;
+    //nav_list_type navlist;	// DCL - this doesn't appear to be used any more
+    				// and can probably be removed.
     nav_list_type carrierlist;
     nav_map_type navaids;
     nav_map_type navaids_by_tile;
@@ -87,6 +89,12 @@ public:
 
     // locate closest item in the DB matching the requested ident
     FGNavRecord *findByIdent( const char* ident, const double lon, const double lat );
+	
+    // Find items of requested type with closest exact or subsequent ident 
+    // (by ASCII code value) to that supplied.
+    // Supplying true for exact forces only exact matches to be returned (similar to above function)
+    // Returns an empty list if no match found - calling function should check for this!
+    nav_list_type findFirstByIdent( string ident, fg_nav_types type, bool exact = false );
 
     // Given an Ident and optional freqency, return the first matching
     // station.
@@ -94,7 +102,7 @@ public:
                                      const double freq = 0.0 );
 
     // returns the closest entry to the give lon/lat/elev
-    FGNavRecord *findClosest( double lon_rad, double lat_rad, double elev_m );
+    FGNavRecord *findClosest( double lon_rad, double lat_rad, double elev_m, fg_nav_types type = FG_NAV_ANY );
 
     // given a frequency returns the first matching entry
     FGNavRecord *findStationByFreq( double frequency );

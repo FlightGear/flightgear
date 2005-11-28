@@ -48,11 +48,20 @@ SG_USING_STD(istream);
 #define FG_DME_DEFAULT_RANGE 50 // nm
 #define FG_NAV_MAX_RANGE 300    // nm
 
+// Shield the rest of FG from possibly changing details of Robins navaid type numbering system.
+// Currently only the GPS code uses this - extra types (LOC, GS etc) may need to be added
+// should other FG code choose to use this. 
+enum fg_nav_types {
+    FG_NAV_VOR,
+    FG_NAV_NDB,
+    FG_NAV_ILS,
+    FG_NAV_ANY
+};
 
 class FGNavRecord {
 
     int type;
-    double lon, lat;            // location in geodetic coords
+    double lon, lat;            // location in geodetic coords (degrees)
     double elev_ft;
     double x, y, z;             // location in cartesian coords (earth centered)
     int freq;
@@ -75,10 +84,11 @@ public:
     inline ~FGNavRecord(void) {}
 
     inline int get_type() const { return type; }
-    inline double get_lon() const { return lon; }
-    inline void set_lon( double l ) { lon = l; }
-    inline double get_lat() const { return lat; }
-    inline void set_lat( double l ) { lat = l; }
+    inline fg_nav_types get_fg_type() const;
+    inline double get_lon() const { return lon; }	// degrees
+    inline void set_lon( double l ) { lon = l; }	// degrees
+    inline double get_lat() const { return lat; }	// degrees
+    inline void set_lat( double l ) { lat = l; }	// degrees
     inline double get_elev_ft() const { return elev_ft; }
     inline void set_elev_ft( double e ) { elev_ft = e; }
     inline double get_x() const { return x; }
@@ -113,6 +123,16 @@ FGNavRecord::FGNavRecord(void) :
     serviceable(true),
     trans_ident("")
 {
+}
+
+
+inline fg_nav_types FGNavRecord::get_fg_type() const {
+    switch(type) {
+    case 2: return(FG_NAV_NDB);
+    case 3: return(FG_NAV_VOR);
+    case 4: return(FG_NAV_ILS);
+    default: return(FG_NAV_ANY);
+    }
 }
 
 
