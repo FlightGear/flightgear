@@ -880,7 +880,7 @@ bool FGAICarrier::OutsideBox(){ //returns true if the carrier is outside operati
         else if (pos[0] >= initialpos[0] + min_long) {return true;}
     }
     
-    SG_LOG(SG_GENERAL, SG_INFO,"AICarrier: Inside Operating Box" );
+    SG_LOG(SG_GENERAL, SG_BULK,"AICarrier: Inside Operating Box" );
    
     return false;   
 
