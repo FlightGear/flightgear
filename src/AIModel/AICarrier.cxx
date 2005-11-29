@@ -220,8 +220,8 @@ void FGAICarrier::update(double dt) {
    }
 
    UpdateWind(dt);
-   UpdateTACAN(dt);
    UpdateFlols(trans);
+   UpdateElevator(dt, transition_time);
 } //end update
 
 bool FGAICarrier::init() {
@@ -247,7 +247,8 @@ bool FGAICarrier::init() {
    _longitude_node = fgGetNode("/position/longitude-deg", true);
    _latitude_node = fgGetNode("/position/latitude-deg", true);
    _altitude_node = fgGetNode("/position/altitude-ft", true);
-   _dme_freq_node = fgGetNode("/instrumentation/dme/frequencies/selected-mhz", true);
+//   _elevator_node = fgGetNode("/controls/elevators", true);
+
    _surface_wind_from_deg_node = 
               fgGetNode("/environment/config/boundary/entry[0]/wind-from-heading-deg", true);
    _surface_wind_speed_node = 
@@ -261,6 +262,13 @@ bool FGAICarrier::init() {
    base_course = hdg;
    base_speed = speed;
    
+   step = 0;
+   pos_norm = 0;
+   elevators = false;
+   transition_time = 150;
+   time_constant = 0.005;
+
+
    return true;
 }
 
@@ -301,12 +309,19 @@ void FGAICarrier::bind() {
                 SGRawValuePointer<double>(&rel_wind_speed_kts));
    props->tie("controls/flols/wave-off-lights",  
                 SGRawValuePointer<bool>(&wave_off_lights));
+   props->tie("controls/elevators",
+                SGRawValuePointer<bool>(&elevators));
+   props->tie("surface-positions/elevators-pos-norm",
+                SGRawValuePointer<double>(&pos_norm));
+   props->tie("controls/elevators-trans-time-s",
+                SGRawValuePointer<double>(&transition_time));
+   props->tie("controls/elevators-time-constant",
+                SGRawValuePointer<double>(&time_constant));
                     
    props->setBoolValue("controls/flols/cut-lights", false);
    props->setBoolValue("controls/flols/wave-off-lights", false);
    props->setBoolValue("controls/flols/cond-datum-lights", true);
    props->setBoolValue("controls/crew", false);
-
    props->setStringValue("navaids/tacan/channel-ID", TACAN_channel_id.c_str());
    props->setStringValue("sign", sign.c_str());
 }
@@ -326,8 +341,12 @@ void FGAICarrier::unbind() {
     props->untie("environment/rel-wind-from-degs");
     props->untie("environment/rel-wind-speed-kts");
     props->untie("controls/flols/wave-off-lights");
-    
+    props->untie("controls/elevators");
+    props->untie("surface-positions/elevators-pos-norm");
+    props->untie("controls/elevators-trans-time-secs");
+    props->untie("controls/elevators-time-constant");
 }
+
 
 bool FGAICarrier::getParkPosition(const string& id, Point3D& geodPos,
                                   double& hdng, sgdVec3 uvw)
@@ -776,7 +795,7 @@ void FGAICarrier::TurnToBase(){
 } //  end turn to base  
 
 void FGAICarrier::ReturnToBox(){
-    double course, distance;
+    double course, distance, az2;
         
     //get the carrier position
     carrierpos = pos;
@@ -806,61 +825,12 @@ void FGAICarrier::ReturnToBox(){
 } //  end turn to base  
  
     
-void FGAICarrier::UpdateTACAN(double dt){ //update the TACAN 
-
-  //cout << "TACAN: " << TACAN_channel_id << endl;
-
-  double max_range_nm = 100; //nm
-  
-  double dme_freq = _dme_freq_node->getDoubleValue();
-  
-  //cout << "dme_freq: " << dme_freq << endl; 
-  
-  if (TACAN_channel_id == "017X"){
-  
-      //get the aircraft position  
-      double longitude_deg = _longitude_node->getDoubleValue();
-      double latitude_deg  = _latitude_node->getDoubleValue();
-      double altitude_m    = _altitude_node->getDoubleValue() * SG_FEET_TO_METER;
-    
-      //get the carrier position
-      carrierpos = pos;
-      
-      //cout << "lat: " << carrierpos[1] << " lon: " << carrierpos[0] << endl;
-      
-      //calculate the bearing and range of the carrier from the aircraft
-      geo_inverse_wgs_84(altitude_m,
-                         latitude_deg,
-                         longitude_deg,
-                         carrierpos[1],
-                         carrierpos[0],
-                         &bearing, &az2, &range);
                          
-      range *= SG_METER_TO_NM;
-      
-      
-      
-       double aircraft_horizon_nm = Horizon(altitude_m) * SG_METER_TO_NM;
-       double carrier_horizon_nm = Horizon(50) * SG_METER_TO_NM;
-       double horizon_nm = aircraft_horizon_nm + carrier_horizon_nm;
-                         
-       if (range > horizon_nm || range > max_range_nm) {
-           range = 0;
-           bearing = 0 ;
-        }    
-    /*cout << "bearing: " << bearing << " range: " << range << " altitude: " << altitude_m
-      <<  " horizon: " << horizon_nm << endl; */
-  } else {
-      range = 0;
-      bearing = 0 ;
-  }  // end if
-        
-}// end update TACAN
 
 bool FGAICarrier::OutsideBox(){ //returns true if the carrier is outside operating box
 
     if ( max_lat == 0 && min_lat == 0 && max_long == 0 && min_long == 0) {
-       SG_LOG(SG_GENERAL, SG_BULK,"AICarrier: No Operating Box defined" );
+       SG_LOG(SG_GENERAL, SG_DEBUG, "AICarrier: No Operating Box defined" );
        return false;
     }        
      
@@ -880,7 +850,7 @@ bool FGAICarrier::OutsideBox(){ //returns true if the carrier is outside operati
         else if (pos[0] >= initialpos[0] + min_long) {return true;}
     }
     
-    SG_LOG(SG_GENERAL, SG_BULK,"AICarrier: Inside Operating Box" );
+    SG_LOG(SG_GENERAL, SG_DEBUG, "AICarrier: Inside Operating Box" );
    
     return false;   
 
@@ -896,4 +866,36 @@ bool FGAICarrier::InToWind(){
     return false;
     
 } //end InToWind     
+
+void FGAICarrier::UpdateElevator(double dt, double transition_time) {
+
+    if ((elevators && pos_norm >= 1 ) || (!elevators && pos_norm <= 0 ))
+        return;
+
+    // move the elevators
+    if ( elevators ) {
+        step += dt/transition_time;
+        if ( step > 1 )
+            step = 1;
+
+    } else {
+        step -= dt/transition_time;
+        if ( step < 0 )
+            step = 0;
+    }
+    // assume a linear relationship
+    raw_pos_norm = step;
+    if (raw_pos_norm >= 1) {
+        raw_pos_norm = 1;
+    } else if (raw_pos_norm <= 0) {
+        raw_pos_norm = 0;
+    }
+
+    //low pass filter
+    pos_norm = (raw_pos_norm * time_constant) + (pos_norm * (1 - time_constant));
+    return;
+
+} // end UpdateElevator
+
+
 int FGAICarrierHardware::unique_id = 1;

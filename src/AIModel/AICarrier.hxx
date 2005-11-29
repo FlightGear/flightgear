@@ -92,7 +92,6 @@ public:
     virtual void unbind();
     void UpdateFlols ( const sgdMat3& trans );
     void UpdateWind ( double dt );
-    void UpdateTACAN( double dt );
     void setWind_from_east( double fps );
     void setWind_from_north( double fps );
     void setMaxLat( double deg );
@@ -103,7 +102,7 @@ public:
     void TurnToBase();
     void ReturnToBox();
     float Horizon(float h);
-    double TACAN_freq;
+
 	bool OutsideBox();
     
 	
@@ -161,19 +160,24 @@ private:
     bool turn_to_launch_hdg;
     bool returning;      // set if the carrier is returning to an operating box
     bool InToWind();     // set if the carrier is in to wind   
+
+
     SGPropertyNode_ptr _longitude_node;
     SGPropertyNode_ptr _latitude_node;
     SGPropertyNode_ptr _altitude_node;
     SGPropertyNode_ptr _surface_wind_from_deg_node;
     SGPropertyNode_ptr _surface_wind_speed_node;
        
-    // these are for TACAN
-    SGPropertyNode_ptr _dme_freq_node;
+    // this is for tacan
     
-    double bearing, az2, range;
     string TACAN_channel_id;
     
-    
+    // these are for moving the elevators
+    void UpdateElevator( double dt, double transition_time);
+    double step;
+    double pos_norm, raw_pos_norm;
+    double transition_time, time_constant;
+    bool elevators;
 };
 
 #endif  // _FG_AICARRIER_HXX
