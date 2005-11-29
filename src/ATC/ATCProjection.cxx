@@ -22,95 +22,93 @@
 #include <math.h>
 #include <simgear/constants.h>
 
-#include <iostream>
-SG_USING_STD(cout);
-
-#define DCL_PI  3.1415926535f
-//#define SG_PI  ((SGfloat) M_PI)
-#define DCL_DEGREES_TO_RADIANS  (DCL_PI/180.0)
-#define DCL_RADIANS_TO_DEGREES  (180.0/DCL_PI)
-
 FGATCProjection::FGATCProjection() {
-    origin.setlat(0.0);
-    origin.setlon(0.0);
-    origin.setelev(0.0);
-    correction_factor = cos(origin.lat() * DCL_DEGREES_TO_RADIANS);
+    _origin.setlat(0.0);
+    _origin.setlon(0.0);
+    _origin.setelev(0.0);
+    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
 }
 
 FGATCProjection::FGATCProjection(const Point3D& centre) {
-    origin = centre;
-    correction_factor = cos(origin.lat() * DCL_DEGREES_TO_RADIANS);
+    _origin = centre;
+    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
 }
 
 FGATCProjection::~FGATCProjection() {
 }
 
 void FGATCProjection::Init(const Point3D& centre) {
-    origin = centre;
-    correction_factor = cos(origin.lat() * DCL_DEGREES_TO_RADIANS);
+    _origin = centre;
+    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
 }
 
 Point3D FGATCProjection::ConvertToLocal(const Point3D& pt) {
-    double delta_lat = pt.lat() - origin.lat();
-    double delta_lon = pt.lon() - origin.lon();
+    double delta_lat = pt.lat() - _origin.lat();
+    double delta_lon = pt.lon() - _origin.lon();
 
-    double y = sin(delta_lat * DCL_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M;
-    double x = sin(delta_lon * DCL_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M * correction_factor;
+    double y = sin(delta_lat * SG_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M;
+    double x = sin(delta_lon * SG_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M * _correction_factor;
 
     return(Point3D(x,y,0.0));
 }
 
 Point3D FGATCProjection::ConvertFromLocal(const Point3D& pt) {
-	double delta_lat = asin(pt.y() / SG_EQUATORIAL_RADIUS_M) * DCL_RADIANS_TO_DEGREES;
-	double delta_lon = (asin(pt.x() / SG_EQUATORIAL_RADIUS_M) * DCL_RADIANS_TO_DEGREES) / correction_factor;
-	
-    return(Point3D(origin.lon()+delta_lon, origin.lat()+delta_lat, 0.0));
+    double delta_lat = asin(pt.y() / SG_EQUATORIAL_RADIUS_M) * SG_RADIANS_TO_DEGREES;
+    double delta_lon = (asin(pt.x() / SG_EQUATORIAL_RADIUS_M) * SG_RADIANS_TO_DEGREES) / _correction_factor;
+    
+    return(Point3D(_origin.lon()+delta_lon, _origin.lat()+delta_lat, 0.0));
 }
 
 /**********************************************************************************/
 
 FGATCAlignedProjection::FGATCAlignedProjection() {
-    origin.setlat(0.0);
-    origin.setlon(0.0);
-    origin.setelev(0.0);
-    correction_factor = cos(origin.lat() * DCL_DEGREES_TO_RADIANS);
+    _origin.setlat(0.0);
+    _origin.setlon(0.0);
+    _origin.setelev(0.0);
+    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
+}
+
+FGATCAlignedProjection::FGATCAlignedProjection(const Point3D& centre, double heading) {
+    _origin = centre;
+    _theta = heading * SG_DEGREES_TO_RADIANS;
+    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
 }
 
 FGATCAlignedProjection::~FGATCAlignedProjection() {
 }
 
 void FGATCAlignedProjection::Init(const Point3D& centre, double heading) {
-    origin = centre;
-    theta = heading * DCL_DEGREES_TO_RADIANS;
-    correction_factor = cos(origin.lat() * DCL_DEGREES_TO_RADIANS);
+    _origin = centre;
+    _theta = heading * SG_DEGREES_TO_RADIANS;
+    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
 }
 
 Point3D FGATCAlignedProjection::ConvertToLocal(const Point3D& pt) {
     // convert from lat/lon to orthogonal
-    double delta_lat = pt.lat() - origin.lat();
-    double delta_lon = pt.lon() - origin.lon();
-    double y = sin(delta_lat * DCL_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M;
-    double x = sin(delta_lon * DCL_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M * correction_factor;
+    double delta_lat = pt.lat() - _origin.lat();
+    double delta_lon = pt.lon() - _origin.lon();
+    double y = sin(delta_lat * SG_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M;
+    double x = sin(delta_lon * SG_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M * _correction_factor;
 
     // Align
-    double xbar = x;
-    x = x*cos(theta) - y*sin(theta);
-    y = (xbar*sin(theta)) + (y*cos(theta));
+    if(_theta != 0.0) {
+        double xbar = x;
+        x = x*cos(_theta) - y*sin(_theta);
+        y = (xbar*sin(_theta)) + (y*cos(_theta));
+    }
 
     return(Point3D(x,y,pt.elev()));
 }
 
 Point3D FGATCAlignedProjection::ConvertFromLocal(const Point3D& pt) {
-	//cout << "theta = " << theta << '\n';
-	//cout << "origin = " << origin << '\n';
     // de-align
-    double thi = theta * -1.0;
+    double thi = _theta * -1.0;
     double x = pt.x()*cos(thi) - pt.y()*sin(thi);
     double y = (pt.x()*sin(thi)) + (pt.y()*cos(thi));
 
     // convert from orthogonal to lat/lon
-    double delta_lat = asin(y / SG_EQUATORIAL_RADIUS_M) * DCL_RADIANS_TO_DEGREES;
-    double delta_lon = (asin(x / SG_EQUATORIAL_RADIUS_M) * DCL_RADIANS_TO_DEGREES) / correction_factor;
+    double delta_lat = asin(y / SG_EQUATORIAL_RADIUS_M) * SG_RADIANS_TO_DEGREES;
+    double delta_lon = (asin(x / SG_EQUATORIAL_RADIUS_M) * SG_RADIANS_TO_DEGREES) / _correction_factor;
 
-    return(Point3D(origin.lon()+delta_lon, origin.lat()+delta_lat, pt.elev()));
+    return(Point3D(_origin.lon()+delta_lon, _origin.lat()+delta_lat, pt.elev()));
 }

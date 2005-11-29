@@ -40,8 +40,8 @@ public:
     Point3D ConvertFromLocal(const Point3D& pt);
 
 private:
-    Point3D origin;	// lat/lon of local area origin
-    double correction_factor;	// Reduction in surface distance per degree of longitude due to latitude.  Saves having to do a cos() every call.
+    Point3D _origin;	// lat/lon of local area origin
+    double _correction_factor;	// Reduction in surface distance per degree of longitude due to latitude.  Saves having to do a cos() every call.
 
 };
 
@@ -52,6 +52,7 @@ class FGATCAlignedProjection {
 
 public:
     FGATCAlignedProjection();
+    FGATCAlignedProjection(const Point3D& centre, double heading);
     ~FGATCAlignedProjection();
 
     void Init(const Point3D& centre, double heading);
@@ -63,9 +64,9 @@ public:
     Point3D ConvertFromLocal(const Point3D& pt);
 
 private:
-    Point3D origin;	// lat/lon of local area origin (the threshold)
-    double theta;	// the rotation angle for alignment in radians
-    double correction_factor;	// Reduction in surface distance per degree of longitude due to latitude.  Saves having to do a cos() every call.
+    Point3D _origin;	// lat/lon of local area origin (the threshold)
+    double _theta;	// the rotation angle for alignment in radians
+    double _correction_factor;	// Reduction in surface distance per degree of longitude due to latitude.  Saves having to do a cos() every call.
 
 };
 
