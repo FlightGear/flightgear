@@ -134,7 +134,11 @@ FGNavRadio::init ()
 	->getChild("serviceable");
     tofrom_serviceable = (node->getChild("to-from", 0, true))
 	->getChild("serviceable", 0, true);
+    nav_slaved_to_gps = node->getChild("slaved-to-gps", 0, true);
 
+    gps_cdi_deflection = fgGetNode("/instrumentation/gps/cdi-deflection", true);
+    gps_to_flag = fgGetNode("/instrumentation/gps/to-flag", true);
+    
     std::ostringstream temp;
     temp << name << "nav-ident" << num;
     nav_fx_name = temp.str();
@@ -794,8 +798,8 @@ void FGNavRadio::search()
 double FGNavRadio::get_nav_cdi_deflection() const {
     double r;
 
-    if ( nav_inrange
-         && nav_serviceable->getBoolValue() && cdi_serviceable->getBoolValue() )
+    if ( nav_inrange && nav_serviceable->getBoolValue() 
+        && cdi_serviceable->getBoolValue() && !nav_slaved_to_gps->getBoolValue() )
     {
         r = nav_radial - nav_target_radial;
 	// cout << "Target radial = " << nav_target_radial 
@@ -810,7 +814,12 @@ double FGNavRadio::get_nav_cdi_deflection() const {
         r = -r;                 // reverse, since radial is outbound
 	if ( nav_loc ) { r *= 4.0; }
 	if ( r < -10.0 ) { r = -10.0; }
-	if ( r >  10.0 ) { r = 10.0; }
+	if ( r >  10.0 ) { r =  10.0; }
+    } else if ( nav_slaved_to_gps->getBoolValue() ) {
+	r = gps_cdi_deflection->getDoubleValue();
+	// We want +- 5 dots deflection for the gps, so clamp to -12.5/12.5
+	if ( r < -12.5 ) { r = -12.5; }
+	if ( r >  12.5 ) { r =  12.5; }
     } else {
 	r = 0.0;
     }
@@ -849,8 +858,8 @@ double FGNavRadio::get_nav_cdi_xtrack_error() const {
 // return the amount of glide slope needle deflection (.i.e. the
 // number of degrees we are off the glide slope * 5.0
 double FGNavRadio::get_nav_gs_deflection() const {
-    if ( nav_inrange && nav_has_gs
-         && nav_serviceable->getBoolValue() && gs_serviceable->getBoolValue() )
+    if ( nav_inrange && nav_has_gs && nav_serviceable->getBoolValue()
+         && gs_serviceable->getBoolValue() && !nav_slaved_to_gps->getBoolValue() )
     {
 	double x = nav_gs_dist;
 	double y = (fgGetDouble("/position/altitude-ft") - nav_elev)
@@ -872,7 +881,8 @@ FGNavRadio::get_nav_to_flag () const
 {
     if ( nav_inrange
          && nav_serviceable->getBoolValue()
-         && tofrom_serviceable->getBoolValue() )
+         && tofrom_serviceable->getBoolValue()
+         && !nav_slaved_to_gps->getBoolValue() )
     {
         double offset = fabs(nav_radial - nav_target_radial);
         if (nav_loc) {
@@ -880,6 +890,8 @@ FGNavRadio::get_nav_to_flag () const
         } else {
             return !(offset <= 90.0 || offset >= 270.0);
         }
+    } else if( nav_slaved_to_gps->getBoolValue() ) {
+        return( gps_to_flag->getBoolValue() );
     } else {
         return false;
     }

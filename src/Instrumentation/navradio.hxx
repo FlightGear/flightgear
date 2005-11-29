@@ -49,6 +49,8 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode *bus_power;
     SGPropertyNode *nav_serviceable;
     SGPropertyNode *cdi_serviceable, *gs_serviceable, *tofrom_serviceable;
+    SGPropertyNode *nav_slaved_to_gps;
+    SGPropertyNode *gps_cdi_deflection, *gps_to_flag;
 
     string last_nav_id;
     bool last_nav_vor;
