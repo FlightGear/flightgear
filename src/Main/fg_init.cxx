@@ -1321,7 +1321,7 @@ void fgInitFDM() {
             cur_fdm_state = new FGLaRCsim( dt );
         } else if ( model == "jsb" ) {
             cur_fdm_state = new FGJSBsim( dt );
-#ifdef ENABLE_SP_FMDS
+#if ENABLE_SP_FDMS
         } else if ( model == "ada" ) {
             cur_fdm_state = new FGADA( dt );
         } else if ( model == "acms" ) {
