@@ -1,3 +1,5 @@
+SUBDIRS = KLN89
+
 noinst_LIBRARIES = libInstrumentation.a
 
 libInstrumentation_a_SOURCES = \
@@ -24,6 +26,8 @@ libInstrumentation_a_SOURCES = \
         vertical_speed_indicator.cxx vertical_speed_indicator.hxx \
 	inst_vertical_speed_indicator.cxx inst_vertical_speed_indicator.hxx \
 	od_gauge.hxx od_gauge.cxx wxradar.hxx wxradar.cxx \
-	tacan.cxx tacan.hxx
+	tacan.cxx tacan.hxx \
+	dclgps.cxx dclgps.hxx \
+	render_area_2d.cxx render_area_2d.hxx	
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
