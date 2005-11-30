@@ -45,6 +45,7 @@
 
 // #include "panel.hxx"
 #include "panel_io.hxx"
+#include <Instrumentation/KLN89/kln89.hxx>
 
 //built-in layers
 #include "built_in/FGMagRibbon.hxx"
@@ -749,12 +750,54 @@ readPanel (const SGPropertyNode * root)
     for (int i = 0; i < nInstruments; i++) {
       const SGPropertyNode * node = instrument_group->getChild(i);
       if (!strcmp(node->getName(), "instrument")) {
-	FGPanelInstrument * instrument = readInstrument(node);
-	if (instrument != 0)
-	  panel->addInstrument(instrument);
+        FGPanelInstrument * instrument = readInstrument(node);
+        if (instrument != 0)
+          panel->addInstrument(instrument);
+      } else if(!strcmp(node->getName(), "special-instrument")) {
+        //cout << "Special instrument found in instruments section!\n";
+        const string name = node->getStringValue("name");
+        if(name == "KLN89 GPS") {
+          //cout << "Special instrument is KLN89\n";
+          
+          int x = node->getIntValue("x", -1);
+          int y = node->getIntValue("y", -1);
+          int real_w = node->getIntValue("w", -1);
+          int real_h = node->getIntValue("h", -1);
+          int w = node->getIntValue("w-base", -1);
+          int h = node->getIntValue("h-base", -1);
+          
+          if (x == -1 || y == -1) {
+            SG_LOG( SG_COCKPIT, SG_ALERT,
+            "x and y positions must be specified and > 0" );
+            return 0;
+          }
+          
+          float w_scale = 1.0;
+          float h_scale = 1.0;
+          if (real_w != -1) {
+            w_scale = float(real_w) / float(w);
+            w = real_w;
+          }
+          if (real_h != -1) {
+            h_scale = float(real_h) / float(h);
+            h = real_h;
+          }
+          
+          SG_LOG( SG_COCKPIT, SG_DEBUG, "Reading instrument " << name );
+          
+          // Warning - hardwired size!!!
+          RenderArea2D* instrument = new RenderArea2D(158, 40, 158, 40, x, y);
+          // FIXME: shift-F3 (panel reload) kill's us here due to duplicate subsystem!
+          KLN89* gps = new KLN89(instrument);
+          panel->addInstrument(gps);
+          globals->add_subsystem("kln89", gps);
+          //gps->init();  // init seems to get called automagically.
+        } else {
+          SG_LOG( SG_COCKPIT, SG_WARN, "Unknown special instrument found" );
+        }
       } else {
-	SG_LOG( SG_COCKPIT, SG_INFO, "Skipping " << node->getName()
-                << " in instruments section" );
+        SG_LOG( SG_COCKPIT, SG_INFO, "Skipping " << node->getName()
+        << " in instruments section" );
       }
     }
   }
