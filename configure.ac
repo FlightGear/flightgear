@@ -523,6 +523,7 @@ AC_CONFIG_FILES([ \
 	src/GUI/Makefile \
 	src/Input/Makefile \
 	src/Instrumentation/Makefile \
+	src/Instrumentation/KLN89/Makefile \
 	src/Main/Makefile \
 	src/Main/runfgfs \
 	src/Main/runfgfs.bat \
