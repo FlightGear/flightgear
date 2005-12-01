@@ -583,8 +583,12 @@ Wing* FGFDM::parseWing(XMLAttributes* a, const char* type)
     w->setTaper(attrf(a, "taper", 1));
     w->setDihedral(attrf(a, "dihedral", defDihed) * DEG2RAD);
     w->setCamber(attrf(a, "camber", 0));
-    w->setIncidence(attrf(a, "incidence", 0) * DEG2RAD);
-    w->setTwist(attrf(a, "twist", 0) * DEG2RAD);
+
+    // These come in with positive indicating positive AoA, but the
+    // internals expect a rotation about the left-pointing Y axis, so
+    // invert the sign.
+    w->setIncidence(attrf(a, "incidence", 0) * DEG2RAD * -1);
+    w->setTwist(attrf(a, "twist", 0) * DEG2RAD * -1);
 
     // The 70% is a magic number that sorta kinda seems to match known
     // throttle settings to approach speed.
