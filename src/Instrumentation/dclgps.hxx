@@ -179,14 +179,14 @@ public:
 	virtual void LooseFocus();
 	
 	// Allows pages that display info for a given ID to have it set/get if they implement these functions.
-	virtual void SetId(string s);
-	virtual string GetId();
+	virtual void SetId(const string& s);
+	virtual const string& GetId()=0;
 	
 	inline int GetSubPage() { return(_subPage); }
 	
 	inline int GetNSubPages() { return(_nSubPages); }
 	
-	inline string GetName() { return(_name); }
+	inline const string& GetName() { return(_name); }
 	
 protected:
 	DCLGPS* _parent;
@@ -274,7 +274,7 @@ public:
 	// Returns -1 if no active waypoint.
 	int GetActiveWaypointIndex();
 	// Ditto for an arbitrary waypoint id
-	int GetWaypointIndex(string id);
+	int GetWaypointIndex(const string& id);
 	
 	// Returns meters
 	inline float GetDistToActiveWaypoint() { return _dist2Act; }
@@ -292,7 +292,7 @@ public:
 	// returns -1 if groundspeed is less than 30kts.
 	// If the waypoint is an unreached part of the active flight plan the time will be via each leg.
 	// otherwise it will be a direct-to time.
-	double GetTimeToWaypoint(string id);
+	double GetTimeToWaypoint(const string& id);
 	
 	// Return true if waypoint alerting is occuring
 	inline bool GetWaypointAlert() const { return(_waypointAlert); }
@@ -313,7 +313,7 @@ public:
 	inline bool GetToFlag() const { return(_headingBugTo); }
 	
 	// Initiate Direct To operation to the supplied ID.
-	void DtoInitiate(string id);
+	void DtoInitiate(const string& id);
 	// Cancel Direct To operation
 	void DtoCancel();
 	
@@ -377,14 +377,14 @@ protected:
 	gps_waypoint_map _waypoints;
 private:
 	// Worker function for the below.
-	const GPSWaypoint* ActualFindFirstById(string id, bool exact = false);
+	const GPSWaypoint* ActualFindFirstById(const string& id, bool exact = false);
 protected:
 	// Find first of any type of waypoint by id.  (TODO - Possibly we should return multiple waypoints here).
-	const GPSWaypoint* FindFirstById(string id, bool &multi, bool exact = false); 
-	FGNavRecord* FindFirstVorById(string id, bool &multi, bool exact = false);
-	FGNavRecord* FindFirstNDBById(string id, bool &multi, bool exact = false);
-	const FGAirport* FindFirstAptById(string id, bool &multi, bool exact = false);
-	const FGFix* FindFirstIntById(string id, bool &multi, bool exact = false);
+	const GPSWaypoint* FindFirstById(const string& id, bool &multi, bool exact = false); 
+	FGNavRecord* FindFirstVorById(const string& id, bool &multi, bool exact = false);
+	FGNavRecord* FindFirstNDBById(const string& id, bool &multi, bool exact = false);
+	const FGAirport* FindFirstAptById(const string& id, bool &multi, bool exact = false);
+	const FGFix* FindFirstIntById(const string& id, bool &multi, bool exact = false);
 	// Find the closest VOR to a position in RADIANS.
 	FGNavRecord* FindClosestVor(double lat_rad, double lon_rad);
 

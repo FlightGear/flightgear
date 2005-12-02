@@ -194,8 +194,7 @@ string GPSPage::GPSitoa(int n) {
 
 void GPSPage::CleanUp() {}
 void GPSPage::LooseFocus() {}
-void GPSPage::SetId(string s) {}
-string GPSPage::GetId() { return(""); }
+void GPSPage::SetId(const string& s) {}
 
 // ------------------------------------------------------------------------------------- //
 
@@ -888,7 +887,7 @@ double DCLGPS::GetCDIDeflection() const {
 	return((xtd / _currentCdiScale) * 5.0 * 2.5 * -1.0);
 }
 
-void DCLGPS::DtoInitiate(string s) {
+void DCLGPS::DtoInitiate(const string& s) {
 	cout << "DtoInitiate, s = " << s << '\n';
 	bool multi;
 	const GPSWaypoint* wp = FindFirstById(s, multi, true);
@@ -1013,7 +1012,7 @@ double DCLGPS::GetETE() {
 // returns -1 if groundspeed is less than 30kts.
 // If the waypoint is an unreached part of the active flight plan the time will be via each leg.
 // otherwise it will be a direct-to time.
-double DCLGPS::GetTimeToWaypoint(string id) {
+double DCLGPS::GetTimeToWaypoint(const string& id) {
 	if(_groundSpeed_kts < 30.0) {
 		return(-1.0);
 	}
@@ -1089,7 +1088,7 @@ int DCLGPS::GetActiveWaypointIndex() {
 	return(-1);
 }
 
-int DCLGPS::GetWaypointIndex(string id) {
+int DCLGPS::GetWaypointIndex(const string& id) {
 	for(unsigned int i=0; i<_flightPlans[0]->waypoints.size(); ++i) {
 		if(_flightPlans[0]->waypoints[i]->id == id) return((int)i);
 	}
@@ -1240,7 +1239,7 @@ void DCLGPS::CreateFlightPlan(GPSFlightPlan* fp, vector<string> ids, vector<GPSW
 
 /***************************************/
 
-const GPSWaypoint* DCLGPS::ActualFindFirstById(string id, bool exact) {
+const GPSWaypoint* DCLGPS::ActualFindFirstById(const string& id, bool exact) {
     gps_waypoint_map_const_iterator itr;
     if(exact) {
         itr = _waypoints.find(id);
@@ -1255,7 +1254,7 @@ const GPSWaypoint* DCLGPS::ActualFindFirstById(string id, bool exact) {
     }
 }
 
-const GPSWaypoint* DCLGPS::FindFirstById(string id, bool &multi, bool exact) {
+const GPSWaypoint* DCLGPS::FindFirstById(const string& id, bool &multi, bool exact) {
 	multi = false;
 	if(exact) return(ActualFindFirstById(id, exact));
 	
@@ -1317,7 +1316,7 @@ const GPSWaypoint* DCLGPS::FindFirstById(string id, bool &multi, bool exact) {
 
 // Host specific lookup functions
 // TODO - add the ASCII / alphabetical stuff from the Atlas version
-FGNavRecord* DCLGPS::FindFirstVorById(string id, bool &multi, bool exact) {
+FGNavRecord* DCLGPS::FindFirstVorById(const string& id, bool &multi, bool exact) {
 	// NOTE - at the moment multi is never set.
 	multi = false;
 	//if(exact) return(_overlays->FindFirstVorById(id, exact));
@@ -1336,7 +1335,7 @@ FGNavRecord* DCLGPS::FindFirstVorById(string id, bool &multi, bool exact) {
 	return(NULL);	// Shouldn't get here!
 }
 #if 0
-Overlays::NAV* DCLGPS::FindFirstVorById(string id, bool &multi, bool exact) {
+Overlays::NAV* DCLGPS::FindFirstVorById(const string& id, bool &multi, bool exact) {
 	// NOTE - at the moment multi is never set.
 	multi = false;
 	if(exact) return(_overlays->FindFirstVorById(id, exact));
@@ -1386,7 +1385,7 @@ Overlays::NAV* DCLGPS::FindFirstVorById(string id, bool &multi, bool exact) {
 #endif //0
 
 // TODO - add the ASCII / alphabetical stuff from the Atlas version
-FGNavRecord* DCLGPS::FindFirstNDBById(string id, bool &multi, bool exact) {
+FGNavRecord* DCLGPS::FindFirstNDBById(const string& id, bool &multi, bool exact) {
 	// NOTE - at the moment multi is never set.
 	multi = false;
 	//if(exact) return(_overlays->FindFirstVorById(id, exact));
@@ -1405,7 +1404,7 @@ FGNavRecord* DCLGPS::FindFirstNDBById(string id, bool &multi, bool exact) {
 	return(NULL);	// Shouldn't get here!
 }
 #if 0
-Overlays::NAV* DCLGPS::FindFirstNDBById(string id, bool &multi, bool exact) {
+Overlays::NAV* DCLGPS::FindFirstNDBById(const string& id, bool &multi, bool exact) {
 	// NOTE - at the moment multi is never set.
 	multi = false;
 	if(exact) return(_overlays->FindFirstNDBById(id, exact));
@@ -1455,7 +1454,7 @@ Overlays::NAV* DCLGPS::FindFirstNDBById(string id, bool &multi, bool exact) {
 #endif //0
 
 // TODO - add the ASCII / alphabetical stuff from the Atlas version
-const FGFix* DCLGPS::FindFirstIntById(string id, bool &multi, bool exact) {
+const FGFix* DCLGPS::FindFirstIntById(const string& id, bool &multi, bool exact) {
 	// NOTE - at the moment multi is never set, and indeed can't be
 	// since FG can only map one Fix per ID at the moment.
 	multi = false;
@@ -1516,7 +1515,7 @@ const FGFix* DCLGPS::FindFirstIntById(string id, bool &multi, bool exact) {
 	return NULL;	// Don't think we can ever get here.
 }
 
-const FGAirport* DCLGPS::FindFirstAptById(string id, bool &multi, bool exact) {
+const FGAirport* DCLGPS::FindFirstAptById(const string& id, bool &multi, bool exact) {
 	// NOTE - at the moment multi is never set.
 	//cout << "FindFirstAptById, id = " << id << '\n';
 	multi = false;
