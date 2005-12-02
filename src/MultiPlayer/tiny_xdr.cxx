@@ -122,42 +122,50 @@ XDR_decode_uint64 ( const xdr_data2_t & n_Val )
 xdr_data_t
 XDR_encode_float ( const float & f_Val )
 {
-    xdr_data_t* tmp;
+    union {
+        xdr_data_t x;
+        float f;
+    } tmp;
 
-    tmp = (xdr_data_t*) &f_Val;
-    return (XDR_encode_int32 (*tmp));
+    tmp.f = f_Val;
+    return (XDR_encode_int32 (tmp.x));
 }
 
 float
 XDR_decode_float ( const xdr_data_t & f_Val )
 {
-    float* tmp;
-    static xdr_data_t dummy;
+    union {
+        xdr_data_t x;
+        float f;
+    } tmp;
 
-    dummy = XDR_decode_int32 (f_Val);
-    tmp = (float*) &dummy;
-    return (*tmp);
+    tmp.x = XDR_decode_int32 (f_Val);
+    return tmp.f;
 }
 
 /* double */
 xdr_data2_t
 XDR_encode_double ( const double & d_Val )
 {
-    xdr_data2_t* tmp;
+    union {
+        xdr_data2_t x;
+        double d;
+    } tmp;
 
-    tmp = (xdr_data2_t*) &d_Val;
-    return (XDR_encode_int64 (*tmp));
+    tmp.d = d_Val;
+    return (XDR_encode_int64 (tmp.x));
 }
 
 double
 XDR_decode_double ( const xdr_data2_t & d_Val )
 {
-    double* tmp;
-    static xdr_data2_t dummy;
+    union {
+        xdr_data2_t x;
+        double d;
+    } tmp;
 
-    dummy = XDR_decode_int64 (d_Val);
-    tmp = (double*) &dummy;
-    return (*tmp);
+    tmp.x = XDR_decode_int64 (d_Val);
+    return tmp.d;
 }
 
 
