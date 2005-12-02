@@ -132,7 +132,7 @@ float
 XDR_decode_float ( const xdr_data_t & f_Val )
 {
     float* tmp;
-    xdr_data_t dummy;
+    static xdr_data_t dummy;
 
     dummy = XDR_decode_int32 (f_Val);
     tmp = (float*) &dummy;
@@ -153,7 +153,7 @@ double
 XDR_decode_double ( const xdr_data2_t & d_Val )
 {
     double* tmp;
-    xdr_data2_t dummy;
+    static xdr_data2_t dummy;
 
     dummy = XDR_decode_int64 (d_Val);
     tmp = (double*) &dummy;
