@@ -34,7 +34,7 @@ public:
 	
 	void Update(double dt);
 	
-	void SetId(string s);
+	void SetId(const string& s);
 	
 	void ClrPressed();
 	void EntPressed();

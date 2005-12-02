@@ -49,7 +49,7 @@ public:
 	void Knob2Left1();
 	void Knob2Right1();
 	
-	void SetId(string s);
+	void SetId(const string& s);
 	
 private:
 	// Update the cached airport details

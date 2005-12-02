@@ -60,8 +60,8 @@ public:
 	inline void SetEntInvert(bool b) { _entInvert = b; }
 	
 	// Get / Set a waypoint id, NOT the page name!
-	virtual void SetId(string s);
-	virtual string GetId();
+	virtual void SetId(const string& s);
+	virtual const string& GetId();
 	
 protected:
 	KLN89* _kln89;
@@ -82,7 +82,7 @@ protected:
 	string _id;		// The ID of the waypoint that the page is displaying.
 					// Doesn't make sense for all pages, but does for all the data pages.
 					
-	void ShowScratchpadMessage(string line1, string line2);
+	void ShowScratchpadMessage(const string& line1, const string& line2);
 					
 	bool _scratchpadMsg;		// Set true when there is a scratchpad message to display
 	double _scratchpadTimer;	// Used for displaying the scratchpad messages for the right amount of time.

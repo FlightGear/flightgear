@@ -40,7 +40,7 @@ public:
 	void Knob2Left1();
 	void Knob2Right1();
 	
-	void SetId(string s);
+	void SetId(const string& s);
 	
 private:
 	string _vor_id;

@@ -48,7 +48,7 @@ public:
 	// Override the base class GetId function to return the waypoint ID under the cursor
 	// on FPL0 page, if there is one and the cursor is on.
 	// Otherwise return an empty string.
-	inline string GetId() { return(_fp0SelWpId); } 
+	inline const string& GetId() { return(_fp0SelWpId); } 
 	
 private:
 	int _fpMode;	// 0 = Dis, 1 = Dtk

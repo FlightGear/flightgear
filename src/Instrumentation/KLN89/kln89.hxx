@@ -240,7 +240,7 @@ private:
 	// Draw an airport or waypoint label on the moving map
 	// Specify position by the map pixel co-ordinate of the left or right, bottom, of the *visible* portion of the label.
 	// The black background quad will automatically overlap this by 1 pixel.
-	void DrawLabel(string s, int x1, int y1, bool right_align = false);
+	void DrawLabel(const string& s, int x1, int y1, bool right_align = false);
 	
 	int GetLabelQuadrant(double h);
 	int GetLabelQuadrant(double h1, double h2);

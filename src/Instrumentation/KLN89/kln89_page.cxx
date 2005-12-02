@@ -110,7 +110,7 @@ void KLN89Page::Update(double dt) {
 	}
 }
 
-void KLN89Page::ShowScratchpadMessage(string line1, string line2) {
+void KLN89Page::ShowScratchpadMessage(const string& line1, const string& line2) {
 	_scratchpadLine1 = line1;
 	_scratchpadLine2 = line2;
 	_scratchpadTimer = 0.0;
@@ -195,10 +195,10 @@ void KLN89Page::LooseFocus() {
 	_entInvert = false;
 }
 
-void KLN89Page::SetId(string s) {
+void KLN89Page::SetId(const string& s) {
 	_id = s;
 }
 
-string KLN89Page::GetId() {
+const string& KLN89Page::GetId() {
 	return(_id);
 }

@@ -63,7 +63,7 @@ void KLN89DirPage::Update(double dt) {
 	KLN89Page::Update(dt);
 }
 
-void KLN89DirPage::SetId(string s) {
+void KLN89DirPage::SetId(const string& s) {
 	if(s.size()) {
 		_id = s;
 		// TODO - fill in lat, lon, type

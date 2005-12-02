@@ -462,7 +462,7 @@ void KLN89AptPage::Update(double dt) {
 	KLN89Page::Update(dt);
 }
 
-void KLN89AptPage::SetId(string s) {
+void KLN89AptPage::SetId(const string& s) {
 	_last_apt_id = _apt_id;
 	_save_apt_id = _apt_id;
 	_apt_id = s;

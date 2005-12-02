@@ -123,7 +123,7 @@ void KLN89NDBPage::Update(double dt) {
 	KLN89Page::Update(dt);
 }
 
-void KLN89NDBPage::SetId(string s) {
+void KLN89NDBPage::SetId(const string& s) {
 	_last_ndb_id = _ndb_id;
 	_save_ndb_id = _ndb_id;
 	_ndb_id = s;

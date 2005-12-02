@@ -908,7 +908,7 @@ void KLN89::DrawMapQuad(int x1, int y1, int x2, int y2, bool invert) {
 // Draw an airport or waypoint label on the moving map
 // Specify position by the map pixel co-ordinate of the left or right, bottom, of the *visible* portion of the label.
 // The black background quad will automatically overlap this by 1 pixel.
-void KLN89::DrawLabel(string s, int x1, int y1, bool right_align) {
+void KLN89::DrawLabel(const string& s, int x1, int y1, bool right_align) {
 	MapToInstrument(x1, y1);
 	if(!right_align) {
 		for(unsigned int i=0; i<s.size(); ++i) {

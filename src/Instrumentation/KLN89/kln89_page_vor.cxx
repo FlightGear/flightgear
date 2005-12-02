@@ -135,7 +135,7 @@ void KLN89VorPage::Update(double dt) {
 	KLN89Page::Update(dt);
 }
 
-void KLN89VorPage::SetId(string s) {
+void KLN89VorPage::SetId(const string& s) {
 	_last_vor_id = _vor_id;
 	_save_vor_id = _vor_id;
 	_vor_id = s;

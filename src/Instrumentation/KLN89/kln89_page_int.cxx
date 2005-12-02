@@ -159,7 +159,7 @@ void KLN89IntPage::Update(double dt) {
 	KLN89Page::Update(dt);
 }
 
-void KLN89IntPage::SetId(string s) {
+void KLN89IntPage::SetId(const string& s) {
 	_last_int_id = _int_id;
 	_save_int_id = _int_id;
 	_int_id = s;
