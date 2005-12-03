@@ -670,7 +670,7 @@ typedef enum {
 
 // storage class for deferred object processing in FGTileEntry::load()
 struct Object {
-    Object(object_type t, string& token, const SGPath& p, istream& in)
+    Object(object_type t, const string& token, const SGPath& p, istream& in)
         : type(t), path(p)
     {
         in >> name;
@@ -679,10 +679,10 @@ struct Object {
         in >> ::skipeol;
 
         if (type == OBJECT)
-            SG_LOG(SG_TERRAIN, SG_INFO, token << "  " << name);
+            SG_LOG(SG_TERRAIN, SG_INFO, "    " << token << "  " << name);
         else
-            SG_LOG(SG_TERRAIN, SG_INFO, token << "  " << name << "  lon=" << lon
-                    << "  lat=" << lat << "  elev=" << elev << "  hdg=" << hdg);
+            SG_LOG(SG_TERRAIN, SG_INFO, "    " << token << "  " << name << "  lon=" <<
+                    lon << "  lat=" << lat << "  elev=" << elev << "  hdg=" << hdg);
     }
     object_type type;
     string name;
@@ -699,13 +699,23 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
     SGPath object_base;
     vector<const Object*> objects;
 
+    string index_str = tile_bucket.gen_index_str();
+    SG_LOG( SG_TERRAIN, SG_INFO, "Loading tile " << index_str );
+
     // scan and parse all files and store information
-    for (int i = 0; i < path_list.size(); i++) {
+    for (unsigned int i = 0; i < path_list.size(); i++) {
+        // If we found a terrain tile in Terrain/, we have to process the
+        // Objects/ dir in the same group, too, before we can stop scanning.
+        // FGGlobals::set_fg_scenery() inserts an empty string to path_list
+        // as marker.
+        if (path_list[i].empty()) {
+            if (found_tile_base)
+                break;
+            else
+                continue;
+        }
 
         bool has_base = false;
-
-        // Generate names for later use
-        string index_str = tile_bucket.gen_index_str();
 
         SGPath tile_path = path_list[i];
         tile_path.append( tile_bucket.gen_base_path() );
@@ -713,7 +723,7 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
         SGPath basename = tile_path;
         basename.append( index_str );
 
-        SG_LOG( SG_TERRAIN, SG_INFO, "Loading tile " << basename.str() );
+        SG_LOG( SG_TERRAIN, SG_INFO, "  Trying " << basename.str() );
 
 
         // Check for master .stg (scene terra gear) file
@@ -736,7 +746,7 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
             if ( token == "OBJECT_BASE" ) {
                 string name;
                 in >> name >> ::skipws;
-                SG_LOG( SG_TERRAIN, SG_INFO, token << "  " << name );
+                SG_LOG( SG_TERRAIN, SG_INFO, "    " << token << " " << name );
 
                 if (!found_tile_base) {
                     found_tile_base = true;
@@ -746,7 +756,7 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
                     object_base.append(name);
 
                 } else
-                    SG_LOG(SG_TERRAIN, SG_INFO, " (skipped)");
+                    SG_LOG(SG_TERRAIN, SG_INFO, "    (skipped)");
 
                             // Load only if base is not in another file
             } else if ( token == "OBJECT" ) {
@@ -755,7 +765,8 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
                 else {
                     string name;
                     in >> name >> ::skipeol;
-                    SG_LOG(SG_TERRAIN, SG_INFO, token << "  " << name << "  (skipped)");
+                    SG_LOG(SG_TERRAIN, SG_INFO, "    " << token << "  "
+                            << name << "  (skipped)");
                 }
 
                             // Always OK to load
@@ -800,6 +811,7 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
 
     } else {
         // ... or generate an ocean tile on the fly
+        SG_LOG(SG_TERRAIN, SG_INFO, "  Generating ocean tile");
         ssgBranch *geometry = new ssgBranch;
         Point3D c;
         double br;
@@ -817,7 +829,7 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
 
 
     // now that we have a valid center, process all the objects
-    for (int j = 0; j < objects.size(); j++) {
+    for (unsigned int j = 0; j < objects.size(); j++) {
         const Object *obj = objects[j];
 
         if (obj->type == OBJECT) {

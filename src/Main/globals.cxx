@@ -157,6 +157,10 @@ void FGGlobals::set_fg_scenery (const string &scenery) {
                 ulCloseDir( od );
             }
         }
+        // insert a marker for FGTileEntry::load(), so that
+        // FG_SCENERY=A:B becomes list ["A/Terrain", "A/Objects", "",
+        // "B/Terrain", "B/Objects", ""]
+        fg_scenery.push_back("");
     }
 }
 
