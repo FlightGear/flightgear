@@ -202,7 +202,7 @@ FGGroundCache::extractGroundProperty( ssgLeaf* l )
 {
   // FIXME: Do more ...
   // Idea: have a get_globals() function which knows about that stuff.
-  // Or most propably read that from a configuration file,
+  // Or most probably read that from a configuration file,
   // from property tree or whatever ...
   
   // Get ground dependent data.
@@ -361,7 +361,7 @@ FGGroundCache::putSurfaceLeafIntoCache(const sgdSphere *sp,
         sgdSubVec3(off, isectpoint, tmp);
         // Only accept the altitude if the intersection point is below the
         // ground cache midpoint
-        if (0 < sgdScalarProductVec3( off, down ) || !found_ground) {
+        if (0 < sgdScalarProductVec3( off, down )) {
           found_ground = true;
           sgdAddVec3(isectpoint, cache_center);
           double this_radius = sgdLengthVec3(isectpoint);
@@ -441,7 +441,7 @@ FGGroundCache::cache_fill(ssgBranch *branch, sgdMat4 xform,
     if ( e->isAKindOf( ssgTypeBranch() ) ) {
       ssgBranch *b = (ssgBranch *)e;
       if ( b->isAKindOf( ssgTypeTransform() ) ) {
-        // Collect up the transfors required to reach that part of
+        // Collect up the transforms required to reach that part of
         // the branch.
         sgMat4 xform2;
         sgMakeIdentMat4( xform2 );
@@ -458,9 +458,9 @@ FGGroundCache::cache_fill(ssgBranch *branch, sgdMat4 xform,
     // This will minimize the number of vertices/triangles in the cache.
     else if (e->isAKindOf(ssgTypeLeaf())) {
       // Since we reach that leaf if we have an intersection with the
-      // most propably bigger wire/catapult cache sphere, we need to check
+      // most probably bigger wire/catapult cache sphere, we need to check
       // that here, if the smaller cache for the surface has a chance for hits.
-      // Also, if the spheres do not intersect compute a croase agl value
+      // Also, if the spheres do not intersect compute a coarse agl value
       // by following the line downwards originating at the aircraft.
       bool spIsec = sp->intersects(&esphere);
       putSurfaceLeafIntoCache(sp, xform, spIsec, down, (ssgLeaf *)e);
@@ -493,7 +493,7 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
   // Decide where we put the scenery center.
   Point3D old_cntr = globals->get_scenery()->get_center();
   Point3D cntr(pt[0], pt[1], pt[2]);
-  // Only move the cache center if it is unaccaptable far away.
+  // Only move the cache center if it is unacceptable far away.
   if (40*40 < old_cntr.distance3Dsquared(cntr))
     globals->get_scenery()->set_center(cntr);
   else
@@ -523,7 +523,7 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
   sgdSetVec3(down, -pt[0], -pt[1], -pt[2]);
   sgdNormalizeVec3(down);
 
-  // We collaps all transforms we need to reach a particular leaf.
+  // We collapse all transforms we need to reach a particular leaf.
   // The leafs itself will be then transformed later.
   // So our cache is just flat.
   // For leafs which are moving (carriers surface, etc ...)
@@ -736,7 +736,7 @@ bool FGGroundCache::caught_wire(double t, const double pt[4][3])
   sgdCopyVec3( tri[1][2], pt[3] );
 
   // Intersect the wire lines with each of these triangles.
-  // You have cautght a wire if they intersect.
+  // You have caught a wire if they intersect.
   for (size_t i = 0; i < sz; ++i) {
     sgdVec3 le[2];
     for (int k = 0; k < 2; ++k) {

@@ -196,6 +196,10 @@ FGInterface::common_init ()
     double alt_m = alt_ft * SG_FEET_TO_METER;
     set_Longitude( lon );
     set_Latitude( lat );
+    SG_LOG( SG_FLIGHT, SG_INFO, "Checking for lon = "
+            << lon*SGD_RADIANS_TO_DEGREES << "deg, lat = "
+            << lat*SGD_RADIANS_TO_DEGREES << "deg, alt = "
+            << alt_ft << "ft");
 
     double ground_elev_m = get_groundlevel_m(lat, lon, alt_m);
     double ground_elev_ft = ground_elev_m * SG_METER_TO_FEET;
@@ -894,26 +898,50 @@ FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
 double
 FGInterface::get_groundlevel_m(double lat, double lon, double alt)
 {
-  // First compute the sea level radius,
   sgdVec3 pos, cpos;
-  sgGeodToCart(lat, lon, 0, pos);
-  double slr = sgdLengthVec3(pos);
-  // .. then the cartesian position of the given lat/lon/alt.
+  // Compute the cartesian position of the given lat/lon/alt.
   sgGeodToCart(lat, lon, alt, pos);
 
   // FIXME: how to handle t - ref_time differences ???
   double ref_time, radius;
   // Prepare the ground cache for that position.
-  if (!is_valid_m(&ref_time, cpos, &radius))
-    prepare_ground_cache_m(ref_time, pos, 10);
-  else if (radius*radius <= sgdDistanceSquaredVec3(pos, cpos))
-    prepare_ground_cache_m(ref_time, pos, radius);
+  if (!is_valid_m(&ref_time, cpos, &radius)) {
+    bool ok = prepare_ground_cache_m(ref_time, pos, 10);
+    /// This is most likely the case when the given altitude is
+    /// too low, try with a new altitude of 10000m, that should be
+    /// sufficient to find a ground level below everywhere on our planet
+    if (!ok) {
+      sgGeodToCart(lat, lon, 10000, pos);
+      /// If there is still no ground, return sea level radius
+      if (!prepare_ground_cache_m(ref_time, pos, 10))
+        return 0;
+    }
+  } else if (radius*radius <= sgdDistanceSquaredVec3(pos, cpos)) {
+    /// We reuse the old radius value, but only if it is at least 10 Meters ..
+    if (!(10 < radius)) // Well this strange compare is nan safe
+      radius = 10;
+
+    bool ok = prepare_ground_cache_m(ref_time, pos, radius);
+    /// This is most likely the case when the given altitude is
+    /// too low, try with a new altitude of 10000m, that should be
+    /// sufficient to find a ground level below everywhere on our planet
+    if (!ok) {
+      sgGeodToCart(lat, lon, 10000, pos);
+      /// If there is still no ground, return sea level radius
+      if (!prepare_ground_cache_m(ref_time, pos, radius))
+        return 0;
+    }
+  }
   
   double contact[3], normal[3], vel[3], lc, ff, agl;
   int type;
+  // Ignore the return value here, since it just tells us if
+  // the returns stem from the groundcache or from the coarse
+  // computations below the groundcache. The contact point is still something
+  // valid, the normals and the other returns just contain some defaults.
   get_agl_m(ref_time, pos, 2.0, contact, normal, vel, &type, &lc, &ff, &agl);
-
-  return sgdLengthVec3(contact) - slr;
+  Point3D geodPos = sgCartToGeod(Point3D(contact[0], contact[1], contact[2]));
+  return geodPos.elev();
 }
   
 bool
