@@ -1281,6 +1281,9 @@ bool FGTaxiRoute::next(int *val)
 FGGroundNetwork::FGGroundNetwork()
 {
   hasNetwork = false;
+  foundRoute = false;
+  totalDistance = 0;
+  maxDistance = 0;
 }
 
 void FGGroundNetwork::addSegment(const FGTaxiSegment &seg)

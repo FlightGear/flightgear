@@ -59,6 +59,13 @@ FGAISchedule::FGAISchedule()
 {
   firstRun     = true;
   AIManagerRef = 0;
+
+  heavy = false;
+  lat = 0;
+  lon = 0;
+  radius = 0;
+  groundOffset = 0;
+  distanceToUser = 0;
 }
 
 FGAISchedule::FGAISchedule(string    mdl, 
@@ -80,8 +87,11 @@ FGAISchedule::FGAISchedule(string    mdl,
   airline      = arln;
   m_class      = mclass;
   flightType   = fltpe;
+  lat = 0;
+  lon = 0;
   radius       = rad;
   groundOffset = grnd;
+  distanceToUser = 0;
   heavy = hvy;
   for (FGScheduledFlightVecIterator i = flt.begin();
        i != flt.end();

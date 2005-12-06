@@ -68,7 +68,7 @@ private:
   double tailWind;
   double crssWind;
 public:
-  ScheduleTime() {};
+  ScheduleTime() : tailWind(0), crssWind(0) {};
   ScheduleTime(const ScheduleTime &other);
   ScheduleTime &operator= (const ScheduleTime &other);
   string getName(time_t dayStart);

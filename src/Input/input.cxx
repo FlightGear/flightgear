@@ -973,6 +973,8 @@ FGInput::_find_key_bindings (unsigned int k, int modifiers)
 
 FGInput::button::button ()
   : is_repeatable(false),
+    interval_sec(0),
+    last_dt(0),
     last_state(0)
 {
 }
@@ -995,7 +997,9 @@ FGInput::axis::axis ()
   : last_value(9999999),
     tolerance(0.002),
     low_threshold(-0.9),
-    high_threshold(0.9)
+    high_threshold(0.9),
+    interval_sec(0),
+    last_dt(0)
 {
 }
 
@@ -1013,6 +1017,12 @@ FGInput::axis::~axis ()
 ////////////////////////////////////////////////////////////////////////
 
 FGInput::joystick::joystick ()
+  : jsnum(0),
+    js(0),
+    naxes(0),
+    nbuttons(0),
+    axes(0),
+    buttons(0)
 {
 }
 
