@@ -386,7 +386,7 @@ FGMenuBar::make_map(SGPropertyNode * node)
 
         SGPropertyNode *menu = node->getNode("menu", menu_index, false);
         if (!menu) {
-            SG_LOG(SG_GENERAL, SG_WARN, "<menu> without node: "
+            SG_LOG(SG_GENERAL, SG_WARN, "'menu' object without node: "
                     << node->getPath() << "/menu[" << menu_index << ']');
             continue;
         }
@@ -394,21 +394,20 @@ FGMenuBar::make_map(SGPropertyNode * node)
         _entries[menu->getPath()] = obj;
         add_enabled_listener(menu);
 
-        puPopupMenu *popup = (puPopupMenu *)obj->getUserData();
+        puGroup *popup = (puGroup *)obj->getUserData();
         if (!popup)
             continue;
 
         // the entries are for some reason reversed (last first), and we
         // don't know yet how many will be usable; so we collect first
         vector<puObject *> e;
-        for (puObject *me = ((puGroup *)popup)->getFirstChild();
-                me; me = me->getNextObject())
+        for (puObject *me = popup->getFirstChild(); me; me = me->getNextObject())
             e.push_back(me);
 
         for (unsigned int i = 0; i < e.size(); i++) {
             SGPropertyNode *item = menu->getNode("item", e.size() - i - 1, false);
             if (!item) {
-                SG_LOG(SG_GENERAL, SG_WARN, "menu <item> without node: "
+                SG_LOG(SG_GENERAL, SG_WARN, "'item' object without node: "
                         << menu->getPath() << "/item[" << i << ']');
                 continue;
             }
