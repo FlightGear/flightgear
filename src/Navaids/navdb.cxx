@@ -146,7 +146,7 @@ bool fgNavDBInit( FGAirportList *airports,
     path.append( "Navaids/carrier_nav.dat" );
     
     file = path.str();
-    SG_LOG( SG_GENERAL, SG_ALERT, "opening file: " << path.str() );
+    SG_LOG( SG_GENERAL, SG_INFO, "opening file: " << path.str() );
     
     sg_gzifstream incarrier( path.str() );
     
@@ -187,9 +187,8 @@ bool fgNavDBInit( FGAirportList *airports,
     path = globals->get_fg_root();
     path.append( "Navaids/TACAN_freq.dat" );
     
-    file = path.str();
-    cout << file << endl;
-    //
+    SG_LOG( SG_GENERAL, SG_INFO, "opening file: " << path.str() );
+        
     sg_gzifstream inchannel( path.str() );
     
     if ( !inchannel.is_open() ) {
