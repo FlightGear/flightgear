@@ -1,0 +1,35 @@
+Welcome to the FlightGear Flight Simulator project.
+===================================================
+
+The primary web page for this project is: http://www.flightgear.org
+
+For basic installation instructions see the "INSTALL" file.
+
+Before you can run FlightGear you will also need to download and
+install the "base" package which is a collection of textures, sounds,
+sample scenery, and other data files need by the sim.
+
+For additional install help for specific platforms please browse the
+"docs-mini/" subdirectory.
+
+More complete documentation is available from our web page as a
+separate distribution.
+
+Please take a look at the "Thanks" file for a list of people who have
+contributed to this project.  If you have contributed something but
+don't find your name in this file.  Please send a polite reminder to
+http://www.flightgear.org/~curt
+
+For a summary of changes/additions by version see the "NEWS" file.
+
+This project is GPL'd.  For complete details on our licensing please
+see the "COPYING" file.
+
+For information on available mailing lists, mailing list archives, and
+other available source code and documenation, please visit our web
+site.
+
+FlightGear is a product of the collaboration of large international
+group of volunteers.  FlightGear is a work in progress.  FlightGear
+comes with no warrantee.  We hope you enjoy FlightGear and/or find it
+of some value!
