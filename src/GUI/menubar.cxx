@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <iostream>
+#include <sstream>
 #include <plib/pu.h>
 #include <simgear/debug/logstream.hxx>
 
@@ -302,6 +303,8 @@ FGMenuBar::make_menubar(const SGPropertyNode * props)
         make_menu(menu_nodes[i]);
 
     _menuBar->close();
+    make_map(props);
+
     if (_visible)
         _menuBar->reveal();
     else
@@ -349,6 +352,104 @@ FGMenuBar::destroy_menubar ()
     SG_LOG(SG_GENERAL, SG_INFO, "Done.");
 }
 
+struct EnabledListener : SGPropertyChangeListener {
+    void valueChanged(SGPropertyNode* node) {
+        NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+        if (!gui)
+            return;
+        FGMenuBar *menubar = gui->getMenuBar();
+        if (menubar)
+            menubar->enable_item(node->getParent(), node->getBoolValue());
+    }
+};
+
+void
+FGMenuBar::add_enabled_listener(SGPropertyNode * node)
+{
+    if (!node->hasValue("enabled"))
+        node->setBoolValue("enabled", true);
+
+    enable_item(node, node->getBoolValue("enabled"));
+    node->getNode("enabled")->addChangeListener(new EnabledListener());
+}
+
+void
+FGMenuBar::make_map(const SGPropertyNode * node)
+{
+    string base = node->getPath();
+
+    int menu_index = 0;
+    for (puObject *obj = ((puGroup *)_menuBar)->getFirstChild();
+            obj; obj = obj->getNextObject()) {
+
+        // skip puPopupMenus. They are also children of _menuBar,
+        // but we access them via getUserData()  (see below)
+        if (!(obj->getType() & PUCLASS_ONESHOT))
+            continue;
+
+        if (!obj->getLegend())
+            continue;
+
+        std::ostringstream menu;
+        menu << base << "/menu[" << menu_index << "]";
+        SGPropertyNode *prop = fgGetNode(menu.str().c_str());
+        if (!prop) {
+            SG_LOG(SG_GENERAL, SG_WARN, "menu without node: " << menu.str());
+            continue;
+        }
+
+        // push "menu" entry
+        _entries[prop->getPath()] = obj;
+        add_enabled_listener(prop);
+
+        // push "item" entries
+        puPopupMenu *popup = (puPopupMenu *)obj->getUserData();
+        if (!popup)
+            continue;
+
+        // the entries are for some reason reversed (last first), and we
+        // don't know yet how many will be usable; so we collect first
+        vector<puObject *> e;
+        for (puObject *me = ((puGroup *)popup)->getFirstChild();
+                me; me = me->getNextObject()) {
+
+            if (!me->getLegend())
+                continue;
+
+            e.push_back(me);
+        }
+
+        for (unsigned int i = 0; i < e.size(); i++) {
+            std::ostringstream item;
+            item << menu.str() << "/item[" << (e.size() - i - 1) << "]";
+            prop = fgGetNode(item.str().c_str());
+            if (!prop) {
+                SG_LOG(SG_GENERAL, SG_WARN, "item without node: " << item.str());
+                continue;
+            }
+            _entries[prop->getPath()] = e[i];
+            add_enabled_listener(prop);
+        }
+        menu_index++;
+    }
+}
+
+bool
+FGMenuBar::enable_item(const SGPropertyNode * node, bool state)
+{
+    if (!node || _entries.find(node->getPath()) == _entries.end()) {
+        SG_LOG(SG_GENERAL, SG_WARN, "Trying to enable/disable "
+            "non-existent menu item");
+        return false;
+    }
+    puObject *object = _entries[node->getPath()];
+    if (state)
+        object->activate();
+    else
+        object->greyOut();
+
+    return true;
+}
 
 char **
 FGMenuBar::make_char_array (int size)

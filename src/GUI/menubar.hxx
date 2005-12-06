@@ -95,6 +95,11 @@ public:
      */
     void destroy_menubar ();
 
+    /**
+     * Disable/enable menu titles and entries
+     */
+    bool enable_item (const SGPropertyNode * item, bool state);
+
 
 private:
 
@@ -103,6 +108,12 @@ private:
 
     // Make the top-level menubar.
     void make_menubar ();
+
+    // Create a property-path -> puObject map for menu node
+    void make_map(const SGPropertyNode * node);
+
+    // Add <enabled> listener that enables/disabled menu entries.
+    void add_enabled_listener(SGPropertyNode * node);
 
     // Is the menu visible?
     bool _visible;
@@ -121,6 +132,8 @@ private:
     puCallback * make_callback_array (int size);
     vector<char **> _char_arrays;
     vector<puCallback *> _callback_arrays;
+
+    map<string, puObject *> _entries;
 };
 
 #endif // __MENUBAR_HXX
