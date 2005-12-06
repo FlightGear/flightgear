@@ -582,6 +582,9 @@ Innis Cunningham <innisc@hotmail.com>
 Vivian Meazza <vivian.meazza@lineone.net>
   Added a number of excellent aircraft models including the Hawker Hunter
   and Seahawk.
+  Provided realistic wind, gravity and drag calculations for AIBallistic models.
+  Added the Fresnel Lens Optical Landing System and AI code for AICarrier and
+  AIShip, and implemented the TACAN navigation instrument
 
 
 David Culp <davidculp2@comcast.net>
