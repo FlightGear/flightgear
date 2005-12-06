@@ -87,7 +87,7 @@ public:
     /**
      * create a menubar based on a PropertyList within the PropertyTree
      */
-    void make_menubar (const SGPropertyNode * props);
+    void make_menubar (SGPropertyNode * props);
 
 
     /**
@@ -110,7 +110,7 @@ private:
     void make_menubar ();
 
     // Create a property-path -> puObject map for menu node
-    void make_map(const SGPropertyNode * node);
+    void make_map(SGPropertyNode * node);
 
     // Add <enabled> listener that enables/disables menu entries.
     void add_enabled_listener(SGPropertyNode * node);

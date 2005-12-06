@@ -4,7 +4,6 @@
 
 #include <string.h>
 #include <iostream>
-#include <sstream>
 #include <plib/pu.h>
 #include <simgear/debug/logstream.hxx>
 
@@ -292,7 +291,7 @@ FGMenuBar::make_menubar ()
  * contents, whether they are representing a 'legal' menubar structure.
  */
 void
-FGMenuBar::make_menubar(const SGPropertyNode * props) 
+FGMenuBar::make_menubar(SGPropertyNode * props) 
 {    
     // Just in case.
     destroy_menubar();
@@ -374,10 +373,8 @@ FGMenuBar::add_enabled_listener(SGPropertyNode * node)
 }
 
 void
-FGMenuBar::make_map(const SGPropertyNode * node)
+FGMenuBar::make_map(SGPropertyNode * node)
 {
-    string base = node->getPath();
-
     int menu_index = 0;
     for (puObject *obj = ((puGroup *)_menuBar)->getFirstChild();
             obj; obj = obj->getNextObject()) {
@@ -387,19 +384,16 @@ FGMenuBar::make_map(const SGPropertyNode * node)
         if (!(obj->getType() & PUCLASS_ONESHOT))
             continue;
 
-        std::ostringstream menu;
-        menu << base << "/menu[" << menu_index << "]";
-        SGPropertyNode *prop = fgGetNode(menu.str().c_str());
-        if (!prop) {
-            SG_LOG(SG_GENERAL, SG_WARN, "menu without node: " << menu.str());
+        SGPropertyNode *menu = node->getNode("menu", menu_index, false);
+        if (!menu) {
+            SG_LOG(SG_GENERAL, SG_WARN, "<menu> without node: "
+                    << node->getPath() << "/menu[" << menu_index << ']');
             continue;
         }
 
-        // push "menu" entry
-        _entries[prop->getPath()] = obj;
-        add_enabled_listener(prop);
+        _entries[menu->getPath()] = obj;
+        add_enabled_listener(menu);
 
-        // push "item" entries
         puPopupMenu *popup = (puPopupMenu *)obj->getUserData();
         if (!popup)
             continue;
@@ -412,15 +406,14 @@ FGMenuBar::make_map(const SGPropertyNode * node)
             e.push_back(me);
 
         for (unsigned int i = 0; i < e.size(); i++) {
-            std::ostringstream item;
-            item << menu.str() << "/item[" << (e.size() - i - 1) << "]";
-            prop = fgGetNode(item.str().c_str());
-            if (!prop) {
-                SG_LOG(SG_GENERAL, SG_WARN, "item without node: " << item.str());
+            SGPropertyNode *item = menu->getNode("item", e.size() - i - 1, false);
+            if (!item) {
+                SG_LOG(SG_GENERAL, SG_WARN, "menu <item> without node: "
+                        << menu->getPath() << "/item[" << i << ']');
                 continue;
             }
-            _entries[prop->getPath()] = e[i];
-            add_enabled_listener(prop);
+            _entries[item->getPath()] = e[i];
+            add_enabled_listener(item);
         }
         menu_index++;
     }
