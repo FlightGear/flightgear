@@ -112,7 +112,7 @@ private:
     // Create a property-path -> puObject map for menu node
     void make_map(const SGPropertyNode * node);
 
-    // Add <enabled> listener that enables/disabled menu entries.
+    // Add <enabled> listener that enables/disables menu entries.
     void add_enabled_listener(SGPropertyNode * node);
 
     // Is the menu visible?

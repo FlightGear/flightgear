@@ -387,9 +387,6 @@ FGMenuBar::make_map(const SGPropertyNode * node)
         if (!(obj->getType() & PUCLASS_ONESHOT))
             continue;
 
-        if (!obj->getLegend())
-            continue;
-
         std::ostringstream menu;
         menu << base << "/menu[" << menu_index << "]";
         SGPropertyNode *prop = fgGetNode(menu.str().c_str());
@@ -411,13 +408,8 @@ FGMenuBar::make_map(const SGPropertyNode * node)
         // don't know yet how many will be usable; so we collect first
         vector<puObject *> e;
         for (puObject *me = ((puGroup *)popup)->getFirstChild();
-                me; me = me->getNextObject()) {
-
-            if (!me->getLegend())
-                continue;
-
+                me; me = me->getNextObject())
             e.push_back(me);
-        }
 
         for (unsigned int i = 0; i < e.size(); i++) {
             std::ostringstream item;
