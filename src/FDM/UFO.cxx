@@ -38,12 +38,14 @@
 const double throttle_damp = 0.2;
 const double aileron_damp = 0.05;
 const double elevator_damp = 0.05;
+const double elevator_trim_damp = 0.05;
 const double rudder_damp = 0.4;
 
 FGUFO::FGUFO( double dt )
   : Throttle(0.0),
     Aileron(0.0),
     Elevator(0.0),
+    Elevator_Trim(0.0),
     Rudder(0.0)
 {
 //     set_delta_t( dt );
@@ -84,6 +86,9 @@ void FGUFO::update( double dt ) {
                + Aileron * (1 - aileron_damp);
     Elevator = globals->get_controls()->get_elevator() * elevator_damp
                + Elevator * (1 - elevator_damp);
+    Elevator_Trim = globals->get_controls()->get_elevator_trim()
+                    * elevator_trim_damp
+                    + Elevator_Trim * (1 - elevator_trim_damp);
     Rudder = globals->get_controls()->get_rudder() * rudder_damp
                + Rudder * (1 - rudder_damp);
 
@@ -92,7 +97,7 @@ void FGUFO::update( double dt ) {
 
     double old_pitch = get_Theta();
     double pitch_rate = SGD_PI_4; // assume I will be pitching up
-    double target_pitch = -Elevator * SGD_PI_2;
+    double target_pitch = (-Elevator - Elevator_Trim) * SGD_PI_2;
 
     // if I am pitching down
     if (old_pitch > target_pitch)

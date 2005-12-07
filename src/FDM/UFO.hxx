@@ -32,6 +32,7 @@ class FGUFO: public FGInterface {
     double Throttle;
     double Aileron;
     double Elevator;
+    double Elevator_Trim;
     double Rudder;
 public:
     FGUFO( double dt );
