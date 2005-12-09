@@ -95,6 +95,7 @@ public:
      */
     void destroy_menubar ();
 
+
     /**
      * Disable/enable menu titles and entries
      */
@@ -133,7 +134,8 @@ private:
     vector<char **> _char_arrays;
     vector<puCallback *> _callback_arrays;
 
-    map<string, puObject *> _entries;
+    // A map for {menu node path}->puObject translation.
+    map<string, puObject *> _objects;
 };
 
 #endif // __MENUBAR_HXX

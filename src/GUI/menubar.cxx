@@ -351,27 +351,6 @@ FGMenuBar::destroy_menubar ()
     SG_LOG(SG_GENERAL, SG_INFO, "Done.");
 }
 
-struct EnabledListener : SGPropertyChangeListener {
-    void valueChanged(SGPropertyNode* node) {
-        NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-        if (!gui)
-            return;
-        FGMenuBar *menubar = gui->getMenuBar();
-        if (menubar)
-            menubar->enable_item(node->getParent(), node->getBoolValue());
-    }
-};
-
-void
-FGMenuBar::add_enabled_listener(SGPropertyNode * node)
-{
-    if (!node->hasValue("enabled"))
-        node->setBoolValue("enabled", true);
-
-    enable_item(node, node->getBoolValue("enabled"));
-    node->getNode("enabled")->addChangeListener(new EnabledListener());
-}
-
 void
 FGMenuBar::make_map(SGPropertyNode * node)
 {
@@ -391,7 +370,7 @@ FGMenuBar::make_map(SGPropertyNode * node)
             continue;
         }
 
-        _entries[menu->getPath()] = obj;
+        _objects[menu->getPath()] = obj;
         add_enabled_listener(menu);
 
         puGroup *popup = (puGroup *)obj->getUserData();
@@ -399,7 +378,7 @@ FGMenuBar::make_map(SGPropertyNode * node)
             continue;
 
         // the entries are for some reason reversed (last first), and we
-        // don't know yet how many will be usable; so we collect first
+        // don't know yet how many there will be; so we collect first
         vector<puObject *> e;
         for (puObject *me = popup->getFirstChild(); me; me = me->getNextObject())
             e.push_back(me);
@@ -411,22 +390,43 @@ FGMenuBar::make_map(SGPropertyNode * node)
                         << menu->getPath() << "/item[" << i << ']');
                 continue;
             }
-            _entries[item->getPath()] = e[i];
+            _objects[item->getPath()] = e[i];
             add_enabled_listener(item);
         }
         menu_index++;
     }
 }
 
+struct EnabledListener : SGPropertyChangeListener {
+    void valueChanged(SGPropertyNode *node) {
+        NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+        if (!gui)
+            return;
+        FGMenuBar *menubar = gui->getMenuBar();
+        if (menubar)
+            menubar->enable_item(node->getParent(), node->getBoolValue());
+    }
+};
+
+void
+FGMenuBar::add_enabled_listener(SGPropertyNode * node)
+{
+    if (!node->hasValue("enabled"))
+        node->setBoolValue("enabled", true);
+
+    enable_item(node, node->getBoolValue("enabled"));
+    node->getNode("enabled")->addChangeListener(new EnabledListener());
+}
+
 bool
 FGMenuBar::enable_item(const SGPropertyNode * node, bool state)
 {
-    if (!node || _entries.find(node->getPath()) == _entries.end()) {
+    if (!node || _objects.find(node->getPath()) == _objects.end()) {
         SG_LOG(SG_GENERAL, SG_WARN, "Trying to enable/disable "
             "non-existent menu item");
         return false;
     }
-    puObject *object = _entries[node->getPath()];
+    puObject *object = _objects[node->getPath()];
     if (state)
         object->activate();
     else
