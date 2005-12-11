@@ -42,6 +42,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
+#  include <simgear/constants.h>
 #  include <math.h>
 #  include <queue>
 #  include STL_STRING
@@ -49,7 +50,6 @@ INCLUDES
 SG_USING_STD(string);
 
 # ifndef M_PI
-#  include <simgear/constants.h>
 #  define M_PI SG_PI
 # endif
 
@@ -71,7 +71,7 @@ using std::string;
 
 #endif
 
-#if !defined(WIN32) || defined(__GNUC__)
+#if !defined(WIN32) || defined(__GNUC__) || ( defined(_MSC_VER) && (_MSC_VER >= 1400)) 
 using std::max;
 #endif
 
