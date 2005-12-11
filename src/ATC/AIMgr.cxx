@@ -82,7 +82,7 @@ void FGAIMgr::init() {
 	    	                           planepath.c_str(),
 									   globals->get_props(),
 									   globals->get_sim_time_sec() );
-	} catch(sg_exception& e) {
+	} catch(sg_exception&) {
 		_loadedDefaultOK = false;
 	}
 	
@@ -102,7 +102,7 @@ void FGAIMgr::init() {
 	    	                         planepath.c_str(),
 									 globals->get_props(),
 									 globals->get_sim_time_sec() );
-	} catch(sg_exception& e) {
+	} catch(sg_exception&) {
 		_havePiperModel = false;
 	}
 

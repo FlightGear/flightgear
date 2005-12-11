@@ -323,8 +323,13 @@ void FGTileMgr::update_queues()
                             SGShadowVolume::occluderTypeTileObject,
                             (ssgBranch *) dm->get_tile()->get_terra_transform());
                     }
-                } catch (const sg_exception& exc) {
-                    SG_LOG( SG_ALL, SG_ALERT, exc.getMessage() );
+                } catch (const sg_io_exception& exc) {
+					string m(exc.getMessage());
+					m += " ";
+					m += exc.getLocation().asString();
+                    SG_LOG( SG_ALL, SG_ALERT, m );
+                } catch (const sg_exception& exc) { // XXX may be redundant
+                    SG_LOG( SG_ALL, SG_ALERT, exc.getMessage());
                 }
                 
                 dm->get_tile()->dec_pending_models();

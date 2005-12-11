@@ -1063,7 +1063,7 @@ fgOptConfig( const char *arg )
 	readProperties(file, globals->get_props());
     } catch (const sg_exception &e) {
 	string message = "Error loading config file: ";
-	message += e.getFormattedMessage();
+	message += e.getFormattedMessage() + e.getOrigin();
 	SG_LOG(SG_INPUT, SG_ALERT, message);
 	exit(2);
     }
