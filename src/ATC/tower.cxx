@@ -2151,14 +2151,15 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = appList.erase(twrItr);
 			appListItr = appList.begin();
+			break;
 		}
 	}
 	for(twrItr = depList.begin(); twrItr != depList.end(); twrItr++) {
 		if((*twrItr)->plane.callsign == ID) {
 			t = *twrItr;
 			twrItr = depList.erase(twrItr);
-			twrItr--;
 			depListItr = depList.begin();
+			break;
 		}
 	}
 	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
@@ -2166,6 +2167,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = circuitList.erase(twrItr);
 			circuitListItr = circuitList.begin();
+			break;
 		}
 	}
 	for(twrItr = holdList.begin(); twrItr != holdList.end(); twrItr++) {
@@ -2173,6 +2175,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = holdList.erase(twrItr);
 			holdListItr = holdList.begin();
+			break;
 		}
 	}
 	for(twrItr = rwyList.begin(); twrItr != rwyList.end(); twrItr++) {
@@ -2180,6 +2183,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = rwyList.erase(twrItr);
 			rwyListItr = rwyList.begin();
+			break;
 		}
 	}
 	for(twrItr = vacatedList.begin(); twrItr != vacatedList.end(); twrItr++) {
@@ -2187,6 +2191,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = vacatedList.erase(twrItr);
 			vacatedListItr = vacatedList.begin();
+			break;
 		}
 	}
 	for(twrItr = trafficList.begin(); twrItr != trafficList.end(); twrItr++) {
@@ -2194,6 +2199,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = trafficList.erase(twrItr);
 			trafficListItr = trafficList.begin();
+			break;
 		}
 	}
 	// And finally, delete the record.
