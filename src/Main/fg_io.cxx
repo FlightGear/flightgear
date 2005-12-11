@@ -203,7 +203,11 @@ FGIO::parse_port_config( const string& config )
 	delete io;
 	return 0;
     }
-
+    
+    if (tokens.size() < 3) {
+      SG_LOG( SG_IO, SG_ALERT, "Incompatible number of network arguments.");
+      return NULL;
+    }
     string medium = tokens[1];
     SG_LOG( SG_IO, SG_INFO, "  medium = " << medium );
 
@@ -217,6 +221,10 @@ FGIO::parse_port_config( const string& config )
     SG_LOG( SG_IO, SG_INFO, "  hertz = " << hertz );
 
     if ( medium == "serial" ) {
+        if ( tokens.size() < 5) {
+          SG_LOG( SG_IO, SG_ALERT, "Incompatible number of arguments for serial communications.");
+	  return NULL;
+        }
 	// device name
 	string device = tokens[4];
 	SG_LOG( SG_IO, SG_INFO, "  device = " << device );
@@ -229,13 +237,22 @@ FGIO::parse_port_config( const string& config )
 	io->set_io_channel( ch );
     } else if ( medium == "file" ) {
 	// file name
+        if ( tokens.size() < 4) {
+          SG_LOG( SG_IO, SG_ALERT, "Incompatible number of arguments for file I/O.");
+	  return NULL;
+        }
+	  
 	string file = tokens[4];
 	SG_LOG( SG_IO, SG_INFO, "  file name = " << file );
 
 	SGFile *ch = new SGFile( file );
 	io->set_io_channel( ch );
     } else if ( medium == "socket" ) {
-	string hostname = tokens[4];
+        if ( tokens.size() < 6) {
+          SG_LOG( SG_IO, SG_ALERT, "Incompatible number of arguments for socket communications.");
+	  return NULL;
+        }
+      	string hostname = tokens[4];
 	string port = tokens[5];
 	string style = tokens[6];
 
