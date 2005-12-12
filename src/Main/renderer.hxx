@@ -44,6 +44,12 @@ public:
      *  clip planes rather than calling the ssg routine directly
      */
     static void setNearFar( float n, float f );
+
+    /** Get the pick start point and direction in global coordinates.
+     *  The inputs are expected to be the x and y coordinates of the
+     *  screen point relative to the window.
+     */
+    static bool getPickInfo( sgdVec3 p, sgdVec3 d, unsigned x, unsigned y );
 };
 
 #endif

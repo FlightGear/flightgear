@@ -920,5 +920,50 @@ void FGRenderer::setNearFar( float n, float f ) {
     fgHackFrustum();
 }
 
+bool FGRenderer::getPickInfo( sgdVec3 pt, sgdVec3 dir, unsigned x, unsigned y )
+{
+  // Get the matrices involved in the transform from global to screen
+  // coordinates.
+  sgMat4 pm;
+  ssgGetProjectionMatrix(pm);
+  sgMat4 mv;
+  ssgGetModelviewMatrix(mv);
+  
+  // Compose ...
+  sgMat4 m;
+  sgMultMat4(m, pm, mv);
+  // ... and invert
+  sgInvertMat4(m);
+  
+  // Get the width and height of the display to be able to normalize the
+  // mouse coordinate
+  float width = fgGetInt("/sim/startup/xsize");
+  float height = fgGetInt("/sim/startup/ysize");
+  
+  // Compute some coordinates of in the line from the eyepoint to the
+  // mouse click coodinates.
+  // First build the normalized projection coordinates
+  sgVec4 normPt;
+  sgSetVec4(normPt, (2*x - width)/width, -(2*y - height)/height, 1, 1);
+  // Transform them into the real world
+  sgVec4 worldPt;
+  sgXformPnt4(worldPt, normPt, m);
+  if (worldPt[3] == 0)
+    return false;
+  sgScaleVec3(worldPt, 1/worldPt[3]);
+
+  // Now build a direction from the point
+  FGViewer* view = globals->get_current_view();
+  sgVec4 fDir;
+  sgSubVec3(fDir, worldPt, view->get_view_pos());
+  sgdSetVec3(dir, fDir);
+  sgdNormalizeVec3(dir);
+
+  // Copy the start point
+  sgdCopyVec3(pt, view->get_absolute_view_pos());
+
+  return true;
+}
 
 // end of renderer.cxx
+    
