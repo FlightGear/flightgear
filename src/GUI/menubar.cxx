@@ -302,7 +302,7 @@ FGMenuBar::make_menubar(SGPropertyNode * props)
         make_menu(menu_nodes[i]);
 
     _menuBar->close();
-    make_map(props);
+    make_object_map(props);
 
     if (_visible)
         _menuBar->reveal();
@@ -352,9 +352,10 @@ FGMenuBar::destroy_menubar ()
 }
 
 void
-FGMenuBar::make_map(SGPropertyNode * node)
+FGMenuBar::make_object_map(SGPropertyNode * node)
 {
-    int menu_index = 0;
+    unsigned int menu_index = 0;
+    vector<SGPropertyNode_ptr> menus = node->getChildren("menu");
     for (puObject *obj = ((puGroup *)_menuBar)->getFirstChild();
             obj; obj = obj->getNextObject()) {
 
@@ -363,13 +364,13 @@ FGMenuBar::make_map(SGPropertyNode * node)
         if (!(obj->getType() & PUCLASS_ONESHOT))
             continue;
 
-        SGPropertyNode *menu = node->getNode("menu", menu_index, false);
-        if (!menu) {
+        if (menu_index >= menus.size()) {
             SG_LOG(SG_GENERAL, SG_WARN, "'menu' object without node: "
                     << node->getPath() << "/menu[" << menu_index << ']');
-            continue;
+            return;
         }
 
+        SGPropertyNode *menu = menus.at(menu_index);
         _objects[menu->getPath()] = obj;
         add_enabled_listener(menu);
 
@@ -383,13 +384,14 @@ FGMenuBar::make_map(SGPropertyNode * node)
         for (puObject *me = popup->getFirstChild(); me; me = me->getNextObject())
             e.push_back(me);
 
+        vector<SGPropertyNode_ptr> items = menu->getChildren("item");
         for (unsigned int i = 0; i < e.size(); i++) {
-            SGPropertyNode *item = menu->getNode("item", e.size() - i - 1, false);
-            if (!item) {
+            if (i >= items.size()) {
                 SG_LOG(SG_GENERAL, SG_WARN, "'item' object without node: "
                         << menu->getPath() << "/item[" << i << ']');
-                continue;
+                break;
             }
+            SGPropertyNode *item = items.at(e.size() - i - 1);
             _objects[item->getPath()] = e[i];
             add_enabled_listener(item);
         }

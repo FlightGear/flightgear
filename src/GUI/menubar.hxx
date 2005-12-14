@@ -111,7 +111,7 @@ private:
     void make_menubar ();
 
     // Create a property-path -> puObject map for menu node
-    void make_map(SGPropertyNode * node);
+    void make_object_map(SGPropertyNode * node);
 
     // Add <enabled> listener that enables/disables menu entries.
     void add_enabled_listener(SGPropertyNode * node);
