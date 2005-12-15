@@ -525,7 +525,12 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "list") {
-        puList * obj = new puList(x, y, x + width, y + height);
+        vector<SGPropertyNode_ptr> value_nodes = props->getChildren("value");
+        char ** entries = make_char_array(value_nodes.size());
+        for (unsigned int i = 0; i < value_nodes.size(); i++)
+            entries[i] = strdup((char *)value_nodes[i]->getStringValue());
+
+        puList * obj = new puList(x, y, x + width, y + height, entries);
         setupObject(obj, props);
         setColor(obj, props);
         return obj;
@@ -590,10 +595,9 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     } else if (type == "combo") {
         vector<SGPropertyNode_ptr> value_nodes = props->getChildren("value");
         char ** entries = make_char_array(value_nodes.size());
-        for (unsigned int i = 0, j = value_nodes.size() - 1;
-             i < value_nodes.size();
-             i++, j--)
+        for (unsigned int i = 0; i < value_nodes.size(); i++)
             entries[i] = strdup((char *)value_nodes[i]->getStringValue());
+
         puComboBox * obj = new puComboBox(x, y, x + width, y + height, entries,
                            props->getBoolValue("editable", false));
         setupObject(obj, props);
@@ -650,10 +654,9 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
             value_nodes.push_back(selection_node->getChild(q));
 
         char ** entries = make_char_array(value_nodes.size());
-        for (unsigned int i = 0, j = value_nodes.size() - 1;
-             i < value_nodes.size();
-             i++, j--)
+        for (unsigned int i = 0; i < value_nodes.size(); i++)
             entries[i] = strdup((char *)value_nodes[i]->getName());
+
         puSelectBox * obj =
             new puSelectBox(x, y, x + width, y + height, entries);
         setupObject(obj, props);

@@ -423,12 +423,13 @@ FGMenuBar::add_enabled_listener(SGPropertyNode * node)
 bool
 FGMenuBar::enable_item(const SGPropertyNode * node, bool state)
 {
-    if (!node || _objects.find(node->getPath()) == _objects.end()) {
-        SG_LOG(SG_GENERAL, SG_WARN, "Trying to enable/disable "
-            "non-existent menu item");
+    const char *path = node->getPath();
+    if (_objects.find(path) == _objects.end()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Trying to enable/disable "
+            "non-existent menu item for node `" << path << '\'');
         return false;
     }
-    puObject *object = _objects[node->getPath()];
+    puObject *object = _objects[path];
     if (state)
         object->activate();
     else
