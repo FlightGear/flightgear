@@ -728,35 +728,6 @@ void fgCockpitUpdate( void ) {
         fgUpdateHUD();
     }
 
-    if ( fgGetBool( "/sim/hud/draw-fps", false ) ) {
-        char buf[64];
-        float fps = get_frame_rate();
-        sprintf(buf,"%-5.1f", fps);
-
-        glMatrixMode( GL_PROJECTION );
-        glPushMatrix();
-        glLoadIdentity();
-        gluOrtho2D( 0, iwidth, 0, iheight );
-        glMatrixMode( GL_MODELVIEW );
-        glPushMatrix();
-        glLoadIdentity();
-
-        glDisable( GL_DEPTH_TEST );
-        glDisable( GL_LIGHTING );
-        
-        glColor3f( 0.9, 0.4, 0.2 );
-
-        guiFnt.drawString( buf,
-			   int(width - guiFnt.getStringWidth(buf) - 10),
-                           10 );
-        glEnable( GL_DEPTH_TEST );
-        glEnable( GL_LIGHTING );
-        glMatrixMode( GL_PROJECTION );
-        glPopMatrix();
-        glMatrixMode( GL_MODELVIEW );
-        glPopMatrix();
-    }
-    
     glViewport( 0, 0, iwidth, iheight );
 }
 
