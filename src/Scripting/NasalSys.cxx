@@ -234,6 +234,15 @@ static naRef f_settimer(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
+// setlistener(func, property) extension function.  Falls through to
+// FGNasalSys::setListener().  See there for docs.
+static naRef f_setlistener(naContext c, naRef me, int argc, naRef* args)
+{
+    FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
+    nasal->setListener(argc, args);
+    return naNil();
+}
+
 // Returns a ghost handle to the argument to the currently executing
 // command
 static naRef f_cmdarg(naContext c, naRef me, int argc, naRef* args)
@@ -285,6 +294,7 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "print",     f_print },
     { "_fgcommand", f_fgcommand },
     { "settimer",  f_settimer },
+    { "_setlistener", f_setlistener },
     { "_cmdarg",  f_cmdarg },
     { "_interpolate",  f_interpolate },
     { "rand",  f_rand },
@@ -553,3 +563,22 @@ void FGNasalSys::NasalTimer::timerExpired()
     nasal->handleTimer(this);
     delete this;
 }
+
+// setlistener(property, func) extension function.  The first argument
+// is either a ghost (SGPropertyNode_ptr*) or a string (global property
+// path), the second is a Nasal function.
+void FGNasalSys::setListener(int argc, naRef* args)
+{
+    SGPropertyNode* node;
+    naRef prop = argc > 0 ? args[0] : naNil();
+    if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
+    else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
+    else return;
+
+    naRef handler = argc > 1 ? args[1] : naNil();
+    if(!(naIsCode(handler) || naIsCCode(handler) || naIsFunc(handler)))
+        return;
+
+    node->addChangeListener(new FGNasalListener(handler, this, gcSave(handler)));
+}
+

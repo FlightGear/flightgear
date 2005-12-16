@@ -36,6 +36,9 @@ public:
     // Implementation of the settimer extension function
     void setTimer(int argc, naRef* args);
 
+    // Implementation of the setlistener extension function
+    void setListener(int argc, naRef* args);
+
     // Returns a ghost wrapper for the current _cmdArg
     naRef cmdArgGhost();
     
@@ -47,6 +50,7 @@ public:
 
 private:
     friend class FGNasalScript;
+    friend class FGNasalListener;
 
     //
     // FGTimer subclass for handling Nasal timer callbacks.
@@ -99,6 +103,25 @@ public:
 private:
     friend class FGNasalSys;
     naRef _code;
+    int _gcKey;
+    FGNasalSys* _nas;
+};
+
+class FGNasalListener : public SGPropertyChangeListener {
+public:
+    FGNasalListener(naRef handler, FGNasalSys* nasal, int gcKey)
+            : _handler(handler), _gcKey(gcKey), _nas(nasal) {}
+
+    void valueChanged(SGPropertyNode* node) {
+        _nas->_cmdArg = node;
+        naCall(_nas->_context, _handler, 0, 0, naNil(), naNil());
+        if(naGetError(_nas->_context))
+            _nas->logError();
+    }
+
+private:
+    friend class FGNasalSys;
+    naRef _handler;
     int _gcKey;
     FGNasalSys* _nas;
 };
