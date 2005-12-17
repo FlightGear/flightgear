@@ -585,7 +585,7 @@ fgLoadFlight (istream &input)
 
 
 bool
-fgLoadProps (const char * path, SGPropertyNode * props, bool in_fg_root)
+fgLoadProps (const char * path, SGPropertyNode * props, bool in_fg_root, int default_mode)
 {
     string fullpath;
     if (in_fg_root) {
@@ -597,7 +597,7 @@ fgLoadProps (const char * path, SGPropertyNode * props, bool in_fg_root)
     }
 
     try {
-        readProperties(fullpath, props);
+        readProperties(fullpath, props, default_mode);
     } catch (const sg_exception &e) {
         guiErrorMessage("Error reading properties: ", e);
         return false;

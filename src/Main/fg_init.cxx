@@ -607,6 +607,18 @@ bool fgInitConfig ( int argc, char **argv ) {
         SG_LOG( SG_INPUT, SG_ALERT, "No default aircraft specified" );
     }
 
+
+    char* envp = ::getenv( "HOME" );
+    if ( envp != NULL ) {
+        SGPath config( globals->get_fg_root() );
+        config.set( envp );
+        config.append( ".fgfs" );
+        config.append( "preferences.xml" );
+        SG_LOG(SG_INPUT, SG_INFO, "Reading user preferences");
+        fgLoadProps(config.str().c_str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
+        SG_LOG(SG_INPUT, SG_BULK, "Finished Reading user preferences");
+    }
+
     // parse options after loading aircraft to ensure any user
     // overrides of defaults are honored.
     do_options(argc, argv);

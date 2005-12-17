@@ -69,7 +69,7 @@ extern bool fgLoadFlight (istream &input);
  *         otherwise.
  */
 extern bool fgLoadProps (const char * path, SGPropertyNode * props,
-                         bool in_fg_root = true);
+                         bool in_fg_root = true, int default_mode = 0);
 
 
 

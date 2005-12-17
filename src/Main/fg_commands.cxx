@@ -189,9 +189,26 @@ do_nasal (const SGPropertyNode * arg)
 static bool
 do_exit (const SGPropertyNode * arg)
 {
-  SG_LOG(SG_INPUT, SG_INFO, "Program exit requested.");
-  fgExit(arg->getIntValue("status", 0));
-  return true;
+    SG_LOG(SG_INPUT, SG_INFO, "Program exit requested.");
+
+    char* envp = ::getenv( "HOME" );
+    if ( envp != NULL ) {
+        SGPath config( globals->get_fg_root() );
+        config.set( envp );
+        config.append( ".fgfs" );
+        config.append( "preferences.xml" );
+        config.create_dir( 0700 );
+        SG_LOG(SG_IO, SG_INFO, "Saving user preferences");
+        try {
+            writeProperties(config.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
+        } catch (const sg_exception &e) {
+            guiErrorMessage("Error saving preferences: ", e);
+        }
+
+        SG_LOG(SG_INPUT, SG_BULK, "Finished Saving user preferences");
+    }
+    fgExit(arg->getIntValue("status", 0));
+    return true;
 }
 
 
