@@ -607,12 +607,19 @@ bool fgInitConfig ( int argc, char **argv ) {
         SG_LOG( SG_INPUT, SG_ALERT, "No default aircraft specified" );
     }
 
-
+#ifdef _MSC_VER
+    char* envp = ::getenv( "APPDATA" );
+#else
     char* envp = ::getenv( "HOME" );
+#endif
     if ( envp != NULL ) {
         SGPath config( globals->get_fg_root() );
         config.set( envp );
+#ifdef _MSC_VER
+        config.append( "flightgear.org" );
+#else
         config.append( ".fgfs" );
+#endif
         config.append( "preferences.xml" );
         SG_LOG(SG_INPUT, SG_INFO, "Reading user preferences");
         fgLoadProps(config.str().c_str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
