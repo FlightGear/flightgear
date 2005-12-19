@@ -37,6 +37,11 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
+Revision 1.5  2005/12/19 12:53:21  ehofman
+Vassilii Khachaturov:
+
+clean up some build warnings caught with gcc-4.0.
+
 Revision 1.4  2003/07/25 17:53:41  mselig
 UIUC code initilization mods to tidy things up a bit.
 
@@ -154,6 +159,8 @@ Initial Flight Gear revision.
 	OUTPUTS:
 
 --------------------------------------------------------------------------*/
+#include <stdio.h>
+
 #include "ls_types.h"
 #include "ls_model.h"
 #include "default_model_routines.h"

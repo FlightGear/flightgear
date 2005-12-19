@@ -36,7 +36,7 @@
 #define numberofbytes 472 // from FDM to visuals
 #define nbytes 8	//from visuals to FDM
 
-struct {
+static struct {
     double number_of_bytes;
     double lat_geoc;
     double lon_geoc;
@@ -111,7 +111,7 @@ struct {
 
 double view_offset; //if this zero, means center window
 
-struct {
+static struct {
 	double ground_elevation;
 } visuals_to_sixdof;
 
