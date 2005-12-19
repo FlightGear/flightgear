@@ -123,12 +123,12 @@ void KLN89NavPage::Update(double dt) {
 			// Desired and actual magnetic track
 			if(!_kln89->_obsMode) {
 				_kln89->DrawText("DTK", 2, 0, 1);
-				_kln89->DrawHeading(_kln89->_dtkMag, 2, 7, 1);
+				_kln89->DrawHeading((int)_kln89->_dtkMag, 2, 7, 1);
 			}
 			_kln89->DrawText("TK", 2, 9, 1);
 			if(_kln89->_groundSpeed_ms > 3) {	// about 6 knots, don't know exactly what value to disable track
 				// The trouble with relying on FG gps's track value is we don't know when it's valid.
-				_kln89->DrawHeading(_kln89->_magTrackDeg, 2, 15, 1);
+				_kln89->DrawHeading((int)_kln89->_magTrackDeg, 2, 15, 1);
 			} else {
 				_kln89->DrawText("---", 2, 12, 1);
 				_kln89->DrawSpecialChar(0, 2, 15, 1);
