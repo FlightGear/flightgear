@@ -263,7 +263,7 @@ void FGClouds::buildMETAR(void) {
 
 // copy from FGMetarEnvironmentCtrl until better
 void
-FGClouds::update_metar_properties( FGMetar *m )
+FGClouds::update_metar_properties( const FGMetar *m )
 {
     int i;
     double d;

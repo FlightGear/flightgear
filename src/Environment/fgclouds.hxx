@@ -51,7 +51,7 @@ private:
 
 	void setLayer( int iLayer, float alt_m, const string& coverage, const string& layer_type );
 
-	void update_metar_properties( FGMetar *m );
+	void update_metar_properties( const FGMetar *m );
 
 	void FGClouds::update_env_config ();
 

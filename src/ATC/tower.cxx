@@ -1109,6 +1109,8 @@ void FGTower::CheckCircuitList(double dt) {
 			circuitListItr = circuitList.erase(circuitListItr);
 			if(circuitListItr == circuitList.end() ) {
 				circuitListItr = circuitList.begin();
+				// avoid increment of circuitListItr (would increment to second element, or crash if no element left)
+				return;
 			}
 		}
 		++circuitListItr;

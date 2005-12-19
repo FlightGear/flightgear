@@ -85,7 +85,6 @@ void FGTrafficManager::init()
 	{
 	  currAircraft=scheduledAircraft.erase(currAircraft);
 	  //cerr << "Erasing " << currAircraft->getRegistration() << endl;
-	  currAircraft--;
 	}
       else 
 	{
@@ -102,6 +101,8 @@ void FGTrafficManager::init()
 void FGTrafficManager::update(double something)
 {
   time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+  if (scheduledAircraft.size() == 0)
+	  return;
   if(currAircraft == scheduledAircraft.end())
     {
       //cerr << "resetting schedule " << endl;
