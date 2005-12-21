@@ -56,6 +56,10 @@ SG_USING_STD(endl);
 #  include <console.h>		// -dw- for command line dialog
 #endif
 
+char *homedir = ::getenv( "HOME" );
+char *hostname = ::getenv( "HOSTNAME" );
+bool free_hostname = false;
+
 // foreward declaration.
 void fgExitCleanup();
 
@@ -215,5 +219,8 @@ void fgExitCleanup() {
         fgSetMouseCursor(MOUSE_CURSOR_POINTER);
 
     delete globals;
+
+    if (free_hostname && hostname != NULL)
+        free(hostname);
 }
 

@@ -126,6 +126,7 @@
 #include "globals.hxx"
 #include "logger.hxx"
 #include "viewmgr.hxx"
+#include "main.hxx"
 
 #if defined(FX) && defined(XMESA)
 #include <GL/xmesa.h>
@@ -211,23 +212,27 @@ static string fgScanForOption( const string& option, const string& path ) {
 // fg_root
 bool fgInitFGRoot ( int argc, char **argv ) {
     string root;
-    char* envp;
 
     // First parse command line options looking for --fg-root=, this
     // will override anything specified in a config file
     root = fgScanForOption( "--fg-root=", argc, argv);
 
+    if (hostname == NULL)
+    {
+        char _hostname[256];
+        gethostname(_hostname, 256);
+        hostname = strdup(_hostname);
+        free_hostname = true;
+    }
+
 #if defined( unix ) || defined( __CYGWIN__ )
     // Next check home directory for .fgfsrc.hostname file
     if ( root.empty() ) {
-        envp = ::getenv( "HOME" );
-        if ( envp != NULL ) {
-            SGPath config( envp );
+        if ( homedir != NULL ) {
+            SGPath config( homedir );
             config.append( ".fgfsrc" );
-            char name[256];
-            gethostname( name, 256 );
             config.concat( "." );
-            config.concat( name );
+            config.concat( hostname );
             root = fgScanForOption( "--fg-root=", config.str() );
         }
     }
@@ -235,9 +240,8 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 
     // Next check home directory for .fgfsrc file
     if ( root.empty() ) {
-        envp = ::getenv( "HOME" );
-        if ( envp != NULL ) {
-            SGPath config( envp );
+        if ( homedir != NULL ) {
+            SGPath config( homedir );
             config.append( ".fgfsrc" );
             root = fgScanForOption( "--fg-root=", config.str() );
         }
@@ -245,7 +249,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
     
     // Next check if fg-root is set as an env variable
     if ( root.empty() ) {
-        envp = ::getenv( "FG_ROOT" );
+        char *envp = ::getenv( "FG_ROOT" );
         if ( envp != NULL ) {
             root = envp;
         }
@@ -295,7 +299,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 // aircraft
 bool fgInitFGAircraft ( int argc, char **argv ) {
     string aircraft;
-    char* envp;
+    char* homedir;
 
     // First parse command line options looking for --aircraft=, this
     // will override anything specified in a config file
@@ -304,14 +308,11 @@ bool fgInitFGAircraft ( int argc, char **argv ) {
 #if defined( unix ) || defined( __CYGWIN__ )
     // Next check home directory for .fgfsrc.hostname file
     if ( aircraft.empty() ) {
-        envp = ::getenv( "HOME" );
-        if ( envp != NULL ) {
-            SGPath config( envp );
+        if ( homedir != NULL ) {
+            SGPath config( homedir );
             config.append( ".fgfsrc" );
-            char name[256];
-            gethostname( name, 256 );
             config.concat( "." );
-            config.concat( name );
+            config.concat( hostname );
             aircraft = fgScanForOption( "--aircraft=", config.str() );
         }
     }
@@ -319,9 +320,8 @@ bool fgInitFGAircraft ( int argc, char **argv ) {
 
     // Next check home directory for .fgfsrc file
     if ( aircraft.empty() ) {
-        envp = ::getenv( "HOME" );
-        if ( envp != NULL ) {
-            SGPath config( envp );
+        if ( homedir != NULL ) {
+            SGPath config( homedir );
             config.append( ".fgfsrc" );
             aircraft = fgScanForOption( "--aircraft=", config.str() );
         }
@@ -493,27 +493,22 @@ do_options (int argc, char ** argv)
     fgParseOptions(config.str());
 
 #if defined( unix ) || defined( __CYGWIN__ )
-    char name[256];
-    // Check for $fg_root/system.fgfsrc.hostname
-    gethostname( name, 256 );
     config.concat( "." );
-    config.concat( name );
+    config.concat( hostname );
     fgParseOptions(config.str());
 #endif
 
     // Check for ~/.fgfsrc
-    char* envp = ::getenv( "HOME" );
-    if ( envp != NULL ) {
-        config.set( envp );
+    if ( homedir != NULL ) {
+        config.set( homedir );
         config.append( ".fgfsrc" );
         fgParseOptions(config.str());
     }
 
 #if defined( unix ) || defined( __CYGWIN__ )
     // Check for ~/.fgfsrc.hostname
-    gethostname( name, 256 );
     config.concat( "." );
-    config.concat( name );
+    config.concat( hostname );
     fgParseOptions(config.str());
 #endif
 
@@ -608,21 +603,23 @@ bool fgInitConfig ( int argc, char **argv ) {
     }
 
 #ifdef _MSC_VER
-    char* envp = ::getenv( "APPDATA" );
-#else
-    char* envp = ::getenv( "HOME" );
-#endif
-    if ( envp != NULL ) {
-        SGPath config( globals->get_fg_root() );
-        config.set( envp );
-#ifdef _MSC_VER
+    char *envp = ::getenv( "APPDATA" );
+    if (envp != NULL ) {
+        SGPath config( env );
         config.append( "flightgear.org" );
 #else
+    if ( homedir != NULL ) {
+        SGPath config( homedir );
         config.append( ".fgfs" );
 #endif
         config.append( "preferences.xml" );
         SG_LOG(SG_INPUT, SG_INFO, "Reading user preferences");
-        fgLoadProps(config.str().c_str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
+        try {
+            fgLoadProps(config.str().c_str(), globals->get_props(), false,
+                        SGPropertyNode::USERARCHIVE);
+        } catch (...) {
+            SG_LOG(SG_INPUT, SG_BULK, "First time reading user preferences.");
+        }
         SG_LOG(SG_INPUT, SG_BULK, "Finished Reading user preferences");
     }
 
