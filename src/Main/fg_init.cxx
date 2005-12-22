@@ -263,7 +263,8 @@ bool fgInitFGRoot ( int argc, char **argv ) {
     root = fgScanForOption( "--fg-root=", argc, argv);
 
     // Check in one of the user configuration files.
-    root = fgScanForOption( "--fg-root=" );
+    if (root.empty() )
+        root = fgScanForOption( "--fg-root=" );
     
     // Next check if fg-root is set as an env variable
     if ( root.empty() ) {
@@ -323,7 +324,8 @@ bool fgInitFGAircraft ( int argc, char **argv ) {
     aircraft = fgScanForOption( "--aircraft=", argc, argv );
 
     // Check in one of the user configuration files.
-    aircraft = fgScanForOption( "--aircraft=" );
+    if ( aircraft.empty() )
+        aircraft = fgScanForOption( "--aircraft=" );
 
     // if an aircraft was specified, set the property name
     if ( !aircraft.empty() ) {
