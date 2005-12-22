@@ -299,7 +299,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 // aircraft
 bool fgInitFGAircraft ( int argc, char **argv ) {
     string aircraft;
-    char* homedir;
+    char* homedir = NULL;
 
     // First parse command line options looking for --aircraft=, this
     // will override anything specified in a config file
@@ -605,7 +605,7 @@ bool fgInitConfig ( int argc, char **argv ) {
 #ifdef _MSC_VER
     char *envp = ::getenv( "APPDATA" );
     if (envp != NULL ) {
-        SGPath config( env );
+        SGPath config( envp );
         config.append( "flightgear.org" );
 #else
     if ( homedir != NULL ) {
