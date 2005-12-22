@@ -39,6 +39,7 @@
 #include "logger.hxx"
 #include "util.hxx"
 #include "viewmgr.hxx"
+#include "main.hxx"
 
 SG_USING_STD(string);
 SG_USING_STD(ifstream);
@@ -191,29 +192,28 @@ do_exit (const SGPropertyNode * arg)
 {
     SG_LOG(SG_INPUT, SG_INFO, "Program exit requested.");
 
+    if (fgGetBool("/sim/startup/save-on-exit")) {
 #ifdef _MSC_VER
-    char* envp = ::getenv( "APPDATA" );
+        char* envp = ::getenv( "APPDATA" );
+        if ( envp != NULL ) {
+            SGPath config( envp );
+            config.append( "flightgear.org" );
 #else
-    char* envp = ::getenv( "HOME" );
+        if ( homedir != NULL ) {
+            SGPath config( homedir );
+            config.append( ".fgfs" );
 #endif
-    if ( envp != NULL ) {
-        SGPath config( globals->get_fg_root() );
-        config.set( envp );
-#ifdef _MSC_VER
-        config.append( "flightgear.org" );
-#else
-        config.append( ".fgfs" );
-#endif
-        config.append( "preferences.xml" );
-        config.create_dir( 0700 );
-        SG_LOG(SG_IO, SG_INFO, "Saving user preferences");
-        try {
-            writeProperties(config.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
-        } catch (const sg_exception &e) {
-            guiErrorMessage("Error saving preferences: ", e);
-        }
+            config.append( "preferences.xml" );
+            config.create_dir( 0700 );
+            SG_LOG(SG_IO, SG_INFO, "Saving user preferences");
+            try {
+                writeProperties(config.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
+            } catch (const sg_exception &e) {
+                guiErrorMessage("Error saving preferences: ", e);
+            }
 
-        SG_LOG(SG_INPUT, SG_BULK, "Finished Saving user preferences");
+            SG_LOG(SG_INPUT, SG_BULK, "Finished Saving user preferences");
+        }
     }
     fgExit(arg->getIntValue("status", 0));
     return true;
