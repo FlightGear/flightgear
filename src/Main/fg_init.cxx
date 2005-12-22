@@ -207,15 +207,10 @@ static string fgScanForOption( const string& option, const string& path ) {
     return "";
 }
 
-
-// Read in configuration (files and command line options) but only set
-// fg_root
-bool fgInitFGRoot ( int argc, char **argv ) {
-    string root;
-
-    // First parse command line options looking for --fg-root=, this
-    // will override anything specified in a config file
-    root = fgScanForOption( "--fg-root=", argc, argv);
+// Scan the user config files for the specified option and return
+// the value.
+static string fgScanForOption( const string& option ) {
+    string arg("");
 
     if (hostname == NULL)
     {
@@ -227,25 +222,48 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 
 #if defined( unix ) || defined( __CYGWIN__ )
     // Next check home directory for .fgfsrc.hostname file
-    if ( root.empty() ) {
+    if ( arg.empty() ) {
         if ( homedir != NULL ) {
             SGPath config( homedir );
             config.append( ".fgfsrc" );
             config.concat( "." );
             config.concat( hostname );
-            root = fgScanForOption( "--fg-root=", config.str() );
+            arg = fgScanForOption( option, config.str() );
         }
     }
 #endif
 
     // Next check home directory for .fgfsrc file
-    if ( root.empty() ) {
+    if ( arg.empty() ) {
         if ( homedir != NULL ) {
             SGPath config( homedir );
             config.append( ".fgfsrc" );
-            root = fgScanForOption( "--fg-root=", config.str() );
+            arg = fgScanForOption( option, config.str() );
         }
     }
+
+    if ( arg.empty() ) {
+        // Check for $fg_root/system.fgfsrc
+        SGPath config( globals->get_fg_root() );
+        config.append( "system.fgfsrc" );
+        arg = fgScanForOption( option, config.str() );
+    }
+
+    return arg;
+}
+
+
+// Read in configuration (files and command line options) but only set
+// fg_root
+bool fgInitFGRoot ( int argc, char **argv ) {
+    string root;
+
+    // First parse command line options looking for --fg-root=, this
+    // will override anything specified in a config file
+    root = fgScanForOption( "--fg-root=", argc, argv);
+
+    // Check in one of the user configuration files.
+    root = fgScanForOption( "--fg-root=" );
     
     // Next check if fg-root is set as an env variable
     if ( root.empty() ) {
@@ -299,40 +317,14 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 // aircraft
 bool fgInitFGAircraft ( int argc, char **argv ) {
     string aircraft;
-    char* homedir = NULL;
 
     // First parse command line options looking for --aircraft=, this
     // will override anything specified in a config file
     aircraft = fgScanForOption( "--aircraft=", argc, argv );
 
-#if defined( unix ) || defined( __CYGWIN__ )
-    // Next check home directory for .fgfsrc.hostname file
-    if ( aircraft.empty() ) {
-        if ( homedir != NULL ) {
-            SGPath config( homedir );
-            config.append( ".fgfsrc" );
-            config.concat( "." );
-            config.concat( hostname );
-            aircraft = fgScanForOption( "--aircraft=", config.str() );
-        }
-    }
-#endif
+    // Check in one of the user configuration files.
+    aircraft = fgScanForOption( "--aircraft=" );
 
-    // Next check home directory for .fgfsrc file
-    if ( aircraft.empty() ) {
-        if ( homedir != NULL ) {
-            SGPath config( homedir );
-            config.append( ".fgfsrc" );
-            aircraft = fgScanForOption( "--aircraft=", config.str() );
-        }
-    }
-
-    if ( aircraft.empty() ) {
-        // Check for $fg_root/system.fgfsrc
-        SGPath sysconf( globals->get_fg_root() );
-        sysconf.append( "system.fgfsrc" );
-        aircraft = fgScanForOption( "--aircraft=", sysconf.str() );
-    }
     // if an aircraft was specified, set the property name
     if ( !aircraft.empty() ) {
         SG_LOG(SG_INPUT, SG_INFO, "aircraft = " << aircraft );
