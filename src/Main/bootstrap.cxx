@@ -30,6 +30,7 @@
 #  include <signal.h>
 #endif
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -205,7 +206,8 @@ int main ( int argc, char **argv ) {
 
     } catch (...) {
         cerr << "Unknown exception in the main loop. Aborting..." << endl;
-        perror("Possible cause");
+        if (errno)
+            perror("Possible cause");
     }
 
     return 0;
