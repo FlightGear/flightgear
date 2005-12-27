@@ -145,7 +145,6 @@ float init_volume;
 static string fgScanForOption( const string& option, int argc, char **argv ) {
     int i = 1;
 
-    cout << "The quest for hostname part 1" << endl;
     if (hostname == NULL)
     {
         char _hostname[256];
