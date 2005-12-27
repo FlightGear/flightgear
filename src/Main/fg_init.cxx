@@ -145,6 +145,15 @@ float init_volume;
 static string fgScanForOption( const string& option, int argc, char **argv ) {
     int i = 1;
 
+    cout << "The quest for hostname part 1" << endl;
+    if (hostname == NULL)
+    {
+        char _hostname[256];
+        gethostname(_hostname, 256);
+        hostname = strdup(_hostname);
+        free_hostname = true;
+    }
+
     SG_LOG(SG_GENERAL, SG_INFO, "Scanning command line for: " << option );
 
     int len = option.length();
@@ -211,14 +220,6 @@ static string fgScanForOption( const string& option, const string& path ) {
 // the value.
 static string fgScanForOption( const string& option ) {
     string arg("");
-
-    if (hostname == NULL)
-    {
-        char _hostname[256];
-        gethostname(_hostname, 256);
-        hostname = strdup(_hostname);
-        free_hostname = true;
-    }
 
 #if defined( unix ) || defined( __CYGWIN__ )
     // Next check home directory for .fgfsrc.hostname file
