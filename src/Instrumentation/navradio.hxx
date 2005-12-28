@@ -86,7 +86,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode *gs_deflection_node;
     SGPropertyNode *gs_rate_of_climb_node;
     SGPropertyNode *gs_dist_node;
-    SGPropertyNode *id_node;
+    SGPropertyNode *nav_id_node;
     SGPropertyNode *id_c1_node;
     SGPropertyNode *id_c2_node;
     SGPropertyNode *id_c3_node;
@@ -100,7 +100,7 @@ class FGNavRadio : public SGSubsystem
 
     // internal (private) values
 
-    string last_id;
+    string last_nav_id;
     bool last_nav_vor;
     int play_count;
     time_t last_time;
@@ -112,6 +112,7 @@ class FGNavRadio : public SGSubsystem
     string trans_ident;
     bool is_valid;
     bool has_dme;
+    double radial;
     double target_radial;
     double loc_lon;
     double loc_lat;
