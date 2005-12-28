@@ -75,11 +75,16 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode *target_radial_true_node;
                                        // true heading of selected radial
     SGPropertyNode *target_auto_hdg_node;
+                                       // suggested autopilot heading
+                                       // to intercept selected radial
+    SGPropertyNode *time_to_intercept; // estimated time to intecept selected
+                                       // radial at current speed and heading
     SGPropertyNode *to_flag_node;
     SGPropertyNode *from_flag_node;
     SGPropertyNode *inrange_node;
     SGPropertyNode *cdi_deflection_node;
     SGPropertyNode *cdi_xtrack_error_node;
+    SGPropertyNode *cdi_xtrack_hdg_err_node;
     SGPropertyNode *has_gs_node;
     SGPropertyNode *loc_node;
     SGPropertyNode *loc_dist_node;
@@ -135,6 +140,8 @@ class FGNavRadio : public SGSubsystem
     double twist;
     double horiz_vel;
     double last_x;
+    double last_loc_dist;
+    double last_xtrack_error;
 
     string name;
     int num;
@@ -162,12 +169,6 @@ public:
 
     // Update nav/adf radios based on current postition
     void search ();
-
-    // NavCom Accessors
-    inline bool has_power() const {
-        return power_btn_node->getBoolValue()
-            && (bus_power_node->getDoubleValue() > 1.0);
-    }
 };
 
 
