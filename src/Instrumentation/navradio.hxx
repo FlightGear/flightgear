@@ -48,7 +48,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode *alt_node;
     SGPropertyNode *bus_power_node;
 
-    // inputs
+    // property inputs
     SGPropertyNode *power_btn_node;
     SGPropertyNode *freq_node;       // primary freq
     SGPropertyNode *alt_freq_node;   // standby freq
@@ -56,8 +56,12 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode *vol_btn_node;
     SGPropertyNode *ident_btn_node;
     SGPropertyNode *audio_btn_node;
+    SGPropertyNode *nav_serviceable_node;
+    SGPropertyNode *cdi_serviceable_node;
+    SGPropertyNode *gs_serviceable_node;
+    SGPropertyNode *tofrom_serviceable_node;
 
-    // outputs
+    // property outputs
     SGPropertyNode *fmt_freq_node;     // formated frequency
     SGPropertyNode *fmt_alt_freq_node; // formated alternate frequency
     SGPropertyNode *heading_node;      // true heading to nav station
@@ -88,49 +92,46 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode *id_c3_node;
     SGPropertyNode *id_c4_node;
 
-    // unfiled
-    SGPropertyNode *nav_serviceable_node;
-    SGPropertyNode *cdi_serviceable_node;
-    SGPropertyNode *gs_serviceable_node;
-    SGPropertyNode *tofrom_serviceable_node;
+    // gps slaving support
     SGPropertyNode *nav_slaved_to_gps_node;
     SGPropertyNode *gps_cdi_deflection_node;
     SGPropertyNode *gps_to_flag_node;
     SGPropertyNode *gps_from_flag_node;
 
+    // internal (private) values
+
     string last_id;
     bool last_nav_vor;
-    int nav_play_count;
-    time_t nav_last_time;
+    int play_count;
+    time_t last_time;
 
     int index;                  // used for property binding
     string nav_fx_name;
     string dme_fx_name;
 
-    // internal (unexported) values
-    string nav_trans_ident;
-    bool nav_valid;
-    bool nav_has_dme;
-    double nav_target_radial;
-    double nav_loclon;
-    double nav_loclat;
+    string trans_ident;
+    bool is_valid;
+    bool has_dme;
+    double target_radial;
+    double loc_lon;
+    double loc_lat;
     double nav_x;
     double nav_y;
     double nav_z;
-    double nav_gslon;
-    double nav_gslat;
+    double gs_lon;
+    double gs_lat;
     double nav_elev;            // use gs elev if available
-    double nav_gs_x;
-    double nav_gs_y;
-    double nav_gs_z;
+    double gs_x;
+    double gs_y;
+    double gs_z;
     sgdVec3 gs_base_vec;
-    double nav_gs_dist_signed;
+    double gs_dist_signed;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;
-    double nav_range;
-    double nav_effective_range;
-    double nav_target_gs;
-    double nav_twist;
+    double range;
+    double effective_range;
+    double target_gs;
+    double twist;
     double horiz_vel;
     double last_x;
 
