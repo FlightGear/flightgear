@@ -46,55 +46,59 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode *lon_node;
     SGPropertyNode *lat_node;
     SGPropertyNode *alt_node;
-    SGPropertyNode *bus_power;
+    SGPropertyNode *bus_power_node;
 
     // inputs
-    SGPropertyNode *power_btn;
-    SGPropertyNode *nav_freq;       // primary freq
-    SGPropertyNode *nav_alt_freq;   // standby freq
-    SGPropertyNode *nav_sel_radial; // selected radial
-    SGPropertyNode *nav_vol_btn;
-    SGPropertyNode *nav_ident_btn;
-    SGPropertyNode *audio_btn;
+    SGPropertyNode *power_btn_node;
+    SGPropertyNode *freq_node;       // primary freq
+    SGPropertyNode *alt_freq_node;   // standby freq
+    SGPropertyNode *sel_radial_node; // selected radial
+    SGPropertyNode *vol_btn_node;
+    SGPropertyNode *ident_btn_node;
+    SGPropertyNode *audio_btn_node;
 
     // outputs
-    SGPropertyNode *fmt_freq;     // formated frequency
-    SGPropertyNode *fmt_alt_freq; // formated alternate frequency
-    SGPropertyNode *nav_heading;  // true heading to nav station
-    SGPropertyNode *nav_radial;   // current radial we are on (taking
-                                  // into consideration the vor station
-                                  // alignment which likely doesn't
-                                  // match the magnetic alignment
-                                  // exactly.)
-    SGPropertyNode *reciprocal_radial;
-                                  // nav_radial + 180 (convenience value)
-    SGPropertyNode *nav_target_radial_true;
-                                  // true heading of selected radial
-    SGPropertyNode *nav_target_auto_hdg;
-    SGPropertyNode *nav_to_flag;
-    SGPropertyNode *nav_from_flag;
-    SGPropertyNode *nav_inrange;
-    SGPropertyNode *nav_cdi_deflection;
-    SGPropertyNode *nav_cdi_xtrack_error;
-    SGPropertyNode *nav_has_gs;
-    SGPropertyNode *nav_loc;
-    SGPropertyNode *nav_loc_dist;
-    SGPropertyNode *nav_gs_deflection;
-    SGPropertyNode *nav_gs_rate_of_climb;
-    SGPropertyNode *nav_gs_dist;
-    SGPropertyNode *nav_id;
-    SGPropertyNode *nav_id_c1;
-    SGPropertyNode *nav_id_c2;
-    SGPropertyNode *nav_id_c3;
-    SGPropertyNode *nav_id_c4;
+    SGPropertyNode *fmt_freq_node;     // formated frequency
+    SGPropertyNode *fmt_alt_freq_node; // formated alternate frequency
+    SGPropertyNode *heading_node;      // true heading to nav station
+    SGPropertyNode *radial_node;       // current radial we are on (taking
+                                       // into consideration the vor station
+                                       // alignment which likely doesn't
+                                       // match the magnetic alignment
+                                       // exactly.)
+    SGPropertyNode *recip_radial_node; // radial_node(val) + 180 (for
+                                       // convenience)
+    SGPropertyNode *target_radial_true_node;
+                                       // true heading of selected radial
+    SGPropertyNode *target_auto_hdg_node;
+    SGPropertyNode *to_flag_node;
+    SGPropertyNode *from_flag_node;
+    SGPropertyNode *inrange_node;
+    SGPropertyNode *cdi_deflection_node;
+    SGPropertyNode *cdi_xtrack_error_node;
+    SGPropertyNode *has_gs_node;
+    SGPropertyNode *loc_node;
+    SGPropertyNode *loc_dist_node;
+    SGPropertyNode *gs_deflection_node;
+    SGPropertyNode *gs_rate_of_climb_node;
+    SGPropertyNode *gs_dist_node;
+    SGPropertyNode *id_node;
+    SGPropertyNode *id_c1_node;
+    SGPropertyNode *id_c2_node;
+    SGPropertyNode *id_c3_node;
+    SGPropertyNode *id_c4_node;
 
     // unfiled
-    SGPropertyNode *nav_serviceable;
-    SGPropertyNode *cdi_serviceable, *gs_serviceable, *tofrom_serviceable;
-    SGPropertyNode *nav_slaved_to_gps;
-    SGPropertyNode *gps_cdi_deflection, *gps_to_flag, *gps_from_flag;
+    SGPropertyNode *nav_serviceable_node;
+    SGPropertyNode *cdi_serviceable_node;
+    SGPropertyNode *gs_serviceable_node;
+    SGPropertyNode *tofrom_serviceable_node;
+    SGPropertyNode *nav_slaved_to_gps_node;
+    SGPropertyNode *gps_cdi_deflection_node;
+    SGPropertyNode *gps_to_flag_node;
+    SGPropertyNode *gps_from_flag_node;
 
-    string last_nav_id;
+    string last_id;
     bool last_nav_vor;
     int nav_play_count;
     time_t nav_last_time;
@@ -156,41 +160,12 @@ public:
 
     // Update nav/adf radios based on current postition
     void search ();
-/*
-    inline void set_bind_index( int i ) {
-        index = i;
-        sprintf( nav_fx_name, "nav%d-vor-ident", index );
-        sprintf( dme_fx_name, "dme%d-vor-ident", index );
-    }
-*/
 
     // NavCom Accessors
     inline bool has_power() const {
-        return power_btn->getBoolValue() && (bus_power->getDoubleValue() > 1.0);
+        return power_btn_node->getBoolValue()
+            && (bus_power_node->getDoubleValue() > 1.0);
     }
-
-    // NAV Accessors
-    inline double get_nav_target_radial() const { return nav_target_radial; }
-
-    // Calculated values.
-    bool get_nav_to_flag () const;
-    inline bool get_nav_has_dme() const { return nav_has_dme; }
-    inline bool get_nav_dme_inrange () const {
-	return nav_inrange->getBoolValue() && nav_has_dme;
-    }
-    inline double get_nav_loclon() const { return nav_loclon; }
-    inline double get_nav_loclat() const { return nav_loclat; }
-    inline double get_nav_gslon() const { return nav_gslon; }
-    inline double get_nav_gslat() const { return nav_gslat; }
-    inline double get_nav_gs_dist_signed() const { return nav_gs_dist_signed; }
-    inline double get_nav_elev() const { return nav_elev; }
-    inline double get_nav_target_gs() const { return nav_target_gs; }
-    inline double get_nav_twist() const { return nav_twist; }
-    //inline const char * get_nav_id() const { return nav_id.c_str(); }
-    //inline int get_nav_id_c1() const { return nav_id.c_str()[0]; }
-    //inline int get_nav_id_c2() const { return nav_id.c_str()[1]; }
-    //inline int get_nav_id_c3() const { return nav_id.c_str()[2]; }
-    //inline int get_nav_id_c4() const { return nav_id.c_str()[3]; }
 };
 
 
