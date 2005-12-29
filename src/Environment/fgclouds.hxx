@@ -53,7 +53,7 @@ private:
 
 	void update_metar_properties( const FGMetar *m );
 
-	void FGClouds::update_env_config ();
+	void update_env_config ();
 
 	int update_event;
 	SGSoundSample *snd_lightning;

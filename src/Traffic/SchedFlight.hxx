@@ -67,7 +67,7 @@ public:
   FGScheduledFlight();
   FGScheduledFlight(const FGScheduledFlight &other);
   //  FGScheduledFlight(const string);
-  FGScheduledFlight::FGScheduledFlight(const string& cs,
+  FGScheduledFlight(const string& cs,
 		     const string& fr,
 		     const string& depPrt,
 		     const string& arrPrt,

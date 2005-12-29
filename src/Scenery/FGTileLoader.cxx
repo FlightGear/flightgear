@@ -157,6 +157,16 @@ FGTileLoader::update()
 
 #if defined(ENABLE_THREADS)
 /**
+ * Ensure mutex is unlocked.
+ */
+void 
+cleanup_handler( void* arg )
+{
+    FGTileLoader* loader = (FGTileLoader*) arg;
+    loader->mutex.unlock();
+}
+
+/**
  * 
  */
 void
@@ -191,15 +201,5 @@ FGTileLoader::LoaderThread::run()
 
     }
     pthread_cleanup_pop(1);
-}
-
-/**
- * Ensure mutex is unlocked.
- */
-void 
-cleanup_handler( void* arg )
-{
-    FGTileLoader* loader = (FGTileLoader*) arg;
-    loader->mutex.unlock();
 }
 #endif // ENABLE_THREADS

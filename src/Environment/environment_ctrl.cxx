@@ -704,6 +704,16 @@ FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
 
 #if defined(ENABLE_THREADS)
 /**
+ * Ensure mutex is unlocked.
+ */
+void
+metar_cleanup_handler( void* arg )
+{
+    FGMetarEnvironmentCtrl* fetcher = (FGMetarEnvironmentCtrl*) arg;
+    fetcher->mutex.unlock();
+}
+
+/**
  *
  */
 void
@@ -723,16 +733,6 @@ FGMetarEnvironmentCtrl::MetarThread::run()
         fetcher->result_queue.push( result );
     }
     pthread_cleanup_pop(1);
-}
-
-/**
- * Ensure mutex is unlocked.
- */
-void
-metar_cleanup_handler( void* arg )
-{
-    FGMetarEnvironmentCtrl* fetcher = (FGMetarEnvironmentCtrl*) arg;
-    fetcher->mutex.unlock();
 }
 #endif // ENABLE_THREADS
 
