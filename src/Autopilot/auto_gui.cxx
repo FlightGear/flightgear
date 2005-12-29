@@ -644,7 +644,6 @@ void TgtAptDialog_OK (puObject *)
 int NewWaypoint( const string& Tgt_Alt )
 {
   string TgtAptId;
-  FGAirport a;
   FGFix f;
 
   double alt = 0.0;
@@ -661,15 +660,15 @@ int NewWaypoint( const string& Tgt_Alt )
   }
 
   FGRouteMgr *rm = (FGRouteMgr *)globals->get_subsystem("route-manager");
-
-  if ( fgFindAirportID( TgtAptId, &a ) ) {
+  const FGAirport *a = fgFindAirportID( TgtAptId);
+  if (a) {
 
       SG_LOG( SG_GENERAL, SG_INFO,
               "Adding waypoint (airport) = " << TgtAptId );
 
       sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
 
-      SGWayPoint wp( a.getLongitude(), a.getLatitude(), alt,
+      SGWayPoint wp( a->getLongitude(), a->getLatitude(), alt,
                      SGWayPoint::WGS84, TgtAptId );
       rm->add_waypoint( wp );
 

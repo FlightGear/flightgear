@@ -664,8 +664,10 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now )
 	//	 << arr->getId() <<endl;
 	//  }	
 	if (prev->name == "park2")
-	  dep->releaseParking(fp->getGate());
-	
+	  {
+	    dep->getDynamics()->releaseParking(fp->getGate());
+	  }
+	// Some debug messages, specific to TESTING THE Logical networks.
 	//if ((arr->getId() == string("EHAM")) && (prev->name  == "Center"))
 	//  {
 	//    

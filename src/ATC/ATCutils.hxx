@@ -92,25 +92,6 @@ void dclBoundHeading(double &hdg);
 // difference is negative if a1 > a2 and positive if a2 > a1
 double GetAngleDiff_deg( const double &a1, const double &a2);
 
-
-/*******************************
-*
-*	Airport-related functions
-*
-********************************/
-
-// The next two functions are straight copies of their fg.... equivalents
-// in fg_init.cxx, and are just here temporarily until some rationalisation occurs.
-
-// find basic airport location info from airport database
-bool dclFindAirportID( const string& id, FGAirport *a );
-
-// get airport elevation IN METERS
-double dclGetAirportElev( const string& id );
-
-// get airport position (elev portion in FEET)
-Point3D dclGetAirportPos( const string& id );
-
 /****************
 *
 *   Runways

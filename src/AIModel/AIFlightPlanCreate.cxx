@@ -115,14 +115,17 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
   // Otherwise use the current aircraft position.
   if (firstFlight)
     {
-      if (!(dep->getAvailableParking(&lat, &lon, &heading, &gateId, radius, fltType, aircraftType, airline)))
+      if (!(dep->getDynamics()->getAvailableParking(&lat, &lon, 
+						    &heading, &gateId, 
+						    radius, fltType, 
+						    aircraftType, airline)))
 	{
 	  cerr << "Could not find parking " << endl;
 	}
     }
   else
     {
-      dep->getParking(gateId, &lat, &lon, &heading);
+      dep->getDynamics()->getParking(gateId, &lat, &lon, &heading);
       //lat     = latitude;
       //lon     = longitude;
       //heading = getHeading();
@@ -204,7 +207,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
       // "NOTE: this is currently fixed to "com" for commercial traffic
       // Should be changed to be used dynamically to allow "gen" and "mil"
       // as well
-      apt->getActiveRunway("com", 1, activeRunway);
+      apt->getDynamics()->getActiveRunway("com", 1, activeRunway);
       if (!(globals->get_runways()->search(apt->getId(), 
 					    activeRunway, 
 					    &rwy)))
@@ -223,10 +226,10 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
       geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
 			  rwy._length * SG_FEET_TO_METER * 0.5 - 5.0,
 			  &lat2, &lon2, &az2 );
-      if (apt->getGroundNetwork()->exists())
+      if (apt->getDynamics()->getGroundNetwork()->exists())
 	{
 	  intVec ids;
-	  int runwayId = apt->getGroundNetwork()->findNearestNode(lat2, lon2);
+	  int runwayId = apt->getDynamics()->getGroundNetwork()->findNearestNode(lat2, lon2);
 	  //int currId   = apt->getGroundNetwork()->findNearestNode(latitude,longitude);
 	  //exit(1);
 	  
@@ -235,9 +238,9 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
 	  // Starting from gate 0 is a bit of a hack...
 	  FGTaxiRoute route;
 	  if (gateId >= 0)
-	    route = apt->getGroundNetwork()->findShortestRoute(gateId, runwayId);
+	    route = apt->getDynamics()->getGroundNetwork()->findShortestRoute(gateId, runwayId);
 	  else
-	    route = apt->getGroundNetwork()->findShortestRoute(0, runwayId);
+	    route = apt->getDynamics()->getGroundNetwork()->findShortestRoute(0, runwayId);
 	  intVecIterator i;
 	  //cerr << "creating route : ";
 	  // No route found: go from gate directly to runway
@@ -276,7 +279,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
 	      {
 		//i = ids.end()-1;
 		//cerr << "Creating Node: " << node << endl;
-		FGTaxiNode *tn = apt->getGroundNetwork()->findNode(node);
+		FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
 		//ids.pop_back();  
 		wpt = new waypoint;
 		wpt->name      = "taxiway"; // fixme: should be the name of the taxiway
@@ -354,7 +357,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
       //geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
       //		  rwy._length * SG_FEET_TO_METER * 0.5 - 5.0,
       //		  &lat2, &lon2, &az2 );
-      apt->getAvailableParking(&lat, &lon, &heading, &gateId, radius, fltType, acType, airline);
+      apt->getDynamics()->getAvailableParking(&lat, &lon, &heading, &gateId, radius, fltType, acType, airline);
       heading += 180.0;
       if (heading > 360)
 	heading -= 360;
@@ -364,10 +367,10 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
       double lat3 = (*(waypoints.end()-1))->latitude;
       double lon3 = (*(waypoints.end()-1))->longitude;
       cerr << (*(waypoints.end()-1))->name << endl;
-      if (apt->getGroundNetwork()->exists())
+      if (apt->getDynamics()->getGroundNetwork()->exists())
 	{
 	  intVec ids;
-	  int runwayId = apt->getGroundNetwork()->findNearestNode(lat3, lon3);
+	  int runwayId = apt->getDynamics()->getGroundNetwork()->findNearestNode(lat3, lon3);
 	  //int currId   = apt->getGroundNetwork()->findNearestNode(latitude,longitude);
 	  //exit(1);
 	  
@@ -376,9 +379,9 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
 	  // Starting from gate 0 is a bit of a hack...
 	  FGTaxiRoute route;
 	  if (gateId >= 0)
-	    route = apt->getGroundNetwork()->findShortestRoute(runwayId, gateId);
+	    route = apt->getDynamics()->getGroundNetwork()->findShortestRoute(runwayId, gateId);
 	  else
-	    route = apt->getGroundNetwork()->findShortestRoute(runwayId, 0);
+	    route = apt->getDynamics()->getGroundNetwork()->findShortestRoute(runwayId, 0);
 	  intVecIterator i;
 	  //cerr << "creating route : ";
 	  // No route found: go from gate directly to runway
@@ -417,7 +420,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction, FGAirport *apt,
 	      {
 		//i = ids.end()-1;
 		//cerr << "Creating Node: " << node << endl;
-		FGTaxiNode *tn = apt->getGroundNetwork()->findNode(node);
+		FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
 		//ids.pop_back();  
 		wpt = new waypoint;
 		wpt->name      = "taxiway"; // fixme: should be the name of the taxiway
@@ -514,7 +517,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
        // "NOTE: this is currently fixed to "com" for commercial traffic
       // Should be changed to be used dynamically to allow "gen" and "mil"
       // as well
-      apt->getActiveRunway("com", 1, activeRunway);
+      apt->getDynamics()->getActiveRunway("com", 1, activeRunway);
 	if (!(globals->get_runways()->search(apt->getId(), 
 					      activeRunway, 
 					      &rwy)))
@@ -609,7 +612,7 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
       // "NOTE: this is currently fixed to "com" for commercial traffic
       // Should be changed to be used dynamically to allow "gen" and "mil"
       // as well
-      apt->getActiveRunway("com", 1, activeRunway);
+      apt->getDynamics()->getActiveRunway("com", 1, activeRunway);
 	if (!(globals->get_runways()->search(apt->getId(), 
 					      activeRunway, 
 					      &rwy)))
@@ -708,7 +711,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep, FGAirport *a
  
   //string name;
   // should be changed dynamically to allow "gen" and "mil"
-  arr->getActiveRunway("com", 2, activeRunway);
+  arr->getDynamics()->getActiveRunway("com", 2, activeRunway);
   if (!(globals->get_runways()->search(arr->getId(), 
 				       activeRunway, 
 				       &rwy)))
@@ -787,7 +790,7 @@ void FGAIFlightPlan::createDecent(FGAirport *apt)
   //Beginning of Decent
   //string name;
   // allow "mil" and "gen" as well
-  apt->getActiveRunway("com", 2, activeRunway);
+  apt->getDynamics()->getActiveRunway("com", 2, activeRunway);
     if (!(globals->get_runways()->search(apt->getId(), 
 					  activeRunway, 
 					  &rwy)))
@@ -943,7 +946,7 @@ void FGAIFlightPlan::createParking(FGAirport *apt)
   double lat;
   double lon;
   double heading;
-  apt->getParking(gateId, &lat, &lon, &heading);
+  apt->getDynamics()->getParking(gateId, &lat, &lon, &heading);
   heading += 180.0;
   if (heading > 360)
     heading -= 360; 

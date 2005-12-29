@@ -246,8 +246,8 @@ double FGCommList::FindClosest( double lon, double lat, double elev, ATCData& ad
 				ATCData ad2 = *itr;
 				//Point3D p1(*itr.lon, *itr.lat, *itr.elev);
 				Point3D p1(ad2.lon, ad2.lat, ad2.elev);
-				FGAirport a;
-				if(dclFindAirportID(ad2.ident, &a)) {
+				const FGAirport *a = fgFindAirportID(ad2.ident);
+				if (a) {
 					Point3D p2(lon, lat, elev);
 					tmp = dclGetHorizontalSeparation(p1, p2);
 					if(tmp <= closest) {
@@ -273,10 +273,10 @@ double FGCommList::FindClosest( double lon, double lat, double elev, ATCData& ad
 // This is basically a wrapper for a call to the airport database to get the airport
 // position followed by a call to FindByPos(...)
 bool FGCommList::FindByCode( const string& ICAO, ATCData& ad, atc_type tp ) {
-    FGAirport a;
-    if ( dclFindAirportID( ICAO, &a ) ) {
+    const FGAirport *a = fgFindAirportID( ICAO);
+    if ( a) {
 		comm_list_type stations;
-		int found = FindByPos(a.getLongitude(), a.getLatitude(), a.getElevation(), 10.0, &stations, tp);
+		int found = FindByPos(a->getLongitude(), a->getLatitude(), a->getElevation(), 10.0, &stations, tp);
 		if(found) {
 			comm_list_iterator itr = stations.begin();
 			while(itr != stations.end()) {

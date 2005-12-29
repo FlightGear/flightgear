@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <string.h>             // strcmp()
 
-
 #if defined( unix ) || defined( __CYGWIN__ )
 #  include <unistd.h>           // for gethostname()
 #endif
@@ -625,48 +624,7 @@ bool fgInitConfig ( int argc, char **argv ) {
 }
 
 
-// find basic airport location info from airport database
-bool fgFindAirportID( const string& id, FGAirport *a ) {
-    const FGAirport* result;
-    if ( id.length() ) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
 
-        result = globals->get_airports()->search( id );
-
-        if ( result == NULL ) {
-            SG_LOG( SG_GENERAL, SG_ALERT,
-                    "Failed to find " << id << " in apt.dat.gz" );
-            return false;
-        }
-    } else {
-        return false;
-    }
-
-    *a = *result;
-
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "Position for " << id << " is ("
-            << a->getLongitude() << ", "
-            << a->getLatitude() << ")" );
-
-    return true;
-}
-
-
-// get airport elevation
-static double fgGetAirportElev( const string& id ) {
-    FGAirport a;
-    // double lon, lat;
-
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "Finding elevation for airport: " << id );
-
-    if ( fgFindAirportID( id, &a ) ) {
-        return a.getElevation();
-    } else {
-        return -9999.0;
-    }
-}
 
 
 #if 0 
@@ -676,7 +634,7 @@ static double fgGetAirportElev( const string& id ) {
 
 // Preset lon/lat given an airport id
 static bool fgSetPosFromAirportID( const string& id ) {
-    FGAirport a;
+    FGAirport *a;
     // double lon, lat;
 
     SG_LOG( SG_GENERAL, SG_INFO,
@@ -684,17 +642,17 @@ static bool fgSetPosFromAirportID( const string& id ) {
 
     if ( fgFindAirportID( id, &a ) ) {
         // presets
-        fgSetDouble("/sim/presets/longitude-deg", a.longitude );
-        fgSetDouble("/sim/presets/latitude-deg", a.latitude );
+        fgSetDouble("/sim/presets/longitude-deg", a->longitude );
+        fgSetDouble("/sim/presets/latitude-deg", a->latitude );
 
         // other code depends on the actual postition being set so set
         // that as well
-        fgSetDouble("/position/longitude-deg", a.longitude );
-        fgSetDouble("/position/latitude-deg", a.latitude );
+        fgSetDouble("/position/longitude-deg", a->longitude );
+        fgSetDouble("/position/latitude-deg", a->latitude );
 
         SG_LOG( SG_GENERAL, SG_INFO,
-                "Position for " << id << " is (" << a.longitude
-                << ", " << a.latitude << ")" );
+                "Position for " << id << " is (" << a->longitude
+                << ", " << a->latitude << ")" );
 
         return true;
     } else {
@@ -706,7 +664,7 @@ static bool fgSetPosFromAirportID( const string& id ) {
 
 // Set current tower position lon/lat given an airport id
 static bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
-    FGAirport a;
+    
     // tower height hard coded for now...
     float towerheight=50.0f;
 
@@ -714,10 +672,11 @@ static bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
     float fudge_lon = fabs(sin(hdg)) * .003f;
     float fudge_lat = .003f - fudge_lon;
 
-    if ( fgFindAirportID( id, &a ) ) {
-        fgSetDouble("/sim/tower/longitude-deg",  a.getLongitude() + fudge_lon);
-        fgSetDouble("/sim/tower/latitude-deg",  a.getLatitude() + fudge_lat);
-        fgSetDouble("/sim/tower/altitude-ft", a.getElevation() + towerheight);
+    const FGAirport *a = fgFindAirportID( id);
+    if ( a) {
+        fgSetDouble("/sim/tower/longitude-deg",  a->getLongitude() + fudge_lon);
+        fgSetDouble("/sim/tower/latitude-deg",  a->getLatitude() + fudge_lat);
+        fgSetDouble("/sim/tower/altitude-ft", a->getElevation() + towerheight);
         return true;
     } else {
         return false;
@@ -1578,7 +1537,6 @@ bool fgInitSubsystems() {
     //     = fgGetNode("/sim/presets/latitude-deg");
     // static const SGPropertyNode *altitude
     //     = fgGetNode("/sim/presets/altitude-ft");
-
     SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
 
@@ -1879,7 +1837,7 @@ bool fgInitSubsystems() {
                                 // Save the initial state for future
                                 // reference.
     globals->saveInitialState();
-
+    
     return true;
 }
 

@@ -328,7 +328,8 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       _error_count( 0 ),
       _stale_count( 0 ),
       _dt( 0.0 ),
-      _error_dt( 0.0 )
+      _error_dt( 0.0 ),
+      last_apt(0)
 {
 #if defined(ENABLE_THREADS)
     thread = new MetarThread(this);
@@ -412,7 +413,7 @@ FGMetarEnvironmentCtrl::init ()
             if ( result.m != NULL ) {
                 SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
                         << a->getId());
-                last_apt = *a;
+                last_apt = a;
                 _icao = a->getId();
                 search_elapsed = 0.0;
                 fetch_elapsed = 0.0;
@@ -470,13 +471,13 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
                              latitude->getDoubleValue(),
                              true );
         if ( a ) {
-            if ( last_apt.getId() != a->getId()
+            if ( !last_apt || last_apt->getId() != a->getId()
                  || fetch_elapsed > same_station_interval_sec )
             {
                 SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
                         << a->getId());
                 request_queue.push( a->getId() );
-                last_apt = *a;
+                last_apt = a;
                 _icao = a->getId();
                 search_elapsed = 0.0;
                 fetch_elapsed = 0.0;

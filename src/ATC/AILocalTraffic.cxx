@@ -156,7 +156,7 @@ void FGAILocalTraffic::GetAirportDetails(const string& id) {
 		_controlled = false;
 	}
 	// Get the airport elevation
-	aptElev = dclGetAirportElev(airportID.c_str());
+	aptElev = fgGetAirportElev(airportID.c_str());
 	//cout << "Airport elev in AILocalTraffic = " << aptElev << '\n';
 	// WARNING - we use this elev for the whole airport - some assumptions in the code 
 	// might fall down with very slopey airports.
@@ -1069,8 +1069,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		if(descending) {
 			if(orthopos.y() < -50.0) {
 				double thesh_offset = 30.0;
-				slope = atan((_pos.elev() - dclGetAirportElev(airportID)) / (orthopos.y() - thesh_offset)) * DCL_RADIANS_TO_DEGREES;
-				//cout << "slope = " << slope << ", elev = " << _pos.elev() << ", apt_elev = " << dclGetAirportElev(airportID) << ", op.y = " << orthopos.y() << '\n';
+				slope = atan((_pos.elev() - fgGetAirportElev(airportID)) / (orthopos.y() - thesh_offset)) * DCL_RADIANS_TO_DEGREES;
+				//cout << "slope = " << slope << ", elev = " << _pos.elev() << ", apt_elev = " << fgGetAirportElev(airportID) << ", op.y = " << orthopos.y() << '\n';
 				if(slope < -10.0) slope = -10.0;
 				_savedSlope = slope;
 				_pitch = -4.0;

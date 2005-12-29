@@ -37,406 +37,63 @@
 #  include <config.h>
 #endif
 #include <simgear/math/point3d.hxx>
-#include <simgear/route/waypoint.hxx>
+
 #include <simgear/compiler.h>
-#include <simgear/xml/easyxml.hxx>
+//#include <simgear/xml/easyxml.hxx>
 
 #include STL_STRING
 #include <map>
 #include <set>
 #include <vector>
 
+#include "runwayprefs.hxx"
+#include "parking.hxx"
+#include "groundnetwork.hxx"
+#include "dynamics.hxx"
+
 SG_USING_STD(string);
 SG_USING_STD(map);
 SG_USING_STD(set);
 SG_USING_STD(vector);
 
-typedef vector<string> stringVec;
-typedef vector<string>::iterator stringVecIterator;
-typedef vector<string>::const_iterator stringVecConstIterator;
-
-typedef vector<time_t> timeVec;
-typedef vector<time_t>::const_iterator timeVecConstIterator;
 
 
-/***************************************************************************/
-class ScheduleTime {
-private:
-  timeVec   start;
-  timeVec   end;
-  stringVec scheduleNames;
-  double tailWind;
-  double crssWind;
-public:
-  ScheduleTime() : tailWind(0), crssWind(0) {};
-  ScheduleTime(const ScheduleTime &other);
-  ScheduleTime &operator= (const ScheduleTime &other);
-  string getName(time_t dayStart);
-
-  void clear();
-  void addStartTime(time_t time)     { start.push_back(time);            };
-  void addEndTime  (time_t time)     { end.  push_back(time);            };
-  void addScheduleName(const string& sched) { scheduleNames.push_back(sched);   };
-  void setTailWind(double wnd)  { tailWind = wnd;                        };
-  void setCrossWind(double wnd) { tailWind = wnd;                        };
-
-  double getTailWind()  { return tailWind;                               };
-  double getCrossWind() { return crssWind;                               };
-};
-
-//typedef vector<ScheduleTime> ScheduleTimes;
-/*****************************************************************************/
-
-class RunwayList
-{
-private:
-  string type;
-  stringVec preferredRunways;
-public:
-  RunwayList() {};
-  RunwayList(const RunwayList &other);
-  RunwayList& operator= (const RunwayList &other);
-
-  void set(const string&, const string&);
-  void clear();
-
-  string getType() { return type; };
-  stringVec *getRwyList() { return &preferredRunways;    };
-  string getRwyList(int j) { return preferredRunways[j]; };
-};
-
-typedef vector<RunwayList> RunwayListVec;
-typedef vector<RunwayList>::iterator RunwayListVectorIterator;
-typedef vector<RunwayList>::const_iterator RunwayListVecConstIterator;
-
-
-/*****************************************************************************/
-
-class RunwayGroup
-{
-private:
-  string name;
-  RunwayListVec rwyList;
-  int active;
-  //stringVec runwayNames;
-  int choice[2];
-  int nrActive;
-public:
-  RunwayGroup() {};
-  RunwayGroup(const RunwayGroup &other);
-  RunwayGroup &operator= (const RunwayGroup &other);
-
-  void setName(string nm) { name = nm;                };
-  void add(RunwayList list) { rwyList.push_back(list);};
-  void setActive(const string& aptId, double windSpeed, double windHeading, double maxTail, double maxCross);
-
-  int getNrActiveRunways() { return nrActive;};
-  void getActive(int i, string& name, string& type);
-
-  string getName() { return name; };
-  void clear() { rwyList.clear(); }; 
-  //void add(string, string);
-};
-
-typedef vector<RunwayGroup> PreferenceList;
-typedef vector<RunwayGroup>::iterator PreferenceListIterator;
-typedef vector<RunwayGroup>::const_iterator PreferenceListConstIterator;
-/******************************************************************************/
-
-class FGRunwayPreference  : public XMLVisitor {
-private:
-  string value;
-  string scheduleName;
-
-  ScheduleTime comTimes; // Commercial Traffic;
-  ScheduleTime genTimes; // General Aviation;
-  ScheduleTime milTimes; // Military Traffic;
-  ScheduleTime currTimes; // Needed for parsing;
-
-  RunwayList  rwyList;
-  RunwayGroup rwyGroup;
-  PreferenceList preferences;
-
-  time_t processTime(const string&);
-  bool initialized;
-
-public:
-  FGRunwayPreference();
-  FGRunwayPreference(const FGRunwayPreference &other);
-  
-  FGRunwayPreference & operator= (const FGRunwayPreference &other);
-  ScheduleTime *getSchedule(const char *trafficType);
-  RunwayGroup *getGroup(const string& groupName);
-  bool available() { return initialized; };
-
- // Some overloaded virtual XMLVisitor members
-  virtual void startXML (); 
-  virtual void endXML   ();
-  virtual void startElement (const char * name, const XMLAttributes &atts);
-  virtual void endElement (const char * name);
-  virtual void data (const char * s, int len);
-  virtual void pi (const char * target, const char * data);
-  virtual void warning (const char * message, int line, int column);
-  virtual void error (const char * message, int line, int column);
-};
-
-double processPosition(const string& pos);
-
-class FGParking {
-private:
-  double latitude;
-  double longitude;
-  double heading;
-  double radius;
-  int index;
-  string parkingName;
-  string type;
-  string airlineCodes;
- 
-  bool available;
-
-  
-
-public:
-  FGParking() { available = true;};
-  //FGParking(FGParking &other);
-  FGParking(double lat,
-	    double lon,
-	    double hdg,
-	    double rad,
-	    int idx,
-	    const string& name,
-	    const string& tpe,
-	    const string& codes);
-  void setLatitude (const string& lat)  { latitude    = processPosition(lat);  };
-  void setLongitude(const string& lon)  { longitude   = processPosition(lon);  };
-  void setHeading  (double hdg)  { heading     = hdg;  };
-  void setRadius   (double rad)  { radius      = rad;  };
-  void setIndex    (int    idx)  { index       = idx;  };
-  void setName     (const string& name) { parkingName = name; };
-  void setType     (const string& tpe)  { type        = tpe;  };
-  void setCodes    (const string& codes){ airlineCodes= codes;};
-
-  bool isAvailable ()         { return available;};
-  void setAvailable(bool val) { available = val; };
-  
-  double getLatitude () { return latitude;    };
-  double getLongitude() { return longitude;   };
-  double getHeading  () { return heading;     };
-  double getRadius   () { return radius;      };
-  int    getIndex    () { return index;       };
-  string getType     () { return type;        };
-  string getCodes    () { return airlineCodes;};
-  string getName     () { return parkingName; };
-
-  bool operator< (const FGParking &other) const {return radius < other.radius; };
-};
-
-typedef vector<FGParking> FGParkingVec;
-typedef vector<FGParking>::iterator FGParkingVecIterator;
-typedef vector<FGParking>::const_iterator FGParkingVecConstIterator;
-
-class FGTaxiSegment; // forward reference
-
-typedef vector<FGTaxiSegment>  FGTaxiSegmentVector;
-typedef vector<FGTaxiSegment*> FGTaxiSegmentPointerVector;
-typedef vector<FGTaxiSegment>::iterator FGTaxiSegmentVectorIterator;
-typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentPointerVectorIterator;
-
-/**************************************************************************************
- * class FGTaxiNode
- *************************************************************************************/
-class FGTaxiNode 
-{
-private:
-  double lat;
-  double lon;
-  int index;
-  FGTaxiSegmentPointerVector next; // a vector to all the segments leaving from this node
-  
-public:
-  FGTaxiNode();
-  FGTaxiNode(double, double, int);
-
-  void setIndex(int idx)                  { index = idx;};
-  void setLatitude (double val)           { lat = val;};
-  void setLongitude(double val)           { lon = val;};
-  void setLatitude (const string& val)           { lat = processPosition(val);  };
-  void setLongitude(const string& val)           { lon = processPosition(val);  };
-  void addSegment(FGTaxiSegment *segment) { next.push_back(segment); };
-  
-  double getLatitude() { return lat;};
-  double getLongitude(){ return lon;};
-
-  int getIndex() { return index; };
-  FGTaxiNode *getAddress() { return this;};
-  FGTaxiSegmentPointerVectorIterator getBeginRoute() { return next.begin(); };
-  FGTaxiSegmentPointerVectorIterator getEndRoute()   { return next.end();   }; 
-};
-
-typedef vector<FGTaxiNode> FGTaxiNodeVector;
-typedef vector<FGTaxiNode>::iterator FGTaxiNodeVectorIterator;
-
-/***************************************************************************************
- * class FGTaxiSegment
- **************************************************************************************/
-class FGTaxiSegment
-{
-private:
-  int startNode;
-  int endNode;
-  double length;
-  FGTaxiNode *start;
-  FGTaxiNode *end;
-  int index;
-
-public:
-  FGTaxiSegment();
-  FGTaxiSegment(FGTaxiNode *, FGTaxiNode *, int);
-
-  void setIndex        (int val) { index     = val; };
-  void setStartNodeRef (int val) { startNode = val; };
-  void setEndNodeRef   (int val) { endNode   = val; };
-
-  void setStart(FGTaxiNodeVector *nodes);
-  void setEnd  (FGTaxiNodeVector *nodes);
-  void setTrackDistance();
-
-  FGTaxiNode * getEnd() { return end;};
-  double getLength() { return length; };
-  int getIndex() { return index; };
-
-  
-};
-
-
-typedef vector<int> intVec;
-typedef vector<int>::iterator intVecIterator;
-
-class FGTaxiRoute
-{
-private:
-  intVec nodes;
-  double distance;
-  intVecIterator currNode;
-
-public:
-  FGTaxiRoute() { distance = 0; currNode = nodes.begin(); };
-  FGTaxiRoute(intVec nds, double dist) { nodes = nds; distance = dist; currNode = nodes.begin();};
-  bool operator< (const FGTaxiRoute &other) const {return distance < other.distance; };
-  bool empty () { return nodes.begin() == nodes.end(); };
-  bool next(int *val); 
-  
-  void first() { currNode = nodes.begin(); };
-};
-
-typedef vector<FGTaxiRoute> TaxiRouteVector;
-typedef vector<FGTaxiRoute>::iterator TaxiRouteVectorIterator;
-
-/**************************************************************************************
- * class FGGroundNetWork
- *************************************************************************************/
-class FGGroundNetwork
-{
-private:
-  bool hasNetwork;
-  FGTaxiNodeVector    nodes;
-  FGTaxiSegmentVector segments;
-  //intVec route;
-  intVec traceStack;
-  TaxiRouteVector routes;
-  
-  bool foundRoute;
-  double totalDistance, maxDistance;
-  
-public:
-  FGGroundNetwork();
-
-  void addNode   (const FGTaxiNode& node);
-  void addNodes  (FGParkingVec *parkings);
-  void addSegment(const FGTaxiSegment& seg); 
-
-  void init();
-  bool exists() { return hasNetwork; };
-  int findNearestNode(double lat, double lon);
-  FGTaxiNode *findNode(int idx);
-  FGTaxiRoute findShortestRoute(int start, int end);
-  void trace(FGTaxiNode *, int, int, double dist);
- 
-};
 
 /***************************************************************************************
  *
  **************************************************************************************/
-class FGAirport : public XMLVisitor{
+class FGAirport {
 private:
   string _id;
   double _longitude;    // degrees
   double _latitude;     // degrees
   double _elevation;    // ft
-  string _code;               // depricated and can be removed
   string _name;
   bool _has_metar;
-  FGParkingVec parkings;
-  FGRunwayPreference rwyPrefs;
-  FGGroundNetwork groundNetwork;
-
-  time_t lastUpdate;
-  string prevTrafficType;
-  stringVec landing;
-  stringVec takeoff;
-
-  // Experimental keep a running average of wind dir and speed to prevent
-  // Erratic runway changes. 
-  // Note: I should add these to the copy constructor and assigment operator to be
-  // constistent
-  double avWindHeading [10];
-  double avWindSpeed   [10];
-
-  string chooseRunwayFallback();
+  FGAirportDynamics *dynamics;
 
 public:
   FGAirport();
-  FGAirport(const FGAirport &other);
-  //operator= (FGAirport &other);
+  // FGAirport(const FGAirport &other);
   FGAirport(const string& id, double lon, double lat, double elev, const string& name, bool has_metar);
+  ~FGAirport();
 
-  void init();
-  void getActiveRunway(const string& trafficType, int action, string& runway);
-  bool getAvailableParking(double *lat, double *lon, double *heading, int *gate, double rad, const string& fltype, 
-			   const string& acType, const string& airline);
-  void getParking         (int id, double *lat, double* lon, double *heading);
-  FGParking *getParking(int i); // { if (i < parkings.size()) return parkings[i]; else return 0;};
-  void releaseParking(int id);
-  string getParkingName(int i); 
   string getId() const { return _id;};
   const string &getName() const { return _name;};
-  //FGAirport *getAddress() { return this; };
-  //const string &getName() const { return _name;};
-  // Returns degrees
   double getLongitude() const { return _longitude;};
   // Returns degrees
   double getLatitude()  const { return _latitude; };
   // Returns ft
   double getElevation() const { return _elevation;};
   bool   getMetar()     const { return _has_metar;};
- FGGroundNetwork* getGroundNetwork() { return &groundNetwork; };
-  
 
   void setId(const string& id) { _id = id;};
   void setMetar(bool value) { _has_metar = value; };
 
-  void setRwyUse(const FGRunwayPreference& ref);
-
- // Some overloaded virtual XMLVisitor members
-  virtual void startXML (); 
-  virtual void endXML   ();
-  virtual void startElement (const char * name, const XMLAttributes &atts);
-  virtual void endElement (const char * name);
-  virtual void data (const char * s, int len);
-  virtual void pi (const char * target, const char * data);
-  virtual void warning (const char * message, int line, int column);
-  virtual void error (const char * message, int line, int column);
+  FGAirportDynamics *getDynamics();
+private:
+  FGAirport operator=(FGAirport &other);
+  FGAirport(const FGAirport&);
 };
 
 typedef map < string, FGAirport* > airport_map;
@@ -454,7 +111,7 @@ private:
 
     airport_map airports_by_id;
     airport_list airports_array;
-    set < string > ai_dirs;
+  //set < string > ai_dirs;
 
 public:
 
@@ -514,6 +171,14 @@ public:
 
 };
 
+// find basic airport location info from airport database
+const FGAirport *fgFindAirportID( const string& id);
+
+// get airport elevation
+double fgGetAirportElev( const string& id );
+
+// get airport position
+Point3D fgGetAirportPos( const string& id );
 
 #endif // _FG_SIMPLE_HXX
 

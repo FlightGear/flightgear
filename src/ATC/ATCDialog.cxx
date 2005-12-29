@@ -365,8 +365,8 @@ void FGATCDialog::FreqDisplay(string& ident) {
 	atcUppercase(ident);
 	string label;
 
-	FGAirport a;
-	if (!dclFindAirportID(ident, &a)) {
+	const FGAirport *a = fgFindAirportID(ident);
+	if (!a) {
 		label = "Airport " + ident + " not found in database.";
 		mkDialog(label.c_str());
 		return;
@@ -379,7 +379,7 @@ void FGATCDialog::FreqDisplay(string& ident) {
 	int n = 0;	// Number of ATC frequencies at this airport
 
 	comm_list_type stations;
-	int found = current_commlist->FindByPos(a.getLongitude(), a.getLatitude(), a.getElevation(), 20.0, &stations);
+	int found = current_commlist->FindByPos(a->getLongitude(), a->getLatitude(), a->getElevation(), 20.0, &stations);
 	if(found) {
 		ostringstream ostr;
 		comm_list_iterator itr = stations.begin();

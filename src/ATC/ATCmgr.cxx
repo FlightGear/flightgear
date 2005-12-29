@@ -21,7 +21,6 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <Airports/simple.hxx>
-
 #include "ATCmgr.hxx"
 #include "commlist.hxx"
 #include "ATCdisplay.hxx"
@@ -216,14 +215,14 @@ bool FGATCMgr::AIRegisterAirport(const string& ident) {
 		airport_atc_map[ident]->numAI++;
 		return(true);
 	} else {
-		FGAirport ap;
-		if(dclFindAirportID(ident, &ap)) {
+		const FGAirport *ap = fgFindAirportID(ident);
+		if (ap) {
 			//cout << "ident = " << ident << '\n';
 			AirportATC *a = new AirportATC;
 			// I'm not entirely sure that this AirportATC structure business is actually needed - it just duplicates what we can find out anyway!
-			a->lon = ap.getLongitude();
-			a->lat = ap.getLatitude();
-			a->elev = ap.getElevation();
+			a->lon = ap->getLongitude();
+			a->lat = ap->getLatitude();
+			a->elev = ap->getElevation();
 			a->atis_freq = GetFrequency(ident, ATIS);
 			//cout << "ATIS freq = " << a->atis_freq << '\n';
 			a->atis_active = false;
@@ -266,13 +265,13 @@ bool FGATCMgr::CommRegisterAirport(const string& ident, int chan, const atc_type
 		return(true);
 	} else {
 		//cout << "NOT IN MAP - creating new..." << endl;
-		FGAirport ap;
-		if(dclFindAirportID(ident, &ap)) {
+		const FGAirport *ap = fgFindAirportID(ident);
+		if (ap) {
 			AirportATC *a = new AirportATC;
 			// I'm not entirely sure that this AirportATC structure business is actually needed - it just duplicates what we can find out anyway!
-			a->lon = ap.getLongitude();
-			a->lat = ap.getLatitude();
-			a->elev = ap.getElevation();
+			a->lon = ap->getLongitude();
+			a->lat = ap->getLatitude();
+			a->elev = ap->getElevation();
 			a->atis_freq = GetFrequency(ident, ATIS);
 			a->atis_active = false;
 			a->tower_freq = GetFrequency(ident, TOWER);

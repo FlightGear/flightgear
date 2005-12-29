@@ -291,67 +291,6 @@ double GetAngleDiff_deg( const double &a1, const double &a2) {
   return a3;
 }
 
-//================================================================================================================
-
-// Airport stuff.  The next two functions are straight copies of their fg.... equivalents
-// in fg_init.cxx, and are just here temporarily until some rationalisation occurs.
-// find basic airport location info from airport database
-bool dclFindAirportID( const string& id, FGAirport *a ) {
-    const FGAirport* result;
-
-    if ( id.length() ) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
-
-        result = globals->get_airports()->search(id);
-        if ( result == NULL ) {
-            SG_LOG( SG_GENERAL, SG_WARN,
-                    "Failed to find " << id << " in apt.dat.gz" );
-            return false;
-        }
-    } else {
-        return false;
-    }
-
-    *a = *result;
-
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "Position for " << id << " is ("
-            << a->getLongitude() << ", "
-            << a->getLatitude() << ")" );
-
-    return true;
-}
-
-// get airport elevation
-double dclGetAirportElev( const string& id ) {
-    FGAirport a;
-    // double lon, lat;
-
-    SG_LOG( SG_ATC, SG_INFO,
-            "Finding elevation for airport: " << id );
-
-    if ( dclFindAirportID( id, &a ) ) {
-        return a.getElevation() * SG_FEET_TO_METER;
-    } else {
-        return -9999.0;
-    }
-}
-
-// get airport position
-Point3D dclGetAirportPos( const string& id ) {
-    FGAirport a;
-    // double lon, lat;
-
-    SG_LOG( SG_ATC, SG_INFO,
-            "Finding position for airport: " << id );
-
-    if ( dclFindAirportID( id, &a ) ) {
-        return Point3D(a.getLongitude(), a.getLatitude(), a.getElevation());
-    } else {
-        return Point3D(0.0, 0.0, -9999.0);
-    }
-}	
-
 // Runway stuff
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
 bool OnRunway(const Point3D& pt, const FGRunway& rwy) {

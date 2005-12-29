@@ -291,7 +291,7 @@ void FGTower::Init() {
 	// TODO - attempt to get a departure control pointer to see if we need to hand off departing traffic to departure.
 	
 	// Get the airport elevation
-	aptElev = dclGetAirportElev(ident.c_str());
+	aptElev = fgGetAirportElev(ident.c_str());
 	
 	// TODO - this function only assumes one active rwy.
 	DoRwyDetails();

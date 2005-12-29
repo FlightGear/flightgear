@@ -24,7 +24,6 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <simgear/math/sg_random.h>
-
 #include <list>
 
 #ifdef _MSC_VER
@@ -131,9 +130,9 @@ void FGAIMgr::init() {
 			ext = file.substr(pos + 1);
 			if(ext == "taxi") {
 				f_ident = file.substr(0, pos);
-				FGAirport a;
-				if(dclFindAirportID(f_ident, &a)) {
-					SGBucket sgb(a.getLongitude(), a.getLatitude());
+				const FGAirport *a = fgFindAirportID( f_ident);
+				if(a){
+					SGBucket sgb(a->getLongitude(), a->getLatitude());
 					int idx = sgb.gen_index();
 					if(facilities.find(idx) != facilities.end()) {
 						facilities[idx]->push_back(f_ident);
@@ -159,7 +158,7 @@ void FGAIMgr::init() {
 	/*
 	// TESTING
 	FGATCAlignedProjection ortho;
-	ortho.Init(dclGetAirportPos("KEMT"), 205.0);	// Guess of rwy19 heading
+	ortho.Init(fgGetAirportPos("KEMT"), 205.0);	// Guess of rwy19 heading
 	//Point3D ip = ortho.ConvertFromLocal(Point3D(6000, 1000, 1000));	// 90 deg entry
 	//Point3D ip = ortho.ConvertFromLocal(Point3D(-7000, 3000, 1000));	// 45 deg entry
 	Point3D ip = ortho.ConvertFromLocal(Point3D(1000, -7000, 1000));	// straight-in
@@ -209,7 +208,7 @@ void FGAIMgr::update(double dt) {
 		ai_activated_map_iterator apt_itr = activated.begin();
 		while(apt_itr != activated.end()) {
 			//cout << "FIRST IS " << (*apt_itr).first << '\n';
-			if(dclGetHorizontalSeparation(userPos, dclGetAirportPos((*apt_itr).first)) > (35.0 * 1600.0)) {
+			if(dclGetHorizontalSeparation(userPos, fgGetAirportPos((*apt_itr).first)) > (35.0 * 1600.0)) {
 				// Then get rid of it and make sure the iterator is left pointing to the next one!
 				string s = (*apt_itr).first;
 				if(traffic.find(s) != traffic.end()) {
@@ -237,14 +236,14 @@ void FGAIMgr::update(double dt) {
 			//cout << "s = " << s << " size = " << (*it).second.size() << '\n';
 			// Only generate extra traffic if within a certain distance of the user,
 			// TODO - maybe take users's tuned freq into account as well.
-			double d = dclGetHorizontalSeparation(userPos, dclGetAirportPos(s)); 
+			double d = dclGetHorizontalSeparation(userPos, fgGetAirportPos(s)); 
 			if(d < (15.0 * 1600.0)) {
 				double cd = 0.0;
 				bool gen = false;
 				//cout << "Size of list is " << (*it).second.size() << " at " << s << '\n';
 				if((*it).second.size()) {
 					FGAIEntity* e = *((*it).second.rbegin());	// Get the last airplane currently scheduled to arrive at this airport.
-					cd = dclGetHorizontalSeparation(e->GetPos(), dclGetAirportPos(s));
+					cd = dclGetHorizontalSeparation(e->GetPos(), fgGetAirportPos(s));
 					if(cd < (d < 5000 ? 10000 : d + 5000)) {
 						gen = true;
 					}
@@ -331,8 +330,8 @@ void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist)
 	/*
 	// TODO - check for military airports - this should be in the current data.
 	// UGGH - there's no point at the moment - everything is labelled civil in basic.dat!
-	FGAirport a;
-	if(dclFindAirportID(ident, &a)) {
+	FGAirport a = fgFindAirportID(ident, &a);
+	if(a) {
 		cout << "CODE IS " << a.code << '\n';
 	} else {
 		// UG - can't find the airport!
@@ -340,7 +339,7 @@ void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist)
 	}
 	*/
 	
-	Point3D aptpos = dclGetAirportPos(ident); 	// TODO - check for elev of -9999
+	Point3D aptpos = fgGetAirportPos(ident); 	// TODO - check for elev of -9999
 	//cout << "ident = " << ident << ", elev = " << aptpos.elev() << '\n';
 	
 	// Operate from airports at 3000ft and below only to avoid the default cloud layers and since we don't degrade AI performance with altitude.
@@ -554,7 +553,7 @@ void FGAIMgr::SearchByPos(double range) {
 		for(twd_itr = towered.begin(); twd_itr != towered.end(); twd_itr++) {
 			// Only activate the closest airport not already activated each time.
 			if(activated.find(twd_itr->ident) == activated.end()) {
-				double sep = dclGetHorizontalSeparation(Point3D(lon, lat, elev), dclGetAirportPos(twd_itr->ident));
+				double sep = dclGetHorizontalSeparation(Point3D(lon, lat, elev), fgGetAirportPos(twd_itr->ident));
 				if(sep < closest) {
 					closest = sep;
 					s = twd_itr->ident;

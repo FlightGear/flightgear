@@ -173,7 +173,7 @@ private:
     float same_station_interval_sec;
     float search_elapsed;
     float fetch_elapsed;
-    FGAirport last_apt;
+    const FGAirport *last_apt;
     SGPropertyNode *proxy_host;
     SGPropertyNode *proxy_port;
     SGPropertyNode *proxy_auth;
