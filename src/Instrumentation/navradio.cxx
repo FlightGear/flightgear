@@ -416,6 +416,23 @@ FGNavRadio::update(double dt)
 	//      << " dist = " << nav_dist << endl;
 
         //////////////////////////////////////////////////////////
+        // compute the target/selected radial in "true" heading
+        //////////////////////////////////////////////////////////
+        double trtrue = 0.0;
+        if ( is_loc ) {
+            // ILS localizers radials are already "true" in our
+            // database
+            trtrue = target_radial;
+        } else {
+            // VOR radials need to have that vor's offset added in
+            trtrue = target_radial + twist;
+        }
+
+        while ( trtrue < 0.0 ) { trtrue += 360.0; }
+        while ( trtrue > 360.0 ) { trtrue -= 360.0; }
+        target_radial_true_node->setDoubleValue( trtrue );
+
+        //////////////////////////////////////////////////////////
 	// adjust reception range for altitude
         //////////////////////////////////////////////////////////
 	if ( is_loc ) {
@@ -548,16 +565,21 @@ FGNavRadio::update(double dt)
             double ddist = last_loc_dist - loc_dist;
             double dxtrack = last_xtrack_error - xtrack_error;
             double a = atan2( dxtrack, ddist ) * SGD_RADIANS_TO_DEGREES;
-            SGPropertyNode *maghead
-                = fgGetNode("/orientation/heading-magnetic-deg", true);
-            cout << "heading = " << maghead->getDoubleValue()
+            if ( from_flag_node->getBoolValue() ) {
+                a = 180.0 - a;
+                if ( a > 180.0 ) { a -= 360.0; }
+                if ( a < -180.0 ) { a += 360.0; }
+            }
+            SGPropertyNode *true_hdg
+                = fgGetNode("/orientation/heading-deg", true);
+            cout << "true heading = " << true_hdg->getDoubleValue()
                  << " selrad = " << sel_radial_node->getDoubleValue()
                  << " artr = " << a
                  << endl;
-            double est_hdg = sel_radial_node->getDoubleValue() + a;
+            double est_hdg = trtrue + a;
             if ( est_hdg < 0.0 ) { est_hdg += 360.0; }
             if ( est_hdg >= 360.0 ) { est_hdg -= 360.0; }
-            hdg_error = est_hdg - maghead->getDoubleValue();
+            hdg_error = est_hdg - true_hdg->getDoubleValue();
         }
         cdi_xtrack_hdg_err_node->setDoubleValue( hdg_error );
 
@@ -632,21 +654,6 @@ FGNavRadio::update(double dt)
         // a nav/ils radial.
         //////////////////////////////////////////////////////////
 
-        // determine the target radial in "true" heading
-        double trtrue = 0.0;
-        if ( is_loc ) {
-            // ILS localizers radials are already "true" in our
-            // database
-            trtrue = target_radial;
-        } else {
-            // VOR radials need to have that vor's offset added in
-            trtrue = target_radial + twist;
-        }
-
-        while ( trtrue < 0.0 ) { trtrue += 360.0; }
-        while ( trtrue > 360.0 ) { trtrue -= 360.0; }
-        target_radial_true_node->setDoubleValue( trtrue );
-
         // FIXME: this smells odd, there must be a better (or more
         // linear) solution
         //
@@ -668,7 +675,7 @@ FGNavRadio::update(double dt)
         // determine the target heading to fly to intercept the
         // tgt_radial = target radial (true) + cdi offset adjustmest -
         // xtrack heading error adjustment
-        double nta_hdg = trtrue + adjustment /* - hdg_error */; 
+        double nta_hdg = trtrue + adjustment - hdg_error; 
         while ( nta_hdg <   0.0 ) { nta_hdg += 360.0; }
         while ( nta_hdg > 360.0 ) { nta_hdg -= 360.0; }
         target_auto_hdg_node->setDoubleValue( nta_hdg );
