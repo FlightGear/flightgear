@@ -572,10 +572,10 @@ FGNavRadio::update(double dt)
             }
             SGPropertyNode *true_hdg
                 = fgGetNode("/orientation/heading-deg", true);
-            cout << "true heading = " << true_hdg->getDoubleValue()
-                 << " selrad = " << sel_radial_node->getDoubleValue()
-                 << " artr = " << a
-                 << endl;
+            // cout << "true heading = " << true_hdg->getDoubleValue()
+            //      << " selrad = " << sel_radial_node->getDoubleValue()
+            //      << " artr = " << a
+            //      << endl;
             double est_hdg = trtrue + a;
             if ( est_hdg < 0.0 ) { est_hdg += 360.0; }
             if ( est_hdg >= 360.0 ) { est_hdg -= 360.0; }
