@@ -62,7 +62,7 @@ FGAIManager::~FGAIManager() {
   ModelVecIterator i = loadedModels.begin();
   while (i != loadedModels.end())
     {
-      i->getModelId()->deRef();
+      ssgDeRefDelete(i->getModelId());
       ++i;
     }
 }
