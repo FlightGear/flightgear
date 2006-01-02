@@ -48,6 +48,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     lon_node(fgGetNode("/position/longitude-deg", true)),
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
+    is_valid_node(NULL),
     power_btn_node(NULL),
     freq_node(NULL),
     alt_freq_node(NULL),
@@ -158,6 +159,7 @@ FGNavRadio::init ()
 	fgGetNode(("/systems/electrical/outputs/" + name).c_str(), true);
 
     // inputs
+    is_valid_node = node->getChild("data-is-valid", 0, true);
     power_btn_node = node->getChild("power-btn", 0, true);
     power_btn_node->setBoolValue( true );
     vol_btn_node = node->getChild("volume", 0, true);
@@ -312,6 +314,14 @@ double FGNavRadio::adjustILSRange( double stationElev, double aircraftElev,
 void 
 FGNavRadio::update(double dt) 
 {
+    // Do a nav station search only once a second to reduce
+    // unnecessary work. (Also, make sure to do this before caching
+    // any values!)
+    _time_before_search_sec -= dt;
+    if ( _time_before_search_sec < 0 ) {
+	search();
+    }
+
     // cache a few strategic values locally for speed
     double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
@@ -336,13 +346,6 @@ FGNavRadio::update(double dt)
     fmt_freq_node->setStringValue(tmp);
     sprintf( tmp, "%.2f", alt_freq_node->getDoubleValue() );
     fmt_alt_freq_node->setStringValue(tmp);
-
-    // Do a nav station search only once a second to reduce
-    // unnecessary work.
-    _time_before_search_sec -= dt;
-    if ( _time_before_search_sec < 0 ) {
-	search();
-    }
 
     // cout << "is_valid = " << is_valid
     //      << " power_btn = " << power_btn
@@ -941,6 +944,8 @@ void FGNavRadio::search()
 	globals->get_soundmgr()->remove( dme_fx_name );
 	// cout << "not picking up vor1. :-(" << endl;
     }
+
+    is_valid_node->setBoolValue( is_valid );
 
     char tmpid[5];
     strncpy( tmpid, nav_id.c_str(), 5 );

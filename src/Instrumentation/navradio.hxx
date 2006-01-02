@@ -49,6 +49,8 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode *bus_power_node;
 
     // property inputs
+    SGPropertyNode *is_valid_node;   // is station data valid (may be way out
+                                     // of range.)
     SGPropertyNode *power_btn_node;
     SGPropertyNode *freq_node;       // primary freq
     SGPropertyNode *alt_freq_node;   // standby freq
@@ -105,6 +107,7 @@ class FGNavRadio : public SGSubsystem
 
     // internal (private) values
 
+    string nav_id;
     string last_nav_id;
     bool last_nav_vor;
     int play_count;
