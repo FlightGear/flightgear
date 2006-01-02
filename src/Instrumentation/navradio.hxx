@@ -107,7 +107,6 @@ class FGNavRadio : public SGSubsystem
 
     // internal (private) values
 
-    string nav_id;
     string last_nav_id;
     bool last_nav_vor;
     int play_count;
