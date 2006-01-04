@@ -58,6 +58,10 @@ Also, see the header file (FGSwitch.h) for further details.
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "FGSwitch.h"
 
 namespace JSBSim {

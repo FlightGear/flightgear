@@ -38,6 +38,10 @@ SENTRY
   INCLUDES
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef FGFS
 #  include <math.h>
 #  include <simgear/compiler.h>

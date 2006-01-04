@@ -36,6 +36,10 @@ JSB  1/9/00          Created
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "FGTable.h"
 
 #if defined ( sgi ) && !defined( __GNUC__ ) && (_COMPILER_VERSION < 740)
