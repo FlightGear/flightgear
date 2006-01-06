@@ -73,6 +73,7 @@ class FGControls;
 class FGFlightPlanDispatcher;
 class FGIO;
 class FGNavList;
+class FGNasalDisplay;
 class FGTACANList;
 class FGFixList;
 class FGLight;
@@ -209,6 +210,9 @@ private:
     FGNavList *carrierlist;
     FGTACANList *channellist;
     FGFixList *fixlist;
+    
+    // Scripting display
+    FGNasalDisplay * Nasal_display;
 
 
 #ifdef FG_MPLAYER_AS
@@ -358,6 +362,9 @@ public:
     inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
 
     inline FGIO* get_io() const { return io; }
+    
+    inline FGNasalDisplay *get_Nasal_display() const { return Nasal_display; }
+    inline void set_Nasal_display( FGNasalDisplay *d ) {Nasal_display = d; }    
 
     inline FGNavList *get_navlist() const { return navlist; }
     inline void set_navlist( FGNavList *n ) { navlist = n; }

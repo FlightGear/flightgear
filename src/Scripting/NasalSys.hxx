@@ -47,7 +47,9 @@ public:
 
     void createModule(const char* moduleName, const char* fileName,
                     const char* src, int len);
-
+		    
+    void screenPrint(const char* src);
+     
 private:
     friend class FGNasalScript;
     friend class FGNasalListener;
@@ -96,7 +98,8 @@ public:
     ~FGNasalScript() { _nas->gcRelease(_gcKey); }
 
     bool call() {
-        naCall(_nas->_context, _code, 0, 0, naNil(), naNil());
+        naRef n = naNil();
+        naCall(_nas->_context, _code, 0, &n, naNil(), naNil());
         return naGetError(_nas->_context) == 0;
     }
 
