@@ -299,6 +299,23 @@ static naRef f_screenPrint(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
+// Return an array listing of all files in a directory
+static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
+{
+    if(argc != 1 || !naIsString(args[0]))
+        naRuntimeError(c, "bad arguments to directory()");
+    naRef ldir = args[0];
+    ulDir* dir = ulOpenDir(naStr_data(args[0]));
+    if(!dir) return naNil();
+    naRef result = naNewVector(c);
+    ulDirEnt* dent;
+    while((dent = ulReadDir(dir)))
+        naVec_append(result, naStr_fromdata(naNewString(c), dent->d_name,
+                                            strlen(dent->d_name)));
+    ulCloseDir(dir);
+    return result;
+}
+
 // Table of extension functions.  Terminate with zeros.
 static struct { char* name; naCFunction func; } funcs[] = {
     { "getprop",   f_getprop },
@@ -311,6 +328,7 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "_interpolate",  f_interpolate },
     { "rand",  f_rand },
     { "screenPrint", f_screenPrint },
+    { "directory", f_directory },
     { 0, 0 }
 };
 
