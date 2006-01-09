@@ -354,6 +354,16 @@ PropsChannel::foundTerminator()
                             = args.getNode("timeofday", i-2, true);
                         node->setStringValue( tokens[i].c_str() );
                     }
+                } else if ( tokens[1] == "play-audio-message" ) {
+                    if ( tokens.size() == 4 ) {
+                        cout << "props: play audio message = " << tokens[2]
+                             << " " << tokens[3] << endl;
+                        SGPropertyNode *node;
+                        node = args.getNode("path", 0, true);
+                        node->setStringValue( tokens[2].c_str() );
+                        node = args.getNode("file", 0, true);
+                        node->setStringValue( tokens[3].c_str() );
+                   }
                 }
                 if ( !globals->get_commands()
                          ->execute(tokens[1].c_str(), &args) )
