@@ -117,7 +117,9 @@ void FGGlobals::set_fg_root (const string &root) {
     tmp.append( "version" );
     if ( ulFileExists( tmp.c_str() ) ) {
         fg_root += "/data";
-        }
+    }
+
+    fgSetString("/sim/fg-root", fg_root.c_str());   
 }
 
 void FGGlobals::set_fg_scenery (const string &scenery) {
