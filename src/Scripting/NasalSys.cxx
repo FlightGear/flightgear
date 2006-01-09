@@ -288,6 +288,12 @@ static naRef f_rand(naContext c, naRef me, int argc, naRef* args)
     return naNum(sg_random());
 }
 
+static naRef f_srand(naContext c, naRef me, int argc, naRef* args)
+{
+    sg_srandom_time();
+    return naNum(0);
+}
+
 // Wrapper function for screenPrint
 static naRef f_screenPrint(naContext c, naRef me, int argc, naRef* args)
 {
@@ -327,6 +333,7 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "_cmdarg",  f_cmdarg },
     { "_interpolate",  f_interpolate },
     { "rand",  f_rand },
+    { "srand",  f_srand },
     { "screenPrint", f_screenPrint },
     { "directory", f_directory },
     { 0, 0 }
