@@ -24,7 +24,16 @@
 #ifndef __FGFX_HXX
 #define __FGFX_HXX 1
 
+#include <simgear/compiler.h>
+
+#include <queue>
+#include <vector>
+
+#include <simgear/sound/sample_openal.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+
+SG_USING_STD(queue);
+SG_USING_STD(vector);
 
 class SGXmlSound;
 
@@ -34,30 +43,47 @@ class SGXmlSound;
  * This module uses FGSoundMgr to generate sound effects based
  * on current flight conditions.  The sound manager must be initialized
  * before this object is.
+ *
+ * Note: this module supports two separate sound mechanisms concurrently.
+ *
+ * 1. This module will load and play a set of sound effects defined in an
+ *    xml file and tie them to various property states.
+ * 2. This modules also maintains a queue of 'message' audio files.  These
+ *    are played sequentially with no overlap until the queue is finished.
+ *    This second mechanims is useful for things like tutorial messages or
+ *    background atc chatter.
  */
 class FGFX : public SGSubsystem
 {
 
 public:
 
-  FGFX ();
-  virtual ~FGFX ();
+    FGFX ();
+    virtual ~FGFX ();
 
-  virtual void init ();
-  virtual void reinit ();
-  virtual void bind ();
-  virtual void unbind ();
-  virtual void update (double dt);
+    virtual void init ();
+    virtual void reinit ();
+    virtual void bind ();
+    virtual void unbind ();
+    virtual void update (double dt);
+
+    /**
+     * add a sound sample to the message queue which is played sequentially
+     * in order.
+     */
+    void play_message( SGSoundSample *_sample );
+    void play_message( const string path, const string fname );
 
 private:
 
-  vector<SGXmlSound *> _sound;
+    vector<SGXmlSound *> _sound;
+    queue<SGSoundSample *> _samplequeue;
 
-  bool last_pause;
-  double last_volume;
+    bool last_pause;
+    double last_volume;
 
-  SGPropertyNode *_pause;
-  SGPropertyNode *_volume;
+    SGPropertyNode *_pause;
+    SGPropertyNode *_volume;
 
 };
 

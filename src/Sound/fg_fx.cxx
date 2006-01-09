@@ -49,7 +49,16 @@ FGFX::FGFX () :
 
 FGFX::~FGFX ()
 {
-   _sound.clear();
+    unsigned int i;
+    for ( i = 0; i < _sound.size(); i++ ) {
+        delete _sound[i];
+    }
+    _sound.clear();
+
+    while ( _samplequeue.size() > 0 ) {
+        delete _samplequeue.front();
+        _samplequeue.pop();
+    }
 }
 
 void
@@ -109,20 +118,43 @@ FGFX::unbind ()
 void
 FGFX::update (double dt)
 {
+    SGSoundMgr *smgr = globals->get_soundmgr();
+
     // command sound manger
     bool pause = _pause->getBoolValue();
     if ( pause != last_pause ) {
         if ( pause ) {
-            globals->get_soundmgr()->pause();
+            smgr->pause();
         } else {
-            globals->get_soundmgr()->resume();
+            smgr->resume();
         }
         last_pause = pause;
     }
 
+    // process mesage queue
+    const string msgid = "Sequential Audio Message";
+    bool is_playing = false;
+    if ( smgr->exists( msgid ) ) {
+        if ( smgr->is_playing( msgid ) ) {
+            // still playing, do nothing
+            is_playing = true;
+        } else {
+            // current message finished, remove
+            smgr->remove( msgid );
+        }
+    }
+    if ( !is_playing ) {
+        // message queue idle, add next sound if we have one
+        if ( _samplequeue.size() > 0 ) {
+            smgr->add( _samplequeue.front(), msgid );
+            _samplequeue.pop();
+            smgr->play_once( msgid );
+        }
+    }
+
     double volume = _volume->getDoubleValue();
     if ( volume != last_volume ) {
-        globals->get_soundmgr()->set_volume( volume );        
+        smgr->set_volume( volume );        
         last_volume = volume;
     }
 
@@ -133,5 +165,23 @@ FGFX::update (double dt)
         }
     }
 }
+
+/**
+ * add a sound sample to the message queue which is played sequentially
+ * in order.
+ */
+void
+FGFX::play_message( SGSoundSample *_sample )
+{
+    _samplequeue.push( _sample );
+}
+void
+FGFX::play_message( const string path, const string fname )
+{
+    SGSoundSample *sample;
+    sample = new SGSoundSample( path.c_str(), fname.c_str() );
+    play_message( sample );
+}
+
 
 // end of fg_fx.cxx
