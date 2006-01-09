@@ -28,6 +28,7 @@
 #  include <Scripting/scriptmgr.hxx>
 #endif
 #include <Scripting/NasalSys.hxx>
+#include <Sound/fg_fx.hxx>
 #include <Time/sunsolver.hxx>
 #include <Time/tmp.hxx>
 
@@ -1144,6 +1145,24 @@ do_gui_redraw (const SGPropertyNode * arg)
 }
 
 /**
+ * Built-in command: play an audio message (i.e. a wav file) This is
+ * fire and forget.  Call this once per message and it will get dumped
+ * into a queue.  Messages are played sequentially so they do not
+ * overlap.
+ */
+static bool
+do_play_audio_message (const SGPropertyNode * arg)
+{
+    FGFX *fx = (FGFX *)globals->get_subsystem("fx");
+    string path = arg->getStringValue("path");
+    string file = arg->getStringValue("file");
+    cout << "playing " << path << " / " << file << endl;
+    fx->play_message( path, file );
+
+    return true;
+}
+
+/**
  * Built-in command: commit presets (read from in /sim/presets/)
  */
 static bool
@@ -1383,6 +1402,7 @@ static struct {
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
     { "gui-redraw", do_gui_redraw },
+    { "play-audio-message", do_play_audio_message },
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },
