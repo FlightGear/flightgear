@@ -173,6 +173,7 @@ FGFX::update (double dt)
 void
 FGFX::play_message( SGSoundSample *_sample )
 {
+    _sample->set_volume( 1.0 );
     _samplequeue.push( _sample );
 }
 void

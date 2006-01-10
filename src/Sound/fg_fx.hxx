@@ -24,6 +24,10 @@
 #ifndef __FGFX_HXX
 #define __FGFX_HXX 1
 
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <simgear/compiler.h>
 
 #include <queue>
