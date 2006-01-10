@@ -139,8 +139,9 @@ FGFX::update (double dt)
             // still playing, do nothing
             is_playing = true;
         } else {
-            // current message finished, remove
-            smgr->remove( msgid );
+            // current message finished, stop and remove
+            smgr->stop( msgid );   // removes source
+            smgr->remove( msgid ); // removes buffer
         }
     }
     if ( !is_playing ) {
