@@ -40,10 +40,10 @@
 
 
 FGFX::FGFX () :
-    _volume( fgGetNode("/sim/sound/volume") ),
-    _pause( fgGetNode("/sim/sound/pause") ),
     last_pause( true ),
-    last_volume( 0.0 )
+    last_volume( 0.0 ),
+    _pause( fgGetNode("/sim/sound/pause") ),
+    _volume( fgGetNode("/sim/sound/volume") )
 {
 }
 
