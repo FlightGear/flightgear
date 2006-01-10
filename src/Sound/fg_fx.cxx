@@ -25,6 +25,10 @@
 #pragma warning (disable: 4786)
 #endif
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 #ifdef __BORLANDC__
