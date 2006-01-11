@@ -274,6 +274,7 @@ void fgHiResDump()
     FILE *f;
     string message;
     bool show_pu_cursor = false;
+    bool menu_status = fgGetBool("/sim/menubar/visibility");
     char *filename = new char [24];
     static int count = 1;
 
@@ -285,6 +286,7 @@ void fgHiResDump()
         fgSetBool("/sim/freeze/master", true);
     }
 
+    fgSetBool("/sim/menubar/visibility", false);
     TurnCursorOff();
     if ( !puCursorIsHidden() ) {
 	show_pu_cursor = true;
@@ -299,8 +301,8 @@ void fgHiResDump()
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgRenderFrame() shouldn't
     // hurt anything
-    renderer->update( true );
-    renderer->update( true );
+    //renderer->update( true );
+    //renderer->update( true );
 
     // This ImageSize stuff is a temporary hack
     // should probably use 128x128 tile size and
@@ -439,6 +441,7 @@ void fgHiResDump()
     }
 
     TurnCursorOn();
+    fgSetBool("/sim/menubar/visibility", menu_status);
 
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);

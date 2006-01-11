@@ -75,6 +75,8 @@
 #include "main.hxx"
 
 
+extern void sgShaderFrameInit(double delta_time_sec);
+
 float default_attenuation[3] = {1.0, 0.0, 0.0};
 
 ssgSelector *lightpoints_brightness = new ssgSelector;
@@ -234,7 +236,8 @@ FGRenderer::init( void ) {
 // Update all Visuals (redraws anything graphics related)
 void
 FGRenderer::update( bool refresh_camera_settings ) {
-    bool scenery_loaded = fgGetBool("sim/sceneryloaded") || fgGetBool("sim/sceneryloaded-override");
+    bool scenery_loaded = fgGetBool("sim/sceneryloaded") \
+                          || fgGetBool("sim/sceneryloaded-override");
 
     if ( idle_state < 1000 || !scenery_loaded ) {
         // still initializing, draw the splash screen
@@ -245,13 +248,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
         SGAnimation::set_sim_time_sec( 0.0 );
         return;
     }
-//    return; 
-
-	// TODO:TEST only, don't commit that !!
-//	sgFXperFrameInit();
-
-    extern void sgShaderFrameInit(double delta_time_sec);
-    sgShaderFrameInit(delta_time_sec);
 
     bool draw_otw = fgGetBool("/sim/rendering/draw-otw");
     bool skyblend = fgGetBool("/sim/rendering/skyblend");
@@ -289,6 +285,11 @@ FGRenderer::update( bool refresh_camera_settings ) {
     } else {
         actual_visibility = fgGetDouble("/environment/visibility-m");
     }
+
+        // TODO:TEST only, don't commit that !!
+//      sgFXperFrameInit();
+
+    sgShaderFrameInit(delta_time_sec);
 
     if ( actual_visibility != last_visibility ) {
         last_visibility = actual_visibility;
