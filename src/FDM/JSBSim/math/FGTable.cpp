@@ -195,7 +195,7 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el) : PropertyManager(prop
   // end lookup property code
 
   tableData = el->FindElement("tableData");
-  for (int i=0; i<tableData->GetNumDataLines(); i++) {
+  for (i=0; i<tableData->GetNumDataLines(); i++) {
     buf << tableData->GetDataLine(i) << string(" ");
   }
   switch (dimension) {

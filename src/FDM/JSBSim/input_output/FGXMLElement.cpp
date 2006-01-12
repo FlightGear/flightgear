@@ -380,9 +380,9 @@ void Element::Print(int level)
   int i, spaces;
 
   level+=2;
-  for (int spaces=0; spaces<=level; spaces++) cout << " "; // format output
+  for (spaces=0; spaces<=level; spaces++) cout << " "; // format output
   cout << "Element Name: " << name;
-  for (int i=0; i<attributes.size(); i++) {
+  for (i=0; i<attributes.size(); i++) {
     cout << "  " << attribute_key[i] << " = " << attributes[attribute_key[i]];
   }
   cout << endl;
