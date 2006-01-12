@@ -514,7 +514,13 @@ AC_CONFIG_FILES([ \
 	src/FDM/ExternalNet/Makefile \
 	src/FDM/ExternalPipe/Makefile \
 	src/FDM/JSBSim/Makefile \
-	src/FDM/JSBSim/filtersjb/Makefile \
+	src/FDM/JSBSim/initialization/Makefile \
+	src/FDM/JSBSim/input_output/Makefile \
+	src/FDM/JSBSim/math/Makefile \
+        src/FDM/JSBSim/models/Makefile \
+	src/FDM/JSBSim/models/flight_control/Makefile \
+	src/FDM/JSBSim/models/atmosphere/Makefile \
+	src/FDM/JSBSim/models/propulsion/Makefile \
 	src/FDM/LaRCsim/Makefile \
 	src/FDM/SP/Makefile \
 	src/FDM/UIUCModel/Makefile \

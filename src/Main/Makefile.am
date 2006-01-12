@@ -25,6 +25,16 @@ else
 GFX_CODE = fg_os.cxx fg_os.hxx
 endif
 
+JSBSIM_LIBS = \
+	$(top_builddir)/src/FDM/JSBSim/libJSBSim.a \
+        $(top_builddir)/src/FDM/JSBSim/initialization/libInit.a \
+        $(top_builddir)/src/FDM/JSBSim/models/libModels.a \
+        $(top_builddir)/src/FDM/JSBSim/models/flight_control/libFlightControl.a\
+        $(top_builddir)/src/FDM/JSBSim/models/atmosphere/libAtmosphere.a \
+        $(top_builddir)/src/FDM/JSBSim/models/propulsion/libPropulsion.a \
+        $(top_builddir)/src/FDM/JSBSim/input_output/libInputOutput.a \
+        $(top_builddir)/src/FDM/JSBSim/math/libMath.a
+
 AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkgdatadir)\"
 
 bin_PROGRAMS = fgfs metar
@@ -63,7 +73,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/FDM/Balloon/libBalloon.a \
 	$(top_builddir)/src/FDM/ExternalNet/libExternalNet.a \
 	$(top_builddir)/src/FDM/ExternalPipe/libExternalPipe.a \
-	$(top_builddir)/src/FDM/JSBSim/libJSBSim.a \
+	$(JSBSIM_LIBS) \
 	$(top_builddir)/src/FDM/YASim/libYASim.a \
 	$(top_builddir)/src/FDM/JSBSim/filtersjb/libfiltersjb.a \
 	$(top_builddir)/src/FDM/LaRCsim/libLaRCsim.a \
@@ -105,4 +115,4 @@ metar_LDADD = \
         -lplibnet -lplibul $(network_LIBS) \
         -lz $(base_LIBS)
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_srcdir)/src/FDM/JSBSim

@@ -40,13 +40,16 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGModel.h"
-#include "FGTrim.h"
-#include "FGInitialCondition.h"
-#include "FGJSBBase.h"
-#include "FGGroundCallback.h"
-#include "FGPropertyManager.h"
-#include "FGPropagate.h"
+#include <models/FGModel.h>
+#include <models/FGOutput.h>
+#include <models/FGInput.h>
+#include <initialization/FGTrim.h>
+#include <initialization/FGInitialCondition.h>
+#include <FGJSBBase.h>
+#include <input_output/FGPropertyManager.h>
+#include <input_output/FGXMLParse.h>
+#include <input_output/FGGroundCallback.h>
+#include <models/FGPropagate.h>
 
 #include <vector>
 
@@ -74,8 +77,7 @@ CLASS DOCUMENTATION
 
     When an aircraft model is loaded the config file is parsed and for each of the
     sections of the config file (propulsion, flight control, etc.) the
-    corresponding "ReadXXX()" method is called. From within this method the
-    "Load()" method of that system is called (e.g. LoadFCS).
+    corresponding Load() method is called (e.g. LoadFCS).
 
     <h4>JSBSim Debugging Directives</h4>
 
@@ -134,17 +136,12 @@ public:
 
   /** Initializes the sim from the initial condition object and executes
       each scheduled model without integrating i.e. dt=0.
-      @return true if successful
-       */
+      @return true if successful */
   bool RunIC(void);
 
-  /// Freezes the sim
-  void Freeze(void) {frozen = true;}
-
-  /// Resumes the sim
-  void Resume(void) {frozen = false;}
-
-  void SetGroundCallback(FGGroundCallback*);
+  /** Sets the ground callback pointer.
+      @param gc A pointer to a ground callback object.  */
+  void SetGroundCallback(FGGroundCallback* gc);
 
   /** Loads an aircraft model.
       @param AircraftPath path to the aircraft directory. For instance:
@@ -162,7 +159,6 @@ public:
   bool LoadModel(string AircraftPath, string EnginePath, string model,
                  bool addModelToPath = true);
 
-
   /** Loads an aircraft model.  The paths to the aircraft and engine
       config file directories must be set prior to calling this.  See
       below.
@@ -175,37 +171,23 @@ public:
       @return true if successful*/
   bool LoadModel(string model, bool addModelToPath = true);
 
-
   /** Sets the path to the engine config file directories.
       @param path path to the directory under which engine config
-      files are kept, for instance "engine"
-  */
+      files are kept, for instance "engine"  */
   bool SetEnginePath(string path)   { EnginePath = path; return true; }
 
   /** Sets the path to the aircraft config file directories.
       @param path path to the aircraft directory. For instance:
       "aircraft". Under aircraft, then, would be directories for various
-      modeled aircraft such as C172/, x15/, etc.
-  */
+      modeled aircraft such as C172/, x15/, etc.  */
   bool SetAircraftPath(string path) { AircraftPath = path; return true; }
-
-  /** Sets the path to the autopilot config file directories.
-      @param path path to the control directory. For instance:
-      "control".
-  */
-//  bool SetControlPath(string path) { ControlPath = path; return true; }
-
 
   /// @name Top-level executive State and Model retrieval mechanism
   //@{
-  /// Returns the FGState pointer.
-  inline FGState* GetState(void)              {return State;}
   /// Returns the FGAtmosphere pointer.
   inline FGAtmosphere* GetAtmosphere(void)    {return Atmosphere;}
   /// Returns the FGFCS pointer.
   inline FGFCS* GetFCS(void)                  {return FCS;}
-  /// Returns the FGGroundCallback pointer.
-  inline FGGroundCallback* GetGroundCallback(void) {return GroundCallback;}
   /// Returns the FGPropulsion pointer.
   inline FGPropulsion* GetPropulsion(void)    {return Propulsion;}
   /// Returns the FGAircraft pointer.
@@ -222,41 +204,100 @@ public:
   inline FGPropagate* GetPropagate(void)      {return Propagate;}
   /// Returns the FGAuxiliary pointer.
   inline FGAuxiliary* GetAuxiliary(void)      {return Auxiliary;}
-  /// Returns the FGOutput pointer.
-  inline FGOutput* GetOutput(void)            {return Output;}
+  /// Returns the FGInput pointer.
+  inline FGInput* GetInput(void)              {return Input;}
+  /// Returns the FGGroundCallback pointer.
+  inline FGGroundCallback* GetGroundCallback(void) {return GroundCallback;}
+  /// Returns the FGState pointer.
+  inline FGState* GetState(void)              {return State;}
   // Returns a pointer to the FGInitialCondition object
   inline FGInitialCondition* GetIC(void)      {return IC;}
   // Returns a pointer to the FGTrim object
-  FGTrim* GetTrim(void);
+  inline FGTrim* GetTrim(void);
   //@}
 
   /// Retrieves the engine path.
   inline string GetEnginePath(void)          {return EnginePath;}
   /// Retrieves the aircraft path.
   inline string GetAircraftPath(void)        {return AircraftPath;}
-//  /// Retrieves the control path.
-//  inline string GetControlPath(void)        {return ControlPath;}
 
+  /// Returns the model name.
   string GetModelName(void) { return modelName; }
 
+  /// Returns a pointer to the property manager object.
   FGPropertyManager* GetPropertyManager(void);
+  /// Returns a vector of strings representing the names of all loaded models (future)
   vector <string> EnumerateFDMs(void);
+  /// Marks this instance of the Exec object as a "slave" object.
   void SetSlave(void) {IsSlave = true;}
+
+  /** Executes trimming in the selected mode.
+  *   @param mode Specifies how to trim:
+  * - tLongitudinal=0
+  * - tFull
+  * - tGround
+  * - tPullup
+  * - tCustom
+  * - tTurn
+  * - tNone
+  */
+  void DoTrim(int mode);
+
+  /// Disables data logging to all outputs.
+  void DisableOutput(void);
+  /// Enables data logging to all outputs.
+  void EnableOutput(void);
+  /// Pauses execution by preventing time from incrementing.
+  void Hold(void) {holding = true;}
+  /// Resumes execution from a "Hold".
+  void Resume(void) {holding = false;}
+  /// Returns true if the simulation is Holding (i.e. simulation time is not moving).
+  bool Holding(void) {return holding;}
+
+  struct PropertyCatalogStructure {
+    /// Name of the property.
+    string base_string;
+    /// The node for the property.
+    FGPropertyManager *node;
+  };
+
+  /** Builds a catalog of properties.
+  *   This function descends the property tree and creates a list (an STL vector)
+  *   containing the name and node for all properties.
+  *   @param pcs The "root" property catalog structure pointer.  */
+  void BuildPropertyCatalog(struct PropertyCatalogStructure* pcs);
+
+  /** Retrieves property or properties matching the supplied string.
+  *   A string is returned that contains a carriage return delimited list of all
+  *   strings in the property catalog that matches the supplied chack string.
+  *   @param check The string to search for in the property catalog.
+  *   @return the carriage-return-delimited string containing all matching strings
+  *               in the catalog.  */
+  string QueryPropertyCatalog(string check);
+
+  /// Use the MSIS atmosphere model.
+  void UseAtmosphereMSIS(void);
+
+  /// Use the Mars atmosphere model. (Not operative yet.)
+  void UseAtmosphereMars(void); 
 
 private:
   FGModel* FirstModel;
 
-  bool frozen;
   bool terminate;
+  bool holding;
+  bool Constructing;
   int  Error;
   unsigned int Frame;
   unsigned int IdFDM;
+  FGPropertyManager* Root;
   static unsigned int FDMctr;
   bool modelLoaded;
   string modelName;
   bool IsSlave;
   static FGPropertyManager *master;
   FGPropertyManager *instance;
+  vector <string> PropertyCatalog;
 
   struct slaveData {
     FGFDMExec* exec;
@@ -279,15 +320,14 @@ private:
 
   string AircraftPath;
   string EnginePath;
-//  string ControlPath;
 
   string CFGVersion;
   string Release;
 
+  FGGroundCallback*  GroundCallback;
   FGState*           State;
   FGAtmosphere*      Atmosphere;
   FGFCS*             FCS;
-  FGGroundCallback*  GroundCallback;
   FGPropulsion*      Propulsion;
   FGMassBalance*     MassBalance;
   FGAerodynamics*    Aerodynamics;
@@ -296,21 +336,17 @@ private:
   FGAircraft*        Aircraft;
   FGPropagate*       Propagate;
   FGAuxiliary*       Auxiliary;
-  FGOutput*          Output;
+  FGInput*           Input;
+  vector <FGOutput*> Outputs;
 
   FGInitialCondition* IC;
   FGTrim *Trim;
 
   vector <slaveData*> SlaveFDMList;
 
-  bool ReadMetrics(FGConfigFile*);
-  bool ReadSlave(FGConfigFile*);
-  bool ReadPropulsion(FGConfigFile*);
-  bool ReadFlightControls(FGConfigFile*);
-  bool ReadAerodynamics(FGConfigFile*);
-  bool ReadUndercarriage(FGConfigFile*);
-  bool ReadPrologue(FGConfigFile*);
-  bool ReadOutput(FGConfigFile*);
+  bool ReadFileHeader(Element*);
+  bool ReadSlave(Element*);
+  bool ReadPrologue(Element*);
 
   bool Allocate(void);
   bool DeAllocate(void);

@@ -76,6 +76,7 @@ const double FGJSBBase::radtodeg = 57.29578;
 const double FGJSBBase::degtorad = 1.745329E-2;
 const double FGJSBBase::hptoftlbssec = 550.0;
 const double FGJSBBase::psftoinhg = 0.014138;
+const double FGJSBBase::psftopa = 47.88;
 const double FGJSBBase::fpstokts = 0.592484;
 const double FGJSBBase::ktstofps = 1.68781;
 const double FGJSBBase::inchtoft = 0.08333333;
@@ -92,8 +93,8 @@ const double FGJSBBase::SHRatio = 1.40;
 const double FGJSBBase::slugtolb = 32.174049;
 const double FGJSBBase::lbtoslug = 1.0/slugtolb;
 
-const string FGJSBBase::needed_cfg_version = "1.65";
-const string FGJSBBase::JSBSim_version = "0.9.5";
+const string FGJSBBase::needed_cfg_version = "2.0";
+const string FGJSBBase::JSBSim_version = "0.9.10.111805";
 
 std::queue <FGJSBBase::Message*> FGJSBBase::Messages;
 FGJSBBase::Message FGJSBBase::localMsg;

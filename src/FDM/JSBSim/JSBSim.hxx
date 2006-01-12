@@ -72,7 +72,8 @@ class FGOutput;
 class FGInitialCondition;
 }
 
-using namespace JSBSim;
+// Adding it here will cause a namespace clash in FlightGear -EMH-
+// using namespace JSBSim;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -205,24 +206,21 @@ public:
     void do_trim(void);
     void update_ic(void);
 
-    //** Handle a crash of the user aircraft. */
-    void crash_handler();
-
 private:
-    FGFDMExec *fdmex;
-    FGInitialCondition *fgic;
+    JSBSim::FGFDMExec *fdmex;
+    JSBSim::FGInitialCondition *fgic;
     bool needTrim;
 
-    FGState*        State;
-    FGAtmosphere*   Atmosphere;
-    FGFCS*          FCS;
-    FGPropulsion*   Propulsion;
-    FGMassBalance*  MassBalance;
-    FGAircraft*     Aircraft;
-    FGPropagate*    Propagate;
-    FGAuxiliary*    Auxiliary;
-    FGAerodynamics* Aerodynamics;
-    FGGroundReactions *GroundReactions;
+    JSBSim::FGState*        State;
+    JSBSim::FGAtmosphere*   Atmosphere;
+    JSBSim::FGFCS*          FCS;
+    JSBSim::FGPropulsion*   Propulsion;
+    JSBSim::FGMassBalance*  MassBalance;
+    JSBSim::FGAircraft*     Aircraft;
+    JSBSim::FGPropagate*    Propagate;
+    JSBSim::FGAuxiliary*    Auxiliary;
+    JSBSim::FGAerodynamics* Aerodynamics;
+    JSBSim::FGGroundReactions *GroundReactions;
 
     int runcount;
     double trim_elev;
@@ -265,10 +263,6 @@ private:
 
     void init_gear(void);
     void update_gear(void);
-
-    bool reset_on_crash;
-    bool crashed;
-    string crash_message;
 
 };
 

@@ -42,18 +42,18 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  include <simgear/constants.h>
 #  include <math.h>
 #  include <queue>
 #  include STL_STRING
 
 SG_USING_STD(string);
 
-# ifndef M_PI
-#  define M_PI SG_PI
-# endif
+#  ifndef M_PI
+#    include <simgear/constants.h>
+#    define M_PI SG_PI
+#  endif
 
-#else
+#else  // JSBSim section
 
 #  include <queue>
 #  include <string>
@@ -65,13 +65,27 @@ SG_USING_STD(string);
 
 using std::string;
 
-# ifndef M_PI
-#  define M_PI 3.14159265358979323846
-# endif
+#  if defined(_MSC_VER) && _MSC_VER <= 1200
+#    ifndef max
+#      define max(a,b)            (((a) > (b)) ? (a) : (b))
+#    endif
+
+#    ifndef min
+#      define min(a,b)            (((a) < (b)) ? (a) : (b))
+#    endif
+#  else
+
+using std::fabs;
+
+#  endif
+
+#  ifndef M_PI
+#    define M_PI 3.14159265358979323846
+#  endif
 
 #endif
 
-#if !defined(WIN32) || defined(__GNUC__) || ( defined(_MSC_VER) && (_MSC_VER >= 1400)) 
+#if !defined(WIN32) || defined(__GNUC__)
 using std::max;
 #endif
 
@@ -92,6 +106,8 @@ CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** JSBSim Base class.
+*   This class provides universal constants, utility functions, messaging
+*   functions, and enumerated constants to JSBSim.
     @author Jon S. Berndt
     @version $Id$
 */
@@ -178,23 +194,40 @@ public:
       @return pointer to a Message structure (or NULL if no mesage) */
   Message* ProcessMessage(void);
   //@}
+
+  /** Returns the version number of JSBSim.
+  *   @return The version number of JSBSim. */
   string GetVersion(void) {return JSBSim_version;}
 
+  /// Disables highlighting in the console output.
   void disableHighLighting(void);
 
   static short debug_lvl;
+
+  /** Converts from degrees Kelvin to degrees Fahrenheit.
+  *   @param kelvin The temperature in degrees Kelvin.
+  *   @return The temperature in Fahrenheit. */
   static double KelvinToFahrenheit (double kelvin) {
     return 1.8*kelvin - 459.4;
   }
 
+  /** Converts from degrees Rankine to degrees Celsius.
+  *   @param rankine The temperature in degrees Rankine.
+  *   @return The temperature in Celsius. */
   static double RankineToCelsius (double rankine) {
     return (rankine - 491.67)/1.8;
   }
 
+  /** Converts from degrees Fahrenheit to degrees Celsius.
+  *   @param fahrenheit The temperature in degrees Fahrenheit.
+  *   @return The temperature in Celsius. */
   static double FahrenheitToCelsius (double fahrenheit) {
     return (fahrenheit - 32.0)/1.8;
   }
 
+  /** Converts from degrees Celsius to degrees Fahrenheit.
+  *   @param celsius The temperature in degrees Celsius.
+  *   @return The temperature in Fahrenheit. */
   static double CelsiusToFahrenheit (double celsius) {
     return celsius * 1.8 + 32.0;
   }
@@ -247,6 +280,7 @@ protected:
   static const double degtorad;
   static const double hptoftlbssec;
   static const double psftoinhg;
+  static const double psftopa;
   static const double fpstokts;
   static const double ktstofps;
   static const double inchtoft;
@@ -257,8 +291,8 @@ protected:
   static const double slugtolb;
   static const string needed_cfg_version;
   static const string JSBSim_version;
-};
 
+public:
 /// Moments L, M, N
 enum {eL     = 1, eM,     eN    };
 /// Rates P, Q, R
@@ -279,6 +313,8 @@ enum {eNorth = 1, eEast,  eDown };
 enum {eLat = 1, eLong, eRad     };
 /// Conversion specifiers
 enum {inNone = 0, inDegrees, inRadians, inMeters, inFeet };
+
+};
 
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

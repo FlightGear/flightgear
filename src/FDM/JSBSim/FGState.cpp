@@ -36,10 +36,6 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #ifdef FGFS
 #  include <simgear/compiler.h>
 #  include <math.h>
@@ -81,7 +77,6 @@ FGState::FGState(FGFDMExec* fdex)
   Propagate    = FDMExec->GetPropagate();
   Auxiliary    = FDMExec->GetAuxiliary();
   FCS          = FDMExec->GetFCS();
-  Output       = FDMExec->GetOutput();
   Atmosphere   = FDMExec->GetAtmosphere();
   Aerodynamics = FDMExec->GetAerodynamics();
   GroundReactions = FDMExec->GetGroundReactions();

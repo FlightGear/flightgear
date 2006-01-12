@@ -59,20 +59,19 @@ INCLUDES
 #include <string>
 #include <map>
 #include "FGJSBBase.h"
-#include "FGInitialCondition.h"
-#include "FGMatrix33.h"
-#include "FGColumnVector3.h"
-#include "FGQuaternion.h"
+#include <initialization/FGInitialCondition.h>
+#include <math/FGMatrix33.h>
+#include <math/FGColumnVector3.h>
+#include <math/FGQuaternion.h>
 #include "FGFDMExec.h"
-#include "FGAtmosphere.h"
-#include "FGFCS.h"
-#include "FGPropagate.h"
-#include "FGAuxiliary.h"
-#include "FGAerodynamics.h"
-#include "FGOutput.h"
-#include "FGAircraft.h"
-#include "FGGroundReactions.h"
-#include "FGPropulsion.h"
+#include <models/FGAtmosphere.h>
+#include <models/FGFCS.h>
+#include <models/FGPropagate.h>
+#include <models/FGAuxiliary.h>
+#include <models/FGAerodynamics.h>
+#include <models/FGAircraft.h>
+#include <models/FGGroundReactions.h>
+#include <models/FGPropulsion.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -117,12 +116,16 @@ public:
   /// Returns the simulation time in seconds.
   inline double Getsim_time(void) const { return sim_time; }
   /// Returns the simulation delta T.
-  inline double Getdt(void) { return dt; }
+  inline double Getdt(void) {
+    return dt;
+  }
 
   /// Suspends the simulation and sets the delta T to zero.
-  inline void Suspend(void) {saved_dt = dt; dt = 0.0;}
+  inline void SuspendIntegration(void) {saved_dt = dt; dt = 0.0;}
   /// Resumes the simulation by resetting delta T to the correct value.
-  inline void Resume(void)  {dt = saved_dt;}
+  inline void ResumeIntegration(void)  {dt = saved_dt;}
+
+  bool IntegrationSuspended(void) {return dt == 0.0;}
 
   /** Sets the current sim time.
       @param cur_time the current time
@@ -136,7 +139,9 @@ public:
   /** Sets the integration time step for the simulation executive.
       @param delta_t the time step in seconds.
       */
-  inline void  Setdt(double delta_t) { dt = delta_t; }
+  inline void  Setdt(double delta_t) {
+    dt = delta_t;
+  }
 
   /** Increments the simulation time.
       @return the new simulation time.
@@ -174,7 +179,6 @@ private:
 
   FGAircraft* Aircraft;
   FGPropagate* Propagate;
-  FGOutput* Output;
   FGAtmosphere* Atmosphere;
   FGFCS* FCS;
   FGAerodynamics* Aerodynamics;
