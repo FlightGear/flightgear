@@ -87,7 +87,7 @@ FGSwitch::FGSwitch(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
       logic = test_element->GetAttributeValue("logic");
       if (logic == "OR") current_test->Logic = eOR;
       else if (logic == "AND") current_test->Logic = eAND;
-      else if (logic.size() == 0) current_test->Logic == eAND; // default
+      else if (logic.size() == 0) current_test->Logic = eAND; // default
       else { // error
         cerr << "Unrecognized LOGIC token " << logic << " in switch component: " << Name << endl;
       }
