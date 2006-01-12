@@ -71,7 +71,7 @@ public:
   /// Constructor
   FGMars(FGFDMExec*);
   /// Destructor
-  ~FGMars();
+  //~FGMars();
   /** Runs the Martian atmosphere model; called by the Executive
       @return false if no error */
   bool Run(void);
@@ -136,7 +136,7 @@ public:
   inline double GetTurbPQR(int idx) const {return vTurbPQR(idx);}
   inline FGColumnVector3& GetTurbPQR(void) {return vTurbPQR;}
   
-  void bind(void);
+  //void bind(void);
   void unbind(void);
 
   
