@@ -22,6 +22,7 @@
 // $Id$
 
 #include "kln89_page_nav.hxx"
+#include <Main/fg_props.hxx>
 
 KLN89NavPage::KLN89NavPage(KLN89* parent) 
 : KLN89Page(parent) {

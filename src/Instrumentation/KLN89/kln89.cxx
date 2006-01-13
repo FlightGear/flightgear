@@ -44,6 +44,7 @@
 #include <iostream>
 
 #include <ATC/ATCProjection.hxx>
+#include <Main/fg_props.hxx>
 #include <simgear/math/point3d.hxx>
 
 SG_USING_STD(cout);

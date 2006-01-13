@@ -787,11 +787,14 @@ readPanel (const SGPropertyNode * root)
           
           // Warning - hardwired size!!!
           RenderArea2D* instrument = new RenderArea2D(158, 40, 158, 40, x, y);
-          // FIXME: shift-F3 (panel reload) kill's us here due to duplicate subsystem!
-          KLN89* gps = new KLN89(instrument);
-          panel->addInstrument(gps);
-          globals->add_subsystem("kln89", gps);
-          //gps->init();  // init seems to get called automagically.
+          KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+		  if(gps == NULL) {
+			  gps = new KLN89(instrument);
+			  globals->add_subsystem("kln89", gps);
+		  }
+		  //gps->init();  // init seems to get called automagically.
+		  FGSpecialInstrument* gpsinst = new FGSpecialInstrument(gps);
+          panel->addInstrument(gpsinst);
         } else {
           SG_LOG( SG_COCKPIT, SG_WARN, "Unknown special instrument found" );
         }

@@ -26,6 +26,8 @@
 #include "dclgps.hxx"
 
 #include <simgear/sg_inlines.h>
+#include <simgear/structure/commands.hxx>
+#include <Main/fg_props.hxx>
 #include <iostream>
 SG_USING_STD(cout);
 

@@ -48,6 +48,7 @@
 
 #include <Main/fg_props.hxx>
 #include <Input/input.hxx>
+#include <Instrumentation/dclgps.hxx>
 
 SG_USING_STD(vector);
 SG_USING_STD(map);
@@ -425,6 +426,28 @@ public:
 protected:
   typedef vector<FGInstrumentLayer *> layer_list;
   layer_list _layers;
+};
+
+
+/**
+ * An empty-shell instrument that exists soley in
+ * order to redirect commands from the panel to a
+ * complex instrument inherited from SGSubsystem.
+ *
+ * Currently the only complex instrument is the KLN89,
+ * which we've hardwired this to for now.
+ */
+class FGSpecialInstrument : public FGPanelInstrument
+{
+public:
+  FGSpecialInstrument(DCLGPS* sb);
+  //FGSpecialInstrument (int x, int y, int w, int h);
+  virtual ~FGSpecialInstrument ();
+
+  virtual void draw ();
+  
+protected:
+  DCLGPS* complex;
 };
 
 

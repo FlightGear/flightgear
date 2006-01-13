@@ -32,8 +32,6 @@
 #include <vector>
 #include <map>
 
-#include <Cockpit/panel.hxx>
-
 #include <Navaids/navrecord.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/fixlist.hxx>
@@ -203,7 +201,7 @@ typedef vector<GPSPage*> gps_page_list_type;
 typedef gps_page_list_type::iterator gps_page_list_itr;
 
 // TODO - merge generic GPS functions instead and split out KLN specific stuff.
-class DCLGPS : public SGSubsystem, public FGPanelInstrument {
+class DCLGPS : public SGSubsystem {
 	
 	friend class GPSPage;
 	
