@@ -203,8 +203,10 @@ string FGFunction::GetValueAsString(void) const
 
 void FGFunction::bind(void)
 {
-  string tmp = PropertyManager->mkPropertyName(Prefix + Name, false); // Allow upper case
-  PropertyManager->Tie( tmp, this, &FGFunction::GetValue);
+  if ( !Name.empty() ) {
+    string tmp = PropertyManager->mkPropertyName(Prefix + Name, false); // Allow upper case
+    PropertyManager->Tie( tmp, this, &FGFunction::GetValue);
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
