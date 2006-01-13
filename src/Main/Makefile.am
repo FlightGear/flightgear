@@ -75,7 +75,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/FDM/ExternalPipe/libExternalPipe.a \
 	$(JSBSIM_LIBS) \
 	$(top_builddir)/src/FDM/YASim/libYASim.a \
-	$(top_builddir)/src/FDM/JSBSim/filtersjb/libfiltersjb.a \
 	$(top_builddir)/src/FDM/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/src/FDM/UIUCModel/libUIUCModel.a \
 	$(SP_FDM_LIBS) \
