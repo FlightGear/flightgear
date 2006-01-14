@@ -27,7 +27,42 @@ AC_ARG_WITH(simgear, [  --with-simgear=PREFIX   Specify the prefix path to simge
 if test "x$with_simgear" != "x" ; then
     echo "SimGear prefix path is $with_simgear"
     EXTRA_DIRS="${EXTRA_DIRS} $with_simgear"
+    CXXFLAGS="$CXXFLAGS -I$with_simgear"
 fi
+
+# specify the plib location
+AC_ARG_WITH(plib, [  --with-plib=PREFIX      Specify the prefix path to plib])
+
+if test "x$with_plib" != "x" ; then
+    echo "plib prefix is $with_plib"
+    EXTRA_DIRS="${EXTRA_DIRS} $with_plib"
+fi
+
+dnl Determine an extra directories to add to include/lib search paths
+case "${host}" in
+*-apple-darwin* | *-*-mingw32*)
+    echo no EXTRA_DIRS for $host
+    ;;
+
+*-*-cygwin*)
+    if test -d /usr/local ; then
+        EXTRA_DIRS="${EXTRA_DIRS} /usr/local"
+    fi
+    ;;
+
+*)
+    if test -d /usr/X11R6 ; then
+        EXTRA_DIR1="/usr/X11R6"
+    fi
+    if test -d /opt/X11R6 ; then
+        EXTRA_DIR2="/opt/X11R6"
+    fi
+    EXTRA_DIRS="${EXTRA_DIRS} $EXTRA_DIR1 $EXTRA_DIR2 /usr/local"
+    ;;
+
+esac
+wi_EXTRA_DIRS(no, ${EXTRA_DIRS})
+
 
 case "${host}" in
 *-*-irix*)
@@ -83,45 +118,11 @@ fi
 AC_CHECK_HEADER(pthread.h)
 AM_CONDITIONAL(WITH_THREADS, test "x$with_threads" = "xyes")
 
-# specify the plib location
-AC_ARG_WITH(plib, [  --with-plib=PREFIX      Specify the prefix path to plib])
-
-if test "x$with_plib" != "x" ; then
-    echo "plib prefix is $with_plib"
-    EXTRA_DIRS="${EXTRA_DIRS} $with_plib"
-fi
-
 dnl Used by JSBSim to conditionally compile in fgfs interface code
 AC_DEFINE([FGFS], 1, [Define so that JSBSim compiles in 'library' mode])
 
 # Check for MS Windows environment
 AC_CHECK_HEADER(windows.h)
-
-dnl Determine an extra directories to add to include/lib search paths
-case "${host}" in
-*-apple-darwin* | *-*-mingw32*)
-    echo no EXTRA_DIRS for $host
-    ;;
-
-*-*-cygwin*)
-    if test -d /usr/local ; then
-        EXTRA_DIRS="${EXTRA_DIRS} /usr/local"
-    fi
-    ;;
-
-*)
-    if test -d /usr/X11R6 ; then
-        EXTRA_DIR1="/usr/X11R6"
-    fi
-    if test -d /opt/X11R6 ; then
-        EXTRA_DIR2="/opt/X11R6"
-    fi
-    EXTRA_DIRS="${EXTRA_DIRS} $EXTRA_DIR1 $EXTRA_DIR2 /usr/local"
-    ;;
-
-esac
-wi_EXTRA_DIRS(no, ${EXTRA_DIRS})
-
 
 dnl Using AM_CONDITIONAL is a step out of the protected little 
 dnl automake fold so it is potentially dangerous.  But, we are
@@ -569,7 +570,7 @@ else
 fi
 
 echo -n "Automake version: "
-automake --version | head -1
+automake --version | head -n 1
 
 if test "x$with_multiplayer" != "xno"; then
     echo "Building with multiplayer support"
