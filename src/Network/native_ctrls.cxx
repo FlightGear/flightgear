@@ -293,7 +293,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     int i;
 
     SGPropertyNode * node;
-
+/***************
     if ( net_byte_order ) {
         // convert from network byte order
         net->version = htonl(net->version);
@@ -350,7 +350,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         net->speedup = htonl(net->speedup);
         net->freeze = htonl(net->freeze);
     }
-
+*************/
     if ( net->version != FG_NET_CTRLS_VERSION ) {
 	SG_LOG( SG_IO, SG_ALERT,
                 "Version mismatch with raw controls packet format." );
@@ -366,6 +366,10 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     node->setDoubleValue( "elevator-trim", net->elevator_trim );
     node->setDoubleValue( "rudder-trim", net->rudder_trim );
     node->setDoubleValue( "flaps", net->flaps );
+    node->setDoubleValue( "speedbrake", net->speedbrake );  //JWW
+    // or
+    node->setDoubleValue( "spoilers", net->spoilers );  //JWW
+//    cout << "NET->Spoilers: " << net->spoilers << endl;
     fgSetBool( "/systems/electrical/outputs/flaps", net->flaps_power );
     node->setBoolValue( "flaps-serviceable", net->flap_motor_ok );
 
@@ -380,7 +384,8 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
             ->setDoubleValue( net->condition[i] );
         node->getChild( "magnetos" )->setDoubleValue( net->magnetos[i] );
         node->getChild( "starter" )->setDoubleValue( net->starter_power[i] );
-
+        node->getChild( "feed_tank" )->setIntValue( net->feed_tank_to[i] );
+        node->getChild( "reverser" )->setBoolValue( net->reverse[i] );
 	// Faults
 	SGPropertyNode *faults = node->getNode( "faults", true );
 	faults->setBoolValue( "serviceable", net->engine_ok[i] );
@@ -401,6 +406,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         node = fgGetNode( "/controls/fuel/tank", i );
         node->getChild( "fuel_selector" )
             ->setBoolValue( net->fuel_selector[i] );
+//        node->getChild( "to_tank" )->xfer_tank( i, net->xfer_to[i] );
     }
     node = fgGetNode( "/controls/gear" );
     if ( node != NULL ) {
@@ -415,6 +421,9 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
 
     node = fgGetNode( "/controls/gear", true );
     node->setBoolValue( "gear-down", net->gear_handle );
+//    node->setDoubleValue( "brake-parking", net->brake_parking );
+//    node->setDoubleValue( net->brake_left );
+//    node->setDoubleValue( net->brake_right );
 
     node = fgGetNode( "/controls/switches", true );
     node->setBoolValue( "master-bat", net->master_bat );
@@ -435,6 +444,11 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     // ground elevation ???
 
     fgSetDouble("/hazards/icing/wing", net->icing);
+    
+    node = fgGetNode( "/radios", true );
+    node->setDoubleValue( "comm/frequencies/selected-mhz[0]", net->comm_1 );
+    node->setDoubleValue( "nav/frequencies/selected-mhz[0]", net->nav_1 );
+    node->setDoubleValue( "nav[1]/frequencies/selected-mhz[0]", net->nav_2 );
 
     fgSetInt( "/sim/speed-up", net->speedup );
 

@@ -20,7 +20,18 @@
 // I am not aware of any platforms that don't use 4 bytes for float
 // and 8 bytes for double.
 
-const uint32_t FG_NET_CTRLS_VERSION = 26;
+//    !!! IMPORTANT !!!
+/* There is some space reserved in the protocol for future use.
+ * When adding a new type, add it just before the "reserved" definition
+ * and subtract the size of this new type from the RESERVED_SPACE definition
+ * (1 for (u)int32_t or float and 2 for double).
+ *	
+ * This way the protocol will be forward and backward compatible until
+ * RESERVED_SPACE becomes zero.
+ */
+
+#define RESERVED_SPACE 25
+const uint32_t FG_NET_CTRLS_VERSION = 27;
 
 
 // Define a structure containing the control parameters
@@ -32,7 +43,7 @@ public:
     enum {
         FG_MAX_ENGINES = 4,
         FG_MAX_WHEELS = 16,
-        FG_MAX_TANKS = 6
+        FG_MAX_TANKS = 8
     };
 
     uint32_t version;		         // increment when data values change
@@ -45,6 +56,8 @@ public:
     double elevator_trim;	         // -1 ... 1
     double rudder_trim;		         // -1 ... 1
     double flaps;		         //  0 ... 1
+    double spoilers;
+    double speedbrake;
 
     // Aero control faults
     uint32_t flaps_power;                 // true = power available
@@ -61,6 +74,9 @@ public:
     double condition[FG_MAX_ENGINES];    //  0 ... 1
     uint32_t fuel_pump_power[FG_MAX_ENGINES];// true = on
     double prop_advance[FG_MAX_ENGINES]; //  0 ... 1
+    uint32_t feed_tank_to[4];
+    uint32_t reverse[4];
+
 
     // Engine faults
     uint32_t engine_ok[FG_MAX_ENGINES];
@@ -73,6 +89,9 @@ public:
     // Fuel management
     uint32_t num_tanks;                      // number of valid tanks
     uint32_t fuel_selector[FG_MAX_TANKS];    // false = off, true = on
+    uint32_t xfer_pump[5];                   // specifies transfer from array
+                                             // value tank to tank specified by
+                                             // int value
     uint32_t cross_feed;                     // false = off, true = on
 
     // Brake controls
@@ -87,6 +106,12 @@ public:
 
     // Switches
     uint32_t master_avionics;
+    
+        // nav and Comm
+    double	comm_1;
+    double	comm_2;
+    double	nav_1;
+    double	nav_2;
 
     // wind and turbulance
     double wind_speed_kt;
@@ -112,6 +137,12 @@ public:
 				         // 0x01=master
 				         // 0x02=position
 				         // 0x04=fuel
+
+    // --- New since FlightGear 0.9.10 (FG_NET_CTRLS_VERSION = 27)
+
+    // --- Add new variables just before this line.
+
+    uint32_t reserved[RESERVED_SPACE];	 // 100 bytes reserved for future use.
 };
 
 

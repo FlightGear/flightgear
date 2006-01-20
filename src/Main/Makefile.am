@@ -19,6 +19,12 @@ else
 THREAD_LIBS =
 endif
 
+if USE_FESTIVAL
+VOICE_LIBS = $(top_builddir)/src/Voice/libVoice.a
+else
+VOICE_LIBS =
+endif
+
 if USE_SDL
 GFX_CODE = fg_os_sdl.cxx fg_os.hxx
 else
@@ -92,6 +98,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
 	$(MPLAYER_LIBS) \
+	$(VOICE_LIBS) \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(top_builddir)/src/Traffic/libTraffic.a \

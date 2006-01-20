@@ -46,20 +46,27 @@ class FGOpenGC : public FGProtocol, public FGInterface {
     SGPropertyNode *temp_node;
     SGPropertyNode *wind_dir_node;
     SGPropertyNode *wind_speed_node;
-    SGPropertyNode *mag_var_node;
+    SGPropertyNode *magvar_node;
     
-    // Position
+    // Position on the Geod
     SGPropertyNode *p_latitude;
     SGPropertyNode *p_longitude;
-    SGPropertyNode *p_alt_node;
-    SGPropertyNode *p_altitude;
+    SGPropertyNode *p_elev_node;
+    //SGPropertyNode *p_altitude;
     SGPropertyNode *p_altitude_agl;
     
-    SGPropertyNode *egt0_node;
-    SGPropertyNode *egt1_node;
-    SGPropertyNode *egt2_node;
-    SGPropertyNode *egt3_node;
-        
+    // Orientation
+    SGPropertyNode	*p_pitch;
+    SGPropertyNode	*p_bank;
+    SGPropertyNode	*p_heading;
+    SGPropertyNode	*p_yaw;
+    SGPropertyNode	*p_yaw_rate;
+    
+    // Flight Parameters
+    SGPropertyNode	*vel_kcas;
+    SGPropertyNode	*p_vvi;
+    SGPropertyNode	*p_mach;
+    
     // Control surfaces
     SGPropertyNode *p_left_aileron;
     SGPropertyNode *p_right_aileron;
@@ -68,6 +75,67 @@ class FGOpenGC : public FGProtocol, public FGInterface {
     SGPropertyNode *p_rudder;
     SGPropertyNode *p_flaps;
     SGPropertyNode *p_flaps_cmd;
+    
+    // GEAR System
+    SGPropertyNode *p_park_brake;
+    
+    // Engines
+    SGPropertyNode *egt0_node;
+    SGPropertyNode *egt1_node;
+    SGPropertyNode *egt2_node;
+    SGPropertyNode *egt3_node;
+    
+    SGPropertyNode *epr0_node;
+    SGPropertyNode *epr1_node;
+    SGPropertyNode *epr2_node;
+    SGPropertyNode *epr3_node;
+    
+    SGPropertyNode *n10_node;
+    SGPropertyNode *n11_node;
+    SGPropertyNode *n12_node;
+    SGPropertyNode *n13_node;
+    
+    SGPropertyNode *n20_node;
+    SGPropertyNode *n21_node;
+    SGPropertyNode *n22_node;
+    SGPropertyNode *n23_node;
+    
+    SGPropertyNode *oil_temp0;
+    SGPropertyNode *oil_temp1;
+    SGPropertyNode *oil_temp2;
+    SGPropertyNode *oil_temp3;
+   
+    // Fuel System
+    SGPropertyNode *tank0_node;
+    SGPropertyNode *tank1_node;
+    SGPropertyNode *tank2_node;
+    SGPropertyNode *tank3_node;
+    SGPropertyNode *tank4_node;
+    SGPropertyNode *tank5_node;
+    SGPropertyNode *tank6_node;
+    SGPropertyNode *tank7_node;
+    // Boost pumps; Center tank has only override pumps; boosts are in the
+    // four main wing tanks 1->4
+//    SGPropertyNode	*boost1_node;
+//    SGPropertyNode	*boost2_node;
+//    SGPropertyNode	*boost3_node;
+//    SGPropertyNode	*boost4_node;
+//    SGPropertyNode	*boost5_node;
+//    SGPropertyNode	*boost6_node;
+//    SGPropertyNode	*boost7_node;
+//    SGPropertyNode	*boost8_node;
+    // Override pumps
+//    SGPropertyNode	*ovride0_node;
+//    SGPropertyNode	*ovride1_node;
+//    SGPropertyNode	*ovride2_node;
+//    SGPropertyNode	*ovride3_node;
+//    SGPropertyNode	*ovride4_node;
+//    SGPropertyNode	*ovride5_node;
+    // X_Feed valves
+//    SGPropertyNode	*x_feed0_node;
+//    SGPropertyNode	*x_feed1_node;
+//    SGPropertyNode	*x_feed2_node;
+//    SGPropertyNode	*x_feed3_node;
     
     // Aero numbers
     SGPropertyNode *p_alphadot;

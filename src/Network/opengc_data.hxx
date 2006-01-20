@@ -97,8 +97,10 @@ public:
     double	gear_left;
     double	gear_right;
     double  gear_left_rear;
-    double  gear_right_rear;  
-
+    double  gear_right_rear;
+    double	parking_brake;
+    bool		wow_main;  // logical and of main gear
+		bool		wow_nose;	
     // engine data
 
     double	rpm[4];  // this is for pistons, jets see below
@@ -117,8 +119,8 @@ public:
     double	prop_advance[4];
     
     // fuel system
-    double main_tank;
-    double tank[4];
+    int num_tanks;
+    double fuel_tank[9];
    
     // Pressures and temperatures
 
@@ -131,6 +133,7 @@ public:
     // more environmental data
 		double wind;
 		double wind_dir;
+		double sea_level_pressure;
 };
 
 #endif // _OPENGC_HXX

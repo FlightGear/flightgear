@@ -369,11 +369,10 @@ public:
     inline void _set_Density( double d ) { density = d; }
     inline void _set_Mach_number( double m ) { mach_number = m; }
     inline void _set_Static_pressure( double sp ) { static_pressure = sp; }
-    inline void _set_Static_temperature( double t ) { static_temperature = t; }
+    inline void _set_Static_temperature( double t ) { static_temperature = t; } 
+    inline void _set_Total_temperature( double tat ) { total_temperature = tat; } //JW
     inline void _set_Sea_level_radius( double r ) { sea_level_radius = r; }
-    inline void _set_Earth_position_angle(double a) {
-	earth_position_angle = a;
-    }
+    inline void _set_Earth_position_angle(double a) { earth_position_angle = a; }
     inline void _set_Runway_altitude( double alt ) { runway_altitude = alt; }
     inline void _set_Climb_Rate(double rate) { climb_rate = rate; }
     inline void _set_sin_lat_geocentric(double parm) {

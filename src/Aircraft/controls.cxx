@@ -198,6 +198,7 @@ FGControls::init ()
 	fuel_pump[engine] = false;
 	prop_advance[engine] = 1.0;
 	magnetos[engine] = 0;
+	feed_tank[engine] = -1; // set to -1 to turn off all tanks 0 feeds all engines from center body tank
 	starter[engine] = false;
         ignition[engine] = false;
         fire_switch[engine] = false;
@@ -342,6 +343,13 @@ FGControls::bind ()
     fgTie(name, this, index,
 	 &FGControls::get_magnetos, &FGControls::set_magnetos);
     fgSetArchivable(name);
+    
+   snprintf(name, MAX_NAME_LEN,
+       "/controls/engines/engine[%d]/feed_tank", index);
+    fgTie(name, this, index,
+	 &FGControls::get_feed_tank, &FGControls::set_feed_tank);
+    fgSetArchivable(name);
+
 
     snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/WEP", index);
     fgTie(name, this, index,
@@ -836,6 +844,9 @@ void FGControls::unbind ()
              "/controls/engines/engine[%d]/throttle", index);
     fgUntie(name);
     snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/feed_tank", index);
+    fgUntie(name);
+    snprintf(name, MAX_NAME_LEN,
              "/controls/engines/engine[%d]/starter", index);
     fgUntie(name);
     snprintf(name, MAX_NAME_LEN,
@@ -1328,6 +1339,23 @@ FGControls::set_cutoff( int engine, bool val )
 	    cutoff[engine] = val;
 	}
     }
+}
+
+void
+FGControls::set_feed_tank( int engine, int tank )
+{ 
+    if ( engine == ALL_ENGINES ) {
+	for ( int i = 0; i < MAX_ENGINES; i++ ) {
+	    feed_tank[i] = tank;
+	    CLAMP( &feed_tank[i], -1, 4 );
+	}
+    } else {
+	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+	    feed_tank[engine] = tank;
+	    CLAMP( &feed_tank[engine], -1, 4 );
+	}
+    } 
+ //   feed_tank[engine] = engine;
 }
 
 

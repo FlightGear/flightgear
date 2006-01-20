@@ -133,6 +133,7 @@ private:
     double mixture[MAX_ENGINES];
     double prop_advance[MAX_ENGINES];
     int magnetos[MAX_ENGINES];
+    int feed_tank[MAX_ENGINES];
     bool nitrous_injection[MAX_ENGINES];  // War Emergency Power
     double cowl_flaps_norm[MAX_ENGINES];
     bool feather[MAX_ENGINES];
@@ -307,6 +308,7 @@ public:
 	return prop_advance[engine];
     }
     inline int get_magnetos(int engine) const { return magnetos[engine]; }
+    inline int get_feed_tank(int engine) const { return feed_tank[engine]; }
     inline bool get_nitrous_injection(int engine) const { 
         return nitrous_injection[engine];
     }
@@ -499,6 +501,7 @@ public:
     void move_prop_advance( int engine, double amt );
     void set_magnetos( int engine, int pos );
     void move_magnetos( int engine, int amt );
+    void set_feed_tank( int engine, int tank );
     void set_nitrous_injection( int engine, bool val );
     void set_cowl_flaps_norm( int engine, double pos );
     void move_cowl_flaps_norm( int engine, double amt );

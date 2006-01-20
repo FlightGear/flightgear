@@ -376,6 +376,12 @@ void fgHiResDump()
     bool do_panel = fgPanelVisible();
     GLfloat panel_col_step = globals->get_current_panel()->getWidth() / ncols;
     GLfloat panel_row_step = globals->get_current_panel()->getHeight() / nrows;
+
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_FOG_HINT, GL_NICEST);
 	
     /* Draw tiles */
     int more = 1;
@@ -383,6 +389,7 @@ void fgHiResDump()
         trBeginTile(tr);
         int curColumn = trGet(tr, TR_CURRENT_COLUMN);
         int curRow =  trGet(tr, TR_CURRENT_ROW);
+
         renderer->update( false );
         if ( do_hud )
             fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,
@@ -423,6 +430,18 @@ void fgHiResDump()
     renderer->resize( width, height );
 
     trDelete(tr);
+
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
+    glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+    glHint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_DONT_CARE);
+    if ( (!strcmp(fgGetString("/sim/rendering/fog"), "disabled")) ||
+         (!fgGetBool("/sim/rendering/shading"))) {
+        // if fastest fog requested, or if flat shading force fastest
+        glHint ( GL_FOG_HINT, GL_FASTEST );
+    } else if ( !strcmp(fgGetString("/sim/rendering/fog"), "nicest") ) {
+        glHint ( GL_FOG_HINT, GL_DONT_CARE );
+    }
 
     fclose(f);
 

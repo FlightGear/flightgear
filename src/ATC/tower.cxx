@@ -711,7 +711,7 @@ void FGTower::ProcessRunwayVacatedReport(TowerPlaneRec* t) {
 		if(!t->isUser) t->planePtr->RegisterTransmission(5);
 	} else {
 		// Cop-out!!
-		trns += " cleared for taxi to the GA parking";
+		trns += " cleared for taxi to general aviation parking";
 		if(!t->isUser) t->planePtr->RegisterTransmission(6);	// TODO - this is a mega-hack!!
 	}
 	//cout << "trns = " << trns << '\n';
