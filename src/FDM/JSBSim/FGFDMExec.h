@@ -70,16 +70,72 @@ CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Encapsulates the JSBSim simulation executive.
-    This class is the interface class through which all other simulation classes
+    This class is the executive class through which all other simulation classes
     are instantiated, initialized, and run. When integrated with FlightGear (or
     other flight simulator) this class is typically instantiated by an interface
     class on the simulator side.
 
-    When an aircraft model is loaded the config file is parsed and for each of the
-    sections of the config file (propulsion, flight control, etc.) the
-    corresponding Load() method is called (e.g. LoadFCS).
+    At the time of simulation initialization, the interface
+    class creates an instance of this executive class. The
+    executive is subsequently directed to load the chosen aircraft specification
+    file:
 
-    <h4>JSBSim Debugging Directives</h4>
+    @code
+    fdmex = new FGFDMExec( … );
+    result = fdmex->LoadModel( … );
+    @endcode
+
+    When an aircraft model is loaded, the config file is parsed and for each of the
+    sections of the config file (propulsion, flight control, etc.) the
+    corresponding Load() method is called (e.g. FGFCS::Load()).
+
+    Subsequent to the creation of the executive and loading of the model,
+    initialization is performed. Initialization involves copying control inputs
+    into the appropriate JSBSim data storage locations, configuring it for the set
+    of user supplied initial conditions, and then copying state variables from
+    JSBSim. The state variables are used to drive the instrument displays and to
+    place the vehicle model in world space for visual rendering:
+
+    @code
+    copy_to_JSBsim(); // copy control inputs to JSBSim
+    fdmex->RunIC(); // loop JSBSim once w/o integrating
+    copy_from_JSBsim(); // update the bus
+    @endcode
+
+    Once initialization is complete, cyclic execution proceeds:
+
+    @code
+    copy_to_JSBsim(); // copy control inputs to JSBSim
+    fdmex->Run(); // execute JSBSim
+    copy_from_JSBsim(); // update the bus
+    @endcode
+
+    JSBSim can be used in a standalone mode by creating a compact stub program
+    that effectively performs the same progression of steps as outlined above for
+    the integrated version, but with two exceptions. First, the copy_to_JSBSim()
+    and copy_from_JSBSim() functions are not used because the control inputs are
+    handled directly by the scripting facilities and outputs are handled by the
+    output (data logging) class. Second, the name of a script file can be supplied
+    to the stub program. Scripting (see FGScript) provides a way to supply command
+    inputs to the simulation:
+
+    @code
+    FDMExec = new JSBSim::FGFDMExec();
+    Script = new JSBSim::FGScript( … );
+    Script->LoadScript( ScriptName ); // the script loads the aircraft and ICs
+    result = FDMExec->Run();
+    while (result) { // cyclic execution
+      if (Scripted) if (!Script->RunScript()) break; // execute script
+      result = FDMExec->Run(); // execute JSBSim
+    }
+    @endcode
+
+    The standalone mode has been useful for verifying changes before committing
+    updates to the source code repository. It is also useful for running sets of
+    tests that reveal some aspects of simulated aircraft performance, such as
+    range, time-to-climb, takeoff distance, etc.
+
+    <h3>JSBSim Debugging Directives</h3>
 
     This describes to any interested entity the debug level
     requested by setting the JSBSIM_DEBUG environment variable.
@@ -101,8 +157,14 @@ CLASS DOCUMENTATION
     - <b>16</b>: When set various parameters are sanity checked and
        a message is printed out when they go out of bounds
 
+    <h3>Properties</h3>
+    @property simulator/do_trim Can be set to the integer equivalent to one of
+                                tLongitudinal (0), tFull (1), tGround (2), tPullup (3),
+                                tCustom (4), tTurn (5). Setting this to a legal value
+                                (such as by a script) causes a trim to be performed.
+
     @author Jon S. Berndt
-    @version $Id$
+    @version $Revision$
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -124,13 +186,14 @@ public:
       FGFDMExec::Run() method must be made before the model is executed. A
       value of 1 means that the model will be executed for each call to the
       exec's Run() method. A value of 5 means that the model will only be
-      executed every 5th call to the exec's Run() method.
+      executed every 5th call to the exec's Run() method. Use of a rate other than
+      one is at this time not recommended.
       @param model A pointer to the model being scheduled.
       @param rate The rate at which to execute the model as described above.
       @return Currently returns 0 always. */
   int  Schedule(FGModel* model, int rate);
 
-  /** This executes each scheduled model in succession.
+  /** This function executes each scheduled model in succession.
       @return true if successful, false if sim should be ended  */
   bool Run(void);
 
@@ -144,7 +207,7 @@ public:
   void SetGroundCallback(FGGroundCallback* gc);
 
   /** Loads an aircraft model.
-      @param AircraftPath path to the aircraft directory. For instance:
+      @param AircraftPath path to the aircraft/ directory. For instance:
       "aircraft". Under aircraft, then, would be directories for various
       modeled aircraft such as C172/, x15/, etc.
       @param EnginePath path to the directory under which engine config
@@ -155,7 +218,7 @@ public:
       instance: "aircraft/x15/x15.xml"
       @param addModelToPath set to true to add the model name to the
       AircraftPath, defaults to true
-      @return true if successful*/
+      @return true if successful */
   bool LoadModel(string AircraftPath, string EnginePath, string model,
                  bool addModelToPath = true);
 
@@ -239,8 +302,7 @@ public:
   * - tPullup
   * - tCustom
   * - tTurn
-  * - tNone
-  */
+  * - tNone  */
   void DoTrim(int mode);
 
   /// Disables data logging to all outputs.
@@ -269,7 +331,7 @@ public:
 
   /** Retrieves property or properties matching the supplied string.
   *   A string is returned that contains a carriage return delimited list of all
-  *   strings in the property catalog that matches the supplied chack string.
+  *   strings in the property catalog that matches the supplied check string.
   *   @param check The string to search for in the property catalog.
   *   @return the carriage-return-delimited string containing all matching strings
   *               in the catalog.  */
@@ -279,7 +341,7 @@ public:
   void UseAtmosphereMSIS(void);
 
   /// Use the Mars atmosphere model. (Not operative yet.)
-  void UseAtmosphereMars(void); 
+  void UseAtmosphereMars(void);
 
 private:
   FGModel* FirstModel;

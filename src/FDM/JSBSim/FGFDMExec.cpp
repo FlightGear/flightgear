@@ -451,6 +451,12 @@ bool FGFDMExec::LoadModel(string model, bool addModelToPath)
   Element* document;
 
   ifstream input_file(aircraftCfgFileName.c_str());
+
+  if (!input_file.is_open()) { // file open failed
+    cerr << "Could not open file " << aircraftCfgFileName.c_str() << endl;
+    return false;
+  }
+
   readXML(input_file, *XMLParse);
   document = XMLParse->GetDocument();
 
