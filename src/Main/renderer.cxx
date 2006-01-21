@@ -215,7 +215,7 @@ FGRenderer::init( void ) {
         // if fastest fog requested, or if flat shading force fastest
         glHint ( GL_FOG_HINT, GL_FASTEST );
     } else if ( !strcmp(fgGetString("/sim/rendering/fog"), "nicest") ) {
-        glHint ( GL_FOG_HINT, GL_NICEST );
+        glHint ( GL_FOG_HINT, GL_DONT_CARE );
     }
     if ( fgGetBool("/sim/rendering/wireframe") ) {
         // draw wire frame
@@ -226,9 +226,12 @@ FGRenderer::init( void ) {
     glFrontFace ( GL_CCW );
 
     // Just testing ...
-    // glEnable(GL_POINT_SMOOTH);
-    // glEnable(GL_LINE_SMOOTH);
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_LINE_SMOOTH);
     // glEnable(GL_POLYGON_SMOOTH);      
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
+    glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+    glHint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
 }
 
 
