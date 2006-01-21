@@ -80,9 +80,6 @@ bool fgInitSubsystems();
 void fgReInitSubsystems();
 
 
-// find basic airport location info from airport database
-bool fgFindAirportID( const string& id, FGAirport *a );
-
 // Set the initial position based on presets (or defaults)
 bool fgInitPosition();
 
