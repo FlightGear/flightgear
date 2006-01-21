@@ -380,7 +380,11 @@ AC_DEFINE([ENABLE_PLIB_JOYSTICK], 1, [Define to enable plib joystick support])
 
 
 dnl Check for the presence of SimGear
+if test "x$with_simgear" != "x"; then
+AC_CHECK_HEADER($with_simgear/include/simgear/version.h, [ac_cv_header_simgear_version_h=yes], [ac_cv_header_simgear_version_h=no])
+else
 AC_CHECK_HEADER(simgear/version.h)
+fi
 if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     echo
     echo "You *must* have the SimGear support library installed on your system"
@@ -432,7 +436,11 @@ int main() {
 LIBS="$saved_LIBS"
 
 dnl Check if SimGear was built with Norman's JPEG factory support
+if test "x$with_simgear" != "x"; then
+AC_CHECK_HEADER($with_simgear/include/simgear/screen/jpgfactory.hxx,[ac_cv_header_simgear_screen_jpgfactory_hxx=yes],[ac_cv_header_simgear_screen_jpgfactory_hxx=no])
+else
 AC_CHECK_HEADER(simgear/screen/jpgfactory.hxx)
+fi
 if test "x$ac_cv_header_simgear_screen_jpgfactory_hxx" = "xyes"; then
     AC_CHECK_LIB(jpeg, jpeg_start_compress)
     if test "x$ac_cv_lib_jpeg_jpeg_start_compress" != "xyes" ; then
