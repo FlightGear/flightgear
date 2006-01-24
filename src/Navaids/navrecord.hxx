@@ -145,7 +145,7 @@ operator >> ( istream& in, FGNavRecord& n )
         return in >> skipeol;
     }
 
-    in >> n.lat >> n.lon >> n.elev_ft >> n.freq >> n.multiuse
+    in >> n.lat >> n.lon >> n.elev_ft >> n.freq >> n.range >> n.multiuse
        >> n.ident;
     getline( in, n.name );
 
@@ -166,15 +166,22 @@ operator >> ( istream& in, FGNavRecord& n )
         n.apt_id = n.name.substr(0, pos);
     }
 
-    // assign default ranges
-    if ( n.type == 2 || n.type == 3 ) {
-        n.range = FG_NAV_DEFAULT_RANGE;
-    } else if ( n.type == 4 || n.type == 5 || n.type == 6 ) {
-        n.range = FG_LOC_DEFAULT_RANGE;
-    } else if ( n.type == 12 ) {
-        n.range = FG_DME_DEFAULT_RANGE;
-    } else {
-        n.range = FG_LOC_DEFAULT_RANGE;
+    // Ranges are included with the latest data format, no need to
+    // assign our own defaults, unless the range is not set for some
+    // reason.
+
+    if ( n.range < 0.1 ) {
+        // assign default ranges
+    
+        if ( n.type == 2 || n.type == 3 ) {
+            n.range = FG_NAV_DEFAULT_RANGE;
+        } else if ( n.type == 4 || n.type == 5 || n.type == 6 ) {
+            n.range = FG_LOC_DEFAULT_RANGE;
+        } else if ( n.type == 12 ) {
+            n.range = FG_DME_DEFAULT_RANGE;
+        } else {
+            n.range = FG_LOC_DEFAULT_RANGE;
+        }
     }
 
     // transmitted ident (same as ident unless modeling a fault)
