@@ -47,7 +47,6 @@ FGFixList::~FGFixList( void ) {
 
 // load the navaids and build the map
 bool FGFixList::init( SGPath path ) {
-
     fixlist.erase( fixlist.begin(), fixlist.end() );
 
     sg_gzifstream in( path.str() );
@@ -83,7 +82,6 @@ bool FGFixList::init( SGPath path ) {
         fixlist[fix.get_ident()] = fix;
         in >> skipcomment;
     }
-    
     return true;
 }
 
