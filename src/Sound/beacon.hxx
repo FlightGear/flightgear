@@ -32,6 +32,8 @@
 
 #include <simgear/compiler.h>
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/structure/SGReferenced.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
 
 #include "morse.hxx"
 
@@ -93,9 +95,9 @@ class FGBeacon {
 
 private:
 
-    SGSoundSample *inner;
-    SGSoundSample *middle;
-    SGSoundSample *outer;
+    SGSharedPtr<SGSoundSample> inner;
+    SGSharedPtr<SGSoundSample> middle;
+    SGSharedPtr<SGSoundSample> outer;
 
 public:
 

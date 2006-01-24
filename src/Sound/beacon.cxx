@@ -25,18 +25,12 @@
 
 
 // constructor
-FGBeacon::FGBeacon() :
-    inner(NULL),
-    middle(NULL),
-    outer(NULL)
+FGBeacon::FGBeacon()
 {
 }
 
 // destructor
 FGBeacon::~FGBeacon() {
-    delete inner;
-    delete middle;
-    delete outer;
 }
 
 
