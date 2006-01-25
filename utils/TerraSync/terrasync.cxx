@@ -131,17 +131,34 @@ static void sync_area( int lat, int lon ) {
     }
 
     char command[512];
-
-    // make container directory
     char container_dir[512];
-    snprintf( container_dir, 512, "%s/%c%03d%c%02d",
+    char dir[512];
+
+    // Sync Terrain
+    snprintf( container_dir, 512, "%s/Terrain/%c%03d%c%02d",
               dest_base.c_str(), EW, abs(baselon), NS, abs(baselat) );
     snprintf( command, 512, "mkdir -p %s", container_dir );
     cout << command << endl;
     system( command );
 
-    char dir[512];
-    snprintf( dir, 512, "%c%03d%c%02d/%c%03d%c%02d",
+    snprintf( dir, 512, "Terrain/%c%03d%c%02d/%c%03d%c%02d",
+              EW, abs(baselon), NS, abs(baselat),
+              EW, abs(lon), NS, abs(lat) );
+
+    snprintf( command, 512,
+              "rsync --verbose --archive --delete --perms --owner --group %s/%s/ %s/%s",
+              source_base.c_str(), dir, dest_base.c_str(), dir );
+    cout << command << endl;
+    system( command );
+
+    // Sync Objects
+    snprintf( container_dir, 512, "%s/Objects/%c%03d%c%02d",
+              dest_base.c_str(), EW, abs(baselon), NS, abs(baselat) );
+    snprintf( command, 512, "mkdir -p %s", container_dir );
+    cout << command << endl;
+    system( command );
+
+    snprintf( dir, 512, "Objects/%c%03d%c%02d/%c%03d%c%02d",
               EW, abs(baselon), NS, abs(baselat),
               EW, abs(lon), NS, abs(lat) );
 

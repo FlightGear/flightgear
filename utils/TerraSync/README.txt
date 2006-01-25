@@ -58,3 +58,7 @@ Final notes:
 I have set up the scenery server at
 scenery.flightgear.org::Scenery-0.9.2.  This is the latest 0.9.2 build
 of the world.
+
+Note to self:
+
+nice ./terrasync -p 5500 -s baron.flightgear.org:/stage/fgfs05/curt/Scenery-1.0 -d /stage/catalina3/Scenery-1.0/
