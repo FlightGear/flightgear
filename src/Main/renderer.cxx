@@ -91,6 +91,7 @@ float scene_farplane = 120000.0f;
 glPointParameterfProc glPointParameterfPtr = 0;
 glPointParameterfvProc glPointParameterfvPtr = 0;
 bool glPointParameterIsSupported = false;
+bool glPointSpriteIsSupported = false;
 
 
 // fog constants.  I'm a little nervous about putting actual code out
@@ -226,7 +227,13 @@ FGRenderer::init( void ) {
     glFrontFace ( GL_CCW );
 
     // Just testing ...
-    glEnable(GL_POINT_SMOOTH);
+    if ( SGIsOpenGLExtensionSupported("GL_ARB_point_sprite") ||
+         SGIsOpenGLExtensionSupported("GL_NV_point_sprite") )
+    {
+        glEnable(GL_POINT_SPRITE);
+        glEnable(GL_POINT_SMOOTH);
+        glPointSpriteIsSupported = true;
+    }
     glEnable(GL_LINE_SMOOTH);
     // glEnable(GL_POLYGON_SMOOTH);      
     glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);

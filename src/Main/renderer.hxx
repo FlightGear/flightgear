@@ -13,6 +13,7 @@ extern SGSky *thesky;
 extern glPointParameterfProc glPointParameterfPtr;
 extern glPointParameterfvProc glPointParameterfvPtr;
 extern bool glPointParameterIsSupported;
+extern bool glPointSpriteIsSupported;
 
 
 class FGRenderer {
