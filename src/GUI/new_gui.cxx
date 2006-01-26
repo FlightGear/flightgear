@@ -26,7 +26,7 @@ extern puFont FONT_SANS_12B;
 
 
 NewGUI::NewGUI ()
-    : _font(FONT_HELVETICA_14),
+    : _fontcache(new FGFontCache),
       _menubar(new FGMenuBar),
       _active_dialog(0)
 {
@@ -346,38 +346,9 @@ static const struct {
 void
 NewGUI::setupFont (SGPropertyNode *node)
 {
-    string fontname = node->getStringValue("name", "Helvetica.txf");
-    float size = node->getFloatValue("size", 15.0);
-    float slant = node->getFloatValue("slant", 0.0);
-
-    int i;
-    for (i = 0; guifonts[i].name; i++)
-        if (fontname == guifonts[i].name)
-            break;
-    if (guifonts[i].name)
-        _font = *guifonts[i].font;
-    else {
-        SGPath fontpath;
-        char* envp = ::getenv("FG_FONTS");
-        if (envp != NULL) {
-            fontpath.set(envp);
-        } else {
-            fontpath.set(globals->get_fg_root());
-            fontpath.append("Fonts");
-        }
-
-        SGPath path(fontpath);
-        path.append(fontname);
-
-        if (_tex_font.load((char *)path.c_str())) {
-            _font.initialize((fntFont *)&_tex_font, size, slant);
-        } else {
-            _font = *guifonts[0].font;
-            fontname = "default";
-        }
-    }
-    puSetDefaultFonts(_font, _font);
-    node->setStringValue("name", fontname.c_str());
+    _font = _fontcache->get(node);
+    puSetDefaultFonts(*_font, *_font);
+    return;
 }
 
 
@@ -434,7 +405,7 @@ FGFontCache::FGFontCache()
     }
 
     for (int i=0; guifonts[i].name; i++)
-        _fonts[guifonts[i].name] = guifonts[i].font;
+        _fonts[guifonts[i].name] = new fnt(guifonts[i].font);
 }
 
 FGFontCache::~FGFontCache()
@@ -445,33 +416,28 @@ FGFontCache::~FGFontCache()
 puFont *
 FGFontCache::get(const char *name, float size, float slant)
 {
-    puFont *font;
     _itt_t it;
 
-    if ((it = _fonts.find(name)) == _fonts.end())
-    {
+    if ((it = _fonts.find(name)) == _fonts.end()) {
         SGPath path(_path);
         path.append(name);
 
-        fntTexFont tex_font;
-        if (tex_font.load((char *)path.c_str()))
-        {
-            font = new puFont;
-            font->initialize((fntFont *)&tex_font, size, slant);
-            _fonts[name] = font;
-        }
-        else
-        {
-            font = _fonts["default"];
-            // puSetDefaultFonts(font, font);
-        }
-    }
-    else
-    {
-        font = it->second;
-    }
+        fnt *f = new fnt();
+        f->texfont = new fntTexFont;
+        if (f->texfont->load((char *)path.c_str())) {
+            f->pufont = new puFont;
+            f->pufont->initialize(static_cast<fntFont *>(f->texfont), size, slant);
+            _fonts[name] = f;
+            return f->pufont;
 
-    return font;
+        } else {
+            delete f;
+            return _fonts["default"]->pufont;
+        }
+
+    } else {
+        return it->second->pufont;
+    }
 }
 
 puFont *

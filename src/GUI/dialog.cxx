@@ -686,18 +686,9 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
         object->setBorderThickness( props->getIntValue("border", 2) );
 
     if ( SGPropertyNode *nft = props->getNode("font", false) ) {
-       SGPath path( _font_path );
-       const char *name = nft->getStringValue("name", "default");
-       float size = nft->getFloatValue("size", 13.0);
-       float slant = nft->getFloatValue("slant", 0.0);
-       path.append( name );
-       path.concat( ".txf" );
-
-       fntFont *font = new fntTexFont;
-       font->load( (char *)path.c_str() );
-
-       puFont lfnt(font, size, slant);
-       object->setLabelFont( lfnt );
+       FGFontCache *fc = _gui->get_fontcache();
+       puFont *lfnt = fc->get(nft);
+       object->setLabelFont(*lfnt);
     }
 
     if (props->hasValue("property")) {

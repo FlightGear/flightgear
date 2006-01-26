@@ -174,7 +174,7 @@ public:
         return (it != _colors.end()) ? it->second : NULL;
     }
 
-    virtual puFont *getDefaultFont() { return &_font; }
+    virtual puFont *getDefaultFont() { return _font; }
 
 
     /**
@@ -220,8 +220,7 @@ private:
         }
     };
 
-    fntTexFont _tex_font;
-    puFont _font;
+    puFont *_font;
     map<const char*,FGColor*, ltstr> _colors;
     typedef map<const char*,FGColor*, ltstr>::iterator _itt_t;
     typedef map<const char*,FGColor*, ltstr>::const_iterator _citt_t;
@@ -292,10 +291,16 @@ private:
  */
 class FGFontCache {
 private:
+    struct fnt {
+        fnt(puFont *pu = 0) : pufont(pu), texfont(0) {}
+        ~fnt() { delete pufont; delete texfont; }
+        puFont *pufont;
+        fntTexFont *texfont;
+    };
     SGPath _path;
 
-    map<const char*,puFont*> _fonts;
-    typedef map<const char*,puFont*>::iterator _itt_t;
+    map<const string,fnt *> _fonts;
+    typedef map<const string,fnt *>::const_iterator _itt_t;
 
 public:
     FGFontCache();
