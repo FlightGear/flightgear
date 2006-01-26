@@ -418,26 +418,24 @@ FGFontCache::get(const char *name, float size, float slant)
 {
     _itt_t it;
 
-    if ((it = _fonts.find(name)) == _fonts.end()) {
-        SGPath path(_path);
-        path.append(name);
-
-        fnt *f = new fnt();
-        f->texfont = new fntTexFont;
-        if (f->texfont->load((char *)path.c_str())) {
-            f->pufont = new puFont;
-            f->pufont->initialize(static_cast<fntFont *>(f->texfont), size, slant);
-            _fonts[name] = f;
-            return f->pufont;
-
-        } else {
-            delete f;
-            return _fonts["default"]->pufont;
-        }
-
-    } else {
+    if ((it = _fonts.find(name)) != _fonts.end())
         return it->second->pufont;
+
+    SGPath path(_path);
+    path.append(name);
+
+    fnt *f = new fnt();
+    f->texfont = new fntTexFont;
+
+    if (f->texfont->load((char *)path.c_str())) {
+        f->pufont = new puFont;
+        f->pufont->initialize(static_cast<fntFont *>(f->texfont), size, slant);
+        _fonts[name] = f;
+        return f->pufont;
     }
+
+    delete f;
+    return _fonts["default"]->pufont;
 }
 
 puFont *
