@@ -617,7 +617,8 @@ void FGNasalSys::setListener(int argc, naRef* args)
     if(!(naIsCode(handler) || naIsCCode(handler) || naIsFunc(handler)))
         return;
 
-    node->addChangeListener(new FGNasalListener(handler, this, gcSave(handler)));
+    gcSave(handler);
+    node->addChangeListener(new FGNasalListener(handler, this));
 }
 
 // functions providing access to the NasalDisplay - used to display text directly on the screen
