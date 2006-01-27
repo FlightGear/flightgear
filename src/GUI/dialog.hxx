@@ -163,8 +163,6 @@ private:
     // dialog closes.
     char ** make_char_array (int size);
     vector<char **> _char_arrays;
-
-    SGPath _font_path;
 };
 
 //

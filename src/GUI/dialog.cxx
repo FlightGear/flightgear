@@ -319,14 +319,6 @@ FGDialog::FGDialog (SGPropertyNode * props)
     : _object(0),
       _gui((NewGUI *)globals->get_subsystem("gui"))
 {
-    char* envp = ::getenv( "FG_FONTS" );
-    if ( envp != NULL ) {
-        _font_path.set( envp );
-    } else {
-        _font_path.set( globals->get_fg_root() );
-        _font_path.append( "Fonts" );
-    }
-
     display(props);
 }
 
