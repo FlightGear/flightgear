@@ -132,11 +132,29 @@ void FGLight::reinit () {
 void FGLight::bind () {
     SGPropertyNode *prop = globals->get_props();
     prop->tie("/sim/time/sun-angle-rad",SGRawValuePointer<double>(&_sun_angle));
+    prop->tie("/rendering/scene/ambient-r",SGRawValuePointer<float>(&_scene_ambient[0]));
+    prop->tie("/rendering/scene/ambient-g",SGRawValuePointer<float>(&_scene_ambient[1]));
+    prop->tie("/rendering/scene/ambient-b",SGRawValuePointer<float>(&_scene_ambient[2]));
+    prop->tie("/rendering/scene/diffuse-r",SGRawValuePointer<float>(&_scene_diffuse[0]));
+    prop->tie("/rendering/scene/diffuse-g",SGRawValuePointer<float>(&_scene_diffuse[1]));
+    prop->tie("/rendering/scene/diffuse-b",SGRawValuePointer<float>(&_scene_diffuse[2]));
+    prop->tie("/rendering/scene/specular-r",SGRawValuePointer<float>(&_scene_specular[0]));
+    prop->tie("/rendering/scene/specular-g",SGRawValuePointer<float>(&_scene_specular[1]));
+    prop->tie("/rendering/scene/specular-b",SGRawValuePointer<float>(&_scene_specular[2]));
 }
 
 void FGLight::unbind () {
     SGPropertyNode *prop = globals->get_props();
     prop->untie("/sim/time/sun-angle-rad");
+    prop->untie("/rendering/scene/ambient-r");
+    prop->untie("/rendering/scene/ambient-g");
+    prop->untie("/rendering/scene/ambient-b");
+    prop->untie("/rendering/scene/diffuse-r");
+    prop->untie("/rendering/scene/diffuse-g");
+    prop->untie("/rendering/scene/diffuse-b");
+    prop->untie("/rendering/scene/specular-r");
+    prop->untie("/rendering/scene/specular-g");
+    prop->untie("/rendering/scene/specular-b");
 }
 
 
