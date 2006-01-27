@@ -420,8 +420,14 @@ FGDialog::display (SGPropertyNode * props)
     // Let the layout widget work in the same property subtree.
     LayoutWidget wid(props);
 
-    puFont *fnt = _gui->getDefaultFont();
-    wid.setDefaultFont(fnt, int(fnt->getPointSize()));
+    SGPropertyNode *fontnode = props->getNode("font");
+    if (fontnode) {
+        FGFontCache *fc = _gui->get_fontcache();
+        _font = fc->get(fontnode);
+    } else {
+        _font = _gui->getDefaultFont();
+    }
+    wid.setDefaultFont(_font, int(_font->getPointSize()));
 
     int pw=0, ph=0;
     int px, py, savex, savey;
@@ -681,6 +687,8 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
        FGFontCache *fc = _gui->get_fontcache();
        puFont *lfnt = fc->get(nft);
        object->setLabelFont(*lfnt);
+    } else {
+       object->setLabelFont(*_font);
     }
 
     if (props->hasValue("property")) {

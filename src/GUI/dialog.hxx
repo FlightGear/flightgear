@@ -142,6 +142,10 @@ private:
     // The GUI subsystem.
     NewGUI * _gui;
 
+    // The dialog font. Defaults to the global gui font, but can get
+    // overridden by a top level font definition.
+    puFont * _font;
+
     // PUI provides no way for userdata to be deleted automatically
     // with a GUI object, so we have to keep track of all the special
     // data we allocated and then free it manually when the dialog
