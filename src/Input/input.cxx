@@ -316,20 +316,32 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
     else {
       // pui and the panel didn't want the click event so compute a
       // terrain intersection point corresponding to the mouse click
-      // and be happy.  This should eventually get written into a set
-      // of properties so that some other [future] subsystems can do
-      // something useful with the information.
+      // and be happy.
       FGScenery* scenery = globals->get_scenery();
       sgdVec3 start, dir, hit;
       if (FGRenderer::getPickInfo(start, dir, x, y) &&
           scenery->get_cart_ground_intersection(start, dir, hit)) {
-        
+
         Point3D geod = sgCartToGeod(Point3D(hit[0], hit[1], hit[2]));
-        
-        std::cout << "lon = " << geod.lon()*SGD_RADIANS_TO_DEGREES
-                  << " deg, lat = " << geod.lat()*SGD_RADIANS_TO_DEGREES
-                  << " deg, elev = " << geod.elev()
-                  << " m" << std::endl;
+
+        static SGPropertyNode_ptr lon
+                = fgGetNode("/sim/input/click/longitude-deg", true);
+        static SGPropertyNode_ptr lat
+                = fgGetNode("/sim/input/click/latitude-deg", true);
+        static SGPropertyNode_ptr elev_m
+                = fgGetNode("/sim/input/click/elevation-m", true);
+        static SGPropertyNode_ptr elev_ft
+                = fgGetNode("/sim/input/click/elevation-ft", true);
+
+        lon->setDoubleValue(geod.lon() * SGD_RADIANS_TO_DEGREES);
+        lat->setDoubleValue(geod.lat() * SGD_RADIANS_TO_DEGREES);
+        elev_m->setDoubleValue(geod.elev());
+        elev_ft->setDoubleValue(geod.elev() * SG_METER_TO_FEET);
+
+        // std::cout << "lon = " << geod.lon()*SGD_RADIANS_TO_DEGREES
+        //           << " deg, lat = " << geod.lat()*SGD_RADIANS_TO_DEGREES
+        //           << " deg, elev = " << geod.elev()
+        //           << " m" << std::endl;
       } else {
         std::cout << "Cannot find intersection point" << std::endl;
       }
