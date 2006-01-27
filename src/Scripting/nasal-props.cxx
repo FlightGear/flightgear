@@ -150,11 +150,12 @@ static naRef f_getChild(naContext c, naRef me, int argc, naRef* args)
     naRef child = naVec_get(argv, 0);
     if(!naIsString(child)) return naNil();
     naRef idx = naNumValue(naVec_get(argv, 1));
+    bool create = naTrue(naVec_get(argv, 2));
     SGPropertyNode* n;
     if(naIsNil(idx) || !naIsNum(idx)) {
-        n = (*node)->getChild(naStr_data(child));
+        n = (*node)->getChild(naStr_data(child), create);
     } else {
-        n = (*node)->getChild(naStr_data(child), (int)idx.num);
+        n = (*node)->getChild(naStr_data(child), (int)idx.num, create);
     }
     if(!n) return naNil();
     return propNodeGhostCreate(c, n);
