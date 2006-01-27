@@ -117,11 +117,11 @@ public:
 
     void valueChanged(SGPropertyNode* node) {
         _nas->_cmdArg = node;
-        naContext subc = naNewContext();
-        naCall(subc, _handler, 0, 0, naNil(), naNil());
-        if(naGetError(subc))
-            _nas->logError(subc);
-        naFreeContext(subc);
+        naContext c = naNewContext();
+        naCall(c, _handler, 0, 0, naNil(), naNil());
+        if(naGetError(c))
+            _nas->logError(c);
+        naFreeContext(c);
     }
 
 private:
