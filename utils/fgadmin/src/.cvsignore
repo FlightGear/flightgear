@@ -1,2 +1,6 @@
+.deps
+Makefile
 Makefile.in
 config.h.in
+fgadmin
+stamp-h1
