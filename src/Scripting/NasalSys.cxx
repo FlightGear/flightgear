@@ -75,7 +75,7 @@ bool FGNasalSys::parseAndRun(const char* sourceCode)
     naCall(_context, code, 0, 0, naNil(), naNil());
 
     if(!naGetError(_context)) return true;
-    logError();
+    logError(_context);
     return false;
 }
 
@@ -443,17 +443,17 @@ void FGNasalSys::loadPropertyScripts()
 }
 
 // Logs a runtime error, with stack trace, to the FlightGear log stream
-void FGNasalSys::logError()
+void FGNasalSys::logError(naContext context)
 {
     SG_LOG(SG_NASAL, SG_ALERT,
-           "Nasal runtime error: " << naGetError(_context));
+           "Nasal runtime error: " << naGetError(context));
     SG_LOG(SG_NASAL, SG_ALERT,
-           "  at " << naStr_data(naGetSourceFile(_context, 0)) <<
-           ", line " << naGetLine(_context, 0));
-    for(int i=1; i<naStackDepth(_context); i++)
+           "  at " << naStr_data(naGetSourceFile(context, 0)) <<
+           ", line " << naGetLine(context, 0));
+    for(int i=1; i<naStackDepth(context); i++)
         SG_LOG(SG_NASAL, SG_ALERT,
-               "  called from: " << naStr_data(naGetSourceFile(_context, i)) <<
-               ", line " << naGetLine(_context, i));
+               "  called from: " << naStr_data(naGetSourceFile(context, i)) <<
+               ", line " << naGetLine(context, i));
 }
 
 // Reads a script file, executes it, and places the resulting
@@ -494,7 +494,7 @@ void FGNasalSys::createModule(const char* moduleName, const char* fileName,
 
     naCall(_context, code, 0, 0, naNil(), locals);
     if(naGetError(_context)) {
-        logError();
+        logError(_context);
         return;
     }
     hashset(_globals, moduleName, locals);
@@ -539,7 +539,7 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     // Call it!
     naRef result = naCall(_context, code, 0, 0, naNil(), locals);
     if(!naGetError(_context)) return true;
-    logError();
+    logError(_context);
     return false;
 }
 
@@ -580,7 +580,7 @@ void FGNasalSys::handleTimer(NasalTimer* t)
 {
     naCall(_context, t->handler, 0, 0, naNil(), naNil());
     if(naGetError(_context))
-        logError();
+        logError(_context);
     gcRelease(t->gcKey);
 }
 

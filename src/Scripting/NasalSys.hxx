@@ -68,7 +68,7 @@ private:
 
     void loadPropertyScripts();
     void hashset(naRef hash, const char* key, naRef val);
-    void logError();
+    void logError(naContext);
     naRef parse(const char* filename, const char* buf, int len);
     naRef genPropsModule();
     naRef propNodeGhost(SGPropertyNode* handle);
@@ -120,7 +120,7 @@ public:
         naContext subc = naNewContext();
         naCall(subc, _handler, 0, 0, naNil(), naNil());
         if(naGetError(subc))
-            _nas->logError();
+            _nas->logError(subc);
         naFreeContext(subc);
     }
 
