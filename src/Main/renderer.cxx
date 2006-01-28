@@ -796,8 +796,13 @@ FGRenderer::resize( int width, int height ) {
 
     glViewport( 0, (GLint)(height - view_h), (GLint)(width), (GLint)(view_h) );
 
-    fgSetInt("/sim/startup/xsize", width);
-    fgSetInt("/sim/startup/ysize", height);
+    static int lastwidth = width;
+    static int lastheight = height;
+    if (width != lastwidth)
+        fgSetInt("/sim/startup/xsize", lastwidth = width);
+    if (height != lastheight)
+        fgSetInt("/sim/startup/ysize", lastheight = height);
+
     guiInitMouse(width, height);
 
     // for all views
