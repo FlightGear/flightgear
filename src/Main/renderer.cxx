@@ -336,6 +336,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
     current__view->set_dirty();
 
     if ( refresh_camera_settings ) {
+        // update view port
+        resize( fgGetInt("/sim/startup/xsize"),
+                fgGetInt("/sim/startup/ysize") );
+
         // Tell GL we are switching to model view parameters
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
