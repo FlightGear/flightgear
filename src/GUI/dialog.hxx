@@ -146,6 +146,10 @@ private:
     // overridden by a top level font definition.
     puFont * _font;
 
+    // The source xml tree, so that we can pass data back, such as the
+    // last position.
+    SGPropertyNode *_props;
+
     // PUI provides no way for userdata to be deleted automatically
     // with a GUI object, so we have to keep track of all the special
     // data we allocated and then free it manually when the dialog

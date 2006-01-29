@@ -317,13 +317,18 @@ copy_from_pui (puObject * object, SGPropertyNode * node)
 
 FGDialog::FGDialog (SGPropertyNode * props)
     : _object(0),
-      _gui((NewGUI *)globals->get_subsystem("gui"))
+      _gui((NewGUI *)globals->get_subsystem("gui")),
+      _props(props)
 {
     display(props);
 }
 
 FGDialog::~FGDialog ()
 {
+    int x, y;
+    _object->getAbsolutePosition(&x, &y);
+    _props->setIntValue("lastx", x);
+    _props->setIntValue("lasty", y);
     puDeleteObject(_object);
 
     unsigned int i;
