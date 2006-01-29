@@ -81,8 +81,9 @@ void reInit(puObject *cb)
     fgReInitSubsystems();
 
     globals->get_tile_mgr()->update( fgGetDouble("/environment/visibility-m") );
-
     globals->get_renderer()->resize( xsize, ysize );
+
+    fgSetBool("/sim/signals/reinit", true);
 
     // BusyCursor(1);
     
