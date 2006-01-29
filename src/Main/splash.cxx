@@ -139,11 +139,11 @@ void fgSplashProgress ( const char *s )
 void fgSplashUpdate ( float alpha ) {
     int screen_width = fgGetInt("/sim/startup/xsize", 0);
     int screen_height = fgGetInt("/sim/startup/ysize", 0);
-    globals->get_renderer()->resize(screen_width, screen_height);
 
     if (!screen_width || !screen_height)
         return;
 
+    globals->get_renderer()->resize(screen_width, screen_height);
     int size = screen_width < (screen_height - 5 * fontsize)
             ? screen_width : screen_height - 5 * fontsize;
     if (size > 512)
