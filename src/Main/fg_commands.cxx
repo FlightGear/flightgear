@@ -192,6 +192,7 @@ static bool
 do_exit (const SGPropertyNode * arg)
 {
     SG_LOG(SG_INPUT, SG_INFO, "Program exit requested.");
+    fgSetBool("/sim/signals/quit", true);
 
     if (fgGetBool("/sim/startup/save-on-exit")) {
 #ifdef _MSC_VER
