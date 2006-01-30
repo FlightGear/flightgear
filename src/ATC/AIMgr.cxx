@@ -213,16 +213,18 @@ void FGAIMgr::update(double dt) {
 				string s = (*apt_itr).first;
 				if(traffic.find(s) != traffic.end()) {
 					//cout << "s = " << s << ", traffic[s].size() = " << traffic[s].size() << '\n';
-					if(traffic[s].size()) {
+					if(!traffic[s].empty()) {
 						apt_itr++;
 					} else {
 						//cout << "Erasing " << (*apt_itr).first << " and traffic" << '\n';
-						activated.erase(apt_itr++);
+						activated.erase(apt_itr);
+						apt_itr = activated.upper_bound(s);
 						traffic.erase(s);
 					}
 				} else {
 						//cout << "Erasing " << (*apt_itr).first << ' ' << (*apt_itr).second << '\n';
-						activated.erase(apt_itr++);
+						activated.erase(apt_itr);
+						apt_itr = activated.upper_bound(s);
 				}
 			} else {
 				apt_itr++;

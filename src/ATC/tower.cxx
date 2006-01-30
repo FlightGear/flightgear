@@ -311,6 +311,7 @@ void FGTower::Init() {
 		t->planePtr = NULL;
 		t->clearedToTakeOff = true;
 		rwyList.push_back(t);
+		rwyListItr = rwyList.begin();
 		departed = false;
 	} else {
 		//cout << "User not on active runway\n";
@@ -528,10 +529,11 @@ void FGTower::Respond() {
 					ClearHoldingPlane(t);
 					t->leg = TAKEOFF_ROLL;
 					rwyList.push_back(t);
+					rwyListItr = rwyList.begin();
 					rwyOccupied = true;
 					// WARNING - WE ARE ASSUMING ONLY ONE PLANE REPORTING HOLD AT A TIME BELOW
 					// FIXME TODO - FIX THIS!!!
-					if(holdList.size()) {
+					if(!holdList.empty()) {
 						if(holdListItr == holdList.end()) {
 							holdListItr = holdList.begin();
 						}
@@ -632,7 +634,7 @@ void FGTower::ProcessDownwindReport(TowerPlaneRec* t) {
 	// This assumes that the number spoken is landing position, not circuit position, since some of the traffic might be on straight-in final.
 	trns += " ";
 	TowerPlaneRec* tt = NULL;
-	if((i == 1) && (!rwyList.size()) && (t->nextOnRwy) && (!cf)) {	// Unfortunately nextOnRwy currently doesn't handle circuit/straight-in ordering properly at present, hence the cf check below.
+	if((i == 1) && rwyList.empty() && (t->nextOnRwy) && (!cf)) {	// Unfortunately nextOnRwy currently doesn't handle circuit/straight-in ordering properly at present, hence the cf check below.
 		trns += "Cleared to land";	// TODO - clear for the option if appropriate
 		t->clearedToLand = true;
 		if(!t->isUser) t->planePtr->RegisterTransmission(7);
@@ -843,7 +845,7 @@ void FGTower::ClearHoldingPlane(TowerPlaneRec* t) {
 // Do one plane from the hold list
 void FGTower::CheckHoldList(double dt) {
 	//cout << "Entering CheckHoldList..." << endl;
-	if(holdList.size()) {
+	if(!holdList.empty()) {
 		//cout << "*holdListItr = " << *holdListItr << endl;
 		if(holdListItr == holdList.end()) {
 			holdListItr = holdList.begin();
@@ -866,9 +868,12 @@ void FGTower::CheckHoldList(double dt) {
 					ClearHoldingPlane(t);
 					t->leg = TAKEOFF_ROLL;
 					rwyList.push_back(t);
+					rwyListItr = rwyList.begin();
 					rwyOccupied = true;
 					holdList.erase(holdListItr);
 					holdListItr = holdList.begin();
+					if (holdList.empty())
+					  return;
 				}
 			}
 			// TODO - rationalise the considerable code duplication above!
@@ -886,7 +891,7 @@ void FGTower::CheckCircuitList(double dt) {
 	downwind_leg_pos = 0.0;
 	crosswind_leg_pos = 0.0;
 	
-	if(circuitList.size()) {	// Do one plane from the circuit
+	if(!circuitList.empty()) {	// Do one plane from the circuit
 		if(circuitListItr == circuitList.end()) {
 			circuitListItr = circuitList.begin();
 		}
@@ -928,18 +933,21 @@ void FGTower::CheckCircuitList(double dt) {
 							t->opType = OUTBOUND;	// TODO - could check if the user has climbed significantly above circuit altitude as well.
 							// Since we are unknown operation we should be in depList already.
 							//cout << ident << " Removing user from circuitList (TTT_UNKNOWN)\n";
-							circuitList.erase(circuitListItr);
+							circuitListItr = circuitList.erase(circuitListItr);
 							RemoveFromTrafficList(t->plane.callsign);
-							circuitListItr = circuitList.begin();
+							if (circuitList.empty())
+							    return;
 						}
 					} else if(t->opType == CIRCUIT) {
 						if(tortho.y() > 10000) {
 							// 10 km out - assume the user has abandoned the circuit!!
 							t->opType = OUTBOUND;
 							depList.push_back(t);
+							depListItr = depList.begin();
 							//cout << ident << " removing user from circuitList (CIRCUIT)\n";
-							circuitList.erase(circuitListItr);
-							circuitListItr = circuitList.begin();
+							circuitListItr = circuitList.erase(circuitListItr);
+							if (circuitList.empty())
+							  return;
 						}
 					}
 				}
@@ -1152,20 +1160,24 @@ void FGTower::CheckRunwayList(double dt) {
 					// It's possible we could be a bit more proactive about this.
 				} else if(t->opType == OUTBOUND) {
 					depList.push_back(t);
+					depListItr = depList.begin();
 					rwyList.pop_front();
 					departed = true;
 					timeSinceLastDeparture = 0.0;
 				} else if(t->opType == CIRCUIT) {
 					//cout << ident << " adding " << t->plane.callsign << " to circuitList" << endl;
 					circuitList.push_back(t);
+					circuitListItr = circuitList.begin();
 					AddToTrafficList(t);
 					rwyList.pop_front();
 					departed = true;
 					timeSinceLastDeparture = 0.0;
 				} else if(t->opType == TTT_UNKNOWN) {
 					depList.push_back(t);
+					depListItr = depList.begin();
 					//cout << ident << " adding " << t->plane.callsign << " to circuitList" << endl;
 					circuitList.push_back(t);
+					circuitListItr = circuitList.begin();
 					AddToTrafficList(t);
 					rwyList.pop_front();
 					departed = true;
@@ -1183,7 +1195,7 @@ void FGTower::CheckRunwayList(double dt) {
 void FGTower::CheckApproachList(double dt) {
 	//cout << "CheckApproachList called for " << ident << endl;
 	//cout << "AppList.size is " << appList.size() << endl;
-	if(appList.size()) {
+	if(!appList.empty()) {
 		if(appListItr == appList.end()) {
 			appListItr = appList.begin();
 		}
@@ -1281,6 +1293,9 @@ void FGTower::CheckApproachList(double dt) {
 			if(appListItr == appList.end() ) {
 				appListItr = appList.begin();
 			}
+			if (appList.empty())
+			  return;
+
 		}
 		
 		++appListItr;
@@ -1290,7 +1305,7 @@ void FGTower::CheckApproachList(double dt) {
 
 // Do one plane from the departure list
 void FGTower::CheckDepartureList(double dt) {
-	if(depList.size()) {
+	if(!depList.empty()) {
 		if(depListItr == depList.end()) {
 			depListItr = depList.begin();
 		}
@@ -1643,10 +1658,12 @@ bool FGTower::AddToCircuitList(TowerPlaneRec* t) {
 			// It depends on what the two planes are doing and whether there's a conflict what we do.
 			if(tpr->eta - t->eta > separation_time) {	// No probs, plane 2 can squeeze in before plane 1 with no apparent conflict
 				circuitList.insert(twrItr, t);
+				circuitListItr = circuitList.begin();
 			} else {	// Ooops - this ones tricky - we have a potential conflict!
 				conflict = true;
 				// HACK - just add anyway for now and flag conflict.
 				circuitList.insert(twrItr, t);
+				circuitListItr = circuitList.begin();
 			}
 			//cout << "\tC\t" << circuitList.size() << '\n';
 			return(conflict);
@@ -1655,6 +1672,7 @@ bool FGTower::AddToCircuitList(TowerPlaneRec* t) {
 	// If we get here we must be at the end of the list, or maybe the list is empty.
 	//cout << ident << " adding " << t->plane.callsign << " to circuitList" << endl;
 	circuitList.push_back(t);	// TODO - check the separation with the preceding plane for the conflict flag.
+	circuitListItr = circuitList.begin();
 	//cout << "\tE\t" << circuitList.size() << endl;
 	return(conflict);
 }
@@ -2007,6 +2025,7 @@ void FGTower::VFRArrivalContact(const string& ID, const LandingType& opt) {
 	responseReqd = true;
 	
 	appList.push_back(t);	// Not necessarily permanent
+	appListItr = appList.begin();
 	AddToTrafficList(t);
 	
 	current_atcdialog->remove_entry(ident, USER_REQUEST_VFR_ARRIVAL, TOWER);
@@ -2036,6 +2055,7 @@ void FGTower::VFRArrivalContact(const PlaneRec& plane, FGAIPlane* requestee, con
 	
 	//cout << "Before adding, appList.size = " << appList.size() << " at " << ident << '\n';
 	appList.push_back(t);	// Not necessarily permanent
+	appListItr = appList.begin();
 	//cout << "After adding, appList.size = " << appList.size() << " at " << ident << '\n';
 	AddToTrafficList(t);
 }
