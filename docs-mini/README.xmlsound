@@ -133,7 +133,7 @@ Configuration description:
  	Volume or Pitch definition. Currently there may be up to 5
 	volume and up to 5 pitch definitions defined within one sound
 	event. Normally all offset values are added together and the
-	results after property calculations will be miltplied.
+	results after property calculations will be multiplied.
 	A special condition occurs when the value of factor is negative,
 	in which case the offset doesn't get added to the other offset values
 	but instead will be used in the multiplication section.
@@ -159,13 +159,13 @@ Configuration description:
  	lin:		linear handling of the property value.
  			this is the default.
  
- 	ln:		convert the property value to a natural logarithmic
- 			value before scaling it. Anything below 1 will return
-			zero.
- 
- 	log:		convert the property value to a true logarithmic
- 			value before scaling it. Anything below 1 will return
-			zero.
+ 	ln:		convert the absolute property value to a natural
+			logarithmic value before scaling it. 
+ 			Anything below 1 will return zero.
+
+ 	log:		convert the absolute property value to a true
+			logarithmic value before scaling it.
+ 			Anything below 1 will return zero.
 
 	inv:		inverse linear handling (1/x).
 
