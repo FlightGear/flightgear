@@ -220,6 +220,8 @@ static void fgMainLoop( void ) {
         = fgGetNode("/sim/freeze/clock", true);
     static const SGPropertyNode *cur_time_override
         = fgGetNode("/sim/time/cur-time-override", true);
+    static const SGPropertyNode *max_simtime_per_frame
+        = fgGetNode("/sim/max-simtime-per-frame", true);
 
     SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
 
@@ -292,6 +294,20 @@ static void fgMainLoop( void ) {
 
     real_delta_time_sec
         = double(current_time_stamp - last_time_stamp) / 1000000.0;
+
+    // Limit the time we need to spend in simulation loops
+    // That means, if the /sim/max-simtime-per-frame value is strictly positive
+    // you can limit the maximum amount of time you will do simulations for
+    // one frame to display. The cpu time spent in simulations code is roughtly
+    // at least O(real_delta_time_sec). If this is (due to running debug
+    // builds or valgrind or something different blowing up execution times)
+    // larger than the real time you will no more get any response
+    // from flightgear. This limits that effect. Just set to property from
+    // your .fgfsrc or commandline ...
+    double dtMax = max_simtime_per_frame->getDoubleValue();
+    if (0 < dtMax && dtMax < real_delta_time_sec)
+      real_delta_time_sec = dtMax;
+
     // round the real time down to a multiple of 1/model-hz.
     // this way all systems are updated the _same_ amount of dt.
     {
