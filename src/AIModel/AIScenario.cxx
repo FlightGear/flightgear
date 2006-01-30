@@ -76,7 +76,7 @@ FGAIScenario::FGAIScenario(const string &filename)
      en->m_class        = entry_node->getStringValue("class", "jet_transport");
      en->path           = entry_node->getStringValue("model", "Models/Geometry/glider.ac");
      en->flightplan     = entry_node->getStringValue("flightplan", "");
-     en->repeat         = entry_node->getDoubleValue("repeat", 0.0); 
+     en->repeat         = entry_node->getBoolValue("repeat", false); 
      en->latitude       = entry_node->getDoubleValue("latitude", 0.0); 
      en->longitude      = entry_node->getDoubleValue("longitude", 0.0); 
      en->altitude       = entry_node->getDoubleValue("altitude", 0.0); 

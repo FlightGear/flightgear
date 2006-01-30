@@ -108,6 +108,9 @@ FGSubmodelMgr::update (double dt)
 bool
 FGSubmodelMgr::release (submodel* sm, double dt)
 {
+  // only run if first time or repeat is set to true
+  if (!sm->first_time && !sm->repeat) return false;
+
   sm->timer += dt;
   if (sm->timer < sm->delay) return false;
   sm->timer = 0.0;
@@ -203,6 +206,7 @@ FGSubmodelMgr::load ()
  
      sm->prop = fgGetNode("/ai/submodels/submodel", i, true);
      sm->prop->tie("count", SGRawValuePointer<int>(&(sm->count)));
+     sm->prop->tie("repeat", SGRawValuePointer<bool>(&(sm->repeat)));
 
 //   sm->prop->tie("contents", SGRawValuePointer<double>(&(sm->contents)));
 //   sm->prop->tie("contents path", SGRawValuePointer<const char *>(&(sm->contents_node)));
