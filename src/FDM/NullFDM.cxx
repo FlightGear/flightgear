@@ -40,6 +40,8 @@ FGNullFDM::~FGNullFDM() {
 // Initialize the NullFDM flight model, dt is the time increment
 // for each subsequent iteration through the EOM
 void FGNullFDM::init() {
+    //do init common to all the FDM's		
+    common_init();
     // cout << "FGNullFDM::init()" << endl;
     set_inited( true );
 }
@@ -50,4 +52,6 @@ void FGNullFDM::init() {
 // external source.)
 void FGNullFDM::update( double dt ) {
     // cout << "FGNullFDM::update()" << endl;
+    // That is just to trigger ground level computations
+    _updateGeodeticPosition(get_Latitude(), get_Longitude(), get_Altitude());
 }
