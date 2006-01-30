@@ -70,6 +70,7 @@ public:
         void TurnTo(double heading);
         void ProcessFlightPlan( double dt, time_t now );
   void getGroundElev(double dt);
+  void doGroundAltitude();
   void loadNextLeg  ();
 
   void setAcType(string ac) { acType = ac; };

@@ -523,7 +523,7 @@ static string fgFindAircraftPath( const SGPath &path, const string &aircraft ) {
     while ((dire = ulReadDir(dirp)) != NULL) {
         if (dire->d_isdir) {
             if ( strcmp("CVS", dire->d_name) && strcmp(".", dire->d_name)
-                 && strcmp("..", dire->d_name) )
+                 && strcmp("..", dire->d_name) && strcmp("AI", dire->d_name))
             {
                 SGPath next = path;
                 next.append(dire->d_name);
