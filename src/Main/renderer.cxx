@@ -230,8 +230,11 @@ FGRenderer::init( void ) {
     if ( SGIsOpenGLExtensionSupported("GL_ARB_point_sprite") ||
          SGIsOpenGLExtensionSupported("GL_NV_point_sprite") )
     {
+        GLuint handle = thesky->get_sun_texture_id();
+        glBindTexture ( GL_TEXTURE_2D, handle ) ;
+        glTexEnvf(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
         glEnable(GL_POINT_SPRITE);
-        glEnable(GL_POINT_SMOOTH);
+        // glEnable(GL_POINT_SMOOTH);
         glPointSpriteIsSupported = true;
     }
     glEnable(GL_LINE_SMOOTH);
