@@ -65,8 +65,8 @@ FGMagRibbon::draw ()
 				// Adjust to put the number in the centre
   xoffset -= 0.25;
 
-  FGCroppedTexture t = getTexture();
-  t.setCrop(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
+  FGCroppedTexture *t = getTexture();
+  t->setCrop(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
 
   glPushAttrib(GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);

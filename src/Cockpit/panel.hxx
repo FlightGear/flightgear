@@ -491,6 +491,7 @@ public:
     _texture = texture;
   }
   virtual const FGCroppedTexture &getTexture () const { return _texture; }
+  virtual FGCroppedTexture *getTexture() { return &_texture; }
 
 private:
   FGCroppedTexture _texture;
