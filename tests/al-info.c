@@ -1,9 +1,24 @@
 
 #include <stdio.h>
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alext.h>
+#ifdef __APPLE__
+# include <OpenAL/al.h>
+# include <OpenAL/alc.h>
+#else
+# include <AL/al.h>
+# include <AL/alc.h>
+# include <AL/alext.h>
+#endif
+
+#ifndef AL_VERSION_1_1
+# ifdef __APPLE__
+#  include <OpenAL/altypes.h>
+#  include <OpenAL/alctypes.h>
+#else
+#  include <AL/altypes.h>
+#  include <AL/alctypes.h>
+# endif
+#endif
 
 #define MAX_DATA	16
 
@@ -13,9 +28,8 @@ int main()
    ALCint data[MAX_DATA];
    ALCdevice *device = NULL;
    ALCcontext *context = NULL;
-   const ALCchar *s;
+   const unsigned char *s;
    ALCenum error;
-   ALCboolean ret;
 
    device = alcOpenDevice(NULL);
    if (device == NULL)
@@ -46,7 +60,7 @@ int main()
    alcGetError(device);
 
    printf("\n");
-   if (alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT") == AL_TRUE)
+   if (alcIsExtensionPresent(NULL, (unsigned char *)"ALC_ENUMERATION_EXT") == AL_TRUE)
    {
       s = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
       printf("ALC_DEVICE_SPECIFIER = \"%s\"\n", s);
@@ -93,7 +107,7 @@ int main()
    }
 #endif
 
-   ret = alcCloseDevice(device);
+   alcCloseDevice(device);
 
-   return ret;
+   return 0;
 }
