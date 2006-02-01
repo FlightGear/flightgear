@@ -171,6 +171,19 @@ readConditions (SGConditional *component, const SGPropertyNode *node)
 static FGPanelAction *
 readAction (const SGPropertyNode * node, float w_scale, float h_scale)
 {
+  unsigned int i, j;
+  SGPropertyNode *binding;
+  vector<SGPropertyNode_ptr>bindings = node->getChildren("binding");
+
+  // button-less actions are fired initially, then fogotten
+  if (!node->hasValue("button")) {
+    for (i = 0; i < bindings.size(); i++) {
+      FGBinding b(bindings[i]);
+      b.fire();
+    }
+    return 0;
+  }
+
   string name = node->getStringValue("name");
 
   int button = node->getIntValue("button");
@@ -182,11 +195,8 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
 
   FGPanelAction * action = new FGPanelAction(button, x, y, w, h, repeatable);
 
-  vector<SGPropertyNode_ptr>bindings = node->getChildren("binding");
   SGPropertyNode * dest = fgGetNode("/sim/bindings/panel", true);
 
-  SGPropertyNode *binding;
-  unsigned int i, j;
   for (i = 0; i < bindings.size(); i++) {
     SG_LOG(SG_INPUT, SG_INFO, "Reading binding "
       << bindings[i]->getStringValue("command"));

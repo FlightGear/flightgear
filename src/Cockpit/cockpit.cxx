@@ -718,13 +718,11 @@ void fgCockpitUpdate( void ) {
 
     int iwidth   = xsize_node->getIntValue();
     int iheight  = ysize_node->getIntValue();
-    float width  = iwidth;
-    // float height = iheight;
 
 				// FIXME: inefficient
     if ( hud_visibility_node->getBoolValue() ) {
         // This will check the global hud linked list pointer.
-        // If these is anything to draw it will.
+        // If there is anything to draw it will.
         fgUpdateHUD();
     }
 
