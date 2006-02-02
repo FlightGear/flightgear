@@ -118,7 +118,9 @@ public:
     void valueChanged(SGPropertyNode* node) {
         _nas->_cmdArg = node;
         naContext c = naNewContext();
+        naModUnlock();
         naCall(c, _handler, 0, 0, naNil(), naNil());
+        naModLock();
         if(naGetError(c))
             _nas->logError(c);
         naFreeContext(c);
