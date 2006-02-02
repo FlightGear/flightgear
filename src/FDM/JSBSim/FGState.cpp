@@ -272,8 +272,7 @@ void FGState::ReportState(void)
 
 void FGState::bind(void)
 {
-  PropertyManager->Tie("sim-time-sec",this,
-                        &FGState::Getsim_time);
+  PropertyManager->Tie("sim-time-sec", this, &FGState::Getsim_time);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

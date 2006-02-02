@@ -850,7 +850,7 @@ bool FGJSBsim::copy_from_JSBsim()
     spoilers_pos_pct->setDoubleValue( FCS->GetDspPos(ofNorm) );
 
     // force a sim reset if crashed (altitude AGL < 0)
-    if (get_Altitude_AGL() < 0.0) {
+    if (get_Altitude_AGL() < -100.0) {
          fgSetBool("/sim/crashed", true);
          SGPropertyNode* node = fgGetNode("/sim/presets", true);
          globals->get_commands()->execute("old-reinit-dialog", node);
@@ -1009,9 +1009,9 @@ void FGJSBsim::set_Euler_Angles( double phi, double theta, double psi )
     FGInterface::set_Euler_Angles(phi, theta, psi);
 
     update_ic();
-    fgic->SetPitchAngleRadIC(theta);
-    fgic->SetRollAngleRadIC(phi);
-    fgic->SetTrueHeadingRadIC(psi);
+    fgic->SetThetaRadIC(theta);
+    fgic->SetPhiRadIC(phi);
+    fgic->SetPsiRadIC(psi);
     needTrim=true;
 }
 
@@ -1126,9 +1126,9 @@ void FGJSBsim::update_ic(void)
      fgic->SetLongitudeRadIC( get_Longitude() );
      fgic->SetAltitudeFtIC( get_Altitude() );
      fgic->SetVcalibratedKtsIC( get_V_calibrated_kts() );
-     fgic->SetPitchAngleRadIC( get_Theta() );
-     fgic->SetRollAngleRadIC( get_Phi() );
-     fgic->SetTrueHeadingRadIC( get_Psi() );
+     fgic->SetThetaRadIC( get_Theta() );
+     fgic->SetPhiRadIC( get_Phi() );
+     fgic->SetPsiRadIC( get_Psi() );
      fgic->SetClimbRateFpsIC( get_Climb_Rate() );
    }
 }

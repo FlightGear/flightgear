@@ -724,8 +724,6 @@ void FGFDMExec::DoTrim(int mode)
 {
   double saved_time;
 
-cout << "DoTrim called" << endl;
-
   if (Constructing) return;
 
   if (mode < 0 || mode > JSBSim::tNone) {
