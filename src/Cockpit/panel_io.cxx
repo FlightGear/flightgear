@@ -175,7 +175,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
   SGPropertyNode *binding;
   vector<SGPropertyNode_ptr>bindings = node->getChildren("binding");
 
-  // button-less actions are fired initially, then fogotten
+  // button-less actions are fired initially
   if (!node->hasValue("w") || !node->hasValue("h")) {
     for (i = 0; i < bindings.size(); i++) {
       FGBinding b(bindings[i]);
