@@ -710,14 +710,20 @@ FGRenderer::update( bool refresh_camera_settings ) {
             glDepthMask( GL_TRUE );
         }
     }
+       double current_view_origin_airspeed_horiz_kt =
+        fgGetDouble("/velocities/airspeed-kt", 0.0)
+                       * cos( fgGetDouble("/orientation/pitch-deg", 0.0)
+                               * SGD_DEGREES_TO_RADIANS);
+       // TODO:find the real view speed, not the AC one
     sgEnviro.drawPrecipitation(
         fgGetDouble("/environment/metar/rain-norm", 0.0),
         fgGetDouble("/environment/metar/snow-norm", 0.0),
         fgGetDouble("/environment/metar/hail-norm", 0.0),
-        current__view->getPitch_deg() - current__view->getPitchOffset_deg(),
+        current__view->getPitch_deg() + current__view->getPitchOffset_deg(),
         current__view->getRoll_deg() + current__view->getRollOffset_deg(),
         - current__view->getHeadingOffset_deg(),
-        fgGetDouble("/velocities/airspeed-kt", 0.0));
+               current_view_origin_airspeed_horiz_kt
+               );
 
     // compute shadows and project them on screen
     bool is_internal = globals->get_current_view()->getInternal();
