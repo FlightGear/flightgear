@@ -932,7 +932,7 @@ void DCLGPS::OBSPressed() {
 	_obsMode = !_obsMode;
 	if(_obsMode) {
 		if(!_activeWaypoint.id.empty()) {
-			_obsHeading = _dtkMag;
+			_obsHeading = static_cast<int>(_dtkMag);
 		}
 		// TODO - the _fromWaypoint location will change as the OBS heading changes.
 		// Might need to store the OBS initiation position somewhere in case it is needed again.
