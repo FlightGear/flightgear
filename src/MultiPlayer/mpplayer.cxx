@@ -295,7 +295,6 @@ MPPlayer::FillMsgHdr
     const int MsgId
     )
 {
-    struct in_addr  address;
     uint32_t        len;
 
     switch (MsgId)

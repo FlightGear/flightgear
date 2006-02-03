@@ -403,10 +403,7 @@ FGMultiplayMgr::ProcessPosMsg
     bool            ActivePlayer; 
     sgQuat          Orientation;
     sgdVec3         Position;
-    struct in_addr  PlayerAddress;
     t_MPClientListIterator CurrentPlayer;
-    int iPlayerCnt;
-    char *sIpAddress;
 
     ActivePlayer = false;
     MsgHdr = (T_MsgHdr *)Msg;
