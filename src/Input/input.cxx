@@ -319,7 +319,7 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
       // and be happy.
       FGScenery* scenery = globals->get_scenery();
       sgdVec3 start, dir, hit;
-      if (FGRenderer::getPickInfo(start, dir, x, y) &&
+      if (updown && FGRenderer::getPickInfo(start, dir, x, y) &&
           scenery->get_cart_ground_intersection(start, dir, hit)) {
 
         Point3D geod = sgCartToGeod(Point3D(hit[0], hit[1], hit[2]));
