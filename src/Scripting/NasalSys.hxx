@@ -112,8 +112,12 @@ private:
 
 class FGNasalListener : public SGPropertyChangeListener {
 public:
-    FGNasalListener(naRef handler, FGNasalSys* nasal)
-            : _handler(handler), _nas(nasal) {}
+    FGNasalListener(naRef handler, FGNasalSys* nasal, int key)
+            : _handler(handler), _gcKey(key), _nas(nasal) {}
+
+    ~FGNasalListener() {
+        _nas->gcRelease(_gcKey);
+    }
 
     void valueChanged(SGPropertyNode* node) {
         _nas->_cmdArg = node;
@@ -129,6 +133,7 @@ public:
 private:
     friend class FGNasalSys;
     naRef _handler;
+    int _gcKey;
     FGNasalSys* _nas;
 };
 
