@@ -311,7 +311,7 @@ NewGUI::setStyle (void)
     if (!n)
         n = sim->getChild("gui", 0, true);
 
-    setupFont(n->getNode("font", true));
+    setupFont(n->getNode("fonts/gui", true));
     n = n->getNode("colors", true);
 
     for (int i = 0; i < n->nChildren(); i++) {
