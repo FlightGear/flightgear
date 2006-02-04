@@ -1,5 +1,6 @@
 /* $Id$ */
 /* gcc -O2 -g -pedantic -Wall fgfsclient.c -o fgfsclient */
+/* Public Domain */
 
 #include <stdio.h>
 #include <errno.h>

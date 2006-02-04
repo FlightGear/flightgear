@@ -2,6 +2,7 @@
 # USAGE: fgfsscript [host [port]]
 # Melchior FRANZ, a8603365@unet.univie.ac.at
 # $Id$
+# Public Domain
 
 use strict;
 use IO::Socket;

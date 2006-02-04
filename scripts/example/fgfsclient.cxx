@@ -1,5 +1,6 @@
 // $Id$
 // g++ -O2 -g -pedantic -Wall fgfsclient.cxx -o fgfsclient -lstdc++
+// Public Domain
 
 #include <errno.h>
 #include <iostream>
