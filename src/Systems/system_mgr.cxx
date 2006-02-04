@@ -41,7 +41,7 @@ FGSystemMgr::FGSystemMgr ()
                 enabled = true;
             } else {
                 SG_LOG( SG_ALL, SG_ALERT,
-                        "Detected an internal inconsistancy in the systems");
+                        "Detected an internal inconsistency in the systems");
                 SG_LOG( SG_ALL, SG_ALERT,
                         " system specification file.  See earlier errors for" );
                 SG_LOG( SG_ALL, SG_ALERT,

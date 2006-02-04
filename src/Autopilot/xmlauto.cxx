@@ -759,7 +759,7 @@ void FGXMLAutopilot::init() {
 
             if ( ! build() ) {
                 SG_LOG( SG_ALL, SG_ALERT,
-                        "Detected an internal inconsistancy in the autopilot");
+                        "Detected an internal inconsistency in the autopilot");
                 SG_LOG( SG_ALL, SG_ALERT,
                         " configuration.  See earlier errors for" );
                 SG_LOG( SG_ALL, SG_ALERT,
