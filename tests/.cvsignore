@@ -2,6 +2,7 @@
 Makefile
 Makefile.in
 est-epsilon
+al-info
 gl-info
 test-env-map
 test-gethostname
