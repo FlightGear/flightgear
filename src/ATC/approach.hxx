@@ -176,6 +176,8 @@ private:
 
   double angle_diff_deg( const double &a1, const double &a2);
 
+  void set_message(const string &s);
+
 // ========================================================================
 // get point2 given starting point1 and course and distance
 // input:  point1 = heading in degrees, distance

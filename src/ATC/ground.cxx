@@ -320,6 +320,7 @@ void FGGround::Update(double dt) {
 				// eg " taxi holding point G2 runway "
 				trns += ConvertRwyNumToSpokenString(activeRwy);
 				if(_display) {
+					fgSetString("/sim/messages/ground", trns.c_str());
 					globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 				}
 				g->planePtr->RegisterTransmission(1);	// cleared to taxi
@@ -338,6 +339,7 @@ void FGGround::Update(double dt) {
 			sprintf(buf, "%.2f", f);
 			trns += buf;
 			if(_display) {
+				fgSetString("/sim/messages/ground", trns.c_str());
 				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 			}
 			g->planePtr->RegisterTransmission(2);	// contact tower

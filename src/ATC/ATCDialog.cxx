@@ -268,8 +268,10 @@ void FGATCDialog::PopupCallback(int num) {
 			//cout << "Doing callback...\n";
 			ATCMenuEntry a = atcmlist[num];
 			atcptr->SetFreqInUse();
+			string pilot = atcptr->GenText(a.transmission, a.callback_code);
+			fgSetString("/sim/messages/pilot", pilot.c_str());
 			// This is the user's speech getting displayed.
-			globals->get_ATC_display()->RegisterSingleMessage(atcptr->GenText(a.transmission, a.callback_code));
+			globals->get_ATC_display()->RegisterSingleMessage(pilot);
 			_callbackPending = true;
 			_callbackTimer = 0.0;
 			_callbackWait = 5.0;

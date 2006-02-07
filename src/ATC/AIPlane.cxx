@@ -182,6 +182,7 @@ void FGAIPlane::ProcessCallback(int code) {
 // The refname is a string to identify this sample to the sound manager
 // The repeating flag indicates whether the message should be repeated continuously or played once.
 void FGAIPlane::Render(const string& refname, bool repeating) {
+	fgSetString("/sim/messages/ai-plane", pending_transmission.c_str());
 #ifdef ENABLE_AUDIO_SUPPORT
 	voice = (voiceOK && fgGetBool("/sim/sound/voice"));
 	if(voice) {

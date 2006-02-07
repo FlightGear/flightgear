@@ -179,7 +179,7 @@ void FGApproach::Update(double dt) {
 				tpars.alt = planes[i].aalt;
 				message = current_transmissionlist->gen_text(station, code, tpars, true );
 				//cout << message << '\n';
-				globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
+				set_message(message);
 				planes[i].lmc = code;
 				planes[i].tlm = etime_node->getDoubleValue();
 				planes[i].on_crs = true;
@@ -237,8 +237,7 @@ void FGApproach::Update(double dt) {
 					message = current_transmissionlist->gen_text(station, code, tpars, true );
 					//cout << "Approach transmitting...\n";
 					//cout << message << endl;
-					globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
-					
+					set_message(message);
 				}
 				else {
 					code.c1 = 1;
@@ -248,7 +247,7 @@ void FGApproach::Update(double dt) {
 					message = current_transmissionlist->gen_text(station, code, tpars, true);
 					//cout << "Approach transmitting 2 ...\n";
 					//cout << message << endl;
-					globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
+					set_message(message);
 				}
 				planes[i].lmc = code;
 				planes[i].tlm = etime_node->getDoubleValue();
@@ -295,7 +294,7 @@ void FGApproach::Update(double dt) {
 					message = current_transmissionlist->gen_text(station, code, tpars, true);
 					//cout << "Approach transmitting 3 ...\n";
 					//cout << message << '\n';
-					globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
+					set_message(message);
 					planes[i].lmc = code;
 					planes[i].tlm = etime_node->getDoubleValue();
 				}
@@ -325,7 +324,7 @@ void FGApproach::Update(double dt) {
 					message = current_transmissionlist->gen_text(station, code, tpars, true);
 					//cout << "Approach transmitting 4 ...\n";
 					//cout << message << '\n';
-					globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
+					set_message(message);
 					planes[i].lmc = code;
 					planes[i].tlm = etime_node->getDoubleValue();
 					
@@ -352,7 +351,7 @@ void FGApproach::Update(double dt) {
 				message = current_transmissionlist->gen_text(station, code, tpars, true);
 				//cout << "Approach transmitting 5 ...\n";
 				//cout << message << '\n';
-				globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
+				set_message(message);
 				planes[i].lmc = code;
 				planes[i].tlm = etime_node->getDoubleValue();
 				
@@ -752,3 +751,11 @@ int FGApproach::RemovePlane() {
 
   return num_planes;
 }
+
+
+void FGApproach::set_message(const string &msg)
+{
+  fgSetString("/sim/messages/approach", msg.c_str());
+  globals->get_ATC_display()->RegisterSingleMessage( msg, 0 );
+}
+

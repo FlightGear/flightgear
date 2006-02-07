@@ -215,14 +215,12 @@ void FGATCDisplay::RegisterSingleMessage(const string& msg, double delay) {
 	m.dsp_offset = 0.0;
 	
 	msgList.push_back(m);
-	fgSetString("/sim/messages/atc", msg.c_str());
 	//cout << "Single message registered\n";
 }
 
 void FGATCDisplay::RegisterRepeatingMessage(const string& msg) {
 	rep_msg = true;
 	rep_msg_str = msg;
-	fgSetString("/sim/messages/atc", msg.c_str());
 	return;
 }
 

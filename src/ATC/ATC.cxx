@@ -225,6 +225,7 @@ void FGATC::SetData(ATCData* d) {
 // The refname is a string to identify this sample to the sound manager
 // The repeating flag indicates whether the message should be repeated continuously or played once.
 void FGATC::Render(string& msg, const string& refname, bool repeating) {
+	fgSetString("/sim/messages/atc", msg.c_str());
 	#ifdef ENABLE_AUDIO_SUPPORT
 	_voice = (_voiceOK && fgGetBool("/sim/sound/voice"));
 	if(_voice) {
