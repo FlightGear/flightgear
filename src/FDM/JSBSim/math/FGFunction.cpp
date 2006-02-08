@@ -77,7 +77,13 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
     // data types
     if (operation == string("property")) {
       property_name = element->GetDataLine();
-      Parameters.push_back(new FGPropertyValue(PropertyManager->GetNode(property_name)));
+      FGPropertyManager* newNode = PropertyManager->GetNode(property_name);
+      if (newNode == 0) {
+        cerr << "The property " << property_name << " is undefined." << endl;
+        abort();
+      } else {
+        Parameters.push_back(new FGPropertyValue( newNode ));
+      }
     } else if (operation == string("value")) {
       Parameters.push_back(new FGRealValue(element->GetDataAsNumber()));
     } else if (operation == string("table")) {

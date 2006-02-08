@@ -108,7 +108,8 @@ CLASS DOCUMENTATION
     at those conditions?  Check the speed, altitude, configuration (flaps,
     gear, etc.), weight, cg, and anything else that may be relevant.
 
-    Example usage:<pre>
+    Example usage:
+    @code
     FGFDMExec* FDMExec = new FGFDMExec();
 
     FGInitialCondition* fgic = new FGInitialCondition(FDMExec);
@@ -119,7 +120,8 @@ CLASS DOCUMENTATION
     if( !fgt.DoTrim() ) {
       cout << "Trim Failed" << endl;
     }
-    fgt.Report(); </pre>
+    fgt.Report();
+    @endcode
     @author Tony Peden
     @version "$Id$"
 */

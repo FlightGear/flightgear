@@ -158,6 +158,12 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el) : PropertyManager(prop
       property_string = axisElement->GetDataLine();
       node = PropertyManager->GetNode(property_string);
 
+      if (node == 0) {
+        cerr << "IndependenVar property, " << property_string
+             << " in Table definition is not defined." << endl;
+        abort();
+      }
+
       lookup_axis = axisElement->GetAttributeValue("lookup");
       if (lookup_axis == string("row")) {
         lookupProperty[eRow] = node;

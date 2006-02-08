@@ -223,7 +223,7 @@ double FGPropeller::GetPowerRequired(void)
     cPReq = cPower->GetValue(J);
   } else {                      // Variable pitch prop
 
-    if (MaxRPM != MinRPM) {   // fixed-speed prop
+    if (MaxRPM != MinRPM) {   // constant speed prop
 
       // do normal calculation when propeller is neither feathered nor reversed
       if (!Feathered) {

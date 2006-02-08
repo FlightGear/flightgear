@@ -99,6 +99,8 @@ will be *anywhere* from 0.95 to 1.05 of the actual "perfect" value at any time -
 even varying all the way from 0.95 to 1.05 in adjacent frames - whatever the delta
 time.
 
+@author Jon S. Berndt
+@version $Revision$
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -110,7 +112,7 @@ class FGSensor  : public FGFCSComponent
 public:
   FGSensor(FGFCS* fcs, Element* element);
   ~FGSensor();
-  
+
   inline void SetFailLow(double val) {if (val > 0.0) fail_low = true; else fail_low = false;}
   inline void SetFailHigh(double val) {if (val > 0.0) fail_high = true; else fail_high = false;}
   inline void SetFailStuck(double val) {if (val > 0.0) fail_stuck = true; else fail_stuck = false;}

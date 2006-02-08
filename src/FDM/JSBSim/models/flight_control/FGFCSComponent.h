@@ -69,7 +69,7 @@ CLASS DOCUMENTATION
 
 /** Base class for JSBSim Flight Control System Components.
     The Flight Control System (FCS) for JSBSim consists of the FCS container
-    class (see \URL[FGFCS]{FGFCS.html}), the FGFCSComponent base class, and the
+    class (see FGFCS), the FGFCSComponent base class, and the
     component classes from which can be constructed a string, or channel. See:
 
     - FGSwitch
@@ -119,6 +119,7 @@ protected:
   double Input;
   double Output;
   double clipmax, clipmin;
+  float clipMinSign, clipMaxSign;
   bool IsOutput;
   bool clip;
 
