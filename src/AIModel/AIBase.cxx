@@ -51,7 +51,6 @@ const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
 FGAIBase::FGAIBase()
   : fp( NULL ),
-    model( NULL ),
     props( NULL ),
     manager( NULL ),
     _refID( _newAIModelID() )
@@ -82,8 +81,6 @@ FGAIBase::~FGAIBase() {
     root->removeChild(_type_str.c_str(), index);
     delete fp;
     fp = NULL;
-    ssgDeRefDelete(model);
-    model = 0;
 }
 
 void FGAIBase::update(double dt) {
@@ -151,7 +148,6 @@ ssgBranch * FGAIBase::load3DModel(const string& fg_root,
   // some more code here to check whether a model with this name has already been loaded
   // if not load it, otherwise, get the memory pointer and do something like 
   // SetModel as in ATC/AIEntity.cxx
-  //SSGBranch *model;
   model = manager->getModel(path);
   if (!(model))
     {
@@ -161,17 +157,7 @@ ssgBranch * FGAIBase::load3DModel(const string& fg_root,
 			    sim_time_sec);
       manager->setModel(path, model);
     }
-  //else
-  //  {
-  //    model->ref();
-  //    aip.init(model);
-  //    aip.setVisible(false);
-  //    globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
-  // do some setModel stuff.
   
-  if (model)
-    model->ref();
-
   return model;
 }
 

@@ -70,8 +70,6 @@ wxRadarBg::wxRadarBg ()
 
 wxRadarBg::~wxRadarBg ()
 {
-    ssgDeRefDelete(resultTexture);
-    ssgDeRefDelete(wxEcho);
 }
 
 void
@@ -83,12 +81,10 @@ wxRadarBg::init ()
     _Instrument = fgGetNode(branch.c_str(), num, true );
     _serviceable_node = _Instrument->getChild("serviceable", 0, true);
     resultTexture = FGTextureManager::createTexture( odgauge_name );
-    resultTexture->ref();
     SGPath tpath(globals->get_fg_root());
     tpath.append("Aircraft/Instruments/Textures/wxecho.rgb");
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
     wxEcho = new ssgTexture( tpath.c_str(), false, false, false);
-    wxEcho->ref();
 
     _Instrument->setFloatValue("trk", 0.0);
     _Instrument->setFloatValue("tilt", 0.0);

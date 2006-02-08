@@ -23,6 +23,7 @@
 #define _FG_AIMGR_HXX
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/structure/ssgSharedPtr.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -109,8 +110,8 @@ public:
 
 private:
 	
-	ssgBranch* _defaultModel;  // Cessna 172!
-	ssgBranch* _piperModel;    // pa28-161
+	ssgSharedPtr<ssgBranch> _defaultModel;  // Cessna 172!
+	ssgSharedPtr<ssgBranch> _piperModel;    // pa28-161
 
 	bool initDone;	// Hack - guard against update getting called before init
 

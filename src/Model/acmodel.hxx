@@ -17,6 +17,7 @@ SG_USING_STD(string);
 SG_USING_STD(vector);
 
 #include <simgear/structure/subsystem_mgr.hxx>	// for SGSubsystem
+#include <simgear/structure/ssgSharedPtr.hxx>
 
 
 // Don't pull in the headers, since we don't need them here.
@@ -43,8 +44,8 @@ public:
 private:
 
   SGModelPlacement * _aircraft;
-  ssgSelector * _selector;
-  ssgRoot * _scene;
+  ssgSharedPtr<ssgSelector> _selector;
+  ssgSharedPtr<ssgRoot> _scene;
   float _nearplane;
   float _farplane;
 

@@ -61,7 +61,6 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	                                  globals->get_sim_time_sec() );
 	*//*
 	_model = model;
-	_model->ref();
 	_aip.init(_model);
 	*/
 	//SetModel(model);
@@ -125,7 +124,6 @@ FGAILocalTraffic::FGAILocalTraffic() {
 }
 
 FGAILocalTraffic::~FGAILocalTraffic() {
-	//_model->deRef();
 }
 
 void FGAILocalTraffic::GetAirportDetails(const string& id) {

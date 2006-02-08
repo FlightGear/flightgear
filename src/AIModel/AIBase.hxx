@@ -27,6 +27,7 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/structure/ssgSharedPtr.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -180,7 +181,7 @@ protected:
 
 
     string model_path;	   //Path to the 3D model
-    ssgBranch * model;     //The 3D model object
+    ssgSharedPtr<ssgBranch> model; //The 3D model object
     SGModelPlacement aip;
     bool delete_me;
     bool invisible;

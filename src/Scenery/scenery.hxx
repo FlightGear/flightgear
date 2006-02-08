@@ -36,12 +36,13 @@
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/point3d.hxx>
+#include <simgear/scene/model/placementtrans.hxx>
+#include <simgear/structure/ssgSharedPtr.hxx>
 
 SG_USING_STD(list);
 
 class ssgRoot;
 class ssgBranch;
-class ssgPlacementTransform;
 
 
 // Define a structure containing global scenery parameters
@@ -57,17 +58,17 @@ class FGScenery : public SGSubsystem {
     double sun_angle;
 
     // SSG scene graph
-    ssgRoot *scene_graph;
-    ssgBranch *terrain_branch;
-    ssgRoot *gnd_lights_root;
-    ssgRoot *vasi_lights_root;
-    ssgRoot *rwy_lights_root;
-    ssgRoot *taxi_lights_root;
-    ssgBranch *models_branch;
-    ssgBranch *aircraft_branch;
+    ssgSharedPtr<ssgRoot> scene_graph;
+    ssgSharedPtr<ssgBranch> terrain_branch;
+    ssgSharedPtr<ssgRoot> gnd_lights_root;
+    ssgSharedPtr<ssgRoot> vasi_lights_root;
+    ssgSharedPtr<ssgRoot> rwy_lights_root;
+    ssgSharedPtr<ssgRoot> taxi_lights_root;
+    ssgSharedPtr<ssgBranch> models_branch;
+    ssgSharedPtr<ssgBranch> aircraft_branch;
 
     // list of all placement transform, used to move the scenery center on the fly.
-    typedef list<ssgPlacementTransform*> placement_list_type;
+    typedef list<ssgSharedPtr<ssgPlacementTransform> > placement_list_type;
     placement_list_type _placement_list;
 
 public:

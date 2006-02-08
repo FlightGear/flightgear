@@ -201,16 +201,6 @@ static void my_remove_branch( ssgBranch * branch ) {
 // is intended to spread the load of freeing a complex tile out over
 // several frames.
 static int fgPartialFreeSSGtree( ssgBranch *b, int n ) {
-
-#if 0
-    // for testing: we could call the following two lines and replace
-    // the functionality of this entire function and everything will
-    // get properly freed, but it will happen all at once and could
-    // cause a huge frame rate hit.
-    ssgDeRefDelete( b );
-    return 0;
-#endif
-
     int num_deletes = 0;
 
     if ( n > 0 ) {
@@ -264,7 +254,7 @@ bool FGTileEntry::free_tile() {
         // disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING terra_transform" );
         if ( fgPartialFreeSSGtree( terra_transform, delete_size ) == 0 ) {
-            ssgDeRefDelete( terra_transform );
+            terra_transform = 0;
             free_tracker |= TERRA_NODE;
         }
     } else if ( !(free_tracker & GROUND_LIGHTS) && gnd_lights_transform ) {
@@ -272,7 +262,7 @@ bool FGTileEntry::free_tile() {
         // disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING gnd_lights_transform" );
         if ( fgPartialFreeSSGtree( gnd_lights_transform, delete_size ) == 0 ) {
-            ssgDeRefDelete( gnd_lights_transform );
+            gnd_lights_transform = 0;
             free_tracker |= GROUND_LIGHTS;
         }
     } else if ( !(free_tracker & VASI_LIGHTS) && vasi_lights_selector ) {
@@ -280,7 +270,7 @@ bool FGTileEntry::free_tile() {
         // been disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING vasi_lights_selector" );
         if ( fgPartialFreeSSGtree( vasi_lights_selector, delete_size ) == 0 ) {
-            ssgDeRefDelete( vasi_lights_selector );
+            vasi_lights_selector = 0;
             free_tracker |= VASI_LIGHTS;
         }
     } else if ( !(free_tracker & RWY_LIGHTS) && rwy_lights_selector ) {
@@ -288,7 +278,7 @@ bool FGTileEntry::free_tile() {
         // been disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING rwy_lights_selector" );
         if ( fgPartialFreeSSGtree( rwy_lights_selector, delete_size ) == 0 ) {
-            ssgDeRefDelete( rwy_lights_selector );
+            rwy_lights_selector = 0;
             free_tracker |= RWY_LIGHTS;
         }
     } else if ( !(free_tracker & TAXI_LIGHTS) && taxi_lights_selector ) {
@@ -296,7 +286,7 @@ bool FGTileEntry::free_tile() {
         // disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING taxi_lights_selector" );
         if ( fgPartialFreeSSGtree( taxi_lights_selector, delete_size ) == 0 ) {
-            ssgDeRefDelete( taxi_lights_selector );
+            taxi_lights_selector = 0;
             free_tracker |= TAXI_LIGHTS;
         }
     } else if ( !(free_tracker & LIGHTMAPS) ) {
@@ -798,21 +788,19 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
 
     if (found_tile_base) {
         // load tile if found ...
-        ssgBranch *geometry = new ssgBranch;
+        ssgSharedPtr<ssgBranch> geometry = new ssgBranch;
         if ( obj_load( object_base.str(), geometry,
                        NULL, NULL, NULL, light_pts, true ) ) {
             geometry->getKid( 0 )->setTravCallback(SSG_CALLBACK_PRETRAV,
                     &FGTileMgr::tile_filter_cb);
 
             new_tile -> addKid( geometry );
-        } else {
-            delete geometry;
         }
 
     } else {
         // ... or generate an ocean tile on the fly
         SG_LOG(SG_TERRAIN, SG_INFO, "  Generating ocean tile");
-        ssgBranch *geometry = new ssgBranch;
+        ssgSharedPtr<ssgBranch> geometry = new ssgBranch;
         Point3D c;
         double br;
         if ( sgGenTile( path_list[0], tile_bucket, &c, &br,
@@ -821,7 +809,6 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
             bounding_radius = br;
             new_tile -> addKid( geometry );
         } else {
-            delete geometry;
             SG_LOG( SG_TERRAIN, SG_ALERT,
                     "Warning: failed to generate ocean tile!" );
         }
@@ -836,10 +823,10 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
             SGPath custom_path = obj->path;
             custom_path.append( obj->name );
 
-            ssgBranch *geometry = new ssgBranch;
-            ssgBranch *vasi_lights = new ssgBranch;
-            ssgBranch *rwy_lights = new ssgBranch;
-            ssgBranch *taxi_lights = new ssgBranch;
+            ssgSharedPtr<ssgBranch> geometry = new ssgBranch;
+            ssgSharedPtr<ssgBranch> vasi_lights = new ssgBranch;
+            ssgSharedPtr<ssgBranch> rwy_lights = new ssgBranch;
+            ssgSharedPtr<ssgBranch> taxi_lights = new ssgBranch;
 
             if ( obj_load( custom_path.str(),
                            geometry, vasi_lights, rwy_lights,
@@ -850,30 +837,16 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
                                                 SSG_CALLBACK_PRETRAV,
                                                 &FGTileMgr::tile_filter_cb );
                     new_tile -> addKid( geometry );
-                } else {
-                    delete geometry;
                 }
 
                 if ( vasi_lights -> getNumKids() > 0 )
                     vasi_lights_transform -> addKid( vasi_lights );
-                else
-                    delete vasi_lights;
 
                 if ( rwy_lights -> getNumKids() > 0 )
                     rwy_lights_transform -> addKid( rwy_lights );
-                else
-                    delete rwy_lights;
 
                 if ( taxi_lights -> getNumKids() > 0 )
                     taxi_lights_transform -> addKid( taxi_lights );
-                else
-                    delete taxi_lights;
-
-            } else {
-                delete geometry;
-                delete vasi_lights;
-                delete rwy_lights;
-                delete taxi_lights;
             }
 
 
@@ -1017,7 +990,6 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
     }
 #endif
 
-    terra_transform->ref();
     terrain_branch->addKid( terra_transform );
     globals->get_scenery()->register_placement_transform(terra_transform);
 
@@ -1030,7 +1002,6 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
     if ( gnd_lights_transform != NULL ) {
         // bump up the ref count so we can remove this later without
         // having ssg try to free the memory.
-        gnd_lights_transform->ref();
         gnd_lights_branch->addKid( gnd_lights_transform );
         globals->get_scenery()->register_placement_transform(gnd_lights_transform);
     }
@@ -1038,7 +1009,6 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
     if ( vasi_lights_transform != NULL ) {
         // bump up the ref count so we can remove this later without
         // having ssg try to free the memory.
-        vasi_lights_selector->ref();
         vasi_lights_selector->addKid( vasi_lights_transform );
         globals->get_scenery()->register_placement_transform(vasi_lights_transform);
         vasi_lights_branch->addKid( vasi_lights_selector );
@@ -1047,7 +1017,6 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
     if ( rwy_lights_transform != NULL ) {
         // bump up the ref count so we can remove this later without
         // having ssg try to free the memory.
-        rwy_lights_selector->ref();
         rwy_lights_selector->addKid( rwy_lights_transform );
         globals->get_scenery()->register_placement_transform(rwy_lights_transform);
         rwy_lights_branch->addKid( rwy_lights_selector );
@@ -1056,7 +1025,6 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
     if ( taxi_lights_transform != NULL ) {
         // bump up the ref count so we can remove this later without
         // having ssg try to free the memory.
-        taxi_lights_selector->ref();
         taxi_lights_selector->addKid( taxi_lights_transform );
         globals->get_scenery()->register_placement_transform(taxi_lights_transform);
         taxi_lights_branch->addKid( taxi_lights_selector );

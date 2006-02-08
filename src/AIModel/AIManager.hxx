@@ -26,6 +26,7 @@
 #include <list>
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/structure/ssgSharedPtr.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -42,7 +43,7 @@ SG_USING_STD(vector);
 class FGModelID
 {
 private:
-  ssgBranch * model;
+  ssgSharedPtr<ssgBranch> model;
   string path;
 public:
   FGModelID(const string& pth, ssgBranch * mdl) { path =pth; model=mdl;};

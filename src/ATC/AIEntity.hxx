@@ -24,8 +24,10 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/model.hxx>
 #include <simgear/scene/model/placement.hxx>
+#include <simgear/structure/ssgSharedPtr.hxx>
 
-class ssgBranch;
+
+class ssgBase;
 
 
 /*****************************************************************
@@ -65,7 +67,7 @@ protected:
     double _pitch;	//degrees
 
     char* _model_path;	//Path to the 3D model
-	ssgBranch* _model;	// Pointer to the model
+    ssgSharedPtr<ssgBranch> _model;	// Pointer to the model
     SGModelPlacement _aip;
 
     void Transform();

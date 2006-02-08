@@ -41,6 +41,8 @@
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/model/placementtrans.hxx>
+#include <simgear/structure/ssgSharedPtr.hxx>
 
 #if defined( sgi )
 #include <strings.h>
@@ -58,7 +60,6 @@ typedef point_list::const_iterator const_point_list_iterator;
 class ssgLeaf;
 class ssgBranch;
 class ssgTransform;
-class ssgPlacementTransform;
 class ssgSelector;
 class ssgRangeSelector;
 class ssgVertexArray;
@@ -75,7 +76,7 @@ private:
     string model_path;
     string texture_path;
     FGTileEntry *tile;
-    ssgTransform *obj_trans;
+    ssgSharedPtr<ssgTransform> obj_trans;
     SGBucket bucket;
 
 
@@ -128,27 +129,27 @@ private:
     //                 - kidn(fan)
 
     // pointer to ssg transform for this tile
-    ssgPlacementTransform *terra_transform;
-    ssgPlacementTransform *vasi_lights_transform;
-    ssgPlacementTransform *rwy_lights_transform;
-    ssgPlacementTransform *taxi_lights_transform;
-    ssgPlacementTransform *gnd_lights_transform;
+    ssgSharedPtr<ssgPlacementTransform> terra_transform;
+    ssgSharedPtr<ssgPlacementTransform> vasi_lights_transform;
+    ssgSharedPtr<ssgPlacementTransform> rwy_lights_transform;
+    ssgSharedPtr<ssgPlacementTransform> taxi_lights_transform;
+    ssgSharedPtr<ssgPlacementTransform> gnd_lights_transform;
 
     // pointer to ssg range selector for this tile
-    ssgRangeSelector *terra_range;
-    ssgRangeSelector *gnd_lights_range;
+    ssgSharedPtr<ssgRangeSelector> terra_range;
+    ssgSharedPtr<ssgRangeSelector> gnd_lights_range;
 
     // we create several preset brightness and can choose which one we
     // want based on lighting conditions.
-    ssgSelector *gnd_lights_brightness;
+    ssgSharedPtr<ssgSelector> gnd_lights_brightness;
 
     // we need to be able to turn runway lights on or off (doing this
     // via a call back would be nifty, but then the call back needs to
     // know about the higher level application's global state which is
     // a problem if we move the code into simgear.)
-    ssgSelector *vasi_lights_selector;
-    ssgSelector *rwy_lights_selector;
-    ssgSelector *taxi_lights_selector;
+    ssgSharedPtr<ssgSelector> vasi_lights_selector;
+    ssgSharedPtr<ssgSelector> rwy_lights_selector;
+    ssgSharedPtr<ssgSelector> taxi_lights_selector;
 
     /**
      * Indicates this tile has been loaded from a file and connected

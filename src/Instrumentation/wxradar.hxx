@@ -26,6 +26,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/environment/visual_enviro.hxx>
+#include <simgear/structure/ssgSharedPtr.hxx>
 
 class ssgTexture;
 class FGODGauge;
@@ -49,8 +50,8 @@ private:
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
-    ssgTexture *resultTexture;
-    ssgTexture *wxEcho;
+    ssgSharedPtr<ssgTexture> resultTexture;
+    ssgSharedPtr<ssgTexture> wxEcho;
     string last_switchKnob;
     bool sim_init_done;
     FGODGauge *odg;

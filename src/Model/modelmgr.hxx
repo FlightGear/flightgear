@@ -90,7 +90,7 @@ private:
 
   vector<Instance *> _instances;
 
-  ssgSelector * _selector;
+  ssgSharedPtr<ssgSelector> _selector;
 
 };
 

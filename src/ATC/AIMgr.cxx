@@ -56,8 +56,6 @@ FGAIMgr::FGAIMgr() {
 }
 
 FGAIMgr::~FGAIMgr() {
-        ssgDeRefDelete(_defaultModel);
-	if(_havePiperModel) ssgDeRefDelete(_piperModel);
 }
 
 void FGAIMgr::init() {
@@ -104,10 +102,6 @@ void FGAIMgr::init() {
 	} catch(sg_exception&) {
 		_havePiperModel = false;
 	}
-
-	// We need to keep one ref of the models open to stop ssg deleting them behind our back!
-	_defaultModel->ref();
-	if(_havePiperModel) _piperModel->ref();
 
 	// go through the $FG_ROOT/ATC directory and find all *.taxi files
 	SGPath path(globals->get_fg_root());

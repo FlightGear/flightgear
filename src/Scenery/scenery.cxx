@@ -112,7 +112,6 @@ void FGScenery::set_center( const Point3D& p ) {
 }
 
 void FGScenery::register_placement_transform(ssgPlacementTransform *trans) {
-    trans->ref();
     _placement_list.push_back(trans);        
     sgdVec3 c;
     sgdSetVec3(c, center.x(), center.y(), center.z());
@@ -124,7 +123,6 @@ void FGScenery::unregister_placement_transform(ssgPlacementTransform *trans) {
     while (it != _placement_list.end()) {
         if ((*it) == trans) {
             it = _placement_list.erase(it);        
-            ssgDeRefDelete(trans);
         } else
             ++it;
     }
@@ -155,7 +153,7 @@ FGScenery::get_cart_elevation_m(const sgdVec3& pos, double max_altoff,
     Point3D ppos(pos[0], pos[1], pos[2]);
     if (30.0*30.0 < ppos.distance3Dsquared(center)) {
       set_center( ppos );
-      replaced_center = false;
+      replaced_center = true;
     }
   }
 

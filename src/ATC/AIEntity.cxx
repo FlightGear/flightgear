@@ -45,7 +45,6 @@ FGAIEntity::FGAIEntity() {
 
 FGAIEntity::~FGAIEntity() {
 	//cout << "FGAIEntity dtor called..." << endl;
-        ssgDeRefDelete(_model);	// Ought to check valid?
 	//cout << "Removing model from scene graph..." << endl;
 	globals->get_scenery()->get_scene_graph()->removeKid(_aip.getSceneGraph());
         // Unregister that one at the scenery manager
@@ -56,7 +55,6 @@ FGAIEntity::~FGAIEntity() {
 
 void FGAIEntity::SetModel(ssgBranch* model) {
 	_model = model;
-	_model->ref();
 	_aip.init(_model);
 	_aip.setVisible(false);
 	globals->get_scenery()->get_scene_graph()->addKid(_aip.getSceneGraph());
