@@ -54,7 +54,7 @@ while true; do
 	-D)	cmd="ddd -x .gdbinit $fgfs" ;;
 	-m)	cmd="make -C ../.." ;;
 	-i)	cmd=""; gdb="" ;;
-	-p)	cmd="calltree $fgfs"; gdb="" ;;
+	-p)	cmd="callgrind --dump-instr=yes --trace-jump=yes --dump-threads=yes $fgfs $opt"; gdb="" ;;
 	-b)	gdb="" ;;
 	-s)	extra="$extra --gen-suppressions=yes" ;;
 	-l)	extra="$extra --leak-check=yes --show-reachable=yes" ;;
@@ -76,6 +76,7 @@ if ! test -e "$fgfs"; then
 fi
 
 echo "set args $opt" > .gdbinit
+echo "handle SIG32 nostop noprint" >> .gdbinit		# work around gdb bug
 
 test -e fgfs.supp || head -14 sample.fgfs.supp > fgfs.supp
 
