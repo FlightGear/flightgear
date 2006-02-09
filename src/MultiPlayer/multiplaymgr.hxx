@@ -44,6 +44,7 @@ SG_USING_STD(string);
 SG_USING_STD(vector);
 
 #include <simgear/compiler.h>
+#include <simgear/props/props.hxx>
 #include <plib/netSocket.h>
 #include <Main/globals.hxx>
 
@@ -59,14 +60,28 @@ public:
     bool init(void);
     void Close(void);
     // transmitter
-    void SendMyPosition (const sgQuat PlayerOrientation, 
-                         const sgdVec3 PlayerPosition);
+    void SendMyPosition (const double lat, const double lon, const double alt,
+                         const double heading, const double roll, const double pitch,
+                         const double speedN, const double speedE, const double speedD,
+                         const double left_aileron, const double right_aileron, const double elevator, const double rudder,
+                         //const double rpms[6],
+                         const double rateH, const double rateR, const double rateP,
+						 const double accN, const double accE, const double accD
+						 );
+    void SendPropMessage (const string &property, SGPropertyNode::Type type, double value);
     void SendTextMessage (const string &sMsgText) const;
     // receiver
     void ProcessData(void);
     void ProcessPosMsg ( const char *Msg, netAddress & SenderAddress );
     void ProcessChatMsg ( const char *Msg, netAddress & SenderAddress );
+    void ProcessPropMsg ( const char *Msg, netAddress & SenderAddress );
     void Update(void);
+
+	/* getters/setters */
+	bool getSendAllProps();
+	void setSendAllProps(bool s);
+	bool send_all_props;
+
 private:
     typedef vector<MPPlayer*>           t_MPClientList;
     typedef t_MPClientList::iterator    t_MPClientListIterator;

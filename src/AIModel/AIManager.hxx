@@ -85,6 +85,7 @@ public:
 
     void* createBallistic( FGAIModelEntity *entity );
     void* createAircraft( FGAIModelEntity *entity,   FGAISchedule *ref=0 );
+    void* createMultiplayer( FGAIModelEntity *entity );
     void* createThermal( FGAIModelEntity *entity );
     void* createStorm( FGAIModelEntity *entity );
     void* createShip( FGAIModelEntity *entity );

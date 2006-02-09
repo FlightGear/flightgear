@@ -113,7 +113,7 @@ public:
     inline const Point3D& GetPos() const { return(pos); }
 
     enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
-                       otRocket, otStorm, otThermal, otStatic,
+                       otRocket, otStorm, otThermal, otStatic, otMultiplayer,
                        MAX_OBJECTS };	// Needs to be last!!!
 
     virtual bool init();
@@ -127,6 +127,7 @@ public:
     void setLatitude( double latitude );
     void setLongitude( double longitude );
     void setBank( double bank );
+    void setPitch( double newpitch );
     void setRadius ( double radius );
     void setXoffset( double x_offset );
     void setYoffset( double y_offset );
@@ -271,6 +272,10 @@ inline void FGAIBase::setAltitude( double altitude_ft ) {
 inline void FGAIBase::setBank( double bank ) {
   roll = tgt_roll = bank;
   no_roll = false;
+}
+
+inline void FGAIBase::setPitch( double newpitch ) {
+  pitch = tgt_pitch = newpitch;
 }
 
 inline void FGAIBase::setLongitude( double longitude ) {

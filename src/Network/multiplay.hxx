@@ -3,6 +3,8 @@
 // Written by Diarmuid Tyson, started February 2003.
 // diarmuid.tyson@airservicesaustralia.com
 //
+// With additions by Vivian Meazza, January 2006
+//
 // Copyright (C) 2003  Airservices Australia
 //
 // This program is free software; you can redistribute it and/or
@@ -56,6 +58,8 @@ SG_USING_STD(string);
 *
 ******************************************************************/
 
+#include <simgear/props/props.hxx>
+
 class FGMultiplay : public FGProtocol {
 public:
 
@@ -65,21 +69,42 @@ public:
     /** Destructor. */
     ~FGMultiplay ();
 
-    /** Enables the FGMultiplay object
-    */
+    /** Enables the FGMultiplay object. */
     bool open();
 
-    /** Tells the multiplayer_mgr to send/receive data.
-    */
+    /** Tells the multiplayer_mgr to send/receive data. */
     bool process();
 
-    /** Closes the multiplayer_mgr.
-    */
+    /** Closes the multiplayer_mgr. */
     bool close();
 
+    
 private:
+    struct _node_cache {
+        double val;
+        SGPropertyNode_ptr node;
+        _node_cache(double v, SGPropertyNode_ptr n) {
+           val = v; node = n;
+        };
+    };
 
+    /** calculate accelerations
+    */
+    void calcAcc(double speedN, double speedE, double speedD);
+
+    double last_time ;                                //sec
+    double last_speedN, last_speedE, last_speedD;     //fps
+    double calcaccN, calcaccE, calcaccD;              //fps2
+
+    SGPropertyNode *lat_n, *lon_n, *alt_n;
+    SGPropertyNode *heading_n, *pitch_n, *roll_n;
+    SGPropertyNode *speedN_n, *speedE_n, *speedD_n;
+    SGPropertyNode *left_aileron_n, *right_aileron_n;
+    SGPropertyNode *elevator_n, *rudder_n;
+    // SGPropertyNode *rpms[5];
+    SGPropertyNode *rateH_n, *rateR_n, *rateP_n;
+
+    map<string,struct _node_cache*> props;
+    map<string,struct _node_cache*>::iterator propit;
 };
-
-
 #endif // _FG_MULTIPLAY_HXX

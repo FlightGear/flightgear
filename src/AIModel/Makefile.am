@@ -5,6 +5,7 @@ libAIModel_a_SOURCES = \
 	AIManager.hxx AIManager.cxx \
 	AIBase.hxx AIBase.cxx \
 	AIAircraft.hxx AIAircraft.cxx \
+        AIMultiplayer.hxx AIMultiplayer.cxx \
 	AIShip.hxx AIShip.cxx \
 	AIBallistic.hxx AIBallistic.cxx \
 	AIStorm.hxx AIStorm.cxx \

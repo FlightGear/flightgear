@@ -5,6 +5,8 @@
 // Written by Duncan McCreanor, started February 2003.
 // duncan.mccreanor@airservicesaustralia.com
 //
+// With additions by Vivian Meazza, January 2006
+//
 // Copyright (C) 2003  Airservices Australia
 // Copyright (C) 2005  Oliver Schroeder
 //
@@ -46,6 +48,7 @@
 
 #include "mpplayer.hxx"
 
+
 #include <stdlib.h>
 #if !(defined(_MSC_VER) || defined(__MINGW32__))
 #   include <netdb.h>
@@ -56,12 +59,16 @@
 #include <plib/netSocket.h>
 #include <plib/sg.h>
 
+#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/model/placementtrans.hxx>
 
+#include <AIModel/AIBase.hxx>
+#include <AIModel/AIManager.hxx>
+#include <AIModel/AIMultiplayer.hxx>
 #include <Main/globals.hxx>
-#include <Scenery/scenery.hxx>
-
+//#include <Scenery/scenery.hxx>
 
 // These constants are provided so that the ident command can list file versions.
 const char sMPPLAYER_BID[] = "$Id$";
@@ -76,8 +83,14 @@ MPPlayer::MPPlayer()
 {
     m_Initialised   = false;
     m_LastUpdate    = 0;
+    m_LastUpdate    = 0;
+    m_LastTime      = 0;
+    m_LastUTime     = 0;
+    m_Elapsed       = 0;
+    m_TimeOffset    = 0.0;
     m_Callsign      = "none";
     m_PlayerAddress.set("localhost", 0);
+    m_AIModel = NULL;
 } // MPPlayer::MPPlayer()
 //////////////////////////////////////////////////////////////////////
 
@@ -118,7 +131,7 @@ MPPlayer::Open
         if (!LocalPlayer)
         {
              try {
-                 LoadModel();
+                 LoadAI();
              } catch (...) {
                  SG_LOG( SG_NETWORK, SG_ALERT,
                    "Failed to load remote model '" << ModelName << "'." );
@@ -147,21 +160,84 @@ MPPlayer::Close(void)
     // Remove the model from the game
     if (m_Initialised && !m_LocalPlayer) 
     {
-        // Disconnect the model from the transform,
-        // then the transform from the scene.
-        m_ModelTrans->removeKid(m_Model);
-        globals->get_scenery()->unregister_placement_transform(m_ModelTrans);
-        globals->get_scenery()->get_aircraft_branch()->removeKid( m_ModelTrans);
-        // Flush the model loader so that it erases the model from its list of
-        // models.
-        // globals->get_model_lib()->flush1();
-        // Assume that plib/ssg deletes the model and transform as their
-        // refcounts should be zero.
+        m_Initialised = 0;
+        
+        // get the model manager
+        FGAIManager *aiModelMgr = (FGAIManager *) globals->get_subsystem("ai_model");
+        if (!aiModelMgr) {
+            SG_LOG( SG_NETWORK, SG_ALERT, "MPPlayer::Close - "
+                    << "Cannot find AI model manager!" );
+            return;
+        }
+        
+        // remove it
+        aiModelMgr->destroyObject(m_AIModel->getID());
+        m_AIModel = NULL;
     }
     m_Initialised   = false;
     m_Updated       = false;
     m_LastUpdate    = 0;
+    m_LastUpdate    = 0;
+    m_LastTime      = 0;
+    m_LastUTime     = 0;
+    m_Elapsed       = 0;
+    m_TimeOffset    = 0.0;
     m_Callsign      = "none";
+}
+
+/******************************************************************
+* Name: CheckTime
+* Description: Checks if the time is valid for a position update
+* and perhaps sets the time offset
+******************************************************************/
+bool MPPlayer::CheckTime(int time, int timeusec)
+{
+    double curOffset;
+    
+    // set the offset
+    struct timeval tv;
+    int toff, utoff;
+    gettimeofday(&tv, NULL);
+    
+    // calculate the offset
+    toff = ((int) tv.tv_sec) - time;
+    utoff = ((int) tv.tv_usec) - timeusec;
+    while (utoff < 0) {
+        toff--;
+        utoff += 1000000;
+    }
+    
+    // set it
+    curOffset = ((double)toff) + (((double)utoff) / 1000000);
+        
+    if (m_LastUpdate == 0) {
+        // set the main offset
+        m_TimeOffset = curOffset;
+        m_Elapsed = 0;
+        return true;
+    } else {
+        // check it
+        if (time < m_LastTime ||
+            (time == m_LastTime && timeusec <= m_LastUTime)) {
+            return false;
+        } else {
+            // set the current offset
+            m_LastOffset = curOffset;
+            // calculate the Hz
+            toff = time - m_LastTime;
+            utoff = timeusec - m_LastUTime;
+            while (utoff < 0) {
+                toff--;
+                utoff += 1000000;
+            }
+            m_Elapsed = ((double)toff) + (((double)utoff)/1000000);
+            
+            m_LastTime = time;
+            m_LastUTime = timeusec;
+            
+            return true;
+        }
+    }
 }
 
 /******************************************************************
@@ -172,17 +248,130 @@ MPPlayer::Close(void)
 void
 MPPlayer::SetPosition
     (
-    const sgQuat PlayerOrientation,
-    const sgdVec3 PlayerPosition
+        const double lat, const double lon, const double alt,
+        const double heading, const double roll, const double pitch,
+        const double speedN, const double speedE, const double speedD,
+        const double left_aileron, const double right_aileron, const double elevator, const double rudder,
+        //const double rpms[6],
+        const double rateH, const double rateR, const double rateP,
+		const double accN, const double accE, const double accD
     )
 {
+    int toff, utoff;
+    
     // Save the position matrix and update time
     if (m_Initialised)
     {
-        sgdCopyVec3(m_ModelPosition, PlayerPosition);
-        sgCopyVec4(m_ModelOrientation, PlayerOrientation);
+        // calculate acceleration
+        /*if (m_Elapsed > 0) {
+            m_accN = (speedN - m_speedN) / m_Elapsed;
+            m_accE = (speedE - m_speedE) / m_Elapsed;
+            m_accD = (speedD - m_speedD) / m_Elapsed;
+        } else {
+            m_accN = 0;
+            m_accE = 0;
+            m_accD = 0;
+        }*/
+        
+        // store the position
+        m_lat = lat;
+        m_lon = lon;
+        m_alt = alt;
+        m_hdg = heading;
+        m_roll = roll;
+        m_pitch = pitch;
+        m_speedN = speedN;
+        m_speedE = speedE;
+        m_speedD = speedD;
+		m_accN = accN;
+		m_accE = accE;
+		m_accD = accD;
+        m_left_aileron = left_aileron;
+		m_right_aileron = right_aileron;
+        m_elevator = elevator;
+		m_rudder = rudder;
+
+        /*for (int i = 0; i < 6; i++) {
+            m_rpms[i] = rpms[i];
+        }
+        m_rateH = rateH;
+        m_rateR = rateR;
+        m_rateP = rateP;*/
+        
+        if (!m_LocalPlayer) {
+            m_AIModel->setLatitude(m_lat);
+            m_AIModel->setLongitude(m_lon);
+            m_AIModel->setAltitude(m_alt);
+            m_AIModel->setHeading(m_hdg);
+            m_AIModel->setBank(m_roll);
+            m_AIModel->setPitch(m_pitch);
+            m_AIModel->setSpeedN(m_speedN);
+            m_AIModel->setSpeedE(m_speedE);
+            m_AIModel->setSpeedD(m_speedD); 
+            m_AIModel->setAccN(m_accN);
+            m_AIModel->setAccE(m_accE);
+            m_AIModel->setAccD(m_accD);
+            m_AIModel->setRateH(m_rateH);
+            m_AIModel->setRateR(m_rateR);
+            m_AIModel->setRateP(m_rateP);
+                
+            // set properties
+            SGPropertyNode *root = m_AIModel->getProps();
+            root->getNode("surface-positions/left-aileron-pos-norm", true)->setDoubleValue(m_left_aileron);
+			root->getNode("surface-positions/right-aileron-pos-norm", true)->setDoubleValue(m_right_aileron);
+            root->getNode("surface-positions/elevator-pos-norm", true)->setDoubleValue(m_elevator);
+            root->getNode("surface-positions/rudder-pos-norm", true)->setDoubleValue(m_rudder);
+            /*root->getNode("engines/engine/rpm", true)->setDoubleValue(m_rpms[0]);
+            root->getNode("engines/engine[1]/rpm", true)->setDoubleValue(m_rpms[1]);
+            root->getNode("engines/engine[2]/rpm", true)->setDoubleValue(m_rpms[2]);
+            root->getNode("engines/engine[3]/rpm", true)->setDoubleValue(m_rpms[3]);
+            root->getNode("engines/engine[4]/rpm", true)->setDoubleValue(m_rpms[4]);
+            root->getNode("engines/engine[5]/rpm", true)->setDoubleValue(m_rpms[5]);*/
+                
+            // Adjust by the last offset
+            //cout << "OFFSET: " << (m_LastOffset - m_TimeOffset) << endl;
+            
+			//m_AIModel->timewarp(m_LastOffset - m_TimeOffset);
+
+			// set the timestamp for the data update (sim elapsed time (secs))
+			m_AIModel->setTimeStamp();
+        }
+        
         time(&m_LastUpdate);
+        
         m_Updated = true;
+    }
+}
+
+/******************************************************************
+ * Name: SetProperty
+ * Description: Sets a property of this player.
+ ******************************************************************/
+void MPPlayer::SetProperty(string property, SGPropertyNode::Type type, double val)
+{    
+    // get rid of any leading /
+    while (property[0] == '/') property = property.substr(1);
+    
+    // get our root node
+    SGPropertyNode *node = m_AIModel->getProps()->getNode(property.c_str(), true);
+        
+    // set the property
+    switch (type) {
+        case 2:
+            node->setBoolValue((bool) val);
+            break;
+        case 3:
+            node->setIntValue((int) val);
+            break;
+        case 4:
+            node->setLongValue((long) val);
+            break;
+        case 5:
+            node->setFloatValue((float) val);
+            break;
+        case 6:
+        default:
+            node->setDoubleValue(val);
     }
 }
 
@@ -202,12 +391,37 @@ MPPlayer::Draw (void)
             // Peform an update if it has changed since the last update
             if (m_Updated)
             {
-                // Transform and update player model
-                sgMat4 orMat;
-                sgMakeIdentMat4(orMat);
-                sgQuatToMatrix(orMat, m_ModelOrientation);
-                m_ModelTrans->setTransform(m_ModelPosition, orMat);
+                /*
+                m_AIModel->setLatitude(m_lat);
+                m_AIModel->setLongitude(m_lon);
+                m_AIModel->setAltitude(m_alt);
+                m_AIModel->setHeading(m_hdg);
+                m_AIModel->setBank(m_roll);
+                m_AIModel->setPitch(m_pitch);
+                m_AIModel->setSpeedN(m_speedN);
+                m_AIModel->setSpeedE(m_speedE);
+                m_AIModel->_setVS_fps(m_speedU*60.0); // it needs input in fpm
+                m_AIModel->setRateH(m_rateH);
+                m_AIModel->setRateR(m_rateR);
+                m_AIModel->setRateP(m_rateP);
+                
+                // set properties
+                SGPropertyNode *root = m_AIModel->getProps();
+                root->getNode("controls/flight/aileron", true)->setDoubleValue(m_aileron);
+                root->getNode("controls/flight/elevator", true)->setDoubleValue(m_elevator);
+                root->getNode("controls/flight/rudder", true)->setDoubleValue(m_rudder);
+                root->getNode("engines/engine/rpm", true)->setDoubleValue(m_rpms[0]);
+                root->getNode("engines/engine[1]/rpm", true)->setDoubleValue(m_rpms[1]);
+                root->getNode("engines/engine[2]/rpm", true)->setDoubleValue(m_rpms[2]);
+                root->getNode("engines/engine[3]/rpm", true)->setDoubleValue(m_rpms[3]);
+                root->getNode("engines/engine[4]/rpm", true)->setDoubleValue(m_rpms[4]);
+                root->getNode("engines/engine[5]/rpm", true)->setDoubleValue(m_rpms[5]);
+                
+                // Adjust by the last offset
+                m_AIModel->update(m_LastOffset - m_TimeOffset);
+                */
                 eResult = PLAYER_DATA_AVAILABLE;
+                
                 // Clear the updated flag so that the position data
                 // is only available if it has changed
                 m_Updated = false;
@@ -243,22 +457,31 @@ MPPlayer::CompareCallsign(const char *Callsign) const
 }
 
 /******************************************************************
-* Name: LoadModel
-* Description: Loads the player's aircraft model.
+ * Name: LoadAI
+ * Description: Loads the AI model into the AI core.
 ******************************************************************/
 void
-MPPlayer::LoadModel (void)
+MPPlayer::LoadAI(void)
 {
-    m_ModelTrans = new ssgPlacementTransform;
-    // Load the model
-    m_Model = globals->get_model_lib()->load_model( globals->get_fg_root(),
-      m_ModelName, globals->get_props(), globals->get_sim_time_sec() );
-    m_Model->clrTraversalMaskBits( SSGTRAV_HOT );
-    // Add model to transform
-    m_ModelTrans->addKid( m_Model );
-    // Place on scene under aircraft branch
-    globals->get_scenery()->get_aircraft_branch()->addKid( m_ModelTrans );
-    globals->get_scenery()->register_placement_transform( m_ModelTrans);
+    // set up the model info
+    FGAIModelEntity aiModel;
+    aiModel.m_type = "aircraft";
+    aiModel.path = m_ModelName;
+    aiModel.acType = "Multiplayer";
+    aiModel.company = m_Callsign;
+   
+    // then get the model manager
+    FGAIManager *aiModelMgr = (FGAIManager *) globals->get_subsystem("ai_model");
+    if (!aiModelMgr) {
+        SG_LOG( SG_NETWORK, SG_ALERT, "MPPlayer::LoadAI - "
+                << "Cannot find AI model manager!" );
+        return;
+    }
+    
+    // then get the model
+    fgSetBool("/sim/freeze/clock", true);
+    m_AIModel = (FGAIMultiplayer *) aiModelMgr->createMultiplayer(&aiModel);
+    fgSetBool("/sim/freeze/clock", false);
 }
 
 /******************************************************************
@@ -272,16 +495,36 @@ MPPlayer::FillPosMsg
     T_PositionMsg *PosMsg
     )
 {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    
     FillMsgHdr(MsgHdr, POS_DATA_ID);
     strncpy(PosMsg->Model, m_ModelName.c_str(), MAX_MODEL_NAME_LEN);
     PosMsg->Model[MAX_MODEL_NAME_LEN - 1] = '\0';
-    PosMsg->PlayerPosition[0] = XDR_encode_double (m_ModelPosition[0]);
-    PosMsg->PlayerPosition[1] = XDR_encode_double (m_ModelPosition[1]);
-    PosMsg->PlayerPosition[2] = XDR_encode_double (m_ModelPosition[2]);
-    PosMsg->PlayerOrientation[0] = XDR_encode_float (m_ModelOrientation[0]);
-    PosMsg->PlayerOrientation[1] = XDR_encode_float (m_ModelOrientation[1]);
-    PosMsg->PlayerOrientation[2] = XDR_encode_float (m_ModelOrientation[2]);
-    PosMsg->PlayerOrientation[3] = XDR_encode_float (m_ModelOrientation[3]);
+    PosMsg->time = XDR_encode_uint32 (tv.tv_sec);
+    PosMsg->timeusec = XDR_encode_uint32 (tv.tv_usec);
+    PosMsg->lat = XDR_encode_double (m_lat);
+    PosMsg->lon = XDR_encode_double (m_lon);
+    PosMsg->alt = XDR_encode_double (m_alt);
+    PosMsg->hdg = XDR_encode_double (m_hdg);
+    PosMsg->roll = XDR_encode_double (m_roll);
+    PosMsg->pitch = XDR_encode_double (m_pitch);
+    PosMsg->speedN = XDR_encode_double (m_speedN);
+    PosMsg->speedE = XDR_encode_double (m_speedE);
+    PosMsg->speedD = XDR_encode_double (m_speedD);
+    PosMsg->left_aileron = XDR_encode_float ((float) m_left_aileron);
+    PosMsg->right_aileron = XDR_encode_float ((float) m_right_aileron);
+    PosMsg->elevator = XDR_encode_float ((float) m_elevator);
+    PosMsg->rudder = XDR_encode_float ((float) m_rudder);
+    /*for (int i = 0; i < 6; i++) {
+        PosMsg->rpms[i] = XDR_encode_float ((float) m_rpms[i]);
+    }*/
+    PosMsg->rateH =  XDR_encode_float ((float) m_rateH);
+    PosMsg->rateR =  XDR_encode_float ((float) m_rateR);
+    PosMsg->rateP =  XDR_encode_float ((float) m_rateP);
+	PosMsg->accN  =  XDR_encode_float ((float) m_accN);
+    PosMsg->accE =  XDR_encode_float ((float) m_accE);
+    PosMsg->accD =  XDR_encode_float ((float) m_accD);
 }
 
 /******************************************************************
@@ -304,6 +547,9 @@ MPPlayer::FillMsgHdr
             break;
         case POS_DATA_ID:
             len = sizeof(T_MsgHdr) + sizeof(T_PositionMsg);
+            break;
+        case PROP_MSG_ID:
+            len = sizeof(T_MsgHdr) + sizeof(T_PropertyMsg);
             break;
         default:
             len = sizeof(T_MsgHdr);

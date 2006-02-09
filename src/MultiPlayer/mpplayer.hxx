@@ -44,7 +44,9 @@
 #include <plib/sg.h>
 #include <plib/netSocket.h>
 #include <simgear/io/sg_socket_udp.hxx>
+#include <simgear/props/props.hxx>
 #include <time.h>
+#include <sys/time.h>
 
 #include STL_STRING
 SG_USING_STD(string);
@@ -52,8 +54,7 @@ SG_USING_STD(string);
 // Number of seconds before a player is consider to be lost
 #define TIME_TO_LIVE 10
 
-class ssgEntity;
-class ssgPlacementTransform;
+class FGAIMultiplayer;
 
 class MPPlayer 
 {
@@ -81,11 +82,21 @@ public:
               const string &ModelName, const bool LocalPlayer);
     /** Closes the player connection */
     void Close(void);
+    /** Checks if the time is valid for a position update and perhaps sets the time offset
+     */
+    bool CheckTime(int time, int timeusec);
     /** Sets the positioning matrix held for this player
-    * @param PlayerPosMat4 Matrix for positioning player's aircraft
     */
-    void SetPosition(const sgQuat PlayerOrientation,
-                     const sgdVec3 PlayerPosition);
+    void SetPosition(const double lat, const double lon, const double alt,
+                     const double heading, const double roll, const double pitch,
+                     const double speedN, const double speedE, const double speedD,
+                     const double left_aileron, const double right_aileron, const double elevator, const double rudder,
+                     //const double rpms[6],
+                     const double rateH, const double rateR, const double rateP,
+					 const double accN, const double accE, const double accD);
+    /** Sets a property for this player
+    */
+    void SetProperty(string property, SGPropertyNode::Type type, double val);
     /** Transform and place model for player
     */
     TPlayerDataState Draw(void);
@@ -109,18 +120,42 @@ public:
     */
     void FillMsgHdr(T_MsgHdr *MsgHdr, const int iMsgId);
 private:
-    void    LoadModel(void);    // Loads the model of the aircraft
+    void    LoadAI(void);       // Loads the plane into the AI core
     bool    m_Initialised;      // True if object is initialised 
-    sgdVec3 m_ModelPosition;    // players global position on earth
-    sgQuat  m_ModelOrientation; // players global orientation
+    
+    double  m_lat;              // location, orientation, etc...
+    double  m_lon;              // ...
+    double  m_alt;              // ...
+    double  m_hdg;              // ...
+    double  m_roll;             // ...
+    double  m_pitch;            // ...
+    double  m_speedN;           // ...
+    double  m_speedE;           // ...
+    double  m_speedD;           // ...
+    double  m_accN;             // ...
+    double  m_accE;             // ...
+    double  m_accD;             // ...
+    double  m_left_aileron;     // ...
+	double  m_right_aileron;     // ...
+    double  m_elevator;         // ...
+    double  m_rudder;           // ...
+    //double  m_rpms[6];          // ...
+    double  m_rateH;            // ...
+    double  m_rateR;            // ...
+    double  m_rateP;            // ...
+	
     time_t  m_LastUpdate;       // last time update data received
+    int     m_LastTime;         // last seconds according to the packet
+    int     m_LastUTime;        // last microseconds according to the packet
+    double  m_Elapsed;          // Elapsed other-side time between responses
+    double  m_TimeOffset;       // the offset to aim for
+    double  m_LastOffset;       // the last offset we got
     bool    m_Updated;          // Set when the player data is updated
     string  m_Callsign;         // players callsign
     bool    m_LocalPlayer;      // true if player is the local player
     string  m_ModelName;        // Aircraft model name for player
-    ssgEntity *m_Model;         // The player's loaded model
     netAddress m_PlayerAddress; // Address information for the player
-    ssgPlacementTransform *m_ModelTrans;    // Model transform
+    FGAIMultiplayer *m_AIModel; // The AI model of this aircraft
 };
 
 #endif

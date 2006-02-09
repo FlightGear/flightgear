@@ -5,6 +5,8 @@
 // Written by Duncan McCreanor, started February 2003.
 // duncan.mccreanor@airservicesaustralia.com
 //
+// With minor additions by Vivian Meazza, January 2006
+//
 // Copyright (C) 2003  Airservices Australia
 // Copyright (C) 2005  Oliver Schroeder
 //
@@ -70,6 +72,8 @@ FGMultiplayMgr::FGMultiplayMgr()
     m_RxPort        = 0;
     m_Initialised   = false;
     m_HaveServer    = false;
+
+	send_all_props= false;
 } // FGMultiplayMgr::FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 
@@ -83,6 +87,22 @@ FGMultiplayMgr::~FGMultiplayMgr()
     Close();
 } // FGMultiplayMgr::~FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// Name: getSendAll
+// Description: getter for send_all
+/////////////////////////////////////////////////////////////////////
+bool FGMultiplayMgr::getSendAllProps() {
+	return send_all_props;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Name: setSendAll
+// Description: setter for send_all
+/////////////////////////////////////////////////////////////////////
+void FGMultiplayMgr::setSendAllProps(bool s) {
+	send_all_props = s;
+}
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -160,6 +180,7 @@ FGMultiplayMgr::init (void)
         return (false);
     }
     m_Initialised = true;
+	send_all_props= true;
     return (true);
 } // FGMultiplayMgr::init()
 //////////////////////////////////////////////////////////////////////
@@ -215,8 +236,13 @@ FGMultiplayMgr::Close (void)
 void
 FGMultiplayMgr::SendMyPosition
     (
-    const sgQuat PlayerOrientation,
-    const sgdVec3 PlayerPosition
+        const double lat, const double lon, const double alt,
+        const double heading, const double roll, const double pitch,
+        const double speedN, const double speedE, const double speedD,
+        const double left_aileron, const double right_aileron, const double elevator, const double rudder,
+        //const double rpms[6],
+        const double rateH, const double rateR, const double rateP,
+		const double accN, const double accE, const double accD
     )
 {
     T_MsgHdr        MsgHdr;
@@ -233,14 +259,58 @@ FGMultiplayMgr::SendMyPosition
           "FGMultiplayMgr::SendMyPosition - no server" );
         return;
     }
-    m_LocalPlayer->SetPosition(PlayerOrientation, PlayerPosition);
+    m_LocalPlayer->SetPosition(lat, lon, alt,
+                               heading, roll, pitch,
+                               speedN, speedE, speedD,
+                               left_aileron, right_aileron, elevator, rudder,
+                               //rpms,
+                               rateH, rateR, rateP,
+							   accN, accE, accD);
     m_LocalPlayer->FillPosMsg(&MsgHdr, &PosMsg);
     memcpy(Msg, &MsgHdr, sizeof(T_MsgHdr));
     memcpy(Msg + sizeof(T_MsgHdr), &PosMsg, sizeof(T_PositionMsg));
     m_DataSocket->sendto (Msg,
       sizeof(T_MsgHdr) + sizeof(T_PositionMsg), 0, &m_Server);
+	SG_LOG( SG_NETWORK, SG_DEBUG,
+          "FGMultiplayMgr::SendMyPosition" );
+	
 } // FGMultiplayMgr::SendMyPosition()
 //////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+//
+//  Description: Sends the property data for the local player.
+//
+//////////////////////////////////////////////////////////////////////
+void FGMultiplayMgr::SendPropMessage (const string &property, SGPropertyNode::Type type, double value)
+	
+	{SG_LOG( SG_NETWORK, SG_INFO,
+          "FGMultiplayMgr::Property: " << property << " Type " << type << " value " << value);
+
+    T_MsgHdr      MsgHdr;
+    T_PropertyMsg PropMsg;
+    unsigned int iNextBlockPosition = 0;
+    char Msg[sizeof(T_MsgHdr) + sizeof(T_PropertyMsg)];
+
+    if ((! m_Initialised) || (! m_HaveServer))
+    {
+        return;
+    }
+    m_LocalPlayer->FillMsgHdr(&MsgHdr, PROP_MSG_ID);
+    
+    strncpy(PropMsg.property, property.c_str(), MAX_PROPERTY_LEN);
+	PropMsg.property[MAX_PROPERTY_LEN-1] = '\0';
+	PropMsg.type = XDR_encode_uint32(type);
+    PropMsg.val = XDR_encode_double(value);
+    SG_LOG( SG_NETWORK, SG_INFO,
+		"FGMultiplayMgr::sending property message: "
+		 << PropMsg.property << " " << PropMsg.type << " " << PropMsg.val);
+    
+	memcpy (Msg, &MsgHdr, sizeof(T_MsgHdr));
+    memcpy (Msg + sizeof(T_MsgHdr), &PropMsg, sizeof(T_PropertyMsg));
+    m_DataSocket->sendto (Msg,
+                          sizeof(T_MsgHdr) + sizeof(T_PropertyMsg), 0, &m_Server);
+} // FGMultiplayMgr::SendPropMessage ()
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -375,6 +445,9 @@ FGMultiplayMgr::ProcessData (void)
             case POS_DATA_ID:
                 ProcessPosMsg ((char*) & Msg, SenderAddress);
                 break;
+            case PROP_MSG_ID:
+                ProcessPropMsg ((char *) & Msg, SenderAddress);
+                break;
             default:
                 SG_LOG( SG_NETWORK, SG_ALERT,
                   "FGMultiplayMgr::MP_ProcessData - "
@@ -401,27 +474,56 @@ FGMultiplayMgr::ProcessPosMsg
     T_PositionMsg*  PosMsg;     // Pointer to position message in received data
     T_MsgHdr*       MsgHdr;     // Pointer to header in received data
     bool            ActivePlayer; 
-    sgQuat          Orientation;
-    sgdVec3         Position;
+    struct in_addr  PlayerAddress;
+    int             time, timeusec;
+    double          lat, lon, alt;
+    double          hdg, roll, pitch;
+    double          speedN, speedE, speedD;
+    double          left_aileron, right_aileron, elevator, rudder;
+    //double        rpms[6];
+    double          rateH, rateR, rateP;
+    double          accN, accE, accD;
     t_MPClientListIterator CurrentPlayer;
 
     ActivePlayer = false;
     MsgHdr = (T_MsgHdr *)Msg;
-    if (MsgHdr->MsgLen != sizeof(T_MsgHdr) + sizeof(T_PositionMsg))
+    if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + sizeof(T_PositionMsg))
     {
         SG_LOG( SG_NETWORK, SG_ALERT,
           "FGMultiplayMgr::MP_ProcessData - "
           << "Position message received with insufficient data" );
         return;
+    } else if (MsgHdr->MsgLen > sizeof(T_MsgHdr) + sizeof(T_PositionMsg)) {
+        SG_LOG( SG_NETWORK, SG_ALERT,
+                "FGMultiplayMgr::MP_ProcessData - "
+                << "Position message received with more data than I can handle" );
     }
     PosMsg = (T_PositionMsg *)(Msg + sizeof(T_MsgHdr));
-    Position[0] = XDR_decode_double (PosMsg->PlayerPosition[0]);
-    Position[1] = XDR_decode_double (PosMsg->PlayerPosition[1]);
-    Position[2] = XDR_decode_double (PosMsg->PlayerPosition[2]);
-    Orientation[0] = XDR_decode_float (PosMsg->PlayerOrientation[0]);
-    Orientation[1] = XDR_decode_float (PosMsg->PlayerOrientation[1]);
-    Orientation[2] = XDR_decode_float (PosMsg->PlayerOrientation[2]);
-    Orientation[3] = XDR_decode_float (PosMsg->PlayerOrientation[3]);
+    time = XDR_decode_uint32 (PosMsg->time);
+    timeusec = XDR_decode_uint32 (PosMsg->timeusec);
+    lat = XDR_decode_double (PosMsg->lat);
+    lon = XDR_decode_double (PosMsg->lon);
+    alt = XDR_decode_double (PosMsg->alt);
+    hdg = XDR_decode_double (PosMsg->hdg);
+    roll = XDR_decode_double (PosMsg->roll);
+    pitch = XDR_decode_double (PosMsg->pitch);
+    speedN = XDR_decode_double (PosMsg->speedN);
+    speedE = XDR_decode_double (PosMsg->speedE);
+    speedD = XDR_decode_double (PosMsg->speedD);
+    left_aileron = XDR_decode_float (PosMsg->left_aileron);
+    right_aileron = XDR_decode_float (PosMsg->right_aileron);
+    elevator = XDR_decode_float (PosMsg->elevator);
+    rudder = XDR_decode_float (PosMsg->rudder);
+    /*for (int i = 0; i < 6; i++) {
+        rpms[i] = XDR_decode_float (PosMsg->rpms[i]);
+    }*/
+    rateH = XDR_decode_float (PosMsg->rateH);
+    rateR = XDR_decode_float (PosMsg->rateR);
+    rateP = XDR_decode_float (PosMsg->rateP);
+    accN = XDR_decode_float (PosMsg->accN);
+    accE = XDR_decode_float (PosMsg->accE);
+    accD = XDR_decode_float (PosMsg->accD);
+
     //////////////////////////////////////////////////
     //  Check if the player is already in the game 
     //  by using the Callsign
@@ -432,8 +534,16 @@ FGMultiplayMgr::ProcessPosMsg
     {
         if ((*CurrentPlayer)->CompareCallsign(MsgHdr->Callsign))
         {
-            // Player found. Update the data for the player.
-            (*CurrentPlayer)->SetPosition(Orientation, Position);
+            // Player found. Update the data for the player if the timestamp is OK
+            if ((*CurrentPlayer)->CheckTime(time, timeusec))
+                (*CurrentPlayer)->SetPosition(lat, lon, alt,
+                                              hdg, roll, pitch,
+                                              speedN, speedE, speedD,
+                                              left_aileron, right_aileron, elevator, rudder,
+                                              //rpms,
+                                              rateH, rateR, rateP,
+											  accN, accE, accD
+											  );
             ActivePlayer = true;
         }
     } // for (...)
@@ -448,8 +558,19 @@ FGMultiplayMgr::ProcessPosMsg
     NewPlayer = new MPPlayer;
     NewPlayer->Open(SenderAddress.getHost(), MsgHdr->ReplyPort,
         MsgHdr->Callsign, PosMsg->Model, false);
-    NewPlayer->SetPosition(Orientation, Position);
+    if (NewPlayer->CheckTime(time, timeusec))
+        NewPlayer->SetPosition(lat, lon, alt,
+                               hdg, roll, pitch,
+                               speedN, speedE, speedD,
+                               left_aileron, right_aileron, elevator, rudder,
+                               //rpms,
+                               rateH, rateR, rateP,
+							   accN, accE, accD);
     m_MPClientList.push_back (NewPlayer);
+
+	// if we have a new player then we need to send all our properties
+	send_all_props = true;
+
 } // FGMultiplayMgr::ProcessPosMsg()
 //////////////////////////////////////////////////////////////////////
 
@@ -470,18 +591,76 @@ FGMultiplayMgr::ProcessChatMsg
     T_MsgHdr*   MsgHdr;     // Pointer to header in received data
 
     MsgHdr = (T_MsgHdr *)Msg;
-    if (MsgHdr->MsgLen != sizeof(T_MsgHdr) + sizeof(T_ChatMsg))
+    if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + 1)
     {
         SG_LOG( SG_NETWORK, SG_ALERT,
           "FGMultiplayMgr::MP_ProcessData - "
           << "Chat message received with insufficient data" );
         return;
     }
+    
+    char *MsgBuf = new char[MsgHdr->MsgLen - sizeof(T_MsgHdr)];
+    strncpy(MsgBuf, ((T_ChatMsg *)(Msg + sizeof(T_MsgHdr)))->Text, MsgHdr->MsgLen - sizeof(T_MsgHdr));
+    MsgBuf[MsgHdr->MsgLen - sizeof(T_MsgHdr) - 1] = '\0';
+    
     ChatMsg = (T_ChatMsg *)(Msg + sizeof(T_MsgHdr));
     SG_LOG ( SG_NETWORK, SG_ALERT, 
-      "Chat [" << MsgHdr->Callsign << "]" << " " << ChatMsg->Text << endl);
+      "Chat [" << MsgHdr->Callsign << "]" << " " << MsgBuf << endl);
+    delete [] MsgBuf;
 } // FGMultiplayMgr::ProcessChatMsg ()
 //////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+//
+//  handle a property message
+//
+//////////////////////////////////////////////////////////////////////
+void FGMultiplayMgr::ProcessPropMsg ( const char *Msg, netAddress & SenderAddress )
+{
+    T_PropertyMsg* PropMsg; // Pointer to the message itself
+    T_MsgHdr*      MsgHdr;  // Pointer to the message header
+    t_MPClientListIterator CurrentPlayer;
+    
+    MsgHdr = (T_MsgHdr *) Msg;
+       
+	if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + sizeof(T_PropertyMsg)) {
+        SG_LOG( SG_NETWORK, SG_ALERT,
+                "FGMultiplayMgr::MP_ProcessData - "
+                << "Properties message received with insufficient data" );
+		return;
+	} else if (MsgHdr->MsgLen > sizeof(T_MsgHdr) + sizeof(T_PropertyMsg)) {
+        SG_LOG( SG_NETWORK, SG_ALERT,
+                "FGMultiplayMgr::MP_ProcessData - "
+                << "Properties message received with more data than I know how to handle" );
+		return;
+	}
+    
+    PropMsg = (T_PropertyMsg *)(Msg + sizeof(T_MsgHdr));
+    
+    //////////////////////////////////////////////////
+    //  Check if the player is already in the game 
+    //  by using the Callsign, but don't activate
+    //  new players (they need to send a position
+    //  message)
+    //////////////////////////////////////////////////
+    for (CurrentPlayer  = m_MPClientList.begin ();
+         CurrentPlayer != m_MPClientList.end ();
+         CurrentPlayer++)
+    {
+        if ((*CurrentPlayer)->CompareCallsign(MsgHdr->Callsign))
+        {
+            // Player found. Update the data for the player.
+            (*CurrentPlayer)->SetProperty(PropMsg->property,
+                                          (SGPropertyNode::Type) XDR_decode_uint32(PropMsg->type),
+                                          XDR_decode_double(PropMsg->val));
+			SG_LOG( SG_NETWORK, SG_INFO,
+                "FGMultiplayMgr::MP_ProcessData - "
+                << PropMsg->property
+                << (SGPropertyNode::Type) XDR_decode_uint32(PropMsg->type)
+				<< XDR_decode_double(PropMsg->val) );
+        }
+	} // for (...)
+}
 
 //////////////////////////////////////////////////////////////////////
 //

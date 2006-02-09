@@ -56,7 +56,7 @@ FGAIBase::FGAIBase()
     _refID( _newAIModelID() )
 {
     _type_str = "model";
-    tgt_heading = tgt_altitude = tgt_speed = 0.0;
+    tgt_heading = hdg = tgt_altitude = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
     bearing = elevation = range = rdot = 0.0;
     x_shift = y_shift = rotation = 0.0;

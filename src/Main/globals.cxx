@@ -96,12 +96,12 @@ FGGlobals::FGGlobals() :
 FGGlobals::~FGGlobals() 
 {
     delete soundmgr;
+    delete io;
     delete subsystem_mgr;
     delete event_mgr;
     delete initial_state;
     delete props;
     delete commands;
-    delete io;
     delete renderer;
     delete initial_waypoints;
 }

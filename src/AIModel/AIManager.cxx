@@ -37,6 +37,7 @@
 #include "AIThermal.hxx"
 #include "AICarrier.hxx"
 #include "AIStatic.hxx"
+#include "AIMultiplayer.hxx"
 
 SG_USING_STD(list);
 
@@ -191,6 +192,23 @@ FGAIManager::createAircraft( FGAIModelEntity *entity,   FGAISchedule *ref) {
         ai_plane->bind();
         return ai_plane;
 }
+
+void*
+FGAIManager::createMultiplayer( FGAIModelEntity *entity ) {
+     
+    FGAIMultiplayer* ai_plane = new FGAIMultiplayer(this);
+    ai_list.push_back(ai_plane);
+    ++numObjects[0];
+    ++numObjects[FGAIBase::otMultiplayer];
+    ai_plane->setAcType(entity->acType);
+    ai_plane->setCompany(entity->company);
+    ai_plane->setPath(entity->path.c_str());
+
+    ai_plane->init();
+    ai_plane->bind();
+    return ai_plane;
+}
+
 
 void*
 FGAIManager::createShip( FGAIModelEntity *entity ) {
