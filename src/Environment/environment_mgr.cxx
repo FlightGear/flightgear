@@ -60,6 +60,7 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
 {
   delete _environment;
   delete _controller;
+  remove_subsystem("controller");
   delete fgClouds;
 }
 
