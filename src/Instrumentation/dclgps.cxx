@@ -890,11 +890,11 @@ double DCLGPS::GetCDIDeflection() const {
 }
 
 void DCLGPS::DtoInitiate(const string& s) {
-	cout << "DtoInitiate, s = " << s << '\n';
+	//cout << "DtoInitiate, s = " << s << '\n';
 	bool multi;
 	const GPSWaypoint* wp = FindFirstById(s, multi, true);
 	if(wp) {
-		cout << "Waypoint found, starting dto operation!\n";
+		//cout << "Waypoint found, starting dto operation!\n";
 		_dto = true;
 		_activeWaypoint = *wp;
 		_fromWaypoint.lat = _gpsLat;
@@ -902,7 +902,7 @@ void DCLGPS::DtoInitiate(const string& s) {
 		_fromWaypoint.type = GPS_WP_VIRT;
 		_fromWaypoint.id = "DTOWP";
 	} else {
-		cout << "Waypoint not found, ignoring dto request\n";
+		//cout << "Waypoint not found, ignoring dto request\n";
 		// Should bring up the user waypoint page, but we're not implementing that yet.
 		_dto = false;	// TODO - implement this some day.
 	}
