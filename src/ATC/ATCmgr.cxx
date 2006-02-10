@@ -105,9 +105,6 @@ void FGATCMgr::init() {
     SGPath p_comm( globals->get_fg_root() );
     current_commlist->init( p_comm );
 	
-	// Set the user callsign - bit of a hack at the moment - eventually should be read from aircraft file and user-over-rideable
-	fgSetString("/sim/user/callsign", "Golf Foxtrot Sierra");	// C-FGFS
-
 #ifdef ENABLE_AUDIO_SUPPORT	
 	// Load all available voices.
 	// For now we'll do one hardwired one
