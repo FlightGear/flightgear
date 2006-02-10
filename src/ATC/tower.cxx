@@ -319,7 +319,7 @@ void FGTower::Init() {
 		// TODO FIXME - this will break when user starts on apron, at hold short, etc.
 		if(!OnAnyRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0))) {
 			//cout << ident << "  ADD 0\n";
-			current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with the ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
+			current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
 		}
 	}
 }
@@ -1325,7 +1325,7 @@ void FGTower::CheckDepartureList(double dt) {
 				// Change the communication options
 				RemoveAllUserDialogOptions();
 				//cout << "ADD A\n";
-				current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with the ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
+				current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
 			} else {
 				// Send a clear-of-airspace signal
 				// TODO - implement this once we actually have departing AI traffic (currently all circuits or arrivals).

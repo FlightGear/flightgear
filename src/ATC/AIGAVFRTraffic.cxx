@@ -179,7 +179,7 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 				}
 				//cout << "freq = " << freq << endl;
 				GetRwyDetails(airportID);
-				//"@AP Tower @CS @MI miles @CD of the airport for full stop with the ATIS"
+				//"@AP Tower @CS @MI miles @CD of the airport for full stop with ATIS"
 				// At the bare minimum we ought to make sure it goes the right way at dual parallel rwy airports!
 				if(rwy.rwyID.size() == 3) {
 					patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
@@ -200,7 +200,7 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 				if(dist_miles > 1) pending_transmission += " miles ";
 				else pending_transmission += " mile ";
 				pending_transmission += GetCompassDirection(GetHeadingFromTo(_destPos, _pos));
-				pending_transmission += " of the airport for full stop with the ATIS";
+				pending_transmission += " of the airport for full stop with ATIS";
 				//cout << pending_transmission << endl;
 				Transmit(14);	// 14 is the callback code, NOT the timeout!
 				responseCounter = 0;
