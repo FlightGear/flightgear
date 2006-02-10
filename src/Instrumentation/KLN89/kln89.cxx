@@ -379,7 +379,10 @@ void KLN89::Knob2Right1() {
 
 void KLN89::CrsrPressed() {
 	_dispMsg = false;
-	if(_activePage == _nrst_page) return;	// CRSR cannot be switched off on nrst page.
+	// CRSR cannot be switched off on nrst page.
+	if(_activePage == _nrst_page) { return; }
+	// CRSR is always off when inner-knob is out on nav4 page.
+	if(_curPage == 6 && _activePage->GetSubPage() == 3 && fgGetBool("/instrumentation/kln89/scan-pull")) { return; }
 	if(_cleanUpPage >= 0) {
 		_pages[(unsigned int)_cleanUpPage]->CleanUp();
 		_cleanUpPage = -1;
@@ -432,10 +435,9 @@ void KLN89::DtoPressed() {
 			} else {
 				_dir_page->SetId(_activeWaypoint.id);
 			}
-		// } else if(_curPage == 6 && _nav_page->GetSubPage() == 3 && 0) {
+		} else if(_curPage == 6 && _activePage->GetSubPage() == 3 && fgGetBool("/instrumentation/kln89/scan-pull") && _activeFP->waypoints.size()) {
 			// NAV 4
-			// TODO
-			// The && 0 should be && outer knob is out.
+			_dir_page->SetId(((KLN89NavPage*)_activePage)->GetNav4WpId());
 		} else if(_curPage == 7 && _activePage->GetSubPage() == 0 && _mode == KLN89_MODE_CRSR) {
 			//cout << "Checking the fpl page!\n";
 			// FPL 0
@@ -449,7 +451,7 @@ void KLN89::DtoPressed() {
 		} else {
 			_dir_page->SetId(_activeWaypoint.id);
 		}
-		// This need to come after the bit before otherwise the FPL page clears it's current ID when it looses focus.
+		// This need to come after the bit before otherwise the FPL or NAV4 page clears their current ID when it looses focus.
 		_activePage->LooseFocus();
 		_activePage = _dir_page;
 		_mode = KLN89_MODE_CRSR;

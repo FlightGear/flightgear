@@ -36,6 +36,7 @@ KLN89NavPage::KLN89NavPage(KLN89* parent)
 	_menuActive = false;
 	_menuPos = 0;
 	_suspendAVS = false;
+	_scanWpSet = false;
 }
 
 KLN89NavPage::~KLN89NavPage() {
@@ -44,10 +45,14 @@ KLN89NavPage::~KLN89NavPage() {
 void KLN89NavPage::Update(double dt) {
 	GPSFlightPlan* fp = ((KLN89*)_parent)->_activeFP;
 	GPSWaypoint* awp = _parent->GetActiveWaypoint();
+	// Scan-pull out on nav4 page switches off the cursor
+	if(3 == _subPage && fgGetBool("/instrumentation/kln89/scan-pull")) { _kln89->_mode = KLN89_MODE_DISP; }
 	bool crsr = (_kln89->_mode == KLN89_MODE_CRSR);
 	bool blink = _kln89->_blink;
 	double lat = _kln89->_gpsLat * SG_RADIANS_TO_DEGREES;
 	double lon = _kln89->_gpsLon * SG_RADIANS_TO_DEGREES;
+	
+	if(_subPage != 3) { _scanWpSet = false; }
 	
 	if(0 == _subPage) {
 		if(_kln89->_navFlagged) {
@@ -240,7 +245,9 @@ void KLN89NavPage::Update(double dt) {
 		} else {
 			_kln89->DrawText("-:--", 2, 11, 0);
 		}
-	} else {
+	} else {	// if(3 == _subPage)
+		// Switch the cursor off if scan-pull is out on this page.
+		if(fgGetBool("/instrumentation/kln89/scan-pull")) { _kln89->_mode = KLN89_MODE_DISP; } 
 		// The moving map page the core KLN89 class draws this.
 		if(_kln89->_mapOrientation == 2 && _kln89->_groundSpeed_kts < 2) {
 			// Don't draw it if in track up mode and groundspeed < 2kts, as per real-life unit.
@@ -297,6 +304,21 @@ void KLN89NavPage::Update(double dt) {
 		} else {
 			// Just draw the scale
 			_kln89->DrawMapText(scle_str, 1, 0, true);
+		}
+		// If the scan-pull knob is out, draw one of the waypoints (if applicable).
+		if(fgGetBool("/instrumentation/kln89/scan-pull")) {
+			if(_kln89->_activeFP->waypoints.size()) {
+				//cout << "Need to draw a waypoint!\n";
+				_kln89->DrawLine(70, 0, 111, 0);
+				if(!_kln89->_blink) {
+					//_kln89->DrawMapQuad(45, 0, 97, 8, true);
+					if(!_scanWpSet) {
+						_scanWpIndex = _kln89->GetActiveWaypointIndex();
+						_scanWpSet = true;
+					}
+					_kln89->DrawMapText(_kln89->_activeFP->waypoints[_scanWpIndex]->id, 71, 0, true);
+				}		
+			}
 		}
 		// And do part of the field 1 update, since NAV 4 is a special case for the last line.
 		_kln89->DrawChar('>', 1, 0, 0);
@@ -357,8 +379,25 @@ void KLN89NavPage::Update(double dt) {
 	KLN89Page::Update(dt);
 }
 
+// Returns the id string of the selected waypoint on NAV4 if valid, else returns an empty string.
+string KLN89NavPage::GetNav4WpId() {
+	if(3 == _subPage) {
+		if(fgGetBool("/instrumentation/kln89/scan-pull")) {
+			if(_kln89->_activeFP->waypoints.size()) {
+				if(!_scanWpSet) {
+					return(_kln89->_activeWaypoint.id);
+				} else {
+					return(_kln89->_activeFP->waypoints[_scanWpIndex]->id);
+				}		
+			}
+		}
+	}
+	return("");
+}
+
 void KLN89NavPage::LooseFocus() {
 	_suspendAVS = false;
+	_scanWpSet = false;
 }
 
 void KLN89NavPage::CrsrPressed() {
@@ -440,6 +479,23 @@ void KLN89NavPage::Knob1Right1() {
 }
 
 void KLN89NavPage::Knob2Left1() {
+	// If the inner-knob is out on the nav4 page, the only effect is to cycle the displayed waypoint.
+	if(3 == _subPage && fgGetBool("/instrumentation/kln89/scan-pull")) {
+		if(_kln89->_activeFP->waypoints.size()) {	// TODO - find out what happens when scan-pull is on on nav4 without an active FP.
+			// It's unlikely that we could get here without _scanWpSet, but theoretically possible, so we need to cover it.
+			if(!_scanWpSet) {
+				_scanWpIndex = _kln89->GetActiveWaypointIndex();
+				_scanWpSet = true;
+			} else {
+				if(0 == _scanWpIndex) {
+					_scanWpIndex = _kln89->_activeFP->waypoints.size() - 1;
+				} else {
+					_scanWpIndex--;
+				}
+			}
+		}
+		return;
+	}
 	if(_kln89->_mode != KLN89_MODE_CRSR || _uLinePos == 0) {
 		KLN89Page::Knob2Left1();
 		return;
@@ -477,6 +533,22 @@ void KLN89NavPage::Knob2Left1() {
 }
 
 void KLN89NavPage::Knob2Right1() {
+	// If the inner-knob is out on the nav4 page, the only effect is to cycle the displayed waypoint.
+	if(3 == _subPage && fgGetBool("/instrumentation/kln89/scan-pull")) {
+		if(_kln89->_activeFP->waypoints.size()) {	// TODO - find out what happens when scan-pull is on on nav4 without an active FP.
+			// It's unlikely that we could get here without _scanWpSet, but theoretically possible, so we need to cover it.
+			if(!_scanWpSet) {
+				_scanWpIndex = _kln89->GetActiveWaypointIndex();
+				_scanWpSet = true;
+			} else {
+				_scanWpIndex++;
+				if(_scanWpIndex > _kln89->_activeFP->waypoints.size() - 1) {
+					_scanWpIndex = 0;
+				}
+			}
+		}
+		return;
+	}
 	if(_kln89->_mode != KLN89_MODE_CRSR || _uLinePos == 0) {
 		KLN89Page::Knob2Right1();
 		return;

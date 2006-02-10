@@ -22,6 +22,7 @@
 // $Id$
 
 #include "kln89_page.hxx"
+#include <Main/fg_props.hxx>
 
 KLN89Page::KLN89Page(KLN89* parent) 
 : GPSPage(parent) {
@@ -130,7 +131,7 @@ void KLN89Page::Knob1Right1() {
 }
 
 void KLN89Page::Knob2Left1() {
-	if(_kln89->_mode != KLN89_MODE_CRSR) {
+	if(_kln89->_mode != KLN89_MODE_CRSR && !fgGetBool("/instrumentation/kln89/scan-pull")) {
 		GPSPage::Knob2Left1(); 
 	} else {
 		if(_uLinePos == 0 && _kln89->_obsMode) {
@@ -144,7 +145,7 @@ void KLN89Page::Knob2Left1() {
 }
 
 void KLN89Page::Knob2Right1() {
-	if(_kln89->_mode != KLN89_MODE_CRSR) {
+	if(_kln89->_mode != KLN89_MODE_CRSR && !fgGetBool("/instrumentation/kln89/scan-pull")) {
 		GPSPage::Knob2Right1(); 
 	} else {
 		if(_uLinePos == 0 && _kln89->_obsMode) {
