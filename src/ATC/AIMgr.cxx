@@ -48,7 +48,7 @@ SG_USING_STD(cout);
 FGAIMgr::FGAIMgr() {
 	ATC = globals->get_ATC_mgr();
 	initDone = false;
-	ai_callsigns_used["CFGFS"] = 1;	// so we don't inadvertently use this
+	ai_callsigns_used["GFS"] = 1;	// so we don't inadvertently use this
 	// TODO - use the proper user callsign when it becomes user settable.
 	removalList.clear();
 	activated.clear();
