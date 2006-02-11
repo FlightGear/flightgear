@@ -205,16 +205,16 @@ do_exit (const SGPropertyNode * arg)
             SGPath config( homedir );
             config.append( ".fgfs" );
 #endif
-            config.append( "preferences.xml" );
+            config.append( "autosave.xml" );
             config.create_dir( 0700 );
-            SG_LOG(SG_IO, SG_INFO, "Saving user preferences");
+            SG_LOG(SG_IO, SG_INFO, "Saving user settings to autosave.xml");
             try {
                 writeProperties(config.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
             } catch (const sg_exception &e) {
-                guiErrorMessage("Error saving preferences: ", e);
+                guiErrorMessage("Error writing autosave.xml: ", e);
             }
 
-            SG_LOG(SG_INPUT, SG_BULK, "Finished Saving user preferences");
+            SG_LOG(SG_INPUT, SG_BULK, "Finished Saving user settings");
         }
     }
     fgExit(arg->getIntValue("status", 0));

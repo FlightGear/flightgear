@@ -606,15 +606,15 @@ bool fgInitConfig ( int argc, char **argv ) {
         SGPath config( homedir );
         config.append( ".fgfs" );
 #endif
-        config.append( "preferences.xml" );
-        SG_LOG(SG_INPUT, SG_INFO, "Reading user preferences");
+        config.append( "autosave.xml" );
+        SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from autosave.xml");
         try {
             fgLoadProps(config.str().c_str(), globals->get_props(), false,
                         SGPropertyNode::USERARCHIVE);
         } catch (...) {
-            SG_LOG(SG_INPUT, SG_BULK, "First time reading user preferences.");
+            SG_LOG(SG_INPUT, SG_BULK, "First time reading user settings");
         }
-        SG_LOG(SG_INPUT, SG_BULK, "Finished Reading user preferences");
+        SG_LOG(SG_INPUT, SG_BULK, "Finished Reading user settings");
     }
 
     // parse options after loading aircraft to ensure any user
