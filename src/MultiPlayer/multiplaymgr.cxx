@@ -474,7 +474,6 @@ FGMultiplayMgr::ProcessPosMsg
     T_PositionMsg*  PosMsg;     // Pointer to position message in received data
     T_MsgHdr*       MsgHdr;     // Pointer to header in received data
     bool            ActivePlayer; 
-    struct in_addr  PlayerAddress;
     int             time, timeusec;
     double          lat, lon, alt;
     double          hdg, roll, pitch;
