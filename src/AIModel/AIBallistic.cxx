@@ -27,20 +27,37 @@
 #include "AIBallistic.hxx"
 
 
-FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
-    manager = mgr;
-    _type_str = "ballistic";
-    _otype = otBallistic;
+FGAIBallistic::FGAIBallistic() : FGAIBase(otBallistic) {
     drag_area = 0.007;
     life_timer = 0.0;
     gravity = 32;
 //  buoyancy = 64;
     no_roll = false;
+    aero_stabilised = false;
 }
 
 FGAIBallistic::~FGAIBallistic() {
 }
 
+void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
+  if (!scFileNode)
+    return;
+
+  FGAIBase::readFromScenario(scFileNode);
+
+  setAzimuth(scFileNode->getDoubleValue("azimuth", 0.0));
+  setElevation(scFileNode->getDoubleValue("elevation", 0.0));
+  setDragArea(scFileNode->getDoubleValue("eda", 0.007));
+  setLife(scFileNode->getDoubleValue("life", 900.0));
+  setBuoyancy(scFileNode->getDoubleValue("buoyancy", 0));
+  setWind_from_east(scFileNode->getDoubleValue("wind_from_east", 0));
+  setWind_from_north(scFileNode->getDoubleValue("wind_from_north", 0));
+  setWind(scFileNode->getBoolValue("wind", false));
+  setRoll(scFileNode->getDoubleValue("roll", 0.0));
+  setCd(scFileNode->getDoubleValue("cd", 0.029));
+  setMass(scFileNode->getDoubleValue("mass", 0.007));
+  setStabilisation(scFileNode->getBoolValue("aero_stabilized", false));
+}
 
 bool FGAIBallistic::init() {
    FGAIBase::init();

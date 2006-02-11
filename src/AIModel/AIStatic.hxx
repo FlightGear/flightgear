@@ -32,18 +32,15 @@ class FGAIStatic : public FGAIBase {
 
 public:
 
-	FGAIStatic(FGAIManager* mgr);
+	FGAIStatic();
 	~FGAIStatic();
-	
-	bool init();
+
+	virtual bool init();
         virtual void bind();
         virtual void unbind();
-	void update(double dt);
+	virtual void update(double dt);
 
-private:
-
-        double dt; 
-	
+        virtual const char* getTypeString(void) const { return "static"; }
 };
 
 

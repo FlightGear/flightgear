@@ -28,8 +28,10 @@ class FGAIBallistic : public FGAIBase {
 
 public:
 
-    FGAIBallistic(FGAIManager* mgr);
+    FGAIBallistic();
     ~FGAIBallistic();
+
+    void readFromScenario(SGPropertyNode* scFileNode);
 
     bool init();
     virtual void bind();
@@ -50,6 +52,8 @@ public:
     void setMass( double m );
 
     double _getTime() const;
+
+    virtual const char* getTypeString(void) const { return "ballistic"; }
 
 private:
 

@@ -36,10 +36,7 @@ SG_USING_STD(string);
 #include "AIStorm.hxx"
 
 
-FGAIStorm::FGAIStorm(FGAIManager* mgr) {
-   manager = mgr;   
-   _type_str = "thunderstorm";
-   _otype = otStorm;
+FGAIStorm::FGAIStorm() : FGAIBase(otStorm) {
    delay = 3.6;
    subflashes = 1;
    timer = 0.0;
@@ -66,6 +63,16 @@ FGAIStorm::FGAIStorm(FGAIManager* mgr) {
 FGAIStorm::~FGAIStorm() {
 }
 
+void FGAIStorm::readFromScenario(SGPropertyNode* scFileNode) {
+  if (!scFileNode)
+    return;
+
+  FGAIBase::readFromScenario(scFileNode);
+
+  setDiameter(scFileNode->getDoubleValue("diameter-ft", 0.0)/6076.11549);
+  setHeight(scFileNode->getDoubleValue("height-msl", 5000.0));
+  setStrengthNorm(scFileNode->getDoubleValue("strength-norm", 1.0)); 
+}
 
 bool FGAIStorm::init() {
    return FGAIBase::init();
@@ -89,8 +96,6 @@ void FGAIStorm::update(double dt) {
 
 void FGAIStorm::Run(double dt) {
 
-   FGAIStorm::dt = dt;
-	
    double speed_north_deg_sec;
    double speed_east_deg_sec;
 

@@ -62,15 +62,13 @@ const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
 };
 
 
-FGAIAircraft::FGAIAircraft(FGAIManager* mgr, FGAISchedule *ref) {
+FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
+  FGAIBase(otAircraft) {
   trafficRef = ref;
   if (trafficRef)
     groundOffset = trafficRef->getGroundOffset();
   else
     groundOffset = 0;
-   manager = mgr;   
-   _type_str = "aircraft";
-   _otype = otAircraft;
    fp = 0;
    dt_count = 0;
    dt_elev_count = 0;
@@ -86,8 +84,19 @@ FGAIAircraft::FGAIAircraft(FGAIManager* mgr, FGAISchedule *ref) {
 
 
 FGAIAircraft::~FGAIAircraft() {
+  delete fp;
 }
 
+void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
+  if (!scFileNode)
+    return;
+
+  FGAIBase::readFromScenario(scFileNode);
+
+  setPerformance(scFileNode->getStringValue("class", "jet_transport"));
+  setFlightPlan(scFileNode->getStringValue("flightplan"),
+                scFileNode->getBoolValue("repeat", false));
+}
 
 bool FGAIAircraft::init() {
    refuel_node = fgGetNode("systems/refuel/contact", true);
@@ -100,19 +109,12 @@ void FGAIAircraft::bind() {
     props->tie("controls/gear/gear-down",
                SGRawValueMethods<FGAIAircraft,bool>(*this,
                                               &FGAIAircraft::_getGearDown));
-#if 0
-    props->getNode("controls/lighting/landing-lights", true)
-           ->alias("controls/gear/gear-down");
-#endif
 }
 
 void FGAIAircraft::unbind() {
     FGAIBase::unbind();
 
     props->untie("controls/gear/gear-down");
-#if 0
-    props->getNode("controls/lighting/landing-lights")->unalias();
-#endif
 }
 
 
@@ -121,6 +123,24 @@ void FGAIAircraft::update(double dt) {
    FGAIBase::update(dt);
    Run(dt);
    Transform();
+}
+
+void FGAIAircraft::setPerformance(const std::string& acclass)
+{
+  if (acclass == "light") {
+    SetPerformance(&FGAIAircraft::settings[FGAIAircraft::LIGHT]);
+  } else if (acclass == "ww2_fighter") {
+    SetPerformance(&FGAIAircraft::settings[FGAIAircraft::WW2_FIGHTER]);
+  } else if (acclass ==  "jet_transport") {
+    SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
+  } else if (acclass == "jet_fighter") {
+    SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_FIGHTER]);
+  } else if (acclass ==  "tanker") {
+    SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
+    SetTanker(true);
+  } else {
+    SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
+  }
 }
 
 void FGAIAircraft::SetPerformance(const PERF_STRUCT *ps) {
@@ -448,7 +468,17 @@ double FGAIAircraft::sign(double x) {
   else { return 1.0; }
 }
 
+void FGAIAircraft::setFlightPlan(const std::string& flightplan, bool repeat)
+{
+  if (!flightplan.empty()){
+    FGAIFlightPlan* fp = new FGAIFlightPlan(flightplan);
+    fp->setRepeat(repeat);
+    SetFlightPlan(fp);
+  }
+}
+
 void FGAIAircraft::SetFlightPlan(FGAIFlightPlan *f) {
+  delete fp;
   fp = f;
 }
 

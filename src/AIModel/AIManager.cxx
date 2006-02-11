@@ -18,16 +18,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-#include <simgear/misc/sg_path.hxx>
-#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 #include <Airports/simple.hxx>
-#include <Traffic/SchedFlight.hxx>
-#include <Traffic/Schedule.hxx>
 #include <Traffic/TrafficMgr.hxx>
-
-#include <list>
 
 #include "AIManager.hxx"
 #include "AIAircraft.hxx"
@@ -39,27 +33,19 @@
 #include "AIStatic.hxx"
 #include "AIMultiplayer.hxx"
 
-SG_USING_STD(list);
-
-
 FGAIManager::FGAIManager() {
-  initDone = false;
   for (int i=0; i < FGAIBase::MAX_OBJECTS; i++)
      numObjects[i] = 0;
   _dt = 0.0;
-  dt_count = 9;
   scenario_filename = "";
-  ai_list.clear();
 }
 
 FGAIManager::~FGAIManager() {
   ai_list_iterator ai_list_itr = ai_list.begin();
   while(ai_list_itr != ai_list.end()) {
       (*ai_list_itr)->unbind();
-      delete (*ai_list_itr);
       ++ai_list_itr;
-    }
-  ai_list.clear();
+  }
 }
 
 
@@ -82,14 +68,16 @@ void FGAIManager::init() {
   user_yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
   user_speed_node     = fgGetNode("/velocities/uBody-fps", true);
 
+
+  /// Move that into the constructor
   for(int i = 0 ; i < root->nChildren() ; i++) {
     SGPropertyNode *aiEntry = root->getChild( i );
-	if( !strcmp( aiEntry->getName(), "scenario" ) ) {
+    if( !strcmp( aiEntry->getName(), "scenario" ) ) {
       scenario_filename = aiEntry->getStringValue();
-      if (scenario_filename != "") processScenario( scenario_filename );
-	}
+      if (!scenario_filename.empty())
+        processScenario( scenario_filename );
+    }
   }
-  initDone = true;
 }
 
 
@@ -128,7 +116,6 @@ void FGAIManager::update(double dt) {
                    --numObjects[(*ai_list_itr)->getType()];
                    --numObjects[0];
                    (*ai_list_itr)->unbind();
-                   delete (*ai_list_itr);
                    if ( ai_list_itr == ai_list.begin() ) {
                        ai_list.erase(ai_list_itr);
                        ai_list_itr = ai_list.begin();
@@ -139,7 +126,8 @@ void FGAIManager::update(double dt) {
                 } else {
                    fetchUserState();
                    if ((*ai_list_itr)->isa(FGAIBase::otThermal)) {
-                       processThermal((FGAIThermal*)*ai_list_itr); 
+                       FGAIBase *base = *ai_list_itr;
+                       processThermal((FGAIThermal*)base); 
                    } else { 
                       (*ai_list_itr)->update(_dt);
                    }
@@ -147,223 +135,19 @@ void FGAIManager::update(double dt) {
                 ++ai_list_itr;
         }
         wind_from_down_node->setDoubleValue( strength ); // for thermals
-
 }
 
-
-void*
-FGAIManager::createAircraft( FGAIModelEntity *entity,   FGAISchedule *ref) {
-     
-        FGAIAircraft* ai_plane = new FGAIAircraft(this, ref);
-        ai_list.push_back(ai_plane);
-        ++numObjects[0];
-        ++numObjects[FGAIBase::otAircraft];
-        if (entity->m_class == "light") {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::LIGHT]);
-        } else if (entity->m_class == "ww2_fighter") {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::WW2_FIGHTER]);
-        } else if (entity->m_class ==  "jet_transport") {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
-        } else if (entity->m_class == "jet_fighter") {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_FIGHTER]);
-        } else if (entity->m_class ==  "tanker") {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
-          ai_plane->SetTanker(true);
-        } else {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
-        }
-        ai_plane->setAcType(entity->acType);
-        ai_plane->setCompany(entity->company);
-        ai_plane->setHeading(entity->heading);
-        ai_plane->setSpeed(entity->speed);
-        ai_plane->setPath(entity->path.c_str());
-        ai_plane->setAltitude(entity->altitude);
-        ai_plane->setLongitude(entity->longitude);
-        ai_plane->setLatitude(entity->latitude);
-        ai_plane->setBank(entity->roll);
-
-        if ( entity->fp ) {
-          ai_plane->SetFlightPlan(entity->fp);
-        }
-        if (entity->repeat) {
-          ai_plane->GetFlightPlan()->setRepeat(true);
-        }
-        ai_plane->init();
-        ai_plane->bind();
-        return ai_plane;
+void
+FGAIManager::attach(SGSharedPtr<FGAIBase> model)
+{
+  model->setManager(this);
+  ai_list.push_back(model);
+  ++numObjects[0];
+  ++numObjects[model->getType()];
+  model->init();
+  model->bind();
 }
 
-void*
-FGAIManager::createMultiplayer( FGAIModelEntity *entity ) {
-     
-    FGAIMultiplayer* ai_plane = new FGAIMultiplayer(this);
-    ai_list.push_back(ai_plane);
-    ++numObjects[0];
-    ++numObjects[FGAIBase::otMultiplayer];
-    ai_plane->setAcType(entity->acType);
-    ai_plane->setCompany(entity->company);
-    ai_plane->setPath(entity->path.c_str());
-
-    ai_plane->init();
-    ai_plane->bind();
-    return ai_plane;
-}
-
-
-void*
-FGAIManager::createShip( FGAIModelEntity *entity ) {
-    
-     // cout << "creating ship" << endl;    
-
-        FGAIShip* ai_ship = new FGAIShip(this);
-        ai_list.push_back(ai_ship);
-        ++numObjects[0];
-        ++numObjects[FGAIBase::otShip];
-        ai_ship->setHeading(entity->heading);
-        ai_ship->setSpeed(entity->speed);
-        ai_ship->setPath(entity->path.c_str());
-        ai_ship->setAltitude(entity->altitude);
-        ai_ship->setLongitude(entity->longitude);
-        ai_ship->setLatitude(entity->latitude);
-        ai_ship->setRudder(entity->rudder);
-        ai_ship->setName(entity->name);
-
-        if ( entity->fp ) {
-           ai_ship->setFlightPlan(entity->fp);
-        }
-
-        ai_ship->init();
-        ai_ship->bind();
-        return ai_ship;
-}
-
-void*
-FGAIManager::createCarrier( FGAIModelEntity *entity ) {
-    
-    // cout << "creating carrier" << endl;
-
-        FGAICarrier* ai_carrier = new FGAICarrier(this);
-        ai_list.push_back(ai_carrier);
-        ++numObjects[0];
-        ++numObjects[FGAIBase::otCarrier];
-        ai_carrier->setHeading(entity->heading);
-        ai_carrier->setSpeed(entity->speed);
-        ai_carrier->setPath(entity->path.c_str());
-        ai_carrier->setAltitude(entity->altitude);
-        ai_carrier->setLongitude(entity->longitude);
-        ai_carrier->setLatitude(entity->latitude);
-        ai_carrier->setRudder(entity->rudder);
-        ai_carrier->setSolidObjects(entity->solid_objects);
-        ai_carrier->setWireObjects(entity->wire_objects);
-        ai_carrier->setCatapultObjects(entity->catapult_objects);
-        ai_carrier->setParkingPositions(entity->ppositions);
-        ai_carrier->setRadius(entity->radius);
-        ai_carrier->setSign(entity->pennant_number);
-        ai_carrier->setName(entity->name);
-        ai_carrier->setFlolsOffset(entity->flols_offset);
-        ai_carrier->setWind_from_east(entity->wind_from_east);
-        ai_carrier->setWind_from_north(entity->wind_from_north);
-        ai_carrier->setTACANChannelID(entity->TACAN_channel_ID);
-        ai_carrier->setMaxLat(entity->max_lat);
-        ai_carrier->setMinLat(entity->min_lat);
-        ai_carrier->setMaxLong(entity->max_long);
-        ai_carrier->setMinLong(entity->min_long);
-        
-
-        if ( entity->fp ) {
-           ai_carrier->setFlightPlan(entity->fp);
-        }
-
-        ai_carrier->init();
-        ai_carrier->bind();
-        return ai_carrier;
-}
-
-void*
-FGAIManager::createBallistic( FGAIModelEntity *entity ) {
-
-        FGAIBallistic* ai_ballistic = new FGAIBallistic(this);
-        ai_list.push_back(ai_ballistic);
-        ++numObjects[0];
-        ++numObjects[FGAIBase::otBallistic];
-        ai_ballistic->setAzimuth(entity->azimuth);
-        ai_ballistic->setElevation(entity->elevation);
-        ai_ballistic->setSpeed(entity->speed);
-        ai_ballistic->setPath(entity->path.c_str());
-        ai_ballistic->setAltitude(entity->altitude);
-        ai_ballistic->setLongitude(entity->longitude);
-        ai_ballistic->setLatitude(entity->latitude);
-        ai_ballistic->setDragArea(entity->eda);
-        ai_ballistic->setLife(entity->life);
-        ai_ballistic->setBuoyancy(entity->buoyancy);
-        ai_ballistic->setWind_from_east(entity->wind_from_east);
-        ai_ballistic->setWind_from_north(entity->wind_from_north);
-        ai_ballistic->setWind(entity->wind);
-        ai_ballistic->setRoll(entity->roll);
-        ai_ballistic->setCd(entity->cd);
-        ai_ballistic->setMass(entity->mass);
-        ai_ballistic->setStabilisation(entity->aero_stabilised);
-        ai_ballistic->init();
-        ai_ballistic->bind();
-        return ai_ballistic;
-}
-
-void*
-FGAIManager::createStorm( FGAIModelEntity *entity ) {
-
-        FGAIStorm* ai_storm = new FGAIStorm(this);
-        ++numObjects[0];
-        ++numObjects[FGAIBase::otStorm];
-        ai_storm->setHeading(entity->heading);
-        ai_storm->setSpeed(entity->speed);
-        ai_storm->setPath(entity->path.c_str());
-        ai_storm->setAltitude(entity->altitude); 
-        ai_storm->setDiameter(entity->diameter / 6076.11549); 
-        ai_storm->setHeight(entity->height_msl); 
-        ai_storm->setStrengthNorm(entity->turb_strength); 
-        ai_storm->setLongitude(entity->longitude);
-        ai_storm->setLatitude(entity->latitude);
-        ai_storm->init();
-        ai_storm->bind();
-        ai_list.push_back(ai_storm);
-        return ai_storm;
-}
-
-void*
-FGAIManager::createThermal( FGAIModelEntity *entity ) {
-
-        FGAIThermal* ai_thermal = new FGAIThermal(this);
-        ++numObjects[0];
-        ++numObjects[FGAIBase::otThermal];
-        ai_thermal->setLongitude(entity->longitude);
-        ai_thermal->setLatitude(entity->latitude);
-        ai_thermal->setMaxStrength(entity->strength);
-        ai_thermal->setDiameter(entity->diameter / 6076.11549);
-        ai_thermal->setHeight(entity->height_msl);
-        ai_thermal->init();
-        ai_thermal->bind();
-        ai_list.push_back(ai_thermal);
-        return ai_thermal;
-}
-
-void*
-FGAIManager::createStatic( FGAIModelEntity *entity ) {
-     
-     // cout << "creating static object" << endl;    
-
-        FGAIStatic* ai_static = new FGAIStatic(this);
-        ai_list.push_back(ai_static);
-        ++numObjects[0];
-        ++numObjects[FGAIBase::otStatic];
-        ai_static->setHeading(entity->heading);
-        ai_static->setPath(entity->path.c_str());
-        ai_static->setAltitude(entity->altitude);
-        ai_static->setLongitude(entity->longitude);
-        ai_static->setLatitude(entity->latitude);
-        ai_static->init();
-        ai_static->bind();
-        return ai_static;
-}
 
 void FGAIManager::destroyObject( int ID ) {
         ai_list_iterator ai_list_itr = ai_list.begin();
@@ -372,9 +156,7 @@ void FGAIManager::destroyObject( int ID ) {
               --numObjects[0];
               --numObjects[(*ai_list_itr)->getType()];
               (*ai_list_itr)->unbind();
-              delete (*ai_list_itr);
               ai_list.erase(ai_list_itr);
-
               break;
             }
             ++ai_list_itr;
@@ -408,36 +190,71 @@ void FGAIManager::processThermal( FGAIThermal* thermal ) {
 
 
 void FGAIManager::processScenario( const string &filename ) {
-  FGAIScenario* s = new FGAIScenario( filename );
-  for (int i=0;i<s->nEntries();i++) {
-   FGAIModelEntity* const en = s->getNextEntry();
 
-    if (en) {
-      if ( en->m_type == "aircraft") {
-        createAircraft( en );
+  SGPropertyNode_ptr scenarioTop = loadScenarioFile(filename);
+  if (!scenarioTop)
+    return;
+  SGPropertyNode* scenarios = scenarioTop->getChild("scenario");
+  if (!scenarios)
+    return;
 
-      } else if ( en->m_type == "ship") {
-        createShip( en );
+  for (int i = 0; i < scenarios->nChildren(); i++) { 
+    SGPropertyNode* scEntry = scenarios->getChild(i);
+    std::string type = scEntry->getStringValue("type", "aircraft");
 
-      } else if ( en->m_type == "carrier") {
-        createCarrier( en );
+    if (type == "aircraft") {
+      FGAIAircraft* aircraft = new FGAIAircraft;
+      aircraft->readFromScenario(scEntry);
+      attach(aircraft);
 
-      } else if ( en->m_type == "thunderstorm") {
-        createStorm( en );
-
-      } else if ( en->m_type == "thermal") {
-        createThermal( en );
-
-      } else if ( en->m_type == "ballistic") {
-        createBallistic( en );
-
-      } else if ( en->m_type == "static") {
-        createStatic( en );
-      }            
+    } else if (type == "ship") {
+      FGAIShip* ship = new FGAIShip;
+      ship->readFromScenario(scEntry);
+      attach(ship);
+      
+    } else if (type == "carrier") {
+      FGAICarrier* carrier = new FGAICarrier;
+      carrier->readFromScenario(scEntry);
+      attach(carrier);
+      
+    } else if (type == "thunderstorm") {
+      FGAIStorm* storm = new FGAIStorm;
+      storm->readFromScenario(scEntry);
+      attach(storm);
+      
+    } else if (type == "thermal") {
+      FGAIThermal* thermal = new FGAIThermal;
+      thermal->readFromScenario(scEntry);
+      attach(thermal);
+      
+    } else if (type == "ballistic") {
+      FGAIBallistic* ballistic = new FGAIBallistic;
+      ballistic->readFromScenario(scEntry);
+      attach(ballistic);
+      
+    } else if (type == "static") {
+      FGAIStatic* aistatic = new FGAIStatic;
+      aistatic->readFromScenario(scEntry);
+      attach(aistatic);
+      
     }
   }
+}
 
-  delete s;
+SGPropertyNode_ptr
+FGAIManager::loadScenarioFile(const std::string& filename)
+{
+  SGPath path(globals->get_fg_root());
+  path.append("AI/" + filename + ".xml");
+  try {
+    SGPropertyNode_ptr root = new SGPropertyNode;
+    readProperties(path.str(), root);
+    return root;
+  } catch (const sg_exception &e) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "Incorrect path specified for AI "
+           "scenario: \"" << path.str() << "\"");
+    return 0;
+  }
 }
 
 // This code keeps track of models that have already been loaded
@@ -464,42 +281,36 @@ bool FGAIManager::getStartPosition(const string& id, const string& pid,
                                    Point3D& geodPos, double& heading,
                                    sgdVec3 uvw)
 {
+  bool found = false;
   SGPropertyNode* root = fgGetNode("sim/ai", true);
   if (!root->getNode("enabled", true)->getBoolValue())
-      return 0;
+      return found;
 
-  bool found = false;
   for(int i = 0 ; (!found) && i < root->nChildren() ; i++) {
     SGPropertyNode *aiEntry = root->getChild( i );
-	if( !strcmp( aiEntry->getName(), "scenario" ) ) {
-        string filename = aiEntry->getStringValue();
-        FGAIScenario* s = new FGAIScenario( filename );
-        for (int i=0; i<s->nEntries(); i++) {
-            FGAIModelEntity* en = s->getNextEntry();
-            if (en && en->m_type == "carrier" &&
-                (en->pennant_number == id || en->name == id)) {
-            FGAICarrier* ai_carrier = new FGAICarrier(0);
-            ai_carrier->setHeading(en->heading);
-            ai_carrier->setSpeed(en->speed);
-            ai_carrier->setAltitude(en->altitude);
-            ai_carrier->setLongitude(en->longitude);
-            ai_carrier->setLatitude(en->latitude);
-            ai_carrier->setBank(en->rudder);
-            ai_carrier->setParkingPositions(en->ppositions);
-      ai_carrier->setWind_from_east(en->wind_from_east);
-      ai_carrier->setWind_from_north(en->wind_from_north);
-      //ai_carrier->setTACANFreq(en->TACAN_freq);
-
-            if (ai_carrier->getParkPosition(pid, geodPos, heading, uvw)) {
-                delete ai_carrier;
+    if( !strcmp( aiEntry->getName(), "scenario" ) ) {
+      string filename = aiEntry->getStringValue();
+      SGPropertyNode_ptr scenarioTop = loadScenarioFile(filename);
+      if (scenarioTop) {
+        SGPropertyNode* scenarios = scenarioTop->getChild("scenario");
+        if (scenarios) {
+          for (int i = 0; i < scenarios->nChildren(); i++) { 
+            SGPropertyNode* scEntry = scenarios->getChild(i);
+            std::string type = scEntry->getStringValue("type");
+            std::string pnumber = scEntry->getStringValue("pennant-number");
+            std::string name = scEntry->getStringValue("name");
+            if (type == "carrier" && (pnumber == id || name == id)) {
+              SGSharedPtr<FGAICarrier> carrier = new FGAICarrier;
+              carrier->readFromScenario(scEntry);
+              
+              if (carrier->getParkPosition(pid, geodPos, heading, uvw)) {
                 found = true;
                 break;
+              }
             }
-
-            delete ai_carrier;
+          }
         }
       }
-      delete s;
     }
   }
   return found;

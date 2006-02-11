@@ -51,15 +51,19 @@ public:
         enum aircraft_e {LIGHT=0, WW2_FIGHTER, JET_TRANSPORT, JET_FIGHTER, TANKER};
         static const PERF_STRUCT settings[];
 	
-	FGAIAircraft(FGAIManager* mgr,   FGAISchedule *ref=0);
+	FGAIAircraft(FGAISchedule *ref=0);
 	~FGAIAircraft();
-	
-	bool init();
+
+        virtual void readFromScenario(SGPropertyNode* scFileNode);
+
+	virtual bool init();
         virtual void bind();
         virtual void unbind();
-	void update(double dt);
+	virtual void update(double dt);
 
+        void setPerformance(const std::string& perfString);
         void SetPerformance(const PERF_STRUCT *ps);
+        void setFlightPlan(const std::string& fp, bool repat = false);
         void SetFlightPlan(FGAIFlightPlan *f);
         FGAIFlightPlan* GetFlightPlan() const { return fp; };
         void AccelTo(double speed);
@@ -73,11 +77,12 @@ public:
   void doGroundAltitude();
   void loadNextLeg  ();
 
-  void setAcType(string ac) { acType = ac; };
-  void setCompany(string comp) { company = comp;};
-  //void setSchedule(FGAISchedule *ref) { trafficRef = ref;};
+  void setAcType(const string& ac) { acType = ac; };
+  void setCompany(const string& comp) { company = comp;};
 
         inline void SetTanker(bool setting) { isTanker = setting; };
+
+        virtual const char* getTypeString(void) const { return "aircraft"; }
 
 private:
    FGAISchedule *trafficRef;

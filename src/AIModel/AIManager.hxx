@@ -27,11 +27,11 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/ssgSharedPtr.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
 
 #include <Main/fg_props.hxx>
 
 #include <AIModel/AIBase.hxx>
-#include <AIModel/AIScenario.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 
 #include <Traffic/SchedFlight.hxx>
@@ -63,12 +63,10 @@ class FGAIManager : public SGSubsystem
 private:
 
     // A list of pointers to AI objects
-    typedef list <FGAIBase*> ai_list_type;
+    typedef list <SGSharedPtr<FGAIBase> > ai_list_type;
     typedef ai_list_type::iterator ai_list_iterator;
     typedef ai_list_type::const_iterator ai_list_const_iterator;
 
-    // Everything put in this list should be created dynamically
-    // on the heap and ***DELETED WHEN REMOVED!!!!!***
     ai_list_type ai_list;
   ModelVec loadedModels;
 
@@ -83,14 +81,7 @@ public:
     void unbind();
     void update(double dt);
 
-    void* createBallistic( FGAIModelEntity *entity );
-    void* createAircraft( FGAIModelEntity *entity,   FGAISchedule *ref=0 );
-    void* createMultiplayer( FGAIModelEntity *entity );
-    void* createThermal( FGAIModelEntity *entity );
-    void* createStorm( FGAIModelEntity *entity );
-    void* createShip( FGAIModelEntity *entity );
-    void* createCarrier( FGAIModelEntity *entity );
-    void* createStatic( FGAIModelEntity *entity );
+    void attach(SGSharedPtr<FGAIBase> model);
 
     void destroyObject( int ID );
 
@@ -113,12 +104,13 @@ public:
   ssgBranch * getModel(const string& path) const;
   void setModel(const string& path, ssgBranch *model);
 
+  static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
+
   static bool getStartPosition(const string& id, const string& pid,
                                Point3D& geodPos, double& hdng, sgdVec3 uvw);
 
 private:
 
-    bool initDone;
     bool enabled;
     int numObjects[FGAIBase::MAX_OBJECTS];
     SGPropertyNode* root;
@@ -145,7 +137,6 @@ private:
     double wind_from_east;
     double wind_from_north;
     double _dt;
-    int dt_count;
     void fetchUserState( void );
 
     // used by thermals

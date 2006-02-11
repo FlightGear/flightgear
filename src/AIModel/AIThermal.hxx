@@ -32,13 +32,15 @@ class FGAIThermal : public FGAIBase {
 
 public:
 
-	FGAIThermal(FGAIManager* mgr);
+	FGAIThermal();
 	~FGAIThermal();
 	
-	bool init();
+        void readFromScenario(SGPropertyNode* scFileNode);
+
+	virtual bool init();
         virtual void bind();
         virtual void unbind();
-	void update(double dt);
+	virtual void update(double dt);
 
         inline void setMaxStrength( double s ) { max_strength = s; };
         inline void setDiameter( double d ) { diameter = d; };
@@ -47,9 +49,9 @@ public:
         inline double getDiameter() const { return diameter; };
         inline double getHeight() const { return height; };
 
+        virtual const char* getTypeString(void) const { return "thermal"; }
 private:
 
-        double dt; 
 	void Run(double dt);
         double max_strength;
         double strength;

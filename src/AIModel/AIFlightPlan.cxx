@@ -48,7 +48,7 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
   leg = 10;
   gateId = 0;
   SGPath path( globals->get_fg_root() );
-  path.append( ("/Data/AI/FlightPlans/" + filename).c_str() );
+  path.append( ("/AI/FlightPlans/" + filename).c_str() );
   SGPropertyNode root;
   repeat = false;
 
@@ -93,13 +93,17 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
 // Position computed by the traffic manager, as well
 // as setting speeds and altitude computed by the
 // traffic manager. 
-FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
+FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
 			       double course,
 			       time_t start,
 			       FGAirport *dep,
 			       FGAirport *arr,
 			       bool firstLeg,
 			       double radius,
+                               double alt,
+                               double lat,
+                               double lon,
+                               double speed,
 			       const string& fltType,
 			       const string& acType,
 			       const string& airline)
@@ -110,8 +114,8 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
   bool useInitialWayPoint = true;
   bool useCurrentWayPoint = false;
   SGPath path( globals->get_fg_root() );
-  path.append( "/Data/AI/FlightPlans" );
-  path.append( entity->path );
+  path.append( "/AI/FlightPlans" );
+  path.append( p );
   SGPropertyNode root;
   
   // This is a bit of a hack:
@@ -183,7 +187,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
       
       //cerr << "Set leg to : " << leg << endl;  
       wpt_iterator = waypoints.begin();
-      create(dep,arr, leg, entity->altitude, entity->speed, entity->latitude, entity->longitude,
+      create(dep,arr, leg, alt, speed, lat, lon,
 	     firstLeg, radius, fltType, acType, airline);
       wpt_iterator = waypoints.begin();
       //cerr << "after create: " << (*wpt_iterator)->name << endl;

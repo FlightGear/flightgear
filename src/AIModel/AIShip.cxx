@@ -24,19 +24,31 @@
 #include <simgear/math/point3d.hxx>
 #include <math.h>
 
+#include "AIFlightPlan.hxx"
 #include "AIShip.hxx"
 
 
-FGAIShip::FGAIShip(FGAIManager* mgr) {
-   manager = mgr;
-   _type_str = "ship";
-   _otype = otShip;
-
+FGAIShip::FGAIShip(object_type ot) : FGAIBase(ot) {
 }
 
 FGAIShip::~FGAIShip() {
 }
 
+void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
+  if (!scFileNode)
+    return;
+
+  FGAIBase::readFromScenario(scFileNode);
+
+  setRudder(scFileNode->getFloatValue("rudder", 0.0));
+  setName(scFileNode->getStringValue("name", "Titanic"));
+  
+  std::string flightplan = scFileNode->getStringValue("flightplan");
+  if (!flightplan.empty()){
+    FGAIFlightPlan* fp = new FGAIFlightPlan(flightplan);
+    setFlightPlan(fp);
+  }
+}
 
 bool FGAIShip::init() {
    

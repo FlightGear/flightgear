@@ -32,13 +32,15 @@ class FGAIStorm : public FGAIBase {
 
 public:
 
-	FGAIStorm(FGAIManager* mgr);
+	FGAIStorm();
 	~FGAIStorm();
 	
-	bool init();
+        void readFromScenario(SGPropertyNode* scFileNode);
+
+	virtual bool init();
         virtual void bind();
         virtual void unbind();
-	void update(double dt);
+	virtual void update(double dt);
         inline void setStrengthNorm( double s ) { strength_norm = s; };
         inline void setDiameter( double d ) { diameter = d; };
         inline void setHeight( double h ) { height = h; };
@@ -46,9 +48,10 @@ public:
         inline double getDiameter() const { return diameter; };
         inline double getHeight() const { return height; };
 
+        virtual const char* getTypeString(void) const { return "thunderstorm"; }
+
 private:
 
-        double dt;
         double diameter;      // diameter of turbulence zone, in nm
         double height;        // top of turbulence zone, in feet MSL
         double strength_norm; // strength of turbulence

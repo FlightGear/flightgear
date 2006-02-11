@@ -34,19 +34,25 @@ SG_USING_STD(string);
 #include "AIThermal.hxx"
 
 
-FGAIThermal::FGAIThermal(FGAIManager* mgr) {
-   manager = mgr;   
-   _type_str = "thermal";
-   _otype = otThermal;
+FGAIThermal::FGAIThermal() : FGAIBase(otThermal) {
    max_strength = 6.0;
    diameter = 0.5;
    strength = factor = 0.0;
 }
 
-
 FGAIThermal::~FGAIThermal() {
 }
 
+void FGAIThermal::readFromScenario(SGPropertyNode* scFileNode) {
+  if (!scFileNode)
+    return;
+
+  FGAIBase::readFromScenario(scFileNode);
+
+  setMaxStrength(scFileNode->getDoubleValue("strength-fps", 8.0)); 
+  setDiameter(scFileNode->getDoubleValue("diameter-ft", 0.0)/6076.11549);
+  setHeight(scFileNode->getDoubleValue("height-msl", 5000.0));
+}
 
 bool FGAIThermal::init() {
    factor = 8.0 * max_strength / (diameter * diameter * diameter);
@@ -71,8 +77,6 @@ void FGAIThermal::update(double dt) {
 
 void FGAIThermal::Run(double dt) {
 
-   FGAIThermal::dt = dt;
-	
    //###########################//
    // do calculations for range //
    //###########################//

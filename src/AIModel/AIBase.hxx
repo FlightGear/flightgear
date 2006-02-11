@@ -28,6 +28,7 @@
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/ssgSharedPtr.hxx>
+#include <simgear/structure/SGReferenced.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -37,89 +38,25 @@ SG_USING_STD(list);
 class FGAIManager;
 class FGAIFlightPlan;
 
-
-struct ParkPosition {
-  ParkPosition(const ParkPosition& pp)
-    : name(pp.name), offset(pp.offset), heading_deg(pp.heading_deg)
-  {}
-  ParkPosition(const string& n, const Point3D& off = Point3D(), double heading = 0)
-    : name(n), offset(off), heading_deg(heading)
-  {}
-  string name;
-  Point3D offset;
-  double heading_deg;
-};
-
-typedef struct {
-   string callsign;
-
-   // can be aircraft, ship, storm, thermal, static or ballistic
-   string m_type;
-   string m_class;
-   string path;
-   string flightplan;
-
-   FGAIFlightPlan *fp;
-
-   double repeat;             // in seconds
-   double latitude;           // used if no flightplan defined
-   double longitude;          // used if no flightplan defined
-   double altitude;           // used if no flightplan defined
-   double speed;              // used if no flightplan defined
-   double heading;            // used if no flightplan defined
-   double roll;               // used if no flightplan defined
-   double azimuth;            // used by ballistic objects
-   double elevation;          // used by ballistic objects
-   double rudder;             // used by ship objects
-   double strength;           // used by thermal 
-   double turb_strength;      // used by storm objects
-   double diameter;           // used by thermal and storm objects
-   double height_msl;         // used by thermal and storm objects
-   double eda;                // used by ballistic objects
-   double life;               // life span in seconds
-   double buoyancy;           // acceleration in ft per sec2
-   double wind_from_east;     // in feet per second
-   double wind_from_north;    // in feet per second
-   double cd;                 // coefficient of drag
-   bool wind;                 // if true, model reacts to parent wind
-   double mass;               // in slugs
-   bool aero_stabilised;      // if true, ballistic object aligns with trajectory
-   list<string> solid_objects;    // List of solid object names
-   list<string> wire_objects;     // List of wire object names
-   list<string> catapult_objects; // List of catapult object names
-   list<ParkPosition> ppositions; // List of positions on a carrier where an aircraft can start.
-   Point3D flols_offset;      // used by carrier objects, in meters
-   double radius;             // used by ship objects, in feet
-   string name;               // used by carrier objects
-   string pennant_number;     // used by carrier objects
-   string acType;             // used by aircraft objects
-   string company;            // used by aircraft objects
-   string TACAN_channel_ID;   // used by carrier objects
-   double max_lat;            // used by carrier objects
-   double min_lat;            // used by carrier objects
-   double max_long;            // used by carrier objects
-   double min_long;            // used by carrier objects
-   
-} FGAIModelEntity;
-
-
-class FGAIBase {
+class FGAIBase : public SGReferenced {
 
 public:
-
-    FGAIBase();
-    virtual ~FGAIBase();
-    virtual void update(double dt);
-    inline const Point3D& GetPos() const { return(pos); }
-
     enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
                        otRocket, otStorm, otThermal, otStatic, otMultiplayer,
                        MAX_OBJECTS };	// Needs to be last!!!
 
+    FGAIBase(object_type ot);
+    virtual ~FGAIBase();
+    inline const Point3D& GetPos() const { return(pos); }
+
+    virtual void readFromScenario(SGPropertyNode* scFileNode);
+
     virtual bool init();
+    virtual void update(double dt);
     virtual void bind();
     virtual void unbind();
 
+    void setManager(FGAIManager* mgr);
     void setPath( const char* model );
     void setSpeed( double speed_KTAS );
     void setAltitude( double altitude_ft );
@@ -194,18 +131,18 @@ protected:
     void CalculateMach();
     double UpdateRadar(FGAIManager* manager);
 
-    string _type_str;
-    object_type _otype;
     int index;
 
     static int _newAIModelID();
 
 private:
     const int _refID;
+    object_type _otype;
 
 public:
 
     object_type getType();
+    virtual const char* getTypeString(void) const { return "null"; }
     bool isa( object_type otype );
 
     double _getVS_fps() const;
@@ -247,8 +184,11 @@ public:
     static bool _isNight();
 };
 
+inline void FGAIBase::setManager(FGAIManager* mgr) {
+  manager = mgr;
+}
 
-inline void FGAIBase::setPath( const char* model ) {
+inline void FGAIBase::setPath(const char* model ) {
   model_path.append(model);
 }
 

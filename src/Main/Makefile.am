@@ -90,7 +90,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Instrumentation/KLN89/libKLN89.a \
 	$(top_builddir)/src/Instrumentation/libInstrumentation.a \
 	$(top_builddir)/src/Model/libModel.a \
-	$(top_builddir)/src/AIModel/libAIModel.a \
 	$(top_builddir)/src/Network/libNetwork.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
@@ -98,6 +97,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
 	$(MPLAYER_LIBS) \
+        $(top_builddir)/src/AIModel/libAIModel.a \
 	$(VOICE_LIBS) \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
@@ -108,7 +108,7 @@ fgfs_LDADD = \
 	-lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound -lsgserial \
 	-lsgstructure -lsgenvironment \
 	$(THREAD_LIBS) \
-	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
+	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssgaux -lplibssg -lplibsg -lplibul \
 	$(network_LIBS) \
 	-lz \
 	$(opengl_LIBS) \

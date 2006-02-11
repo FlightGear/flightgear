@@ -34,16 +34,12 @@ SG_USING_STD(string);
 #include "AIStatic.hxx"
 
 
-FGAIStatic::FGAIStatic(FGAIManager* mgr) {
-   manager = mgr;   
-   _type_str = "static";
-   _otype = otStatic;
+FGAIStatic::FGAIStatic() : FGAIBase(otStatic) {
 }
 
 
 FGAIStatic::~FGAIStatic() {
 }
-
 
 bool FGAIStatic::init() {
    return FGAIBase::init();

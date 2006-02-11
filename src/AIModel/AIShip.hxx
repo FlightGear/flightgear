@@ -28,13 +28,15 @@ class FGAIShip : public FGAIBase {
 	
 public:
 	
-	FGAIShip(FGAIManager* mgr);
-	~FGAIShip();
+        FGAIShip(object_type ot = otShip);
+	virtual ~FGAIShip();
 	
-	bool init();
+        virtual void readFromScenario(SGPropertyNode* scFileNode);
+
+	virtual bool init();
         virtual void bind();
         virtual void unbind();
-	void update(double dt);
+	virtual void update(double dt);
         void setFlightPlan(FGAIFlightPlan* f);
         void setName(const string&);
         void setRudder(float r);
@@ -49,6 +51,8 @@ public:
         void ClimbTo(double altitude);
         void TurnTo(double heading);
 	    bool hdg_lock;
+
+        virtual const char* getTypeString(void) const { return "ship"; }
 	
 protected:
 

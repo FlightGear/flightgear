@@ -76,15 +76,12 @@ private:
 class FGAICarrier  : public FGAIShip {
 public:
 
-    FGAICarrier(FGAIManager* mgr);
-    ~FGAICarrier();
+    FGAICarrier();
+    virtual ~FGAICarrier();
 
-    void setSolidObjects(const list<string>& solid_objects);
-    void setWireObjects(const list<string>& wire_objects);
-    void setCatapultObjects(const list<string>& catapult_objects);
-    void setParkingPositions(const list<ParkPosition>& p);
+    virtual void readFromScenario(SGPropertyNode* scFileNode);
+
     void setSign(const string& );
-    void setFlolsOffset(const Point3D& off);
     void setTACANChannelID(const string &);
 
     void getVelocityWrtEarth(sgdVec3& v, sgdVec3& omega, sgdVec3& pivot);
@@ -106,10 +103,26 @@ public:
 
     bool init();
 
+    virtual const char* getTypeString(void) const { return "carrier"; }
+
     bool getParkPosition(const string& id, Point3D& geodPos,
                          double& hdng, sgdVec3 uvw);
 
 private:
+  /// Is sufficient to be private, stores a possible position to place an
+  /// aircraft on start
+  struct ParkPosition {
+    ParkPosition(const ParkPosition& pp)
+      : name(pp.name), offset(pp.offset), heading_deg(pp.heading_deg)
+    {}
+    ParkPosition(const string& n, const Point3D& off = Point3D(), double heading = 0)
+      : name(n), offset(off), heading_deg(heading)
+    {}
+    string name;
+    Point3D offset;
+    double heading_deg;
+  };
+
 
     void update(double dt);
     void mark_nohot(ssgEntity*);

@@ -49,13 +49,13 @@ const double FGAIBase::e = 2.71828183;
 const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
 
-FGAIBase::FGAIBase()
+FGAIBase::FGAIBase(object_type ot)
   : fp( NULL ),
     props( NULL ),
     manager( NULL ),
-    _refID( _newAIModelID() )
+    _refID( _newAIModelID() ),
+    _otype(ot)
 {
-    _type_str = "model";
     tgt_heading = hdg = tgt_altitude = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
     bearing = elevation = range = rdot = 0.0;
@@ -64,8 +64,6 @@ FGAIBase::FGAIBase()
     invisible = true;
     no_roll = true;
     life = 900;
-    model_path = "";
-    _otype = otNull;
     index = 0;
     delete_me = false;
 }
@@ -76,11 +74,26 @@ FGAIBase::~FGAIBase() {
         globals->get_scenery()->unregister_placement_transform(aip.getTransform());
         globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
     }
-    // unbind();
     SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
-    root->removeChild(_type_str.c_str(), index);
+    root->removeChild(getTypeString(), index);
     delete fp;
     fp = NULL;
+}
+
+
+void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
+{
+  if (!scFileNode)
+    return;
+
+  setPath(scFileNode->getStringValue("model", "Models/Geometry/glider.ac"));
+
+  setHeading(scFileNode->getDoubleValue("heading", 0.0));
+  setSpeed(scFileNode->getDoubleValue("speed", 0.0));
+  setAltitude(scFileNode->getDoubleValue("altitude", 0.0));
+  setLongitude(scFileNode->getDoubleValue("longitude", 0.0));
+  setLatitude(scFileNode->getDoubleValue("latitude", 0.0));
+  setBank(scFileNode->getDoubleValue("roll", 0.0));
 }
 
 void FGAIBase::update(double dt) {
@@ -109,17 +122,15 @@ bool FGAIBase::init() {
    SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
 
    index = manager->getNum(_otype) - 1;
-   props = root->getNode(_type_str.c_str(), index, true);
+   props = root->getNode(getTypeString(), index, true);
 
-   if (model_path != "") {
-    try {
-      model = load3DModel( globals->get_fg_root(),
-	                     SGPath(model_path).c_str(),
-                             props,
-	                     globals->get_sim_time_sec() );
-    } catch (const sg_exception &e) {
+   if (!model_path.empty()) {
+     try {
+       model = load3DModel( globals->get_fg_root(), model_path, props,
+                            globals->get_sim_time_sec() );
+     } catch (const sg_exception &e) {
        model = NULL;
-    }
+     }
    }
    if (model) {
      aip.init( model );
@@ -129,7 +140,7 @@ bool FGAIBase::init() {
      // Register that one at the scenery manager
      globals->get_scenery()->register_placement_transform(aip.getTransform());
    } else {
-     if (model_path != "") { 
+     if (!model_path.empty()) { 
        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
      }
    } 

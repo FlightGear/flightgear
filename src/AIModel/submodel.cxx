@@ -11,6 +11,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 #include <AIModel/AIManager.hxx>
+#include <AIModel/AIBallistic.hxx>
 
 
 const double FGSubmodelMgr::lbs_to_slugs = 0.031080950172;
@@ -122,26 +123,25 @@ FGSubmodelMgr::release (submodel* sm, double dt)
 
   transform(sm);  // calculate submodel's initial conditions in world-coordinates
 
-  FGAIModelEntity entity;
-
-  entity.path = sm->model.c_str();
-  entity.latitude = IC.lat;
-  entity.longitude = IC.lon;
-  entity.altitude = IC.alt;
-  entity.azimuth = IC.azimuth;
-  entity.elevation = IC.elevation;
-  entity.roll = IC.roll;
-  entity.speed = IC.speed;
-  entity.eda = sm->drag_area;
-  entity.life = sm->life;
-  entity.buoyancy = sm->buoyancy;
-  entity.wind_from_east = IC.wind_from_east;
-  entity.wind_from_north = IC.wind_from_north;
-  entity.wind = sm->wind;
-  entity.cd = sm->cd;
-  entity.mass = IC.mass;
-  entity.aero_stabilised = sm->aero_stabilised;
-  ai->createBallistic( &entity );
+  FGAIBallistic* ballist = new FGAIBallistic;
+  ballist->setPath(sm->model.c_str());
+  ballist->setLatitude(IC.lat);
+  ballist->setLongitude(IC.lon);
+  ballist->setAltitude(IC.alt);
+  ballist->setAzimuth(IC.azimuth);
+  ballist->setElevation(IC.elevation);
+  ballist->setRoll(IC.roll);
+  ballist->setSpeed(IC.speed);
+  ballist->setDragArea(sm->drag_area);
+  ballist->setLife(sm->life);
+  ballist->setBuoyancy(sm->buoyancy);
+  ballist->setWind_from_east(IC.wind_from_east);
+  ballist->setWind_from_north(IC.wind_from_north);
+  ballist->setWind(sm->wind);
+  ballist->setCd(sm->cd);
+  ballist->setMass(IC.mass);
+  ballist->setStabilisation(sm->aero_stabilised);
+  ai->attach(ballist);
  
   if (sm->count > 0) (sm->count)--; 
 
@@ -171,7 +171,7 @@ FGSubmodelMgr::load ()
    vector<SGPropertyNode_ptr> children = root.getChildren("submodel");
    vector<SGPropertyNode_ptr>::iterator it = children.begin();
    vector<SGPropertyNode_ptr>::iterator end = children.end();
-   for (int i = 0; it < end; ++it, i++) {
+   for (int i = 0; it != end; ++it, i++) {
 
      // cout << "Reading submodel " << (*it)->getPath() << endl;
      submodel* sm = new submodel;

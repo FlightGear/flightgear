@@ -50,13 +50,17 @@ public:
   } waypoint;
 
    FGAIFlightPlan(const string& filename);
-  FGAIFlightPlan(FGAIModelEntity *entity,
+  FGAIFlightPlan(const std::string& p,
 		 double course,
 		 time_t start,
 		 FGAirport *dep,
 		 FGAirport *arr,
 		 bool firstLeg,
 		 double radius,
+                 double alt,
+                 double lat,
+                 double lon,
+                 double speed,
 		 const string& fltType,
 		 const string& acType,
 		 const string& airline);

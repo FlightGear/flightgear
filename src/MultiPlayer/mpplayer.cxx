@@ -48,7 +48,6 @@
 
 #include "mpplayer.hxx"
 
-
 #include <stdlib.h>
 #if !(defined(_MSC_VER) || defined(__MINGW32__))
 #   include <netdb.h>
@@ -254,7 +253,7 @@ MPPlayer::SetPosition
         const double left_aileron, const double right_aileron, const double elevator, const double rudder,
         //const double rpms[6],
         const double rateH, const double rateR, const double rateP,
-		const double accN, const double accE, const double accD
+        const double accN, const double accE, const double accD
     )
 {
     int toff, utoff;
@@ -283,13 +282,13 @@ MPPlayer::SetPosition
         m_speedN = speedN;
         m_speedE = speedE;
         m_speedD = speedD;
-		m_accN = accN;
-		m_accE = accE;
-		m_accD = accD;
+        m_accN = accN;
+        m_accE = accE;
+        m_accD = accD;
         m_left_aileron = left_aileron;
-		m_right_aileron = right_aileron;
+        m_right_aileron = right_aileron;
         m_elevator = elevator;
-		m_rudder = rudder;
+        m_rudder = rudder;
 
         /*for (int i = 0; i < 6; i++) {
             m_rpms[i] = rpms[i];
@@ -318,7 +317,7 @@ MPPlayer::SetPosition
             // set properties
             SGPropertyNode *root = m_AIModel->getProps();
             root->getNode("surface-positions/left-aileron-pos-norm", true)->setDoubleValue(m_left_aileron);
-			root->getNode("surface-positions/right-aileron-pos-norm", true)->setDoubleValue(m_right_aileron);
+            root->getNode("surface-positions/right-aileron-pos-norm", true)->setDoubleValue(m_right_aileron);
             root->getNode("surface-positions/elevator-pos-norm", true)->setDoubleValue(m_elevator);
             root->getNode("surface-positions/rudder-pos-norm", true)->setDoubleValue(m_rudder);
             /*root->getNode("engines/engine/rpm", true)->setDoubleValue(m_rpms[0]);
@@ -331,10 +330,10 @@ MPPlayer::SetPosition
             // Adjust by the last offset
             //cout << "OFFSET: " << (m_LastOffset - m_TimeOffset) << endl;
             
-			//m_AIModel->timewarp(m_LastOffset - m_TimeOffset);
+            //m_AIModel->timewarp(m_LastOffset - m_TimeOffset);
 
-			// set the timestamp for the data update (sim elapsed time (secs))
-			m_AIModel->setTimeStamp();
+            // set the timestamp for the data update (sim elapsed time (secs))
+            m_AIModel->setTimeStamp();
         }
         
         time(&m_LastUpdate);
@@ -463,13 +462,6 @@ MPPlayer::CompareCallsign(const char *Callsign) const
 void
 MPPlayer::LoadAI(void)
 {
-    // set up the model info
-    FGAIModelEntity aiModel;
-    aiModel.m_type = "aircraft";
-    aiModel.path = m_ModelName;
-    aiModel.acType = "Multiplayer";
-    aiModel.company = m_Callsign;
-   
     // then get the model manager
     FGAIManager *aiModelMgr = (FGAIManager *) globals->get_subsystem("ai_model");
     if (!aiModelMgr) {
@@ -480,7 +472,11 @@ MPPlayer::LoadAI(void)
     
     // then get the model
     fgSetBool("/sim/freeze/clock", true);
-    m_AIModel = (FGAIMultiplayer *) aiModelMgr->createMultiplayer(&aiModel);
+    m_AIModel = new FGAIMultiplayer;
+    m_AIModel->setAcType("Multiplayer");
+    m_AIModel->setCompany(m_Callsign);
+    m_AIModel->setPath(m_ModelName.c_str());
+    aiModelMgr->attach(m_AIModel);
     fgSetBool("/sim/freeze/clock", false);
 }
 
@@ -522,7 +518,7 @@ MPPlayer::FillPosMsg
     PosMsg->rateH =  XDR_encode_float ((float) m_rateH);
     PosMsg->rateR =  XDR_encode_float ((float) m_rateR);
     PosMsg->rateP =  XDR_encode_float ((float) m_rateP);
-	PosMsg->accN  =  XDR_encode_float ((float) m_accN);
+    PosMsg->accN  =  XDR_encode_float ((float) m_accN);
     PosMsg->accE =  XDR_encode_float ((float) m_accE);
     PosMsg->accD =  XDR_encode_float ((float) m_accD);
 }

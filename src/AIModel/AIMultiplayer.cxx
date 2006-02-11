@@ -49,11 +49,7 @@ SG_USING_STD(string);
    static string tempReg;
 
 
-FGAIMultiplayer::FGAIMultiplayer(FGAIManager* mgr) {
-   manager = mgr;   
-   _type_str = "multiplayer";
-   _otype = otMultiplayer;
-
+FGAIMultiplayer::FGAIMultiplayer() : FGAIBase(otMultiplayer) {
    _time_node = fgGetNode("/sim/time/elapsed-sec", true);
 
    //initialise values
@@ -80,7 +76,6 @@ FGAIMultiplayer::FGAIMultiplayer(FGAIManager* mgr) {
 
 FGAIMultiplayer::~FGAIMultiplayer() {
 }
-
 
 bool FGAIMultiplayer::init() {
    return FGAIBase::init();
@@ -262,6 +257,7 @@ void FGAIMultiplayer::Run(double dt) {
     //###########################//
     //double range_ft2 = UpdateRadar(manager);
 }
+
 void FGAIMultiplayer::setTimeStamp()
 {    
     // this function sets the timestamp as the sim elapsed time 

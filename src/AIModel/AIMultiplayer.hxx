@@ -35,7 +35,7 @@ SG_USING_STD(string);
 class FGAIMultiplayer : public FGAIBase {
 
     public:
-    FGAIMultiplayer(FGAIManager* mgr);
+    FGAIMultiplayer();
     ~FGAIMultiplayer();
     
     bool init();
@@ -63,6 +63,8 @@ class FGAIMultiplayer : public FGAIBase {
         
     void setAcType(string ac) { acType = ac; };
     void setCompany(string comp);
+
+    virtual const char* getTypeString(void) const { return "multiplayer"; }
 
     double dt; 
     double speedN, speedE, speedD;

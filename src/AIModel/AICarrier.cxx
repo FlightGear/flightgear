@@ -32,19 +32,73 @@
 
 #include "AICarrier.hxx"
 
-#include "AIScenario.hxx"
-
 /** Value of earth radius (meters) */
 #define RADIUS_M   SG_EQUATORIAL_RADIUS_M
 
 
 
-FGAICarrier::FGAICarrier(FGAIManager* mgr) : FGAIShip(mgr) {
-    _type_str = "carrier";
-    _otype = otCarrier;
+FGAICarrier::FGAICarrier() : FGAIShip(otCarrier) {
 }
 
 FGAICarrier::~FGAICarrier() {
+}
+
+void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
+  if (!scFileNode)
+    return;
+
+  FGAIShip::readFromScenario(scFileNode);
+
+  setRadius(scFileNode->getDoubleValue("turn-radius-ft", 2000));
+  setSign(scFileNode->getStringValue("pennant-number"));
+  setWind_from_east(scFileNode->getDoubleValue("wind_from_east", 0));
+  setWind_from_north(scFileNode->getDoubleValue("wind_from_north", 0));
+  setTACANChannelID(scFileNode->getStringValue("TACAN-channel-ID", "029Y"));
+  setMaxLat(scFileNode->getDoubleValue("max-lat", 0));
+  setMinLat(scFileNode->getDoubleValue("min-lat", 0));
+  setMaxLong(scFileNode->getDoubleValue("max-long", 0));
+  setMinLong(scFileNode->getDoubleValue("min-long", 0));
+
+  SGPropertyNode* flols = scFileNode->getChild("flols-pos");
+  if (flols) {
+    flols_off[0] = flols->getDoubleValue("x-offset-m", 0);
+    flols_off[1] = flols->getDoubleValue("y-offset-m", 0);
+    flols_off[2] = flols->getDoubleValue("z-offset-m", 0);
+  } else
+    flols_off = Point3D(0, 0, 0);
+
+  std::vector<SGPropertyNode_ptr> props = scFileNode->getChildren("wire");
+  std::vector<SGPropertyNode_ptr>::const_iterator it;
+  for (it = props.begin(); it != props.end(); ++it) {
+    std::string s = (*it)->getStringValue();
+    if (!s.empty())
+      wire_objects.push_back(s);
+  }
+  
+  props = scFileNode->getChildren("catapult");
+  for (it = props.begin(); it != props.end(); ++it) {
+    std::string s = (*it)->getStringValue();
+    if (!s.empty())
+      catapult_objects.push_back(s);
+  }
+
+  props = scFileNode->getChildren("solid");
+  for (it = props.begin(); it != props.end(); ++it) {
+    std::string s = (*it)->getStringValue();
+    if (!s.empty())
+      solid_objects.push_back(s);
+  }
+
+  props = scFileNode->getChildren("parking-pos");
+  for (it = props.begin(); it != props.end(); ++it) {
+    string name = (*it)->getStringValue("name", "unnamed");
+    double offset_x = (*it)->getDoubleValue("x-offset-m", 0);
+    double offset_y = (*it)->getDoubleValue("y-offset-m", 0);
+    double offset_z = (*it)->getDoubleValue("z-offset-m", 0);
+    double hd = (*it)->getDoubleValue("heading-offset-deg", 0);
+    ParkPosition pp(name, Point3D(offset_x, offset_y, offset_z), hd);
+    ppositions.push_back(pp);
+  }
 }
 
 void FGAICarrier::setWind_from_east(double fps) {
@@ -71,32 +125,12 @@ void FGAICarrier::setMinLong(double deg) {
     min_long = fabs(deg);
 }
 
-void FGAICarrier::setSolidObjects(const list<string>& so) {
-    solid_objects = so;
-}
-
-void FGAICarrier::setWireObjects(const list<string>& wo) {
-    wire_objects = wo;
-}
-
-void FGAICarrier::setCatapultObjects(const list<string>& co) {
-    catapult_objects = co;
-}
-
-void FGAICarrier::setParkingPositions(const list<ParkPosition>& p) {
-    ppositions = p;
-}
-
 void FGAICarrier::setSign(const string& s) {
     sign = s;
 }
 
 void FGAICarrier::setTACANChannelID(const string& id) {
     TACAN_channel_id = id;
-}
-
-void FGAICarrier::setFlolsOffset(const Point3D& off) {
-    flols_off = off;
 }
 
 void FGAICarrier::getVelocityWrtEarth(sgdVec3& v, sgdVec3& omega, sgdVec3& pivot) {
@@ -106,7 +140,6 @@ void FGAICarrier::getVelocityWrtEarth(sgdVec3& v, sgdVec3& omega, sgdVec3& pivot
 }
 
 void FGAICarrier::update(double dt) {
-
     // For computation of rotation speeds we just use finite differences her.
     // That is perfectly valid since this thing is not driven by accelerations
     // but by just apply discrete changes at its velocity variables.
