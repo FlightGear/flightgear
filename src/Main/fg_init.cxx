@@ -106,6 +106,7 @@
 #include <Sound/fg_fx.hxx>
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
+#include <Sound/voice.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/light.hxx>
 #include <Time/sunsolver.hxx>
@@ -1677,7 +1678,7 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
 
     globals->add_subsystem("fx", new FGFX);
-    
+    globals->add_subsystem("voice", new FGVoiceMgr);
 #endif
 
     ////////////////////////////////////////////////////////////////////
