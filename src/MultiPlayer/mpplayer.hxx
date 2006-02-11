@@ -46,7 +46,6 @@
 #include <simgear/io/sg_socket_udp.hxx>
 #include <simgear/props/props.hxx>
 #include <time.h>
-#include <sys/time.h>
 
 #include STL_STRING
 SG_USING_STD(string);

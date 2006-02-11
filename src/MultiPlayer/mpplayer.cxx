@@ -46,6 +46,8 @@
 *
 ******************************************************************/
 
+#include <simgear/timing/timestamp.hxx>
+
 #include "mpplayer.hxx"
 
 #include <stdlib.h>
@@ -192,15 +194,13 @@ MPPlayer::Close(void)
 bool MPPlayer::CheckTime(int time, int timeusec)
 {
     double curOffset;
-    
-    // set the offset
-    struct timeval tv;
     int toff, utoff;
-    gettimeofday(&tv, NULL);
+    
+    SGTimeStamp now;
     
     // calculate the offset
-    toff = ((int) tv.tv_sec) - time;
-    utoff = ((int) tv.tv_usec) - timeusec;
+    toff = ((int) now.get_seconds()) - time;
+    utoff = ((int) now.get_usec()) - timeusec;
     while (utoff < 0) {
         toff--;
         utoff += 1000000;
@@ -256,8 +256,6 @@ MPPlayer::SetPosition
         const double accN, const double accE, const double accD
     )
 {
-    int toff, utoff;
-    
     // Save the position matrix and update time
     if (m_Initialised)
     {
@@ -357,7 +355,7 @@ void MPPlayer::SetProperty(string property, SGPropertyNode::Type type, double va
     // set the property
     switch (type) {
         case 2:
-            node->setBoolValue((bool) val);
+            node->setBoolValue( val != 0.0 );
             break;
         case 3:
             node->setIntValue((int) val);
@@ -491,14 +489,13 @@ MPPlayer::FillPosMsg
     T_PositionMsg *PosMsg
     )
 {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    
+    SGTimeStamp now;
+
     FillMsgHdr(MsgHdr, POS_DATA_ID);
     strncpy(PosMsg->Model, m_ModelName.c_str(), MAX_MODEL_NAME_LEN);
     PosMsg->Model[MAX_MODEL_NAME_LEN - 1] = '\0';
-    PosMsg->time = XDR_encode_uint32 (tv.tv_sec);
-    PosMsg->timeusec = XDR_encode_uint32 (tv.tv_usec);
+    PosMsg->time = XDR_encode_uint32 (now.get_seconds());
+    PosMsg->timeusec = XDR_encode_uint32 (now.get_usec());
     PosMsg->lat = XDR_encode_double (m_lat);
     PosMsg->lon = XDR_encode_double (m_lon);
     PosMsg->alt = XDR_encode_double (m_alt);
