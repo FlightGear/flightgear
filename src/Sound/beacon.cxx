@@ -23,6 +23,7 @@
 
 #include "beacon.hxx"
 
+#include <simgear/structure/exception.hxx>
 
 // constructor
 FGBeacon::FGBeacon()
@@ -56,44 +57,48 @@ bool FGBeacon::init() {
 	ptr += INNER_DIT_LEN;
     }
 
-    inner = new SGSoundSample( inner_buf, INNER_SIZE, BYTES_PER_SECOND );
-    inner->set_reference_dist( 10.0 );
-    inner->set_max_dist( 20.0 );
+    try {
+        inner = new SGSoundSample( inner_buf, INNER_SIZE, BYTES_PER_SECOND );
+        inner->set_reference_dist( 10.0 );
+        inner->set_max_dist( 20.0 );
 
-    // Make middle marker beacon sound
-    len= (int)(MIDDLE_DIT_LEN / 2.0 );
-    unsigned char middle_dit[MIDDLE_DIT_LEN];
-    make_tone( middle_dit, MIDDLE_FREQ, len, MIDDLE_DIT_LEN,
-	       TRANSITION_BYTES );
+        // Make middle marker beacon sound
+        len= (int)(MIDDLE_DIT_LEN / 2.0 );
+        unsigned char middle_dit[MIDDLE_DIT_LEN];
+        make_tone( middle_dit, MIDDLE_FREQ, len, MIDDLE_DIT_LEN,
+	            TRANSITION_BYTES );
 
-    len= (int)(MIDDLE_DAH_LEN * 3 / 4.0 );
-    unsigned char middle_dah[MIDDLE_DAH_LEN];
-    make_tone( middle_dah, MIDDLE_FREQ, len, MIDDLE_DAH_LEN,
-	       TRANSITION_BYTES );
+        len= (int)(MIDDLE_DAH_LEN * 3 / 4.0 );
+        unsigned char middle_dah[MIDDLE_DAH_LEN];
+        make_tone( middle_dah, MIDDLE_FREQ, len, MIDDLE_DAH_LEN,
+	            TRANSITION_BYTES );
 
-    ptr = middle_buf;
-    memcpy( ptr, middle_dit, MIDDLE_DIT_LEN );
-    ptr += MIDDLE_DIT_LEN;
-    memcpy( ptr, middle_dah, MIDDLE_DAH_LEN );
+        ptr = middle_buf;
+        memcpy( ptr, middle_dit, MIDDLE_DIT_LEN );
+        ptr += MIDDLE_DIT_LEN;
+        memcpy( ptr, middle_dah, MIDDLE_DAH_LEN );
 
-    middle = new SGSoundSample( middle_buf, MIDDLE_SIZE, BYTES_PER_SECOND );
-    middle->set_reference_dist( 10.0 );
-    middle->set_max_dist( 20.0 );
+        middle = new SGSoundSample( middle_buf, MIDDLE_SIZE, BYTES_PER_SECOND );
+        middle->set_reference_dist( 10.0 );
+        middle->set_max_dist( 20.0 );
 
-    // Make outer marker beacon sound
-    len= (int)(OUTER_DAH_LEN * 3.0 / 4.0 );
-    unsigned char outer_dah[OUTER_DAH_LEN];
-    make_tone( outer_dah, OUTER_FREQ, len, OUTER_DAH_LEN,
-	       TRANSITION_BYTES );
-    
-    ptr = outer_buf;
-    memcpy( ptr, outer_dah, OUTER_DAH_LEN );
-    ptr += OUTER_DAH_LEN;
-    memcpy( ptr, outer_dah, OUTER_DAH_LEN );
+        // Make outer marker beacon sound
+        len= (int)(OUTER_DAH_LEN * 3.0 / 4.0 );
+        unsigned char outer_dah[OUTER_DAH_LEN];
+        make_tone( outer_dah, OUTER_FREQ, len, OUTER_DAH_LEN,
+	            TRANSITION_BYTES );
+           
+        ptr = outer_buf;
+        memcpy( ptr, outer_dah, OUTER_DAH_LEN );
+        ptr += OUTER_DAH_LEN;
+        memcpy( ptr, outer_dah, OUTER_DAH_LEN );
 
-    outer = new SGSoundSample( outer_buf, OUTER_SIZE, BYTES_PER_SECOND);
-    outer->set_reference_dist( 10.0 );
-    outer->set_max_dist( 20.0 );
+        outer = new SGSoundSample( outer_buf, OUTER_SIZE, BYTES_PER_SECOND);
+        outer->set_reference_dist( 10.0 );
+        outer->set_max_dist( 20.0 );
+    } catch ( sg_io_exception &e ) {
+        SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
+    }
 
     return true;
 }

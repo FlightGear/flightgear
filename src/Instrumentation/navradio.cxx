@@ -905,32 +905,36 @@ void FGNavRadio::search()
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
 	    }
-	    SGSoundSample *sound;
-	    sound = morse.make_ident( trans_ident, LO_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    if ( globals->get_soundmgr()->add( sound, nav_fx_name ) ) {
-                // cout << "Added nav-vor-ident sound" << endl;
-            } else {
-                SG_LOG(SG_COCKPIT, SG_WARN, "Failed to add v1-vor-ident sound");
+            try {
+	        SGSoundSample *sound;
+	        sound = morse.make_ident( trans_ident, LO_FREQUENCY );
+	        sound->set_volume( 0.3 );
+	        if ( globals->get_soundmgr()->add( sound, nav_fx_name ) ) {
+                    // cout << "Added nav-vor-ident sound" << endl;
+                } else {
+                    SG_LOG(SG_COCKPIT, SG_WARN, "Failed to add v1-vor-ident sound");
+                }
+
+	        if ( globals->get_soundmgr()->exists( dme_fx_name ) ) {
+		    globals->get_soundmgr()->remove( dme_fx_name );
+	        }
+	        sound = morse.make_ident( trans_ident, HI_FREQUENCY );
+	        sound->set_volume( 0.3 );
+	        globals->get_soundmgr()->add( sound, dme_fx_name );
+
+	        int offset = (int)(sg_random() * 30.0);
+	        play_count = offset / 4;
+	        last_time = globals->get_time_params()->get_cur_time() - offset;
+	        // cout << "offset = " << offset << " play_count = "
+	        //      << play_count << " last_time = "
+	        //      << last_time << " current time = "
+	        //      << globals->get_time_params()->get_cur_time() << endl;
+
+	        // cout << "Found a vor station in range" << endl;
+	        // cout << " id = " << nav->get_ident() << endl;
+            } catch ( sg_io_exception &e ) {
+                SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
             }
-
-	    if ( globals->get_soundmgr()->exists( dme_fx_name ) ) {
-		globals->get_soundmgr()->remove( dme_fx_name );
-	    }
-	    sound = morse.make_ident( trans_ident, HI_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, dme_fx_name );
-
-	    int offset = (int)(sg_random() * 30.0);
-	    play_count = offset / 4;
-	    last_time = globals->get_time_params()->get_cur_time() - offset;
-	    // cout << "offset = " << offset << " play_count = "
-	    //      << play_count << " last_time = "
-	    //      << last_time << " current time = "
-	    //      << globals->get_time_params()->get_cur_time() << endl;
-
-	    // cout << "Found a vor station in range" << endl;
-	    // cout << " id = " << nav->get_ident() << endl;
 	}
     } else {
 	is_valid = false;

@@ -293,8 +293,10 @@ void FGMarkerBeacon::search()
         if ( last_beacon != OUTER ) {
             if ( ! globals->get_soundmgr()->exists( "outer-marker" ) ) {
                 SGSoundSample *sound = beacon.get_outer();
-                sound->set_volume( 0.3 );
-                globals->get_soundmgr()->add( sound, "outer-marker" );
+                if ( sound ) {
+                    sound->set_volume( 0.3 );
+                    globals->get_soundmgr()->add( sound, "outer-marker" );
+                }
             }
         }
         if ( audio_btn->getBoolValue() ) {
@@ -310,8 +312,10 @@ void FGMarkerBeacon::search()
 	if ( last_beacon != MIDDLE ) {
 	    if ( ! globals->get_soundmgr()->exists( "middle-marker" ) ) {
 		SGSoundSample *sound = beacon.get_middle();
-		sound->set_volume( 0.3 );
-		globals->get_soundmgr()->add( sound, "middle-marker" );
+                if ( sound ) {
+		    sound->set_volume( 0.3 );
+		    globals->get_soundmgr()->add( sound, "middle-marker" );
+                }
 	    }
         }
         if ( audio_btn->getBoolValue() ) {
@@ -327,8 +331,10 @@ void FGMarkerBeacon::search()
 	if ( last_beacon != INNER ) {
 	    if ( ! globals->get_soundmgr()->exists( "inner-marker" ) ) {
 		SGSoundSample *sound = beacon.get_inner();
-		sound->set_volume( 0.3 );
-		globals->get_soundmgr()->add( sound, "inner-marker" );
+                if ( sound ) {
+		    sound->set_volume( 0.3 );
+		    globals->get_soundmgr()->add( sound, "inner-marker" );
+                }
 	    }
         }
         if ( audio_btn->getBoolValue() ) {

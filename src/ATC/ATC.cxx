@@ -23,6 +23,7 @@
 #endif
 
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -231,16 +232,20 @@ void FGATC::Render(string& msg, const string& refname, bool repeating) {
 		int len;
 		unsigned char* buf = _vPtr->WriteMessage((char*)msg.c_str(), len, _voice);
 		if(_voice) {
-			SGSoundSample *simple
-                            = new SGSoundSample(buf, len, 8000);
-			// TODO - at the moment the volume is always set off comm1 
-			// and can't be changed after the transmission has started.
-			simple->set_volume(5.0 * fgGetDouble("/instrumentation/comm[0]/volume"));
-			globals->get_soundmgr()->add(simple, refname);
-			if(repeating) {
-				globals->get_soundmgr()->play_looped(refname);
-			} else {
-				globals->get_soundmgr()->play_once(refname);
+			try {
+				SGSoundSample *simple
+								= new SGSoundSample(buf, len, 8000);
+				// TODO - at the moment the volume is always set off comm1 
+				// and can't be changed after the transmission has started.
+				simple->set_volume(5.0 * fgGetDouble("/instrumentation/comm[0]/volume"));
+				globals->get_soundmgr()->add(simple, refname);
+				if(repeating) {
+					globals->get_soundmgr()->play_looped(refname);
+				} else {
+					globals->get_soundmgr()->play_once(refname);
+				}
+			} catch ( sg_io_exception &e ) {
+				SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
 			}
 		}
 		delete[] buf;

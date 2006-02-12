@@ -85,7 +85,7 @@ FGFX::init()
    SGPropertyNode root;
    try {
       readProperties(path.str(), &root);
-   } catch (const sg_exception &e) {
+   } catch (const sg_exception &) {
       SG_LOG(SG_GENERAL, SG_ALERT,
        "Incorrect path specified in configuration file");
       return;
@@ -95,10 +95,15 @@ FGFX::init()
    for (i = 0; i < node->nChildren(); i++) {
       SGXmlSound *sound = new SGXmlSound();
 
-      sound->init(globals->get_props(), node->getChild(i),
-                  globals->get_soundmgr(), globals->get_fg_root());
+      try {
+         sound->init(globals->get_props(), node->getChild(i),
+                     globals->get_soundmgr(), globals->get_fg_root());
 
-      _sound.push_back(sound);
+         _sound.push_back(sound);
+      } catch ( sg_io_exception &e ) {
+         SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
+         delete sound;
+      }
    }
 }
 

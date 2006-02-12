@@ -110,8 +110,15 @@ void FGATCMgr::init() {
 	// For now we'll do one hardwired one
 	
 	v1 = new FGATCVoice;
-	voiceOK = v1->LoadVoice("default");
-	voice = true;
+	try {
+		voiceOK = v1->LoadVoice("default");
+		voice = true;
+	} catch ( sg_io_exception & ) {
+		voiceOK  = false;
+		voice = false;
+		delete v1;
+		v1 = 0;
+	}
 	
 	/* I've loaded the voice even if /sim/sound/pause is true
 	*  since I know no way of forcing load of the voice if the user
