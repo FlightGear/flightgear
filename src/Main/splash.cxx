@@ -168,7 +168,9 @@ void fgSplashUpdate ( float alpha ) {
     glDisable(GL_LIGHTING);
 
     // draw the background
-    glColor4f( 0.0, 0.0, 0.0, alpha );
+    FGColor c(0.0, 0.0, 0.0);
+    c.merge(fgGetNode("/sim/gui/colors/splash-screen"));
+    glColor4f(c.red(), c.green(), c.blue(), alpha );
     glBegin(GL_POLYGON);
     glVertex2f(0.0, 0.0);
     glVertex2f(screen_width, 0.0);
@@ -202,7 +204,7 @@ void fgSplashUpdate ( float alpha ) {
 
         info.begin();
         FGColor c(1.0, 0.9, 0.0);
-        c.merge(fgGetNode("/sim/gui/colors/splash"));
+        c.merge(fgGetNode("/sim/gui/colors/splash-font"));
         glColor4f(c.red(), c.green(), c.blue(), alpha);
 
         font.getBBox(progress_text, fontsize, 0, &left, &right, &bot, &top);
