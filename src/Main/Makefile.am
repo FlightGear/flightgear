@@ -92,7 +92,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Airports/libAirports.a \
 	$(MPLAYER_LIBS) \
         $(top_builddir)/src/AIModel/libAIModel.a \
-        $(top_builddir)/src/Voice/libVoice.a \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(top_builddir)/src/Traffic/libTraffic.a \
