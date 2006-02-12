@@ -29,7 +29,6 @@
 
 #include "ATC.hxx"
 #include "ATCdisplay.hxx"
-#include "voice.hxx"
 
 FGATC::FGATC() {
 	freqClear = true;
