@@ -118,14 +118,6 @@ fi
 AC_CHECK_HEADER(pthread.h)
 AM_CONDITIONAL(WITH_THREADS, test "x$with_threads" = "xyes")
 
-dnl Festival related checks
-# defaults to yes
-AC_ARG_WITH(festival, [  --with-festival         Use festival speech software [default=no]], [], [with_festival=no])
-if test "x$with_festival" = "xyes"; then
-    AC_DEFINE([USE_FESTIVAL], 1, [Define to enable festival speech software])
-fi
-AM_CONDITIONAL(USE_FESTIVAL, test "x$with_festival" = "xyes")
-
 dnl Used by JSBSim to conditionally compile in fgfs interface code
 AC_DEFINE([FGFS], 1, [Define so that JSBSim compiles in 'library' mode])
 

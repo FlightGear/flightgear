@@ -31,10 +31,6 @@
 #include "ATCdisplay.hxx"
 #include "voice.hxx"
 
-#ifdef USE_FESTIVAL
-FGVoice *p_Voice = new FGVoice();
-#endif
-
 FGATC::FGATC() {
 	freqClear = true;
 	receiving = false;
@@ -244,14 +240,8 @@ void FGATC::Render(string& msg, const string& refname, bool repeating) {
 			globals->get_soundmgr()->add(simple, refname);
 			if(repeating) {
 				globals->get_soundmgr()->play_looped(refname);
-#ifdef USE_FESTIVAL
-				p_Voice->send_transcript( msg , refname, 1 );
-#endif
 			} else {
 				globals->get_soundmgr()->play_once(refname);
-#ifdef USE_FESTIVAL
-				p_Voice->send_transcript( msg , refname, 0 );
-#endif
 			}
 		}
 		delete[] buf;
@@ -266,14 +256,8 @@ void FGATC::Render(string& msg, const string& refname, bool repeating) {
 		}
 		if(repeating) {
 			globals->get_ATC_display()->RegisterRepeatingMessage(msg);
-#ifdef USE_FESTIVAL
-			p_Voice->send_transcript( msg , refname, 1 );
-#endif
 		} else {
 			globals->get_ATC_display()->RegisterSingleMessage(msg);
-#ifdef USE_FESTIVAL
-			p_Voice->send_transcript( msg, refname, 0 );
-#endif
 		}
 	}
 	_playing = true;	
@@ -287,9 +271,6 @@ void FGATC::NoRender(const string& refname) {
 #ifdef ENABLE_AUDIO_SUPPORT		
 			globals->get_soundmgr()->stop(refname);
 			globals->get_soundmgr()->remove(refname);
-# ifdef USE_FESTIVAL
-			p_Voice->send_transcript( "--", refname, 2);
-# endif
 #endif
 		} else {
 			globals->get_ATC_display()->CancelRepeatingMessage();

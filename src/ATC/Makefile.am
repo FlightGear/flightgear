@@ -1,11 +1,5 @@
 noinst_LIBRARIES = libATC.a
 
-if USE_FESTIVAL
-VOICE_SRC = voice.cxx voice.hxx
-else
-VOICE_SRC =
-endif
-
 libATC_a_SOURCES = \
 	ATC.hxx ATC.cxx \
 	atis.hxx atis.cxx \
@@ -25,7 +19,6 @@ libATC_a_SOURCES = \
 	AILocalTraffic.hxx AILocalTraffic.cxx \
 	AIGAVFRTraffic.hxx AIGAVFRTraffic.cxx \
 	transmission.hxx transmission.cxx \
-	transmissionlist.hxx transmissionlist.cxx \
-	$(VOICE_SRC)
+	transmissionlist.hxx transmissionlist.cxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
