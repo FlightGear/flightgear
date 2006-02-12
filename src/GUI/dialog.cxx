@@ -445,9 +445,9 @@ FGDialog::display (SGPropertyNode * props)
 
     // Negative x/y coordinates are interpreted as distance from the top/right
     // corner rather than bottom/left.
-    if (px < 0)
+    if (userx && px < 0)
         px = screenw - pw + px;
-    if (py < 0)
+    if (usery && py < 0)
         py = screenh - ph + py;
 
     // Define "x", "y", "width" and/or "height" in the property tree if they
