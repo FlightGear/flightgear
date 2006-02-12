@@ -375,7 +375,10 @@ void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist)
 	double d = dclGetHorizontalSeparation(userpos, aptpos);	// in meters
 	
 	int lev = fgGetInt("/sim/ai-traffic/level");
-	if(lev < 1 || lev > 3) lev = 2;
+	if(lev < 1)
+		return;
+	if (lev > 3)
+		lev = 3;
 	if(visibility < 6000) lev = 1;
 	//cout << "level = " << lev << '\n';
 	
