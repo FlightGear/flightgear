@@ -41,15 +41,13 @@ public:
 
     // Returns a ghost wrapper for the current _cmdArg
     naRef cmdArgGhost();
-    
+
     // Callbacks for command and timer bindings
     virtual bool handleCommand(const SGPropertyNode* arg);
 
     void createModule(const char* moduleName, const char* fileName,
                     const char* src, int len);
-		    
-    void screenPrint(const char* src);
-     
+
 private:
     friend class FGNasalScript;
     friend class FGNasalListener;

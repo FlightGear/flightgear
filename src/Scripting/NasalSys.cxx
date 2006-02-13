@@ -16,7 +16,6 @@
 #include <Main/fg_props.hxx>
 
 #include "NasalSys.hxx"
-#include "NasalDisplay.hxx"
 
 // Read and return file contents in a single buffer.  Note use of
 // stat() to get the file size.  This is a win32 function, believe it
@@ -294,17 +293,6 @@ static naRef f_srand(naContext c, naRef me, int argc, naRef* args)
     return naNum(0);
 }
 
-// Wrapper function for screenPrint
-static naRef f_screenPrint(naContext c, naRef me, int argc, naRef* args)
-{
-    if(argc != 1 || !naIsString(args[0]))
-        naRuntimeError(c, "bad arguments to screenPrint()");
-    naRef lmsg = args[0];
-    FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
-    nasal->screenPrint(naStr_data(lmsg));
-    return naNil();
-}
-
 // Return an array listing of all files in a directory
 static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
 {
@@ -334,7 +322,6 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "_interpolate",  f_interpolate },
     { "rand",  f_rand },
     { "srand",  f_srand },
-    { "screenPrint", f_screenPrint },
     { "directory", f_directory },
     { 0, 0 }
 };
@@ -621,8 +608,3 @@ void FGNasalSys::setListener(int argc, naRef* args)
     node->addChangeListener(new FGNasalListener(handler, this, gcSave(handler)), initial);
 }
 
-// functions providing access to the NasalDisplay - used to display text directly on the screen
-void FGNasalSys::screenPrint(const char* src)
-{
-  globals->get_Nasal_display()->RegisterSingleMessage(src, 0);
-}
