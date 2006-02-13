@@ -607,6 +607,7 @@ bool fgInitConfig ( int argc, char **argv ) {
         SGPath config( homedir );
         config.append( ".fgfs" );
 #endif
+        fgSetString("/sim/fg-home", config.c_str());
         config.append( "autosave.xml" );
         SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from autosave.xml");
         try {
