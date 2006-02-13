@@ -66,7 +66,6 @@
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
-#include <Scripting/NasalDisplay.hxx>
 #include <ATC/ATCdisplay.hxx>
 #include <GUI/new_gui.hxx>
 
@@ -762,9 +761,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
     // This only works properly if called before the panel call
     if((fgGetBool("/sim/atc/enabled")) || (fgGetBool("/sim/ai-traffic/enabled")))
         globals->get_ATC_display()->update(delta_time_sec);
-
-    // Update any messages from the Nasal System
-    globals->get_Nasal_display()->update(delta_time_sec);
 
     // update the panel subsystem
     if ( globals->get_current_panel() != NULL ) {

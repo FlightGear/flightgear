@@ -102,7 +102,6 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
-#include <Scripting/NasalDisplay.hxx>
 #include <Sound/fg_fx.hxx>
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
@@ -1760,14 +1759,6 @@ bool fgInitSubsystems() {
     globals->get_io()->init();
     globals->get_io()->bind();
 
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialise Nasal display system
-    ////////////////////////////////////////////////////////////////////
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  Nasal Display");
-    globals->set_Nasal_display(new FGNasalDisplay);
-    globals->get_Nasal_display()->init(); 
 
     ////////////////////////////////////////////////////////////////////
     // Add a new 2D panel.
