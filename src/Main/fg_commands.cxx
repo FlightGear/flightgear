@@ -584,9 +584,9 @@ do_set_oat_degc (const SGPropertyNode * arg)
     dummy.set_temperature_degc( atof( temp_str.c_str() ) );
     double temp_sea_level_degc = dummy.get_temperature_sea_level_degc();
 
-    cout << "Altitude = " << altitude_ft->getDoubleValue() << endl;
-    cout << "Temp at alt (C) = " << atof( temp_str.c_str() ) << endl;
-    cout << "Temp sea level (C) = " << temp_sea_level_degc << endl;
+    //cout << "Altitude = " << altitude_ft->getDoubleValue() << endl;
+    //cout << "Temp at alt (C) = " << atof( temp_str.c_str() ) << endl;
+    //cout << "Temp sea level (C) = " << temp_sea_level_degc << endl;
  
     SGPropertyNode *node, *child;
 
@@ -674,9 +674,9 @@ do_set_dewpoint_degc (const SGPropertyNode * arg)
     dummy.set_dewpoint_degc( atof( dewpoint_str.c_str() ) );
     double dewpoint_sea_level_degc = dummy.get_dewpoint_sea_level_degc();
 
-    cout << "Altitude = " << altitude_ft->getDoubleValue() << endl;
-    cout << "Dewpoint at alt (C) = " << atof( dewpoint_str.c_str() ) << endl;
-    cout << "Dewpoint at sea level (C) = " << dewpoint_sea_level_degc << endl;
+    //cout << "Altitude = " << altitude_ft->getDoubleValue() << endl;
+    //cout << "Dewpoint at alt (C) = " << atof( dewpoint_str.c_str() ) << endl;
+    //cout << "Dewpoint at sea level (C) = " << dewpoint_sea_level_degc << endl;
  
     SGPropertyNode *node, *child;
 
