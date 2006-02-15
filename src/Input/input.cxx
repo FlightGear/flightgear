@@ -319,7 +319,7 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
       // and be happy.
       FGScenery* scenery = globals->get_scenery();
       sgdVec3 start, dir, hit;
-      if (updown && FGRenderer::getPickInfo(start, dir, x, y) &&
+      if (MOUSE_BUTTON_DOWN && FGRenderer::getPickInfo(start, dir, x, y) &&
           scenery->get_cart_ground_intersection(start, dir, hit)) {
 
         Point3D geod = sgCartToGeod(Point3D(hit[0], hit[1], hit[2]));
@@ -337,13 +337,6 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
         lat->setDoubleValue(geod.lat() * SGD_RADIANS_TO_DEGREES);
         elev_m->setDoubleValue(geod.elev());
         elev_ft->setDoubleValue(geod.elev() * SG_METER_TO_FEET);
-
-        // std::cout << "lon = " << geod.lon()*SGD_RADIANS_TO_DEGREES
-        //           << " deg, lat = " << geod.lat()*SGD_RADIANS_TO_DEGREES
-        //           << " deg, elev = " << geod.elev()
-        //           << " m" << std::endl;
-      } else {
-        std::cout << "Cannot find intersection point" << std::endl;
       }
     }
   }
