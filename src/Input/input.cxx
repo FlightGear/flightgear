@@ -324,19 +324,11 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
 
         Point3D geod = sgCartToGeod(Point3D(hit[0], hit[1], hit[2]));
 
-        static SGPropertyNode_ptr lon
-                = fgGetNode("/sim/input/click/longitude-deg", true);
-        static SGPropertyNode_ptr lat
-                = fgGetNode("/sim/input/click/latitude-deg", true);
-        static SGPropertyNode_ptr elev_m
-                = fgGetNode("/sim/input/click/elevation-m", true);
-        static SGPropertyNode_ptr elev_ft
-                = fgGetNode("/sim/input/click/elevation-ft", true);
-
-        lon->setDoubleValue(geod.lon() * SGD_RADIANS_TO_DEGREES);
-        lat->setDoubleValue(geod.lat() * SGD_RADIANS_TO_DEGREES);
-        elev_m->setDoubleValue(geod.elev());
-        elev_ft->setDoubleValue(geod.elev() * SG_METER_TO_FEET);
+        SGPropertyNode *c = fgGetNode("/sim/input/click", true);
+        c->setDoubleValue("longitude-deg", geod.lon() * SGD_RADIANS_TO_DEGREES);
+        c->setDoubleValue("latitude-deg", geod.lat() * SGD_RADIANS_TO_DEGREES);
+        c->setDoubleValue("elevation-m", geod.elev());
+        c->setDoubleValue("elevation-ft", geod.elev() * SG_METER_TO_FEET);
       }
     }
   }
