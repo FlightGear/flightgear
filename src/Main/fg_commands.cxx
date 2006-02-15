@@ -1157,7 +1157,7 @@ do_play_audio_message (const SGPropertyNode * arg)
     FGFX *fx = (FGFX *)globals->get_subsystem("fx");
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
-    cout << "playing " << path << " / " << file << endl;
+    // cout << "playing " << path << " / " << file << endl;
     fx->play_message( path, file );
 
     return true;
@@ -1223,8 +1223,8 @@ do_replay (const SGPropertyNode * arg)
         fgSetDouble( "/sim/replay/time", r->get_start_time() );
     }
 
-    cout << "start = " << r->get_start_time()
-         << "  end = " << r->get_end_time() << endl;
+    // cout << "start = " << r->get_start_time()
+    //      << "  end = " << r->get_end_time() << endl;
 
     return true;
 }
