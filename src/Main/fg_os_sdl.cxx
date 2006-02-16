@@ -241,6 +241,9 @@ int fgGetKeyModifiers()
 
 void fgWarpMouse(int x, int y)
 {
+    SDL_Event e[10];
+    SDL_PumpEvents();
+    SDL_PeepEvents(e, 10, SDL_GETEVENT, SDL_MOUSEMOTIONMASK);
     SDL_WarpMouse(x, y);
 }
 
