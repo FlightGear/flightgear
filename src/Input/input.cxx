@@ -387,19 +387,13 @@ FGInput::doMouseMotion (int x, int y)
                                 // Constrain the mouse if requested
   if (mode.constrained) {
     bool need_warp = false;
-    if (x <= 0) {
-      x = xsize - 2;
-      need_warp = true;
-    } else if (x >= (xsize-1)) {
-      x = 1;
+    if (x <= (xsize * .25) || x >= (xsize * .75)) {
+      x = int(xsize * .5);
       need_warp = true;
     }
 
-    if (y <= 0) {
-      y = ysize - 2;
-      need_warp = true;
-    } else if (y >= (ysize-1)) {
-      y = 1;
+    if (y <= (ysize * .25) || y >= (ysize * .75)) {
+      y = int(ysize * .5);
       need_warp = true;
     }
 
