@@ -493,8 +493,11 @@ public:
   virtual const FGCroppedTexture &getTexture () const { return _texture; }
   virtual FGCroppedTexture *getTexture() { return &_texture; }
 
+  void setEmissive(bool e) { _emissive = e; }
+
 private:
   FGCroppedTexture _texture;
+  bool _emissive;
 };
 
 

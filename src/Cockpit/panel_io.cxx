@@ -439,6 +439,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
   string type = node->getStringValue("type");
   int w = node->getIntValue("w", -1);
   int h = node->getIntValue("h", -1);
+  bool emissive = node->getBoolValue("emissive", false);
   if (w != -1)
     w = int(w * w_scale);
   if (h != -1)
@@ -457,6 +458,11 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
   if (type == "texture") {
     FGCroppedTexture texture = readTexture(node->getNode("texture"));
     layer = new FGTexturedLayer(texture, w, h);
+    if (emissive) {
+      FGTexturedLayer *tl=(FGTexturedLayer*)layer;
+      tl->setEmissive(true);
+    }
+
   }
 
 				// A group of sublayers.

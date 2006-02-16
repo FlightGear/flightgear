@@ -18,6 +18,15 @@
 //
 //  $Id$
 
+//JVK
+// On 2D panels all instruments include light sources were in night displayed
+// with a red mask (instrument light). It is not correct for light sources
+// (bulbs). There is added new layer property "emissive" (boolean) (only for
+// textured layers).
+// If a layer has to shine set it in the "instrument_def_file.xml" inside the
+// <layer> tag by adding <emissive>true</emissive> tag. When omitted the default
+// value is for backward compatibility set to false.
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -169,6 +178,7 @@ static fntRenderer text_renderer;
 static fntTexFont *default_font = 0;
 static fntTexFont *led_font = 0;
 static sgVec4 panel_color;
+static sgVec4 emissive_panel_color = {1,1,1,1};
 
 /**
  * Constructor.
@@ -955,7 +965,8 @@ FGGroupLayer::addLayer (FGInstrumentLayer * layer)
 
 
 FGTexturedLayer::FGTexturedLayer (const FGCroppedTexture &texture, int w, int h)
-  : FGInstrumentLayer(w, h)
+  : FGInstrumentLayer(w, h),
+    _emissive(false)
 {
   setTexture(texture);
 }
@@ -976,10 +987,14 @@ FGTexturedLayer::draw ()
     transform();
     glBindTexture(GL_TEXTURE_2D, _texture.getTexture()->getHandle());
     glBegin(GL_POLYGON);
-    
+
+    if (_emissive) {
+      glColor4fv( emissive_panel_color );
+    } else {
 				// From Curt: turn on the panel
 				// lights after sundown.
-    glColor4fv( panel_color );
+      glColor4fv( panel_color );
+    }
 
     glTexCoord2f(_texture.getMinX(), _texture.getMinY()); glVertex2f(-w2, -h2);
     glTexCoord2f(_texture.getMaxX(), _texture.getMinY()); glVertex2f(w2, -h2);
