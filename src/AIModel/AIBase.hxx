@@ -131,8 +131,6 @@ protected:
     void CalculateMach();
     double UpdateRadar(FGAIManager* manager);
 
-    int index;
-
     static int _newAIModelID();
 
 private:

@@ -9,11 +9,7 @@ else
 JPEG_SERVER =
 endif
 
-if ENABLE_MPLAYER_AS
 MPLAYER_AS = multiplay.cxx multiplay.hxx
-else
-MPLAYER_AS =
-endif
 
 libNetwork_a_SOURCES = \
 	protocol.cxx protocol.hxx \

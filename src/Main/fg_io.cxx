@@ -58,10 +58,7 @@
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
 #include <Network/generic.hxx>
-
-#ifdef FG_MPLAYER_AS
 #include <Network/multiplay.hxx>
-#endif
 
 #include "globals.hxx"
 #include "fg_io.hxx"
@@ -182,8 +179,6 @@ FGIO::parse_port_config( const string& config )
             else if (tokens[1] == "file") n--;
             FGGeneric *generic = new FGGeneric( tokens[n] );
             io = generic;
-
-#ifdef FG_MPLAYER_AS
 	} else if ( protocol == "multiplay" ) {\
 	    //Determine dir, rate, host & port
 	    string dir = tokens[1];
@@ -191,8 +186,6 @@ FGIO::parse_port_config( const string& config )
 	    string host = tokens[3];
 	    string port = tokens[4];
 	    return new FGMultiplay(dir, atoi(rate.c_str()), host, atoi(port.c_str()));
-#endif
-
 	} else {
 	    return NULL;
 	}

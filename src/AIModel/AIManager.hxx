@@ -95,9 +95,7 @@ public:
     inline double get_wind_from_east() const {return wind_from_east; }
     inline double get_wind_from_north() const {return wind_from_north; }
 
-    inline int getNum( FGAIBase::object_type ot ) const {
-      return (0 < ot && ot < FGAIBase::MAX_OBJECTS) ? numObjects[ot] : numObjects[0];
-    }
+    int getNumAiObjects(void) const;
 
     void processScenario( const string &filename );
 
@@ -112,7 +110,8 @@ public:
 private:
 
     bool enabled;
-    int numObjects[FGAIBase::MAX_OBJECTS];
+    int mNumAiModels;
+
     SGPropertyNode* root;
     SGPropertyNode* wind_from_down_node;
     SGPropertyNode* user_latitude_node;

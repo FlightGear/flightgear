@@ -90,18 +90,6 @@ if test "x$with_logging" = "xno" ; then
     AC_DEFINE([FG_NDEBUG], 1, [Define for no logging output])
 fi
 
-# Specify if we want to build with Multiplayer support
-# default to with_network=yes
-AC_ARG_WITH(multiplayer, [  --with-multiplayer      Include multiplayer support [default=yes]])
-
-if test "x$with_multiplayer" = "xno"; then
-  echo "Building without any kind of multiplayer support"
-else
-  echo "Building with multiplayer support"
-  AC_DEFINE([FG_MPLAYER_AS], 1, [Define to build with multiplayer support])
-fi
-AM_CONDITIONAL(ENABLE_MPLAYER_AS, test "x$with_multiplayer" != "xno")
-
 AC_ARG_ENABLE(sp_fdms, [  --enable-sp-fdms              Include special purpose Flight Models], [enable_sp_fdms="$enableval"] )
 AC_DEFINE([ENABLE_SP_FMDS], test "x$enable_sp_fdms" = "xyes", [Define to include special purpose FDMs])
 AM_CONDITIONAL(ENABLE_SP_FDM, test "x$enable_sp_fdms" != "xno")

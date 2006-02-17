@@ -1,7 +1,6 @@
 // FGAIMultiplayer - AIBase derived class creates an AI multiplayer aircraft
 //
 // Written by David Culp, started October 2003.
-// With additions by Vivian Meazza
 //
 // Copyright (C) 2003  David P. Culp - davidculp2@comcast.net
 //
@@ -22,82 +21,72 @@
 #ifndef _FG_AIMultiplayer_HXX
 #define _FG_AIMultiplayer_HXX
 
-#include "AIManager.hxx"
+#include <map>
+#include <string>
+
+#include <MultiPlayer/mpmessages.hxx>
 #include "AIBase.hxx"
 
-//#include <Traffic/SchedFlight.hxx>
-//#include <Traffic/Schedule.hxx>
-
-#include <string>
-SG_USING_STD(string);
-
-
 class FGAIMultiplayer : public FGAIBase {
-
-    public:
-    FGAIMultiplayer();
-    ~FGAIMultiplayer();
-    
-    bool init();
-    virtual void bind();
-    virtual void unbind();
-    void update(double dt);
-    
-
-    void setSpeedN(double sn);
-    void setSpeedE(double se);
-    void setSpeedD(double sd);
-    void setAccN(double an);
-    void setAccE(double ae);
-    void setAccD(double ad);
-    void setRateH(double rh);
-    void setRateR(double rr);
-    void setRateP(double rp);
-    void setRudder( double r ) { rudder = r;}   
-    void setElevator( double e ) { elevator = e; }
-    void setLeftAileron( double la ) { left_aileron = la; } 
-    void setRightAileron( double ra ) { right_aileron = ra; }   
-    void setTimeStamp();
-    
-    inline SGPropertyNode *FGAIMultiplayer::getProps() { return props; }
-        
-    void setAcType(string ac) { acType = ac; };
-    void setCompany(string comp);
-
-    virtual const char* getTypeString(void) const { return "multiplayer"; }
-
-    double dt; 
-    double speedN, speedE, speedD;
-    double rateH, rateR, rateP;
-    double raw_hdg , raw_roll , raw_pitch ;
-    double raw_speed_north_deg_sec, raw_speed_east_deg_sec;
-    double raw_lat, damp_lat, lat_constant;
-    double raw_lon, damp_lon, lon_constant;
-    double raw_alt, damp_alt, alt_constant;
-    double hdg_constant, roll_constant, pitch_constant;
-    double speed_north_deg_sec_constant, speed_east_deg_sec_constant;
-    double speed_north_deg_sec, speed_east_deg_sec;
-    double accN, accE, accD;
-    double rudder, elevator, left_aileron, right_aileron;
-    double time_stamp, last_time_stamp;
-
-    SGPropertyNode_ptr _time_node;
-        
-    void Run(double dt);
-    inline double sign(double x) { return (x < 0.0) ? -1.0 : 1.0; }
+public:
+  FGAIMultiplayer();
+  virtual ~FGAIMultiplayer();
   
-    string acType;
-    string company;
-};
+  virtual bool init();
+  virtual void bind();
+  virtual void unbind();
+  virtual void update(double dt);
+  
+  void addMotionInfo(const FGExternalMotionData& motionInfo, long stamp);
+  void setDoubleProperty(const std::string& prop, double val);
+  
+  void setCallSign(const string& callSign)
+  { mCallSign = callSign; }
+  const char* getCallSign(void) const
+  { return mCallSign.c_str(); }
+  
+  long getLastTimestamp(void) const
+  { return mLastTimestamp; }
 
-inline void FGAIMultiplayer::setSpeedN(double sn) { speedN = sn; }
-inline void FGAIMultiplayer::setSpeedE(double se) { speedE = se; }
-inline void FGAIMultiplayer::setSpeedD(double sd) { speedD = sd; }
-inline void FGAIMultiplayer::setAccN(double an) { accN = an; }
-inline void FGAIMultiplayer::setAccE(double ae) { accE = ae; }
-inline void FGAIMultiplayer::setAccD(double ad) { accD = ad; }
-inline void FGAIMultiplayer::setRateH(double rh) { rateH = rh; }
-inline void FGAIMultiplayer::setRateR(double rr) { rateR = rr; }
-inline void FGAIMultiplayer::setRateP(double rp) { rateP = rp; }
+  void setAllowExtrapolation(bool allowExtrapolation)
+  { mAllowExtrapolation = allowExtrapolation; }
+  bool getAllowExtrapolation(void) const
+  { return mAllowExtrapolation; }
+  void setLagAdjustSystemSpeed(double lagAdjustSystemSpeed)
+  {
+    if (lagAdjustSystemSpeed < 0)
+      lagAdjustSystemSpeed = 0;
+    mLagAdjustSystemSpeed = lagAdjustSystemSpeed;
+  }
+  double getLagAdjustSystemSpeed(void) const
+  { return mLagAdjustSystemSpeed; }
+
+  void addPropertyId(unsigned id, const char* name)
+  { mPropertyMap[id] = props->getNode(name, true); }
+
+  virtual const char* getTypeString(void) const { return "multiplayer"; }
+
+private:
+
+  // Automatic sorting of motion data according to its timestamp
+  typedef std::map<double,FGExternalMotionData> MotionInfo;
+  MotionInfo mMotionInfo;
+  
+  // Map between the property id's from the multiplayers network packets
+  // and the property nodes
+  typedef std::map<unsigned, SGSharedPtr<SGPropertyNode> > PropertyMap;
+  PropertyMap mPropertyMap;
+
+  std::string mCallSign;
+  
+  double mTimeOffset;
+  bool mTimeOffsetSet;
+  
+  /// Properties which are for now exposed for testing
+  bool mAllowExtrapolation;
+  double mLagAdjustSystemSpeed;
+
+  long mLastTimestamp;
+};
 
 #endif  // _FG_AIMultiplayer_HXX

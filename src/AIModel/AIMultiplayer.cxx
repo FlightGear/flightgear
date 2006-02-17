@@ -3,7 +3,6 @@
 // Based on FGAIAircraft
 // Written by David Culp, started October 2003.
 // Also by Gregor Richards, started December 2005.
-// With additions by Vivian Meazza, January 2006
 //
 // Copyright (C) 2003  David P. Culp - davidculp2@comcast.net
 // Copyright (C) 2005  Gregor Richards
@@ -26,51 +25,18 @@
 #  include <config.h>
 #endif
 
-#include <simgear/math/point3d.hxx>
-#include <Main/fg_props.hxx>
-#include <Main/globals.hxx>
-#include <Main/viewer.hxx>
-#include <Scenery/scenery.hxx>
-#include <Scenery/tilemgr.hxx>
-#include <simgear/route/waypoint.hxx>
 #include <string>
-#include <math.h>
-#include <time.h>
-#ifdef _MSC_VER
-#  include <float.h>
-#  define finite _finite
-#elif defined(__sun) || defined(sgi)
-#  include <ieeefp.h>
-#endif
-
-SG_USING_STD(string);
 
 #include "AIMultiplayer.hxx"
-   static string tempReg;
 
+// #define SG_DEBUG SG_ALERT
 
 FGAIMultiplayer::FGAIMultiplayer() : FGAIBase(otMultiplayer) {
-   _time_node = fgGetNode("/sim/time/elapsed-sec", true);
+   no_roll = false;
 
-   //initialise values
-   speedN = speedE = rateH = rateR = rateP = 0.0;
-   raw_hdg = hdg;
-   raw_roll = roll;
-   raw_pitch = pitch;
-   raw_speed_east_deg_sec = speedE / ft_per_deg_lon;
-   raw_speed_north_deg_sec = speedN / ft_per_deg_lat;
-   raw_lon = damp_lon = pos.lon();
-   raw_lat = damp_lat = pos.lat();
-   raw_alt = damp_alt = pos.elev() / SG_FEET_TO_METER;
-
-   //Exponentially weighted moving average time constants
-   speed_north_deg_sec_constant = speed_east_deg_sec_constant = 0.1;
-   alt_constant = 0.1;
-   lat_constant = 0.05;
-   lon_constant = 0.05;
-   hdg_constant = 0.1;
-   roll_constant = 0.1;
-   pitch_constant = 0.1;
+   mTimeOffsetSet = false;
+   mAllowExtrapolation = true;
+   mLagAdjustSystemSpeed = 10;
 }
 
 
@@ -83,192 +49,273 @@ bool FGAIMultiplayer::init() {
 
 void FGAIMultiplayer::bind() {
     FGAIBase::bind();
-    props->setStringValue("callsign", company.c_str());
-    
-    props->tie("controls/constants/roll",
-                SGRawValuePointer<double>(&roll_constant));
-    props->tie("controls/constants/pitch",
-                SGRawValuePointer<double>(&pitch_constant));
-    props->tie("controls/constants/hdg",
-                SGRawValuePointer<double>(&hdg_constant));
-    props->tie("controls/constants/altitude",
-                SGRawValuePointer<double>(&alt_constant));
-    /*props->tie("controls/constants/speedE",
-                SGRawValuePointer<double>(&speed_east_deg_sec_constant));
-    props->tie("controls/constants/speedN",
-                SGRawValuePointer<double>(&speed_north_deg_sec_constant));*/
-    props->tie("controls/constants/lat",
-                SGRawValuePointer<double>(&lat_constant));
-    props->tie("controls/constants/lon",
-                SGRawValuePointer<double>(&lon_constant));
-    props->tie("surface-positions/rudder-pos-norm",
-                SGRawValuePointer<double>(&rudder));
-    props->tie("surface-positions/elevator-pos-norm",
-                SGRawValuePointer<double>(&elevator));
-    props->tie("velocities/speedE-fps",
-                SGRawValuePointer<double>(&speedE));
 
+#define AIMPROProp(type, name) \
+SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
 
-    props->setDoubleValue("sim/current-view/view-number", 1);
-                   
-}
+#define AIMPRWProp(type, name) \
+SGRawValueMethods<FGAIMultiplayer, type>(*this, \
+      &FGAIMultiplayer::get##name, &FGAIMultiplayer::set##name)
 
-void FGAIMultiplayer::setCompany(string comp) {
-    company = comp;
-    if (props)
-        props->setStringValue("callsign", company.c_str());
+    props->tie("callsign", AIMPROProp(const char *, CallSign));
 
+    props->tie("controls/allow-extrapolation",
+               AIMPRWProp(bool, AllowExtrapolation));
+    props->tie("controls/lag-adjust-system-speed",
+               AIMPRWProp(double, LagAdjustSystemSpeed));
+
+#undef AIMPROProp
+#undef AIMPRWProp
 }
 
 void FGAIMultiplayer::unbind() {
     FGAIBase::unbind();
-    
-    props->untie("controls/constants/roll");
-    props->untie("controls/constants/pitch");
-    props->untie("controls/constants/hdg");
-    props->untie("controls/constants/altitude");
-    /*props->untie("controls/constants/speedE");
-    props->untie("controls/constants/speedN");*/
-    props->untie("controls/constants/lat");
-    props->untie("controls/constants/lon");
-    props->untie("surface-positions/rudder-pos-norm");
-    props->untie("surface-positions/elevator-pos-norm");
-    props->untie("velocities/speedE-fps");
+
+    props->untie("callsign");
+    props->untie("controls/allow-extrapolation");
+    props->untie("controls/lag-adjust-system-speed");
 }
 
+void FGAIMultiplayer::update(double dt)
+{
+  if (dt <= 0)
+    return;
 
-void FGAIMultiplayer::update(double dt) {
+  FGAIBase::update(dt);
 
-    FGAIBase::update(dt);
-    Run(dt);
-    Transform();
-}
+  // Check if we already got data
+  if (mMotionInfo.empty())
+    return;
+
+  // The current simulation time we need to update for,
+  // note that the simulation time is updated before calling all the
+  // update methods. Thus it contains the time intervals *end* time
+  double curtime = globals->get_sim_time_sec();
+
+  // Get the last available time
+  MotionInfo::reverse_iterator it = mMotionInfo.rbegin();
+  double curentPkgTime = it->second.time;
+
+  // Dynamically optimize the time offset between the feeder and the client
+  // Well, 'dynamically' means that the dynamic of that update must be very
+  // slow. You would otherwise notice huge jumps in the multiplayer models.
+  // The reason is that we want to avoid huge extrapolation times since
+  // extrapolation is highly error prone. For that we need something
+  // approaching the average latency of the packets. This first order lag
+  // component will provide this. We just take the error of the currently
+  // requested time to the most recent available packet. This is the
+  // target we want to reach in average.
+  double lag = it->second.lag;
+  if (!mTimeOffsetSet) {
+    mTimeOffsetSet = true;
+    mTimeOffset = curentPkgTime - curtime - lag;
+  } else {
+    double offset = curentPkgTime - curtime - lag;
+    if (!mAllowExtrapolation && offset + lag < mTimeOffset) {
+      mTimeOffset = offset;
+      SG_LOG(SG_GENERAL, SG_DEBUG, "Resetting time offset adjust system to "
+             "avoid extrapolation: time offset = " << mTimeOffset);
+    } else {
+      // the error of the offset, respectively the negative error to avoid
+      // a minus later ...
+      double err = offset - mTimeOffset;
+      // limit errors leading to shorter lag values somehow, that is late
+      // arriving packets will pessimize the overall lag much more than
+      // early packets will shorten the overall lag
+      double sysSpeed;
+      if (err < 0) {
+        // Ok, we have some very late packets and nothing newer increase the
+        // lag by the given speedadjust
+        sysSpeed = mLagAdjustSystemSpeed*err;
+      } else {
+        // We have a too pessimistic display delay shorten that a small bit
+        sysSpeed = SGMiscd::min(0.1*err*err, 0.5);
+      }
+
+      // simple euler integration for that first order system including some
+      // overshooting guard to prevent to aggressive system speeds
+      // (stiff systems) to explode the systems state
+      double systemIncrement = dt*sysSpeed;
+      if (fabs(err) < fabs(systemIncrement))
+        systemIncrement = err;
+      mTimeOffset += systemIncrement;
+      
+      SG_LOG(SG_GENERAL, SG_DEBUG, "Offset adjust system: time offset = "
+             << mTimeOffset << ", expected longitudinal position error due to "
+             " current adjustment of the offset: "
+             << fabs(norm(it->second.linearVel)*systemIncrement));
+    }
+  }
 
 
-void FGAIMultiplayer::Run(double dt) {
-    
-    // strangely, this is called with a dt of 0 quite often
+  // Compute the time in the feeders time scale which fits the current time
+  // we need to 
+  double tInterp = curtime + mTimeOffset;
 
-    SG_LOG( SG_GENERAL, SG_DEBUG, "AIMultiplayer::main loop dt " << dt ) ;
+  SGVec3d ecPos;
+  SGQuatf ecOrient;
+  if (tInterp <= curentPkgTime) {
+    // Ok, we need a time prevous to the last available packet,
+    // that is good ...
 
-    //if (dt == 0) return;
-    
-    //FGAIMultiplayer::dt = dt;
+    // Find the first packet before the target time
+    MotionInfo::iterator nextIt = mMotionInfo.upper_bound(tInterp);
+    if (nextIt == mMotionInfo.begin()) {
+      SG_LOG(SG_GENERAL, SG_DEBUG, "Taking oldest packet!");
+      // We have no packet before the target time, just use the first one
+      MotionInfo::iterator firstIt = mMotionInfo.begin();
+      ecPos = firstIt->second.position;
+      ecOrient = firstIt->second.orientation;
 
-    //double rhr, rha; // "real" heading radius/angle
+      std::vector<FGFloatPropertyData>::const_iterator firstPropIt;
+      std::vector<FGFloatPropertyData>::const_iterator firstPropItEnd;
+      firstPropIt = firstIt->second.properties.begin();
+      firstPropItEnd = firstIt->second.properties.end();
+      while (firstPropIt != firstPropItEnd) {
+        float val = firstPropIt->value;
+        PropertyMap::iterator pIt = mPropertyMap.find(firstPropIt->id);
+        if (pIt != mPropertyMap.end())
+          pIt->second->setFloatValue(val);
+        ++firstPropIt;
+      }
 
-    // get the current sim elapsed time
-    double time =_time_node->getDoubleValue();                        //secs
-    
-    dt = 0;
-    
-    //calulate the time difference, dt. Then use this value to extrapolate position and orientation    
-    dt = time - time_stamp;
-    
-    SG_LOG(SG_GENERAL, SG_DEBUG, "time: "
-        << time << " timestamp: " << time_stamp << " dt: " << dt << " freq Hz: " << 1/dt);
-    
-    // change heading/roll/pitch
-    raw_hdg = hdg + rateH * dt;
-    raw_roll = roll + rateR * dt;
-    raw_pitch = pitch + rateP * dt;
-        
-    //apply lowpass filters
-    hdg = (raw_hdg * hdg_constant) + (hdg * (1 - hdg_constant));
-    roll = (raw_roll * roll_constant) + (roll * (1 - roll_constant));
-    pitch = (raw_pitch * pitch_constant) + (pitch * (1 - pitch_constant));
-    
-    /*cout << "raw roll " << raw_roll <<" damp hdg " << roll << endl; 
-    cout << "raw hdg" << raw_hdg <<" damp hdg " << hdg << endl;
-    cout << "raw pitch " << raw_pitch <<" damp pitch " << pitch << endl;*/
-    
-    // sanitize HRP
-    while (hdg < 0) hdg += 360;
-    while (hdg >= 360) hdg -= 360;
-    while (roll <= -180) roll += 360;
-    while (roll > 180) roll -= 360;
-    while (pitch <= -180) pitch += 360;
-    while (pitch > 180) pitch -= 360;
+    } else {
+      // Ok, we have really found something where our target time is in between
+      // do interpolation here
+      MotionInfo::iterator prevIt = nextIt;
+      --prevIt;
 
-    // calculate the new accelerations by change in the rate of heading
-    /*rhr = sqrt(pow(accN,2) + pow(accE,2));
-    rha = atan2(accN, accE);
-    rha += rateH * dt;
-    accN = sin(rha);
-    accE = cos(rha);*/
-    
-    // calculate new speed by acceleration
-    speedN += accN * dt;
-    speedE += accE * dt;
-    speedD += accD * dt;
+      // Interpolation coefficient is between 0 and 1
+      double intervalStart = prevIt->second.time;
+      double intervalEnd = nextIt->second.time;
+      double intervalLen = intervalEnd - intervalStart;
+      double tau = (tInterp - intervalStart)/intervalLen;
 
-    // convert speed to degrees per second
-    // 1.686
-    speed_north_deg_sec = speedN / ft_per_deg_lat;
-    speed_east_deg_sec  = speedE / ft_per_deg_lon;
+      SG_LOG(SG_GENERAL, SG_DEBUG, "Multiplayer vehicle interpolation: ["
+             << intervalStart << ", " << intervalEnd << "], intervalLen = "
+             << intervalLen << ", interpolation parameter = " << tau);
+
+      // Here we do just linear interpolation on the position
+      ecPos = ((1-tau)*prevIt->second.position + tau*nextIt->second.position);
+      ecOrient = interpolate((float)tau, prevIt->second.orientation,
+                             nextIt->second.orientation);
+
+      if (prevIt->second.properties.size()
+          == nextIt->second.properties.size()) {
+        std::vector<FGFloatPropertyData>::const_iterator prevPropIt;
+        std::vector<FGFloatPropertyData>::const_iterator prevPropItEnd;
+        std::vector<FGFloatPropertyData>::const_iterator nextPropIt;
+        std::vector<FGFloatPropertyData>::const_iterator nextPropItEnd;
+        prevPropIt = prevIt->second.properties.begin();
+        prevPropItEnd = prevIt->second.properties.end();
+        nextPropIt = nextIt->second.properties.begin();
+        nextPropItEnd = nextIt->second.properties.end();
+        while (prevPropIt != prevPropItEnd) {
+          float val = (1-tau)*prevPropIt->value + tau*nextPropIt->value;
+          PropertyMap::iterator pIt = mPropertyMap.find(prevPropIt->id);
+          if (pIt != mPropertyMap.end())
+            pIt->second->setFloatValue(val);
+          ++prevPropIt;
+          ++nextPropIt;
+        }
+      }
+
+      // Now throw away too old data
+      if (prevIt != mMotionInfo.begin()) {
+        --prevIt;
+        mMotionInfo.erase(mMotionInfo.begin(), prevIt);
+      }
+    }
+  } else {
+    // Ok, we need to predict the future, so, take the best data we can have
+    // and do some eom computation to guess that for now.
+    FGExternalMotionData motionInfo = it->second;
+
+    // The time to predict, limit to 5 seconds
+    double t = tInterp - motionInfo.time;
+    t = SGMisc<double>::min(t, 5);
+
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Multiplayer vehicle extrapolation: "
+           "extrapolation time = " << t);
+
+    // Do a few explicit euler steps with the constant acceleration's
+    // This must be sufficient ...
+    ecPos = motionInfo.position;
+    ecOrient = motionInfo.orientation;
+    SGVec3f linearVel = motionInfo.linearVel;
+    SGVec3f angularVel = motionInfo.angularVel;
+    while (0 < t) {
+      double h = 1e-1;
+      if (t < h)
+        h = t;
+
+      SGVec3d ecVel = toVec3d(ecOrient.backTransform(linearVel));
+      ecPos += h*ecVel;
+      ecOrient += h*ecOrient.derivative(angularVel);
+
+      linearVel += h*(cross(linearVel, angularVel) + motionInfo.linearAccel);
+      angularVel += h*motionInfo.angularAccel;
+      
+      t -= h;
+    }
+
+    std::vector<FGFloatPropertyData>::const_iterator firstPropIt;
+    std::vector<FGFloatPropertyData>::const_iterator firstPropItEnd;
+    firstPropIt = it->second.properties.begin();
+    firstPropItEnd = it->second.properties.end();
+    while (firstPropIt != firstPropItEnd) {
+      float val = firstPropIt->value;
+      PropertyMap::iterator pIt = mPropertyMap.find(firstPropIt->id);
+      if (pIt != mPropertyMap.end())
+        pIt->second->setFloatValue(val);
+      ++firstPropIt;
+    }
+  }
   
-    // calculate new position by speed 
-    raw_lat = pos.lat() + speed_north_deg_sec * dt;
-    raw_lon = pos.lon() + speed_east_deg_sec * dt ;
-    raw_alt = (pos.elev() / SG_FEET_TO_METER) +  (speedD * dt);
-    
-    //apply lowpass filters if the difference is small
-    if ( fabs ( pos.lat() - raw_lat) < 0.001 ) {
-        SG_LOG(SG_GENERAL, SG_DEBUG,"lat lowpass filter");
-        damp_lat = (raw_lat * lat_constant) + (damp_lat * (1 - lat_constant));
-    }else {
-        // skip the filter
-        SG_LOG(SG_GENERAL, SG_DEBUG,"lat high pass filter");
-        damp_lat = raw_lat;
-    }
-     
-    if ( fabs ( pos.lon() - raw_lon) < 0.001 ) {
-        SG_LOG(SG_GENERAL, SG_DEBUG,"lon lowpass filter");
-        damp_lon = (raw_lon * lon_constant) + (damp_lon * (1 - lon_constant)); 
-    }else {
-        // skip the filter
-        SG_LOG(SG_GENERAL, SG_DEBUG,"lon high pass filter");
-        damp_lon = raw_lon;
-    }
+  // extract the position
+  SGGeod geod = ecPos;
+  pos.setlat(geod.getLatitudeDeg());
+  pos.setlon(geod.getLongitudeDeg());
+  pos.setelev(geod.getElevationM());
+  
+  // The quaternion rotating from the earth centered frame to the
+  // horizontal local frame
+  SGQuatf qEc2Hl = SGQuatf::fromLonLat((float)geod.getLongitudeRad(),
+                                       (float)geod.getLatitudeRad());
+  // The orientation wrt the horizontal local frame
+  SGQuatf hlOr = conj(qEc2Hl)*ecOrient;
+  float hDeg, pDeg, rDeg;
+  hlOr.getEulerDeg(hDeg, pDeg, rDeg);
+  hdg = hDeg;
+  roll = rDeg;
+  pitch = pDeg;
 
-    if ( fabs ( (pos.elev()/SG_FEET_TO_METER) - raw_alt) < 10 ) {
-        SG_LOG(SG_GENERAL, SG_DEBUG,"alt lowpass filter");
-        damp_alt = (raw_alt * alt_constant) + (damp_alt * (1 - alt_constant));
-    }else {
-        // skip the filter
-        SG_LOG(SG_GENERAL, SG_DEBUG,"alt high pass filter");
-        damp_alt = raw_alt;
-    }
-    
- //      cout << "raw lat" << raw_lat <<" damp lat " << damp_lat << endl;  
-    //cout << "raw lon" << raw_lon <<" damp lon " << damp_lon << endl;
-    //cout << "raw alt" << raw_alt <<" damp alt " << damp_alt << endl;
-    
-    // set new position
-    pos.setlat( damp_lat );
-    pos.setlon( damp_lon );
-    pos.setelev( damp_alt * SG_FEET_TO_METER );
+  SG_LOG(SG_GENERAL, SG_DEBUG, "Multiplayer position and orientation: "
+         << geod << ", " << hlOr);
 
-    //save the values
-    time_stamp = time;
-     
-    //###########################//
-    // do calculations for radar //
-    //###########################//
-    //double range_ft2 = UpdateRadar(manager);
+  //###########################//
+  // do calculations for radar //
+  //###########################//
+  UpdateRadar(manager);
+
+  Transform();
 }
 
-void FGAIMultiplayer::setTimeStamp()
-{    
-    // this function sets the timestamp as the sim elapsed time 
-    time_stamp = _time_node->getDoubleValue();            //secs
-    
-    //calculate the elapsed time since the latst update for display purposes only
-    double elapsed_time = time_stamp - last_time_stamp;
-    
-    SG_LOG( SG_GENERAL, SG_DEBUG, " net input time s" << time_stamp << " freq Hz: " << 1/elapsed_time ) ;
-        
-    //save the values
-    last_time_stamp = time_stamp;
+void
+FGAIMultiplayer::addMotionInfo(const FGExternalMotionData& motionInfo,
+                               long stamp)
+{
+  mLastTimestamp = stamp;
+  // Drop packets arriving out of order
+  if (!mMotionInfo.empty() && motionInfo.time < mMotionInfo.rbegin()->first)
+    return;
+  mMotionInfo[motionInfo.time] = motionInfo;
+}
+
+void
+FGAIMultiplayer::setDoubleProperty(const std::string& prop, double val)
+{
+  SGPropertyNode* pNode = props->getChild(prop.c_str(), true);
+  pNode->setDoubleValue(val);
 }
 

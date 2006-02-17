@@ -83,7 +83,6 @@ FGAircraftModel::~FGAircraftModel ()
     globals->get_scenery()->unregister_placement_transform(_aircraft->getTransform());
 
   delete _aircraft;
-  delete _scene;
 				// SSG will delete it
   globals->get_scenery()->get_aircraft_branch()->removeKid(_selector);
 }

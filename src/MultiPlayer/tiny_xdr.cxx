@@ -11,7 +11,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <string>
+
 #include <plib/ul.h>
+#include <plib/netSocket.h>
 
 #include "tiny_xdr.hxx"
 
@@ -167,5 +170,4 @@ XDR_decode_double ( const xdr_data2_t & d_Val )
     tmp.x = XDR_decode_int64 (d_Val);
     return tmp.d;
 }
-
 

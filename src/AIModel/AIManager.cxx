@@ -34,10 +34,8 @@
 #include "AIMultiplayer.hxx"
 
 FGAIManager::FGAIManager() {
-  for (int i=0; i < FGAIBase::MAX_OBJECTS; i++)
-     numObjects[i] = 0;
   _dt = 0.0;
-  scenario_filename = "";
+  mNumAiModels = 0;
 }
 
 FGAIManager::~FGAIManager() {
@@ -88,7 +86,8 @@ void FGAIManager::reinit() {
 
 void FGAIManager::bind() {
    root = globals->get_props()->getNode("ai/models", true);
-   root->tie("count", SGRawValuePointer<int>(&numObjects[0]));
+   root->tie("count", SGRawValueMethods<FGAIManager, int>(*this,
+             &FGAIManager::getNumAiObjects));
 }
 
 
@@ -99,42 +98,34 @@ void FGAIManager::unbind() {
 
 void FGAIManager::update(double dt) {
 
-        // initialize these for finding nearest thermals
-        range_nearest = 10000.0;
-        strength = 0.0;
-	FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("Traffic Manager");
+  // initialize these for finding nearest thermals
+  range_nearest = 10000.0;
+  strength = 0.0;
+  if (!enabled)
+    return;
 
-        if (!enabled)
-            return;
+  FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("Traffic Manager");
+  _dt = dt;
 
-        _dt = dt;
-
-        ai_list_iterator ai_list_itr = ai_list.begin();
-        while(ai_list_itr != ai_list.end()) {
-                if ((*ai_list_itr)->getDie()) {      
-		  tmgr->release((*ai_list_itr)->getID());
-                   --numObjects[(*ai_list_itr)->getType()];
-                   --numObjects[0];
-                   (*ai_list_itr)->unbind();
-                   if ( ai_list_itr == ai_list.begin() ) {
-                       ai_list.erase(ai_list_itr);
-                       ai_list_itr = ai_list.begin();
-                       continue;
-                   } else {
-                       ai_list.erase(ai_list_itr--);
-                   }
-                } else {
-                   fetchUserState();
-                   if ((*ai_list_itr)->isa(FGAIBase::otThermal)) {
-                       FGAIBase *base = *ai_list_itr;
-                       processThermal((FGAIThermal*)base); 
-                   } else { 
-                      (*ai_list_itr)->update(_dt);
-                   }
-                }
-                ++ai_list_itr;
-        }
-        wind_from_down_node->setDoubleValue( strength ); // for thermals
+  ai_list_iterator ai_list_itr = ai_list.begin();
+  while(ai_list_itr != ai_list.end()) {
+    if ((*ai_list_itr)->getDie()) {      
+      tmgr->release((*ai_list_itr)->getID());
+      --mNumAiModels;
+      (*ai_list_itr)->unbind();
+      ai_list_itr = ai_list.erase(ai_list_itr);
+    } else {
+      fetchUserState();
+      if ((*ai_list_itr)->isa(FGAIBase::otThermal)) {
+        FGAIBase *base = *ai_list_itr;
+        processThermal((FGAIThermal*)base); 
+      } else { 
+        (*ai_list_itr)->update(_dt);
+      }
+      ++ai_list_itr;
+    }
+  }
+  wind_from_down_node->setDoubleValue( strength ); // for thermals
 }
 
 void
@@ -142,27 +133,29 @@ FGAIManager::attach(SGSharedPtr<FGAIBase> model)
 {
   model->setManager(this);
   ai_list.push_back(model);
-  ++numObjects[0];
-  ++numObjects[model->getType()];
+  ++mNumAiModels;
   model->init();
   model->bind();
 }
 
 
 void FGAIManager::destroyObject( int ID ) {
-        ai_list_iterator ai_list_itr = ai_list.begin();
-        while(ai_list_itr != ai_list.end()) {
-            if ((*ai_list_itr)->getID() == ID) {
-              --numObjects[0];
-              --numObjects[(*ai_list_itr)->getType()];
-              (*ai_list_itr)->unbind();
-              ai_list.erase(ai_list_itr);
-              break;
-            }
-            ++ai_list_itr;
-        }
+  ai_list_iterator ai_list_itr = ai_list.begin();
+  while(ai_list_itr != ai_list.end()) {
+    if ((*ai_list_itr)->getID() == ID) {
+      --mNumAiModels;
+      (*ai_list_itr)->unbind();
+      ai_list_itr = ai_list.erase(ai_list_itr);
+    } else
+      ++ai_list_itr;
+  }
 }
 
+int
+FGAIManager::getNumAiObjects(void) const
+{
+  return mNumAiModels;
+}
 
 void FGAIManager::fetchUserState( void ) {
      user_latitude  = user_latitude_node->getDoubleValue();
@@ -174,8 +167,6 @@ void FGAIManager::fetchUserState( void ) {
      user_speed     = user_speed_node->getDoubleValue() * 0.592484;
      wind_from_east = wind_from_east_node->getDoubleValue();
      wind_from_north = wind_from_north_node->getDoubleValue();
-     
-     
 }
 
 

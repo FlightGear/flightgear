@@ -230,14 +230,11 @@ fgSetDefaults ()
     fgSetBool("/sim/freeze/clock", false);
     fgSetBool("/sim/freeze/fuel", false);
 
-#ifdef FG_MPLAYER_AS
     fgSetString("/sim/multiplay/callsign", "callsign");
     fgSetString("/sim/multiplay/rxhost", "0");
     fgSetString("/sim/multiplay/txhost", "0");
     fgSetInt("/sim/multiplay/rxport", 0);
     fgSetInt("/sim/multiplay/txport", 0);
-#endif
-
 }
 
 static bool
@@ -1343,10 +1340,8 @@ struct OptionDesc {
     {"joyclient",                    true,  OPTION_CHANNEL, "", false, "", 0 },
     {"jsclient",                     true,  OPTION_CHANNEL, "", false, "", 0 },
     {"proxy",                        true,  OPTION_FUNC,    "", false, "", fgSetupProxy },
-#ifdef FG_MPLAYER_AS
     {"callsign",                     true, OPTION_STRING,  "sim/multiplay/callsign", false, "", 0 },
     {"multiplay",                    true,  OPTION_CHANNEL, "", false, "", 0 },
-#endif
     {"trace-read",                   true,  OPTION_FUNC,   "", false, "", fgOptTraceRead },
     {"trace-write",                  true,  OPTION_FUNC,   "", false, "", fgOptTraceWrite },
     {"log-level",                    true,  OPTION_FUNC,   "", false, "", fgOptLogLevel },

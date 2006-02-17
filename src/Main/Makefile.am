@@ -1,11 +1,7 @@
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in \
              fg_os_sdl.cxx fg_os.cxx fg_os.hxx
 
-if ENABLE_MPLAYER_AS
 MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a
-else
-MPLAYER_LIBS = 
-endif
 
 if ENABLE_SP_FDM
 SP_FDM_LIBS = $(top_builddir)/src/FDM/SP/libSPFDM.a

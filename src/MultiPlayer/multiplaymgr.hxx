@@ -31,7 +31,6 @@
 
 #define MULTIPLAYTXMGR_HID "$Id$"
 
-#include "mpplayer.hxx"
 #include "mpmessages.hxx"
 
 #ifdef HAVE_CONFIG_H
@@ -48,52 +47,48 @@ SG_USING_STD(vector);
 #include <plib/netSocket.h>
 #include <Main/globals.hxx>
 
-// Maximum number of players that can exist at any time
-// FIXME: use a list<mplayer> instead
-#define MAX_PLAYERS 10
+#include <AIModel/AIMultiplayer.hxx>
+
+struct FGExternalMotionInfo;
 
 class FGMultiplayMgr 
 {
 public:
-    FGMultiplayMgr();
-    ~FGMultiplayMgr();
-    bool init(void);
-    void Close(void);
-    // transmitter
-    void SendMyPosition (const double lat, const double lon, const double alt,
-                         const double heading, const double roll, const double pitch,
-                         const double speedN, const double speedE, const double speedD,
-                         const double left_aileron, const double right_aileron, const double elevator, const double rudder,
-                         //const double rpms[6],
-                         const double rateH, const double rateR, const double rateP,
-						 const double accN, const double accE, const double accD
-						 );
-    void SendPropMessage (const string &property, SGPropertyNode::Type type, double value);
-    void SendTextMessage (const string &sMsgText) const;
-    // receiver
-    void ProcessData(void);
-    void ProcessPosMsg ( const char *Msg, netAddress & SenderAddress );
-    void ProcessChatMsg ( const char *Msg, netAddress & SenderAddress );
-    void ProcessPropMsg ( const char *Msg, netAddress & SenderAddress );
-    void Update(void);
+  struct IdPropertyList {
+    unsigned id;
+    const char* name;
+  };
+  static IdPropertyList sIdPropertyList[];
 
-	/* getters/setters */
-	bool getSendAllProps();
-	void setSendAllProps(bool s);
-	bool send_all_props;
-
+  FGMultiplayMgr();
+  ~FGMultiplayMgr();
+  bool init(void);
+  void Close(void);
+  // transmitter
+  void SendMyPosition(const FGExternalMotionData& motionInfo);
+  void SendTextMessage(const string &sMsgText);
+  void FillMsgHdr(T_MsgHdr *MsgHdr, int iMsgId, unsigned _len = 0u);
+  
+  // receiver
+  void ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
+                     unsigned len, long stamp);
+  void ProcessChatMsg(const char *Msg, netAddress & SenderAddress);
+  void Update(void);
+  
 private:
-    typedef vector<MPPlayer*>           t_MPClientList;
-    typedef t_MPClientList::iterator    t_MPClientListIterator;
-    MPPlayer*       m_LocalPlayer;
-    netSocket*      m_DataSocket;
-    netAddress      m_Server;
-    bool            m_HaveServer;
-    bool            m_Initialised;
-    t_MPClientList  m_MPClientList;
-    string          m_RxAddress;
-    int             m_RxPort;
-    string          m_Callsign;
+  FGAIMultiplayer* addMultiplayer(const std::string& callsign,
+                                  const std::string& modelName);
+  FGAIMultiplayer* getMultiplayer(const std::string& callsign);
+
+  /// maps from the callsign string to the FGAIMultiplayer
+  typedef std::map<std::string, SGSharedPtr<FGAIMultiplayer> > MultiPlayerMap;
+  MultiPlayerMap mMultiPlayerMap;
+
+  netSocket* mSocket;
+  netAddress mServer;
+  bool mHaveServer;
+  bool mInitialised;
+  string mCallsign;
 };
 
 #endif

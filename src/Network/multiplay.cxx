@@ -35,10 +35,10 @@
 #include <string>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/scene/model/placement.hxx>
-#include <simgear/scene/model/placementtrans.hxx>
+#include <simgear/math/SGMath.hxx>
 
-#include <Scenery/scenery.hxx>
+#include <FDM/flight.hxx>
+#include <MultiPlayer/mpmessages.hxx>
 
 #include "multiplay.hxx"
 
@@ -57,123 +57,22 @@ const char sFG_MULTIPLAY_HID[] = FG_MULTIPLAY_HID;
 ******************************************************************/
 FGMultiplay::FGMultiplay (const string &dir, const int rate, const string &host, const int port) {
 
-    last_time = 0;
-    last_speedN = last_speedE = last_speedD = 0;
-    calcaccN = calcaccE = calcaccD = 0;
-    set_hz(rate);
+  set_hz(rate);
 
-    set_direction(dir);
+  set_direction(dir);
 
-    if (get_direction() == SG_IO_IN) {
+  if (get_direction() == SG_IO_IN) {
 
-        fgSetInt("/sim/multiplay/rxport", port);
-        fgSetString("/sim/multiplay/rxhost", host.c_str());
+    fgSetInt("/sim/multiplay/rxport", port);
+    fgSetString("/sim/multiplay/rxhost", host.c_str());
 
-    } else if (get_direction() == SG_IO_OUT) {
+  } else if (get_direction() == SG_IO_OUT) {
 
-        fgSetInt("/sim/multiplay/txport", port);
-        fgSetString("/sim/multiplay/txhost", host.c_str());
+    fgSetInt("/sim/multiplay/txport", port);
+    fgSetString("/sim/multiplay/txhost", host.c_str());
 
-    }
+  }
 
-    lat_n = fgGetNode("/position/latitude-deg", true);
-    lon_n = fgGetNode("/position/longitude-deg", true);
-    alt_n = fgGetNode("/position/altitude-ft", true);
-    heading_n = fgGetNode("/orientation/heading-deg", true);
-    roll_n = fgGetNode("/orientation/roll-deg", true);
-    pitch_n = fgGetNode("/orientation/pitch-deg", true);
-    speedN_n = fgGetNode("/velocities/speed-north-fps", true);
-    speedE_n = fgGetNode("/velocities/speed-east-fps", true);
-    speedD_n = fgGetNode("/velocities/speed-down-fps", true);
-    left_aileron_n = fgGetNode("/surface-positions/left-aileron-pos-norm", true);
-    right_aileron_n = fgGetNode("/surface-positions/right-aileron-pos-norm", true);
-    elevator_n = fgGetNode("/surface-positions/elevator-pos-norm", true);
-    rudder_n = fgGetNode("/surface-positions/rudder-pos-norm", true);
-    /*rpms_n[0] = fgGetNode("/engines/engine/rpm", true);
-    rpms_n[1] = fgGetNode("/engines/engine[1]/rpm", true);
-    rpms_n[2] = fgGetNode("/engines/engine[2]/rpm", true);
-    rpms_n[3] = fgGetNode("/engines/engine[3]/rpm", true);
-    rpms_n[4] = fgGetNode("/engines/engine[4]/rpm", true);
-    rpms_n[5] = fgGetNode("/engines/engine[5]/rpm", true);*/
-    rateH_n = fgGetNode("/orientation/yaw-rate-degps", true);
-    rateR_n = fgGetNode("/orientation/roll-rate-degps", true);
-    rateP_n = fgGetNode("/orientation/pitch-rate-degps", true);
-
-    SGPropertyNode_ptr n = fgGetNode("/controls/flight/slats",true);
-    _node_cache *c = new _node_cache( n->getDoubleValue(), n );
-    props["controls/flight/slats"] = c;
-
-    n = fgGetNode("/controls/flight/speedbrake", true);
-    c = new _node_cache( n->getDoubleValue(), n );
-    props["controls/flight/speedbrake"] = c;
-
-    n = fgGetNode("/controls/flight/spoilers", true);
-    c = new _node_cache( n->getDoubleValue(), n );
-    props["controls/flight/spoilers"] = c;
-
-    n = fgGetNode("/controls/gear/gear-down", true);
-    c = new _node_cache( n->getDoubleValue(), n );
-    props["controls/gear/gear-down"] = c;
-
-    n = fgGetNode("/controls/lighting/nav-lights", true);
-    c = new _node_cache( n->getDoubleValue(), n );
-    props["controls/lighting/nav-lights"] = c;
-
-    n = fgGetNode("/surface-positions/flap-pos-norm", true);
-    c = new _node_cache( n->getDoubleValue(), n );
-    props["surface-positions/flap-pos-norm"] = c;
-
-    n = fgGetNode("/surface-positions/speedbrake-pos-norm", true);
-    c = new _node_cache( n->getDoubleValue(), n );
-    props["surface-positions/speedbrake-pos-norm"] = c;
-
-    for (int i = 0; i < 6; i++)
-    {
-        char *s = new char[32];
-
-        snprintf(s, 32, "engines/engine[%i]/n1", i);
-        n = fgGetNode(s, true);
-        c = new _node_cache( n->getDoubleValue(), n );
-        props["s"] = c;
-
-        snprintf(s, 32, "engines/engine[%i]/n2", i);
-        n = fgGetNode(s, true);
-        c = new _node_cache( n->getDoubleValue(), n );
-        props[s] = c;
-
-        snprintf(s, 32, "engines/engine[%i]/rpm", i);
-        n = fgGetNode(s, true);
-        c = new _node_cache( n->getDoubleValue(), n );
-        props[s] = c;
-
-        delete [] s;
-    }
-
-    for (int j = 0; j < 5; j++)
-    {
-        char *s = new char[32];
-    
-        snprintf(s, 32, "gear/gear[%i]/compression-norm", j);
-        n = fgGetNode(s, true);
-        c = new _node_cache( n->getDoubleValue(), n );
-        props["s"] = c;
-
-        snprintf(s, 32, "gear/gear[%i]/position-norm", j);
-        n = fgGetNode(s, true);
-        c = new _node_cache( n->getDoubleValue(), n );
-        props[s] = c;
-#if 0
-        snprintf(s, 32, "gear/gear[%i]/rollspeed-ms", j);
-        n = fgGetNode(s, true);
-        c = new _node_cache( n->getDoubleValue(), n );
-        props[s] = c;
-#endif
-        delete [] s;
-    }
-
-    n = fgGetNode("gear/tailhook/position-norm", true);
-    c = new _node_cache( n->getDoubleValue(), n );
-    props["gear/tailhook/position-norm"] = c;
 }
 
 
@@ -182,7 +81,6 @@ FGMultiplay::FGMultiplay (const string &dir, const int rate, const string &host,
 * Description: Destructor.
 ******************************************************************/
 FGMultiplay::~FGMultiplay () {
-    props.clear();
 }
 
 
@@ -193,12 +91,24 @@ FGMultiplay::~FGMultiplay () {
 bool FGMultiplay::open() {
 
     if ( is_enabled() ) {
-    SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel "
-        << "is already in use, ignoring" );
-    return false;
+	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel "
+		<< "is already in use, ignoring" );
+	return false;
     }
 
     set_enabled(true);
+
+    SGPropertyNode* root = globals->get_props();
+
+    /// Build up the id to property map
+    unsigned i = 0;
+    while (FGMultiplayMgr::sIdPropertyList[i].name) {
+      const char* name = FGMultiplayMgr::sIdPropertyList[i].name;
+      SGPropertyNode* pNode = root->getNode(name);
+      if (pNode)
+        mPropertyMap[FGMultiplayMgr::sIdPropertyList[i].id] = pNode;
+      ++i;
+    }
 
     return is_enabled();
 }
@@ -211,83 +121,94 @@ bool FGMultiplay::open() {
 ******************************************************************/
 bool FGMultiplay::process() {
 
-  if (get_direction() == SG_IO_IN) {
+  if (get_direction() == SG_IO_OUT) {
 
-    globals->get_multiplayer_mgr()->ProcessData();
+    // check if we have left initialization phase. That will not provide
+    // interresting data, also the freeze in simulation time hurts the
+    // multiplayer clients
+    double sim_time = globals->get_sim_time_sec();
+//     if (sim_time < 20)
+//       return true;
 
-  } else if (get_direction() == SG_IO_OUT) {
+    FGInterface *ifce = cur_fdm_state;
 
-    double accN, accE, accD;
-    string fdm = fgGetString("/sim/flight-model");
+    // put together a motion info struct, you will get that later
+    // from FGInterface directly ...
+    FGExternalMotionData motionInfo;
 
-    if(fdm == "jsb"){
-        calcAcc(speedN_n->getDoubleValue(),
-                speedE_n->getDoubleValue(),
-                speedD_n->getDoubleValue());
-        accN = calcaccN;
-        accE = calcaccE;
-        accD = calcaccD;
-    }else{
-        SG_LOG(SG_GENERAL, SG_DEBUG," not doing acc calc" << fdm);
-        accN = fgGetDouble("/accelerations/ned/north-accel-fps_sec");
-        accE = fgGetDouble("/accelerations/ned/east-accel-fps_sec");
-        accD = fgGetDouble("/accelerations/ned/down-accel-fps_sec");
-    }
+    // The current simulation time we need to update for,
+    // note that the simulation time is updated before calling all the
+    // update methods. Thus it contains the time intervals *end* time.
+    // The FDM is already run, so the states belong to that time.
+    motionInfo.time = sim_time;
 
-    globals->get_multiplayer_mgr()->SendMyPosition(
-                                     lat_n->getDoubleValue(),
-                                     lon_n->getDoubleValue(),
-                                     alt_n->getDoubleValue(),
-                                     heading_n->getDoubleValue(),
-                                     roll_n->getDoubleValue(),
-                                     pitch_n->getDoubleValue(),
-                                     speedN_n->getDoubleValue(),
-                                     speedE_n->getDoubleValue(),
-                                     speedD_n->getDoubleValue(),
-                                     left_aileron_n->getDoubleValue(),
-                                     right_aileron_n->getDoubleValue(),
-                                     elevator_n->getDoubleValue(),
-                                     rudder_n->getDoubleValue(),
-                                     rateH_n->getDoubleValue(),
-                                     rateR_n->getDoubleValue(),
-                                     rateP_n->getDoubleValue(),
-                                     accN, accE, accD);
+    // The typical lag will be the reciprocal of the output frequency
+    double hz = get_hz();
+    if (hz != 0) // I guess we can test a double for exact zero in this case
+      motionInfo.lag = 1/get_hz();
+    else
+      motionInfo.lag = 0.1; //??
+
+    // These are for now converted from lat/lon/alt and euler angles.
+    // But this should change in FGInterface ...
+    double lon = ifce->get_Longitude();
+    double lat = ifce->get_Latitude();
+    // first the aprioriate structure for the geodetic one
+    SGGeod geod = SGGeod::fromRadFt(lon, lat, ifce->get_Altitude());
+    // Convert to cartesion coordinate
+    motionInfo.position = geod;
     
-    // check for changes
-    for (propit = props.begin(); propit != props.end(); propit++)
-    {
-      double val = propit->second->val;
-      double curr_val = propit->second->node->getDoubleValue();
-      if (curr_val < val * 0.99 || curr_val > val * 1.01 )
-      {
-        SGPropertyNode::Type type = propit->second->node->getType();
-        propit->second->val = val = curr_val;
-        globals->get_multiplayer_mgr()->SendPropMessage(propit->first, type, val);
-        //cout << "Prop " << propit->first <<" type " << type << " val " << val << endl;
-      } else {
-          //  cout << "no change" << endl;
-      }
+    // The quaternion rotating from the earth centered frame to the
+    // horizontal local frame
+    SGQuatf qEc2Hl = SGQuatf::fromLonLat((float)lon, (float)lat);
+    // The orientation wrt the horizontal local frame
+    float heading = ifce->get_Psi();
+    float pitch = ifce->get_Theta();
+    float roll = ifce->get_Phi();
+    SGQuatf hlOr = SGQuatf::fromYawPitchRoll(heading, pitch, roll);
+    // The orientation of the vehicle wrt the earth centered frame
+    motionInfo.orientation = qEc2Hl*hlOr;
+
+    if (!ifce->is_suspended()) {
+      // velocities
+      motionInfo.linearVel = SG_FEET_TO_METER*SGVec3f(ifce->get_U_body(),
+                                                      ifce->get_V_body(),
+                                                      ifce->get_W_body());
+      motionInfo.angularVel = SGVec3f(ifce->get_P_body(),
+                                      ifce->get_Q_body(),
+                                      ifce->get_R_body());
+      
+      // accels, set that to zero for now.
+      // Angular accelerations are missing from the interface anyway,
+      // linear accelerations are screwed up at least for JSBSim.
+//  motionInfo.linearAccel = SG_FEET_TO_METER*SGVec3f(ifce->get_U_dot_body(),
+//                                                    ifce->get_V_dot_body(),
+//                                                    ifce->get_W_dot_body());
+      motionInfo.linearAccel = SGVec3f::zeros();
+      motionInfo.angularAccel = SGVec3f::zeros();
+    } else {
+      // if the interface is suspendend, prevent the client from
+      // wild extrapolations
+      motionInfo.linearVel = SGVec3f::zeros();
+      motionInfo.angularVel = SGVec3f::zeros();
+      motionInfo.linearAccel = SGVec3f::zeros();
+      motionInfo.angularAccel = SGVec3f::zeros();
     }
 
-    // send all properties when necessary
-    // FGMultiplayMgr::getSendAllProps();
-    bool send_all = globals->get_multiplayer_mgr()->getSendAllProps();
-    //cout << "send_all in " << send;
-    if (send_all){
-        SG_LOG( SG_NETWORK, SG_ALERT,
-          "FGMultiplay::sending ALL property messages" );
-          for (propit = props.begin(); propit != props.end(); propit++) {
-              SGPropertyNode::Type type = propit->second->node->getType();
-              double val = propit->second->val;
-              globals->get_multiplayer_mgr()->SendPropMessage(propit->first, type, val);
-          }
-        send_all = false;
-        globals->get_multiplayer_mgr()->setSendAllProps(send_all);
+    // now send the properties
+    PropertyMap::iterator it;
+    for (it = mPropertyMap.begin(); it != mPropertyMap.end(); ++it) {
+      FGFloatPropertyData pData;
+      pData.id = it->first;
+      pData.value = it->second->getFloatValue();
+      motionInfo.properties.push_back(pData);
     }
-    //cout << " send_all out " << s << endl;
+
+    FGMultiplayMgr* mpmgr = globals->get_multiplayer_mgr();
+    mpmgr->SendMyPosition(motionInfo);
   }
 
-    return true;
+  return true;
 }
 
 
@@ -304,46 +225,10 @@ bool FGMultiplay::close() {
 
   } else if (get_direction() == SG_IO_OUT) {
 
-//    globals->get_multiplayer_mgr()->Close();
+    globals->get_multiplayer_mgr()->Close();
 
   }
 
-    return true;
+  return true;
 }
-
-/******************************************************************
- * Name: CalcAcc
- * Description: Calculate accelerations given speedN, speedE, speedD
- ******************************************************************/
-void FGMultiplay::calcAcc(double speedN, double speedE, double speedD)
-{
-    double time, dt;                        //secs
-    /*double accN, accE, accD;    */            //fps2
-
-    dt = 0;
-
-    time = fgGetDouble("/sim/time/elapsed-sec");
-
-    dt = time-last_time;
-    
-    SG_LOG(SG_GENERAL, SG_DEBUG," doing acc calc"
-    <<"time: "<< time << " last " << last_time << " dt " << dt );
-                                
-    //calculate the accelerations  
-    calcaccN = (speedN - last_speedN)/dt;
-    calcaccE = (speedE - last_speedE)/dt;
-    calcaccD = (speedD - last_speedD)/dt;
-
-    //set the properties
-    /*fgSetDouble("/accelerations/ned/north-accel-fps_sec",accN);
-    fgSetDouble("/accelerations/ned/east-accel-fps_sec",accE);
-    fgSetDouble("/accelerations/ned/down-accel-fps_sec",accN);*/
-    
-    //save the values
-    last_time = time;
-    last_speedN = speedN;
-    last_speedE = speedE;
-    last_speedD = speedD;
-    
-}// end calcAcc
 

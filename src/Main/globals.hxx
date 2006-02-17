@@ -79,9 +79,7 @@ class FGLight;
 class FGModelMgr;
 class FGRouteMgr;
 class FGScenery;
-#ifdef FG_MPLAYER_AS
 class FGMultiplayMgr;
-#endif
 class FGPanel;
 class FGTileMgr;
 class FGViewMgr;
@@ -210,11 +208,8 @@ private:
     FGTACANList *channellist;
     FGFixList *fixlist;
 
-
-#ifdef FG_MPLAYER_AS
     //Mulitplayer managers
     FGMultiplayMgr *multiplayer_mgr;
-#endif
 
 public:
 
@@ -326,15 +321,12 @@ public:
       model_mgr = mgr;
     }
 
-#ifdef FG_MPLAYER_AS
     inline FGMultiplayMgr *get_multiplayer_mgr () { return multiplayer_mgr; }
 
     inline void set_multiplayer_mgr (FGMultiplayMgr * mgr)
     {
       multiplayer_mgr = mgr;
     }
-
-#endif
 
     inline string_list *get_channel_options_list () {
 	return channel_options_list;

@@ -64,7 +64,6 @@ FGAIBase::FGAIBase(object_type ot)
     invisible = true;
     no_roll = true;
     life = 900;
-    index = 0;
     delete_me = false;
 }
 
@@ -74,10 +73,13 @@ FGAIBase::~FGAIBase() {
         globals->get_scenery()->unregister_placement_transform(aip.getTransform());
         globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
     }
-    SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
-    root->removeChild(getTypeString(), index);
+    if (props) {
+      SGPropertyNode* parent = props->getParent();
+      if (parent)
+        parent->removeChild(props->getName(), props->getIndex());
+    }
     delete fp;
-    fp = NULL;
+    fp = 0;
 }
 
 
@@ -121,7 +123,8 @@ bool FGAIBase::init() {
 
    SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
 
-   index = manager->getNum(_otype) - 1;
+   unsigned index = root->getChildren(getTypeString()).size();
+
    props = root->getNode(getTypeString(), index, true);
 
    if (!model_path.empty()) {

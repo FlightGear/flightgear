@@ -74,12 +74,7 @@
 #include <Time/fg_timer.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <GUI/new_gui.hxx>
-
-#ifdef FG_MPLAYER_AS
 #include <MultiPlayer/multiplaymgr.hxx>
-#endif
-
-
 
 #include "fg_commands.hxx"
 #include "fg_io.hxx"
@@ -454,18 +449,19 @@ static void fgMainLoop( void ) {
     ++frames;
 #endif
 
+    // Update any multiplayer's network queues, the AIMultiplayer
+    // implementation is an AI model and depends on that
+    globals->get_multiplayer_mgr()->Update();
+
     // Run ATC subsystem
     if (fgGetBool("/sim/atc/enabled"))
         globals->get_ATC_mgr()->update(delta_time_sec);
 
     // Run the AI subsystem
+    // FIXME: run that also if we have multiplying enabled since the
+    // multiplayer information is interpreted by an AI model
     if (fgGetBool("/sim/ai-traffic/enabled"))
         globals->get_AI_mgr()->update(delta_time_sec);
-
-#ifdef FG_MPLAYER_AS
-    // Update any multiplayer models
-    globals->get_multiplayer_mgr()->Update();
-#endif
 
     // Run flight model
 

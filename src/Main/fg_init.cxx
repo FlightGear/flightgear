@@ -111,10 +111,7 @@
 #include <Time/sunsolver.hxx>
 #include <Time/tmp.hxx>
 #include <Traffic/TrafficMgr.hxx>
-
-#ifdef FG_MPLAYER_AS
 #include <MultiPlayer/multiplaymgr.hxx>
-#endif
 
 #include <Environment/environment_mgr.hxx>
 
@@ -1805,14 +1802,12 @@ bool fgInitSubsystems() {
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
 
-#ifdef FG_MPLAYER_AS
     ////////////////////////////////////////////////////////////////////
     // Initialize multiplayer subsystem
     ////////////////////////////////////////////////////////////////////
 
     globals->set_multiplayer_mgr(new FGMultiplayMgr);
     globals->get_multiplayer_mgr()->init();
-#endif
 
     ////////////////////////////////////////////////////////////////////////
     // Initialize the Nasal interpreter.
