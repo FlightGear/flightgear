@@ -484,7 +484,7 @@ FGMultiplayMgr::ProcessChatMsg(const char *Msg, netAddress& SenderAddress)
     return;
   }
   
-  char MsgBuf[MsgHdr->MsgLen - sizeof(T_MsgHdr)];
+  char *MsgBuf = new char[MsgHdr->MsgLen - sizeof(T_MsgHdr)];
   strncpy(MsgBuf, ((T_ChatMsg *)(Msg + sizeof(T_MsgHdr)))->Text,
           MsgHdr->MsgLen - sizeof(T_MsgHdr));
   MsgBuf[MsgHdr->MsgLen - sizeof(T_MsgHdr) - 1] = '\0';
@@ -492,6 +492,7 @@ FGMultiplayMgr::ProcessChatMsg(const char *Msg, netAddress& SenderAddress)
   T_ChatMsg* ChatMsg = (T_ChatMsg *)(Msg + sizeof(T_MsgHdr));
   SG_LOG ( SG_NETWORK, SG_ALERT, "Chat [" << MsgHdr->Callsign << "]"
            << " " << MsgBuf << endl);
+  delete [] MsgBuf;
 } // FGMultiplayMgr::ProcessChatMsg ()
 //////////////////////////////////////////////////////////////////////
 
