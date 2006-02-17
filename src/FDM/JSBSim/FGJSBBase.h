@@ -85,7 +85,7 @@ using std::fabs;
 
 #endif
 
-#if !defined(WIN32) || defined(__GNUC__) || (defined(_MSC_VER) && (_MSC_VER >= 1400))
+#if !defined(WIN32) || defined(__GNUC__) || (defined(_MSC_VER) && (_MSC_VER >= 1300))
 using std::max;
 #endif
 
