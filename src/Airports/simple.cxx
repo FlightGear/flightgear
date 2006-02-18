@@ -277,7 +277,7 @@ void FGAirportList::has_metar( const string &id ) {
 const FGAirport *fgFindAirportID( const string& id) {
     const FGAirport* result = NULL;
     if ( id.length() ) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
+        SG_LOG( SG_GENERAL, SG_BULK, "Searching for airport code = " << id );
 
         result = globals->get_airports()->search( id );
 
@@ -289,7 +289,7 @@ const FGAirport *fgFindAirportID( const string& id) {
     } else {
         return NULL;
     }
-    SG_LOG( SG_GENERAL, SG_INFO,
+    SG_LOG( SG_GENERAL, SG_BULK,
             "Position for " << id << " is ("
             << result->getLongitude() << ", "
             << result->getLatitude() << ")" );
@@ -303,7 +303,7 @@ double fgGetAirportElev( const string& id ) {
     
     // double lon, lat;
 
-    SG_LOG( SG_GENERAL, SG_INFO,
+    SG_LOG( SG_GENERAL, SG_BULK,
             "Finding elevation for airport: " << id );
 
     const FGAirport *a=fgFindAirportID( id);
@@ -318,7 +318,7 @@ double fgGetAirportElev( const string& id ) {
 Point3D fgGetAirportPos( const string& id ) {
     // double lon, lat;
 
-    SG_LOG( SG_ATC, SG_INFO,
+    SG_LOG( SG_ATC, SG_BULK,
             "Finding position for airport: " << id );
 
     const FGAirport *a = fgFindAirportID( id);
