@@ -81,7 +81,7 @@ public:
 	void wake_up() { _jobs.signal(); }
 
 private:
-	void wait_for_jobs() { _mutex.lock(); _jobs.wait(_mutex); _mutex.unlock(); }
+	void wait_for_jobs() { SGGuard<SGMutex> g(_mutex); _jobs.wait(_mutex); }
 	SGPthreadCond _jobs;
 	SGMutex _mutex;
 	FGVoiceMgr *_mgr;
