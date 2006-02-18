@@ -20,10 +20,6 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
 #include <sstream>
 #include <simgear/compiler.h>
 #include <Main/fg_props.hxx>
