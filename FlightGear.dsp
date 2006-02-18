@@ -9583,36 +9583,6 @@ SOURCE=.\src\MultiPlayer\multiplaymgr.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\MultiPlayer\mpplayer.cxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_MultiPlayer"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_MultiPlayer"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\MultiPlayer\mpplayer.hxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_MultiPlayer"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_MultiPlayer"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\src\MultiPlayer\mpmessages.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -10311,6 +10281,36 @@ SOURCE=.\src\Network\opengc_data.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\multiplay.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\multiplay.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\props.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -10665,36 +10665,6 @@ SOURCE=.\src\Scripting\NasalSys.cxx
 # Begin Source File
 
 SOURCE=.\src\Scripting\NasalSys.hxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Scripting"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Scripting"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\Scripting\NasalDisplay.cxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Scripting"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Scripting"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\Scripting\NasalDisplay.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
