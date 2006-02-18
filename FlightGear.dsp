@@ -35,7 +35,7 @@ RSC=rc.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-# ADD CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /FD /c  /MTd /I ".." /I "src" /I "src\include" /I "src\FDM\JSBsim" /I "..\SimGear" /I "..\zlib-1.2.3" /I "..\freeglut-2.4.0\include" /I "..\OpenAL 1.0 Software Development Kit\include" /I "..\Pre-built.2\include" /D "_USE_MATH_DEFINES" /D "_CRT_SECURE_NO_DEPRECATE" /D "HAVE_CONFIG_H" /D "FGFS" /D "FG_NEW_ENVIRONMENT" /D "ENABLE_AUDIO_SUPPORT" /D "ENABLE_PLIB_JOYSTICK"
+# ADD CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /FD /c  /MT /I ".." /I "src" /I "src\include" /I "src\FDM\JSBsim" /I "..\SimGear" /I "..\zlib-1.2.3" /I "..\freeglut-2.4.0\include" /I "..\OpenAL 1.0 Software Development Kit\include" /I "..\Pre-built.2\include" /D "_USE_MATH_DEFINES" /D "_CRT_SECURE_NO_DEPRECATE" /D "HAVE_CONFIG_H" /D "FGFS" /D "FG_NEW_ENVIRONMENT" /D "ENABLE_AUDIO_SUPPORT" /D "ENABLE_PLIB_JOYSTICK"
 # SUBTRACT CPP /YX
 # ADD RSC /l 0xc09 /d "NDEBUG"
 BSC32=bscmake.exe
