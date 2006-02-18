@@ -20,10 +20,10 @@
 //
 // $Id$
 
+#include <Main/globals.hxx>
 #include <sstream>
 #include <simgear/compiler.h>
 #include <Main/fg_props.hxx>
-#include <Main/globals.hxx>
 #include "voice.hxx"
 
 #define VOICE "/sim/sound/voices"
