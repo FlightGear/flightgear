@@ -21,8 +21,10 @@
 // $Id$
 
 #ifdef HAVE_CONFIG_H
-#  include <simgear/compiler.h>
+#  include "config.h"
 #endif
+
+#include <simgear/compiler.h>
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/magvar/magvar.hxx>

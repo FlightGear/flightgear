@@ -1,5 +1,9 @@
 // dialog.cxx: implementation of an XML-configurable dialog box.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <stdlib.h>		// atof()
 
 #include <Input/input.hxx>

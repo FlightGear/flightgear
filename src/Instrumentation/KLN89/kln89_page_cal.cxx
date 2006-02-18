@@ -21,6 +21,10 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "kln89_page_cal.hxx"
 
 KLN89CalPage::KLN89CalPage(KLN89* parent)

@@ -1,5 +1,9 @@
 // fg_commands.cxx - internal FGFS commands.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <string.h>		// strcmp()
 
 #include <simgear/compiler.h>

@@ -20,6 +20,10 @@
 //
 //
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <plib/sg.h>
 #include <plib/ssg.h>
 #include <Main/fg_props.hxx>

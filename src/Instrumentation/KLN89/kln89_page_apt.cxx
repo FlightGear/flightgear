@@ -21,6 +21,10 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "kln89_page_apt.hxx"
 #include <ATC/commlist.hxx>
 #include <Main/globals.hxx>

@@ -21,6 +21,10 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "kln89_page_usr.hxx"
 
 KLN89UsrPage::KLN89UsrPage(KLN89* parent) 

@@ -21,6 +21,10 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "kln89_page_act.hxx"
 #include "kln89_page_apt.hxx"
 #include "kln89_page_vor.hxx"

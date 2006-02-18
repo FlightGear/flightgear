@@ -21,6 +21,10 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "kln89_page_vor.hxx"
 
 KLN89VorPage::KLN89VorPage(KLN89* parent) 
