@@ -148,7 +148,7 @@ private:
 
     // The source xml tree, so that we can pass data back, such as the
     // last position.
-    SGPropertyNode *_props;
+    SGPropertyNode_ptr _props;
 
     // PUI provides no way for userdata to be deleted automatically
     // with a GUI object, so we have to keep track of all the special
