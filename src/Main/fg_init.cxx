@@ -935,13 +935,13 @@ static bool fgSetPosFromNAV( const string& id, const double& freq ) {
 static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
 
     // set initial position from runway and heading
-    Point3D geodPos;
+    SGGeod geodPos;
     double heading;
-    sgdVec3 uvw;
+    SGVec3d uvw;
     if (FGAIManager::getStartPosition(carrier, posid, geodPos, heading, uvw)) {
-        double lon = geodPos.lon() * SGD_RADIANS_TO_DEGREES;
-        double lat = geodPos.lat() * SGD_RADIANS_TO_DEGREES;
-        double alt = geodPos.elev() * SG_METER_TO_FEET;
+        double lon = geodPos.getLongitudeDeg();
+        double lat = geodPos.getLatitudeDeg();
+        double alt = geodPos.getElevationFt();
 
         SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
                 << carrier << " at lat = " << lat << ", lon = " << lon
@@ -957,12 +957,12 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
         fgSetDouble("/orientation/heading-deg", heading);
 
         fgSetString("/sim/presets/speed-set", "UVW");
-        fgSetDouble("/velocities/uBody-fps", uvw[0]);
-        fgSetDouble("/velocities/vBody-fps", uvw[1]);
-        fgSetDouble("/velocities/wBody-fps", uvw[2]);
-        fgSetDouble("/sim/presets/uBody-fps", uvw[0]);
-        fgSetDouble("/sim/presets/vBody-fps", uvw[1]);
-        fgSetDouble("/sim/presets/wBody-fps", uvw[2]);
+        fgSetDouble("/velocities/uBody-fps", uvw(0));
+        fgSetDouble("/velocities/vBody-fps", uvw(1));
+        fgSetDouble("/velocities/wBody-fps", uvw(2));
+        fgSetDouble("/sim/presets/uBody-fps", uvw(0));
+        fgSetDouble("/sim/presets/vBody-fps", uvw(1));
+        fgSetDouble("/sim/presets/wBody-fps", uvw(2));
 
         fgSetBool("/sim/presets/onground", true);
 

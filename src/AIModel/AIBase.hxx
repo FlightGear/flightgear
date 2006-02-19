@@ -24,6 +24,7 @@
 #include <list>
 
 #include <simgear/constants.h>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -75,8 +76,7 @@ public:
     void setDie( bool die );
     bool getDie();
 
-    Point3D getCartPosAt(const Point3D& off) const;
-    Point3D getGeocPosAt(const Point3D& off) const;
+    SGVec3d getCartPosAt(const SGVec3d& off) const;
 
 protected:
 

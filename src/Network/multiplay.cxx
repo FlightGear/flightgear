@@ -160,7 +160,7 @@ bool FGMultiplay::process() {
     
     // The quaternion rotating from the earth centered frame to the
     // horizontal local frame
-    SGQuatf qEc2Hl = SGQuatf::fromLonLat((float)lon, (float)lat);
+    SGQuatf qEc2Hl = SGQuatf::fromLonLatRad((float)lon, (float)lat);
     // The orientation wrt the horizontal local frame
     float heading = ifce->get_Psi();
     float pitch = ifce->get_Theta();

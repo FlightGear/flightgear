@@ -105,7 +105,7 @@ public:
   static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
 
   static bool getStartPosition(const string& id, const string& pid,
-                               Point3D& geodPos, double& hdng, sgdVec3 uvw);
+                               SGGeod& geodPos, double& hdng, SGVec3d& uvw);
 
 private:
 

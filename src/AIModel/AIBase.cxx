@@ -335,35 +335,23 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
    return range_ft2;
 }
 
-Point3D
-FGAIBase::getCartPosAt(const Point3D& off) const
+SGVec3d
+FGAIBase::getCartPosAt(const SGVec3d& _off) const
 {
-  // The offset converted to the usual body fixed coordinate system.
-  sgdVec3 sgdOff;
-  sgdSetVec3(sgdOff, -off.x(), off.z(), -off.y());
-
   // Transform that one to the horizontal local coordinate system.
-  sgdMat4 hlTrans;
-  sgdMakeRotMat4(hlTrans, hdg, pitch, roll);
-  sgdXformPnt3(sgdOff, hlTrans);
+  SGQuatd hlTrans = SGQuatd::fromLonLatDeg(pos.lon(), pos.lat());
+  // and postrotate the orientation of the AIModel wrt the horizontal
+  // local frame
+  hlTrans *= SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
 
-  // Now transform to the wgs84 earth centeres system.
-  Point3D pos2(pos.lon()* SGD_DEGREES_TO_RADIANS,
-               pos.lat() * SGD_DEGREES_TO_RADIANS,
-               pos.elev());
-  Point3D cartPos3D = sgGeodToCart(pos2);
-  sgdMat4 ecTrans;
-  sgdMakeCoordMat4(ecTrans, cartPos3D.x(), cartPos3D.y(), cartPos3D.z(),
-                   pos.lon(), 0, - 90 - pos.lat());
-  sgdXformPnt3(sgdOff, ecTrans);
+  // The offset converted to the usual body fixed coordinate system
+  // rotated to the earth fiexed coordinates axis
+  SGVec3d off = hlTrans.backTransform(_off);
 
-  return Point3D(sgdOff[0], sgdOff[1], sgdOff[2]);
-}
+  // Add the position offset of the AIModel to gain the earth centered position
+  SGVec3d cartPos = SGGeod::fromDegFt(pos.lon(), pos.lat(), pos.elev());
 
-Point3D
-FGAIBase::getGeocPosAt(const Point3D& off) const
-{
-  return sgCartToGeod(getCartPosAt(off));
+  return cartPos + off;
 }
 
 /*

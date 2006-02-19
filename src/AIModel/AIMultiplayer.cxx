@@ -280,8 +280,8 @@ void FGAIMultiplayer::update(double dt)
   
   // The quaternion rotating from the earth centered frame to the
   // horizontal local frame
-  SGQuatf qEc2Hl = SGQuatf::fromLonLat((float)geod.getLongitudeRad(),
-                                       (float)geod.getLatitudeRad());
+  SGQuatf qEc2Hl = SGQuatf::fromLonLatRad((float)geod.getLongitudeRad(),
+                                          (float)geod.getLatitudeRad());
   // The orientation wrt the horizontal local frame
   SGQuatf hlOr = conj(qEc2Hl)*ecOrient;
   float hDeg, pDeg, rDeg;

@@ -225,8 +225,8 @@ void YASim::update(double dt)
 void YASim::copyToYASim(bool copyState)
 {
     // Physical state
-    float lat = get_Latitude();
-    float lon = get_Longitude();
+    double lat = get_Latitude();
+    double lon = get_Longitude();
     float alt = get_Altitude() * FT2M;
     float roll = get_Phi();
     float pitch = get_Theta();

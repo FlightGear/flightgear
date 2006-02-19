@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include <simgear/math/SGMath.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <math.h>
@@ -61,11 +62,14 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
 
   SGPropertyNode* flols = scFileNode->getChild("flols-pos");
   if (flols) {
-    flols_off[0] = flols->getDoubleValue("x-offset-m", 0);
-    flols_off[1] = flols->getDoubleValue("y-offset-m", 0);
-    flols_off[2] = flols->getDoubleValue("z-offset-m", 0);
+    // Transform to the right coordinate frame, configuration is done in
+    // the usual x-back, y-right, z-up coordinates, computations
+    // in the simulation usual body x-forward, y-right, z-down coordinates
+    flols_off(0) = - flols->getDoubleValue("x-offset-m", 0);
+    flols_off(1) = flols->getDoubleValue("y-offset-m", 0);
+    flols_off(2) = - flols->getDoubleValue("z-offset-m", 0);
   } else
-    flols_off = Point3D(0, 0, 0);
+    flols_off = SGVec3d::zeros();
 
   std::vector<SGPropertyNode_ptr> props = scFileNode->getChildren("wire");
   std::vector<SGPropertyNode_ptr>::const_iterator it;
@@ -92,11 +96,14 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
   props = scFileNode->getChildren("parking-pos");
   for (it = props.begin(); it != props.end(); ++it) {
     string name = (*it)->getStringValue("name", "unnamed");
-    double offset_x = (*it)->getDoubleValue("x-offset-m", 0);
+    // Transform to the right coordinate frame, configuration is done in
+    // the usual x-back, y-right, z-up coordinates, computations
+    // in the simulation usual body x-forward, y-right, z-down coordinates
+    double offset_x = -(*it)->getDoubleValue("x-offset-m", 0);
     double offset_y = (*it)->getDoubleValue("y-offset-m", 0);
-    double offset_z = (*it)->getDoubleValue("z-offset-m", 0);
+    double offset_z = -(*it)->getDoubleValue("z-offset-m", 0);
     double hd = (*it)->getDoubleValue("heading-offset-deg", 0);
-    ParkPosition pp(name, Point3D(offset_x, offset_y, offset_z), hd);
+    ParkPosition pp(name, SGVec3d(offset_x, offset_y, offset_z), hd);
     ppositions.push_back(pp);
   }
 }
@@ -134,57 +141,32 @@ void FGAICarrier::setTACANChannelID(const string& id) {
 }
 
 void FGAICarrier::getVelocityWrtEarth(sgdVec3& v, sgdVec3& omega, sgdVec3& pivot) {
-    sgdCopyVec3(v, vel_wrt_earth );
-    sgdCopyVec3(omega, rot_wrt_earth );
-    sgdCopyVec3(pivot, rot_pivot_wrt_earth );
+    sgdCopyVec3(v, vel_wrt_earth.sg() );
+    sgdCopyVec3(omega, rot_wrt_earth.sg() );
+    sgdCopyVec3(pivot, rot_pivot_wrt_earth.sg() );
 }
 
 void FGAICarrier::update(double dt) {
-    // For computation of rotation speeds we just use finite differences her.
+    // For computation of rotation speeds we just use finite differences here.
     // That is perfectly valid since this thing is not driven by accelerations
     // but by just apply discrete changes at its velocity variables.
-    double old_hdg = hdg;
-    double old_roll = roll;
-    double old_pitch = pitch;
-
     // Update the velocity information stored in those nodes.
+    // Transform that one to the horizontal local coordinate system.
+    SGQuatd ec2hl = SGQuatd::fromLonLatDeg(pos.lon(), pos.lat());
+    // The orientation of the carrier wrt the horizontal local frame
+    SGQuatd hl2body = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+    // and postrotate the orientation of the AIModel wrt the horizontal
+    // local frame
+    SGQuatd ec2body = ec2hl*hl2body;
+    // The cartesian position of the carrier in the wgs84 world
+    SGVec3d cartPos = SGGeod::fromDegFt(pos.lon(), pos.lat(), pos.elev());
+    // Store for later use by the groundcache
+    rot_pivot_wrt_earth = cartPos;
+
+    // Compute the velocity in m/s in the earth centered coordinate system axis
     double v_north = 0.51444444*speed*cos(hdg * SGD_DEGREES_TO_RADIANS);
     double v_east  = 0.51444444*speed*sin(hdg * SGD_DEGREES_TO_RADIANS);
-
-    double sin_lat = sin(pos.lat() * SGD_DEGREES_TO_RADIANS);
-    double cos_lat = cos(pos.lat() * SGD_DEGREES_TO_RADIANS);
-    double sin_lon = sin(pos.lon() * SGD_DEGREES_TO_RADIANS);
-    double cos_lon = cos(pos.lon() * SGD_DEGREES_TO_RADIANS);
-    double sin_roll = sin(roll * SGD_DEGREES_TO_RADIANS);
-    double cos_roll = cos(roll * SGD_DEGREES_TO_RADIANS);
-    double sin_pitch = sin(pitch * SGD_DEGREES_TO_RADIANS);
-    double cos_pitch = cos(pitch * SGD_DEGREES_TO_RADIANS);
-    double sin_hdg = sin(hdg * SGD_DEGREES_TO_RADIANS);
-    double cos_hdg = cos(hdg * SGD_DEGREES_TO_RADIANS);
-
-    // Transform this back the the horizontal local frame.
-    sgdMat3 trans;
-
-    // set up the transform matrix
-    trans[0][0] =          cos_pitch*cos_hdg;
-    trans[0][1] = sin_roll*sin_pitch*cos_hdg - cos_roll*sin_hdg;
-    trans[0][2] = cos_roll*sin_pitch*cos_hdg + sin_roll*sin_hdg;
-
-    trans[1][0] =          cos_pitch*sin_hdg;
-    trans[1][1] = sin_roll*sin_pitch*sin_hdg + cos_roll*cos_hdg;
-    trans[1][2] = cos_roll*sin_pitch*sin_hdg - sin_roll*cos_hdg;
-
-    trans[2][0] =         -sin_pitch;
-    trans[2][1] = sin_roll*cos_pitch;
-    trans[2][2] = cos_roll*cos_pitch;
-
-    sgdSetVec3( vel_wrt_earth,
-               - cos_lon*sin_lat*v_north - sin_lon*v_east,
-               - sin_lon*sin_lat*v_north + cos_lon*v_east,
-                 cos_lat*v_north );
-    sgGeodToCart(pos.lat() * SGD_DEGREES_TO_RADIANS,
-                 pos.lon() * SGD_DEGREES_TO_RADIANS,
-                 pos.elev(), rot_pivot_wrt_earth);
+    vel_wrt_earth = ec2hl.backTransform(SGVec3d(v_north, v_east, 0));
 
     // Now update the position and heading. This will compute new hdg and
     // roll values required for the rotation speed computation.
@@ -202,59 +184,73 @@ void FGAICarrier::update(double dt) {
 
     // Only change these values if we are able to compute them safely
     if (dt < DBL_MIN)
-        sgdSetVec3( rot_wrt_earth, 0.0, 0.0, 0.0);
+      rot_wrt_earth = SGVec3d::zeros();
     else {
-        // Compute the change of the euler angles.
-        double hdg_dot = SGD_DEGREES_TO_RADIANS * (hdg-old_hdg)/dt;
-        // Always assume that the movement was done by the shorter way.
-        if (hdg_dot < - SGD_DEGREES_TO_RADIANS * 180)
-            hdg_dot += SGD_DEGREES_TO_RADIANS * 360;
-        if (hdg_dot > SGD_DEGREES_TO_RADIANS * 180)
-            hdg_dot -= SGD_DEGREES_TO_RADIANS * 360;
-        double pitch_dot = SGD_DEGREES_TO_RADIANS * (pitch-old_pitch)/dt;
-        // Always assume that the movement was done by the shorter way.
-        if (pitch_dot < - SGD_DEGREES_TO_RADIANS * 180)
-            pitch_dot += SGD_DEGREES_TO_RADIANS * 360;
-        if (pitch_dot > SGD_DEGREES_TO_RADIANS * 180)
-            pitch_dot -= SGD_DEGREES_TO_RADIANS * 360;
-        double roll_dot = SGD_DEGREES_TO_RADIANS * (roll-old_roll)/dt;
-        // Always assume that the movement was done by the shorter way.
-        if (roll_dot < - SGD_DEGREES_TO_RADIANS * 180)
-            roll_dot += SGD_DEGREES_TO_RADIANS * 360;
-        if (roll_dot > SGD_DEGREES_TO_RADIANS * 180)
-            roll_dot -= SGD_DEGREES_TO_RADIANS * 360;
-        /*cout << "euler derivatives = "
-            << roll_dot << " " << pitch_dot << " " << hdg_dot << endl;*/
+      // Now here is the finite difference ...
 
-        // Now Compute the rotation vector in the carriers coordinate frame
-        // originating from the euler angle changes.
-        sgdVec3 body;
-        body[0] = roll_dot - hdg_dot*sin_pitch;
-        body[1] = pitch_dot*cos_roll + hdg_dot*sin_roll*cos_pitch;
-        body[2] = -pitch_dot*sin_roll + hdg_dot*cos_roll*cos_pitch;
+      // Transform that one to the horizontal local coordinate system.
+      SGQuatd ec2hlNew = SGQuatd::fromLonLatDeg(pos.lon(), pos.lat());
+      // compute the new orientation
+      SGQuatd hl2bodyNew = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+      // The rotation difference
+      SGQuatd dOr = inverse(ec2body)*ec2hlNew*hl2bodyNew;
+      SGVec3d dOrAngleAxis;
+      dOr.getAngleAxis(dOrAngleAxis);
+      // divided by the time difference provides a rotation speed vector
+      dOrAngleAxis /= dt;
 
-        // Transform that back to the horizontal local frame.
-        sgdVec3 hl;
-        hl[0] = body[0]*trans[0][0] + body[1]*trans[0][1] + body[2]*trans[0][2];
-        hl[1] = body[0]*trans[1][0] + body[1]*trans[1][1] + body[2]*trans[1][2];
-        hl[2] = body[0]*trans[2][0] + body[1]*trans[2][1] + body[2]*trans[2][2];
+      // now rotate the rotation speed vector back into the
+      // earth centered frames coordinates
+      dOrAngleAxis = ec2body.backTransform(dOrAngleAxis);
+//       dOrAngleAxis = hl2body.backTransform(dOrAngleAxis);
+//       dOrAngleAxis(1) = 0;
+//       dOrAngleAxis = ec2hl.backTransform(dOrAngleAxis);
+      rot_wrt_earth = dOrAngleAxis;
+    }
 
-        // Now we need to project out rotation components ending in speeds in y
-        // direction in the horizontal local frame.
-        hl[1] = 0;
+    UpdateWind(dt);
+    UpdateElevator(dt, transition_time);
 
-        // Transform that to the earth centered frame.
-        sgdSetVec3(rot_wrt_earth,
-                - cos_lon*sin_lat*hl[0] - sin_lon*hl[1] - cos_lat*cos_lon*hl[2],
-                - sin_lon*sin_lat*hl[0] + cos_lon*hl[1] - cos_lat*sin_lon*hl[2],
-                cos_lat*hl[0] - sin_lat*hl[2]);
-   }
+    // For the flols reuse some computations done above ...
 
-   UpdateWind(dt);
-   UpdateFlols(trans);
-   UpdateElevator(dt, transition_time);
+    // The position of the eyepoint - at least near that ...
+    SGVec3d eyePos(globals->get_current_view()->get_absolute_view_pos());
+    // Add the position offset of the AIModel to gain the earth
+    // centered position
+    SGVec3d eyeWrtCarrier = eyePos - cartPos;
+    // rotate the eyepoint wrt carrier vector into the carriers frame
+    eyeWrtCarrier = ec2body.transform(eyeWrtCarrier);
+    // the eyepoints vector wrt the flols position
+    SGVec3d eyeWrtFlols = eyeWrtCarrier - flols_off;
+    
+    // the distance from the eyepoint to the flols
+    dist = norm(eyeWrtFlols);
+    
+    // now the angle, positive angles are upwards
+    if (fabs(dist) < SGLimits<float>::min()) {
+      angle = 0;
+    } else {
+      double sAngle = -eyeWrtFlols(2)/dist;
+      sAngle = SGMiscd::min(1, SGMiscd::max(-1, sAngle));
+      angle = SGMiscd::rad2deg(asin(sAngle));
+    }
+    
+    // set the value of source
+    if ( angle <= 4.35 && angle > 4.01 )
+      source = 1;
+    else if ( angle <= 4.01 && angle > 3.670 )
+      source = 2;
+    else if ( angle <= 3.670 && angle > 3.330 )
+      source = 3;
+    else if ( angle <= 3.330 && angle > 2.990 )
+      source = 4;
+    else if ( angle <= 2.990 && angle > 2.650 )
+      source = 5;
+    else if ( angle <= 2.650 )
+      source = 6;
+    else
+      source = 0;
 } //end update
-
 
 bool FGAICarrier::init() {
     if (!FGAIShip::init())
@@ -379,8 +375,8 @@ void FGAICarrier::unbind() {
 }
 
 
-bool FGAICarrier::getParkPosition(const string& id, Point3D& geodPos,
-                                  double& hdng, sgdVec3 uvw)
+bool FGAICarrier::getParkPosition(const string& id, SGGeod& geodPos,
+                                  double& hdng, SGVec3d& uvw)
 {
 
     // FIXME: does not yet cover rotation speeds.
@@ -389,12 +385,13 @@ bool FGAICarrier::getParkPosition(const string& id, Point3D& geodPos,
         // Take either the specified one or the first one ...
         if ((*it).name == id || id.empty()) {
             ParkPosition ppos = *it;
-            geodPos = getGeocPosAt(ppos.offset);
+            SGVec3d cartPos = getCartPosAt(ppos.offset);
+            geodPos = cartPos;
             hdng = hdg + ppos.heading_deg;
             double shdng = sin(ppos.heading_deg * SGD_DEGREES_TO_RADIANS);
             double chdng = cos(ppos.heading_deg * SGD_DEGREES_TO_RADIANS);
             double speed_fps = speed*1.6878099;
-            sgdSetVec3(uvw, chdng*speed_fps, shdng*speed_fps, 0);
+            uvw = SGVec3d(chdng*speed_fps, shdng*speed_fps, 0);
             return true;
         }
         ++it;
@@ -583,160 +580,6 @@ bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects, bool m
     }
     return found;
 }
-
-
-void FGAICarrier::UpdateFlols(const sgdMat3& trans) {
-
-    float in[3];
-    float out[3];
-
-    double flolsXYZ[3], eyeXYZ[3];
-    double lat, lon, alt;
-    Point3D eyepos;
-    Point3D flolspos;
-
-/*    cout << "x_offset " << flols_x_offset
-         << " y_offset " << flols_y_offset
-         << " z_offset " << flols_z_offset << endl;
-
-    cout << "roll " << roll
-         << " heading " << hdg
-         << " pitch " << pitch << endl;
-
-    cout << "carrier lon " << pos[0]
-         << " lat " <<  pos[1]
-         << " alt " << pos[2] << endl;
-*/
-
-    // set the Flols initial position to the carrier position
-
-    flolspos = pos;
-
-/*    cout << "flols lon " << flolspos[0]
-         << " lat " <<  flolspos[1]
-         << " alt " << flolspos[2] << endl;
-
-    // set the offsets in metres
-
-    cout << "flols_x_offset " << flols_x_offset << endl
-         << "flols_y_offset " << flols_y_offset << endl
-         << "flols_z_offset " << flols_z_offset << endl;
-*/
-
-    in[0] = flols_off.x();
-    in[1] = flols_off.y();
-    in[2] = flols_off.z();
-
-    // multiply the input and transform matrices
-    out[0] = in[0] * trans[0][0] + in[1] * trans[0][1] + in[2] * trans[0][2];
-    out[1] = in[0] * trans[1][0] + in[1] * trans[1][1] + in[2] * trans[1][2];
-    out[2] = in[0] * trans[2][0] + in[1] * trans[2][1] + in[2] * trans[2][2];
-
-    // convert meters to ft to degrees of latitude
-    out[0] = (out[0] * 3.28083989501) /
-            (366468.96 - 3717.12 * cos(flolspos[0] * SG_DEGREES_TO_RADIANS));
-
-    // convert meters to ft to degrees of longitude
-    out[1] = (out[1] * 3.28083989501) /
-            (365228.16 * cos(flolspos[1] * SG_DEGREES_TO_RADIANS));
-
-/*    cout  << "lat adjust deg" << out[0]
-          << " lon adjust deg " << out[1]
-          << " alt adjust m " << out[2]  << endl;
-*/
-
-    // adjust Flols position
-    flolspos[0] += out[0];
-    flolspos[1] += out[1];
-    flolspos[2] += out[2];
-
-    // convert flols position to cartesian co-ordinates
-    sgGeodToCart(flolspos[1] * SG_DEGREES_TO_RADIANS,
-                 flolspos[0] * SG_DEGREES_TO_RADIANS,
-                 flolspos[2] , flolsXYZ );
-
-
-/*    cout << "flols X " << flolsXYZ[0]
-         << " Y " <<  flolsXYZ[1]
-         << " Z " << flolsXYZ[2] << endl;
-
-    // check the conversion
-
-    sgCartToGeod(flolsXYZ, &lat, &lon, &alt);
-
-    cout << "flols check lon " << lon
-         << " lat " << lat
-         << " alt " << alt << endl;
-*/
-
-    // get the current position of the pilot's eyepoint (cartesian coordinates)
-    sgdCopyVec3( eyeXYZ, globals->get_current_view()->get_absolute_view_pos() );
-
-/*    cout  << "Eye_X "  << eyeXYZ[0]
-          << " Eye_Y " << eyeXYZ[1]
-          << " Eye_Z " << eyeXYZ[2]  << endl;
-*/
-
-    sgCartToGeod(eyeXYZ, &lat, &lon, &alt);
-
-    eyepos[0] = lon * SG_RADIANS_TO_DEGREES;
-    eyepos[1] = lat * SG_RADIANS_TO_DEGREES;
-    eyepos[2] = alt;
-
-/*  cout << "eye lon " << eyepos[0]
-        << " eye lat " << eyepos[1]
-        << " eye alt " << eyepos[2] << endl;
-*/
-
-    //calculate the distance from eye to flols
-    dist = sgdDistanceVec3( flolsXYZ, eyeXYZ );
-
-    //apply an index error
-    dist -= 100;
-
-    //cout << "distance " << dist << endl;
-    if ( dist > 5000 )
-        return;
-
-    // calculate height above FLOLS
-    double y = eyepos[2] - flolspos[2];
-
-    // calculate the angle from the flols to eye
-    // above the horizontal
-    // double angle;
-
-    if ( dist != 0 )
-        angle = asin( y / dist );
-    else
-        angle = 0.0;
-
-    angle *= SG_RADIANS_TO_DEGREES;
-
-
-    // cout << " height " << y << " angle " << angle ;
-
-    // set the value of source
-
-    if ( angle <= 4.35 && angle > 4.01 )
-        source = 1;
-    else if ( angle <= 4.01 && angle > 3.670 )
-        source = 2;
-    else if ( angle <= 3.670 && angle > 3.330 )
-        source = 3;
-    else if ( angle <= 3.330 && angle > 2.990 )
-        source = 4;
-    else if ( angle <= 2.990 && angle > 2.650 )
-        source = 5;
-    else if ( angle <= 2.650 )
-        source = 6;
-    else
-        source = 0;
-
-    // cout << " source " << source << endl;
-
-} // end updateflols
-
-
 
 // find relative wind
 void FGAICarrier::UpdateWind( double dt) {

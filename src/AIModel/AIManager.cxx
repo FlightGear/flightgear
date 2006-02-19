@@ -269,8 +269,7 @@ void FGAIManager::setModel(const string& path, ssgBranch *model)
 }
 
 bool FGAIManager::getStartPosition(const string& id, const string& pid,
-                                   Point3D& geodPos, double& heading,
-                                   sgdVec3 uvw)
+                                   SGGeod& geodPos, double& hdng, SGVec3d& uvw)
 {
   bool found = false;
   SGPropertyNode* root = fgGetNode("sim/ai", true);
@@ -294,7 +293,7 @@ bool FGAIManager::getStartPosition(const string& id, const string& pid,
               SGSharedPtr<FGAICarrier> carrier = new FGAICarrier;
               carrier->readFromScenario(scEntry);
               
-              if (carrier->getParkPosition(pid, geodPos, heading, uvw)) {
+              if (carrier->getParkPosition(pid, geodPos, hdng, uvw)) {
                 found = true;
                 break;
               }

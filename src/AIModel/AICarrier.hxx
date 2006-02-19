@@ -87,7 +87,6 @@ public:
     void getVelocityWrtEarth(sgdVec3& v, sgdVec3& omega, sgdVec3& pivot);
     virtual void bind();
     virtual void unbind();
-    void UpdateFlols ( const sgdMat3& trans );
     void UpdateWind ( double dt );
     void setWind_from_east( double fps );
     void setWind_from_north( double fps );
@@ -105,8 +104,8 @@ public:
 
     virtual const char* getTypeString(void) const { return "carrier"; }
 
-    bool getParkPosition(const string& id, Point3D& geodPos,
-                         double& hdng, sgdVec3 uvw);
+    bool getParkPosition(const string& id, SGGeod& geodPos,
+                         double& hdng, SGVec3d& uvw);
 
 private:
   /// Is sufficient to be private, stores a possible position to place an
@@ -115,11 +114,11 @@ private:
     ParkPosition(const ParkPosition& pp)
       : name(pp.name), offset(pp.offset), heading_deg(pp.heading_deg)
     {}
-    ParkPosition(const string& n, const Point3D& off = Point3D(), double heading = 0)
+    ParkPosition(const string& n, const SGVec3d& off = SGVec3d(), double heading = 0)
       : name(n), offset(off), heading_deg(heading)
     {}
     string name;
-    Point3D offset;
+    SGVec3d offset;
     double heading_deg;
   };
 
@@ -143,13 +142,12 @@ private:
     string sign;                      // The sign of this carrier.
 
     // Velocity wrt earth.
-    sgdVec3 vel_wrt_earth;
-    sgdVec3 rot_wrt_earth;
-    sgdVec3 rot_pivot_wrt_earth;
-
+    SGVec3d vel_wrt_earth;
+    SGVec3d rot_wrt_earth;
+    SGVec3d rot_pivot_wrt_earth;
 
     // these describe the flols
-    Point3D flols_off;
+    SGVec3d flols_off;
 
     double dist;            // the distance of the eyepoint from the flols
     double angle;
