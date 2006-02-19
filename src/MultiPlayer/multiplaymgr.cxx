@@ -351,7 +351,7 @@ FGMultiplayMgr::Update(void)
     //  no Data received
     //////////////////////////////////////////////////
     if (bytes <= 0) {
-      if (errno != EAGAIN)
+      if (errno != EAGAIN && errno != 0) // MSVC output "NoError" otherwise
         perror("FGMultiplayMgr::MP_ProcessData");
       break;
     }
