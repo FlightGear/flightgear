@@ -269,7 +269,7 @@ void printReport(SGMetar *m)
 		if ((s = rwy.getExtentString()) && strlen(s))
 			surface.push_back(s);
 		if ((d = rwy.getDepth()) != NaN) {
-			sprintf(buf, "%.0lf mm", d * 1000.0);
+			sprintf(buf, "%.1lf mm", d * 1000.0);
 			surface.push_back(buf);
 		}
 		if ((s = rwy.getFrictionString()) && strlen(s))
