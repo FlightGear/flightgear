@@ -194,7 +194,7 @@ private:
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
      */
-    SGBlockingQueue < FGMetarResult > result_queue;
+    SGLockedQueue < FGMetarResult > result_queue;
 #else
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
@@ -240,16 +240,6 @@ private:
      */
     MetarThread* thread;
 
-    /**
-     * Lock and synchronize access to metar queue.
-     */
-    SGMutex mutex;
-    SGPthreadCond metar_cond;
-
-    /**
-     * Thread cleanup handler.
-     */
-    friend void metar_cleanup_handler( void* );
 
 #endif // ENABLE_THREADS
 

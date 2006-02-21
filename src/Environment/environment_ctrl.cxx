@@ -707,36 +707,16 @@ FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
 
 
 #if defined(ENABLE_THREADS)
-/**
- * Ensure mutex is unlocked.
- */
-void
-metar_cleanup_handler( void* arg )
-{
-    FGMetarEnvironmentCtrl* fetcher = (FGMetarEnvironmentCtrl*) arg;
-    fetcher->mutex.unlock();
-}
-
-/**
- *
- */
 void
 FGMetarEnvironmentCtrl::MetarThread::run()
 {
-    pthread_cleanup_push( metar_cleanup_handler, fetcher );
     while ( true )
     {
-        set_cancel( SGThread::CANCEL_DISABLE );
-
         string icao = fetcher->request_queue.pop();
         SG_LOG( SG_GENERAL, SG_INFO, "Thread: fetch metar data = " << icao );
         FGMetarResult result = fetcher->fetch_data( icao );
-
-        set_cancel( SGThread::CANCEL_DEFERRED );
-
         fetcher->result_queue.push( result );
     }
-    pthread_cleanup_pop(1);
 }
 #endif // ENABLE_THREADS
 
