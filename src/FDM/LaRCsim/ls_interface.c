@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  * $Id$
  * (Log is kept at end of this file)
@@ -580,8 +580,11 @@ int ls_ForceAltitude(double alt_feet) {
 /* Flight Gear Modification Log
  *
  * $Log$
- * Revision 1.1  2002/09/10 01:14:02  curt
- * Initial revision
+ * Revision 1.2  2006/02/21 17:45:03  mfranz
+ * new FSF address (see http://www.gnu.org/licenses/gpl.html)
+ *
+ * Revision 1.1.1.1  2002-09-10 01:14:02  curt
+ * Initial revision of FlightGear-0.9.0
  *
  * Revision 1.6  2002/01/30 15:17:27  david
  * Fixes from Cameron Moore:
