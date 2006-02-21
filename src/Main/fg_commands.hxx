@@ -3,9 +3,9 @@
 #ifndef __FG_COMMANDS_HXX
 #define __FG_COMMANDS_HXX
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
-#endif                                   
+#endif
 
 
 #ifdef HAVE_CONFIG_H
@@ -13,7 +13,7 @@
 #endif
 
 #ifdef HAVE_WINDOWS_H
-#  include <windows.h>                     
+#  include <windows.h>
 #endif
 
 #include <simgear/structure/commands.hxx>

@@ -3,7 +3,7 @@
  Module:       BalloonSim.cpp
  Author:       Christian Mayer
  Date started: 01.09.99
- Called by:    
+ Called by:
 
  -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
@@ -17,9 +17,9 @@
  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
- this program; if not, write to the Free Software Foundation, Inc., 59 Temple
- Place - Suite 330, Boston, MA  02111-1307, USA.
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
  Further information about the GNU General Public License can also be found on
  the world wide web at http://www.gnu.org.
