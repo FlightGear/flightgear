@@ -1,0 +1,82 @@
+The tutorial system is a Nasal script that runs tutorials defined by a set
+of properties under /sim/tutorial. The tutorials are automatically picked up by
+the GUI, and can be found under the Help menu item.
+
+Tutorials are typically tied to specific aircraft and defined in a 
+separate XML file as follows:
+
+<sim>
+  <tutorial include="c172-tutorial.xml"></tutorial>
+</sim>
+
+Each tutorial is defined by a "tutorial" leaf under /tutorial, and consists of
+the following elements.
+
+name        - The name of the tutorial, used in the GUI
+description - A plain-text description of the tutorial, displayed in the GUI.
+audio-dir   - (Optional) The directory (relative to FG_ROOT) to pick up any
+              wav files used.
+timeofday   - (Optional) .Time of day (morning, noon, evening...). Used to 
+              set the initial tutorial state.
+presets     - (Optional) Properties to be set under /sim/presets, followed
+              by a presets-commit command. Used to set the initial tutorial
+              state. e.g. airport-id, runway, heading-deg
+init        - (Optional) Initial tutorial state properties to set. 
+              Consists of one or more set nodes (see below for details).
+step        - A tutorial step (see below for details)
+endtext     - Text to display at the end of the tutorial
+endtext-voice - .wav filename to play at the end of the tutorial
+endtext-tts - Text to send to text-to-speech engine at the end of tutorial
+
+
+The bulk of the tutorial definition consists of step definitions. These are
+discreet stages within the tutorial lasting at least 5 seconds. Typically the
+consist of an instruction from the FG instructor, some exit criteria used to
+check that the user has performed the step correctly and can move to the next
+step, and a series of error conditions to check the user isn't deviating.
+
+Each step consists of the following elements:
+
+instruction        - Text to display to the user when they enter the step, and
+                     when they have still to fulfill the exit criteria
+instruction-tts    - text to send to the text-to-speech (TTS) engine
+instruction-voice  - .wav filename to play
+set                - (Optional) properties to set when entering the step. May
+                     be more than one.
+error              - Error conditions, consisting of one or more check nodes
+                     with messages (see below)
+exit               - Exit criteria, consisting of one or more check nodes
+                     without messages.
+              
+Set nodes consist of
+
+prop - The property name to set
+val  - The value to set.              
+
+For example
+
+ <set>
+   <prop>/controls/engines/engine/throttle</prop>
+   <val>0.5</val>
+ </set>
+
+
+Check nodes consist of a property to check, a single operator, and (for error
+nodes) a message to display if the check evaluates to true.
+
+prop - The property to check
+lt   - the value to check the property is less than
+gt   - the value to check the property is greater than
+eq   - the value to check the property is equal to.
+msg  - (error node only) text message to display
+msg-tts - (error node only, optional) message to send to TTS engine
+msg-voice - (error node only, optional) .wav filename to play
+
+For example:
+
+ <check>
+   <prop>/controls/engines/engine/throttle</prop>
+   <lt>0.95</lt>
+   <msg>Apply full throttle for take-off.</msg>
+ </check>
+
