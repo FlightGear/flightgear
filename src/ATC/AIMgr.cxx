@@ -19,10 +19,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include <simgear/misc/sg_path.hxx>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/math/sg_random.h>
 #include <list>
 

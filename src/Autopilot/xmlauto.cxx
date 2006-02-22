@@ -20,6 +20,9 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>

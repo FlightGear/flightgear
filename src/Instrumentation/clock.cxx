@@ -5,6 +5,9 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include "clock.hxx"
 #include <simgear/timing/sg_time.hxx>

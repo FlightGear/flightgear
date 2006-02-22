@@ -3,6 +3,10 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sg_inlines.h>
