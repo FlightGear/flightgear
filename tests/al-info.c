@@ -7,7 +7,9 @@
 #else
 # include <AL/al.h>
 # include <AL/alc.h>
-# include <AL/alext.h>
+# ifndef __CYGWIN__
+#  include <AL/alext.h>
+# endif
 #endif
 
 #ifndef AL_VERSION_1_1

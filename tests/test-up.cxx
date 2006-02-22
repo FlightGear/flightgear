@@ -1,5 +1,9 @@
 // do some test relating to the concept of "up"
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <simgear/compiler.h>
 
 #include STL_IOSTREAM
