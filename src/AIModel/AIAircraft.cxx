@@ -84,7 +84,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
 
 
 FGAIAircraft::~FGAIAircraft() {
-  delete fp;
+  //delete fp;
 }
 
 void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
