@@ -204,6 +204,9 @@ int main ( int argc, char **argv ) {
         if (!t.getOrigin().empty())
             cerr << " (received from " << t.getOrigin() << ')' << endl;
 
+    } catch (string &s) {
+        cerr << "Fatal error: " << s << endl;
+
     } catch (...) {
         cerr << "Unknown exception in the main loop. Aborting..." << endl;
         if (errno)
