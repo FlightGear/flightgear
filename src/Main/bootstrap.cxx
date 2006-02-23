@@ -196,7 +196,7 @@ int main ( int argc, char **argv ) {
     try {
         atexit(fgExitCleanup);
         fgMainInit(argc, argv);
-    } catch (sg_throwable &t) {
+    } catch (const sg_throwable &t) {
                             // We must use cerr rather than
                             // logging, since logging may be
                             // disabled.
@@ -204,7 +204,7 @@ int main ( int argc, char **argv ) {
         if (!t.getOrigin().empty())
             cerr << " (received from " << t.getOrigin() << ')' << endl;
 
-    } catch (string &s) {
+    } catch (const string &s) {
         cerr << "Fatal error: " << s << endl;
 
     } catch (...) {
