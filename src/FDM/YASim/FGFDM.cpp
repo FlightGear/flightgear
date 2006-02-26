@@ -762,6 +762,11 @@ void FGFDM::parsePropeller(XMLAttributes* a)
     PropEngine* thruster = new PropEngine(prop, eng, moment);
     _airplane.addThruster(thruster, mass, cg);
 
+    // Set the stops (fine = minimum pitch, coarse = maximum pitch)
+    float fine_stop = attrf(a, "fine-stop", 0.25f);
+    float coarse_stop = attrf(a, "coarse-stop", 4.0f);
+    prop->setStops(fine_stop, coarse_stop);
+
     if(a->hasAttribute("takeoff-power")) {
 	float power0 = attrf(a, "takeoff-power") * HP2W;
 	float omega0 = attrf(a, "takeoff-rpm") * RPM2RAD;

@@ -119,7 +119,9 @@ void PropEngine::stabilize()
 
     bool goingUp = false;
     float step = 10;
-    while(true) {
+
+    // If we cannot manage this in 100 iterations, give up.
+    for (int n = 0; n < 100; n++) {
 	float ptau, thrust;
 	_prop->calc(_rho, speed, _omega * _gearRatio, &thrust, &ptau);
 	_eng->calc(_pressure, _temp, _omega);

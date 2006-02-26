@@ -16,6 +16,8 @@ public:
     // course.
     Propeller(float radius, float v, float omega, float rho, float power);
 
+    void setStops (float fine_stop, float coarse_stop);
+
     void setTakeoff(float omega0, float power0);
 
     void modPitch(float mod);
@@ -38,6 +40,8 @@ private:
     float _lambdaPeak;  // constant, ~0.759835;
     float _beta;        // constant, ~1.48058;
     float _tc0;         // thrust "coefficient" at takeoff
+    float _fine_stop;   // ratio for minimum pitch (high RPM)
+    float _coarse_stop; // ratio for maximum pitch (low RPM)
     bool  _matchTakeoff; // Does _tc0 mean anything?
     bool  _manual;      // manual pitch mode
     float _proppitch;   // prop pitch control setting (0 ~ 1.0)

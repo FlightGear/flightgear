@@ -37,12 +37,18 @@ void Propeller::setTakeoff(float omega0, float power0)
     float density = Atmosphere::getStdDensity(0);
     _tc0 = (torque * gamma) / (0.5f * density * V2 * _f0);
 }
+
+void Propeller::setStops(float fine_stop, float coarse_stop)
+{
+    _fine_stop = fine_stop;
+    _coarse_stop = coarse_stop;
+}
     
 void Propeller::modPitch(float mod)
 {
     _j0 *= mod;
-    if(_j0 < 0.25f*_baseJ0) _j0 = 0.25f*_baseJ0;
-    if(_j0 > 4*_baseJ0)     _j0 = 4*_baseJ0;
+    if(_j0 < _fine_stop*_baseJ0) _j0 = _fine_stop*_baseJ0;
+    if(_j0 > _coarse_stop*_baseJ0)     _j0 = _coarse_stop*_baseJ0;
 }
 
 void Propeller::setManualPitch()
@@ -68,6 +74,7 @@ void Propeller::calc(float density, float v, float omega,
     // For manual pitch, exponentially modulate the J0 value between
     // 0.25 and 4.  A prop pitch of 0.5 results in no change from the
     // base value.
+    // TODO: integrate with _fine_stop and _coarse_stop variables
     if (_manual) 
         _j0 = _baseJ0 * Math::pow(2, 2 - 4*_proppitch);
     
