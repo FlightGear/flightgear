@@ -94,7 +94,7 @@ void
 TurnIndicator::update (double dt)
 {
                                 // Get the spin from the gyro
-    double power = _electric_current_node->getDoubleValue() / 24.0;
+    double power = _electric_current_node->getDoubleValue() / 12.0;
     _gyro.set_power_norm(power);
     _gyro.update(dt);
     double spin = _gyro.get_spin_norm();
