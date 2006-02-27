@@ -161,6 +161,7 @@ public:
   bool   GetReverse (void) { return Reversed; }
   void   SetFeather (bool f) { Feathered = f; }
   bool   GetFeather (void) { return Feathered; }
+  double GetThrustCoefficient(void) const {return ThrustCoeff;}  
 
 private:
   int   numBlades;

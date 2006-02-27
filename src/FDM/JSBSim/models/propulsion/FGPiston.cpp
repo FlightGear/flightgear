@@ -298,6 +298,7 @@ double FGPiston::Calculate(void)
 
   if (Thruster->GetType() == FGThruster::ttPropeller) {
     ((FGPropeller*)Thruster)->SetAdvance(FCS->GetPropAdvance(EngineNumber));
+    ((FGPropeller*)Thruster)->SetFeather(FCS->GetPropFeather(EngineNumber));
   }
 
   PowerAvailable = (HP * hptoftlbssec) - Thruster->GetPowerRequired();

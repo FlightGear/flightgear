@@ -127,6 +127,8 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
   PropertyManager->Tie( property_name, &J );
   snprintf(property_name, 80, "propulsion/engine[%d]/blade-angle", EngineNum);
   PropertyManager->Tie( property_name, &Pitch );
+  snprintf(property_name, 80, "propulsion/engine[%d]/thrust-coefficient", EngineNum);
+  PropertyManager->Tie( property_name, this, &FGPropeller::GetThrustCoefficient );
 
   Debug(0);
 }
@@ -223,7 +225,7 @@ double FGPropeller::GetPowerRequired(void)
     cPReq = cPower->GetValue(J);
   } else {                      // Variable pitch prop
 
-    if (MaxRPM != MinRPM) {   // constant speed prop
+    if (MaxRPM != MinRPM) {   // fixed-speed prop
 
       // do normal calculation when propeller is neither feathered nor reversed
       if (!Feathered) {
