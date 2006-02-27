@@ -701,6 +701,9 @@ void FGFDM::parsePistonEngine(XMLAttributes* a)
         eng->setTurboParams(mul, mp);
     }
 
+    if(a->hasAttribute("supercharger"))
+        eng->setSupercharger(attrb(a, "supercharger"));
+
     ((PropEngine*)_currObj)->setEngine(eng);
 }
 

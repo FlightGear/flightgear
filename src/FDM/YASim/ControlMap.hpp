@@ -15,7 +15,7 @@ public:
 		      INCIDENCE, FLAP0, FLAP1, SLAT, SPOILER, VECTOR,
                       BOOST, CASTERING, PROPPITCH, PROPFEATHER,
                       COLLECTIVE, CYCLICAIL, CYCLICELE, ROTORENGINEON,
-                      REVERSE_THRUST };
+                      REVERSE_THRUST, WASTEGATE };
 
     enum { OPT_SPLIT  = 0x01,
            OPT_INVERT = 0x02,

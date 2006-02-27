@@ -14,6 +14,9 @@ public:
     void setTurboParams(float mul, float maxMP);
     void setDisplacement(float d);
     void setCompression(float c);
+    void setWastegate(float norm) { _wastegate = norm; }
+    void setSupercharger(float hasSuper) { _hasSuper = hasSuper; }
+    void setTurboLag(float lag) { _turboLag = lag; }
 
     bool isCranking();
     float getMP();
@@ -36,7 +39,12 @@ private:
     float _f0;       // "ideal" fuel flow at P0/omega0
     float _mixCoeff; // fuel flow per omega at full mixture
     float _turbo;    // (or super-)charger pressure multiplier
-    float _maxMP;    // wastegate setting
+    bool _hasSuper;  // true indicates gear-driven (not turbo)
+    float _turboLag; // turbo lag time in seconds
+    float _charge;   // current {turbo|super}charge multiplier
+    float _chargeTarget;  // eventual charge value
+    float _maxMP;    // static maximum pressure
+    float _wastegate;    // wastegate setting, [0:1]
     float _displacement; // piston stroke volume
     float _compression;  // compression ratio (>1)
 

@@ -127,6 +127,14 @@ void PropEngine::stabilize()
 	_eng->calc(_pressure, _temp, _omega);
         _eng->stabilize();
 
+        // Do it again -- the turbo sets the target MP in the first
+        // run, stabilize sets the current to the target, then we need
+        // to run again to get the correct output torque.  Clumsy, but
+        // it works without side effects (other than solver
+        // performance).  In the future, the Engine objects should
+        // store state to allow them to do the work themselves.
+	_eng->calc(_pressure, _temp, _omega);
+
         // Compute torque as seen by the engine's end of the gearbox.
         // The propeller will be moving more slowly (for gear ratios
         // less than one), so it's torque will be higher than the

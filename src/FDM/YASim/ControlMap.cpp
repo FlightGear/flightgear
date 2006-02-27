@@ -215,6 +215,9 @@ void ControlMap::applyControls(float dt)
 	case BOOST:
 	    ((PistonEngine*)((Thruster*)obj)->getEngine())->setBoost(lval);
 	    break;
+        case WASTEGATE:
+            ((PistonEngine*)((Thruster*)obj)->getEngine())->setWastegate(lval);
+            break;
 	}
     }
 }

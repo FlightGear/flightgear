@@ -36,6 +36,9 @@ PistonEngine::PistonEngine(float power, float speed)
 
     _turbo = 1;
     _maxMP = 1e6; // No waste gate on non-turbo engines.
+    _wastegate = 1;
+    _charge = 1;
+    _chargeTarget = 1;
 
     // Guess at reasonable values for these guys.  Displacements run
     // at about 2 cubic inches per horsepower or so, at least for
@@ -100,11 +103,16 @@ float PistonEngine::getEGT()
 void PistonEngine::stabilize()
 {
     _oilTemp = _oilTempTarget;
+    _charge = _chargeTarget;
 }
 
 void PistonEngine::integrate(float dt) 
 {
     _oilTemp += (_dOilTempdt * dt);
+
+    // See comments in Jet.cpp for how this decay constant works
+    float decay = 1.5f * 2.3f / _turboLag;
+    _charge = (_charge + dt*decay * _chargeTarget) / (1 + dt*decay);
 }
 
 void PistonEngine::calc(float pressure, float temp, float speed)
@@ -128,17 +136,27 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     float B = 0.55620178;
     float C = 1.246708471;
     float rpm_factor = A * Math::pow(B, rpm_norm) * Math::pow(rpm_norm, C);
+    _chargeTarget = 1 + (_boost * (_turbo-1) * rpm_factor);
+
+    if(_hasSuper) {
+        // Superchargers have no lag
+        _charge = _chargeTarget;
+    } else if(!_running) {
+        // Turbochargers only work when the engine is actually
+        // running.  The 25% number is a guesstimate from Vivian.
+        _chargeTarget = 1 + (_chargeTarget - 1) * 0.25;
+    }
 
     // We need to adjust the minimum manifold pressure to get a
     // reasonable idle speed (a "closed" throttle doesn't suck a total
     // vacuum in real manifolds).  This is a hack.
     float _minMP = (-0.008 * _turbo ) + 0.1;
 
+    _mp = pressure * _charge;
+
     // Scale to throttle setting, clamp to wastegate
-    if(_running) {
-        _mp = pressure * (1 + (_boost * (_turbo-1) * rpm_factor));
+    if(_running)
         _mp *= _minMP + (1 -_minMP) * _throttle;
-    }
     if(_mp > _maxMP) _mp = _maxMP;
 
     // The "boost" is the delta above ambient
