@@ -239,13 +239,20 @@ static naRef f_settimer(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
-// setlistener(func, property) extension function.  Falls through to
+// setlistener(func, property, bool) extension function.  Falls through to
 // FGNasalSys::setListener().  See there for docs.
 static naRef f_setlistener(naContext c, naRef me, int argc, naRef* args)
 {
     FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
-    nasal->setListener(argc, args);
-    return naNil();
+    return nasal->setListener(argc, args);
+}
+
+// removelistener(int) extension function. Falls through to
+// FGNasalSys::removeListener(). See there for docs.
+static naRef f_removelistener(naContext c, naRef me, int argc, naRef* args)
+{
+    FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
+    return nasal->removeListener(argc, args);
 }
 
 // Returns a ghost handle to the argument to the currently executing
@@ -323,6 +330,7 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "_fgcommand", f_fgcommand },
     { "settimer",  f_settimer },
     { "_setlistener", f_setlistener },
+    { "removelistener", f_removelistener },
     { "_cmdarg",  f_cmdarg },
     { "_interpolate",  f_interpolate },
     { "rand",  f_rand },
@@ -554,7 +562,7 @@ void FGNasalSys::setTimer(int argc, naRef* args)
 
     naRef delta = argc > 1 ? args[1] : naNil();
     if(naIsNil(delta)) return;
-    
+
     bool simtime = (argc > 2 && naTrue(args[2])) ? false : true;
 
     // Generate and register a C++ timer handler
@@ -594,22 +602,51 @@ void FGNasalSys::NasalTimer::timerExpired()
     delete this;
 }
 
-// setlistener(property, func) extension function.  The first argument
+int FGNasalSys::_listenerId = 0;
+
+// setlistener(property, func, bool) extension function.  The first argument
 // is either a ghost (SGPropertyNode_ptr*) or a string (global property
-// path), the second is a Nasal function.
-void FGNasalSys::setListener(int argc, naRef* args)
+// path), the second is a Nasal function, the optional third one a bool.
+// If the bool is true, then the listener is executed initially. The
+// setlistener() function returns a unique id number, that can be used
+// as argument to the removelistener() function.
+naRef FGNasalSys::setListener(int argc, naRef* args)
 {
-    SGPropertyNode* node;
+    SGPropertyNode_ptr node;
     naRef prop = argc > 0 ? args[0] : naNil();
     if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
     else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
-    else return;
+    else return naNil();
 
     naRef handler = argc > 1 ? args[1] : naNil();
     if(!(naIsCode(handler) || naIsCCode(handler) || naIsFunc(handler)))
-        return;
+        return naNil();
 
     bool initial = argc > 2 && naTrue(args[2]);
-    node->addChangeListener(new FGNasalListener(handler, this, gcSave(handler)), initial);
+
+    FGNasalListener *nl = new FGNasalListener(node, handler, this,
+            gcSave(handler));
+    _listener[_listenerId] = nl;
+    node->addChangeListener(nl, initial);
+    return naNum(_listenerId++);
+}
+
+// removelistener(int) extension function. The argument is the id of
+// a listener as returned by the setlistener() function.
+naRef FGNasalSys::removeListener(int argc, naRef* args)
+{
+    naRef id = argc > 0 ? args[0] : naNil();
+    if(!naIsNum(id))
+        return naNil();
+
+    int i = int(id.num);
+    if (_listener.find(i) == _listener.end())
+        return naNil();
+
+    FGNasalListener *nl = _listener[i];
+    nl->_node->removeChangeListener(nl);
+    _listener.erase(i);
+    delete nl;
+    return id;
 }
 

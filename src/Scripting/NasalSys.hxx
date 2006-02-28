@@ -5,7 +5,12 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/nasal/nasal.h>
 
+#include <map>
+SG_USING_STD(map);
+
+
 class FGNasalScript;
+class FGNasalListener;
 
 class FGNasalSys : public SGSubsystem
 {
@@ -37,7 +42,8 @@ public:
     void setTimer(int argc, naRef* args);
 
     // Implementation of the setlistener extension function
-    void setListener(int argc, naRef* args);
+    naRef setListener(int argc, naRef* args);
+    naRef removeListener(int argc, naRef* args);
 
     // Returns a ghost wrapper for the current _cmdArg
     naRef cmdArgGhost();
@@ -63,6 +69,10 @@ private:
         int gcKey;
         FGNasalSys* nasal;
     };
+
+    // Listener
+    map<int, FGNasalListener *> _listener;
+    static int _listenerId;
 
     void loadPropertyScripts();
     void hashset(naRef hash, const char* key, naRef val);
@@ -110,8 +120,9 @@ private:
 
 class FGNasalListener : public SGPropertyChangeListener {
 public:
-    FGNasalListener(naRef handler, FGNasalSys* nasal, int key)
-            : _handler(handler), _gcKey(key), _nas(nasal) {}
+    FGNasalListener(SGPropertyNode_ptr node, naRef handler,
+            FGNasalSys* nasal, int key)
+        : _node(node), _handler(handler), _gcKey(key), _nas(nasal) {}
 
     ~FGNasalListener() {
         _nas->gcRelease(_gcKey);
@@ -130,6 +141,7 @@ public:
 
 private:
     friend class FGNasalSys;
+    SGPropertyNode_ptr _node;
     naRef _handler;
     int _gcKey;
     FGNasalSys* _nas;
