@@ -699,6 +699,7 @@ void FGFDM::parsePistonEngine(XMLAttributes* a)
         float mul = attrf(a, "turbo-mul");
         float mp = attrf(a, "wastegate-mp", 1e6) * INHG2PA;
         eng->setTurboParams(mul, mp);
+        eng->setTurboLag(attrf(a, "turbo-lag", 2));
     }
 
     if(a->hasAttribute("supercharger"))
@@ -852,6 +853,7 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "CYCLICELE")) return ControlMap::CYCLICELE;
     if(eq(name, "ROTORENGINEON")) return ControlMap::ROTORENGINEON;
     if(eq(name, "REVERSE_THRUST")) return ControlMap::REVERSE_THRUST;
+    if(eq(name, "WASTEGATE")) return ControlMap::WASTEGATE;
     SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '"
            << name << "' in YASim aircraft description.");
     exit(1);
