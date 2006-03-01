@@ -812,6 +812,7 @@ static struct {
     const char *name;
     int key;
 } keymap[] = {
+    {"backspace", 8},
     {"tab", 9},
     {"return", 13},
     {"enter", 13},
