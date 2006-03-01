@@ -480,9 +480,10 @@ void Model::calcForces(State* s)
     if(_launchbar) {
 	float v[3], rot[3], glvel[3], ground[3];
         _launchbar->calcForce(_ground_cb, &_body, s, lv, lrot);
-	float force[3], contact[3];
-        _launchbar->getForce(force, contact);
-        _body.addForce(contact, force);
+	float forcelb[3], contactlb[3], forcehb[3], contacthb[3];
+        _launchbar->getForce(forcelb, contactlb, forcehb, contacthb);
+        _body.addForce(contactlb, forcelb);
+        _body.addForce(contacthb, forcehb);
     }
 }
 

@@ -480,5 +480,9 @@ void YASim::copyFromYASim()
     if(l) {
 	SGPropertyNode * node = fgGetNode("gear/launchbar", 0, true);
 	node->setFloatValue("position-norm", l->getCompressFraction());
+        node->setFloatValue("holdback-position-norm", l->getHoldbackCompressFraction());
+        node->setStringValue("state", l->getState());
+        node->setBoolValue("strop", l->getStrop());
     }
+
 }

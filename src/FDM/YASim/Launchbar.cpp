@@ -5,15 +5,19 @@
 
 #include "Launchbar.hpp"
 
-#include <iostream>
 using namespace std;
 namespace yasim {
+
+  static const float YASIM_PI2 = 3.14159265358979323846/2;
+  static const float YASIM_PI = 3.14159265358979323846;
+  static const float RAD2DEG = 180/YASIM_PI;
 
 Launchbar::Launchbar()
 {
     int i;
     for(i=0; i<3; i++)
-	_launchbar_mount[i] = _holdback_mount[i] = _force[i] = 0;
+      _launchbar_mount[i] = _holdback_mount[i] = _launchbar_force[i]
+              = _holdback_force[i] = 0;
     for(i=0; i<2; i++)
 	_global_ground[i] = 0;
     _global_ground[2] = 1;
@@ -22,11 +26,13 @@ Launchbar::Launchbar()
     _holdback_length = 2.0;
     _down_ang = 0.0;
     _up_ang = 0.0;
+    _ang = 0.0;
     _extension = 0.0;
-    _frac = 0.0;
+    _frac = _h_frac =0.0;
     _launch_cmd = false;
     _pos_on_cat = 0.0;
     _state = Unmounted;
+    _strop = false;
 }
 
 void Launchbar::setLaunchbarMount(float* position)
@@ -45,6 +51,11 @@ void Launchbar::setLength(float length)
 {
     _length = length;
 }
+
+  void Launchbar::setHoldbackLength(float length)
+  {
+    _holdback_length = length;
+  }
 
 void Launchbar::setDownAngle(float ang)
 {
@@ -78,11 +89,26 @@ void Launchbar::getLaunchbarMount(float* out)
     for(i=0; i<3; i++) out[i] = _launchbar_mount[i];
 }
 
+  float Launchbar::getLaunchbarPos(int i)
+  {
+    return _launchbar_mount[i];
+  }
+
 void Launchbar::getHoldbackMount(float* out)
 {
     int i;
     for(i=0; i<3; i++) out[i] = _holdback_mount[i];
 }
+
+  float Launchbar::getHoldbackPos(int j)
+  {
+    return _holdback_mount[j];
+  }
+
+  float Launchbar::getHoldbackLength(void)
+  {
+    return _holdback_length;
+  }
 
 float Launchbar::getLength(void)
 {
@@ -99,15 +125,46 @@ float Launchbar::getUpAngle(void)
     return _up_ang;
 }
 
+  float Launchbar::getAngle(void)
+  {
+    return _ang;
+  }
+
+  float Launchbar::getHoldbackAngle(void)
+  {
+    return _h_ang;
+  }
 float Launchbar::getExtension(void)
 {
     return _extension;
 }
 
-void Launchbar::getForce(float* force, float* off)
+  void Launchbar::getForce(float* force1, float* off1,
+    float* force2, float* off2)
+  {
+    Math::set3(_launchbar_force, force1);
+    Math::set3(_launchbar_mount, off1);
+    Math::set3(_holdback_force, force2);
+    Math::set3(_holdback_mount, off2);
+  }
+
+  const char* Launchbar::getState(void)
+  {
+    switch (_state) {
+    case Arrested:
+      return "Engaged";
+    case Launch:
+      return "Launching";
+    case Completed:
+      return "Completed";
+    default:
+      return "Disengaged"; 
+    }
+  }   
+
+  bool Launchbar::getStrop(void)
 {
-    Math::set3(_force, force);
-    Math::set3(_launchbar_mount, off);
+    return _strop;
 }
 
 float Launchbar::getCompressFraction()
@@ -115,13 +172,42 @@ float Launchbar::getCompressFraction()
     return _frac;
 }
 
+  float Launchbar::getHoldbackCompressFraction()
+  {
+    return _h_frac;
+  }
+
 void Launchbar::getTipPosition(float* out)
 {
     // The launchbar tip in local coordinates.
-    float ang = _frac*(_down_ang - _up_ang) + _up_ang;
-    float pos_tip[3] = { _length*Math::cos(ang), 0.0,-_length*Math::sin(ang) };
-    Math::add3(_launchbar_mount, pos_tip, out);
+
+    _ang = _frac*(_down_ang - _up_ang ) + _up_ang ;
+    float ptip[3] = { _length*Math::cos(_ang), 0, -_length*Math::sin(_ang) };
+    Math::add3(_launchbar_mount, ptip, out);
+  }
+
+  float Launchbar::getTipPos(int i)
+  {
+    float pos_tip[3];
+    getTipPosition(pos_tip);
+    return pos_tip[i];
+  }    
+
+  void Launchbar::getHoldbackTipPosition(float* out)
+  {
+    // The holdback tip in local coordinates.
+    _h_ang = _h_frac*(_down_ang - _up_ang) + _up_ang;
+    float htip[3] = { -_length*Math::cos(_h_ang), 0, -_length*Math::sin(_h_ang) };
+    Math::add3(_holdback_mount, htip, out);
+  }
+
+  float Launchbar::getHoldbackTipPos(int i)
+  {
+    float pos_tip[3];
+    getHoldbackTipPosition(pos_tip);
+    return pos_tip[i];
 }
+
 
 void Launchbar::getTipGlobalPosition(State* s, double* out)
 {
@@ -168,7 +254,8 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
 {
     // Init the return values
     int i;
-    for(i=0; i<3; i++) _force[i] = 0;
+    for(i=0; i<3; i++) _launchbar_force[i] = 0;
+    for(i=0; i<3; i++) _holdback_force[i] = 0;
 
     if (_state != Unmounted)
       _extension = 1;
@@ -177,32 +264,91 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
     if(_extension <= 0)
 	return;
 
-    if (_extension < _frac)
-        _frac = _extension;
+    // For the first guess, the position fraction is equal to the
+    // extension value.
+    _frac = _h_frac = _extension;
+
+    // The ground plane transformed to the local frame.
+    float ground[4];
+    s->planeGlobalToLocal(_global_ground, ground);
+
+    // The launchbar tip in local coordinates.
+    float ltip[3];
+    getTipPosition(ltip);
+
+        // Correct the extension value for no intersection.
+
+    // Check if the tip will intersect the ground or not. That is, compute
+    // the distance of the tip to the ground plane.
+    float tipdist = ground[3] - Math::dot3(ltip, ground);
+    if(0 <= tipdist) {
+      _frac = _extension;
+    } else {
+      // Compute the distance of the launchbar mount point from the
+      // ground plane.
+      float mountdist = ground[3] - Math::dot3(_launchbar_mount, ground);
+
+      // Compute the distance of the launchbar mount point from the
+      // ground plane in the x-z plane. It holds:
+      // mountdist = mountdist_xz*cos(angle(normal_yz, e_z))
+      // thus
+      float mountdist_xz = _length;
+      if (ground[2] != 0) {
+        float nrm_yz = Math::sqrt(ground[1]*ground[1]+ground[2]*ground[2]);
+        mountdist_xz = -mountdist*nrm_yz/ground[2];
+      }
+
+      if (mountdist_xz < _length) { 
+        // the launchbar points forward, so we need to change the signs here
+        float ang = -Math::asin(mountdist_xz/_length)
+          + Math::atan2(ground[2], ground[0]) + YASIM_PI2;
+        ang = -ang;
+            _frac = (ang - _up_ang)/(_down_ang - _up_ang);
+      } else {
+            _frac = _extension;
+    }
+    }
+
+    // Now do it again for the holdback
+
+    // The holdback tip in local coordinates.
+    float htip[3];
+    getHoldbackTipPosition(htip);
+
+    // Check if the tip will intersect the ground or not. That is, compute
+    // the distance of the tip to the ground plane.
+    float h_tipdist = ground[3] - Math::dot3(htip, ground);
+    if (0 <= h_tipdist) {
+      _h_frac = _extension;
+    } else {
+      // Compute the distance of the holdback mount point from the ground
+      // plane.
+      float h_mountdist = ground[3] - Math::dot3(_holdback_mount, ground);
+
+      // Compute the distance of the holdback mount point from the ground
+      // plane in the x-z plane. It holds:
+      //  mountdist = mountdist_xz*cos(angle(normal_yz, e_z))
+      // thus
+      float h_mountdist_xz = _holdback_length;
+      if (ground[2] != 0) {
+        float nrm_yz = Math::sqrt(ground[1]*ground[1]+ground[2]*ground[2]);
+        h_mountdist_xz = -h_mountdist*nrm_yz/ground[2];
+      }
+
+      if (h_mountdist_xz < _holdback_length) {
+        float h_ang = Math::asin(h_mountdist_xz/_holdback_length)
+          + Math::atan2(ground[2], ground[0]) + YASIM_PI2;
+        _h_frac = (h_ang - _up_ang)/(_down_ang - _up_ang);
+      } else {
+        _h_frac = _extension;
+      }
+    }
+
+    float llb_mount[3];
+    getTipPosition(llb_mount);
 
     // The launchbar tip in global coordinates.
     double launchbar_pos[3];
-    getTipGlobalPosition(s, launchbar_pos);
-
-    // If the launchbars tip is less extended than it could be.
-    if(_frac < _extension) {
-        // Correct the extension value for no intersection.
-        // Compute the distance of the mount point from the ground plane.
-        double a = - _global_ground[3] + launchbar_pos[0]*_global_ground[0]
-          + launchbar_pos[1]*_global_ground[1]
-          + launchbar_pos[2]*_global_ground[2];
-        if(a < _length) {
-            float ang = Math::asin(a/_length);
-            _frac = (ang - _up_ang)/(_down_ang - _up_ang);
-        } else
-            // FIXME: this will jump 
-            _frac = _extension;
-    }
-
-    // Recompute the launchbar tip.
-    float llb_mount[3];
-    getTipPosition(llb_mount);
-    // The launchbar tip in global coordinates.
     s->posLocalToGlobal(llb_mount, launchbar_pos);
 
     double end[2][3]; float vel[2][3];
@@ -213,7 +359,7 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
         return;
 
     // Compute the positions of the catapult start and endpoints in the
-    // local coordiante system
+    // local coordinate system
     float lend[2][3];
     s->posGlobalToLocal(end[0], lend[0]);
     s->posGlobalToLocal(end[1], lend[1]);
@@ -237,8 +383,8 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
     Math::mul3(1.0/lblen, llbdir, llbdir);
 
     // Check if we are near enough to the cat.
-    if (_state == Unmounted && dist < 0.5) {
-        // croase approximation for the velocity of the launchbar.
+    if (_state == Unmounted && dist < 0.6) {
+      // coarse approximation for the velocity of the launchbar.
         // Might be sufficient because arresting at the cat makes only
         // sense when the aircraft does not rotate much.
         float lv_mount[3];
@@ -258,12 +404,16 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
         double dd[2][3]; float fd[2][3]; double ghldbkpos[3];
         s->posLocalToGlobal(_holdback_mount, ghldbkpos);
         float hbdist = g_cb->getCatapult(ghldbkpos, dd, fd);
-        float offset = -Math::sqrt(_holdback_length*_holdback_length - hbdist*hbdist);
-        _pos_on_cat = getPercentPosOnCat(_holdback_mount, offset, lend);
 
+      // don't let the calculation go -ve here
+      if (_holdback_length*_holdback_length - hbdist*hbdist < 0)
+        return;
+      float offset = -Math::sqrt(_holdback_length*_holdback_length
+        - hbdist*hbdist);
+      _pos_on_cat = getPercentPosOnCat(_holdback_mount, offset, lend);
 
         // We cannot arrest if we are not at the start of the cat.
-        if (_pos_on_cat < 0.0 || 0.2 < _pos_on_cat)
+      if (_pos_on_cat < 0.0 || 0.4 < _pos_on_cat)
             return;
 
         // Now we are arrested at the cat.
@@ -284,13 +434,13 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
     
     if (_state == Arrested) {
         // Now apply a constant tension from the catapult over the launchbar.
-        Math::mul3(2.0, llbdir, _force);
+      Math::mul3(2.0, llbdir, _launchbar_force);
 
         // If the distance from the holdback mount at the aircraft to the
         // holdback mount on the cat is larger than the holdback length itself,
         // the holdback applies a force to the gear.
         if (_holdback_length < hldbklen) {
-            // croase approximation for the velocity of the holdback mount
+        // coarse approximation for the velocity of the holdback mount
             // at the gear.
             // Might be sufficient because arresting at the cat makes only
             // sense when the aircraft does not rotate much.
@@ -308,29 +458,43 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
 
             // The spring force the holdback will apply to the gear
             float tmp[3];
-            Math::mul3(1e1*(hldbklen - _holdback_length), lhldbkdir, tmp);
-            Math::add3(tmp, _force, _force);
+        Math::mul3(1e1*(hldbklen - _holdback_length), lhldbkdir,
+          _holdback_force);
 
             // The damping force here ...
             Math::mul3(2e0, lvhldbk, tmp);
-            Math::sub3(_force, tmp, _force);
+        Math::sub3(_holdback_force, tmp, _holdback_force);
         }
 
-        if (_launch_cmd)
+      if (_launch_cmd) {
             _state = Launch;
+        _strop = false;
+      }
     }
 
     if (_state == Launch) {
         // Now apply a constant tension from the catapult over the launchbar.
-        Math::mul3(25.0, llbdir, _force);
+      Math::mul3(25.0, llbdir, _launchbar_force);
 
-        if (1.0 < dist)
+      if (1.0 < dist) {
+        _state = Completed;
+      }
+    }
+
+    if (_state == Completed) {
+      // Wait until the strop has cleared the deck
+      // This is a temporary fix until we come up with something better
+
+      if (_frac > 0.8) {
             _state = Unmounted;
+        _strop = true;
+      }
     }
 
     // Scale by the mass. That keeps the stiffness in reasonable bounds.
     float mass = body->getTotalMass();
-    Math::mul3(mass, _force, _force);
+    Math::mul3(mass, _launchbar_force, _launchbar_force);
+    Math::mul3(mass, _holdback_force, _holdback_force);
 }
 
 }; // namespace yasim

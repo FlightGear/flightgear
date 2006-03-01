@@ -63,6 +63,11 @@ void Hook::getPosition(float* out)
     for(i=0; i<3; i++) out[i] = _pos[i];
 }
 
+float Hook::getHookPos(int i)
+{
+    return _pos[i];
+}
+
 float Hook::getLength(void)
 {
     return _length;
@@ -76,6 +81,11 @@ float Hook::getDownAngle(void)
 float Hook::getUpAngle(void)
 {
     return _up_ang;
+}
+
+float Hook::getAngle(void)
+{
+    return _ang;
 }
 
 float Hook::getExtension(void)
@@ -97,8 +107,8 @@ float Hook::getCompressFraction()
 void Hook::getTipPosition(float* out)
 {
     // The hook tip in local coordinates.
-    float ang = _frac*(_down_ang - _up_ang) + _up_ang;
-    float pos_tip[3] = { _length*Math::cos(ang), 0.0, _length*Math::sin(ang) };
+    _ang = _frac*(_down_ang - _up_ang) + _up_ang;
+    float pos_tip[3] = { _length*Math::cos(_ang), 0, _length*Math::sin(_ang) };
     Math::sub3(_pos, pos_tip, out);
 }
 
