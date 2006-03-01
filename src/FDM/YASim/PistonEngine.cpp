@@ -13,6 +13,7 @@ PistonEngine::PistonEngine(float power, float speed)
     _running = false;
     _fuel = true;
     _boostPressure = 0;
+    _hasSuper = false;
     
     _oilTemp = Atmosphere::getStdTemperature(0);
     _oilTempTarget = _oilTemp;
