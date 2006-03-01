@@ -111,26 +111,21 @@ void PistonEngine::integrate(float dt)
     _oilTemp += (_dOilTempdt * dt);
 
     // See comments in Jet.cpp for how this decay constant works
-    float decay = 1.5f * 2.3f / _turboLag;
+    float decay = 2.3f / _turboLag;
     _charge = (_charge + dt*decay * _chargeTarget) / (1 + dt*decay);
 }
 
 void PistonEngine::calc(float pressure, float temp, float speed)
 {
-    if(_magnetos == 0 || speed < 60*RPM2RADPS)
-	_running = false;
-    else if(_fuel == false)
-        _running = false;
-    else
-	_running = true;
+    _running = _magnetos && _fuel && (speed > 60*RPM2RADPS);
 
-    // Calculate the factor required to modify supercharger output for 
+    // Calculate the factor required to modify supercharger output for
     // rpm. Assume that the normalized supercharger output ~= 1 when
-    // the engine is at the nominated peak-power rpm (normalised).
-    // A power equation of the form  (A * B^x * x^C)  has been  
-    // derived empirically from some representative supercharger data.
-    // This provides near-linear output over the normal operating range, 
-    // with fall-off in the over-speed situation.
+    // the engine is at the nominal peak-power rpm.  A power equation
+    // of the form (A * B^x * x^C) has been derived empirically from
+    // some representative supercharger data.  This provides
+    // near-linear output over the normal operating range, with
+    // fall-off in the over-speed situation.
     float rpm_norm = (speed / _omega0);
     float A = 1.795206541;
     float B = 0.55620178;
@@ -142,7 +137,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
         // Superchargers have no lag
         _charge = _chargeTarget;
     } else if(!_running) {
-        // Turbochargers only work when the engine is actually
+        // Turbochargers only work well when the engine is actually
         // running.  The 25% number is a guesstimate from Vivian.
         _chargeTarget = 1 + (_chargeTarget - 1) * 0.25;
     }
@@ -157,7 +152,13 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // Scale to throttle setting, clamp to wastegate
     if(_running)
         _mp *= _minMP + (1 -_minMP) * _throttle;
-    if(_mp > _maxMP) _mp = _maxMP;
+
+    // Scale the max MP according to the WASTEGATE control input.  Use
+    // the un-supercharged MP as the bottom limit.
+    float max = _wastegate * _maxMP;
+    if(max < _mp/_charge) max = _mp/_charge;
+    if(_mp > max) _mp = max;
+    
 
     // The "boost" is the delta above ambient
     _boostPressure = _mp - pressure;
