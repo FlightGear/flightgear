@@ -5,7 +5,6 @@
 
 #include "Launchbar.hpp"
 
-using namespace std;
 namespace yasim {
 
   static const float YASIM_PI2 = 3.14159265358979323846/2;
