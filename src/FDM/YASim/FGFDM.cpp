@@ -287,8 +287,9 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	l->setHoldbackMount(v);
         float length = attrf(a, "length", 1.0);
         l->setLength(length);
-        l->setDownAngle(attrf(a, "down-angle", 30) * DEG2RAD);
-        l->setUpAngle(attrf(a, "up-angle", -30) * DEG2RAD);
+        l->setDownAngle(attrf(a, "down-angle", 45) * DEG2RAD);
+        l->setUpAngle(attrf(a, "up-angle", -45) * DEG2RAD);
+        l->setHoldbackLength(attrf(a, "holdback-length", 2.0));
  	_airplane.addLaunchbar(l);
     } else if(eq(name, "fuselage")) {
 	float b[3];
