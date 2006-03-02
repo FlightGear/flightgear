@@ -626,8 +626,9 @@ naRef FGNasalSys::setListener(int argc, naRef* args)
 
     FGNasalListener *nl = new FGNasalListener(node, handler, this,
             gcSave(handler));
-    _listener[_listenerId] = nl;
     node->addChangeListener(nl, initial);
+
+    _listener[_listenerId] = nl;
     return naNum(_listenerId++);
 }
 
@@ -647,6 +648,6 @@ naRef FGNasalSys::removeListener(int argc, naRef* args)
     nl->_node->removeChangeListener(nl);
     _listener.erase(i);
     delete nl;
-    return id;
+    return naNum(_listener.size());
 }
 
