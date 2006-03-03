@@ -118,9 +118,10 @@ FGVoiceMgr::FGVoice::FGVoice(FGVoiceMgr *mgr, const SGPropertyNode_ptr node) :
 		char buf[4];
 		int len = _sock->read(buf, 3);
 		if (len != 3 || buf[0] != 'L' || buf[1] != 'P') {
-			SG_LOG(SG_IO, SG_ALERT, "VOICE: something is listening to "
-				<< host << ':' << port << "', but it doesn't seem "
-				"to be Festival");
+			SG_LOG(SG_IO, SG_ALERT, "VOICE: unexpected or no response from `"
+					<< host << ':' << port << "'. Either it's not " << endl
+					<< "       Festival listening, or Festival couldn't open a "
+					"sound device.");
 			_connected = false;
 			return;
 		}
