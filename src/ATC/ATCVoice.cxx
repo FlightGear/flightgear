@@ -34,10 +34,13 @@
 #include <stdlib.h>
 
 FGATCVoice::FGATCVoice() {
+  SoundData = 0;
+  rawSoundData = 0;
 }
 
 FGATCVoice::~FGATCVoice() {
-    free( rawSoundData );
+    if (rawSoundData)
+        free( rawSoundData );
     delete SoundData;
 }
 
