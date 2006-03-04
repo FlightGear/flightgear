@@ -96,6 +96,7 @@ private:
   //stringVec runwayNames;
   int choice[2];
   int nrActive;
+
 public:
   RunwayGroup() {};
   RunwayGroup(const RunwayGroup &other);
@@ -103,7 +104,7 @@ public:
 
   void setName(const string& nm) { name = nm;                };
   void add(const RunwayList& list) { rwyList.push_back(list);};
-  void setActive(const string& aptId, double windSpeed, double windHeading, double maxTail, double maxCross);
+  void setActive(const string& aptId, double windSpeed, double windHeading, double maxTail, double maxCross, stringVec *curr);
 
   int getNrActiveRunways() { return nrActive;};
   void getActive(int i, string& name, string& type);
@@ -132,6 +133,7 @@ private:
   RunwayList  rwyList;
   RunwayGroup rwyGroup;
   PreferenceList preferences;
+  
 
   time_t processTime(const string&);
   bool initialized;

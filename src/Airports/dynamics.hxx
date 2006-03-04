@@ -45,6 +45,7 @@ private:
   string prevTrafficType;
   stringVec landing;
   stringVec takeoff;
+  stringVec currentlyActive;
 
   // Experimental keep a running average of wind dir and speed to prevent
   // Erratic runway changes. 

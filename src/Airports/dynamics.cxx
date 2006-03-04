@@ -486,60 +486,61 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	  
 	  windSpeed = stationweather.get_wind_speed_kt();
 	  windHeading = stationweather.get_wind_from_heading_deg();
-	  double averageWindSpeed   = 0;
-	  double averageWindHeading = 0;
-	  double cosHeading         = 0;
-	  double sinHeading         = 0;
-	  // Initialize at the beginning of the next day or startup
-	  if ((lastUpdate == 0) || (dayStart < lastUpdate))
-	    {
-	      for (int i = 0; i < 10; i++)
-		{
-		  avWindHeading [i] = windHeading;
-		  avWindSpeed   [i] = windSpeed;
-		}
-	    }
-	  else
-	    {
-	      if (windSpeed != avWindSpeed[9]) // update if new metar data 
-		{
-		  // shift the running average
-		  for (int i = 0; i < 9 ; i++)
-		    {
-		      avWindHeading[i] = avWindHeading[i+1];
-		      avWindSpeed  [i] = avWindSpeed  [i+1];
-		    }
-		} 
-	      avWindHeading[9] = windHeading;
-	      avWindSpeed  [9] = windSpeed;
-	    }
+	 //  double averageWindSpeed   = 0;
+// 	  double averageWindHeading = 0;
+// 	  double cosHeading         = 0;
+// 	  double sinHeading         = 0;
+// 	  // Initialize at the beginning of the next day or startup
+// 	  if ((lastUpdate == 0) || (dayStart < lastUpdate))
+// 	    {
+// 	      for (int i = 0; i < 10; i++)
+// 		{
+// 		  avWindHeading [i] = windHeading;
+// 		  avWindSpeed   [i] = windSpeed;
+// 		}
+// 	    }
+// 	  else
+// 	    {
+// 	      if (windSpeed != avWindSpeed[9]) // update if new metar data 
+// 		{
+// 		  // shift the running average
+// 		  for (int i = 0; i < 9 ; i++)
+// 		    {
+// 		      avWindHeading[i] = avWindHeading[i+1];
+// 		      avWindSpeed  [i] = avWindSpeed  [i+1];
+// 		    }
+// 		} 
+// 	      avWindHeading[9] = windHeading;
+// 	      avWindSpeed  [9] = windSpeed;
+// 	    }
 	  
-	  for (int i = 0; i < 10; i++)
-	    {
-	      averageWindSpeed   += avWindSpeed   [i];
-	      //averageWindHeading += avWindHeading [i];
-	      cosHeading += cos(avWindHeading[i] * SG_DEGREES_TO_RADIANS);
-	      sinHeading += sin(avWindHeading[i] * SG_DEGREES_TO_RADIANS);
-	    }
-	  averageWindSpeed   /= 10;
-	  //averageWindHeading /= 10;
-	  cosHeading /= 10;
-	  sinHeading /= 10;
-	  averageWindHeading = atan2(sinHeading, cosHeading) *SG_RADIANS_TO_DEGREES;
-	  if (averageWindHeading < 0)
-	    averageWindHeading += 360.0;
-	  //cerr << "Wind Heading " << windHeading << " average " << averageWindHeading << endl;
-	  //cerr << "Wind Speed   " << windSpeed   << " average " << averageWindSpeed   << endl;
-	  lastUpdate = dayStart;
-	      //if (wind_speed == 0) {
-	  //  wind_heading = 270;	 This forces West-facing rwys to be used in no-wind situations
-	    // which is consistent with Flightgear's initial setup.
-	  //}
+// 	  for (int i = 0; i < 10; i++)
+// 	    {
+// 	      averageWindSpeed   += avWindSpeed   [i];
+// 	      //averageWindHeading += avWindHeading [i];
+// 	      cosHeading += cos(avWindHeading[i] * SG_DEGREES_TO_RADIANS);
+// 	      sinHeading += sin(avWindHeading[i] * SG_DEGREES_TO_RADIANS);
+// 	    }
+// 	  averageWindSpeed   /= 10;
+// 	  //averageWindHeading /= 10;
+// 	  cosHeading /= 10;
+// 	  sinHeading /= 10;
+// 	  averageWindHeading = atan2(sinHeading, cosHeading) *SG_RADIANS_TO_DEGREES;
+// 	  if (averageWindHeading < 0)
+// 	    averageWindHeading += 360.0;
+// 	  //cerr << "Wind Heading " << windHeading << " average " << averageWindHeading << endl;
+// 	  //cerr << "Wind Speed   " << windSpeed   << " average " << averageWindSpeed   << endl;
+// 	  lastUpdate = dayStart;
+// 	      //if (wind_speed == 0) {
+// 	  //  wind_heading = 270;	 This forces West-facing rwys to be used in no-wind situations
+// 	    // which is consistent with Flightgear's initial setup.
+// 	  //}
 	  
 	  //string rwy_no = globals->get_runways()->search(apt->getId(), int(wind_heading));
 	  string scheduleName;
 	  //cerr << "finding active Runway for" << _id << endl;
 	  //cerr << "Nr of seconds since day start << " << dayStart << endl;
+
 	  ScheduleTime *currSched;
 	  //cerr << "A"<< endl;
 	  currSched = rwyPrefs.getSchedule(trafficType.c_str());
@@ -559,7 +560,19 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	    return;
 	  nrActiveRunways = currRunwayGroup->getNrActiveRunways();
 	  //cerr << "Nr of Active Runways = " << nrActiveRunways << endl; 
-	  currRunwayGroup->setActive(_id, averageWindSpeed, averageWindHeading, maxTail, maxCross); 
+
+	  // 
+	  currRunwayGroup->setActive(_id, 
+				     windSpeed, 
+				     windHeading, 
+				     maxTail, 
+				     maxCross, 
+				     &currentlyActive); 
+
+	  // Note that I SHOULD keep three lists in memory, one for 
+	  // general aviation, one for commercial and one for military
+	  // traffic.
+	  currentlyActive.clear();
 	  nrActiveRunways = currRunwayGroup->getNrActiveRunways();
 	  for (int i = 0; i < nrActiveRunways; i++)
 	    {
@@ -568,11 +581,13 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	      if (type == "landing")
 		{
 		  landing.push_back(name);
+		  currentlyActive.push_back(name);
 		  //cerr << "Landing " << name << endl; 
 		}
 	      if (type == "takeoff")
 		{
 		  takeoff.push_back(name);
+		  currentlyActive.push_back(name);
 		  //cerr << "takeoff " << name << endl;
 		}
 	    }
@@ -582,6 +597,9 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	  int nr = takeoff.size();
 	  if (nr)
 	    {
+	      // Note that the randomization below, is just a placeholder to choose between
+	      // multiple active runways for this action. This should be
+	      // under ATC control.
 	      runway = takeoff[(rand() %  nr)];
 	    }
 	  else

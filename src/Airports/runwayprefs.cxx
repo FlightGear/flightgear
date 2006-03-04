@@ -197,7 +197,8 @@ void RunwayGroup::setActive(const string &aptId,
 			    double windSpeed, 
 			    double windHeading, 
 			    double maxTail, 
-			    double maxCross)
+			    double maxCross,
+			    stringVec *currentlyActive)
 {
 
   FGRunway rwy;
@@ -209,16 +210,31 @@ void RunwayGroup::setActive(const string &aptId,
   double crossWind;
   double tailWind;
   string name;
+  //stringVec names;
+  int bestMatch = 0, bestChoice = 0;
 
   if (activeRwys > 0)
-    {
+    {  
+      // Now downward iterate across all the possible preferences
+      // starting by the least preferred choice working toward the most preferred choice
+
       nrOfPreferences = rwyList[0].getRwyList()->size();
-      for (int i = 0; i < nrOfPreferences; i++)
+      bool validSelection = true;
+      bool foundValidSelection = false;
+      for (int i = nrOfPreferences-1; i >= 0; i--)
 	{
-	  bool validSelection = true;
+	  int match = 0;
+	  
+
+	  // Test each runway listed in the preference to see if it's possible to use
+	  // If one runway of the selection isn't allowed, we need to exclude this
+	  // preference, however, we don't want to stop right there, because we also
+	  // don't want to randomly swap runway preferences, unless there is a need to. 
+	  //
+
 	  for (int j = 0; j < activeRwys; j++)
 	    {
-	      //cerr << "I J " << i << " " << j << endl;
+	      validSelection = true;
 	      name = rwyList[j].getRwyList(i);
 	      //cerr << "Name of Runway: " << name << endl;
 	      if (globals->get_runways()->search( aptId, 
@@ -238,20 +254,42 @@ void RunwayGroup::setActive(const string &aptId,
 		  //cerr << "Tailwind : " << tailWind << endl;
 		  //cerr << "Crosswnd : " << crossWind << endl;
 		  if ((tailWind > maxTail) || (crossWind > maxCross))
-		    validSelection = false;
+		    {
+		      //cerr << "Invalid : ";
+		      validSelection = false;
+		   }
+		  else 
+		    {
+		      //cerr << "Valid   : ";
+		  }
 		}else {
-		  SG_LOG( SG_GENERAL, SG_INFO, "Failed to find runway " << name << " at " << aptId );
-		  exit(1);
-		}
-
+		SG_LOG( SG_GENERAL, SG_INFO, "Failed to find runway " << name << " at " << aptId );
+		exit(1);
+	      }
 	    }
-	  if (validSelection)
+	  if (validSelection) 
 	    {
-	      //cerr << "Valid runay selection : " << i << endl;
-	      nrActive = activeRwys;
-	      active = i;
-	      return;
-	    }
+	      //cerr << "Valid   : ";
+	      foundValidSelection = true;
+	      for (stringVecIterator it = currentlyActive->begin(); 
+		   it != currentlyActive->end(); it++)
+		{
+		  if ((*it) == name)
+		    match++;
+		  if (match >= bestMatch) {
+		    bestMatch = match;
+		    bestChoice = i;
+		  }
+		}
+	    } 
+	  //cerr << "Preference " << i << " bestMatch " << bestMatch << " choice " << bestChoice << endl;
+	}
+      if (foundValidSelection)
+	{
+	  //cerr << "Valid runay selection : " << bestChoice << endl;
+	  nrActive = activeRwys;
+	  active = bestChoice;
+	  return;
 	}
       // If this didn't work, due to heavy winds, try again
       // but select only one landing and one takeoff runway. 
@@ -280,16 +318,11 @@ void RunwayGroup::setActive(const string &aptId,
 		{
 		  //cerr << "Succes" << endl;
 		  hdgDiff = fabs(windHeading - rwy._heading);
-		  //cerr << "Wind Heading: " << windHeading << "Runway Heading: " <<rwy._heading << endl;
-		  //cerr << "Wind Speed  : " << windSpeed << endl;
 		  if (hdgDiff > 180)
 		    hdgDiff = 360 - hdgDiff;
-		  //cerr << "Heading diff: " << hdgDiff << endl;
 		  hdgDiff *= ((2*M_PI)/360.0); // convert to radians
 		  crossWind = windSpeed * sin(hdgDiff);
 		  tailWind  = -windSpeed * cos(hdgDiff);
-		  //cerr << "Tailwind : " << tailWind << endl;
-		  //cerr << "Crosswnd : " << crossWind << endl;
 		  if ((tailWind > maxTail) || (crossWind > maxCross))
 		    validSelection = false;
 		}else {
@@ -308,19 +341,7 @@ void RunwayGroup::setActive(const string &aptId,
 	}
     }
   active = -1;
-  //RunwayListVectorIterator i; // = rwlist.begin();
-  //stringVecIterator j;
-  //for (i = rwyList.begin(); i != rwyList.end(); i++)
-  //  {
-  //    cerr << i->getType();
-  //    for (j = i->getRwyList()->begin(); j != i->getRwyList()->end(); j++)
-  //	{                                 
-  //	  cerr << (*j);
-  //	}
-  //    cerr << endl;
-  //  }
-  //for (int
-
+  nrActive = 0;
 }
 
 void RunwayGroup::getActive(int i, string &name, string &type)
