@@ -11,8 +11,8 @@
 
 PitotSystem::PitotSystem ( SGPropertyNode *node )
     :
-    name("pitot"),
-    num(0)
+    num(0),
+    name("pitot")
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {

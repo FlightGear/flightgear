@@ -151,7 +151,6 @@ time_t FGScheduledFlight::processTimeString(const string& theTime)
 {
   int weekday;
   int timeOffsetInDays;
-  int targetDate;
   int targetHour;
   int targetMinute;
   int targetSecond;
