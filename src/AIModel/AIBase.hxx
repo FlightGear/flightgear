@@ -57,7 +57,7 @@ public:
     virtual void bind();
     virtual void unbind();
 
-    void setManager(FGAIManager* mgr);
+    void setManager(FGAIManager* mgr, SGPropertyNode* p);
     void setPath( const char* model );
     void setSpeed( double speed_KTAS );
     void setAltitude( double altitude_ft );
@@ -182,8 +182,9 @@ public:
     static bool _isNight();
 };
 
-inline void FGAIBase::setManager(FGAIManager* mgr) {
+inline void FGAIBase::setManager(FGAIManager* mgr, SGPropertyNode* p) {
   manager = mgr;
+  props = p;
 }
 
 inline void FGAIBase::setPath(const char* model ) {

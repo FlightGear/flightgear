@@ -36,6 +36,8 @@
 FGAIManager::FGAIManager() {
   _dt = 0.0;
   mNumAiModels = 0;
+  for (unsigned i = 0; i < FGAIBase::MAX_OBJECTS; ++i)
+    mNumAiTypeModels[i] = 0;
 }
 
 FGAIManager::~FGAIManager() {
@@ -112,6 +114,7 @@ void FGAIManager::update(double dt) {
     if ((*ai_list_itr)->getDie()) {      
       tmgr->release((*ai_list_itr)->getID());
       --mNumAiModels;
+      --(mNumAiTypeModels[(*ai_list_itr)->getType()]);
       (*ai_list_itr)->unbind();
       ai_list_itr = ai_list.erase(ai_list_itr);
     } else {
@@ -131,9 +134,14 @@ void FGAIManager::update(double dt) {
 void
 FGAIManager::attach(SGSharedPtr<FGAIBase> model)
 {
-  model->setManager(this);
+  unsigned idx = mNumAiTypeModels[model->getType()];
+  const char* typeString = model->getTypeString();
+  SGPropertyNode* root = globals->get_props()->getNode("ai/models", true);
+  SGPropertyNode* p = root->getNode(typeString, idx, true);
+  model->setManager(this, p);
   ai_list.push_back(model);
   ++mNumAiModels;
+  ++(mNumAiTypeModels[model->getType()]);
   model->init();
   model->bind();
 }
@@ -144,6 +152,7 @@ void FGAIManager::destroyObject( int ID ) {
   while(ai_list_itr != ai_list.end()) {
     if ((*ai_list_itr)->getID() == ID) {
       --mNumAiModels;
+      --(mNumAiTypeModels[(*ai_list_itr)->getType()]);
       (*ai_list_itr)->unbind();
       ai_list_itr = ai_list.erase(ai_list_itr);
     } else

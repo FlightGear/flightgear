@@ -110,6 +110,7 @@ public:
 private:
 
     bool enabled;
+    int mNumAiTypeModels[FGAIBase::MAX_OBJECTS];
     int mNumAiModels;
 
     SGPropertyNode* root;

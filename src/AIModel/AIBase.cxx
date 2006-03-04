@@ -76,7 +76,7 @@ FGAIBase::~FGAIBase() {
     if (props) {
       SGPropertyNode* parent = props->getParent();
       if (parent)
-        parent->removeChild(props->getName(), props->getIndex());
+        parent->removeChild(props->getName(), props->getIndex(), false);
     }
     delete fp;
     fp = 0;
@@ -120,12 +120,6 @@ void FGAIBase::Transform() {
 
 
 bool FGAIBase::init() {
-
-   SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
-
-   unsigned index = root->getChildren(getTypeString()).size();
-
-   props = root->getNode(getTypeString(), index, true);
 
    if (!model_path.empty()) {
      try {
