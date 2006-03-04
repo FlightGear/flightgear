@@ -1353,6 +1353,49 @@ do_save_xml_from_proptree(const SGPropertyNode * node)
     return true;
 }
 
+static bool
+do_press_cockpit_button (const SGPropertyNode *arg)
+{
+  const char *prefix = arg->getStringValue("prefix");
+
+  if (arg->getBoolValue("guarded") && fgGetDouble((string(prefix) + "-guard").c_str()) < 1)
+    return true;
+
+  string prop = string(prefix) + "-button";
+  double value;
+
+  if (arg->getBoolValue("latching"))
+    value = fgGetDouble(prop.c_str()) > 0 ? 0 : 1;
+  else
+    value = 1;
+
+  fgSetDouble(prop.c_str(), value);
+  fgSetBool(arg->getStringValue("discrete"), value > 0);
+
+  return true;
+}
+
+static bool
+do_release_cockpit_button (const SGPropertyNode *arg)
+{
+  const char *prefix = arg->getStringValue("prefix");
+
+  if (arg->getBoolValue("guarded")) {
+    string prop = string(prefix) + "-guard";
+    if (fgGetDouble(prop.c_str()) < 1) {
+      fgSetDouble(prop.c_str(), 1);
+      return true;
+    }
+  }
+
+  if (! arg->getBoolValue("latching")) {
+    fgSetDouble((string(prefix) + "-button").c_str(), 0);
+    fgSetBool(arg->getStringValue("discrete"), false);
+  }
+
+  return true;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
@@ -1419,6 +1462,8 @@ static struct {
     { "hud-init2", do_hud_init2 },
     { "loadxml", do_load_xml_to_proptree},
     { "savexml", do_save_xml_from_proptree },    
+    { "press-cockpit-button", do_press_cockpit_button },
+    { "release-cockpit-button", do_release_cockpit_button },
     { 0, 0 }			// zero-terminated
 };
 

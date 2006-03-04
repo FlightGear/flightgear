@@ -26,7 +26,7 @@ libInstrumentation_a_SOURCES = \
         vertical_speed_indicator.cxx vertical_speed_indicator.hxx \
 	inst_vertical_speed_indicator.cxx inst_vertical_speed_indicator.hxx \
 	od_gauge.hxx od_gauge.cxx wxradar.hxx wxradar.cxx \
-	tacan.cxx tacan.hxx \
+	tacan.cxx tacan.hxx mk_viii.cxx mk_viii.hxx \
 	dclgps.cxx dclgps.hxx \
 	render_area_2d.cxx render_area_2d.hxx	
 

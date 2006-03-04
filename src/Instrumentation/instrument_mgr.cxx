@@ -43,6 +43,7 @@
 #include "od_gauge.hxx"
 #include "wxradar.hxx"
 #include "tacan.hxx" 
+#include "mk_viii.hxx"
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
@@ -165,6 +166,9 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "tacan" ) { 
             set_subsystem( "instrument" + temp.str(), 
                            new TACAN( node ) );
+        } else if ( name == "mk-viii" ) { 
+            set_subsystem( "instrument" + temp.str(), 
+                           new MK_VIII( node ) );
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
                     << name );
