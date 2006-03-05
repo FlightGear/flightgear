@@ -37,6 +37,8 @@ public:
 	void CrsrPressed();
 	void EntPressed();
 	void ClrPressed();
+	void Knob1Left1();
+	void Knob1Right1();
 	void Knob2Left1();
 	void Knob2Right1();
 	

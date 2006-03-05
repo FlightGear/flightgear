@@ -468,10 +468,17 @@ void KLN89AptPage::Update(double dt) {
 }
 
 void KLN89AptPage::SetId(const string& s) {
+	if(s != _apt_id || s != _last_apt_id) {
+		UpdateAirport(s);	// If we don't do this here we break things if s is the same as the current ID since the update wouldn't get called then.
+		/*
+			DCL: Hmmm - I wrote the comment above, but I don't quite understand it!
+			I'm not quite sure why I don't simply set _apt_id here (and NOT _last_apt_id)
+			and let the logic in Update(...) handle the airport details cache update.
+		*/
+	}
 	_last_apt_id = _apt_id;
 	_save_apt_id = _apt_id;
 	_apt_id = s;
-	UpdateAirport(s);	// If we don't do this here we break things if s is the same as the current ID since the update wouldn't get called then.
 }
 
 // Update the cached airport details
@@ -535,7 +542,16 @@ void KLN89AptPage::UpdateAirport(const string& id) {
 	if(itr != _kln89->_np_iap.end()) {
 		_iaps = itr->second;
 	}
-	if(_subPage == 7) _maxULinePos = 4 + _iaps.size();	// We shouldn't need to check the crsr for out-of-bounds here since we only update the airport details when the airport code is changed - ie. _uLinePos <= 4!
+	if(_subPage == 7) { 
+		if(_iafDialog || _addDialog || _replaceDialog) {
+			// Eek - major logic error if an airport details cache update occurs
+			// with one of these dialogs active.
+			// TODO - output a warning.
+			//cout << "HELP!!!!!!!!!!\n";
+		} else {
+			_maxULinePos = 4 + _iaps.size();	// We shouldn't need to check the crsr for out-of-bounds here since we only update the airport details when the airport code is changed - ie. _uLinePos <= 4!
+		}
+	}
 }
 
 void KLN89AptPage::CrsrPressed() {
@@ -617,16 +633,13 @@ void KLN89AptPage::ClrPressed() {
 }
 
 void KLN89AptPage::EntPressed() {
-	//cout << "A\n"
 	if(_entInvert) {
 		_entInvert = false;
 		_last_apt_id = _apt_id;
 		_apt_id = _save_apt_id;
 	} else if(_subPage == 7 && _kln89->_mode == KLN89_MODE_CRSR && _uLinePos > 0) {
-		//cout << "B\n";
 		// We are selecting an approach
 		if(_iafDialog) {
-			//cout << "C\n";
 			if(_uLinePos > 0) {
 				// Record the IAF that was picked
 				if(_uLinePos == 3) {

@@ -107,6 +107,18 @@ void KLN89ActPage::ClrPressed() {
 	}
 }
 
+void KLN89ActPage::Knob1Left1() {
+	if(_actPage) {
+		_actPage->Knob1Left1();
+	}
+}
+
+void KLN89ActPage::Knob1Right1() {
+	if(_actPage) {
+		_actPage->Knob1Right1();
+	}
+}
+
 void KLN89ActPage::Knob2Left1() {
 	if((_kln89->_mode != KLN89_MODE_CRSR) && (_actPage)) {
 		_actPage->Knob2Left1();
