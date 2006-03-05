@@ -561,33 +561,50 @@ void DCLGPS::init() {
 	iap->_MAP.clear();
 	// -------
 	wp = new GPSWaypoint;
-	wp->id = "PATYY";
+	wp->id = "MAXNI";
 	// Nasty using the find any function here, but it saves converting data from FGFix etc. 
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAF;
-	iap->_IAF.push_back(wp);
+	fp = FindFirstById(wp->id, multi, true);
+	if(fp) {
+		*wp = *fp;
+		wp->appType = GPS_IAF;
+		iap->_IAF.push_back(wp);
+	}
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "PATYY";
+	fp = FindFirstById(wp->id, multi, true);
+	if(fp) {
+		*wp = *fp;
+		wp->appType = GPS_IAF;
+		iap->_IAF.push_back(wp);
+	}
 	// -------
 	wp = new GPSWaypoint;
 	wp->id = "TRACY";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAF;
-	iap->_IAF.push_back(wp);
+	fp = FindFirstById(wp->id, multi, true);
+	if(fp) {
+		*wp = *fp;
+		wp->appType = GPS_IAF;
+		iap->_IAF.push_back(wp);
+	}
 	// -------
 	wp = new GPSWaypoint;
 	wp->id = "TRACY";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAP;
-	iap->_IAP.push_back(wp);
+	fp = FindFirstById(wp->id, multi, true);
+	if(fp) {
+		*wp = *fp;
+		wp->appType = GPS_IAP;
+		iap->_IAP.push_back(wp);
+	}
 	// -------
 	wp = new GPSWaypoint;
 	wp->id = "BABPI";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_FAF;
-	iap->_IAP.push_back(wp);
+	fp = FindFirstById(wp->id, multi, true);
+	if(fp) {
+		*wp = *fp;
+		wp->appType = GPS_FAF;
+		iap->_IAP.push_back(wp);
+	}
 	// -------
 	wp = new GPSWaypoint;
 	wp->id = "AMOSY";
