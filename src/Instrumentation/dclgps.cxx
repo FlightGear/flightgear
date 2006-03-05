@@ -859,9 +859,9 @@ void DCLGPS::update(double dt) {
 						// Do nothing
 					} else if(_activeWaypoint.appType == GPS_MAP) {
 						// Don't sequence beyond the missed approach point
-						cout << "ACTIVE WAYPOINT is MAP - not sequencing!!!!!\n";
+						//cout << "ACTIVE WAYPOINT is MAP - not sequencing!!!!!\n";
 					} else {
-						cout << "Sequencing...\n";
+						//cout << "Sequencing...\n";
 						_fromWaypoint = _activeWaypoint;
 						_activeWaypoint = *_activeFP->waypoints[idx + 1];
 						_dto = false;
