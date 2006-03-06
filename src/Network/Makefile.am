@@ -18,6 +18,7 @@ libNetwork_a_SOURCES = \
 	ATC-Outputs.cxx ATC-Outputs.hxx \
 	atlas.cxx atlas.hxx \
 	garmin.cxx garmin.hxx \
+	lfsglass.cxx lfsglass.hxx lfsglass_data.hxx \
         httpd.cxx httpd.hxx \
         $(JPEG_SERVER) \
 	joyclient.cxx joyclient.hxx \
