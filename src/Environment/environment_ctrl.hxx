@@ -240,7 +240,7 @@ private:
      */
     MetarThread* thread;
 
-
+    void thread_stop();
 #endif // ENABLE_THREADS
 
     int _error_count;

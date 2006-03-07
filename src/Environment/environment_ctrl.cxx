@@ -344,8 +344,7 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
 FGMetarEnvironmentCtrl::~FGMetarEnvironmentCtrl ()
 {
 #if defined(ENABLE_THREADS)
-   thread->cancel();
-   thread->join();
+   thread_stop();
 #endif // ENABLE_THREADS
 
    delete env;
@@ -590,8 +589,7 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
 #if defined(ENABLE_THREADS)
         if (_error_count++ >= 3) {
            SG_LOG( SG_GENERAL, SG_WARN, "Stop fetching data permanently.");
-           thread->cancel();
-           thread->join();
+           thread_stop();
         }
 #endif
 
@@ -708,11 +706,20 @@ FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
 
 #if defined(ENABLE_THREADS)
 void
+FGMetarEnvironmentCtrl::thread_stop()
+{
+    request_queue.push( string() );	// ask thread to terminate
+    thread->join();
+}
+
+void
 FGMetarEnvironmentCtrl::MetarThread::run()
 {
     while ( true )
     {
         string icao = fetcher->request_queue.pop();
+        if (icao.empty())
+            return;
         SG_LOG( SG_GENERAL, SG_INFO, "Thread: fetch metar data = " << icao );
         FGMetarResult result = fetcher->fetch_data( icao );
         fetcher->result_queue.push( result );
