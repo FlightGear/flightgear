@@ -7,6 +7,7 @@
 #include <stdlib.h>		// atof()
 
 #include <Input/input.hxx>
+#include <Scripting/NasalSys.hxx>
 
 #include "dialog.hxx"
 #include "new_gui.hxx"
@@ -324,6 +325,17 @@ FGDialog::FGDialog (SGPropertyNode * props)
       _gui((NewGUI *)globals->get_subsystem("gui")),
       _props(props)
 {
+    _module = string("__dlg:") + props->getStringValue("name", "[unnamed]");
+    SGPropertyNode *nasal = props->getNode("nasal");
+    if (nasal) {
+        _nasal_close = nasal->getNode("close");
+        SGPropertyNode *open = nasal->getNode("open");
+        if (open) {
+            const char *s = open->getStringValue();
+            FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+            nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s));
+        }
+    }
     display(props);
 }
 
@@ -333,6 +345,14 @@ FGDialog::~FGDialog ()
     _object->getAbsolutePosition(&x, &y);
     _props->setIntValue("lastx", x);
     _props->setIntValue("lasty", y);
+
+    FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+    if (_nasal_close) {
+        const char *s = _nasal_close->getStringValue();
+        nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s));
+    }
+    nas->deleteModule(_module.c_str());
+
     puDeleteObject(_object);
 
     unsigned int i;
@@ -726,6 +746,10 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
             SGPropertyNode *binding;
             while (dest->getChild("binding", j))
                 j++;
+
+            const char *cmd = bindings[i]->getStringValue("command");
+            if (!strcmp(cmd, "nasal") && _module[0])
+                bindings[i]->setStringValue("module", _module.c_str());
 
             binding = dest->getChild("binding", j, true);
             copyProperties(bindings[i], binding);

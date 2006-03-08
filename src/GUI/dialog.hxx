@@ -150,6 +150,10 @@ private:
     // last position.
     SGPropertyNode_ptr _props;
 
+    // Nasal module.
+    string _module;
+    SGPropertyNode_ptr _nasal_close;
+
     // PUI provides no way for userdata to be deleted automatically
     // with a GUI object, so we have to keep track of all the special
     // data we allocated and then free it manually when the dialog
