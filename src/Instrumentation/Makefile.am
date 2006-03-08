@@ -30,4 +30,4 @@ libInstrumentation_a_SOURCES = \
 	dclgps.cxx dclgps.hxx \
 	render_area_2d.cxx render_area_2d.hxx	
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_builddir)/src
