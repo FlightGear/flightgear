@@ -54,6 +54,8 @@ public:
     void createModule(const char* moduleName, const char* fileName,
                     const char* src, int len);
 
+    void deleteModule(const char* moduleName);
+
 private:
     friend class FGNasalScript;
     friend class FGNasalListener;
@@ -101,6 +103,7 @@ private:
     public: void handleTimer(NasalTimer* t);
 };
 
+
 class FGNasalScript {
 public:
     ~FGNasalScript() { _nas->gcRelease(_gcKey); }
@@ -117,6 +120,7 @@ private:
     int _gcKey;
     FGNasalSys* _nas;
 };
+
 
 class FGNasalListener : public SGPropertyChangeListener {
 public:

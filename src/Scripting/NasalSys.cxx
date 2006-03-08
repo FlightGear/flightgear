@@ -500,6 +500,15 @@ void FGNasalSys::createModule(const char* moduleName, const char* fileName,
     hashset(_globals, moduleName, locals);
 }
 
+void FGNasalSys::deleteModule(const char* moduleName)
+{
+    naRef modname = naNewString(_context);
+    naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
+    naModLock();
+    naHash_delete(_globals, modname);
+    naModUnlock();
+}
+
 naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
 {
     int errLine = -1;
