@@ -533,12 +533,13 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     naRef code = parse(arg->getPath(true), nasal, strlen(nasal));
     if(naIsNil(code)) return false;
 
+    naContext c = naNewContext();
     naRef locals = naNil();
-    if (moduleName[0]) {
-        naRef modname = naNewString(_context);
+    if(moduleName[0]) {
+        naRef modname = naNewString(c);
         naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
         if(!naHash_get(_globals, modname, &locals))
-            locals = naNewHash(_context);
+            locals = naNewHash(c);
     }
     // Cache the command argument for inspection via cmdarg().  For
     // performance reasons, we won't bother with it if the invoked
@@ -546,10 +547,15 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     _cmdArg = (SGPropertyNode*)arg;
 
     // Call it!
-    naRef result = naCall(_context, code, 0, 0, naNil(), locals);
-    if(!naGetError(_context)) return true;
-    logError(_context);
-    return false;
+    naModUnlock();
+    naRef result = naCall(c, code, 0, 0, naNil(), locals);
+    naModLock();
+    bool error = naGetError(c);
+    if(error)
+       logError(c);
+
+    naFreeContext(c);
+    return !error;
 }
 
 // settimer(func, dt, simtime) extension function.  The first argument
