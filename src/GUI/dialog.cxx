@@ -748,7 +748,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
                 j++;
 
             const char *cmd = bindings[i]->getStringValue("command");
-            if (!strcmp(cmd, "nasal") && _module[0])
+            if (!strcmp(cmd, "nasal"))
                 bindings[i]->setStringValue("module", _module.c_str());
 
             binding = dest->getChild("binding", j, true);
