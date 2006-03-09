@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 # FlightGear METAR proxy server
-# Melchior FRANZ (c) 2005, <mfranz@aon.at>, GPL V2
+# Melchior FRANZ (c) 2005, <mfranz # aon : at>, GPL V2
 # $Id$
 #
 # typical use
@@ -109,7 +109,7 @@ sub parse_options()
 		return $ARGV[0];
 	}
 	my $mode = 4;
-	unshift @ARGV, split / /, $ENV{'METARPROXY'} if defined $ENV{'METARPROXY'};
+	unshift @ARGV, split /\s+/, $ENV{'METARPROXY'} if defined $ENV{'METARPROXY'};
 	while (1) {
 		$_ = $ARGV[0];
 		defined $_ or last;

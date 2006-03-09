@@ -88,11 +88,11 @@ systems, and is, for instance, used by the lynx browser), or none if
 unset. To set a particular proxy server for HTTP download, use one of
 these methods:
 
-- set http_proxy globally:     EXPORT http_proxy=http://localhost:3128/
+- set http_proxy globally:     export http_proxy=http://localhost:3128/
 - or on the command line:      $ http_proxy=http://localhost:3128/ metarproxy
 - unset http_proxy:            $ http_proxy= metarproxy
 - use the command line option: $ metarproxy --proxy=http://localhost:3128/
-- set the option globally:     EXPORT METARPROXY="-yhttp://localhost:3128"
+- set the option globally:     export METARPROXY="-yhttp://localhost:3128"
 
 
 
@@ -277,5 +277,5 @@ stations:
 
 
 $Id$
-Melchior FRANZ <mfranz@aon.at>, 2005/1/24
+Melchior FRANZ <mfranz # aon : at>, 2005/1/24
 
