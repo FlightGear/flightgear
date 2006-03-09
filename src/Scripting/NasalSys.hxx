@@ -6,8 +6,6 @@
 #include <simgear/nasal/nasal.h>
 #include <simgear/scene/model/model.hxx>
 
-#include <Main/globals.hxx>
-
 #include <map>
 SG_USING_STD(map);
 

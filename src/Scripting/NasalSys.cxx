@@ -669,9 +669,9 @@ naRef FGNasalSys::removeListener(int argc, naRef* args)
 
 
 // FGNasalModelData class.  If sgLoad3DModel() is called with a pointer to
-// such a class, then the modelLoaded() function is executed by the loader,
-// and the destructor when the model branch is removed from the scene graph.
-// They are used for calling a model's <load> and <unload> scripts.
+// such a class, then it lets modelLoaded() run the <load> script, and the
+// destructor the <unload> script. The latter happens when the model branch
+// is removed from the scene graph.
 
 void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
                                    ssgBranch *)
