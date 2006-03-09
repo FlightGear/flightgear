@@ -697,8 +697,11 @@ FGNasalModelData::~FGNasalModelData()
         return;
 
     FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
-    if (!nas)
+    if (!nas) {
+        SG_LOG(SG_NASAL, SG_ALERT, "Trying to run an <unload> script "
+                "without Nasal subsystem present.");
         return;
+    }
 
     if (_unload) {
         const char *s = _unload->getStringValue();
