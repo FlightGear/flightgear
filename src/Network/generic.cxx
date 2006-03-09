@@ -133,7 +133,7 @@ bool FGGeneric::parse_message() {
     double val;
     int i = -1;
 
-    while ((++i < _in_message.size()) &&
+    while ((++i < (int)_in_message.size()) &&
            p1 && strcmp(p1, line_separator.c_str())) {
 
         p2 = strstr(p1, var_separator.c_str());
