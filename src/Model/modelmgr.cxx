@@ -18,6 +18,7 @@
 
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
+#include <Scripting/NasalSys.hxx>
 
 
 #include "modelmgr.hxx"
@@ -56,7 +57,7 @@ FGModelMgr::init ()
                          node->getStringValue("path",
                                               "Models/Geometry/glider.ac"),
                          globals->get_props(),
-                         globals->get_sim_time_sec() );
+                         globals->get_sim_time_sec(), 0, new FGNasalModelData );
     model->init( object );
 
 				// Set position and orientation either

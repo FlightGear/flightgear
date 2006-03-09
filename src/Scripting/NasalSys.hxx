@@ -4,6 +4,9 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/nasal/nasal.h>
+#include <simgear/scene/model/model.hxx>
+
+#include <Main/globals.hxx>
 
 #include <map>
 SG_USING_STD(map);
@@ -149,6 +152,18 @@ private:
     naRef _handler;
     int _gcKey;
     FGNasalSys* _nas;
+};
+
+
+class FGNasalModelData : public SGModelData {
+public:
+    FGNasalModelData() : _unload(0) {}
+    ~FGNasalModelData();
+    void modelLoaded(const string& path, SGPropertyNode *prop, ssgBranch *);
+
+private:
+    string _module;
+    SGPropertyNode_ptr _unload;
 };
 
 #endif // __NASALSYS_HXX

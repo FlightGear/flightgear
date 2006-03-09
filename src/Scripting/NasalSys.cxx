@@ -666,3 +666,42 @@ naRef FGNasalSys::removeListener(int argc, naRef* args)
     return naNum(_listener.size());
 }
 
+
+
+// FGNasalModelData class.  If sgLoad3DModel() is called with a pointer to
+// such a class, then the modelLoaded() function is executed by the loader,
+// and the destructor when the model branch is removed from the scene graph.
+// They are used for calling a model's <load> and <unload> scripts.
+
+void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
+                                   ssgBranch *)
+{
+    SGPropertyNode *n = prop->getNode("nasal"), *load;
+    if (!n)
+        return;
+
+    load = n->getNode("load");
+    _unload = n->getNode("unload");
+    if (!load && !_unload)
+        return;
+
+    _module = path;
+    const char *s = load ? load->getStringValue() : "";
+    FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+    nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s));
+}
+
+FGNasalModelData::~FGNasalModelData()
+{
+    if (_module.empty())
+        return;
+
+    FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+    if (_unload) {
+        const char *s = _unload->getStringValue();
+        nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s));
+    }
+    nas->deleteModule(_module.c_str());
+}
+
+

@@ -40,6 +40,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewer.hxx>
+#include <Scripting/NasalSys.hxx>
 
 #include "newcache.hxx"
 #include "scenery.hxx"
@@ -316,7 +317,9 @@ void FGTileMgr::update_queues()
                         globals->get_model_lib()->load_model( ".",
                                                   dm->get_model_path(),
                                                   globals->get_props(),
-                                                  globals->get_sim_time_sec() );
+                                                  globals->get_sim_time_sec(),
+                                                  dm->get_cache_state(),
+                                                  new FGNasalModelData );
                     if ( obj_model != NULL ) {
                         dm->get_obj_trans()->addKid( obj_model );
                         shadows->addOccluder( (ssgBranch *) obj_model->getParent(0),

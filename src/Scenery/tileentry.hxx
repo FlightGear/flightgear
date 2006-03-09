@@ -25,9 +25,9 @@
 #define _TILEENTRY_HXX
 
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
-#endif                                   
+#endif
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -78,24 +78,27 @@ private:
     FGTileEntry *tile;
     ssgSharedPtr<ssgTransform> obj_trans;
     SGBucket bucket;
+    bool cache_obj;
 
 
 public:
 
     inline FGDeferredModel() { }
     inline FGDeferredModel( const string& mp, const string& tp, SGBucket b,
-		     FGTileEntry *t, ssgTransform *ot )
+		     FGTileEntry *t, ssgTransform *ot, bool co )
     {
 	model_path = mp;
 	texture_path = tp;
         bucket = b;
 	tile = t;
 	obj_trans = ot;
+	cache_obj = co;
     }
     inline ~FGDeferredModel() { }
     inline const string& get_model_path() const { return model_path; }
     inline const string& get_texture_path() const { return texture_path; }
     inline const SGBucket& get_bucket() const { return bucket; }
+    inline const bool get_cache_state() const { return cache_obj; }
     inline FGTileEntry *get_tile() const { return tile; }
     inline ssgTransform *get_obj_trans() const { return obj_trans; }
 };

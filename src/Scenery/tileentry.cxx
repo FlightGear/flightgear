@@ -876,7 +876,8 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
                 = new FGDeferredModel( custom_path.str(),
                                        obj->path.str(),
                                        tile_bucket,
-                                       this, obj_trans );
+                                       this, obj_trans,
+                                       obj->type == OBJECT_SHARED );
             FGTileMgr::model_ready( dm );
 
 
