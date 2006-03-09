@@ -305,11 +305,11 @@ NewGUI::setStyle (void)
 
     //puSetDefaultStyle();
 
-    int which = fgGetInt("/sim/current-gui", 0);
-    SGPropertyNode *sim = globals->get_props()->getNode("sim");
-    SGPropertyNode *n = sim->getChild("gui", which);
+    int which = fgGetInt("/sim/gui/current-style", 0);
+    SGPropertyNode *sim = globals->get_props()->getNode("sim/gui");
+    SGPropertyNode *n = sim->getChild("style", which);
     if (!n)
-        n = sim->getChild("gui", 0, true);
+        n = sim->getChild("style", 0, true);
 
     setupFont(n->getNode("fonts/gui", true));
     n = n->getNode("colors", true);
