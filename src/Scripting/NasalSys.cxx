@@ -697,6 +697,9 @@ FGNasalModelData::~FGNasalModelData()
         return;
 
     FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+    if (!nas)
+        return;
+
     if (_unload) {
         const char *s = _unload->getStringValue();
         nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s));
