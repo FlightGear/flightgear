@@ -39,6 +39,7 @@
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
+#include <Scripting/NasalSys.hxx>
 
 
 #include "AIBase.hxx"
@@ -162,7 +163,8 @@ ssgBranch * FGAIBase::load3DModel(const string& fg_root,
       model = sgLoad3DModel(fg_root,
 			    path,
 			    prop_root,
-			    sim_time_sec);
+			    sim_time_sec, 0,
+			    new FGNasalModelData);
       manager->setModel(path, model);
     }
   
