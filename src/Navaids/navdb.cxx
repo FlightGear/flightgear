@@ -122,8 +122,8 @@ bool fgNavDBInit( FGAirportList *airports,
         {
             // Marker Beacon = 7,8,9
             mkrlist->add( r );
-        } else if ( r->get_type() == 12 ) {
-            // DME=12
+        } else if ( r->get_type() == 12 || r->get_type() == 13) {
+            // DME with ILS=12; standalone DME=13
             string str1( r->get_name() );
             unsigned int loc1= str1.find( "TACAN", 0 );
             unsigned int loc2 = str1.find( "VORTAC", 0 );
