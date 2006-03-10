@@ -28,6 +28,13 @@ static fgKeyHandler KeyHandler = 0;
 static fgMouseClickHandler MouseClickHandler = 0;
 static fgMouseMotionHandler MouseMotionHandler = 0;
 
+// We need to flush all pending mouse move events past a mouse warp to avoid
+// a race condition ending in warping twice and having huge increments for the
+// second warp.
+// I am not aware of such a flush function in glut. So we emulate that by
+// ignoring mouse move events between a warp mouse and the next frame.
+static bool mouseWarped = false;
+
 void fgRegisterIdleHandler(fgIdleHandler func)
 {
     IdleHandler = func;
@@ -75,6 +82,8 @@ static void callKeyHandler(int k, int mods, int x, int y)
 
 static void GLUTmotion (int x, int y)
 {
+    if (mouseWarped)
+        return;
     if(MouseMotionHandler) (*MouseMotionHandler)(x, y);
 }
 
@@ -111,12 +120,14 @@ static void GLUTkey(unsigned char k, int x, int y)
 static void GLUTidle()
 {
     if(IdleHandler) (*IdleHandler)();
+    mouseWarped = false;
 }
 
 static void GLUTdraw()
 {
     if(DrawHandler) (*DrawHandler)();
     glutSwapBuffers();
+    mouseWarped = false;
 }
 
 static void GLUTreshape(int w, int h)
@@ -169,6 +180,7 @@ void fgSetMouseCursor(int cursor)
 
 void fgWarpMouse(int x, int y)
 {
+    mouseWarped = true;
     glutWarpPointer(x, y);
 }
 
