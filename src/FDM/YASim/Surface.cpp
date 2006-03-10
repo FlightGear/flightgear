@@ -158,6 +158,13 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
 	return;
     }
 
+    // special case this so the logic below doesn't produce a non-zero
+    // force; should probably have a "no force" flag instead...
+    if(_cx == 0. && _cy == 0. && _cz == 0.) {
+        for(int i=0; i<3; i++) out[i] = torque[i] = 0.;
+        return;
+    }
+
     Math::mul3(1/vel, v, out);
 
     // Convert to the surface's coordinates
