@@ -10,6 +10,7 @@
 class Vector {
 public:
     Vector();
+    ~Vector();
     int   add(void* p);
     void* get(int i);
     void  set(int i, void* p);
@@ -27,6 +28,11 @@ inline Vector::Vector()
     _nelem = 0;
     _sz = 0;
     _array = 0;
+}
+
+inline Vector::~Vector()
+{
+    delete[] _array;
 }
 
 inline int Vector::add(void* p)

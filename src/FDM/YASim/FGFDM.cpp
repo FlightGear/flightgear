@@ -83,6 +83,7 @@ FGFDM::~FGFDM()
     }
     for(i=0; i<_controlProps.size(); i++)
         delete (PropOut*)_controlProps.get(i);
+    delete _turb;
 }
 
 void FGFDM::iterate(float dt)

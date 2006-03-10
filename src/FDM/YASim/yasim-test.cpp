@@ -22,12 +22,13 @@ static const float RAD2DEG = 57.2957795131;
 
 int main(int argc, char** argv)
 {
-    FGFDM fdm;
-    Airplane* a = fdm.getAirplane();
+    FGFDM* fdm = new FGFDM();
+    Airplane* a = fdm->getAirplane();
 
     // Read
     try {
-        readXML(argv[1], fdm);
+        string file = argv[1];
+        readXML(file, *fdm);
     } catch (const sg_exception &e) {
         printf("XML parse error: %s (%s)\n",
                e.getFormattedMessage().c_str(), e.getOrigin().c_str());
@@ -53,4 +54,8 @@ int main(int argc, char** argv)
 
     if(a->getFailureMsg())
         printf("SOLUTION FAILURE: %s\n", a->getFailureMsg());
+
+    delete fdm;
+
+    return 0;
 }

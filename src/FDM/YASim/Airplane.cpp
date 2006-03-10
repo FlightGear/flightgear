@@ -60,14 +60,35 @@ Airplane::~Airplane()
 	delete (Tank*)_tanks.get(i);
     for(i=0; i<_thrusters.size(); i++)
 	delete (ThrustRec*)_thrusters.get(i);
-    for(i=0; i<_gears.size(); i++)
-	delete (GearRec*)_gears.get(i);
+    for(i=0; i<_gears.size(); i++) {
+	GearRec* g = (GearRec*)_gears.get(i);
+        delete g->gear;
+        delete g;
+    }
     for(i=0; i<_surfs.size(); i++)
 	delete (Surface*)_surfs.get(i);    
-    for(i=0; i<_contacts.size(); i++)
-        delete[] (float*)_contacts.get(i);
+    for(i=0; i<_contacts.size(); i++) {
+        ContactRec* c = (ContactRec*)_contacts.get(i);
+        delete c->gear;
+        delete c;
+    }
     for(i=0; i<_solveWeights.size(); i++)
-        delete[] (SolveWeight*)_solveWeights.get(i);
+        delete (SolveWeight*)_solveWeights.get(i);
+    for(i=0; i<_cruiseControls.size(); i++)
+        delete (Control*)_cruiseControls.get(i);
+    for(i=0; i<_approachControls.size(); i++) {
+        Control* c = (Control*)_approachControls.get(i);
+        if(c != &_approachElevator)
+            delete c;
+    }
+    delete _wing;
+    delete _tail;
+    for(i=0; i<_vstabs.size(); i++)
+        delete (Wing*)_vstabs.get(i);
+    for(i=0; i<_weights.size(); i++)
+        delete (WeightRec*)_weights.get(i);
+    for(i=0; i<_rotors.size(); i++)
+        delete (Rotor*)_rotors.get(i);
 }
 
 void Airplane::iterate(float dt)
@@ -415,11 +436,12 @@ void Airplane::setupState(float aoa, float speed, State* s)
 
 void Airplane::addContactPoint(float* pos)
 {
-    float* cp = new float[3];
-    cp[0] = pos[0];
-    cp[1] = pos[1];
-    cp[2] = pos[2];
-    _contacts.add(cp);
+    ContactRec* c = new ContactRec;
+    c->gear = 0;
+    c->p[0] = pos[0];
+    c->p[1] = pos[1];
+    c->p[2] = pos[2];
+    _contacts.add(c);
 }
 
 float Airplane::compileWing(Wing* w)
@@ -595,10 +617,11 @@ void Airplane::compileContactPoints()
 
     int i;
     for(i=0; i<_contacts.size(); i++) {
-        float *cp = (float*)_contacts.get(i);
+        ContactRec* c = (ContactRec*)_contacts.get(i);
 
         Gear* g = new Gear();
-        g->setPosition(cp);
+        c->gear = g;
+        g->setPosition(c->p);
         
         g->setCompression(comp);
         g->setSpring(spring);

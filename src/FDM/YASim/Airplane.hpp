@@ -100,6 +100,7 @@ private:
     struct Control { int control; float val; };
     struct WeightRec { int handle; Surface* surf; };
     struct SolveWeight { bool approach; int idx; float wgt; };
+    struct ContactRec { Gear* gear; float p[3]; };
 
     void runCruise();
     void runApproach();
