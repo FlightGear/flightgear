@@ -912,6 +912,23 @@ static void fgIdleFunction ( void ) {
 }
 
 
+static void upper_case_property(const char *name)
+{
+    SGPropertyNode *p = fgGetNode(name, false);
+    if (!p) {
+        p = fgGetNode(name, true);
+        p->setStringValue("");
+    } else {
+        SGPropertyNode::Type t = p->getType();
+        if (t == SGPropertyNode::NONE || t == SGPropertyNode::UNSPECIFIED)
+            p->setStringValue("");
+        else
+            assert(t == SGPropertyNode::STRING);
+    }
+    p->addChangeListener(new FGMakeUpperCase);
+}
+
+
 // Main top level initialization
 bool fgMainInit( int argc, char **argv ) {
 
@@ -947,6 +964,10 @@ bool fgMainInit( int argc, char **argv ) {
 
     string_list *col = new string_list;
     globals->set_channel_options_list( col );
+
+    upper_case_property("/sim/presets/airport-id");
+    upper_case_property("/sim/presets/runway");
+    upper_case_property("/sim/tower/airport-id");
 
     // Scan the config file(s) and command line options to see if
     // fg_root was specified (ignore all other options for now)

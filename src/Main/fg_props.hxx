@@ -532,5 +532,18 @@ fgTie (const char * name, T * obj, int index,
 }
 
 
+class FGMakeUpperCase : public SGPropertyChangeListener {
+public:
+    void valueChanged(SGPropertyNode *node) {
+        if (node->getType() != SGPropertyNode::STRING)
+            return;
+
+        char *s = (char *)node->getStringValue();
+        for (; *s; s++)
+            *s = toupper(*s);
+    }
+};
+
+
 #endif // __FG_PROPS_HXX
 
