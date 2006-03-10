@@ -60,6 +60,14 @@ Model::Model()
     _ground_cb = new Ground();
     _hook = 0;
     _launchbar = 0;
+
+    _groundEffectSpan = 0;
+    _groundEffect = 0;
+    for(i=0; i<3; i++) _wingCenter[i] = 0;
+
+    _global_ground[0] = 0; _global_ground[1] = 0; _global_ground[2] = 1;
+    _global_ground[3] = -100000;
+
 }
 
 Model::~Model()
