@@ -366,33 +366,40 @@ bool FGAISchedule::update(time_t now)
 	      //	  alt = dep->_elevation+19;
 	      //	}
 
-	      // Fixme: A non-existent model path results in an
-	      // abort, due to an unhandled exeption, in fg main loop.
-              FGAIAircraft *aircraft = new FGAIAircraft(this);
-              aircraft->setPerformance(m_class); //"jet_transport";
-	      aircraft->setCompany(airline); //i->getAirline();
-	      aircraft->setAcType(acType); //i->getAcType();
-              aircraft->setPath(modelPath.c_str());
-              aircraft->setFlightPlan(flightPlanName);
-              aircraft->setLatitude(lat);
-              aircraft->setLongitude(lon);
-              aircraft->setAltitude(i->getCruiseAlt()*100); // convert from FL to feet
-              aircraft->setSpeed(speed);
-              aircraft->setBank(0);
-              aircraft->SetFlightPlan(new FGAIFlightPlan(modelPath, courseToDest, i->getDepartureTime(), dep, 
-                                                         arr,true, radius, i->getCruiseAlt()*100, lat, lon, speed, flightType, acType, airline));
-              aimgr->attach(aircraft);
-	      
-
-	      AIManagerRef = aircraft->getID();
-	      //cerr << "Class: " << m_class << ". acType: " << acType << ". Airline: " << airline << ". Speed = " << speed << ". From " << dep->getId() << " to " << arr->getId() << ". Time Fraction = " << (remainingTimeEnroute/(double) totalTimeEnroute) << endl;
-	      //cerr << "Latitude : " << lat << ". Longitude : " << lon << endl;
-	      //cerr << "Dep      : " << dep->getLatitude()<< ", "<< dep->getLongitude() << endl;
-	      //cerr << "Arr      : " << arr->getLatitude()<< ", "<< arr->getLongitude() << endl;
-	      //cerr << "Time remaining = " << (remainingTimeEnroute/3600.0) << endl;
-	      //cerr << "Total time     = " << (totalTimeEnroute/3600.0) << endl;
-	      //cerr << "Distance remaining = " << distanceToDest*SG_METER_TO_NM << endl;
-	      
+	      // Only allow traffic to be created when the model path exists
+	      SGPath mp(globals->get_fg_root());
+	      mp.append(modelPath);
+	      if (mp.exists()) 
+	      {
+		  FGAIAircraft *aircraft = new FGAIAircraft(this);
+		  aircraft->setPerformance(m_class); //"jet_transport";
+		  aircraft->setCompany(airline); //i->getAirline();
+		  aircraft->setAcType(acType); //i->getAcType();
+		  aircraft->setPath(modelPath.c_str());
+		  aircraft->setFlightPlan(flightPlanName);
+		  aircraft->setLatitude(lat);
+		  aircraft->setLongitude(lon);
+		  aircraft->setAltitude(i->getCruiseAlt()*100); // convert from FL to feet
+		  aircraft->setSpeed(speed);
+		  aircraft->setBank(0);
+		  aircraft->SetFlightPlan(new FGAIFlightPlan(modelPath, courseToDest, i->getDepartureTime(), dep, 
+							     arr,true, radius, i->getCruiseAlt()*100, lat, lon, speed, flightType, acType, airline));
+		  aimgr->attach(aircraft);
+		  
+		  
+		  AIManagerRef = aircraft->getID();
+		  //cerr << "Class: " << m_class << ". acType: " << acType << ". Airline: " << airline << ". Speed = " << speed << ". From " << dep->getId() << " to " << arr->getId() << ". Time Fraction = " << (remainingTimeEnroute/(double) totalTimeEnroute) << endl;
+		  //cerr << "Latitude : " << lat << ". Longitude : " << lon << endl;
+		  //cerr << "Dep      : " << dep->getLatitude()<< ", "<< dep->getLongitude() << endl;
+		  //cerr << "Arr      : " << arr->getLatitude()<< ", "<< arr->getLongitude() << endl;
+		  //cerr << "Time remaining = " << (remainingTimeEnroute/3600.0) << endl;
+		  //cerr << "Total time     = " << (totalTimeEnroute/3600.0) << endl;
+		  //cerr << "Distance remaining = " << distanceToDest*SG_METER_TO_NM << endl;
+		  }
+	      else
+		{
+		  SG_LOG(SG_INPUT, SG_WARN, "TrafficManager: Could not load model " << mp.str());
+		}
 	    }
 	  return true;
     }
