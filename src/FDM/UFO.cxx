@@ -46,7 +46,8 @@ FGUFO::FGUFO( double dt )
     Aileron(0.0),
     Elevator(0.0),
     Elevator_Trim(0.0),
-    Rudder(0.0)
+    Rudder(0.0),
+    Speed_Max(fgGetNode("/engines/engine/speed-max-mps", true))
 {
 //     set_delta_t( dt );
 }
@@ -60,6 +61,8 @@ FGUFO::~FGUFO() {
 // for each subsequent iteration through the EOM
 void FGUFO::init() {
     common_init();
+    if (Speed_Max->getDoubleValue() < 0.01)
+        Speed_Max->setDoubleValue(2000.0);
 }
 
 
@@ -93,7 +96,7 @@ void FGUFO::update( double dt ) {
                + Rudder * (1 - rudder_damp);
 
     // the velocity of the aircraft
-    double velocity = Throttle * 2000; // meters/sec
+    double velocity = Throttle * Speed_Max->getDoubleValue(); // meters/sec
 
     double old_pitch = get_Theta();
     double pitch_rate = SGD_PI_4; // assume I will be pitching up

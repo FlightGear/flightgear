@@ -34,6 +34,8 @@ class FGUFO: public FGInterface {
     double Elevator;
     double Elevator_Trim;
     double Rudder;
+    SGPropertyNode *Speed_Max;
+
 public:
     FGUFO( double dt );
     ~FGUFO();
