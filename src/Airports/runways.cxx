@@ -96,6 +96,11 @@ void FGRunwayList::add( const string& id, const string& rwy_no,
 static string GetReverseRunwayNo(string& rwyno) {	
     // cout << "Original rwyno = " << rwyNo << '\n';
     
+    // Helipads don't have a seperate number per end
+    if(rwyno.size() && (rwyno[0] == 'H' || rwyno[0] == 'h')) {
+	return rwyno;
+    }
+    
     // standardize input number
     string tmp = rwyno.substr(1, 1);
     if (( tmp == "L" || tmp == "R" || tmp == "C" ) || (rwyno.size() == 1)) {
