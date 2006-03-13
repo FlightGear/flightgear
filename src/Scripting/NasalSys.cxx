@@ -387,6 +387,7 @@ void FGNasalSys::init()
         if(file.extension() != "nas") continue;
         loadModule(fullpath, file.base().c_str());
     }
+    ulCloseDir(dir);
 
     // Pull scripts out of the property tree, too
     loadPropertyScripts();
