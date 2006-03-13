@@ -5,7 +5,7 @@
 //
 // Written by David Luff, started 2005.
 //
-// Copyright (C) 2005 - David C Luff - david.luff@nottingham.ac.uk
+// Copyright (C) 2005 - David C Luff:  daveluff --AT-- ntlworld --D0T-- com
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -152,6 +152,22 @@ FGNPIAP::FGNPIAP() {
 FGNPIAP::~FGNPIAP() {
 }
 
+ClockTime::ClockTime() {
+    _hr = 0;
+    _min = 0;
+}
+
+ClockTime::ClockTime(int hr, int min) {
+    while(hr < 0) { hr += 24; }
+    _hr = hr % 24;
+    while(min < 0) { min += 60; }
+    while(min > 60) { min -= 60; }
+	_min = min;
+}
+
+ClockTime::~ClockTime() {
+}
+
 GPSPage::GPSPage(DCLGPS* parent) {
 	_parent = parent;
 	_subPage = 0;
@@ -256,6 +272,10 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 	_departed = false;
 	_departureTimeString = "----";
 	_elapsedTime = 0.0;
+	_powerOnTime.set_hr(0);
+	_powerOnTime.set_min(0);
+	_powerOnTimerSet = false;
+	_alarmSet = false;
 	
 	// Configuration Initialisation
 	// Should this be in kln89.cxx ?
@@ -674,6 +694,20 @@ void DCLGPS::update(double dt) {
 	_checkLon = _gpsLon;
 	_checkLat = _gpsLat;
 	
+	// TODO - check for unit power before running this.
+	if(!_powerOnTimerSet) {
+		SetPowerOnTimer();
+	} 
+	
+	// Check if an alarm timer has expired
+	if(_alarmSet) {
+		if(_alarmTime.hr() == atoi(fgGetString("/instrumentation/clock/indicated-hour"))
+		&& _alarmTime.min() == atoi(fgGetString("/instrumentation/clock/indicated-min"))) {
+			_messageStack.push_back("*Timer Expired");
+			_alarmSet = false;
+		}
+	}
+	
 	if(!_departed) {
 		if(_groundSpeed_kts > 30.0) {
 			_departed = true;
@@ -899,6 +933,23 @@ void DCLGPS::update(double dt) {
 		}
 		*/
 	}
+}
+
+// I don't yet fully understand all the gotchas about where to source time from.
+// This function sets the initial timer before the clock exports properties
+// and the one below uses the clock to be consistent with the rest of the code.
+// It might change soonish...
+void DCLGPS::SetPowerOnTimer() {
+	struct tm *t = globals->get_time_params()->getGmt();
+	_powerOnTime.set_hr(t->tm_hour);
+	_powerOnTime.set_min(t->tm_min);
+	_powerOnTimerSet = true;
+}
+
+void DCLGPS::ResetPowerOnTimer() {
+	_powerOnTime.set_hr(atoi(fgGetString("/instrumentation/clock/indicated-hour")));
+	_powerOnTime.set_min(atoi(fgGetString("/instrumentation/clock/indicated-min")));
+	_powerOnTimerSet = true;
 }
 
 double DCLGPS::GetCDIDeflection() const {

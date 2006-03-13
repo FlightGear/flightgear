@@ -5,7 +5,7 @@
 //
 // Written by David Luff, started 2005.
 //
-// Copyright (C) 2005 - David C Luff - david.luff@nottingham.ac.uk
+// Copyright (C) 2005 - David C Luff:  daveluff --AT-- ntlworld --D0T-- com
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -142,6 +142,40 @@ typedef vector < FGIAP* > iap_list_type;
 typedef map < string, iap_list_type > iap_map_type;
 typedef iap_map_type::iterator iap_map_iterator;
 
+//	A class to encapsulate hr:min representation of time. 
+
+class ClockTime {
+public:
+    ClockTime();
+    ClockTime(int hr, int min);
+    ~ClockTime();
+    inline void set_hr(int hr) { _hr = hr; }
+    inline int hr() const { return(_hr); } 
+    inline void set_min(int min) { _min = min; }
+    inline int min() const { return(_min); }
+    
+    ClockTime operator+ (const ClockTime& t) {
+        int cumMin = _hr * 60 + _min + t.hr() * 60 + t.min();
+        ClockTime t2(cumMin / 60, cumMin % 60);
+        return(t2);
+    }
+    // Operator - has a max difference of 23:59,
+    // and assumes the day has wrapped if the second operand
+    // is larger that the first.
+    // eg. 2:59 - 3:00 = 23:59
+    ClockTime operator- (const ClockTime& t) {
+        int diff = (_hr * 60 + _min) - (t.hr() * 60 + t.min());
+        if(diff < 0) { diff += 24 * 60; }
+        ClockTime t2(diff / 60, diff % 60);
+        return(t2);
+    }
+    friend ostream& operator<< (ostream& out, const ClockTime& t);
+
+private:
+    int _hr;
+    int _min;
+};
+
 // ------------------------------------------------------------------------------
 
 class DCLGPS;
@@ -172,7 +206,7 @@ public:
 	virtual void CleanUp();
 	
 	// The LooseFocus function is called when a page or subpage looses focus
-	// and allow pages to clean up state that is maintained whilst focus is
+	// and allows pages to clean up state that is maintained whilst focus is
 	// retained, but lost on return.
 	virtual void LooseFocus();
 	
@@ -484,6 +518,20 @@ protected:
 	bool _departed;		// Set when groundspeed first exceeds 30kts.
 	string _departureTimeString;	// Ditto.
 	double _elapsedTime;	// Elapsed time in seconds since departure
+	ClockTime _powerOnTime;		// Time (hr:min) of unit power-up.
+	bool _powerOnTimerSet;		// Indicates that we have set the above following power-up.
+	void SetPowerOnTimer();
+public:
+	void ResetPowerOnTimer();
+	// Set the alarm to go off at a given time.
+	inline void SetAlarm(int hr, int min) {
+		_alarmTime.set_hr(hr);
+		_alarmTime.set_min(min);
+		_alarmSet = true;
+	}
+protected:
+	ClockTime _alarmTime;
+	bool _alarmSet;
 	
 	// Configuration that affects flightplan operation
 	bool _turnAnticipationEnabled;
