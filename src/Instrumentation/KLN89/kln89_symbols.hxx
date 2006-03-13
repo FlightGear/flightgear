@@ -2,7 +2,7 @@
 //
 // Written by David Luff, started 2005.
 //
-// Copyright (C) 2005 - David C Luff - david.luff@nottingham.ac.uk
+// Copyright (C) 2005 David C Luff:  daveluff --AT-- ntlworld --D0T-- com
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -131,7 +131,7 @@ const char SpecialChar[][8] = {{0x00, 0x04, 0x0A, 0x04, 0x00, 0x00, 0x00, 0x00},
 							   {0x00, 0x1E, 0x11, 0x11, 0x3F, 0x11, 0x11, 0x1E},   // 6: the barred 'D' of the DTO symbol
 							   {0x00, 0x00, 0x04, 0x0C, 0x1F, 0x0C, 0x04, 0x00}};  // 7: Left pointing arrow.
 							   
-// For small char, the first char is the number of chars horizontally that are used for drawing,
+// For small char, the first char is the number of pixels horizontally that are used for drawing,
 // since these chars are not fixed width.  (Used for the labels in the moving map display).
 // The hex values are referenced from the right-most pixel position, and the chars are 5 pixels high (last 5 chars).
 const char SmallChar[][8] = {{0x03, 0x00, 0x00, 0x07, 0x05, 0x05, 0x05, 0x07},   // 0
