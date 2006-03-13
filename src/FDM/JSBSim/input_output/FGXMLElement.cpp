@@ -407,8 +407,13 @@ void Element::AddAttribute(string name, string value)
 
 void Element::AddData(string d)
 {
-  int string_start = d.find_first_not_of(" ");
-  if (string_start > 0) d.erase(0,string_start-1);
+  int string_end=-1;
+  int string_start = d.find_first_not_of(" \t");
+  if (string_start > 0) {
+    d.erase(0,string_start);
+    string_end = d.find_first_of(" \t");
+    if (string_end > 0) d.erase(string_end,d.size()-string_end);
+  }
   data_lines.push_back(d);
 }
 

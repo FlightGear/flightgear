@@ -162,7 +162,7 @@ double FGFunction::GetValue(void) const
     temp = pow(temp,Parameters[1]->GetValue());
     break;
   case eAbs:
-    temp = abs(temp);
+    temp = fabs(temp);
     break;
   case eSin:
     temp = sin(temp);

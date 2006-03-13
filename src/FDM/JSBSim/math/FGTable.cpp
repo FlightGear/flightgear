@@ -156,6 +156,7 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el) : PropertyManager(prop
 
     while (axisElement) {
       property_string = axisElement->GetDataLine();
+      // The property string passed into GetNode() must have no spaces or tabs.
       node = PropertyManager->GetNode(property_string);
 
       if (node == 0) {

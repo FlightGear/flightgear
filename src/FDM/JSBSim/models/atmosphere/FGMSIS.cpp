@@ -950,7 +950,7 @@ double MSIS::globe7(double *p, struct nrlmsise_input *input,
   /* parms not used: 82, 89, 99, 139-149 */
   tinf = p[30];
   for (i=0;i<14;i++)
-    tinf = tinf + abs(flags->sw[i+1])*t[i];
+    tinf = tinf + fabs(flags->sw[i+1])*t[i];
   return tinf;
 }
 
@@ -1049,7 +1049,7 @@ double MSIS::glob7s(double *p, struct nrlmsise_input *input,
   }
   tt=0;
   for (i=0;i<14;i++)
-    tt+=abs(flags->sw[i+1])*t[i];
+    tt+=fabs(flags->sw[i+1])*t[i];
   return tt;
 }
 

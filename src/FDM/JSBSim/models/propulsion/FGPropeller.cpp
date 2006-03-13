@@ -145,6 +145,8 @@ FGPropeller::~FGPropeller()
   PropertyManager->Untie( property_name );
   snprintf(property_name, 80, "propulsion/engine[%d]/blade-angle", EngineNum);
   PropertyManager->Untie( property_name );
+  snprintf(property_name, 80, "propulsion/engine[%d]/thrust-coefficient", EngineNum);
+  PropertyManager->Untie( property_name );
 
   Debug(1);
 }

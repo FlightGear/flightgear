@@ -169,6 +169,7 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) : Exec(fdmex),
   maxCompLen      = 0.0;
 
   WheelSlip = last_WheelSlip = 0.0;
+  slipIn = last_SlipIn = 0;
   TirePressureNorm = 1.0;
 
   Debug(0);
