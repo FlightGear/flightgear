@@ -604,6 +604,13 @@ FGNavRadio::update(double dt)
         //////////////////////////////////////////////////////////
         // compute the amount of glide slope needle deflection
         // (.i.e. the number of degrees we are off the glide slope * 5.0
+        //
+        // CLO - 13 Mar 2006: The glide slope needle should peg at
+        // +/-0.7 degrees off the ideal glideslope.  I'm not sure why
+        // we compute the factor the way we do (5*gs_error), but we
+        // need to compensate for our 'odd' number in the glideslope
+        // needle animation.  This means that the needle should peg
+        // when this values is +/-3.5.
         //////////////////////////////////////////////////////////
         r = 0.0;
         if ( has_gs && gs_serviceable_node->getBoolValue() ) {
