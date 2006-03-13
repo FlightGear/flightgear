@@ -40,6 +40,7 @@ PistonEngine::PistonEngine(float power, float speed)
     _wastegate = 1;
     _charge = 1;
     _chargeTarget = 1;
+    _turboLag = 2;
 
     // Guess at reasonable values for these guys.  Displacements run
     // at about 2 cubic inches per horsepower or so, at least for
