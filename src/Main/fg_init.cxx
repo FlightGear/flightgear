@@ -516,6 +516,7 @@ static string fgFindAircraftPath( const SGPath &path, const string &aircraft ) {
         exit(-1);
     }
 
+    string result;
     while ((dire = ulReadDir(dirp)) != NULL) {
         if (dire->d_isdir) {
             if ( strcmp("CVS", dire->d_name) && strcmp(".", dire->d_name)
@@ -524,19 +525,18 @@ static string fgFindAircraftPath( const SGPath &path, const string &aircraft ) {
                 SGPath next = path;
                 next.append(dire->d_name);
 
-                string result = fgFindAircraftPath( next, aircraft );
+                result = fgFindAircraftPath( next, aircraft );
                 if ( ! result.empty() ) {
-                    return result;
+                    break;
                 }
             }
         } else if ( !strcmp(dire->d_name, aircraft.c_str()) ) {
-            return path.str();
+            result = path.str();
         }
     }
 
     ulCloseDir(dirp);
-
-    return "";
+    return result;
 }
 
 
