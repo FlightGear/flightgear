@@ -532,6 +532,7 @@ static string fgFindAircraftPath( const SGPath &path, const string &aircraft ) {
             }
         } else if ( !strcmp(dire->d_name, aircraft.c_str()) ) {
             result = path.str();
+            break;
         }
     }
 
