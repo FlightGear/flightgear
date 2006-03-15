@@ -361,6 +361,10 @@ void FGNasalSys::init()
     // Add in the math library under "math"
     hashset(_globals, "math", naMathLib(_context));
 
+    // Add in the IO library.  Disabled currently until after the
+    // 0.9.10 release.
+    // hashset(_globals, "io", naIOLib(_context));
+
     // Add our custom extension functions:
     for(i=0; funcs[i].name; i++)
         hashset(_globals, funcs[i].name,
