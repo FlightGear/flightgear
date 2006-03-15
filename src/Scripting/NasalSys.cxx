@@ -364,6 +364,7 @@ void FGNasalSys::init()
     // Add in the IO library.  Disabled currently until after the
     // 0.9.10 release.
     // hashset(_globals, "io", naIOLib(_context));
+    // hashset(_globals, "bits", naBitsLib(_context));
 
     // Add our custom extension functions:
     for(i=0; funcs[i].name; i++)
