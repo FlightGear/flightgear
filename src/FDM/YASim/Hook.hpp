@@ -44,8 +44,8 @@ public:
     void getForce(float* force, float* off);
     float getCompressFraction(void);
 
-    float Hook::getAngle(void);
-    float Hook::getHookPos(int i);
+    float getAngle(void);
+    float getHookPos(int i);
 
 private:
     float _pos[3];
