@@ -78,7 +78,7 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
     if (!s.empty())
       wire_objects.push_back(s);
   }
-  
+
   props = scFileNode->getChildren("catapult");
   for (it = props.begin(); it != props.end(); ++it) {
     std::string s = (*it)->getStringValue();
@@ -210,7 +210,7 @@ void FGAICarrier::update(double dt) {
 
     UpdateWind(dt);
     UpdateElevator(dt, transition_time);
-
+    UpdateJBD(dt, jbd_transition_time);
     // For the flols reuse some computations done above ...
 
     // The position of the eyepoint - at least near that ...
@@ -275,7 +275,8 @@ bool FGAICarrier::init() {
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
     _altitude_node = fgGetNode("/position/altitude-ft", true);
-    // _elevator_node = fgGetNode("/controls/elevators", true);
+
+    _launchbar_state_node = fgGetNode("/gear/launchbar/state", true);
 
     _surface_wind_from_deg_node =
             fgGetNode("/environment/config/boundary/entry[0]/wind-from-heading-deg", true);
@@ -290,12 +291,14 @@ bool FGAICarrier::init() {
     base_course = hdg;
     base_speed = speed;
 
-    step = 0;
     pos_norm = 0;
     elevators = false;
     transition_time = 150;
     time_constant = 0.005;
-
+    jbd_pos_norm = raw_jbd_pos_norm = 0;
+    jbd = false ;
+    jbd_transition_time = 3;
+    jbd_time_constant = 0.1;
     return true;
 }
 
@@ -344,6 +347,14 @@ void FGAICarrier::bind() {
                 SGRawValuePointer<double>(&transition_time));
     props->tie("controls/elevators-time-constant",
                 SGRawValuePointer<double>(&time_constant));
+    props->tie("controls/jbd",
+        SGRawValuePointer<bool>(&jbd));
+    props->tie("surface-positions/jbd-pos-norm",
+        SGRawValuePointer<double>(&jbd_pos_norm));
+    props->tie("controls/jbd-trans-time-s",
+        SGRawValuePointer<double>(&jbd_transition_time));
+    props->tie("controls/jbd-time-constant",
+        SGRawValuePointer<double>(&jbd_time_constant));
 
     props->setBoolValue("controls/flols/cut-lights", false);
     props->setBoolValue("controls/flols/wave-off-lights", false);
@@ -372,6 +383,11 @@ void FGAICarrier::unbind() {
     props->untie("surface-positions/elevators-pos-norm");
     props->untie("controls/elevators-trans-time-secs");
     props->untie("controls/elevators-time-constant");
+    props->untie("controls/jbd");
+    props->untie("surface-positions/jbd-pos-norm");
+    props->untie("controls/jbd-trans-time-s");
+    props->untie("controls/jbd-time-constant");
+
 }
 
 
@@ -756,33 +772,79 @@ bool FGAICarrier::InToWind() {
 
 void FGAICarrier::UpdateElevator(double dt, double transition_time) {
 
+    double step = 0;
+
     if ((elevators && pos_norm >= 1 ) || (!elevators && pos_norm <= 0 ))
         return;
 
     // move the elevators
     if ( elevators ) {
-        step += dt/transition_time;
+        step = dt/transition_time;
         if ( step > 1 )
             step = 1;
-
     } else {
-        step -= dt/transition_time;
-        if ( step < 0 )
-            step = 0;
+        step = -dt/transition_time;
+        if ( step < -1 )
+            step = -1;
     }
     // assume a linear relationship
-    raw_pos_norm = step;
+    raw_pos_norm += step;
+
+    //low pass filter
+    pos_norm = (raw_pos_norm * time_constant) + (pos_norm * (1 - time_constant));
+
+    //sanitise the output
     if (raw_pos_norm >= 1) {
         raw_pos_norm = 1;
     } else if (raw_pos_norm <= 0) {
         raw_pos_norm = 0;
     }
-
-    //low pass filter
-    pos_norm = (raw_pos_norm * time_constant) + (pos_norm * (1 - time_constant));
     return;
 
 } // end UpdateElevator
+
+void FGAICarrier::UpdateJBD(double dt, double jbd_transition_time) {
+
+    string launchbar_state = _launchbar_state_node->getStringValue();
+    double step = 0;
+
+    if (launchbar_state == "Engaged"){
+        jbd = true;
+    } else {
+        jbd = false;
+    }
+
+    if (( jbd && jbd_pos_norm >= 1 ) || ( !jbd && jbd_pos_norm <= 0 )){
+        return;
+    }
+
+    // move the jbds
+    if ( jbd ) {
+        step = dt/jbd_transition_time;
+        if ( step > 1 )
+            step = 1;
+    } else {
+        step = -dt/jbd_transition_time;
+        if ( step < -1 )
+            step = -1;
+    }
+
+    // assume a linear relationship
+    raw_jbd_pos_norm += step;
+
+    //low pass filter
+    jbd_pos_norm = (raw_jbd_pos_norm * jbd_time_constant) + (jbd_pos_norm * (1 - jbd_time_constant));
+
+    //sanitise the output
+    if (jbd_pos_norm >= 1) {
+        jbd_pos_norm = 1;
+    } else if (jbd_pos_norm <= 0) {
+        jbd_pos_norm = 0;
+    }
+
+    return;
+
+} // end UpdateJBD
 
 
 int FGAICarrierHardware::unique_id = 1;

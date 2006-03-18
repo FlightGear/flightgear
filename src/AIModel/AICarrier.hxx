@@ -176,17 +176,22 @@ private:
     SGPropertyNode_ptr _altitude_node;
     SGPropertyNode_ptr _surface_wind_from_deg_node;
     SGPropertyNode_ptr _surface_wind_speed_node;
-
+    SGPropertyNode_ptr _launchbar_state_node;
     // this is for tacan
 
     string TACAN_channel_id;
 
     // these are for moving the elevators
     void UpdateElevator( double dt, double transition_time);
-    double step;
     double pos_norm, raw_pos_norm;
     double transition_time, time_constant;
     bool elevators;
+
+    // these are for moving the jet blast deflectors
+    void UpdateJBD( double dt, double jbd_transition_time);
+    double jbd_pos_norm, raw_jbd_pos_norm;
+    double jbd_transition_time, jbd_time_constant;
+    bool jbd;
 };
 
 #endif  // _FG_AICARRIER_HXX
