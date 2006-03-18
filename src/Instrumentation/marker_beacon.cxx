@@ -114,6 +114,8 @@ FGMarkerBeacon::init ()
     morse.init();
     beacon.init();
     blink.stamp();
+
+    outer_marker = middle_marker = inner_marker = false;
 }
 
 
