@@ -306,7 +306,7 @@ NewGUI::setStyle (void)
     //puSetDefaultStyle();
 
     int which = fgGetInt("/sim/gui/current-style", 0);
-    SGPropertyNode *sim = globals->get_props()->getNode("sim/gui");
+    SGPropertyNode *sim = globals->get_props()->getNode("sim/gui", true);
     SGPropertyNode *n = sim->getChild("style", which);
     if (!n)
         n = sim->getChild("style", 0, true);
