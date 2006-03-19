@@ -117,7 +117,7 @@ private:
   void createCruise(bool, FGAirport*, FGAirport*, double, double, double, double);
   void createDecent(FGAirport *);
   void createLanding(FGAirport *);
-  void createParking(FGAirport *);
+  void createParking(FGAirport *, double radius);
   void deleteWaypoints(); 
   void resetWaypoints();
 };    

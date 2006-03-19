@@ -297,7 +297,7 @@ void FGAirportDynamics::getParking (int id, double *lat, double* lon, double *he
 	    {
 	      *lat     = i->getLatitude();
 	      *lon     = i->getLongitude();
-	      *heading = i->getLongitude();
+	      *heading = i->getHeading();
 	    }
 	}
     }

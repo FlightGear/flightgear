@@ -124,6 +124,7 @@ public:
   bool next(int *val); 
   
   void first() { currNode = nodes.begin(); };
+  int size() { return nodes.end() - nodes.begin(); };
 };
 
 typedef vector<FGTaxiRoute> TaxiRouteVector;
