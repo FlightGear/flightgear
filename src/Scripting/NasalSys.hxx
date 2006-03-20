@@ -137,7 +137,7 @@ private:
     naRef _handler;
     int _gcKey;
     FGNasalSys* _nas;
-    bool _active;
+    unsigned int _active;
 };
 
 

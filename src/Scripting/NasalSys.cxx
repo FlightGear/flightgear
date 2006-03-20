@@ -682,7 +682,7 @@ FGNasalListener::FGNasalListener(SGPropertyNode_ptr node, naRef handler,
     _handler(handler),
     _gcKey(key),
     _nas(nasal),
-    _active(false)
+    _active(0)
 {
 }
 
@@ -698,7 +698,7 @@ void FGNasalListener::valueChanged(SGPropertyNode* node)
                 "on property " << node->getPath());
         return;
     }
-    _active = true;
+    _active++;
     _nas->_cmdArg = node;
     naContext c = naNewContext();
     naModUnlock();
@@ -707,7 +707,7 @@ void FGNasalListener::valueChanged(SGPropertyNode* node)
     if(naGetError(c))
         _nas->logError(c);
     naFreeContext(c);
-    _active = false;
+    _active--;
 }
 
 
