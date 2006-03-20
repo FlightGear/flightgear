@@ -18,7 +18,6 @@
 SG_USING_STD(vector);
 
 // Don't pull in headers, since we don't need them here.
-class ssgSelector;
 class SGPropertyNode;
 class SGModelPlacement;
 
@@ -48,6 +47,7 @@ public:
     Instance ();
     virtual ~Instance ();
     SGModelPlacement * model;
+    SGPropertyNode_ptr node;
     SGPropertyNode_ptr lon_deg_node;
     SGPropertyNode_ptr lat_deg_node;
     SGPropertyNode_ptr elev_ft_node;
@@ -99,6 +99,7 @@ private:
   public:
     Listener(FGModelMgr *mgr) : _mgr(mgr) {}
     virtual void childAdded (SGPropertyNode * parent, SGPropertyNode * child);
+    virtual void childRemoved (SGPropertyNode * parent, SGPropertyNode * child);
 
   private:
     FGModelMgr * _mgr;
@@ -108,8 +109,6 @@ private:
   Listener * _listener;
 
   vector<Instance *> _instances;
-
-  ssgSharedPtr<ssgSelector> _selector;
 
 };
 

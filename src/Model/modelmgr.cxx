@@ -28,8 +28,7 @@ SG_USING_STD(vector);
 
 FGModelMgr::FGModelMgr ()
   : _models(fgGetNode("/models", true)),
-    _listener(new Listener(this)),
-    _selector(new ssgSelector)
+    _listener(new Listener(this))
 
 {
   _models->addChangeListener(_listener);
@@ -69,6 +68,7 @@ FGModelMgr::add_model (SGPropertyNode * node)
   Instance * instance = new Instance;
   SGModelPlacement *model = new SGModelPlacement;
   instance->model = model;
+  instance->node = node;
   ssgBranch *object
       = sgLoad3DModel( globals->get_fg_root(),
                        node->getStringValue("path",
@@ -198,6 +198,7 @@ FGModelMgr::draw ()
 
 FGModelMgr::Instance::Instance ()
   : model(0),
+    node(0),
     lon_deg_node(0),
     lat_deg_node(0),
     elev_ft_node(0),
@@ -231,6 +232,30 @@ FGModelMgr::Listener::childAdded(SGPropertyNode * parent, SGPropertyNode * child
     _mgr->add_model(parent);
   } catch (const sg_throwable& t) {
     SG_LOG(SG_GENERAL, SG_ALERT, t.getFormattedMessage() << t.getOrigin());
+  }
+}
+
+void
+FGModelMgr::Listener::childRemoved(SGPropertyNode * parent, SGPropertyNode * child)
+{
+  if (strcmp(parent->getName(), "models") || strcmp(child->getName(), "model"))
+    return;
+
+  // search instance by node and remove it from scenegraph
+  vector<Instance *>::iterator it = _mgr->_instances.begin();
+  vector<Instance *>::iterator end = _mgr->_instances.end();
+
+  for (; it != end; ++it) {
+    Instance *instance = *it;
+    if (instance->node != child)
+      continue;
+
+    _mgr->_instances.erase(it);
+    globals->get_scenery()->get_scene_graph()
+        ->removeKid(instance->model->getSceneGraph());
+
+    delete instance;
+    break;
   }
 }
 
