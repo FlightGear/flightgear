@@ -126,23 +126,10 @@ private:
 class FGNasalListener : public SGPropertyChangeListener {
 public:
     FGNasalListener(SGPropertyNode_ptr node, naRef handler,
-            FGNasalSys* nasal, int key)
-        : _node(node), _handler(handler), _gcKey(key), _nas(nasal) {}
+                    FGNasalSys* nasal, int key);
 
-    ~FGNasalListener() {
-        _nas->gcRelease(_gcKey);
-    }
-
-    void valueChanged(SGPropertyNode* node) {
-        _nas->_cmdArg = node;
-        naContext c = naNewContext();
-        naModUnlock();
-        naCall(c, _handler, 0, 0, naNil(), naNil());
-        naModLock();
-        if(naGetError(c))
-            _nas->logError(c);
-        naFreeContext(c);
-    }
+    ~FGNasalListener();
+    void valueChanged(SGPropertyNode* node);
 
 private:
     friend class FGNasalSys;
@@ -150,6 +137,7 @@ private:
     naRef _handler;
     int _gcKey;
     FGNasalSys* _nas;
+    bool _active;
 };
 
 
@@ -161,7 +149,7 @@ public:
 
 private:
     string _module;
-    SGPropertyNode_ptr _unload;
+    SGConstPropertyNode_ptr _unload;
 };
 
 #endif // __NASALSYS_HXX

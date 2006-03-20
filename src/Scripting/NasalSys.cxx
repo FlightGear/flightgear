@@ -674,6 +674,45 @@ naRef FGNasalSys::removeListener(int argc, naRef* args)
 
 
 
+// FGNasalListener class.
+
+FGNasalListener::FGNasalListener(SGPropertyNode_ptr node, naRef handler,
+                                 FGNasalSys* nasal, int key) :
+    _node(node),
+    _handler(handler),
+    _gcKey(key),
+    _nas(nasal),
+    _active(false)
+{
+}
+
+FGNasalListener::~FGNasalListener()
+{
+    _nas->gcRelease(_gcKey);
+}
+
+void FGNasalListener::valueChanged(SGPropertyNode* node)
+{
+    if (_active) {
+        SG_LOG(SG_NASAL, SG_ALERT, "Recursive listener call "
+                "on property " << node->getPath());
+        return;
+    }
+    _active = true;
+    _nas->_cmdArg = node;
+    naContext c = naNewContext();
+    naModUnlock();
+    naCall(c, _handler, 0, 0, naNil(), naNil());
+    naModLock();
+    if(naGetError(c))
+        _nas->logError(c);
+    naFreeContext(c);
+    _active = false;
+}
+
+
+
+
 // FGNasalModelData class.  If sgLoad3DModel() is called with a pointer to
 // such a class, then it lets modelLoaded() run the <load> script, and the
 // destructor the <unload> script. The latter happens when the model branch
