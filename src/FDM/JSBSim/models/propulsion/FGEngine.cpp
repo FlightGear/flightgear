@@ -175,7 +175,10 @@ void FGEngine::ConsumeFuel(void)
       if (Tank->GetContents() > 0.0) ++TanksWithOxidizer;
     }
   }
-  if (TanksWithFuel==0 || (haveOxTanks && TanksWithOxidizer==0)) return;
+  if (TanksWithFuel==0 || (haveOxTanks && TanksWithOxidizer==0)) {
+    Starved = true;
+    return;
+  }
 
   for (i=0; i<SourceTanks.size(); i++) {
     Tank = Propulsion->GetTank(SourceTanks[i]);
