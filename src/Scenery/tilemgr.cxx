@@ -104,8 +104,6 @@ int FGTileMgr::init() {
     loader.reinit();
 #endif
 
-    hit_list.clear();
-
     state = Inited;
 
     previous_bucket.make_bad();

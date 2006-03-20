@@ -41,7 +41,6 @@
 #endif // ENABLE_THREADS
 
 #include "FGTileLoader.hxx"
-#include "hitlist.hxx"
 #include "newcache.hxx"
 
 #if defined(USE_MEM) || defined(WIN32)
@@ -81,8 +80,6 @@ private:
 
     // schedule a needed buckets for loading
     void schedule_needed(double visibility_meters, const SGBucket& curr_bucket);
-
-    FGHitList hit_list;
 
     SGBucket previous_bucket;
     SGBucket current_bucket;
