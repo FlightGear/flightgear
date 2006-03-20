@@ -40,7 +40,7 @@ FGModelMgr::~FGModelMgr ()
   delete _listener;
 
   for (unsigned int i = 0; i < _instances.size(); i++) {
-    globals->get_scenery()->get_models_branch()
+    globals->get_scenery()->get_scene_graph()
       ->removeKid(_instances[i]->model->getSceneGraph());
     delete _instances[i];
   }
