@@ -64,6 +64,8 @@ public:
   virtual void unbind ();
   virtual void update (double dt);
 
+  virtual void add_model (SGPropertyNode * node);
+
   /**
    * Add an instance of a dynamic model to the manager.
    *

@@ -18,7 +18,6 @@
 
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
-#include <Scripting/NasalSys.hxx>
 
 
 #include "modelmgr.hxx"
@@ -45,70 +44,75 @@ FGModelMgr::init ()
 {
   vector<SGPropertyNode_ptr> model_nodes =
     fgGetNode("/models", true)->getChildren("model");
-  for (unsigned int i = 0; i < model_nodes.size(); i++) {
-    SGPropertyNode * node = model_nodes[i];
-    SG_LOG(SG_GENERAL, SG_INFO,
+
+  for (unsigned int i = 0; i < model_nodes.size(); i++)
+    add_model(model_nodes[i]);
+}
+
+void
+FGModelMgr::add_model (SGPropertyNode * node)
+{
+  SG_LOG(SG_GENERAL, SG_INFO,
 	   "Adding model " << node->getStringValue("name", "[unnamed]"));
-    Instance * instance = new Instance;
-    SGModelPlacement *model = new SGModelPlacement;
-    instance->model = model;
-    ssgBranch *object
-        = sgLoad3DModel( globals->get_fg_root(),
-                         node->getStringValue("path",
-                                              "Models/Geometry/glider.ac"),
-                         globals->get_props(),
-                         globals->get_sim_time_sec(), 0, new FGNasalModelData );
-    model->init( object );
+  Instance * instance = new Instance;
+  SGModelPlacement *model = new SGModelPlacement;
+  instance->model = model;
+  ssgBranch *object
+      = sgLoad3DModel( globals->get_fg_root(),
+                       node->getStringValue("path",
+                                            "Models/Geometry/glider.ac"),
+                       globals->get_props(),
+                       globals->get_sim_time_sec() );
+  model->init( object );
 
 				// Set position and orientation either
 				// indirectly through property refs
 				// or directly with static values.
-    SGPropertyNode * child = node->getChild("longitude-deg-prop");
-    if (child != 0)
-      instance->lon_deg_node = fgGetNode(child->getStringValue(), true);
-    else
-      model->setLongitudeDeg(node->getDoubleValue("longitude-deg"));
+  SGPropertyNode * child = node->getChild("longitude-deg-prop");
+  if (child != 0)
+    instance->lon_deg_node = fgGetNode(child->getStringValue(), true);
+  else
+    model->setLongitudeDeg(node->getDoubleValue("longitude-deg"));
 
-    child = node->getChild("latitude-deg-prop");
-    if (child != 0)
-      instance->lat_deg_node = fgGetNode(child->getStringValue(), true);
-    else
-      model->setLatitudeDeg(node->getDoubleValue("latitude-deg"));
+  child = node->getChild("latitude-deg-prop");
+  if (child != 0)
+    instance->lat_deg_node = fgGetNode(child->getStringValue(), true);
+  else
+    model->setLatitudeDeg(node->getDoubleValue("latitude-deg"));
 
-    child = node->getChild("elevation-ft-prop");
-    if (child != 0)
-      instance->elev_ft_node = fgGetNode(child->getStringValue(), true);
-    else
-      model->setElevationFt(node->getDoubleValue("elevation-ft"));
+  child = node->getChild("elevation-ft-prop");
+  if (child != 0)
+    instance->elev_ft_node = fgGetNode(child->getStringValue(), true);
+  else
+    model->setElevationFt(node->getDoubleValue("elevation-ft"));
 
-    child = node->getChild("roll-deg-prop");
-    if (child != 0)
-      instance->roll_deg_node = fgGetNode(child->getStringValue(), true);
-    else
-      model->setRollDeg(node->getDoubleValue("roll-deg"));
+  child = node->getChild("roll-deg-prop");
+  if (child != 0)
+    instance->roll_deg_node = fgGetNode(child->getStringValue(), true);
+  else
+    model->setRollDeg(node->getDoubleValue("roll-deg"));
 
-    child = node->getChild("pitch-deg-prop");
-    if (child != 0)
-      instance->pitch_deg_node = fgGetNode(child->getStringValue(), true);
-    else
-      model->setPitchDeg(node->getDoubleValue("pitch-deg"));
+  child = node->getChild("pitch-deg-prop");
+  if (child != 0)
+    instance->pitch_deg_node = fgGetNode(child->getStringValue(), true);
+  else
+    model->setPitchDeg(node->getDoubleValue("pitch-deg"));
 
-    child = node->getChild("heading-deg-prop");
-    if (child != 0)
-      instance->heading_deg_node = fgGetNode(child->getStringValue(), true);
-    else
-      model->setHeadingDeg(node->getDoubleValue("heading-deg"));
+  child = node->getChild("heading-deg-prop");
+  if (child != 0)
+    instance->heading_deg_node = fgGetNode(child->getStringValue(), true);
+  else
+    model->setHeadingDeg(node->getDoubleValue("heading-deg"));
 
-				// Add this model to the global scene graph
-    globals->get_scenery()->get_scene_graph()->addKid(model->getSceneGraph());
+      			// Add this model to the global scene graph
+  globals->get_scenery()->get_scene_graph()->addKid(model->getSceneGraph());
 
-    // Register that one at the scenery manager
-    globals->get_scenery()->register_placement_transform(model->getTransform());
+  // Register that one at the scenery manager
+  globals->get_scenery()->register_placement_transform(model->getTransform());
 
 
-				// Save this instance for updating
-    add_instance(instance);
-  }
+      			// Save this instance for updating
+  add_instance(instance);
 }
 
 void
