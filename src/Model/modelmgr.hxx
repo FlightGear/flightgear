@@ -48,12 +48,12 @@ public:
     Instance ();
     virtual ~Instance ();
     SGModelPlacement * model;
-    SGPropertyNode * lon_deg_node;
-    SGPropertyNode * lat_deg_node;
-    SGPropertyNode * elev_ft_node;
-    SGPropertyNode * roll_deg_node;
-    SGPropertyNode * pitch_deg_node;
-    SGPropertyNode * heading_deg_node;
+    SGPropertyNode_ptr lon_deg_node;
+    SGPropertyNode_ptr lat_deg_node;
+    SGPropertyNode_ptr elev_ft_node;
+    SGPropertyNode_ptr roll_deg_node;
+    SGPropertyNode_ptr pitch_deg_node;
+    SGPropertyNode_ptr heading_deg_node;
   };
 
   FGModelMgr ();
