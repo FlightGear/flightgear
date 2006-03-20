@@ -15,6 +15,7 @@
 
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/model/model.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
@@ -45,15 +46,20 @@ FGModelMgr::init ()
   vector<SGPropertyNode_ptr> model_nodes =
     fgGetNode("/models", true)->getChildren("model");
 
-  for (unsigned int i = 0; i < model_nodes.size(); i++)
-    add_model(model_nodes[i]);
+  for (unsigned int i = 0; i < model_nodes.size(); i++) {
+    try {
+      add_model(model_nodes[i]);
+    } catch (const sg_throwable& t) {
+      SG_LOG(SG_GENERAL, SG_ALERT, t.getFormattedMessage() << t.getOrigin());
+    }
+  }
 }
 
 void
 FGModelMgr::add_model (SGPropertyNode * node)
 {
   SG_LOG(SG_GENERAL, SG_INFO,
-	   "Adding model " << node->getStringValue("name", "[unnamed]"));
+         "Adding model " << node->getStringValue("name", "[unnamed]"));
   Instance * instance = new Instance;
   SGModelPlacement *model = new SGModelPlacement;
   instance->model = model;
