@@ -27,12 +27,19 @@ SG_USING_STD(vector);
 
 
 FGModelMgr::FGModelMgr ()
-  : _selector(new ssgSelector)
+  : _models(fgGetNode("/models", true)),
+    _listener(new Listener(this)),
+    _selector(new ssgSelector)
+
 {
+  _models->addChangeListener(_listener);
 }
 
 FGModelMgr::~FGModelMgr ()
 {
+  _models->removeChangeListener(_listener);
+  delete _listener;
+
   for (unsigned int i = 0; i < _instances.size(); i++) {
     globals->get_scenery()->get_models_branch()
       ->removeKid(_instances[i]->model->getSceneGraph());
@@ -43,8 +50,7 @@ FGModelMgr::~FGModelMgr ()
 void
 FGModelMgr::init ()
 {
-  vector<SGPropertyNode_ptr> model_nodes =
-    fgGetNode("/models", true)->getChildren("model");
+  vector<SGPropertyNode_ptr> model_nodes = _models->getChildren("model");
 
   for (unsigned int i = 0; i < model_nodes.size(); i++) {
     try {
@@ -207,6 +213,25 @@ FGModelMgr::Instance::~Instance ()
   globals->get_scenery()->unregister_placement_transform(model->getTransform());
 
   delete model;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGModelMgr::Listener
+////////////////////////////////////////////////////////////////////////
+
+void
+FGModelMgr::Listener::childAdded(SGPropertyNode * parent, SGPropertyNode * child)
+{
+  if (strcmp(parent->getName(), "model") || strcmp(child->getName(), "add"))
+    return;
+
+  try {
+    _mgr->add_model(parent);
+  } catch (const sg_throwable& t) {
+    SG_LOG(SG_GENERAL, SG_ALERT, t.getFormattedMessage() << t.getOrigin());
+  }
 }
 
 // end of modelmgr.cxx

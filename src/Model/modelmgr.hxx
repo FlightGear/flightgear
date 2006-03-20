@@ -88,7 +88,24 @@ public:
 
   virtual void draw ();
 
+
+
 private:
+  /**
+   * Listener class that adds models at runtime.
+   */
+  class Listener : public SGPropertyChangeListener
+  {
+  public:
+    Listener(FGModelMgr *mgr) : _mgr(mgr) {}
+    virtual void childAdded (SGPropertyNode * parent, SGPropertyNode * child);
+
+  private:
+    FGModelMgr * _mgr;
+  };
+
+  SGPropertyNode_ptr _models;
+  Listener * _listener;
 
   vector<Instance *> _instances;
 
