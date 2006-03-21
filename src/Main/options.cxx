@@ -1419,7 +1419,7 @@ parse_option (const string& arg)
                     fgSetBool( pt->property, pt->b_param );
                     break;
                 case OPTION_STRING:
-                    if ( pt->has_param && pos != string::npos ) {
+                    if ( pt->has_param && pos != string::npos && pos + 1 < arg.size() ) {
                         fgSetString( pt->property, arg.substr( pos + 1 ).c_str() );
                     } else if ( !pt->has_param && pos == string::npos ) {
                         fgSetString( pt->property, pt->s_param );
@@ -1432,7 +1432,7 @@ parse_option (const string& arg)
                     }
                     break;
                 case OPTION_DOUBLE:
-                    if ( pos != string::npos ) {
+                    if ( pos != string::npos && pos + 1 < arg.size() ) {
                         fgSetDouble( pt->property, atof( arg.substr( pos + 1 ) ) );
                     } else {
                         SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
@@ -1440,7 +1440,7 @@ parse_option (const string& arg)
                     }
                     break;
                 case OPTION_INT:
-                    if ( pos != string::npos ) {
+                    if ( pos != string::npos && pos + 1 < arg.size() ) {
                         fgSetInt( pt->property, atoi( arg.substr( pos + 1 ) ) );
                     } else {
                         SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
