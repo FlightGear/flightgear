@@ -329,6 +329,8 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
         c->setDoubleValue("latitude-deg", geod.lat() * SGD_RADIANS_TO_DEGREES);
         c->setDoubleValue("elevation-m", geod.elev());
         c->setDoubleValue("elevation-ft", geod.elev() * SG_METER_TO_FEET);
+
+        fgSetBool("/sim/signals/click", 1);
       }
     }
   }
