@@ -22,7 +22,7 @@
 // I am not aware of any platforms that don't use 4 bytes for float
 // and 8 bytes for double.
 
-const uint32_t FG_NET_FDM_VERSION = 23;
+const uint32_t FG_NET_FDM_VERSION = 24;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -84,6 +84,7 @@ public:
     uint32_t eng_state[FG_MAX_ENGINES];// Engine state (off, cranking, running)
     float rpm[FG_MAX_ENGINES];	     // Engine RPM rev/min
     float fuel_flow[FG_MAX_ENGINES]; // Fuel flow gallons/hr
+    float fuel_px[FG_MAX_ENGINES];   // Fuel pressure psi
     float egt[FG_MAX_ENGINES];	     // Exhuast gas temp deg F
     float cht[FG_MAX_ENGINES];	     // Cylinder head temp deg F
     float mp_osi[FG_MAX_ENGINES];    // Manifold pressure

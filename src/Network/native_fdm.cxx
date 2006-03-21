@@ -171,6 +171,7 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         }
         net->rpm[i] = node->getDoubleValue( "rpm" );
         net->fuel_flow[i] = node->getDoubleValue( "fuel-flow-gph" );
+        net->fuel_px[i] = node->getDoubleValue( "fuel-px-psi" );
         net->egt[i] = node->getDoubleValue( "egt-degf" );
         // cout << "egt = " << aero->EGT << endl;
         net->cht[i] = node->getDoubleValue( "cht-degf" );
@@ -254,6 +255,7 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
             net->eng_state[i] = htonl(net->eng_state[i]);
             htonf(net->rpm[i]);
             htonf(net->fuel_flow[i]);
+            htonf(net->fuel_px[i]);
             htonf(net->egt[i]);
             htonf(net->cht[i]);
             htonf(net->mp_osi[i]);
@@ -335,6 +337,7 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
             net->eng_state[i] = htonl(net->eng_state[i]);
             htonf(net->rpm[i]);
             htonf(net->fuel_flow[i]);
+            htonf(net->fuel_px[i]);
             htonf(net->egt[i]);
             htonf(net->cht[i]);
             htonf(net->mp_osi[i]);
@@ -433,6 +436,7 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 
 	    node->setDoubleValue( "rpm", net->rpm[i] );
 	    node->setDoubleValue( "fuel-flow-gph", net->fuel_flow[i] );
+	    node->setDoubleValue( "fuel-px-psi", net->fuel_px[i] );
 	    node->setDoubleValue( "egt-degf", net->egt[i] );
 	    node->setDoubleValue( "cht-degf", net->cht[i] );
 	    node->setDoubleValue( "mp-osi", net->mp_osi[i] );
