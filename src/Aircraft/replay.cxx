@@ -278,6 +278,8 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
         result.fdm.rpm[i] = weight( fdm1.rpm[i], fdm2.rpm[i], ratio );
         result.fdm.fuel_flow[i]
             = weight( fdm1.fuel_flow[i], fdm2.fuel_flow[i], ratio );
+        result.fdm.fuel_px[i]
+            = weight( fdm1.fuel_px[i], fdm2.fuel_px[i], ratio );
         result.fdm.egt[i] = weight( fdm1.egt[i], fdm2.egt[i], ratio );
         result.fdm.cht[i] = weight( fdm1.cht[i], fdm2.cht[i], ratio );
         result.fdm.mp_osi[i] = weight( fdm1.mp_osi[i], fdm2.mp_osi[i], ratio );
