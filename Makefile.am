@@ -28,6 +28,9 @@ dist-hook:
 # make the base distribution with textures, sounds and a bit of
 # scenery, and all the other associated files
 
+# note, fedora core tar does case insensitive wildcard matching for
+# directories, but apparently not files ... some stupid reason. :-(
+
 fgfs-base-tar:
 	(cd ..; \
 	tar \
@@ -41,7 +44,8 @@ fgfs-base-tar:
 	--exclude='*/Textures.high/*.new' \
 	--exclude='*/Docs/source' \
         --exclude='*/Models/MNUAV' \
-	-cvf - \
+        --exclude='*/Models/Airspace' \
+	-cjvf fgfs-base-$(VERSION).tar.bz2 \
                 data/Aircraft/Generic \
                 data/Aircraft/Instruments \
                 data/Aircraft/Instruments-3d \
@@ -66,17 +70,29 @@ fgfs-base-tar:
 		data/Astro \
 		data/ATC \
 		data/AUTHORS \
-		data/[C-H]* \
+		data/ChangeLog \
+		data/cloudlayers.xml \
+		data/COPYING \
+		data/D* \
+		data/Fonts \
+		data/gui \
+		data/Huds \
 		data/Input \
-		data/[J-R]* \
+		data/keyboard.xml \
+		data/Lighting \
+		data/materials.dtd \
+		data/materials.xml \
+		data/mice.xml \
+		data/Models \
+		data/N* \
+		data/options.xml \
+		data/preferences.xml \
+		data/Protocol \
+		data/README \
 		data/Scenery \
 		data/Sounds \
 		data/T* \
-		data/cloudlayers.xml \
-		data/gui \
-		data/[j-p]* \
 		data/version \
-	| bzip2 --best > fgfs-base-$(VERSION).tar.bz2 \
 	)
 
 fgfs-textures-high:
