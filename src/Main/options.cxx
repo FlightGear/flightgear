@@ -1395,15 +1395,14 @@ parse_option (const string& arg)
     } else if ( arg.find( "--prop:" ) == 0 ) {
         string assign = arg.substr(7);
 	string::size_type pos = assign.find('=');
-	if ( pos == arg.npos || pos == 0 ) {
+	if ( pos == arg.npos || pos == 0 || pos + 1 == assign.size() ) {
 	    SG_LOG( SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg );
-	    return FG_OPTIONS_ERROR;
-	}
-	string name = assign.substr(0, pos);
-	string value = assign.substr(pos + 1);
-	fgSetString(name.c_str(), value.c_str());
-	// SG_LOG(SG_GENERAL, SG_INFO, "Setting default value of property "
-	//        << name << " to \"" << value << '"');
+            return FG_OPTIONS_ERROR;
+        } else {
+	    string name = assign.substr(0, pos);
+	    string value = assign.substr(pos + 1);
+	    fgSetString(name.c_str(), value.c_str());
+        }
     } else if ( arg.find( "--" ) == 0 ) {
         size_t pos = arg.find( '=' );
         string arg_name;
@@ -1449,7 +1448,7 @@ parse_option (const string& arg)
                     }
                     break;
                 case OPTION_CHANNEL:
-                    if ( pt->has_param && pos != string::npos ) {
+                    if ( pt->has_param && pos != string::npos && pos + 1 < arg.size() ) {
                         add_channel( pt->option, arg.substr( pos + 1 ) );
                     } else if ( !pt->has_param && pos == string::npos ) {
                         add_channel( pt->option, pt->s_param );
@@ -1462,7 +1461,7 @@ parse_option (const string& arg)
                     }
                     break;
                 case OPTION_FUNC:
-                    if ( pt->has_param && pos != string::npos ) {
+                    if ( pt->has_param && pos != string::npos && pos + 1 < arg.size() ) {
                         return pt->func( arg.substr( pos + 1 ).c_str() );
                     } else if ( !pt->has_param && pos == string::npos ) {
                         return pt->func( 0 );
