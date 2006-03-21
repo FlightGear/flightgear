@@ -1,3 +1,65 @@
+New in 0.9.10-pre1
+* March 20, 2006
+
+* Fix a bug in the metar (real weather) threading that could lead to
+  long pauses and even crashes.
+
+* Upgraded to JSBSim v2.0
+* Fix a discrepancy in sign of twist and incidence values in YASim
+  between code and documentation.
+* Updates to YASim for more fine grained propeller modeling.
+* UFO will now honor elevator trim value so that it will respond to
+  the autopilot altitude hold module.
+* UFO can adjust it's speed range so you can use it for super high
+  speed world exploration, or extremly fine grained precise positioning.
+* Updates to carrier interaction and launch/recovery modeling.
+
+* Add a feature that allows the end user to click any where on the
+  terrain.  The system will compute a ground intersection and report
+  back the lon, lat, and elevation of the click point.  The click
+  point is reported in the property system so it can be read by just
+  about anything including external programs.  Later we added the
+  ability to place an object at the click point as well.
+
+* Add a feature to play one-off wav files.  These are qeued and played
+  sequentially.  This was then leveraged to build an ATC background
+  chatter module in nasal that can be turned on/off at run time.  This
+  could also be leveraged for tutorials or other interactive type
+  scripts to play prerecorded messages at specific times or under
+  specific conditions..
+
+* AI planes have improved ground following and are smarter about
+  selecting the active runway.
+
+* Many improvements to the multi-player mode.  Other airplanes are now
+  updated smoothly.  There is a really nifty google maps based moving
+  map that anyone can use to track all online activity.
+
+* Include the ability to send ATC and AI aircraft communication to a
+  local festival server to be converted to spoken speech output.
+
+* Added a detailed model of the Honeywell MK VIII EGPWS ground
+  proximity warning system.
+
+* Allow clock to report local time as well as universal.
+* Add a model of a KLN89 GPS.
+* Allow nav radios to be slaved to the gps.
+* Allow enabling/disabling of menu entries.
+* Replace old hardcoded frame rate display with a much more flexible
+  nasal/gui version.
+* Add a listener function to properties so that nasal code can be
+  triggered whenever a property changes.  This is more efficient than
+  polling.
+* Add a save-on-exit option to save user preferences.
+* Add support for point sprites.
+* Add support for emissive layers (such as lights) on 2d panels.
+
+* Various compiler/platform fixes.
+* Fix various valgrind complaints.
+* Better use of exceptions in places.
+* Fix the 2d compass texture handling.
+
+
 New in 0.9.9
 * November 17, 2005
 
