@@ -658,7 +658,7 @@ void FGTower::ProcessDownwindReport(TowerPlaneRec* t) {
 		trns += s;
 		if((tt->opType) == CIRCUIT) {
 			PatternLeg leg;
-			if(t->isUser) {
+			if(tt->isUser) {
 				leg = tt->leg;
 			} else {
 				leg = tt->planePtr->GetLeg();
