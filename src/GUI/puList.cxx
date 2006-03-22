@@ -79,7 +79,8 @@ puList::newList (char ** contents)
 char *
 puList::getListStringValue ()
 {
-    return _contents[_list_box->getIntegerValue()];
+    int i = _list_box->getIntegerValue();
+    return i < 0 ? 0 : _contents[i];
 }
 
 int

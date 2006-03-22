@@ -304,7 +304,9 @@ copy_from_pui (puObject * object, SGPropertyNode * node)
         // Special case to handle lists, as getStringValue cannot be overridden
         if(object->getType() & PUCLASS_LIST)
         {
-            node->setStringValue(((puList *) object)->getListStringValue());
+            const char *s = ((puList *) object)->getListStringValue();
+            if (s)
+                node->setStringValue(s);
         }
         else
         {
