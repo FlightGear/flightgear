@@ -14,7 +14,7 @@
 #include <plib/ssg.h>
 
 #include <simgear/scene/model/placement.hxx>
-#include <simgear/scene/model/model.hxx>
+#include <simgear/scene/model/modellib.hxx>
 #include <simgear/structure/exception.hxx>
 
 #include <Main/fg_props.hxx>
@@ -69,12 +69,14 @@ FGModelMgr::add_model (SGPropertyNode * node)
   SGModelPlacement *model = new SGModelPlacement;
   instance->model = model;
   instance->node = node;
-  ssgBranch *object
-      = sgLoad3DModel( globals->get_fg_root(),
-                       node->getStringValue("path",
-                                            "Models/Geometry/glider.ac"),
-                       globals->get_props(),
-                       globals->get_sim_time_sec() );
+  SGModelLib *model_lib = globals->get_model_lib();
+  ssgBranch *object = (ssgBranch *)model_lib->load_model(
+      globals->get_fg_root(),
+      node->getStringValue("path",
+                           "Models/Geometry/glider.ac"),
+      globals->get_props(),
+      globals->get_sim_time_sec(), /*cache_object=*/false);
+
   model->init( object );
 
 				// Set position and orientation either
