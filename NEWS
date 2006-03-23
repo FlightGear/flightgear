@@ -1,5 +1,5 @@
-New in 0.9.10-pre1
-* March 20, 2006
+New in 0.9.10-pre2
+* March 23, 2006
 
 * Many improvements to the multi-player mode.  Other airplanes are now
   updated smoothly.  There is a really nifty google maps based moving
@@ -11,6 +11,7 @@ New in 0.9.10-pre1
 * Added a detailed model of the Honeywell MK VIII EGPWS ground
   proximity warning system.
 * Added background ATC chatter.
+* Updated/improved rain cone rendering.
 
 * Upgraded to JSBSim v2.0
 * Fix a discrepancy in sign of twist and incidence values in YASim
@@ -93,6 +94,7 @@ New in 0.9.10-pre1
   - English Electric Lightning (F.1A)
   - Lockheed 1049 Constellation
   - Lockheed F-80C Shooting Star
+  - Messerschmitt Bf 109
   - Ogel (a for-fun fantasy airplane.)
   - New OV-10 with Clickable 3D cockpit
   - Piper PA24-250 Comanche 250 (N7764P)

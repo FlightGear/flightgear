@@ -8074,6 +8074,36 @@ SOURCE=.\src\Instrumentation\tacan.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Instrumentation\mk_viii.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Instrumentation"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Instrumentation"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Instrumentation\mk_viii.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Instrumentation"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Instrumentation"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Instrumentation\dclgps.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -9922,6 +9952,51 @@ SOURCE=.\src\Network\garmin.cxx
 # Begin Source File
 
 SOURCE=.\src\Network\garmin.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\lfsglass.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\lfsglass.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\lfsglass_data.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
