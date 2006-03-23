@@ -559,7 +559,10 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         for (unsigned int i = 0; i < value_nodes.size(); i++)
             entries[i] = strdup((char *)value_nodes[i]->getStringValue());
 
-        puList * obj = new puList(x, y, x + width, y + height, entries);
+        int slider_width = props->getIntValue("slider", 20);
+        puList * obj = new puList(x, y, x + width, y + height, entries, slider_width);
+        if(presetSize)
+            obj->setSize(width, height);
         setupObject(obj, props);
         setColor(obj, props);
         return obj;
@@ -658,9 +661,8 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "textbox") {
-        int slider_width = props->getIntValue("slider", parentHeight);
+        int slider_width = props->getIntValue("slider", 20);
         int wrap = props->getBoolValue("wrap", true);
-        if (slider_width==0) slider_width=20;
         puLargeInput * obj = new puLargeInput(x, y,
                 x+width, x+height, 2, slider_width, wrap);
 
@@ -670,6 +672,8 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
             else
                 obj->enableInput();
         }
+        if(presetSize)
+            obj->setSize(width, height);
         setupObject(obj, props);
         setColor(obj, props, FOREGROUND|LABEL);
         return obj;
