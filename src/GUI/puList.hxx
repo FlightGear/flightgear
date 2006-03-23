@@ -27,6 +27,9 @@ class puList : public puGroup
     // TODO: other string value funcs
     virtual char * getListStringValue ();
     virtual int getListIntegerValue();
+    virtual void setColourScheme (float r, float g, float b, float a);
+    virtual void setColour (int which, float r, float g, float b, float a);
+
 
  protected:
     virtual void init (int w, int h);

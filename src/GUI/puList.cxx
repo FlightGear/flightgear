@@ -116,4 +116,18 @@ puList::init (int w, int h)
     close();
 }
 
+void
+puList::setColourScheme (float r, float g, float b, float a)
+{
+    puObject::setColourScheme(r, g, b, a);
+    _list_box->setColourScheme(r, g, b, a);
+}
+
+void
+puList::setColour (int which, float r, float g, float b, float a)
+{
+    puObject::setColour(which, r, g, b, a);
+    _list_box->setColour(which, r, g, b, a);
+}
+
 // end of puList.cxx
