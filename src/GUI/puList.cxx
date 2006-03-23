@@ -103,25 +103,26 @@ puList::getListIntegerValue()
 void
 puList::init (int w, int h)
 {
+    const int sw = 20;
     _frame = new puFrame(0, 0, w, h);
 
-    _list_box = new puListBox(0, 0, w-30, h);
+    _list_box = new puListBox(0, 0, w-sw, h);
     _list_box->setStyle(-PUSTYLE_SMALL_SHADED);
     _list_box->setUserData(this);
     _list_box->setCallback(handle_list_entry);
     _list_box->setValue(0);
 
-    _slider = new puSlider(w-30, 30, h-60, true);
+    _slider = new puSlider(w-sw, sw, h-2*sw, true, sw);
     _slider->setValue(1.0f);
     _slider->setUserData(_list_box);
     _slider->setCallback(handle_slider);
     _slider->setCBMode(PUSLIDER_ALWAYS);
 
-    _down_arrow = new puArrowButton(w-30, 0, w, 30, PUARROW_DOWN) ;
+    _down_arrow = new puArrowButton(w-sw, 0, w, sw, PUARROW_DOWN) ;
     _down_arrow->setUserData(_slider);
     _down_arrow->setCallback(handle_arrow);
 
-    _up_arrow = new puArrowButton(w-30, h-30, w, h, PUARROW_UP);
+    _up_arrow = new puArrowButton(w-sw, h-sw, w, h, PUARROW_UP);
     _up_arrow->setUserData(_slider);
     _up_arrow->setCallback(handle_arrow);
 
