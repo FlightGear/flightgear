@@ -189,6 +189,7 @@ FGEnvironmentMgr::bind ()
   fgTie("/environment/turbulence/use-cloud-turbulence", &sgEnviro,
       &SGEnviro::get_turbulence_enable_state,
       &SGEnviro::set_turbulence_enable_state);
+  sgEnviro.config(fgGetNode("/sim/rendering/precipitation"));
 }
 
 void
