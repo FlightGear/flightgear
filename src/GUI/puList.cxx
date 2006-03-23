@@ -18,6 +18,17 @@ handle_slider (puObject * slider)
 
 
 /**
+ * Static function: handle list entry clicks.
+ */
+static void
+handle_list_entry (puObject * listbox)
+{
+    puListBox * box = (puListBox *)listbox->getUserData();
+    box->invokeCallback();
+}
+
+
+/**
  * Static function: handle arrow clicks.
  */
 static void
@@ -97,6 +108,7 @@ puList::init (int w, int h)
     _list_box = new puListBox(0, 0, w-30, h);
     _list_box->setStyle(-PUSTYLE_SMALL_SHADED);
     _list_box->setUserData(this);
+    _list_box->setCallback(handle_list_entry);
     _list_box->setValue(0);
 
     _slider = new puSlider(w-30, 30, h-60, true);
