@@ -300,7 +300,8 @@ FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft,
         // the closest station.)
 	if ( d2 < min_dist &&
              (stations[i]->get_type() == 4 || stations[i]->get_type() == 5 ||
-              stations[i]->get_type() == 6 || stations[i]->get_type() == 12) )
+              stations[i]->get_type() == 6 || stations[i]->get_type() == 12 ||
+              stations[i]->get_type() == 13) )
         {
             double hdg_deg = 0.0;
             if ( stations[i]->get_type() == 4 || stations[i]->get_type() == 5 ){
@@ -308,7 +309,8 @@ FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft,
             } else if ( stations[i]->get_type() == 6 ) {
                 int tmp = (int)(stations[i]->get_multiuse() / 1000.0);
                 hdg_deg = stations[i]->get_multiuse() - (tmp * 1000);
-            } else if ( stations[i]->get_type() == 12 ) {
+            } else if ( stations[i]->get_type() == 12 ||
+                        stations[i]->get_type() == 13 ) {
                 // oops, Robin's data format doesn't give us the
                 // needed information to compute a heading for a DME
                 // transmitter.  FIXME Robin!
