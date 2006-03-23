@@ -199,14 +199,14 @@ private:
   int _height;
   int _view_height;
 
-  SGPropertyNode * _visibility;
-  SGPropertyNode * _x_offset;
-  SGPropertyNode * _y_offset;
-  SGPropertyNode * _jitter;
-  SGPropertyNode * _flipx;
+  SGPropertyNode_ptr _visibility;
+  SGPropertyNode_ptr _x_offset;
+  SGPropertyNode_ptr _y_offset;
+  SGPropertyNode_ptr _jitter;
+  SGPropertyNode_ptr _flipx;
 
-  const SGPropertyNode * _xsize_node;
-  const SGPropertyNode * _ysize_node;
+  SGConstPropertyNode_ptr _xsize_node;
+  SGConstPropertyNode_ptr _ysize_node;
   
   ssgTexture * _bg;
   ssgTexture * _mbg[8];
@@ -303,7 +303,7 @@ public:
   virtual ~FGPanelTransformation ();
 
   Type type;
-  const SGPropertyNode * node;
+  SGConstPropertyNode_ptr node;
   float min;
   float max;
   bool has_mod;
@@ -529,7 +529,7 @@ public:
   private:
     ChunkType _type;
     string _text;
-    const SGPropertyNode * _node;
+    SGConstPropertyNode_ptr _node;
     string _fmt;
     float _mult;
     float _offs;

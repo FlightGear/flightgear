@@ -41,7 +41,7 @@ class fg_Cockpit  {
   private:
     int  Code;
     int  cockpitStatus;
-    SGPropertyNode * hud_status;
+    SGPropertyNode_ptr hud_status;
 
   public:
     fg_Cockpit   () : Code(1), cockpitStatus(0) {};
