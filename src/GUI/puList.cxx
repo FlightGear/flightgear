@@ -61,15 +61,17 @@ handle_arrow (puObject * arrow)
     slider->setValue(1.0f - float(index)/list_box->getNumItems());
 }
 
-puList::puList (int x, int y, int w, int h)
-    : puGroup(x, y)
+puList::puList (int x, int y, int w, int h, int sl_width)
+    : puGroup(x, y),
+      sw(sl_width)
 {
     type |= PUCLASS_LIST;
     init(w, h);
 }
 
-puList::puList (int x, int y, int w, int h, char ** contents)
-    : puGroup(x, y)
+puList::puList (int x, int y, int w, int h, char ** contents, int sl_width)
+    : puGroup(x, y),
+      sw(sl_width)
 {
     type |= PUCLASS_LIST;
     init(w, h);
@@ -103,7 +105,6 @@ puList::getListIntegerValue()
 void
 puList::init (int w, int h)
 {
-    const int sw = 20;
     _frame = new puFrame(0, 0, w, h);
 
     _list_box = new puListBox(0, 0, w-sw, h);
@@ -141,6 +142,20 @@ puList::setColour (int which, float r, float g, float b, float a)
 {
     puObject::setColour(which, r, g, b, a);
     _list_box->setColour(which, r, g, b, a);
+}
+
+void
+puList::setSize (int w, int h)
+{
+    puObject::setSize(w, h);
+    _frame->setSize(w, h);
+    _list_box->setSize(w-sw, h);
+
+    _slider->setPosition(w-sw, sw);
+    _slider->setSize(sw, h-2*sw);
+
+    _down_arrow->setPosition(w-sw, 0);
+    _up_arrow->setPosition(w-sw, h-sw);
 }
 
 // end of puList.cxx

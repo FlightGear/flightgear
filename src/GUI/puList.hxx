@@ -19,8 +19,8 @@
 class puList : public puGroup
 {
  public:
-    puList (int x, int y, int w, int h);
-    puList (int x, int y, int w, int h, char ** contents);
+    puList (int x, int y, int w, int h, int sl_width = 20);
+    puList (int x, int y, int w, int h, char ** contents, int sl_width = 20);
     virtual ~puList ();
 
     virtual void newList (char ** contents);
@@ -29,12 +29,14 @@ class puList : public puGroup
     virtual int getListIntegerValue();
     virtual void setColourScheme (float r, float g, float b, float a);
     virtual void setColour (int which, float r, float g, float b, float a);
+    virtual void setSize (int w, int h);
 
 
  protected:
     virtual void init (int w, int h);
 
  private:
+    int sw;            // slider width
     char ** _contents;
     puFrame * _frame;
     puListBox * _list_box;
