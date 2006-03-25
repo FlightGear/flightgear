@@ -561,7 +561,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 
         int slider_width = props->getIntValue("slider", 20);
         puList * obj = new puList(x, y, x + width, y + height, entries, slider_width);
-        if(presetSize)
+        if (presetSize)
             obj->setSize(width, height);
         setupObject(obj, props);
         setColor(obj, props);
@@ -569,6 +569,8 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 
     } else if (type == "airport-list") {
         AirportList * obj = new AirportList(x, y, x + width, y + height);
+        if (presetSize)
+            obj->setSize(width, height);
         setupObject(obj, props);
         setColor(obj, props);
         return obj;
@@ -592,8 +594,10 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         }
         // Layed-out objects need their size set, and non-layout ones
         // get a different placement.
-        if(presetSize) obj->setSize(width, height);
-        else obj->setLabelPlace(PUPLACE_LABEL_DEFAULT);
+        if (presetSize)
+            obj->setSize(width, height);
+        else
+            obj->setLabelPlace(PUPLACE_LABEL_DEFAULT);
         setColor(obj, props, LABEL);
         return obj;
 
@@ -618,7 +622,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
             obj = new puOneShot(x, y, legend);
         else
             obj = new puButton(x, y, legend);
-        if(presetSize)
+        if (presetSize)
             obj->setSize(width, height);
         setupObject(obj, props);
         setColor(obj, props);
@@ -646,7 +650,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         obj->setMinValue(props->getFloatValue("min", 0.0));
         obj->setMaxValue(props->getFloatValue("max", 1.0));
         setupObject(obj, props);
-        if(presetSize)
+        if (presetSize)
             obj->setSize(width, height);
         setColor(obj, props, FOREGROUND|LABEL);
         return obj;
@@ -672,7 +676,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
             else
                 obj->enableInput();
         }
-        if(presetSize)
+        if (presetSize)
             obj->setSize(width, height);
         setupObject(obj, props);
         setColor(obj, props, FOREGROUND|LABEL);
