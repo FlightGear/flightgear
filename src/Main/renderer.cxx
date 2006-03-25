@@ -78,10 +78,8 @@ extern void sgShaderFrameInit(double delta_time_sec);
 
 float default_attenuation[3] = {1.0, 0.0, 0.0};
 
-ssgSelector *lightpoints_brightness = new ssgSelector;
-ssgTransform *lightpoints_transform = new ssgTransform;
-FGTileEntry *dummy_tile;
-sgVec3 rway_ols;
+ssgSharedPtr<ssgSelector> lightpoints_brightness = new ssgSelector;
+ssgSharedPtr<ssgTransform> lightpoints_transform = new ssgTransform;
 
 // Clip plane settings...
 float scene_nearplane = 0.5f;
@@ -105,15 +103,6 @@ static GLfloat ground_exp2_punch_through;
 
 // Sky structures
 SGSky *thesky;
-
-// hack
-sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
-{
-  {  1.0f,  0.0f,  0.0f,  0.0f },
-  {  0.0f,  0.0f, -1.0f,  0.0f },
-  {  0.0f,  1.0f,  0.0f,  0.0f },
-  {  0.0f,  0.0f,  0.0f,  1.0f }
-};
 
 ssgSharedPtr<ssgSimpleState> cloud3d_imposter_state;
 ssgSharedPtr<ssgSimpleState> default_state;
