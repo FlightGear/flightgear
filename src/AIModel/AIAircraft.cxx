@@ -704,20 +704,21 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now )
 	    dep->getDynamics()->releaseParking(fp->getGate());
 	  }
 	// Some debug messages, specific to testing the Logical networks.
-	//if ((arr->getId() == string("EHAM")) && (prev->name  == "Center"))
-	//  {
-	//    
-	//    cerr << "Schiphol ground " 
-	//	 << trafficRef->getRegistration() << " "
-	//	 << trafficRef->getCallSign();
-	//    if (trafficRef->getHeavy())
-	//      cerr << "Heavy";
-	//    cerr << " landed runway " 
-	//	 << fp->getRunway()
-	//	 << " request taxi to gate " 
-	//	 << arr->getDynamics()->getParkingName(fp->getGate()) 
-	//	 << endl;
-	//  }
+	if ((arr->getId() == string("EHAM")) && (prev->name  == "Center"))
+	  {
+	    
+	    cerr << "Schiphol ground " 
+		 << trafficRef->getRegistration() << " "
+		 << trafficRef->getCallSign();
+	    if (trafficRef->getHeavy())
+	      cerr << "Heavy";
+	    cerr << ", arriving from " << dep->getName() ;
+	    cerr << " landed runway " 
+		 << fp->getRunway()
+		 << " request taxi to gate " 
+		 << arr->getDynamics()->getParkingName(fp->getGate()) 
+		 << endl;
+	  }
 	if (prev->name == "END")
 	  fp->setTime(trafficRef->getDepartureTime());
 	//cerr << "5" << endl;

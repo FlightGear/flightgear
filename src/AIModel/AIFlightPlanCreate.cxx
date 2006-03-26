@@ -303,7 +303,9 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	      isPushBackPoint = true;
 	      int nrWaypoints = route.size();
 	      int nrWaypointsToSkip = rand() % nrWaypoints;
-	      for (int i = 0; i < nrWaypointsToSkip; i++) {
+	      // but make sure we always keep two active waypoints
+	      // to prevent a segmentation fault
+	      for (int i = 0; i < nrWaypointsToSkip-2; i++) {
 		isPushBackPoint = false;
 		route.next(&node);
 	      }
