@@ -566,11 +566,11 @@ void  FGRunwayPreference::pi (const char * target, const char * data) {
 }
 
 void  FGRunwayPreference::warning (const char * message, int line, int column) {
-  cout << "Warning: " << message << " (" << line << ',' << column << ')'   
-       << endl;
+  //cout << "Warning: " << message << " (" << line << ',' << column << ')'   
+  //     << endl;
 }
 
 void  FGRunwayPreference::error (const char * message, int line, int column) {
-  cout << "Error: " << message << " (" << line << ',' << column << ')'
-       << endl;
+  //cout << "Error: " << message << " (" << line << ',' << column << ')'
+  //     << endl;
 }
