@@ -1,5 +1,5 @@
-New in 0.9.10-pre2
-* March 23, 2006
+New in 0.9.10-pre3
+* March 27, 2006
 
 * Many improvements to the multi-player mode.  Other airplanes are now
   updated smoothly.  There is a really nifty google maps based moving
@@ -10,6 +10,7 @@ New in 0.9.10-pre2
   local festival server to be converted to spoken speech output.
 * Added a detailed model of the Honeywell MK VIII EGPWS ground
   proximity warning system.
+* Complete overhaul/redo of terrain textures based on USGS satellite imagery.
 * Added background ATC chatter.
 * Updated/improved rain cone rendering.
 
@@ -59,10 +60,11 @@ New in 0.9.10-pre2
 * Better use of exceptions in places.
 * Fix the 2d compass texture handling.
 * Many tweaks and improvements to our keyboard input handling system.
+* Added a first attempt at MS-VC8 project files.
 
 * Updated aircraft:
   - A4/A3F (cleanups and updates, functional drag chute)
-  - A-10 (fdm tuning, munitions, drop tanks)
+  - A-10 (3d cockpit, fdm tuning, munitions, drop tanks)
   - AN-225 (fdm tuning)
   - B1900D
   - BO105 Eurocopter (new livry/logo options.)

@@ -6,16 +6,18 @@ SUBDIRS = \
         utils
 
 EXTRA_DIST = \
-	Thanks \
 	acinclude.m4 \
 	autogen.sh \
 	FlightGear.dsp \
-	FlightGear.dsw
+	FlightGear.dsw \
+	projects \
+	Thanks
 
 dist-hook:
 	(cd $(top_srcdir); $(HOME)/Projects/FlightGear/admin/am2dsp.pl)
 	(cd $(top_srcdir); tar --exclude docs-mini/CVS --exclude hints/CVS \
 		-cf - docs-mini ) | (cd $(distdir); tar xvf -)
+	rm -rf `find $(distdir)/projects -name CVS`
 
 
 ##########################################################################
@@ -40,8 +42,10 @@ fgfs-base-tar:
 	--exclude='*.xcf' \
 	--exclude='*/c172/Instruments.high' \
 	--exclude='*/Textures/Unused' \
-	--exclude='*/Textures.high/*.save' \
+	--exclude='*/Textures/*.orig' \
 	--exclude='*/Textures.high/*.new' \
+	--exclude='*/Textures.high/*.orig' \
+	--exclude='*/Textures.high/*.save' \
 	--exclude='*/Docs/source' \
         --exclude='*/Models/MNUAV' \
         --exclude='*/Models/Airspace' \
@@ -50,19 +54,21 @@ fgfs-base-tar:
                 data/Aircraft/Instruments \
                 data/Aircraft/Instruments-3d \
                 data/Aircraft/UIUC \
-                data/Aircraft/737 \
+                data/Aircraft/737-300 \
                 data/Aircraft/A-10 \
+                data/Aircraft/bf109 \
                 data/Aircraft/bo105 \
                 data/Aircraft/c172 \
                 data/Aircraft/c172p \
                 data/Aircraft/c310 \
                 data/Aircraft/c310u3a \
-                data/Aircraft/Citation \
+                data/Aircraft/Citation-Bravo \
                 data/Aircraft/f16 \
                 data/Aircraft/j3cub \
                 data/Aircraft/Hunter \
                 data/Aircraft/p51d \
                 data/Aircraft/pa28-161 \
+                data/Aircraft/Rascal \
                 data/Aircraft/T38 \
                 data/Aircraft/ufo \
                 data/Aircraft/wrightFlyer1903 \
@@ -78,6 +84,7 @@ fgfs-base-tar:
 		data/gui \
 		data/Huds \
 		data/Input \
+		data/joysticks.xml \
 		data/keyboard.xml \
 		data/Lighting \
 		data/materials.dtd \
@@ -89,7 +96,8 @@ fgfs-base-tar:
 		data/preferences.xml \
 		data/Protocol \
 		data/README \
-		data/Scenery \
+		data/Scenery/Objects \
+		data/Scenery/Terrain \
 		data/Sounds \
 		data/T* \
 		data/version \

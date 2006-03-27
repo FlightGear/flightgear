@@ -35,10 +35,10 @@ $ldir = "Large";
 $sdir = "Small";
 $mdir = "Movies";
 
-$columns = 3;
+$columns = 2;
 
-$swidth = 170;
-$sheight = 128;
+$swidth = 320;
+$sheight = 240;
 
 $lwidth = 1024;
 $lheight = 768;
@@ -213,13 +213,14 @@ while ( <MASTER> ) {
 	    $linkname = `basename $i .png`;
         }
 	chop($linkname);
-	# print OUT "<TD WIDTH=220 HEIGHT=160>\n";
-	print OUT "<TD WIDTH=$swidth HEIGHT=$sheight>\n";
 
 	$thumbinfo = `identify $sdir/$i`;
 	($name, $type, $geom, $junk) = split(/\s+/, $thumbinfo, 4);
 	($twidth, $theight) = split(/x/, $geom);
 	$theight =~ s/\+.*$//;
+
+	# print OUT "<TD WIDTH=220 HEIGHT=160>\n";
+	print OUT "<TD WIDTH=$twidth HEIGHT=$sheight>\n";
 
 	print OUT "<A HREF=\"$link/$linkname.html\">";
 	print OUT "<IMG WIDTH=$twidth HEIGHT=$theight SRC=\"$sdir/$i\" ALT=\"$linkname\">";
