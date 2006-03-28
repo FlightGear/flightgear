@@ -231,10 +231,10 @@ void RunwayGroup::setActive(const string &aptId,
 	  // preference, however, we don't want to stop right there, because we also
 	  // don't want to randomly swap runway preferences, unless there is a need to. 
 	  //
-
+	  validSelection = true;
 	  for (int j = 0; j < activeRwys; j++)
 	    {
-	      validSelection = true;
+	     
 	      name = rwyList[j].getRwyList(i);
 	      //cerr << "Name of Runway: " << name << endl;
 	      if (globals->get_runways()->search( aptId, 
