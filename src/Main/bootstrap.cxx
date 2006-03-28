@@ -28,6 +28,8 @@
 #if defined(__linux__) && defined(__i386__)
 #  include <fpu_control.h>
 #  include <signal.h>
+#elif defined(__FreeBSD__)
+#  include <signal.h>
 #endif
 
 #include <errno.h>
@@ -147,9 +149,12 @@ int main ( int argc, char **argv ) {
 
     _bootstrap_OSInit = 0;
 
-    // Enable floating-point exceptions for Linux/x86
 #if defined(__linux__) && defined(__i386__)
+    // Enable floating-point exceptions for Linux/x86
     initFPE();
+#elif defined(__FreeBSD__)
+    // Ignore floating-point exceptions on FreeBSD
+    signal(SIGFPE, SIG_IGN);
 #endif
 
 #if defined(sgi)
