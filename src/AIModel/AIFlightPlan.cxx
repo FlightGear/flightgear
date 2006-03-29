@@ -159,7 +159,7 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
 	  }
 	}
       catch (const sg_exception &e) {
-	SG_LOG(SG_GENERAL, SG_ALERT,
+	SG_LOG(SG_GENERAL, SG_WARN,
 	       "Error reading AI flight plan: ");
 	cerr << "Errno = " << errno << endl;
 	if (errno == ENOENT)

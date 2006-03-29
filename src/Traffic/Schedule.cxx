@@ -376,13 +376,13 @@ bool FGAISchedule::update(time_t now)
 		  aircraft->setCompany(airline); //i->getAirline();
 		  aircraft->setAcType(acType); //i->getAcType();
 		  aircraft->setPath(modelPath.c_str());
-		  aircraft->setFlightPlan(flightPlanName);
+		  //aircraft->setFlightPlan(flightPlanName);
 		  aircraft->setLatitude(lat);
 		  aircraft->setLongitude(lon);
 		  aircraft->setAltitude(i->getCruiseAlt()*100); // convert from FL to feet
 		  aircraft->setSpeed(speed);
 		  aircraft->setBank(0);
-		  aircraft->SetFlightPlan(new FGAIFlightPlan(modelPath, courseToDest, i->getDepartureTime(), dep, 
+		  aircraft->SetFlightPlan(new FGAIFlightPlan(flightPlanName, courseToDest, i->getDepartureTime(), dep, 
 							     arr,true, radius, i->getCruiseAlt()*100, lat, lon, speed, flightType, acType, airline));
 		  aimgr->attach(aircraft);
 		  
