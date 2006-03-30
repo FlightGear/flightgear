@@ -73,6 +73,11 @@ void reInit(puObject *cb)
     // update our position based on current presets
     fgInitPosition();
 
+    // We don't know how to resize the window, so keep the last values 
+    //  for xsize and ysize, and don't use the one set initially
+    fgSetInt("/sim/startup/xsize",xsize);
+    fgSetInt("/sim/startup/ysize",ysize);
+
     SGTime *t = globals->get_time_params();
     delete t;
     t = fgInitTime();
