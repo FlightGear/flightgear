@@ -15,6 +15,7 @@
 
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/model/modellib.hxx>
+#include <simgear/scene/model/shadowvolume.hxx>
 #include <simgear/structure/exception.hxx>
 
 #include <Main/fg_props.hxx>
@@ -24,6 +25,8 @@
 #include "modelmgr.hxx"
 
 SG_USING_STD(vector);
+
+extern SGShadowVolume *shadows;
 
 
 FGModelMgr::FGModelMgr ()
@@ -78,6 +81,7 @@ FGModelMgr::add_model (SGPropertyNode * node)
       globals->get_sim_time_sec(), /*cache_object=*/false);
 
   model->init( object );
+  shadows->addOccluder((ssgBranch *)object, SGShadowVolume::occluderTypeTileObject);
 
 				// Set position and orientation either
 				// indirectly through property refs
@@ -253,8 +257,9 @@ FGModelMgr::Listener::childRemoved(SGPropertyNode * parent, SGPropertyNode * chi
       continue;
 
     _mgr->_instances.erase(it);
-    globals->get_scenery()->get_scene_graph()
-        ->removeKid(instance->model->getSceneGraph());
+    ssgBranch *branch = (ssgBranch *)instance->model->getSceneGraph();
+    shadows->deleteOccluder(branch);
+    globals->get_scenery()->get_scene_graph()->removeKid(branch);
 
     delete instance;
     break;
