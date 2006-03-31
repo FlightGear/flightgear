@@ -1125,10 +1125,8 @@ do_dialog_apply (const SGPropertyNode * arg)
         if (arg->hasValue("object-name")) {
             const char * name = arg->getStringValue("object-name");
             dialog->applyValue(name);
-            dialog->updateValue(name);
         } else {
             dialog->applyValues();
-            dialog->updateValues();
         }
         return true;
     } else {
