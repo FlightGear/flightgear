@@ -7,35 +7,49 @@
 
 
 AirportList::AirportList (int x, int y, int width, int height)
-    : puList(x, y, width, height)
+    : puList(x, y, width, height),
+      _airports(globals->get_airports()),
+      _content(0)
 {
-    char buf[1024];
-
-    _airports = globals->get_airports();
-    _nAirports = _airports->size();
-
-    _content = new char *[_nAirports+1];
-    for (int i = 0; i < _nAirports; i++) {
-        const FGAirport *airport = _airports->getAirport(i);
-        snprintf(buf, 1023, "%s  (%s)",
-                 airport->getName().c_str(),
-                 airport->getId().c_str());
-
-        unsigned int buf_len = (strlen(buf) > 1023) ? 1023 : strlen(buf);
-
-        _content[i] = new char[buf_len+1];
-        memcpy(_content[i], buf, buf_len);
-        _content[i][buf_len] = '\0';
-    }
-    _content[_nAirports] = 0;
-    newList(_content);
+    create_list();
 }
 
 AirportList::~AirportList ()
 {
-    for (int i = 0; i < _nAirports; i++) {
-        delete _content[i];
-        _content[i] = 0;
+    destroy_list();
+}
+
+void
+AirportList::create_list ()
+{
+    if (_content)
+        destroy_list();
+
+    int num_apt = _airports->size();
+    _content = new char *[num_apt + 1];
+
+    int n = 0;
+    for (int i = 0; i < num_apt; i++) {
+        const FGAirport *apt = _airports->getAirport(i);
+        STD::string entry(apt->getName() + "   (" + apt->getId() + ')');
+
+        if (!_filter.empty() && entry.find(_filter) == STD::string::npos)
+            continue;
+
+        _content[n] = new char[entry.size() + 1];
+        strcpy(_content[n], entry.c_str());
+        n++;
+    }
+    _content[n] = 0;
+    newList(_content);
+}
+
+void
+AirportList::destroy_list ()
+{
+    for (char **c = _content; *c; c++) {
+        delete *c;
+        *c = 0;
     }
     delete [] _content;
 }
@@ -44,10 +58,17 @@ char *
 AirportList::getListStringValue ()
 {
     int i = getListIntegerValue();
-    if (i >= 0)
-        return (char *)_airports->getAirport(i)->getId().c_str();
-    else
-        return "";
+    return i < 0 ? 0 : _content[i];
+}
+
+void
+AirportList::setValue (const char *s)
+{
+    STD::string filter(s);
+    if (filter != _filter) {
+        _filter = filter;
+        create_list();
+    }
 }
 
 // end of AirportList.cxx
