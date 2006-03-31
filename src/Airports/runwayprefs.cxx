@@ -566,11 +566,9 @@ void  FGRunwayPreference::pi (const char * target, const char * data) {
 }
 
 void  FGRunwayPreference::warning (const char * message, int line, int column) {
-  //cout << "Warning: " << message << " (" << line << ',' << column << ')'   
-  //     << endl;
+  SG_LOG(SG_IO, SG_WARN, "Warning: " << message << " (" << line << ',' << column << ')');
 }
 
 void  FGRunwayPreference::error (const char * message, int line, int column) {
-  //cout << "Error: " << message << " (" << line << ',' << column << ')'
-  //     << endl;
+  SG_LOG(SG_IO, SG_ALERT, "Error: " << message << " (" << line << ',' << column << ')');
 }

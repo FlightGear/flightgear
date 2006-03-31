@@ -57,8 +57,8 @@ SG_USING_STD(random_shuffle);
 /********** FGAirport Dynamics *********************************************/
 
 FGAirportDynamics::FGAirportDynamics(double lat, double lon, double elev, string id) :
-  _latitude(lat),
   _longitude(lon),
+  _latitude(lat),
   _elevation(elev),
   _id(id)
 {
@@ -437,13 +437,11 @@ void  FGAirportDynamics::pi (const char * target, const char * data) {
 }
 
 void  FGAirportDynamics::warning (const char * message, int line, int column) {
-  //cout << "Warning: " << message << " (" << line << ',' << column << ')'   
-  //     << endl;
+  SG_LOG(SG_IO, SG_WARN, "Warning: " << message << " (" << line << ',' << column << ')');
 }
 
 void  FGAirportDynamics::error (const char * message, int line, int column) {
-  //cout << "Error: " << message << " (" << line << ',' << column << ')'
-  //     << endl;
+  SG_LOG(SG_IO, SG_ALERT, "Error: " << message << " (" << line << ',' << column << ')');
 }
 
 void FGAirportDynamics::setRwyUse(const FGRunwayPreference& ref)
