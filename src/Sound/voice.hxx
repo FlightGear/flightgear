@@ -104,7 +104,6 @@ public:
 private:
 	class FGVoiceListener;
 	SGSocket *_sock;
-	bool _connected;
 	double _volume;
 	double _pitch;
 	double _speed;

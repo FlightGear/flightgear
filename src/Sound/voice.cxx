@@ -63,8 +63,12 @@ void FGVoiceMgr::init()
 
 	SGPropertyNode *base = fgGetNode(VOICE, true);
 	vector<SGPropertyNode_ptr> voices = base->getChildren("voice");
-	for (unsigned int i = 0; i < voices.size(); i++)
-		_voices.push_back(new FGVoice(this, voices[i]));
+	try {
+		for (unsigned int i = 0; i < voices.size(); i++)
+			_voices.push_back(new FGVoice(this, voices[i]));
+	} catch (const string& s) {
+		SG_LOG(SG_IO, SG_ALERT, "VOICE: " << s);
+	}
 
 #if defined(ENABLE_THREADS)
 	_thread->start(1);
@@ -105,28 +109,20 @@ FGVoiceMgr::FGVoice::FGVoice(FGVoiceMgr *mgr, const SGPropertyNode_ptr node) :
 	const string &port = _mgr->_port;
 
 	_sock = new SGSocket(host, port, "tcp");
-	_sock->set_timeout(10000);
-	_connected = _sock->open(SG_IO_OUT);
-	if (!_connected) {
-		SG_LOG(SG_IO, SG_ALERT, "VOICE: no connection to `"
-				<< host << ':' << port << '\'');
-		return;
-	}
+	_sock->set_timeout(6000);
+	if (!_sock->open(SG_IO_OUT))
+		throw string("no connection to `") + host + ':' + port + '\'';
 
 	if (_festival) {
 		_sock->writestring("(SayText \"\")\015\012");
 		char buf[4];
 		int len = _sock->read(buf, 3);
-		if (len != 3 || buf[0] != 'L' || buf[1] != 'P') {
-			SG_LOG(SG_IO, SG_ALERT, "VOICE: unexpected or no response from `"
-					<< host << ':' << port << "'. Either it's not " << endl
-					<< "       Festival listening, or Festival couldn't open a "
-					"sound device.");
-			_connected = false;
-			return;
-		}
+		if (len != 3 || buf[0] != 'L' || buf[1] != 'P')
+			throw string("unexpected or no response from `") + host + ':' + port
+					+ "'. Either it's not\n       Festival listening,"
+					" or Festival couldn't open a sound device.";
 
-		SG_LOG(SG_IO, SG_BULK, "VOICE: connection to Festival server on `"
+		SG_LOG(SG_IO, SG_INFO, "VOICE: connection to Festival server on `"
 				<< host << ':' << port << "' established");
 
 		setVolume(_volume = _volumeNode->getDoubleValue());
@@ -175,7 +171,7 @@ bool FGVoiceMgr::FGVoice::speak(void)
 
 void FGVoiceMgr::FGVoice::update(void)
 {
-	if (_connected && _festival) {
+	if (_festival) {
 		double d;
 		d = _volumeNode->getDoubleValue();
 		if (d != _volume)
