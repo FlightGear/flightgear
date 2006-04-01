@@ -78,9 +78,6 @@ extern void sgShaderFrameInit(double delta_time_sec);
 
 float default_attenuation[3] = {1.0, 0.0, 0.0};
 
-ssgSharedPtr<ssgSelector> lightpoints_brightness = new ssgSelector;
-ssgSharedPtr<ssgTransform> lightpoints_transform = new ssgTransform;
-
 // Clip plane settings...
 float scene_nearplane = 0.5f;
 float scene_farplane = 120000.0f;
@@ -104,7 +101,6 @@ static GLfloat ground_exp2_punch_through;
 // Sky structures
 SGSky *thesky;
 
-ssgSharedPtr<ssgSimpleState> cloud3d_imposter_state;
 ssgSharedPtr<ssgSimpleState> default_state;
 ssgSharedPtr<ssgSimpleState> hud_and_panel;
 ssgSharedPtr<ssgSimpleState> menus;
@@ -138,19 +134,6 @@ FGRenderer::build_states( void ) {
     default_state->disable( GL_BLEND );
     default_state->disable( GL_ALPHA_TEST );
     default_state->disable( GL_LIGHTING );
-
-    cloud3d_imposter_state = new ssgSimpleState;
-    cloud3d_imposter_state->enable( GL_TEXTURE_2D );
-    cloud3d_imposter_state->enable( GL_CULL_FACE );
-    cloud3d_imposter_state->enable( GL_COLOR_MATERIAL );
-    cloud3d_imposter_state->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
-    cloud3d_imposter_state->setMaterial( GL_DIFFUSE, 1, 1, 1, 1 );
-    cloud3d_imposter_state->setMaterial( GL_AMBIENT, 1, 1, 1, 1 );
-    cloud3d_imposter_state->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
-    cloud3d_imposter_state->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
-    cloud3d_imposter_state->enable( GL_BLEND );
-    cloud3d_imposter_state->enable( GL_ALPHA_TEST );
-    cloud3d_imposter_state->disable( GL_LIGHTING );
 
     hud_and_panel = new ssgSimpleState;
     hud_and_panel->disable( GL_CULL_FACE );
