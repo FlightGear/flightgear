@@ -594,36 +594,16 @@ bool fgInitConfig ( int argc, char **argv ) {
     }
 
 #ifdef _MSC_VER
-    // Best solution is to set fg-home to My Documents but it requires reading the Windows registry
-    bool fg_home_set = false;
-    HKEY hKey;
-    LONG rc = RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 0, KEY_QUERY_VALUE, &hKey );
-    if ( rc == ERROR_SUCCESS ) {
-        DWORD vt,bs;
-        rc = RegQueryValueEx( hKey, "Personal", NULL, &vt, NULL, &bs );
-        if ( rc == ERROR_SUCCESS ) {
-            unsigned char *buff = new unsigned char[ bs ];
-            rc = RegQueryValueEx( hKey, "Personal", NULL, &vt, buff, &bs );
-            fgSetString("/sim/fg-home", (char *)buff);
-            fg_home_set = true;
-            delete [] buff;
-        }
-        RegCloseKey( hKey );
-    }
-    char *envp = ::getenv( "APPDATA" ); // APPDATA is for applications and is hidden
+    char *envp = ::getenv( "APPDATA" );
     if (envp != NULL ) {
         SGPath config( envp );
         config.append( "flightgear.org" );
-        if ( !fg_home_set ) {
-            fgSetString("/sim/fg-home", config.c_str());
-            fg_home_set = true;
-        }
 #else
     if ( homedir != NULL ) {
         SGPath config( homedir );
         config.append( ".fgfs" );
-        fgSetString("/sim/fg-home", config.c_str());
 #endif
+        fgSetString("/sim/fg-home", config.c_str());
         config.append( "autosave.xml" );
         SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from autosave.xml");
         try {
