@@ -23,7 +23,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Creating Config.h"
-				CommandLine="copy ..\..\src\Include\config.h.msvc8 ..\..\src\Include\config.h"
+				CommandLine="copy ..\..\src\Include\config.h-msvc8 ..\..\src\Include\config.h"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
