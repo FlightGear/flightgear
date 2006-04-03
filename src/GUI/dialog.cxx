@@ -711,6 +711,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 void
 FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 {
+    string type = props->getName();
     object->setLabelPlace(PUPLACE_CENTERED_RIGHT);
 
     if (props->hasValue("legend"))
@@ -766,6 +767,10 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
             info->bindings.push_back(new FGBinding(binding));
         }
         object->setCallback(action_callback);
+
+        if (type == "input" && props->getBoolValue("live"))
+            object->setDownCallback(action_callback);
+
         object->setUserData(info);
         _info.push_back(info);
     }
