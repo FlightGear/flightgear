@@ -46,10 +46,12 @@ fgfs-base-tar:
 	--exclude='*/Textures.high/*.new' \
 	--exclude='*/Textures.high/*.orig' \
 	--exclude='*/Textures.high/*.save' \
+	--exclude='*/data/Data' \
 	--exclude='*/Docs/source' \
         --exclude='*/Models/MNUAV' \
         --exclude='*/Models/Airspace' \
 	-cjvf fgfs-base-$(VERSION).tar.bz2 \
+		data/AI \
                 data/Aircraft/Generic \
                 data/Aircraft/Instruments \
                 data/Aircraft/Instruments-3d \

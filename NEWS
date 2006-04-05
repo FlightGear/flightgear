@@ -1,5 +1,5 @@
-New in 0.9.10-pre3
-* March 27, 2006
+New in 0.9.10
+* April 5, 2006
 
 * Many improvements to the multi-player mode.  Other airplanes are now
   updated smoothly.  There is a really nifty google maps based moving
@@ -13,6 +13,7 @@ New in 0.9.10-pre3
 * Complete overhaul/redo of terrain textures based on USGS satellite imagery.
 * Added background ATC chatter.
 * Updated/improved rain cone rendering.
+* Updated manual.
 
 * Upgraded to JSBSim v2.0
 * Fix a discrepancy in sign of twist and incidence values in YASim

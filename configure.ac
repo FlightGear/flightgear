@@ -10,7 +10,7 @@ AC_PREREQ(2.52)
 dnl Initialize the automake stuff
 dnl set the $host variable based on local machine/os
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE(FlightGear, 0.9.10-pre3)
+AM_INIT_AUTOMAKE(FlightGear, 0.9.10)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
