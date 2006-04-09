@@ -117,7 +117,7 @@ extern "C" void uiuc_record_routine(double dt);
 extern "C" void uiuc_network_recv_routine();
 extern "C" void uiuc_network_send_routine();
 
-AIRCRAFT *aircraft_ = new AIRCRAFT;
+AIRCRAFT *aircraft_ = 0;
 
 // SendArray testarray(4950);
 
@@ -160,6 +160,9 @@ void uiuc_initial_init ()
 
 void uiuc_defaults_inits ()
 {
+  if (aircraft_ == 0)
+    aircraft_ = new AIRCRAFT;
+
   // set defaults and initialize (called once from uiuc_init_2_wrapper)
 
   //fog inits 
