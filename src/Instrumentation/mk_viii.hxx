@@ -232,10 +232,16 @@ class MK_VIII : public SGSubsystem
       tie(node->getNode(relative_path, true), raw_value);
     }
 
+    PropertiesHandler() {};
+
     void init ();
     void unbind ();
   };
 
+public:
+  PropertiesHandler     properties_handler;
+
+private:
   /////////////////////////////////////////////////////////////////////////////
   // MK_VIII::PowerHandler ////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -431,6 +437,7 @@ class MK_VIII : public SGSubsystem
   // MK_VIII::IOHandler ///////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
+public:
   class IOHandler
   {
   public:
@@ -604,6 +611,8 @@ class MK_VIII : public SGSubsystem
 
     void bind (SGPropertyNode *node);
 
+    MK_VIII *mk;
+
   private:
 
     ///////////////////////////////////////////////////////////////////////////
@@ -626,8 +635,6 @@ class MK_VIII : public SGSubsystem
     ///////////////////////////////////////////////////////////////////////////
     // MK_VIII::IOHandler (continued) /////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
-
-    MK_VIII *mk;
 
     TerrainClearanceFilter terrain_clearance_filter;
 
@@ -677,6 +684,8 @@ class MK_VIII : public SGSubsystem
     void tie_output (SGPropertyNode *node,
 		     const char *name,
 		     int *output);
+
+  public:
 
     bool get_discrete_input (bool *ptr) const;
     void set_discrete_input (bool *ptr, bool value);
@@ -860,7 +869,7 @@ class MK_VIII : public SGSubsystem
 
     inline void bind (SGPropertyNode *node) { speaker.bind(node); }
 
-  private:
+  public:
 
     ///////////////////////////////////////////////////////////////////////////
     // MK_VIII::VoicePlayer::Speaker //////////////////////////////////////////
@@ -890,13 +899,13 @@ class MK_VIII : public SGSubsystem
 	    &MK_VIII::VoicePlayer::Speaker::set_property));
       }
 
+    public:
       template <class T>
       inline void set_property (T *ptr, T value) { *ptr = value; update_configuration(); }
 
       template <class T>
       inline T get_property (T *ptr) const { return *ptr; }
 
-    public:
       double volume;
 
       inline Speaker (VoicePlayer *_player)
@@ -917,6 +926,7 @@ class MK_VIII : public SGSubsystem
       void update_configuration ();
     };
 
+  private:
     ///////////////////////////////////////////////////////////////////////////
     // MK_VIII::VoicePlayer (continued) ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////
@@ -949,6 +959,7 @@ class MK_VIII : public SGSubsystem
     inline void make_voice (Voice **voice, T1 e1, T2 e2, T3 e3, T4 e4) { make_voice(voice, e1, e2, e3); append(*voice, e4); }
   };
 
+private:
   /////////////////////////////////////////////////////////////////////////////
   // MK_VIII::SelfTestHandler /////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -1573,7 +1584,6 @@ class MK_VIII : public SGSubsystem
   string	name;
   int		num;
 
-  PropertiesHandler	properties_handler;
   PowerHandler		power_handler;
   SystemHandler		system_handler;
   ConfigurationModule	configuration_module;
