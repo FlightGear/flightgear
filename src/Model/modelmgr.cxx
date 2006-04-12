@@ -81,7 +81,8 @@ FGModelMgr::add_model (SGPropertyNode * node)
       globals->get_sim_time_sec(), /*cache_object=*/false);
 
   model->init( object );
-  shadows->addOccluder((ssgBranch *)object, SGShadowVolume::occluderTypeTileObject);
+  if (shadows)
+      shadows->addOccluder((ssgBranch *)object, SGShadowVolume::occluderTypeTileObject);
 
 				// Set position and orientation either
 				// indirectly through property refs
@@ -258,7 +259,8 @@ FGModelMgr::Listener::childRemoved(SGPropertyNode * parent, SGPropertyNode * chi
 
     _mgr->_instances.erase(it);
     ssgBranch *branch = (ssgBranch *)instance->model->getSceneGraph();
-    shadows->deleteOccluder(branch);
+    if (shadows)
+        shadows->deleteOccluder(branch);
     globals->get_scenery()->get_scene_graph()->removeKid(branch);
 
     delete instance;
