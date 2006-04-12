@@ -54,6 +54,7 @@ public:
     SGPropertyNode_ptr roll_deg_node;
     SGPropertyNode_ptr pitch_deg_node;
     SGPropertyNode_ptr heading_deg_node;
+    bool shadow;
   };
 
   FGModelMgr ();
