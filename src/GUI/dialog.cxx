@@ -841,6 +841,8 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
         if ((pucol[i].mask == LABEL) && !c->isValid())
             dirty |= c->merge(_gui->getColor("label"));
 
+        dirty |= c->merge(props->getNode(pucol[i].cname));
+
         if (c->isValid() && dirty)
             object->setColor(pucol[i].id, c->red(), c->green(), c->blue(), c->alpha());
     }
