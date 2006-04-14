@@ -653,7 +653,7 @@ typedef enum {
     OBJECT,
     OBJECT_SHARED,
     OBJECT_STATIC,
-    OBJECT_TAXI_SIGN,
+    OBJECT_SIGN,
     OBJECT_RUNWAY_SIGN
 } object_type;
 
@@ -766,8 +766,8 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
             } else if ( token == "OBJECT_SHARED" ) {
                 objects.push_back(new Object(OBJECT_SHARED, token, tile_path, in));
 
-            } else if ( token == "OBJECT_TAXI_SIGN" ) {
-                objects.push_back(new Object(OBJECT_TAXI_SIGN, token, tile_path, in));
+            } else if ( token == "OBJECT_SIGN" ) {
+                objects.push_back(new Object(OBJECT_SIGN, token, tile_path, in));
 
             } else if ( token == "OBJECT_RUNWAY_SIGN" ) {
                 objects.push_back(new Object(OBJECT_RUNWAY_SIGN, token, tile_path, in));
@@ -881,9 +881,9 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
             FGTileMgr::model_ready( dm );
 
 
-        } else if (obj->type == OBJECT_TAXI_SIGN || obj->type == OBJECT_RUNWAY_SIGN) {
+        } else if (obj->type == OBJECT_SIGN || obj->type == OBJECT_RUNWAY_SIGN) {
             ssgBranch *(*make_sign)(SGMaterialLib *, const string, const string);
-            make_sign = obj->type == OBJECT_TAXI_SIGN ? sgMakeTaxiSign : sgMakeRunwaySign;
+            make_sign = obj->type == OBJECT_SIGN ? sgMakeSign : sgMakeRunwaySign;
 
             // load the object itself
             SGPath custom_path = obj->path;
