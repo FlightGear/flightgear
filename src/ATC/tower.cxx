@@ -204,13 +204,11 @@ FGTower::FGTower() {
 	update_count_max = 15;
 	
 	holdListItr = holdList.begin();
-	appList.clear();
 	appListItr = appList.begin();
 	depListItr = depList.begin();
 	rwyListItr = rwyList.begin();
 	circuitListItr = circuitList.begin();
 	trafficListItr = trafficList.begin();
-	vacatedList.clear();
 	vacatedListItr = vacatedList.begin();
 	
 	freqClear = true;
@@ -2173,7 +2171,9 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = appList.erase(twrItr);
 			appListItr = appList.begin();
-			break;
+			// HACK: aircraft are sometimes more than once in a list, so we need to
+			// remove them all before we can delete the TowerPlaneRec class
+			//break;
 		}
 	}
 	for(twrItr = depList.begin(); twrItr != depList.end(); twrItr++) {
@@ -2181,7 +2181,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = depList.erase(twrItr);
 			depListItr = depList.begin();
-			break;
+			//break;
 		}
 	}
 	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
@@ -2189,7 +2189,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = circuitList.erase(twrItr);
 			circuitListItr = circuitList.begin();
-			break;
+			//break;
 		}
 	}
 	for(twrItr = holdList.begin(); twrItr != holdList.end(); twrItr++) {
@@ -2197,7 +2197,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = holdList.erase(twrItr);
 			holdListItr = holdList.begin();
-			break;
+			//break;
 		}
 	}
 	for(twrItr = rwyList.begin(); twrItr != rwyList.end(); twrItr++) {
@@ -2205,7 +2205,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = rwyList.erase(twrItr);
 			rwyListItr = rwyList.begin();
-			break;
+			//break;
 		}
 	}
 	for(twrItr = vacatedList.begin(); twrItr != vacatedList.end(); twrItr++) {
@@ -2213,7 +2213,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = vacatedList.erase(twrItr);
 			vacatedListItr = vacatedList.begin();
-			break;
+			//break;
 		}
 	}
 	for(twrItr = trafficList.begin(); twrItr != trafficList.end(); twrItr++) {
@@ -2221,7 +2221,7 @@ void FGTower::RemovePlane(const string& ID) {
 			t = *twrItr;
 			twrItr = trafficList.erase(twrItr);
 			trafficListItr = trafficList.begin();
-			break;
+			//break;
 		}
 	}
 	// And finally, delete the record.
