@@ -23,6 +23,10 @@
 #ifndef _ENVIRONMENT_CTRL_HXX
 #define _ENVIRONMENT_CTRL_HXX
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/environment/metar.hxx>
@@ -45,6 +49,7 @@ SG_USING_STD(queue);
 SG_USING_STD(vector);
 
 class SGPropertyNode;
+class FGAirport;
 
 #include "environment.hxx"
 #include "fgmetar.hxx"
