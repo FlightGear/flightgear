@@ -25,10 +25,13 @@
 #include <simgear/math/point3d.hxx>
 #include <Main/fg_props.hxx>
 
-#include "tower.hxx"
 #include "AIPlane.hxx"
 #include "ATCProjection.hxx"
 #include "ground.hxx"
+
+class FGGround;
+class FGTower;
+class Gate;
 
 #include <string>
 SG_USING_STD(string);

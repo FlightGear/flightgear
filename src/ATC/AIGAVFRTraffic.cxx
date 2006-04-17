@@ -23,24 +23,20 @@
 #  include <config.h>
 #endif
 
-//#include <simgear/scene/model/location.hxx>
-
 #include <Airports/runways.hxx>
 #include <Main/globals.hxx>
-//#include <Scenery/scenery.hxx>
-//#include <Scenery/tilemgr.hxx>
 #include <simgear/math/point3d.hxx>
-//#include <simgear/math/sg_geodesy.hxx>
-//#include <simgear/misc/sg_path.hxx>
 #include <string>
 #include <math.h>
 
 SG_USING_STD(string);
 
+#include "ATC.hxx"
 #include "ATCmgr.hxx"
 #include "AILocalTraffic.hxx"
 #include "AIGAVFRTraffic.hxx"
 #include "ATCutils.hxx"
+#include "tower.hxx"
 
 FGAIGAVFRTraffic::FGAIGAVFRTraffic() {
 	ATC = globals->get_ATC_mgr();

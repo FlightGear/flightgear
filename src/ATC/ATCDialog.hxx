@@ -23,7 +23,13 @@
 
 #include <simgear/compiler.h>
 
+#include <vector>
+#include <map>
+
 #include "ATC.hxx"
+
+SG_USING_STD(vector);
+SG_USING_STD(map);
 
 class NewGUI;
 

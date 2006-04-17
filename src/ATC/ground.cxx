@@ -33,10 +33,10 @@
 #include STL_FSTREAM
 
 #include "ground.hxx"
-#include "ATCmgr.hxx"
-#include "ATCutils.hxx"
 #include "ATCdisplay.hxx"
+#include "ATCutils.hxx"
 #include "AILocalTraffic.hxx"
+#include "ATCmgr.hxx"
 
 SG_USING_STD(ifstream);
 SG_USING_STD(cout);

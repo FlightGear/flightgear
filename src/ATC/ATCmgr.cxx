@@ -25,11 +25,15 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <Airports/simple.hxx>
+
 #include "ATCmgr.hxx"
 #include "commlist.hxx"
 #include "ATCdisplay.hxx"
 #include "ATCDialog.hxx"
 #include "ATCutils.hxx"
+#include "transmissionlist.hxx"
+#include "ground.hxx"
+
 
 /*
 // periodic radio station search wrapper

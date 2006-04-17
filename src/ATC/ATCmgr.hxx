@@ -31,13 +31,8 @@
 #include <list>
 #include <map>
 
-#include "atis.hxx"
 #include "tower.hxx"
 #include "approach.hxx"
-#include "ground.hxx"
-#include "ATC.hxx"
-#include "ATCVoice.hxx"
-#include "transmissionlist.hxx"
 
 SG_USING_STD(string);
 SG_USING_STD(list);

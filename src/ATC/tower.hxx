@@ -24,9 +24,7 @@
 #include <simgear/compiler.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/misc/sgstream.hxx>
-//#include <simgear/math/sg_geodesy.hxx>
 #include <plib/sg.h>
-//#include <Airports/runways.hxx>
 
 #include STL_IOSTREAM
 #include STL_STRING
@@ -35,10 +33,11 @@ SG_USING_STD(string);
 SG_USING_STD(ios);
 
 #include "ATC.hxx"
-//#include "ATCmgr.hxx"
-#include "ground.hxx"
 #include "ATCProjection.hxx"
 #include "AIPlane.hxx"
+
+class FGATCMgr;
+class FGGround;
 
 //DCL - a complete guess for now.
 #define FG_TOWER_DEFAULT_RANGE 30

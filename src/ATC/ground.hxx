@@ -21,28 +21,30 @@
 #ifndef _FG_GROUND_HXX
 #define _FG_GROUND_HXX
 
+#include <map>
+#include <vector>
+#include <list>
+
+#include <simgear/math/point3d.hxx>
+#include <simgear/misc/sgstream.hxx>
+#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/props/props.hxx>
+
+#include "ATC.hxx"
+#include "ATCProjection.hxx"
+
 #include STL_IOSTREAM
 #include STL_STRING
 
 SG_USING_STD(string);
 SG_USING_STD(ios);
 
-#include <map>
-#include <vector>
-#include <list>
-#include <simgear/math/point3d.hxx>
-#include <simgear/misc/sgstream.hxx>
-#include <simgear/math/sg_geodesy.hxx>
-
-#include "ATC.hxx"
-//#include "ATCmgr.hxx"
-#include "ATCProjection.hxx"
-#include "AIEntity.hxx"
-//#include "AILocalTraffic.hxx"	// RunwayDetails - this is a temporary hack
-
 SG_USING_STD(map);
 SG_USING_STD(vector);
 SG_USING_STD(list);
+
+class FGAIEntity;
+class FGATCMgr;
 
 //////////////////////////////////////////////////////
 // Types for the logical network data structure
@@ -308,8 +310,8 @@ private:
     //NextClearance(ground_rec &g);
 	
 	// environment - need to make sure we're getting the surface winds and not winds aloft.
-	SGPropertyNode* wind_from_hdg;	//degrees
-	SGPropertyNode* wind_speed_knots;		//knots
+	SGPropertyNode_ptr wind_from_hdg;	//degrees
+	SGPropertyNode_ptr wind_speed_knots;		//knots
 	
 	// for failure modeling
 	string trans_ident;		// transmitted ident

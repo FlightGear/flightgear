@@ -25,10 +25,6 @@
 #include <simgear/math/point3d.hxx>
 #include <Main/fg_props.hxx>
 
-#include "tower.hxx"
-#include "AIPlane.hxx"
-#include "ATCProjection.hxx"
-#include "ground.hxx"
 #include "AILocalTraffic.hxx"
 
 #include <string>

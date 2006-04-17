@@ -39,10 +39,8 @@
 #include <Airports/simple.hxx>
 
 #include <sstream>
-#include <map>
 
 SG_USING_STD(ostringstream);
-SG_USING_STD(map);
 
 FGATCDialog *current_atcdialog;
 
