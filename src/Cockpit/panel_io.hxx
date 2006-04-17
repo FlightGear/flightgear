@@ -25,15 +25,17 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H          
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
 #include <simgear/compiler.h>
 
 #include STL_IOSTREAM
+#include STL_STRING
 
 SG_USING_STD(istream);
+SG_USING_STD(string);
 
 class FGPanel;
 

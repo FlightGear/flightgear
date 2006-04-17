@@ -27,8 +27,6 @@
 #include <math.h>
 #include <algorithm>
 
-#include <simgear/compiler.h>
-
 //#include <plib/sg.h>
 //#include <plib/ul.h>
 

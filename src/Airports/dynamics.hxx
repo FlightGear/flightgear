@@ -23,14 +23,19 @@
 #define _AIRPORT_DYNAMICS_HXX_
 
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
-#endif                        
+#endif
 
-  
+#include <simgear/xml/easyxml.hxx>
+
+#include "parking.hxx"
+#include "groundnetwork.hxx"
+#include "runwayprefs.hxx"
+
 
 class FGAirportDynamics : public XMLVisitor {
-  
+
 private:
   double _longitude;    // degrees
   double _latitude;     // degrees

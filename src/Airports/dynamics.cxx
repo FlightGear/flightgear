@@ -39,7 +39,6 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Airports/runways.hxx>
-#include <simgear/xml/easyxml.hxx>
 
 #include STL_STRING
 #include <vector>
@@ -49,9 +48,6 @@ SG_USING_STD(vector);
 SG_USING_STD(sort);
 SG_USING_STD(random_shuffle);
 
-#include "parking.hxx"
-#include "groundnetwork.hxx"
-#include "runwayprefs.hxx"
 #include "dynamics.hxx"
 
 /********** FGAirport Dynamics *********************************************/

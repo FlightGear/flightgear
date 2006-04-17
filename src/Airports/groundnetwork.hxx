@@ -24,6 +24,8 @@
 #ifndef _GROUNDNETWORK_HXX_
 #define _GROUNDNETWORK_HXX_
 
+#include <simgear/compiler.h>
+
 #include STL_STRING
 #include <vector>
 
