@@ -8,6 +8,7 @@
 #endif
 
 #include <simgear/compiler.h>	// for SG_USING_STD
+#include <Main/fg_props.hxx>
 
 #include <plib/pu.h>
 

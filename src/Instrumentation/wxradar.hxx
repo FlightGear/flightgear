@@ -23,6 +23,8 @@
 #ifndef _INST_WXRADAR_HXX
 #define _INST_WXRADAR_HXX
 
+#include <plib/ssg.h>
+
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/environment/visual_enviro.hxx>

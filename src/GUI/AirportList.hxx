@@ -1,10 +1,16 @@
 // AirportList.hxx - scrolling list of airports.
 
 #ifndef __AIRPORTLIST_HXX
+#define __AIRPORTLIST_HXX
+
+#include <simgear/compiler.h>
+#include STL_STRING
 
 #include <plib/pu.h>
 
 #include "puList.hxx"
+
+SG_USING_STD(string);
 
 class FGAirportList;
 
@@ -28,5 +34,3 @@ class AirportList : public puList
 };
 
 #endif // __AIRPORTLIST_HXX
-
-// end of AirportList.hxx

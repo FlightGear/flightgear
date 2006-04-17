@@ -25,7 +25,6 @@
 #endif
 
 #include <plib/sg.h>
-#include <plib/ssg.h>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Cockpit/panel.hxx>
