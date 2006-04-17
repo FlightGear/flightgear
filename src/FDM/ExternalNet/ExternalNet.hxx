@@ -30,6 +30,7 @@
 
 #include <Network/net_ctrls.hxx>
 #include <Network/net_fdm.hxx>
+#include <FDM/flight.hxx>
 
 
 class HTTPClient : public netBufferChannel
