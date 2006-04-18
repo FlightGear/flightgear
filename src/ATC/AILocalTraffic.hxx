@@ -31,7 +31,7 @@
 
 class FGGround;
 class FGTower;
-class Gate;
+struct Gate;
 
 #include <string>
 SG_USING_STD(string);
