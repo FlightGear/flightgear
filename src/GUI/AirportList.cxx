@@ -21,11 +21,8 @@ AirportList::~AirportList ()
 void
 AirportList::create_list ()
 {
-    if (_content)
-        destroy_list();
-
     int num_apt = _airports->size();
-    _content = new char *[num_apt + 1];
+    char **content = new char *[num_apt + 1];
 
     int n = 0;
     for (int i = 0; i < num_apt; i++) {
@@ -35,12 +32,18 @@ AirportList::create_list ()
         if (!_filter.empty() && entry.find(_filter) == STD::string::npos)
             continue;
 
-        _content[n] = new char[entry.size() + 1];
-        strcpy(_content[n], entry.c_str());
+        content[n] = new char[entry.size() + 1];
+        strcpy(content[n], entry.c_str());
         n++;
     }
-    _content[n] = 0;
-    newList(_content);
+    content[n] = 0;
+    // work around plib 2006/04/18 bug: lists with no entries cause crash on arrow-up
+    newList(n > 0 ? content : 0);
+
+    if (_content)
+        destroy_list();
+
+    _content = content;
 }
 
 void
