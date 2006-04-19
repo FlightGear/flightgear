@@ -124,7 +124,8 @@ TACAN::init ()
     _bearing_node = node->getChild("indicated-bearing-true-deg", 0, true);
     SGPropertyNode *cnode = fgGetNode("/ai/models/carrier", num, true );
     _carrier_name_node = cnode->getChild("name", 0, true);
-    
+    SGPropertyNode *tnode = fgGetNode("/ai/models/aircraft", num, true );
+    _tanker_callsign_node = tnode->getChild("callsign", 0, true);
 }
 
 void
@@ -133,10 +134,21 @@ TACAN::update (double delta_time_sec)
     double az2 = 0;
     double bearing = 0;
     double distance = 0;
-    double carrier_az2= 0;
+    double carrier_az2 = 0;
     double carrier_bearing = 0;
     double carrier_distance = 0;
+    double tanker_az2 = 0;
+    double tanker_bearing = 0;
+    double tanker_distance = 0;
     double frequency_mhz = 0;
+    double mobile_bearing = 0;
+    double mobile_distance = 0;
+    double mobile_elevation_ft = 0;
+    double mobile_range_nm = 0;
+    double mobile_bias = 0;
+    string mobile_name = "";
+    bool   mobile_valid = false;
+
     string _channel, _last_channel, _channel_1, _channel_2,_channel_3, _channel_4;
 
                                 // If it's off, don't waste any time.
@@ -204,6 +216,18 @@ TACAN::update (double delta_time_sec)
                        _carrier_lon,
                        &carrier_bearing, &carrier_az2, &carrier_distance);
 
+    //calculate the bearing and range of the tanker from the aircraft
+    SG_LOG( SG_INSTR, SG_DEBUG, "tanker_lat " << _tanker_lat);
+    SG_LOG( SG_INSTR, SG_DEBUG, "tanker_lon " << _tanker_lon);
+    SG_LOG( SG_INSTR, SG_DEBUG, "tanker_name " << _tanker_name);
+    SG_LOG( SG_INSTR, SG_DEBUG, "tanker_valid " << _tanker_valid);
+    geo_inverse_wgs_84(altitude_m,
+                       latitude_deg,
+                       longitude_deg,
+                       _tanker_lat,
+                       _tanker_lon,
+                       &tanker_bearing, &tanker_az2, &tanker_distance);
+
 
     //calculate the bearing and range of the station from the aircraft
     geo_inverse_wgs_84(altitude_m,
@@ -213,17 +237,63 @@ TACAN::update (double delta_time_sec)
                        _transmitter_lon,
                        &bearing, &az2, &distance);
 
+    //select the nearest valid mobile transmitter
+    if ( _carrier_valid && _tanker_valid ){
+        if( carrier_distance <= tanker_distance ){
+            SG_LOG( SG_INSTR, SG_DEBUG, " select carrier (dist) " );
+            mobile_bearing = carrier_bearing;
+            mobile_distance = carrier_distance;
+            mobile_elevation_ft = _carrier_elevation_ft;
+            mobile_range_nm = _carrier_range_nm;
+            mobile_bias = _carrier_bias;
+            mobile_name = _carrier_name;
+        }else{
+            SG_LOG( SG_INSTR, SG_DEBUG, " select tanker (dist)  " );
+            mobile_bearing = tanker_bearing;
+            mobile_distance = tanker_distance;
+            mobile_elevation_ft = _tanker_elevation_ft;
+            mobile_range_nm = _tanker_range_nm;
+            mobile_bias = _tanker_bias;
+            mobile_name = _tanker_name;
+        }
+        mobile_valid = true;
+    }
+    else if ( _carrier_valid && !_tanker_valid ){
+        SG_LOG( SG_INSTR, SG_DEBUG, " select carrier  " );
+        mobile_bearing = carrier_bearing;
+        mobile_distance = carrier_distance;
+        mobile_elevation_ft = _carrier_elevation_ft;
+        mobile_range_nm = _carrier_range_nm;
+        mobile_bias = _carrier_bias;
+        mobile_name = _carrier_name;
+        mobile_valid = true;
+    }
+    else if ( !_carrier_valid && _tanker_valid ){
+        SG_LOG( SG_INSTR, SG_DEBUG, " select tanker  " );
+        mobile_bearing = tanker_bearing;
+        mobile_distance = tanker_distance;
+        mobile_elevation_ft = _tanker_elevation_ft;
+        mobile_range_nm = _tanker_range_nm;
+        mobile_bias = _tanker_bias;
+        mobile_name = _tanker_name;
+        mobile_valid = true;
+    }else{
+        mobile_valid = false;
+    }
+
+
+
 
     //select the nearer
-    if ( carrier_distance <= distance && _carrier_valid) {
-        SG_LOG( SG_INSTR, SG_DEBUG, "carrier_distance_nm " << carrier_distance);
-        SG_LOG( SG_INSTR, SG_DEBUG, "distance_nm " << distance);
-        bearing = carrier_bearing;
-        distance = carrier_distance;
-        _transmitter_elevation_ft = _carrier_elevation_ft;
-        _transmitter_range_nm = _carrier_range_nm;
-        _transmitter_bias = _carrier_bias;
-        _transmitter_name = _carrier_name;
+    if ( mobile_distance <= distance && mobile_valid) {
+        SG_LOG( SG_INSTR, SG_DEBUG, "mobile_distance_m " << mobile_distance);
+        SG_LOG( SG_INSTR, SG_DEBUG, "distance_m " << distance);
+        bearing = mobile_bearing;
+        distance = mobile_distance;
+        _transmitter_elevation_ft = mobile_elevation_ft;
+        _transmitter_range_nm = mobile_range_nm;
+        _transmitter_bias = mobile_bias;
+        _transmitter_name = mobile_name;
         _name_node->setStringValue(_transmitter_name.c_str());
     }
 
@@ -263,7 +333,7 @@ TACAN::update (double delta_time_sec)
     }
 
                                 // If we can't find a valid station set everything to zero
-    if (!_transmitter_valid && !_carrier_valid) {
+    if (!_transmitter_valid && !mobile_valid ) {
         _in_range_node->setBoolValue(false);
         _distance_node->setDoubleValue(0);
         _speed_node->setDoubleValue(0);
@@ -279,6 +349,7 @@ void
 TACAN::search (double frequency_mhz, double longitude_rad,
                double latitude_rad, double altitude_m)
 {
+    int number, i;
 
     SG_LOG( SG_INSTR, SG_DEBUG, "tacan freq " << frequency_mhz );
 
@@ -298,14 +369,13 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         SGPropertyNode * branch = fgGetNode("ai/models", true);
         vector<SGPropertyNode_ptr> carrier = branch->getChildren("carrier");
 
-        int number = carrier.size();
+        number = carrier.size();
 
         SG_LOG( SG_INSTR, SG_DEBUG, "carrier " << number );
 
-        int i;
         for ( i = 0; i < number; ++i ) {
             string str2 ( carrier[i]->getStringValue("name", ""));
-            // SG_LOG( SG_INSTR, SG_DEBUG, "carrier name " << str2 );
+            SG_LOG( SG_INSTR, SG_DEBUG, "carrier name " << str2 );
 
             SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 2 " << str2 );
             unsigned int loc1= str1.find( str2, 0 );
@@ -334,6 +404,56 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter invalid " << _carrier_valid  );
     }
 
+    //try any tankers second
+     FGNavRecord *tanker_tacan
+          = globals->get_carrierlist()->findStationByFreq( frequency_mhz );
+
+     _tanker_valid = (tanker_tacan != NULL);
+
+
+    if ( _tanker_valid ) {
+        SG_LOG( SG_INSTR, SG_DEBUG, "tanker transmitter valid start " << _tanker_valid  );
+
+        string str3( tanker_tacan->get_name() );
+
+        SGPropertyNode * branch = fgGetNode("ai/models", true);
+        vector<SGPropertyNode_ptr> tanker = branch->getChildren("aircraft");
+
+        number = tanker.size();
+
+        SG_LOG( SG_INSTR, SG_DEBUG, "tanker number " << number );
+
+        for ( i = 0; i < number; ++i ) {
+            string str4 ( tanker[i]->getStringValue("callsign", ""));
+            SG_LOG( SG_INSTR, SG_DEBUG, "tanker callsign " << str4 );
+
+            SG_LOG( SG_INSTR, SG_DEBUG, "strings 3 " << str3 << " 4 " << str4 );
+            unsigned int loc1= str3.find( str4, 0 );
+            if ( loc1 != string::npos && str4 != "" ) {
+                SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
+                _tanker_lat = tanker[i]->getDoubleValue("position/latitude-deg");
+                _tanker_lon = tanker[i]->getDoubleValue("position/longitude-deg");
+                _tanker_elevation_ft = tanker[i]->getDoubleValue("position/altitude-ft");
+                _tanker_range_nm = tanker_tacan->get_range();
+                _tanker_bias = tanker_tacan->get_multiuse();
+                _tanker_name = tanker_tacan->get_name();
+                _tanker_valid = 1;
+                SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter valid " << _tanker_valid );
+                break;
+            } else {
+                _tanker_valid = 0;
+                SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter invalid " << _tanker_valid );
+            }
+        }
+
+        SG_LOG( SG_INSTR, SG_DEBUG, "tanker name " << _tanker_name);
+        SG_LOG( SG_INSTR, SG_DEBUG, "lat " << _tanker_lat << "lon " << _tanker_lon);
+        SG_LOG( SG_INSTR, SG_DEBUG, "elev " << _tanker_elevation_ft);
+        SG_LOG( SG_INSTR, SG_DEBUG, "range " << _tanker_range_nm);
+
+    } else {
+        SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter invalid " << _tanker_valid  );
+    }
 
     // try the TACAN/VORTAC list next
     FGNavRecord *tacan

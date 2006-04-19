@@ -96,6 +96,8 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
   setPerformance(scFileNode->getStringValue("class", "jet_transport"));
   setFlightPlan(scFileNode->getStringValue("flightplan"),
                 scFileNode->getBoolValue("repeat", false));
+  setCallSign(scFileNode->getStringValue("callsign"));
+  setTACANChannelID(scFileNode->getStringValue("TACAN-channel-ID"));
 }
 
 bool FGAIAircraft::init() {
@@ -109,6 +111,8 @@ void FGAIAircraft::bind() {
     props->tie("controls/gear/gear-down",
                SGRawValueMethods<FGAIAircraft,bool>(*this,
                                               &FGAIAircraft::_getGearDown));
+    props->setStringValue("callsign", callsign.c_str());
+    props->setStringValue("navaids/tacan/channel-ID", TACAN_channel_id.c_str());
 }
 
 void FGAIAircraft::unbind() {
@@ -971,7 +975,15 @@ void FGAIAircraft::getGroundElev(double dt) {
      //cerr << "Target altitude : " << tgt_altitude << endl;
    }
 }
-   
+
+void FGAIAircraft::setCallSign(const string& s) {
+    callsign = s;
+}
+
+void FGAIAircraft::setTACANChannelID(const string& id) {
+    TACAN_channel_id = id;
+}
+
 void FGAIAircraft::doGroundAltitude()
 {
   if (fabs(altitude - (tgt_altitude+groundOffset)) > 1000.0)

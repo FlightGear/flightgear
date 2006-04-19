@@ -73,6 +73,9 @@ public:
         void ClimbTo(double altitude);
         void TurnTo(double heading);
         void ProcessFlightPlan( double dt, time_t now );
+        void setCallSign(const string& );
+        void setTACANChannelID(const string& );
+
   void getGroundElev(double dt);
   void doGroundAltitude();
   void loadNextLeg  ();
@@ -106,12 +109,15 @@ private:
   
   string acType;
   string company;
+
   int spinCounter;
   double prevSpeed;
   double prev_dist_to_go;
 
         bool _getGearDown() const;
   bool reachedWaypoint;
+        string callsign;                      // The callsign of this tanker.
+        string TACAN_channel_id;              // The TACAN channel of this tanker
 };
 
 

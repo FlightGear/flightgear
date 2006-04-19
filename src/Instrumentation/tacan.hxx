@@ -73,13 +73,16 @@ private:
     SGPropertyNode_ptr _carrier_name_node;
     SGPropertyNode_ptr _channel_node;
 
+    SGPropertyNode_ptr _tanker_callsign_node;
+
     double _last_distance_nm;
     double _last_frequency_mhz;
     double _time_before_search_sec;
-    
+
     bool _carrier_valid;
+    bool _tanker_valid;
     bool _transmitter_valid;
-    
+
     Point3D _transmitter;
     double _transmitter_lat, _transmitter_lon;
     double _transmitter_elevation_ft;
@@ -87,13 +90,20 @@ private:
     double _transmitter_bearing_deg;
     double _transmitter_bias;
     string _transmitter_name;
-    
+
     double _carrier_lat, _carrier_lon;
     double _carrier_elevation_ft;
     double _carrier_range_nm;
     double _carrier_bearing_deg;
     double _carrier_bias;
     string _carrier_name;
+
+    double _tanker_lat, _tanker_lon;
+    double _tanker_elevation_ft;
+    double _tanker_range_nm;
+    double _tanker_bearing_deg;
+    double _tanker_bias;
+    string _tanker_name;
 
     string name;
     int num;
