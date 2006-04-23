@@ -129,10 +129,6 @@ FGFX::update (double dt)
 {
     SGSoundMgr *smgr = globals->get_soundmgr();
 
-    if (smgr->is_working() == false) {
-        return;
-    }
-
     // command sound manger
     bool pause = _pause->getBoolValue();
     if ( pause != last_pause ) {
@@ -193,9 +189,6 @@ FGFX::play_message( SGSoundSample *_sample )
 void
 FGFX::play_message( const string path, const string fname )
 {
-    if (globals->get_soundmgr()->is_working() == false) {
-        return;
-    }
     SGSoundSample *sample;
     sample = new SGSoundSample( path.c_str(), fname.c_str() );
     play_message( sample );
