@@ -2299,7 +2299,13 @@ MK_VIII::VoicePlayer::get_sample (const char *name)
   std::ostringstream refname;
   refname << mk->name << "[" << mk->num << "]" << "/" << name;
 
-  SGSoundSample *sample = globals->get_soundmgr()->find(refname.str());
+  SGSoundMgr *soundmgr = globals->get_soundmgr();
+  if (soundmgr->is_working() == false)
+    {
+      return NULL;
+    }
+
+  SGSoundSample *sample = soundmgr->find(refname.str());
   if (! sample)
     {
       SGPath sample_path(globals->get_fg_root());
@@ -2316,7 +2322,7 @@ MK_VIII::VoicePlayer::get_sample (const char *name)
 	  exit(1);
 	}
 
-      globals->get_soundmgr()->add(sample, refname.str());
+      soundmgr->add(sample, refname.str());
       samples[refname.str()] = sample;
     }
 
