@@ -219,13 +219,19 @@ bool FGMultiplay::process() {
 ******************************************************************/
 bool FGMultiplay::close() {
 
+  FGMultiplayMgr *mgr = globals->get_multiplayer_mgr();
+
+  if (mgr == 0) {
+    return false;
+  }
+
   if (get_direction() == SG_IO_IN) {
 
-    globals->get_multiplayer_mgr()->Close();
+    mgr->Close();
 
   } else if (get_direction() == SG_IO_OUT) {
 
-    globals->get_multiplayer_mgr()->Close();
+    mgr->Close();
 
   }
 
