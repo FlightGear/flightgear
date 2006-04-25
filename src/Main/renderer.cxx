@@ -773,8 +773,8 @@ FGRenderer::resize( int width, int height ) {
 
     glViewport( 0, (GLint)(height - view_h), (GLint)(width), (GLint)(view_h) );
 
-    static int lastwidth = width;
-    static int lastheight = height;
+    static int lastwidth = 0;
+    static int lastheight = 0;
     if (width != lastwidth)
         fgSetInt("/sim/startup/xsize", lastwidth = width);
     if (height != lastheight)
