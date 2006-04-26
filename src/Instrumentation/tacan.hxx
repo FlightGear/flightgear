@@ -24,6 +24,7 @@
  * /position/longitude-deg
  * /position/latitude-deg
  * /position/altitude-ft
+ * /heading
  * /systems/electrical/outputs/TACAN
  * /instrumentation/"name"/serviceable
  * /instrumentation/"name"/frequencies/source
@@ -57,10 +58,16 @@ private:
     SGPropertyNode_ptr _longitude_node;
     SGPropertyNode_ptr _latitude_node;
     SGPropertyNode_ptr _altitude_node;
+    SGPropertyNode_ptr _heading_node;
+    SGPropertyNode_ptr _yaw_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _electrical_node;
     SGPropertyNode_ptr _source_node;
     SGPropertyNode_ptr _frequency_node;
+    SGPropertyNode_ptr _display_node;
+    SGPropertyNode_ptr _x_shift_node;
+    SGPropertyNode_ptr _y_shift_node;
+    SGPropertyNode_ptr _rotation_node;
 
     SGPropertyNode_ptr _in_range_node;
     SGPropertyNode_ptr _distance_node;

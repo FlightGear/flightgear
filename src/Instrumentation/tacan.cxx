@@ -107,6 +107,8 @@ TACAN::init ()
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
     _altitude_node = fgGetNode("/position/altitude-ft", true);
+    _heading_node   = fgGetNode("/orientation/heading-deg", true);
+    _yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
     _serviceable_node = node->getChild("serviceable", 0, true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/tacan", true);
     SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
@@ -122,6 +124,11 @@ TACAN::init ()
     _time_node = node->getChild("indicated-time-min", 0, true);
     _name_node = node->getChild("name", 0, true);
     _bearing_node = node->getChild("indicated-bearing-true-deg", 0, true);
+    SGPropertyNode *dnode = node->getChild("display", 0, true);
+    _x_shift_node = dnode->getChild("x-shift", 0, true);
+    _y_shift_node = dnode->getChild("y-shift", 0, true);
+    _rotation_node = dnode->getChild("rotation", 0, true);
+    _channel_node = dnode->getChild("channel", 0, true);
     SGPropertyNode *cnode = fgGetNode("/ai/models/carrier", num, true );
     _carrier_name_node = cnode->getChild("name", 0, true);
     SGPropertyNode *tnode = fgGetNode("/ai/models/aircraft", num, true );
@@ -177,11 +184,12 @@ TACAN::update (double delta_time_sec)
     _channel_2 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[2]");
     _channel_3 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[3]");
     _channel_4 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[4]");
-    SG_LOG( SG_INSTR, SG_DEBUG, "channels " << _channel_1 << _channel_2 << _channel_3 << _channel_4);
-    _channel = _channel_1 + _channel_2 + _channel_3 + _channel_4;
-    SG_LOG( SG_INSTR, SG_DEBUG, "channel " << _channel );
 
-                                // Get the frequecncy
+    SG_LOG( SG_INSTR, SG_DEBUG, "channels " << _channel_1 << _channel_2 << _channel_3 << _channel_4);
+
+    _channel = _channel_1 + _channel_2 + _channel_3 + _channel_4;
+
+                                    // Get the frequency
     if (_channel != _last_channel) {
         _time_before_search_sec = 0;
         _last_channel = _channel;
@@ -190,16 +198,19 @@ TACAN::update (double delta_time_sec)
         _frequency_node->setDoubleValue(frequency_mhz);
     }
 
+    SG_LOG( SG_INSTR, SG_DEBUG, "channel " << _channel );
                                 // Get the aircraft position
     double longitude_deg = _longitude_node->getDoubleValue();
     double latitude_deg  = _latitude_node->getDoubleValue();
     double altitude_m    = _altitude_node->getDoubleValue() * SG_FEET_TO_METER;
+    double heading       = _heading_node->getDoubleValue() ;
+    double yaw           = _yaw_node->getDoubleValue() ;
     double longitude_rad = longitude_deg * SGD_DEGREES_TO_RADIANS;
     double latitude_rad  = latitude_deg * SGD_DEGREES_TO_RADIANS;
 
                                 // On timeout, scan again
     _time_before_search_sec -= delta_time_sec;
-    if (_time_before_search_sec < 0 && frequency_mhz > 0)
+    if (_time_before_search_sec < 0 && frequency_mhz >= 0)
         search(frequency_mhz, longitude_rad, latitude_rad, altitude_m);
 
                                  // Calculate the distance to the transmitter
@@ -295,10 +306,35 @@ TACAN::update (double delta_time_sec)
         _transmitter_bias = mobile_bias;
         _transmitter_name = mobile_name;
         _name_node->setStringValue(_transmitter_name.c_str());
+        _channel_node->setStringValue(_channel.c_str());
     }
 
+    //// calculate some values for boresight display
     double distance_nm = distance * SG_METER_TO_NM;
-    SG_LOG( SG_INSTR, SG_DEBUG, "distance_nm " << distance_nm  << " bearing " << bearing);
+
+    //// calculate look left/right to target, without yaw correction
+    // double horiz_offset = bearing - heading;
+    //
+    // if (horiz_offset > 180.0) horiz_offset -= 360.0;
+    // if (horiz_offset < -180.0) horiz_offset += 360.0;
+
+    //// now correct look left/right for yaw
+    // horiz_offset += yaw;
+
+    // use the bearing for plan position indicator display
+
+    double horiz_offset = bearing;
+
+    SG_LOG( SG_INSTR, SG_DEBUG, "distance_nm " << distance_nm  << " bearing "
+            << bearing << " horiz_offset " << horiz_offset);
+
+    // calculate values for radar display
+    double y_shift = distance_nm * cos( horiz_offset * SG_DEGREES_TO_RADIANS);
+    double x_shift = distance_nm * sin( horiz_offset * SG_DEGREES_TO_RADIANS);
+
+    SG_LOG( SG_INSTR, SG_DEBUG, "y_shift " << y_shift  << " x_shift " << x_shift);
+
+    double rotation = 0;
 
     /*Point3D location =
         sgGeodToCart(Point3D(longitude_rad, latitude_rad, altitude_m));
@@ -322,7 +358,9 @@ TACAN::update (double delta_time_sec)
         _speed_node->setDoubleValue(speed_kt);
         _time_node->setDoubleValue(distance_nm/speed_kt*60.0);
         _bearing_node->setDoubleValue(bearing);
-
+        _x_shift_node->setDoubleValue(x_shift);
+        _y_shift_node->setDoubleValue(y_shift);
+        _rotation_node->setDoubleValue(rotation);
     } else {
         _last_distance_nm = 0;
         _in_range_node->setBoolValue(false);
@@ -330,6 +368,9 @@ TACAN::update (double delta_time_sec)
         _speed_node->setDoubleValue(0);
         _time_node->setDoubleValue(0);
         _bearing_node->setDoubleValue(0);
+        _x_shift_node->setDoubleValue(0);
+        _y_shift_node->setDoubleValue(0);
+        _rotation_node->setDoubleValue(0);
     }
 
                                 // If we can't find a valid station set everything to zero
@@ -339,8 +380,12 @@ TACAN::update (double delta_time_sec)
         _speed_node->setDoubleValue(0);
         _time_node->setDoubleValue(0);
         _bearing_node->setDoubleValue(0);
+        _x_shift_node->setDoubleValue(0);
+        _y_shift_node->setDoubleValue(0);
+        _rotation_node->setDoubleValue(0);
         _transmitter_name = "";
         _name_node->setStringValue(_transmitter_name.c_str());
+        _channel_node->setStringValue(_channel.c_str());
         return;
     }
 } // end function update
