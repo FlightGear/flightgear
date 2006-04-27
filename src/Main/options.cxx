@@ -536,55 +536,57 @@ add_channel( const string& type, const string& channel_str ) {
     return true;
 }
 
-// The parse wp and parse flight-plan options don't work anymore, because 
+
+// The parse wp and parse flight-plan options don't work anymore, because
 // the route manager and the airport subsystems have not yet been initialized
-// at this stage. 
+// at this stage.
 
 // Parse --wp=ID[@alt]
-static void 
+static void
 parse_wp( const string& arg ) {
     string_list *waypoints = globals->get_initial_waypoints();
     if (!waypoints) {
         waypoints = new string_list;
+        globals->set_initial_waypoints(waypoints);
     }
     waypoints->push_back(arg);
-    globals->set_initial_waypoints(waypoints);
 }
 
 
 // Parse --flight-plan=[file]
-static bool 
+static bool
 parse_flightplan(const string& arg)
 {
-  string_list *waypoints = globals->get_initial_waypoints();
-  if (!waypoints)
-    waypoints = new string_list;
-  sg_gzifstream in(arg.c_str());
-  if ( !in.is_open() ) {
-    return false;
-  }
-  while ( true ) {
-    string line;
-    
+    string_list *waypoints = globals->get_initial_waypoints();
+    if (!waypoints) {
+        waypoints = new string_list;
+        globals->set_initial_waypoints(waypoints);
+    }
+
+    sg_gzifstream in(arg.c_str());
+    if ( !in.is_open() )
+        return false;
+
+    while ( true ) {
+        string line;
+
 #if defined( macintosh )
-    getline( in, line, '\r' );
+        getline( in, line, '\r' );
 #else
-    getline( in, line, '\n' );
+        getline( in, line, '\n' );
 #endif
-    
-    // catch extraneous (DOS) line ending character
-    if ( line[line.length() - 1] < 32 ) {
-      line = line.substr( 0, line.length()-1 );
+        // catch extraneous (DOS) line ending character
+        if ( line[line.length() - 1] < 32 )
+            line = line.substr( 0, line.length()-1 );
+
+        if ( in.eof() )
+            break;
+
+        waypoints->push_back(line);
     }
-    
-    if ( in.eof() ) {
-      break;
-    }
-    waypoints->push_back(line);
-  }
-  globals->set_initial_waypoints(waypoints);
-  return true;
+    return true;
 }
+
 
 static int
 fgOptLanguage( const char *arg )
