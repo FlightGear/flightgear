@@ -483,7 +483,7 @@ void FGNasalSys::loadModule(SGPath file, const char* module)
 // Parse and run.  Save the local variables namespace, as it will
 // become a sub-object of globals.
 void FGNasalSys::createModule(const char* moduleName, const char* fileName,
-                              const char* src, int len)
+                              const char* src, int len, const SGPropertyNode* arg)
 {
     naRef code = parse(fileName, src, len);
     if(naIsNil(code))
@@ -497,6 +497,8 @@ void FGNasalSys::createModule(const char* moduleName, const char* fileName,
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
     if(!naHash_get(_globals, modname, &locals))
         locals = naNewHash(_context);
+
+    _cmdArg = (SGPropertyNode*)arg;
 
     naCall(_context, code, 0, 0, naNil(), locals);
     if(naGetError(_context)) {
