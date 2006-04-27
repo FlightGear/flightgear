@@ -481,7 +481,9 @@ void FGNasalSys::loadModule(SGPath file, const char* module)
 }
 
 // Parse and run.  Save the local variables namespace, as it will
-// become a sub-object of globals.
+// become a sub-object of globals.  The optional "arg" argument can be
+// used to pass an associated property node to the module, which can then
+// be accessed via cmdarg().  (This is, for example, used by XML dialogs.)
 void FGNasalSys::createModule(const char* moduleName, const char* fileName,
                               const char* src, int len, const SGPropertyNode* arg)
 {
