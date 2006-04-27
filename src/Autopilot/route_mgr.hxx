@@ -58,24 +58,24 @@ private:
     SGRoute *route;
 
     // automatic inputs
-    SGPropertyNode *lon;
-    SGPropertyNode *lat;
-    SGPropertyNode *alt;
+    SGPropertyNode_ptr lon;
+    SGPropertyNode_ptr lat;
+    SGPropertyNode_ptr alt;
 
     // automatic outputs
-    SGPropertyNode *true_hdg_deg;
+    SGPropertyNode_ptr true_hdg_deg;
 
-    SGPropertyNode *wp0_id;
-    SGPropertyNode *wp0_dist;
-    SGPropertyNode *wp0_eta;
+    SGPropertyNode_ptr wp0_id;
+    SGPropertyNode_ptr wp0_dist;
+    SGPropertyNode_ptr wp0_eta;
 
-    SGPropertyNode *wp1_id;
-    SGPropertyNode *wp1_dist;
-    SGPropertyNode *wp1_eta;
+    SGPropertyNode_ptr wp1_id;
+    SGPropertyNode_ptr wp1_dist;
+    SGPropertyNode_ptr wp1_eta;
 
-    SGPropertyNode *wpn_id;
-    SGPropertyNode *wpn_dist;
-    SGPropertyNode *wpn_eta;
+    SGPropertyNode_ptr wpn_id;
+    SGPropertyNode_ptr wpn_dist;
+    SGPropertyNode_ptr wpn_eta;
 
 
 public:
