@@ -30,6 +30,7 @@
 #include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
 
+#include "auto_gui.hxx"        // FIXME temporary dependency (NewWaypoint)
 #include "route_mgr.hxx"
 
 
@@ -77,6 +78,17 @@ void FGRouteMgr::init() {
     wpn_eta = fgGetNode( "/autopilot/route-manager/wp-last/eta", true );
 
     route->clear();
+}
+
+
+void FGRouteMgr::postinit() {
+    string_list *waypoints = globals->get_initial_waypoints();
+    if (!waypoints)
+        return;
+
+    vector<string>::iterator it;
+    for (it = waypoints->begin(); it != waypoints->end(); ++it)
+        NewWaypoint(*it);
 }
 
 

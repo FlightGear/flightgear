@@ -1021,29 +1021,6 @@ static bool fgSetPosFromFix( const string& id ) {
         return false;
     }
 }
- 
-static void parseWaypoints() {
-    string_list *waypoints = globals->get_initial_waypoints();
-    if (waypoints) {
-	vector<string>::iterator i;
-	for (i = waypoints->begin(); 
-	     i  != waypoints->end();
-	     i++)
-        {
-            NewWaypoint(*i);
-        }
-	// Now were done using the way points we can deallocate the
-	// memory they used
-	while (waypoints->begin() != waypoints->end()) {
-            waypoints->pop_back();
-        }
-	delete waypoints;
-	globals->set_initial_waypoints(0);
-    }
-}
-
- 
- 
 
 
 /**
@@ -1816,11 +1793,6 @@ bool fgInitSubsystems() {
     FGNasalSys* nasal = new FGNasalSys();
     globals->add_subsystem("nasal", nasal);
     nasal->init();
-
-    ////////////////////////////////////////////////////////////////////
-    // At this point we could try and parse the waypoint options
-    ///////////////////////////////////////////////////////////////////
-    parseWaypoints();
 
     // initialize methods that depend on other subsystems.
     globals->get_subsystem_mgr()->postinit();
