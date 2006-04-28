@@ -384,7 +384,7 @@ FGDialog::updateValues (const char * objectName)
 {
     for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
         const string &name = _propertyObjects[i]->name;
-        if (name.size() && name != objectName)
+        if (objectName && name != objectName)
             continue;
 
         puObject *obj = _propertyObjects[i]->object;
@@ -397,7 +397,7 @@ FGDialog::applyValues (const char * objectName)
 {
     for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
         const string &name = _propertyObjects[i]->name;
-        if (name.size() && name != objectName)
+        if (objectName && name != objectName)
             continue;
 
         copy_from_pui(_propertyObjects[i]->object,
