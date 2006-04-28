@@ -165,6 +165,15 @@ public:
      */
     virtual FGDialog * getActiveDialog ();
 
+
+    /**
+     * Get the named dialog if active.
+     *
+     * @return The named dialog, or 0 if it isn't active.
+     */
+    virtual FGDialog * getDialog (const string &name);
+
+
     virtual FGColor *getColor (const char * name) const {
         _citt_t it = _colors.find(name);
         return (it != _colors.end()) ? it->second : NULL;

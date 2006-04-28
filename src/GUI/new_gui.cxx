@@ -171,7 +171,17 @@ NewGUI::getDialogProperties (const string &name)
     if(_dialog_props.find(name) != _dialog_props.end())
         return _dialog_props[name];
 
-    SG_LOG(SG_GENERAL, SG_ALERT, "dialog '" << name << "' missing");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "dialog '" << name << "' missing");
+    return 0;
+}
+
+FGDialog *
+NewGUI::getDialog (const string &name)
+{
+    if(_active_dialogs.find(name) != _active_dialogs.end())
+        return _active_dialogs[name];
+
+    SG_LOG(SG_GENERAL, SG_DEBUG, "dialog '" << name << "' missing");
     return 0;
 }
 

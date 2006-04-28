@@ -1097,7 +1097,12 @@ static bool
 do_dialog_update (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    FGDialog * dialog = gui->getActiveDialog();
+    FGDialog * dialog;
+    if (arg->hasValue("dialog-name"))
+        dialog = gui->getDialog(arg->getStringValue("dialog-name"));
+    else
+        dialog = gui->getActiveDialog();
+
     if (dialog != 0) {
         if (arg->hasValue("object-name")) {
             dialog->updateValue(arg->getStringValue("object-name"));
@@ -1120,7 +1125,12 @@ static bool
 do_dialog_apply (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    FGDialog * dialog = gui->getActiveDialog();
+    FGDialog * dialog;
+    if (arg->hasValue("dialog-name"))
+        dialog = gui->getDialog(arg->getStringValue("dialog-name"));
+    else
+        dialog = gui->getActiveDialog();
+
     if (dialog != 0) {
         if (arg->hasValue("object-name")) {
             const char * name = arg->getStringValue("object-name");
