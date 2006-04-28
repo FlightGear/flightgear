@@ -391,7 +391,11 @@ FGDialog::updateValues (const char * objectName)
             continue;
 
         puObject *obj = _propertyObjects[i]->object;
-        copy_to_pui(_propertyObjects[i]->node, obj);
+        SGPropertyNode *values = _propertyObjects[i]->values;
+        if (obj->getType() & PUCLASS_LIST && values)
+            ((puList *)obj)->newList(value_list(values));
+        else
+            copy_to_pui(_propertyObjects[i]->node, obj);
     }
 }
 
@@ -721,7 +725,9 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
         const char * propname = props->getStringValue("property");
         SGPropertyNode_ptr node = fgGetNode(propname, true);
         copy_to_pui(node, object);
-        PropertyObject* po = new PropertyObject(name, object, node);
+
+        SGPropertyNode * values = type == "list" ? props : 0;
+        PropertyObject* po = new PropertyObject(name, object, node, values);
         _propertyObjects.push_back(po);
         if(props->getBoolValue("live"))
             _liveObjects.push_back(po);
@@ -962,10 +968,12 @@ FGDialog::destroy_char_array (char ** array)
 
 FGDialog::PropertyObject::PropertyObject (const char * n,
                                            puObject * o,
-                                           SGPropertyNode_ptr p)
+                                           SGPropertyNode_ptr p,
+                                           SGPropertyNode_ptr v)
     : name(n),
       object(o),
-      node(p)
+      node(p),
+      values(v)
 {
 }
 

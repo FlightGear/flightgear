@@ -141,15 +141,18 @@ private:
     // PUI provides no way for userdata to be deleted automatically
     // with a GUI object, so we have to keep track of all the special
     // data we allocated and then free it manually when the dialog
-    // closes.
+    // closes. "values" is a node with "value" children and only used
+    // by the <list> widget.
     vector<void *> _info;
     struct PropertyObject {
         PropertyObject (const char * name,
                         puObject * object,
-                        SGPropertyNode_ptr node);
+                        SGPropertyNode_ptr node,
+                        SGPropertyNode_ptr values = 0);
         string name;
         puObject * object;
         SGPropertyNode_ptr node;
+        SGPropertyNode_ptr values;
     };
     vector<PropertyObject *> _propertyObjects;
     vector<PropertyObject *> _liveObjects;
