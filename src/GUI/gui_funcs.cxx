@@ -164,7 +164,7 @@ void mkDialog (const char *txt)
     NewGUI *gui = (NewGUI *)globals->get_subsystem("gui");
     if (!gui)
         return;
-    SGPropertyNode_ptr dlg = gui->getDialog("message");
+    SGPropertyNode_ptr dlg = gui->getDialogProperties("message");
     if (!dlg)
         return;
 

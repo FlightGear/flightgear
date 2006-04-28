@@ -143,7 +143,7 @@ public:
      * @param name The name of the dialog box.
      * @return node pointer if the dialog was found, zero otherwise.
      */
-    virtual SGPropertyNode_ptr getDialog (const string &name);
+    virtual SGPropertyNode_ptr getDialogProperties (const string &name);
 
     /**
      * Return a pointer to the current menubar.

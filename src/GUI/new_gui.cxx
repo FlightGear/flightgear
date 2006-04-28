@@ -166,7 +166,7 @@ NewGUI::closeDialog (const string& name)
 }
 
 SGPropertyNode_ptr
-NewGUI::getDialog (const string &name)
+NewGUI::getDialogProperties (const string &name)
 {
     if(_dialog_props.find(name) != _dialog_props.end())
         return _dialog_props[name];

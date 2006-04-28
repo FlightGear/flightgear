@@ -191,7 +191,7 @@ bool FGATCDialog::trans_reg( const string &station, int code, atc_type type ) {
 // Display the ATC popup dialog box with options relevant to the users current situation.
 void FGATCDialog::PopupDialog() {
 	const char *dialog_name = "atc-dialog";
-	SGPropertyNode_ptr dlg = _gui->getDialog(dialog_name);
+	SGPropertyNode_ptr dlg = _gui->getDialogProperties(dialog_name);
 	if (!dlg)
 		return;
 
@@ -306,7 +306,7 @@ struct atcdata {
 
 void FGATCDialog::FreqDialog() {
 	const char *dialog_name = "atc-freq-search";
-	SGPropertyNode_ptr dlg = _gui->getDialog(dialog_name);
+	SGPropertyNode_ptr dlg = _gui->getDialogProperties(dialog_name);
 	if (!dlg)
 		return;
 
@@ -357,7 +357,7 @@ void FGATCDialog::FreqDialog() {
 
 void FGATCDialog::FreqDisplay(string& ident) {
 	const char *dialog_name = "atc-freq-display";
-	SGPropertyNode_ptr dlg = _gui->getDialog(dialog_name);
+	SGPropertyNode_ptr dlg = _gui->getDialogProperties(dialog_name);
 	if (!dlg)
 		return;
 
