@@ -382,6 +382,9 @@ FGDialog::~FGDialog ()
 void
 FGDialog::updateValues (const char * objectName)
 {
+    if (objectName && !objectName[0])
+        objectName = 0;
+
     for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
         const string &name = _propertyObjects[i]->name;
         if (objectName && name != objectName)
@@ -395,6 +398,9 @@ FGDialog::updateValues (const char * objectName)
 void
 FGDialog::applyValues (const char * objectName)
 {
+    if (objectName && !objectName[0])
+        objectName = 0;
+
     for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
         const string &name = _propertyObjects[i]->name;
         if (objectName && name != objectName)
