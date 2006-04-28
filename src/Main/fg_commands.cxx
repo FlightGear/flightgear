@@ -1104,11 +1104,7 @@ do_dialog_update (const SGPropertyNode * arg)
         dialog = gui->getActiveDialog();
 
     if (dialog != 0) {
-        if (arg->hasValue("object-name")) {
-            dialog->updateValue(arg->getStringValue("object-name"));
-        } else {
-            dialog->updateValues();
-        }
+        dialog->updateValues(arg->getStringValue("object-name"));
         return true;
     } else {
         return false;
@@ -1132,12 +1128,7 @@ do_dialog_apply (const SGPropertyNode * arg)
         dialog = gui->getActiveDialog();
 
     if (dialog != 0) {
-        if (arg->hasValue("object-name")) {
-            const char * name = arg->getStringValue("object-name");
-            dialog->applyValue(name);
-        } else {
-            dialog->applyValues();
-        }
+        dialog->applyValues(arg->getStringValue("object-name"));
         return true;
     } else {
         return false;

@@ -358,16 +358,12 @@ FGDialog::~FGDialog ()
     puDeleteObject(_object);
 
     unsigned int i;
-
                                 // Delete all the arrays we made
                                 // and were forced to keep around
                                 // because PUI won't do its own
                                 // memory management.
-    for (i = 0; i < _char_arrays.size(); i++) {
-        for (int j = 0; _char_arrays[i][j] != 0; j++)
-            free(_char_arrays[i][j]); // added with strdup
-        delete[] _char_arrays[i];
-    }
+    for (i = 0; i < _char_arrays.size(); i++)
+        destroy_char_array(_char_arrays[i]);
 
                                 // Delete all the info objects we
                                 // were forced to keep around because
@@ -376,7 +372,6 @@ FGDialog::~FGDialog ()
         delete (GUIInfo *)_info[i];
         _info[i] = 0;
     }
-
                                 // Finally, delete the property links.
     for (i = 0; i < _propertyObjects.size(); i++) {
         delete _propertyObjects[i];
@@ -385,39 +380,29 @@ FGDialog::~FGDialog ()
 }
 
 void
-FGDialog::updateValue (const char * objectName)
+FGDialog::updateValues (const char * objectName)
 {
     for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
         const string &name = _propertyObjects[i]->name;
-        if (name == objectName)
-            copy_to_pui(_propertyObjects[i]->node,
-                        _propertyObjects[i]->object);
+        if (name.size() && name != objectName)
+            continue;
+
+        puObject *obj = _propertyObjects[i]->object;
+        copy_to_pui(_propertyObjects[i]->node, obj);
     }
 }
 
 void
-FGDialog::applyValue (const char * objectName)
+FGDialog::applyValues (const char * objectName)
 {
     for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
-        if (_propertyObjects[i]->name == objectName)
-            copy_from_pui(_propertyObjects[i]->object,
-                          _propertyObjects[i]->node);
-    }
-}
+        const string &name = _propertyObjects[i]->name;
+        if (name.size() && name != objectName)
+            continue;
 
-void
-FGDialog::updateValues ()
-{
-    for (unsigned int i = 0; i < _propertyObjects.size(); i++)
-        copy_to_pui(_propertyObjects[i]->node, _propertyObjects[i]->object);
-}
-
-void
-FGDialog::applyValues ()
-{
-    for (unsigned int i = 0; i < _propertyObjects.size(); i++)
         copy_from_pui(_propertyObjects[i]->object,
                       _propertyObjects[i]->node);
+    }
 }
 
 void
@@ -554,11 +539,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "list") {
-        vector<SGPropertyNode_ptr> value_nodes = props->getChildren("value");
-        char ** entries = make_char_array(value_nodes.size());
-        for (unsigned int i = 0; i < value_nodes.size(); i++)
-            entries[i] = strdup((char *)value_nodes[i]->getStringValue());
-
+        char ** entries = value_list(props);
         int slider_width = props->getIntValue("slider", 20);
         puList * obj = new puList(x, y, x + width, y + height, entries, slider_width);
         if (presetSize)
@@ -629,11 +610,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "combo") {
-        vector<SGPropertyNode_ptr> value_nodes = props->getChildren("value");
-        char ** entries = make_char_array(value_nodes.size());
-        for (unsigned int i = 0; i < value_nodes.size(); i++)
-            entries[i] = strdup((char *)value_nodes[i]->getStringValue());
-
+        char ** entries = value_list(props);
         puComboBox * obj = new puComboBox(x, y, x + width, y + height, entries,
                            props->getBoolValue("editable", false));
         setupObject(obj, props);
@@ -944,6 +921,16 @@ FGDialog::getKeyCode(const char *str)
 }
 
 char **
+FGDialog::value_list (const SGPropertyNode *props)
+{
+    vector<SGPropertyNode_ptr> value_nodes = props->getChildren("value");
+    char ** entries = make_char_array(value_nodes.size());
+    for (unsigned int i = 0; i < value_nodes.size(); i++)
+        entries[i] = strdup((char *)value_nodes[i]->getStringValue());
+    return entries;
+}
+
+char **
 FGDialog::make_char_array (int size)
 {
     char ** list = new char*[size+1];
@@ -953,6 +940,14 @@ FGDialog::make_char_array (int size)
     return list;
 }
 
+void
+FGDialog::destroy_char_array (char ** array)
+{
+    for (int i = 0; array[i] != 0; i++)
+        if (array[i])
+            free(array[i]);// added with strdup
+    delete[] array;
+}
 
 
 ////////////////////////////////////////////////////////////////////////

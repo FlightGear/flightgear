@@ -54,7 +54,8 @@ public:
 
 
     /**
-     * Update the values of all GUI objects with a specific name.
+     * Update the values of all GUI objects with a specific name,
+     * or all if name is 0 (default).
      *
      * This method copies values from the FlightGear property tree to
      * the GUI object(s).
@@ -62,11 +63,12 @@ public:
      * @param objectName The name of the GUI object(s) to update.
      *        Use the empty name for all unnamed objects.
      */
-    virtual void updateValue (const char * objectName);
+    virtual void updateValues (const char * objectName = 0);
 
 
     /**
-     * Apply the values of all GUI objects with a specific name.
+     * Apply the values of all GUI objects with a specific name,
+     * or all if name is 0 (default)
      *
      * This method copies values from the GUI object(s) to the
      * FlightGear property tree.
@@ -74,25 +76,7 @@ public:
      * @param objectName The name of the GUI object(s) to update.
      *        Use the empty name for all unnamed objects.
      */
-    virtual void applyValue (const char * objectName);
-
-
-    /**
-     * Update the values of all GUI objects.
-     *
-     * This method copies values from the FlightGear property tree to
-     * the GUI objects.
-     */
-    virtual void updateValues ();
-
-
-    /**
-     * Apply the values of all GUI objects.
-     *
-     * This method copies from the GUI objects to the FlightGear
-     * property tree properties.
-     */
-    virtual void applyValues ();
+    virtual void applyValues (const char * objectName = 0);
 
 
     /**
@@ -172,8 +156,11 @@ private:
 
     // PUI doesn't copy arrays, so we have to allocate string arrays
     // and then keep pointers so that we can delete them when the
-    // dialog closes.
+    // dialog closes. value_list() builds such a list from "value"
+    // children.
     char ** make_char_array (int size);
+    char ** value_list(const SGPropertyNode * prop);
+    void destroy_char_array (char **array);
     vector<char **> _char_arrays;
 };
 
