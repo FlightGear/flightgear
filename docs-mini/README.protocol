@@ -1,7 +1,6 @@
 The generic communication protocol for FlightGear provides a powerfull way
-of adding a simple ASCII based output only protocol, just by defining an
-XML encoded configuration file and placing it in the $FG_ROOT/data/Protocols
-directory.
+of adding a simple ASCII based or binary protocol, just by defining an
+XML encoded configuration file.
 
 The definition of the protocol consists of variable separators, line separators,
 and chuncks of text.
@@ -17,8 +16,9 @@ Each chunck defines:
 			%s	string
 			%i	integer	(default)
 			%f	float
+		(not used or needed in binary mode)
 
-<factor>	an optionale multiplication factor which can be used for
+<factor>	an optional multiplication factor which can be used for
 		unit conversion. (for example, radians to degrees).
 <offset>	an optional offset which can be used for unit conversion.
 		(for example, degrees Celsius to degrees Fahrenheit).
@@ -45,6 +45,16 @@ any other charachters just need to be added to "Network/generic.cxx"
 The var_separator is placed between each variable, while the line_separator is
 placed at the end of each lot of variables.
 
+To enable binary mode, simply include a <binary_mode>true</binary_mode> tag in
+your XML file. The format of the binary output is tightly packed, with 1 byte
+for bool, 4 bytes for int, and 8 bytes for double. At this time, strings are not
+supported. A configurable footer at the end of each "line" or packet of binary
+output can be added using the <binary_footer> tag. Options include the length
+of the packet, a magic number to simplify decoding. Examples:
+
+	<binary_footer>magic,0x12345678</binary_footer>
+	<binary_footer>length</binary_footer>
+	<binary_footer>none</binary_footer>			<!-- default -->
 
 A simple protocol configuration file then could look something like the
 following:
@@ -52,10 +62,13 @@ following:
 <?xml version="1.0"?>
 
 <PropertyList>
- <output>
 
+ <generic>
+
+  <output>
    <line_separator>newline</line_separator>
    <var_separator>newline</var_separator>
+   <binary_mode>false</binary_mode>
 
    <chunk>
     <name>speed</name>
@@ -64,18 +77,19 @@ following:
    </chunk>
 
    <chunk>
-    <name>heading (rad)</name>
+    <name>heading</name>
     <format>H=%02d</format>
     <node>/orientation/heading-deg</node>
-    <factor>57.29578</factor>  <!-- degrees to radians -->
+    <factor>57.29578</factor>  <!-- radians to degrees -->
    </chunk>
 
    <chunk>
-    <name>pitch angle (deg)</name>
+    <name>pitch angle</name>
     <format>P=%05.1f</format>
     <type>float</type>
     <node>/orientation/pitch-deg</node>
    </chunk>
 
- </output>
+ </generic>
+
 </PropertyList>
