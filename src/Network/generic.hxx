@@ -78,6 +78,10 @@ private:
     vector<_serial_prot> _out_message;
     vector<_serial_prot> _in_message;
 
+    bool binary_mode;
+    enum {FOOTER_NONE, FOOTER_LENGTH, FOOTER_MAGIC} binary_footer_type;
+    int binary_footer_value;
+
     void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
 
 };

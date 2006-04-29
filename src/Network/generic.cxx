@@ -24,13 +24,14 @@
 #  include "config.h"
 #endif
 
-#include <string.h>		// strstr()
-#include <stdlib.h>		// strtod(), atoi()
+#include <string.h>                // strstr()
+#include <stdlib.h>                // strtod(), atoi()
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/stdint.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 
@@ -79,51 +80,100 @@ FGGeneric::~FGGeneric() {
 
 // generate the message
 bool FGGeneric::gen_message() {
-
     string generic_sentence;
     char tmp[255];
+    length = 0;
 
     double val;
 
     for (unsigned int i = 0; i < _out_message.size(); i++) {
 
-        if (i > 0)
-           generic_sentence += var_separator;
+        if (i > 0 && !binary_mode)
+            generic_sentence += var_separator;
 
         switch (_out_message[i].type) {
         case FG_INT:
             val = _out_message[i].offset +
                   _out_message[i].prop->getIntValue() * _out_message[i].factor;
-            snprintf(tmp, 255, _out_message[i].format.c_str(), (int)val);
+            if (binary_mode) {
+                *((int32_t*)&buf[length]) = (int32_t)val;
+                length += sizeof(int32_t);
+            } else {
+                snprintf(tmp, 255, _out_message[i].format.c_str(), (int)val);
+            }
             break;
 
         case FG_BOOL:
-            snprintf(tmp, 255, _out_message[i].format.c_str(),
-                               _out_message[i].prop->getBoolValue());
+            if (binary_mode) {
+                *((int8_t*)&buf[length])
+                          = _out_message[i].prop->getBoolValue() ? true : false;
+                length += sizeof(int8_t);
+            } else {
+                snprintf(tmp, 255, _out_message[i].format.c_str(),
+                                   _out_message[i].prop->getBoolValue());
+            }
             break;
 
         case FG_DOUBLE:
             val = _out_message[i].offset +
                 _out_message[i].prop->getFloatValue() * _out_message[i].factor;
-            snprintf(tmp, 255, _out_message[i].format.c_str(), (float)val);
+            if (binary_mode) {
+                *((double*)&buf[length]) = val;
+                length += sizeof(double);
+            } else {
+                snprintf(tmp, 255, _out_message[i].format.c_str(), (float)val);
+            }
             break;
 
         default: // SG_STRING
-             snprintf(tmp, 255, _out_message[i].format.c_str(),
-                                _out_message[i].prop->getStringValue());
+            if (binary_mode) {
+                const char *strdata = _out_message[i].prop->getStringValue();
+                int strlength = strlen(strdata);
+
+                /* Format for strings is 
+                 * [length as int, 4 bytes][ASCII data, length bytes]
+                 */
+                *((int32_t*)&buf[length]) = strlength;
+                                length += sizeof(int32_t);
+                                strncpy(&buf[length], strdata, strlength);
+                                length += strlength; 
+                /* FIXME padding for alignment? Something like: 
+                 * length += (strlength % 4 > 0 ? sizeof(int32_t) - strlength % 4 : 0;
+                 */
+            } else {
+                snprintf(tmp, 255, _out_message[i].format.c_str(),
+                                   _out_message[i].prop->getStringValue());
+            }
         }
 
-        generic_sentence += tmp;
+        if (!binary_mode) {
+            generic_sentence += tmp;
+        }
     }
 
-    /* After each lot of variables has been added, put the line separator
-     * char/string
-     */
-    generic_sentence += line_separator;
- 
-            
-    length =  generic_sentence.length();
-    strncpy( buf, generic_sentence.c_str(), length );
+    if (!binary_mode) {
+        /* After each lot of variables has been added, put the line separator
+         * char/string
+         */
+        generic_sentence += line_separator;
+
+        length =  generic_sentence.length();
+        strncpy( buf, generic_sentence.c_str(), length );
+    } else {
+        // add the footer to the packet ("line")
+        switch (binary_footer_type) {
+            case FOOTER_LENGTH:
+                binary_footer_value = length;
+                break;
+
+            case FOOTER_MAGIC:
+                break;
+        }
+        if (binary_footer_type != FOOTER_NONE) {
+            *((int32_t*)&buf[length]) = binary_footer_value;
+            length += sizeof(int32_t);
+        }
+    }
 
     return true;
 }
@@ -133,8 +183,12 @@ bool FGGeneric::parse_message() {
     double val;
     int i = -1;
 
+    if (binary_mode)
+        SG_LOG( SG_IO, SG_ALERT,
+                "generic protocol: binary mode input is not yet implemented.");
+        
     while ((++i < (int)_in_message.size()) &&
-           p1 && strcmp(p1, line_separator.c_str())) {
+            p1 && strcmp(p1, line_separator.c_str())) {
 
         p2 = strstr(p1, var_separator.c_str());
         if (p2) {
@@ -230,6 +284,12 @@ bool FGGeneric::close() {
 void
 FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 {
+    if (root->hasValue("binary_mode"))
+        binary_mode = root->getBoolValue("binary_mode");
+    else 
+        binary_mode = false;
+
+    if (!binary_mode) {
         /* These variables specified in the $FG_ROOT/data/Protocol/xxx.xml
          * file for each format
          *
@@ -237,8 +297,8 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
          * line_sep_string = the string/charachter to place at the end of each
          *                   lot of variables
          */
-    var_sep_string = root->getStringValue("var_separator");
-    line_sep_string = root->getStringValue("line_separator");
+        var_sep_string = root->getStringValue("var_separator");
+        line_sep_string = root->getStringValue("line_separator");
 
         if ( var_sep_string == "newline" )
                 var_separator = '\n';
@@ -269,7 +329,22 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
                 line_separator = '\v';
         else
                 line_separator = line_sep_string;
-
+    } else {
+        binary_footer_type = FOOTER_NONE; // default choice
+        if ( root->hasValue("binary_footer") ) {
+            string footer_type = root->getStringValue("binary_footer");
+            if ( footer_type == "length" )
+                binary_footer_type = FOOTER_LENGTH;
+            else if ( footer_type.substr(0, 5) == "magic" ) {
+                binary_footer_type = FOOTER_MAGIC;
+                binary_footer_value = strtol(footer_type.substr(6, 
+                            footer_type.length() - 6).c_str(), (char**)0, 0);
+            } else if ( footer_type != "none" )
+                SG_LOG(SG_IO, SG_ALERT,
+                       "generic protocol: Undefined generic binary protocol"
+                                           "footer, using no footer.");
+        }
+    }
 
     vector<SGPropertyNode_ptr> chunks = root->getChildren("chunk");
     for (unsigned int i = 0; i < chunks.size(); i++) {
