@@ -56,6 +56,7 @@ void FGAIThermal::readFromScenario(SGPropertyNode* scFileNode) {
 
 bool FGAIThermal::init() {
    factor = 8.0 * max_strength / (diameter * diameter * diameter);
+   setAltitude( height );
    return FGAIBase::init();
 }
 
