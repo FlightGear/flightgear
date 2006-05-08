@@ -383,7 +383,11 @@ void FGRouteMgr::Listener::valueChanged(SGPropertyNode *prop)
     else if (!strncmp(s, "@insert", 7)) {
         char *r;
         int pos = strtol(s + 7, &r, 10);
-        if (*r++ == ':' && *r)
+        if (*r++ != ':')
+            return;
+        while (isspace(*r))
+            r++;
+        if (*r)
             mgr->new_waypoint(r, pos);
     } else
         mgr->new_waypoint(s);
