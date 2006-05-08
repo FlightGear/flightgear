@@ -62,40 +62,6 @@ do_properties_dialog (const SGPropertyNode * arg)
     return true;
 }
 
-#if 0
-extern void AddWayPoint (puObject *);
-static bool
-do_ap_add_waypoint_dialog (const SGPropertyNode * arg)
-{
-    AddWayPoint(0);
-    return true;
-}
-
-extern void PopWayPoint (puObject *);
-static bool
-do_ap_pop_waypoint_dialog (const SGPropertyNode * arg)
-{
-    PopWayPoint(0);
-    return true;
-}
-
-extern void ClearRoute (puObject *);
-static bool
-do_ap_clear_route_dialog (const SGPropertyNode * arg)
-{
-    ClearRoute(0);
-    return true;
-}
-
-extern void fgAPAdjust (puObject *);
-static bool
-do_ap_adjust_dialog (const SGPropertyNode * arg)
-{
-    fgAPAdjust(0);
-    return true;
-}
-#endif
-
 extern void fgLatLonFormatToggle (puObject *);
 static bool
 do_lat_lon_format_dialog (const SGPropertyNode * arg)
