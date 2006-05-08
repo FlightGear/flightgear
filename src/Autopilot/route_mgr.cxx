@@ -1,6 +1,8 @@
 // route_mgr.cxx - manage a route (i.e. a collection of waypoints)
 //
 // Written by Curtis Olson, started January 2004.
+//            Norman Vine
+//            Melchior FRANZ
 //
 // Copyright (C) 2004  Curtis L. Olson  - http://www.flightgear.org/~curt
 //
@@ -27,11 +29,15 @@
 
 #include <simgear/compiler.h>
 
+#include <Airports/simple.hxx>
 #include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
+#include <Navaids/fixlist.hxx>
+#include <Navaids/navlist.hxx>
 
-#include "auto_gui.hxx"        // FIXME temporary dependency (NewWaypoint)
 #include "route_mgr.hxx"
+
+#define RM "/autopilot/route-manager/"
 
 
 FGRouteMgr::FGRouteMgr() :
@@ -48,13 +54,19 @@ FGRouteMgr::FGRouteMgr() :
     wp1_eta( NULL ),
     wpn_id( NULL ),
     wpn_dist( NULL ),
-    wpn_eta( NULL )
+    wpn_eta( NULL ),
+    input(fgGetNode( RM "input", true )),
+    listener(new Listener(this)),
+    mirror(fgGetNode( RM "route", true ))
 {
+    input->setStringValue("");
+    input->addChangeListener(listener);
 }
 
 
 FGRouteMgr::~FGRouteMgr() {
     delete route;
+    input->removeChangeListener(listener);
 }
 
 
@@ -65,19 +77,20 @@ void FGRouteMgr::init() {
 
     true_hdg_deg = fgGetNode( "/autopilot/settings/true-heading-deg", true );
 
-    wp0_id = fgGetNode( "/autopilot/route-manager/wp[0]/id", true );
-    wp0_dist = fgGetNode( "/autopilot/route-manager/wp[0]/dist", true );
-    wp0_eta = fgGetNode( "/autopilot/route-manager/wp[0]/eta", true );
+    wp0_id = fgGetNode( RM "wp[0]/id", true );
+    wp0_dist = fgGetNode( RM "wp[0]/dist", true );
+    wp0_eta = fgGetNode( RM "wp[0]/eta", true );
 
-    wp1_id = fgGetNode( "/autopilot/route-manager/wp[1]/id", true );
-    wp1_dist = fgGetNode( "/autopilot/route-manager/wp[1]/dist", true );
-    wp1_eta = fgGetNode( "/autopilot/route-manager/wp[1]/eta", true );
+    wp1_id = fgGetNode( RM "wp[1]/id", true );
+    wp1_dist = fgGetNode( RM "wp[1]/dist", true );
+    wp1_eta = fgGetNode( RM "wp[1]/eta", true );
 
-    wpn_id = fgGetNode( "/autopilot/route-manager/wp-last/id", true );
-    wpn_dist = fgGetNode( "/autopilot/route-manager/wp-last/dist", true );
-    wpn_eta = fgGetNode( "/autopilot/route-manager/wp-last/eta", true );
+    wpn_id = fgGetNode( RM "wp-last/id", true );
+    wpn_dist = fgGetNode( RM "wp-last/dist", true );
+    wpn_eta = fgGetNode( RM "wp-last/eta", true );
 
     route->clear();
+    update_mirror();
 }
 
 
@@ -88,7 +101,7 @@ void FGRouteMgr::postinit() {
 
     vector<string>::iterator it;
     for (it = waypoints->begin(); it != waypoints->end(); ++it)
-        NewWaypoint(*it);
+        new_waypoint(*it);
 }
 
 
@@ -100,7 +113,7 @@ static double get_ground_speed() {
     // starts in ft/s so we convert to kts
     static const SGPropertyNode * speedup_node = fgGetNode("/sim/speed-up");
 
-    double ft_s = cur_fdm_state->get_V_ground_speed() 
+    double ft_s = cur_fdm_state->get_V_ground_speed()
         * speedup_node->getIntValue();
     double kts = ft_s * SG_FEET_TO_METER * 3600 * SG_METER_TO_NM;
 
@@ -137,15 +150,15 @@ void FGRouteMgr::update( double dt ) {
         wp0_dist->setDoubleValue( accum * SG_METER_TO_NM );
 
         double eta = accum * SG_METER_TO_NM / get_ground_speed();
-	if ( eta >= 100.0 ) { eta = 99.999; }
-	int major, minor;
-	if ( eta < (1.0/6.0) ) {
-	    // within 10 minutes, bump up to min/secs
-	    eta *= 60.0;
-	}
-	major = (int)eta;
-	minor = (int)((eta - (int)eta) * 60.0);
-	snprintf( eta_str, 128, "%d:%02d", major, minor );
+        if ( eta >= 100.0 ) { eta = 99.999; }
+        int major, minor;
+        if ( eta < (1.0/6.0) ) {
+            // within 10 minutes, bump up to min/secs
+            eta *= 60.0;
+        }
+        major = (int)eta;
+        minor = (int)((eta - (int)eta) * 60.0);
+        snprintf( eta_str, 128, "%d:%02d", major, minor );
         wp0_eta->setStringValue( eta_str );
     }
 
@@ -161,25 +174,25 @@ void FGRouteMgr::update( double dt ) {
         wp1_dist->setDoubleValue( accum * SG_METER_TO_NM );
 
         double eta = accum * SG_METER_TO_NM / get_ground_speed();
-	if ( eta >= 100.0 ) { eta = 99.999; }
-	int major, minor;
-	if ( eta < (1.0/6.0) ) {
-	    // within 10 minutes, bump up to min/secs
-	    eta *= 60.0;
-	}
-	major = (int)eta;
-	minor = (int)((eta - (int)eta) * 60.0);
-	snprintf( eta_str, 128, "%d:%02d", major, minor );
+        if ( eta >= 100.0 ) { eta = 99.999; }
+        int major, minor;
+        if ( eta < (1.0/6.0) ) {
+            // within 10 minutes, bump up to min/secs
+            eta *= 60.0;
+        }
+        major = (int)eta;
+        minor = (int)((eta - (int)eta) * 60.0);
+        snprintf( eta_str, 128, "%d:%02d", major, minor );
         wp1_eta->setStringValue( eta_str );
     }
 
     // summarize remaining way points
     if ( route->size() > 2 ) {
         SGWayPoint wp;
-	for ( int i = 2; i < route->size(); ++i ) {
+        for ( int i = 2; i < route->size(); ++i ) {
             wp = route->get_waypoint( i );
-	    accum += wp.get_distance();
-	}
+            accum += wp.get_distance();
+        }
 
         // update the property tree info
 
@@ -188,26 +201,34 @@ void FGRouteMgr::update( double dt ) {
         wpn_dist->setDoubleValue( accum * SG_METER_TO_NM );
 
         double eta = accum * SG_METER_TO_NM / get_ground_speed();
-	if ( eta >= 100.0 ) { eta = 99.999; }
-	int major, minor;
-	if ( eta < (1.0/6.0) ) {
-	    // within 10 minutes, bump up to min/secs
-	    eta *= 60.0;
-	}
-	major = (int)eta;
-	minor = (int)((eta - (int)eta) * 60.0);
-	snprintf( eta_str, 128, "%d:%02d", major, minor );
+        if ( eta >= 100.0 ) { eta = 99.999; }
+        int major, minor;
+        if ( eta < (1.0/6.0) ) {
+            // within 10 minutes, bump up to min/secs
+            eta *= 60.0;
+        }
+        major = (int)eta;
+        minor = (int)((eta - (int)eta) * 60.0);
+        snprintf( eta_str, 128, "%d:%02d", major, minor );
         wpn_eta->setStringValue( eta_str );
     }
 }
 
 
-SGWayPoint FGRouteMgr::pop_waypoint() {
+void FGRouteMgr::add_waypoint( const SGWayPoint& wp, int n ) {
+    route->add_waypoint( wp, n );
+    update_mirror();
+}
+
+
+SGWayPoint FGRouteMgr::pop_waypoint( int n ) {
     SGWayPoint wp;
 
     if ( route->size() > 0 ) {
-        wp = route->get_first();
-        route->delete_first();
+        if ( n < 0 )
+            n = route->size() - 1;
+        wp = route->get_waypoint(n);
+        route->delete_waypoint(n);
     }
 
     if ( route->size() <= 2 ) {
@@ -228,6 +249,7 @@ SGWayPoint FGRouteMgr::pop_waypoint() {
         wp0_eta->setStringValue( "" );
     }
 
+    update_mirror();
     return wp;
 }
 
@@ -235,3 +257,136 @@ SGWayPoint FGRouteMgr::pop_waypoint() {
 bool FGRouteMgr::build() {
     return true;
 }
+
+
+
+int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
+    double alt = 0.0;
+    string target = Tgt_Alt;
+
+    // make upper case
+    for (unsigned int i = 0; i < target.size(); i++)
+        if (target[i] >= 'a' && target[i] <= 'z')
+            target[i] -= 'a' - 'A';
+
+    // extract altitude
+    unsigned int pos = target.find( '@' );
+    if ( pos != string::npos ) {
+        alt = atof( target.c_str() + pos + 1 );
+        target = target.substr( 0, pos );
+        if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+            alt *= SG_FEET_TO_METER;
+    }
+
+    // check for lon,lat
+    pos = target.find(',');
+    if ( pos != string::npos ) {
+        double lon = atof( target.substr(0, pos).c_str());
+        double lat = atof( target.c_str() + pos + 1);
+
+        SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint lon = " << lon << ", lat = " << lat );
+        SGWayPoint wp( lon, lat, alt, SGWayPoint::WGS84, target );
+        add_waypoint( wp, n );
+        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+        return 1;
+    }
+
+    // check for airport id
+    const FGAirport *apt = fgFindAirportID( target );
+    if (apt) {
+        SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (airport) = " << target );
+        SGWayPoint wp( apt->getLongitude(), apt->getLatitude(), alt, SGWayPoint::WGS84, target );
+        add_waypoint( wp, n );
+        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+        return 2;
+    }
+
+    // check for fix id
+    FGFix f;
+    if ( globals->get_fixlist()->query( target, &f ) ) {
+        SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (fix) = " << target );
+        SGWayPoint wp( f.get_lon(), f.get_lat(), alt, SGWayPoint::WGS84, target );
+        add_waypoint( wp, n );
+        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+        return 3;
+    }
+
+    // Try finding a nav matching the ID
+    double lat, lon;
+    // The base lon/lat are determined by the last WP,
+    // or the current pos if the WP list is empty.
+    const int wps = this->size();
+
+    if (wps > 0) {
+        SGWayPoint wp = get_waypoint(wps-1);
+        lat = wp.get_target_lat();
+        lon = wp.get_target_lon();
+    } else {
+        lat = fgGetNode("/position/latitude-deg")->getDoubleValue();
+        lon = fgGetNode("/position/longitude-deg")->getDoubleValue();
+    }
+
+    lat *= SGD_DEGREES_TO_RADIANS;
+    lon *= SGD_DEGREES_TO_RADIANS;
+
+    SG_LOG( SG_GENERAL, SG_INFO, "Looking for nav " << target << " at " << lon << " " << lat);
+
+    if (FGNavRecord* nav = globals->get_navlist()->findByIdent(target.c_str(), lon, lat)) {
+        SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (nav) = " << target );
+        SGWayPoint wp( nav->get_lon(), nav->get_lat(), alt, SGWayPoint::WGS84, target );
+        add_waypoint( wp, n );
+        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+        return 4;
+    }
+
+    // target not identified
+    return 0;
+}
+
+
+// mirror internal route to the property system for inspection by other subsystems
+void FGRouteMgr::update_mirror() {
+    mirror->removeChildren("wp");
+    for (int i = 0; i < route->size(); i++) {
+        SGWayPoint wp = route->get_waypoint(i);
+        SGPropertyNode *prop = mirror->getChild("wp", i, 1);
+
+        prop->setStringValue("id", wp.get_id().c_str());
+        prop->setStringValue("name", wp.get_name().c_str());
+        prop->setDoubleValue("longitude-deg", wp.get_target_lon());
+        prop->setDoubleValue("latitude-deg", wp.get_target_lat());
+        prop->setDoubleValue("altitude-m", wp.get_target_alt());
+        prop->setDoubleValue("altitude-ft", wp.get_target_alt() * SG_METER_TO_FEET);
+    }
+    // set number as listener attachment point
+    mirror->setIntValue("num", route->size());
+}
+
+
+// command interface /autopilot/route-manager/input:
+//
+//   @clear             ... clear route
+//   @pop               ... remove first entry
+//   @delete3           ... delete 4th entry
+//   @insert2:ksfo@900  ... insert "ksfo@900" as 3rd entry
+//   ksfo@900           ... append "ksfo@900"
+//
+void FGRouteMgr::Listener::valueChanged(SGPropertyNode *prop)
+{
+    const char *s = prop->getStringValue();
+    if (!strcmp(s, "@clear"))
+        mgr->init();
+    else if (!strcmp(s, "@pop"))
+        mgr->pop_waypoint(0);
+    else if (!strncmp(s, "@delete", 7))
+        mgr->pop_waypoint(atoi(s + 7));
+    else if (!strncmp(s, "@insert", 7)) {
+        char *r;
+        int pos = strtol(s + 7, &r, 10);
+        if (*r++ == ':' && *r)
+            mgr->new_waypoint(r, pos);
+    } else
+        mgr->new_waypoint(s);
+}
+
+

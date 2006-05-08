@@ -78,6 +78,18 @@ private:
     SGPropertyNode_ptr wpn_eta;
 
 
+    class Listener : public SGPropertyChangeListener {
+    public:
+        Listener(FGRouteMgr *m) : mgr(m) {}
+        virtual void valueChanged (SGPropertyNode * prop);
+    private:
+        FGRouteMgr *mgr;
+    };
+
+    SGPropertyNode_ptr input;
+    Listener *listener;
+    SGPropertyNode_ptr mirror;
+
 public:
 
     FGRouteMgr();
@@ -91,19 +103,19 @@ public:
 
     bool build ();
 
-    void add_waypoint( const SGWayPoint& wp ) {
-        route->add_waypoint( wp );
-    }
+    int new_waypoint( const string& tgt_alt, int n = -1 );
+    void add_waypoint( const SGWayPoint& wp, int n = -1 );
+    SGWayPoint pop_waypoint( int i = 0 );
 
     SGWayPoint get_waypoint( int i ) const {
         return route->get_waypoint(i);
     }
 
-    SGWayPoint pop_waypoint();
-
     int size() const {
         return route->size();
     }
+
+    void update_mirror();
 };
 
 

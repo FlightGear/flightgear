@@ -57,7 +57,6 @@
 #include <Aircraft/aircraft.hxx>
 #include <Aircraft/controls.hxx>
 #include <Airports/simple.hxx>
-#include <Autopilot/auto_gui.hxx>
 #include <Cockpit/panel.hxx>
 #include <FDM/flight.hxx>
 #include <Main/fg_init.hxx>

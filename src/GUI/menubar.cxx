@@ -7,7 +7,6 @@
 #include <plib/pu.h>
 #include <simgear/debug/logstream.hxx>
 
-#include <Autopilot/auto_gui.hxx>
 #include <Input/input.hxx>
 #include <Main/globals.hxx>
 
@@ -63,6 +62,7 @@ do_properties_dialog (const SGPropertyNode * arg)
     return true;
 }
 
+#if 0
 extern void AddWayPoint (puObject *);
 static bool
 do_ap_add_waypoint_dialog (const SGPropertyNode * arg)
@@ -87,7 +87,6 @@ do_ap_clear_route_dialog (const SGPropertyNode * arg)
     return true;
 }
 
-#if 0
 extern void fgAPAdjust (puObject *);
 static bool
 do_ap_adjust_dialog (const SGPropertyNode * arg)
@@ -125,9 +124,6 @@ static struct {
     { "old-print-dialog", do_print_dialog },
 #endif
     { "old-properties-dialog", do_properties_dialog },
-    { "old-ap-add-waypoint-dialog", do_ap_add_waypoint_dialog },
-    { "old-ap-pop-waypoint-dialog", do_ap_pop_waypoint_dialog },
-    { "old-ap-clear-route-dialog", do_ap_clear_route_dialog },
     { "old-lat-lon-format-dialog", do_lat_lon_format_dialog },
     { "old-help-dialog", do_help_dialog },
     { 0, 0 }

@@ -71,7 +71,6 @@
 #include <Aircraft/aircraft.hxx>
 #include <Aircraft/controls.hxx>
 #include <Airports/simple.hxx>
-#include <Autopilot/auto_gui.hxx>
 #include <Cockpit/panel.hxx>
 #include <FDM/flight.hxx>
 #include <Main/main.hxx>
@@ -141,12 +140,12 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
         {"fgPresetCommit", fgPresetCommit},
 
         // Autopilot
-        {"NewAltitude", NewAltitude},
-	{"NewHeading", NewHeading},
+/*
         {"AddWayPoint", AddWayPoint},
         {"PopWayPoint", PopWayPoint},
         {"ClearRoute", ClearRoute},
         {"fgLatLonFormatToggle", fgLatLonFormatToggle},
+*/
 
         // Help
         {"helpCb", helpCb},

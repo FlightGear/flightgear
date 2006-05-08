@@ -70,7 +70,6 @@
 #include <ATC/ATCdisplay.hxx>
 #include <ATC/ATCmgr.hxx>
 #include <ATC/AIMgr.hxx>
-#include <Autopilot/auto_gui.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/xmlauto.hxx>
 #include <Cockpit/cockpit.hxx>
@@ -1716,17 +1715,6 @@ bool fgInitSubsystems() {
 
 
     ////////////////////////////////////////////////////////////////////
-    // Initialize the autopilot subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-                                // FIXME: these should go in the
-                                // GUI initialization code, not here.
-    // fgAPAdjustInit();
-    NewTgtAirportInit();
-    NewHeadingInit();
-    NewAltitudeInit();
-
-    ////////////////////////////////////////////////////////////////////
     // Initialize I/O subsystem.
     ////////////////////////////////////////////////////////////////////
 
@@ -1743,7 +1731,7 @@ bool fgInitSubsystems() {
 
     globals->set_current_panel( fgReadPanel(panel_path) );
     if (globals->get_current_panel() == 0) {
-        SG_LOG( SG_INPUT, SG_ALERT, 
+        SG_LOG( SG_INPUT, SG_ALERT,
                 "Error reading new panel from " << panel_path );
     } else {
         SG_LOG( SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path );
@@ -1751,7 +1739,7 @@ bool fgInitSubsystems() {
         globals->get_current_panel()->bind();
     }
 
-    
+
     ////////////////////////////////////////////////////////////////////
     // Initialize the controls subsystem.
     ////////////////////////////////////////////////////////////////////
