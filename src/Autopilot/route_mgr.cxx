@@ -46,6 +46,8 @@ FGRouteMgr::FGRouteMgr() :
     lat( NULL ),
     alt( NULL ),
     true_hdg_deg( NULL ),
+    target_altitude_ft( NULL ),
+    altitude_lock( NULL ),
     wp0_id( NULL ),
     wp0_dist( NULL ),
     wp0_eta( NULL ),
@@ -57,7 +59,8 @@ FGRouteMgr::FGRouteMgr() :
     wpn_eta( NULL ),
     input(fgGetNode( RM "input", true )),
     listener(new Listener(this)),
-    mirror(fgGetNode( RM "route", true ))
+    mirror(fgGetNode( RM "route", true )),
+    altitude_set( false )
 {
     input->setStringValue("");
     input->addChangeListener(listener);
@@ -76,6 +79,8 @@ void FGRouteMgr::init() {
     alt = fgGetNode( "/position/altitude-ft", true );
 
     true_hdg_deg = fgGetNode( "/autopilot/settings/true-heading-deg", true );
+    target_altitude_ft = fgGetNode( "/autopilot/settings/target-altitude-ft", true );
+    altitude_lock = fgGetNode( "/autopilot/locks/altitude", true );
 
     wp0_id = fgGetNode( RM "wp[0]/id", true );
     wp0_dist = fgGetNode( RM "wp[0]/dist", true );
@@ -133,9 +138,19 @@ void FGRouteMgr::update( double dt ) {
                               alt->getDoubleValue(), &wp_course, &wp_distance );
 
         true_hdg_deg->setDoubleValue( wp_course );
+        double target_alt = wp.get_target_alt();
+
+        // activate altitude lock only once per route (this can't be done in
+        // new_waypoint() because the first wp might not have an altitude defined at all)
+        if (!altitude_set && target_alt > -9990) {
+            target_altitude_ft->setDoubleValue( target_alt * SG_METER_TO_FEET );
+            altitude_lock->setStringValue( "altitude-hold" );
+            altitude_set = true;
+        }
 
         if ( wp_distance < 200.0 ) {
             pop_waypoint();
+            altitude_set = false;
         }
     }
 
@@ -261,13 +276,28 @@ bool FGRouteMgr::build() {
 
 
 int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
-    double alt = 0.0;
     string target = Tgt_Alt;
 
     // make upper case
     for (unsigned int i = 0; i < target.size(); i++)
         if (target[i] >= 'a' && target[i] <= 'z')
             target[i] -= 'a' - 'A';
+
+    SGWayPoint *wp = 0;
+    int type = make_waypoint( &wp, target );
+
+    if (wp) {
+        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+        add_waypoint( *wp, n );
+        delete wp;
+    }
+    return type;
+}
+
+
+
+int FGRouteMgr::make_waypoint(SGWayPoint **wp, string& target) {
+    double alt = -9999.0;
 
     // extract altitude
     unsigned int pos = target.find( '@' );
@@ -285,9 +315,7 @@ int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
         double lat = atof( target.c_str() + pos + 1);
 
         SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint lon = " << lon << ", lat = " << lat );
-        SGWayPoint wp( lon, lat, alt, SGWayPoint::WGS84, target );
-        add_waypoint( wp, n );
-        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+        *wp = new SGWayPoint( lon, lat, alt, SGWayPoint::WGS84, target );
         return 1;
     }
 
@@ -295,9 +323,7 @@ int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
     const FGAirport *apt = fgFindAirportID( target );
     if (apt) {
         SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (airport) = " << target );
-        SGWayPoint wp( apt->getLongitude(), apt->getLatitude(), alt, SGWayPoint::WGS84, target );
-        add_waypoint( wp, n );
-        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+        *wp = new SGWayPoint( apt->getLongitude(), apt->getLatitude(), alt, SGWayPoint::WGS84, target );
         return 2;
     }
 
@@ -305,9 +331,7 @@ int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
     FGFix f;
     if ( globals->get_fixlist()->query( target, &f ) ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (fix) = " << target );
-        SGWayPoint wp( f.get_lon(), f.get_lat(), alt, SGWayPoint::WGS84, target );
-        add_waypoint( wp, n );
-        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+        *wp = new SGWayPoint( f.get_lon(), f.get_lat(), alt, SGWayPoint::WGS84, target );
         return 3;
     }
 
@@ -333,9 +357,7 @@ int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
 
     if (FGNavRecord* nav = globals->get_navlist()->findByIdent(target.c_str(), lon, lat)) {
         SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (nav) = " << target );
-        SGWayPoint wp( nav->get_lon(), nav->get_lat(), alt, SGWayPoint::WGS84, target );
-        add_waypoint( wp, n );
-        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+        *wp = new SGWayPoint( nav->get_lon(), nav->get_lat(), alt, SGWayPoint::WGS84, target );
         return 4;
     }
 

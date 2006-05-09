@@ -64,6 +64,8 @@ private:
 
     // automatic outputs
     SGPropertyNode_ptr true_hdg_deg;
+    SGPropertyNode_ptr target_altitude_ft;
+    SGPropertyNode_ptr altitude_lock;
 
     SGPropertyNode_ptr wp0_id;
     SGPropertyNode_ptr wp0_dist;
@@ -89,6 +91,10 @@ private:
     SGPropertyNode_ptr input;
     Listener *listener;
     SGPropertyNode_ptr mirror;
+    bool altitude_set;
+
+    int make_waypoint( SGWayPoint **wp, string& target );
+    void update_mirror();
 
 public:
 
@@ -115,7 +121,6 @@ public:
         return route->size();
     }
 
-    void update_mirror();
 };
 
 
