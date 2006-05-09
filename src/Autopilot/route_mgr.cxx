@@ -140,8 +140,6 @@ void FGRouteMgr::update( double dt ) {
         true_hdg_deg->setDoubleValue( wp_course );
         double target_alt = wp.get_target_alt();
 
-        // activate altitude lock only once per route (this can't be done in
-        // new_waypoint() because the first wp might not have an altitude defined at all)
         if (!altitude_set && target_alt > -9990) {
             target_altitude_ft->setDoubleValue( target_alt * SG_METER_TO_FEET );
             altitude_lock->setStringValue( "altitude-hold" );
