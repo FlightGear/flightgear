@@ -554,6 +554,7 @@ void fgDumpSnapShot () {
 	show_pu_cursor = true;
 	puHideCursor();
     }
+    fgSetBool("/sim/signals/screenshot", true);
 
     FGRenderer *renderer = globals->get_renderer();
     renderer->init();
@@ -586,6 +587,7 @@ void fgDumpSnapShot () {
 	message += "\".";
     }
 
+    fgSetBool("/sim/signals/screenshot", false);
     mkDialog (message.c_str());
 
     delete [] filename;
