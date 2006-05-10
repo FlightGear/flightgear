@@ -229,6 +229,9 @@ void FGRouteMgr::update( double dt ) {
 
 
 void FGRouteMgr::add_waypoint( const SGWayPoint& wp, int n ) {
+    if ( n == 0 )
+        altitude_set = false;
+
     route->add_waypoint( wp, n );
     update_mirror();
 }
@@ -262,6 +265,9 @@ SGWayPoint FGRouteMgr::pop_waypoint( int n ) {
         wp0_eta->setStringValue( "" );
     }
 
+    if ( n == 0 && route->size() )
+        altitude_set = false;
+
     update_mirror();
     return wp;
 }
@@ -285,8 +291,8 @@ int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
     int type = make_waypoint( &wp, target );
 
     if (wp) {
-        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
         add_waypoint( *wp, n );
+        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
         delete wp;
     }
     return type;
@@ -307,7 +313,7 @@ int FGRouteMgr::make_waypoint(SGWayPoint **wp, string& target) {
     }
 
     // check for lon,lat
-    pos = target.find(',');
+    pos = target.find( ',' );
     if ( pos != string::npos ) {
         double lon = atof( target.substr(0, pos).c_str());
         double lat = atof( target.c_str() + pos + 1);
@@ -359,7 +365,7 @@ int FGRouteMgr::make_waypoint(SGWayPoint **wp, string& target) {
         return 4;
     }
 
-    // target not identified
+    // unknown target
     return 0;
 }
 
