@@ -229,7 +229,7 @@ void FGRouteMgr::update( double dt ) {
 
 
 void FGRouteMgr::add_waypoint( const SGWayPoint& wp, int n ) {
-    if ( n == 0 )
+    if ( n == 0 || !route->size())
         altitude_set = false;
 
     route->add_waypoint( wp, n );
