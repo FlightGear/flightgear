@@ -140,10 +140,12 @@ void FGRouteMgr::update( double dt ) {
         true_hdg_deg->setDoubleValue( wp_course );
         double target_alt = wp.get_target_alt();
 
-        if (!altitude_set && target_alt > -9990) {
+        if ( !altitude_set && target_alt > -9990 ) {
             target_altitude_ft->setDoubleValue( target_alt * SG_METER_TO_FEET );
-            altitude_lock->setStringValue( "altitude-hold" );
             altitude_set = true;
+
+            if ( !on_ground() )
+                altitude_lock->setStringValue( "altitude-hold" );
         }
 
         if ( wp_distance < 200.0 ) {
@@ -229,7 +231,7 @@ void FGRouteMgr::update( double dt ) {
 
 
 void FGRouteMgr::add_waypoint( const SGWayPoint& wp, int n ) {
-    if ( n == 0 || !route->size())
+    if ( n == 0 || !route->size() )
         altitude_set = false;
 
     route->add_waypoint( wp, n );
@@ -278,7 +280,6 @@ bool FGRouteMgr::build() {
 }
 
 
-
 int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
     string target = Tgt_Alt;
 
@@ -292,12 +293,13 @@ int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
 
     if (wp) {
         add_waypoint( *wp, n );
-        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
         delete wp;
+
+        if ( !on_ground() )
+            fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
     }
     return type;
 }
-
 
 
 int FGRouteMgr::make_waypoint(SGWayPoint **wp, string& target) {
@@ -386,6 +388,15 @@ void FGRouteMgr::update_mirror() {
     }
     // set number as listener attachment point
     mirror->setIntValue("num", route->size());
+}
+
+
+bool FGRouteMgr::on_ground() {
+    SGPropertyNode *gear = fgGetNode( "/gear/gear/wow", false );
+    if ( !gear || gear->getType() == SGPropertyNode::NONE )
+        return fgGetBool( "/sim/presets/onground", true );
+
+    return gear->getBoolValue();
 }
 
 
