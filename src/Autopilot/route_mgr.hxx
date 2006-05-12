@@ -95,7 +95,7 @@ private:
 
     int make_waypoint( SGWayPoint **wp, string& target );
     void update_mirror();
-    bool on_ground();
+    bool near_ground();
 
 public:
 

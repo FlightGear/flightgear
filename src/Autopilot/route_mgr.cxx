@@ -144,7 +144,7 @@ void FGRouteMgr::update( double dt ) {
             target_altitude_ft->setDoubleValue( target_alt * SG_METER_TO_FEET );
             altitude_set = true;
 
-            if ( !on_ground() )
+            if ( !near_ground() )
                 altitude_lock->setStringValue( "altitude-hold" );
         }
 
@@ -295,7 +295,7 @@ int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
         add_waypoint( *wp, n );
         delete wp;
 
-        if ( !on_ground() )
+        if ( !near_ground() )
             fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
     }
     return type;
@@ -391,10 +391,14 @@ void FGRouteMgr::update_mirror() {
 }
 
 
-bool FGRouteMgr::on_ground() {
+bool FGRouteMgr::near_ground() {
     SGPropertyNode *gear = fgGetNode( "/gear/gear/wow", false );
     if ( !gear || gear->getType() == SGPropertyNode::NONE )
         return fgGetBool( "/sim/presets/onground", true );
+
+    if ( fgGetDouble("/position/altitude-agl-ft", 300.0)
+            < fgGetDouble("/autopilot/route-manager/min-lock-altitude-agl-ft") )
+        return true;
 
     return gear->getBoolValue();
 }
