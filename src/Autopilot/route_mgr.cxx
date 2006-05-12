@@ -68,8 +68,8 @@ FGRouteMgr::FGRouteMgr() :
 
 
 FGRouteMgr::~FGRouteMgr() {
-    delete route;
     input->removeChangeListener(listener);
+    delete route;
 }
 
 
@@ -280,14 +280,7 @@ bool FGRouteMgr::build() {
 }
 
 
-int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
-    string target = Tgt_Alt;
-
-    // make upper case
-    for (unsigned int i = 0; i < target.size(); i++)
-        if (target[i] >= 'a' && target[i] <= 'z')
-            target[i] -= 'a' - 'A';
-
+int FGRouteMgr::new_waypoint( const string& target, int n ) {
     SGWayPoint *wp = 0;
     int type = make_waypoint( &wp, target );
 
@@ -302,10 +295,16 @@ int FGRouteMgr::new_waypoint( const string& Tgt_Alt, int n ) {
 }
 
 
-int FGRouteMgr::make_waypoint(SGWayPoint **wp, string& target) {
-    double alt = -9999.0;
+int FGRouteMgr::make_waypoint( SGWayPoint **wp, const string& tgt ) {
+    string target = tgt;
+
+    // make upper case
+    for (unsigned int i = 0; i < target.size(); i++)
+        if (target[i] >= 'a' && target[i] <= 'z')
+            target[i] -= 'a' - 'A';
 
     // extract altitude
+    double alt = -9999.0;
     unsigned int pos = target.find( '@' );
     if ( pos != string::npos ) {
         alt = atof( target.c_str() + pos + 1 );
