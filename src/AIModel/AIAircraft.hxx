@@ -34,91 +34,89 @@ SG_USING_STD(string);
 class FGAIAircraft : public FGAIBase {
 
 private:
+    typedef struct {
+        double accel;
+        double decel;
+        double climb_rate;
+        double descent_rate;
+        double takeoff_speed;
+        double climb_speed;
+        double cruise_speed;
+        double descent_speed;
+        double land_speed;
+    } PERF_STRUCT;
 
-	typedef struct {
-            double accel;
-            double decel;
-            double climb_rate;
-            double descent_rate;
-            double takeoff_speed;
-            double climb_speed;
-            double cruise_speed;
-            double descent_speed;
-            double land_speed;
-	} PERF_STRUCT;
-	
 public:
-        enum aircraft_e {LIGHT=0, WW2_FIGHTER, JET_TRANSPORT, JET_FIGHTER, TANKER};
-        static const PERF_STRUCT settings[];
-	
-	FGAIAircraft(FGAISchedule *ref=0);
-	~FGAIAircraft();
+    enum aircraft_e {LIGHT=0, WW2_FIGHTER, JET_TRANSPORT, JET_FIGHTER, TANKER};
+    static const PERF_STRUCT settings[];
 
-        virtual void readFromScenario(SGPropertyNode* scFileNode);
+    FGAIAircraft(FGAISchedule *ref=0);
+    ~FGAIAircraft();
 
-	virtual bool init();
-        virtual void bind();
-        virtual void unbind();
-	virtual void update(double dt);
+    virtual void readFromScenario(SGPropertyNode* scFileNode);
 
-        void setPerformance(const std::string& perfString);
-        void SetPerformance(const PERF_STRUCT *ps);
-        void setFlightPlan(const std::string& fp, bool repat = false);
-        void SetFlightPlan(FGAIFlightPlan *f);
-        FGAIFlightPlan* GetFlightPlan() const { return fp; };
-        void AccelTo(double speed);
-        void PitchTo(double angle);
-        void RollTo(double angle);
-        void YawTo(double angle);
-        void ClimbTo(double altitude);
-        void TurnTo(double heading);
-        void ProcessFlightPlan( double dt, time_t now );
-        void setCallSign(const string& );
-        void setTACANChannelID(const string& );
+    virtual bool init();
+    virtual void bind();
+    virtual void unbind();
+    virtual void update(double dt);
 
-  void getGroundElev(double dt);
-  void doGroundAltitude();
-  void loadNextLeg  ();
+    void setPerformance(const std::string& perfString);
+    void SetPerformance(const PERF_STRUCT *ps);
+    void setFlightPlan(const std::string& fp, bool repat = false);
+    void SetFlightPlan(FGAIFlightPlan *f);
+    FGAIFlightPlan* GetFlightPlan() const { return fp; };
+    void AccelTo(double speed);
+    void PitchTo(double angle);
+    void RollTo(double angle);
+    void YawTo(double angle);
+    void ClimbTo(double altitude);
+    void TurnTo(double heading);
+    void ProcessFlightPlan( double dt, time_t now );
+    void setCallSign(const string& );
+    void setTACANChannelID(const string& );
 
-  void setAcType(const string& ac) { acType = ac; };
-  void setCompany(const string& comp) { company = comp;};
+    void getGroundElev(double dt);
+    void doGroundAltitude();
+    void loadNextLeg  ();
 
-        inline void SetTanker(bool setting) { isTanker = setting; };
+    void setAcType(const string& ac) { acType = ac; };
+    void setCompany(const string& comp) { company = comp;};
 
-        virtual const char* getTypeString(void) const { return "aircraft"; }
+    inline void SetTanker(bool setting) { isTanker = setting; };
+    virtual const char* getTypeString(void) const { return "aircraft"; }
 
 private:
-   FGAISchedule *trafficRef;
-  
-        bool hdg_lock;
-        bool alt_lock;
-        double dt_count;  
-  double dt_elev_count;
-  double headingChangeRate;
-  double groundTargetSpeed;
-  double groundOffset;
-        double dt; 
+    FGAISchedule *trafficRef;
 
-        const PERF_STRUCT *performance;
-        bool use_perf_vs;
-        SGPropertyNode* refuel_node;
-        bool isTanker;
+    bool hdg_lock;
+    bool alt_lock;
+    double dt_count;
+    double dt_elev_count;
+    double headingChangeRate;
+    double groundTargetSpeed;
+    double groundOffset;
+    double dt;
 
-	void Run(double dt);
-        double sign(double x);	
-  
-  string acType;
-  string company;
+    const PERF_STRUCT *performance;
+    bool use_perf_vs;
+    SGPropertyNode* refuel_node;
+    bool isTanker;
 
-  int spinCounter;
-  double prevSpeed;
-  double prev_dist_to_go;
+    void Run(double dt);
+    double sign(double x);
 
-        bool _getGearDown() const;
-  bool reachedWaypoint;
-        string callsign;                      // The callsign of this tanker.
-        string TACAN_channel_id;              // The TACAN channel of this tanker
-  bool contact;                               // set if this tanker is within fuelling range
+    string acType;
+    string company;
+
+    int spinCounter;
+    double prevSpeed;
+    double prev_dist_to_go;
+
+    bool _getGearDown() const;
+    bool reachedWaypoint;
+    string callsign;             // The callsign of this tanker.
+    string TACAN_channel_id;     // The TACAN channel of this tanker
+    bool contact;                // set if this tanker is within fuelling range
 };
 
 
