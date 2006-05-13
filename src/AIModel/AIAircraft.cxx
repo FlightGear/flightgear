@@ -111,14 +111,17 @@ void FGAIAircraft::bind() {
     props->tie("controls/gear/gear-down",
                SGRawValueMethods<FGAIAircraft,bool>(*this,
                                               &FGAIAircraft::_getGearDown));
+    props->tie("refuel/contact", SGRawValuePointer<bool>(&contact));
     props->setStringValue("callsign", callsign.c_str());
     props->setStringValue("navaids/tacan/channel-ID", TACAN_channel_id.c_str());
+    props->setBoolValue("tanker",isTanker);
 }
 
 void FGAIAircraft::unbind() {
     FGAIBase::unbind();
 
     props->untie("controls/gear/gear-down");
+    props->untie("refuel/contact");
 }
 
 
@@ -426,9 +429,13 @@ void FGAIAircraft::Run(double dt) {
           (y_shift > 0.0)    &&
           (elevation > 0.0) ) {
        refuel_node->setBoolValue(true);
+       contact = true;
      } else {
        refuel_node->setBoolValue(false);
+       contact = false;
      } 
+   } else {
+       contact = false;
    }
 }
 

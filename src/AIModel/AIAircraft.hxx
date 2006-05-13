@@ -118,6 +118,7 @@ private:
   bool reachedWaypoint;
         string callsign;                      // The callsign of this tanker.
         string TACAN_channel_id;              // The TACAN channel of this tanker
+  bool contact;                               // set if this tanker is within fuelling range
 };
 
 
