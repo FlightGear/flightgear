@@ -305,7 +305,7 @@ int FGRouteMgr::make_waypoint( SGWayPoint **wp, const string& tgt ) {
 
     // extract altitude
     double alt = -9999.0;
-    unsigned int pos = target.find( '@' );
+    size_t pos = target.find( '@' );
     if ( pos != string::npos ) {
         alt = atof( target.c_str() + pos + 1 );
         target = target.substr( 0, pos );
