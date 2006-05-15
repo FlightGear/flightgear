@@ -129,10 +129,14 @@ TACAN::init ()
     _y_shift_node = dnode->getChild("y-shift", 0, true);
     _rotation_node = dnode->getChild("rotation", 0, true);
     _channel_node = dnode->getChild("channel", 0, true);
-    SGPropertyNode *cnode = fgGetNode("/ai/models/carrier", num, true );
-    _carrier_name_node = cnode->getChild("name", 0, true);
-    SGPropertyNode *tnode = fgGetNode("/ai/models/aircraft", num, true );
-    _tanker_callsign_node = tnode->getChild("callsign", 0, true);
+
+    SGPropertyNode *cnode = fgGetNode("/ai/models/carrier", num, false );
+    if (cnode)
+        _carrier_name_node = cnode->getChild("name", 0, false);
+
+    SGPropertyNode *tnode = fgGetNode("/ai/models/aircraft", num, false);
+    if (tnode)
+        _tanker_callsign_node = tnode->getChild("callsign", 0, false);
 }
 
 void
