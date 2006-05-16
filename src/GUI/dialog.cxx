@@ -6,15 +6,12 @@
 
 #include <stdlib.h>		// atof()
 
-#include <plib/puAux.h>
-
 #include <Input/input.hxx>
 #include <Scripting/NasalSys.hxx>
 
 #include "dialog.hxx"
 #include "new_gui.hxx"
 
-#include "puList.hxx"
 #include "AirportList.hxx"
 #include "layout.hxx"
 
@@ -48,6 +45,7 @@ GUIInfo::~GUIInfo ()
         bindings[i] = 0;
     }
 }
+
 
 
 /**
@@ -360,13 +358,6 @@ FGDialog::~FGDialog ()
     puDeleteObject(_object);
 
     unsigned int i;
-                                // Delete all the arrays we made
-                                // and were forced to keep around
-                                // because PUI won't do its own
-                                // memory management.
-    for (i = 0; i < _char_arrays.size(); i++)
-        destroy_char_array(_char_arrays[i]);
-
                                 // Delete all the info objects we
                                 // were forced to keep around because
                                 // PUI cannot delete its own user data.
@@ -393,10 +384,10 @@ FGDialog::updateValues (const char * objectName)
             continue;
 
         puObject *obj = _propertyObjects[i]->object;
-        SGPropertyNode *values = _propertyObjects[i]->values;
-        if (obj->getType() & PUCLASS_LIST && values)
-            ((puList *)obj)->newList(value_list(values));
-        else
+        if (obj->getType() & PUCLASS_LIST) {
+            fgList *pl = static_cast<fgList *>(obj);
+            pl->update();
+        } else
             copy_to_pui(_propertyObjects[i]->node, obj);
     }
 }
@@ -551,9 +542,8 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "list") {
-        char ** entries = value_list(props);
         int slider_width = props->getIntValue("slider", 20);
-        puList * obj = new puList(x, y, x + width, y + height, entries, slider_width);
+        fgList * obj = new fgList(x, y, x + width, y + height, props, slider_width);
         if (presetSize)
             obj->setSize(width, height);
         setupObject(obj, props);
@@ -622,8 +612,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "combo") {
-        char ** entries = value_list(props);
-        puaComboBox * obj = new puaComboBox(x, y, x + width, y + height, entries,
+        fgComboBox * obj = new fgComboBox(x, y, x + width, y + height, props,
                            props->getBoolValue("editable", false));
         setupObject(obj, props);
 #ifdef PUCOL_EDITFIELD  // plib > 0.8.4
@@ -672,19 +661,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "select") {
-        vector<SGPropertyNode_ptr> value_nodes;
-        SGPropertyNode * selection_node =
-                fgGetNode(props->getChild("selection")->getStringValue(), true);
-
-        for (int q = 0; q < selection_node->nChildren(); q++)
-            value_nodes.push_back(selection_node->getChild(q));
-
-        char ** entries = make_char_array(value_nodes.size());
-        for (unsigned int i = 0; i < value_nodes.size(); i++)
-            entries[i] = strdup((char *)value_nodes[i]->getName());
-
-        puaSelectBox * obj =
-            new puaSelectBox(x, y, x + width, y + height, entries);
+        fgSelectBox * obj = new fgSelectBox(x, y, x + width, y + height, props);
         setupObject(obj, props);
 #ifdef PUCOL_EDITFIELD  // plib > 0.8.4
         setColor(obj, props, EDITFIELD);
@@ -728,8 +705,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
         SGPropertyNode_ptr node = fgGetNode(propname, true);
         copy_to_pui(node, object);
 
-        SGPropertyNode * values = type == "list" ? props : 0;
-        PropertyObject* po = new PropertyObject(name, object, node, values);
+        PropertyObject* po = new PropertyObject(name, object, node);
         _propertyObjects.push_back(po);
         if(props->getBoolValue("live"))
             _liveObjects.push_back(po);
@@ -934,34 +910,6 @@ FGDialog::getKeyCode(const char *str)
     return key;
 }
 
-char **
-FGDialog::value_list (const SGPropertyNode *props)
-{
-    vector<SGPropertyNode_ptr> value_nodes = props->getChildren("value");
-    char ** entries = make_char_array(value_nodes.size());
-    for (unsigned int i = 0; i < value_nodes.size(); i++)
-        entries[i] = strdup((char *)value_nodes[i]->getStringValue());
-    return entries;
-}
-
-char **
-FGDialog::make_char_array (int size)
-{
-    char ** list = new char*[size+1];
-    for (int i = 0; i <= size; i++)
-        list[i] = 0;
-    _char_arrays.push_back(list);
-    return list;
-}
-
-void
-FGDialog::destroy_char_array (char ** array)
-{
-    for (int i = 0; array[i] != 0; i++)
-        if (array[i])
-            free(array[i]);// added with strdup
-    delete[] array;
-}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -970,14 +918,66 @@ FGDialog::destroy_char_array (char ** array)
 
 FGDialog::PropertyObject::PropertyObject (const char * n,
                                            puObject * o,
-                                           SGPropertyNode_ptr p,
-                                           SGPropertyNode_ptr v)
+                                           SGPropertyNode_ptr p)
     : name(n),
       object(o),
-      node(p),
-      values(v)
+      node(p)
 {
 }
 
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of fgList and derived pui widgets
+////////////////////////////////////////////////////////////////////////
+
+
+fgValueList::fgValueList(SGPropertyNode *p) :
+    _props(p)
+{
+    make_list();
+}
+
+void
+fgValueList::update()
+{
+    destroy_list();
+    make_list();
+}
+
+fgValueList::~fgValueList()
+{
+    destroy_list();
+}
+
+void
+fgValueList::make_list()
+{
+    vector<SGPropertyNode_ptr> value_nodes = _props->getChildren("value");
+    _list = new char *[value_nodes.size() + 1];
+    unsigned int i;
+    for (i = 0; i < value_nodes.size(); i++)
+        _list[i] = strdup((char *)value_nodes[i]->getStringValue());
+    _list[i] = 0;
+}
+
+void
+fgValueList::destroy_list()
+{
+    for (int i = 0; _list[i] != 0; i++)
+        if (_list[i])
+            free(_list[i]);
+    delete[] _list;
+}
+
+
+
+void
+fgList::update()
+{
+    fgValueList::update();
+    newList(_list);
+}
 
 // end of dialog.cxx

@@ -7,12 +7,15 @@
 # error This library requires C++
 #endif
 
-#include <plib/pu.h>
+#include <plib/puAux.h>
 #include <plib/sg.h>
 
 #include <simgear/compiler.h>	// for SG_USING_STD
 #include <simgear/props/props.hxx>
 #include <simgear/misc/sg_path.hxx>
+
+#undef PUCLASS_LIST
+#include "puList.hxx"
 
 #include <vector>
 SG_USING_STD(vector);
@@ -141,30 +144,18 @@ private:
     // PUI provides no way for userdata to be deleted automatically
     // with a GUI object, so we have to keep track of all the special
     // data we allocated and then free it manually when the dialog
-    // closes. "values" is a node with "value" children and only used
-    // by the <list> widget.
+    // closes.
     vector<void *> _info;
     struct PropertyObject {
         PropertyObject (const char * name,
                         puObject * object,
-                        SGPropertyNode_ptr node,
-                        SGPropertyNode_ptr values = 0);
+                        SGPropertyNode_ptr node);
         string name;
         puObject * object;
         SGPropertyNode_ptr node;
-        SGPropertyNode_ptr values;
     };
     vector<PropertyObject *> _propertyObjects;
     vector<PropertyObject *> _liveObjects;
-
-    // PUI doesn't copy arrays, so we have to allocate string arrays
-    // and then keep pointers so that we can delete them when the
-    // dialog closes. value_list() builds such a list from "value"
-    // children.
-    char ** make_char_array (int size);
-    char ** value_list(const SGPropertyNode * prop);
-    void destroy_char_array (char **array);
-    vector<char **> _char_arrays;
 };
 
 //
@@ -189,6 +180,42 @@ private:
     bool _draggable;
     bool _dragging;
     int _dX, _dY;
+};
+
+
+class fgValueList {
+public:
+    fgValueList(SGPropertyNode *p);
+    virtual ~fgValueList();
+    virtual void update();
+
+protected:
+    char **_list;
+
+private:
+    void make_list();
+    void destroy_list();
+    SGPropertyNode_ptr _props;
+};
+
+
+class fgList : public fgValueList, public puList {
+public:
+    fgList(int x1, int y1, int x2, int y2, SGPropertyNode *p, int sw) :
+        fgValueList(p), puList(x1, y1, x2, y2, _list, sw) {}
+    virtual void update();
+};
+
+class fgComboBox : public fgValueList, public puaComboBox {
+public:
+    fgComboBox(int x1, int y1, int x2, int y2, SGPropertyNode *p, bool editable) :
+        fgValueList(p), puaComboBox(x1, y1, x2, y2, _list, editable) {}
+};
+
+class fgSelectBox : public fgValueList, public puaSelectBox {
+public:
+    fgSelectBox(int x1, int y1, int x2, int y2, SGPropertyNode *p) :
+        fgValueList(p), puaSelectBox(x1, y1, x2, y2, _list) {}
 };
 
 #endif // __DIALOG_HXX
