@@ -112,6 +112,14 @@ void fgOSOpenWindow(int w, int h, int bpp,
     // int realh = screen->h;
 }
 
+
+struct keydata {
+    keydata() : unicode(0), mod(0) {};
+    Uint16 unicode;
+    unsigned int mod;
+} keys[SDLK_LAST];
+
+
 static void handleKey(int key, int raw, int keyup)
 {
     int modmask = 0;
@@ -173,8 +181,19 @@ static void handleKey(int key, int raw, int keyup)
         CurrentModifiers |= modmask;
         keymod = CurrentModifiers & ~KEYMOD_RELEASED;
     }
-    if(modmask == 0 && KeyHandler)
+
+    if(modmask == 0 && KeyHandler) {
+        if (keymod & KEYMOD_RELEASED) {
+            if (keys[raw].mod) {
+                key = keys[raw].unicode;
+                keys[raw].mod = 0;
+            }
+        } else {
+            keys[raw].mod = keymod;
+            keys[raw].unicode = key;
+        }
         (*KeyHandler)(key, keymod, CurrentMouseX, CurrentMouseY);
+    }
 }
 
 // FIXME: Integrate with existing fgExit() in util.cxx.
