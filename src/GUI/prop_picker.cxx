@@ -89,6 +89,7 @@ void prop_pickerRefresh()
 	}
 	fgPropPicker *me = (fgPropPicker *)PP_widget -> getUserData();
 	me -> find_props( true );
+	me -> clrValue();
 }
 
 void prop_editOpen( const char * name, const char * value, char * proppath )
@@ -284,9 +285,10 @@ void fgPropPicker::handle_select ( puObject* list_box )
       return ;
     }
 
-    if (child->getType() == SGPropertyNode::BOOL && (fgGetKeyModifiers() & KEYMOD_CTRL))
+    if (child->getType() == SGPropertyNode::BOOL && (fgGetKeyModifiers() & KEYMOD_CTRL)) {
         child->setBoolValue(!child->getBoolValue());
-    else
+        prop_pickerRefresh();
+    } else
         prop_editOpen(child->getName(), child->getStringValue(), dst);
   }
   else
@@ -557,6 +559,7 @@ void fgPropPicker::valueChanged(SGPropertyNode *nd)
 void fgPropEdit::fgPropEditHandleCancel ( puObject* b )
 {
   fgPropEdit* prop_edit = (fgPropEdit*) b -> getUserData () ;
+  prop_pickerRefresh();
   FG_POP_PUI_DIALOG( prop_edit );
 }
 
