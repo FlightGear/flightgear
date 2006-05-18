@@ -88,7 +88,7 @@ void prop_pickerRefresh()
 		prop_pickerInit();
 	}
 	fgPropPicker *me = (fgPropPicker *)PP_widget -> getUserData();
-	me -> find_props();
+	me -> find_props( true );
 }
 
 void prop_editOpen( const char * name, const char * value, char * proppath )
@@ -426,7 +426,7 @@ static int nodeNameCompare(const void *ppNode1, const void *ppNode2)
 
 
 // Replace the current list of properties with the children of node "startDir".
-void fgPropPicker::find_props ()
+void fgPropPicker::find_props ( bool restore_pos )
 {
   int pi;
   int i;
@@ -499,12 +499,16 @@ void fgPropPicker::find_props ()
 
   proppath ->    setLabel          (startDir);
 
+  int top = list_box->getTopItem();
   list_box -> newList ( files ) ;
+  if (restore_pos)
+      list_box->setTopItem(top);
 
   // adjust the size of the slider...
   if (num_files > list_box->getNumVisible()) {
     slider->setSliderFraction((float)list_box->getNumVisible() / num_files);
-    slider->setValue(1.0f);
+    if (!restore_pos)
+        slider->setValue(1.0f);
     slider->reveal();
     up_arrow->reveal();
     down_arrow->reveal();

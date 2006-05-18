@@ -65,7 +65,7 @@ protected:
 
 public:
   puText    *proppath      ;
-  void find_props () ;
+  void find_props ( bool restore_slider_pos = false ) ;
   fgPropPicker ( int x, int y, int w, int h, int arrows,
                  const char *dir, const char *title = "Pick a file" ) ;
 
