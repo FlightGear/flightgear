@@ -81,6 +81,7 @@ private:
     SGPropertyNode_ptr _channel_node;
 
     SGPropertyNode_ptr _tanker_callsign_node;
+    SGPropertyNode_ptr _mp_callsign_node;
 
     double _last_distance_nm;
     double _last_frequency_mhz;
@@ -88,6 +89,7 @@ private:
 
     bool _carrier_valid;
     bool _tanker_valid;
+    bool _mp_tanker_valid;
     bool _transmitter_valid;
 
     Point3D _transmitter;

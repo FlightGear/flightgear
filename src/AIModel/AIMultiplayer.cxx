@@ -44,11 +44,27 @@ FGAIMultiplayer::~FGAIMultiplayer() {
 }
 
 bool FGAIMultiplayer::init() {
+    refuel_node = fgGetNode("systems/refuel/contact", true);
+    isTanker = false; // do this until this property is
+                      // passed over the net
+
+    string str1 = mCallSign;
+    string str2 = "MOBIL";
+
+    unsigned int loc1= str1.find( str2, 0 );
+    if ( (loc1 != string::npos && str2 != "") /*|| mCallSign == "mpdummy" */) {
+        //	   cout << " string found "	<< str2 << " in " << str1 << endl;
+        isTanker = true;
+        //	   cout << "isTanker " << isTanker << " " << mCallSign <<endl;
+    }
    return FGAIBase::init();
 }
 
 void FGAIMultiplayer::bind() {
     FGAIBase::bind();
+
+    props->tie("refuel/contact", SGRawValuePointer<bool>(&contact));
+    props->setBoolValue("tanker",isTanker);
 
 #define AIMPROProp(type, name) \
 SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
@@ -64,6 +80,7 @@ SGRawValueMethods<FGAIMultiplayer, type>(*this, \
     props->tie("controls/lag-adjust-system-speed",
                AIMPRWProp(double, LagAdjustSystemSpeed));
 
+
 #undef AIMPROProp
 #undef AIMPRWProp
 }
@@ -74,6 +91,7 @@ void FGAIMultiplayer::unbind() {
     props->untie("callsign");
     props->untie("controls/allow-extrapolation");
     props->untie("controls/lag-adjust-system-speed");
+    props->untie("refuel/contact");
 }
 
 void FGAIMultiplayer::update(double dt)
@@ -296,7 +314,25 @@ void FGAIMultiplayer::update(double dt)
   //###########################//
   // do calculations for radar //
   //###########################//
-  UpdateRadar(manager);
+    double range_ft2 = UpdateRadar(manager);
+
+    //************************************//
+    // Tanker code                        //
+    //************************************//
+
+
+    if ( isTanker) {
+        if ( (range_ft2 < 250.0 * 250.0)
+                /*&& (y_shift > 0.0) && (elevation > 0.0)*/ ) {
+            refuel_node->setBoolValue(true);
+            contact = true;
+        } else {
+            refuel_node->setBoolValue(false);
+            contact = false;
+        }
+    } else {
+        contact = false;
+    }
 
   Transform();
 }

@@ -31,20 +31,20 @@ class FGAIMultiplayer : public FGAIBase {
 public:
   FGAIMultiplayer();
   virtual ~FGAIMultiplayer();
-  
+
   virtual bool init();
   virtual void bind();
   virtual void unbind();
   virtual void update(double dt);
-  
+
   void addMotionInfo(const FGExternalMotionData& motionInfo, long stamp);
   void setDoubleProperty(const std::string& prop, double val);
-  
+
   void setCallSign(const string& callSign)
   { mCallSign = callSign; }
   const char* getCallSign(void) const
   { return mCallSign.c_str(); }
-  
+
   long getLastTimestamp(void) const
   { return mLastTimestamp; }
 
@@ -71,22 +71,27 @@ private:
   // Automatic sorting of motion data according to its timestamp
   typedef std::map<double,FGExternalMotionData> MotionInfo;
   MotionInfo mMotionInfo;
-  
+
   // Map between the property id's from the multiplayers network packets
   // and the property nodes
   typedef std::map<unsigned, SGSharedPtr<SGPropertyNode> > PropertyMap;
   PropertyMap mPropertyMap;
 
   std::string mCallSign;
-  
+
   double mTimeOffset;
   bool mTimeOffsetSet;
-  
+
   /// Properties which are for now exposed for testing
   bool mAllowExtrapolation;
   double mLagAdjustSystemSpeed;
 
   long mLastTimestamp;
+
+  // Propertiies for tankers
+  SGPropertyNode* refuel_node;
+  bool isTanker;
+  bool contact;          // set if this tanker is within fuelling range
 };
 
 #endif  // _FG_AIMultiplayer_HXX
