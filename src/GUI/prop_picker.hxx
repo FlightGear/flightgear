@@ -13,7 +13,6 @@
 void prop_pickerInit();
 void prop_pickerView( puObject * );
 void prop_pickerRefresh();
-void prop_editInit( const char * name, const char * value );
 void prop_editOpen( const char * name, const char * value );
 
 class fgPropPicker       ;

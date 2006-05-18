@@ -40,6 +40,7 @@
 
 #include STL_STRING
 
+#include <Main/fg_os.hxx>
 #include <Main/globals.hxx>
 #include "new_gui.hxx"
 #include "prop_picker.hxx"
@@ -90,19 +91,11 @@ void prop_pickerRefresh()
 	me -> find_props();
 }
 
-void prop_editInit( const char * name, const char * value, char * proppath )
-{
-	if( PE_widget == 0 ) {
-            fgPropEdit *PP = new fgPropEdit ( name, value, proppath );
-	    PE_widget = PP;
-	}
-}
-
 void prop_editOpen( const char * name, const char * value, char * proppath )
 {
-	if( PE_widget == 0 ) {
-		prop_editInit( name, value, proppath );
-	}
+	if( PE_widget == 0 )
+		PE_widget = new fgPropEdit(name, value, proppath);
+
 	fgPropEdit *me = (fgPropEdit *)PE_widget -> getUserData();
         me -> propname ->    setLabel          (name);
         me -> propinput ->   setValue          (value);
@@ -290,8 +283,11 @@ void fgPropPicker::handle_select ( puObject* list_box )
         "PUI: fgPropPicker - path is too long, max is %d.", PUSTRING_MAX ) ;
       return ;
     }
-	
-    prop_editOpen(child->getName(), child->getStringValue(), dst);
+
+    if (child->getType() == SGPropertyNode::BOOL && (fgGetKeyModifiers() & KEYMOD_CTRL))
+        child->setBoolValue(!child->getBoolValue());
+    else
+        prop_editOpen(child->getName(), child->getStringValue(), dst);
   }
   else
   {
