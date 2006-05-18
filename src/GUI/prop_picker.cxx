@@ -532,8 +532,25 @@ void fgPropPicker::updateTextForEntry(int index)
     stdString line = node->getDisplayName() + stdString(" = '")
         + value + "' " + "(";
     line += getValueTypeString( node );
+
+    if (fgGetBool("/sim/gui/dialogs/property-browser/show-flags", false)) {
+        stdString ext;
+        if (!node->getAttribute(SGPropertyNode::READ))
+            ext += "r";
+        if (!node->getAttribute(SGPropertyNode::WRITE))
+            ext += "w";
+        if (node->getAttribute(SGPropertyNode::ARCHIVE))
+            ext += "A";
+        if (node->getAttribute(SGPropertyNode::USERARCHIVE))
+            ext += "U";
+        if (node->isTied())
+            ext += "T";
+        if (ext.size())
+            line += ", " + ext;
+    }
+
     line += ")";
-	
+
     // truncate entries to plib pui limit
     if (line.length() >= PUSTRING_MAX)
         line[PUSTRING_MAX-1] = '\0';
