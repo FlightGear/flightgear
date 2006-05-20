@@ -39,24 +39,16 @@
 #include <simgear/props/props.hxx>
 
 #include STL_STRING
+SG_USING_STD(string);
 
 #include <Main/fg_os.hxx>
 #include <Main/globals.hxx>
 #include "new_gui.hxx"
 #include "prop_picker.hxx"
 
-SG_USING_STD(string);
-
-// A local alternative name, for use when a variable called "string"
-// is in scope - e.g. in classes derived from puInput.
-typedef string stdString;
-
-#define DOTDOTSLASH "../"
-#define SLASH       "/"
 
 static puObject *PP_widget = 0;
 
-// widget location and size...
 #define PROPPICK_X 100
 #define PROPPICK_Y 200
 #define PROPPICK_W 500
@@ -86,9 +78,9 @@ void prop_pickerView( puObject * )
 
 void prop_pickerInit()
 {
-    if ( PP_widget == 0 ) {
+    if (!PP_widget) {
         fgPropPicker *PP = new fgPropPicker ( PROPPICK_X, PROPPICK_Y, PROPPICK_W, PROPPICK_H,
-                1, "/", "FG Properties");
+                1, globals->get_props(), "FG Properties");
         PP_widget = PP;
     }
 }
@@ -96,7 +88,7 @@ void prop_pickerInit()
 
 void prop_pickerRefresh()
 {
-    if( PP_widget == 0 )
+    if (!PP_widget)
         prop_pickerInit();
 
     fgPropPicker *me = (fgPropPicker *)PP_widget -> getUserData();
@@ -105,16 +97,18 @@ void prop_pickerRefresh()
 }
 
 
-void prop_editOpen( const char * name, const char * value, char * proppath )
+void prop_editOpen( SGPropertyNode *node )
 {
-    if( PE_widget == 0 )
-        PE_widget = new fgPropEdit(name, value, proppath);
+    assert(node);
+    if (!PE_widget)
+        PE_widget = new fgPropEdit(node);
 
     fgPropEdit *me = (fgPropEdit *)PE_widget -> getUserData();
-    me -> propname -> setLabel (name);
-    me -> propinput -> setValue (value);
-    strcpy(me -> propPath, proppath);
+    me -> namestring = node->getDisplayName();
+    me -> propname -> setLabel (me->namestring.c_str());
+    me -> propinput -> setValue (node->getStringValue());
     me -> propinput -> acceptInput ();
+    me -> setEditNode(node);
     FG_PUSH_PUI_DIALOG( me );
 }
 
@@ -144,6 +138,21 @@ static string getValueTypeString( const SGPropertyNode_ptr node ) {
         result = "string";
 
     return result;
+}
+
+
+// Like strcmp, but for sorting property nodes into a suitable display order.
+static int nodeNameCompare(const void *ppNode1, const void *ppNode2)
+{
+    const SGPropertyNode_ptr pNode1 = *(const SGPropertyNode_ptr *)ppNode1;
+    const SGPropertyNode_ptr pNode2 = *(const SGPropertyNode_ptr *)ppNode2;
+
+    // Compare name first, and then index.
+    int diff = strcmp(pNode1->getName(), pNode2->getName());
+    if (diff)
+        return diff;
+
+    return pNode1->getIndex() - pNode2->getIndex();
 }
 
 
@@ -199,48 +208,6 @@ void fgPropPicker::fgPropPickerHandleArrow ( puObject *arrow )
 }
 
 
-void fgPropPicker::chop_file ( char *fname )
-{
-  /* removes everything back to the last '/' */
-
-    for ( int i = strlen(fname)-1; fname[i] != SLASH[0] && i >= 0; i-- )
-        fname[i] = '\0';
-}
-
-
-void fgPropPicker::go_up_one_directory ( char *fname )
-{
-    /* removes everything back to the last but one '/' */
-
-    chop_file ( fname );
-
-    if ( strlen ( fname ) == 0 ) {
-        /* Empty string!  The only way to go up is to append a "../" */
-        strcpy ( fname, DOTDOTSLASH );
-        return;
-    }
-
-    /* If the last path element is a "../" then we'll have to add another "../" */
-
-    if ( strcmp ( & fname [ strlen(fname)-3 ], DOTDOTSLASH ) == 0 ) {
-        if ( strlen ( fname ) + 4 >= PUSTRING_MAX ) {
-            ulSetError ( UL_WARNING, "PUI: fgPropPicker - path is too long, max is %d.",
-                    PUSTRING_MAX );
-            return;
-        }
-
-        strcat ( fname, DOTDOTSLASH );
-        return;
-    }
-
-    /* Otherwise, just delete the last element of the path. */
-    /* Remove the trailing slash - then remove the rest as if it was a file name */
-
-    fname [ strlen(fname)-1 ] = '\0';
-    chop_file ( fname );
-}
-
-
 void fgPropPicker::handle_select ( puObject* list_box )
 {
     fgPropPicker* prop_picker = (fgPropPicker*) list_box -> getUserData ();
@@ -248,20 +215,22 @@ void fgPropPicker::handle_select ( puObject* list_box )
     list_box -> getValue ( &selected );
 
     if ( selected >= 0 && selected < prop_picker -> num_files ) {
-        char *dst = prop_picker -> startDir;
-        char *src = prop_picker -> files [ selected ];
+        const char *src = prop_picker -> files [ selected ];
 
         if (prop_picker->dotFiles && (selected < 2)) {
             if ( strcmp ( src, "." ) == 0 ) {
                 /* Do nothing - but better refresh anyway. */
-
                 prop_picker -> find_props ();
                 return;
+
             } else if ( strcmp ( src, ".." ) == 0 ) {
                 /* Do back up one level - so refresh. */
 
-                go_up_one_directory ( dst );
-                prop_picker -> find_props ();
+                SGPropertyNode *parent = prop_picker->getCurrent()->getParent();
+                if (parent) {
+                    prop_picker->setCurrent(parent);
+                    prop_picker -> find_props ();
+                }
                 return;
             }
         }
@@ -275,32 +244,17 @@ void fgPropPicker::handle_select ( puObject* list_box )
 
         // check if it's a directory (had children)
         if ( child->nChildren() ) {
-            /* If this is a directory - then descend into it and refresh */
-
-            if ( strlen ( dst ) + strlen ( src ) + 2 >= PUSTRING_MAX ) {
-                ulSetError ( UL_WARNING,
-                        "PUI: fgPropPicker - path is too long, max is %d.", PUSTRING_MAX );
-                return;
-            }
-
-            strcat ( dst, src ); /* add path to descend to */
+            prop_picker->setCurrent(child);
             prop_picker -> find_props ();
             return;
         }
 
-        /* If this is a regular file - then just append it to the string */
-
-        if ( strlen ( dst ) + strlen ( src ) + 2 >= PUSTRING_MAX ) {
-            ulSetError ( UL_WARNING,
-                    "PUI: fgPropPicker - path is too long, max is %d.", PUSTRING_MAX );
-            return;
-        }
-
+        // it is a regular property
         if (child->getType() == SGPropertyNode::BOOL && (fgGetKeyModifiers() & KEYMOD_CTRL)) {
             child->setBoolValue(!child->getBoolValue());
             prop_pickerRefresh();
         } else
-            prop_editOpen(child->getName(), child->getStringValue(), dst);
+            prop_editOpen(child);
 
     } else {
           // The user clicked on blank screen - maybe we should
@@ -315,7 +269,7 @@ void fgPropPicker::fgPropPickerHandleOk ( puObject* b )
 {
     fgPropPicker* prop_picker = (fgPropPicker*) b -> getUserData ();
 
-    /* nothing to do, just hide */
+    // nothing to do, just hide
     FG_POP_PUI_DIALOG( prop_picker );
 }
 
@@ -350,8 +304,10 @@ fgPropPicker::~fgPropPicker ()
 
 
 fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
-                             const char *dir, const char *title ) :
+                             SGPropertyNode *start, const char *title ) :
     fgPopup ( x,y ),
+    curr(start),
+    flags(fgGetNode("/sim/gui/dialogs/property-browser/show-flags", true)),
     _gui((NewGUI *)globals->get_subsystem("gui"))
 {
     puFont LegendFont, LabelFont;
@@ -363,8 +319,6 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
     files = NULL;
     num_files = 0;
 
-    strcpy ( startDir, dir );
-    // printf ( "StartDirLEN=%i", strlen(startDir));
     if ( arrows > 2 )
         arrows = 2;
     if ( arrows < 0 )
@@ -376,7 +330,7 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
     setUserData( this );
 
     proppath = new puText (10, h-30);
-    proppath -> setLabel (startDir);
+    proppath -> setLabel (curr->getPath(true));
     proppath -> setColor(PUCOL_LABEL, txtcol.red(), txtcol.green(),
                          txtcol.blue(), txtcol.alpha());
 
@@ -421,44 +375,24 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
 }
 
 
-// Like strcmp, but for sorting property nodes into a suitable display order.
-static int nodeNameCompare(const void *ppNode1, const void *ppNode2)
-{
-    const SGPropertyNode_ptr pNode1 = *(const SGPropertyNode_ptr *)ppNode1;
-    const SGPropertyNode_ptr pNode2 = *(const SGPropertyNode_ptr *)ppNode2;
-
-    // Compare name first, and then index.
-    int diff = strcmp(pNode1->getName(), pNode2->getName());
-    if (diff)
-        return diff;
-
-    return pNode1->getIndex() - pNode2->getIndex();
-}
-
-
-// Replace the current list of properties with the children of node "startDir".
+// Replace list with children of current
 void fgPropPicker::find_props ( bool restore_pos )
 {
     int pi;
     int i;
 
     delete_arrays();
-    num_files = 0;
-
-    // printf("dir begin of find_props=%s\n",startDir);
-    // printf("len of dir=%i",strlen(startDir));
-    SGPropertyNode * node = globals->get_props()->getNode(startDir);
-
-    num_files = node ? (int)node->nChildren() : 0;
+    num_files = (int)curr->nChildren();
 
     // instantiate string objects and add [.] and [..] for subdirs
-    if (strcmp(startDir,"/") == 0) {
+    if (!curr->getParent()) {
         files = new char* [ num_files+1 ];
         pi = 0;
         dotFiles = false;
+
     } else {
         // add two for the .. and .
-        num_files = num_files + 2;
+        num_files += 2;
         // make room for .. and .
         files = new char* [ num_files+1 ];
 
@@ -474,38 +408,34 @@ void fgPropPicker::find_props ( bool restore_pos )
         dotFiles = true;
     }
 
+    num_children = curr->nChildren();
+    children = new SGPropertyNode_ptr[num_children];
+    for (i = 0; i < num_children; i++)
+        children[i] = curr->getChild(i);
 
-    if (node) {
-        num_children = node->nChildren();
-        children = new SGPropertyNode_ptr[num_children];
-        for (i = 0; i < num_children; i++)
-            children[i] = node->getChild(i);
+    qsort(children, num_children, sizeof(children[0]), nodeNameCompare);
 
-        qsort(children, num_children, sizeof(children[0]), nodeNameCompare);
+    // Make lists of the children's names, values, etc.
+    for (i = 0; i < num_children; i++) {
+        SGPropertyNode * child = children[i];
 
-        // Make lists of the children's names, values, etc.
-        for (i = 0; i < num_children; i++) {
-            SGPropertyNode * child = children[i];
-            stdString name = child->getDisplayName(true);
+        if ( child->nChildren() > 0 ) {
+            stdString name = stdString(child->getDisplayName(true)) + '/';
+            files[ pi ] = new char[ name.size() + 1 ];
+            strcpy ( files [ pi ], name.c_str() );
 
-            if ( child->nChildren() > 0 ) {
-                files[ pi ] = new char[ strlen(name.c_str())+2 ];
-                strcpy ( files [ pi ], name.c_str() );
-                strcat ( files [ pi ], "/" );
-            } else {
-                files[pi] = NULL; // ensure it's NULL before setting intial value
-                updateTextForEntry(i);
-                // observe it
-                child->addChangeListener(this);
-            }
-
-            ++pi;
+        } else {
+            files[pi] = NULL; // ensure it's NULL before setting intial value
+            updateTextForEntry(i);
+            child->addChangeListener(this);
         }
+
+        ++pi;
     }
 
     files [ num_files ] = NULL;
 
-    proppath -> setLabel(startDir);
+    proppath -> setLabel(curr->getPath(true));
 
     int top = list_box->getTopItem();
     list_box -> newList ( files );
@@ -535,50 +465,54 @@ void fgPropPicker::updateTextForEntry(int index)
     assert((index >= 0) && (index < num_children));
     SGPropertyNode_ptr node = children[index];
 
-    // take a copy of the value
+    stdString name = node->getDisplayName(true);
+    stdString type = getValueTypeString(node);
     stdString value = node->getStringValue();
 
-    stdString line = node->getDisplayName() + stdString(" = '") + value + "' " + "(";
-    line += getValueTypeString( node );
+    stdString line = name + " = '" + value + "' (" + type;
 
-    if (fgGetBool("/sim/gui/dialogs/property-browser/show-flags", false)) {
+    if (flags->getBoolValue()) {
         stdString ext;
         if (!node->getAttribute(SGPropertyNode::READ))
-            ext += "r";
+            ext += 'r';
         if (!node->getAttribute(SGPropertyNode::WRITE))
-            ext += "w";
+            ext += 'w';
+        if (node->getAttribute(SGPropertyNode::TRACE_READ))
+            ext += 'R';
+        if (node->getAttribute(SGPropertyNode::TRACE_WRITE))
+            ext += 'W';
         if (node->getAttribute(SGPropertyNode::ARCHIVE))
-            ext += "A";
+            ext += 'A';
         if (node->getAttribute(SGPropertyNode::USERARCHIVE))
-            ext += "U";
+            ext += 'U';
         if (node->isTied())
-            ext += "T";
+            ext += 'T';
         if (ext.size())
             line += ", " + ext;
     }
 
-    line += ")";
+    line += ')';
 
     // truncate entries to plib pui limit
     if (line.length() >= PUSTRING_MAX)
         line[PUSTRING_MAX-1] = '\0';
 
     if (dotFiles)
-        index +=2;
+        index += 2;
 
     // don't leak everywhere if we're updating
     delete[] files[index];
 
-    files[index] = new char[ strlen(line.c_str())+2 ];
+    files[index] = new char[ line.size() + 1 ];
     strcpy ( files [ index ], line.c_str() );
 }
 
 
 void fgPropPicker::valueChanged(SGPropertyNode *nd)
 {
-    for (int C=0; C<num_children; ++C)
-        if (children[C] == nd) {
-            updateTextForEntry(C);
+    for (int i = 0; i < num_children; i++)
+        if (children[i] == nd) {
+            updateTextForEntry(i);
             return;
         }
 }
@@ -599,15 +533,10 @@ void fgPropEdit::fgPropEditHandleCancel ( puObject* b )
 void fgPropEdit::fgPropEditHandleOK ( puObject* b )
 {
     fgPropEdit* prop_edit = (fgPropEdit*) b -> getUserData ();
-    const char* tname;
     char* tvalue;
 
-    // use label text for property node to be updated
-    tname = prop_edit -> propname -> getLabel();
     prop_edit -> propinput -> getValue( &tvalue );
-
-    SGPropertyNode * node = globals->get_props()->getNode(prop_edit -> propPath);
-    node->getNode( prop_edit -> propname -> getLabel(), true)->setStringValue(tvalue);
+    prop_edit->getEditNode()->setStringValue(tvalue);
 
     // update the picker display so it shows new value
     prop_pickerRefresh();
@@ -616,10 +545,13 @@ void fgPropEdit::fgPropEditHandleOK ( puObject* b )
 }
 
 
-fgPropEdit::fgPropEdit ( const char *name, const char *value, char *proppath ) :
+fgPropEdit::fgPropEdit ( SGPropertyNode *n ) :
     fgPopup ( 0, 0 ),
+    node(n),
     _gui((NewGUI *)globals->get_subsystem("gui"))
 {
+    assert(n);
+
     puFont LegendFont, LabelFont;
     puGetDefaultFonts ( &LegendFont, &LabelFont );
     FGColor txtcol(_gui->getColor("label"));
@@ -631,17 +563,16 @@ fgPropEdit::fgPropEdit ( const char *name, const char *value, char *proppath ) :
     int fy = PROPPICK_Y + PROPPICK_H;
     frame   = new puFrame (fx,fy, fx+500, fy+120);
 
-    strcpy (propPath, proppath);
-
     setUserData( this );
 
+    namestring = node->getDisplayName();
     propname = new puText (fx+10, fy+90);
-    propname -> setLabel(name);
+    propname -> setLabel(namestring.c_str());
     propname -> setColor(PUCOL_LABEL, txtcol.red(), txtcol.green(),
             txtcol.blue(), txtcol.alpha());
 
     propinput = new puInput (fx+10, fy+50, fx+480, fy+80);
-    propinput -> setValue (value);
+    propinput -> setValue (node->getStringValue());
     propinput -> acceptInput();
 
     ok_button = new puOneShot (fx+10, fy+10, fx+80, fy+30);
