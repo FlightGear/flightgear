@@ -204,6 +204,7 @@ public:
     fgList(int x1, int y1, int x2, int y2, SGPropertyNode *p, int sw) :
         fgValueList(p), puList(x1, y1, x2, y2, _list, sw) {}
     virtual void update();
+    virtual const char *getTypeString() { return "fgList"; }
 };
 
 class fgComboBox : public fgValueList, public puaComboBox {

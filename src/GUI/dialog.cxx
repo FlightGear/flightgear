@@ -384,7 +384,7 @@ FGDialog::updateValues (const char * objectName)
             continue;
 
         puObject *obj = _propertyObjects[i]->object;
-        if (obj->getType() & PUCLASS_LIST) {
+        if (!strcmp(obj->getTypeString(), "fgList")) {
             fgList *pl = static_cast<fgList *>(obj);
             pl->update();
         } else
@@ -929,7 +929,7 @@ FGDialog::PropertyObject::PropertyObject (const char * n,
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of fgList and derived pui widgets
+// Implementation of fgValueList and derived pui widgets
 ////////////////////////////////////////////////////////////////////////
 
 
