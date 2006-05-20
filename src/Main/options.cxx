@@ -1165,6 +1165,24 @@ fgOptLivery( const char *arg )
     return FG_OPTIONS_OK;
 }
 
+static int
+fgOptScenario( const char *arg )
+{
+    SGPropertyNode_ptr ai_node = fgGetNode( "/sim/ai", false );
+    vector<SGPropertyNode_ptr> scenarii = ai_node->getChildren( "scenario" );
+    int index = -1;
+    for ( size_t i = 0; i < scenarii.size(); ++i ) {
+        int ind = scenarii[i]->getIndex();
+        if ( index < ind ) {
+            index = ind;
+        }
+    }
+    SGPropertyNode_ptr scenario = ai_node->getNode( "scenario", index + 1, true );
+    scenario->setStringValue( arg );
+    ai_node->setBoolValue( "enabled", true );
+    return FG_OPTIONS_OK;
+}
+
 static map<string,size_t> fgOptionMap;
 
 /*
@@ -1367,6 +1385,7 @@ struct OptionDesc {
     {"dme",                          true,  OPTION_FUNC,   "", false, "", fgOptDME },
     {"min-status",                   true,  OPTION_STRING,  "/sim/aircraft-min-status", false, "all", 0 },
     {"livery",                       true,  OPTION_FUNC,   "", false, "", fgOptLivery },
+    {"ai-scenario",                  true,  OPTION_FUNC,   "", false, "", fgOptScenario },
     {0}
 };
 
