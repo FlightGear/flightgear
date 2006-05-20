@@ -1168,7 +1168,7 @@ fgOptLivery( const char *arg )
 static int
 fgOptScenario( const char *arg )
 {
-    SGPropertyNode_ptr ai_node = fgGetNode( "/sim/ai", false );
+    SGPropertyNode_ptr ai_node = fgGetNode( "/sim/ai", true );
     vector<SGPropertyNode_ptr> scenarii = ai_node->getChildren( "scenario" );
     int index = -1;
     for ( size_t i = 0; i < scenarii.size(); ++i ) {
