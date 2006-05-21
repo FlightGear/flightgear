@@ -384,7 +384,7 @@ FGDialog::updateValues (const char * objectName)
             continue;
 
         puObject *obj = _propertyObjects[i]->object;
-        if (!strcmp(obj->getTypeString(), "fgList")) {
+        if ((obj->getType() & PUCLASS_LIST) && (dynamic_cast<GUI_ID *>(obj)->id & FGCLASS_LIST)) {
             fgList *pl = static_cast<fgList *>(obj);
             pl->update();
         } else

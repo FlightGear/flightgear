@@ -7,6 +7,7 @@
 
 AirportList::AirportList (int x, int y, int width, int height)
     : puList(x, y, width, height),
+      GUI_ID(FGCLASS_AIRPORTLIST),
       _airports(globals->get_airports()),
       _content(0)
 {

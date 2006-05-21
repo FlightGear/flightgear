@@ -8,13 +8,20 @@
 
 #include <plib/pu.h>
 
+
+// ugly temproary workaround for plib's lack of user defined class ids  FIXME
+#define FGCLASS_LIST        0x00000001
+#define FGCLASS_AIRPORTLIST 0x00000002
+class GUI_ID { public: GUI_ID(int id) : id(id) {} int id; };
+
+
 #include "puList.hxx"
 
 SG_USING_STD(string);
 
 class FGAirportList;
 
-class AirportList : public puList
+class AirportList : public puList, public GUI_ID
 {
  public:
     AirportList (int x, int y, int width, int height);

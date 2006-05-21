@@ -20,6 +20,9 @@
 #include <vector>
 SG_USING_STD(vector);
 
+#include "AirportList.hxx"
+
+
 class FGDialog;
 class FGBinding;
 class NewGUI;
@@ -199,12 +202,11 @@ private:
 };
 
 
-class fgList : public fgValueList, public puList {
+class fgList : public fgValueList, public puList, public GUI_ID {
 public:
     fgList(int x1, int y1, int x2, int y2, SGPropertyNode *p, int sw) :
-        fgValueList(p), puList(x1, y1, x2, y2, _list, sw) {}
-    virtual void update();
-    virtual const char *getTypeString() { return "fgList"; }
+            fgValueList(p), puList(x1, y1, x2, y2, _list, sw), GUI_ID(FGCLASS_LIST) {}
+    void update();
 };
 
 class fgComboBox : public fgValueList, public puaComboBox {
