@@ -105,7 +105,7 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
 
 
 bool FGAIAircraft::init() {
-    refuel_node = fgGetNode("systems/refuel/contact", true);
+    //refuel_node = fgGetNode("systems/refuel/contact", true);
     return FGAIBase::init();
 }
 
@@ -412,7 +412,7 @@ void FGAIAircraft::Run(double dt) {
     }
 
     // match pitch angle to vertical speed
-    if (vs > 0){
+    if (vs > 0) {
         pitch = vs * 0.005;
     } else {
         pitch = vs * 0.002;
@@ -433,7 +433,7 @@ void FGAIAircraft::Run(double dt) {
             refuel_node->setBoolValue(true);
             contact = true;
         } else {
-            refuel_node->setBoolValue(false);
+            //refuel_node->setBoolValue(false);
             contact = false;
         }
     } else {
@@ -777,7 +777,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
                  << "pos : " << pos.lat() << ", " << pos.lon()
                  << "waypoint " << curr->latitude << ", " << curr->longitude << endl;
             cerr << "waypoint name " << curr->name;
-            exit(1);  // FIXME 
+            exit(1);  // FIXME
         }
 
         double speed_diff = speed - prevSpeed;

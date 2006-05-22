@@ -44,7 +44,7 @@ FGAIMultiplayer::~FGAIMultiplayer() {
 }
 
 bool FGAIMultiplayer::init() {
-    refuel_node = fgGetNode("systems/refuel/contact", true);
+    //refuel_node = fgGetNode("systems/refuel/contact", true);
     isTanker = false; // do this until this property is
                       // passed over the net
 
@@ -52,7 +52,7 @@ bool FGAIMultiplayer::init() {
     string str2 = "MOBIL";
 
     unsigned int loc1= str1.find( str2, 0 );
-    if ( (loc1 != string::npos && str2 != "") /*|| mCallSign == "mpdummy" */) {
+    if ( (loc1 != string::npos && str2 != "") ){
         //	   cout << " string found "	<< str2 << " in " << str1 << endl;
         isTanker = true;
         //	   cout << "isTanker " << isTanker << " " << mCallSign <<endl;
@@ -322,12 +322,13 @@ void FGAIMultiplayer::update(double dt)
 
 
     if ( isTanker) {
-        if ( (range_ft2 < 250.0 * 250.0)
-                /*&& (y_shift > 0.0) && (elevation > 0.0)*/ ) {
-            refuel_node->setBoolValue(true);
+        if ( (range_ft2 < 250.0 * 250.0) &&
+            (y_shift > 0.0)    &&
+            (elevation > 0.0) ){
+                // refuel_node->setBoolValue(true);
             contact = true;
         } else {
-            refuel_node->setBoolValue(false);
+            // refuel_node->setBoolValue(false);
             contact = false;
         }
     } else {
