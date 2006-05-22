@@ -20,7 +20,13 @@
 #include <vector>
 SG_USING_STD(vector);
 
-#include "AirportList.hxx"
+
+// ugly temproary workaround for plib's lack of user defined class ids  FIXME
+#define FGCLASS_LIST          0x00000001
+#define FGCLASS_AIRPORTLIST   0x00000002
+#define FGCLASS_PROPERTYLIST  0x00000004
+class GUI_ID { public: GUI_ID(int id) : id(id) {} int id; };
+
 
 
 class FGDialog;

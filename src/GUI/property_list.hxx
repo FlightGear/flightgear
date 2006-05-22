@@ -26,11 +26,11 @@
 
 #include <plib/pu.h>
 #include <simgear/props/props.hxx>
+#include "dialog.hxx"
 
 #include "puList.hxx"
 
-
-class PropertyList : public puList, public SGPropertyChangeListener {
+class PropertyList : public puList, public SGPropertyChangeListener, public GUI_ID {
 public:
     PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNode *);
     ~PropertyList();
