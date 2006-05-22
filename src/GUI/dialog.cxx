@@ -13,6 +13,7 @@
 #include "new_gui.hxx"
 
 #include "AirportList.hxx"
+#include "property_list.hxx"
 #include "layout.hxx"
 
 ////////////////////////////////////////////////////////////////////////
@@ -552,6 +553,14 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 
     } else if (type == "airport-list") {
         AirportList * obj = new AirportList(x, y, x + width, y + height);
+        if (presetSize)
+            obj->setSize(width, height);
+        setupObject(obj, props);
+        setColor(obj, props);
+        return obj;
+
+    } else if (type == "property-list") {
+        PropertyList * obj = new PropertyList(x, y, x + width, y + height, globals->get_props());
         if (presetSize)
             obj->setSize(width, height);
         setupObject(obj, props);
