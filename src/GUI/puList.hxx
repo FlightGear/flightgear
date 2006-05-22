@@ -31,18 +31,23 @@ class puList : public puGroup
     virtual void setColour (int which, float r, float g, float b, float a);
     virtual void setSize (int w, int h);
 
+    int  getNumItems ( void ) const ;
+    int  getTopItem  ( void ) const { return _list_box->getTopItem(); }
+    void setTopItem (int index);
 
  protected:
-    virtual void init (int w, int h);
+    virtual void init (int w, int h, short transparent);
+    puListBox * _list_box;
 
  private:
-    int sw;            // slider width
     char ** _contents;
     puFrame * _frame;
-    puListBox * _list_box;
     puSlider * _slider;
     puArrowButton * _up_arrow;
     puArrowButton * _down_arrow;
+    int _style;
+    int _sw;            // slider width
+    int _width, _height;
 };
 
 #endif // __PULIST_HXX

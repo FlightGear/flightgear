@@ -10,9 +10,10 @@ static void
 handle_slider (puObject * slider)
 {
     puListBox * box = (puListBox *)slider->getUserData();
-    int index = int(box->getNumItems() * (1.0 - slider->getFloatValue()));
-    if (index >= box->getNumItems())
-        index = box->getNumItems() - 1;
+    int total = box->getNumItems();
+    int visible = box->getNumVisible();
+    // negative numbers are OK -- setTopItem() clamps anyway
+    int index = int((total - visible) * (1.0 - slider->getFloatValue()));
     box->setTopItem(index);
 }
 
@@ -50,31 +51,30 @@ handle_arrow (puObject * arrow)
         break;
     }
 
+    int total = list_box->getNumItems();
+    int visible = list_box->getNumVisible();
     int index = list_box->getTopItem();
-    index += step;
-    if (index < 0)
-        index = 0;
-    else if (index >= list_box->getNumItems())
-        index = list_box->getNumItems() - 1;
-    list_box->setTopItem(index);
-
-    slider->setValue(1.0f - float(index)/list_box->getNumItems());
+    list_box->setTopItem(index + step);
+    // read back to get setTopItem()'s clamping
+    index = list_box->getTopItem();
+    // negative numbers can't happen, as the buttons aren't visible then
+    slider->setValue(1.0f - float(index)/(total-visible));
 }
 
 puList::puList (int x, int y, int w, int h, int sl_width)
     : puGroup(x, y),
-      sw(sl_width)
+      _sw(sl_width)
 {
     type |= PUCLASS_LIST;
-    init(w, h);
+    init(w, h, 1);
 }
 
 puList::puList (int x, int y, int w, int h, char ** contents, int sl_width)
     : puGroup(x, y),
-      sw(sl_width)
+      _sw(sl_width)
 {
     type |= PUCLASS_LIST;
-    init(w, h);
+    init(w, h, 1);
     newList(contents);
 }
 
@@ -87,6 +87,9 @@ puList::newList (char ** contents)
 {
     _list_box->newList(contents);
     _contents = contents;
+
+    // new size calculation to consider slider visibility
+    setSize(_width, _height);
 }
 
 char *
@@ -103,30 +106,34 @@ puList::getListIntegerValue()
 }
 
 void
-puList::init (int w, int h)
+puList::init (int w, int h, short transparent)
 {
-    _frame = new puFrame(0, 0, w, h);
+    if ( transparent )
+        _frame = NULL ;
+    else
+        _frame = new puFrame(0, 0, w, h);
 
-    _list_box = new puListBox(0, 0, w-sw, h);
+    _list_box = new puListBox(0, 0, w-_sw, h);
     _list_box->setStyle(-PUSTYLE_SMALL_SHADED);
     _list_box->setUserData(this);
     _list_box->setCallback(handle_list_entry);
     _list_box->setValue(0);
 
-    _slider = new puSlider(w-sw, sw, h-2*sw, true, sw);
+    _slider = new puSlider(w-_sw, _sw, h-2*_sw, true, _sw);
     _slider->setValue(1.0f);
     _slider->setUserData(_list_box);
     _slider->setCallback(handle_slider);
     _slider->setCBMode(PUSLIDER_ALWAYS);
 
-    _down_arrow = new puArrowButton(w-sw, 0, w, sw, PUARROW_DOWN) ;
+    _down_arrow = new puArrowButton(w-_sw, 0, w, _sw, PUARROW_DOWN) ;
     _down_arrow->setUserData(_slider);
     _down_arrow->setCallback(handle_arrow);
 
-    _up_arrow = new puArrowButton(w-sw, h-sw, w, h, PUARROW_UP);
+    _up_arrow = new puArrowButton(w-_sw, h-_sw, w, h, PUARROW_UP);
     _up_arrow->setUserData(_slider);
     _up_arrow->setCallback(handle_arrow);
 
+    setSize(w, h);
     close();
 }
 
@@ -145,17 +152,59 @@ puList::setColour (int which, float r, float g, float b, float a)
 }
 
 void
+puList::setTopItem( int top )
+{
+    int visible = _list_box->getNumVisible();
+    int num = _list_box->getNumItems();
+    if ( top < 0 || num <= visible )
+        top = 0 ;
+    else if ( num > 0 && top > num-visible )
+        top = num-visible;
+
+    _list_box->setTopItem(top) ;
+}
+
+void
 puList::setSize (int w, int h)
 {
+    _width = w;
+    _height = h;
     puObject::setSize(w, h);
-    _frame->setSize(w, h);
-    _list_box->setSize(w-sw, h);
+    if (_frame)
+        _frame->setSize(w, h);
 
-    _slider->setPosition(w-sw, sw);
-    _slider->setSize(sw, h-2*sw);
+    int total = _list_box->getNumItems();
+    int visible = _list_box->getNumVisible();
 
-    _down_arrow->setPosition(w-sw, 0);
-    _up_arrow->setPosition(w-sw, h-sw);
+    if (total > visible)
+    {
+        if (!_slider->isVisible())
+        {
+            _slider->setValue(1.0f);
+            _slider->reveal();
+            _up_arrow->reveal();
+            _down_arrow->reveal();
+        }
+        _list_box->setSize(w-_sw, h);
+
+        _slider->setPosition(w-_sw, _sw);
+        _slider->setSize(_sw, h-2*_sw);
+        _slider->setSliderFraction(float(visible) / total);
+
+        _down_arrow->setPosition(w-_sw, 0);
+        _up_arrow->setPosition(w-_sw, h-_sw);
+
+    }
+    else
+    {
+        if (_slider->isVisible())
+        {
+            _slider->hide();
+            _up_arrow->hide();
+            _down_arrow->hide();
+        }
+        _list_box->setSize(w, h);
+    }
 }
 
 // end of puList.cxx
