@@ -97,7 +97,9 @@ PropertyList::PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNod
 
 PropertyList::~PropertyList()
 {
-    delete_arrays();
+    // FIXME this seems to cause a crash, which is probably why
+    //       commented out in prop_picker.cxx since many years
+    //delete_arrays();
 }
 
 
