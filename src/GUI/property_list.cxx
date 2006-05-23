@@ -295,15 +295,14 @@ void PropertyList::valueChanged(SGPropertyNode *nd)
 
 
 void PropertyList::setValue(const char *s)
-{
-    SGPropertyNode *p;
-    try {
-        p = fgGetNode(s, false);
-    } catch (const stdString& m) {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "property-list: " << m);
-        return;
-    }
-    setCurrent(p);
+try {
+    SGPropertyNode *p = fgGetNode(s, false);
+    if (p)
+        setCurrent(p);
+    else
+        throw stdString("node doesn't exist");
+} catch (const stdString& m) {
+    SG_LOG(SG_GENERAL, SG_DEBUG, "property-list node `" << s << "': "<< m);
 }
 
 
