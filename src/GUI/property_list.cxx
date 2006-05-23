@@ -168,13 +168,13 @@ void PropertyList::handle_select(puObject *list_box)
         // it is a regular property
         if (child->getType() == SGPropertyNode::BOOL && mod_ctrl) {
             child->setBoolValue(!child->getBoolValue());
-            prop_list->update();
+            prop_list->update(true);
         } else
             prop_list->publish(child);
 
     } else {
         // the user clicked on blank screen
-        prop_list->update();
+        prop_list->update(true);
     }
 }
 
@@ -182,7 +182,6 @@ void PropertyList::handle_select(puObject *list_box)
 void PropertyList::update(bool restore_pos)
 {
     int pi;
-    int i;
 
     delete_arrays();
     _num_entries = (int)_curr->nChildren();
@@ -207,6 +206,7 @@ void PropertyList::update(bool restore_pos)
         dotFiles = true;
     }
 
+    int i;
     _num_children = _curr->nChildren();
     _children = new SGPropertyNode_ptr[_num_children];
     for (i = 0; i < _num_children; i++)
@@ -302,7 +302,7 @@ try {
     else
         throw stdString("node doesn't exist");
 } catch (const stdString& m) {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "property-list node `" << s << "': "<< m);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "property-list node `" << s << "': " << m);
 }
 
 
