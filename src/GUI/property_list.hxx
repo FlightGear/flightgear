@@ -42,7 +42,8 @@ public:
     void toggleFlags() { _flags->setBoolValue(!_flags->getBoolValue()); }
 
     // overridden plib pui methods
-    virtual char *getStringValue(void) { return (char *)(_return ? _return->getPath(true) : ""); }
+    virtual char *getListStringValue() { return (char *)(_return ? _return->getPath(true) : ""); }
+    //virtual char *getStringValue(void) { return (char *)(_return ? _return->getPath(true) : ""); }
     virtual void setValue(const char *);
 
     // listener method
