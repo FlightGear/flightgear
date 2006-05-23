@@ -111,10 +111,9 @@ void PropertyList::delete_arrays()
     for (int i = 0; i < _num_entries; i++)
         delete[] _entries[i];
 
-    for (int j = 0; j < _num_children; j++) {
+    for (int j = 0; j < _num_children; j++)
         if (!_children[j]->nChildren())
             _children[j]->removeChangeListener(this);
-    }
 
     delete[] _entries;
     delete[] _children;
@@ -297,9 +296,23 @@ void PropertyList::valueChanged(SGPropertyNode *nd)
 
 void PropertyList::setValue(const char *s)
 {
-    SGPropertyNode *p = fgGetNode(s, false);
-    if (p)
-        setCurrent(p);
+    SGPropertyNode *p;
+    try {
+        p = fgGetNode(s, false);
+    } catch (const stdString& m) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "property-list: " << m);
+        return;
+    }
+    setCurrent(p);
 }
 
+
+void PropertyList::setCurrent(SGPropertyNode *p)
+{
+    bool same = (_curr == p);
+    _return = _curr = p;
+    update(same);
+    if (!same)
+        publish(p);
+}
 

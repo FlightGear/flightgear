@@ -36,7 +36,7 @@ public:
     ~PropertyList();
 
     void update (bool restore_slider_pos = false);
-    void setCurrent(SGPropertyNode *p) { _curr = p; update(); publish(p); }
+    void setCurrent(SGPropertyNode *p);
     SGPropertyNode *getCurrent() const { return _curr; }
     void publish(SGPropertyNode *p) { _return = p; invokeCallback(); }
     void toggleFlags() { _flags->setBoolValue(!_flags->getBoolValue()); }
