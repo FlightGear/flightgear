@@ -124,11 +124,16 @@ void FGNasalSys::hashset(naRef hash, const char* key, naRef val)
 static SGPropertyNode* findnode(naContext c, naRef* vec, int len)
 {
     SGPropertyNode* p = globals->get_props();
-    for(int i=0; i<len; i++) {
-        naRef a = vec[i];
-        if(!naIsString(a)) return 0;
-        p = p->getNode(naStr_data(a));
-        if(p == 0) return 0;
+    try {
+        for(int i=0; i<len; i++) {
+            naRef a = vec[i];
+            if(!naIsString(a)) return 0;
+            p = p->getNode(naStr_data(a));
+            if(p == 0) return 0;
+        }
+    } catch (const string& err) {
+        naRuntimeError(c, (char *)err.c_str());
+        return 0;
     }
     return p;
 }
@@ -185,8 +190,12 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
 
     SGPropertyNode* props = globals->get_props();
     naRef val = args[argc-1];
-    if(naIsString(val)) props->setStringValue(buf, naStr_data(val));
-    else                props->setDoubleValue(buf, naNumValue(val).num);
+    try {
+        if(naIsString(val)) props->setStringValue(buf, naStr_data(val));
+        else                props->setDoubleValue(buf, naNumValue(val).num);
+    } catch (const string& err) {
+        naRuntimeError(c, (char *)err.c_str());
+    }
     return naNil();
 #undef BUFLEN
 }

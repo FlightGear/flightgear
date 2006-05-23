@@ -157,10 +157,15 @@ static naRef f_getChild(naContext c, naRef me, int argc, naRef* args)
     naRef idx = naNumValue(naVec_get(argv, 1));
     bool create = naTrue(naVec_get(argv, 2));
     SGPropertyNode* n;
-    if(naIsNil(idx) || !naIsNum(idx)) {
-        n = (*node)->getChild(naStr_data(child), create);
-    } else {
-        n = (*node)->getChild(naStr_data(child), (int)idx.num, create);
+    try {
+        if(naIsNil(idx) || !naIsNum(idx)) {
+            n = (*node)->getChild(naStr_data(child), create);
+        } else {
+            n = (*node)->getChild(naStr_data(child), (int)idx.num, create);
+        }
+    } catch (const string& err) {
+        naRuntimeError(c, (char *)err.c_str());
+        return naNil();
     }
     if(!n) return naNil();
     return propNodeGhostCreate(c, n);
@@ -178,10 +183,15 @@ static naRef f_getChildren(naContext c, naRef me, int argc, naRef* args)
         // Get all children of a specified name
         naRef name = naVec_get(argv, 0);
         if(!naIsString(name)) return naNil();
-        vector<SGPropertyNode_ptr> children
-            = (*node)->getChildren(naStr_data(name));
-        for(unsigned int i=0; i<children.size(); i++)
-            naVec_append(result, propNodeGhostCreate(c, children[i]));
+        try {
+            vector<SGPropertyNode_ptr> children
+                = (*node)->getChildren(naStr_data(name));
+            for(unsigned int i=0; i<children.size(); i++)
+                naVec_append(result, propNodeGhostCreate(c, children[i]));
+        } catch (const string& err) {
+            naRuntimeError(c, (char *)err.c_str());
+            return naNil();
+        }
     }
     return result;
 }
@@ -192,7 +202,11 @@ static naRef f_removeChild(naContext c, naRef me, int argc, naRef* args)
     naRef child = naVec_get(argv, 0);
     naRef index = naVec_get(argv, 1);
     if(!naIsString(child) || !naIsNum(index)) return naNil();
-    (*node)->removeChild(naStr_data(child), (int)index.num, false);
+    try {
+        (*node)->removeChild(naStr_data(child), (int)index.num, false);
+    } catch (const string& err) {
+        naRuntimeError(c, (char *)err.c_str());
+    }
     return naNil();
 }
 
@@ -208,10 +222,15 @@ static naRef f_removeChildren(naContext c, naRef me, int argc, naRef* args)
         // Remove all children of a specified name
         naRef name = naVec_get(argv, 0);
         if(!naIsString(name)) return naNil();
-        vector<SGPropertyNode_ptr> children
-            = (*node)->removeChildren(naStr_data(name), false);
-        for(unsigned int i=0; i<children.size(); i++)
-            naVec_append(result, propNodeGhostCreate(c, children[i]));
+        try {
+            vector<SGPropertyNode_ptr> children
+                = (*node)->removeChildren(naStr_data(name), false);
+            for(unsigned int i=0; i<children.size(); i++)
+                naVec_append(result, propNodeGhostCreate(c, children[i]));
+        } catch (const string& err) {
+            naRuntimeError(c, (char *)err.c_str());
+            return naNil();
+        }
     }
     return result;
 }
@@ -222,7 +241,13 @@ static naRef f_getNode(naContext c, naRef me, int argc, naRef* args)
     naRef path = naVec_get(argv, 0);
     bool create = naTrue(naVec_get(argv, 1));
     if(!naIsString(path)) return naNil();
-    SGPropertyNode* n = (*node)->getNode(naStr_data(path), create);
+    SGPropertyNode* n;
+    try {
+        n = (*node)->getNode(naStr_data(path), create);
+    } catch (const string& err) {
+        naRuntimeError(c, (char *)err.c_str());
+        return naNil();
+    }
     return propNodeGhostCreate(c, n);
 }
 
