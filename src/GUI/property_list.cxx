@@ -40,9 +40,7 @@ typedef string stdString;      // puObject has a "string" member
 static string getValueTypeString(const SGPropertyNode *node)
 {
     string result;
-
-    if (!node)
-        return "unknown";
+    assert(node);
 
     SGPropertyNode::Type type = node->getType();
     if (type == SGPropertyNode::UNSPECIFIED)
@@ -89,7 +87,7 @@ static void sanitize(stdString& s)
             s += "\'";
         else if (r[i] == '\\')
             s += "\\";
-        else if (isascii(r[i]))
+        else if (isprint(r[i]))
             s += r[i];
         else {
             const char *hex = "0123456789abcdef";
@@ -103,7 +101,7 @@ static void sanitize(stdString& s)
 
 
 PropertyList::PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNode *start) :
-    puList(minx, miny, maxx, maxy, short(0), 20),
+    puaList(minx, miny, maxx, maxy, short(0), 20),
     GUI_ID(FGCLASS_PROPERTYLIST),
     _curr(start),
     _flags(fgGetNode("/sim/gui/dialogs/property-browser/show-flags", true)),
@@ -179,6 +177,7 @@ void PropertyList::handle_select(puObject *list_box)
 
         // check if it's a directory
         if (child->nChildren()) {
+            prop_list->setTopItem(0);
             prop_list->setCurrent(child);
             return;
         }
@@ -242,7 +241,7 @@ void PropertyList::update(bool restore_pos)
             strcpy(_entries[pi], name.c_str());
 
         } else {
-            _entries[pi] = 0;       // ensure it's 0 before setting intial value
+            _entries[pi] = 0;       // make it delete-able
             updateTextForEntry(i);
             _children[i].setListener(this);
         }
@@ -316,13 +315,13 @@ void PropertyList::valueChanged(SGPropertyNode *nd)
 }
 
 
-int PropertyList::nodeNameCompare(const void *ppNode1, const void *ppNode2)
+int PropertyList::nodeNameCompare(const void *p1, const void *p2)
 {
-    const SGPropertyNode_ptr pNode1 = (*(const NodeData *)ppNode1).node;
-    const SGPropertyNode_ptr pNode2 = (*(const NodeData *)ppNode2).node;
+    const SGPropertyNode *n1 = (*(const NodeData *)p1).node;
+    const SGPropertyNode *n2 = (*(const NodeData *)p2).node;
 
-    int diff = strcmp(pNode1->getName(), pNode2->getName());
-    return diff ? diff : pNode1->getIndex() - pNode2->getIndex();
+    int diff = strcmp(n1->getName(), n2->getName());
+    return diff ? diff : n1->getIndex() - n2->getIndex();
 }
 
 
