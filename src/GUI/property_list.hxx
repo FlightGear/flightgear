@@ -57,6 +57,7 @@ private:
     void updateTextForEntry(int index);
     void delete_arrays();
     static void handle_select(puObject *b);
+    static int nodeNameCompare(const void *, const void *);
 
     SGPropertyNode_ptr _curr;
     SGPropertyNode_ptr _flags;
@@ -65,7 +66,19 @@ private:
     char **_entries;
     int _num_entries;
 
-    SGPropertyNode_ptr *_children;
+    struct NodeData {
+        NodeData() : listener(0) {}
+        ~NodeData() {
+            if (listener)
+                node->removeChangeListener(listener);
+        }
+        void setListener(SGPropertyChangeListener *l) {
+            node->addChangeListener(listener = l);
+        }
+        SGPropertyNode_ptr node;
+        SGPropertyChangeListener *listener;
+    };
+    NodeData *_children;
     int _num_children;
 
     bool dotFiles;      // . and .. pseudo-dirs currently shown?

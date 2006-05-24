@@ -37,16 +37,6 @@ typedef string stdString;      // puObject has a "string" member
 #include "property_list.hxx"
 
 
-static int nodeNameCompare(const void *ppNode1, const void *ppNode2)
-{
-    const SGPropertyNode_ptr pNode1 = *(const SGPropertyNode_ptr *)ppNode1;
-    const SGPropertyNode_ptr pNode2 = *(const SGPropertyNode_ptr *)ppNode2;
-
-    int diff = strcmp(pNode1->getName(), pNode2->getName());
-    return diff ? diff : pNode1->getIndex() - pNode2->getIndex();
-}
-
-
 static string getValueTypeString(const SGPropertyNode *node)
 {
     string result;
@@ -97,9 +87,7 @@ PropertyList::PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNod
 
 PropertyList::~PropertyList()
 {
-    // FIXME this seems to cause a crash, which is probably why
-    //       commented out in prop_picker.cxx since many years
-    //delete_arrays();
+    delete_arrays();
 }
 
 
@@ -110,10 +98,6 @@ void PropertyList::delete_arrays()
 
     for (int i = 0; i < _num_entries; i++)
         delete[] _entries[i];
-
-    for (int j = 0; j < _num_children; j++)
-        if (!_children[j]->nChildren())
-            _children[j]->removeChangeListener(this);
 
     delete[] _entries;
     delete[] _children;
@@ -156,7 +140,7 @@ void PropertyList::handle_select(puObject *list_box)
         if (prop_list->dotFiles)
             selected -= 2;
 
-        SGPropertyNode_ptr child = prop_list->_children[selected];
+        SGPropertyNode_ptr child = prop_list->_children[selected].node;
         assert(child);
 
         // check if it's a directory
@@ -208,15 +192,15 @@ void PropertyList::update(bool restore_pos)
 
     int i;
     _num_children = _curr->nChildren();
-    _children = new SGPropertyNode_ptr[_num_children];
+    _children = new NodeData[_num_children];
     for (i = 0; i < _num_children; i++)
-        _children[i] = _curr->getChild(i);
+        _children[i].node = _curr->getChild(i);
 
     qsort(_children, _num_children, sizeof(_children[0]), nodeNameCompare);
 
     // Make lists of the children's names, values, etc.
     for (i = 0; i < _num_children; i++, pi++) {
-        SGPropertyNode *child = _children[i];
+        SGPropertyNode *child = _children[i].node;
 
         if (child->nChildren() > 0) {
             stdString name = stdString(child->getDisplayName(true)) + '/';
@@ -226,7 +210,7 @@ void PropertyList::update(bool restore_pos)
         } else {
             _entries[pi] = 0;       // ensure it's 0 before setting intial value
             updateTextForEntry(i);
-            child->addChangeListener(this);
+            _children[i].setListener(this);
         }
     }
 
@@ -242,7 +226,7 @@ void PropertyList::update(bool restore_pos)
 void PropertyList::updateTextForEntry(int index)
 {
     assert((index >= 0) && (index < _num_children));
-    SGPropertyNode_ptr node = _children[index];
+    SGPropertyNode_ptr node = _children[index].node;
 
     stdString name = node->getDisplayName(true);
     stdString type = getValueTypeString(node);
@@ -287,10 +271,20 @@ void PropertyList::updateTextForEntry(int index)
 void PropertyList::valueChanged(SGPropertyNode *nd)
 {
     for (int i = 0; i < _num_children; i++)
-        if (_children[i] == nd) {
+        if (_children[i].node == nd) {
             updateTextForEntry(i);
             return;
         }
+}
+
+
+int PropertyList::nodeNameCompare(const void *ppNode1, const void *ppNode2)
+{
+    const SGPropertyNode_ptr pNode1 = (*(const NodeData *)ppNode1).node;
+    const SGPropertyNode_ptr pNode2 = (*(const NodeData *)ppNode2).node;
+
+    int diff = strcmp(pNode1->getName(), pNode2->getName());
+    return diff ? diff : pNode1->getIndex() - pNode2->getIndex();
 }
 
 
