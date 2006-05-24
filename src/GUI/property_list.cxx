@@ -101,7 +101,7 @@ static void sanitize(stdString& s)
 
 
 PropertyList::PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNode *start) :
-    puaList(minx, miny, maxx, maxy, short(0), 20),
+    puList(minx, miny, maxx, maxy, short(0), 20),
     GUI_ID(FGCLASS_PROPERTYLIST),
     _curr(start),
     _flags(fgGetNode("/sim/gui/dialogs/property-browser/show-flags", true)),
