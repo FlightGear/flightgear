@@ -289,14 +289,16 @@ int PropertyList::nodeNameCompare(const void *ppNode1, const void *ppNode2)
 
 
 void PropertyList::setValue(const char *s)
-try {
-    SGPropertyNode *p = fgGetNode(s, false);
-    if (p)
-        setCurrent(p);
-    else
-        throw stdString("node doesn't exist");
-} catch (const stdString& m) {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "property-list node `" << s << "': " << m);
+{
+    try {
+        SGPropertyNode *p = fgGetNode(s, false);
+        if (p)
+            setCurrent(p);
+        else
+            throw stdString("node doesn't exist");
+    } catch (const stdString& m) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "property-list node `" << s << "': " << m);
+    }
 }
 
 
