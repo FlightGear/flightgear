@@ -66,6 +66,40 @@ static string getValueTypeString(const SGPropertyNode *node)
 }
 
 
+static void sanitize(stdString& s)
+{
+    stdString r = s;
+    s = "";
+    for (unsigned i = 0; i < r.size(); i++) {
+        if (r[i] == '\a')
+            s += "\\a";
+        else if (r[i] == '\b')
+            s += "\\b";
+        else if (r[i] == '\t')
+            s += "\\t";
+        else if (r[i] == '\n')
+            s += "\\n";
+        else if (r[i] == '\v')
+            s += "\\v";
+        else if (r[i] == '\f')
+            s += "\\f";
+        else if (r[i] == '\r')
+            s += "\\r";
+        else if (r[i] == '\'')
+            s += "\'";
+        else if (r[i] == '\\')
+            s += "\\";
+        else if (isascii(r[i]))
+            s += r[i];
+        else {
+            const char *hex = "0123456789abcdef";
+            int c = r[i] & 255;
+            s += stdString("\\x") + hex[c / 16] + hex[c % 16];
+        }
+    }
+}
+
+
 
 
 PropertyList::PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNode *start) :
@@ -110,7 +144,7 @@ void PropertyList::handle_select(puObject *list_box)
 {
     PropertyList *prop_list = (PropertyList *)list_box->getUserData();
     int selected = list_box->getIntegerValue();
-    bool mod_ctrl = fgGetKeyModifiers() & KEYMOD_CTRL;
+    int mod_ctrl = fgGetKeyModifiers() & KEYMOD_CTRL;
 
     if (selected >= 0 && selected < prop_list->_num_entries) {
         const char *src = prop_list->_entries[selected];
@@ -232,6 +266,10 @@ void PropertyList::updateTextForEntry(int index)
     stdString type = getValueTypeString(node);
     stdString value = node->getStringValue();
 
+    if (node->getType() == SGPropertyNode::STRING
+            || node->getType() == SGPropertyNode::UNSPECIFIED)
+        sanitize(value);
+
     stdString line = name + " = '" + value + "' (" + type;
 
     if (_flags->getBoolValue()) {
@@ -297,7 +335,7 @@ void PropertyList::setValue(const char *s)
         else
             throw stdString("node doesn't exist");
     } catch (const stdString& m) {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "property-list node `" << s << "': " << m);
+        SG_LOG(SG_GENERAL, SG_DEBUG, "property-list node '" << s << "': " << m);
     }
 }
 
