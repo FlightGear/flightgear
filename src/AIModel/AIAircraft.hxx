@@ -99,7 +99,7 @@ private:
 
     const PERF_STRUCT *performance;
     bool use_perf_vs;
-    SGPropertyNode* refuel_node;
+    SGPropertyNode_ptr refuel_node;
     bool isTanker;
 
     void Run(double dt);

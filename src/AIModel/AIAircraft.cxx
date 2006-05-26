@@ -430,7 +430,7 @@ void FGAIAircraft::Run(double dt) {
     if ( isTanker) {
         if ( (range_ft2 < 250.0 * 250.0) && (y_shift > 0.0)
                 && (elevation > 0.0) ) {
-            refuel_node->setBoolValue(true);
+            //refuel_node->setBoolValue(true);
             contact = true;
         } else {
             //refuel_node->setBoolValue(false);
