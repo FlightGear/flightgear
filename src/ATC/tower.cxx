@@ -2166,7 +2166,7 @@ void FGTower::RemovePlane(const string& ID) {
 	// but we can only delete it once, AT THE END.
 	TowerPlaneRec* t = NULL;
 	tower_plane_rec_list_iterator twrItr;
-	for(twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
+	for(twrItr = appList.begin(); twrItr != appList.end();) {
 		if((*twrItr)->plane.callsign == ID) {
 			t = *twrItr;
 			twrItr = appList.erase(twrItr);
@@ -2174,55 +2174,56 @@ void FGTower::RemovePlane(const string& ID) {
 			// HACK: aircraft are sometimes more than once in a list, so we need to
 			// remove them all before we can delete the TowerPlaneRec class
 			//break;
-		}
+		} else
+                        ++twrItr;
 	}
-	for(twrItr = depList.begin(); twrItr != depList.end(); twrItr++) {
+	for(twrItr = depList.begin(); twrItr != depList.end();) {
 		if((*twrItr)->plane.callsign == ID) {
 			t = *twrItr;
 			twrItr = depList.erase(twrItr);
 			depListItr = depList.begin();
-			//break;
-		}
+		} else
+                        ++twrItr;
 	}
-	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
+	for(twrItr = circuitList.begin(); twrItr != circuitList.end();) {
 		if((*twrItr)->plane.callsign == ID) {
 			t = *twrItr;
 			twrItr = circuitList.erase(twrItr);
 			circuitListItr = circuitList.begin();
-			//break;
-		}
+                } else
+                        ++twrItr;
 	}
-	for(twrItr = holdList.begin(); twrItr != holdList.end(); twrItr++) {
+	for(twrItr = holdList.begin(); twrItr != holdList.end();) {
 		if((*twrItr)->plane.callsign == ID) {
 			t = *twrItr;
 			twrItr = holdList.erase(twrItr);
 			holdListItr = holdList.begin();
-			//break;
-		}
+                } else
+                        ++twrItr;
 	}
-	for(twrItr = rwyList.begin(); twrItr != rwyList.end(); twrItr++) {
+	for(twrItr = rwyList.begin(); twrItr != rwyList.end();) {
 		if((*twrItr)->plane.callsign == ID) {
 			t = *twrItr;
 			twrItr = rwyList.erase(twrItr);
 			rwyListItr = rwyList.begin();
-			//break;
-		}
+                } else
+                        ++twrItr;
 	}
-	for(twrItr = vacatedList.begin(); twrItr != vacatedList.end(); twrItr++) {
+	for(twrItr = vacatedList.begin(); twrItr != vacatedList.end();) {
 		if((*twrItr)->plane.callsign == ID) {
 			t = *twrItr;
 			twrItr = vacatedList.erase(twrItr);
 			vacatedListItr = vacatedList.begin();
-			//break;
-		}
+                } else
+                        ++twrItr;
 	}
-	for(twrItr = trafficList.begin(); twrItr != trafficList.end(); twrItr++) {
+	for(twrItr = trafficList.begin(); twrItr != trafficList.end();) {
 		if((*twrItr)->plane.callsign == ID) {
 			t = *twrItr;
 			twrItr = trafficList.erase(twrItr);
 			trafficListItr = trafficList.begin();
-			//break;
-		}
+                } else
+                        ++twrItr;
 	}
 	// And finally, delete the record.
 	delete t;
