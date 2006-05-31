@@ -765,7 +765,7 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 
 
 // Set current_options lon/lat given an airport id and runway number
-static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
+static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bool rwy_req ) {
     FGRunway r;
 
     if ( id.length() ) {
@@ -776,7 +776,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
                 << id << ":" << rwy );
 
         if ( ! globals->get_runways()->search( id, rwy, &r ) ) {
-            SG_LOG( SG_GENERAL, SG_ALERT,
+            SG_LOG( SG_GENERAL, rwy_req ? SG_ALERT : SG_INFO,
                     "Failed to find runway " << rwy << 
                     " at airport " << id );
             return false;
@@ -1123,6 +1123,7 @@ bool fgInitPosition() {
 
     string apt = fgGetString("/sim/presets/airport-id");
     string rwy_no = fgGetString("/sim/presets/runway");
+    bool rwy_req = fgGetBool("/sim/presets/runway-requested");
     double hdg = fgGetDouble("/sim/presets/heading-deg");
     string vor = fgGetString("/sim/presets/vor-id");
     double vor_freq = fgGetDouble("/sim/presets/vor-freq");
@@ -1137,7 +1138,7 @@ bool fgInitPosition() {
 
     if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
         // An airport + runway is requested
-        if ( fgSetPosFromAirportIDandRwy( apt, rwy_no ) ) {
+        if ( fgSetPosFromAirportIDandRwy( apt, rwy_no, rwy_req ) ) {
             // set tower position (a little off the heading for single
             // runway airports)
 	    fgSetString("/sim/tower/airport-id",  apt.c_str());
