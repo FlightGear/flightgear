@@ -238,7 +238,7 @@ void MIDGTrack::parse_msg( const int id, char *buf, MIDGpos *pos, MIDGatt *att )
         // cout << "  pos = " << posx << "," << posy << "," << posz << endl;
 
         double xyz[3];
-        xyz[0] = posx/100; xyz[1] = posy/100; xyz[2] = posz/100;
+        xyz[0] = (double)posx/100; xyz[1] = (double)posy/100; xyz[2] = (double)posz/100;
         double lat, lon, alt;
         sgCartToGeod(xyz, &lat, &lon, &alt);
         pos->lat_deg = lat * 180.0 / SG_PI;
