@@ -104,10 +104,10 @@ PropertyList::PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNod
     puList(minx, miny, maxx, maxy, short(0), 20),
     GUI_ID(FGCLASS_PROPERTYLIST),
     _curr(start),
-    _flags(fgGetNode("/sim/gui/dialogs/property-browser/show-flags", true)),
     _return(0),
     _entries(0),
-    _num_entries(0)
+    _num_entries(0),
+    _flags(false)
 
 {
     _list_box->setUserData(this);
@@ -147,7 +147,7 @@ void PropertyList::handle_select(puObject *list_box)
     if (selected >= 0 && selected < prop_list->_num_entries) {
         const char *src = prop_list->_entries[selected];
 
-        if (prop_list->dotFiles && (selected < 2)) {
+        if (prop_list->_dot_files && (selected < 2)) {
             if (!strcmp(src, ".")) {
                 if (mod_ctrl)
                     prop_list->toggleFlags();
@@ -169,7 +169,7 @@ void PropertyList::handle_select(puObject *list_box)
 
         // we know we're dealing with a regular entry, so convert
         // it to an index into children[]
-        if (prop_list->dotFiles)
+        if (prop_list->_dot_files)
             selected -= 2;
 
         SGPropertyNode_ptr child = prop_list->_children[selected].node;
@@ -207,7 +207,7 @@ void PropertyList::update(bool restore_pos)
     if (!_curr->getParent()) {
         _entries = new char*[_num_entries + 1];
         pi = 0;
-        dotFiles = false;
+        _dot_files = false;
 
     } else {
         _num_entries += 2;    // for . and ..
@@ -220,7 +220,7 @@ void PropertyList::update(bool restore_pos)
         strcpy(_entries[1], "..");
 
         pi = 2;
-        dotFiles = true;
+        _dot_files = true;
     }
 
     int i;
@@ -271,7 +271,7 @@ void PropertyList::updateTextForEntry(int index)
 
     stdString line = name + " = '" + value + "' (" + type;
 
-    if (_flags->getBoolValue()) {
+    if (_flags) {
         stdString ext;
         if (!node->getAttribute(SGPropertyNode::READ))
             ext += 'r';
@@ -296,7 +296,7 @@ void PropertyList::updateTextForEntry(int index)
     if (line.size() >= PUSTRING_MAX)
         line.resize(PUSTRING_MAX - 1);
 
-    if (dotFiles)
+    if (_dot_files)
         index += 2;
 
     delete[] _entries[index];

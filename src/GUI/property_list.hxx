@@ -39,7 +39,7 @@ public:
     void setCurrent(SGPropertyNode *p);
     SGPropertyNode *getCurrent() const { return _curr; }
     void publish(SGPropertyNode *p) { _return = p; invokeCallback(); }
-    void toggleFlags() { _flags->setBoolValue(!_flags->getBoolValue()); }
+    void toggleFlags() { _flags = !_flags; }
 
     // overridden plib pui methods
     virtual char *getListStringValue() { return (char *)(_return ? _return->getPath(true) : ""); }
@@ -60,7 +60,6 @@ private:
     static int nodeNameCompare(const void *, const void *);
 
     SGPropertyNode_ptr _curr;
-    SGPropertyNode_ptr _flags;
     SGPropertyNode_ptr _return;
 
     char **_entries;
@@ -81,7 +80,8 @@ private:
     NodeData *_children;
     int _num_children;
 
-    bool dotFiles;      // . and .. pseudo-dirs currently shown?
+    bool _dot_files;      // . and .. pseudo-dirs currently shown?
+    bool _flags;          // show SGPropertyNode flags
 };
 
 
