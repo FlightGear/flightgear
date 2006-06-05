@@ -245,6 +245,8 @@ public:
    */
   virtual void doMouseMotion (int x, int y);
 
+  void bind ();
+  void unbind ();
 
 private:
 				// Constants
