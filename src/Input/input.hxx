@@ -197,6 +197,8 @@ public:
   virtual void init ();
   virtual void reinit ();
   virtual void postinit ();
+  virtual void bind ();
+  virtual void unbind ();
   virtual void update (double dt);
   virtual void suspend ();
   virtual void resume ();
@@ -245,8 +247,6 @@ public:
    */
   virtual void doMouseMotion (int x, int y);
 
-  void bind ();
-  void unbind ();
 
 private:
 				// Constants
