@@ -77,6 +77,28 @@ void keyHandler(int key, int keymod, int mousex, int mousey);
 
 static FGInput * default_input = 0;
 
+
+////////////////////////////////////////////////////////////////////////
+// Local functions.
+////////////////////////////////////////////////////////////////////////
+
+static bool
+getModShift ()
+{
+  return bool(fgGetKeyModifiers() & KEYMOD_SHIFT);
+}
+
+static bool
+getModCtrl ()
+{
+  return bool(fgGetKeyModifiers() & KEYMOD_CTRL);
+}
+
+static bool
+getModAlt ()
+{
+  return bool(fgGetKeyModifiers() & KEYMOD_ALT);
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -199,6 +221,22 @@ void
 FGInput::postinit ()
 {
   _postinit_joystick();
+}
+
+void
+FGInput::bind ()
+{
+  fgTie("/devices/status/keyboard/shift", getModShift);
+  fgTie("/devices/status/keyboard/ctrl", getModCtrl);
+  fgTie("/devices/status/keyboard/alt", getModAlt);
+}
+
+void
+FGInput::unbind ()
+{
+  fgUntie("/devices/status/keyboard/shift");
+  fgUntie("/devices/status/keyboard/ctrl");
+  fgUntie("/devices/status/keyboard/alt");
 }
 
 void 
