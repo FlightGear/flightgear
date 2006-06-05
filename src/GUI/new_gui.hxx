@@ -186,14 +186,7 @@ public:
     virtual puFont *getDefaultFont() { return _font; }
 
 
-    /**
-     * menu wide font cache, accessible from other classes as well.
-     */
-    FGFontCache *get_fontcache() { return _fontcache; }
-
 protected:
-
-    FGFontCache * _fontcache;
 
     /**
      * Test if the menubar is visible.
@@ -310,6 +303,7 @@ private:
 
     map<const string,fnt *> _fonts;
     typedef map<const string,fnt *>::const_iterator _itt_t;
+    bool _initialized;
 
 public:
     FGFontCache();

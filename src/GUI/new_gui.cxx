@@ -26,8 +26,7 @@ extern puFont FONT_SANS_12B;
 
 
 NewGUI::NewGUI ()
-    : _fontcache(new FGFontCache),
-      _menubar(new FGMenuBar),
+    : _menubar(new FGMenuBar),
       _active_dialog(0)
 {
 }
@@ -334,29 +333,10 @@ NewGUI::setStyle (void)
 }
 
 
-
-
-static const struct {
-    char *name;
-    puFont *font;
-} guifonts[] = {
-    { "default",      &FONT_HELVETICA_14 },
-    { "FIXED_8x13",   &PUFONT_8_BY_13 },
-    { "FIXED_9x15",   &PUFONT_9_BY_15 },
-    { "TIMES_10",     &PUFONT_TIMES_ROMAN_10 },
-    { "TIMES_24",     &PUFONT_TIMES_ROMAN_24 },
-    { "HELVETICA_10", &PUFONT_HELVETICA_10 },
-    { "HELVETICA_12", &PUFONT_HELVETICA_12 },
-    { "HELVETICA_14", &FONT_HELVETICA_14 },
-    { "HELVETICA_18", &PUFONT_HELVETICA_18 },
-    { "SANS_12B",     &FONT_SANS_12B },
-    { 0, 0 }
-};
-
 void
 NewGUI::setupFont (SGPropertyNode *node)
 {
-    _font = _fontcache->get(node);
+    _font = globals->get_fontcache()->get(node);
     puSetDefaultFonts(*_font, *_font);
     return;
 }
@@ -403,19 +383,32 @@ FGColor::merge(const FGColor *color)
 }
 
 
-//
-FGFontCache::FGFontCache()
-{
-    char *envp = ::getenv("FG_FONTS");
-    if (envp != NULL) {
-        _path.set(envp);
-    } else {
-        _path.set(globals->get_fg_root());
-        _path.append("Fonts");
-    }
+
+////////////////////////////////////////////////////////////////////////
+// FGFontCache class.
+////////////////////////////////////////////////////////////////////////
 
-    for (int i=0; guifonts[i].name; i++)
-        _fonts[guifonts[i].name] = new fnt(guifonts[i].font);
+static const struct {
+    char *name;
+    puFont *font;
+} guifonts[] = {
+    { "default",      &FONT_HELVETICA_14 },
+    { "FIXED_8x13",   &PUFONT_8_BY_13 },
+    { "FIXED_9x15",   &PUFONT_9_BY_15 },
+    { "TIMES_10",     &PUFONT_TIMES_ROMAN_10 },
+    { "TIMES_24",     &PUFONT_TIMES_ROMAN_24 },
+    { "HELVETICA_10", &PUFONT_HELVETICA_10 },
+    { "HELVETICA_12", &PUFONT_HELVETICA_12 },
+    { "HELVETICA_14", &FONT_HELVETICA_14 },
+    { "HELVETICA_18", &PUFONT_HELVETICA_18 },
+    { "SANS_12B",     &FONT_SANS_12B },
+    { 0, 0 }
+};
+
+
+FGFontCache::FGFontCache() :
+    _initialized(false)
+{
 }
 
 FGFontCache::~FGFontCache()
@@ -426,6 +419,19 @@ FGFontCache::~FGFontCache()
 puFont *
 FGFontCache::get(const char *name, float size, float slant)
 {
+    if (!_initialized) {
+        char *envp = ::getenv("FG_FONTS");
+        if (envp != NULL) {
+            _path.set(envp);
+        } else {
+            _path.set(globals->get_fg_root());
+            _path.append("Fonts");
+        }
+        _initialized = true;
+    }
+
+    for (int i=0; guifonts[i].name; i++)
+        _fonts[guifonts[i].name] = new fnt(guifonts[i].font);
     _itt_t it;
 
     if ((it = _fonts.find(name)) != _fonts.end())
