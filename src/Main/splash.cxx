@@ -56,6 +56,7 @@
 
 static const char *progress_text = 0;
 static SGTexture splash;
+SGPropertyNode_ptr style;
 
 
 // Initialize the splash screen
@@ -63,6 +64,12 @@ void fgSplashInit ( const char *splash_texture ) {
     fgRequestRedraw();
 
     SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
+
+    int which = fgGetInt("/sim/gui/current-style", 0);
+    SGPropertyNode *sim = fgGetNode("/sim/gui", true);
+    style = sim->getChild("style", which);
+    if (!style)
+        style = sim->getChild("style", 0, true);
 
     if (!fgGetBool("/sim/startup/splash-screen"))
         return;
@@ -145,7 +152,7 @@ void fgSplashUpdate ( float alpha ) {
 
     // draw the background
     FGColor c(0.0, 0.0, 0.0);
-    c.merge(fgGetNode("/sim/gui/style/colors/splash-screen"));
+    c.merge(style->getNode("colors/splash-screen"));
     glColor4f(c.red(), c.green(), c.blue(), alpha );
     glBegin(GL_POLYGON);
     glVertex2f(0.0, 0.0);
@@ -169,6 +176,8 @@ void fgSplashUpdate ( float alpha ) {
         glEnd();
     }
 
+    glDisable(GL_TEXTURE_2D);
+
     if (progress_text && fgGetBool("/sim/startup/splash-progress", true)) {
         glEnable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
@@ -176,17 +185,16 @@ void fgSplashUpdate ( float alpha ) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDisable(GL_CULL_FACE);
 
-        puFont *fnt = globals->get_fontcache()->get(fgGetNode("/sim/gui/style/fonts/splash"));
+        puFont *fnt = globals->get_fontcache()->get(style->getNode("fonts/splash"));
 
-        glDisable(GL_TEXTURE_2D);
         FGColor c(1.0, 0.9, 0.0);
-        c.merge(fgGetNode("/sim/gui/style/colors/splash-font"));
+        c.merge(style->getNode("colors/splash-font"));
         glColor4f(c.red(), c.green(), c.blue(), alpha);
 
-        float height = fnt->getStringHeight("/M");
+        float height = fnt->getStringHeight("/M$");
         float descender = fnt->getStringDescender();
         float width = fnt->getFloatStringWidth(progress_text);
-        fnt->drawString(progress_text, int((screen_width - width) / 2.0), int(10 + descender));
+        fnt->drawString(progress_text, int((screen_width - width) / 2), int(10 + descender));
 
         const char *title = fgGetString("/sim/startup/splash-title", "");
         width = fnt->getFloatStringWidth(title);
@@ -195,7 +203,6 @@ void fgSplashUpdate ( float alpha ) {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
