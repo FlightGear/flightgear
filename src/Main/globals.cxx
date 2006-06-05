@@ -28,6 +28,8 @@
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#include <GUI/new_gui.hxx>
+
 #include "globals.hxx"
 #include "renderer.hxx"
 #include "viewmgr.hxx"
@@ -80,6 +82,7 @@ FGGlobals::FGGlobals() :
     scenery( NULL ),
     tile_mgr( NULL ),
     io( new FGIO ),
+    fontcache ( new FGFontCache ),
     navlist( NULL ),
     loclist( NULL ),
     gslist( NULL ),
@@ -102,6 +105,7 @@ FGGlobals::~FGGlobals()
     delete props;
     delete commands;
     delete io;
+    delete fontcache;
     delete renderer;
     delete initial_waypoints;
 }

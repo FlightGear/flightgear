@@ -85,6 +85,7 @@ class FGTileMgr;
 class FGViewMgr;
 class FGViewer;
 class FGRenderer;
+class FGFontCache;
 
 
 /**
@@ -196,6 +197,8 @@ private:
 
     // Input/Ouput subsystem
     FGIO *io;
+
+    FGFontCache *fontcache;
 
     // Navigational Aids
     FGNavList *navlist;
@@ -350,6 +353,7 @@ public:
     inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
 
     inline FGIO* get_io() const { return io; }
+    inline FGFontCache *get_fontcache() const { return fontcache; }
     
     inline FGNavList *get_navlist() const { return navlist; }
     inline void set_navlist( FGNavList *n ) { navlist = n; }
