@@ -267,6 +267,7 @@ class DrawLineSeg2D {
 
 
 #define USE_HUD_TextList
+extern fntTexFont        *HUD_Font;
 extern float              HUD_TextSize;
 extern fntRenderer       *HUDtext;
 extern float HUD_matrix[16];
@@ -297,7 +298,7 @@ public:
     {
         if ( HUDtext && str ) {
             float r, l ;
-            guiFntHandle->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
+            HUD_Font->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
             return FloatToInt( r - l );
         }
         return 0 ;
@@ -307,7 +308,7 @@ public:
     {
         if ( HUDtext && strlen( msg )) {
             float r, l ;
-            guiFntHandle->getBBox ( msg, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
+            HUD_Font->getBBox ( msg, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
             return FloatToInt( r - l );
         }
         return 0 ;
@@ -335,7 +336,7 @@ public:
                 i++;
             }
             if(c>p) {
-                fnt->setPointSize(8);
+                fnt->setPointSize(HUD_TextSize * 0.8);
                 int p1=c-3;
                 char *tmp1=msg+p1;
                 int p2=p1*8;
@@ -343,7 +344,7 @@ public:
                 fnt->start2f(x+p2,y);
                 fnt->puts(tmp1);
 
-                fnt->setPointSize(12);
+                fnt->setPointSize(HUD_TextSize * 1.2);
                 char tmp2[64];
                 strncpy(tmp2,msg,p1);
                 tmp2[p1]='\0';
@@ -351,13 +352,13 @@ public:
                 fnt->start2f(x,y);
                 fnt->puts(tmp2);
             } else {
-                fnt->setPointSize(12);					
+                fnt->setPointSize(HUD_TextSize * 1.2);
                 fnt->start2f( x, y );
                 fnt->puts(tmp);
             }
         } else {
             //if digits not equal to 1
-            fnt->setPointSize(8);         
+            fnt->setPointSize(HUD_TextSize * 0.8);
             fnt->start2f( x, y );
             fnt->puts( msg ) ;
         }
@@ -523,7 +524,7 @@ public:
     {
         if ( HUDtext && str ) {
             float r, l ;
-            guiFntHandle->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
+            HUD_Font->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
             return FloatToInt( r - l );
         }
         return 0 ;

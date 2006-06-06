@@ -80,7 +80,8 @@ fgLineList         HUD_LineList;
 fgLineList         HUD_StippleLineList;
 
 fntRenderer *HUDtext = 0;
-float  HUD_TextSize = 0;
+fntTexFont *HUD_Font = 0;
+float HUD_TextSize = 0;
 int HUD_style = 0;
 
 float HUD_matrix[16];
@@ -763,11 +764,13 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
         delete tmp;
     }
 
-//    HUD_TextSize = fgGetInt("/sim/startup/xsize") / 60;
-    HUD_TextSize = 10;
+    FGFontCache *fc = globals->get_fontcache();
+    HUD_Font = fc->getTexFont(fgGetString("/sim/hud/font/name", "Helvetica.txf"));
+    HUD_TextSize = fgGetFloat("/sim/hud/font/size", 10);
+
     HUDtext = new fntRenderer();
-    HUDtext -> setFont      ( guiFntHandle ) ;
-    HUDtext -> setPointSize ( HUD_TextSize ) ;
+    HUDtext->setFont(HUD_Font);
+    HUDtext->setPointSize(HUD_TextSize);
     HUD_TextList.setFont( HUDtext );
     
     return 0;  // For now. Later we may use this for an error code.
