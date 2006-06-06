@@ -383,6 +383,7 @@ FGColor::merge(const FGColor *color)
 }
 
 
+
 
 ////////////////////////////////////////////////////////////////////////
 // FGFontCache class.
@@ -416,8 +417,8 @@ FGFontCache::~FGFontCache()
    _fonts.clear();
 }
 
-puFont *
-FGFontCache::get(const char *name, float size, float slant)
+struct FGFontCache::fnt *
+FGFontCache::getfnt(const char *name, float size, float slant)
 {
     if (!_initialized) {
         char *envp = ::getenv("FG_FONTS");
@@ -432,10 +433,10 @@ FGFontCache::get(const char *name, float size, float slant)
 
     for (int i=0; guifonts[i].name; i++)
         _fonts[guifonts[i].name] = new fnt(guifonts[i].font);
-    _itt_t it;
 
+    _itt_t it;
     if ((it = _fonts.find(name)) != _fonts.end())
-        return it->second->pufont;
+        return it->second;
 
     SGPath path(_path);
     path.append(name);
@@ -446,12 +447,23 @@ FGFontCache::get(const char *name, float size, float slant)
     if (f->texfont->load((char *)path.c_str())) {
         f->pufont = new puFont;
         f->pufont->initialize(static_cast<fntFont *>(f->texfont), size, slant);
-        _fonts[name] = f;
-        return f->pufont;
+        return _fonts[name] = f;
     }
 
     delete f;
-    return _fonts["default"]->pufont;
+    return _fonts["default"];
+}
+
+puFont *
+FGFontCache::get(const char *name, float size, float slant)
+{
+    return getfnt(name, size, slant)->pufont;
+}
+
+fntTexFont *
+FGFontCache::getTexFont(const char *name, float size, float slant)
+{
+    return getfnt(name, size, slant)->texfont;
 }
 
 puFont *

@@ -304,6 +304,7 @@ private:
     map<const string,fnt *> _fonts;
     typedef map<const string,fnt *>::const_iterator _itt_t;
     bool _initialized;
+    struct fnt *getfnt(const char *name, float size, float slant);
 
 public:
     FGFontCache();
@@ -311,6 +312,8 @@ public:
 
     puFont *get(const char *name, float size=15.0, float slant=0.0);
     puFont *get(SGPropertyNode *node);
+
+    fntTexFont *getTexFont(const char *name, float size=15.0, float slant=0.0);
 };
 
 
