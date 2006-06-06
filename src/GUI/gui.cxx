@@ -45,6 +45,7 @@
 #include <Main/main.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <GUI/new_gui.hxx>
 
 #include "gui.h"
 #include "gui_local.hxx"
@@ -53,7 +54,6 @@
 
 
 puFont guiFnt = 0;
-fntTexFont *guiFntHandle = 0;
 
 
 /* -------------------------------------------------------------------------
@@ -66,30 +66,18 @@ void guiInit()
     char *mesa_win_state;
 
     // Initialize PUI
+#ifndef PU_USE_NONE
     puInit();
+#endif
     puSetDefaultStyle         ( PUSTYLE_SMALL_SHADED ); //PUSTYLE_DEFAULT
     puSetDefaultColourScheme  (0.8, 0.8, 0.9, 1);
 
-    // Next check home directory
-    SGPath fntpath;
-    char* envp = ::getenv( "FG_FONTS" );
-    if ( envp != NULL ) {
-        fntpath.set( envp );
-    } else {
-        fntpath.set( globals->get_fg_root() );
-	fntpath.append( "Fonts" );
-    }
-
-    // Install our fast fonts
-    SGPropertyNode *locale = globals->get_locale();
-    fntpath.append(locale->getStringValue("font", "typewriter.txf"));
-    guiFntHandle = new fntTexFont ;
-    guiFntHandle -> load ( (char *)fntpath.c_str() ) ;
-    puFont GuiFont ( guiFntHandle, 15 ) ;
-    puSetDefaultFonts( GuiFont, GuiFont ) ;
+    FGFontCache *fc = globals->get_fontcache();
+    puFont *GuiFont = fc->get(globals->get_locale()->getStringValue("font", "typewriter.txf"), 15);
+    puSetDefaultFonts(*GuiFont, *GuiFont);
     guiFnt = puGetDefaultLabelFont();
 
-    LayoutWidget::setDefaultFont(&GuiFont, 15);
+    LayoutWidget::setDefaultFont(GuiFont, 15);
   
     if (!fgHasNode("/sim/startup/mouse-pointer")) {
         // no preference specified for mouse pointer, attempt to autodetect...
