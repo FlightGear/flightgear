@@ -52,6 +52,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
 #include <Time/light.hxx>
+#include <GUI/new_gui.hxx>	// FGFontCache
 
 #include "hud.hxx"
 #include "panel.hxx"
@@ -175,8 +176,6 @@ FGCroppedTexture::getTexture ()
 ////////////////////////////////////////////////////////////////////////
 
 static fntRenderer text_renderer;
-static fntTexFont *default_font = 0;
-static fntTexFont *led_font = 0;
 static sgVec4 panel_color;
 static sgVec4 emissive_panel_color = {1,1,1,1};
 
@@ -230,28 +229,6 @@ FGPanel::addInstrument (FGPanelInstrument * instrument)
 void
 FGPanel::init ()
 {
-    SGPath base_path;
-    char* envp = ::getenv( "FG_FONTS" );
-    if ( envp != NULL ) {
-        base_path.set( envp );
-    } else {
-        base_path.set( globals->get_fg_root() );
-	base_path.append( "Fonts" );
-    }
-
-    SGPath fntpath;
-
-    // Install the default font
-    fntpath = base_path;
-    fntpath.append( "typewriter.txf" );
-    default_font = new fntTexFont ;
-    default_font -> load ( (char *)fntpath.c_str() ) ;
-
-    // Install the LED font
-    fntpath = base_path;
-    fntpath.append( "led.txf" );
-    led_font = new fntTexFont ;
-    led_font -> load ( (char *)fntpath.c_str() ) ;
 }
 
 
@@ -1011,7 +988,7 @@ FGTexturedLayer::draw ()
 ////////////////////////////////////////////////////////////////////////
 
 FGTextLayer::FGTextLayer (int w, int h)
-  : FGInstrumentLayer(w, h), _pointSize(14.0), _font_name("default")
+  : FGInstrumentLayer(w, h), _pointSize(14.0), _font_name("default.txf")
 {
   _then.stamp();
   _color[0] = _color[1] = _color[2] = 0.0;
@@ -1033,11 +1010,10 @@ FGTextLayer::draw ()
   if (test()) {
     glColor4fv(_color);
     transform();
-    if ( _font_name == "led" && led_font != 0) {
-	text_renderer.setFont(led_font);
-    } else {
-	text_renderer.setFont(guiFntHandle);
-    }
+
+    FGFontCache *fc = globals->get_fontcache();
+    text_renderer.setFont(fc->getTexFont(_font_name.c_str()));
+
     text_renderer.setPointSize(_pointSize);
     text_renderer.begin();
     text_renderer.start3f(0, 0, 0);
@@ -1096,7 +1072,7 @@ FGTextLayer::setPointSize (float size)
 void
 FGTextLayer::setFontName(const string &name)
 {
-  _font_name = name;
+  _font_name = name + ".txf";
 }
 
 
