@@ -491,7 +491,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
     tlayer->setPointSize(pointSize);
 
 				// Set the font.
-    string fontName = node->getStringValue("font", "default");
+    string fontName = node->getStringValue("font", "Helvetica");
     tlayer->setFontName(fontName);
 
     const SGPropertyNode * chunk_group = node->getNode("chunks");

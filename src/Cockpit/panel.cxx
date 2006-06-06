@@ -988,7 +988,7 @@ FGTexturedLayer::draw ()
 ////////////////////////////////////////////////////////////////////////
 
 FGTextLayer::FGTextLayer (int w, int h)
-  : FGInstrumentLayer(w, h), _pointSize(14.0), _font_name("default.txf")
+  : FGInstrumentLayer(w, h), _pointSize(14.0), _font_name("Helvetica.txf")
 {
   _then.stamp();
   _color[0] = _color[1] = _color[2] = 0.0;
