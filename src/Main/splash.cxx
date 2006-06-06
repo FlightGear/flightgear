@@ -67,7 +67,7 @@ void fgSplashInit ( const char *splash_texture ) {
 
     int which = fgGetInt("/sim/gui/current-style", 0);
     SGPropertyNode *sim = fgGetNode("/sim/gui", true);
-    style = sim->getChild("style", which);
+    style = sim->getChild("style", 0/*which*/); // always use style[0]?
     if (!style)
         style = sim->getChild("style", 0, true);
 
