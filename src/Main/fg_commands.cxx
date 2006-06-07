@@ -1257,20 +1257,6 @@ do_increase_visibility (const SGPropertyNode * arg)
 }
 
 static bool
-do_hud_brightkey(const SGPropertyNode *)
-{
-    HUD_brightkey( true );
-    return true;
-}
-
-static bool
-do_hud_masterswitch(const SGPropertyNode *)
-{
-    HUD_masterswitch( true );
-    return true;
-}
-
-static bool
 do_hud_init(const SGPropertyNode *)
 {
     fgHUDInit(0); // minimal HUD
@@ -1455,8 +1441,6 @@ static struct {
     { "replay", do_replay },
     { "decrease-visibility", do_decrease_visibility },
     { "increase-visibility", do_increase_visibility },
-    { "hud-brightkey", do_hud_brightkey },
-    { "hud-masterswitch", do_hud_masterswitch },
     { "hud-init", do_hud_init },
     { "hud-init2", do_hud_init2 },
     { "loadxml", do_load_xml_to_proptree},
