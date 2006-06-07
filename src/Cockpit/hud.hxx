@@ -1034,8 +1034,6 @@ public:
 //using namespace std;
 //deque <instr_item>  * Hdeque_ptr;
 
-extern void HUD_masterswitch( bool incr );
-extern void HUD_brightkey( bool incr_bright );
 extern int  fgHUDInit( fgAIRCRAFT * /* current_aircraft */ );
 extern int  fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ );
 extern void fgUpdateHUD( void );
@@ -1053,5 +1051,28 @@ void fgUpdateHUD ( Hptr hud );
 void fgUpdateHUD2( Hptr hud ); // Future use?
 void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 */
+
+
+
+
+class HUD_Properties : public SGPropertyChangeListener {
+public:
+    HUD_Properties();
+    void valueChanged(SGPropertyNode *n);
+    void setColor() const;
+    bool isVisible() const { return _visible; }
+    bool isAntialiased() const { return _antialiased; }
+
+private:
+    float clamp(float f) { return f < 0.0f ? 0.0f : f > 1.0f ? 1.0f : f; }
+    vector<SGPropertyNode_ptr> _colors;
+    SGPropertyNode_ptr _which;
+    SGPropertyNode_ptr _brightness;
+    SGPropertyNode_ptr _alpha;
+    SGPropertyNode_ptr _visibility;
+    SGPropertyNode_ptr _antialiasing;
+    bool _visible, _antialiased;
+    float _r, _g, _b, _a;
+};
 
 #endif // _HUD_H

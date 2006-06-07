@@ -66,6 +66,9 @@ extern "C" {
 
 #include "hud.hxx"
 
+
+static HUD_Properties *HUD;
+
 static char units[5];
 
 // The following routines obtain information concerning the aircraft's
@@ -775,7 +778,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
     HUDtext->setFont(HUD_Font);
     HUDtext->setPointSize(HUD_TextSize);
     HUD_TextList.setFont( HUDtext );
-    
+
+    HUD = new HUD_Properties;
     return 0;  // For now. Later we may use this for an error code.
 
 }
@@ -805,80 +809,6 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 }
 //$$$ End - added, Neetha, 28 Nov 2k  
 
-static int global_day_night_switch = HUD_DAY;
-
-void HUD_masterswitch( bool incr )
-{
-    if ( fgGetBool("/sim/hud/visibility") ) {
-	if ( global_day_night_switch == HUD_DAY ) {
-	    global_day_night_switch = HUD_NIGHT;
-	} else {
-	    fgSetBool("/sim/hud/visibility", false);
-	}
-    } else {
-        fgSetBool("/sim/hud/visibility", true);
-	global_day_night_switch = HUD_DAY;
-    }	
-}
-
-void HUD_brightkey( bool incr_bright )
-{
-    instr_item *pHUDInstr = HUD_deque[0];
-    int brightness        = pHUDInstr->get_brightness();
-
-    if( fgGetBool("/sim/hud/visibility") ) {
-	if( incr_bright ) {
-	    switch (brightness)
-		{
-		case HUD_BRT_LIGHT:
-		    brightness = HUD_BRT_BLACK;
-		    break;
-
-		case HUD_BRT_MEDIUM:
-		    brightness = HUD_BRT_LIGHT;
-		    break;
-
-		case HUD_BRT_DARK:
-		    brightness = HUD_BRT_MEDIUM;
-		    break;
-
-		case HUD_BRT_BLACK:
-		    brightness = HUD_BRT_DARK;
-		    break;
-
-		default:
-		    brightness = HUD_BRT_BLACK;
-		}
-	} else {
-	    switch (brightness)
-		{
-		case HUD_BRT_LIGHT:
-		    brightness = HUD_BRT_MEDIUM;
-		    break;
-
-		case HUD_BRT_MEDIUM:
-		    brightness = HUD_BRT_DARK;
-		    break;
-
-		case HUD_BRT_DARK:
-		    brightness = HUD_BRT_BLACK;
-		    break;
-
-		case HUD_BRT_BLACK:
-		    brightness = HUD_BRT_LIGHT;
-		    break;
-
-		default:
-		    fgSetBool("/sim/hud/visibility", false);
-		}
-	}
-    } else {
-	fgSetBool("/sim/hud/visibility", true);
-    }
-
-    pHUDInstr->SetBrightness( brightness );
-}
-
 
 void fgHUDReshape(void) {
 #if 0
@@ -899,17 +829,6 @@ void fgHUDReshape(void) {
     HUDtext -> setPointSize ( HUD_TextSize ) ;
     HUD_TextList.setFont( HUDtext );
 #endif
-}
-
-
-static void set_hud_color(float r, float g, float b) {
-    static SGPropertyNode_ptr alias = fgGetNode("/sim/hud/antialiased", true);
-    static SGPropertyNode_ptr alpha = fgGetNode("/sim/hud/alpha", true);
-
-    if (alias->getBoolValue())
-        glColor4f(r, g, b, alpha->getFloatValue());
-    else
-        glColor3f(r, g, b);
 }
 
 
@@ -1025,8 +944,6 @@ void drawHUD()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
 
-    static const SGPropertyNode *antialiased_node
-        = fgGetNode("/sim/hud/antialiased", true);
     static const SGPropertyNode *heading_enabled
         = fgGetNode("/autopilot/locks/heading", true);
     static const SGPropertyNode *altitude_enabled
@@ -1038,7 +955,7 @@ void drawHUD()
     static char hud_wp2_text[256];
     static char hud_alt_text[256];
 
-    if( antialiased_node->getBoolValue() ) {
+    if (HUD->isAntialiased()) {
         glEnable(GL_LINE_SMOOTH);
         //	  glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
@@ -1048,56 +965,7 @@ void drawHUD()
         glLineWidth(1.0);
     }
 
-    if( global_day_night_switch == HUD_DAY) {
-        switch (HUD_deque[0]->get_brightness())
-            {
-            case HUD_BRT_LIGHT:
-                set_hud_color (0.1f, 0.9f, 0.1f);
-                break;
-
-            case HUD_BRT_MEDIUM:
-                set_hud_color (0.1f, 0.7f, 0.0f);
-                break;
-
-            case HUD_BRT_DARK:
-                set_hud_color (0.0f, 0.6f, 0.0f);
-                break;
-
-            case HUD_BRT_BLACK:
-                set_hud_color( 0.0f, 0.0f, 0.0f);
-                break;
-
-            default:
-                set_hud_color (0.1f, 0.9f, 0.1f);
-            }
-    } else {
-        if( global_day_night_switch == HUD_NIGHT) {
-            switch (HUD_deque[0]->get_brightness())
-                {
-                case HUD_BRT_LIGHT:
-                    set_hud_color (0.9f, 0.1f, 0.1f);
-                    break;
-
-                case HUD_BRT_MEDIUM:
-                    set_hud_color (0.7f, 0.0f, 0.1f);
-                    break;
-
-                case HUD_BRT_DARK:
-                    set_hud_color (0.6f, 0.0f, 0.0f);
-                    break;
-
-                case HUD_BRT_BLACK:
-                    set_hud_color( 0.0f, 0.0f, 0.0f);
-                    break;
-
-                default:
-                    set_hud_color (0.6f, 0.0f, 0.0f);
-                }
-        } else {     // Just in case default
-            set_hud_color (0.1f, 0.9f, 0.1f);
-        }
-    }
-
+    HUD->setColor();
     for_each(HUD_deque.begin(), HUD_deque.end(), HUDdraw());
 
     HUD_TextList.add( fgText(40, 10, get_formated_gmt_time(), 0) );
@@ -1164,7 +1032,7 @@ void drawHUD()
     // HUD_StippleLineList.draw();
     // glDisable(GL_LINE_STIPPLE);
 
-    if( antialiased_node->getBoolValue() ) {
+    if (HUD->isAntialiased()) {
         // glDisable(GL_BLEND);
         glDisable(GL_LINE_SMOOTH);
         glLineWidth(1.0);
@@ -1172,5 +1040,53 @@ void drawHUD()
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
+}
+
+
+
+
+
+// HUD property listener class
+//
+HUD_Properties::HUD_Properties()
+{
+    _colors = fgGetNode("/sim/hud/colors", true)->getChildren("color");
+    _which = fgGetNode("/sim/hud/current-color", true);
+    _brightness = fgGetNode("/sim/hud/brightness", true);
+    _alpha = fgGetNode("/sim/hud/alpha", true);
+    _visibility = fgGetNode("/sim/hud/visibility", true);
+    _antialiasing = fgGetNode("/sim/hud/antialiased", true);
+
+    _which->addChangeListener(this);
+    _brightness->addChangeListener(this);
+    _alpha->addChangeListener(this);
+    _visibility->addChangeListener(this);
+    _antialiasing->addChangeListener(this, true);
+}
+
+
+void HUD_Properties::valueChanged(SGPropertyNode *n)
+{
+    _visible = _visibility->getBoolValue();
+    _antialiased = _antialiasing->getBoolValue();
+    float brt = _brightness->getFloatValue();
+    int w = _which->getIntValue();
+    if (w < 0 || w >= int(_colors.size()))
+        _visible = false;
+    else {
+        _r = clamp(brt * _colors[w]->getFloatValue("red", 1.0));
+        _g = clamp(brt * _colors[w]->getFloatValue("green", 1.0));
+        _b = clamp(brt * _colors[w]->getFloatValue("blue", 1.0));
+    }
+    _a = _alpha->getFloatValue();
+}
+
+
+void HUD_Properties::setColor() const
+{
+    if (_antialiased)
+        glColor4f(_r, _g, _b, _a);
+    else
+        glColor3f(_r, _g, _b);
 }
 
