@@ -69,6 +69,8 @@ SG_USING_STD(vector);
 SG_USING_NAMESPACE(std);
 
 
+#define HUD_BRT_MEDIUM         5    // FIXME remove me
+
 // some of Norman's crazy optimizations. :-)
 
 #ifndef WIN32
