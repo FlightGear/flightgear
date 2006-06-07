@@ -85,17 +85,6 @@ typedef struct {
 
 enum VIEW_MODES{ HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
 
-// DAY, NIGHT and brightness levels need to be visible where dialogs and
-// controls can be used to set intensity and appropriate color. This will
-// be moved.
-// Hud general constants
-#define HUD_DAY                1
-#define HUD_NIGHT              2
-#define HUD_BRT_BLACK          3
-#define HUD_BRT_DARK           4
-#define HUD_BRT_MEDIUM         5
-#define HUD_BRT_LIGHT          6
-
 // Label constants
 #define HUD_FONT_SMALL     1
 #define HUD_FONT_LARGE     2
