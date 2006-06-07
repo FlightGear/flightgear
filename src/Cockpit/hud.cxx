@@ -1048,7 +1048,10 @@ void drawHUD()
 
 // HUD property listener class
 //
-HUD_Properties::HUD_Properties()
+HUD_Properties::HUD_Properties() :
+    _r(1.0),
+    _g(1.0),
+    _b(1.0)
 {
     _colors = fgGetNode("/sim/hud/colors", true)->getChildren("color");
     _which = fgGetNode("/sim/hud/current-color", true);
@@ -1071,9 +1074,7 @@ void HUD_Properties::valueChanged(SGPropertyNode *n)
     _antialiased = _antialiasing->getBoolValue();
     float brt = _brightness->getFloatValue();
     int w = _which->getIntValue();
-    if (w < 0 || w >= int(_colors.size()))
-        _visible = false;
-    else {
+    if (w >= 0 && w < int(_colors.size())) {
         _r = clamp(brt * _colors[w]->getFloatValue("red", 1.0));
         _g = clamp(brt * _colors[w]->getFloatValue("green", 1.0));
         _b = clamp(brt * _colors[w]->getFloatValue("blue", 1.0));
