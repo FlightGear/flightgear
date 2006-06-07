@@ -3,7 +3,7 @@
 
 
 UINT instr_item :: instances = 0;  // Initial value of zero
-int  instr_item :: brightness = HUD_BRT_MEDIUM;
+int  instr_item :: brightness = 5;/*HUD_BRT_MEDIUM*/
 //glRGBTRIPLE instr_item :: color = {0.1, 0.7, 0.0};
 glRGBTRIPLE instr_item :: color = {0.0, 1.0, 0.0};
 
