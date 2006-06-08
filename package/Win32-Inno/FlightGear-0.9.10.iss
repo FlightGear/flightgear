@@ -30,6 +30,7 @@ DefaultDirName={pf}\FlightGear
 DefaultGroupName=FlightGear v0.9.10
 LicenseFile=X:\data\COPYING
 Uninstallable=yes
+SetupIconFile=x:\flightgear.ico
 
 [Tasks]
 ; NOTE: The following entry contains English phrases ("Create a desktop icon" and "Additional icons"). You are free to translate them into another language if required.
@@ -50,7 +51,7 @@ Source: "X:\docs\*.*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdir
 Name: "{group}\FlightGear Launcher"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}";
 ; Name: "{group}\FlightGear"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
 Name: "{group}\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}";
-Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\docs\index.html"
+Name: "{group}\FlightGear Documentation"; Filename: "{app}\docs\index.html"
 Name: "{group}\Explore Documentation Folder"; Filename: "{app}\docs"
 Name: "{group}\Flightgear Wiki"; Filename: "http://www.seedwiki.com/wiki/flight_gear/flight_gear.cfm"
 Name: "{group}\Uninstall FlightGear v0.9.10"; Filename: "{uninstallexe}"
