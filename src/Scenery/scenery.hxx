@@ -94,6 +94,8 @@ public:
     /// All values are meant to be in meters or degrees.
     bool get_elevation_m(double lat, double lon, double max_alt,
                          double& alt, bool exact = false);
+    bool get_material_m(double lat, double lon, double max_alt,
+                        double& alt, string & material, bool exact = false);
 
     /// Compute the elevation of the scenery beow the cartesian point pos.
     /// you the returned scenery altitude is not higher than the position
@@ -108,6 +110,8 @@ public:
     /// All values are meant to be in meters.
     bool get_cart_elevation_m(const sgdVec3& pos, double max_altoff,
                               double& radius, bool exact = false);
+    bool get_cart_material_m(const sgdVec3& pos, double max_altoff,
+                             double& radius, string& material, bool exact = false);
 
     /// Compute the nearest intersection point of the line starting from 
     /// start going in direction dir with the terrain.

@@ -702,7 +702,8 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
                     sgdVec3 scenery_center,
                     ssgTransform *terra_transform,
                     FGHitList *hit_list,
-                    double *terrain_elev, double *radius, double *normal)
+                    double *terrain_elev, double *radius, double *normal,
+		    int & this_hit )
 {
     // SGTimeStamp start; start.stamp();
 
@@ -724,7 +725,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
     sgdSetMat4(xform,fxform);
     hit_list->Intersect( terra_transform, xform, orig, dir );
 
-    int this_hit = -1;
+    this_hit = -1;
     int max_hit = -1;
     double hit_elev = -9999;
     double max_elev = -9999;

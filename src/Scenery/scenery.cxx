@@ -32,6 +32,7 @@
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/scene/model/placementtrans.hxx>
+#include <simgear/scene/material/matlib.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -144,6 +145,17 @@ FGScenery::get_elevation_m(double lat, double lon, double max_alt,
 }
 
 bool
+FGScenery::get_material_m(double lat, double lon, double max_alt,
+                          double& alt, string & material, bool exact)
+{
+  sgdVec3 pos;
+  sgGeodToCart(lat*SG_DEGREES_TO_RADIANS, lon*SG_DEGREES_TO_RADIANS,
+               max_alt, pos);
+
+  return get_cart_material_m(pos, 0, alt, material, exact);
+}
+
+bool
 FGScenery::get_cart_elevation_m(const sgdVec3& pos, double max_altoff,
                                 double& alt, bool exact)
 {
@@ -159,6 +171,7 @@ FGScenery::get_cart_elevation_m(const sgdVec3& pos, double max_altoff,
 
   // overridden with actual values if a terrain intersection is
   // found
+  int this_hit;
   double hit_radius = 0.0;
   sgdVec3 hit_normal = { 0.0, 0.0, 0.0 };
   
@@ -176,7 +189,78 @@ FGScenery::get_cart_elevation_m(const sgdVec3& pos, double max_altoff,
     // be valid (and not just luck)
     hit = fgCurrentElev(ncpos, max_altoff+sgdLengthVec3(pos),
                         sc, (ssgTransform*)get_scene_graph(),
-                        &hit_list, &alt, &hit_radius, hit_normal);
+                        &hit_list, &alt, &hit_radius, hit_normal, this_hit);
+  }
+
+  if (replaced_center)
+    set_center( saved_center );
+  
+  return hit;
+}
+
+bool
+FGScenery::get_cart_material_m(const sgdVec3& pos, double max_altoff,
+                               double& alt, string& material, bool exact)
+{
+  Point3D saved_center = center;
+  bool replaced_center = false;
+  if (exact) {
+    Point3D ppos(pos[0], pos[1], pos[2]);
+    if (30.0*30.0 < ppos.distance3Dsquared(center)) {
+      set_center( ppos );
+      replaced_center = true;
+    }
+  }
+
+  material = "";
+
+  // overridden with actual values if a terrain intersection is
+  // found
+  int this_hit;
+  double hit_radius = 0.0;
+  sgdVec3 hit_normal = { 0.0, 0.0, 0.0 };
+  
+  bool hit = false;
+  if ( fabs(pos[0]) > 1.0 || fabs(pos[1]) > 1.0 || fabs(pos[2]) > 1.0 ) {
+    sgdVec3 sc;
+    sgdSetVec3(sc, center[0], center[1], center[2]);
+    
+    sgdVec3 ncpos;
+    sgdCopyVec3(ncpos, pos);
+    
+    FGHitList hit_list;
+    
+    // scenery center has been properly defined so any hit should
+    // be valid (and not just luck)
+    hit = fgCurrentElev(ncpos, max_altoff+sgdLengthVec3(pos),
+                        sc, (ssgTransform*)get_scene_graph(),
+                        &hit_list, &alt, &hit_radius, hit_normal,
+			this_hit );
+
+    if( hit )
+    {
+	ssgEntity *entity = hit_list.get_entity( this_hit );
+
+	if( entity != NULL && entity->isAKindOf(ssgTypeLeaf()) )
+	{
+	    ssgLeaf *leaf = (ssgLeaf*) hit_list.get_entity( this_hit );
+            ssgState *st = leaf->getState();
+
+	    if( st != NULL && st->isAKindOf(ssgTypeSimpleState()) )
+	    {
+	        ssgSimpleState *ss = (ssgSimpleState *) st;
+
+	  	if( !globals->get_matlib()->find( ss, material ) )
+		{
+		    material = "not-in-matlib";
+		}
+	    }
+	}
+    }
+    else
+    {
+	material = "no-hit";
+    }
   }
 
   if (replaced_center)

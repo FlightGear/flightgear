@@ -93,7 +93,8 @@ bool fgCurrentElev( sgdVec3 abs_view_pos,
                     FGHitList *hit_list,
                     double *terrain_elev,
                     double *radius,
-                    double *normal );
+                    double *normal,
+		    int & this_hit );
 
 bool fgCurrentElev( sgdVec3 abs_view_pos,
                     double max_alt_m,
