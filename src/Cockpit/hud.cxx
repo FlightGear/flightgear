@@ -957,9 +957,10 @@ void drawHUD()
 
     if (HUD->isAntialiased()) {
         glEnable(GL_LINE_SMOOTH);
+        glAlphaFunc(GL_GREATER, HUD->alphaClamp());
         //	  glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        glHint(GL_LINE_SMOOTH_HINT,GL_DONT_CARE);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
         glLineWidth(2.0);
     } else {
         glLineWidth(1.0);
@@ -1034,6 +1035,7 @@ void drawHUD()
 
     if (HUD->isAntialiased()) {
         // glDisable(GL_BLEND);
+        glDisable(GL_ALPHA_TEST);
         glDisable(GL_LINE_SMOOTH);
         glLineWidth(1.0);
     }
@@ -1044,42 +1046,87 @@ void drawHUD()
 
 
 
+void fgTextList::draw()
+{
+    if (!Font)
+        return;
+
+    vector<fgText>::iterator curString = List.begin();
+    vector<fgText>::iterator lastString = List.end();
+
+    glPushAttrib(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_BLEND);
+    if (HUD->isAntialiased()) {
+        glEnable(GL_ALPHA_TEST);
+        glAlphaFunc(GL_GREATER, HUD->alphaClamp());
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    } else {
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    Font->begin();
+    for (; curString != lastString; curString++)
+        curString->Draw(Font,curString->digit);
+    Font->end();
+
+    glDisable(GL_TEXTURE_2D);
+    glPopAttrib();
+}
+
 
 
 // HUD property listener class
 //
 HUD_Properties::HUD_Properties() :
-    _r(1.0),
-    _g(1.0),
-    _b(1.0)
+    _current(fgGetNode("/sim/hud/current-color", true)),
+    _visibility(fgGetNode("/sim/hud/visibility", true)),
+    _antialiasing(fgGetNode("/sim/hud/color/antialiased", true)),
+    _red(fgGetNode("/sim/hud/color/red", true)),
+    _green(fgGetNode("/sim/hud/color/green", true)),
+    _blue(fgGetNode("/sim/hud/color/blue", true)),
+    _alpha(fgGetNode("/sim/hud/color/alpha", true)),
+    _alpha_clamp(fgGetNode("/sim/hud/color/alpha-clamp", true)),
+    _brightness(fgGetNode("/sim/hud/color/brightness", true))
 {
-    _colors = fgGetNode("/sim/hud/colors", true)->getChildren("color");
-    _which = fgGetNode("/sim/hud/current-color", true);
-    _brightness = fgGetNode("/sim/hud/brightness", true);
-    _alpha = fgGetNode("/sim/hud/alpha", true);
-    _visibility = fgGetNode("/sim/hud/visibility", true);
-    _antialiasing = fgGetNode("/sim/hud/antialiased", true);
-
-    _which->addChangeListener(this);
-    _brightness->addChangeListener(this);
-    _alpha->addChangeListener(this);
     _visibility->addChangeListener(this);
-    _antialiasing->addChangeListener(this, true);
+    _antialiasing->addChangeListener(this);
+    _red->addChangeListener(this);
+    _green->addChangeListener(this);
+    _blue->addChangeListener(this);
+    _alpha->addChangeListener(this);
+    _alpha_clamp->addChangeListener(this);
+    _brightness->addChangeListener(this);
+    _current->addChangeListener(this, true);
 }
 
 
-void HUD_Properties::valueChanged(SGPropertyNode *n)
+void HUD_Properties::valueChanged(SGPropertyNode *node)
 {
+    if (!strcmp(node->getName(), "current-color")) {
+        int i = node->getIntValue();
+        if (i < 0)
+            i = 0;
+        SGPropertyNode *n = fgGetNode("/sim/hud/palette", true);
+        if ((n = n->getChild("color", i, false))) {
+            _red->setFloatValue(n->getFloatValue("red", 1.0));
+            _green->setFloatValue(n->getFloatValue("green", 1.0));
+            _blue->setFloatValue(n->getFloatValue("blue", 1.0));
+            if (n->hasValue("alpha"))
+                _alpha->setFloatValue(n->getFloatValue("alpha", 1.0));
+            if (n->hasValue("alpha-clamp"))
+                _alpha_clamp->setFloatValue(n->getFloatValue("alpha-clamp", 0.01));
+            if (n->hasValue("brightness"))
+                _brightness->setFloatValue(n->getFloatValue("brightness", 0.75));
+        }
+    }
     _visible = _visibility->getBoolValue();
     _antialiased = _antialiasing->getBoolValue();
     float brt = _brightness->getFloatValue();
-    int w = _which->getIntValue();
-    if (w >= 0 && w < int(_colors.size())) {
-        _r = clamp(brt * _colors[w]->getFloatValue("red", 1.0));
-        _g = clamp(brt * _colors[w]->getFloatValue("green", 1.0));
-        _b = clamp(brt * _colors[w]->getFloatValue("blue", 1.0));
-    }
-    _a = _alpha->getFloatValue();
+    _r = clamp(brt * _red->getFloatValue());
+    _g = clamp(brt * _green->getFloatValue());
+    _b = clamp(brt * _blue->getFloatValue());
+    _a = clamp(_alpha->getFloatValue());
+    _cl = clamp(_alpha_clamp->getFloatValue());
 }
 
 

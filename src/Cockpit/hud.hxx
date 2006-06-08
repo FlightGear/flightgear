@@ -69,7 +69,6 @@ SG_USING_STD(vector);
 SG_USING_NAMESPACE(std);
 
 
-
 // some of Norman's crazy optimizations. :-)
 
 #ifndef WIN32
@@ -385,28 +384,7 @@ public:
     void setFont( fntRenderer *Renderer ) { Font = Renderer; }
     void add( const fgText& String ) { List.push_back(String); }
     void erase( void ) { List.erase( List.begin(), List.end() ); }
-    
-    void draw( void ) {
-        if( Font == 0 )
-            return;
-        vector < fgText > :: iterator curString = List.begin();
-        vector < fgText > :: iterator lastString = List.end();
-
-        glPushAttrib( GL_COLOR_BUFFER_BIT );
-        glEnable    ( GL_ALPHA_TEST   ) ;
-        glEnable    ( GL_BLEND        ) ;
-        glAlphaFunc ( GL_GREATER, 0.1 ) ;
-        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-
-        Font->begin();
-        for( ; curString != lastString; curString++ ) {
-            curString->Draw(Font,curString->digit); //suma
-        }
-        Font->end();
-
-        glDisable ( GL_TEXTURE_2D ) ;
-        glPopAttrib();
-    }
+    void draw( void );
 };
 
 
@@ -1052,17 +1030,19 @@ public:
     void setColor() const;
     bool isVisible() const { return _visible; }
     bool isAntialiased() const { return _antialiased; }
+    float alphaClamp() const { return _cl; }
 
 private:
     float clamp(float f) { return f < 0.0f ? 0.0f : f > 1.0f ? 1.0f : f; }
-    vector<SGPropertyNode_ptr> _colors;
-    SGPropertyNode_ptr _which;
-    SGPropertyNode_ptr _brightness;
-    SGPropertyNode_ptr _alpha;
+    SGPropertyNode_ptr _current;
     SGPropertyNode_ptr _visibility;
     SGPropertyNode_ptr _antialiasing;
-    bool _visible, _antialiased;
-    float _r, _g, _b, _a;
+    SGPropertyNode_ptr _red, _green, _blue, _alpha;
+    SGPropertyNode_ptr _alpha_clamp;
+    SGPropertyNode_ptr _brightness;
+    bool _visible;
+    bool _antialiased;
+    float _r, _g, _b, _a, _cl;
 };
 
 #endif // _HUD_H
