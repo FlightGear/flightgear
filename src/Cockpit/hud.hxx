@@ -1030,6 +1030,7 @@ public:
     void setColor() const;
     bool isVisible() const { return _visible; }
     bool isAntialiased() const { return _antialiased; }
+    bool isTransparent() const { return _transparent; }
     float alphaClamp() const { return _cl; }
 
 private:
@@ -1037,11 +1038,13 @@ private:
     SGPropertyNode_ptr _current;
     SGPropertyNode_ptr _visibility;
     SGPropertyNode_ptr _antialiasing;
+    SGPropertyNode_ptr _transparency;
     SGPropertyNode_ptr _red, _green, _blue, _alpha;
     SGPropertyNode_ptr _alpha_clamp;
     SGPropertyNode_ptr _brightness;
     bool _visible;
     bool _antialiased;
+    bool _transparent;
     float _r, _g, _b, _a, _cl;
 };
 

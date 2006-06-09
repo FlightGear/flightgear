@@ -952,13 +952,17 @@ void drawHUD()
     static char hud_wp2_text[256];
     static char hud_alt_text[256];
 
+    glEnable(GL_BLEND);
+    if (HUD->isTransparent())
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    else
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     if (HUD->isAntialiased()) {
         glEnable(GL_LINE_SMOOTH);
         glAlphaFunc(GL_GREATER, HUD->alphaClamp());
-        //	  glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-        glLineWidth(2.0);
+        glLineWidth(1.5);
     } else {
         glLineWidth(1.0);
     }
@@ -966,7 +970,7 @@ void drawHUD()
     HUD->setColor();
     for_each(HUD_deque.begin(), HUD_deque.end(), HUDdraw());
 
-    HUD_TextList.add( fgText(40, 10, get_formated_gmt_time(), 0) );
+    //HUD_TextList.add( fgText(40, 10, get_formated_gmt_time(), 0) );
 
 
     int apY = 480 - 80;
@@ -1022,7 +1026,6 @@ void drawHUD()
     }
 
     HUD_TextList.draw();
-
     HUD_LineList.draw();
 
     // glEnable(GL_LINE_STIPPLE);
@@ -1031,7 +1034,6 @@ void drawHUD()
     // glDisable(GL_LINE_STIPPLE);
 
     if (HUD->isAntialiased()) {
-        // glDisable(GL_BLEND);
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_LINE_SMOOTH);
         glLineWidth(1.0);
@@ -1053,12 +1055,14 @@ void fgTextList::draw()
 
     glPushAttrib(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);
+    if (HUD->isTransparent())
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    else
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     if (HUD->isAntialiased()) {
         glEnable(GL_ALPHA_TEST);
         glAlphaFunc(GL_GREATER, HUD->alphaClamp());
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    } else {
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     Font->begin();
@@ -1078,15 +1082,22 @@ HUD_Properties::HUD_Properties() :
     _current(fgGetNode("/sim/hud/current-color", true)),
     _visibility(fgGetNode("/sim/hud/visibility", true)),
     _antialiasing(fgGetNode("/sim/hud/color/antialiased", true)),
+    _transparency(fgGetNode("/sim/hud/color/transparent", true)),
     _red(fgGetNode("/sim/hud/color/red", true)),
     _green(fgGetNode("/sim/hud/color/green", true)),
     _blue(fgGetNode("/sim/hud/color/blue", true)),
     _alpha(fgGetNode("/sim/hud/color/alpha", true)),
     _alpha_clamp(fgGetNode("/sim/hud/color/alpha-clamp", true)),
-    _brightness(fgGetNode("/sim/hud/color/brightness", true))
+    _brightness(fgGetNode("/sim/hud/color/brightness", true)),
+    _visible(false),
+    _antialiased(false),
+    _transparent(false),
+    _a(0.67),
+    _cl(0.01)
 {
     _visibility->addChangeListener(this);
     _antialiasing->addChangeListener(this);
+    _transparency->addChangeListener(this);
     _red->addChangeListener(this);
     _green->addChangeListener(this);
     _blue->addChangeListener(this);
@@ -1109,14 +1120,19 @@ void HUD_Properties::valueChanged(SGPropertyNode *node)
             _green->setFloatValue(n->getFloatValue("green", 1.0));
             _blue->setFloatValue(n->getFloatValue("blue", 1.0));
             if (n->hasValue("alpha"))
-                _alpha->setFloatValue(n->getFloatValue("alpha", 1.0));
+                _alpha->setFloatValue(n->getFloatValue("alpha", 0.67));
             if (n->hasValue("alpha-clamp"))
                 _alpha_clamp->setFloatValue(n->getFloatValue("alpha-clamp", 0.01));
             if (n->hasValue("brightness"))
                 _brightness->setFloatValue(n->getFloatValue("brightness", 0.75));
+            if (n->hasValue("antialiased"))
+                _antialiasing->setBoolValue(n->getBoolValue("antialiased", false));
+            if (n->hasValue("transparent"))
+                _transparency->setBoolValue(n->getBoolValue("transparent", false));
         }
     }
     _visible = _visibility->getBoolValue();
+    _transparent = _transparency->getBoolValue();
     _antialiased = _antialiasing->getBoolValue();
     float brt = _brightness->getFloatValue();
     _r = clamp(brt * _red->getFloatValue());
