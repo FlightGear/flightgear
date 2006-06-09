@@ -74,9 +74,9 @@ FGAIBase::~FGAIBase() {
         globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
     }
     if (props) {
-      SGPropertyNode* parent = props->getParent();
-      if (parent)
-        parent->removeChild(props->getName(), props->getIndex(), false);
+        SGPropertyNode* parent = props->getParent();
+        if (parent)
+            parent->removeChild(props->getName(), props->getIndex(), false);
     }
     delete fp;
     fp = 0;
@@ -85,22 +85,24 @@ FGAIBase::~FGAIBase() {
 
 void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
 {
-  if (!scFileNode)
-    return;
+    if (!scFileNode)
+        return;
 
-  setPath(scFileNode->getStringValue("model", "Models/Geometry/glider.ac"));
+    setPath(scFileNode->getStringValue("model", "Models/Geometry/glider.ac"));
 
-  setHeading(scFileNode->getDoubleValue("heading", 0.0));
-  setSpeed(scFileNode->getDoubleValue("speed", 0.0));
-  setAltitude(scFileNode->getDoubleValue("altitude", 0.0));
-  setLongitude(scFileNode->getDoubleValue("longitude", 0.0));
-  setLatitude(scFileNode->getDoubleValue("latitude", 0.0));
-  setBank(scFileNode->getDoubleValue("roll", 0.0));
+    setHeading(scFileNode->getDoubleValue("heading", 0.0));
+    setSpeed(scFileNode->getDoubleValue("speed", 0.0));
+    setAltitude(scFileNode->getDoubleValue("altitude", 0.0));
+    setLongitude(scFileNode->getDoubleValue("longitude", 0.0));
+    setLatitude(scFileNode->getDoubleValue("latitude", 0.0));
+    setBank(scFileNode->getDoubleValue("roll", 0.0));
 }
 
 void FGAIBase::update(double dt) {
-    if (_otype == otStatic) return;
-    if (_otype == otBallistic) CalculateMach();
+    if (_otype == otStatic)
+        return;
+    if (_otype == otBallistic)
+        CalculateMach();
 
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()*SGD_DEGREES_TO_RADIANS);
     ft_per_deg_lon = 365228.16 * cos(pos.lat()*SGD_DEGREES_TO_RADIANS);
@@ -114,7 +116,7 @@ void FGAIBase::Transform() {
       } else {
          aip.setOrientation(roll, pitch, hdg);
       }
-      aip.update();    
+      aip.update();
     }
 }
 
@@ -137,10 +139,10 @@ bool FGAIBase::init() {
      // Register that one at the scenery manager
      globals->get_scenery()->register_placement_transform(aip.getTransform());
    } else {
-     if (!model_path.empty()) { 
+     if (!model_path.empty()) {
        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
      }
-   } 
+   }
 
    setDie(false);
 
@@ -148,30 +150,31 @@ bool FGAIBase::init() {
 }
 
 
-ssgBranch * FGAIBase::load3DModel(const string& fg_root, 
-				  const string &path,
-				  SGPropertyNode *prop_root, 
-				  double sim_time_sec)
+ssgBranch * FGAIBase::load3DModel(const string& fg_root,
+                                  const string &path,
+                                  SGPropertyNode *prop_root,
+                                  double sim_time_sec)
 {
   // some more code here to check whether a model with this name has already been loaded
-  // if not load it, otherwise, get the memory pointer and do something like 
+  // if not load it, otherwise, get the memory pointer and do something like
   // SetModel as in ATC/AIEntity.cxx
   model = manager->getModel(path);
-  if (!(model))
-    {
+  if (!(model)) {
       model = sgLoad3DModel(fg_root,
-			    path,
-			    prop_root,
-			    sim_time_sec);
+                            path,
+                            prop_root,
+                            sim_time_sec);
       manager->setModel(path, model);
-    }
-  
+  }
+
   return model;
 }
 
 bool FGAIBase::isa( object_type otype ) {
- if ( otype == _otype ) { return true; }
- else { return false; } 
+ if ( otype == _otype )
+   return true;
+ else
+   return false;
 }
 
 
@@ -206,7 +209,7 @@ void FGAIBase::bind() {
    props->tie("radar/elevation-deg", SGRawValuePointer<double>(&elevation));
    props->tie("radar/range-nm", SGRawValuePointer<double>(&range));
    props->tie("radar/h-offset", SGRawValuePointer<double>(&horiz_offset));
-   props->tie("radar/v-offset", SGRawValuePointer<double>(&vert_offset)); 
+   props->tie("radar/v-offset", SGRawValuePointer<double>(&vert_offset));
    props->tie("radar/x-shift", SGRawValuePointer<double>(&x_shift));
    props->tie("radar/y-shift", SGRawValuePointer<double>(&y_shift));
    props->tie("radar/rotation", SGRawValuePointer<double>(&rotation));
@@ -392,43 +395,44 @@ int FGAIBase::getID() const {
 }
 
 void FGAIBase::CalculateMach() {
-     // Calculate rho at altitude, using standard atmosphere
-     // For the temperature T and the pressure p,
- 
-     if (altitude < 36152) {		// curve fits for the troposphere
-       T = 59 - 0.00356 * altitude;
-       p = 2116 * pow( ((T + 459.7) / 518.6) , 5.256);
- 
-     } else if ( 36152 < altitude && altitude < 82345 ) {    // lower stratosphere
-       T = -70;
-       p = 473.1 * pow( e , 1.73 - (0.000048 * altitude) );
- 
-     } else {                                    //  upper stratosphere
-       T = -205.05 + (0.00164 * altitude);
-       p = 51.97 * pow( ((T + 459.7) / 389.98) , -11.388);
-     }
- 
-     rho = p / (1718 * (T + 459.7));
- 	
- 	// calculate the speed of sound at altitude
- 	// a = sqrt ( g * R * (T + 459.7))
- 	// where:
- 	// a = speed of sound [ft/s]
- 	// g = specific heat ratio, which is usually equal to 1.4  
- 	// R = specific gas constant, which equals 1716 ft-lb/slug/°R 
- 	
- 	a = sqrt ( 1.4 * 1716 * (T + 459.7));
- 	
- 	// calculate Mach number
- 	
- 	Mach = speed/a;
- 	
- //	cout  << "Speed(ft/s) "<< speed <<" Altitude(ft) "<< altitude << " Mach " << Mach;
+    // Calculate rho at altitude, using standard atmosphere
+    // For the temperature T and the pressure p,
+
+    if (altitude < 36152) {		// curve fits for the troposphere
+      T = 59 - 0.00356 * altitude;
+      p = 2116 * pow( ((T + 459.7) / 518.6) , 5.256);
+
+    } else if ( 36152 < altitude && altitude < 82345 ) {    // lower stratosphere
+      T = -70;
+      p = 473.1 * pow( e , 1.73 - (0.000048 * altitude) );
+
+    } else {                                    //  upper stratosphere
+      T = -205.05 + (0.00164 * altitude);
+      p = 51.97 * pow( ((T + 459.7) / 389.98) , -11.388);
+    }
+
+    rho = p / (1718 * (T + 459.7));
+
+    // calculate the speed of sound at altitude
+    // a = sqrt ( g * R * (T + 459.7))
+    // where:
+    // a = speed of sound [ft/s]
+    // g = specific heat ratio, which is usually equal to 1.4
+    // R = specific gas constant, which equals 1716 ft-lb/slug/°R
+
+    a = sqrt ( 1.4 * 1716 * (T + 459.7));
+
+    // calculate Mach number
+
+    Mach = speed/a;
+
+    // cout  << "Speed(ft/s) "<< speed <<" Altitude(ft) "<< altitude << " Mach " << Mach;
 }
 
 int FGAIBase::_newAIModelID() {
-   static int id = 0;
-   if (!++id) id++;	// id = 0 is not allowed.
+    static int id = 0;
+   if (!++id)
+      id++;	// id = 0 is not allowed.
    return id;
 }
 

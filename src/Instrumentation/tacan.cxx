@@ -111,7 +111,7 @@ TACAN::init ()
     _yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
     _serviceable_node = node->getChild("serviceable", 0, true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/tacan", true);
-	_ident_node = node->getChild("ident", 0, true);
+    _ident_node = node->getChild("ident", 0, true);
     SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
     _source_node = fnode->getChild("source", 0, true);
     _frequency_node = fnode->getChild("selected-mhz", 0, true);

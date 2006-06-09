@@ -90,7 +90,7 @@ protected:
     double pitch;	// degrees, nose-down is negative
     double speed;       // knots true airspeed
     double altitude;    // meters above sea level
-    double vs;          // vertical speed, feet per minute  
+    double vs;          // vertical speed, feet per minute
     double turn_radius_ft; // turn radius ft at 15 kts rudder angle 15 degrees
 
     double ft_per_deg_lon;
@@ -167,40 +167,40 @@ public:
     double rho;
     double T;                             // temperature, degs farenheit
     double p;                             // pressure lbs/sq ft
-	double a;                             // speed of sound at altitude (ft/s)
-	double Mach;                          // Mach number
-	
+    double a;                             // speed of sound at altitude (ft/s)
+    double Mach;                          // Mach number
+
     static const double e;
     static const double lbs_to_slugs;
 
     inline double _getRange() { return range; };
-  ssgBranch * load3DModel(const string& fg_root, 
-			  const string &path,
-			  SGPropertyNode *prop_root, 
-			  double sim_time_sec);
+    ssgBranch * load3DModel(const string& fg_root,
+                            const string &path,
+                            SGPropertyNode *prop_root,
+                            double sim_time_sec);
 
     static bool _isNight();
 };
 
 inline void FGAIBase::setManager(FGAIManager* mgr, SGPropertyNode* p) {
-  manager = mgr;
-  props = p;
+    manager = mgr;
+    props = p;
 }
 
 inline void FGAIBase::setPath(const char* model ) {
-  model_path.append(model);
+    model_path.append(model);
 }
 
 inline void FGAIBase::setSpeed( double speed_KTAS ) {
-  speed = tgt_speed = speed_KTAS;
+    speed = tgt_speed = speed_KTAS;
 }
 
 inline void FGAIBase::setRadius( double radius ) {
-  turn_radius_ft = radius;
+    turn_radius_ft = radius;
 }
 
 inline void FGAIBase::setHeading( double heading ) {
-  hdg = tgt_heading = heading;
+    hdg = tgt_heading = heading;
 }
 
 inline void FGAIBase::setAltitude( double altitude_ft ) {
@@ -209,12 +209,12 @@ inline void FGAIBase::setAltitude( double altitude_ft ) {
 }
 
 inline void FGAIBase::setBank( double bank ) {
-  roll = tgt_roll = bank;
-  no_roll = false;
+    roll = tgt_roll = bank;
+    no_roll = false;
 }
 
 inline void FGAIBase::setPitch( double newpitch ) {
-  pitch = tgt_pitch = newpitch;
+    pitch = tgt_pitch = newpitch;
 }
 
 inline void FGAIBase::setLongitude( double longitude ) {

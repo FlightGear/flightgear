@@ -110,8 +110,8 @@ wxRadarBg::init ()
 void
 wxRadarBg::update (double delta_time_sec)
 {
-    if( ! sim_init_done ) {
-        if( ! fgGetBool("sim/sceneryloaded", false) )
+    if ( ! sim_init_done ) {
+        if ( ! fgGetBool("sim/sceneryloaded", false) )
             return;
         sim_init_done = true;
     }
@@ -125,16 +125,16 @@ wxRadarBg::update (double delta_time_sec)
     float range_nm = _Instrument->getFloatValue("range", 40.0);
     float range_m = range_nm * SG_NM_TO_METER;
 
-    if( last_switchKnob != switchKnob ) {
+    if ( last_switchKnob != switchKnob ) {
         // since 3D models don't share textures with the rest of the world
         // we must locate them and replace their handle by hand
         // only do that when the instrument is turned on
-        if( last_switchKnob == "off" )
+        if ( last_switchKnob == "off" )
             odg->set_texture( odgauge_name, resultTexture->getHandle());
         last_switchKnob = switchKnob;
     }
     FGViewer *current__view = globals->get_current_view();
-    if( current__view->getInternal() && 
+    if ( current__view->getInternal() &&
         (current__view->getHeadingOffset_deg() <= 15.0 || current__view->getHeadingOffset_deg() >= 345.0) &&
         (current__view->getPitchOffset_deg() <= 15.0 || current__view->getPitchOffset_deg() >= 350.0) ) {
 
@@ -148,191 +148,192 @@ wxRadarBg::update (double delta_time_sec)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glPushMatrix();
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        if( switchKnob == "off" ) {
-            _Instrument->setStringValue("status","");
-        } else if( switchKnob == "stby" ) {
-            _Instrument->setStringValue("status","STBY");
-        } else if( switchKnob == "tst" ) {
-            _Instrument->setStringValue("status","TST");
-            // find something interesting to do...
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    if ( switchKnob == "off" ) {
+        _Instrument->setStringValue("status","");
+    } else if ( switchKnob == "stby" ) {
+        _Instrument->setStringValue("status","STBY");
+    } else if ( switchKnob == "tst" ) {
+        _Instrument->setStringValue("status","TST");
+        // find something interesting to do...
+    } else {
+        string display_mode = _Instrument->getStringValue("display-mode", "arc");
+
+        // pretend we have a scan angle bigger then the FOV
+        // TODO:check real fov, enlarge if < nn, and do clipping if > mm
+        const float fovFactor = 1.45f;
+        float view_heading = get_heading() * SG_DEGREES_TO_RADIANS;
+        float range = 200.0f / range_nm;
+        _Instrument->setStringValue("status", modeButton.c_str());
+        if ( display_mode == "arc" ) {
+            glTranslatef(0.0f, -180.0f, 0.0f);
+            range = 2*180.0f / range_nm;
+        } else if ( display_mode == "map" ) {
+//            float view_heading = get_track() * SG_DEGREES_TO_RADIANS;
+        } else if ( display_mode == "plan" ) {
+            // no sense I presume
+            view_heading = 0;
         } else {
-            string display_mode = _Instrument->getStringValue("display-mode", "arc");
+            // rose
+        }
+        range /= SG_NM_TO_METER;
+        // we will rotate the echo quads, this gives a better rendering
+        const float rot_x = cos ( view_heading );
+        const float rot_y = sin ( view_heading );
 
-            // pretend we have a scan angle bigger then the FOV
-            // TODO:check real fov, enlarge if < nn, and do clipping if > mm
-            const float fovFactor = 1.45f;
-            float view_heading = get_heading() * SG_DEGREES_TO_RADIANS;
-            float range = 200.0f / range_nm;
-            _Instrument->setStringValue("status", modeButton.c_str());
-            if( display_mode == "arc" ) {
-                glTranslatef(0.0f, -180.0f, 0.0f);
-                range = 2*180.0f / range_nm;
-            } else if( display_mode == "map" ) {
-//                float view_heading = get_track() * SG_DEGREES_TO_RADIANS;
-            } else if( display_mode == "plan" ) {
-                // no sense I presume
-				view_heading = 0;
-            } else {
-                // rose
-            }
-            range /= SG_NM_TO_METER;
-            // we will rotate the echo quads, this gives a better rendering
-            const float rot_x = cos ( view_heading );
-            const float rot_y = sin ( view_heading );
+        list_of_SGWxRadarEcho *radarEcho = &radarEchoBuffer;
+        list_of_SGWxRadarEcho::iterator iradarEcho;
+        const float LWClevel[] = { 0.1f, 0.5f, 2.1f };
+        const float symbolSize = 1.0f / 8.0f ;
+        // draw the radar echo, we do that in 3 passes, one for each color level
+        // this is to 'merge' same colors together
+        glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle() );
+        glColor3f(1.0f, 1.0f, 1.0f);
+        glBegin( GL_QUADS );
 
-            list_of_SGWxRadarEcho *radarEcho = &radarEchoBuffer;
-            list_of_SGWxRadarEcho::iterator iradarEcho;
-            const float LWClevel[] = { 0.1f, 0.5f, 2.1f };
-            const float symbolSize = 1.0f / 8.0f ;
-            // draw the radar echo, we do that in 3 passes, one for each color level
-            // this is to 'merge' same colors together
-            glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle() );
-            glColor3f(1.0f, 1.0f, 1.0f);
-            glBegin( GL_QUADS );
-
-            for(int level = 0; level <= 2 ; level++ ) {
-                float col = level * symbolSize;
-                for(iradarEcho = radarEcho->begin() ; iradarEcho != radarEcho->end() ; iradarEcho++ ) {
-                    int cloudId = (iradarEcho->cloudId) ;
-                    bool upgrade = ((cloudId >> 5) & 1);
-                    float lwc = iradarEcho->LWC + (upgrade ? 1.0f : 0.0f);
-                    // skip ns
-                    if( iradarEcho->LWC >= 0.5 && iradarEcho->LWC <= 0.6)
+        for (int level = 0; level <= 2 ; level++ ) {
+            float col = level * symbolSize;
+            for (iradarEcho = radarEcho->begin() ; iradarEcho != radarEcho->end() ; iradarEcho++ ) {
+                int cloudId = (iradarEcho->cloudId) ;
+                bool upgrade = ((cloudId >> 5) & 1);
+                float lwc = iradarEcho->LWC + (upgrade ? 1.0f : 0.0f);
+                // skip ns
+                if ( iradarEcho->LWC >= 0.5 && iradarEcho->LWC <= 0.6)
+                    continue;
+                if ( (! iradarEcho->lightning) && ( lwc >= LWClevel[level]) ) {
+                    float dist = sgSqrt( iradarEcho->dist );
+                    float size = iradarEcho->radius * 2.0;
+                    if ( dist - size > range_m )
                         continue;
-                    if( (! iradarEcho->lightning) && ( lwc >= LWClevel[level]) ) {
-                        float dist = sgSqrt( iradarEcho->dist );
-                        float size = iradarEcho->radius * 2.0;
-                        if( dist - size > range_m )
-                            continue;
-                        dist = dist * range;
-                        size = size * range;
-                        // compute the relative angle from the view direction
-                        float angle = ( view_heading + iradarEcho->heading );
-                        if( angle > SG_PI )
-                            angle -= 2.0*SG_PI;
-                        if( angle < - SG_PI )
-                            angle += 2.0*SG_PI;
-                        // and apply a fov factor to simulate a greater scan angle
-                        angle =  angle * fovFactor + SG_PI / 2.0;
-                        float x = cos( angle ) * dist;
-                        float y = sin( angle ) * dist;
-                        // use different shapes so the display is less boring
-                        float row = symbolSize * (float) (4 + (cloudId & 3) );
-                        float size_x = rot_x * size;
-                        float size_y = rot_y * size;
-                        glTexCoord2f( col, row);
-                        glVertex2f( x - size_x, y - size_y);
-                        glTexCoord2f( col+symbolSize, row);
-                        glVertex2f( x + size_y, y - size_x);
-                        glTexCoord2f( col+symbolSize, row+symbolSize);
-                        glVertex2f( x + size_x, y + size_y);
-                        glTexCoord2f( col, row+symbolSize);
-                        glVertex2f( x - size_y, y + size_x);
-                    }
+                    dist = dist * range;
+                    size = size * range;
+                    // compute the relative angle from the view direction
+                    float angle = ( view_heading + iradarEcho->heading );
+                    if ( angle > SG_PI )
+                        angle -= 2.0*SG_PI;
+                    if ( angle < - SG_PI )
+                        angle += 2.0*SG_PI;
+                    // and apply a fov factor to simulate a greater scan angle
+                    angle =  angle * fovFactor + SG_PI / 2.0;
+                    float x = cos( angle ) * dist;
+                    float y = sin( angle ) * dist;
+                    // use different shapes so the display is less boring
+                    float row = symbolSize * (float) (4 + (cloudId & 3) );
+                    float size_x = rot_x * size;
+                    float size_y = rot_y * size;
+                    glTexCoord2f( col, row);
+                    glVertex2f( x - size_x, y - size_y);
+                    glTexCoord2f( col+symbolSize, row);
+                    glVertex2f( x + size_y, y - size_x);
+                    glTexCoord2f( col+symbolSize, row+symbolSize);
+                    glVertex2f( x + size_x, y + size_y);
+                    glTexCoord2f( col, row+symbolSize);
+                    glVertex2f( x - size_y, y + size_x);
                 }
             }
-            glEnd(); // GL_QUADS
+        }
+        glEnd(); // GL_QUADS
 
-            // draw lightning echos
-            if( drawLightning ) {
-                float col = 3 * symbolSize;
-                float row = 4 * symbolSize;
-                for(iradarEcho = radarEcho->begin() ; iradarEcho != radarEcho->end() ; iradarEcho++ ) {
-                    if( iradarEcho->lightning ) {
-                        float dist = iradarEcho->dist;
-                        dist = dist * range;
-                        float angle = (view_heading - iradarEcho->heading);
-                        if( angle > SG_PI )
-                            angle -= 2.0*SG_PI;
-                        if( angle < - SG_PI )
-                            angle += 2.0*SG_PI;
-                        angle =  angle * fovFactor - SG_PI / 2.0;
-                        float x = cos( angle ) * dist;
-                        float y = sin( angle ) * dist;
-                        glColor3f(1.0f, 1.0f, 1.0f);
-                        float size = symbolSize * 0.5f;
-                        glBegin( GL_QUADS );
-                            glTexCoord2f( col, row);
-                            glVertex2f( x - size, y - size);
-                            glTexCoord2f( col+symbolSize, row);
-                            glVertex2f( x + size, y - size);
-                            glTexCoord2f( col+symbolSize, row+symbolSize);
-                            glVertex2f( x + size, y + size);
-                            glTexCoord2f( col, row+symbolSize);
-                            glVertex2f( x - size, y + size);
-                        glEnd();
-                    }
+        // draw lightning echos
+        if ( drawLightning ) {
+            float col = 3 * symbolSize;
+            float row = 4 * symbolSize;
+            for (iradarEcho = radarEcho->begin() ; iradarEcho != radarEcho->end() ; iradarEcho++ ) {
+                if ( iradarEcho->lightning ) {
+                    float dist = iradarEcho->dist;
+                    dist = dist * range;
+                    float angle = (view_heading - iradarEcho->heading);
+                    if ( angle > SG_PI )
+                        angle -= 2.0*SG_PI;
+                    if ( angle < - SG_PI )
+                        angle += 2.0*SG_PI;
+                    angle =  angle * fovFactor - SG_PI / 2.0;
+                    float x = cos( angle ) * dist;
+                    float y = sin( angle ) * dist;
+                    glColor3f(1.0f, 1.0f, 1.0f);
+                    float size = symbolSize * 0.5f;
+                    glBegin( GL_QUADS );
+                        glTexCoord2f( col, row);
+                        glVertex2f( x - size, y - size);
+                        glTexCoord2f( col+symbolSize, row);
+                        glVertex2f( x + size, y - size);
+                        glTexCoord2f( col+symbolSize, row+symbolSize);
+                        glVertex2f( x + size, y + size);
+                        glTexCoord2f( col, row+symbolSize);
+                        glVertex2f( x - size, y + size);
+                    glEnd();
                 }
             }
-            // erase what is out of sight of antenna
-            /*
-                |\     /|
-                | \   / |
-                |  \ /  |
-                ---------
-                |       |
-                |       |
-                ---------
-            */
-            float yOffset = 180.0f, xOffset = 256.0f;
-			
-            if( display_mode != "arc" ) {
-                yOffset = 40.0f;
-                xOffset = 240.0f;
-            }
-			
-            if ( display_mode != "plan" ) {	
-             glDisable(GL_BLEND);
-               glColor4f(1.0f, 0.0f, 0.0f, 0.01f);
+        }
+        // erase what is out of sight of antenna
+        /*
+            |\     /|
+            | \   / |
+            |  \ /  |
+            ---------
+            |       |
+            |       |
+            ---------
+        */
+        float yOffset = 180.0f, xOffset = 256.0f;
+
+        if ( display_mode != "arc" ) {
+            yOffset = 40.0f;
+            xOffset = 240.0f;
+        }
+
+        if ( display_mode != "plan" ) {
+            glDisable(GL_BLEND);
+            glColor4f(1.0f, 0.0f, 0.0f, 0.01f);
             glBegin( GL_QUADS );
-                glTexCoord2f( 0.5f, 0.25f);
-                glVertex2f(-xOffset, 0.0 + yOffset);
-                glTexCoord2f( 1.0f, 0.25f);
-                glVertex2f(xOffset, 0.0 + yOffset);
-                glTexCoord2f( 1.0f, 0.5f);
-                glVertex2f(xOffset, 256.0 + yOffset);
-                glTexCoord2f( 0.5f, 0.5f);
-                glVertex2f(-xOffset, 256.0 + yOffset);
+            glTexCoord2f( 0.5f, 0.25f);
+            glVertex2f(-xOffset, 0.0 + yOffset);
+            glTexCoord2f( 1.0f, 0.25f);
+            glVertex2f(xOffset, 0.0 + yOffset);
+            glTexCoord2f( 1.0f, 0.5f);
+            glVertex2f(xOffset, 256.0 + yOffset);
+            glTexCoord2f( 0.5f, 0.5f);
+            glVertex2f(-xOffset, 256.0 + yOffset);
             glEnd();
 
             glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
-//            glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+//          glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
             glDisable(GL_ALPHA_TEST);
             glBindTexture(GL_TEXTURE_2D, 0);
 
             glBegin( GL_TRIANGLES );
-                glVertex2f(0.0, 0.0);
-                glVertex2f(-256.0, 0.0);
-                glVertex2f(-256.0, 256.0 * tan(30*SG_DEGREES_TO_RADIANS));			 
+            glVertex2f(0.0, 0.0);
+            glVertex2f(-256.0, 0.0);
+            glVertex2f(-256.0, 256.0 * tan(30*SG_DEGREES_TO_RADIANS));
 
-                glVertex2f(0.0, 0.0);
-                glVertex2f(256.0, 0.0);
-                glVertex2f(256.0, 256.0 * tan(30*SG_DEGREES_TO_RADIANS));
+            glVertex2f(0.0, 0.0);
+            glVertex2f(256.0, 0.0);
+            glVertex2f(256.0, 256.0 * tan(30*SG_DEGREES_TO_RADIANS));
 
-                glVertex2f(-256, 0.0);
-                glVertex2f(256.0, 0.0);
-                glVertex2f(-256.0, -256.0);
+            glVertex2f(-256, 0.0);
+            glVertex2f(256.0, 0.0);
+            glVertex2f(-256.0, -256.0);
 
-                glVertex2f(256, 0.0);
-                glVertex2f(256.0, -256.0);
-                glVertex2f(-256.0, -256.0);
+            glVertex2f(256, 0.0);
+            glVertex2f(256.0, -256.0);
+            glVertex2f(-256.0, -256.0);
             glEnd();
-			}
-
-            // DEBUG only
-/*            glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-            glBegin( GL_LINES );
-                glVertex2f(0.0, 0.0);
-                glVertex2f(-256.0, 256.0);
-                glVertex2f(0.0, 0.0);
-                glVertex2f(256.0, 256.0);
-            glEnd();*/
-
-            glEnable(GL_BLEND);
-            glEnable(GL_ALPHA_TEST);
         }
+
+        // DEBUG only
+/*      glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+        glBegin( GL_LINES );
+        glVertex2f(0.0, 0.0);
+        glVertex2f(-256.0, 256.0);
+        glVertex2f(0.0, 0.0);
+        glVertex2f(256.0, 256.0);
+        glEnd();*/
+
+        glEnable(GL_BLEND);
+        glEnable(GL_ALPHA_TEST);
+    }
     glPopMatrix();
     odg->endCapture( resultTexture->getHandle() );
 }

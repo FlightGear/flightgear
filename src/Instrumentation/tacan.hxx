@@ -68,7 +68,7 @@ private:
     SGPropertyNode_ptr _x_shift_node;
     SGPropertyNode_ptr _y_shift_node;
     SGPropertyNode_ptr _rotation_node;
-	/*SGPropertyNode_ptr _x_shift_calibration_node;
+    /*SGPropertyNode_ptr _x_shift_calibration_node;
     SGPropertyNode_ptr _y_shift_calibration_node;
     SGPropertyNode_ptr _distance_calibration_node;*/
 
