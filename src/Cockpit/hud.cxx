@@ -86,12 +86,12 @@ float HUD_matrix[16];
 
 //$$$ begin - added, Neetha, 28 Nov 2k
 
-static string	name;
-static int		x;
-static int		y;
+static string  name;
+static int     x;
+static int     y;
 static UINT    width;
 static UINT    height;
-static float	factor;
+static float   factor;
 static float   span_units;
 static float   division_units;
 static float   minor_division = 0;
@@ -99,7 +99,7 @@ static UINT    screen_hole;
 static UINT    lbl_pos;
 static bool    working;
 static string  loadfn;
-static UINT	options;
+static UINT    options;
 static float   maxValue;
 static float   minValue;
 static float   scaling;
@@ -111,50 +111,50 @@ static string  label_format;
 static string  prelabel;
 static string  postlabel;
 static int     justi;
-static int		blinking;
+static int     blinking;
 static float   maxBankAngle;
 static float   maxSlipAngle;
 static UINT    gap_width;
-static bool	latitude;
-static bool	longitude;
-static bool	tick_bottom;
-static bool	tick_top;
-static bool	tick_right;
-static bool	tick_left;
-static bool	cap_bottom;
-static bool	cap_top;
-static bool	cap_right;
-static bool	cap_left;
+static bool    latitude;
+static bool    longitude;
+static bool    tick_bottom;
+static bool    tick_top;
+static bool    tick_right;
+static bool    tick_left;
+static bool    cap_bottom;
+static bool    cap_top;
+static bool    cap_right;
+static bool    cap_left;
 static float   marker_off;
 static string  type;
 static bool    enable_pointer;
 static string  type_pointer;
 static bool    frl_spot;
-static bool	target;
+static bool    target;
 static bool    vel_vector;
 static bool    drift;
 static bool    alpha;
-static bool	energy;
-static bool	climb_dive;
-static bool	glide;
-static float	glide_slope_val;
-static bool	worm_energy;
-static bool	waypoint;
-static string type_tick;//hud
-static string length_tick;//hud
-static bool label_box;//hud
-static int digits; //suma
-static float radius; //suma
-static int divisions; //suma
-static int zoom; //suma
-static int zenith; //suma
-static int nadir ; //suma
-static int hat; //suma
-static bool tsi; //suma
-static float rad; //suma
+static bool    energy;
+static bool    climb_dive;
+static bool    glide;
+static float   glide_slope_val;
+static bool    worm_energy;
+static bool    waypoint;
+static string  type_tick;//hud
+static string  length_tick;//hud
+static bool    label_box;//hud
+static int     digits; //suma
+static float   radius; //suma
+static int     divisions; //suma
+static int     zoom; //suma
+static int     zenith; //suma
+static int     nadir ; //suma
+static int     hat; //suma
+static bool    tsi; //suma
+static float   rad; //suma
 
 
-static FLTFNPTR load_fn;    
+static FLTFNPTR load_fn;
 static fgLabelJust justification;
 static const char *pre_label_string  = 0;
 static const char *post_label_string = 0;
@@ -201,37 +201,37 @@ locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
 #define INSTRDEFS 21
 
 //$$$ begin - added, Neetha, 28 Nov 2k
-static instr_item * 
+static instr_item *
 readLadder(const SGPropertyNode * node)
 {
 
     instr_item *p;
 
-    name			= node->getStringValue("name");
-    x				= node->getIntValue("x");
-    y				= node->getIntValue("y");
-    width			= node->getIntValue("width");
-    height			= node->getIntValue("height");
-    factor			= node->getFloatValue("compression_factor");
-    span_units		= node->getFloatValue("span_units");
-    division_units	= node->getFloatValue("division_units");
-    screen_hole		= node->getIntValue("screen_hole");
-    lbl_pos			= node->getIntValue("lbl_pos");
-    frl_spot		= node->getBoolValue("enable_frl",false);
-    target			= node->getBoolValue("enable_target_spot",false);
-    vel_vector		= node->getBoolValue("enable_velocity_vector",false);
-    drift			= node->getBoolValue("enable_drift_marker",false);
-    alpha			= node->getBoolValue("enable_alpha_bracket",false);
-    energy			= node->getBoolValue("enable_energy_marker",false);
-    climb_dive		= node->getBoolValue("enable_climb_dive_marker",false);
-    glide			= node->getBoolValue("enable_glide_slope_marker",false);
-    glide_slope_val	= node->getFloatValue("glide_slope",-4.0);
-    worm_energy		= node->getBoolValue("enable_energy_marker",false);
-    waypoint		= node->getBoolValue("enable_waypoint_marker",false);
-    working			= node->getBoolValue("working");
-    zenith			= node->getIntValue("zenith");  //suma
-    nadir			= node->getIntValue("nadir");  //suma
-    hat				= node->getIntValue("hat");
+    name               = node->getStringValue("name");
+    x                  = node->getIntValue("x");
+    y                  = node->getIntValue("y");
+    width              = node->getIntValue("width");
+    height             = node->getIntValue("height");
+    factor             = node->getFloatValue("compression_factor");
+    span_units         = node->getFloatValue("span_units");
+    division_units     = node->getFloatValue("division_units");
+    screen_hole        = node->getIntValue("screen_hole");
+    lbl_pos            = node->getIntValue("lbl_pos");
+    frl_spot           = node->getBoolValue("enable_frl",false);
+    target             = node->getBoolValue("enable_target_spot",false);
+    vel_vector         = node->getBoolValue("enable_velocity_vector",false);
+    drift              = node->getBoolValue("enable_drift_marker",false);
+    alpha              = node->getBoolValue("enable_alpha_bracket",false);
+    energy             = node->getBoolValue("enable_energy_marker",false);
+    climb_dive         = node->getBoolValue("enable_climb_dive_marker",false);
+    glide              = node->getBoolValue("enable_glide_slope_marker",false);
+    glide_slope_val    = node->getFloatValue("glide_slope",-4.0);
+    worm_energy        = node->getBoolValue("enable_energy_marker",false);
+    waypoint           = node->getBoolValue("enable_waypoint_marker",false);
+    working            = node->getBoolValue("working");
+    zenith             = node->getIntValue("zenith");  //suma
+    nadir              = node->getIntValue("nadir");  //suma
+    hat                = node->getIntValue("hat");
     // The factor assumes a base of 55 degrees per 640 pixels.
     // Invert to convert the "compression" factor to a
     // pixels-per-degree number.
@@ -245,58 +245,58 @@ readLadder(const SGPropertyNode * node)
     }
 
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
-	
+
     p = (instr_item *) new HudLadder( name, x, y,
                                       width, height, factor,
                                       get_roll, get_pitch,
                                       span_units, division_units, minor_division,
-                                      screen_hole, lbl_pos, frl_spot, target, vel_vector, 
-                                      drift, alpha, energy, climb_dive, 
-                                      glide, glide_slope_val, worm_energy, 
+                                      screen_hole, lbl_pos, frl_spot, target, vel_vector,
+                                      drift, alpha, energy, climb_dive,
+                                      glide, glide_slope_val, worm_energy,
                                       waypoint, working, zenith, nadir, hat);
-				
+
     return p;
-		
+
 } //end readLadder
 
-static instr_item * 
+static instr_item *
 readCard(const SGPropertyNode * node)
 {
 
     instr_item *p;
 
-    name			= node->getStringValue("name");
-    x				= node->getIntValue("x");
-    y				= node->getIntValue("y");
-    width			= node->getIntValue("width");
-    height			= node->getIntValue("height");
-    loadfn			= node->getStringValue("loadfn");
-    options			= node->getIntValue("options");
-    maxValue		= node->getFloatValue("maxValue");
-    minValue		= node->getFloatValue("minValue");
-    scaling			= node->getFloatValue("disp_scaling");
-    major_divs		= node->getIntValue("major_divs");
-    minor_divs		= node->getIntValue("minor_divs");
-    modulator		= node->getIntValue("modulator");
-    span_units		= node->getFloatValue("value_span");
-    type			= node->getStringValue("type");
-    tick_bottom	    = node->getBoolValue("tick_bottom",false);
-    tick_top		= node->getBoolValue("tick_top",false);
-    tick_right		= node->getBoolValue("tick_right",false);
-    tick_left		= node->getBoolValue("tick_left",false);
-    cap_bottom		= node->getBoolValue("cap_bottom",false);
-    cap_top			= node->getBoolValue("cap_top",false);
-    cap_right		= node->getBoolValue("cap_right",false);
-    cap_left		= node->getBoolValue("cap_left",false);
-    marker_off		= node->getFloatValue("marker_offset",0.0);
-    enable_pointer	= node->getBoolValue("enable_pointer",true);
-    type_pointer	= node->getStringValue("pointer_type");
-    type_tick		= node->getStringValue("tick_type");//hud Can be 'circle' or 'line'
-    length_tick		= node->getStringValue("tick_length");//hud For variable length
-    working			= node->getBoolValue("working");
-    radius			= node->getFloatValue("radius"); //suma
-    divisions		= node->getIntValue("divisions"); //suma
-    zoom			= node->getIntValue("zoom"); //suma
+    name               = node->getStringValue("name");
+    x                  = node->getIntValue("x");
+    y                  = node->getIntValue("y");
+    width              = node->getIntValue("width");
+    height             = node->getIntValue("height");
+    loadfn             = node->getStringValue("loadfn");
+    options            = node->getIntValue("options");
+    maxValue           = node->getFloatValue("maxValue");
+    minValue           = node->getFloatValue("minValue");
+    scaling            = node->getFloatValue("disp_scaling");
+    major_divs         = node->getIntValue("major_divs");
+    minor_divs         = node->getIntValue("minor_divs");
+    modulator          = node->getIntValue("modulator");
+    span_units         = node->getFloatValue("value_span");
+    type               = node->getStringValue("type");
+    tick_bottom        = node->getBoolValue("tick_bottom",false);
+    tick_top           = node->getBoolValue("tick_top",false);
+    tick_right         = node->getBoolValue("tick_right",false);
+    tick_left          = node->getBoolValue("tick_left",false);
+    cap_bottom         = node->getBoolValue("cap_bottom",false);
+    cap_top            = node->getBoolValue("cap_top",false);
+    cap_right          = node->getBoolValue("cap_right",false);
+    cap_left           = node->getBoolValue("cap_left",false);
+    marker_off         = node->getFloatValue("marker_offset",0.0);
+    enable_pointer     = node->getBoolValue("enable_pointer",true);
+    type_pointer       = node->getStringValue("pointer_type");
+    type_tick          = node->getStringValue("tick_type");//hud Can be 'circle' or 'line'
+    length_tick        = node->getStringValue("tick_length");//hud For variable length
+    working            = node->getBoolValue("working");
+    radius             = node->getFloatValue("radius"); //suma
+    divisions          = node->getIntValue("divisions"); //suma
+    zoom               = node->getIntValue("zoom"); //suma
 
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
@@ -336,7 +336,7 @@ readCard(const SGPropertyNode * node)
 
     if ( (type == "dial") | (type == "tape") ) {
         p = (instr_item *) new hud_card( x,
-                                         y,  
+                                         y,
                                          width,
                                          height,
                                          load_fn,
@@ -367,10 +367,10 @@ readCard(const SGPropertyNode * node)
                                          zoom  //suma
                                          );
     } else {
-        p = (instr_item *) new  gauge_instr( x,            // x
-                                             y,  // y
-                                             width,            // width
-                                             height,            // height
+        p = (instr_item *) new  gauge_instr( x,       // x
+                                             y,       // y
+                                             width,   // width
+                                             height,  // height
                                              load_fn, // data source
                                              options,
                                              scaling,
@@ -391,24 +391,24 @@ readLabel(const SGPropertyNode * node)
 
     int font_size = (fgGetInt("/sim/startup/xsize") > 1000) ? HUD_FONT_LARGE : HUD_FONT_SMALL;
 
-    name		= node->getStringValue("name");
-    x                   = node->getIntValue("x");
-    y                   = node->getIntValue("y");
-    width               = node->getIntValue("width");
-    height		= node->getIntValue("height");
-    loadfn		= node->getStringValue("data_source");
-    label_format	= node->getStringValue("label_format");
-    prelabel		= node->getStringValue("pre_label_string");
-    postlabel		= node->getStringValue("post_label_string");
-    scaling		= node->getFloatValue("scale_data");
-    options		= node->getIntValue("options");
-    justi		= node->getIntValue("justification");
-    blinking            = node->getIntValue("blinking");
-    latitude		= node->getBoolValue("latitude",false);
-    longitude		= node->getBoolValue("longitude",false);
-    label_box		= node->getBoolValue("label_box",false);//hud
-    working             = node->getBoolValue("working");
-    digits		= node->getIntValue("digits"); //suma
+    name               = node->getStringValue("name");
+    x                  = node->getIntValue("x");
+    y                  = node->getIntValue("y");
+    width              = node->getIntValue("width");
+    height             = node->getIntValue("height");
+    loadfn             = node->getStringValue("data_source");
+    label_format       = node->getStringValue("label_format");
+    prelabel           = node->getStringValue("pre_label_string");
+    postlabel          = node->getStringValue("post_label_string");
+    scaling            = node->getFloatValue("scale_data");
+    options            = node->getIntValue("options");
+    justi              = node->getIntValue("justification");
+    blinking           = node->getIntValue("blinking");
+    latitude           = node->getBoolValue("latitude",false);
+    longitude          = node->getBoolValue("longitude",false);
+    label_box          = node->getBoolValue("label_box",false);//hud
+    working            = node->getBoolValue("working");
+    digits             = node->getIntValue("digits"); //suma
 
 
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
@@ -489,7 +489,7 @@ readLabel(const SGPropertyNode * node)
         load_fn = get_aux18;
     } else
 #endif
-      if ( loadfn == "ax" ) {
+    if ( loadfn == "ax" ) {
         load_fn = get_Ax;
     } else if ( loadfn == "speed" ) {
         load_fn = get_speed;
@@ -543,7 +543,7 @@ readLabel(const SGPropertyNode * node)
     return p;
 } // end readLabel
 
-static instr_item * 
+static instr_item *
 readTBI(const SGPropertyNode * node)
 {
 
@@ -558,19 +558,19 @@ readTBI(const SGPropertyNode * node)
     maxSlipAngle   = node->getFloatValue("maxSlipAngle");
     gap_width      = node->getIntValue("gap_width");
     working        = node->getBoolValue("working");
-    tsi			   = node->getBoolValue("tsi"); //suma
-    rad			   = node->getFloatValue("rad"); //suma
+    tsi            = node->getBoolValue("tsi"); //suma
+    rad            = node->getFloatValue("rad"); //suma
 
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
 
-    p = (instr_item *) new fgTBI_instr(	x,
-                                        y,  
+    p = (instr_item *) new fgTBI_instr( x,
+                                        y,
                                         width,
                                         height,
                                         get_roll,
                                         get_sideslip,
-                                        maxBankAngle, 
+                                        maxBankAngle,
                                         maxSlipAngle,
                                         gap_width,
                                         working,
@@ -580,27 +580,27 @@ readTBI(const SGPropertyNode * node)
     return p;
 } //end readTBI
 
-static instr_item * 
+static instr_item *
 readRunway(const SGPropertyNode * node) {
-	name	= node->getStringValue("name");
-	x	= node->getIntValue("x");
-	y	= node->getIntValue("y");
-	width = node->getIntValue("width");
-	height = node->getIntValue("height");
-	scaling	= node->getDoubleValue("scale");
-	working = node->getBoolValue("working",true);
-	runway_instr *ri = new runway_instr(x,y,width,height,scaling,working);
-	double scale = node->getDoubleValue("arrow_scale",1.0);	
-	ri->setDrawArrow((scale>0)?true:false);
-	ri->setDrawArrowAlways((scale>0)?node->getBoolValue("arrow_always"):false);
-	ri->setStippleOutline(node->getIntValue("outer_stipple",0xFFFF));
-	ri->setStippleCenterline(node->getIntValue("center_stipple",0xFFFF));
-	ri->setArrowRotationRadius(node->getDoubleValue("arrow_radius"));
-	ri->setArrowScale(scale);
-	ri->setLineScale(node->getDoubleValue("line_scale",1.0));
-	ri->setScaleDist(node->getDoubleValue("scale_dist_nm"));
-	SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
-	return (instr_item *) ri;
+        name     = node->getStringValue("name");
+        x        = node->getIntValue("x");
+        y        = node->getIntValue("y");
+        width    = node->getIntValue("width");
+        height   = node->getIntValue("height");
+        scaling  = node->getDoubleValue("scale");
+        working  = node->getBoolValue("working",true);
+        runway_instr *ri = new runway_instr(x,y,width,height,scaling,working);
+        double scale = node->getDoubleValue("arrow_scale",1.0);
+        ri->setDrawArrow((scale>0)?true:false);
+        ri->setDrawArrowAlways((scale>0)?node->getBoolValue("arrow_always"):false);
+        ri->setStippleOutline(node->getIntValue("outer_stipple",0xFFFF));
+        ri->setStippleCenterline(node->getIntValue("center_stipple",0xFFFF));
+        ri->setArrowRotationRadius(node->getDoubleValue("arrow_radius"));
+        ri->setArrowScale(scale);
+        ri->setLineScale(node->getDoubleValue("line_scale",1.0));
+        ri->setScaleDist(node->getDoubleValue("scale_dist_nm"));
+        SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
+        return (instr_item *) ri;
 }
 
 
@@ -610,7 +610,7 @@ int readInstrument(const SGPropertyNode * node)
         = fgGetNode("/sim/startup/units");
 
     instr_item *HIptr;
-    
+
     if ( !strcmp(startup_units_node->getStringValue(), "feet") ) {
         strcpy(units, " ft");
     } else {
@@ -622,10 +622,10 @@ int readInstrument(const SGPropertyNode * node)
     if (ladder_group != 0) {
         int nLadders = ladder_group->nChildren();
         for (int j = 0; j < nLadders; j++) {
-            
+
             HIptr = readLadder(ladder_group->getChild(j));
             HUD_deque.insert( HUD_deque.begin(), HIptr);
-					
+
         }// for - ladders
     }
 
@@ -633,7 +633,7 @@ int readInstrument(const SGPropertyNode * node)
     if (card_group != 0) {
         int nCards = card_group->nChildren();
         for (int j = 0; j < nCards; j++) {
-            
+
             HIptr = readCard(card_group->getChild(j));
             HUD_deque.insert( HUD_deque.begin(), HIptr);
 
@@ -661,7 +661,7 @@ int readInstrument(const SGPropertyNode * node)
 
         }//for - tbis
     }
-    
+
     const SGPropertyNode * rwy_group = node->getNode("runways");
     if (rwy_group != 0) {
         int nRwy = rwy_group->nChildren();
@@ -672,12 +672,12 @@ int readInstrument(const SGPropertyNode * node)
             HUD_deque.insert( HUD_deque.begin(), HIptr);
 
         }//for - runways
-    }    
+    }
     return 0;
 }//end readinstrument
 
 
-int readHud( istream &input ) 
+int readHud( istream &input )
 {
 
     SGPropertyNode root;
@@ -688,13 +688,13 @@ int readHud( istream &input )
         guiErrorMessage("Error reading HUD: ", e);
         return 0;
     }
-  
-	
+
+
     SG_LOG(SG_INPUT, SG_INFO, "Read properties for  " <<
            root.getStringValue("name"));
 
 
-    HUD_deque.erase( HUD_deque.begin(), HUD_deque.end());  // empty the HUD deque
+    HUD_deque.erase( HUD_deque.begin(), HUD_deque.end());
 
 
     SG_LOG(SG_INPUT, SG_INFO, "Reading Hud instruments");
@@ -703,7 +703,7 @@ int readHud( istream &input )
     int nInstruments = instrument_group->nChildren();
 
     for (int i = 0; i < nInstruments; i++) {
-		
+
         const SGPropertyNode * node = instrument_group->getChild(i);
 
         SGPath path( globals->get_fg_root() );
@@ -720,7 +720,7 @@ int readHud( istream &input )
         } catch (const sg_exception &e) {
             guiErrorMessage("Error reading HUD instrument: ", e);
             continue;
-        } 
+        }
         readInstrument(&root2);
     }//for loop(i)
 
@@ -736,10 +736,10 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
     SG_LOG( SG_COCKPIT, SG_INFO, "Initializing current aircraft HUD" );
 
     string hud_path =
-	fgGetString("/sim/hud/path", "Huds/Default/default.xml");
+        fgGetString("/sim/hud/path", "Huds/Default/default.xml");
     SGPath path(globals->get_fg_root());
     path.append(hud_path);
-	
+
     ifstream input(path.c_str());
     if (!input.good()) {
         SG_LOG(SG_INPUT, SG_ALERT,
@@ -804,7 +804,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
     return 0;  // For now. Later we may use this for an error code.
 
 }
-//$$$ End - added, Neetha, 28 Nov 2k  
+//$$$ End - added, Neetha, 28 Nov 2k
 
 
 void fgHUDReshape(void) {
@@ -836,14 +836,13 @@ void fgHUDReshape(void) {
 // all C++.
 //
 void fgUpdateHUD( void ) {
-	
+
     static const SGPropertyNode *enable3d_node = fgGetNode("/sim/hud/enable3d");
-    if( HUD_style == 1 && enable3d_node->getBoolValue() )
-    {
+    if( HUD_style == 1 && enable3d_node->getBoolValue() ) {
         fgUpdateHUDVirtual();
         return;
     }
-    
+
     static const float normal_aspect = float(640) / float(480);
     // note: aspect_ratio is Y/X
     float current_aspect = 1.0f/globals->get_current_view()->get_aspect_ratio();
@@ -872,7 +871,7 @@ void fgUpdateHUDVirtual()
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-  
+
     // Standard fgfs view direction computation
     float lookat[3];
     lookat[0] = -sin(SG_DEGREES_TO_RADIANS * view->getHeadingOffset_deg());
@@ -930,14 +929,13 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
 
 void drawHUD()
 {
-    if( !HUD_deque.size() ) {  // Trust everyone, but ALWAYS cut the cards!
+    if( !HUD_deque.size() ) // Trust everyone, but ALWAYS cut the cards!
         return;
-    }
 
     HUD_TextList.erase();
     HUD_LineList.erase();
     // HUD_StippleLineList.erase();
-  
+
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
 
@@ -974,8 +972,8 @@ void drawHUD()
 
 
     int apY = 480 - 80;
-    
-    
+
+
     if (strcmp( heading_enabled->getStringValue(), "dg-heading-hold") == 0 ) {
         snprintf( hud_hdg_text, 256, "hdg = %.1f\n",
                   fgGetDouble("/autopilot/settings/heading-bug-deg") );
@@ -989,7 +987,7 @@ void drawHUD()
 
         string wp0_id = fgGetString( "/autopilot/route-manager/wp[0]/id" );
         if ( wp0_id.length() > 0 ) {
-            snprintf( hud_wp0_text, 256, "%5s %6.1fnm %s", wp0_id.c_str(), 
+            snprintf( hud_wp0_text, 256, "%5s %6.1fnm %s", wp0_id.c_str(),
                       fgGetDouble( "/autopilot/route-manager/wp[0]/dist" ),
                       fgGetString( "/autopilot/route-manager/wp[0]/eta" ) );
             HUD_TextList.add( fgText( 40, apY, hud_wp0_text ) );
@@ -997,7 +995,7 @@ void drawHUD()
         }
         string wp1_id = fgGetString( "/autopilot/route-manager/wp[1]/id" );
         if ( wp1_id.length() > 0 ) {
-            snprintf( hud_wp1_text, 256, "%5s %6.1fnm %s", wp1_id.c_str(), 
+            snprintf( hud_wp1_text, 256, "%5s %6.1fnm %s", wp1_id.c_str(),
                       fgGetDouble( "/autopilot/route-manager/wp[1]/dist" ),
                       fgGetString( "/autopilot/route-manager/wp[1]/eta" ) );
             HUD_TextList.add( fgText( 40, apY, hud_wp1_text ) );
@@ -1005,14 +1003,14 @@ void drawHUD()
         }
         string wp2_id = fgGetString( "/autopilot/route-manager/wp-last/id" );
         if ( wp2_id.length() > 0 ) {
-            snprintf( hud_wp2_text, 256, "%5s %6.1fnm %s", wp2_id.c_str(), 
+            snprintf( hud_wp2_text, 256, "%5s %6.1fnm %s", wp2_id.c_str(),
                       fgGetDouble( "/autopilot/route-manager/wp-last/dist" ),
                       fgGetString( "/autopilot/route-manager/wp-last/eta" ) );
             HUD_TextList.add( fgText( 40, apY, hud_wp2_text ) );
             apY -= 15;
         }
     }
-  
+
     if ( strcmp( altitude_enabled->getStringValue(), "altitude-hold" ) == 0 ) {
         snprintf( hud_alt_text, 256, "alt = %.0f\n",
                   fgGetDouble("/autopilot/settings/target-altitude-ft") );

@@ -75,7 +75,7 @@ SG_USING_NAMESPACE(std);
 typedef struct {
     int x, y;
 } POINT;
- 
+
 typedef struct {
     int top, bottom, left, right;
 } RECT;
@@ -239,7 +239,7 @@ public:
     }
 
     ~fgLineSeg2D() {}
-    
+
     void draw() const
     {
         glVertex2f(x0, y0);
@@ -268,20 +268,20 @@ private:
 public:
     int digit; //suma
     fgText(float x = 0, float y = 0, char *c = NULL,int digits=0): x(x), y(y) //suma
-    { 
+    {
         strcpy(msg,c);
         digit=digits; //suma
     }
-		   
+
     fgText( const fgText & image )
-        : x(image.x), y(image.y),digit(image.digit) {strcpy(msg,image.msg);} //suma
+        : x(image.x), y(image.y),digit(image.digit) { strcpy(msg,image.msg); } //suma
 
     fgText& operator = ( const fgText & image ) {
         strcpy(msg,image.msg); x = image.x; y = image.y;digit=image.digit; //suma
-        return *this;   
+        return *this;
     }
 
-    ~fgText() {msg[0]='\0';}
+    ~fgText() { msg[0]='\0'; }
 
     int getStringWidth ( char *str )
     {
@@ -292,7 +292,7 @@ public:
         }
         return 0 ;
     }
-    
+
     int StringWidth (void )
     {
         if ( HUDtext && strlen( msg )) {
@@ -302,7 +302,7 @@ public:
         }
         return 0 ;
     }
-   
+
     // this code is changed to display Numbers with big/small digits
     // according to MIL Standards for example Altitude above 10000 ft
     // is shown as 10ooo.  begin suma
@@ -320,7 +320,7 @@ public:
             }
             char *tmp=msg;
             while(tmp[i]!='\0') {
-                if((tmp[i]>='0') && (tmp[i]<='9'))  
+                if((tmp[i]>='0') && (tmp[i]<='9'))
                     c++;
                 i++;
             }
@@ -329,7 +329,7 @@ public:
                 int p1=c-3;
                 char *tmp1=msg+p1;
                 int p2=p1*8;
- 			  
+
                 fnt->start2f(x+p2,y);
                 fnt->puts(tmp1);
 
@@ -337,7 +337,7 @@ public:
                 char tmp2[64];
                 strncpy(tmp2,msg,p1);
                 tmp2[p1]='\0';
-			 
+
                 fnt->start2f(x,y);
                 fnt->puts(tmp2);
             } else {
@@ -380,7 +380,7 @@ class fgTextList {
 public:
     fgTextList ( void ) { Font = 0; }
     ~fgTextList( void ) {}
-    
+
     void setFont( fntRenderer *Renderer ) { Font = Renderer; }
     void add( const fgText& String ) { List.push_back(String); }
     void erase( void ) { List.erase( List.begin(), List.end() ); }
@@ -426,8 +426,8 @@ private:
     bool               broken;
     UINT               scr_span;      // Working values for draw;
     POINT              mid_span;      //
-    int		       digits;        //suma
-  
+    int                digits;        //suma
+
 public:
     instr_item( int            x,
                 int            y,
@@ -437,7 +437,7 @@ public:
                 float          data_scaling,
                 UINT           options,
                 bool           working  = true,
-                int	       digit = 0); //suma
+                int            digit = 0); //suma
 
     instr_item( const instr_item & image );
 
@@ -454,7 +454,7 @@ public:
     UINT    get_span        ( void ) { return scr_span;  }
     POINT   get_centroid    ( void ) { return mid_span;  }
     UINT    get_options     ( void ) { return opts;      }
-    int     get_digits	    ( void ) { return digits;	 } //suma
+    int     get_digits      ( void ) { return digits;         } //suma
 
     UINT    huds_vert     (UINT options) { return( options  & HUDS_VERT ); }
     UINT    huds_left     (UINT options) { return( options  & HUDS_LEFT ); }
@@ -466,7 +466,7 @@ public:
     UINT    huds_notext   (UINT options) { return( options  & HUDS_NOTEXT ); }
     UINT    huds_top      (UINT options) { return( options  & HUDS_TOP ); }
     UINT    huds_bottom   (UINT options) { return( options  & HUDS_BOTTOM ); }
-  
+
     virtual void display_enable( bool working ) { is_enabled = !! working;}
 
     virtual void update( void );
@@ -475,7 +475,7 @@ public:
     void         SetPosition  ( int x, int y, UINT width, UINT height );
     UINT         get_Handle( void );
     virtual void draw( void ) = 0;   // Required method in derived classes
-    
+
     void drawOneLine( float x1, float y1, float x2, float y2)
     {
         HUD_LineList.add(fgLineSeg2D(x1,y1,x2,y2));
@@ -486,7 +486,7 @@ public:
     }
     void TextString( char *msg, float x, float y,int digit ) //suma
     {
-        HUD_TextList.add(fgText(x, y, msg,digit)); //suma  
+        HUD_TextList.add(fgText(x, y, msg,digit)); //suma
     }
     int getStringWidth ( char *str )
     {
@@ -501,15 +501,15 @@ public:
     //code to draw ticks as small circles
     void drawOneCircle(float x1, float y1, float r)
     {
-        glBegin(GL_LINE_LOOP);  // Use polygon to approximate a circle 
-        for(int count=0; count<25; count++) {             
-            float cosine = r * cos(count * 2 * SG_PI/10.0); 
-            float sine =   r * sin(count * 2 * SG_PI/10.0); 
+        glBegin(GL_LINE_LOOP);  // Use polygon to approximate a circle
+        for(int count=0; count<25; count++) {
+            float cosine = r * cos(count * 2 * SG_PI/10.0);
+            float sine =   r * sin(count * 2 * SG_PI/10.0);
             glVertex2f(cosine+x1, sine+y1);
-        }     
-        glEnd(); 
+        }
+        glEnd();
     }
-    
+
 };
 
 typedef instr_item *HIptr;
@@ -544,9 +544,9 @@ private:
     int         fontSize;
     int         blink;
     char format_buffer[80];
-    bool		lat;
-    bool		lon;
-    bool		lbox;
+    bool        lat;
+    bool        lon;
+    bool        lbox;
 
 public:
     instr_label( int          x,
@@ -562,9 +562,9 @@ public:
                  fgLabelJust  justification,
                  int          font_size,
                  int          blinking,
-                 bool		  latitude,
-                 bool		  longitude,
-                 bool		  label_box,
+                 bool         latitude,
+                 bool         longitude,
+                 bool         label_box,
                  bool         working,
                  int          digit ); //suma);
 
@@ -597,13 +597,13 @@ public:
                const char  *label_format,
                const char  *pre_label_string,
                const char  *post_label_string,
-               float       scale_data,
+               float        scale_data,
                UINT         options,
                fgLabelJust  justification,
                int          font_size,
                int          blinking,
                bool         working,
-               int	    digits =0 );//suma
+               int          digits =0 );//suma
 
     ~lat_label();
 
@@ -633,13 +633,13 @@ public:
                const char  *label_format,
                const char  *pre_label_string,
                const char  *post_label_string,
-               float       scale_data,
+               float        scale_data,
                UINT         options,
                fgLabelJust  justification,
                int          font_size,
                int          blinking,
                bool         working,
-               int	    digit=0); //suma
+               int          digit=0); //suma
 
 
     ~lon_label();
@@ -652,46 +652,46 @@ public:
 typedef lon_label * pLonlabel;
 
 //
-// fgRunway_instr	This class is responsible for rendering the active runway
-//			in the hud (if visible).
-class runway_instr : public instr_item 
+// fgRunway_instr        This class is responsible for rendering the active runway
+//                        in the hud (if visible).
+class runway_instr : public instr_item
 {
-private:	
-	void boundPoint(const sgdVec3& v, sgdVec3& m);
-	bool boundOutsidePoints(sgdVec3& v, sgdVec3& m);
-	bool drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& p1, const sgdVec3& p2);
-	void drawArrow();
-	bool get_active_runway(FGRunway& rwy);
-	void get_rwy_points(sgdVec3 *points);
-	void setLineWidth(void);
+private:
+        void boundPoint(const sgdVec3& v, sgdVec3& m);
+        bool boundOutsidePoints(sgdVec3& v, sgdVec3& m);
+        bool drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& p1, const sgdVec3& p2);
+        void drawArrow();
+        bool get_active_runway(FGRunway& rwy);
+        void get_rwy_points(sgdVec3 *points);
+        void setLineWidth(void);
 
-	sgdVec3 points3d[6],points2d[6];
-	double mm[16],pm[16], arrowScale, arrowRad, lnScale, scaleDist, default_pitch, default_heading;
-	GLint view[4];
-	FGRunway runway;
-	FGViewer* cockpit_view;	
-	unsigned short stippleOut,stippleCen;
-	bool drawIA,drawIAAlways;
-	RECT location;
-	POINT center; 
-	
+        sgdVec3 points3d[6],points2d[6];
+        double mm[16],pm[16], arrowScale, arrowRad, lnScale, scaleDist, default_pitch, default_heading;
+        GLint view[4];
+        FGRunway runway;
+        FGViewer* cockpit_view;
+        unsigned short stippleOut,stippleCen;
+        bool drawIA,drawIAAlways;
+        RECT location;
+        POINT center;
+
 public:
     runway_instr( int    x,
-                  int    y,			
-				  int	 width,
-				  int    height,
-               	  float  scale_data,
-               	  bool   working = true);
+                  int    y,
+                  int    width,
+                  int    height,
+                  float  scale_data,
+                  bool   working = true);
 
     virtual void draw( void );       // Required method in base class
-	void setArrowRotationRadius(double radius);
-	void setArrowScale(double scale); // Scales the runway indication arrow
-	void setDrawArrow(bool draw);	 // Draws arrow when runway is not visible in HUD if draw=true
-	void setDrawArrowAlways(bool draw); //Always draws arrow if draw=true;
-	void setLineScale(double scale); //Sets the maximum line scale
-	void setScaleDist(double dist_nm); //Sets the distance where to start scaling the lines
-	void setStippleOutline(unsigned short stipple); //Sets the stipple pattern of the outline of the runway
-	void setStippleCenterline(unsigned short stipple); //Sets the stipple patter of the center line of the runway
+        void setArrowRotationRadius(double radius);
+        void setArrowScale(double scale); // Scales the runway indication arrow
+        void setDrawArrow(bool draw);         // Draws arrow when runway is not visible in HUD if draw=true
+        void setDrawArrowAlways(bool draw); //Always draws arrow if draw=true;
+        void setLineScale(double scale); //Sets the maximum line scale
+        void setScaleDist(double dist_nm); //Sets the distance where to start scaling the lines
+        void setStippleOutline(unsigned short stipple); //Sets the stipple pattern of the outline of the runway
+        void setStippleCenterline(unsigned short stipple); //Sets the stipple patter of the center line of the runway
 };
 
 
@@ -719,10 +719,10 @@ public:
                  UINT         height,
                  FLTFNPTR     load_fn,
                  UINT         options,
-                 float       show_range,
-                 float       max_value,
-                 float       min_value,
-                 float       disp_scaling,
+                 float        show_range,
+                 float        max_value,
+                 float        min_value,
+                 float        disp_scaling,
                  UINT         major_divs,
                  UINT         minor_divs,
                  UINT         rollover,
@@ -736,11 +736,11 @@ public:
     virtual void draw   ( void ) {}; // No-op here. Defined in derived classes.
     UINT   div_min      ( void ) { return Min_div;}
     UINT   div_max      ( void ) { return Maj_div;}
-    float min_val      ( void ) { return Minimum_value;}
-    float max_val      ( void ) { return Maximum_value;}
+    float min_val       ( void ) { return Minimum_value;}
+    float max_val       ( void ) { return Maximum_value;}
     UINT   modulo       ( void ) { return Modulo; }
-    float factor       ( void ) { return scale_factor;}
-    float range_to_show( void ) { return range_shown;}
+    float factor        ( void ) { return scale_factor;}
+    float range_to_show ( void ) { return range_shown;}
 };
 
 // hud_card_               This class displays the indicated quantity on
@@ -750,31 +750,31 @@ public:
 
 class hud_card : public instr_scale {
 private:
-    float val_span;
+    float  val_span;
     string type;
-    float half_width_units;
-    bool  draw_tick_bottom;
-    bool  draw_tick_top;
-    bool  draw_tick_right;
-    bool  draw_tick_left;
-    bool  draw_cap_bottom;
-    bool  draw_cap_top;
-    bool  draw_cap_right;
-    bool  draw_cap_left;
-    float marker_offset;
-    bool  pointer;
-    string  pointer_type;
-    string  tick_type;
-    string  tick_length;
-    float   radius; //suma
-    float   maxValue; //suma
-    float   minValue; //suma
-    int		divisions; //suma
-    int     zoom; //suma
-    UINT	Maj_div; //suma
-    UINT	Min_div; //suma
-	
-    
+    float  half_width_units;
+    bool   draw_tick_bottom;
+    bool   draw_tick_top;
+    bool   draw_tick_right;
+    bool   draw_tick_left;
+    bool   draw_cap_bottom;
+    bool   draw_cap_top;
+    bool   draw_cap_right;
+    bool   draw_cap_left;
+    float  marker_offset;
+    bool   pointer;
+    string pointer_type;
+    string tick_type;
+    string tick_length;
+    float  radius; //suma
+    float  maxValue; //suma
+    float  minValue; //suma
+    int    divisions; //suma
+    int    zoom; //suma
+    UINT   Maj_div; //suma
+    UINT   Min_div; //suma
+
+
 public:
     hud_card( int      x,
               int      y,
@@ -790,24 +790,24 @@ public:
               UINT     modulator,
               int      dp_showing,
               float    value_span,
-	      string   type,
-	      bool     draw_tick_bottom,
-	      bool     draw_tick_top,
-	      bool     draw_tick_right,
-	      bool     draw_tick_left,
-	      bool     draw_cap_bottom,
-	      bool     draw_cap_top,
-	      bool     draw_cap_right,
-	      bool     draw_cap_left,
-	      float    marker_offset,
-	      bool     pointer,
-	      string   pointer_type,
+              string   type,
+              bool     draw_tick_bottom,
+              bool     draw_tick_top,
+              bool     draw_tick_right,
+              bool     draw_tick_left,
+              bool     draw_cap_bottom,
+              bool     draw_cap_top,
+              bool     draw_cap_right,
+              bool     draw_cap_left,
+              float    marker_offset,
+              bool     pointer,
+              string   pointer_type,
               string  tick_type,
               string  tick_length,
               bool     working,
               float    radius, //suma
               int      divisions, //suma
-              int       zoom //suma
+              int      zoom //suma
             );
 
 
@@ -871,10 +871,10 @@ public:
 
     float current_ch1( void ) { return (float)alt_data_source();}
     float current_ch2( void ) { return (float)get_value();}
-    virtual void draw ( void ) { }
+    virtual void draw( void ) { }
 };
 
-class fgTBI_instr : public dual_instr_item 
+class fgTBI_instr : public dual_instr_item
 {
 private:
     UINT BankLimit;
@@ -890,11 +890,11 @@ public:
                  UINT      height,
                  FLTFNPTR  chn1_source,
                  FLTFNPTR  chn2_source,
-                 float    maxBankAngle,
-                 float    maxSlipAngle,
+                 float     maxBankAngle,
+                 float     maxSlipAngle,
                  UINT      gap_width,
                  bool      working,
-                 bool	   tsi, //suma
+                 bool      tsi, //suma
                  float     rad); //suma
 
     fgTBI_instr( const fgTBI_instr & image);
@@ -926,16 +926,16 @@ private:
     bool   velocity_vector;
     bool   drift_marker;
     bool   alpha_bracket;
-    bool	energy_marker;
-    bool	climb_dive_marker;
-    bool	glide_slope_marker;
-    float	glide_slope;
-    bool	energy_worm;
-    bool	waypoint_marker;
-    int     zenith; //suma
-    int     nadir; //suma
-    int		hat; //suma
-    
+    bool   energy_marker;
+    bool   climb_dive_marker;
+    bool   glide_slope_marker;
+    float  glide_slope;
+    bool   energy_worm;
+    bool   waypoint_marker;
+    int    zenith; //suma
+    int    nadir; //suma
+    int    hat; //suma
+
 
     // The Ladder has it's own temporary display lists
     fgTextList         TextList;
@@ -944,11 +944,11 @@ private:
 
 public:
     HudLadder( const string&    name,
-	       int       x,
+               int       x,
                int       y,
                UINT      width,
                UINT      height,
-	       float	 factor,
+               float     factor,
                FLTFNPTR  ptch_source,
                FLTFNPTR  roll_source,
                float     span_units,
@@ -956,21 +956,21 @@ public:
                float     minor_division,
                UINT      screen_hole,
                UINT      lbl_pos,
-	       bool	 frl,
-	       bool	 target_spot,
-	       bool     velocity_vector,
-	       bool     drift_marker,
-	       bool     alpha_bracket,
-	       bool	 energy_marker,
-	       bool	 climb_dive_marker,
-	       bool	 glide_slope_marker,
-	       float	 glide_slope,
-	       bool	 energy_worm,
-	       bool	 waypoint_marker,
-               bool  working,
-               int   zenith, //suma
-               int   nadir, //suma
-               int      hat
+               bool      frl,
+               bool      target_spot,
+               bool      velocity_vector,
+               bool      drift_marker,
+               bool      alpha_bracket,
+               bool      energy_marker,
+               bool      climb_dive_marker,
+               bool      glide_slope_marker,
+               float     glide_slope,
+               bool      energy_worm,
+               bool      waypoint_marker,
+               bool      working,
+               int       zenith, //suma
+               int       nadir, //suma
+               int       hat
              ); //suma
 
 
