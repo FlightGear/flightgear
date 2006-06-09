@@ -58,16 +58,10 @@
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 
-#if defined (__sun) || defined ( __sgi )
-extern "C" {
-    extern void *memmove(void *, const void *, size_t);
-}
-#endif
-
 #include "hud.hxx"
 
 
-static HUD_Properties *HUD;
+static HUD_Properties *HUD = 0;
 
 static char units[5];
 
@@ -779,7 +773,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
     HUDtext->setPointSize(HUD_TextSize);
     HUD_TextList.setFont( HUDtext );
 
-    HUD = new HUD_Properties;
+    if (!HUD)
+        HUD = new HUD_Properties;
     return 0;  // For now. Later we may use this for an error code.
 
 }
@@ -804,6 +799,8 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
         input.close();
     }
 
+    if (!HUD)
+        HUD = new HUD_Properties;
     return 0;  // For now. Later we may use this for an error code.
 
 }
