@@ -111,6 +111,7 @@ TACAN::init ()
     _yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
     _serviceable_node = node->getChild("serviceable", 0, true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/tacan", true);
+	_ident_node = node->getChild("ident", 0, true);
     SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
     _source_node = fnode->getChild("source", 0, true);
     _frequency_node = fnode->getChild("selected-mhz", 0, true);
@@ -245,6 +246,8 @@ TACAN::update (double delta_time_sec)
         _transmitter_bias = _mobile_bias;
         _transmitter_name = _mobile_name;
         _name_node->setStringValue(_transmitter_name.c_str());
+        _transmitter_ident = _mobile_ident;
+        _ident_node->setStringValue(_transmitter_ident.c_str());
         _channel_node->setStringValue(_channel.c_str());
     }
 
@@ -324,6 +327,8 @@ TACAN::update (double delta_time_sec)
         _rotation_node->setDoubleValue(0);
         _transmitter_name = "";
         _name_node->setStringValue(_transmitter_name.c_str());
+        _transmitter_ident = "";
+        _ident_node->setStringValue(_transmitter_ident.c_str());
         _channel_node->setStringValue(_channel.c_str());
         return;
     }
@@ -372,6 +377,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                 _mobile_range_nm = mobile_tacan->get_range();
                 _mobile_bias = mobile_tacan->get_multiuse();
                 _mobile_name = mobile_tacan->get_name();
+                _mobile_ident = mobile_tacan->get_trans_ident();
                 _mobile_valid = true;
                 SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter valid " << _mobile_valid );
                 break;
@@ -411,6 +417,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                 _mobile_range_nm = mobile_tacan->get_range();
                 _mobile_bias = mobile_tacan->get_multiuse();
                 _mobile_name = mobile_tacan->get_name();
+                _mobile_ident = mobile_tacan->get_trans_ident();
                 _mobile_valid = true;
                 SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter valid " << _mobile_valid );
                 break;
@@ -452,6 +459,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                 _mobile_range_nm = mobile_tacan->get_range();
                 _mobile_bias = mobile_tacan->get_multiuse();
                 _mobile_name = mobile_tacan->get_name();
+                _mobile_ident = mobile_tacan->get_trans_ident();
                 _mobile_valid = true;
 
                 SG_LOG( SG_INSTR, SG_DEBUG, "  mp tanker transmitter valid " << _mobile_valid );
@@ -488,6 +496,8 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         _transmitter_bias = tacan->get_multiuse();
         _transmitter_name = tacan->get_name();
         _name_node->setStringValue(_transmitter_name.c_str());
+        _transmitter_ident = tacan->get_trans_ident();
+        _ident_node->setStringValue(_transmitter_ident.c_str());
 
         SG_LOG( SG_INSTR, SG_DEBUG, "name " << _transmitter_name);
         SG_LOG( SG_INSTR, SG_DEBUG, "lat " << _transmitter_lat << "lon " << _transmitter_lon);

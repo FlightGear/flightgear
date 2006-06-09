@@ -116,7 +116,7 @@ protected:
     double x_shift;      // value used by radar display instrument
     double y_shift;      // value used by radar display instrument
     double rotation;     // value used by radar display instrument
-
+    double ht_diff;		 // value used by radar display instrument
 
     string model_path;	   //Path to the 3D model
     ssgSharedPtr<ssgBranch> model; //The 3D model object

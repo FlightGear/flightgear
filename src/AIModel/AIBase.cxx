@@ -210,6 +210,7 @@ void FGAIBase::bind() {
    props->tie("radar/x-shift", SGRawValuePointer<double>(&x_shift));
    props->tie("radar/y-shift", SGRawValuePointer<double>(&y_shift));
    props->tie("radar/rotation", SGRawValuePointer<double>(&rotation));
+   props->tie("radar/ht-diff-ft", SGRawValuePointer<double>(&ht_diff));
 
    props->tie("controls/lighting/nav-lights",
                SGRawValueFunctions<bool>(_isNight));
@@ -240,6 +241,7 @@ void FGAIBase::unbind() {
     props->untie("radar/x-shift");
     props->untie("radar/y-shift");
     props->untie("radar/rotation");
+    props->untie("radar/ht-diff-ft");
 
     props->untie("controls/lighting/nav-lights");
 }
@@ -298,11 +300,10 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
      if (horiz_offset < -180.0) horiz_offset += 360.0;
 
      // calculate elevation to target
-     elevation = atan2( altitude * SG_METER_TO_FEET - user_altitude, range_ft )
-                        * SG_RADIANS_TO_DEGREES;
+     elevation = atan2( altitude - user_altitude, range_ft ) * SG_RADIANS_TO_DEGREES;
 
      // calculate look up/down to target
-     vert_offset = elevation + user_pitch;
+     vert_offset = elevation - user_pitch;
 
      /* this calculation needs to be fixed, but it isn't important anyway
      // calculate range rate
@@ -323,6 +324,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
      x_shift = range * sin( horiz_offset * SG_DEGREES_TO_RADIANS);
      rotation = hdg - user_heading;
      if (rotation < 0.0) rotation += 360.0;
+     ht_diff = altitude - user_altitude;
 
    }
 

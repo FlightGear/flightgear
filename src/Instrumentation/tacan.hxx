@@ -68,6 +68,9 @@ private:
     SGPropertyNode_ptr _x_shift_node;
     SGPropertyNode_ptr _y_shift_node;
     SGPropertyNode_ptr _rotation_node;
+	/*SGPropertyNode_ptr _x_shift_calibration_node;
+    SGPropertyNode_ptr _y_shift_calibration_node;
+    SGPropertyNode_ptr _distance_calibration_node;*/
 
     SGPropertyNode_ptr _in_range_node;
     SGPropertyNode_ptr _distance_node;
@@ -97,6 +100,7 @@ private:
     double _transmitter_bearing_deg;
     double _transmitter_bias;
     string _transmitter_name;
+    string _transmitter_ident;
 
     double _mobile_lat, _mobile_lon;
     double _mobile_elevation_ft;
@@ -104,6 +108,7 @@ private:
     double _mobile_bearing_deg;
     double _mobile_bias;
     string _mobile_name;
+    string _mobile_ident;
 
     string name;
     int num;

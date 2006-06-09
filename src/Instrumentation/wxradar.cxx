@@ -159,6 +159,7 @@ wxRadarBg::update (double delta_time_sec)
             // find something interesting to do...
         } else {
             string display_mode = _Instrument->getStringValue("display-mode", "arc");
+
             // pretend we have a scan angle bigger then the FOV
             // TODO:check real fov, enlarge if < nn, and do clipping if > mm
             const float fovFactor = 1.45f;
@@ -172,7 +173,7 @@ wxRadarBg::update (double delta_time_sec)
 //                float view_heading = get_track() * SG_DEGREES_TO_RADIANS;
             } else if( display_mode == "plan" ) {
                 // no sense I presume
-                float view_heading = 0.0;
+				view_heading = 0;
             } else {
                 // rose
             }
@@ -276,10 +277,13 @@ wxRadarBg::update (double delta_time_sec)
                 ---------
             */
             float yOffset = 180.0f, xOffset = 256.0f;
+			
             if( display_mode != "arc" ) {
                 yOffset = 40.0f;
                 xOffset = 240.0f;
             }
+			
+            if ( display_mode != "plan" ) {	
              glDisable(GL_BLEND);
                glColor4f(1.0f, 0.0f, 0.0f, 0.01f);
             glBegin( GL_QUADS );
@@ -301,11 +305,11 @@ wxRadarBg::update (double delta_time_sec)
             glBegin( GL_TRIANGLES );
                 glVertex2f(0.0, 0.0);
                 glVertex2f(-256.0, 0.0);
-                glVertex2f(-256.0, 256.0);
+                glVertex2f(-256.0, 256.0 * tan(30*SG_DEGREES_TO_RADIANS));			 
 
                 glVertex2f(0.0, 0.0);
                 glVertex2f(256.0, 0.0);
-                glVertex2f(256.0, 256.0);
+                glVertex2f(256.0, 256.0 * tan(30*SG_DEGREES_TO_RADIANS));
 
                 glVertex2f(-256, 0.0);
                 glVertex2f(256.0, 0.0);
@@ -315,6 +319,7 @@ wxRadarBg::update (double delta_time_sec)
                 glVertex2f(256.0, -256.0);
                 glVertex2f(-256.0, -256.0);
             glEnd();
+			}
 
             // DEBUG only
 /*            glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
