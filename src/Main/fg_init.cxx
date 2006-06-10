@@ -1780,7 +1780,7 @@ bool fgInitSubsystems() {
     // Do this last, so that the loaded scripts see initialized state
     ////////////////////////////////////////////////////////////////////////
     FGNasalSys* nasal = new FGNasalSys();
-    globals->add_subsystem("nasal", nasal);
+    globals->add_subsystem("nasal", nasal, SGSubsystemMgr::INIT);
     nasal->init();
 
     // initialize methods that depend on other subsystems.
