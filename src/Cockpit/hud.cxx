@@ -960,9 +960,9 @@ void drawHUD()
         glEnable(GL_LINE_SMOOTH);
         glAlphaFunc(GL_GREATER, HUD->alphaClamp());
         glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-        glLineWidth(1.5);
+        //glLineWidth(1.5);
     } else {
-        glLineWidth(1.0);
+        //glLineWidth(1.0);
     }
 
     HUD->setColor();
@@ -1034,7 +1034,7 @@ void drawHUD()
     if (HUD->isAntialiased()) {
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_LINE_SMOOTH);
-        glLineWidth(1.0);
+        //glLineWidth(1.0);
     }
 
     glEnable(GL_DEPTH_TEST);
