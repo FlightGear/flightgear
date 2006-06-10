@@ -1224,6 +1224,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\GUI\property_list.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\network\props.hxx"
 				>
 			</File>
@@ -1949,10 +1953,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\instrumentation\attitude_indicator.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\autopilot\auto_gui.cxx"
 				>
 			</File>
 			<File
@@ -2877,6 +2877,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\fdm\yasim\PropEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\GUI\property_list.cxx"
 				>
 			</File>
 			<File
