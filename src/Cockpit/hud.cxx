@@ -1114,9 +1114,12 @@ void HUD_Properties::valueChanged(SGPropertyNode *node)
             i = 0;
         SGPropertyNode *n = fgGetNode("/sim/hud/palette", true);
         if ((n = n->getChild("color", i, false))) {
-            _red->setFloatValue(n->getFloatValue("red", 1.0));
-            _green->setFloatValue(n->getFloatValue("green", 1.0));
-            _blue->setFloatValue(n->getFloatValue("blue", 1.0));
+            if (n->hasValue("red"))
+                _red->setFloatValue(n->getFloatValue("red", 1.0));
+            if (n->hasValue("green"))
+                _green->setFloatValue(n->getFloatValue("green", 1.0));
+            if (n->hasValue("blue"))
+                _blue->setFloatValue(n->getFloatValue("blue", 1.0));
             if (n->hasValue("alpha"))
                 _alpha->setFloatValue(n->getFloatValue("alpha", 0.67));
             if (n->hasValue("alpha-clamp"))
