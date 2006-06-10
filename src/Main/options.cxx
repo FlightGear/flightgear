@@ -185,7 +185,7 @@ fgSetDefaults ()
     fgSetString("/sim/logging/priority", "alert");
 
 				// Features
-    fgSetBool("/sim/hud/antialiased", false);
+    fgSetBool("/sim/hud/color/antialiased", false);
     fgSetBool("/sim/hud/enable3d", true);
     fgSetBool("/sim/hud/visibility", false);
     fgSetBool("/sim/panel/visibility", true);
@@ -1254,8 +1254,8 @@ struct OptionDesc {
     {"enable-clock-freeze",          false, OPTION_BOOL,   "/sim/freeze/clock", true, "", 0 },
     {"disable-hud-3d",               false, OPTION_BOOL,   "/sim/hud/enable3d", false, "", 0 },
     {"enable-hud-3d",                false, OPTION_BOOL,   "/sim/hud/enable3d", true, "", 0 },
-    {"disable-anti-alias-hud",       false, OPTION_BOOL,   "/sim/hud/antialiased", false, "", 0 },
-    {"enable-anti-alias-hud",        false, OPTION_BOOL,   "/sim/hud/antialiased", true, "", 0 },
+    {"disable-anti-alias-hud",       false, OPTION_BOOL,   "/sim/hud/color/antialiased", false, "", 0 },
+    {"enable-anti-alias-hud",        false, OPTION_BOOL,   "/sim/hud/color/antialiased", true, "", 0 },
     {"control",                      true,  OPTION_STRING, "/sim/control-mode", false, "", 0 },
     {"disable-auto-coordination",    false, OPTION_BOOL,   "/sim/auto-coordination", false, "", 0 },
     {"enable-auto-coordination",     false, OPTION_BOOL,   "/sim/auto-coordination", true, "", 0 },
