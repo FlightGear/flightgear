@@ -60,6 +60,10 @@ FGNasalSys::FGNasalSys()
 
 FGNasalSys::~FGNasalSys()
 {
+    map<int, FGNasalListener *>::iterator it, end = _listener.end();
+    for (it = _listener.begin(); it != end; ++it)
+        delete it->second;
+
     // Nasal doesn't have a "destroy context" API yet. :(
     // Not a problem for a global subsystem that will never be
     // destroyed.  And the context is actually a global, so no memory
@@ -679,7 +683,6 @@ naRef FGNasalSys::removeListener(int argc, naRef* args)
         return naNil();
 
     FGNasalListener *nl = _listener[i];
-    nl->_node->removeChangeListener(nl);
     _listener.erase(i);
     delete nl;
     return naNum(_listener.size());
@@ -701,6 +704,7 @@ FGNasalListener::FGNasalListener(SGPropertyNode_ptr node, naRef handler,
 
 FGNasalListener::~FGNasalListener()
 {
+    _node->removeChangeListener(this);
     _nas->gcRelease(_gcKey);
 }
 
