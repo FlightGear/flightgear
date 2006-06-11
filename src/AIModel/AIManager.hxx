@@ -113,17 +113,17 @@ private:
     int mNumAiTypeModels[FGAIBase::MAX_OBJECTS];
     int mNumAiModels;
 
-    SGPropertyNode* root;
-    SGPropertyNode* wind_from_down_node;
-    SGPropertyNode* user_latitude_node;
-    SGPropertyNode* user_longitude_node;
-    SGPropertyNode* user_altitude_node;
-    SGPropertyNode* user_heading_node;
-    SGPropertyNode* user_pitch_node;
-    SGPropertyNode* user_yaw_node;
-    SGPropertyNode* user_speed_node;
-    SGPropertyNode* wind_from_east_node ;
-    SGPropertyNode* wind_from_north_node ;
+    SGPropertyNode_ptr root;
+    SGPropertyNode_ptr wind_from_down_node;
+    SGPropertyNode_ptr user_latitude_node;
+    SGPropertyNode_ptr user_longitude_node;
+    SGPropertyNode_ptr user_altitude_node;
+    SGPropertyNode_ptr user_heading_node;
+    SGPropertyNode_ptr user_pitch_node;
+    SGPropertyNode_ptr user_yaw_node;
+    SGPropertyNode_ptr user_speed_node;
+    SGPropertyNode_ptr wind_from_east_node ;
+    SGPropertyNode_ptr wind_from_north_node ;
 
     string scenario_filename;
 

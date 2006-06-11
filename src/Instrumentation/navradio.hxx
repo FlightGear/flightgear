@@ -43,67 +43,67 @@ class FGNavRadio : public SGSubsystem
     SGInterpTable *low_tbl;
     SGInterpTable *high_tbl;
 
-    SGPropertyNode *lon_node;
-    SGPropertyNode *lat_node;
-    SGPropertyNode *alt_node;
-    SGPropertyNode *bus_power_node;
+    SGPropertyNode_ptr lon_node;
+    SGPropertyNode_ptr lat_node;
+    SGPropertyNode_ptr alt_node;
+    SGPropertyNode_ptr bus_power_node;
 
     // property inputs
-    SGPropertyNode *is_valid_node;   // is station data valid (may be way out
+    SGPropertyNode_ptr is_valid_node;   // is station data valid (may be way out
                                      // of range.)
-    SGPropertyNode *power_btn_node;
-    SGPropertyNode *freq_node;       // primary freq
-    SGPropertyNode *alt_freq_node;   // standby freq
-    SGPropertyNode *sel_radial_node; // selected radial
-    SGPropertyNode *vol_btn_node;
-    SGPropertyNode *ident_btn_node;
-    SGPropertyNode *audio_btn_node;
-    SGPropertyNode *nav_serviceable_node;
-    SGPropertyNode *cdi_serviceable_node;
-    SGPropertyNode *gs_serviceable_node;
-    SGPropertyNode *tofrom_serviceable_node;
+    SGPropertyNode_ptr power_btn_node;
+    SGPropertyNode_ptr freq_node;       // primary freq
+    SGPropertyNode_ptr alt_freq_node;   // standby freq
+    SGPropertyNode_ptr sel_radial_node; // selected radial
+    SGPropertyNode_ptr vol_btn_node;
+    SGPropertyNode_ptr ident_btn_node;
+    SGPropertyNode_ptr audio_btn_node;
+    SGPropertyNode_ptr nav_serviceable_node;
+    SGPropertyNode_ptr cdi_serviceable_node;
+    SGPropertyNode_ptr gs_serviceable_node;
+    SGPropertyNode_ptr tofrom_serviceable_node;
 
     // property outputs
-    SGPropertyNode *fmt_freq_node;     // formated frequency
-    SGPropertyNode *fmt_alt_freq_node; // formated alternate frequency
-    SGPropertyNode *heading_node;      // true heading to nav station
-    SGPropertyNode *radial_node;       // current radial we are on (taking
+    SGPropertyNode_ptr fmt_freq_node;     // formated frequency
+    SGPropertyNode_ptr fmt_alt_freq_node; // formated alternate frequency
+    SGPropertyNode_ptr heading_node;      // true heading to nav station
+    SGPropertyNode_ptr radial_node;       // current radial we are on (taking
                                        // into consideration the vor station
                                        // alignment which likely doesn't
                                        // match the magnetic alignment
                                        // exactly.)
-    SGPropertyNode *recip_radial_node; // radial_node(val) + 180 (for
+    SGPropertyNode_ptr recip_radial_node; // radial_node(val) + 180 (for
                                        // convenience)
-    SGPropertyNode *target_radial_true_node;
+    SGPropertyNode_ptr target_radial_true_node;
                                        // true heading of selected radial
-    SGPropertyNode *target_auto_hdg_node;
+    SGPropertyNode_ptr target_auto_hdg_node;
                                        // suggested autopilot heading
                                        // to intercept selected radial
-    SGPropertyNode *time_to_intercept; // estimated time to intecept selected
+    SGPropertyNode_ptr time_to_intercept; // estimated time to intecept selected
                                        // radial at current speed and heading
-    SGPropertyNode *to_flag_node;
-    SGPropertyNode *from_flag_node;
-    SGPropertyNode *inrange_node;
-    SGPropertyNode *cdi_deflection_node;
-    SGPropertyNode *cdi_xtrack_error_node;
-    SGPropertyNode *cdi_xtrack_hdg_err_node;
-    SGPropertyNode *has_gs_node;
-    SGPropertyNode *loc_node;
-    SGPropertyNode *loc_dist_node;
-    SGPropertyNode *gs_deflection_node;
-    SGPropertyNode *gs_rate_of_climb_node;
-    SGPropertyNode *gs_dist_node;
-    SGPropertyNode *nav_id_node;
-    SGPropertyNode *id_c1_node;
-    SGPropertyNode *id_c2_node;
-    SGPropertyNode *id_c3_node;
-    SGPropertyNode *id_c4_node;
+    SGPropertyNode_ptr to_flag_node;
+    SGPropertyNode_ptr from_flag_node;
+    SGPropertyNode_ptr inrange_node;
+    SGPropertyNode_ptr cdi_deflection_node;
+    SGPropertyNode_ptr cdi_xtrack_error_node;
+    SGPropertyNode_ptr cdi_xtrack_hdg_err_node;
+    SGPropertyNode_ptr has_gs_node;
+    SGPropertyNode_ptr loc_node;
+    SGPropertyNode_ptr loc_dist_node;
+    SGPropertyNode_ptr gs_deflection_node;
+    SGPropertyNode_ptr gs_rate_of_climb_node;
+    SGPropertyNode_ptr gs_dist_node;
+    SGPropertyNode_ptr nav_id_node;
+    SGPropertyNode_ptr id_c1_node;
+    SGPropertyNode_ptr id_c2_node;
+    SGPropertyNode_ptr id_c3_node;
+    SGPropertyNode_ptr id_c4_node;
 
     // gps slaving support
-    SGPropertyNode *nav_slaved_to_gps_node;
-    SGPropertyNode *gps_cdi_deflection_node;
-    SGPropertyNode *gps_to_flag_node;
-    SGPropertyNode *gps_from_flag_node;
+    SGPropertyNode_ptr nav_slaved_to_gps_node;
+    SGPropertyNode_ptr gps_cdi_deflection_node;
+    SGPropertyNode_ptr gps_to_flag_node;
+    SGPropertyNode_ptr gps_from_flag_node;
 
     // internal (private) values
 

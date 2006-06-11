@@ -42,7 +42,7 @@ class FGJsClient : public FGProtocol {
     char buf[256];
     int length;
     double axis[4];
-    SGPropertyNode *axisdef[4];
+    SGPropertyNode_ptr axisdef[4];
     string axisdefstr[4];
     bool active;
 				

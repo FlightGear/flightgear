@@ -52,7 +52,7 @@ private:
   struct Log {
     Log ();
     virtual ~Log ();
-    vector<SGPropertyNode *> nodes;
+    vector<SGPropertyNode_ptr> nodes;
     ostream * output;
     long interval_ms;
     double last_time_ms;

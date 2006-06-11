@@ -89,7 +89,7 @@ private:
   long mLastTimestamp;
 
   // Propertiies for tankers
-  SGPropertyNode* refuel_node;
+  SGPropertyNode_ptr refuel_node;
   bool isTanker;
   bool contact;          // set if this tanker is within fuelling range
 };

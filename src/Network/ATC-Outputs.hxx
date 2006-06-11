@@ -53,9 +53,9 @@ class FGATCOutput {
 
     unsigned char radio_display_data[ATC_RADIO_DISPLAY_BYTES];
 
-    SGPropertyNode *lamps_out_node;
-    SGPropertyNode *radio_display_node;
-    SGPropertyNode *steppers_node;
+    SGPropertyNode_ptr lamps_out_node;
+    SGPropertyNode_ptr radio_display_node;
+    SGPropertyNode_ptr steppers_node;
 
     void init_config();
     bool do_lamps();

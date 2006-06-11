@@ -193,7 +193,7 @@ class FGElectricalSwitch {
 
 private:
 
-    SGPropertyNode *switch_node;
+    SGPropertyNode_ptr switch_node;
     float rating_amps;
     bool circuit_breaker;
 
@@ -275,8 +275,8 @@ private:
     comp_list outputs;
     comp_list connectors;
 
-    SGPropertyNode *_volts_out;
-    SGPropertyNode *_amps_out;
+    SGPropertyNode_ptr _volts_out;
+    SGPropertyNode_ptr _amps_out;
 };
 
 

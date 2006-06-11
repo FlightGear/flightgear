@@ -1,7 +1,8 @@
 #ifndef __LAYOUT_HXX
 #define __LAYOUT_HXX
 
-class SGPropertyNode;
+#include <simgear/props/props.hxx>
+
 class puFont;
 
 // For the purposes of doing layout management, widgets have a type,
@@ -50,7 +51,7 @@ private:
     void doHVBox(bool doLayout, bool vertical, int* w=0, int* h=0);
     void doTable(bool doLayout, int* w=0, int* h=0);
 
-    SGPropertyNode* _prop;
+    SGPropertyNode_ptr _prop;
 };
 
 #endif // __LAYOUT_HXX

@@ -27,9 +27,9 @@ public:
 
 
  typedef struct {
-  SGPropertyNode* trigger;
-  SGPropertyNode* prop;
-  SGPropertyNode* contents_node;
+  SGPropertyNode_ptr trigger;
+  SGPropertyNode_ptr prop;
+  SGPropertyNode_ptr contents_node;
   
   string             name;
   string             model;
@@ -116,23 +116,23 @@ private:
 
     double contrail_altitude;
 
-    SGPropertyNode* _serviceable_node;
-    SGPropertyNode* _user_lat_node;
-    SGPropertyNode* _user_lon_node;
-    SGPropertyNode* _user_heading_node;
-    SGPropertyNode* _user_alt_node;
-    SGPropertyNode* _user_pitch_node;
-    SGPropertyNode* _user_roll_node;
-    SGPropertyNode* _user_yaw_node;
-    SGPropertyNode* _user_alpha_node;
-    SGPropertyNode* _user_speed_node;
-    SGPropertyNode* _user_wind_from_east_node;
-    SGPropertyNode* _user_wind_from_north_node;
-    SGPropertyNode* _user_speed_down_fps_node;
-    SGPropertyNode* _user_speed_east_fps_node;
-    SGPropertyNode* _user_speed_north_fps_node;
-    SGPropertyNode* _contrail_altitude_node;
-    SGPropertyNode* _contrail_trigger;
+    SGPropertyNode_ptr _serviceable_node;
+    SGPropertyNode_ptr _user_lat_node;
+    SGPropertyNode_ptr _user_lon_node;
+    SGPropertyNode_ptr _user_heading_node;
+    SGPropertyNode_ptr _user_alt_node;
+    SGPropertyNode_ptr _user_pitch_node;
+    SGPropertyNode_ptr _user_roll_node;
+    SGPropertyNode_ptr _user_yaw_node;
+    SGPropertyNode_ptr _user_alpha_node;
+    SGPropertyNode_ptr _user_speed_node;
+    SGPropertyNode_ptr _user_wind_from_east_node;
+    SGPropertyNode_ptr _user_wind_from_north_node;
+    SGPropertyNode_ptr _user_speed_down_fps_node;
+    SGPropertyNode_ptr _user_speed_east_fps_node;
+    SGPropertyNode_ptr _user_speed_north_fps_node;
+    SGPropertyNode_ptr _contrail_altitude_node;
+    SGPropertyNode_ptr _contrail_trigger;
 
     FGAIManager* ai;
     IC_struct  IC;

@@ -42,10 +42,10 @@ public:
 
 private:
 
-    SGPropertyNode *_alt, *_speed, *_climb_rate;
-    SGPropertyNode *_pitch, *_roll, *_heading;
-    SGPropertyNode *_acc_lat, *_acc_lon, *_acc_down;
-    SGPropertyNode *_temp, *_wow;
+    SGPropertyNode_ptr _alt, _speed, _climb_rate;
+    SGPropertyNode_ptr _pitch, _roll, _heading;
+    SGPropertyNode_ptr _acc_lat, _acc_lon, _acc_down;
+    SGPropertyNode_ptr _temp, _wow;
 };
 
 

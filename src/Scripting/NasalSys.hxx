@@ -96,7 +96,7 @@ private:
     naContext _context;
     naRef _globals;
 
-    SGPropertyNode* _cmdArg;
+    SGPropertyNode_ptr _cmdArg;
 
     int _nextGCKey;
     naRef _gcHash;

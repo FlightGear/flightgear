@@ -87,9 +87,9 @@ private:
     double lat;
     double elev;
     // Pointers to current users position
-    SGPropertyNode *lon_node;
-    SGPropertyNode *lat_node;
-    SGPropertyNode *elev_node;
+    SGPropertyNode_ptr lon_node;
+    SGPropertyNode_ptr lat_node;
+    SGPropertyNode_ptr elev_node;
 
 public:
 

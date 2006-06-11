@@ -39,11 +39,11 @@
 
 class FGKT_70 : public SGSubsystem
 {
-    SGPropertyNode *lon_node;
-    SGPropertyNode *lat_node;
-    SGPropertyNode *alt_node;
-    SGPropertyNode *bus_power;
-    SGPropertyNode *serviceable_node;
+    SGPropertyNode_ptr lon_node;
+    SGPropertyNode_ptr lat_node;
+    SGPropertyNode_ptr alt_node;
+    SGPropertyNode_ptr bus_power;
+    SGPropertyNode_ptr serviceable_node;
 
     // internal values
     double r_flash_time;

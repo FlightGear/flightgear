@@ -83,8 +83,8 @@ private:
 	double stall_speed_landing_config;
 	
 	// environment - some of this might get moved into FGAIPlane
-	SGPropertyNode* wind_from_hdg;	//degrees
-	SGPropertyNode* wind_speed_knots;		//knots
+	SGPropertyNode_ptr wind_from_hdg;	//degrees
+	SGPropertyNode_ptr wind_speed_knots;		//knots
 	
 	atc_type changeFreqType;	// the service we need to change to
 

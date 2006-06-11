@@ -122,20 +122,20 @@ class FGApproach : public FGATC {
   string   transmission;
   bool     first;
 
-  SGPropertyNode *comm1_node;
-  SGPropertyNode *comm2_node;
+  SGPropertyNode_ptr comm1_node;
+  SGPropertyNode_ptr comm2_node;
 
-  SGPropertyNode *atcmenu_node;
-  SGPropertyNode *atcopt0_node;
-  SGPropertyNode *atcopt1_node;
-  SGPropertyNode *atcopt2_node;
-  SGPropertyNode *atcopt3_node;
-  SGPropertyNode *atcopt4_node;
-  SGPropertyNode *atcopt5_node;
-  SGPropertyNode *atcopt6_node;
-  SGPropertyNode *atcopt7_node;
-  SGPropertyNode *atcopt8_node;
-  SGPropertyNode *atcopt9_node;
+  SGPropertyNode_ptr atcmenu_node;
+  SGPropertyNode_ptr atcopt0_node;
+  SGPropertyNode_ptr atcopt1_node;
+  SGPropertyNode_ptr atcopt2_node;
+  SGPropertyNode_ptr atcopt3_node;
+  SGPropertyNode_ptr atcopt4_node;
+  SGPropertyNode_ptr atcopt5_node;
+  SGPropertyNode_ptr atcopt6_node;
+  SGPropertyNode_ptr atcopt7_node;
+  SGPropertyNode_ptr atcopt8_node;
+  SGPropertyNode_ptr atcopt9_node;
 
   // for failure modeling
   string trans_ident;	// transmitted ident
@@ -215,12 +215,12 @@ private:
 		       const double &h3);
 
   // Pointers to current users position
-  SGPropertyNode *lon_node;
-  SGPropertyNode *lat_node;
-  SGPropertyNode *elev_node;
-  SGPropertyNode *hdg_node;
-  SGPropertyNode *speed_node;
-  SGPropertyNode *etime_node;
+  SGPropertyNode_ptr lon_node;
+  SGPropertyNode_ptr lat_node;
+  SGPropertyNode_ptr elev_node;
+  SGPropertyNode_ptr hdg_node;
+  SGPropertyNode_ptr speed_node;
+  SGPropertyNode_ptr etime_node;
   
   //Update the transmission string
   void UpdateTransmission(void);

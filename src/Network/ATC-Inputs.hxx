@@ -57,12 +57,12 @@ class FGATCInput {
     unsigned char radio_switch_data[ATC_RADIO_SWITCH_BYTES];
     unsigned char switch_data[ATC_SWITCH_BYTES];
 
-    SGPropertyNode *ignore_flight_controls;
-    SGPropertyNode *ignore_pedal_controls;
+    SGPropertyNode_ptr ignore_flight_controls;
+    SGPropertyNode_ptr ignore_pedal_controls;
 
-    SGPropertyNode *analog_in_node;
-    SGPropertyNode *radio_in_node;
-    SGPropertyNode *switches_node;
+    SGPropertyNode_ptr analog_in_node;
+    SGPropertyNode_ptr radio_in_node;
+    SGPropertyNode_ptr switches_node;
 
     void init_config();
     bool do_analog_in();

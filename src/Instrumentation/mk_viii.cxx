@@ -235,7 +235,7 @@ MK_VIII::PropertiesHandler::init ()
 void
 MK_VIII::PropertiesHandler::unbind ()
 {
-  vector<SGPropertyNode *>::iterator iter;
+  vector<SGPropertyNode_ptr>::iterator iter;
 
   for (iter = tied_properties.begin(); iter != tied_properties.end(); iter++)
     (*iter)->untie();

@@ -38,21 +38,21 @@ class Annunciator : public SGSubsystem
     double timer4;
 
     // inputs
-    SGPropertyNode *_volts;
-    SGPropertyNode *_vac_l;
-    SGPropertyNode *_vac_r;
-    SGPropertyNode *_fuel_l;
-    SGPropertyNode *_fuel_r;
-    SGPropertyNode *_oil_px;
-    SGPropertyNode *_elec_serv;
+    SGPropertyNode_ptr _volts;
+    SGPropertyNode_ptr _vac_l;
+    SGPropertyNode_ptr _vac_r;
+    SGPropertyNode_ptr _fuel_l;
+    SGPropertyNode_ptr _fuel_r;
+    SGPropertyNode_ptr _oil_px;
+    SGPropertyNode_ptr _elec_serv;
 
     // outputs
-    SGPropertyNode *_ann_volts;  // VOLTS        (red)
-    SGPropertyNode *_ann_vac_l;  // L VAC        (amber)
-    SGPropertyNode *_ann_vac_r;  //   VAC R      (amber
-    SGPropertyNode *_ann_fuel_l; // L LOW FUEL   (amber)
-    SGPropertyNode *_ann_fuel_r; //   LOW FUEL R (amber)
-    SGPropertyNode *_ann_oil_px; // OIL PRESS    (red)
+    SGPropertyNode_ptr _ann_volts;  // VOLTS        (red)
+    SGPropertyNode_ptr _ann_vac_l;  // L VAC        (amber)
+    SGPropertyNode_ptr _ann_vac_r;  //   VAC R      (amber
+    SGPropertyNode_ptr _ann_fuel_l; // L LOW FUEL   (amber)
+    SGPropertyNode_ptr _ann_fuel_r; //   LOW FUEL R (amber)
+    SGPropertyNode_ptr _ann_oil_px; // OIL PRESS    (red)
 
 public:
 

@@ -63,7 +63,7 @@ protected:
         e_type type;
         double offset;
         double factor;
-        SGPropertyNode *prop;
+        SGPropertyNode_ptr prop;
     } _serial_prot;
 
 private:

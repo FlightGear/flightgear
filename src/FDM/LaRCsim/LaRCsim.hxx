@@ -41,9 +41,9 @@ private:
     void set_ls(void);
     void snap_shot(void);
     double time_step;
-    SGPropertyNode *speed_up;
-    SGPropertyNode *aero;
-    SGPropertyNode *uiuc_type;
+    SGPropertyNode_ptr speed_up;
+    SGPropertyNode_ptr aero;
+    SGPropertyNode_ptr uiuc_type;
     
 public:
 

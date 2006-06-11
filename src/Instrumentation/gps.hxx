@@ -141,9 +141,9 @@ private:
     SGPropertyNode_ptr _leg_to_flag_node;
     SGPropertyNode_ptr _alt_deviation_node;
 
-    SGPropertyNode *_route;
-    SGPropertyNode *addWp;
-    SGPropertyNode *popWp;
+    SGPropertyNode_ptr _route;
+    SGPropertyNode_ptr addWp;
+    SGPropertyNode_ptr popWp;
 
     SGRoute *route;
 

@@ -181,37 +181,37 @@ class MK_VIII : public SGSubsystem
   {
     MK_VIII *mk;
 
-    vector<SGPropertyNode *> tied_properties;
+    vector<SGPropertyNode_ptr> tied_properties;
 
   public:
     struct
     {
-      SGPropertyNode *ai_caged;
-      SGPropertyNode *ai_roll;
-      SGPropertyNode *ai_serviceable;
-      SGPropertyNode *altimeter_altitude;
-      SGPropertyNode *altimeter_serviceable;
-      SGPropertyNode *altitude;
-      SGPropertyNode *altitude_agl;
-      SGPropertyNode *asi_serviceable;
-      SGPropertyNode *asi_speed;
-      SGPropertyNode *autopilot_heading_lock;
-      SGPropertyNode *flaps;
-      SGPropertyNode *gear_down;
-      SGPropertyNode *latitude;
-      SGPropertyNode *longitude;
-      SGPropertyNode *nav0_cdi_serviceable;
-      SGPropertyNode *nav0_gs_distance;
-      SGPropertyNode *nav0_gs_needle_deflection;
-      SGPropertyNode *nav0_gs_serviceable;
-      SGPropertyNode *nav0_has_gs;
-      SGPropertyNode *nav0_heading_needle_deflection;
-      SGPropertyNode *nav0_in_range;
-      SGPropertyNode *nav0_nav_loc;
-      SGPropertyNode *nav0_serviceable;
-      SGPropertyNode *power;
-      SGPropertyNode *replay_state;
-      SGPropertyNode *vs;
+      SGPropertyNode_ptr ai_caged;
+      SGPropertyNode_ptr ai_roll;
+      SGPropertyNode_ptr ai_serviceable;
+      SGPropertyNode_ptr altimeter_altitude;
+      SGPropertyNode_ptr altimeter_serviceable;
+      SGPropertyNode_ptr altitude;
+      SGPropertyNode_ptr altitude_agl;
+      SGPropertyNode_ptr asi_serviceable;
+      SGPropertyNode_ptr asi_speed;
+      SGPropertyNode_ptr autopilot_heading_lock;
+      SGPropertyNode_ptr flaps;
+      SGPropertyNode_ptr gear_down;
+      SGPropertyNode_ptr latitude;
+      SGPropertyNode_ptr longitude;
+      SGPropertyNode_ptr nav0_cdi_serviceable;
+      SGPropertyNode_ptr nav0_gs_distance;
+      SGPropertyNode_ptr nav0_gs_needle_deflection;
+      SGPropertyNode_ptr nav0_gs_serviceable;
+      SGPropertyNode_ptr nav0_has_gs;
+      SGPropertyNode_ptr nav0_heading_needle_deflection;
+      SGPropertyNode_ptr nav0_in_range;
+      SGPropertyNode_ptr nav0_nav_loc;
+      SGPropertyNode_ptr nav0_serviceable;
+      SGPropertyNode_ptr power;
+      SGPropertyNode_ptr replay_state;
+      SGPropertyNode_ptr vs;
     } external_properties;
 
     inline PropertiesHandler (MK_VIII *device)

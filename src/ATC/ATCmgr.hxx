@@ -110,12 +110,12 @@ private:
     double comm_freq[2];
 
     // Pointers to users current communication frequencies.
-    SGPropertyNode* comm_node[2];
+    SGPropertyNode_ptr comm_node[2];
 
     // Pointers to current users position
-    SGPropertyNode* lon_node;
-    SGPropertyNode* lat_node;
-    SGPropertyNode* elev_node;
+    SGPropertyNode_ptr lon_node;
+    SGPropertyNode_ptr lat_node;
+    SGPropertyNode_ptr elev_node;
 
     // Position of the ATC that the comm radios are tuned to in order to decide 
 	// whether transmission will be received.

@@ -66,9 +66,9 @@ class FGATIS : public FGATC {
 	// or the whereabouts of the aircraft it is transmitting to.  However, to ensure consistancy of
 	// operation with the other ATC classes the ATIS class must calculate range to the aircraft in order
 	// to decide whether to render the transmission - hence the users plane details must be stored.
-	//SGPropertyNode *airplane_lon_node; 
-	//SGPropertyNode *airplane_lat_node;
-	//SGPropertyNode *airplane_elev_node; 
+	//SGPropertyNode_ptr airplane_lon_node; 
+	//SGPropertyNode_ptr airplane_lat_node;
+	//SGPropertyNode_ptr airplane_elev_node; 
 	
 	public:
 	

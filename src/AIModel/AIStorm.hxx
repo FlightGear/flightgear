@@ -61,16 +61,16 @@ private:
         double delay;   // average time (sec) between lightning flashes
         int subflashes; // number of subflashes per flash
         double random_delay;  // delay +/- random number
-        double timer; 
-        SGPropertyNode* flash_node; 
+        double timer;
+        SGPropertyNode_ptr flash_node;
         int flashed;    // number of subflashes already done this flash
         bool flashing;  // true if currently flashing;
         int subflash_array[8];
         int subflash_index;
 
         // turbulence stuff
-        SGPropertyNode* turb_mag_node;
-        SGPropertyNode* turb_rate_node;
+        SGPropertyNode_ptr turb_mag_node;
+        SGPropertyNode_ptr turb_rate_node;
 
 };
 

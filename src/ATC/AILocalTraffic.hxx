@@ -160,8 +160,8 @@ private:
 	bool inAir;				// True when off the ground 
 	
 	// environment - some of this might get moved into FGAIPlane
-	SGPropertyNode* wind_from_hdg;	//degrees
-	SGPropertyNode* wind_speed_knots;		//knots
+	SGPropertyNode_ptr wind_from_hdg;	//degrees
+	SGPropertyNode_ptr wind_speed_knots;		//knots
 	
 	// Pattern details that (may) change
 	int numInPattern;		// Number of planes in the pattern (this might get more complicated if high performance GA aircraft fly a higher pattern eventually)

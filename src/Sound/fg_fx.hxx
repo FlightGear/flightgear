@@ -82,8 +82,8 @@ private:
     bool last_pause;
     double last_volume;
 
-    SGPropertyNode *_pause;
-    SGPropertyNode *_volume;
+    SGPropertyNode_ptr _pause;
+    SGPropertyNode_ptr _volume;
 
 };
 

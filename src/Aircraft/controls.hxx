@@ -258,7 +258,7 @@ private:
     int lateral_mode;
      
 
-    SGPropertyNode * auto_coordination;
+    SGPropertyNode_ptr auto_coordination;
 
 public:
 

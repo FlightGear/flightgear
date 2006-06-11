@@ -52,7 +52,7 @@ private:
     double last_cg_offset;
 
     vector <string> property_names;
-    vector <SGPropertyNode *> nodes;
+    vector <SGPropertyNode_ptr> nodes;
 
     // Protocol specific init routines
     void init_binary();

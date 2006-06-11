@@ -46,14 +46,14 @@ class FGMarkerBeacon : public SGSubsystem
     SGInterpTable *high_tbl;
 
     // Inputs
-    SGPropertyNode *lon_node;
-    SGPropertyNode *lat_node;
-    SGPropertyNode *alt_node;
-    SGPropertyNode *bus_power;
-    SGPropertyNode *power_btn;
-    SGPropertyNode *audio_btn;
-    SGPropertyNode *serviceable;
-    SGPropertyNode *sound_pause;
+    SGPropertyNode_ptr lon_node;
+    SGPropertyNode_ptr lat_node;
+    SGPropertyNode_ptr alt_node;
+    SGPropertyNode_ptr bus_power;
+    SGPropertyNode_ptr power_btn;
+    SGPropertyNode_ptr audio_btn;
+    SGPropertyNode_ptr serviceable;
+    SGPropertyNode_ptr sound_pause;
 
     bool need_update;
 

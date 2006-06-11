@@ -247,8 +247,8 @@ private:
 	bool departed;	// set true when the above needs incrementing with time, false when it doesn't.
 	
 	// environment - need to make sure we're getting the surface winds and not winds aloft.
-	SGPropertyNode* wind_from_hdg;	//degrees
-	SGPropertyNode* wind_speed_knots;		//knots
+	SGPropertyNode_ptr wind_from_hdg;	//degrees
+	SGPropertyNode_ptr wind_speed_knots;		//knots
 	
 	double aptElev;		// Airport elevation
 	string activeRwy;	// Active runway number - For now we'll disregard multiple / alternate runway operation.
@@ -334,10 +334,10 @@ private:
 	bool tower_failed;		// tower failed?
 	
 	// Pointers to current users position and orientation
-	SGPropertyNode* user_lon_node;
-	SGPropertyNode* user_lat_node;
-	SGPropertyNode* user_elev_node;
-	SGPropertyNode* user_hdg_node;
+	SGPropertyNode_ptr user_lon_node;
+	SGPropertyNode_ptr user_lat_node;
+	SGPropertyNode_ptr user_elev_node;
+	SGPropertyNode_ptr user_hdg_node;
 	
 	// Details of the general traffic flow etc in the circuit
 	double crosswind_leg_pos;	// Distance from threshold crosswind leg is being turned to in meters (actual operation - *not* ideal circuit)

@@ -105,8 +105,8 @@ public:
 
 private:
 
-  SGPropertyNode * _base_wind_speed_node;
-  SGPropertyNode * _gust_wind_speed_node;
+  SGPropertyNode_ptr _base_wind_speed_node;
+  SGPropertyNode_ptr _gust_wind_speed_node;
 
   double _current_wind_speed_kt;
   double _delta_wind_speed_kt;
@@ -179,10 +179,10 @@ private:
     float search_elapsed;
     float fetch_elapsed;
     const FGAirport *last_apt;
-    SGPropertyNode *proxy_host;
-    SGPropertyNode *proxy_port;
-    SGPropertyNode *proxy_auth;
-    SGPropertyNode *metar_max_age;
+    SGPropertyNode_ptr proxy_host;
+    SGPropertyNode_ptr proxy_port;
+    SGPropertyNode_ptr proxy_auth;
+    SGPropertyNode_ptr metar_max_age;
 
     FGMetarResult fetch_data( const string &icao );
     virtual void update_metar_properties( const FGMetar *m );
