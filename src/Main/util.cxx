@@ -104,8 +104,13 @@ fgSetupWind (double min_hdg, double max_hdg, double speed, double gust)
 void
 fgExit (int status)
 {
-    SG_LOG(SG_GENERAL, SG_INFO, "Exiting FlightGear with status " << status);
+    // remove subsystems first, which need access to other subsystems in their
+    // destructors (e.g. "nasal")
+    SGSubsystem *sub = globals->get_subsystem("ai_model");
+    globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("ai_model");
+    delete sub;
 
+    SG_LOG(SG_GENERAL, SG_INFO, "Exiting FlightGear with status " << status);
     exit(status);
 }
 
