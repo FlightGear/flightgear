@@ -28,6 +28,8 @@
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 
+class SGMaterial;
+
 class FGGroundCache {
 public:
     FGGroundCache();
@@ -63,8 +65,7 @@ public:
     // and finally the altitude above ground.
     bool get_agl(double t, const double pt[3], double max_altoff,
                  double contact[3], double normal[3], double vel[3],
-                 int *type, double *loadCapacity,
-                 double *frictionFactor, double *agl);
+                 int *type, const SGMaterial** material, double *agl);
 
     // Return 1 if the hook intersects with a wire.
     // That test is done by checking if the quad spanned by the points pt*
@@ -82,6 +83,7 @@ public:
 
 private:
     struct Triangle {
+      Triangle() : material(0) {}
       // The edge vertices.
       sgdVec3 vertices[3];
       // The surface normal.
@@ -94,6 +96,8 @@ private:
       sgdVec3 rotation_pivot;
       // Ground type
       int type;
+      // the simgear material reference, contains friction coeficients ...
+      const SGMaterial* material;
     };
     struct Catapult {
       sgdVec3 start;
@@ -147,14 +151,13 @@ private:
 
     // Helper class to hold some properties of the ground triangle.
     struct GroundProperty {
-      GroundProperty() : type(0) {}
+      GroundProperty() : type(0), material(0) {}
       int type;
       int wire_id;
       sgdVec3 vel;
       sgdVec3 rot;
       sgdVec3 pivot;
-      // not yet implemented ...
-//       double loadCapacity;
+      const SGMaterial* material;
     };
 
     // compute the ground property of this leaf.

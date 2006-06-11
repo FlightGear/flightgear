@@ -1090,7 +1090,6 @@ public:
     enum GroundType {
       Unknown = 0, //??
       Solid, // Whatever we will roll on with infinite load factor.
-      Forest, // Ground unsuitable for taxiing.
       Water, // For the beaver ...
       Catapult, // Carrier cats.
       Wire // Carrier wires.
@@ -1133,14 +1132,17 @@ public:
                     double contact[3], double normal[3], double vel[3],
                     int *type, double *loadCapacity,
                     double *frictionFactor, double *agl);
+
+    // Return the altitude above ground below the wgs84 point pt
+    // Search for the nearest triangle to pt.
+    // Return ground properties like the ground type, a pointer to the
+    // material and finally the altitude above ground.
     bool get_agl_m(double t, const double pt[3], double max_altoff,
                    double contact[3], double normal[3], double vel[3],
-                   int *type, double *loadCapacity,
-                   double *frictionFactor, double *agl);
+                   int *type, const SGMaterial** material, double *agl);
     bool get_agl_ft(double t, const double pt[3], double max_altoff,
                     double contact[3], double normal[3], double vel[3],
-                    int *type, double *loadCapacity,
-                    double *frictionFactor, double *agl);
+                    int *type, const SGMaterial** material, double *agl);
     double get_groundlevel_m(double lat, double lon, double alt);
 
 

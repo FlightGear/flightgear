@@ -561,7 +561,7 @@ static void fgMainLoop( void ) {
       } else {
         // Do full intersection test.
         double lev;
-        if (globals->get_scenery()->get_elevation_m(lat, lon, alt+2, lev))
+        if (globals->get_scenery()->get_elevation_m(lat, lon, alt+2, lev, 0))
           view_location->set_cur_elev_m( lev );
         else
           view_location->set_cur_elev_m( -9999.0 );

@@ -941,7 +941,7 @@ void FGAIAircraft::getGroundElev(double dt) {
 
         // FIXME: make sure the pos.lat/pos.lon values are in degrees ...
         double alt;
-        if (globals->get_scenery()->get_elevation_m(pos.lat(), pos.lon(), 20000.0, alt))
+        if (globals->get_scenery()->get_elevation_m(pos.lat(), pos.lon(), 20000.0, alt, 0))
             tgt_altitude = alt * SG_METER_TO_FEET;
 
         //cerr << "Target altitude : " << tgt_altitude << endl;

@@ -89,7 +89,7 @@ public:
 bool fgCurrentElev( sgdVec3 abs_view_pos,
                     double max_alt_m,
                     sgdVec3 scenery_center,
-                    ssgTransform *terra_transform,
+                    ssgBranch *branch,
                     FGHitList *hit_list,
                     double *terrain_elev,
                     double *radius,

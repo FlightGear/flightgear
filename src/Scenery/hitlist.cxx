@@ -700,7 +700,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
 // returned results are in meters
 bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
                     sgdVec3 scenery_center,
-                    ssgTransform *terra_transform,
+                    ssgBranch *branch,
                     FGHitList *hit_list,
                     double *terrain_elev, double *radius, double *normal,
 		    int & this_hit )
@@ -719,11 +719,11 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
 
     sgMat4 fxform;
     sgMakeIdentMat4 ( fxform ) ;
-    ssgGetEntityTransform( terra_transform, fxform );
+    ssgGetEntityTransform( branch, fxform );
 
     sgdMat4 xform;
     sgdSetMat4(xform,fxform);
-    hit_list->Intersect( terra_transform, xform, orig, dir );
+    hit_list->Intersect( branch, xform, orig, dir );
 
     this_hit = -1;
     int max_hit = -1;

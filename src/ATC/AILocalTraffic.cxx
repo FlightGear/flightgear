@@ -1590,7 +1590,7 @@ void FGAILocalTraffic::DoGroundElev() {
 
         // FIXME: make shure the pos.lat/pos.lon values are in degrees ...
         double alt;
-        if (globals->get_scenery()->get_elevation_m(lat, lon, 20000.0, alt))
+        if (globals->get_scenery()->get_elevation_m(lat, lon, 20000.0, alt, 0))
           _aip.getSGLocation()->set_cur_elev_m(alt);
 }
 

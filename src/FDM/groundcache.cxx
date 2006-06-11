@@ -32,6 +32,8 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/scene/material/mat.hxx>
+#include <simgear/scene/material/matlib.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
@@ -233,32 +235,15 @@ FGGroundCache::extractGroundProperty( ssgLeaf* l )
   }
 
   else {
-
     // Initialize velocity field.
     sgdSetVec3( gp.vel, 0.0, 0.0, 0.0 );
     sgdSetVec3( gp.rot, 0.0, 0.0, 0.0 );
     sgdSetVec3( gp.pivot, 0.0, 0.0, 0.0 );
-  }
-  
-  // Get the texture name and decide what ground type we have.
-  ssgState *st = l->getState();
-  if (st != NULL && st->isAKindOf(ssgTypeSimpleState())) {
-    ssgSimpleState *ss = (ssgSimpleState*)st;
-    SGPath fullPath( ss->getTextureFilename() ? ss->getTextureFilename(): "" );
-    string file = fullPath.file();
-    SGPath dirPath(fullPath.dir());
-    string category = dirPath.file();
-    
-    if (category == "Runway")
-      gp.type = FGInterface::Solid;
-    else {
-      if (file == "asphault.rgb" || file == "airport.rgb")
-        gp.type = FGInterface::Solid;
-      else if (file == "water.rgb" || file == "water-lake.rgb")
-        gp.type = FGInterface::Water;
-      else if (file == "forest.rgb" || file == "cropwood.rgb")
-        gp.type = FGInterface::Forest;
-    }
+
+    // get some material information for use in the gear model
+    gp.material = globals->get_matlib()->findMaterial(l);
+    if (gp.material)
+      gp.type = gp.material->get_solid() ? FGInterface::Solid : FGInterface::Water;
   }
   
   return gp;
@@ -322,6 +307,7 @@ FGGroundCache::putSurfaceLeafIntoCache(const sgdSphere *sp,
   for (int i = 0; i < nt; ++i) {
     Triangle t;
     t.sphere.empty();
+    t.material = gp.material;
     short v[3];
     l->getTriangle(i, &v[0], &v[1], &v[2]);
     for (int k = 0; k < 3; ++k) {
@@ -395,6 +381,7 @@ FGGroundCache::velocityTransformTriangle(double dt,
   sgdCopyVec3(dst.rotation_pivot, src.rotation_pivot);
 
   dst.type = src.type;
+  dst.material = src.material;
 
   if (dt*sgdLengthSquaredVec3(src.velocity) != 0) {
     sgdVec3 pivotoff, vel;
@@ -621,15 +608,14 @@ FGGroundCache::get_cat(double t, const double dpt[3],
 bool
 FGGroundCache::get_agl(double t, const double dpt[3], double max_altoff,
                        double contact[3], double normal[3], double vel[3],
-                       int *type, double *loadCapacity,
-                       double *frictionFactor, double *agl)
+                       int *type, const SGMaterial** material, double *agl)
 {
   bool ret = false;
 
   *type = FGInterface::Unknown;
 //   *agl = 0.0;
-  *loadCapacity = DBL_MAX;
-  *frictionFactor = 1.0;
+  if (material)
+    *material = 0;
   sgdSetVec3( vel, 0.0, 0.0, 0.0 );
   sgdSetVec3( contact, 0.0, 0.0, 0.0 );
   sgdSetVec3( normal, 0.0, 0.0, 0.0 );
@@ -683,11 +669,11 @@ FGGroundCache::get_agl(double t, const double dpt[3], double max_altoff,
           sgdAddVec3(vel, triangle.velocity);
           // Save the ground type.
           *type = triangle.type;
-          // FIXME: figure out how to get that sign ...
-//           *agl = sqrt(sqdist);
-          *agl = sgdLengthVec3( dpt ) - sgdLengthVec3( contact );
-//           *loadCapacity = DBL_MAX;
-//           *frictionFactor = 1.0;
+          sgdVec3 dstToContact;
+          sgdSubVec3(dstToContact, contact, dpt);
+          *agl = sgdScalarProductVec3(dir, dstToContact);
+          if (material)
+            *material = triangle.material;
         }
       }
     }
@@ -708,10 +694,10 @@ FGGroundCache::get_agl(double t, const double dpt[3], double max_altoff,
   
   // The altitude is the distance of the requested point from the
   // contact point.
-  *agl = sgdLengthVec3( dpt ) - sgdLengthVec3( contact );
+  sgdVec3 dstToContact;
+  sgdSubVec3(dstToContact, contact, dpt);
+  *agl = sgdScalarProductVec3(dir, dstToContact);
   *type = FGInterface::Unknown;
-  *loadCapacity = DBL_MAX;
-  *frictionFactor = 1.0;
 
   return ret;
 }

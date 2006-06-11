@@ -32,6 +32,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/scene/model/placement.hxx>
+#include <simgear/scene/material/mat.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Scenery/scenery.hxx>
@@ -836,16 +837,28 @@ FGInterface::get_cat_ft(double t, const double pt[3],
   return dist*SG_METER_TO_FEET;
 }
 
+// Legacy interface just kept because of JSBSim
 bool
 FGInterface::get_agl_m(double t, const double pt[3],
                        double contact[3], double normal[3], double vel[3],
                        int *type, double *loadCapacity,
                        double *frictionFactor, double *agl)
 {
-  return ground_cache.get_agl(t, pt, 2.0, contact, normal, vel, type,
-                              loadCapacity, frictionFactor, agl);
+  const SGMaterial* material;
+  bool ret = ground_cache.get_agl(t, pt, 2.0, contact, normal, vel, type,
+                                  &material, agl);
+  if (material) {
+    *loadCapacity = material->get_load_resistence();
+    *frictionFactor = material->get_friction_factor();
+
+  } else {
+    *loadCapacity = DBL_MAX;
+    *frictionFactor = 1.0;
+  }
+  return ret;
 }
 
+// Legacy interface just kept because of JSBSim
 bool
 FGInterface::get_agl_ft(double t, const double pt[3],
                         double contact[3], double normal[3], double vel[3],
@@ -855,45 +868,51 @@ FGInterface::get_agl_ft(double t, const double pt[3],
   // Convert units and do the real work.
   sgdVec3 pt_m;
   sgdScaleVec3( pt_m, pt, SG_FEET_TO_METER );
+
+  const SGMaterial* material;
   bool ret = ground_cache.get_agl(t, pt_m, 2.0, contact, normal, vel,
-                                  type, loadCapacity, frictionFactor, agl);
+                                  type, &material, agl);
   // Convert units back ...
   sgdScaleVec3( contact, SG_METER_TO_FEET );
   sgdScaleVec3( vel, SG_METER_TO_FEET );
   *agl *= SG_METER_TO_FEET;
-  // FIXME: scale the load limit to something in the english unit system.
-  // Be careful with the DBL_MAX which is returned by default.
+
+  // return material properties if available
+  if (material) {
+    // FIXME: convert units?? now pascal to lbf/ft^2
+    *loadCapacity = 0.020885434*material->get_load_resistence();
+    *frictionFactor = material->get_friction_factor();
+  } else {
+    *loadCapacity = DBL_MAX;
+    *frictionFactor = 1.0;
+  }
   return ret;
 }
 
 bool
 FGInterface::get_agl_m(double t, const double pt[3], double max_altoff,
                        double contact[3], double normal[3], double vel[3],
-                       int *type, double *loadCapacity,
-                       double *frictionFactor, double *agl)
+                       int *type, const SGMaterial** material, double *agl)
 {
   return ground_cache.get_agl(t, pt, max_altoff, contact, normal, vel, type,
-                              loadCapacity, frictionFactor, agl);
+                              material, agl);
 }
 
 bool
 FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
                         double contact[3], double normal[3], double vel[3],
-                        int *type, double *loadCapacity,
-                        double *frictionFactor, double *agl)
+                        int *type, const SGMaterial** material, double *agl)
 {
   // Convert units and do the real work.
   sgdVec3 pt_m;
   sgdScaleVec3( pt_m, pt, SG_FEET_TO_METER );
   bool ret = ground_cache.get_agl(t, pt_m, SG_FEET_TO_METER * max_altoff,
                                   contact, normal, vel,
-                                  type, loadCapacity, frictionFactor, agl);
+                                  type, material, agl);
   // Convert units back ...
   sgdScaleVec3( contact, SG_METER_TO_FEET );
   sgdScaleVec3( vel, SG_METER_TO_FEET );
   *agl *= SG_METER_TO_FEET;
-  // FIXME: scale the load limit to something in the english unit system.
-  // Be careful with the DBL_MAX which is returned by default.
   return ret;
 }
 
@@ -936,13 +955,13 @@ FGInterface::get_groundlevel_m(double lat, double lon, double alt)
     }
   }
   
-  double contact[3], normal[3], vel[3], lc, ff, agl;
+  double contact[3], normal[3], vel[3], agl;
   int type;
   // Ignore the return value here, since it just tells us if
   // the returns stem from the groundcache or from the coarse
   // computations below the groundcache. The contact point is still something
   // valid, the normals and the other returns just contain some defaults.
-  get_agl_m(ref_time, pos, 2.0, contact, normal, vel, &type, &lc, &ff, &agl);
+  get_agl_m(ref_time, pos, 2.0, contact, normal, vel, &type, 0, &agl);
   Point3D geodPos = sgCartToGeod(Point3D(contact[0], contact[1], contact[2]));
   return geodPos.elev();
 }
