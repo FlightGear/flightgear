@@ -35,8 +35,6 @@ public:
 
 private:
     SGPropertyNode *config_props;
-    bool enabled;
-
 };
 
 #endif // __INSTRUMENT_MGR_HXX

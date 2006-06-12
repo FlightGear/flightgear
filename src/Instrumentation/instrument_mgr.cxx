@@ -64,16 +64,10 @@ FGInstrumentMgr::FGInstrumentMgr ()
         try {
             readProperties( config.str(), config_props );
 
-            if ( build() ) {
-                enabled = true;
-            } else {
-                SG_LOG( SG_ALL, SG_ALERT,
-                        "Detected an internal inconsistency in the instrumentation");
-                SG_LOG( SG_ALL, SG_ALERT,
-                        " system specification file.  See earlier errors for" );
-                SG_LOG( SG_ALL, SG_ALERT,
-                        " details.");
-                exit(-1);
+            if ( !build() ) {
+                throw sg_throwable(string(
+                        "Detected an internal inconsistency in the instrumentation\n"
+                        "system specification file.  See earlier errors for details."));
             }
         } catch (const sg_exception& exc) {
             SG_LOG( SG_ALL, SG_ALERT, "Failed to load instrumentation system model: "
