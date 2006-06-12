@@ -166,10 +166,10 @@ draw( void ) //  (HUD_scale * pscale )
 {
 
     float vmin = 0.0, vmax = 0.0;
-    int marker_xs;
-    int marker_xe;
-    int marker_ys;
-    int marker_ye;
+    float marker_xs;
+    float marker_xe;
+    float marker_ys;
+    float marker_ye;
     int text_x = 0, text_y = 0;
     int lenstr;
     int height, width;
@@ -452,7 +452,7 @@ draw( void ) //  (HUD_scale * pscale )
 
                     if( condition ) {  // Show a tick if necessary
                         // Calculate the location of this tick
-                        marker_ys = scrn_rect.top + FloatToInt(((i - vmin) * factor()/*+.5f*/));
+                        marker_ys = scrn_rect.top + (i - vmin) * factor()/*+.5f*/;
                         // marker_ys = scrn_rect.top + (int)((i - vmin) * factor() + .5);
                         // Block calculation artifact from drawing ticks below min coordinate.
                         // Calculation here accounts for text height.
