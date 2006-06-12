@@ -3,55 +3,55 @@
 
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, digit )  TextString( text, x , y,digit )  //suma
+#define textString( x , y, text, digit )  TextString( text, x , y,digit )
 #else
-#define textString( x , y, text, digit )  puDrawString ( guiFnt, text, x, y ); //suma
+#define textString( x , y, text, digit )  puDrawString ( guiFnt, text, x, y )
 #endif
 
 //============== Top of gauge_instr class member definitions ==============
 
-gauge_instr ::
-gauge_instr( int          x,
-	     int          y,
-	     UINT         width,
-	     UINT         height,
-	     FLTFNPTR     load_fn,
-	     UINT         options,
-	     float       disp_scale,
-	     float       maxValue,
-	     float       minValue,
-	     UINT         major_divs,
-	     UINT         minor_divs,
-	     int          dp_showing,
-	     UINT         modulus,
-	     bool         working) :
+gauge_instr::gauge_instr(
+             int      x,
+             int      y,
+             UINT     width,
+             UINT     height,
+             FLTFNPTR load_fn,
+             UINT     options,
+             float    disp_scale,
+             float    maxValue,
+             float    minValue,
+             UINT     major_divs,
+             UINT     minor_divs,
+             int      dp_showing,
+             UINT     modulus,
+             bool     working) :
     instr_scale( x, y, width, height,
-		 load_fn, options,
-		 (maxValue - minValue), // Always shows span?
-		 maxValue, minValue,
-		 disp_scale,
-		 major_divs, minor_divs,
-		 modulus, dp_showing,
-		 working)
+                 load_fn, options,
+                 (maxValue - minValue), // Always shows span?
+                 maxValue, minValue,
+                 disp_scale,
+                 major_divs, minor_divs,
+                 modulus, dp_showing,
+                 working)
 {
     //  UINT options = get_options();
     //  huds_vert    = options & HUDS_VERT;
     //  huds_left    = options & HUDS_LEFT;
     //  huds_right   = options & HUDS_RIGHT;
     //  huds_both    = (options & HUDS_BOTH) == HUDS_BOTH;
-    //	huds_noticks = options & HUDS_NOTICKS;
+    //  huds_noticks = options & HUDS_NOTICKS;
     //  huds_notext  = options & HUDS_NOTEXT;
     //  huds_top     = options & HUDS_TOP;
     //  huds_bottom  = options & HUDS_BOTTOM;
 }
 
-gauge_instr ::
-~gauge_instr()
+
+gauge_instr::~gauge_instr()
 {
 }
 
-gauge_instr ::
-gauge_instr( const gauge_instr & image):
+
+gauge_instr::gauge_instr( const gauge_instr & image) :
     instr_scale( (instr_scale &) image)
 {
     //  UINT options = get_options();
@@ -65,14 +65,15 @@ gauge_instr( const gauge_instr & image):
     //  huds_bottom =  options & HUDS_BOTTOM;
 }
 
-gauge_instr & gauge_instr ::
-operator = (const gauge_instr & rhs )
+
+gauge_instr & gauge_instr::operator=(const gauge_instr & rhs)
 {
-    if( !(this == &rhs)) {
-	instr_scale::operator = (rhs);
+    if (!(this == &rhs)) {
+        instr_scale::operator = (rhs);
     }
     return *this;
 }
+
 
 // As implemented, draw only correctly draws a horizontal or vertical
 // scale. It should contain a variation that permits clock type displays.
@@ -80,10 +81,10 @@ operator = (const gauge_instr & rhs )
 // This routine should be worked over before using. Current value would be
 // fetched and not used if not commented out. Clearly that is intollerable.
 
-void gauge_instr :: draw (void)
+void gauge_instr::draw (void)
 {
-    int marker_xs, marker_xe;
-    int marker_ys, marker_ye;
+    float marker_xs, marker_xe;
+    float marker_ys, marker_ye;
     int text_x, text_y;
     int width, height, bottom_4;
     int lenstr;
@@ -100,280 +101,281 @@ void gauge_instr :: draw (void)
 
     width = scrn_rect.left + scrn_rect.right;
     height = scrn_rect.top  + scrn_rect.bottom,
-	bottom_4 = scrn_rect.bottom / 4;
+    bottom_4 = scrn_rect.bottom / 4;
     // Draw the basic markings for the scale...
 
-    if( huds_vert(options) ) { // Vertical scale
-	drawOneLine( scrn_rect.left,     // Bottom tick bar
-		     scrn_rect.top,
-		     width,
-		     scrn_rect.top);
+    if ( huds_vert(options) ) { // Vertical scale
+        drawOneLine( scrn_rect.left,     // Bottom tick bar
+                     scrn_rect.top,
+                     width,
+                     scrn_rect.top);
 
-	drawOneLine( scrn_rect.left,    // Top tick bar
-		     height,
-		     width,
-		     height );
+        drawOneLine( scrn_rect.left,    // Top tick bar
+                     height,
+                     width,
+                     height );
 
-	marker_xs = scrn_rect.left;
-	marker_xe = width;
+        marker_xs = scrn_rect.left;
+        marker_xe = width;
 
-	if( huds_left(options) ) {     // Read left, so line down right side
-	    drawOneLine( width,
-			 scrn_rect.top,
-			 width,
-			 height);
-	  
-	    marker_xs  = marker_xe - scrn_rect.right / 3;   // Adjust tick xs
-	}
-	
-	if( huds_right(options) ) {     // Read  right, so down left sides
-	    drawOneLine( scrn_rect.left,
-			 scrn_rect.top,
-			 scrn_rect.left,
-			 height);
-	  
-	    marker_xe = scrn_rect.left + scrn_rect.right / 3;     // Adjust tick xe
-	}
+        if ( huds_left(options) ) {     // Read left, so line down right side
+            drawOneLine( width,
+                         scrn_rect.top,
+                         width,
+                         height);
 
-	// At this point marker x_start and x_end values are transposed.
-	// To keep this from confusing things they are now interchanged.
-	if( huds_both(options) ) {
-	    marker_ye = marker_xs;
-	    marker_xs = marker_xe;
-	    marker_xe = marker_ye;
-	}
+            marker_xs  = marker_xe - scrn_rect.right / 3.0;   // Adjust tick xs
+        }
 
-	// Work through from bottom to top of scale. Calculating where to put
-	// minor and major ticks.
+        if ( huds_right(options) ) {     // Read  right, so down left sides
+            drawOneLine( scrn_rect.left,
+                         scrn_rect.top,
+                         scrn_rect.left,
+                         height);
 
-	if( !huds_noticks(options)) {    // If not no ticks...:)
-	    // Calculate x marker offsets
-	    int last = (int)vmax + 1; //FloatToInt(vmax)+1;
-	    i = (int)vmin; //FloatToInt(vmin);
-	    for(; i <last ; i++ )      {
-		//	for( i = (int)vmin; i <= (int)vmax; i++ ) {
+            marker_xe = scrn_rect.left + scrn_rect.right / 3.0;     // Adjust tick xe
+        }
 
-		// Calculate the location of this tick
-		marker_ys = scrn_rect.top + FloatToInt((i - vmin) * factor()/* +.5f*/);
+        // At this point marker x_start and x_end values are transposed.
+        // To keep this from confusing things they are now interchanged.
+        if ( huds_both(options) ) {
+            marker_ye = marker_xs;
+            marker_xs = marker_xe;
+            marker_xe = marker_ye;
+        }
 
-		// We compute marker_ys even though we don't know if we will use
-		// either major or minor divisions. Simpler.
+        // Work through from bottom to top of scale. Calculating where to put
+        // minor and major ticks.
 
-		if( div_min()) {                  // Minor tick marks
-		    if( !(i%(int)div_min()) ) {
-			if( huds_left(options) && huds_right(options) ) {
-			    drawOneLine( scrn_rect.left, marker_ys,
-					 marker_xs - 3, marker_ys );
-			    drawOneLine( marker_xe + 3, marker_ys,
-					 width, marker_ys );
-			}
-			else {
-			    if( huds_left(options) ) {
-				drawOneLine( marker_xs + 3, marker_ys, marker_xe, marker_ys );
-			    }
-			    else {
-				drawOneLine( marker_xs, marker_ys, marker_xe - 3, marker_ys );
-			    }
-			}
-		    }
-		}
+        if ( !huds_noticks(options)) {    // If not no ticks...:)
+            // Calculate x marker offsets
+            int last = (int)vmax + 1; //FloatToInt(vmax)+1;
+            i = (int)vmin; //FloatToInt(vmin);
+            for (; i < last; i++) {
+                // for ( i = (int)vmin; i <= (int)vmax; i++ ) {
 
-		// Now we work on the major divisions. Since these are also labeled
-		// and no labels are drawn otherwise, we label inside this if
-		// statement.
+                // Calculate the location of this tick
+                marker_ys = scrn_rect.top + (i - vmin) * factor()/* +.5f*/;
 
-		if( div_max()) {                  // Major tick mark
-		    if( !(i%(int)div_max()) )            {
-			if( huds_left(options) && huds_right(options) ) {
-			    drawOneLine( scrn_rect.left, marker_ys,
-					 marker_xs, marker_ys );
-			    drawOneLine( marker_xe, marker_ys,
-					 width, marker_ys );
-			}
-			else {
-			    drawOneLine( marker_xs, marker_ys, marker_xe, marker_ys );
-			}
+                // We compute marker_ys even though we don't know if we will use
+                // either major or minor divisions. Simpler.
 
-			if( !huds_notext(options) ) {
-			    disp_val = i;
-			    sprintf( TextScale, "%d",
-				     FloatToInt(disp_val * data_scaling()/*+.5*/ ));
+                if ( div_min()) {                  // Minor tick marks
+                    if ( !(i%(int)div_min()) ) {
+                        if ( huds_left(options) && huds_right(options) ) {
+                            drawOneLine( scrn_rect.left, marker_ys,
+                                         marker_xs - 3, marker_ys );
+                            drawOneLine( marker_xe + 3, marker_ys,
+                                         width, marker_ys );
+                        }
+                        else {
+                            if ( huds_left(options) ) {
+                                drawOneLine( marker_xs + 3, marker_ys, marker_xe, marker_ys );
+                            }
+                            else {
+                                drawOneLine( marker_xs, marker_ys, marker_xe - 3, marker_ys );
+                            }
+                        }
+                    }
+                }
 
-			    lenstr = getStringWidth( TextScale );
-						
-			    if( huds_left(options) && huds_right(options) ) {
-				text_x = mid_scr.x -  lenstr/2 ;
-			    }
-			    else {
-				if( huds_left(options) )              {
-				    text_x = marker_xs - lenstr;
-				}
-				else {
-				    text_x = marker_xe - lenstr;
-				}
-			    }
-			    // Now we know where to put the text.
-			    text_y = marker_ys;
-			    textString( text_x, text_y, TextScale, 0 ); //suma
-			}
-		    }
-		}  //
-	    }  //
-	}  //
-	// Now that the scale is drawn, we draw in the pointer(s). Since labels
-	// have been drawn, text_x and text_y may be recycled. This is used
-	// with the marker start stops to produce a pointer for each side reading
+                // Now we work on the major divisions. Since these are also labeled
+                // and no labels are drawn otherwise, we label inside this if
+                // statement.
 
-	text_y = scrn_rect.top + FloatToInt((cur_value - vmin) * factor() /*+.5f*/);
-	//    text_x = marker_xs - scrn_rect.left;
+                if ( div_max()) {                  // Major tick mark
+                    if ( !(i%(int)div_max()) )            {
+                        if ( huds_left(options) && huds_right(options) ) {
+                            drawOneLine( scrn_rect.left, marker_ys,
+                                         marker_xs, marker_ys );
+                            drawOneLine( marker_xe, marker_ys,
+                                         width, marker_ys );
+                        }
+                        else {
+                            drawOneLine( marker_xs, marker_ys, marker_xe, marker_ys );
+                        }
 
-	if( huds_right(options) ) {
-	    glBegin(GL_LINE_STRIP);
-	    glVertex2f( scrn_rect.left, text_y + 5);
-	    glVertex2f( marker_xe,      text_y);
-	    glVertex2f( scrn_rect.left, text_y - 5);
-	    glEnd();
-	}
-	if( huds_left(options) ) {
-	    glBegin(GL_LINE_STRIP);
-	    glVertex2f( width,      text_y + 5);
-	    glVertex2f( marker_xs,  text_y);
-	    glVertex2f( width,      text_y - 5);
-	    glEnd();
-	}
-    }  // End if VERTICAL SCALE TYPE
-    else {                                // Horizontal scale by default
-	drawOneLine( scrn_rect.left,     // left tick bar
-		     scrn_rect.top,
-		     scrn_rect.left,
-		     height);
+                        if ( !huds_notext(options) ) {
+                            disp_val = i;
+                            sprintf( TextScale, "%d",
+                                     FloatToInt(disp_val * data_scaling()/*+.5*/ ));
 
-	drawOneLine( width,    // right tick bar
-		     scrn_rect.top,
-		     width,
-		     height );
+                            lenstr = getStringWidth( TextScale );
 
-	marker_ys = scrn_rect.top;                       // Starting point for
-	marker_ye = height;                              // tick y location calcs
-	marker_xs = scrn_rect.left + FloatToInt((cur_value - vmin) * factor() /*+ .5f*/);
+                            if ( huds_left(options) && huds_right(options) ) {
+                                text_x = mid_scr.x -  lenstr/2 ;
+                            }
+                            else {
+                                if ( huds_left(options) )              {
+                                    text_x = FloatToInt(marker_xs - lenstr);
+                                }
+                                else {
+                                    text_x = FloatToInt(marker_xe - lenstr);
+                                }
+                            }
+                            // Now we know where to put the text.
+                            text_y = FloatToInt(marker_ys);
+                            textString( text_x, text_y, TextScale, 0 );
+                        }
+                    }
+                }  //
+            }  //
+        }  //
+        // Now that the scale is drawn, we draw in the pointer(s). Since labels
+        // have been drawn, text_x and text_y may be recycled. This is used
+        // with the marker start stops to produce a pointer for each side reading
 
-	if( huds_top(options) ) {
-	    drawOneLine( scrn_rect.left,
-			 scrn_rect.top,
-			 width,
-			 scrn_rect.top);                    // Bottom box line
-	  
-	    marker_ye  = scrn_rect.top + scrn_rect.bottom / 2;   // Tick point adjust
-	    // Bottom arrow
-	    glBegin(GL_LINE_STRIP);
-	    glVertex2f( marker_xs - bottom_4, scrn_rect.top);
-	    glVertex2f( marker_xs, marker_ye);
-	    glVertex2f( marker_xs + bottom_4, scrn_rect.top);
-	    glEnd();
-	}
-	if( huds_bottom(options) ) {
-	    // Top box line
-	    drawOneLine( scrn_rect.left, height, width, height);
-	    // Tick point adjust
-	    marker_ys = height - scrn_rect.bottom  / 2;
+        text_y = scrn_rect.top + FloatToInt((cur_value - vmin) * factor() /*+.5f*/);
+        //    text_x = marker_xs - scrn_rect.left;
 
-	    // Top arrow
-	    glBegin(GL_LINE_STRIP);
-	    glVertex2f( marker_xs + bottom_4, height);
-	    glVertex2f( marker_xs, marker_ys );
-	    glVertex2f( marker_xs - bottom_4, height);
-	    glEnd();
-	}
+        if ( huds_right(options) ) {
+            glBegin(GL_LINE_STRIP);
+            glVertex2f( scrn_rect.left, text_y + 5);
+            glVertex2f( FloatToInt(marker_xe),      text_y);
+            glVertex2f( scrn_rect.left, text_y - 5);
+            glEnd();
+        }
+        if ( huds_left(options) ) {
+            glBegin(GL_LINE_STRIP);
+            glVertex2f( width,      text_y + 5);
+            glVertex2f( FloatToInt(marker_xs),  text_y);
+            glVertex2f( width,      text_y - 5);
+            glEnd();
+        }
+        // End if VERTICAL SCALE TYPE
 
-	
-	int last = (int)vmax + 1; //FloatToInt(vmax)+1;
-	i = (int)vmin; //FloatToInt(vmin);
-	for( ; i <last ; i++ )      {
-	    condition = true;
-	    if( !modulo()) {
-		if( i < min_val()) {
-		    condition = false;
-		}
-	    }
-	    if( condition )        {
-		marker_xs = scrn_rect.left + FloatToInt((i - vmin) * factor()/* +.5f*/);
-		//        marker_xs = scrn_rect.left + (int)((i - vmin) * factor() + .5f);
-		if( div_min()){
-		    if( !(i%(int)div_min()) ) {			
-			// draw in ticks only if they aren't too close to the edge.
-			if((( marker_xs + 5) > scrn_rect.left ) ||
-			   (( marker_xs - 5 )< (width))){
+    } else {                             // Horizontal scale by default
+        drawOneLine( scrn_rect.left,     // left tick bar
+                     scrn_rect.top,
+                     scrn_rect.left,
+                     height);
 
-			    if( huds_both(options) ) {
-				drawOneLine( marker_xs, scrn_rect.top,
-					     marker_xs, marker_ys - 4);
-				drawOneLine( marker_xs, marker_ye + 4,
-					     marker_xs, height);
-			    }
-			    else {
-				if( huds_top(options) ) {
-				    drawOneLine( marker_xs, marker_ys,
-						 marker_xs, marker_ye - 4);
-				}
-				else {
-				    drawOneLine( marker_xs, marker_ys + 4,
-						 marker_xs, marker_ye);
-				}
-			    }
-			}
-		    }
-		}
-		if( div_max()) {
-		    if( !(i%(int)div_max()) ) {			
-			if(modulo()) {
-			    if( disp_val < 0) {
-				while( disp_val < 0 ) {
-				    disp_val += modulo();
-				}	
-			    }
-			    disp_val = i % (int)modulo();
-			} else {
-			    disp_val = i;
-			}
-			sprintf( TextScale, "%d",
-				 FloatToInt(disp_val  * data_scaling()/* +.5*/ ));
-			lenstr = getStringWidth( TextScale);
-						
-			// Draw major ticks and text only if far enough from the edge.
-			if(( (marker_xs - 10)> scrn_rect.left ) &&
-			   ( (marker_xs + 10) < width )){
-			    if( huds_both(options) ) {
-				drawOneLine( marker_xs, scrn_rect.top,
-					     marker_xs, marker_ys);
-				drawOneLine( marker_xs, marker_ye,
-					     marker_xs, height);
+        drawOneLine( width,    // right tick bar
+                     scrn_rect.top,
+                     width,
+                     height );
 
-				if( !huds_notext(options) ) {
-				    textString ( marker_xs - lenstr, marker_ys + 4,
-						 TextScale ,0); //suma
-				}
-			    }
-			    else {
-				drawOneLine( marker_xs, marker_ys,
-					     marker_xs, marker_ye );
-				
-				if( !huds_notext(options) ) {
-				    if( huds_top(options) )              {
-					textString ( marker_xs - lenstr,
-						     height - 10,
-						     TextScale, 0 ); //suma
-				    }
-				    else  {
-					textString( marker_xs - lenstr, scrn_rect.top,
-						    TextScale, 0 );  //suma
-				    }            
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	}
+        marker_ys = scrn_rect.top;                       // Starting point for
+        marker_ye = height;                              // tick y location calcs
+        marker_xs = scrn_rect.left + (cur_value - vmin) * factor() /*+ .5f*/;
+
+        if ( huds_top(options) ) {
+            drawOneLine( scrn_rect.left,
+                         scrn_rect.top,
+                         width,
+                         scrn_rect.top);                    // Bottom box line
+
+            marker_ye  = scrn_rect.top + scrn_rect.bottom / 2.0;   // Tick point adjust
+            // Bottom arrow
+            glBegin(GL_LINE_STRIP);
+            glVertex2f( marker_xs - bottom_4, scrn_rect.top);
+            glVertex2f( marker_xs, marker_ye);
+            glVertex2f( marker_xs + bottom_4, scrn_rect.top);
+            glEnd();
+        }
+        if ( huds_bottom(options) ) {
+            // Top box line
+            drawOneLine( scrn_rect.left, height, width, height);
+            // Tick point adjust
+            marker_ys = height - scrn_rect.bottom  / 2.0;
+
+            // Top arrow
+            glBegin(GL_LINE_STRIP);
+            glVertex2f( marker_xs + bottom_4, height);
+            glVertex2f( marker_xs, marker_ys );
+            glVertex2f( marker_xs - bottom_4, height);
+            glEnd();
+        }
+
+
+        int last = (int)vmax + 1; //FloatToInt(vmax)+1;
+        i = (int)vmin; //FloatToInt(vmin);
+        for ( ; i <last ; i++ )      {
+            condition = true;
+            if ( !modulo()) {
+                if ( i < min_val()) {
+                    condition = false;
+                }
+            }
+            if ( condition )        {
+                marker_xs = scrn_rect.left + (i - vmin) * factor()/* +.5f*/;
+                //        marker_xs = scrn_rect.left + (int)((i - vmin) * factor() + .5f);
+                if ( div_min()){
+                    if ( !(i%(int)div_min()) ) {
+                        // draw in ticks only if they aren't too close to the edge.
+                        if ((( marker_xs + 5) > scrn_rect.left ) ||
+                           (( marker_xs - 5 )< (width))){
+
+                            if ( huds_both(options) ) {
+                                drawOneLine( marker_xs, scrn_rect.top,
+                                             marker_xs, marker_ys - 4);
+                                drawOneLine( marker_xs, marker_ye + 4,
+                                             marker_xs, height);
+                            }
+                            else {
+                                if ( huds_top(options) ) {
+                                    drawOneLine( marker_xs, marker_ys,
+                                                 marker_xs, marker_ye - 4);
+                                }
+                                else {
+                                    drawOneLine( marker_xs, marker_ys + 4,
+                                                 marker_xs, marker_ye);
+                                }
+                            }
+                        }
+                    }
+                }
+                if ( div_max()) {
+                    if ( !(i%(int)div_max()) ) {
+                        if (modulo()) {
+                            if ( disp_val < 0) {
+                                while( disp_val < 0 ) {
+                                    disp_val += modulo();
+                                }
+                            }
+                            disp_val = i % (int)modulo();
+                        } else {
+                            disp_val = i;
+                        }
+                        sprintf( TextScale, "%d",
+                                 FloatToInt(disp_val  * data_scaling()/* +.5*/ ));
+                        lenstr = getStringWidth( TextScale);
+
+                        // Draw major ticks and text only if far enough from the edge.
+                        if (( (marker_xs - 10)> scrn_rect.left ) &&
+                           ( (marker_xs + 10) < width )){
+                            if ( huds_both(options) ) {
+                                drawOneLine( marker_xs, scrn_rect.top,
+                                             marker_xs, marker_ys);
+                                drawOneLine( marker_xs, marker_ye,
+                                             marker_xs, height);
+
+                                if ( !huds_notext(options) ) {
+                                    textString ( marker_xs - lenstr, marker_ys + 4,
+                                                 TextScale ,0);
+                                }
+                            }
+                            else {
+                                drawOneLine( marker_xs, marker_ys,
+                                             marker_xs, marker_ye );
+
+                                if ( !huds_notext(options) ) {
+                                    if ( huds_top(options) )              {
+                                        textString ( marker_xs - lenstr,
+                                                     height - 10,
+                                                     TextScale, 0 );
+                                    }
+                                    else  {
+                                        textString( marker_xs - lenstr, scrn_rect.top,
+                                                    TextScale, 0 );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
