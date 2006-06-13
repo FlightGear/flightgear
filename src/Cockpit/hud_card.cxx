@@ -130,34 +130,6 @@ hud_card::hud_card(const hud_card & image) :
 }
 
 
-hud_card & hud_card::operator=(const hud_card & rhs)
-{
-    if (!(this == &rhs)) {
-        instr_scale::operator = (rhs);
-        val_span = rhs.val_span;
-        half_width_units = rhs.half_width_units;
-        draw_tick_bottom = rhs.draw_tick_bottom;
-        draw_tick_top    = rhs.draw_tick_top;
-        draw_tick_right  = rhs.draw_tick_right;
-        draw_tick_left   = rhs.draw_tick_left;
-        draw_cap_bottom  = rhs.draw_cap_bottom;
-        draw_cap_top     = rhs.draw_cap_top;
-        draw_cap_right   = rhs.draw_cap_right;
-        draw_cap_left    = rhs.draw_cap_left;
-        marker_offset    = rhs.marker_offset;
-        type             = rhs.type;
-        pointer          = rhs.pointer;
-        pointer_type     = rhs.pointer_type;
-        tick_type        = rhs.tick_type;
-        tick_length      = rhs.tick_length;
-        Maj_div          = rhs.Maj_div;
-        Min_div          = rhs.Min_div;
-    }
-
-    return *this;
-}
-
-
 void hud_card::draw(void) //  (HUD_scale * pscale)
 {
     float vmin = 0.0, vmax = 0.0;

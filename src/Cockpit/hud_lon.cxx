@@ -84,20 +84,6 @@ lon_label :: lon_label( const lon_label & image) :
 
 }
 
-lon_label & lon_label ::operator = (const lon_label & rhs )
-{
-  if( !(this == &rhs)) {
-    instr_item::operator = (rhs);
-    pformat      = rhs.pformat;
-    fontSize   = rhs.fontSize;
-    blink      = rhs.blink;
-    justify    = rhs.justify;
-    pre_str    = rhs.pre_str;
-    post_str   = rhs.post_str;
-    strcpy(format_buffer,rhs.format_buffer);	
-    }
-  return *this;
-}
 
 //
 // draw                    Draws a label anywhere in the HUD

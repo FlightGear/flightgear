@@ -93,25 +93,6 @@ instr_label :: instr_label( const instr_label & image) :
 
 }
 
-instr_label & instr_label ::operator = (const instr_label & rhs )
-{
-  if( !(this == &rhs)) {
-    instr_item::operator = (rhs);
-    pformat      = rhs.pformat;
-    fontSize   = rhs.fontSize;
-    blink      = rhs.blink;
-    justify    = rhs.justify;
-    pre_str    = rhs.pre_str;
-    post_str   = rhs.post_str;
-    lat		   = rhs.lat;
-    lon		   = rhs.lon;
-	lbox	   = rhs.lbox; //hud
-
-
-    strcpy(format_buffer,rhs.format_buffer);	
-    }
-  return *this;
-}
 
 //
 // draw                    Draws a label anywhere in the HUD

@@ -66,15 +66,6 @@ gauge_instr::gauge_instr( const gauge_instr & image) :
 }
 
 
-gauge_instr & gauge_instr::operator=(const gauge_instr & rhs)
-{
-    if (!(this == &rhs)) {
-        instr_scale::operator = (rhs);
-    }
-    return *this;
-}
-
-
 // As implemented, draw only correctly draws a horizontal or vertical
 // scale. It should contain a variation that permits clock type displays.
 // Now is supports "tickless" displays such as control surface indicators.

@@ -75,22 +75,6 @@ lat_label::lat_label( const lat_label & image) :
 }
 
 
-lat_label& lat_label::operator=(const lat_label & rhs)
-{
-    if (!(this == &rhs)) {
-        instr_item::operator = (rhs);
-        pformat    = rhs.pformat;
-        fontSize   = rhs.fontSize;
-        blink      = rhs.blink;
-        justify    = rhs.justify;
-        pre_str    = rhs.pre_str;
-        post_str   = rhs.post_str;
-        strcpy(format_buffer,rhs.format_buffer);
-    }
-    return *this;
-}
-
-
 //
 // draw                    Draws a label anywhere in the HUD
 //

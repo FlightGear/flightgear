@@ -41,17 +41,6 @@ fgTBI_instr :: fgTBI_instr( const fgTBI_instr & image):
 {
 }
 
-fgTBI_instr & fgTBI_instr ::
-operator = (const fgTBI_instr & rhs )
-{
-  if( !(this == &rhs)) {
-    dual_instr_item::operator = (rhs);
-    BankLimit = rhs.BankLimit;
-    SlewLimit = rhs.SlewLimit;
-    scr_hole  = rhs.scr_hole;
-    }
-   return *this;
-}
 
 //
 //  Draws a Turn Bank Indicator on the screen

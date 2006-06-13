@@ -1,7 +1,7 @@
 
 #include "hud.hxx"
 
-     
+
 //============ Top of dual_instr_item class member definitions ============
 
 dual_instr_item ::
@@ -25,16 +25,4 @@ dual_instr_item ::
                  alt_data_source( image.alt_data_source)
 {
 }
-
-dual_instr_item & dual_instr_item ::
-  operator = (const dual_instr_item & rhs )
-{
-  if( !(this == &rhs)) {
-    instr_item::operator = (rhs);
-    alt_data_source = rhs.alt_data_source;
-    }
-  return *this;
-}
-
-// End of hud_dnst.cxx
 

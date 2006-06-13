@@ -102,34 +102,6 @@ HudLadder::HudLadder( const HudLadder & image ) :
 }
 
 
-HudLadder& HudLadder::operator=( const HudLadder & rhs )
-{
-    if (!(this == &rhs)) {
-        (dual_instr_item &)(*this) = (dual_instr_item &)rhs;
-        width_units                = rhs.width_units;
-        div_units                  = rhs.div_units;
-        label_pos                  = rhs.label_pos;
-        scr_hole                   = rhs.scr_hole;
-        vmax                       = rhs.vmax;
-        vmin                       = rhs.vmin;
-        factor                     = rhs.factor;
-        hudladder_type             = rhs.hudladder_type;
-        frl                        = rhs.frl;
-        velocity_vector            = rhs.velocity_vector;
-        drift_marker               = rhs.drift_marker;
-        alpha_bracket              = rhs.alpha_bracket;
-        energy_marker              = rhs.energy_marker;
-        climb_dive_marker          = rhs.climb_dive_marker;
-        target_spot                = rhs.target_spot;
-        glide_slope_marker         = rhs.glide_slope_marker;
-        glide_slope                = rhs.glide_slope;
-        energy_worm                = rhs.energy_worm;
-        waypoint_marker            = rhs.waypoint_marker;
-    }
-    return *this;
-}
-
-
 //
 //  Draws a climb ladder in the center of the HUD
 //

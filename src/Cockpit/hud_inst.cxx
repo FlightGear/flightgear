@@ -71,22 +71,6 @@ instr_item  ::
 {
 }
 
-// assignment operator
-
-instr_item & instr_item :: operator = ( const instr_item & rhs )
-{
-  if( !(this == &rhs )) { // Not an identity assignment
-    scrn_pos      = rhs.scrn_pos;
-    load_value_fn = rhs.load_value_fn;
-    disp_factor   = rhs.disp_factor;
-    opts          = rhs.opts;
-    is_enabled    = rhs.is_enabled;
-    broken        = rhs.broken;
-    }
-  return *this;
-}
-
-// destructor
 
 instr_item :: ~instr_item ()
 {

@@ -441,7 +441,6 @@ public:
 
     instr_item( const instr_item & image );
 
-    instr_item & operator = ( const instr_item & rhs );
     virtual ~instr_item ();
 
     int     get_brightness  ( void ) { return brightness;}
@@ -571,7 +570,6 @@ public:
     ~instr_label();
 
     instr_label( const instr_label & image);
-    instr_label & operator = (const instr_label & rhs );
     virtual void draw( void );       // Required method in base class
 };
 
@@ -608,7 +606,6 @@ public:
     ~lat_label();
 
     lat_label( const lat_label & image);
-    lat_label & operator = (const lat_label & rhs );
     virtual void draw( void );       // Required method in base class
 };
 
@@ -645,7 +642,6 @@ public:
     ~lon_label();
 
     lon_label( const lon_label & image);
-    lon_label & operator = (const lon_label & rhs );
     virtual void draw( void );       // Required method in base class
 };
 
@@ -731,7 +727,6 @@ public:
 
     virtual ~instr_scale();
     instr_scale( const instr_scale & image);
-    instr_scale & operator = (const instr_scale & rhs);
 
     virtual void draw   ( void ) {}; // No-op here. Defined in derived classes.
     UINT   div_min      ( void ) { return Min_div;}
@@ -813,7 +808,6 @@ public:
 
     ~hud_card();
     hud_card( const hud_card & image);
-    hud_card & operator = (const hud_card & rhs );
     //    virtual void display_enable( bool setting );
     virtual void draw( void );       // Required method in base class
     void circles(float,float,float); // suma
@@ -842,7 +836,6 @@ public:
 
     ~gauge_instr();
     gauge_instr( const gauge_instr & image);
-    gauge_instr & operator = (const gauge_instr & rhs );
     virtual void draw( void );       // Required method in base class
 };
 
@@ -867,7 +860,6 @@ public:
 
     virtual ~dual_instr_item() {};
     dual_instr_item( const dual_instr_item & image);
-    dual_instr_item & operator = (const dual_instr_item & rhs );
 
     float current_ch1( void ) { return (float)alt_data_source();}
     float current_ch2( void ) { return (float)get_value();}
@@ -898,7 +890,6 @@ public:
                  float     rad); //suma
 
     fgTBI_instr( const fgTBI_instr & image);
-    fgTBI_instr & operator = (const fgTBI_instr & rhs );
 
     ~fgTBI_instr();
 
@@ -977,7 +968,6 @@ public:
     ~HudLadder();
 
     HudLadder( const HudLadder & image );
-    HudLadder & operator = ( const HudLadder & rhs );
     virtual void draw( void );
     void drawZenith(float,float,float); //suma
     void drawNadir(float, float, float); //suma

@@ -66,21 +66,6 @@ instr_scale ::
 {
 }
 
-instr_scale & instr_scale :: operator = (const instr_scale & rhs )
-{
-  if( !(this == &rhs)) {
-    instr_item::operator = (rhs);
-    range_shown   = rhs.range_shown;
-    scale_factor  = rhs.scale_factor;
-    Maximum_value = rhs.Maximum_value;
-    Minimum_value = rhs.Minimum_value;
-    Maj_div       = rhs.Maj_div;
-    Min_div       = rhs.Min_div;
-    Modulo        = rhs.Modulo;
-    signif_digits = rhs.signif_digits;
-    }
-  return *this;
-}
 
 instr_scale :: ~ instr_scale () {}
 
