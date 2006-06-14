@@ -3,130 +3,96 @@
 #  include "config.h"
 #endif
 
-#include <plib/sg.h>
-#include "hud.hxx"
-
-#ifdef USE_HUD_TextList
-#define textString(x, y, text, digit)  TextString(text, x , y ,digit)
-#else
-#define textString(x, y, text, digit)  puDrawString(guiFnt, text, x, y)
-#endif
-
-//========== Top of hud_card class member definitions =============
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <plib/sg.h>
+#include "hud.hxx"
 
-hud_card::hud_card(
-          int       x,
-          int       y,
-          UINT      width,
-          UINT      height,
-          FLTFNPTR  data_source,
-          UINT      options,
-          float     max_value, // 360
-          float     min_value, // 0
-          float     disp_scaling,
-          UINT      major_divs,
-          UINT      minor_divs,
-          UINT      modulus,  // 360
-          int       dp_showing,
-          float     value_span,
-          string    card_type,
-          bool      tick_bottom,
-          bool      tick_top,
-          bool      tick_right,
-          bool      tick_left,
-          bool      cap_bottom,
-          bool      cap_top,
-          bool      cap_right,
-          bool      cap_left,
-          float     mark_offset,
-          bool      pointer_enable,
-          string    type_pointer,
-          string    type_tick,
-          string    length_tick,
-          bool      working,
-          float     rad,
-          int       divs,
-          int       zooms) :
-    instr_scale(x,y,width,height,
-                 data_source, options,
-                 value_span,
-                 max_value, min_value, disp_scaling,
-                 major_divs, minor_divs, modulus,
-                 working),
-    val_span         (value_span),
-    type             (card_type),
-    draw_tick_bottom (tick_bottom),
-    draw_tick_top    (tick_top),
-    draw_tick_right  (tick_right),
-    draw_tick_left   (tick_left),
-    draw_cap_bottom  (cap_bottom),
-    draw_cap_top     (cap_top),
-    draw_cap_right   (cap_right),
-    draw_cap_left    (cap_left),
-    marker_offset    (mark_offset),
-    pointer          (pointer_enable),
-    pointer_type     (type_pointer),
-    tick_type        (type_tick),
-    tick_length      (length_tick),
-    Maj_div          (major_divs),
-    Min_div          (minor_divs)
+#ifdef USE_HUD_TextList
+#define textString(x, y, text, digit)  TextString(text, x , y , digit)
+#else
+#define textString(x, y, text, digit)  puDrawString(guiFnt, text, x, y)
+#endif
 
+
+hud_card::hud_card(const SGPropertyNode *node) :
+    instr_scale(
+            node->getIntValue("x"),
+            node->getIntValue("y"),
+            node->getIntValue("width"),
+            node->getIntValue("height"),
+            0 /*data_source*/,    // FIXME
+            node->getIntValue("options"),
+            node->getFloatValue("value_span"),
+            node->getFloatValue("maxValue"),
+            node->getFloatValue("minValue"),
+            node->getFloatValue("disp_scaling"),
+            node->getIntValue("major_divs"),
+            node->getIntValue("minor_divs"),
+            node->getIntValue("modulator"),
+            node->getBoolValue("working")),
+    val_span(node->getFloatValue("value_span")),    // FIXME
+    type(node->getStringValue("type")),
+    draw_tick_bottom(node->getBoolValue("tick_bottom", false)),
+    draw_tick_top(node->getBoolValue("tick_top", false)),
+    draw_tick_right(node->getBoolValue("tick_right", false)),
+    draw_tick_left(node->getBoolValue("tick_left", false)),
+    draw_cap_bottom(node->getBoolValue("cap_bottom", false)),
+    draw_cap_top(node->getBoolValue("cap_top", false)),
+    draw_cap_right(node->getBoolValue("cap_right", false)),
+    draw_cap_left(node->getBoolValue("cap_left", false)),
+    marker_offset(node->getFloatValue("marker_offset", 0.0)),
+    pointer(node->getBoolValue("enable_pointer", true)),
+    pointer_type(node->getStringValue("pointer_type")),
+    tick_type(node->getStringValue("tick_type")), // 'circle' or 'line'
+    tick_length(node->getStringValue("tick_length")), // for variable length
+    radius(node->getFloatValue("radius")),
+    maxValue(node->getFloatValue("maxValue")),		// FIXME dup
+    minValue(node->getFloatValue("minValue")),		// FIXME dup
+    divisions(node->getIntValue("divisions")),
+    zoom(node->getIntValue("zoom")),
+    Maj_div(node->getIntValue("major_divs")),		// FIXME dup
+    Min_div(node->getIntValue("minor_divs"))		// FIXME dup
 {
+    SG_LOG(SG_INPUT, SG_INFO, "Done reading dial/tape instrument "
+            << node->getStringValue("name", "[unnamed]"));
+
+    string loadfn = node->getStringValue("loadfn");
+    float (*load_fn)(void);
+    if (loadfn == "anzg")
+        load_fn = get_anzg;
+    else if (loadfn == "heading")
+        load_fn = get_heading;
+    else if (loadfn == "aoa")
+        load_fn = get_aoa;
+    else if (loadfn == "climb")
+        load_fn = get_climb_rate;
+    else if (loadfn == "altitude")
+        load_fn = get_altitude;
+    else if (loadfn == "agl")
+        load_fn = get_agl;
+    else if (loadfn == "speed")
+        load_fn = get_speed;
+    else if (loadfn == "view_direction")
+        load_fn = get_view_direction;
+    else if (loadfn == "aileronval")
+        load_fn = get_aileronval;
+    else if (loadfn == "elevatorval")
+        load_fn = get_elevatorval;
+    else if (loadfn == "elevatortrimval")
+        load_fn = get_elev_trimval;
+    else if (loadfn == "rudderval")
+        load_fn = get_rudderval;
+    else if (loadfn == "throttleval")
+        load_fn = get_throttleval;
+    else
+        load_fn = 0;
+
+    set_data_source(load_fn);
+
     half_width_units = range_to_show() / 2.0;
-    radius = rad;
-    maxValue = max_value;
-    minValue = min_value;
-    divisions = divs;
-    zoom = zooms;
-
-    //  UINT options     = get_options();
-    //  huds_both = (options & HUDS_BOTH) == HUDS_BOTH;
-    //  huds_right = options & HUDS_RIGHT;
-    //  huds_left = options & HUDS_LEFT;
-    //  huds_vert = options & HUDS_VERT;
-    //  huds_notext = options & HUDS_NOTEXT;
-    //  huds_top = options & HUDS_TOP;
-    //  huds_bottom = options & HUDS_BOTTOM;
-}
-
-
-hud_card::~hud_card() { }
-
-
-hud_card::hud_card(const hud_card & image) :
-    instr_scale((const instr_scale &) image),
-    val_span(image.val_span),
-    type(image.type),
-    half_width_units (image.half_width_units),
-    draw_tick_bottom (image.draw_tick_bottom),
-    draw_tick_top (image.draw_tick_top),
-    draw_tick_right (image.draw_tick_right),
-    draw_tick_left (image.draw_tick_left),
-    draw_cap_bottom (image.draw_cap_bottom),
-    draw_cap_top (image.draw_cap_top),
-    draw_cap_right (image.draw_cap_right),
-    draw_cap_left (image.draw_cap_left),
-    marker_offset (image.marker_offset),
-    pointer (image.pointer),
-    pointer_type (image.pointer_type),
-    tick_type(image.tick_type),
-    tick_length(image.tick_length),
-    Maj_div(image.Maj_div),
-    Min_div(image.Min_div)
-
-{
-    //  UINT options     = get_options();
-    //  huds_both = (options & HUDS_BOTH) == HUDS_BOTH;
-    //  huds_right = options & HUDS_RIGHT;
-    //  huds_left = options & HUDS_LEFT;
-    //  huds_vert = options & HUDS_VERT;
-    //  huds_notext = options & HUDS_NOTEXT;
-    //  huds_top = options & HUDS_TOP;
-    //  huds_bottom = options & HUDS_BOTTOM;
 }
 
 
@@ -146,10 +112,10 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
     int disp_val = 0;
     int oddtype, k; //odd or even values for ticks
 
-    POINT mid_scr    = get_centroid();
-    float cur_value  = get_value();
+    POINT mid_scr = get_centroid();
+    float cur_value = get_value();
 
-    if (!((int)maxValue%2))
+    if (!((int)maxValue % 2))
         oddtype = 0; //draw ticks at even values
     else
         oddtype = 1; //draw ticks at odd values
@@ -162,7 +128,7 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
 
     // if type=gauge then display dial
     if (type == "gauge") {
-        float x,y;
+        float x, y;
         float i;
         y = (float)(scrn_rect.top);
         x = (float)(scrn_rect.left);
@@ -172,8 +138,8 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
         float incr = 360.0 / divisions;
         for (i = 0.0; i < 360.0; i += incr) {
             float i1 = i * SGD_DEGREES_TO_RADIANS;
-            float x1 = x + radius*cos(i1);
-            float y1 = y + radius*sin(i1);
+            float x1 = x + radius * cos(i1);
+            float y1 = y + radius * sin(i1);
 
             glBegin(GL_POINTS);
             glVertex2f(x1, y1);
@@ -188,18 +154,18 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
             float r1 = 10.0; //size of carrot
             float theta = get_value();
 
-            float theta1 = -theta*SGD_DEGREES_TO_RADIANS+offset;
-            float x1 = x+radius*cos(theta1);
-            float y1 = y+radius*sin(theta1);
-            float x2 = x1-r1*cos(theta1-30.0*SGD_DEGREES_TO_RADIANS);
-            float y2 = y1-r1*sin(theta1-30.0*SGD_DEGREES_TO_RADIANS);
-            float x3 = x1-r1*cos(theta1+30.0*SGD_DEGREES_TO_RADIANS);
-            float y3 = y1-r1*sin(theta1+30.0*SGD_DEGREES_TO_RADIANS);
+            float theta1 = -theta * SGD_DEGREES_TO_RADIANS + offset;
+            float x1 = x + radius * cos(theta1);
+            float y1 = y + radius * sin(theta1);
+            float x2 = x1 - r1 * cos(theta1 - 30.0 * SGD_DEGREES_TO_RADIANS);
+            float y2 = y1 - r1 * sin(theta1 - 30.0 * SGD_DEGREES_TO_RADIANS);
+            float x3 = x1 - r1 * cos(theta1 + 30.0 * SGD_DEGREES_TO_RADIANS);
+            float y3 = y1 - r1 * sin(theta1 + 30.0 * SGD_DEGREES_TO_RADIANS);
 
             // draw carrot
-            drawOneLine(x1,y1,x2,y2);
-            drawOneLine(x1,y1,x3,y3);
-            sprintf(TextScale,"%3.1f\n",theta);
+            drawOneLine(x1, y1, x2, y2);
+            drawOneLine(x1, y1, x3, y3);
+            sprintf(TextScale,"%3.1f\n", theta);
 
             // draw value
             int l = abs((int)theta);
@@ -207,30 +173,31 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                 if (l < 10)
                     textString(x, y, TextScale, 0);
                 else if (l < 100)
-                    textString(x-1.0, y, TextScale, 0);
+                    textString(x - 1.0, y, TextScale, 0);
                 else if (l<360)
-                    textString(x-2.0, y, TextScale, 0);
+                    textString(x - 2.0, y, TextScale, 0);
             }
-        } //end type=gauge
+        }
+        //end type=gauge
 
     } else {
         // if its not explicitly a gauge default to tape
         if (pointer) {
-            if (pointer_type=="moving") {
+            if (pointer_type == "moving") {
                 vmin = minValue;
                 vmax = maxValue;
 
             } else {
                 // default to fixed
-                vmin   = cur_value - half_width_units; // width units == needle travel
-                vmax   = cur_value + half_width_units; // or picture unit span.
+                vmin = cur_value - half_width_units; // width units == needle travel
+                vmax = cur_value + half_width_units; // or picture unit span.
                 text_x = mid_scr.x;
                 text_y = mid_scr.y;
             }
 
         } else {
-            vmin   = cur_value - half_width_units; // width units == needle travel
-            vmax   = cur_value + half_width_units; // or picture unit span.
+            vmin = cur_value - half_width_units; // width units == needle travel
+            vmax = cur_value + half_width_units; // or picture unit span.
             text_x = mid_scr.x;
             text_y = mid_scr.y;
         }
@@ -238,19 +205,13 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
         // Draw the basic markings for the scale...
 
         if (huds_vert(options)) { // Vertical scale
-            if (draw_tick_bottom) {
-                drawOneLine(scrn_rect.left,     // Bottom tick bar
-                            scrn_rect.top,
-                            width,
-                            scrn_rect.top);
-            } // endif draw_tick_bottom
+            // Bottom tick bar
+            if (draw_tick_bottom)
+                drawOneLine(scrn_rect.left, scrn_rect.top, width, scrn_rect.top);
 
-            if (draw_tick_top) {
-                drawOneLine(scrn_rect.left,    // Top tick bar
-                            height,
-                            width,
-                            height);
-            } // endif draw_tick_top
+            // Top tick bar
+            if (draw_tick_top)
+                drawOneLine(scrn_rect.left, height, width, height);
 
             marker_xs = scrn_rect.left;  // x start
             marker_xe = width;           // x extent
@@ -277,9 +238,9 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
             if (huds_left(options)) {    // Calculate x marker offset
 
                 if (draw_cap_right) {
-                    drawOneLine(marker_xe, scrn_rect.top,
-                                 marker_xe, marker_ye); // Cap right side
-                } //endif cap_right
+                    // Cap right side
+                    drawOneLine(marker_xe, scrn_rect.top, marker_xe, marker_ye);
+                }
 
                 marker_xs  = marker_xe - scrn_rect.right / 3;   // Adjust tick xs
 
@@ -290,11 +251,11 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
 
                 // draw pointer
                 if (pointer) {
-                    if (pointer_type=="moving") {
+                    if (pointer_type == "moving") {
                         if (zoom == 0) {
                             //Code for Moving Type Pointer
-                            float ycentre, ypoint,xpoint;
-                            int range,wth;
+                            float ycentre, ypoint, xpoint;
+                            int range, wth;
                             if (cur_value > maxValue)
                                 cur_value = maxValue;
                             if (cur_value < minValue)
@@ -304,32 +265,33 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                 ycentre = scrn_rect.top;
                             else if (maxValue + minValue == 0.0)
                                 ycentre = mid_scr.y;
+                            else if (oddtype == 1)
+                                ycentre = scrn_rect.top + (1.0 - minValue)*scrn_rect.bottom
+                                        / (maxValue - minValue);
                             else
-                                if (oddtype == 1)
-                                    ycentre = scrn_rect.top + (1.0-minValue)*scrn_rect.bottom/(maxValue-minValue);
-                                else
-                                    ycentre = scrn_rect.top + minValue*scrn_rect.bottom/(maxValue-minValue);
+                                ycentre = scrn_rect.top + minValue * scrn_rect.bottom
+                                        / (maxValue - minValue);
 
                             range = scrn_rect.bottom;
-                            wth   = scrn_rect.left + scrn_rect.right;
+                            wth = scrn_rect.left + scrn_rect.right;
 
                             if (oddtype == 1)
-                                ypoint = ycentre + ((cur_value-1.0) * range / val_span);
+                                ypoint = ycentre + ((cur_value - 1.0) * range / val_span);
                             else
                                 ypoint = ycentre + (cur_value * range / val_span);
 
                             xpoint = wth + marker_offset;
-                            drawOneLine(xpoint,ycentre,xpoint,ypoint);
-                            drawOneLine(xpoint,ypoint,xpoint-marker_offset,ypoint);
-                            drawOneLine(xpoint-marker_offset,ypoint,xpoint-5.0,ypoint+5.0);
-                            drawOneLine(xpoint-marker_offset,ypoint,xpoint-5.0,ypoint-5.0);
+                            drawOneLine(xpoint, ycentre, xpoint, ypoint);
+                            drawOneLine(xpoint, ypoint, xpoint - marker_offset, ypoint);
+                            drawOneLine(xpoint - marker_offset, ypoint, xpoint - 5.0, ypoint + 5.0);
+                            drawOneLine(xpoint - marker_offset, ypoint, xpoint - 5.0, ypoint - 5.0);
                         } //zoom=0
 
                     } else {
                         // default to fixed
-                        fixed(marker_offset+marker_xe, text_y + scrn_rect.right / 6,
-                              marker_offset+marker_xs, text_y,marker_offset+marker_xe,
-                              text_y - scrn_rect.right / 6);
+                        fixed(marker_offset + marker_xe, text_y + scrn_rect.right / 6,
+                                marker_offset + marker_xs, text_y, marker_offset + marker_xe,
+                                text_y - scrn_rect.right / 6);
                     }//end pointer type
                 } //if pointer
             } //end vertical/left
@@ -338,8 +300,8 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
             //First draw capping lines and pointers
             if (huds_right(options)) {  // We'll default this for now.
                 if (draw_cap_left) {
-                    drawOneLine(scrn_rect.left, scrn_rect.top,
-                                 scrn_rect.left, marker_ye);  // Cap left side
+                    // Cap left side
+                    drawOneLine(scrn_rect.left, scrn_rect.top, scrn_rect.left, marker_ye);
                 } //endif cap_left
 
                 marker_xe = scrn_rect.left + scrn_rect.right / 3;     // Adjust tick xe
@@ -355,7 +317,7 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                         if (zoom == 0) {
                             //type-fixed & zoom=1, behaviour to be defined
                             // Code for Moving Type Pointer
-                            float ycentre, ypoint,xpoint;
+                            float ycentre, ypoint, xpoint;
                             int range;
 
                             if (cur_value > maxValue)
@@ -367,31 +329,30 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                 ycentre = scrn_rect.top;
                             else if (maxValue + minValue == 0.0)
                                 ycentre = mid_scr.y;
+                            else if (oddtype == 1)
+                                ycentre = scrn_rect.top + (1.0 - minValue)*scrn_rect.bottom / (maxValue - minValue);
                             else
-                                if (oddtype == 1)
-                                    ycentre = scrn_rect.top + (1.0-minValue)*scrn_rect.bottom/(maxValue-minValue);
-                                else
-                                    ycentre = scrn_rect.top + minValue*scrn_rect.bottom/(maxValue-minValue);
+                                ycentre = scrn_rect.top + minValue * scrn_rect.bottom / (maxValue - minValue);
 
                             range = scrn_rect.bottom;
 
                             if (oddtype == 1)
-                                ypoint = ycentre + ((cur_value-1.0) * range / val_span);
+                                ypoint = ycentre + ((cur_value - 1.0) * range / val_span);
                             else
                                 ypoint = ycentre + (cur_value * range / val_span);
 
                             xpoint = scrn_rect.left - marker_offset;
-                            drawOneLine(xpoint,ycentre,xpoint,ypoint);
-                            drawOneLine(xpoint,ypoint,xpoint+marker_offset,ypoint);
-                            drawOneLine(xpoint+marker_offset,ypoint,xpoint+5.0,ypoint+5.0);
-                            drawOneLine(xpoint+marker_offset,ypoint,xpoint+5.0,ypoint-5.0);
+                            drawOneLine(xpoint, ycentre, xpoint, ypoint);
+                            drawOneLine(xpoint, ypoint, xpoint + marker_offset, ypoint);
+                            drawOneLine(xpoint + marker_offset, ypoint, xpoint + 5.0, ypoint + 5.0);
+                            drawOneLine(xpoint + marker_offset, ypoint, xpoint + 5.0, ypoint - 5.0);
                         }
 
                     } else {
                         // default to fixed
-                        fixed(-marker_offset+scrn_rect.left, text_y +  scrn_rect.right / 6,
-                               -marker_offset+marker_xe, text_y,-marker_offset+scrn_rect.left,
-                               text_y -  scrn_rect.right / 6);
+                        fixed(-marker_offset + scrn_rect.left, text_y +  scrn_rect.right / 6,
+                                -marker_offset + marker_xe, text_y,-marker_offset + scrn_rect.left,
+                                text_y -  scrn_rect.right / 6);
                     }
                 } //if pointer
             }  //end vertical/right
@@ -419,11 +380,8 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
             } else {
                 for (; i < last; i++) {
                     condition = true;
-                    if (!modulo()) {
-                        if (i < min_val()) {
-                            condition = false;
-                        }
-                    }
+                    if (!modulo() && i < min_val())
+                        condition = false;
 
                     if (condition) {  // Show a tick if necessary
                         // Calculate the location of this tick
@@ -433,46 +391,47 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                         // Calculation here accounts for text height.
 
                         if ((marker_ys < (scrn_rect.top + 4))
-                                | (marker_ys > (height - 4))) {
+                                || (marker_ys > (height - 4))) {
                             // Magic numbers!!!
                             continue;
                         }
 
                         if (oddtype == 1)
-                            k = i+1; //enable ticks at odd values
+                            k = i + 1; //enable ticks at odd values
                         else
                             k = i;
 
                         // Minor ticks
                         if (div_min()) {
-                            // if ((i%div_min()) == 0) {
-                            if (!(k%(int)div_min())) {
+                            // if ((i % div_min()) == 0) {
+                            if (!(k % (int)div_min())) {
                                 if (((marker_ys - 5) > scrn_rect.top)
                                         && ((marker_ys + 5) < (height))) {
 
                                     //vertical/left OR vertical/right
                                     if (huds_both(options)) {
-                                        if (tick_type=="line") {
-                                            if (tick_length=="variable") {
+                                        if (tick_type == "line") {
+                                            if (tick_length == "variable") {
                                                 drawOneLine(scrn_rect.left, marker_ys,
-                                                            marker_xs,      marker_ys);
-                                                drawOneLine(marker_xe,      marker_ys,
-                                                            width,  marker_ys);
+                                                        marker_xs, marker_ys);
+                                                drawOneLine(marker_xe, marker_ys,
+                                                        width, marker_ys);
                                             } else {
                                                 drawOneLine(scrn_rect.left, marker_ys,
-                                                            marker_xs,      marker_ys);
-                                                drawOneLine(marker_xe,      marker_ys,
-                                                            width,  marker_ys);
+                                                        marker_xs, marker_ys);
+                                                drawOneLine(marker_xe, marker_ys,
+                                                        width, marker_ys);
                                             }
-                                        } else if (tick_type == "circle")
-                                            circles(scrn_rect.left,(float)marker_ys,3.0);
 
-                                        else {
+                                        } else if (tick_type == "circle") {
+                                            circles(scrn_rect.left,(float)marker_ys, 3.0);
+
+                                        } else {
                                             // if neither line nor circle draw default as line
                                             drawOneLine(scrn_rect.left, marker_ys,
-                                                        marker_xs,      marker_ys);
-                                            drawOneLine(marker_xe,      marker_ys,
-                                                        width,  marker_ys);
+                                                    marker_xs, marker_ys);
+                                            drawOneLine(marker_xe, marker_ys,
+                                                    width, marker_ys);
                                         }
                                         // glBegin(GL_LINES);
                                         // glVertex2f(scrn_rect.left, marker_ys);
@@ -484,35 +443,37 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
 
                                     } else {
                                         if (huds_left(options)) {
-                                            if (tick_type=="line") {
-                                                if (tick_length=="variable") {
+                                            if (tick_type == "line") {
+                                                if (tick_length == "variable") {
                                                     drawOneLine(marker_xs + 4, marker_ys,
-                                                                marker_xe,     marker_ys);
+                                                            marker_xe, marker_ys);
                                                 } else {
-                                                    drawOneLine(marker_xs , marker_ys,
-                                                                marker_xe,     marker_ys);
+                                                    drawOneLine(marker_xs, marker_ys,
+                                                            marker_xe, marker_ys);
                                                 }
-                                            } else if (tick_type=="circle")
-                                                circles((float)marker_xs + 4, (float)marker_ys,3.0);
+                                            } else if (tick_type == "circle") {
+                                                circles((float)marker_xs + 4, (float)marker_ys, 3.0);
 
-                                            else {
+                                            } else {
                                                 drawOneLine(marker_xs + 4, marker_ys,
-                                                            marker_xe,     marker_ys);
+                                                        marker_xe, marker_ys);
                                             }
+
                                         }  else {
-                                            if (tick_type=="line") {
-                                                if (tick_length=="variable") {
-                                                    drawOneLine(marker_xs,     marker_ys,
-                                                                marker_xe - 4, marker_ys);
-                                                } else {
-                                                    drawOneLine(marker_xs,     marker_ys,
-                                                                marker_xe , marker_ys);
-                                                }
-                                            } else if (tick_type=="circle")
-                                                circles((float)marker_xe - 4, (float)marker_ys,3.0);
-                                            else {
-                                                drawOneLine(marker_xs,     marker_ys,
+                                            if (tick_type == "line") {
+                                                if (tick_length == "variable") {
+                                                    drawOneLine(marker_xs, marker_ys,
                                                             marker_xe - 4, marker_ys);
+                                                } else {
+                                                    drawOneLine(marker_xs, marker_ys,
+                                                            marker_xe, marker_ys);
+                                                }
+
+                                            } else if (tick_type == "circle") {
+                                                circles((float)marker_xe - 4, (float)marker_ys, 3.0);
+                                            } else {
+                                                drawOneLine(marker_xs, marker_ys,
+                                                        marker_xe - 4, marker_ys);
                                             }
                                         }
                                     } //end huds both
@@ -522,7 +483,7 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
 
                         // Major ticks
                         if (div_max()) {
-                            if (!(k%(int)div_max())) {
+                            if (!(k % (int)div_max())) {
                                 if (modulo()) {
                                     disp_val = i % (int) modulo(); // ?????????
                                     if (disp_val < 0) {
@@ -534,7 +495,7 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                 }
 
                                 lenstr = sprintf(TextScale, "%d",
-                                                 FloatToInt(disp_val * data_scaling()/*+.5*/));
+                                        FloatToInt(disp_val * data_scaling()/*+.5*/));
                                 // (int)(disp_val  * data_scaling() +.5));
                                 /* if (((marker_ys - 8) > scrn_rect.top) &&
                                    ((marker_ys + 8) < (height))){ */
@@ -551,8 +512,10 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                         glVertex2f(marker_xs, marker_ys);
                                         glVertex2f(width, marker_ys);
                                         glEnd();
+
                                     } else if (tick_type == "circle") {
-                                        circles(scrn_rect.left, (float)marker_ys,5.0);
+                                        circles(scrn_rect.left, (float)marker_ys, 5.0);
+
                                     } else {
                                         glBegin(GL_LINE_STRIP);
                                         glVertex2f(scrn_rect.left, marker_ys);
@@ -561,31 +524,26 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                         glEnd();
                                     }
 
-                                    if (!huds_notext(options)) {
-                                        textString (marker_xs + 2,  marker_ys,
-                                                    TextScale,0);
-                                    }
+                                    if (!huds_notext(options))
+                                        textString (marker_xs + 2, marker_ys, TextScale, 0);
 
                                 } else {
                                     /* Changes are made to draw a circle when tick_type="circle" */
                                     // anything other than huds_both
-                                    if (tick_type=="line") {
+                                    if (tick_type == "line")
                                         drawOneLine(marker_xs, marker_ys, marker_xe, marker_ys);
-                                    } else if (tick_type=="circle") {
-                                        circles((float)marker_xs + 4, (float)marker_ys,5.0);
-                                    } else {
+                                    else if (tick_type == "circle")
+                                        circles((float)marker_xs + 4, (float)marker_ys, 5.0);
+                                    else
                                         drawOneLine(marker_xs, marker_ys, marker_xe, marker_ys);
-                                    }
 
                                     if (!huds_notext(options)) {
                                         if (huds_left(options)) {
-                                            textString(marker_xs -  8 * lenstr - 2,
-                                                       marker_ys - 4,
-                                                       TextScale, 0);
+                                            textString(marker_xs - 8 * lenstr - 2,
+                                                    marker_ys - 4, TextScale, 0);
                                         } else {
                                             textString(marker_xe + 3 * lenstr,
-                                                       marker_ys - 4,
-                                                       TextScale, 0);
+                                                    marker_ys - 4, TextScale, 0);
                                         } //End if huds_left
                                     } //End if !huds_notext
                                 }  //End if huds-both
@@ -599,19 +557,15 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
         } else {
             // Horizontal scale by default
             // left tick bar
-            if (draw_tick_left) {
-                drawOneLine(scrn_rect.left, scrn_rect.top,
-                            scrn_rect.left, height);
-            }  // endif draw_tick_left
-            // right tick bar
-            if (draw_tick_right) {
-                drawOneLine(width, scrn_rect.top,
-                            width,
-                            height);
-            }  // endif draw_tick_right
+            if (draw_tick_left)
+                drawOneLine(scrn_rect.left, scrn_rect.top, scrn_rect.left, height);
 
-            marker_ys = scrn_rect.top;           // Starting point for
-            marker_ye = height;                  // tick y location calcs
+            // right tick bar
+            if (draw_tick_right)
+                drawOneLine(width, scrn_rect.top, width, height);
+
+            marker_ys = scrn_rect.top;    // Starting point for
+            marker_ye = height;           // tick y location calcs
             marker_xe = width;
             marker_xs = scrn_rect.left + ((cur_value - vmin) * factor() /*+ .5f*/);
 
@@ -626,13 +580,9 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
             //    glEnd();
 
             if (huds_top(options)) {
-                if (draw_cap_bottom) {
-                    // Bottom box line
-                    drawOneLine(scrn_rect.left,
-                                scrn_rect.top,
-                                width,
-                                scrn_rect.top);
-                }  //endif cap_bottom
+                // Bottom box line
+                if (draw_cap_bottom)
+                    drawOneLine(scrn_rect.left, scrn_rect.top, width, scrn_rect.top);
 
                 // Tick point adjust
                 marker_ye  = scrn_rect.top + scrn_rect.bottom / 2;
@@ -646,7 +596,7 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                     if (pointer_type == "moving") {
                         if (zoom == 0) {
                             //Code for Moving Type Pointer
-                            // static float xcentre,xpoint,ypoint;
+                            // static float xcentre, xpoint, ypoint;
                             // static int range;
                             if (cur_value > maxValue)
                                 cur_value = maxValue;
@@ -657,25 +607,24 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                             int range = scrn_rect.right;
                             float xpoint = xcentre + (cur_value * range / val_span);
                             float ypoint = scrn_rect.top - marker_offset;
-                            drawOneLine(xcentre, ypoint,xpoint,ypoint);
-                            drawOneLine(xpoint,ypoint,xpoint,ypoint+marker_offset);
-                            drawOneLine(xpoint,ypoint+marker_offset,xpoint+5.0,ypoint+5.0);
-                            drawOneLine(xpoint,ypoint+marker_offset,xpoint-5.0,ypoint+5.0);
+                            drawOneLine(xcentre, ypoint, xpoint, ypoint);
+                            drawOneLine(xpoint, ypoint, xpoint, ypoint + marker_offset);
+                            drawOneLine(xpoint, ypoint + marker_offset, xpoint + 5.0, ypoint + 5.0);
+                            drawOneLine(xpoint, ypoint + marker_offset, xpoint - 5.0, ypoint + 5.0);
                         }
+
                     } else {
                         //default to fixed
-                        fixed(marker_xs - scrn_rect.bottom / 4, scrn_rect.top,
-                               marker_xs, marker_ye, marker_xs + scrn_rect.bottom / 4,scrn_rect.top);
+                        fixed(marker_xs - scrn_rect.bottom / 4, scrn_rect.top, marker_xs,
+                                marker_ye, marker_xs + scrn_rect.bottom / 4, scrn_rect.top);
                     }
                 }  //if pointer
             } //End Horizontal scale/top
 
             if (huds_bottom(options)) {
                 // Top box line
-                if (draw_cap_top) {
-                    drawOneLine(scrn_rect.left, height,
-                                 width, height);
-                }  //endif cap_top
+                if (draw_cap_top)
+                    drawOneLine(scrn_rect.left, height, width, height);
 
                 // Tick point adjust
                 marker_ys = height - scrn_rect.bottom / 2;
@@ -689,11 +638,11 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
 
                 // draw pointer
                 if (pointer) {
-                    if (pointer_type =="moving") {
+                    if (pointer_type == "moving") {
                         if (zoom == 0) {
                             //Code for Moving Type Pointer
-                            // static float xcentre,xpoint,ypoint;
-                            // static int range,hgt;
+                            // static float xcentre, xpoint, ypoint;
+                            // static int range, hgt;
                             if (cur_value > maxValue)
                                 cur_value = maxValue;
                             if (cur_value < minValue)
@@ -701,17 +650,17 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
 
                             float xcentre = mid_scr.x ;
                             int range = scrn_rect.right;
-                            int hgt   = scrn_rect.top + scrn_rect.bottom;
+                            int hgt = scrn_rect.top + scrn_rect.bottom;
                             float xpoint = xcentre + (cur_value * range / val_span);
                             float ypoint = hgt + marker_offset;
-                            drawOneLine(xcentre, ypoint,xpoint,ypoint);
-                            drawOneLine(xpoint,ypoint,xpoint,ypoint-marker_offset);
-                            drawOneLine(xpoint,ypoint-marker_offset,xpoint+5.0,ypoint-5.0);
-                            drawOneLine(xpoint,ypoint-marker_offset,xpoint-5.0,ypoint-5.0);
+                            drawOneLine(xcentre, ypoint, xpoint, ypoint);
+                            drawOneLine(xpoint, ypoint, xpoint, ypoint - marker_offset);
+                            drawOneLine(xpoint, ypoint - marker_offset, xpoint + 5.0, ypoint - 5.0);
+                            drawOneLine(xpoint, ypoint - marker_offset, xpoint - 5.0, ypoint - 5.0);
                         }
                     } else {
                         fixed(marker_xs + scrn_rect.bottom / 4, height, marker_xs, marker_ys,
-                              marker_xs - scrn_rect.bottom / 4, height);
+                                marker_xs - scrn_rect.bottom / 4, height);
                     }
                 } //if pointer
             }  //end horizontal scale bottom
@@ -737,25 +686,23 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                     // for (i = (int)vmin; i <= (int)vmax; i++)     {
                     // printf("<*> i = %d\n", i);
                     condition = true;
-                    if (!modulo()) {
-                        if (i < min_val()) {
-                            condition = false;
-                        }
-                    }
+                    if (!modulo() && i < min_val())
+                        condition = false;
+
                     // printf("<**> i = %d\n", i);
                     if (condition) {
                         // marker_xs = scrn_rect.left + (int)((i - vmin) * factor() + .5);
                         marker_xs = scrn_rect.left + (((i - vmin) * factor()/*+ .5f*/));
 
                         if (oddtype == 1)
-                            k = i+1; //enable ticks at odd values
+                            k = i + 1; //enable ticks at odd values
                         else
                             k = i;
 
                         if (div_min()) {
-                            //          if ((i%(int)div_min()) == 0) {
+                            //          if ((i % (int)div_min()) == 0) {
                             //draw minor ticks
-                            if (!(k%(int)div_min())) {
+                            if (!(k % (int)div_min())) {
                                 // draw in ticks only if they aren't too close to the edge.
                                 if (((marker_xs - 5) > scrn_rect.left)
                                         && ((marker_xs + 5)< (scrn_rect.left + scrn_rect.right))) {
@@ -763,14 +710,14 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                     if (huds_both(options)) {
                                         if (tick_length == "variable") {
                                             drawOneLine(marker_xs, scrn_rect.top,
-                                                        marker_xs, marker_ys - 4);
+                                                    marker_xs, marker_ys - 4);
                                             drawOneLine(marker_xs, marker_ye + 4,
-                                                        marker_xs, height);
+                                                    marker_xs, height);
                                         } else {
                                             drawOneLine(marker_xs, scrn_rect.top,
-                                                        marker_xs, marker_ys);
+                                                    marker_xs, marker_ys);
                                             drawOneLine(marker_xs, marker_ye,
-                                                        marker_xs, height);
+                                                    marker_xs, height);
                                         }
                                         // glBegin(GL_LINES);
                                         // glVertex2f(marker_xs, scrn_rect.top);
@@ -782,72 +729,72 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                     } else {
                                         if (huds_top(options)) {
                                             //draw minor ticks
-                                            if (tick_length=="variable")
-                                                drawOneLine(marker_xs,marker_ys,marker_xs,marker_ye-4);
+                                            if (tick_length == "variable")
+                                                drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye - 4);
                                             else
-                                                drawOneLine(marker_xs,marker_ys,marker_xs,marker_ye);
+                                                drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye);
 
-                                        } else
-                                            if (tick_length=="variable")
-                                                drawOneLine(marker_xs,marker_ys+4,marker_xs,marker_ye);
-                                            else
-                                                drawOneLine(marker_xs,marker_ys,marker_xs,marker_ye);
-                                        }
-                                    }
-                                } //end draw minor ticks
-                            } //end minor ticks
-
-                            //major ticks
-                            if (div_max()) {
-                                // printf("i = %d\n", i);
-                                // if ((i%(int)div_max())==0) {
-                                //     draw major ticks
-
-                                if (!(k%(int)div_max())) {
-                                    if (modulo()) {
-                                        disp_val = i % (int) modulo(); // ?????????
-                                        if (disp_val < 0) {
-                                            while (disp_val<0)
-                                                disp_val += modulo();
-                                        }
-                                    } else {
-                                        disp_val = i;
-                                    }
-                                    // printf("disp_val = %d\n", disp_val);
-                                    // printf("%d\n", (int)(disp_val  * (double)data_scaling() + 0.5));
-                                    lenstr = sprintf(TextScale, "%d",
-                                            // (int)(disp_val  * data_scaling() +.5));
-                                            FloatToInt(disp_val * data_scaling()/*+.5*/));
-
-                                    // Draw major ticks and text only if far enough from the edge.
-                                    if (((marker_xs - 10)> scrn_rect.left)
-                                            && ((marker_xs + 10) < (scrn_rect.left + scrn_rect.right))) {
-                                        if (huds_both(options)) {
-                                            // drawOneLine(marker_xs, scrn_rect.top,
-                                            //              marker_xs, marker_ys);
-                                            // drawOneLine(marker_xs, marker_ye,
-                                            //              marker_xs, scrn_rect.top + scrn_rect.bottom);
-                                            glBegin(GL_LINE_STRIP);
-                                            glVertex2f(marker_xs, scrn_rect.top);
-                                            glVertex2f(marker_xs, marker_ye);
-                                            glVertex2f(marker_xs, height);
-                                            glEnd();
-
-                                            if (!huds_notext(options)) {
-                                                textString(marker_xs - 4 * lenstr,
-                                                           marker_ys + 4, TextScale, 0);
-                                            }
+                                        } else if (tick_length == "variable") {
+                                            drawOneLine(marker_xs, marker_ys + 4, marker_xs, marker_ye);
                                         } else {
                                             drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye);
+                                        }
+                                    }
+                                }
+                            } //end draw minor ticks
+                        } //end minor ticks
+
+                        //major ticks
+                        if (div_max()) {
+                            // printf("i = %d\n", i);
+                            // if ((i % (int)div_max())==0) {
+                            //     draw major ticks
+
+                            if (!(k % (int)div_max())) {
+                                if (modulo()) {
+                                    disp_val = i % (int) modulo(); // ?????????
+                                    if (disp_val < 0) {
+                                        while (disp_val<0)
+                                            disp_val += modulo();
+                                    }
+                                } else {
+                                    disp_val = i;
+                                }
+                                // printf("disp_val = %d\n", disp_val);
+                                // printf("%d\n", (int)(disp_val  * (double)data_scaling() + 0.5));
+                                lenstr = sprintf(TextScale, "%d",
+                                        // (int)(disp_val  * data_scaling() +.5));
+                                        FloatToInt(disp_val * data_scaling()/*+.5*/));
+
+                                // Draw major ticks and text only if far enough from the edge.
+                                if (((marker_xs - 10)> scrn_rect.left)
+                                        && ((marker_xs + 10) < (scrn_rect.left + scrn_rect.right))) {
+                                    if (huds_both(options)) {
+                                        // drawOneLine(marker_xs, scrn_rect.top,
+                                        //              marker_xs, marker_ys);
+                                        // drawOneLine(marker_xs, marker_ye,
+                                        //              marker_xs, scrn_rect.top + scrn_rect.bottom);
+                                        glBegin(GL_LINE_STRIP);
+                                        glVertex2f(marker_xs, scrn_rect.top);
+                                        glVertex2f(marker_xs, marker_ye);
+                                        glVertex2f(marker_xs, height);
+                                        glEnd();
+
+                                        if (!huds_notext(options)) {
+                                            textString(marker_xs - 4 * lenstr,
+                                                    marker_ys + 4, TextScale, 0);
+                                        }
+                                    } else {
+                                        drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye);
 
                                         if (!huds_notext(options)) {
                                             if (huds_top(options)) {
                                                 textString(marker_xs - 4 * lenstr,
-                                                           height - 10, TextScale, 0);
+                                                        height - 10, TextScale, 0);
 
                                             }  else  {
                                                 textString(marker_xs - 4 * lenstr,
-                                                           scrn_rect.top, TextScale, 0);
+                                                        scrn_rect.top, TextScale, 0);
                                             }
                                         }
                                     }
@@ -863,13 +810,13 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
 
 
 
-void hud_card::circles(float x,float y,float size)
+void hud_card::circles(float x, float y, float size)
 {
     glEnable(GL_POINT_SMOOTH);
     glPointSize(size);
 
     glBegin(GL_POINTS);
-    glVertex2f(x,y);
+    glVertex2f(x, y);
     glEnd();
 
     glPointSize(1.0);
@@ -889,21 +836,20 @@ void hud_card::fixed(float x1, float y1, float x2, float y2, float x3, float y3)
 
 void hud_card::zoomed_scale(int first, int last)
 {
-    POINT mid_scr    = get_centroid();
-    RECT   scrn_rect = get_location();
-    UINT options     = get_options();
+    POINT mid_scr = get_centroid();
+    RECT scrn_rect = get_location();
+    UINT options = get_options();
     char TextScale[80];
-    // int disp_val = 0;
     int data[80];
 
-    float x,y,w,h,bottom;
-    float cur_value=get_value();
+    float x, y, w, h, bottom;
+    float cur_value = get_value();
     if (cur_value > maxValue)
         cur_value = maxValue;
     if (cur_value < minValue)
         cur_value = minValue;
 
-    int a=0;
+    int a = 0;
 
     while (first <= last) {
         if ((first % (int)Maj_div) == 0) {
@@ -912,65 +858,65 @@ void hud_card::zoomed_scale(int first, int last)
         }
         first++;
     }
-    int centre =a/2;
+    int centre = a / 2;
 
     if (huds_vert(options)) {
-        x=scrn_rect.left;
-        y=scrn_rect.top;
-        w=scrn_rect.left+scrn_rect.right;
-        h=scrn_rect.top+scrn_rect.bottom;
-        bottom=scrn_rect.bottom;
+        x = scrn_rect.left;
+        y = scrn_rect.top;
+        w = scrn_rect.left + scrn_rect.right;
+        h = scrn_rect.top + scrn_rect.bottom;
+        bottom = scrn_rect.bottom;
 
         float xstart, yfirst, ycentre, ysecond;
 
-        float hgt = bottom * 20.0 /100.0;  // 60% of height should be zoomed
+        float hgt = bottom * 20.0 / 100.0;  // 60% of height should be zoomed
         yfirst = mid_scr.y - hgt;
         ycentre = mid_scr.y;
         ysecond = mid_scr.y + hgt;
         float range = hgt * 2;
 
         int i;
-        float factor = range /10.0;
+        float factor = range / 10.0;
 
-        float hgt1 = bottom * 30.0 /100.0;
+        float hgt1 = bottom * 30.0 / 100.0;
         int  incrs = ((int)val_span - (Maj_div * 2)) / Maj_div ;
         int  incr = incrs / 2;
         float factors = hgt1 / incr;
 
         // begin
         //this is for moving type pointer
-        static float ycent, ypoint,xpoint;
+        static float ycent, ypoint, xpoint;
         static int wth;
 
         ycent = mid_scr.y;
-        wth=scrn_rect.left+scrn_rect.right;
+        wth = scrn_rect.left + scrn_rect.right;
 
-        if (cur_value <= data[centre+1])
+        if (cur_value <= data[centre + 1])
             if (cur_value > data[centre]) {
-                ypoint = ycent + ((cur_value - data[centre]) * hgt/Maj_div);
+                ypoint = ycent + ((cur_value - data[centre]) * hgt / Maj_div);
             }
 
-        if (cur_value >= data[centre-1])
+        if (cur_value >= data[centre - 1])
             if (cur_value <= data[centre]) {
-                ypoint = ycent - ((data[centre]-cur_value) * hgt/Maj_div);
+                ypoint = ycent - ((data[centre]-cur_value) * hgt / Maj_div);
             }
 
-        if (cur_value < data[centre-1])
+        if (cur_value < data[centre - 1])
             if (cur_value >= minValue) {
-                float diff  = minValue  - data[centre-1];
-                float diff1 = cur_value - data[centre-1];
+                float diff  = minValue - data[centre - 1];
+                float diff1 = cur_value - data[centre - 1];
                 float val = (diff1 * hgt1) / diff;
 
-                ypoint = ycent - hgt -  val;
+                ypoint = ycent - hgt - val;
             }
 
-        if (cur_value > data[centre+1])
+        if (cur_value > data[centre + 1])
             if (cur_value <= maxValue) {
-                float diff  = maxValue  - data[centre+1];
-                float diff1 = cur_value - data[centre+1];
+                float diff  = maxValue - data[centre + 1];
+                float diff1 = cur_value - data[centre + 1];
                 float val = (diff1 * hgt1) / diff;
 
-                ypoint = ycent + hgt +  val;
+                ypoint = ycent + hgt + val;
             }
 
         if (huds_left(options)) {
@@ -980,35 +926,34 @@ void hud_card::zoomed_scale(int first, int last)
 
             sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
 
-            if (!huds_notext(options)) {
-                textString (x, ycentre, TextScale, 0);
-            }
+            if (!huds_notext(options))
+                textString(x, ycentre, TextScale, 0);
 
             for (i = 1; i < 5; i++) {
-                yfirst  += factor;
+                yfirst += factor;
                 ycentre += factor;
-                circles(xstart-2.5,yfirst, 3.0);
-                circles(xstart-2.5,ycentre,3.0);
+                circles(xstart - 2.5, yfirst, 3.0);
+                circles(xstart - 2.5, ycentre, 3.0);
             }
 
             yfirst = mid_scr.y - hgt;
 
             for (i = 0; i <= incr; i++) {
                 drawOneLine(xstart, yfirst, xstart - 5.0, yfirst);
-                drawOneLine(xstart,ysecond, xstart - 5.0,ysecond);
+                drawOneLine(xstart, ysecond, xstart - 5.0, ysecond);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre-i-1] * data_scaling()));
+                sprintf(TextScale,"%3.0f\n",(float)(data[centre - i - 1] * data_scaling()));
 
                 if (!huds_notext(options))
                     textString (x, yfirst, TextScale, 0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre+i+1] * data_scaling()));
+                sprintf(TextScale,"%3.0f\n",(float)(data[centre + i + 1] * data_scaling()));
 
                 if (!huds_notext(options))
                     textString (x, ysecond, TextScale, 0);
 
-                yfirst    -= factors;
-                ysecond   += factors;
+                yfirst -= factors;
+                ysecond += factors;
 
             }
 
@@ -1017,44 +962,43 @@ void hud_card::zoomed_scale(int first, int last)
             xpoint = wth + 10.0;
 
             if (pointer_type == "moving") {
-                drawOneLine(xpoint,ycent,xpoint,ypoint);
-                drawOneLine(xpoint,ypoint,xpoint-10.0,ypoint);
-                drawOneLine(xpoint-10.0,ypoint,xpoint-5.0,ypoint+5.0);
-                drawOneLine(xpoint-10.0,ypoint,xpoint-5.0,ypoint-5.0);
+                drawOneLine(xpoint, ycent, xpoint, ypoint);
+                drawOneLine(xpoint, ypoint, xpoint - 10.0, ypoint);
+                drawOneLine(xpoint - 10.0, ypoint, xpoint - 5.0, ypoint + 5.0);
+                drawOneLine(xpoint - 10.0, ypoint, xpoint - 5.0, ypoint - 5.0);
             }
             //end
 
         } else {
             //huds_right
-            xstart = (x+w)/2;
+            xstart = (x + w) / 2;
 
             drawOneLine(xstart, ycentre, xstart + 5.0, ycentre); //centre tick
 
             sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
 
-            if (!huds_notext(options)) {
-                textString (w, ycentre, TextScale, 0);
-            }
+            if (!huds_notext(options))
+                textString(w, ycentre, TextScale, 0);
 
             for (i = 1; i < 5; i++) {
-                yfirst  += factor;
+                yfirst += factor;
                 ycentre += factor;
-                circles(xstart+2.5,yfirst, 3.0);
-                circles(xstart+2.5,ycentre,3.0);
+                circles(xstart + 2.5, yfirst, 3.0);
+                circles(xstart + 2.5, ycentre, 3.0);
             }
 
             yfirst = mid_scr.y - hgt;
 
             for (i = 0; i <= incr; i++) {
                 drawOneLine(xstart, yfirst, xstart + 5.0, yfirst);
-                drawOneLine(xstart,ysecond, xstart + 5.0,ysecond);
+                drawOneLine(xstart, ysecond, xstart + 5.0, ysecond);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre-i-1] * data_scaling()));
+                sprintf(TextScale,"%3.0f\n",(float)(data[centre - i - 1] * data_scaling()));
 
                 if (!huds_notext(options))
                     textString(w, yfirst, TextScale, 0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre+i+1] * data_scaling()));
+                sprintf(TextScale,"%3.0f\n",(float)(data[centre + i + 1] * data_scaling()));
 
                 if (!huds_notext(options))
                     textString(w, ysecond, TextScale, 0);
@@ -1069,10 +1013,10 @@ void hud_card::zoomed_scale(int first, int last)
             xpoint = scrn_rect.left;
 
             if (pointer_type == "moving") {
-                drawOneLine(xpoint,ycent,xpoint,ypoint);
-                drawOneLine(xpoint,ypoint,xpoint+10.0,ypoint);
-                drawOneLine(xpoint+10.0,ypoint,xpoint+5.0,ypoint+5.0);
-                drawOneLine(xpoint+10.0,ypoint,xpoint+5.0,ypoint-5.0);
+                drawOneLine(xpoint, ycent, xpoint, ypoint);
+                drawOneLine(xpoint, ypoint, xpoint + 10.0, ypoint);
+                drawOneLine(xpoint + 10.0, ypoint, xpoint + 5.0, ypoint + 5.0);
+                drawOneLine(xpoint + 10.0, ypoint, xpoint + 5.0, ypoint - 5.0);
             }
             //end
         }//end huds_right /left
@@ -1080,24 +1024,24 @@ void hud_card::zoomed_scale(int first, int last)
 
     } else {
         //horizontal scale
-        x=scrn_rect.left;
-        y=scrn_rect.top;
-        w=scrn_rect.left+scrn_rect.right;
-        h=scrn_rect.top+scrn_rect.bottom;
-        bottom=scrn_rect.right;
+        x = scrn_rect.left;
+        y = scrn_rect.top;
+        w = scrn_rect.left + scrn_rect.right;
+        h = scrn_rect.top + scrn_rect.bottom;
+        bottom = scrn_rect.right;
 
         float ystart, xfirst, xcentre, xsecond;
 
-        float hgt = bottom * 20.0 /100.0;  // 60% of height should be zoomed
+        float hgt = bottom * 20.0 / 100.0;  // 60% of height should be zoomed
         xfirst = mid_scr.x - hgt;
         xcentre = mid_scr.x;
         xsecond = mid_scr.x + hgt;
         float range = hgt * 2;
 
         int i;
-        float factor = range /10.0;
+        float factor = range / 10.0;
 
-        float hgt1 = bottom * 30.0 /100.0;
+        float hgt1 = bottom * 30.0 / 100.0;
         int  incrs = ((int)val_span - (Maj_div * 2)) / Maj_div ;
         int  incr = incrs / 2;
         float factors = hgt1 / incr;
@@ -1105,74 +1049,71 @@ void hud_card::zoomed_scale(int first, int last)
 
         //Code for Moving Type Pointer
         //begin
-        static float xcent,xpoint,ypoint;
+        static float xcent, xpoint, ypoint;
 
         xcent = mid_scr.x;
 
-        if (cur_value <= data[centre+1])
+        if (cur_value <= data[centre + 1])
             if (cur_value > data[centre]) {
-                xpoint = xcent + ((cur_value - data[centre]) * hgt/Maj_div);
+                xpoint = xcent + ((cur_value - data[centre]) * hgt / Maj_div);
             }
 
-        if (cur_value >= data[centre-1])
+        if (cur_value >= data[centre - 1])
             if (cur_value <= data[centre]) {
-                xpoint = xcent - ((data[centre]-cur_value) * hgt/Maj_div);
+                xpoint = xcent - ((data[centre]-cur_value) * hgt / Maj_div);
             }
 
-        if (cur_value < data[centre-1])
+        if (cur_value < data[centre - 1])
             if (cur_value >= minValue) {
-                float diff  = minValue  - data[centre-1];
-                float diff1 = cur_value - data[centre-1];
+                float diff = minValue - data[centre - 1];
+                float diff1 = cur_value - data[centre - 1];
                 float val = (diff1 * hgt1) / diff;
 
-                xpoint = xcent - hgt -  val;
+                xpoint = xcent - hgt - val;
             }
 
 
-        if (cur_value > data[centre+1])
+        if (cur_value > data[centre + 1])
             if (cur_value <= maxValue) {
-                float diff  = maxValue  - data[centre+1];
-                float diff1 = cur_value - data[centre+1];
+                float diff = maxValue - data[centre + 1];
+                float diff1 = cur_value - data[centre + 1];
                 float val = (diff1 * hgt1) / diff;
 
-                xpoint = xcent + hgt +  val;
+                xpoint = xcent + hgt + val;
             }
 
         //end
         if (huds_top(options)) {
-
-            ystart =h;
-
+            ystart = h;
             drawOneLine(xcentre, ystart, xcentre, ystart - 5.0); //centre tick
 
             sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
 
-            if (!huds_notext(options)) {
-                textString (xcentre-10.0, y, TextScale, 0);
-            }
+            if (!huds_notext(options))
+                textString (xcentre - 10.0, y, TextScale, 0);
 
             for (i = 1; i < 5; i++) {
-                xfirst  += factor;
+                xfirst += factor;
                 xcentre += factor;
-                circles(xfirst,  ystart-2.5, 3.0);
-                circles(xcentre, ystart-2.5, 3.0);
+                circles(xfirst, ystart - 2.5, 3.0);
+                circles(xcentre, ystart - 2.5, 3.0);
             }
 
             xfirst = mid_scr.x - hgt;
 
             for (i = 0; i <= incr; i++) {
-                drawOneLine(xfirst,  ystart, xfirst,  ystart - 5.0);
+                drawOneLine(xfirst, ystart, xfirst,  ystart - 5.0);
                 drawOneLine(xsecond, ystart, xsecond, ystart - 5.0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre-i-1] * data_scaling()));
+                sprintf(TextScale,"%3.0f\n",(float)(data[centre - i - 1] * data_scaling()));
 
                 if (!huds_notext(options))
-                    textString (xfirst-10.0, y, TextScale, 0);
+                    textString (xfirst - 10.0, y, TextScale, 0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre+i+1] * data_scaling()));
+                sprintf(TextScale,"%3.0f\n",(float)(data[centre + i + 1] * data_scaling()));
 
                 if (!huds_notext(options))
-                    textString (xsecond-10.0, y, TextScale, 0);
+                    textString (xsecond - 10.0, y, TextScale, 0);
 
 
                 xfirst -= factors;
@@ -1184,10 +1125,10 @@ void hud_card::zoomed_scale(int first, int last)
             ypoint = scrn_rect.top + scrn_rect.bottom + 10.0;
 
             if (pointer_type == "moving") {
-                drawOneLine(xcent, ypoint,xpoint,ypoint);
-                drawOneLine(xpoint,ypoint,xpoint,ypoint-10.0);
-                drawOneLine(xpoint,ypoint-10.0,xpoint+5.0,ypoint-5.0);
-                drawOneLine(xpoint,ypoint-10.0,xpoint-5.0,ypoint-5.0);
+                drawOneLine(xcent, ypoint, xpoint, ypoint);
+                drawOneLine(xpoint, ypoint, xpoint, ypoint - 10.0);
+                drawOneLine(xpoint, ypoint - 10.0, xpoint + 5.0, ypoint - 5.0);
+                drawOneLine(xpoint, ypoint - 10.0, xpoint - 5.0, ypoint - 5.0);
             }
             //end of top option
 
@@ -1200,47 +1141,44 @@ void hud_card::zoomed_scale(int first, int last)
 
             sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
 
-            if (!huds_notext(options)) {
-                textString (xcentre-10.0, h, TextScale, 0);
-            }
+            if (!huds_notext(options))
+                textString (xcentre - 10.0, h, TextScale, 0);
 
             for (i = 1; i < 5; i++) {
-                xfirst  += factor;
+                xfirst += factor;
                 xcentre += factor;
-                circles(xfirst,  ystart+2.5, 3.0);
-                circles(xcentre, ystart+2.5,3.0);
+                circles(xfirst, ystart + 2.5, 3.0);
+                circles(xcentre, ystart + 2.5, 3.0);
             }
 
             xfirst = mid_scr.x - hgt;
 
             for (i = 0; i <= incr; i++) {
                 drawOneLine(xfirst, ystart, xfirst, ystart + 5.0);
-                drawOneLine(xsecond,ystart, xsecond,ystart + 5.0);
+                drawOneLine(xsecond, ystart, xsecond, ystart + 5.0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre-i-1] * data_scaling()));
-
-                if (!huds_notext(options))
-                    textString (xfirst-10.0,h, TextScale, 0);
-
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre+i+1] * data_scaling()));
+                sprintf(TextScale,"%3.0f\n",(float)(data[centre - i - 1] * data_scaling()));
 
                 if (!huds_notext(options))
-                    textString (xsecond-10.0,h, TextScale, 0);
+                    textString (xfirst - 10.0, h, TextScale, 0);
 
+                sprintf(TextScale,"%3.0f\n",(float)(data[centre + i + 1] * data_scaling()));
+
+                if (!huds_notext(options))
+                    textString (xsecond - 10.0, h, TextScale, 0);
 
                 xfirst -= factors;
                 xsecond   += factors;
-
             }
             //this is for movimg pointer for bottom option
             //begin
 
             ypoint = scrn_rect.top - 10.0;
             if (pointer_type == "moving") {
-                drawOneLine(xcent, ypoint,xpoint,ypoint);
-                drawOneLine(xpoint,ypoint,xpoint,ypoint+10.0);
-                drawOneLine(xpoint,ypoint+10.0,xpoint+5.0,ypoint+5.0);
-                drawOneLine(xpoint,ypoint+10.0,xpoint-5.0,ypoint+5.0);
+                drawOneLine(xcent, ypoint, xpoint, ypoint);
+                drawOneLine(xpoint, ypoint, xpoint, ypoint + 10.0);
+                drawOneLine(xpoint, ypoint + 10.0, xpoint + 5.0, ypoint + 5.0);
+                drawOneLine(xpoint, ypoint + 10.0, xpoint - 5.0, ypoint + 5.0);
             }
         }//end hud_top or hud_bottom
     }  //end of horizontal/vertical scales

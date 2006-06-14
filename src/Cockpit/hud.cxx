@@ -83,48 +83,16 @@ int HUD_style = 0;
 float HUD_matrix[16];
 
 static string  name;
-static int     x;
-static int     y;
-static UINT    width;
-static UINT    height;
-static float   span_units;
-static bool    working;
-static string  loadfn;
-static UINT    options;
-static float   maxValue;
-static float   minValue;
-static float   scaling;
-static UINT    major_divs;
-static UINT    minor_divs;
-static UINT    modulator;
-static int     dp_showing = 0;
 static string  label_format;
 static string  prelabel;
 static string  postlabel;
-static bool    tick_bottom;
-static bool    tick_top;
-static bool    tick_right;
-static bool    tick_left;
-static bool    cap_bottom;
-static bool    cap_top;
-static bool    cap_right;
-static bool    cap_left;
-static float   marker_off;
 static string  type;
-static bool    enable_pointer;
 static string  type_pointer;
 static string  type_tick;
 static string  length_tick;
-static float   radius;
-static int     divisions;
-static int     zoom;
-
-
-static FLTFNPTR load_fn;
 
 int readHud( istream &input );
 int readInstrument ( const SGPropertyNode * node);
-static instr_item * readCardDialTape ( const SGPropertyNode * node);
 
 static void drawHUD();
 static void fgUpdateHUDVirtual();
@@ -156,110 +124,6 @@ locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
 // display for a Piper Cub doesn't show the speed range of a North American
 // mustange and the engine readouts of a B36!
 //
-
-static instr_item *
-readCardDialTape(const SGPropertyNode * node)
-{
-    instr_item *p;
-
-    x                  = node->getIntValue("x");
-    y                  = node->getIntValue("y");
-    width              = node->getIntValue("width");
-    height             = node->getIntValue("height");
-    loadfn             = node->getStringValue("loadfn");
-    options            = node->getIntValue("options");
-    maxValue           = node->getFloatValue("maxValue");
-    minValue           = node->getFloatValue("minValue");
-    scaling            = node->getFloatValue("disp_scaling");
-    major_divs         = node->getIntValue("major_divs");
-    minor_divs         = node->getIntValue("minor_divs");
-    modulator          = node->getIntValue("modulator");
-    span_units         = node->getFloatValue("value_span");
-    type               = node->getStringValue("type");
-    tick_bottom        = node->getBoolValue("tick_bottom",false);
-    tick_top           = node->getBoolValue("tick_top",false);
-    tick_right         = node->getBoolValue("tick_right",false);
-    tick_left          = node->getBoolValue("tick_left",false);
-    cap_bottom         = node->getBoolValue("cap_bottom",false);
-    cap_top            = node->getBoolValue("cap_top",false);
-    cap_right          = node->getBoolValue("cap_right",false);
-    cap_left           = node->getBoolValue("cap_left",false);
-    marker_off         = node->getFloatValue("marker_offset",0.0);
-    enable_pointer     = node->getBoolValue("enable_pointer",true);
-    type_pointer       = node->getStringValue("pointer_type");
-    type_tick          = node->getStringValue("tick_type"); // 'circle' or 'line'
-    length_tick        = node->getStringValue("tick_length"); // for variable length
-    working            = node->getBoolValue("working");
-    radius             = node->getFloatValue("radius");
-    divisions          = node->getIntValue("divisions");
-    zoom               = node->getIntValue("zoom");
-
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading dial/tape instrument "
-            << node->getStringValue("name", "[none]"));
-
-    if (loadfn=="anzg") {
-        load_fn = get_anzg;
-    } else if (loadfn=="heading") {
-        load_fn = get_heading;
-    } else if (loadfn=="aoa") {
-        load_fn = get_aoa;
-    } else if (loadfn=="climb") {
-        load_fn = get_climb_rate;
-    } else if (loadfn=="altitude") {
-        load_fn = get_altitude;
-    } else if (loadfn=="agl") {
-        load_fn = get_agl;
-    } else if (loadfn=="speed") {
-        load_fn = get_speed;
-    } else if (loadfn=="view_direction") {
-        load_fn = get_view_direction;
-    } else if (loadfn=="aileronval") {
-        load_fn = get_aileronval;
-    } else if (loadfn=="elevatorval") {
-        load_fn = get_elevatorval;
-    } else if (loadfn=="elevatortrimval") {
-        load_fn = get_elev_trimval;
-    } else if (loadfn=="rudderval") {
-        load_fn = get_rudderval;
-    } else if (loadfn=="throttleval") {
-        load_fn = get_throttleval;
-    }
-
-
-    // type == "dial") || (type == "tape")
-    p = (instr_item *) new hud_card( x,
-                                     y,
-                                     width,
-                                     height,
-                                     load_fn,
-                                     options,
-                                     maxValue, minValue,
-                                     scaling,
-                                     major_divs, minor_divs,
-                                     modulator,
-                                     dp_showing,
-                                     span_units,
-                                     type,
-                                     tick_bottom,
-                                     tick_top,
-                                     tick_right,
-                                     tick_left,
-                                     cap_bottom,
-                                     cap_top,
-                                     cap_right,
-                                     cap_left,
-                                     marker_off,
-                                     enable_pointer,
-                                     type_pointer,
-                                     type_tick,
-                                     length_tick,
-                                     working,
-                                     radius,
-                                     divisions,
-                                     zoom
-                                     );
-    return p;
-}
 
 
 
@@ -294,7 +158,7 @@ int readInstrument(const SGPropertyNode * node)
             if (!strcmp(type, "gauge"))
                 HIptr = static_cast<instr_item *>(new gauge_instr(card_group->getChild(j)));
             else if (!strcmp(type, "dial") || !strcmp(type, "tape"))
-                HIptr = readCardDialTape(card_group->getChild(j));
+                HIptr = static_cast<instr_item *>(new hud_card(card_group->getChild(j)));
             HUD_deque.insert(HUD_deque.begin(), HIptr);
         }
     }

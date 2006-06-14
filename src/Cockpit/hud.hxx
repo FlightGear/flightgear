@@ -711,17 +711,17 @@ public:
     virtual ~instr_scale();
     instr_scale( const instr_scale & image);
 
-    virtual void draw   ( void ) {}; // No-op here. Defined in derived classes.
-    UINT   div_min      ( void ) { return Min_div;}
-    UINT   div_max      ( void ) { return Maj_div;}
-    float min_val       ( void ) { return Minimum_value;}
-    float max_val       ( void ) { return Maximum_value;}
-    UINT   modulo       ( void ) { return Modulo; }
-    float factor        ( void ) { return scale_factor;}
-    float range_to_show ( void ) { return range_shown;}
+    virtual void draw    ( void ) {}; // No-op here. Defined in derived classes.
+    UINT   div_min       ( void ) { return Min_div;}
+    UINT   div_max       ( void ) { return Maj_div;}
+    float  min_val       ( void ) { return Minimum_value;}
+    float  max_val       ( void ) { return Maximum_value;}
+    UINT   modulo        ( void ) { return Modulo; }
+    float  factor        ( void ) { return scale_factor;}
+    float  range_to_show ( void ) { return range_shown;}
 };
 
-// hud_card_               This class displays the indicated quantity on
+// hud_card                This class displays the indicated quantity on
 //                         a scale that moves past the pointer. It may be
 // horizontal or vertical, read above(left) or below(right) of the base
 // line.
@@ -752,50 +752,13 @@ private:
     UINT   Maj_div;
     UINT   Min_div;
 
-
 public:
-    hud_card( int      x,
-              int      y,
-              UINT     width,
-              UINT     height,
-              FLTFNPTR load_fn,
-              UINT     options,
-              float    maxValue,
-              float    minValue,
-              float    disp_scaling,
-              UINT     major_divs,
-              UINT     minor_divs,
-              UINT     modulator,
-              int      dp_showing,
-              float    value_span,
-              string   type,
-              bool     draw_tick_bottom,
-              bool     draw_tick_top,
-              bool     draw_tick_right,
-              bool     draw_tick_left,
-              bool     draw_cap_bottom,
-              bool     draw_cap_top,
-              bool     draw_cap_right,
-              bool     draw_cap_left,
-              float    marker_offset,
-              bool     pointer,
-              string   pointer_type,
-              string  tick_type,
-              string  tick_length,
-              bool     working,
-              float    radius,
-              int      divisions,
-              int      zoom
-            );
-
-
-    ~hud_card();
-    hud_card( const hud_card & image);
-    //    virtual void display_enable( bool setting );
-    virtual void draw( void );       // Required method in base class
-    void circles(float,float,float);
-    void fixed(float,float,float,float,float,float);
-    void zoomed_scale(int,int);
+    hud_card(const SGPropertyNode *);
+    //    virtual void display_enable( bool setting );			// FIXME
+    virtual void draw(void);
+    void circles(float, float, float);
+    void fixed(float, float, float, float, float, float);
+    void zoomed_scale(int, int);
 };
 
 
