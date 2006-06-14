@@ -51,6 +51,7 @@
 #include STL_FSTREAM
 
 #include <simgear/constants.h>
+//#include <simgear/props/props.hxx>
 
 #include <Include/fg_typedefs.h>
 #include <Aircraft/aircraft.hxx>
@@ -900,6 +901,7 @@ public:
 
 typedef fgTBI_instr * pTBI;
 
+
 class HudLadder : public dual_instr_item {
 private:
     UINT   width_units;
@@ -926,64 +928,32 @@ private:
     int    nadir;
     int    hat;
 
-
     // The Ladder has it's own temporary display lists
     fgTextList         TextList;
     fgLineList         LineList;
     fgLineList         StippleLineList;
 
 public:
-    HudLadder( const string&    name,
-               int       x,
-               int       y,
-               UINT      width,
-               UINT      height,
-               float     factor,
-               FLTFNPTR  ptch_source,
-               FLTFNPTR  roll_source,
-               float     span_units,
-               float     division_units,
-               float     minor_division,
-               UINT      screen_hole,
-               UINT      lbl_pos,
-               bool      frl,
-               bool      target_spot,
-               bool      velocity_vector,
-               bool      drift_marker,
-               bool      alpha_bracket,
-               bool      energy_marker,
-               bool      climb_dive_marker,
-               bool      glide_slope_marker,
-               float     glide_slope,
-               bool      energy_worm,
-               bool      waypoint_marker,
-               bool      working,
-               int       zenith,
-               int       nadir,
-               int       hat
-             );
-
-
+    HudLadder(const SGPropertyNode *);
     ~HudLadder();
 
-    HudLadder( const HudLadder & image );
-    virtual void draw( void );
-    void drawZenith(float,float,float);
+    virtual void draw(void);
+    void drawZenith(float, float, float);
     void drawNadir(float, float, float);
 
-    void Text( float x, float y, char *s)
+    void Text(float x, float y, char *s)
     {
-        TextList.add( fgText( x, y, s) );
+        TextList.add(fgText(x, y, s));
     }
 
-    void Line( float x1, float y1, float x2, float y2)
+    void Line(float x1, float y1, float x2, float y2)
     {
-        LineList.add(fgLineSeg2D(x1,y1,x2,y2));
+        LineList.add(fgLineSeg2D(x1, y1, x2, y2));
     }
 
-    void StippleLine( float x1, float y1, float x2, float y2)
+    void StippleLine(float x1, float y1, float x2, float y2)
     {
-        StippleLineList.add(fgLineSeg2D(x1,y1,x2,y2));
+        StippleLineList.add(fgLineSeg2D(x1, y1, x2, y2));
     }
 };
 

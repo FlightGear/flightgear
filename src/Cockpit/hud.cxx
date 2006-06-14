@@ -91,12 +91,7 @@ static int     x;
 static int     y;
 static UINT    width;
 static UINT    height;
-static float   factor;
 static float   span_units;
-static float   division_units;
-static float   minor_division = 0;
-static UINT    screen_hole;
-static UINT    lbl_pos;
 static bool    working;
 static string  loadfn;
 static UINT    options;
@@ -129,17 +124,6 @@ static float   marker_off;
 static string  type;
 static bool    enable_pointer;
 static string  type_pointer;
-static bool    frl_spot;
-static bool    target;
-static bool    vel_vector;
-static bool    drift;
-static bool    alpha;
-static bool    energy;
-static bool    climb_dive;
-static bool    glide;
-static float   glide_slope_val;
-static bool    worm_energy;
-static bool    waypoint;
 static string  type_tick;
 static string  length_tick;
 static bool    label_box;
@@ -147,9 +131,6 @@ static int     digits;
 static float   radius;
 static int     divisions;
 static int     zoom;
-static int     zenith;
-static int     nadir ;
-static int     hat;
 static bool    tsi;
 static float   rad;
 
@@ -161,7 +142,6 @@ static const char *post_label_string = 0;
 
 int readHud( istream &input );
 int readInstrument ( const SGPropertyNode * node);
-static instr_item * readLadder ( const SGPropertyNode * node);
 static instr_item * readCard ( const SGPropertyNode * node);
 static instr_item * readLabel( const SGPropertyNode * node);
 static instr_item * readTBI( const SGPropertyNode * node);
@@ -175,7 +155,7 @@ public:
     RECT rect;
 
     locRECT( UINT left, UINT top, UINT right, UINT bottom);
-    RECT get_rect(void) { return rect;}
+    RECT get_rect(void) { return rect; }
 };
 
 locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
@@ -197,65 +177,6 @@ locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
 // display for a Piper Cub doesn't show the speed range of a North American
 // mustange and the engine readouts of a B36!
 //
-
-#define INSTRDEFS 21
-
-//$$$ begin - added, Neetha, 28 Nov 2k
-static instr_item *
-readLadder(const SGPropertyNode * node)
-{
-
-    instr_item *p;
-
-    name               = node->getStringValue("name");
-    x                  = node->getIntValue("x");
-    y                  = node->getIntValue("y");
-    width              = node->getIntValue("width");
-    height             = node->getIntValue("height");
-    factor             = node->getFloatValue("compression_factor");
-    span_units         = node->getFloatValue("span_units");
-    division_units     = node->getFloatValue("division_units");
-    screen_hole        = node->getIntValue("screen_hole");
-    lbl_pos            = node->getIntValue("lbl_pos");
-    frl_spot           = node->getBoolValue("enable_frl",false);
-    target             = node->getBoolValue("enable_target_spot",false);
-    vel_vector         = node->getBoolValue("enable_velocity_vector",false);
-    drift              = node->getBoolValue("enable_drift_marker",false);
-    alpha              = node->getBoolValue("enable_alpha_bracket",false);
-    energy             = node->getBoolValue("enable_energy_marker",false);
-    climb_dive         = node->getBoolValue("enable_climb_dive_marker",false);
-    glide              = node->getBoolValue("enable_glide_slope_marker",false);
-    glide_slope_val    = node->getFloatValue("glide_slope",-4.0);
-    worm_energy        = node->getBoolValue("enable_energy_marker",false);
-    waypoint           = node->getBoolValue("enable_waypoint_marker",false);
-    working            = node->getBoolValue("working");
-    zenith             = node->getIntValue("zenith");
-    nadir              = node->getIntValue("nadir");
-    hat                = node->getIntValue("hat");
-    // The factor assumes a base of 55 degrees per 640 pixels.
-    // Invert to convert the "compression" factor to a
-    // pixels-per-degree number.
-    if (fgGetBool("/sim/hud/enable3d", true)) {
-        if (HUD_style == 1) {
-            factor = 1;
-            factor = (640./55.) / factor;
-        }
-    }
-
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
-
-    p = (instr_item *) new HudLadder( name, x, y,
-                                      width, height, factor,
-                                      get_roll, get_pitch,
-                                      span_units, division_units, minor_division,
-                                      screen_hole, lbl_pos, frl_spot, target, vel_vector,
-                                      drift, alpha, energy, climb_dive,
-                                      glide, glide_slope_val, worm_energy,
-                                      waypoint, working, zenith, nadir, hat);
-
-    return p;
-
-} //end readLadder
 
 static instr_item *
 readCard(const SGPropertyNode * node)
@@ -621,7 +542,7 @@ int readInstrument(const SGPropertyNode * node)
         int nLadders = ladder_group->nChildren();
         for (int j = 0; j < nLadders; j++) {
 
-            HIptr = readLadder(ladder_group->getChild(j));
+            HIptr = static_cast<instr_item *>(new HudLadder(ladder_group->getChild(j)));
             HUD_deque.insert( HUD_deque.begin(), HIptr);
 
         }// for - ladders
