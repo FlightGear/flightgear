@@ -436,7 +436,7 @@ public:
                 FLTFNPTR       data_source,
                 float          data_scaling,
                 UINT           options,
-                bool           working  = true,
+                bool           working = true,
                 int            digit = 0);
 
     instr_item( const instr_item & image );
@@ -455,19 +455,23 @@ public:
     POINT   get_centroid    ( void ) { return mid_span;  }
     UINT    get_options     ( void ) { return opts;      }
     int     get_digits      ( void ) { return digits;         }
+    inline int get_x() const { return scrn_pos.left; }
+    inline int get_y() const { return scrn_pos.top; }
+    inline int get_width() const { return scrn_pos.right; }
+    inline int get_height() const { return scrn_pos.bottom; }
 
-    UINT    huds_vert     (UINT options) { return( options  & HUDS_VERT ); }
-    UINT    huds_left     (UINT options) { return( options  & HUDS_LEFT ); }
-    UINT    huds_right    (UINT options) { return( options  & HUDS_RIGHT ); }
+    UINT    huds_vert     (UINT options) { return (options & HUDS_VERT); }
+    UINT    huds_left     (UINT options) { return (options & HUDS_LEFT); }
+    UINT    huds_right    (UINT options) { return (options & HUDS_RIGHT); }
     UINT    huds_both     (UINT options) {
-        return( (options & HUDS_BOTH) == HUDS_BOTH );
+        return ((options & HUDS_BOTH) == HUDS_BOTH);
     }
-    UINT    huds_noticks  (UINT options) { return( options  & HUDS_NOTICKS ); }
-    UINT    huds_notext   (UINT options) { return( options  & HUDS_NOTEXT ); }
-    UINT    huds_top      (UINT options) { return( options  & HUDS_TOP ); }
-    UINT    huds_bottom   (UINT options) { return( options  & HUDS_BOTTOM ); }
+    UINT    huds_noticks  (UINT options) { return (options & HUDS_NOTICKS); }
+    UINT    huds_notext   (UINT options) { return (options & HUDS_NOTEXT); }
+    UINT    huds_top      (UINT options) { return (options & HUDS_TOP); }
+    UINT    huds_bottom   (UINT options) { return (options & HUDS_BOTTOM); }
 
-    virtual void display_enable( bool working ) { is_enabled = !! working;}
+    virtual void display_enable( bool working ) { is_enabled = working;}
 
     virtual void update( void );
     virtual void break_display ( bool bad );
@@ -624,45 +628,49 @@ public:
 
 
 //
-// fgRunway_instr        This class is responsible for rendering the active runway
-//                        in the hud (if visible).
+// fgRunway_instr   This class is responsible for rendering the active runway
+//                  in the hud (if visible).
 class runway_instr : public instr_item {
 private:
         void boundPoint(const sgdVec3& v, sgdVec3& m);
         bool boundOutsidePoints(sgdVec3& v, sgdVec3& m);
-        bool drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& p1, const sgdVec3& p2);
+        bool drawLine(const sgdVec3& a1, const sgdVec3& a2,
+                const sgdVec3& p1, const sgdVec3& p2);
         void drawArrow();
         bool get_active_runway(FGRunway& rwy);
         void get_rwy_points(sgdVec3 *points);
         void setLineWidth(void);
 
-        sgdVec3 points3d[6],points2d[6];
-        double mm[16],pm[16], arrowScale, arrowRad, lnScale, scaleDist, default_pitch, default_heading;
+        sgdVec3 points3d[6], points2d[6];
+        double mm[16],pm[16], arrowScale, arrowRad, lnScale;
+        double scaleDist, default_pitch, default_heading;
         GLint view[4];
         FGRunway runway;
         FGViewer* cockpit_view;
-        unsigned short stippleOut,stippleCen;
-        bool drawIA,drawIAAlways;
+        unsigned short stippleOut, stippleCen;
+        bool drawIA, drawIAAlways;
         RECT location;
         POINT center;
 
 public:
-    runway_instr( int    x,
-                  int    y,
-                  int    width,
-                  int    height,
-                  float  scale_data,
-                  bool   working = true);
+    runway_instr(const SGPropertyNode *);
 
-    virtual void draw( void );       // Required method in base class
-        void setArrowRotationRadius(double radius);
-        void setArrowScale(double scale); // Scales the runway indication arrow
-        void setDrawArrow(bool draw);         // Draws arrow when runway is not visible in HUD if draw=true
-        void setDrawArrowAlways(bool draw); //Always draws arrow if draw=true;
-        void setLineScale(double scale); //Sets the maximum line scale
-        void setScaleDist(double dist_nm); //Sets the distance where to start scaling the lines
-        void setStippleOutline(unsigned short stipple); //Sets the stipple pattern of the outline of the runway
-        void setStippleCenterline(unsigned short stipple); //Sets the stipple patter of the center line of the runway
+    virtual void draw( void );
+    void setArrowRotationRadius(double radius);
+    // Scales the runway indication arrow
+    void setArrowScale(double scale);
+    // Draws arrow when runway is not visible in HUD if draw=true
+    void setDrawArrow(bool draw);
+    //Always draws arrow if draw=true;
+    void setDrawArrowAlways(bool draw);
+    //Sets the maximum line scale
+    void setLineScale(double scale);
+    //Sets the distance where to start scaling the lines
+    void setScaleDist(double dist_nm);
+    //Sets the stipple pattern of the outline of the runway
+    void setStippleOutline(unsigned short stipple);
+    //Sets the stipple patter of the center line of the runway
+    void setStippleCenterline(unsigned short stipple);
 };
 
 

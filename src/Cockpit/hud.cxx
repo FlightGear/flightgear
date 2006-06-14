@@ -284,30 +284,6 @@ readCard(const SGPropertyNode * node)
 }// end readCard
 
 
-static instr_item *
-readRunway(const SGPropertyNode * node) {
-        name     = node->getStringValue("name");
-        x        = node->getIntValue("x");
-        y        = node->getIntValue("y");
-        width    = node->getIntValue("width");
-        height   = node->getIntValue("height");
-        scaling  = node->getDoubleValue("scale");
-        working  = node->getBoolValue("working",true);
-        runway_instr *ri = new runway_instr(x,y,width,height,scaling,working);
-        double scale = node->getDoubleValue("arrow_scale",1.0);
-        ri->setDrawArrow((scale>0)?true:false);
-        ri->setDrawArrowAlways((scale>0)?node->getBoolValue("arrow_always"):false);
-        ri->setStippleOutline(node->getIntValue("outer_stipple",0xFFFF));
-        ri->setStippleCenterline(node->getIntValue("center_stipple",0xFFFF));
-        ri->setArrowRotationRadius(node->getDoubleValue("arrow_radius"));
-        ri->setArrowScale(scale);
-        ri->setLineScale(node->getDoubleValue("line_scale",1.0));
-        ri->setScaleDist(node->getDoubleValue("scale_dist_nm"));
-        SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
-        return (instr_item *) ri;
-}
-
-
 int readInstrument(const SGPropertyNode * node)
 {
     static const SGPropertyNode *startup_units_node
@@ -354,7 +330,7 @@ int readInstrument(const SGPropertyNode * node)
         int nTbis = tbi_group->nChildren();
         for (int j = 0; j < nTbis; j++) {
             HIptr = static_cast<instr_item *>(new fgTBI_instr(tbi_group->getChild(j)));
-            HUD_deque.insert( HUD_deque.begin(), HIptr);
+            HUD_deque.insert(HUD_deque.begin(), HIptr);
         }
     }
 
@@ -362,13 +338,12 @@ int readInstrument(const SGPropertyNode * node)
     if (rwy_group != 0) {
         int nRwy = rwy_group->nChildren();
         for (int j = 0; j < nRwy; j++) {
-            SG_LOG(SG_COCKPIT, SG_DEBUG, "***  Reading runway properties ***");
-            HIptr = readRunway(rwy_group->getChild(j));
-            HUD_deque.insert( HUD_deque.begin(), HIptr);
+            HIptr = static_cast<instr_item *>(new runway_instr(rwy_group->getChild(j)));
+            HUD_deque.insert(HUD_deque.begin(), HIptr);
         }
     }
     return 0;
-}//end readinstrument
+} //end readinstrument
 
 
 int readHud( istream &input )
