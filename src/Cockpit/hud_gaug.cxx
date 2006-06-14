@@ -1,6 +1,4 @@
-
 #include "hud.hxx"
-
 
 #ifdef USE_HUD_TextList
 #define textString(x, y, text, digit)  TextString(text, x , y ,digit)
@@ -8,61 +6,60 @@
 #define textString(x, y, text, digit)  puDrawString(guiFnt, text, x, y)
 #endif
 
-//============== Top of gauge_instr class member definitions ==============
 
-gauge_instr::gauge_instr(
-        int      x,
-        int      y,
-        UINT     width,
-        UINT     height,
-        FLTFNPTR load_fn,
-        UINT     options,
-        float    disp_scale,
-        float    maxValue,
-        float    minValue,
-        UINT     major_divs,
-        UINT     minor_divs,
-        int      dp_showing,
-        UINT     modulus,
-        bool     working) :
-    instr_scale( x, y, width, height,
-                 load_fn, options,
-                 (maxValue - minValue), // Always shows span?
-                 maxValue, minValue,
-                 disp_scale,
-                 major_divs, minor_divs,
-                 modulus, dp_showing,
-                 working)
+gauge_instr::gauge_instr(const SGPropertyNode *node) :
+    instr_scale(
+            node->getIntValue("x"),
+            node->getIntValue("y"),
+            node->getIntValue("width"),
+            node->getIntValue("height"),
+            0 /*load_fn*/,
+            node->getIntValue("options"),
+            node->getFloatValue("maxValue") - node->getFloatValue("minValue"), // Always shows span?
+            node->getFloatValue("maxValue"),
+            node->getFloatValue("minValue"),
+            node->getFloatValue("disp_scaling"),
+            node->getIntValue("major_divs"),
+            node->getIntValue("minor_divs"),
+            node->getIntValue("modulator"), // "rollover"
+            0, /* hud.cxx: static int dp_shoing = 0; */    // FIXME
+            node->getBoolValue("working"))
 {
-    //  UINT options = get_options();
-    //  huds_vert    = options & HUDS_VERT;
-    //  huds_left    = options & HUDS_LEFT;
-    //  huds_right   = options & HUDS_RIGHT;
-    //  huds_both    = (options & HUDS_BOTH) == HUDS_BOTH;
-    //  huds_noticks = options & HUDS_NOTICKS;
-    //  huds_notext  = options & HUDS_NOTEXT;
-    //  huds_top     = options & HUDS_TOP;
-    //  huds_bottom  = options & HUDS_BOTTOM;
-}
+    SG_LOG(SG_INPUT, SG_INFO, "Done reading gauge instrument "
+            << node->getStringValue("name", "[unnamed]"));
 
+    string loadfn = node->getStringValue("loadfn");		// FIXME
+    float (*load_fn)(void);
+    if (loadfn=="anzg") {
+        load_fn = get_anzg;
+    } else if (loadfn=="heading") {
+        load_fn = get_heading;
+    } else if (loadfn=="aoa") {
+        load_fn = get_aoa;
+    } else if (loadfn=="climb") {
+        load_fn = get_climb_rate;
+    } else if (loadfn=="altitude") {
+        load_fn = get_altitude;
+    } else if (loadfn=="agl") {
+        load_fn = get_agl;
+    } else if (loadfn=="speed") {
+        load_fn = get_speed;
+    } else if (loadfn=="view_direction") {
+        load_fn = get_view_direction;
+    } else if (loadfn=="aileronval") {
+        load_fn = get_aileronval;
+    } else if (loadfn=="elevatorval") {
+        load_fn = get_elevatorval;
+    } else if (loadfn=="elevatortrimval") {
+        load_fn = get_elev_trimval;
+    } else if (loadfn=="rudderval") {
+        load_fn = get_rudderval;
+    } else if (loadfn=="throttleval") {
+        load_fn = get_throttleval;
+    } else
+        load_fn = 0;
 
-gauge_instr::~gauge_instr()
-{
-}
-
-
-gauge_instr::gauge_instr( const gauge_instr & image) :
-    instr_scale( (instr_scale &) image)
-{
-    //  UINT options = get_options();
-    //  huds_vert = options & HUDS_VERT;
-    //  huds_left = options & HUDS_LEFT;
-    //  huds_right = options & HUDS_RIGHT;
-    //  huds_both = (options & HUDS_BOTH) == HUDS_BOTH;
-    //  huds_noticks = options & HUDS_NOTICKS;
-    //  huds_notext = options & HUDS_NOTEXT;
-    //  huds_top = options & HUDS_TOP;
-    //  huds_bottom =  options & HUDS_BOTTOM;
+    set_data_source(load_fn);
 }
 
 
@@ -72,7 +69,7 @@ gauge_instr::gauge_instr( const gauge_instr & image) :
 // This routine should be worked over before using. Current value would be
 // fetched and not used if not commented out. Clearly that is intollerable.
 
-void gauge_instr::draw (void)
+void gauge_instr::draw(void)
 {
     float marker_xs, marker_xe;
     float marker_ys, marker_ye;
@@ -83,53 +80,41 @@ void gauge_instr::draw (void)
     char TextScale[80];
     bool condition;
     int disp_val = 0;
-    float vmin       = min_val();
-    float vmax       = max_val();
-    POINT mid_scr    = get_centroid();
-    float cur_value  = get_value();
-    RECT  scrn_rect  = get_location();
-    UINT options     = get_options();
+    float vmin = min_val();
+    float vmax = max_val();
+    POINT mid_scr = get_centroid();
+    float cur_value = get_value();
+    RECT  scrn_rect = get_location();
+    UINT options = get_options();
 
     width = scrn_rect.left + scrn_rect.right;
-    height = scrn_rect.top  + scrn_rect.bottom,
+    height = scrn_rect.top + scrn_rect.bottom;
     bottom_4 = scrn_rect.bottom / 4;
+
     // Draw the basic markings for the scale...
+    if (huds_vert(options)) { // Vertical scale
+        // Bottom tick bar
+        drawOneLine(scrn_rect.left, scrn_rect.top, width, scrn_rect.top);
 
-    if ( huds_vert(options) ) { // Vertical scale
-        drawOneLine( scrn_rect.left,     // Bottom tick bar
-                     scrn_rect.top,
-                     width,
-                     scrn_rect.top);
-
-        drawOneLine( scrn_rect.left,    // Top tick bar
-                     height,
-                     width,
-                     height );
+        // Top tick bar
+        drawOneLine( scrn_rect.left, height, width, height);
 
         marker_xs = scrn_rect.left;
         marker_xe = width;
 
-        if ( huds_left(options) ) {     // Read left, so line down right side
-            drawOneLine( width,
-                         scrn_rect.top,
-                         width,
-                         height);
-
-            marker_xs  = marker_xe - scrn_rect.right / 3.0;   // Adjust tick xs
+        if (huds_left(options)) { // Read left, so line down right side
+            drawOneLine(width, scrn_rect.top, width, height);
+            marker_xs  = marker_xe - scrn_rect.right / 3.0;   // Adjust tick
         }
 
-        if ( huds_right(options) ) {     // Read  right, so down left sides
-            drawOneLine( scrn_rect.left,
-                         scrn_rect.top,
-                         scrn_rect.left,
-                         height);
-
-            marker_xe = scrn_rect.left + scrn_rect.right / 3.0;     // Adjust tick xe
+        if (huds_right(options)) {     // Read  right, so down left sides
+            drawOneLine(scrn_rect.left, scrn_rect.top, scrn_rect.left, height);
+            marker_xe = scrn_rect.left + scrn_rect.right / 3.0;   // Adjust tick
         }
 
         // At this point marker x_start and x_end values are transposed.
         // To keep this from confusing things they are now interchanged.
-        if ( huds_both(options) ) {
+        if (huds_both(options)) {
             marker_ye = marker_xs;
             marker_xs = marker_xe;
             marker_xe = marker_ye;
@@ -138,34 +123,28 @@ void gauge_instr::draw (void)
         // Work through from bottom to top of scale. Calculating where to put
         // minor and major ticks.
 
-        if ( !huds_noticks(options)) {    // If not no ticks...:)
+        if (!huds_noticks(options)) {    // If not no ticks...:)
             // Calculate x marker offsets
-            int last = (int)vmax + 1; //FloatToInt(vmax)+1;
+            int last = (int)vmax + 1;    // FloatToInt(vmax)+1;
             i = (int)vmin; //FloatToInt(vmin);
-            for (; i < last; i++) {
-                // for ( i = (int)vmin; i <= (int)vmax; i++ ) {
 
+            for (; i < last; i++) {
                 // Calculate the location of this tick
                 marker_ys = scrn_rect.top + (i - vmin) * factor()/* +.5f*/;
 
                 // We compute marker_ys even though we don't know if we will use
                 // either major or minor divisions. Simpler.
 
-                if ( div_min()) {                  // Minor tick marks
-                    if ( !(i%(int)div_min()) ) {
-                        if ( huds_left(options) && huds_right(options) ) {
-                            drawOneLine( scrn_rect.left, marker_ys,
-                                         marker_xs - 3, marker_ys );
-                            drawOneLine( marker_xe + 3, marker_ys,
-                                         width, marker_ys );
-                        }
-                        else {
-                            if ( huds_left(options) ) {
-                                drawOneLine( marker_xs + 3, marker_ys, marker_xe, marker_ys );
-                            }
-                            else {
-                                drawOneLine( marker_xs, marker_ys, marker_xe - 3, marker_ys );
-                            }
+                if (div_min()) {                  // Minor tick marks
+                    if (!(i % (int)div_min())) {
+                        if (huds_left(options) && huds_right(options)) {
+                            drawOneLine(scrn_rect.left, marker_ys, marker_xs - 3, marker_ys);
+                            drawOneLine(marker_xe + 3, marker_ys, width, marker_ys);
+
+                        } else if (huds_left(options)) {
+                            drawOneLine(marker_xs + 3, marker_ys, marker_xe, marker_ys);
+                        } else {
+                            drawOneLine(marker_xs, marker_ys, marker_xe - 3, marker_ys);
                         }
                     }
                 }
@@ -174,44 +153,39 @@ void gauge_instr::draw (void)
                 // and no labels are drawn otherwise, we label inside this if
                 // statement.
 
-                if ( div_max()) {                  // Major tick mark
-                    if ( !(i%(int)div_max()) )            {
-                        if ( huds_left(options) && huds_right(options) ) {
-                            drawOneLine( scrn_rect.left, marker_ys,
-                                         marker_xs, marker_ys );
-                            drawOneLine( marker_xe, marker_ys,
-                                         width, marker_ys );
-                        }
-                        else {
-                            drawOneLine( marker_xs, marker_ys, marker_xe, marker_ys );
+                if (div_max()) {                  // Major tick mark
+                    if (!(i % (int)div_max())) {
+                        if (huds_left(options) && huds_right(options)) {
+                            drawOneLine(scrn_rect.left, marker_ys, marker_xs, marker_ys);
+                            drawOneLine(marker_xe, marker_ys, width, marker_ys);
+                        } else {
+                            drawOneLine(marker_xs, marker_ys, marker_xe, marker_ys);
                         }
 
-                        if ( !huds_notext(options) ) {
+                        if (!huds_notext(options)) {
                             disp_val = i;
-                            sprintf( TextScale, "%d",
-                                     FloatToInt(disp_val * data_scaling()/*+.5*/ ));
+                            sprintf(TextScale, "%d",
+                                    FloatToInt(disp_val * data_scaling()/*+.5*/));
 
-                            lenstr = getStringWidth( TextScale );
+                            lenstr = getStringWidth(TextScale);
 
-                            if ( huds_left(options) && huds_right(options) ) {
+                            if (huds_left(options) && huds_right(options)) {
                                 text_x = mid_scr.x -  lenstr/2 ;
-                            }
-                            else {
-                                if ( huds_left(options) )              {
-                                    text_x = FloatToInt(marker_xs - lenstr);
-                                }
-                                else {
-                                    text_x = FloatToInt(marker_xe - lenstr);
-                                }
+
+                            } else if (huds_left(options)) {
+                                text_x = FloatToInt(marker_xs - lenstr);
+                            } else {
+                                text_x = FloatToInt(marker_xe - lenstr);
                             }
                             // Now we know where to put the text.
                             text_y = FloatToInt(marker_ys);
-                            textString( text_x, text_y, TextScale, 0 );
+                            textString(text_x, text_y, TextScale, 0);
                         }
                     }
-                }  //
-            }  //
-        }  //
+                }
+            }
+        }
+
         // Now that the scale is drawn, we draw in the pointer(s). Since labels
         // have been drawn, text_x and text_y may be recycled. This is used
         // with the marker start stops to produce a pointer for each side reading
@@ -219,147 +193,123 @@ void gauge_instr::draw (void)
         text_y = scrn_rect.top + FloatToInt((cur_value - vmin) * factor() /*+.5f*/);
         //    text_x = marker_xs - scrn_rect.left;
 
-        if ( huds_right(options) ) {
+        if (huds_right(options)) {
             glBegin(GL_LINE_STRIP);
-            glVertex2f( scrn_rect.left, text_y + 5);
-            glVertex2f( FloatToInt(marker_xe),      text_y);
-            glVertex2f( scrn_rect.left, text_y - 5);
+            glVertex2f(scrn_rect.left, text_y + 5);
+            glVertex2f(FloatToInt(marker_xe), text_y);
+            glVertex2f(scrn_rect.left, text_y - 5);
             glEnd();
         }
-        if ( huds_left(options) ) {
+        if (huds_left(options)) {
             glBegin(GL_LINE_STRIP);
-            glVertex2f( width,      text_y + 5);
-            glVertex2f( FloatToInt(marker_xs),  text_y);
-            glVertex2f( width,      text_y - 5);
+            glVertex2f(width, text_y + 5);
+            glVertex2f(FloatToInt(marker_xs), text_y);
+            glVertex2f(width, text_y - 5);
             glEnd();
         }
         // End if VERTICAL SCALE TYPE
 
     } else {                             // Horizontal scale by default
-        drawOneLine( scrn_rect.left,     // left tick bar
-                     scrn_rect.top,
-                     scrn_rect.left,
-                     height);
+        // left tick bar
+        drawOneLine(scrn_rect.left, scrn_rect.top, scrn_rect.left, height);
 
-        drawOneLine( width,    // right tick bar
-                     scrn_rect.top,
-                     width,
-                     height );
+        // right tick bar
+        drawOneLine(width, scrn_rect.top, width, height );
 
         marker_ys = scrn_rect.top;                       // Starting point for
         marker_ye = height;                              // tick y location calcs
         marker_xs = scrn_rect.left + (cur_value - vmin) * factor() /*+ .5f*/;
 
-        if ( huds_top(options) ) {
-            drawOneLine( scrn_rect.left,
-                         scrn_rect.top,
-                         width,
-                         scrn_rect.top);                    // Bottom box line
+        if (huds_top(options)) {
+            // Bottom box line
+            drawOneLine(scrn_rect.left, scrn_rect.top, width, scrn_rect.top);
 
-            marker_ye  = scrn_rect.top + scrn_rect.bottom / 2.0;   // Tick point adjust
+            marker_ye = scrn_rect.top + scrn_rect.bottom / 2.0;   // Tick point adjust
             // Bottom arrow
             glBegin(GL_LINE_STRIP);
-            glVertex2f( marker_xs - bottom_4, scrn_rect.top);
-            glVertex2f( marker_xs, marker_ye);
-            glVertex2f( marker_xs + bottom_4, scrn_rect.top);
+            glVertex2f(marker_xs - bottom_4, scrn_rect.top);
+            glVertex2f(marker_xs, marker_ye);
+            glVertex2f(marker_xs + bottom_4, scrn_rect.top);
             glEnd();
         }
-        if ( huds_bottom(options) ) {
+
+        if (huds_bottom(options)) {
             // Top box line
-            drawOneLine( scrn_rect.left, height, width, height);
+            drawOneLine(scrn_rect.left, height, width, height);
             // Tick point adjust
             marker_ys = height - scrn_rect.bottom  / 2.0;
 
             // Top arrow
             glBegin(GL_LINE_STRIP);
-            glVertex2f( marker_xs + bottom_4, height);
-            glVertex2f( marker_xs, marker_ys );
-            glVertex2f( marker_xs - bottom_4, height);
+            glVertex2f(marker_xs + bottom_4, height);
+            glVertex2f(marker_xs, marker_ys );
+            glVertex2f(marker_xs - bottom_4, height);
             glEnd();
         }
 
 
         int last = (int)vmax + 1; //FloatToInt(vmax)+1;
         i = (int)vmin; //FloatToInt(vmin);
-        for ( ; i <last ; i++ )      {
+        for (; i <last ; i++) {
             condition = true;
-            if ( !modulo()) {
-                if ( i < min_val()) {
+            if (!modulo() && i < min_val())
                     condition = false;
-                }
-            }
-            if ( condition )        {
+
+            if (condition) {
                 marker_xs = scrn_rect.left + (i - vmin) * factor()/* +.5f*/;
                 //        marker_xs = scrn_rect.left + (int)((i - vmin) * factor() + .5f);
-                if ( div_min()){
-                    if ( !(i%(int)div_min()) ) {
+                if (div_min()) {
+                    if (!(i % (int)div_min())) {
                         // draw in ticks only if they aren't too close to the edge.
-                        if ((( marker_xs + 5) > scrn_rect.left ) ||
-                           (( marker_xs - 5 )< (width))){
+                        if (((marker_xs + 5) > scrn_rect.left)
+                               || ((marker_xs - 5) < (width))) {
 
-                            if ( huds_both(options) ) {
-                                drawOneLine( marker_xs, scrn_rect.top,
-                                             marker_xs, marker_ys - 4);
-                                drawOneLine( marker_xs, marker_ye + 4,
-                                             marker_xs, height);
-                            }
-                            else {
-                                if ( huds_top(options) ) {
-                                    drawOneLine( marker_xs, marker_ys,
-                                                 marker_xs, marker_ye - 4);
-                                }
-                                else {
-                                    drawOneLine( marker_xs, marker_ys + 4,
-                                                 marker_xs, marker_ye);
-                                }
+                            if (huds_both(options)) {
+                                drawOneLine(marker_xs, scrn_rect.top, marker_xs, marker_ys - 4);
+                                drawOneLine(marker_xs, marker_ye + 4, marker_xs, height);
+
+                            } else if (huds_top(options)) {
+                                drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye - 4);
+                            } else {
+                                drawOneLine(marker_xs, marker_ys + 4, marker_xs, marker_ye);
                             }
                         }
                     }
                 }
-                if ( div_max()) {
-                    if ( !(i%(int)div_max()) ) {
+
+                if (div_max()) {
+                    if (!(i % (int)div_max())) {
                         if (modulo()) {
-                            if ( disp_val < 0) {
-                                while ( disp_val < 0 ) {
+                            if (disp_val < 0) {
+                                while (disp_val < 0)
                                     disp_val += modulo();
-                                }
                             }
                             disp_val = i % (int)modulo();
                         } else {
                             disp_val = i;
                         }
-                        sprintf( TextScale, "%d",
-                                 FloatToInt(disp_val  * data_scaling()/* +.5*/ ));
-                        lenstr = getStringWidth( TextScale);
+                        sprintf(TextScale, "%d",
+                                FloatToInt(disp_val * data_scaling()/* +.5*/));
+                        lenstr = getStringWidth(TextScale);
 
                         // Draw major ticks and text only if far enough from the edge.
-                        if (( (marker_xs - 10)> scrn_rect.left ) &&
-                           ( (marker_xs + 10) < width )){
-                            if ( huds_both(options) ) {
-                                drawOneLine( marker_xs, scrn_rect.top,
-                                             marker_xs, marker_ys);
-                                drawOneLine( marker_xs, marker_ye,
-                                             marker_xs, height);
+                        if (((marker_xs - 10) > scrn_rect.left)
+                                && ((marker_xs + 10) < width)) {
+                            if (huds_both(options)) {
+                                drawOneLine(marker_xs, scrn_rect.top, marker_xs, marker_ys);
+                                drawOneLine(marker_xs, marker_ye, marker_xs, height);
 
-                                if ( !huds_notext(options) ) {
-                                    textString ( marker_xs - lenstr, marker_ys + 4,
-                                                 TextScale ,0);
-                                }
-                            }
-                            else {
-                                drawOneLine( marker_xs, marker_ys,
-                                             marker_xs, marker_ye );
+                                if (!huds_notext(options))
+                                    textString(marker_xs - lenstr, marker_ys + 4, TextScale, 0);
 
-                                if ( !huds_notext(options) ) {
-                                    if ( huds_top(options) )              {
-                                        textString ( marker_xs - lenstr,
-                                                     height - 10,
-                                                     TextScale, 0 );
-                                    }
-                                    else  {
-                                        textString( marker_xs - lenstr, scrn_rect.top,
-                                                    TextScale, 0 );
-                                    }
+                            } else {
+                                drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye);
+
+                                if (!huds_notext(options)) {
+                                    if (huds_top(options))
+                                        textString(marker_xs - lenstr, height - 10, TextScale, 0);
+                                    else
+                                        textString(marker_xs - lenstr, scrn_rect.top, TextScale, 0);
                                 }
                             }
                         }

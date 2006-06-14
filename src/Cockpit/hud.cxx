@@ -48,12 +48,11 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/props/props.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Autopilot/xmlauto.hxx>
-#include <GUI/new_gui.hxx>
+#include <GUI/new_gui.hxx>           // FGFontCache
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
@@ -61,7 +60,7 @@
 #include "hud.hxx"
 
 
-static HUD_Properties *HUD = 0;
+static HUD_Properties *HUDprop = 0;
 
 static char units[5];
 
@@ -125,7 +124,7 @@ static FLTFNPTR load_fn;
 
 int readHud( istream &input );
 int readInstrument ( const SGPropertyNode * node);
-static instr_item * readCard ( const SGPropertyNode * node);
+static instr_item * readCardDialTape ( const SGPropertyNode * node);
 
 static void drawHUD();
 static void fgUpdateHUDVirtual();
@@ -159,12 +158,10 @@ locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
 //
 
 static instr_item *
-readCard(const SGPropertyNode * node)
+readCardDialTape(const SGPropertyNode * node)
 {
-
     instr_item *p;
 
-    name               = node->getStringValue("name");
     x                  = node->getIntValue("x");
     y                  = node->getIntValue("y");
     width              = node->getIntValue("width");
@@ -197,12 +194,8 @@ readCard(const SGPropertyNode * node)
     divisions          = node->getIntValue("divisions");
     zoom               = node->getIntValue("zoom");
 
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
-
-
-    if (type=="gauge") {
-        span_units = maxValue - minValue;
-    }
+    SG_LOG(SG_INPUT, SG_INFO, "Done reading dial/tape instrument "
+            << node->getStringValue("name", "[none]"));
 
     if (loadfn=="anzg") {
         load_fn = get_anzg;
@@ -233,55 +226,41 @@ readCard(const SGPropertyNode * node)
     }
 
 
-    if ( (type == "dial") | (type == "tape") ) {
-        p = (instr_item *) new hud_card( x,
-                                         y,
-                                         width,
-                                         height,
-                                         load_fn,
-                                         options,
-                                         maxValue, minValue,
-                                         scaling,
-                                         major_divs, minor_divs,
-                                         modulator,
-                                         dp_showing,
-                                         span_units,
-                                         type,
-                                         tick_bottom,
-                                         tick_top,
-                                         tick_right,
-                                         tick_left,
-                                         cap_bottom,
-                                         cap_top,
-                                         cap_right,
-                                         cap_left,
-                                         marker_off,
-                                         enable_pointer,
-                                         type_pointer,
-                                         type_tick,
-                                         length_tick,
-                                         working,
-                                         radius,
-                                         divisions,
-                                         zoom
-                                         );
-    } else {
-        p = (instr_item *) new  gauge_instr( x,       // x
-                                             y,       // y
-                                             width,   // width
-                                             height,  // height
-                                             load_fn, // data source
-                                             options,
-                                             scaling,
-                                             maxValue,minValue,
-                                             major_divs, minor_divs,
-                                             dp_showing,
-                                             modulator,
-                                             working);
-    }
-
+    // type == "dial") || (type == "tape")
+    p = (instr_item *) new hud_card( x,
+                                     y,
+                                     width,
+                                     height,
+                                     load_fn,
+                                     options,
+                                     maxValue, minValue,
+                                     scaling,
+                                     major_divs, minor_divs,
+                                     modulator,
+                                     dp_showing,
+                                     span_units,
+                                     type,
+                                     tick_bottom,
+                                     tick_top,
+                                     tick_right,
+                                     tick_left,
+                                     cap_bottom,
+                                     cap_top,
+                                     cap_right,
+                                     cap_left,
+                                     marker_off,
+                                     enable_pointer,
+                                     type_pointer,
+                                     type_tick,
+                                     length_tick,
+                                     working,
+                                     radius,
+                                     divisions,
+                                     zoom
+                                     );
     return p;
-}// end readCard
+}
+
 
 
 int readInstrument(const SGPropertyNode * node)
@@ -311,7 +290,11 @@ int readInstrument(const SGPropertyNode * node)
     if (card_group != 0) {
         int nCards = card_group->nChildren();
         for (int j = 0; j < nCards; j++) {
-            HIptr = readCard(card_group->getChild(j));
+            const char *type = card_group->getChild(j)->getStringValue("type", "gauge");
+            if (!strcmp(type, "gauge"))
+                HIptr = static_cast<instr_item *>(new gauge_instr(card_group->getChild(j)));
+            else if (!strcmp(type, "dial") || !strcmp(type, "tape"))
+                HIptr = readCardDialTape(card_group->getChild(j));
             HUD_deque.insert(HUD_deque.begin(), HIptr);
         }
     }
@@ -442,8 +425,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
     HUDtext->setPointSize(HUD_TextSize);
     HUD_TextList.setFont( HUDtext );
 
-    if (!HUD)
-        HUD = new HUD_Properties;
+    if (!HUDprop)
+        HUDprop = new HUD_Properties;
     return 0;  // For now. Later we may use this for an error code.
 
 }
@@ -468,8 +451,8 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
         input.close();
     }
 
-    if (!HUD)
-        HUD = new HUD_Properties;
+    if (!HUDprop)
+        HUDprop = new HUD_Properties;
     return 0;  // For now. Later we may use this for an error code.
 
 }
@@ -621,21 +604,21 @@ void drawHUD()
     static char hud_alt_text[256];
 
     glEnable(GL_BLEND);
-    if (HUD->isTransparent())
+    if (HUDprop->isTransparent())
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     else
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if (HUD->isAntialiased()) {
+    if (HUDprop->isAntialiased()) {
         glEnable(GL_LINE_SMOOTH);
-        glAlphaFunc(GL_GREATER, HUD->alphaClamp());
+        glAlphaFunc(GL_GREATER, HUDprop->alphaClamp());
         glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
         //glLineWidth(1.5);
     } else {
         //glLineWidth(1.0);
     }
 
-    HUD->setColor();
+    HUDprop->setColor();
     for_each(HUD_deque.begin(), HUD_deque.end(), HUDdraw());
 
     //HUD_TextList.add( fgText(40, 10, get_formated_gmt_time(), 0) );
@@ -701,7 +684,7 @@ void drawHUD()
     // HUD_StippleLineList.draw();
     // glDisable(GL_LINE_STIPPLE);
 
-    if (HUD->isAntialiased()) {
+    if (HUDprop->isAntialiased()) {
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_LINE_SMOOTH);
         //glLineWidth(1.0);
@@ -723,14 +706,14 @@ void fgTextList::draw()
 
     glPushAttrib(GL_COLOR_BUFFER_BIT);
     glEnable(GL_BLEND);
-    if (HUD->isTransparent())
+    if (HUDprop->isTransparent())
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     else
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if (HUD->isAntialiased()) {
+    if (HUDprop->isAntialiased()) {
         glEnable(GL_ALPHA_TEST);
-        glAlphaFunc(GL_GREATER, HUD->alphaClamp());
+        glAlphaFunc(GL_GREATER, HUDprop->alphaClamp());
     }
 
     Font->begin();

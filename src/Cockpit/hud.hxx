@@ -801,23 +801,7 @@ public:
 
 class gauge_instr : public instr_scale {
 public:
-    gauge_instr( int       x,
-                 int       y,
-                 UINT      width,
-                 UINT      height,
-                 FLTFNPTR  load_fn,
-                 UINT      options,
-                 float     disp_scaling,
-                 float     maxValue,
-                 float     minValue,
-                 UINT      major_divs,
-                 UINT      minor_divs,
-                 int       dp_showing,
-                 UINT      modulus,
-                 bool      working);
-
-    ~gauge_instr();
-    gauge_instr( const gauge_instr & image);
+    gauge_instr(const SGPropertyNode *);
     virtual void draw( void );       // Required method in base class
 };
 

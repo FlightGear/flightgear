@@ -29,7 +29,7 @@ instr_scale::instr_scale(
         UINT     minor_divs,
         UINT     rollover,
         int      dp_showing,
-        bool     working ) :
+        bool     working) :
     instr_item( x, y, width, height, load_fn, disp_scale, options, working),
     range_shown  ( show_range ),
     Maximum_value( maxValue   ),
