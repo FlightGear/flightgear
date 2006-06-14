@@ -45,8 +45,8 @@ hud_card::hud_card(
           float     mark_offset,
           bool      pointer_enable,
           string    type_pointer,
-          string    type_tick,//hud
-          string    length_tick,//hud
+          string    type_tick,
+          string    length_tick,
           bool      working,
           float     rad,
           int       divs,
@@ -70,8 +70,8 @@ hud_card::hud_card(
     marker_offset    (mark_offset),
     pointer          (pointer_enable),
     pointer_type     (type_pointer),
-    tick_type        (type_tick), //hud
-    tick_length      (length_tick), //hud
+    tick_type        (type_tick),
+    tick_length      (length_tick),
     Maj_div          (major_divs),
     Min_div          (minor_divs)
 
@@ -113,8 +113,8 @@ hud_card::hud_card(const hud_card & image) :
     marker_offset (image.marker_offset),
     pointer (image.pointer),
     pointer_type (image.pointer_type),
-    tick_type(image.tick_type), //hud
-    tick_length(image.tick_length), //hud
+    tick_type(image.tick_type),
+    tick_length(image.tick_length),
     Maj_div(image.Maj_div),
     Min_div(image.Min_div)
 

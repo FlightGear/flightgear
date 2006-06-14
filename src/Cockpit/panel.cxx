@@ -92,13 +92,13 @@ get_aspect_adjust (int xsize, int ysize)
 bool
 fgPanelVisible ()
 {
-     if(globals->get_current_panel() == 0)
+     if (globals->get_current_panel() == 0)
 	return false;
-     if(globals->get_current_panel()->getVisibility() == 0)
+     if (globals->get_current_panel()->getVisibility() == 0)
 	return false;
-     if(globals->get_viewmgr()->get_current() != 0)
+     if (globals->get_viewmgr()->get_current() != 0)
 	return false;
-     if(globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS != 0)
+     if (globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS != 0)
 	return false;
      return true;
 }
@@ -371,7 +371,7 @@ FGPanel::draw()
   glEnable(GL_COLOR_MATERIAL);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
-  if( _enable_depth_test )
+  if ( _enable_depth_test )
       glDepthFunc(GL_ALWAYS);
   else
     glDisable(GL_DEPTH_TEST);
@@ -442,7 +442,7 @@ FGPanel::draw()
 
 
   // restore some original state
-  if( _enable_depth_test )
+  if ( _enable_depth_test )
     glDepthFunc(GL_LESS);
   glPopAttrib();
   glPolygonOffset(0, 0);
@@ -873,7 +873,7 @@ FGInstrumentLayer::transform () const
 	val = t->max;
       }
 
-      if(t->table==0) {
+      if (t->table==0) {
 	val = val * t->factor + t->offset;
       } else {
 	val = t->table->interpolate(val) * t->factor + t->offset;

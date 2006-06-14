@@ -41,8 +41,8 @@
 #include <math.h>
 
 #include <stdlib.h>
-#include <stdio.h>		// char related functions
-#include <string.h>		// strcmp()
+#include <stdio.h>              // char related functions
+#include <string.h>             // strcmp()
 
 #include SG_GLU_H
 
@@ -140,18 +140,18 @@ static bool    glide;
 static float   glide_slope_val;
 static bool    worm_energy;
 static bool    waypoint;
-static string  type_tick;//hud
-static string  length_tick;//hud
-static bool    label_box;//hud
-static int     digits; //suma
-static float   radius; //suma
-static int     divisions; //suma
-static int     zoom; //suma
-static int     zenith; //suma
-static int     nadir ; //suma
-static int     hat; //suma
-static bool    tsi; //suma
-static float   rad; //suma
+static string  type_tick;
+static string  length_tick;
+static bool    label_box;
+static int     digits;
+static float   radius;
+static int     divisions;
+static int     zoom;
+static int     zenith;
+static int     nadir ;
+static int     hat;
+static bool    tsi;
+static float   rad;
 
 
 static FLTFNPTR load_fn;
@@ -229,16 +229,14 @@ readLadder(const SGPropertyNode * node)
     worm_energy        = node->getBoolValue("enable_energy_marker",false);
     waypoint           = node->getBoolValue("enable_waypoint_marker",false);
     working            = node->getBoolValue("working");
-    zenith             = node->getIntValue("zenith");  //suma
-    nadir              = node->getIntValue("nadir");  //suma
+    zenith             = node->getIntValue("zenith");
+    nadir              = node->getIntValue("nadir");
     hat                = node->getIntValue("hat");
     // The factor assumes a base of 55 degrees per 640 pixels.
     // Invert to convert the "compression" factor to a
     // pixels-per-degree number.
-    if(fgGetBool("/sim/hud/enable3d", true))
-    {
-        if (HUD_style == 1)
-        {
+    if (fgGetBool("/sim/hud/enable3d", true)) {
+        if (HUD_style == 1) {
             factor = 1;
             factor = (640./55.) / factor;
         }
@@ -291,17 +289,17 @@ readCard(const SGPropertyNode * node)
     marker_off         = node->getFloatValue("marker_offset",0.0);
     enable_pointer     = node->getBoolValue("enable_pointer",true);
     type_pointer       = node->getStringValue("pointer_type");
-    type_tick          = node->getStringValue("tick_type");//hud Can be 'circle' or 'line'
-    length_tick        = node->getStringValue("tick_length");//hud For variable length
+    type_tick          = node->getStringValue("tick_type"); // 'circle' or 'line'
+    length_tick        = node->getStringValue("tick_length"); // for variable length
     working            = node->getBoolValue("working");
-    radius             = node->getFloatValue("radius"); //suma
-    divisions          = node->getIntValue("divisions"); //suma
-    zoom               = node->getIntValue("zoom"); //suma
+    radius             = node->getFloatValue("radius");
+    divisions          = node->getIntValue("divisions");
+    zoom               = node->getIntValue("zoom");
 
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
 
-    if(type=="gauge") {
+    if (type=="gauge") {
         span_units = maxValue - minValue;
     }
 
@@ -359,12 +357,12 @@ readCard(const SGPropertyNode * node)
                                          marker_off,
                                          enable_pointer,
                                          type_pointer,
-                                         type_tick,//hud
-                                         length_tick,//hud
+                                         type_tick,
+                                         length_tick,
                                          working,
-                                         radius, //suma
-                                         divisions, //suma
-                                         zoom  //suma
+                                         radius,
+                                         divisions,
+                                         zoom
                                          );
     } else {
         p = (instr_item *) new  gauge_instr( x,       // x
@@ -406,9 +404,9 @@ readLabel(const SGPropertyNode * node)
     blinking           = node->getIntValue("blinking");
     latitude           = node->getBoolValue("latitude",false);
     longitude          = node->getBoolValue("longitude",false);
-    label_box          = node->getBoolValue("label_box",false);//hud
+    label_box          = node->getBoolValue("label_box",false);
     working            = node->getBoolValue("working");
-    digits             = node->getIntValue("digits"); //suma
+    digits             = node->getIntValue("digits");
 
 
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
@@ -536,9 +534,9 @@ readLabel(const SGPropertyNode * node)
                                          blinking,
                                          latitude,
                                          longitude,
-                                         label_box, //hud
+                                         label_box,
                                          working,
-                                         digits); //suma
+                                         digits);
 
     return p;
 } // end readLabel
@@ -558,8 +556,8 @@ readTBI(const SGPropertyNode * node)
     maxSlipAngle   = node->getFloatValue("maxSlipAngle");
     gap_width      = node->getIntValue("gap_width");
     working        = node->getBoolValue("working");
-    tsi            = node->getBoolValue("tsi"); //suma
-    rad            = node->getFloatValue("rad"); //suma
+    tsi            = node->getBoolValue("tsi");
+    rad            = node->getFloatValue("rad");
 
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
@@ -574,8 +572,8 @@ readTBI(const SGPropertyNode * node)
                                         maxSlipAngle,
                                         gap_width,
                                         working,
-                                        tsi, //suma
-                                        rad); //suma
+                                        tsi,
+                                        rad);
 
     return p;
 } //end readTBI
@@ -838,7 +836,7 @@ void fgHUDReshape(void) {
 void fgUpdateHUD( void ) {
 
     static const SGPropertyNode *enable3d_node = fgGetNode("/sim/hud/enable3d");
-    if( HUD_style == 1 && enable3d_node->getBoolValue() ) {
+    if ( HUD_style == 1 && enable3d_node->getBoolValue() ) {
         fgUpdateHUDVirtual();
         return;
     }
@@ -846,7 +844,7 @@ void fgUpdateHUD( void ) {
     static const float normal_aspect = float(640) / float(480);
     // note: aspect_ratio is Y/X
     float current_aspect = 1.0f/globals->get_current_view()->get_aspect_ratio();
-    if( current_aspect > normal_aspect ) {
+    if ( current_aspect > normal_aspect ) {
         float aspect_adjust = current_aspect / normal_aspect;
         float adjust = 320.0f*aspect_adjust - 320.0f;
         fgUpdateHUD( -adjust, 0.0f, 640.0f+adjust, 480.0f );
@@ -877,7 +875,8 @@ void fgUpdateHUDVirtual()
     lookat[0] = -sin(SG_DEGREES_TO_RADIANS * view->getHeadingOffset_deg());
     lookat[1] = tan(SG_DEGREES_TO_RADIANS * view->getPitchOffset_deg());
     lookat[2] = -cos(SG_DEGREES_TO_RADIANS * view->getHeadingOffset_deg());
-    if(fabs(lookat[1]) > 9999) lookat[1] = 9999; // FPU sanity
+    if (fabs(lookat[1]) > 9999)
+        lookat[1] = 9999; // FPU sanity
     gluLookAt(0, 0, 0, lookat[0], lookat[1], lookat[2], 0, 1, 0);
 
     // Map the -1:1 square to a 55.0x41.25 degree wide patch at z=1.
@@ -929,7 +928,7 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
 
 void drawHUD()
 {
-    if( !HUD_deque.size() ) // Trust everyone, but ALWAYS cut the cards!
+    if ( !HUD_deque.size() ) // Trust everyone, but ALWAYS cut the cards!
         return;
 
     HUD_TextList.erase();

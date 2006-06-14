@@ -21,9 +21,9 @@
 #ifndef __PANEL_HXX
 #define __PANEL_HXX
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
-#endif                                   
+#endif
 
 
 #ifdef HAVE_CONFIG_H

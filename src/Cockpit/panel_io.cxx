@@ -289,7 +289,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
     SG_LOG( SG_COCKPIT, SG_INFO, "Found interpolation table with "
             << trans_table->nChildren() << "children" );
     t->table = new SGInterpTable();
-    for(int i = 0; i < trans_table->nChildren(); i++) {
+    for (int i = 0; i < trans_table->nChildren(); i++) {
       const SGPropertyNode * node = trans_table->getChild(i);
       if (!strcmp(node->getName(), "entry")) {
 	double ind = node->getDoubleValue("ind", 0.0);
@@ -769,10 +769,10 @@ readPanel (const SGPropertyNode * root)
         FGPanelInstrument * instrument = readInstrument(node);
         if (instrument != 0)
           panel->addInstrument(instrument);
-      } else if(!strcmp(node->getName(), "special-instrument")) {
+      } else if (!strcmp(node->getName(), "special-instrument")) {
         //cout << "Special instrument found in instruments section!\n";
         const string name = node->getStringValue("name");
-        if(name == "KLN89 GPS") {
+        if (name == "KLN89 GPS") {
           //cout << "Special instrument is KLN89\n";
           
           int x = node->getIntValue("x", -1);
@@ -804,7 +804,7 @@ readPanel (const SGPropertyNode * root)
           // Warning - hardwired size!!!
           RenderArea2D* instrument = new RenderArea2D(158, 40, 158, 40, x, y);
           KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
-		  if(gps == NULL) {
+		  if (gps == NULL) {
 			  gps = new KLN89(instrument);
 			  globals->add_subsystem("kln89", gps);
 		  }

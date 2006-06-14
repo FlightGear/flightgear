@@ -3,28 +3,28 @@
 
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, digit )  TextString( text, x , y,digit )
+#define textString(x, y, text, digit)  TextString(text, x , y ,digit)
 #else
-#define textString( x , y, text, digit )  puDrawString ( guiFnt, text, x, y )
+#define textString(x, y, text, digit)  puDrawString(guiFnt, text, x, y)
 #endif
 
 //============== Top of gauge_instr class member definitions ==============
 
 gauge_instr::gauge_instr(
-             int      x,
-             int      y,
-             UINT     width,
-             UINT     height,
-             FLTFNPTR load_fn,
-             UINT     options,
-             float    disp_scale,
-             float    maxValue,
-             float    minValue,
-             UINT     major_divs,
-             UINT     minor_divs,
-             int      dp_showing,
-             UINT     modulus,
-             bool     working) :
+        int      x,
+        int      y,
+        UINT     width,
+        UINT     height,
+        FLTFNPTR load_fn,
+        UINT     options,
+        float    disp_scale,
+        float    maxValue,
+        float    minValue,
+        UINT     major_divs,
+        UINT     minor_divs,
+        int      dp_showing,
+        UINT     modulus,
+        bool     working) :
     instr_scale( x, y, width, height,
                  load_fn, options,
                  (maxValue - minValue), // Always shows span?
@@ -320,7 +320,7 @@ void gauge_instr::draw (void)
                     if ( !(i%(int)div_max()) ) {
                         if (modulo()) {
                             if ( disp_val < 0) {
-                                while( disp_val < 0 ) {
+                                while ( disp_val < 0 ) {
                                     disp_val += modulo();
                                 }
                             }

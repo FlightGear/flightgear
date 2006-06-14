@@ -3,9 +3,9 @@
 
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, digit )  TextString( text, x , y,digit )
+#define textString(x, y, text, digit)  TextString(text, x , y ,digit)
 #else
-#define textString( x , y, text, digit )  puDrawString ( guiFnt, text, x, y )
+#define textString(x, y, text, digit)  puDrawString(guiFnt, text, x, y)
 #endif
 
 //======================= Top of instr_label class =========================

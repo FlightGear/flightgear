@@ -266,18 +266,18 @@ private:
     float x, y;
     char msg[64];
 public:
-    int digit; //suma
-    fgText(float x = 0, float y = 0, char *c = NULL,int digits=0): x(x), y(y) //suma
+    int digit;
+    fgText(float x = 0, float y = 0, char *c = NULL,int digits=0): x(x), y(y)
     {
         strcpy(msg,c);
-        digit=digits; //suma
+        digit=digits;
     }
 
     fgText( const fgText & image )
-        : x(image.x), y(image.y),digit(image.digit) { strcpy(msg,image.msg); } //suma
+        : x(image.x), y(image.y),digit(image.digit) { strcpy(msg,image.msg); }
 
     fgText& operator = ( const fgText & image ) {
-        strcpy(msg,image.msg); x = image.x; y = image.y;digit=image.digit; //suma
+        strcpy(msg,image.msg); x = image.x; y = image.y;digit=image.digit;
         return *this;
     }
 
@@ -305,26 +305,26 @@ public:
 
     // this code is changed to display Numbers with big/small digits
     // according to MIL Standards for example Altitude above 10000 ft
-    // is shown as 10ooo.  begin suma
+    // is shown as 10ooo.
 
     void Draw(fntRenderer *fnt,int digits) {
-        if(digits==1) {
+        if (digits==1) {
             int c=0,i=0;
             char *t=msg;
             int p=4;
 
-            if(t[0]=='-') {
+            if (t[0]=='-') {
                 //if negative value then increase the c and p values
                 //for '-' sign.  c++;
                 p++;
             }
             char *tmp=msg;
-            while(tmp[i]!='\0') {
-                if((tmp[i]>='0') && (tmp[i]<='9'))
+            while (tmp[i]!='\0') {
+                if ((tmp[i]>='0') && (tmp[i]<='9'))
                     c++;
                 i++;
             }
-            if(c>p) {
+            if (c>p) {
                 fnt->setPointSize(HUD_TextSize * 0.8);
                 int p1=c-3;
                 char *tmp1=msg+p1;
@@ -352,7 +352,6 @@ public:
             fnt->puts( msg ) ;
         }
     }
-    //end suma
 
     void Draw()
     {
@@ -426,7 +425,7 @@ private:
     bool               broken;
     UINT               scr_span;      // Working values for draw;
     POINT              mid_span;      //
-    int                digits;        //suma
+    int                digits;
 
 public:
     instr_item( int            x,
@@ -437,7 +436,7 @@ public:
                 float          data_scaling,
                 UINT           options,
                 bool           working  = true,
-                int            digit = 0); //suma
+                int            digit = 0);
 
     instr_item( const instr_item & image );
 
@@ -453,7 +452,7 @@ public:
     UINT    get_span        ( void ) { return scr_span;  }
     POINT   get_centroid    ( void ) { return mid_span;  }
     UINT    get_options     ( void ) { return opts;      }
-    int     get_digits      ( void ) { return digits;         } //suma
+    int     get_digits      ( void ) { return digits;         }
 
     UINT    huds_vert     (UINT options) { return( options  & HUDS_VERT ); }
     UINT    huds_left     (UINT options) { return( options  & HUDS_LEFT ); }
@@ -483,9 +482,9 @@ public:
     {
         HUD_StippleLineList.add(fgLineSeg2D(x1,y1,x2,y2));
     }
-    void TextString( char *msg, float x, float y,int digit ) //suma
+    void TextString( char *msg, float x, float y,int digit )
     {
-        HUD_TextList.add(fgText(x, y, msg,digit)); //suma
+        HUD_TextList.add(fgText(x, y, msg,digit));
     }
     int getStringWidth ( char *str )
     {
@@ -501,7 +500,7 @@ public:
     void drawOneCircle(float x1, float y1, float r)
     {
         glBegin(GL_LINE_LOOP);  // Use polygon to approximate a circle
-        for(int count=0; count<25; count++) {
+        for (int count=0; count<25; count++) {
             float cosine = r * cos(count * 2 * SG_PI/10.0);
             float sine =   r * sin(count * 2 * SG_PI/10.0);
             glVertex2f(cosine+x1, sine+y1);
@@ -516,7 +515,7 @@ typedef instr_item *HIptr;
 class HUDdraw {
     public:
         void operator() (HIptr elem) const {
-            if( elem->enabled())
+            if ( elem->enabled())
                 elem->draw();
         }
 };
@@ -565,7 +564,7 @@ public:
                  bool         longitude,
                  bool         label_box,
                  bool         working,
-                 int          digit ); //suma);
+                 int          digit );
 
     ~instr_label();
 
@@ -601,7 +600,7 @@ public:
                int          font_size,
                int          blinking,
                bool         working,
-               int          digits =0 );//suma
+               int          digits =0 );
 
     ~lat_label();
 
@@ -636,7 +635,7 @@ public:
                int          font_size,
                int          blinking,
                bool         working,
-               int          digit=0); //suma
+               int          digit=0);
 
 
     ~lon_label();
@@ -761,13 +760,13 @@ private:
     string pointer_type;
     string tick_type;
     string tick_length;
-    float  radius; //suma
-    float  maxValue; //suma
-    float  minValue; //suma
-    int    divisions; //suma
-    int    zoom; //suma
-    UINT   Maj_div; //suma
-    UINT   Min_div; //suma
+    float  radius;
+    float  maxValue;
+    float  minValue;
+    int    divisions;
+    int    zoom;
+    UINT   Maj_div;
+    UINT   Min_div;
 
 
 public:
@@ -800,9 +799,9 @@ public:
               string  tick_type,
               string  tick_length,
               bool     working,
-              float    radius, //suma
-              int      divisions, //suma
-              int      zoom //suma
+              float    radius,
+              int      divisions,
+              int      zoom
             );
 
 
@@ -810,9 +809,9 @@ public:
     hud_card( const hud_card & image);
     //    virtual void display_enable( bool setting );
     virtual void draw( void );       // Required method in base class
-    void circles(float,float,float); // suma
-    void fixed(float,float,float,float,float,float); //suma
-    void zoomed_scale(int,int); //suma
+    void circles(float,float,float);
+    void fixed(float,float,float,float,float,float);
+    void zoomed_scale(int,int);
 };
 
 typedef hud_card * pCardScale;
@@ -872,8 +871,8 @@ private:
     UINT BankLimit;
     UINT SlewLimit;
     UINT scr_hole;
-    bool tsi;  //suma
-    float rad; //suma
+    bool tsi;
+    float rad;
 
 public:
     fgTBI_instr( int       x,
@@ -886,8 +885,8 @@ public:
                  float     maxSlipAngle,
                  UINT      gap_width,
                  bool      working,
-                 bool      tsi, //suma
-                 float     rad); //suma
+                 bool      tsi,
+                 float     rad);
 
     fgTBI_instr( const fgTBI_instr & image);
 
@@ -923,9 +922,9 @@ private:
     float  glide_slope;
     bool   energy_worm;
     bool   waypoint_marker;
-    int    zenith; //suma
-    int    nadir; //suma
-    int    hat; //suma
+    int    zenith;
+    int    nadir;
+    int    hat;
 
 
     // The Ladder has it's own temporary display lists
@@ -959,18 +958,18 @@ public:
                bool      energy_worm,
                bool      waypoint_marker,
                bool      working,
-               int       zenith, //suma
-               int       nadir, //suma
+               int       zenith,
+               int       nadir,
                int       hat
-             ); //suma
+             );
 
 
     ~HudLadder();
 
     HudLadder( const HudLadder & image );
     virtual void draw( void );
-    void drawZenith(float,float,float); //suma
-    void drawNadir(float, float, float); //suma
+    void drawZenith(float,float,float);
+    void drawNadir(float, float, float);
 
     void Text( float x, float y, char *s)
     {

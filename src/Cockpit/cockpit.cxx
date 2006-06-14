@@ -25,7 +25,7 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H          
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -77,7 +77,7 @@ float get_lat_min( void )
 {
     double a, d;
 
-    a = current_aircraft.fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;    
+    a = current_aircraft.fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;
     if (a < 0.0) {
         a = -a;
     }
@@ -99,7 +99,7 @@ get_formated_gmt_time( void )
 {
     static char buf[32];
     const struct tm *p = globals->get_time_params()->getGmt();
-    sprintf( buf, "%d/%d/%4d %d:%02d:%02d", 
+    sprintf( buf, "%d/%d/%4d %d:%02d:%02d",
          p->tm_mon+1, p->tm_mday, 1900 + p->tm_year,
          p->tm_hour, p->tm_min, p->tm_sec);
 
@@ -110,12 +110,12 @@ get_formated_gmt_time( void )
 float get_long_min( void )
 {
     double  a, d;
-    a = current_aircraft.fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;   
+    a = current_aircraft.fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;
     if (a < 0.0) {
         a = -a;
     }
     d = (double) ( (int) a);
-    float lon_min = (a - d) * 60.0; 
+    float lon_min = (a - d) * 60.0;
 
     return lon_min;
 }
@@ -151,7 +151,7 @@ float get_speed( void )
     static const SGPropertyNode * speedup_node = fgGetNode("/sim/speed-up");
 
     float speed = current_aircraft.fdm_state->get_V_calibrated_kts()
-	* speedup_node->getIntValue();
+        * speedup_node->getIntValue();
 
     return speed;
 }
@@ -159,7 +159,7 @@ float get_speed( void )
 float get_mach(void)
 {
     return current_aircraft.fdm_state->get_Mach_number();
-}	
+}
 
 float get_aoa( void )
 {
@@ -228,7 +228,7 @@ float get_frame_rate( void )
 
 float get_fov( void )
 {
-    return globals->get_current_view()->get_fov(); 
+    return globals->get_current_view()->get_fov();
 }
 
 float get_vfc_ratio( void )
@@ -272,13 +272,13 @@ float get_view_direction( void )
 {
     double view_off = SGD_2PI - globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS;
     double view = ( current_aircraft.fdm_state->get_Psi() + view_off)
-	* SGD_RADIANS_TO_DEGREES;
-    
-    if(view > 360.)
+        * SGD_RADIANS_TO_DEGREES;
+
+    if (view > 360.)
         view -= 360.;
-    else if(view<0.)
+    else if (view<0.)
         view += 360.;
-    
+
     return view;
 }
 
@@ -531,11 +531,11 @@ float get_aux18 (void)
 /****************************************************************************/
 char *dmshh_format(double degrees)
 {
-    static char buf[16];    
+    static char buf[16];
     int deg_part;
     int min_part;
     double sec_part;
-    
+
     if (degrees < 0)
       degrees = -degrees;
 
@@ -573,9 +573,9 @@ static char *toDM(float dd)
     double sign = 1;
     int deg;
 
-    if (dd < 0) {
-	sign = -1;
-    }
+    if (dd < 0)
+        sign = -1;
+
     /* round for minutes expressed to three decimal places */
     tempdd = fabs(dd) + (5.0E-4 / 60.0);
     deg = (int)tempdd;
@@ -604,9 +604,9 @@ static char *toDMS(float dd)
     double sec;
     double sign = 1;
 
-    if(dd < 0) {
-	sign = -1;
-    }
+    if (dd < 0)
+        sign = -1;
+
     /* round up for seconds expressed to one decimal place */
     tempdd = fabs(dd) + (0.05 / 3600.0);
     deg = (int)tempdd;
@@ -631,7 +631,7 @@ char *coord_format_lat(float latitude)
 //      dmshh_format(latitude),
 //      toDMS(latitude),
 //      toDM(latitude),
-        fgLatLonFormat(latitude),           
+        fgLatLonFormat(latitude),
         latitude > 0 ? 'N' : 'S');
     return buf;
 }
@@ -653,11 +653,11 @@ void fgLatLonFormatToggle( puObject *)
 {
     static int toggle = 0;
 
-    if ( toggle ) 
+    if ( toggle )
         fgLatLonFormat = toDM;
     else
         fgLatLonFormat = toDMS;
-    
+
     toggle = ~toggle;
 }
 
@@ -685,30 +685,30 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 
     // If aircraft has HUD specified we will get the specs from its def
     // file. For now we will depend upon hard coding in hud?
-    
+
     // We must insure that the existing instrument link is purged.
     // This is done by deleting the links in the list.
-    
+
     // HI_Head is now a null pointer so we can generate a new list from the
     // current aircraft.
 
     fgHUDInit( cur_aircraft );
     ac_cockpit = new fg_Cockpit();
-    
+
     // Have to set the LatLon display type
     fgLatLonFormat = toDM;
-    
+
     SG_LOG( SG_COCKPIT, SG_INFO,
-        "  Code " << ac_cockpit->code() << " Status " 
+        "  Code " << ac_cockpit->code() << " Status "
         << ac_cockpit->status() );
 
-	return true;
+    return true;
 }
 
 void fgCockpitUpdate( void ) {
 
     SG_LOG( SG_COCKPIT, SG_DEBUG,
-            "Cockpit: code " << ac_cockpit->code() << " status " 
+            "Cockpit: code " << ac_cockpit->code() << " status "
             << ac_cockpit->status() );
 
     static const SGPropertyNode * xsize_node = fgGetNode("/sim/startup/xsize");
@@ -719,7 +719,7 @@ void fgCockpitUpdate( void ) {
     int iwidth   = xsize_node->getIntValue();
     int iheight  = ysize_node->getIntValue();
 
-				// FIXME: inefficient
+                                // FIXME: inefficient
     if ( hud_visibility_node->getBoolValue() ) {
         // This will check the global hud linked list pointer.
         // If there is anything to draw it will.
