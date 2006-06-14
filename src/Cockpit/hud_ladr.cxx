@@ -49,9 +49,10 @@ HudLadder::HudLadder(const SGPropertyNode *node) :
     // Invert to convert the "compression" factor to a
     // pixels-per-degree number.
     if (fgGetBool("/sim/hud/enable3d", true) && HUD_style == 1)
-        factor = (640./55.);
+        factor = 640.0 / 55.0;
 
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading HudLadder instrument");	// TODO add name
+    SG_LOG(SG_INPUT, SG_INFO, "Done reading HudLadder instrument"
+            << node->getStringValue("name", "[NONE]"));
 
     if (!width_units)
         width_units = 45;

@@ -84,8 +84,6 @@ int HUD_style = 0;
 float HUD_matrix[16];
 
 
-//$$$ begin - added, Neetha, 28 Nov 2k
-
 static string  name;
 static int     x;
 static int     y;
@@ -105,13 +103,9 @@ static int     dp_showing = 0;
 static string  label_format;
 static string  prelabel;
 static string  postlabel;
-static int     justi;
-static int     blinking;
 static float   maxBankAngle;
 static float   maxSlipAngle;
 static UINT    gap_width;
-static bool    latitude;
-static bool    longitude;
 static bool    tick_bottom;
 static bool    tick_top;
 static bool    tick_right;
@@ -126,8 +120,6 @@ static bool    enable_pointer;
 static string  type_pointer;
 static string  type_tick;
 static string  length_tick;
-static bool    label_box;
-static int     digits;
 static float   radius;
 static int     divisions;
 static int     zoom;
@@ -136,16 +128,11 @@ static float   rad;
 
 
 static FLTFNPTR load_fn;
-static fgLabelJust justification;
-static const char *pre_label_string  = 0;
-static const char *post_label_string = 0;
 
 int readHud( istream &input );
 int readInstrument ( const SGPropertyNode * node);
 static instr_item * readCard ( const SGPropertyNode * node);
-static instr_item * readLabel( const SGPropertyNode * node);
 static instr_item * readTBI( const SGPropertyNode * node);
-//$$$ end   - added, Neetha, 28 Nov 2k
 
 static void drawHUD();
 static void fgUpdateHUDVirtual();
@@ -304,165 +291,6 @@ readCard(const SGPropertyNode * node)
 }// end readCard
 
 static instr_item *
-readLabel(const SGPropertyNode * node)
-{
-    instr_item *p;
-
-    int font_size = (fgGetInt("/sim/startup/xsize") > 1000) ? HUD_FONT_LARGE : HUD_FONT_SMALL;
-
-    name               = node->getStringValue("name");
-    x                  = node->getIntValue("x");
-    y                  = node->getIntValue("y");
-    width              = node->getIntValue("width");
-    height             = node->getIntValue("height");
-    loadfn             = node->getStringValue("data_source");
-    label_format       = node->getStringValue("label_format");
-    prelabel           = node->getStringValue("pre_label_string");
-    postlabel          = node->getStringValue("post_label_string");
-    scaling            = node->getFloatValue("scale_data");
-    options            = node->getIntValue("options");
-    justi              = node->getIntValue("justification");
-    blinking           = node->getIntValue("blinking");
-    latitude           = node->getBoolValue("latitude",false);
-    longitude          = node->getBoolValue("longitude",false);
-    label_box          = node->getBoolValue("label_box",false);
-    working            = node->getBoolValue("working");
-    digits             = node->getIntValue("digits");
-
-
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
-
-
-    if ( justi == 0 ) {
-        justification = LEFT_JUST;
-    } else {
-        if ( justi == 1 ) {
-            justification = CENTER_JUST;
-        } else {
-            if ( justi == 2 ) {
-                justification = RIGHT_JUST;
-            }
-        }
-    }
-
-    if ( prelabel == "NULL" ) {
-        pre_label_string = NULL;
-    } else {
-        if ( prelabel == "blank" ) {
-            pre_label_string = " ";
-        } else {
-            pre_label_string = prelabel.c_str();
-        }
-    }
-
-    if ( postlabel == "blank" ) {
-        post_label_string = " ";
-    } else {
-        if ( postlabel == "NULL" ) {
-            post_label_string = NULL;
-        } else {
-            if ( postlabel == "units" ) {
-                post_label_string = units;
-            } else {
-                post_label_string = postlabel.c_str();
-            }
-        }
-    }
-
-#ifdef ENABLE_SP_FMDS
-    if ( loadfn== "aux1" ) {
-        load_fn = get_aux1;
-    } else if ( loadfn == "aux2" ) {
-        load_fn = get_aux2;
-    } else if ( loadfn == "aux3" ) {
-        load_fn = get_aux3;
-    } else if ( loadfn == "aux4" ) {
-        load_fn = get_aux4;
-    } else if ( loadfn == "aux5" ) {
-        load_fn = get_aux5;
-    } else if ( loadfn == "aux6" ) {
-        load_fn = get_aux6;
-    } else if ( loadfn == "aux7" ) {
-        load_fn = get_aux7;
-    } else if ( loadfn == "aux8" ) {
-        load_fn = get_aux8;
-    } else if ( loadfn == "aux9" ) {
-        load_fn = get_aux9;
-    } else if ( loadfn == "aux10" ) {
-        load_fn = get_aux10;
-    } else if ( loadfn == "aux11" ) {
-        load_fn = get_aux11;
-    } else if ( loadfn == "aux12" ) {
-        load_fn = get_aux12;
-    } else if ( loadfn == "aux13" ) {
-        load_fn = get_aux13;
-    } else if ( loadfn == "aux14" ) {
-        load_fn = get_aux14;
-    } else if ( loadfn == "aux15" ) {
-        load_fn = get_aux15;
-    } else if ( loadfn == "aux16" ) {
-        load_fn = get_aux16;
-    } else if ( loadfn == "aux17" ) {
-        load_fn = get_aux17;
-    } else if ( loadfn == "aux18" ) {
-        load_fn = get_aux18;
-    } else
-#endif
-    if ( loadfn == "ax" ) {
-        load_fn = get_Ax;
-    } else if ( loadfn == "speed" ) {
-        load_fn = get_speed;
-    } else if ( loadfn == "mach" ) {
-        load_fn = get_mach;
-    } else if ( loadfn == "altitude" ) {
-        load_fn = get_altitude;
-    } else if ( loadfn == "agl" ) {
-        load_fn = get_agl;
-    } else if ( loadfn == "framerate" ) {
-        load_fn = get_frame_rate;
-    } else if ( loadfn == "heading" ) {
-        load_fn = get_heading;
-    } else if ( loadfn == "fov" ) {
-        load_fn = get_fov;
-    } else if ( loadfn == "vfc_tris_culled" ) {
-        load_fn = get_vfc_tris_culled;
-    } else if ( loadfn == "vfc_tris_drawn" ) {
-        load_fn = get_vfc_tris_drawn;
-    } else if ( loadfn == "aoa" ) {
-        load_fn = get_aoa;
-    } else if ( loadfn == "latitude" ) {
-        load_fn  = get_latitude;
-    } else if ( loadfn == "anzg" ) {
-        load_fn = get_anzg;
-    } else if ( loadfn == "longitude" ) {
-        load_fn   = get_longitude;
-    } else if (loadfn=="throttleval") {
-        load_fn = get_throttleval;
-    }
-
-    p = (instr_item *) new instr_label ( x,
-                                         y,
-                                         width,
-                                         height,
-                                         load_fn,
-                                         label_format.c_str(),
-                                         pre_label_string,
-                                         post_label_string,
-                                         scaling,
-                                         options,
-                                         justification,
-                                         font_size,
-                                         blinking,
-                                         latitude,
-                                         longitude,
-                                         label_box,
-                                         working,
-                                         digits);
-
-    return p;
-} // end readLabel
-
-static instr_item *
 readTBI(const SGPropertyNode * node)
 {
 
@@ -541,56 +369,46 @@ int readInstrument(const SGPropertyNode * node)
     if (ladder_group != 0) {
         int nLadders = ladder_group->nChildren();
         for (int j = 0; j < nLadders; j++) {
-
             HIptr = static_cast<instr_item *>(new HudLadder(ladder_group->getChild(j)));
-            HUD_deque.insert( HUD_deque.begin(), HIptr);
-
-        }// for - ladders
+            HUD_deque.insert(HUD_deque.begin(), HIptr);
+        }
     }
 
     const SGPropertyNode * card_group = node->getNode("cards");
     if (card_group != 0) {
         int nCards = card_group->nChildren();
         for (int j = 0; j < nCards; j++) {
-
             HIptr = readCard(card_group->getChild(j));
-            HUD_deque.insert( HUD_deque.begin(), HIptr);
-
-        }//for - cards
+            HUD_deque.insert(HUD_deque.begin(), HIptr);
+        }
     }
 
     const SGPropertyNode * label_group = node->getNode("labels");
     if (label_group != 0) {
         int nLabels = label_group->nChildren();
         for (int j = 0; j < nLabels; j++) {
-
-            HIptr = readLabel(label_group->getChild(j));
-            HUD_deque.insert( HUD_deque.begin(), HIptr);
-
-        }//for - labels
+            HIptr = static_cast<instr_item *>(new instr_label(label_group->getChild(j)));
+            HUD_deque.insert(HUD_deque.begin(), HIptr);
+        }
     }
 
     const SGPropertyNode * tbi_group = node->getNode("tbis");
     if (tbi_group != 0) {
         int nTbis = tbi_group->nChildren();
         for (int j = 0; j < nTbis; j++) {
-
             HIptr = readTBI(tbi_group->getChild(j));
             HUD_deque.insert( HUD_deque.begin(), HIptr);
-
-        }//for - tbis
+        }
     }
 
     const SGPropertyNode * rwy_group = node->getNode("runways");
     if (rwy_group != 0) {
         int nRwy = rwy_group->nChildren();
         for (int j = 0; j < nRwy; j++) {
-            SG_LOG( SG_COCKPIT, SG_DEBUG,
-                    "**************  Reading runway properties" );
+            SG_LOG(SG_COCKPIT, SG_DEBUG, "***  Reading runway properties ***");
             HIptr = readRunway(rwy_group->getChild(j));
             HUD_deque.insert( HUD_deque.begin(), HIptr);
-
-        }//for - runways
+        }
     }
     return 0;
 }//end readinstrument

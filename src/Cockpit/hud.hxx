@@ -443,6 +443,7 @@ public:
 
     virtual ~instr_item ();
 
+    void    set_data_source ( FLTFNPTR fn ) { load_value_fn = fn; }
     int     get_brightness  ( void ) { return brightness;}
     RECT    get_location    ( void ) { return scrn_pos;  }
     bool    is_broken       ( void ) { return broken;    }
@@ -521,9 +522,6 @@ class HUDdraw {
         }
 };
 
-//typedef deque <  instr_item * > hud_deque_type;
-//typedef hud_deque_type::iterator hud_deque_iterator;
-//typedef hud_deque_type::const_iterator hud_deque_const_iterator;
 
 extern deque< instr_item *> HUD_deque;
 extern int HUD_style;
@@ -536,44 +534,24 @@ extern int HUD_style;
 
 class instr_label : public instr_item {
 private:
-    const char *pformat;
-    const char *pre_str;
-    const char *post_str;
+    const char  *pformat;
+    const char  *pre_str;
+    const char  *post_str;
     fgLabelJust justify;
     int         fontSize;
     int         blink;
-    char format_buffer[80];
+    char        format_buffer[80];
     bool        lat;
     bool        lon;
     bool        lbox;
 
 public:
-    instr_label( int          x,
-                 int          y,
-                 UINT         width,
-                 UINT         height,
-                 FLTFNPTR     data_source,
-                 const char  *label_format,
-                 const char  *pre_label_string,
-                 const char  *post_label_string,
-                 float        scale_data,
-                 UINT         options,
-                 fgLabelJust  justification,
-                 int          font_size,
-                 int          blinking,
-                 bool         latitude,
-                 bool         longitude,
-                 bool         label_box,
-                 bool         working,
-                 int          digit );
-
+    instr_label(const SGPropertyNode *);
     ~instr_label();
 
-    instr_label( const instr_label & image);
-    virtual void draw( void );       // Required method in base class
+    instr_label(const instr_label& image);
+    virtual void draw(void);
 };
-
-typedef instr_label * pInstlabel;
 
 
 class lat_label : public instr_item {
@@ -609,7 +587,6 @@ public:
     virtual void draw( void );       // Required method in base class
 };
 
-typedef lat_label * pLatlabel;
 
 class lon_label : public instr_item {
 private:
@@ -645,7 +622,6 @@ public:
     virtual void draw( void );       // Required method in base class
 };
 
-typedef lon_label * pLonlabel;
 
 //
 // fgRunway_instr        This class is responsible for rendering the active runway
@@ -815,7 +791,6 @@ public:
     void zoomed_scale(int,int);
 };
 
-typedef hud_card * pCardScale;
 
 class gauge_instr : public instr_scale {
 public:
@@ -839,7 +814,7 @@ public:
     virtual void draw( void );       // Required method in base class
 };
 
-typedef gauge_instr * pGaugeInst;
+
 //
 // dual_instr_item         This class was created to form the base class
 //                         for both panel and HUD Turn Bank Indicators.
@@ -898,8 +873,6 @@ public:
 
     virtual void draw( void );       // Required method in base class
 };
-
-typedef fgTBI_instr * pTBI;
 
 
 class HudLadder : public dual_instr_item {
