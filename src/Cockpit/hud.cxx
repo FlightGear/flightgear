@@ -83,7 +83,6 @@ int HUD_style = 0;
 
 float HUD_matrix[16];
 
-
 static string  name;
 static int     x;
 static int     y;
@@ -103,9 +102,6 @@ static int     dp_showing = 0;
 static string  label_format;
 static string  prelabel;
 static string  postlabel;
-static float   maxBankAngle;
-static float   maxSlipAngle;
-static UINT    gap_width;
 static bool    tick_bottom;
 static bool    tick_top;
 static bool    tick_right;
@@ -123,8 +119,6 @@ static string  length_tick;
 static float   radius;
 static int     divisions;
 static int     zoom;
-static bool    tsi;
-static float   rad;
 
 
 static FLTFNPTR load_fn;
@@ -132,7 +126,6 @@ static FLTFNPTR load_fn;
 int readHud( istream &input );
 int readInstrument ( const SGPropertyNode * node);
 static instr_item * readCard ( const SGPropertyNode * node);
-static instr_item * readTBI( const SGPropertyNode * node);
 
 static void drawHUD();
 static void fgUpdateHUDVirtual();
@@ -290,42 +283,6 @@ readCard(const SGPropertyNode * node)
     return p;
 }// end readCard
 
-static instr_item *
-readTBI(const SGPropertyNode * node)
-{
-
-    instr_item *p;
-
-    name           = node->getStringValue("name");
-    x              = node->getIntValue("x");
-    y              = node->getIntValue("y");
-    width          = node->getIntValue("width");
-    height         = node->getIntValue("height");
-    maxBankAngle   = node->getFloatValue("maxBankAngle");
-    maxSlipAngle   = node->getFloatValue("maxSlipAngle");
-    gap_width      = node->getIntValue("gap_width");
-    working        = node->getBoolValue("working");
-    tsi            = node->getBoolValue("tsi");
-    rad            = node->getFloatValue("rad");
-
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
-
-
-    p = (instr_item *) new fgTBI_instr( x,
-                                        y,
-                                        width,
-                                        height,
-                                        get_roll,
-                                        get_sideslip,
-                                        maxBankAngle,
-                                        maxSlipAngle,
-                                        gap_width,
-                                        working,
-                                        tsi,
-                                        rad);
-
-    return p;
-} //end readTBI
 
 static instr_item *
 readRunway(const SGPropertyNode * node) {
@@ -396,7 +353,7 @@ int readInstrument(const SGPropertyNode * node)
     if (tbi_group != 0) {
         int nTbis = tbi_group->nChildren();
         for (int j = 0; j < nTbis; j++) {
-            HIptr = readTBI(tbi_group->getChild(j));
+            HIptr = static_cast<instr_item *>(new fgTBI_instr(tbi_group->getChild(j)));
             HUD_deque.insert( HUD_deque.begin(), HIptr);
         }
     }

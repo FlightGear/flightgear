@@ -626,8 +626,7 @@ public:
 //
 // fgRunway_instr        This class is responsible for rendering the active runway
 //                        in the hud (if visible).
-class runway_instr : public instr_item
-{
+class runway_instr : public instr_item {
 private:
         void boundPoint(const sgdVec3& v, sgdVec3& m);
         bool boundOutsidePoints(sgdVec3& v, sgdVec3& m);
@@ -841,8 +840,8 @@ public:
     virtual void draw( void ) { }
 };
 
-class fgTBI_instr : public dual_instr_item
-{
+
+class fgTBI_instr : public dual_instr_item {
 private:
     UINT BankLimit;
     UINT SlewLimit;
@@ -851,27 +850,12 @@ private:
     float rad;
 
 public:
-    fgTBI_instr( int       x,
-                 int       y,
-                 UINT      width,
-                 UINT      height,
-                 FLTFNPTR  chn1_source,
-                 FLTFNPTR  chn2_source,
-                 float     maxBankAngle,
-                 float     maxSlipAngle,
-                 UINT      gap_width,
-                 bool      working,
-                 bool      tsi,
-                 float     rad);
+    fgTBI_instr(const SGPropertyNode *);
 
-    fgTBI_instr( const fgTBI_instr & image);
+    UINT bank_limit(void) { return BankLimit; }
+    UINT slew_limit(void) { return SlewLimit; }
 
-    ~fgTBI_instr();
-
-    UINT bank_limit( void ) { return BankLimit;}
-    UINT slew_limit( void ) { return SlewLimit;}
-
-    virtual void draw( void );       // Required method in base class
+    virtual void draw(void);
 };
 
 
