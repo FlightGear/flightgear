@@ -156,7 +156,7 @@ bool FGMultiplay::process() {
     // first the aprioriate structure for the geodetic one
     SGGeod geod = SGGeod::fromRadFt(lon, lat, ifce->get_Altitude());
     // Convert to cartesion coordinate
-    motionInfo.position = geod;
+    motionInfo.position = SGVec3d::fromGeod(geod);
     
     // The quaternion rotating from the earth centered frame to the
     // horizontal local frame

@@ -48,7 +48,6 @@ public:
 
     FGAIBase(object_type ot);
     virtual ~FGAIBase();
-    inline const Point3D& GetPos() const { return(pos); }
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
@@ -84,7 +83,7 @@ protected:
     FGAIManager* manager;
 
     // these describe the model's actual state
-    Point3D pos;	// WGS84 lat & lon in degrees, elev above sea-level in meters
+    SGGeod pos;	// WGS84 lat & lon in degrees, elev above sea-level in meters
     double hdg;		// True heading in degrees
     double roll;	// degrees, left is negative
     double pitch;	// degrees, nose-down is negative
@@ -205,7 +204,7 @@ inline void FGAIBase::setHeading( double heading ) {
 
 inline void FGAIBase::setAltitude( double altitude_ft ) {
     altitude = tgt_altitude = altitude_ft;
-    pos.setelev(altitude * SG_FEET_TO_METER);
+    pos.setElevationFt(altitude);
 }
 
 inline void FGAIBase::setBank( double bank ) {
@@ -218,10 +217,10 @@ inline void FGAIBase::setPitch( double newpitch ) {
 }
 
 inline void FGAIBase::setLongitude( double longitude ) {
-    pos.setlon( longitude );
+    pos.setLongitudeDeg( longitude );
 }
 inline void FGAIBase::setLatitude ( double latitude ) {
-    pos.setlat( latitude );
+    pos.setLatitudeDeg( latitude );
 }
 
 inline void FGAIBase::setDie( bool die ) { delete_me = die; }

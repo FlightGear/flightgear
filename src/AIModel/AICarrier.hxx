@@ -155,8 +155,7 @@ private:
     bool wave_off_lights;
 
     // these are for maneuvering the carrier
-    Point3D carrierpos;
-    Point3D initialpos;
+    SGGeod mOpBoxPos;
 
     double wind_speed_from_north_kts ;
     double wind_speed_from_east_kts  ;

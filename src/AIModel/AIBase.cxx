@@ -106,13 +106,13 @@ void FGAIBase::update(double dt) {
     if (_otype == otBallistic)
         CalculateMach();
 
-    ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()*SGD_DEGREES_TO_RADIANS);
-    ft_per_deg_lon = 365228.16 * cos(pos.lat()*SGD_DEGREES_TO_RADIANS);
+    ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.getLatitudeRad());
+    ft_per_deg_lon = 365228.16 * cos(pos.getLatitudeRad());
 }
 
 void FGAIBase::Transform() {
     if (!invisible) {
-      aip.setPosition(pos.lon(), pos.lat(), pos.elev() * SG_METER_TO_FEET);
+      aip.setPosition(pos);
       if (no_roll) {
          aip.setOrientation(0.0, pitch, hdg);
       } else {
@@ -260,8 +260,8 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
 
    double user_latitude  = manager->get_user_latitude();
    double user_longitude = manager->get_user_longitude();
-   double lat_range = fabs(pos.lat() - user_latitude) * ft_per_deg_lat;
-   double lon_range = fabs(pos.lon() - user_longitude) * ft_per_deg_lon;
+   double lat_range = fabs(pos.getLatitudeDeg() - user_latitude) * ft_per_deg_lat;
+   double lon_range = fabs(pos.getLongitudeDeg() - user_longitude) * ft_per_deg_lon;
    double range_ft2 = lat_range*lat_range + lon_range*lon_range;
 
    //
@@ -284,16 +284,16 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
      range = range_ft / 6076.11549;
 
      // calculate bearing to target
-     if (pos.lat() >= user_latitude) {
+     if (pos.getLatitudeDeg() >= user_latitude) {
         bearing = atan2(lat_range, lon_range) * SG_RADIANS_TO_DEGREES;
-        if (pos.lon() >= user_longitude) {
+        if (pos.getLongitudeDeg() >= user_longitude) {
            bearing = 90.0 - bearing;
         } else {
            bearing = 270.0 + bearing;
         }
      } else {
         bearing = atan2(lon_range, lat_range) * SG_RADIANS_TO_DEGREES;
-        if (pos.lon() >= user_longitude) {
+        if (pos.getLongitudeDeg() >= user_longitude) {
            bearing = 180.0 - bearing;
         } else {
            bearing = 180.0 + bearing;
@@ -341,7 +341,8 @@ SGVec3d
 FGAIBase::getCartPosAt(const SGVec3d& _off) const
 {
   // Transform that one to the horizontal local coordinate system.
-  SGQuatd hlTrans = SGQuatd::fromLonLatDeg(pos.lon(), pos.lat());
+  
+  SGQuatd hlTrans = SGQuatd::fromLonLat(pos);
   // and postrotate the orientation of the AIModel wrt the horizontal
   // local frame
   hlTrans *= SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
@@ -351,7 +352,7 @@ FGAIBase::getCartPosAt(const SGVec3d& _off) const
   SGVec3d off = hlTrans.backTransform(_off);
 
   // Add the position offset of the AIModel to gain the earth centered position
-  SGVec3d cartPos = SGGeod::fromDegFt(pos.lon(), pos.lat(), pos.elev());
+  SGVec3d cartPos = SGVec3d::fromGeod(pos);
 
   return cartPos + off;
 }
@@ -360,17 +361,17 @@ FGAIBase::getCartPosAt(const SGVec3d& _off) const
  * getters and Setters
  */
 void FGAIBase::_setLongitude( double longitude ) {
-    pos.setlon(longitude);
+    pos.setLongitudeDeg(longitude);
 }
 void FGAIBase::_setLatitude ( double latitude )  {
-    pos.setlat(latitude);
+    pos.setLatitudeDeg(latitude);
 }
 
 double FGAIBase::_getLongitude() const {
-    return pos.lon();
+    return pos.getLongitudeDeg();
 }
 double FGAIBase::_getLatitude () const {
-    return pos.lat();
+    return pos.getLatitudeDeg();
 }
 double FGAIBase::_getRdot() const {
     return rdot;

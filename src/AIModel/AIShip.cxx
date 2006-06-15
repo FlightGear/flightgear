@@ -135,8 +135,8 @@ void FGAIShip::Run(double dt) {
                           * speed * 1.686 / ft_per_deg_lon;
 
    // set new position
-   pos.setlat( pos.lat() + speed_north_deg_sec * dt);
-   pos.setlon( pos.lon() + speed_east_deg_sec * dt); 
+   pos.setLatitudeDeg( pos.getLatitudeDeg() + speed_north_deg_sec * dt);
+   pos.setLongitudeDeg( pos.getLongitudeDeg() + speed_east_deg_sec * dt); 
 
    
    // adjust heading based on current rudder angle

@@ -106,8 +106,8 @@ void FGAIStorm::Run(double dt) {
                           * speed * 1.686 / ft_per_deg_lon;
 
    // set new position
-   pos.setlat( pos.lat() + speed_north_deg_sec * dt);
-   pos.setlon( pos.lon() + speed_east_deg_sec * dt); 
+   pos.setLatitudeDeg( pos.getLatitudeDeg() + speed_north_deg_sec * dt);
+   pos.setLongitudeDeg( pos.getLongitudeDeg() + speed_east_deg_sec * dt); 
 
    // do calculations for weather radar display 
    UpdateRadar(manager);
@@ -159,8 +159,8 @@ void FGAIStorm::Run(double dt) {
    double user_altitude  = manager->get_user_altitude();
 
    // calculate range to target in feet and nautical miles
-   double lat_range = fabs(pos.lat() - user_latitude) * ft_per_deg_lat;
-   double lon_range = fabs(pos.lon() - user_longitude) * ft_per_deg_lon;
+   double lat_range = fabs(pos.getLatitudeDeg() - user_latitude) * ft_per_deg_lat;
+   double lon_range = fabs(pos.getLongitudeDeg() - user_longitude) * ft_per_deg_lon;
    double range_ft = sqrt(lat_range*lat_range + lon_range*lon_range);
    range = range_ft / 6076.11549;
 

@@ -152,14 +152,14 @@ void FGAICarrier::update(double dt) {
     // but by just apply discrete changes at its velocity variables.
     // Update the velocity information stored in those nodes.
     // Transform that one to the horizontal local coordinate system.
-    SGQuatd ec2hl = SGQuatd::fromLonLatDeg(pos.lon(), pos.lat());
+    SGQuatd ec2hl = SGQuatd::fromLonLat(pos);
     // The orientation of the carrier wrt the horizontal local frame
     SGQuatd hl2body = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
     // and postrotate the orientation of the AIModel wrt the horizontal
     // local frame
     SGQuatd ec2body = ec2hl*hl2body;
     // The cartesian position of the carrier in the wgs84 world
-    SGVec3d cartPos = SGGeod::fromDegFt(pos.lon(), pos.lat(), pos.elev());
+    SGVec3d cartPos = SGVec3d::fromGeod(pos);
     // Store for later use by the groundcache
     rot_pivot_wrt_earth = cartPos;
 
@@ -189,7 +189,7 @@ void FGAICarrier::update(double dt) {
       // Now here is the finite difference ...
 
       // Transform that one to the horizontal local coordinate system.
-      SGQuatd ec2hlNew = SGQuatd::fromLonLatDeg(pos.lon(), pos.lat());
+      SGQuatd ec2hlNew = SGQuatd::fromLonLat(pos);
       // compute the new orientation
       SGQuatd hl2bodyNew = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
       // The rotation difference
@@ -287,7 +287,7 @@ bool FGAICarrier::init() {
     turn_to_launch_hdg = false;
     returning = false;
 
-    initialpos = pos;
+    mOpBoxPos = pos;
     base_course = hdg;
     base_speed = speed;
 
@@ -322,9 +322,9 @@ void FGAICarrier::bind() {
     props->tie("controls/base-speed-kts",
                 SGRawValuePointer<double>(&base_speed));
     props->tie("controls/start-pos-lat-deg",
-                SGRawValuePointer<double>(&initialpos[1]));
+               SGRawValueMethods<SGGeod,double>(pos, &SGGeod::getLatitudeDeg));
     props->tie("controls/start-pos-long-deg",
-                SGRawValuePointer<double>(&initialpos[0]));
+               SGRawValueMethods<SGGeod,double>(pos, &SGGeod::getLongitudeDeg));
     props->tie("velocities/speed-kts",
                 SGRawValuePointer<double>(&speed));
     props->tie("environment/surface-wind-speed-true-kts",
@@ -402,7 +402,7 @@ bool FGAICarrier::getParkPosition(const string& id, SGGeod& geodPos,
         if ((*it).name == id || id.empty()) {
             ParkPosition ppos = *it;
             SGVec3d cartPos = getCartPosAt(ppos.offset);
-            geodPos = cartPos;
+            geodPos = SGGeod::fromCart(cartPos);
             hdng = hdg + ppos.heading_deg;
             double shdng = sin(ppos.heading_deg * SGD_DEGREES_TO_RADIANS);
             double chdng = cos(ppos.heading_deg * SGD_DEGREES_TO_RADIANS);
@@ -579,14 +579,14 @@ bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects, bool m
                         // care for transforms ...
                         short v[2];
                         l->getLine(0, v, v+1 );
-                        sgVec3 ends[2];
+                        SGVec3f ends[2];
                         for (int k=0; k<2; ++k)
-                            sgCopyVec3( ends[k], l->getVertex( v[k] ) );
+                            sgCopyVec3( ends[k].sg(), l->getVertex( v[k] ) );
 
                         // When the 1 end is behind the 0 end, swap the coordinates.
                         if (ends[0][0] < ends[1][0]) {
-                            sgCopyVec3( l->getVertex( v[0] ), ends[1] );
-                            sgCopyVec3( l->getVertex( v[1] ), ends[0] );
+                            sgCopyVec3( l->getVertex( v[0] ), ends[1].sg() );
+                            sgCopyVec3( l->getVertex( v[1] ), ends[0].sg() );
                         }
                         found = true;
                     }
@@ -685,18 +685,8 @@ void FGAICarrier::TurnToBase(){
 void FGAICarrier::ReturnToBox(){
     double course, distance, az2;
 
-    //get the carrier position
-    carrierpos = pos;
-
-    //cout << "lat: " << carrierpos[1] << " lon: " << carrierpos[0] << endl;
-
     //calculate the bearing and range of the initial position from the carrier
-    geo_inverse_wgs_84(carrierpos[2],
-                       carrierpos[1],
-                       carrierpos[0],
-                       initialpos[1],
-                       initialpos[0],
-                       &course, &az2, &distance);
+    geo_inverse_wgs_84(pos, mOpBoxPos, &course, &az2, &distance);
 
     distance *= SG_METER_TO_NM;
 
@@ -720,33 +710,33 @@ bool FGAICarrier::OutsideBox() { //returns true if the carrier is outside operat
         return false;
     }
 
-    if (initialpos[1] >= 0) { //northern hemisphere
-        if (pos[1] >= initialpos[1] + max_lat)
+    if (mOpBoxPos.getLatitudeDeg() >= 0) { //northern hemisphere
+        if (pos.getLatitudeDeg() >= mOpBoxPos.getLatitudeDeg() + max_lat)
             return true;
 
-        if (pos[1] <= initialpos[1] - min_lat)
+        if (pos.getLatitudeDeg() <= mOpBoxPos.getLatitudeDeg() - min_lat)
             return true;
 
     } else {                  //southern hemisphere
-        if (pos[1] <= initialpos[1] - max_lat)
+        if (pos.getLatitudeDeg() <= mOpBoxPos.getLatitudeDeg() - max_lat)
             return true;
 
-        if (pos[1] >= initialpos[1] + min_lat)
+        if (pos.getLatitudeDeg() >= mOpBoxPos.getLatitudeDeg() + min_lat)
             return true;
     }
 
-    if (initialpos[0] >=0) { //eastern hemisphere
-        if (pos[0] >= initialpos[0] + max_long)
+    if (mOpBoxPos.getLongitudeDeg() >=0) { //eastern hemisphere
+        if (pos.getLongitudeDeg() >= mOpBoxPos.getLongitudeDeg() + max_long)
             return true;
 
-        if (pos[0] <= initialpos[0] - min_long)
+        if (pos.getLongitudeDeg() <= mOpBoxPos.getLongitudeDeg() - min_long)
             return true;
 
     } else {                 //western hemisphere
-        if (pos[0] <= initialpos[0] - max_long)
+        if (pos.getLongitudeDeg() <= mOpBoxPos.getLongitudeDeg() - max_long)
             return true;
 
-        if (pos[0] >= initialpos[0] + min_long)
+        if (pos.getLongitudeDeg() >= mOpBoxPos.getLongitudeDeg() + min_long)
             return true;
     }
 

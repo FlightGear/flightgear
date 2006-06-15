@@ -180,7 +180,7 @@ void FGAIAircraft::Run(double dt) {
                 doGroundAltitude();
                 //cerr << " Actual altitude " << altitude << endl;
                 // Transform();
-                pos.setelev(altitude * SG_FEET_TO_METER);
+                pos.setElevationFt(altitude);
             }
             return;
         }
@@ -219,8 +219,8 @@ void FGAIAircraft::Run(double dt) {
                           * speed * 1.686 / ft_per_deg_lon;
 
     // set new position
-    pos.setlat( pos.lat() + speed_north_deg_sec * dt);
-    pos.setlon( pos.lon() + speed_east_deg_sec * dt);
+    pos.setLatitudeDeg( pos.getLatitudeDeg() + speed_north_deg_sec * dt);
+    pos.setLongitudeDeg( pos.getLongitudeDeg() + speed_east_deg_sec * dt); 
     //if (!(finite(pos.lat()) && finite(pos.lon())))
     //  {
     //    cerr << "Position is not finite" << endl;
@@ -361,7 +361,7 @@ void FGAIAircraft::Run(double dt) {
 
     // adjust altitude (meters) based on current vertical speed (fpm)
     altitude += vs / 60.0 * dt;
-    pos.setelev(altitude * SG_FEET_TO_METER);
+    pos.setElevationFt(altitude);  
     double altitude_ft = altitude;
 
     // adjust target Altitude, based on ground elevation when on ground
@@ -564,7 +564,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         if (curr->crossat > -1000.0) { //use a calculated descent/climb rate
             use_perf_vs = false;
             tgt_vs = (curr->crossat - prev->altitude)
-                    / (fp->getDistanceToGo(pos.lat(), pos.lon(), curr)
+                    / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
                     / 6076.0 / prev->speed*60.0);
             tgt_altitude = curr->crossat;
         } else {
@@ -597,7 +597,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         dt_count = 0;
     }
     // check to see if we've reached the lead point for our next turn
-    double dist_to_go = fp->getDistanceToGo(pos.lat(), pos.lon(), curr);
+    double dist_to_go = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
 
     //cerr << "2" << endl;
     double lead_dist = fp->getLeadDistance();
@@ -666,7 +666,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             double userLatitude  = fgGetDouble("/position/latitude-deg");
             double userLongitude = fgGetDouble("/position/longitude-deg");
             double course, distance;
-            SGWayPoint current (pos.lon(), pos.lat(), 0);
+            SGWayPoint current(pos.getLongitudeDeg(), pos.getLatitudeDeg(), 0);
             SGWayPoint user (userLongitude, userLatitude, 0);
             user.CourseAndDistance(current, &course, &distance);
             if ((distance * SG_METER_TO_NM) > TRAFFICTOAIDIST) {
@@ -736,7 +736,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             if (curr->crossat > -1000.0) {
                 //cerr << "5.1a" << endl;
                 use_perf_vs = false;
-                tgt_vs = (curr->crossat - altitude) / (fp->getDistanceToGo(pos.lat(), pos.lon(), curr)
+                tgt_vs = (curr->crossat - altitude) / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
                         / 6076.0 / speed*60.0);
                 //cerr << "5.1b" << endl;
                 tgt_altitude = curr->crossat;
@@ -757,7 +757,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         //cout << "  Target heading:  " << tgt_heading << endl << endl;
 
     } else {
-        double calc_bearing = fp->getBearing(pos.lat(), pos.lon(), curr);
+        double calc_bearing = fp->getBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
         //cerr << "Bearing = " << calc_bearing << endl;
         if (speed < 0) {
             calc_bearing +=180;
@@ -774,7 +774,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         } else {
             cerr << "calc_bearing is not a finite number : "
                  << "Speed " << speed
-                 << "pos : " << pos.lat() << ", " << pos.lon()
+                 << "pos : " << pos.getLatitudeDeg() << ", " << pos.getLongitudeDeg()
                  << "waypoint " << curr->latitude << ", " << curr->longitude << endl;
             cerr << "waypoint name " << curr->name;
             exit(1);  // FIXME
@@ -924,7 +924,7 @@ void FGAIAircraft::getGroundElev(double dt) {
 
         //Point3D currView(vw->getLongitude_deg(),
         //                 vw->getLatitude_deg(), 0.0);
-        SGWayPoint current (pos.lon(), pos.lat(), 0);
+        SGWayPoint current(pos.getLongitudeDeg(), pos.getLatitudeDeg(), 0);
         SGWayPoint view (vw->getLongitude_deg(), vw->getLatitude_deg(), 0);
         view.CourseAndDistance(current, &course, &distance);
         if(distance > visibility_meters) {
@@ -934,14 +934,14 @@ void FGAIAircraft::getGroundElev(double dt) {
 
         // FIXME: make sure the pos.lat/pos.lon values are in degrees ...
         double range = 500.0;
-        if (!globals->get_tile_mgr()->scenery_available(pos.lat(), pos.lon(), range)) {
+        if (!globals->get_tile_mgr()->scenery_available(pos.getLatitudeDeg(), pos.getLongitudeDeg(), range)) {
             // Try to shedule tiles for that position.
             globals->get_tile_mgr()->update( aip.getSGLocation(), range );
         }
 
         // FIXME: make sure the pos.lat/pos.lon values are in degrees ...
         double alt;
-        if (globals->get_scenery()->get_elevation_m(pos.lat(), pos.lon(), 20000.0, alt, 0))
+        if (globals->get_scenery()->get_elevation_m(pos.getLatitudeDeg(), pos.getLongitudeDeg(), 20000.0, alt, 0))
             tgt_altitude = alt * SG_METER_TO_FEET;
 
         //cerr << "Target altitude : " << tgt_altitude << endl;

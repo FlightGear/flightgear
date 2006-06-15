@@ -23,6 +23,7 @@
 #  include <config.h>
 #endif
 
+#include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <Main/fg_props.hxx>
 
@@ -78,9 +79,7 @@ void FGACMS::update( double dt ) {
     double acc_down = _acc_down->getDoubleValue();
     _set_Accels_Local( acc_lon, acc_lat, acc_down );
 
-    sgVec3 accel_ned;
-    sgSetVec3(accel_ned, acc_lon, acc_lat, acc_down);
-    double accel = sgLengthVec3 (accel_ned) * SG_FEET_TO_METER;
+    double accel = norm(SGVec3d(acc_lon, acc_lat, acc_down)) * SG_FEET_TO_METER;
 
     double velocity = (_speed->getDoubleValue() * SG_KT_TO_MPS) + accel * dt;
     double dist = cos (pitch) * velocity * dt;
@@ -89,16 +88,15 @@ void FGACMS::update( double dt ) {
     _set_V_calibrated_kts( kts );
     _set_V_ground_speed( kts );
 
+    SGGeod pos = SGGeod::fromDegM(get_Longitude(), get_Latitude(), get_Altitude());
     // update (lon/lat) position
-    double lat2, lon2, az2;
-    geo_direct_wgs_84 ( get_Altitude(),
-                        get_Latitude() * SGD_RADIANS_TO_DEGREES,
-                        get_Longitude() * SGD_RADIANS_TO_DEGREES,
-                        heading * SGD_RADIANS_TO_DEGREES,
-                        dist, &lat2, &lon2, &az2 );
+    SGGeod pos2;
+    double az2;
+    geo_direct_wgs_84 ( pos, heading * SGD_RADIANS_TO_DEGREES,
+                        dist, pos2, &az2 );
 
-    _set_Longitude( lon2 * SGD_DEGREES_TO_RADIANS );
-    _set_Latitude( lat2 * SGD_DEGREES_TO_RADIANS );
+    _set_Longitude( pos2.getLongitudeRad() );
+    _set_Latitude( pos2.getLatitudeRad() );
 
     double sl_radius, lat_geoc;
     sgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );

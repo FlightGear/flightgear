@@ -169,7 +169,7 @@ void FGAIBallistic::Run(double dt) {
    
    // calculate vertical and horizontal speed components
    vs = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed;
-   hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed;
+   double hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed;
 
    // convert horizontal speed (fps) to degrees per second
    speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lat;
@@ -186,15 +186,15 @@ void FGAIBallistic::Run(double dt) {
    wind_speed_from_east_deg_sec  = wind_from_east / ft_per_deg_lon;
    
    // set new position
-   pos.setlat( pos.lat() + (speed_north_deg_sec - wind_speed_from_north_deg_sec) * dt );
-   pos.setlon( pos.lon() + (speed_east_deg_sec - wind_speed_from_east_deg_sec) * dt ); 
+   pos.setLatitudeDeg( pos.getLatitudeDeg() + (speed_north_deg_sec - wind_speed_from_north_deg_sec) * dt );
+   pos.setLongitudeDeg( pos.getLongitudeDeg() + (speed_east_deg_sec - wind_speed_from_east_deg_sec) * dt ); 
 
    // adjust vertical speed for acceleration of gravity and buoyancy
    vs -= (gravity - buoyancy) * dt;
    
    // adjust altitude (feet)
    altitude += vs * dt;
-   pos.setelev(altitude * SG_FEET_TO_METER); 
+   pos.setElevationFt(altitude); 
 
    // recalculate pitch (velocity vector) if aerostabilized
    //   cout << "aero_stabilised " << aero_stabilised  << endl ;

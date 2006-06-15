@@ -60,7 +60,6 @@ private:
     double azimuth;         // degrees true
     double elevation;       // degrees
     double rotation;        // degrees
-    double hs;              // horizontal speed (fps)
     bool aero_stabilised;   // if true, object will align wit trajectory
     double drag_area;       // equivalent drag area in ft2
     double life_timer;      // seconds
