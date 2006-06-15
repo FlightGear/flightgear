@@ -495,7 +495,7 @@ int FGTileMgr::tile_filter_cb( ssgEntity *, int )
 bool FGTileMgr::scenery_available(double lat, double lon, double range_m)
 {
   // sanity check (unfortunately needed!)
-  if ( lon < -180.0 || lon > 180.0 || lat < -90.0 || lat > 90.0 )
+  if ( lon <= -180.0 || lon >= 180.0 || lat <= -90.0 || lat >= 90.0 )
     return false;
   
   SGBucket bucket(lon, lat);
