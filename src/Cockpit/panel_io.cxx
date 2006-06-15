@@ -22,7 +22,7 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H          
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 

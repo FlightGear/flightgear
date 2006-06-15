@@ -16,6 +16,7 @@
 #define textString(x, y, text, digit)  puDrawString(guiFnt, text, x, y)
 #endif
 
+FLTFNPTR get_func(const char *name);   // FIXME
 
 hud_card::hud_card(const SGPropertyNode *node) :
     instr_scale(
@@ -32,7 +33,7 @@ hud_card::hud_card(const SGPropertyNode *node) :
             node->getIntValue("major_divs"),
             node->getIntValue("minor_divs"),
             node->getIntValue("modulator"),
-            node->getBoolValue("working")),
+            node->getBoolValue("working", true)),
     val_span(node->getFloatValue("value_span")),    // FIXME
     type(node->getStringValue("type")),
     draw_tick_bottom(node->getBoolValue("tick_bottom", false)),
@@ -59,39 +60,7 @@ hud_card::hud_card(const SGPropertyNode *node) :
     SG_LOG(SG_INPUT, SG_INFO, "Done reading dial/tape instrument "
             << node->getStringValue("name", "[unnamed]"));
 
-    string loadfn = node->getStringValue("loadfn");
-    float (*load_fn)(void);
-    if (loadfn == "anzg")
-        load_fn = get_anzg;
-    else if (loadfn == "heading")
-        load_fn = get_heading;
-    else if (loadfn == "aoa")
-        load_fn = get_aoa;
-    else if (loadfn == "climb")
-        load_fn = get_climb_rate;
-    else if (loadfn == "altitude")
-        load_fn = get_altitude;
-    else if (loadfn == "agl")
-        load_fn = get_agl;
-    else if (loadfn == "speed")
-        load_fn = get_speed;
-    else if (loadfn == "view_direction")
-        load_fn = get_view_direction;
-    else if (loadfn == "aileronval")
-        load_fn = get_aileronval;
-    else if (loadfn == "elevatorval")
-        load_fn = get_elevatorval;
-    else if (loadfn == "elevatortrimval")
-        load_fn = get_elev_trimval;
-    else if (loadfn == "rudderval")
-        load_fn = get_rudderval;
-    else if (loadfn == "throttleval")
-        load_fn = get_throttleval;
-    else
-        load_fn = 0;
-
-    set_data_source(load_fn);
-
+    set_data_source(get_func(node->getStringValue("loadfn")));
     half_width_units = range_to_show() / 2.0;
 }
 

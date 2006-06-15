@@ -8,13 +8,7 @@
 #define textString(x, y, text, digit)  puDrawString(guiFnt, text, x, y)
 #endif
 
-// FIXME
-extern float get_aux1(), get_aux2(), get_aux3(), get_aux4(), get_aux5(), get_aux6();
-extern float get_aux7(), get_aux8(), get_aux9(), get_aux10(), get_aux11(), get_aux12();
-extern float get_aux13(), get_aux14(), get_aux15(), get_aux16(), get_aux17(), get_aux18();
-extern float get_Ax(), get_speed(), get_mach(), get_altitude(), get_agl(), get_frame_rate();
-extern float get_heading(), get_fov(), get_vfc_tris_culled(), get_vfc_tris_drawn(), get_aoa();
-extern float get_latitude(), get_anzg(), get_longitude(), get_throttleval();
+FLTFNPTR get_func(const char *name);   // FIXME
 
 instr_label::instr_label(const SGPropertyNode *node) :
     instr_item(
@@ -25,7 +19,7 @@ instr_label::instr_label(const SGPropertyNode *node) :
             NULL /* node->getStringValue("data_source") */,	// FIXME
             node->getFloatValue("scale_data"),
             node->getIntValue("options"),
-            node->getBoolValue("working"),
+            node->getBoolValue("working", true),
             node->getIntValue("digits")),
     pformat(node->getStringValue("label_format")),
     pre_str(node->getStringValue("pre_label_string")),
@@ -37,83 +31,9 @@ instr_label::instr_label(const SGPropertyNode *node) :
     lbox(node->getBoolValue("label_box", false))
 {
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instr_label instrument "
-            << node->getStringValue("name", "[none]"));
+            << node->getStringValue("name", "[unnamed]"));
 
-    string loadfn = node->getStringValue("data_source");	// FIXME
-    float (*load_fn)(void);
-#ifdef ENABLE_SP_FMDS
-    if (loadfn == "aux1")
-        load_fn = get_aux1;
-    else if (loadfn == "aux2")
-        load_fn = get_aux2;
-    else if (loadfn == "aux3")
-        load_fn = get_aux3;
-    else if (loadfn == "aux4")
-        load_fn = get_aux4;
-    else if (loadfn == "aux5")
-        load_fn = get_aux5;
-    else if (loadfn == "aux6")
-        load_fn = get_aux6;
-    else if (loadfn == "aux7")
-        load_fn = get_aux7;
-    else if (loadfn == "aux8")
-        load_fn = get_aux8;
-    else if (loadfn == "aux9")
-        load_fn = get_aux9;
-    else if (loadfn == "aux10")
-        load_fn = get_aux10;
-    else if (loadfn == "aux11")
-        load_fn = get_aux11;
-    else if (loadfn == "aux12")
-        load_fn = get_aux12;
-    else if (loadfn == "aux13")
-        load_fn = get_aux13;
-    else if (loadfn == "aux14")
-        load_fn = get_aux14;
-    else if (loadfn == "aux15")
-        load_fn = get_aux15;
-    else if (loadfn == "aux16")
-        load_fn = get_aux16;
-    else if (loadfn == "aux17")
-        load_fn = get_aux17;
-    else if (loadfn == "aux18")
-        load_fn = get_aux18;
-    else
-#endif
-    if (loadfn == "ax")
-        load_fn = get_Ax;
-    else if (loadfn == "speed")
-        load_fn = get_speed;
-    else if (loadfn == "mach")
-        load_fn = get_mach;
-    else if (loadfn == "altitude")
-        load_fn = get_altitude;
-    else if (loadfn == "agl")
-        load_fn = get_agl;
-    else if (loadfn == "framerate")
-        load_fn = get_frame_rate;
-    else if (loadfn == "heading")
-        load_fn = get_heading;
-    else if (loadfn == "fov")
-        load_fn = get_fov;
-    else if (loadfn == "vfc_tris_culled")
-        load_fn = get_vfc_tris_culled;
-    else if (loadfn == "vfc_tris_drawn")
-        load_fn = get_vfc_tris_drawn;
-    else if (loadfn == "aoa")
-        load_fn = get_aoa;
-    else if (loadfn == "latitude")
-        load_fn = get_latitude;
-    else if (loadfn == "anzg")
-        load_fn = get_anzg;
-    else if (loadfn == "longitude")
-        load_fn = get_longitude;
-    else if (loadfn =="throttleval")
-        load_fn = get_throttleval;
-    else
-        load_fn = 0;
-
-    set_data_source(load_fn);
+    set_data_source(get_func(node->getStringValue("data_source")));
 
     int just = node->getIntValue("justification");
     if (just == 0)

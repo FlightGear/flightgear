@@ -21,7 +21,7 @@ HudLadder::HudLadder(const SGPropertyNode *node) :
             node->getIntValue("height"),
             get_roll,
             get_pitch,				// FIXME getter functions from cockpit.cxx
-            node->getBoolValue("working"),
+            node->getBoolValue("working", true),
             HUDS_RIGHT),
     width_units(int(node->getFloatValue("span_units"))),
     div_units(int(fabs(node->getFloatValue("division_units")))),
@@ -52,7 +52,7 @@ HudLadder::HudLadder(const SGPropertyNode *node) :
         factor = 640.0 / 55.0;
 
     SG_LOG(SG_INPUT, SG_INFO, "Done reading HudLadder instrument"
-            << node->getStringValue("name", "[NONE]"));
+            << node->getStringValue("name", "[unnamed]"));
 
     if (!width_units)
         width_units = 45;

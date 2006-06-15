@@ -729,3 +729,66 @@ void fgCockpitUpdate( void ) {
     glViewport( 0, 0, iwidth, iheight );
 }
 
+
+
+
+
+struct FuncTable {
+    char *name;
+    FLTFNPTR func;
+} fn_table[] = {
+    { "agl", get_agl },
+    { "aileronval", get_aileronval },
+    { "altitude", get_altitude },
+    { "anzg", get_anzg },
+    { "aoa", get_aoa },
+    { "ax", get_Ax },
+    { "climb", get_climb_rate },
+    { "elevatortrimval", get_elev_trimval },
+    { "elevatorval", get_elevatorval },
+    { "fov", get_fov },
+    { "framerate", get_frame_rate },
+    { "heading", get_heading },
+    { "latitude", get_latitude },
+    { "longitude", get_longitude },
+    { "mach", get_mach },
+    { "rudderval", get_rudderval },
+    { "speed", get_speed },
+    { "throttleval", get_throttleval },
+    { "view_direction", get_view_direction },
+    { "vfc_tris_culled", get_vfc_tris_culled },
+    { "vfc_tris_drawn", get_vfc_tris_drawn },
+#ifdef ENABLE_SP_FMDS
+    { "aux1", get_aux1 },
+    { "aux2", get_aux2 },
+    { "aux3", get_aux3 },
+    { "aux4", get_aux4 },
+    { "aux5", get_aux5 },
+    { "aux6", get_aux6 },
+    { "aux7", get_aux7 },
+    { "aux8", get_aux8 },
+    { "aux9", get_aux9 },
+    { "aux10", get_aux10 },
+    { "aux11", get_aux11 },
+    { "aux12", get_aux12 },
+    { "aux13", get_aux13 },
+    { "aux14", get_aux14 },
+    { "aux15", get_aux15 },
+    { "aux16", get_aux16 },
+    { "aux17", get_aux17 },
+    { "aux18", get_aux18 },
+#endif
+    { 0, 0 },
+};
+
+
+FLTFNPTR get_func(const char *name)
+{
+    for (int i = 0; fn_table[i].name; i++)
+        if (!strcmp(fn_table[i].name, name))
+            return fn_table[i].func;
+
+    return 0;
+}
+
+

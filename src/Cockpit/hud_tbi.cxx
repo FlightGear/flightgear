@@ -23,7 +23,7 @@ fgTBI_instr::fgTBI_instr(const SGPropertyNode *node) :
             node->getIntValue("height"),
             get_roll,					// FIXME
             get_sideslip,
-            node->getBoolValue("working"),
+            node->getBoolValue("working", true),
             HUDS_TOP),
     BankLimit(int(node->getFloatValue("maxBankAngle"))),
     SlewLimit(int(node->getFloatValue("maxSlipAngle"))),
@@ -33,7 +33,7 @@ fgTBI_instr::fgTBI_instr(const SGPropertyNode *node) :
 
 {
     SG_LOG(SG_INPUT, SG_INFO, "Done reading TBI instrument"
-            << node->getStringValue("name", "[NONE]"));
+            << node->getStringValue("name", "[unnamed]"));
 }
 
 
