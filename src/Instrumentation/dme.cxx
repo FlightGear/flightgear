@@ -152,9 +152,10 @@ DME::update (double delta_time_sec)
     }
 
                                 // Calculate the distance to the transmitter
-    Point3D location =
-        sgGeodToCart(Point3D(longitude_rad, latitude_rad, altitude_m));
-    double distance_nm = _transmitter.distance3D(location) * SG_METER_TO_NM;
+    SGGeod geod = SGGeod::fromRadM(longitude_rad, latitude_rad, altitude_m);
+    SGVec3d location = SGVec3d::fromGeod(geod);
+    
+    double distance_nm = dist(_transmitter, location) * SG_METER_TO_NM;
 
     double range_nm = adjust_range(_transmitter_elevation_ft,
                                    altitude_m * SG_METER_TO_FEET,
@@ -198,7 +199,7 @@ DME::search (double frequency_mhz, double longitude_rad,
     _transmitter_valid = (dme != NULL);
 
     if ( _transmitter_valid ) {
-        _transmitter = Point3D(dme->get_x(), dme->get_y(), dme->get_z());
+        _transmitter = dme->get_cart();
         _transmitter_elevation_ft = dme->get_elev_ft();
         _transmitter_range_nm = dme->get_range();
         _transmitter_bias = dme->get_multiuse();

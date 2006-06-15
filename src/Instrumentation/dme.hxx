@@ -71,7 +71,7 @@ private:
     double _time_before_search_sec;
 
     bool _transmitter_valid;
-    Point3D _transmitter;
+    SGVec3d _transmitter;
     double _transmitter_elevation_ft;
     double _transmitter_range_nm;
     double _transmitter_bias;

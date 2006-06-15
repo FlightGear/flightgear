@@ -61,7 +61,8 @@ ADF::ADF (SGPropertyNode *node )
     _time_before_search_sec(0),
     _last_frequency_khz(-1),
     _transmitter_valid(false),
-    _transmitter_elevation_ft(0),
+    _transmitter_pos(SGGeod::fromDeg(0, 0)),
+    _transmitter_cart(0, 0, 0),
     _transmitter_range_nm(0),
     _ident_count(0),
     _last_ident_time(0),
@@ -92,7 +93,8 @@ ADF::ADF ()
     : _time_before_search_sec(0),
       _last_frequency_khz(-1),
       _transmitter_valid(false),
-      _transmitter_elevation_ft(0),
+      _transmitter_pos(SGGeod::fromDeg(0, 0)),
+      _transmitter_cart(0, 0, 0),
       _transmitter_range_nm(0),
       _ident_count(0),
       _last_ident_time(0),
@@ -178,11 +180,11 @@ ADF::update (double delta_time_sec)
     }
 
                                 // Calculate the bearing to the transmitter
-    Point3D location =
-        sgGeodToCart(Point3D(longitude_rad, latitude_rad, altitude_m));
-
-    double distance_nm = _transmitter.distance3D(location) * SG_METER_TO_NM;
-    double range_nm = adjust_range(_transmitter_elevation_ft,
+    SGGeod geod = SGGeod::fromRadM(longitude_rad, latitude_rad, altitude_m);
+    SGVec3d location = SGVec3d::fromGeod(geod);
+    
+    double distance_nm = dist(_transmitter_cart, location) * SG_METER_TO_NM;
+    double range_nm = adjust_range(_transmitter_pos.getElevationFt(),
                                    altitude_m * SG_METER_TO_FEET,
                                    _transmitter_range_nm);
     if (distance_nm <= range_nm) {
@@ -190,11 +192,7 @@ ADF::update (double delta_time_sec)
         double bearing, az2, s;
         double heading = _heading_node->getDoubleValue();
 
-        geo_inverse_wgs_84(altitude_m,
-                           latitude_deg,
-                           longitude_deg,
-                           _transmitter_lat_deg,
-                           _transmitter_lon_deg,
+        geo_inverse_wgs_84(geod, _transmitter_pos,
                            &bearing, &az2, &s);
         _in_range_node->setBoolValue(true);
 
@@ -258,10 +256,8 @@ ADF::search (double frequency_khz, double longitude_rad,
     if ( _transmitter_valid ) {
         ident = nav->get_trans_ident();
         if ( ident != _last_ident ) {
-            _transmitter_lon_deg = nav->get_lon();
-            _transmitter_lat_deg = nav->get_lat();
-            _transmitter = Point3D(nav->get_x(), nav->get_y(), nav->get_z());
-            _transmitter_elevation_ft = nav->get_elev_ft();
+            _transmitter_pos = nav->get_pos();
+            _transmitter_cart = nav->get_cart();
             _transmitter_range_nm = nav->get_range();
         }
     }

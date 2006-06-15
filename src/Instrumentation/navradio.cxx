@@ -323,9 +323,9 @@ FGNavRadio::update(double dt)
     }
 
     // cache a few strategic values locally for speed
-    double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
+    SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
+                                   lat_node->getDoubleValue(),
+                                   alt_node->getDoubleValue());
     bool power_btn = power_btn_node->getBoolValue();
     bool nav_serviceable = nav_serviceable_node->getBoolValue();
     bool cdi_serviceable = cdi_serviceable_node->getBoolValue();
@@ -335,8 +335,6 @@ FGNavRadio::update(double dt)
     bool is_loc = loc_node->getBoolValue();
     double loc_dist = loc_dist_node->getDoubleValue();
 
-    Point3D aircraft = sgGeodToCart( Point3D( lon, lat, elev ) );
-    Point3D station;
     double az1, az2, s;
 
     // Create "formatted" versions of the nav frequencies for
@@ -356,31 +354,22 @@ FGNavRadio::update(double dt)
     if ( is_valid && power_btn && (bus_power_node->getDoubleValue() > 1.0)
          && nav_serviceable )
     {
-	station = Point3D( nav_x, nav_y, nav_z );
-	loc_dist = aircraft.distance3D( station );
+        SGVec3d aircraft = SGVec3d::fromGeod(pos);
+        loc_dist = dist(aircraft, nav_xyz);
 	loc_dist_node->setDoubleValue( loc_dist );
         // cout << "station = " << station << " dist = " << loc_dist << endl;
 
 	if ( has_gs ) {
             // find closest distance to the gs base line
-            sgdVec3 p;
-            sgdSetVec3( p, aircraft.x(), aircraft.y(), aircraft.z() );
-            sgdVec3 p0;
-            sgdSetVec3( p0, gs_x, gs_y, gs_z );
-            double dist = sgdClosestPointToLineDistSquared( p, p0,
-                                                            gs_base_vec );
+            SGVec3d p = aircraft;
+            double dist = sgdClosestPointToLineDistSquared(p.sg(), gs_xyz.sg(),
+                                                           gs_base_vec.sg());
             gs_dist_node->setDoubleValue( sqrt( dist ) );
             // cout << "gs_dist = " << gs_dist_node->getDoubleValue()
             //      << endl;
 
-            Point3D tmp( gs_x, gs_y, gs_z );
-            // cout << " (" << aircraft.distance3D( tmp ) << ")" << endl;
-
             // wgs84 heading to glide slope (to determine sign of distance)
-            geo_inverse_wgs_84( elev,
-                                lat * SGD_RADIANS_TO_DEGREES,
-                                lon * SGD_RADIANS_TO_DEGREES, 
-                                gs_lat, gs_lon,
+            geo_inverse_wgs_84( pos, SGGeod::fromDeg(gs_lon, gs_lat),
                                 &az1, &az2, &s );
             double r = az1 - target_radial;
             while ( r >  180.0 ) { r -= 360.0;}
@@ -403,10 +392,7 @@ FGNavRadio::update(double dt)
 	// compute forward and reverse wgs84 headings to localizer
         //////////////////////////////////////////////////////////
         double hdg;
-	geo_inverse_wgs_84( elev,
-                            lat * SGD_RADIANS_TO_DEGREES,
-                            lon * SGD_RADIANS_TO_DEGREES, 
-			    loc_lat, loc_lon,
+	geo_inverse_wgs_84( pos, SGGeod::fromDeg(loc_lon, loc_lat),
 			    &hdg, &az2, &s );
 	// cout << "az1 = " << az1 << " magvar = " << nav_magvar << endl;
         heading_node->setDoubleValue( hdg );
@@ -444,10 +430,10 @@ FGNavRadio::update(double dt)
 	    while ( offset > 180.0 ) { offset -= 360.0; }
 	    // cout << "ils offset = " << offset << endl;
 	    effective_range
-                = adjustILSRange( nav_elev, elev, offset,
-                                  loc_dist * SG_METER_TO_NM );
+              = adjustILSRange( nav_elev, pos.getElevationM(), offset,
+                                loc_dist * SG_METER_TO_NM );
 	} else {
-	    effective_range = adjustNavRange( nav_elev, elev, range );
+	    effective_range = adjustNavRange( nav_elev, pos.getElevationM(), range );
 	}
 	// cout << "nav range = " << effective_range
 	//      << " (" << range << ")" << endl;
@@ -809,9 +795,7 @@ void FGNavRadio::search()
 	    while ( target_radial > 360.0 ) { target_radial -= 360.0; }
 	    loc_lon = loc->get_lon();
 	    loc_lat = loc->get_lat();
-	    nav_x = loc->get_x();
-	    nav_y = loc->get_y();
-	    nav_z = loc->get_z();
+	    nav_xyz = loc->get_cart();
 	    last_nav_id = nav_id;
 	    last_nav_vor = false;
 	    loc_node->setBoolValue( true );
@@ -823,32 +807,26 @@ void FGNavRadio::search()
                 nav_elev = gs->get_elev_ft();
                 int tmp = (int)(gs->get_multiuse() / 1000.0);
                 target_gs = (double)tmp / 100.0;
-                gs_x = gs->get_x();
-                gs_y = gs->get_y();
-                gs_z = gs->get_z();
+                gs_xyz = gs->get_cart();
 
                 // derive GS baseline (perpendicular to the runay
                 // along the ground)
                 double tlon, tlat, taz;
                 geo_direct_wgs_84 ( 0.0, gs_lat, gs_lon,
-                                    target_radial + 90,  
+                                    target_radial + 90,
                                     100.0, &tlat, &tlon, &taz );
                 // cout << "target_radial = " << target_radial << endl;
                 // cout << "nav_loc = " << loc_node->getBoolValue() << endl;
                 // cout << gs_lon << "," << gs_lat << "  "
                 //      << tlon << "," << tlat << "  (" << nav_elev << ")"
                 //      << endl;
-                Point3D p1 = sgGeodToCart( Point3D(tlon*SGD_DEGREES_TO_RADIANS,
-                                                   tlat*SGD_DEGREES_TO_RADIANS,
-                                                   nav_elev*SG_FEET_TO_METER)
-                                           );
-                // cout << gs_x << "," << gs_y << "," << gs_z
-                //      << endl;
+                SGGeod tpos = SGGeod::fromDegFt(tlon, tlat, nav_elev);
+                SGVec3d p1 = SGVec3d::fromGeod(tpos);
+
+                // cout << gs_xyz << endl;
                 // cout << p1 << endl;
-                sgdSetVec3( gs_base_vec,
-                            p1.x()-gs_x, p1.y()-gs_y, p1.z()-gs_z );
-                // cout << gs_base_vec[0] << "," << gs_base_vec[1] << ","
-                //      << gs_base_vec[2] << endl;
+                gs_base_vec = p1 - gs_xyz;
+                // cout << gs_base_vec << endl;
             } else {
                 has_gs_node->setBoolValue( false );
                 nav_elev = loc->get_elev_ft();
@@ -905,9 +883,7 @@ void FGNavRadio::search()
 	    effective_range = adjustNavRange(nav_elev, elev, range);
 	    target_gs = 0.0;
 	    target_radial = sel_radial_node->getDoubleValue();
-	    nav_x = nav->get_x();
-	    nav_y = nav->get_y();
-	    nav_z = nav->get_z();
+	    nav_xyz = nav->get_cart();
 
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );

@@ -157,8 +157,10 @@ bool FGTACANList::add( FGTACANRecord *c ) {
 
 FGNavRecord *FGNavList::findByFreq( double freq, double lon, double lat, double elev )
 {
-    nav_list_type stations = navaids[(int)(freq*100.0 + 0.5)];
-    Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
+    const nav_list_type& stations = navaids[(int)(freq*100.0 + 0.5)];
+
+    SGGeod geod = SGGeod::fromRadM(lon, lat, elev);
+    SGVec3d aircraft = SGVec3d::fromGeod(geod);
     SG_LOG( SG_INSTR, SG_DEBUG, "findbyFreq " << freq << " size " << stations.size()  );
 
     return findNavFromList( aircraft, stations );
@@ -168,14 +170,14 @@ FGNavRecord *FGNavList::findByFreq( double freq, double lon, double lat, double 
 FGNavRecord *FGNavList::findByIdent( const char* ident,
                                const double lon, const double lat )
 {
-    nav_list_type stations = ident_navaids[ident];
-    Point3D aircraft = sgGeodToCart( Point3D(lon, lat, 0.0) );
-
+    const nav_list_type& stations = ident_navaids[ident];
+    SGGeod geod = SGGeod::fromRad(lon, lat);
+    SGVec3d aircraft = SGVec3d::fromGeod(geod);
     return findNavFromList( aircraft, stations );
 }
 
 
-nav_list_type FGNavList::findFirstByIdent( string ident, fg_nav_types type, bool exact)
+nav_list_type FGNavList::findFirstByIdent( const string& ident, fg_nav_types type, bool exact)
 {
     nav_list_type n2;
     n2.clear();
@@ -266,11 +268,10 @@ FGNavRecord *FGNavList::findByIdentAndFreq( const char* ident, const double freq
 
 // Given a point and a list of stations, return the closest one to the
 // specified point.
-FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft, 
+FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft, 
                                          const nav_list_type &stations )
 {
     FGNavRecord *nav = NULL;
-    Point3D station;
     double d2;                  // in meters squared
     double min_dist
         = FG_NAV_MAX_RANGE*SG_NM_TO_METER*FG_NAV_MAX_RANGE*SG_NM_TO_METER;
@@ -278,11 +279,7 @@ FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft,
     // find the closest station within a sensible range (FG_NAV_MAX_RANGE)
     for ( unsigned int i = 0; i < stations.size(); ++i ) {
 	// cout << "testing " << current->get_ident() << endl;
-	station = Point3D( stations[i]->get_x(),
-                           stations[i]->get_y(),
-                           stations[i]->get_z() );
-
-	d2 = aircraft.distance3Dsquared( station );
+        d2 = distSqr(stations[i]->get_cart(), aircraft);
 
 	// cout << "  dist = " << sqrt(d)
 	//      << "  range = " << current->get_range() * SG_NM_TO_METER
@@ -317,13 +314,8 @@ FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft,
             }
 
             double az1 = 0.0, az2 = 0.0, s = 0.0;
-            double elev_m = 0.0, lat_rad = 0.0, lon_rad = 0.0;
-            double xyz[3] = { aircraft.x(), aircraft.y(), aircraft.z() };
-            sgCartToGeod( xyz, &lat_rad, &lon_rad, &elev_m );
-            geo_inverse_wgs_84( elev_m,
-                                lat_rad * SG_RADIANS_TO_DEGREES,
-                                lon_rad * SG_RADIANS_TO_DEGREES,
-                                stations[i]->get_lat(), stations[i]->get_lon(),
+            SGGeod geod = SGGeod::fromCart(aircraft);
+            geo_inverse_wgs_84( geod, stations[i]->get_pos(),
                                 &az1, &az2, &s);
             az1 = az1 - stations[i]->get_multiuse();
             if ( az1 >  180.0) az1 -= 360.0;
@@ -372,29 +364,23 @@ FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
 
     int master_index = lonidx * 1000 + latidx;
 
-    nav_list_type navs = navaids_by_tile[ master_index ];
+    const nav_list_type& navs = navaids_by_tile[ master_index ];
     // cout << "Master index = " << master_index << endl;
     // cout << "beacon search length = " << beacons.size() << endl;
 
     nav_list_const_iterator current = navs.begin();
     nav_list_const_iterator last = navs.end();
 
-    Point3D aircraft = sgGeodToCart( Point3D(lon_rad,
-                                             lat_rad,
-                                             elev_m) );
+    SGGeod geod = SGGeod::fromRadM(lon_rad, lat_rad, elev_m);
+    SGVec3d aircraft = SGVec3d::fromGeod(geod);
 
     double min_dist = 999999999.0;
 
     for ( ; current != last ; ++current ) {
 	if(isTypeMatch(*current, type)) {
 	    // cout << "  testing " << (*current)->get_ident() << endl;
-	    Point3D station = Point3D( (*current)->get_x(),
-				       (*current)->get_y(),
-				       (*current)->get_z() );
-	    // cout << "    aircraft = " << aircraft << " station = " << station 
-	    //      << endl;
     
-	    double d = aircraft.distance3Dsquared( station ); // meters^2
+            double d = distSqr((*current)->get_cart(), aircraft);
 	    // cout << "  distance = " << d << " (" 
 	    //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
 	    //         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
@@ -418,7 +404,7 @@ FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
 // Given a TACAN Channel return the first matching frequency
 FGTACANRecord *FGTACANList::findByChannel( const string& channel )
 {
-    tacan_list_type stations = ident_channels[channel];
+    const tacan_list_type& stations = ident_channels[channel];
     SG_LOG( SG_INSTR, SG_DEBUG, "findByChannel " << channel<< " size " << stations.size()  );
     
     if (stations.size()) {
@@ -430,7 +416,7 @@ FGTACANRecord *FGTACANList::findByChannel( const string& channel )
 // Given a frequency, return the first matching station.
 FGNavRecord *FGNavList::findStationByFreq( double freq )
 {
-    nav_list_type stations = navaids[(int)(freq*100.0 + 0.5)];
+    const nav_list_type& stations = navaids[(int)(freq*100.0 + 0.5)];
    
     SG_LOG( SG_INSTR, SG_DEBUG, "findStationByFreq " << freq << " size " << stations.size()  );
     

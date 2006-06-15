@@ -59,9 +59,7 @@ class FGKR_87 : public SGSubsystem
     double effective_range;
     double dist;
     double heading;
-    double x;
-    double y;
-    double z;
+    SGVec3d xyz;
     double goal_needle_deg;
     double et_flash_time;
 

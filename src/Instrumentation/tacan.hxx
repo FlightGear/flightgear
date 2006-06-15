@@ -93,9 +93,8 @@ private:
     bool _mobile_valid;
     bool _transmitter_valid;
 
-    Point3D _transmitter;
-    double _transmitter_lat, _transmitter_lon;
-    double _transmitter_elevation_ft;
+    SGVec3d _transmitter;
+    SGGeod _transmitter_pos;
     double _transmitter_range_nm;
     double _transmitter_bearing_deg;
     double _transmitter_bias;

@@ -56,8 +56,6 @@ typedef map < string, tacan_list_type > tacan_ident_map_type;
 
 class FGNavList {
 
-    //nav_list_type navlist;	// DCL - this doesn't appear to be used any more
-    				// and can probably be removed.
     nav_list_type carrierlist;
     nav_map_type navaids;
     nav_map_type navaids_by_tile;
@@ -65,7 +63,7 @@ class FGNavList {
 	
     // Given a point and a list of stations, return the closest one to
     // the specified point.
-    FGNavRecord *findNavFromList( const Point3D &aircraft, 
+    FGNavRecord *findNavFromList( const SGVec3d &aircraft, 
                                   const nav_list_type &stations );
 	
 public:
@@ -78,7 +76,6 @@ public:
 
     // add an entry
     bool add( FGNavRecord *n );
-    //bool add( FGTACANRecord *r );
 
     /** Query the database for the specified station.  It is assumed
       * that there will be multiple stations with matching frequencies
@@ -94,7 +91,7 @@ public:
     // (by ASCII code value) to that supplied.
     // Supplying true for exact forces only exact matches to be returned (similar to above function)
     // Returns an empty list if no match found - calling function should check for this!
-    nav_list_type findFirstByIdent( string ident, fg_nav_types type, bool exact = false );
+    nav_list_type findFirstByIdent( const string& ident, fg_nav_types type, bool exact = false );
 
     // Given an Ident and optional freqency, return the first matching
     // station.
@@ -113,15 +110,8 @@ public:
 class FGTACANList {
 
     tacan_list_type channellist;
-    //nav_list_type carrierlist;
     tacan_map_type channels;
-    //nav_map_type navaids_by_tile;
     tacan_ident_map_type ident_channels;
-	
-    // Given a point and a list of stations, return the closest one to
-    // the specified point.
-    /*FGNavRecord *findNavFromList( const Point3D &aircraft, 
-                                  const nav_list_type &stations );*/
 	
 public:
 
@@ -132,7 +122,6 @@ public:
     bool init();
 
     // add an entry
-    
     bool add( FGTACANRecord *r );
     
     // Given a TACAN Channel, return the appropriate frequency.  

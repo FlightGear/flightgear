@@ -123,16 +123,12 @@ class FGNavRadio : public SGSubsystem
     double target_radial;
     double loc_lon;
     double loc_lat;
-    double nav_x;
-    double nav_y;
-    double nav_z;
+    SGVec3d nav_xyz;
     double gs_lon;
     double gs_lat;
     double nav_elev;            // use gs elev if available
-    double gs_x;
-    double gs_y;
-    double gs_z;
-    sgdVec3 gs_base_vec;
+    SGVec3d gs_xyz;
+    SGVec3d gs_base_vec;
     double gs_dist_signed;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;

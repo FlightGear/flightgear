@@ -201,15 +201,16 @@ FGMarkerBeacon::update(double dt)
 }
 
 
-static bool check_beacon_range( double lon_rad, double lat_rad, double elev_m,
+static bool check_beacon_range( const SGGeod& pos,
                                 FGNavRecord *b )
 {
-    Point3D aircraft = sgGeodToCart( Point3D(lon_rad, lat_rad, elev_m) );
-    Point3D station = Point3D( b->get_x(), b->get_y(), b->get_z() );
+    SGVec3d aircraft = SGVec3d::fromGeod(pos);
+    SGVec3d station = b->get_cart();
     // cout << "    aircraft = " << aircraft << " station = " << station 
     //      << endl;
 
-    double d = aircraft.distance3Dsquared( station ); // meters^2
+    SGVec3d tmp = station - aircraft;
+    double d = dot(tmp, tmp);
     // cout << "  distance = " << d << " (" 
     //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
     //         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
@@ -219,7 +220,7 @@ static bool check_beacon_range( double lon_rad, double lat_rad, double elev_m,
 
     // cout << "elev = " << elev * SG_METER_TO_FEET
     //      << " current->get_elev() = " << current->get_elev() << endl;
-    double elev_ft = elev_m * SG_METER_TO_FEET;
+    double elev_ft = pos.getElevationFt();
     double delev = elev_ft - b->get_elev_ft();
 
     // max range is the area under r = 2.4 * alt or r^2 = 4000^2 - alt^2
@@ -253,9 +254,9 @@ void FGMarkerBeacon::search()
 
     static fgMkrBeacType last_beacon = NOBEACON;
 
-    double lon_rad = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double lat_rad = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev_m = alt_node->getDoubleValue() * SG_FEET_TO_METER;
+    SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
+                                   lat_node->getDoubleValue(),
+                                   alt_node->getDoubleValue());
 
     ////////////////////////////////////////////////////////////////////////
     // Beacons.
@@ -263,7 +264,9 @@ void FGMarkerBeacon::search()
 
     // get closest marker beacon
     FGNavRecord *b
-	= globals->get_mkrlist()->findClosest( lon_rad, lat_rad, elev_m );
+      = globals->get_mkrlist()->findClosest( pos.getLongitudeRad(),
+                                             pos.getLatitudeRad(),
+                                             pos.getElevationM() );
 
     // cout << "marker beacon = " << b << " (" << b->get_type() << ")" << endl;
 
@@ -277,7 +280,7 @@ void FGMarkerBeacon::search()
         } else if ( b->get_type() == 9 ) {
             beacon_type = INNER;
         }
-        inrange = check_beacon_range( lon_rad, lat_rad, elev_m, b );
+        inrange = check_beacon_range( pos, b );
         // cout << "  inrange = " << inrange << endl;
     }
 

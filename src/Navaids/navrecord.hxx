@@ -61,9 +61,8 @@ enum fg_nav_types {
 class FGNavRecord {
 
     int type;
-    double lon, lat;            // location in geodetic coords (degrees)
-    double elev_ft;
-    double x, y, z;             // location in cartesian coords (earth centered)
+    SGGeod pos;                // location in geodetic coords (degrees)
+    SGVec3d cart;              // location in cartesian coords (earth centered)
     int freq;
     int range;
     double multiuse;            // can be slaved variation of VOR
@@ -85,15 +84,14 @@ public:
 
     inline int get_type() const { return type; }
     inline fg_nav_types get_fg_type() const;
-    inline double get_lon() const { return lon; }	// degrees
-    inline void set_lon( double l ) { lon = l; }	// degrees
-    inline double get_lat() const { return lat; }	// degrees
-    inline void set_lat( double l ) { lat = l; }	// degrees
-    inline double get_elev_ft() const { return elev_ft; }
-    inline void set_elev_ft( double e ) { elev_ft = e; }
-    inline double get_x() const { return x; }
-    inline double get_y() const { return y; }
-    inline double get_z() const { return z; }
+    inline double get_lon() const { return pos.getLongitudeDeg(); } // degrees
+    inline void set_lon( double l ) { pos.setLongitudeDeg(l); } // degrees
+    inline double get_lat() const { return pos.getLatitudeDeg(); } // degrees
+    inline void set_lat( double l ) { pos.setLatitudeDeg(l); } // degrees
+    inline double get_elev_ft() const { return pos.getElevationFt(); }
+    inline void set_elev_ft( double e ) { pos.setElevationFt(e); }
+    const SGGeod& get_pos() const { return pos; }
+    const SGVec3d& get_cart() const { return cart; }
     inline int get_freq() const { return freq; }
     inline int get_range() const { return range; }
     inline double get_multiuse() const { return multiuse; }
@@ -111,9 +109,8 @@ public:
 inline
 FGNavRecord::FGNavRecord(void) :
     type(0),
-    lon(0.0), lat(0.0),
-    elev_ft(0.0),
-    x(0.0), y(0.0), z(0.0),
+    pos(SGGeod::fromDeg(0, 0)),
+    cart(0, 0, 0),
     freq(0),
     range(0),
     multiuse(0.0),
@@ -145,8 +142,12 @@ operator >> ( istream& in, FGNavRecord& n )
         return in >> skipeol;
     }
 
-    in >> n.lat >> n.lon >> n.elev_ft >> n.freq >> n.range >> n.multiuse
+    double lat, lon, elev_ft;
+    in >> lat >> lon >> elev_ft >> n.freq >> n.range >> n.multiuse
        >> n.ident;
+    n.pos.setLatitudeDeg(lat);
+    n.pos.setLongitudeDeg(lon);
+    n.pos.setElevationFt(elev_ft);
     getline( in, n.name );
 
     // silently multiply adf frequencies by 100 so that adf
@@ -188,13 +189,7 @@ operator >> ( istream& in, FGNavRecord& n )
     n.trans_ident = n.ident;
 
     // generate cartesian coordinates
-    Point3D geod( n.lon * SGD_DEGREES_TO_RADIANS,
-                  n.lat * SGD_DEGREES_TO_RADIANS,
-                  n.elev_ft * SG_FEET_TO_METER );
-    Point3D cart = sgGeodToCart( geod );
-    n.x = cart.x();
-    n.y = cart.y();
-    n.z = cart.z();
+    n.cart = SGVec3d::fromGeod(n.pos);
 
     return in;
 }

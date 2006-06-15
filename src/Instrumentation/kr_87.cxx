@@ -244,14 +244,12 @@ void FGKR_87::unbind () {
 
 // Update the various nav values based on position and valid tuned in navs
 void FGKR_87::update( double dt_sec ) {
-    double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
+    SGGeod acft = SGGeod::fromDegFt(lon_node->getDoubleValue(),
+                                    lat_node->getDoubleValue(),
+                                    alt_node->getDoubleValue());
 
     need_update = false;
 
-    Point3D aircraft = sgGeodToCart( Point3D( acft_lon, acft_lat, acft_elev ) );
-    Point3D station;
     double az1, az2, s;
 
     // On timeout, scan again
@@ -361,20 +359,17 @@ void FGKR_87::update( double dt_sec ) {
         if ( valid ) {
             // cout << "adf is valid" << endl;
             // staightline distance
-            station = Point3D( x, y, z );
-            dist = aircraft.distance3D( station );
+            // What a hack, dist is a class local variable
+            dist = sqrt(distSqr(SGVec3d::fromGeod(acft), xyz));
 
             // wgs84 heading
-            geo_inverse_wgs_84( acft_elev,
-                                acft_lat * SGD_RADIANS_TO_DEGREES,
-                                acft_lon * SGD_RADIANS_TO_DEGREES, 
-                                stn_lat, stn_lon,
+            geo_inverse_wgs_84( acft, SGGeod::fromDeg(stn_lon, stn_lat),
                                 &az1, &az2, &s );
             heading = az1;
             // cout << " heading = " << heading
             //      << " dist = " << dist << endl;
 
-            effective_range = kludgeRange(stn_elev, acft_elev, range);
+            effective_range = kludgeRange(stn_elev, acft.getElevationFt(), range);
             if ( dist < effective_range * SG_NM_TO_METER ) {
                 inrange = true;
             } else if ( dist < 2 * effective_range * SG_NM_TO_METER ) {
@@ -530,9 +525,7 @@ void FGKR_87::search() {
 	    stn_elev = adf->get_elev_ft();
 	    range = adf->get_range();
 	    effective_range = kludgeRange(stn_elev, acft_elev, range);
-	    x = adf->get_x();
-	    y = adf->get_y();
-	    z = adf->get_z();
+	    xyz = adf->get_cart();
 
 	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
 		globals->get_soundmgr()->remove( "adf-ident" );

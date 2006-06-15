@@ -85,10 +85,8 @@ private:
     int _last_frequency_khz;
     bool _transmitter_valid;
     string _last_ident;
-    Point3D _transmitter;
-    double _transmitter_lon_deg;
-    double _transmitter_lat_deg;
-    double _transmitter_elevation_ft;
+    SGGeod _transmitter_pos;
+    SGVec3d _transmitter_cart;
     double _transmitter_range_nm;
 
     FGMorse morse;

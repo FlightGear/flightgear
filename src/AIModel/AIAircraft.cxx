@@ -909,12 +909,6 @@ void FGAIAircraft::getGroundElev(double dt) {
     else
        dt_elev_count = 0;
 
-    // It would be nice if we could set the correct tile center here in order to get a correct
-    // answer with one call to the function, but what I tried in the two commented-out lines
-    // below only intermittently worked, and I haven't quite groked why yet.
-    //SGBucket buck(pos.lon(), pos.lat());
-    //aip.getSGLocation()->set_tile_center(Point3D(buck.get_center_lon(), buck.get_center_lat(), 0.0));
-
     // Only do the proper hitlist stuff if we are within visible range of the viewer.
     if (!invisible) {
         double visibility_meters = fgGetDouble("/environment/visibility-m");
@@ -922,8 +916,6 @@ void FGAIAircraft::getGroundElev(double dt) {
         FGViewer* vw = globals->get_current_view();
         double course, distance;
 
-        //Point3D currView(vw->getLongitude_deg(),
-        //                 vw->getLatitude_deg(), 0.0);
         SGWayPoint current(pos.getLongitudeDeg(), pos.getLatitudeDeg(), 0);
         SGWayPoint view (vw->getLongitude_deg(), vw->getLatitude_deg(), 0);
         view.CourseAndDistance(current, &course, &distance);

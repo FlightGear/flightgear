@@ -51,10 +51,9 @@ TACAN::TACAN ( SGPropertyNode *node )
       _time_before_search_sec(0),
       _mobile_valid(false),
       _transmitter_valid(false),
-      _transmitter_elevation_ft(0),
+      _transmitter_pos(SGGeod::fromDeg(0, 0)),
       _transmitter_range_nm(0),
       _transmitter_bias(0.0),
-
       name("tacan"),
       num(0)
 {
@@ -83,7 +82,7 @@ TACAN::TACAN ()
       _time_before_search_sec(0),
       _mobile_valid(false),
       _transmitter_valid(false),
-      _transmitter_elevation_ft(0),
+      _transmitter_pos(SGGeod::fromDeg(0, 0)),
       _transmitter_range_nm(0),
       _transmitter_bearing_deg(0),
       _transmitter_bias(0.0),
@@ -227,11 +226,8 @@ TACAN::update (double delta_time_sec)
                        &mobile_bearing, &mobile_az2, &mobile_distance);
 
     //calculate the bearing and range of the station from the aircraft
-    geo_inverse_wgs_84(altitude_m,
-                       latitude_deg,
-                       longitude_deg,
-                       _transmitter_lat,
-                       _transmitter_lon,
+    SGGeod pos = SGGeod::fromDegM(longitude_deg, latitude_deg, altitude_m);
+    geo_inverse_wgs_84(pos, _transmitter_pos,
                        &bearing, &az2, &distance);
 
 
@@ -241,7 +237,7 @@ TACAN::update (double delta_time_sec)
         SG_LOG( SG_INSTR, SG_DEBUG, "distance_m " << distance);
         bearing = mobile_bearing;
         distance = mobile_distance;
-        _transmitter_elevation_ft = _mobile_elevation_ft;
+        _transmitter_pos.setElevationFt(_mobile_elevation_ft);
         _transmitter_range_nm = _mobile_range_nm;
         _transmitter_bias = _mobile_bias;
         _transmitter_name = _mobile_name;
@@ -278,11 +274,7 @@ TACAN::update (double delta_time_sec)
 
     double rotation = 0;
 
-    /*Point3D location =
-        sgGeodToCart(Point3D(longitude_rad, latitude_rad, altitude_m));
-    double distance_nm = _transmitter.distance3D(location) * SG_METER_TO_NM;*/
-
-    double range_nm = adjust_range(_transmitter_elevation_ft,
+    double range_nm = adjust_range(_transmitter_pos.getElevationFt(),
                                    altitude_m * SG_METER_TO_FEET,
                                    _transmitter_range_nm);
 
@@ -489,9 +481,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
     if ( _transmitter_valid ) {
         SG_LOG( SG_INSTR, SG_DEBUG, "transmitter valid " << _transmitter_valid  );
 
-        _transmitter_lat = tacan->get_lat();
-        _transmitter_lon = tacan->get_lon();
-        _transmitter_elevation_ft = tacan->get_elev_ft();
+        _transmitter_pos = tacan->get_pos();
         _transmitter_range_nm = tacan->get_range();
         _transmitter_bias = tacan->get_multiuse();
         _transmitter_name = tacan->get_name();
@@ -500,8 +490,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         _ident_node->setStringValue(_transmitter_ident.c_str());
 
         SG_LOG( SG_INSTR, SG_DEBUG, "name " << _transmitter_name);
-        SG_LOG( SG_INSTR, SG_DEBUG, "lat " << _transmitter_lat << "lon " << _transmitter_lon);
-        SG_LOG( SG_INSTR, SG_DEBUG, "elev " << _transmitter_elevation_ft);
+        SG_LOG( SG_INSTR, SG_DEBUG, _transmitter_pos);
 
     } else {
         SG_LOG( SG_INSTR, SG_DEBUG, "transmitter invalid " << _transmitter_valid  );
