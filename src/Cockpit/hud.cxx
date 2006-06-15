@@ -51,7 +51,7 @@
 #include <simgear/misc/sg_path.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Autopilot/xmlauto.hxx>
+//#include <Autopilot/xmlauto.hxx>
 #include <GUI/new_gui.hxx>           // FGFontCache
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -64,16 +64,11 @@ static HUD_Properties *HUDprop = 0;
 
 static char units[5];
 
-// The following routines obtain information concerning the aircraft's
-// current state and return it to calling instrument display routines.
-// They should eventually be member functions of the aircraft.
-//
+deque<instr_item *> HUD_deque;
 
-deque< instr_item * > HUD_deque;
-
-fgTextList         HUD_TextList;
-fgLineList         HUD_LineList;
-fgLineList         HUD_StippleLineList;
+fgTextList HUD_TextList;
+fgLineList HUD_LineList;
+fgLineList HUD_StippleLineList;
 
 fntRenderer *HUDtext = 0;
 fntTexFont *HUD_Font = 0;
@@ -82,20 +77,12 @@ int HUD_style = 0;
 
 float HUD_matrix[16];
 
-static string  name;
-static string  label_format;
-static string  prelabel;
-static string  postlabel;
-static string  type;
-static string  type_pointer;
-static string  type_tick;
-static string  length_tick;
-
 int readHud( istream &input );
 int readInstrument ( const SGPropertyNode * node);
 
 static void drawHUD();
 static void fgUpdateHUDVirtual();
+
 
 class locRECT {
 public:
@@ -115,15 +102,6 @@ locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
 }
 // #define DEBUG
 
-//========================= End of Class Implementations===================
-// fgHUDInit
-//
-// Constructs a HUD object and then adds in instruments. At the present
-// the instruments are hard coded into the routine. Ultimately these need
-// to be defined by the aircraft's instrumentation records so that the
-// display for a Piper Cub doesn't show the speed range of a North American
-// mustange and the engine readouts of a B36!
-//
 
 
 
@@ -155,10 +133,15 @@ int readInstrument(const SGPropertyNode * node)
         int nCards = card_group->nChildren();
         for (int j = 0; j < nCards; j++) {
             const char *type = card_group->getChild(j)->getStringValue("type", "gauge");
+
             if (!strcmp(type, "gauge"))
                 HIptr = static_cast<instr_item *>(new gauge_instr(card_group->getChild(j)));
             else if (!strcmp(type, "dial") || !strcmp(type, "tape"))
                 HIptr = static_cast<instr_item *>(new hud_card(card_group->getChild(j)));
+            else {
+                SG_LOG(SG_INPUT, SG_WARN, "HUD: unknown 'card' type: " << type);
+                continue;
+            }
             HUD_deque.insert(HUD_deque.begin(), HIptr);
         }
     }
@@ -244,6 +227,14 @@ int readHud( istream &input )
 }
 
 
+// fgHUDInit
+//
+// Constructs a HUD object and then adds in instruments. At the present
+// the instruments are hard coded into the routine. Ultimately these need
+// to be defined by the aircraft's instrumentation records so that the
+// display for a Piper Cub doesn't show the speed range of a North American
+// mustange and the engine readouts of a B36!
+//
 int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 {
 
@@ -294,6 +285,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
     return 0;  // For now. Later we may use this for an error code.
 
 }
+
 
 int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 {
@@ -424,6 +416,7 @@ void fgUpdateHUDVirtual()
     glPopMatrix();
 }
 
+
 void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
                   GLfloat x_end, GLfloat y_end )
 {
@@ -443,6 +436,7 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 }
+
 
 void drawHUD()
 {
@@ -559,7 +553,6 @@ void drawHUD()
 }
 
 
-
 void fgTextList::draw()
 {
     if (!Font)
@@ -588,7 +581,6 @@ void fgTextList::draw()
     glDisable(GL_TEXTURE_2D);
     glPopAttrib();
 }
-
 
 
 // HUD property listener class
@@ -668,4 +660,5 @@ void HUD_Properties::setColor() const
     else
         glColor3f(_r, _g, _b);
 }
+
 
