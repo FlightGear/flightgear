@@ -62,11 +62,6 @@ HudLadder::HudLadder(const SGPropertyNode *node) :
 }
 
 
-HudLadder::~HudLadder()
-{
-}
-
-
 //
 //  Draws a climb ladder in the center of the HUD
 //

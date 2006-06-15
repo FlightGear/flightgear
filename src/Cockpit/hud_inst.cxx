@@ -57,31 +57,12 @@ instr_item::instr_item(
 }
 
 
-// copy constructor
-instr_item::instr_item( const instr_item & image ) :
-    handle       ( ++instances        ),
-    scrn_pos     ( image.scrn_pos     ),
-    load_value_fn( image.load_value_fn),
-    disp_factor  ( image.disp_factor  ),
-    opts         ( image.opts         ),
-    is_enabled   ( image.is_enabled   ),
-    broken       ( image.broken       ),
-    scr_span     ( image.scr_span     ),
-    mid_span     ( image.mid_span     )
-{
-}
-
-
 instr_item::~instr_item ()
 {
     if (instances)
         instances--;
 }
 
-
-void instr_item::update( void )
-{
-}
 
 // break_display       This is emplaced to provide hooks for making
 //                     instruments unreliable. The default behavior is

@@ -651,14 +651,14 @@ char *coord_format_lon(float longitude)
 
 void fgLatLonFormatToggle( puObject *)
 {
-    static int toggle = 0;
+    static bool toggle = false;
 
     if ( toggle )
         fgLatLonFormat = toDM;
     else
         fgLatLonFormat = toDMS;
 
-    toggle = ~toggle;
+    toggle = !toggle;
 }
 
 #ifdef NOT_USED

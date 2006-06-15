@@ -51,22 +51,3 @@ instr_scale::instr_scale(
 }
 
 
-instr_scale::instr_scale( const instr_scale & image ) :
-    instr_item( (const instr_item &) image),
-    range_shown  ( image.range_shown   ),
-    Maximum_value( image.Maximum_value ),
-    Minimum_value( image.Minimum_value ),
-    scale_factor ( image.scale_factor  ),
-    Maj_div      ( image.Maj_div       ),
-    Min_div      ( image.Min_div       ),
-    Modulo       ( image.Modulo        ),
-    signif_digits( image.signif_digits )
-{
-}
-
-
-instr_scale::~instr_scale ()
-{
-}
-
-

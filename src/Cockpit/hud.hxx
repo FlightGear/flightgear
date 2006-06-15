@@ -235,11 +235,9 @@ public:
     fgLineSeg2D( const fgLineSeg2D & image )
         : x0(image.x0), y0(image.y0), x1(image.x1), y1(image.y1) {}
 
-    fgLineSeg2D& operator= ( const fgLineSeg2D & image ) {
+    fgLineSeg2D& operator= ( const fgLineSeg2D & image ) { // seems unused
         x0 = image.x0; y0 = image.y0; x1 = image.x1; y1 = image.y1; return *this;
     }
-
-    ~fgLineSeg2D() {}
 
     void draw() const
     {
@@ -277,12 +275,12 @@ public:
     fgText( const fgText & image )
         : x(image.x), y(image.y),digit(image.digit) { strcpy(msg,image.msg); }
 
-    fgText& operator = ( const fgText & image ) {
+    fgText& operator = ( const fgText & image ) {  // seems unused
         strcpy(msg,image.msg); x = image.x; y = image.y;digit=image.digit;
         return *this;
     }
 
-    ~fgText() { msg[0]='\0'; }
+    ~fgText() { msg[0]='\0'; }  // used but useless
 
     int getStringWidth ( char *str )
     {
@@ -364,7 +362,6 @@ class fgLineList {
     vector < fgLineSeg2D > List;
 public:
     fgLineList( void ) {}
-    ~fgLineList( void ) {}
     void add( const fgLineSeg2D& seg ) { List.push_back(seg); }
     void erase( void ) { List.erase( List.begin(), List.end() ); }
     void draw( void ) {
@@ -379,7 +376,6 @@ class fgTextList {
     vector< fgText > List;
 public:
     fgTextList ( void ) { Font = 0; }
-    ~fgTextList( void ) {}
 
     void setFont( fntRenderer *Renderer ) { Font = Renderer; }
     void add( const fgText& String ) { List.push_back(String); }
@@ -439,8 +435,6 @@ public:
                 bool           working = true,
                 int            digit = 0);
 
-    instr_item( const instr_item & image );
-
     virtual ~instr_item ();
 
     void    set_data_source ( FLTFNPTR fn ) { load_value_fn = fn; }
@@ -473,7 +467,6 @@ public:
 
     virtual void display_enable( bool working ) { is_enabled = working;}
 
-    virtual void update( void );
     virtual void break_display ( bool bad );
     virtual void SetBrightness( int illumination_level ); // fgHUDSetBright...
     void         SetPosition  ( int x, int y, UINT width, UINT height );
@@ -551,9 +544,6 @@ private:
 
 public:
     instr_label(const SGPropertyNode *);
-    ~instr_label();
-
-    instr_label(const instr_label& image);
     virtual void draw(void);
 };
 
@@ -584,8 +574,6 @@ public:
                int          blinking,
                bool         working,
                int          digits =0 );
-
-    ~lat_label();
 
     lat_label( const lat_label & image);
     virtual void draw( void );       // Required method in base class
@@ -619,8 +607,6 @@ public:
                bool         working,
                int          digit=0);
 
-
-    ~lon_label();
 
     lon_label( const lon_label & image);
     virtual void draw( void );       // Required method in base class
@@ -661,15 +647,15 @@ public:
     void setArrowScale(double scale);
     // Draws arrow when runway is not visible in HUD if draw=true
     void setDrawArrow(bool draw);
-    //Always draws arrow if draw=true;
+    // Always draws arrow if draw=true;
     void setDrawArrowAlways(bool draw);
-    //Sets the maximum line scale
+    // Sets the maximum line scale
     void setLineScale(double scale);
-    //Sets the distance where to start scaling the lines
+    // Sets the distance where to start scaling the lines
     void setScaleDist(double dist_nm);
-    //Sets the stipple pattern of the outline of the runway
+    // Sets the stipple pattern of the outline of the runway
     void setStippleOutline(unsigned short stipple);
-    //Sets the stipple patter of the center line of the runway
+    // Sets the stipple patter of the center line of the runway
     void setStippleCenterline(unsigned short stipple);
 };
 
@@ -707,9 +693,6 @@ public:
                  UINT         rollover,
                  int          dp_showing,
                  bool         working = true);
-
-    virtual ~instr_scale();
-    instr_scale( const instr_scale & image);
 
     virtual void draw    ( void ) {}; // No-op here. Defined in derived classes.
     UINT   div_min       ( void ) { return Min_div;}
@@ -787,12 +770,9 @@ public:
                       bool      working,
                       UINT      options );
 
-    virtual ~dual_instr_item() {};
-    dual_instr_item( const dual_instr_item & image);
-
-    float current_ch1( void ) { return (float)alt_data_source();}
-    float current_ch2( void ) { return (float)get_value();}
-    virtual void draw( void ) { }
+    float current_ch1( void ) { return (float)alt_data_source(); }
+    float current_ch2( void ) { return (float)get_value(); }
+    virtual void draw( void ) {}
 };
 
 
@@ -847,7 +827,6 @@ private:
 
 public:
     HudLadder(const SGPropertyNode *);
-    ~HudLadder();
 
     virtual void draw(void);
     void drawZenith(float, float, float);

@@ -152,11 +152,6 @@ instr_label::instr_label(const SGPropertyNode *node) :
 }
 
 
-instr_label::~instr_label()
-{
-}
-
-
 void instr_label::draw(void)
 {
     char label_buffer[80];
