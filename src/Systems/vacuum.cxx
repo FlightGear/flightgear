@@ -3,6 +3,10 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "vacuum.hxx"
 #include <Main/fg_props.hxx>
 
