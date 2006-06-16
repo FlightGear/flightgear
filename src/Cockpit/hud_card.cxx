@@ -339,8 +339,8 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
 
             // draw scale or tape
 
-//            last = FloatToInt(vmax)+1;
-//            i = FloatToInt(vmin);
+//            last = float_to_int(vmax)+1;
+//            i = float_to_int(vmin);
             last = (int)vmax + 1; // N
             i = (int)vmin; // N
 
@@ -464,7 +464,7 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                 }
 
                                 lenstr = sprintf(TextScale, "%d",
-                                        FloatToInt(disp_val * data_scaling()/*+.5*/));
+                                        float_to_int(disp_val * data_scaling()/*+.5*/));
                                 // (int)(disp_val  * data_scaling() +.5));
                                 /* if (((marker_ys - 8) > scrn_rect.top) &&
                                    ((marker_ys + 8) < (height))){ */
@@ -642,8 +642,8 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
 
             // printf("vmin = %d  vmax = %d\n", (int)vmin, (int)vmax);
 
-            //  last = FloatToInt(vmax)+1;
-            //  i    = FloatToInt(vmin);
+            //  last = float_to_int(vmax)+1;
+            //  i    = float_to_int(vmin);
 
             if (zoom == 1) {
                 zoomed_scale((int)vmin,(int)vmax);
@@ -733,7 +733,7 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                 // printf("%d\n", (int)(disp_val  * (double)data_scaling() + 0.5));
                                 lenstr = sprintf(TextScale, "%d",
                                         // (int)(disp_val  * data_scaling() +.5));
-                                        FloatToInt(disp_val * data_scaling()/*+.5*/));
+                                        float_to_int(disp_val * data_scaling()/*+.5*/));
 
                                 // Draw major ticks and text only if far enough from the edge.
                                 if (((marker_xs - 10)> scrn_rect.left)

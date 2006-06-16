@@ -45,7 +45,7 @@ instr_scale::instr_scale(
     if (show_range < 0)
         range_shown = -range_shown;
 
-    temp = FloatToInt(Maximum_value - Minimum_value) / 100;
+    temp = float_to_int(Maximum_value - Minimum_value) / 100;
     if (range_shown < temp)
         range_shown = temp;
 }

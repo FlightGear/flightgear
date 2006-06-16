@@ -448,8 +448,8 @@ void HudLadder::draw(void)
         LineList.erase();
         StippleLineList.erase();
 
-        int last = FloatToInt(vmax) + 1;
-        int i = FloatToInt(vmin);
+        int last = float_to_int(vmax) + 1;
+        int i = float_to_int(vmin);
 
         if (!scr_hole) {
             x_end = half_span;

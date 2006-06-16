@@ -21,8 +21,8 @@
 // $Id$
 
 
-#ifndef _HUD_HXX
-#define _HUD_HXX
+#ifndef _OLDHUD_HXX
+#define _OLDHUD_HXX
 
 #ifndef __cplusplus
 # error This library requires C++
@@ -50,8 +50,9 @@
 #include <deque>        // STL double ended queue
 #include STL_FSTREAM
 
+#include <simgear/math/fastmath.hxx>    // float_to_int()
 #include <simgear/constants.h>
-//#include <simgear/props/props.hxx>
+#include <simgear/props/props.hxx>
 
 #include <Include/fg_typedefs.h>
 #include <Aircraft/aircraft.hxx>
@@ -62,7 +63,6 @@
 #include <Main/viewmgr.hxx>
 #include <Airports/runways.hxx>
 
-#include "hud_opts.hxx"
 #include <plib/sg.h>
 
 SG_USING_STD(deque);
@@ -287,7 +287,7 @@ public:
         if ( HUDtext && str ) {
             float r, l ;
             HUD_Font->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
-            return FloatToInt( r - l );
+            return float_to_int( r - l );
         }
         return 0 ;
     }
@@ -297,7 +297,7 @@ public:
         if ( HUDtext && strlen( msg )) {
             float r, l ;
             HUD_Font->getBBox ( msg, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
-            return FloatToInt( r - l );
+            return float_to_int( r - l );
         }
         return 0 ;
     }
@@ -354,7 +354,7 @@ public:
 
     void Draw()
     {
-        guiFnt.drawString( msg, FloatToInt(x), FloatToInt(y) );
+        guiFnt.drawString( msg, float_to_int(x), float_to_int(y) );
     }
 };
 
@@ -490,7 +490,7 @@ public:
         if ( HUDtext && str ) {
             float r, l ;
             HUD_Font->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
-            return FloatToInt( r - l );
+            return float_to_int( r - l );
         }
         return 0 ;
     }
@@ -898,4 +898,4 @@ private:
     float _r, _g, _b, _a, _cl;
 };
 
-#endif // _HUD_H
+#endif // _OLDHUD_H

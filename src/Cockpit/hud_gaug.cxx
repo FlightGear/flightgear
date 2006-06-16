@@ -95,8 +95,8 @@ void gauge_instr::draw(void)
 
         if (!huds_noticks(options)) {    // If not no ticks...:)
             // Calculate x marker offsets
-            int last = (int)vmax + 1;    // FloatToInt(vmax)+1;
-            i = (int)vmin; //FloatToInt(vmin);
+            int last = (int)vmax + 1;    // float_to_int(vmax)+1;
+            i = (int)vmin; //float_to_int(vmin);
 
             for (; i < last; i++) {
                 // Calculate the location of this tick
@@ -135,7 +135,7 @@ void gauge_instr::draw(void)
                         if (!huds_notext(options)) {
                             disp_val = i;
                             sprintf(TextScale, "%d",
-                                    FloatToInt(disp_val * data_scaling()/*+.5*/));
+                                    float_to_int(disp_val * data_scaling()/*+.5*/));
 
                             lenstr = getStringWidth(TextScale);
 
@@ -143,12 +143,12 @@ void gauge_instr::draw(void)
                                 text_x = mid_scr.x -  lenstr/2 ;
 
                             } else if (huds_left(options)) {
-                                text_x = FloatToInt(marker_xs - lenstr);
+                                text_x = float_to_int(marker_xs - lenstr);
                             } else {
-                                text_x = FloatToInt(marker_xe - lenstr);
+                                text_x = float_to_int(marker_xe - lenstr);
                             }
                             // Now we know where to put the text.
-                            text_y = FloatToInt(marker_ys);
+                            text_y = float_to_int(marker_ys);
                             textString(text_x, text_y, TextScale, 0);
                         }
                     }
@@ -160,20 +160,20 @@ void gauge_instr::draw(void)
         // have been drawn, text_x and text_y may be recycled. This is used
         // with the marker start stops to produce a pointer for each side reading
 
-        text_y = scrn_rect.top + FloatToInt((cur_value - vmin) * factor() /*+.5f*/);
+        text_y = scrn_rect.top + float_to_int((cur_value - vmin) * factor() /*+.5f*/);
         //    text_x = marker_xs - scrn_rect.left;
 
         if (huds_right(options)) {
             glBegin(GL_LINE_STRIP);
             glVertex2f(scrn_rect.left, text_y + 5);
-            glVertex2f(FloatToInt(marker_xe), text_y);
+            glVertex2f(float_to_int(marker_xe), text_y);
             glVertex2f(scrn_rect.left, text_y - 5);
             glEnd();
         }
         if (huds_left(options)) {
             glBegin(GL_LINE_STRIP);
             glVertex2f(width, text_y + 5);
-            glVertex2f(FloatToInt(marker_xs), text_y);
+            glVertex2f(float_to_int(marker_xs), text_y);
             glVertex2f(width, text_y - 5);
             glEnd();
         }
@@ -218,8 +218,8 @@ void gauge_instr::draw(void)
         }
 
 
-        int last = (int)vmax + 1; //FloatToInt(vmax)+1;
-        i = (int)vmin; //FloatToInt(vmin);
+        int last = (int)vmax + 1; //float_to_int(vmax)+1;
+        i = (int)vmin; //float_to_int(vmin);
         for (; i <last ; i++) {
             condition = true;
             if (!modulo() && i < min_val())
@@ -259,7 +259,7 @@ void gauge_instr::draw(void)
                             disp_val = i;
                         }
                         sprintf(TextScale, "%d",
-                                FloatToInt(disp_val * data_scaling()/* +.5*/));
+                                float_to_int(disp_val * data_scaling()/* +.5*/));
                         lenstr = getStringWidth(TextScale);
 
                         // Draw major ticks and text only if far enough from the edge.
