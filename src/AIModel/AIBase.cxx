@@ -266,6 +266,7 @@ void FGAIBase::unbind() {
 double FGAIBase::UpdateRadar(FGAIManager* manager)
 {
    double radar_range_ft2 = fgGetDouble("/instrumentation/radar/range");
+   bool force_on = fgGetBool("/instrumentation/radar/debug-mode", false);
    radar_range_ft2 *= SG_NM_TO_METER * SG_METER_TO_FEET * 1.1; // + 10%
    radar_range_ft2 *= radar_range_ft2;
 
@@ -279,7 +280,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
    // Test whether the target is within radar range.
    //
    in_range = (range_ft2 && (range_ft2 <= radar_range_ft2));
-   if ( in_range )
+   if ( in_range || force_on )
    {
      props->setBoolValue("radar/in-range", true);
 
