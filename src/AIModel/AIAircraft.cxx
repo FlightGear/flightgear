@@ -184,6 +184,35 @@ void FGAIAircraft::Run(double dt) {
             }
             return;
         }
+    } else {
+        // no flight plan, update target heading, speed, and altitude
+        // from control properties.  These default to the initial
+        // settings in the config file, but can be changed "on the
+        // fly".
+
+        string lat_mode = props->getStringValue("controls/flight/lateral-mode");
+        if ( lat_mode == "roll" ) {
+            double angle
+                = props->getDoubleValue("controls/flight/target-roll" );
+            RollTo( angle );
+        } else {
+             double angle
+                = props->getDoubleValue("controls/flight/target-hdg" );
+            TurnTo( angle );
+        }
+
+        string lon_mode
+            = props->getStringValue("controls/flight/longitude-mode");
+        if ( lon_mode == "alt" ) {
+            double alt = props->getDoubleValue("controls/flight/target-alt" );
+            ClimbTo( alt );
+        } else {
+            double angle
+                = props->getDoubleValue("controls/flight/target-pitch" );
+            PitchTo( angle );
+        }
+
+        AccelTo( props->getDoubleValue("controls/flight/target-spd" ) );
     }
 
     double turn_radius_ft;

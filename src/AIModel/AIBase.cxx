@@ -223,6 +223,17 @@ void FGAIBase::bind() {
    props->setBoolValue("controls/lighting/beacon", true);
    props->setBoolValue("controls/lighting/strobe", true);
    props->setBoolValue("controls/glide-path", true);
+
+   props->setStringValue("controls/flight/lateral-mode", "roll");
+   props->setDoubleValue("controls/flight/target-hdg", hdg);
+   props->setDoubleValue("controls/flight/target-roll", roll);
+
+   props->setStringValue("controls/flight/longitude-mode", "alt");
+   props->setDoubleValue("controls/flight/target-alt", altitude);
+   props->setDoubleValue("controls/flight/target-pitch", pitch);
+
+   props->setDoubleValue("controls/flight/target-spd", speed);
+
 }
 
 void FGAIBase::unbind() {
