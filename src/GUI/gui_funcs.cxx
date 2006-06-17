@@ -96,8 +96,6 @@
 SG_USING_STD(string);
 SG_USING_STD(cout);
 
-// from cockpit.cxx
-extern void fgLatLonFormatToggle( puObject *);
 
 #if defined( TR_HIRES_SNAP)
 #include <simgear/screen/tr.h>
@@ -138,7 +136,6 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
         {"fgPresetGlideslope", fgPresetGlideslope},
         {"fgPresetAirspeed", fgPresetAirspeed},
         {"fgPresetCommit", fgPresetCommit},
-        {"fgLatLonFormatToggle", fgLatLonFormatToggle},
 
         // Help
         {"helpCb", helpCb},

@@ -62,14 +62,6 @@ do_properties_dialog (const SGPropertyNode * arg)
     return true;
 }
 
-extern void fgLatLonFormatToggle (puObject *);
-static bool
-do_lat_lon_format_dialog (const SGPropertyNode * arg)
-{
-    fgLatLonFormatToggle(0);
-    return true;
-}
-
 extern void helpCb (puObject *);
 static bool
 do_help_dialog (const SGPropertyNode * arg)
@@ -90,7 +82,6 @@ static struct {
     { "old-print-dialog", do_print_dialog },
 #endif
     { "old-properties-dialog", do_properties_dialog },
-    { "old-lat-lon-format-dialog", do_lat_lon_format_dialog },
     { "old-help-dialog", do_help_dialog },
     { 0, 0 }
 };
