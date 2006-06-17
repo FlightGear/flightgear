@@ -441,9 +441,10 @@ getLongitudeString ()
   static char buf[32];
   double d = n->getDoubleValue();
   int format = f->getIntValue();
+  char c = d < 0.0 ? 'W' : 'E';
 
   if (format == 0) {
-    snprintf(buf, 32, "%3.6f", d);
+    snprintf(buf, 32, "%3.6f%c", d, c);
 
   } else if (format == 1) {
     // dd mm.mmm' (DMM-Format) -- uses a round-off factor tailored to the
@@ -451,8 +452,7 @@ getLongitudeString ()
     // preventing minute values of 60.
     double deg = fabs(d) + 5.0E-4 / 60.0;
     double min = fabs(deg - int(deg)) * 60.0 - 4.999E-4;
-    snprintf(buf, 32, "%d*%06.3f%c", int(d < 0.0 ? -deg : deg), min,
-        d < 0.0 ? 'W' : 'E');
+    snprintf(buf, 32, "%d*%06.3f%c", int(d < 0.0 ? -deg : deg), min, c);
 
   } else {
     // mm'ss.s'' (DMS-Format) -- uses a round-off factor tailored to the
@@ -462,7 +462,7 @@ getLongitudeString ()
     double min = (deg - int(deg)) * 60.0;
     double sec = (min - int(min)) * 60.0 - 0.049;
     snprintf(buf, 32, "%d*%02d %04.1f%c", int(d < 0.0 ? -deg : deg),
-      int(min), sec, d < 0.0 ? 'W' : 'E');
+        int(min), fabs(sec), c);
   }
   return buf;
 }
@@ -475,22 +475,22 @@ getLatitudeString ()
   static char buf[32];
   double d = n->getDoubleValue();
   int format = f->getIntValue();
+  char c = d < 0.0 ? 'S' : 'N';
 
   if (format == 0) {
-    snprintf(buf, 32, "%3.6f", d);
+    snprintf(buf, 32, "%3.6f%c", d, c);
 
   } else if (format == 1) {
     double deg = fabs(d) + 5.0E-4 / 60.0;
     double min = fabs(deg - int(deg)) * 60.0 - 4.999E-4;
-    snprintf(buf, 32, "%d*%06.3f%c", int(d < 0.0 ? -deg : deg), min,
-        d < 0.0 ? 'S' : 'N');
+    snprintf(buf, 32, "%d*%06.3f%c", int(d < 0.0 ? -deg : deg), min, c);
 
   } else {
     double deg = fabs(d) + 0.05 / 3600.0;
     double min = (deg - int(deg)) * 60.0;
     double sec = (min - int(min)) * 60.0 - 0.049;
     snprintf(buf, 32, "%d*%02d %04.1f%c", int(d < 0.0 ? -deg : deg),
-      int(min), sec, d < 0.0 ? 'S' : 'N');
+        int(min), fabs(sec), c);
   }
   return buf;
 }
