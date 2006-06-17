@@ -433,6 +433,70 @@ setFDMDataLogging (bool state)
   }
 }
 
+static const char *
+getLongitudeString ()
+{
+  static SGConstPropertyNode_ptr n = fgGetNode("/position/longitude-deg", true);
+  static SGConstPropertyNode_ptr f = fgGetNode("/sim/lon-lat-format", true);
+  static char buf[32];
+  double d = n->getDoubleValue();
+  int format = f->getIntValue();
+
+  if (format == 0) {
+    snprintf(buf, 32, "%3.6f", d);
+
+  } else if (format == 1) {
+    // dd mm.mmm' (DMM-Format) -- uses a round-off factor tailored to the
+    // required precision of the minutes field (three decimal places),
+    // preventing minute values of 60.
+    double deg = fabs(d) + 5.0E-4 / 60.0;
+    double min = fabs(deg - int(deg)) * 60.0 - 4.999E-4;
+    snprintf(buf, 32, "%d*%06.3f%c", int(d < 0.0 ? -deg : deg), min,
+        d < 0.0 ? 'W' : 'E');
+
+  } else {
+    // mm'ss.s'' (DMS-Format) -- uses a round-off factor tailored to the
+    // required precision of the seconds field (one decimal place),
+    // preventing second values of 60.
+    double deg = fabs(d) + 0.05 / 3600.0;
+    double min = (deg - int(deg)) * 60.0;
+    double sec = (min - int(min)) * 60.0 - 0.049;
+    snprintf(buf, 32, "%d*%02d %04.1f%c", int(d < 0.0 ? -deg : deg),
+      int(min), sec, d < 0.0 ? 'W' : 'E');
+  }
+  return buf;
+}
+
+static const char *
+getLatitudeString ()
+{
+  static SGConstPropertyNode_ptr n = fgGetNode("/position/latitude-deg", true);
+  static SGConstPropertyNode_ptr f = fgGetNode("/sim/lon-lat-format", true);
+  static char buf[32];
+  double d = n->getDoubleValue();
+  int format = f->getIntValue();
+
+  if (format == 0) {
+    snprintf(buf, 32, "%3.6f", d);
+
+  } else if (format == 1) {
+    double deg = fabs(d) + 5.0E-4 / 60.0;
+    double min = fabs(deg - int(deg)) * 60.0 - 4.999E-4;
+    snprintf(buf, 32, "%d*%06.3f%c", int(d < 0.0 ? -deg : deg), min,
+        d < 0.0 ? 'S' : 'N');
+
+  } else {
+    double deg = fabs(d) + 0.05 / 3600.0;
+    double min = (deg - int(deg)) * 60.0;
+    double sec = (min - int(min)) * 60.0 - 0.049;
+    snprintf(buf, 32, "%d*%02d %04.1f%c", int(d < 0.0 ? -deg : deg),
+      int(min), sec, d < 0.0 ? 'S' : 'N');
+  }
+  return buf;
+}
+
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Tie the properties.
@@ -464,6 +528,10 @@ FGProperties::bind ()
   fgSetArchivable("/sim/time/gmt");
   fgTie("/sim/time/gmt-string", getGMTString);
 
+				// Position
+  fgTie("/position/latitude-string", getLatitudeString);
+  fgTie("/position/longitude-string", getLongitudeString);
+
 				// Orientation
   fgTie("/orientation/heading-magnetic-deg", getHeadingMag);
 
@@ -490,6 +558,9 @@ FGProperties::unbind ()
   fgUntie("/sim/time/elapsed-sec");
   fgUntie("/sim/time/gmt");
   fgUntie("/sim/time/gmt-string");
+				// Position
+  fgUntie("/position/latitude-string");
+  fgUntie("/position/longitude-string");
 
 				// Orientation
   fgUntie("/orientation/heading-magnetic-deg");
