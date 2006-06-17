@@ -316,11 +316,10 @@ setDateString (const char * date_string)
 static const char *
 getGMTString ()
 {
-  static char buf[16];		// FIXME
+  static char buf[16];
   struct tm *t = globals->get_time_params()->getGmt();
-  sprintf(buf, " %.2d:%.2d:%.2d",
-	  t->tm_hour, t->tm_min, t->tm_sec);
-  // cout << t << " " << buf << endl;
+  snprintf(buf, 16, "%.2d:%.2d:%.2d",
+      t->tm_hour, t->tm_min, t->tm_sec);
   return buf;
 }
 
