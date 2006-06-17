@@ -52,13 +52,13 @@
 
 #include <simgear/math/fastmath.hxx>    // float_to_int()
 #include <simgear/constants.h>
-#include <simgear/props/props.hxx>
 
 #include <Include/fg_typedefs.h>
 #include <Aircraft/aircraft.hxx>
 #include <Aircraft/controls.hxx>
 #include <FDM/flight.hxx>
 #include <GUI/gui.h>
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
 #include <Airports/runways.hxx>
@@ -541,6 +541,8 @@ private:
     bool        lat;
     bool        lon;
     bool        lbox;
+    SGPropertyNode_ptr lon_node;
+    SGPropertyNode_ptr lat_node;
 
 public:
     instr_label(const SGPropertyNode *);

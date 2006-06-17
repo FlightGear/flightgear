@@ -3,8 +3,6 @@
 #  include <config.h>
 #endif
 
-#include <Main/fg_props.hxx>
-
 #include "hud.hxx"
 
 #ifdef USE_HUD_TextList
@@ -33,7 +31,9 @@ instr_label::instr_label(const SGPropertyNode *node) :
     blink(node->getIntValue("blinking")),
     lat(node->getBoolValue("latitude", false)),
     lon(node->getBoolValue("longitude", false)),
-    lbox(node->getBoolValue("label_box", false))
+    lbox(node->getBoolValue("label_box", false)),
+    lon_node(fgGetNode("/position/longitude-string", true)),
+    lat_node(fgGetNode("/position/latitude-string", true))
 {
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instr_label instrument "
             << node->getStringValue("name", "[unnamed]"));
@@ -86,9 +86,9 @@ void instr_label::draw(void)
 
     if (data_available()) {
         if (lat)
-            sprintf(label_buffer, format_buffer, coord_format_lat(get_value()));
+            snprintf(label_buffer, 80, format_buffer, lat_node->getStringValue());
         else if (lon)
-            sprintf(label_buffer, format_buffer, coord_format_lon(get_value()));
+            snprintf(label_buffer, 80, format_buffer, lon_node->getStringValue());
         else {
             if (lbox) {// Box for label
                 float x = scrn_rect.left;

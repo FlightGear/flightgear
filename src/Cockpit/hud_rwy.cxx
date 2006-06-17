@@ -25,7 +25,6 @@
 #include "hud.hxx"
 
 #include <math.h>
-#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Aircraft/aircraft.hxx>

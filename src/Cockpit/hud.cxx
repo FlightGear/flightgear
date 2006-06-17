@@ -54,7 +54,6 @@
 //#include <Autopilot/xmlauto.hxx>
 #include <GUI/new_gui.hxx>           // FGFontCache
 #include <Main/globals.hxx>
-#include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "hud.hxx"
