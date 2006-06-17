@@ -547,6 +547,9 @@ void drawHUD()
         //glLineWidth(1.0);
     }
 
+    if (HUDprop->isTransparent())
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
 }
