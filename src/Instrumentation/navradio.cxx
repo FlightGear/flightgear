@@ -357,7 +357,7 @@ FGNavRadio::update(double dt)
         SGVec3d aircraft = SGVec3d::fromGeod(pos);
         loc_dist = dist(aircraft, nav_xyz);
 	loc_dist_node->setDoubleValue( loc_dist );
-        // cout << "station = " << station << " dist = " << loc_dist << endl;
+        // cout << "dt = " << dt << " dist = " << loc_dist << endl;
 
 	if ( has_gs ) {
             // find closest distance to the gs base line
@@ -551,24 +551,17 @@ FGNavRadio::update(double dt)
         //////////////////////////////////////////////////////////
         double hdg_error = 0.0;
         if ( inrange && cdi_serviceable ) {
-            double ddist = last_loc_dist - loc_dist;
-            double dxtrack = last_xtrack_error - xtrack_error;
-            double a = atan2( dxtrack, ddist ) * SGD_RADIANS_TO_DEGREES;
-            if ( from_flag_node->getBoolValue() ) {
-                a = 180.0 - a;
-                if ( a > 180.0 ) { a -= 360.0; }
-                if ( a < -180.0 ) { a += 360.0; }
-            }
+            double vn = fgGetDouble( "/velocities/speed-north-fps" );
+            double ve = fgGetDouble( "/velocities/speed-east-fps" );
+            double gnd_trk_true = atan2( ve, vn ) * SGD_RADIANS_TO_DEGREES;
+            if ( gnd_trk_true < 0.0 ) { gnd_trk_true += 360.0; }
+
             SGPropertyNode *true_hdg
                 = fgGetNode("/orientation/heading-deg", true);
-            // cout << "true heading = " << true_hdg->getDoubleValue()
-            //      << " selrad = " << sel_radial_node->getDoubleValue()
-            //      << " artr = " << a
-            //      << endl;
-            double est_hdg = trtrue + a;
-            if ( est_hdg < 0.0 ) { est_hdg += 360.0; }
-            if ( est_hdg >= 360.0 ) { est_hdg -= 360.0; }
-            hdg_error = est_hdg - true_hdg->getDoubleValue();
+            hdg_error = gnd_trk_true - true_hdg->getDoubleValue();
+
+            // cout << "ground track = " << gnd_trk_true
+            //      << " orientation = " << true_hdg->getDoubleValue() << endl;
         }
         cdi_xtrack_hdg_err_node->setDoubleValue( hdg_error );
 
@@ -672,8 +665,10 @@ FGNavRadio::update(double dt)
         // tgt_radial = target radial (true) + cdi offset adjustmest -
         // xtrack heading error adjustment
         double nta_hdg = trtrue + adjustment - hdg_error; 
+        // cout << "trtrue = " << trtrue << " adj = " << adjustment
+        //      << " hdg_error = " << hdg_error << endl;
         while ( nta_hdg <   0.0 ) { nta_hdg += 360.0; }
-        while ( nta_hdg > 360.0 ) { nta_hdg -= 360.0; }
+        while ( nta_hdg >= 360.0 ) { nta_hdg -= 360.0; }
         target_auto_hdg_node->setDoubleValue( nta_hdg );
 
         last_xtrack_error = xtrack_error;
