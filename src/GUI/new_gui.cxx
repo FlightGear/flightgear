@@ -414,7 +414,9 @@ FGFontCache::FGFontCache() :
 
 FGFontCache::~FGFontCache()
 {
-   _fonts.clear();
+   map<const string, fnt *>::iterator it, end = _fonts.end();
+   for (it = _fonts.begin(); it != end; ++it)
+       delete it->second;
 }
 
 struct FGFontCache::fnt *
@@ -429,7 +431,7 @@ FGFontCache::getfnt(const char *name, float size, float slant)
             _path.append("Fonts");
         }
 
-        for (int i=0; guifonts[i].name; i++)
+        for (int i = 0; guifonts[i].name; i++)
             _fonts[guifonts[i].name] = new fnt(guifonts[i].font);
 
         _initialized = true;
