@@ -428,11 +428,12 @@ FGFontCache::getfnt(const char *name, float size, float slant)
             _path.set(globals->get_fg_root());
             _path.append("Fonts");
         }
+
+        for (int i=0; guifonts[i].name; i++)
+            _fonts[guifonts[i].name] = new fnt(guifonts[i].font);
+
         _initialized = true;
     }
-
-    for (int i=0; guifonts[i].name; i++)
-        _fonts[guifonts[i].name] = new fnt(guifonts[i].font);
 
     _itt_t it;
     if ((it = _fonts.find(name)) != _fonts.end())
