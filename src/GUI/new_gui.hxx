@@ -295,7 +295,7 @@ class FGFontCache {
 private:
     struct fnt {
         fnt(puFont *pu = 0) : pufont(pu), texfont(0) {}
-        ~fnt() { delete pufont; delete texfont; }
+        ~fnt() { if (texfont) { delete pufont; delete texfont; } }
         puFont *pufont;
         fntTexFont *texfont;
     };
