@@ -56,7 +56,7 @@ FGAIBase::FGAIBase(object_type ot)
     _refID( _newAIModelID() ),
     _otype(ot)
 {
-    tgt_heading = hdg = tgt_altitude = tgt_speed = 0.0;
+    tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
     bearing = elevation = range = rdot = 0.0;
     x_shift = y_shift = rotation = 0.0;
@@ -229,7 +229,7 @@ void FGAIBase::bind() {
    props->setDoubleValue("controls/flight/target-roll", roll);
 
    props->setStringValue("controls/flight/longitude-mode", "alt");
-   props->setDoubleValue("controls/flight/target-alt", altitude);
+   props->setDoubleValue("controls/flight/target-alt", altitude_ft);
    props->setDoubleValue("controls/flight/target-pitch", pitch);
 
    props->setDoubleValue("controls/flight/target-spd", speed);
@@ -318,7 +318,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
      if (horiz_offset < -180.0) horiz_offset += 360.0;
 
      // calculate elevation to target
-     elevation = atan2( altitude - user_altitude, range_ft ) * SG_RADIANS_TO_DEGREES;
+     elevation = atan2( altitude_ft - user_altitude, range_ft ) * SG_RADIANS_TO_DEGREES;
 
      // calculate look up/down to target
      vert_offset = elevation - user_pitch;
@@ -342,7 +342,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
      x_shift = range * sin( horiz_offset * SG_DEGREES_TO_RADIANS);
      rotation = hdg - user_heading;
      if (rotation < 0.0) rotation += 360.0;
-     ht_diff = altitude - user_altitude;
+     ht_diff = altitude_ft - user_altitude;
 
    }
 
@@ -396,7 +396,7 @@ void FGAIBase::_setVS_fps( double _vs ) {
 }
 
 double FGAIBase::_getAltitude() const {
-    return altitude;
+    return altitude_ft;
 }
 void FGAIBase::_setAltitude( double _alt ) {
     setAltitude( _alt );
@@ -413,6 +413,8 @@ int FGAIBase::getID() const {
 void FGAIBase::CalculateMach() {
     // Calculate rho at altitude, using standard atmosphere
     // For the temperature T and the pressure p,
+
+    double altitude = altitude_ft;
 
     if (altitude < 36152) {		// curve fits for the troposphere
       T = 59 - 0.00356 * altitude;

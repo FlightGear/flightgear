@@ -193,8 +193,8 @@ void FGAIBallistic::Run(double dt) {
    vs -= (gravity - buoyancy) * dt;
    
    // adjust altitude (feet)
-   altitude += vs * dt;
-   pos.setElevationFt(altitude); 
+   altitude_ft += vs * dt;
+   pos.setElevationFt(altitude_ft); 
 
    // recalculate pitch (velocity vector) if aerostabilized
    //   cout << "aero_stabilised " << aero_stabilised  << endl ;
@@ -204,7 +204,7 @@ void FGAIBallistic::Run(double dt) {
    speed = sqrt( vs * vs + hs * hs);
 
    // set destruction flag if altitude less than sea level -1000
-   if (altitude < -1000.0) setDie(true);
+   if (altitude_ft < -1000.0) setDie(true);
 
 }  // end Run
 

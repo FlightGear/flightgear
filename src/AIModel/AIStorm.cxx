@@ -165,7 +165,7 @@ void FGAIStorm::Run(double dt) {
    range = range_ft / 6076.11549;
 
    if (range < (diameter * 0.5) &&
-       user_altitude > (altitude - 1000.0) &&
+       user_altitude > (altitude_ft - 1000.0) &&
        user_altitude < height) {
               turb_mag_node->setDoubleValue(strength_norm);
               turb_rate_node->setDoubleValue(0.5);

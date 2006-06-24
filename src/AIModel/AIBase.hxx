@@ -88,7 +88,7 @@ protected:
     double roll;	// degrees, left is negative
     double pitch;	// degrees, nose-down is negative
     double speed;       // knots true airspeed
-    double altitude;    // meters above sea level
+    double altitude_ft; // feet above sea level
     double vs;          // vertical speed, feet per minute
     double turn_radius_ft; // turn radius ft at 15 kts rudder angle 15 degrees
 
@@ -96,9 +96,9 @@ protected:
     double ft_per_deg_lat;
 
     // these describe the model's desired state
-    double tgt_heading;  // target heading, degrees true
-    double tgt_altitude; // target altitude, *feet* above sea level
-    double tgt_speed;    // target speed, KTAS
+    double tgt_heading;     // target heading, degrees true
+    double tgt_altitude_ft; // target altitude, *feet* above sea level
+    double tgt_speed;       // target speed, KTAS
     double tgt_roll;
     double tgt_pitch;
     double tgt_yaw;
@@ -202,9 +202,9 @@ inline void FGAIBase::setHeading( double heading ) {
     hdg = tgt_heading = heading;
 }
 
-inline void FGAIBase::setAltitude( double altitude_ft ) {
-    altitude = tgt_altitude = altitude_ft;
-    pos.setElevationFt(altitude);
+inline void FGAIBase::setAltitude( double alt_ft ) {
+    altitude_ft = tgt_altitude_ft = alt_ft;
+    pos.setElevationFt(altitude_ft);
 }
 
 inline void FGAIBase::setBank( double bank ) {

@@ -172,6 +172,8 @@ void FGAIMultiplayer::update(double dt)
 
   SGVec3d ecPos;
   SGQuatf ecOrient;
+  SGVec3f myVel;
+
   if (tInterp <= curentPkgTime) {
     // Ok, we need a time prevous to the last available packet,
     // that is good ...
@@ -184,6 +186,7 @@ void FGAIMultiplayer::update(double dt)
       MotionInfo::iterator firstIt = mMotionInfo.begin();
       ecPos = firstIt->second.position;
       ecOrient = firstIt->second.orientation;
+      myVel = firstIt->second.linearVel;
 
       std::vector<FGFloatPropertyData>::const_iterator firstPropIt;
       std::vector<FGFloatPropertyData>::const_iterator firstPropItEnd;
@@ -217,6 +220,7 @@ void FGAIMultiplayer::update(double dt)
       ecPos = ((1-tau)*prevIt->second.position + tau*nextIt->second.position);
       ecOrient = interpolate((float)tau, prevIt->second.orientation,
                              nextIt->second.orientation);
+      myVel = ((1-tau)*prevIt->second.linearVel + tau*nextIt->second.linearVel);
 
       if (prevIt->second.properties.size()
           == nextIt->second.properties.size()) {
@@ -262,6 +266,7 @@ void FGAIMultiplayer::update(double dt)
     ecOrient = motionInfo.orientation;
     SGVec3f linearVel = motionInfo.linearVel;
     SGVec3f angularVel = motionInfo.angularVel;
+    myVel = linearVel;
     while (0 < t) {
       double h = 1e-1;
       if (t < h)
@@ -272,6 +277,7 @@ void FGAIMultiplayer::update(double dt)
       ecOrient += h*ecOrient.derivative(angularVel);
 
       linearVel += h*(cross(linearVel, angularVel) + motionInfo.linearAccel);
+      myVel = linearVel;
       angularVel += h*motionInfo.angularAccel;
       
       t -= h;
@@ -292,7 +298,15 @@ void FGAIMultiplayer::update(double dt)
   
   // extract the position
   pos = SGGeod::fromCart(ecPos);
-  
+  altitude_ft = pos.getElevationFt();
+
+  // estimate speed (we care only about magnitude not direction/frame
+  // of reference here)
+  double vel_ms = sqrt( myVel[0]*myVel[0] + myVel[1]*myVel[1]
+                        + myVel[2]*myVel[2] );
+  double vel_kts = vel_ms * SG_METER_TO_NM * 3600.0;
+  speed = vel_kts;
+
   // The quaternion rotating from the earth centered frame to the
   // horizontal local frame
   SGQuatf qEc2Hl = SGQuatf::fromLonLatRad((float)pos.getLongitudeRad(),

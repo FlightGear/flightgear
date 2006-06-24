@@ -180,7 +180,7 @@ void FGAIAircraft::Run(double dt) {
                 doGroundAltitude();
                 //cerr << " Actual altitude " << altitude << endl;
                 // Transform();
-                pos.setElevationFt(altitude);
+                pos.setElevationFt(altitude_ft);
             }
             return;
         }
@@ -389,9 +389,8 @@ void FGAIAircraft::Run(double dt) {
     }
 
     // adjust altitude (meters) based on current vertical speed (fpm)
-    altitude += vs / 60.0 * dt;
-    pos.setElevationFt(altitude);  
-    double altitude_ft = altitude;
+    altitude_ft += vs / 60.0 * dt;
+    pos.setElevationFt(altitude_ft);  
 
     // adjust target Altitude, based on ground elevation when on ground
     if (no_roll) {
@@ -400,23 +399,23 @@ void FGAIAircraft::Run(double dt) {
     } else {
         // find target vertical speed if altitude lock engaged
         if (alt_lock && use_perf_vs) {
-            if (altitude_ft < tgt_altitude) {
-                tgt_vs = tgt_altitude - altitude_ft;
+            if (altitude_ft < tgt_altitude_ft) {
+                tgt_vs = tgt_altitude_ft - altitude_ft;
                 if (tgt_vs > performance->climb_rate)
                     tgt_vs = performance->climb_rate;
             } else {
-                tgt_vs = tgt_altitude - altitude_ft;
+                tgt_vs = tgt_altitude_ft - altitude_ft;
                 if (tgt_vs  < (-performance->descent_rate))
                     tgt_vs = -performance->descent_rate;
             }
         }
 
         if (alt_lock && !use_perf_vs) {
-            double max_vs = 4*(tgt_altitude - altitude);
+            double max_vs = 4*(tgt_altitude_ft - altitude_ft);
             double min_vs = 100;
-            if (tgt_altitude < altitude)
+            if (tgt_altitude_ft < altitude_ft)
                 min_vs = -100.0;
-            if ((fabs(tgt_altitude - altitude) < 1500.0)
+            if ((fabs(tgt_altitude_ft - altitude_ft) < 1500.0)
                     && (fabs(max_vs) < fabs(tgt_vs)))
                 tgt_vs = max_vs;
 
@@ -493,8 +492,8 @@ void FGAIAircraft::YawTo(double angle) {
 }
 
 
-void FGAIAircraft::ClimbTo(double altitude) {
-    tgt_altitude = altitude;
+void FGAIAircraft::ClimbTo(double alt_ft ) {
+    tgt_altitude_ft = alt_ft;
     alt_lock = true;
 }
 
@@ -595,10 +594,10 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             tgt_vs = (curr->crossat - prev->altitude)
                     / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
                     / 6076.0 / prev->speed*60.0);
-            tgt_altitude = curr->crossat;
+            tgt_altitude_ft = curr->crossat;
         } else {
             use_perf_vs = true;
-            tgt_altitude = prev->altitude;
+            tgt_altitude_ft = prev->altitude;
         }
         alt_lock = hdg_lock = true;
         no_roll = prev->on_ground;
@@ -761,19 +760,19 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
 
         //cerr << "5.1" << endl;
         if (!(prev->on_ground)) { // only update the tgt altitude from flightplan if not on the ground
-            tgt_altitude = prev->altitude;
+            tgt_altitude_ft = prev->altitude;
             if (curr->crossat > -1000.0) {
                 //cerr << "5.1a" << endl;
                 use_perf_vs = false;
-                tgt_vs = (curr->crossat - altitude) / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
+                tgt_vs = (curr->crossat - altitude_ft) / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
                         / 6076.0 / speed*60.0);
                 //cerr << "5.1b" << endl;
-                tgt_altitude = curr->crossat;
+                tgt_altitude_ft = curr->crossat;
             } else {
                 //cerr << "5.1c" << endl;
                 use_perf_vs = true;
                 //cerr << "5.1d" << endl;
-                //cerr << "Setting target altitude : " <<tgt_altitude << endl;
+                //cerr << "Setting target altitude : " <<tgt_altitude_ft << endl;
             }
         }
         //cerr << "6" << endl;
@@ -782,7 +781,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         no_roll = prev->on_ground;
         //cout << "Crossing waypoint: " << prev->name << endl;
         //cout << "  Target speed:    " << tgt_speed << endl;
-        //cout << "  Target altitude: " << tgt_altitude << endl;
+        //cout << "  Target altitude: " << tgt_altitude_ft << endl;
         //cout << "  Target heading:  " << tgt_heading << endl << endl;
 
     } else {
@@ -892,16 +891,16 @@ void FGAIAircraft::loadNextLeg() {
         //        //cerr << "25.1a" << endl;
         //        use_perf_vs = false;
         //
-        //        tgt_vs = (curr->crossat - altitude)/
+        //        tgt_vs = (curr->crossat - altitude_ft)/
         //          (fp->getDistanceToGo(pos.lat(), pos.lon(), curr)/6076.0/speed*60.0);
         //        //cerr << "25.1b" << endl;
-        //        tgt_altitude = curr->crossat;
+        //        tgt_altitude_ft = curr->crossat;
         //} else {
         //        //cerr << "25.1c" << endl;
         //        use_perf_vs = true;
         //        //cerr << "25.1d" << endl;
-        //        tgt_altitude = prev->altitude;
-        //        //cerr << "Setting target altitude : " <<tgt_altitude << endl;
+        //        tgt_altitude_ft = prev->altitude;
+        //        //cerr << "Setting target altitude : " <<tgt_altitude_ft << endl;
         // }
         //cerr << "26" << endl;
         //tgt_speed = prev->speed;
@@ -963,13 +962,13 @@ void FGAIAircraft::getGroundElev(double dt) {
         // FIXME: make sure the pos.lat/pos.lon values are in degrees ...
         double alt;
         if (globals->get_scenery()->get_elevation_m(pos.getLatitudeDeg(), pos.getLongitudeDeg(), 20000.0, alt, 0))
-            tgt_altitude = alt * SG_METER_TO_FEET;
+            tgt_altitude_ft = alt * SG_METER_TO_FEET;
 
-        //cerr << "Target altitude : " << tgt_altitude << endl;
+        //cerr << "Target altitude : " << tgt_altitude_ft << endl;
         // if (globals->get_scenery()->get_elevation_m(pos.lat(), pos.lon(),
         //                                            20000.0, alt))
-        //    tgt_altitude = alt * SG_METER_TO_FEET;
-        //cerr << "Target altitude : " << tgt_altitude << endl;
+        //    tgt_altitude_ft = alt * SG_METER_TO_FEET;
+        //cerr << "Target altitude : " << tgt_altitude_ft << endl;
     }
 }
 
@@ -985,9 +984,9 @@ void FGAIAircraft::setTACANChannelID(const string& id) {
 
 
 void FGAIAircraft::doGroundAltitude() {
-   if (fabs(altitude - (tgt_altitude+groundOffset)) > 1000.0)
-       altitude = (tgt_altitude + groundOffset);
+   if (fabs(altitude_ft - (tgt_altitude_ft+groundOffset)) > 1000.0)
+       altitude_ft = (tgt_altitude_ft + groundOffset);
    else
-      altitude += 0.1 * ((tgt_altitude+groundOffset) - altitude);
+      altitude_ft += 0.1 * ((tgt_altitude_ft+groundOffset) - altitude_ft);
 }
 
