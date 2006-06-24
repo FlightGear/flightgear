@@ -1578,6 +1578,13 @@ bool fgInitSubsystems() {
     // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
 
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the aircraft systems and instrumentation (before the
+    // autopilot.)
+    ////////////////////////////////////////////////////////////////////
+
+    globals->add_subsystem("instrumentation", new FGInstrumentMgr);
+    globals->add_subsystem("systems", new FGSystemMgr);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the XML Autopilot subsystem.
@@ -1698,10 +1705,6 @@ bool fgInitSubsystems() {
      readXML(path.str(),
 	*dispatcher);
 	     //globals->get_subsystem("Traffic Manager")->init();
-
-    globals->add_subsystem("instrumentation", new FGInstrumentMgr);
-    globals->add_subsystem("systems", new FGSystemMgr);
-
 
 
     ////////////////////////////////////////////////////////////////////

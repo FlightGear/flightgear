@@ -15,6 +15,7 @@ libInstrumentation_a_SOURCES = \
         gps.cxx gps.hxx \
         gyro.cxx gyro.hxx \
         heading_indicator.cxx heading_indicator.hxx \
+        heading_indicator_fg.cxx heading_indicator_fg.hxx \
 	kr_87.hxx kr_87.cxx \
 	kt_70.cxx kt_70.hxx \
         mag_compass.cxx mag_compass.hxx \

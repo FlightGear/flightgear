@@ -30,6 +30,7 @@
 #include "encoder.hxx"
 #include "gps.hxx"
 #include "heading_indicator.hxx"
+#include "heading_indicator_fg.hxx"
 #include "kr_87.hxx"
 #include "kt_70.hxx"
 #include "mag_compass.hxx"
@@ -124,6 +125,9 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "heading-indicator" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new HeadingIndicator( node ) );
+        } else if ( name == "heading-indicator-fg" ) {
+            set_subsystem( "instrument" + temp.str(), 
+                           new HeadingIndicatorFG( node ) );
         } else if ( name == "KR-87" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new FGKR_87( node ) );

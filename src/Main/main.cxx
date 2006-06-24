@@ -830,6 +830,8 @@ static void fgIdleFunction ( void ) {
                                     globals->get_time_params()->getJD() );
         double var = globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
         fgSetDouble("/instrumentation/heading-indicator/offset-deg", -var);
+        fgSetDouble("/instrumentation/heading-indicator-fg/offset-deg", -var);
+
 
         // airport = new ssgBranch;
         // airport->setName( "Airport Lighting" );
