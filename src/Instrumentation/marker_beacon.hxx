@@ -76,10 +76,10 @@ class FGMarkerBeacon : public SGSubsystem
 public:
 
     enum fgMkrBeacType {
-	NOBEACON = 0,
-	INNER,
-	MIDDLE,
-	OUTER   
+        NOBEACON = 0,
+        INNER,
+        MIDDLE,
+        OUTER
     };
 
     FGMarkerBeacon(SGPropertyNode *node);

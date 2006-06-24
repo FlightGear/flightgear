@@ -72,7 +72,7 @@ FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
         } else if ( cname == "number" ) {
             num = child->getIntValue();
         } else {
-            SG_LOG( SG_INSTR, SG_WARN, 
+            SG_LOG( SG_INSTR, SG_WARN,
                     "Error in marker beacon config logic" );
             if ( name.length() ) {
                 SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
@@ -83,7 +83,7 @@ FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
 
 
 // Destructor
-FGMarkerBeacon::~FGMarkerBeacon() 
+FGMarkerBeacon::~FGMarkerBeacon()
 {
     delete term_tbl;
     delete low_tbl;
@@ -128,13 +128,13 @@ FGMarkerBeacon::bind ()
     branch = "/instrumentation/" + name;
 
     fgTie((branch + "/inner").c_str(), this,
-	  &FGMarkerBeacon::get_inner_blink);
+          &FGMarkerBeacon::get_inner_blink);
 
     fgTie((branch + "/middle").c_str(), this,
-	  &FGMarkerBeacon::get_middle_blink);
+          &FGMarkerBeacon::get_middle_blink);
 
     fgTie((branch + "/outer").c_str(), this,
-	  &FGMarkerBeacon::get_outer_blink);
+          &FGMarkerBeacon::get_outer_blink);
 }
 
 
@@ -151,19 +151,19 @@ FGMarkerBeacon::unbind ()
 
 
 // Update the various nav values based on position and valid tuned in navs
-void 
-FGMarkerBeacon::update(double dt) 
+void
+FGMarkerBeacon::update(double dt)
 {
     need_update = false;
 
     if ( has_power() && serviceable->getBoolValue()
             && !sound_pause->getBoolValue()) {
 
-	// On timeout, scan again
-	_time_before_search_sec -= dt;
-	if ( _time_before_search_sec < 0 ) {
-	    search();
-	}
+        // On timeout, scan again
+        _time_before_search_sec -= dt;
+        if ( _time_before_search_sec < 0 ) {
+            search();
+        }
         // marker beacon blinking
         bool light_on = ( outer_blink || middle_blink || inner_blink );
         SGTimeStamp current;
@@ -208,16 +208,16 @@ static bool check_beacon_range( const SGGeod& pos,
 {
     SGVec3d aircraft = SGVec3d::fromGeod(pos);
     SGVec3d station = b->get_cart();
-    // cout << "    aircraft = " << aircraft << " station = " << station 
+    // cout << "    aircraft = " << aircraft << " station = " << station
     //      << endl;
 
     SGVec3d tmp = station - aircraft;
     double d = dot(tmp, tmp);
-    // cout << "  distance = " << d << " (" 
-    //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
+    // cout << "  distance = " << d << " ("
+    //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
     //         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
     //      << ")" << endl;
-    
+
     // cout << "  range = " << sqrt(d) << endl;
 
     // cout << "elev = " << elev * SG_METER_TO_FEET
@@ -248,7 +248,7 @@ static bool check_beacon_range( const SGGeod& pos,
 }
 
 // Update current nav/adf radio stations based on current postition
-void FGMarkerBeacon::search() 
+void FGMarkerBeacon::search()
 {
 
     // reset search time
@@ -290,18 +290,18 @@ void FGMarkerBeacon::search()
 
     if ( b == NULL || !inrange || !has_power() || !serviceable->getBoolValue() )
     {
-	// cout << "no marker" << endl;
-	globals->get_soundmgr()->stop( "outer-marker" );
-	globals->get_soundmgr()->stop( "middle-marker" );
-	globals->get_soundmgr()->stop( "inner-marker" );
+        // cout << "no marker" << endl;
+        globals->get_soundmgr()->stop( "outer-marker" );
+        globals->get_soundmgr()->stop( "middle-marker" );
+        globals->get_soundmgr()->stop( "inner-marker" );
     } else {
 
         string current_sound_name;
 
         if ( beacon_type == OUTER ) {
-	    outer_marker = true;
+            outer_marker = true;
             current_sound_name = "outer-marker";
-	    // cout << "OUTER MARKER" << endl;
+            // cout << "OUTER MARKER" << endl;
             if ( last_beacon != OUTER ) {
                 if ( ! globals->get_soundmgr()->exists( current_sound_name ) ) {
                     SGSoundSample *sound = beacon.get_outer();
@@ -318,16 +318,16 @@ void FGMarkerBeacon::search()
                 globals->get_soundmgr()->stop( current_sound_name );
             }
         } else if ( beacon_type == MIDDLE ) {
-	    middle_marker = true;
+            middle_marker = true;
             current_sound_name = "middle-marker";
-	    // cout << "MIDDLE MARKER" << endl;
-	    if ( last_beacon != MIDDLE ) {
-	        if ( ! globals->get_soundmgr()->exists( current_sound_name ) ) {
-		    SGSoundSample *sound = beacon.get_middle();
+            // cout << "MIDDLE MARKER" << endl;
+            if ( last_beacon != MIDDLE ) {
+                if ( ! globals->get_soundmgr()->exists( current_sound_name ) ) {
+                    SGSoundSample *sound = beacon.get_middle();
                     if ( sound ) {
-		        globals->get_soundmgr()->add( sound, current_sound_name );
+                        globals->get_soundmgr()->add( sound, current_sound_name );
                     }
-	        }
+                }
             }
             if ( audio_btn->getBoolValue() ) {
                 if ( !globals->get_soundmgr()->is_playing(current_sound_name) ) {
@@ -337,16 +337,16 @@ void FGMarkerBeacon::search()
                 globals->get_soundmgr()->stop( current_sound_name );
             }
         } else if ( beacon_type == INNER ) {
-	    inner_marker = true;
+            inner_marker = true;
             current_sound_name = "inner-marker";
-	    // cout << "INNER MARKER" << endl;
-	    if ( last_beacon != INNER ) {
-	        if ( ! globals->get_soundmgr()->exists( current_sound_name ) ) {
-		    SGSoundSample *sound = beacon.get_inner();
+            // cout << "INNER MARKER" << endl;
+            if ( last_beacon != INNER ) {
+                if ( ! globals->get_soundmgr()->exists( current_sound_name ) ) {
+                    SGSoundSample *sound = beacon.get_inner();
                     if ( sound ) {
-		        globals->get_soundmgr()->add( sound, current_sound_name );
+                        globals->get_soundmgr()->add( sound, current_sound_name );
                     }
-	        }
+                }
             }
             if ( audio_btn->getBoolValue() ) {
                 if ( !globals->get_soundmgr()->is_playing(current_sound_name) ) {
