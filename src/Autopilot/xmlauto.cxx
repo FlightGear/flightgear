@@ -79,6 +79,10 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
             if ( val != NULL ) {
                 enable_value = val->getStringValue();
             }
+            SGPropertyNode *pass = child->getChild( "honor-passive" );
+            if ( pass != NULL ) {
+                honor_passive = pass->getBoolValue();
+            }
         } else if ( cname == "input" ) {
             SGPropertyNode *prop = child->getChild( "prop" );
             if ( prop != NULL ) {
@@ -338,9 +342,18 @@ void FGPIDController::update( double dt ) {
         edf_n_2 = edf_n_1;
         edf_n_1 = edf_n;
 
-        unsigned int i;
-        for ( i = 0; i < output_list.size(); ++i ) {
-            output_list[i]->setDoubleValue( u_n );
+        // passive_ignore == true means that we go through all the
+        // motions, but drive the outputs.  This is analogous to
+        // running the autopilot with the "servos" off.  This is
+        // helpful for things like flight directors which position
+        // their vbars from the autopilot computations.
+        if ( passive_mode->getBoolValue() && honor_passive ) {
+            // skip output step
+        } else {
+            unsigned int i;
+            for ( i = 0; i < output_list.size(); ++i ) {
+                output_list[i]->setDoubleValue( u_n );
+            }
         }
     } else if ( !enabled ) {
         ep_n  = 0.0;

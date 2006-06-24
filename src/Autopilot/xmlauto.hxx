@@ -45,6 +45,8 @@ SG_USING_STD(deque);
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
+#include <Main/fg_props.hxx>
+
 
 /**
  * Base class for other autopilot components
@@ -57,7 +59,9 @@ protected:
     string name;
 
     SGPropertyNode_ptr enable_prop;
+    SGPropertyNode_ptr passive_mode;
     string enable_value;
+    bool honor_passive;
     bool enabled;
 
     SGPropertyNode_ptr input_prop;
@@ -69,7 +73,9 @@ public:
 
     FGXMLAutoComponent() :
       enable_prop( NULL ),
+      passive_mode( fgGetNode("/autopilot/settings/passive-mode", true) ),
       enable_value( "" ),
+      honor_passive( false ),
       enabled( false ),
       input_prop( NULL ),
       r_n_prop( NULL ),
