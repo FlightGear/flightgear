@@ -29,6 +29,7 @@
 #include "dme.hxx"
 #include "encoder.hxx"
 #include "gps.hxx"
+#include "gsdi.hxx"
 #include "heading_indicator.hxx"
 #include "heading_indicator_fg.hxx"
 #include "kr_87.hxx"
@@ -122,6 +123,9 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "gps" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new GPS( node ), 0.45 );
+        } else if ( name == "gsdi" ) {
+            set_subsystem( "instrument" + temp.str(),
+                           new GSDI( node ) );
         } else if ( name == "heading-indicator" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new HeadingIndicator( node ) );

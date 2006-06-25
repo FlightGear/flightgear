@@ -13,6 +13,7 @@ libInstrumentation_a_SOURCES = \
         dme.cxx dme.hxx \
 	encoder.cxx encoder.hxx \
         gps.cxx gps.hxx \
+        gsdi.cxx gsdi.hxx \
         gyro.cxx gyro.hxx \
         heading_indicator.cxx heading_indicator.hxx \
         heading_indicator_fg.cxx heading_indicator_fg.hxx \
