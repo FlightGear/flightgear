@@ -371,12 +371,16 @@ void YASim::copyFromYASim()
     double lat, lon, alt;
     sgCartToGeod(s->pos, &lat, &lon, &alt);
     _set_Geodetic_Position(lat, lon, alt*M2FT);
-    _update_ground_elev_at_pos();
+    double groundlevel_m = get_groundlevel_m(lat, lon, alt);
+    _set_Runway_altitude(groundlevel_m*SG_METER_TO_FEET);
+    _set_Altitude_AGL((alt-groundlevel_m)*SG_METER_TO_FEET);
+
+    // the smallest agl of all gears
+    fgSetFloat("/position/gear-agl-m", model->getAGL());
+    fgSetFloat("/position/gear-agl-ft", model->getAGL()*M2FT);
 
     // UNUSED
     //_set_Geocentric_Position(Glue::geod2geocLat(lat), lon, alt*M2FT);
-
-    _set_Altitude_AGL(model->getAGL() * M2FT);
 
     // useful conversion matrix
     float xyz2ned[9];
