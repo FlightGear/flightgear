@@ -778,7 +778,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
         if ( ! globals->get_runways()->search( id, rwy, &r ) ) {
             SG_LOG( SG_GENERAL, rwy_req ? SG_ALERT : SG_INFO,
                     "Failed to find runway " << rwy << 
-                    " at airport " << id );
+                    " at airport " << id << ". Using default runway." );
             return false;
         }
     } else {
