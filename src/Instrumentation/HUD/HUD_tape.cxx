@@ -83,8 +83,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
     width = scrn_rect.left + scrn_rect.right;
 
 
-    // was: if (type != "gauge") { ... until end
-    // if its not explicitly a gauge default to tape
     if (_pointer) {
         if (_pointer_type == MOVING) {
             vmin = _input.min();
@@ -272,9 +270,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
         // minor and major ticks.
 
         // draw scale or tape
-
-//        last = float_to_int(vmax)+1;
-//        i = float_to_int(vmin);
         last = (int)vmax + 1; // N
         i = (int)vmin; // N
 
@@ -327,7 +322,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                                         }
 
                                     } else if (_tick_type == CIRCLE) {
-                                        circle(scrn_rect.left,(float)marker_ys, 3.0);
+                                        draw_bullet(scrn_rect.left,(float)marker_ys, 3.0);
 
                                     } else {
                                         // if neither line nor circle draw default as line
@@ -355,7 +350,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                                                         marker_xe, marker_ys);
                                             }
                                         } else if (_tick_type == CIRCLE) {
-                                            circle((float)marker_xs + 4, (float)marker_ys, 3.0);
+                                            draw_bullet((float)marker_xs + 4, (float)marker_ys, 3.0);
 
                                         } else {
                                             draw_line(marker_xs + 4, marker_ys,
@@ -373,7 +368,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                                             }
 
                                         } else if (_tick_type == CIRCLE) {
-                                            circle((float)marker_xe - 4, (float)marker_ys, 3.0);
+                                            draw_bullet((float)marker_xe - 4, (float)marker_ys, 3.0);
                                         } else {
                                             draw_line(marker_xs, marker_ys,
                                                     marker_xe - 4, marker_ys);
@@ -418,7 +413,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                                     glEnd();
 
                                 } else if (_tick_type == CIRCLE) {
-                                    circle(scrn_rect.left, (float)marker_ys, 5.0);
+                                    draw_bullet(scrn_rect.left, (float)marker_ys, 5.0);
 
                                 } else {
                                     glBegin(GL_LINE_STRIP);
@@ -437,7 +432,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                                 if (_tick_type == LINE)
                                     draw_line(marker_xs, marker_ys, marker_xe, marker_ys);
                                 else if (_tick_type == CIRCLE)
-                                    circle((float)marker_xs + 4, (float)marker_ys, 5.0);
+                                    draw_bullet((float)marker_xs + 4, (float)marker_ys, 5.0);
                                 else
                                     draw_line(marker_xs, marker_ys, marker_xe, marker_ys);
 
@@ -703,20 +698,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
 
 
-void HUD::Tape::circle(float x, float y, float size)
-{
-    glEnable(GL_POINT_SMOOTH);
-    glPointSize(size);
-
-    glBegin(GL_POINTS);
-    glVertex2f(x, y);
-    glEnd();
-
-    glPointSize(1.0);
-    glDisable(GL_POINT_SMOOTH);
-}
-
-
 void HUD::Tape::fixed(float x1, float y1, float x2, float y2, float x3, float y3)
 {
     glBegin(GL_LINE_STRIP);
@@ -825,8 +806,8 @@ void HUD::Tape::zoomed_scale(int first, int last)
             for (i = 1; i < 5; i++) {
                 yfirst += factor;
                 ycentre += factor;
-                circle(xstart - 2.5, yfirst, 3.0);
-                circle(xstart - 2.5, ycentre, 3.0);
+                draw_bullet(xstart - 2.5, yfirst, 3.0);
+                draw_bullet(xstart - 2.5, ycentre, 3.0);
             }
 
             yfirst = mid_scr.y - hgt;
@@ -876,8 +857,8 @@ void HUD::Tape::zoomed_scale(int first, int last)
             for (i = 1; i < 5; i++) {
                 yfirst += factor;
                 ycentre += factor;
-                circle(xstart + 2.5, yfirst, 3.0);
-                circle(xstart + 2.5, ycentre, 3.0);
+                draw_bullet(xstart + 2.5, yfirst, 3.0);
+                draw_bullet(xstart + 2.5, ycentre, 3.0);
             }
 
             yfirst = mid_scr.y - hgt;
@@ -988,8 +969,8 @@ void HUD::Tape::zoomed_scale(int first, int last)
             for (i = 1; i < 5; i++) {
                 xfirst += factor;
                 xcentre += factor;
-                circle(xfirst, ystart - 2.5, 3.0);
-                circle(xcentre, ystart - 2.5, 3.0);
+                draw_bullet(xfirst, ystart - 2.5, 3.0);
+                draw_bullet(xcentre, ystart - 2.5, 3.0);
             }
 
             xfirst = mid_scr.x - hgt;
@@ -1040,8 +1021,8 @@ void HUD::Tape::zoomed_scale(int first, int last)
             for (i = 1; i < 5; i++) {
                 xfirst += factor;
                 xcentre += factor;
-                circle(xfirst, ystart + 2.5, 3.0);
-                circle(xcentre, ystart + 2.5, 3.0);
+                draw_bullet(xfirst, ystart + 2.5, 3.0);
+                draw_bullet(xcentre, ystart + 2.5, 3.0);
             }
 
             xfirst = mid_scr.x - hgt;

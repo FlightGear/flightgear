@@ -87,10 +87,60 @@ HUD::Item::Item(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
 bool HUD::Item::isEnabled()
 {
-    if (!_condition)
-        return true;
+    return _condition ? _condition->test() : true;
+}
 
-    return _condition->test();
+
+void HUD::Item::draw_line( float x1, float y1, float x2, float y2)
+{
+    _hud->_line_list.add(LineSegment(x1, y1, x2, y2));
+}
+
+
+void HUD::Item::draw_stipple_line( float x1, float y1, float x2, float y2)
+{
+    _hud->_stipple_line_list.add(LineSegment(x1, y1, x2, y2));
+}
+
+
+void HUD::Item::draw_text( float x, float y, char *msg, int digit)
+{
+    _hud->_text_list.add(HUDText(x, y, msg, digit));
+}
+
+
+void HUD::Item::draw_circle(float x1, float y1, float r) const
+{
+    glBegin(GL_LINE_LOOP);
+    for (int count = 0; count < 25; count++) {
+        float cosine = r * cos(count * 2 * SG_PI / 10.0);
+        float sine =   r * sin(count * 2 * SG_PI / 10.0);
+        glVertex2f(cosine + x1, sine + y1);
+    }
+    glEnd();
+}
+
+
+void HUD::Item::draw_bullet(float x, float y, float size)
+{
+    glEnable(GL_POINT_SMOOTH);
+    glPointSize(size);
+
+    glBegin(GL_POINTS);
+    glVertex2f(x, y);
+    glEnd();
+
+    glPointSize(1.0);
+    glDisable(GL_POINT_SMOOTH);
+}
+
+
+float HUD::Item::text_width(char *str) const
+{
+    assert(_hud->_font_renderer);
+    float r, l;
+    _hud->_font->getBBox(str, _hud->_font_size, 0, &l, &r, 0, 0);
+    return r - l;
 }
 
 
