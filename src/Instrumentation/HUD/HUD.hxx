@@ -527,22 +527,22 @@ protected:
     void zoomed_scale(int, int);
 
 private:
-    float  val_span;
-    float  half_width_units;
-    bool   draw_tick_bottom;
-    bool   draw_tick_top;
-    bool   draw_tick_right;
-    bool   draw_tick_left;
-    bool   draw_cap_bottom;
-    bool   draw_cap_top;
-    bool   draw_cap_right;
-    bool   draw_cap_left;
-    float  marker_offset;
-    bool   pointer;
-    string pointer_type;
-    string tick_type;
-    string tick_length;
-    int    zoom;
+    float  _val_span;
+    float  _half_width_units;
+    bool   _draw_tick_bottom;
+    bool   _draw_tick_top;
+    bool   _draw_tick_right;
+    bool   _draw_tick_left;
+    bool   _draw_cap_bottom;
+    bool   _draw_cap_top;
+    bool   _draw_cap_right;
+    bool   _draw_cap_left;
+    float  _marker_offset;
+    bool   _pointer;
+    int    _zoom;
+    enum PointerType { FIXED, MOVING } _pointer_type;
+    enum TickType { LINE, CIRCLE } _tick_type;
+    enum TickLength { VARIABLE, CONSTANT } _tick_length;
 };
 
 
