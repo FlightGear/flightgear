@@ -78,6 +78,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Autopilot/libAutopilot.a \
 	$(top_builddir)/src/Input/libInput.a \
 	$(top_builddir)/src/Instrumentation/KLN89/libKLN89.a \
+	$(top_builddir)/src/Instrumentation/HUD/libHUD.a \
 	$(top_builddir)/src/Instrumentation/libInstrumentation.a \
 	$(top_builddir)/src/Model/libModel.a \
 	$(top_builddir)/src/Network/libNetwork.a \

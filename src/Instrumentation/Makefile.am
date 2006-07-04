@@ -1,4 +1,4 @@
-SUBDIRS = KLN89
+SUBDIRS = KLN89 HUD
 
 noinst_LIBRARIES = libInstrumentation.a
 
