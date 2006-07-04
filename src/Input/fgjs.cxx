@@ -6,6 +6,7 @@
 // Written by Tony Peden, started May 2001
 //
 // Copyright (C) 2001  Tony Peden (apeden@earthlink.net)
+// Copyright (C) 2006  Stefan Seifert
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -29,8 +30,6 @@
 #include STL_FSTREAM
 #include STL_STRING
 
-#include <jsinput.h>
-
 SG_USING_STD(fstream);
 SG_USING_STD(cout);
 SG_USING_STD(cin);
@@ -38,460 +37,336 @@ SG_USING_STD(endl);
 SG_USING_STD(ios);
 SG_USING_STD(string);
 
-string axes_humannames[8] = { "Aileron", "Elevator", "Rudder", "Throttle",
-                              "Mixture", "Pitch", "View Direction",
-                              "View Elevation"
-                            };
+#include <simgear/constants.h>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sgstream.hxx>
+#include <simgear/structure/exception.hxx>
 
-string axes_propnames[8]={ "/controls/flight/aileron","/controls/flight/elevator",
-                           "/controls/flight/rudder","/controls/engines/engine[%d]/throttle",
-                           "/controls/engines/engine[%d]/mixture","/controls/engines/engine[%d]/pitch",
-                           "/sim/current-view/goal-heading-offset-deg",
-                           "/sim/current-view/goal-pitch-offset-deg"
-                         };
+#include <Main/fg_io.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 
-string axis_posdir[8]= { "right", "down/forward", "right", "forward", "forward", "forward", "left", "upward" };
+#include "jsinput.h"
 
 
-bool half_range[8]={ false,false,false,true,true,true,false,false };
-
-bool repeatable[8]={ false,false,false,false,false,false,true,true };
-
-bool invert[8]= { false,false,false,false,false,false,false,false };
-
-string button_humannames[8]= { "Left Brake", "Right Brake",
-                               "Flaps Up", "Flaps Down",
-                               "Elevator Trim Forward", "Elevator Trim Backward",
-                               "Landing Gear Up", "Landing Gear Down"
-                             };
-
-string button_propnames[8]={ "/controls/gear/brake-left",
-                             "/controls/gear/brake-right",
-                             "/controls/flight/flaps",
-                             "/controls/flight/flaps",
-                             "/controls/flight/elevator-trim",
-                             "/controls/flight/elevator-trim",
-                             "/controls/gear/gear-down",
-                             "/controls/gear/gear-down"
-                           };
-
-bool button_modup[8]={ true,true,false,false,false,false,false,false };
-
-bool button_boolean[8]={ false,false,false,false,false,false,true,true };
-
-float button_step[8]={ 1.0, 1.0, -0.34, 0.34, 0.001, -0.001, 0.0, 1.0 };
-
-string button_repeat[8]={ "false", "false", "false", "false", "true", "true", "false", "false" };
-
-
-void writeAxisXML(fstream &fs, int control, int axis) {
-
-     char axisline[16];
-     snprintf(axisline,16," <axis n=\"%d\">",axis);
-
-     fs << axisline << endl;
-     fs << "  <desc>" << axes_humannames[control] << "</desc>" << endl;
-     if (half_range[control]) {
-       for (int i=0; i<=7; i++) {
-         fs << "  <binding>" << endl;
-         fs << "   <command>property-scale</command>" << endl;
-         char propertyline[256];
-         snprintf(propertyline,256,axes_propnames[control].c_str(),i);
-         fs << "   <property>" << propertyline << "</property>" << endl;
-         fs << "   <offset type=\"double\">-1.0</offset>" << endl;
-         fs << "   <factor type=\"double\">-0.5</factor>" << endl;
-         fs << "  </binding>" << endl;
-       }
-     } else if (repeatable[control]) {
-       fs << "  <low>" << endl;
-       fs << "   <repeatable>true</repeatable>" << endl;
-       fs << "   <binding>" << endl;
-       fs << "    <command>property-adjust</command>" << endl;
-       fs << "    <property>" << axes_propnames[control] << "</property>" << endl;
-       if (invert[control]) {
-         fs << "    <step type=\"double\">1.0</step>" << endl;
-       } else {
-         fs << "    <step type=\"double\">-1.0</step>" << endl;
-       }
-       fs << "   </binding>" << endl;
-       fs << "  </low>" << endl;
-       fs << "  <high>" << endl;
-       fs << "   <repeatable>true</repeatable>" << endl;
-       fs << "   <binding>" << endl;
-       fs << "    <command>property-adjust</command>" << endl;
-       fs << "    <property>" << axes_propnames[control] << "</property>" << endl;
-       if (invert[control]) {
-         fs << "    <step type=\"double\">-1.0</step>" << endl;
-       } else {
-         fs << "    <step type=\"double\">1.0</step>" << endl;
-       }
-       fs << "   </binding>" << endl;
-       fs << "  </high>" << endl;
-     } else {
-       fs << "  <binding>" << endl;
-       fs << "   <command>property-scale</command>" << endl;
-       fs << "   <property>" << axes_propnames[control] << "</property>" << endl;
-       fs << "   <dead-band type=\"double\">0.02</dead-band>" << endl;
-       fs << "   <offset type=\"double\">0.0</offset>" << endl;
-       if (invert[control]) {
-         fs << "   <factor type=\"double\">-1.0</factor>" << endl;
-       } else {
-         fs << "   <factor type=\"double\">1.0</factor>" << endl;
-       }
-       fs << "  </binding>" << endl;
-     }
-     fs << " </axis>" << endl << endl;
+bool confirmAnswer() {
+    char answer;
+    do {
+        cout << "Is this correct? (y/n) $ ";
+        cin >> answer;
+        cin.ignore(256, '\n');
+        if (answer == 'y')
+            return true;
+        if (answer == 'n')
+            return false;
+    } while (true);
 }
 
-void writeAxisProperties(fstream &fs, int control,int joystick, int axis) {
-
-     char jsDesc[80];
-     snprintf(jsDesc,80,"--prop:/input/joysticks/js[%d]/axis[%d]",joystick,axis);
-     if( half_range[control] == true) {
-       for (int i=0; i<=7; i++) {
-         char bindno[64];
-         snprintf(bindno,64,"/binding[%d]",i);
-         char propertyline[256];
-         snprintf(propertyline,256,axes_propnames[control].c_str(),i);
-         fs << jsDesc << bindno << "/command=property-scale" << endl;
-         fs << jsDesc << bindno << "/property=" << propertyline << endl;
-         fs << jsDesc << bindno << "/offset=-1.0" << endl;
-         fs << jsDesc << bindno << "/factor=-0.5" << endl;
-       }
-     } else if (repeatable[control]) {
-       fs << jsDesc << "/low/repeatable=true" << endl;
-       fs << jsDesc << "/low/binding/command=property-adjust" << endl;
-       fs << jsDesc << "/low/binding/property=" << axes_propnames[control] << endl;
-       if (invert[control]) {
-         fs << jsDesc << "/low/binding/step=1.0" << endl;
-       } else {
-         fs << jsDesc << "/low/binding/step=-1.0" << endl;
-       }
-       fs << jsDesc << "/high/repeatable=true" << endl;
-       fs << jsDesc << "/high/binding/command=property-adjust" << endl;
-       fs << jsDesc << "/high/binding/property=" << axes_propnames[control] << endl;
-       if (invert[control]) {
-         fs << jsDesc << "/high/binding/step=-1.0" << endl;
-       } else {
-         fs << jsDesc << "/high/binding/step=1.0" << endl;
-       }
-     } else {
-       fs << jsDesc << "/binding/command=property-scale" << endl;
-       fs << jsDesc << "/binding/property=" << axes_propnames[control] << endl;
-       fs << jsDesc << "/binding/dead-band=0.02" << endl;
-       fs << jsDesc << "/binding/offset=0.0" << endl;
-       if (invert[control]) {
-         fs << jsDesc << "/binding/factor=-1.0" << endl;
-       } else {
-         fs << jsDesc << "/binding/factor=1.0" << endl;
-       }
-     }
-     fs << endl;
-}
-
-void writeButtonXML(fstream &fs, int property, int button) {
-
-     char buttonline[32];
-     snprintf(buttonline,32," <button n=\"%d\">",button);
-
-     fs << buttonline << endl;
-     if (property==-2) {
-       fs << "  <desc>View Cycle</desc>" << endl;
-       fs << "  <repeatable>false</repeatable>" << endl;
-       fs << "  <binding>" << endl;
-       fs << "   <command>view-cycle</command>" << endl;
-       fs << "   <step type=\"double\">1</step>" << endl;
-       fs << "  </binding>" << endl;
-     } else if (property==-1) {
-       fs << "  <desc>Brakes</desc>" << endl;
-       fs << "  <binding>" << endl;
-       fs << "   <command>property-assign</command>" << endl;
-       fs << "   <property>" << button_propnames[0] << "</property>" << endl;
-       fs << "   <value type=\"double\">" << button_step[0] << "</value>" << endl;
-       fs << "  </binding>" << endl;
-       fs << "  <binding>" << endl;
-       fs << "   <command>property-assign</command>" << endl;
-       fs << "   <property>" << button_propnames[1] << "</property>" << endl;
-       fs << "   <value type=\"double\">" << button_step[1] << "</value>" << endl;
-       fs << "  </binding>" << endl;
-       fs << "  <mod-up>" << endl;
-       fs << "   <binding>" << endl;
-       fs << "    <command>property-assign</command>" << endl;
-       fs << "    <property>" << button_propnames[0] << "</property>" << endl;
-       fs << "    <value type=\"double\">0</value>" << endl;
-       fs << "   </binding>" << endl;
-       fs << "   <binding>" << endl;
-       fs << "    <command>property-assign</command>" << endl;
-       fs << "    <property>" << button_propnames[1] << "</property>" << endl;
-       fs << "    <value type=\"double\">0</value>" << endl;
-       fs << "   </binding>" << endl;
-       fs << "  </mod-up>" << endl;
-     } else {
-       fs << "  <desc>" << button_humannames[property] << "</desc>" << endl;
-       if (button_modup[property]) {
-         fs << "  <binding>" << endl;
-         fs << "   <command>property-assign</command>" << endl;
-         fs << "   <property>" << button_propnames[property] << "</property>" << endl;
-         fs << "   <value type=\"double\">" << button_step[property] << "</value>" << endl;
-         fs << "  </binding>" << endl;
-         fs << "  <mod-up>" << endl;
-         fs << "   <binding>" << endl;
-         fs << "    <command>property-assign</command>" << endl;
-         fs << "    <property>" << button_propnames[property] << "</property>" << endl;
-         fs << "    <value type=\"double\">0</value>" << endl;
-         fs << "   </binding>" << endl;
-         fs << "  </mod-up>" << endl;
-       } else if (button_boolean[property]) {
-         fs << "  <repeatable>" << button_repeat[property] << "</repeatable>" << endl;
-         fs << "  <binding>" << endl;
-         fs << "   <command>property-assign</command>" << endl;
-         fs << "   <property>" << button_propnames[property] << "</property>" << endl;
-         fs << "   <value type=\"bool\">";
-         if (button_step[property]==1) {
-           fs << "true";
-         } else {
-           fs << "false";
-         }
-         fs << "</value>" << endl;
-         fs << "  </binding>" << endl;
-       } else {
-         fs << "  <repeatable>" << button_repeat[property] << "</repeatable>" << endl;
-         fs << "  <binding>" << endl;
-         fs << "   <command>property-adjust</command>" << endl;
-         fs << "   <property>" << button_propnames[property] << "</property>" << endl;
-         fs << "   <step type=\"double\">" << button_step[property] << "</step>" << endl;
-         fs << "  </binding>" << endl;
-       }
-     }
-     fs << " </button>" << endl << endl;
-}
-
-void writeButtonProperties(fstream &fs, int property,int joystick, int button) {
-
-     char jsDesc[80];
-     snprintf(jsDesc,80,"--prop:/input/joysticks/js[%d]/button[%d]",joystick,button);
-
-     if (property==-1) {
-       fs << jsDesc << "/binding[0]/command=property-assign" << endl; 
-       fs << jsDesc << "/binding[0]/property=" << button_propnames[0] << endl;
-       fs << jsDesc << "/binding[0]/value=" << button_step[0] << endl; 
-       fs << jsDesc << "/binding[1]/command=property-assign" << endl; 
-       fs << jsDesc << "/binding[1]/property=" << button_propnames[1] << endl;
-       fs << jsDesc << "/binding[1]/value=" << button_step[1] << endl; 
-       fs << jsDesc << "/mod-up/binding[0]/command=property-assign" << endl; 
-       fs << jsDesc << "/mod-up/binding[0]/property=" << button_propnames[0] << endl;
-       fs << jsDesc << "/mod-up/binding[0]/value=0" << endl; 
-       fs << jsDesc << "/mod-up/binding[1]/command=property-assign" << endl; 
-       fs << jsDesc << "/mod-up/binding[1]/property=" << button_propnames[1] << endl;
-       fs << jsDesc << "/mod-up/binding[1]/value=0" << endl; 
-       fs << endl; 
-     } else if (button_modup[property]) {
-       fs << jsDesc << "/binding/command=property-assign" << endl; 
-       fs << jsDesc << "/binding/property=" << button_propnames[property] << endl;
-       fs << jsDesc << "/binding/value=" << button_step[property] << endl; 
-       fs << jsDesc << "/mod-up/binding/command=property-assign" << endl; 
-       fs << jsDesc << "/mod-up/binding/property=" << button_propnames[property] << endl;
-       fs << jsDesc << "/mod-up/binding/value=0" << endl; 
-       fs << endl; 
-     } else if (button_boolean[property]) {
-       fs << jsDesc << "/repeatable=" << button_repeat[property] << endl;
-       fs << jsDesc << "/binding/command=property-assign" << endl; 
-       fs << jsDesc << "/binding/property=" << button_propnames[property] << endl;
-       fs << jsDesc << "/binding/value=";
-       if (button_step[property]==1) {
-         fs << "true";
-       } else {
-         fs << "false";
-       }
-       fs << endl << endl; 
-     } else {
-       fs << jsDesc << "/repeatable=" << button_repeat[property] << endl;
-       fs << jsDesc << "/binding/command=property-adjust" << endl; 
-       fs << jsDesc << "/binding/property=" << button_propnames[property] << endl;
-       fs << jsDesc << "/binding/step=" << button_step[property] << endl; 
-       fs << endl; 
-     }
-}
+string getFGRoot( int argc, char *argv[] );
 
 int main( int argc, char *argv[] ) {
 
-  bool usexml=true;
-  float deadband=0;
-  char answer[128];
-  int btninit=-2;
-
-  for (int i=1; i<argc; i++) {
-    if (strcmp("--help",argv[i])==0) {
-      cout << "Usage:" << endl;
-      cout << "  --help\t\t\tShow this help" << endl;
-      cout << "  --prop\t\t\tOutput property list" << endl;
-      cout << "  --xml\t\t\t\tOutput xml (default)" << endl;
-      cout << "  --deadband <float>\t\tSet deadband (for this program only, useful" << endl;
-      cout << "\t\t\t\tfor 'twitchy' joysticks)" << endl;
-      exit(0);
-    } else if (strcmp("--prop",argv[i])==0) {
-      usexml=false;
-      btninit=-1;
-    } else if (strcmp("--deadband",argv[i])==0) {
-      i++;
-      deadband=atoi(argv[i]);
-      cout << "Deadband set to " << argv[i] << endl;
-    } else if (strcmp("--xml",argv[i])!=0) {
-      cout << "Unknown option \"" << argv[i] << "\"" << endl;
-      exit(0);
+    for (int i = 1; i < argc; i++) {
+        if (strcmp("--help", argv[i]) == 0) {
+            cout << "Usage:" << endl;
+            cout << "  --help\t\t\tShow this help" << endl;
+            exit(0);
+        } else {
+            cout << "Unknown option \"" << argv[i] << "\"" << endl;
+            exit(0);
+        }
     }
-  }
 
-  jsInit();
+    jsInit();
 
-  jsSuper *jss=new jsSuper();
-  jsInput *jsi=new jsInput(jss);
-  jsi->displayValues(false);
-  int control=0;
+    jsSuper *jss = new jsSuper();
+    jsInput *jsi = new jsInput(jss);
+    jsi->displayValues(false);
 
-  cout << "Found " << jss->getNumJoysticks() << " joystick(s)" << endl;
+    cout << "Found " << jss->getNumJoysticks() << " joystick(s)" << endl;
 
-  if(jss->getNumJoysticks() <= 0) { 
-    cout << "Can't find any joysticks ..." << endl;
-    exit(1);
-  }
-
-  fstream fs;
-  fstream *xfs = new fstream[jss->getNumJoysticks()];
-  if (!usexml) {
-    fs.open("fgfsrc.js",ios::out);
-  }
-
-  jss->firstJoystick();
-  do {
-    cout << "Joystick #" << jss->getCurrentJoystickId()
-         << " \"" << jss->getJoystick()->getName() << "\" has "
-         << jss->getJoystick()->getNumAxes() << " axes" << endl;
-    for (int i=0; i<jss->getJoystick()->getNumAxes(); i++) {
-      jss->getJoystick()->setDeadBand(i,deadband);
+    if(jss->getNumJoysticks() <= 0) {
+        cout << "Can't find any joysticks ..." << endl;
+        exit(1);
     }
-    if (usexml) {
-      char filename[16];
-      snprintf(filename,16,"js%i.xml",jss->getCurrentJoystickId());
-      xfs[jss->getCurrentJoystickId()].open(filename,ios::out);
-      xfs[jss->getCurrentJoystickId()] << "<?xml version=\"1.0\" ?>" << endl
-      << endl << "<PropertyList>" << endl << endl << " <name>"
-      << jss->getJoystick()->getName() << "</name>" << endl << endl;
+    cout << endl << "Now measuring the dead band of your joystick. The dead band is the area " << endl
+                 << "where the joystick is centered and should not generate any input. Move all " << endl
+                 << "axes around in this dead zone during the ten seconds this test will take." << endl;
+    cout << "Press enter to continue." << endl;
+    cin.ignore(1024, '\n');
+    jsi->findDeadBand();
+    cout << endl << "Dead band calibration finished. Press enter to start control assignment." << endl;
+    cin.ignore(1024, '\n');
+
+    jss->firstJoystick();
+    fstream *xfs = new fstream[ jss->getNumJoysticks() ];
+    SGPropertyNode_ptr *jstree = new SGPropertyNode_ptr[ jss->getNumJoysticks() ];
+    do {
+        cout << "Joystick #" << jss->getCurrentJoystickId()
+             << " \"" << jss->getJoystick()->getName() << "\" has "
+             << jss->getJoystick()->getNumAxes() << " axes" << endl;
+
+        char filename[16];
+        snprintf(filename, 16, "js%i.xml", jss->getCurrentJoystickId());
+        xfs[ jss->getCurrentJoystickId() ].open(filename, ios::out);
+        jstree[ jss->getCurrentJoystickId() ] = new SGPropertyNode();
+    } while ( jss->nextJoystick() );
+
+    SGPath templatefile( getFGRoot(argc, argv) );
+    templatefile.append("Input");
+    templatefile.append("Joysticks");
+    templatefile.append("template.xml");
+
+    SGPropertyNode *templatetree = new SGPropertyNode();
+    try {
+        readProperties(templatefile.str().c_str(), templatetree);
+    } catch (sg_io_exception e) {
+        cout << e.getFormattedMessage ();
     }
-  } while( jss->nextJoystick() ); 
 
-  for(control=0;control<=7;control++) {
-      cout << "Move the control you wish to use for " << axes_humannames[control]
-           << " " << axis_posdir[control] << endl;
-      cout << "Pressing a button skips this axis\n";
-      fflush( stdout );
-      jsi->getInput();
-
-      if(jsi->getInputAxis() != -1) {
-         cout << endl << "Assigned axis " << jsi->getInputAxis()
-              << " on joystick " << jsi->getInputJoystick()
-              << " to control " << axes_humannames[control]
-              << endl;
-         bool badanswer=true;
-         do {
-           cout << "Is this correct? (y/n) $ ";
-           cin >> answer;
-           if ((strcmp(answer,"y")==0) || (strcmp(answer,"n")==0)) { badanswer=false; }
-         } while (badanswer);
-         if (strcmp(answer,"n")==0) {
-           control--;
-         } else {
-	   invert[control]=!jsi->getInputAxisPositive();
-           if (usexml) {
-             writeAxisXML( xfs[jsi->getInputJoystick()], control, jsi->getInputAxis() );
-           } else {
-             writeAxisProperties( fs, control, jsi->getInputJoystick(), jsi->getInputAxis() );
-           }
-         }
-      } else {
-         cout << "Skipping control" << endl;
-         bool badanswer=true;
-         do {
-           cout << "Is this correct? (y/n) $ ";
-           cin >> answer;
-           if ((strcmp(answer,"y")==0) || (strcmp(answer,"n")==0)) { badanswer=false; }
-         } while (badanswer);
-         if (strcmp(answer,"n")==0) { control--; }
-      }
-      cout << endl;
-  }
-
-  for(control=btninit;control<=7;control++) {
-      if ( control == -2 ) {
-        cout << "Press the button you wish to use for View Cycle" << endl;
-      } else if ( control == -1 ) {
-        cout << "Press the button you wish to use for Brakes" << endl;
-      } else {
-        cout << "Press the button you wish to use for " << button_humannames[control] << endl;
-      }
-      cout << "Moving a joystick axis skips this button\n";
-      fflush( stdout );
-      jsi->getInput();
-      if(jsi->getInputButton() != -1) {
-         cout << endl << "Assigned button " << jsi->getInputButton()
-              << " on joystick " << jsi->getInputJoystick()
-              << " to control ";
-         if ( control == -2 ) { cout << "View Cycle" << endl; }
-         else if ( control == -1 ) { cout << "Brakes" << endl; }
-         else { cout << button_humannames[control] << endl; }
-         bool badanswer=true;
-         do {
-           cout << "Is this correct? (y/n) $ ";
-           cin >> answer;
-           if ((strcmp(answer,"y")==0) || (strcmp(answer,"n")==0)) { badanswer=false; }
-         } while (badanswer);
-         if (strcmp(answer,"n")==0) {
-           control--;
-         } else {
-           if (usexml) {
-             writeButtonXML( xfs[jsi->getInputJoystick()], control, jsi->getInputButton() );
-           } else {
-             writeButtonProperties( fs, control, jsi->getInputJoystick(), jsi->getInputButton() );
-           }
-         }
-      } else {
-         cout << "Skipping control" << endl;
-         bool badanswer=true;
-         do {
-           cout << "Is this correct? (y/n) $ ";
-           cin >> answer;
-           if ((strcmp(answer,"y")==0) || (strcmp(answer,"n")==0)) { badanswer=false; }
-         } while (badanswer);
-         if (strcmp(answer,"n")==0) { control--; }
-      }
-
-      cout << endl;
-  }
-  if (usexml) {
-    for (int i=0; i<jss->getNumJoysticks(); i++) {
-      xfs[i] << "</PropertyList>" << endl << endl << "<!-- end of joystick.xml -->" << endl;
-      xfs[i].close();
+    vector<SGPropertyNode_ptr> axes = templatetree->getChildren("axis");
+    for(vector<SGPropertyNode_ptr>::iterator iter = axes.begin(); iter != axes.end(); iter++) {
+        cout << "Move the control you wish to use for " << (*iter)->getStringValue("desc")
+             << " " << (*iter)->getStringValue("direction") << endl;
+        cout << "Pressing a button skips this axis" << endl;
+        fflush( stdout );
+        jsi->getInput();
+        if (jsi->getInputAxis() != -1) {
+            cout << endl << "Assigned axis " << jsi->getInputAxis()
+                 << " on joystick " << jsi->getInputJoystick()
+                 << " to control " << (*iter)->getStringValue("desc") << endl;
+            if ( confirmAnswer() ) {
+                SGPropertyNode *axis = jstree[ jsi->getInputJoystick() ]->getChild("axis", jsi->getInputAxis(), true);
+                copyProperties(*iter, axis);
+                axis->setDoubleValue("dead-band", jss->getJoystick(jsi->getInputJoystick())
+                        ->getDeadBand(jsi->getInputAxis()));
+                axis->setDoubleValue("binding/factor", jsi->getInputAxisPositive() ? 1.0 : -1.0);
+            } else {
+                iter--;
+            }
+        } else {
+            cout << "Skipping control" << endl;
+            if ( ! confirmAnswer() )
+                iter--;
+        }
+        cout << endl;
     }
-  } else {
-    fs.close();
-  }
-  delete jsi;
-  delete[] xfs;
-  delete jss;
 
-  cout << "Your joystick settings are in ";
-  if (usexml) {
-    cout << "js0.xml, js1.xml, etc. depending on how many" << endl << "devices you have." << endl;
-  } else {
-    cout << "fgfsrc.js" << endl;
-  }
-  cout << endl << "Check and edit as desired. Once you are happy," << endl;
-  if (usexml) {
-    cout << "move relevant js<n>.xml files to $FG_ROOT/Input/Joysticks/ (if you didn't use" << endl
+    vector<SGPropertyNode_ptr> buttons = templatetree->getChildren("button");
+    for(vector<SGPropertyNode_ptr>::iterator iter = buttons.begin(); iter != buttons.end(); iter++) {
+        cout << "Press the button you wish to use for " << (*iter)->getStringValue("desc") << endl;
+        cout << "Moving a joystick axis skips this button" << endl;
+        fflush( stdout );
+        jsi->getInput();
+        if (jsi->getInputButton() != -1) {
+            cout << endl << "Assigned button " << jsi->getInputButton()
+                 << " on joystick " << jsi->getInputJoystick()
+                 << " to control " << (*iter)->getStringValue("desc") << endl;
+            if ( confirmAnswer() ) {
+                SGPropertyNode *button = jstree[ jsi->getInputJoystick() ]->getChild("button", jsi->getInputButton(), true);
+                copyProperties(*iter, button);
+            } else {
+                iter--;
+            }
+        } else {
+            cout << "Skipping control" << endl;
+            if (! confirmAnswer())
+                iter--;
+        }
+        cout << endl;
+    }
+
+    cout << "Your joystick settings are in ";
+    for (int i = 0; i < jss->getNumJoysticks(); i++) {
+        try {
+            cout << "js" << i << ".xml";
+            if (i + 2 < jss->getNumJoysticks())
+                cout << ", ";
+            else if (i + 1 < jss->getNumJoysticks())
+                cout << " and ";
+
+            jstree[i]->setStringValue("name", jss->getJoystick(i)->getName());
+            writeProperties(xfs[i], jstree[i], true);
+        } catch (sg_io_exception e) {
+            cout << e.getFormattedMessage ();
+        }
+        xfs[i].close();
+    }
+    cout << "." << endl << "Check and edit as desired. Once you are happy," << endl
+         << "move relevant js<n>.xml files to $FG_ROOT/Input/Joysticks/ (if you didn't use" << endl
          << "an attached controller, you don't need to move the corresponding file)" << endl;
-  } else {
-    cout << "append its contents to your .fgfsrc or system.fgfsrc" << endl;
-  }
 
-  return 1;
+    delete jsi;
+    delete[] xfs;
+    delete jss;
+
+    return 1;
+}
+
+char *homedir = ::getenv( "HOME" );
+char *hostname = ::getenv( "HOSTNAME" );
+bool free_hostname = false;
+
+// Scan the command line options for the specified option and return
+// the value.
+static string fgScanForOption( const string& option, int argc, char **argv ) {
+    int i = 1;
+
+    if (hostname == NULL)
+    {
+        char _hostname[256];
+        gethostname(_hostname, 256);
+        hostname = strdup(_hostname);
+        free_hostname = true;
+    }
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Scanning command line for: " << option );
+
+    int len = option.length();
+
+    while ( i < argc ) {
+        SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
+
+        string arg = argv[i];
+        if ( arg.find( option ) == 0 ) {
+            return arg.substr( len );
+        }
+
+        i++;
+    }
+
+    return "";
+}
+
+// Scan the user config files for the specified option and return
+// the value.
+static string fgScanForOption( const string& option, const string& path ) {
+    sg_gzifstream in( path );
+    if ( !in.is_open() ) {
+        return "";
+    }
+
+    SG_LOG( SG_GENERAL, SG_INFO, "Scanning " << path << " for: " << option );
+
+    int len = option.length();
+
+    in >> skipcomment;
+#ifndef __MWERKS__
+    while ( ! in.eof() ) {
+#else
+    char c = '\0';
+    while ( in.get(c) && c != '\0' ) {
+        in.putback(c);
+#endif
+        string line;
+
+#if defined( macintosh )
+        getline( in, line, '\r' );
+#else
+        getline( in, line, '\n' );
+#endif
+
+        // catch extraneous (DOS) line ending character
+        if ( line[line.length() - 1] < 32 ) {
+            line = line.substr( 0, line.length()-1 );
+        }
+
+        if ( line.find( option ) == 0 ) {
+            return line.substr( len );
+        }
+
+        in >> skipcomment;
+    }
+
+    return "";
+}
+
+// Scan the user config files for the specified option and return
+// the value.
+static string fgScanForOption( const string& option ) {
+    string arg("");
+
+#if defined( unix ) || defined( __CYGWIN__ )
+    // Next check home directory for .fgfsrc.hostname file
+    if ( arg.empty() ) {
+        if ( homedir != NULL ) {
+            SGPath config( homedir );
+            config.append( ".fgfsrc" );
+            config.concat( "." );
+            config.concat( hostname );
+            arg = fgScanForOption( option, config.str() );
+        }
+    }
+#endif
+
+    // Next check home directory for .fgfsrc file
+    if ( arg.empty() ) {
+        if ( homedir != NULL ) {
+            SGPath config( homedir );
+            config.append( ".fgfsrc" );
+            arg = fgScanForOption( option, config.str() );
+        }
+    }
+
+    return arg;
+}
+
+// Read in configuration (files and command line options) but only set
+// fg_root
+string getFGRoot ( int argc, char **argv ) {
+    string root;
+
+    // First parse command line options looking for --fg-root=, this
+    // will override anything specified in a config file
+    root = fgScanForOption( "--fg-root=", argc, argv);
+
+    // Check in one of the user configuration files.
+    if (root.empty() )
+        root = fgScanForOption( "--fg-root=" );
+
+    // Next check if fg-root is set as an env variable
+    if ( root.empty() ) {
+        char *envp = ::getenv( "FG_ROOT" );
+        if ( envp != NULL ) {
+            root = envp;
+        }
+    }
+
+    // Otherwise, default to a random compiled-in location if we can't
+    // find fg-root any other way.
+    if ( root.empty() ) {
+#if defined( __CYGWIN__ )
+        root = "/FlightGear";
+#elif defined( WIN32 )
+        root = "\\FlightGear";
+#elif defined(OSX_BUNDLE)
+        /* the following code looks for the base package directly inside
+            the application bundle. This can be changed fairly easily by
+            fiddling with the code below. And yes, I know it's ugly and verbose.
+        */
+        CFBundleRef appBundle = CFBundleGetMainBundle();
+        CFURLRef appUrl = CFBundleCopyBundleURL(appBundle);
+        CFRelease(appBundle);
+
+        // look for a 'data' subdir directly inside the bundle : is there
+        // a better place? maybe in Resources? I don't know ...
+        CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, appUrl, CFSTR("data"), true);
+
+        // now convert down to a path, and the a c-string
+        CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
+        root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
+
+        // tidy up.
+        CFRelease(appBundle);
+        CFRelease(dataDir);
+        CFRelease(path);
+#else
+        root = PKGLIBDIR;
+#endif
+    }
+
+    SG_LOG(SG_INPUT, SG_INFO, "fg_root = " << root );
+
+    return root;
 }

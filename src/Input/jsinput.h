@@ -32,29 +32,30 @@ class jsInput {
     float axes[_JS_MAX_AXES];
     float axes_iv[MAX_JOYSTICKS][_JS_MAX_AXES];
     int button_iv[MAX_JOYSTICKS];
-    
+
     int joystick,axis,button;
     bool axis_positive;
-    
+
     float axis_threshold;
-    
+
   public:
     jsInput(jsSuper *jss);
-    ~jsInput(void); 
-    
+    ~jsInput(void);
+
     inline void displayValues(bool bb) { pretty_display=bb; }
-    
+
     int getInput(void);
-    
+    void findDeadBand(void);
+
     inline int getInputJoystick(void) { return joystick; }
     inline int getInputAxis(void)     { return axis; }
     inline int getInputButton(void)   { return button; }
     inline bool getInputAxisPositive(void) { return axis_positive; }
-    
+
     inline float getReturnThreshold(void) { return axis_threshold; }
-    inline void setReturnThreshold(float ff) 
+    inline void setReturnThreshold(float ff)
               { if(fabs(ff) <= 1.0) axis_threshold=ff; }
-};    
+};
 
 
 #endif
