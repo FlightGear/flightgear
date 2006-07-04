@@ -18,6 +18,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
+#include <Instrumentation/HUD/HUD.hxx>
 
 #include "instrument_mgr.hxx"
 #include "adf.hxx"
@@ -44,7 +45,7 @@
 #include "inst_vertical_speed_indicator.hxx" // (TJ)
 #include "od_gauge.hxx"
 #include "wxradar.hxx"
-#include "tacan.hxx" 
+#include "tacan.hxx"
 #include "mk_viii.hxx"
 
 
@@ -52,6 +53,7 @@ FGInstrumentMgr::FGInstrumentMgr ()
 {
     set_subsystem("annunciator", new Annunciator);
     set_subsystem("od_gauge", new FGODGauge, 1.0);
+    set_subsystem("hud", new HUD);
 
     config_props = new SGPropertyNode;
 

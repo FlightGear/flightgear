@@ -68,6 +68,8 @@
 #include <Scenery/tilemgr.hxx>
 #include <ATC/ATCdisplay.hxx>
 #include <GUI/new_gui.hxx>
+#include <Instrumentation/instrument_mgr.hxx>
+#include <Instrumentation/HUD/HUD.hxx>
 
 #include "splash.hxx"
 #include "renderer.hxx"
@@ -728,6 +730,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
     hud_and_panel->apply();
     fgCockpitUpdate();
+
+    FGInstrumentMgr *instr = static_cast<FGInstrumentMgr *>(globals->get_subsystem("instrumentation"));
+    HUD *hud = static_cast<HUD *>(instr->get_subsystem("hud"));
+    hud->draw();
 
     // Use the hud_and_panel ssgSimpleState for rendering the ATC output
     // This only works properly if called before the panel call
