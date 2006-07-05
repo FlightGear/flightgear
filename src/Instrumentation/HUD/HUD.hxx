@@ -387,14 +387,14 @@ protected:
     inline float get_width()  const { return _scrn_pos.right; }
     inline float get_height() const { return _scrn_pos.bottom; }
 
-    inline bool option_vert()    const { return _options & VERT; }
-    inline bool option_left()    const { return _options & LEFT; }
-    inline bool option_right()   const { return _options & RIGHT; }
+    inline bool option_vert()    const { return (_options & VERT) == VERT; }
+    inline bool option_left()    const { return (_options & LEFT) == LEFT; }
+    inline bool option_right()   const { return (_options & RIGHT) == RIGHT; }
     inline bool option_both()    const { return (_options & BOTH) == BOTH; }
-    inline bool option_noticks() const { return _options & NOTICKS; }
-    inline bool option_notext()  const { return _options & NOTEXT; }
-    inline bool option_top()     const { return _options & TOP; }
-    inline bool option_bottom()  const { return _options & BOTTOM; }
+    inline bool option_noticks() const { return (_options & NOTICKS) == NOTICKS; }
+    inline bool option_notext()  const { return (_options & NOTEXT) == NOTEXT; }
+    inline bool option_top()     const { return (_options & TOP) == TOP; }
+    inline bool option_bottom()  const { return (_options & BOTTOM) == BOTTOM; }
 
     void draw_line( float x1, float y1, float x2, float y2);
     void draw_stipple_line( float x1, float y1, float x2, float y2);
