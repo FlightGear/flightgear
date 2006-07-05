@@ -225,8 +225,7 @@ void HUD::draw3D()
 }
 
 
-void HUD::draw2D( GLfloat x_start, GLfloat y_start,
-                  GLfloat x_end, GLfloat y_end )
+void HUD::draw2D(GLfloat x_start, GLfloat y_start, GLfloat x_end, GLfloat y_end)
 {
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();

@@ -315,7 +315,7 @@ public:
         _offset = n->getFloatValue("offset", offset);
         _min = n->getFloatValue("min", min);
         _max = n->getFloatValue("max", max);
-        _coeff = n->getFloatValue("damp", 0.0);
+        _coeff = 1.0 - 1.0 / powf(10, fabsf(n->getFloatValue("damp", 0.0)));
         SGPropertyNode *p = ((SGPropertyNode *)n)->getNode("property", false);
         if (p) {
             const char *path = p->getStringValue();
@@ -338,13 +338,14 @@ public:
             _damped = f;
         if (_coeff > 0.0f)
             f = _damped = f * (1.0f - _coeff) + _damped * _coeff;
-        return f < _min ? _min : f > _max ? _max : f;
+        return clamp(f);
     }
 
     inline float isValid() const { return _valid; }
     inline float min() const { return _min; }
     inline float max() const { return _max; }
     inline float factor() const { return _factor; }
+    float clamp(float v) const { return v < _min ? _min : v > _max ? _max : v; }
 
     void set_min(float m, bool force = true) {
         if (force || _min == -SGLimitsf::max())
@@ -368,7 +369,7 @@ private:
 
 
 
-class HUD::Item { // An Abstract Base Class (ABC)
+class HUD::Item {
 public:
     Item(HUD *parent, const SGPropertyNode *, float x = 0.0f, float y = 0.0f);
     virtual ~Item () {}
@@ -376,7 +377,6 @@ public:
     virtual bool isEnabled();
 
 protected:
-
     inline Rect  get_location()   const { return _scrn_pos; }
     inline float get_span()       const { return _scr_span; }
     inline Point get_centroid()   const { return _mid_span; }
@@ -469,8 +469,8 @@ public:
 
 protected:
     inline unsigned int modulo() const { return _modulo; }
-    inline float  factor() const { return scale_factor; }
-    inline float  range_to_show() const { return _range_shown; }
+    inline float factor() const { return _display_factor; }
+    inline float range_to_show() const { return _range_shown; }
 
     Input _input;
     unsigned int _major_divs;  // major division marker units
@@ -478,8 +478,8 @@ protected:
 
 private:
     float _range_shown;     // Width Units.
-    float scale_factor;    // factor => screen units/range values.
-    unsigned int _modulo;  // Roll over point
+    float _display_factor;  // factor => screen units/range values.
+    unsigned int _modulo;   // Roll over point
 };
 
 
@@ -576,15 +576,14 @@ private:
     Input  _pitch;
     Input  _roll;
     enum Type { PITCH, CLIMB_DIVE } _type;
-    unsigned int width_units;
+    float _width_units;
     int    div_units;
-    unsigned int minor_div;
     unsigned int label_pos;
     unsigned int _scr_hole;
     float  _vmax;
     float  _vmin;
     float  _compression;
-    bool   _frl;
+    bool   _frl;               // fuselage reference line
     bool   _target_spot;
     bool   _velocity_vector;
     bool   _drift_marker;
@@ -617,8 +616,7 @@ public:
 private:
     void boundPoint(const sgdVec3& v, sgdVec3& m);
     bool boundOutsidePoints(sgdVec3& v, sgdVec3& m);
-    bool drawLine(const sgdVec3& a1, const sgdVec3& a2,
-            const sgdVec3& p1, const sgdVec3& p2);
+    bool drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& p1, const sgdVec3& p2);
     void drawArrow();
     bool get_active_runway(FGRunway& rwy);
     void get_rwy_points(sgdVec3 *points);

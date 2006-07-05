@@ -42,8 +42,8 @@ void HUD::Dial::draw(void)
 
     float x, y;
     float i;
-    y = (float)(scrn_rect.top);
-    x = (float)(scrn_rect.left);
+    y = scrn_rect.top;
+    x = scrn_rect.left;
     glEnable(GL_POINT_SMOOTH);
     glPointSize(3.0);
 

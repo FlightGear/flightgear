@@ -38,7 +38,8 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
 {
     _half_width_units = range_to_show() / 2.0;
 
-    const char *s = n->getStringValue("pointer-type");
+    const char *s;
+    s = n->getStringValue("pointer-type");
     _pointer_type = strcmp(s, "moving") ? FIXED : MOVING;    // "fixed", "moving"
 
     s = n->getStringValue("tick-type");
@@ -62,17 +63,15 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
     float text_x = 0.0, text_y = 0.0;
     int lenstr;
     float height, width;
-    int i, last;
     const int BUFSIZE = 80;
     char buf[BUFSIZE];
-    bool condition;
     int disp_val = 0;
     int oddtype, k; //odd or even values for ticks
 
     Point mid_scr = get_centroid();
     float cur_value = _input.getFloatValue();
 
-    if ((int)_input.max() & 1)
+    if (int(floor(_input.max() + 0.5)) & 1)
         oddtype = 1; //draw ticks at odd values
     else
         oddtype = 0; //draw ticks at even values
@@ -88,8 +87,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             vmin = _input.min();
             vmax = _input.max();
 
-        } else {
-            // default to fixed
+        } else { // FIXED
             vmin = cur_value - _half_width_units; // width units == needle travel
             vmax = cur_value + _half_width_units; // or picture unit span.
             text_x = mid_scr.x;
@@ -102,6 +100,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
         text_x = mid_scr.x;
         text_y = mid_scr.y;
     }
+
 
     // Draw the basic markings for the scale...
 
@@ -138,10 +137,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
         //First draw capping lines and pointers
         if (option_left()) {    // Calculate x marker offset
 
-            if (_draw_cap_right) {
-                // Cap right side
+            if (_draw_cap_right)
                 draw_line(marker_xe, scrn_rect.top, marker_xe, marker_ye);
-            }
 
             marker_xs  = marker_xe - scrn_rect.right / 3;   // Adjust tick xs
 
@@ -153,20 +150,16 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             // draw pointer
             if (_pointer) {
                 if (_pointer_type == MOVING) {
-                    if (_zoom == 0) {
+                    if (!_zoom) {
                         //Code for Moving Type Pointer
                         float ycentre, ypoint, xpoint;
                         float range, wth;
-                        if (cur_value > _input.max())
-                            cur_value = _input.max();
-                        if (cur_value < _input.min())
-                            cur_value = _input.min();
 
                         if (_input.min() >= 0.0)
                             ycentre = scrn_rect.top;
                         else if (_input.max() + _input.min() == 0.0)
                             ycentre = mid_scr.y;
-                        else if (oddtype == 1)
+                        else if (oddtype)
                             ycentre = scrn_rect.top + (1.0 - _input.min()) * scrn_rect.bottom
                                     / (_input.max() - _input.min());
                         else
@@ -176,7 +169,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         range = scrn_rect.bottom;
                         wth = scrn_rect.left + scrn_rect.right;
 
-                        if (oddtype == 1)
+                        if (oddtype)
                             ypoint = ycentre + ((cur_value - 1.0) * range / _val_span);
                         else
                             ypoint = ycentre + (cur_value * range / _val_span);
@@ -186,7 +179,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         draw_line(xpoint, ypoint, xpoint - _marker_offset, ypoint);
                         draw_line(xpoint - _marker_offset, ypoint, xpoint - 5.0, ypoint + 5.0);
                         draw_line(xpoint - _marker_offset, ypoint, xpoint - 5.0, ypoint - 5.0);
-                    } //_zoom=0
+                    } // !_zoom
 
                 } else {
                     // default to fixed
@@ -197,13 +190,13 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             } //if pointer
         } //end vertical/left
 
+
         // begin vertical/right
         //First draw capping lines and pointers
-        if (option_right()) {  // We'll default this for now.
-            if (_draw_cap_left) {
-                // Cap left side
+        if (option_right()) {
+
+            if (_draw_cap_left)
                 draw_line(scrn_rect.left, scrn_rect.top, scrn_rect.left, marker_ye);
-            } //endif cap_left
 
             marker_xe = scrn_rect.left + scrn_rect.right / 3;     // Adjust tick xe
             // Indicator carrot
@@ -215,29 +208,24 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             // draw pointer
             if (_pointer) {
                 if (_pointer_type == MOVING) {
-                    if (_zoom == 0) {
+                    if (!_zoom) {
                         //type-fixed & _zoom=1, behaviour to be defined
                         // Code for Moving Type Pointer
                         float ycentre, ypoint, xpoint;
                         float range;
 
-                        if (cur_value > _input.max())
-                            cur_value = _input.max();
-                        if (cur_value < _input.min())
-                            cur_value = _input.min();
-
                         if (_input.min() >= 0.0)
                             ycentre = scrn_rect.top;
                         else if (_input.max() + _input.min() == 0.0)
                             ycentre = mid_scr.y;
-                        else if (oddtype == 1)
+                        else if (oddtype)
                             ycentre = scrn_rect.top + (1.0 - _input.min()) * scrn_rect.bottom / (_input.max() - _input.min());
                         else
                             ycentre = scrn_rect.top + _input.min() * scrn_rect.bottom / (_input.max() - _input.min());
 
                         range = scrn_rect.bottom;
 
-                        if (oddtype == 1)
+                        if (oddtype)
                             ypoint = ycentre + ((cur_value - 1.0) * range / _val_span);
                         else
                             ypoint = ycentre + (cur_value * range / _val_span);
@@ -258,200 +246,175 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             } //if pointer
         }  //end vertical/right
 
+
         // At this point marker x_start and x_end values are transposed.
-        // To keep this from confusing things they are now interchanged.
-        if (option_both()) {
-            marker_ye = marker_xs;
-            marker_xs = marker_xe;
-            marker_xe = marker_ye;
-        }
+        // To keep this from confusing things they are now swapped.
+        if (option_both())
+            marker_ye = marker_xs, marker_xs = marker_xe, marker_xe = marker_ye;
+
+
 
         // Work through from bottom to top of scale. Calculating where to put
         // minor and major ticks.
 
         // draw scale or tape
-        last = (int)vmax + 1; // N
-        i = (int)vmin; // N
-
-        if (_zoom == 1) {
+        if (_zoom) {
             zoomed_scale((int)vmin, (int)vmax);
         } else {
-            for (; i < last; i++) {
-                condition = true;
+
+            for (int i = (int)vmin; i < (int)vmax + 1; i++) {
                 if (!modulo() && i < _input.min())
-                    condition = false;
+                    continue;
 
-                if (condition) {  // Show a tick if necessary
-                    // Calculate the location of this tick
-                    marker_ys = scrn_rect.top + ((i - vmin) * factor()/*+.5f*/);
-                    // marker_ys = scrn_rect.top + (int)((i - vmin) * factor() + .5);
-                    // Block calculation artifact from drawing ticks below min coordinate.
-                    // Calculation here accounts for text height.
+                // Calculate the location of this tick
+                marker_ys = scrn_rect.top + ((i - vmin) * factor());
+                // Block calculation artifact from drawing ticks below min coordinate.
+                // Calculation here accounts for text height.
 
-                    if ((marker_ys < (scrn_rect.top + 4))
-                            || (marker_ys > (height - 4))) {
-                        // Magic numbers!!!
-                        continue;
-                    }
+                if ((marker_ys < (scrn_rect.top + 4)) || (marker_ys > (height - 4)))
+                    continue;
 
-                    if (oddtype == 1)
-                        k = i + 1; //enable ticks at odd values
-                    else
-                        k = i;
+                if (oddtype)
+                    k = i + 1; //enable ticks at odd values
+                else
+                    k = i;
 
-                    // Minor ticks
-                    if (_minor_divs) {
-                        // if ((i % _minor_divs) == 0) {
-                        if (!(k % (int)_minor_divs)) {
-                            if (((marker_ys - 5) > scrn_rect.top)
-                                    && ((marker_ys + 5) < (height))) {
 
-                                //vertical/left OR vertical/right
-                                if (option_both()) {
-                                    if (_tick_type == LINE) {
-                                        if (_tick_length == VARIABLE) {
-                                            draw_line(scrn_rect.left, marker_ys,
-                                                    marker_xs, marker_ys);
-                                            draw_line(marker_xe, marker_ys,
-                                                    width, marker_ys);
-                                        } else {
-                                            draw_line(scrn_rect.left, marker_ys,
-                                                    marker_xs, marker_ys);
-                                            draw_line(marker_xe, marker_ys,
-                                                    width, marker_ys);
-                                        }
+                // Minor ticks
+                if (_minor_divs) {
+                    // if ((i % _minor_divs) == 0) {
+                    if (!(k % (int)_minor_divs)) {
+                        if (marker_ys < scrn_rect.top + 5 || (marker_ys + 5) > height)
+                            continue;
 
-                                    } else if (_tick_type == CIRCLE) {
-                                        draw_bullet(scrn_rect.left,(float)marker_ys, 3.0);
-
-                                    } else {
-                                        // if neither line nor circle draw default as line
-                                        draw_line(scrn_rect.left, marker_ys,
-                                                marker_xs, marker_ys);
-                                        draw_line(marker_xe, marker_ys,
-                                                width, marker_ys);
-                                    }
-                                    // glBegin(GL_LINES);
-                                    // glVertex2f(scrn_rect.left, marker_ys);
-                                    // glVertex2f(marker_xs,      marker_ys);
-                                    // glVertex2f(marker_xe,      marker_ys);
-                                    // glVertex2f(scrn_rect.left + scrn_rect.right,  marker_ys);
-                                    // glEnd();
-                                    // anything other than option_both
-
+                        //vertical/left OR vertical/right
+                        if (option_both()) {
+                            if (_tick_type == LINE) {
+                                if (_tick_length == VARIABLE) {
+                                    draw_line(scrn_rect.left, marker_ys, marker_xs, marker_ys);
+                                    draw_line(marker_xe, marker_ys, width, marker_ys);
                                 } else {
-                                    if (option_left()) {
-                                        if (_tick_type == LINE) {
-                                            if (_tick_length == VARIABLE) {
-                                                draw_line(marker_xs + 4, marker_ys,
-                                                        marker_xe, marker_ys);
-                                            } else {
-                                                draw_line(marker_xs, marker_ys,
-                                                        marker_xe, marker_ys);
-                                            }
-                                        } else if (_tick_type == CIRCLE) {
-                                            draw_bullet((float)marker_xs + 4, (float)marker_ys, 3.0);
-
-                                        } else {
-                                            draw_line(marker_xs + 4, marker_ys,
-                                                    marker_xe, marker_ys);
-                                        }
-
-                                    }  else {
-                                        if (_tick_type == LINE) {
-                                            if (_tick_length == VARIABLE) {
-                                                draw_line(marker_xs, marker_ys,
-                                                        marker_xe - 4, marker_ys);
-                                            } else {
-                                                draw_line(marker_xs, marker_ys,
-                                                        marker_xe, marker_ys);
-                                            }
-
-                                        } else if (_tick_type == CIRCLE) {
-                                            draw_bullet((float)marker_xe - 4, (float)marker_ys, 3.0);
-                                        } else {
-                                            draw_line(marker_xs, marker_ys,
-                                                    marker_xe - 4, marker_ys);
-                                        }
-                                    }
-                                } //end huds both
-                            }
-                        } //end draw minor ticks
-                    }  //end minor ticks
-
-                    // Major ticks
-                    if (_major_divs) {
-                        if (!(k % (int)_major_divs)) {
-
-                            if (modulo()) {
-                                disp_val = i % (int) modulo(); // ?????????
-                                if (disp_val < 0) {
-                                    while (disp_val < 0)
-                                        disp_val += modulo();
+                                    draw_line(scrn_rect.left, marker_ys, marker_xs, marker_ys);
+                                    draw_line(marker_xe, marker_ys, width, marker_ys);
                                 }
-                            } else {
-                                disp_val = i;
-                            }
 
-// FIXME what nonsense is this?!?
-                            lenstr = snprintf(buf, BUFSIZE, "%d", int(disp_val * _input.factor()/*+.5*/));   // was data_scaling ... makes no sense at all
-                            // (int)(disp_val  * data_scaling() +.5));
-                            /* if (((marker_ys - 8) > scrn_rect.top) &&
-                               ((marker_ys + 8) < (height))){ */
-                            // option_both
-                            if (option_both()) {
-                                // draw_line(scrn_rect.left, marker_ys,
-                                //              marker_xs,      marker_ys);
-                                // draw_line(marker_xs, marker_ys,
-                                //              scrn_rect.left + scrn_rect.right,
-                                //              marker_ys);
+                            } else if (_tick_type == CIRCLE) {
+                                draw_bullet(scrn_rect.left, marker_ys, 3.0);
+
+                            } else {
+                                // if neither line nor circle draw default as line
+                                draw_line(scrn_rect.left, marker_ys, marker_xs, marker_ys);
+                                draw_line(marker_xe, marker_ys, width, marker_ys);
+                            }
+                            // glBegin(GL_LINES);
+                            // glVertex2f(scrn_rect.left, marker_ys);
+                            // glVertex2f(marker_xs,      marker_ys);
+                            // glVertex2f(marker_xe,      marker_ys);
+                            // glVertex2f(scrn_rect.left + scrn_rect.right,  marker_ys);
+                            // glEnd();
+                            // anything other than huds_both
+
+                        } else {
+                            if (option_left()) {
                                 if (_tick_type == LINE) {
-                                    glBegin(GL_LINE_STRIP);
-                                    glVertex2f(scrn_rect.left, marker_ys);
-                                    glVertex2f(marker_xs, marker_ys);
-                                    glVertex2f(width, marker_ys);
-                                    glEnd();
+                                    if (_tick_length == VARIABLE) {
+                                        draw_line(marker_xs + 4, marker_ys, marker_xe, marker_ys);
+                                    } else {
+                                        draw_line(marker_xs, marker_ys, marker_xe, marker_ys);
+                                    }
+                                } else if (_tick_type == CIRCLE) {
+                                    draw_bullet(marker_xs + 4, marker_ys, 3.0);
+                                } else {
+                                    draw_line(marker_xs + 4, marker_ys, marker_xe, marker_ys);
+                                }
+
+                            }  else {
+                                if (_tick_type == LINE) {
+                                    if (_tick_length == VARIABLE) {
+                                        draw_line(marker_xs, marker_ys, marker_xe - 4, marker_ys);
+                                    } else {
+                                        draw_line(marker_xs, marker_ys, marker_xe, marker_ys);
+                                    }
 
                                 } else if (_tick_type == CIRCLE) {
-                                    draw_bullet(scrn_rect.left, (float)marker_ys, 5.0);
-
+                                    draw_bullet(marker_xe - 4, marker_ys, 3.0);
                                 } else {
-                                    glBegin(GL_LINE_STRIP);
-                                    glVertex2f(scrn_rect.left, marker_ys);
-                                    glVertex2f(marker_xs, marker_ys);
-                                    glVertex2f(width, marker_ys);
-                                    glEnd();
+                                    draw_line(marker_xs, marker_ys, marker_xe - 4, marker_ys);
                                 }
+                            }
+                        } // end huds both
+                    } // end draw minor ticks
+                } // end minor ticks
 
-                                if (!option_notext())
-                                    draw_text(marker_xs + 2, marker_ys, buf, 0);
+
+                // Major ticks
+                if (_major_divs) {
+                    if (!(k % (int)_major_divs)) {
+
+                        if (modulo()) {
+                            disp_val = i % (int) modulo();
+                            if (disp_val < 0) {
+                                while (disp_val < 0)
+                                    disp_val += modulo();
+                            }
+                        } else {
+                            disp_val = i;
+                        }
+
+                        // FIXME  int lenstr??
+                        lenstr = snprintf(buf, BUFSIZE, "%d", int(disp_val * _input.factor()));   // was data_scaling ... makes no sense at all
+
+                        if (option_both()) {
+                            // drawOneLine(scrn_rect.left, marker_ys,
+                            //              marker_xs,      marker_ys);
+                            // drawOneLine(marker_xs, marker_ys,
+                            //              scrn_rect.left + scrn_rect.right,
+                            //              marker_ys);
+                            if (_tick_type == LINE) {
+                                glBegin(GL_LINE_STRIP);
+                                glVertex2f(scrn_rect.left, marker_ys);
+                                glVertex2f(marker_xs, marker_ys);
+                                glVertex2f(width, marker_ys);
+                                glEnd();
+
+                            } else if (_tick_type == CIRCLE) {
+                                draw_bullet(scrn_rect.left, marker_ys, 5.0);
 
                             } else {
-                                /* Changes are made to draw a circle when tick_type=CIRCLE */
-                                // anything other than option_both
-                                if (_tick_type == LINE)
-                                    draw_line(marker_xs, marker_ys, marker_xe, marker_ys);
-                                else if (_tick_type == CIRCLE)
-                                    draw_bullet((float)marker_xs + 4, (float)marker_ys, 5.0);
-                                else
-                                    draw_line(marker_xs, marker_ys, marker_xe, marker_ys);
+                                glBegin(GL_LINE_STRIP);
+                                glVertex2f(scrn_rect.left, marker_ys);
+                                glVertex2f(marker_xs, marker_ys);
+                                glVertex2f(width, marker_ys);
+                                glEnd();
+                            }
 
-                                if (!option_notext()) {
-                                    if (option_left()) {
-                                        draw_text(marker_xs - 8 * lenstr - 2,
-                                                marker_ys - 4, buf, 0);
-                                    } else {
-                                        draw_text(marker_xe + 3 * lenstr,
-                                                marker_ys - 4, buf, 0);
-                                    } //End if option_left
-                                } //End if !option_notext
-                            }  //End if huds-both
-                        }  // End if draw major ticks
-                    }   // End if major ticks
-                }  // End condition
-            }  // End for
-        }  //end of zoom
+                            if (!option_notext())
+                                draw_text(marker_xs + 2, marker_ys, buf, 0);
+
+                        } else {
+                            /* Changes are made to draw a circle when tick_type=CIRCLE */
+                            // anything other than option_both
+                            if (_tick_type == LINE)
+                                draw_line(marker_xs, marker_ys, marker_xe, marker_ys);
+                            else if (_tick_type == CIRCLE)
+                                draw_bullet(marker_xs + 4, marker_ys, 5.0);
+                            else
+                                draw_line(marker_xs, marker_ys, marker_xe, marker_ys);
+
+                            if (!option_notext()) {
+                                if (option_left())
+                                    draw_text(marker_xs - 8 * lenstr - 2, marker_ys - 4, buf, 0);
+                                else
+                                    draw_text(marker_xe + 3 * lenstr, marker_ys - 4, buf, 0);
+                            }
+                        } // End if huds-both
+                    } // End if draw major ticks
+                } // End if major ticks
+            } // End for
+        } // end of zoom
         // End if VERTICAL SCALE TYPE (tape loop yet to be closed)
+
+
 
     } else {
         // Horizontal scale by default
@@ -466,7 +429,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
         marker_ys = scrn_rect.top;    // Starting point for
         marker_ye = height;           // tick y location calcs
         marker_xe = width;
-        marker_xs = scrn_rect.left + ((cur_value - vmin) * factor() /*+ .5f*/);
+        marker_xs = scrn_rect.left + ((cur_value - vmin) * factor());
 
         //    glBegin(GL_LINES);
         // left tick bar
@@ -479,7 +442,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
         //    glEnd();
 
         if (option_top()) {
-            // Bottom box line
             if (_draw_cap_bottom)
                 draw_line(scrn_rect.left, scrn_rect.top, width, scrn_rect.top);
 
@@ -493,14 +455,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             // draw pointer
             if (_pointer) {
                 if (_pointer_type == MOVING) {
-                    if (_zoom == 0) {
+                    if (!_zoom) {
                         //Code for Moving Type Pointer
-                        // static float xcentre, xpoint, ypoint;
-                        // static int range;
-                        if (cur_value > _input.max())
-                            cur_value = _input.max();
-                        if (cur_value < _input.min())
-                            cur_value = _input.min();
 
                         float xcentre = mid_scr.x;
                         float range = scrn_rect.right;
@@ -521,7 +477,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
         } //End Horizontal scale/top
 
         if (option_bottom()) {
-            // Top box line
             if (_draw_cap_top)
                 draw_line(scrn_rect.left, height, width, height);
 
@@ -538,14 +493,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             // draw pointer
             if (_pointer) {
                 if (_pointer_type == MOVING) {
-                    if (_zoom == 0) {
+                    if (!_zoom) {
                         //Code for Moving Type Pointer
-                        // static float xcentre, xpoint, ypoint;
-                        // static int range, hgt;
-                        if (cur_value > _input.max())
-                            cur_value = _input.max();
-                        if (cur_value < _input.min())
-                            cur_value = _input.min();
 
                         float xcentre = mid_scr.x ;
                         float range = scrn_rect.right;
@@ -561,140 +510,113 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     fixed(marker_xs + scrn_rect.bottom / 4, height, marker_xs, marker_ys,
                             marker_xs - scrn_rect.bottom / 4, height);
                 }
-            } //if pointer
-        }  //end horizontal scale bottom
+            }
+        } //end horizontal scale bottom
 
 
-        if (_zoom == 1) {
+        if (_zoom) {
             zoomed_scale((int)vmin,(int)vmax);
         } else {
-            //default to _zoom=0
-            last = (int)vmax + 1;
-            i = (int)vmin;
-            for (; i < last; i++) {
-                // for (i = (int)vmin; i <= (int)vmax; i++)     {
-                // printf("<*> i = %d\n", i);
-                condition = true;
+
+            for (int i = (int)vmin; i < (int)vmax + 1; i++) {
                 if (!modulo() && i < _input.min())
-                    condition = false;
+                    continue;
 
-                // printf("<**> i = %d\n", i);
-                if (condition) {
-                    // marker_xs = scrn_rect.left + (int)((i - vmin) * factor() + .5);
-                    marker_xs = scrn_rect.left + (((i - vmin) * factor()/*+ .5f*/));
+                marker_xs = scrn_rect.left + (i - vmin) * factor();
 
-                    if (oddtype == 1)
-                        k = i + 1; //enable ticks at odd values
-                    else
-                        k = i;
+                if (oddtype)
+                    k = i + 1;
+                else
+                    k = i;
 
-                    if (_minor_divs) {
-                        //          if ((i % (int)_minor_divs) == 0) {
-                        //draw minor ticks
-                        if (!(k % (int)_minor_divs)) {
-                            // draw in ticks only if they aren't too close to the edge.
-                            if (((marker_xs - 5) > scrn_rect.left)
-                                    && ((marker_xs + 5)< (scrn_rect.left + scrn_rect.right))) {
+                if (_minor_divs) {
+                    // draw minor ticks
+                    if (!(k % (int)_minor_divs)) {
+                        // draw in ticks only if they aren't too close to the edge.
+                        if (marker_xs < scrn_rect.left + 5 || marker_xs + 5 > scrn_rect.left + scrn_rect.right)
+                            continue;
 
-                                if (option_both()) {
-                                    if (_tick_length == VARIABLE) {
-                                        draw_line(marker_xs, scrn_rect.top,
-                                                marker_xs, marker_ys - 4);
-                                        draw_line(marker_xs, marker_ye + 4,
-                                                marker_xs, height);
-                                    } else {
-                                        draw_line(marker_xs, scrn_rect.top,
-                                                marker_xs, marker_ys);
-                                        draw_line(marker_xs, marker_ye,
-                                                marker_xs, height);
-                                    }
-                                    // glBegin(GL_LINES);
-                                    // glVertex2f(marker_xs, scrn_rect.top);
-                                    // glVertex2f(marker_xs, marker_ys - 4);
-                                    // glVertex2f(marker_xs, marker_ye + 4);
-                                    // glVertex2f(marker_xs, scrn_rect.top + scrn_rect.bottom);
-                                    // glEnd();
-
-                                } else {
-                                    if (option_top()) {
-                                        //draw minor ticks
-                                        if (_tick_length == VARIABLE)
-                                            draw_line(marker_xs, marker_ys, marker_xs, marker_ye - 4);
-                                        else
-                                            draw_line(marker_xs, marker_ys, marker_xs, marker_ye);
-
-                                    } else if (_tick_length == VARIABLE) {
-                                        draw_line(marker_xs, marker_ys + 4, marker_xs, marker_ye);
-                                    } else {
-                                        draw_line(marker_xs, marker_ys, marker_xs, marker_ye);
-                                    }
-                                }
-                            }
-                        } //end draw minor ticks
-                    } //end minor ticks
-
-                    //major ticks
-                    if (_major_divs) {
-                        // printf("i = %d\n", i);
-                        // if ((i % (int)_major_divs)==0) {
-                        //     draw major ticks
-
-                        if (!(k % (int)_major_divs)) {
-                            if (modulo()) {
-                                disp_val = i % (int) modulo(); // ?????????
-                                if (disp_val < 0) {
-                                    while (disp_val<0)
-                                        disp_val += modulo();
-                                }
+                        if (option_both()) {
+                            if (_tick_length == VARIABLE) {
+                                draw_line(marker_xs, scrn_rect.top, marker_xs, marker_ys - 4);
+                                draw_line(marker_xs, marker_ye + 4, marker_xs, height);
                             } else {
-                                disp_val = i;
+                                draw_line(marker_xs, scrn_rect.top, marker_xs, marker_ys);
+                                draw_line(marker_xs, marker_ye, marker_xs, height);
                             }
-                            // printf("disp_val = %d\n", disp_val);
-                            // printf("%d\n", (int)(disp_val  * (double)data_scaling() + 0.5));
-                            lenstr = snprintf(buf, BUFSIZE, "%d",
-                                    // (int)(disp_val  * data_scaling() +.5));
-                                    int(disp_val * _input.factor() /*+.5*/));  // was data_scaling() ... makes no sense at all
+                            // glBegin(GL_LINES);
+                            // glVertex2f(marker_xs, scrn_rect.top);
+                            // glVertex2f(marker_xs, marker_ys - 4);
+                            // glVertex2f(marker_xs, marker_ye + 4);
+                            // glVertex2f(marker_xs, scrn_rect.top + scrn_rect.bottom);
+                            // glEnd();
 
-                            // Draw major ticks and text only if far enough from the edge.
-                            if (((marker_xs - 10)> scrn_rect.left)
-                                    && ((marker_xs + 10) < (scrn_rect.left + scrn_rect.right))) {
-                                if (option_both()) {
-                                    // draw_line(marker_xs, scrn_rect.top,
-                                    //              marker_xs, marker_ys);
-                                    // draw_line(marker_xs, marker_ye,
-                                    //              marker_xs, scrn_rect.top + scrn_rect.bottom);
-                                    glBegin(GL_LINE_STRIP);
-                                    glVertex2f(marker_xs, scrn_rect.top);
-                                    glVertex2f(marker_xs, marker_ye);
-                                    glVertex2f(marker_xs, height);
-                                    glEnd();
-
-                                    if (!option_notext()) {
-                                        draw_text(marker_xs - 4 * lenstr,
-                                                marker_ys + 4, buf, 0);
-                                    }
-                                } else {
+                        } else {
+                            if (option_top()) {
+                                // draw minor ticks
+                                if (_tick_length == VARIABLE)
+                                    draw_line(marker_xs, marker_ys, marker_xs, marker_ye - 4);
+                                else
                                     draw_line(marker_xs, marker_ys, marker_xs, marker_ye);
 
-                                    if (!option_notext()) {
-                                        if (option_top()) {
-                                            draw_text(marker_xs - 4 * lenstr,
-                                                    height - 10, buf, 0);
-
-                                        }  else  {
-                                            draw_text(marker_xs - 4 * lenstr,
-                                                    scrn_rect.top, buf, 0);
-                                        }
-                                    }
-                                }
+                            } else if (_tick_length == VARIABLE) {
+                                draw_line(marker_xs, marker_ys + 4, marker_xs, marker_ye);
+                            } else {
+                                draw_line(marker_xs, marker_ys, marker_xs, marker_ye);
                             }
-                        }  //end draw major ticks
-                    } //endif major ticks
-                }   //end condition
-            } //end for
-        }  //end zoom
-    } //end horizontal/vertical scale
-} //draw
+                        }
+                    } // end draw minor ticks
+                } // end minor ticks
+
+                // major ticks
+                if (_major_divs) {
+
+                    if (!(k % (int)_major_divs)) {
+                        if (modulo()) {
+                            disp_val = i % (int) modulo();
+                            if (disp_val < 0) {
+                                while (disp_val<0)
+                                    disp_val += modulo();
+                            }
+                        } else {
+                            disp_val = i;
+                        }
+                        lenstr = snprintf(buf, BUFSIZE, "%d", int(disp_val * _input.factor()));  // was data_scaling() ... makes no sense at all
+
+                        // Draw major ticks and text only if far enough from the edge.
+                        if (marker_xs > scrn_rect.left + 10 || marker_xs + 10 < scrn_rect.left + scrn_rect.right)
+                            continue;
+
+                        if (option_both()) {
+                            // draw_line(marker_xs, scrn_rect.top,
+                            //              marker_xs, marker_ys);
+                            // draw_line(marker_xs, marker_ye,
+                            //              marker_xs, scrn_rect.top + scrn_rect.bottom);
+                            glBegin(GL_LINE_STRIP);
+                            glVertex2f(marker_xs, scrn_rect.top);
+                            glVertex2f(marker_xs, marker_ye);
+                            glVertex2f(marker_xs, height);
+                            glEnd();
+
+                            if (!option_notext())
+                                draw_text(marker_xs - 4 * lenstr, marker_ys + 4, buf, 0);
+
+                        } else {
+                            draw_line(marker_xs, marker_ys, marker_xs, marker_ye);
+
+                            if (!option_notext()) {
+                                if (option_top())
+                                    draw_text(marker_xs - 4 * lenstr, height - 10, buf, 0);
+                                else
+                                    draw_text(marker_xs - 4 * lenstr, scrn_rect.top, buf, 0);
+                            }
+                        }
+                    } // end draw major ticks
+                } // endif major ticks
+            } // end for
+        } // end zoom
+    } // end horizontal/vertical scale
+}
 
 
 
@@ -718,11 +640,6 @@ void HUD::Tape::zoomed_scale(int first, int last)
 
     float x, y, w, h, bottom;
     float cur_value = _input.getFloatValue();
-    if (cur_value > _input.max())
-        cur_value = _input.max();
-    if (cur_value < _input.min())
-        cur_value = _input.min();
-
     int a = 0;
 
     while (first <= last) {
@@ -759,7 +676,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
 
         // begin
         //this is for moving type pointer
-        static float ycent, ypoint, xpoint;
+        static float ycent, ypoint, xpoint;					// FIXME really static?
         static float wth;
 
         ycent = mid_scr.y;
@@ -798,7 +715,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
 
             draw_line(xstart, ycentre, xstart - 5.0, ycentre); //centre tick
 
-            snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre] * _input.factor())); // was data_scaling() ... makes not sense at all
+            snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre] * _input.factor())); // was data_scaling() ... makes not sense at all
 
             if (!option_notext())
                 draw_text(x, ycentre, buf, 0);
@@ -816,12 +733,12 @@ void HUD::Tape::zoomed_scale(int first, int last)
                 draw_line(xstart, yfirst, xstart - 5.0, yfirst);
                 draw_line(xstart, ysecond, xstart - 5.0, ysecond);
 
-                snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre - i - 1] * _input.factor()));  // was data_scaling() ... makes no sense at all
+                snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre - i - 1] * _input.factor()));  // was data_scaling() ... makes no sense at all
 
                 if (!option_notext())
                     draw_text(x, yfirst, buf, 0);
 
-                snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre + i + 1] * _input.factor())); // was data_scaling() ... makes no sense at all
+                snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre + i + 1] * _input.factor())); // was data_scaling() ... makes no sense at all
 
                 if (!option_notext())
                     draw_text(x, ysecond, buf, 0);
@@ -849,7 +766,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
 
             draw_line(xstart, ycentre, xstart + 5.0, ycentre); //centre tick
 
-            snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre] * _input.factor())); // was data_scaling() ... makes no sense at all
+            snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre] * _input.factor())); // was data_scaling() ... makes no sense at all
 
             if (!option_notext())
                 draw_text(w, ycentre, buf, 0);
@@ -867,12 +784,12 @@ void HUD::Tape::zoomed_scale(int first, int last)
                 draw_line(xstart, yfirst, xstart + 5.0, yfirst);
                 draw_line(xstart, ysecond, xstart + 5.0, ysecond);
 
-                snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre - i - 1] * _input.factor())); // was data_scaling() ... makes no sense at all
+                snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre - i - 1] * _input.factor())); // was data_scaling() ... makes no sense at all
 
                 if (!option_notext())
                     draw_text(w, yfirst, buf, 0);
 
-                snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre + i + 1] * _input.factor()));
+                snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre + i + 1] * _input.factor()));
 
                 if (!option_notext())
                     draw_text(w, ysecond, buf, 0);
@@ -923,7 +840,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
 
         //Code for Moving Type Pointer
         //begin
-        static float xcent, xpoint, ypoint;
+        static float xcent, xpoint, ypoint;				// FIXME really static?
 
         xcent = mid_scr.x;
 
@@ -961,7 +878,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
             ystart = h;
             draw_line(xcentre, ystart, xcentre, ystart - 5.0); //centre tick
 
-            snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre] * _input.factor()));  // was data_scaling() ... makes no sense at all
+            snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre] * _input.factor()));  // was data_scaling() ... makes no sense at all
 
             if (!option_notext())
                 draw_text(xcentre - 10.0, y, buf, 0);
@@ -979,12 +896,12 @@ void HUD::Tape::zoomed_scale(int first, int last)
                 draw_line(xfirst, ystart, xfirst,  ystart - 5.0);
                 draw_line(xsecond, ystart, xsecond, ystart - 5.0);
 
-                snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre - i - 1] * _input.factor())); // was data_scaling() ... makes no sense at all
+                snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre - i - 1] * _input.factor())); // was data_scaling() ... makes no sense at all
 
                 if (!option_notext())
                     draw_text(xfirst - 10.0, y, buf, 0);
 
-                snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre + i + 1] * _input.factor())); // was data_scaling() ... makes no sense at all
+                snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre + i + 1] * _input.factor())); // was data_scaling() ... makes no sense at all
 
                 if (!option_notext())
                     draw_text(xsecond - 10.0, y, buf, 0);
@@ -1013,7 +930,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
             //draw_line(xstart, yfirst,  xstart - 5.0, yfirst);
             draw_line(xcentre, ystart, xcentre, ystart + 5.0); //centre tick
 
-            snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre] * _input.factor())); // was data_scaling() ... makes no sense at all
+            snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre] * _input.factor())); // was data_scaling() ... makes no sense at all
 
             if (!option_notext())
                 draw_text(xcentre - 10.0, h, buf, 0);
@@ -1031,12 +948,12 @@ void HUD::Tape::zoomed_scale(int first, int last)
                 draw_line(xfirst, ystart, xfirst, ystart + 5.0);
                 draw_line(xsecond, ystart, xsecond, ystart + 5.0);
 
-                snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre - i - 1] * _input.factor())); // was data_scaling() ... makes no sense at all
+                snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre - i - 1] * _input.factor())); // was data_scaling() ... makes no sense at all
 
                 if (!option_notext())
                     draw_text(xfirst - 10.0, h, buf, 0);
 
-                snprintf(buf, BUFSIZE, "%3.0f\n", (float)(data[centre + i + 1] * _input.factor())); // was data_scaling() ... makes no sense at all
+                snprintf(buf, BUFSIZE, "%3.0f\n", float(data[centre + i + 1] * _input.factor())); // was data_scaling() ... makes no sense at all
 
                 if (!option_notext())
                     draw_text(xsecond - 10.0, h, buf, 0);

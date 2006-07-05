@@ -95,31 +95,32 @@ bool HUD::Item::isEnabled()
 }
 
 
-void HUD::Item::draw_line( float x1, float y1, float x2, float y2)
+void HUD::Item::draw_line(float x1, float y1, float x2, float y2)
 {
     _hud->_line_list.add(LineSegment(x1, y1, x2, y2));
 }
 
 
-void HUD::Item::draw_stipple_line( float x1, float y1, float x2, float y2)
+void HUD::Item::draw_stipple_line(float x1, float y1, float x2, float y2)
 {
     _hud->_stipple_line_list.add(LineSegment(x1, y1, x2, y2));
 }
 
 
-void HUD::Item::draw_text( float x, float y, char *msg, int digit)
+void HUD::Item::draw_text(float x, float y, char *msg, int digit)
 {
     _hud->_text_list.add(HUDText(x, y, msg, digit));
 }
 
 
-void HUD::Item::draw_circle(float x1, float y1, float r) const
+void HUD::Item::draw_circle(float xoffs, float yoffs, float r) const
 {
     glBegin(GL_LINE_LOOP);
-    for (int count = 0; count < 25; count++) {
-        float cosine = r * cos(count * 2 * SG_PI / 10.0);
-        float sine =   r * sin(count * 2 * SG_PI / 10.0);
-        glVertex2f(cosine + x1, sine + y1);
+    for (int i = 0; i < 25; i++) {
+        float alpha = i * 2.0 * SG_PI / 10.0;
+        float x = r * cos(alpha);
+        float y = r * sin(alpha);
+        glVertex2f(x + xoffs, y + yoffs);
     }
     glEnd();
 }

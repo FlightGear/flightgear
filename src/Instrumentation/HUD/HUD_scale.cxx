@@ -46,7 +46,7 @@ HUD::Scale::Scale( HUD *hud, const SGPropertyNode *n, float x, float y) :
     else
         _range_shown = _input.max() - _input.min();
 
-    scale_factor = (float)get_span() / _range_shown;
+    _display_factor = get_span() / _range_shown;
     if (_range_shown < 0)
         _range_shown = -_range_shown;
 

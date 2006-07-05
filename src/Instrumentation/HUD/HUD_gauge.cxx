@@ -93,8 +93,8 @@ void HUD::Gauge::draw(void)
 
         if (!option_noticks()) {    // If not no ticks...:)
             // Calculate x marker offsets
-            int last = (int)vmax + 1;    // float_to_int(vmax)+1;
-            i = (int)vmin; //float_to_int(vmin);
+            int last = (int)vmax + 1;
+            i = (int)vmin;
 
             for (; i < last; i++) {
                 // Calculate the location of this tick
@@ -216,8 +216,8 @@ void HUD::Gauge::draw(void)
         }
 
 
-        int last = (int)vmax + 1; //float_to_int(vmax)+1;
-        i = (int)vmin; //float_to_int(vmin);
+        int last = (int)vmax + 1;
+        i = (int)vmin;
         for (; i <last ; i++) {
             condition = true;
             if (!modulo() && i < _input.min())

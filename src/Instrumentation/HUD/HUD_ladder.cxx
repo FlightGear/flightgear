@@ -44,9 +44,8 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     Item(hud, n, x, y),
     _pitch(n->getNode("pitch-input", false)),
     _roll(n->getNode("roll-input", false)),
-    width_units(int(n->getFloatValue("display-span"))),
+    _width_units(int(n->getFloatValue("display-span"))),
     div_units(int(fabs(n->getFloatValue("divisions")))),
-    minor_div(0 /* hud.cxx: static float minor_division = 0 */),
     label_pos(n->getIntValue("lbl-pos")),
     _scr_hole(n->getIntValue("screen-hole")),
     _compression(n->getFloatValue("compression-factor")),
@@ -56,7 +55,7 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _drift_marker(n->getBoolValue("enable-drift-marker", false)),
     _alpha_bracket(n->getBoolValue("enable-alpha-bracket", false)),
     _energy_marker(n->getBoolValue("enable-energy-marker", false)),
-    _climb_dive_marker(n->getBoolValue("enable-climb-dive-marker", false)),		// WTF FIXME
+    _climb_dive_marker(n->getBoolValue("enable-climb-dive-marker", false)),
     _glide_slope_marker(n->getBoolValue("enable-glide-slope-marker",false)),
     _glide_slope(n->getFloatValue("glide-slope", -4.0)),
     _energy_worm(n->getBoolValue("enable-energy-marker", false)),
@@ -68,10 +67,10 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     const char *t = n->getStringValue("type");
     _type = strcmp(t, "climb-dive") ? PITCH : CLIMB_DIVE;
 
-    if (!width_units)
-        width_units = 45;
+    if (!_width_units)
+        _width_units = 45;
 
-    _vmax = width_units / 2;
+    _vmax = _width_units / 2;
     _vmin = -_vmax;
 }
 
@@ -423,13 +422,13 @@ void HUD::Ladder::draw(void)
     //****************************************************************
 
     if (climb_dive_ladder) { // CONFORMAL_HUD
-        _vmin = pitch_value - (float)width_units;
-        _vmax = pitch_value + (float)width_units;
+        _vmin = pitch_value - _width_units;
+        _vmax = pitch_value + _width_units;
         glTranslatef(vel_x, vel_y, 0);
 
     } else { // pitch_ladder - Default Hud
-        _vmin = pitch_value - (float)width_units * 0.5f;
-        _vmax = pitch_value + (float)width_units * 0.5f;
+        _vmin = pitch_value - _width_units * 0.5f;
+        _vmax = pitch_value + _width_units * 0.5f;
     }
 
     glRotatef(roll_value * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
@@ -467,8 +466,8 @@ void HUD::Ladder::draw(void)
         if (!_scr_hole) {
             x_end = half_span;
 
-            for (; i<last; i++) {
-                y = (((float)(i - pitch_value) * _compression) + .5f);
+            for (; i < last; i++) {
+                y = (i - pitch_value) * _compression + .5f;
 
                 if (!(i % div_units)) {           //  At integral multiple of div
                     snprintf(buf, BUFSIZE, "%d", i);
@@ -505,16 +504,16 @@ void HUD::Ladder::draw(void)
 
         } else { // if (_scr_hole)
             // Draw ladder with space in the middle of the lines
-            float hole = (float)((_scr_hole) / 2.0f);
+            float hole = _scr_hole / 2.0f;
 
             x_end = -half_span + hole;
             x_ini2 = half_span - hole;
 
             for (; i < last; i++) {
                 if (_type == PITCH)
-                    y = (((float)(i - pitch_value) * _compression) + .5);
+                    y = float(i - pitch_value) * _compression + .5;
                 else // _type == CLIMB_DIVE
-                    y = (((float)(i - actslope) * _compression) + .5);
+                    y = float(i - actslope) * _compression + .5;
 
                 if (!(i % div_units)) {  //  At integral multiple of div
                     snprintf(buf, BUFSIZE, "%d", i);
@@ -676,7 +675,7 @@ void HUD::Ladder::draw(void)
                 glBegin(GL_POINTS);
 
                 for (int count = 0; count <= 200; count++) {
-                    float temp = count * 3.142 * 3 / (200.0 * 2.0);
+                    float temp = count * SG_PI * 3 / (200.0 * 2.0);
                     float temp1 = temp - (45.0 * SGD_DEGREES_TO_RADIANS);
                     x1 = x + r * cos(temp1);
                     y1 = y + r * sin(temp1);
@@ -743,7 +742,7 @@ void HUD::Ladder::draw_nadir(float xfirst, float xlast, float yvalue)
     ycent1 = ycentre;
 
     for (int count = 1; count <= 400; count++) {
-        float temp = count * 2 * 3.142 / 400.0;
+        float temp = count * 2 * SG_PI / 400.0;
         xcent2 = xcentre + r * cos(temp);
         ycent2 = ycentre + r * sin(temp);
 
@@ -765,7 +764,7 @@ void HUD::Ladder::draw_nadir(float xfirst, float xlast, float yvalue)
     //line in the middle of circle
     draw_line(xcentre - 7.5, ycentre, xcentre + 7.5, ycentre);
 
-    float theta = asin (2.5 / 7.5);
+    float theta = asin(2.5 / 7.5);
     float theta1 = asin(5.0 / 7.5);
 
     x1 = xcentre + r * cos(theta);
