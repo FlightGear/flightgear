@@ -29,6 +29,10 @@
 #  include <config.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#   include <windows.h>
+#endif
+
 #include SG_GLU_H
 
 #include <simgear/constants.h>
