@@ -414,7 +414,7 @@ bool FGATCInput::do_analog_in() {
             string name = "";
             string type = "";
             string subtype = "";
-            vector <SGPropertyNode *> output_nodes; output_nodes.clear();
+            vector <SGPropertyNode *> output_nodes;
             int center = -1;
             int min = 0;
             int max = 1023;
@@ -660,7 +660,7 @@ bool FGATCInput::do_switches() {
             string cname = child->getName();
             string name = "";
             string type = "";
-            vector <SGPropertyNode *> output_nodes; output_nodes.clear();
+            vector <SGPropertyNode *> output_nodes;
             int row = -1;
             int col = -1;
             float factor = 1.0;
@@ -863,7 +863,7 @@ bool FGATCInput::do_radio_switches() {
             if ( cname == "switch" ) {
                 string name = "";
                 string type = "";
-                vector <SGPropertyNode *> output_nodes; output_nodes.clear();
+                vector <SGPropertyNode *> output_nodes;
                 int byte_num = -1;
                 int right_shift = 0;
                 int mask = 0xff;

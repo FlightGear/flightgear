@@ -61,20 +61,16 @@ FGGeneric::FGGeneric(string& config) {
          return;
     }
 
-    _out_message.clear();
     SGPropertyNode *output = root.getNode("generic/output");
     if (output)
         read_config(output, _out_message);
 
-    _in_message.clear();
     SGPropertyNode *input = root.getNode("generic/input");
     if (input)
         read_config(input, _in_message);
 }
 
 FGGeneric::~FGGeneric() {
-    _out_message.clear();
-    _in_message.clear();
 }
 
 
