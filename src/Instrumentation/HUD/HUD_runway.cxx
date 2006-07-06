@@ -218,12 +218,10 @@ bool HUD::Runway::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& 
     sgdVec3 p1, p2;
     sgdCopyVec3(p1, point1);
     sgdCopyVec3(p2, point2);
-    bool p1Inside = (p1[0] >= _left && p1[0] <= _right
-            && p1[1] >= _bottom && p1[1] <= _top);
+    bool p1Inside = (p1[0] >= _left && p1[0] <= _right && p1[1] >= _bottom && p1[1] <= _top);
     bool p1Insight = (p1[2] >= 0.0 && p1[2] < 1.0);
     bool p1Valid = p1Insight && p1Inside;
-    bool p2Inside = (p2[0] >= _left && p2[0] <= _right
-            && p2[1] >= _bottom && p2[1] <= _top);
+    bool p2Inside = (p2[0] >= _left && p2[0] <= _right && p2[1] >= _bottom && p2[1] <= _top);
     bool p2Insight = (p2[2] >= 0.0 && p2[2] < 1.0);
     bool p2Valid = p2Insight && p2Inside;
 

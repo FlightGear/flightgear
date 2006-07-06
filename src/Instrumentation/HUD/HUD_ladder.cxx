@@ -471,9 +471,8 @@ void HUD::Ladder::draw(void)
                 if (!(i % div_units)) {           //  At integral multiple of div
                     snprintf(buf, BUFSIZE, "%d", i);
                     font->getBBox(buf, pointsize, italic, &left, &right, &bot, &top);
-                    label_length = right - left;
-                    label_length += text_offset;
-                    label_height = (top - bot) / 2.0f;
+                    label_length = right + left;
+                    label_height = (top + bot) / 2.0f;
 
                     x_ini = -half_span;
 
@@ -496,7 +495,7 @@ void HUD::Ladder::draw(void)
                     }
 
                     // Calculate the position of the left text and write it.
-                    draw_text(x_ini - label_length, y - label_height, buf);
+                    draw_text(x_ini - text_offset - label_length + 2.5/*hack*/, y - label_height, buf);
                     draw_text(x_end + text_offset, y - label_height, buf);
                 }
             }
@@ -517,10 +516,9 @@ void HUD::Ladder::draw(void)
                 if (!(i % div_units)) {  //  At integral multiple of div
                     snprintf(buf, BUFSIZE, "%d", i);
                     font->getBBox(buf, pointsize, italic, &left, &right, &bot, &top);
-                    label_length = right - left;
-                    label_length += text_offset;
-                    label_height = (top - bot) / 2.0f;
-                    // printf("l %f r %f b %f t %f\n",left, right, bot, top);
+                    label_length = right + left;
+                    label_height = (top + bot) / 2.0f;
+                    //printf("%s -- l %f r %f b %f t %f\n", buf, left, right, bot, top);
 
                     // Start by calculating the points and drawing the
                     // left side lines.
@@ -562,7 +560,7 @@ void HUD::Ladder::draw(void)
                     }
 
                     // Now calculate the location of the left side label using
-                    draw_text(x_ini - label_length, y - label_height, buf);
+                    draw_text(x_ini - text_offset - label_length + 2.5/*hack*/, y - label_height, buf);
                     draw_text(x_end2 + text_offset, y - label_height, buf);
                 }
             }

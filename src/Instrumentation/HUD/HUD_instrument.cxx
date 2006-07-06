@@ -145,7 +145,7 @@ float HUD::Item::text_width(char *str) const
     assert(_hud->_font_renderer);
     float r, l;
     _hud->_font->getBBox(str, _hud->_font_size, 0, &l, &r, 0, 0);
-    return r - l;
+    return r + l;
 }
 
 

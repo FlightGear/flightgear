@@ -61,8 +61,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
     float marker_ys;
     float marker_ye;
     float text_x = 0.0, text_y = 0.0;
-    int lenstr;
-    float height, width;
     const int BUFSIZE = 80;
     char buf[BUFSIZE];
     int oddtype;
@@ -76,8 +74,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
     else
         oddtype = 0; //draw ticks at even values
 
-    height = _y + _h;			// FIXME huh?
-    width = _x + _w;
+    float top = _y + _h;
+    float right = _x + _w;
 
 
     if (_pointer) {
@@ -109,15 +107,15 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
     if (option_vert()) { // Vertical scale
         // Bottom tick bar
         if (_draw_tick_bottom)
-            draw_line(_x, _y, width, _y);
+            draw_line(_x, _y, right, _y);
 
         // Top tick bar
         if (_draw_tick_top)
-            draw_line(_x, height, width, height);
+            draw_line(_x, top, right, top);
 
-        marker_xs = _x;  // x start
-        marker_xe = width;           // x extent
-        marker_ye = height;
+        marker_xs = _x;       // x start
+        marker_xe = right;    // x extent
+        marker_ye = top;
 
         //    glBegin(GL_LINES);
 
@@ -142,7 +140,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             if (_draw_cap_right)
                 draw_line(marker_xe, _y, marker_xe, marker_ye);
 
-            marker_xs  = marker_xe - _w / 3 + 0.5;   // Adjust tick xs
+            marker_xs = marker_xe - _w / 3.0;
 
             // draw_line(marker_xs, mid_scr.y, marker_xe, mid_scr.y + _w / 6);
             // draw_line(marker_xs, mid_scr.y, marker_xe, mid_scr.y - _w / 6);
@@ -198,7 +196,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             if (_draw_cap_left)
                 draw_line(_x, _y, _x, marker_ye);
 
-            marker_xe = _x + _w / 3 - 0.5;     // Adjust tick xe
+            marker_xe = _x + _w / 3.0;
             // Indicator carrot
             // draw_line(_x, mid_scr.y +  _w / 6, marker_xe, mid_scr.y);
             // draw_line(_x, mid_scr.y -  _w / 6, marker_xe, mid_scr.y);
@@ -260,15 +258,14 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             zoomed_scale((int)vmin, (int)vmax);
         } else {
 
-//#############################################################################
-
             int div_ratio;
             if (_minor_divs != 0.0f)
                 div_ratio = int(_major_divs / _minor_divs + 0.5f);
             else
-                div_ratio = 0, _minor_divs = _major_divs;			// FIXME move that into Scale/Constructor ?
+                div_ratio = 0, _minor_divs = _major_divs;		// FIXME move that into Scale/Constructor ?
 
             float vstart = floorf(vmin / _major_divs) * _major_divs;
+            float min_diff = _w / 6.0;    // length difference between major & minor tick
 
             // FIXME consider oddtype
             for (int i = 0; ; i++) {
@@ -281,7 +278,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                 if (y < _y + 4)
                     continue;
-                if (y > height - 4)
+                if (y > top - 4)
                     break;
 
                 if (div_ratio && i % div_ratio) { // minor div
@@ -289,20 +286,16 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         if (_tick_type == LINE) {
                             if (_tick_length == VARIABLE) {
                                 draw_line(_x, y, marker_xs, y);
-                                draw_line(marker_xe, y, width, y);
+                                draw_line(marker_xe, y, right, y);
                             } else {
                                 draw_line(_x, y, marker_xs, y);
-                                draw_line(marker_xe, y, width, y);
+                                draw_line(marker_xe, y, right, y);
                             }
 
-                        } else if (_tick_type == CIRCLE) {
+                        } else { // _tick_type == CIRCLE
                             draw_bullet(_x, y, 3.0);
-
-                        } else {
-                            // if neither line nor circle draw default as line
-                            draw_line(_x, y, marker_xs, y);
-                            draw_line(marker_xe, y, width, y);
                         }
+
                         // glBegin(GL_LINES);
                         // glVertex2f(_x, y);
                         // glVertex2f(marker_xs,      y);
@@ -311,33 +304,27 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         // glEnd();
                         // anything other than huds_both
 
-                    } else {
-                        if (option_left()) {
-                            if (_tick_type == LINE) {
-                                if (_tick_length == VARIABLE) {
-                                    draw_line(marker_xs + 4, y, marker_xe, y);
-                                } else {
-                                    draw_line(marker_xs, y, marker_xe, y);
-                                }
-                            } else if (_tick_type == CIRCLE) {
-                                draw_bullet(marker_xs + 4, y, 3.0);
+                    } else if (option_left()) {
+                        if (_tick_type == LINE) {
+                            if (_tick_length == VARIABLE) {
+                                draw_line(marker_xs + min_diff, y, marker_xe, y);
                             } else {
-                                draw_line(marker_xs + 4, y, marker_xe, y);
+                                draw_line(marker_xs, y, marker_xe, y);
+                            }
+                        } else { // _tick_type == CIRCLE
+                            draw_bullet(marker_xs + 4, y, 3.0);
+                        }
+
+                    } else { // if (option_right())
+                        if (_tick_type == LINE) {
+                            if (_tick_length == VARIABLE) {
+                                draw_line(marker_xs, y, marker_xe - min_diff, y);
+                            } else {
+                                draw_line(marker_xs, y, marker_xe, y);
                             }
 
-                        }  else {
-                            if (_tick_type == LINE) {
-                                if (_tick_length == VARIABLE) {
-                                    draw_line(marker_xs, y, marker_xe - 4, y);
-                                } else {
-                                    draw_line(marker_xs, y, marker_xe, y);
-                                }
-
-                            } else if (_tick_type == CIRCLE) {
-                                draw_bullet(marker_xe - 4, y, 3.0);
-                            } else {
-                                draw_line(marker_xs, y, marker_xe - 4, y);
-                            }
+                        } else { // _tick_type == CIRCLE
+                            draw_bullet(marker_xe - 4, y, 3.0);
                         }
                     } // end huds both
 
@@ -346,7 +333,9 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     if (_modulo)
                         display_value %= _modulo;
 
-                    lenstr = snprintf(buf, BUFSIZE, "%d", display_value);
+                    snprintf(buf, BUFSIZE, "%d", display_value);
+                    float strwd = text_width(buf);
+                    float strht = _hud->_font_size;
 
                     if (option_both()) {
                         // draw_line(_x, y, marker_xs, y);
@@ -355,38 +344,27 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                             glBegin(GL_LINE_STRIP);
                             glVertex2f(_x, y);
                             glVertex2f(marker_xs, y);
-                            glVertex2f(width, y);
+                            glVertex2f(right, y);
                             glEnd();
 
-                        } else if (_tick_type == CIRCLE) {
+                        } else { // _tick_type == CIRCLE
                             draw_bullet(_x, y, 5.0);
-
-                        } else {
-                            glBegin(GL_LINE_STRIP);
-                            glVertex2f(_x, y);
-                            glVertex2f(marker_xs, y);
-                            glVertex2f(width, y);
-                            glEnd();
                         }
 
                         if (!option_notext())
                             draw_text(marker_xs + 2, y, buf, 0);
 
                     } else {
-                        /* Changes are made to draw a circle when tick_type=CIRCLE */
-                        // anything other than option_both
                         if (_tick_type == LINE)
                             draw_line(marker_xs, y, marker_xe, y);
-                        else if (_tick_type == CIRCLE)
+                        else // _tick_type == CIRCLE
                             draw_bullet(marker_xs + 4, y, 5.0);
-                        else
-                            draw_line(marker_xs, y, marker_xe, y);
 
                         if (!option_notext()) {
                             if (option_left())
-                                draw_text(marker_xs - 8 * lenstr - 2, y - 4, buf, 0);
+                                draw_text(marker_xs - strwd, y - 4, buf, 0);
                             else
-                                draw_text(marker_xe + 3 * lenstr, y - 4, buf, 0);
+                                draw_text(marker_xe + strwd / 2, y - 4, buf, 0);
                         }
                     } // End if huds-both
                 }
@@ -402,15 +380,15 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
     } else {
         // left tick bar
         if (_draw_tick_left)
-            draw_line(_x, _y, _x, height);
+            draw_line(_x, _y, _x, top);
 
         // right tick bar
         if (_draw_tick_right)
-            draw_line(width, _y, width, height);
+            draw_line(right, _y, right, top);
 
         marker_ys = _y;    // Starting point for
-        marker_ye = height;           // tick y location calcs
-        marker_xe = width;
+        marker_ye = top;           // tick y location calcs
+        marker_xe = right;
         marker_xs = _x + ((cur_value - vmin) * factor());
 
         //    glBegin(GL_LINES);
@@ -425,7 +403,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
         if (option_top()) {
             if (_draw_cap_bottom)
-                draw_line(_x, _y, width, _y);
+                draw_line(_x, _y, right, _y);
 
             // Tick point adjust
             marker_ye  = _y + _h / 2;
@@ -458,10 +436,10 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
         if (option_bottom()) {
             if (_draw_cap_top)
-                draw_line(_x, height, width, height);
+                draw_line(_x, top, right, top);
 
             // Tick point adjust
-            marker_ys = height - _h / 2;
+            marker_ys = top - _h / 2;
             // Top arrow
             // draw_line(mid_scr.x + _h / 4, _y + _h, mid_scr.x, marker_ys);
             // draw_line(mid_scr.x - _h / 4, _y + _h, mid_scr.x , marker_ys);
@@ -483,8 +461,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         draw_line(xpoint, ypoint - _marker_offset, xpoint - 5.0, ypoint - 5.0);
                     }
                 } else {
-                    fixed(marker_xs + _h / 4, height, marker_xs, marker_ys,
-                            marker_xs - _h / 4, height);
+                    fixed(marker_xs + _h / 4, top, marker_xs, marker_ys,
+                            marker_xs - _h / 4, top);
                 }
             }
         } //end horizontal scale bottom
@@ -500,6 +478,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                 div_ratio = 0, _minor_divs = _major_divs;			// FIXME move that into Scale/Constructor ?
 
             float vstart = floorf(vmin / _major_divs) * _major_divs;
+            float min_diff = _h / 6.0;    // length difference between major & minor tick
 
             // FIXME consider oddtype
             for (int i = 0; ; i++) {
@@ -512,17 +491,17 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                 if (x < _x + 4)
                     continue;
-                if (x > width - 4)
+                if (x > right - 4)
                     break;
 
                 if (div_ratio && i % div_ratio) { // minor div
                     if (option_both()) {
                         if (_tick_length == VARIABLE) {
                             draw_line(x, _y, x, marker_ys - 4);
-                            draw_line(x, marker_ye + 4, x, height);
+                            draw_line(x, marker_ye + 4, x, top);
                         } else {
                             draw_line(x, _y, x, marker_ys);
-                            draw_line(x, marker_ye, x, height);
+                            draw_line(x, marker_ye, x, top);
                         }
                         // glBegin(GL_LINES);
                         // glVertex2f(x, _y);
@@ -535,7 +514,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         if (option_top()) {
                             // draw minor ticks
                             if (_tick_length == VARIABLE)
-                                draw_line(x, marker_ys, x, marker_ye - 4);
+                                draw_line(x, marker_ys, x, marker_ye - min_diff);
                             else
                                 draw_line(x, marker_ys, x, marker_ye);
 
@@ -551,7 +530,9 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     if (_modulo)
                         display_value %= _modulo;
 
-                    lenstr = snprintf(buf, BUFSIZE, "%d", display_value);
+                    snprintf(buf, BUFSIZE, "%d", display_value);
+                    float strwd = text_width(buf);
+                    float strht = _hud->_font_size;
 
                     // Draw major ticks and text only if far enough from the edge.			// FIXME
                     if (x < _x + 10 || x + 10 > _x + _w)
@@ -565,20 +546,20 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         glBegin(GL_LINE_STRIP);
                         glVertex2f(x, _y);
                         glVertex2f(x, marker_ye);
-                        glVertex2f(x, height);
+                        glVertex2f(x, top);
                         glEnd();
 
                         if (!option_notext())
-                            draw_text(x - 4 * lenstr, marker_ys + 4, buf, 0);
+                            draw_text(x - strwd / 2.0, marker_ys + 4, buf, 0);
 
                     } else {
                         draw_line(x, marker_ys, x, marker_ye);
 
                         if (!option_notext()) {
                             if (option_top())
-                                draw_text(x - 4 * lenstr, height - 10, buf, 0);
+                                draw_text(x - strwd / 2.0, top - 10, buf, 0);
                             else
-                                draw_text(x - 4 * lenstr, _y, buf, 0);
+                                draw_text(x - strwd / 2.0, _y, buf, 0);
                         }
                     }
                 }
