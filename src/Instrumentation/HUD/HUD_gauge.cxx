@@ -219,7 +219,7 @@ void HUD::Gauge::draw(void)
         i = (int)vmin;
         for (; i <last ; i++) {
             condition = true;
-            if (!modulo() && i < _input.min())
+            if (!_modulo && i < _input.min())
                     condition = false;
 
             if (condition) {
@@ -246,12 +246,12 @@ void HUD::Gauge::draw(void)
 
                 if (_major_divs) {
                     if (!(i % (int)_major_divs)) {
-                        if (modulo()) {
+                        if (_modulo) {
                             if (disp_val < 0) {
                                 while (disp_val < 0)
-                                    disp_val += modulo();
+                                    disp_val += _modulo;
                             }
-                            disp_val = i % (int)modulo();
+                            disp_val = i % (int)_modulo;
                         } else {
                             disp_val = i;
                         }

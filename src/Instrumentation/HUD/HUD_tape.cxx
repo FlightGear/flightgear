@@ -274,7 +274,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             for (int i = 0; ; i++) {
                 float v = vstart + i * _minor_divs;
 
-                if (!modulo() && (v < _input.min() || v > _input.max()))
+                if (!_modulo && (v < _input.min() || v > _input.max()))
                     continue;
 
                 float y = _y + (v - vmin) * factor();
@@ -342,7 +342,11 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     } // end huds both
 
                 } else { // major div
-                    lenstr = snprintf(buf, BUFSIZE, "%d", int(v));
+                    int display_value = int(v);
+                    if (_modulo)
+                        display_value %= _modulo;
+
+                    lenstr = snprintf(buf, BUFSIZE, "%d", display_value);
 
                     if (option_both()) {
                         // draw_line(_x, y, marker_xs, y);
@@ -501,7 +505,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             for (int i = 0; ; i++) {
                 float v = vstart + i * _minor_divs;
 
-                if (!modulo() && (v < _input.min() || v > _input.max()))
+                if (!_modulo && (v < _input.min() || v > _input.max()))
                     continue;
 
                 float x = _x + (v - vmin) * factor();
@@ -543,7 +547,11 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     }
 
                 } else { // major divs
-                    lenstr = snprintf(buf, BUFSIZE, "%d", int(v));
+                    int display_value = int(v);
+                    if (_modulo)
+                        display_value %= _modulo;
+
+                    lenstr = snprintf(buf, BUFSIZE, "%d", display_value);
 
                     // Draw major ticks and text only if far enough from the edge.			// FIXME
                     if (x < _x + 10 || x + 10 > _x + _w)

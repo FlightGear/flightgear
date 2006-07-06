@@ -457,18 +457,17 @@ public:
     virtual void draw    ( void ) {}  // No-op here. Defined in derived classes.
 
 protected:
-    inline unsigned int modulo() const { return _modulo; }
     inline float factor() const { return _display_factor; }
     inline float range_to_show() const { return _range_shown; }
 
     Input _input;
-    float _major_divs;  // major division marker units
-    float _minor_divs;  // minor division marker units
+    float _major_divs;      // major division marker units
+    float _minor_divs;      // minor division marker units
+    unsigned int _modulo;   // Roll over point
 
 private:
     float _range_shown;     // Width Units.
     float _display_factor;  // factor => screen units/range values.
-    unsigned int _modulo;   // Roll over point
 };
 
 
