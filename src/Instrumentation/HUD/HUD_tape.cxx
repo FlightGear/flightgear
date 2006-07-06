@@ -630,7 +630,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
         float factor = range / 10.0;
 
         float hgt1 = bottom * 30.0 / 100.0;
-        int  incrs = ((int)_val_span - (_major_divs * 2)) / _major_divs ;		// FIXME wtf?
+        int  incrs = int((_val_span - _major_divs * 2.0) / _major_divs);
         int  incr = incrs / 2;
         float factors = hgt1 / incr;
 
@@ -793,7 +793,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
         float factor = range / 10.0;
 
         float hgt1 = bottom * 30.0 / 100.0;
-        int  incrs = ((int)_val_span - (_major_divs * 2)) / _major_divs ;
+        int  incrs = int((_val_span - _major_divs * 2.0) / _major_divs);
         int  incr = incrs / 2;
         float factors = hgt1 / incr;
 
