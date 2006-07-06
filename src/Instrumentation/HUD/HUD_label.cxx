@@ -78,32 +78,27 @@ void HUD::Label::draw(void)
     if (!(_mode == NONE || _input.isValid() && blink()))
         return;
 
-    Rect scrn_rect = get_location();
-
     if (_box) {
-        float x = scrn_rect.left;
-        float y = scrn_rect.top;
-        float w = scrn_rect.right;
         float h = _hud->_font_size;			// FIXME
 
         glPushMatrix();
         glLoadIdentity();
 
         glBegin(GL_LINES);
-        glVertex2f(x - 2.0,  y - 2.0);
-        glVertex2f(x + w + 2.0, y - 2.0);
-        glVertex2f(x + w + 2.0, y + h + 2.0);
-        glVertex2f(x - 2.0,  y + h + 2.0);
+        glVertex2f(_x - 2.0,  _y - 2.0);
+        glVertex2f(_x + _w + 2.0, _y - 2.0);
+        glVertex2f(_x + _w + 2.0, _y + h + 2.0);
+        glVertex2f(_x - 2.0,  _y + h + 2.0);
         glEnd();
 
         glEnable(GL_LINE_STIPPLE);
         glLineStipple(1, 0xAAAA);
 
         glBegin(GL_LINES);
-        glVertex2f(x + w + 2.0, y - 2.0);
-        glVertex2f(x + w + 2.0, y + h + 2.0);
-        glVertex2f(x - 2.0, y + h + 2.0);
-        glVertex2f(x - 2.0, y - 2.0);
+        glVertex2f(_x + _w + 2.0, _y - 2.0);
+        glVertex2f(_x + _w + 2.0, _y + h + 2.0);
+        glVertex2f(_x - 2.0, _y + h + 2.0);
+        glVertex2f(_x - 2.0, _y - 2.0);
         glEnd();
 
         glDisable(GL_LINE_STIPPLE);
@@ -129,16 +124,16 @@ void HUD::Label::draw(void)
     float lenstr = text_width(buf);
 
     if (_halign == RIGHT_ALIGN)
-        posincr = scrn_rect.right - lenstr;
+        posincr = _w - lenstr;
     else if (_halign == CENTER_ALIGN)
-        posincr = get_span() - (lenstr / 2);		// FIXME get_span() ? really?
+        posincr = (_w - lenstr) / 2.0;
     else // LEFT_ALIGN
         posincr = 0;
 
     if (_fontsize == FONT_SMALL)
-        draw_text(scrn_rect.left + posincr, scrn_rect.top, buf, get_digits());
+        draw_text(_x + posincr, _y, buf, get_digits());
     else if (_fontsize == FONT_LARGE)
-        draw_text(scrn_rect.left + posincr, scrn_rect.top, buf, get_digits());
+        draw_text(_x + posincr, _y, buf, get_digits());
 }
 
 

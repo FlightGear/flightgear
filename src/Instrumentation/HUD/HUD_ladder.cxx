@@ -98,9 +98,8 @@ void HUD::Ladder::draw(void)
     GLdouble eqn_right[4] = {1.0, 0.0, 0.0, 100.0};
 
     Point centroid = get_centroid();
-    Rect box = get_location();
 
-    float half_span = box.right / 2.0;
+    float half_span = _w / 2.0;
     float roll_value = _roll.getFloatValue() * SGD_DEGREES_TO_RADIANS;		// FIXME rad/deg conversion
     alpha = get__aoa();
     pla = get__throttleval();

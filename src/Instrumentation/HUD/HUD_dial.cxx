@@ -38,20 +38,14 @@ void HUD::Dial::draw(void)
     const int BUFSIZE = 80;
     char buf[BUFSIZE];
 
-    Rect scrn_rect = get_location();
-
-    float x, y;
-    float i;
-    y = scrn_rect.top;
-    x = scrn_rect.left;
     glEnable(GL_POINT_SMOOTH);
     glPointSize(3.0);
 
     float incr = 360.0 / _divisions;
-    for (i = 0.0; i < 360.0; i += incr) {
+    for (float i = 0.0; i < 360.0; i += incr) {
         float i1 = i * SGD_DEGREES_TO_RADIANS;
-        float x1 = x + _radius * cos(i1);
-        float y1 = y + _radius * sin(i1);
+        float x1 = _x + _radius * cos(i1);
+        float y1 = _y + _radius * sin(i1);
 
         glBegin(GL_POINTS);
         glVertex2f(x1, y1);
@@ -66,8 +60,8 @@ void HUD::Dial::draw(void)
     float theta = _input.getFloatValue();
 
     float theta1 = -theta * SGD_DEGREES_TO_RADIANS + offset;
-    float x1 = x + _radius * cos(theta1);
-    float y1 = y + _radius * sin(theta1);
+    float x1 = _x + _radius * cos(theta1);
+    float y1 = _y + _radius * sin(theta1);
     float x2 = x1 - r1 * cos(theta1 - 30.0 * SGD_DEGREES_TO_RADIANS);
     float y2 = y1 - r1 * sin(theta1 - 30.0 * SGD_DEGREES_TO_RADIANS);
     float x3 = x1 - r1 * cos(theta1 + 30.0 * SGD_DEGREES_TO_RADIANS);
@@ -82,11 +76,11 @@ void HUD::Dial::draw(void)
     int l = abs((int)theta);
     if (l) {
         if (l < 10)
-            draw_text(x, y, buf, 0);
+            draw_text(_x, _y, buf, 0);
         else if (l < 100)
-            draw_text(x - 1.0, y, buf, 0);
+            draw_text(_x - 1.0, _y, buf, 0);
         else if (l < 360)
-            draw_text(x - 2.0, y, buf, 0);
+            draw_text(_x - 2.0, _y, buf, 0);
     }
 }
 

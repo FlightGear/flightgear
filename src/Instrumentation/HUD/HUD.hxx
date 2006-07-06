@@ -204,10 +204,6 @@ public:
         float x, y;
     } Point;
 
-    typedef struct {
-        float top, bottom, left, right;
-    } Rect;
-
     // called from Main/renderer.cxx to draw 2D and 3D HUD
     void draw();
 
@@ -377,15 +373,9 @@ public:
     virtual bool isEnabled();
 
 protected:
-    inline Rect  get_location()   const { return _scrn_pos; }
     inline float get_span()       const { return _scr_span; }
     inline Point get_centroid()   const { return _mid_span; }
     inline int   get_digits()     const { return _digits; }
-
-    inline float get_x()      const { return _scrn_pos.left; }
-    inline float get_y()      const { return _scrn_pos.top; }
-    inline float get_width()  const { return _scrn_pos.right; }
-    inline float get_height() const { return _scrn_pos.bottom; }
 
     inline bool option_vert()    const { return (_options & VERT) == VERT; }
     inline bool option_left()    const { return (_options & LEFT) == LEFT; }
@@ -406,11 +396,10 @@ protected:
     HUD         *_hud;
     string      _name;
     int         _options;
+    float       _x, _y, _w, _h;
 
 private:
     SGCondition *_condition;
-    Rect        _scrn_pos;      // Framing - affects scale dimensions
-                                // and orientation. Vert vs Horz, etc.
     float       _disp_factor;   // Multiply by to get numbers shown on scale.
     float       _scr_span;      // Working values for draw;
     Point       _mid_span;
@@ -473,8 +462,8 @@ protected:
     inline float range_to_show() const { return _range_shown; }
 
     Input _input;
-    unsigned int _major_divs;  // major division marker units
-    unsigned int _minor_divs;  // minor division marker units
+    float _major_divs;  // major division marker units
+    float _minor_divs;  // minor division marker units
 
 private:
     float _range_shown;     // Width Units.
@@ -639,7 +628,7 @@ private:
     unsigned short _stipple_center; // stipple pattern of the center line of the runway
     bool   _draw_arrow;             // draw arrow when runway is not visible in HUD
     bool   _draw_arrow_always;      // always draws arrow
-    Rect   _location;
+    float  _left, _right, _top, _bottom;
     Point  _center;
 };
 

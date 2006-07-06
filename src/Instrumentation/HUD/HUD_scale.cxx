@@ -37,8 +37,8 @@
 HUD::Scale::Scale( HUD *hud, const SGPropertyNode *n, float x, float y) :
     Item(hud, n, x, y),
     _input(n->getNode("input", false)),
-    _major_divs(n->getIntValue("major-divisions")),
-    _minor_divs(n->getIntValue("minor-divisions")),
+    _major_divs(n->getFloatValue("major-divisions")),
+    _minor_divs(n->getFloatValue("minor-divisions")),
     _modulo(n->getIntValue("modulo"))
 {
     if (n->hasValue("display-span"))

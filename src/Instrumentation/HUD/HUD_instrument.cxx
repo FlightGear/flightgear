@@ -39,10 +39,10 @@ HUD::Item::Item(HUD *hud, const SGPropertyNode *n, float x, float y) :
     if (node)
         _condition = sgReadCondition(globals->get_props(), node);
 
-    _scrn_pos.left = n->getIntValue("x") + x;
-    _scrn_pos.top = n->getIntValue("y") + y;
-    _scrn_pos.right = n->getIntValue("width");
-    _scrn_pos.bottom = n->getIntValue("height");
+    _x = n->getIntValue("x") + x;
+    _y = n->getIntValue("y") + y;
+    _w = n->getIntValue("width");
+    _h = n->getIntValue("height");
 
     vector<SGPropertyNode_ptr> opt = n->getChildren("option");
     for (unsigned int i = 0; i < opt.size(); i++) {
@@ -79,13 +79,13 @@ HUD::Item::Item(HUD *hud, const SGPropertyNode *n, float x, float y) :
     // the span values according to orientation
 
     if (_options & VERT) {
-        _scr_span = _scrn_pos.bottom;
+        _scr_span = _h;
     } else {
-        _scr_span = _scrn_pos.right;
+        _scr_span = _w;
     }
 
-    _mid_span.x = _scrn_pos.left + _scrn_pos.right / 2.0;
-    _mid_span.y = _scrn_pos.top + _scrn_pos.bottom / 2.0;
+    _mid_span.x = _x + _w / 2.0;
+    _mid_span.y = _y + _h / 2.0;
 }
 
 

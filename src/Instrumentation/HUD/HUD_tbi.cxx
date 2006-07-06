@@ -48,13 +48,12 @@ void HUD::TurnBankIndicator::draw(void)
     float sideslip = _sideslip.getFloatValue();
 
     float span = get_span();
-    Rect My_box = get_location();
     Point centroid = get_centroid();
 
     float cen_x = centroid.x;
     float cen_y = centroid.y;
 
-    float tee_height = My_box.bottom;
+    float tee_height = _h;
     float tee = -tee_height;
     float ss_const = 2 * sideslip * span / 40.0;  // sideslip angle pixels per deg (width represents 40 deg)
 
@@ -92,10 +91,10 @@ void HUD::TurnBankIndicator::draw(void)
 
 
     } else { // draw MIL-STD 1878B/4.2.2.4 bank scale
-        draw_line(cen_x - 1.0, My_box.top, cen_x + 1.0, My_box.top);
-        draw_line(cen_x - 1.0, My_box.top, cen_x - 1.0, My_box.top + 10.0);
-        draw_line(cen_x + 1.0, My_box.top, cen_x + 1.0, My_box.top + 10.0);
-        draw_line(cen_x - 1.0, My_box.top + 10.0, cen_x + 1.0, My_box.top + 10.0);
+        draw_line(cen_x - 1.0, _y, cen_x + 1.0, _y);
+        draw_line(cen_x - 1.0, _y, cen_x - 1.0, _y + 10.0);
+        draw_line(cen_x + 1.0, _y, cen_x + 1.0, _y + 10.0);
+        draw_line(cen_x - 1.0, _y + 10.0, cen_x + 1.0, _y + 10.0);
 
         float x1, y1, x2, y2, x3, y3, x4, y4, x5, y5;
         float xc, yc;
@@ -103,8 +102,8 @@ void HUD::TurnBankIndicator::draw(void)
         float r1 = r - 10.0;
         float r2 = r - 5.0;
 
-        xc = My_box.left + My_box.right / 2.0 ;
-        yc = My_box.top + r;
+        xc = _x + _w / 2.0;                // FIXME redunant, no?
+        yc = _y + r;
 
         // first n last lines
         x1 = xc + r * cos(255.0 * SGD_DEGREES_TO_RADIANS);

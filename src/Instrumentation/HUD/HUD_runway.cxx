@@ -63,10 +63,10 @@ HUD::Runway::Runway(HUD *hud, const SGPropertyNode *node, float x, float y) :
     _center.x = _view[2] / 2;
     _center.y = _view[3] / 2;
 
-    _location.left = _center.x - (get_width() / 2) + get_x();
-    _location.right = _center.x + (get_width() / 2) + get_x();
-    _location.bottom = _center.y - (get_height() / 2) + get_y();
-    _location.top = _center.y + (get_height() / 2) + get_y();
+    _left = _center.x - (_w / 2) + _x;
+    _right = _center.x + (_w / 2) + _x;
+    _bottom = _center.y - (_h / 2) + _y;
+    _top = _center.y + (_h / 2) + _y;
 }
 
 
@@ -218,12 +218,12 @@ bool HUD::Runway::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& 
     sgdVec3 p1, p2;
     sgdCopyVec3(p1, point1);
     sgdCopyVec3(p2, point2);
-    bool p1Inside = (p1[0] >= _location.left && p1[0] <= _location.right
-            && p1[1] >= _location.bottom && p1[1] <= _location.top);
+    bool p1Inside = (p1[0] >= _left && p1[0] <= _right
+            && p1[1] >= _bottom && p1[1] <= _top);
     bool p1Insight = (p1[2] >= 0.0 && p1[2] < 1.0);
     bool p1Valid = p1Insight && p1Inside;
-    bool p2Inside = (p2[0] >= _location.left && p2[0] <= _location.right
-            && p2[1] >= _location.bottom && p2[1] <= _location.top);
+    bool p2Inside = (p2[0] >= _left && p2[0] <= _right
+            && p2[1] >= _bottom && p2[1] <= _top);
     bool p2Insight = (p2[2] >= 0.0 && p2[2] < 1.0);
     bool p2Valid = p2Insight && p2Inside;
 
@@ -284,9 +284,9 @@ void HUD::Runway::boundPoint(const sgdVec3& v, sgdVec3& m)
 {
     double y = v[1];
     if (m[1] < v[1])
-        y = _location.bottom;
+        y = _bottom;
     else if (m[1] > v[1])
-        y = _location.top;
+        y = _top;
 
     if (m[0] == v[0]) {
         m[1] = y;
@@ -297,87 +297,87 @@ void HUD::Runway::boundPoint(const sgdVec3& v, sgdVec3& m)
     m[0] = (y - v[1]) / slope + v[0];
     m[1] = y;
 
-    if (m[0] < _location.left) {
-        m[0] = _location.left;
-        m[1] = slope * (_location.left - v[0]) + v[1];
+    if (m[0] < _left) {
+        m[0] = _left;
+        m[1] = slope * (_left - v[0]) + v[1];
 
-    } else if (m[0] > _location.right) {
-        m[0] = _location.right;
-        m[1] = slope * (_location.right - v[0]) + v[1];
+    } else if (m[0] > _right) {
+        m[0] = _right;
+        m[1] = slope * (_right - v[0]) + v[1];
     }
 }
 
 
 bool HUD::Runway::boundOutsidePoints(sgdVec3& v, sgdVec3& m)
 {
-    bool pointsInvalid = (v[1] > _location.top && m[1] > _location.top) ||
-                         (v[1] < _location.bottom && m[1] < _location.bottom) ||
-                         (v[0] > _location.right && m[0] > _location.right) ||
-                         (v[0] < _location.left && m[0] < _location.left);
+    bool pointsInvalid = (v[1] > _top && m[1] > _top) ||
+                         (v[1] < _bottom && m[1] < _bottom) ||
+                         (v[0] > _right && m[0] > _right) ||
+                         (v[0] < _left && m[0] < _left);
     if (pointsInvalid)
         return false;
 
     if (m[0] == v[0]) {//x's are equal, vertical line
         if (m[1] > v[1]) {
-            m[1] = _location.top;
-            v[1] = _location.bottom;
+            m[1] = _top;
+            v[1] = _bottom;
         } else {
-            v[1] = _location.top;
-            m[1] = _location.bottom;
+            v[1] = _top;
+            m[1] = _bottom;
         }
         return true;
     }
 
     if (m[1] == v[1]) { //y's are equal, horizontal line
         if (m[0] > v[0]) {
-            m[0] = _location.right;
-            v[0] = _location.left;
+            m[0] = _right;
+            v[0] = _left;
         } else {
-            v[0] = _location.right;
-            m[0] = _location.left;
+            v[0] = _right;
+            m[0] = _left;
         }
         return true;
     }
 
     double slope = (m[1] - v[1]) / (m[0] - v[0]);
     double b = v[1] - (slope * v[0]);
-    double y1 = slope * _location.left + b;
-    double y2 = slope * _location.right + b;
-    double x1 = (_location.bottom - b) / slope;
-    double x2 = (_location.top - b) / slope;
+    double y1 = slope * _left + b;
+    double y2 = slope * _right + b;
+    double x1 = (_bottom - b) / slope;
+    double x2 = (_top - b) / slope;
     int counter = 0;
 
-    if  (y1 >= _location.bottom && y1 <= _location.top) {
-        v[0] = _location.left;
+    if (y1 >= _bottom && y1 <= _top) {
+        v[0] = _left;
         v[1] = y1;
         counter++;
     }
 
-    if (y2 >= _location.bottom && y2 <= _location.top) {
+    if (y2 >= _bottom && y2 <= _top) {
         if (counter > 0) {
-            m[0] = _location.right;
+            m[0] = _right;
             m[1] = y2;
         } else {
-            v[0] = _location.right;
+            v[0] = _right;
             v[1] = y2;
         }
         counter++;
     }
 
-    if (x1 >= _location.left && x1 <= _location.right) {
+    if (x1 >= _left && x1 <= _right) {
         if (counter > 0) {
             m[0] = x1;
-            m[1] = _location.bottom;
+            m[1] = _bottom;
         } else {
             v[0] = x1;
-            v[1] = _location.bottom;
+            v[1] = _bottom;
         }
         counter++;
     }
 
-    if (x2 >= _location.left && x2 <= _location.right) {
+    if (x2 >= _left && x2 <= _right) {
         m[0] = x1;
-        m[1] = _location.bottom;
+        m[1] = _bottom;
         counter++;
     }
     return (counter == 2);
@@ -396,7 +396,7 @@ void HUD::Runway::drawArrow()
     theta = -theta;
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    glTranslated((_location.right + _location.left) / 2.0,(_location.top + _location.bottom) / 2.0, 0.0);
+    glTranslated((_right + _left) / 2.0, (_top + _bottom) / 2.0, 0.0);
     glRotated(theta, 0.0, 0.0, 1.0);
     glTranslated(0.0, _arrow_radius, 0.0);
     glScaled(_arrow_scale, _arrow_scale, 0.0);
