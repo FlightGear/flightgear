@@ -1417,7 +1417,7 @@ void fgInitTimeOffset() {
     time_t systemLocalTime = sgTimeGetGMT( localtime(&cur_time) );
     time_t aircraftLocalTime = 
         sgTimeGetGMT( fgLocaltime(&cur_time, t->get_zonename() ) );
-
+    
     // Okay, we now have several possible scenarios
     int offset = fgGetInt("/sim/startup/time-offset");
     string offset_type = fgGetString("/sim/startup/time-offset-type");
@@ -1476,16 +1476,19 @@ void fgInitTimeOffset() {
                                            180.0, false ); 
     } else if ( offset_type == "system-offset" ) {
         warp = offset;
+	orig_warp = 0;
     } else if ( offset_type == "gmt-offset" ) {
         warp = offset - (currGMT - systemLocalTime);
+	orig_warp = 0;
     } else if ( offset_type == "latitude-offset" ) {
         warp = offset - (aircraftLocalTime - systemLocalTime);
+	orig_warp = 0;
     } else if ( offset_type == "system" ) {
-        warp = offset - cur_time;
+      warp = offset - (systemLocalTime - currGMT) - cur_time;
     } else if ( offset_type == "gmt" ) {
-        warp = offset - currGMT;
+        warp = offset - cur_time;
     } else if ( offset_type == "latitude" ) {
-        warp = offset - (aircraftLocalTime - systemLocalTime) - cur_time; 
+        warp = offset - (aircraftLocalTime - currGMT)- cur_time; 
     } else {
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "FG_TIME::Unsupported offset type " << offset_type );
