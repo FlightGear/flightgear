@@ -1,6 +1,6 @@
 //
 // simple.cxx -- a really simplistic class to manage airport ID,
-//               lat, lon of the center of one of it's runways, and 
+//               lat, lon of the center of one of it's runways, and
 //               elevation in feet.
 //
 // Written by Curtis Olson, started April 1998.
@@ -57,27 +57,26 @@ SG_USING_STD(random_shuffle);
 
 
 
-
-
 /***************************************************************************
  * FGAirport
  ***************************************************************************/
 FGAirport::FGAirport() : _longitude(0), _latitude(0), _elevation(0)
 {
-  dynamics = 0;
+    dynamics = 0;
 }
 
 
 FGAirport::FGAirport(const string &id, double lon, double lat, double elev, const string &name, bool has_metar)
 {
-  _id = id;
-  _longitude = lon;
-  _latitude  = lat;
-  _elevation = elev;
-  _name      = name;
-  _has_metar = has_metar;
-  dynamics   = 0;
+    _id = id;
+    _longitude = lon;
+    _latitude  = lat;
+    _elevation = elev;
+    _name      = name;
+    _has_metar = has_metar;
+    dynamics   = 0;
 }
+
 
 FGAirport::~FGAirport()
 {
@@ -87,52 +86,48 @@ FGAirport::~FGAirport()
 
 FGAirportDynamics * FGAirport::getDynamics()
 {
-  
-  if (dynamics != 0)
-    return dynamics;
-  else
-    {
-      FGRunwayPreference rwyPrefs;
-      //cerr << "Trying to load dynamics for " << _id << endl;
-      dynamics = new FGAirportDynamics(_latitude, _longitude, _elevation, _id);
+    if (dynamics != 0) {
+        return dynamics;
+    } else {
+        FGRunwayPreference rwyPrefs;
+        //cerr << "Trying to load dynamics for " << _id << endl;
+        dynamics = new FGAirportDynamics(_latitude, _longitude, _elevation, _id);
 
-      SGPath parkpath( globals->get_fg_root() );
-      parkpath.append( "/Airports/AI/" );
-      parkpath.append(_id);
-      parkpath.append("parking.xml"); 
-      
-      SGPath rwyPrefPath( globals->get_fg_root() );
-      rwyPrefPath.append( "/Airports/AI/" );
-      rwyPrefPath.append(_id);
-      rwyPrefPath.append("rwyuse.xml");
-      //if (ai_dirs.find(id.c_str()) != ai_dirs.end()
-      //  && parkpath.exists()) 
-      if (parkpath.exists())
-	{
-	  try {
-	    readXML(parkpath.str(),*dynamics);
- 	    dynamics->init();
-	  } 
-	  catch  (const sg_exception &e) {
-	    //cerr << "unable to read " << parkpath.str() << endl;
-	  }
-	}
-      //if (ai_dirs.find(id.c_str()) != ai_dirs.end()
-      //  && rwyPrefPath.exists()) 
-      if (rwyPrefPath.exists())
-	{
-	  try {
-	    readXML(rwyPrefPath.str(), rwyPrefs);
-	    dynamics->setRwyUse(rwyPrefs);
-	  }
-	  catch  (const sg_exception &e) {
-	    //cerr << "unable to read " << rwyPrefPath.str() << endl;
-	    //exit(1);
-	  }
-	}
-      //exit(1);
+        SGPath parkpath( globals->get_fg_root() );
+        parkpath.append( "/Airports/AI/" );
+        parkpath.append(_id);
+        parkpath.append("parking.xml");
+
+        SGPath rwyPrefPath( globals->get_fg_root() );
+        rwyPrefPath.append( "/Airports/AI/" );
+        rwyPrefPath.append(_id);
+        rwyPrefPath.append("rwyuse.xml");
+
+        //if (ai_dirs.find(id.c_str()) != ai_dirs.end()
+        //  && parkpath.exists())
+        if (parkpath.exists()) {
+            try {
+                readXML(parkpath.str(),*dynamics);
+                dynamics->init();
+            } catch (const sg_exception &e) {
+                //cerr << "unable to read " << parkpath.str() << endl;
+            }
+        }
+
+        //if (ai_dirs.find(id.c_str()) != ai_dirs.end()
+        //  && rwyPrefPath.exists())
+        if (rwyPrefPath.exists()) {
+            try {
+                readXML(rwyPrefPath.str(), rwyPrefs);
+                dynamics->setRwyUse(rwyPrefs);
+            } catch (const sg_exception &e) {
+                //cerr << "unable to read " << rwyPrefPath.str() << endl;
+                //exit(1);
+            }
+        }
+        //exit(1);
     }
-  return dynamics;
+    return dynamics;
 }
 
 
@@ -151,7 +146,7 @@ FGAirportDynamics * FGAirport::getDynamics()
 // in the base package.
 //
 // Note: 2005/12/23: This is probably not necessary anymore, because I'm
-// Switching to runtime airport dynamics loading (DT). 
+// Switching to runtime airport dynamics loading (DT).
 FGAirportList::FGAirportList()
 {
 //     ulDir* d;
@@ -168,8 +163,9 @@ FGAirportList::FGAirportList()
 }
 
 
-FGAirportList::~FGAirportList( void ) {
-    for(unsigned int i = 0; i < airports_array.size(); ++i) {
+FGAirportList::~FGAirportList( void )
+{
+    for (unsigned int i = 0; i < airports_array.size(); ++i) {
         delete airports_array[i];
     }
 }
@@ -183,10 +179,9 @@ void FGAirportList::add( const string &id, const double longitude,
     FGRunwayPreference rwyPrefs;
     FGAirport* a = new FGAirport(id, longitude, latitude, elevation, name, has_metar);
 
-    
     airports_by_id[a->getId()] = a;
     // try and read in an auxilary file
-    
+
     airports_array.push_back( a );
     SG_LOG( SG_GENERAL, SG_BULK, "Adding " << id << " pos = " << longitude
             << ", " << latitude << " elev = " << elevation );
@@ -194,31 +189,34 @@ void FGAirportList::add( const string &id, const double longitude,
 
 
 // search for the specified id
-FGAirport* FGAirportList::search( const string& id) {
-    airport_map_iterator itr = airports_by_id.find(id); 
-    return(itr == airports_by_id.end() ? NULL : itr->second);
+FGAirport* FGAirportList::search( const string& id)
+{
+    airport_map_iterator itr = airports_by_id.find(id);
+    return (itr == airports_by_id.end() ? NULL : itr->second);
 }
 
 
 // search for first subsequent alphabetically to supplied id
-const FGAirport* FGAirportList::findFirstById( const string& id, bool exact ) {
+const FGAirport* FGAirportList::findFirstById( const string& id, bool exact )
+{
     airport_map_iterator itr;
-    if(exact) {
+    if (exact) {
         itr = airports_by_id.find(id);
     } else {
         itr = airports_by_id.lower_bound(id);
     }
-    if(itr == airports_by_id.end()) {
-        return(NULL);
+    if (itr == airports_by_id.end()) {
+        return (NULL);
     } else {
-        return(itr->second);
+        return (itr->second);
     }
 }
 
 
 // search for the airport nearest the specified position
 FGAirport* FGAirportList::search( double lon_deg, double lat_deg,
-                                 bool with_metar ) {
+                                  bool with_metar )
+{
     int closest = -1;
     double min_dist = 360.0;
     unsigned int i;
@@ -244,9 +242,10 @@ FGAirportList::size () const
     return airports_array.size();
 }
 
+
 const FGAirport *FGAirportList::getAirport( unsigned int index ) const
 {
-    if(index < airports_array.size()) {
+    if (index < airports_array.size()) {
         return(airports_array[index]);
     } else {
         return(NULL);
@@ -257,8 +256,9 @@ const FGAirport *FGAirportList::getAirport( unsigned int index ) const
 /**
  * Mark the specified airport record as not having metar
  */
-void FGAirportList::no_metar( const string &id ) {
-    if(airports_by_id.find(id) != airports_by_id.end()) { 
+void FGAirportList::no_metar( const string &id )
+{
+    if(airports_by_id.find(id) != airports_by_id.end()) {
         airports_by_id[id]->setMetar(false);
     }
 }
@@ -267,14 +267,17 @@ void FGAirportList::no_metar( const string &id ) {
 /**
  * Mark the specified airport record as (yes) having metar
  */
-void FGAirportList::has_metar( const string &id ) {
-    if(airports_by_id.find(id) != airports_by_id.end()) { 
+void FGAirportList::has_metar( const string &id )
+{
+    if(airports_by_id.find(id) != airports_by_id.end()) {
         airports_by_id[id]->setMetar(true);
     }
 }
 
+
 // find basic airport location info from airport database
-const FGAirport *fgFindAirportID( const string& id) {
+const FGAirport *fgFindAirportID( const string& id)
+{
     const FGAirport* result = NULL;
     if ( id.length() ) {
         SG_LOG( SG_GENERAL, SG_BULK, "Searching for airport code = " << id );
@@ -299,10 +302,8 @@ const FGAirport *fgFindAirportID( const string& id) {
 
 
 // get airport elevation
-double fgGetAirportElev( const string& id ) {
-    
-    // double lon, lat;
-
+double fgGetAirportElev( const string& id )
+{
     SG_LOG( SG_GENERAL, SG_BULK,
             "Finding elevation for airport: " << id );
 
@@ -314,15 +315,15 @@ double fgGetAirportElev( const string& id ) {
     }
 }
 
-// get airport position
-Point3D fgGetAirportPos( const string& id ) {
-    // double lon, lat;
 
+// get airport position
+Point3D fgGetAirportPos( const string& id )
+{
     SG_LOG( SG_ATC, SG_BULK,
             "Finding position for airport: " << id );
 
     const FGAirport *a = fgFindAirportID( id);
-    
+
     if (a) {
         return Point3D(a->getLongitude(), a->getLatitude(), a->getElevation());
     } else {
