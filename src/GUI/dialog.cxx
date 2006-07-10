@@ -148,6 +148,9 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
 
 int fgPopup::getHitObjects(puObject *object, int x, int y)
 {
+    if (!object->isVisible())
+        return 0;
+
     int type = 0;
     if(object->getType() & PUCLASS_GROUP)
         for (puObject *obj = ((puGroup *)object)->getFirstChild();
