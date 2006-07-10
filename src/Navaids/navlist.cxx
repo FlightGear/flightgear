@@ -35,33 +35,31 @@
 // Return true if the nav record matches the type
 static bool isTypeMatch(const FGNavRecord* n, fg_nav_types type) {
     switch(type) {
-    case FG_NAV_ANY: return(true);
-    case FG_NAV_VOR: return(n->get_type() == 3);
-    case FG_NAV_NDB: return(n->get_type() == 2);
-    case FG_NAV_ILS: return(n->get_type() == 4);	// Note - very simplified, only matches loc as part of full ILS.
-    default: return false;
+        case FG_NAV_ANY: return(true);
+        case FG_NAV_VOR: return(n->get_type() == 3);
+        case FG_NAV_NDB: return(n->get_type() == 2);
+        case FG_NAV_ILS: return(n->get_type() == 4);	// Note - very simplified, only matches loc as part of full ILS.
+        default: return false;
     }
 }
 
 
-// Constructor
-FGNavList::FGNavList( void ) {
+
+// FGNavList ------------------------------------------------------------------
+
+FGNavList::FGNavList( void )
+{
 }
 
-FGTACANList::FGTACANList( void ){
+
+FGNavList::~FGNavList( void )
+{
 }
 
-
-// Destructor
-FGNavList::~FGNavList( void ) {
-}
-
-FGTACANList::~FGTACANList( void ){
-}
 
 // load the navaids and build the map
-bool FGNavList::init() {
-
+bool FGNavList::init()
+{
     // FIXME: leaves all the individual navaid entries leaked
     navaids.erase( navaids.begin(), navaids.end() );
     navaids_by_tile.erase( navaids_by_tile.begin(), navaids_by_tile.end() );
@@ -70,10 +68,6 @@ bool FGNavList::init() {
     return true;
 }
 
-bool FGTACANList::init() {
-    
-    return true;      
-}
 
 // real add a marker beacon
 static void real_add( nav_map_type &navmap, const int master_index,
@@ -84,7 +78,8 @@ static void real_add( nav_map_type &navmap, const int master_index,
 
 
 // front end for add a marker beacon
-static void tile_add( nav_map_type &navmap, FGNavRecord *n ) {
+static void tile_add( nav_map_type &navmap, FGNavRecord *n )
+{
     double diff;
 
     double lon = n->get_lon();
@@ -93,7 +88,7 @@ static void tile_add( nav_map_type &navmap, FGNavRecord *n ) {
     int lonidx = (int)lon;
     diff = lon - (double)lonidx;
     if ( (lon < 0.0) && (fabs(diff) > SG_EPSILON) ) {
-	lonidx -= 1;
+        lonidx -= 1;
     }
     double lonfrac = lon - (double)lonidx;
     lonidx += 180;
@@ -101,7 +96,7 @@ static void tile_add( nav_map_type &navmap, FGNavRecord *n ) {
     int latidx = (int)lat;
     diff = lat - (double)latidx;
     if ( (lat < 0.0) && (fabs(diff) > SG_EPSILON) ) {
-	latidx -= 1;
+        latidx -= 1;
     }
     double latfrac = lat - (double)latidx;
     latidx += 90;
@@ -119,41 +114,36 @@ static void tile_add( nav_map_type &navmap, FGNavRecord *n ) {
     // there are 8 cases since there are 8 adjacent tiles
 
     if ( lonfrac < 0.2 ) {
-	real_add( navmap, master_index - 1000, n );
-	if ( latfrac < 0.2 ) {
-	    real_add( navmap, master_index - 1000 - 1, n );
-	} else if ( latfrac > 0.8 ) {
-	    real_add( navmap, master_index - 1000 + 1, n );
-	}
+        real_add( navmap, master_index - 1000, n );
+        if ( latfrac < 0.2 ) {
+            real_add( navmap, master_index - 1000 - 1, n );
+        } else if ( latfrac > 0.8 ) {
+            real_add( navmap, master_index - 1000 + 1, n );
+        }
     } else if ( lonfrac > 0.8 ) {
-	real_add( navmap, master_index + 1000, n );
-	if ( latfrac < 0.2 ) {
-	    real_add( navmap, master_index + 1000 - 1, n );
-	} else if ( latfrac > 0.8 ) {
-	    real_add( navmap, master_index + 1000 + 1, n );
-	}
+        real_add( navmap, master_index + 1000, n );
+        if ( latfrac < 0.2 ) {
+            real_add( navmap, master_index + 1000 - 1, n );
+        } else if ( latfrac > 0.8 ) {
+            real_add( navmap, master_index + 1000 + 1, n );
+        }
     } else if ( latfrac < 0.2 ) {
-	real_add( navmap, master_index - 1, n );
+        real_add( navmap, master_index - 1, n );
     } else if ( latfrac > 0.8 ) {
-	real_add( navmap, master_index + 1, n );
+        real_add( navmap, master_index + 1, n );
     }
 }
 
 
-
 // add an entry to the lists
-bool FGNavList::add( FGNavRecord *n ) {
+bool FGNavList::add( FGNavRecord *n )
+{
     navaids[n->get_freq()].push_back(n);
     ident_navaids[n->get_ident()].push_back(n);
     tile_add( navaids_by_tile, n );
     return true;
 }
 
-// add an entry to the lists
-bool FGTACANList::add( FGTACANRecord *c ) {
-    ident_channels[c->get_channel()].push_back(c);
-    return true;
-}
 
 FGNavRecord *FGNavList::findByFreq( double freq, double lon, double lat, double elev )
 {
@@ -181,64 +171,64 @@ nav_list_type FGNavList::findFirstByIdent( const string& ident, fg_nav_types typ
 {
     nav_list_type n2;
     n2.clear();
-    
+
     int iType;
     if(type == FG_NAV_VOR) iType = 3;
     else if(type == FG_NAV_NDB) iType = 2;
     else return(n2);
-    
+
     nav_ident_map_iterator it;
     if(exact) {
-	it = ident_navaids.find(ident);
+        it = ident_navaids.find(ident);
     } else {
-	bool typeMatch = false;
-	int safety_count = 0;
-	it = ident_navaids.lower_bound(ident);
-	while(!typeMatch) {
-	    nav_list_type n0 = it->second;	
-	    // local copy, so we should be able to do anything with n0.
-	    // Remove the types that don't match request.
-	    for(nav_list_iterator it0 = n0.begin(); it0 != n0.end();) {
-		FGNavRecord* nv = *it0;
-		if(nv->get_type() == iType) {
-		    typeMatch = true;
-		    ++it0;
-		} else {
-		    it0 = n0.erase(it0);
-		}
-	    }
-	    if(typeMatch) {
-		return(n0);
-	    }
-	    if(it == ident_navaids.begin()) {
-		// We didn't find a match before reaching the beginning of the map
-		n0.clear();
-		return(n0);		
-	    }
-	    safety_count++;
-	    if(safety_count == 1000000) {
-		SG_LOG(SG_INSTR, SG_ALERT,
-		       "safety_count triggered exit from while loop in findFirstByIdent!");
-		break;
-	    }
-	    ++it;
-	    if(it == ident_navaids.end()) {
-		n0.clear();
-		return(n0);
-	    }
-	}
+        bool typeMatch = false;
+        int safety_count = 0;
+        it = ident_navaids.lower_bound(ident);
+        while(!typeMatch) {
+            nav_list_type n0 = it->second;
+            // local copy, so we should be able to do anything with n0.
+            // Remove the types that don't match request.
+            for(nav_list_iterator it0 = n0.begin(); it0 != n0.end();) {
+                FGNavRecord* nv = *it0;
+                if(nv->get_type() == iType) {
+                    typeMatch = true;
+                    ++it0;
+                } else {
+                    it0 = n0.erase(it0);
+                }
+            }
+            if(typeMatch) {
+                return(n0);
+            }
+            if(it == ident_navaids.begin()) {
+                // We didn't find a match before reaching the beginning of the map
+                n0.clear();
+                return(n0);
+            }
+            safety_count++;
+            if(safety_count == 1000000) {
+                SG_LOG(SG_INSTR, SG_ALERT,
+                       "safety_count triggered exit from while loop in findFirstByIdent!");
+                break;
+            }
+            ++it;
+            if(it == ident_navaids.end()) {
+                n0.clear();
+                return(n0);
+            }
+        }
     }
     if(it == ident_navaids.end()) {
-	n2.clear();
-	return(n2);
+        n2.clear();
+        return(n2);
     } else {
-	nav_list_type n1 = it->second;
-	n2.clear();
-	for(nav_list_iterator it2 = n1.begin(); it2 != n1.end(); ++it2) {
-	    FGNavRecord* nv = *it2;
-	    if(nv->get_type() == iType) n2.push_back(nv);
-	}
-	return(n2);
+        nav_list_type n1 = it->second;
+        n2.clear();
+        for(nav_list_iterator it2 = n1.begin(); it2 != n1.end(); ++it2) {
+            FGNavRecord* nv = *it2;
+            if(nv->get_type() == iType) n2.push_back(nv);
+        }
+        return(n2);
     }
 }
 
@@ -268,7 +258,7 @@ FGNavRecord *FGNavList::findByIdentAndFreq( const char* ident, const double freq
 
 // Given a point and a list of stations, return the closest one to the
 // specified point.
-FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft, 
+FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft,
                                          const nav_list_type &stations )
 {
     FGNavRecord *nav = NULL;
@@ -278,11 +268,11 @@ FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft,
 
     // find the closest station within a sensible range (FG_NAV_MAX_RANGE)
     for ( unsigned int i = 0; i < stations.size(); ++i ) {
-	// cout << "testing " << current->get_ident() << endl;
+        // cout << "testing " << current->get_ident() << endl;
         d2 = distSqr(stations[i]->get_cart(), aircraft);
 
-	// cout << "  dist = " << sqrt(d)
-	//      << "  range = " << current->get_range() * SG_NM_TO_METER
+        // cout << "  dist = " << sqrt(d)
+        //      << "  range = " << current->get_range() * SG_NM_TO_METER
         //      << endl;
 
         // LOC, ILS, GS, and DME antenna's could potentially be
@@ -295,7 +285,7 @@ FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft,
         // placed from each other.  (Do the expensive check only for
         // directional atennas and only when there is a chance it is
         // the closest station.)
-	if ( d2 < min_dist &&
+        if ( d2 < min_dist &&
              (stations[i]->get_type() == 4 || stations[i]->get_type() == 5 ||
               stations[i]->get_type() == 6 || stations[i]->get_type() == 12 ||
               stations[i]->get_type() == 13) )
@@ -351,14 +341,14 @@ FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
     int lonidx = (int)lon_deg;
     diff = lon_deg - (double)lonidx;
     if ( (lon_deg < 0.0) && (fabs(diff) > SG_EPSILON) ) {
-	lonidx -= 1;
+        lonidx -= 1;
     }
     lonidx += 180;
 
     int latidx = (int)lat_deg;
     diff = lat_deg - (double)latidx;
     if ( (lat_deg < 0.0) && (fabs(diff) > SG_EPSILON) ) {
-	latidx -= 1;
+        latidx -= 1;
     }
     latidx += 90;
 
@@ -377,22 +367,22 @@ FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
     double min_dist = 999999999.0;
 
     for ( ; current != last ; ++current ) {
-	if(isTypeMatch(*current, type)) {
-	    // cout << "  testing " << (*current)->get_ident() << endl;
-    
+        if(isTypeMatch(*current, type)) {
+            // cout << "  testing " << (*current)->get_ident() << endl;
+
             double d = distSqr((*current)->get_cart(), aircraft);
-	    // cout << "  distance = " << d << " (" 
-	    //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
-	    //         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
-	    //      << ")" << endl;
-    
-	    // cout << "  range = " << sqrt(d) << endl;
-    
-	    if ( d < min_dist ) {
-		min_dist = d;
-		result = (*current);
-	    }
-	}
+            // cout << "  distance = " << d << " ("
+            //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
+            //         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
+            //      << ")" << endl;
+
+            // cout << "  range = " << sqrt(d) << endl;
+
+            if ( d < min_dist ) {
+                min_dist = d;
+                result = (*current);
+            }
+        }
     }
 
     // cout << "lon = " << lon << " lat = " << lat
@@ -401,27 +391,57 @@ FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
     return result;
 }
 
-// Given a TACAN Channel return the first matching frequency
-FGTACANRecord *FGTACANList::findByChannel( const string& channel )
-{
-    const tacan_list_type& stations = ident_channels[channel];
-    SG_LOG( SG_INSTR, SG_DEBUG, "findByChannel " << channel<< " size " << stations.size()  );
-    
-    if (stations.size()) {
-        return stations[0];
-    }    
-    return NULL;
-}
-
 // Given a frequency, return the first matching station.
 FGNavRecord *FGNavList::findStationByFreq( double freq )
 {
     const nav_list_type& stations = navaids[(int)(freq*100.0 + 0.5)];
-   
+
     SG_LOG( SG_INSTR, SG_DEBUG, "findStationByFreq " << freq << " size " << stations.size()  );
-    
+
     if (stations.size()) {
         return stations[0];
-    }    
+    }
     return NULL;
 }
+
+
+
+// FGTACANList ----------------------------------------------------------------
+
+FGTACANList::FGTACANList( void )
+{
+}
+
+
+FGTACANList::~FGTACANList( void )
+{
+}
+
+
+bool FGTACANList::init()
+{
+    return true;
+}
+
+
+// add an entry to the lists
+bool FGTACANList::add( FGTACANRecord *c )
+{
+    ident_channels[c->get_channel()].push_back(c);
+    return true;
+}
+
+
+// Given a TACAN Channel return the first matching frequency
+FGTACANRecord *FGTACANList::findByChannel( const string& channel )
+{
+    const tacan_list_type& stations = ident_channels[channel];
+    SG_LOG( SG_INSTR, SG_DEBUG, "findByChannel " << channel<< " size " << stations.size() );
+
+    if (stations.size()) {
+        return stations[0];
+    }
+    return NULL;
+}
+
+

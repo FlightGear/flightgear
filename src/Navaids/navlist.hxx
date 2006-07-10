@@ -39,20 +39,21 @@ SG_USING_STD(vector);
 SG_USING_STD(string);
 
 
-// convenience types
+
+// FGNavList ------------------------------------------------------------------
+
+
 typedef vector < FGNavRecord* > nav_list_type;
-typedef vector < FGTACANRecord* > tacan_list_type;
 typedef nav_list_type::iterator nav_list_iterator;
 typedef nav_list_type::const_iterator nav_list_const_iterator;
 
 typedef map < int, nav_list_type > nav_map_type;
-typedef map < int, tacan_list_type > tacan_map_type;
 typedef nav_map_type::iterator nav_map_iterator;
 typedef nav_map_type::const_iterator nav_map_const_iterator;
 
 typedef map < string, nav_list_type > nav_ident_map_type;
 typedef nav_ident_map_type::iterator nav_ident_map_iterator;
-typedef map < string, tacan_list_type > tacan_ident_map_type;
+
 
 class FGNavList {
 
@@ -60,12 +61,12 @@ class FGNavList {
     nav_map_type navaids;
     nav_map_type navaids_by_tile;
     nav_ident_map_type ident_navaids;
-	
+
     // Given a point and a list of stations, return the closest one to
     // the specified point.
-    FGNavRecord *findNavFromList( const SGVec3d &aircraft, 
+    FGNavRecord *findNavFromList( const SGVec3d &aircraft,
                                   const nav_list_type &stations );
-	
+
 public:
 
     FGNavList();
@@ -81,13 +82,13 @@ public:
       * that there will be multiple stations with matching frequencies
       * so a position must be specified.  Lon and lat are in radians,
       * elev is in meters.
-	  */
+      */
     FGNavRecord *findByFreq( double freq, double lon, double lat, double elev );
 
     // locate closest item in the DB matching the requested ident
     FGNavRecord *findByIdent( const char* ident, const double lon, const double lat );
-	
-    // Find items of requested type with closest exact or subsequent ident 
+
+    // Find items of requested type with closest exact or subsequent ident
     // (by ASCII code value) to that supplied.
     // Supplying true for exact forces only exact matches to be returned (similar to above function)
     // Returns an empty list if no match found - calling function should check for this!
@@ -107,12 +108,24 @@ public:
     inline const nav_map_type& get_navaids() const { return navaids; }
 };
 
+
+
+
+// FGTACANList ----------------------------------------------------------------
+
+
+
+typedef vector < FGTACANRecord* > tacan_list_type;
+typedef map < int, tacan_list_type > tacan_map_type;
+typedef map < string, tacan_list_type > tacan_ident_map_type;
+
+
 class FGTACANList {
 
     tacan_list_type channellist;
     tacan_map_type channels;
     tacan_ident_map_type ident_channels;
-	
+
 public:
 
     FGTACANList();
@@ -123,10 +136,10 @@ public:
 
     // add an entry
     bool add( FGTACANRecord *r );
-    
-    // Given a TACAN Channel, return the appropriate frequency.  
+
+    // Given a TACAN Channel, return the appropriate frequency.
     FGTACANRecord *findByChannel( const string& channel );
 
-    
+
 };
 #endif // _FG_NAVLIST_HXX
