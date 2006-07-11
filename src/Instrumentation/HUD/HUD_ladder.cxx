@@ -45,8 +45,7 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _pitch(n->getNode("pitch-input", false)),
     _roll(n->getNode("roll-input", false)),
     _width_units(int(n->getFloatValue("display-span"))),
-    div_units(int(fabs(n->getFloatValue("divisions")))),
-    label_pos(n->getIntValue("lbl-pos")),
+    _div_units(int(fabs(n->getFloatValue("divisions")))),
     _scr_hole(n->getIntValue("screen-hole")),
     _compression(n->getFloatValue("compression-factor")),
     _frl(n->getBoolValue("enable-fuselage-ref-line", false)),
@@ -433,7 +432,7 @@ void HUD::Ladder::draw(void)
     glRotatef(roll_value * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
     // FRL marker not rotated - this line shifted below
 
-    if (div_units) {
+    if (_div_units) {
         const int BUFSIZE = 8;
         char buf[BUFSIZE];
         float label_length;
@@ -468,7 +467,7 @@ void HUD::Ladder::draw(void)
             for (; i < last; i++) {
                 y = (i - pitch_value) * _compression + .5f;
 
-                if (!(i % div_units)) {           //  At integral multiple of div
+                if (!(i % _div_units)) {           //  At integral multiple of div
                     snprintf(buf, BUFSIZE, "%d", i);
                     font->getBBox(buf, pointsize, italic, &left, &right, &bot, &top);
                     label_length = right + left;
@@ -513,7 +512,7 @@ void HUD::Ladder::draw(void)
                 else // _type == CLIMB_DIVE
                     y = float(i - actslope) * _compression + .5;
 
-                if (!(i % div_units)) {  //  At integral multiple of div
+                if (!(i % _div_units)) {  //  At integral multiple of div
                     snprintf(buf, BUFSIZE, "%d", i);
                     font->getBBox(buf, pointsize, italic, &left, &right, &bot, &top);
                     label_length = right + left;

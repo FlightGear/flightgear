@@ -134,7 +134,7 @@ void HUD::init()
     _font_renderer->setPointSize(_font_size);
     _text_list.setFont(_font_renderer);
 
-    load(fgGetString("/hud", "Huds/default.xml"));
+    load(fgGetString("/sim/hud/path[1]", "Huds/default.xml"));
 }
 
 

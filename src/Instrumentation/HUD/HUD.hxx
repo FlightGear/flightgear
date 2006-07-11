@@ -561,12 +561,11 @@ private:
         _locStippleLineList.add(LineSegment(x1, y1, x2, y2));
     }
 
+    enum   Type { PITCH, CLIMB_DIVE } _type;
     Input  _pitch;
     Input  _roll;
-    enum Type { PITCH, CLIMB_DIVE } _type;
-    float _width_units;
-    int    div_units;
-    unsigned int label_pos;
+    float  _width_units;
+    int    _div_units;
     unsigned int _scr_hole;
     float  _vmax;
     float  _vmin;
