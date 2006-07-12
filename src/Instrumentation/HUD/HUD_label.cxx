@@ -168,7 +168,7 @@ HUD::Label::Format HUD::Label::check_format(const char *f) const
 
     if (*f == 'd')
         fmt = l ? LONG : INT;
-    if (*f == 'f')
+    else if (*f == 'f')
         fmt = l ? DOUBLE : FLOAT;
     else if (*f == 's') {
         if (l)
