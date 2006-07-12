@@ -47,7 +47,14 @@ private:
     } PERF_STRUCT;
 
 public:
-    enum aircraft_e {LIGHT=0, WW2_FIGHTER, JET_TRANSPORT, JET_FIGHTER, TANKER};
+    enum aircraft_e {
+        LIGHT = 0,
+        WW2_FIGHTER,
+        JET_TRANSPORT,
+        JET_FIGHTER,
+        TANKER,
+        UFO
+    };
     static const PERF_STRUCT settings[];
 
     FGAIAircraft(FGAISchedule *ref=0);

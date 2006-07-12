@@ -58,7 +58,9 @@ const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
     // jet_fighter
     {7.0, 3.0, 4000.0, 2000.0, 150.0, 350.0, 500.0, 350.0, 150.0},
     // tanker
-    {5.0, 2.0, 3000.0, 1500.0, 140.0, 300.0, 430.0, 300.0, 130.0}
+    {5.0, 2.0, 3000.0, 1500.0, 140.0, 300.0, 430.0, 300.0, 130.0},
+    // ufo (extreme accel/decel)
+    {30.0, 30.0, 6000.0, 6000.0, 150.0, 300.0, 430.0, 300.0, 130.0}
 };
 
 
@@ -150,6 +152,8 @@ void FGAIAircraft::setPerformance(const std::string& acclass) {
     } else if (acclass == "tanker") {
         SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
         SetTanker(true);
+    } else if (acclass == "ufo") {
+        SetPerformance(&FGAIAircraft::settings[FGAIAircraft::UFO]);
     } else {
         SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
     }
