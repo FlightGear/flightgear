@@ -73,7 +73,7 @@ public:
 
     FGXMLAutoComponent() :
       enable_prop( NULL ),
-      passive_mode( fgGetNode("/autopilot/settings/passive-mode", true) ),
+      passive_mode( fgGetNode("/autopilot/locks/passive-mode", true) ),
       enable_value( "" ),
       honor_passive( false ),
       enabled( false ),
