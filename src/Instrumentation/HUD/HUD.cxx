@@ -53,7 +53,7 @@ static float clamp(float f)
 HUD::HUD() :
     _current(fgGetNode("/sim/hud/current-color", true)),
     _visibility(fgGetNode("/sim/hud/visibility[1]", true)),
-    _3DenabledN(fgGetNode("/sim/hud/enable3d", true)),
+    _3DenabledN(fgGetNode("/sim/hud/enable3d[1]", true)),
     _antialiasing(fgGetNode("/sim/hud/color/antialiased", true)),
     _transparency(fgGetNode("/sim/hud/color/transparent", true)),
     _red(fgGetNode("/sim/hud/color/red", true)),
@@ -347,7 +347,7 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
 
         } else if (!strcmp(name, "enable3d")) {
             // set in the tree so that valueChanged() picks it up
-            fgSetBool("/sim/hud/enable3d", n->getBoolValue());
+            _3DenabledN->setBoolValue(n->getBoolValue());
             continue;
 
         } else if (!strcmp(name, "import")) {
