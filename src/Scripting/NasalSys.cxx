@@ -656,6 +656,12 @@ naRef FGNasalSys::setListener(int argc, naRef* args)
     else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
     else return naNil();
 
+    if (node->isTied()) {
+        naRuntimeError(_context, "cannot attach listener to tied property %s",
+                node->getPath());
+        return naNil();
+    }
+
     naRef handler = argc > 1 ? args[1] : naNil();
     if(!(naIsCode(handler) || naIsCCode(handler) || naIsFunc(handler)))
         return naNil();
@@ -710,11 +716,10 @@ FGNasalListener::~FGNasalListener()
 
 void FGNasalListener::valueChanged(SGPropertyNode* node)
 {
-    if (_active) {
-        SG_LOG(SG_NASAL, SG_ALERT, "Recursive listener call "
-                "on property " << node->getPath());
+    // drop recursive listener calls
+    if (_active)
         return;
-    }
+
     _active++;
     _nas->_cmdArg = node;
     naContext c = naNewContext();
