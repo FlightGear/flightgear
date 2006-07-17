@@ -59,8 +59,8 @@ private:
     SGPropertyNode_ptr _pressure_node;
     SGPropertyNode_ptr _density_node;
     SGPropertyNode_ptr _velocity_node;
+    SGPropertyNode_ptr _slip_angle;
     SGPropertyNode_ptr _total_pressure_node;
-    
 };
 
 #endif // __SYSTEMS_PITOT_HXX
