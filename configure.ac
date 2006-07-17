@@ -91,7 +91,11 @@ if test "x$with_logging" = "xno" ; then
 fi
 
 AC_ARG_ENABLE(sp_fdms, [  --enable-sp-fdms              Include special purpose Flight Models], [enable_sp_fdms="$enableval"] )
-AC_DEFINE([ENABLE_SP_FDM], test "x$enable_sp_fdms" = "xyes", [Define to include special purpose FDMs])
+if test "x$enable_sp_fdms" != "xno"; then
+    AC_DEFINE([ENABLE_SP_FDM], 1, [Define to include special purpose FDMs])
+else
+    AC_DEFINE([ENABLE_SP_FDM], 0, [Define to include special purpose FDMs])
+fi
 AM_CONDITIONAL(ENABLE_SP_FDM, test "x$enable_sp_fdms" != "xno")
 
 
