@@ -94,7 +94,7 @@ void HudLadder::draw(void)
     alpha = get_aoa();
     pla = get_throttleval();
 
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
     int lgear, wown, wowm, ilcanclaw, ihook;
     ilcanclaw = get_iaux2();
     lgear = get_iaux3();
@@ -247,7 +247,7 @@ void HudLadder::draw(void)
         glVertex2f(vel_x, vel_y + 6);
         glEnd();
 
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
         // OBJECT MOVING RETICLE
         // TYPE LINE
         // ATTRIB - ON CONDITION
@@ -295,7 +295,7 @@ void HudLadder::draw(void)
     // TYPE - SQUARE_BRACKET
     // ATTRIB - ON CONDITION
     // alpha bracket
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
     if (alpha_bracket && ihook == 1) {
         glBegin(GL_LINE_STRIP);
         glVertex2f(vel_x - 20 , vel_y - (16 - alpha) * factor);
@@ -365,7 +365,7 @@ void HudLadder::draw(void)
     // OBJECT STATIC RETICLE
     // TYPE LINE
     // ATTRIB - ON CONDITION
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
     if (energy_worm && ilcanclaw == 1) {
         glBegin(GL_LINE_STRIP);
         glVertex2f(-15, -134);
@@ -562,7 +562,7 @@ void HudLadder::draw(void)
             // TYPE LINE
             // ATTRIB - ON CONDITION
             // draw appraoch glide slope marker
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
             if (glide_slope_marker && ihook) {
                 Line(-half_span + 15, (glide_slope-actslope) * factor,
                         -half_span + hole, (glide_slope - actslope) * factor);
@@ -590,7 +590,7 @@ void HudLadder::draw(void)
     //*************************************************************
 
     //*************************************************************
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
     if (waypoint_marker) {
         //waypoint marker computation
         float fromwp_lat, towp_lat, fromwp_lon, towp_lon, dist, delx, dely, hyp, theta, brg;

@@ -37,7 +37,7 @@ float get__Vz() { return fgGetFloat("/velocities/wBody-fps"); }
 float get__Ax() { return fgGetFloat("/acclerations/pilot/x-accel-fps_sec"); }
 float get__Ay() { return fgGetFloat("/acclerations/pilot/y-accel-fps_sec"); }
 float get__Az() { return fgGetFloat("/acclerations/pilot/z-accel-fps_sec"); }
-#undef ENABLE_SP_FMDS
+#undef ENABLE_SP_FDM
 
 
 HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
@@ -103,7 +103,7 @@ void HUD::Ladder::draw(void)
     alpha = get__aoa();
     pla = get__throttleval();
 
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
     int lgear, wown, wowm, ilcanclaw, ihook;
     ilcanclaw = get__iaux2();
     lgear = get__iaux3();
@@ -256,7 +256,7 @@ void HUD::Ladder::draw(void)
         glVertex2f(vel_x, vel_y + 6);
         glEnd();
 
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
         // OBJECT MOVING RETICLE
         // TYPE LINE
         // ATTRIB - ON CONDITION
@@ -304,7 +304,7 @@ void HUD::Ladder::draw(void)
     // TYPE - SQUARE_BRACKET
     // ATTRIB - ON CONDITION
     // alpha bracket
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
     if (_alpha_bracket && ihook == 1) {
         glBegin(GL_LINE_STRIP);
         glVertex2f(vel_x - 20 , vel_y - (16 - alpha) * _compression);
@@ -374,7 +374,7 @@ void HUD::Ladder::draw(void)
     // OBJECT STATIC RETICLE
     // TYPE LINE
     // ATTRIB - ON CONDITION
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
     if (_energy_worm && ilcanclaw == 1) {
         glBegin(GL_LINE_STRIP);
         glVertex2f(-15, -134);
@@ -568,7 +568,7 @@ void HUD::Ladder::draw(void)
             // TYPE LINE
             // ATTRIB - ON CONDITION
             // draw appraoch glide slope marker
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
             if (_glide_slope_marker && ihook) {
                 draw_line(-half_span + 15, (_glide_slope - actslope) * _compression,
                         -half_span + hole, (_glide_slope - actslope) * _compression);
@@ -596,7 +596,7 @@ void HUD::Ladder::draw(void)
     //*************************************************************
 
     //*************************************************************
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
     if (_waypoint_marker) {
         //waypoint marker computation
         float fromwp_lat, towp_lat, fromwp_lon, towp_lon, dist, delx, dely, hyp, theta, brg;

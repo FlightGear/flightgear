@@ -75,7 +75,7 @@
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
 #include <FDM/SP/ADA.hxx>
 #include <FDM/SP/ACMS.hxx>
 #endif
@@ -1266,7 +1266,7 @@ void fgInitFDM() {
             cur_fdm_state = new FGLaRCsim( dt );
         } else if ( model == "jsb" ) {
             cur_fdm_state = new FGJSBsim( dt );
-#if ENABLE_SP_FDMS
+#if ENABLE_SP_FDM
         } else if ( model == "ada" ) {
             cur_fdm_state = new FGADA( dt );
         } else if ( model == "acms" ) {

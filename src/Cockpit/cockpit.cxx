@@ -45,7 +45,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
 #include <FDM/SP/ADA.hxx>
 #endif
 #include <Main/globals.hxx>
@@ -341,7 +341,7 @@ float get_anzg   ( void )
     return anzg;
 }
 
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
 int get_iaux1 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
@@ -603,7 +603,7 @@ struct FuncTable {
     { "view_direction", get_view_direction },
     { "vfc_tris_culled", get_vfc_tris_culled },
     { "vfc_tris_drawn", get_vfc_tris_drawn },
-#ifdef ENABLE_SP_FMDS
+#ifdef ENABLE_SP_FDM
     { "aux1", get_aux1 },
     { "aux2", get_aux2 },
     { "aux3", get_aux3 },
