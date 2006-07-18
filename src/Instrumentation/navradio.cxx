@@ -52,8 +52,6 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     power_btn_node(NULL),
     freq_node(NULL),
     alt_freq_node(NULL),
-    fmt_freq_node(NULL),
-    fmt_alt_freq_node(NULL),
     sel_radial_node(NULL),
     vol_btn_node(NULL),
     ident_btn_node(NULL),
@@ -62,6 +60,8 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     cdi_serviceable_node(NULL),
     gs_serviceable_node(NULL),
     tofrom_serviceable_node(NULL),
+    fmt_freq_node(NULL),
+    fmt_alt_freq_node(NULL),
     heading_node(NULL),
     radial_node(NULL),
     recip_radial_node(NULL),
@@ -423,6 +423,8 @@ FGNavRadio::update(double dt)
 
         //////////////////////////////////////////////////////////
 	// adjust reception range for altitude
+        // FIXME: make sure we are using the navdata range now that
+        //        it is valid in the data file
         //////////////////////////////////////////////////////////
 	if ( is_loc ) {
 	    double offset = radial - target_radial;
@@ -430,10 +432,11 @@ FGNavRadio::update(double dt)
 	    while ( offset > 180.0 ) { offset -= 360.0; }
 	    // cout << "ils offset = " << offset << endl;
 	    effective_range
-              = adjustILSRange( nav_elev, pos.getElevationM(), offset,
-                                loc_dist * SG_METER_TO_NM );
+                = adjustILSRange( nav_elev, pos.getElevationM(), offset,
+                                  loc_dist * SG_METER_TO_NM );
 	} else {
-	    effective_range = adjustNavRange( nav_elev, pos.getElevationM(), range );
+	    effective_range
+                = adjustNavRange( nav_elev, pos.getElevationM(), range );
 	}
 	// cout << "nav range = " << effective_range
 	//      << " (" << range << ")" << endl;
@@ -494,13 +497,14 @@ FGNavRadio::update(double dt)
         // of ( -10 , 10 )
         //////////////////////////////////////////////////////////
         double r = 0.0;
+        bool loc_bc = false;   // an in-code flag indicating that we are
+                               // on a localizer backcourse.
         if ( cdi_serviceable ) {
             if ( nav_slaved_to_gps_node->getBoolValue() ) {
                 r = gps_cdi_deflection_node->getDoubleValue();
                 // We want +- 5 dots deflection for the gps, so clamp
                 // to -12.5/12.5
-                if ( r < -12.5 ) { r = -12.5; }
-                if ( r >  12.5 ) { r =  12.5; }
+                SG_CLAMP_RANGE( r, -12.5, 12.5 );
             } else if ( inrange ) {
                 r = radial - target_radial;
                 // cout << "Target radial = " << target_radial 
@@ -510,14 +514,19 @@ FGNavRadio::update(double dt)
                 while ( r < -180.0 ) { r += 360.0;}
                 if ( fabs(r) > 90.0 ) {
                     r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+                } else {
+                    if ( is_loc ) {
+                        loc_bc = true;
+                    }
                 }
 
-                // According to Robin Peel, the ILS is 4x more
-                // sensitive than a vor
                 r = -r;         // reverse, since radial is outbound
-                if ( is_loc ) { r *= 4.0; }
-                if ( r < -10.0 ) { r = -10.0; }
-                if ( r >  10.0 ) { r =  10.0; }
+                if ( is_loc ) {
+                    // According to Robin Peel, the ILS is 4x more
+                    // sensitive than a vor
+                    r *= 4.0;
+                }
+                SG_CLAMP_RANGE( r, -10.0, 10.0 );
             }
         }
         cdi_deflection_node->setDoubleValue( r );
@@ -643,30 +652,32 @@ FGNavRadio::update(double dt)
         // a nav/ils radial.
         //////////////////////////////////////////////////////////
 
-        // FIXME: this smells odd, there must be a better (or more
-        // linear) solution
+        // Now that we have cross track heading adjustment built in,
+        // we shouldn't need to overdrive the heading angle within 8km
+        // of the station.
         //
-        // determine the heading adjustment needed.
-        // over 8km scale by 3.0 
-        //    (3 is chosen because max deflection is 10
-        //    and 30 is clamped angle to radial)
-        // under 8km scale by 10.0
-        //    because the overstated error helps drive it to the radial in a 
-        //    moderate cross wind.
-        double adjustment = 0.0;
-        if ( loc_dist > 8000 ) {
-            adjustment = cdi_deflection_node->getDoubleValue() * 3.0;
-        } else {
-            adjustment = cdi_deflection_node->getDoubleValue() * 10.0;
-        }
+        // The cdi deflection should be +/-10 for a full range of deflection
+        // so multiplying this by 3 gives us +/- 30 degrees heading
+        // compensation.
+        double adjustment = cdi_deflection_node->getDoubleValue() * 3.0;
         SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
         
         // determine the target heading to fly to intercept the
         // tgt_radial = target radial (true) + cdi offset adjustmest -
         // xtrack heading error adjustment
-        double nta_hdg = trtrue + adjustment - hdg_error; 
-        // cout << "trtrue = " << trtrue << " adj = " << adjustment
-        //      << " hdg_error = " << hdg_error << endl;
+        double nta_hdg = 0.0;
+        if ( is_loc && loc_bc ) {
+            // tuned to a localizer and positioned in backcourse range
+            // trtrue += 180.0;   // reverse the target localizer heading
+            // while ( trtrue > 360.0 ) { trtrue -= 360.0; }
+            nta_hdg = trtrue + adjustment - hdg_error; 
+            cout << "trtrue = " << trtrue << " adj = " << adjustment
+                 << " hdg_error = " << hdg_error << endl;
+       } else {
+            // all other situations (nav or loc front course)
+            nta_hdg = trtrue + adjustment - hdg_error; 
+        }
+
         while ( nta_hdg <   0.0 ) { nta_hdg += 360.0; }
         while ( nta_hdg >= 360.0 ) { nta_hdg -= 360.0; }
         target_auto_hdg_node->setDoubleValue( nta_hdg );
