@@ -56,6 +56,27 @@ FGNasalSys::FGNasalSys()
     _globals = naNil();
     _gcHash = naNil();
     _nextGCKey = 0; // Any value will do
+    _callCount = 0;
+}
+
+// Does a naCall() in a new context.  Wrapped here to make lock
+// tracking easier.  Extension functions are called with the lock, but
+// we have to release it before making a new naCall().  So rather than
+// drop the lock in every extension function that might call back into
+// Nasal, we keep a stack depth counter here and only unlock/lock
+// around the naCall if it isn't the first one.
+naRef FGNasalSys::call(naRef code, naRef locals)
+{
+    naContext ctx = naNewContext();
+    if(_callCount) naModUnlock();
+    _callCount++;
+    naRef result = naCall(ctx, code, 0, 0, naNil(), locals);
+    if(naGetError(ctx))
+        logError(ctx);
+    _callCount--;
+    if(_callCount) naModLock();
+    naFreeContext(ctx);
+    return result;
 }
 
 FGNasalSys::~FGNasalSys()
@@ -79,12 +100,8 @@ bool FGNasalSys::parseAndRun(const char* sourceCode)
                        strlen(sourceCode));
     if(naIsNil(code))
         return false;
-
-    naCall(_context, code, 0, 0, naNil(), naNil());
-
-    if(!naGetError(_context)) return true;
-    logError(_context);
-    return false;
+    call(code, naNil());
+    return true;
 }
 
 FGNasalScript* FGNasalSys::parseScript(const char* src, const char* name)
@@ -515,11 +532,7 @@ void FGNasalSys::createModule(const char* moduleName, const char* fileName,
 
     _cmdArg = (SGPropertyNode*)arg;
 
-    naCall(_context, code, 0, 0, naNil(), locals);
-    if(naGetError(_context)) {
-        logError(_context);
-        return;
-    }
+    call(code, locals);
     hashset(_globals, moduleName, locals);
 }
 
@@ -527,9 +540,7 @@ void FGNasalSys::deleteModule(const char* moduleName)
 {
     naRef modname = naNewString(_context);
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
-    naModLock();
     naHash_delete(_globals, modname);
-    naModUnlock();
 }
 
 naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
@@ -570,15 +581,8 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     _cmdArg = (SGPropertyNode*)arg;
 
     // Call it!
-    naModUnlock();
-    naRef result = naCall(c, code, 0, 0, naNil(), locals);
-    naModLock();
-    bool error = naGetError(c);
-    if(error)
-       logError(c);
-
-    naFreeContext(c);
-    return !error;
+    call(code, locals);
+    return true;
 }
 
 // settimer(func, dt, simtime) extension function.  The first argument
@@ -616,9 +620,7 @@ void FGNasalSys::setTimer(int argc, naRef* args)
 
 void FGNasalSys::handleTimer(NasalTimer* t)
 {
-    naCall(_context, t->handler, 0, 0, naNil(), naNil());
-    if(naGetError(_context))
-        logError(_context);
+    call(t->handler, naNil());
     gcRelease(t->gcKey);
 }
 
@@ -720,13 +722,7 @@ void FGNasalListener::valueChanged(SGPropertyNode* node)
 
     _active++;
     _nas->_cmdArg = node;
-    naContext c = naNewContext();
-    naModUnlock();
-    naCall(c, _handler, 0, 0, naNil(), naNil());
-    naModLock();
-    if(naGetError(c))
-        _nas->logError(c);
-    naFreeContext(c);
+    _nas->call(_handler, naNil());
     _active--;
 }
 

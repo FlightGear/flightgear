@@ -57,6 +57,8 @@ public:
 
     void deleteModule(const char* moduleName);
 
+    naRef call(naRef code, naRef locals);
+
 private:
     friend class FGNasalScript;
     friend class FGNasalListener;
@@ -100,6 +102,7 @@ private:
 
     int _nextGCKey;
     naRef _gcHash;
+    int _callCount;
 
     public: void handleTimer(NasalTimer* t);
 };
