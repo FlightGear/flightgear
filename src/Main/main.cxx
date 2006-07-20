@@ -681,22 +681,20 @@ static void fgIdleFunction ( void ) {
 #endif
 
         // get the address of our OpenGL extensions
-        if ( fgGetBool("/sim/rendering/distance-attenuation") ) {
-            if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ) {
-                glPointParameterIsSupported = true;
-                glPointParameterfPtr = (glPointParameterfProc)
-                                       SGLookupFunction("glPointParameterfEXT");
-                glPointParameterfvPtr = (glPointParameterfvProc)
-                                        SGLookupFunction("glPointParameterfvEXT");
-
-            } else if ( SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) {
-                glPointParameterIsSupported = true;
-                glPointParameterfPtr = (glPointParameterfProc)
-                                       SGLookupFunction("glPointParameterfARB");
-                glPointParameterfvPtr = (glPointParameterfvProc)
-                                        SGLookupFunction("glPointParameterfvARB");
-            } else
-                glPointParameterIsSupported = false;
+        if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ) {
+            glPointParameterIsSupported = true;
+            glPointParameterfPtr = (glPointParameterfProc)
+                SGLookupFunction("glPointParameterfEXT");
+            glPointParameterfvPtr = (glPointParameterfvProc)
+                SGLookupFunction("glPointParameterfvEXT");
+        } else if ( SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) {
+            glPointParameterIsSupported = true;
+            glPointParameterfPtr = (glPointParameterfProc)
+                SGLookupFunction("glPointParameterfARB");
+            glPointParameterfvPtr = (glPointParameterfvProc)
+                SGLookupFunction("glPointParameterfvARB");
+        } else {
+            glPointParameterIsSupported = false;
         }
         fgSplashProgress("reading airport & navigation data");
 
