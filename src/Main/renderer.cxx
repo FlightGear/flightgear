@@ -233,6 +233,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
     bool draw_otw = fgGetBool("/sim/rendering/draw-otw");
     bool skyblend = fgGetBool("/sim/rendering/skyblend");
+    bool use_point_sprites = fgGetBool("/sim/rendering/point-sprites");
     bool enhanced_lighting = fgGetBool("/sim/rendering/enhanced-lighting");
     bool distance_attenuation = fgGetBool("/sim/rendering/distance-attenuation");
     bool volumetric_clouds = sgEnviro.get_clouds_enable_state();
@@ -582,6 +583,12 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
     // CLO - 02/25/2005 - DO WE NEED THIS extra fgSetNearFar()?
     // fgSetNearFar( scene_nearplane, scene_farplane );
+
+    if ( use_point_sprites ) {
+        glEnable(GL_POINT_SPRITE);
+    } else {
+        glDisable(GL_POINT_SPRITE);
+    }
 
     if ( enhanced_lighting ) {
 
