@@ -37,14 +37,15 @@
 
 #include <simgear/screen/extensions.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/model/animation.hxx>
+#include <simgear/scene/model/model.hxx>
+#include <simgear/scene/model/modellib.hxx>
+#include <simgear/scene/model/placement.hxx>
+#include <simgear/scene/tgdb/pt_lights.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/scene/model/animation.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/scene/model/placement.hxx>
 #include <simgear/math/sg_random.h>
-#include <simgear/scene/model/modellib.hxx>
-#include <simgear/scene/model/model.hxx>
 #ifdef FG_JPEG_SERVER
 #include <simgear/screen/jpgfactory.hxx>
 #endif
@@ -235,7 +236,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
     bool skyblend = fgGetBool("/sim/rendering/skyblend");
     bool use_point_sprites = fgGetBool("/sim/rendering/point-sprites");
     bool enhanced_lighting = fgGetBool("/sim/rendering/enhanced-lighting");
-    bool distance_attenuation = fgGetBool("/sim/rendering/distance-attenuation");
+    bool distance_attenuation
+        = fgGetBool("/sim/rendering/distance-attenuation");
+    sgConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
+                                  distance_attenuation );
     bool volumetric_clouds = sgEnviro.get_clouds_enable_state();
 #ifdef FG_ENABLE_MULTIPASS_CLOUDS
     bool multi_pass_clouds = fgGetBool("/sim/rendering/multi-pass-clouds") && 
@@ -603,7 +607,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
             float quadratic[3] = {1.0, 0.001, 0.0000001};
             // makes the points fade as they move away
             glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT, quadratic);
-            glPointParameterfPtr(GL_POINT_SIZE_MIN_EXT, 1.0); 
+            // glPointParameterfPtr(GL_POINT_SIZE_MIN_EXT, 1.0); 
         }
 
         glPointSize(4.0);
