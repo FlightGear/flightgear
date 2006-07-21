@@ -50,7 +50,7 @@ class FGNavRadio : public SGSubsystem
 
     // property inputs
     SGPropertyNode_ptr is_valid_node;   // is station data valid (may be way out
-                                     // of range.)
+                                        // of range.)
     SGPropertyNode_ptr power_btn_node;
     SGPropertyNode_ptr freq_node;       // primary freq
     SGPropertyNode_ptr alt_freq_node;   // standby freq
@@ -58,6 +58,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr vol_btn_node;
     SGPropertyNode_ptr ident_btn_node;
     SGPropertyNode_ptr audio_btn_node;
+    SGPropertyNode_ptr backcourse_node;
     SGPropertyNode_ptr nav_serviceable_node;
     SGPropertyNode_ptr cdi_serviceable_node;
     SGPropertyNode_ptr gs_serviceable_node;

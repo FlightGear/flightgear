@@ -56,6 +56,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     vol_btn_node(NULL),
     ident_btn_node(NULL),
     audio_btn_node(NULL),
+    backcourse_node(NULL),
     nav_serviceable_node(NULL),
     cdi_serviceable_node(NULL),
     gs_serviceable_node(NULL),
@@ -167,6 +168,8 @@ FGNavRadio::init ()
     ident_btn_node->setBoolValue( true );
     audio_btn_node = node->getChild("audio-btn", 0, true);
     audio_btn_node->setBoolValue( true );
+    backcourse_node = node->getChild("back-course-btn", 0, true);
+    backcourse_node->setBoolValue( false );
     nav_serviceable_node = node->getChild("serviceable", 0, true);
     cdi_serviceable_node = (node->getChild("cdi", 0, true))
 	->getChild("serviceable", 0, true);
@@ -497,8 +500,8 @@ FGNavRadio::update(double dt)
         // of ( -10 , 10 )
         //////////////////////////////////////////////////////////
         double r = 0.0;
-        bool loc_bc = false;   // an in-code flag indicating that we are
-                               // on a localizer backcourse.
+        bool loc_backside = false; // an in-code flag indicating that we are
+                                   // on a localizer backcourse.
         if ( cdi_serviceable ) {
             if ( nav_slaved_to_gps_node->getBoolValue() ) {
                 r = gps_cdi_deflection_node->getDoubleValue();
@@ -516,7 +519,7 @@ FGNavRadio::update(double dt)
                     r = ( r<0.0 ? -r-180.0 : -r+180.0 );
                 } else {
                     if ( is_loc ) {
-                        loc_bc = true;
+                        loc_backside = true;
                     }
                 }
 
@@ -661,21 +664,18 @@ FGNavRadio::update(double dt)
         // compensation.
         double adjustment = cdi_deflection_node->getDoubleValue() * 3.0;
         SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
-        
+
         // determine the target heading to fly to intercept the
         // tgt_radial = target radial (true) + cdi offset adjustmest -
         // xtrack heading error adjustment
-        double nta_hdg = 0.0;
-        if ( is_loc && loc_bc ) {
-            // tuned to a localizer and positioned in backcourse range
-            // trtrue += 180.0;   // reverse the target localizer heading
-            // while ( trtrue > 360.0 ) { trtrue -= 360.0; }
-            nta_hdg = trtrue + adjustment - hdg_error; 
-            cout << "trtrue = " << trtrue << " adj = " << adjustment
-                 << " hdg_error = " << hdg_error << endl;
-       } else {
-            // all other situations (nav or loc front course)
-            nta_hdg = trtrue + adjustment - hdg_error; 
+        double nta_hdg;
+        if ( is_loc && backcourse_node->getBoolValue() ) {
+            // tuned to a localizer and backcourse mode activated
+            trtrue += 180.0;   // reverse the target localizer heading
+            while ( trtrue > 360.0 ) { trtrue -= 360.0; }
+            nta_hdg = trtrue - adjustment - hdg_error;
+        } else {
+            nta_hdg = trtrue + adjustment - hdg_error;
         }
 
         while ( nta_hdg <   0.0 ) { nta_hdg += 360.0; }
