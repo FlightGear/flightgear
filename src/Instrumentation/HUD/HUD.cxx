@@ -379,6 +379,8 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
             item = static_cast<Item *>(new Ladder(this, n, x, y));
         } else if (!strcmp(name, "runway")) {
             item = static_cast<Item *>(new Runway(this, n, x, y));
+        } else if (!strcmp(name, "aiming-reticle")) {
+            item = static_cast<Item *>(new AimingReticle(this, n, x, y));
         } else {
             SG_LOG(SG_INPUT, TREE, indent << "      \\...unsupported!");
             continue;

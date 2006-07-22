@@ -116,8 +116,8 @@ void HUD::Item::draw_text(float x, float y, char *msg, int digit)
 void HUD::Item::draw_circle(float xoffs, float yoffs, float r) const
 {
     glBegin(GL_LINE_LOOP);
-    for (int i = 0; i < 25; i++) {
-        float alpha = i * 2.0 * SG_PI / 10.0;
+    float step = SG_PI / r;
+    for (float alpha = 0; alpha < SG_PI * 2.0; alpha += step) {
         float x = r * cos(alpha);
         float y = r * sin(alpha);
         glVertex2f(x + xoffs, y + yoffs);

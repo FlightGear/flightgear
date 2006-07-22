@@ -261,6 +261,7 @@ private:
     class TurnBankIndicator;
     class Ladder;
     class Runway;
+    class AimingReticle;
 
     deque<Item *> _items;
 
@@ -320,6 +321,11 @@ public:
                 _valid = true;
             }
         }
+    }
+
+    bool getBoolValue() const {
+        assert(_property);
+        return _property->getBoolValue();
     }
 
     const char *getStringValue() const {
@@ -629,6 +635,20 @@ private:
     float  _left, _right, _top, _bottom;
     Point  _center;
 };
+
+
+class HUD::AimingReticle : public Item {
+public:
+    AimingReticle(HUD *parent, const SGPropertyNode *, float x, float y);
+    virtual void draw();
+
+private:
+    SGCondition *_active_condition;  // stadiametric (true) or standby (false)
+    Input   _diameter;               // inner/outer radius relation
+    float   _bullet_size;
+    float   _inner_radius;
+};
+
 
 
 #endif // _HUD_HXX

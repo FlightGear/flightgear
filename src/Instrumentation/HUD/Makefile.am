@@ -8,6 +8,7 @@ libHUD_a_SOURCES = \
 	HUD_instrument.cxx \
 	HUD_label.cxx \
 	HUD_ladder.cxx \
+	HUD_misc.cxx \
 	HUD_runway.cxx \
 	HUD_scale.cxx \
 	HUD_tbi.cxx
