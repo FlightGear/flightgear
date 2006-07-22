@@ -205,10 +205,10 @@ void HUD::draw3D()
     float dx = 0.52056705; // tan(55/2)
     float dy = dx * 0.75;  // assumes 4:3 aspect ratio
     float m[16];
-    m[0] = dx; m[4] =  0; m[ 8] = 0; m[12] = 0;
-    m[1] =  0; m[5] = dy; m[ 9] = 0; m[13] = 0;
-    m[2] =  0; m[6] =  0; m[10] = 1; m[14] = 0;
-    m[3] =  0; m[7] =  0; m[11] = 0; m[15] = 1;
+    m[0] = dx, m[4] =  0, m[ 8] = 0, m[12] = 0;
+    m[1] =  0, m[5] = dy, m[ 9] = 0, m[13] = 0;
+    m[2] =  0, m[6] =  0, m[10] = 1, m[14] = 0;
+    m[3] =  0, m[7] =  0, m[11] = 0, m[15] = 1;
     glMultMatrixf(m);
 
     // Convert the 640x480 "HUD standard" coordinate space to a square

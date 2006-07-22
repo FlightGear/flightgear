@@ -107,10 +107,10 @@ void HUD::Runway::draw()
     ssgGetModelviewMatrix(modelView);
     //Create a rotation matrix to correct for any offsets (other than default offsets) to the model view matrix
     sgMat4 xy; //rotation about the Rxy, negate the sin's on Ry
-    xy[0][0] = cYaw;         xy[1][0] = 0.0f;   xy[2][0] = -sYaw;        xy[3][0] = 0.0f;
-    xy[0][1] = sPitch*-sYaw; xy[1][1] = cPitch; xy[2][1] = -sPitch*cYaw; xy[3][1] = 0.0f;
-    xy[0][2] = cPitch*sYaw;  xy[1][2] = sPitch; xy[2][2] = cPitch*cYaw;  xy[3][2] = 0.0f;
-    xy[0][3] = 0.0f;         xy[1][3] = 0.0f;   xy[2][3] = 0.0f;         xy[3][3] = 1.0f;
+    xy[0][0] = cYaw,         xy[1][0] = 0.0f,   xy[2][0] = -sYaw,        xy[3][0] = 0.0f;
+    xy[0][1] = sPitch*-sYaw, xy[1][1] = cPitch, xy[2][1] = -sPitch*cYaw, xy[3][1] = 0.0f;
+    xy[0][2] = cPitch*sYaw,  xy[1][2] = sPitch, xy[2][2] = cPitch*cYaw,  xy[3][2] = 0.0f;
+    xy[0][3] = 0.0f,         xy[1][3] = 0.0f,   xy[2][3] = 0.0f,         xy[3][3] = 1.0f;
     //Re-center the model view
     sgPostMultMat4(modelView,xy);
     //copy float matrices to double
