@@ -51,7 +51,6 @@ void HUD::Gauge::draw(void)
     int disp_val = 0;
     float vmin = _input.min();
     float vmax = _input.max();
-    Point mid_scr = get_centroid();
     float cur_value = _input.getFloatValue();
 
     width = _x + _w;						// FIXME huh?
@@ -137,7 +136,7 @@ void HUD::Gauge::draw(void)
                             lenstr = text_width(buf);
 
                             if (option_left() && option_right()) {
-                                text_x = mid_scr.x - lenstr/2 ;
+                                text_x = _center_x - lenstr/2 ;
 
                             } else if (option_left()) {
                                 text_x = marker_xs - lenstr;

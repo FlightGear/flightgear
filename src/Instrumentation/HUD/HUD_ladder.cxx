@@ -96,8 +96,6 @@ void HUD::Ladder::draw(void)
     GLdouble eqn_left[4] = {-1.0, 0.0, 0.0, 100.0};
     GLdouble eqn_right[4] = {1.0, 0.0, 0.0, 100.0};
 
-    Point centroid = get_centroid();
-
     float half_span = _w / 2.0;
     float roll_value = _roll.getFloatValue() * SGD_DEGREES_TO_RADIANS;		// FIXME rad/deg conversion
     alpha = get__aoa();
@@ -127,7 +125,7 @@ void HUD::Ladder::draw(void)
     //**************************************************************
     glPushMatrix();
     // define (0, 0) as center of screen
-    glTranslatef(centroid.x, centroid.y, 0);
+    glTranslatef(_center_x, _center_y, 0);
 
     // OBJECT STATIC RETICLE
     // TYPE FRL (FUSELAGE REFERENCE LINE)
@@ -307,14 +305,14 @@ void HUD::Ladder::draw(void)
 #ifdef ENABLE_SP_FDM
     if (_alpha_bracket && ihook == 1) {
         glBegin(GL_LINE_STRIP);
-        glVertex2f(vel_x - 20 , vel_y - (16 - alpha) * _compression);
+        glVertex2f(vel_x - 20, vel_y - (16 - alpha) * _compression);
         glVertex2f(vel_x - 17, vel_y - (16 - alpha) * _compression);
         glVertex2f(vel_x - 17, vel_y - (14 - alpha) * _compression);
         glVertex2f(vel_x - 20, vel_y - (14 - alpha) * _compression);
         glEnd();
 
         glBegin(GL_LINE_STRIP);
-        glVertex2f(vel_x + 20 , vel_y - (16 - alpha) * _compression);
+        glVertex2f(vel_x + 20, vel_y - (16 - alpha) * _compression);
         glVertex2f(vel_x + 17, vel_y - (16 - alpha) * _compression);
         glVertex2f(vel_x + 17, vel_y - (14 - alpha) * _compression);
         glVertex2f(vel_x + 20, vel_y - (14 - alpha) * _compression);
@@ -635,7 +633,7 @@ void HUD::Ladder::draw(void)
         // waypoint marker
         if (fabs(brg-psi) > 10.0) {
             glPushMatrix();
-            glTranslatef(centroid.x, centroid.y, 0);
+            glTranslatef(_center_x, _center_y, 0);
             glTranslatef(vel_x, vel_y, 0);
             glRotatef(brg - psi, 0.0, 0.0, -1.0);
             glBegin(GL_LINE_LOOP);

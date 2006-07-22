@@ -46,9 +46,8 @@ void HUD::AimingReticle::draw(void)
     bool active = _active_condition ? _active_condition->test() : true;
     float diameter = _diameter.isValid() ? _diameter.getFloatValue() : 2.0f; // outer circle
 
-    Point centroid = get_centroid();
-    float x = centroid.x;
-    float y = centroid.y;
+    float x = _center_x;
+    float y = _center_y;
 
     if (active) { // stadiametric (4.2.4.4)
         draw_bullet(x, y, _bullet_size);

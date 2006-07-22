@@ -200,10 +200,6 @@ public:
     void init();
     void update(double);
 
-    typedef struct {
-        float x, y;
-    } Point;
-
     // called from Main/renderer.cxx to draw 2D and 3D HUD
     void draw();
 
@@ -380,7 +376,6 @@ public:
 
 protected:
     inline float get_span()       const { return _scr_span; }
-    inline Point get_centroid()   const { return _mid_span; }
     inline int   get_digits()     const { return _digits; }
 
     inline bool option_vert()    const { return (_options & VERT) == VERT; }
@@ -403,12 +398,12 @@ protected:
     string      _name;
     int         _options;
     float       _x, _y, _w, _h;
+    float       _center_x, _center_y;
 
 private:
     SGCondition *_condition;
     float       _disp_factor;   // Multiply by to get numbers shown on scale.
     float       _scr_span;      // Working values for draw;
-    Point       _mid_span;
     int         _digits;
 };
 
@@ -633,7 +628,6 @@ private:
     bool   _draw_arrow;             // draw arrow when runway is not visible in HUD
     bool   _draw_arrow_always;      // always draws arrow
     float  _left, _right, _top, _bottom;
-    Point  _center;
 };
 
 

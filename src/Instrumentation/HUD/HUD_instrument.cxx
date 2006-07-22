@@ -84,8 +84,8 @@ HUD::Item::Item(HUD *hud, const SGPropertyNode *n, float x, float y) :
         _scr_span = _w;
     }
 
-    _mid_span.x = _x + _w / 2.0;
-    _mid_span.y = _y + _h / 2.0;
+    _center_x = _x + _w / 2.0;
+    _center_y = _y + _h / 2.0;
 }
 
 

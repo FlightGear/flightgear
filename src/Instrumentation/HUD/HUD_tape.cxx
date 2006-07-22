@@ -66,7 +66,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
     int oddtype;
 //    int k; //odd or even values for ticks		// FIXME odd scale
 
-    Point mid_scr = get_centroid();
     float cur_value = _input.getFloatValue();
 
     if (int(floor(_input.max() + 0.5)) & 1)
@@ -86,15 +85,15 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
         } else { // FIXED
             vmin = cur_value - _half_width_units; // width units == needle travel
             vmax = cur_value + _half_width_units; // or picture unit span.
-            text_x = mid_scr.x;
-            text_y = mid_scr.y;
+            text_x = _center_x;
+            text_y = _center_y;
         }
 
     } else {
         vmin = cur_value - _half_width_units; // width units == needle travel
         vmax = cur_value + _half_width_units; // or picture unit span.
-        text_x = mid_scr.x;
-        text_y = mid_scr.y;
+        text_x = _center_x;
+        text_y = _center_y;
     }
 
 
@@ -142,8 +141,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
             marker_xs = marker_xe - _w / 3.0;
 
-            // draw_line(marker_xs, mid_scr.y, marker_xe, mid_scr.y + _w / 6);
-            // draw_line(marker_xs, mid_scr.y, marker_xe, mid_scr.y - _w / 6);
+            // draw_line(marker_xs, _center_y, marker_xe, _center_y + _w / 6);
+            // draw_line(marker_xs, _center_y, marker_xe, _center_y - _w / 6);
 
             // draw pointer
             if (_pointer) {
@@ -156,7 +155,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         if (_input.min() >= 0.0)
                             ycentre = _y;
                         else if (_input.max() + _input.min() == 0.0)
-                            ycentre = mid_scr.y;
+                            ycentre = _center_y;
                         else if (oddtype)
                             ycentre = _y + (1.0 - _input.min()) * _h
                                     / (_input.max() - _input.min());
@@ -198,8 +197,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
             marker_xe = _x + _w / 3.0;
             // Indicator carrot
-            // draw_line(_x, mid_scr.y +  _w / 6, marker_xe, mid_scr.y);
-            // draw_line(_x, mid_scr.y -  _w / 6, marker_xe, mid_scr.y);
+            // draw_line(_x, _center_y +  _w / 6, marker_xe, _center_y);
+            // draw_line(_x, _center_y -  _w / 6, marker_xe, _center_y);
 
             // draw pointer
             if (_pointer) {
@@ -213,7 +212,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         if (_input.min() >= 0.0)
                             ycentre = _y;
                         else if (_input.max() + _input.min() == 0.0)
-                            ycentre = mid_scr.y;
+                            ycentre = _center_y;
                         else if (oddtype)
                             ycentre = _y + (1.0 - _input.min()) * _h / (_input.max() - _input.min());
                         else
@@ -408,15 +407,15 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             // Tick point adjust
             marker_ye  = _y + _h / 2;
             // Bottom arrow
-            // draw_line(mid_scr.x, marker_ye, mid_scr.x - _h / 4, _y);
-            // draw_line(mid_scr.x, marker_ye, mid_scr.x + _h / 4, _y);
+            // draw_line(_center_x, marker_ye, _center_x - _h / 4, _y);
+            // draw_line(_center_x, marker_ye, _center_x + _h / 4, _y);
             // draw pointer
             if (_pointer) {
                 if (_pointer_type == MOVING) {
                     if (!_zoom) {
                         //Code for Moving Type Pointer
 
-                        float xcentre = mid_scr.x;
+                        float xcentre = _center_x;
                         float range = _w;
                         float xpoint = xcentre + (cur_value * range / _val_span);
                         float ypoint = _y - _marker_offset;
@@ -441,8 +440,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             // Tick point adjust
             marker_ys = top - _h / 2;
             // Top arrow
-            // draw_line(mid_scr.x + _h / 4, _y + _h, mid_scr.x, marker_ys);
-            // draw_line(mid_scr.x - _h / 4, _y + _h, mid_scr.x , marker_ys);
+            // draw_line(_center_x + _h / 4, _y + _h, _center_x, marker_ys);
+            // draw_line(_center_x - _h / 4, _y + _h, _center_x , marker_ys);
 
             // draw pointer
             if (_pointer) {
@@ -450,7 +449,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     if (!_zoom) {
                         //Code for Moving Type Pointer
 
-                        float xcentre = mid_scr.x ;
+                        float xcentre = _center_x;
                         float range = _w;
                         float hgt = _y + _h;
                         float xpoint = xcentre + (cur_value * range / _val_span);
@@ -582,7 +581,6 @@ void HUD::Tape::fixed(float x1, float y1, float x2, float y2, float x3, float y3
 
 void HUD::Tape::zoomed_scale(int first, int last)
 {
-    Point mid_scr = get_centroid();
     const int BUFSIZE = 80;
     char buf[BUFSIZE];
     int data[80];
@@ -594,7 +592,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
     while (first <= last) {
         if ((first % (int)_major_divs) == 0) {
             data[a] = first;
-            a++ ;
+            a++;
         }
         first++;
     }
@@ -610,9 +608,9 @@ void HUD::Tape::zoomed_scale(int first, int last)
         float xstart, yfirst, ycentre, ysecond;
 
         float hgt = bottom * 20.0 / 100.0;  // 60% of height should be zoomed
-        yfirst = mid_scr.y - hgt;
-        ycentre = mid_scr.y;
-        ysecond = mid_scr.y + hgt;
+        yfirst = _center_y - hgt;
+        ycentre = _center_y;
+        ysecond = _center_y + hgt;
         float range = hgt * 2;
 
         int i;
@@ -628,7 +626,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
         static float ycent, ypoint, xpoint;					// FIXME really static?
         static float wth;
 
-        ycent = mid_scr.y;
+        ycent = _center_y;
         wth = _x + _w;
 
         if (cur_value <= data[centre + 1])
@@ -676,7 +674,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
                 draw_bullet(xstart - 2.5, ycentre, 3.0);
             }
 
-            yfirst = mid_scr.y - hgt;
+            yfirst = _center_y - hgt;
 
             for (i = 0; i <= incr; i++) {
                 draw_line(xstart, yfirst, xstart - 5.0, yfirst);
@@ -727,7 +725,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
                 draw_bullet(xstart + 2.5, ycentre, 3.0);
             }
 
-            yfirst = mid_scr.y - hgt;
+            yfirst = _center_y - hgt;
 
             for (i = 0; i <= incr; i++) {
                 draw_line(xstart, yfirst, xstart + 5.0, yfirst);
@@ -773,9 +771,9 @@ void HUD::Tape::zoomed_scale(int first, int last)
         float ystart, xfirst, xcentre, xsecond;
 
         float hgt = bottom * 20.0 / 100.0;  // 60% of height should be zoomed
-        xfirst = mid_scr.x - hgt;
-        xcentre = mid_scr.x;
-        xsecond = mid_scr.x + hgt;
+        xfirst = _center_x - hgt;
+        xcentre = _center_x;
+        xsecond = _center_x + hgt;
         float range = hgt * 2;
 
         int i;
@@ -791,7 +789,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
         //begin
         static float xcent, xpoint, ypoint;				// FIXME really static?
 
-        xcent = mid_scr.x;
+        xcent = _center_x;
 
         if (cur_value <= data[centre + 1])
             if (cur_value > data[centre]) {
@@ -839,7 +837,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
                 draw_bullet(xcentre, ystart - 2.5, 3.0);
             }
 
-            xfirst = mid_scr.x - hgt;
+            xfirst = _center_x - hgt;
 
             for (i = 0; i <= incr; i++) {
                 draw_line(xfirst, ystart, xfirst,  ystart - 5.0);
@@ -891,7 +889,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
                 draw_bullet(xcentre, ystart + 2.5, 3.0);
             }
 
-            xfirst = mid_scr.x - hgt;
+            xfirst = _center_x - hgt;
 
             for (i = 0; i <= incr; i++) {
                 draw_line(xfirst, ystart, xfirst, ystart + 5.0);

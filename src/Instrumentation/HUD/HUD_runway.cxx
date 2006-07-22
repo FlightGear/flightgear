@@ -60,13 +60,13 @@ HUD::Runway::Runway(HUD *hud, const SGPropertyNode *node, float x, float y) :
     _view[2] = 640;
     _view[3] = 480;
 
-    _center.x = _view[2] / 2;
-    _center.y = _view[3] / 2;
+    _center_x = _view[2] / 2;
+    _center_y = _view[3] / 2;
 
-    _left = _center.x - (_w / 2) + _x;
-    _right = _center.x + (_w / 2) + _x;
-    _bottom = _center.y - (_h / 2) + _y;
-    _top = _center.y + (_h / 2) + _y;
+    _left = _center_x - (_w / 2) + _x;
+    _right = _center_x + (_w / 2) + _x;
+    _bottom = _center_y - (_h / 2) + _y;
+    _top = _center_y + (_h / 2) + _y;
 }
 
 

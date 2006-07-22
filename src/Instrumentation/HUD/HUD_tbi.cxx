@@ -48,17 +48,13 @@ void HUD::TurnBankIndicator::draw(void)
     float sideslip = _sideslip.getFloatValue();
 
     float span = get_span();
-    Point centroid = get_centroid();
-
-    float cen_x = centroid.x;
-    float cen_y = centroid.y;
 
     float tee_height = _h;
     float tee = -tee_height;
     float ss_const = 2 * sideslip * span / 40.0;  // sideslip angle pixels per deg (width represents 40 deg)
 
     glPushMatrix();
-    glTranslatef(cen_x, cen_y, 0.0);
+    glTranslatef(_center_x, _center_y, 0.0);
     glRotatef(-bank, 0.0, 0.0, 1.0);
 
     if (!_bank_scale) {
@@ -91,10 +87,10 @@ void HUD::TurnBankIndicator::draw(void)
 
 
     } else { // draw MIL-STD 1878B/4.2.2.4 bank scale
-        draw_line(cen_x - 1.0, _y, cen_x + 1.0, _y);
-        draw_line(cen_x - 1.0, _y, cen_x - 1.0, _y + 10.0);
-        draw_line(cen_x + 1.0, _y, cen_x + 1.0, _y + 10.0);
-        draw_line(cen_x - 1.0, _y + 10.0, cen_x + 1.0, _y + 10.0);
+        draw_line(_center_x - 1.0, _y, _center_x + 1.0, _y);
+        draw_line(_center_x - 1.0, _y, _center_x - 1.0, _y + 10.0);
+        draw_line(_center_x + 1.0, _y, _center_x + 1.0, _y + 10.0);
+        draw_line(_center_x - 1.0, _y + 10.0, _center_x + 1.0, _y + 10.0);
 
         float x1, y1, x2, y2, x3, y3, x4, y4, x5, y5;
         float xc, yc;
