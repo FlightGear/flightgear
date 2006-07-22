@@ -32,8 +32,8 @@ HUD::AimingReticle::AimingReticle(HUD *hud, const SGPropertyNode *n, float x, fl
     Item(hud, n, x, y),
     _active_condition(0),
     _diameter(n->getNode("diameter-input", false)),
-    _bullet_size(_w / 3.0),
-    _inner_radius(_w)
+    _bullet_size(_w / 6.0),
+    _inner_radius(_w / 2.0)
 {
     const SGPropertyNode *node = n->getNode("active-condition");
     if (node)
