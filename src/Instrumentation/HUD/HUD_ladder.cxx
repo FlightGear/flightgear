@@ -59,9 +59,9 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _glide_slope(n->getFloatValue("glide-slope", -4.0)),
     _energy_worm(n->getBoolValue("enable-energy-marker", false)),
     _waypoint_marker(n->getBoolValue("enable-waypoint-marker", false)),
-    _zenith(n->getIntValue("zenith")),
-    _nadir(n->getIntValue("nadir")),
-    _hat(n->getIntValue("hat"))
+    _zenith(n->getBoolValue("enable-zenith")),
+    _nadir(n->getBoolValue("enable-nadir")),
+    _hat(n->getBoolValue("enable-hat"))
 {
     const char *t = n->getStringValue("type");
     _type = strcmp(t, "climb-dive") ? PITCH : CLIMB_DIVE;
@@ -79,37 +79,12 @@ void HUD::Ladder::draw(void)
     if (!_pitch.isValid() || !_roll.isValid())
         return;
 
-    float x_ini, x_ini2;
-    float x_end, x_end2;
-    float y = 0;
-    int count;
-    float cosine, sine, xvvr, yvvr, Vxx = 0.0, Vyy = 0.0, Vzz = 0.0;
-    float up_vel, ground_vel, actslope = 0.0;
-    float Axx = 0.0, Ayy = 0.0, Azz = 0.0, total_vel = 0.0, pot_slope, t1;
-    float t2 = 0.0, psi = 0.0, alpha, pla;
-    float vel_x = 0.0, vel_y = 0.0, drift;
-    bool pitch_ladder = false;
-    bool climb_dive_ladder = false;
-    bool clip_plane = false;
-
-    GLdouble eqn_top[4] = {0.0, -1.0, 0.0, 0.0};
-    GLdouble eqn_left[4] = {-1.0, 0.0, 0.0, 100.0};
-    GLdouble eqn_right[4] = {1.0, 0.0, 0.0, 100.0};
-
-    float half_span = _w / 2.0;
-    float roll_value = _roll.getFloatValue() * SGD_DEGREES_TO_RADIANS;		// FIXME rad/deg conversion
-    alpha = get__aoa();
-    pla = get__throttleval();
-
-#ifdef ENABLE_SP_FDM
-    int lgear, wown, wowm, ilcanclaw, ihook;
-    ilcanclaw = get__iaux2();
-    lgear = get__iaux3();
-    wown = get__iaux4();
-    wowm = get__iaux5();
-    ihook = get__iaux6();
-#endif
+    float roll_value = _roll.getFloatValue() * SGD_DEGREES_TO_RADIANS;
     float pitch_value = _pitch.getFloatValue();
+
+    bool pitch_ladder;
+    bool climb_dive_ladder;
+    bool clip_plane;
 
     if (_type == CLIMB_DIVE) {
         pitch_ladder = false;
@@ -124,7 +99,6 @@ void HUD::Ladder::draw(void)
 
     //**************************************************************
     glPushMatrix();
-    // define (0, 0) as center of screen
     glTranslatef(_center_x, _center_y, 0);
 
     // OBJECT STATIC RETICLE
@@ -165,6 +139,11 @@ void HUD::Ladder::draw(void)
 
     //****************************************************************
     //velocity vector reticle - computations
+    float xvvr, yvvr, Vxx = 0.0, Vyy = 0.0, Vzz = 0.0;
+    float Axx = 0.0, Ayy = 0.0, Azz = 0.0, total_vel = 0.0, pot_slope, t1;
+    float up_vel, ground_vel, actslope = 0.0, psi = 0.0;
+    float vel_x = 0.0, vel_y = 0.0, drift;
+
     if (_velocity_vector) {
         Vxx = get__Vx();
         Vyy = get__Vy();
@@ -217,6 +196,10 @@ void HUD::Ladder::draw(void)
         // Clipping coordinates for ladder to be input from xml file
         // Clip hud ladder
         if (clip_plane) {
+            GLdouble eqn_top[4] = {0.0, -1.0, 0.0, 0.0};
+            GLdouble eqn_left[4] = {-1.0, 0.0, 0.0, 100.0};
+            GLdouble eqn_right[4] = {1.0, 0.0, 0.0, 100.0};
+
             glClipPlane(GL_CLIP_PLANE0, eqn_top);
             glEnable(GL_CLIP_PLANE0);
             glClipPlane(GL_CLIP_PLANE1, eqn_left);
@@ -232,13 +215,7 @@ void HUD::Ladder::draw(void)
         // TYPE VELOCITY VECTOR
         // ATTRIB - ALWAYS
         // velocity vector
-        glBegin(GL_LINE_LOOP);  // Use polygon to approximate a circle
-        for (count = 0; count < 50; count++) {
-            cosine = 6 * cos(count * SGD_2PI / 50.0);
-            sine =   6 * sin(count * SGD_2PI / 50.0);
-            glVertex2f(cosine + vel_x, sine + vel_y);
-        }
-        glEnd();
+        draw_circle(vel_x, vel_y, 6);
 
         //velocity vector reticle orientation lines
         glBegin(GL_LINE_STRIP);
@@ -255,6 +232,9 @@ void HUD::Ladder::draw(void)
         glEnd();
 
 #ifdef ENABLE_SP_FDM
+        int lgear = get__iaux3();
+        int ihook = get__iaux6();
+
         // OBJECT MOVING RETICLE
         // TYPE LINE
         // ATTRIB - ON CONDITION
@@ -303,6 +283,8 @@ void HUD::Ladder::draw(void)
     // ATTRIB - ON CONDITION
     // alpha bracket
 #ifdef ENABLE_SP_FDM
+    float alpha = get__aoa();
+
     if (_alpha_bracket && ihook == 1) {
         glBegin(GL_LINE_STRIP);
         glVertex2f(vel_x - 20, vel_y - (16 - alpha) * _compression);
@@ -327,6 +309,9 @@ void HUD::Ladder::draw(void)
     // TYPE ENERGY_MARKERS
     // ATTRIB - ALWAYS
     //energy markers - compute potential slope
+    float pla = get__throttleval();
+    float t2 = 0.0;
+
     if (_energy_marker) {
         if (total_vel < 5.0) {
             t1 = 0;
@@ -373,6 +358,8 @@ void HUD::Ladder::draw(void)
     // TYPE LINE
     // ATTRIB - ON CONDITION
 #ifdef ENABLE_SP_FDM
+    int ilcanclaw = get__iaux2();
+
     if (_energy_worm && ilcanclaw == 1) {
         glBegin(GL_LINE_STRIP);
         glVertex2f(-15, -134);
@@ -429,6 +416,10 @@ void HUD::Ladder::draw(void)
 
     glRotatef(roll_value * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
     // FRL marker not rotated - this line shifted below
+    float half_span = _w / 2.0;
+    float y = 0;
+    float x_ini, x_ini2;
+    float x_end, x_end2;
 
     if (_div_units) {
         const int BUFSIZE = 8;
@@ -481,13 +472,13 @@ void HUD::Ladder::draw(void)
                         // Zero or above draw solid lines
                         draw_line(x_ini, y, x_end, y);
 
-                        if (i == 90 && _zenith == 1)
+                        if (i == 90 && _zenith)
                             draw_zenith(x_ini, x_end, y);
                     } else {
                         // Below zero draw dashed lines.
                         draw_stipple_line(x_ini, y, x_end, y);
 
-                        if (i == -90 && _nadir ==1)
+                        if (i == -90 && _nadir)
                             draw_nadir(x_ini, x_end, y);
                     }
 
@@ -538,7 +529,7 @@ void HUD::Ladder::draw(void)
                         draw_line(x_ini, y, x_end, y);
                         draw_line(x_ini2, y, x_end2, y);
 
-                        if (i == 90 && _zenith == 1)
+                        if (i == 90 && _zenith)
                             draw_zenith(x_ini2, x_end, y);
 
                     } else { // i < 0
@@ -552,7 +543,7 @@ void HUD::Ladder::draw(void)
                         draw_stipple_line(x_ini, y, x_end, y);
                         draw_stipple_line(x_ini2, y, x_end2, y);
 
-                        if (i == -90 && _nadir == 1)
+                        if (i == -90 && _nadir)
                             draw_nadir(x_ini2, x_end, y);
                     }
 
@@ -631,7 +622,7 @@ void HUD::Ladder::draw(void)
         // OBJECT MOVING RETICLE
         // TYPE ARROW
         // waypoint marker
-        if (fabs(brg-psi) > 10.0) {
+        if (fabs(brg - psi) > 10.0) {
             glPushMatrix();
             glTranslatef(_center_x, _center_y, 0);
             glTranslatef(vel_x, vel_y, 0);
@@ -649,8 +640,8 @@ void HUD::Ladder::draw(void)
         }
 
         // waypoint marker on heading scale
-        if (fabs(brg-psi) < 12.0) {
-            if (_hat == 0) {
+        if (fabs(brg - psi) < 12.0) {
+            if (!_hat) {
                 glBegin(GL_LINE_LOOP);
                 glVertex2f(((brg - psi) * 60 / 25) + 320, 240.0);
                 glVertex2f(((brg - psi) * 60 / 25) + 326, 240.0 - 4);
@@ -661,7 +652,7 @@ void HUD::Ladder::draw(void)
                 glVertex2f(((brg - psi) * 60 / 25) + 314, 240.0 - 4);
                 glEnd();
 
-            } else { //if _hat=0
+            } else { // if (_hat)
                 float x = (brg - psi) * 60 / 25 + 320, y = 240.0, r = 5.0;
                 float x1, y1;
 
@@ -678,7 +669,7 @@ void HUD::Ladder::draw(void)
 
                 glEnd();
                 glDisable(GL_POINT_SMOOTH);
-            } //_hat=0
+            }
 
          } //brg<12
      } // if _waypoint_marker
@@ -720,68 +711,43 @@ void HUD::Ladder::draw_zenith(float xfirst, float xlast, float yvalue)
 }
 
 
-//  draws the nadir symbol  for lowest possible dive angle (i.e. 90 degree dive angle)
+//  draws the nadir symbol (lowest possible dive angle i.e. 90 degree dive angle))
 //
 void HUD::Ladder::draw_nadir(float xfirst, float xlast, float yvalue)
 {
     float xcentre = (xfirst + xlast) / 2.0;
     float ycentre = yvalue;
+    const float R = 7.5;
 
-    float r = 7.5;
+    draw_circle(xcentre, ycentre, R);
+    draw_line(xcentre, ycentre + R, xcentre, ycentre + 22.5); // line above the circle
+    draw_line(xcentre - R, ycentre, xcentre + R, ycentre);    // line at middle of circle
+
+    float theta = asin(2.5 / R);
+    float theta1 = asin(5.0 / R);
     float x1, y1, x2, y2;
 
-    // to draw a circle
-    float xcent1, xcent2, ycent1, ycent2;
-    xcent1 = xcentre + r;
-    ycent1 = ycentre;
-
-    for (int count = 1; count <= 400; count++) {
-        float temp = count * 2 * SG_PI / 400.0;
-        xcent2 = xcentre + r * cos(temp);
-        ycent2 = ycentre + r * sin(temp);
-
-        draw_line(xcent1, ycent1, xcent2, ycent2);
-
-        xcent1 = xcent2;
-        ycent1 = ycent2;
-    }
-
-    xcent2 = xcentre + r;
-    ycent2 = ycentre;
-
-    Item::draw_line(xcent1, ycent1, xcent2, ycent2); //to connect last point to first point
-    //end circle
-
-    //to draw a line above the circle
-    draw_line(xcentre, ycentre + 7.5, xcentre, ycentre + 22.5);
-
-    //line in the middle of circle
-    draw_line(xcentre - 7.5, ycentre, xcentre + 7.5, ycentre);
-
-    float theta = asin(2.5 / 7.5);
-    float theta1 = asin(5.0 / 7.5);
-
-    x1 = xcentre + r * cos(theta);
+    x1 = xcentre + R * cos(theta);
     y1 = ycentre + 2.5;
-    x2 = xcentre + r * cos((180.0 * SGD_DEGREES_TO_RADIANS) - theta);
+    x2 = xcentre + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) - theta);
     y2 = ycentre + 2.5;
     draw_line(x1, y1, x2, y2);
 
-    x1 = xcentre + r * cos(theta1);
+    x1 = xcentre + R * cos(theta1);
     y1 = ycentre + 5.0;
-    x2 = xcentre + r * cos((180.0 * SGD_DEGREES_TO_RADIANS) - theta1);
+    x2 = xcentre + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) - theta1);
     y2 = ycentre + 5.0;
     draw_line(x1, y1, x2, y2);
 
-    x1 = xcentre + r * cos((180.0 * SGD_DEGREES_TO_RADIANS) + theta);
+    x1 = xcentre + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) + theta);
     y1 = ycentre - 2.5;
-    x2 = xcentre + r * cos((360.0 * SGD_DEGREES_TO_RADIANS) - theta);
+    x2 = xcentre + R * cos((360.0 * SGD_DEGREES_TO_RADIANS) - theta);
     y2 = ycentre - 2.5;
     draw_line(x1, y1, x2, y2);
 
-    x1 = xcentre + r * cos((180.0 * SGD_DEGREES_TO_RADIANS) + theta1);
+    x1 = xcentre + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) + theta1);
     y1 = ycentre - 5.0;
-    x2 = xcentre + r * cos((360.0 * SGD_DEGREES_TO_RADIANS) - theta1);
+    x2 = xcentre + R * cos((360.0 * SGD_DEGREES_TO_RADIANS) - theta1);
     y2 = ycentre - 5.0;
     draw_line(x1, y1, x2, y2);
 }

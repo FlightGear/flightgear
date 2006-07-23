@@ -582,9 +582,9 @@ private:
     float  _glide_slope;
     bool   _energy_worm;
     bool   _waypoint_marker;
-    int    _zenith;
-    int    _nadir;
-    int    _hat;
+    bool   _zenith;
+    bool   _nadir;
+    bool   _hat;
 
     // The Ladder has its own temporary display lists
     TextList _locTextList;
