@@ -30,13 +30,14 @@
 // FIXME
 float get__heading() { return fgGetFloat("/orientation/heading-deg") * M_PI / 180.0; }
 float get__throttleval() { return fgGetFloat("/controls/engines/engine/throttle"); }
-float get__aoa() { return fgGetFloat("/sim/frame-rate"); }					// FIXME
 float get__Vx() { return fgGetFloat("/velocities/uBody-fps"); }
 float get__Vy() { return fgGetFloat("/velocities/vBody-fps"); }
 float get__Vz() { return fgGetFloat("/velocities/wBody-fps"); }
 float get__Ax() { return fgGetFloat("/acclerations/pilot/x-accel-fps_sec"); }
 float get__Ay() { return fgGetFloat("/acclerations/pilot/y-accel-fps_sec"); }
 float get__Az() { return fgGetFloat("/acclerations/pilot/z-accel-fps_sec"); }
+float get__alpha() { return fgGetFloat("/orientation/alpha-deg"); }
+float get__beta() { return fgGetFloat("/orientation/side-slip-deg"); }
 #undef ENABLE_SP_FDM
 
 
@@ -81,6 +82,7 @@ void HUD::Ladder::draw(void)
 
     float roll_value = _roll.getFloatValue() * SGD_DEGREES_TO_RADIANS;
     float pitch_value = _pitch.getFloatValue();
+    float alpha;
 
     bool pitch_ladder;
     bool climb_dive_ladder;
@@ -139,12 +141,15 @@ void HUD::Ladder::draw(void)
 
     //****************************************************************
     //velocity vector reticle - computations
-    float xvvr, yvvr, Vxx = 0.0, Vyy = 0.0, Vzz = 0.0;
+    float xvvr, /* yvvr, */ Vxx = 0.0, Vyy = 0.0, Vzz = 0.0;
     float Axx = 0.0, Ayy = 0.0, Azz = 0.0, total_vel = 0.0, pot_slope, t1;
     float up_vel, ground_vel, actslope = 0.0, psi = 0.0;
     float vel_x = 0.0, vel_y = 0.0, drift;
 
     if (_velocity_vector) {
+        drift = get__beta();
+        alpha = get__alpha();
+
         Vxx = get__Vx();
         Vyy = get__Vy();
         Vzz = get__Vz();
@@ -170,13 +175,14 @@ void HUD::Ladder::draw(void)
             actslope = atan(up_vel / ground_vel) * SGD_RADIANS_TO_DEGREES;
         }
 
-        xvvr = (((atan2(Vyy, Vxx) * SGD_RADIANS_TO_DEGREES) - psi)
-                * (_compression / globals->get_current_view()->get_aspect_ratio()));
-        drift = ((atan2(Vyy, Vxx) * SGD_RADIANS_TO_DEGREES) - psi);
-        yvvr = ((actslope - pitch_value) * _compression);
-        vel_y = ((actslope - pitch_value) * cos(roll_value) + drift * sin(roll_value)) * _compression;
-        vel_x = (-(actslope - pitch_value) * sin(roll_value) + drift * cos(roll_value))
-                * (_compression / globals->get_current_view()->get_aspect_ratio());
+        xvvr = (drift * (_compression / globals->get_current_view()->get_aspect_ratio()));
+        // drift = ((atan2(Vyy, Vxx) * SGD_RADIANS_TO_DEGREES) - psi);
+        // yvvr = (-alpha * _compression);
+        // vel_y = (-alpha * cos(roll_value) + drift * sin(roll_value)) * _compression;
+        // vel_x = (alpha * sin(roll_value) + drift * cos(roll_value))
+        //         * (_compression / globals->get_current_view()->get_aspect_ratio());
+        vel_y = -alpha * _compression;
+        vel_x = drift * (_compression / globals->get_current_view()->get_aspect_ratio());
         //  printf("%f %f %f %f\n",vel_x, vel_y, drift, psi);
 
         //****************************************************************
@@ -283,7 +289,7 @@ void HUD::Ladder::draw(void)
     // ATTRIB - ON CONDITION
     // alpha bracket
 #ifdef ENABLE_SP_FDM
-    float alpha = get__aoa();
+    alpha = get__alpha();
 
     if (_alpha_bracket && ihook == 1) {
         glBegin(GL_LINE_STRIP);
