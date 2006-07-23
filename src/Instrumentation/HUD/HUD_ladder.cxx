@@ -49,17 +49,17 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _div_units(int(fabs(n->getFloatValue("divisions")))),
     _scr_hole(n->getIntValue("screen-hole")),
     _compression(n->getFloatValue("compression-factor")),
-    _frl(n->getBoolValue("enable-fuselage-ref-line", false)),
-    _target_spot(n->getBoolValue("enable-target-spot", false)),
-    _velocity_vector(n->getBoolValue("enable-velocity-vector", false)),
-    _drift_marker(n->getBoolValue("enable-drift-marker", false)),
-    _alpha_bracket(n->getBoolValue("enable-alpha-bracket", false)),
-    _energy_marker(n->getBoolValue("enable-energy-marker", false)),
-    _climb_dive_marker(n->getBoolValue("enable-climb-dive-marker", false)),
-    _glide_slope_marker(n->getBoolValue("enable-glide-slope-marker",false)),
+    _frl(n->getBoolValue("enable-fuselage-ref-line")),
+    _target_spot(n->getBoolValue("enable-target-spot")),
+    _velocity_vector(n->getBoolValue("enable-velocity-vector")),
+    _drift_marker(n->getBoolValue("enable-drift-marker")),
+    _alpha_bracket(n->getBoolValue("enable-alpha-bracket")),
+    _energy_marker(n->getBoolValue("enable-energy-marker")),
+    _climb_dive_marker(n->getBoolValue("enable-climb-dive-marker")),
+    _glide_slope_marker(n->getBoolValue("enable-glide-slope-marker")),
     _glide_slope(n->getFloatValue("glide-slope", -4.0)),
-    _energy_worm(n->getBoolValue("enable-energy-marker", false)),
-    _waypoint_marker(n->getBoolValue("enable-waypoint-marker", false)),
+    _energy_worm(n->getBoolValue("enable-energy-marker")),
+    _waypoint_marker(n->getBoolValue("enable-waypoint-marker")),
     _zenith(n->getBoolValue("enable-zenith")),
     _nadir(n->getBoolValue("enable-nadir")),
     _hat(n->getBoolValue("enable-hat"))
@@ -122,7 +122,7 @@ void HUD::Ladder::draw(void)
         glEnd();
 #undef FRL_DIAMOND_SIZE
     }
-    // TYPE WATERLINE_MARK (W shaped _    _ )
+    // TYPE WATERLINE_MARK (W shaped _    _ )		// TODO (-> HUD_misc.cxx)
     //                                \/\/
 
     //****************************************************************
