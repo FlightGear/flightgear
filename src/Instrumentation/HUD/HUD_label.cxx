@@ -32,7 +32,7 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _input(n->getNode("input", false)),
     _fontsize(fgGetInt("/sim/startup/xsize") > 1000 ? FONT_LARGE : FONT_SMALL),		// FIXME
     _box(n->getBoolValue("box", false)),
-    _marker_offset(n->getFloatValue("marker-offset", 8)),
+    _marker_offset(n->getFloatValue("marker-offset", 5)),
     _blink_condition(0),
     _blink_interval(n->getFloatValue("blinking/interval", -1.0f)),
     _blink_target(0.0),
