@@ -274,8 +274,11 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             for (int i = 0; ; i++) {
                 float v = vstart + i * _minor_divs;
 
-                if (!_modulo && (v < _input.min() || v > _input.max()))
-                    continue;
+                if (!_modulo)
+                    if (v < _input.min())
+                        continue;
+                    else if (v > _input.max())
+                        break;
 
                 float y = _y + (v - vmin) * factor();
 
@@ -486,8 +489,11 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
             for (int i = 0; ; i++) {
                 float v = vstart + i * _minor_divs;
 
-                if (!_modulo && (v < _input.min() || v > _input.max()))
-                    continue;
+                if (!_modulo)
+                    if (v < _input.min())
+                        continue;
+                    else if (v > _input.max())
+                        break;
 
                 float x = _x + (v - vmin) * factor();
 
