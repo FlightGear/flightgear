@@ -129,7 +129,7 @@ void HUD::init()
     if (!_font)
         throw sg_throwable(string("/sim/hud/font/name is not a texture font"));
 
-    _font_size = fgGetFloat("/sim/hud/font/size", 10);
+    _font_size = fgGetFloat("/sim/hud/font/size", 8);
     _font_renderer->setFont(_font);
     _font_renderer->setPointSize(_font_size);
     _text_list.setFont(_font_renderer);

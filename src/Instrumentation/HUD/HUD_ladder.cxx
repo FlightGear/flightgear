@@ -479,13 +479,13 @@ void HUD::Ladder::draw(void)
                         draw_line(x_ini, y, x_end, y);
 
                         if (i == 90 && _zenith)
-                            draw_zenith(x_ini, x_end, y);
+                            draw_zenith(0.0, y);
                     } else {
                         // Below zero draw dashed lines.
                         draw_stipple_line(x_ini, y, x_end, y);
 
                         if (i == -90 && _nadir)
-                            draw_nadir(x_ini, x_end, y);
+                            draw_nadir(0.0, y);
                     }
 
                     // Calculate the position of the left text and write it.
@@ -536,7 +536,7 @@ void HUD::Ladder::draw(void)
                         draw_line(x_ini2, y, x_end2, y);
 
                         if (i == 90 && _zenith)
-                            draw_zenith(x_ini2, x_end, y);
+                            draw_zenith(0.0, y);
 
                     } else { // i < 0
                         // draw dive bar vertical lines
@@ -550,7 +550,7 @@ void HUD::Ladder::draw(void)
                         draw_stipple_line(x_ini2, y, x_end2, y);
 
                         if (i == -90 && _nadir)
-                            draw_nadir(x_ini2, x_end, y);
+                            draw_nadir(0.0, y);
                     }
 
                     // Now calculate the location of the left side label using
@@ -649,13 +649,14 @@ void HUD::Ladder::draw(void)
         if (fabs(brg - psi) < 12.0) {
             if (!_hat) {
                 glBegin(GL_LINE_LOOP);
-                glVertex2f(((brg - psi) * 60 / 25) + 320, 240.0);
-                glVertex2f(((brg - psi) * 60 / 25) + 326, 240.0 - 4);
-                glVertex2f(((brg - psi) * 60 / 25) + 323, 240.0 - 4);
-                glVertex2f(((brg - psi) * 60 / 25) + 323, 240.0 - 8);
-                glVertex2f(((brg - psi) * 60 / 25) + 317, 240.0 - 8);
-                glVertex2f(((brg - psi) * 60 / 25) + 317, 240.0 - 4);
-                glVertex2f(((brg - psi) * 60 / 25) + 314, 240.0 - 4);
+                GLfloat x = (brg - psi) * 60 / 25;
+                glVertex2f(x + 320, 240.0);
+                glVertex2f(x + 326, 240.0 - 4);
+                glVertex2f(x + 323, 240.0 - 4);
+                glVertex2f(x + 323, 240.0 - 8);
+                glVertex2f(x + 317, 240.0 - 8);
+                glVertex2f(x + 317, 240.0 - 4);
+                glVertex2f(x + 314, 240.0 - 4);
                 glEnd();
 
             } else { // if (_hat)
@@ -684,77 +685,72 @@ void HUD::Ladder::draw(void)
 
 
 /******************************************************************/
-//  draws the zenith symbol  for highest possible climb angle (i.e. 90 degree climb angle)
+//  draws the zenith symbol (highest possible climb angle i.e. 90 degree climb angle)
 //
-void HUD::Ladder::draw_zenith(float xfirst, float xlast, float yvalue)
+void HUD::Ladder::draw_zenith(float x, float y)
 {
-    float xcentre = (xfirst + xlast) / 2.0;
-    float ycentre = yvalue;
+    draw_line(x - 9.0, y, x - 3.0, y + 1.3);
+    draw_line(x - 9.0, y, x - 3.0, y - 1.3);
 
-    draw_line(xcentre - 9.0, ycentre, xcentre - 3.0, ycentre + 1.3);
-    draw_line(xcentre - 9.0, ycentre, xcentre - 3.0, ycentre - 1.3);
+    draw_line(x + 9.0, y, x + 3.0, y + 1.3);
+    draw_line(x + 9.0, y, x + 3.0, y - 1.3);
 
-    draw_line(xcentre + 9.0, ycentre, xcentre + 3.0, ycentre + 1.3);
-    draw_line(xcentre + 9.0, ycentre, xcentre + 3.0, ycentre - 1.3);
+    draw_line(x, y + 9.0, x - 1.3, y + 3.0);
+    draw_line(x, y + 9.0, x + 1.3, y + 3.0);
 
-    draw_line(xcentre, ycentre + 9.0, xcentre - 1.3, ycentre + 3.0);
-    draw_line(xcentre, ycentre + 9.0, xcentre + 1.3, ycentre + 3.0);
+    draw_line(x - 3.9, y + 3.9, x - 3.0, y + 1.3);
+    draw_line(x - 3.9, y + 3.9, x - 1.3, y + 3.0);
 
-    draw_line(xcentre - 3.9, ycentre + 3.9, xcentre - 3.0, ycentre + 1.3);
-    draw_line(xcentre - 3.9, ycentre + 3.9, xcentre - 1.3, ycentre + 3.0);
+    draw_line(x + 3.9, y + 3.9, x + 1.3, y + 3.0);
+    draw_line(x + 3.9, y + 3.9, x + 3.0, y + 1.3);
 
-    draw_line(xcentre + 3.9, ycentre + 3.9, xcentre + 1.3, ycentre+3.0);
-    draw_line(xcentre + 3.9, ycentre + 3.9, xcentre + 3.0, ycentre+1.3);
+    draw_line(x - 3.9, y - 3.9, x - 3.0, y - 1.3);
+    draw_line(x - 3.9, y - 3.9, x - 1.3, y - 2.6);
 
-    draw_line(xcentre - 3.9, ycentre - 3.9, xcentre - 3.0, ycentre-1.3);
-    draw_line(xcentre - 3.9, ycentre - 3.9, xcentre - 1.3, ycentre-2.6);
+    draw_line(x + 3.9, y - 3.9, x + 3.0, y - 1.3);
+    draw_line(x + 3.9, y - 3.9, x + 1.3, y - 2.6);
 
-    draw_line(xcentre + 3.9, ycentre - 3.9, xcentre + 3.0, ycentre-1.3);
-    draw_line(xcentre + 3.9, ycentre - 3.9, xcentre + 1.3, ycentre-2.6);
-
-    draw_line(xcentre - 1.3, ycentre - 2.6, xcentre, ycentre - 27.0);
-    draw_line(xcentre + 1.3, ycentre - 2.6, xcentre, ycentre - 27.0);
+    draw_line(x - 1.3, y - 2.6, x, y - 27.0);
+    draw_line(x + 1.3, y - 2.6, x, y - 27.0);
 }
 
 
 //  draws the nadir symbol (lowest possible dive angle i.e. 90 degree dive angle))
 //
-void HUD::Ladder::draw_nadir(float xfirst, float xlast, float yvalue)
+void HUD::Ladder::draw_nadir(float x, float y)
 {
-    float xcentre = (xfirst + xlast) / 2.0;
-    float ycentre = yvalue;
     const float R = 7.5;
 
-    draw_circle(xcentre, ycentre, R);
-    draw_line(xcentre, ycentre + R, xcentre, ycentre + 22.5); // line above the circle
-    draw_line(xcentre - R, ycentre, xcentre + R, ycentre);    // line at middle of circle
+    draw_circle(x, y, R);
+    draw_line(x, y + R, x, y + 22.5); // line above the circle
+    draw_line(x - R, y, x + R, y);    // line at middle of circle
 
     float theta = asin(2.5 / R);
     float theta1 = asin(5.0 / R);
     float x1, y1, x2, y2;
 
-    x1 = xcentre + R * cos(theta);
-    y1 = ycentre + 2.5;
-    x2 = xcentre + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) - theta);
-    y2 = ycentre + 2.5;
+    x1 = x + R * cos(theta);
+    y1 = y + 2.5;
+    x2 = x + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) - theta);
+    y2 = y + 2.5;
     draw_line(x1, y1, x2, y2);
 
-    x1 = xcentre + R * cos(theta1);
-    y1 = ycentre + 5.0;
-    x2 = xcentre + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) - theta1);
-    y2 = ycentre + 5.0;
+    x1 = x + R * cos(theta1);
+    y1 = y + 5.0;
+    x2 = x + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) - theta1);
+    y2 = y + 5.0;
     draw_line(x1, y1, x2, y2);
 
-    x1 = xcentre + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) + theta);
-    y1 = ycentre - 2.5;
-    x2 = xcentre + R * cos((360.0 * SGD_DEGREES_TO_RADIANS) - theta);
-    y2 = ycentre - 2.5;
+    x1 = x + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) + theta);
+    y1 = y - 2.5;
+    x2 = x + R * cos((360.0 * SGD_DEGREES_TO_RADIANS) - theta);
+    y2 = y - 2.5;
     draw_line(x1, y1, x2, y2);
 
-    x1 = xcentre + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) + theta1);
-    y1 = ycentre - 5.0;
-    x2 = xcentre + R * cos((360.0 * SGD_DEGREES_TO_RADIANS) - theta1);
-    y2 = ycentre - 5.0;
+    x1 = x + R * cos((180.0 * SGD_DEGREES_TO_RADIANS) + theta1);
+    y1 = y - 5.0;
+    x2 = x + R * cos((360.0 * SGD_DEGREES_TO_RADIANS) - theta1);
+    y2 = y - 5.0;
     draw_line(x1, y1, x2, y2);
 }
 

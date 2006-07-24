@@ -56,16 +56,16 @@ void HUD::Dial::draw(void)
 
 
     float offset = 90.0 * SGD_DEGREES_TO_RADIANS;
-    float r1 = 10.0; //size of carrot
+    const float R = 10.0; //size of carrot
     float theta = _input.getFloatValue();
 
     float theta1 = -theta * SGD_DEGREES_TO_RADIANS + offset;
     float x1 = _x + _radius * cos(theta1);
     float y1 = _y + _radius * sin(theta1);
-    float x2 = x1 - r1 * cos(theta1 - 30.0 * SGD_DEGREES_TO_RADIANS);
-    float y2 = y1 - r1 * sin(theta1 - 30.0 * SGD_DEGREES_TO_RADIANS);
-    float x3 = x1 - r1 * cos(theta1 + 30.0 * SGD_DEGREES_TO_RADIANS);
-    float y3 = y1 - r1 * sin(theta1 + 30.0 * SGD_DEGREES_TO_RADIANS);
+    float x2 = x1 - R * cos(theta1 - 30.0 * SGD_DEGREES_TO_RADIANS);
+    float y2 = y1 - R * sin(theta1 - 30.0 * SGD_DEGREES_TO_RADIANS);
+    float x3 = x1 - R * cos(theta1 + 30.0 * SGD_DEGREES_TO_RADIANS);
+    float y3 = y1 - R * sin(theta1 + 30.0 * SGD_DEGREES_TO_RADIANS);
 
     // draw carrot
     draw_line(x1, y1, x2, y2);

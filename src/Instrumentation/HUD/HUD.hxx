@@ -100,13 +100,9 @@ public:
     // is shown as 10ooo.
 
     void draw(fntRenderer *fnt) {
-        float orig_size = fnt->getPointSize();
         if (!_digits) { // show all digits in same size
-            fnt->setPointSize(orig_size * 0.8);
             fnt->start2f(_x, _y);
             fnt->puts(_msg);
-
-            fnt->setPointSize(orig_size);
             return;
         }
 
@@ -126,6 +122,8 @@ public:
                 c++;
             i++;
         }
+
+        float orig_size = fnt->getPointSize();
         if (c > p) {
             fnt->setPointSize(orig_size * 0.8);
             int p1 = c - 3;
@@ -440,6 +438,7 @@ private:
     int     _fontsize;
     int     _blink;
     bool    _box;
+    float   _text_y;
 
     SGCondition *_blink_condition;
     double  _blink_interval;
@@ -506,6 +505,8 @@ private:
     float  _marker_offset;
     bool   _pointer;
     int    _zoom;
+    float  _0_ht;
+
     enum PointerType { FIXED, MOVING } _pointer_type;
     enum TickType { LINE, CIRCLE } _tick_type;
     enum TickLength { VARIABLE, CONSTANT } _tick_length;
@@ -547,8 +548,8 @@ public:
     virtual void draw();
 
 private:
-    void draw_zenith(float, float, float);
-    void draw_nadir(float, float, float);
+    void draw_zenith(float, float);
+    void draw_nadir(float, float);
 
     void draw_text(float x, float y, char *s) {
         _locTextList.add(HUDText(x, y, s));

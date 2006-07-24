@@ -47,6 +47,10 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
     s = n->getStringValue("tick-length");                    // "variable", "constant"
     _tick_length = strcmp(s, "constant") ? VARIABLE : CONSTANT;
+
+    float top;
+    _hud->_font->getBBox("0", _hud->_font_size, 0.0, 0, 0, 0, &top);
+    _0_ht = top / 2.0;  // half 0 height
 }
 
 
@@ -334,7 +338,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                     snprintf(buf, BUFSIZE, "%d", display_value);
                     float strwd = text_width(buf);
-                    float strht = _hud->_font_size;
 
                     if (option_both()) {
                         // draw_line(_x, y, marker_xs, y);
@@ -351,7 +354,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         }
 
                         if (!option_notext())
-                            draw_text(marker_xs + 2, y, buf, 0);
+                            draw_text(marker_xs + 2, y - _0_ht, buf, 0);
 
                     } else {
                         if (_tick_type == LINE)
@@ -361,9 +364,9 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                         if (!option_notext()) {
                             if (option_left())
-                                draw_text(marker_xs - strwd, y - 4, buf, 0);
+                                draw_text(marker_xs - strwd, y - _0_ht, buf, 0);
                             else
-                                draw_text(marker_xe + strwd / 2, y - 4, buf, 0);
+                                draw_text(marker_xe + strwd / 2, y - _0_ht, buf, 0);
                         }
                     } // End if huds-both
                 }
@@ -531,7 +534,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                     snprintf(buf, BUFSIZE, "%d", display_value);
                     float strwd = text_width(buf);
-                    float strht = _hud->_font_size;
 
                     // Draw major ticks and text only if far enough from the edge.			// FIXME
                     if (x < _x + 10 || x + 10 > _x + _w)

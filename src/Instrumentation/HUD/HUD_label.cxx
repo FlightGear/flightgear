@@ -55,10 +55,12 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
     if (pre)
         _format = pre;
+
     if (fmt)
         _format += fmt;
     else
         _format += "%s";
+
     if (post)
         _format += post;
 
@@ -69,6 +71,9 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
         _mode = NONE;
     }
 
+    float top;
+    _hud->_font->getBBox("0", _hud->_font_size, 0.0, 0, 0, 0, &top);
+    _text_y = _y + (_h - top) / 2.0;
     blink();
 }
 
@@ -79,30 +84,10 @@ void HUD::Label::draw(void)
         return;
 
     if (_box) {
-        float h = _hud->_font_size;			// FIXME
-
-        glPushMatrix();
-        glLoadIdentity();
-
-        glBegin(GL_LINES);
-        glVertex2f(_x - 2.0,  _y - 2.0);
-        glVertex2f(_x + _w + 2.0, _y - 2.0);
-        glVertex2f(_x + _w + 2.0, _y + h + 2.0);
-        glVertex2f(_x - 2.0,  _y + h + 2.0);
-        glEnd();
-
-        glEnable(GL_LINE_STIPPLE);
-        glLineStipple(1, 0xAAAA);
-
-        glBegin(GL_LINES);
-        glVertex2f(_x + _w + 2.0, _y - 2.0);
-        glVertex2f(_x + _w + 2.0, _y + h + 2.0);
-        glVertex2f(_x - 2.0, _y + h + 2.0);
-        glVertex2f(_x - 2.0, _y - 2.0);
-        glEnd();
-
-        glDisable(GL_LINE_STIPPLE);
-        glPopMatrix();
+        draw_line(_x, _y, _x + _w, _y);
+        draw_line(_x + _w, _y, _x + _w, _y + _h);
+        draw_line(_x + _w, _y + _h, _x, _y + _h);
+        draw_line(_x, _y + _h, _x, _y);
     }
 
     const int BUFSIZE = 256;
@@ -131,9 +116,9 @@ void HUD::Label::draw(void)
         posincr = 0;
 
     if (_fontsize == FONT_SMALL)
-        draw_text(_x + posincr, _y, buf, get_digits());
+        draw_text(_x + posincr, _text_y, buf, get_digits());
     else if (_fontsize == FONT_LARGE)
-        draw_text(_x + posincr, _y, buf, get_digits());
+        draw_text(_x + posincr, _text_y, buf, get_digits());
 }
 
 
