@@ -439,6 +439,7 @@ private:
     int     _blink;
     bool    _box;
     float   _text_y;
+    float   _marker_offset;
 
     SGCondition *_blink_condition;
     double  _blink_interval;
