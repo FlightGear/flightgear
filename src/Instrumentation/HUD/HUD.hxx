@@ -216,18 +216,18 @@ public:
     Units getUnits() const { return _units; }
 
     enum {
+        HORZ      = 0x0000,  // keep that at zero?
         AUTOTICKS = 0x0001,
         VERT      = 0x0002,
-        HORZ      = 0x0000,
         TOP       = 0x0004,
         BOTTOM    = 0x0008,
-        LEFT      = TOP,
-        RIGHT     = BOTTOM,
+        LEFT      = 0x0010,
+        RIGHT     = 0x0020,
         BOTH      = (LEFT|RIGHT),
-        NOTICKS   = 0x0010,
-        ARITHTIC  = 0x0020,
-        DECITICS  = 0x0040,
-        NOTEXT    = 0x0080,
+        NOTICKS   = 0x0040,
+        ARITHTIC  = 0x0080,
+        DECITICS  = 0x0100,
+        NOTEXT    = 0x0200,
     };
 
     enum Adjust {
