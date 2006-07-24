@@ -323,6 +323,7 @@ public:
                     c++;
                 i++;
             }
+            float orig_size = fnt->getPointSize();
             if (c>p) {
                 fnt->setPointSize(HUD_TextSize * 0.8);
                 int p1=c-3;
@@ -344,9 +345,9 @@ public:
                 fnt->start2f( x, y );
                 fnt->puts(tmp);
             }
+            fnt->setPointSize(orig_size);
         } else {
             //if digits not equal to 1
-            fnt->setPointSize(HUD_TextSize * 0.8);
             fnt->start2f( x, y );
             fnt->puts( msg ) ;
         }
