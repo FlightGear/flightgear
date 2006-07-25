@@ -32,7 +32,8 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _input(n->getNode("input", false)),
     _fontsize(fgGetInt("/sim/startup/xsize") > 1000 ? FONT_LARGE : FONT_SMALL),		// FIXME
     _box(n->getBoolValue("box", false)),
-    _marker_offset(n->getFloatValue("marker-offset", 5)),
+    _pointer_width(n->getFloatValue("pointer-width", 7.0)),
+    _pointer_length(n->getFloatValue("pointer-length", 5.0)),
     _blink_condition(0),
     _blink_interval(n->getFloatValue("blinking/interval", -1.0f)),
     _blink_target(0.0),
@@ -85,49 +86,58 @@ void HUD::Label::draw(void)
         return;
 
     if (_box) {
-        const float tan30 = 0.57735;
-        float base = _marker_offset * tan30;
         float l, r, p;
+        float pw = _pointer_width / 2.0;
 
-        l = _center_x - base;
-        r = _center_x + base;
+        l = _center_x - pw;
+        r = _center_x + pw;
+        bool draw_parallel = fabsf(_pointer_width - _w) > 2.0; // draw lines left and right of arrow?
 
         if (option_bottom()) {
-            p = _y - _marker_offset;
-            draw_line(_x, _y, l, _y);
+            if (draw_parallel) {
+                draw_line(_x, _y, l, _y);
+                draw_line(r, _y, _x + _w, _y);
+            }
+            p = _y - _pointer_length;
             draw_line(l, _y, _center_x, p);
             draw_line(_center_x, p, r, _y);
-            draw_line(r, _y, _x + _w, _y);
         } else
             draw_line(_x, _y, _x + _w, _y);
 
         if (option_top()) {
-            p = _y + _h + _marker_offset;
-            draw_line(_x, _y + _h, l, _y + _h);
+            if (draw_parallel) {
+                draw_line(_x, _y + _h, l, _y + _h);
+                draw_line(r, _y + _h, _x + _w, _y + _h);
+            }
+            p = _y + _h + _pointer_length;
             draw_line(l, _y + _h, _center_x, p);
             draw_line(_center_x, p, r, _y + _h);
-            draw_line(r, _y + _h, _x + _w, _y + _h);
         } else
             draw_line(_x + _w, _y + _h, _x, _y + _h);
 
-        l = _center_y - base;
-        r = _center_y + base;
+        l = _center_y - pw;
+        r = _center_y + pw;
+        draw_parallel = fabsf(_pointer_width - _h) > 2.0;
 
         if (option_left()) {
-            p = _x - _marker_offset;
-            draw_line(_x, _y, _x, l);
+            if (draw_parallel) {
+                draw_line(_x, _y, _x, l);
+                draw_line(_x, r, _x, _y + _h);
+            }
+            p = _x - _pointer_length;
             draw_line(_x, l, p, _center_y);
             draw_line(p, _center_y, _x, r);
-            draw_line(_x, r, _x, _y + _h);
         } else
             draw_line(_x, _y + _h, _x, _y);
 
         if (option_right()) {
-            p = _x + _w + _marker_offset;
-            draw_line(_x + _w, _y, _x + _w, l);
+            if (draw_parallel) {
+                draw_line(_x + _w, _y, _x + _w, l);
+                draw_line(_x + _w, r, _x + _w, _y + _h);
+            }
+            p = _x + _w + _pointer_length;
             draw_line(_x + _w, l, p, _center_y);
             draw_line(p, _center_y, _x + _w, r);
-            draw_line(_x + _w, r, _x + _w, _y + _h);
         } else
             draw_line(_x + _w, _y, _x + _w, _y + _h);
     }
