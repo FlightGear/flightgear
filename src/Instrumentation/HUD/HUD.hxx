@@ -423,11 +423,6 @@ private:
         STRING,
     };
 
-    enum FontSize {
-        FONT_SMALL,
-        FONT_LARGE
-    };
-
     Format  check_format(const char *) const;
     bool    blink();
 
@@ -435,7 +430,6 @@ private:
     Format  _mode;
     string  _format;
     Adjust  _halign;
-    int     _fontsize;
     int     _blink;
     bool    _box;
     float   _text_y;

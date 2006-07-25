@@ -30,7 +30,6 @@
 HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
     Item(hud, n, x, y),
     _input(n->getNode("input", false)),
-    _fontsize(fgGetInt("/sim/startup/xsize") > 1000 ? FONT_LARGE : FONT_SMALL),		// FIXME
     _box(n->getBoolValue("box", false)),
     _pointer_width(n->getFloatValue("pointer-width", 7.0)),
     _pointer_length(n->getFloatValue("pointer-length", 5.0)),
@@ -170,11 +169,7 @@ void HUD::Label::draw(void)
         posincr = 0;
 
     posincr += _hud->_font->getGap() / 2.0 - L;
-
-    if (_fontsize == FONT_SMALL)
-        draw_text(_x + posincr, _text_y, buf, get_digits());
-    else if (_fontsize == FONT_LARGE)
-        draw_text(_x + posincr, _text_y, buf, get_digits());
+    draw_text(_x + posincr, _text_y, buf, get_digits());
 }
 
 
