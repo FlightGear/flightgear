@@ -73,9 +73,9 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
         _mode = NONE;
     }
 
-    float top;
-    _hud->_font->getBBox("0", _hud->_font_size, 0.0, 0, 0, 0, &top);
-    _text_y = _y + (_h - top) / 2.0;
+    float top, bot;
+    _hud->_font->getBBox("0", _hud->_font_size, 0.0, 0, 0, &bot, &top);
+    _text_y = _y + (_h - top + bot) / 2.0 - bot;
     blink();
 }
 
@@ -158,7 +158,9 @@ void HUD::Label::draw(void)
         snprintf(buf, BUFSIZE, _format.c_str(), double(_input.getFloatValue()));
 
     float posincr;
-    float lenstr = text_width(buf);
+    float L, R, B, T;
+    _hud->_font->getBBox(buf, _hud->_font_size, 0.0, &L, &R, &B, &T);
+    float lenstr = R - L;
 
     if (_halign == RIGHT_ALIGN)
         posincr = _w - lenstr;
@@ -166,6 +168,8 @@ void HUD::Label::draw(void)
         posincr = (_w - lenstr) / 2.0;
     else // LEFT_ALIGN
         posincr = 0;
+
+    posincr += _hud->_font->getGap() / 2.0 - L;
 
     if (_fontsize == FONT_SMALL)
         draw_text(_x + posincr, _text_y, buf, get_digits());
