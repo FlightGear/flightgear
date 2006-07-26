@@ -87,6 +87,18 @@ FGInterface::_calc_multiloop (double dt)
   // ... ok, two times the roundoff to have enough room.
   int multiloop = int(floor(ml * (1.0 + 2.0*DBL_EPSILON)));
   remainder = (ml - multiloop) / hz;
+
+  // If we artificially inflate ml above by a tiny amount to get the
+  // closest integer, then subtract the integer from the original
+  // slightly smaller value, we can get a negative remainder.
+  // Logically this should never happen, and we definitely don't want
+  // to carry a negative remainder over to the next iteration, so
+  // never let the remainder go below zero.
+  // 
+  // Note: this fixes a problem where we run 1, 3, 1, 3, 1, 3... loops
+  // of the FDM when in fact we want to run 2, 2, 2, 2, 2...
+  if ( remainder < 0 ) { remainder = 0; }
+
   return (multiloop * speedup);
 }
 
