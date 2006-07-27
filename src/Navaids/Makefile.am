@@ -5,6 +5,7 @@ noinst_LIBRARIES = libNavaids.a
 libNavaids_a_SOURCES = \
 	navdb.hxx navdb.cxx \
 	fix.hxx fixlist.hxx fixlist.cxx \
+	awynet.hxx awynet.cxx \
 	navrecord.hxx navlist.hxx navlist.cxx
 
 #	ils.hxx ilslist.hxx ilslist.cxx \
