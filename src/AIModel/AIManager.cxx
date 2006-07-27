@@ -99,7 +99,6 @@ void FGAIManager::unbind() {
 
 
 void FGAIManager::update(double dt) {
-
   // initialize these for finding nearest thermals
   range_nearest = 10000.0;
   strength = 0.0;
