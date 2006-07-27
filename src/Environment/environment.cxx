@@ -36,7 +36,10 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/interpolater.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/environment/visual_enviro.hxx>
+
+#include <Main/fg_props.hxx>
 
 #include "environment.hxx"
 
