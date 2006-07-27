@@ -1085,6 +1085,16 @@ fgInitNav ()
     fixlist->init( p_fix );
     globals->set_fixlist( fixlist );
 
+    SG_LOG(SG_GENERAL, SG_INFO, "  Airways");
+    SGPath p_awy( globals->get_fg_root() );
+    p_awy.append( "Navaids/awy.dat" );
+    FGAirwayNetwork *awyNet = new FGAirwayNetwork;
+    //cerr << "Loading Airways" << endl;
+    awyNet->load (p_awy );
+    awyNet->init();
+    //cerr << "initializing airways" << endl;
+    globals->set_airwaynet( awyNet );
+
     return true;
 }
 

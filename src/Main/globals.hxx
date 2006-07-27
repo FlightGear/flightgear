@@ -73,6 +73,7 @@ class FGControls;
 class FGFlightPlanDispatcher;
 class FGIO;
 class FGNavList;
+class FGAirwayNetwork;
 class FGTACANList;
 class FGFixList;
 class FGLight;
@@ -210,6 +211,7 @@ private:
     FGNavList *carrierlist;
     FGTACANList *channellist;
     FGFixList *fixlist;
+    FGAirwayNetwork *airwaynet;
 
     //Mulitplayer managers
     FGMultiplayMgr *multiplayer_mgr;
@@ -373,6 +375,10 @@ public:
     inline void set_fixlist( FGFixList *f ) { fixlist = f; }
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }
+
+    inline FGAirwayNetwork *get_airwaynet() const { return airwaynet; }
+    inline void set_airwaynet( FGAirwayNetwork *a ) { airwaynet = a; }
+
 
    /**
      * Save the current state as the initial state.

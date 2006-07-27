@@ -174,6 +174,7 @@ time_t FGScheduledFlight::processTimeString(const string& theTime)
     {
       timeOffsetInDays = 0;
     }
+  // TODO: verify status of each token.
   targetHour   = atoi(timeCopy.substr(0,2).c_str());
   targetMinute = atoi(timeCopy.substr(3,5).c_str());
   targetSecond = atoi(timeCopy.substr(6,8).c_str());
