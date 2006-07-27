@@ -213,8 +213,6 @@ void HUD::Ladder::draw(void)
             glEnable(GL_CLIP_PLANE1);
             glClipPlane(GL_CLIP_PLANE2, eqn_right);
             glEnable(GL_CLIP_PLANE2);
-            // glScissor(-100,-240, 200, 240);
-            // glEnable(GL_SCISSOR_TEST);
         }
 
         //****************************************************************
@@ -284,16 +282,15 @@ void HUD::Ladder::draw(void)
     } // if _velocity_vector
 
     // draw hud markers on top of each AI/MP target
-    if ( _target_markers ) {
-        SGPropertyNode *models
-            = globals->get_props()->getNode("/ai/models", true);
-        for ( int i = 0; i < models->nChildren(); i++ ) {
+    if (_target_markers) {
+        SGPropertyNode *models = globals->get_props()->getNode("/ai/models", true);
+        for (int i = 0; i < models->nChildren(); i++) {
             SGPropertyNode *chld = models->getChild(i);
             string name;
             name = chld->getName();
-            if ( name == "aircraft" || name == "multiplayer" ) {
+            if (name == "aircraft" || name == "multiplayer") {
                 string callsign = chld->getStringValue("callsign");
-                if ( callsign != "" ) {
+                if (callsign != "") {
                     float h_deg = chld->getFloatValue("radar/h-offset");
                     float v_deg = chld->getFloatValue("radar/v-offset");
                     float pos_x = (h_deg * cos(roll_value) -
@@ -609,7 +606,6 @@ void HUD::Ladder::draw(void)
     glDisable(GL_CLIP_PLANE0);
     glDisable(GL_CLIP_PLANE1);
     glDisable(GL_CLIP_PLANE2);
-    //  glDisable(GL_SCISSOR_TEST);
     glPopMatrix();
     //*************************************************************
 

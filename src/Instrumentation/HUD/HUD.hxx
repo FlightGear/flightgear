@@ -528,12 +528,15 @@ public:
     virtual void draw();
 
 private:
+    void draw_scale();
+    void draw_tee();
+    void draw_tick(float angle, float r1, float r2, int side);
+
     Input _bank;
     Input _sideslip;
 
     float _gap_width;
     bool  _bank_scale;
-    float _bank_scale_radius;
 };
 
 

@@ -27,8 +27,7 @@ HUD::TurnBankIndicator::TurnBankIndicator(HUD *hud, const SGPropertyNode *n, flo
     _bank(n->getNode("bank-input", false)),
     _sideslip(n->getNode("sideslip-input", false)),
     _gap_width(n->getFloatValue("gap-width", 5)),
-    _bank_scale(n->getBoolValue("bank-scale", false)),
-    _bank_scale_radius(n->getFloatValue("bank-scale-radius", 250.0))
+    _bank_scale(n->getBoolValue("bank-scale", false))
 {
     if (!_bank_scale) {
         _bank.set_max(30.0, false);
@@ -44,164 +43,167 @@ void HUD::TurnBankIndicator::draw(void)
     if (!_bank.isValid() || !_sideslip.isValid())
         return;
 
+    if (_bank_scale)
+        draw_scale();
+    else
+        draw_tee();
+}
+
+
+void HUD::TurnBankIndicator::draw_tee()
+{
+    // ___________  /\  ___________
+    //            | \/ |
+
     float bank = _bank.getFloatValue();
     float sideslip = _sideslip.getFloatValue();
 
     float span = get_span();
+    float tee = -_h;
 
-    float tee_height = _h;
-    float tee = -tee_height;
-    float ss_const = 2 * sideslip * span / 40.0;  // sideslip angle pixels per deg (width represents 40 deg)
+    // sideslip angle pixels per deg (width represents 40 deg)
+    float ss_const = 2 * sideslip * span / 40.0;
 
     glPushMatrix();
     glTranslatef(_center_x, _center_y, 0.0);
     glRotatef(-bank, 0.0, 0.0, 1.0);
 
-    if (!_bank_scale) {
-       glBegin(GL_LINES);
+    glBegin(GL_LINES);
 
-       if (!_gap_width) {
-           glVertex2f(-span, 0.0);
-           glVertex2f(span, 0.0);
+    if (!_gap_width) {
+        glVertex2f(-span, 0.0);
+        glVertex2f(span, 0.0);
 
-       } else {
-           glVertex2f(-span, 0.0);
-           glVertex2f(-_gap_width, 0.0);
-           glVertex2f(_gap_width, 0.0);
-           glVertex2f(span, 0.0);
-       }
-
-       // draw teemarks
-       glVertex2f(_gap_width, 0.0);
-       glVertex2f(_gap_width, tee);
-       glVertex2f(-_gap_width, 0.0);
-       glVertex2f(-_gap_width, tee);
-       glEnd();
-
-       glBegin(GL_LINE_LOOP);
-       glVertex2f(ss_const, -_gap_width);
-       glVertex2f(ss_const + _gap_width, 0.0);
-       glVertex2f(ss_const, _gap_width);
-       glVertex2f(ss_const - _gap_width, 0.0);
-       glEnd();
-
-
-    } else { // draw MIL-STD 1878B/4.2.2.4 bank scale
-        draw_line(_center_x - 1.0, _y, _center_x + 1.0, _y);
-        draw_line(_center_x - 1.0, _y, _center_x - 1.0, _y + 10.0);
-        draw_line(_center_x + 1.0, _y, _center_x + 1.0, _y + 10.0);
-        draw_line(_center_x - 1.0, _y + 10.0, _center_x + 1.0, _y + 10.0);
-
-        float x1, y1, x2, y2, x3, y3, x4, y4, x5, y5;
-        float xc, yc;
-        float r = _bank_scale_radius;
-        float r1 = r - 10.0;
-        float r2 = r - 5.0;
-
-        xc = _x + _w / 2.0;                // FIXME redunant, no?
-        yc = _y + r;
-
-        // first n last lines
-        x1 = xc + r * cos(255.0 * SGD_DEGREES_TO_RADIANS);
-        y1 = yc + r * sin(255.0 * SGD_DEGREES_TO_RADIANS);
-
-        x2 = xc + r1 * cos(255.0 * SGD_DEGREES_TO_RADIANS);
-        y2 = yc + r1 * sin(255.0 * SGD_DEGREES_TO_RADIANS);
-        draw_line(x1, y1, x2, y2);
-
-        x1 = xc + r * cos(285.0 * SGD_DEGREES_TO_RADIANS);
-        y1 = yc + r * sin(285.0 * SGD_DEGREES_TO_RADIANS);
-
-        x2 = xc + r1 * cos(285.0 * SGD_DEGREES_TO_RADIANS);
-        y2 = yc + r1 * sin(285.0 * SGD_DEGREES_TO_RADIANS);
-        draw_line(x1, y1, x2, y2);
-
-        // second n fifth  lines
-        x1 = xc + r * cos(260.0 * SGD_DEGREES_TO_RADIANS);
-        y1 = yc + r * sin(260.0 * SGD_DEGREES_TO_RADIANS);
-
-        x2 = xc + r2 * cos(260.0 * SGD_DEGREES_TO_RADIANS);
-        y2 = yc + r2 * sin(260.0 * SGD_DEGREES_TO_RADIANS);
-        draw_line(x1, y1, x2, y2);
-
-        x1 = xc + r * cos(280.0 * SGD_DEGREES_TO_RADIANS);
-        y1 = yc + r * sin(280.0 * SGD_DEGREES_TO_RADIANS);
-
-        x2 = xc + r2 * cos(280.0 * SGD_DEGREES_TO_RADIANS);
-        y2 = yc + r2 * sin(280.0 * SGD_DEGREES_TO_RADIANS);
-        draw_line(x1, y1, x2, y2);
-
-        // third n fourth lines
-        x1 = xc + r * cos(265.0 * SGD_DEGREES_TO_RADIANS);
-        y1 = yc + r * sin(265.0 * SGD_DEGREES_TO_RADIANS);
-
-
-        x2 = xc + r2 * cos(265.0 * SGD_DEGREES_TO_RADIANS);
-        y2 = yc + r2 * sin(265.0 * SGD_DEGREES_TO_RADIANS);
-        draw_line(x1, y1, x2, y2);
-
-        x1 = xc + r * cos(275.0 * SGD_DEGREES_TO_RADIANS);
-        y1 = yc + r * sin(275.0 * SGD_DEGREES_TO_RADIANS);
-
-        x2 = xc + r2 * cos(275.0 * SGD_DEGREES_TO_RADIANS);
-        y2 = yc + r2 * sin(275.0 * SGD_DEGREES_TO_RADIANS);
-        draw_line(x1, y1, x2, y2);
-
-        // draw marker
-        r = _bank_scale_radius + 5.0;  // add gap
-
-        // upper polygon
-        float valbank = bank * 15.0 / _bank.max(); // total span of TSI is 30 degrees
-        float valsideslip = sideslip * 15.0 / _sideslip.max();
-
-        // values 270, 225 and 315 are angles in degrees...
-        x1 = xc + r * cos((valbank + 270.0) * SGD_DEGREES_TO_RADIANS);
-        y1 = yc + r * sin((valbank + 270.0) * SGD_DEGREES_TO_RADIANS);
-
-        x2 = x1 + 6.0 * cos(225 * SGD_DEGREES_TO_RADIANS);
-        y2 = y1 + 6.0 * sin(225 * SGD_DEGREES_TO_RADIANS);
-
-        x3 = x1 + 6.0 * cos(315 * SGD_DEGREES_TO_RADIANS);
-        y3 = y1 + 6.0 * sin(315 * SGD_DEGREES_TO_RADIANS);
-
-        draw_line(x1, y1, x2, y2);
-        draw_line(x2, y2, x3, y3);
-        draw_line(x3, y3, x1, y1);
-
-        // lower polygon				// FIXME this is inefficient and wrong!
-        x1 = xc + r * cos((valbank + 270.0) * SGD_DEGREES_TO_RADIANS);
-        y1 = yc + r * sin((valbank + 270.0) * SGD_DEGREES_TO_RADIANS);
-
-        x2 = x1 + 6.0 * cos(225 * SGD_DEGREES_TO_RADIANS);
-        y2 = y1 + 6.0 * sin(225 * SGD_DEGREES_TO_RADIANS);
-
-        x3 = x1 + 6.0 * cos(315 * SGD_DEGREES_TO_RADIANS);
-        y3 = y1 + 6.0 * sin(315 * SGD_DEGREES_TO_RADIANS);
-
-        x4 = x1 + 10.0 * cos(225 * SGD_DEGREES_TO_RADIANS);
-        y4 = y1 + 10.0 * sin(225 * SGD_DEGREES_TO_RADIANS);
-
-        x5 = x1 + 10.0 * cos(315 * SGD_DEGREES_TO_RADIANS);
-        y5 = y1 + 10.0 * sin(315 * SGD_DEGREES_TO_RADIANS);
-
-        float cosss = cos(valsideslip * SGD_DEGREES_TO_RADIANS);
-        float sinss = sin(valsideslip * SGD_DEGREES_TO_RADIANS);
-
-        x2 = x2 + cosss;
-        y2 = y2 + sinss;
-        x3 = x3 + cosss;
-        y3 = y3 + sinss;
-        x4 = x4 + cosss;
-        y4 = y4 + sinss;
-        x5 = x5 + cosss;
-        y5 = y5 + sinss;
-
-        draw_line(x2, y2, x3, y3);
-        draw_line(x3, y3, x5, y5);
-        draw_line(x5, y5, x4, y4);
-        draw_line(x4, y4, x2, y2);
+    } else {
+        glVertex2f(-span, 0.0);
+        glVertex2f(-_gap_width, 0.0);
+        glVertex2f(_gap_width, 0.0);
+        glVertex2f(span, 0.0);
     }
+
+    // draw teemarks
+    glVertex2f(_gap_width, 0.0);
+    glVertex2f(_gap_width, tee);
+    glVertex2f(-_gap_width, 0.0);
+    glVertex2f(-_gap_width, tee);
+    glEnd();
+
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(ss_const, -_gap_width);
+    glVertex2f(ss_const + _gap_width, 0.0);
+    glVertex2f(ss_const, _gap_width);
+    glVertex2f(ss_const - _gap_width, 0.0);
+    glEnd();
+
     glPopMatrix();
+}
+
+
+void HUD::TurnBankIndicator::draw_scale()
+{
+    // MIL-STD 1878B/4.2.2.4 bank scale
+    float bank = _bank.getFloatValue();
+    float sideslip = _sideslip.getFloatValue();
+
+    float cx = _center_x;
+    float cy = _center_y;
+
+    float r = _w / 2.0;
+    float minor = r - r * 3.0 / 70.0;
+    float major = r - r * 5.0 / 70.0;
+
+    // hollow 0 degree mark
+    float w = r / 70.0;
+    if (w < 1.0)
+        w = 1.0;
+    float h = r * 6.0 / 70.0;
+    draw_line(cx - w, _y, cx + w, _y);
+    draw_line(cx - w, _y, cx - w, _y + h);
+    draw_line(cx + w, _y, cx + w, _y + h);
+    draw_line(cx - w, _y + h, cx + w, _y + h);
+
+    // tick lines
+    draw_tick(10, r, minor, 0);
+    draw_tick(20, r, minor, 0);
+    draw_tick(30, r, major, 0);
+
+    int dir = bank > 0 ? 1 : -1;
+
+    if (fabsf(bank) > 25) {
+        draw_tick(45, r, minor, dir);
+        draw_tick(60, r, major, dir);
+    }
+
+    if (fabsf(bank) > 55) {
+        draw_tick(90, r, major, dir);
+        draw_tick(135, r, major, dir);
+    }
+
+    // bank marker
+    float a, rr = r + r * 2.0 / 70.0;
+
+    a = (bank + 270.0) * SGD_DEGREES_TO_RADIANS;
+    float x1 = cx + rr * cos(a);
+    float y1 = cy + rr * sin(a);
+
+    rr = r * 3.0 / 70.0;
+    a = (bank + 240.0) * SGD_DEGREES_TO_RADIANS;
+    float x2 = x1 + rr * cos(a);
+    float y2 = y1 + rr * sin(a);
+
+    a = (bank + 300.0) * SGD_DEGREES_TO_RADIANS;
+    float x3 = x1 + rr * cos(a);
+    float y3 = y1 + rr * sin(a);
+
+    draw_line(x1, y1, x2, y2);
+    draw_line(x2, y2, x3, y3);
+    draw_line(x3, y3, x1, y1);
+
+
+    // sideslip marker
+    rr = r + r * 2.0 / 70.0;
+    a = (bank + sideslip + 270.0) * SGD_DEGREES_TO_RADIANS;
+    x1 = cx + rr * cos(a);
+    y1 = cy + rr * sin(a);
+
+    rr = r * 3.0 / 70.0;
+    a = (bank + sideslip + 240.0) * SGD_DEGREES_TO_RADIANS;
+    x2 = x1 + rr * cos(a);
+    y2 = y1 + rr * sin(a);
+
+    a = (bank + sideslip + 300.0) * SGD_DEGREES_TO_RADIANS;
+    x3 = x1 + rr * cos(a);
+    y3 = y1 + rr * sin(a);
+
+    rr = r * 6.0 / 70.0;
+    a = (bank + sideslip + 240.0) * SGD_DEGREES_TO_RADIANS;
+    float x4 = x1 + rr * cos(a);
+    float y4 = y1 + rr * sin(a);
+
+    a = (bank + sideslip + 300.0) * SGD_DEGREES_TO_RADIANS;
+    float x5 = x1 + rr * cos(a);
+    float y5 = y1 + rr * sin(a);
+
+    draw_line(x2, y2, x3, y3);
+    draw_line(x3, y3, x5, y5);
+    draw_line(x5, y5, x4, y4);
+    draw_line(x4, y4, x2, y2);
+}
+
+
+void HUD::TurnBankIndicator::draw_tick(float angle, float r1, float r2, int side)
+{
+    float a = (270 - angle) * SGD_DEGREES_TO_RADIANS;
+    float c = cos(a);
+    float s = sin(a);
+    float x1 = r1 * c;
+    float x2 = r2 * c;
+    float y1 = _center_y + r1 * s;
+    float y2 = _center_y + r2 * s;
+    if (side >= 0)
+        draw_line(_center_x - x1, y1, _center_x - x2, y2);
+    if (side <= 0)
+        draw_line(_center_x + x1, y1, _center_x + x2, y2);
 }
 
 

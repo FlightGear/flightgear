@@ -22,18 +22,6 @@
 #include "HUD.hxx"
 
 
-//============== Scale class memeber definitions ===============
-//
-// Notes:
-// 1. Scales divide the specified location into half and then
-//    the half opposite the read direction in half again. A bar is
-//    then drawn along the second divider. Scale ticks are drawn
-//    between the middle and quarter section lines (minor division
-//    markers) or just over the middle line.
-//
-// 2.  This class was not intended to be instanciated. See moving_scale
-//     and gauge_instr classes.
-//==============================================================
 HUD::Scale::Scale( HUD *hud, const SGPropertyNode *n, float x, float y) :
     Item(hud, n, x, y),
     _input(n->getNode("input", false)),
@@ -50,9 +38,6 @@ HUD::Scale::Scale( HUD *hud, const SGPropertyNode *n, float x, float y) :
     if (_range_shown < 0)
         _range_shown = -_range_shown;
 
-//    float temp = (_input.max() - _input.min()) / 100;		// FIXME huh?
-//    if (_range_shown < temp)
-//        _range_shown = temp;
 }
 
 
