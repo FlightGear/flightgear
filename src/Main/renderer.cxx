@@ -232,6 +232,27 @@ FGRenderer::update( bool refresh_camera_settings ) {
         return;
     }
 
+    // Let the scenery center follow the current view position with
+    // 30m increments.
+    //
+    // Having the scenery center near the view position will eliminate
+    // jitter of objects which are placed very near the view position
+    // and haveing it's center near that view position.
+    // So the 3d insruments of the aircraft will not jitter with this.
+    // 
+    // Following the view position exactly would introduce jitter of
+    // the scenery tiles (they would be from their center up to 10000m
+    // to the view and this will introduce roundoff too). By stepping
+    // at 30m incements the roundoff error of the scenery tiles is
+    // still present, but we will make exactly the same roundoff error
+    // at each frame until the center is switched to a new
+    // position. This roundoff is still visible but you will most
+    // propably not notice.
+    double *vp = globals->get_current_view()->get_absolute_view_pos();
+    SGVec3d cntr(vp);
+    if (30.0*30.0 < distSqr(cntr, globals->get_scenery()->get_center()))
+      globals->get_scenery()->set_center( cntr );
+
     bool draw_otw = fgGetBool("/sim/rendering/draw-otw");
     bool skyblend = fgGetBool("/sim/rendering/skyblend");
     bool use_point_sprites = fgGetBool("/sim/rendering/point-sprites");
@@ -305,10 +326,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
     // now work without seg faulting the system.
 
     FGViewer *current__view = globals->get_current_view();
-
-    // calculate our current position in cartesian space
-    Point3D cntr = globals->get_scenery()->get_next_center();
-    globals->get_scenery()->set_center(cntr);
     // Force update of center dependent values ...
     current__view->set_dirty();
 
@@ -934,7 +951,8 @@ void FGRenderer::setNearFar( float n, float f ) {
     fgHackFrustum();
 }
 
-bool FGRenderer::getPickInfo( sgdVec3 pt, sgdVec3 dir, unsigned x, unsigned y )
+bool FGRenderer::getPickInfo( SGVec3d& pt, SGVec3d& dir,
+                              unsigned x, unsigned y )
 {
   // Get the matrices involved in the transform from global to screen
   // coordinates.
@@ -970,11 +988,11 @@ bool FGRenderer::getPickInfo( sgdVec3 pt, sgdVec3 dir, unsigned x, unsigned y )
   FGViewer* view = globals->get_current_view();
   sgVec4 fDir;
   sgSubVec3(fDir, worldPt, view->get_view_pos());
-  sgdSetVec3(dir, fDir);
-  sgdNormalizeVec3(dir);
+  sgdSetVec3(dir.sg(), fDir);
+  sgdNormalizeVec3(dir.sg());
 
   // Copy the start point
-  sgdCopyVec3(pt, view->get_absolute_view_pos());
+  sgdCopyVec3(pt.sg(), view->get_absolute_view_pos());
 
   return true;
 }

@@ -356,17 +356,17 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
       // terrain intersection point corresponding to the mouse click
       // and be happy.
       FGScenery* scenery = globals->get_scenery();
-      sgdVec3 start, dir, hit;
-      if (!b && updown == MOUSE_BUTTON_DOWN && FGRenderer::getPickInfo(start, dir, x, y)
+      SGVec3d start, dir, hit;
+      if (!b && updown == MOUSE_BUTTON_DOWN
+          && FGRenderer::getPickInfo(start, dir, x, y)
           && scenery->get_cart_ground_intersection(start, dir, hit)) {
 
-        Point3D geod = sgCartToGeod(Point3D(hit[0], hit[1], hit[2]));
-
+        SGGeod geod = SGGeod::fromCart(hit);
         SGPropertyNode *c = fgGetNode("/sim/input/click", true);
-        c->setDoubleValue("longitude-deg", geod.lon() * SGD_RADIANS_TO_DEGREES);
-        c->setDoubleValue("latitude-deg", geod.lat() * SGD_RADIANS_TO_DEGREES);
-        c->setDoubleValue("elevation-m", geod.elev());
-        c->setDoubleValue("elevation-ft", geod.elev() * SG_METER_TO_FEET);
+        c->setDoubleValue("longitude-deg", geod.getLongitudeDeg());
+        c->setDoubleValue("latitude-deg", geod.getLatitudeDeg());
+        c->setDoubleValue("elevation-m", geod.getElevationM());
+        c->setDoubleValue("elevation-ft", geod.getElevationFt());
 
         fgSetBool("/sim/signals/click", 1);
       }

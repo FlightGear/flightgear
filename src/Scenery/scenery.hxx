@@ -49,10 +49,7 @@ class SGMaterial;
 // Define a structure containing global scenery parameters
 class FGScenery : public SGSubsystem {
     // center of current scenery chunk
-    Point3D center;
-
-    // next center of current scenery chunk
-    Point3D next_center;
+    SGVec3d center;
 
     // FIXME this should be a views property
     // angle of sun relative to current local horizontal
@@ -108,7 +105,7 @@ public:
     /// lat/lon pair. If there is no scenery for that point, the altitude
     /// value is undefined.
     /// All values are meant to be in meters.
-    bool get_cart_elevation_m(const sgdVec3& pos, double max_altoff,
+    bool get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
                               double& radius, const SGMaterial** material,
                               bool exact = false);
 
@@ -117,14 +114,11 @@ public:
     /// The input and output values should be in cartesian coordinates in the
     /// usual earth centered wgs84 coordiante system. Units are meters.
     /// On success, true is returned.
-    bool get_cart_ground_intersection(const sgdVec3& start, const sgdVec3& dir,
-                                      sgdVec3& nearestHit, bool exact = false);
+    bool get_cart_ground_intersection(const SGVec3d& start, const SGVec3d& dir,
+                                      SGVec3d& nearestHit, bool exact = false);
 
-    inline const Point3D& get_center() const { return center; }
-    void set_center( const Point3D& p );
-
-    inline const Point3D& get_next_center() const { return next_center; }
-    inline void set_next_center( const Point3D& p ) { next_center = p; }
+    const SGVec3d& get_center() const { return center; }
+    void set_center( const SGVec3d& p );
 
     inline ssgRoot *get_scene_graph () const { return scene_graph; }
     inline void set_scene_graph (ssgRoot * s) { scene_graph = s; }

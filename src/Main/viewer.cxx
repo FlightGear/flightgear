@@ -576,9 +576,7 @@ FGViewer::recalc ()
 void
 FGViewer::recalcLookFrom ()
 {
-
   sgVec3 right, forward;
-  // sgVec3 eye_pos;
   sgVec3 position_offset; // eye position offsets (xyz)
 
   // LOOKFROM mode...
@@ -642,7 +640,6 @@ FGViewer::recalcLookFrom ()
 void
 FGViewer::recalcLookAt ()
 {
-
   sgVec3 right, forward;
   sgVec3 eye_pos, at_pos;
   sgVec3 position_offset; // eye position offsets (xyz)
@@ -663,7 +660,7 @@ FGViewer::recalcLookAt ()
           _target_roll_deg, _target_pitch_deg, _target_heading_deg );
   }
   // calculate the "at" target object positon relative to eye or view's tile center...
-  Point3D center = globals->get_scenery()->get_next_center();
+  SGVec3d center = globals->get_scenery()->get_center();
   sgdVec3 dVec3;
   sgdSetVec3(dVec3, center[0], center[1], center[2]);
   sgdSubVec3(dVec3, _target_location->get_absolute_view_pos(), dVec3 );
@@ -679,7 +676,7 @@ FGViewer::recalcLookAt ()
           _roll_deg, _pitch_deg, _heading_deg );
   }
   // save the eye positon...
-  sgCopyVec3(eye_pos,  _location->get_view_pos(center));
+  sgCopyVec3(eye_pos, _location->get_view_pos(center));
 
   // copy data from location class to local items...
   copyLocationData();
@@ -730,7 +727,7 @@ FGViewer::recalcLookAt ()
 void
 FGViewer::copyLocationData()
 {
-  Point3D center = globals->get_scenery()->get_center();
+  SGVec3d center = globals->get_scenery()->get_center();
   // Get our friendly vectors from the eye location...
   sgdCopyVec3(_absolute_view_pos, _location->get_absolute_view_pos());
   sgCopyVec3(_relative_view_pos, _location->get_view_pos(center));

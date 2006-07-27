@@ -173,14 +173,6 @@ bool HUD::Runway::get_active_runway(FGRunway& runway)
 
 void HUD::Runway::get_rwy_points(sgdVec3 *_points3d)
 {
-    static Point3D center = globals->get_scenery()->get_center();
-
-    //Get the current tile center
-    Point3D currentCenter = globals->get_scenery()->get_center();
-    Point3D tileCenter = currentCenter;
-    if (center != currentCenter) //if changing tiles
-        tileCenter = center; //use last center
-
     double alt = current_aircraft.fdm_state->get_Runway_altitude() * SG_FEET_TO_METER;
     double length = (_runway._length / 2.0) * SG_FEET_TO_METER;
     double width = (_runway._width / 2.0) * SG_FEET_TO_METER;
@@ -204,12 +196,13 @@ void HUD::Runway::get_rwy_points(sgdVec3 *_points3d)
     geo_direct_wgs_84(alt, frontLat, frontLon, _runway._heading + 90, width, &tempLat, &tempLon, &az);
     sgGeodToCart(tempLat * SG_DEGREES_TO_RADIANS, tempLon * SG_DEGREES_TO_RADIANS, alt, _points3d[3]);
 
+    //Get the current tile center
+    SGVec3d tileCenter = globals->get_scenery()->get_center();
     for (int i = 0; i < 6; i++) {
         _points3d[i][0] -= tileCenter.x();
         _points3d[i][1] -= tileCenter.y();
         _points3d[i][2] -= tileCenter.z();
     }
-    center = currentCenter;
 }
 
 

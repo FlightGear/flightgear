@@ -50,7 +50,7 @@
 #include <deque>        // STL double ended queue
 #include STL_FSTREAM
 
-#include <simgear/math/fastmath.hxx>    // float_to_int()
+#include <simgear/math/SGMath.hxx>
 #include <simgear/constants.h>
 
 #include <Include/fg_typedefs.h>
@@ -69,6 +69,7 @@ SG_USING_STD(deque);
 SG_USING_STD(vector);
 SG_USING_NAMESPACE(std);
 
+#define float_to_int(v) SGMiscf::roundToInt(v)
 
 // some of Norman's crazy optimizations. :-)
 

@@ -69,7 +69,6 @@ void fgUpdateLocalTime() {
 // update the cur_time_params structure with the current sun position
 void fgUpdateSunPos( void ) {
     sgVec3 nup, nsun;
-    Point3D rel_sunpos;
     double dot, east_dot;
     double sun_gd_lat, sl_radius;
 
@@ -94,8 +93,9 @@ void fgUpdateSunPos( void ) {
     sgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &sun_l);
     l->set_sun_gc_lat(sun_l);
 
-    Point3D p = Point3D( l->get_sun_lon(), l->get_sun_gc_lat(), sl_radius );
-    l->set_sunpos( sgPolarToCart3d(p) );
+    SGGeoc geocSun = SGGeoc::fromRadM( l->get_sun_lon(), l->get_sun_gc_lat(),
+                                       sl_radius );
+    l->set_sunpos( SGVec3d::fromGeoc(geocSun) );
 
     SG_LOG( SG_EVENT, SG_DEBUG, "    t->cur_time = " << t->get_cur_time() );
     SG_LOG( SG_EVENT, SG_DEBUG,
@@ -130,10 +130,9 @@ void fgUpdateSunPos( void ) {
 	    << l->get_sun_angle() );
     
     // calculate vector to sun's position on the earth's surface
-    Point3D vp( v->get_view_pos()[0],
-		v->get_view_pos()[1],
-		v->get_view_pos()[2] );
-    rel_sunpos = l->get_sunpos() - (vp + globals->get_scenery()->get_center());
+    SGVec3d rel_sunpos = globals->get_scenery()->get_center();
+    SGVec3f vp( v->get_view_pos() );
+    rel_sunpos += l->get_sunpos() - toVec3d(vp);
     sgSetVec3( to_sun, rel_sunpos.x(), rel_sunpos.y(), rel_sunpos.z() );
     // printf( "Vector to sun = %.2f %.2f %.2f\n",
     //         v->to_sun[0], v->to_sun[1], v->to_sun[2]);

@@ -514,44 +514,23 @@ static void fgMainLoop( void ) {
     double visibility_meters = fgGetDouble("/environment/visibility-m");
     FGViewer *current_view = globals->get_current_view();
 
-    // Let the scenery center follow the current view position with
-    // 30m increments.
-    //
-    // Having the scenery center near the view position will eliminate
-    // jitter of objects which are placed very near the view position
-    // and haveing it's center near that view position.
-    // So the 3d insruments of the aircraft will not jitter with this.
-    // 
-    // Following the view position exactly would introduce jitter of
-    // the scenery tiles (they would be from their center up to 10000m
-    // to the view and this will introduce roundoff too). By stepping
-    // at 30m incements the roundoff error of the scenery tiles is
-    // still present, but we will make exactly the same roundoff error
-    // at each frame until the center is switched to a new
-    // position. This roundoff is still visible but you will most
-    // propably not notice.
-    double *vp = globals->get_current_view()->get_absolute_view_pos();
-    Point3D cntr(vp[0], vp[1], vp[2]);
-    if (30.0*30.0 < cntr.distance3Dsquared(globals->get_scenery()->get_center())) {
-      globals->get_scenery()->set_next_center( cntr );
-    }
-
     globals->get_tile_mgr()->prep_ssg_nodes( current_view->getSGLocation(),
                                              visibility_meters );
     // update tile manager for view...
     SGLocation *view_location = globals->get_current_view()->getSGLocation();
     globals->get_tile_mgr()->update( view_location, visibility_meters );
-    globals->get_scenery()->set_center( cntr );
     {
       double lon = view_location->getLongitude_deg();
       double lat = view_location->getLatitude_deg();
       double alt = view_location->getAltitudeASL_ft() * SG_FEET_TO_METER;
 
       // check if we can reuse the groundcache for that purpose.
-      double ref_time, pt[3], r;
-      bool valid = cur_fdm_state->is_valid_m(&ref_time, pt, &r);
-      if (valid &&
-          cntr.distance3Dsquared(Point3D(pt[0], pt[1], pt[2])) < r*r) {
+      double ref_time, r;
+      SGVec3d pt;
+      bool valid = cur_fdm_state->is_valid_m(&ref_time, pt.sg(), &r);
+      double *vp = globals->get_current_view()->get_absolute_view_pos();
+      SGVec3d viewpos(vp);
+      if (valid && distSqr(viewpos, pt) < r*r) {
         // Reuse the cache ...
         double lev
           = cur_fdm_state->get_groundlevel_m(lat*SGD_DEGREES_TO_RADIANS,

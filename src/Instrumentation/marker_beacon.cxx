@@ -206,13 +206,7 @@ FGMarkerBeacon::update(double dt)
 static bool check_beacon_range( const SGGeod& pos,
                                 FGNavRecord *b )
 {
-    SGVec3d aircraft = SGVec3d::fromGeod(pos);
-    SGVec3d station = b->get_cart();
-    // cout << "    aircraft = " << aircraft << " station = " << station
-    //      << endl;
-
-    SGVec3d tmp = station - aircraft;
-    double d = dot(tmp, tmp);
+    double d = distSqr(b->get_cart(), SGVec3d::fromGeod(pos));
     // cout << "  distance = " << d << " ("
     //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
     //         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER

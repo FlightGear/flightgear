@@ -481,10 +481,10 @@ FGGroundCache::prepare_ground_cache(double ref_time, const double pt[3],
   cache_ref_time = ref_time;
 
   // Decide where we put the scenery center.
-  Point3D old_cntr = globals->get_scenery()->get_center();
-  Point3D cntr(pt[0], pt[1], pt[2]);
+  SGVec3d old_cntr = globals->get_scenery()->get_center();
+  SGVec3d cntr(pt[0], pt[1], pt[2]);
   // Only move the cache center if it is unacceptable far away.
-  if (40*40 < old_cntr.distance3Dsquared(cntr))
+  if (40*40 < distSqr(old_cntr, cntr))
     globals->get_scenery()->set_center(cntr);
   else
     cntr = old_cntr;

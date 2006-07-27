@@ -50,7 +50,7 @@ public:
      *  The inputs are expected to be the x and y coordinates of the
      *  screen point relative to the window.
      */
-    static bool getPickInfo( sgdVec3 p, sgdVec3 d, unsigned x, unsigned y );
+    static bool getPickInfo( SGVec3d& p, SGVec3d& d, unsigned x, unsigned y );
 };
 
 #endif
