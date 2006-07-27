@@ -38,7 +38,6 @@
 #include <simgear/math/interpolater.hxx>
 #include <simgear/environment/visual_enviro.hxx>
 
-#include <Main/fg_props.hxx>
 #include "environment.hxx"
 
 
@@ -532,9 +531,8 @@ FGEnvironment::_recalc_sl_temperature ()
 {
   // If we're in the stratosphere, leave sea-level temp alone
   if (elevation_ft < 38000) {
-    temperature_sea_level_degc =
-      (temperature_degc + 273.15)
-      /_temperature_degc_table->interpolate(elevation_ft)
+    temperature_sea_level_degc = (temperature_degc + 273.15)
+        / _temperature_degc_table->interpolate(elevation_ft)
       - 273.15;
   }
 }
@@ -543,9 +541,8 @@ void
 FGEnvironment::_recalc_alt_temperature ()
 {
   if (elevation_ft < 38000) {
-    temperature_degc =
-      (temperature_sea_level_degc + 273.15) *
-      _temperature_degc_table->interpolate(elevation_ft) - 273.15;
+    temperature_degc = (temperature_sea_level_degc + 273.15) *
+        _temperature_degc_table->interpolate(elevation_ft) - 273.15;
   } else {
     temperature_degc = -56.49;	// Stratosphere is constant
   }
@@ -612,12 +609,14 @@ void
 FGEnvironment::_recalc_density_tropo_avg_kgm3 ()
 {
   double pressure_mb = pressure_inhg * 33.86;
-  double vaporpressure = 6.11 * pow ( 10, ((7.5 * dewpoint_degc) /( 237.7 + dewpoint_degc)));
+  double vaporpressure = 6.11 * pow(10, ((7.5 * dewpoint_degc) / (237.7 + dewpoint_degc)));
 
   double virtual_temp = (temperature_degc + 273.15) / (1 - 0.379 * (vaporpressure/pressure_mb));
 
-  double density_half = (100* pressure_mb * exp (-altitude_half_to_sun_m / 8000)) / (287.05 * virtual_temp);
-  double density_tropo = (100* pressure_mb * exp ((-1 * altitude_tropo_top_m) / 8000)) /( 287.05 * virtual_temp);
+  double density_half = (100 * pressure_mb * exp(-altitude_half_to_sun_m / 8000))
+      / (287.05 * virtual_temp);
+  double density_tropo = (100 * pressure_mb * exp((-1 * altitude_tropo_top_m) / 8000))
+      / ( 287.05 * virtual_temp);
 
   density_tropo_avg_kgm3 = ((density_slugft3 * 515.379) + density_half + density_tropo) / 3;
 }
@@ -625,9 +624,10 @@ FGEnvironment::_recalc_density_tropo_avg_kgm3 ()
 void
 FGEnvironment::_recalc_relative_humidity ()
 {
-  double vaporpressure = 6.11 * pow ( 10, ((7.5 * dewpoint_degc) /( 237.7 + dewpoint_degc)));
-  double sat_vaporpressure = 6.11 * pow ( 10, ((7.5 * temperature_degc) /( 237.7 + temperature_degc)) );
-  relative_humidity = 100 *vaporpressure / sat_vaporpressure ;
+  double vaporpressure = 6.11 * pow(10, ((7.5 * dewpoint_degc) / ( 237.7 + dewpoint_degc)));
+  double sat_vaporpressure = 6.11 * pow(10, ((7.5 * temperature_degc)
+      / ( 237.7 + temperature_degc)) );
+  relative_humidity = 100 * vaporpressure / sat_vaporpressure ;
 }
 
 

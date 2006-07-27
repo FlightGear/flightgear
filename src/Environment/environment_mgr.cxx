@@ -190,7 +190,7 @@ FGEnvironmentMgr::bind ()
   fgTie("/sim/rendering/precipitation-enable", &sgEnviro,
 	  &SGEnviro::get_precipitation_enable_state,
 	  &SGEnviro::set_precipitation_enable_state);
-  fgTie("/environment/rebuild_layers", fgClouds,
+  fgTie("/environment/rebuild-layers", fgClouds,
       &FGClouds::get_update_event,
       &FGClouds::set_update_event);
   fgTie("/sim/rendering/lightning-enable", &sgEnviro,
@@ -213,13 +213,13 @@ FGEnvironmentMgr::unbind ()
   fgUntie("/environment/pressure-sea-level-inhg");
   fgUntie("/environment/pressure-inhg");
   fgUntie("/environment/density-inhg");
-  fgUntie("/environment/relative_humidity");
-  fgUntie("/environment/atmosphere/density_tropo_avg");
+  fgUntie("/environment/relative-humidity");
+  fgUntie("/environment/atmosphere/density-tropo-avg");
   fgUntie("/environment/wind-from-north-fps");
   fgUntie("/environment/wind-from-east-fps");
   fgUntie("/environment/wind-from-down-fps");
-  fgUntie("/environment/atmosphere/altitude_half_to_sun");
-  fgUntie("/environment/atmosphere/altitude_troposphere_top");
+  fgUntie("/environment/atmosphere/altitude-half-to-sun");
+  fgUntie("/environment/atmosphere/altitude-troposphere-top");
   for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
     char buf[128];
     sprintf(buf, "/environment/clouds/layer[%d]/span-m", i);
@@ -239,7 +239,7 @@ FGEnvironmentMgr::unbind ()
   fgUntie("/sim/rendering/clouds3d-cache-size");
   fgUntie("/sim/rendering/clouds3d-cache-resolution");
   fgUntie("/sim/rendering/precipitation-enable");
-  fgUntie("/environment/rebuild_layers");
+  fgUntie("/environment/rebuild-layers");
   fgUntie("/sim/rendering/lightning-enable");
   fgUntie("/environment/turbulence/use-cloud-turbulence");
 }
