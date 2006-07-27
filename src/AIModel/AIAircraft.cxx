@@ -169,7 +169,7 @@ void FGAIAircraft::SetPerformance(const PERF_STRUCT *ps) {
 void FGAIAircraft::Run(double dt) {
 
     FGAIAircraft::dt = dt;
-
+    
     if (fp) {
         time_t now = time(NULL) + fgGetLong("/sim/time/warp");
         ProcessFlightPlan(dt, now);
@@ -233,27 +233,36 @@ void FGAIAircraft::Run(double dt) {
     } else {
         speed_diff = groundTargetSpeed - speed;
     }
-    if (fabs(speed_diff) > 0.2) {
-        if (speed_diff > 0.0)
-            speed += performance->accel * dt;
-        if (speed_diff < 0.0) {
-            if (no_roll) { // was (!no_roll) but seems more logical this way (ground brakes).
-                speed -= performance->decel * dt * 3;
-            } else {
-                speed -= performance->decel * dt;
-            }
+    if (speed_diff > 0.0) {
+        speed += performance->accel * dt;
+        if ( speed > tgt_speed ) speed = tgt_speed; // don't overshoot
+    } else if (speed_diff < 0.0) {
+        if (no_roll) {
+            // on ground (aircraft can't roll)
+            speed -= performance->decel * dt * 3;
+        } else {
+            speed -= performance->decel * dt;
         }
+        if ( speed < tgt_speed ) speed = tgt_speed; // don't overshoot
     }
 
     // convert speed to degrees per second
-    speed_north_deg_sec = cos( hdg / SG_RADIANS_TO_DEGREES )
+    speed_north_deg_sec = cos( hdg * SGD_DEGREES_TO_RADIANS )
                           * speed * 1.686 / ft_per_deg_lat;
-    speed_east_deg_sec  = sin( hdg / SG_RADIANS_TO_DEGREES )
+    speed_east_deg_sec  = sin( hdg * SGD_DEGREES_TO_RADIANS )
                           * speed * 1.686 / ft_per_deg_lon;
 
     // set new position
     pos.setLatitudeDeg( pos.getLatitudeDeg() + speed_north_deg_sec * dt);
     pos.setLongitudeDeg( pos.getLongitudeDeg() + speed_east_deg_sec * dt); 
+
+    /* printf("%.7f %0.4f %.7f %.5f %.7f %.7f %.8f %.8f %.9f %.9f\n",
+           dt, hdg, speed, ft_per_deg_lat,
+           cos( hdg * SGD_DEGREES_TO_RADIANS ),
+           speed * 1.686 / ft_per_deg_lat,
+           speed_north_deg_sec, speed_east_deg_sec,
+           pos.getLatitudeDeg(), pos.getLongitudeDeg()); */
+
     //if (!(finite(pos.lat()) && finite(pos.lon())))
     //  {
     //    cerr << "Position is not finite" << endl;
