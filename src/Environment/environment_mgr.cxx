@@ -108,6 +108,16 @@ FGEnvironmentMgr::bind ()
 	&FGEnvironment::get_pressure_inhg); // FIXME: read-only for now
   fgTie("/environment/density-slugft3", _environment,
 	&FGEnvironment::get_density_slugft3); // read-only
+  fgTie("/environment/relative-humidity", _environment,
+	&FGEnvironment::get_relative_humidity); //ro
+  fgTie("/environment/atmosphere/density-tropo-avg", _environment,
+	&FGEnvironment::get_density_tropo_avg_kgm3); //ro
+  fgTie("/environment/atmosphere/altitude-half-to-sun", _environment,
+	&FGEnvironment::get_altitude_half_to_sun_m, 
+	&FGEnvironment::set_altitude_half_to_sun_m);
+  fgTie("/environment/atmosphere/altitude-troposphere-top", _environment,
+        &FGEnvironment::get_altitude_tropo_top_m,
+        &FGEnvironment::set_altitude_tropo_top_m);
   fgTie("/environment/wind-from-heading-deg", _environment,
 	&FGEnvironment::get_wind_from_heading_deg,
 	&FGEnvironment::set_wind_from_heading_deg);
@@ -203,9 +213,13 @@ FGEnvironmentMgr::unbind ()
   fgUntie("/environment/pressure-sea-level-inhg");
   fgUntie("/environment/pressure-inhg");
   fgUntie("/environment/density-inhg");
+  fgUntie("/environment/relative_humidity");
+  fgUntie("/environment/atmosphere/density_tropo_avg");
   fgUntie("/environment/wind-from-north-fps");
   fgUntie("/environment/wind-from-east-fps");
   fgUntie("/environment/wind-from-down-fps");
+  fgUntie("/environment/atmosphere/altitude_half_to_sun");
+  fgUntie("/environment/atmosphere/altitude_troposphere_top");
   for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
     char buf[128];
     sprintf(buf, "/environment/clouds/layer[%d]/span-m", i);

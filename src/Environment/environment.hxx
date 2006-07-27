@@ -65,6 +65,11 @@ public:
   virtual double get_pressure_inhg () const;
   virtual double get_density_slugft3 () const;
 
+  virtual double get_relative_humidity () const;
+  virtual double get_density_tropo_avg_kgm3 () const;
+  virtual double get_altitude_half_to_sun_m () const;
+  virtual double get_altitude_tropo_top_m () const;
+
   virtual double get_wind_from_heading_deg () const;
   virtual double get_wind_speed_kt () const;
   virtual double get_wind_from_north_fps () const;
@@ -94,6 +99,8 @@ public:
 
   virtual double get_elevation_ft () const;
   virtual void set_elevation_ft (double elevation_ft);
+  virtual void set_altitude_half_to_sun_m (double alt);
+  virtual void set_altitude_tropo_top_m (double alt);
 
 private:
 
@@ -108,11 +115,13 @@ private:
   void _recalc_alt_pressure ();
   void _recalc_density ();
 
-  double elevation_ft;
+  void _recalc_density_tropo_avg_kgm3 ();
+  void _recalc_relative_humidity ();
 
+  double elevation_ft;
   double visibility_m;
 
-				// Atmosphere
+  // Atmosphere
   double temperature_sea_level_degc;
   double temperature_degc;
   double dewpoint_sea_level_degc;
@@ -120,6 +129,11 @@ private:
   double pressure_sea_level_inhg;
   double pressure_inhg;
   double density_slugft3;
+
+  double density_tropo_avg_kgm3;
+  double relative_humidity;
+  double altitude_half_to_sun_m;
+  double altitude_tropo_top_m;
 
   double turbulence_magnitude_norm;
   double turbulence_rate_hz;

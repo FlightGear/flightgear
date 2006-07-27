@@ -128,10 +128,13 @@ FGEnvironment::FGEnvironment()
     wind_speed_kt(0),
     wind_from_north_fps(0),
     wind_from_east_fps(0),
-    wind_from_down_fps(0)
+    wind_from_down_fps(0),
+    altitude_half_to_sun_m(1000),
+    altitude_tropo_top_m(10000)
 {
   _setup_tables();
   _recalc_density();
+  _recalc_relative_humidity();
 }
 
 FGEnvironment::FGEnvironment (const FGEnvironment &env)
@@ -272,6 +275,30 @@ FGEnvironment::get_density_slugft3 () const
 }
 
 double
+FGEnvironment::get_relative_humidity () const
+{
+  return relative_humidity;
+}
+
+double
+FGEnvironment::get_density_tropo_avg_kgm3 () const
+{
+  return density_tropo_avg_kgm3;
+}
+
+double
+FGEnvironment::get_altitude_half_to_sun_m () const
+{
+  return altitude_half_to_sun_m;
+}
+
+double
+FGEnvironment::get_altitude_tropo_top_m () const
+{
+  return altitude_tropo_top_m;
+}
+
+double
 FGEnvironment::get_wind_from_heading_deg () const
 {
   return wind_from_heading_deg;
@@ -344,6 +371,7 @@ FGEnvironment::set_temperature_degc (double t)
   temperature_degc = t;
   _recalc_sl_temperature();
   _recalc_density();
+  _recalc_relative_humidity();
 }
 
 void
@@ -362,6 +390,7 @@ FGEnvironment::set_dewpoint_degc (double t)
   dewpoint_degc = t;
   _recalc_sl_dewpoint();
   _recalc_density();
+  _recalc_relative_humidity();
 }
 
 void
@@ -435,7 +464,23 @@ FGEnvironment::set_elevation_ft (double e)
   _recalc_alt_dewpoint();
   _recalc_alt_pressure();
   _recalc_density();
+  _recalc_relative_humidity();
 }
+
+void
+FGEnvironment::set_altitude_half_to_sun_m (double alt)
+{
+ altitude_half_to_sun_m = alt;
+ _recalc_density_tropo_avg_kgm3();
+}
+
+void
+FGEnvironment::set_altitude_tropo_top_m (double alt)
+{
+ altitude_tropo_top_m = alt;
+ _recalc_density_tropo_avg_kgm3();
+}
+
 
 void
 FGEnvironment::_recalc_hdgspd ()
@@ -558,10 +603,35 @@ FGEnvironment::_recalc_density ()
   double virtual_temperature_degr = virtual_temperature_degk * 1.8;
 
   density_slugft3 = pressure_psf / (virtual_temperature_degr * 1718);
+  _recalc_density_tropo_avg_kgm3();
+}
+
+// This is used to calculate the average density on the path 
+// of sunlight to the observer for calculating sun-color
+void
+FGEnvironment::_recalc_density_tropo_avg_kgm3 ()
+{
+  double pressure_mb = pressure_inhg * 33.86;
+  double vaporpressure = 6.11 * pow ( 10, ((7.5 * dewpoint_degc) /( 237.7 + dewpoint_degc)));
+
+  double virtual_temp = (temperature_degc + 273.15) / (1 - 0.379 * (vaporpressure/pressure_mb));
+
+  double density_half = (100* pressure_mb * exp (-altitude_half_to_sun_m / 8000)) / (287.05 * virtual_temp);
+  double density_tropo = (100* pressure_mb * exp ((-1 * altitude_tropo_top_m) / 8000)) /( 287.05 * virtual_temp);
+
+  density_tropo_avg_kgm3 = ((density_slugft3 * 515.379) + density_half + density_tropo) / 3;
+}
+
+void
+FGEnvironment::_recalc_relative_humidity ()
+{
+  double vaporpressure = 6.11 * pow ( 10, ((7.5 * dewpoint_degc) /( 237.7 + dewpoint_degc)));
+  double sat_vaporpressure = 6.11 * pow ( 10, ((7.5 * temperature_degc) /( 237.7 + temperature_degc)) );
+  relative_humidity = 100 *vaporpressure / sat_vaporpressure ;
 }
 
 
-
+
 ////////////////////////////////////////////////////////////////////////
 // Functions.
 ////////////////////////////////////////////////////////////////////////

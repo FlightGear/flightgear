@@ -808,7 +808,8 @@ static void fgIdleFunction ( void ) {
                        globals->get_ephem()->getNumPlanets(), 
                        globals->get_ephem()->getPlanets(),
                        globals->get_ephem()->getNumStars(),
-                       globals->get_ephem()->getStars() );
+                       globals->get_ephem()->getStars(),
+		       fgGetNode("/environment", true));
 
         // Initialize MagVar model
         SGMagVar *magvar = new SGMagVar();

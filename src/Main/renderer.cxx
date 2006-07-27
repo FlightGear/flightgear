@@ -362,65 +362,17 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
     // update the sky dome
     if ( skyblend ) {
-        /*
-         SG_LOG( SG_GENERAL, SG_BULK, "thesky->repaint() sky_color = "
-         << l->sky_color()[0] << " "
-         << l->sky_color()[1] << " "
-         << l->sky_color()[2] << " "
-         << l->sky_color()[3] );
-        SG_LOG( SG_GENERAL, SG_BULK, "    fog = "
-         << l->fog_color()[0] << " "
-         << l->fog_color()[1] << " "
-         << l->fog_color()[2] << " "
-         << l->fog_color()[3] ); 
-        SG_LOG( SG_GENERAL, SG_BULK,
-                "    sun_angle = " << l->sun_angle
-         << "    moon_angle = " << l->moon_angle );
-        */
-
-        static SGSkyColor scolor;
-//        FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
-
-        scolor.sky_color   = l->sky_color();
-        scolor.fog_color   = l->adj_fog_color();
-        scolor.cloud_color = l->cloud_color();
-        scolor.sun_angle   = l->get_sun_angle();
-        scolor.moon_angle  = l->get_moon_angle();
-        scolor.nplanets    = globals->get_ephem()->getNumPlanets();
-        scolor.nstars      = globals->get_ephem()->getNumStars();
-        scolor.planet_data = globals->get_ephem()->getPlanets();
-        scolor.star_data   = globals->get_ephem()->getStars();
-
-        thesky->repaint( scolor );
-
-        /*
-        SG_LOG( SG_GENERAL, SG_BULK,
-                "thesky->reposition( view_pos = " << view_pos[0] << " "
-         << view_pos[1] << " " << view_pos[2] );
-        SG_LOG( SG_GENERAL, SG_BULK,
-                "    zero_elev = " << zero_elev[0] << " "
-         << zero_elev[1] << " " << zero_elev[2]
-         << " lon = " << cur_fdm_state->get_Longitude()
-         << " lat = " << cur_fdm_state->get_Latitude() );
-        SG_LOG( SG_GENERAL, SG_BULK,
-                "    sun_rot = " << l->get_sun_rotation
-         << " gst = " << SGTime::cur_time_params->getGst() );
-        SG_LOG( SG_GENERAL, SG_BULK,
-             "    sun ra = " << globals->get_ephem()->getSunRightAscension()
-          << " sun dec = " << globals->get_ephem()->getSunDeclination()
-          << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
-          << " moon dec = " << globals->get_ephem()->getMoonDeclination() );
-        */
 
         // The sun and moon distances are scaled down versions
         // of the actual distance to get both the moon and the sun
         // within the range of the far clip plane.
         // Moon distance:    384,467 kilometers
         // Sun distance: 150,000,000 kilometers
+
         double sun_horiz_eff, moon_horiz_eff;
         if (fgGetBool("/sim/rendering/horizon-effect")) {
-        sun_horiz_eff = 0.67+pow(0.5+cos(l->get_sun_angle())*2/2, 0.33)/3;
-        moon_horiz_eff = 0.67+pow(0.5+cos(l->get_moon_angle())*2/2, 0.33)/3;
+           sun_horiz_eff = 0.67+pow(0.5+cos(l->get_sun_angle())*2/2, 0.33)/3;
+           moon_horiz_eff = 0.67+pow(0.5+cos(l->get_moon_angle())*2/2, 0.33)/3;
         } else {
            sun_horiz_eff = moon_horiz_eff = 1.0;
         }
@@ -444,16 +396,68 @@ FGRenderer::update( bool refresh_camera_settings ) {
         sstate.moon_ra   = globals->get_ephem()->getMoonRightAscension();
         sstate.moon_dec  = globals->get_ephem()->getMoonDeclination();
         sstate.moon_dist = 40000.0 * moon_horiz_eff;
+        sstate.sun_angle = l->get_sun_angle();
+
+
+        /*
+         SG_LOG( SG_GENERAL, SG_BULK, "thesky->repaint() sky_color = "
+         << l->sky_color()[0] << " "
+         << l->sky_color()[1] << " "
+         << l->sky_color()[2] << " "
+         << l->sky_color()[3] );
+        SG_LOG( SG_GENERAL, SG_BULK, "    fog = "
+         << l->fog_color()[0] << " "
+         << l->fog_color()[1] << " "
+         << l->fog_color()[2] << " "
+         << l->fog_color()[3] );
+        SG_LOG( SG_GENERAL, SG_BULK,
+                "    sun_angle = " << l->sun_angle
+         << "    moon_angle = " << l->moon_angle );
+        */
+
+        static SGSkyColor scolor;
+//        FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
+
+        scolor.sky_color   = l->sky_color();
+        scolor.fog_color   = l->adj_fog_color();
+        scolor.cloud_color = l->cloud_color();
+        scolor.sun_angle   = l->get_sun_angle();
+        scolor.moon_angle  = l->get_moon_angle();
+        scolor.nplanets    = globals->get_ephem()->getNumPlanets();
+        scolor.nstars      = globals->get_ephem()->getNumStars();
+        scolor.planet_data = globals->get_ephem()->getPlanets();
+        scolor.star_data   = globals->get_ephem()->getStars();
 
         thesky->reposition( sstate, delta_time_sec );
+        thesky->repaint( scolor );
 
-        shadows->setupShadows( 
+        /*
+        SG_LOG( SG_GENERAL, SG_BULK,
+                "thesky->reposition( view_pos = " << view_pos[0] << " "
+         << view_pos[1] << " " << view_pos[2] );
+        SG_LOG( SG_GENERAL, SG_BULK,
+                "    zero_elev = " << zero_elev[0] << " "
+         << zero_elev[1] << " " << zero_elev[2]
+         << " lon = " << cur_fdm_state->get_Longitude()
+         << " lat = " << cur_fdm_state->get_Latitude() );
+        SG_LOG( SG_GENERAL, SG_BULK,
+                "    sun_rot = " << l->get_sun_rotation
+         << " gst = " << SGTime::cur_time_params->getGst() );
+        SG_LOG( SG_GENERAL, SG_BULK,
+             "    sun ra = " << globals->get_ephem()->getSunRightAscension()
+          << " sun dec = " << globals->get_ephem()->getSunDeclination()
+          << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
+          << " moon dec = " << globals->get_ephem()->getMoonDeclination() );
+        */
+
+        shadows->setupShadows(
           current__view->getLongitude_deg(),
           current__view->getLatitude_deg(),
           globals->get_time_params()->getGst(),
           globals->get_ephem()->getSunRightAscension(),
           globals->get_ephem()->getSunDeclination(),
           l->get_sun_angle());
+
     }
 
     glEnable( GL_DEPTH_TEST );
