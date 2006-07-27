@@ -30,6 +30,7 @@
 #include <plib/ssg.h>
 
 #include <simgear/math/point3d.hxx>
+#include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/location.hxx>
@@ -312,6 +313,19 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
         }
      }
 
+     // This is an alternate way to compute bearing and distance which
+     // agrees with the original scheme within about 0.1 degrees.
+     //
+     // Point3D start( user_longitude * SGD_DEGREES_TO_RADIANS,
+     //                user_latitude * SGD_DEGREES_TO_RADIANS, 0 );
+     // Point3D dest( pos.getLongitudeRad(), pos.getLatitudeRad(), 0 );
+     // double gc_bearing, gc_range;
+     // calc_gc_course_dist( start, dest, &gc_bearing, &gc_range );
+     // gc_range *= SG_METER_TO_NM;
+     // gc_bearing *= SGD_RADIANS_TO_DEGREES;
+     // printf("orig b = %.3f %.2f  gc b= %.3f, %.2f\n",
+     //        bearing, range, gc_bearing, gc_range);
+
      // calculate look left/right to target, without yaw correction
      horiz_offset = bearing - user_heading;
      if (horiz_offset > 180.0) horiz_offset -= 360.0;
@@ -335,7 +349,7 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
 */
 
      // now correct look left/right for yaw
-     horiz_offset += user_yaw;
+     // horiz_offset += user_yaw; // FIXME: WHY WOULD WE WANT TO ADD IN SIDE-SLIP HERE?
 
      // calculate values for radar display
      y_shift = range * cos( horiz_offset * SG_DEGREES_TO_RADIANS);
