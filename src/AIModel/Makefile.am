@@ -10,7 +10,8 @@ libAIModel_a_SOURCES = \
 	AIBallistic.hxx AIBallistic.cxx \
 	AIStorm.hxx AIStorm.cxx \
 	AIThermal.hxx AIThermal.cxx \
-	AIFlightPlan.hxx AIFlightPlan.cxx AIFlightPlanCreate.cxx \
+	AIFlightPlan.hxx AIFlightPlan.cxx \
+	AIFlightPlanCreate.cxx AIFlightPlanCreateCruise.cxx \
         AICarrier.hxx AICarrier.cxx \
         AIStatic.hxx AIStatic.cxx
 

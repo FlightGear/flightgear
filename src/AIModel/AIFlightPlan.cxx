@@ -110,6 +110,7 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
 			       const string& acType,
 			       const string& airline)
 {
+  repeat = false;
   leg = 10;
   gateId=0;
   start_time = start;
@@ -118,6 +119,7 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
   SGPath path( globals->get_fg_root() );
   path.append( "/AI/FlightPlans" );
   path.append( p );
+  
   SGPropertyNode root;
   
   // This is a bit of a hack:

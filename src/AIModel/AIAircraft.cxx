@@ -193,7 +193,6 @@ void FGAIAircraft::Run(double dt) {
         // from control properties.  These default to the initial
         // settings in the config file, but can be changed "on the
         // fly".
-
         string lat_mode = props->getStringValue("controls/flight/lateral-mode");
         if ( lat_mode == "roll" ) {
             double angle
@@ -218,7 +217,7 @@ void FGAIAircraft::Run(double dt) {
 
         AccelTo( props->getDoubleValue("controls/flight/target-spd" ) );
     }
-
+      
     double turn_radius_ft;
     double turn_circum_ft;
     double speed_north_deg_sec;
@@ -233,19 +232,30 @@ void FGAIAircraft::Run(double dt) {
     } else {
         speed_diff = groundTargetSpeed - speed;
     }
+
     if (speed_diff > 0.0) {
         speed += performance->accel * dt;
-        if ( speed > tgt_speed ) speed = tgt_speed; // don't overshoot
+	if (no_roll) { // apply overshoot correction
+	  if ( speed > groundTargetSpeed ) speed = groundTargetSpeed;
+	}else {
+	  if ( speed > tgt_speed ) speed = tgt_speed;
+	}
     } else if (speed_diff < 0.0) {
         if (no_roll) {
             // on ground (aircraft can't roll)
+	    // deceleration performance is better due to wheel brakes.
             speed -= performance->decel * dt * 3;
         } else {
             speed -= performance->decel * dt;
         }
-        if ( speed < tgt_speed ) speed = tgt_speed; // don't overshoot
+	if (no_roll) { // apply overshoot correction
+        if (speed < groundTargetSpeed ) speed = groundTargetSpeed;
+	} else { 
+	  if ( speed < tgt_speed ) speed = tgt_speed;
+	}
     }
-
+    
+    
     // convert speed to degrees per second
     speed_north_deg_sec = cos( hdg * SGD_DEGREES_TO_RADIANS )
                           * speed * 1.686 / ft_per_deg_lat;

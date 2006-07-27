@@ -14,7 +14,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #ifndef _FG_AIFLIGHTPLAN_HXX
 #define _FG_AIFLIGHTPLAN_HXX
@@ -25,6 +25,7 @@
 
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
+#include <Navaids/awynet.hxx>
 
 #include "AIBase.hxx"
 
@@ -92,6 +93,8 @@ public:
   void setRepeat(bool r) { repeat = r; };
   bool getRepeat(void) const { return repeat; };
   void restart(void);
+  
+  int getNrOfWayPoints() { return waypoints.end() - waypoints.begin(); };
 
 private:
   FGRunway rwy;
@@ -109,6 +112,16 @@ private:
   int leg;
   int gateId;
   string activeRunway;
+  FGAirRoute route;
+
+
+  Point3D temp;
+  sgdVec3 a, b, cross;
+  sgdVec3 newPos;
+  sgdMat4 matrix;
+  double angle;
+  double midlat, midlon;
+  double course, distance;  
 
   void createPushBack(bool, FGAirport*, double, double, double, const string&, const string&, const string&);
   void createTaxi(bool, int, FGAirport *, double, double, double, const string&, const string&, const string&);
@@ -120,6 +133,9 @@ private:
   void createParking(FGAirport *, double radius);
   void deleteWaypoints(); 
   void resetWaypoints();
+
+  //void createCruiseFallback(bool, FGAirport*, FGAirport*, double, double, double, double);
+ void evaluateRoutePart(double deplat, double deplon, double arrlat, double arrlon);
 };    
 
 

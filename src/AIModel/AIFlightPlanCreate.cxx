@@ -636,6 +636,7 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
   heading = rwy._heading;
   double azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
+  cerr << "Creating climb at : " << rwy._id << " " << rwy._rwy_no << endl;
   geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
 		      10*SG_NM_TO_METER,
 		      &lat2, &lon2, &az2 );
@@ -671,69 +672,69 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
 }
 
 
-/*******************************************************************
- * CreateCruise
- * initialize the Aircraft at the parking location
- ******************************************************************/
-void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep, 
-				  FGAirport *arr, double latitude, 
-				  double longitude, double speed, 
-				  double alt)
-{
-  double wind_speed;
-  double wind_heading;
-  double heading;
-  double lat, lon, az;
-  double lat2, lon2, az2;
-  double azimuth;
-  waypoint *wpt;
+// /*******************************************************************
+//  * CreateCruise
+//  * initialize the Aircraft at the parking location
+//  ******************************************************************/
+// void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep, 
+// 				  FGAirport *arr, double latitude, 
+// 				  double longitude, double speed, 
+// 				  double alt)
+// {
+//   double wind_speed;
+//   double wind_heading;
+//   double heading;
+//   double lat, lon, az;
+//   double lat2, lon2, az2;
+//   double azimuth;
+//   waypoint *wpt;
 
-  wpt = new waypoint;
-  wpt->name      = "Cruise"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = latitude;
-  wpt->longitude = longitude;
-  wpt->altitude  = alt;
-  wpt->speed     = speed; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = false;
-  wpt->flaps_down= false;
-  wpt->finished  = false;
-  wpt->on_ground = false;
-  waypoints.push_back(wpt); 
+//   wpt = new waypoint;
+//   wpt->name      = "Cruise"; //wpt_node->getStringValue("name", "END");
+//   wpt->latitude  = latitude;
+//   wpt->longitude = longitude;
+//   wpt->altitude  = alt;
+//   wpt->speed     = speed; 
+//   wpt->crossat   = -10000;
+//   wpt->gear_down = false;
+//   wpt->flaps_down= false;
+//   wpt->finished  = false;
+//   wpt->on_ground = false;
+//   waypoints.push_back(wpt); 
   
  
-  // should be changed dynamically to allow "gen" and "mil"
-  arr->getDynamics()->getActiveRunway("com", 2, activeRunway);
-  if (!(globals->get_runways()->search(arr->getId(), 
-				       activeRunway, 
-				       &rwy)))
-    {
-      SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
-	     activeRunway << 
-	     " at airport     " << arr->getId());
-      exit(1);
-    }
-  heading = rwy._heading;
-  azimuth = heading + 180.0;
-  while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
+//   // should be changed dynamically to allow "gen" and "mil"
+//   arr->getDynamics()->getActiveRunway("com", 2, activeRunway);
+//   if (!(globals->get_runways()->search(arr->getId(), 
+// 				       activeRunway, 
+// 				       &rwy)))
+//     {
+//       SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
+// 	     activeRunway << 
+// 	     " at airport     " << arr->getId());
+//       exit(1);
+//     }
+//   heading = rwy._heading;
+//   azimuth = heading + 180.0;
+//   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
   
   
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		      110000,
-		      &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "BOD";
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = alt;
-  wpt->speed     = speed; 
-  wpt->crossat   = alt;
-  wpt->gear_down = false;
-  wpt->flaps_down= false;
-  wpt->finished  = false;
-  wpt->on_ground = false;
-  waypoints.push_back(wpt); 
-}
+//   geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
+// 		      110000,
+// 		      &lat2, &lon2, &az2 );
+//   wpt = new waypoint;
+//   wpt->name      = "BOD";
+//   wpt->latitude  = lat2;
+//   wpt->longitude = lon2;
+//   wpt->altitude  = alt;
+//   wpt->speed     = speed; 
+//   wpt->crossat   = alt;
+//   wpt->gear_down = false;
+//   wpt->flaps_down= false;
+//   wpt->finished  = false;
+//   wpt->on_ground = false;
+//   waypoints.push_back(wpt); 
+// }
 
 /*******************************************************************
  * CreateDecent
