@@ -573,6 +573,7 @@ private:
     float  _vmin;
     float  _compression;
     bool   _dynamic_origin;
+    bool   _clip_plane;
     bool   _frl;               // fuselage reference line
     bool   _target_spot;
     bool   _target_markers;

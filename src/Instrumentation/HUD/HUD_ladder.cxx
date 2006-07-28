@@ -51,6 +51,7 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _scr_hole(n->getIntValue("screen-hole")),
     _compression(n->getFloatValue("compression-factor")),
     _dynamic_origin(n->getBoolValue("enable-dynamic-origin")),
+    _clip_plane(n->getBoolValue("enable-clip-plane")),
     _frl(n->getBoolValue("enable-fuselage-ref-line")),
     _target_spot(n->getBoolValue("enable-target-spot")),
     _target_markers(n->getBoolValue("enable-target-markers")),
@@ -86,18 +87,6 @@ void HUD::Ladder::draw(void)
     float roll_value = _roll.getFloatValue() * SGD_DEGREES_TO_RADIANS;
     float pitch_value = _pitch.getFloatValue();
     float alpha;
-
-    bool pitch_ladder;
-    bool clip_plane;
-
-    if (_type == CLIMB_DIVE) {
-        pitch_ladder = false;
-        clip_plane = true;
-
-    } else { // _type == PITCH
-        pitch_ladder = true;
-        clip_plane = false;
-    }
 
     //**************************************************************
     glPushMatrix();
@@ -200,8 +189,9 @@ void HUD::Ladder::draw(void)
 
         //****************************************************************
         // Clipping coordinates for ladder to be input from xml file
-        // Clip hud ladder
-        if (clip_plane) {
+        // Clip hud ladder.  FIXME, these should be configurable, but they
+        // have always been hardcoded here.
+        if (_clip_plane) {
             GLdouble eqn_top[4] = {0.0, -1.0, 0.0, 0.0};
             GLdouble eqn_left[4] = {-1.0, 0.0, 0.0, 100.0};
             GLdouble eqn_right[4] = {1.0, 0.0, 0.0, 100.0};
