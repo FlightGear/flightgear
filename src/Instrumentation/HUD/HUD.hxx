@@ -564,6 +564,7 @@ private:
     }
 
     enum   Type { PITCH, CLIMB_DIVE } _type;
+    bool   _climb_dive_ladder;
     Input  _pitch;
     Input  _roll;
     float  _width_units;

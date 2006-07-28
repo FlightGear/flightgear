@@ -23,6 +23,7 @@
 #  include <config.h>
 #endif
 
+#include <simgear/math/vector.hxx>
 #include <Main/viewer.hxx>
 #include "HUD.hxx"
 
@@ -43,6 +44,7 @@ float get__beta() { return fgGetFloat("/orientation/side-slip-deg"); }
 
 HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     Item(hud, n, x, y),
+    _climb_dive_ladder(n->getBoolValue("enable-climb-dive-ladder")),
     _pitch(n->getNode("pitch-input", false)),
     _roll(n->getNode("roll-input", false)),
     _width_units(int(n->getFloatValue("display-span"))),
@@ -96,7 +98,11 @@ void HUD::Ladder::draw(void)
 
     } else { // _type == PITCH
         pitch_ladder = true;
-        climb_dive_ladder = false;
+        if ( _climb_dive_ladder ) {
+            climb_dive_ladder = true;
+        } else {
+            climb_dive_ladder = false;
+        }
         clip_plane = false;
     }
 
@@ -430,11 +436,25 @@ void HUD::Ladder::draw(void)
 
     //****************************************************************
 
+    /*float pos_x = (drift * cos(roll_value) -
+                   alpha * sin(roll_value)) * _compression;
+    float pos_y = (alpha * cos(roll_value) +
+    drift * sin(roll_value)) * _compression; */
     if (climb_dive_ladder) { // CONFORMAL_HUD
-        _vmin = pitch_value - _width_units;
-        _vmax = pitch_value + _width_units;
-        glTranslatef(vel_x, vel_y, 0);
-
+        _vmin = pitch_value - _width_units * 0.5f;
+        _vmax = pitch_value + _width_units * 0.5f;
+        {
+            // the hud ladder center point should move relative to alpha/beta
+            // however the horizon line should always stay on the horizon.  We
+            // project the alpha/beta offset onto the horizon line to get the
+            // result we want.
+            sgdVec3 p1; // result
+            sgdVec3 p; sgdSetVec3(p, vel_x, vel_y, 0.0);
+            sgdVec3 p0; sgdSetVec3(p0, 0.0, 0.0, 0.0);
+            sgdVec3 d; sgdSetVec3(d, cos(roll_value), sin(roll_value), 0.0);
+            sgdClosestPointToLine( p1, p, p0, d );
+            glTranslatef(p1[0], p1[1], 0);
+        }
     } else { // pitch_ladder - Default Hud
         _vmin = pitch_value - _width_units * 0.5f;
         _vmax = pitch_value + _width_units * 0.5f;
@@ -443,7 +463,7 @@ void HUD::Ladder::draw(void)
     glRotatef(roll_value * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
     // FRL marker not rotated - this line shifted below
     float half_span = _w / 2.0;
-    float y = 0;
+    float y = 0, y_end = 0;
     float x_ini, x_ini2;
     float x_end, x_end2;
 
@@ -522,10 +542,18 @@ void HUD::Ladder::draw(void)
             x_ini2 = half_span - hole;
 
             for (; i < last; i++) {
-                if (_type == PITCH)
+                if (_type == PITCH) {
                     y = float(i - pitch_value) * _compression + .5;
-                else // _type == CLIMB_DIVE
+                } else {
+                    // _type == CLIMB_DIVE
                     y = float(i - actslope) * _compression + .5;
+                }
+                if ( i < 0 )
+                    y_end = y +
+                        sin(0.5 * i * SG_DEGREES_TO_RADIANS * 3/*hack*/) *
+                        _compression;
+                else
+                    y_end = y;
 
                 if (!(i % _div_units)) {  //  At integral multiple of div
                     snprintf(buf, BUFSIZE, "%d", i);
@@ -544,12 +572,13 @@ void HUD::Ladder::draw(void)
                         if (i == 0) {
                             x_ini -= zero_offset;
                             x_end2 += zero_offset;
-                        }
-                        //draw climb bar vertical lines
-                        if (climb_dive_ladder) {
-                            // Zero or above draw solid lines
-                            draw_line(x_end, y - 5.0, x_end, y);
-                            draw_line(x_ini2, y - 5.0, x_ini2, y);
+                        } else {
+                            //draw climb bar vertical lines
+                            if (climb_dive_ladder) {
+                                // Zero or above draw solid lines
+                                draw_line(x_end, y - 5.0, x_end, y);
+                                draw_line(x_ini2, y - 5.0, x_ini2, y);
+                            }
                         }
                         // draw pitch / climb bar
                         draw_line(x_ini, y, x_end, y);
@@ -566,16 +595,16 @@ void HUD::Ladder::draw(void)
                         }
 
                         // draw pitch / dive bars
-                        draw_stipple_line(x_ini, y, x_end, y);
-                        draw_stipple_line(x_ini2, y, x_end2, y);
+                        draw_stipple_line(x_ini, y_end, x_end, y);
+                        draw_stipple_line(x_ini2, y, x_end2, y_end);
 
                         if (i == -90 && _nadir)
                             draw_nadir(0.0, y);
                     }
 
                     // Now calculate the location of the left side label using
-                    draw_text(x_ini - text_offset - label_length + 2.5/*hack*/, y - label_height, buf);
-                    draw_text(x_end2 + text_offset, y - label_height, buf);
+                    draw_text(x_ini - text_offset - label_length + 2.5/*hack*/, y_end - label_height, buf);
+                    draw_text(x_end2 + text_offset, y_end - label_height, buf);
                 }
             }
 
