@@ -140,7 +140,8 @@ void HUD::TurnBankIndicator::draw_scale()
     }
 
     // bank marker
-    float a, rr = r + r * 2.0 / 70.0;
+    float a;
+    float rr = r + r * 0.5 / 70.0;  // little gap for the arrow peak
 
     a = (bank + 270.0) * SGD_DEGREES_TO_RADIANS;
     float x1 = cx + rr * cos(a);
@@ -161,7 +162,7 @@ void HUD::TurnBankIndicator::draw_scale()
 
 
     // sideslip marker
-    rr = r + r * 2.0 / 70.0;
+    rr = r + r * 0.5 / 70.0;
     a = (bank + sideslip + 270.0) * SGD_DEGREES_TO_RADIANS;
     x1 = cx + rr * cos(a);
     y1 = cy + rr * sin(a);
