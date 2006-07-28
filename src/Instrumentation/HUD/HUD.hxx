@@ -530,6 +530,7 @@ public:
 private:
     void draw_scale();
     void draw_tee();
+    void draw_line(float, float, float, float);
     void draw_tick(float angle, float r1, float r2, int side);
 
     Input _bank;

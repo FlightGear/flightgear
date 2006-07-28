@@ -207,3 +207,13 @@ void HUD::TurnBankIndicator::draw_tick(float angle, float r1, float r2, int side
 }
 
 
+void HUD::TurnBankIndicator::draw_line(float x1, float y1, float x2, float y2)
+{
+    if (option_top()) {
+        float y = 2.0 * _center_y;  // mirror vertically
+        Item::draw_line(x1, y - y1, x2, y - y2);
+    } else
+        Item::draw_line(x1, y1, x2, y2);
+}
+
+
