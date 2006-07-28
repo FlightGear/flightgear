@@ -436,10 +436,6 @@ void HUD::Ladder::draw(void)
 
     //****************************************************************
 
-    /*float pos_x = (drift * cos(roll_value) -
-                   alpha * sin(roll_value)) * _compression;
-    float pos_y = (alpha * cos(roll_value) +
-    drift * sin(roll_value)) * _compression; */
     if (climb_dive_ladder) { // CONFORMAL_HUD
         _vmin = pitch_value - _width_units * 0.5f;
         _vmax = pitch_value + _width_units * 0.5f;
