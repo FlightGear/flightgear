@@ -564,7 +564,6 @@ private:
     }
 
     enum   Type { PITCH, CLIMB_DIVE } _type;
-    bool   _climb_dive_ladder;
     Input  _pitch;
     Input  _roll;
     float  _width_units;
@@ -573,6 +572,7 @@ private:
     float  _vmax;
     float  _vmin;
     float  _compression;
+    bool   _dynamic_origin;
     bool   _frl;               // fuselage reference line
     bool   _target_spot;
     bool   _target_markers;

@@ -44,13 +44,13 @@ float get__beta() { return fgGetFloat("/orientation/side-slip-deg"); }
 
 HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     Item(hud, n, x, y),
-    _climb_dive_ladder(n->getBoolValue("enable-climb-dive-ladder")),
     _pitch(n->getNode("pitch-input", false)),
     _roll(n->getNode("roll-input", false)),
     _width_units(int(n->getFloatValue("display-span"))),
     _div_units(int(fabs(n->getFloatValue("divisions")))),
     _scr_hole(n->getIntValue("screen-hole")),
     _compression(n->getFloatValue("compression-factor")),
+    _dynamic_origin(n->getBoolValue("enable-dynamic-origin")),
     _frl(n->getBoolValue("enable-fuselage-ref-line")),
     _target_spot(n->getBoolValue("enable-target-spot")),
     _target_markers(n->getBoolValue("enable-target-markers")),
@@ -88,21 +88,14 @@ void HUD::Ladder::draw(void)
     float alpha;
 
     bool pitch_ladder;
-    bool climb_dive_ladder;
     bool clip_plane;
 
     if (_type == CLIMB_DIVE) {
         pitch_ladder = false;
-        climb_dive_ladder = true;
         clip_plane = true;
 
     } else { // _type == PITCH
         pitch_ladder = true;
-        if ( _climb_dive_ladder ) {
-            climb_dive_ladder = true;
-        } else {
-            climb_dive_ladder = false;
-        }
         clip_plane = false;
     }
 
@@ -436,7 +429,10 @@ void HUD::Ladder::draw(void)
 
     //****************************************************************
 
-    if (climb_dive_ladder) { // CONFORMAL_HUD
+    if (_dynamic_origin) {
+        // ladder moves with alpha/beta offset projected onto horizon
+        // line (so that the horizon line always aligns with the
+        // actual horizon.
         _vmin = pitch_value - _width_units * 0.5f;
         _vmax = pitch_value + _width_units * 0.5f;
         {
@@ -451,7 +447,8 @@ void HUD::Ladder::draw(void)
             sgdClosestPointToLine( p1, p, p0, d );
             glTranslatef(p1[0], p1[1], 0);
         }
-    } else { // pitch_ladder - Default Hud
+    } else {
+        // ladder position is fixed relative to the center of the screen.
         _vmin = pitch_value - _width_units * 0.5f;
         _vmax = pitch_value + _width_units * 0.5f;
     }
@@ -475,12 +472,10 @@ void HUD::Ladder::draw(void)
         float text_offset = 4.0f;
         float zero_offset = 0.0;
 
-        if (climb_dive_ladder)
-            zero_offset = 50.0f; // horizon line is wider by this much (hard coded ??)
-        else
-            zero_offset = 10.0f;
+        // horizon line is wider by this much (hard coded ??)
+        zero_offset = 50.0f;
 
-        fntFont *font = _hud->_font_renderer->getFont();			// FIXME
+        fntFont *font = _hud->_font_renderer->getFont();   // FIXME
         float pointsize = _hud->_font_renderer->getPointSize();
         float italic = _hud->_font_renderer->getSlant();
 
@@ -570,11 +565,8 @@ void HUD::Ladder::draw(void)
                             x_end2 += zero_offset;
                         } else {
                             //draw climb bar vertical lines
-                            if (climb_dive_ladder) {
-                                // Zero or above draw solid lines
-                                draw_line(x_end, y - 5.0, x_end, y);
-                                draw_line(x_ini2, y - 5.0, x_ini2, y);
-                            }
+                            draw_line(x_end, y - 5.0, x_end, y);
+                            draw_line(x_ini2, y - 5.0, x_ini2, y);
                         }
                         // draw pitch / climb bar
                         draw_line(x_ini, y, x_end, y);
@@ -585,10 +577,8 @@ void HUD::Ladder::draw(void)
 
                     } else { // i < 0
                         // draw dive bar vertical lines
-                        if (climb_dive_ladder) {
-                            draw_line(x_end, y + 5.0, x_end, y);
-                            draw_line(x_ini2, y + 5.0, x_ini2, y);
-                        }
+                        draw_line(x_end, y + 5.0, x_end, y);
+                        draw_line(x_ini2, y + 5.0, x_ini2, y);
 
                         // draw pitch / dive bars
                         draw_stipple_line(x_ini, y_end, x_end, y);
