@@ -47,12 +47,10 @@ HUD::Item::Item(HUD *hud, const SGPropertyNode *n, float x, float y) :
     vector<SGPropertyNode_ptr> opt = n->getChildren("option");
     for (unsigned int i = 0; i < opt.size(); i++) {
         const char *o = opt[i]->getStringValue();
-        if (!strcmp(o, "autoticks"))
-            _options |= AUTOTICKS;
-        else if (!strcmp(o, "vertical"))
-            _options |= VERT;
+        if (!strcmp(o, "vertical"))
+            _options |= VERTICAL;
         else if (!strcmp(o, "horizontal"))
-            _options |= HORZ;
+            _options |= HORIZONTAL;
         else if (!strcmp(o, "top"))
             _options |= TOP;
         else if (!strcmp(o, "left"))
@@ -65,10 +63,6 @@ HUD::Item::Item(HUD *hud, const SGPropertyNode *n, float x, float y) :
             _options |= (LEFT|RIGHT);
         else if (!strcmp(o, "noticks"))
             _options |= NOTICKS;
-        else if (!strcmp(o, "arithtic"))
-            _options |= ARITHTIC;
-        else if (!strcmp(o, "decitics"))
-            _options |= DECITICS;
         else if (!strcmp(o, "notext"))
             _options |= NOTEXT;
         else
@@ -78,7 +72,7 @@ HUD::Item::Item(HUD *hud, const SGPropertyNode *n, float x, float y) :
     // Set up convenience values for centroid of the box and
     // the span values according to orientation
 
-    if (_options & VERT) {
+    if (_options & VERTICAL) {
         _scr_span = _h;
     } else {
         _scr_span = _w;

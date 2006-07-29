@@ -216,18 +216,18 @@ public:
     Units getUnits() const { return _units; }
 
     enum {
-        HORZ      = 0x0000,  // keep that at zero?
-        AUTOTICKS = 0x0001,
-        VERT      = 0x0002,
-        TOP       = 0x0004,
-        BOTTOM    = 0x0008,
-        LEFT      = 0x0010,
-        RIGHT     = 0x0020,
-        BOTH      = (LEFT|RIGHT),
-        NOTICKS   = 0x0040,
-        ARITHTIC  = 0x0080,
-        DECITICS  = 0x0100,
-        NOTEXT    = 0x0200,
+        HORIZONTAL = 0x0000,  // keep that at zero?
+        VERTICAL   = 0x0001,
+        TOP        = 0x0002,
+        BOTTOM     = 0x0004,
+        LEFT       = 0x0008,
+        RIGHT      = 0x0010,
+        HCENTER    = 0x0020,
+        VCENTER    = 0x0040,
+        NOTICKS    = 0x0080,
+        NOTEXT     = 0x0100,
+        BOTH       = (LEFT|RIGHT),
+        CENTER     = (HCENTER|VCENTER),
     };
 
     enum Adjust {
@@ -376,7 +376,7 @@ protected:
     inline float get_span()       const { return _scr_span; }
     inline int   get_digits()     const { return _digits; }
 
-    inline bool option_vert()    const { return (_options & VERT) == VERT; }
+    inline bool option_vert()    const { return (_options & VERTICAL) == VERTICAL; }
     inline bool option_left()    const { return (_options & LEFT) == LEFT; }
     inline bool option_right()   const { return (_options & RIGHT) == RIGHT; }
     inline bool option_both()    const { return (_options & BOTH) == BOTH; }
