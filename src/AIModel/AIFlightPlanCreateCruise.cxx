@@ -119,7 +119,7 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
 			FGAirRoute routePart = globals->get_airwaynet()->findShortestRoute(*i, *j);
 			if (!(routePart.empty()))
 			{
-				route.add(routePart);
+				airRoute.add(routePart);
 				i = j;
 				break;
 			}

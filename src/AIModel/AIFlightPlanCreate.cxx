@@ -192,6 +192,8 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
   double lat2, lon2, az2;
   waypoint *wpt;
 
+  int nrWaypointsToSkip;
+
    if (direction == 1)
     {
       // If this function is called during initialization,
@@ -256,15 +258,18 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  // fallback mechanism for this. 
 	  // Starting from gate 0 in this case is a bit of a hack
 	  // which requires a more proper solution later on.
-	  FGTaxiRoute route;
+	  //FGTaxiRoute route;
+	  if (taxiRoute)
+	    delete taxiRoute;
+	  taxiRoute = new FGTaxiRoute;
 	  if (gateId >= 0)
-	    route = apt->getDynamics()->getGroundNetwork()->findShortestRoute(gateId, 
+	    *taxiRoute = apt->getDynamics()->getGroundNetwork()->findShortestRoute(gateId, 
 									      runwayId);
 	  else
-	    route = apt->getDynamics()->getGroundNetwork()->findShortestRoute(0, runwayId);
+	    *taxiRoute = apt->getDynamics()->getGroundNetwork()->findShortestRoute(0, runwayId);
 	  intVecIterator i;
 	 
-	  if (route.empty()) {
+	  if (taxiRoute->empty()) {
 	    //Add the runway startpoint;
 	    wpt = new waypoint;
 	    wpt->name      = "Airport Center";
@@ -294,34 +299,35 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	    waypoints.push_back(wpt);	
 	  } else {
 	    int node;
-	    route.first();
+	    taxiRoute->first();
 	    bool isPushBackPoint = false;
 	    if (firstFlight) {
 	      // If this is called during initialization, randomly
 	      // skip a number of waypoints to get a more realistic
 	      // taxi situation.
 	      isPushBackPoint = true;
-	      int nrWaypoints = route.size();
-	      int nrWaypointsToSkip = rand() % nrWaypoints;
+	      int nrWaypoints = taxiRoute->size();
+	      nrWaypointsToSkip = rand() % nrWaypoints;
 	      // but make sure we always keep two active waypoints
 	      // to prevent a segmentation fault
 	      for (int i = 0; i < nrWaypointsToSkip-2; i++) {
 		isPushBackPoint = false;
-		route.next(&node);
+		taxiRoute->next(&node);
 	      }
 	    }
 	    else {
 	      //chop off the first two waypoints, because
 	      // those have already been created
 	      // by create pushback
-	      int size = route.size();
+	      int size = taxiRoute->size();
 	      if (size > 2) {
-		route.next(&node);
-		route.next(&node);
+		taxiRoute->next(&node);
+		taxiRoute->next(&node);
 	      }
 	    }
-	    while(route.next(&node))
+	    while(taxiRoute->next(&node))
 	      {
+		//FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findSegment(node)->getEnd();
 		FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
 		//ids.pop_back();  
 		wpt = new waypoint;
@@ -345,7 +351,20 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 		wpt->on_ground = true;
 		waypoints.push_back(wpt);
 	      }
-	    cerr << endl;
+	    //cerr << endl;
+	    // finally, rewind the taxiRoute object to the point where we started
+	    taxiRoute->first();
+	    if (firstFlight) { 
+	      for (int i = 0; i < nrWaypointsToSkip-2; i++) {
+		taxiRoute->next(&node);
+	      }
+	    } else {
+	      int size = taxiRoute->size();
+	      if (size > 2) {
+		taxiRoute->next(&node);
+		taxiRoute->next(&node);
+	      }
+	    }
 	  }
 	}
       else 
@@ -399,16 +418,19 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  // A negative gateId indicates an overflow parking, use a
 	  // fallback mechanism for this. 
 	  // Starting from gate 0 is a bit of a hack...
-	  FGTaxiRoute route;
+	  //FGTaxiRoute route;
+	  if (taxiRoute)
+	    delete taxiRoute;
+	  taxiRoute = new FGTaxiRoute;
 	  if (gateId >= 0)
-	    route = apt->getDynamics()->getGroundNetwork()->findShortestRoute(runwayId, 
+	    *taxiRoute = apt->getDynamics()->getGroundNetwork()->findShortestRoute(runwayId, 
 									      gateId);
 	  else
-	    route = apt->getDynamics()->getGroundNetwork()->findShortestRoute(runwayId, 0);
+	    *taxiRoute = apt->getDynamics()->getGroundNetwork()->findShortestRoute(runwayId, 0);
 	  intVecIterator i;
 	 
 	  // No route found: go from gate directly to runway
-	  if (route.empty()) {
+	  if (taxiRoute->empty()) {
 	    //Add the runway startpoint;
 	    wpt = new waypoint;
 	    wpt->name      = "Airport Center";
@@ -438,13 +460,14 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	    waypoints.push_back(wpt);	
 	  } else {
 	    int node;
-	    route.first();
-	    int size = route.size();
+	    taxiRoute->first();
+	    int size = taxiRoute->size();
 	    // Omit the last two waypoints, as 
 	    // those are created by createParking()
 	    for (int i = 0; i < size-2; i++)
 	      {
-		route.next(&node);
+		taxiRoute->next(&node);
+		//FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
 		FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
 		wpt = new waypoint;
 		wpt->name      = "taxiway"; // fixme: should be the name of the taxiway
@@ -636,7 +659,7 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
   heading = rwy._heading;
   double azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
-  cerr << "Creating climb at : " << rwy._id << " " << rwy._rwy_no << endl;
+  //cerr << "Creating climb at : " << rwy._id << " " << rwy._rwy_no << endl;
   geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
 		      10*SG_NM_TO_METER,
 		      &lat2, &lon2, &az2 );

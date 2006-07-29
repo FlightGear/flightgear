@@ -49,6 +49,7 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
   start_time = 0;
   leg = 10;
   gateId = 0;
+  taxiRoute = 0;
   SGPath path( globals->get_fg_root() );
   path.append( ("/AI/FlightPlans/" + filename).c_str() );
   SGPropertyNode root;
@@ -113,6 +114,7 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
   repeat = false;
   leg = 10;
   gateId=0;
+  taxiRoute = 0;
   start_time = start;
   bool useInitialWayPoint = true;
   bool useCurrentWayPoint = false;
@@ -300,6 +302,8 @@ FGAIFlightPlan::~FGAIFlightPlan()
   //    delete *(waypoints.begin());
   //    waypoints.erase (waypoints.begin());
   //  }
+  if (taxiRoute)
+    delete taxiRoute;
 }
 
 

@@ -50,13 +50,15 @@ class FGAISchedule
   double groundOffset;
   double distanceToUser;
   int AIManagerRef;
+  int score;
   bool firstRun;
 
 
  public:
   FGAISchedule();                                           // constructor
-  FGAISchedule(string, string, string, bool, string, string, string, string, double, double, FGScheduledFlightVec);  // construct & init
-  FGAISchedule(const FGAISchedule &other);             // copy constructor
+  FGAISchedule(string, string, string, bool, string, string, string, string, double, double, 
+	       int, FGScheduledFlightVec);                  // construct & init
+  FGAISchedule(const FGAISchedule &other);                  // copy constructor
 
   ~FGAISchedule(); //destructor
 
@@ -64,7 +66,7 @@ class FGAISchedule
   bool init();
 
   double getSpeed         ();
-  void setClosestDistanceToUser();
+  //void setClosestDistanceToUser();
   void next();   // forces the schedule to move on to the next flight.
 
   time_t      getDepartureTime    () { return flights.begin()->getDepartureTime   (); };
@@ -79,7 +81,9 @@ class FGAISchedule
   const string& getCallSign       () { return flights.begin()->getCallSign (); };
   const string& getRegistration   () { return registration;};
   bool getHeavy                   () { return heavy; };
-  bool operator< (const FGAISchedule &other) const { return (distanceToUser < other.distanceToUser); };
+  // used to sort in decending order of score: I've probably found a better way to
+  // decending order sorting, but still need to test that.
+  bool operator< (const FGAISchedule &other) const { return (score > other.score); };
   //void * getAiRef                 () { return AIManagerRef; };
   //FGAISchedule* getAddress        () { return this;};
   // More member functions follow later

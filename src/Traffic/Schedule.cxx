@@ -25,6 +25,8 @@
 #  include "config.h"
 #endif
 
+#define BOGUS 0xFFFF
+
 #include <stdlib.h>
 #include <time.h>
 #include <iostream>
@@ -72,6 +74,7 @@ FGAISchedule::FGAISchedule()
   radius = 0;
   groundOffset = 0;
   distanceToUser = 0;
+  score = 0;
 }
 
 FGAISchedule::FGAISchedule(string    mdl, 
@@ -84,6 +87,7 @@ FGAISchedule::FGAISchedule(string    mdl,
 			   string fltpe,
 			   double rad,
 			   double grnd,
+			   int    scre,
 			   FGScheduledFlightVec flt)
 {
   modelPath    = mdl; 
@@ -104,6 +108,7 @@ FGAISchedule::FGAISchedule(string    mdl,
        i++)
     flights.push_back(FGScheduledFlight((*i)));
   AIManagerRef = 0;
+  score    = scre;
   firstRun = true;
 }
 
@@ -124,6 +129,7 @@ FGAISchedule::FGAISchedule(const FGAISchedule &other)
   radius       = other.radius;
   groundOffset = other.groundOffset;
   flightType   = other.flightType;
+  score        = other.score;
   distanceToUser = other.distanceToUser;
 }
 
@@ -155,7 +161,7 @@ bool FGAISchedule::init()
   // Since time isn't initialized yet when this function is called,
   // Find the closest possible airport.
   // This should give a reasonable initialization order. 
-  setClosestDistanceToUser();
+  //setClosestDistanceToUser();
   return true;
 }
 
@@ -203,6 +209,9 @@ bool FGAISchedule::update(time_t now)
   // finally kicks in. 
   if (firstRun)
     {
+      if (init() == false)
+	AIManagerRef = BOGUS;
+	
       for (FGScheduledFlightVecIterator i = flights.begin(); 
   	   i != flights.end(); 
   	   i++)
@@ -460,47 +469,47 @@ double FGAISchedule::getSpeed()
 }
 
 
-void FGAISchedule::setClosestDistanceToUser()
-{
+// void FGAISchedule::setClosestDistanceToUser()
+// {
   
   
-  double course;
-  double dist;
+//   double course;
+//   double dist;
 
-  Point3D temp;
-  time_t 
-    totalTimeEnroute, 
-    elapsedTimeEnroute;
+//   Point3D temp;
+//   time_t 
+//     totalTimeEnroute, 
+//     elapsedTimeEnroute;
  
-  double userLatitude  = fgGetDouble("/position/latitude-deg");
-  double userLongitude = fgGetDouble("/position/longitude-deg");
+//   double userLatitude  = fgGetDouble("/position/latitude-deg");
+//   double userLongitude = fgGetDouble("/position/longitude-deg");
 
-  FGAirport *dep;
+//   FGAirport *dep;
   
-#if defined( __CYGWIN__) || defined( __MINGW32__)
-  #define HUGE HUGE_VAL
-#endif
-  distanceToUser = HUGE;
-  FGScheduledFlightVecIterator i = flights.begin();
-  while (i != flights.end())
-    {
-      dep = i->getDepartureAirport();
-      //if (!(dep))
-      //return HUGE;
+// #if defined( __CYGWIN__) || defined( __MINGW32__)
+//   #define HUGE HUGE_VAL
+// #endif
+//   distanceToUser = HUGE;
+//   FGScheduledFlightVecIterator i = flights.begin();
+//   while (i != flights.end())
+//     {
+//       dep = i->getDepartureAirport();
+//       //if (!(dep))
+//       //return HUGE;
       
-      SGWayPoint user (   userLongitude,
-			  userLatitude,
-			  i->getCruiseAlt());
-      SGWayPoint current (dep->getLongitude(),
-			  dep->getLatitude(),
-			  0);
-      user.CourseAndDistance(current, &course, &dist);
-      if (dist < distanceToUser)
-	{
-	  distanceToUser = dist;
-	  //cerr << "Found closest distance to user for " << registration << " to be " << distanceToUser << " at airport " << dep->getId() << endl;
-	}
-      i++;
-    }
-  //return distToUser;
-}
+//       SGWayPoint user (   userLongitude,
+// 			  userLatitude,
+// 			  i->getCruiseAlt());
+//       SGWayPoint current (dep->getLongitude(),
+// 			  dep->getLatitude(),
+// 			  0);
+//       user.CourseAndDistance(current, &course, &dist);
+//       if (dist < distanceToUser)
+// 	{
+// 	  distanceToUser = dist;
+// 	  //cerr << "Found closest distance to user for " << registration << " to be " << distanceToUser << " at airport " << dep->getId() << endl;
+// 	}
+//       i++;
+//     }
+//   //return distToUser;
+// }

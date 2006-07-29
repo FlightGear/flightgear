@@ -102,10 +102,9 @@ void FGTaxiSegment::setTrackDistance()
 		     end->getLatitude(),
 		     0);
   first.CourseAndDistance(second, &course, &length);
-  
 }
 
-bool FGTaxiRoute::next(int *val) 
+bool FGTaxiRoute::next(int *nde) 
 { 
   //for (intVecIterator i = nodes.begin(); i != nodes.end(); i++)
   //  cerr << "FGTaxiRoute contains : " << *(i) << endl;
@@ -114,11 +113,35 @@ bool FGTaxiRoute::next(int *val)
   //  cerr << "true" << endl;
   //else
   //  cerr << "false" << endl;
+  //if (nodes.size() != (routes.size()) +1)
+  //  cerr << "ALERT: Misconfigured TaxiRoute : " << nodes.size() << " " << routes.size() << endl;
       
   if (currNode == nodes.end())
     return false;
-  *val = *(currNode); 
+  *nde = *(currNode); 
   currNode++;
+  currRoute++;
+  return true;
+};
+
+bool FGTaxiRoute::next(int *nde, int *rte) 
+{ 
+  //for (intVecIterator i = nodes.begin(); i != nodes.end(); i++)
+  //  cerr << "FGTaxiRoute contains : " << *(i) << endl;
+  //cerr << "Offset from end: " << nodes.end() - currNode << endl;
+  //if (currNode != nodes.end())
+  //  cerr << "true" << endl;
+  //else
+  //  cerr << "false" << endl;
+  //if (nodes.size() != (routes.size()) +1)
+  //  cerr << "ALERT: Misconfigured TaxiRoute : " << nodes.size() << " " << routes.size() << endl;
+      
+  if (currNode == nodes.end())
+    return false;
+  *nde = *(currNode); 
+  *rte = *(currRoute);
+  currNode++;
+  currRoute++;
   return true;
 };
 /***************************************************************************
@@ -163,12 +186,14 @@ void FGGroundNetwork::addNodes(FGParkingVec *parkings)
 void FGGroundNetwork::init()
 {
   hasNetwork = true;
+  int index = 0;
   FGTaxiSegmentVectorIterator i = segments.begin();
   while(i != segments.end()) {
     //cerr << "initializing node " << i->getIndex() << endl;
     i->setStart(&nodes);
     i->setEnd  (&nodes);
     i->setTrackDistance();
+    i->setIndex(index++);
     //cerr << "Track distance = " << i->getLength() << endl;
     //cerr << "Track ends at"      << i->getEnd()->getIndex() << endl;
     i++;
@@ -216,6 +241,18 @@ FGTaxiNode *FGGroundNetwork::findNode(int idx)
   return 0;
 }
 
+FGTaxiSegment *FGGroundNetwork::findSegment(int idx)
+{
+  for (FGTaxiSegmentVectorIterator 
+	 itr = segments.begin();
+       itr != segments.end(); itr++)
+    {
+      if (itr->getIndex() == idx)
+	return itr->getAddress();
+    }
+  return 0;
+}
+
 FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end) 
 {
   foundRoute = false;
@@ -225,7 +262,9 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end)
   //prevNode = prevPrevNode = -1;
   //prevNode = start;
   routes.clear();
-  traceStack.clear();
+  nodesStack.clear();
+  routesStack.clear();
+
   trace(firstNode, end, 0, 0);
   FGTaxiRoute empty;
   
@@ -249,7 +288,7 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end)
 
 void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double distance)
 {
-  traceStack.push_back(currNode->getIndex());
+  nodesStack.push_back(currNode->getIndex());
   totalDistance += distance;
   //cerr << "Starting trace " << depth << " total distance: " << totalDistance<< endl;
   //<< currNode->getIndex() << endl;
@@ -258,9 +297,10 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
   // So we can add this to the routing table
   if (currNode->getIndex() == end)
     {
-      //cerr << "Found route : " <<  totalDistance << "" << " " << *(traceStack.end()-1) << endl;
-      routes.push_back(FGTaxiRoute(traceStack,totalDistance));
-      traceStack.pop_back();
+      //cerr << "Found route : " <<  totalDistance << "" << " " << *(nodesStack.end()-1) << endl;
+      routes.push_back(FGTaxiRoute(nodesStack,routesStack,totalDistance));
+      nodesStack.pop_back();
+      routesStack.pop_back();
       if (!(foundRoute))
 	maxDistance = totalDistance;
       else
@@ -276,18 +316,19 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
   // if so, we should step back one level, because it is
   // rather rediculous to proceed further from here. 
   // if the current node has not been encountered before,
-  // i should point to traceStack.end()-1; and we can continue
-  // if i is not traceStack.end, the previous node was found, 
+  // i should point to nodesStack.end()-1; and we can continue
+  // if i is not nodesStack.end, the previous node was found, 
   // and we should return. 
   // This only works at trace levels of 1 or higher though
   if (depth > 0) {
-    intVecIterator i = traceStack.begin();
+    intVecIterator i = nodesStack.begin();
     while ((*i) != currNode->getIndex()) {
       //cerr << "Route so far : " << (*i) << endl;
       i++;
     }
-    if (i != traceStack.end()-1) {
-      traceStack.pop_back();
+    if (i != nodesStack.end()-1) {
+      nodesStack.pop_back();
+      routesStack.pop_back();
       totalDistance -= distance;
       return;
     }
@@ -297,7 +338,8 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
     if ((totalDistance > maxDistance) && foundRoute)
       {
 	//cerr << "Stopping rediculously long trace: " << totalDistance << endl;
-	traceStack.pop_back();
+	nodesStack.pop_back();
+	routesStack.pop_back();
 	totalDistance -= distance;
 	return;
       }
@@ -312,7 +354,10 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
 	   i != currNode->getEndRoute();
 	   i++)
 	{
-	  //cerr << (*i)->getLenght() << endl;
+	  //cerr << (*i)->getLength() << endl;
+	  //cerr << (*i)->getIndex() << endl;
+	  int idx = (*i)->getIndex();
+	  routesStack.push_back((*i)->getIndex());
 	  trace((*i)->getEnd(), end, depth+1, (*i)->getLength());
 	//  {
 	//      // cerr << currNode -> getIndex() << " ";
@@ -325,7 +370,8 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
     {
       SG_LOG( SG_GENERAL, SG_DEBUG, "4" );
     }
-  traceStack.pop_back();
+  nodesStack.pop_back();
+  routesStack.pop_back();
   totalDistance -= distance;
   return;
 }

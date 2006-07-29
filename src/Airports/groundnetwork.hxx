@@ -104,6 +104,8 @@ public:
   double getLength() { return length; };
   int getIndex() { return index; };
 
+ FGTaxiSegment *getAddress() { return this;};
+
   
 };
 
@@ -111,21 +113,32 @@ public:
 typedef vector<int> intVec;
 typedef vector<int>::iterator intVecIterator;
 
+/***************************************************************************************
+ * class FGTaxiRoute
+ **************************************************************************************/
 class FGTaxiRoute
 {
 private:
   intVec nodes;
+  intVec routes;
   double distance;
   intVecIterator currNode;
+  intVecIterator currRoute;
 
 public:
-  FGTaxiRoute() { distance = 0; currNode = nodes.begin(); };
-  FGTaxiRoute(intVec nds, double dist) { nodes = nds; distance = dist; currNode = nodes.begin();};
+  FGTaxiRoute() { distance = 0; currNode = nodes.begin(); currRoute = routes.begin();};
+  FGTaxiRoute(intVec nds, intVec rts, double dist) { 
+    nodes = nds; 
+    routes = rts;
+    distance = dist; 
+    currNode = nodes.begin();
+  };
   bool operator< (const FGTaxiRoute &other) const {return distance < other.distance; };
   bool empty () { return nodes.begin() == nodes.end(); };
-  bool next(int *val); 
+  bool next(int *nde); 
+  bool next(int *nde, int *rte);
   
-  void first() { currNode = nodes.begin(); };
+  void first() { currNode = nodes.begin(); currRoute = routes.begin(); };
   int size() { return nodes.size(); };
 };
 
@@ -142,7 +155,8 @@ private:
   FGTaxiNodeVector    nodes;
   FGTaxiSegmentVector segments;
   //intVec route;
-  intVec traceStack;
+  intVec nodesStack;
+  intVec routesStack;
   TaxiRouteVector routes;
   
   bool foundRoute;
@@ -159,6 +173,7 @@ public:
   bool exists() { return hasNetwork; };
   int findNearestNode(double lat, double lon);
   FGTaxiNode *findNode(int idx);
+  FGTaxiSegment *findSegment(int idx);
   FGTaxiRoute findShortestRoute(int start, int end);
   void trace(FGTaxiNode *, int, int, double dist);
  

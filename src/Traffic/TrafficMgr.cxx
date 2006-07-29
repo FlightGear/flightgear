@@ -63,7 +63,7 @@
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIBase.hxx>
 #include <Airports/simple.hxx>
-#include <Main/fg_init.hxx>   // That's pretty ugly, but I need fgFindAirportID
+#include <Main/fg_init.hxx>
 
 
 
@@ -76,26 +76,27 @@ SG_USING_STD(sort);
  *****************************************************************************/
 FGTrafficManager::FGTrafficManager()
 {
+  score = 0;
 }
 
 
 void FGTrafficManager::init()
 { 
   //cerr << "Initializing Schedules" << endl;
-  time_t now = time(NULL) + fgGetLong("/sim/time/warp");
-  currAircraft = scheduledAircraft.begin();
-  while (currAircraft != scheduledAircraft.end())
-    {
-      if (!(currAircraft->init()))
-	{
-	  currAircraft=scheduledAircraft.erase(currAircraft);
-	  //cerr << "Erasing " << currAircraft->getRegistration() << endl;
-	}
-      else 
-	{
-	  currAircraft++;
-	}
-    }
+  //time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+  //currAircraft = scheduledAircraft.begin();
+  //while (currAircraft != scheduledAircraft.end())
+  //  {
+  //    if (!(currAircraft->init()))
+  //	{
+  //	  currAircraft=scheduledAircraft.erase(currAircraft);
+  //	  //cerr << "Erasing " << currAircraft->getRegistration() << endl;
+  //	}
+  //   else 
+  //	{
+  //	  currAircraft++;
+  //	}
+  //   }
   //cerr << "Sorting by distance " << endl;
   sort(scheduledAircraft.begin(), scheduledAircraft.end());
   currAircraft = scheduledAircraft.begin();
@@ -107,7 +108,7 @@ void FGTrafficManager::update(double something)
 {
   time_t now = time(NULL) + fgGetLong("/sim/time/warp");
   if (scheduledAircraft.size() == 0)
-	  return;
+    return;
   if(currAircraft == scheduledAircraft.end())
     {
       //cerr << "resetting schedule " << endl;
@@ -226,6 +227,11 @@ void  FGTrafficManager::endElement (const char * name) {
       //cerr << "Pusing back flight " << callsign << endl;
       //cerr << callsign  <<  " " << fltrules     << " "<< departurePort << " " <<  arrivalPort << " "
       //   << cruiseAlt <<  " " << departureTime<< " "<< arrivalTime   << " " << repeat << endl;
+
+      //Prioritize aircraft 
+      string apt = fgGetString("/sim/presets/airport-id");
+      //cerr << "Airport information: " << apt << " " << departurePort << " " << arrivalPort << endl;
+      if (departurePort == apt) score++;
       flights.push_back(FGScheduledFlight(callsign,
 					  fltrules,
 					  departurePort,
@@ -248,9 +254,15 @@ void  FGTrafficManager::endElement (const char * name) {
 					       flighttype,
 					       radius,
 					       offset,
+					       score,
 					       flights));
       while(flights.begin() != flights.end())
 	flights.pop_back();
+      SG_LOG( SG_GENERAL, SG_BULK, "Reading aircraft : " 
+	      << registration 
+	      << " with prioritization score " 
+	      << score);
+      score = 0;
     }
 }
 

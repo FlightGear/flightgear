@@ -112,7 +112,8 @@ private:
   int leg;
   int gateId;
   string activeRunway;
-  FGAirRoute route;
+  FGAirRoute airRoute;
+  FGTaxiRoute *taxiRoute;
 
 
   Point3D temp;

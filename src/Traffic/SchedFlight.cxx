@@ -265,13 +265,13 @@ bool FGScheduledFlight::initializeAirports()
   departurePort = globals->get_airports()->search(depId);
   if(departurePort == NULL)
     {
-      cerr << "Could not find " << depId << endl; 
+      SG_LOG( SG_GENERAL, SG_WARN, "Traffic manager could not find departure airport : " << depId);
       return false;
     }
   arrivalPort = globals->get_airports()->search(arrId);
   if(arrivalPort == NULL)
     {
-      cerr << "Could not find " << arrId << endl;
+      SG_LOG( SG_GENERAL, SG_WARN, "Traffic manager could not find arrival airort   : " << arrId);
       return false;
     }
 
