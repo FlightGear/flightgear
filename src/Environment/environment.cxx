@@ -612,7 +612,7 @@ void
 FGEnvironment::_recalc_density_tropo_avg_kgm3 ()
 {
   double pressure_mb = pressure_inhg * 33.86;
-  double vaporpressure = 6.11 * pow(10, ((7.5 * dewpoint_degc) / (237.7 + dewpoint_degc)));
+  double vaporpressure = 6.11 * pow(10.0, ((7.5 * dewpoint_degc) / (237.7 + dewpoint_degc)));
 
   double virtual_temp = (temperature_degc + 273.15) / (1 - 0.379 * (vaporpressure/pressure_mb));
 
@@ -627,8 +627,8 @@ FGEnvironment::_recalc_density_tropo_avg_kgm3 ()
 void
 FGEnvironment::_recalc_relative_humidity ()
 {
-  double vaporpressure = 6.11 * pow(10, ((7.5 * dewpoint_degc) / ( 237.7 + dewpoint_degc)));
-  double sat_vaporpressure = 6.11 * pow(10, ((7.5 * temperature_degc)
+  double vaporpressure = 6.11 * pow(10.0, ((7.5 * dewpoint_degc) / ( 237.7 + dewpoint_degc)));
+  double sat_vaporpressure = 6.11 * pow(10.0, ((7.5 * temperature_degc)
       / ( 237.7 + temperature_degc)) );
   relative_humidity = 100 * vaporpressure / sat_vaporpressure ;
 }
