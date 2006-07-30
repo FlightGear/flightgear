@@ -185,10 +185,8 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 				double radius, const string& fltType, 
 				const string& acType, const string& airline)
 {
-  double wind_speed;
-  double wind_heading;
   double heading;
-  double lat, lon, az;
+  double lat, lon;
   double lat2, lon2, az2;
   waypoint *wpt;
 
@@ -448,8 +446,8 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	    //Add the runway startpoint;
 	    wpt = new waypoint;
 	    wpt->name      = "Runway Takeoff";
-	    wpt->latitude  = lat2;
-	    wpt->longitude = lon2;
+	    wpt->latitude  = lat3;
+	    wpt->longitude = lon3;
 	    wpt->altitude  = apt->getElevation();
 	    wpt->speed     = 15; 
 	    wpt->crossat   = -10000;
@@ -552,8 +550,6 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
  ******************************************************************/
 void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double speed)
 {
-  double wind_speed;
-  double wind_heading;
   double heading;
   double lat, lon, az;
   double lat2, lon2, az2;
@@ -627,11 +623,8 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
  ******************************************************************/
 void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed, double alt)
 {
-  double wind_speed;
-  double wind_heading;
   double heading;
   //FGRunway rwy;
-  double lat, lon, az;
   double lat2, lon2, az2;
   //int direction;
   waypoint *wpt;
@@ -767,11 +760,8 @@ void FGAIFlightPlan::createDecent(FGAirport *apt)
 {
 
   // Ten thousand ft. Slowing down to 240 kts
-  double wind_speed;
-  double wind_heading;
   double heading;
   //FGRunway rwy;
-  double lat, lon, az;
   double lat2, lon2, az2;
   double azimuth;
   //int direction;
@@ -835,11 +825,8 @@ void FGAIFlightPlan::createDecent(FGAirport *apt)
 void FGAIFlightPlan::createLanding(FGAirport *apt)
 {
   // Ten thousand ft. Slowing down to 150 kts
-  double wind_speed;
-  double wind_heading;
   double heading;
   //FGRunway rwy;
-  double lat, lon, az;
   double lat2, lon2, az2;
   double azimuth;
   //int direction;
