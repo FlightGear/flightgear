@@ -69,8 +69,7 @@ SG_USING_STD(deque);
 SG_USING_STD(vector);
 SG_USING_NAMESPACE(std);
 
-//#define float_to_int(v) SGMiscf::roundToInt(v)
-#define float_to_int(v) int(floorf(v + 0.5f))
+#define float_to_int(v) SGMiscf::roundToInt(v)
 
 // some of Norman's crazy optimizations. :-)
 
