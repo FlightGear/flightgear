@@ -804,6 +804,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\gsdi.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\gui\gui.h"
 				>
 			</File>
@@ -820,6 +824,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\heading_indicator_fg.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\scenery\hitlist.hxx"
 				>
 			</File>
@@ -829,6 +837,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\network\httpd.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\HUD\HUD.hxx"
 				>
 			</File>
 			<File
@@ -2444,6 +2456,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\gsdi.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\gui\gui.cxx"
 				>
 			</File>
@@ -2464,6 +2480,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\heading_indicator_fg.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\scenery\hitlist.cxx"
 				>
 			</File>
@@ -2480,7 +2500,33 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\HUD\HUD.cxx"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\..\src\cockpit\hud_card.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\HUD\HUD_dial.cxx"
 				>
 			</File>
 			<File
@@ -2492,7 +2538,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\HUD\HUD_gauge.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\cockpit\hud_inst.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\HUD\HUD_instrument.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\HUD\HUD_label.cxx"
 				>
 			</File>
 			<File
@@ -2500,15 +2558,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\HUD\HUD_ladder.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\cockpit\hud_ladr.cxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud_lat.cxx"
+				RelativePath="..\..\src\Instrumentation\HUD\HUD_misc.cxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud_lon.cxx"
+				RelativePath="..\..\src\Instrumentation\HUD\HUD_runway.cxx"
 				>
 			</File>
 			<File
@@ -2520,8 +2582,38 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\HUD\HUD_scale.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\HUD\HUD_tape.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\cockpit\hud_tbi.cxx"
 				>
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\HUD\HUD_tbi.cxx"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\src\input\input.cxx"

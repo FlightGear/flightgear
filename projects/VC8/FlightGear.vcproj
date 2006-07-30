@@ -65,6 +65,7 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
+				FixedBaseAddress="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -142,6 +143,7 @@
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
+				FixedBaseAddress="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -199,10 +201,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\globals.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\logger.hxx"
 				>
 			</File>
 			<File
