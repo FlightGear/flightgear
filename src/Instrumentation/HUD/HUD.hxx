@@ -91,64 +91,20 @@ private:
 
 class HUDText {
 public:
-    HUDText(float x, float y, char *s, int d = 0) : _x(x), _y(y), _digits(d) {
-        strncpy(_msg, s, BUFSIZE);
-    }
-
-    // this code is changed to display Numbers with big/small digits
-    // according to MIL Standards for example Altitude above 10000 ft
-    // is shown as 10ooo.
-
-    void draw(fntRenderer *fnt) {
-        if (!_digits) { // show all digits in same size
-            fnt->start2f(_x, _y);
-            fnt->puts(_msg);
-            return;
-        }
-
-        int c = 0, i = 0;
-        char *t = _msg;
-        int p = 4;
-
-        if (t[0] == '-') {
-            //if negative value then increase the c and p values
-            //for '-' sign.
-            c++; // was moved to the comment. Unintentionally?   TODO
-            p++;
-        }
-        char *tmp = _msg;
-        while (tmp[i] != '\0') {
-            if ((tmp[i] >= '0') && (tmp[i] <= '9'))
-                c++;
-            i++;
-        }
-
-        float orig_size = fnt->getPointSize();
-        if (c > p) {
-            fnt->setPointSize(orig_size * 0.8);
-            int p1 = c - 3;
-            char *tmp1 = _msg + p1;
-            int p2 = p1 * 8;
-
-            fnt->start2f(_x + p2, _y);
-            fnt->puts(tmp1);
-
-            fnt->setPointSize(orig_size * 1.2);
-            char tmp2[BUFSIZE];
-            strncpy(tmp2, _msg, p1);
-            tmp2[p1] = '\0';
-
-            fnt->start2f(_x, _y);
-            fnt->puts(tmp2);
-        } else {
-            fnt->setPointSize(orig_size * 1.2);
-            fnt->start2f(_x, _y);
-            fnt->puts(tmp);
-        }
-        fnt->setPointSize(orig_size);
-    }
+    HUDText(fntRenderer *f, float x, float y, const char *s, int align = 0, int digits = 0);
+    void draw();
+    enum {
+        LEFT    = 0x0001,
+        RIGHT   = 0x0002,
+        TOP     = 0x0004,
+        BOTTOM  = 0x0008,
+        HCENTER = 0x0010,
+        VCENTER = 0x0020,
+        CENTER  = (HCENTER|VCENTER),
+    };
 
 private:
+    fntRenderer *_fnt;
     float _x, _y;
     int _digits;
     static const int BUFSIZE = 64;
@@ -162,7 +118,9 @@ public:
     TextList() { _font = 0; }
 
     void setFont(fntRenderer *Renderer) { _font = Renderer; }
-    void add(const HUDText& String) { _list.push_back(String); }
+    void add(float x, float y, const char *s, int align = 0, int digit = 0) {
+        _list.push_back(HUDText(_font, x, y, s, align, digit));
+    }
     void erase() { _list.erase(_list.begin(), _list.end()); }
     void draw() {
         assert(_font);
@@ -174,7 +132,7 @@ public:
         _font->begin();
         vector<HUDText>::iterator it, end = _list.end();
         for (it = _list.begin(); it != end; ++it)
-            it->draw(_font);
+            it->draw();
         _font->end();
 
         glDisable(GL_TEXTURE_2D);
@@ -222,18 +180,9 @@ public:
         BOTTOM     = 0x0004,
         LEFT       = 0x0008,
         RIGHT      = 0x0010,
-        HCENTER    = 0x0020,
-        VCENTER    = 0x0040,
-        NOTICKS    = 0x0080,
-        NOTEXT     = 0x0100,
+        NOTICKS    = 0x0020,
+        NOTEXT     = 0x0040,
         BOTH       = (LEFT|RIGHT),
-        CENTER     = (HCENTER|VCENTER),
-    };
-
-    enum Adjust {
-        LEFT_ALIGN,
-        CENTER_ALIGN,
-        RIGHT_ALIGN
     };
 
 protected:
@@ -385,9 +334,9 @@ protected:
     inline bool option_top()     const { return (_options & TOP) == TOP; }
     inline bool option_bottom()  const { return (_options & BOTTOM) == BOTTOM; }
 
-    void draw_line( float x1, float y1, float x2, float y2);
-    void draw_stipple_line( float x1, float y1, float x2, float y2);
-    void draw_text( float x, float y, char *msg, int digit);
+    void draw_line(float x1, float y1, float x2, float y2);
+    void draw_stipple_line(float x1, float y1, float x2, float y2);
+    void draw_text(float x, float y, char *msg, int align = 0, int digit = 0);
     float text_width(char *str) const;
     void draw_circle(float x1, float y1, float r) const;
     void draw_bullet(float, float, float);
@@ -429,7 +378,7 @@ private:
     Input   _input;
     Format  _mode;
     string  _format;
-    Adjust  _halign;
+    int     _halign;    // HUDText alignment
     int     _blink;
     bool    _box;
     float   _text_y;
@@ -551,8 +500,8 @@ private:
     void draw_zenith(float, float);
     void draw_nadir(float, float);
 
-    void draw_text(float x, float y, char *s) {
-        _locTextList.add(HUDText(x, y, s));
+    void draw_text(float x, float y, char *s, int align = 0) {
+        _locTextList.add(x, y, s, align, 0);
     }
 
     void draw_line(float x1, float y1, float x2, float y2) {

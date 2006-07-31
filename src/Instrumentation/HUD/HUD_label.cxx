@@ -44,11 +44,13 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
     const char *halign = n->getStringValue("halign", "center");
     if (!strcmp(halign, "left"))
-        _halign = LEFT_ALIGN;
+        _halign = HUDText::LEFT;
     else if (!strcmp(halign, "right"))
-        _halign = RIGHT_ALIGN;
+        _halign = HUDText::RIGHT;
     else
-        _halign = CENTER_ALIGN;
+        _halign = HUDText::HCENTER;
+
+    _halign |= HUDText::VCENTER;
 
     const char *pre = n->getStringValue("prefix", 0);
     const char *post = n->getStringValue("postfix", 0);
@@ -72,9 +74,6 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
         _mode = NONE;
     }
 
-    float top, bot;
-    _hud->_font->getBBox("0", _hud->_font_size, 0.0, 0, 0, &bot, &top);
-    _text_y = _y + (_h - top + bot) / 2.0 - bot;
     blink();
 }
 
@@ -156,20 +155,12 @@ void HUD::Label::draw(void)
     else if (_mode == DOUBLE) // not really supported yet
         snprintf(buf, BUFSIZE, _format.c_str(), double(_input.getFloatValue()));
 
-    float posincr;
-    float L, R, B, T;
-    _hud->_font->getBBox(buf, _hud->_font_size, 0.0, &L, &R, &B, &T);
-    float lenstr = R - L;
-
-    if (_halign == RIGHT_ALIGN)
-        posincr = _w - lenstr;
-    else if (_halign == CENTER_ALIGN)
-        posincr = (_w - lenstr) / 2.0;
-    else // LEFT_ALIGN
-        posincr = 0;
-
-    posincr += _hud->_font->getGap() / 2.0 - L;
-    draw_text(_x + posincr, _text_y, buf, get_digits());
+    if (_halign & HUDText::HCENTER)
+        draw_text(_center_x, _center_y, buf, _halign, get_digits());
+    else if (_halign & HUDText::LEFT)
+        draw_text(_x, _center_y, buf, _halign, get_digits());
+    else // if (_halign & HUDText::RIGHT)
+        draw_text(_x + _w, _center_y, buf, _halign, get_digits());
 }
 
 

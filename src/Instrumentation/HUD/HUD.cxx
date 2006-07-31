@@ -446,3 +446,99 @@ void HUD::setColor() const
 }
 
 
+
+
+
+
+
+
+// HUDText -- text container for TextList vector
+
+
+HUDText::HUDText(fntRenderer *fnt, float x, float y, const char *s, int align, int d) :
+    _fnt(fnt),
+    _x(x),
+    _y(y),
+    _digits(d)
+{
+    strncpy(_msg, s, BUFSIZE);
+    if (!align || !s[0])
+        return;
+
+    fntFont *f = _fnt->getFont();
+    float gap = f->getGap();
+    float left, right, bot, top;
+    f->getBBox(s, _fnt->getPointSize(), _fnt->getSlant(), &left, &right, &bot, &top);
+
+    if (align & HCENTER)
+        _x = x - left + gap - (right - left - gap) / 2.0;
+    else if (align & RIGHT)
+        _x = x - right;
+    else if (align & LEFT)
+        _x = x - left;
+
+    if (align & VCENTER)
+        _y = y - bot - (top - bot) / 2.0;
+    else if (align & TOP)
+        _y = y - top;
+    else if (align & BOTTOM)
+        _y = y - bot;
+}
+
+
+void HUDText::draw()
+{
+    if (!_digits) { // show all digits in same size
+        _fnt->start2f(_x, _y);
+        _fnt->puts(_msg);
+        return;
+    }
+
+    // FIXME
+    // this code is changed to display Numbers with big/small digits
+    // according to MIL Standards for example Altitude above 10000 ft
+    // is shown as 10ooo.
+
+    int c = 0, i = 0;
+    char *t = _msg;
+    int p = 4;
+
+    if (t[0] == '-') {
+        //if negative value then increase the c and p values
+        //for '-' sign.
+        c++; // was moved to the comment. Unintentionally?   TODO
+        p++;
+    }
+    char *tmp = _msg;
+    while (tmp[i] != '\0') {
+        if ((tmp[i] >= '0') && (tmp[i] <= '9'))
+            c++;
+        i++;
+    }
+
+    float orig_size = _fnt->getPointSize();
+    if (c > p) {
+        _fnt->setPointSize(orig_size * 0.8);
+        int p1 = c - 3;
+        char *tmp1 = _msg + p1;
+        int p2 = p1 * 8;
+
+        _fnt->start2f(_x + p2, _y);
+        _fnt->puts(tmp1);
+
+        _fnt->setPointSize(orig_size * 1.2);
+        char tmp2[BUFSIZE];
+        strncpy(tmp2, _msg, p1);
+        tmp2[p1] = '\0';
+
+        _fnt->start2f(_x, _y);
+        _fnt->puts(tmp2);
+    } else {
+        _fnt->setPointSize(orig_size * 1.2);
+        _fnt->start2f(_x, _y);
+        _fnt->puts(tmp);
+    }
+    _fnt->setPointSize(orig_size);
+}
+
+

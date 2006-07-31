@@ -434,7 +434,7 @@ void HUD::Ladder::draw(void)
             sgdVec3 p; sgdSetVec3(p, vel_x, vel_y, 0.0);
             sgdVec3 p0; sgdSetVec3(p0, 0.0, 0.0, 0.0);
             sgdVec3 d; sgdSetVec3(d, cos(roll_value), sin(roll_value), 0.0);
-            sgdClosestPointToLine( p1, p, p0, d );
+            sgdClosestPointToLine(p1, p, p0, d);
             glTranslatef(p1[0], p1[1], 0);
         }
     } else {
@@ -453,21 +453,7 @@ void HUD::Ladder::draw(void)
     if (_div_units) {
         const int BUFSIZE = 8;
         char buf[BUFSIZE];
-        float label_length;
-        float label_height;
-        float left;
-        float right;
-        float bot;
-        float top;
-        float text_offset = 4.0f;
-        float zero_offset = 0.0;
-
-        // horizon line is wider by this much (hard coded ??)
-        zero_offset = 50.0f;
-
-        fntFont *font = _hud->_font_renderer->getFont();   // FIXME
-        float pointsize = _hud->_font_renderer->getPointSize();
-        float italic = _hud->_font_renderer->getSlant();
+        const float zero_offset = 50.0f; // horizon line is wider by this much
 
         _locTextList.setFont(_hud->_font_renderer);
         _locTextList.erase();
@@ -485,17 +471,16 @@ void HUD::Ladder::draw(void)
 
                 if (!(i % _div_units)) {           //  At integral multiple of div
                     snprintf(buf, BUFSIZE, "%d", i);
-                    font->getBBox(buf, pointsize, italic, &left, &right, &bot, &top);
-                    label_length = right + left;
-                    label_height = (top + bot) / 2.0f;
-
                     x_ini = -half_span;
 
-                    if (i >= 0) {
+                    if (i == 0) {
                         // Make zero point wider on left
-                        if (i == 0)
-                            x_ini -= zero_offset;
+                        x_ini -= zero_offset;
+                        x_end += zero_offset;
 
+                        draw_line(x_ini, y, x_end, y);
+
+                    } else if (i > 0) {
                         // Zero or above draw solid lines
                         draw_line(x_ini, y, x_end, y);
 
@@ -509,9 +494,8 @@ void HUD::Ladder::draw(void)
                             draw_nadir(0.0, y);
                     }
 
-                    // Calculate the position of the left text and write it.
-                    draw_text(x_ini - text_offset - label_length + 2.5/*hack*/, y - label_height, buf);
-                    draw_text(x_end + text_offset, y - label_height, buf);
+                    draw_text(x_ini - 4, y, buf, HUDText::VCENTER|HUDText::LEFT);
+                    draw_text(x_end + 4, y, buf, HUDText::VCENTER|HUDText::RIGHT);
                 }
             }
 
@@ -525,47 +509,49 @@ void HUD::Ladder::draw(void)
             for (; i < last; i++) {
                 if (_type == PITCH) {
                     y = float(i - pitch_value) * _compression + .5;
-                } else {
-                    // _type == CLIMB_DIVE
+                } else { // _type == CLIMB_DIVE
                     y = float(i - actslope) * _compression + .5;
                 }
-                if ( i < 0 )
-                    y_end = y +
-                        sin(0.5 * i * SG_DEGREES_TO_RADIANS * 3/*hack*/) *
-                        _compression;
-                else
-                    y_end = y;
 
                 if (!(i % _div_units)) {  //  At integral multiple of div
                     snprintf(buf, BUFSIZE, "%d", i);
-                    font->getBBox(buf, pointsize, italic, &left, &right, &bot, &top);
-                    label_length = right + left;
-                    label_height = (top + bot) / 2.0f;
-                    //printf("%s -- l %f r %f b %f t %f\n", buf, left, right, bot, top);
 
                     // Start by calculating the points and drawing the
                     // left side lines.
                     x_ini = -half_span;
                     x_end2 = half_span;
+                    y_end = y;
 
-                    if (i >= 0) {
+                    if (i == 0) {
                         // Make zero point wider on left
-                        if (i == 0) {
-                            x_ini -= zero_offset;
-                            x_end2 += zero_offset;
-                        } else {
-                            //draw climb bar vertical lines
-                            draw_line(x_end, y - 5.0, x_end, y);
-                            draw_line(x_ini2, y - 5.0, x_ini2, y);
-                        }
+                        x_ini -= zero_offset;
+                        x_end2 += zero_offset;
+
+                        draw_line(x_ini, y, x_end, y);
+                        draw_line(x_ini2, y, x_end2, y);
+
+                        draw_text(x_ini - 3, y, buf, HUDText::VCENTER|HUDText::RIGHT);
+                        draw_text(x_end2 + 3, y, buf, HUDText::VCENTER|HUDText::LEFT);
+
+                    } else if (i > 0) {
+                        //draw climb bar vertical lines
+                        draw_line(x_ini, y - 5.0, x_ini, y);
+                        draw_line(x_end2, y - 5.0, x_end2, y);
+
                         // draw pitch / climb bar
                         draw_line(x_ini, y, x_end, y);
                         draw_line(x_ini2, y, x_end2, y);
+
+                        draw_text(x_ini + 0.5, y - 0.5, buf, HUDText::TOP|HUDText::LEFT);
+                        draw_text(x_end2 - 0.5, y - 0.5, buf, HUDText::TOP|HUDText::RIGHT);
 
                         if (i == 90 && _zenith)
                             draw_zenith(0.0, y);
 
                     } else { // i < 0
+                        y_end = y + sin(0.5 * i * SG_DEGREES_TO_RADIANS * 3/*hack*/) *
+                                _compression;
+
                         // draw dive bar vertical lines
                         draw_line(x_end, y + 5.0, x_end, y);
                         draw_line(x_ini2, y + 5.0, x_ini2, y);
@@ -574,13 +560,13 @@ void HUD::Ladder::draw(void)
                         draw_stipple_line(x_ini, y_end, x_end, y);
                         draw_stipple_line(x_ini2, y, x_end2, y_end);
 
+                        float yoffs = 1.0 + (y - y_end) / 4.0;  // too hackish?
+                        draw_text(x_ini + 2.0, y_end + yoffs, buf, HUDText::BOTTOM|HUDText::HCENTER);
+                        draw_text(x_end2 - 2.0, y_end + yoffs, buf, HUDText::BOTTOM|HUDText::HCENTER);
+
                         if (i == -90 && _nadir)
                             draw_nadir(0.0, y);
                     }
-
-                    // Now calculate the location of the left side label using
-                    draw_text(x_ini - text_offset - label_length + 2.5/*hack*/, y_end - label_height, buf);
-                    draw_text(x_end2 + text_offset, y_end - label_height, buf);
                 }
             }
 

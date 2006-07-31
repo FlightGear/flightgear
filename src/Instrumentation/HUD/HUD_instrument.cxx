@@ -101,9 +101,9 @@ void HUD::Item::draw_stipple_line(float x1, float y1, float x2, float y2)
 }
 
 
-void HUD::Item::draw_text(float x, float y, char *msg, int digit)
+void HUD::Item::draw_text(float x, float y, char *msg, int align, int digit)
 {
-    _hud->_text_list.add(HUDText(x, y, msg, digit));
+    _hud->_text_list.add(x, y, msg, align, digit);
 }
 
 
