@@ -33,6 +33,7 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _draw_cap_right(n->getBoolValue("cap-right", false)),
     _draw_cap_left(n->getBoolValue("cap-left", false)),
     _marker_offset(n->getFloatValue("marker-offset", 0.0)),
+    _label_gap(n->getFloatValue("label-gap-width", 0.0)),
     _pointer(n->getBoolValue("enable-pointer", true)),
     _zoom(n->getIntValue("zoom"))
 {
@@ -60,7 +61,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
     float marker_xe;
     float marker_ys;
     float marker_ye;
-    float text_x = 0.0, text_y = 0.0;
+    float text_y = 0.0;
     const int BUFSIZE = 80;
     char buf[BUFSIZE];
     int oddtype;
@@ -77,22 +78,18 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
     float right = _x + _w;
 
 
-    if (_pointer) {
-        if (_pointer_type == MOVING) {
-            vmin = _input.min();
-            vmax = _input.max();
-
-        } else { // FIXED
-            vmin = cur_value - _half_width_units; // width units == needle travel
-            vmax = cur_value + _half_width_units; // or picture unit span.
-            text_x = _center_x;
-            text_y = _center_y;
-        }
-
-    } else {
+    if (!_pointer) {
         vmin = cur_value - _half_width_units; // width units == needle travel
         vmax = cur_value + _half_width_units; // or picture unit span.
-        text_x = _center_x;
+        text_y = _center_y;
+
+    } else if (_pointer_type == MOVING) {
+        vmin = _input.min();
+        vmax = _input.max();
+
+    } else { // FIXED
+        vmin = cur_value - _half_width_units; // width units == needle travel
+        vmax = cur_value + _half_width_units; // or picture unit span.
         text_y = _center_y;
     }
 
@@ -115,18 +112,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
         marker_xs = _x;       // x start
         marker_xe = right;    // x extent
         marker_ye = top;
-
-        //    glBegin(GL_LINES);
-
-        // Bottom tick bar
-        //    glVertex2f(marker_xs, _y);
-        //    glVertex2f(marker_xe, _y);
-
-        // Top tick bar
-        //    glVertex2f(marker_xs, marker_ye);
-        //    glVertex2f(marker_xe, marker_ye);
-        //    glEnd();
-
 
         // We do not use else in the following so that combining the
         // two options produces a "caged" display with double
@@ -296,14 +281,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                             draw_bullet(_x, y, 3.0);
                         }
 
-                        // glBegin(GL_LINES);
-                        // glVertex2f(_x, y);
-                        // glVertex2f(marker_xs,      y);
-                        // glVertex2f(marker_xe,      y);
-                        // glVertex2f(_x + _w,  y);
-                        // glEnd();
-                        // anything other than huds_both
-
                     } else if (option_left()) {
                         if (_tick_type == LINE) {
                             if (_tick_length == VARIABLE) {
@@ -336,14 +313,9 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     snprintf(buf, BUFSIZE, "%d", display_value);
 
                     if (option_both()) {
-                        // draw_line(_x, y, marker_xs, y);
-                        // draw_line(marker_xs, y, _x + _w, y);
                         if (_tick_type == LINE) {
-                            glBegin(GL_LINE_STRIP);
-                            glVertex2f(_x, y);
-                            glVertex2f(marker_xs, y);
-                            glVertex2f(right, y);
-                            glEnd();
+                            draw_line(_x, y, marker_xs, y);
+                            draw_line(marker_xs, y, right, y);
 
                         } else { // _tick_type == CIRCLE
                             draw_bullet(_x, y, 5.0);
@@ -388,16 +360,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
         marker_ye = top;           // tick y location calcs
         marker_xe = right;
         marker_xs = _x + ((cur_value - vmin) * factor());
-
-        //    glBegin(GL_LINES);
-        // left tick bar
-        //    glVertex2f(_x, _y);
-        //    glVertex2f(_x, marker_ye);
-
-        // right tick bar
-        //    glVertex2f(marker_xe, _y);
-        //    glVertex2f(marker_xe, marker_ye);
-        //    glEnd();
 
         if (option_top()) {
             if (_draw_cap_bottom)
@@ -504,12 +466,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                             draw_line(x, _y, x, marker_ys);
                             draw_line(x, marker_ye, x, top);
                         }
-                        // glBegin(GL_LINES);
-                        // glVertex2f(x, _y);
-                        // glVertex2f(x, marker_ys - 4);
-                        // glVertex2f(x, marker_ye + 4);
-                        // glVertex2f(x, _y + _h);
-                        // glEnd();
 
                     } else {
                         if (option_top()) {
@@ -538,15 +494,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         continue;
 
                     if (option_both()) {
-                        // draw_line(x, _y,
-                        //              x, marker_ys);
-                        // draw_line(x, marker_ye,
-                        //              x, _y + _h);
-                        glBegin(GL_LINE_STRIP);
-                        glVertex2f(x, _y);
-                        glVertex2f(x, marker_ye);
-                        glVertex2f(x, top);
-                        glEnd();
+                        draw_line(x, _y, x, marker_ye);
+                        draw_line(x, marker_ye, x, _y + _h);
 
                         if (!option_notext())
                             draw_text(x, marker_ys, buf, HUDText::CENTER);
@@ -781,23 +730,23 @@ void HUD::Tape::zoomed_scale(int first, int last)
         float factors = hgt1 / incr;
 
 
-        //Code for Moving Type Pointer
-        //begin
-        static float xcent, xpoint, ypoint;				// FIXME really static?
+        // Code for Moving Type Pointer
+        float, xpoint, ypoint;
+        float xcent = _center_x;
 
-        xcent = _center_x;
-
-        if (cur_value <= data[centre + 1])
+        if (cur_value <= data[centre + 1]) {
             if (cur_value > data[centre]) {
                 xpoint = xcent + ((cur_value - data[centre]) * hgt / _major_divs);
             }
+        }
 
-        if (cur_value >= data[centre - 1])
+        if (cur_value >= data[centre - 1]) {
             if (cur_value <= data[centre]) {
                 xpoint = xcent - ((data[centre] - cur_value) * hgt / _major_divs);
             }
+        }
 
-        if (cur_value < data[centre - 1])
+        if (cur_value < data[centre - 1]) {
             if (cur_value >= _input.min()) {
                 float diff = _input.min() - data[centre - 1];
                 float diff1 = cur_value - data[centre - 1];
@@ -805,9 +754,9 @@ void HUD::Tape::zoomed_scale(int first, int last)
 
                 xpoint = xcent - hgt - val;
             }
+        }
 
-
-        if (cur_value > data[centre + 1])
+        if (cur_value > data[centre + 1]) {
             if (cur_value <= _input.max()) {
                 float diff = _input.max() - data[centre + 1];
                 float diff1 = cur_value - data[centre + 1];
@@ -815,8 +764,9 @@ void HUD::Tape::zoomed_scale(int first, int last)
 
                 xpoint = xcent + hgt + val;
             }
+        }
+        // end moving pointer
 
-        //end
         if (option_top()) {
             ystart = h;
             draw_line(xcentre, ystart, xcentre, ystart - 5.0); //centre tick
@@ -853,9 +803,8 @@ void HUD::Tape::zoomed_scale(int first, int last)
                 xfirst -= factors;
                 xsecond += factors;
             }
-            //this is for moving pointer for top option
-            //begin
 
+            // moving pointer for top option
             ypoint = _y + _h + 10.0;
 
             if (_pointer_type == MOVING) {
@@ -904,9 +853,8 @@ void HUD::Tape::zoomed_scale(int first, int last)
                 xfirst -= factors;
                 xsecond   += factors;
             }
-            //this is for movimg pointer for bottom option
-            //begin
 
+            // movimg pointer for bottom option
             ypoint = _y - 10.0;
             if (_pointer_type == MOVING) {
                 draw_line(xcent, ypoint, xpoint, ypoint);

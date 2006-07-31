@@ -447,6 +447,7 @@ private:
     bool   _draw_cap_right;
     bool   _draw_cap_left;
     float  _marker_offset;
+    float  _label_gap;
     bool   _pointer;
     int    _zoom;
 
