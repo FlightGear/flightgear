@@ -561,12 +561,13 @@ void HUD::Ladder::draw(void)
                         draw_line(x_ini2, y + 5.0, x_ini2, y);
 
                         // draw pitch / dive bars
-                        draw_stipple_line(x_ini, y_end, x_end, y);
+                        draw_stipple_line(x_end, y, x_ini, y_end);
                         draw_stipple_line(x_ini2, y, x_end2, y_end);
 
                         float yoffs = 1.0 + (y - y_end) / 4.0;  // too hackish?
-                        draw_text(x_ini + 2.0, y_end + yoffs, buf, HUDText::BOTTOM|HUDText::HCENTER);
-                        draw_text(x_end2 - 2.0, y_end + yoffs, buf, HUDText::BOTTOM|HUDText::HCENTER);
+                        draw_text(x_ini + 3.0, y_end + yoffs, buf, HUDText::BOTTOM|HUDText::HCENTER);
+                        // right number shifted in a little more, because of the minus
+                        draw_text(x_end2 - 4.0, y_end + yoffs, buf, HUDText::BOTTOM|HUDText::HCENTER);
 
                         if (i == -90 && _nadir)
                             draw_nadir(0.0, y);
