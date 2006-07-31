@@ -432,7 +432,7 @@ public:
     virtual void draw();
 
 protected:
-    void fixed(float, float, float, float, float, float);
+    void draw_fixed_pointer(float, float, float, float, float, float);
     void zoomed_scale(int, int);
 
 private:

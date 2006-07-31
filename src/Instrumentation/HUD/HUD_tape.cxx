@@ -68,7 +68,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
     float cur_value = _input.getFloatValue();
 
-    if (int(floor(_input.max() + 0.5)) & 1)
+    if (int(floorf(_input.max() + 0.5)) & 1)
         oddtype = 1; //draw ticks at odd values
     else
         oddtype = 0; //draw ticks at even values
@@ -150,28 +150,26 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     if (!_zoom) {
                         //Code for Moving Type Pointer
                         float ycentre, ypoint, xpoint;
-                        float range, wth;
+                        float range, right;
 
                         if (_input.min() >= 0.0)
                             ycentre = _y;
                         else if (_input.max() + _input.min() == 0.0)
                             ycentre = _center_y;
                         else if (oddtype)
-                            ycentre = _y + (1.0 - _input.min()) * _h
-                                    / (_input.max() - _input.min());
+                            ycentre = _y + (1.0 - _input.min()) * _h / (_input.max() - _input.min());
                         else
-                            ycentre = _y + _input.min() * _h
-                                    / (_input.max() - _input.min());
+                            ycentre = _y + _input.min() * _h / (_input.max() - _input.min());
 
                         range = _h;
-                        wth = _x + _w;
+                        right = _x + _w;
 
                         if (oddtype)
                             ypoint = ycentre + ((cur_value - 1.0) * range / _val_span);
                         else
                             ypoint = ycentre + (cur_value * range / _val_span);
 
-                        xpoint = wth + _marker_offset;
+                        xpoint = right + _marker_offset;
                         draw_line(xpoint, ycentre, xpoint, ypoint);
                         draw_line(xpoint, ypoint, xpoint - _marker_offset, ypoint);
                         draw_line(xpoint - _marker_offset, ypoint, xpoint - 5.0, ypoint + 5.0);
@@ -180,7 +178,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                 } else {
                     // default to fixed
-                    fixed(_marker_offset + marker_xe, text_y + _w / 6,
+                    draw_fixed_pointer(_marker_offset + marker_xe, text_y + _w / 6,
                             _marker_offset + marker_xs, text_y, _marker_offset + marker_xe,
                             text_y - _w / 6);
                 } // end pointer type
@@ -234,7 +232,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                 } else {
                     // default to fixed
-                    fixed(-_marker_offset + _x, text_y +  _w / 6,
+                    draw_fixed_pointer(-_marker_offset + _x, text_y +  _w / 6,
                             -_marker_offset + marker_xe, text_y, -_marker_offset + _x,
                             text_y - _w / 6);
                 }
@@ -428,7 +426,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                 } else {
                     //default to fixed
-                    fixed(marker_xs - _h / 4, _y, marker_xs,
+                    draw_fixed_pointer(marker_xs - _h / 4, _y, marker_xs,
                             marker_ye, marker_xs + _h / 4, _y);
                 }
             }
@@ -461,7 +459,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         draw_line(xpoint, ypoint - _marker_offset, xpoint - 5.0, ypoint - 5.0);
                     }
                 } else {
-                    fixed(marker_xs + _h / 4, top, marker_xs, marker_ys,
+                    draw_fixed_pointer(marker_xs + _h / 4, top, marker_xs, marker_ys,
                             marker_xs - _h / 4, top);
                 }
             }
@@ -570,8 +568,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 }
 
 
-
-void HUD::Tape::fixed(float x1, float y1, float x2, float y2, float x3, float y3)
+void HUD::Tape::draw_fixed_pointer(float x1, float y1, float x2, float y2, float x3, float y3)
 {
     glBegin(GL_LINE_STRIP);
     glVertex2f(x1, y1);
@@ -623,13 +620,10 @@ void HUD::Tape::zoomed_scale(int first, int last)
         int  incr = incrs / 2;
         float factors = hgt1 / incr;
 
-        // begin
-        //this is for moving type pointer
-        static float ycent, ypoint, xpoint;					// FIXME really static?
-        static float wth;
-
-        ycent = _center_y;
-        wth = _x + _w;
+        // moving type pointer
+        float ypoint, xpoint;
+        float ycent = _center_y;
+        float right = _x + _w;
 
         if (cur_value <= data[centre + 1])
             if (cur_value > data[centre]) {
@@ -699,7 +693,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
 
             //to draw moving type pointer for left option
             //begin
-            xpoint = wth + 10.0;
+            xpoint = right + 10.0;
 
             if (_pointer_type == MOVING) {
                 draw_line(xpoint, ycent, xpoint, ypoint);
