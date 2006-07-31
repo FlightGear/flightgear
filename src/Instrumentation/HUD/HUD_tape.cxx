@@ -731,7 +731,7 @@ void HUD::Tape::zoomed_scale(int first, int last)
 
 
         // Code for Moving Type Pointer
-        float, xpoint, ypoint;
+        float xpoint, ypoint;
         float xcent = _center_x;
 
         if (cur_value <= data[centre + 1]) {
