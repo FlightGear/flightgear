@@ -530,8 +530,8 @@ void HUD::Ladder::draw(void)
                         draw_line(x_ini, y, x_end, y);
                         draw_line(x_ini2, y, x_end2, y);
 
-                        draw_text(x_ini - 3, y, buf, HUDText::VCENTER|HUDText::RIGHT);
-                        draw_text(x_end2 + 3, y, buf, HUDText::VCENTER|HUDText::LEFT);
+                        draw_text(x_ini - 2.0, y, buf, HUDText::VCENTER|HUDText::RIGHT);
+                        draw_text(x_end2 + 2.0, y, buf, HUDText::VCENTER|HUDText::LEFT);
 
                     } else if (i > 0) {
                         //draw climb bar vertical lines
@@ -549,8 +549,12 @@ void HUD::Ladder::draw(void)
                             draw_zenith(0.0, y);
 
                     } else { // i < 0
-                        y_end = y + sin(0.5 * i * SG_DEGREES_TO_RADIANS * 3/*hack*/) *
-                                _compression;
+                        float alpha = i * SG_DEGREES_TO_RADIANS / 2.0;
+                        y_end = y + (x_end - x_ini) * sin(alpha);
+
+                        float w = (x_end - x_ini) * cos(alpha);
+                        x_ini = x_end - w;
+                        x_end2 = x_ini2 + w;
 
                         // draw dive bar vertical lines
                         draw_line(x_end, y + 5.0, x_end, y);
