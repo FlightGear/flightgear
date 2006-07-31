@@ -41,9 +41,7 @@ void HUD::Gauge::draw(void)
 
     float marker_xs, marker_xe;
     float marker_ys, marker_ye;
-    float text_x, text_y;
-    float width, height, bottom_4;
-    float lenstr;
+    float text_y;
     int i;
     const int BUFSIZE = 80;
     char buf[BUFSIZE];
@@ -53,28 +51,28 @@ void HUD::Gauge::draw(void)
     float vmax = _input.max();
     float cur_value = _input.getFloatValue();
 
-    width = _x + _w;						// FIXME huh?
-    height = _y + _h;
-    bottom_4 = _h / 4.0;
+    float right = _x + _w;
+    float top = _y + _h;
+    float bottom_4 = _h / 4.0;		// FIXME
 
     // Draw the basic markings for the scale...
     if (option_vert()) { // Vertical scale
         // Bottom tick bar
-        draw_line(_x, _y, width, _y);
+        draw_line(_x, _y, right, _y);
 
         // Top tick bar
-        draw_line(_x, height, width, height);
+        draw_line(_x, top, right, top);
 
         marker_xs = _x;
-        marker_xe = width;
+        marker_xe = right;
 
         if (option_left()) { // Read left, so line down right side
-            draw_line(width, _y, width, height);
+            draw_line(right, _y, right, top);
             marker_xs  = marker_xe - _w / 3.0;   // Adjust tick
         }
 
         if (option_right()) {     // Read  right, so down left sides
-            draw_line(_x, _y, _x, height);
+            draw_line(_x, _y, _x, top);
             marker_xe = _x + _w / 3.0;   // Adjust tick
         }
 
@@ -105,7 +103,7 @@ void HUD::Gauge::draw(void)
                     if (!(i % (int)_minor_divs)) {
                         if (option_left() && option_right()) {
                             draw_line(_x, marker_ys, marker_xs - 3, marker_ys);
-                            draw_line(marker_xe + 3, marker_ys, width, marker_ys);
+                            draw_line(marker_xe + 3, marker_ys, right, marker_ys);
 
                         } else if (option_left()) {
                             draw_line(marker_xs + 3, marker_ys, marker_xe, marker_ys);
@@ -123,7 +121,7 @@ void HUD::Gauge::draw(void)
                     if (!(i % (int)_major_divs)) {
                         if (option_left() && option_right()) {
                             draw_line(_x, marker_ys, marker_xs, marker_ys);
-                            draw_line(marker_xe, marker_ys, width, marker_ys);
+                            draw_line(marker_xe, marker_ys, right, marker_ys);
                         } else {
                             draw_line(marker_xs, marker_ys, marker_xe, marker_ys);
                         }
@@ -133,31 +131,20 @@ void HUD::Gauge::draw(void)
                             snprintf(buf, BUFSIZE, "%d",
                                     int(disp_val * _input.factor()/*+.5*/));  /// was data_scaling(), which makes no sense
 
-                            lenstr = text_width(buf);
-
-                            if (option_left() && option_right()) {
-                                text_x = _center_x - lenstr/2 ;
-
-                            } else if (option_left()) {
-                                text_x = marker_xs - lenstr;
-                            } else {
-                                text_x = marker_xe - lenstr;
-                            }
-                            // Now we know where to put the text.
-                            text_y = marker_ys;
-                            draw_text(text_x, text_y, buf, 0);
+                            if (option_left() && option_right())
+                                draw_text(_center_x, marker_ys, buf, HUDText::CENTER);
+                            else if (option_left())
+                                draw_text(marker_xs, marker_ys, buf, HUDText::RIGHT|HUDText::VCENTER);
+                            else
+                                draw_text(marker_xe, marker_ys, buf, HUDText::LEFT|HUDText::VCENTER);
                         }
                     }
                 }
             }
         }
 
-        // Now that the scale is drawn, we draw in the pointer(s). Since labels
-        // have been drawn, text_x and text_y may be recycled. This is used
-        // with the marker start stops to produce a pointer for each side reading
-
+        // Now that the scale is drawn, we draw in the pointer(s).
         text_y = _y + ((cur_value - vmin) * factor() /*+.5f*/);
-        //    text_x = marker_xs - _x;
 
         if (option_right()) {
             glBegin(GL_LINE_STRIP);
@@ -168,27 +155,27 @@ void HUD::Gauge::draw(void)
         }
         if (option_left()) {
             glBegin(GL_LINE_STRIP);
-            glVertex2f(width, text_y + 5);
+            glVertex2f(right, text_y + 5);
             glVertex2f(marker_xs, text_y);
-            glVertex2f(width, text_y - 5);
+            glVertex2f(right, text_y - 5);
             glEnd();
         }
         // End if VERTICAL SCALE TYPE
 
     } else {                             // Horizontal scale by default
         // left tick bar
-        draw_line(_x, _y, _x, height);
+        draw_line(_x, _y, _x, top);
 
         // right tick bar
-        draw_line(width, _y, width, height );
+        draw_line(right, _y, right, top );
 
         marker_ys = _y;                       // Starting point for
-        marker_ye = height;                              // tick y location calcs
+        marker_ye = top;                              // tick y location calcs
         marker_xs = _x + (cur_value - vmin) * factor() /*+ .5f*/;
 
         if (option_top()) {
             // Bottom box line
-            draw_line(_x, _y, width, _y);
+            draw_line(_x, _y, right, _y);
 
             marker_ye = _y + _h / 2.0;   // Tick point adjust
             // Bottom arrow
@@ -201,15 +188,15 @@ void HUD::Gauge::draw(void)
 
         if (option_bottom()) {
             // Top box line
-            draw_line(_x, height, width, height);
+            draw_line(_x, top, right, top);
             // Tick point adjust
-            marker_ys = height - _h / 2.0;
+            marker_ys = top - _h / 2.0;
 
             // Top arrow
             glBegin(GL_LINE_STRIP);
-            glVertex2f(marker_xs + bottom_4, height);
+            glVertex2f(marker_xs + bottom_4, top);
             glVertex2f(marker_xs, marker_ys );
-            glVertex2f(marker_xs - bottom_4, height);
+            glVertex2f(marker_xs - bottom_4, top);
             glEnd();
         }
 
@@ -228,11 +215,11 @@ void HUD::Gauge::draw(void)
                     if (!(i % (int)_minor_divs)) {
                         // draw in ticks only if they aren't too close to the edge.
                         if (((marker_xs + 5) > _x)
-                               || ((marker_xs - 5) < (width))) {
+                               || ((marker_xs - 5) < right)) {
 
                             if (option_both()) {
                                 draw_line(marker_xs, _y, marker_xs, marker_ys - 4);
-                                draw_line(marker_xs, marker_ye + 4, marker_xs, height);
+                                draw_line(marker_xs, marker_ye + 4, marker_xs, top);
 
                             } else if (option_top()) {
                                 draw_line(marker_xs, marker_ys, marker_xs, marker_ye - 4);
@@ -256,26 +243,25 @@ void HUD::Gauge::draw(void)
                         }
                         snprintf(buf, BUFSIZE, "%d",
                                 int(disp_val * _input.factor()/* +.5*/)); // was data_scaling(), which makes no sense
-                        lenstr = text_width(buf);
 
                         // Draw major ticks and text only if far enough from the edge.
                         if (((marker_xs - 10) > _x)
-                                && ((marker_xs + 10) < width)) {
+                                && ((marker_xs + 10) < right)) {
                             if (option_both()) {
                                 draw_line(marker_xs, _y, marker_xs, marker_ys);
-                                draw_line(marker_xs, marker_ye, marker_xs, height);
+                                draw_line(marker_xs, marker_ye, marker_xs, top);
 
                                 if (!option_notext())
-                                    draw_text(marker_xs - lenstr, marker_ys + 4, buf, 0);
+                                    draw_text(marker_xs, marker_ys, buf, HUDText::CENTER);
 
                             } else {
                                 draw_line(marker_xs, marker_ys, marker_xs, marker_ye);
 
                                 if (!option_notext()) {
                                     if (option_top())
-                                        draw_text(marker_xs - lenstr, height - 10, buf, 0);
+                                        draw_text(marker_xs, top, buf, HUDText::TOP|HUDText::HCENTER);
                                     else
-                                        draw_text(marker_xs - lenstr, _y, buf, 0);
+                                        draw_text(marker_xs, _y, buf, HUDText::BOTTOM|HUDText::HCENTER);
                                 }
                             }
                         }
