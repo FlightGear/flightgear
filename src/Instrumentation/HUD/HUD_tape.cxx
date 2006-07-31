@@ -47,9 +47,6 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
     s = n->getStringValue("tick-length");                    // "variable", "constant"
     _tick_length = strcmp(s, "constant") ? VARIABLE : CONSTANT;
-
-    float top;
-    _hud->_font->getBBox("0", _hud->_font_size, 0.0, 0, 0, 0, &top);
 }
 
 

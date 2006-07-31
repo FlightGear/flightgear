@@ -337,7 +337,6 @@ protected:
     void draw_line(float x1, float y1, float x2, float y2);
     void draw_stipple_line(float x1, float y1, float x2, float y2);
     void draw_text(float x, float y, char *msg, int align = 0, int digit = 0);
-    float text_width(char *str) const;
     void draw_circle(float x1, float y1, float r) const;
     void draw_bullet(float, float, float);
 
