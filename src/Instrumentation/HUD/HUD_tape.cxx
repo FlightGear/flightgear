@@ -50,7 +50,6 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
     float top;
     _hud->_font->getBBox("0", _hud->_font_size, 0.0, 0, 0, 0, &top);
-    _0_ht = top / 2.0;  // half 0 height
 }
 
 
@@ -340,7 +339,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         display_value %= _modulo;
 
                     snprintf(buf, BUFSIZE, "%d", display_value);
-                    float strwd = text_width(buf);
 
                     if (option_both()) {
                         // draw_line(_x, y, marker_xs, y);
@@ -357,7 +355,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         }
 
                         if (!option_notext())
-                            draw_text(marker_xs + 2, y - _0_ht, buf, 0);
+                            draw_text(marker_xs, y, buf, HUDText::CENTER);
 
                     } else {
                         if (_tick_type == LINE)
@@ -367,9 +365,9 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                         if (!option_notext()) {
                             if (option_left())
-                                draw_text(marker_xs - strwd, y - _0_ht, buf, 0);
+                                draw_text(marker_xs, y, buf, HUDText::RIGHT|HUDText::VCENTER);
                             else
-                                draw_text(marker_xe + strwd / 2, y - _0_ht, buf, 0);
+                                draw_text(marker_xe + 1.0, y, buf, HUDText::LEFT|HUDText::VCENTER);
                         }
                     } // End if huds-both
                 }
@@ -539,7 +537,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         display_value %= _modulo;
 
                     snprintf(buf, BUFSIZE, "%d", display_value);
-                    float strwd = text_width(buf);
 
                     // Draw major ticks and text only if far enough from the edge.			// FIXME
                     if (x < _x + 10 || x + 10 > _x + _w)
@@ -557,16 +554,16 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         glEnd();
 
                         if (!option_notext())
-                            draw_text(x - strwd / 2.0, marker_ys + 4, buf, 0);
+                            draw_text(x, marker_ys, buf, HUDText::CENTER);
 
                     } else {
                         draw_line(x, marker_ys, x, marker_ye);
 
                         if (!option_notext()) {
                             if (option_top())
-                                draw_text(x - strwd / 2.0, top - 10, buf, 0);
+                                draw_text(x, top, buf, HUDText::TOP|HUDText::HCENTER);
                             else
-                                draw_text(x - strwd / 2.0, _y, buf, 0);
+                                draw_text(x, _y, buf, HUDText::BOTTOM|HUDText::HCENTER);
                         }
                     }
                 }

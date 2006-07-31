@@ -450,7 +450,6 @@ private:
     float  _marker_offset;
     bool   _pointer;
     int    _zoom;
-    float  _0_ht;
 
     enum PointerType { FIXED, MOVING } _pointer_type;
     enum TickType { LINE, CIRCLE } _tick_type;
