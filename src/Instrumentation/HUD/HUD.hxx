@@ -146,7 +146,7 @@ public:
     inline bool is3D() const { return _3Denabled; }
     inline float alphaClamp() const { return _cl; }
     inline double timer() const { return _timer; }
-    static void textAlign(fntRenderer *r, const char *s, int align, float *x, float *y,
+    static void textAlign(fntRenderer *rend, const char *s, int align, float *x, float *y,
             float *l, float *r, float *b, float *t);
 
     enum Units { FEET, METER };
