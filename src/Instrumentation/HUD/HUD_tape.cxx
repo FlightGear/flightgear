@@ -341,14 +341,15 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     if (!option_notext()) {
                         float l, r, b, t;
                         _hud->_text_list.align(buf, align, &x, &y, &l, &r, &b, &t);
+
                         if (b < _y || t > top)
                             continue;
-                        if (_label_gap == 0.0)
+
+                        if (_label_gap == 0.0
+                                || b < _center_y - _label_gap && t < _center_y - _label_gap
+                                || b > _center_y + _label_gap && t > _center_y + _label_gap) {
                             draw_text(x, y, buf);
-                        else if (b < _center_y - _label_gap && t < _center_y - _label_gap)
-                            draw_text(x, y, buf);
-                        else if (b > _center_y + _label_gap && t > _center_y + _label_gap)
-                            draw_text(x, y, buf);
+                        }
                     }
                 }
             }
@@ -522,14 +523,15 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     if (!option_notext()) {
                         float l, r, b, t;
                         _hud->_text_list.align(buf, align, &x, &y, &l, &r, &b, &t);
+
                         if (l < _x || r > right)
                             continue;
-                        if (_label_gap == 0.0)
+
+                        if (_label_gap == 0.0
+                                || l < _center_x - _label_gap && r < _center_x - _label_gap
+                                || l > _center_x + _label_gap && r > _center_x + _label_gap) {
                             draw_text(x, y, buf);
-                        else if (l < _center_x - _label_gap && r < _center_x - _label_gap)
-                            draw_text(x, y, buf);
-                        else if (l > _center_x + _label_gap && r > _center_x + _label_gap)
-                            draw_text(x, y, buf);
+                        }
                     }
                 }
             } // end for

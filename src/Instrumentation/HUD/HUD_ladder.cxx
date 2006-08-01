@@ -520,7 +520,7 @@ void HUD::Ladder::draw(void)
                     y_end = y;
 
                     if (i == 0) {
-                        // Make zero point wider on left
+                        // make zero point wider
                         x_ini -= zero_offset;
                         x_end2 += zero_offset;
 
@@ -531,7 +531,7 @@ void HUD::Ladder::draw(void)
                         draw_text(x_end2 + 2.0, y, buf, VCENTER|LEFT);
 
                     } else if (i > 0) {
-                        //draw climb bar vertical lines
+                        // draw climb bar vertical lines
                         draw_line(x_ini, y - 5.0, x_ini, y);
                         draw_line(x_end2, y - 5.0, x_end2, y);
 
