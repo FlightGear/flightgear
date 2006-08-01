@@ -33,7 +33,7 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _draw_cap_right(n->getBoolValue("cap-right", false)),
     _draw_cap_left(n->getBoolValue("cap-left", false)),
     _marker_offset(n->getFloatValue("marker-offset", 0.0)),
-    _label_gap(n->getFloatValue("label-gap-width", 0.0)),
+    _label_gap(n->getFloatValue("label-gap-width", 0.0) / 2.0),
     _pointer(n->getBoolValue("enable-pointer", true)),
     _zoom(n->getIntValue("zoom"))
 {
@@ -261,9 +261,9 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                 float y = _y + (v - vmin) * factor();
 
-                if (y < _y + 4)
+                if (y < _y + 0)
                     continue;
-                if (y > top - 4)
+                if (y > top - 0)
                     break;
 
                 if (div_ratio && i % div_ratio) { // minor div
@@ -312,6 +312,9 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                     snprintf(buf, BUFSIZE, "%d", display_value);
 
+                    float x;
+                    int align;
+
                     if (option_both()) {
                         if (_tick_type == LINE) {
                             draw_line(_x, y, marker_xs, y);
@@ -321,8 +324,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                             draw_bullet(_x, y, 5.0);
                         }
 
-                        if (!option_notext())
-                            draw_text(marker_xs, y, buf, HUDText::CENTER);
+                        x = marker_xs, align = CENTER;
 
                     } else {
                         if (_tick_type == LINE)
@@ -330,13 +332,24 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         else // _tick_type == CIRCLE
                             draw_bullet(marker_xs + 4, y, 5.0);
 
-                        if (!option_notext()) {
-                            if (option_left())
-                                draw_text(marker_xs, y, buf, HUDText::RIGHT|HUDText::VCENTER);
-                            else
-                                draw_text(marker_xe + 1.0, y, buf, HUDText::LEFT|HUDText::VCENTER);
-                        }
-                    } // End if huds-both
+                        if (option_left())
+                            x = marker_xs, align = RIGHT|VCENTER;
+                        else
+                            x = marker_xe, align = LEFT|VCENTER;
+                    }
+
+                    if (!option_notext()) {
+                        float l, r, b, t;
+                        _hud->_text_list.align(buf, align, &x, &y, &l, &r, &b, &t);
+                        if (b < _y || t > top)
+                            continue;
+                        if (_label_gap == 0.0)
+                            draw_text(x, y, buf);
+                        else if (b < _center_x - _label_gap && t < _center_x - _label_gap)
+                            draw_text(x, y, buf);
+                        else if (b > _center_x + _label_gap && t > _center_x + _label_gap)
+                            draw_text(x, y, buf);
+                    }
                 }
             }
         } // end of zoom
@@ -452,9 +465,9 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                 float x = _x + (v - vmin) * factor();
 
-                if (x < _x + 4)
+                if (x < _x + 0)
                     continue;
-                if (x > right - 4)
+                if (x > right - 0)
                     break;
 
                 if (div_ratio && i % div_ratio) { // minor div
@@ -489,26 +502,34 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
                     snprintf(buf, BUFSIZE, "%d", display_value);
 
-                    // Draw major ticks and text only if far enough from the edge.			// FIXME
-                    if (x < _x + 10 || x + 10 > _x + _w)
-                        continue;
+                    float y;
+                    int align;
 
                     if (option_both()) {
                         draw_line(x, _y, x, marker_ye);
                         draw_line(x, marker_ye, x, _y + _h);
-
-                        if (!option_notext())
-                            draw_text(x, marker_ys, buf, HUDText::CENTER);
+                        y = marker_ys, align = CENTER;
 
                     } else {
                         draw_line(x, marker_ys, x, marker_ye);
 
-                        if (!option_notext()) {
-                            if (option_top())
-                                draw_text(x, top, buf, HUDText::TOP|HUDText::HCENTER);
-                            else
-                                draw_text(x, _y, buf, HUDText::BOTTOM|HUDText::HCENTER);
-                        }
+                        if (option_top())
+                            y = top, align = TOP|HCENTER;
+                        else
+                            y = _y, align = BOTTOM|HCENTER;
+                    }
+
+                    if (!option_notext()) {
+                        float l, r, b, t;
+                        _hud->_text_list.align(buf, align, &x, &y, &l, &r, &b, &t);
+                        if (l < _x || r > right)
+                            continue;
+                        if (_label_gap == 0.0)
+                            draw_text(x, y, buf);
+                        else if (l < _center_x - _label_gap && r < _center_x - _label_gap)
+                            draw_text(x, y, buf);
+                        else if (l > _center_x + _label_gap && r > _center_x + _label_gap)
+                            draw_text(x, y, buf);
                     }
                 }
             } // end for

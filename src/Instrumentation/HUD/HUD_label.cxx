@@ -44,13 +44,13 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
     const char *halign = n->getStringValue("halign", "center");
     if (!strcmp(halign, "left"))
-        _halign = HUDText::LEFT;
+        _halign = LEFT;
     else if (!strcmp(halign, "right"))
-        _halign = HUDText::RIGHT;
+        _halign = RIGHT;
     else
-        _halign = HUDText::HCENTER;
+        _halign = HCENTER;
 
-    _halign |= HUDText::VCENTER;
+    _halign |= VCENTER;
 
     const char *pre = n->getStringValue("prefix", 0);
     const char *post = n->getStringValue("postfix", 0);
@@ -155,11 +155,11 @@ void HUD::Label::draw(void)
     else if (_mode == DOUBLE) // not really supported yet
         snprintf(buf, BUFSIZE, _format.c_str(), double(_input.getFloatValue()));
 
-    if (_halign & HUDText::HCENTER)
+    if (_halign & HCENTER)
         draw_text(_center_x, _center_y, buf, _halign, get_digits());
-    else if (_halign & HUDText::LEFT)
+    else if (_halign & LEFT)
         draw_text(_x, _center_y, buf, _halign, get_digits());
-    else // if (_halign & HUDText::RIGHT)
+    else // if (_halign & RIGHT)
         draw_text(_x + _w, _center_y, buf, _halign, get_digits());
 }
 

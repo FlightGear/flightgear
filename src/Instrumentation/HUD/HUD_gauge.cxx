@@ -132,11 +132,11 @@ void HUD::Gauge::draw(void)
                                     int(disp_val * _input.factor()/*+.5*/));  /// was data_scaling(), which makes no sense
 
                             if (option_left() && option_right())
-                                draw_text(_center_x, marker_ys, buf, HUDText::CENTER);
+                                draw_text(_center_x, marker_ys, buf, CENTER);
                             else if (option_left())
-                                draw_text(marker_xs, marker_ys, buf, HUDText::RIGHT|HUDText::VCENTER);
+                                draw_text(marker_xs, marker_ys, buf, RIGHT|VCENTER);
                             else
-                                draw_text(marker_xe, marker_ys, buf, HUDText::LEFT|HUDText::VCENTER);
+                                draw_text(marker_xe, marker_ys, buf, LEFT|VCENTER);
                         }
                     }
                 }
@@ -252,16 +252,16 @@ void HUD::Gauge::draw(void)
                                 draw_line(marker_xs, marker_ye, marker_xs, top);
 
                                 if (!option_notext())
-                                    draw_text(marker_xs, marker_ys, buf, HUDText::CENTER);
+                                    draw_text(marker_xs, marker_ys, buf, CENTER);
 
                             } else {
                                 draw_line(marker_xs, marker_ys, marker_xs, marker_ye);
 
                                 if (!option_notext()) {
                                     if (option_top())
-                                        draw_text(marker_xs, top, buf, HUDText::TOP|HUDText::HCENTER);
+                                        draw_text(marker_xs, top, buf, TOP|HCENTER);
                                     else
-                                        draw_text(marker_xs, _y, buf, HUDText::BOTTOM|HUDText::HCENTER);
+                                        draw_text(marker_xs, _y, buf, BOTTOM|HCENTER);
                                 }
                             }
                         }

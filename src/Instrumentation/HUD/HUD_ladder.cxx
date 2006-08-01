@@ -494,8 +494,8 @@ void HUD::Ladder::draw(void)
                             draw_nadir(0.0, y);
                     }
 
-                    draw_text(x_ini - 4, y, buf, HUDText::VCENTER|HUDText::LEFT);
-                    draw_text(x_end + 4, y, buf, HUDText::VCENTER|HUDText::RIGHT);
+                    draw_text(x_ini - 4, y, buf, VCENTER|LEFT);
+                    draw_text(x_end + 4, y, buf, VCENTER|RIGHT);
                 }
             }
 
@@ -530,8 +530,8 @@ void HUD::Ladder::draw(void)
                         draw_line(x_ini, y, x_end, y);
                         draw_line(x_ini2, y, x_end2, y);
 
-                        draw_text(x_ini - 2.0, y, buf, HUDText::VCENTER|HUDText::RIGHT);
-                        draw_text(x_end2 + 2.0, y, buf, HUDText::VCENTER|HUDText::LEFT);
+                        draw_text(x_ini - 2.0, y, buf, VCENTER|RIGHT);
+                        draw_text(x_end2 + 2.0, y, buf, VCENTER|LEFT);
 
                     } else if (i > 0) {
                         //draw climb bar vertical lines
@@ -542,8 +542,8 @@ void HUD::Ladder::draw(void)
                         draw_line(x_ini, y, x_end, y);
                         draw_line(x_ini2, y, x_end2, y);
 
-                        draw_text(x_ini + 0.5, y - 0.5, buf, HUDText::TOP|HUDText::LEFT);
-                        draw_text(x_end2 - 0.5, y - 0.5, buf, HUDText::TOP|HUDText::RIGHT);
+                        draw_text(x_ini + 0.5, y - 0.5, buf, TOP|LEFT);
+                        draw_text(x_end2 - 0.5, y - 0.5, buf, TOP|RIGHT);
 
                         if (i == 90 && _zenith)
                             draw_zenith(0.0, y);
@@ -565,9 +565,9 @@ void HUD::Ladder::draw(void)
                         draw_stipple_line(x_ini2, y, x_end2, y_end);
 
                         float yoffs = 1.0 + (y - y_end) / 4.0;  // too hackish?
-                        draw_text(x_ini + 3.0, y_end + yoffs, buf, HUDText::BOTTOM|HUDText::HCENTER);
+                        draw_text(x_ini + 3.0, y_end + yoffs, buf, BOTTOM|HCENTER);
                         // right number shifted in a little more, because of the minus
-                        draw_text(x_end2 - 4.0, y_end + yoffs, buf, HUDText::BOTTOM|HUDText::HCENTER);
+                        draw_text(x_end2 - 4.0, y_end + yoffs, buf, BOTTOM|HCENTER);
 
                         if (i == -90 && _nadir)
                             draw_nadir(0.0, y);

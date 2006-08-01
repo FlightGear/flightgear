@@ -448,6 +448,33 @@ void HUD::setColor() const
 
 
 
+void HUD::textAlign(fntRenderer *rend, const char *s, int align,
+        float *x, float *y, float *l, float *r, float *t, float *b)
+{
+    fntFont *font = rend->getFont();
+    float gap = font->getGap();
+    float left, right, bot, top;
+    font->getBBox(s, rend->getPointSize(), rend->getSlant(), &left, &right, &bot, &top);
+
+    if (align & HUD::HCENTER)
+        *x = *x - left + gap - (right - left - gap) / 2.0;
+    else if (align & HUD::RIGHT)
+        *x = *x - right;
+    else if (align & HUD::LEFT)
+        *x = *x - left;
+
+    if (align & HUD::VCENTER)
+        *y = *y - bot - (top - bot) / 2.0;
+    else if (align & HUD::TOP)
+        *y = *y - top;
+    else if (align & HUD::BOTTOM)
+        *y = *y - bot;
+
+    *l = *x + left;
+    *r = *x + right;
+    *b = *y + bot;
+    *t = *y + top;
+}
 
 
 
@@ -464,25 +491,8 @@ HUDText::HUDText(fntRenderer *fnt, float x, float y, const char *s, int align, i
     strncpy(_msg, s, BUFSIZE);
     if (!align || !s[0])
         return;
-
-    fntFont *f = _fnt->getFont();
-    float gap = f->getGap();
-    float left, right, bot, top;
-    f->getBBox(s, _fnt->getPointSize(), _fnt->getSlant(), &left, &right, &bot, &top);
-
-    if (align & HCENTER)
-        _x = x - left + gap - (right - left - gap) / 2.0;
-    else if (align & RIGHT)
-        _x = x - right;
-    else if (align & LEFT)
-        _x = x - left;
-
-    if (align & VCENTER)
-        _y = y - bot - (top - bot) / 2.0;
-    else if (align & TOP)
-        _y = y - top;
-    else if (align & BOTTOM)
-        _y = y - bot;
+    float ign;
+    HUD::textAlign(fnt, s, align, &_x, &_y, &ign, &ign, &ign, &ign);
 }
 
 
@@ -539,6 +549,32 @@ void HUDText::draw()
         _fnt->puts(tmp);
     }
     _fnt->setPointSize(orig_size);
+}
+
+
+void TextList::align(const char *s, int align, float *x, float *y,
+        float *l, float *r, float *b, float *t) const
+{
+    HUD::textAlign(_font, s, align, x, y, l, r, b, t);
+}
+
+
+void TextList::draw()
+{
+    assert(_font);
+
+    // FIXME
+    glPushAttrib(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_BLEND);
+
+    _font->begin();
+    vector<HUDText>::iterator it, end = _list.end();
+    for (it = _list.begin(); it != end; ++it)
+        it->draw();
+    _font->end();
+
+    glDisable(GL_TEXTURE_2D);
+    glPopAttrib();
 }
 
 

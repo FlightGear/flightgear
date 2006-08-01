@@ -53,7 +53,6 @@ class FGViewer;
 class SGCondition;
 
 
-
 class LineSegment {
 public:
     LineSegment(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1)
@@ -93,15 +92,6 @@ class HUDText {
 public:
     HUDText(fntRenderer *f, float x, float y, const char *s, int align = 0, int digits = 0);
     void draw();
-    enum {
-        LEFT    = 0x0001,
-        RIGHT   = 0x0002,
-        TOP     = 0x0004,
-        BOTTOM  = 0x0008,
-        HCENTER = 0x0010,
-        VCENTER = 0x0020,
-        CENTER  = (HCENTER|VCENTER),
-    };
 
 private:
     fntRenderer *_fnt;
@@ -122,22 +112,9 @@ public:
         _list.push_back(HUDText(_font, x, y, s, align, digit));
     }
     void erase() { _list.erase(_list.begin(), _list.end()); }
-    void draw() {
-        assert(_font);
-
-        // FIXME
-        glPushAttrib(GL_COLOR_BUFFER_BIT);
-        glEnable(GL_BLEND);
-
-        _font->begin();
-        vector<HUDText>::iterator it, end = _list.end();
-        for (it = _list.begin(); it != end; ++it)
-            it->draw();
-        _font->end();
-
-        glDisable(GL_TEXTURE_2D);
-        glPopAttrib();
-    }
+    void align(const char *s, int align, float *x, float *y,
+            float *l, float *r, float *b, float *t) const;
+    void draw();
 
 private:
     fntRenderer *_font;
@@ -169,6 +146,8 @@ public:
     inline bool is3D() const { return _3Denabled; }
     inline float alphaClamp() const { return _cl; }
     inline double timer() const { return _timer; }
+    static void textAlign(fntRenderer *r, const char *s, int align, float *x, float *y,
+            float *l, float *r, float *b, float *t);
 
     enum Units { FEET, METER };
     Units getUnits() const { return _units; }
@@ -183,6 +162,11 @@ public:
         NOTICKS    = 0x0020,
         NOTEXT     = 0x0040,
         BOTH       = (LEFT|RIGHT),
+
+        // for alignment (with LEFT, RIGHT, TOP, BOTTOM)
+        HCENTER    = 0x0080,
+        VCENTER    = 0x0100,
+        CENTER     = (HCENTER|VCENTER),
     };
 
 protected:
