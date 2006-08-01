@@ -164,58 +164,6 @@ void HUD::Label::draw(void)
 }
 
 
-// make sure the format matches '[ -+#]?\d*(\.\d*)?(l?[df]|s)'
-//
-HUD::Label::Format HUD::Label::check_format(const char *f) const
-{
-    bool l = false;
-    Format fmt = STRING;
-
-    for (; *f; f++) {
-        if (*f == '%') {
-            if (f[1] == '%')
-                f++;
-            else
-                break;
-        }
-    }
-    if (*f++ != '%')
-        return NONE;
-    if (*f == ' ' || *f == '+' || *f == '-' || *f == '#')
-        f++;
-    while (*f && isdigit(*f))
-        f++;
-    if (*f == '.') {
-        f++;
-        while (*f && isdigit(*f))
-            f++;
-    }
-    if (*f == 'l')
-        l = true, f++;
-
-    if (*f == 'd')
-        fmt = l ? LONG : INT;
-    else if (*f == 'f')
-        fmt = l ? DOUBLE : FLOAT;
-    else if (*f == 's') {
-        if (l)
-            return INVALID;
-        fmt = STRING;
-    } else
-        return INVALID;
-
-    for (++f; *f; f++) {
-        if (*f == '%') {
-            if (f[1] == '%')
-                f++;
-            else
-                return INVALID;
-        }
-    }
-    return fmt;
-}
-
-
 bool HUD::Label::blink()
 {
     if (_blink_interval < 0.0f)

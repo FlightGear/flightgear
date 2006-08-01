@@ -35,6 +35,7 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _marker_offset(n->getFloatValue("marker-offset", 0.0)),
     _label_gap(n->getFloatValue("label-gap-width", 0.0) / 2.0),
     _pointer(n->getBoolValue("enable-pointer", true)),
+    _format(n->getStringValue("format", "%d")),
     _zoom(n->getIntValue("zoom"))
 {
     _half_width_units = range_to_show() / 2.0;
@@ -48,6 +49,13 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
     s = n->getStringValue("tick-length");                    // "variable", "constant"
     _tick_length = strcmp(s, "constant") ? VARIABLE : CONSTANT;
+
+    _label_fmt = check_format(_format.c_str());
+    if (_label_fmt != INT && _label_fmt != LONG
+            && _label_fmt != FLOAT && _label_fmt != DOUBLE) {
+        _label_fmt = INT;
+        _format = "%d";
+    }
 }
 
 
@@ -62,8 +70,6 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
     float marker_ys;
     float marker_ye;
     float text_y = 0.0;
-    const int BUFSIZE = 80;
-    char buf[BUFSIZE];
     int oddtype;
 //    int k; //odd or even values for ticks		// FIXME odd scale
 
@@ -306,11 +312,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     } // end huds both
 
                 } else { // major div
-                    int display_value = int(v);
                     if (_modulo)
-                        display_value %= _modulo;
-
-                    snprintf(buf, BUFSIZE, "%d", display_value);
+                        v = fmodf(v + _modulo, _modulo);
 
                     float x;
                     int align;
@@ -339,8 +342,10 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     }
 
                     if (!option_notext()) {
+                        char *s = format_value(v);
+
                         float l, r, b, t;
-                        _hud->_text_list.align(buf, align, &x, &y, &l, &r, &b, &t);
+                        _hud->_text_list.align(s, align, &x, &y, &l, &r, &b, &t);
 
                         if (b < _y || t > top)
                             continue;
@@ -348,7 +353,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         if (_label_gap == 0.0
                                 || b < _center_y - _label_gap && t < _center_y - _label_gap
                                 || b > _center_y + _label_gap && t > _center_y + _label_gap) {
-                            draw_text(x, y, buf);
+                            draw_text(x, y, s);
                         }
                     }
                 }
@@ -497,11 +502,8 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     }
 
                 } else { // major divs
-                    int display_value = int(v);
                     if (_modulo)
-                        display_value %= _modulo;
-
-                    snprintf(buf, BUFSIZE, "%d", display_value);
+                        v = fmodf(v + _modulo, _modulo);
 
                     float y;
                     int align;
@@ -521,8 +523,10 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                     }
 
                     if (!option_notext()) {
+                        char *s = format_value(v);
+
                         float l, r, b, t;
-                        _hud->_text_list.align(buf, align, &x, &y, &l, &r, &b, &t);
+                        _hud->_text_list.align(s, align, &x, &y, &l, &r, &b, &t);
 
                         if (l < _x || r > right)
                             continue;
@@ -530,13 +534,27 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                         if (_label_gap == 0.0
                                 || l < _center_x - _label_gap && r < _center_x - _label_gap
                                 || l > _center_x + _label_gap && r > _center_x + _label_gap) {
-                            draw_text(x, y, buf);
+                            draw_text(x, y, s);
                         }
                     }
                 }
             } // end for
         } // end zoom
     } // end horizontal/vertical scale
+}
+
+
+char *HUD::Tape::format_value(float v)
+{
+    if (_label_fmt == INT)
+        snprintf(_buf, BUFSIZE, _format.c_str(), int(v + 0.5f));
+    else if (_label_fmt == LONG)
+        snprintf(_buf, BUFSIZE, _format.c_str(), long(v + 0.5f));
+    else if (_label_fmt == FLOAT)
+        snprintf(_buf, BUFSIZE, _format.c_str(), v);
+    else // _label_fmt == DOUBLE
+        snprintf(_buf, BUFSIZE, _format.c_str(), double(v));
+    return _buf;
 }
 
 

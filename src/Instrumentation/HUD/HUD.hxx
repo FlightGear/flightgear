@@ -306,6 +306,17 @@ public:
     virtual bool isEnabled();
 
 protected:
+    enum Format {
+        INVALID,
+        NONE,
+        INT,
+        LONG,
+        FLOAT,
+        DOUBLE,
+        STRING,
+    };
+
+    Format  check_format(const char *) const;
     inline float get_span()       const { return _scr_span; }
     inline int   get_digits()     const { return _digits; }
 
@@ -345,17 +356,6 @@ public:
     virtual void draw();
 
 private:
-    enum Format {
-        INVALID,
-        NONE,
-        INT,
-        LONG,
-        FLOAT,
-        DOUBLE,
-        STRING,
-    };
-
-    Format  check_format(const char *) const;
     bool    blink();
 
     Input   _input;
@@ -418,6 +418,7 @@ public:
 protected:
     void draw_fixed_pointer(float, float, float, float, float, float);
     void zoomed_scale(int, int);
+    char *format_value(float);
 
 private:
     float  _val_span;
@@ -433,7 +434,12 @@ private:
     float  _marker_offset;
     float  _label_gap;
     bool   _pointer;
+    Format _label_fmt;
+    string _format;
     int    _zoom;
+
+    enum { BUFSIZE = 64 };
+    char   _buf[BUFSIZE];
 
     enum PointerType { FIXED, MOVING } _pointer_type;
     enum TickType { LINE, CIRCLE } _tick_type;
