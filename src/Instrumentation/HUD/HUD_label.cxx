@@ -69,7 +69,8 @@ HUD::Label::Label(HUD *hud, const SGPropertyNode *n, float x, float y) :
 
     _mode = check_format(_format.c_str());
     if (_mode == INVALID) {
-        SG_LOG(SG_INPUT, SG_ALERT, "HUD: invalid format '" << _format.c_str() << '\'');
+        SG_LOG(SG_INPUT, SG_ALERT, "HUD: invalid format '" << _format.c_str()
+                << "' in <label> '" << _name << '\'');
         _format = "INVALID";
         _mode = NONE;
     }

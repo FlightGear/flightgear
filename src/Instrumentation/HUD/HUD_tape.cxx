@@ -53,6 +53,8 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _label_fmt = check_format(_format.c_str());
     if (_label_fmt != INT && _label_fmt != LONG
             && _label_fmt != FLOAT && _label_fmt != DOUBLE) {
+        SG_LOG(SG_INPUT, SG_ALERT, "HUD: invalid <format> '" << _format.c_str()
+                << "' in <tape> '" << _name << "' (must be number format)");
         _label_fmt = INT;
         _format = "%d";
     }
@@ -546,6 +548,9 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
 char *HUD::Tape::format_value(float v)
 {
+    if (fabsf(v) < 1e-8)
+        v = 0.0f;
+
     if (_label_fmt == INT)
         snprintf(_buf, BUFSIZE, _format.c_str(), int(v + 0.5f));
     else if (_label_fmt == LONG)
