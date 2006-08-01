@@ -86,7 +86,6 @@ void HUD::Ladder::draw(void)
 
     float roll_value = _roll.getFloatValue() * SGD_DEGREES_TO_RADIANS;
     float pitch_value = _pitch.getFloatValue();
-    float alpha;
 
     //**************************************************************
     glPushMatrix();
@@ -134,6 +133,7 @@ void HUD::Ladder::draw(void)
     float Axx = 0.0, Ayy = 0.0, Azz = 0.0, total_vel = 0.0, pot_slope, t1;
     float up_vel, ground_vel, actslope = 0.0, psi = 0.0;
     float vel_x = 0.0, vel_y = 0.0, drift;
+    float alpha;
 
     if (_velocity_vector) {
         drift = get__beta();
@@ -474,11 +474,8 @@ void HUD::Ladder::draw(void)
                     x_ini = -half_span;
 
                     if (i == 0) {
-                        // Make zero point wider on left
-                        x_ini -= zero_offset;
-                        x_end += zero_offset;
-
-                        draw_line(x_ini, y, x_end, y);
+                        draw_line(x_ini - zero_offset, y, x_end + zero_offset, y);
+                        continue;
 
                     } else if (i > 0) {
                         // Zero or above draw solid lines
@@ -494,8 +491,8 @@ void HUD::Ladder::draw(void)
                             draw_nadir(0.0, y);
                     }
 
-                    draw_text(x_ini - 4, y, buf, VCENTER|LEFT);
-                    draw_text(x_end + 4, y, buf, VCENTER|RIGHT);
+                    draw_text(x_ini - 4, y, buf, VCENTER|RIGHT);
+                    draw_text(x_end + 4, y, buf, VCENTER|LEFT);
                 }
             }
 
