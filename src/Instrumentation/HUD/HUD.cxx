@@ -457,18 +457,18 @@ void HUD::textAlign(fntRenderer *rend, const char *s, int align,
     font->getBBox(s, rend->getPointSize(), rend->getSlant(), &left, &right, &bot, &top);
 
     if (align & HUD::HCENTER)
-        *x = *x - left + gap - (right - left - gap) / 2.0;
+        *x -= left - gap + (right - left - gap) / 2.0;
     else if (align & HUD::RIGHT)
-        *x = *x - right;
+        *x -= right;
     else if (align & HUD::LEFT)
-        *x = *x - left;
+        *x -= left;
 
     if (align & HUD::VCENTER)
-        *y = *y - bot - (top - bot) / 2.0;
+        *y -= bot + (top - bot) / 2.0;
     else if (align & HUD::TOP)
-        *y = *y - top;
+        *y -= top;
     else if (align & HUD::BOTTOM)
-        *y = *y - bot;
+        *y -= bot;
 
     *l = *x + left;
     *r = *x + right;
