@@ -345,9 +345,9 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
                             continue;
                         if (_label_gap == 0.0)
                             draw_text(x, y, buf);
-                        else if (b < _center_x - _label_gap && t < _center_x - _label_gap)
+                        else if (b < _center_y - _label_gap && t < _center_y - _label_gap)
                             draw_text(x, y, buf);
-                        else if (b > _center_x + _label_gap && t > _center_x + _label_gap)
+                        else if (b > _center_y + _label_gap && t > _center_y + _label_gap)
                             draw_text(x, y, buf);
                     }
                 }
