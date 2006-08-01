@@ -15,7 +15,7 @@ public:
     void setDisplacement(float d);
     void setCompression(float c);
     void setWastegate(float norm) { _wastegate = norm; }
-    void setSupercharger(float hasSuper) { _hasSuper = hasSuper; }
+    void setSupercharger(bool hasSuper) { _hasSuper = hasSuper; }
     void setTurboLag(float lag) { _turboLag = lag; }
 
     bool isCranking();
