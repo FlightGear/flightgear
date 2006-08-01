@@ -332,6 +332,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Navaids\awynet.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\fdm\Balloon.h"
 				>
 			</File>
@@ -840,11 +844,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Instrumentation\HUD\HUD.hxx"
+				RelativePath="..\..\src\cockpit\hud.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud.hxx"
+				RelativePath="..\..\src\Instrumentation\HUD\HUD.hxx"
 				>
 			</File>
 			<File
@@ -1836,6 +1840,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\AIModel\AIFlightPlanCreateCruise.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\atc\AIGAVFRTraffic.cxx"
 				>
 			</File>
@@ -1965,6 +1973,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\instrumentation\attitude_indicator.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Navaids\awynet.cxx"
 				>
 			</File>
 			<File
