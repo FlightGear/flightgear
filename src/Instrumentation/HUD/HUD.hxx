@@ -416,8 +416,9 @@ public:
     virtual void draw();
 
 protected:
+    void draw_vertical(float);
+    void draw_horizontal(float);
     void draw_fixed_pointer(float, float, float, float, float, float);
-    void zoomed_scale(int, int);
     char *format_value(float);
 
 private:
@@ -436,7 +437,8 @@ private:
     bool   _pointer;
     Format _label_fmt;
     string _format;
-    int    _zoom;
+    int    _div_ratio;          // _major_divs/_minor_divs
+    bool   _odd_type;           // whether to put numbers at 0/2/4 or 1/3/5
 
     enum { BUFSIZE = 64 };
     char   _buf[BUFSIZE];
