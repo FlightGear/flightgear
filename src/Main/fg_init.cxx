@@ -606,12 +606,11 @@ bool fgInitConfig ( int argc, char **argv ) {
         config.append( "autosave.xml" );
         SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from autosave.xml");
         try {
-            fgLoadProps(config.str().c_str(), globals->get_props(), false,
-                        SGPropertyNode::USERARCHIVE);
+            readProperties(config.str(), globals->get_props(), SGPropertyNode::USERARCHIVE);
         } catch (...) {
-            SG_LOG(SG_INPUT, SG_BULK, "First time reading user settings");
+            SG_LOG(SG_INPUT, SG_DEBUG, "First time reading user settings");
         }
-        SG_LOG(SG_INPUT, SG_BULK, "Finished Reading user settings");
+        SG_LOG(SG_INPUT, SG_DEBUG, "Finished Reading user settings");
     }
 
     // parse options after loading aircraft to ensure any user
