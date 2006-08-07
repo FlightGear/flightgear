@@ -56,7 +56,7 @@
 
 static const char *progress_text = 0;
 static SGTexture splash;
-SGPropertyNode_ptr style;
+SGPropertyNode_ptr style = 0;
 
 
 // Initialize the splash screen
@@ -65,11 +65,7 @@ void fgSplashInit ( const char *splash_texture ) {
 
     SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
 
-    int which = fgGetInt("/sim/gui/current-style", 0);
-    SGPropertyNode *sim = fgGetNode("/sim/gui", true);
-    style = sim->getChild("style", 0/*which*/); // always use style[0]?
-    if (!style)
-        style = sim->getChild("style", 0, true);
+    style = fgGetNode("/sim/gui/style[0]", true);
 
     if (!fgGetBool("/sim/startup/splash-screen"))
         return;
