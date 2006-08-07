@@ -105,7 +105,7 @@ long global_multi_loop;
 SGTimeStamp last_time_stamp;
 SGTimeStamp current_time_stamp;
 
-// The atexit() functio handler should know when the graphical subsystem
+// The atexit() function handler should know when the graphical subsystem
 // is initialized.
 extern int _bootstrap_OSInit;
 
@@ -133,20 +133,20 @@ void fgUpdateTimeDepCalcs() {
     //      << " cur_elev = " << scenery.get_cur_elev() << endl;
 
     if (!cur_fdm_state->get_inited()) {
-      // Check for scenery around the aircraft.
-      double lon = fgGetDouble("/sim/presets/longitude-deg");
-      double lat = fgGetDouble("/sim/presets/latitude-deg");
-      // We require just to have 50 meter scenery availabe around
-      // the aircraft.
-      double range = 50.0;
-      if (globals->get_tile_mgr()->scenery_available(lat, lon, range)) {
-        SG_LOG(SG_FLIGHT,SG_INFO, "Finally initializing fdm");
-        cur_fdm_state->init();
-        if ( cur_fdm_state->get_bound() ) {
-            cur_fdm_state->unbind();
+        // Check for scenery around the aircraft.
+        double lon = fgGetDouble("/sim/presets/longitude-deg");
+        double lat = fgGetDouble("/sim/presets/latitude-deg");
+        // We require just to have 50 meter scenery availabe around
+        // the aircraft.
+        double range = 50.0;
+        if (globals->get_tile_mgr()->scenery_available(lat, lon, range)) {
+            SG_LOG(SG_FLIGHT,SG_INFO, "Finally initializing fdm");
+            cur_fdm_state->init();
+            if ( cur_fdm_state->get_bound() ) {
+                cur_fdm_state->unbind();
+            }
+            cur_fdm_state->bind();
         }
-        cur_fdm_state->bind();
-      }
     }
 
     // conceptually, the following block could be done for each fdm
@@ -159,20 +159,20 @@ void fgUpdateTimeDepCalcs() {
         }
 
         if ( replay_state->getIntValue() == 0 ) {
-	    // replay off, run fdm
+            // replay off, run fdm
             cur_fdm_state->update( delta_time_sec );
         } else {
             FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
             r->replay( replay_time->getDoubleValue() );
-  	    if ( replay_state->getIntValue() == 1 ) {
+            if ( replay_state->getIntValue() == 1 ) {
                 // normal playback
                 replay_time->setDoubleValue( replay_time->getDoubleValue()
                                              + ( delta_time_sec
                                                * fgGetInt("/sim/speed-up") ) );
-	    } else if ( replay_state->getIntValue() == 2 ) {
-	        // paused playback (don't advance replay time)
-	    }
-	}
+            } else if ( replay_state->getIntValue() == 2 ) {
+                // paused playback (don't advance replay time)
+            }
+        }
     } else {
         // do nothing, fdm isn't inited yet
     }
@@ -231,7 +231,7 @@ static void fgMainLoop( void ) {
 
     double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
     if ( throttle_hz > 0.0 && scenery_loaded ) {
-        // optionally throttle the frame rate (to get consistant frame
+        // optionally throttle the frame rate (to get consistent frame
         // rates or reduce cpu usage.
 
         double frame_us = 1000000.0 / throttle_hz;
@@ -242,18 +242,18 @@ static void fgMainLoop( void ) {
         //
         // Calling sleep, even usleep() on linux is less accurate than
         // we like, but it does free up the cpu for other tasks during
-        // the sleep so it is desireable.  Because of the way sleep()
-        // is implimented in consumer operating systems like windows
+        // the sleep so it is desirable.  Because of the way sleep()
+        // is implemented in consumer operating systems like windows
         // and linux, you almost always sleep a little longer than the
         // requested amount.
-        // 
-        // To combat the problem of sleeping to long, we calculate the
+        //
+        // To combat the problem of sleeping too long, we calculate the
         // desired wait time and shorten it by 2000us (2ms) to avoid
         // [hopefully] over-sleep'ing.  The 2ms value was arrived at
         // via experimentation.  We follow this up at the end with a
         // simple busy-wait loop to get the final pause timing exactly
         // right.
-        // 
+        //
         // Assuming we don't oversleep by more than 2000us, this
         // should be a reasonable compromise between sleep based
         // waiting, and busy waiting.
@@ -274,9 +274,9 @@ static void fgMainLoop( void ) {
 #endif
 
         // busy wait timing loop.
-        // 
+        //
         // This yields the most accurate timing.  If the previous
-        // ulMilliSecondSleep() call is ommitted this will peg the cpu
+        // ulMilliSecondSleep() call is omitted this will peg the cpu
         // (which is just fine if FG is the only app you care about.)
         current_time_stamp.stamp();
         while ( current_time_stamp - last_time_stamp < frame_us ) {
@@ -293,25 +293,25 @@ static void fgMainLoop( void ) {
     // Limit the time we need to spend in simulation loops
     // That means, if the /sim/max-simtime-per-frame value is strictly positive
     // you can limit the maximum amount of time you will do simulations for
-    // one frame to display. The cpu time spent in simulations code is roughtly
+    // one frame to display. The cpu time spent in simulations code is roughly
     // at least O(real_delta_time_sec). If this is (due to running debug
     // builds or valgrind or something different blowing up execution times)
-    // larger than the real time you will no more get any response
+    // larger than the real time you will no longer get any response
     // from flightgear. This limits that effect. Just set to property from
     // your .fgfsrc or commandline ...
     double dtMax = max_simtime_per_frame->getDoubleValue();
     if (0 < dtMax && dtMax < real_delta_time_sec)
-      real_delta_time_sec = dtMax;
+        real_delta_time_sec = dtMax;
 
     // round the real time down to a multiple of 1/model-hz.
     // this way all systems are updated the _same_ amount of dt.
     {
-      static double rem = 0.0;
-      real_delta_time_sec += rem;
-      double hz = model_hz;
-      double nit = floor(real_delta_time_sec*hz);
-      rem = real_delta_time_sec - nit/hz;
-      real_delta_time_sec = nit/hz;
+        static double rem = 0.0;
+        real_delta_time_sec += rem;
+        double hz = model_hz;
+        double nit = floor(real_delta_time_sec*hz);
+        rem = real_delta_time_sec - nit/hz;
+        real_delta_time_sec = nit/hz;
     }
 
 
@@ -400,22 +400,22 @@ static void fgMainLoop( void ) {
                globals->get_warp() );
 
     if (globals->get_warp_delta() != 0) {
-	FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
-	l->update( 0.5 );
+        FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
+        l->update( 0.5 );
     }
 
     // update magvar model
     globals->get_mag()->update( longitude->getDoubleValue()
-                              * SGD_DEGREES_TO_RADIANS,
-                            latitude->getDoubleValue()
-                              * SGD_DEGREES_TO_RADIANS,
-                            altitude->getDoubleValue() * SG_FEET_TO_METER,
-                            globals->get_time_params()->getJD() );
+                                * SGD_DEGREES_TO_RADIANS,
+                                latitude->getDoubleValue()
+                                * SGD_DEGREES_TO_RADIANS,
+                                altitude->getDoubleValue() * SG_FEET_TO_METER,
+                                globals->get_time_params()->getJD() );
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
-    SG_LOG( SG_ALL, SG_DEBUG, 
-            "Elapsed time interval is = " << elapsed 
+    SG_LOG( SG_ALL, SG_DEBUG,
+            "Elapsed time interval is = " << elapsed
             << ", previous remainder is = " << remainder );
 
     // Calculate frame rate average
@@ -441,7 +441,7 @@ static void fgMainLoop( void ) {
     if ( (t->get_cur_time() != last_time) && (last_time > 0) ) {
         general.set_frame_rate( frames );
         fgSetInt("/sim/frame-rate", frames);
-        SG_LOG( SG_ALL, SG_DEBUG, 
+        SG_LOG( SG_ALL, SG_DEBUG,
             "--> Frame rate is = " << general.get_frame_rate() );
         frames = 0;
     }
@@ -458,7 +458,7 @@ static void fgMainLoop( void ) {
         globals->get_ATC_mgr()->update(delta_time_sec);
 
     // Run the AI subsystem
-    // FIXME: run that also if we have multiplying enabled since the
+    // FIXME: run that also if we have multiplaying enabled since the
     // multiplayer information is interpreted by an AI model
     if (fgGetBool("/sim/ai-traffic/enabled"))
         globals->get_AI_mgr()->update(delta_time_sec);
@@ -470,12 +470,12 @@ static void fgMainLoop( void ) {
 
     global_multi_loop = (long)(((double)elapsed * 0.000001) * model_hz );
     remainder = elapsed - ( (global_multi_loop*1000000) / model_hz );
-    SG_LOG( SG_ALL, SG_DEBUG, 
+    SG_LOG( SG_ALL, SG_DEBUG,
             "Model iterations needed = " << global_multi_loop
             << ", new remainder = " << remainder );
-        
-    // chop max interations to something reasonable if the sim was
-    // delayed for an excesive amount of time
+
+    // chop max iterations to something reasonable if the sim was
+    // delayed for an excessive amount of time
     if ( global_multi_loop > 2.0 * model_hz ) {
         global_multi_loop = (int)(2.0 * model_hz );
         remainder = 0;
@@ -483,11 +483,11 @@ static void fgMainLoop( void ) {
 
     // flight model
     if ( global_multi_loop > 0) {
-        // first run the flight model each frame until it is intialized
+        // first run the flight model each frame until it is initialized
         // then continue running each frame only after initial scenery load is complete.
         fgUpdateTimeDepCalcs();
     } else {
-        SG_LOG( SG_ALL, SG_DEBUG, 
+        SG_LOG( SG_ALL, SG_DEBUG,
             "Elapsed time is zero ... we're zinging" );
     }
 
@@ -509,7 +509,7 @@ static void fgMainLoop( void ) {
     //
     // Tile Manager updates - see if we need to load any new scenery tiles.
     //   this code ties together the fdm, viewer and scenery classes...
-    //   we may want to move this to it's own class at some point
+    //   we may want to move this to its own class at some point
     //
     double visibility_meters = fgGetDouble("/environment/visibility-m");
     FGViewer *current_view = globals->get_current_view();
@@ -520,31 +520,31 @@ static void fgMainLoop( void ) {
     SGLocation *view_location = globals->get_current_view()->getSGLocation();
     globals->get_tile_mgr()->update( view_location, visibility_meters );
     {
-      double lon = view_location->getLongitude_deg();
-      double lat = view_location->getLatitude_deg();
-      double alt = view_location->getAltitudeASL_ft() * SG_FEET_TO_METER;
+        double lon = view_location->getLongitude_deg();
+        double lat = view_location->getLatitude_deg();
+        double alt = view_location->getAltitudeASL_ft() * SG_FEET_TO_METER;
 
-      // check if we can reuse the groundcache for that purpose.
-      double ref_time, r;
-      SGVec3d pt;
-      bool valid = cur_fdm_state->is_valid_m(&ref_time, pt.sg(), &r);
-      double *vp = globals->get_current_view()->get_absolute_view_pos();
-      SGVec3d viewpos(vp);
-      if (valid && distSqr(viewpos, pt) < r*r) {
-        // Reuse the cache ...
-        double lev
-          = cur_fdm_state->get_groundlevel_m(lat*SGD_DEGREES_TO_RADIANS,
-                                             lon*SGD_DEGREES_TO_RADIANS,
-                                             alt + 2.0);
-        view_location->set_cur_elev_m( lev );
-      } else {
-        // Do full intersection test.
-        double lev;
-        if (globals->get_scenery()->get_elevation_m(lat, lon, alt+2, lev, 0))
-          view_location->set_cur_elev_m( lev );
-        else
-          view_location->set_cur_elev_m( -9999.0 );
-      }
+        // check if we can reuse the groundcache for that purpose.
+        double ref_time, r;
+        SGVec3d pt;
+        bool valid = cur_fdm_state->is_valid_m(&ref_time, pt.sg(), &r);
+        double *vp = globals->get_current_view()->get_absolute_view_pos();
+        SGVec3d viewpos(vp);
+        if (valid && distSqr(viewpos, pt) < r*r) {
+            // Reuse the cache ...
+            double lev
+                = cur_fdm_state->get_groundlevel_m(lat*SGD_DEGREES_TO_RADIANS,
+                                                   lon*SGD_DEGREES_TO_RADIANS,
+                                                   alt + 2.0);
+            view_location->set_cur_elev_m( lev );
+        } else {
+            // Do full intersection test.
+            double lev;
+            if (globals->get_scenery()->get_elevation_m(lat, lon, alt+2, lev, 0))
+                view_location->set_cur_elev_m( lev );
+            else
+                view_location->set_cur_elev_m( -9999.0 );
+        }
     }
 
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -629,7 +629,7 @@ static void fgIdleFunction ( void ) {
         idle_state++;
         // This seems to be the absolute earliest in the init sequence
         // that these calls will return valid info.  Too bad it's after
-        // we've already created and sized out window. :-(
+        // we've already created and sized our window. :-(
         general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
         general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
         general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
@@ -650,14 +650,14 @@ static void fgIdleFunction ( void ) {
 
         // Initialize the user interface (we need to do this before
         // passing off control to the OS main loop and before
-         // fgInitGeneral to get our fonts !!!
+        // fgInitGeneral to get our fonts !!!
         guiInit();
         fgSplashProgress("reading aircraft list");
 
 
     } else if ( idle_state == 2 ) {
         idle_state++;
-        // Read the list of available aircrafts
+        // Read the list of available aircraft
         fgReadAircraft();
 
         // get the address of our OpenGL extensions
@@ -696,8 +696,8 @@ static void fgIdleFunction ( void ) {
 
         // Do some quick general initializations
         if( !fgInitGeneral()) {
-            SG_LOG( SG_GENERAL, SG_ALERT, 
-                "General initializations failed ..." );
+            SG_LOG( SG_GENERAL, SG_ALERT,
+                "General initialization failed ..." );
             exit(-1);
         }
 
@@ -779,17 +779,17 @@ static void fgIdleFunction ( void ) {
         thesky->texture_path( sky_tex_path.str() );
 
         // The sun and moon diameters are scaled down numbers of the
-        // actual diameters. This was needed to fit bot the sun and the
+        // actual diameters. This was needed to fit both the sun and the
         // moon within the distance to the far clip plane.
         // Moon diameter:    3,476 kilometers
         // Sun diameter: 1,390,000 kilometers
         thesky->build( 80000.0, 80000.0,
                        463.3, 361.8,
-                       globals->get_ephem()->getNumPlanets(), 
+                       globals->get_ephem()->getNumPlanets(),
                        globals->get_ephem()->getPlanets(),
                        globals->get_ephem()->getNumStars(),
                        globals->get_ephem()->getStars(),
-		       fgGetNode("/environment", true));
+                       fgGetNode("/environment", true));
 
         // Initialize MagVar model
         SGMagVar *magvar = new SGMagVar();
@@ -831,7 +831,7 @@ static void fgIdleFunction ( void ) {
             SGPath mp3file( globals->get_fg_root() );
             mp3file.append( "Sounds/intro.mp3" );
 
-            SG_LOG( SG_GENERAL, SG_INFO, 
+            SG_LOG( SG_GENERAL, SG_INFO,
                 "Starting intro music: " << mp3file.str() );
 
 #if defined( __CYGWIN__ )
@@ -857,11 +857,11 @@ static void fgIdleFunction ( void ) {
 
         // This is the top level init routine which calls all the
         // other subsystem initialization routines.  If you are adding
-        // a subsystem to flightgear, its initialization call should
+        // a subsystem to flightgear, its initialization call should be
         // located in this routine.
         if( !fgInitSubsystems()) {
             SG_LOG( SG_GENERAL, SG_ALERT,
-                "Subsystem initializations failed ..." );
+                "Subsystem initialization failed ..." );
             exit(-1);
         }
         fgSplashProgress("setting up time & renderer");
@@ -937,7 +937,7 @@ bool fgMainInit( int argc, char **argv ) {
 
     globals = new FGGlobals;
 
-    // seed the random number generater
+    // seed the random number generator
     sg_srandom_time();
 
     FGControls *controls = new FGControls;
@@ -975,7 +975,7 @@ bool fgMainInit( int argc, char **argv ) {
     sgUseDisplayList = fgGetBool( "/sim/rendering/use-display-list", true );
 
     // Load the configuration parameters.  (Command line options
-    // overrides config file options.  Config file options override
+    // override config file options.  Config file options override
     // defaults.)
     if ( !fgInitConfig(argc, argv) ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
