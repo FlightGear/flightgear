@@ -617,6 +617,11 @@ static void fgMainLoop( void ) {
 static void fgIdleFunction ( void ) {
     if ( idle_state == 0 ) {
         idle_state++;
+
+#ifdef GL_EXT_texture_lod_bias
+        // negative values sharpen, positive values blur mipmapped textures
+        glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
+#endif
         fgSplashProgress("setting up scenegraph & user interface");
 
 
@@ -654,10 +659,6 @@ static void fgIdleFunction ( void ) {
         idle_state++;
         // Read the list of available aircrafts
         fgReadAircraft();
-
-#ifdef GL_EXT_texture_lod_bias
-        glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
-#endif
 
         // get the address of our OpenGL extensions
         if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ) {
