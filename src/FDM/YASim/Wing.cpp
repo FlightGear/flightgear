@@ -235,22 +235,25 @@ void Wing::compile()
     // Have we already been compiled?
     if(_surfs.size() != 0) return;
 
-    // Assemble the start/end coordinates into an array, sort them,
+    // Assemble the start/end coordinates of all control surfaces
+    // and the wing itself into an array, sort them,
     // and remove duplicates.  This gives us the boundaries of our
     // segments.
-    float bounds[8];
+    float bounds[10];
     bounds[0] = _flap0Start;   bounds[1] = _flap0End;
     bounds[2] = _flap1Start;   bounds[3] = _flap1End;
     bounds[4] = _spoilerStart; bounds[5] = _spoilerEnd;
     bounds[6] = _slatStart;    bounds[7] = _slatEnd;
+    //and don't forget the root and the tip of the wing itself
+    bounds[8] = 0;             bounds[9] = 1;
 
     // Sort in increasing order
     int i;
-    for(i=0; i<8; i++) {
+    for(i=0; i<10; i++) {
         int minIdx = i;
 	float minVal = bounds[i];
         int j;
-        for(j=i+1; j<8; j++) {
+        for(j=i+1; j<10; j++) {
             if(bounds[j] < minVal) {
                 minIdx = j;
 		minVal = bounds[j];
@@ -259,11 +262,11 @@ void Wing::compile()
         float tmp = bounds[i];
         bounds[i] = minVal; bounds[minIdx] = tmp;
     }
-				  
+
     // Uniqify
     float last = bounds[0];
     int nbounds = 1;
-    for(i=1; i<8; i++) {
+    for(i=1; i<10; i++) {
         if(bounds[i] != last)
             bounds[nbounds++] = bounds[i];
         last = bounds[i];

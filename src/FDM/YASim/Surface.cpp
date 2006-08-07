@@ -300,11 +300,11 @@ float Surface::flapLift(float alpha)
     if(alpha < _stalls[0])
         return flapLift;
     else if(alpha > _stalls[0] + _widths[0])
-        return 1;
+        return 0;
 
     float frac = (alpha - _stalls[0]) / _widths[0];
     frac = frac*frac*(3-2*frac);
-    return flapLift * (1-frac) + frac;
+    return flapLift * (1-frac);
 }
 
 float Surface::controlDrag(float lift, float drag)
