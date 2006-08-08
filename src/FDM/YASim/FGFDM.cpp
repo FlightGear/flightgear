@@ -480,7 +480,7 @@ void FGFDM::setOutputProperties(float dt)
         int j = 0;
         float f;
         char b[256];
-        while(j = r->getValueforFGSet(j, b, &f))
+        while((j = r->getValueforFGSet(j, b, &f)))
             if(b[0]) fgSetFloat(b,f);
         
         for(j=0; j < r->numRotorparts(); j++) {

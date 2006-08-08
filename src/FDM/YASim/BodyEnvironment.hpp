@@ -89,6 +89,8 @@ public:
     // of body state vs. the environment can happen here (crashes,
     // etc...).
     virtual void newState(State* state) = 0;
+
+    virtual ~BodyEnvironment() {} // #!$!?! gcc warning...
 };
 
 }; // namespace yasim

@@ -35,6 +35,7 @@ public:
     virtual float getTorque() = 0;
     virtual float getFuelFlow() = 0;
 
+    virtual ~Engine() {}
 protected:
     float _throttle;
     bool _starter; // true=engaged, false=disengaged
