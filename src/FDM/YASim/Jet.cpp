@@ -142,10 +142,10 @@ void Jet::integrate(float dt)
     const static float T0 = Atmosphere::getStdTemperature(0);
     const static float D0 = Atmosphere::getStdDensity(0);
 
-    float speed = -Math::dot3(_wind, _dir);
+    float spd = -Math::dot3(_wind, _dir);
 
     float statT, statP, statD;
-    Atmosphere::calcStaticAir(_pressure, _temp, _rho, speed,
+    Atmosphere::calcStaticAir(_pressure, _temp, _rho, spd,
                               &statP, &statT, &statD);
     _pressureCorrect = statP/P0;
     _tempCorrect = Math::sqrt(statT/T0);
@@ -157,7 +157,7 @@ void Jet::integrate(float dt)
         _throttle = 0;
 
     // Linearly taper maxThrust to zero at vMax
-    float vCorr = 1 - (speed/_vMax);
+    float vCorr = spd<0 ? 1 : (spd<_vMax ? 1-spd/_vMax : 0);
 
     float maxThrust = _maxThrust * vCorr * (statD/D0);
     float setThrust = maxThrust * _throttle;
