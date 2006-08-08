@@ -70,6 +70,7 @@ private:
     //
     struct NasalTimer {
         virtual void timerExpired();
+        virtual ~NasalTimer() {}
         naRef handler;
         int gcKey;
         FGNasalSys* nasal;

@@ -97,8 +97,9 @@ static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
     case SGPropertyNode::STRING:
     case SGPropertyNode::UNSPECIFIED:
         return NASTR((*node)->getStringValue());
+    default:
+        return naNil();
     }
-    return naNil();
 }
 
 static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
