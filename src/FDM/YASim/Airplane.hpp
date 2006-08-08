@@ -90,6 +90,8 @@ public:
     float getApproachElevator() { return _approachElevator.val; }
     char* getFailureMsg();
 
+    static void setupState(float aoa, float speed, State* s); // utility
+
 private:
     struct Tank { float pos[3]; float cap; float fill;
 	          float density; int handle; };
@@ -104,7 +106,6 @@ private:
 
     void runCruise();
     void runApproach();
-    void setupState(float aoa, float speed, State* s);
     void solveGear();
     void solve();
     void solveHelicopter();
