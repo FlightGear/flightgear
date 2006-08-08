@@ -50,10 +50,10 @@ const double FGAIBase::e = 2.71828183;
 const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
 
-FGAIBase::FGAIBase(object_type ot)
-  : fp( NULL ),
+FGAIBase::FGAIBase(object_type ot) :
     props( NULL ),
     manager( NULL ),
+    fp( NULL ),
     _refID( _newAIModelID() ),
     _otype(ot)
 {
@@ -289,8 +289,8 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
      double user_altitude  = manager->get_user_altitude();
      double user_heading   = manager->get_user_heading();
      double user_pitch     = manager->get_user_pitch();
-     double user_yaw       = manager->get_user_yaw();
-     double user_speed     = manager->get_user_speed();
+     //double user_yaw       = manager->get_user_yaw();
+     //double user_speed     = manager->get_user_speed();
 
      // calculate range to target in feet and nautical miles
      double range_ft = sqrt( range_ft2 );
