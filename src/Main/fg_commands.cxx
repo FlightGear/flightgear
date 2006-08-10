@@ -211,14 +211,14 @@ do_exit (const SGPropertyNode * arg)
 #endif
             config.append( "autosave.xml" );
             config.create_dir( 0700 );
-            SG_LOG(SG_IO, SG_INFO, "Saving user settings to autosave.xml");
+            SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << config.str());
             try {
                 writeProperties(config.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
             } catch (const sg_exception &e) {
                 guiErrorMessage("Error writing autosave.xml: ", e);
             }
 
-            SG_LOG(SG_INPUT, SG_BULK, "Finished Saving user settings");
+            SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
         }
     }
     fgExit(arg->getIntValue("status", 0));
