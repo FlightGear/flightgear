@@ -287,7 +287,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
   const SGPropertyNode * trans_table = node->getNode("interpolation");
   if (trans_table != 0) {
     SG_LOG( SG_COCKPIT, SG_INFO, "Found interpolation table with "
-            << trans_table->nChildren() << "children" );
+            << trans_table->nChildren() << " children" );
     t->table = new SGInterpTable();
     for (int i = 0; i < trans_table->nChildren(); i++) {
       const SGPropertyNode * node = trans_table->getChild(i);
