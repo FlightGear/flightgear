@@ -295,6 +295,8 @@ float Surface::stallFunc(float* v)
 float Surface::flapLift(float alpha)
 {
     float flapLift = _cz * _flapPos * (_flapLift-1);
+    if(_stalls[0] == 0)
+        return 0;
 
     if(alpha < 0) alpha = -alpha;
     if(alpha < _stalls[0])

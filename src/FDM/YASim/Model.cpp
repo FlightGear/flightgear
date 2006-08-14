@@ -11,7 +11,6 @@
 #include "Surface.hpp"
 #include "Rotor.hpp"
 #include "Rotorpart.hpp"
-#include "Rotorblade.hpp"
 #include "Glue.hpp"
 #include "Ground.hpp"
 
@@ -131,31 +130,22 @@ void Model::initIteration()
     
 }
 
-// FIXME: This method looks to me like it's doing *integration*, not
-// initialization.  Integration code should ideally go into
-// calcForces.  Only very "unstiff" problems can be solved well like
-// this (see the engine code for an example); I don't know if rotor
-// dynamics qualify or not.
-// -Andy
+// This function initializes some variables for the rotor calculation
+// Furthermore it integrates in "void Rotorpart::inititeration
+// (float dt,float *rot)" the "rotor orientation" by omega*dt for the 
+// 3D-visualization of the heli only. and it compensates the rotation 
+// of the fuselage. The rotor does not follow the rotation of the fuselage.
+// Therefore its rotation must be subtracted from the orientation of the 
+// rotor.
+// Maik
 void Model::initRotorIteration()
 {
-    int i;
     float dt = _integrator.getInterval();
     float lrot[3];
+    if (!_rotorgear.isInUse()) return;
     Math::vmul33(_s->orient, _s->rot, lrot);
     Math::mul3(dt,lrot,lrot);
-    for(i=0; i<_rotors.size(); i++) {
-        Rotor* r = (Rotor*)_rotors.get(i);
-        r->inititeration(dt);
-    }
-    for(i=0; i<_rotorparts.size(); i++) {
-        Rotorpart* rp = (Rotorpart*)_rotorparts.get(i);
-        rp->inititeration(dt,lrot);
-    }
-    for(i=0; i<_rotorblades.size(); i++) {
-        Rotorblade* rp = (Rotorblade*)_rotorblades.get(i);
-        rp->inititeration(dt,lrot);
-    }
+    _rotorgear.initRotorIteration(lrot,dt);
 }
 
 void Model::iterate()
@@ -207,17 +197,9 @@ Surface* Model::getSurface(int handle)
     return (Surface*)_surfaces.get(handle);
 }
 
-Rotorpart* Model::getRotorpart(int handle)
+Rotorgear* Model::getRotorgear(void)
 {
-    return (Rotorpart*)_rotorparts.get(handle);
-}
-Rotorblade* Model::getRotorblade(int handle)
-{
-    return (Rotorblade*)_rotorblades.get(handle);
-}
-Rotor* Model::getRotor(int handle)
-{
-    return (Rotor*)_rotors.get(handle);
+    return &_rotorgear;
 }
 
 int Model::addThruster(Thruster* t)
@@ -253,19 +235,6 @@ void Model::setThruster(int handle, Thruster* t)
 int Model::addSurface(Surface* surf)
 {
     return _surfaces.add(surf);
-}
-
-int Model::addRotorpart(Rotorpart* rpart)
-{
-    return _rotorparts.add(rpart);
-}
-int Model::addRotorblade(Rotorblade* rblade)
-{
-    return _rotorblades.add(rblade);
-}
-int Model::addRotor(Rotor* r)
-{
-    return _rotors.add(r);
 }
 
 int Model::addGear(Gear* gear)
@@ -341,6 +310,24 @@ void Model::updateGround(State* s)
         _ground_cb->getGroundPlane(pt, global_ground, global_vel);
         g->setGlobalGround(global_ground, global_vel);
     }
+    for(i=0; i<_rotorgear.getRotors()->size(); i++) {
+        Rotor* r = (Rotor*)_rotorgear.getRotors()->get(i);
+
+        // Get the point of the rotor center
+        float pos[3];
+        r->getPosition(pos);
+
+        // Transform the local coordinates to
+        // global coordinates.
+        double pt[3];
+        s->posLocalToGlobal(pos, pt);
+
+        // Ask for the ground plane in the global coordinate system
+        double global_ground[4];
+        float global_vel[3];
+        _ground_cb->getGroundPlane(pt, global_ground, global_vel);
+        r->setGlobalGround(global_ground, global_vel);
+    }
 
     // The arrester hook
     if(_hook) {
@@ -370,7 +357,7 @@ void Model::calcForces(State* s)
     // step.
     _body.setGyro(_gyro);
     _body.addTorque(_torque);
-    int i;
+    int i,j;
     for(i=0; i<_thrusters.size(); i++) {
 	Thruster* t = (Thruster*)_thrusters.get(i);
 	float thrust[3], pos[3];
@@ -413,51 +400,55 @@ void Model::calcForces(State* s)
 	_body.addForce(pos, force);
 	_body.addTorque(torque);
     }
-    for(i=0; i<_rotorparts.size(); i++) {
-        Rotorpart* sf = (Rotorpart*)_rotorparts.get(i);
-
-	// Vsurf = wind - velocity + (rot cross (cg - pos))
-	float vs[3], pos[3];
-	sf->getPosition(pos);
+    for (j=0; j<_rotorgear.getRotors()->size();j++)
+    {
+        Rotor* r = (Rotor *)_rotorgear.getRotors()->get(j);
+        float vs[3], pos[3];
+        r->getPosition(pos);
         localWind(pos, s, vs, alt);
+        r->calcLiftFactor(vs, _rho,s);
+        float tq=0; 
+        // total torque of rotor (scalar) for calculating new rotor rpm
 
-	float force[3], torque[3];
-	sf->calcForce(vs, _rho, force, torque);
-        //Math::add3(faero, force, faero);
+        for(i=0; i<r->_rotorparts.size(); i++) {
+            float torque_scalar=0;
+            Rotorpart* rp = (Rotorpart*)r->_rotorparts.get(i);
 
-        sf->getPositionForceAttac(pos);
+            // Vsurf = wind - velocity + (rot cross (cg - pos))
+            float vs[3], pos[3];
+            rp->getPosition(pos);
+            localWind(pos, s, vs, alt,true);
 
-	_body.addForce(pos, force);
-	_body.addTorque(torque);
+            float force[3], torque[3];
+            rp->calcForce(vs, _rho, force, torque, &torque_scalar);
+            tq+=torque_scalar;
+            rp->getPositionForceAttac(pos);
+
+            _body.addForce(pos, force);
+            _body.addTorque(torque);
+        }
+        r->setTorque(tq);
     }
-    for(i=0; i<_rotorblades.size(); i++) {
-        Rotorblade* sf = (Rotorblade*)_rotorblades.get(i);
-
-	// Vsurf = wind - velocity + (rot cross (cg - pos))
-	float vs[3], pos[3];
-	sf->getPosition(pos);
-        localWind(pos, s, vs, alt);
-
-	float force[3], torque[3];
-	sf->calcForce(vs, _rho, force, torque);
-        //Math::add3(faero, force, faero);
-
-        sf->getPositionForceAttac(pos);
-
-	_body.addForce(pos, force);
-	_body.addTorque(torque);
+    if (_rotorgear.isInUse())
+    {
+        float torque[3];
+        _rotorgear.calcForces(torque);
+        _body.addTorque(torque);
     }
 
     // Account for ground effect by multiplying the vertical force
     // component by an amount linear with the fraction of the wingspan
     // above the ground.
-    float dist = ground[3] - Math::dot3(ground, _wingCenter);
-    if(dist > 0 && dist < _groundEffectSpan) {
-	float fz = Math::dot3(faero, ground);
-        fz *= (_groundEffectSpan - dist) / _groundEffectSpan;
-        fz *= _groundEffect;
-	Math::mul3(fz, ground, faero);
-	_body.addForce(faero);
+    if ((_groundEffectSpan != 0) && (_groundEffect != 0 ))
+    {
+        float dist = ground[3] - Math::dot3(ground, _wingCenter);
+        if(dist > 0 && dist < _groundEffectSpan) {
+        float fz = Math::dot3(faero, ground);
+            fz *= (_groundEffectSpan - dist) / _groundEffectSpan;
+            fz *= _groundEffect;
+        Math::mul3(fz, ground, faero);
+        _body.addForce(faero);
+        }
     }
     
     // Convert the velocity and rotation vectors to local coordinates
@@ -528,7 +519,7 @@ void Model::newState(State* s)
 
 // Calculates the airflow direction at the given point and for the
 // specified aircraft velocity.
-void Model::localWind(float* pos, State* s, float* out, float alt)
+void Model::localWind(float* pos, State* s, float* out, float alt, bool is_rotor)
 {
     float tmp[3], lwind[3], lrot[3], lv[3];
 
@@ -556,6 +547,15 @@ void Model::localWind(float* pos, State* s, float* out, float alt)
     Math::mul3(-1, out, out);      //  (negated)
     Math::add3(lwind, out, out);    //  + wind
     Math::sub3(out, lv, out);       //  - velocity
+
+    //add the downwash of the rotors if it is not self a rotor
+    if (_rotorgear.isInUse()&&!is_rotor)
+    {
+        _rotorgear.getDownWash(pos,lv,tmp);
+        Math::add3(out,tmp, out);    //  + downwash
+    }
+
+
 }
 
 }; // namespace yasim

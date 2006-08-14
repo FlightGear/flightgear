@@ -172,8 +172,9 @@ void RigidBody::getAccel(float* pos, float* accelOut)
     float a[3];
     float rate = Math::mag3(_spin);
     Math::set3(_spin, a);
-    Math::mul3(1/rate, a, a);
-
+    if (rate !=0 )
+        Math::mul3(1/rate, a, a);
+    //an else branch is not neccesary. a, which is a=(0,0,0) in the else case, is only used in a dot product
     float v[3];
     Math::sub3(_cg, pos, v);             // v = cg - pos
     Math::mul3(Math::dot3(v, a), a, a);  // a = a * (v dot a)

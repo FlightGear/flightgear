@@ -3,22 +3,39 @@
 
 #include "Vector.hpp"
 #include "Rotorpart.hpp"
-#include "Rotorblade.hpp"
+#include "Integrator.hpp"
+#include "RigidBody.hpp"
+#include "BodyEnvironment.hpp"
+
 namespace yasim {
 
 class Surface;
 class Rotorpart;
+const float rho_null=1.184f; //25DegC, 101325Pa
 
 class Rotor {
+private:
+    float _torque;
+    float _omega,_omegan,_omegarel,_ddt_omega,_omegarelneu;
+    float _chord;
+    float _taper;
+    float _airfoil_incidence_no_lift;
+    float _collective;
+    float _airfoil_lift_coefficient;
+    float _airfoil_drag_coefficient0;
+    float _airfoil_drag_coefficient1;
+    int _ccw;
+
 public:
     Rotor();
     ~Rotor();
 
-
     // Rotor geometry:
-    void setNormal(float* normal);    //the normal vector (direction of rotormast, pointing up)
-    void setForward(float* forward);    //the normal vector pointing forward (for ele and ail)
-    //void setMaxPitchForce(float force);
+    void setNormal(float* normal);
+    //the normal vector (direction of rotormast, pointing up)
+
+    void setForward(float* forward);
+    //the normal vector pointing forward (for ele and ail)
     void setForceAtPitchA(float force);
     void setPowerAtPitch0(float value);
     void setPowerAtPitchB(float value);
@@ -44,32 +61,28 @@ public:
     void setRPM(float value);
     void setRelLenHinge(float value);
     void setBase(float* base);        // in local coordinates
+    void getPosition(float* out);
     void setCyclicail(float lval,float rval);
     void setCyclicele(float lval,float rval);
     void setCollective(float lval);
     void setAlphaoutput(int i, const char *text);
     void setCcw(int ccw);
-    void setSimBlades(int value);
-    void setEngineOn(int value);
-
+    int getCcw() {return _ccw;};
+    void setParameter(char *parametername, float value);
+    void setGlobalGround(double* global_ground, float* global_vel);
+    float getTorqueOfInertia();
     int getValueforFGSet(int j,char *b,float *f);
     void setName(const char *text);
-    void inititeration(float dt);
+    void inititeration(float dt,float omegarel,float ddt_omegarel,float *rot);
     void compile();
-
     void getTip(float* tip);
-
-
-
-    // Ground effect information, stil missing
+    void calcLiftFactor(float* v, float rho, State *s);
+    void getDownWash(float *pos, float * v_heli, float *downwash);
     float getGroundEffect(float* posOut);
-    
+
     // Query the list of Rotorpart objects
     int numRotorparts();
     Rotorpart* getRotorpart(int n);
-    // Query the list of Rotorblade objects
-    int numRotorblades();
-    Rotorblade* getRotorblade(int n);
     void setAlpha0(float f);
     void setAlphamin(float f);
     void setAlphamax(float f);
@@ -77,28 +90,33 @@ public:
     void setMaxteeterdamp(float f);
     void setRelLenTeeterHinge(float value);
     void setAlpha0factor(float f);
+    void setTorque(float f);
+    void addTorque(float f);
+    float getTorque() {return _torque;}
+    float getLiftFactor();
+    float getLiftCoef(float incidence,float speed);
+    float getDragCoef(float incidence,float speed);
+    float getOmegaRel() {return _omegarel;}
+    float getOmegaRelNeu() {return _omegarelneu;}
+    void setOmegaRelNeu(float orn) {_omegarelneu=orn;}
+    float getOmegan() {return _omegan;}
+    float getTaper() { return _taper;}
+    float getChord() { return _chord;}
+    float getOverallStall() 
+        {if (_stall_v2sum !=0 ) return _stall_sum/_stall_v2sum; else return 0;}
+    Vector _rotorparts;
 
 private:
     void strncpy(char *dest,const char *src,int maxlen);
     void interp(float* v1, float* v2, float frac, float* out);
+    float calcStall(float incidence,float speed);
     Rotorpart* newRotorpart(float* pos, float *posforceattac, float *normal,
-         float* speed,float *dirzentforce, float zentforce,float maxpitchforce,float maxpitch, float minpitch, float mincyclic,float maxcyclic,
-         float delta3,float mass,float translift,float rellenhinge,float len);
-
-    Rotorblade* newRotorblade(
-         float* pos,  float *normal,float *front, float *right,
-         float lforceattac,float relenhinge,
-         float *dirzentforce, float zentforce,float maxpitchforce,float maxpitch, 
-         float delta3,float mass,float translift,float phi,float omega,float len,float speed);
-    
-
-
-    Vector _rotorparts;
-    Vector _rotorblades;
-
+        float* speed,float *dirzentforce, float zentforce,float maxpitchforce,
+        float maxpitch, float minpitch, float mincyclic,float maxcyclic,
+        float delta3,float mass,float translift,float rellenhinge,float len);
     float _base[3];
-
     float _normal[3];//the normal vector (direction of rotormast, pointing up)
+    float _normal_with_yaw_roll[3];//the normal vector (perpendicular to rotordisc)
     float _forward[3];
     float _diameter;
     int _number_of_blades;
@@ -106,7 +124,6 @@ private:
     float _rel_blade_center;
     float _min_pitch;
     float _max_pitch;
-    float _force_at_max_pitch;
     float _force_at_pitch_a;
     float _pitch_a;
     float _power_at_pitch_0;
@@ -128,18 +145,79 @@ private:
     float _stepspersecond;
     char _alphaoutput[8][256];
     char _name[256];
-    int _ccw;
     int _engineon;
-    float _omega,_omegan,_omegarel;
     float _alphamin,_alphamax,_alpha0,_alpha0factor;
     float _teeterdamp,_maxteeterdamp;
     float _rellenteeterhinge;
+    float _translift_ve;
+    float _translift_maxfactor;
+    float _ground_effect_constant;
+    float _vortex_state_lift_factor;
+    float _vortex_state_c1;
+    float _vortex_state_c2;
+    float _vortex_state_c3;
+    float _vortex_state_e1;
+    float _vortex_state_e2;
+    float _vortex_state_e3;
+    float _lift_factor,_f_ge,_f_vs,_f_tl;
+    float _vortex_state;
+    double _global_ground[4];
+    float _liftcoef;
+    float _dragcoef0;
+    float _dragcoef1;
+    float _twist; //outer incidence = inner inner incidence + _twist
+    int _number_of_segments;
+    float _rel_len_where_incidence_is_measured;
+    float _torque_of_inertia;
+    float _rel_len_blade_start;
+    float _incidence_stall_zero_speed;
+    float _incidence_stall_half_sonic_speed;
+    float _lift_factor_stall;
+    float _stall_change_over;
+    float _drag_factor_stall;
+    float _stall_sum;
+    float _stall_v2sum;
+    float _yaw;
+    float _roll;
+};
 
+class Rotorgear {
+private:
+    int _in_use;
+    int _engineon;
+    float _max_power_engine;
+    float _engine_prop_factor;
+    float _yasimdragfactor;
+    float _yasimliftfactor;
+    float _rotorbrake;
+    float _max_power_rotor_brake;
+    float _ddt_omegarel;
+    float _engine_accell_limit;
+    Vector _rotors;
 
-
-
-
-
+public:
+    Rotorgear();
+    ~Rotorgear();
+    int isInUse() {return _in_use;}
+    void setInUse() {_in_use = 1;}
+    float compile(RigidBody* body);
+    void addRotor(Rotor* rotor);
+    int getNumRotors() {return _rotors.size();}
+    Rotor* getRotor(int i) {return (Rotor*)_rotors.get(i);}
+    void calcForces(float* torqueOut);
+    void setParameter(char *parametername, float value);
+    void setEngineOn(int value);
+    int getEngineon();
+    void setRotorBrake(float lval);
+    float getYasimDragFactor() { return _yasimdragfactor;}
+    float getYasimLiftFactor() { return _yasimliftfactor;}
+    float getMaxPowerEngine() { return _max_power_engine;}
+    float getMaxPowerRotorBrake() { return _max_power_rotor_brake;}
+    float getRotorBrake() { return _rotorbrake;}
+    float getEnginePropFactor() {return _engine_prop_factor;}
+    Vector* getRotors() { return &_rotors;}
+    void initRotorIteration(float *lrot,float dt);
+    void getDownWash(float *pos, float * v_heli, float *downwash);
 };
 
 }; // namespace yasim

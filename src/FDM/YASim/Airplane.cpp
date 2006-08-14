@@ -6,7 +6,6 @@
 #include "RigidBody.hpp"
 #include "Surface.hpp"
 #include "Rotorpart.hpp"
-#include "Rotorblade.hpp"
 #include "Thruster.hpp"
 #include "Airplane.hpp"
 
@@ -87,8 +86,6 @@ Airplane::~Airplane()
         delete (Wing*)_vstabs.get(i);
     for(i=0; i<_weights.size(); i++)
         delete (WeightRec*)_weights.get(i);
-    for(i=0; i<_rotors.size(); i++)
-        delete (Rotor*)_rotors.get(i);
 }
 
 void Airplane::iterate(float dt)
@@ -166,6 +163,11 @@ Hook* Airplane::getHook()
 Launchbar* Airplane::getLaunchbar()
 {
     return _model.getLaunchbar();
+}
+
+Rotorgear* Airplane::getRotorgear()
+{
+    return _model.getRotorgear();
 }
 
 void Airplane::updateGearState()
@@ -274,11 +276,6 @@ void Airplane::setTail(Wing* tail)
 void Airplane::addVStab(Wing* vstab)
 {
     _vstabs.add(vstab);
-}
-
-void Airplane::addRotor(Rotor* rotor)
-{
-    _rotors.add(rotor);
 }
 
 void Airplane::addFuselage(float* front, float* back, float width,
@@ -480,41 +477,9 @@ float Airplane::compileWing(Wing* w)
     return wgt;
 }
 
-float Airplane::compileRotor(Rotor* r)
+float Airplane::compileRotorgear()
 {
-    // Todo: add rotor to model!!!
-    // Todo: calc and add mass!!!
-    r->compile();
-    _model.addRotor(r);
-
-    float wgt = 0;
-    int i;
-    for(i=0; i<r->numRotorparts(); i++) {
-        Rotorpart* s = (Rotorpart*)r->getRotorpart(i);
-
-        _model.addRotorpart(s);
-        
-        float mass = s->getWeight();
-        mass = mass * Math::sqrt(mass);
-        float pos[3];
-        s->getPosition(pos);
-        _model.getBody()->addMass(mass, pos);
-        wgt += mass;
-    }
-    
-    for(i=0; i<r->numRotorblades(); i++) {
-        Rotorblade* b = (Rotorblade*)r->getRotorblade(i);
-
-        _model.addRotorblade(b);
-        
-        float mass = b->getWeight();
-        mass = mass * Math::sqrt(mass);
-        float pos[3];
-        b->getPosition(pos);
-        _model.getBody()->addMass(mass, pos);
-        wgt += mass;
-    }
-    return wgt;
+    return getRotorgear()->compile(_model.getBody());
 }
 
 float Airplane::compileFuselage(Fuselage* f)
@@ -654,9 +619,10 @@ void Airplane::compile()
     int i;
     for(i=0; i<_vstabs.size(); i++)
         aeroWgt += compileWing((Wing*)_vstabs.get(i)); 
-    for(i=0; i<_rotors.size(); i++)
-        aeroWgt += compileRotor((Rotor*)_rotors.get(i)); 
-    
+
+    // The rotor(s)
+    aeroWgt += compileRotorgear(); 
+
     // The fuselage(s)
     for(i=0; i<_fuselages.size(); i++)
         aeroWgt += compileFuselage((Fuselage*)_fuselages.get(i));
@@ -1077,13 +1043,29 @@ void Airplane::solveHelicopter()
 {
     _solutionIterations = 0;
     _failureMsg = 0;
-
-    applyDragFactor(Math::pow(15.7/1000, 1/SOLVE_TWEAK));
-    applyLiftRatio(Math::pow(104, 1/SOLVE_TWEAK));
+    if (getRotorgear()!=0)
+    {
+        Rotorgear* rg = getRotorgear();
+        applyDragFactor(Math::pow(rg->getYasimDragFactor()/1000,
+            1/SOLVE_TWEAK));
+        applyLiftRatio(Math::pow(rg->getYasimLiftFactor(),
+            1/SOLVE_TWEAK));
+    }
+    else
+    //huh, no wing and no rotor? (_rotorgear is constructed, 
+    //if a rotor is defined
+    {
+        applyDragFactor(Math::pow(15.7/1000, 1/SOLVE_TWEAK));
+        applyLiftRatio(Math::pow(104, 1/SOLVE_TWEAK));
+    }
     setupState(0,0, &_cruiseState);
     _model.setState(&_cruiseState);
+    setupWeights(true);
     _controls.reset();
     _model.getBody()->reset();
+    _model.setAir(_cruiseP, _cruiseT,
+                  Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
+    
 }
 
 }; // namespace yasim

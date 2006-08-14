@@ -16,7 +16,6 @@
 #include "TurbineEngine.hpp"
 #include "Rotor.hpp"
 #include "Rotorpart.hpp"
-#include "Rotorblade.hpp"
 
 #include "FGFDM.hpp"
 
@@ -176,7 +175,19 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	v[2] = attrf(a, "z");
 	_airplane.setPilotPos(v);
     } else if(eq(name, "rotor")) {
-        _airplane.addRotor(parseRotor(a, name));
+        _airplane.getModel()->getRotorgear()->addRotor(parseRotor(a, name));
+    } else if(eq(name, "rotorgear")) {
+        Rotorgear* r = _airplane.getModel()->getRotorgear();
+	_currObj = r;
+        #define p(x) if (a->hasAttribute(#x)) r->setParameter((char *)#x,attrf(a,#x) );
+        p(max_power_engine)
+        p(engine_prop_factor)
+        p(yasimdragfactor)
+        p(yasimliftfactor)
+        p(max_power_rotor_brake)
+        p(engine_accell_limit)
+        #undef p
+        r->setInUse();
     } else if(eq(name, "wing")) {
 	_airplane.setWing(parseWing(a, name));
     } else if(eq(name, "hstab")) {
@@ -475,8 +486,8 @@ void FGFDM::setOutputProperties(float dt)
         p->prop->setFloatValue(val);
     }
 
-    for(i=0; i<_airplane.getNumRotors(); i++) {
-        Rotor*r=(Rotor*)_airplane.getRotor(i);
+    for(i=0; i<_airplane.getRotorgear()->getNumRotors(); i++) {
+        Rotor*r=(Rotor*)_airplane.getRotorgear()->getRotor(i);
         int j = 0;
         float f;
         char b[256];
@@ -489,15 +500,6 @@ void FGFDM::setOutputProperties(float dt)
             int k;
             for(k=0; k<2; k++) {
                 b=s->getAlphaoutput(k);
-                if(b[0]) fgSetFloat(b, s->getAlpha(k));
-            }
-        }
-        for(j=0; j < r->numRotorblades(); j++) {
-            Rotorblade* s = (Rotorblade*)r->getRotorblade(j);
-            char *b;
-            int k;
-            for (k=0; k<2; k++) {
-                b = s->getAlphaoutput(k);
                 if(b[0]) fgSetFloat(b, s->getAlpha(k));
             }
         }
@@ -677,9 +679,34 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setPowerAtPitchB(attrf(a, "poweratpitch_b", 3000));
     if(attrb(a,"notorque"))
        w->setNotorque(1); 
-    if(attrb(a,"simblades"))
-       w->setSimBlades(1); 
 
+#define p(x) if (a->hasAttribute(#x)) w->setParameter((char *)#x,attrf(a,#x) );
+    p(translift_ve)
+    p(translift_maxfactor)
+    p(ground_effect_constant)
+    p(vortex_state_lift_factor)
+    p(vortex_state_c1)
+    p(vortex_state_c2)
+    p(vortex_state_c3)
+    p(vortex_state_e1)
+    p(vortex_state_e2)
+    p(twist)
+    p(number_of_segments)
+    p(rel_len_where_incidence_is_measured)
+    p(chord)
+    p(taper)
+    p(airfoil_incidence_no_lift)
+    p(rel_len_blade_start)
+    p(incidence_stall_zero_speed)
+    p(incidence_stall_half_sonic_speed)
+    p(lift_factor_stall)
+    p(stall_change_over)
+    p(drag_factor_stall)
+    p(airfoil_lift_coefficient)
+    p(airfoil_drag_coefficient0)
+    p(airfoil_drag_coefficient1)
+
+#undef p
     _currObj = w;
     return w;
 }
@@ -853,7 +880,8 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "COLLECTIVE")) return ControlMap::COLLECTIVE;
     if(eq(name, "CYCLICAIL")) return ControlMap::CYCLICAIL;
     if(eq(name, "CYCLICELE")) return ControlMap::CYCLICELE;
-    if(eq(name, "ROTORENGINEON")) return ControlMap::ROTORENGINEON;
+    if(eq(name, "ROTORGEARENGINEON")) return ControlMap::ROTORENGINEON;
+    if(eq(name, "ROTORBRAKE")) return ControlMap::ROTORBRAKE;
     if(eq(name, "REVERSE_THRUST")) return ControlMap::REVERSE_THRUST;
     if(eq(name, "WASTEGATE")) return ControlMap::WASTEGATE;
     SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '"

@@ -6,6 +6,7 @@
 #include "BodyEnvironment.hpp"
 #include "Vector.hpp"
 #include "Turbulence.hpp"
+#include "Rotor.hpp"
 
 namespace yasim {
 
@@ -14,8 +15,6 @@ class Integrator;
 class Thruster;
 class Surface;
 class Rotorpart;
-class Rotorblade;
-class Rotor;
 class Gear;
 class Ground;
 class Hook;
@@ -43,16 +42,11 @@ public:
     // Externally-managed subcomponents
     int addThruster(Thruster* t);
     int addSurface(Surface* surf);
-    int addRotorpart(Rotorpart* rpart);
-    int addRotorblade(Rotorblade* rblade);
-    int addRotor(Rotor* rotor);
     int addGear(Gear* gear);
     void addHook(Hook* hook);
     void addLaunchbar(Launchbar* launchbar);
     Surface* getSurface(int handle);
-    Rotorpart* getRotorpart(int handle);
-    Rotorblade* getRotorblade(int handle);
-    Rotor* getRotor(int handle);
+    Rotorgear* getRotorgear(void);
     Gear* getGear(int handle);
     Hook* getHook(void);
     Launchbar* getLaunchbar(void);
@@ -84,7 +78,8 @@ private:
     void initRotorIteration();
     void calcGearForce(Gear* g, float* v, float* rot, float* ground);
     float gearFriction(float wgt, float v, Gear* g);
-    void localWind(float* pos, State* s, float* out, float alt);
+    void localWind(float* pos, State* s, float* out, float alt,
+        bool is_rotor = false);
 
     Integrator _integrator;
     RigidBody _body;
@@ -93,9 +88,7 @@ private:
 
     Vector _thrusters;
     Vector _surfaces;
-    Vector _rotorparts;
-    Vector _rotorblades;
-    Vector _rotors;
+    Rotorgear _rotorgear;
     Vector _gears;
     Hook* _hook;
     Launchbar* _launchbar;

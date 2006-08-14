@@ -36,10 +36,6 @@ public:
     void setTail(Wing* tail);
     void addVStab(Wing* vstab);
 
-    void addRotor(Rotor* Rotor);
-    int getNumRotors() {return _rotors.size();}
-    Rotor* getRotor(int i) {return (Rotor*)_rotors.get(i);}
-
     void addFuselage(float* front, float* back, float width,
                      float taper=1, float mid=0.5);
     int addTank(float* pos, float cap, float fuelDensity);
@@ -64,6 +60,7 @@ public:
     int numGear();
     Gear* getGear(int g);
     Hook* getHook();
+    Rotorgear* getRotorgear();
     Launchbar* getLaunchbar();
 
     int numThrusters() { return _thrusters.size(); }
@@ -110,7 +107,7 @@ private:
     void solve();
     void solveHelicopter();
     float compileWing(Wing* w);
-    float compileRotor(Rotor* w);
+    float compileRotorgear();
     float compileFuselage(Fuselage* f);
     void compileGear(GearRec* gr);
     void applyDragFactor(float factor);
@@ -141,8 +138,6 @@ private:
     Vector _contacts; // non-gear ground contact points
     Vector _weights;
     Vector _surfs; // NON-wing Surfaces
-
-    Vector _rotors;
 
     Vector _solveWeights;
 
