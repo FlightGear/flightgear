@@ -133,9 +133,10 @@ bool FGTaxiRoute::next(int *nde, int *rte)
   //  cerr << "true" << endl;
   //else
   //  cerr << "false" << endl;
-  //if (nodes.size() != (routes.size()) +1)
-  //  cerr << "ALERT: Misconfigured TaxiRoute : " << nodes.size() << " " << routes.size() << endl;
-      
+  if (nodes.size() != (routes.size()) +1) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "ALERT: Misconfigured TaxiRoute : " << nodes.size() << " " << routes.size());
+    exit(1);
+  }
   if (currNode == nodes.end())
     return false;
   *nde = *(currNode); 
@@ -288,6 +289,12 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end)
 
 void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double distance)
 {
+  // Just check some preconditions of the trace algorithm
+  if (nodesStack.size() != routesStack.size()) 
+    {
+      SG_LOG(SG_GENERAL, SG_ALERT, "size of nodesStack and routesStack is not equal. NodesStack :" 
+	     << nodesStack.size() << ". RoutesStack : " << routesStack.size());
+    }
   nodesStack.push_back(currNode->getIndex());
   totalDistance += distance;
   //cerr << "Starting trace " << depth << " total distance: " << totalDistance<< endl;
@@ -299,6 +306,10 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
     {
       //cerr << "Found route : " <<  totalDistance << "" << " " << *(nodesStack.end()-1) << endl;
       routes.push_back(FGTaxiRoute(nodesStack,routesStack,totalDistance));
+      if (nodesStack.empty() || routesStack.empty())
+	{
+	  printRoutingError(string("while finishing route"));
+	}
       nodesStack.pop_back();
       routesStack.pop_back();
       if (!(foundRoute))
@@ -327,6 +338,10 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
       i++;
     }
     if (i != nodesStack.end()-1) {
+      if (nodesStack.empty() || routesStack.empty())
+	{
+	  printRoutingError(string("while returning from an already encountered node"));
+	}
       nodesStack.pop_back();
       routesStack.pop_back();
       totalDistance -= distance;
@@ -338,6 +353,10 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
     if ((totalDistance > maxDistance) && foundRoute)
       {
 	//cerr << "Stopping rediculously long trace: " << totalDistance << endl;
+	if (nodesStack.empty() || routesStack.empty())
+	{
+	  printRoutingError(string("while returning from finding a rediculously long route"));
+	}
 	nodesStack.pop_back();
 	routesStack.pop_back();
 	totalDistance -= distance;
@@ -368,11 +387,37 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
     }
   else
     {
-      SG_LOG( SG_GENERAL, SG_DEBUG, "4" );
+      //SG_LOG( SG_GENERAL, SG_DEBUG, "4" );
+    }
+  if (nodesStack.empty())
+    {
+      printRoutingError(string("while finishing trace"));
     }
   nodesStack.pop_back();
-  routesStack.pop_back();
+  // Make sure not to dump the level-zero routesStack entry, because that was never created.
+  if (depth)
+    {
+      routesStack.pop_back();
+      //cerr << "leaving trace " << routesStack.size() << endl;
+    }
   totalDistance -= distance;
   return;
 }
 
+void FGGroundNetwork::printRoutingError(string mess)
+{
+  SG_LOG(SG_GENERAL, SG_ALERT,  "Error in ground network trace algorithm " << mess);
+  if (nodesStack.empty())
+    {
+      SG_LOG(SG_GENERAL, SG_ALERT, " nodesStack is empty. Dumping routesStack");
+      for (intVecIterator i = routesStack.begin() ; i != routesStack.end(); i++)
+	SG_LOG(SG_GENERAL, SG_ALERT, "Route " << (*i));
+    }
+  if (routesStack.empty())
+    {
+      SG_LOG(SG_GENERAL, SG_ALERT, " routesStack is empty. Dumping nodesStack"); 
+      for (intVecIterator i = nodesStack.begin() ; i != nodesStack.end(); i++)
+	SG_LOG(SG_GENERAL, SG_ALERT, "Node " << (*i));
+    }
+  //exit(1);
+}

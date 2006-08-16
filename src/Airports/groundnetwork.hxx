@@ -161,6 +161,8 @@ private:
   
   bool foundRoute;
   double totalDistance, maxDistance;
+
+  void printRoutingError(string);
   
 public:
   FGGroundNetwork();
