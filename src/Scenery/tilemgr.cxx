@@ -163,9 +163,10 @@ void FGTileMgr::schedule_needed( double vis, const SGBucket& curr_bucket) {
         SG_LOG( SG_TERRAIN, SG_ALERT,
                 "Attempting to schedule tiles for bogus lon and lat  = ("
                 << longitude << "," << latitude << ")" );
+        return;		// FIXME
         SG_LOG( SG_TERRAIN, SG_ALERT,
                 "This is a FATAL error.  Exiting!" );
-        exit(-1);        
+        exit(-1);
     }
 
     SG_LOG( SG_TERRAIN, SG_INFO,
