@@ -450,12 +450,12 @@ void FGAIAircraft::Run(double dt) {
     double vs_diff = tgt_vs - vs;
     if (fabs(vs_diff) > 10.0) {
         if (vs_diff > 0.0) {
-            vs += 900.0 * dt;
+            vs += (performance->climb_rate / 3.0) * dt;
 
             if (vs > tgt_vs)
                 vs = tgt_vs;
         } else {
-            vs -= 400.0 * dt;
+            vs -= (performance->descent_rate / 3.0) * dt;
 
            if (vs < tgt_vs)
                vs = tgt_vs;
