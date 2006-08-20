@@ -53,7 +53,7 @@ private:
 
     void search (double frequency, double longitude_rad,
                  double latitude_rad, double altitude_m);
-    double searchChannel (const string& _channel);
+    double searchChannel (const string& channel);
 
     SGPropertyNode_ptr _longitude_node;
     SGPropertyNode_ptr _latitude_node;
@@ -86,6 +86,7 @@ private:
     SGPropertyNode_ptr _tanker_callsign_node;
     SGPropertyNode_ptr _mp_callsign_node;
 
+    string _last_channel;
     double _last_distance_nm;
     double _last_frequency_mhz;
     double _time_before_search_sec;
@@ -109,8 +110,8 @@ private:
     string _mobile_name;
     string _mobile_ident;
 
-    string name;
-    int num;
+    string _name;
+    int _num;
 
 };
 

@@ -54,8 +54,8 @@ TACAN::TACAN ( SGPropertyNode *node )
       _transmitter_pos(SGGeod::fromDeg(0, 0)),
       _transmitter_range_nm(0),
       _transmitter_bias(0.0),
-      name("tacan"),
-      num(0)
+      _name("tacan"),
+      _num(0)
 {
 
     int i;
@@ -64,13 +64,13 @@ TACAN::TACAN ( SGPropertyNode *node )
         string cname = child->getName();
         string cval = child->getStringValue();
         if ( cname == "name" ) {
-            name = cval;
+            _name = cval;
         } else if ( cname == "number" ) {
-            num = child->getIntValue();
+            _num = child->getIntValue();
         } else {
             SG_LOG( SG_INSTR, SG_DEBUG, "Error in TACAN config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_DEBUG, "Section = " << name );
+            if ( _name.length() ) {
+                SG_LOG( SG_INSTR, SG_DEBUG, "Section = " << _name );
             }
         }
     }
@@ -87,7 +87,8 @@ TACAN::TACAN ()
       _transmitter_bearing_deg(0),
       _transmitter_bias(0.0),
       _transmitter_name(""),
-      name("tacan")
+      _name("tacan"),
+      _num(0)
 {
 }
 
@@ -99,25 +100,26 @@ void
 TACAN::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
 
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
     _altitude_node = fgGetNode("/position/altitude-ft", true);
-    _heading_node   = fgGetNode("/orientation/heading-deg", true);
-    _yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
+    _heading_node = fgGetNode("/orientation/heading-deg", true);
+    _yaw_node = fgGetNode("/orientation/side-slip-deg", true);
     _serviceable_node = node->getChild("serviceable", 0, true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/tacan", true);
     _ident_node = node->getChild("ident", 0, true);
     SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
     _source_node = fnode->getChild("source", 0, true);
     _frequency_node = fnode->getChild("selected-mhz", 0, true);
-    _channel_node = fnode->getChild("selected-channel", 1, true);
-    _channel_node = fnode->getChild("selected-channel", 2, true);
-    _channel_node = fnode->getChild("selected-channel", 3, true);
-    _channel_node = fnode->getChild("selected-channel", 4, true);
+    _channel_node = fnode->getChild("selected-channel", 0, true);
+    fnode->getChild("selected-channel", 1, true);
+    fnode->getChild("selected-channel", 2, true);
+    fnode->getChild("selected-channel", 3, true);
+    fnode->getChild("selected-channel", 4, true);
     _in_range_node = node->getChild("in-range", 0, true);
     _distance_node = node->getChild("indicated-distance-nm", 0, true);
     _speed_node = node->getChild("indicated-ground-speed-kt", 0, true);
@@ -130,17 +132,14 @@ TACAN::init ()
     _rotation_node = dnode->getChild("rotation", 0, true);
     _channel_node = dnode->getChild("channel", 0, true);
 
-    SGPropertyNode *cnode = fgGetNode("/ai/models/carrier", num, false );
-    if (cnode)
-        _carrier_name_node = cnode->getChild("name", 0, false);
+    SGPropertyNode *cnode = fgGetNode("/ai/models/carrier", _num, false );
+    _carrier_name_node = cnode ? cnode->getChild("name", 0, false) : 0;
 
-    SGPropertyNode *tnode = fgGetNode("/ai/models/aircraft", num, false);
-    if (tnode)
-        _tanker_callsign_node = tnode->getChild("callsign", 0, false);
+    SGPropertyNode *tnode = fgGetNode("/ai/models/aircraft", _num, false);
+    _tanker_callsign_node = tnode ? tnode->getChild("callsign", 0, false) : 0;
 
-    SGPropertyNode *mnode = fgGetNode("/ai/models/multiplayer", num, false);
-    if (mnode)
-        _mp_callsign_node = mnode->getChild("callsign", 0, false);
+    SGPropertyNode *mnode = fgGetNode("/ai/models/multiplayer", _num, false);
+    _mp_callsign_node = mnode ? mnode->getChild("callsign", 0, false) : 0;
 }
 
 void
@@ -153,8 +152,6 @@ TACAN::update (double delta_time_sec)
     double mobile_bearing = 0;
     double mobile_distance = 0;
     double frequency_mhz = 0;
-
-    string _channel, _last_channel, _channel_1, _channel_2,_channel_3, _channel_4;
 
                                 // If it's off, don't waste any time.
     if (!_serviceable_node->getBoolValue() || !_electrical_node->getBoolValue()) {
@@ -172,44 +169,46 @@ TACAN::update (double delta_time_sec)
 
     if (source[0] == '\0') {
         string branch;
-        branch = "/instrumentation/" + name + "/frequencies/selected-channel";
+        branch = "/instrumentation/" + _name + "/frequencies/selected-channel";
         _source_node->setStringValue(branch.c_str());
         source = _source_node->getStringValue();
-        SG_LOG( SG_INSTR, SG_DEBUG, "source " << source  );
+        SG_LOG( SG_INSTR, SG_DEBUG, "source " << source );
     }
-                                // Get the channel
-    _channel_1 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[1]");
-    _channel_2 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[2]");
-    _channel_3 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[3]");
-    _channel_4 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[4]");
+                                // Get the channel   FIXME always from instrument #1 ??
+    string channel_1 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[1]");
+    string channel_2 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[2]");
+    string channel_3 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[3]");
+    string channel_4 = fgGetString("/instrumentation/tacan/frequencies/selected-channel[4]");
 
-    SG_LOG( SG_INSTR, SG_DEBUG, "channels " << _channel_1 << _channel_2 << _channel_3 << _channel_4);
+    SG_LOG( SG_INSTR, SG_DEBUG, "channels " << channel_1 << channel_2 << channel_3 << channel_4);
 
-    _channel = _channel_1 + _channel_2 + _channel_3 + _channel_4;
+    string channel = channel_1 + channel_2 + channel_3 + channel_4;
 
                                     // Get the frequency
-    if (_channel != _last_channel) {
+    frequency_mhz = _last_frequency_mhz;
+    if (channel != _last_channel) {
         _time_before_search_sec = 0;
-        _last_channel = _channel;
-        frequency_mhz = searchChannel(_channel);
+        _last_channel = channel;
+        frequency_mhz = searchChannel(channel);
         SG_LOG( SG_INSTR, SG_DEBUG, "frequency " << frequency_mhz );
         _frequency_node->setDoubleValue(frequency_mhz);
     }
 
-    SG_LOG( SG_INSTR, SG_DEBUG, "channel " << _channel );
+    SG_LOG( SG_INSTR, SG_DEBUG, "channel " << channel );
                                 // Get the aircraft position
     double longitude_deg = _longitude_node->getDoubleValue();
     double latitude_deg  = _latitude_node->getDoubleValue();
     double altitude_m    = _altitude_node->getDoubleValue() * SG_FEET_TO_METER;
-    double heading       = _heading_node->getDoubleValue() ;
-    double yaw           = _yaw_node->getDoubleValue() ;
     double longitude_rad = longitude_deg * SGD_DEGREES_TO_RADIANS;
     double latitude_rad  = latitude_deg * SGD_DEGREES_TO_RADIANS;
 
                                 // On timeout, scan again
     _time_before_search_sec -= delta_time_sec;
-    if (_time_before_search_sec < 0 && frequency_mhz >= 0)
+    if (_time_before_search_sec < 0 && frequency_mhz >= 0
+            || frequency_mhz != _last_frequency_mhz) {
         search(frequency_mhz, longitude_rad, latitude_rad, altitude_m);
+        _last_frequency_mhz = frequency_mhz;
+    }
 
                                  // Calculate the distance to the transmitter
 
@@ -244,7 +243,7 @@ TACAN::update (double delta_time_sec)
         _name_node->setStringValue(_transmitter_name.c_str());
         _transmitter_ident = _mobile_ident;
         _ident_node->setStringValue(_transmitter_ident.c_str());
-        _channel_node->setStringValue(_channel.c_str());
+        _channel_node->setStringValue(channel.c_str());
     }
 
     //// calculate some values for boresight display
@@ -263,7 +262,7 @@ TACAN::update (double delta_time_sec)
 
     double horiz_offset = bearing;
 
-    SG_LOG( SG_INSTR, SG_DEBUG, "distance_nm " << distance_nm  << " bearing "
+    SG_LOG( SG_INSTR, SG_DEBUG, "distance_nm " << distance_nm << " bearing "
             << bearing << " horiz_offset " << horiz_offset);
 
     // calculate values for radar display
@@ -321,7 +320,7 @@ TACAN::update (double delta_time_sec)
         _name_node->setStringValue(_transmitter_name.c_str());
         _transmitter_ident = "";
         _ident_node->setStringValue(_transmitter_ident.c_str());
-        _channel_node->setStringValue(_channel.c_str());
+        _channel_node->setStringValue(channel.c_str());
         return;
     }
 } // end function update
@@ -331,7 +330,6 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                double latitude_rad, double altitude_m)
 {
     int number, i;
-    bool freq_valid = false;
 
     SG_LOG( SG_INSTR, SG_DEBUG, "tacan freq " << frequency_mhz );
 
@@ -341,8 +339,8 @@ TACAN::search (double frequency_mhz, double longitude_rad,
     //try any carriers first
     FGNavRecord *mobile_tacan
           = globals->get_carrierlist()->findStationByFreq( frequency_mhz );
-    freq_valid = (mobile_tacan != NULL);
-    SG_LOG( SG_INSTR, SG_DEBUG, "mobile freqency valid " << freq_valid  );
+    bool freq_valid = (mobile_tacan != NULL);
+    SG_LOG( SG_INSTR, SG_DEBUG, "mobile freqency valid " << freq_valid );
 
     if ( freq_valid ) {
 
@@ -386,7 +384,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         //try any AI tankers second
 
         if ( !_mobile_valid) {
-            SG_LOG( SG_INSTR, SG_DEBUG, "tanker transmitter valid start " << _mobile_valid  );
+            SG_LOG( SG_INSTR, SG_DEBUG, "tanker transmitter valid start " << _mobile_valid );
 
         SGPropertyNode * branch = fgGetNode("ai/models", true);
         vector<SGPropertyNode_ptr> tanker = branch->getChildren("aircraft");
@@ -428,7 +426,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
     //try any mp tankers third, if we haven't found the tanker in the ai aircraft
 
     if ( !_mobile_valid ) {
-        SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter valid start " << _mobile_valid  );
+        SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter valid start " << _mobile_valid );
 
         SGPropertyNode * branch = fgGetNode("ai/models", true);
         vector<SGPropertyNode_ptr> mp_tanker = branch->getChildren("multiplayer");
@@ -454,8 +452,8 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                 _mobile_ident = mobile_tacan->get_trans_ident();
                 _mobile_valid = true;
 
-                SG_LOG( SG_INSTR, SG_DEBUG, "  mp tanker transmitter valid " << _mobile_valid );
-                SG_LOG( SG_INSTR, SG_DEBUG, " mp_tanker name " << _mobile_name);
+                SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter valid " << _mobile_valid );
+                SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker name " << _mobile_name);
                 SG_LOG( SG_INSTR, SG_DEBUG, " mp lat " << _mobile_lat << "lon " << _mobile_lon);
                 SG_LOG( SG_INSTR, SG_DEBUG, " mp elev " << _mobile_elevation_ft);
                 SG_LOG( SG_INSTR, SG_DEBUG, " mp range " << _mobile_range_nm);
@@ -468,7 +466,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         }
     } else {
         _mobile_valid = false;
-        SG_LOG( SG_INSTR, SG_DEBUG, " mobile transmitter invalid " << _mobile_valid  );
+        SG_LOG( SG_INSTR, SG_DEBUG, " mobile transmitter invalid " << _mobile_valid );
     }
 
     // try the TACAN/VORTAC list next
@@ -479,7 +477,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
     _transmitter_valid = (tacan != NULL);
 
     if ( _transmitter_valid ) {
-        SG_LOG( SG_INSTR, SG_DEBUG, "transmitter valid " << _transmitter_valid  );
+        SG_LOG( SG_INSTR, SG_DEBUG, "transmitter valid " << _transmitter_valid );
 
         _transmitter_pos = tacan->get_pos();
         _transmitter_range_nm = tacan->get_range();
@@ -493,24 +491,24 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         SG_LOG( SG_INSTR, SG_DEBUG, _transmitter_pos);
 
     } else {
-        SG_LOG( SG_INSTR, SG_DEBUG, "transmitter invalid " << _transmitter_valid  );
+        SG_LOG( SG_INSTR, SG_DEBUG, "transmitter invalid " << _transmitter_valid );
     }
 }
 
 double
-TACAN::searchChannel (const string& _channel){
-
+TACAN::searchChannel (const string& channel)
+{
     double frequency_khz = 0;
 
     FGTACANRecord *freq
-        = globals->get_channellist()->findByChannel( _channel );
-    double _freq_valid = (freq != NULL);
-    SG_LOG( SG_INSTR, SG_DEBUG, "freq valid " << _freq_valid  );
+        = globals->get_channellist()->findByChannel( channel );
+    bool _freq_valid = (freq != NULL);
+    SG_LOG( SG_INSTR, SG_DEBUG, "freq valid " << _freq_valid );
     if ( _freq_valid ) {
         frequency_khz = freq->get_freq();
-        SG_LOG( SG_INSTR, SG_DEBUG, "freq output " << frequency_khz  );
+        SG_LOG( SG_INSTR, SG_DEBUG, "freq output " << frequency_khz );
         //check sanity
-        if (frequency_khz >=9620 && frequency_khz <= 121300)
+        if (frequency_khz >= 9620 && frequency_khz <= 121300)
             return frequency_khz/100;
     }
     return frequency_khz = 0;
