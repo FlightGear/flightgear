@@ -43,6 +43,7 @@
 #include <Network/protocol.hxx>
 #include <Network/ATC-Main.hxx>
 #include <Network/atlas.hxx>
+#include <Network/AV400.hxx>
 #include <Network/garmin.hxx>
 #include <Network/httpd.hxx>
 #ifdef FG_JPEG_SERVER
@@ -130,6 +131,9 @@ FGIO::parse_port_config( const string& config )
 	    // printf("Parsed opengc\n"); cin >> wait;
 	    FGOpenGC *opengc = new FGOpenGC;
 	    io = opengc;
+	} else if ( protocol == "AV400" ) {
+	    FGAV400 *av400 = new FGAV400;
+	    io = av400;
 	} else if ( protocol == "garmin" ) {
 	    FGGarmin *garmin = new FGGarmin;
 	    io = garmin;

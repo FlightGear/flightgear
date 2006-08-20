@@ -17,6 +17,7 @@ libNetwork_a_SOURCES = \
 	ATC-Inputs.cxx ATC-Inputs.hxx \
 	ATC-Outputs.cxx ATC-Outputs.hxx \
 	atlas.cxx atlas.hxx \
+	AV400.cxx AV400.hxx \
 	garmin.cxx garmin.hxx \
 	lfsglass.cxx lfsglass.hxx lfsglass_data.hxx \
         httpd.cxx httpd.hxx \
