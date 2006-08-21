@@ -1624,7 +1624,7 @@ fgUsage (bool verbose)
 
     try {
         fgLoadProps("options.xml", &options_root);
-    } catch (const sg_exception &ex) {
+    } catch (const sg_exception &) {
         cout << "Unable to read the help file." << endl;
         cout << "Make sure the file options.xml is located in the FlightGear base directory," << endl;
         cout << "and the location of the base directory is specified by setting $FG_ROOT or" << endl;
@@ -1656,7 +1656,7 @@ fgUsage (bool verbose)
             SGPropertyNode *short_name = option[k]->getNode("short");
             SGPropertyNode *key = option[k]->getNode("key");
             SGPropertyNode *arg = option[k]->getNode("arg");
-            bool brief = option[k]->getNode("brief");
+            bool brief = option[k]->getNode("brief") != 0;
 
             if ((brief || verbose) && name) {
                 string tmp = name->getStringValue();
