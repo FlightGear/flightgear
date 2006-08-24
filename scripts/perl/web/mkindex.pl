@@ -38,7 +38,7 @@ $mdir = "Movies";
 $columns = 2;
 
 $swidth = 320;
-$sheight = 240;
+$sheight = 233;
 
 $lwidth = 1024;
 $lheight = 768;
