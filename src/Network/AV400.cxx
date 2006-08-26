@@ -80,7 +80,7 @@ bool FGAV400::gen_message() {
     double min;
 
     // create msg_z
-    sprintf( msg_z, "z%05.0f\n", cur_fdm_state->get_Altitude() );
+    sprintf( msg_z, "z%05.0f\r\n", cur_fdm_state->get_Altitude() );
 
     // create msg_A
     sprintf( msg_A, "A");
@@ -94,7 +94,7 @@ bool FGAV400::gen_message() {
     }
     deg = (int)latd;
     min = (latd - (double)deg) * 60.0 * 100.0;
-    sprintf( msg_A, "A%c %02d %04.0f\n", dir, deg, min);
+    sprintf( msg_A, "A%c %02d %04.0f\r\n", dir, deg, min);
 
     // create msg_B
     double lond = cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;
@@ -106,7 +106,7 @@ bool FGAV400::gen_message() {
     }
     deg = (int)lond;
     min = (lond - (double)deg) * 60.0 * 100.0;
-    sprintf( msg_B, "B%c %03d %04.0f\n", dir, deg, min);
+    sprintf( msg_B, "B%c %03d %04.0f\r\n", dir, deg, min);
 
     // create msg_C
     float magdeg = fgGetDouble( "/environment/magnetic-variation-deg" );
@@ -116,14 +116,14 @@ bool FGAV400::gen_message() {
     double gnd_trk_mag = gnd_trk_true - magdeg;
     if ( gnd_trk_mag < 0.0 ) { gnd_trk_mag += 360.0; }
     if ( gnd_trk_mag >= 360.0 ) { gnd_trk_mag -= 360.0; }
-    sprintf( msg_C, "C%03.0f\n", gnd_trk_mag);
+    sprintf( msg_C, "C%03.0f\r\n", gnd_trk_mag);
 
     // create msg_D
     double speed_kt = sqrt( vn*vn + ve*ve ) * SG_FPS_TO_KT;
     if ( speed_kt > 999.0 ) {
         speed_kt = 999.0;
     }
-    sprintf( msg_D, "D%03.0f\n", speed_kt);
+    sprintf( msg_D, "D%03.0f\r\n", speed_kt);
 
     // create msg_E (not implemented)
     // create msg_G (not implemented)
@@ -138,17 +138,17 @@ bool FGAV400::gen_message() {
     } else {
         dir = 'E';
     }
-    sprintf( msg_Q, "Q%c%03.0f\n", dir, magdeg * 10.0 );
+    sprintf( msg_Q, "Q%c%03.0f\r\n", dir, magdeg * 10.0 );
 
     // create msg_S (not implemented)
 
     // create msg_T
-    sprintf( msg_T, "T---------\n" );
+    sprintf( msg_T, "T---------\r\n" );
 
     // create msg_l (not implemented)
 
     // sentence type 2
-    sprintf( msg_type2, "w01%c\n", (char)64 );
+    sprintf( msg_type2, "w01%c\r\n", (char)65 );
 
     // assemble message
     string sentence;
@@ -158,16 +158,16 @@ bool FGAV400::gen_message() {
     sentence += msg_B;          // longitude
     sentence += msg_C;          // ground track
     sentence += msg_D;          // ground speed (kt)
-    // sentence += "E-----\n";
-    // sentence += "G-----\n";
-    // sentence += "I----\n";
-    // sentence += "K-----\n";
-    // sentence += "L----\n";
+    // sentence += "E-----\r\n";
+    // sentence += "G-----\r\n";
+    // sentence += "I----\r\n";
+    // sentence += "K-----\r\n";
+    // sentence += "L----\r\n";
     sentence += msg_Q;          // magvar
-    // sentence += "S-----\n";
+    // sentence += "S-----\r\n";
     sentence += msg_T;          // end of type 1 messages (must be sent)
     sentence += msg_type2;      // type2 message
-    // sentence += "l------\n";
+    // sentence += "l------\r\n";
     sentence += '\003';         // ETX
 
     // cout << sentence;
