@@ -11,6 +11,12 @@ A1 Free Sounds <techie@mail.ev1.net> http://www.a1freesoundeffects.com
   Granted permission for the flightgear project to use some of the
   sound effects from their site.
 
+Mark Akermann <flightgear@akermann.org>
+  Redone sun code. The sun now consists of three textures with individual 
+  colors which are calculated based on the effect of light scattering.
+  This is accomplished by using various environmental data and by 
+  calculating the distance the light travels through the atmosphere.
+
 
 Raul Alonzo <amil@las.es>
   Mr. Alonzo is the author of Ssystem and provided his kind permission 
