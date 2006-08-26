@@ -48,6 +48,7 @@ public:
    bool gear_down;
    bool flaps_down;
    bool on_ground;
+    int routeIndex;  // For AI/ATC purposes;
   } waypoint;
 
    FGAIFlightPlan(const string& filename);
@@ -93,8 +94,11 @@ public:
   void setRepeat(bool r) { repeat = r; };
   bool getRepeat(void) const { return repeat; };
   void restart(void);
+  int getNrOfWayPoints() { return waypoints.size(); };
+  int getRouteIndex(int i); // returns the AI related index of this current routes. 
+  FGTaxiRoute *getTaxiRoute() { return taxiRoute; };
+  void deleteTaxiRoute();
   
-  int getNrOfWayPoints() { return waypoints.end() - waypoints.begin(); };
 
 private:
   FGRunway rwy;

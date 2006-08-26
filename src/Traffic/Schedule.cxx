@@ -185,7 +185,7 @@ bool FGAISchedule::update(time_t now)
   time_t 
     totalTimeEnroute, 
     elapsedTimeEnroute,
-    remainingTimeEnroute;
+    remainingTimeEnroute, deptime = 0;
   double
     userLatitude,
     userLongitude;
@@ -218,6 +218,8 @@ bool FGAISchedule::update(time_t now)
   	{
   	  i->adjustTime(now);
   	}
+      if (fgGetBool("/sim/traffic-manager/instantaneous-action") == true)
+	deptime = now;
       firstRun = false;
     }
   
@@ -225,6 +227,8 @@ bool FGAISchedule::update(time_t now)
   // Because this is done at every update, we only need to check the status
   // of the first listed flight. 
   sort(flights.begin(), flights.end());
+  if (!deptime)
+    deptime = flights.begin()->getDepartureTime();
   FGScheduledFlightVecIterator i = flights.begin();
   if (AIManagerRef)
     {
@@ -391,8 +395,11 @@ bool FGAISchedule::update(time_t now)
 		  aircraft->setAltitude(i->getCruiseAlt()*100); // convert from FL to feet
 		  aircraft->setSpeed(speed);
 		  aircraft->setBank(0);
-		  aircraft->SetFlightPlan(new FGAIFlightPlan(flightPlanName, courseToDest, i->getDepartureTime(), dep, 
-							     arr,true, radius, i->getCruiseAlt()*100, lat, lon, speed, flightType, acType, airline));
+		  aircraft->SetFlightPlan(new FGAIFlightPlan(flightPlanName, courseToDest, deptime, 
+							     dep, arr,true, radius, 
+							     i->getCruiseAlt()*100, 
+							     lat, lon, speed, flightType, acType, 
+							     airline));
 		  aimgr->attach(aircraft);
 		  
 		  

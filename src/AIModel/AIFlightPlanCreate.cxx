@@ -44,7 +44,7 @@ void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, int legNr,
   int currWpt = wpt_iterator - waypoints.begin();
   switch(legNr)
     {
-    case 1:
+      case 1:
       createPushBack(firstFlight,dep, latitude, longitude, 
 		     radius, fltType, aircraftType, airline);
       break;
@@ -140,10 +140,9 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = true;
+
   waypoints.push_back(wpt); 
   
-  // Add park twice, because it uses park once for initialization and once
-  // to trigger the departure ATC message 
   geo_direct_wgs_84 ( 0, lat, lon, heading, 
  		      10, 
  		      &lat2, &lon2, &az2 );
@@ -158,6 +157,7 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = true;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt); 
   geo_direct_wgs_84 ( 0, lat, lon, heading, 
  		      2.2*radius,           
@@ -173,6 +173,7 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = true;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt);  
 }
 
@@ -280,6 +281,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	    wpt->flaps_down= true;
 	    wpt->finished  = false;
 	    wpt->on_ground = true;
+	    wpt->routeIndex = 0;
 	    waypoints.push_back(wpt);
 	    
 	    //Add the runway startpoint;
@@ -294,6 +296,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	    wpt->flaps_down= true;
 	    wpt->finished  = false;
 	    wpt->on_ground = true;
+	    wpt->routeIndex = 0;
 	    waypoints.push_back(wpt);	
 	  } else {
 	    int node;
@@ -312,8 +315,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 		isPushBackPoint = false;
 		taxiRoute->next(&node);
 	      }
-	    }
-	    else {
+	    } else {
 	      //chop off the first two waypoints, because
 	      // those have already been created
 	      // by create pushback
@@ -323,13 +325,16 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 		taxiRoute->next(&node);
 	      }
 	    }
-	    while(taxiRoute->next(&node))
+	    int route;
+	    while(taxiRoute->next(&node, &route))
 	      {
 		//FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findSegment(node)->getEnd();
+		char buffer[10];
+		snprintf (buffer, 10, "%d", node);
 		FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
 		//ids.pop_back();  
 		wpt = new waypoint;
-		wpt->name      = "taxiway"; // fixme: should be the name of the taxiway
+		wpt->name      = string(buffer); // fixme: should be the name of the taxiway
 		wpt->latitude  = tn->getLatitude();
 		wpt->longitude = tn->getLongitude();
 		// Elevation is currently disregarded when on_ground is true
@@ -347,23 +352,27 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 		wpt->flaps_down= true;
 		wpt->finished  = false;
 		wpt->on_ground = true;
+		wpt->routeIndex = route;
 		waypoints.push_back(wpt);
 	      }
 	    //cerr << endl;
 	    // finally, rewind the taxiRoute object to the point where we started
+	    // generating the Flightplan, for AI use.
+	    // This is a bit tricky, because the 
 	    taxiRoute->first();
 	    if (firstFlight) { 
-	      for (int i = 0; i < nrWaypointsToSkip-2; i++) {
+	      for (int i = 0; i < nrWaypointsToSkip-1; i++) {
 		taxiRoute->next(&node);
 	      }
 	    } else {
 	      int size = taxiRoute->size();
 	      if (size > 2) {
-		taxiRoute->next(&node);
-		taxiRoute->next(&node);
+		//taxiRoute->next(&node);
+		//taxiRoute->next(&node);	
+		//taxiRoute->next(&node);
 	      }
 	    }
-	  }
+	  } // taxiRoute not empty
 	}
       else 
 	{
@@ -380,6 +389,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  wpt->flaps_down= true;
 	  wpt->finished  = false;
 	  wpt->on_ground = true;
+	  wpt->routeIndex = 0;
 	  waypoints.push_back(wpt);
 	  
 	  //Add the runway startpoint;
@@ -394,6 +404,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  wpt->flaps_down= true;
 	  wpt->finished  = false;
 	  wpt->on_ground = true;
+	  wpt->routeIndex = 0;
 	  waypoints.push_back(wpt);
 	}
     }
@@ -441,6 +452,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	    wpt->flaps_down= true;
 	    wpt->finished  = false;
 	    wpt->on_ground = true;
+	    wpt->routeIndex = 0;
 	    waypoints.push_back(wpt);
 	    
 	    //Add the runway startpoint;
@@ -455,6 +467,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	    wpt->flaps_down= true;
 	    wpt->finished  = false;
 	    wpt->on_ground = true;
+	    wpt->routeIndex = 0;
 	    waypoints.push_back(wpt);	
 	  } else {
 	    int node;
@@ -462,13 +475,17 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	    int size = taxiRoute->size();
 	    // Omit the last two waypoints, as 
 	    // those are created by createParking()
+	    int route;
 	    for (int i = 0; i < size-2; i++)
 	      {
-		taxiRoute->next(&node);
+		taxiRoute->next(&node, &route);
+		char buffer[10];
+		snprintf (buffer, 10, "%d", node);
 		//FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
 		FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
 		wpt = new waypoint;
-		wpt->name      = "taxiway"; // fixme: should be the name of the taxiway
+		//wpt->name      = "taxiway"; // fixme: should be the name of the taxiway
+		wpt->name      = string(buffer);// fixme: should be the name of the taxiway
 		wpt->latitude  = tn->getLatitude();
 		wpt->longitude = tn->getLongitude();
 		wpt->altitude  = apt->getElevation();
@@ -478,8 +495,11 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 		wpt->flaps_down= true;
 		wpt->finished  = false;
 		wpt->on_ground = true;
+		wpt->routeIndex = route;
 		waypoints.push_back(wpt);
 	      }
+	    //taxiRoute->first();
+	    //taxiRoute->next(&node);
 	  }
 	}
       else
@@ -503,6 +523,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  wpt->flaps_down= true;
 	  wpt->finished  = false;
 	  wpt->on_ground = true;
+	  wpt->routeIndex = 0;
 	  waypoints.push_back(wpt);
 	 
 	  wpt = new waypoint;
@@ -516,6 +537,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  wpt->flaps_down= true;
 	  wpt->finished  = false;
 	  wpt->on_ground = true;
+	  wpt->routeIndex = 0;
 	  waypoints.push_back(wpt); 
 
 	  //waypoint* wpt;
@@ -538,6 +560,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  wpt->flaps_down= true;
 	  wpt->finished  = false;
 	  wpt->on_ground = true;
+	  wpt->routeIndex = 0;
 	  waypoints.push_back(wpt);
 	}
       
@@ -592,6 +615,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = true;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt); 
   
   lat = lat2;
@@ -614,6 +638,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = false;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt);
 }
  
@@ -667,6 +692,7 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = false;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt); 
   
 
@@ -684,6 +710,7 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = false;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt); 
 }
 
@@ -799,6 +826,7 @@ void FGAIFlightPlan::createDecent(FGAirport *apt)
   wpt->flaps_down= false;
   wpt->finished  = false;
   wpt->on_ground = false;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt);  
   
   // Three thousand ft. Slowing down to 160 kts
@@ -816,6 +844,7 @@ void FGAIFlightPlan::createDecent(FGAirport *apt)
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = false;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt);
 }
 /*******************************************************************
@@ -852,6 +881,7 @@ void FGAIFlightPlan::createLanding(FGAirport *apt)
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = true;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt); 
 
  //Full stop at the runway centerpoint
@@ -869,6 +899,7 @@ void FGAIFlightPlan::createLanding(FGAirport *apt)
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = true;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt);
 
  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
@@ -885,6 +916,7 @@ void FGAIFlightPlan::createLanding(FGAirport *apt)
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = true;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt); 
 }
 
@@ -917,6 +949,7 @@ void FGAIFlightPlan::createParking(FGAirport *apt, double radius)
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = true;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt); 
   geo_direct_wgs_84 ( 0, lat, lon, heading, 
  		      0.1 *radius,           
@@ -932,6 +965,7 @@ void FGAIFlightPlan::createParking(FGAirport *apt, double radius)
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = true;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt);   
 
   wpt = new waypoint;
@@ -945,5 +979,6 @@ void FGAIFlightPlan::createParking(FGAirport *apt, double radius)
   wpt->flaps_down= true;
   wpt->finished  = false;
   wpt->on_ground = true;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt);
 }

@@ -60,6 +60,8 @@ class FGAISchedule
 	       int, FGScheduledFlightVec);                  // construct & init
   FGAISchedule(const FGAISchedule &other);                  // copy constructor
 
+
+
   ~FGAISchedule(); //destructor
 
   bool update(time_t now);

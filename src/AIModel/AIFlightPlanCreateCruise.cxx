@@ -340,6 +340,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
   wpt->flaps_down= false;
   wpt->finished  = false;
   wpt->on_ground = false;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt); 
   
  
@@ -373,5 +374,6 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
   wpt->flaps_down= false;
   wpt->finished  = false;
   wpt->on_ground = false;
+  wpt->routeIndex = 0;
   waypoints.push_back(wpt); 
 }

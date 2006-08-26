@@ -71,6 +71,7 @@ public:
     void SetPerformance(const PERF_STRUCT *ps);
     void setFlightPlan(const std::string& fp, bool repat = false);
     void SetFlightPlan(FGAIFlightPlan *f);
+    void initializeFlightPlan();
     FGAIFlightPlan* GetFlightPlan() const { return fp; };
     void AccelTo(double speed);
     void PitchTo(double angle);
@@ -89,11 +90,15 @@ public:
     void setAcType(const string& ac) { acType = ac; };
     void setCompany(const string& comp) { company = comp;};
 
+    void announcePositionToController();
+    void processATC(FGATCInstruction instruction);
+
     inline void SetTanker(bool setting) { isTanker = setting; };
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
 private:
     FGAISchedule *trafficRef;
+    FGATCController *controller, *prevController; 
 
     bool hdg_lock;
     bool alt_lock;

@@ -296,12 +296,6 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
 FGAIFlightPlan::~FGAIFlightPlan()
 {
   deleteWaypoints();
-  //waypoints.clear();
-  //while (waypoints.begin() != waypoints.end())
-  //  {
-  //    delete *(waypoints.begin());
-  //    waypoints.erase (waypoints.begin());
-  //  }
   if (taxiRoute)
     delete taxiRoute;
 }
@@ -490,4 +484,21 @@ void FGAIFlightPlan::resetWaypoints()
 void FGAIFlightPlan::restart()
 {
   wpt_iterator = waypoints.begin();
+}
+
+
+void FGAIFlightPlan::deleteTaxiRoute() 
+{
+  if (taxiRoute)
+    delete taxiRoute;
+  taxiRoute = 0;
+}
+
+
+int FGAIFlightPlan::getRouteIndex(int i) {
+  if ((i > 0) && (i < waypoints.size())) {
+    return waypoints[i]->routeIndex;
+  }
+  else
+    return 0;
 }

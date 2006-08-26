@@ -271,7 +271,7 @@ bool FGScheduledFlight::initializeAirports()
   arrivalPort = globals->get_airports()->search(arrId);
   if(arrivalPort == NULL)
     {
-      SG_LOG( SG_GENERAL, SG_WARN, "Traffic manager could not find arrival airort   : " << arrId);
+      SG_LOG( SG_GENERAL, SG_WARN, "Traffic manager could not find arrival airport   : " << arrId);
       return false;
     }
 

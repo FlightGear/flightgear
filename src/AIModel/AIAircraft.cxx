@@ -74,6 +74,8 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
         groundOffset = 0;
 
     fp = 0;
+    controller = 0;
+    prevController = 0;
     dt_count = 0;
     dt_elev_count = 0;
     use_perf_vs = true;
@@ -217,6 +219,19 @@ void FGAIAircraft::Run(double dt) {
 
         AccelTo( props->getDoubleValue("controls/flight/target-spd" ) );
     }
+    if (controller)
+      {
+	controller->update(getID(), 
+			   pos.getLatitudeDeg(), 
+			   pos.getLongitudeDeg(),
+			   hdg,
+			   speed,
+			   altitude_ft);
+	//if (controller->hasInstruction(getID()))
+	//  {
+	    processATC(controller->getInstruction(getID()));
+	    //  }
+      }
       
     double turn_radius_ft;
     double turn_circum_ft;
@@ -553,22 +568,11 @@ void FGAIAircraft::SetFlightPlan(FGAIFlightPlan *f) {
 void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
     bool eraseWaypoints;
     if (trafficRef) {
-//      FGAirport *arr;
-//      FGAirport *dep;
         eraseWaypoints = true;
-//      cerr << trafficRef->getRegistration();
-//      cerr << "Departure airport " << endl;
-//      dep = trafficRef->getDepartureAirport();
-//      if (dep)
-//          cerr << dep->getId() << endl;
-//      cerr << "Arrival   airport " << endl;
-//      arr = trafficRef->getArrivalAirport();
-//      if (arr)
-//          cerr << arr->getId() <<endl << endl;;
     } else
         eraseWaypoints = false;
 
-    //cerr << "Processing Flightplan" << endl;
+ 
     FGAIFlightPlan::waypoint* prev = 0; // the one behind you
     FGAIFlightPlan::waypoint* curr = 0; // the one ahead
     FGAIFlightPlan::waypoint* next = 0; // the next plus 1
@@ -577,75 +581,68 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
     next = fp->getNextWaypoint();
     dt_count += dt;
 
-    if (!prev) {  //beginning of flightplan, do this initialization once
-        //setBank(0.0);
-        spinCounter = 0;
-        tempReg = "";
-        //prev_dist_to_go = HUGE;
-        //cerr << "Before increment " << curr-> name << endl;
-        fp->IncrementWaypoint(eraseWaypoints);
-        //prev = fp->getPreviousWaypoint(); //first waypoint
-        //curr = fp->getCurrentWaypoint();  //second waypoint
-        //next = fp->getNextWaypoint();     //third waypoint (might not exist!)
-        //cerr << "After increment " << prev-> name << endl;
-        if (!(fp->getNextWaypoint()) && trafficRef)
-            loadNextLeg();
+    ///////////////////////////////////////////////////////////////////////////
+    // Initialize the flightplan
+    //////////////////////////////////////////////////////////////////////////
+    if (!prev) {
 
-        //cerr << "After load " << prev-> name << endl;
-        prev = fp->getPreviousWaypoint(); //first waypoint
-        curr = fp->getCurrentWaypoint();  //second waypoint
-        next = fp->getNextWaypoint();     //third waypoint (might not exist!)
-        //cerr << "After load " << prev-> name << endl;
-        setLatitude(prev->latitude);
-        setLongitude(prev->longitude);
-        setSpeed(prev->speed);
-        setAltitude(prev->altitude);
-
-        if (prev->speed > 0.0)
-            setHeading(fp->getBearing(prev->latitude, prev->longitude, curr));
-        else
-            setHeading(fp->getBearing(curr->latitude, curr->longitude, prev));
-
-        // If next doesn't exist, as in incrementally created flightplans for
-        // AI/Trafficmanager created plans,
-        // Make sure lead distance is initialized otherwise
-        if (next)
-            fp->setLeadDistance(speed, hdg, curr, next);
-
-        if (curr->crossat > -1000.0) { //use a calculated descent/climb rate
-            use_perf_vs = false;
-            tgt_vs = (curr->crossat - prev->altitude)
-                    / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
-                    / 6076.0 / prev->speed*60.0);
-            tgt_altitude_ft = curr->crossat;
-        } else {
-            use_perf_vs = true;
-            tgt_altitude_ft = prev->altitude;
-        }
-        alt_lock = hdg_lock = true;
-        no_roll = prev->on_ground;
-        if (no_roll) {
-            Transform();         // make sure aip is initialized.
-            getGroundElev(60.1); // make sure it's exectuted first time around, so force a large dt value
-            //getGroundElev(60.1); // Need to do this twice.
-            //cerr << trafficRef->getRegistration() << " Setting altitude to " << tgt_altitude << endl;
-            doGroundAltitude(); //(tgt_altitude);
-        }
-        prevSpeed = 0;
-        //cout << "First waypoint:  " << prev->name << endl;
-        //cout << "  Target speed:    " << tgt_speed << endl;
-        //cout << "  Target altitude: " << tgt_altitude << endl;
-        //cout << "  Target heading:  " << tgt_heading << endl << endl;
-        //cerr << "Done Flightplan init" << endl;
-        return;
+      spinCounter = 0;
+      tempReg = "";
+      fp->IncrementWaypoint(eraseWaypoints);
+      if (!(fp->getNextWaypoint()) && trafficRef)
+	loadNextLeg();
+      
+      prev = fp->getPreviousWaypoint(); //first waypoint
+      curr = fp->getCurrentWaypoint();  //second waypoint
+      next = fp->getNextWaypoint();     //third waypoint (might not exist!)
+      
+      setLatitude(prev->latitude);
+      setLongitude(prev->longitude);
+      setSpeed(prev->speed);
+      setAltitude(prev->altitude);
+      
+      if (prev->speed > 0.0)
+	setHeading(fp->getBearing(prev->latitude, prev->longitude, curr));
+      else
+	setHeading(fp->getBearing(curr->latitude, curr->longitude, prev));
+      
+      // If next doesn't exist, as in incrementally created flightplans for
+      // AI/Trafficmanager created plans,
+      // Make sure lead distance is initialized otherwise
+      if (next)
+	fp->setLeadDistance(speed, hdg, curr, next);
+      
+      if (curr->crossat > -1000.0) { //use a calculated descent/climb rate
+	use_perf_vs = false;
+	tgt_vs = (curr->crossat - prev->altitude)
+	  / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
+	     / 6076.0 / prev->speed*60.0);
+	tgt_altitude_ft = curr->crossat;
+      } else {
+	use_perf_vs = true;
+	tgt_altitude_ft = prev->altitude;
+      }
+      alt_lock = hdg_lock = true;
+      no_roll = prev->on_ground;
+      if (no_roll) {
+	Transform();         // make sure aip is initialized.
+	getGroundElev(60.1); // make sure it's exectuted first time around, so force a large dt value
+	doGroundAltitude(); 
+      }
+      // Make sure to announce the aircraft's position 
+      announcePositionToController();
+      prevSpeed = 0;
+      return;
     } // end of initialization
-
-    // let's only process the flight plan every 100 ms.
+    
+    ///////////////////////////////////////////////////////////////////////////
+    // Check Execution time (currently once every 100 ms
+    ///////////////////////////////////////////////////////////////////////////
     if ((dt_count < 0.1) || (now < fp->getStartTime())) {
-        //cerr  << "done fp dt" << endl;
-        return;
+      //cerr  << "done fp dt" << endl;
+      return;
     } else {
-        dt_count = 0;
+      dt_count = 0;
     }
     // check to see if we've reached the lead point for our next turn
     double dist_to_go = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
@@ -659,45 +656,18 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         lead_dist = fabs(2*speed);  //don't skip over the waypoint
         //cerr << "Extending lead distance to " << lead_dist << endl;
     }
-//  FGAirport * apt = trafficRef->getDepartureAirport();
-//  if ((dist_to_go > prev_dist_to_go) && trafficRef && apt) {
-//      if (apt->getId() == string("EHAM"))
-//          cerr << "Alert: " << trafficRef->getRegistration() << " is moving away from waypoint " << curr->name  << endl
-//               << "Target heading : " << tgt_heading << "act heading " << hdg << " Tgt speed : " << tgt_speed << endl
-//               << "Lead distance : " << lead_dist  << endl
-//               << "Distance to go: " << dist_to_go << endl;
-//  }
 
-    prev_dist_to_go = dist_to_go;
-    //cerr << "2" << endl;
-    //if (no_roll)
-    //  lead_dist = 10.0;
-    //cout << "Leg : " << (fp->getLeg()-1) << ". dist_to_go: " << dist_to_go << ",  lead_dist: "
-    //     << lead_dist << ", tgt_speed " << tgt_speed << ", tgt_heading " << tgt_heading
-    //     << " speed " << speed << " hdg " << hdg << ". Altitude "  << altitude << " TAget alt :"
-    //     << tgt_altitude << endl;
+    //prev_dist_to_go = dist_to_go;
 
     if ( dist_to_go < lead_dist ) {
-        //prev_dist_to_go = HUGE;
-        // For traffic manager generated aircraft:
-        // check if the aircraft flies of of user range. And adjust the
-        // Current waypoint's elevation according to Terrain Elevation
         if (curr->finished) {  //end of the flight plan
             if (fp->getRepeat())
                 fp->restart();
             else
                 setDie(true);
-
-            //cerr << "Done die end of fp" << endl;
             return;
         }
 
-        // we've reached the lead-point for the waypoint ahead
-        //cerr << "4" << endl;
-        //cerr << "Situation after lead point" << endl;
-        //cerr << "Prviious: " << prev->name << endl;
-        //cerr << "Current : " << curr->name << endl;
-        //cerr << "Next    : " << next->name << endl;
         if (next) {
             tgt_heading = fp->getBearing(curr, next);
             spinCounter = 0;
@@ -712,7 +682,6 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         next = fp->getNextWaypoint();
 
         // Now that we have incremented the waypoints, excute some traffic manager specific code
-        // based on the name of the waypoint we just passed.
         if (trafficRef) {
             double userLatitude  = fgGetDouble("/position/latitude-deg");
             double userLongitude = fgGetDouble("/position/longitude-deg");
@@ -722,57 +691,32 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             user.CourseAndDistance(current, &course, &distance);
             if ((distance * SG_METER_TO_NM) > TRAFFICTOAIDIST) {
                 setDie(true);
-                //cerr << "done fp die out of range" << endl;
                 return;
             }
 
             FGAirport * dep = trafficRef->getDepartureAirport();
             FGAirport * arr = trafficRef->getArrivalAirport();
-            // At parking the beginning of the airport
             if (!( dep && arr)) {
                 setDie(true);
                 return;
             }
-
-            //if ((dep->getId() == string("EHAM") || (arr->getId() == string("EHAM")))) {
-            //    cerr << trafficRef->getRegistration()
-            //         << " Enroute from " << dep->getId()
-            //         << " to "           << arr->getId()
-            //         << " just crossed " << prev->name
-            //         << " Assigned rwy     " << fp->getRunwayId()
-            //         << " " << fp->getRunway() << endl;
-            // }
-            //if ((dep->getId() == string("EHAM")) && (prev->name == "park2")) {
-            //    cerr << "Schiphol ground "
-            //         << trafficRef->getCallSign();
-            //    if (trafficRef->getHeavy())
-            //        cerr << "Heavy";
-            //    cerr << ", is type "
-            //         << trafficRef->getAircraft()
-            //         << " ready to go. IFR to "
-            //         << arr->getId() <<endl;
-            // }
-
+	    // This waypoint marks the fact that the aircraft has passed the initial taxi
+	    // departure waypoint, so it can release the parking.
             if (prev->name == "park2")
                 dep->getDynamics()->releaseParking(fp->getGate());
-
-            // Some debug messages, specific to testing the Logical networks.
-            // if ((arr->getId() == string("EHAM")) && (prev->name  == "Center")) {
-            //     cerr << "Schiphol ground "
-            //          << trafficRef->getRegistration() << " "
-            //          << trafficRef->getCallSign();
-            //     if (trafficRef->getHeavy())
-            //         cerr << "Heavy";
-            //     cerr << ", arriving from " << dep->getName() ;
-            //     cerr << " landed runway "
-            //          << fp->getRunway()
-            //          << " request taxi to gate "
-            //          << arr->getDynamics()->getParkingName(fp->getGate())
-            //          << endl;
-            // }
-            if (prev->name == "END")
-                fp->setTime(trafficRef->getDepartureTime());
-            //cerr << "5" << endl;
+	    // This is the last taxi waypoint, and marks the the end of the flight plan
+	    // so, the schedule should update and wait for the next departure time. 
+            if (prev->name == "END") {
+	      // make sure to wait at least 20 minutes at parking to prevent "nervous" taxi behavior
+	      // delayed aircraft. 
+	      time_t nextDeparture = trafficRef->getDepartureTime();
+	      if (nextDeparture < (now+1200)) {
+		nextDeparture = now + 1200; 
+	      }
+	      fp->setTime(trafficRef->getDepartureTime());
+	    }
+	    announcePositionToController();
+            
         }
 
         if (next) {
@@ -841,6 +785,11 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
 
         //cerr << "Done Processing FlightPlan"<< endl;
     }
+}
+
+void FGAIAircraft::initializeFlightPlan() 
+{
+
 }
 
 
@@ -1013,3 +962,82 @@ void FGAIAircraft::doGroundAltitude() {
       altitude_ft += 0.1 * ((tgt_altitude_ft+groundOffset) - altitude_ft);
 }
 
+
+void FGAIAircraft::announcePositionToController() 
+{
+  if (trafficRef) {
+    //FGTaxiRoute *taxiRoute = fp->getTaxiRoute();
+    
+    int leg = fp->getLeg();
+    
+    // For starters, I'll only do this for departure and arrival taxi. The mechanism
+    // could be extended to include any controller however. 
+    //int node, currentTaxiSegment;
+    //if (taxiRoute->next(&node, &currentTaxiSegment)) {
+    if (fp->getCurrentWaypoint()->routeIndex != 0) {
+      //char buffer[10];
+      //snprintf (buffer, 10, "%d", node);
+      switch (leg) {
+      case 3:
+	cerr << trafficRef->getRegistration() 
+	     << " taxiing to runway at segment " 
+	     << fp->getCurrentWaypoint()->routeIndex
+	     << endl;
+	//cerr << "Match check between taxisegment and taxiroute : " << node << " " 
+	//     << fp->getCurrentWaypoint()->name << endl;
+	if (trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork()->exists())
+	  controller = trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork();
+	break;
+      case 9:
+	cerr << trafficRef->getRegistration() 
+	     << " taxiing to parking at segment " 
+	     << fp->getCurrentWaypoint()->routeIndex
+	     << endl;
+	if (trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork()->exists())
+	  controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork();
+	break;
+      default: 
+	controller = 0;
+	break;
+      }
+    } else {
+      //fp->deleteTaxiRoute();
+      controller = 0;
+    }
+    if ((controller != prevController) && (prevController != 0)) {
+      prevController->signOff(getID());
+      cerr << trafficRef->getRegistration() 
+	   << " signing off " << endl;
+    }
+    prevController = controller;
+    if (controller) {
+      controller->announcePosition(getID(), fp, fp->getCurrentWaypoint()->routeIndex,
+				   _getLatitude(), _getLongitude(), hdg, speed, altitude_ft, 
+				   trafficRef->getRadius());
+    }
+  }
+}
+
+
+void FGAIAircraft::processATC(FGATCInstruction instruction)
+{
+  //cerr << "Processing ATC instruction (not Implimented yet)" << endl;
+  if (instruction.getHoldPattern   ()) {
+  }
+  if (instruction.getHoldPosition  ()) {
+  }
+  if (instruction.getChangeSpeed   ()) {
+    AccelTo(instruction.getSpeed());
+  }else {
+    if (fp) AccelTo(fp->getPreviousWaypoint()->speed);
+  }
+  if (instruction.getChangeHeading ()) { 
+    hdg_lock = false;
+    TurnTo(instruction.getHeading());
+  } else {
+    if (fp) {hdg_lock = true;}
+  }
+  if (instruction.getChangeAltitude()) { 
+  }
+
+}
