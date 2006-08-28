@@ -10,7 +10,7 @@ namespace yasim {
 // out the middle of the western hemisphere.
 class Glue {
 public:
-    static void calcAlphaBeta(State* s, float* alpha, float* beta);
+    static void calcAlphaBeta(State* s, float* wind, float* alpha, float* beta);
 
     // Calculates the instantaneous rotation velocities about each
     // axis.

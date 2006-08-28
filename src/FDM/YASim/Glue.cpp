@@ -2,11 +2,12 @@
 #include "Glue.hpp"
 namespace yasim {
 
-void Glue::calcAlphaBeta(State* s, float* alpha, float* beta)
+void Glue::calcAlphaBeta(State* s, float* wind, float* alpha, float* beta)
 {
     // Convert the velocity to the aircraft frame.
     float v[3];
-    Math::vmul33(s->orient, s->v, v);
+    Math::sub3(s->v, wind, v);
+    Math::vmul33(s->orient, v, v);
 
     // By convention, positive alpha is an up pitch, and a positive
     // beta is yawed to the right.

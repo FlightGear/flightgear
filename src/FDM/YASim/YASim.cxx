@@ -441,7 +441,7 @@ void YASim::copyFromYASim()
 
     // orientation
     float alpha, beta;
-    Glue::calcAlphaBeta(s, &alpha, &beta);
+    Glue::calcAlphaBeta(s, wind, &alpha, &beta);
     _set_Alpha(alpha);
     _set_Beta(beta);
 
