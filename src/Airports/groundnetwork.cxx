@@ -323,7 +323,7 @@ void FGGroundNetwork::init()
 int FGGroundNetwork::findNearestNode(double lat, double lon)
 {
   double minDist = HUGE_VAL;
-  double course, dist;
+  double dist;
   int index;
   SGWayPoint first  (lon,
 		     lat,
@@ -737,6 +737,7 @@ bool FGGroundNetwork::hasInstruction(int id)
   } else {
     return i->hasInstruction();
   }
+  return false;
 }
 
 FGATCInstruction FGGroundNetwork::getInstruction(int id)
@@ -754,6 +755,7 @@ FGATCInstruction FGGroundNetwork::getInstruction(int id)
   } else {
     return i->getInstruction();
   }
+  return FGATCInstruction();
 }
 
 
