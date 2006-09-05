@@ -65,7 +65,7 @@
 // The number of polygon-offset "units" to place between layers.  In
 // principle, one is supposed to be enough.  In practice, I find that
 // my hardware/driver requires many more.
-#define POFF_UNITS 4
+#define POFF_UNITS 8
 
 ////////////////////////////////////////////////////////////////////////
 // Local functions.
@@ -419,16 +419,45 @@ FGPanel::draw()
   }
 
   // Draw the instruments.
+  // Syd Adams: added instrument clipping
   instrument_list_type::const_iterator current = _instruments.begin();
   instrument_list_type::const_iterator end = _instruments.end();
+
+  GLdouble blx[4]={1.0,0.0,0.0,0.0};
+  GLdouble bly[4]={0.0,1.0,0.0,0.0};
+  GLdouble urx[4]={-1.0,0.0,0.0,0.0};
+  GLdouble ury[4]={0.0,-1.0,0.0,0.0};
 
   for ( ; current != end; current++) {
     FGPanelInstrument * instr = *current;
     glPushMatrix();
     glTranslated(instr->getXPos(), instr->getYPos(), 0);
+
+    int ix= instr->getWidth();
+    int iy= instr->getHeight();
+    glPushMatrix();
+    glTranslated(-ix/2,-iy/2,0);
+    glClipPlane(GL_CLIP_PLANE0,blx);
+    glClipPlane(GL_CLIP_PLANE1,bly);
+    glEnable(GL_CLIP_PLANE0);
+    glEnable(GL_CLIP_PLANE1);
+
+    glTranslated(ix,iy,0);
+    glClipPlane(GL_CLIP_PLANE2,urx);
+    glClipPlane(GL_CLIP_PLANE3,ury);
+    glEnable(GL_CLIP_PLANE2);
+    glEnable(GL_CLIP_PLANE3);
+    glPopMatrix();
     instr->draw();
+
     glPopMatrix();
   }
+
+  glDisable(GL_CLIP_PLANE0);
+  glDisable(GL_CLIP_PLANE1);
+  glDisable(GL_CLIP_PLANE2);
+  glDisable(GL_CLIP_PLANE3);
+
 
   // Draw yellow "hotspots" if directed to.  This is a panel authoring
   // feature; not intended to be high performance or to look good.
@@ -1174,6 +1203,3 @@ FGSwitchLayer::draw ()
 
 
 // end of panel.cxx
-
-
-
