@@ -11,9 +11,11 @@ namespace yasim {
 
 class Surface;
 class Rotorpart;
+class Ground;
 const float rho_null=1.184f; //25DegC, 101325Pa
 
 class Rotor {
+    friend std::ostream &  operator<<(std::ostream & out, /*const*/ Rotor& r);
 private:
     float _torque;
     float _omega,_omegan,_omegarel,_ddt_omega,_omegarelneu;
@@ -25,6 +27,9 @@ private:
     float _airfoil_drag_coefficient0;
     float _airfoil_drag_coefficient1;
     int _ccw;
+    int _number_of_blades;
+    int _number_of_segments;
+    int _number_of_parts;
 
 public:
     Rotor();
@@ -78,7 +83,7 @@ public:
     void getTip(float* tip);
     void calcLiftFactor(float* v, float rho, State *s);
     void getDownWash(float *pos, float * v_heli, float *downwash);
-    float getGroundEffect(float* posOut);
+    int getNumberOfBlades(){return _number_of_blades;}
 
     // Query the list of Rotorpart objects
     int numRotorparts();
@@ -102,24 +107,36 @@ public:
     float getOmegan() {return _omegan;}
     float getTaper() { return _taper;}
     float getChord() { return _chord;}
+    int getNumberOfParts() { return _number_of_parts;}
     float getOverallStall() 
         {if (_stall_v2sum !=0 ) return _stall_sum/_stall_v2sum; else return 0;}
+    float getAirfoilIncidenceNoLift() {return _airfoil_incidence_no_lift;}
+    
+    
     Vector _rotorparts;
+    void findGroundEffectAltitude(Ground * ground_cb,State *s);
+    void writeInfo();
+
 
 private:
     void strncpy(char *dest,const char *src,int maxlen);
     void interp(float* v1, float* v2, float frac, float* out);
     float calcStall(float incidence,float speed);
+    float findGroundEffectAltitude(Ground * ground_cb,State *s,
+        float *pos0,float *pos1,float *pos2,float *pos3,
+        int iteration=0,float a0=-1,float a1=-1,float a2=-1,float a3=-1);
     Rotorpart* newRotorpart(float* pos, float *posforceattac, float *normal,
         float* speed,float *dirzentforce, float zentforce,float maxpitchforce,
         float maxpitch, float minpitch, float mincyclic,float maxcyclic,
         float delta3,float mass,float translift,float rellenhinge,float len);
     float _base[3];
+    float _groundeffectpos[4][3];
+    float _ground_effect_altitude;
+    //some postions, where to calcualte the ground effect
     float _normal[3];//the normal vector (direction of rotormast, pointing up)
     float _normal_with_yaw_roll[3];//the normal vector (perpendicular to rotordisc)
     float _forward[3];
     float _diameter;
-    int _number_of_blades;
     float _weight_per_blade;
     float _rel_blade_center;
     float _min_pitch;
@@ -166,7 +183,6 @@ private:
     float _dragcoef0;
     float _dragcoef1;
     float _twist; //outer incidence = inner inner incidence + _twist
-    int _number_of_segments;
     float _rel_len_where_incidence_is_measured;
     float _torque_of_inertia;
     float _rel_len_blade_start;
@@ -179,7 +195,12 @@ private:
     float _stall_v2sum;
     float _yaw;
     float _roll;
+    float _cyclicail;
+    float _cyclicele;
+    float _cyclic_factor;
+    float _rotor_correction_factor;
 };
+std::ostream &  operator<<(std::ostream & out, /*const*/ Rotor& r);
 
 class Rotorgear {
 private:
@@ -191,8 +212,10 @@ private:
     float _yasimliftfactor;
     float _rotorbrake;
     float _max_power_rotor_brake;
+    float _rotorgear_friction;
     float _ddt_omegarel;
-    float _engine_accell_limit;
+    float _engine_accel_limit;
+    float _total_torque_on_engine;
     Vector _rotors;
 
 public:
@@ -218,6 +241,7 @@ public:
     Vector* getRotors() { return &_rotors;}
     void initRotorIteration(float *lrot,float dt);
     void getDownWash(float *pos, float * v_heli, float *downwash);
+    int getValueforFGSet(int j,char *b,float *f);
 };
 
 }; // namespace yasim

@@ -45,6 +45,8 @@ Rotorpart::Rotorpart()
     _lastrp=0;
     _nextrp=0;
     _oppositerp=0;
+    _last90rp=0;
+    _next90rp=0;
     _translift=0;
     _dynamic=100;
     _c2=0;
@@ -62,6 +64,8 @@ Rotorpart::Rotorpart()
     _diameter=10;
     _torque_of_inertia=0;
     _rel_len_blade_start=0;
+    _torque=0;
+    _rotor_correction_factor=0.6;
 }
 
 void Rotorpart::inititeration(float dt,float *rot)
@@ -73,10 +77,10 @@ void Rotorpart::inititeration(float dt,float *rot)
     float a=Math::dot3(rot,_normal);
     if(a>0)
         _alphaalt=_alpha*Math::cos(a)
-        +_nextrp->getrealAlpha()*Math::sin(a);
+        +_next90rp->getrealAlpha()*Math::sin(a);
     else
         _alphaalt=_alpha*Math::cos(a)
-        +_lastrp->getrealAlpha()*Math::sin(-a);
+        +_last90rp->getrealAlpha()*Math::sin(-a);
     //calculate the rotation of the fuselage, determine
     //the part in the same direction as alpha
     //and add it ro _alphaalt
@@ -102,8 +106,10 @@ void Rotorpart::setParameter(char *parametername, float value)
         p(number_of_segments)
         p(rel_len_where_incidence_is_measured)
         p(rel_len_blade_start)
-        cout << "internal error in parameter set up for rotorpart: '"
-            << parametername <<"'" << endl;
+        p(rotor_correction_factor)
+        SG_LOG(SG_INPUT, SG_ALERT,
+            "internal error in parameter set up for rotorpart: '"
+            << parametername <<"'" << endl);
 #undef p
 }
 
@@ -281,14 +287,14 @@ float Rotorpart::getAlpha(int i)
     i=i&1;
 
     if (i==0)
-        return _alpha*180/3.14;//in Grad = 1
+        return _alpha*180/pi;//in Grad = 1
     else
     {
         if (_alpha2type==1) //yaw or roll
             return (getAlpha(0)-_oppositerp->getAlpha(0))/2;
         else //collective
             return (getAlpha(0)+_oppositerp->getAlpha(0)+
-            _nextrp->getAlpha(0)+_lastrp->getAlpha(0))/4;
+            _next90rp->getAlpha(0)+_last90rp->getAlpha(0))/4;
     }
 }
 float Rotorpart::getrealAlpha(void)
@@ -298,11 +304,7 @@ float Rotorpart::getrealAlpha(void)
 
 void Rotorpart::setAlphaoutput(char *text,int i)
 {
-    SG_LOG(SG_FLIGHT, SG_DEBUG, "setAlphaoutput rotorpart ["
-        << text << "] typ" << i);
-
     strncpy(_alphaoutputbuf[i>0],text,255);
-
     if (i>0) _alpha2type=i;
 }
 
@@ -339,11 +341,13 @@ void Rotorpart::setCyclic(float pos)
 }
 
 void Rotorpart::setlastnextrp(Rotorpart*lastrp,Rotorpart*nextrp,
-    Rotorpart *oppositerp)
+    Rotorpart *oppositerp,Rotorpart*last90rp,Rotorpart*next90rp)
 {
     _lastrp=lastrp;
     _nextrp=nextrp;
     _oppositerp=oppositerp;
+    _last90rp=last90rp;
+    _next90rp=next90rp;
 }
 
 void Rotorpart::strncpy(char *dest,const char *src,int maxlen)
@@ -373,7 +377,10 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
     if((_nextrp==NULL)||(_lastrp==NULL)||(_rotor==NULL)) 
         return 0.0;//not initialized. Can happen during startupt of flightgear
     if (returnlift!=NULL) *returnlift=0;
-    float flap_omega=(_nextrp->getrealAlpha()-_lastrp->getrealAlpha())
+    /*float flap_omega=(_nextrp->getrealAlpha()-_lastrp->getrealAlpha())
+        *_omega / pi*_rotor->getNumberOfParts()/4; hier mal die alte version probieren?
+        */
+    float flap_omega=(_next90rp->getrealAlpha()-_last90rp->getrealAlpha())
         *_omega / pi;
     float local_width=_diameter*(1-_rel_len_blade_start)/2.
         /(float (_number_of_segments));
@@ -382,8 +389,8 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
         float rel = (n+.5)/(float (_number_of_segments));
         float r= _diameter *0.5 *(rel*(1-_rel_len_blade_start)
             +_rel_len_blade_start);
-        float local_incidence=incidence+_twist *rel - _twist
-            *_rel_len_where_incidence_is_measured;
+        float local_incidence=incidence+_twist *rel -
+            _twist *_rel_len_where_incidence_is_measured;
         float local_chord = _rotor->getChord()*rel+_rotor->getChord()
             *_rotor->getTaper()*(1-rel);
         float A = local_chord * local_width;
@@ -401,19 +408,30 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
 
         //substract now the component of the air speed parallel to 
         //the blade;
-       Math::mul3(Math::dot3(v_local,_directionofrotorpart),
+        Math::mul3(Math::dot3(v_local,_directionofrotorpart),
            _directionofrotorpart,v_help);
         Math::sub3(v_local,v_help,v_local);
 
         //split into direction and magnitude
         v_local_scalar=Math::mag3(v_local);
         if (v_local_scalar!=0)
-            Math::unit3(v_local,v_local);
+            //Math::unit3(v_local,v_help);
+            Math::mul3(1/v_local_scalar,v_local,v_help);
         float incidence_of_airspeed = Math::asin(Math::clamp(
-            Math::dot3(v_local,_normal),-1,1)) + local_incidence;
+            Math::dot3(v_help,_normal),-1,1)) + local_incidence;
         ias = incidence_of_airspeed;
-        float lift_wo_cyc = 
-            _rotor->getLiftCoef(incidence_of_airspeed-cyc,v_local_scalar)
+
+        //reduce the ias (Prantl factor)
+        float prantl_factor=2/pi*Math::acos(Math::exp(
+            -_rotor->getNumberOfBlades()/2.*(1-rel)
+             *Math::sqrt(1+1/Math::sqr(Math::tan(
+               pi/2-Math::abs(incidence_of_airspeed-local_incidence))))));
+        incidence_of_airspeed = (incidence_of_airspeed+
+            _rotor->getAirfoilIncidenceNoLift())*prantl_factor
+            *_rotor_correction_factor-_rotor->getAirfoilIncidenceNoLift();
+        ias = incidence_of_airspeed;
+        float lift_wo_cyc = _rotor->getLiftCoef(incidence_of_airspeed
+            -cyc*_rotor_correction_factor,v_local_scalar)
             * v_local_scalar * v_local_scalar * A *rho *0.5;
         float lift_with_cyc = 
             _rotor->getLiftCoef(incidence_of_airspeed,v_local_scalar)
@@ -427,15 +445,28 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
         //angle between blade movement caused by rotor-rotation and the
         //total movement of the blade
 
+        /* the next shold look like this, but this is the inner loop of
+           the rotor simulation. For small angles (and we hav only small
+           angles) the first order approximation works well
         lift_moment += r*(lift * Math::cos(angle) 
             - drag * Math::sin(angle));
         *torque     += r*(drag * Math::cos(angle) 
             + lift * Math::sin(angle));
-
+            */
+        lift_moment += r*(lift * (1-angle*angle) 
+            - drag * angle);
+        *torque     += r*(drag * (1-angle*angle) 
+            + lift * angle);
+        
         if (returnlift!=NULL) *returnlift+=lift;
     }
-    float alpha=Math::atan2(lift_moment,_zentipetalforce * _len); 
-
+    //as above, use 1st order approximation
+    //float alpha=Math::atan2(lift_moment,_zentipetalforce * _len); 
+    float alpha;
+    if ((_zentipetalforce >1e-8) || (_zentipetalforce <-1e-8))
+        alpha=lift_moment/(_zentipetalforce * _len); 
+    else 
+        alpha=0;
     return (alpha);
 }
 
@@ -461,12 +492,13 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
     //Angle of blade which would produce no vertical force (where the 
     //effective incidence is zero)
 
-    float cyc=_mincyclic+(_cyclic+1)/2*(_maxcyclic-_mincyclic);
+    //float cyc=_mincyclic+(_cyclic+1)/2*(_maxcyclic-_mincyclic);
+    float cyc=_cyclic;
     float col=_minpitch+(_collective+1)/2*(_maxpitch-_minpitch);
     _incidence=(col+cyc)-_delta3*_alphaalt;
     //the incidence of the rotorblade due to control input reduced by the
     //delta3 effect, see README.YASIM
-    float beta=_relamp*cyc+col; 
+    //float beta=_relamp*cyc+col; 
     //the incidence of the rotorblade which is used for the calculation
 
     float alpha,factor; //alpha is the flapping angle
@@ -490,7 +522,7 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
             &scalar_torque);
         //calculate drag etc., e. g. for deccelrating the rotor if engine
         //is off and omega <10%
-
+        alpha = Math::clamp(alpha,_alphamin,_alphamax);
         float rel =_omega*10 / _omegan;
         alpha=rel * alpha + (1-rel)* _alpha0;
         factor=_dt*_dynamic/10;
@@ -505,11 +537,11 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
 
     alpha=_alphaalt+(alpha-_alphaalt)*factor;
     _alpha=alpha;
-    float meancosalpha=(1*Math::cos(_lastrp->getrealAlpha())
-        +1*Math::cos(_nextrp->getrealAlpha())
+    float meancosalpha=(1*Math::cos(_last90rp->getrealAlpha())
+        +1*Math::cos(_next90rp->getrealAlpha())
         +1*Math::cos(_oppositerp->getrealAlpha())
         +1*Math::cos(alpha))/4;
-    float schwenkfactor=1-(Math::cos(_lastrp->getrealAlpha())-meancosalpha);
+    float schwenkfactor=1-(Math::cos(_lastrp->getrealAlpha())-meancosalpha)*_rotor->getNumberOfParts()/4;
 
     //missing: consideration of rellenhinge
     float xforce = Math::cos(alpha)*_zentipetalforce;
@@ -531,8 +563,62 @@ void Rotorpart::getAccelTorque(float relaccel,float *t)
     int i;
     float f=_rotor->getCcw()?1:-1;
     for(i=0; i<3; i++) {
-        t[i]=f*-1* _normal[i]*relaccel*_omegan* _torque_of_inertia;
+        t[i]=f*-1* _normal[i]*relaccel*_omegan* _torque_of_inertia;// *_omeagan ?
         _rotor->addTorque(-relaccel*_omegan* _torque_of_inertia);
     }
+}
+std::ostream &  operator<<(std::ostream & out, const Rotorpart& rp)
+{
+#define i(x) << #x << ":" << rp.x << endl
+#define iv(x) << #x << ":" << rp.x[0] << ";" << rp.x[1] << ";" <<rp.x[2] << ";" << endl
+    out << "Writing Info on Rotorpart " << endl
+        i( _dt)
+        iv( _last_torque)
+        i( _compiled)
+        iv( _pos)    // position in local coords
+        iv( _posforceattac)    // position in local coords
+        iv( _normal) //direcetion of the rotation axis
+        i( _torque_max_force)
+        i( _torque_no_force)
+        iv( _speed)
+        iv( _direction_of_movement)
+        iv( _directionofzentipetalforce)
+        iv( _directionofrotorpart)
+        i( _zentipetalforce)
+        i( _maxpitch)
+        i( _minpitch)
+        i( _maxcyclic)
+        i( _mincyclic)
+        i( _cyclic)
+        i( _collective)
+        i( _delta3)
+        i( _dynamic)
+        i( _translift)
+        i( _c2)
+        i( _mass)
+        i( _alpha)
+        i( _alphaalt)
+        i( _alphamin) i(_alphamax) i(_alpha0) i(_alpha0factor)
+        i( _rellenhinge)
+        i( _relamp)
+        i( _omega) i(_omegan) i(_ddt_omega)
+        i( _phi)
+        i( _len)
+        i( _incidence)
+        i( _twist) //outer incidence = inner inner incidence + _twist
+        i( _number_of_segments)
+        i( _rel_len_where_incidence_is_measured)
+        i( _rel_len_blade_start)
+        i( _diameter)
+        i( _torque_of_inertia)
+        i( _torque) 
+        i (_alphaoutputbuf[0])
+        i (_alphaoutputbuf[1])
+        i( _alpha2type)
+        i(_rotor_correction_factor)
+    << endl;
+#undef i
+#undef iv
+    return out;  
 }
 }; // namespace yasim

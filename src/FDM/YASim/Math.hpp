@@ -20,6 +20,8 @@ public:
     static float atan2(float y, float x);
     static float asin(float f);
     static float acos(float f);
+    static float exp(float f);
+    static float sqr(float f) {return f*f;}
 
     // Takes two args and runs afoul of the Koenig rules.
     static float pow(double base, double exp);

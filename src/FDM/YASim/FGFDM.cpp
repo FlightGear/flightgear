@@ -180,13 +180,17 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         Rotorgear* r = _airplane.getModel()->getRotorgear();
 	_currObj = r;
         #define p(x) if (a->hasAttribute(#x)) r->setParameter((char *)#x,attrf(a,#x) );
+        #define p2(x,y) if (a->hasAttribute(#x)) {r->setParameter((char *)#y,attrf(a,#x) ); SG_LOG(SG_INPUT, SG_ALERT,"Warning: Aircraft defnition files uses outdated tag '" <<#x<<"', use '"<<#y<<"' instead (see README.YASim)" <<endl);}
         p(max_power_engine)
         p(engine_prop_factor)
         p(yasimdragfactor)
         p(yasimliftfactor)
         p(max_power_rotor_brake)
-        p(engine_accell_limit)
+        p(rotorgear_friction)
+        p(engine_accel_limit)
+        p2(engine_accell_limit,engine_accel_limit)
         #undef p
+        #undef p2
         r->setInUse();
     } else if(eq(name, "wing")) {
 	_airplane.setWing(parseWing(a, name));
@@ -493,8 +497,10 @@ void FGFDM::setOutputProperties(float dt)
         char b[256];
         while((j = r->getValueforFGSet(j, b, &f)))
             if(b[0]) fgSetFloat(b,f);
-        
-        for(j=0; j < r->numRotorparts(); j++) {
+        j=0;
+        while((j = _airplane.getRotorgear()->getValueforFGSet(j, b, &f)))
+            if(b[0]) fgSetFloat(b,f);
+        for(j=0; j < r->numRotorparts(); j+=r->numRotorparts()>>2) {
             Rotorpart* s = (Rotorpart*)r->getRotorpart(j);
             char *b;
             int k;
@@ -692,6 +698,7 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     p(vortex_state_e2)
     p(twist)
     p(number_of_segments)
+    p(number_of_parts)
     p(rel_len_where_incidence_is_measured)
     p(chord)
     p(taper)
@@ -705,7 +712,8 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     p(airfoil_lift_coefficient)
     p(airfoil_drag_coefficient0)
     p(airfoil_drag_coefficient1)
-
+    p(cyclic_factor)
+    p(rotor_correction_factor)
 #undef p
     _currObj = w;
     return w;

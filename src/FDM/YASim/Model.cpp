@@ -312,21 +312,7 @@ void Model::updateGround(State* s)
     }
     for(i=0; i<_rotorgear.getRotors()->size(); i++) {
         Rotor* r = (Rotor*)_rotorgear.getRotors()->get(i);
-
-        // Get the point of the rotor center
-        float pos[3];
-        r->getPosition(pos);
-
-        // Transform the local coordinates to
-        // global coordinates.
-        double pt[3];
-        s->posLocalToGlobal(pos, pt);
-
-        // Ask for the ground plane in the global coordinate system
-        double global_ground[4];
-        float global_vel[3];
-        _ground_cb->getGroundPlane(pt, global_ground, global_vel);
-        r->setGlobalGround(global_ground, global_vel);
+        r->findGroundEffectAltitude(_ground_cb,s);
     }
 
     // The arrester hook

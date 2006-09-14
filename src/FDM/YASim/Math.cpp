@@ -80,6 +80,11 @@ float Math::pow(double base, double exp)
     return (float)::pow(base, exp);
 }
 
+float Math::exp(float f)
+{
+    return (float)::exp(f);
+}
+
 double Math::ceil(double f)
 {
     return ::ceil(f);

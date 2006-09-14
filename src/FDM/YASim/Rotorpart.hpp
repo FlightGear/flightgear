@@ -1,10 +1,12 @@
 #ifndef _ROTORPART_HPP
 #define _ROTORPART_HPP
-
+#include <sstream>
+#include <iostream>
 namespace yasim {
     class Rotor;
     class Rotorpart
     {
+        friend std::ostream &  operator<<(std::ostream & out, const Rotorpart& rp);
     private:
         float _dt;
         float _last_torque[3];
@@ -54,7 +56,7 @@ namespace yasim {
         float calculateAlpha(float* v, float rho, float incidence, float cyc,
             float alphaalt, float *torque,float *returnlift=0);
         void setlastnextrp(Rotorpart*lastrp,Rotorpart*nextrp,
-            Rotorpart *oppositerp);
+            Rotorpart *oppositerp,Rotorpart*last90rp,Rotorpart*next90rp);
         void setTorque(float torque_max_force,float torque_no_force);
         void setOmega(float value);
         void setOmegaN(float value);
@@ -69,10 +71,11 @@ namespace yasim {
         void setParameter(char *parametername, float value);
         void setRotor(Rotor *rotor);
         void setTorqueOfInertia(float toi);
+        void writeInfo(std::ostringstream &buffer);
 
     private:
         void strncpy(char *dest,const char *src,int maxlen);
-        Rotorpart *_lastrp,*_nextrp,*_oppositerp;
+        Rotorpart *_lastrp,*_nextrp,*_oppositerp,*_last90rp,*_next90rp;
         Rotor *_rotor;
 
         float _pos[3];    // position in local coords
@@ -109,14 +112,14 @@ namespace yasim {
         int _number_of_segments;
         float _rel_len_where_incidence_is_measured;
         float _rel_len_blade_start;
-        float _rel_len_blade_measured;
         float _diameter;
         float _torque_of_inertia;
         float _torque; 
         // total torque of rotor (scalar) for calculating new rotor rpm
         char _alphaoutputbuf[2][256];
         int _alpha2type;
+        float _rotor_correction_factor;
     };
-
+    std::ostream &  operator<<(std::ostream & out, const Rotorpart& rp);
 }; // namespace yasim
 #endif // _ROTORPART_HPP
