@@ -61,6 +61,7 @@ FGTaxiNode::FGTaxiNode()
  **************************************************************************/
 FGTaxiSegment::FGTaxiSegment()
 {
+  oppositeDirection = 0;
 }
 
 void FGTaxiSegment::setStart(FGTaxiNodeVector *nodes)
@@ -262,6 +263,102 @@ void FGTrafficRecord::setPositionAndHeading(double lat, double lon, double hdg,
   altitude = alt;
 }
 
+int FGTrafficRecord::crosses(FGGroundNetwork *net, FGTrafficRecord &other)
+{
+  if (checkPositionAndIntentions(other) || (other.checkPositionAndIntentions(*this)))
+    return -1;
+  intVecIterator i, j;
+  int currentTargetNode = 0, otherTargetNode = 0;
+  if (currentPos > 0)
+    currentTargetNode = net->findSegment(currentPos      )->getEnd()->getIndex(); // OKAY,... 
+  if (other.currentPos > 0)
+    otherTargetNode   = net->findSegment(other.currentPos)->getEnd()->getIndex(); // OKAY,...
+  if ((currentTargetNode == otherTargetNode) && currentTargetNode > 0)
+    return currentTargetNode;
+  if (intentions.size())
+    {
+      for (i = intentions.begin(); i != intentions.end(); i++)
+	{
+	  if (currentTargetNode == net->findSegment(*i)->getEnd()->getIndex())
+	    {
+	      cerr << "Current crosses at " << currentTargetNode <<endl;
+	      return currentTargetNode;
+	    }
+	  
+	}
+    }
+  if (other.intentions.size())
+    {
+      for (i = other.intentions.begin(); i != other.intentions.end(); i++)
+	{
+	  if (otherTargetNode == net->findSegment(*i)->getEnd()->getIndex())
+	    {
+	      cerr << "Other crosses at " << currentTargetNode <<endl;
+	      return otherTargetNode;
+	    }
+	}
+    }
+  if (intentions.size() && other.intentions.size())
+    {
+      for (i = intentions.begin(); i != intentions.end(); i++) 
+	{
+	  for (j = other.intentions.begin(); j != other.intentions.end(); j++)
+	    {
+	      //cerr << "finding segment " << *i << " and " << *j << endl;
+	      currentTargetNode = net->findSegment(*i)->getEnd()->getIndex();
+	      otherTargetNode   = net->findSegment(*j)->getEnd()->getIndex();
+	      if (currentTargetNode == otherTargetNode) 
+		{
+		  //cerr << "Routes will cross at " << currentTargetNode << endl;
+		  return currentTargetNode;
+		}
+	    }
+	}
+    }
+  return -1;
+}
+
+bool FGTrafficRecord::isOpposing (FGGroundNetwork *net, FGTrafficRecord &other, int node)
+{
+  // Check if current segment is the reverse segment for the other aircraft
+  FGTaxiSegment *opp;
+  //cerr << "Current segment " << currentPos << endl;
+  if ((currentPos > 0) && (other.currentPos > 0))
+    {
+      opp = net->findSegment(currentPos)->opposite();
+      if (opp) {
+	if (opp->getIndex() == other.currentPos)
+	  return true;
+      }
+      
+      for (intVecIterator i = intentions.begin(); i != intentions.end(); i++)
+	{
+	  for (intVecIterator j = intentions.begin(); j != intentions.end(); j++)
+	    {  
+	      // cerr << "Current segment 1 " << (*i) << endl;
+	      if (opp = net->findSegment(*i)->opposite())
+		{
+		  if (opp->getIndex() == 
+		      net->findSegment(*j)->getIndex())
+		    {
+		      cerr << "Nodes " << net->findSegment(*i)->getIndex()
+			   << " and  " << net->findSegment(*j)->getIndex()
+			   << " are opposites " << endl;
+		      if (net->findSegment(*i)->getStart()->getIndex() == node) {
+			{
+			  cerr << "Found the node" << endl;
+			  return true;
+			}
+		      }
+		    }
+		}
+	    }
+	}
+    }
+  return false;
+}
+
+
 /***************************************************************************
  * FGGroundNetwork()
  **************************************************************************/
@@ -273,6 +370,7 @@ FGGroundNetwork::FGGroundNetwork()
   totalDistance = 0;
   maxDistance = 0;
   currTraffic = activeTraffic.begin();
+
 }
 
 void FGGroundNetwork::addSegment(const FGTaxiSegment &seg)
@@ -306,15 +404,38 @@ void FGGroundNetwork::init()
 {
   hasNetwork = true;
   int index = 1;
+  sort(nodes.begin(), nodes.end());
+  sort(segments.begin(), segments.end());
   FGTaxiSegmentVectorIterator i = segments.begin();
   while(i != segments.end()) {
     //cerr << "initializing node " << i->getIndex() << endl;
     i->setStart(&nodes);
     i->setEnd  (&nodes);
     i->setTrackDistance();
-    i->setIndex(index++);
+    i->setIndex(index);
     //cerr << "Track distance = " << i->getLength() << endl;
     //cerr << "Track ends at"      << i->getEnd()->getIndex() << endl;
+    i++;
+    index++;
+  }
+  i = segments.begin();
+  while(i != segments.end()) {
+    FGTaxiSegmentPointerVectorIterator j = i->getEnd()->getBeginRoute(); 
+    while (j != i->getEnd()->getEndRoute())
+      {
+	if ((*j)->getEnd()->getIndex() == i->getStart()->getIndex())
+	  {
+	    int start1 = i->getStart()->getIndex();
+	    int end1   = i->getEnd()  ->getIndex();
+	    int start2 = (*j)->getStart()->getIndex();
+	    int end2   = (*j)->getEnd()->getIndex();
+	    int oppIndex = (*j)->getIndex();
+	    cerr << "Oppossite of  " << i->getIndex() << " (" << start1 << "," << end1 << ") "
+		 << "happens to be " << oppIndex      << " (" << start2 << "," << end2 << ") " << endl;
+	    break;
+	  }
+	  j++;
+      }
     i++;
   }
   //exit(1);
@@ -349,27 +470,38 @@ int FGGroundNetwork::findNearestNode(double lat, double lon)
 }
 
 FGTaxiNode *FGGroundNetwork::findNode(int idx)
-{
-  for (FGTaxiNodeVectorIterator 
-	 itr = nodes.begin();
-       itr != nodes.end(); itr++)
+{ /*
+    for (FGTaxiNodeVectorIterator 
+    itr = nodes.begin();
+    itr != nodes.end(); itr++)
     {
-      if (itr->getIndex() == idx)
-	return itr->getAddress();
-    }
-  return 0;
+    if (itr->getIndex() == idx)
+    return itr->getAddress();
+    }*/
+  
+  if ((idx >= 0) && (idx < nodes.size())) 
+    return nodes[idx].getAddress();
+  else
+    return 0;
 }
 
 FGTaxiSegment *FGGroundNetwork::findSegment(int idx)
-{
+{/*
   for (FGTaxiSegmentVectorIterator 
 	 itr = segments.begin();
        itr != segments.end(); itr++)
     {
       if (itr->getIndex() == idx)
 	return itr->getAddress();
+    } 
+ */
+  if ((idx > 0) && (idx <= segments.size()))
+    return segments[idx-1].getAddress();
+  else
+    {
+      cerr << "Alert: trying to find invalid segment " << idx << endl;
+      return 0;
     }
-  return 0;
 }
 
 FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end) 
@@ -583,7 +715,8 @@ void FGGroundNetwork::signOff(int id) {
   }
 }
 
-void FGGroundNetwork::update(int id, double lat, double lon, double heading, double speed, double alt) {
+void FGGroundNetwork::update(int id, double lat, double lon, double heading, double speed, double alt, 
+			     double dt) {
   TrafficVectorIterator i = activeTraffic.begin();
   // Search search if the current id has an entry
   // This might be faster using a map instead of a vector, but let's start by taking a safe route
@@ -600,16 +733,48 @@ void FGGroundNetwork::update(int id, double lat, double lon, double heading, dou
     i->setPositionAndHeading(lat, lon, heading, speed, alt);
     current = i;
   }
+  
+  setDt(getDt() + dt);
+  
+  // Update every three secs, but add some randomness
+  // to prevent all IA objects doing this in synchrony
+  //if (getDt() < (3.0) + (rand() % 10))
+  //  return;
+  //else
+  //  setDt(0);
+  checkSpeedAdjustment(id, lat, lon, heading, speed, alt);
+  checkHoldPosition   (id, lat, lon, heading, speed, alt);
+}
 
+void FGGroundNetwork::checkSpeedAdjustment(int id, double lat, 
+					   double lon, double heading, 
+					   double speed, double alt)
+{
+  
   // Scan for a speed adjustment change. Find the nearest aircraft that is in front
   // and adjust speed when we get too close. Only do this when current position and/or
   // intentions of the current aircraft match current taxiroute position of the proximate
-  // aircraft. 
+  // aircraft. For traffic that is on other routes we need to issue a "HOLD Position"
+  // instruction. See below for the hold position instruction.
+  TrafficVectorIterator current, closest;
+  TrafficVectorIterator i = activeTraffic.begin();
+  if (activeTraffic.size()) 
+    {
+      while ((i->getId() != id) && (i != activeTraffic.end()))
+	{
+	  i++;
+	}
+    }
+  else
+    {
+      return;
+    }
+  current = i;
   double mindist = HUGE;
   if (activeTraffic.size()) 
     {
       double course, dist, bearing, minbearing;
-     
+      
       //TrafficVector iterator closest;
       for (TrafficVectorIterator i = activeTraffic.begin(); 
 	   i != activeTraffic.end(); i++)
@@ -622,19 +787,19 @@ void FGGroundNetwork::update(int id, double lat, double lon, double heading, dou
 				 i->getLatitude (),
 				 i->getAltitude  ());
 	    other.CourseAndDistance(curr, &course, &dist);
-	     bearing = fabs(heading-course);
-	  if (bearing > 180)
-	    bearing = 360-bearing;
-	  if ((dist < mindist) && (bearing < 60.0))
-	    {
-	      mindist = dist;
-	      closest = i;
-	      minbearing = bearing;
-	    }
+	    bearing = fabs(heading-course);
+	    if (bearing > 180)
+	      bearing = 360-bearing;
+	    if ((dist < mindist) && (bearing < 60.0))
+	      {
+		mindist = dist;
+		closest = i;
+		minbearing = bearing;
+	      }
 	  }
 	}
-	  //cerr << "Distance : " << dist << " bearing : " << bearing << " heading : " << heading 
-	  //   << " course : " << course << endl;
+      //cerr << "Distance : " << dist << " bearing : " << bearing << " heading : " << heading 
+      //   << " course : " << course << endl;
       current->clearSpeedAdjustment();
       // Only clear the heading adjustment at positive speeds, otherwise the waypoint following
       // code wreaks havoc
@@ -655,7 +820,7 @@ void FGGroundNetwork::update(int id, double lat, double lon, double heading, dou
 	  
 	  // Getting close: Slow down to a bit less than the other aircraft
 	  double maxAllowableDistance = (1.1*current->getRadius()) + (1.1*closest->getRadius());
-	    if (mindist > maxAllowableDistance)
+	  if (mindist > maxAllowableDistance)
 	    {
 	      if (current->checkPositionAndIntentions(*closest)) 
 		{
@@ -673,8 +838,8 @@ void FGGroundNetwork::update(int id, double lat, double lon, double heading, dou
 		    }
 		  else
 		    {
-		       double newSpeed = (maxAllowableDistance-mindist);
-		       current->setSpeedAdjustment(newSpeed);
+		      double newSpeed = (maxAllowableDistance-mindist);
+		      current->setSpeedAdjustment(newSpeed);
 		    } 
 		}
 	    }
@@ -685,36 +850,11 @@ void FGGroundNetwork::update(int id, double lat, double lon, double heading, dou
 		  double newSpeed;
 		  if (mindist > 10) {
 		    newSpeed = 0.01;
-		      current->setSpeedAdjustment(newSpeed);
+		    current->setSpeedAdjustment(newSpeed);
 		  } else {
 		    newSpeed = -1 * (maxAllowableDistance-mindist);
 		    current->setSpeedAdjustment(newSpeed);
 		    current->setHeadingAdjustment(heading);
-		    // 	      if (mindist < 5) {
-		    // 		double bank_sense = 0;
-		    // 		current->setSpeedAdjustment(-0.1);
-		    // 		// Do a heading adjustment
-		    // 		double diff = fabs(heading - bearing);
-		    // 		if (diff > 180)
-		    // 		  diff = fabs(diff - 360);
-		    
-		    // 		double sum = heading + diff;
-		    // 		if (sum > 360.0)
-		    // 		  sum -= 360.0;
-		    // 		if (fabs(sum - bearing) < 1.0) {
-		    // 		  bank_sense = -1.0;   // turn left for evasive action
-		    // 		} else {
-		    // 		  bank_sense = 1.0;  // turn right for evasive action
-		    // 		}
-		    // 		double newHeading = heading + bank_sense;
-		    // 		if (newHeading < 0) newHeading   += 360;
-		    // 		if (newHeading > 360) newHeading -= 360;
-		    // 		current->setHeadingAdjustment(newHeading);
-		    // 		//cerr << "Yikes: TOOOO close. backing up and turning to heading " << newHeading 
-		    // 		//  << endl;
-		    // 		cerr << "Troubleshooting: " << current->getId() << " Closest : " << closest->getId() 
-		    // 		     << endl;
-		    //	     }
 		  }
 		}
 	    }
@@ -722,13 +862,116 @@ void FGGroundNetwork::update(int id, double lat, double lon, double heading, dou
     }
 }
 
+void FGGroundNetwork::checkHoldPosition(int id, double lat, 
+					double lon, double heading, 
+					double speed, double alt)
+{
+  // Check for "Hold position instruction".
+  // The hold position should be issued under the following conditions:
+  // 1) For aircraft entering or crossing a runway with active traffic on it, or landing aircraft near it
+  // 2) For taxiing aircraft that use one taxiway in opposite directions
+  // 3) For crossing or merging taxiroutes.
+
+  TrafficVectorIterator current, closest;
+  TrafficVectorIterator i = activeTraffic.begin();
+  if (activeTraffic.size()) 
+    {
+      while ((i->getId() != id) && i != activeTraffic.end()) 
+	{
+	  i++;
+	}
+    }
+  else
+    {
+      return ;
+    }
+  current = i;
+  current->setHoldPosition(false);
+  double course, dist, bearing, minbearing;
+  for (i = activeTraffic.begin(); 
+       i != activeTraffic.end(); i++)
+    {
+      if (i != current) 
+	{
+	  int node = current->crosses(this, *i);
+	  if (node != -1)
+	    {
+	      // Determine whether it's save to continue or not. 
+	      // If we have a crossing route, there are two possibilities:
+	      // 1) This is an interestion
+	      // 2) This is oncoming two-way traffic, using the same taxiway.
+	      //cerr << "Hold check 1 : " << id << " has common node " << node << endl;
+	      SGWayPoint nodePos(findNode(node)->getLongitude  (),
+				 findNode(node)->getLatitude   (),
+				 alt);
+	      SGWayPoint curr  (lon,
+				lat,
+				alt);
+	      
+	      SGWayPoint other    (i->getLongitude  (),
+				   i->getLatitude (),
+				   i->getAltitude  ());
+	      //other.CourseAndDistance(curr, &course, &dist);
+	      bool needsToWait;
+	      if (current->isOpposing(this, *i, node))
+		{
+		  needsToWait = true;
+		  //cerr << "Hold check 2 : " << id << "  has opposing segment " << endl;
+		  // issue a "Hold Position" as soon as we're close to the offending node
+		  // For now, I'm doing this as long as the other aircraft doesn't
+		  // have a hold instruction as soon as we're within a reasonable 
+		  // distance from the offending node.
+		  // This may be a bit of a conservative estimate though, as it may
+		  // be well possible that both aircraft can both continue to taxi 
+		  // without crashing into each other.
+		} 
+	      else 
+		{
+		  other.CourseAndDistance(nodePos, &course, &dist);
+		  if (dist > 2.0*i->getRadius())
+		    {
+		      needsToWait = false; 
+		      //cerr << "Hold check 3 : " << id <<"  Other aircraft approaching node is still far away. (" << dist << " nm). Can safely continue " 
+		      //	   << endl;
+		    }
+		  else 
+		    {
+		      needsToWait = true;
+		      //cerr << "Hold check 4: " << id << "  Would need to wait for other aircraft : distance = " << dist << " nm" << endl;
+		    }
+		}
+	      curr.CourseAndDistance(nodePos, &course, &dist);
+	      if (!(i->hasHoldPosition()))
+		{
+		  
+		  if ((dist < 2.5*current->getRadius()) && 
+		      (needsToWait) && 
+		      (!(current->getId() == i->getWaitsForId())) &&
+		      (!(current->getSpeedAdjustment())))
+		    
+		    {
+		      current->setHoldPosition(true);
+		      //cerr << "Hold check 5: " << id <<"  Setting Hold Position: distance to node : " << dist << " nm"<< endl;
+		    }
+		  else
+		    {
+		      //cerr << "Hold check 6: " << id << "  No need to hold yet: Distance to node : " << dist << " nm"<< endl;
+		    }
+		}
+	    }
+	}
+    }
+}
+
+
 bool FGGroundNetwork::hasInstruction(int id)
 {
    TrafficVectorIterator i = activeTraffic.begin();
   // Search search if the current id has an entry
   // This might be faster using a map instead of a vector, but let's start by taking a safe route
-  if (activeTraffic.size()) {
-    while ((i->getId() != id) && i != activeTraffic.end()) {
+  if (activeTraffic.size()) 
+    {
+      while ((i->getId() != id) && i != activeTraffic.end()) {
       i++;
     }
   }

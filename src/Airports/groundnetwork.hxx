@@ -76,6 +76,7 @@ public:
   FGTaxiNode *getAddress() { return this;};
   FGTaxiSegmentPointerVectorIterator getBeginRoute() { return next.begin(); };
   FGTaxiSegmentPointerVectorIterator getEndRoute()   { return next.end();   }; 
+  bool operator<(const FGTaxiNode &other) const { return index < other.index; };
 };
 
 typedef vector<FGTaxiNode> FGTaxiNodeVector;
@@ -93,24 +94,31 @@ private:
   FGTaxiNode *start;
   FGTaxiNode *end;
   int index;
+  FGTaxiSegment *oppositeDirection;
 
 public:
   FGTaxiSegment();
-  FGTaxiSegment(FGTaxiNode *, FGTaxiNode *, int);
+  //FGTaxiSegment(FGTaxiNode *, FGTaxiNode *, int);
 
   void setIndex        (int val) { index     = val; };
   void setStartNodeRef (int val) { startNode = val; };
   void setEndNodeRef   (int val) { endNode   = val; };
+
+  void setOpposite(FGTaxiSegment *opp) { oppositeDirection = opp; };
 
   void setStart(FGTaxiNodeVector *nodes);
   void setEnd  (FGTaxiNodeVector *nodes);
   void setTrackDistance();
 
   FGTaxiNode * getEnd() { return end;};
+  FGTaxiNode * getStart() { return start; };
   double getLength() { return length; };
   int getIndex() { return index; };
 
  FGTaxiSegment *getAddress() { return this;};
+
+  bool operator<(const FGTaxiSegment &other) const { return index < other.index; };
+  FGTaxiSegment *opposite() { return oppositeDirection; };
 
   
 };
@@ -194,6 +202,7 @@ public:
   void setAlt         (double val) { alt     = val; };
 };
 
+class FGGroundNetwork;
 
 /**************************************************************************************
  * class FGTrafficRecord
@@ -219,6 +228,10 @@ public:
   bool hasInstruction() { return instruction.hasInstruction(); };
   void setPositionAndHeading(double lat, double lon, double hdg, double spd, double alt);
   bool checkPositionAndIntentions(FGTrafficRecord &other);
+  int  crosses                   (FGGroundNetwork *, FGTrafficRecord &other); 
+  bool isOpposing                (FGGroundNetwork *, FGTrafficRecord &other, int node);
+
+  bool getSpeedAdjustment() { return instruction.getChangeSpeed(); };
   
   double getLatitude () { return latitude ; };
   double getLongitude() { return longitude; };
@@ -237,6 +250,8 @@ public:
   void clearHeadingAdjustment() { instruction.setChangeHeading(false); };
 
   bool hasHeadingAdjustment() { return instruction.getChangeHeading(); };
+  bool hasHoldPosition() { return instruction.getHoldPosition(); };
+  void setHoldPosition (bool inst) { instruction.setHoldPosition(inst); };
 
   void setWaitsForId(int id) { waitsForId = id; };
 
@@ -265,7 +280,7 @@ public:
 				double hdg, double spd, double alt, double radius) = 0;
   virtual void             signOff(int id) = 0;
   virtual void             update(int id, double lat, double lon, 
-				  double heading, double speed, double alt) = 0;
+				  double heading, double speed, double alt, double dt) = 0;
   virtual bool             hasInstruction(int id) = 0;
   virtual FGATCInstruction getInstruction(int id) = 0;
 
@@ -295,6 +310,11 @@ private:
   double totalDistance, maxDistance;
 
   void printRoutingError(string);
+
+  void checkSpeedAdjustment(int id, double lat, double lon, 
+			    double heading, double speed, double alt);
+  void checkHoldPosition(int id, double lat, double lon, 
+			 double heading, double speed, double alt);
   
 public:
   FGGroundNetwork();
@@ -314,7 +334,7 @@ public:
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute, 
 				double lat, double lon, double hdg, double spd, double alt, double radius);
   virtual void signOff(int id);
-  virtual void update(int id, double lat, double lon, double heading, double speed, double alt);
+  virtual void update(int id, double lat, double lon, double heading, double speed, double alt, double dt);
   virtual bool hasInstruction(int id);
   virtual FGATCInstruction getInstruction(int id);
 };

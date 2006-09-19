@@ -86,6 +86,8 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     alt_lock = false;
     roll = 0;
     headingChangeRate = 0.0;
+
+    holdPos = false;
 }
 
 
@@ -226,7 +228,7 @@ void FGAIAircraft::Run(double dt) {
 			   pos.getLongitudeDeg(),
 			   hdg,
 			   speed,
-			   altitude_ft);
+			   altitude_ft, dt);
 	//if (controller->hasInstruction(getID()))
 	//  {
 	    processATC(controller->getInstruction(getID()));
@@ -979,20 +981,20 @@ void FGAIAircraft::announcePositionToController()
       //snprintf (buffer, 10, "%d", node);
       switch (leg) {
       case 3:
-	cerr << trafficRef->getRegistration() 
-	     << " taxiing to runway at segment " 
-	     << fp->getCurrentWaypoint()->routeIndex
-	     << endl;
+	//cerr << trafficRef->getRegistration() 
+	//     << " taxiing to runway at segment " 
+	//     << fp->getCurrentWaypoint()->routeIndex
+	//     << endl;
 	//cerr << "Match check between taxisegment and taxiroute : " << node << " " 
 	//     << fp->getCurrentWaypoint()->name << endl;
 	if (trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork()->exists())
 	  controller = trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork();
 	break;
       case 9:
-	cerr << trafficRef->getRegistration() 
-	     << " taxiing to parking at segment " 
-	     << fp->getCurrentWaypoint()->routeIndex
-	     << endl;
+	//cerr << trafficRef->getRegistration() 
+	//     << " taxiing to parking at segment " 
+	//     << fp->getCurrentWaypoint()->routeIndex
+	//     << endl;
 	if (trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork()->exists())
 	  controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork();
 	break;
@@ -1006,8 +1008,8 @@ void FGAIAircraft::announcePositionToController()
     }
     if ((controller != prevController) && (prevController != 0)) {
       prevController->signOff(getID());
-      cerr << trafficRef->getRegistration() 
-	   << " signing off " << endl;
+      //cerr << trafficRef->getRegistration() 
+      //   << " signing off " << endl;
     }
     prevController = controller;
     if (controller) {
@@ -1024,12 +1026,28 @@ void FGAIAircraft::processATC(FGATCInstruction instruction)
   //cerr << "Processing ATC instruction (not Implimented yet)" << endl;
   if (instruction.getHoldPattern   ()) {
   }
+  
+  // Hold Position
   if (instruction.getHoldPosition  ()) {
-  }
-  if (instruction.getChangeSpeed   ()) {
-    AccelTo(instruction.getSpeed());
-  }else {
-    if (fp) AccelTo(fp->getPreviousWaypoint()->speed);
+    if (!holdPos) {
+      if (trafficRef)
+	cerr << trafficRef->getCallSign() << "Holding Position " << endl;
+      holdPos = true;
+    }
+    AccelTo(0.25);
+  } else {
+    if (holdPos) {
+      if (trafficRef)
+	cerr << trafficRef->getCallSign() << " Resuming Taxi " << endl;
+      holdPos = false;
+    }    
+    // Change speed Instruction. This can only be excecuted when there is no 
+    // Hold position instruction.
+    if (instruction.getChangeSpeed   ()) {
+      AccelTo(instruction.getSpeed());
+    }else {
+      if (fp) AccelTo(fp->getPreviousWaypoint()->speed);
+    }
   }
   if (instruction.getChangeHeading ()) { 
     hdg_lock = false;

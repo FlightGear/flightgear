@@ -124,6 +124,8 @@ private:
     double prevSpeed;
     double prev_dist_to_go;
 
+  bool holdPos;
+
     bool _getGearDown() const;
     bool reachedWaypoint;
     string callsign;             // The callsign of this tanker.
