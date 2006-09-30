@@ -114,6 +114,7 @@ FGIO::parse_port_config( const string& config )
                 SG_LOG( SG_IO, SG_ALERT, "Usage: --atcsim=[no-]pedals,"
                         << "input0_config,input1_config,"
                         << "output0_config,output1_config,file.nas" );
+		delete atcsim;
                 return NULL;
             }
             if ( tokens[1] == "no-pedals" ) {
