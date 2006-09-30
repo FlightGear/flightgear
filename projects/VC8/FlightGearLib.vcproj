@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../../AL/include;../../../zlib-1.2.3;../../../freeglut-2.4.0/include;../../../Pre-built.2/include;../../src/include;../../src/input;../../src/FDM/JSBSim"
+				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../devel/include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX;FREEGLUT_STATIC"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -104,7 +104,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../../AL/include;../../../zlib-1.2.3;../../../freeglut-2.4.0/include;../../../Pre-built.2/include;../../src/include;../../src/input;../../src/FDM/JSBSim"
+				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../devel/include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;PTW32_STATIC_LIB;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX;FREEGLUT_STATIC"
 				StringPooling="true"
 				MinimalRebuild="false"
@@ -1812,7 +1812,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\aimodel\AIAircraft.cxx"
+				RelativePath="..\..\src\AIModel\AIAircraft.cxx"
 				>
 			</File>
 			<File
@@ -1820,7 +1820,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\aimodel\AIBase.cxx"
+				RelativePath="..\..\src\AIModel\AIBase.cxx"
 				>
 			</File>
 			<File
@@ -1836,7 +1836,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\aimodel\AIFlightPlanCreate.cxx"
+				RelativePath="..\..\src\AIModel\AIFlightPlanCreate.cxx"
 				>
 			</File>
 			<File
@@ -1852,7 +1852,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\aimodel\AIManager.cxx"
+				RelativePath="..\..\src\AIModel\AIManager.cxx"
 				>
 			</File>
 			<File
@@ -1973,6 +1973,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\instrumentation\attitude_indicator.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Network\AV400.cxx"
 				>
 			</File>
 			<File
@@ -2508,10 +2512,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\Instrumentation\HUD\HUD.cxx"
 				>
 				<FileConfiguration
@@ -2532,6 +2532,10 @@
 						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\cockpit\hud.cxx"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\cockpit\hud_card.cxx"
@@ -3060,7 +3064,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\traffic\Schedule.cxx"
+				RelativePath="..\..\src\Traffic\Schedule.cxx"
 				>
 			</File>
 			<File
@@ -3136,7 +3140,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\traffic\TrafficMgr.cxx"
+				RelativePath="..\..\src\Traffic\TrafficMgr.cxx"
 				>
 			</File>
 			<File
