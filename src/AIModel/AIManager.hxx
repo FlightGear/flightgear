@@ -49,10 +49,11 @@ public:
   FGModelID(const string& pth, ssgBranch * mdl) { path =pth; model=mdl;};
   ssgBranch * const getModelId() const { return model;};
   const string & getPath() const { return path;};
+  int getNumRefs() const { return model.getNumRefs(); };
 };
 
 typedef vector<FGModelID> ModelVec;
-typedef vector<FGModelID>::const_iterator ModelVecIterator;
+typedef vector<FGModelID>::iterator ModelVecIterator;
 
 class FGAIThermal;
 
@@ -99,7 +100,7 @@ public:
 
     void processScenario( const string &filename );
 
-  ssgBranch * getModel(const string& path) const;
+  ssgBranch * getModel(const string& path);
   void setModel(const string& path, ssgBranch *model);
 
   static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);

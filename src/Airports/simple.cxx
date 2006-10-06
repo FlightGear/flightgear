@@ -90,7 +90,7 @@ FGAirportDynamics * FGAirport::getDynamics()
         return dynamics;
     } else {
         FGRunwayPreference rwyPrefs;
-        //cerr << "Trying to load dynamics for " << _id << endl;
+        cerr << "Trying to load dynamics for " << _id << endl;
         dynamics = new FGAirportDynamics(_latitude, _longitude, _elevation, _id);
 
         SGPath parkpath( globals->get_fg_root() );

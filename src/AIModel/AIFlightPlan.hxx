@@ -98,6 +98,7 @@ public:
   int getRouteIndex(int i); // returns the AI related index of this current routes. 
   FGTaxiRoute *getTaxiRoute() { return taxiRoute; };
   void deleteTaxiRoute();
+  string getRunway() { return activeRunway; };
   
 
 private:

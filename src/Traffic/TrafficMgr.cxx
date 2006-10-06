@@ -79,6 +79,20 @@ FGTrafficManager::FGTrafficManager()
   score = 0;
 }
 
+FGTrafficManager:: ~FGTrafficManager()
+{
+  for (ScheduleVectorIterator sched = scheduledAircraft.begin(); sched != scheduledAircraft.end(); sched++)
+    {
+      delete (*sched);
+    }
+  scheduledAircraft.clear();
+  // for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
+//     {
+//       delete (*flt);
+//     }
+//   flights.clear();
+}
+
 
 void FGTrafficManager::init()
 { 
@@ -97,8 +111,9 @@ void FGTrafficManager::init()
   //	  currAircraft++;
   //	}
   //   }
-  //cerr << "Sorting by distance " << endl;
-  sort(scheduledAircraft.begin(), scheduledAircraft.end());
+  // Sort by points: Aircraft with frequent visits to the
+  // startup airport will be processed first
+  sort(scheduledAircraft.begin(), scheduledAircraft.end(), compareSchedules);
   currAircraft = scheduledAircraft.begin();
   currAircraftClosest = scheduledAircraft.begin();
   //cerr << "Done initializing schedules" << endl;
@@ -114,7 +129,7 @@ void FGTrafficManager::update(double something)
       //cerr << "resetting schedule " << endl;
       currAircraft = scheduledAircraft.begin();
     }
-  if (!(currAircraft->update(now)))
+  if (!((*currAircraft)->update(now)))
     {
       // after proper initialization, we shouldnt get here.
       // But let's make sure
@@ -232,7 +247,7 @@ void  FGTrafficManager::endElement (const char * name) {
       string apt = fgGetString("/sim/presets/airport-id");
       //cerr << "Airport information: " << apt << " " << departurePort << " " << arrivalPort << endl;
       if (departurePort == apt) score++;
-      flights.push_back(FGScheduledFlight(callsign,
+      flights.push_back(new FGScheduledFlight(callsign,
 					  fltrules,
 					  departurePort,
 					  arrivalPort,
@@ -244,7 +259,7 @@ void  FGTrafficManager::endElement (const char * name) {
   else if (element == string("aircraft"))
     {
       //cerr << "Pushing back aircraft " << registration << endl;
-      scheduledAircraft.push_back(FGAISchedule(mdl, 
+      scheduledAircraft.push_back(new FGAISchedule(mdl, 
 					       livery, 
 					       registration, 
 					       heavy,
@@ -256,8 +271,14 @@ void  FGTrafficManager::endElement (const char * name) {
 					       offset,
 					       score,
 					       flights));
-      while(flights.begin() != flights.end())
-	flights.pop_back();
+     //  while(flights.begin() != flights.end()) {
+// 	flights.pop_back();
+//       }
+      for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
+    {
+      delete (*flt);
+    }
+  flights.clear();
       SG_LOG( SG_GENERAL, SG_BULK, "Reading aircraft : " 
 	      << registration 
 	      << " with prioritization score " 

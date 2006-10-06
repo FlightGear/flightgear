@@ -71,29 +71,31 @@ class FGAISchedule
   //void setClosestDistanceToUser();
   void next();   // forces the schedule to move on to the next flight.
 
-  time_t      getDepartureTime    () { return flights.begin()->getDepartureTime   (); };
-  FGAirport * getDepartureAirport () { return flights.begin()->getDepartureAirport(); };
-  FGAirport * getArrivalAirport   () { return flights.begin()->getArrivalAirport  (); };
-  int         getCruiseAlt        () { return flights.begin()->getCruiseAlt       (); };
+  time_t      getDepartureTime    () { return (*flights.begin())->getDepartureTime   (); };
+  FGAirport * getDepartureAirport () { return (*flights.begin())->getDepartureAirport(); };
+  FGAirport * getArrivalAirport   () { return (*flights.begin())->getArrivalAirport  (); };
+  int         getCruiseAlt        () { return (*flights.begin())->getCruiseAlt       (); };
   double      getRadius           () { return radius; };
   double      getGroundOffset     () { return groundOffset;};
   const string& getFlightType     () { return flightType;};
   const string& getAirline        () { return airline; };
   const string& getAircraft       () { return acType; };
-  const string& getCallSign       () { return flights.begin()->getCallSign (); };
+  const string& getCallSign       () { return (*flights.begin())->getCallSign (); };
   const string& getRegistration   () { return registration;};
+  const string& getFlightRules    () { return (*flights.begin())->getFlightRules (); };
   bool getHeavy                   () { return heavy; };
   // used to sort in decending order of score: I've probably found a better way to
   // decending order sorting, but still need to test that.
   bool operator< (const FGAISchedule &other) const { return (score > other.score); };
   //void * getAiRef                 () { return AIManagerRef; };
   //FGAISchedule* getAddress        () { return this;};
-  // More member functions follow later
 
 };
 
-typedef vector<FGAISchedule >           ScheduleVector;
-typedef vector<FGAISchedule >::iterator ScheduleVectorIterator;
+typedef vector<FGAISchedule*>           ScheduleVector;
+typedef vector<FGAISchedule*>::iterator ScheduleVectorIterator;
+
+bool compareSchedules(FGAISchedule*a, FGAISchedule*b);
 
 #endif
 

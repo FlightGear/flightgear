@@ -91,7 +91,6 @@ FGAirportDynamics::FGAirportDynamics(const FGAirportDynamics& other)
 // Destructor
 FGAirportDynamics::~FGAirportDynamics()
 {
-  
 }
 
 
@@ -109,6 +108,7 @@ void FGAirportDynamics::init()
   // add the gate positions to the ground network. 
   groundNetwork.addNodes(&parkings);
   groundNetwork.init();
+  groundNetwork .setTowerController(&towerController);
 }
 
 bool FGAirportDynamics::getAvailableParking(double *lat, double *lon, double *heading, int *gateId, double rad, const string &flType, const string &acType, const string &airline)

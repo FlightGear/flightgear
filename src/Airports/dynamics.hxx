@@ -32,6 +32,7 @@
 #include "parking.hxx"
 #include "groundnetwork.hxx"
 #include "runwayprefs.hxx"
+#include "trafficcontrol.hxx"
 
 
 class FGAirportDynamics : public XMLVisitor {
@@ -42,9 +43,10 @@ private:
   double _elevation;    // ft
   string _id;
 
-  FGParkingVec parkings;
+  FGParkingVec       parkings;
   FGRunwayPreference rwyPrefs;
-  FGGroundNetwork groundNetwork;
+  FGGroundNetwork    groundNetwork;
+  FGTowerController  towerController;
 
   time_t lastUpdate;
   string prevTrafficType;
@@ -86,7 +88,8 @@ public:
   //const string &getName() const { return _name;};
   // Returns degrees
 
- FGGroundNetwork* getGroundNetwork() { return &groundNetwork; };
+  FGGroundNetwork   *getGroundNetwork()   { return &groundNetwork; };
+  FGTowerController *getTowerController() { return &towerController; };
   
 
   void setRwyUse(const FGRunwayPreference& ref);

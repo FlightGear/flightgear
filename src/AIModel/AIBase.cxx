@@ -176,6 +176,7 @@ ssgBranch * FGAIBase::load3DModel(const string& fg_root,
   personality_branch->addKid( model );
 
   return personality_branch;
+  //return model;
 }
 
 bool FGAIBase::isa( object_type otype ) {

@@ -598,6 +598,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
 	    exit(1);
 	  }
     }
+  // Acceleration point, 105 meters into the runway,
   heading = rwy._heading;
   double azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
@@ -622,13 +623,34 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   lon = lon2;
   az  = az2;
   
-  //Next: the Start of Climb
+  //Start Climbing to 3000 ft. Let's do this 
+  // at the center of the runway for now:
+  // 
   geo_direct_wgs_84 ( 0, lat, lon, heading, 
   2560 * SG_FEET_TO_METER,
   &lat2, &lon2, &az2 );
   
   wpt = new waypoint;
   wpt->name      = "SOC";
+  wpt->latitude  = rwy._lat;
+  wpt->longitude = rwy._lon;
+  wpt->altitude  = apt->getElevation()+1000;
+  wpt->speed     = speed; 
+  wpt->crossat   = -10000;
+  wpt->gear_down = true;
+  wpt->flaps_down= true;
+  wpt->finished  = false;
+  wpt->on_ground = false;
+  wpt->routeIndex = 0;
+  waypoints.push_back(wpt);
+
+
+ geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
+  rwy._length * SG_FEET_TO_METER,
+  &lat2, &lon2, &az2 );
+
+  wpt = new waypoint;
+  wpt->name      = "3000 ft";
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
   wpt->altitude  = apt->getElevation()+3000;
@@ -640,6 +662,46 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   wpt->on_ground = false;
   wpt->routeIndex = 0;
   waypoints.push_back(wpt);
+
+// Finally, add two more waypoints, so that aircraft will remain under
+  // Tower control until they have reached the 3000 ft climb point
+
+
+ geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
+  5000,
+  &lat2, &lon2, &az2 );
+
+
+  wpt = new waypoint;
+  wpt->name      = "5000 ft";
+  wpt->latitude  = lat2;
+  wpt->longitude = lon2;
+  wpt->altitude  = apt->getElevation()+5000;
+  wpt->speed     = speed; 
+  wpt->crossat   = -10000;
+  wpt->gear_down = true;
+  wpt->flaps_down= true;
+  wpt->finished  = false;
+  wpt->on_ground = false;
+  wpt->routeIndex = 0;
+  waypoints.push_back(wpt);  
+
+ //  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
+//   100000,
+//   &lat2, &lon2, &az2 );
+//   wpt = new waypoint;
+//   wpt->name      = "5100 ft";
+//   wpt->latitude  = lat2;
+//   wpt->longitude = lon2;
+//   wpt->altitude  = apt->getElevation()+5100;
+//   wpt->speed     = speed; 
+//   wpt->crossat   = -10000;
+//   wpt->gear_down = true;
+//   wpt->flaps_down= true;
+//   wpt->finished  = false;
+//   wpt->on_ground = false;
+//   wpt->routeIndex = 0;
+//   waypoints.push_back(wpt);
 }
  
 /*******************************************************************

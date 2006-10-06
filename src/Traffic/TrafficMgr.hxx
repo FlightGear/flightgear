@@ -59,7 +59,7 @@ private:
 
 public:
   FGTrafficManager();
-  
+  ~FGTrafficManager();
   void init();
   void update(double time);
   void release(int ref);

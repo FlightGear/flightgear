@@ -43,6 +43,7 @@
 SG_USING_STD(string);
 
 #include "AIAircraft.hxx"
+//#include <Airports/trafficcontroller.hxx>
    static string tempReg;
 //
 // accel, decel, climb_rate, descent_rate, takeoff_speed, climb_speed,
@@ -93,6 +94,8 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
 
 FGAIAircraft::~FGAIAircraft() {
     //delete fp;
+  if (controller)
+    controller->signOff(getID());
 }
 
 
@@ -180,15 +183,29 @@ void FGAIAircraft::Run(double dt) {
         if (now < fp->getStartTime()) {
             // Do execute Ground elev for inactive aircraft, so they
             // Are repositioned to the correct ground altitude when the user flies within visibility range.
+	    // In addition, check whether we are out of user range, so this aircraft
+	    // can be deleted.
             if (no_roll) {
                 Transform();       // make sure aip is initialized.
-                getGroundElev(dt); // make sure it's exectuted first time around, so force a large dt value
-                //getGroundElev(dt); // Need to do this twice.
-                //cerr << trafficRef->getRegistration() << " Setting altitude to " << tgt_altitude;
-                doGroundAltitude();
-                //cerr << " Actual altitude " << altitude << endl;
-                // Transform();
-                pos.setElevationFt(altitude_ft);
+		if (trafficRef) {
+		  double userLatitude  = fgGetDouble("/position/latitude-deg");
+		  double userLongitude = fgGetDouble("/position/longitude-deg");
+		  double course, distance;
+		  SGWayPoint current(pos.getLongitudeDeg(), pos.getLatitudeDeg(), 0);
+		  SGWayPoint user (userLongitude, userLatitude, 0);
+		  user.CourseAndDistance(current, &course, &distance);
+		  if ((distance * SG_METER_TO_NM) > TRAFFICTOAIDIST) {
+		    setDie(true);
+		    return;
+		  }
+		  getGroundElev(dt); // make sure it's exectuted first time around, so force a large dt value
+		  //getGroundElev(dt); // Need to do this twice.
+		  //cerr << trafficRef->getRegistration() << " Setting altitude to " << tgt_altitude;
+		  doGroundAltitude();
+		  //cerr << " Actual altitude " << altitude << endl;
+		  // Transform();
+		  pos.setElevationFt(altitude_ft);
+		}
             }
             return;
         }
@@ -229,10 +246,7 @@ void FGAIAircraft::Run(double dt) {
 			   hdg,
 			   speed,
 			   altitude_ft, dt);
-	//if (controller->hasInstruction(getID()))
-	//  {
-	    processATC(controller->getInstruction(getID()));
-	    //  }
+	processATC(controller->getInstruction(getID()));
       }
       
     double turn_radius_ft;
@@ -972,29 +986,34 @@ void FGAIAircraft::announcePositionToController()
     
     int leg = fp->getLeg();
     
-    // For starters, I'll only do this for departure and arrival taxi. The mechanism
-    // could be extended to include any controller however. 
-    //int node, currentTaxiSegment;
-    //if (taxiRoute->next(&node, &currentTaxiSegment)) {
-    if (fp->getCurrentWaypoint()->routeIndex != 0) {
+    //if (fp->getCurrentWaypoint()->routeIndex != 0) {
       //char buffer[10];
       //snprintf (buffer, 10, "%d", node);
+      // Note that leg was been incremented after creating the current leg, so we should use
+      // leg numbers here that are one higher than the number that is used to create the leg
+      //
       switch (leg) {
-      case 3:
-	//cerr << trafficRef->getRegistration() 
-	//     << " taxiing to runway at segment " 
-	//     << fp->getCurrentWaypoint()->routeIndex
-	//     << endl;
-	//cerr << "Match check between taxisegment and taxiroute : " << node << " " 
-	//     << fp->getCurrentWaypoint()->name << endl;
+      case 3: // Taxiing to runway
 	if (trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork()->exists())
 	  controller = trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork();
 	break;
-      case 9:
-	//cerr << trafficRef->getRegistration() 
-	//     << " taxiing to parking at segment " 
-	//     << fp->getCurrentWaypoint()->routeIndex
-	//     << endl;
+      case 4: //Take off tower controller
+	if (trafficRef->getDepartureAirport()->getDynamics())
+	  {
+	    controller = trafficRef->getDepartureAirport()->getDynamics()->getTowerController();	   
+	    //if (trafficRef->getDepartureAirport()->getId() == "EHAM") {
+	    //cerr << trafficRef->getCallSign() << " at runway " << fp->getRunway() << "Ready for departure "
+	    //   << trafficRef->getFlightType() << " to " << trafficRef->getArrivalAirport()->getId() << endl;
+	    //  if (controller == 0) {
+	    //cerr << "Error in assigning controller at " << trafficRef->getDepartureAirport()->getId() << endl;
+		//}
+	      
+	  } 
+	else {
+	  cerr << "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId() << endl;
+	}
+	break;
+      case 9: // Taxiing for parking
 	if (trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork()->exists())
 	  controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundNetwork();
 	break;
@@ -1002,20 +1021,27 @@ void FGAIAircraft::announcePositionToController()
 	controller = 0;
 	break;
       }
-    } else {
-      //fp->deleteTaxiRoute();
-      controller = 0;
-    }
+      
     if ((controller != prevController) && (prevController != 0)) {
       prevController->signOff(getID());
-      //cerr << trafficRef->getRegistration() 
-      //   << " signing off " << endl;
+      string callsign =  trafficRef->getCallSign();
+      if ( trafficRef->getHeavy())
+	callsign += "Heavy";
+      switch (leg) {
+      case 3:
+	cerr << callsign << " ready to taxi to runway " << fp->getRunway() << endl;
+	break;
+      case 4:
+	cerr << callsign << " at runway " << fp->getRunway() << "Ready for take-off. "
+	     << trafficRef->getFlightRules() << " to " << trafficRef->getArrivalAirport()->getId() 
+	     << "(" << trafficRef->getArrivalAirport()->getName() << ")."<< endl;
+      }
     }
     prevController = controller;
     if (controller) {
       controller->announcePosition(getID(), fp, fp->getCurrentWaypoint()->routeIndex,
-				   _getLatitude(), _getLongitude(), hdg, speed, altitude_ft, 
-				   trafficRef->getRadius());
+    			   _getLatitude(), _getLongitude(), hdg, speed, altitude_ft, 
+    				   trafficRef->getRadius(), leg);
     }
   }
 }

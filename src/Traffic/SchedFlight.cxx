@@ -280,3 +280,9 @@ bool FGScheduledFlight::initializeAirports()
   initialized = true;
   return true;
 }
+
+
+bool compareScheduledFlights(FGScheduledFlight *a, FGScheduledFlight *b) 
+{ 
+  return (*a) < (*b); 
+};

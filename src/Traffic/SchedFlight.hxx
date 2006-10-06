@@ -95,13 +95,16 @@ public:
   { 
     return (departureTime < other.departureTime); 
   };
+  string& getFlightRules() { return fltRules; };
 
   time_t processTimeString(const string& time);
   const string& getCallSign() {return callsign; };
 };
 
-typedef vector<FGScheduledFlight>           FGScheduledFlightVec;
-typedef vector<FGScheduledFlight>::iterator FGScheduledFlightVecIterator;
+typedef vector<FGScheduledFlight*>           FGScheduledFlightVec;
+typedef vector<FGScheduledFlight*>::iterator FGScheduledFlightVecIterator;
+
+bool compareScheduledFlights(FGScheduledFlight *a, FGScheduledFlight *b);
 
 
 #endif

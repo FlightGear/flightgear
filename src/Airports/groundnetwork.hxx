@@ -35,17 +35,18 @@ SG_USING_STD(vector);
 
 
 #include "parking.hxx"
-//#include <AIModel/AIBase.hxx>
+#include "trafficcontrol.hxx"
 
 
 
 class FGTaxiSegment; // forward reference
 class FGAIFlightPlan; // forward reference
 
-typedef vector<FGTaxiSegment>  FGTaxiSegmentVector;
-typedef vector<FGTaxiSegment*> FGTaxiSegmentPointerVector;
-typedef vector<FGTaxiSegment>::iterator FGTaxiSegmentVectorIterator;
-typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentPointerVectorIterator;
+typedef vector<FGTaxiSegment*>  FGTaxiSegmentVector;
+typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentVectorIterator;
+
+//typedef vector<FGTaxiSegment*> FGTaxiSegmentPointerVector;
+//typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentPointerVectorIterator;
 
 /**************************************************************************************
  * class FGTaxiNode
@@ -56,7 +57,7 @@ private:
   double lat;
   double lon;
   int index;
-  FGTaxiSegmentPointerVector next; // a vector to all the segments leaving from this node
+  FGTaxiSegmentVector next; // a vector of pointers to all the segments leaving from this node
   
 public:
   FGTaxiNode();
@@ -74,13 +75,13 @@ public:
 
   int getIndex() { return index; };
   FGTaxiNode *getAddress() { return this;};
-  FGTaxiSegmentPointerVectorIterator getBeginRoute() { return next.begin(); };
-  FGTaxiSegmentPointerVectorIterator getEndRoute()   { return next.end();   }; 
+  FGTaxiSegmentVectorIterator getBeginRoute() { return next.begin(); };
+  FGTaxiSegmentVectorIterator getEndRoute()   { return next.end();   }; 
   bool operator<(const FGTaxiNode &other) const { return index < other.index; };
 };
 
-typedef vector<FGTaxiNode> FGTaxiNodeVector;
-typedef vector<FGTaxiNode>::iterator FGTaxiNodeVectorIterator;
+typedef vector<FGTaxiNode*> FGTaxiNodeVector;
+typedef vector<FGTaxiNode*>::iterator FGTaxiNodeVectorIterator;
 
 /***************************************************************************************
  * class FGTaxiSegment
@@ -160,133 +161,6 @@ public:
 typedef vector<FGTaxiRoute> TaxiRouteVector;
 typedef vector<FGTaxiRoute>::iterator TaxiRouteVectorIterator;
 
-/**************************************************************************************
- * class FGATCInstruction
- * like class FGATC Controller, this class definition should go into its own file
- * and or directory... For now, just testing this stuff out though...
- *************************************************************************************/
-class FGATCInstruction
-{
-private:
-  bool holdPattern;
-  bool holdPosition;
-  bool changeSpeed;
-  bool changeHeading;
-  bool changeAltitude;
-
-  double speed;
-  double heading;
-  double alt;
-public:
-
-  FGATCInstruction();
-  bool hasInstruction   ();
-  bool getHoldPattern   () { return holdPattern;    };
-  bool getHoldPosition  () { return holdPosition;   };
-  bool getChangeSpeed   () { return changeSpeed;    };
-  bool getChangeHeading () { return changeHeading;  };
-  bool getChangeAltitude() { return changeAltitude; };
-
-  double getSpeed       () { return speed; };
-  double getHeading     () { return heading; };
-  double getAlt         () { return alt; };
-
-  void setHoldPattern   (bool val) { holdPattern    = val; };
-  void setHoldPosition  (bool val) { holdPosition   = val; };
-  void setChangeSpeed   (bool val) { changeSpeed    = val; };
-  void setChangeHeading (bool val) { changeHeading  = val; };
-  void setChangeAltitude(bool val) { changeAltitude = val; };
-
-  void setSpeed       (double val) { speed   = val; };
-  void setHeading     (double val) { heading = val; };
-  void setAlt         (double val) { alt     = val; };
-};
-
-class FGGroundNetwork;
-
-/**************************************************************************************
- * class FGTrafficRecord
- *************************************************************************************/
-class FGTrafficRecord
-{
-private:
-  int id, waitsForId;
-  int currentPos;
-  intVec intentions;
-  FGATCInstruction instruction;
-  double latitude, longitude, heading, speed, altitude, radius;
-  
-  
-public:
-  FGTrafficRecord() {};
-  
-  void setId(int val)  { id = val; };
-  void setRadius(double rad) { radius = rad;};
-  void setPositionAndIntentions(int pos, FGAIFlightPlan *route);
-  int getId() { return id;};
-  FGATCInstruction getInstruction() { return instruction;};
-  bool hasInstruction() { return instruction.hasInstruction(); };
-  void setPositionAndHeading(double lat, double lon, double hdg, double spd, double alt);
-  bool checkPositionAndIntentions(FGTrafficRecord &other);
-  int  crosses                   (FGGroundNetwork *, FGTrafficRecord &other); 
-  bool isOpposing                (FGGroundNetwork *, FGTrafficRecord &other, int node);
-
-  bool getSpeedAdjustment() { return instruction.getChangeSpeed(); };
-  
-  double getLatitude () { return latitude ; };
-  double getLongitude() { return longitude; };
-  double getHeading  () { return heading  ; };
-  double getSpeed    () { return speed    ; };
-  double getAltitude () { return altitude ; };
-  double getRadius   () { return radius   ; };
-
-  int getWaitsForId  () { return waitsForId; };
-
-  void setSpeedAdjustment(double spd) { instruction.setChangeSpeed(true); 
-                                        instruction.setSpeed(spd); };
-  void setHeadingAdjustment(double heading) { instruction.setChangeHeading(true);
-                                              instruction.setHeading(heading); };
-  void clearSpeedAdjustment  () { instruction.setChangeSpeed  (false); };
-  void clearHeadingAdjustment() { instruction.setChangeHeading(false); };
-
-  bool hasHeadingAdjustment() { return instruction.getChangeHeading(); };
-  bool hasHoldPosition() { return instruction.getHoldPosition(); };
-  void setHoldPosition (bool inst) { instruction.setHoldPosition(inst); };
-
-  void setWaitsForId(int id) { waitsForId = id; };
-
-};
-
-typedef vector<FGTrafficRecord> TrafficVector;
-typedef vector<FGTrafficRecord>::iterator TrafficVectorIterator;
-
-
-
-
-/**************************************************************************************
- * class FGATCController
- * NOTE: this class serves as an abstraction layer for all sorts of ATC controller,
- * Ground and air, so eventually it should move to its own file / directory. 
- *************************************************************************************/
-class FGATCController
-{
-private:
-  double dt_count;
-public:
-  FGATCController() { dt_count = 0;};
-  virtual ~FGATCController() {};
-  virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
-				double lat, double lon,
-				double hdg, double spd, double alt, double radius) = 0;
-  virtual void             signOff(int id) = 0;
-  virtual void             update(int id, double lat, double lon, 
-				  double heading, double speed, double alt, double dt) = 0;
-  virtual bool             hasInstruction(int id) = 0;
-  virtual FGATCInstruction getInstruction(int id) = 0;
-
-  double getDt() { return dt_count; };
-  void   setDt(double dt) { dt_count = dt;};
-};
 
 
 
@@ -308,6 +182,7 @@ private:
   
   bool foundRoute;
   double totalDistance, maxDistance;
+  FGTowerController *towerController;
 
   void printRoutingError(string);
 
@@ -318,6 +193,7 @@ private:
   
 public:
   FGGroundNetwork();
+  ~FGGroundNetwork();
 
   void addNode   (const FGTaxiNode& node);
   void addNodes  (FGParkingVec *parkings);
@@ -325,6 +201,7 @@ public:
 
   void init();
   bool exists() { return hasNetwork; };
+  void setTowerController(FGTowerController *twrCtrlr) { towerController = twrCtrlr; };
   int findNearestNode(double lat, double lon);
   FGTaxiNode *findNode(int idx);
   FGTaxiSegment *findSegment(int idx);
@@ -332,7 +209,7 @@ public:
   void trace(FGTaxiNode *, int, int, double dist);
 
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute, 
-				double lat, double lon, double hdg, double spd, double alt, double radius);
+				double lat, double lon, double hdg, double spd, double alt, double radius, int leg);
   virtual void signOff(int id);
   virtual void update(int id, double lat, double lon, double heading, double speed, double alt, double dt);
   virtual bool hasInstruction(int id);

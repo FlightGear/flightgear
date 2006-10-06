@@ -9,7 +9,8 @@ libAirports_a_SOURCES = \
 	runwayprefs.cxx runwayprefs.hxx \
 	parking.cxx parking.hxx \
 	groundnetwork.cxx groundnetwork.hxx \
-	dynamics.cxx dynamics.hxx
+	dynamics.cxx dynamics.hxx \
+	trafficcontrol.hxx trafficcontrol.cxx
 
 calc_loc_SOURCES = calc_loc.cxx
 calc_loc_LDADD = -lsgmath -lsgdebug -lsgmisc -lz $(base_LIBS)
