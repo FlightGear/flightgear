@@ -2512,6 +2512,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\cockpit\hud.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\Instrumentation\HUD\HUD.cxx"
 				>
 				<FileConfiguration
@@ -2532,10 +2536,6 @@
 						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\src\cockpit\hud.cxx"
-				>
 			</File>
 			<File
 				RelativePath="..\..\src\cockpit\hud_card.cxx"
@@ -2606,10 +2606,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud_tbi.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\Instrumentation\HUD\HUD_tbi.cxx"
 				>
 				<FileConfiguration
@@ -2630,6 +2626,10 @@
 						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\cockpit\hud_tbi.cxx"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\input\input.cxx"
@@ -3137,6 +3137,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\gui\trackball.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\trafficcontrol.cxx"
 				>
 			</File>
 			<File
