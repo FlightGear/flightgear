@@ -187,15 +187,44 @@ void FGAIMultiplayer::update(double dt)
       ecOrient = firstIt->second.orientation;
       speed = norm(firstIt->second.linearVel) * SG_METER_TO_NM * 3600.0;
 
-      std::vector<FGFloatPropertyData>::const_iterator firstPropIt;
-      std::vector<FGFloatPropertyData>::const_iterator firstPropItEnd;
+      std::vector<FGPropertyData*>::const_iterator firstPropIt;
+      std::vector<FGPropertyData*>::const_iterator firstPropItEnd;
       firstPropIt = firstIt->second.properties.begin();
       firstPropItEnd = firstIt->second.properties.end();
       while (firstPropIt != firstPropItEnd) {
-        float val = firstPropIt->value;
-        PropertyMap::iterator pIt = mPropertyMap.find(firstPropIt->id);
+        //cout << " Setting property..." << (*firstPropIt)->id;
+        PropertyMap::iterator pIt = mPropertyMap.find((*firstPropIt)->id);
         if (pIt != mPropertyMap.end())
-          pIt->second->setFloatValue(val);
+        {
+          //cout << "Found " << pIt->second->getPath() << ":";
+          switch ((*firstPropIt)->type) {
+            case SGPropertyNode::INT:  
+            case SGPropertyNode::BOOL:
+            case SGPropertyNode::LONG:        
+              pIt->second->setIntValue((*firstPropIt)->int_value);
+              //cout << "Int: " << (*firstPropIt)->int_value << "\n";
+              break;
+            case SGPropertyNode::FLOAT:
+            case SGPropertyNode::DOUBLE:
+              pIt->second->setFloatValue((*firstPropIt)->float_value);
+              //cout << "Flo: " << (*firstPropIt)->float_value << "\n";
+              break;
+            case SGPropertyNode::STRING:
+            case SGPropertyNode::UNSPECIFIED:
+              pIt->second->setStringValue((*firstPropIt)->string_value);
+              //cout << "Str: " << (*firstPropIt)->string_value << "\n";    
+              break;
+            default:
+              // FIXME - currently defaults to float values
+              pIt->second->setFloatValue((*firstPropIt)->float_value);
+              //cout << "Unknown: " << (*firstPropIt)->float_value << "\n";
+              break;
+          }            
+        }
+        else
+        {
+          SG_LOG(SG_GENERAL, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
+        }
         ++firstPropIt;
       }
 
@@ -224,27 +253,90 @@ void FGAIMultiplayer::update(double dt)
 
       if (prevIt->second.properties.size()
           == nextIt->second.properties.size()) {
-        std::vector<FGFloatPropertyData>::const_iterator prevPropIt;
-        std::vector<FGFloatPropertyData>::const_iterator prevPropItEnd;
-        std::vector<FGFloatPropertyData>::const_iterator nextPropIt;
-        std::vector<FGFloatPropertyData>::const_iterator nextPropItEnd;
+        std::vector<FGPropertyData*>::const_iterator prevPropIt;
+        std::vector<FGPropertyData*>::const_iterator prevPropItEnd;
+        std::vector<FGPropertyData*>::const_iterator nextPropIt;
+        std::vector<FGPropertyData*>::const_iterator nextPropItEnd;
         prevPropIt = prevIt->second.properties.begin();
         prevPropItEnd = prevIt->second.properties.end();
         nextPropIt = nextIt->second.properties.begin();
         nextPropItEnd = nextIt->second.properties.end();
         while (prevPropIt != prevPropItEnd) {
-          float val = (1-tau)*prevPropIt->value + tau*nextPropIt->value;
-          PropertyMap::iterator pIt = mPropertyMap.find(prevPropIt->id);
+          PropertyMap::iterator pIt = mPropertyMap.find((*prevPropIt)->id);
+          //cout << " Setting property..." << (*prevPropIt)->id;
+          
           if (pIt != mPropertyMap.end())
-            pIt->second->setFloatValue(val);
+          {
+            //cout << "Found " << pIt->second->getPath() << ":";
+          
+            int ival;
+            float val;
+            switch ((*prevPropIt)->type) {
+              case SGPropertyNode::INT:   
+              case SGPropertyNode::BOOL:
+              case SGPropertyNode::LONG:        
+                ival = (int) (1-tau)*((double) (*prevPropIt)->int_value) +
+                  tau*((double) (*nextPropIt)->int_value);
+                pIt->second->setIntValue(ival);
+                //cout << "Int: " << ival << "\n";
+                break;
+              case SGPropertyNode::FLOAT:
+              case SGPropertyNode::DOUBLE:
+                val = (1-tau)*(*prevPropIt)->float_value +
+                  tau*(*nextPropIt)->float_value;
+                //cout << "Flo: " << val << "\n";
+                pIt->second->setFloatValue(val);
+                break;
+              case SGPropertyNode::STRING:
+              case SGPropertyNode::UNSPECIFIED:
+                //cout << "Str: " << (*nextPropIt)->string_value << "\n";
+                pIt->second->setStringValue((*nextPropIt)->string_value);
+                break;
+              default:
+                // FIXME - currently defaults to float values
+                val = (1-tau)*(*prevPropIt)->float_value +
+                  tau*(*nextPropIt)->float_value;
+                //cout << "Unk: " << val << "\n";
+                pIt->second->setFloatValue(val);
+                break;
+            }            
+          }
+          else
+          {
+            SG_LOG(SG_GENERAL, SG_DEBUG, "Unable to find property: " << (*prevPropIt)->id << "\n");
+          }
+          
           ++prevPropIt;
           ++nextPropIt;
         }
       }
 
       // Now throw away too old data
-      if (prevIt != mMotionInfo.begin()) {
+      if (prevIt != mMotionInfo.begin()) 
+      {
         --prevIt;
+        
+        MotionInfo::iterator delIt;
+        delIt = mMotionInfo.begin();
+        
+        while (delIt != prevIt) 
+        {
+          std::vector<FGPropertyData*>::const_iterator propIt;
+          std::vector<FGPropertyData*>::const_iterator propItEnd;
+          propIt = delIt->second.properties.begin();
+          propItEnd = delIt->second.properties.end();
+
+          //cout << "Deleting data\n";
+          
+          while (propIt != propItEnd)
+          {
+            delete *propIt;
+            propIt++;
+          }
+          
+          delIt++;
+        }
+        
         mMotionInfo.erase(mMotionInfo.begin(), prevIt);
       }
     }
@@ -281,17 +373,46 @@ void FGAIMultiplayer::update(double dt)
       t -= h;
     }
 
+    std::vector<FGPropertyData*>::const_iterator firstPropIt;
+    std::vector<FGPropertyData*>::const_iterator firstPropItEnd;
     speed = norm(linearVel) * SG_METER_TO_NM * 3600.0;
-
-    std::vector<FGFloatPropertyData>::const_iterator firstPropIt;
-    std::vector<FGFloatPropertyData>::const_iterator firstPropItEnd;
     firstPropIt = it->second.properties.begin();
     firstPropItEnd = it->second.properties.end();
     while (firstPropIt != firstPropItEnd) {
-      float val = firstPropIt->value;
-      PropertyMap::iterator pIt = mPropertyMap.find(firstPropIt->id);
+      PropertyMap::iterator pIt = mPropertyMap.find((*firstPropIt)->id);
+      //cout << " Setting property..." << (*firstPropIt)->id;
+      
       if (pIt != mPropertyMap.end())
-        pIt->second->setFloatValue(val);
+      {
+        switch ((*firstPropIt)->type) {
+          case SGPropertyNode::INT:      
+          case SGPropertyNode::BOOL:
+          case SGPropertyNode::LONG:        
+            pIt->second->setIntValue((*firstPropIt)->int_value);
+            //cout << "Int: " << (*firstPropIt)->int_value << "\n";
+            break;
+          case SGPropertyNode::FLOAT:
+          case SGPropertyNode::DOUBLE:
+            pIt->second->setFloatValue((*firstPropIt)->float_value);
+            //cout << "Flo: " << (*firstPropIt)->float_value << "\n";
+            break;
+          case SGPropertyNode::STRING:
+          case SGPropertyNode::UNSPECIFIED:
+            pIt->second->setStringValue((*firstPropIt)->string_value);
+            //cout << "Str: " << (*firstPropIt)->string_value << "\n";
+            break;
+          default:
+            // FIXME - currently defaults to float values
+            pIt->second->setFloatValue((*firstPropIt)->float_value);
+            //cout << "Unk: " << (*firstPropIt)->float_value << "\n";
+            break;
+        }            
+      }
+      else
+      {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "Unable to find property: " << (*firstPropIt)->id << "\n");
+      }
+      
       ++firstPropIt;
     }
   }
@@ -359,4 +480,3 @@ FGAIMultiplayer::setDoubleProperty(const std::string& prop, double val)
   SGPropertyNode* pNode = props->getChild(prop.c_str(), true);
   pNode->setDoubleValue(val);
 }
-

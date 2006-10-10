@@ -39,6 +39,7 @@
 
 #include <plib/sg.h>
 #include <simgear/compiler.h>
+#include <simgear/props/props.hxx>
 #include <simgear/math/SGMath.hxx>
 #include "tiny_xdr.hxx"
 
@@ -109,16 +110,26 @@ struct T_PositionMsg {
     xdr_data_t angularAccel[3];
 };
 
-// Property message
-struct T_PropertyMsg {
-    xdr_data_t id;
-    xdr_data_t value;
+struct FGPropertyData {
+  unsigned id;
+  
+  // While the type isn't transmitted, it is needed for the destructor
+  SGPropertyNode::Type type;
+  union { 
+    int int_value;
+    float float_value;
+    char* string_value;
+  }; 
+  
+  ~FGPropertyData() {
+    if ((type == SGPropertyNode::STRING) || (type == SGPropertyNode::UNSPECIFIED))
+    {
+      delete [] string_value;
+    }
+  }
 };
 
-struct FGFloatPropertyData {
-  unsigned id;
-  float value;
-};
+
 
 // Position message
 struct FGExternalMotionData {
@@ -149,7 +160,7 @@ struct FGExternalMotionData {
   SGVec3f angularAccel;
   
   // The set of properties recieved for this timeslot
-  std::vector<FGFloatPropertyData> properties;
+  std::vector<FGPropertyData*> properties;
 };
 
 #endif

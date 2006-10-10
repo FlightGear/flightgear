@@ -198,14 +198,68 @@ bool FGMultiplay::process() {
     // now send the properties
     PropertyMap::iterator it;
     for (it = mPropertyMap.begin(); it != mPropertyMap.end(); ++it) {
-      FGFloatPropertyData pData;
-      pData.id = it->first;
-      pData.value = it->second->getFloatValue();
+      FGPropertyData* pData = new FGPropertyData;
+      pData->id = it->first;
+      pData->type = it->second->getType();
+      
+      switch (pData->type) {
+        case SGPropertyNode::INT:        
+        case SGPropertyNode::LONG:       
+        case SGPropertyNode::BOOL:
+          pData->int_value = it->second->getIntValue();
+          break;
+        case SGPropertyNode::FLOAT:
+        case SGPropertyNode::DOUBLE:
+          pData->float_value = it->second->getFloatValue();
+          break;
+        case SGPropertyNode::STRING:
+        case SGPropertyNode::UNSPECIFIED:
+          {
+            // FIXME: We assume unspecified are strings for the moment.
+
+            const char* cstr = it->second->getStringValue();
+            int len = strlen(cstr);
+            
+            if (len > 0)
+            {            
+              pData->string_value = new char[len + 1];
+              strcpy(pData->string_value, cstr);
+            }
+            else
+            {
+              // Size 0 - ignore
+              pData->string_value = 0;            
+            }
+
+            //cout << " Sending property " << pData->id << " " << pData->type << " " <<  pData->string_value << "\n";
+            break;        
+          }
+        default:
+          // FIXME Currently default to a float. 
+          //cout << "Unknown type when iterating through props: " << pData->type << "\n";
+          pData->float_value = it->second->getFloatValue();
+          break;
+      }
+      
       motionInfo.properties.push_back(pData);
     }
 
     FGMultiplayMgr* mpmgr = globals->get_multiplayer_mgr();
     mpmgr->SendMyPosition(motionInfo);
+    
+    // Now remove the data
+    std::vector<FGPropertyData*>::const_iterator propIt;
+    std::vector<FGPropertyData*>::const_iterator propItEnd;
+    propIt = motionInfo.properties.begin();
+    propItEnd = motionInfo.properties.end();
+
+    //cout << "Deleting data\n";
+
+    while (propIt != propItEnd)
+    {
+      delete *propIt;
+      propIt++;
+    }    
   }
 
   return true;

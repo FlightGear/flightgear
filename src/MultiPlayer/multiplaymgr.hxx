@@ -54,9 +54,11 @@ struct FGExternalMotionInfo;
 class FGMultiplayMgr 
 {
 public:
+
   struct IdPropertyList {
     unsigned id;
     const char* name;
+    SGPropertyNode::Type type;
   };
   static IdPropertyList sIdPropertyList[];
 

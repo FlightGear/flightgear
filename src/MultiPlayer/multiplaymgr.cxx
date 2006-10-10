@@ -33,16 +33,18 @@
 
 #include <plib/netSocket.h>
 
+#include <simgear/misc/stdint.hxx>
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/props/props.hxx>
 
 #include <AIModel/AIManager.hxx>
 #include <Main/fg_props.hxx>
-
 #include "multiplaymgr.hxx"
 #include "mpmessages.hxx"
 
 #define MAX_PACKET_SIZE 1200
+#define MAX_TEXT_SIZE 128
 
 // These constants are provided so that the ident 
 // command can list file versions
@@ -54,77 +56,80 @@ const char sMULTIPLAYMGR_HID[] = MULTIPLAYTXMGR_HID;
 // For now only that static list
 FGMultiplayMgr::IdPropertyList
 FGMultiplayMgr::sIdPropertyList[] = {
-  {100, "surface-positions/left-aileron-pos-norm"},
-  {101, "surface-positions/right-aileron-pos-norm"},
-  {102, "surface-positions/elevator-pos-norm"},
-  {103, "surface-positions/rudder-pos-norm"},
-  {104, "surface-positions/flap-pos-norm"},
-  {105, "surface-positions/speedbrake-pos-norm"},
-  {106, "gear/tailhook/position-norm"},
+  {100, "surface-positions/left-aileron-pos-norm",  SGPropertyNode::FLOAT},
+  {101, "surface-positions/right-aileron-pos-norm", SGPropertyNode::FLOAT},
+  {102, "surface-positions/elevator-pos-norm",      SGPropertyNode::FLOAT},
+  {103, "surface-positions/rudder-pos-norm",        SGPropertyNode::FLOAT},
+  {104, "surface-positions/flap-pos-norm",          SGPropertyNode::FLOAT},
+  {105, "surface-positions/speedbrake-pos-norm",    SGPropertyNode::FLOAT},
+  {106, "gear/tailhook/position-norm",              SGPropertyNode::FLOAT},
 
-  {200, "gear/gear[0]/compression-norm"},
-  {201, "gear/gear[0]/position-norm"},
-  {210, "gear/gear[1]/compression-norm"},
-  {211, "gear/gear[1]/position-norm"},
-  {220, "gear/gear[2]/compression-norm"},
-  {221, "gear/gear[2]/position-norm"},
-  {230, "gear/gear[3]/compression-norm"},
-  {231, "gear/gear[3]/position-norm"},
-  {240, "gear/gear[4]/compression-norm"},
-  {241, "gear/gear[4]/position-norm"},
+  {200, "gear/gear[0]/compression-norm",           SGPropertyNode::FLOAT},
+  {201, "gear/gear[0]/position-norm",              SGPropertyNode::FLOAT},
+  {210, "gear/gear[1]/compression-norm",           SGPropertyNode::FLOAT},
+  {211, "gear/gear[1]/position-norm",              SGPropertyNode::FLOAT},
+  {220, "gear/gear[2]/compression-norm",           SGPropertyNode::FLOAT},
+  {221, "gear/gear[2]/position-norm",              SGPropertyNode::FLOAT},
+  {230, "gear/gear[3]/compression-norm",           SGPropertyNode::FLOAT},
+  {231, "gear/gear[3]/position-norm",              SGPropertyNode::FLOAT},
+  {240, "gear/gear[4]/compression-norm",           SGPropertyNode::FLOAT},
+  {241, "gear/gear[4]/position-norm",              SGPropertyNode::FLOAT},
 
-  {300, "engines/engine[0]/n1"},
-  {301, "engines/engine[0]/n2"},
-  {302, "engines/engine[0]/rpm"},
-  {310, "engines/engine[1]/n1"},
-  {311, "engines/engine[1]/n2"},
-  {312, "engines/engine[1]/rpm"},
-  {320, "engines/engine[2]/n1"},
-  {321, "engines/engine[2]/n2"},
-  {322, "engines/engine[2]/rpm"},
-  {330, "engines/engine[3]/n1"},
-  {331, "engines/engine[3]/n2"},
-  {332, "engines/engine[3]/rpm"},
-  {340, "engines/engine[4]/n1"},
-  {341, "engines/engine[4]/n2"},
-  {342, "engines/engine[4]/rpm"},
-  {350, "engines/engine[5]/n1"},
-  {351, "engines/engine[5]/n2"},
-  {352, "engines/engine[5]/rpm"},
-  {360, "engines/engine[6]/n1"},
-  {361, "engines/engine[6]/n2"},
-  {362, "engines/engine[6]/rpm"},
-  {370, "engines/engine[7]/n1"},
-  {371, "engines/engine[7]/n2"},
-  {372, "engines/engine[7]/rpm"},
-  {380, "engines/engine[8]/n1"},
-  {381, "engines/engine[8]/n2"},
-  {382, "engines/engine[8]/rpm"},
-  {390, "engines/engine[9]/n1"},
-  {391, "engines/engine[9]/n2"},
-  {392, "engines/engine[9]/rpm"},
+  {300, "engines/engine[0]/n1",  SGPropertyNode::FLOAT},
+  {301, "engines/engine[0]/n2",  SGPropertyNode::FLOAT},
+  {302, "engines/engine[0]/rpm", SGPropertyNode::FLOAT},
+  {310, "engines/engine[1]/n1",  SGPropertyNode::FLOAT},
+  {311, "engines/engine[1]/n2",  SGPropertyNode::FLOAT},
+  {312, "engines/engine[1]/rpm", SGPropertyNode::FLOAT},
+  {320, "engines/engine[2]/n1",  SGPropertyNode::FLOAT},
+  {321, "engines/engine[2]/n2",  SGPropertyNode::FLOAT},
+  {322, "engines/engine[2]/rpm", SGPropertyNode::FLOAT},
+  {330, "engines/engine[3]/n1",  SGPropertyNode::FLOAT},
+  {331, "engines/engine[3]/n2",  SGPropertyNode::FLOAT},
+  {332, "engines/engine[3]/rpm", SGPropertyNode::FLOAT},
+  {340, "engines/engine[4]/n1",  SGPropertyNode::FLOAT},
+  {341, "engines/engine[4]/n2",  SGPropertyNode::FLOAT},
+  {342, "engines/engine[4]/rpm", SGPropertyNode::FLOAT},
+  {350, "engines/engine[5]/n1",  SGPropertyNode::FLOAT},
+  {351, "engines/engine[5]/n2",  SGPropertyNode::FLOAT},
+  {352, "engines/engine[5]/rpm", SGPropertyNode::FLOAT},
+  {360, "engines/engine[6]/n1",  SGPropertyNode::FLOAT},
+  {361, "engines/engine[6]/n2",  SGPropertyNode::FLOAT},
+  {362, "engines/engine[6]/rpm", SGPropertyNode::FLOAT},
+  {370, "engines/engine[7]/n1",  SGPropertyNode::FLOAT},
+  {371, "engines/engine[7]/n2",  SGPropertyNode::FLOAT},
+  {372, "engines/engine[7]/rpm", SGPropertyNode::FLOAT},
+  {380, "engines/engine[8]/n1",  SGPropertyNode::FLOAT},
+  {381, "engines/engine[8]/n2",  SGPropertyNode::FLOAT},
+  {382, "engines/engine[8]/rpm", SGPropertyNode::FLOAT},
+  {390, "engines/engine[9]/n1",  SGPropertyNode::FLOAT},
+  {391, "engines/engine[9]/n2",  SGPropertyNode::FLOAT},
+  {392, "engines/engine[9]/rpm", SGPropertyNode::FLOAT},
 
-  {800, "rotors/main/rpm"},
-  {801, "rotors/tail/rpm"},
-  {810, "rotors/main/blade1_pos"},
-  {811, "rotors/main/blade2_pos"},
-  {812, "rotors/main/blade3_pos"},
-  {813, "rotors/main/blade4_pos"},
-  {820, "rotors/main/blade1_flap"},
-  {821, "rotors/main/blade2_flap"},
-  {822, "rotors/main/blade3_flap"},
-  {823, "rotors/main/blade4_flap"},
-  {830, "rotors/tail/blade1_pos"},
-  {831, "rotors/tail/blade2_pos"},
+  {800, "rotors/main/rpm", SGPropertyNode::FLOAT},
+  {801, "rotors/tail/rpm", SGPropertyNode::FLOAT},
+  {810, "rotors/main/blade1_pos",  SGPropertyNode::FLOAT},
+  {811, "rotors/main/blade2_pos",  SGPropertyNode::FLOAT},
+  {812, "rotors/main/blade3_pos",  SGPropertyNode::FLOAT},
+  {813, "rotors/main/blade4_pos",  SGPropertyNode::FLOAT},
+  {820, "rotors/main/blade1_flap",  SGPropertyNode::FLOAT},
+  {821, "rotors/main/blade2_flap",  SGPropertyNode::FLOAT},
+  {822, "rotors/main/blade3_flap",  SGPropertyNode::FLOAT},
+  {823, "rotors/main/blade4_flap",  SGPropertyNode::FLOAT},
+  {830, "rotors/tail/blade1_pos",  SGPropertyNode::FLOAT},
+  {831, "rotors/tail/blade2_pos",  SGPropertyNode::FLOAT},
 
-  {1001, "controls/flight/slats"},
-  {1002, "controls/flight/speedbrake"},
-  {1003, "controls/flight/spoilers"},
-  {1004, "controls/gear/gear-down"},
-  {1005, "controls/lighting/nav-lights"},
+  {1001, "controls/flight/slats",  SGPropertyNode::FLOAT},
+  {1002, "controls/flight/speedbrake",  SGPropertyNode::FLOAT},
+  {1003, "controls/flight/spoilers",  SGPropertyNode::FLOAT},
+  {1004, "controls/gear/gear-down",  SGPropertyNode::FLOAT},
+  {1005, "controls/lighting/nav-lights",  SGPropertyNode::FLOAT},
+  
+  {10001, "sim/multiplay/transmission-freq-hz",  SGPropertyNode::STRING},
+  {10002, "sim/multiplay/chat",  SGPropertyNode::STRING},
 
   /// termination
-  {0, 0}
+  {0, 0, SGPropertyNode::UNSPECIFIED}
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -271,15 +276,103 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
   memcpy(Msg + sizeof(T_MsgHdr), &PosMsg, sizeof(T_PositionMsg));
   
   char* ptr = Msg + sizeof(T_MsgHdr) + sizeof(T_PositionMsg);
-  std::vector<FGFloatPropertyData>::const_iterator it;
+  std::vector<FGPropertyData*>::const_iterator it;
   it = motionInfo.properties.begin();
+  //cout << "OUTPUT PROPERTIES\n";
   while (it != motionInfo.properties.end()
-         && ptr < (Msg + MAX_PACKET_SIZE - sizeof(T_PropertyMsg))) {
-    T_PropertyMsg pMsg;
-    pMsg.id = XDR_encode_uint32(it->id);
-    pMsg.value = XDR_encode_float(it->value);
-    memcpy(ptr, &pMsg, sizeof(T_PropertyMsg));
-    ptr += sizeof(T_PropertyMsg);
+         && ptr < (Msg + MAX_PACKET_SIZE - sizeof(xdr_data_t))) {
+             
+    // First elements is the ID
+    xdr_data_t xdr = XDR_encode_uint32((*it)->id);
+    memcpy(ptr, &xdr, sizeof(xdr_data_t));
+    ptr += sizeof(xdr_data_t);
+    
+    // The actual data representation depends on the type
+    switch ((*it)->type) {
+      case SGPropertyNode::INT:        
+      case SGPropertyNode::BOOL:        
+      case SGPropertyNode::LONG:        
+        xdr = XDR_encode_uint32((*it)->int_value);
+        memcpy(ptr, &xdr, sizeof(xdr_data_t));
+        ptr += sizeof(xdr_data_t);
+        //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->int_value << "\n";
+        break;
+      case SGPropertyNode::FLOAT:
+      case SGPropertyNode::DOUBLE:
+        xdr = XDR_encode_float((*it)->float_value);;
+        memcpy(ptr, &xdr, sizeof(xdr_data_t));
+        ptr += sizeof(xdr_data_t);
+        //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
+        break;
+      case SGPropertyNode::STRING:
+      case SGPropertyNode::UNSPECIFIED:
+        {
+          // String is complicated. It consists of
+          // The length of the string
+          // The string itself
+          // Padding to the nearest 4-bytes.        
+          const char* lcharptr = (*it)->string_value;
+          
+          if (lcharptr != 0)
+          {
+            // Add the length         
+            ////cout << "String length: " << strlen(lcharptr) << "\n";
+            uint32_t len = strlen(lcharptr);
+            //cout << "String length unint32: " << len << "\n";
+            xdr = XDR_encode_uint32(len);
+            memcpy(ptr, &xdr, sizeof(xdr_data_t));
+            ptr += sizeof(xdr_data_t);
+            
+            if (len != 0)
+            {
+
+              // Now the text itself          
+              int lcount = 0;
+              while ((*lcharptr != '\0') && (lcount < MAX_TEXT_SIZE)) 
+              {
+                xdr = XDR_encode_int8(*lcharptr);
+                memcpy(ptr, &xdr, sizeof(xdr_data_t));
+                ptr += sizeof(xdr_data_t);
+                lcharptr++;
+                lcount++;          
+              }
+
+              //cout << "Prop:" << (*it)->id << " " << (*it)->type << " " << len << " " << (*it)->string_value;
+
+              // Now pad if required
+              while ((lcount % 4) != 0)
+              {
+                xdr = XDR_encode_int8(0);
+                memcpy(ptr, &xdr, sizeof(xdr_data_t));
+                ptr += sizeof(xdr_data_t);
+                lcount++;          
+                //cout << "0";
+              }
+              
+              //cout << "\n";
+            }
+          }
+          else
+          {
+            // Nothing to encode
+            xdr = XDR_encode_uint32(0);
+            memcpy(ptr, &xdr, sizeof(xdr_data_t));
+            ptr += sizeof(xdr_data_t);
+            //cout << "Prop:" << (*it)->id << " " << (*it)->type << " 0\n";
+          }
+           
+        }
+        break;
+        
+      default:
+        //cout << " Unknown Type: " << (*it)->type << "\n";
+        xdr = XDR_encode_float((*it)->float_value);;
+        memcpy(ptr, &xdr, sizeof(xdr_data_t));
+        ptr += sizeof(xdr_data_t);
+        //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
+        break;
+    }
+        
     ++it;
   }
 
@@ -314,6 +407,7 @@ FGMultiplayMgr::SendTextMessage(const string &MsgText)
   //////////////////////////////////////////////////
   unsigned iNextBlockPosition = 0;
   T_ChatMsg ChatMsg;
+  
   char Msg[sizeof(T_MsgHdr) + sizeof(T_ChatMsg)];
   while (iNextBlockPosition < MsgText.length()) {
     strncpy (ChatMsg.Text, 
@@ -324,7 +418,10 @@ FGMultiplayMgr::SendTextMessage(const string &MsgText)
     memcpy (Msg + sizeof(T_MsgHdr), &ChatMsg, sizeof(T_ChatMsg));
     mSocket->sendto (Msg, sizeof(T_MsgHdr) + sizeof(T_ChatMsg), 0, &mServer);
     iNextBlockPosition += MAX_CHAT_MSG_LEN - 1;
+
   }
+  
+  
 } // FGMultiplayMgr::SendTextMessage ()
 //////////////////////////////////////////////////////////////////////
 
@@ -464,14 +561,107 @@ FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
   for (unsigned i = 0; i < 3; ++i)
     motionInfo.angularAccel(i) = XDR_decode_float(PosMsg->angularAccel[i]);
 
-  T_PropertyMsg* PropMsg
-    = (T_PropertyMsg*)(Msg + sizeof(T_MsgHdr) + sizeof(T_PositionMsg));
-  while ((char*)PropMsg < Msg + len) {
-    FGFloatPropertyData pData;
-    pData.id = XDR_decode_uint32(PropMsg->id);
-    pData.value = XDR_decode_float(PropMsg->value);
-    motionInfo.properties.push_back(pData);
-    ++PropMsg;
+
+  //cout << "INPUT MESSAGE\n";
+  xdr_data_t* xdr = (xdr_data_t*) 
+                   (Msg + sizeof(T_MsgHdr) + sizeof(T_PositionMsg));
+  while ((char*)xdr < Msg + len) {
+    FGPropertyData* pData = new FGPropertyData;
+    SGPropertyNode::Type type = SGPropertyNode::UNSPECIFIED;
+    
+    // First element is always the ID
+    pData->id = XDR_decode_uint32(*xdr);
+    //cout << pData->id << " ";
+    xdr++;
+    
+    // Check the ID actually exists and get the type
+    unsigned i = 0;
+    bool found = false;
+    while (FGMultiplayMgr::sIdPropertyList[i].name) 
+    {
+      if (sIdPropertyList[i].id == pData->id)
+      {
+        found = true;
+        pData->type = sIdPropertyList[i].type;
+      } 
+      
+      i++;
+    }
+    
+    if (found == true)
+    {
+      // How we decode the remainder of the property depends on the type
+      switch (pData->type) {
+        case SGPropertyNode::INT:        
+        case SGPropertyNode::BOOL:
+        case SGPropertyNode::LONG:        
+          pData->int_value = XDR_decode_uint32(*xdr);
+          xdr++;
+          //cout << pData->int_value << "\n";
+          break;
+        case SGPropertyNode::FLOAT:
+        case SGPropertyNode::DOUBLE:
+          pData->float_value = XDR_decode_float(*xdr);
+          xdr++;
+          //cout << pData->float_value << "\n";
+          break;
+        case SGPropertyNode::STRING:
+        case SGPropertyNode::UNSPECIFIED:
+          {
+            // String is complicated. It consists of
+            // The length of the string
+            // The string itself
+            // Padding to the nearest 4-bytes.    
+            uint32_t length = XDR_decode_uint32(*xdr);
+            xdr++;
+            //cout << length << " ";
+
+            if ((length > 0) && (length < MAX_TEXT_SIZE))
+            {
+              pData->string_value = new char[length + 1];
+              //cout << " String: ";
+
+              for (int i = 0; i < length; i++)
+              {
+                pData->string_value[i] = (char) XDR_decode_int8(*xdr);
+                xdr++;
+                //cout << pData->string_value[i];
+              }
+
+              pData->string_value[length] = '\0';
+
+              // Now handle the padding
+              while ((length % 4) != 0)
+              {
+                xdr++;
+                length++;
+                //cout << "0";
+              }
+            }
+            else
+            {
+              pData->string_value = new char[1];
+              pData->string_value[0] = '\0';
+            }
+
+            //cout << "\n";
+          }
+          break;
+
+        default:
+          pData->float_value = XDR_decode_float(*xdr);
+          cerr << "Unknown Prop type " << pData->id << " " << pData->type << "\n";
+          xdr++;
+          break;
+      }            
+
+      motionInfo.properties.push_back(pData);
+    }
+    else
+    {
+      // We failed to find the property. We'll try the next packet immediately.
+      //cout << " Unknown\n";
+    }
   }
   
   FGAIMultiplayer* mp = getMultiplayer(MsgHdr->Callsign);
@@ -505,6 +695,7 @@ FGMultiplayMgr::ProcessChatMsg(const char *Msg, netAddress& SenderAddress)
   T_ChatMsg* ChatMsg = (T_ChatMsg *)(Msg + sizeof(T_MsgHdr));
   SG_LOG ( SG_NETWORK, SG_ALERT, "Chat [" << MsgHdr->Callsign << "]"
            << " " << MsgBuf << endl);
+
   delete [] MsgBuf;
 } // FGMultiplayMgr::ProcessChatMsg ()
 //////////////////////////////////////////////////////////////////////
