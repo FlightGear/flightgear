@@ -283,8 +283,8 @@ void FGGroundNetwork::init()
 	    int start2 = (*j)->getStart()->getIndex();
 	    int end2   = (*j)->getEnd()->getIndex();
 	    int oppIndex = (*j)->getIndex();
-	    cerr << "Opposite of  " << (*i)->getIndex() << " (" << start1 << "," << end1 << ") "
-		 << "happens to be " << oppIndex      << " (" << start2 << "," << end2 << ") " << endl;
+//	    cerr << "Opposite of  " << (*i)->getIndex() << " (" << start1 << "," << end1 << ") "
+//		 << "happens to be " << oppIndex      << " (" << start2 << "," << end2 << ") " << endl;
 	    break;
 	  }
 	  j++;
@@ -352,7 +352,7 @@ FGTaxiSegment *FGGroundNetwork::findSegment(int idx)
     return segments[idx-1]->getAddress();
   else
     {
-      cerr << "Alert: trying to find invalid segment " << idx << endl;
+      //cerr << "Alert: trying to find invalid segment " << idx << endl;
       return 0;
     }
 }

@@ -39,11 +39,11 @@ void FGTrafficRecord::setPositionAndIntentions(int pos, FGAIFlightPlan *route)
      intVecIterator i = intentions.begin();
      if ((*i) != pos) {
        SG_LOG(SG_GENERAL, SG_ALERT, "Error in FGTrafficRecord::setPositionAndIntentions");
-       cerr << "Pos : " << pos << " Curr " << *(intentions.begin())  << endl;
+       //cerr << "Pos : " << pos << " Curr " << *(intentions.begin())  << endl;
        for (intVecIterator i = intentions.begin(); i != intentions.end() ; i++) {
- 	cerr << (*i) << " ";
+ 	//cerr << (*i) << " ";
        }
-       cerr << endl;
+       //cerr << endl;
      }
      intentions.erase(i);
    } else {
@@ -137,7 +137,7 @@ int FGTrafficRecord::crosses(FGGroundNetwork *net, FGTrafficRecord &other)
  	  if ((*i) > 0) {
  	    if ((currentTargetNode == net->findSegment(*i)->getEnd()->getIndex()))
  	      {
- 		cerr << "Current crosses at " << currentTargetNode <<endl;
+ 		//cerr << "Current crosses at " << currentTargetNode <<endl;
  		return currentTargetNode;
  	      }
  	  }
@@ -150,7 +150,7 @@ int FGTrafficRecord::crosses(FGGroundNetwork *net, FGTrafficRecord &other)
  	  if ((*i) > 0) {
  	    if (otherTargetNode == net->findSegment(*i)->getEnd()->getIndex())
  	      {
- 		cerr << "Other crosses at " << currentTargetNode <<endl;
+ 		//cerr << "Other crosses at " << currentTargetNode <<endl;
  		return otherTargetNode;
  	      }
  	  }
@@ -204,12 +204,12 @@ bool FGTrafficRecord::isOpposing (FGGroundNetwork *net, FGTrafficRecord &other, 
 			if (opp->getIndex() == 
 			    net->findSegment(*j)->getIndex())
 			  {
-			    cerr << "Nodes " << net->findSegment(*i)->getIndex()
-				 << " and  " << net->findSegment(*j)->getIndex()
-				 << " are opposites " << endl;
+//			    cerr << "Nodes " << net->findSegment(*i)->getIndex()
+//				 << " and  " << net->findSegment(*j)->getIndex()
+//				 << " are opposites " << endl;
 			    if (net->findSegment(*i)->getStart()->getIndex() == node) {
 			      {
-				cerr << "Found the node" << endl;
+				//cerr << "Found the node" << endl;
 				return true;
 			      }
 			    }
