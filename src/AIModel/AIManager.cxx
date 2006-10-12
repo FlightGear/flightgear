@@ -262,24 +262,24 @@ FGAIManager::loadScenarioFile(const std::string& filename)
 ssgBranch * FGAIManager::getModel(const string& path)
 {
   ModelVecIterator i = loadedModels.begin();  
-  cerr << "Reference count summary " << endl;
+  //cerr << "Reference count summary " << endl;
   int count = 0;
   while (i != loadedModels.end())
     {
       count += i->getNumRefs() -1;
-      cerr << "Model " << i->getPath() << " has reference count of " << i->getNumRefs() << " ";
+      //cerr << "Model " << i->getPath() << " has reference count of " << i->getNumRefs() << " ";
       if (i->getNumRefs() == 1)
 	{
 	  i = loadedModels.erase(i);
-	  cerr << "[ Deleted ]" << endl;
+	  //cerr << "[ Deleted ]" << endl;
 	}
       else
 	{
 	  i++;
-	  cerr << endl;
+	  //cerr << endl;
 	}
     }
-  cerr << "Reference summary end : " << count << "models allocated" << endl;
+  //cerr << "Reference summary end : " << count << "models allocated" << endl;
   i = loadedModels.begin();
 
    while (i != loadedModels.end())
