@@ -341,6 +341,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
           = globals->get_carrierlist()->findStationByFreq( frequency_mhz );
     bool freq_valid = (mobile_tacan != NULL);
     SG_LOG( SG_INSTR, SG_DEBUG, "mobile freqency valid " << freq_valid );
+    _mobile_valid = false;
 
     if ( freq_valid ) {
 
@@ -352,28 +353,29 @@ TACAN::search (double frequency_mhz, double longitude_rad,
         number = carrier.size();
 
         SG_LOG( SG_INSTR, SG_DEBUG, "carrier " << number );
+        if ( number > 0 ) {	  // don't do this if there are no carriers
+            for ( i = 0; i < number; ++i ) {
+                string str2 ( carrier[i]->getStringValue("name", ""));
+                SG_LOG( SG_INSTR, SG_DEBUG, "carrier name " << str2 );
 
-        for ( i = 0; i < number; ++i ) {
-            string str2 ( carrier[i]->getStringValue("name", ""));
-            SG_LOG( SG_INSTR, SG_DEBUG, "carrier name " << str2 );
-
-            SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 2 " << str2 );
-            unsigned int loc1= str1.find( str2, 0 );
-            if ( loc1 != string::npos && str2 != "" ) {
-                SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
-                _mobile_lat = carrier[i]->getDoubleValue("position/latitude-deg");
-                _mobile_lon = carrier[i]->getDoubleValue("position/longitude-deg");
-                _mobile_elevation_ft = mobile_tacan->get_elev_ft();
-                _mobile_range_nm = mobile_tacan->get_range();
-                _mobile_bias = mobile_tacan->get_multiuse();
-                _mobile_name = mobile_tacan->get_name();
-                _mobile_ident = mobile_tacan->get_trans_ident();
-                _mobile_valid = true;
-                SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter valid " << _mobile_valid );
-                break;
-            } else {
-                _mobile_valid = false;
-                SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter invalid " << _mobile_valid );
+                SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 2 " << str2 );
+                unsigned int loc1= str1.find( str2, 0 );
+                if ( loc1 != string::npos && str2 != "" ) {
+                    SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
+                    _mobile_lat = carrier[i]->getDoubleValue("position/latitude-deg");
+                    _mobile_lon = carrier[i]->getDoubleValue("position/longitude-deg");
+                    _mobile_elevation_ft = mobile_tacan->get_elev_ft();
+                    _mobile_range_nm = mobile_tacan->get_range();
+                    _mobile_bias = mobile_tacan->get_multiuse();
+                    _mobile_name = mobile_tacan->get_name();
+                    _mobile_ident = mobile_tacan->get_trans_ident();
+                    _mobile_valid = true;
+                    SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter valid " << _mobile_valid );
+                    break;
+                } else {
+                    _mobile_valid = false;
+                    SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter invalid " << _mobile_valid );
+                }
             }
         }
 
@@ -393,27 +395,29 @@ TACAN::search (double frequency_mhz, double longitude_rad,
 
         SG_LOG( SG_INSTR, SG_DEBUG, "tanker number " << number );
 
-        for ( i = 0; i < number; ++i ) {
-            string str4 ( tanker[i]->getStringValue("callsign", ""));
-            SG_LOG( SG_INSTR, SG_DEBUG, "tanker callsign " << str4 );
+        if ( number > 0 ) {	  // don't do this if there are no AI aircraft
+            for ( i = 0; i < number; ++i ) {
+                string str4 ( tanker[i]->getStringValue("callsign", ""));
+                SG_LOG( SG_INSTR, SG_DEBUG, "tanker callsign " << str4 );
 
-            SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 4 " << str4 );
-            unsigned int loc1= str1.find( str4, 0 );
-            if ( loc1 != string::npos && str4 != "" ) {
-                SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
-                _mobile_lat = tanker[i]->getDoubleValue("position/latitude-deg");
-                _mobile_lon = tanker[i]->getDoubleValue("position/longitude-deg");
-                _mobile_elevation_ft = tanker[i]->getDoubleValue("position/altitude-ft");
-                _mobile_range_nm = mobile_tacan->get_range();
-                _mobile_bias = mobile_tacan->get_multiuse();
-                _mobile_name = mobile_tacan->get_name();
-                _mobile_ident = mobile_tacan->get_trans_ident();
-                _mobile_valid = true;
-                SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter valid " << _mobile_valid );
-                break;
-            } else {
-                _mobile_valid = false;
-                SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter invalid " << _mobile_valid );
+                SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 4 " << str4 );
+                unsigned int loc1= str1.find( str4, 0 );
+                if ( loc1 != string::npos && str4 != "" ) {
+                    SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
+                    _mobile_lat = tanker[i]->getDoubleValue("position/latitude-deg");
+                    _mobile_lon = tanker[i]->getDoubleValue("position/longitude-deg");
+                    _mobile_elevation_ft = tanker[i]->getDoubleValue("position/altitude-ft");
+                    _mobile_range_nm = mobile_tacan->get_range();
+                    _mobile_bias = mobile_tacan->get_multiuse();
+                    _mobile_name = mobile_tacan->get_name();
+                    _mobile_ident = mobile_tacan->get_trans_ident();
+                    _mobile_valid = true;
+                    SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter valid " << _mobile_valid );
+                    break;
+                } else {
+                    _mobile_valid = false;
+                    SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter invalid " << _mobile_valid );
+                }
             }
         }
 
@@ -435,32 +439,34 @@ TACAN::search (double frequency_mhz, double longitude_rad,
 
         SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker number " << number );
 
-        for ( i = 0; i < number; ++i ) {
-            string str6 ( mp_tanker[i]->getStringValue("callsign", ""));
-            SG_LOG( SG_INSTR, SG_DEBUG, "mp tanker callsign " << str6 );
+        if ( number > 0 ) {	  // don't do this if there are no MP aircraft
+            for ( i = 0; i < number; ++i ) {
+                string str6 ( mp_tanker[i]->getStringValue("callsign", ""));
+                SG_LOG( SG_INSTR, SG_DEBUG, "mp tanker callsign " << str6 );
 
-            SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 5 " << str6 );
-            unsigned int loc1= str1.find( str6, 0 );
-            if ( loc1 != string::npos && str6 != "" ) {
-                SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
-                _mobile_lat = mp_tanker[i]->getDoubleValue("position/latitude-deg");
-                _mobile_lon = mp_tanker[i]->getDoubleValue("position/longitude-deg");
-                _mobile_elevation_ft = mp_tanker[i]->getDoubleValue("position/altitude-ft");
-                _mobile_range_nm = mobile_tacan->get_range();
-                _mobile_bias = mobile_tacan->get_multiuse();
-                _mobile_name = mobile_tacan->get_name();
-                _mobile_ident = mobile_tacan->get_trans_ident();
-                _mobile_valid = true;
+                SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 5 " << str6 );
+                unsigned int loc1= str1.find( str6, 0 );
+                if ( loc1 != string::npos && str6 != "" ) {
+                    SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
+                    _mobile_lat = mp_tanker[i]->getDoubleValue("position/latitude-deg");
+                    _mobile_lon = mp_tanker[i]->getDoubleValue("position/longitude-deg");
+                    _mobile_elevation_ft = mp_tanker[i]->getDoubleValue("position/altitude-ft");
+                    _mobile_range_nm = mobile_tacan->get_range();
+                    _mobile_bias = mobile_tacan->get_multiuse();
+                    _mobile_name = mobile_tacan->get_name();
+                    _mobile_ident = mobile_tacan->get_trans_ident();
+                    _mobile_valid = true;
 
-                SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter valid " << _mobile_valid );
-                SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker name " << _mobile_name);
-                SG_LOG( SG_INSTR, SG_DEBUG, " mp lat " << _mobile_lat << "lon " << _mobile_lon);
-                SG_LOG( SG_INSTR, SG_DEBUG, " mp elev " << _mobile_elevation_ft);
-                SG_LOG( SG_INSTR, SG_DEBUG, " mp range " << _mobile_range_nm);
-                break;
-            } else {
-                _mobile_valid = false;
-                SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter invalid " << _mobile_valid );
+                    SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter valid " << _mobile_valid );
+                    SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker name " << _mobile_name);
+                    SG_LOG( SG_INSTR, SG_DEBUG, " mp lat " << _mobile_lat << "lon " << _mobile_lon);
+                    SG_LOG( SG_INSTR, SG_DEBUG, " mp elev " << _mobile_elevation_ft);
+                    SG_LOG( SG_INSTR, SG_DEBUG, " mp range " << _mobile_range_nm);
+                    break;
+                } else {
+                    _mobile_valid = false;
+                    SG_LOG( SG_INSTR, SG_DEBUG, " mp tanker transmitter invalid " << _mobile_valid );
+                    }
                 }
             }
         }
