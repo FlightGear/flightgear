@@ -341,7 +341,6 @@ TACAN::search (double frequency_mhz, double longitude_rad,
           = globals->get_carrierlist()->findStationByFreq( frequency_mhz );
     bool freq_valid = (mobile_tacan != NULL);
     SG_LOG( SG_INSTR, SG_DEBUG, "mobile freqency valid " << freq_valid );
-    _mobile_valid = false;
 
     if ( freq_valid ) {
 
@@ -359,7 +358,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                 SG_LOG( SG_INSTR, SG_DEBUG, "carrier name " << str2 );
 
                 SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 2 " << str2 );
-                unsigned int loc1= str1.find( str2, 0 );
+                string::size_type loc1= str1.find( str2, 0 );
                 if ( loc1 != string::npos && str2 != "" ) {
                     SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
                     _mobile_lat = carrier[i]->getDoubleValue("position/latitude-deg");
@@ -401,7 +400,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                 SG_LOG( SG_INSTR, SG_DEBUG, "tanker callsign " << str4 );
 
                 SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 4 " << str4 );
-                unsigned int loc1= str1.find( str4, 0 );
+                string::size_type loc1= str1.find( str4, 0 );
                 if ( loc1 != string::npos && str4 != "" ) {
                     SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
                     _mobile_lat = tanker[i]->getDoubleValue("position/latitude-deg");
@@ -445,7 +444,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                 SG_LOG( SG_INSTR, SG_DEBUG, "mp tanker callsign " << str6 );
 
                 SG_LOG( SG_INSTR, SG_DEBUG, "strings 1 " << str1 << " 5 " << str6 );
-                unsigned int loc1= str1.find( str6, 0 );
+                string::size_type loc1= str1.find( str6, 0 );
                 if ( loc1 != string::npos && str6 != "" ) {
                     SG_LOG( SG_INSTR, SG_DEBUG, " string found" );
                     _mobile_lat = mp_tanker[i]->getDoubleValue("position/latitude-deg");
