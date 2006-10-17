@@ -107,7 +107,12 @@ static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
     NODEARG();
     naRef val = naVec_get(argv, 0);
     if(naIsString(val)) (*node)->setStringValue(naStr_data(val));
-    else                (*node)->setDoubleValue(naNumValue(val).num);
+    else {
+        naRef n = naNumValue(val);
+        if(naIsNil(n))
+            naRuntimeError(c, "props.setValue() with non-number");
+        (*node)->setDoubleValue(naNumValue(val).num);
+    }
     return naNil();
 }
 
@@ -120,6 +125,8 @@ static naRef f_setIntValue(naContext c, naRef me, int argc, naRef* args)
     // Junk to pacify the gcc-2.95.3 optimizer:
     naRef tmp0 = naVec_get(argv, 0);
     naRef tmp1 = naNumValue(tmp0);
+    if(naIsNil(tmp1))
+        naRuntimeError(c, "props.setIntValue() with non-number");
     double tmp2 = tmp1.num;
     int iv = (int)tmp2;
 
@@ -138,7 +145,10 @@ static naRef f_setBoolValue(naContext c, naRef me, int argc, naRef* args)
 static naRef f_setDoubleValue(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
-    (*node)->setDoubleValue(naNumValue(naVec_get(argv, 0)).num);
+    naRef r = naNumValue(naVec_get(argv, 0));
+    if(naIsNil(r))
+        naRuntimeError(c, "props.setDoubleValue() with non-number");
+    (*node)->setDoubleValue(r.num);
     return naNil();
 }
 

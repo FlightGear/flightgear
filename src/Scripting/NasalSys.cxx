@@ -213,7 +213,12 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
     naRef val = args[argc-1];
     try {
         if(naIsString(val)) props->setStringValue(buf, naStr_data(val));
-        else                props->setDoubleValue(buf, naNumValue(val).num);
+        else {
+            naRef n = naNumValue(val);
+            if(naIsNil(n))
+                naRuntimeError(c, "setprop() value is not string or number");
+            props->setDoubleValue(buf, n.num);
+        }
     } catch (const string& err) {
         naRuntimeError(c, (char *)err.c_str());
     }
