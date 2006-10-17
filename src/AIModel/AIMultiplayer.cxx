@@ -51,7 +51,7 @@ bool FGAIMultiplayer::init() {
     string str1 = mCallSign;
     string str2 = "MOBIL";
 
-    unsigned int loc1= str1.find( str2, 0 );
+    string::size_type loc1= str1.find( str2, 0 );
     if ( (loc1 != string::npos && str2 != "") ){
         //	   cout << " string found "	<< str2 << " in " << str1 << endl;
         isTanker = true;

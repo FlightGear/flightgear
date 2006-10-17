@@ -125,8 +125,8 @@ bool fgNavDBInit( FGAirportList *airports,
         } else if ( r->get_type() == 12 || r->get_type() == 13) {
             // DME with ILS=12; standalone DME=13
             string str1( r->get_name() );
-            unsigned int loc1= str1.find( "TACAN", 0 );
-            unsigned int loc2 = str1.find( "VORTAC", 0 );
+            string::size_type loc1= str1.find( "TACAN", 0 );
+            string::size_type loc2 = str1.find( "VORTAC", 0 );
                        
             if( loc1 != string::npos || loc2 != string::npos ){
                  //cout << " name = " << r->get_name() ;
