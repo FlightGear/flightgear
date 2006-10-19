@@ -261,7 +261,7 @@ void FGAtmosphere::CalculateDerived(void)
   T_dev = (*temperature) - GetTemperature(h);
   density_altitude = h + T_dev * 66.7;
 
-  if (turbType != ttStandard) {
+  if (turbType == ttStandard) {
     Turbulence();
     vWindNED += vTurbulence;
   }
