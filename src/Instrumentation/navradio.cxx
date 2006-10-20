@@ -931,11 +931,8 @@ void FGNavRadio::search()
 	target_radial = 0;
 	trans_ident = "";
 	last_nav_id = "";
-	if ( ! globals->get_soundmgr()->remove( nav_fx_name ) ) {
-            SG_LOG(SG_COCKPIT, SG_WARN, "Failed to remove nav-vor-ident sound");
-        }
+	globals->get_soundmgr()->remove( nav_fx_name );
 	globals->get_soundmgr()->remove( dme_fx_name );
-	// cout << "not picking up vor1. :-(" << endl;
     }
 
     is_valid_node->setBoolValue( is_valid );
