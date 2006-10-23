@@ -17,10 +17,12 @@ libInstrumentation_a_SOURCES = \
         gyro.cxx gyro.hxx \
         heading_indicator.cxx heading_indicator.hxx \
         heading_indicator_fg.cxx heading_indicator_fg.hxx \
+	heading_indicator_dg.cxx heading_indicator_dg.hxx \
 	kr_87.hxx kr_87.cxx \
 	kt_70.cxx kt_70.hxx \
         mag_compass.cxx mag_compass.hxx \
         marker_beacon.cxx marker_beacon.hxx \
+	mrg.cxx mrg.hxx\
         navradio.cxx navradio.hxx \
         slip_skid_ball.cxx slip_skid_ball.hxx \
 	transponder.cxx transponder.hxx \
