@@ -65,16 +65,17 @@ class HttpdImageChannel : public netChat
 public:
 
     HttpdImageChannel() : buffer(512) {
+
+        int nWidth  = fgGetInt( "/sim/startup/xsize", 800 );
+        int nHeight = fgGetInt( "/sim/startup/ysize", 600 );
+
         setTerminator("\r\n");
         JpgFactory = new trJpgFactory();
-
-        // This is a terrible hack but it can't be initialized until
-        // after OpenGL is up an running
-        JpgFactory->init(400,300);
+        JpgFactory -> init( nWidth, nHeight );
     }
 
     ~HttpdImageChannel() {
-        JpgFactory->destroy();
+        JpgFactory -> destroy();
         delete JpgFactory;
     }
 
