@@ -1,5 +1,5 @@
-// MRG.cxx - an electrcally powered master reference gyro.
-// Written by Vivian Meazza based on wrok by David Megginson, started 2006.
+// MRG.cxx - an electrically powered master reference gyro.
+// Written by Vivian Meazza based on work by David Megginson, started 2006.
 //
 // This file is in the Public Domain and comes with no warranty.
 
@@ -167,7 +167,7 @@ MasterReferenceGyro::update (double dt)
 	_last_yaw_rate = yaw_rate;
 
 	//the gyro only erects inside limits
-	if ( abs ( yaw_rate ) <= 5
+	if ( fabs ( yaw_rate ) <= 5
 			&& (_g_in_node->getDoubleValue() <= 1.5
 			|| _g_in_node->getDoubleValue() >= -0.5) ) {
 		indicated_roll = _last_roll;

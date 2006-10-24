@@ -131,7 +131,7 @@ HeadingIndicatorFG::update (double dt)
 
     _heading_out_node->setDoubleValue(heading);
 
-	                             // calculate the difference between the indicacted heading
+	                             // calculate the difference between the indicated heading
 	                             // and the selected heading for use with an autopilot
 	static SGPropertyNode *bnode
         = fgGetNode( "/autopilot/settings/heading-bug-deg", false );

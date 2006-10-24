@@ -33,6 +33,7 @@
 #include "gsdi.hxx"
 #include "heading_indicator.hxx"
 #include "heading_indicator_fg.hxx"
+#include "heading_indicator_dg.hxx"
 #include "kr_87.hxx"
 #include "kt_70.hxx"
 #include "mag_compass.hxx"
@@ -47,6 +48,7 @@
 #include "wxradar.hxx"
 #include "tacan.hxx"
 #include "mk_viii.hxx"
+#include "mrg.hxx"
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
@@ -134,6 +136,9 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "heading-indicator-fg" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new HeadingIndicatorFG( node ) );
+        } else if ( name == "heading-indicator-dg" ) {
+            set_subsystem( "instrument" + temp.str(), 
+                           new HeadingIndicatorDG( node ) );
         } else if ( name == "KR-87" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new FGKR_87( node ) );
@@ -173,6 +178,10 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "mk-viii" ) { 
             set_subsystem( "instrument" + temp.str(), 
                            new MK_VIII( node ) );
+        } else if ( name == "master-reference-gyro" ) { 
+            set_subsystem( "instrument" + temp.str(), 
+                           new MasterReferenceGyro( node ) );
+
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
                     << name );

@@ -1,5 +1,5 @@
 // heading_indicator_dg.cxx - a Directional Gyro (DG) compass.
-// Based on the vacuum driven Heading Indicator Written by David Megginson, 
+// Based on the vacuum driven Heading Indicator Written by David Megginson,
 // started 2002.
 //
 // Written by Vivian Meazza, started 2005.
