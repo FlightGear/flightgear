@@ -17,42 +17,11 @@
 
 AirspeedIndicator::AirspeedIndicator ( SGPropertyNode *node )
     :
-    name("airspeed-indicator"),
-    num(0),
-    pitot_port("/systems/pitot"),
-    static_port("/systems/static")
+    name(node->getStringValue("name", "airspeed-indicator")),
+    num(node->getIntValue("number", 0)),
+    pitot_port(node->getStringValue("pitot-port", "/systems/pitot")),
+    static_port(node->getStringValue("static-port", "/systems/static"))
 {
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else if ( cname == "pitot-port" ) {
-            pitot_port = cval;
-        } else if ( cname == "static-port" ) {
-            static_port = cval;
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in aispeed-indicator config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-
-AirspeedIndicator::AirspeedIndicator ( int i )
-    :
-    name("airspeed-indicator"),
-    num(0),
-    pitot_port("/systems/pitot"),
-    static_port("/systems/static")
-{
-    num = i;
 }
 
 AirspeedIndicator::~AirspeedIndicator ()

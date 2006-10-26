@@ -44,7 +44,7 @@ public:
 private:
 
     string name;
-    int num;
+    unsigned int num;
     string pitot_port;
     string static_port;
     SGPropertyNode_ptr _serviceable_node;
