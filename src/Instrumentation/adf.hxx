@@ -64,6 +64,9 @@ private:
     void search (double frequency, double longitude_rad,
                  double latitude_rad, double altitude_m);
 
+    string _name;
+    unsigned int _num;
+
     SGPropertyNode_ptr _longitude_node;
     SGPropertyNode_ptr _latitude_node;
     SGPropertyNode_ptr _altitude_node;
@@ -93,10 +96,7 @@ private:
     int _ident_count;
     time_t _last_ident_time;
     double _last_volume;
-
-    string name;
-    int num;
-    string adf_ident;
+    string _adf_ident;
 };
 
 

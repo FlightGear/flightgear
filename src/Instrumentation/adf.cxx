@@ -58,6 +58,8 @@ adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
 
 ADF::ADF (SGPropertyNode *node )
     :
+    _name(node->getStringValue("name", "adf")),
+    _num(node->getIntValue("number", 0)),
     _time_before_search_sec(0),
     _last_frequency_khz(-1),
     _transmitter_valid(false),
@@ -66,41 +68,7 @@ ADF::ADF (SGPropertyNode *node )
     _transmitter_range_nm(0),
     _ident_count(0),
     _last_ident_time(0),
-    _last_volume(-1),
-    name("adf"),
-    num(0)
-{
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in adf config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-
-ADF::ADF ()
-    : _time_before_search_sec(0),
-      _last_frequency_khz(-1),
-      _transmitter_valid(false),
-      _transmitter_pos(SGGeod::fromDeg(0, 0)),
-      _transmitter_cart(0, 0, 0),
-      _transmitter_range_nm(0),
-      _ident_count(0),
-      _last_ident_time(0),
-      _last_volume(-1),
-      name("adf"),
-      num(0)
+    _last_volume(-1)
 {
 }
 
@@ -112,9 +80,9 @@ void
 ADF::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
     _altitude_node = fgGetNode("/position/altitude-ft", true);
@@ -135,8 +103,8 @@ ADF::init ()
     morse.init();
 
     std::ostringstream temp;
-    temp << name << num;
-    adf_ident = temp.str();
+    temp << _name << _num;
+    _adf_ident = temp.str();
 }
 
 void
@@ -212,7 +180,7 @@ ADF::update (double delta_time_sec)
             _last_volume = volume;
 
             SGSoundSample *sound;
-            sound = globals->get_soundmgr()->find( adf_ident );
+            sound = globals->get_soundmgr()->find( _adf_ident );
             if ( sound != NULL )
                 sound->set_volume( volume );
             else
@@ -226,8 +194,8 @@ ADF::update (double delta_time_sec)
         }
 
         if ( _ident_count < 4 ) {
-            if ( !globals->get_soundmgr()->is_playing(adf_ident) ) {
-                globals->get_soundmgr()->play_once( adf_ident );
+            if ( !globals->get_soundmgr()->is_playing(_adf_ident) ) {
+                globals->get_soundmgr()->play_once( _adf_ident );
                 ++_ident_count;
             }
         }
@@ -235,7 +203,7 @@ ADF::update (double delta_time_sec)
         _in_range_node->setBoolValue(false);
         set_bearing(delta_time_sec, 90);
         _ident_node->setStringValue("");
-        globals->get_soundmgr()->stop( adf_ident );
+        globals->get_soundmgr()->stop( _adf_ident );
     }
 }
 
@@ -266,16 +234,16 @@ ADF::search (double frequency_khz, double longitude_rad,
         _last_ident = ident;
         _ident_node->setStringValue(ident.c_str());
 
-        if ( globals->get_soundmgr()->exists( adf_ident ) ) {
+        if ( globals->get_soundmgr()->exists( _adf_ident ) ) {
 	    // stop is required! -- remove alone wouldn't stop immediately
-            globals->get_soundmgr()->stop( adf_ident );
-            globals->get_soundmgr()->remove( adf_ident );
+            globals->get_soundmgr()->stop( _adf_ident );
+            globals->get_soundmgr()->remove( _adf_ident );
         }
 
         SGSoundSample *sound;
         sound = morse.make_ident( ident, LO_FREQUENCY );
         sound->set_volume(_last_volume = 0);
-        globals->get_soundmgr()->add( sound, adf_ident );
+        globals->get_soundmgr()->add( sound, _adf_ident );
 
         int offset = (int)(sg_random() * 30.0);
         _ident_count = offset / 4;
