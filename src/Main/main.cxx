@@ -156,6 +156,7 @@ void fgUpdateTimeDepCalcs() {
 
         if ( !inited ) {
             inited = true;
+            fgSetBool("/sim/signals/fdm-initialized", true);
         }
 
         if ( replay_state->getIntValue() == 0 ) {
