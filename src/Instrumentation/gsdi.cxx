@@ -36,27 +36,8 @@
 
 
 GSDI::GSDI(SGPropertyNode *node) :
-	_name("gsdi"),
-	_num(0)
-{
-	for (int i = 0; i < node->nChildren(); ++i) {
-		SGPropertyNode *child = node->getChild(i);
-		string name = child->getName();
-
-		if (name == "name") {
-			_name = child->getStringValue();
-		} else if (name == "number") {
-			_num = child->getIntValue();
-		} else {
-			SG_LOG(SG_INSTR, SG_WARN, "Error in gsdi config logic");
-			if (_name.length())
-				SG_LOG(SG_INSTR, SG_WARN, "Section = " << _name);
-		}
-	}
-}
-
-
-GSDI::GSDI()
+	_name(node->getStringValue("name", "gsdi")),
+	_num(node->getIntValue("number", 0))
 {
 }
 

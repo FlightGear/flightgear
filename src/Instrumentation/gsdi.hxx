@@ -45,7 +45,6 @@ class GSDI : public SGSubsystem
 {
 public:
 	GSDI(SGPropertyNode *node);
-	GSDI();
 	virtual ~GSDI();
 
 	virtual void init();
@@ -53,7 +52,7 @@ public:
 
 private:
 	string _name;
-	int _num;
+	unsigned int _num;
 
 	SGPropertyNode_ptr _serviceableN;
 	SGPropertyNode_ptr _headingN;
