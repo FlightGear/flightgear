@@ -42,7 +42,6 @@ class TACAN : public SGSubsystem, public SGPropertyChangeListener
 public:
 
     TACAN ( SGPropertyNode *node );
-    TACAN ();
     virtual ~TACAN ();
 
     virtual void init ();

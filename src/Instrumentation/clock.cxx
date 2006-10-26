@@ -15,47 +15,19 @@
 #include <Main/util.hxx>
 
 
-Clock::Clock ( SGPropertyNode *node )
-    : _is_serviceable(true),
-      _gmt_time_sec(0),
-      _offset_sec(0),
-      _indicated_sec(0),
-      _indicated_min(0),
-      _indicated_hour(0),
-      _local_hour(0),
-      _standstill_offset(0),
-      name("clock"),
-      num(0)
+Clock::Clock(SGPropertyNode *node) :
+    _name(node->getStringValue("name", "clock")),
+    _num(node->getIntValue("number", 0)),
+    _is_serviceable(true),
+    _gmt_time_sec(0),
+    _offset_sec(0),
+    _indicated_sec(0),
+    _indicated_min(0),
+    _indicated_hour(0),
+    _local_hour(0),
+    _standstill_offset(0)
 {
     _indicated_string[0] = '\0';
-
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in clock config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-Clock::Clock ()
-    : _is_serviceable(true),
-      _gmt_time_sec(0),
-      _offset_sec(0),
-      _indicated_sec(0),
-      _standstill_offset(0)
-{
-    _indicated_string[0] = '\0';
-    _indicated_short_string[0] = '\0';
 }
 
 Clock::~Clock ()
@@ -66,9 +38,9 @@ void
 Clock::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
     _offset_node = node->getChild("offset-sec", 0, true);
     _sec_node = node->getChild("indicated-sec", 0, true);
@@ -99,8 +71,10 @@ Clock::update (double delta_time_sec)
     // compute local time zone hour
     int tzoffset_hours = globals->get_time_params()->get_local_offset() / 3600;
     int lhour = hour + tzoffset_hours;
-    if ( lhour < 0 ) { lhour += 24; }
-    if ( lhour >= 24 ) { lhour -= 24; }
+    if (lhour < 0)
+        lhour += 24;
+    if (lhour >= 24)
+        lhour -= 24;
 
     long gmt = (hour * 60 + min) * 60 + sec;
     int offset = _offset_node->getLongValue();
@@ -152,8 +126,6 @@ Clock::update (double delta_time_sec)
     _hour_node->setLongValue(_indicated_hour);
     _local_hour = lhour;
     _lhour_node->setLongValue(_local_hour);
-
-    
 }
 
 

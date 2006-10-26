@@ -51,7 +51,6 @@ class ADF : public SGSubsystem
 public:
 
     ADF ( SGPropertyNode *node );
-    ADF ();
     virtual ~ADF ();
 
     virtual void init ();

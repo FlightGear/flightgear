@@ -9,10 +9,6 @@
 #ifndef __INSTRUMENTS_CLOCK_HXX
 #define __INSTRUMENTS_CLOCK_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
@@ -30,19 +26,17 @@
  * /instrumentation/clock/indicated-sec
  * /instrumentation/clock/indicated-string
  */
-class Clock : public SGSubsystem
-{
-
+class Clock : public SGSubsystem {
 public:
+    Clock(SGPropertyNode *node);
+    virtual ~Clock();
 
-    Clock ( SGPropertyNode *node );
-    Clock ();
-    virtual ~Clock ();
-
-    virtual void init ();
-    virtual void update (double dt);
+    virtual void init();
+    virtual void update(double dt);
 
 private:
+    string _name;
+    unsigned int _num;
 
     bool _is_serviceable;
     long _gmt_time_sec;
@@ -56,9 +50,6 @@ private:
     char _local_short_string[16];
     long _standstill_offset;
 
-    string name;
-    int num;
-
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _sec_node;
@@ -68,7 +59,6 @@ private:
     SGPropertyNode_ptr _string_node;
     SGPropertyNode_ptr _string_node1;
     SGPropertyNode_ptr _string_node2;
-
 };
 
 #endif // __INSTRUMENTS_CLOCK_HXX
