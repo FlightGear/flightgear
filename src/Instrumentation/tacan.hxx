@@ -27,7 +27,6 @@
  * /heading
  * /systems/electrical/outputs/TACAN
  * /instrumentation/"name"/serviceable
- * /instrumentation/"name"/frequencies/source
  * /instrumentation/"name"/frequencies/selected-mhz
  *
  * Output properties:
@@ -37,7 +36,7 @@
  * /instrumentation/"name"/indicated-ground-speed-kt
  * /instrumentation/"name"/indicated-time-kt
  */
-class TACAN : public SGSubsystem
+class TACAN : public SGSubsystem, public SGPropertyChangeListener
 {
 
 public:
@@ -54,6 +53,10 @@ private:
     void search (double frequency, double longitude_rad,
                  double latitude_rad, double altitude_m);
     double searchChannel (const string& channel);
+    void valueChanged (SGPropertyNode *);
+
+    string _name;
+    unsigned int _num;
 
     SGPropertyNode_ptr _longitude_node;
     SGPropertyNode_ptr _latitude_node;
@@ -62,15 +65,11 @@ private:
     SGPropertyNode_ptr _yaw_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _electrical_node;
-    SGPropertyNode_ptr _source_node;
     SGPropertyNode_ptr _frequency_node;
     SGPropertyNode_ptr _display_node;
     SGPropertyNode_ptr _x_shift_node;
     SGPropertyNode_ptr _y_shift_node;
     SGPropertyNode_ptr _rotation_node;
-    /*SGPropertyNode_ptr _x_shift_calibration_node;
-    SGPropertyNode_ptr _y_shift_calibration_node;
-    SGPropertyNode_ptr _distance_calibration_node;*/
 
     SGPropertyNode_ptr _in_range_node;
     SGPropertyNode_ptr _distance_node;
@@ -80,15 +79,21 @@ private:
     SGPropertyNode_ptr _ident_node;
     SGPropertyNode_ptr _name_node;
 
-    SGPropertyNode_ptr _carrier_name_node;
     SGPropertyNode_ptr _channel_node;
+    SGPropertyNode_ptr _channel_in0_node;
+    SGPropertyNode_ptr _channel_in1_node;
+    SGPropertyNode_ptr _channel_in2_node;
+    SGPropertyNode_ptr _channel_in3_node;
+    SGPropertyNode_ptr _channel_in4_node;
 
-    SGPropertyNode_ptr _tanker_callsign_node;
-    SGPropertyNode_ptr _mp_callsign_node;
+    SGPropertyNode_ptr _carrier_name_node;		// FIXME unused
+    SGPropertyNode_ptr _tanker_callsign_node;		// FIXME
+    SGPropertyNode_ptr _mp_callsign_node;		// FIXME
 
-    string _last_channel;
+    bool _new_frequency;
+    string _channel;
     double _last_distance_nm;
-    double _last_frequency_mhz;
+    double _frequency_mhz;
     double _time_before_search_sec;
 
     bool _mobile_valid;
@@ -110,9 +115,7 @@ private:
     string _mobile_name;
     string _mobile_ident;
 
-    string _name;
-    int _num;
-
+    int _listener_active;
 };
 
 
