@@ -300,9 +300,9 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
                             return 0;
                         }
                         int w=j%3;
-                        sprintf(text,"/rotors/%s/blade%i_%s",
-                            _name,b+1,
-                            w==0?"pos":(w==1?"flap":"incidence"));
+                        sprintf(text,"/rotors/%s/blade[%i]/%s",
+                            _name,b,
+                            w==0?"position-deg":(w==1?"flap-deg":"incidence-deg"));
                         *f=((Rotorpart*)getRotorpart(0))->getPhi()*180/pi
                             +360*b/_number_of_blades*(_ccw?1:-1);
                         if (*f>360) *f-=360;
@@ -894,6 +894,9 @@ void Rotor::compile()
         Math::unit3(directions[i],directions[i]);
     }
     Math::set3(directions[4],directions[0]);
+    // now directions[0] is perpendicular to the _normal.and has a length
+    // of 1. if _forward is already normalized and perpendicular to the 
+    // normal, directions[0] will be the same
     for (i=0;i<4;i++)
     {
         Math::mul3(_diameter*0.7,directions[i],_groundeffectpos[i]);
@@ -1048,7 +1051,7 @@ void Rotor::compile()
         &(torque[1]),&(lift[1])); //pitch b
     rps[0]->calculateAlpha(v_wind,rho_null,0,0,0,
         &(torque[3]),&(lift[3])); //pitch 0
-    SG_LOG(SG_GENERAL, SG_DEBUG,
+    SG_LOG(SG_GENERAL, SG_INFO,
         "Rotor: coefficients for airfoil:" << endl << setprecision(6)
         << " drag0: " << _dragcoef0*_number_of_parts/_number_of_blades/_c2
         << " drag1: " << _dragcoef1*_number_of_parts/_number_of_blades/_c2
