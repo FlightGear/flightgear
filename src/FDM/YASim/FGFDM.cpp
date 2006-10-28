@@ -180,15 +180,14 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         Rotorgear* r = _airplane.getModel()->getRotorgear();
 	_currObj = r;
         #define p(x) if (a->hasAttribute(#x)) r->setParameter((char *)#x,attrf(a,#x) );
-        #define p2(x,y) if (a->hasAttribute(#x)) {r->setParameter((char *)#y,attrf(a,#x) ); SG_LOG(SG_INPUT, SG_ALERT,"Warning: Aircraft defnition files uses outdated tag '" <<#x<<"', use '"<<#y<<"' instead (see README.YASim)" <<endl);}
-        p(max_power_engine)
-        p(engine_prop_factor)
+        #define p2(x,y) if (a->hasAttribute(y)) r->setParameter((char *)#x,attrf(a,y) );
+        p2(max_power_engine,"max-power-engine")
+        p2(engine_prop_factor,"engine-prop-factor")
         p(yasimdragfactor)
         p(yasimliftfactor)
-        p(max_power_rotor_brake)
-        p(rotorgear_friction)
-        p(engine_accel_limit)
-        p2(engine_accell_limit,engine_accel_limit)
+        p2(max_power_rotor_brake,"max-power-rotor-brake")
+        p2(rotorgear_friction,"rotorgear-friction")
+        p2(engine_accel_limit,"engine-accel-limit")
         #undef p
         #undef p2
         r->setInUse();
@@ -678,43 +677,45 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     if(a->hasAttribute("yawout"))   w->setAlphaoutput(5,a->getValue("yawout") );
     if(a->hasAttribute("rollout"))  w->setAlphaoutput(6,a->getValue("rollout") );
 
-    w->setPitchA(attrf(a, "pitch_a", 10));
-    w->setPitchB(attrf(a, "pitch_b", 10));
-    w->setForceAtPitchA(attrf(a, "forceatpitch_a", 3000));
-    w->setPowerAtPitch0(attrf(a, "poweratpitch_0", 300));
-    w->setPowerAtPitchB(attrf(a, "poweratpitch_b", 3000));
+    w->setPitchA(attrf(a, "pitch-a", 10));
+    w->setPitchB(attrf(a, "pitch-b", 10));
+    w->setForceAtPitchA(attrf(a, "forceatpitch-a", 3000));
+    w->setPowerAtPitch0(attrf(a, "poweratpitch-0", 300));
+    w->setPowerAtPitchB(attrf(a, "poweratpitch-b", 3000));
     if(attrb(a,"notorque"))
        w->setNotorque(1); 
 
 #define p(x) if (a->hasAttribute(#x)) w->setParameter((char *)#x,attrf(a,#x) );
-    p(translift_ve)
-    p(translift_maxfactor)
-    p(ground_effect_constant)
-    p(vortex_state_lift_factor)
-    p(vortex_state_c1)
-    p(vortex_state_c2)
-    p(vortex_state_c3)
-    p(vortex_state_e1)
-    p(vortex_state_e2)
+#define p2(x,y) if (a->hasAttribute(y)) w->setParameter((char *)#x,attrf(a,y) );
+    p2(translift_ve,"translift-ve")
+    p2(translift_maxfactor,"translift-maxfactor")
+    p2(ground_effect_constant,"ground-effect-constant")
+    p2(vortex_state_lift_factor,"vortex-state-lift-factor")
+    p2(vortex_state_c1,"vortex-state-c1")
+    p2(vortex_state_c2,"vortex-state-c2")
+    p2(vortex_state_c3,"vortex-state_c3")
+    p2(vortex_state_e1,"vortex-state-e1")
+    p2(vortex_state_e2,"vortex-state-e2")
     p(twist)
-    p(number_of_segments)
-    p(number_of_parts)
-    p(rel_len_where_incidence_is_measured)
+    p2(number_of_segments,"number-of-segments")
+    p2(number_of_parts,"number-of-parts")
+    p2(rel_len_where_incidence_is_measured,"rel-len-where-incidence-is-measured")
     p(chord)
     p(taper)
-    p(airfoil_incidence_no_lift)
-    p(rel_len_blade_start)
-    p(incidence_stall_zero_speed)
-    p(incidence_stall_half_sonic_speed)
-    p(lift_factor_stall)
-    p(stall_change_over)
-    p(drag_factor_stall)
-    p(airfoil_lift_coefficient)
-    p(airfoil_drag_coefficient0)
-    p(airfoil_drag_coefficient1)
-    p(cyclic_factor)
-    p(rotor_correction_factor)
+    p2(airfoil_incidence_no_lift,"airfoil-incidence-no-lift")
+    p2(rel_len_blade_start,"rel-len-blade-start")
+    p2(incidence_stall_zero_speed,"incidence-stall-zero-speed")
+    p2(incidence_stall_half_sonic_speed,"incidence-stall-half-sonic-speed")
+    p2(lift_factor_stall,"lift-factor-stall")
+    p2(stall_change_over,"stall-change-over")
+    p2(drag_factor_stall,"drag-factor-stall")
+    p2(airfoil_lift_coefficient,"airfoil-lift-coefficient")
+    p2(airfoil_drag_coefficient0,"airfoil-drag-coefficient0")
+    p2(airfoil_drag_coefficient1,"airfoil-drag-coefficient1")
+    p2(cyclic_factor,"cyclic-factor")
+    p2(rotor_correction_factor,"rotor-correction-factor")
 #undef p
+#undef p2
     _currObj = w;
     return w;
 }
