@@ -28,7 +28,6 @@ SHARED_SOURCE_FILES = \
         TurbineEngine.cpp TurbineEngine.hpp \
         RigidBody.cpp RigidBody.hpp \
         Rotor.cpp Rotor.hpp \
-        Rotorblade.cpp Rotorblade.hpp \
         Rotorpart.cpp Rotorpart.hpp \
         SimpleJet.cpp SimpleJet.hpp \
         Surface.cpp Surface.hpp \
