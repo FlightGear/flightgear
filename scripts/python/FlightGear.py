@@ -100,7 +100,7 @@ class FlightGear:
         except socket.error, msg:
             self.telnet = None
             raise socket.error, msg
-        
+
     def __del__(self):
         # Ensure telnet connection is closed cleanly.
         self.quit();
@@ -130,7 +130,7 @@ class FlightGear:
                 return 0
         else:
             return value
-        
+
     def __setitem__(self, key, value):
         """Set a FlightGear property value."""
         self.telnet.set( key, value )
@@ -140,3 +140,12 @@ class FlightGear:
         if self.telnet:
             self.telnet.quit()
             self.telnet = None
+
+    def view_next(self):
+        #move to next view
+        self.telnet.set( "/command/view/next", "true")
+
+    def view_prev(self):
+        #move to next view
+        self.telnet.set( "/command/view/prev", "true")
+
