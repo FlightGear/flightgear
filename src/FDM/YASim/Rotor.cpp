@@ -230,7 +230,7 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
     if (4>numRotorparts()) return 0; //compile first!
     if (j==0)
     {
-        sprintf(text,"/rotors/%s/cone", _name);
+        sprintf(text,"/rotors/%s/cone-deg", _name);
         *f=( ((Rotorpart*)getRotorpart(0))->getrealAlpha()
             +((Rotorpart*)getRotorpart(1*(_number_of_parts>>2)))->getrealAlpha()
             +((Rotorpart*)getRotorpart(2*(_number_of_parts>>2)))->getrealAlpha()
@@ -240,7 +240,7 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
     else
         if (j==1)
         {
-            sprintf(text,"/rotors/%s/roll", _name);
+            sprintf(text,"/rotors/%s/roll-deg", _name);
             _roll = ( ((Rotorpart*)getRotorpart(0))->getrealAlpha()
                 -((Rotorpart*)getRotorpart(2*(_number_of_parts>>2)))->getrealAlpha()
                 )/2*(_ccw?-1:1);
@@ -249,7 +249,7 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
         else
             if (j==2)
             {
-                sprintf(text,"/rotors/%s/yaw", _name);
+                sprintf(text,"/rotors/%s/yaw-deg", _name);
                 _yaw=( ((Rotorpart*)getRotorpart(1*(_number_of_parts>>2)))->getrealAlpha()
                     -((Rotorpart*)getRotorpart(3*(_number_of_parts>>2)))->getrealAlpha()
                     )/2;
