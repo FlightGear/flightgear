@@ -25,8 +25,6 @@
 #  include <config.h>
 #endif
 
-#include <plib/ssg.h>		// plib include
-
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -246,7 +244,8 @@ void FGNewCache::clear_cache() {
     }
 
     // and ... just in case we missed something ... 
-    globals->get_scenery()->get_terrain_branch()->removeAllKids();
+    osg::Group* group = globals->get_scenery()->get_terrain_branch();
+    group->removeChildren(0, group->getNumChildren());
 }
 
 

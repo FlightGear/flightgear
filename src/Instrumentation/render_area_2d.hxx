@@ -28,9 +28,9 @@
 #  include <config.h>
 #endif
 
+#include <plib/sg.h>
 #include <simgear/compiler.h>
 
-#include <plib/ssg.h>
 #include <vector>
 
 SG_USING_STD(vector);

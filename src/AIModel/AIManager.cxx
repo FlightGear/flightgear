@@ -259,7 +259,7 @@ FGAIManager::loadScenarioFile(const std::string& filename)
 // This code keeps track of models that have already been loaded
 // Eventually we'd prbably need to find a way to keep track of models
 // that are unloaded again
-ssgBranch * FGAIManager::getModel(const string& path)
+osg::Node* FGAIManager::getModel(const string& path)
 {
   ModelVecIterator i = loadedModels.begin();  
   //cerr << "Reference count summary " << endl;
@@ -291,7 +291,7 @@ ssgBranch * FGAIManager::getModel(const string& path)
   return 0;
 }
 
-void FGAIManager::setModel(const string& path, ssgBranch *model)
+void FGAIManager::setModel(const string& path, osg::Node *model)
 {
   loadedModels.push_back(FGModelID(path,model));
 }

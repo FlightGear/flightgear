@@ -23,14 +23,13 @@
 #ifndef _INST_WXRADAR_HXX
 #define _INST_WXRADAR_HXX
 
-#include <plib/ssg.h>
+#include <osg/ref_ptr>
+#include <osg/Texture2D>
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/environment/visual_enviro.hxx>
-#include <simgear/structure/ssgSharedPtr.hxx>
 
-class ssgTexture;
 class FGODGauge;
 
 class wxRadarBg : public SGSubsystem {
@@ -52,8 +51,8 @@ private:
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
-    ssgSharedPtr<ssgTexture> resultTexture;
-    ssgSharedPtr<ssgTexture> wxEcho;
+    osg::ref_ptr<osg::Texture2D> resultTexture;
+    osg::ref_ptr<osg::Texture2D> wxEcho;
     string last_switchKnob;
     bool sim_init_done;
     FGODGauge *odg;

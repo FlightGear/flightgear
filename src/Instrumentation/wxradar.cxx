@@ -87,7 +87,10 @@ wxRadarBg::init ()
     SGPath tpath(globals->get_fg_root());
     tpath.append("Aircraft/Instruments/Textures/wxecho.rgb");
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
-    wxEcho = new ssgTexture( tpath.c_str(), false, false, false);
+
+    // OSGFIXME
+//     wxEcho = new ssgTexture( tpath.c_str(), false, false, false);
+    wxEcho = new osg::Texture2D;
 
     _Instrument->setFloatValue("trk", 0.0);
     _Instrument->setFloatValue("tilt", 0.0);
@@ -110,6 +113,8 @@ wxRadarBg::init ()
 void
 wxRadarBg::update (double delta_time_sec)
 {
+  //OSGFIXME
+#if 0
     if ( ! sim_init_done ) {
         if ( ! fgGetBool("sim/sceneryloaded", false) )
             return;
@@ -130,7 +135,7 @@ wxRadarBg::update (double delta_time_sec)
         // we must locate them and replace their handle by hand
         // only do that when the instrument is turned on
         if ( last_switchKnob == "off" )
-            odg->set_texture( odgauge_name, resultTexture->getHandle());
+            odg->set_texture( odgauge_name, resultTexture.get());
         last_switchKnob = switchKnob;
     }
     FGViewer *current__view = globals->get_current_view();
@@ -189,7 +194,8 @@ wxRadarBg::update (double delta_time_sec)
         const float symbolSize = 1.0f / 8.0f ;
         // draw the radar echo, we do that in 3 passes, one for each color level
         // this is to 'merge' same colors together
-        glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle() );
+        // OSGFIXME
+//         glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle() );
         glColor3f(1.0f, 1.0f, 1.0f);
         glBegin( GL_QUADS );
 
@@ -335,5 +341,6 @@ wxRadarBg::update (double delta_time_sec)
         glEnable(GL_ALPHA_TEST);
     }
     glPopMatrix();
-    odg->endCapture( resultTexture->getHandle() );
+    odg->endCapture( resultTexture.get() );
+#endif
 }

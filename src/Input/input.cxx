@@ -59,7 +59,6 @@
 
 #include <Scenery/scenery.hxx>
 #include <Main/renderer.hxx>
-#include <plib/ssg.h>
 #include <simgear/math/sg_geodesy.hxx>
 
 SG_USING_STD(ifstream);

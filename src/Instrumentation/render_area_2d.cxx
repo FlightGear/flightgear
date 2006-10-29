@@ -21,13 +21,18 @@
 //
 // $Id$
 
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#   include <windows.h>
+#endif
+
+#include <GL/gl.h>
+
 #include "render_area_2d.hxx"
-//#include <iostream>
-
-#include <plib/ssg.h>
-
-//using namespace std;
-
 
 
 static const float dummy_normals[][3] = {{0.0f, 0.0f, 0.0f},
@@ -65,6 +70,7 @@ RenderArea2D::RenderArea2D(int logx, int logy, int sizex, int sizey, int posx, i
 }
 
 void RenderArea2D::draw() {
+#if 0
     glDisable(GL_TEXTURE_2D);
 	/*
     glColor3f(1, 1, 0);
@@ -103,6 +109,7 @@ void RenderArea2D::draw() {
 	}
 	
 	glEnable(GL_TEXTURE_2D);
+#endif
 }
 
 // Set clipping region in logical units
@@ -336,25 +343,34 @@ void RenderArea2D::Flush() {
 // -----------------------------------------
 
 void RenderArea2D::doSetColor( const float *rgba ) {
+  //OSGFIXME
+#if 0
   glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, rgba);
   glColor4fv( rgba );
+#endif
 }
 
 void RenderArea2D::doDrawQuad( const sgVec2 *p, const sgVec3 *normals ) {
 	//cout << "doDrawQuad: " << *p[0] << ", " << *(p[0]+1) << ", " << *p[1] << ", " << *(p[1]+1) << ", " << *p[2] << ", " << *p([2]+1) << ", " << *p[3] << ", " << *p([3]+1) <<'\n';
+  //OSGFIXME
+#if 0
   glBegin(GL_QUADS);
   glNormal3fv( normals[0] ); glVertex2fv( p[0] );
   glNormal3fv( normals[1] ); glVertex2fv( p[1] );
   glNormal3fv( normals[2] ); glVertex2fv( p[2] );
   glNormal3fv( normals[3] ); glVertex2fv( p[3] );
   glEnd();
+#endif
 }
 
 void RenderArea2D::doDrawQuad( const sgVec2 *p, const sgVec3 *normals, const sgVec4 *color ) {
+  //OSGFIXME
+#if 0
   glBegin(GL_QUADS);
     glColor4fv( color[0] );glNormal3fv( normals[0] ); glVertex2fv( p[0] );
     glColor4fv( color[1] );glNormal3fv( normals[1] ); glVertex2fv( p[1] );
     glColor4fv( color[2] );glNormal3fv( normals[2] ); glVertex2fv( p[2] );
     glColor4fv( color[3] );glNormal3fv( normals[3] ); glVertex2fv( p[3] );
   glEnd();
+#endif
 }

@@ -26,8 +26,8 @@
 
 #include STL_STRING
 
-#include <plib/sg.h>
-#include <plib/ssg.h>
+#include <osg/ref_ptr>
+#include <osg/Node>
 
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
@@ -73,7 +73,7 @@ FGAIBase::~FGAIBase() {
     // Unregister that one at the scenery manager
     if (globals->get_scenery()) {
         globals->get_scenery()->unregister_placement_transform(aip.getTransform());
-        globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
+        globals->get_scenery()->get_scene_graph()->removeChild(aip.getSceneGraph());
     }
     if (props) {
         SGPropertyNode* parent = props->getParent();
@@ -135,11 +135,11 @@ bool FGAIBase::init() {
        model = NULL;
      }
    }
-   if (model) {
-     aip.init( model );
+   if (model.get()) {
+     aip.init( model.get() );
      aip.setVisible(true);
      invisible = false;
-     globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
+     globals->get_scenery()->get_scene_graph()->addChild(aip.getSceneGraph());
      // Register that one at the scenery manager
      globals->get_scenery()->register_placement_transform(aip.getTransform());
      fgSetString("/ai/models/model-added", props->getPath());
@@ -155,15 +155,16 @@ bool FGAIBase::init() {
 }
 
 
-ssgBranch * FGAIBase::load3DModel(const string& fg_root,
-                                  const string &path,
-                                  SGPropertyNode *prop_root,
-                                  double sim_time_sec)
+osg::Node*
+FGAIBase::load3DModel(const string& fg_root,
+                      const string &path,
+                      SGPropertyNode *prop_root,
+                      double sim_time_sec)
 {
   // some more code here to check whether a model with this name has already been loaded
   // if not load it, otherwise, get the memory pointer and do something like
   // SetModel as in ATC/AIEntity.cxx
-  ssgBranch *personality_branch = new SGPersonalityBranch;
+  osg::Group* personality_branch = new SGPersonalityBranch;
 
   model = manager->getModel(path);
   if (!(model)) {
@@ -171,9 +172,9 @@ ssgBranch * FGAIBase::load3DModel(const string& fg_root,
                             path,
                             prop_root,
                             sim_time_sec);
-      manager->setModel(path, model);
+      manager->setModel(path, model.get());
   }
-  personality_branch->addKid( model );
+  personality_branch->addChild( model.get() );
 
   return personality_branch;
   //return model;

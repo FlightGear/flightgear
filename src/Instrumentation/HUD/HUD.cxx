@@ -144,7 +144,7 @@ void HUD::update(double dt)
 }
 
 
-void HUD::draw()
+void HUD::draw(osg::State&)
 {
     if (!isVisible())
         return;

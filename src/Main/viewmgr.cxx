@@ -28,7 +28,6 @@
 #include <string.h>		// strcmp
 
 #include <plib/sg.h>
-#include <plib/ssg.h>
 
 #include <simgear/compiler.h>
 

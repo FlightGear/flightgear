@@ -19,11 +19,6 @@ SG_USING_STD(vector);
 
 
 // Don't pull in the headers, since we don't need them here.
-class ssgBranch;
-class ssgEntity;
-class ssgRangeSelector;
-class ssgSelector;
-class ssgTransform;
 
 class SGInterpTable;
 class FGCondition;
@@ -51,9 +46,9 @@ class FGLocation;
  * Subsystems should not normally invoke this function directly;
  * instead, they should use the SGModelLoader declared in loader.hxx.
  */
-ssgBranch *fgLoad3DModelPanel( const string& fg_root, const string &path,
+osg::Node *fgLoad3DModelPanel( const string& fg_root, const string &path,
                                SGPropertyNode *prop_root,
-                               double sim_time_sec );
+                               double sim_time_sec, const SGPath& livery );
 
 
 #endif // __MODEL_HXX

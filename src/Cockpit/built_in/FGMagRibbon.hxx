@@ -34,7 +34,7 @@ public:
     FGMagRibbon (int w, int h);
     virtual ~FGMagRibbon () {}
 
-    virtual void draw ();
+    virtual void draw (osg::State& state);
 
 private:
     SGPropertyNode_ptr _magcompass_node;

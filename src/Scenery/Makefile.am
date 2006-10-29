@@ -2,7 +2,6 @@ noinst_LIBRARIES = libScenery.a
 
 libScenery_a_SOURCES = \
 	FGTileLoader.cxx FGTileLoader.hxx \
-	hitlist.cxx hitlist.hxx \
 	newcache.cxx newcache.hxx \
 	scenery.cxx scenery.hxx \
 	tileentry.cxx tileentry.hxx \

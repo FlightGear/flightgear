@@ -28,15 +28,17 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <osgUtil/IntersectVisitor>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/scene/model/placementtrans.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/util/SGNodeMasks.hxx>
 
 #include <Main/fg_props.hxx>
 
-#include "hitlist.hxx"
 #include "scenery.hxx"
 
 
@@ -55,33 +57,33 @@ FGScenery::~FGScenery() {
 
 void FGScenery::init() {
     // Scene graph root
-    scene_graph = new ssgRoot;
+    scene_graph = new osg::Group;
     scene_graph->setName( "Scene" );
 
     // Terrain branch
-    terrain_branch = new ssgBranch;
+    terrain_branch = new osg::Group;
     terrain_branch->setName( "Terrain" );
-    scene_graph->addKid( terrain_branch );
+    scene_graph->addChild( terrain_branch.get() );
 
-    models_branch = new ssgBranch;
+    models_branch = new osg::Group;
     models_branch->setName( "Models" );
-    scene_graph->addKid( models_branch );
+    scene_graph->addChild( models_branch.get() );
 
-    aircraft_branch = new ssgBranch;
+    aircraft_branch = new osg::Group;
     aircraft_branch->setName( "Aircraft" );
-    scene_graph->addKid( aircraft_branch );
+    scene_graph->addChild( aircraft_branch.get() );
 
     // Lighting
-    gnd_lights_root = new ssgRoot;
+    gnd_lights_root = new osg::Group;
     gnd_lights_root->setName( "Ground Lighting Root" );
 
-    vasi_lights_root = new ssgRoot;
+    vasi_lights_root = new osg::Group;
     vasi_lights_root->setName( "VASI/PAPI Lighting Root" );
 
-    rwy_lights_root = new ssgRoot;
+    rwy_lights_root = new osg::Group;
     rwy_lights_root->setName( "Runway Lighting Root" );
 
-    taxi_lights_root = new ssgRoot;
+    taxi_lights_root = new osg::Group;
     taxi_lights_root->setName( "Taxi Lighting Root" );
 
     // Initials values needed by the draw-time object loader
@@ -107,17 +109,17 @@ void FGScenery::set_center( const SGVec3d& p ) {
     center = p;
     placement_list_type::iterator it = _placement_list.begin();
     while (it != _placement_list.end()) {
-        (*it)->setSceneryCenter(center.sg());
+        (*it)->setSceneryCenter(center);
         ++it;
     }
 }
 
-void FGScenery::register_placement_transform(ssgPlacementTransform *trans) {
+void FGScenery::register_placement_transform(SGPlacementTransform *trans) {
     _placement_list.push_back(trans);        
-    trans->setSceneryCenter(center.sg());
+    trans->setSceneryCenter(center);
 }
 
-void FGScenery::unregister_placement_transform(ssgPlacementTransform *trans) {
+void FGScenery::unregister_placement_transform(SGPlacementTransform *trans) {
     placement_list_type::iterator it = _placement_list.begin();
     while (it != _placement_list.end()) {
         if ((*it) == trans) {
@@ -154,29 +156,32 @@ FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
     }
   }
 
-  // overridden with actual values if a terrain intersection is
-  // found
-  int this_hit;
-  double hit_radius = 0.0;
-  SGVec3d hit_normal(0, 0, 0);
+
+  SGVec3d start = pos + max_altoff*normalize(pos) - center;
+  SGVec3d end = - center;
   
-  SGVec3d sc = center;
-  SGVec3d ncpos = pos;
-
-  FGHitList hit_list;
-  // scenery center has been properly defined so any hit should
-  // be valid (and not just luck)
-  bool hit = fgCurrentElev(ncpos.sg(), max_altoff+length(pos), sc.sg(),
-                           get_scene_graph(), &hit_list, &alt,
-                           &hit_radius, hit_normal.sg(), this_hit);
-
-  if (material) {
-    *material = 0;
-    if (hit) {
-      ssgEntity *entity = hit_list.get_entity( this_hit );
-      if (entity && entity->isAKindOf(ssgTypeLeaf())) {
-        ssgLeaf* leaf = static_cast<ssgLeaf*>(entity);
-        *material = globals->get_matlib()->findMaterial(leaf);
+  osgUtil::IntersectVisitor intersectVisitor;
+  intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
+  osg::ref_ptr<osg::LineSegment> lineSegment;
+  lineSegment = new osg::LineSegment(start.osg(), end.osg());
+  intersectVisitor.addLineSegment(lineSegment.get());
+  get_scene_graph()->accept(intersectVisitor);
+  bool hits = intersectVisitor.hits();
+  if (hits) {
+    int nHits = intersectVisitor.getNumHits(lineSegment.get());
+    alt = -SGLimitsd::max();
+    for (int i = 0; i < nHits; ++i) {
+      const osgUtil::Hit& hit
+        = intersectVisitor.getHitList(lineSegment.get())[i];
+      SGVec3d point;
+      point.osg() = hit.getWorldIntersectPoint();
+      point += center;
+      SGGeod geod = SGGeod::fromCart(point);
+      double elevation = geod.getElevationM();
+      if (alt < elevation) {
+        alt = elevation;
+        if (material)
+          *material = globals->get_matlib()->findMaterial(hit.getGeode());
       }
     }
   }
@@ -184,7 +189,7 @@ FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
   if (replaced_center)
     set_center( saved_center );
   
-  return hit;
+  return hits;
 }
 
 bool
@@ -207,43 +212,37 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
     }
   }
 
-  // Not yet found any hit ...
-  bool result = false;
-
   // Make really sure the direction is normalized, is really cheap compared to
   // computation of ground intersection.
-  SGVec3d normalizedDir = normalize(dir);
-  SGVec3d relativePos = pos - center;
-
-  // At the moment only intersection with the terrain?
-  FGHitList hit_list;
-  hit_list.Intersect(globals->get_scenery()->get_terrain_branch(),
-                     relativePos.sg(), normalizedDir.sg());
-
-  double dist = DBL_MAX;
-  int hitcount = hit_list.num_hits();
-  for (int i = 0; i < hitcount; ++i) {
-    // Check for the nearest hit
-    SGVec3d diff = SGVec3d(hit_list.get_point(i)) - relativePos;
-    
-    // We only want hits in front of us ...
-    if (dot(normalizedDir, diff) < 0)
-      continue;
-
-    // find the nearest hit
-    double nDist = dot(diff, diff);
-    if (dist < nDist)
-      continue;
-
-    // Store the hit point
-    dist = nDist;
-    nearestHit = SGVec3d(hit_list.get_point(i)) + center;
-    result = true;
+  SGVec3d start = pos - center;
+  SGVec3d end = start + 1e5*dir;
+  
+  osgUtil::IntersectVisitor intersectVisitor;
+  intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
+  osg::ref_ptr<osg::LineSegment> lineSegment;
+  lineSegment = new osg::LineSegment(start.osg(), end.osg());
+  intersectVisitor.addLineSegment(lineSegment.get());
+  get_scene_graph()->accept(intersectVisitor);
+  bool hits = intersectVisitor.hits();
+  if (hits) {
+    int nHits = intersectVisitor.getNumHits(lineSegment.get());
+    double dist = SGLimitsd::max();
+    for (int i = 0; i < nHits; ++i) {
+      const osgUtil::Hit& hit
+        = intersectVisitor.getHitList(lineSegment.get())[i];
+      SGVec3d point;
+      point.osg() = hit.getWorldIntersectPoint();
+      double newdist = length(start - point);
+      if (newdist < dist) {
+        dist = newdist;
+        nearestHit = point + center;
+      }
+    }
   }
 
   if (replaced_center)
     set_center( saved_center );
 
-  return result;
+  return hits;
 }
 

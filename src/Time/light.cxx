@@ -68,6 +68,8 @@ FGLight::FGLight ()
       _diffuse_tbl( NULL ),
       _specular_tbl( NULL ),
       _sky_tbl( NULL ),
+      _sun_angle(0),
+      _moon_angle(0),
       _prev_sun_angle(-9999.0),
       _sun_rotation( 0.0 ),
       _dt_total( 0.0 )
@@ -227,7 +229,7 @@ void FGLight::update_sky_color () {
     }
     gamma_correct_rgb( _cloud_color );
 
-    float *sun_color = thesky->get_sun_color();
+    SGVec4f sun_color = thesky->get_sun_color();
 
     _scene_ambient[0] = ((sun_color[0]*0.25 + _cloud_color[0]*0.75) + ambient) / 2;
     _scene_ambient[1] = ((sun_color[1]*0.25 + _cloud_color[1]*0.75) + ambient) / 2;
@@ -289,7 +291,7 @@ void FGLight::update_adj_fog_color () {
 
     // revert to unmodified values before usign them.
     //
-    float *sun_color = thesky->get_sun_color();
+    SGVec4f sun_color = thesky->get_sun_color();
 
     gamma_restore_rgb( _fog_color );
 

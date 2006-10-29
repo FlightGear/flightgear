@@ -23,30 +23,14 @@
 #  include <config.h>
 #endif
 
-#ifdef _MSC_VER
-#  define _USE_MATH_DEFINES
-#endif
 #include <math.h>
 #include <algorithm>
 
 #include <simgear/compiler.h>
 
-//#include <plib/sg.h>
-//#include <plib/ul.h>
-
-//#include <Environment/environment_mgr.hxx>
-//#include <Environment/environment.hxx>
-//#include <simgear/misc/sg_path.hxx>
-//#include <simgear/props/props.hxx>
-//#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/route/waypoint.hxx>
-//#include <Main/globals.hxx>
-//#include <Main/fg_props.hxx>
-//#include <Airports/runways.hxx>
-
-//#include STL_STRING
 
 #include "awynet.hxx"
 

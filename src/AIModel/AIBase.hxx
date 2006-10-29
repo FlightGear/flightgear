@@ -118,7 +118,7 @@ protected:
     double ht_diff;		 // value used by radar display instrument
 
     string model_path;	   //Path to the 3D model
-    ssgSharedPtr<ssgBranch> model; //The 3D model object
+    osg::ref_ptr<osg::Node> model; //The 3D model object
     SGModelPlacement aip;
     bool delete_me;
     bool invisible;
@@ -173,7 +173,7 @@ public:
     static const double lbs_to_slugs;
 
     inline double _getRange() { return range; };
-    ssgBranch * load3DModel(const string& fg_root,
+    osg::Node* load3DModel(const string& fg_root,
                             const string &path,
                             SGPropertyNode *prop_root,
                             double sim_time_sec);

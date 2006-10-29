@@ -78,8 +78,8 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Autopilot/libAutopilot.a \
 	$(top_builddir)/src/Input/libInput.a \
 	$(top_builddir)/src/Instrumentation/KLN89/libKLN89.a \
-	$(top_builddir)/src/Instrumentation/HUD/libHUD.a \
 	$(top_builddir)/src/Instrumentation/libInstrumentation.a \
+	$(top_builddir)/src/Instrumentation/HUD/libHUD.a \
 	$(top_builddir)/src/Model/libModel.a \
 	$(top_builddir)/src/Network/libNetwork.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
@@ -97,12 +97,16 @@ fgfs_LDADD = \
 	-lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket -lsgprops -lsgdebug \
 	-lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound -lsgserial \
 	-lsgstructure -lsgenvironment \
+	-lplibpuaux -lplibpu -lplibfnt -lplibjs -lplibnet \
+	-lplibsg -lplibul \
+	-losgUtil -losgDB -losgSim -losg -lOpenThreads \
 	$(THREAD_LIBS) \
-	-lplibpuaux -lplibpu -lplibfnt -lplibjs -lplibnet -lplibssgaux -lplibssg -lplibsg -lplibul \
 	$(network_LIBS) \
 	-lz \
 	$(opengl_LIBS) \
 	$(openal_LIBS)
+
+# -lplibssgaux -lplibssg
 
 metar_SOURCES = metar_main.cxx
 

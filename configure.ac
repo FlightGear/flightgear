@@ -38,6 +38,14 @@ if test "x$with_plib" != "x" ; then
     EXTRA_DIRS="${EXTRA_DIRS} $with_plib"
 fi
 
+# specify the osg location
+AC_ARG_WITH(osg, [  --with-osg=PREFIX       Specify the prefix path to osg])
+
+if test "x$with_osg" != "x" ; then
+    echo "osg prefix is $with_osg"
+    EXTRA_DIRS="${EXTRA_DIRS} $with_osg"
+fi
+
 dnl Determine an extra directories to add to include/lib search paths
 case "${host}" in
 *-apple-darwin* | *-*-mingw32*)

@@ -32,15 +32,44 @@
 #  include <windows.h>
 #endif
 
-#include <plib/ssg.h>
-#include <plib/netSocket.h>
+#include <osg/ref_ptr>
+#include <osg/AlphaFunc>
+#include <osg/BlendFunc>
+#include <osg/CameraNode>
+#include <osg/CameraView>
+#include <osg/CullFace>
+#include <osg/Depth>
+#include <osg/Fog>
+#include <osg/Group>
+#include <osg/LightModel>
+#include <osg/NodeCallback>
+#include <osg/Notify>
+#include <osg/MatrixTransform>
+#include <osg/Multisample>
+#include <osg/Point>
+#include <osg/PolygonMode>
+#include <osg/ShadeModel>
+#include <osg/TexEnv>
+#include <osg/TexGen>
+#include <osg/TexMat>
+#include <osg/ColorMatrix>
 
+#include <osgUtil/SceneView>
+#include <osgUtil/UpdateVisitor>
+
+#include <osg/io_utils>
+#include <osgDB/WriteFile>
+#include <osgDB/ReadFile>
+#include <sstream>
+
+#include <simgear/math/SGMath.hxx>
 #include <simgear/screen/extensions.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/model/model.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/model/placement.hxx>
+#include <simgear/scene/util/SGUpdateVisitor.hxx>
 #include <simgear/scene/tgdb/pt_lights.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
@@ -52,13 +81,10 @@
 
 #include <simgear/environment/visual_enviro.hxx>
 
-#include <simgear/scene/model/shadowvolume.hxx>
-
 #include <Scenery/tileentry.hxx>
 #include <Time/light.hxx>
 #include <Time/light.hxx>
 #include <Aircraft/aircraft.hxx>
-// #include <Aircraft/replay.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/hud.hxx>
@@ -77,19 +103,105 @@
 #include "main.hxx"
 
 
-extern void sgShaderFrameInit(double delta_time_sec);
+class FGSunLightUpdateCallback : public osg::StateAttribute::Callback {
+public:
+  virtual void operator()(osg::StateAttribute* stateAttribute,
+                          osg::NodeVisitor*)
+  {
+    assert(dynamic_cast<osg::Light*>(stateAttribute));
+    osg::Light* light = static_cast<osg::Light*>(stateAttribute);
 
-float default_attenuation[3] = {1.0, 0.0, 0.0};
+    FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
+    SGVec4f ambient(l->scene_ambient());
+    light->setAmbient(ambient.osg());
+    SGVec4f diffuse(l->scene_diffuse());
+    light->setDiffuse(diffuse.osg());
+    SGVec4f specular(l->scene_specular());
+    light->setSpecular(specular.osg());
+    SGVec4f position(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2], 0);
+    light->setPosition(position.osg());
 
-// Clip plane settings...
-float scene_nearplane = 0.5f;
-float scene_farplane = 120000.0f;
+    light->setDirection(osg::Vec3(0, 0, -1));
+    light->setSpotExponent(0);
+    light->setSpotCutoff(180);
+    light->setConstantAttenuation(1);
+    light->setLinearAttenuation(0);
+    light->setQuadraticAttenuation(0);
+  }
+};
 
-glPointParameterfProc glPointParameterfPtr = 0;
-glPointParameterfvProc glPointParameterfvPtr = 0;
-bool glPointParameterIsSupported = false;
-bool glPointSpriteIsSupported = false;
+class FGWireFrameModeUpdateCallback : public osg::StateAttribute::Callback {
+public:
+  FGWireFrameModeUpdateCallback() :
+    mWireframe(fgGetNode("/sim/rendering/wireframe"))
+  { }
+  virtual void operator()(osg::StateAttribute* stateAttribute,
+                          osg::NodeVisitor*)
+  {
+    assert(dynamic_cast<osg::PolygonMode*>(stateAttribute));
+    osg::PolygonMode* polygonMode;
+    polygonMode = static_cast<osg::PolygonMode*>(stateAttribute);
 
+    if (mWireframe->getBoolValue())
+      polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK,
+                           osg::PolygonMode::LINE);
+    else
+      polygonMode->setMode(osg::PolygonMode::FRONT_AND_BACK,
+                           osg::PolygonMode::FILL);
+  }
+private:
+  SGSharedPtr<SGPropertyNode> mWireframe;
+};
+
+class FGLightModelUpdateCallback : public osg::StateAttribute::Callback {
+public:
+  FGLightModelUpdateCallback() :
+    mHighlights(fgGetNode("/sim/rendering/specular-highlight"))
+  { }
+  virtual void operator()(osg::StateAttribute* stateAttribute,
+                          osg::NodeVisitor*)
+  {
+    assert(dynamic_cast<osg::LightModel*>(stateAttribute));
+    osg::LightModel* lightModel;
+    lightModel = static_cast<osg::LightModel*>(stateAttribute);
+
+#if 0
+    FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
+    SGVec4f ambient(l->scene_ambient());
+    lightModel->setAmbientIntensity(ambient.osg());
+#else
+    lightModel->setAmbientIntensity(osg::Vec4(0, 0, 0, 1));
+#endif
+    lightModel->setTwoSided(true);
+
+    if (mHighlights->getBoolValue()) {
+      lightModel->setColorControl(osg::LightModel::SEPARATE_SPECULAR_COLOR);
+      lightModel->setLocalViewer(true);
+    } else {
+      lightModel->setColorControl(osg::LightModel::SINGLE_COLOR);
+      lightModel->setLocalViewer(false);
+    }
+  }
+private:
+  SGSharedPtr<SGPropertyNode> mHighlights;
+};
+
+class FGFogEnableUpdateCallback : public osg::StateSet::Callback {
+public:
+  FGFogEnableUpdateCallback() :
+    mFogEnabled(fgGetNode("/sim/rendering/fog"))
+  { }
+  virtual void operator()(osg::StateSet* stateSet, osg::NodeVisitor*)
+  {
+    if (strcmp(mFogEnabled->getStringValue(), "disabled") == 0) {
+      stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
+    } else {
+      stateSet->setMode(GL_FOG, osg::StateAttribute::ON);
+    }
+  }
+private:
+  SGSharedPtr<SGPropertyNode> mFogEnabled;
+};
 
 // fog constants.  I'm a little nervous about putting actual code out
 // here but it seems to work (?)
@@ -104,11 +216,19 @@ static GLfloat ground_exp2_punch_through;
 // Sky structures
 SGSky *thesky;
 
-ssgSharedPtr<ssgSimpleState> default_state;
-ssgSharedPtr<ssgSimpleState> hud_and_panel;
-ssgSharedPtr<ssgSimpleState> menus;
+static osg::ref_ptr<osgUtil::SceneView> sceneView = new osgUtil::SceneView;
+static osg::ref_ptr<osg::FrameStamp> mFrameStamp = new osg::FrameStamp;
 
-SGShadowVolume *shadows;
+static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
+
+static osg::ref_ptr<osg::CameraView> mCameraView = new osg::CameraView;
+static osg::ref_ptr<osg::CameraNode> mBackGroundCamera = new osg::CameraNode;
+static osg::ref_ptr<osg::CameraNode> mSceneCamera = new osg::CameraNode;
+
+static osg::ref_ptr<osg::Fog> mFog = new osg::Fog;
+static osg::ref_ptr<osg::Fog> mRunwayLightingFog = new osg::Fog;
+static osg::ref_ptr<osg::Fog> mTaxiLightingFog = new osg::Fog;
+static osg::ref_ptr<osg::Fog> mGroundLightingFog = new osg::Fog;
 
 FGRenderer::FGRenderer()
 {
@@ -124,63 +244,16 @@ FGRenderer::~FGRenderer()
 #endif
 }
 
-
-void
-FGRenderer::build_states( void ) {
-    default_state = new ssgSimpleState;
-    default_state->disable( GL_TEXTURE_2D );
-    default_state->enable( GL_CULL_FACE );
-    default_state->enable( GL_COLOR_MATERIAL );
-    default_state->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
-    default_state->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
-    default_state->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
-    default_state->disable( GL_BLEND );
-    default_state->disable( GL_ALPHA_TEST );
-    default_state->disable( GL_LIGHTING );
-
-    hud_and_panel = new ssgSimpleState;
-    hud_and_panel->disable( GL_CULL_FACE );
-    hud_and_panel->disable( GL_TEXTURE_2D );
-    hud_and_panel->disable( GL_LIGHTING );
-    hud_and_panel->enable( GL_BLEND );
-
-    menus = new ssgSimpleState;
-    menus->disable( GL_CULL_FACE );
-    menus->disable( GL_TEXTURE_2D );
-    menus->enable( GL_BLEND );
-
-    shadows = new SGShadowVolume( globals->get_scenery()->get_scene_graph() );
-    shadows->init( fgGetNode("/sim/rendering", true) );
-    shadows->addOccluder( globals->get_scenery()->get_aircraft_branch(), SGShadowVolume::occluderTypeAircraft );
-
-}
-
-
 // Initialize various GL/view parameters
 void
 FGRenderer::init( void ) {
 
-    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
+    osg::initNotifyLevel();
 
     // Go full screen if requested ...
-    if ( fgGetBool("/sim/startup/fullscreen") ) {
+    if ( fgGetBool("/sim/startup/fullscreen") )
         fgOSFullScreen();
-    }
 
-    // If enabled, normal vectors specified with glNormal are scaled
-    // to unit length after transformation.  Enabling this has
-    // performance implications.  See the docs for glNormal.
-    // glEnable( GL_NORMALIZE );
-
-    glEnable( GL_LIGHTING );
-    glEnable( GL_LIGHT0 );
-    // glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );  // done later with ssg
-
-    sgVec3 sunpos;
-    sgSetVec3( sunpos, l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2] );
-    ssgGetLight( 0 ) -> setPosition( sunpos );
-
-    glFogi (GL_FOG_MODE, GL_EXP2);
     if ( (!strcmp(fgGetString("/sim/rendering/fog"), "disabled")) || 
          (!fgGetBool("/sim/rendering/shading"))) {
         // if fastest fog requested, or if flat shading force fastest
@@ -188,38 +261,141 @@ FGRenderer::init( void ) {
     } else if ( !strcmp(fgGetString("/sim/rendering/fog"), "nicest") ) {
         glHint ( GL_FOG_HINT, GL_DONT_CARE );
     }
-    if ( fgGetBool("/sim/rendering/wireframe") ) {
-        // draw wire frame
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    }
 
-    // This is the default anyways, but it can't hurt
-    glFrontFace ( GL_CCW );
-
-    // Just testing ...
-    if ( SGIsOpenGLExtensionSupported("GL_ARB_point_sprite") ||
-         SGIsOpenGLExtensionSupported("GL_NV_point_sprite") )
-    {
-        GLuint handle = thesky->get_sun_texture_id();
-        glBindTexture ( GL_TEXTURE_2D, handle ) ;
-        glTexEnvf(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
-        glEnable(GL_POINT_SPRITE);
-        // glEnable(GL_POINT_SMOOTH);
-        glPointSpriteIsSupported = true;
-    }
-    glEnable(GL_LINE_SMOOTH);
-    // glEnable(GL_POLYGON_SMOOTH);      
     glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
     glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     glHint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
-}
 
+    sceneView->setDefaults(osgUtil::SceneView::COMPILE_GLOBJECTS_AT_INIT);
+
+    mFog->setMode(osg::Fog::EXP2);
+    mRunwayLightingFog->setMode(osg::Fog::EXP2);
+    mTaxiLightingFog->setMode(osg::Fog::EXP2);
+    mGroundLightingFog->setMode(osg::Fog::EXP2);
+
+    sceneView->setFrameStamp(mFrameStamp.get());
+
+    sceneView->setUpdateVisitor(new SGUpdateVisitor);
+
+    sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    sceneView->getCamera()->setClearMask(0);
+
+    osg::StateSet* stateSet = mRoot->getOrCreateStateSet();
+
+    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    
+    stateSet->setAttribute(new osg::Depth(osg::Depth::LEQUAL));
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+
+    stateSet->setAttribute(new osg::AlphaFunc(osg::AlphaFunc::GREATER, 0.01));
+    stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::OFF);
+    stateSet->setAttribute(new osg::BlendFunc);
+    stateSet->setMode(GL_BLEND, osg::StateAttribute::OFF);
+
+    stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
+    
+//     osg::Material* material = new osg::Material;
+//     stateSet->setAttribute(material);
+    
+//     stateSet->setAttribute(new osg::CullFace(osg::CullFace::BACK));
+//     stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
+
+
+    // need to update the light on every frame
+    osg::Light* sunLight = new osg::Light;
+    sunLight->setLightNum(0);
+    sunLight->setUpdateCallback(new FGSunLightUpdateCallback);
+    stateSet->setAttributeAndModes(sunLight, osg::StateAttribute::ON);
+    osg::LightModel* lightModel = new osg::LightModel;
+    lightModel->setUpdateCallback(new FGLightModelUpdateCallback);
+    stateSet->setAttributeAndModes(lightModel, osg::StateAttribute::ON);
+
+    // this is the topmost scenegraph node for osg
+    mBackGroundCamera->addChild(thesky->getPreRoot());
+    mBackGroundCamera->setClearMask(GL_COLOR_BUFFER_BIT);
+
+    GLbitfield inheritanceMask = osg::CullSettings::ALL_VARIABLES;
+    inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
+    inheritanceMask &= ~osg::CullSettings::NEAR_FAR_RATIO;
+    inheritanceMask &= ~osg::CullSettings::CULLING_MODE;
+    mBackGroundCamera->setInheritanceMask(inheritanceMask);
+    mBackGroundCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    mBackGroundCamera->setCullingMode(osg::CullSettings::NO_CULLING);
+
+    mBackGroundCamera->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+
+    mRoot->addChild(mBackGroundCamera.get());
+
+
+    sceneView->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+
+    mSceneCamera->setClearMask(GL_DEPTH_BUFFER_BIT);
+    inheritanceMask = osg::CullSettings::ALL_VARIABLES;
+    inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
+    inheritanceMask &= ~osg::CullSettings::CULLING_MODE;
+    mSceneCamera->setInheritanceMask(inheritanceMask);
+    mSceneCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    mSceneCamera->setCullingMode(osg::CullSettings::DEFAULT_CULLING);
+
+
+    stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
+    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+    stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
+    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::ON);
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+
+    // switch to enable wireframe
+    osg::PolygonMode* polygonMode = new osg::PolygonMode;
+    polygonMode->setUpdateCallback(new FGWireFrameModeUpdateCallback);
+    stateSet->setAttributeAndModes(polygonMode);
+
+    // scene fog handling
+    stateSet->setAttributeAndModes(mFog.get());
+    stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
+
+    mRoot->addChild(mSceneCamera.get());
+
+    mSceneCamera->addChild(globals->get_scenery()->get_scene_graph());
+
+    stateSet = mSceneCamera->getOrCreateStateSet();
+    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+
+    // this one contains all lights, here we set the light states we did
+    // in the plib case with plain OpenGL
+    osg::Group* lightGroup = new osg::Group;
+    mSceneCamera->addChild(lightGroup);
+    lightGroup->addChild(globals->get_scenery()->get_gnd_lights_root());
+    lightGroup->addChild(globals->get_scenery()->get_vasi_lights_root());
+    lightGroup->addChild(globals->get_scenery()->get_rwy_lights_root());
+    lightGroup->addChild(globals->get_scenery()->get_taxi_lights_root());
+
+    stateSet = globals->get_scenery()->get_gnd_lights_root()->getOrCreateStateSet();
+    stateSet->setAttributeAndModes(mFog.get());
+    stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
+    stateSet = globals->get_scenery()->get_vasi_lights_root()->getOrCreateStateSet();
+    stateSet->setAttributeAndModes(mRunwayLightingFog.get());
+    stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
+    stateSet = globals->get_scenery()->get_rwy_lights_root()->getOrCreateStateSet();
+    stateSet->setAttributeAndModes(mRunwayLightingFog.get());
+    stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
+    stateSet = globals->get_scenery()->get_taxi_lights_root()->getOrCreateStateSet();
+    stateSet->setAttributeAndModes(mTaxiLightingFog.get());
+    stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
+
+    mCameraView->addChild(mRoot.get());
+    sceneView->setSceneData(mCameraView.get());
+
+    mSceneCamera->addChild(thesky->getCloudRoot());
+
+//  sceneView->getState()->setCheckForGLErrors(osg::State::ONCE_PER_ATTRIBUTE);
+}
 
 
 // Update all Visuals (redraws anything graphics related)
 void
 FGRenderer::update( bool refresh_camera_settings ) {
-    bool scenery_loaded = fgGetBool("sim/sceneryloaded") \
+    bool scenery_loaded = fgGetBool("sim/sceneryloaded")
                           || fgGetBool("sim/sceneryloaded-override");
 
     if ( idle_state < 1000 || !scenery_loaded ) {
@@ -232,38 +408,18 @@ FGRenderer::update( bool refresh_camera_settings ) {
         return;
     }
 
-    bool draw_otw = fgGetBool("/sim/rendering/draw-otw");
     bool skyblend = fgGetBool("/sim/rendering/skyblend");
     bool use_point_sprites = fgGetBool("/sim/rendering/point-sprites");
     bool enhanced_lighting = fgGetBool("/sim/rendering/enhanced-lighting");
     bool distance_attenuation
         = fgGetBool("/sim/rendering/distance-attenuation");
-    sgConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
+    SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
                                   distance_attenuation );
-    bool volumetric_clouds = sgEnviro.get_clouds_enable_state();
-#ifdef FG_ENABLE_MULTIPASS_CLOUDS
-    bool multi_pass_clouds = fgGetBool("/sim/rendering/multi-pass-clouds") && 
-                                !volumetric_clouds &&
-                                !SGCloudLayer::enable_bump_mapping;  // ugly artefact now
-#else
-    bool multi_pass_clouds = false;
-#endif
-    bool draw_clouds = fgGetBool("/environment/clouds/status");
 
-    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
-    GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
-
-    // static const SGPropertyNode *longitude
-    //     = fgGetNode("/position/longitude-deg");
-    // static const SGPropertyNode *latitude
-    //     = fgGetNode("/position/latitude-deg");
-    // static const SGPropertyNode *altitude
-    //     = fgGetNode("/position/altitude-ft");
     static const SGPropertyNode *groundlevel_nearplane
         = fgGetNode("/sim/current-view/ground-level-nearplane-m");
 
-    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
-    static double last_visibility = -9999;
+    FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
 
     // update fog params
     double actual_visibility;
@@ -273,11 +429,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         actual_visibility = fgGetDouble("/environment/visibility-m");
     }
 
-        // TODO:TEST only, don't commit that !!
-//      sgFXperFrameInit();
-
-    sgShaderFrameInit(delta_time_sec);
-
+    static double last_visibility = -9999;
     if ( actual_visibility != last_visibility ) {
         last_visibility = actual_visibility;
 
@@ -291,14 +443,11 @@ FGRenderer::update( bool refresh_camera_settings ) {
             rwy_exp2_punch_through = sqrt_m_log01 / ( 8000 * 2.5 );
             taxi_exp2_punch_through = sqrt_m_log01 / ( 8000 * 1.5 );
         }
+        mFog->setDensity(fog_exp2_density);
+        mRunwayLightingFog->setDensity(rwy_exp2_punch_through);
+        mTaxiLightingFog->setDensity(taxi_exp2_punch_through);
+        mGroundLightingFog->setDensity(ground_exp2_punch_through);
     }
-
-    // double angle;
-    // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
-    // GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
-    // GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
-    // GLfloat mat_shininess[] = { 10.0 };
-    GLbitfield clear_mask;
 
     // idle_state is now 1000 meaning we've finished all our
     // initializations and are running the main loop, so this will
@@ -313,37 +462,37 @@ FGRenderer::update( bool refresh_camera_settings ) {
         resize( fgGetInt("/sim/startup/xsize"),
                 fgGetInt("/sim/startup/ysize") );
 
-        // Tell GL we are switching to model view parameters
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        ssgSetCamera( (sgVec4 *)current__view->get_VIEW() );
-    }
+        // OSGFXME: compute the view directly without indirection through ssg
+        sgMat4 viewmat;
+        sgTransposeNegateMat4(viewmat, (sgVec4 *)current__view->get_VIEW());
+        sgMat4 cameraMatrix = {
+          {  1.0f,  0.0f,  0.0f,  0.0f },
+          {  0.0f,  0.0f, -1.0f,  0.0f },
+          {  0.0f,  1.0f,  0.0f,  0.0f },
+          {  0.0f,  0.0f,  0.0f,  1.0f }
+        };
+        sgPreMultMat4(cameraMatrix, viewmat);
 
-    clear_mask = GL_DEPTH_BUFFER_BIT;
-    if ( fgGetBool("/sim/rendering/wireframe") ) {
-        clear_mask |= GL_COLOR_BUFFER_BIT;
+        osg::Matrixd m;
+        for (unsigned i = 0; i < 4; ++i)
+          for (unsigned j = 0; j < 4; ++j)
+            m(i, j) = cameraMatrix[i][j];
+
+        osg::Quat attitude;
+        attitude.set(m);
+        mCameraView->setPosition(osg::Vec3d(m(3,0), m(3,1), m(3,2)));
+        mCameraView->setAttitude(attitude);
     }
 
     if ( skyblend ) {
         if ( fgGetBool("/sim/rendering/textures") ) {
-        // glClearColor(black[0], black[1], black[2], black[3]);
-        glClearColor(l->adj_fog_color()[0], l->adj_fog_color()[1],
-                     l->adj_fog_color()[2], l->adj_fog_color()[3]);
-        clear_mask |= GL_COLOR_BUFFER_BIT;
+            SGVec4f clearColor(l->adj_fog_color());
+            mBackGroundCamera->setClearColor(clearColor.osg());
         }
     } else {
-        glClearColor(l->sky_color()[0], l->sky_color()[1],
-                     l->sky_color()[2], l->sky_color()[3]);
-        clear_mask |= GL_COLOR_BUFFER_BIT;
+        SGVec4f clearColor(l->sky_color());
+        mBackGroundCamera->setClearColor(clearColor.osg());
     }
-    if ( multi_pass_clouds && draw_clouds ) {
-        glClearStencil( 0 );
-        clear_mask |= GL_STENCIL_BUFFER_BIT;
-    }
-    glClear( clear_mask );
-
-    // set the opengl state to known default values
-    default_state->force();
 
     // update fog params if visibility has changed
     double visibility_meters = fgGetDouble("/environment/visibility-m");
@@ -352,9 +501,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
     thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
                         ( global_multi_loop * fgGetInt("/sim/speed-up") )
                         / (double)fgGetInt("/sim/model-hz") );
-
-    // Set correct opengl fog density
-    glFogf (GL_FOG_DENSITY, fog_exp2_density);
 
     // update the sky dome
     if ( skyblend ) {
@@ -375,9 +521,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
         static SGSkyState sstate;
 
-        sstate.view_pos  = current__view->get_view_pos();
-        sstate.zero_elev = current__view->get_zero_elev();
-        sstate.view_up   = current__view->get_world_up();
+        sstate.view_pos  = SGVec3f(current__view->get_view_pos());
+        sstate.zero_elev = SGVec3f(current__view->get_zero_elev());
+        sstate.view_up   = SGVec3f(current__view->get_world_up());
         sstate.lon       = current__view->getLongitude_deg()
                             * SGD_DEGREES_TO_RADIANS;
         sstate.lat       = current__view->getLatitude_deg()
@@ -412,11 +558,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
         */
 
         static SGSkyColor scolor;
-//        FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
 
-        scolor.sky_color   = l->sky_color();
-        scolor.fog_color   = l->adj_fog_color();
-        scolor.cloud_color = l->cloud_color();
+        scolor.sky_color   = SGVec3f(l->sky_color());
+        scolor.fog_color   = SGVec3f(l->adj_fog_color());
+        scolor.cloud_color = SGVec3f(l->cloud_color());
         scolor.sun_angle   = l->get_sun_angle();
         scolor.moon_angle  = l->get_moon_angle();
         scolor.nplanets    = globals->get_ephem()->getNumPlanets();
@@ -446,47 +591,35 @@ FGRenderer::update( bool refresh_camera_settings ) {
           << " moon dec = " << globals->get_ephem()->getMoonDeclination() );
         */
 
-        shadows->setupShadows(
-          current__view->getLongitude_deg(),
-          current__view->getLatitude_deg(),
-          globals->get_time_params()->getGst(),
-          globals->get_ephem()->getSunRightAscension(),
-          globals->get_ephem()->getSunDeclination(),
-          l->get_sun_angle());
+        //OSGFIXME
+//         shadows->setupShadows(
+//           current__view->getLongitude_deg(),
+//           current__view->getLatitude_deg(),
+//           globals->get_time_params()->getGst(),
+//           globals->get_ephem()->getSunRightAscension(),
+//           globals->get_ephem()->getSunDeclination(),
+//           l->get_sun_angle());
 
     }
 
-    glEnable( GL_DEPTH_TEST );
     if ( strcmp(fgGetString("/sim/rendering/fog"), "disabled") ) {
-        glEnable( GL_FOG );
-        glFogi( GL_FOG_MODE, GL_EXP2 );
-        glFogfv( GL_FOG_COLOR, l->adj_fog_color() );
-    } else
-        glDisable( GL_FOG ); 
+        SGVec4f color(l->adj_fog_color());
+        mFog->setColor(color.osg());
+        mRunwayLightingFog->setColor(color.osg());
+        mTaxiLightingFog->setColor(color.osg());
+        mGroundLightingFog->setColor(color.osg());
+    }
 
-    // set sun/lighting parameters
-    ssgGetLight( 0 ) -> setPosition( l->sun_vec() );
 
-    // GL_LIGHT_MODEL_AMBIENT has a default non-zero value so if
-    // we only update GL_AMBIENT for our lights we will never get
-    // a completely dark scene.  So, we set GL_LIGHT_MODEL_AMBIENT
-    // explicitely to black.
-    glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
-
-    ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient() );
-    ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse() );
-    ssgGetLight( 0 ) -> setColour( GL_SPECULAR, l->scene_specular() );
-
-    sgEnviro.setLight(l->adj_fog_color());
+//     sgEnviro.setLight(l->adj_fog_color());
 
     // texture parameters
-    // glEnable( GL_TEXTURE_2D );
-    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
-    glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
+    glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
 
     double agl = current__view->getAltitudeASL_ft()*SG_FEET_TO_METER
       - current__view->getSGLocation()->get_cur_elev_m();
 
+    float scene_nearplane, scene_farplane;
     if ( agl > 10.0 ) {
         scene_nearplane = 10.0f;
         scene_farplane = 120000.0f;
@@ -497,279 +630,84 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
     setNearFar( scene_nearplane, scene_farplane );
 
-    sgEnviro.startOfFrame(current__view->get_view_pos(), 
-        current__view->get_world_up(),
-        current__view->getLongitude_deg(),
-        current__view->getLatitude_deg(),
-        current__view->getAltitudeASL_ft() * SG_FEET_TO_METER,
-        delta_time_sec);
+//     sgEnviro.startOfFrame(current__view->get_view_pos(), 
+//         current__view->get_world_up(),
+//         current__view->getLongitude_deg(),
+//         current__view->getLatitude_deg(),
+//         current__view->getAltitudeASL_ft() * SG_FEET_TO_METER,
+//         delta_time_sec);
 
-    if ( draw_otw && skyblend ) {
-        // draw the sky backdrop
+    // OSGFIXME
+//     sgEnviro.drawLightning();
 
-        // we need a white diffuse light for the phase of the moon
-        ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
-        thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
-                         fog_exp2_density );
-        // return to the desired diffuse color
-        ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse() );
-    }
-
-    // draw the ssg scene
-    glEnable( GL_DEPTH_TEST );
-
-    if ( fgGetBool("/sim/rendering/wireframe") ) {
-        // draw wire frame
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    }
-    if ( draw_otw ) {
-        if ( draw_clouds ) {
-
-            // Draw the terrain
-            FGTileMgr::set_tile_filter( true );
-            sgSetModelFilter( false );
-            globals->get_aircraft_model()->select( false );
-            ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
-
-            // Disable depth buffer update, draw the clouds
-            glDepthMask( GL_FALSE );
-            if( !volumetric_clouds )
-                thesky->drawUpperClouds();
-            if ( multi_pass_clouds ) {
-                thesky->drawLowerClouds();
-            }
-            glDepthMask( GL_TRUE );
-
-            if ( multi_pass_clouds ) {
-                // Draw the objects except the aircraft
-                //  and update the stencil buffer with 1
-                glEnable( GL_STENCIL_TEST );
-                glStencilFunc( GL_ALWAYS, 1, 1 );
-                glStencilOp( GL_KEEP, GL_KEEP, GL_REPLACE );
-            }
-            FGTileMgr::set_tile_filter( false );
-            sgSetModelFilter( true );
-            ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
-        } else {
-            FGTileMgr::set_tile_filter( true );
-            sgSetModelFilter( true );
-            globals->get_aircraft_model()->select( false );
-            ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
-        }
-    }
-
-    // This is a bit kludgy.  Every 200 frames, do an extra
-    // traversal of the scene graph without drawing anything, but
-    // with the field-of-view set to 360x360 degrees.  This
-    // ensures that out-of-range random objects that are not in
-    // the current view frustum will still be freed properly.
-    static int counter = 0;
-    counter++;
-    if (counter >= 200) {
-        sgFrustum f;
-        f.setFOV(360, 360);
-                // No need to put the near plane too close;
-                // this way, at least the aircraft can be
-                // culled.
-        f.setNearFar(1000, 1000000);
-        sgMat4 m;
-        ssgGetModelviewMatrix(m);
-        FGTileMgr::set_tile_filter( true );
-        sgSetModelFilter( true );
-        globals->get_scenery()->get_scene_graph()->cull(&f, m, true);
-        counter = 0;
-    }
-
-    // change state for lighting here
-
-    // draw runway lighting
-    glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
-
-    // CLO - 02/25/2005 - DO WE NEED THIS extra fgSetNearFar()?
-    // fgSetNearFar( scene_nearplane, scene_farplane );
-
-    if ( use_point_sprites ) {
-        glEnable(GL_POINT_SPRITE);
-    } else {
-        glDisable(GL_POINT_SPRITE);
-    }
-
-    if ( enhanced_lighting ) {
-
-        // Enable states for drawing points with GL_extension
-        glEnable(GL_POINT_SMOOTH);
-
-        if ( distance_attenuation && glPointParameterIsSupported )
-        {
-            // Enable states for drawing points with GL_extension
-            glEnable(GL_POINT_SMOOTH);
-
-            float quadratic[3] = {1.0, 0.001, 0.0000001};
-            // makes the points fade as they move away
-            glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT, quadratic);
-            // glPointParameterfPtr(GL_POINT_SIZE_MIN_EXT, 1.0); 
-        }
-
-        glPointSize(4.0);
-
-        // blending function for runway lights
-        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
-    }
-
-    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
-    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
-    glEnable(GL_TEXTURE_GEN_S);
-    glEnable(GL_TEXTURE_GEN_T);
-    glPolygonMode(GL_FRONT, GL_POINT);
-
-    // draw runway lighting
-    if ( draw_otw ) {
-        ssgCullAndDraw( globals->get_scenery()->get_vasi_lights_root() );
-        ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
-    }
-
-    // change punch through and then draw taxi lighting
-    glFogf ( GL_FOG_DENSITY, fog_exp2_density );
-    // sgVec3 taxi_fog;
-    // sgSetVec3( taxi_fog, 0.0, 0.0, 0.0 );
-    // glFogfv ( GL_FOG_COLOR, taxi_fog );
-    if ( draw_otw ) {
-        ssgCullAndDraw( globals->get_scenery()->get_taxi_lights_root() );
-    }
-
-    // clean up lighting
-    glPolygonMode(GL_FRONT, GL_FILL);
-    glDisable(GL_TEXTURE_GEN_S);
-    glDisable(GL_TEXTURE_GEN_T);
-
-    //static int _frame_count = 0;
-    //if (_frame_count % 30 == 0) {
-    //  printf("SSG: %s\n", ssgShowStats());
-    //}
-    //else {
-    //  ssgShowStats();
-    //}
-    //_frame_count++;
-
-
-    if ( enhanced_lighting ) {
-        if ( distance_attenuation && glPointParameterIsSupported ) {
-            glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT,
-                                  default_attenuation);
-        }
-
-        glPointSize(1.0);
-        glDisable(GL_POINT_SMOOTH);
-    }
-
-    // draw ground lighting
-    glFogf (GL_FOG_DENSITY, ground_exp2_punch_through);
-    if ( draw_otw ) {
-        ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
-    }
-
-    sgEnviro.drawLightning();
-
-    if ( draw_otw && draw_clouds ) {
-        if ( multi_pass_clouds ) {
-            // Disable depth buffer update, draw the clouds where the
-            //  objects overwrite the already drawn clouds, by testing
-            //  the stencil buffer against 1
-            glDepthMask( GL_FALSE );
-            glStencilFunc( GL_EQUAL, 1, 1 );
-            glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
-            thesky->drawUpperClouds();
-            thesky->drawLowerClouds();
-            glDepthMask( GL_TRUE );
-            glDisable( GL_STENCIL_TEST );
-        } else {
-            glDepthMask( GL_FALSE );
-            if( volumetric_clouds )
-                thesky->drawUpperClouds();
-            thesky->drawLowerClouds();
-            glDepthMask( GL_TRUE );
-        }
-    }
-       double current_view_origin_airspeed_horiz_kt =
-        fgGetDouble("/velocities/airspeed-kt", 0.0)
-                       * cos( fgGetDouble("/orientation/pitch-deg", 0.0)
-                               * SGD_DEGREES_TO_RADIANS);
+//        double current_view_origin_airspeed_horiz_kt =
+//         fgGetDouble("/velocities/airspeed-kt", 0.0)
+//                        * cos( fgGetDouble("/orientation/pitch-deg", 0.0)
+//                                * SGD_DEGREES_TO_RADIANS);
        // TODO:find the real view speed, not the AC one
-    sgEnviro.drawPrecipitation(
-        fgGetDouble("/environment/metar/rain-norm", 0.0),
-        fgGetDouble("/environment/metar/snow-norm", 0.0),
-        fgGetDouble("/environment/metar/hail-norm", 0.0),
-        current__view->getPitch_deg() + current__view->getPitchOffset_deg(),
-        current__view->getRoll_deg() + current__view->getRollOffset_deg(),
-        - current__view->getHeadingOffset_deg(),
-               current_view_origin_airspeed_horiz_kt
-               );
+//     sgEnviro.drawPrecipitation(
+//         fgGetDouble("/environment/metar/rain-norm", 0.0),
+//         fgGetDouble("/environment/metar/snow-norm", 0.0),
+//         fgGetDouble("/environment/metar/hail-norm", 0.0),
+//         current__view->getPitch_deg() + current__view->getPitchOffset_deg(),
+//         current__view->getRoll_deg() + current__view->getRollOffset_deg(),
+//         - current__view->getHeadingOffset_deg(),
+//                current_view_origin_airspeed_horiz_kt
+//                );
 
-    // compute shadows and project them on screen
-    bool is_internal = globals->get_current_view()->getInternal();
-    // draw before ac because ac internal rendering clear the depth buffer
+    // OSGFIXME
+//     if( is_internal )
+//         shadows->endOfFrame();
 
-	globals->get_aircraft_model()->select( true );
-    if( is_internal )
-        shadows->endOfFrame();
+    // need to call the update visitor once
+    globals->get_aircraft_model()->select( true );
+    FGTileMgr::set_tile_filter( true );
+    mFrameStamp->setReferenceTime(globals->get_sim_time_sec());
+    mFrameStamp->setFrameNumber(1+mFrameStamp->getFrameNumber());
+    mFrameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
+    sceneView->update();
+    sceneView->cull();
+    sceneView->draw();
 
-    if ( draw_otw ) {
-        FGTileMgr::set_tile_filter( false );
-        sgSetModelFilter( false );
-        globals->get_aircraft_model()->select( true );
-        globals->get_model_mgr()->draw();
-        globals->get_aircraft_model()->draw();
-
-        FGTileMgr::set_tile_filter( true );
-        sgSetModelFilter( true );
-        globals->get_aircraft_model()->select( true );
-    }
-	// in 'external' view the ac can be culled, so shadows have not been draw in the
-	// posttrav callback, this would be a rare case if the getInternal was acting
-	// as expected (ie in internal view, getExternal returns false)
-	if( !is_internal )
-		shadows->endOfFrame();
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPushClientAttrib(~0u);
 
     // display HUD && Panel
     glDisable( GL_FOG );
     glDisable( GL_DEPTH_TEST );
-    // glDisable( GL_CULL_FACE );
-    // glDisable( GL_TEXTURE_2D );
 
-    // update the controls subsystem
-    globals->get_controls()->update(delta_time_sec);
+    fgCockpitUpdate(sceneView->getState());
 
-    hud_and_panel->apply();
-    fgCockpitUpdate();
-
-    FGInstrumentMgr *instr = static_cast<FGInstrumentMgr *>(globals->get_subsystem("instrumentation"));
-    HUD *hud = static_cast<HUD *>(instr->get_subsystem("hud"));
-    hud->draw();
-
-    // Use the hud_and_panel ssgSimpleState for rendering the ATC output
-    // This only works properly if called before the panel call
-    if((fgGetBool("/sim/atc/enabled")) || (fgGetBool("/sim/ai-traffic/enabled")))
-        globals->get_ATC_display()->update(delta_time_sec);
+    FGInstrumentMgr *instr = static_cast<FGInstrumentMgr*>(globals->get_subsystem("instrumentation"));
+    HUD *hud = static_cast<HUD*>(instr->get_subsystem("hud"));
+    hud->draw(*sceneView->getState());
 
     // update the panel subsystem
-    if ( globals->get_current_panel() != NULL ) {
-        globals->get_current_panel()->update(delta_time_sec);
-    }
+    if ( globals->get_current_panel() != NULL )
+        globals->get_current_panel()->update(*sceneView->getState());
+    // We don't need a state here - can be safely removed when we can pick
+    // correctly
     fgUpdate3DPanels();
 
-    // We can do translucent menus, so why not. :-)
-    menus->apply();
-    glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-    puDisplay();
-    // glDisable ( GL_BLEND ) ;
+    if((fgGetBool("/sim/atc/enabled"))
+       || (fgGetBool("/sim/ai-traffic/enabled")))
+      globals->get_ATC_display()->update(delta_time_sec,
+                                         *sceneView->getState());
 
-    glEnable( GL_DEPTH_TEST );
-    glEnable( GL_FOG );
+    // We can do translucent menus, so why not. :-)
+    glDisable( GL_TEXTURE_2D ) ;
+    glDisable( GL_CULL_FACE ) ;
+    glEnable( GL_BLEND ) ;
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
+    puDisplay();
 
     // Fade out the splash screen over the first three seconds.
     double t = globals->get_sim_time_sec();
     if (t <= 2.5)
         fgSplashUpdate((2.5 - t) / 2.5);
+
+    glPopClientAttrib();
+    glPopAttrib();
 }
 
 
@@ -788,7 +726,7 @@ FGRenderer::resize( int width, int height ) {
         view_h = height;
     }
 
-    glViewport( 0, (GLint)(height - view_h), (GLint)(width), (GLint)(view_h) );
+    sceneView->getViewport()->setViewport(0, height - view_h, width, view_h);
 
     static int lastwidth = 0;
     static int lastheight = 0;
@@ -812,11 +750,7 @@ FGRenderer::resize( int width, int height ) {
       // cout << "setFOV(" << viewmgr->get_current_view()->get_h_fov()
       //      << ", " << viewmgr->get_current_view()->get_v_fov() << ")"
       //      << endl;
-
     }
-
-    fgHUDReshape();
-
 }
 
 
@@ -844,8 +778,10 @@ static void fgHackFrustum() {
     static SGPropertyNode *top_pct
         = fgGetNode("/sim/current-view/frustum-top-pct");
 
-    sgFrustum *f = ssgGetFrustum();
-
+    double left, right;
+    double bottom, top;
+    double zNear, zFar;
+    sceneView->getProjectionMatrixAsFrustum(left, right, bottom, top, zNear, zFar);
     // cout << " l = " << f->getLeft()
     //      << " r = " << f->getRight()
     //      << " b = " << f->getBot()
@@ -854,36 +790,36 @@ static void fgHackFrustum() {
     //      << " f = " << f->getFar()
     //      << endl;
 
-    double width = f->getRight() - f->getLeft();
-    double height = f->getTop() - f->getBot();
+    double width = right - left;
+    double height = top - bottom;
 
     double l, r, t, b;
 
     if ( left_pct != NULL ) {
-        l = f->getLeft() + width * left_pct->getDoubleValue();
+        l = left + width * left_pct->getDoubleValue();
     } else {
-        l = f->getLeft();
+        l = left;
     }
 
     if ( right_pct != NULL ) {
-        r = f->getLeft() + width * right_pct->getDoubleValue();
+        r = left + width * right_pct->getDoubleValue();
     } else {
-        r = f->getRight();
+        r = right;
     }
 
     if ( bottom_pct != NULL ) {
-        b = f->getBot() + height * bottom_pct->getDoubleValue();
+        b = bottom + height * bottom_pct->getDoubleValue();
     } else {
-        b = f->getBot();
+        b = bottom;
     }
 
     if ( top_pct != NULL ) {
-        t = f->getBot() + height * top_pct->getDoubleValue();
+        t = bottom + height * top_pct->getDoubleValue();
     } else {
-        t = f->getTop();
+        t = top;
     }
 
-    ssgSetFrustum(l, r, b, t, f->getNear(), f->getFar());
+    sceneView->setProjectionMatrixAsFrustum(l, r, b, t, zNear, zFar);
 }
 
 
@@ -906,12 +842,13 @@ void FGRenderer::setFOV( float w, float h ) {
     fov_width = w;
     fov_height = h;
 
+    sceneView->setProjectionMatrixAsPerspective(fov_height,
+                                                fov_width/fov_height,
+                                                fov_near, fov_far);
     // fully specify the view frustum before hacking it (so we don't
     // accumulate hacked effects
-    ssgSetFOV( w, h );
-    ssgSetNearFar( fov_near, fov_far );
     fgHackFrustum();
-    sgEnviro.setFOV( w, h );
+//     sgEnviro.setFOV( w, h );
 }
 
 
@@ -919,14 +856,20 @@ void FGRenderer::setFOV( float w, float h ) {
  *  planes rather than calling the ssg routine directly
  */
 void FGRenderer::setNearFar( float n, float f ) {
+// OSGFIXME: we have currently too much z-buffer fights
+n = 0.2;
     fov_near = n;
     fov_far = f;
 
+    sceneView->setProjectionMatrixAsPerspective(fov_height,
+                                                fov_width/fov_height,
+                                                fov_near, fov_far);
+
+    sceneView->getCamera()->setNearFarRatio(fov_near/fov_far);
+    mSceneCamera->setNearFarRatio(fov_near/fov_far);
+
     // fully specify the view frustum before hacking it (so we don't
     // accumulate hacked effects
-    ssgSetNearFar( n, f );
-    ssgSetFOV( fov_width, fov_height );
-
     fgHackFrustum();
 }
 
@@ -935,16 +878,20 @@ bool FGRenderer::getPickInfo( SGVec3d& pt, SGVec3d& dir,
 {
   // Get the matrices involved in the transform from global to screen
   // coordinates.
-  sgMat4 pm;
-  ssgGetProjectionMatrix(pm);
-  sgMat4 mv;
-  ssgGetModelviewMatrix(mv);
+  osg::Matrix pm = sceneView->getCamera()->getProjectionMatrix();
+
+  osg::Matrix mv;
+  osg::NodePathList paths;
+  paths = globals->get_scenery()->get_scene_graph()->getParentalNodePaths();
+  if (!paths.empty()) {
+    // Ok, we know that this should not have multiple parents ...
+    // FIXME: is this allways true?
+    mv = osg::computeLocalToEye(sceneView->getCamera()->getViewMatrix(),
+                                paths.front(), false);
+  }
   
-  // Compose ...
-  sgMat4 m;
-  sgMultMat4(m, pm, mv);
-  // ... and invert
-  sgInvertMat4(m);
+  // Compose and invert
+  osg::Matrix m = osg::Matrix::inverse(mv*pm);
   
   // Get the width and height of the display to be able to normalize the
   // mouse coordinate
@@ -954,24 +901,25 @@ bool FGRenderer::getPickInfo( SGVec3d& pt, SGVec3d& dir,
   // Compute some coordinates of in the line from the eyepoint to the
   // mouse click coodinates.
   // First build the normalized projection coordinates
-  sgVec4 normPt;
-  sgSetVec4(normPt, (2*x - width)/width, -(2*y - height)/height, 1, 1);
+  osg::Vec4 normPt((2*x - width)/width, -(2*y - height)/height, 1, 1);
   // Transform them into the real world
-  sgVec4 worldPt;
-  sgXformPnt4(worldPt, normPt, m);
-  if (worldPt[3] == 0)
+  osg::Vec4 worldPt4 = m.preMult(normPt);
+  if (fabs(worldPt4[3]) < SGLimitsf::min())
     return false;
-  sgScaleVec3(worldPt, 1/worldPt[3]);
+  SGVec3f worldPt(worldPt4[0]/worldPt4[3],
+                  worldPt4[1]/worldPt4[3],
+                  worldPt4[2]/worldPt4[3]);
 
   // Now build a direction from the point
   FGViewer* view = globals->get_current_view();
-  sgVec4 fDir;
-  sgSubVec3(fDir, worldPt, view->get_view_pos());
-  sgdSetVec3(dir.sg(), fDir);
-  sgdNormalizeVec3(dir.sg());
+  dir = normalize(toVec3d(worldPt - SGVec3f(view->get_view_pos())));
 
   // Copy the start point
-  sgdCopyVec3(pt.sg(), view->get_absolute_view_pos());
+  pt = SGVec3d(view->get_absolute_view_pos());
+
+  // OSGFIXME: ist this sufficient??? especially the precision problems here??
+// bool mSceneView->projectWindowXYIntoObject(int x,int y,osg::Vec3& near_point,osg::Vec3& far_point) const;
+
 
   return true;
 }

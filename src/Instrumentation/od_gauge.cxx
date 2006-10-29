@@ -24,7 +24,6 @@
 #  include "config.h"
 #endif
 
-#include <plib/ssg.h>
 #include <simgear/screen/extensions.hxx>
 #include <simgear/screen/RenderTexture.h>
 #include <simgear/debug/logstream.hxx>
@@ -35,8 +34,8 @@
 #include "od_gauge.hxx"
 
 FGODGauge::FGODGauge() :
-    rtAvailable( false ),
-    rt( 0 )
+    rtAvailable( false )// ,
+//     rt( 0 )
 {
 }
 
@@ -44,49 +43,49 @@ FGODGauge::FGODGauge() :
 // never used
 void FGODGauge::allocRT () {
     GLint colorBits = 0;
-    glGetIntegerv( GL_BLUE_BITS, &colorBits );
+//     glGetIntegerv( GL_BLUE_BITS, &colorBits );
     textureWH = 256;
-    rt = new RenderTexture();
-    if( colorBits < 8 )
-        rt->Reset("rgba=5,5,5,1 ctt");
-    else
-        rt->Reset("rgba ctt");
+//     rt = new RenderTexture();
+//     if( colorBits < 8 )
+//         rt->Reset("rgba=5,5,5,1 ctt");
+//     else
+//         rt->Reset("rgba ctt");
 
-    if( rt->Initialize(256, 256, true) ) {
-        SG_LOG(SG_ALL, SG_INFO, "FGODGauge:Initialize sucessfull");
-        if (rt->BeginCapture())
-        {
-            SG_LOG(SG_ALL, SG_INFO, "FGODGauge:BeginCapture sucessfull, RTT available");
-            rtAvailable = true;
-            glViewport(0, 0, textureWH, textureWH);
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            gluOrtho2D( -256.0, 256.0, -256.0, 256.0 );
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-            glDisable(GL_LIGHTING);
-            glEnable(GL_COLOR_MATERIAL);
-            glDisable(GL_CULL_FACE);
-            glDisable(GL_FOG);
-            glDisable(GL_DEPTH_TEST);
-            glClearColor(0.0, 0.0, 0.0, 0.0);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            glEnable(GL_TEXTURE_2D);
-            glEnable(GL_ALPHA_TEST);
-            glAlphaFunc(GL_GREATER, 0.0f);
-            glDisable(GL_SMOOTH);
-            glEnable(GL_BLEND);
-            glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
-            rt->EndCapture();
-        } else
-            SG_LOG(SG_ALL, SG_WARN, "FGODGauge:BeginCapture failed, RTT not available, using backbuffer");
-    } else
-        SG_LOG(SG_ALL, SG_WARN, "FGODGauge:Initialize failed, RTT not available, using backbuffer");
+//     if( rt->Initialize(256, 256, true) ) {
+//         SG_LOG(SG_ALL, SG_INFO, "FGODGauge:Initialize sucessfull");
+//         if (rt->BeginCapture())
+//         {
+//             SG_LOG(SG_ALL, SG_INFO, "FGODGauge:BeginCapture sucessfull, RTT available");
+//             rtAvailable = true;
+//             glViewport(0, 0, textureWH, textureWH);
+//             glMatrixMode(GL_PROJECTION);
+//             glLoadIdentity();
+//             gluOrtho2D( -256.0, 256.0, -256.0, 256.0 );
+//             glMatrixMode(GL_MODELVIEW);
+//             glLoadIdentity();
+//             glDisable(GL_LIGHTING);
+//             glEnable(GL_COLOR_MATERIAL);
+//             glDisable(GL_CULL_FACE);
+//             glDisable(GL_FOG);
+//             glDisable(GL_DEPTH_TEST);
+//             glClearColor(0.0, 0.0, 0.0, 0.0);
+//             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//             glBindTexture(GL_TEXTURE_2D, 0);
+//             glEnable(GL_TEXTURE_2D);
+//             glEnable(GL_ALPHA_TEST);
+//             glAlphaFunc(GL_GREATER, 0.0f);
+//             glDisable(GL_SMOOTH);
+//             glEnable(GL_BLEND);
+//             glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+//             rt->EndCapture();
+//         } else
+//             SG_LOG(SG_ALL, SG_WARN, "FGODGauge:BeginCapture failed, RTT not available, using backbuffer");
+//     } else
+//         SG_LOG(SG_ALL, SG_WARN, "FGODGauge:Initialize failed, RTT not available, using backbuffer");
 }
 
 FGODGauge::~FGODGauge() {
-    delete rt;
+//     delete rt;
 }
 
 void FGODGauge::init () {
@@ -96,58 +95,59 @@ void FGODGauge::update (double dt) {
 }
 
 void FGODGauge::beginCapture(int viewSize) {
-    if( ! rt )
-        allocRT();
-    if(rtAvailable) {
-        rt->BeginCapture();
-    }
-    else
-        set2D();
-     textureWH = viewSize;
-    glViewport(0, 0, textureWH, textureWH);
+//     if( ! rt )
+//         allocRT();
+//     if(rtAvailable) {
+//         rt->BeginCapture();
+//     }
+//     else
+//         set2D();
+//      textureWH = viewSize;
+//     glViewport(0, 0, textureWH, textureWH);
 }
 
 void FGODGauge::beginCapture(void) {
-    if( ! rt )
-        allocRT();
-    if(rtAvailable) {
-        rt->BeginCapture();
-    }
-    else
-        set2D();
+//     if( ! rt )
+//         allocRT();
+//     if(rtAvailable) {
+//         rt->BeginCapture();
+//     }
+//     else
+//         set2D();
 }
 
 void FGODGauge::Clear(void) {
-    if(rtAvailable) {
-        glClear(GL_COLOR_BUFFER_BIT);
-    }
-    else {
-        glDisable(GL_BLEND);
-        glDisable(GL_ALPHA_TEST);
-          glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
-        glRectf(-256.0, -256.0, 256.0, 256.0);
-        glEnable(GL_BLEND);
-        glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
-        glEnable(GL_ALPHA_TEST);
-    }
+//     if(rtAvailable) {
+//         glClear(GL_COLOR_BUFFER_BIT);
+//     }
+//     else {
+//         glDisable(GL_BLEND);
+//         glDisable(GL_ALPHA_TEST);
+//           glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
+//         glRectf(-256.0, -256.0, 256.0, 256.0);
+//         glEnable(GL_BLEND);
+//         glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+//         glEnable(GL_ALPHA_TEST);
+//     }
 }
 
-void FGODGauge::endCapture(GLuint texID) {
-    glBindTexture(GL_TEXTURE_2D, texID);
-    // don't use mimaps if we don't update them
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+void FGODGauge::endCapture(osg::Texture2D* texID) {
+  // OSGFIXME
+//     glBindTexture(GL_TEXTURE_2D, texID);
+//     // don't use mimaps if we don't update them
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, textureWH, textureWH);
-    if(rtAvailable)
-        rt->EndCapture();
-    else
-        set3D();
-    glBindTexture(GL_TEXTURE_2D, 0);
+//     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, textureWH, textureWH);
+//     if(rtAvailable)
+//         rt->EndCapture();
+//     else
+//         set3D();
+//     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void FGODGauge::setSize(int viewSize) {
     textureWH = viewSize;
-    glViewport(0, 0, textureWH, textureWH);
+//     glViewport(0, 0, textureWH, textureWH);
 }
 
 bool FGODGauge::serviceable(void) {
@@ -168,9 +168,11 @@ static const char *strip_path(const char *name) {
     return fn ;
 }
 
-static ssgSimpleState *
-find_texture_node (ssgEntity * node, const char * name)
+// OSGFIXME
+static osg::StateSet*
+find_texture_node(osg::Node* node, const char * name)
 {
+#if 0
   if( node->isAKindOf( ssgTypeLeaf() ) ) {
     ssgLeaf *leaf = (ssgLeaf *) node;
     ssgSimpleState *state = (ssgSimpleState *) leaf->getState();
@@ -195,49 +197,51 @@ find_texture_node (ssgEntity * node, const char * name)
         return result;
     }
   } 
+#endif
   return 0;
 }
 
-void FGODGauge::set_texture(const char * name, GLuint new_texture) {
-    ssgEntity * root = globals->get_scenery()->get_aircraft_branch();
+void FGODGauge::set_texture(const char * name, osg::Texture2D* new_texture) {
+    osg::Group* root = globals->get_scenery()->get_aircraft_branch();
     name = strip_path( name );
-    ssgSimpleState * node = find_texture_node( root, name );
-    if( node )
-        node->setTexture( new_texture );
+    // OSGFIXME
+//     osg::StateSet* node = find_texture_node( root, name );
+//     if( node )
+//         node->setTexture( new_texture );
 }
 
 void FGODGauge::set2D() {
-    glPushAttrib ( GL_ENABLE_BIT | GL_VIEWPORT_BIT  | GL_TRANSFORM_BIT | GL_LIGHTING_BIT ) ;
+//     glPushAttrib ( GL_ENABLE_BIT | GL_VIEWPORT_BIT  | GL_TRANSFORM_BIT | GL_LIGHTING_BIT ) ;
 
-    glDisable(GL_LIGHTING);
-    glEnable(GL_COLOR_MATERIAL);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_FOG);
-    glDisable(GL_DEPTH_TEST);
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glEnable(GL_TEXTURE_2D);
-    glDisable(GL_SMOOTH);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glBindTexture(GL_TEXTURE_2D, 0);
+//     glDisable(GL_LIGHTING);
+//     glEnable(GL_COLOR_MATERIAL);
+//     glDisable(GL_CULL_FACE);
+//     glDisable(GL_FOG);
+//     glDisable(GL_DEPTH_TEST);
+//     glClearColor(0.0, 0.0, 0.0, 0.0);
+//     glEnable(GL_TEXTURE_2D);
+//     glDisable(GL_SMOOTH);
+//     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glViewport ( 0, 0, textureWH, textureWH ) ;
-    glMatrixMode   ( GL_PROJECTION ) ;
-    glPushMatrix   () ;
-    glLoadIdentity () ;
-    gluOrtho2D( -256.0, 256.0, -256.0, 256.0 );
-    glMatrixMode   ( GL_MODELVIEW ) ;
-    glPushMatrix   () ;
-    glLoadIdentity () ;
+//     glViewport ( 0, 0, textureWH, textureWH ) ;
+//     glMatrixMode   ( GL_PROJECTION ) ;
+//     glPushMatrix   () ;
+//     glLoadIdentity () ;
+//     gluOrtho2D( -256.0, 256.0, -256.0, 256.0 );
+//     glMatrixMode   ( GL_MODELVIEW ) ;
+//     glPushMatrix   () ;
+//     glLoadIdentity () ;
 
-    glAlphaFunc(GL_GREATER, 0.0f);
+//     glAlphaFunc(GL_GREATER, 0.0f);
 
 }
 
 void FGODGauge::set3D() {
-    glMatrixMode   ( GL_PROJECTION ) ;
-    glPopMatrix    () ;
-    glMatrixMode   ( GL_MODELVIEW ) ;
-    glPopMatrix    () ;
-    glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-    glPopAttrib    () ;
+//     glMatrixMode   ( GL_PROJECTION ) ;
+//     glPopMatrix    () ;
+//     glMatrixMode   ( GL_MODELVIEW ) ;
+//     glPopMatrix    () ;
+//     glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
+//     glPopAttrib    () ;
 }

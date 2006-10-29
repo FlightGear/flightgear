@@ -31,8 +31,9 @@
 # error This library requires C++
 #endif
 
+#include <osg/State>
 
-#include <Aircraft/aircraft.hxx>
+#include "Aircraft/aircraft.hxx"
 #include "panel.hxx"
 
 // Class fg_Cockpit          This class is a holder for the heads up display
@@ -53,7 +54,7 @@ class fg_Cockpit  {
 typedef fg_Cockpit * pCockpit;
 
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft );
-void fgCockpitUpdate( void );
+void fgCockpitUpdate( osg::State* );
 
 
 #endif /* _COCKPIT_HXX */

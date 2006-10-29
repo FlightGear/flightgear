@@ -11,11 +11,8 @@
 
 #include <vector>
 
-#include <plib/ssg.h>
-
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/model/modellib.hxx>
-#include <simgear/scene/model/shadowvolume.hxx>
 #include <simgear/structure/exception.hxx>
 
 #include <Main/fg_props.hxx>
@@ -26,7 +23,8 @@
 
 SG_USING_STD(vector);
 
-extern SGShadowVolume *shadows;
+// OSGFIXME
+// extern SGShadowVolume *shadows;
 
 
 FGModelMgr::FGModelMgr ()
@@ -43,7 +41,7 @@ FGModelMgr::~FGModelMgr ()
 
   for (unsigned int i = 0; i < _instances.size(); i++) {
     globals->get_scenery()->get_scene_graph()
-      ->removeKid(_instances[i]->model->getSceneGraph());
+      ->removeChild(_instances[i]->model->getSceneGraph());
     delete _instances[i];
   }
 }
@@ -72,7 +70,7 @@ FGModelMgr::add_model (SGPropertyNode * node)
   instance->model = model;
   instance->node = node;
   SGModelLib *model_lib = globals->get_model_lib();
-  ssgBranch *object = (ssgBranch *)model_lib->load_model(
+  osg::Node *object = model_lib->load_model(
       globals->get_fg_root(),
       node->getStringValue("path",
                            "Models/Geometry/glider.ac"),
@@ -121,7 +119,7 @@ FGModelMgr::add_model (SGPropertyNode * node)
     model->setHeadingDeg(node->getDoubleValue("heading-deg"));
 
       			// Add this model to the global scene graph
-  globals->get_scenery()->get_scene_graph()->addKid(model->getSceneGraph());
+  globals->get_scenery()->get_scene_graph()->addChild(model->getSceneGraph());
 
   // Register that one at the scenery manager
   globals->get_scenery()->register_placement_transform(model->getTransform());
@@ -166,11 +164,12 @@ FGModelMgr::update (double dt)
 
     instance->model->update();
 
-    if (shadows && !instance->shadow) {
-      ssgBranch *branch = (ssgBranch *)instance->model->getSceneGraph();
-      shadows->addOccluder(branch, SGShadowVolume::occluderTypeTileObject);
-      instance->shadow = true;
-    }
+    // OSGFIXME
+//     if (shadows && !instance->shadow) {
+//       osg::Node *branch = instance->model->getSceneGraph();
+//       shadows->addOccluder(branch, SGShadowVolume::occluderTypeTileObject);
+//       instance->shadow = true;
+//     }
   }
 }
 
@@ -192,14 +191,6 @@ FGModelMgr::remove_instance (Instance * instance)
         }
     }
 }
-
-void
-FGModelMgr::draw ()
-{
-//   ssgSetNearFar(_nearplane, _farplane);
-//   ssgCullAndDraw(_scene);
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -262,10 +253,11 @@ FGModelMgr::Listener::childRemoved(SGPropertyNode * parent, SGPropertyNode * chi
       continue;
 
     _mgr->_instances.erase(it);
-    ssgBranch *branch = (ssgBranch *)instance->model->getSceneGraph();
-    if (shadows && instance->shadow)
-        shadows->deleteOccluder(branch);
-    globals->get_scenery()->get_scene_graph()->removeKid(branch);
+    osg::Node *branch = instance->model->getSceneGraph();
+    // OSGFIXME
+//     if (shadows && instance->shadow)
+//         shadows->deleteOccluder(branch);
+    globals->get_scenery()->get_scene_graph()->removeChild(branch);
 
     delete instance;
     break;

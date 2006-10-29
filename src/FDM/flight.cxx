@@ -800,29 +800,32 @@ bool
 FGInterface::prepare_ground_cache_m(double ref_time, const double pt[3],
                                     double rad)
 {
-  return ground_cache.prepare_ground_cache(ref_time, pt, rad);
+  return ground_cache.prepare_ground_cache(ref_time, SGVec3d(pt), rad);
 }
 
 bool FGInterface::prepare_ground_cache_ft(double ref_time, const double pt[3],
                                           double rad)
 {
   // Convert units and do the real work.
-  sgdVec3 pt_ft;
-  sgdScaleVec3( pt_ft, pt, SG_FEET_TO_METER );
+  SGVec3d pt_ft = SG_FEET_TO_METER*SGVec3d(pt);
   return ground_cache.prepare_ground_cache(ref_time, pt_ft, rad*SG_FEET_TO_METER);
 }
 
 bool
 FGInterface::is_valid_m(double *ref_time, double pt[3], double *rad)
 {
-  return ground_cache.is_valid(ref_time, pt, rad);
+  SGVec3d _pt;
+  bool valid = ground_cache.is_valid(*ref_time, _pt, *rad);
+  sgdCopyVec3(pt, _pt.data());
+  return valid;
 }
 
 bool FGInterface::is_valid_ft(double *ref_time, double pt[3], double *rad)
 {
   // Convert units and do the real work.
-  bool found_ground = ground_cache.is_valid(ref_time, pt, rad);
-  sgdScaleVec3(pt, SG_METER_TO_FEET);
+  SGVec3d _pt;
+  bool found_ground = ground_cache.is_valid(*ref_time, _pt, *rad);
+  sgdScaleVec3(pt, _pt.data(), SG_METER_TO_FEET);
   *rad *= SG_METER_TO_FEET;
   return found_ground;
 }
@@ -831,7 +834,13 @@ double
 FGInterface::get_cat_m(double t, const double pt[3],
                        double end[2][3], double vel[2][3])
 {
-  return ground_cache.get_cat(t, pt, end, vel);
+  SGVec3d _end[2], _vel[2];
+  double dist = ground_cache.get_cat(t, SGVec3d(pt), _end, _vel);
+  for (int k=0; k<2; ++k) {
+    sgdCopyVec3( end[k], _end[k].data() );
+    sgdCopyVec3( vel[k], _vel[k].data() );
+  }
+  return dist;
 }
 
 double
@@ -839,12 +848,12 @@ FGInterface::get_cat_ft(double t, const double pt[3],
                         double end[2][3], double vel[2][3])
 {
   // Convert units and do the real work.
-  sgdVec3 pt_m;
-  sgdScaleVec3( pt_m, pt, SG_FEET_TO_METER );
-  double dist = ground_cache.get_cat(t, pt_m, end, vel);
+  SGVec3d pt_m = SG_FEET_TO_METER*SGVec3d(pt);
+  SGVec3d _end[2], _vel[2];
+  double dist = ground_cache.get_cat(t, pt_m, _end, _vel);
   for (int k=0; k<2; ++k) {
-    sgdScaleVec3( end[k], SG_METER_TO_FEET );
-    sgdScaleVec3( vel[k], SG_METER_TO_FEET );
+    sgdScaleVec3( end[k], _end[k].data(), SG_METER_TO_FEET );
+    sgdScaleVec3( vel[k], _vel[k].data(), SG_METER_TO_FEET );
   }
   return dist*SG_METER_TO_FEET;
 }
@@ -857,8 +866,12 @@ FGInterface::get_agl_m(double t, const double pt[3],
                        double *frictionFactor, double *agl)
 {
   const SGMaterial* material;
-  bool ret = ground_cache.get_agl(t, pt, 2.0, contact, normal, vel, type,
-                                  &material, agl);
+  SGVec3d _contact, _normal, _vel;
+  bool ret = ground_cache.get_agl(t, SGVec3d(pt), 2.0, _contact, _normal,
+                                  _vel, type, &material, agl);
+  sgdCopyVec3(contact, _contact.data());
+  sgdCopyVec3(normal, _normal.data());
+  sgdCopyVec3(vel, _vel.data());
   if (material) {
     *loadCapacity = material->get_load_resistence();
     *frictionFactor = material->get_friction_factor();
@@ -878,15 +891,16 @@ FGInterface::get_agl_ft(double t, const double pt[3],
                         double *frictionFactor, double *agl)
 {
   // Convert units and do the real work.
-  sgdVec3 pt_m;
-  sgdScaleVec3( pt_m, pt, SG_FEET_TO_METER );
+  SGVec3d pt_m = SG_FEET_TO_METER*SGVec3d(pt);
 
   const SGMaterial* material;
-  bool ret = ground_cache.get_agl(t, pt_m, 2.0, contact, normal, vel,
+  SGVec3d _contact, _normal, _vel;
+  bool ret = ground_cache.get_agl(t, pt_m, 2.0, _contact, _normal, _vel,
                                   type, &material, agl);
   // Convert units back ...
-  sgdScaleVec3( contact, SG_METER_TO_FEET );
-  sgdScaleVec3( vel, SG_METER_TO_FEET );
+  sgdScaleVec3( contact, _contact.data(), SG_METER_TO_FEET );
+  sgdScaleVec3( vel, _vel.data(), SG_METER_TO_FEET );
+  sgdCopyVec3( normal, _normal.data() );
   *agl *= SG_METER_TO_FEET;
 
   // return material properties if available
@@ -906,8 +920,13 @@ FGInterface::get_agl_m(double t, const double pt[3], double max_altoff,
                        double contact[3], double normal[3], double vel[3],
                        int *type, const SGMaterial** material, double *agl)
 {
-  return ground_cache.get_agl(t, pt, max_altoff, contact, normal, vel, type,
-                              material, agl);
+  SGVec3d _contact, _normal, _vel;
+  bool found = ground_cache.get_agl(t, SGVec3d(pt), max_altoff, _contact,
+                                    _normal, _vel, type, material, agl);
+  sgdCopyVec3(contact, _contact.data());
+  sgdCopyVec3(normal, _normal.data());
+  sgdCopyVec3(vel, _vel.data());
+  return found;
 }
 
 bool
@@ -916,14 +935,15 @@ FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
                         int *type, const SGMaterial** material, double *agl)
 {
   // Convert units and do the real work.
-  sgdVec3 pt_m;
-  sgdScaleVec3( pt_m, pt, SG_FEET_TO_METER );
+  SGVec3d pt_m = SG_FEET_TO_METER*SGVec3d(pt);
+  SGVec3d _contact, _normal, _vel;
   bool ret = ground_cache.get_agl(t, pt_m, SG_FEET_TO_METER * max_altoff,
-                                  contact, normal, vel,
+                                  _contact, _normal, _vel,
                                   type, material, agl);
   // Convert units back ...
-  sgdScaleVec3( contact, SG_METER_TO_FEET );
-  sgdScaleVec3( vel, SG_METER_TO_FEET );
+  sgdScaleVec3( contact, _contact.data(), SG_METER_TO_FEET );
+  sgdScaleVec3( vel, _vel.data(), SG_METER_TO_FEET );
+  sgdCopyVec3( normal, _normal.data() );
   *agl *= SG_METER_TO_FEET;
   return ret;
 }
@@ -932,37 +952,37 @@ FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
 double
 FGInterface::get_groundlevel_m(double lat, double lon, double alt)
 {
-  sgdVec3 pos, cpos;
   // Compute the cartesian position of the given lat/lon/alt.
-  sgGeodToCart(lat, lon, alt, pos);
+  SGVec3d pos = SGVec3d::fromGeod(SGGeod::fromRadM(lon, lat, alt));
 
   // FIXME: how to handle t - ref_time differences ???
+  SGVec3d cpos;
   double ref_time, radius;
   // Prepare the ground cache for that position.
-  if (!is_valid_m(&ref_time, cpos, &radius)) {
-    bool ok = prepare_ground_cache_m(ref_time, pos, 10);
+  if (!is_valid_m(&ref_time, cpos.data(), &radius)) {
+    bool ok = prepare_ground_cache_m(ref_time, pos.data(), 10);
     /// This is most likely the case when the given altitude is
     /// too low, try with a new altitude of 10000m, that should be
     /// sufficient to find a ground level below everywhere on our planet
     if (!ok) {
-      sgGeodToCart(lat, lon, 10000, pos);
+      pos = SGVec3d::fromGeod(SGGeod::fromRadM(lon, lat, 10000));
       /// If there is still no ground, return sea level radius
-      if (!prepare_ground_cache_m(ref_time, pos, 10))
+      if (!prepare_ground_cache_m(ref_time, pos.data(), 10))
         return 0;
     }
-  } else if (radius*radius <= sgdDistanceSquaredVec3(pos, cpos)) {
+  } else if (radius*radius <= distSqr(pos, cpos)) {
     /// We reuse the old radius value, but only if it is at least 10 Meters ..
     if (!(10 < radius)) // Well this strange compare is nan safe
       radius = 10;
 
-    bool ok = prepare_ground_cache_m(ref_time, pos, radius);
+    bool ok = prepare_ground_cache_m(ref_time, pos.data(), radius);
     /// This is most likely the case when the given altitude is
     /// too low, try with a new altitude of 10000m, that should be
     /// sufficient to find a ground level below everywhere on our planet
     if (!ok) {
-      sgGeodToCart(lat, lon, 10000, pos);
+      pos = SGVec3d::fromGeod(SGGeod::fromRadM(lon, lat, 10000));
       /// If there is still no ground, return sea level radius
-      if (!prepare_ground_cache_m(ref_time, pos, radius))
+      if (!prepare_ground_cache_m(ref_time, pos.data(), radius))
         return 0;
     }
   }
@@ -973,24 +993,28 @@ FGInterface::get_groundlevel_m(double lat, double lon, double alt)
   // the returns stem from the groundcache or from the coarse
   // computations below the groundcache. The contact point is still something
   // valid, the normals and the other returns just contain some defaults.
-  get_agl_m(ref_time, pos, 2.0, contact, normal, vel, &type, 0, &agl);
-  Point3D geodPos = sgCartToGeod(Point3D(contact[0], contact[1], contact[2]));
-  return geodPos.elev();
+  get_agl_m(ref_time, pos.data(), 2.0, contact, normal, vel, &type, 0, &agl);
+  SGGeod geod = SGGeod::fromCart(SGVec3d(contact));
+  return geod.getElevationM();
 }
   
 bool
 FGInterface::caught_wire_m(double t, const double pt[4][3])
 {
-  return ground_cache.caught_wire(t, pt);
+  SGVec3d pt_m[4];
+  for (int i=0; i<4; ++i)
+    sgdCopyVec3(pt_m[i].data(), pt[i]);
+  
+  return ground_cache.caught_wire(t, pt_m);
 }
 
 bool
 FGInterface::caught_wire_ft(double t, const double pt[4][3])
 {
   // Convert units and do the real work.
-  double pt_m[4][3];
+  SGVec3d pt_m[4];
   for (int i=0; i<4; ++i)
-    sgdScaleVec3(pt_m[i], pt[i], SG_FEET_TO_METER);
+    sgdScaleVec3(pt_m[i].data(), pt[i], SG_FEET_TO_METER);
     
   return ground_cache.caught_wire(t, pt_m);
 }
@@ -998,17 +1022,24 @@ FGInterface::caught_wire_ft(double t, const double pt[4][3])
 bool
 FGInterface::get_wire_ends_m(double t, double end[2][3], double vel[2][3])
 {
-  return ground_cache.get_wire_ends(t, end, vel);
+  SGVec3d _end[2], _vel[2];
+  bool ret = ground_cache.get_wire_ends(t, _end, _vel);
+  for (int k=0; k<2; ++k) {
+    sgdCopyVec3( end[k], _end[k].data() );
+    sgdCopyVec3( vel[k], _vel[k].data() );
+  }
+  return ret;
 }
 
 bool
 FGInterface::get_wire_ends_ft(double t, double end[2][3], double vel[2][3])
 {
   // Convert units and do the real work.
-  bool ret = ground_cache.get_wire_ends(t, end, vel);
+  SGVec3d _end[2], _vel[2];
+  bool ret = ground_cache.get_wire_ends(t, _end, _vel);
   for (int k=0; k<2; ++k) {
-    sgdScaleVec3( end[k], SG_METER_TO_FEET );
-    sgdScaleVec3( vel[k], SG_METER_TO_FEET );
+    sgdScaleVec3( end[k], _end[k].data(), SG_METER_TO_FEET );
+    sgdScaleVec3( vel[k], _vel[k].data(), SG_METER_TO_FEET );
   }
   return ret;
 }

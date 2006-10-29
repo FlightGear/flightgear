@@ -61,8 +61,13 @@ void FGATCDisplay::bind() {
 void FGATCDisplay::unbind() {
 }
 
+void FGATCDisplay::update(double dt)
+{
+  std::cout << "OSGFIXME" << std::endl;
+}
+
 // update - this actually draws the visuals and should be called from the main Flightgear rendering loop.
-void FGATCDisplay::update(double dt) {
+void FGATCDisplay::update(double dt, osg::State& state) {
 	
 	// These strings are used for temporary storage of the transmission string in order
 	// that the string we view only changes when the next repetition starts scrolling

@@ -550,7 +550,7 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
     return true;
 }
 
-void fgCockpitUpdate( void ) {
+void fgCockpitUpdate( osg::State* state ) {
 
     SG_LOG( SG_COCKPIT, SG_DEBUG,
             "Cockpit: code " << ac_cockpit->code() << " status "
@@ -568,7 +568,7 @@ void fgCockpitUpdate( void ) {
     if ( hud_visibility_node->getBoolValue() ) {
         // This will check the global hud linked list pointer.
         // If there is anything to draw it will.
-        fgUpdateHUD();
+        fgUpdateHUD( state );
     }
 
     glViewport( 0, 0, iwidth, iheight );

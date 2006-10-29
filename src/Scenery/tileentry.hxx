@@ -42,7 +42,13 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/placementtrans.hxx>
-#include <simgear/structure/ssgSharedPtr.hxx>
+
+#include <osg/ref_ptr>
+#include <osg/Array>
+#include <osg/Group>
+#include <osg/LOD>
+#include <osg/MatrixTransform>
+#include <osg/Switch>
 
 #if defined( sgi )
 #include <strings.h>
@@ -57,12 +63,6 @@ typedef point_list::iterator point_list_iterator;
 typedef point_list::const_iterator const_point_list_iterator;
 
 
-class ssgLeaf;
-class ssgBranch;
-class ssgTransform;
-class ssgSelector;
-class ssgRangeSelector;
-class ssgVertexArray;
 class FGTileEntry;
 
 
@@ -76,7 +76,7 @@ private:
     string model_path;
     string texture_path;
     FGTileEntry *tile;
-    ssgSharedPtr<ssgTransform> obj_trans;
+    osg::ref_ptr<osg::MatrixTransform> obj_trans;
     SGBucket bucket;
     bool cache_obj;
 
@@ -85,7 +85,7 @@ public:
 
     inline FGDeferredModel() { }
     inline FGDeferredModel( const string& mp, const string& tp, SGBucket b,
-		     FGTileEntry *t, ssgTransform *ot, bool co )
+                            FGTileEntry *t, osg::MatrixTransform *ot, bool co )
     {
 	model_path = mp;
 	texture_path = tp;
@@ -100,7 +100,7 @@ public:
     inline const SGBucket& get_bucket() const { return bucket; }
     inline const bool get_cache_state() const { return cache_obj; }
     inline FGTileEntry *get_tile() const { return tile; }
-    inline ssgTransform *get_obj_trans() const { return obj_trans; }
+    inline osg::MatrixTransform *get_obj_trans() const { return obj_trans.get(); }
 };
 
 
@@ -121,10 +121,10 @@ public:
 private:
 
     // ssg tree structure for this tile is as follows:
-    // ssgRoot(scene)
-    //     - ssgBranch(terrain)
-    //        - ssgTransform(tile)
-    //           - ssgRangeSelector(tile)
+    // osg::Group(scene)
+    //     - osg::Group(terrain)
+    //        - SGPlacementTransform(tile)
+    //           - osg::LOD(tile)
     //              - ssgEntity(tile)
     //                 - kid1(fan)
     //                 - kid2(fan)
@@ -132,27 +132,27 @@ private:
     //                 - kidn(fan)
 
     // pointer to ssg transform for this tile
-    ssgSharedPtr<ssgPlacementTransform> terra_transform;
-    ssgSharedPtr<ssgPlacementTransform> vasi_lights_transform;
-    ssgSharedPtr<ssgPlacementTransform> rwy_lights_transform;
-    ssgSharedPtr<ssgPlacementTransform> taxi_lights_transform;
-    ssgSharedPtr<ssgPlacementTransform> gnd_lights_transform;
+    osg::ref_ptr<SGPlacementTransform> terra_transform;
+    osg::ref_ptr<SGPlacementTransform> vasi_lights_transform;
+    osg::ref_ptr<SGPlacementTransform> rwy_lights_transform;
+    osg::ref_ptr<SGPlacementTransform> taxi_lights_transform;
+    osg::ref_ptr<SGPlacementTransform> gnd_lights_transform;
 
     // pointer to ssg range selector for this tile
-    ssgSharedPtr<ssgRangeSelector> terra_range;
-    ssgSharedPtr<ssgRangeSelector> gnd_lights_range;
+    osg::ref_ptr<osg::LOD> terra_range;
+    osg::ref_ptr<osg::LOD> gnd_lights_range;
 
     // we create several preset brightness and can choose which one we
     // want based on lighting conditions.
-    ssgSharedPtr<ssgSelector> gnd_lights_brightness;
+    osg::ref_ptr<osg::Switch> gnd_lights_brightness;
 
     // we need to be able to turn runway lights on or off (doing this
     // via a call back would be nifty, but then the call back needs to
     // know about the higher level application's global state which is
     // a problem if we move the code into simgear.)
-    ssgSharedPtr<ssgSelector> vasi_lights_selector;
-    ssgSharedPtr<ssgSelector> rwy_lights_selector;
-    ssgSharedPtr<ssgSelector> taxi_lights_selector;
+    osg::ref_ptr<osg::Switch> vasi_lights_selector;
+    osg::ref_ptr<osg::Switch> rwy_lights_selector;
+    osg::ref_ptr<osg::Switch> taxi_lights_selector;
 
     /**
      * Indicates this tile has been loaded from a file and connected
@@ -169,15 +169,15 @@ private:
     volatile int pending_models;
 
     bool obj_load( const string& path,
-                   ssgBranch* geometry,
-                   ssgBranch* vasi_lights,
-                   ssgBranch* rwy_lights,
-                   ssgBranch* taxi_lights,
-                   ssgVertexArray* gound_lights,
+                   osg::Group* geometry,
+                   osg::Group* vasi_lights,
+                   osg::Group* rwy_lights,
+                   osg::Group* taxi_lights,
+                   osg::Vec3Array* gound_lights,
                    bool is_base );
 
-    ssgLeaf* gen_lights( SGMaterialLib *matlib, ssgVertexArray *lights,
-                         int inc, float bright );
+    osg::Node* gen_lights( SGMaterialLib *matlib, osg::Vec3Array *lights,
+                           int inc, float bright );
 
     double timestamp;
 
@@ -255,18 +255,13 @@ public:
     inline const SGBucket& get_tile_bucket() const { return tile_bucket; }
 
     /**
-     * Apply ssgLeaf::makeDList to all leaf of a branch
-     */
-    void makeDList( ssgBranch *b );
-
-    /**
      * Add terrain mesh and ground lighting to scene graph.
      */
-    void add_ssg_nodes( ssgBranch *terrain_branch,
-			ssgBranch *gnd_lights_branch,
-                        ssgBranch *vasi_lights_branch,
-			ssgBranch *rwy_lights_branch,
-			ssgBranch *taxi_lights_branch );
+    void add_ssg_nodes( osg::Group *terrain_branch,
+			osg::Group *gnd_lights_branch,
+                        osg::Group *vasi_lights_branch,
+			osg::Group *rwy_lights_branch,
+			osg::Group *taxi_lights_branch );
 
     /**
      * disconnect terrain mesh and ground lighting nodes from scene
@@ -278,7 +273,7 @@ public:
     /**
      * return the SSG Transform node for the terrain
      */
-    inline ssgPlacementTransform *get_terra_transform() const { return terra_transform; }
+    inline SGPlacementTransform *get_terra_transform() const { return terra_transform.get(); }
 
     inline double get_timestamp() const { return timestamp; }
     inline void set_timestamp( double time_ms ) { timestamp = time_ms; }

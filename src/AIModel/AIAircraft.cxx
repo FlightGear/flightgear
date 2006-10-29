@@ -82,6 +82,11 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     use_perf_vs = true;
     isTanker = false;
 
+    no_roll = false;
+    tgt_speed = 0;
+    speed = 0;
+    groundTargetSpeed = 0;
+
     // set heading and altitude locks
     hdg_lock = false;
     alt_lock = false;

@@ -34,6 +34,10 @@
 #  include <windows.h>
 #endif
 
+#include <osg/ref_ptr>
+#include <osg/StateSet>
+#include <osg/Texture2D>
+
 #include <plib/fnt.h>
 
 #include <simgear/compiler.h>
@@ -54,7 +58,6 @@ SG_USING_STD(vector);
 SG_USING_STD(map);
 
 
-class ssgTexture;
 class FGPanelInstrument;
 
 
@@ -72,9 +75,9 @@ class FGPanelInstrument;
 class FGTextureManager
 {
 public:
-  static ssgTexture * createTexture(const string &relativePath);
+  static osg::Texture2D* createTexture(const string &relativePath);
 private:
-  static map<string,ssgTexture *> _textureMap;
+  static map<string,osg::ref_ptr<osg::Texture2D> > _textureMap;
 };
 
 
@@ -97,7 +100,7 @@ public:
 
   virtual const string &getPath () const { return _path; }
 
-  virtual ssgTexture * getTexture ();
+  virtual osg::StateSet* getTexture ();
 
   virtual void setCrop (float minX, float minY, float maxX, float maxY) {
     _minX = minX; _minY = minY; _maxX = maxX; _maxY = maxY;
@@ -111,7 +114,7 @@ public:
 
 private:
   string _path;
-  ssgTexture * _texture;
+  osg::ref_ptr<osg::StateSet> _texture;
   float _minX, _minY, _maxX, _maxY;
 };
 
@@ -141,9 +144,10 @@ public:
   virtual void init ();
   virtual void bind ();
   virtual void unbind ();
-  virtual void draw ();
-  virtual void update (double dt);
-  virtual void update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
+  virtual void draw (osg::State& state);
+  virtual void update (double);
+  void update (osg::State& state);
+  virtual void update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
 
   virtual void updateMouseDelay();
 
@@ -151,10 +155,10 @@ public:
   virtual void addInstrument (FGPanelInstrument * instrument);
 
 				// Background texture.
-  virtual void setBackground (ssgTexture * texture);
+  virtual void setBackground (osg::Texture2D* texture);
 
 				// Background multiple textures.
-  virtual void setMultiBackground (ssgTexture * texture, int idx);
+  virtual void setMultiBackground (osg::Texture2D* texture, int idx);
 
 				// Make the panel visible or invisible.
   virtual bool getVisibility () const;
@@ -208,8 +212,8 @@ private:
   SGConstPropertyNode_ptr _xsize_node;
   SGConstPropertyNode_ptr _ysize_node;
   
-  ssgTexture * _bg;
-  ssgTexture * _mbg[8];
+  osg::ref_ptr<osg::StateSet> _bg;
+  osg::ref_ptr<osg::StateSet> _mbg[8];
 				// List of instruments in panel.
   instrument_list_type _instruments;
   bool _enable_depth_test;
@@ -335,7 +339,7 @@ public:
   FGInstrumentLayer (int w = -1, int h = -1);
   virtual ~FGInstrumentLayer ();
 
-  virtual void draw () = 0;
+  virtual void draw (osg::State& state) = 0;
   virtual void transform () const;
 
   virtual int getWidth () const { return _w; }
@@ -377,8 +381,8 @@ public:
   FGPanelInstrument (int x, int y, int w, int h);
   virtual ~FGPanelInstrument ();
 
-  virtual void draw () = 0;
-  virtual void drawHotspots();
+  virtual void draw (osg::State& state) = 0;
+  virtual void drawHotspots(osg::State& state);
 
   virtual void setPosition(int x, int y);
   virtual void setSize(int w, int h);
@@ -414,7 +418,7 @@ public:
   FGLayeredInstrument (int x, int y, int w, int h);
   virtual ~FGLayeredInstrument ();
 
-  virtual void draw ();
+  virtual void draw (osg::State& state);
 
 				// Transfer pointer ownership!!
   virtual int addLayer (FGInstrumentLayer *layer);
@@ -444,7 +448,7 @@ public:
   //FGSpecialInstrument (int x, int y, int w, int h);
   virtual ~FGSpecialInstrument ();
 
-  virtual void draw ();
+  virtual void draw (osg::State& state);
   
 protected:
   DCLGPS* complex;
@@ -463,7 +467,7 @@ class FGGroupLayer : public FGInstrumentLayer
 public:
   FGGroupLayer ();
   virtual ~FGGroupLayer ();
-  virtual void draw ();
+  virtual void draw (osg::State& state);
 				// transfer pointer ownership
   virtual void addLayer (FGInstrumentLayer * layer);
 protected:
@@ -485,7 +489,7 @@ public:
   FGTexturedLayer (const FGCroppedTexture &texture, int w = -1, int h = -1);
   virtual ~FGTexturedLayer ();
 
-  virtual void draw ();
+  virtual void draw (osg::State& state);
 
   virtual void setTexture (const FGCroppedTexture &texture) {
     _texture = texture;
@@ -540,7 +544,7 @@ public:
   FGTextLayer (int w = -1, int h = -1);
   virtual ~FGTextLayer ();
 
-  virtual void draw ();
+  virtual void draw (osg::State& state);
 
 				// Transfer pointer!!
   virtual void addChunk (Chunk * chunk);
@@ -576,7 +580,7 @@ class FGSwitchLayer : public FGGroupLayer
 public:
 				// Transfer pointers!!
   FGSwitchLayer ();
-  virtual void draw ();
+  virtual void draw (osg::State& state);
 
 };
 

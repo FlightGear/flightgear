@@ -21,22 +21,79 @@
 #  include <config.h>
 #endif
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
+#include <osg/NodeVisitor>
+
 #include <simgear/math/SGMath.hxx>
-#include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/scene/util/SGNodeMasks.hxx>
+
 #include <math.h>
 #include <Main/util.hxx>
 #include <Main/viewer.hxx>
 
 #include "AICarrier.hxx"
 
-/** Value of earth radius (meters) */
-#define RADIUS_M   SG_EQUATORIAL_RADIUS_M
+class FGCarrierVisitor : public osg::NodeVisitor {
+public:
+  FGCarrierVisitor(FGAICarrier* carrier,
+                   const std::list<std::string>& wireObjects,
+                   const std::list<std::string>& catapultObjects,
+                   const std::list<std::string>& solidObjects) :
+    osg::NodeVisitor(osg::NodeVisitor::NODE_VISITOR,
+                     osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
+    mWireObjects(wireObjects),
+    mCatapultObjects(catapultObjects),
+    mSolidObjects(solidObjects),
+    mFoundHot(false),
+    mCarrier(carrier)
+  { }
+  virtual void apply(osg::Node& node)
+  {
+    osg::ref_ptr<osg::Referenced> oldUserData = mUserData;
+    bool oldFoundHot = mFoundHot;
+    mFoundHot = false;
 
+    if (std::find(mWireObjects.begin(), mWireObjects.end(), node.getName())
+        != mWireObjects.end()) {
+      mFoundHot = true;
+      mUserData = FGAICarrierHardware::newWire(mCarrier);
+    }
+    if (std::find(mCatapultObjects.begin(), mCatapultObjects.end(), node.getName())
+        != mCatapultObjects.end()) {
+      mFoundHot = true;
+      mUserData = FGAICarrierHardware::newCatapult(mCarrier);
+    }
+    if (std::find(mSolidObjects.begin(), mSolidObjects.end(), node.getName())
+        != mSolidObjects.end()) {
+      mFoundHot = true;
+      mUserData = FGAICarrierHardware::newSolid(mCarrier);
+    }
+    node.setUserData(mUserData.get());
 
+    traverse(node);
+
+    mFoundHot = oldFoundHot || mFoundHot;
+
+    if (mFoundHot) {
+      node.setNodeMask(node.getNodeMask() | SG_NODEMASK_TERRAIN_BIT);
+    } else
+      node.setNodeMask(node.getNodeMask() & ~SG_NODEMASK_TERRAIN_BIT);
+
+    mUserData = oldUserData;
+  }
+  
+private:
+  std::list<std::string> mWireObjects;
+  std::list<std::string> mCatapultObjects;
+  std::list<std::string> mSolidObjects;
+  bool mFoundHot;
+  FGAICarrier* mCarrier;
+  osg::ref_ptr<osg::Referenced> mUserData;
+};
 
 FGAICarrier::FGAICarrier() : FGAIShip(otCarrier) {
 }
@@ -140,10 +197,10 @@ void FGAICarrier::setTACANChannelID(const string& id) {
     TACAN_channel_id = id;
 }
 
-void FGAICarrier::getVelocityWrtEarth(sgdVec3& v, sgdVec3& omega, sgdVec3& pivot) {
-    sgdCopyVec3(v, vel_wrt_earth.sg() );
-    sgdCopyVec3(omega, rot_wrt_earth.sg() );
-    sgdCopyVec3(pivot, rot_pivot_wrt_earth.sg() );
+void FGAICarrier::getVelocityWrtEarth(SGVec3d& v, SGVec3d& omega, SGVec3d& pivot) {
+    v = vel_wrt_earth;
+    omega = rot_wrt_earth;
+    pivot = rot_pivot_wrt_earth;
 }
 
 void FGAICarrier::update(double dt) {
@@ -263,14 +320,12 @@ bool FGAICarrier::init() {
     // To avoid that every detail in a carrier 3D model will end into
     // the aircraft local cache, only set the HOT traversal bit on
     // selected objects.
-    ssgEntity *sel = aip.getSceneGraph();
+    osg::Node* sel = aip.getSceneGraph();
     // Clear the HOT traversal flag
-    mark_nohot(sel);
     // Selectively set that flag again for wires/cats/solid objects.
     // Attach a pointer to this carrier class to those objects.
-    mark_wires(sel, wire_objects);
-    mark_cat(sel, catapult_objects);
-    mark_solid(sel, solid_objects);
+    FGCarrierVisitor carrierVisitor(this, wire_objects, catapult_objects, solid_objects);
+    sel->accept(carrierVisitor);
 
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
@@ -414,187 +469,6 @@ bool FGAICarrier::getParkPosition(const string& id, SGGeod& geodPos,
     }
 
     return false;
-}
-
-
-void FGAICarrier::mark_nohot(ssgEntity* e) {
-    if (e->isAKindOf(ssgTypeBranch())) {
-        ssgBranch* br = (ssgBranch*)e;
-        ssgEntity* kid;
-        for ( kid = br->getKid(0); kid != NULL ; kid = br->getNextKid() )
-            mark_nohot(kid);
-
-        br->clrTraversalMaskBits(SSGTRAV_HOT);
-
-    } else if (e->isAKindOf(ssgTypeLeaf())) {
-
-        e->clrTraversalMaskBits(SSGTRAV_HOT);
-    }
-}
-
-
-bool FGAICarrier::mark_wires(ssgEntity* e, const list<string>& wire_objects, bool mark) {
-    bool found = false;
-    if (e->isAKindOf(ssgTypeBranch())) {
-        ssgBranch* br = (ssgBranch*)e;
-        ssgEntity* kid;
-
-        list<string>::const_iterator it;
-        for (it = wire_objects.begin(); it != wire_objects.end(); ++it)
-            mark = mark || (e->getName() && (*it) == e->getName());
-
-        for ( kid = br->getKid(0); kid != NULL ; kid = br->getNextKid() )
-            found = mark_wires(kid, wire_objects, mark) || found;
-
-        if (found)
-            br->setTraversalMaskBits(SSGTRAV_HOT);
-
-    } else if (e->isAKindOf(ssgTypeLeaf())) {
-        list<string>::const_iterator it;
-        for (it = wire_objects.begin(); it != wire_objects.end(); ++it) {
-            if (mark || (e->getName() && (*it) == e->getName())) {
-                e->setTraversalMaskBits(SSGTRAV_HOT);
-                ssgBase* ud = e->getUserData();
-                if (ud) {
-                    FGAICarrierHardware* ch = dynamic_cast<FGAICarrierHardware*>(ud);
-                    if (ch) {
-                        SG_LOG(SG_GENERAL, SG_WARN,
-                                "AICarrier: Carrier hardware gets marked twice!\n"
-                                "           You have probably a whole branch marked as"
-                                " a wire which also includes other carrier hardware.");
-                    } else {
-                        SG_LOG(SG_GENERAL, SG_ALERT,
-                                "AICarrier: Found user data attached to a leaf node which "
-                                "should be marked as a wire!\n    ****Skipping!****");
-                    }
-                } else {
-                    e->setUserData( FGAICarrierHardware::newWire( this ) );
-                    ssgLeaf *l = (ssgLeaf*)e;
-                    if ( l->getNumLines() != 1 ) {
-                        SG_LOG(SG_GENERAL, SG_ALERT,
-                                "AICarrier: Found wires not modeled with exactly one line!");
-                    }
-                    found = true;
-                }
-            }
-        }
-    }
-    return found;
-}
-
-
-bool FGAICarrier::mark_solid(ssgEntity* e, const list<string>& solid_objects, bool mark) {
-    bool found = false;
-    if (e->isAKindOf(ssgTypeBranch())) {
-        ssgBranch* br = (ssgBranch*)e;
-        ssgEntity* kid;
-
-        list<string>::const_iterator it;
-        for (it = solid_objects.begin(); it != solid_objects.end(); ++it)
-            mark = mark || (e->getName() && (*it) == e->getName());
-
-        for ( kid = br->getKid(0); kid != NULL ; kid = br->getNextKid() )
-            found = mark_solid(kid, solid_objects, mark) || found;
-
-        if (found)
-            br->setTraversalMaskBits(SSGTRAV_HOT);
-
-    } else if (e->isAKindOf(ssgTypeLeaf())) {
-        list<string>::const_iterator it;
-        for (it = solid_objects.begin(); it != solid_objects.end(); ++it) {
-            if (mark || (e->getName() && (*it) == e->getName())) {
-                e->setTraversalMaskBits(SSGTRAV_HOT);
-                ssgBase* ud = e->getUserData();
-
-                if (ud) {
-                    FGAICarrierHardware* ch = dynamic_cast<FGAICarrierHardware*>(ud);
-                    if (ch) {
-                        SG_LOG(SG_GENERAL, SG_WARN,
-                                "AICarrier: Carrier hardware gets marked twice!\n"
-                                "           You have probably a whole branch marked solid"
-                                " which also includes other carrier hardware.");
-                    } else {
-                        SG_LOG(SG_GENERAL, SG_ALERT,
-                                "AICarrier: Found user data attached to a leaf node which "
-                                "should be marked solid!\n    ****Skipping!****");
-                    }
-                } else {
-                    e->setUserData( FGAICarrierHardware::newSolid( this ) );
-                    found = true;
-                }
-            }
-        }
-    }
-    return found;
-}
-
-
-bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects, bool mark) {
-    bool found = false;
-    if (e->isAKindOf(ssgTypeBranch())) {
-        ssgBranch* br = (ssgBranch*)e;
-        ssgEntity* kid;
-
-        list<string>::const_iterator it;
-        for (it = cat_objects.begin(); it != cat_objects.end(); ++it)
-            mark = mark || (e->getName() && (*it) == e->getName());
-
-        for ( kid = br->getKid(0); kid != NULL ; kid = br->getNextKid() )
-            found = mark_cat(kid, cat_objects, mark) || found;
-
-        if (found)
-            br->setTraversalMaskBits(SSGTRAV_HOT);
-
-    } else if (e->isAKindOf(ssgTypeLeaf())) {
-        list<string>::const_iterator it;
-        for (it = cat_objects.begin(); it != cat_objects.end(); ++it) {
-            if (mark || (e->getName() && (*it) == e->getName())) {
-                e->setTraversalMaskBits(SSGTRAV_HOT);
-                ssgBase* ud = e->getUserData();
-                if (ud) {
-                    FGAICarrierHardware* ch = dynamic_cast<FGAICarrierHardware*>(ud);
-                    if (ch) {
-                        SG_LOG(SG_GENERAL, SG_WARN,
-                                "AICarrier: Carrier hardware gets marked twice!\n"
-                                "You have probably a whole branch marked as"
-                                "a catapult which also includes other carrier hardware.");
-                    } else {
-                        SG_LOG(SG_GENERAL, SG_ALERT,
-                                "AICarrier: Found user data attached to a leaf node which "
-                                "should be marked as a catapult!\n    ****Skipping!****");
-                    }
-                } else {
-                    e->setUserData( FGAICarrierHardware::newCatapult( this ) );
-                    ssgLeaf *l = (ssgLeaf*)e;
-                    if ( l->getNumLines() != 1 ) {
-                        SG_LOG(SG_GENERAL, SG_ALERT,
-                                "AICarrier: Found a cat not modeled with exactly "
-                                "one line!");
-                    } else {
-                        // Now some special code to make sure the cat points in the right
-                        // direction. The 0 index must be the backward end, the 1 index
-                        // the forward end.
-                        // Forward is positive x-direction in our 3D model, also the model
-                        // as such is flattened when it is loaded, so we do not need to
-                        // care for transforms ...
-                        short v[2];
-                        l->getLine(0, v, v+1 );
-                        SGVec3f ends[2];
-                        for (int k=0; k<2; ++k)
-                            sgCopyVec3( ends[k].sg(), l->getVertex( v[k] ) );
-
-                        // When the 1 end is behind the 0 end, swap the coordinates.
-                        if (ends[0][0] < ends[1][0]) {
-                            sgCopyVec3( l->getVertex( v[0] ), ends[1].sg() );
-                            sgCopyVec3( l->getVertex( v[1] ), ends[0].sg() );
-                        }
-                        found = true;
-                    }
-                }
-            }
-        }
-    }
-    return found;
 }
 
 // find relative wind
@@ -744,12 +618,6 @@ bool FGAICarrier::OutsideBox() { //returns true if the carrier is outside operat
     return false;
 
 } // end OutsideBox
-
-
-// return the distance to the horizon, given the altitude and the radius of the earth
-float FGAICarrier::Horizon(float h) {
-    return RADIUS_M * acos(RADIUS_M / (RADIUS_M + h));
-}
 
 
 bool FGAICarrier::InToWind() {

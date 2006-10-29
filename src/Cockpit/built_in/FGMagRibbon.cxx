@@ -36,7 +36,7 @@ FGMagRibbon::FGMagRibbon (int w, int h)
 }
 
 void
-FGMagRibbon::draw ()
+FGMagRibbon::draw (osg::State& state)
 {
   double heading = _magcompass_node->getDoubleValue();
   double xoffset, yoffset;
@@ -71,10 +71,16 @@ FGMagRibbon::draw ()
   FGCroppedTexture *t = getTexture();
   t->setCrop(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
 
-  glPushAttrib(GL_DEPTH_BUFFER_BIT);
-  glEnable(GL_DEPTH_TEST);
-  FGTexturedLayer::draw();
-  glPopAttrib();
+  static osg::ref_ptr<osg::StateSet> stateSet = new osg::StateSet;
+  stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+
+  state.pushStateSet(stateSet.get());
+  state.apply();
+
+  FGTexturedLayer::draw(state);
+
+  state.popStateSet();
+  state.apply();
 }
 
 // end of FGMagRibbon.cxx

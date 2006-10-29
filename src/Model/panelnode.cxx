@@ -14,8 +14,9 @@
 SG_USING_STD(vector);
 
 
-// Static (!) handling for all 3D panels in the program.  Very
-// clumsy.  Replace with per-aircraft handling.
+// Static (!) handling for all 3D panels in the program.
+// OSGFIXME: Put the panel as different elements in the scenegraph.
+// Then just pick in that scenegraph.
 vector<FGPanelNode*> all_3d_panels;
 bool fgHandle3DPanelMouseEvent( int button, int updown, int x, int y )
 {
@@ -45,16 +46,10 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
     // Never mind.  We *have* to call init to make sure the static
     // state is initialized (it's not, if there aren't any 2D
     // panels).  This is a memory leak and should be fixed!`
+    // FIXME
     _panel->init();
 
     _panel->setDepthTest( props->getBoolValue("depth-test") );
-
-    // Initialize the matrices to the identity.  PLib prints warnings
-    // when trying to invert singular matrices (e.g. when not using a
-    // 3D panel).
-    for(i=0; i<4; i++)
-        for(int j=0; j<4; j++)
-            _lastModelview[4*i+j] = _lastProjection[4*i+j] = i==j ? 1 : 0;
 
     // Read out the pixel-space info
     _xmax = _panel->getWidth();
@@ -80,44 +75,38 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
     // "a", "b", and "c" as our corners and "m" as the matrix. The
     // vector u goes from a to b, v from a to c, and w is a
     // perpendicular cross product.
-    float *a = _bottomLeft, *b = _bottomRight, *c = _topLeft, *m = _xform;
-    float u[3], v[3], w[3];
-    for(i=0; i<3; i++) u[i] = b[i] - a[i]; // U = B - A
-    for(i=0; i<3; i++) v[i] = c[i] - a[i]; // V = C - A
+    osg::Vec3 a = _bottomLeft;
+    osg::Vec3 b = _bottomRight;
+    osg::Vec3 c = _topLeft;
+    osg::Vec3 u = b - a;
+    osg::Vec3 v = c - a;
+    osg::Vec3 w = u^v;
 
-    w[0] = u[1]*v[2] - v[1]*u[2];          // W = U x V
-    w[1] = u[2]*v[0] - v[2]*u[0];
-    w[2] = u[0]*v[1] - v[0]*u[1];
-
+    osg::Matrix& m = _xform;
     // Now generate a trivial basis transformation matrix.  If we want
     // to map the three unit vectors to three arbitrary vectors U, V,
     // and W, then those just become the columns of the 3x3 matrix.
-    m[0] = u[0]; m[4] = v[0]; m[8]  = w[0]; m[12] = a[0]; //     |Ux Vx Wx|
-    m[1] = u[1]; m[5] = v[1]; m[9]  = w[1]; m[13] = a[1]; // m = |Uy Vy Wy|
-    m[2] = u[2]; m[6] = v[2]; m[10] = w[2]; m[14] = a[2]; //     |Uz Vz Wz|
-    m[3] = 0;    m[7] = 0;    m[11] = 0;    m[15] = 1;
+    m(0,0) = u[0]; m(1,0) = v[0]; m(2,0) = w[0]; m(3,0) = a[0];//    |Ux Vx Wx|
+    m(0,1) = u[1]; m(1,1) = v[1]; m(2,1) = w[1]; m(3,1) = a[1];//m = |Uy Vy Wy|
+    m(0,2) = u[2]; m(1,2) = v[2]; m(2,2) = w[2]; m(3,2) = a[2];//    |Uz Vz Wz|
+    m(0,3) = 0;    m(1,3) = 0;    m(2,3) = 0;    m(3,3) = 1;
 
     // The above matrix maps the unit (!) square to the panel
     // rectangle.  Postmultiply scaling factors that match the
     // pixel-space size of the panel.
-    for(i=0; i<4; i++) {
-        m[0+i] *= 1.0/_xmax;
-        m[4+i] *= 1.0/_ymax;
+    for(i=0; i<4; ++i) {
+        m(0,i) *= 1.0/_xmax;
+        m(1,i) *= 1.0/_ymax;
     }
 
-    // Now plib initialization.  The bounding sphere is defined nicely
-    // by our corner points:
-    float cx = (b[0]+c[0])/2;
-    float cy = (b[1]+c[1])/2;
-    float cz = (b[2]+c[2])/2;
-    float r = sqrt((cx-a[0])*(cx-a[0]) +
-                   (cy-a[1])*(cy-a[1]) +
-                   (cz-a[2])*(cz-a[2]));
-    bsphere.setCenter(cx, cy, cz);
-    bsphere.setRadius(r);
+    dirtyBound();
 
     // All done.  Add us to the list
     all_3d_panels.push_back(this);
+
+    setUseDisplayList(false);
+    getOrCreateStateSet()->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+    getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
 }
 
 FGPanelNode::~FGPanelNode()
@@ -125,29 +114,35 @@ FGPanelNode::~FGPanelNode()
     delete _panel;
 }
 
-void FGPanelNode::draw()
+void
+FGPanelNode::drawImplementation(osg::State& state) const
 {
-    // What's the difference?
-    draw_geometry();
+  osg::ref_ptr<osg::RefMatrix> mv = new osg::RefMatrix;
+  mv->set(_xform*state.getModelViewMatrix());
+  state.applyModelViewMatrix(mv.get());
+  
+  // Grab the matrix state, so that we can get back from screen
+  // coordinates to panel coordinates when the user clicks the
+  // mouse.
+  // OSGFIXME: we don't need that when we can really pick
+  const_cast<osg::Matrix&>(_lastModelview) = state.getModelViewMatrix();
+  const_cast<osg::Matrix&>(_lastProjection) = state.getProjectionMatrix();
+  state.getCurrentViewport()->getViewport(const_cast<int&>(_lastViewport[0]),
+                                          const_cast<int&>(_lastViewport[1]),
+                                          const_cast<int&>(_lastViewport[2]),
+                                          const_cast<int&>(_lastViewport[3]));
+  
+  _panel->draw(state);
 }
 
-void FGPanelNode::draw_geometry()
+osg::BoundingBox
+FGPanelNode::computeBound() const
 {
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glMultMatrixf(_xform);
-
-    // Grab the matrix state, so that we can get back from screen
-    // coordinates to panel coordinates when the user clicks the
-    // mouse.
-    glGetFloatv(GL_MODELVIEW_MATRIX, _lastModelview);
-    glGetFloatv(GL_PROJECTION_MATRIX, _lastProjection);
-    glGetIntegerv(GL_VIEWPORT, _lastViewport);
-
-    _panel->draw();
-
-
-    glPopMatrix();
+    osg::BoundingBox bb;
+    bb.expandBy(_bottomLeft);
+    bb.expandBy(_bottomRight);
+    bb.expandBy(_topLeft);
+    return bb;
 }
 
 bool FGPanelNode::doMouseAction(int button, int updown, int x, int y)
@@ -162,7 +157,7 @@ bool FGPanelNode::doMouseAction(int button, int updown, int x, int y)
 
     // Make two vectors in post-projection coordinates at the given
     // screen, one in the near field and one in the far field.
-    sgVec3 a, b;
+    osg::Vec3 a, b;
     a[0] = b[0] = vx;
     a[1] = b[1] = vy;
     a[2] =  0.75; // "Near" Z value
@@ -170,12 +165,11 @@ bool FGPanelNode::doMouseAction(int button, int updown, int x, int y)
 
     // Run both vectors "backwards" through the OpenGL matrix
     // transformation.  Remember to w-normalize the vectors!
-    sgMat4 m;
-    sgMultMat4(m, *(sgMat4*)_lastProjection, *(sgMat4*)_lastModelview);
-    sgInvertMat4(m);
+    osg::Matrix m = _lastModelview*_lastProjection;
+    m = osg::Matrix::inverse(m);
 
-    sgFullXformPnt3(a, m);
-    sgFullXformPnt3(b, m);
+    a = m.preMult(a);
+    b = m.preMult(b);
 
     // And find their intersection on the z=0 plane.  The resulting X
     // and Y coordinates are the hit location in panel coordinates.
@@ -185,11 +179,5 @@ bool FGPanelNode::doMouseAction(int button, int updown, int x, int y)
     int panelY = (int)(a[1] - a[2]*dydz + 0.5);
 
     return _panel->doLocalMouseAction(button, updown, panelX, panelY);
-}
-
-void FGPanelNode::die()
-{
-    SG_LOG(SG_ALL,SG_ALERT,"Unimplemented function called on FGPanelNode");
-    exit(1);
 }
 

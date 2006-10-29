@@ -27,6 +27,7 @@
 #  include <config.h>
 #endif
 
+#include <osg/State>
 #include <simgear/structure/subsystem_mgr.hxx>
 
 #include <vector>
@@ -72,6 +73,7 @@ public:
     void unbind();
 
     // Display any registered messages
+    void update(double dt, osg::State&);
     void update(double dt);
 
     // Register a single message for display after a delay of delay seconds

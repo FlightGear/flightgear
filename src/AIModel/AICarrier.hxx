@@ -23,7 +23,10 @@
 
 #include <string>
 #include <list>
-#include <plib/ssg.h>
+
+#include <osg/Referenced>
+#include <osg/Node>
+
 #include <simgear/compiler.h>
 
 SG_USING_STD(string);
@@ -37,7 +40,7 @@ SG_USING_STD(list);
 class FGAIManager;
 class FGAICarrier;
 
-class FGAICarrierHardware : public ssgBase {
+class FGAICarrierHardware : public osg::Referenced {
 public:
 
     enum Type { Catapult, Wire, Solid };
@@ -84,7 +87,7 @@ public:
     void setSign(const string& );
     void setTACANChannelID(const string &);
 
-    void getVelocityWrtEarth(sgdVec3& v, sgdVec3& omega, sgdVec3& pivot);
+    void getVelocityWrtEarth(SGVec3d& v, SGVec3d& omega, SGVec3d& pivot);
     virtual void bind();
     virtual void unbind();
     void UpdateWind ( double dt );
@@ -97,7 +100,6 @@ public:
     void TurnToLaunch();
     void TurnToBase();
     void ReturnToBox();
-    float Horizon(float h);
     bool OutsideBox();
 
     bool init();
@@ -124,11 +126,6 @@ private:
 
 
     void update(double dt);
-    void mark_nohot(ssgEntity*);
-
-    bool mark_wires(ssgEntity*, const list<string>&, bool = false);
-    bool mark_cat(ssgEntity*, const list<string>&, bool = false);
-    bool mark_solid(ssgEntity*, const list<string>&, bool = false);
     double wind_from_east;  // fps
     double wind_from_north; // fps
     double rel_wind_speed_kts;

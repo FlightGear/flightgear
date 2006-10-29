@@ -41,14 +41,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#ifdef HAVE_VALUES_H
-//#  include <values.h>  // for MAXINT
-//#endif
-
 #include <algorithm>    // for_each()
 #include <vector>       // STL vector
 #include <deque>        // STL double ended queue
 #include STL_FSTREAM
+
+#include <osg/State>
 
 #include <simgear/math/SGMath.hxx>
 #include <simgear/constants.h>
@@ -106,32 +104,6 @@ enum fgLabelJust{ LEFT_JUST, CENTER_JUST, RIGHT_JUST } ;
 #define HUDS_DECITICS            0x0040
 #define HUDS_NOTEXT              0x0080
 
-// Ladder orientaion
-// #define HUD_VERTICAL        1
-// #define HUD_HORIZONTAL       2
-// #define HUD_FREEFLOAT        3
-
-// Ladder orientation modes
-// #define HUD_LEFT         1
-// #define HUD_RIGHT            2
-// #define HUD_TOP              1
-// #define HUD_BOTTOM           2
-// #define HUD_V_LEFT           1
-// #define HUD_V_RIGHT          2
-// #define HUD_H_TOP            1
-// #define HUD_H_BOTTOM         2
-
-
-// Ladder sub-types
-// #define HUD_LIM              1
-// #define HUD_NOLIM            2
-// #define HUD_CIRC         3
-
-// #define HUD_INSTR_LADDER 1
-// #define HUD_INSTR_CLADDER    2
-// #define HUD_INSTR_HORIZON    3
-// #define HUD_INSTR_LABEL      4
-
 // in cockpit.cxx
 extern float get_throttleval ( void );
 extern float get_aileronval  ( void );
@@ -161,10 +133,8 @@ extern float get_climb_rate  ( void );
 extern float get_mach( void );
 extern char *coord_format_lat(float);
 extern char *coord_format_lon(float);
-//extern char *coord_format_latlon(float latitude, float longitude);  // cockpit.cxx
 
 // $$$ begin - added, VS Renganathan, 13 Oct 2K
-// #define FIGHTER_HUD
 extern float get_anzg (void);
 extern float get_Vx (void);
 extern float get_Vy (void);
@@ -205,7 +175,6 @@ extern float get_aux18(void);
 // $$$ end - added, VS Renganathan, 13 Oct 2K
 
 extern char *get_formated_gmt_time( void );
-extern void fgHUDReshape(void);
 
 enum  hudinstype{ HUDno_instr,
                   HUDscale,
@@ -522,9 +491,7 @@ class HUDdraw {
 };
 
 
-extern deque< instr_item *> HUD_deque;
 extern int HUD_style;
-//extern hud_deque_type HUD_deque;
 
 // instr_item           This class has no other purpose than to maintain
 //                      a linked list of instrument and derived class
@@ -788,26 +755,11 @@ public:
 };
 
 
-//using namespace std;
-//deque <instr_item>  * Hdeque_ptr;
-
 extern int  fgHUDInit( fgAIRCRAFT * /* current_aircraft */ );
 extern int  fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ );
-extern void fgUpdateHUD( void );
-extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
+extern void fgUpdateHUD( osg::State* );
+extern void fgUpdateHUD( osg::State*, GLfloat x_start, GLfloat y_start,
                          GLfloat x_end, GLfloat y_end );
-
-/*
-bool AddHUDInstrument( instr_item *pBlackBox );
-void DrawHUD ( void );
-bool DamageInstrument( INSTR_HANDLE unit );
-bool RepairInstrument( INSTR_HANDLE unit );
-
-
-void fgUpdateHUD ( Hptr hud );
-void fgUpdateHUD2( Hptr hud ); // Future use?
-void fgHUDSetTimeMode( Hptr hud, int time_of_day );
-*/
 
 
 

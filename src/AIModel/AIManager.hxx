@@ -26,7 +26,6 @@
 #include <list>
 
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/structure/ssgSharedPtr.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
 #include <Main/fg_props.hxx>
@@ -43,13 +42,13 @@ SG_USING_STD(vector);
 class FGModelID
 {
 private:
-  ssgSharedPtr<ssgBranch> model;
+  osg::ref_ptr<osg::Node> model;
   string path;
 public:
-  FGModelID(const string& pth, ssgBranch * mdl) { path =pth; model=mdl;};
-  ssgBranch * const getModelId() const { return model;};
+  FGModelID(const string& pth, osg::Node* mdl) { path =pth; model=mdl;};
+  osg::Node* const getModelId() const { return model.get();};
   const string & getPath() const { return path;};
-  int getNumRefs() const { return model.getNumRefs(); };
+  int getNumRefs() const { return model->referenceCount(); };
 };
 
 typedef vector<FGModelID> ModelVec;
@@ -100,8 +99,8 @@ public:
 
     void processScenario( const string &filename );
 
-  ssgBranch * getModel(const string& path);
-  void setModel(const string& path, ssgBranch *model);
+  osg::Node* getModel(const string& path);
+  void setModel(const string& path, osg::Node *model);
 
   static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
 

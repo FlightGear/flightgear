@@ -87,9 +87,6 @@ public:
    */
   virtual void remove_instance (Instance * instance);
 
-  virtual void draw ();
-
-
 
 private:
   /**

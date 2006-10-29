@@ -23,11 +23,9 @@
 #ifndef _OD_GAUGE_HXX
 #define _OD_GAUGE_HXX
 
+#include <osg/Texture2D>
 
-#include <plib/ssg.h>
 #include <simgear/structure/subsystem_mgr.hxx>
-
-class RenderTexture;
 
 /**
  * Owner Drawn Gauge helper class.
@@ -58,7 +56,7 @@ public:
      * Finish rendering and save the buffer to a texture.
      * @param texID name of a gl texture
      */
-    void endCapture(GLuint texID);
+    void endCapture(osg::Texture2D*);
     /**
      * Set the size of the destination texture.
      * @param viewSize size of the destination texture 
@@ -75,11 +73,10 @@ public:
      * @param name texture filename
      * @param new_texture dynamic texture to replace the old one
      */
-    void set_texture(const char * name, GLuint new_texture);
+    void set_texture(const char * name, osg::Texture2D* new_texture);
 
 private:
     int textureWH;
-    RenderTexture *rt;
     bool rtAvailable;
 
     void allocRT(void);

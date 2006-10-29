@@ -149,7 +149,7 @@ class FGNasalModelData : public SGModelData {
 public:
     FGNasalModelData() : _unload(0) {}
     ~FGNasalModelData();
-    void modelLoaded(const string& path, SGPropertyNode *prop, ssgBranch *);
+    void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *);
 
 private:
     string _module;

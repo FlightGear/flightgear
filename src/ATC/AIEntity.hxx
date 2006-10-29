@@ -24,10 +24,6 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/model.hxx>
 #include <simgear/scene/model/placement.hxx>
-#include <simgear/structure/ssgSharedPtr.hxx>
-
-
-class ssgBase;
 
 
 /*****************************************************************
@@ -46,7 +42,7 @@ public:
     virtual ~FGAIEntity();
 	
 	// Set the 3D model to use (Must be called)
-	void SetModel(ssgBranch* model);
+  void SetModel(osg::Node* model);
 
     // Run the internal calculations
     virtual void Update(double dt)=0;
@@ -67,7 +63,7 @@ protected:
     double _pitch;	//degrees
 
     char* _model_path;	//Path to the 3D model
-    ssgSharedPtr<ssgBranch> _model;	// Pointer to the model
+    osg::ref_ptr<osg::Node> _model;	// Pointer to the model
     SGModelPlacement _aip;
 
     void Transform();

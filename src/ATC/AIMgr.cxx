@@ -306,7 +306,7 @@ void FGAIMgr::ActivateAirport(const string& ident) {
 	ATC->AIRegisterAirport(ident);
 	// TODO - need to start the traffic more randomly
 	FGAILocalTraffic* local_traffic = new FGAILocalTraffic;
-	local_traffic->SetModel(_defaultModel);	// currently hardwired to cessna.
+	local_traffic->SetModel(_defaultModel.get());	// currently hardwired to cessna.
 	//local_traffic->Init(ident, IN_PATTERN, TAKEOFF_ROLL);
 	local_traffic->Init(GenerateShortForm(GenerateUniqueCallsign()), ident);
 	local_traffic->FlyCircuits(1, true);	// Fly 2 circuits with touch & go in between
@@ -469,7 +469,7 @@ void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist)
 			else cessna = true;
 			string s = GenerateShortForm(GenerateUniqueCallsign(), (cessna ? "Cessna-" : "Piper-"));
 			FGAIGAVFRTraffic* t = new FGAIGAVFRTraffic();
-			t->SetModel(cessna ? _defaultModel : (_havePiperModel ? _piperModel : _defaultModel));
+			t->SetModel(cessna ? _defaultModel.get() : (_havePiperModel ? _piperModel.get() : _defaultModel.get()));
 			//cout << "Generating VFR traffic " << s << " inbound to " << ident << " " << ad << " meters out from " << dir << " degrees\n";
 			Point3D tpos = dclUpdatePosition(aptpos, dir, 6.0, ad);
 			if(tpos.elev() > (aptpos.elev() + 3000.0)) tpos.setelev(aptpos.elev() + 3000.0);	// FEET yuk :-(

@@ -60,8 +60,6 @@
 # endif
 #endif
 
-#include <plib/ssg.h>
-
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -283,7 +281,7 @@ void fgHiResDump()
     }
 
     FGRenderer *renderer = globals->get_renderer();
-    renderer->init();
+//     renderer->init();
     renderer->resize( fgGetInt("/sim/startup/xsize"),
                       fgGetInt("/sim/startup/ysize") );
 
@@ -325,11 +323,12 @@ void fgHiResDump()
     trTileBuffer(tr, GL_RGB, GL_UNSIGNED_BYTE, tile);
     trImageSize(tr, imageWidth, imageHeight);
     trRowOrder(tr, TR_TOP_TO_BOTTOM);
-    sgFrustum *frustum = ssgGetFrustum();
-    trFrustum(tr,
-              frustum->getLeft(), frustum->getRight(),
-              frustum->getBot(),  frustum->getTop(), 
-              frustum->getNear(), frustum->getFar());
+    // OSGFIXME
+//     sgFrustum *frustum = ssgGetFrustum();
+//     trFrustum(tr,
+//               frustum->getLeft(), frustum->getRight(),
+//               frustum->getBot(),  frustum->getTop(), 
+//               frustum->getNear(), frustum->getFar());
 	
     /* Prepare ppm output file */
     while (count < 1000) {
@@ -380,13 +379,15 @@ void fgHiResDump()
         int curRow =  trGet(tr, TR_CURRENT_ROW);
 
         renderer->update( false );
-        if ( do_hud )
-            fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,
-                         (curColumn+1)*hud_col_step, (curRow+1)*hud_row_step );
-        if (do_panel)
-            globals->get_current_panel()->update(
-                                   curColumn*panel_col_step, panel_col_step,
-                                   curRow*panel_row_step,    panel_row_step );
+        // OSGFIXME
+//         if ( do_hud )
+//             fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,
+//                          (curColumn+1)*hud_col_step, (curRow+1)*hud_row_step );
+        // OSGFIXME
+//         if (do_panel)
+//             globals->get_current_panel()->update(
+//                                    curColumn*panel_col_step, panel_col_step,
+//                                    curRow*panel_row_step,    panel_row_step );
         more = trEndTile(tr);
 
         /* save tile into tile row buffer*/
@@ -472,7 +473,7 @@ GLubyte *hiResScreenCapture( int multiplier )
     float fov = oldfov / multiplier;
     FGViewer *v = globals->get_current_view();
     fgSetDouble("/sim/current-view/field-of-view", fov);
-    globals->get_renderer()->init();
+//     globals->get_renderer()->init();
     int cur_width = fgGetInt("/sim/startup/xsize");
     int cur_height = fgGetInt("/sim/startup/ysize");
     delete( b1 );
@@ -554,7 +555,7 @@ void fgDumpSnapShot () {
     fgSetBool("/sim/signals/screenshot", true);
 
     FGRenderer *renderer = globals->get_renderer();
-    renderer->init();
+//     renderer->init();
     renderer->resize( fgGetInt("/sim/startup/xsize"),
                         fgGetInt("/sim/startup/ysize") );
 

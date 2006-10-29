@@ -46,18 +46,18 @@ FGAIEntity::FGAIEntity() {
 FGAIEntity::~FGAIEntity() {
 	//cout << "FGAIEntity dtor called..." << endl;
 	//cout << "Removing model from scene graph..." << endl;
-	globals->get_scenery()->get_scene_graph()->removeKid(_aip.getSceneGraph());
+	globals->get_scenery()->get_scene_graph()->removeChild(_aip.getSceneGraph());
         // Unregister that one at the scenery manager
         globals->get_scenery()->unregister_placement_transform(_aip.getTransform());
 
 	//cout << "Done!" << endl;
 }
 
-void FGAIEntity::SetModel(ssgBranch* model) {
+void FGAIEntity::SetModel(osg::Node* model) {
 	_model = model;
-	_aip.init(_model);
+	_aip.init(_model.get());
 	_aip.setVisible(false);
-	globals->get_scenery()->get_scene_graph()->addKid(_aip.getSceneGraph());
+	globals->get_scenery()->get_scene_graph()->addChild(_aip.getSceneGraph());
         // Register that one at the scenery manager
         globals->get_scenery()->register_placement_transform(_aip.getTransform());
 

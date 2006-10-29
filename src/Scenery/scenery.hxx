@@ -31,18 +31,16 @@
 
 #include <list>
 
-#include <plib/sg.h>
+#include <osg/ref_ptr>
+#include <osg/Group>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/placementtrans.hxx>
-#include <simgear/structure/ssgSharedPtr.hxx>
 
 SG_USING_STD(list);
 
-class ssgRoot;
-class ssgBranch;
 class SGMaterial;
 
 
@@ -56,17 +54,17 @@ class FGScenery : public SGSubsystem {
     double sun_angle;
 
     // SSG scene graph
-    ssgSharedPtr<ssgRoot> scene_graph;
-    ssgSharedPtr<ssgBranch> terrain_branch;
-    ssgSharedPtr<ssgRoot> gnd_lights_root;
-    ssgSharedPtr<ssgRoot> vasi_lights_root;
-    ssgSharedPtr<ssgRoot> rwy_lights_root;
-    ssgSharedPtr<ssgRoot> taxi_lights_root;
-    ssgSharedPtr<ssgBranch> models_branch;
-    ssgSharedPtr<ssgBranch> aircraft_branch;
+    osg::ref_ptr<osg::Group> scene_graph;
+    osg::ref_ptr<osg::Group> terrain_branch;
+    osg::ref_ptr<osg::Group> gnd_lights_root;
+    osg::ref_ptr<osg::Group> vasi_lights_root;
+    osg::ref_ptr<osg::Group> rwy_lights_root;
+    osg::ref_ptr<osg::Group> taxi_lights_root;
+    osg::ref_ptr<osg::Group> models_branch;
+    osg::ref_ptr<osg::Group> aircraft_branch;
 
     // list of all placement transform, used to move the scenery center on the fly.
-    typedef list<ssgSharedPtr<ssgPlacementTransform> > placement_list_type;
+    typedef list<osg::ref_ptr<SGPlacementTransform> > placement_list_type;
     placement_list_type _placement_list;
 
 public:
@@ -120,56 +118,56 @@ public:
     const SGVec3d& get_center() const { return center; }
     void set_center( const SGVec3d& p );
 
-    inline ssgRoot *get_scene_graph () const { return scene_graph; }
-    inline void set_scene_graph (ssgRoot * s) { scene_graph = s; }
+    osg::Group *get_scene_graph () const { return scene_graph.get(); }
+    inline void set_scene_graph (osg::Group * s) { scene_graph = s; }
 
-    inline ssgBranch *get_terrain_branch () const { return terrain_branch; }
-    inline void set_terrain_branch (ssgBranch * t) { terrain_branch = t; }
+    osg::Group *get_terrain_branch () const { return terrain_branch.get(); }
+    inline void set_terrain_branch (osg::Group * t) { terrain_branch = t; }
 
-    inline ssgRoot *get_gnd_lights_root () const {
-        return gnd_lights_root;
+    inline osg::Group *get_gnd_lights_root () const {
+        return gnd_lights_root.get();
     }
-    inline void set_gnd_lights_root (ssgRoot *r) {
+    inline void set_gnd_lights_root (osg::Group *r) {
         gnd_lights_root = r;
     }
 
-    inline ssgRoot *get_vasi_lights_root () const {
-        return vasi_lights_root;
+    inline osg::Group *get_vasi_lights_root () const {
+        return vasi_lights_root.get();
     }
-    inline void set_vasi_lights_root (ssgRoot *r) {
+    inline void set_vasi_lights_root (osg::Group *r) {
         vasi_lights_root = r;
     }
 
-    inline ssgRoot *get_rwy_lights_root () const {
-        return rwy_lights_root;
+    inline osg::Group *get_rwy_lights_root () const {
+        return rwy_lights_root.get();
     }
-    inline void set_rwy_lights_root (ssgRoot *r) {
+    inline void set_rwy_lights_root (osg::Group *r) {
         rwy_lights_root = r;
     }
 
-    inline ssgRoot *get_taxi_lights_root () const {
-        return taxi_lights_root;
+    inline osg::Group *get_taxi_lights_root () const {
+        return taxi_lights_root.get();
     }
-    inline void set_taxi_lights_root (ssgRoot *r) {
+    inline void set_taxi_lights_root (osg::Group *r) {
         taxi_lights_root = r;
     }
 
-    inline ssgBranch *get_models_branch () const {
-        return models_branch;
+    inline osg::Group *get_models_branch () const {
+        return models_branch.get();
     }
-    inline void set_models_branch (ssgBranch *t) {
+    inline void set_models_branch (osg::Group *t) {
         models_branch = t;
     }
 
-    inline ssgBranch *get_aircraft_branch () const {
-        return aircraft_branch;
+    inline osg::Group *get_aircraft_branch () const {
+        return aircraft_branch.get();
     }
-    inline void set_aircraft_branch (ssgBranch *t) {
+    inline void set_aircraft_branch (osg::Group *t) {
         aircraft_branch = t;
     }
 
-    void register_placement_transform(ssgPlacementTransform *trans);
-    void unregister_placement_transform(ssgPlacementTransform *trans);
+    void register_placement_transform(SGPlacementTransform *trans);
+    void unregister_placement_transform(SGPlacementTransform *trans);
 };
 
 

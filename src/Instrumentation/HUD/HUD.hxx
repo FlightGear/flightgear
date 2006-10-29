@@ -36,6 +36,8 @@ SG_USING_STD(deque);
 SG_USING_STD(vector);
 SG_USING_NAMESPACE(std);
 
+#include <osg/State>
+
 #include <plib/sg.h>
 
 #include <simgear/math/SGLimits.hxx>
@@ -134,7 +136,7 @@ public:
     void update(double);
 
     // called from Main/renderer.cxx to draw 2D and 3D HUD
-    void draw();
+    void draw(osg::State&);
 
     // listener callback to read various HUD related properties
     void valueChanged(SGPropertyNode *);

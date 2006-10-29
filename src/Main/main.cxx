@@ -614,13 +614,12 @@ static void fgMainLoop( void ) {
         globals->get_soundmgr()->set_volume(init_volume);
     }
 
-    if (fgGetBool("/sim/rendering/specular-highlight")) {
-        glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
-	// glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-    } else {
-        glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SINGLE_COLOR);
-        // glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
-    }
+    // OSGFIXME: with osg>1.2 remove this, osg::LightModel does the trick...
+//     if (fgGetBool("/sim/rendering/specular-highlight")) {
+//         glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+//     } else {
+//         glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SINGLE_COLOR);
+//     }
 
     fgRequestRedraw();
 
@@ -665,10 +664,6 @@ static void fgIdleFunction ( void ) {
         general.set_glDepthBits( tmp );
         SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
 
-        // Initialize ssg (from plib).  Needs to come before we do any
-        // other ssg stuff, but after opengl has been initialized.
-        ssgInit();
-
         // Initialize the user interface (we need to do this before
         // passing off control to the OS main loop and before
         // fgInitGeneral to get our fonts !!!
@@ -682,21 +677,21 @@ static void fgIdleFunction ( void ) {
         fgReadAircraft();
 
         // get the address of our OpenGL extensions
-        if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ) {
-            glPointParameterIsSupported = true;
-            glPointParameterfPtr = (glPointParameterfProc)
-                SGLookupFunction("glPointParameterfEXT");
-            glPointParameterfvPtr = (glPointParameterfvProc)
-                SGLookupFunction("glPointParameterfvEXT");
-        } else if ( SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) {
-            glPointParameterIsSupported = true;
-            glPointParameterfPtr = (glPointParameterfProc)
-                SGLookupFunction("glPointParameterfARB");
-            glPointParameterfvPtr = (glPointParameterfvProc)
-                SGLookupFunction("glPointParameterfvARB");
-        } else {
-            glPointParameterIsSupported = false;
-        }
+//         if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ) {
+//             glPointParameterIsSupported = true;
+//             glPointParameterfPtr = (glPointParameterfProc)
+//                 SGLookupFunction("glPointParameterfEXT");
+//             glPointParameterfvPtr = (glPointParameterfvProc)
+//                 SGLookupFunction("glPointParameterfvEXT");
+//         } else if ( SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) {
+//             glPointParameterIsSupported = true;
+//             glPointParameterfPtr = (glPointParameterfProc)
+//                 SGLookupFunction("glPointParameterfARB");
+//             glPointParameterfvPtr = (glPointParameterfvProc)
+//                 SGLookupFunction("glPointParameterfvARB");
+//         } else {
+//             glPointParameterIsSupported = false;
+//         }
         fgSplashProgress("reading airport & navigation data");
 
 
@@ -838,7 +833,6 @@ static void fgIdleFunction ( void ) {
         // lighting->addKid( airport );
 
         // build our custom render states
-        globals->get_renderer()->build_states();
         fgSplashProgress("initializing subsystems");
 
 
@@ -993,7 +987,8 @@ bool fgMainInit( int argc, char **argv ) {
         exit(-1);
     }
 
-    sgUseDisplayList = fgGetBool( "/sim/rendering/use-display-list", true );
+    //OSGFIXME
+//     sgUseDisplayList = fgGetBool( "/sim/rendering/use-display-list", true );
 
     // Load the configuration parameters.  (Command line options
     // override config file options.  Config file options override

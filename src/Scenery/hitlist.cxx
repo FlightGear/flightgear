@@ -10,7 +10,6 @@
 #include <math.h>
 
 #include <plib/sg.h>
-#include <plib/ssg.h>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>

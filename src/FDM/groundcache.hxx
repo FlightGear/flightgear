@@ -23,12 +23,12 @@
 #ifndef _GROUNDCACHE_HXX
 #define _GROUNDCACHE_HXX
 
-#include <plib/sg.h>
-#include <plib/ssg.h>
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
+#include <simgear/math/SGMath.hxx>
 
 class SGMaterial;
+class GroundCacheFillVisitor;
 
 class FGGroundCache {
 public:
@@ -42,19 +42,18 @@ public:
     // Prepare the ground cache for the wgs84 position pt_*.
     // That is take all vertices in the ball with radius rad around the
     // position given by the pt_* and store them in a local scene graph.
-    bool prepare_ground_cache(double ref_time, const double pt[3],
+    bool prepare_ground_cache(double ref_time, const SGVec3d& pt,
                               double rad);
 
     // Returns true if the cache is valid.
     // Also the reference time, point and radius values where the cache
     // is valid for are returned.
-    bool is_valid(double *ref_time, double pt[3], double *rad);
-      
+    bool is_valid(double& ref_time, SGVec3d& pt, double& rad);
 
     // Return the nearest catapult to the given point
     // pt in wgs84 coordinates.
-    double get_cat(double t, const double pt[3],
-                   double end[2][3], double vel[2][3]);
+    double get_cat(double t, const SGVec3d& pt,
+                   SGVec3d end[2], SGVec3d vel[2]);
   
 
     // Return the altitude above ground below the wgs84 point pt
@@ -63,8 +62,8 @@ public:
     // this kind kind of ground can carry, the friction factor between
     // 0 and 1 which can be used to model lower friction with wet runways
     // and finally the altitude above ground.
-    bool get_agl(double t, const double pt[3], double max_altoff,
-                 double contact[3], double normal[3], double vel[3],
+    bool get_agl(double t, const SGVec3d& pt, double max_altoff,
+                 SGVec3d& contact, SGVec3d& normal, SGVec3d& vel,
                  int *type, const SGMaterial** material, double *agl);
 
     // Return 1 if the hook intersects with a wire.
@@ -72,51 +71,54 @@ public:
     // intersects with the line representing the wire.
     // If the wire is caught, the cache will trace this wires endpoints until
     // the FDM calls release_wire().
-    bool caught_wire(double t, const double pt[4][3]);
+    bool caught_wire(double t, const SGVec3d pt[4]);
   
     // Return the location and speed of the wire endpoints.
-    bool get_wire_ends(double t, double end[2][3], double vel[2][3]);
+    bool get_wire_ends(double t, SGVec3d end[2], SGVec3d vel[2]);
 
     // Tell the cache code that it does no longer need to care for
     // the wire end position.
     void release_wire(void);
 
 private:
+    friend class GroundCacheFillVisitor;
+
     struct Triangle {
       Triangle() : material(0) {}
       // The edge vertices.
-      sgdVec3 vertices[3];
+      SGVec3d vertices[3];
       // The surface normal.
-      sgdVec4 plane;
+      SGVec4d plane;
       // The bounding shpere.
-      sgdSphere sphere;
+      SGVec3d boundCenter;
+      double boundRadius;
       // The linear and angular velocity.
-      sgdVec3 velocity;
-      sgdVec3 rotation;
-      sgdVec3 rotation_pivot;
+      SGVec3d velocity;
+      SGVec3d rotation;
+      SGVec3d rotation_pivot;
       // Ground type
       int type;
       // the simgear material reference, contains friction coeficients ...
       const SGMaterial* material;
     };
     struct Catapult {
-      sgdVec3 start;
-      sgdVec3 end;
-      sgdVec3 velocity;
-      sgdVec3 rotation;
-      sgdVec3 rotation_pivot;
+      SGVec3d start;
+      SGVec3d end;
+      SGVec3d velocity;
+      SGVec3d rotation;
+      SGVec3d rotation_pivot;
     };
     struct Wire {
-      sgdVec3 ends[2];
-      sgdVec3 velocity;
-      sgdVec3 rotation;
-      sgdVec3 rotation_pivot;
+      SGVec3d ends[2];
+      SGVec3d velocity;
+      SGVec3d rotation;
+      SGVec3d rotation_pivot;
       int wire_id;
     };
 
 
     // The center of the cache.
-    sgdVec3 cache_center;
+    SGVec3d cache_center;
     // Approximate ground radius.
     // In case the aircraft is too high above ground.
     double ground_radius;
@@ -133,36 +135,22 @@ private:
 
     // The point and radius where the cache is built around.
     // That are the arguments that were given to prepare_ground_cache.
-    sgdVec3 reference_wgs84_point;
+    SGVec3d reference_wgs84_point;
     double reference_vehicle_radius;
+    SGVec3d down;
     bool found_ground;
 
-
-    // Fills the environment cache with everything inside the sphere sp.
-    void cache_fill(ssgBranch *branch, sgdMat4 xform,
-                    sgdSphere* sp, sgdVec3 down, sgdSphere* wsp);
-
-    // compute the ground property of this leaf.
-    void putSurfaceLeafIntoCache(const sgdSphere *sp, const sgdMat4 xform,
-                                 bool sphIsec, sgdVec3 down, ssgLeaf *l);
-
-    void putLineLeafIntoCache(const sgdSphere *wsp, const sgdMat4 xform,
-                              ssgLeaf *l);
 
     // Helper class to hold some properties of the ground triangle.
     struct GroundProperty {
       GroundProperty() : type(0), material(0) {}
       int type;
       int wire_id;
-      sgdVec3 vel;
-      sgdVec3 rot;
-      sgdVec3 pivot;
+      SGVec3d vel;
+      SGVec3d rot;
+      SGVec3d pivot;
       const SGMaterial* material;
     };
-
-    // compute the ground property of this leaf.
-    static GroundProperty extractGroundProperty( ssgLeaf* leaf );
-
 
     static void velocityTransformTriangle(double dt, Triangle& dst,
                                           const Triangle& src);

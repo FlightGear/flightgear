@@ -79,8 +79,8 @@ float HUD_matrix[16];
 int readHud( istream &input );
 int readInstrument ( const SGPropertyNode * node);
 
-static void drawHUD();
-static void fgUpdateHUDVirtual();
+static void drawHUD(osg::State*);
+static void fgUpdateHUDVirtual(osg::State*);
 
 
 class locRECT {
@@ -255,8 +255,6 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
         input.close();
     }
 
-    fgHUDReshape();
-
     if ( HUDtext ) {
         // this chunk of code is not necessarily thread safe if the
         // compiler optimizer reorders these statements.  Note that
@@ -314,39 +312,17 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 //$$$ End - added, Neetha, 28 Nov 2k
 
 
-void fgHUDReshape(void) {
-#if 0
-    if ( HUDtext ) {
-        // this chunk of code is not necessarily thread safe if the
-        // compiler optimizer reorders these statements.  Note that
-        // "delete ptr" does not set "ptr = NULL".  We have to do that
-        // ourselves.
-        fntRenderer *tmp = HUDtext;
-        HUDtext = NULL;
-        delete tmp;
-    }
-
-    HUD_TextSize = fgGetInt("/sim/startup/xsize") / 60;
-    HUD_TextSize = 10;
-    HUDtext = new fntRenderer();
-    HUDtext -> setFont      ( guiFntHandle ) ;
-    HUDtext -> setPointSize ( HUD_TextSize ) ;
-    HUD_TextList.setFont( HUDtext );
-#endif
-}
-
-
 // fgUpdateHUD
 //
 // Performs a once around the list of calls to instruments installed in
 // the HUD object with requests for redraw. Kinda. It will when this is
 // all C++.
 //
-void fgUpdateHUD( void ) {
+void fgUpdateHUD( osg::State* state ) {
 
     static const SGPropertyNode *enable3d_node = fgGetNode("/sim/hud/enable3d");
     if ( HUD_style == 1 && enable3d_node->getBoolValue() ) {
-        fgUpdateHUDVirtual();
+        fgUpdateHUDVirtual(state);
         return;
     }
 
@@ -356,15 +332,15 @@ void fgUpdateHUD( void ) {
     if ( current_aspect > normal_aspect ) {
         float aspect_adjust = current_aspect / normal_aspect;
         float adjust = 320.0f*aspect_adjust - 320.0f;
-        fgUpdateHUD( -adjust, 0.0f, 640.0f+adjust, 480.0f );
+        fgUpdateHUD( state, -adjust, 0.0f, 640.0f+adjust, 480.0f );
     } else {
         float aspect_adjust = normal_aspect / current_aspect;
         float adjust = 240.0f*aspect_adjust - 240.0f;
-        fgUpdateHUD( 0.0f, -adjust, 640.0f, 480.0f+adjust );
+        fgUpdateHUD( state, 0.0f, -adjust, 640.0f, 480.0f+adjust );
     }
 }
 
-void fgUpdateHUDVirtual()
+void fgUpdateHUDVirtual(osg::State* state)
 {
     FGViewer* view = globals->get_current_view();
 
@@ -406,7 +382,7 @@ void fgUpdateHUDVirtual()
     glTranslatef(-320, -240, -1);
 
     // Do the deed
-    drawHUD();
+    drawHUD(state);
 
     // Clean up our mess
     glMatrixMode(GL_PROJECTION);
@@ -416,7 +392,7 @@ void fgUpdateHUDVirtual()
 }
 
 
-void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
+void fgUpdateHUD( osg::State* state, GLfloat x_start, GLfloat y_start,
                   GLfloat x_end, GLfloat y_end )
 {
     glMatrixMode(GL_PROJECTION);
@@ -428,7 +404,7 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
     glPushMatrix();
     glLoadIdentity();
 
-    drawHUD();
+    drawHUD(state);
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -437,7 +413,7 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
 }
 
 
-void drawHUD()
+void drawHUD(osg::State* state)
 {
     if ( !HUD_deque.size() ) // Trust everyone, but ALWAYS cut the cards!
         return;

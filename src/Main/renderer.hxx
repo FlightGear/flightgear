@@ -25,7 +25,6 @@ public:
 
     void init();
 
-    void build_states();
     static void resize(int width, int height );
 
     // calling update( refresh_camera_settings = false ) will not

@@ -9,10 +9,11 @@
 
 #include <simgear/compiler.h>
 
-#include <plib/ssg.h>
+#include <osg/Geode>
 
 #include <simgear/props/props.hxx>
 #include <simgear/scene/model/model.hxx>
+#include <simgear/scene/util/SGNodeMasks.hxx>
 
 #include "panelnode.hxx"
 
@@ -21,21 +22,27 @@
 SG_USING_STD(vector);
 
 static
-ssgEntity *load_panel(SGPropertyNode *n)
+osg::Node* load_panel(SGPropertyNode *n)
 {
-  return new FGPanelNode(n);
+  osg::Geode* geode = new osg::Geode;
+  geode->addDrawable(new FGPanelNode(n));
+  return geode;
 }
+
 
 ////////////////////////////////////////////////////////////////////////
 // Global functions.
 ////////////////////////////////////////////////////////////////////////
 
-ssgBranch *
+osg::Node *
 fgLoad3DModelPanel( const string &fg_root, const string &path,
                     SGPropertyNode *prop_root,
-                    double sim_time_sec )
+                    double sim_time_sec, const SGPath& livery )
 {
-  return sgLoad3DModel( fg_root, path, prop_root, sim_time_sec, load_panel );
+  osg::Node* node = sgLoad3DModel( fg_root, path, prop_root, sim_time_sec,
+                                   load_panel, 0, livery );
+  node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
+  return node;
 }
 
 

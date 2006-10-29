@@ -38,15 +38,21 @@
 #include <stdio.h>	// sprintf
 #include <string.h>
 
+#include <osg/CullFace>
+#include <osg/Depth>
+#include <osg/Material>
+#include <osg/TexEnv>
+#include <osg/PolygonOffset>
+
 #include <simgear/compiler.h>
 
 #include SG_GLU_H
 
-#include <plib/ssg.h>
 #include <plib/fnt.h>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/model/model.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -109,23 +115,24 @@ fgPanelVisible ()
 // Implementation of FGTextureManager.
 ////////////////////////////////////////////////////////////////////////
 
-map<string,ssgTexture *> FGTextureManager::_textureMap;
+map<string,osg::ref_ptr<osg::Texture2D> > FGTextureManager::_textureMap;
 
-ssgTexture *
+osg::Texture2D*
 FGTextureManager::createTexture (const string &relativePath)
 {
-  ssgTexture * texture = _textureMap[relativePath];
+  osg::Texture2D* texture = _textureMap[relativePath].get();
   if (texture == 0) {
     SG_LOG( SG_COCKPIT, SG_DEBUG,
             "Texture " << relativePath << " does not yet exist" );
     SGPath tpath(globals->get_fg_root());
     tpath.append(relativePath);
-    texture = new ssgTexture((char *)tpath.c_str(), false, false);
+
+    texture = SGLoadTexture2D(tpath);
+
     _textureMap[relativePath] = texture;
-    if (_textureMap[relativePath] == 0) 
+    if (!_textureMap[relativePath].valid()) 
       SG_LOG( SG_COCKPIT, SG_ALERT, "Texture *still* doesn't exist" );
-    SG_LOG( SG_COCKPIT, SG_DEBUG, "Created texture " << relativePath
-            << " handle=" << texture->getHandle() );
+    SG_LOG( SG_COCKPIT, SG_DEBUG, "Created texture " << relativePath );
   }
 
   return texture;
@@ -160,13 +167,16 @@ FGCroppedTexture::~FGCroppedTexture ()
 }
 
 
-ssgTexture *
+osg::StateSet*
 FGCroppedTexture::getTexture ()
 {
   if (_texture == 0) {
-    _texture = FGTextureManager::createTexture(_path);
+    _texture = new osg::StateSet;
+    _texture->setTextureAttribute(0, FGTextureManager::createTexture(_path));
+    _texture->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::ON);
+    _texture->setTextureAttribute(0, new osg::TexEnv(osg::TexEnv::MODULATE));
   }
-  return _texture;
+  return _texture.get();
 }
 
 
@@ -254,11 +264,52 @@ FGPanel::unbind ()
 }
 
 
+void
+FGPanel::update (double dt)
+{
+  std::cout << "OSGFIXME" << std::endl;
+}
+
+void
+FGPanel::update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
+{
+                               // Calculate accelerations
+                               // and jiggle the panel accordingly
+                               // The factors and bounds are just
+                               // initial guesses; using sqrt smooths
+                               // out the spikes.
+  double x_offset = _x_offset->getIntValue();
+  double y_offset = _y_offset->getIntValue();
+
+
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  if ( _flipx->getBoolValue() ) {
+    gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
+  } else {
+    gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
+  }
+  
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+  
+  glTranslated(x_offset, y_offset, 0);
+  
+  draw(state);
+
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+}
+
 /**
  * Update the panel.
  */
 void
-FGPanel::update (double dt)
+FGPanel::update (osg::State& state)
 {
 				// Do nothing if the panel isn't visible.
     if ( !fgPanelVisible() ) {
@@ -271,9 +322,9 @@ FGPanel::update (double dt)
     float aspect_adjust = get_aspect_adjust(_xsize_node->getIntValue(),
                                             _ysize_node->getIntValue());
     if (aspect_adjust <1.0)
-        update(WIN_X, int(WIN_W * aspect_adjust), WIN_Y, WIN_H);
+        update(state, WIN_X, int(WIN_W * aspect_adjust), WIN_Y, WIN_H);
     else
-        update(WIN_X, WIN_W, WIN_Y, int(WIN_H / aspect_adjust));
+        update(state, WIN_X, WIN_W, WIN_Y, int(WIN_H / aspect_adjust));
 }
 
 /**
@@ -294,87 +345,39 @@ void FGPanel::updateMouseDelay()
 
 
 void
-FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
-{
-				// Calculate accelerations
-				// and jiggle the panel accordingly
-				// The factors and bounds are just
-				// initial guesses; using sqrt smooths
-				// out the spikes.
-  double x_offset = _x_offset->getIntValue();
-  double y_offset = _y_offset->getIntValue();
-
-#if 0
-  if (_jitter->getFloatValue() != 0.0) {
-    double a_x_pilot = current_aircraft.fdm_state->get_A_X_pilot();
-    double a_y_pilot = current_aircraft.fdm_state->get_A_Y_pilot();
-    double a_z_pilot = current_aircraft.fdm_state->get_A_Z_pilot();
-
-    double a_zx_pilot = a_z_pilot - a_x_pilot;
-    
-    int x_adjust = int(sqrt(fabs(a_y_pilot) * _jitter->getFloatValue())) *
-		   (a_y_pilot < 0 ? -1 : 1);
-    int y_adjust = int(sqrt(fabs(a_zx_pilot) * _jitter->getFloatValue())) *
-		   (a_zx_pilot < 0 ? -1 : 1);
-
-				// adjustments in screen coordinates
-    x_offset += x_adjust;
-    y_offset += y_adjust;
-  }
-#endif
-
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity();
-  if ( _flipx->getBoolValue() ) {
-    gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
-  } else {
-    gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
-  }
-  
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
-  
-  glTranslated(x_offset, y_offset, 0);
-  
-  draw();
-
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-
-  ssgForceBasicState();
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-}
-
-void
-FGPanel::draw()
+FGPanel::draw(osg::State& state)
 {
   // In 3D mode, it's possible that we are being drawn exactly on top
   // of an existing polygon.  Use an offset to prevent z-fighting.  In
   // 2D mode, this is a no-op.
-  glEnable(GL_POLYGON_OFFSET_FILL);
-  glPolygonOffset(-1, -POFF_UNITS);
+  static osg::ref_ptr<osg::StateSet> panelStateSet;
+  if (!panelStateSet.valid()) {
+    panelStateSet = new osg::StateSet;
+    panelStateSet->setAttributeAndModes(new osg::PolygonOffset(-1, -POFF_UNITS));
+    panelStateSet->setTextureAttribute(0, new osg::TexEnv);
 
-  // save some state
-  glPushAttrib( GL_COLOR_BUFFER_BIT | GL_ENABLE_BIT | GL_LIGHTING_BIT
-                | GL_TEXTURE_BIT | GL_PIXEL_MODE_BIT | GL_CULL_FACE 
-                | GL_DEPTH_BUFFER_BIT );
-
-  // Draw the background
-  glEnable(GL_TEXTURE_2D);
-  glDisable(GL_LIGHTING);
-  glEnable(GL_BLEND);
-  glEnable(GL_ALPHA_TEST);
-  glEnable(GL_COLOR_MATERIAL);
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
-  if ( _enable_depth_test )
-      glDepthFunc(GL_ALWAYS);
-  else
-    glDisable(GL_DEPTH_TEST);
+    // Draw the background
+    panelStateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::ON);
+    panelStateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    panelStateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+    panelStateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
+    osg::Material* material = new osg::Material;
+    material->setColorMode(osg::Material::AMBIENT_AND_DIFFUSE);
+    material->setDiffuse(osg::Material::FRONT_AND_BACK, osg::Vec4(1, 1, 1, 1));
+    material->setAmbient(osg::Material::FRONT_AND_BACK, osg::Vec4(1, 1, 1, 1));
+    material->setSpecular(osg::Material::FRONT_AND_BACK, osg::Vec4(0, 0, 0, 1));
+    material->setEmission(osg::Material::FRONT_AND_BACK, osg::Vec4(0, 0, 0, 1));
+    panelStateSet->setAttribute(material);
+    panelStateSet->setMode(GL_COLOR_MATERIAL, osg::StateAttribute::ON);
+    panelStateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
+    panelStateSet->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK));
+    if ( _enable_depth_test )
+      panelStateSet->setAttributeAndModes(new osg::Depth(osg::Depth::ALWAYS));
+    else
+      panelStateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+  }
+  state.pushStateSet(panelStateSet.get());
+  state.apply();
 
   FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
   sgCopyVec4( panel_color, l->scene_diffuse());
@@ -385,36 +388,40 @@ FGPanel::draw()
   }
   glColor4fv( panel_color );
   if (_bg != 0) {
-    glBindTexture(GL_TEXTURE_2D, _bg->getHandle());
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    state.pushStateSet(_bg.get());
+    state.apply();
     glBegin(GL_POLYGON);
     glTexCoord2f(0.0, 0.0); glVertex2f(WIN_X, WIN_Y);
     glTexCoord2f(1.0, 0.0); glVertex2f(WIN_X + _width, WIN_Y);
     glTexCoord2f(1.0, 1.0); glVertex2f(WIN_X + _width, WIN_Y + _height);
     glTexCoord2f(0.0, 1.0); glVertex2f(WIN_X, WIN_Y + _height);
     glEnd();
+    state.popStateSet();
+    state.apply();
   } else {
     for (int i = 0; i < 4; i ++) {
       // top row of textures...(1,3,5,7)
-      glBindTexture(GL_TEXTURE_2D, _mbg[i*2]->getHandle());
-      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+      state.pushStateSet(_mbg[i*2].get());
+      state.apply();
       glBegin(GL_POLYGON);
       glTexCoord2f(0.0, 0.0); glVertex2f(WIN_X + (_width/4) * i, WIN_Y + (_height/2));
       glTexCoord2f(1.0, 0.0); glVertex2f(WIN_X + (_width/4) * (i+1), WIN_Y + (_height/2));
       glTexCoord2f(1.0, 1.0); glVertex2f(WIN_X + (_width/4) * (i+1), WIN_Y + _height);
       glTexCoord2f(0.0, 1.0); glVertex2f(WIN_X + (_width/4) * i, WIN_Y + _height);
       glEnd();
+      state.popStateSet();
+      state.apply();
       // bottom row of textures...(2,4,6,8)
-      glBindTexture(GL_TEXTURE_2D, _mbg[(i*2)+1]->getHandle());
-      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+      state.pushStateSet(_mbg[i*2+1].get());
+      state.apply();
       glBegin(GL_POLYGON);
       glTexCoord2f(0.0, 0.0); glVertex2f(WIN_X + (_width/4) * i, WIN_Y);
       glTexCoord2f(1.0, 0.0); glVertex2f(WIN_X + (_width/4) * (i+1), WIN_Y);
       glTexCoord2f(1.0, 1.0); glVertex2f(WIN_X + (_width/4) * (i+1), WIN_Y + (_height/2));
       glTexCoord2f(0.0, 1.0); glVertex2f(WIN_X + (_width/4) * i, WIN_Y + (_height/2));
       glEnd();
+      state.popStateSet();
+      state.apply();
     }
   }
 
@@ -448,7 +455,7 @@ FGPanel::draw()
     glEnable(GL_CLIP_PLANE2);
     glEnable(GL_CLIP_PLANE3);
     glPopMatrix();
-    instr->draw();
+    instr->draw(state);
 
     glPopMatrix();
   }
@@ -458,24 +465,24 @@ FGPanel::draw()
   glDisable(GL_CLIP_PLANE2);
   glDisable(GL_CLIP_PLANE3);
 
+  state.popStateSet();
+  state.apply();
 
   // Draw yellow "hotspots" if directed to.  This is a panel authoring
   // feature; not intended to be high performance or to look good.
   if ( fgGetBool("/sim/panel-hotspots") ) {
-    glDisable(GL_TEXTURE_2D);
+    static osg::ref_ptr<osg::StateSet> hotspotStateSet = new osg::StateSet;
+    hotspotStateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
+    state.pushStateSet(hotspotStateSet.get());
+    state.apply();
+  
     glColor3f(1, 1, 0);
     
     for ( unsigned int i = 0; i < _instruments.size(); i++ )
-      _instruments[i]->drawHotspots();
+      _instruments[i]->drawHotspots(state);
+    state.popStateSet();
+    state.apply();
   }
-
-
-  // restore some original state
-  if ( _enable_depth_test )
-    glDepthFunc(GL_LESS);
-  glPopAttrib();
-  glPolygonOffset(0, 0);
-  glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
 /**
@@ -502,19 +509,28 @@ FGPanel::getVisibility () const
  * Set the panel's background texture.
  */
 void
-FGPanel::setBackground (ssgTexture * texture)
+FGPanel::setBackground (osg::Texture2D* texture)
 {
-  _bg = texture;
+  osg::StateSet* stateSet = new osg::StateSet;
+  stateSet->setTextureAttribute(0, texture);
+  stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::ON);
+  stateSet->setTextureAttribute(0, new osg::TexEnv(osg::TexEnv::MODULATE));
+  _bg = stateSet;
 }
 
 /**
  * Set the panel's multiple background textures.
  */
 void
-FGPanel::setMultiBackground (ssgTexture * texture, int idx)
+FGPanel::setMultiBackground (osg::Texture2D* texture, int idx)
 {
   _bg = 0;
-  _mbg[idx] = texture;
+
+  osg::StateSet* stateSet = new osg::StateSet;
+  stateSet->setTextureAttribute(0, texture);
+  stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::ON);
+  stateSet->setTextureAttribute(0, new osg::TexEnv(osg::TexEnv::MODULATE));
+  _mbg[idx] = stateSet;
 }
 
 /**
@@ -702,7 +718,7 @@ FGPanelInstrument::~FGPanelInstrument ()
 }
 
 void
-FGPanelInstrument::drawHotspots()
+FGPanelInstrument::drawHotspots(osg::State& state)
 {
   for ( unsigned int i = 0; i < _actions.size(); i++ ) {
     FGPanelAction* a = _actions[i];
@@ -800,14 +816,14 @@ FGLayeredInstrument::~FGLayeredInstrument ()
 }
 
 void
-FGLayeredInstrument::draw ()
+FGLayeredInstrument::draw (osg::State& state)
 {
   if (!test())
     return;
   
   for (int i = 0; i < (int)_layers.size(); i++) {
     glPushMatrix();
-    _layers[i]->draw();
+    _layers[i]->draw(state);
     glPopMatrix();
   }
 }
@@ -857,7 +873,7 @@ FGSpecialInstrument::~FGSpecialInstrument ()
 }
 
 void
-FGSpecialInstrument::draw ()
+FGSpecialInstrument::draw (osg::State& state)
 {
   complex->draw();
 }
@@ -947,13 +963,13 @@ FGGroupLayer::~FGGroupLayer ()
 }
 
 void
-FGGroupLayer::draw ()
+FGGroupLayer::draw (osg::State& state)
 {
   if (test()) {
     transform();
     int nLayers = _layers.size();
     for (int i = 0; i < nLayers; i++)
-      _layers[i]->draw();
+      _layers[i]->draw(state);
   }
 }
 
@@ -984,14 +1000,15 @@ FGTexturedLayer::~FGTexturedLayer ()
 
 
 void
-FGTexturedLayer::draw ()
+FGTexturedLayer::draw (osg::State& state)
 {
   if (test()) {
     int w2 = _w / 2;
     int h2 = _h / 2;
     
     transform();
-    glBindTexture(GL_TEXTURE_2D, _texture.getTexture()->getHandle());
+    state.pushStateSet(_texture.getTexture());
+    state.apply();
     glBegin(GL_POLYGON);
 
     if (_emissive) {
@@ -1007,6 +1024,8 @@ FGTexturedLayer::draw ()
     glTexCoord2f(_texture.getMaxX(), _texture.getMaxY()); glVertex2f(w2, h2);
     glTexCoord2f(_texture.getMinX(), _texture.getMaxY()); glVertex2f(-w2, h2);
     glEnd();
+    state.popStateSet();
+    state.apply();
   }
 }
 
@@ -1034,7 +1053,7 @@ FGTextLayer::~FGTextLayer ()
 }
 
 void
-FGTextLayer::draw ()
+FGTextLayer::draw (osg::State& state)
 {
   if (test()) {
     glColor4fv(_color);
@@ -1187,14 +1206,14 @@ FGSwitchLayer::FGSwitchLayer ()
 }
 
 void
-FGSwitchLayer::draw ()
+FGSwitchLayer::draw (osg::State& state)
 {
   if (test()) {
     transform();
     int nLayers = _layers.size();
     for (int i = 0; i < nLayers; i++) {
       if (_layers[i]->test()) {
-          _layers[i]->draw();
+          _layers[i]->draw(state);
           return;
       }
     }
