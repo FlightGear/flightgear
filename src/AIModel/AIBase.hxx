@@ -28,7 +28,7 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/structure/ssgSharedPtr.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 
 #include <Main/fg_props.hxx>
