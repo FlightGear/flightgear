@@ -317,7 +317,7 @@ void FGTower::Init() {
 		// TODO FIXME - this will break when user starts on apron, at hold short, etc.
 		if(!OnAnyRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0))) {
 			//cout << ident << "  ADD 0\n";
-			current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
+			current_atcdialog->add_entry(ident, "@AP Tower, @CS @MI miles @CD of the airport for full stop with ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
 		}
 	}
 }
@@ -476,7 +476,7 @@ void FGTower::Respond() {
 			string trns = t->plane.callsign;
 			trns += " ";
 			trns += name;
-			trns += " Tower";
+			trns += " Tower,";
 			// Should we clear staight in or for downwind entry?
 			// For now we'll clear straight in if greater than 1km from a line drawn through the threshold perpendicular to the rwy.
 			// Later on we might check the actual heading and direct some of those to enter on downwind or base.
@@ -485,7 +485,7 @@ void FGTower::Respond() {
 				trns += " Report three mile straight-in runway ";
 				t->opType = STRAIGHT_IN;
 				if(t->isUser) {
-					current_atcdialog->add_entry(ident, "@AP Tower @CS @MI mile final Runway @RW", "Report Final", TOWER, (int)USER_REPORT_3_MILE_FINAL);
+					current_atcdialog->add_entry(ident, "@AP Tower, @CS @MI mile final Runway @RW", "Report Final", TOWER, (int)USER_REPORT_3_MILE_FINAL);
 				} else {
 					t->planePtr->RegisterTransmission(14);
 				}
@@ -500,7 +500,7 @@ void FGTower::Respond() {
 				t->opType = CIRCUIT;
 				// leave it in the app list until it gets into pattern though.
 				if(t->isUser) {
-					current_atcdialog->add_entry(ident, "@AP Tower @CS Downwind @RW", "Report Downwind", TOWER, (int)USER_REPORT_DOWNWIND);
+					current_atcdialog->add_entry(ident, "@AP Tower, @CS Downwind @RW", "Report Downwind", TOWER, (int)USER_REPORT_DOWNWIND);
 				} else {
 					t->planePtr->RegisterTransmission(15);
 				}
@@ -1323,7 +1323,7 @@ void FGTower::CheckDepartureList(double dt) {
 				// Change the communication options
 				RemoveAllUserDialogOptions();
 				//cout << "ADD A\n";
-				current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
+				current_atcdialog->add_entry(ident, "@AP Tower, @CS @MI miles @CD of the airport for full stop with ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
 			} else {
 				// Send a clear-of-airspace signal
 				// TODO - implement this once we actually have departing AI traffic (currently all circuits or arrivals).
@@ -2265,7 +2265,7 @@ void FGTower::ReportGoingAround(const string& ID) {
 	if(ID == "USER") {
 		uid = fgGetString("/sim/user/callsign");
 		RemoveAllUserDialogOptions();	// TODO - it would be much more efficient if ATCDialog simply had a clear() function!!!
-		current_atcdialog->add_entry(ident, "@AP Tower @CS Downwind @RW", "Report Downwind", TOWER, (int)USER_REPORT_DOWNWIND);
+		current_atcdialog->add_entry(ident, "@AP Tower, @CS Downwind @RW", "Report Downwind", TOWER, (int)USER_REPORT_DOWNWIND);
 	}
 	TowerPlaneRec* t = FindPlane(uid);
 	if(t) {
