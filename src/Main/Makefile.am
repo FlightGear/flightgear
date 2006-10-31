@@ -94,8 +94,8 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Traffic/libTraffic.a \
 	$(top_builddir)/src/Environment/libEnvironment.a \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgmaterial -lsgtgdb -lsgmodel \
-	-lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket -lsgprops -lsgdebug \
-	-lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound -lsgserial \
+	-lsgutil -lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket -lsgprops \
+	-lsgdebug -lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound -lsgserial \
 	-lsgstructure -lsgenvironment \
 	-lplibpuaux -lplibpu -lplibfnt -lplibjs -lplibnet \
 	-lplibsg -lplibul \
