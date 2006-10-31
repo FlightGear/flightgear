@@ -35,7 +35,6 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/location.hxx>
 #include <simgear/scene/model/model.hxx>
-#include <simgear/scene/model/personality.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
 
@@ -164,7 +163,7 @@ FGAIBase::load3DModel(const string& fg_root,
   // some more code here to check whether a model with this name has already been loaded
   // if not load it, otherwise, get the memory pointer and do something like
   // SetModel as in ATC/AIEntity.cxx
-  osg::Group* personality_branch = new SGPersonalityBranch;
+  osg::Group* personality_branch = new osg::Group;
 
   model = manager->getModel(path);
   if (!(model)) {

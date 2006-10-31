@@ -404,7 +404,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
         // Keep resetting sim time while the sim is initializing
         globals->set_sim_time_sec( 0.0 );
-        SGAnimation::set_sim_time_sec( 0.0 );
         return;
     }
 

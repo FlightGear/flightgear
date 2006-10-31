@@ -323,7 +323,6 @@ static void fgMainLoop( void ) {
     }
     last_time_stamp = current_time_stamp;
     globals->inc_sim_time_sec( delta_time_sec );
-    SGAnimation::set_sim_time_sec( globals->get_sim_time_sec() );
 
     // These are useful, especially for Nasal scripts.
     fgSetDouble("/sim/time/delta-realtime-sec", real_delta_time_sec);
