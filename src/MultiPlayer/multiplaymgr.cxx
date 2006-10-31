@@ -201,7 +201,6 @@ FGMultiplayMgr::init (void)
     return false;
   }
   mSocket->setBlocking(false);
-  mSocket->setBroadcast(true);
   if (mSocket->bind(rxAddress.c_str(), rxPort) != 0) {
     perror("bind");
     SG_LOG( SG_NETWORK, SG_ALERT,
