@@ -1357,27 +1357,12 @@ void fgInitFDM() {
     }
 }
 
-static void printMat(const sgVec4 *mat, char *name="")
-{
-    int i;
-    SG_LOG(SG_GENERAL, SG_BULK, name );
-    for(i=0; i<4; i++) {
-        SG_LOG(SG_GENERAL, SG_BULK, "  " << mat[i][0] << " " << mat[i][1]
-                                    << " " << mat[i][2] << " " << mat[i][3] );
-    }
-}
-
 // Initialize view parameters
 void fgInitView() {
   // force update of model so that viewer can get some data...
   globals->get_aircraft_model()->update(0);
   // run update for current view so that data is current...
   globals->get_viewmgr()->update(0);
-
-  printMat(globals->get_current_view()->get_VIEW(),"VIEW");
-  printMat(globals->get_current_view()->get_UP(),"UP");
-  // printMat(globals->get_current_view()->get_LOCAL(),"LOCAL");
-  
 }
 
 
