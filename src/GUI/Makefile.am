@@ -8,7 +8,6 @@ libGUI_a_SOURCES = \
 	gui.cxx gui.h gui_funcs.cxx \
 	gui_local.cxx gui_local.hxx \
 	mouse.cxx fonts.cxx \
-	preset_dlg.cxx preset_dlg.hxx \
 	sgVec3Slider.cxx sgVec3Slider.hxx \
 	trackball.c trackball.h \
 	puList.cxx puList.hxx \

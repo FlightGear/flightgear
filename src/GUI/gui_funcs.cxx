@@ -87,7 +87,6 @@
 
 #include "gui.h"
 #include "gui_local.hxx"
-#include "preset_dlg.hxx"
 #include "sgVec3Slider.hxx"
 
 SG_USING_STD(string);
@@ -123,15 +122,6 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
 
         //View
         {"guiTogglePanel", guiTogglePanel},
-
-        // Environment
-        {"fgPresetAirport", fgPresetAirport},
-        {"fgPresetRunway", fgPresetRunway},
-        {"fgPresetOffsetDistance", fgPresetOffsetDistance},
-        {"fgPresetAltitude", fgPresetAltitude},
-        {"fgPresetGlideslope", fgPresetGlideslope},
-        {"fgPresetAirspeed", fgPresetAirspeed},
-        {"fgPresetCommit", fgPresetCommit},
 
         // Help
         {"helpCb", helpCb},
