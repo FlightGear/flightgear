@@ -49,7 +49,6 @@
 
 #include "gui.h"
 #include "gui_local.hxx"
-#include "preset_dlg.hxx"
 #include "layout.hxx"
 
 
@@ -104,7 +103,4 @@ void guiInit()
 	
     // MOUSE_VIEW mode stuff
 	initMouseQuat();
-
-    // Set up our Dialog Boxes
-    fgPresetInit();
 }
