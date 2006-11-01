@@ -14,7 +14,6 @@ menubar.[ch]xx          XML-configurable menu bar.
 mouse.cxx               Old GUI mouse support (deprecated).
 new_gui.[ch]xx          Top-level for the GUI subsystem.
 preset_dlg.[ch]xx       Internal functions for presets (deprecated).
-prop_picker.[ch]xx      Built-in property-tree dialog.
 sgVec3Slider.[ch]xx     Built-in dialog for adjusting the view.
 trackball.[ch]          Old mouse view support (deprecated).
 

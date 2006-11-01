@@ -67,7 +67,6 @@ extern void printScreen(puObject *);
 extern void guiTogglePanel(puObject *);
 extern void PilotOffsetAdjust(puObject *);
 extern void fgHUDalphaAdjust(puObject *);
-extern void prop_pickerView(puObject *);
 extern void NewAirport(puObject *);
 #ifdef FG_NETWORK_OLK
 extern void net_display_toggle(puObject *);
