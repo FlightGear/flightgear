@@ -90,7 +90,6 @@
 #include "gui.h"
 #include "gui_local.hxx"
 #include "preset_dlg.hxx"
-#include "prop_picker.hxx"
 #include "sgVec3Slider.hxx"
 
 SG_USING_STD(string);
@@ -126,7 +125,6 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
 
         //View
         {"guiTogglePanel", guiTogglePanel},
-        {"prop_pickerView", prop_pickerView},
 
         // Environment
         {"fgPresetAirport", fgPresetAirport},

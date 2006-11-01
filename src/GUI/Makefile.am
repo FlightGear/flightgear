@@ -9,7 +9,6 @@ libGUI_a_SOURCES = \
 	gui_local.cxx gui_local.hxx \
 	mouse.cxx fonts.cxx \
 	preset_dlg.cxx preset_dlg.hxx \
-	prop_picker.cxx prop_picker.hxx \
 	sgVec3Slider.cxx sgVec3Slider.hxx \
 	trackball.c trackball.h \
 	puList.cxx puList.hxx \

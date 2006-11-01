@@ -54,14 +54,6 @@ do_print_dialog (const SGPropertyNode * arg)
 }
 #endif
 
-extern void prop_pickerView (puObject *);
-static bool
-do_properties_dialog (const SGPropertyNode * arg)
-{
-    prop_pickerView(0);
-    return true;
-}
-
 extern void helpCb (puObject *);
 static bool
 do_help_dialog (const SGPropertyNode * arg)
@@ -81,7 +73,6 @@ static struct {
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
     { "old-print-dialog", do_print_dialog },
 #endif
-    { "old-properties-dialog", do_properties_dialog },
     { "old-help-dialog", do_help_dialog },
     { 0, 0 }
 };
