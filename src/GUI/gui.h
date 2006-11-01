@@ -53,8 +53,6 @@ extern fntTexFont *guiFntHandle;
 extern int gui_menu_on;
 
 // from gui_funcs.cxx
-extern void saveFlight(puObject *);
-extern void loadFlight(puObject *);
 extern void reInit(puObject *);
 extern void fgDumpSnapShotWrapper(puObject *);
 #ifdef TR_HIRES_SNAP
@@ -65,21 +63,6 @@ extern void fgHiResDump();
 extern void printScreen(puObject *);
 #endif
 extern void PilotOffsetAdjust(puObject *);
-extern void fgHUDalphaAdjust(puObject *);
-extern void NewAirport(puObject *);
-#ifdef FG_NETWORK_OLK
-extern void net_display_toggle(puObject *);
-extern void NewCallSign(puObject *);
-extern void net_fgd_scan(puObject *);
-extern void net_register(puObject *);
-extern void net_unregister(puObject *);
-#endif
-extern void NewAltitude(puObject *);
-extern void AddWayPoint(puObject *);
-extern void PopWayPoint(puObject *);
-extern void ClearRoute(puObject *);
-extern void fgAPAdjust(puObject *);
-extern void fgLatLonFormatToggle(puObject *);
 extern void helpCb(puObject *);
 extern void fgReshape(int, int);
 
