@@ -64,7 +64,6 @@ extern void fgHiResDump();
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
 extern void printScreen(puObject *);
 #endif
-extern void guiTogglePanel(puObject *);
 extern void PilotOffsetAdjust(puObject *);
 extern void fgHUDalphaAdjust(puObject *);
 extern void NewAirport(puObject *);

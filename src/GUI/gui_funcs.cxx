@@ -121,10 +121,6 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
         {"printScreen", printScreen},
 #endif
-
-        //View
-        {"guiTogglePanel", guiTogglePanel},
-
         // Help
         {"helpCb", helpCb},
 
@@ -183,18 +179,6 @@ ____________________________________________________________________*/
 // Added by David Findlay <nedz@bigpond.com>
 // on Sunday 3rd of December
 
-
-// This is the accessor function
-void guiTogglePanel(puObject *cb)
-{
-  if (fgGetBool("/sim/panel/visibility"))
-    fgSetBool("/sim/panel/visibility", false);
-  else
-    fgSetBool("/sim/panel/visibility", true);
-
-  globals->get_renderer()->resize(fgGetInt("/sim/startup/xsize"),
-                                  fgGetInt("/sim/startup/ysize"));
-}
 
 void helpCb (puObject *)
 {
