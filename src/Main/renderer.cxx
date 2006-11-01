@@ -278,6 +278,12 @@ FGRenderer::init( void ) {
     sceneView->setUpdateVisitor(new SGUpdateVisitor);
 
     sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+
+    sceneView->getCamera()->setViewMatrix(osg::Matrix(0, 0,-1, 0,
+                                                      1, 0, 0, 0,
+                                                      0,-1, 0, 0,
+                                                      0, 0, 0, 1));
+
     sceneView->getCamera()->setClearMask(0);
 
     osg::StateSet* stateSet = mRoot->getOrCreateStateSet();
@@ -412,6 +418,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
     bool enhanced_lighting = fgGetBool("/sim/rendering/enhanced-lighting");
     bool distance_attenuation
         = fgGetBool("/sim/rendering/distance-attenuation");
+    // OSGFIXME
     SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
                                   distance_attenuation );
 
@@ -461,26 +468,12 @@ FGRenderer::update( bool refresh_camera_settings ) {
         resize( fgGetInt("/sim/startup/xsize"),
                 fgGetInt("/sim/startup/ysize") );
 
-        // OSGFXME: compute the view directly without indirection through ssg
-        sgMat4 viewmat;
-        sgTransposeNegateMat4(viewmat, (sgVec4 *)current__view->get_VIEW());
-        sgMat4 cameraMatrix = {
-          {  1.0f,  0.0f,  0.0f,  0.0f },
-          {  0.0f,  0.0f, -1.0f,  0.0f },
-          {  0.0f,  1.0f,  0.0f,  0.0f },
-          {  0.0f,  0.0f,  0.0f,  1.0f }
-        };
-        sgPreMultMat4(cameraMatrix, viewmat);
-
-        osg::Matrixd m;
-        for (unsigned i = 0; i < 4; ++i)
-          for (unsigned j = 0; j < 4; ++j)
-            m(i, j) = cameraMatrix[i][j];
-
-        osg::Quat attitude;
-        attitude.set(m);
-        mCameraView->setPosition(osg::Vec3d(m(3,0), m(3,1), m(3,2)));
-        mCameraView->setAttitude(attitude);
+        SGVec3d center = globals->get_scenery()->get_center();
+        SGVec3d position = current__view->getViewPosition();
+        SGQuatd attitude = current__view->getViewOrientation();
+        SGVec3d osgPosition = attitude.transform(center - position);
+        mCameraView->setPosition(osgPosition.osg());
+        mCameraView->setAttitude(inverse(attitude).osg());
     }
 
     if ( skyblend ) {
@@ -520,9 +513,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
         static SGSkyState sstate;
 
-        sstate.view_pos  = SGVec3f(current__view->get_view_pos());
-        sstate.zero_elev = SGVec3f(current__view->get_zero_elev());
-        sstate.view_up   = SGVec3f(current__view->get_world_up());
+        sstate.view_pos  = current__view->get_view_pos();
+        sstate.zero_elev = current__view->get_zero_elev();
+        sstate.view_up   = current__view->get_world_up();
         sstate.lon       = current__view->getLongitude_deg()
                             * SGD_DEGREES_TO_RADIANS;
         sstate.lat       = current__view->getLatitude_deg()

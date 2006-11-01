@@ -115,7 +115,7 @@ void fgUpdateSunPos( void ) {
     //      << ","<< l->sun_vec[2] << endl;
 
     // calculate the sun's relative angle to local up
-    sgCopyVec3( nup, v->get_world_up() );
+    sgCopyVec3( nup, v->get_world_up().data() );
     sgSetVec3( nsun, l->get_sunpos().x(),
                l->get_sunpos().y(), l->get_sunpos().z() );
     sgNormalizeVec3(nup);
@@ -141,7 +141,9 @@ void fgUpdateSunPos( void ) {
     // earth's surface the sun is directly over, map into onto the
     // local plane representing "horizontal".
 
-    sgmap_vec_onto_cur_surface_plane( v->get_world_up(), v->get_view_pos(),
+    SGVec3f world_up = v->get_world_up();
+    SGVec3f view_pos = v->get_view_pos();
+    sgmap_vec_onto_cur_surface_plane( world_up.data(), view_pos.data(),
 				      to_sun, surface_to_sun );
     sgNormalizeVec3(surface_to_sun);
     // cout << "(sg) Surface direction to sun is "
@@ -155,13 +157,13 @@ void fgUpdateSunPos( void ) {
     // v->get_surface_east().  We do this so we can sort out the
     // acos() ambiguity.  I wish I could think of a more efficient
     // way. :-(
-    east_dot = sgScalarProductVec3( surface_to_sun, v->get_surface_east() );
+    east_dot = sgScalarProductVec3( surface_to_sun, v->get_surface_east().data() );
     // cout << "  East dot product = " << east_dot << endl;
 
     // calculate the angle between v->surface_to_sun and
     // v->surface_south.  this is how much we have to rotate the sky
     // for it to align with the sun
-    dot = sgScalarProductVec3( surface_to_sun, v->get_surface_south() );
+    dot = sgScalarProductVec3( surface_to_sun, v->get_surface_south().data() );
     // cout << "  Dot product = " << dot << endl;
 
     if (dot > 1.0) {

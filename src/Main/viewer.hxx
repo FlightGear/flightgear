@@ -130,12 +130,12 @@ public:
     //   orientation rotations listed below.  This has the effect of the 
     //   eye moving around and "looking at" the object (model) from 
     //   different angles.
-    virtual double getXOffset_m () const { return _x_offset_m; }
-    virtual double getYOffset_m () const { return _y_offset_m; }
-    virtual double getZOffset_m () const { return _z_offset_m; }
-    virtual double getTargetXOffset_m () const { return _target_x_offset_m; }
-    virtual double getTargetYOffset_m () const { return _target_y_offset_m; }
-    virtual double getTargetZOffset_m () const { return _target_z_offset_m; }
+    virtual double getXOffset_m () const { return _offset_m.x(); }
+    virtual double getYOffset_m () const { return _offset_m.y(); }
+    virtual double getZOffset_m () const { return _offset_m.z(); }
+    virtual double getTargetXOffset_m () const { return _target_offset_m.x(); }
+    virtual double getTargetYOffset_m () const { return _target_offset_m.y(); }
+    virtual double getTargetZOffset_m () const { return _target_offset_m.z(); }
     virtual void setXOffset_m (double x_offset_m);
     virtual void setYOffset_m (double y_offset_m);
     virtual void setZOffset_m (double z_offset_m);
@@ -210,23 +210,20 @@ public:
     // Vectors and positions...
 
     // Get zero view_pos
-    virtual float * get_view_pos() {if ( _dirty ) { recalc(); }	return _view_pos; }
+    const SGVec3f& get_view_pos() {if ( _dirty ) { recalc(); }	return _view_pos; }
     // Get the absolute view position in fgfs coordinates.
     virtual double * get_absolute_view_pos ();
     // Get zero elev
-    virtual float * get_zero_elev() {if ( _dirty ) { recalc(); } return _zero_elev; }
+    const SGVec3f& get_zero_elev() {if ( _dirty ) { recalc(); } return _zero_elev; }
     // Get world up vector
-    virtual float *get_world_up() {if ( _dirty ) { recalc(); } return _world_up; }
-    // Get the relative (to scenery center) view position in fgfs coordinates.
-    virtual float * getRelativeViewPos ();
+    const SGVec3f& get_world_up() {if ( _dirty ) { recalc(); } return _world_up; }
     // Get surface east vector
-    virtual float *get_surface_east() {	if ( _dirty ) { recalc(); } return _surface_east; }
+    const SGVec3f& get_surface_east() {	if ( _dirty ) { recalc(); } return _surface_east; }
     // Get surface south vector
-    virtual float *get_surface_south() {if ( _dirty ) { recalc(); } return _surface_south; }
+    const SGVec3f& get_surface_south() {if ( _dirty ) { recalc(); } return _surface_south; }
 
-    // Matrices...
-    virtual const sgVec4 *get_VIEW() { if ( _dirty ) { recalc(); } return VIEW; }
-    virtual const sgVec4 *get_UP() { if ( _dirty ) { recalc(); } return UP; }
+    const SGVec3d& getViewPosition() { if ( _dirty ) { recalc(); } return _absolute_view_pos; }
+    const SGQuatd& getViewOrientation() { if ( _dirty ) { recalc(); } return mViewOrientation; }
 
     //////////////////////////////////////////////////////////////////////
     // Part 4: View and frustrum data setters and getters
@@ -276,8 +273,9 @@ private:
     // flag forcing a recalc of derived view parameters
     bool _dirty;
 
-    mutable sgdVec3 _absolute_view_pos;
-    mutable sgVec3 _relative_view_pos;
+    SGQuatd mViewOrientation;
+    SGVec3d _absolute_view_pos;
+    SGVec3f _relative_view_pos;
 
     double _lon_deg;
     double _lat_deg;
@@ -305,16 +303,12 @@ private:
     // Position offsets from FDM origin.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
     // distance in meters
-    double _x_offset_m;
-    double _y_offset_m;
-    double _z_offset_m;
+    SGVec3d _offset_m;
 
     // Target offsets from FDM origin (for "lookat" targets) The X
     // axis is positive out the tail, Y is out the right wing, and Z
     // is positive up.  distance in meters
-    double _target_x_offset_m;
-    double _target_y_offset_m;
-    double _target_z_offset_m;
+    SGVec3d _target_offset_m;
 
 
     // orientation offsets from reference (_goal* are for smoothed transitions)
@@ -346,49 +340,35 @@ private:
     SGLocation * _target_location;
 
     // the nominal field of view (angle, in degrees)
-    double _fov_deg; 
+    double _fov_deg;
 
     // Ratio of window width and height; height = width *
     // aspect_ratio.  This value is automatically calculated based on
     // window dimentions.
-    double _aspect_ratio;       
+    double _aspect_ratio;   
 
     // default = 1.0, this value is user configurable and is
     // multiplied into the aspect_ratio to get the actual vertical fov
     double _aspect_ratio_multiplier;
 
-    bool _reverse_view_offset;
-
     // view position in opengl world coordinates (this is the
     // abs_view_pos translated to scenery.center)
-    sgVec3 _view_pos;
+    SGVec3f _view_pos;
 
     // cartesion coordinates of current lon/lat if at sea level
     // translated to scenery.center
-    sgVec3 _zero_elev;
+    SGVec3f _zero_elev;
 
     // surface vector heading south
-    sgVec3 _surface_south;
+    SGVec3f _surface_south;
 
     // surface vector heading east (used to unambiguously align sky
     // with sun)
-    sgVec3 _surface_east;
+    SGVec3f _surface_east;
 
     // world up vector (normal to the plane tangent to the earth's
     // surface at the spot we are directly above
-    sgVec3 _world_up;
-
-    // up vector for the view (usually point straight up through the
-    // top of the aircraft
-    sgVec3 _view_up;
-
-    // sg versions of our friendly matrices
-    sgMat4 VIEW, UP;
-    sgMat4 LOCAL, ATLOCAL, TRANS, LARC_TO_SSG;
-
-    // Transformation matrix for the view direction offset relative to
-    // the AIRCRAFT matrix
-    sgMat4 VIEW_OFFSET;
+    SGVec3f _world_up;
 
     //////////////////////////////////////////////////////////////////
     // private functions                                            //
@@ -397,12 +377,7 @@ private:
     void recalc ();
     void recalcLookFrom();
     void recalcLookAt();
-    void copyLocationData();
-    void updateFromModelLocation (SGLocation * location);
-    void updateAtModelLocation (SGLocation * location);
-    void recalcOurOwnLocation (SGLocation * location, double lon_deg, double lat_deg, double alt_ft,
-                 double roll_deg, double pitch_deg, double heading_deg);
-    void dampEyeData (double &roll_deg, double &pitch_deg, double &heading_deg);
+    void dampEyeData(double &roll_deg, double &pitch_deg, double &heading_deg);
 
     // add to _heading_offset_deg
     inline void incHeadingOffset_deg( double amt ) {
@@ -420,10 +395,6 @@ private:
     inline void incRollOffset_deg( double amt ) {
 	set_dirty();
 	_roll_offset_deg += amt;
-    }
-
-    inline void set_reverse_view_offset( bool val ) {
-	_reverse_view_offset = val;
     }
 
 };
