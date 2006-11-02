@@ -4,6 +4,7 @@
 	Version="8,00"
 	Name="JS_demo"
 	ProjectGUID="{7E64A670-D297-468D-AF5D-315A02AA668F}"
+	RootNamespace="JS_demo"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -42,7 +43,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;NOMINMAX;FREEGLUT_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -118,7 +119,7 @@
 				AdditionalIncludeDirectories="../../../;../../src/include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX;FREEGLUT_STATIC"
 				StringPooling="true"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"

@@ -4,6 +4,7 @@
 	Version="8,00"
 	Name="FlightGear"
 	ProjectGUID="{0E698D36-EA1C-434F-A524-21A673C19F2E}"
+	RootNamespace="FlightGear"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -38,11 +39,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../devel/include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;NOMINMAX;FREEGLUT_STATIC"
+				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;NOMINMAX"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -59,9 +60,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt_d.lib js_d.lib net_d.lib psl_d.lib puAux_d.lib pui_d.lib pw_d.lib sg_d.lib sl_d.lib ssg_d.lib ssgAux_d.lib ul_d.lib pthreadvc2.lib Alut.lib openal32.lib zlib.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
+				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt_d.lib js_d.lib net_d.lib psl_d.lib puAux_d.lib pui_d.lib pw_d.lib sg_d.lib sl_d.lib ul_d.lib osgd.lib osgDBd.lib osgUtild.lib OpenThreadsWin32d.lib pthreadvc2.lib Alut.lib openal32.lib zlib1d.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../devel/lib"
+				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib"
+				IgnoreDefaultLibraryNames="libcmt.lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -115,10 +117,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../devel/include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX;FREEGLUT_STATIC"
+				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
 				StringPooling="true"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -135,11 +137,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ssg.lib ssgAux.lib ul.lib pthreadvc2.lib Alut.lib openal32.lib zlib.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
+				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ssgAux.lib ul.lib osg.lib osgDB.lib osgUtil.lib OpenThreadsWin32.lib pthreadvc2.lib Alut.lib openal32.lib zlib.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../devel/lib"
+				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
