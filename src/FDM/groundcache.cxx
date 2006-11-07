@@ -370,17 +370,25 @@ public:
 
   virtual void apply(osg::Transform& transform)
   {
+    if (!enterNode(transform))
+      return;
+    bool oldBackfaceCulling = mBackfaceCulling;
+    bool oldSphIsec = sphIsec;
+    FGGroundCache::GroundProperty oldGp = mGroundProperty;
     /// transform the caches center to local coords
     osg::Matrix oldLocalToGlobal = mLocalToGlobal;
     transform.computeLocalToWorldMatrix(mLocalToGlobal, this);
 
     // walk the children
-    apply((osg::Group&)transform);
+    traverse(transform);
 
     // Restore that one
     mLocalToGlobal = oldLocalToGlobal;
+    sphIsec = oldSphIsec;
+    mBackfaceCulling = oldBackfaceCulling;
+    mGroundProperty = oldGp;
   }
-
+  
   void addTriangle(const osg::Vec3& v1, const osg::Vec3& v2,
                    const osg::Vec3& v3)
   {
