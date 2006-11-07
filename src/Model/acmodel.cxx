@@ -35,7 +35,6 @@
 FGAircraftModel::FGAircraftModel ()
   : _aircraft(0),
     _selector(new osg::Switch),
-    _scene(new osg::Group),
     _nearplane(0.10f),
     _farplane(1000.0f)
 {
@@ -86,7 +85,6 @@ FGAircraftModel::init ()
                                            liveryPath);
     _aircraft->init( model );
   }
-  _scene->addChild(_aircraft->getSceneGraph());
   _selector->addChild(_aircraft->getSceneGraph());
   // Do not do altitude computations with that model
   _selector->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);

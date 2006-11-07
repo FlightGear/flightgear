@@ -45,7 +45,6 @@ private:
 
   SGModelPlacement * _aircraft;
   osg::ref_ptr<osg::Switch> _selector;
-  osg::ref_ptr<osg::Group> _scene;
   float _nearplane;
   float _farplane;
 
