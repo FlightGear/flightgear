@@ -829,6 +829,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\heading_indicator_dg.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\Instrumentation\heading_indicator_fg.hxx"
 				>
 			</File>
@@ -2121,18 +2125,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\fg_init.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\fg_io.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\fg_os.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\main\fg_props.cxx"
 				>
 			</File>
@@ -2497,6 +2489,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\heading_indicator_dg.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\Instrumentation\heading_indicator_fg.cxx"
 				>
 			</File>
@@ -2603,6 +2599,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\cockpit\hud_tbi.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\Instrumentation\HUD\HUD_tbi.cxx"
 				>
 				<FileConfiguration
@@ -2623,10 +2623,6 @@
 						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\src\cockpit\hud_tbi.cxx"
-				>
 			</File>
 			<File
 				RelativePath="..\..\src\input\input.cxx"
@@ -2973,14 +2969,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\gui\preset_dlg.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\gui\prop_picker.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\fdm\yasim\Propeller.cpp"
 				>
 			</File>
@@ -3030,10 +3018,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\fdm\yasim\Rotor.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\fdm\yasim\Rotorblade.cpp"
 				>
 			</File>
 			<File
