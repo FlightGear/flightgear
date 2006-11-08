@@ -300,6 +300,9 @@ FGRenderer::init( void ) {
 
     stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
     
+    // this will be set below
+    stateSet->setMode(GL_NORMALIZE, osg::StateAttribute::OFF);
+
 //     osg::Material* material = new osg::Material;
 //     stateSet->setAttribute(material);
     
