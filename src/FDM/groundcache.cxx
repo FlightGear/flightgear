@@ -232,9 +232,11 @@ public:
   {
     setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
     mDown = down;
+    mLocalDown = down;
     sphIsec = true;
     mBackfaceCulling = false;
     mCacheReference = cacheReference;
+    mLocalCacheReference = cacheReference;
     mCacheRadius = cacheRadius;
     mWireCacheRadius = wireCacheRadius;
 
@@ -320,7 +322,7 @@ public:
       break;
     }
     // Copy the velocity from the carrier class.
-    ud->carrier->getVelocityWrtEarth( gp.vel, gp.rot, gp.pivot );
+    ud->carrier->getVelocityWrtEarth(gp.vel, gp.rot, gp.pivot);
   
     return true;
   }
@@ -377,13 +379,23 @@ public:
     FGGroundCache::GroundProperty oldGp = mGroundProperty;
     /// transform the caches center to local coords
     osg::Matrix oldLocalToGlobal = mLocalToGlobal;
+    osg::Matrix oldGlobalToLocal = mGlobalToLocal;
     transform.computeLocalToWorldMatrix(mLocalToGlobal, this);
+    transform.computeWorldToLocalMatrix(mGlobalToLocal, this);
+
+    SGVec3d oldLocalCacheReference = mLocalCacheReference;
+    mLocalCacheReference.osg() = mCacheReference.osg()*mGlobalToLocal;
+    SGVec3d oldLocalDown = mLocalDown;
+    mLocalDown.osg() = osg::Matrixd::transform3x3(mDown.osg(), mGlobalToLocal);
 
     // walk the children
     traverse(transform);
 
     // Restore that one
+    mLocalDown = oldLocalDown;
+    mLocalCacheReference = oldLocalCacheReference;
     mLocalToGlobal = oldLocalToGlobal;
+    mGlobalToLocal = oldGlobalToLocal;
     sphIsec = oldSphIsec;
     mBackfaceCulling = oldBackfaceCulling;
     mGroundProperty = oldGp;
@@ -392,58 +404,81 @@ public:
   void addTriangle(const osg::Vec3& v1, const osg::Vec3& v2,
                    const osg::Vec3& v3)
   {
-    FGGroundCache::Triangle t;
-    osg::Vec3d gv1 = osg::Vec3d(v1)*mLocalToGlobal;
-    osg::Vec3d gv2 = osg::Vec3d(v2)*mLocalToGlobal;
-    osg::Vec3d gv3 = osg::Vec3d(v3)*mLocalToGlobal;
-    for (unsigned i = 0; i < 3; ++i) {
-      t.vertices[0][i] = gv1[i];
-      t.vertices[1][i] = gv2[i];
-      t.vertices[2][i] = gv3[i];
-    }
-    // FIXME: can do better ...
-    t.boundCenter = (1.0/3)*(t.vertices[0] + t.vertices[1] + t.vertices[2]);
-    t.boundRadius = std::max(length(t.vertices[0] - t.boundCenter),
-                             length(t.vertices[1] - t.boundCenter));
-    t.boundRadius = std::max(t.boundRadius,
-                             length(t.vertices[2] - t.boundCenter));
+    SGVec3d v[3] = {
+      SGVec3d(v1),
+      SGVec3d(v2),
+      SGVec3d(v3)
+    };
+    
+    // a bounding sphere in the node local system
+    SGVec3d boundCenter = (1.0/3)*(v[0] + v[1] + v[2]);
+#if 0
+    double boundRadius = std::max(norm1(v[0] - boundCenter),
+                                  norm1(v[1] - boundCenter));
+    boundRadius = std::max(boundRadius, norm1(v[2] - boundCenter));
+    // Ok, we take the 1-norm instead of the expensive 2 norm.
+    // Therefore we need that scaling factor - roughly sqrt(3)
+    boundRadius = 1.733*boundRadius;
+#else
+    double boundRadius = std::max(distSqr(v[0], boundCenter),
+                                  distSqr(v[1], boundCenter));
+    boundRadius = std::max(boundRadius, distSqr(v[2], boundCenter));
+    boundRadius = sqrt(boundRadius);
+#endif
 
-    sgdMakePlane(t.plane.sg(), t.vertices[0].sg(), t.vertices[1].sg(),
-                 t.vertices[2].sg());
-    double d = sgdScalarProductVec3(mDown.sg(), t.plane.sg());
-    if (d > 0) {
+    // if we are not in the downward cylinder bail out
+    if (!fgdIsectSphereInfLine(boundCenter, boundRadius + mCacheRadius,
+                              mLocalCacheReference, mLocalDown))
+      return;
+
+    
+    // The normal and plane in the node local coordinate system
+    SGVec3d n = normalize(cross(v[1] - v[0], v[2] - v[0]));
+    if (0 < dot(mLocalDown, n)) {
       if (mBackfaceCulling) {
         // Surface points downwards, ignore for altitude computations.
         return;
       } else
-        t.plane = -t.plane;
+        n = -n;
     }
-
-    // Check if the sphere around the vehicle intersects the sphere
-    // around that triangle. If so, put that triangle into the cache.
-    if (sphIsec &&
-        distSqr(t.boundCenter, mCacheReference)
-        < (t.boundRadius + mCacheRadius)*(t.boundRadius + mCacheRadius) ) {
-      t.velocity = mGroundProperty.vel;
-      t.rotation = mGroundProperty.rot;
-      t.rotation_pivot = mGroundProperty.pivot - mGroundCache->cache_center;
-      t.type = mGroundProperty.type;
-      mGroundCache->triangles.push_back(t);
+    
+    // Only check if the triangle is in the cache sphere if the plane
+    // containing the triangle is near enough
+    if (sphIsec && fabs(dot(n, v[0] - mLocalCacheReference)) < mCacheRadius) {
+      // Check if the sphere around the vehicle intersects the sphere
+      // around that triangle. If so, put that triangle into the cache.
+      double r2 = boundRadius + mCacheRadius;
+      if (distSqr(boundCenter, mLocalCacheReference) < r2*r2) {
+        FGGroundCache::Triangle t;
+        for (unsigned i = 0; i < 3; ++i)
+          t.vertices[i].osg() = v[i].osg()*mLocalToGlobal;
+        t.boundCenter.osg() = boundCenter.osg()*mLocalToGlobal;
+        t.boundRadius = boundRadius;
+        
+        SGVec3d tmp;
+        tmp.osg() = osg::Matrixd::transform3x3(n.osg(), mLocalToGlobal);
+        t.plane = SGVec4d(tmp[0], tmp[1], tmp[2], -dot(tmp, t.vertices[0]));
+        t.velocity = mGroundProperty.vel;
+        t.rotation = mGroundProperty.rot;
+        t.rotation_pivot = mGroundProperty.pivot - mGroundCache->cache_center;
+        t.type = mGroundProperty.type;
+        mGroundCache->triangles.push_back(t);
+      }
     }
     
     // In case the cache is empty, we still provide agl computations.
     // But then we use the old way of having a fixed elevation value for
     // the whole lifetime of this cache.
-    if ( fgdIsectSphereInfLine(t.boundCenter, t.boundRadius,
-                               mCacheReference, mDown) ) {
-      SGVec3d isectpoint;
-      if ( sgdIsectInfLinePlane( isectpoint.sg(), mCacheReference.sg(),
-                                 mDown.sg(), t.plane.sg() ) &&
-           fgdPointInTriangle( isectpoint, t.vertices ) ) {
+    SGVec4d plane = SGVec4d(n[0], n[1], n[2], -dot(n, v[0]));
+    SGVec3d isectpoint;
+    if ( sgdIsectInfLinePlane( isectpoint.sg(), mLocalCacheReference.sg(),
+                               mLocalDown.sg(), plane.sg() ) ) {
+      if (fgdPointInTriangle(isectpoint, v)) {
         // Only accept the altitude if the intersection point is below the
         // ground cache midpoint
-        if (0 < dot(isectpoint - mCacheReference, mDown)) {
+        if (0 < dot(isectpoint - mLocalCacheReference, mLocalDown)) {
           mGroundCache->found_ground = true;
+          isectpoint.osg() = isectpoint.osg()*mLocalToGlobal;
           isectpoint += mGroundCache->cache_center;
           double this_radius = length(isectpoint);
           if (mGroundCache->ground_radius < this_radius)
@@ -452,11 +487,11 @@ public:
       }
     }
   }
- 
+  
   void addLine(const osg::Vec3& v1, const osg::Vec3& v2)
   {
-    SGVec3d gv1 = SGVec3d(osg::Vec3d(v1)*mLocalToGlobal);
-    SGVec3d gv2 = SGVec3d(osg::Vec3d(v2)*mLocalToGlobal);
+    SGVec3d gv1(osg::Vec3d(v1)*mLocalToGlobal);
+    SGVec3d gv2(osg::Vec3d(v2)*mLocalToGlobal);
 
     SGVec3d boundCenter = 0.5*(gv1 + gv2);
     double boundRadius = length(gv1 - boundCenter);
@@ -501,7 +536,10 @@ public:
   double mCacheRadius;
   double mWireCacheRadius;
   osg::Matrix mLocalToGlobal;
+  osg::Matrix mGlobalToLocal;
   SGVec3d mDown;
+  SGVec3d mLocalDown;
+  SGVec3d mLocalCacheReference;
   bool sphIsec;
   bool mBackfaceCulling;
   FGGroundCache::GroundProperty mGroundProperty;
