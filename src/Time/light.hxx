@@ -73,10 +73,10 @@ private:
     SGVec3d _sunpos, _moonpos;
 
     // (in view coordinates)
-    sgVec4 _sun_vec, _moon_vec;
+    SGVec4f _sun_vec, _moon_vec;
 
     // inverse (in view coordinates)
-    sgVec4 _sun_vec_inv, _moon_vec_inv;
+    SGVec4f _sun_vec_inv, _moon_vec_inv;
 
     // the angle between the celestial object and the local horizontal
     // (in radians)
@@ -94,18 +94,18 @@ private:
      */
 
     // ambient, diffuse and specular component
-    GLfloat _scene_ambient[4];
-    GLfloat _scene_diffuse[4];
-    GLfloat _scene_specular[4];
+    SGVec4f _scene_ambient;
+    SGVec4f _scene_diffuse;
+    SGVec4f _scene_specular;
 
     // clear sky, fog and cloud color
-    GLfloat _sky_color[4];
-    GLfloat _fog_color[4];
-    GLfloat _cloud_color[4];
+    SGVec4f _sky_color;
+    SGVec4f _fog_color;
+    SGVec4f _cloud_color;
 
     // clear sky and fog color adjusted for sunset effects
-    GLfloat _adj_fog_color[4];
-    GLfloat _adj_sky_color[4];
+    SGVec4f _adj_fog_color;
+    SGVec4f _adj_sky_color;
 
     double _dt_total;
 
@@ -126,13 +126,13 @@ public:
 
     // Color related functions
 
-    inline float *scene_ambient () const { return (float *)_scene_ambient; }
-    inline float *scene_diffuse () const { return (float *)_scene_diffuse; }
-    inline float *scene_specular () const { return (float *)_scene_specular; }
+    inline const SGVec4f& scene_ambient () const { return _scene_ambient; }
+    inline const SGVec4f& scene_diffuse () const { return _scene_diffuse; }
+    inline const SGVec4f& scene_specular () const { return _scene_specular; }
 
-    inline float *sky_color () const { return (float *)_sky_color; }
-    inline float *cloud_color () const { return (float *)_cloud_color; }
-    inline float *adj_fog_color () const { return (float *)_adj_fog_color; }
+    inline const SGVec4f& sky_color () const { return _sky_color; }
+    inline const SGVec4f& cloud_color () const { return _cloud_color; }
+    inline const SGVec4f& adj_fog_color () const { return _adj_fog_color; }
 
 
     // Sun related functions
@@ -152,8 +152,8 @@ public:
     inline const SGVec3d& get_sunpos () const { return _sunpos; }
     inline void set_sunpos (const SGVec3d& p) { _sunpos = p; }
 
-    inline float *sun_vec () const { return (float *)_sun_vec; }
-    inline float *sun_vec_inv () const { return (float *)_sun_vec_inv; }
+    inline SGVec4f& sun_vec () { return _sun_vec; }
+    inline SGVec4f& sun_vec_inv () { return _sun_vec_inv; }
 
 
     // Moon related functions
@@ -173,8 +173,8 @@ public:
     inline const SGVec3d& get_moonpos () const { return _moonpos; }
     inline void set_moonpos (const SGVec3d& p) { _moonpos = p; }
 
-    inline float *moon_vec () const { return (float *)_moon_vec; }
-    inline float *moon_vec_inv () const { return (float *)_moon_vec_inv; }
+    inline const SGVec4f& moon_vec () const { return _moon_vec; }
+    inline const SGVec4f& moon_vec_inv () const { return _moon_vec_inv; }
 };
 
 #endif // _LIGHT_HXX

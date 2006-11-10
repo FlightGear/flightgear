@@ -368,7 +368,6 @@ FGPanel::draw(osg::State& state)
     material->setSpecular(osg::Material::FRONT_AND_BACK, osg::Vec4(0, 0, 0, 1));
     material->setEmission(osg::Material::FRONT_AND_BACK, osg::Vec4(0, 0, 0, 1));
     panelStateSet->setAttribute(material);
-    panelStateSet->setMode(GL_COLOR_MATERIAL, osg::StateAttribute::ON);
     panelStateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
     panelStateSet->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK));
     if ( _enable_depth_test )
@@ -380,7 +379,7 @@ FGPanel::draw(osg::State& state)
   state.apply();
 
   FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
-  sgCopyVec4( panel_color, l->scene_diffuse());
+  sgCopyVec4( panel_color, l->scene_diffuse().data());
   if ( fgGetDouble("/systems/electrical/outputs/instrument-lights") > 1.0 ) {
       if ( panel_color[0] < 0.7 ) panel_color[0] = 0.7;
       if ( panel_color[1] < 0.2 ) panel_color[1] = 0.2;

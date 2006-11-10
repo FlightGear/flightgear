@@ -68,11 +68,30 @@ FGLight::FGLight ()
       _diffuse_tbl( NULL ),
       _specular_tbl( NULL ),
       _sky_tbl( NULL ),
+      _sun_lon(0),
+      _sun_gc_lat(0),
+      _moon_lon(0),
+      _moon_gc_lat(0),
+      _sunpos(0, 0, 0),
+      _moonpos(0, 0, 0),
+      _sun_vec(0, 0, 0, 0),
+      _moon_vec(0, 0, 0, 0),
+      _sun_vec_inv(0, 0, 0, 0),
+      _moon_vec_inv(0, 0, 0, 0),
       _sun_angle(0),
       _moon_angle(0),
-      _prev_sun_angle(-9999.0),
-      _sun_rotation( 0.0 ),
-      _dt_total( 0.0 )
+      _prev_sun_angle(0),
+      _sun_rotation(0),
+      _moon_rotation(0),
+      _scene_ambient(0, 0, 0, 0),
+      _scene_diffuse(0, 0, 0, 0),
+      _scene_specular(0, 0, 0, 0),
+      _sky_color(0, 0, 0, 0),
+      _fog_color(0, 0, 0, 0),
+      _cloud_color(0, 0, 0, 0),
+      _adj_fog_color(0, 0, 0, 0),
+      _adj_sky_color(0, 0, 0, 0),
+      _dt_total(0)
 {
 }
 
@@ -211,14 +230,14 @@ void FGLight::update_sky_color () {
     _sky_color[1] = base_sky_color[1] * sky_brightness;
     _sky_color[2] = base_sky_color[2] * sky_brightness;
     _sky_color[3] = base_sky_color[3];
-    gamma_correct_rgb( _sky_color );
+    gamma_correct_rgb( _sky_color.data() );
 
     // set cloud and fog color
     _cloud_color[0] = _fog_color[0] = base_fog_color[0] * sky_brightness;
     _cloud_color[1] = _fog_color[1] = base_fog_color[1] * sky_brightness;
     _cloud_color[2] = _fog_color[2] = base_fog_color[2] * sky_brightness;
     _cloud_color[3] = _fog_color[3] = base_fog_color[3];
-    gamma_correct_rgb( _fog_color );
+    gamma_correct_rgb( _fog_color.data() );
 
     // adjust the cloud colors for sunrise/sunset effects (darken them)
     if (_sun_angle > 1.0) {
@@ -227,7 +246,7 @@ void FGLight::update_sky_color () {
        _cloud_color[1] /= sun2;
        _cloud_color[2] /= sun2;
     }
-    gamma_correct_rgb( _cloud_color );
+    gamma_correct_rgb( _cloud_color.data() );
 
     SGVec4f sun_color = thesky->get_sun_color();
 
@@ -293,7 +312,7 @@ void FGLight::update_adj_fog_color () {
     //
     SGVec4f sun_color = thesky->get_sun_color();
 
-    gamma_restore_rgb( _fog_color );
+    gamma_restore_rgb( _fog_color.data() );
 
     // Calculate the fog color in the direction of the sun for
     // sunrise/sunset effects.
@@ -323,11 +342,11 @@ void FGLight::update_adj_fog_color () {
     _adj_fog_color[0] = rf3 * _fog_color[0] + rf2 * s_red;
     _adj_fog_color[1] = rf3 * _fog_color[1] + rf2 * s_green;
     _adj_fog_color[2] = rf3 * _fog_color[2] + rf2 * s_blue;
-    gamma_correct_rgb( _adj_fog_color );
+    gamma_correct_rgb( _adj_fog_color.data() );
 
     // make sure the colors have their original value before they are being
     // used by the rest of the program.
     //
-    gamma_correct_rgb( _fog_color );
+    gamma_correct_rgb( _fog_color.data() );
 }
 

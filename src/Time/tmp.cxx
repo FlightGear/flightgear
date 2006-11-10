@@ -103,11 +103,11 @@ void fgUpdateSunPos( void ) {
 	    << " Geocentric lat = " << l->get_sun_gc_lat() );
 
     // update the sun light vector
-    sgSetVec4( l->sun_vec(), l->get_sunpos().x(),
+    sgSetVec4( l->sun_vec().data(), l->get_sunpos().x(),
 	       l->get_sunpos().y(), l->get_sunpos().z(), 0.0 );
-    sgNormalizeVec4( l->sun_vec() );
-    sgCopyVec4( l->sun_vec_inv(), l->sun_vec() );
-    sgNegateVec4( l->sun_vec_inv() );
+    sgNormalizeVec4( l->sun_vec().data() );
+    sgCopyVec4( l->sun_vec_inv().data(), l->sun_vec().data() );
+    sgNegateVec4( l->sun_vec_inv().data() );
 
     // make sure these are directional light sources only
     l->sun_vec()[3] = l->sun_vec_inv()[3] = 0.0;

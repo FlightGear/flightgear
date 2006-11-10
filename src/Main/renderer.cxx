@@ -112,16 +112,13 @@ public:
     osg::Light* light = static_cast<osg::Light*>(stateAttribute);
 
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
-    SGVec4f ambient(l->scene_ambient());
-    light->setAmbient(ambient.osg());
-    SGVec4f diffuse(l->scene_diffuse());
-    light->setDiffuse(diffuse.osg());
-    SGVec4f specular(l->scene_specular());
-    light->setSpecular(specular.osg());
+    light->setAmbient(l->scene_ambient().osg());
+    light->setDiffuse(l->scene_diffuse().osg());
+    light->setSpecular(l->scene_specular().osg());
     SGVec4f position(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2], 0);
     light->setPosition(position.osg());
-
-    light->setDirection(osg::Vec3(0, 0, -1));
+    SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
+    light->setDirection(direction.osg());
     light->setSpotExponent(0);
     light->setSpotCutoff(180);
     light->setConstantAttenuation(1);
@@ -554,9 +551,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
         static SGSkyColor scolor;
 
-        scolor.sky_color   = SGVec3f(l->sky_color());
-        scolor.fog_color   = SGVec3f(l->adj_fog_color());
-        scolor.cloud_color = SGVec3f(l->cloud_color());
+        scolor.sky_color   = SGVec3f(l->sky_color().data());
+        scolor.fog_color   = SGVec3f(l->adj_fog_color().data());
+        scolor.cloud_color = SGVec3f(l->cloud_color().data());
         scolor.sun_angle   = l->get_sun_angle();
         scolor.moon_angle  = l->get_moon_angle();
         scolor.nplanets    = globals->get_ephem()->getNumPlanets();
