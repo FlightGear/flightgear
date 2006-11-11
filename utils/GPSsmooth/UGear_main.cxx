@@ -18,7 +18,7 @@
 #include <Network/net_ctrls.hxx>
 #include <Network/net_fdm.hxx>
 
-#include "MIDG-II.hxx"
+#include "UGear.hxx"
 
 
 SG_USING_STD(cout);
@@ -29,8 +29,8 @@ SG_USING_STD(string);
 // Network channels
 static netSocket fdm_sock, ctrls_sock;
 
-// midg data
-MIDGTrack track;
+// ugear data
+UGEARTrack track;
 
 // Default ports
 static int fdm_port = 5505;
@@ -104,8 +104,9 @@ static void htonf (float &x)
 }
 
 
-static void midg2fg( const MIDGpos pos, const MIDGatt att,
-                     FGNetFDM *fdm, FGNetCtrls *ctrls )
+static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
+		      servo *servopacket,
+		      FGNetFDM *fdm, FGNetCtrls *ctrls )
 {
     unsigned int i;
 
@@ -113,13 +114,13 @@ static void midg2fg( const MIDGpos pos, const MIDGatt att,
     fdm->version = FG_NET_FDM_VERSION;
 
     // Aero parameters
-    fdm->longitude = pos.lon_deg * SGD_DEGREES_TO_RADIANS;
-    fdm->latitude = pos.lat_deg * SGD_DEGREES_TO_RADIANS;
-    fdm->altitude = pos.altitude_msl + alt_offset;
+    fdm->longitude = gpspacket->lon;
+    fdm->latitude = gpspacket->lat;
+    fdm->altitude = gpspacket->alt;
     fdm->agl = -9999.0;
-    fdm->psi = att.yaw_rad; // heading
-    fdm->phi = att.roll_rad; // roll
-    fdm->theta = att.pitch_rad; // pitch;
+    fdm->psi = imupacket->psi; // heading
+    fdm->phi = imupacket->phi; // roll
+    fdm->theta = imupacket->the; // pitch;
 
     fdm->phidot = 0.0;
     fdm->thetadot = 0.0;
@@ -132,7 +133,11 @@ static void midg2fg( const MIDGpos pos, const MIDGatt att,
     // double v_ms = dist / (frame_us / 1000000);
     // double v_kts = v_ms * SG_METER_TO_NM * 3600;
     // kts_filter = (0.99 * kts_filter) + (0.01 * v_kts);
-    fdm->vcas = pos.speed_kts;
+    double vn = gpspacket->vn;
+    double ve = gpspacket->ve;
+    double vd = gpspacket->vd;
+
+    fdm->vcas = sqrt( vn*vn + ve*ve + vd*vd );
     // last_lat = pos.lat_deg;
     // last_lon = pos.lon_deg;
     // cout << "kts_filter = " << kts_filter << " vel = " << pos.speed_kts << endl;
@@ -155,7 +160,7 @@ static void midg2fg( const MIDGpos pos, const MIDGatt att,
     fdm->num_engines = 1;
     fdm->eng_state[0] = 2;
     // cout << "state = " << fdm->eng_state[0] << endl;
-    double rpm = ((pos.speed_kts - 15.0) / 65.0) * 2000.0 + 500.0;
+    double rpm = ((fdm->vcas - 15.0) / 65.0) * 2000.0 + 500.0;
     if ( rpm < 0.0 ) { rpm = 0.0; }
     if ( rpm > 3000.0 ) { rpm = 3000.0; }
     fdm->rpm[0] = rpm;
@@ -272,7 +277,8 @@ static void midg2fg( const MIDGpos pos, const MIDGatt att,
 }
 
 
-static void send_data( const MIDGpos pos, const MIDGatt att ) {
+static void send_data( gps *gpspacket, imu *imupacket, nav *navpacket,
+		       servo *servopacket ) {
     int len;
     int fdmsize = sizeof( FGNetFDM );
 
@@ -281,7 +287,7 @@ static void send_data( const MIDGpos pos, const MIDGatt att ) {
     FGNetFDM fgfdm;
     FGNetCtrls fgctrls;
 
-    midg2fg( pos, att, &fgfdm, &fgctrls );
+    ugear2fg( gpspacket, imupacket, navpacket, servopacket, &fgfdm, &fgctrls );
     len = fdm_sock.send(&fgfdm, fdmsize, 0);
 }
 
@@ -434,14 +440,16 @@ int main( int argc, char **argv ) {
     if ( infile.length() ) {
         // Load data from a track data
         track.load( infile );
-        cout << "Loaded " << track.pos_size() << " position records." << endl;
-        cout << "Loaded " << track.att_size() << " attitude records." << endl;
+        cout << "Loaded " << track.gps_size() << " gps records." << endl;
+        cout << "Loaded " << track.imu_size() << " imu records." << endl;
+        cout << "Loaded " << track.nav_size() << " nav records." << endl;
+        cout << "Loaded " << track.servo_size() << " servo records." << endl;
 
-        int size = track.pos_size();
+        int size = track.imu_size();
 
-        double current_time = track.get_pospt(0).get_seconds();
+        double current_time = track.get_imupt(0).time;
         cout << "Track begin time is " << current_time << endl;
-        double end_time = track.get_pospt(size-1).get_seconds();
+        double end_time = track.get_imupt(size-1).time;
         cout << "Track end time is " << end_time << endl;
         cout << "Duration = " << end_time - current_time << endl;
 
@@ -455,80 +463,135 @@ int main( int argc, char **argv ) {
 
         SGTimeStamp start_time;
         start_time.stamp();
-        int pos_count = 0;
-        int att_count = 0;
+        int gps_count = 0;
+        int imu_count = 0;
+        int nav_count = 0;
+        int servo_count = 0;
 
-        MIDGpos pos0, pos1;
-        pos0 = pos1 = track.get_pospt( 0 );
+        gps gps0, gps1;
+        gps0 = gps1 = track.get_gpspt( 0 );
     
-        MIDGatt att0, att1;
-        att0 = att1 = track.get_attpt( 0 );
+        imu imu0, imu1;
+        imu0 = imu1 = track.get_imupt( 0 );
+    
+        nav nav0, nav1;
+        nav0 = nav1 = track.get_navpt( 0 );
+    
+        servo servo0, servo1;
+        servo0 = servo1 = track.get_servopt( 0 );
     
         while ( current_time < end_time ) {
             // cout << "current_time = " << current_time << " end_time = "
             //      << end_time << endl;
 
-            // Advance position pointer
-            while ( current_time > pos1.get_seconds()
-                    && pos_count < track.pos_size() )
+            // Advance gps pointer
+            while ( current_time > gps1.time
+                    && gps_count < track.gps_size() )
             {
-                pos0 = pos1;
-                ++pos_count;
+                gps0 = gps1;
+                ++gps_count;
                 // cout << "count = " << count << endl;
-                pos1 = track.get_pospt( pos_count );
+                gps1 = track.get_gpspt( gps_count );
             }
             // cout << "p0 = " << p0.get_time() << " p1 = " << p1.get_time()
             //      << endl;
 
-            // Advance attitude pointer
-            while ( current_time > att1.get_seconds()
-                    && att_count < track.att_size() )
+            // Advance imu pointer
+            while ( current_time > imu1.time
+                    && imu_count < track.imu_size() )
             {
-                att0 = att1;
-                ++att_count;
+                imu0 = imu1;
+                ++imu_count;
                 // cout << "count = " << count << endl;
-                att1 = track.get_attpt( att_count );
+                imu1 = track.get_imupt( imu_count );
             }
             //  cout << "pos0 = " << pos0.get_seconds()
             // << " pos1 = " << pos1.get_seconds() << endl;
 
-            double pos_percent;
-            if ( fabs(pos1.get_seconds() - pos0.get_seconds()) < 0.00001 ) {
-                pos_percent = 0.0;
-            } else {
-                pos_percent =
-                    (current_time - pos0.get_seconds()) /
-                    (pos1.get_seconds() - pos0.get_seconds());
+            // Advance nav pointer
+            while ( current_time > nav1.time
+                    && nav_count < track.nav_size() )
+            {
+                nav0 = nav1;
+                ++nav_count;
+                // cout << "count = " << count << endl;
+                nav1 = track.get_navpt( nav_count );
             }
-            // cout << "Percent = " << percent << endl;
-            double att_percent;
-            if ( fabs(att1.get_seconds() - att0.get_seconds()) < 0.00001 ) {
-                att_percent = 0.0;
+            //  cout << "pos0 = " << pos0.get_seconds()
+            // << " pos1 = " << pos1.get_seconds() << endl;
+
+            // Advance servo pointer
+            while ( current_time > servo1.time
+                    && servo_count < track.servo_size() )
+            {
+                servo0 = servo1;
+                ++servo_count;
+                // cout << "count = " << count << endl;
+                servo1 = track.get_servopt( servo_count );
+            }
+            //  cout << "pos0 = " << pos0.get_seconds()
+            // << " pos1 = " << pos1.get_seconds() << endl;
+
+            double gps_percent;
+            if ( fabs(gps1.time - gps0.time) < 0.00001 ) {
+                gps_percent = 0.0;
             } else {
-                att_percent =
-                    (current_time - att0.get_seconds()) /
-                    (att1.get_seconds() - att0.get_seconds());
+                gps_percent =
+                    (current_time - gps0.time) /
+                    (gps1.time - gps0.time);
             }
             // cout << "Percent = " << percent << endl;
 
-            MIDGpos pos = MIDGInterpPos( pos0, pos1, pos_percent );
-            MIDGatt att = MIDGInterpAtt( att0, att1, att_percent );
+            double imu_percent;
+            if ( fabs(imu1.time - imu0.time) < 0.00001 ) {
+                imu_percent = 0.0;
+            } else {
+                imu_percent =
+                    (current_time - imu0.time) /
+                    (imu1.time - imu0.time);
+            }
+            // cout << "Percent = " << percent << endl;
+
+            double nav_percent;
+            if ( fabs(nav1.time - nav0.time) < 0.00001 ) {
+                nav_percent = 0.0;
+            } else {
+                nav_percent =
+                    (current_time - nav0.time) /
+                    (nav1.time - nav0.time);
+            }
+            // cout << "Percent = " << percent << endl;
+
+            double servo_percent;
+            if ( fabs(servo1.time - servo0.time) < 0.00001 ) {
+                servo_percent = 0.0;
+            } else {
+                servo_percent =
+                    (current_time - servo0.time) /
+                    (servo1.time - servo0.time);
+            }
+            // cout << "Percent = " << percent << endl;
+
+            gps gpspacket = UGEARInterpGPS( gps0, gps1, gps_percent );
+            imu imupacket = UGEARInterpIMU( imu0, imu1, imu_percent );
+            nav navpacket = UGEARInterpNAV( nav0, nav1, nav_percent );
+            servo servopacket = UGEARInterpSERVO( servo0, servo1,
+						  servo_percent );
+
             // cout << current_time << " " << p0.lat_deg << ", " << p0.lon_deg
             //      << endl;
             // cout << current_time << " " << p1.lat_deg << ", " << p1.lon_deg
             //      << endl;
             // cout << (double)current_time << " " << pos.lat_deg << ", "
             //      << pos.lon_deg << " " << att.yaw_deg << endl;
-            if ( pos.lat_deg > -500 ) {
+            if ( gpspacket.lat > -500 ) {
             printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
                     current_time,
-                    pos.lat_deg, pos.lon_deg, pos.altitude_msl,
-                    att.yaw_rad * 180.0 / SG_PI,
-                    att.pitch_rad * 180.0 / SG_PI,
-                    att.roll_rad * 180.0 / SG_PI );
+                    gpspacket.lat, gpspacket.lon, gpspacket.alt,
+                    imupacket.psi, imupacket.the, imupacket.phi );
 	    }
 
-            send_data( pos, att );
+            send_data( &gpspacket, &imupacket, &navpacket, &servopacket );
 
             // Update the elapsed time.
             static bool first_time = true;
@@ -553,7 +616,7 @@ int main( int argc, char **argv ) {
             last_time_stamp = current_time_stamp;
         }
 
-        cout << "Processed " << pos_count << " entries in "
+        cout << "Processed " << imu_count << " entries in "
              << (current_time_stamp - start_time) / 1000000 << " seconds."
              << endl;
     } else if ( serialdev.length() ) {
@@ -562,11 +625,15 @@ int main( int argc, char **argv ) {
         int count = 0;
         double current_time = 0.0;
 
-        MIDGpos pos;
-        MIDGatt att;
+        gps gpspacket;
+	imu imupacket;
+	nav navpacket;
+	servo servopacket;
 
-        uint32_t pos_time = 1;
-        uint32_t att_time = 1;
+        double gps_time = 0;
+        double imu_time = 0;
+        double nav_time = 0;
+        double servo_time = 0;
 
         // open the serial port device
         SGSerialPort input( serialdev, 115200 );
@@ -589,36 +656,49 @@ int main( int argc, char **argv ) {
 
         while ( input.is_enabled() ) {
             // cout << "looking for next message ..." << endl;
-            int id = track.next_message( &input, &output, &pos, &att );
+            int id = track.next_message( &input, &output, &gpspacket,
+					 &imupacket, &navpacket, &servopacket );
             cout << "message id = " << id << endl;
             count++;
 
-            if ( id == 10 ) {
-                if ( att.get_msec() > att_time ) {
-                    att_time = att.get_msec();
-                    current_time = att_time;
+            if ( id == GPS_PACKET ) {
+                if ( gpspacket.time > gps_time ) {
+                    gps_time = gpspacket.time;
+                    current_time = gps_time;
                 } else {
-                    cout << "oops att back in time" << endl;
+                    cout << "oops gps back in time" << endl;
                 }
-            } else if ( id == 12 ) {
-                if ( pos.get_msec() > pos_time ) {
-                    pos_time = pos.get_msec();
-                    current_time = pos_time;
+	    } else if ( id == IMU_PACKET ) {
+                if ( imupacket.time > imu_time ) {
+                    imu_time = imupacket.time;
+                    current_time = imu_time;
                 } else {
-                    cout << "oops pos back in time" << endl;
+                    cout << "oops imu back in time" << endl;
+                }
+	    } else if ( id == NAV_PACKET ) {
+                if ( navpacket.time > nav_time ) {
+                    nav_time = navpacket.time;
+                    current_time = nav_time;
+                } else {
+                    cout << "oops nav back in time" << endl;
+                }
+	    } else if ( id == SERVO_PACKET ) {
+                if ( servopacket.time > servo_time ) {
+                    servo_time = servopacket.time;
+                    current_time = servo_time;
+                } else {
+                    cout << "oops servo back in time" << endl;
                 }
             }
 
-	    if ( pos.lat_deg > -500 ) {
-            // printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
-            //         current_time,
-            //         pos.lat_deg, pos.lon_deg, pos.altitude_msl,
-            //         att.yaw_rad * 180.0 / SG_PI,
-            //         att.pitch_rad * 180.0 / SG_PI,
-            //         att.roll_rad * 180.0 / SG_PI );
-	    }
+	    // if ( gpspacket.lat > -500 ) {
+            printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
+                    current_time,
+                    gpspacket.lat, gpspacket.lon, gpspacket.alt,
+                    imupacket.phi, imupacket.the, imupacket.psi );
+	    // }
 
-            send_data( pos, att );
+            send_data( &gpspacket, &imupacket, &navpacket, &servopacket );
         }
     }
 

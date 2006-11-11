@@ -377,11 +377,12 @@ bool MIDGTrack::load( const string &file ) {
 int myread( SGIOChannel *ch, SGIOChannel *log, char *buf, int length ) {
     bool myeof = false;
     int result = 0;
-    while ( result != length && !myeof ) {
-        result = ch->read( buf, length );
-        if ( ch->get_type() == sgFileType ) {
-            myeof = ((SGFile *)ch)->eof();
-        }
+    if ( !myeof ) {
+      result = ch->read( buf, length );
+      // cout << "wanted " << length << " read " << result << " bytes" << endl;
+      if ( ch->get_type() == sgFileType ) {
+	myeof = ((SGFile *)ch)->eof();
+      }
     }
 
     if ( result > 0 && log != NULL ) {
@@ -389,6 +390,23 @@ int myread( SGIOChannel *ch, SGIOChannel *log, char *buf, int length ) {
     }
 
     return result;
+}
+
+// attempt to work around some system dependent issues.  Our read can
+// return < data than we want.
+int serial_read( SGSerialPort *serial, char *buf, int length ) {
+    int result = 0;
+    int bytes_read = 0;
+    char *tmp = buf;
+
+    while ( bytes_read < length ) {
+      result = serial->read_port( tmp, length - bytes_read );
+      bytes_read += result;
+      tmp += result;
+      // cout << "  read " << bytes_read << " of " << length << endl;
+    }
+
+    return bytes_read;
 }
 
 // load the next message of a real time data stream
@@ -409,7 +427,9 @@ int MIDGTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
     while ( (sync0 != 129 || sync1 != 161) && !myeof ) {
         sync0 = sync1;
         myread( ch, log, tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
-        // cout << "scanning for start of message, eof = " << ch->eof() << endl;
+        // cout << "scanning for start of message "
+	//      << (unsigned int)sync0 << " " << (unsigned int)sync1
+	//      << ", eof = " << ch->eof() << endl;
         if ( ch->get_type() == sgFileType ) {
             myeof = ((SGFile *)ch)->eof();
         }
@@ -429,9 +449,13 @@ int MIDGTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
             cout << "ERROR: didn't read enough bytes!" << endl;
         }
     } else {
+#ifdef READ_ONE_BY_ONE
         for ( int i = 0; i < size; ++i ) {
             myread( ch, log, tmpbuf, 1 ); savebuf[i] = tmpbuf[0];
         }
+#else
+	myread( ch, log, savebuf, size );
+#endif
     }
 
     // read checksum
@@ -443,8 +467,67 @@ int MIDGTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
         return id;
     }
 
-    // cout << "Check sum failure!" << endl;
+    cout << "Check sum failure!" << endl;
     return -1;
+}
+
+
+// load the next message of a real time data stream
+int MIDGTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
+                             MIDGpos *pos, MIDGatt *att )
+{
+    char tmpbuf[256];
+    char savebuf[256];
+    int result = 0;
+
+    cout << "in next_message()" << endl;
+
+    bool myeof = false;
+
+    // scan for sync characters
+    uint8_t sync0, sync1;
+    result = serial_read( serial, tmpbuf, 2 );
+    sync0 = (unsigned char)tmpbuf[0];
+    sync1 = (unsigned char)tmpbuf[1];
+    while ( (sync0 != 129 || sync1 != 161) && !myeof ) {
+        sync0 = sync1;
+        serial_read( serial, tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
+        cout << "scanning for start of message "
+	     << (unsigned int)sync0 << " " << (unsigned int)sync1
+	     << endl;
+    }
+
+    cout << "found start of message ..." << endl;
+
+    // read message id and size
+    serial_read( serial, tmpbuf, 2 );
+    uint8_t id = (unsigned char)tmpbuf[0];
+    uint8_t size = (unsigned char)tmpbuf[1];
+    // cout << "message = " << (int)id << " size = " << (int)size << endl;
+
+    // load message
+    serial_read( serial, savebuf, size );
+
+    // read checksum
+    serial_read( serial, tmpbuf, 2 );
+    uint8_t cksum0 = (unsigned char)tmpbuf[0];
+    uint8_t cksum1 = (unsigned char)tmpbuf[1];
+    
+    if ( validate_cksum( id, size, savebuf, cksum0, cksum1 ) ) {
+        parse_msg( id, savebuf, pos, att );
+
+	//
+	// FIXME
+	// WRITE DATA TO LOG FILE
+	//
+
+        return id;
+    }
+
+    cout << "Check sum failure!" << endl;
+    return -1;
+
+    
 }
 
 

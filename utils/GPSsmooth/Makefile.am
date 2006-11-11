@@ -1,4 +1,4 @@
-noinst_PROGRAMS = GPSsmooth MIDGsmooth
+noinst_PROGRAMS = GPSsmooth MIDGsmooth UGsmooth
 
 GPSsmooth_SOURCES = \
 	gps.cxx gps.hxx \
@@ -16,5 +16,15 @@ MIDGsmooth_LDADD = \
 	-lsgio -lsgserial -lsgtiming -lsgmath -lsgbucket -lsgmisc -lsgdebug \
 	-lplibnet -lplibul \
 	$(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
+
+UGsmooth_SOURCES = \
+        UGear.cxx UGear.hxx \
+        UGear_main.cxx
+
+UGsmooth_LDADD = \
+        -lsgio -lsgserial -lsgtiming -lsgmath -lsgbucket -lsgmisc -lsgdebug \
+        -lplibnet -lplibul \
+        $(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
+
 
 INCLUDES = -I$(top_srcdir)/src

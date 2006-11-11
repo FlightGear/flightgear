@@ -14,6 +14,7 @@
 
 #include <simgear/misc/stdint.hxx>
 #include <simgear/io/iochannel.hxx>
+#include <simgear/serial/serial.hxx>
 
 SG_USING_STD(cout);
 SG_USING_STD(endl);
@@ -132,6 +133,8 @@ public:
     // read/parse the next message from the specified data stream,
     // returns id # if a valid message found.
     int next_message( SGIOChannel *ch, SGIOChannel *log,
+                      MIDGpos *pos, MIDGatt *att );
+    int next_message( SGSerialPort *serial, SGIOChannel *log,
                       MIDGpos *pos, MIDGatt *att );
 
     // load the named file into internal buffers
