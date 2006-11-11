@@ -161,11 +161,19 @@ bool FGAirportDynamics::getAvailableParking(double *lat, double *lon, double *he
 	      continue;
 	    }
 	  else // Airline code doesn't match
-	    if (i->getCodes().find(airline, 0) == string::npos)
-	      {
-		available = false;
-		continue;
-	      }
+	    {
+	      //cerr << "Code = " << airline << ": Codes " << i->getCodes();
+	      if (i->getCodes().find(airline, 0) == string::npos)
+		{
+		  available = false;
+		  //cerr << "Unavailable" << endl;
+		  continue;
+		}
+	      else
+		{
+		  //cerr << "Available" << endl;
+		}
+	    }
 	  // Type doesn't match
 	  if (i->getType() != flType)
 	    {

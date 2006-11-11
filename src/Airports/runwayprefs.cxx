@@ -255,12 +255,12 @@ void RunwayGroup::setActive(const string &aptId,
 		  //cerr << "Crosswnd : " << crossWind << endl;
 		  if ((tailWind > maxTail) || (crossWind > maxCross))
 		    {
-		      //cerr << "Invalid : ";
+		      //cerr << "Invalid : " << endl;
 		      validSelection = false;
 		   }
 		  else 
 		    {
-		      //cerr << "Valid   : ";
+		      //cerr << "Valid   : " << endl;;
 		  }
 		}else {
 		SG_LOG( SG_GENERAL, SG_INFO, "Failed to find runway " << name << " at " << aptId );
@@ -269,18 +269,18 @@ void RunwayGroup::setActive(const string &aptId,
 	    }
 	  if (validSelection) 
 	    {
-	      //cerr << "Valid   : ";
+	      //cerr << "Valid selection  : " << i << endl;;
 	      foundValidSelection = true;
 	      for (stringVecIterator it = currentlyActive->begin(); 
 		   it != currentlyActive->end(); it++)
 		{
 		  if ((*it) == name)
 		    match++;
-		  if (match >= bestMatch) {
-		    bestMatch = match;
-		    bestChoice = i;
-		  }
 		}
+	      if (match >= bestMatch) {
+		bestMatch = match;
+		bestChoice = i;
+	      }
 	    } 
 	  //cerr << "Preference " << i << " bestMatch " << bestMatch << " choice " << bestChoice << endl;
 	}

@@ -54,11 +54,11 @@ void FGTrafficRecord::setPositionAndIntentions(int pos, FGAIFlightPlan *route)
      //cerr << "setting intentions ";
      for (int i = 0; i < size; i++) {
        int val = route->getRouteIndex(i);
-   
+       //cerr << val<< " ";
        if ((val) && (val != pos))
  	{
  	  intentions.push_back(val); 
- 	  //cerr << val<< " ";
+ 	  //cerr << "[set] ";
  	}
      }
      //cerr << endl;
@@ -76,7 +76,7 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord &other)
    //cerr << "Start check 1" << endl;
    if (currentPos == other.currentPos) 
      {
-       //cerr << "Check Position and intentions: current matches" << endl;
+       //cerr << callsign << ": Check Position and intentions: we are on the same taxiway" << other.callsign << "Index = " << currentPos << endl;
        result = true;
      }
   //  else if (other.intentions.size()) 
@@ -100,7 +100,7 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord &other)
        i++;
      }
      if (i != intentions.end()) {
-       //cerr << "Check Position and intentions: .other.current matches" << endl;
+       //cerr << callsign << ": Check Position and intentions: .other.current matches" << other.callsign << "Index = " << (*i) << endl;
        result = true;
      }
    }
@@ -178,6 +178,45 @@ int FGTrafficRecord::crosses(FGGroundNetwork *net, FGTrafficRecord &other)
   return -1;
 }
 
+bool FGTrafficRecord::onRoute(FGGroundNetwork *net, FGTrafficRecord &other)
+{
+  int node = -1, othernode = -1;
+  if (currentPos >0)
+    node = net->findSegment(currentPos)->getEnd()->getIndex();
+  if (other.currentPos > 0)
+    othernode = net->findSegment(other.currentPos)->getEnd()->getIndex();
+  if ((node == othernode) && (node != -1))
+    return true;
+  if (other.intentions.size())
+    {
+      for (intVecIterator i = other.intentions.begin(); i != other.intentions.end(); i++)
+	{
+	  if (*i > 0) 
+	    {
+	      othernode = net->findSegment(*i)->getEnd()->getIndex();
+	      if ((node == othernode) && (node > -1))
+		return true;
+	    }
+	}
+    }
+  //if (other.currentPos > 0)
+  //  othernode = net->findSegment(other.currentPos)->getEnd()->getIndex();
+  //if (intentions.size())
+  //  {
+  //    for (intVecIterator i = intentions.begin(); i != intentions.end(); i++)
+  //	{
+  //	  if (*i > 0) 
+  //	    {
+  //	      node = net->findSegment(*i)->getEnd()->getIndex();
+  //	      if ((node == othernode) && (node > -1))
+  //		return true;
+  //	    }
+  //	}
+  //  }
+  return false;
+}
+
+
 bool FGTrafficRecord::isOpposing (FGGroundNetwork *net, FGTrafficRecord &other, int node)
 {
    // Check if current segment is the reverse segment for the other aircraft
@@ -193,6 +232,19 @@ bool FGTrafficRecord::isOpposing (FGGroundNetwork *net, FGTrafficRecord &other, 
       
        for (intVecIterator i = intentions.begin(); i != intentions.end(); i++)
  	{
+	  if (opp = net->findSegment(other.currentPos)->opposite())
+	    {
+	      if ((*i) > 0)
+		if (opp->getIndex() == net->findSegment(*i)->getIndex())
+		  {
+		    if (net->findSegment(*i)->getStart()->getIndex() == node) {
+		      {
+			//cerr << "Found the node " << node << endl;
+			return true;
+		      }
+		    }
+		  }
+	    }
 	  if (other.intentions.size())
 	    {
 	      for (intVecIterator j = other.intentions.begin(); j != other.intentions.end(); j++)
@@ -204,12 +256,12 @@ bool FGTrafficRecord::isOpposing (FGGroundNetwork *net, FGTrafficRecord &other, 
 			if (opp->getIndex() == 
 			    net->findSegment(*j)->getIndex())
 			  {
-//			    cerr << "Nodes " << net->findSegment(*i)->getIndex()
-//				 << " and  " << net->findSegment(*j)->getIndex()
-//				 << " are opposites " << endl;
+			    //cerr << "Nodes " << net->findSegment(*i)->getIndex()
+			    //	 << " and  " << net->findSegment(*j)->getIndex()
+			    //	 << " are opposites " << endl;
 			    if (net->findSegment(*i)->getStart()->getIndex() == node) {
 			      {
-				//cerr << "Found the node" << endl;
+				//cerr << "Found the node " << node << endl;
 				return true;
 			      }
 			    }
@@ -273,7 +325,8 @@ FGTowerController::FGTowerController() :
 // 
 void FGTowerController::announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentPosition,
 					 double lat, double lon, double heading, 
-					 double speed, double alt, double radius, int leg)
+					 double speed, double alt, double radius, int leg,
+					 string callsign)
 {
   TrafficVectorIterator i = activeTraffic.begin();
   // Search whether the current id alread has an entry
@@ -295,6 +348,7 @@ void FGTowerController::announcePosition(int id, FGAIFlightPlan *intendedRoute, 
     rec.setPositionAndHeading(lat, lon, heading, speed, alt);
     rec.setRunway(intendedRoute->getRunway());
     rec.setLeg(leg);
+    rec.setCallSign(callsign);
     activeTraffic.push_back(rec);
   } else {
     i->setPositionAndHeading(lat, lon, heading, speed, alt);

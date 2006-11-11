@@ -49,7 +49,7 @@ private:
     port, timeString, departurePort, departureTime, arrivalPort, arrivalTime,
     repeat, acType, airline, m_class, flighttype;
   int cruiseAlt;
-  int score;
+  int score, runCount;
   double radius, offset;
   bool heavy;
 

@@ -108,7 +108,9 @@ FGAirportDynamics * FGAirport::getDynamics()
         if (parkpath.exists()) {
             try {
                 readXML(parkpath.str(),*dynamics);
+		//cerr << "Initializing " << getId() << endl;
                 dynamics->init();
+		dynamics->getGroundNetwork()->setParent(this);
             } catch (const sg_exception &e) {
                 //cerr << "unable to read " << parkpath.str() << endl;
             }
