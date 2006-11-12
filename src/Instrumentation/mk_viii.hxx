@@ -745,10 +745,10 @@ public:
 	inline SampleElement (SGSoundSample *sample, double volume = 1.0)
 	  : _sample(sample), _volume(volume) { silence = false; }
 
-	virtual inline void play (double volume) { set_volume(volume); _sample->play_once(); }
-	virtual inline void stop () { _sample->stop(); }
-	virtual inline bool is_playing () { return _sample->is_playing(); }
-	virtual inline void set_volume (double volume) { _sample->set_volume(volume * _volume); }
+        virtual inline void play (double volume) { if (_sample) { set_volume(volume); _sample->play_once(); } }
+	virtual inline void stop () { if (_sample) _sample->stop(); }
+        virtual inline bool is_playing () { return _sample ? _sample->is_playing() : false; }
+	virtual inline void set_volume (double volume) { if (_sample) _sample->set_volume(volume * _volume); }
       };
 
       /////////////////////////////////////////////////////////////////////////
