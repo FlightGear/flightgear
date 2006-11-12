@@ -50,6 +50,7 @@
 #include <osg/PolygonMode>
 #include <osg/ShadeModel>
 #include <osg/TexEnv>
+#include <osg/TexEnvCombine>
 #include <osg/TexGen>
 #include <osg/TexMat>
 #include <osg/ColorMatrix>
@@ -101,6 +102,37 @@
 #include "splash.hxx"
 #include "renderer.hxx"
 #include "main.hxx"
+
+class SGPuDrawable : public osg::Drawable {
+public:
+  SGPuDrawable()
+  {
+    // Dynamic stuff, do not store geometry
+    setUseDisplayList(false);
+
+    osg::StateSet* stateSet = getOrCreateStateSet();
+    // speed optimization?
+    stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
+    // We can do translucent menus, so why not. :-)
+    stateSet->setAttribute(new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA));
+    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+    stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
+
+    stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+  }
+  virtual void drawImplementation(osg::State& state) const
+  {
+    state.pushStateSet(getStateSet());
+    puDisplay();
+    state.popStateSet();
+  }
+
+  virtual osg::Object* cloneType() const { return new SGPuDrawable; }
+  virtual osg::Object* clone(const osg::CopyOp&) const { return new SGPuDrawable; }
+  
+private:
+};
 
 
 class FGSunLightUpdateCallback : public osg::StateAttribute::Callback {
@@ -280,10 +312,11 @@ FGRenderer::init( void ) {
                                                       1, 0, 0, 0,
                                                       0,-1, 0, 0,
                                                       0, 0, 0, 1));
-
-    sceneView->getCamera()->setClearMask(0);
+    sceneView->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    sceneView->getCamera()->setClearMask(GL_COLOR_BUFFER_BIT);
 
     osg::StateSet* stateSet = mRoot->getOrCreateStateSet();
+    stateSet->setRenderingHint(osg::StateSet::OPAQUE_BIN);
 
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     
@@ -300,9 +333,13 @@ FGRenderer::init( void ) {
     // this will be set below
     stateSet->setMode(GL_NORMALIZE, osg::StateAttribute::OFF);
 
-//     osg::Material* material = new osg::Material;
-//     stateSet->setAttribute(material);
+    osg::Material* material = new osg::Material;
+    stateSet->setAttribute(material);
     
+    stateSet->setTextureAttribute(0, new osg::TexEnv);
+    stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
+
+
 //     stateSet->setAttribute(new osg::CullFace(osg::CullFace::BACK));
 //     stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
 
@@ -318,7 +355,7 @@ FGRenderer::init( void ) {
 
     // this is the topmost scenegraph node for osg
     mBackGroundCamera->addChild(thesky->getPreRoot());
-    mBackGroundCamera->setClearMask(GL_COLOR_BUFFER_BIT);
+    mBackGroundCamera->setClearMask(0);
 
     GLbitfield inheritanceMask = osg::CullSettings::ALL_VARIABLES;
     inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
@@ -331,9 +368,6 @@ FGRenderer::init( void ) {
     mBackGroundCamera->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 
     mRoot->addChild(mBackGroundCamera.get());
-
-
-    sceneView->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 
     mSceneCamera->setClearMask(GL_DEPTH_BUFFER_BIT);
     inheritanceMask = osg::CullSettings::ALL_VARIABLES;
@@ -360,6 +394,21 @@ FGRenderer::init( void ) {
     stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
 
     mRoot->addChild(mSceneCamera.get());
+
+    // plug in the GUI
+    osg::CameraNode* guiCamera = new osg::CameraNode;
+    guiCamera->setRenderOrder(osg::CameraNode::POST_RENDER);
+    guiCamera->setClearMask(0);
+    inheritanceMask = osg::CullSettings::ALL_VARIABLES;
+    inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
+    inheritanceMask &= ~osg::CullSettings::CULLING_MODE;
+    guiCamera->setInheritanceMask(inheritanceMask);
+    guiCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    guiCamera->setCullingMode(osg::CullSettings::NO_CULLING);
+    mRoot->addChild(guiCamera);
+    osg::Geode* geode = new osg::Geode;
+    geode->addDrawable(new SGPuDrawable);
+    guiCamera->addChild(geode);
 
     mSceneCamera->addChild(globals->get_scenery()->get_scene_graph());
 
@@ -479,11 +528,11 @@ FGRenderer::update( bool refresh_camera_settings ) {
     if ( skyblend ) {
         if ( fgGetBool("/sim/rendering/textures") ) {
             SGVec4f clearColor(l->adj_fog_color());
-            mBackGroundCamera->setClearColor(clearColor.osg());
+            sceneView->getCamera()->setClearColor(clearColor.osg());
         }
     } else {
         SGVec4f clearColor(l->sky_color());
-        mBackGroundCamera->setClearColor(clearColor.osg());
+        sceneView->getCamera()->setClearColor(clearColor.osg());
     }
 
     // update fog params if visibility has changed
@@ -691,7 +740,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
     glDisable( GL_CULL_FACE ) ;
     glEnable( GL_BLEND ) ;
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-    puDisplay();
 
     // Fade out the splash screen over the first three seconds.
     double t = globals->get_sim_time_sec();

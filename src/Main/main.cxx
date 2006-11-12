@@ -613,13 +613,6 @@ static void fgMainLoop( void ) {
         globals->get_soundmgr()->set_volume(init_volume);
     }
 
-    // OSGFIXME: with osg>1.2 remove this, osg::LightModel does the trick...
-//     if (fgGetBool("/sim/rendering/specular-highlight")) {
-//         glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
-//     } else {
-//         glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SINGLE_COLOR);
-//     }
-
     fgRequestRedraw();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
