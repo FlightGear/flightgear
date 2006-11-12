@@ -196,19 +196,17 @@ public:
 
 #if 0
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
-    SGVec4f ambient(l->scene_ambient());
-    lightModel->setAmbientIntensity(ambient.osg());
+    lightModel->setAmbientIntensity(l->scene_ambient().osg());
 #else
     lightModel->setAmbientIntensity(osg::Vec4(0, 0, 0, 1));
 #endif
     lightModel->setTwoSided(true);
+    lightModel->setLocalViewer(false);
 
     if (mHighlights->getBoolValue()) {
       lightModel->setColorControl(osg::LightModel::SEPARATE_SPECULAR_COLOR);
-      lightModel->setLocalViewer(true);
     } else {
       lightModel->setColorControl(osg::LightModel::SINGLE_COLOR);
-      lightModel->setLocalViewer(false);
     }
   }
 private:
