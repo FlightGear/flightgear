@@ -114,8 +114,8 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     fdm->version = FG_NET_FDM_VERSION;
 
     // Aero parameters
-    fdm->longitude = gpspacket->lon;
-    fdm->latitude = gpspacket->lat;
+    fdm->longitude = gpspacket->lon * SG_DEGREES_TO_RADIANS;
+    fdm->latitude = gpspacket->lat * SG_DEGREES_TO_RADIANS;
     fdm->altitude = gpspacket->alt;
     fdm->agl = -9999.0;
     fdm->psi = imupacket->psi; // heading
@@ -692,10 +692,12 @@ int main( int argc, char **argv ) {
             }
 
 	    // if ( gpspacket.lat > -500 ) {
-            printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
+            printf( "%.2f  %.6f %.6f %.1f  %.2f %.2f %.2f\n",
                     current_time,
-                    gpspacket.lat, gpspacket.lon, gpspacket.alt,
-                    imupacket.phi, imupacket.the, imupacket.psi );
+                    navpacket.lat, navpacket.lon, navpacket.alt,
+                    imupacket.phi*SGD_RADIANS_TO_DEGREES,
+		    imupacket.the*SGD_RADIANS_TO_DEGREES,
+		    imupacket.psi*SGD_RADIANS_TO_DEGREES );
 	    // }
 
             send_data( &gpspacket, &imupacket, &navpacket, &servopacket );

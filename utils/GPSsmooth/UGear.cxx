@@ -69,9 +69,9 @@ static bool validate_cksum( uint8_t id, uint8_t size, char *buf,
         //      << " [" << (unsigned int)buf[i] << "]" << endl;
     }
 
-    // cout << "c0 = " << (unsigned int)c0 << " (" << (unsigned int)cksum0
-    //      << ") c1 = " << (unsigned int)c1 << " (" << (unsigned int)cksum1
-    //      << ")" << endl;
+    cout << "c0 = " << (unsigned int)c0 << " (" << (unsigned int)cksum0
+         << ") c1 = " << (unsigned int)c1 << " (" << (unsigned int)cksum1
+         << ")" << endl;
 
     if ( c0 == cksum0 && c1 == cksum1 ) {
         return true;
@@ -87,8 +87,8 @@ void UGEARTrack::parse_msg( const int id, char *buf,
 {
     if ( id == GPS_PACKET ) {
       *gpspacket = *(struct gps *)buf;
-      gpspacket->lon  = sg_swap_double( (uint8_t *)buf, 0 );
-      gpspacket->lat  = sg_swap_double( (uint8_t *)buf, 8 );
+      gpspacket->lat  = sg_swap_double( (uint8_t *)buf, 0 );
+      gpspacket->lon  = sg_swap_double( (uint8_t *)buf, 8 );
       gpspacket->alt  = sg_swap_double( (uint8_t *)buf, 16 );
       gpspacket->vn   = sg_swap_double( (uint8_t *)buf, 24 );
       gpspacket->ve   = sg_swap_double( (uint8_t *)buf, 32 );
@@ -114,6 +114,13 @@ void UGEARTrack::parse_msg( const int id, char *buf,
       // printf("imu.time = %.4f\n", imupacket->time);
     } else if ( id == NAV_PACKET ) {
       *navpacket = *(struct nav *)buf;
+      navpacket->lon  = sg_swap_double( (uint8_t *)buf, 0 );
+      navpacket->lat  = sg_swap_double( (uint8_t *)buf, 8 );
+      navpacket->alt  = sg_swap_double( (uint8_t *)buf, 16 );
+      navpacket->vn   = sg_swap_double( (uint8_t *)buf, 24 );
+      navpacket->ve   = sg_swap_double( (uint8_t *)buf, 32 );
+      navpacket->vd   = sg_swap_double( (uint8_t *)buf, 40 );
+      navpacket->time = sg_swap_double( (uint8_t *)buf, 52 );
     } else if ( id == SERVO_PACKET ) {
       *servopacket = *(struct servo *)buf;
       servopacket->time = sg_swap_double( (uint8_t *)buf, 20 );
@@ -214,13 +221,18 @@ int myread( SGIOChannel *ch, SGIOChannel *log, char *buf, int length ) {
 
 // attempt to work around some system dependent issues.  Our read can
 // return < data than we want.
-int serial_read( SGSerialPort *serial, char *buf, int length ) {
+int serial_read( SGSerialPort *serial, SGIOChannel *log,
+		 char *buf, int length )
+{
     int result = 0;
     int bytes_read = 0;
     char *tmp = buf;
 
     while ( bytes_read < length ) {
       result = serial->read_port( tmp, length - bytes_read );
+      if ( result > 0 && log != NULL ) {
+        log->write( buf, result );
+      }
       bytes_read += result;
       tmp += result;
       // cout << "  read " << bytes_read << " of " << length << endl;
@@ -308,12 +320,12 @@ int UGEARTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
 
     // scan for sync characters
     uint8_t sync0, sync1;
-    result = serial_read( serial, tmpbuf, 2 );
+    result = serial_read( serial, log, tmpbuf, 2 );
     sync0 = (unsigned char)tmpbuf[0];
     sync1 = (unsigned char)tmpbuf[1];
     while ( (sync0 != START_OF_MSG0 || sync1 != START_OF_MSG1) && !myeof ) {
         sync0 = sync1;
-        serial_read( serial, tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
+        serial_read( serial, log, tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
         cout << "scanning for start of message "
 	     << (unsigned int)sync0 << " " << (unsigned int)sync1
 	     << endl;
@@ -322,16 +334,16 @@ int UGEARTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     // cout << "found start of message ..." << endl;
 
     // read message id and size
-    serial_read( serial, tmpbuf, 2 );
+    serial_read( serial, log, tmpbuf, 2 );
     uint8_t id = (unsigned char)tmpbuf[0];
     uint8_t size = (unsigned char)tmpbuf[1];
     cout << "message = " << (int)id << " size = " << (int)size << endl;
 
     // load message
-    serial_read( serial, savebuf, size );
+    serial_read( serial, log, savebuf, size );
 
     // read checksum
-    serial_read( serial, tmpbuf, 2 );
+    serial_read( serial, log, tmpbuf, 2 );
     uint8_t cksum0 = (unsigned char)tmpbuf[0];
     uint8_t cksum1 = (unsigned char)tmpbuf[1];
     // cout << "cksum0 = " << (int)cksum0 << " cksum1 = " << (int)cksum1
@@ -339,11 +351,6 @@ int UGEARTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     
     if ( validate_cksum( id, size, savebuf, cksum0, cksum1 ) ) {
         parse_msg( id, savebuf, gpspacket, imupacket, navpacket, servopacket );
-
-	//
-	// FIXME
-	// WRITE DATA TO LOG FILE
-	//
 
         return id;
     }
