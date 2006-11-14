@@ -765,6 +765,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
     SG_LOG(SG_GENERAL, SG_ALERT, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkSpeedAdjustment");
   }
   current = i;
+  closest = current;
   previousInstruction = current->getSpeedAdjustment();
   double mindist = HUGE;
   if (activeTraffic.size()) 
@@ -774,7 +775,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
 			lat,
 			alt);
       //TrafficVector iterator closest;
-      closest = current;
+      //closest = current;
       for (TrafficVectorIterator i = activeTraffic.begin(); 
    	   i != activeTraffic.end(); i++)
    	{

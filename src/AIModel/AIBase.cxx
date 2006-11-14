@@ -165,14 +165,14 @@ FGAIBase::load3DModel(const string& fg_root,
   // SetModel as in ATC/AIEntity.cxx
   osg::Group* personality_branch = new osg::Group;
 
-  model = manager->getModel(path);
-  if (!(model)) {
+  //model = manager->getModel(path);
+  //if (!(model)) {
       model = sgLoad3DModel(fg_root,
                             path,
                             prop_root,
                             sim_time_sec);
-      manager->setModel(path, model.get());
-  }
+      //        manager->setModel(path, model.get());
+      //}
   personality_branch->addChild( model.get() );
 
   return personality_branch;
