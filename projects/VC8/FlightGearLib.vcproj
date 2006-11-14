@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				AdditionalIncludeDirectories="../../../;../../../OpenThreads/include;../../../OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -105,7 +105,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				AdditionalIncludeDirectories="../../../;../../../OpenThreads/include;../../../OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;PTW32_STATIC_LIB;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
 				StringPooling="true"
 				MinimalRebuild="false"
@@ -2421,10 +2421,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\globals.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\fdm\yasim\Glue.cpp"
 				>
 			</File>
@@ -2765,10 +2761,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\logger.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\fdm\larcsim\ls_accel.c"
 				>
 			</File>
@@ -2941,10 +2933,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\options.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\cockpit\panel.cxx"
 				>
 			</File>
@@ -3005,10 +2993,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\renderer.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\aircraft\replay.cxx"
 				>
 			</File>
@@ -3066,10 +3050,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\instrumentation\slip_skid_ball.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\splash.cxx"
 				>
 			</File>
 			<File
@@ -3473,23 +3453,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\util.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\systems\vacuum.cxx"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\instrumentation\vertical_speed_indicator.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\viewer.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\viewmgr.cxx"
 				>
 			</File>
 			<File

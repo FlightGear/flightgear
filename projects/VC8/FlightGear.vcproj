@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				AdditionalIncludeDirectories="../../../;../../../OpenThreads/include;../../../OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;NOMINMAX"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,7 +62,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt_d.lib js_d.lib net_d.lib psl_d.lib puAux_d.lib pui_d.lib pw_d.lib sg_d.lib sl_d.lib ul_d.lib osgd.lib osgDBd.lib osgUtild.lib OpenThreadsWin32d.lib pthreadvc2.lib Alut.lib openal32.lib zlib1d.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib"
+				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../OpenThreads/lib/win32;../../../OpenSceneGraph/lib/win32;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib"
 				IgnoreDefaultLibraryNames="libcmt.lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -117,7 +117,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				AdditionalIncludeDirectories="../../../;../../../OpenThreads/include;../../../OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -139,7 +139,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ssgAux.lib ul.lib osg.lib osgDB.lib osgUtil.lib OpenThreadsWin32.lib pthreadvc2.lib Alut.lib openal32.lib zlib1.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib"
+				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../OpenThreads/lib/win32;../../../OpenSceneGraph/lib/win32;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib;$(NOINHERIT)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
