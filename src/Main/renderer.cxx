@@ -111,6 +111,7 @@ public:
     setUseDisplayList(false);
 
     osg::StateSet* stateSet = getOrCreateStateSet();
+    stateSet->setRenderBinDetails(1001, "RenderBin");
     // speed optimization?
     stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
     // We can do translucent menus, so why not. :-)
@@ -124,12 +125,83 @@ public:
   virtual void drawImplementation(osg::State& state) const
   {
     state.pushStateSet(getStateSet());
+    state.apply();
+
+
+    if((fgGetBool("/sim/atc/enabled"))
+       || (fgGetBool("/sim/ai-traffic/enabled")))
+      globals->get_ATC_display()->update(delta_time_sec, state);
+
+
     puDisplay();
+
+    // Fade out the splash screen over the first three seconds.
+    double t = globals->get_sim_time_sec();
+    if (t <= 2.5) {
+      glPushAttrib(GL_ALL_ATTRIB_BITS);
+      glPushClientAttrib(~0u);
+
+      fgSplashUpdate((2.5 - t) / 2.5);
+
+      glPopClientAttrib();
+      glPopAttrib();
+    }
+
     state.popStateSet();
   }
 
   virtual osg::Object* cloneType() const { return new SGPuDrawable; }
   virtual osg::Object* clone(const osg::CopyOp&) const { return new SGPuDrawable; }
+  
+private:
+};
+
+class SGHUDAndPanelDrawable : public osg::Drawable {
+public:
+  SGHUDAndPanelDrawable()
+  {
+    // Dynamic stuff, do not store geometry
+    setUseDisplayList(false);
+
+    osg::StateSet* stateSet = getOrCreateStateSet();
+    stateSet->setRenderBinDetails(1000, "RenderBin");
+
+    // speed optimization?
+    stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
+    stateSet->setAttribute(new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA));
+    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+    stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+  }
+  virtual void drawImplementation(osg::State& state) const
+  {
+    state.pushStateSet(getStateSet());
+    state.apply();
+
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPushClientAttrib(~0u);
+
+    fgCockpitUpdate(&state);
+
+    FGInstrumentMgr *instr = static_cast<FGInstrumentMgr*>(globals->get_subsystem("instrumentation"));
+    HUD *hud = static_cast<HUD*>(instr->get_subsystem("hud"));
+    hud->draw(state);
+
+    // update the panel subsystem
+    if ( globals->get_current_panel() != NULL )
+        globals->get_current_panel()->update(state);
+    // We don't need a state here - can be safely removed when we can pick
+    // correctly
+    fgUpdate3DPanels();
+
+    glPopClientAttrib();
+    glPopAttrib();
+
+    state.popStateSet();
+  }
+
+  virtual osg::Object* cloneType() const { return new SGHUDAndPanelDrawable; }
+  virtual osg::Object* clone(const osg::CopyOp&) const { return new SGHUDAndPanelDrawable; }
   
 private:
 };
@@ -406,6 +478,7 @@ FGRenderer::init( void ) {
     mRoot->addChild(guiCamera);
     osg::Geode* geode = new osg::Geode;
     geode->addDrawable(new SGPuDrawable);
+    geode->addDrawable(new SGHUDAndPanelDrawable);
     guiCamera->addChild(geode);
 
     mSceneCamera->addChild(globals->get_scenery()->get_scene_graph());
@@ -453,7 +526,13 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
     if ( idle_state < 1000 || !scenery_loaded ) {
         // still initializing, draw the splash screen
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glPushClientAttrib(~0u);
+
         fgSplashUpdate(1.0);
+
+        glPopClientAttrib();
+        glPopAttrib();
 
         // Keep resetting sim time while the sim is initializing
         globals->set_sim_time_sec( 0.0 );
@@ -707,45 +786,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
     sceneView->update();
     sceneView->cull();
     sceneView->draw();
-
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glPushClientAttrib(~0u);
-
-    // display HUD && Panel
-    glDisable( GL_FOG );
-    glDisable( GL_DEPTH_TEST );
-
-    fgCockpitUpdate(sceneView->getState());
-
-    FGInstrumentMgr *instr = static_cast<FGInstrumentMgr*>(globals->get_subsystem("instrumentation"));
-    HUD *hud = static_cast<HUD*>(instr->get_subsystem("hud"));
-    hud->draw(*sceneView->getState());
-
-    // update the panel subsystem
-    if ( globals->get_current_panel() != NULL )
-        globals->get_current_panel()->update(*sceneView->getState());
-    // We don't need a state here - can be safely removed when we can pick
-    // correctly
-    fgUpdate3DPanels();
-
-    if((fgGetBool("/sim/atc/enabled"))
-       || (fgGetBool("/sim/ai-traffic/enabled")))
-      globals->get_ATC_display()->update(delta_time_sec,
-                                         *sceneView->getState());
-
-    // We can do translucent menus, so why not. :-)
-    glDisable( GL_TEXTURE_2D ) ;
-    glDisable( GL_CULL_FACE ) ;
-    glEnable( GL_BLEND ) ;
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-
-    // Fade out the splash screen over the first three seconds.
-    double t = globals->get_sim_time_sec();
-    if (t <= 2.5)
-        fgSplashUpdate((2.5 - t) / 2.5);
-
-    glPopClientAttrib();
-    glPopAttrib();
 }
 
 

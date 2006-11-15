@@ -370,11 +370,12 @@ FGPanel::draw(osg::State& state)
     panelStateSet->setAttribute(material);
     panelStateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
     panelStateSet->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK));
-    if ( _enable_depth_test )
-      panelStateSet->setAttributeAndModes(new osg::Depth(osg::Depth::ALWAYS));
-    else
-      panelStateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+    panelStateSet->setAttributeAndModes(new osg::Depth(osg::Depth::LEQUAL));
   }
+  if ( _enable_depth_test )
+    panelStateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+  else
+    panelStateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
   state.pushStateSet(panelStateSet.get());
   state.apply();
 
@@ -470,15 +471,25 @@ FGPanel::draw(osg::State& state)
   // Draw yellow "hotspots" if directed to.  This is a panel authoring
   // feature; not intended to be high performance or to look good.
   if ( fgGetBool("/sim/panel-hotspots") ) {
-    static osg::ref_ptr<osg::StateSet> hotspotStateSet = new osg::StateSet;
-    hotspotStateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
+    static osg::ref_ptr<osg::StateSet> hotspotStateSet;
+    if (!hotspotStateSet.valid()) {
+      hotspotStateSet = new osg::StateSet;
+      hotspotStateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
+      hotspotStateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    }
+
     state.pushStateSet(hotspotStateSet.get());
     state.apply();
-  
+
+    glPushAttrib(GL_ENABLE_BIT);
+    glDisable(GL_COLOR_MATERIAL);
     glColor3f(1, 1, 0);
     
     for ( unsigned int i = 0; i < _instruments.size(); i++ )
       _instruments[i]->drawHotspots(state);
+
+    glPopAttrib();
+
     state.popStateSet();
     state.apply();
   }
