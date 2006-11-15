@@ -101,7 +101,8 @@ public:
   virtual ~FGATCController() {};
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
 				double lat, double lon,
-				double hdg, double spd, double alt, double radius, int leg) = 0;
+				double hdg, double spd, double alt, double radius, int leg,
+				string callsign) = 0;
   virtual void             signOff(int id) = 0;
   virtual void             update(int id, double lat, double lon, 
 				  double heading, double speed, double alt, double dt) = 0;
@@ -126,6 +127,7 @@ private:
   FGATCInstruction instruction;
   double latitude, longitude, heading, speed, altitude, radius;
   string runway;
+  string callsign;
   
   
 public:
@@ -143,6 +145,8 @@ public:
   bool checkPositionAndIntentions(FGTrafficRecord &other);
   int  crosses                   (FGGroundNetwork *, FGTrafficRecord &other); 
   bool isOpposing                (FGGroundNetwork *, FGTrafficRecord &other, int node);
+
+  bool onRoute(FGGroundNetwork *, FGTrafficRecord &other);
 
   bool getSpeedAdjustment() { return instruction.getChangeSpeed(); };
   
@@ -167,6 +171,8 @@ public:
   void setWaitsForId(int id) { waitsForId = id; };
 
   string getRunway() { return runway; };
+  void setCallSign(string clsgn) { callsign = clsgn; };
+  string getCallSign() { return callsign; };
 
 };
 
@@ -206,7 +212,8 @@ public:
   virtual ~FGTowerController() {};
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
 				double lat, double lon,
-				double hdg, double spd, double alt, double radius, int leg);
+				double hdg, double spd, double alt, double radius, int leg,
+				string callsign);
   virtual void             signOff(int id);
   virtual void             update(int id, double lat, double lon, 
 				  double heading, double speed, double alt, double dt);

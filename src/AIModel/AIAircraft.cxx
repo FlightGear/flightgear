@@ -1029,19 +1029,20 @@ void FGAIAircraft::announcePositionToController()
 	callsign += "Heavy";
       switch (leg) {
       case 3:
-	cerr << callsign << " ready to taxi to runway " << fp->getRunway() << endl;
+	//cerr << callsign << " ready to taxi to runway " << fp->getRunway() << endl;
 	break;
       case 4:
-	cerr << callsign << " at runway " << fp->getRunway() << "Ready for take-off. "
-	     << trafficRef->getFlightRules() << " to " << trafficRef->getArrivalAirport()->getId() 
-	     << "(" << trafficRef->getArrivalAirport()->getName() << ")."<< endl;
+	//cerr << callsign << " at runway " << fp->getRunway() << "Ready for take-off. "
+	//     << trafficRef->getFlightRules() << " to " << trafficRef->getArrivalAirport()->getId() 
+	//     << "(" << trafficRef->getArrivalAirport()->getName() << ")."<< endl;
+	break;
       }
     }
     prevController = controller;
     if (controller) {
       controller->announcePosition(getID(), fp, fp->getCurrentWaypoint()->routeIndex,
     			   _getLatitude(), _getLongitude(), hdg, speed, altitude_ft, 
-    				   trafficRef->getRadius(), leg);
+    				   trafficRef->getRadius(), leg, trafficRef->getCallSign());
     }
   }
 }
@@ -1056,20 +1057,22 @@ void FGAIAircraft::processATC(FGATCInstruction instruction)
   // Hold Position
   if (instruction.getHoldPosition  ()) {
     if (!holdPos) {
-      if (trafficRef)
-	cerr << trafficRef->getCallSign() << "Holding Position " << endl;
+      //if (trafficRef)
+      //cerr << trafficRef->getCallSign() << "Holding Position " << endl;
       holdPos = true;
     }
-    AccelTo(0.25);
+    AccelTo(0.0);
   } else {
     if (holdPos) {
-      if (trafficRef)
-	cerr << trafficRef->getCallSign() << " Resuming Taxi " << endl;
+      //if (trafficRef)
+      //	cerr << trafficRef->getCallSign() << " Resuming Taxi " << endl;
       holdPos = false;
     }    
     // Change speed Instruction. This can only be excecuted when there is no 
     // Hold position instruction.
     if (instruction.getChangeSpeed   ()) {
+      //  if (trafficRef)
+      //cerr << trafficRef->getCallSign() << " Changing Speed " << endl;
       AccelTo(instruction.getSpeed());
     }else {
       if (fp) AccelTo(fp->getPreviousWaypoint()->speed);

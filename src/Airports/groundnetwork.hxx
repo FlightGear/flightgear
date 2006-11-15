@@ -25,6 +25,7 @@
 #define _GROUNDNETWORK_HXX_
 
 #include <simgear/compiler.h>
+#include <simgear/route/waypoint.hxx>
 
 
 #include STL_STRING
@@ -33,7 +34,6 @@
 SG_USING_STD(string);
 SG_USING_STD(vector);
 
-
 #include "parking.hxx"
 #include "trafficcontrol.hxx"
 
@@ -41,6 +41,7 @@ SG_USING_STD(vector);
 
 class FGTaxiSegment; // forward reference
 class FGAIFlightPlan; // forward reference
+class FGAirport;      // forward reference
 
 typedef vector<FGTaxiSegment*>  FGTaxiSegmentVector;
 typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentVectorIterator;
@@ -78,6 +79,8 @@ public:
   FGTaxiSegmentVectorIterator getBeginRoute() { return next.begin(); };
   FGTaxiSegmentVectorIterator getEndRoute()   { return next.end();   }; 
   bool operator<(const FGTaxiNode &other) const { return index < other.index; };
+
+  void sortEndSegments(bool);
 };
 
 typedef vector<FGTaxiNode*> FGTaxiNodeVector;
@@ -92,10 +95,15 @@ private:
   int startNode;
   int endNode;
   double length;
+  double course;
+  double headingDiff;
+  bool isActive;
   FGTaxiNode *start;
   FGTaxiNode *end;
   int index;
   FGTaxiSegment *oppositeDirection;
+
+ 
 
 public:
   FGTaxiSegment();
@@ -119,14 +127,21 @@ public:
  FGTaxiSegment *getAddress() { return this;};
 
   bool operator<(const FGTaxiSegment &other) const { return index < other.index; };
+  bool hasSmallerHeadingDiff (const FGTaxiSegment &other) const { return headingDiff < other.headingDiff; };
   FGTaxiSegment *opposite() { return oppositeDirection; };
+  void setCourseDiff(double crse);
+
 
   
 };
 
 
+
+
 typedef vector<int> intVec;
 typedef vector<int>::iterator intVecIterator;
+
+
 
 /***************************************************************************************
  * class FGTaxiRoute
@@ -137,16 +152,18 @@ private:
   intVec nodes;
   intVec routes;
   double distance;
+  int depth;
   intVecIterator currNode;
   intVecIterator currRoute;
 
 public:
   FGTaxiRoute() { distance = 0; currNode = nodes.begin(); currRoute = routes.begin();};
-  FGTaxiRoute(intVec nds, intVec rts, double dist) { 
+  FGTaxiRoute(intVec nds, intVec rts, double dist, int dpth) { 
     nodes = nds; 
     routes = rts;
     distance = dist; 
     currNode = nodes.begin();
+    depth = dpth;
   };
   bool operator< (const FGTaxiRoute &other) const {return distance < other.distance; };
   bool empty () { return nodes.begin() == nodes.end(); };
@@ -156,12 +173,14 @@ public:
   
   void first() { currNode = nodes.begin(); currRoute = routes.begin(); };
   int size() { return nodes.size(); };
+  int getDepth() { return depth; };
 };
 
 typedef vector<FGTaxiRoute> TaxiRouteVector;
 typedef vector<FGTaxiRoute>::iterator TaxiRouteVectorIterator;
 
-
+bool sortByHeadingDiff(FGTaxiSegment *a, FGTaxiSegment *b);
+bool sortByLength     (FGTaxiSegment *a, FGTaxiSegment *b);
 
 
 /**************************************************************************************
@@ -171,6 +190,8 @@ class FGGroundNetwork : public FGATCController
 {
 private:
   bool hasNetwork;
+  int maxDepth;
+  int count;
   FGTaxiNodeVector    nodes;
   FGTaxiSegmentVector segments;
   //intVec route;
@@ -179,10 +200,13 @@ private:
   TaxiRouteVector routes;
   TrafficVector activeTraffic;
   TrafficVectorIterator currTraffic;
+  SGWayPoint destination;
   
   bool foundRoute;
   double totalDistance, maxDistance;
   FGTowerController *towerController;
+  FGAirport *parent;
+  
 
   void printRoutingError(string);
 
@@ -208,8 +232,11 @@ public:
   FGTaxiRoute findShortestRoute(int start, int end);
   void trace(FGTaxiNode *, int, int, double dist);
 
+  void setParent(FGAirport *par) { parent = par; };
+
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute, 
-				double lat, double lon, double hdg, double spd, double alt, double radius, int leg);
+				double lat, double lon, double hdg, double spd, double alt, 
+				double radius, int leg, string callsign);
   virtual void signOff(int id);
   virtual void update(int id, double lat, double lon, double heading, double speed, double alt, double dt);
   virtual bool hasInstruction(int id);

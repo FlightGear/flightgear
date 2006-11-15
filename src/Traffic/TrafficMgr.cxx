@@ -77,6 +77,7 @@ SG_USING_STD(sort);
 FGTrafficManager::FGTrafficManager()
 {
   score = 0;
+  runCount = 0;
 }
 
 FGTrafficManager:: ~FGTrafficManager()
@@ -121,6 +122,11 @@ void FGTrafficManager::init()
 
 void FGTrafficManager::update(double something)
 {
+  if (runCount < 1000)
+    {
+      runCount++;
+      return;
+    }
   time_t now = time(NULL) + fgGetLong("/sim/time/warp");
   if (scheduledAircraft.size() == 0)
     return;

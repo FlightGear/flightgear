@@ -115,11 +115,12 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
  						    radius, fltType, 
  						    aircraftType, airline)))
  	{
- 	  SG_LOG(SG_INPUT, SG_WARN, "Could not find parking for a " << 
+ 	  SG_LOG(SG_INPUT, SG_ALERT, "Could not find parking for a " << 
  		 aircraftType <<
  		 " of flight type " << fltType << 
  		 " of airline     " << airline <<
  		 " at airport     " << dep->getId());
+	  //exit(1);
  	}
     }
   else
