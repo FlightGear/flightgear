@@ -317,6 +317,7 @@ SGSky *thesky;
 
 static osg::ref_ptr<osgUtil::SceneView> sceneView = new osgUtil::SceneView;
 static osg::ref_ptr<osg::FrameStamp> mFrameStamp = new osg::FrameStamp;
+static osg::ref_ptr<SGUpdateVisitor> mUpdateVisitor= new SGUpdateVisitor;
 
 static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
@@ -374,7 +375,8 @@ FGRenderer::init( void ) {
 
     sceneView->setFrameStamp(mFrameStamp.get());
 
-    sceneView->setUpdateVisitor(new SGUpdateVisitor);
+    mUpdateVisitor = new SGUpdateVisitor;
+    sceneView->setUpdateVisitor(mUpdateVisitor.get());
 
     sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 
@@ -783,6 +785,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
     mFrameStamp->setReferenceTime(globals->get_sim_time_sec());
     mFrameStamp->setFrameNumber(1+mFrameStamp->getFrameNumber());
     mFrameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
+    mUpdateVisitor->setViewData(current__view->getViewPosition(),
+                                current__view->getViewOrientation());
+    mUpdateVisitor->setSceneryCenter(globals->get_scenery()->get_center());
+    mUpdateVisitor->setVisibility(actual_visibility);
     sceneView->update();
     sceneView->cull();
     sceneView->draw();
