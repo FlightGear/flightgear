@@ -50,27 +50,93 @@
 #include "groundcache.hxx"
 
 static inline bool
+fgdRayTriangle(SGVec3d& x, const SGVec3d& point, const SGVec3d& dir,
+               const SGVec3d v[3])
+{
+  double eps = 1e-4;
+  // Method based on the observation that we are looking for a
+  // point x that can be expressed in terms of the triangle points
+  //  x = p_0 + \mu_1*(p_1 - p_0) + \mu_2*(p_2 - p_0)
+  // with 0 <= \mu_1, \mu_2 and \mu_1 + \mu_2 <= 1.
+  // OTOH it could be expressed in terms of the ray
+  //  x = point + \lambda*dir
+  // Now we can compute \mu_i and \lambda.
+  // define
+  SGVec3d d1 = v[1] - v[0];
+  SGVec3d d2 = v[2] - v[0];
+  SGVec3d b = point - v[0];
+  
+  // the vector in normal direction, but not normalized
+  SGVec3d d1crossd2 = cross(d1, d2);
+  
+  double denom = -dot(dir, d1crossd2);
+  double signDenom = copysign(1, denom);
+  // return if paralell ??? FIXME what if paralell and in plane?
+  // may be we are ok below than anyway??
+  // if (SGMiscd::abs(denom) <= SGLimitsd::min())
+  //   return false;
+  
+  // Now \lambda would read
+  //   lambda = 1/denom*dot(b, d1crossd2);
+  // To avoid an expensive division we multiply by |denom|
+  double lambdaDenom = signDenom*dot(b, d1crossd2);
+  if (lambdaDenom < 0)
+    return false;
+  // For line segment we would test against
+  // if (1 < lambda)
+  //   return false;
+  // with the original lambda. The multiplied test would read
+  // if (absDenom < lambdaDenom)
+  //   return false;
+
+  double absDenom = fabs(denom);
+  double absDenomEps = absDenom*eps;
+  
+  SGVec3d bcrossr = cross(b, dir);
+  // double mu1 = 1/denom*dot(d2, bcrossr);
+  double mu1 = signDenom*dot(d2, bcrossr);
+  if (mu1 < -absDenomEps)
+    return false;
+  // double mu2 = -1/denom*dot(d1, bcrossr);
+  // if (mu2 < -eps)
+  //   return false;
+  double mmu2 = signDenom*dot(d1, bcrossr);
+  if (mmu2 > absDenomEps)
+    return false;
+  
+  if (mu1 - mmu2 > absDenom + absDenomEps)
+    return false;
+
+  x = point;
+  // if we have survived here it could only happen with denom == 0
+  // that the point is already in plane. Then return the origin ...
+  if (SGLimitsd::min() < absDenom)
+    x += (lambdaDenom/absDenom)*dir;
+
+  return true;
+}
+
+static inline bool
 fgdPointInTriangle( const SGVec3d& point, const SGVec3d tri[3] )
 {
     SGVec3d dif;
 
     // Some tolerance in meters we accept a point to be outside of the triangle
     // and still return that it is inside.
-    SGDfloat eps = 1e-2;
     SGDfloat min, max;
     // punt if outside bouding cube
     SG_MIN_MAX3 ( min, max, tri[0][0], tri[1][0], tri[2][0] );
-    if( (point[0] < min - eps) || (point[0] > max + eps) )
+    if( (point[0] < min) || (point[0] > max) )
         return false;
     dif[0] = max - min;
 
     SG_MIN_MAX3 ( min, max, tri[0][1], tri[1][1], tri[2][1] );
-    if( (point[1] < min - eps) || (point[1] > max + eps) )
+    if( (point[1] < min) || (point[1] > max) )
         return false;
     dif[1] = max - min;
 
     SG_MIN_MAX3 ( min, max, tri[0][2], tri[1][2], tri[2][2] );
-    if( (point[2] < min - eps) || (point[2] > max + eps) )
+    if( (point[2] < min) || (point[2] > max) )
         return false;
     dif[2] = max - min;
 
@@ -117,8 +183,7 @@ fgdPointInTriangle( const SGVec3d& point, const SGVec3d tri[3] )
     SGDfloat tmp = (y2 - y3);
     SGDfloat tmpn = (x2 - x3);
     int side1 = SG_SIGN (tmp * (rx - x3) + (y3 - ry) * tmpn);
-    int side2 = SG_SIGN (tmp * (x1 - x3) + (y3 - y1) * tmpn
-                         + side1 * eps * fabs(tmpn));
+    int side2 = SG_SIGN (tmp * (x1 - x3) + (y3 - y1) * tmpn);
     if ( side1 != side2 ) {
         // printf("failed side 1 check\n");
         return false;
@@ -128,8 +193,7 @@ fgdPointInTriangle( const SGVec3d& point, const SGVec3d tri[3] )
     tmp = (y3 - ry);
     tmpn = (x3 - rx);
     side1 = SG_SIGN (tmp * (x2 - rx) + (ry - y2) * tmpn);
-    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - y1) * tmpn
-                     + side1 * eps * fabs(tmpn));
+    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - y1) * tmpn);
     if ( side1 != side2 ) {
         // printf("failed side 2 check\n");
         return false;
@@ -139,8 +203,7 @@ fgdPointInTriangle( const SGVec3d& point, const SGVec3d tri[3] )
     tmp = (y2 - ry);
     tmpn = (x2 - rx);
     side1 = SG_SIGN (tmp * (x3 - rx) + (ry - y3) * tmpn);
-    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - y1) * tmpn
-                     + side1 * eps * fabs(tmpn));
+    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - y1) * tmpn);
     if ( side1 != side2 ) {
         // printf("failed side 3  check\n");
         return false;
@@ -438,8 +501,10 @@ public:
       if (mBackfaceCulling) {
         // Surface points downwards, ignore for altitude computations.
         return;
-      } else
+      } else {
         n = -n;
+        std::swap(v[1], v[2]);
+      }
     }
     
     // Only check if the triangle is in the cache sphere if the plane
@@ -471,20 +536,14 @@ public:
     // the whole lifetime of this cache.
     SGVec4d plane = SGVec4d(n[0], n[1], n[2], -dot(n, v[0]));
     SGVec3d isectpoint;
-    if ( sgdIsectInfLinePlane( isectpoint.sg(), mLocalCacheReference.sg(),
-                               mLocalDown.sg(), plane.sg() ) ) {
-      if (fgdPointInTriangle(isectpoint, v)) {
-        // Only accept the altitude if the intersection point is below the
-        // ground cache midpoint
-        if (0 < dot(isectpoint - mLocalCacheReference, mLocalDown)) {
-          mGroundCache->found_ground = true;
-          isectpoint.osg() = isectpoint.osg()*mLocalToGlobal;
-          isectpoint += mGroundCache->cache_center;
-          double this_radius = length(isectpoint);
-          if (mGroundCache->ground_radius < this_radius)
-            mGroundCache->ground_radius = this_radius;
-        }
-      }
+
+    if (fgdRayTriangle(isectpoint, mLocalCacheReference, mLocalDown, v)) {
+      mGroundCache->found_ground = true;
+      isectpoint.osg() = isectpoint.osg()*mLocalToGlobal;
+      isectpoint += mGroundCache->cache_center;
+      double this_radius = length(isectpoint);
+      if (mGroundCache->ground_radius < this_radius)
+        mGroundCache->ground_radius = this_radius;
     }
   }
   
@@ -723,6 +782,8 @@ FGGroundCache::get_agl(double t, const SGVec3d& dpt, double max_altoff,
 
   // The double valued point we start to search for intersection.
   SGVec3d pt = dpt - cache_center;
+  // shift the start of our ray by maxaltoff upwards
+  SGVec3d raystart = pt - max_altoff*down;
 
   // Initialize to something sensible
   double current_radius = 0.0;
@@ -736,32 +797,29 @@ FGGroundCache::get_agl(double t, const SGVec3d& dpt, double max_altoff,
 
     // Check for intersection.
     SGVec3d isecpoint;
-    if ( sgdIsectInfLinePlane( isecpoint.sg(), pt.sg(), down.sg(), triangle.plane.sg() ) &&
-         fgdPointInTriangle( isecpoint, triangle.vertices ) ) {
+    if (fgdRayTriangle(isecpoint, raystart, down, triangle.vertices)) {
       // Compute the vector from pt to the intersection point ...
       SGVec3d off = isecpoint - pt;
       // ... and check if it is too high or not
-      if (-max_altoff < dot(off, down)) {
-        // Transform to the wgs system
-        isecpoint += cache_center;
-        // compute the radius, good enough approximation to take the geocentric radius
-        double radius = dot(isecpoint, isecpoint);
-        if (current_radius < radius) {
-          current_radius = radius;
-          ret = true;
-          // Save the new potential intersection point.
-          contact = isecpoint;
-          // The first three values in the vector are the plane normal.
-          sgdCopyVec3( normal.sg(), triangle.plane.sg() );
-          // The velocity wrt earth.
-          SGVec3d pivotoff = pt - triangle.rotation_pivot;
-          vel = triangle.velocity + cross(triangle.rotation, pivotoff);
-          // Save the ground type.
-          *type = triangle.type;
-          *agl = dot(down, contact - dpt);
-          if (material)
-            *material = triangle.material;
-        }
+      // Transform to the wgs system
+      isecpoint += cache_center;
+      // compute the radius, good enough approximation to take the geocentric radius
+      double radius = dot(isecpoint, isecpoint);
+      if (current_radius < radius) {
+        current_radius = radius;
+        ret = true;
+        // Save the new potential intersection point.
+        contact = isecpoint;
+        // The first three values in the vector are the plane normal.
+        sgdCopyVec3( normal.sg(), triangle.plane.sg() );
+        // The velocity wrt earth.
+        SGVec3d pivotoff = pt - triangle.rotation_pivot;
+        vel = triangle.velocity + cross(triangle.rotation, pivotoff);
+        // Save the ground type.
+        *type = triangle.type;
+        *agl = dot(down, contact - dpt);
+        if (material)
+          *material = triangle.material;
       }
     }
   }
