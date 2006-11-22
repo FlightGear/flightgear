@@ -129,7 +129,8 @@ void FGAIMultiplayer::update(double dt)
     mTimeOffset = curentPkgTime - curtime - lag;
   } else {
     double offset = curentPkgTime - curtime - lag;
-    if (!mAllowExtrapolation && offset + lag < mTimeOffset) {
+    if ((!mAllowExtrapolation && offset + lag < mTimeOffset)
+        || (offset - 10 > mTimeOffset)) {
       mTimeOffset = offset;
       SG_LOG(SG_GENERAL, SG_DEBUG, "Resetting time offset adjust system to "
              "avoid extrapolation: time offset = " << mTimeOffset);
