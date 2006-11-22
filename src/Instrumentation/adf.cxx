@@ -111,8 +111,8 @@ void
 ADF::update (double delta_time_sec)
 {
                                 // If it's off, don't waste any time.
-    if (!_electrical_node->getBoolValue() ||
-        !_serviceable_node->getBoolValue()) {
+    if (_electrical_node->getDoubleValue() < 1.0
+            || !_serviceable_node->getBoolValue()) {
         set_bearing(delta_time_sec, 90);
         _ident_node->setStringValue("");
         return;
