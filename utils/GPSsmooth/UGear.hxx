@@ -26,7 +26,8 @@ enum ugPacketType {
     GPS_PACKET = 0,
     IMU_PACKET = 1,
     NAV_PACKET = 2,
-    SERVO_PACKET = 3
+    SERVO_PACKET = 3,
+    HEALTH_PACKET = 4
 };
 
 struct imu {
@@ -62,6 +63,12 @@ struct servo {
    double time;
 };
 
+struct health {
+    float volts_raw;            /* raw volt reading */
+    float volts;                /* filtered volts */
+    uint16_t est_seconds;       /* estimated useful seconds remaining */
+    double time;
+};
 
 // Manage a saved ugear log (track file)
 class UGEARTrack {
@@ -72,12 +79,13 @@ private:
     vector <imu> imu_data;
     vector <nav> nav_data;
     vector <servo> servo_data;
+    vector <health> health_data;
 
     // parse message and put current data into vector if message has a
     // newer time stamp than existing data.
     void parse_msg( const int id, char *buf,
 		    gps *gpspacket, imu *imupacket, nav *navpacket,
-		    servo *servopacket );
+		    servo *servopacket, health *healthpacket );
 
 public:
 
@@ -88,10 +96,10 @@ public:
     // returns id # if a valid message found.
     int next_message( SGIOChannel *ch, SGIOChannel *log,
                       gps *gpspacket, imu *imupacket, nav *navpacket,
-		      servo *servopacket );
+		      servo *servopacket, health * healthpacket );
     int next_message( SGSerialPort *serial, SGIOChannel *log,
                       gps *gpspacket, imu *imupacket, nav *navpacket,
-		      servo *servopacket );
+		      servo *servopacket, health *healthpacket );
 
     // load the named file into internal buffers
     bool load( const string &file );
@@ -100,6 +108,7 @@ public:
     inline int imu_size() const { return imu_data.size(); }
     inline int nav_size() const { return nav_data.size(); }
     inline int servo_size() const { return servo_data.size(); }
+    inline int health_size() const { return health_data.size(); }
 
     inline gps get_gpspt( const unsigned int i )
     {
@@ -133,7 +142,15 @@ public:
             return servo();
         }
     }
-        
+    inline health get_healthpt( const unsigned int i )
+    {
+        if ( i < health_data.size() ) {
+            return health_data[i];
+        } else {
+            return health();
+        }
+    }
+       
 
 };
 
@@ -142,6 +159,8 @@ gps UGEARInterpGPS( const gps A, const gps B, const double percent );
 imu UGEARInterpIMU( const imu A, const imu B, const double percent );
 nav UGEARInterpNAV( const nav A, const nav B, const double percent );
 servo UGEARInterpSERVO( const servo A, const servo B, const double percent );
+health UGEARInterpHEALTH( const health A, const health B,
+			  const double percent );
 
 
 #endif // _FG_UGEAR_II_HXX

@@ -105,7 +105,7 @@ static void htonf (float &x)
 
 
 static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
-		      servo *servopacket,
+		      servo *servopacket, health *healthpacket,
 		      FGNetFDM *fdm, FGNetCtrls *ctrls )
 {
     unsigned int i;
@@ -278,7 +278,7 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
 
 
 static void send_data( gps *gpspacket, imu *imupacket, nav *navpacket,
-		       servo *servopacket ) {
+		       servo *servopacket, health *healthpacket ) {
     int len;
     int fdmsize = sizeof( FGNetFDM );
 
@@ -287,7 +287,8 @@ static void send_data( gps *gpspacket, imu *imupacket, nav *navpacket,
     FGNetFDM fgfdm;
     FGNetCtrls fgctrls;
 
-    ugear2fg( gpspacket, imupacket, navpacket, servopacket, &fgfdm, &fgctrls );
+    ugear2fg( gpspacket, imupacket, navpacket, servopacket, healthpacket,
+	      &fgfdm, &fgctrls );
     len = fdm_sock.send(&fgfdm, fdmsize, 0);
 }
 
@@ -444,6 +445,7 @@ int main( int argc, char **argv ) {
         cout << "Loaded " << track.imu_size() << " imu records." << endl;
         cout << "Loaded " << track.nav_size() << " nav records." << endl;
         cout << "Loaded " << track.servo_size() << " servo records." << endl;
+        cout << "Loaded " << track.health_size() << " health records." << endl;
 
         int size = track.imu_size();
 
@@ -467,6 +469,7 @@ int main( int argc, char **argv ) {
         int imu_count = 0;
         int nav_count = 0;
         int servo_count = 0;
+        int health_count = 0;
 
         gps gps0, gps1;
         gps0 = gps1 = track.get_gpspt( 0 );
@@ -479,6 +482,9 @@ int main( int argc, char **argv ) {
     
         servo servo0, servo1;
         servo0 = servo1 = track.get_servopt( 0 );
+    
+        health health0, health1;
+        health0 = health1 = track.get_healthpt( 0 );
     
         while ( current_time < end_time ) {
             // cout << "current_time = " << current_time << " end_time = "
@@ -532,6 +538,18 @@ int main( int argc, char **argv ) {
             //  cout << "pos0 = " << pos0.get_seconds()
             // << " pos1 = " << pos1.get_seconds() << endl;
 
+            // Advance health pointer
+            while ( current_time > health1.time
+                    && health_count < track.health_size() )
+            {
+                health0 = health1;
+                ++health_count;
+                // cout << "count = " << count << endl;
+                health1 = track.get_healthpt( health_count );
+            }
+            //  cout << "pos0 = " << pos0.get_seconds()
+            // << " pos1 = " << pos1.get_seconds() << endl;
+
             double gps_percent;
             if ( fabs(gps1.time - gps0.time) < 0.00001 ) {
                 gps_percent = 0.0;
@@ -572,11 +590,23 @@ int main( int argc, char **argv ) {
             }
             // cout << "Percent = " << percent << endl;
 
+            double health_percent;
+            if ( fabs(health1.time - health0.time) < 0.00001 ) {
+                health_percent = 0.0;
+            } else {
+                health_percent =
+                    (current_time - health0.time) /
+                    (health1.time - health0.time);
+            }
+            // cout << "Percent = " << percent << endl;
+
             gps gpspacket = UGEARInterpGPS( gps0, gps1, gps_percent );
             imu imupacket = UGEARInterpIMU( imu0, imu1, imu_percent );
             nav navpacket = UGEARInterpNAV( nav0, nav1, nav_percent );
             servo servopacket = UGEARInterpSERVO( servo0, servo1,
 						  servo_percent );
+            health healthpacket = UGEARInterpHEALTH( health0, health1,
+						  health_percent );
 
             // cout << current_time << " " << p0.lat_deg << ", " << p0.lon_deg
             //      << endl;
@@ -591,7 +621,8 @@ int main( int argc, char **argv ) {
                     imupacket.psi, imupacket.the, imupacket.phi );
 	    }
 
-            send_data( &gpspacket, &imupacket, &navpacket, &servopacket );
+            send_data( &gpspacket, &imupacket, &navpacket, &servopacket,
+		       &healthpacket );
 
             // Update the elapsed time.
             static bool first_time = true;
@@ -629,11 +660,13 @@ int main( int argc, char **argv ) {
 	imu imupacket;
 	nav navpacket;
 	servo servopacket;
+	health healthpacket;
 
         double gps_time = 0;
         double imu_time = 0;
         double nav_time = 0;
         double servo_time = 0;
+        double health_time = 0;
 
         // open the serial port device
         SGSerialPort input( serialdev, 115200 );
@@ -657,7 +690,8 @@ int main( int argc, char **argv ) {
         while ( input.is_enabled() ) {
             // cout << "looking for next message ..." << endl;
             int id = track.next_message( &input, &output, &gpspacket,
-					 &imupacket, &navpacket, &servopacket );
+					 &imupacket, &navpacket, &servopacket,
+					 &healthpacket );
             cout << "message id = " << id << endl;
             count++;
 
@@ -689,6 +723,13 @@ int main( int argc, char **argv ) {
                 } else {
                     cout << "oops servo back in time" << endl;
                 }
+	    } else if ( id == HEALTH_PACKET ) {
+                if ( healthpacket.time > health_time ) {
+                    health_time = healthpacket.time;
+                    current_time = health_time;
+                } else {
+                    cout << "oops health back in time" << endl;
+                }
             }
 
 	    // if ( gpspacket.lat > -500 ) {
@@ -700,7 +741,8 @@ int main( int argc, char **argv ) {
 		    imupacket.psi*SGD_RADIANS_TO_DEGREES );
 	    // }
 
-            send_data( &gpspacket, &imupacket, &navpacket, &servopacket );
+            send_data( &gpspacket, &imupacket, &navpacket, &servopacket,
+		       &healthpacket );
         }
     }
 

@@ -83,7 +83,8 @@ static bool validate_cksum( uint8_t id, uint8_t size, char *buf,
 
 void UGEARTrack::parse_msg( const int id, char *buf,
 			    struct gps *gpspacket, imu *imupacket,
-			    nav *navpacket, servo *servopacket )
+			    nav *navpacket, servo *servopacket,
+			    health *healthpacket )
 {
     if ( id == GPS_PACKET ) {
       *gpspacket = *(struct gps *)buf;
@@ -125,6 +126,9 @@ void UGEARTrack::parse_msg( const int id, char *buf,
       *servopacket = *(struct servo *)buf;
       servopacket->time = sg_swap_double( (uint8_t *)buf, 20 );
       // printf("servo time = %.3f\n", servopacket->time);
+    } else if ( id == HEALTH_PACKET ) {
+      *healthpacket = *(struct health *)buf;
+      healthpacket->time = sg_swap_double( (uint8_t *)buf, 12 );
     } else {
         cout << "unknown id = " << id << endl;
     }
@@ -139,16 +143,19 @@ bool UGEARTrack::load( const string &file ) {
     imu imupacket;
     nav navpacket;
     servo servopacket;
+    health healthpacket;
 
     double gps_time = 0;
     double imu_time = 0;
     double nav_time = 0;
     double servo_time = 0;
+    double health_time = 0;
 
     gps_data.clear();
     imu_data.clear();
     nav_data.clear();
     servo_data.clear();
+    health_data.clear();
 
     // open the file
     SGFile input( file );
@@ -160,7 +167,7 @@ bool UGEARTrack::load( const string &file ) {
     while ( ! input.eof() ) {
         // cout << "looking for next message ..." << endl;
         int id = next_message( &input, NULL, &gpspacket, &imupacket,
-			       &navpacket, &servopacket );
+			       &navpacket, &servopacket, &healthpacket );
         count++;
 
         if ( id == GPS_PACKET ) {
@@ -168,28 +175,35 @@ bool UGEARTrack::load( const string &file ) {
                 gps_data.push_back( gpspacket );
                 gps_time = gpspacket.time;
             } else {
-                cout << "oops att back in time" << endl;
+                cout << "oops gps back in time" << endl;
             }
         } else if ( id == IMU_PACKET ) {
             if ( imupacket.time > imu_time ) {
                 imu_data.push_back( imupacket );
                 imu_time = imupacket.time;
             } else {
-                cout << "oops pos back in time" << endl;
+                cout << "oops imu back in time" << endl;
             }
         } else if ( id == NAV_PACKET ) {
             if ( navpacket.time > nav_time ) {
                 nav_data.push_back( navpacket );
                 nav_time = navpacket.time;
             } else {
-                cout << "oops pos back in time" << endl;
+                cout << "oops nav back in time" << endl;
             }
         } else if ( id == SERVO_PACKET ) {
             if ( servopacket.time > servo_time ) {
                 servo_data.push_back( servopacket );
                 servo_time = servopacket.time;
             } else {
-                cout << "oops pos back in time" << endl;
+                cout << "oops servo back in time" << endl;
+            }
+        } else if ( id == HEALTH_PACKET ) {
+            if ( healthpacket.time > health_time ) {
+                health_data.push_back( healthpacket );
+                health_time = healthpacket.time;
+            } else {
+                cout << "oops health back in time" << endl;
             }
         }
     }
@@ -244,7 +258,7 @@ int serial_read( SGSerialPort *serial, SGIOChannel *log,
 // load the next message of a real time data stream
 int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
 			      gps *gpspacket, imu *imupacket, nav *navpacket,
-			      servo *servopacket )
+			      servo *servopacket, health *healthpacket )
 {
     char tmpbuf[256];
     char savebuf[256];
@@ -296,7 +310,8 @@ int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
     myread( ch, log, tmpbuf, 1 ); uint8_t cksum1 = (unsigned char)tmpbuf[0];
     
     if ( validate_cksum( id, size, savebuf, cksum0, cksum1 ) ) {
-        parse_msg( id, savebuf, gpspacket, imupacket, navpacket, servopacket );
+        parse_msg( id, savebuf, gpspacket, imupacket, navpacket, servopacket,
+		   healthpacket );
         return id;
     }
 
@@ -308,7 +323,7 @@ int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
 // load the next message of a real time data stream
 int UGEARTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
 			      gps *gpspacket, imu *imupacket, nav *navpacket,
-			      servo *servopacket )
+			      servo *servopacket, health *healthpacket )
 {
     char tmpbuf[256];
     char savebuf[256];
@@ -350,7 +365,8 @@ int UGEARTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     //      << endl;
     
     if ( validate_cksum( id, size, savebuf, cksum0, cksum1 ) ) {
-        parse_msg( id, savebuf, gpspacket, imupacket, navpacket, servopacket );
+        parse_msg( id, savebuf, gpspacket, imupacket, navpacket, servopacket,
+		   healthpacket );
 
         return id;
     }
@@ -438,6 +454,18 @@ servo UGEARInterpSERVO( const servo A, const servo B, const double percent )
       p.chn[i] = (uint16_t)interp(A.chn[i], B.chn[i], percent);
     }
     p.status = A.status;
+
+    return p;
+}
+
+
+health UGEARInterpHEALTH( const health A, const health B, const double percent )
+{
+    health p;
+    p.volts_raw = interp(A.volts_raw, B.volts_raw, percent);
+    p.volts = interp(A.volts, B.volts, percent);
+    p.est_seconds = (uint16_t)interp(A.est_seconds, B.est_seconds, percent);
+    p.time = interp(A.time, B.time, percent);
 
     return p;
 }
