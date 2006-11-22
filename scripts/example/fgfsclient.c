@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 
 	sock = fgfsconnect(hostname, port);
 	if (sock < 0)
-		return (EXIT_FAILURE);
+		return EXIT_FAILURE;
 
 	fgfswrite(sock, "data");
 	fgfswrite(sock, "set /controls/engines/engine[%d]/throttle %d", 0, 1);
