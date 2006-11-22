@@ -15,34 +15,37 @@
 #include <unistd.h>
 #include <string.h>
 
-const int maxlen = 256;
+
+const int MAXLEN = 256;
 
 
 class FGFSSocket {
-	int		sock;
-	bool		connected;
-	unsigned	timeout;
-    public:
-			FGFSSocket(const char *name, const unsigned port);
-			~FGFSSocket() { close(); };
+public:
+	FGFSSocket(const char *name, const unsigned port);
+	~FGFSSocket();
 
 	int		write(const char *msg, ...);
-	const char 	*read(void);
-	inline void 	flush(void);
-	void		settimeout(unsigned t) { timeout = t; };
-    private:
+	const char	*read(void);
+	inline void	flush(void);
+	void		settimeout(unsigned t) { _timeout = t; }
+
+private:
 	int		close(void);
+
+	int		_sock;
+	bool		_connected;
+	unsigned	_timeout;
+	char		_buffer[MAXLEN];
 };
 
 
-FGFSSocket::FGFSSocket(const char *hostname = "localhost", const unsigned port = 5501)
-	:
-	sock(-1),
-	connected(false),
-	timeout(1)
+FGFSSocket::FGFSSocket(const char *hostname = "localhost", const unsigned port = 5501) :
+	_sock(-1),
+	_connected(false),
+	_timeout(1)
 {
-	sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sock < 0)
+	_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (_sock < 0)
 		throw("FGFSSocket/socket");
 
 	struct hostent *hostinfo;
@@ -57,11 +60,11 @@ FGFSSocket::FGFSSocket(const char *hostname = "localhost", const unsigned port =
 	serv_addr.sin_port = htons(port);
 	serv_addr.sin_addr = *(struct in_addr *)hostinfo->h_addr;
 
-	if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+	if (connect(_sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
 		close();
 		throw("FGFSSocket/connect");
 	}
-	connected = true;
+	_connected = true;
 	try {
 		write("data");
 	} catch (...) {
@@ -71,14 +74,20 @@ FGFSSocket::FGFSSocket(const char *hostname = "localhost", const unsigned port =
 }
 
 
+FGFSSocket::~FGFSSocket()
+{
+	close();
+}
+
+
 int FGFSSocket::close(void)
 {
-	if (connected)
+	if (_connected)
 		write("quit");
-	if (sock < 0)
+	if (_sock < 0)
 		return 0;
-	int ret = ::close(sock);
-	sock = -1;
+	int ret = ::close(_sock);
+	_sock = -1;
 	return ret;
 }
 
@@ -87,13 +96,13 @@ int FGFSSocket::write(const char *msg, ...)
 {
 	va_list va;
 	ssize_t len;
-	char buf[maxlen];
+	char buf[MAXLEN];
 	fd_set fd;
 	struct timeval tv;
 
 	FD_ZERO(&fd);
-	FD_SET(sock, &fd);
-	tv.tv_sec = timeout;
+	FD_SET(_sock, &fd);
+	tv.tv_sec = _timeout;
 	tv.tv_usec = 0;
 	if (!select(FD_SETSIZE, 0, &fd, 0, &tv))
 		throw("FGFSSocket::write/select: timeout exceeded");
@@ -104,7 +113,7 @@ int FGFSSocket::write(const char *msg, ...)
 	std::cout << "SEND: " << buf << std::endl;
 	strcat(buf, "\015\012");
 
-	len = ::write(sock, buf, strlen(buf));
+	len = ::write(_sock, buf, strlen(buf));
 	if (len < 0)
 		throw("FGFSSocket::write");
 	return len;
@@ -113,44 +122,43 @@ int FGFSSocket::write(const char *msg, ...)
 
 const char *FGFSSocket::read(void)
 {
-	static char buf[maxlen];
 	char *p;
 	fd_set fd;
 	struct timeval tv;
 	ssize_t len;
 
 	FD_ZERO(&fd);
-	FD_SET(sock, &fd);
-	tv.tv_sec = timeout;
+	FD_SET(_sock, &fd);
+	tv.tv_sec = _timeout;
 	tv.tv_usec = 0;
 	if (!select(FD_SETSIZE, &fd, 0, 0, &tv)) {
-		if (timeout == 0)
+		if (_timeout == 0)
 			return 0;
 		else
 			throw("FGFSSocket::read/select: timeout exceeded");
 	}
 
-	len = ::read(sock, buf, maxlen - 1);
+	len = ::read(_sock, _buffer, MAXLEN - 1);
 	if (len < 0)
 		throw("FGFSSocket::read/read");
 	if (len == 0)
 		return 0;
 
-	for (p = &buf[len - 1]; p >= buf; p--)
+	for (p = &_buffer[len - 1]; p >= _buffer; p--)
 		if (*p != '\015' && *p != '\012')
 			break;
 	*++p = '\0';
-	return strlen(buf) ? buf : 0;
+	return strlen(_buffer) ? _buffer : 0;
 }
 
 
 inline void FGFSSocket::flush(void)
 {
-	int i = timeout;
-	timeout = 0;
+	int i = _timeout;
+	_timeout = 0;
 	while (read())
 		;
-	timeout = i;
+	_timeout = i;
 }
 
 
@@ -167,15 +175,15 @@ try {
 	const char *p = f.read();
 	if (p)
 		std::cout << "RECV: " << p << std::endl;
-	return 0;
+	return EXIT_SUCCESS;
 
 } catch (const char s[]) {
 	std::cerr << "Error: " << s << ": " << strerror(errno) << std::endl;
-	return -1;
+	return EXIT_FAILURE;
 
 } catch (...) {
 	std::cerr << "Error: unknown exception" << std::endl;
-	return -1;
+	return EXIT_FAILURE;
 }
 
 
