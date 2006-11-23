@@ -41,7 +41,9 @@
 #include <osg/Depth>
 #include <osg/Fog>
 #include <osg/Group>
+#include <osg/Light>
 #include <osg/LightModel>
+#include <osg/LightSource>
 #include <osg/NodeCallback>
 #include <osg/Notify>
 #include <osg/MatrixTransform>
@@ -206,15 +208,14 @@ public:
 private:
 };
 
-
-class FGSunLightUpdateCallback : public osg::StateAttribute::Callback {
+class FGLightSourceUpdateCallback : public osg::NodeCallback {
 public:
-  virtual void operator()(osg::StateAttribute* stateAttribute,
-                          osg::NodeVisitor*)
+  virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
   {
-    assert(dynamic_cast<osg::Light*>(stateAttribute));
-    osg::Light* light = static_cast<osg::Light*>(stateAttribute);
-
+    assert(dynamic_cast<osg::LightSource*>(node));
+    osg::LightSource* lightSource = static_cast<osg::LightSource*>(node);
+    osg::Light* light = lightSource->getLight();
+    
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
     light->setAmbient(l->scene_ambient().osg());
     light->setDiffuse(l->scene_diffuse().osg());
@@ -228,6 +229,8 @@ public:
     light->setConstantAttenuation(1);
     light->setLinearAttenuation(0);
     light->setQuadraticAttenuation(0);
+
+    traverse(node, nv);
   }
 };
 
@@ -388,7 +391,6 @@ FGRenderer::init( void ) {
     sceneView->getCamera()->setClearMask(GL_COLOR_BUFFER_BIT);
 
     osg::StateSet* stateSet = mRoot->getOrCreateStateSet();
-    stateSet->setRenderingHint(osg::StateSet::OPAQUE_BIN);
 
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     
@@ -416,15 +418,6 @@ FGRenderer::init( void ) {
 //     stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
 
 
-    // need to update the light on every frame
-    osg::Light* sunLight = new osg::Light;
-    sunLight->setLightNum(0);
-    sunLight->setUpdateCallback(new FGSunLightUpdateCallback);
-    stateSet->setAttributeAndModes(sunLight, osg::StateAttribute::ON);
-    osg::LightModel* lightModel = new osg::LightModel;
-    lightModel->setUpdateCallback(new FGLightModelUpdateCallback);
-    stateSet->setAttributeAndModes(lightModel, osg::StateAttribute::ON);
-
     // this is the topmost scenegraph node for osg
     mBackGroundCamera->addChild(thesky->getPreRoot());
     mBackGroundCamera->setClearMask(0);
@@ -436,6 +429,7 @@ FGRenderer::init( void ) {
     mBackGroundCamera->setInheritanceMask(inheritanceMask);
     mBackGroundCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     mBackGroundCamera->setCullingMode(osg::CullSettings::NO_CULLING);
+    mBackGroundCamera->setRenderOrder(osg::CameraNode::NESTED_RENDER);
 
     mBackGroundCamera->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 
@@ -448,13 +442,35 @@ FGRenderer::init( void ) {
     mSceneCamera->setInheritanceMask(inheritanceMask);
     mSceneCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     mSceneCamera->setCullingMode(osg::CullSettings::DEFAULT_CULLING);
+    mSceneCamera->setRenderOrder(osg::CameraNode::NESTED_RENDER);
+    mRoot->addChild(mSceneCamera.get());
 
+    stateSet = mSceneCamera->getOrCreateStateSet();
+    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+
+    // need to update the light on every frame
+    osg::LightSource* lightSource = new osg::LightSource;
+    lightSource->setUpdateCallback(new FGLightSourceUpdateCallback);
+    // relative because of CameraView being just a clever transform node
+    lightSource->setReferenceFrame(osg::LightSource::RELATIVE_RF);
+    lightSource->setLocalStateSetModes(osg::StateAttribute::ON);
+    mSceneCamera->addChild(lightSource);
+
+    lightSource->addChild(globals->get_scenery()->get_scene_graph());
+    lightSource->addChild(thesky->getCloudRoot());
 
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::ON);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+
+    // enable disable specular highlights.
+    // is the place where we might plug in an other fragment shader ...
+    osg::LightModel* lightModel = new osg::LightModel;
+    lightModel->setUpdateCallback(new FGLightModelUpdateCallback);
+    stateSet->setAttribute(lightModel);
 
     // switch to enable wireframe
     osg::PolygonMode* polygonMode = new osg::PolygonMode;
@@ -464,8 +480,6 @@ FGRenderer::init( void ) {
     // scene fog handling
     stateSet->setAttributeAndModes(mFog.get());
     stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
-
-    mRoot->addChild(mSceneCamera.get());
 
     // plug in the GUI
     osg::CameraNode* guiCamera = new osg::CameraNode;
@@ -482,12 +496,6 @@ FGRenderer::init( void ) {
     geode->addDrawable(new SGPuDrawable);
     geode->addDrawable(new SGHUDAndPanelDrawable);
     guiCamera->addChild(geode);
-
-    mSceneCamera->addChild(globals->get_scenery()->get_scene_graph());
-
-    stateSet = mSceneCamera->getOrCreateStateSet();
-    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
-    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
 
     // this one contains all lights, here we set the light states we did
     // in the plib case with plain OpenGL
@@ -513,8 +521,6 @@ FGRenderer::init( void ) {
 
     mCameraView->addChild(mRoot.get());
     sceneView->setSceneData(mCameraView.get());
-
-    mSceneCamera->addChild(thesky->getCloudRoot());
 
 //  sceneView->getState()->setCheckForGLErrors(osg::State::ONCE_PER_ATTRIBUTE);
 }
