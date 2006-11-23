@@ -1,5 +1,6 @@
 /* $Id$ */
 /* gcc -O2 -g -pedantic -Wall fgfsclient.c -o fgfsclient */
+/* USAGE: ./fgfsclient [hostname [port]] */
 /* Public Domain */
 
 #include <stdio.h>
@@ -35,7 +36,7 @@ int fgfswrite(int sock, char *msg, ...)
 	char buf[MAXMSG];
 
 	va_start(va, msg);
-	vsprintf(buf, msg, va);
+	vsnprintf(buf, MAXMSG - 2, msg, va);
 	va_end(va);
 	printf("SEND: \t<%s>\n", buf);
 	strcat(buf, "\015\012");

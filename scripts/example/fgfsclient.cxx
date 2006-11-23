@@ -1,5 +1,6 @@
 // $Id$
 // g++ -O2 -g -pedantic -Wall fgfsclient.cxx -o fgfsclient -lstdc++
+// USAGE: ./fgfsclient [hostname [port]]
 // Public Domain
 
 #include <errno.h>
@@ -16,12 +17,14 @@
 #include <string.h>
 
 
-const int MAXLEN = 256;
+const char *HOST = "localhost";
+const unsigned PORT = 5501;
+const int BUFLEN = 256;
 
 
 class FGFSSocket {
 public:
-	FGFSSocket(const char *name, const unsigned port);
+	FGFSSocket(const char *name, unsigned port);
 	~FGFSSocket();
 
 	int		write(const char *msg, ...);
@@ -35,11 +38,11 @@ private:
 	int		_sock;
 	bool		_connected;
 	unsigned	_timeout;
-	char		_buffer[MAXLEN];
+	char		_buffer[BUFLEN];
 };
 
 
-FGFSSocket::FGFSSocket(const char *hostname = "localhost", const unsigned port = 5501) :
+FGFSSocket::FGFSSocket(const char *hostname = HOST, unsigned port = PORT) :
 	_sock(-1),
 	_connected(false),
 	_timeout(1)
@@ -96,7 +99,7 @@ int FGFSSocket::write(const char *msg, ...)
 {
 	va_list va;
 	ssize_t len;
-	char buf[MAXLEN];
+	char buf[BUFLEN];
 	fd_set fd;
 	struct timeval tv;
 
@@ -108,7 +111,7 @@ int FGFSSocket::write(const char *msg, ...)
 		throw("FGFSSocket::write/select: timeout exceeded");
 
 	va_start(va, msg);
-	vsprintf(buf, msg, va);
+	vsnprintf(buf, BUFLEN - 2, msg, va);
 	va_end(va);
 	std::cout << "SEND: " << buf << std::endl;
 	strcat(buf, "\015\012");
@@ -138,7 +141,7 @@ const char *FGFSSocket::read(void)
 			throw("FGFSSocket::read/select: timeout exceeded");
 	}
 
-	len = ::read(_sock, _buffer, MAXLEN - 1);
+	len = ::read(_sock, _buffer, BUFLEN - 1);
 	if (len < 0)
 		throw("FGFSSocket::read/read");
 	if (len == 0)
