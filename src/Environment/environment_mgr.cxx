@@ -86,6 +86,8 @@ FGEnvironmentMgr::bind ()
   fgTie("/environment/visibility-m", _environment,
 	&FGEnvironment::get_visibility_m, &FGEnvironment::set_visibility_m);
   fgSetArchivable("/environment/visibility-m");
+  fgTie("/environment/effective-visibility-m", thesky,
+       &SGSky::get_visibility );
   fgTie("/environment/temperature-sea-level-degc", _environment,
 	&FGEnvironment::get_temperature_sea_level_degc,
 	&FGEnvironment::set_temperature_sea_level_degc);
@@ -206,6 +208,7 @@ void
 FGEnvironmentMgr::unbind ()
 {
   fgUntie("/environment/visibility-m");
+  fgUntie("/environment/effective-visibility-m");
   fgUntie("/environment/temperature-sea-level-degc");
   fgUntie("/environment/temperature-degc");
   fgUntie("/environment/dewpoint-sea-level-degc");
