@@ -765,7 +765,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
     SG_LOG(SG_GENERAL, SG_ALERT, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkSpeedAdjustment");
   }
   current = i;
-  closest = current;
+  //closest = current;
   previousInstruction = current->getSpeedAdjustment();
   double mindist = HUGE;
   if (activeTraffic.size()) 
@@ -775,7 +775,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
 			lat,
 			alt);
       //TrafficVector iterator closest;
-      //closest = current;
+      closest = current;
       for (TrafficVectorIterator i = activeTraffic.begin(); 
    	   i != activeTraffic.end(); i++)
    	{
@@ -804,25 +804,24 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
 	  for (TrafficVectorIterator i = towerController->getActiveTraffic().begin(); 
 	       i != towerController->getActiveTraffic().end(); i++)
 	    {
-	      if (i != current) {
-		//SGWayPoint curr  (lon,
-		//		  lat,
-		//		  alt);
-		SGWayPoint other    (i->getLongitude  (),
-				     i->getLatitude (),
-				     i->getAltitude  ());
-		other.CourseAndDistance(curr, &course, &dist);
-		bearing = fabs(heading-course);
-		if (bearing > 180)
-		  bearing = 360-bearing;
-		if ((dist < mindist) && (bearing < 60.0))
-		  {
-		    mindist = dist;
-		    closest = i;
-		    minbearing = bearing;
-		    otherReasonToSlowDown = true;
-		  }
-	      }
+	      //cerr << "Comparing " << current->getId() << " and " << i->getId() << endl;
+	      //SGWayPoint curr  (lon,
+	      //		  lat,
+	      //		  alt);
+	      SGWayPoint other    (i->getLongitude  (),
+				   i->getLatitude (),
+				   i->getAltitude  ());
+	      other.CourseAndDistance(curr, &course, &dist);
+	      bearing = fabs(heading-course);
+	      if (bearing > 180)
+		bearing = 360-bearing;
+	      if ((dist < mindist) && (bearing < 60.0))
+		{
+		  mindist = dist;
+		  closest = i;
+		  minbearing = bearing;
+		  otherReasonToSlowDown = true;
+		}
 	    }
 	}
       // Finally, check UserPosition

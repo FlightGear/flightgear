@@ -173,7 +173,6 @@ public:
   string getRunway() { return runway; };
   void setCallSign(string clsgn) { callsign = clsgn; };
   string getCallSign() { return callsign; };
-
 };
 
 typedef vector<FGTrafficRecord> TrafficVector;
