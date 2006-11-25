@@ -94,12 +94,12 @@ FGAirportDynamics * FGAirport::getDynamics()
         dynamics = new FGAirportDynamics(_latitude, _longitude, _elevation, _id);
 
         SGPath parkpath( globals->get_fg_root() );
-        parkpath.append( "/Airports/AI/" );
+        parkpath.append( "/AI/Airports/" );
         parkpath.append(_id);
         parkpath.append("parking.xml");
 
         SGPath rwyPrefPath( globals->get_fg_root() );
-        rwyPrefPath.append( "/Airports/AI/" );
+        rwyPrefPath.append( "AI/Airports/" );
         rwyPrefPath.append(_id);
         rwyPrefPath.append("rwyuse.xml");
 
