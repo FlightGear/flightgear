@@ -3,3 +3,4 @@ Makefile.in
 .deps
 GPSsmooth
 MIDGsmooth
+UGsmooth
