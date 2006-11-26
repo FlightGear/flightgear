@@ -80,6 +80,7 @@ public:
 protected:
 
     SGPropertyNode_ptr props;
+    SGPropertyNode_ptr model_removed; // where to report model removal
     FGAIManager* manager;
 
     // these describe the model's actual state
