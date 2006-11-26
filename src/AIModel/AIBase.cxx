@@ -52,6 +52,7 @@ const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
 FGAIBase::FGAIBase(object_type ot) :
     props( NULL ),
+    model_removed( fgGetNode("/ai/models/model-removed", true) ),
     manager( NULL ),
     fp( NULL ),
     _refID( _newAIModelID() ),
@@ -77,7 +78,7 @@ FGAIBase::~FGAIBase() {
     if (props) {
         SGPropertyNode* parent = props->getParent();
         if (parent) {
-            fgSetString("/ai/models/model-removed", props->getPath());
+            model_removed->setStringValue(props->getPath());
             parent->removeChild(props->getName(), props->getIndex(), false);
         }
     }
