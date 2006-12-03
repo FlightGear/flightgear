@@ -794,6 +794,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
     mUpdateVisitor->setViewData(current__view->getViewPosition(),
                                 current__view->getViewOrientation());
     mUpdateVisitor->setSceneryCenter(globals->get_scenery()->get_center());
+    SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
+    mUpdateVisitor->setLight(direction, l->scene_ambient(),
+                             l->scene_diffuse(), l->scene_specular());
     mUpdateVisitor->setVisibility(actual_visibility);
     sceneView->update();
     sceneView->cull();
