@@ -3,6 +3,8 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/structure/exception.hxx>
+
 #include <vector>
 
 #include <plib/sg.h>
@@ -40,7 +42,10 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
 
     // Make an FGPanel object.  But *don't* call init() or bind() on
     // it -- those methods touch static state.
-    _panel = fgReadPanel(props->getStringValue("path"));
+    const char *path = props->getStringValue("path");
+    _panel = fgReadPanel(path);
+    if (!_panel)
+        throw sg_io_exception(string("Failed to load panel ") + path);
 
     // Never mind.  We *have* to call init to make sure the static
     // state is initialized (it's not, if there aren't any 2D
