@@ -121,6 +121,8 @@ public:
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
 
+    stateSet->setTextureAttribute(0, new osg::TexEnv(osg::TexEnv::MODULATE));
+
     stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
   }
@@ -174,6 +176,8 @@ public:
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+
+    stateSet->setTextureAttribute(0, new osg::TexEnv(osg::TexEnv::MODULATE));
   }
   virtual void drawImplementation(osg::State& state) const
   {
