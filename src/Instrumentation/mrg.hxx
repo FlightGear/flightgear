@@ -25,7 +25,6 @@
  * /instrumentation/"name"/tumble-norm
  * /orientation/pitch-deg
  * /orientation/roll-deg
- * "vacuum-system"/suction-inhg
  *
  * Output properties:
  *
@@ -50,8 +49,8 @@ public:
 
 private:
 
-    string name;
-    int num;
+    string _name;
+    int _num;
 
     double _last_roll;
     double _last_pitch;

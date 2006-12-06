@@ -51,9 +51,9 @@ private:
     Gyro _gyro;
     double _last_heading_deg;
 
-    string name;
-    int num;
-    string vacuum_system;
+    string _name;
+    int _num;
+    string _suction;
 
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _heading_in_node;

@@ -35,7 +35,6 @@ class AirspeedIndicator : public SGSubsystem
 public:
 
     AirspeedIndicator ( SGPropertyNode *node );
-    AirspeedIndicator ( int i);
     virtual ~AirspeedIndicator ();
 
     virtual void init ();
@@ -43,10 +42,10 @@ public:
 
 private:
 
-    string name;
-    unsigned int num;
-    string pitot_port;
-    string static_port;
+    string _name;
+    unsigned int _num;
+    string _total_pressure;
+    string _static_pressure;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _total_pressure_node;
     SGPropertyNode_ptr _static_pressure_node;

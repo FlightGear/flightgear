@@ -21,31 +21,9 @@
 
 AttitudeIndicator::AttitudeIndicator ( SGPropertyNode *node )
     :
-    name("attitude-indicator"),
-    num(0),
-    vacuum_system("/systems/vacuum")
-{
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = (int) child->getDoubleValue();
-        } else if ( cname == "vacuum-system" ) {
-            vacuum_system = cval;
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in attitude-indicator config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-AttitudeIndicator::AttitudeIndicator ()
+    _name(node->getStringValue("name", "attitude-indicator")),
+    _num(node->getIntValue("number", 0)),
+    _suction(node->getStringValue("suction", "/systems/vacuum/suction-inhg"))
 {
 }
 
@@ -57,14 +35,13 @@ void
 AttitudeIndicator::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
-    vacuum_system += "/suction-inhg";
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     
     _pitch_in_node = fgGetNode("/orientation/pitch-deg", true);
     _roll_in_node = fgGetNode("/orientation/roll-deg", true);
-    _suction_node = fgGetNode(vacuum_system.c_str(), true);
+    _suction_node = fgGetNode(_suction.c_str(), true);
     SGPropertyNode *cnode = node->getChild("config", 0, true);
     _tumble_flag_node = cnode->getChild("tumble-flag", 0, true);
     _caged_node = node->getChild("caged-flag", 0, true);
@@ -80,8 +57,8 @@ AttitudeIndicator::bind ()
 {
     std::ostringstream temp;
     string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+    temp << _num;
+    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 
     fgTie((branch + "/serviceable").c_str(),
           &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
@@ -94,8 +71,8 @@ AttitudeIndicator::unbind ()
 {
     std::ostringstream temp;
     string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+    temp << _num;
+    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 
     fgUntie((branch + "/serviceable").c_str());
     fgUntie((branch + "/spin").c_str());

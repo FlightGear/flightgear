@@ -20,29 +20,8 @@
 
 TurnIndicator::TurnIndicator ( SGPropertyNode *node) :
     _last_rate(0),
-    name("turn-indicator"),
-    num(0)
-{
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in turn-indicator config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-TurnIndicator::TurnIndicator () :
-    _last_rate(0)
+    _name(node->getStringValue("name", "turn-indicator")),
+    _num(node->getIntValue("number", 0))
 {
 }
 
@@ -54,9 +33,9 @@ void
 TurnIndicator::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _roll_rate_node = fgGetNode("/orientation/roll-rate-degps", true);
     _yaw_rate_node = fgGetNode("/orientation/yaw-rate-degps", true);
     _electric_current_node = 
@@ -69,8 +48,8 @@ TurnIndicator::bind ()
 {
     std::ostringstream temp;
     string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+    temp << _num;
+    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 
     fgTie((branch + "/serviceable").c_str(),
           &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
@@ -83,8 +62,8 @@ TurnIndicator::unbind ()
 {
     std::ostringstream temp;
     string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+    temp << _num;
+    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 
     fgUntie((branch + "/serviceable").c_str());
     fgUntie((branch + "/serviceable").c_str());

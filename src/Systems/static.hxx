@@ -46,8 +46,8 @@ public:
 
 private:
 
-    string name;
-    int num;
+    string _name;
+    int _num;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_in_node;
     SGPropertyNode_ptr _pressure_out_node;

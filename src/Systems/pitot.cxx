@@ -13,31 +13,9 @@
 
 PitotSystem::PitotSystem ( SGPropertyNode *node )
     :
-    num(0),
-    name("pitot")
+    _name(node->getStringValue("name", "pitot")),
+    _num(node->getIntValue("number", 0))
 {
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_SYSTEMS, SG_WARN, "Error in systems config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_SYSTEMS, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-PitotSystem::PitotSystem ( int i )
-{
-    num = i;
-    name = "pitot";
 }
 
 PitotSystem::~PitotSystem ()
@@ -48,9 +26,9 @@ void
 PitotSystem::init ()
 {
     string branch;
-    branch = "/systems/" + name;
+    branch = "/systems/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
     _pressure_node = fgGetNode("/environment/pressure-inhg", true);
     _density_node = fgGetNode("/environment/density-slugft3", true);

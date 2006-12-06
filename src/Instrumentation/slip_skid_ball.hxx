@@ -14,8 +14,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-#include "gyro.hxx"
-
 
 /**
  * Model a slip-skid ball.
@@ -36,7 +34,6 @@ class SlipSkidBall : public SGSubsystem
 public:
 
     SlipSkidBall ( SGPropertyNode *node );
-    SlipSkidBall ();
     virtual ~SlipSkidBall ();
 
     virtual void init ();
@@ -44,11 +41,10 @@ public:
 
 private:
 
-    Gyro _gyro;
     double _last_pos;
 
-    string name;
-    int num;
+    string _name;
+    int _num;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _y_accel_node;

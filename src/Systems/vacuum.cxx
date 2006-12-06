@@ -13,40 +13,25 @@
 
 VacuumSystem::VacuumSystem ( SGPropertyNode *node )
     :
-    name("vacuum"),
-    num(0),
-    scale(1.0)
-
+    _name(node->getStringValue("name", "vacuum")),
+    _num(node->getIntValue("number", 0)),
+    _scale(node->getDoubleValue("scale", 1.0))
 {
-    rpms.clear();
+    _rpms.clear();
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
         string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else if ( cname == "rpm" ) {
-            rpms.push_back(cval);
-        } else if ( cname == "scale" ) {
-            scale = child->getDoubleValue();
+        if ( cname == "rpm" ) {
+            _rpms.push_back(cval);
         } else {
             SG_LOG( SG_SYSTEMS, SG_WARN, "Error in vacuum config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_SYSTEMS, SG_WARN, "Section = " << name );
+            if ( _name.length() ) {
+                SG_LOG( SG_SYSTEMS, SG_WARN, "Section = " << _name );
             }
         }
     }
-}
-
-VacuumSystem::VacuumSystem( int i )
-{
-    name = "vacuum";
-    num = i;
-    rpms.clear();
-    scale = 1.0;
 }
 
 VacuumSystem::~VacuumSystem ()
@@ -58,12 +43,12 @@ VacuumSystem::init()
 {
     unsigned int i;
     string branch;
-    branch = "/systems/" + name;
+    branch = "/systems/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
-    for ( i = 0; i < rpms.size(); i++ ) {
-      SGPropertyNode_ptr _rpm_node = fgGetNode(rpms[i].c_str(), true);
+    for ( i = 0; i < _rpms.size(); i++ ) {
+      SGPropertyNode_ptr _rpm_node = fgGetNode(_rpms[i].c_str(), true);
       _rpm_nodes.push_back( _rpm_node );
     }
     _pressure_node = fgGetNode("/environment/pressure-inhg", true);
@@ -94,7 +79,7 @@ VacuumSystem::update (double dt)
 	// select the source with the max rpm
         double rpm = 0.0;
 	for ( i = 0; i < _rpm_nodes.size(); i++ ) {
-	  double tmp = _rpm_nodes[i]->getDoubleValue() * scale;
+	  double tmp = _rpm_nodes[i]->getDoubleValue() * _scale;
 	  if ( tmp > rpm ) {
 	    rpm = tmp;
 	  }

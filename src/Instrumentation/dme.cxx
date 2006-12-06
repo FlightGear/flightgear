@@ -48,35 +48,8 @@ DME::DME ( SGPropertyNode *node )
       _transmitter_elevation_ft(0),
       _transmitter_range_nm(0),
       _transmitter_bias(0.0),
-      name("dme"),
-      num(0)
-{
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in dme config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-DME::DME ()
-    : _last_distance_nm(0),
-      _last_frequency_mhz(-1),
-      _time_before_search_sec(0),
-      _transmitter_valid(false),
-      _transmitter_elevation_ft(0),
-      _transmitter_range_nm(0),
-      _transmitter_bias(0.0)
+      _name(node->getStringValue("name", "dme")),
+      _num(node->getIntValue("number", 0))
 {
 }
 
@@ -88,9 +61,9 @@ void
 DME::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
 
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
@@ -113,7 +86,7 @@ DME::update (double delta_time_sec)
     const char * source = _source_node->getStringValue();
     if (source[0] == '\0') {
         string branch;
-        branch = "/instrumentation/" + name + "/frequencies/selected-mhz";
+        branch = "/instrumentation/" + _name + "/frequencies/selected-mhz";
         _source_node->setStringValue(branch.c_str());
         source = _source_node->getStringValue();
     }

@@ -26,29 +26,11 @@
 
 Transponder::Transponder(SGPropertyNode *node)
     :
-    name("transponder"),
-    num(0),
-    encoder("/instrumentation/encoder")
+    _name(node->getStringValue("name", "transponder")),
+    _num(node->getIntValue("number", 0)),
+    _mode_c_altitude(node->getStringValue("mode-c-altitude", 
+					  "/instrumentation/encoder/mode-c-alt-ft"))
 {
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else if ( cname == "encoder" ) {
-            encoder = cval;
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, 
-                    "Error in transponder config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
 }
 
 
@@ -60,12 +42,11 @@ Transponder::~Transponder()
 void Transponder::init()
 {
     string branch;
-    branch = "/instrumentation/" + name;
-    encoder += "/mode-c-alt-ft";
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     // Inputs
-    pressureAltitudeNode = fgGetNode(encoder.c_str(), true);
+    pressureAltitudeNode = fgGetNode(_mode_c_altitude.c_str(), true);
     busPowerNode = fgGetNode("/systems/electrical/outputs/transponder", true);
     serviceableNode = node->getChild("serviceable", 0, true);
     // Outputs

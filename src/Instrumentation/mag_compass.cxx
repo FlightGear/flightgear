@@ -21,30 +21,8 @@
 MagCompass::MagCompass ( SGPropertyNode *node )
     : _error_deg(0.0),
       _rate_degps(0.0),
-      name("magnetic-compass"),
-      num(0)
-{
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in magnetic-compass config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-MagCompass::MagCompass ()
-    : _error_deg(0.0),
-      _rate_degps(0.0)
+      _name(node->getStringValue("name", "magnetic-compass")),
+      _num(node->getIntValue("number", 0))
 {
 }
 
@@ -56,26 +34,18 @@ void
 MagCompass::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
-    _roll_node =
-        fgGetNode("/orientation/roll-deg", true);
-    _pitch_node =
-        fgGetNode("/orientation/pitch-deg", true);
-    _heading_node =
-        fgGetNode("/orientation/heading-magnetic-deg", true);
-    _beta_node =
-        fgGetNode("/orientation/side-slip-deg", true);
-    _dip_node =
-        fgGetNode("/environment/magnetic-dip-deg", true);
-    _x_accel_node =
-        fgGetNode("/accelerations/pilot/x-accel-fps_sec", true);
-    _y_accel_node =
-        fgGetNode("/accelerations/pilot/y-accel-fps_sec", true);
-    _z_accel_node =
-        fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);
+    _roll_node = fgGetNode("/orientation/roll-deg", true);
+    _pitch_node = fgGetNode("/orientation/pitch-deg", true);
+    _heading_node = fgGetNode("/orientation/heading-magnetic-deg", true);
+    _beta_node = fgGetNode("/orientation/side-slip-deg", true);
+    _dip_node = fgGetNode("/environment/magnetic-dip-deg", true);
+    _x_accel_node = fgGetNode("/accelerations/pilot/x-accel-fps_sec", true);
+    _y_accel_node = fgGetNode("/accelerations/pilot/y-accel-fps_sec", true);
+    _z_accel_node = fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);
     _out_node = node->getChild("indicated-heading-deg", 0, true);
 }
 

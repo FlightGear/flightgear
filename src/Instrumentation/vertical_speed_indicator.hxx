@@ -33,7 +33,6 @@ class VerticalSpeedIndicator : public SGSubsystem
 public:
 
     VerticalSpeedIndicator ( SGPropertyNode *node );
-    VerticalSpeedIndicator ();
     virtual ~VerticalSpeedIndicator ();
 
     virtual void init ();
@@ -43,9 +42,9 @@ private:
 
     double _internal_pressure_inhg;
 
-    string name;
-    int num;
-    string static_port;
+    string _name;
+    int _num;
+    string _static_pressure;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_node;

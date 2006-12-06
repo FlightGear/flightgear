@@ -60,35 +60,17 @@ int round (double value, int nearest=1)
     return ((int) (value/nearest + 0.5)) * nearest;
 }
 
+
 Encoder::Encoder(SGPropertyNode *node)
     :
-    name("encoder"),
-    num(0),
-    staticPort("/systems/static"),
+    _name(node->getStringValue("name", "encoder")),
+    _num(node->getIntValue("number", 0)),
+    _static_pressure(node->getStringValue("static-pressure", "/systems/static/pressure-inhg")),
     altitudeTable(new SGInterpTable)
 {
     int i;
     for ( i = 0; altitude_data[i][0] != -1; i++ )
         altitudeTable->addEntry(altitude_data[i][0], altitude_data[i][1]);
-
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else if ( cname == "static-port" ) {
-            staticPort = cval;
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, 
-                    "Error in encoder config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
 }
 
 
@@ -101,12 +83,11 @@ Encoder::~Encoder()
 void Encoder::init()
 {
     string branch;
-    branch = "/instrumentation/" + name;
-    staticPort += "/pressure-inhg";
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     // Inputs
-    staticPressureNode = fgGetNode(staticPort.c_str(), true);
+    staticPressureNode = fgGetNode(_static_pressure.c_str(), true);
     busPowerNode = fgGetNode("/systems/electrical/outputs/encoder", true);
     serviceableNode = node->getChild("serviceable", 0, true);
     // Outputs

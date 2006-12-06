@@ -142,8 +142,8 @@ class FGNavRadio : public SGSubsystem
     double last_loc_dist;
     double last_xtrack_error;
 
-    string name;
-    int num;
+    string _name;
+    int _num;
 
     // internal periodic station search timer
     double _time_before_search_sec;

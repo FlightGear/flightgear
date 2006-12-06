@@ -20,28 +20,8 @@
 
 
 MasterReferenceGyro::MasterReferenceGyro ( SGPropertyNode *node ) :
-	name("master-reference-gyro"),
-	num(0)
-{
-	int i;
-	for ( i = 0; i < node->nChildren(); ++i ) {
-		SGPropertyNode *child = node->getChild(i);
-		string cname = child->getName();
-		string cval = child->getStringValue();
-		if ( cname == "name" ) {
-			name = cval;
-		} else if ( cname == "number" ) {
-			num = (int) child->getDoubleValue();
-		} else {
-			SG_LOG( SG_INSTR, SG_WARN, "Error in mrg config logic" );
-			if ( name.length() ) {
-				SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-			}
-		}
-	}
-}
-
-MasterReferenceGyro::MasterReferenceGyro ()
+	_name(node->getStringValue("name", "master-reference-gyro")),
+	_num(node->getIntValue("number", 0))
 {
 }
 
@@ -63,7 +43,7 @@ MasterReferenceGyro::init ()
 	_indicated_pitch_rate = 0;
 	
 	string branch;
-	branch = "/instrumentation/" + name;
+	branch = "/instrumentation/" + _name;
 
 	_pitch_in_node = fgGetNode("/orientation/pitch-deg", true);
 	_roll_in_node = fgGetNode("/orientation/roll-deg", true);
@@ -74,7 +54,7 @@ MasterReferenceGyro::init ()
 	_g_in_node =   fgGetNode("/accelerations/pilot-g-damped", true);
 	_electrical_node = fgGetNode("/systems/electrical/outputs/MRG", true);
 	
-	SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+	SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
 	_off_node = node->getChild("off-flag", 0, true);
 	_pitch_out_node = node->getChild("indicated-pitch-deg", 0, true);
 	_roll_out_node = node->getChild("indicated-roll-deg", 0, true);
@@ -95,8 +75,8 @@ MasterReferenceGyro::bind ()
 {
 	std::ostringstream temp;
 	string branch;
-	temp << num;
-	branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+	temp << _num;
+	branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 
 	fgTie((branch + "/serviceable").c_str(),
 		&_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
@@ -109,8 +89,8 @@ MasterReferenceGyro::unbind ()
 {
 	std::ostringstream temp;
 	string branch;
-	temp << num;
-	branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+	temp << _num;
+	branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 
 	fgUntie((branch + "/serviceable").c_str());
 	fgUntie((branch + "/spin").c_str());
