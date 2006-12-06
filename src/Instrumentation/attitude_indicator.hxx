@@ -42,7 +42,6 @@ class AttitudeIndicator : public SGSubsystem
 public:
 
     AttitudeIndicator ( SGPropertyNode *node );
-    AttitudeIndicator ();
     virtual ~AttitudeIndicator ();
 
     virtual void init ();
@@ -52,9 +51,9 @@ public:
 
 private:
 
-    string name;
-    int num;
-    string vacuum_system;
+    string _name;
+    int _num;
+    string _suction;
 
     Gyro _gyro;
 

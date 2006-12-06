@@ -100,8 +100,8 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     last_x(0.0),
     last_loc_dist(0.0),
     last_xtrack_error(0.0),
-    name("nav"),
-    num(0),
+    _name(node->getStringValue("name", "nav")),
+    _num(node->getIntValue("number", 0)),
     _time_before_search_sec(-1.0)
 {
     SGPath path( globals->get_fg_root() );
@@ -115,25 +115,6 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     term_tbl = new SGInterpTable( term.str() );
     low_tbl = new SGInterpTable( low.str() );
     high_tbl = new SGInterpTable( high.str() );
-
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, 
-                    "Error in nav radio config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-
 }
 
 
@@ -152,12 +133,12 @@ FGNavRadio::init ()
     morse.init();
 
     string branch;
-    branch = "/instrumentation/" + name;
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
 
     bus_power_node = 
-	fgGetNode(("/systems/electrical/outputs/" + name).c_str(), true);
+	fgGetNode(("/systems/electrical/outputs/" + _name).c_str(), true);
 
     // inputs
     is_valid_node = node->getChild("data-is-valid", 0, true);
@@ -222,9 +203,9 @@ FGNavRadio::init ()
     gps_from_flag_node = fgGetNode("/instrumentation/gps/from-flag", true);
     
     std::ostringstream temp;
-    temp << name << "nav-ident" << num;
+    temp << _name << "nav-ident" << _num;
     nav_fx_name = temp.str();
-    temp << name << "dme-ident" << num;
+    temp << _name << "dme-ident" << _num;
     dme_fx_name = temp.str();
 }
 
@@ -233,8 +214,8 @@ FGNavRadio::bind ()
 {
     std::ostringstream temp;
     string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+    temp << _num;
+    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 }
 
 
@@ -243,8 +224,8 @@ FGNavRadio::unbind ()
 {
     std::ostringstream temp;
     string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+    temp << _num;
+    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 }
 
 

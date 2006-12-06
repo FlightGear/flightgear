@@ -41,41 +41,9 @@ GPS::GPS ( SGPropertyNode *node)
       _wp1_altitude_m(0),
       _alt_dist_ratio(0),
       _distance_m(0),
-      _course_deg(0)
-{
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in gps config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-GPS::GPS ()
-    : _last_valid(false),
-      _last_longitude_deg(0),
-      _last_latitude_deg(0),
-      _last_altitude_m(0),
-      _last_speed_kts(0),
-      _wp0_latitude_deg(0),
-      _wp0_longitude_deg(0),
-      _wp0_altitude_m(0),
-      _wp1_latitude_deg(0),
-      _wp1_longitude_deg(0),
-      _wp1_altitude_m(0),
-      _alt_dist_ratio(0),
-      _distance_m(0),
-      _course_deg(0)
+      _course_deg(0),
+      _name(node->getStringValue("name", "gps")),
+      _num(node->getIntValue("number", 0))
 {
 }
 
@@ -90,9 +58,9 @@ GPS::init ()
     route->clear();
 
     string branch;
-    branch = "/instrumentation/" + name;
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
 
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);

@@ -41,7 +41,6 @@ class TurnIndicator : public SGSubsystem
 public:
 
     TurnIndicator ( SGPropertyNode *node );
-    TurnIndicator ();
     virtual ~TurnIndicator ();
 
     virtual void init ();
@@ -54,8 +53,8 @@ private:
     Gyro _gyro;
     double _last_rate;
 
-    string name;
-    int num;
+    string _name;
+    int _num;
 
     SGPropertyNode_ptr _roll_rate_node;
     SGPropertyNode_ptr _yaw_rate_node;

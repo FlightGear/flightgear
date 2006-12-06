@@ -166,14 +166,14 @@ private:
     double _distance_m;
     double _course_deg;
 
-    double bias_length;
-    double bias_angle;
-    double azimuth_error;
-    double range_error;
-    double elapsed_time;
+    double _bias_length;
+    double _bias_angle;
+    double _azimuth_error;
+    double _range_error;
+    double _elapsed_time;
 
-    string name;
-    int num;
+    string _name;
+    int _num;
 
 };
 

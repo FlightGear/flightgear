@@ -42,7 +42,6 @@ class DME : public SGSubsystem
 public:
 
     DME ( SGPropertyNode *node );
-    DME ();
     virtual ~DME ();
 
     virtual void init ();
@@ -76,8 +75,8 @@ private:
     double _transmitter_range_nm;
     double _transmitter_bias;
 
-    string name;
-    int num;
+    string _name;
+    int _num;
 
 };
 

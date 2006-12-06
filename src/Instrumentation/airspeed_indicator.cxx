@@ -17,10 +17,10 @@
 
 AirspeedIndicator::AirspeedIndicator ( SGPropertyNode *node )
     :
-    name(node->getStringValue("name", "airspeed-indicator")),
-    num(node->getIntValue("number", 0)),
-    pitot_port(node->getStringValue("pitot-port", "/systems/pitot")),
-    static_port(node->getStringValue("static-port", "/systems/static"))
+    _name(node->getStringValue("name", "airspeed-indicator")),
+    _num(node->getIntValue("number", 0)),
+    _total_pressure(node->getStringValue("total-pressure", "/systems/pitot/total-pressure-inhg")),
+    _static_pressure(node->getStringValue("static-pressure", "/systems/static/pressure-inhg"))
 {
 }
 
@@ -32,14 +32,12 @@ void
 AirspeedIndicator::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
-    pitot_port += "/total-pressure-inhg";
-    static_port += "/pressure-inhg";
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
-    _total_pressure_node = fgGetNode(pitot_port.c_str(), true);
-    _static_pressure_node = fgGetNode(static_port.c_str(), true);
+    _total_pressure_node = fgGetNode(_total_pressure.c_str(), true);
+    _static_pressure_node = fgGetNode(_static_pressure.c_str(), true);
     _density_node = fgGetNode("/environment/density-slugft3", true);
     _speed_node = node->getChild("indicated-speed-kt", 0, true);
 }

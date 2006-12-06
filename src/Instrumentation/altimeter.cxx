@@ -46,39 +46,13 @@ static double altitude_data[][2] = {
 
 
 Altimeter::Altimeter ( SGPropertyNode *node )
-    : name("altimeter"),
-      num(0),
-      static_port("/systems/static"),
+    : _name(node->getStringValue("name", "altimeter")),
+      _num(node->getIntValue("number", 0)),
+      _static_pressure(node->getStringValue("static-pressure", "/systems/static/pressure-inhg")),
       _altitude_table(new SGInterpTable)
 {
     int i;
     for (i = 0; altitude_data[i][0] != -1; i++)
-        _altitude_table->addEntry(altitude_data[i][0], altitude_data[i][1]);
-
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else if ( cname == "static-port" ) {
-            static_port = cval;
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in altimeter config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-Altimeter::Altimeter ()
-    : _altitude_table(new SGInterpTable)
-{
-
-    for (int i = 0; altitude_data[i][0] != -1; i++)
         _altitude_table->addEntry(altitude_data[i][0], altitude_data[i][1]);
 }
 
@@ -91,14 +65,13 @@ void
 Altimeter::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
-    static_port += "/pressure-inhg";
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
 
     _serviceable_node = node->getChild("serviceable", 0, true);
     _setting_node = node->getChild("setting-inhg", 0, true);
-    _pressure_node = fgGetNode(static_port.c_str(), true);
+    _pressure_node = fgGetNode(_static_pressure.c_str(), true);
     _altitude_node = node->getChild("indicated-altitude-ft", 0, true);
 }
 

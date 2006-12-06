@@ -49,10 +49,10 @@ public:
 
 private:
 
-    string name;
-    int num;
-    string_list rpms;
-    double scale;
+    string _name;
+    int _num;
+    string_list _rpms;
+    double _scale;
     SGPropertyNode_ptr _serviceable_node;
     vector<SGPropertyNode_ptr> _rpm_nodes;
     SGPropertyNode_ptr _pressure_node;

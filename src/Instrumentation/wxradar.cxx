@@ -41,33 +41,13 @@
 static const char *odgauge_name = "Aircraft/Instruments/Textures/od_wxradar.rgb";
 
 wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
-    name("wxRadar"),
-    num(0),
+    _name(node->getStringValue("name", "wxRadar")),
+    _num(node->getIntValue("number", 0)),
     resultTexture( 0 ),
     wxEcho( 0 ),
     last_switchKnob( "off" ),
     sim_init_done ( false ),
     odg( 0 )
-{
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in wxRadar config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-wxRadarBg::wxRadarBg ()
 {
 }
 
@@ -79,9 +59,9 @@ void
 wxRadarBg::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
+    branch = "/instrumentation/" + _name;
 
-    _Instrument = fgGetNode(branch.c_str(), num, true );
+    _Instrument = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = _Instrument->getChild("serviceable", 0, true);
     resultTexture = FGTextureManager::createTexture( odgauge_name );
     SGPath tpath(globals->get_fg_root());

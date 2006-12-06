@@ -43,7 +43,6 @@ class PitotSystem : public SGSubsystem
 public:
 
     PitotSystem ( SGPropertyNode *node );
-    PitotSystem ( int i );
     virtual ~PitotSystem ();
 
     virtual void init ();
@@ -53,8 +52,8 @@ public:
 
 private:
 
-    int num;
-    string name;
+    string _name;
+    int _num;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_node;
     SGPropertyNode_ptr _density_node;

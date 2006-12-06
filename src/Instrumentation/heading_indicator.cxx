@@ -15,31 +15,9 @@
 
 HeadingIndicator::HeadingIndicator ( SGPropertyNode *node )
     :
-    name("heading-indicator"),
-    num(0),
-    vacuum_system("/systems/vacuum")
-{
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else if ( cname == "vacuum-system" ) {
-            vacuum_system = cval;
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in heading-indicator config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
-}
-
-HeadingIndicator::HeadingIndicator ()
+    _name(node->getStringValue("name", "heading-indicator")),
+    _num(node->getIntValue("number", 0)),
+    _suction(node->getStringValue("suction", "/systems/vacuum/suction-inhg"))
 {
 }
 
@@ -51,13 +29,12 @@ void
 HeadingIndicator::init ()
 {
     string branch;
-    branch = "/instrumentation/" + name;
-    vacuum_system += "/suction-inhg";
+    branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _offset_node = node->getChild("offset-deg", 0, true);
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
-    _suction_node = fgGetNode(vacuum_system.c_str(), true);
+    _suction_node = fgGetNode(_suction.c_str(), true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _last_heading_deg = (_heading_in_node->getDoubleValue() +
                          _offset_node->getDoubleValue());
@@ -68,8 +45,8 @@ HeadingIndicator::bind ()
 {
     std::ostringstream temp;
     string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+    temp << _num;
+    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 
     fgTie((branch + "/serviceable").c_str(),
           &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
@@ -82,8 +59,8 @@ HeadingIndicator::unbind ()
 {
     std::ostringstream temp;
     string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
+    temp << _num;
+    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 
     fgUntie((branch + "/serviceable").c_str());
     fgUntie((branch + "/spin").c_str());

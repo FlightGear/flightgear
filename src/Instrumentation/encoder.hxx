@@ -51,9 +51,9 @@ private:
     SGPropertyNode_ptr modeCAltitudeNode;
 
     // Internal
-    string name;
-    int num;
-    string staticPort;
+    string _name;
+    int _num;
+    string _static_pressure;
 
     SGInterpTable* altitudeTable;
 };
