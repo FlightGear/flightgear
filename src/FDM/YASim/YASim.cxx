@@ -54,6 +54,11 @@ YASim::YASim(double dt)
     _fdm->getAirplane()->getModel()->getIntegrator()->setInterval(_dt);
 }
 
+YASim::~YASim()
+{
+    delete _fdm;
+}
+
 void YASim::report()
 {
     Airplane* a = _fdm->getAirplane();
