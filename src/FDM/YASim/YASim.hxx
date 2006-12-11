@@ -8,6 +8,7 @@ namespace yasim { class FGFDM; };
 class YASim : public FGInterface {
 public:
     YASim(double dt);
+    ~YASim();
 
     // Load externally set stuff into the FDM
     virtual void init();

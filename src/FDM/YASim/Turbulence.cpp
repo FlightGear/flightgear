@@ -138,8 +138,8 @@ void Turbulence::getTurbulence(double* loc, float alt, float* up,
     double b = (loc[1] + _off[1]) + _timeOff;
     a -= _sz * Math::floor(a * (1.0/_sz));
     b -= _sz * Math::floor(b * (1.0/_sz));
-    int x = (int)Math::floor(a);
-    int y = (int)Math::floor(b);
+    int x = ((int)Math::floor(a))&(_sz-1);
+    int y = ((int)Math::floor(b))&(_sz-1);
 
     // Convert to fractional interpolation factors
     a -= x;
