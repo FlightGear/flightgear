@@ -36,25 +36,7 @@
 #include "Aircraft/aircraft.hxx"
 #include "panel.hxx"
 
-// Class fg_Cockpit          This class is a holder for the heads up display
-//                          and is initialized with a
-class fg_Cockpit  {
-  private:
-    int  Code;
-    int  cockpitStatus;
-    SGPropertyNode_ptr hud_status;
-
-  public:
-    fg_Cockpit   () : Code(1), cockpitStatus(0) {};
-    int   code  ( void ) { return Code; }
-    int   status( void ) { return cockpitStatus; }
-};
-
-
-typedef fg_Cockpit * pCockpit;
-
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft );
 void fgCockpitUpdate( osg::State* );
-
 
 #endif /* _COCKPIT_HXX */

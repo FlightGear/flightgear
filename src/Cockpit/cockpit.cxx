@@ -59,10 +59,6 @@
 #include "hud.hxx"
 
 
-// This is a structure that contains all data related to
-// cockpit/panel/hud system
-
-static pCockpit ac_cockpit;
 // The following routines obtain information concerntin the aircraft's
 // current state and return it to calling instrument display routines.
 // They should eventually be member functions of the aircraft.
@@ -541,20 +537,11 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
     // current aircraft.
 
     fgHUDInit( cur_aircraft );
-    ac_cockpit = new fg_Cockpit();
-
-    SG_LOG( SG_COCKPIT, SG_INFO,
-        "  Code " << ac_cockpit->code() << " Status "
-        << ac_cockpit->status() );
 
     return true;
 }
 
 void fgCockpitUpdate( osg::State* state ) {
-
-    SG_LOG( SG_COCKPIT, SG_DEBUG,
-            "Cockpit: code " << ac_cockpit->code() << " status "
-            << ac_cockpit->status() );
 
     static const SGPropertyNode * xsize_node = fgGetNode("/sim/startup/xsize");
     static const SGPropertyNode * ysize_node = fgGetNode("/sim/startup/ysize");
