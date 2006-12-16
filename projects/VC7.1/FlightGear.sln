@@ -22,6 +22,21 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fgjs", "fgjs.vcproj", "{674
 		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED} = {22540CD3-D3CA-4C86-A773-80AEEE3ACDED}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GPSsmooth", "GPSsmooth.vcproj", "{AE9CE7E4-8F21-4C34-82DD-4D0371C210DA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED} = {22540CD3-D3CA-4C86-A773-80AEEE3ACDED}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MIDGsmooth", "MIDGsmooth.vcproj", "{92010FAB-17A3-4891-AE6D-507214FEA508}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED} = {22540CD3-D3CA-4C86-A773-80AEEE3ACDED}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UGsmooth", "UGsmooth.vcproj", "{EEEEB798-BFFD-425F-86F9-03C6FE6B8B99}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED} = {22540CD3-D3CA-4C86-A773-80AEEE3ACDED}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -48,6 +63,18 @@ Global
 		{6749547A-6493-4754-8E0E-49FB3137C4CA}.Debug.Build.0 = Debug|Win32
 		{6749547A-6493-4754-8E0E-49FB3137C4CA}.Release.ActiveCfg = Release|Win32
 		{6749547A-6493-4754-8E0E-49FB3137C4CA}.Release.Build.0 = Release|Win32
+		{AE9CE7E4-8F21-4C34-82DD-4D0371C210DA}.Debug.ActiveCfg = Debug|Win32
+		{AE9CE7E4-8F21-4C34-82DD-4D0371C210DA}.Debug.Build.0 = Debug|Win32
+		{AE9CE7E4-8F21-4C34-82DD-4D0371C210DA}.Release.ActiveCfg = Release|Win32
+		{AE9CE7E4-8F21-4C34-82DD-4D0371C210DA}.Release.Build.0 = Release|Win32
+		{92010FAB-17A3-4891-AE6D-507214FEA508}.Debug.ActiveCfg = Debug|Win32
+		{92010FAB-17A3-4891-AE6D-507214FEA508}.Debug.Build.0 = Debug|Win32
+		{92010FAB-17A3-4891-AE6D-507214FEA508}.Release.ActiveCfg = Release|Win32
+		{92010FAB-17A3-4891-AE6D-507214FEA508}.Release.Build.0 = Release|Win32
+		{EEEEB798-BFFD-425F-86F9-03C6FE6B8B99}.Debug.ActiveCfg = Debug|Win32
+		{EEEEB798-BFFD-425F-86F9-03C6FE6B8B99}.Debug.Build.0 = Debug|Win32
+		{EEEEB798-BFFD-425F-86F9-03C6FE6B8B99}.Release.ActiveCfg = Release|Win32
+		{EEEEB798-BFFD-425F-86F9-03C6FE6B8B99}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

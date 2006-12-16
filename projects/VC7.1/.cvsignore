@@ -6,5 +6,11 @@ fgadmin_Release
 3dconvert_Release
 fgjs_Debug
 fgjs_Release
+GPSsmooth_Debug
+GPSsmooth_Release
+MIDGsmooth_Debug
+MIDGsmooth_Release
+UGsmooth_Debug
+UGsmooth_Release
 FlightGear.ncb
 FlightGear.suo
