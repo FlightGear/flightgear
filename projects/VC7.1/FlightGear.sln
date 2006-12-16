@@ -37,6 +37,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UGsmooth", "UGsmooth.vcproj
 		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED} = {22540CD3-D3CA-4C86-A773-80AEEE3ACDED}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yasim", "yasim.vcproj", "{800CB1FF-C398-4B81-B3D6-8BBD9E0897D2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED} = {22540CD3-D3CA-4C86-A773-80AEEE3ACDED}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -75,6 +80,10 @@ Global
 		{EEEEB798-BFFD-425F-86F9-03C6FE6B8B99}.Debug.Build.0 = Debug|Win32
 		{EEEEB798-BFFD-425F-86F9-03C6FE6B8B99}.Release.ActiveCfg = Release|Win32
 		{EEEEB798-BFFD-425F-86F9-03C6FE6B8B99}.Release.Build.0 = Release|Win32
+		{800CB1FF-C398-4B81-B3D6-8BBD9E0897D2}.Debug.ActiveCfg = Debug|Win32
+		{800CB1FF-C398-4B81-B3D6-8BBD9E0897D2}.Debug.Build.0 = Debug|Win32
+		{800CB1FF-C398-4B81-B3D6-8BBD9E0897D2}.Release.ActiveCfg = Release|Win32
+		{800CB1FF-C398-4B81-B3D6-8BBD9E0897D2}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
