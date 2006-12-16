@@ -45,13 +45,13 @@
 
 #include "jpg-httpd.hxx"
 
-//[Leidson<]
 #define __MAX_HTTP_BLOCK_SIZE       4096
 #define __MAX_STRING_SIZE           2048
 #define __TIMEOUT_COUNT             5
 #define __HTTP_GET_STRING           "GET "
-//[Leidson>]
 
+#include <osg/CameraNode>
+extern osg::ref_ptr<osg::CameraNode> mSceneCamera;
 
 SG_USING_STD(string);
 
@@ -104,6 +104,10 @@ void HttpdImageChannel :: foundTerminator( void ) {
     if ( strstr( pRequest, __HTTP_GET_STRING ) != NULL ) {
         
         SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< HTTP Request : " << pRequest );
+
+        double left, right, bottom, top, zNear, zFar;
+        mSceneCamera->getProjectionMatrixAsFrustum( left, right, bottom, top, zNear, zFar );
+        JpgFactory->setFrustum( left, right, bottom, top, zNear, zFar );
 
         nImageLen  = JpgFactory -> render();
 	nBlockSize = ( nImageLen < __MAX_HTTP_BLOCK_SIZE ? nImageLen : __MAX_HTTP_BLOCK_SIZE );

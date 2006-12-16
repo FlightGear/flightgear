@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..;..\..\src;..\..\src\include;..\..\..\SimGear;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\src\FDM\JSBSim;..\..\..\OpenSceneGraph\include;..\..\..\OpenThreads\include;..\..\..\3rdParty\include"
-				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;FG_PLIB_JOYSTICK_GETNAME;FG_NEW_ENVIRONMENT;FG_MPLAYER_AS;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;NO_FG_JPEG_SERVER"
+				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;FG_PLIB_JOYSTICK_GETNAME;FG_NEW_ENVIRONMENT;FG_MPLAYER_AS;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER"
 				StringPooling="TRUE"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="glut32.lib wsock32.lib sg_d.lib net_d.lib ssg_d.lib pui_d.lib puaux_d.lib fnt_d.lib js_d.lib ul_d.lib zlibd.lib pthreadVC2d.lib OpenAL32.lib ALut.lib libjpegd.lib osgd.lib osgDBd.lib osgUtild.lib"
+				AdditionalDependencies="glut32.lib wsock32.lib sg_d.lib net_d.lib ssg_d.lib pui_d.lib puaux_d.lib fnt_d.lib js_d.lib ul_d.lib zlibd.lib pthreadVC2d.lib OpenAL32.lib ALut.lib libjpegd.lib osgd.lib osgDBd.lib osgUtild.lib libjpegd.lib"
 				OutputFile="Debug/fgfs.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
@@ -87,7 +87,7 @@
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..;..\..\src;..\..\src\include;..\..\src\FDM\JSBSim;..\..\..\SimGear;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\include;..\..\..\Producer\include;..\..\..\OpenThreads\include;..\..\..\3rdParty\include"
-				PreprocessorDefinitions="HAVE_CONFIG_H;FGFS;NDEBUG;WIN32;_CONSOLE;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;FG_PLIB_JOYSTICK_GETNAME;FG_NEW_ENVIRONMENT;ENABLE_THREADS=1;FG_MPLAYER_AS;FG_USE_CLOUDS_3D;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES"
+				PreprocessorDefinitions="HAVE_CONFIG_H;FGFS;NDEBUG;WIN32;_CONSOLE;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;FG_PLIB_JOYSTICK_GETNAME;FG_NEW_ENVIRONMENT;ENABLE_THREADS=1;FG_MPLAYER_AS;FG_USE_CLOUDS_3D;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="TRUE"
@@ -104,7 +104,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="glut32.lib wsock32.lib sg.lib net.lib ssg.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib pthreadVC2.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib"
+				AdditionalDependencies="glut32.lib wsock32.lib sg.lib net.lib ssg.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib pthreadVC2.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib libjpeg.lib"
 				OutputFile=".\Release/fgfs.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -1980,6 +1980,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Network\joyclient.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Network\jpg-httpd.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Network\jpg-httpd.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Network\jsclient.cxx">

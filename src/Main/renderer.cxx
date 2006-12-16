@@ -330,7 +330,7 @@ static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
 static osg::ref_ptr<osg::CameraView> mCameraView = new osg::CameraView;
 static osg::ref_ptr<osg::CameraNode> mBackGroundCamera = new osg::CameraNode;
-static osg::ref_ptr<osg::CameraNode> mSceneCamera = new osg::CameraNode;
+osg::ref_ptr<osg::CameraNode> mSceneCamera = new osg::CameraNode;
 
 static osg::ref_ptr<osg::Fog> mFog = new osg::Fog;
 static osg::ref_ptr<osg::Fog> mRunwayLightingFog = new osg::Fog;
