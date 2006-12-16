@@ -17,6 +17,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3dconvert", "3dconvert.vcpr
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fgjs", "fgjs.vcproj", "{6749547A-6493-4754-8E0E-49FB3137C4CA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED} = {22540CD3-D3CA-4C86-A773-80AEEE3ACDED}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -39,6 +44,10 @@ Global
 		{D95DBC85-D945-4879-B6CF-5864BF8F5E2E}.Debug.Build.0 = Debug|Win32
 		{D95DBC85-D945-4879-B6CF-5864BF8F5E2E}.Release.ActiveCfg = Release|Win32
 		{D95DBC85-D945-4879-B6CF-5864BF8F5E2E}.Release.Build.0 = Release|Win32
+		{6749547A-6493-4754-8E0E-49FB3137C4CA}.Debug.ActiveCfg = Debug|Win32
+		{6749547A-6493-4754-8E0E-49FB3137C4CA}.Debug.Build.0 = Debug|Win32
+		{6749547A-6493-4754-8E0E-49FB3137C4CA}.Release.ActiveCfg = Release|Win32
+		{6749547A-6493-4754-8E0E-49FB3137C4CA}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
