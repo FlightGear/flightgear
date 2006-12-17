@@ -128,11 +128,21 @@ void FGAIBase::Transform() {
 bool FGAIBase::init() {
 
    if (!model_path.empty()) {
+     SGPath ai_path("AI");
+     ai_path.append(model_path);
      try {
-       model = load3DModel( globals->get_fg_root(), model_path, props,
-                            globals->get_sim_time_sec() );
+       model = load3DModel( globals->get_fg_root(), ai_path.str(), props,
+                        globals->get_sim_time_sec() );
      } catch (const sg_exception &e) {
        model = NULL;
+     }
+     if (!model) {
+       try {
+         model = load3DModel( globals->get_fg_root(), model_path, props,
+                        globals->get_sim_time_sec() );
+       } catch (const sg_exception &e) {
+         model = NULL;
+       }
      }
    }
    if (model.get()) {
