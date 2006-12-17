@@ -68,7 +68,7 @@ class HttpdServer : private netChannel
     virtual void handleAccept (void) {
         netAddress addr ;
         int handle = accept ( &addr ) ;
-        printf("Client %s:%d connected\n", addr.getHost(), addr.getPort());
+        SG_LOG( SG_IO, SG_INFO, "Client " << addr.getHost() << ":" << addr.getPort() << " connected" );
 
         HttpdChannel *hc = new HttpdChannel;
         hc->setHandle ( handle ) ;

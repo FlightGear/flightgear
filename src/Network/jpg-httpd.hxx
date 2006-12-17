@@ -95,7 +95,7 @@ class HttpdImageServer : private netChannel
     virtual void handleAccept (void) {
         netAddress addr ;
         int handle = accept ( &addr ) ;
-        printf("Client %s:%d connected\n", addr.getHost(), addr.getPort());
+        SG_LOG( SG_IO, SG_INFO, "Client " << addr.getHost() << ":" << addr.getPort() << " connected" );
 
         HttpdImageChannel *hc = new HttpdImageChannel;
         hc->setHandle ( handle ) ;
