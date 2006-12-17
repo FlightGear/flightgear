@@ -881,7 +881,7 @@ fgSetupProxy( const char *arg )
 {
     string options = arg;
     string host, port, auth;
-    unsigned int pos;
+    string::size_type pos;
 
     host = port = auth = "";
     if ((pos = options.find("@")) != string::npos) 
