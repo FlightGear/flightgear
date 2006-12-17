@@ -374,7 +374,7 @@ bool FGAISchedule::update(time_t now)
 	    {
 	      string flightPlanName = dep->getId() + string("-") + arr->getId() + 
 		string(".xml");
-	      int alt;
+	      //int alt;
 	      //if  ((i->getDepartureTime() < now))
 	      //{
 	      //	  alt = i->getCruiseAlt() *100;
@@ -461,8 +461,8 @@ void FGAISchedule::next()
 
 double FGAISchedule::getSpeed()
 {
-  double courseToUser,   courseToDest;
-  double distanceToUser, distanceToDest;
+  double courseToDest;
+  double distanceToDest;
   double speed, remainingTimeEnroute;
   FGAirport *dep, *arr;
 

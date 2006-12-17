@@ -133,14 +133,14 @@ bool FGAIBase::init() {
      try {
        model = load3DModel( globals->get_fg_root(), ai_path.str(), props,
                         globals->get_sim_time_sec() );
-     } catch (const sg_exception &e) {
+     } catch (const sg_exception &) {
        model = NULL;
      }
      if (!model) {
        try {
          model = load3DModel( globals->get_fg_root(), model_path, props,
                         globals->get_sim_time_sec() );
-       } catch (const sg_exception &e) {
+       } catch (const sg_exception &) {
          model = NULL;
        }
      }
