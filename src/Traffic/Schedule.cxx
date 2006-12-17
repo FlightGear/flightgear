@@ -384,10 +384,15 @@ bool FGAISchedule::update(time_t now)
 	      //	  alt = dep->_elevation+19;
 	      //	}
 
-	      // Only allow traffic to be created when the model path exists
+	      // Only allow traffic to be created when the model path (or the AI version of mp) exists
 	      SGPath mp(globals->get_fg_root());
+	      SGPath mp_ai = mp;
+
 	      mp.append(modelPath);
-	      if (mp.exists()) 
+	      mp_ai.append("AI");
+	      mp_ai.append(modelPath);
+
+	      if (mp.exists() || mp_ai.exists())
 	      {
 		  FGAIAircraft *aircraft = new FGAIAircraft(this);
 		  aircraft->setPerformance(m_class); //"jet_transport";
