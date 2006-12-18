@@ -279,7 +279,8 @@ void Airplane::addVStab(Wing* vstab)
 }
 
 void Airplane::addFuselage(float* front, float* back, float width,
-                           float taper, float mid)
+                           float taper, float mid, 
+                           float cx, float cy, float cz, float idrag)
 {
     Fuselage* f = new Fuselage();
     int i;
@@ -290,6 +291,10 @@ void Airplane::addFuselage(float* front, float* back, float width,
     f->width = width;
     f->taper = taper;
     f->mid = mid;
+    f->_cx=cx;
+    f->_cy=cy;
+    f->_cz=cz;
+    f->_idrag=idrag;
     _fuselages.add(f);
 }
 
@@ -519,9 +524,10 @@ float Airplane::compileFuselage(Fuselage* f)
         Surface* s = new Surface();
         s->setPosition(pos);
 	float sideDrag = len/wid;
-        s->setYDrag(sideDrag);
-        s->setZDrag(sideDrag);
-        s->setTotalDrag(scale*segWgt);
+        s->setYDrag(sideDrag*f->_cy);
+        s->setZDrag(sideDrag*f->_cz);
+        s->setTotalDrag(scale*segWgt*f->_cx);
+        s->setInducedDrag(f->_idrag);
 
         // FIXME: fails for fuselages aligned along the Y axis
         float o[9];

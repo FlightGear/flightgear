@@ -37,7 +37,8 @@ public:
     void addVStab(Wing* vstab);
 
     void addFuselage(float* front, float* back, float width,
-                     float taper=1, float mid=0.5);
+                     float taper=1, float mid=0.5,
+                     float cx=1, float cy=1, float cz=1, float idrag=1);
     int addTank(float* pos, float cap, float fuelDensity);
     void addGear(Gear* g);
     void addHook(Hook* h);
@@ -92,7 +93,7 @@ public:
 private:
     struct Tank { float pos[3]; float cap; float fill;
 	          float density; int handle; };
-    struct Fuselage { float front[3], back[3], width, taper, mid; };
+    struct Fuselage { float front[3], back[3], width, taper, mid, _cx, _cy, _cz, _idrag; };
     struct GearRec { Gear* gear; Surface* surf; float wgt; };
     struct ThrustRec { Thruster* thruster;
 	               int handle; float cg[3]; float mass; };
