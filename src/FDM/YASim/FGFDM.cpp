@@ -316,7 +316,12 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	b[2] = attrf(a, "bz");
         float taper = attrf(a, "taper", 1);
         float mid = attrf(a, "midpoint", 0.5);
-	_airplane.addFuselage(v, b, attrf(a, "width"), taper, mid);
+        float cx = attrf(a, "cx", 1);
+        float cy = attrf(a, "cy", 1);
+        float cz = attrf(a, "cz", 1);
+	float idrag = attrf(a, "idrag", 1);
+	_airplane.addFuselage(v, b, attrf(a, "width"), taper, mid, 
+            cx, cy, cz, idrag);
     } else if(eq(name, "tank")) {
 	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");

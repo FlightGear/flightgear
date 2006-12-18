@@ -45,9 +45,9 @@ noinst_PROGRAMS = proptest
 
 yasim_SOURCES = yasim-test.cpp $(SHARED_SOURCE_FILES)
 
-yasim_LDADD = -lsgxml -lsgprops -lsgdebug -lsgmisc -lsgstructure -lplibssg -lplibul -lplibsg $(opengl_LIBS) $(base_LIBS)
+yasim_LDADD = -lsgxml -lsgprops -lsgdebug -lsgmisc -lsgstructure -lplibul -lplibsg $(opengl_LIBS) $(base_LIBS)
 
 proptest_SOURCES = proptest.cpp $(SHARED_SOURCE_FILES)
-proptest_LDADD = -lsgxml -lsgprops -lsgdebug -lsgmisc -lsgstructure -lplibssg -lplibul -lplibsg $(opengl_LIBS) $(base_LIBS)
+proptest_LDADD = -lsgxml -lsgprops -lsgdebug -lsgmisc -lsgstructure -lplibul -lplibsg $(opengl_LIBS) $(base_LIBS)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
