@@ -116,7 +116,7 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     // Aero parameters
     fdm->longitude = gpspacket->lon * SG_DEGREES_TO_RADIANS;
     fdm->latitude = gpspacket->lat * SG_DEGREES_TO_RADIANS;
-    fdm->altitude = gpspacket->alt;
+    fdm->altitude = gpspacket->alt + alt_offset;
     fdm->agl = -9999.0;
     fdm->psi = imupacket->psi; // heading
     fdm->phi = imupacket->phi; // roll
@@ -160,9 +160,9 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     fdm->num_engines = 1;
     fdm->eng_state[0] = 2;
     // cout << "state = " << fdm->eng_state[0] << endl;
-    double rpm = ((fdm->vcas - 15.0) / 65.0) * 2000.0 + 500.0;
+    double rpm = 5000.0 - ((double)servopacket->chn[2] / 65536.0)*3500.0;
     if ( rpm < 0.0 ) { rpm = 0.0; }
-    if ( rpm > 3000.0 ) { rpm = 3000.0; }
+    if ( rpm > 5000.0 ) { rpm = 5000.0; }
     fdm->rpm[0] = rpm;
 
     fdm->fuel_flow[0] = 0.0;
@@ -191,13 +191,13 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     fdm->left_flap = 0.0;
     fdm->right_flap = 0.0;
 
-    fdm->elevator = -fdm->theta * 1.0;
+    fdm->elevator = ((double)servopacket->chn[1] / 32768.0) - 1.0;
     fdm->elevator_trim_tab = 0.0;
     fdm->left_flap = 0.0;
     fdm->right_flap = 0.0;
-    fdm->left_aileron = fdm->phi * 1.0;
-    fdm->right_aileron = -fdm->phi * 1.0;
-    fdm->rudder = 0.0;
+    fdm->left_aileron = ((double)servopacket->chn[0] / 32768.0) - 1.0;
+    fdm->right_aileron = 1.0 - ((double)servopacket->chn[0] / 32768.0);
+    fdm->rudder = 1.0 - ((double)servopacket->chn[3] / 32768.0);
     fdm->nose_wheel = 0.0;
     fdm->speedbrake = 0.0;
     fdm->spoilers = 0.0;
@@ -274,6 +274,8 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     htonf(fdm->nose_wheel);
     htonf(fdm->speedbrake);
     htonf(fdm->spoilers);
+
+
 }
 
 
@@ -656,11 +658,11 @@ int main( int argc, char **argv ) {
         int count = 0;
         double current_time = 0.0;
 
-        gps gpspacket;
-	imu imupacket;
-	nav navpacket;
-	servo servopacket;
-	health healthpacket;
+        gps gpspacket; bzero( &gpspacket, sizeof(gpspacket) );
+	imu imupacket; bzero( &imupacket, sizeof(imupacket) );
+	nav navpacket; bzero( &navpacket, sizeof(navpacket) );
+	servo servopacket; bzero( &servopacket, sizeof(servopacket) );
+	health healthpacket; bzero( &healthpacket, sizeof(healthpacket) );
 
         double gps_time = 0;
         double imu_time = 0;
@@ -688,7 +690,7 @@ int main( int argc, char **argv ) {
         }
 
         while ( input.is_enabled() ) {
-            // cout << "looking for next message ..." << endl;
+	    cout << "looking for next message ..." << endl;
             int id = track.next_message( &input, &output, &gpspacket,
 					 &imupacket, &navpacket, &servopacket,
 					 &healthpacket );
@@ -733,12 +735,14 @@ int main( int argc, char **argv ) {
             }
 
 	    // if ( gpspacket.lat > -500 ) {
-            printf( "%.2f  %.6f %.6f %.1f  %.2f %.2f %.2f\n",
+            printf( "%.2f  %.6f %.6f %.1f  %.2f %.2f %.2f  %.2f %d\n",
                     current_time,
                     navpacket.lat, navpacket.lon, navpacket.alt,
                     imupacket.phi*SGD_RADIANS_TO_DEGREES,
 		    imupacket.the*SGD_RADIANS_TO_DEGREES,
-		    imupacket.psi*SGD_RADIANS_TO_DEGREES );
+		    imupacket.psi*SGD_RADIANS_TO_DEGREES,
+		    healthpacket.volts,
+		    healthpacket.est_seconds);
 	    // }
 
             send_data( &gpspacket, &imupacket, &navpacket, &servopacket,
