@@ -738,10 +738,6 @@ void Airplane::solveGear()
         // Critically damped (too damped, too!)
         gr->gear->setDamping(2*Math::sqrt(k*_approachWeight*gr->wgt)
                              * gr->gear->getDamping());
-
-        // These are pretty generic
-        gr->gear->setStaticFriction(0.8f);
-        gr->gear->setDynamicFriction(0.7f);
     }
 }
 
