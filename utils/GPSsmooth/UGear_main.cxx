@@ -2,6 +2,7 @@
 #  include <config.h>
 #endif
 
+#include <strings.h>		// for bzero()
 #include <iostream>
 #include <string>
 
