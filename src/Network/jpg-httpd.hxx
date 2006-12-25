@@ -44,6 +44,7 @@ public:
     void init(int, int);
     void destroy();
     int render();
+    void setFrustum(double,double,double,double,double,double);
   void *data();
 };
 #endif
