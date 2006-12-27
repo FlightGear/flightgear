@@ -348,13 +348,16 @@ bool FGAISchedule::update(time_t now)
 	  
 	  SGWayPoint current  (lon,
 			       lat,
-			       (*i)->getCruiseAlt());
+			       (*i)->getCruiseAlt(), 
+			       SGWayPoint::SPHERICAL);
 	  SGWayPoint user (   userLongitude,
 			      userLatitude,
-			      (*i)->getCruiseAlt());
+			      (*i)->getCruiseAlt(), 
+			      SGWayPoint::SPHERICAL);
 	  SGWayPoint dest (   arr->getLongitude(),
 			      arr->getLatitude(),
-			      (*i)->getCruiseAlt());
+			      (*i)->getCruiseAlt(), 
+			      SGWayPoint::SPHERICAL);
 	  // We really only need distance to user
 	  // and course to destination 
 	  user.CourseAndDistance(current, &courseToUser, &distanceToUser);
@@ -474,10 +477,12 @@ double FGAISchedule::getSpeed()
  
   SGWayPoint dest (   dep->getLongitude(),
 		      dep->getLatitude(),
-		      (*i)->getCruiseAlt()); 
+		      (*i)->getCruiseAlt(), 
+		      SGWayPoint::SPHERICAL); 
   SGWayPoint curr (    arr->getLongitude(),
 		      arr->getLatitude(),
-		       (*i)->getCruiseAlt());
+		       (*i)->getCruiseAlt(), 
+		       SGWayPoint::SPHERICAL);
   remainingTimeEnroute     = (*i)->getArrivalTime() - (*i)->getDepartureTime();
   dest.CourseAndDistance(curr, &courseToDest, &distanceToDest);
   speed =  (distanceToDest*SG_METER_TO_NM) / 
