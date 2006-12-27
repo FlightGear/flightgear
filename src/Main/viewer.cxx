@@ -479,25 +479,24 @@ FGViewer::recalcLookFrom ()
   // The geodetic position of our base view position
   SGGeod geodPos = SGGeod::fromDegFt(lon, lat, alt);
   // The rotation rotating from the earth centerd frame to
-  // the horizontal local frame
-  SGQuatd hlOr = SGQuatd::fromLonLat(geodPos);
+  // the horizontal local OpenGL frame
+  SGQuatd hlOr = SGQuatd::viewHL(geodPos);
+
   // the rotation from the horizontal local frame to the basic view orientation
   SGQuatd hlToBody = SGQuatd::fromYawPitchRollDeg(head, pitch, roll);
+  hlToBody = SGQuatd::simToView(hlToBody);
+
   // The cartesian position of the basic view coordinate
   SGVec3d position = SGVec3d::fromGeod(geodPos);
   // the rotation offset, don't know why heading is negative here ...
-  SGQuatd viewOffsetOr =
+  SGQuatd viewOffsetOr = SGQuatd::simToView(
     SGQuatd::fromYawPitchRollDeg(-_heading_offset_deg, _pitch_offset_deg,
-                                 _roll_offset_deg);
-
-  // The offset vector is meant: x +right/-left, y +up/-down, z, +back/-fwd
-  // We work in the body coordinate system which is slightly different
-  SGVec3d off(-_offset_m.z(), _offset_m.x(), -_offset_m.y());
+                                 _roll_offset_deg));
 
   // Compute the eyepoints orientation and position
   // wrt the earth centered frame - that is global coorinates
   SGQuatd ec2body = hlOr*hlToBody;
-  _absolute_view_pos = position + ec2body.backTransform(off);
+  _absolute_view_pos = position + ec2body.backTransform(_offset_m);
   mViewOrientation = ec2body*viewOffsetOr;
 }
 
@@ -583,14 +582,14 @@ FGViewer::recalcLookAt ()
   // the view direction
   SGVec3d dir = normalize(atCart - eyeCart);
   // the up directon
-  SGVec3d up = ec2eye.backTransform(SGVec3d(0, 0, 1));
+  SGVec3d up = ec2eye.backTransform(SGVec3d(0, 0, -1));
   // rotate dir to the 0-th unit vector
   // rotate up to 2-th unit vector
-  mViewOrientation = SGQuatd::fromRotateTo(dir, 0, up, 2);
+  mViewOrientation = SGQuatd::fromRotateTo(-dir, 2, up, 1);
 }
 
 void
-FGViewer::dampEyeData (double &roll_deg, double &pitch_deg, double &heading_deg)
+FGViewer::dampEyeData(double &roll_deg, double &pitch_deg, double &heading_deg)
 {
   const double interval = 0.01;
 

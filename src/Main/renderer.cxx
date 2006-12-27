@@ -386,11 +386,6 @@ FGRenderer::init( void ) {
     sceneView->setUpdateVisitor(mUpdateVisitor.get());
 
     sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-
-    sceneView->getCamera()->setViewMatrix(osg::Matrix(0, 0,-1, 0,
-                                                      1, 0, 0, 0,
-                                                      0,-1, 0, 0,
-                                                      0, 0, 0, 1));
     sceneView->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     sceneView->getCamera()->setClearMask(GL_COLOR_BUFFER_BIT);
 
