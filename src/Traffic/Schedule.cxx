@@ -235,6 +235,7 @@ bool FGAISchedule::update(time_t now)
   if (!deptime)
     deptime = (*flights.begin())->getDepartureTime();
   FGScheduledFlightVecIterator i = flights.begin();
+  SG_LOG (SG_GENERAL, SG_INFO,"Processing registration " << registration << " with callsign " << (*i)->getCallSign())
   if (AIManagerRef)
     {
       // Check if this aircraft has been released. 
@@ -263,7 +264,6 @@ bool FGAISchedule::update(time_t now)
       // object for it. 
       //if ((i->getDepartureTime() < now) && (i->getArrivalTime() > now))
       
-
       // Part of this flight is in the future.
       if ((*i)->getArrivalTime() > now)
 	{
