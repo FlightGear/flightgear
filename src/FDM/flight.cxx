@@ -870,6 +870,16 @@ FGInterface::get_agl_m(double t, const double pt[3],
   return ret;
 }
 
+bool
+FGInterface::get_agl_m(double t, const double pt[3],
+                       double contact[3], double normal[3], double vel[3],
+                       int *type, const SGMaterial **material, double *agl)
+{
+  bool ret = ground_cache.get_agl(t, pt, 2.0, contact, normal, vel, type,
+                                  material, agl);
+  return ret;
+}
+
 // Legacy interface just kept because of JSBSim
 bool
 FGInterface::get_agl_ft(double t, const double pt[3],

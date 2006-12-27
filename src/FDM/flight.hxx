@@ -1128,6 +1128,9 @@ public:
                    double contact[3], double normal[3], double vel[3],
                    int *type, double *loadCapacity,
                    double *frictionFactor, double *agl);
+    bool get_agl_m(double t, const double pt[3],
+                       double contact[3], double normal[3], double vel[3],
+                       int *type, const SGMaterial **material,double *agl);
     bool get_agl_ft(double t, const double pt[3],
                     double contact[3], double normal[3], double vel[3],
                     int *type, double *loadCapacity,
