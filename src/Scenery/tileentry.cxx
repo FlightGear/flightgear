@@ -317,58 +317,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         }
     }
 
-    if ( vasi_lights_transform.get() ) {
-        // we need to lift the lights above the terrain to avoid
-        // z-buffer fighting.  We do this based on our altitude and
-        // the distance this tile is away from scenery center.
-        SGVec3f lift_vec(up);
-
-        // we fudge agl by 30 meters so that the lifting function
-        // doesn't phase in until we are > 30m agl.
-        double agl;
-        agl = globals->get_current_view()->getAltitudeASL_ft()*SG_FEET_TO_METER
-          - globals->get_current_view()->getSGLocation()->get_cur_elev_m()
-          - 30.0;
-        if ( agl < 0.0 ) {
-            agl = 0.0;
-        }
-        
-        if ( general.get_glDepthBits() > 16 ) {
-            lift_vec *= 0.25 + agl / 400.0 + agl*agl / 5000000.0;
-        } else {
-            lift_vec *= 0.25 + agl / 150.0;
-        }
-
-        vasi_lights_transform->setTransform( lt_trans + toVec3d(lift_vec) );
-
-        // generally, vasi lights are always on
-        vasi_lights_selector->setAllChildrenOn();
-    }
-
     if ( rwy_lights_transform.get() ) {
-        // we need to lift the lights above the terrain to avoid
-        // z-buffer fighting.  We do this based on our altitude and
-        // the distance this tile is away from scenery center.
-        SGVec3f lift_vec(up);
-
-        // we fudge agl by 30 meters so that the lifting function
-        // doesn't phase in until we are > 30m agl.
-        double agl;
-        agl = globals->get_current_view()->getAltitudeASL_ft()*SG_FEET_TO_METER
-          - globals->get_current_view()->getSGLocation()->get_cur_elev_m()
-          - 30.0;
-        if ( agl < 0.0 ) {
-            agl = 0.0;
-        }
-        
-        if ( general.get_glDepthBits() > 16 ) {
-            lift_vec *= 0.01 + agl / 400.0 + agl*agl / 5000000.0;
-        } else {
-            lift_vec *= 0.25 + agl / 150.0;
-        }
-
-        rwy_lights_transform->setTransform( lt_trans + toVec3d(lift_vec) );
-
         // turn runway lights on/off based on sun angle and visibility
         float sun_angle = l->get_sun_angle() * SGD_RADIANS_TO_DEGREES;
         if ( sun_angle > 85 ||
@@ -380,29 +329,6 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
     }
 
     if ( taxi_lights_transform.get() ) {
-        // we need to lift the lights above the terrain to avoid
-        // z-buffer fighting.  We do this based on our altitude and
-        // the distance this tile is away from scenery center.
-        SGVec3f lift_vec(up);
-
-        // we fudge agl by 30 meters so that the lifting function
-        // doesn't phase in until we are > 30m agl.
-        double agl;
-        agl = globals->get_current_view()->getAltitudeASL_ft()*SG_FEET_TO_METER
-          - globals->get_current_view()->getSGLocation()->get_cur_elev_m()
-          - 30.0;
-        if ( agl < 0.0 ) {
-            agl = 0.0;
-        }
-        
-        if ( general.get_glDepthBits() > 16 ) {
-            lift_vec *= 0.01 + agl / 400.0 + agl*agl / 5000000.0;
-        } else {
-            lift_vec *= 0.25 + agl / 150.0;
-        }
-
-        taxi_lights_transform->setTransform( lt_trans + toVec3d(lift_vec) );
-
         // turn taxi lights on/off based on sun angle and visibility
         float sun_angle = l->get_sun_angle() * SGD_RADIANS_TO_DEGREES;
         if ( sun_angle > 85 ||
