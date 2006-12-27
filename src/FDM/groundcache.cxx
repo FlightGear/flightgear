@@ -527,6 +527,7 @@ public:
         t.rotation = mGroundProperty.rot;
         t.rotation_pivot = mGroundProperty.pivot - mGroundCache->cache_center;
         t.type = mGroundProperty.type;
+        t.material=mGroundProperty.material;
         mGroundCache->triangles.push_back(t);
       }
     }
