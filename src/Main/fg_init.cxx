@@ -1695,13 +1695,12 @@ bool fgInitSubsystems() {
      // After the AI and ATC systems have been initialized properly.
      // AI Traffic manager
      globals->add_subsystem("Traffic Manager", new FGTrafficManager);
-	     FGTrafficManager *dispatcher = 
-	     (FGTrafficManager*) globals->get_subsystem("Traffic Manager");
-	     SGPath path = globals->get_fg_root();
-	     path.append("/Traffic/fgtraffic.xml");
-     readXML(path.str(),
-	*dispatcher);
-	     //globals->get_subsystem("Traffic Manager")->init();
+     //FGTrafficManager *dispatcher = 
+     //  (FGTrafficManager*) globals->get_subsystem("Traffic Manager");
+     //SGPath path = globals->get_fg_root();
+     //path.append("/Traffic/fgtraffic.xml");
+     //readXML(path.str(),
+     //	*dispatcher);
 
 
     ////////////////////////////////////////////////////////////////////
