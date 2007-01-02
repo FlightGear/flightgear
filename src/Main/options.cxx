@@ -1673,7 +1673,16 @@ fgUsage (bool verbose)
                     tmp.append(", -");
                     tmp.append(short_name->getStringValue());
                 }
-
+				
+                if (tmp.size() <= 25) {
+                    msg+= "   --";
+                    msg += tmp;
+                    msg.append( 27-tmp.size(), ' ');
+                } else {
+                    msg += "\n   --";
+                    msg += tmp + '\n';
+                    msg.append(32, ' ');
+                }
                 char cstr[96];
                 if (tmp.size() <= 25) {
                     snprintf(cstr, 96, "   --%-27s", tmp.c_str());
@@ -1684,10 +1693,8 @@ fgUsage (bool verbose)
                 // There may be more than one <description> tag assosiated
                 // with one option
 
-                msg += cstr;
-                vector<SGPropertyNode_ptr>desc =
-                                          option[k]->getChildren("description");
-
+                vector<SGPropertyNode_ptr> desc;
+                desc = option[k]->getChildren("description");
                 if (desc.size() > 0) {
                    for ( unsigned int l = 0; l < desc.size(); l++) {
 
@@ -1702,9 +1709,7 @@ fgUsage (bool verbose)
                          string t_str = trans_desc[m]->getStringValue();
 
                          if ((m > 0) || ((l > 0) && m == 0)) {
-                            snprintf(cstr, 96, "%32c", ' ');
-                            msg += cstr;
-
+                            msg.append( 32, ' ');
                          }
 
                          // If the string is too large to fit on the screen,
@@ -1713,9 +1718,8 @@ fgUsage (bool verbose)
                          while ( t_str.size() > 47 ) {
 
                             unsigned int m = t_str.rfind(' ', 47);
-                            msg += t_str.substr(0, m);
-                            snprintf(cstr, 96, "\n%32c", ' ');
-                            msg += cstr;
+                            msg += t_str.substr(0, m) + '\n';
+                            msg.append( 32, ' ');
 
                             t_str.erase(t_str.begin(), t_str.begin() + m + 1);
                         }
@@ -1726,8 +1730,8 @@ fgUsage (bool verbose)
             }
         }
 
-        SGPropertyNode *name =
-                            locale->getNode(section[j]->getStringValue("name"));
+        SGPropertyNode *name;
+        name = locale->getNode(section[j]->getStringValue("name"));
 
         if (!msg.empty() && name) {
            cout << endl << name->getStringValue() << ":" << endl;
@@ -1810,25 +1814,27 @@ static void fgSearchAircraft(const SGPath &path, string_list &aircraft,
 	     	status = node->getNode("status");
           }
 
-          char cstr[96];
-	  //additionally display status information where it is available
-          
-          if (strlen(dire->d_name) <= 27) {
-             snprintf(cstr, 96, "   %-27s  %s", dire->d_name,
-                      (desc) ? desc->getStringValue() : "");
+          //additionally display status information where it is available
 
-          } else {
-             snprintf(cstr, 96, "   %-27s\n%32c%s", dire->d_name, ' ',
-                      (desc) ? desc->getStringValue() : "");
+          string descStr("   ");
+          descStr += dire->d_name;
+          if (desc) {
+              if (descStr.size() <= 27+3) {
+                descStr.append(29+3-descStr.size(), ' ');
+              } else {
+                descStr += '\n';
+                descStr.append( 32, ' ');
+              }
+              descStr += desc->getStringValue();
           }
-
-	  SGPropertyNode * required_status
+  
+          SGPropertyNode * required_status
                              = fgGetNode ("/sim/aircraft-min-status", true);
 	  
 	  // If the node holds the value "all", then there wasn't any status 
 	  // level specified, so we simply go ahead and output ALL aircraft
 	  if (strcmp(required_status->getStringValue(),"all")==0) {	   
-		  aircraft.push_back(cstr);
+		  aircraft.push_back(descStr);
 		  }
 	  else
 	  {
@@ -1840,7 +1846,7 @@ static void fgSearchAircraft(const SGPath &path, string_list &aircraft,
      	  //Compare (minimally) required status level with actual aircraft status:
 	   if (	getNumMaturity(status->getStringValue() ) >= 
 	  	getNumMaturity(required_status->getStringValue() ) )
-				  aircraft.push_back(cstr); }
+				  aircraft.push_back(descStr); }
 	  			  		  
 	  }
       
