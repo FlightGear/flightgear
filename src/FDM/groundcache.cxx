@@ -364,6 +364,7 @@ public:
       gp.type = gp.material->get_solid() ? FGInterface::Solid : FGInterface::Water;
       return true;
     }
+    gp.type = FGInterface::Unknown;
     osg::Referenced* base = node.getUserData();
     if (!base)
       return true;
@@ -527,7 +528,7 @@ public:
         t.rotation = mGroundProperty.rot;
         t.rotation_pivot = mGroundProperty.pivot - mGroundCache->cache_center;
         t.type = mGroundProperty.type;
-        t.material=mGroundProperty.material;
+        t.material = mGroundProperty.material;
         mGroundCache->triangles.push_back(t);
       }
     }
@@ -543,8 +544,11 @@ public:
       isectpoint.osg() = isectpoint.osg()*mLocalToGlobal;
       isectpoint += mGroundCache->cache_center;
       double this_radius = length(isectpoint);
-      if (mGroundCache->ground_radius < this_radius)
+      if (mGroundCache->ground_radius < this_radius) {
         mGroundCache->ground_radius = this_radius;
+        mGroundCache->_type = mGroundProperty.type;
+        mGroundCache->_material = mGroundProperty.material;
+      }
     }
   }
   
@@ -840,7 +844,9 @@ FGGroundCache::get_agl(double t, const SGVec3d& dpt, double max_altoff,
   // The altitude is the distance of the requested point from the
   // contact point.
   *agl = dot(down, contact - dpt);
-  *type = FGInterface::Unknown;
+  *type = _type;
+  if (material)
+    *material = _material;
 
   return ret;
 }

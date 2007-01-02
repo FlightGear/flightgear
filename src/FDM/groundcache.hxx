@@ -122,6 +122,10 @@ private:
     // Approximate ground radius.
     // In case the aircraft is too high above ground.
     double ground_radius;
+    // Ground type
+    int _type;
+    // the simgear material reference, contains friction coeficients ...
+    const SGMaterial* _material;
     // The time reference for later call to intersection test routines.
     // Is required since we will have moving triangles in carriers.
     double cache_ref_time;
