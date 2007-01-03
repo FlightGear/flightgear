@@ -1683,13 +1683,6 @@ fgUsage (bool verbose)
                     msg += tmp + '\n';
                     msg.append(32, ' ');
                 }
-                char cstr[96];
-                if (tmp.size() <= 25) {
-                    snprintf(cstr, 96, "   --%-27s", tmp.c_str());
-                } else {
-                    snprintf(cstr, 96, "\n   --%s\n%32c", tmp.c_str(), ' ');
-                }
-
                 // There may be more than one <description> tag assosiated
                 // with one option
 
