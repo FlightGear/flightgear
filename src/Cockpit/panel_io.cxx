@@ -178,7 +178,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
   // button-less actions are fired initially
   if (!node->hasValue("w") || !node->hasValue("h")) {
     for (i = 0; i < bindings.size(); i++) {
-      FGBinding b(bindings[i]);
+      SGBinding b(bindings[i], globals->get_props());
       b.fire();
     }
     return 0;
@@ -207,7 +207,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
 
     binding = dest->getChild("binding", j, true);
     copyProperties(bindings[i], binding);
-    action->addBinding(new FGBinding(binding), 0);
+    action->addBinding(new SGBinding(binding, globals->get_props()), 0);
   }
 
   if (node->hasChild("mod-up")) {
@@ -219,7 +219,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
 
       binding = dest->getChild("binding", j, true);
       copyProperties(bindings[i], binding);
-      action->addBinding(new FGBinding(binding), 1);
+      action->addBinding(new SGBinding(binding, globals->get_props()), 1);
     }
   }
 

@@ -661,7 +661,7 @@ FGPanelAction::~FGPanelAction ()
 }
 
 void
-FGPanelAction::addBinding (FGBinding * binding, int updown)
+FGPanelAction::addBinding (SGBinding * binding, int updown)
 {
   _bindings[updown].push_back(binding);
 }

@@ -46,16 +46,10 @@
 #include <osg/LightSource>
 #include <osg/NodeCallback>
 #include <osg/Notify>
-#include <osg/MatrixTransform>
-#include <osg/Multisample>
-#include <osg/Point>
 #include <osg/PolygonMode>
+#include <osg/PolygonOffset>
 #include <osg/ShadeModel>
 #include <osg/TexEnv>
-#include <osg/TexEnvCombine>
-#include <osg/TexGen>
-#include <osg/TexMat>
-#include <osg/ColorMatrix>
 
 #include <osgUtil/SceneView>
 #include <osgUtil/UpdateVisitor>
@@ -135,7 +129,6 @@ public:
     if((fgGetBool("/sim/atc/enabled"))
        || (fgGetBool("/sim/ai-traffic/enabled")))
       globals->get_ATC_display()->update(delta_time_sec, state);
-
 
     puDisplay();
 
@@ -356,6 +349,12 @@ void
 FGRenderer::init( void ) {
 
     osg::initNotifyLevel();
+
+    // The number of polygon-offset "units" to place between layers.  In
+    // principle, one is supposed to be enough.  In practice, I find that
+    // my hardware/driver requires many more.
+    osg::PolygonOffset::setUnitsMultiplier(1);
+    osg::PolygonOffset::setFactorMultiplier(1);
 
     // Go full screen if requested ...
     if ( fgGetBool("/sim/startup/fullscreen") )
@@ -797,6 +796,12 @@ FGRenderer::update( bool refresh_camera_settings ) {
     mUpdateVisitor->setLight(direction, l->scene_ambient(),
                              l->scene_diffuse(), l->scene_specular());
     mUpdateVisitor->setVisibility(actual_visibility);
+
+    if (fgGetBool("/sim/panel-hotspots"))
+      sceneView->setCullMask(~0u);
+    else
+      sceneView->setCullMask(~SG_NODEMASK_PICK_BIT);
+
     sceneView->update();
     sceneView->cull();
     sceneView->draw();
@@ -839,9 +844,6 @@ FGRenderer::resize( int width, int height ) {
 
       setFOV( viewmgr->get_current_view()->get_h_fov(),
               viewmgr->get_current_view()->get_v_fov() );
-      // cout << "setFOV(" << viewmgr->get_current_view()->get_h_fov()
-      //      << ", " << viewmgr->get_current_view()->get_v_fov() << ")"
-      //      << endl;
     }
 }
 

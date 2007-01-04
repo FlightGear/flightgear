@@ -21,7 +21,7 @@ SG_USING_STD(vector);
 
 class puMenuBar;
 class puObject;
-class FGBinding;
+class SGBinding;
 
 
 /**
@@ -124,7 +124,7 @@ private:
     puMenuBar * _menuBar;
 
     // A map of bindings for the menubar.
-    map<string,vector<FGBinding *> > _bindings;
+    map<string,vector<SGBinding *> > _bindings;
 
     // These are hoops that we have to jump through because PUI doesn't
     // do memory management for lists.  We have to allocate the arrays,

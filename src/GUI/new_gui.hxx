@@ -27,9 +27,10 @@ SG_USING_STD(string);
 
 #include <Main/fg_props.hxx>
 
+class SGBinding;
+
 class FGMenuBar;
 class FGDialog;
-class FGBinding;
 class FGColor;
 class FGFontCache;
 

@@ -156,7 +156,7 @@ void
 FGMenuBar::fireItem (puObject * item)
 {
     const char * name = item->getLegend();
-    vector<FGBinding *> &bindings = _bindings[name];
+    vector<SGBinding *> &bindings = _bindings[name];
     int nBindings = bindings.size();
 
     for (int i = 0; i < nBindings; i++)
@@ -194,7 +194,7 @@ FGMenuBar::make_menu (SGPropertyNode * node)
 
             binding = dest->getChild("binding", m, true);
             copyProperties(bindings[k], binding);
-            _bindings[items[j]].push_back(new FGBinding(binding));
+            _bindings[items[j]].push_back(new SGBinding(binding, globals->get_props()));
         }
     }
 
@@ -283,7 +283,7 @@ FGMenuBar::destroy_menubar ()
 
                                 // Delete all those bindings
     SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings");
-    map<string,vector<FGBinding *> >::iterator it;
+    map<string,vector<SGBinding *> >::iterator it;
     it = _bindings.begin();
     for (it = _bindings.begin(); it != _bindings.end(); it++) {
         SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings for " << it->first);

@@ -41,7 +41,9 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/scene/util/SGSceneUserData.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Autopilot/xmlauto.hxx>
@@ -59,7 +61,6 @@
 
 #include <Scenery/scenery.hxx>
 #include <Main/renderer.hxx>
-#include <simgear/math/sg_geodesy.hxx>
 
 SG_USING_STD(ifstream);
 SG_USING_STD(string);
@@ -98,87 +99,6 @@ getModAlt ()
 {
   return bool(fgGetKeyModifiers() & KEYMOD_ALT);
 }
-
-
-////////////////////////////////////////////////////////////////////////
-// Implementation of FGBinding.
-////////////////////////////////////////////////////////////////////////
-
-FGBinding::FGBinding ()
-  : _command(0),
-    _arg(new SGPropertyNode),
-    _setting(0)
-{
-}
-
-FGBinding::FGBinding (const SGPropertyNode * node)
-  : _command(0),
-    _arg(0),
-    _setting(0)
-{
-  read(node);
-}
-
-FGBinding::~FGBinding ()
-{
-  _arg->getParent()->removeChild(_arg->getName(), _arg->getIndex(), false);
-}
-
-void
-FGBinding::read (const SGPropertyNode * node)
-{
-  const SGPropertyNode * conditionNode = node->getChild("condition");
-  if (conditionNode != 0)
-    setCondition(sgReadCondition(globals->get_props(), conditionNode));
-
-  _command_name = node->getStringValue("command", "");
-  if (_command_name.empty()) {
-    SG_LOG(SG_INPUT, SG_WARN, "No command supplied for binding.");
-    _command = 0;
-    return;
-  }
-
-  _arg = (SGPropertyNode *)node;
-  _setting = 0;
-}
-
-void
-FGBinding::fire () const
-{
-  if (test()) {
-    if (_command == 0)
-      _command = globals->get_commands()->getCommand(_command_name);
-    if (_command == 0) {
-      SG_LOG(SG_INPUT, SG_WARN, "No command attached to binding");
-    } else if (!(*_command)(_arg)) {
-      SG_LOG(SG_INPUT, SG_ALERT, "Failed to execute command "
-             << _command_name);
-    }
-  }
-}
-
-void
-FGBinding::fire (double offset, double max) const
-{
-  if (test()) {
-    _arg->setDoubleValue("offset", offset/max);
-    fire();
-  }
-}
-
-void
-FGBinding::fire (double setting) const
-{
-  if (test()) {
-                                // A value is automatically added to
-                                // the args
-    if (_setting == 0)          // save the setting node for efficiency
-      _setting = _arg->getChild("setting", 0, true);
-    _setting->setDoubleValue(setting);
-    fire();
-  }
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -341,6 +261,16 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
                                 // Pass on to PUI and the panel if
                                 // requested, and return if one of
                                 // them consumes the event.
+
+  if (updown != MOUSE_BUTTON_DOWN) {
+    // Execute the mouse up event in any case, may be we should
+    // stop processing here?
+    while (!_activePickCallbacks[b].empty()) {
+      _activePickCallbacks[b].front()->buttonReleased();
+      _activePickCallbacks[b].pop_front();
+    }
+  }
+
   if (mode.pass_through) {
     if (puMouse(b, updown, x, y))
       return;
@@ -351,28 +281,33 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
     else if (fgHandle3DPanelMouseEvent(b, updown, x, y))
       return;
     else {
-      // pui and the panel didn't want the click event so compute a
-      // terrain intersection point corresponding to the mouse click
-      // and be happy.
-      FGScenery* scenery = globals->get_scenery();
-      SGVec3d start, dir, hit;
-      if (!b && updown == MOUSE_BUTTON_DOWN
-          && FGRenderer::getPickInfo(start, dir, x, y)
-          && scenery->get_cart_ground_intersection(start, dir, hit)) {
+      // pui didn't want the click event so compute a
+      // scenegraph intersection point corresponding to the mouse click
+      if (updown == MOUSE_BUTTON_DOWN) {
+        FGScenery* scenery = globals->get_scenery();
+        SGVec3d start, dir;
 
-        SGGeod geod = SGGeod::fromCart(hit);
-        SGPropertyNode *c = fgGetNode("/sim/input/click", true);
-        c->setDoubleValue("longitude-deg", geod.getLongitudeDeg());
-        c->setDoubleValue("latitude-deg", geod.getLatitudeDeg());
-        c->setDoubleValue("elevation-m", geod.getElevationM());
-        c->setDoubleValue("elevation-ft", geod.getElevationFt());
-
-        fgSetBool("/sim/signals/click", 1);
+        // Get the list of hit callbacks. Take the first callback that
+        // accepts the mouse button press and ignore the rest of them
+        // That is they get sorted by distance and by scenegraph depth.
+        // The nearest one is the first one and the deepest
+        // (the most specialized one in the scenegraph) is the first.
+        if (FGRenderer::getPickInfo(start, dir, x, y)) {
+          std::vector<SGSceneryPick> pickList;
+          scenery->pick(start, dir, pickList);
+          std::vector<SGSceneryPick>::const_iterator i;
+          for (i = pickList.begin(); i != pickList.end(); ++i) {
+            if (i->callback->buttonPressed(b, i->info)) {
+              _activePickCallbacks[b].push_back(i->callback);
+              break;
+            }
+          }
+        }
       }
     }
   }
 
-                                // OK, PUI and the panel didn't want the click
+  // OK, PUI and the panel didn't want the click
   if (b >= MAX_MOUSE_BUTTONS) {
     SG_LOG(SG_INPUT, SG_ALERT, "Mouse button " << b
            << " where only " << MAX_MOUSE_BUTTONS << " expected");
@@ -924,6 +859,16 @@ FGInput::_update_mouse ( double dt )
       m.save_x = m.x;
       m.save_y = m.y;
   }
+
+  // handle repeatable mouse press events
+  std::map<int, std::list<SGSharedPtr<SGPickCallback> > >::iterator mi;
+  for (mi = _activePickCallbacks.begin();
+       mi != _activePickCallbacks.end(); ++mi) {
+    std::list<SGSharedPtr<SGPickCallback> >::iterator li;
+    for (li = mi->second.begin(); li != mi->second.end(); ++li) {
+      (*li)->update(dt);
+    }
+  }
 }
 
 void
@@ -934,8 +879,9 @@ FGInput::_update_button (button &b, int modifiers, bool pressed,
                                 // The press event may be repeated.
     if (!b.last_state || b.is_repeatable) {
       SG_LOG( SG_INPUT, SG_DEBUG, "Button has been pressed" );
-      for (unsigned int k = 0; k < b.bindings[modifiers].size(); k++)
+      for (unsigned int k = 0; k < b.bindings[modifiers].size(); k++) {
         b.bindings[modifiers][k]->fire(x, y);
+      }
     }
   } else {
                                 // The release event is never repeated.
@@ -963,7 +909,7 @@ FGInput::_read_bindings (const SGPropertyNode * node,
 
     if (!strcmp(cmd, "nasal") && _module[0])
       bindings[i]->setStringValue("module", _module);
-    binding_list[modifiers].push_back(new FGBinding(bindings[i]));
+    binding_list[modifiers].push_back(new SGBinding(bindings[i], globals->get_props()));
   }
 
                                 // Read nested bindings for modifiers
@@ -985,7 +931,7 @@ FGInput::_read_bindings (const SGPropertyNode * node,
 }
 
 
-const vector<FGBinding *> &
+const FGInput::binding_list_t&
 FGInput::_find_key_bindings (unsigned int k, int modifiers)
 {
   unsigned char kc = (unsigned char)k;

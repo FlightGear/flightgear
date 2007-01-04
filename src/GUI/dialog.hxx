@@ -30,7 +30,6 @@ class GUI_ID { public: GUI_ID(int id) : id(id) {} int id; };
 
 
 class FGDialog;
-class FGBinding;
 class NewGUI;
 class FGColor;
 

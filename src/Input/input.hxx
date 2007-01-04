@@ -35,15 +35,17 @@
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/structure/commands.hxx>
+#include <simgear/structure/SGBinding.hxx>
 #include <simgear/props/condition.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/scene/util/SGSceneUserData.hxx>
 
 #include <Main/fg_os.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 #include <map>
+#include <list>
 #include <vector>
 
 SG_USING_STD(map);
@@ -59,110 +61,6 @@ SG_USING_STD(vector);
 #else
 #define TGT_PLATFORM	"unix"
 #endif
-
-
-
-////////////////////////////////////////////////////////////////////////
-// General binding support.
-////////////////////////////////////////////////////////////////////////
-
-
-/**
- * An input binding of some sort.
- *
- * <p>This class represents a binding that can be assigned to a
- * keyboard key, a joystick button or axis, or even a panel
- * instrument.</p>
- */
-class FGBinding : public SGConditional
-{
-public:
-
-  /**
-   * Default constructor.
-   */
-  FGBinding ();
-
-
-  /**
-   * Convenience constructor.
-   *
-   * @param node The binding will be built from this node.
-   */
-  FGBinding (const SGPropertyNode * node);
-
-
-  /**
-   * Destructor.
-   */
-  virtual ~FGBinding ();
-
-
-  /**
-   * Get the command name.
-   *
-   * @return The string name of the command for this binding.
-   */
-  virtual const string &getCommandName () const { return _command_name; }
-
-
-  /**
-   * Get the command itself.
-   *
-   * @return The command associated with this binding, or 0 if none
-   * is present.
-   */
-  virtual SGCommandMgr::command_t getCommand () const { return _command; }
-
-
-  /**
-   * Get the argument that will be passed to the command.
-   *
-   * @return A property node that will be passed to the command as its
-   * argument, or 0 if none was supplied.
-   */
-  virtual const SGPropertyNode * getArg () { return _arg; }
-  
-
-  /**
-   * Read a binding from a property node.
-   *
-   * @param node The property node containing the binding.
-   */
-  virtual void read (const SGPropertyNode * node);
-
-
-  /**
-   * Fire a binding.
-   */
-  virtual void fire () const;
-
-
-  /**
-   * Fire a binding with a scaled movement (rather than absolute position).
-   */
-  virtual void fire (double offset, double max) const;
-
-
-  /**
-   * Fire a binding with a setting (i.e. joystick axis).
-   *
-   * A double 'setting' property will be added to the arguments.
-   *
-   * @param setting The input setting, usually between -1.0 and 1.0.
-   */
-  virtual void fire (double setting) const;
-
-
-private:
-                                // just to be safe.
-  FGBinding (const FGBinding &binding);
-
-  string _command_name;
-  mutable SGCommandMgr::command_t _command;
-  mutable SGPropertyNode_ptr _arg;
-  mutable SGPropertyNode_ptr _setting;
-};
 
 
 
@@ -268,7 +166,7 @@ private:
   struct mouse;
   friend struct mouse;
 
-  typedef vector<FGBinding *> binding_list_t;
+  typedef vector<SGSharedPtr<SGBinding> > binding_list_t;
 
   /**
    * Settings for a key or button.
@@ -424,8 +322,8 @@ private:
   /**
    * Look up the bindings for a key code.
    */
-  const vector<FGBinding *> &_find_key_bindings (unsigned int k,
-						 int modifiers);
+  const binding_list_t& _find_key_bindings (unsigned int k,
+                                            int modifiers);
 
   button _key_bindings[MAX_KEYS];
   joystick _joystick_bindings[MAX_JOYSTICKS];
@@ -435,6 +333,11 @@ private:
    * Nasal module name/namespace.
    */
   char _module[32];
+
+  /**
+   * List of currently pressed mouse button events
+   */
+  std::map<int, std::list<SGSharedPtr<SGPickCallback> > > _activePickCallbacks;
 };
 
 #endif // _INPUT_HXX

@@ -32,7 +32,7 @@ struct GUIInfo
     virtual ~GUIInfo ();
 
     FGDialog * dialog;
-    vector <FGBinding *> bindings;
+    vector <SGBinding *> bindings;
     int key;
 };
 
@@ -746,7 +746,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 
             binding = dest->getChild("binding", j, true);
             copyProperties(bindings[i], binding);
-            info->bindings.push_back(new FGBinding(binding));
+            info->bindings.push_back(new SGBinding(binding, globals->get_props()));
         }
         object->setCallback(action_callback);
 

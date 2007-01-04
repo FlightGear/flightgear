@@ -250,7 +250,7 @@ public:
 				// Setters.
 
 				// transfer pointer ownership
-  virtual void addBinding (FGBinding * binding, int updown);
+  virtual void addBinding (SGBinding * binding, int updown);
   virtual void setButton (int button) { _button = button; }
   virtual void setX (int x) { _x = x; }
   virtual void setY (int y) { _y = y; }
@@ -271,7 +271,7 @@ public:
   virtual bool doAction (int updown);
 
 private:
-  typedef vector<FGBinding *> binding_list_t;
+  typedef vector<SGBinding *> binding_list_t;
 
   int _button;
   int _x;
