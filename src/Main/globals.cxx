@@ -73,7 +73,7 @@ FGGlobals::FGGlobals() :
     props( new SGPropertyNode ),
     initial_state( NULL ),
     locale( NULL ),
-    commands( new SGCommandMgr ),
+    commands( SGCommandMgr::instance() ),
     model_lib( NULL ),
     acmodel( NULL ),
     model_mgr( NULL ),
@@ -103,7 +103,6 @@ FGGlobals::~FGGlobals()
     delete event_mgr;
     delete initial_state;
     delete props;
-    delete commands;
     delete io;
     delete fontcache;
     delete renderer;
