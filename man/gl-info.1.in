@@ -25,7 +25,7 @@ gl-info \- OpenGL test program for FlightGear
 .B gl-info
 is an OpenGL test program used to verify a valid OpenGL environment.
 .SH BUGS
-Send bug reports to <flightgear-devel@flightgear.org>.
+Send bug reports to <flightgear-devel@lists.sourceforge.net>.
 .SH SEE ALSO
 fgfs(1)
 .SH AUTHORS

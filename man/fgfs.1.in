@@ -509,7 +509,7 @@ $FG_ROOT/mice.xml
 Mouse bindings.
 .RE
 .SH BUGS
-Send bug reports to <flightgear-devel@flightgear.org>.
+Send bug reports to <flightgear-devel@lists.sourceforge.net>.
 .SH SEE ALSO
 fgjs(1)
 .SH AUTHORS

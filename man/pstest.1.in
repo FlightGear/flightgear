@@ -25,7 +25,7 @@ pstest \- engine model test for FlightGear
 .B pstest
 is a test program that models a Continental IO-520-M engine.
 .SH BUGS
-Send bug reports to <flightgear-devel@flightgear.org>.
+Send bug reports to <flightgear-devel@lists.sourceforge.net>.
 .SH SEE ALSO
 fgfs(1)
 .SH AUTHORS

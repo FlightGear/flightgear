@@ -25,7 +25,7 @@ est-epsilon \- GLfloat epsilon estimation program for FlightGear
 .B est-epsilon
 is an OpenGL test program used to show epsilon estimation of GLfloat.
 .SH BUGS
-Send bug reports to <flightgear-devel@flightgear.org>.
+Send bug reports to <flightgear-devel@lists.sourceforge.net>.
 .SH SEE ALSO
 fgfs(1)
 .SH AUTHORS

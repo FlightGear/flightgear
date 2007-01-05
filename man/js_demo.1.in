@@ -25,7 +25,7 @@ js_demo \- joystick test program for FlightGear
 .B js_demo
 is a joystick test program for the FlightGear Flight Simulator.
 .SH BUGS
-Send bug reports to <flightgear-devel@flightgear.org>.
+Send bug reports to <flightgear-devel@lists.sourceforge.net>.
 .SH SEE ALSO
 fgfs(1), fgjs(1)
 .SH AUTHORS

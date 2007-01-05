@@ -26,7 +26,7 @@ fgjs \- FlightGear Joystick Utility
 is a joystick utility for the FlightGear Flight Simulator.  It allows
 you to generate an appropriate configuration file for your joystick.
 .SH BUGS
-Send bug reports to <flightgear-devel@flightgear.org>.
+Send bug reports to <flightgear-devel@lists.sourceforge.net>.
 .SH SEE ALSO
 fgfs(1)
 .SH AUTHORS
