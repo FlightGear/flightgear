@@ -378,6 +378,8 @@ FGPanel::draw(osg::State& state)
     panelStateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
   state.pushStateSet(panelStateSet.get());
   state.apply();
+  state.setActiveTextureUnit(0);
+  state.setClientActiveTextureUnit(0);
 
   FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
   sgCopyVec4( panel_color, l->scene_diffuse().data());
@@ -390,6 +392,9 @@ FGPanel::draw(osg::State& state)
   if (_bg != 0) {
     state.pushStateSet(_bg.get());
     state.apply();
+    state.setActiveTextureUnit(0);
+    state.setClientActiveTextureUnit(0);
+
     glBegin(GL_POLYGON);
     glTexCoord2f(0.0, 0.0); glVertex2f(WIN_X, WIN_Y);
     glTexCoord2f(1.0, 0.0); glVertex2f(WIN_X + _width, WIN_Y);
@@ -398,11 +403,17 @@ FGPanel::draw(osg::State& state)
     glEnd();
     state.popStateSet();
     state.apply();
+    state.setActiveTextureUnit(0);
+    state.setClientActiveTextureUnit(0);
+
   } else {
     for (int i = 0; i < 4; i ++) {
       // top row of textures...(1,3,5,7)
       state.pushStateSet(_mbg[i*2].get());
       state.apply();
+      state.setActiveTextureUnit(0);
+      state.setClientActiveTextureUnit(0);
+
       glBegin(GL_POLYGON);
       glTexCoord2f(0.0, 0.0); glVertex2f(WIN_X + (_width/4) * i, WIN_Y + (_height/2));
       glTexCoord2f(1.0, 0.0); glVertex2f(WIN_X + (_width/4) * (i+1), WIN_Y + (_height/2));
@@ -411,9 +422,15 @@ FGPanel::draw(osg::State& state)
       glEnd();
       state.popStateSet();
       state.apply();
+      state.setActiveTextureUnit(0);
+      state.setClientActiveTextureUnit(0);
+
       // bottom row of textures...(2,4,6,8)
       state.pushStateSet(_mbg[i*2+1].get());
       state.apply();
+      state.setActiveTextureUnit(0);
+      state.setClientActiveTextureUnit(0);
+
       glBegin(GL_POLYGON);
       glTexCoord2f(0.0, 0.0); glVertex2f(WIN_X + (_width/4) * i, WIN_Y);
       glTexCoord2f(1.0, 0.0); glVertex2f(WIN_X + (_width/4) * (i+1), WIN_Y);
@@ -422,6 +439,9 @@ FGPanel::draw(osg::State& state)
       glEnd();
       state.popStateSet();
       state.apply();
+      state.setActiveTextureUnit(0);
+      state.setClientActiveTextureUnit(0);
+
     }
   }
 
@@ -467,6 +487,9 @@ FGPanel::draw(osg::State& state)
 
   state.popStateSet();
   state.apply();
+  state.setActiveTextureUnit(0);
+  state.setClientActiveTextureUnit(0);
+
 
   // Draw yellow "hotspots" if directed to.  This is a panel authoring
   // feature; not intended to be high performance or to look good.
@@ -480,6 +503,9 @@ FGPanel::draw(osg::State& state)
 
     state.pushStateSet(hotspotStateSet.get());
     state.apply();
+    state.setActiveTextureUnit(0);
+    state.setClientActiveTextureUnit(0);
+
 
     glPushAttrib(GL_ENABLE_BIT);
     glDisable(GL_COLOR_MATERIAL);
@@ -492,6 +518,9 @@ FGPanel::draw(osg::State& state)
 
     state.popStateSet();
     state.apply();
+    state.setActiveTextureUnit(0);
+    state.setClientActiveTextureUnit(0);
+
   }
 }
 
@@ -1019,6 +1048,9 @@ FGTexturedLayer::draw (osg::State& state)
     transform();
     state.pushStateSet(_texture.getTexture());
     state.apply();
+    state.setActiveTextureUnit(0);
+    state.setClientActiveTextureUnit(0);
+
     glBegin(GL_POLYGON);
 
     if (_emissive) {
@@ -1036,6 +1068,9 @@ FGTexturedLayer::draw (osg::State& state)
     glEnd();
     state.popStateSet();
     state.apply();
+    state.setActiveTextureUnit(0);
+    state.setClientActiveTextureUnit(0);
+
   }
 }
 

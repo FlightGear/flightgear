@@ -124,7 +124,8 @@ public:
   {
     state.pushStateSet(getStateSet());
     state.apply();
-
+    state.setActiveTextureUnit(0);
+    state.setClientActiveTextureUnit(0);
 
     if((fgGetBool("/sim/atc/enabled"))
        || (fgGetBool("/sim/ai-traffic/enabled")))
@@ -176,6 +177,8 @@ public:
   {
     state.pushStateSet(getStateSet());
     state.apply();
+    state.setActiveTextureUnit(0);
+    state.setClientActiveTextureUnit(0);
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushClientAttrib(~0u);
@@ -531,6 +534,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
                           || fgGetBool("sim/sceneryloaded-override");
 
     if ( idle_state < 1000 || !scenery_loaded ) {
+        if (sceneView.valid() && sceneView->getState()) {
+            sceneView->getState()->setActiveTextureUnit(0);
+            sceneView->getState()->setClientActiveTextureUnit(0);
+        }
         // still initializing, draw the splash screen
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPushClientAttrib(~0u);
