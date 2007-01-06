@@ -9,20 +9,20 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -45,6 +45,7 @@ INCLUDES
 #include <models/flight_control/FGFilter.h>
 #include <models/flight_control/FGDeadBand.h>
 #include <models/flight_control/FGGain.h>
+#include <models/flight_control/FGPID.h>
 #include <models/flight_control/FGGradient.h>
 #include <models/flight_control/FGSwitch.h>
 #include <models/flight_control/FGSummer.h>
@@ -453,10 +454,9 @@ void FGFCS::SetPropFeather(int engineNum, bool setting)
 
 bool FGFCS::Load(Element* el)
 {
-  string name, file, fname, comp_name, interface_property_string;
-  unsigned i;
+  string name, file, fname, interface_property_string;
   vector <FGFCSComponent*> *Components;
-  Element *FCS_cfg, *document, *component_element, *property_element, *sensor_element;
+  Element *document, *component_element, *property_element, *sensor_element;
   Element *channel_element;
   ifstream* controls_file = new ifstream();
   FGXMLParse controls_file_parser;
@@ -474,7 +474,7 @@ bool FGFCS::Load(Element* el)
 
   if (name.empty()) {
     fname = el->GetAttributeValue("file");
-    file = FDMExec->GetAircraftPath() + separator + FDMExec->GetModelName() + separator + fname + ".xml";
+    file = FDMExec->GetFullAircraftPath() + separator + fname + ".xml";
     if (fname.empty()) {
       cerr << "FCS/Autopilot does not appear to be defined inline nor in a file" << endl;
       return false;
@@ -527,60 +527,42 @@ bool FGFCS::Load(Element* el)
 
   channel_element = document->FindElement("channel");
   while (channel_element) {
-    component_element = channel_element->FindElement("component");
-    if (component_element) {
-      cout << "This form of the component specification is being deprecated" << endl;
-    } else {
-      component_element = channel_element->GetElement();
-    }
+    component_element = channel_element->GetElement();
     while (component_element) {
-      comp_name = component_element->GetAttributeValue("type");
       try {
-        if ((comp_name == "LAG_FILTER") ||
-            (comp_name == "LEAD_LAG_FILTER") ||
-            (comp_name == "SECOND_ORDER_FILTER") ||
-            (comp_name == "WASHOUT_FILTER") ||
-            (comp_name == "INTEGRATOR") ||
-            (component_element->GetName() == string("lag_filter")) ||
+        if ((component_element->GetName() == string("lag_filter")) ||
             (component_element->GetName() == string("lead_lag_filter")) ||
             (component_element->GetName() == string("washout_filter")) ||
             (component_element->GetName() == string("second_order_filter")) ||
             (component_element->GetName() == string("integrator")) )
         {
           Components->push_back(new FGFilter(this, component_element));
-        } else if ((comp_name == "PURE_GAIN") ||
-                   (comp_name == "SCHEDULED_GAIN") ||
-                   (comp_name == "AEROSURFACE_SCALE") ||
-                   (component_element->GetName() == string("pure_gain")) ||
+        } else if ((component_element->GetName() == string("pure_gain")) ||
                    (component_element->GetName() == string("scheduled_gain")) ||
                    (component_element->GetName() == string("aerosurface_scale")))
         {
           Components->push_back(new FGGain(this, component_element));
-        } else if ((comp_name == "SUMMER") || (component_element->GetName() == string("summer"))) {
+        } else if (component_element->GetName() == string("summer")) {
           Components->push_back(new FGSummer(this, component_element));
-        } else if ((comp_name == "DEADBAND") || (component_element->GetName() == string("deadband"))) {
+        } else if (component_element->GetName() == string("deadband")) {
           Components->push_back(new FGDeadBand(this, component_element));
-        } else if (comp_name == "GRADIENT") {
-          Components->push_back(new FGGradient(this, component_element));
-        } else if ((comp_name == "SWITCH") || (component_element->GetName() == string("switch"))) {
+        } else if (component_element->GetName() == string("switch")) {
           Components->push_back(new FGSwitch(this, component_element));
-        } else if ((comp_name == "KINEMAT") || (component_element->GetName() == string("kinematic"))) {
+        } else if (component_element->GetName() == string("kinematic")) {
           Components->push_back(new FGKinemat(this, component_element));
-        } else if ((comp_name == "FUNCTION") || (component_element->GetName() == string("fcs_function"))) {
+        } else if (component_element->GetName() == string("fcs_function")) {
           Components->push_back(new FGFCSFunction(this, component_element));
+        } else if (component_element->GetName() == string("pid")) {
+          Components->push_back(new FGPID(this, component_element));
         } else {
-          cerr << "Unknown FCS component: " << comp_name << endl;
+          cerr << "Unknown FCS component: " << component_element->GetName() << endl;
         }
       } catch(string s) {
         cerr << highint << fgred << endl << "  " << s << endl;
         cerr << reset << endl;
         return false;
       }
-      if (comp_name.empty()) { // comp_name will be empty if using new format
-        component_element = channel_element->GetNextElement();
-      } else {
-        component_element = channel_element->FindNextElement("component");
-      }
+      component_element = channel_element->GetNextElement();
     }
     channel_element = document->FindNextElement("channel");
   }
@@ -635,7 +617,7 @@ string FGFCS::GetComponentValues(string delimeter)
 {
   unsigned int comp;
   string CompValues = "";
-  char buffer[12];
+  char buffer[17];
   bool firstime = true;
 
   for (comp = 0; comp < FCSComponents.size(); comp++) {
@@ -651,6 +633,7 @@ string FGFCS::GetComponentValues(string delimeter)
     CompValues += string(buffer);
   }
 
+  CompValues += "\0";
   return CompValues;
 }
 
@@ -667,7 +650,7 @@ void FGFCS::AddThrottle(void)
   PropFeatherCmd.push_back(false);
   PropFeather.push_back(false);
 
-  unsigned int num = ThrottleCmd.size()-1;
+  unsigned int num = (unsigned int)ThrottleCmd.size()-1;
   bindThrottle(num);
 }
 
@@ -685,14 +668,12 @@ void FGFCS::bind(void)
   PropertyManager->Tie("fcs/aileron-cmd-norm", this, &FGFCS::GetDaCmd, &FGFCS::SetDaCmd);
   PropertyManager->Tie("fcs/elevator-cmd-norm", this, &FGFCS::GetDeCmd, &FGFCS::SetDeCmd);
   PropertyManager->Tie("fcs/rudder-cmd-norm", this, &FGFCS::GetDrCmd, &FGFCS::SetDrCmd);
-  PropertyManager->Tie("fcs/steer-cmd-norm", this, &FGFCS::GetDsCmd, &FGFCS::SetDsCmd);
   PropertyManager->Tie("fcs/flap-cmd-norm", this, &FGFCS::GetDfCmd, &FGFCS::SetDfCmd);
   PropertyManager->Tie("fcs/speedbrake-cmd-norm", this, &FGFCS::GetDsbCmd, &FGFCS::SetDsbCmd);
   PropertyManager->Tie("fcs/spoiler-cmd-norm", this, &FGFCS::GetDspCmd, &FGFCS::SetDspCmd);
   PropertyManager->Tie("fcs/pitch-trim-cmd-norm", this, &FGFCS::GetPitchTrimCmd, &FGFCS::SetPitchTrimCmd);
   PropertyManager->Tie("fcs/roll-trim-cmd-norm", this, &FGFCS::GetRollTrimCmd, &FGFCS::SetRollTrimCmd);
   PropertyManager->Tie("fcs/yaw-trim-cmd-norm", this, &FGFCS::GetYawTrimCmd, &FGFCS::SetYawTrimCmd);
-  PropertyManager->Tie("gear/gear-cmd-norm", this, &FGFCS::GetGearCmd, &FGFCS::SetGearCmd);
 
   PropertyManager->Tie("fcs/left-aileron-pos-rad", this, ofRad, &FGFCS::GetDaLPos, &FGFCS::SetDaLPos);
   PropertyManager->Tie("fcs/left-aileron-pos-deg", this, ofDeg, &FGFCS::GetDaLPos, &FGFCS::SetDaLPos);
@@ -729,6 +710,11 @@ void FGFCS::bind(void)
   PropertyManager->Tie("fcs/mag-spoiler-pos-rad", this, ofMag, &FGFCS::GetDspPos);
 
   PropertyManager->Tie("gear/gear-pos-norm", this, &FGFCS::GetGearPos, &FGFCS::SetGearPos);
+  PropertyManager->Tie("gear/gear-cmd-norm", this, &FGFCS::GetGearCmd, &FGFCS::SetGearCmd);
+  PropertyManager->Tie("fcs/left-brake-cmd-norm", this, &FGFCS::GetLBrake, &FGFCS::SetLBrake);
+  PropertyManager->Tie("fcs/right-brake-cmd-norm", this, &FGFCS::GetRBrake, &FGFCS::SetRBrake);
+  PropertyManager->Tie("fcs/center-brake-cmd-norm", this, &FGFCS::GetCBrake, &FGFCS::SetCBrake);
+  PropertyManager->Tie("fcs/steer-cmd-norm", this, &FGFCS::GetDsCmd, &FGFCS::SetDsCmd);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

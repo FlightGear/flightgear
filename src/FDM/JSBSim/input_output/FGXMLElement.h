@@ -7,20 +7,20 @@
  ------------- Copyright (C) 2004  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -183,16 +183,16 @@ public:
       @param i the index of the data line to return (0 by default).
       @return a string representing the data line requested, or the empty string
               if none exists.*/
-  string GetDataLine(int i=0);
+  string GetDataLine(unsigned int i=0);
 
   /// Returns the number of lines of data stored
-  int GetNumDataLines(void) {return data_lines.size();}
+  unsigned int GetNumDataLines(void) {return (unsigned int)data_lines.size();}
 
   /// Returns the number of child elements for this element.
-  int GetNumElements(void) {return children.size();}
+  unsigned int GetNumElements(void) {return (unsigned int)children.size();}
 
   /// Returns the number of named child elements for this element.
-  int GetNumElements(string);
+  unsigned int GetNumElements(string);
 
   /** Converts the element data to a number.
       This function attempts to convert the first (and presumably only) line of
@@ -208,7 +208,7 @@ public:
       GetNextElement() will return NULL.
       @param el the index of the requested element (0 by default)
       @return a pointer to the Element, or 0 if no valid element exists. */
-  Element* GetElement(int el=0);
+  Element* GetElement(unsigned int el=0);
 
   /** Returns a pointer to the next element in the list.
       The function GetElement() must be called first to be sure that this
@@ -333,7 +333,7 @@ public:
   /** Prints the element.
   *   Prints this element and calls the Print routine for child elements.
   *   @param d The tab level. A level corresponds to a single space. */
-  void Print(int level=0);
+  void Print(unsigned int level=0);
 
 private:
   string name;
@@ -342,7 +342,7 @@ private:
   vector <Element*> children;
   vector <string> attribute_key;
   Element *parent;
-  int element_index;
+  unsigned int element_index;
   typedef map <string, map <string, double> > tMapConvert;
   tMapConvert convert;
 };

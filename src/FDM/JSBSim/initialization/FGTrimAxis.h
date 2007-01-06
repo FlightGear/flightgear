@@ -7,20 +7,20 @@
  ------------- Copyright (C) 1999  Anthony K. Peden (apeden@earthlink.net) -------------
  
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
  
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
  
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
  
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
  
  HISTORY
@@ -89,12 +89,20 @@ enum Control { tThrottle, tBeta, tAlpha, tElevator, tAileron, tRudder, tAltAGL,
 class FGTrimAxis : public FGJSBBase
 {
 public:
+  /**  Constructor for Trim Axis class.
+       @param fdmex FGFDMExec pointer
+       @param IC pointer to initial conditions instance
+       @param state a State type (enum)
+       @param control a Control type (enum) */
   FGTrimAxis(FGFDMExec* fdmex, 
-             FGInitialCondition *ic, 
-             State st,
-             Control ctrl );
+             FGInitialCondition *IC, 
+             State state,
+             Control control );
+  /// Destructor
   ~FGTrimAxis();
 
+  /** This function iterates through a call to the FGFDMExec::RunIC() 
+      function until the desired trimming condition falls inside a tolerance.*/
   void Run(void);
  
   double GetState(void) { getState(); return state_value; }

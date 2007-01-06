@@ -4,6 +4,9 @@
 
 #include "Gear.hpp"
 namespace yasim {
+static const float YASIM_PI = 3.14159265358979323846;
+static const float maxGroundBumpAmplitude=0.4;
+        //Amplitude can be positive and negative
 
 Gear::Gear()
 {
@@ -19,6 +22,25 @@ Gear::Gear()
     _extension = 1;
     _castering = false;
     _frac = 0;
+    _ground_type = 0;
+    _ground_frictionFactor = 1;
+    _ground_rollingFriction = 0.02;
+    _ground_loadCapacity = 1e30;
+    _ground_loadResistance = 1e30;
+    _ground_isSolid=1;
+    _ground_bumpiness = 0;
+    _onWater=0;
+    _onSolid=1;
+    _global_x=0.0;
+    _global_y=0.0;
+    _inverseSpeedSpringIsDoubled=0;
+    _reduceFrictionByExtension=0;
+    _bumpinessFrictionOffset=0;
+    _bumpinessFrictionFactor=0;
+    _spring_factor_not_planing=1;
+    _speed_planing=0;
+    _isContactPoint=0;
+    _ignoreWhileSolving=0;
 
     for(i=0; i<3; i++)
 	_global_ground[i] = _global_vel[i] = 0;
@@ -78,11 +100,76 @@ void Gear::setCastering(bool c)
     _castering = c;
 }
 
-void Gear::setGlobalGround(double *global_ground, float* global_vel)
+void Gear::setContactPoint(bool c)
+{
+    _isContactPoint=c;
+}
+
+void Gear::setOnWater(bool c)
+{
+    _onWater = c;
+}
+
+void Gear::setOnSolid(bool c)
+{
+    _onSolid = c;
+}
+
+void Gear::setIgnoreWhileSolving(bool c)
+{
+    _ignoreWhileSolving = c;
+}
+
+void Gear::setInverseSpeedSpringIsDoubled(float s)
+{
+    _inverseSpeedSpringIsDoubled=s;
+}
+
+void Gear::setSpringFactorNotPlaning(float f)
+{
+    _spring_factor_not_planing=f;
+}
+
+void Gear::setSpeedPlaning(float s)
+{
+    _speed_planing=s;
+}
+
+void Gear::setReduceFrictionByExtension(float s)
+{
+    _reduceFrictionByExtension=s;
+}
+
+void Gear::setBumpinessFrictionOffset(float s)
+{
+    _bumpinessFrictionOffset=s;
+}
+
+void Gear::setBumpinessFrictionFactor(float s)
+{
+    _bumpinessFrictionFactor=s;
+}
+
+void Gear::setGlobalGround(double *global_ground, float* global_vel,
+                           double globalX, double globalY,
+                           int type, double frictionFactor,
+                           double rollingFriction, double loadCapacity,
+                           double loadResistance, double bumpiness, 
+                           bool isSolid)
 {
     int i;
     for(i=0; i<4; i++) _global_ground[i] = global_ground[i];
     for(i=0; i<3; i++) _global_vel[i] = global_vel[i];
+    _ground_type = type;
+    _ground_frictionFactor=frictionFactor;
+    _ground_rollingFriction=rollingFriction;
+    _ground_loadCapacity=loadCapacity;
+    _ground_loadResistance=loadResistance;
+    _ground_bumpiness=bumpiness;
+    _ground_isSolid=isSolid;
+    _global_x=globalX;
+    _global_y=globalY;
+
 }
 
 void Gear::getPosition(float* out)
@@ -159,6 +246,31 @@ bool Gear::getCastering()
     return _castering;
 }
 
+bool Gear::getGroundIsSolid()
+{
+    return _ground_isSolid;
+}
+
+float Gear::getBumpAltitude()
+{
+    if (_ground_bumpiness<0.001) return 0.0;
+    double x = _global_x*0.1;
+    double y = _global_y*0.1;
+    x-=Math::floor(x);
+    y-=Math::floor(y);
+    x*=2*YASIM_PI;
+    y*=2*YASIM_PI;
+    //now x and y are in the range of 0..2pi
+    //we need a function, that is periodically on 2pi and gives some
+    //height. This is not very fast, but for a beginning.
+    //maybe this should be done by interpolating between some precalculated
+    //values
+    float h= Math::sin(x)+Math::sin(7*x)+Math::sin(8*x)+Math::sin(13*x);
+    h+= Math::sin(2*y)+Math::sin(5*y)+Math::sin(9*y*x)+Math::sin(17*y);
+    
+    return h *(1/8.)*_ground_bumpiness*maxGroundBumpAmplitude;
+}
+
 void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
 {
     // Init the return values
@@ -168,6 +280,16 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     // Don't bother if it's not down
     if(_extension < 1)
 	return;
+
+    // Dont bother if we are in the "wrong" ground
+    if (!((_onWater&&!_ground_isSolid)||(_onSolid&&_ground_isSolid)))  {
+	_wow = 0;
+	_frac = 0;
+        _compressDist = 0;
+        _rollSpeed = 0;
+        _casterAngle = 0;
+	return;
+    }
 
     // The ground plane transformed to the local frame.
     float ground[4];
@@ -180,6 +302,12 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     // First off, make sure that the gear "tip" is below the ground.
     // If it's not, there's no force.
     float a = ground[3] - Math::dot3(_pos, ground);
+    float BumpAltitude=0;
+    if (a<maxGroundBumpAmplitude)
+    {
+        BumpAltitude=getBumpAltitude();
+        a+=BumpAltitude;
+    }
     _compressDist = -a;
     if(a > 0) {
 	_wow = 0;
@@ -196,7 +324,7 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     // above ground is negative.
     float tmp[3];
     Math::add3(_cmpr, _pos, tmp);
-    float b = ground[3] - Math::dot3(tmp, ground);
+    float b = ground[3] - Math::dot3(tmp, ground)+BumpAltitude;
 
     // Calculate the point of ground _contact.
     _frac = a/(a-b);
@@ -219,7 +347,20 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     // compression.   (note the clamping of _frac to 1):
     _frac = (_frac > 1) ? 1 : _frac;
     float fmag = _frac*clen*_spring;
-
+    float inversespeed_multiplied_by_speed=0;
+    if (_inverseSpeedSpringIsDoubled>0.0000001) {
+        inversespeed_multiplied_by_speed=Math::mag3(cv)*_inverseSpeedSpringIsDoubled;
+        fmag*=1+inversespeed_multiplied_by_speed;
+    }
+    if (_speed_planing>0)
+    {
+        float v=Math::mag3(cv);
+        if (v<_speed_planing)
+        {
+            float frac=v/_speed_planing;
+            fmag= fmag*_spring_factor_not_planing*(1-frac)+fmag*frac;
+        }
+    }
     // Then the damping.  Use the only the velocity into the ground
     // (projection along "ground") projected along the compression
     // axis.  So Vdamp = ground*(ground dot cv) dot cmpr
@@ -284,11 +425,32 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
         _rollSpeed = vsteer;
         _casterAngle = _rot;
     }
-
-    float fsteer = _brake * calcFriction(wgt, vsteer);
-    float fskid  = calcFriction(wgt, vskid);
+    float fsteer,fskid;
+    if(_ground_isSolid)
+    {
+        fsteer = ((_brake * _ground_frictionFactor 
+                    +(1-_brake)*_ground_rollingFriction
+                  )+_bumpinessFrictionFactor*Math::mag3(cv)
+                 )*calcFriction(wgt, vsteer);
+        fskid  = calcFriction(wgt, vskid)*(_ground_frictionFactor+_bumpinessFrictionFactor*Math::mag3(cv));
+    }
+    else
+    {
+        fsteer = calcFrictionV2(wgt, vsteer)*(_ground_frictionFactor+_bumpinessFrictionFactor*Math::mag3(cv));
+        fskid  = calcFrictionV2(wgt, vskid)*(_ground_frictionFactor+_bumpinessFrictionFactor*Math::mag3(cv));
+    }
     if(vsteer > 0) fsteer = -fsteer;
     if(vskid > 0) fskid = -fskid;
+    
+    //reduce friction if wanted by _reduceFrictionByExtension
+    //float factor = 1-inversespeed_multiplied_by_speed*_reduceFrictionByExtension;
+    float factor = (1-_frac)*(1-_reduceFrictionByExtension)+_frac*1;
+    factor=Math::clamp(factor,0,1);
+
+    //add the _bumpinessFrictionOffset
+    factor*=(1+_bumpinessFrictionOffset*vsteer);
+    fsteer*=factor;
+    fskid*=factor;
 
     // Phoo!  All done.  Add it up and get out of here.
     Math::mul3(fsteer, steer, tmp);
@@ -308,5 +470,15 @@ float Gear::calcFriction(float wgt, float v)
     else         return wgt * _dfric;
 }
 
+float Gear::calcFrictionV2(float wgt, float v)
+{
+    // How slow is stopped?  1 cm/second?
+    const float STOP = 0.01f;
+    const float iSTOP = 1.0f/STOP;
+    v = Math::abs(v);
+    if(v < STOP) return v*iSTOP * wgt * _sfric;
+    else         return wgt * _dfric*v*v*0.01;
+    //*0.01: to get _dfric of the same size than _dfric on solid
+}
 }; // namespace yasim
 

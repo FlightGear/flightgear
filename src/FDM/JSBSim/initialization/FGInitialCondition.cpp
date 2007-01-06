@@ -7,20 +7,20 @@
  ------------- Copyright (C) 1999  Anthony K. Peden (apeden@earthlink.net) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 
@@ -731,7 +731,7 @@ double FGInitialCondition::GetWindDirDegIC(void) const {
 
 bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
 {
-  string resetDef, acpath;
+  string resetDef;
   ifstream initialization_file;
   FGXMLParse initialization_file_parser;
   Element *document, *el;
@@ -739,12 +739,11 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
 
   string sep = "/";
 # ifdef macintosh
-   string sep = ";";
+   sep = ";";
 # endif
 
   if( useStoredPath ) {
-    acpath = fdmex->GetAircraftPath() + sep + fdmex->GetModelName();
-    resetDef = acpath + sep + rstfile + ".xml";
+    resetDef = fdmex->GetFullAircraftPath() + sep + rstfile + ".xml";
   } else {
     resetDef = rstfile;
   }
@@ -773,20 +772,6 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
     SetLatitudeDegIC(document->FindElementValueAsNumberConvertTo("latitude", "DEG"));
   if (document->FindElement("longitude"))
     SetLongitudeDegIC(document->FindElementValueAsNumberConvertTo("longitude", "DEG"));
-  if (document->FindElement("phi"))
-    SetPhiDegIC(document->FindElementValueAsNumberConvertTo("phi", "DEG"));
-  if (document->FindElement("theta"))
-    SetThetaDegIC(document->FindElementValueAsNumberConvertTo("theta", "DEG"));
-  if (document->FindElement("psi"))
-    SetPsiDegIC(document->FindElementValueAsNumberConvertTo("psi", "DEG"));
-  if (document->FindElement("alpha"))
-    SetAlphaDegIC(document->FindElementValueAsNumberConvertTo("alpha", "DEG"));
-  if (document->FindElement("beta"))
-    SetBetaDegIC(document->FindElementValueAsNumberConvertTo("beta", "DEG"));
-  if (document->FindElement("gamma"))
-    SetFlightPathAngleDegIC(document->FindElementValueAsNumberConvertTo("gamma", "DEG"));
-  if (document->FindElement("roc"))
-    SetClimbRateFpmIC(document->FindElementValueAsNumberConvertTo("roc", "FT/SEC"));
   if (document->FindElement("altitude"))
     SetAltitudeFtIC(document->FindElementValueAsNumberConvertTo("altitude", "FT"));
   if (document->FindElement("winddir"))
@@ -801,6 +786,20 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
     SetVcalibratedKtsIC(document->FindElementValueAsNumberConvertTo("vc", "FT/SEC"));
   if (document->FindElement("mach"))
     SetMachIC(document->FindElementValueAsNumber("mach"));
+  if (document->FindElement("phi"))
+    SetPhiDegIC(document->FindElementValueAsNumberConvertTo("phi", "DEG"));
+  if (document->FindElement("theta"))
+    SetThetaDegIC(document->FindElementValueAsNumberConvertTo("theta", "DEG"));
+  if (document->FindElement("psi"))
+    SetPsiDegIC(document->FindElementValueAsNumberConvertTo("psi", "DEG"));
+  if (document->FindElement("alpha"))
+    SetAlphaDegIC(document->FindElementValueAsNumberConvertTo("alpha", "DEG"));
+  if (document->FindElement("beta"))
+    SetBetaDegIC(document->FindElementValueAsNumberConvertTo("beta", "DEG"));
+  if (document->FindElement("gamma"))
+    SetFlightPathAngleDegIC(document->FindElementValueAsNumberConvertTo("gamma", "DEG"));
+  if (document->FindElement("roc"))
+    SetClimbRateFpsIC(document->FindElementValueAsNumberConvertTo("roc", "FT/SEC"));
   if (document->FindElement("vground"))
     SetVgroundKtsIC(document->FindElementValueAsNumberConvertTo("vground", "FT/SEC"));
   if (document->FindElement("running")) {

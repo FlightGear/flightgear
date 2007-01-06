@@ -7,20 +7,20 @@
  ------------- Copyright (C) 2001 Jon S. Berndt -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 HISTORY
@@ -59,20 +59,25 @@ CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Models a deadband object.
-    Here is the format of the deadband control specification:
-    <pre>
-    \<COMPONENT NAME="Deadbeat1" TYPE="DEADBAND">
-       INPUT {input}
-       WIDTH {deadband width}
-       MIN {minimum value}
-       MAX {maximum value}
-       [GAIN {optional deadband gain}]
-       [OUTPUT {optional output parameter to set}]
-    \</COMPONENT>
-    </pre>
-    The WIDTH value is the total deadband region within which an input will
-    produce no output. For example, say that the WIDTH value is 2.0.  If the
-    input is between -1.0 and +1.0, the output will be zero.
+    This is a component that allows for some “play” in a control path, in the
+    form of a dead zone, or deadband. The form of the deadband component
+    specification is:
+
+    @code
+    <deadband name="Windup Trigger">
+      <input> [-]property </input>
+      <width> number </width>
+      [<clipto>
+        <min> {[-]property name | value} </min>
+        <max> {[-]property name | value} </max>
+      </clipto>]
+      [<output> {property} </output>]
+    </deadband>
+    @endcode
+
+    The width value is the total deadband region within which an input will
+    produce no output. For example, say that the width value is 2.0. If the
+    input is between –1.0 and +1.0, the output will be zero.
     @author Jon S. Berndt
     @version $Id$
 */

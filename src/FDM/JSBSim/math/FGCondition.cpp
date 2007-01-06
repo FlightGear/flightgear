@@ -7,20 +7,20 @@
  -------------- Copyright (C) 2003 Jon S. Berndt (jsb@hal-pc.org) --------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 HISTORY
@@ -47,7 +47,7 @@ CLASS IMPLEMENTATION
 
 string FGCondition::indent = "        ";
 
-
+// This constructor is called when tests are inside an element
 FGCondition::FGCondition(Element* element, FGPropertyManager* PropertyManager) :
   PropertyManager(PropertyManager), isGroup(true)
 {
@@ -63,30 +63,37 @@ FGCondition::FGCondition(Element* element, FGPropertyManager* PropertyManager) :
   conditions.clear();
 
   logic = element->GetAttributeValue("logic");
-  if (logic == "OR") Logic = eOR;
-  else if (logic == "AND") Logic = eAND;
-  else { // error
-    cerr << "Unrecognized LOGIC token " << logic << " in switch component: " << logic << endl;
+  if (!logic.empty()) {
+    if (logic == "OR") Logic = eOR;
+    else if (logic == "AND") Logic = eAND;
+    else { // error
+      cerr << "Unrecognized LOGIC token " << logic << endl;
+    }
+  } else {
+    Logic = eAND; // default
   }
+
   condition_element = element->GetElement();
   while (condition_element) {
     conditions.push_back(FGCondition(condition_element, PropertyManager));
     condition_element = element->GetNextElement();
   }
-  for (int i=0; i<element->GetNumDataLines(); i++) {
-    conditions.push_back(FGCondition(element->GetDataLine(i), PropertyManager));
+  for (unsigned int i=0; i<element->GetNumDataLines(); i++) {
+    string data = element->GetDataLine(i);
+    conditions.push_back(FGCondition(data, PropertyManager));
   }
 
   Debug(0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//This constructor is called when there are no nested test groups inside the
+// condition
 
 FGCondition::FGCondition(string test, FGPropertyManager* PropertyManager) :
   PropertyManager(PropertyManager), isGroup(false)
 {
   string property1, property2, compare_string;
-  Element* condition_element;
 
   InitializeConditionals();
 
@@ -96,7 +103,7 @@ FGCondition::FGCondition(string test, FGPropertyManager* PropertyManager) :
   Logic       = elUndef;
   conditions.clear();
 
-  int start = 0, end = 0;
+  unsigned int start = 0, end = 0;
   start = test.find_first_not_of(" ");
   end = test.find_first_of(" ", start+1);
   property1 = test.substr(start,end-start);
@@ -155,21 +162,25 @@ bool FGCondition::Evaluate(void )
   bool pass = false;
   double compareValue;
 
-  if (Logic == eAND) {
+  if (TestParam1 == 0L) {
 
-    iConditions = conditions.begin();
-    pass = true;
-    while (iConditions < conditions.end()) {
-      if (!iConditions->Evaluate()) pass = false;
-      *iConditions++;
-    }
+    if (Logic == eAND) {
 
-  } else if (Logic == eOR) {
+      iConditions = conditions.begin();
+      pass = true;
+      while (iConditions < conditions.end()) {
+        if (!iConditions->Evaluate()) pass = false;
+        *iConditions++;
+      }
 
-    pass = false;
-    while (iConditions < conditions.end()) {
-      if (iConditions->Evaluate()) pass = true;
-      *iConditions++;
+    } else { // Logic must be eOR
+
+      pass = false;
+      while (iConditions < conditions.end()) {
+        if (iConditions->Evaluate()) pass = true;
+        *iConditions++;
+      }
+
     }
 
   } else {
@@ -221,7 +232,7 @@ void FGCondition::PrintCondition(void )
       cerr << "unset logic for test condition" << endl;
       break;
     case (eAND):
-      scratch = " if all of the following are true";
+      scratch = " if all of the following are true:";
       break;
     case (eOR):
       scratch = " if any of the following are true:";
@@ -239,9 +250,9 @@ void FGCondition::PrintCondition(void )
     }
   } else {
     if (TestParam2 != 0L)
-      cout << TestParam1->GetName() << " " << conditional << " " << TestParam2->GetName();
+      cout << "    " << TestParam1->GetName() << " " << conditional << " " << TestParam2->GetName();
     else
-      cout << TestParam1->GetName() << " " << conditional << " " << TestValue;
+      cout << "    " << TestParam1->GetName() << " " << conditional << " " << TestValue;
   }
 }
 

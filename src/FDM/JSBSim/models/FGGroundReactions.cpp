@@ -8,20 +8,20 @@
  ------------- Copyright (C) 2000  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -142,18 +142,20 @@ string FGGroundReactions::GetGroundReactionStrings(string delimeter)
   std::ostringstream buf;
 
   for (unsigned int i=0;i<lGear.size();i++) {
-    string name = lGear[i].GetName();
-    buf << name << "_WOW" << delimeter
-        << name << "_stroke" << delimeter
-        << name << "_strokeVel" << delimeter
-        << name << "_CompressForce" << delimeter
-        << name << "_WhlSideForce" << delimeter
-        << name << "_WhlVelVecX" << delimeter
-        << name << "_WhlVelVecY" << delimeter
-        << name << "_WhlRollForce" << delimeter
-        << name << "_BodyXForce" << delimeter
-        << name << "_BodyYForce" << delimeter
-        << name << "_WhlSlipDegrees" << delimeter;
+    if (lGear[i].IsBogey()) {
+      string name = lGear[i].GetName();
+      buf << name << "_WOW" << delimeter
+          << name << "_stroke" << delimeter
+          << name << "_strokeVel" << delimeter
+          << name << "_CompressForce" << delimeter
+          << name << "_WhlSideForce" << delimeter
+          << name << "_WhlVelVecX" << delimeter
+          << name << "_WhlVelVecY" << delimeter
+          << name << "_WhlRollForce" << delimeter
+          << name << "_BodyXForce" << delimeter
+          << name << "_BodyYForce" << delimeter
+          << name << "_WhlSlipDegrees" << delimeter;
+    }
   }
 
   buf << "TotalGearForce_X" << delimeter
@@ -173,18 +175,20 @@ string FGGroundReactions::GetGroundReactionValues(string delimeter)
   std::ostringstream buf;
 
   for (unsigned int i=0;i<lGear.size();i++) {
-    FGLGear& gear = lGear[i];
-    buf << (gear.GetWOW() ? "1, " : "0, ")
-        << setprecision(5) << gear.GetCompLen() << delimeter
-        << setprecision(6) << gear.GetCompVel() << delimeter
-        << setprecision(10) << gear.GetCompForce() << delimeter
-        << setprecision(6) << gear.GetWheelVel(eX) << delimeter
-        << gear.GetWheelVel(eY) << delimeter
-        << gear.GetWheelSideForce() << delimeter
-        << gear.GetWheelRollForce() << delimeter
-        << gear.GetBodyXForce() << delimeter
-        << gear.GetBodyYForce() << delimeter
-        << gear.GetWheelSlipAngle() << delimeter;
+    if (lGear[i].IsBogey()) {
+      FGLGear& gear = lGear[i];
+      buf << (gear.GetWOW() ? "1, " : "0, ")
+          << setprecision(5) << gear.GetCompLen() << delimeter
+          << setprecision(6) << gear.GetCompVel() << delimeter
+          << setprecision(10) << gear.GetCompForce() << delimeter
+          << setprecision(6) << gear.GetWheelVel(eX) << delimeter
+          << gear.GetWheelVel(eY) << delimeter
+          << gear.GetWheelSideForce() << delimeter
+          << gear.GetWheelRollForce() << delimeter
+          << gear.GetBodyXForce() << delimeter
+          << gear.GetBodyYForce() << delimeter
+          << gear.GetWheelSlipAngle() << delimeter;
+    }
   }
 
   buf << vForces(eX) << delimeter

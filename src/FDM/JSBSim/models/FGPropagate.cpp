@@ -9,20 +9,20 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -96,6 +96,7 @@ CLASS IMPLEMENTATION
 FGPropagate::FGPropagate(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGPropagate";
+//  vQtrndot.zero();
 
   bind();
   Debug(0);
@@ -231,22 +232,58 @@ bool FGPropagate::Run(void)
   vUVWdot += Tl2b*gAccel;
 
   // Compute vehicle velocity wrt EC frame, expressed in EC frame
-  FGColumnVector3 vLocationDot = Tl2ec * vVel;
+  vLocationDot = Tl2ec * vVel;
 
   FGColumnVector3 omegaLocal( rInv*vVel(eEast),
                               -rInv*vVel(eNorth),
                               -rInv*vVel(eEast)*VState.vLocation.GetTanLatitude() );
 
   // Compute quaternion orientation derivative on current body rates
-  FGQuaternion vQtrndot = VState.vQtrn.GetQDot( VState.vPQR - Tl2b*omegaLocal );
+  vQtrndot = VState.vQtrn.GetQDot( VState.vPQR - Tl2b*omegaLocal );
 
-  // Propagate velocities
-  VState.vPQR += dt*vPQRdot;
-  VState.vUVW += dt*vUVWdot;
+  // Integrate to propagate the state
 
-  // Propagate positions
-  VState.vQtrn += dt*vQtrndot;
-  VState.vLocation += dt*vLocationDot;
+  // Propagate rotational velocity
+
+  // VState.vPQR += dt*(1.5*vPQRdot - 0.5*last_vPQRdot); // Adams-Bashforth
+  VState.vPQR += (1/12.0)*dt*(23.0*vPQRdot - 16.0*last_vPQRdot + 5.0*last2_vPQRdot); // Adams-Bashforth 3
+  // VState.vPQR += dt*vPQRdot;                          // Rectangular Euler
+  // VState.vPQR += 0.5*dt*(vPQRdot + last_vPQRdot);     // Trapezoidal
+
+  // Propagate translational velocity
+
+  // VState.vUVW += dt*(1.5*vUVWdot - 0.5*last_vUVWdot); // Adams Bashforth
+  VState.vUVW += (1/12.0)*dt*(23.0*vUVWdot - 16.0*last_vUVWdot + 5.0*last2_vUVWdot); // Adams-Bashforth 3
+  // VState.vUVW += dt*vUVWdot;                         // Rectangular Euler
+  // VState.vUVW += 0.5*dt*(vUVWdot + last_vUVWdot);    // Trapezoidal
+
+  // Propagate angular position
+
+  // VState.vQtrn += dt*(1.5*vQtrndot - 0.5*last_vQtrndot); // Adams Bashforth
+  VState.vQtrn += (1/12.0)*dt*(23.0*vQtrndot - 16.0*last_vQtrndot + 5.0*last2_vQtrndot); // Adams-Bashforth 3
+  // VState.vQtrn += dt*vQtrndot;                           // Rectangular Euler
+  // VState.vQtrn += 0.5*dt*(vQtrndot + last_vQtrndot);     // Trapezoidal
+
+  // Propagate translational position
+
+  // VState.vLocation += dt*(1.5*vLocationDot - 0.5*last_vLocationDot); // Adams Bashforth
+  VState.vLocation += (1/12.0)*dt*(23.0*vLocationDot - 16.0*last_vLocationDot + 5.0*last2_vLocationDot); // Adams-Bashforth 3
+  // VState.vLocation += dt*vLocationDot;                               // Rectangular Euler
+  // VState.vLocation += 0.5*dt*(vLocationDot + last_vLocationDot);     // Trapezoidal
+
+  // Set past values
+  
+  last2_vPQRdot = last_vPQRdot;
+  last_vPQRdot = vPQRdot;
+  
+  last2_vUVWdot = last_vUVWdot;
+  last_vUVWdot = vUVWdot;
+  
+  last2_vQtrndot = last_vQtrndot;
+  last_vQtrndot = vQtrndot;
+
+  last2_vLocationDot = last_vLocationDot;
+  last_vLocationDot = vLocationDot;
 
   return false;
 }

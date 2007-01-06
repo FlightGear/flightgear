@@ -14,6 +14,13 @@
 #include "Glue.hpp"
 #include "Ground.hpp"
 
+/*
+#include <stdio.h>
+#include <iostream>
+#include <sstream>
+#include <simgear/debug/logstream.hxx>
+*/
+
 #include "Model.hpp"
 namespace yasim {
 
@@ -307,8 +314,26 @@ void Model::updateGround(State* s)
         // Ask for the ground plane in the global coordinate system
         double global_ground[4];
         float global_vel[3];
-        _ground_cb->getGroundPlane(pt, global_ground, global_vel);
-        g->setGlobalGround(global_ground, global_vel);
+        int type;
+        double frictionFactor, rollingFriction, loadCapacity,
+               loadResistance, bumpiness;
+        bool isSolid;
+        //_ground_cb->getGroundPlane(pt, global_ground, global_vel);
+        _ground_cb->getGroundPlane(pt, global_ground, global_vel,
+                              &type,&frictionFactor, &rollingFriction,
+                              &loadCapacity, &loadResistance,&bumpiness,&isSolid);
+        static int h=0;
+        /*
+        if (h++>100)
+        {
+            cout<<"t:"<<type<<"fF:"<<frictionFactor<<"rF:"<<rollingFriction
+                <<"lC:"<<loadCapacity<<"lR"<<loadResistance<<"b:"<<bumpiness<<"s:"<<isSolid<<"    \r";
+            h=0;
+        }
+        */
+        g->setGlobalGround(global_ground, global_vel, pt[0], pt[1],type,
+            frictionFactor, rollingFriction, loadCapacity, loadResistance,
+            bumpiness,isSolid);
     }
     for(i=0; i<_rotorgear.getRotors()->size(); i++) {
         Rotor* r = (Rotor*)_rotorgear.getRotors()->get(i);
@@ -480,23 +505,26 @@ void Model::newState(State* s)
     for(i=0; i<_gears.size(); i++) {
 	Gear* g = (Gear*)_gears.get(i);
 
-	// Get the point of ground contact
-        float pos[3], cmpr[3];
-	g->getPosition(pos);
-	g->getCompression(cmpr);
-	Math::mul3(g->getCompressFraction(), cmpr, cmpr);
-	Math::add3(cmpr, pos, pos);
+        if (!g->getIgnoreAtCrashDetection())
+        {
+	    // Get the point of ground contact
+            float pos[3], cmpr[3];
+	    g->getPosition(pos);
+	    g->getCompression(cmpr);
+	    Math::mul3(g->getCompressFraction(), cmpr, cmpr);
+	    Math::add3(cmpr, pos, pos);
 
-        // The plane transformed to local coordinates.
-        double global_ground[4];
-        g->getGlobalGround(global_ground);
-        float ground[4];
-        s->planeGlobalToLocal(global_ground, ground);
-	float dist = ground[3] - Math::dot3(pos, ground);
+            // The plane transformed to local coordinates.
+            double global_ground[4];
+            g->getGlobalGround(global_ground);
+            float ground[4];
+            s->planeGlobalToLocal(global_ground, ground);
+	    float dist = ground[3] - Math::dot3(pos, ground);
 
-	// Find the lowest one
-	if(dist < min)
-	    min = dist;
+	    // Find the lowest one
+	    if(dist < min)
+	        min = dist;
+        }
     }
     _agl = min;
     if(_agl < -1) // Allow for some integration slop

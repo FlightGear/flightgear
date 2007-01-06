@@ -39,8 +39,20 @@ public:
     void setRotation(float rotation);
     void setExtension(float extension);
     void setCastering(bool castering);
-    void setGlobalGround(double* global_ground, float* global_vel);
-
+    void setOnWater(bool c);
+    void setOnSolid(bool c);
+    void setInverseSpeedSpringIsDoubled(float s);
+    void setSpringFactorNotPlaning(float f);
+    void setSpeedPlaning(float s);
+    void setReduceFrictionByExtension(float s);
+    void setBumpinessFrictionOffset(float s);
+    void setBumpinessFrictionFactor(float s);
+    void setIgnoreWhileSolving(bool c);
+    void setGlobalGround(double* global_ground, float* global_vel,
+        double globalX, double globalY,
+        int type, double frictionFactor,double rollingFriction,
+        double loadCapacity, double loadResistance, double bumpiness,
+        bool isSolid);
     void getPosition(float* out);
     void getCompression(float* out);
     void getGlobalGround(double* global_ground);
@@ -54,6 +66,8 @@ public:
     bool getCastering();
     float getCasterAngle() { return _casterAngle; }
     float getRollSpeed() { return _rollSpeed; }
+    float getBumpAltitude();
+    bool getGroundIsSolid();
 
     // Takes a velocity of the aircraft relative to ground, a rotation
     // vector, and a ground plane (all specified in local coordinates)
@@ -67,9 +81,13 @@ public:
     float getWoW();
     float getCompressFraction();
     float getCompressDist() { return _compressDist; }
+    bool getIgnoreAtCrashDetection() {return (!_ground_isSolid)&&(!_isContactPoint); }
+    bool getIgnoreWhileSolving() {return _ignoreWhileSolving; }
+    void setContactPoint(bool c);
 
 private:
     float calcFriction(float wgt, float v);
+    float calcFrictionV2(float wgt, float v);
 
     bool _castering;
     float _pos[3];
@@ -90,6 +108,26 @@ private:
     float _global_vel[3];
     float _casterAngle;
     float _rollSpeed;
+    bool _isContactPoint;
+    bool _onWater;
+    bool _onSolid;
+    float _inverseSpeedSpringIsDoubled;
+    float _spring_factor_not_planing;
+    float _speed_planing;
+    float _reduceFrictionByExtension;
+    float _bumpinessFrictionOffset;
+    float _bumpinessFrictionFactor;
+    bool _ignoreWhileSolving;
+
+    int _ground_type;
+    double _ground_frictionFactor;
+    double _ground_rollingFriction;
+    double _ground_loadCapacity;
+    double _ground_loadResistance;
+    double _ground_bumpiness;
+    bool _ground_isSolid;
+    double _global_x;
+    double _global_y;
 };
 
 }; // namespace yasim

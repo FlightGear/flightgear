@@ -5,6 +5,25 @@ Author: Jon Berndt
 Date started: 8/25/2004
 Purpose: Stores various parameter types for functions
 
+ ------------- Copyright (C) 2004  Jon S. Berndt (jsb@hal-pc.org) -------------
+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU Lesser General Public License as published by the Free Software
+ Foundation; either version 2 of the License, or (at your option) any later
+ version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ details.
+
+ You should have received a copy of the GNU Lesser General Public License along with
+ this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ Place - Suite 330, Boston, MA  02111-1307, USA.
+
+ Further information about the GNU Lesser General Public License can also be found on
+ the world wide web at http://www.gnu.org.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -37,9 +56,9 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
 
   Name = el->GetAttributeValue("name");
   operation = el->GetName();
+
   if (operation == string("function")) {
     Type = eTopLevel;
-    bind();
   } else if (operation == string("product")) {
     Type = eProduct;
   } else if (operation == string("difference")) {
@@ -54,6 +73,8 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
     Type = eAbs;
   } else if (operation == string("sin")) {
     Type = eSin;
+  } else if (operation == string("exp")) {
+    Type = eExp;
   } else if (operation == string("cos")) {
     Type = eCos;
   } else if (operation == string("tan")) {
@@ -94,6 +115,7 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
                operation == string("sum") ||
                operation == string("quotient") ||
                operation == string("pow") ||
+               operation == string("exp") ||
                operation == string("abs") ||
                operation == string("sin") ||
                operation == string("cos") ||
@@ -110,6 +132,8 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
     element = el->GetNextElement();
   }
 
+  bind(); // Allow any function to save its value
+
   Debug(0);
 }
 
@@ -117,8 +141,14 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
 
 FGFunction::~FGFunction(void)
 {
-  string tmp = PropertyManager->mkPropertyName(Prefix + Name, false); // Allow upper case
-  PropertyManager->Untie(tmp);
+  if (!Name.empty()) {
+    string tmp = PropertyManager->mkPropertyName(Prefix + Name, false); // Allow upper case
+    PropertyManager->Untie(tmp);
+  }
+
+  for (int i=0; i<Parameters.size(); i++) {
+    delete Parameters[i];
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -160,6 +190,9 @@ double FGFunction::GetValue(void) const
     break;
   case ePow:
     temp = pow(temp,Parameters[1]->GetValue());
+    break;
+  case eExp:
+    temp = exp(temp);
     break;
   case eAbs:
     temp = fabs(temp);
@@ -245,8 +278,8 @@ void FGFunction::Debug(int from)
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification
-    if (from == 0) cout << "Instantiated: FGGroundReactions" << endl;
-    if (from == 1) cout << "Destroyed:    FGGroundReactions" << endl;
+    if (from == 0) cout << "Instantiated: FGFunction" << endl;
+    if (from == 1) cout << "Destroyed:    FGFunction" << endl;
   }
   if (debug_lvl & 4 ) { // Run() method entry print for FGModel-derived objects
   }

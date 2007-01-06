@@ -9,20 +9,20 @@
  ------------- Copyright (C) 2000  Jon S. Berndt (jsb@hal-pc.org) --------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -80,15 +80,15 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   // These are internal program variables
 
   crank_counter = 0;
-  OilTemp_degK = 298;
+  OilTemp_degK = RankineToKelvin(Atmosphere->GetTemperature());
   ManifoldPressure_inHg = Atmosphere->GetPressure() * psftoinhg; // psf to in Hg
   minMAP = 21950;
   maxMAP = 96250;
   MAP = Atmosphere->GetPressure() * psftopa;
-  CylinderHeadTemp_degK = 0.0;
+  CylinderHeadTemp_degK = RankineToKelvin(Atmosphere->GetTemperature());
   Magnetos = 0;
-  ExhaustGasTemp_degK = 0.0;
-  EGT_degC = 0.0;
+  ExhaustGasTemp_degK = RankineToKelvin(Atmosphere->GetTemperature());
+  EGT_degC = ExhaustGasTemp_degK - 273;
 
   dt = State->Getdt();
 
@@ -198,6 +198,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   }
   minMAP = MinManifoldPressure_inHg * 3386.38;  // inHg to Pa
   maxMAP = MaxManifoldPressure_inHg * 3386.38;
+  StarterHP = sqrt(MaxHP) * 0.2;
 
   // Set up and sanity-check the turbo/supercharging configuration based on the input values.
   if (TakeoffBoost > RatedBoost[0]) bTakeoffBoost = true;
@@ -271,7 +272,7 @@ double FGPiston::Calculate(void)
 
   p_amb = Atmosphere->GetPressure() * psftopa;
   p_amb_sea_level = Atmosphere->GetPressureSL() * psftopa;
-  T_amb = Atmosphere->GetTemperature() * (5.0 / 9.0);  // convert from Rankine to Kelvin
+  T_amb = RankineToKelvin(Atmosphere->GetTemperature());
 
   RPM = Thruster->GetRPM() * Thruster->GetGearRatio();
 
@@ -555,7 +556,8 @@ void FGPiston::doEnginePower(void)
     } else {
       ManXRPM = ManifoldPressure_inHg * RPM; // Note that inHg must be used for the following correlation.
       Percentage_Power = (6e-9 * ManXRPM * ManXRPM) + (8e-4 * ManXRPM) - 1.0;
-      Percentage_Power += ((T_amb_sea_lev_degF - T_amb_degF) * 7 /120);
+//      Percentage_Power += ((T_amb_sea_lev_degF - T_amb_degF) * 7 /120);
+      Percentage_Power += ((T_amb_sea_lev_degF - T_amb_degF) * 7 * dt);
       if (Percentage_Power < 0.0) Percentage_Power = 0.0;
       else if (Percentage_Power > 100.0) Percentage_Power = 100.0;
     }
@@ -576,14 +578,12 @@ void FGPiston::doEnginePower(void)
     // Power output when the engine is not running
     if (Cranking) {
       if (RPM < 10) {
-        HP = 3.0;   // This is a hack to prevent overshooting the idle rpm in
-                    // the first time step. It may possibly need to be changed
-                    // if the prop model is changed.
+        HP = StarterHP;
       } else if (RPM < 480) {
-        HP = 3.0 + ((480 - RPM) / 10.0);
+        HP = StarterHP + ((480 - RPM) / 10.0);
         // This is a guess - would be nice to find a proper starter moter torque curve
       } else {
-        HP = 3.0;
+        HP = StarterHP;
       }
     } else {
       // Quick hack until we port the FMEP stuff
@@ -622,7 +622,8 @@ void FGPiston::doEGT(void)
     ExhaustGasTemp_degK = T_amb + delta_T_exhaust;
     ExhaustGasTemp_degK *= 0.444 + ((0.544 - 0.444) * Percentage_Power / 100.0);
   } else {  // Drop towards ambient - guess an appropriate time constant for now
-    dEGTdt = (298.0 - ExhaustGasTemp_degK) / 100.0;
+    combustion_efficiency = 0;
+    dEGTdt = (RankineToKelvin(Atmosphere->GetTemperature()) - ExhaustGasTemp_degK) / 100.0;
     delta_T_exhaust = dEGTdt * dt;
     ExhaustGasTemp_degK += delta_T_exhaust;
   }
@@ -687,7 +688,7 @@ void FGPiston::doOilTemperature(void)
       time_constant /= ((Percentage_Power / idle_percentage_power) / 10.0); // adjust for power
     }
   } else {
-    target_oil_temp = 298;
+    target_oil_temp = RankineToKelvin(Atmosphere->GetTemperature());
     time_constant = 1000;  // Time constant for engine-off; reflects the fact
                            // that oil is no longer getting circulated
   }

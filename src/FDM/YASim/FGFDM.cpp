@@ -273,6 +273,15 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	g->setDynamicFriction(attrf(a, "dfric", 0.7));
         g->setSpring(attrf(a, "spring", 1));
         g->setDamping(attrf(a, "damp", 1));
+        if(a->hasAttribute("on-water")) g->setOnWater(attrb(a,"on-water"));
+        if(a->hasAttribute("on-solid")) g->setOnSolid(attrb(a,"on-solid"));
+        if(a->hasAttribute("ignored-by-solver")) g->setIgnoreWhileSolving(attrb(a,"ignored-by-solver"));
+        g->setInverseSpeedSpringIsDoubled(attrf(a, "inverse-speed-spring-is-doubled", 0) / KTS2MPS);
+        g->setSpringFactorNotPlaning(attrf(a, "spring-factor-not-planing", 1));
+        g->setSpeedPlaning(attrf(a, "speed_planing", 0) * KTS2MPS);
+        g->setReduceFrictionByExtension(attrf(a, "reduce-friction-by-extension", 0));
+        g->setBumpinessFrictionOffset(attrf(a, "bumpiness-friction-offset", 0) / KTS2MPS);
+        g->setBumpinessFrictionFactor(attrf(a, "bumpiness-friction-factor", 0) / KTS2MPS);
 	_airplane.addGear(g);
     } else if(eq(name, "hook")) {
 	Hook* h = new Hook();

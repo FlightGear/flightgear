@@ -7,20 +7,20 @@
  ------------- Copyright (C) 2000 -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -33,24 +33,27 @@ HISTORY
 COMMENTS, REFERENCES,  and NOTES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The SWITCH component is defined as follows (see the API documentation for more
+The switch component is defined as follows (see the API documentation for more
 information):
 
-<COMPONENT NAME="switch1" TYPE="SWITCH">
-  <TEST LOGIC="{AND|OR|DEFAULT}" OUTPUT="{property|value}">
+@code
+<switch name="switch1">
+  <default value="{property|value}"/>
+  <test logic="{AND|OR}" value="{property|value}">
     {property} {conditional} {property|value}
-    <CONDITION_GROUP LOGIC="{AND|OR}">
+    <test logic="{AND|OR}">
       {property} {conditional} {property|value}
       ...
-    </CONDITION_GROUP>
+    </test>
     ...
-  </TEST>
-  <TEST LOGIC="{AND|OR}" OUTPUT="{property|value}">
+  </test>
+  <test logic="{AND|OR}" value="{property|value}">
     {property} {conditional} {property|value}
     ...
-  </TEST>
+  </test>
   ...
-</COMPONENT>
+</switch>
+@endcode
 
 Also, see the header file (FGSwitch.h) for further details.
 

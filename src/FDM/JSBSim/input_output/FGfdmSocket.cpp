@@ -9,20 +9,20 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -82,13 +82,13 @@ FGfdmSocket::FGfdmSocket(string address, int port)
       memcpy(&scktName.sin_addr, host->h_addr_list[0], host->h_length);
       int len = sizeof(struct sockaddr_in);
       if (connect(sckt, (struct sockaddr*)&scktName, len) == 0) {   // successful
-        cout << "Successfully connected to socket ..." << endl;
+        cout << "Successfully connected to socket for output ..." << endl;
         connected = true;
       } else {                // unsuccessful
-        cout << "Could not connect to socket ..." << endl;
+        cout << "Could not connect to socket for output ..." << endl;
       }
     } else {          // unsuccessful
-      cout << "Could not create socket for FDM, error = " << errno << endl;
+      cout << "Could not create socket for FDM output, error = " << errno << endl;
     }
   }
   Debug(0);
@@ -116,10 +116,9 @@ FGfdmSocket::FGfdmSocket(int port)
     memset(&scktName, 0, sizeof(struct sockaddr_in));
     scktName.sin_family = AF_INET;
     scktName.sin_port = htons(port);
-//    memcpy(&scktName.sin_addr, host->h_addr_list[0], host->h_length);
     int len = sizeof(struct sockaddr_in);
     if (bind(sckt, (struct sockaddr*)&scktName, len) == 0) {   // successful
-      cout << "Successfully bound to socket ..." << endl;
+      cout << "Successfully bound to socket for input on port " << port << endl;
       if (listen(sckt, 5) >= 0) { // successful listen()
         #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
           ioctlsocket(sckt, FIONBIO, &NoBlock);
@@ -133,10 +132,10 @@ FGfdmSocket::FGfdmSocket(int port)
       }
       connected = true;
     } else {                // unsuccessful
-      cerr << "Could not bind to socket ..." << endl;
+      cerr << "Could not bind to socket for input ..." << endl;
     }
   } else {          // unsuccessful
-    cerr << "Could not create socket for FDM, error = " << errno << endl;
+    cerr << "Could not create socket for FDM input, error = " << errno << endl;
   }
 
   Debug(0);

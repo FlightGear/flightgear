@@ -7,20 +7,20 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 HISTORY
@@ -501,6 +501,18 @@ public:
       @param bg which brakegroup to retrieve the command for
       @return the brake setting for the supplied brake group argument */
   double GetBrake(FGLGear::BrakeGroup bg);
+
+  /** Gets the left brake.
+      @return the left brake setting. */
+  double GetLBrake(void) const {return LeftBrake;}
+
+  /** Gets the right brake.
+      @return the right brake setting. */
+  double GetRBrake(void) const {return RightBrake;}
+
+  /** Gets the center brake.
+      @return the center brake setting. */
+  double GetCBrake(void) const {return CenterBrake;}
   //@}
 
   /** Loads the Flight Control System.

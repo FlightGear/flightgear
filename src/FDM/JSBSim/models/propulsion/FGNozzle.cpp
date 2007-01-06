@@ -8,20 +8,20 @@
  ------------- Copyright (C) 2000  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -50,7 +50,8 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGNozzle::FGNozzle(FGFDMExec* FDMExec, Element* nozzle_element, int num) : FGThruster(FDMExec)
+FGNozzle::FGNozzle(FGFDMExec* FDMExec, Element* nozzle_element, int num)
+                    : FGThruster(FDMExec, nozzle_element, num)
 {
 
   if (nozzle_element->FindElement("pe"))
@@ -79,14 +80,9 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, Element* nozzle_element, int num) : FGThr
   }
 
   Thrust = 0;
-  ReverserAngle = 0.0;
   Type = ttNozzle;
   Area2 = (Diameter*Diameter/4.0)*M_PI;
   AreaT = Area2/ExpR;
-
-//  char property_name[80];
-//  snprintf(property_name, 80, "propulsion/c-thrust[%u]", EngineNum);
-//  PropertyManager->Tie( property_name, &ThrustCoeff );
 
   Debug(0);
 }
@@ -95,10 +91,6 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, Element* nozzle_element, int num) : FGThr
 
 FGNozzle::~FGNozzle()
 {
-//  char property_name[80];
-//  snprintf(property_name, 80, "propulsion/c-thrust[%u]", EngineNum);
-//  PropertyManager->Untie( property_name );
-
   Debug(1);
 }
 
