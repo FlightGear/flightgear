@@ -434,7 +434,6 @@ FGRenderer::init( void ) {
 
     mBackGroundCamera->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 
-    mRoot->addChild(mBackGroundCamera.get());
 
     mSceneCamera->setClearMask(GL_DEPTH_BUFFER_BIT);
     inheritanceMask = osg::CullSettings::ALL_VARIABLES;
@@ -444,7 +443,8 @@ FGRenderer::init( void ) {
     mSceneCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     mSceneCamera->setCullingMode(osg::CullSettings::DEFAULT_CULLING);
     mSceneCamera->setRenderOrder(osg::CameraNode::NESTED_RENDER);
-    mRoot->addChild(mSceneCamera.get());
+    mSceneCamera->addChild(globals->get_scenery()->get_scene_graph());
+    mSceneCamera->addChild(thesky->getCloudRoot());
 
     stateSet = mSceneCamera->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
@@ -456,10 +456,11 @@ FGRenderer::init( void ) {
     // relative because of CameraView being just a clever transform node
     lightSource->setReferenceFrame(osg::LightSource::RELATIVE_RF);
     lightSource->setLocalStateSetModes(osg::StateAttribute::ON);
-    mSceneCamera->addChild(lightSource);
+    mRoot->addChild(lightSource);
 
-    lightSource->addChild(globals->get_scenery()->get_scene_graph());
-    lightSource->addChild(thesky->getCloudRoot());
+    lightSource->addChild(mBackGroundCamera.get());
+    lightSource->addChild(mSceneCamera.get());
+
 
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
