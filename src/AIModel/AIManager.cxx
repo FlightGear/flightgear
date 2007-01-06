@@ -256,46 +256,6 @@ FGAIManager::loadScenarioFile(const std::string& filename)
   }
 }
 
-// This code keeps track of models that have already been loaded
-// Eventually we'd prbably need to find a way to keep track of models
-// that are unloaded again
-osg::Node* FGAIManager::getModel(const string& path)
-{
-  ModelVecIterator i = loadedModels.begin();  
-  //cerr << "Reference count summary " << endl;
-  int count = 0;
-  while (i != loadedModels.end())
-    {
-      count += i->getNumRefs() -1;
-      //cerr << "Model " << i->getPath() << " has reference count of " << i->getNumRefs() << " ";
-      if (i->getNumRefs() == 1)
-	{
-	  i = loadedModels.erase(i);
-	  //cerr << "[ Deleted ]" << endl;
-	}
-      else
-	{
-	  i++;
-	  //cerr << endl;
-	}
-    }
-  //cerr << "Reference summary end : " << count << "models allocated" << endl;
-  i = loadedModels.begin();
-
-   while (i != loadedModels.end())
-    {
-      if (i->getPath() == path)
-	return i->getModelId();
-      i++;
-    }
-  return 0;
-}
-
-void FGAIManager::setModel(const string& path, osg::Node *model)
-{
-  loadedModels.push_back(FGModelID(path,model));
-}
-
 bool FGAIManager::getStartPosition(const string& id, const string& pid,
                                    SGGeod& geodPos, double& hdng, SGVec3d& uvw)
 {

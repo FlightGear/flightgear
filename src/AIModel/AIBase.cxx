@@ -35,6 +35,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/location.hxx>
 #include <simgear/scene/model/model.hxx>
+#include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
 
@@ -171,23 +172,9 @@ FGAIBase::load3DModel(const string& fg_root,
                       SGPropertyNode *prop_root,
                       double sim_time_sec)
 {
-  // some more code here to check whether a model with this name has already been loaded
-  // if not load it, otherwise, get the memory pointer and do something like
-  // SetModel as in ATC/AIEntity.cxx
-  osg::Group* personality_branch = new osg::Group;
-
-  //model = manager->getModel(path);
-  //if (!(model)) {
-      model = sgLoad3DModel(fg_root,
-                            path,
-                            prop_root,
-                            sim_time_sec);
-      //        manager->setModel(path, model.get());
-      //}
-  personality_branch->addChild( model.get() );
-
-  return personality_branch;
-  //return model;
+  model = sgLoad3DModel(fg_root, path, prop_root, sim_time_sec);
+  model->setNodeMask(model->getNodeMask() & ~SG_NODEMASK_TERRAIN_BIT);
+  return model.get();
 }
 
 bool FGAIBase::isa( object_type otype ) {

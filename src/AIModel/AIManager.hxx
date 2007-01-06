@@ -37,25 +37,8 @@
 #include <Traffic/Schedule.hxx>
 
 SG_USING_STD(list);
-SG_USING_STD(vector);
-
-class FGModelID
-{
-private:
-  osg::ref_ptr<osg::Node> model;
-  string path;
-public:
-  FGModelID(const string& pth, osg::Node* mdl) { path =pth; model=mdl;};
-  osg::Node* const getModelId() const { return model.get();};
-  const string & getPath() const { return path;};
-  int getNumRefs() const { return model->referenceCount(); };
-};
-
-typedef vector<FGModelID> ModelVec;
-typedef vector<FGModelID>::iterator ModelVecIterator;
 
 class FGAIThermal;
-
 
 class FGAIManager : public SGSubsystem
 {
@@ -68,7 +51,6 @@ private:
     typedef ai_list_type::const_iterator ai_list_const_iterator;
 
     ai_list_type ai_list;
-  ModelVec loadedModels;
 
 public:
 
@@ -98,9 +80,6 @@ public:
     int getNumAiObjects(void) const;
 
     void processScenario( const string &filename );
-
-  osg::Node* getModel(const string& path);
-  void setModel(const string& path, osg::Node *model);
 
   static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
 
