@@ -4,6 +4,7 @@
 	Version="7.10"
 	Name="FlightGear"
 	ProjectGUID="{49142EAF-B264-4B9F-B096-F669999EBB2E}"
+	RootNamespace="FlightGear"
 	SccProjectName=""
 	SccLocalPath="">
 	<Platforms>
@@ -23,7 +24,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..;..\..\src;..\..\src\include;..\..\..\SimGear;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\src\FDM\JSBSim;..\..\..\OpenSceneGraph\include;..\..\..\OpenThreads\include;..\..\..\3rdParty\include"
-				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;FG_PLIB_JOYSTICK_GETNAME;FG_NEW_ENVIRONMENT;FG_MPLAYER_AS;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER"
+				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				StringPooling="TRUE"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -87,7 +88,7 @@
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..;..\..\src;..\..\src\include;..\..\src\FDM\JSBSim;..\..\..\SimGear;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\include;..\..\..\Producer\include;..\..\..\OpenThreads\include;..\..\..\3rdParty\include"
-				PreprocessorDefinitions="HAVE_CONFIG_H;FGFS;NDEBUG;WIN32;_CONSOLE;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;FG_PLIB_JOYSTICK_GETNAME;FG_NEW_ENVIRONMENT;ENABLE_THREADS=1;FG_MPLAYER_AS;FG_USE_CLOUDS_3D;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER"
+				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="TRUE"
@@ -2794,7 +2795,23 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\src\Include\config.h-msvc6">
+			RelativePath="..\..\src\Include\config.h-msvc71">
+			<FileConfiguration
+				Name="Debug|Win32">
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Generation of config.h"
+					CommandLine="copy $(inputPath) $(InputDir)\$(InputName).h"
+					Outputs="..\..\src\Include\config.h"/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32">
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Generation of config.h"
+					CommandLine="copy $(inputPath) $(InputDir)\$(InputName).h"
+					Outputs="..\..\src\Include\config.h"/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath="flightgear.ico">

@@ -473,7 +473,7 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS( \
 	fcntl.h getopt.h malloc.h memory.h stdlib.h sys/param.h sys/stat.h \
-        sys/time.h sys/timeb.h unistd.h windows.h values.h )
+	sys/time.h sys/timeb.h unistd.h windows.h values.h )
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -487,7 +487,7 @@ LIBS="$base_LIBS $network_LIBS $opengl_LIBS"
 AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS( [ \
-        ftime gettimeofday timegm memcpy bcopy mktime strstr rand mkfifo \
+	ftime gettimeofday timegm memcpy bcopy mktime strstr rand mkfifo \
 	random drand48 setitimer getitimer signal GetLocalTime rint getrusage \
 	truncf ] )
 LIBS=$old_LIBS
@@ -503,15 +503,16 @@ AC_CONFIG_FILES([ \
 	man/gl-info.1 \
 	man/js_demo.1 \
 	man/pstest.1 \
-        scripts/Makefile \
-        scripts/debug/Makefile \
-        scripts/perl/Makefile \
-        scripts/perl/examples/Makefile \
-        scripts/python/Makefile \
+	scripts/Makefile \
+	scripts/debug/Makefile \
+	scripts/perl/Makefile \
+	scripts/perl/examples/Makefile \
+	scripts/python/Makefile \
 	src/Makefile \
 	src/Include/Makefile \
 	src/Include/version.h \
 	src/Include/config.h-msvc6 \
+	src/Include/config.h-msvc71 \
 	src/Include/config.h-msvc8 \
 	src/Aircraft/Makefile \
 	src/Airports/Makefile \
@@ -527,7 +528,7 @@ AC_CONFIG_FILES([ \
 	src/FDM/JSBSim/initialization/Makefile \
 	src/FDM/JSBSim/input_output/Makefile \
 	src/FDM/JSBSim/math/Makefile \
-        src/FDM/JSBSim/models/Makefile \
+	src/FDM/JSBSim/models/Makefile \
 	src/FDM/JSBSim/models/flight_control/Makefile \
 	src/FDM/JSBSim/models/atmosphere/Makefile \
 	src/FDM/JSBSim/models/propulsion/Makefile \
