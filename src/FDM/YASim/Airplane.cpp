@@ -602,7 +602,6 @@ void Airplane::compileContactPoints()
         // I made these up
         g->setStaticFriction(0.6f);
         g->setDynamicFriction(0.5f);
-        g->setContactPoint(1);
 
         _model.addGear(g);
     }
@@ -707,8 +706,7 @@ void Airplane::solveGear()
         g->getPosition(pos);
 	Math::sub3(cg, pos, pos);
         gr->wgt = 1.0f/(0.5f+Math::sqrt(pos[0]*pos[0] + pos[1]*pos[1]));
-        if (!g->getIgnoreWhileSolving())
-            total += gr->wgt;
+        total += gr->wgt;
     }
 
     // Renormalize so they sum to 1

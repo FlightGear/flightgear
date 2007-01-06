@@ -28,19 +28,6 @@ void Ground::getGroundPlane(const double pos[3],
     vel[2] = 0.0;
 }
 
-void Ground::getGroundPlane(const double pos[3],
-                              double plane[4], float vel[3],
-                              int *type,
-                              double *frictionFactor, 
-                              double *rollingFriction,
-                              double *loadCapacity,
-                              double *loadResistance,
-                              double *bumpiness,
-                              bool *isSolid)
-{
-    getGroundPlane(pos,plane,vel);
-}
-
 bool Ground::caughtWire(const double pos[4][3])
 {
     return false;

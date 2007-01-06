@@ -477,7 +477,6 @@ void YASim::copyFromYASim()
 	node->setFloatValue("compression-m", g->getCompressDist());
         node->setFloatValue("caster-angle-deg", g->getCasterAngle() * RAD2DEG);
         node->setFloatValue("rollspeed-ms", g->getRollSpeed());
-        node->setBoolValue("ground-is-solid", g->getGroundIsSolid()!=0);
     }
 
     Hook* h = airplane->getHook();
