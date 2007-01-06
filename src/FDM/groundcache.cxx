@@ -578,7 +578,7 @@ public:
         // Trick to get the ends in the right order.
         // Use the x axis in the original coordinate system. Choose the
         // most negative x-axis as the one pointing forward
-        if (v1[0] < v2[0]) {
+        if (v1[0] > v2[0]) {
           cat.start = gv1;
           cat.end = gv2;
         } else {
