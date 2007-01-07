@@ -284,17 +284,14 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
       // pui didn't want the click event so compute a
       // scenegraph intersection point corresponding to the mouse click
       if (updown == MOUSE_BUTTON_DOWN) {
-        FGScenery* scenery = globals->get_scenery();
-        SGVec3d start, dir;
 
         // Get the list of hit callbacks. Take the first callback that
         // accepts the mouse button press and ignore the rest of them
         // That is they get sorted by distance and by scenegraph depth.
         // The nearest one is the first one and the deepest
         // (the most specialized one in the scenegraph) is the first.
-        if (FGRenderer::getPickInfo(start, dir, x, y)) {
-          std::vector<SGSceneryPick> pickList;
-          scenery->pick(start, dir, pickList);
+        std::vector<SGSceneryPick> pickList;
+        if (FGRenderer::pick(x, y, pickList)) {
           std::vector<SGSceneryPick>::const_iterator i;
           for (i = pickList.begin(); i != pickList.end(); ++i) {
             if (i->callback->buttonPressed(b, i->info)) {

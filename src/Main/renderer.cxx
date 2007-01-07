@@ -53,6 +53,7 @@
 
 #include <osgUtil/SceneView>
 #include <osgUtil/UpdateVisitor>
+#include <osgUtil/IntersectVisitor>
 
 #include <osg/io_utils>
 #include <osgDB/WriteFile>
@@ -975,55 +976,94 @@ n = 0.2;
     fgHackFrustum();
 }
 
-bool FGRenderer::getPickInfo( SGVec3d& pt, SGVec3d& dir,
-                              unsigned x, unsigned y )
+bool
+FGRenderer::pick( unsigned x, unsigned y,
+                  std::vector<SGSceneryPick>& pickList )
 {
-  // Get the matrices involved in the transform from global to screen
-  // coordinates.
-  osg::Matrix pm = sceneView->getCamera()->getProjectionMatrix();
+  // wipe out the return ...
+  pickList.resize(0);
 
-  osg::Matrix mv;
-  osg::NodePathList paths;
-  paths = globals->get_scenery()->get_scene_graph()->getParentalNodePaths();
-  if (!paths.empty()) {
-    // Ok, we know that this should not have multiple parents ...
-    // FIXME: is this allways true?
-    mv = osg::computeLocalToEye(sceneView->getCamera()->getViewMatrix(),
-                                paths.front(), false);
-  }
-  
-  // Compose and invert
-  osg::Matrix m = osg::Matrix::inverse(mv*pm);
-  
-  // Get the width and height of the display to be able to normalize the
-  // mouse coordinate
-  float width = fgGetInt("/sim/startup/xsize");
-  float height = fgGetInt("/sim/startup/ysize");
-  
-  // Compute some coordinates of in the line from the eyepoint to the
-  // mouse click coodinates.
-  // First build the normalized projection coordinates
-  osg::Vec4 normPt((2*x - width)/width, -(2*y - height)/height, 1, 1);
-  // Transform them into the real world
-  osg::Vec4 worldPt4 = m.preMult(normPt);
-  if (fabs(worldPt4[3]) < SGLimitsf::min())
+  // we can get called early ...
+  if (!sceneView.valid())
     return false;
-  SGVec3f worldPt(worldPt4[0]/worldPt4[3],
-                  worldPt4[1]/worldPt4[3],
-                  worldPt4[2]/worldPt4[3]);
 
-  // Now build a direction from the point
-  FGViewer* view = globals->get_current_view();
-  dir = normalize(toVec3d(worldPt - SGVec3f(view->get_view_pos())));
+  osg::Node* sceneData = globals->get_scenery()->get_scene_graph();
+  if (!sceneData)
+    return false;
+  osg::Viewport* viewport = sceneView->getViewport();
+  if (!viewport)
+    return false;
 
-  // Copy the start point
-  pt = SGVec3d(view->get_absolute_view_pos());
+  // good old scenery center
+  SGVec3d center = globals->get_scenery()->get_center();
 
-  // OSGFIXME: ist this sufficient??? especially the precision problems here??
-// bool mSceneView->projectWindowXYIntoObject(int x,int y,osg::Vec3& near_point,osg::Vec3& far_point) const;
+  // don't know why, but the update has partly happened somehow,
+  // so update the scneery part of the viewer
+  FGViewer *current_view = globals->get_current_view();
+  // Force update of center dependent values ...
+  current_view->set_dirty();
+  SGVec3d position = current_view->getViewPosition();
+  SGQuatd attitude = current_view->getViewOrientation();
+  SGVec3d osgPosition = attitude.transform(center - position);
+  mCameraView->setPosition(osgPosition.osg());
+  mCameraView->setAttitude(inverse(attitude).osg());
 
+  osg::Matrix projection(sceneView->getProjectionMatrix());
+  osg::Matrix modelview(sceneView->getViewMatrix());
 
-  return true;
+  osg::NodePathList nodePath = sceneData->getParentalNodePaths();
+  // modify the view matrix so that it accounts for this nodePath's
+  // accumulated transform
+  if (!nodePath.empty())
+    modelview.preMult(computeLocalToWorld(nodePath.front()));
+
+  // swap the y values ...
+  y = viewport->height() - y;
+  // set up the pick visitor
+  osgUtil::PickVisitor pickVisitor(viewport, projection, modelview, x, y);
+  sceneData->accept(pickVisitor);
+  if (!pickVisitor.hits())
+    return false;
+
+  // collect all interaction callbacks on the pick ray.
+  // They get stored in the pickCallbacks list where they are sorted back
+  // to front and croasest to finest wrt the scenery node they are attached to
+  osgUtil::PickVisitor::LineSegmentHitListMap::const_iterator mi;
+  for (mi = pickVisitor.getSegHitList().begin();
+       mi != pickVisitor.getSegHitList().end();
+       ++mi) {
+    osgUtil::IntersectVisitor::HitList::const_iterator hi;
+    for (hi = mi->second.begin(); hi != mi->second.end(); ++hi) {
+      // ok, go back the nodes and ask for intersection callbacks,
+      // execute them in top down order
+      const osg::NodePath& np = hi->getNodePath();
+      osg::NodePath::const_reverse_iterator npi;
+      for (npi = np.rbegin(); npi != np.rend(); ++npi) {
+        SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
+        if (!ud)
+          continue;
+        for (unsigned i = 0; i < ud->getNumPickCallbacks(); ++i) {
+          SGPickCallback* pickCallback = ud->getPickCallback(i);
+          if (!pickCallback)
+            continue;
+          SGSceneryPick sceneryPick;
+          /// note that this is done totally in doubles instead of
+          /// just using getWorldIntersectionPoint
+          osg::Vec3d localPt = hi->getLocalIntersectPoint();
+          sceneryPick.info.local = SGVec3d(localPt);
+          if (hi->getMatrix())
+            sceneryPick.info.wgs84 = SGVec3d(localPt*(*hi->getMatrix()));
+          else
+            sceneryPick.info.wgs84 = SGVec3d(localPt);
+          sceneryPick.info.wgs84 += globals->get_scenery()->get_center();
+          sceneryPick.callback = pickCallback;
+          pickList.push_back(sceneryPick);
+        }
+      }
+    }
+  }
+
+  return !pickList.empty();
 }
 
 // end of renderer.cxx

@@ -217,25 +217,6 @@ FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
   return hits;
 }
 
-static const osgUtil::Hit*
-getNearestHit(const osgUtil::IntersectVisitor::HitList& hitList,
-              const SGVec3d& start)
-{
-  const osgUtil::Hit* nearestHit = 0;
-  double dist = SGLimitsd::max();
-  osgUtil::IntersectVisitor::HitList::const_iterator hit;
-  for (hit = hitList.begin(); hit != hitList.end(); ++hit) {
-    SGVec3d point(hit->getWorldIntersectPoint());
-    double newdist = length(start - point);
-    if (newdist < dist) {
-      dist = newdist;
-      nearestHit = &*hit;
-    }
-  }
-
-  return nearestHit;
-}
-
 bool
 FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
                                         SGVec3d& nearestHit, bool exact)
@@ -288,54 +269,4 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
     set_center( saved_center );
 
   return hits;
-}
-
-void
-FGScenery::pick(const SGVec3d& pos, const SGVec3d& dir,
-                std::vector<SGSceneryPick>& pickList)
-{
-  pickList.clear();
-
-  // Make really sure the direction is normalized, is really cheap compared to
-  // computation of ground intersection.
-  SGVec3d start = pos - center;
-  SGVec3d end = start + 1e5*normalize(dir); // FIXME visibility ???
-  
-  osgUtil::IntersectVisitor intersectVisitor;
-//   osgUtil::PickVisitor intersectVisitor;
-//   intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  osg::ref_ptr<osg::LineSegment> lineSegment;
-  lineSegment = new osg::LineSegment(start.osg(), end.osg());
-  intersectVisitor.addLineSegment(lineSegment.get());
-  get_scene_graph()->accept(intersectVisitor);
-  if (!intersectVisitor.hits())
-    return;
-
-  // collect all interaction callbacks on the pick ray.
-  // They get stored in the pickCallbacks list where they are sorted back
-  // to front and croasest to finest wrt the scenery node they are attached to
-  osgUtil::IntersectVisitor::HitList::const_iterator hi;
-  for (hi = intersectVisitor.getHitList(lineSegment.get()).begin();
-       hi != intersectVisitor.getHitList(lineSegment.get()).end();
-       ++hi) {
-
-    // ok, go back the nodes and ask for intersection callbacks,
-    // execute them in top down order
-    const osg::NodePath& np = hi->getNodePath();
-    osg::NodePath::const_reverse_iterator npi;
-    for (npi = np.rbegin(); npi != np.rend(); ++npi) {
-      SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
-      if (!ud)
-        continue;
-      SGPickCallback* pickCallback = ud->getPickCallback();
-      if (!pickCallback)
-        continue;
-
-      SGSceneryPick sceneryPick;
-      sceneryPick.info.wgs84 = center + SGVec3d(hi->getWorldIntersectPoint());
-      sceneryPick.info.local = SGVec3d(hi->getLocalIntersectPoint());
-      sceneryPick.callback = pickCallback;
-      pickList.push_back(sceneryPick);
-    }
-  }
 }

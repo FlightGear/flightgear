@@ -115,8 +115,6 @@ public:
     /// On success, true is returned.
     bool get_cart_ground_intersection(const SGVec3d& start, const SGVec3d& dir,
                                       SGVec3d& nearestHit, bool exact = false);
-    void pick(const SGVec3d& pos, const SGVec3d& dir,
-              std::vector<SGSceneryPick>& pickList);
 
     const SGVec3d& get_center() const { return center; }
     void set_center( const SGVec3d& p );

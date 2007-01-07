@@ -4,6 +4,7 @@
 
 #include <simgear/screen/extensions.hxx>
 #include <simgear/scene/sky/sky.hxx>
+#include <simgear/scene/util/SGPickCallback.hxx>
 
 #define FG_ENABLE_MULTIPASS_CLOUDS 1
 
@@ -45,11 +46,10 @@ public:
      */
     static void setNearFar( float n, float f );
 
-    /** Get the pick start point and direction in global coordinates.
-     *  The inputs are expected to be the x and y coordinates of the
-     *  screen point relative to the window.
+    /** Just pick into the scene and return the pick callbacks on the way ...
      */
-    static bool getPickInfo( SGVec3d& p, SGVec3d& d, unsigned x, unsigned y );
+    static bool pick( unsigned x, unsigned y,
+                      std::vector<SGSceneryPick>& pickList );
 };
 
 #endif
