@@ -499,17 +499,6 @@ void PilotOffsetInit( sgVec3 cart )
 	}
 }
 
-void PilotOffsetAdjust( puObject * )
-{
-	if( PO_vec == 0 ) {
-		PilotOffsetInit();
-	}
-	sgVec3Slider *me = (sgVec3Slider *)PO_vec -> getUserData();
-	me -> adjust( me );
-	me -> stashVec();
-	FG_PUSH_PUI_DIALOG( me );
-}
-
 // external to get pilot offset vector for viewer
 sgVec3 *PilotOffsetGet()
 {

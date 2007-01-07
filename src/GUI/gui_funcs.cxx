@@ -477,7 +477,6 @@ void printScreen ( puObject *obj ) {
 	show_pu_cursor = true;
 	puHideCursor();
     }
-    // BusyCursor( 0 );
 
     CGlPrinter p( CGlPrinter::PRINT_BITMAP );
     int cur_width = fgGetInt("/sim/startup/xsize");
@@ -485,7 +484,6 @@ void printScreen ( puObject *obj ) {
     p.Begin( "FlightGear", cur_width*3, cur_height*3 );
     p.End( hiResScreenCapture(3) );
 
-    // BusyCursor(1);
     if ( show_pu_cursor ) {
 	puShowCursor();
     }

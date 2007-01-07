@@ -62,9 +62,7 @@ extern void fgHiResDump();
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
 extern void printScreen(puObject *);
 #endif
-extern void PilotOffsetAdjust(puObject *);
 extern void helpCb(puObject *);
-extern void fgReshape(int, int);
 
 typedef struct {
         char *name;
@@ -81,11 +79,7 @@ extern char *gui_msg_RESET;  // "RESET"
 
 // mouse.cxx
 extern void guiInitMouse(int width, int height);
-extern void guiMotionFunc ( int x, int y );
-extern void guiMouseFunc(int button, int updown, int x, int y);
 extern void maybeToggleMouse( void );
-extern void BusyCursor( int restore );
-extern void CenterView( void );
 extern void TurnCursorOn( void );
 extern void TurnCursorOff( void );
 

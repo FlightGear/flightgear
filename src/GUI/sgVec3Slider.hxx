@@ -16,7 +16,6 @@
 
 void PilotOffsetInit();
 void PilotOffsetInit( sgVec3 vec );
-void PilotOffsetAdjust( puObject * );
 void Vec3FromHeadingPitchRadius( sgVec3 vec3, float heading, float pitch, float radius );
 void HeadingPitchRadiusFromVec3( sgVec3 hpr, sgVec3 vec3 );
 //void PilotOffsetGet( float *po );

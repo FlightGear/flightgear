@@ -48,7 +48,6 @@ void initMouseQuat(void) {
 
 void reInit(puObject *cb)
 {
-    // BusyCursor(0);
     Quat0();
 
     static const SGPropertyNode *master_freeze
@@ -90,8 +89,6 @@ void reInit(puObject *cb)
 
     fgSetBool("/sim/signals/reinit", true);
 
-    // BusyCursor(1);
-    
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
     }
