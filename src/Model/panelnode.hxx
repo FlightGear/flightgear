@@ -53,9 +53,9 @@ private:
     // The matrix transformation state that was active the last time
     // we were rendered.  Used by the mouse code to compute
     // intersections.
-    osg::Matrix _lastModelview;
-    osg::Matrix _lastProjection;
-    int   _lastViewport[4];
+    mutable osg::Matrix _lastModelview;
+    mutable osg::Matrix _lastProjection;
+    mutable double _lastViewport[4];
 };
 
 

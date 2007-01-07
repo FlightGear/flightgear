@@ -130,12 +130,14 @@ FGPanelNode::drawImplementation(osg::State& state) const
   // coordinates to panel coordinates when the user clicks the
   // mouse.
   // OSGFIXME: we don't need that when we can really pick
-  const_cast<osg::Matrix&>(_lastModelview) = state.getModelViewMatrix();
-  const_cast<osg::Matrix&>(_lastProjection) = state.getProjectionMatrix();
-  state.getCurrentViewport()->getViewport(const_cast<int&>(_lastViewport[0]),
-                                          const_cast<int&>(_lastViewport[1]),
-                                          const_cast<int&>(_lastViewport[2]),
-                                          const_cast<int&>(_lastViewport[3]));
+  _lastModelview = state.getModelViewMatrix();
+  _lastProjection = state.getProjectionMatrix();
+
+  const osg::Viewport* vp = state.getCurrentViewport();
+  _lastViewport[0] = vp->x();
+  _lastViewport[1] = vp->y();
+  _lastViewport[2] = vp->width();
+  _lastViewport[3] = vp->height();
   
   _panel->draw(state);
 }
