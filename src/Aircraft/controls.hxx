@@ -161,6 +161,7 @@ private:
     double copilot_brake_right;
     double brake_parking;
     double steering;
+    bool nose_wheel_steering;
     bool gear_down;
     bool antiskid;
     bool tailhook;
@@ -346,6 +347,7 @@ public:
     inline double get_copilot_brake_right() const { return copilot_brake_right; }
     inline double get_brake_parking() const { return brake_parking; }
     inline double get_steering() const { return steering; }
+    inline bool get_nose_wheel_steering() const { return nose_wheel_steering; }
     inline bool get_gear_down() const { return gear_down; }
     inline bool get_antiskid() const { return antiskid; }
     inline bool get_tailhook() const { return tailhook; }
@@ -533,6 +535,7 @@ public:
     void set_brake_parking( double pos );
     void set_steering( double pos );
     void move_steering( double amt );
+    void set_nose_wheel_steering( bool nws );
     void set_gear_down( bool gear );
     void set_antiskid( bool val );
     void set_tailhook( bool val );

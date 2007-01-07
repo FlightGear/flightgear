@@ -78,6 +78,7 @@ FGControls::FGControls() :
     copilot_brake_right( 0.0 ),
     brake_parking( 0.0 ),
     steering( 0.0 ),
+    nose_wheel_steering( true ),
     gear_down( true ),
     antiskid( true ),
     tailhook( false ),
@@ -157,6 +158,7 @@ void FGControls::reset_all()
     set_fuel_selector( ALL_TANKS, true );
     dump_valve = false;
     steering =  0.0;
+    nose_wheel_steering = true;
     gear_down = true;
     tailhook = false;
     launchbar = false;
@@ -467,6 +469,11 @@ FGControls::bind ()
   fgTie("/controls/gear/steering", this,
 	&FGControls::get_steering, &FGControls::set_steering);
   fgSetArchivable("/controls/gear/steering");
+
+  fgTie("/controls/gear/nose-wheel-steering", this,
+	&FGControls::get_nose_wheel_steering,
+        &FGControls::set_nose_wheel_steering);
+  fgSetArchivable("/controls/gear/nose-wheel-steering");
 
   fgTie("/controls/gear/gear-down", this,
 	&FGControls::get_gear_down, &FGControls::set_gear_down);
@@ -915,7 +922,8 @@ void FGControls::unbind ()
   fgUntie("/controls/gear/brake-right");
   fgUntie("/controls/gear/brake-parking");
   fgUntie("/controls/gear/steering");
-  fgUntie("/controls/gear/gear_down");
+  fgUntie("/controls/gear/nose-wheel-steering");
+  fgUntie("/controls/gear/gear-down");
   fgUntie("/controls/gear/antiskid");
   fgUntie("/controls/gear/tailhook");
   fgUntie("/controls/gear/launchbar");
@@ -1708,6 +1716,12 @@ FGControls::set_steering( double angle )
 {
     steering = angle;
     CLAMP(&steering, -80.0, 80.0);
+}
+
+void
+FGControls::set_nose_wheel_steering( bool nws )
+{
+    nose_wheel_steering = nws;
 }
 
 void
