@@ -299,7 +299,7 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
           for (i = pickList.begin(); i != pickList.end(); ++i) {
             if (i->callback->buttonPressed(b, i->info)) {
               _activePickCallbacks[b].push_back(i->callback);
-              break;
+              return;
             }
           }
         }
