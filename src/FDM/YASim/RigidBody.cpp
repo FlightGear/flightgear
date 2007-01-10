@@ -204,4 +204,14 @@ void RigidBody::getAngularAccel(float* accelOut)
     Math::vmul33(_invI, v, v);   // v = invI*(tau + (omega X I*omega))
 }
 
+void RigidBody::getInertiaMatrix(float* inertiaOut)
+{
+    // valid only after a call to RigidBody::recalc()
+    // See comment at top of RigidBody.hpp on units.
+    for(int i=0;i<9;i++)
+    {
+       inertiaOut[i] = _tI[i];
+    }
+}
+
 }; // namespace yasim
