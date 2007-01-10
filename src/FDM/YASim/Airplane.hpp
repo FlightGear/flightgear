@@ -108,7 +108,7 @@ private:
     void solve();
     void solveHelicopter();
     float compileWing(Wing* w);
-    float compileRotorgear();
+    void compileRotorgear();
     float compileFuselage(Fuselage* f);
     void compileGear(GearRec* gr);
     void applyDragFactor(float factor);

@@ -482,9 +482,9 @@ float Airplane::compileWing(Wing* w)
     return wgt;
 }
 
-float Airplane::compileRotorgear()
+void Airplane::compileRotorgear()
 {
-    return getRotorgear()->compile(_model.getBody());
+    getRotorgear()->compile();
 }
 
 float Airplane::compileFuselage(Fuselage* f)
@@ -626,8 +626,6 @@ void Airplane::compile()
     for(i=0; i<_vstabs.size(); i++)
         aeroWgt += compileWing((Wing*)_vstabs.get(i)); 
 
-    // The rotor(s)
-    aeroWgt += compileRotorgear(); 
 
     // The fuselage(s)
     for(i=0; i<_fuselages.size(); i++)
@@ -681,7 +679,12 @@ void Airplane::compile()
 
     solveGear();
     if(_wing && _tail) solve();
-    else solveHelicopter();
+    else
+    {
+       // The rotor(s) mass:
+       compileRotorgear(); 
+       solveHelicopter();
+    }
 
     // Do this after solveGear, because it creates "gear" objects that
     // we don't want to affect.

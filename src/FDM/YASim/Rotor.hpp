@@ -223,7 +223,7 @@ public:
     ~Rotorgear();
     int isInUse() {return _in_use;}
     void setInUse() {_in_use = 1;}
-    float compile(RigidBody* body);
+    void compile();
     void addRotor(Rotor* rotor);
     int getNumRotors() {return _rotors.size();}
     Rotor* getRotor(int i) {return (Rotor*)_rotors.get(i);}

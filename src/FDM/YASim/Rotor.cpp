@@ -1362,24 +1362,13 @@ void Rotorgear::addRotor(Rotor* rotor)
     _in_use = 1;
 }
 
-float Rotorgear::compile(RigidBody* body)
+void Rotorgear::compile()
 {
     float wgt = 0;
     for(int j=0; j<_rotors.size(); j++) {
         Rotor* r = (Rotor*)_rotors.get(j);
         r->compile();
-        int i;
-        for(i=0; i<r->numRotorparts(); i++) {
-            Rotorpart* rp = (Rotorpart*)r->getRotorpart(i);
-            float mass = rp->getWeight();
-            mass = mass * Math::sqrt(mass);
-            float pos[3];
-            rp->getPosition(pos);
-            body->addMass(mass, pos);
-            wgt += mass;
-        }
     }
-    return wgt;
 }
 
 void Rotorgear::getDownWash(float *pos, float * v_heli, float *downwash)
