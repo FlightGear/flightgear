@@ -103,6 +103,10 @@ int main(int argc, char** argv)
         float drag = 1000 * a->getDragCoefficient();
         float cg[3];
         a->getModel()->getBody()->getCG(cg);
+        a->getModel()->getBody()->recalc();
+
+        float SI_inertia[9];
+        a->getModel()->getBody()->getInertiaMatrix(SI_inertia);
         
         printf("Solution results:");
         printf("       Iterations: %d\n", a->getSolutionIterations());
@@ -111,7 +115,10 @@ int main(int argc, char** argv)
         printf("       Cruise AoA: %f\n", aoa);
         printf("   Tail Incidence: %f\n", tail);
         printf("Approach Elevator: %f\n", a->getApproachElevator());
-        printf("               CG: %.3f, %.3f, %.3f\n", cg[0], cg[1], cg[2]);
+        printf("               CG: x:%.3f, y:%.3f, z:%.3f\n\n", cg[0], cg[1], cg[2]);
+        printf("  Inertia tensor : %.3f, %.3f, %.3f\n", SI_inertia[0], SI_inertia[1], SI_inertia[2]);
+        printf("        [kg*m^2]   %.3f, %.3f, %.3f\n", SI_inertia[3], SI_inertia[4], SI_inertia[5]);
+        printf("     Origo at CG   %.3f, %.3f, %.3f\n", SI_inertia[6], SI_inertia[7], SI_inertia[8]);
     }
     delete fdm;
     return 0;
