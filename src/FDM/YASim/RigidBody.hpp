@@ -97,6 +97,9 @@ public:
     // Returns the instantaneous rate of change of the angular
     // velocity, as a vector in local coordinates.
     void getAngularAccel(float* accelOut);
+    
+    // Returns the intertia tensor in a float[9] allocated by caller.
+    void getInertiaMatrix(float* inertiaOut);
 
 private:
     struct Mass { float m; float p[3]; };
