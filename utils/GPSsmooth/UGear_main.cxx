@@ -2,7 +2,11 @@
 #  include <config.h>
 #endif
 
-#include <strings.h>		// for bzero()
+#ifndef _MSC_VER
+#  include <strings.h>		// for bzero()
+#else
+#  define bzero(a,b) memset(a,0,b)
+#endif
 #include <iostream>
 #include <string>
 
