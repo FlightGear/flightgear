@@ -74,6 +74,50 @@ static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
     return NASTR(t);
 }
 
+static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    naRef val = naVec_get(argv, 0);
+    char *a = naStr_data(val);
+    SGPropertyNode::Attribute attr;
+    if(!a) a = "";
+    if(!strcmp(a, "READ"))             attr = SGPropertyNode::READ;
+    else if(!strcmp(a, "WRITE"))       attr = SGPropertyNode::WRITE;
+    else if(!strcmp(a, "ARCHIVE"))     attr = SGPropertyNode::ARCHIVE;
+    else if(!strcmp(a, "TRACE_READ"))  attr = SGPropertyNode::TRACE_READ;
+    else if(!strcmp(a, "TRACE_WRITE")) attr = SGPropertyNode::TRACE_WRITE;
+    else if(!strcmp(a, "USERARCHIVE")) attr = SGPropertyNode::USERARCHIVE;
+    else if(!strcmp(a, "TIED")) {
+        return naNum((*node)->isTied());
+    } else {
+        naRuntimeError(c, "props.getAttribute() with invalid attribute");
+        return naNil();
+    }
+    return naNum((*node)->getAttribute(attr));
+}
+
+static naRef f_setAttribute(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    naRef val = naVec_get(argv, 0);
+    char *a = naStr_data(val);
+    SGPropertyNode::Attribute attr;
+    if(!a) a = "";
+    if(!strcmp(a, "READ"))             attr = SGPropertyNode::READ;
+    else if(!strcmp(a, "WRITE"))       attr = SGPropertyNode::WRITE;
+    else if(!strcmp(a, "ARCHIVE"))     attr = SGPropertyNode::ARCHIVE;
+    else if(!strcmp(a, "TRACE_READ"))  attr = SGPropertyNode::TRACE_READ;
+    else if(!strcmp(a, "TRACE_WRITE")) attr = SGPropertyNode::TRACE_WRITE;
+    else if(!strcmp(a, "USERARCHIVE")) attr = SGPropertyNode::USERARCHIVE;
+    else {
+        naRuntimeError(c, "props.setAttribute() with invalid attribute");
+        return naNil();
+    }
+    naRef ret = naNum((*node)->getAttribute(attr));
+    (*node)->setAttribute(attr, naTrue(naVec_get(argv, 1)) ? true : false);
+    return ret;
+}
+
 static naRef f_getName(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
@@ -277,6 +321,8 @@ static struct {
     char* name;
 } propfuncs[] = {
     { f_getType, "_getType" },
+    { f_getAttribute, "_getAttribute" },
+    { f_setAttribute, "_setAttribute" },
     { f_getName, "_getName" },
     { f_getIndex, "_getIndex" },
     { f_getValue, "_getValue" },
