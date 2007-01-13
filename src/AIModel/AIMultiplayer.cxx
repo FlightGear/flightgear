@@ -57,7 +57,7 @@ bool FGAIMultiplayer::init() {
         isTanker = true;
         //	   cout << "isTanker " << isTanker << " " << mCallSign <<endl;
     }
-   return FGAIBase::init();
+   return FGAIBase::init(true);
 }
 
 void FGAIMultiplayer::bind() {

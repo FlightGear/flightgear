@@ -120,7 +120,7 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
 
 bool FGAIAircraft::init() {
     //refuel_node = fgGetNode("systems/refuel/contact", true);
-    return FGAIBase::init();
+    return FGAIBase::init(true);
 }
 
 
@@ -647,7 +647,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
       no_roll = prev->on_ground;
       if (no_roll) {
 	Transform();         // make sure aip is initialized.
-	getGroundElev(60.1); // make sure it's exectuted first time around, so force a large dt value
+	getGroundElev(60.1); // make sure it's executed first time around, so force a large dt value
 	doGroundAltitude(); 
       }
       // Make sure to announce the aircraft's position 
@@ -655,16 +655,19 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
       prevSpeed = 0;
       return;
     } // end of initialization
-    
+     ///////////////////////////////////////////////////////////////////////////
+    // Check Execution time (currently once every 100 ms) 
+    // Add a bit of randomization to prevent the execution of all flight plans
+    // in synchrony, which can add significant periodic framerate flutter.
     ///////////////////////////////////////////////////////////////////////////
-    // Check Execution time (currently once every 100 ms
-    ///////////////////////////////////////////////////////////////////////////
-    if ((dt_count < 0.1) || (now < fp->getStartTime())) {
+    double rand_exec_time = (rand() % 100) / 100;
+    if ((dt_count < (0.1+rand_exec_time)) || (now < fp->getStartTime())) {
       //cerr  << "done fp dt" << endl;
       return;
     } else {
       dt_count = 0;
     }
+
     // check to see if we've reached the lead point for our next turn
     double dist_to_go = fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr);
 

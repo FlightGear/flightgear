@@ -136,12 +136,27 @@ FGAIManager::attach(SGSharedPtr<FGAIBase> model)
   unsigned idx = mNumAiTypeModels[model->getType()];
   const char* typeString = model->getTypeString();
   SGPropertyNode* root = globals->get_props()->getNode("ai/models", true);
-  SGPropertyNode* p = root->getNode(typeString, idx, true);
+  SGPropertyNode* p;
+  int i;
+  for (i=0;i<10000;i++) //find free index in the property tree, if we have
+      //more than 10000 mp-aircrafts in the property tree we should optimize the mp-server
+  {
+    p = root->getNode(typeString, i, false);
+    if (!p) break;
+    if (p->getIntValue("id",-1)==model->getID())
+    {
+        p->setStringValue("callsign","***invalid node***"); //debug only, should never set!
+                                              
+    }
+  }
+  p = root->getNode(typeString, i, true);
   model->setManager(this, p);
   ai_list.push_back(model);
   ++mNumAiModels;
   ++(mNumAiTypeModels[model->getType()]);
-  model->init();
+  model->init(model->getType()==FGAIBase::otAircraft
+      || model->getType()==FGAIBase::otMultiplayer
+      || model->getType()==FGAIBase::otStatic);
   model->bind();
 }
 

@@ -42,7 +42,7 @@ FGAIStatic::~FGAIStatic() {
 }
 
 bool FGAIStatic::init() {
-   return FGAIBase::init();
+   return FGAIBase::init(true);
 }
 
 void FGAIStatic::bind() {
