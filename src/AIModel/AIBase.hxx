@@ -51,7 +51,7 @@ public:
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
-    virtual bool init();
+    virtual bool init(bool search_in_AI_path=false);
     virtual void update(double dt);
     virtual void bind();
     virtual void unbind();
@@ -76,6 +76,10 @@ public:
     bool getDie();
 
     SGVec3d getCartPosAt(const SGVec3d& off) const;
+    SGVec3d getCartPos() const;
+    double _getCartPosX() const;
+    double _getCartPosY() const;
+    double _getCartPosZ() const;
 
 protected:
 

@@ -113,9 +113,9 @@ void FGAIAircraft::readFromScenario(SGPropertyNode* scFileNode) {
 }
 
 
-bool FGAIAircraft::init() {
+bool FGAIAircraft::init(bool search_in_AI_path) {
     //refuel_node = fgGetNode("systems/refuel/contact", true);
-    return FGAIBase::init();
+    return FGAIBase::init(search_in_AI_path);
 }
 
 

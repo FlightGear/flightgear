@@ -54,10 +54,10 @@ void FGAIThermal::readFromScenario(SGPropertyNode* scFileNode) {
   setHeight(scFileNode->getDoubleValue("height-msl", 5000.0));
 }
 
-bool FGAIThermal::init() {
+bool FGAIThermal::init(bool search_in_AI_path) {
    factor = 8.0 * max_strength / (diameter * diameter * diameter);
    setAltitude( height );
-   return FGAIBase::init();
+   return FGAIBase::init(search_in_AI_path);
 }
 
 void FGAIThermal::bind() {

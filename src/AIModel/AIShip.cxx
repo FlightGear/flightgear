@@ -50,7 +50,7 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
   }
 }
 
-bool FGAIShip::init() {
+bool FGAIShip::init(bool search_in_AI_path) {
    
    hdg_lock = false;
    rudder = 0.0;
@@ -61,7 +61,7 @@ bool FGAIShip::init() {
    speed_constant = 0.05;
    hdg_constant = 0.01;
    
-   return FGAIBase::init();
+   return FGAIBase::init(search_in_AI_path);
 }
 
 void FGAIShip::bind() {

@@ -33,7 +33,7 @@ public:
 
     void readFromScenario(SGPropertyNode* scFileNode);
 
-    bool init();
+    bool init(bool search_in_AI_path=false);
     virtual void bind();
     virtual void unbind();
     void update(double dt);

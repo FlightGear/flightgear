@@ -35,7 +35,7 @@ public:
 	FGAIStatic();
 	~FGAIStatic();
 
-	virtual bool init();
+	virtual bool init(bool search_in_AI_path=false);
         virtual void bind();
         virtual void unbind();
 	virtual void update(double dt);

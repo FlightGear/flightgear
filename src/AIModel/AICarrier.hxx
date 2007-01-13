@@ -100,7 +100,7 @@ public:
     float Horizon(float h);
     bool OutsideBox();
 
-    bool init();
+    bool init(bool search_in_AI_path=false);
 
     virtual const char* getTypeString(void) const { return "carrier"; }
 

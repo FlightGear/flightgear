@@ -41,8 +41,8 @@ FGAIStatic::FGAIStatic() : FGAIBase(otStatic) {
 FGAIStatic::~FGAIStatic() {
 }
 
-bool FGAIStatic::init() {
-   return FGAIBase::init();
+bool FGAIStatic::init(bool search_in_AI_path) {
+   return FGAIBase::init(search_in_AI_path);
 }
 
 void FGAIStatic::bind() {

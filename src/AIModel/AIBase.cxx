@@ -126,14 +126,27 @@ void FGAIBase::Transform() {
 }
 
 
-bool FGAIBase::init() {
+bool FGAIBase::init(bool search_in_AI_path) {
 
-   if (!model_path.empty()) {
-     try {
-       model = load3DModel( globals->get_fg_root(), model_path, props,
-                            globals->get_sim_time_sec() );
-     } catch (const sg_exception &e) {
-       model = NULL;
+    if (!model_path.empty()) {
+     if ( (search_in_AI_path)
+          &&(model_path.substr(model_path.size() - 4, 4) == ".xml")) {
+       SGPath ai_path("AI");
+       ai_path.append(model_path);
+       try {
+         model = load3DModel( globals->get_fg_root(), ai_path.str(), props,
+                        globals->get_sim_time_sec() );
+       } catch (const sg_exception &e) {
+         model = NULL;
+       }
+     } else model = NULL;
+     if (!model) {
+       try {
+         model = load3DModel( globals->get_fg_root(), model_path, props,
+                        globals->get_sim_time_sec() );
+       } catch (const sg_exception &e) {
+         model = NULL;
+       }
      }
    }
    if (model) {
@@ -154,7 +167,6 @@ bool FGAIBase::init() {
 
    return true;
 }
-
 
 ssgBranch * FGAIBase::load3DModel(const string& fg_root,
                                   const string &path,
@@ -210,6 +222,19 @@ void FGAIBase::bind() {
                                          &FGAIBase::_getLongitude,
                                          &FGAIBase::_setLongitude));
 
+   props->tie("position/global-x",
+               SGRawValueMethods<FGAIBase,double>(*this,
+                                         &FGAIBase::_getCartPosX,
+                                         0));
+   props->tie("position/global-y",
+               SGRawValueMethods<FGAIBase,double>(*this,
+                                         &FGAIBase::_getCartPosY,
+                                         0));
+   props->tie("position/global-z",
+               SGRawValueMethods<FGAIBase,double>(*this,
+                                         &FGAIBase::_getCartPosZ,
+                                         0));
+
    props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
    props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
    props->tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
@@ -251,6 +276,9 @@ void FGAIBase::unbind() {
     props->untie("position/altitude-ft");
     props->untie("position/latitude-deg");
     props->untie("position/longitude-deg");
+    props->untie("position/global-x");
+    props->untie("position/global-y");
+    props->untie("position/global-z");
 
     props->untie("orientation/pitch-deg");
     props->untie("orientation/roll-deg");
@@ -387,6 +415,42 @@ FGAIBase::getCartPosAt(const SGVec3d& _off) const
   SGVec3d cartPos = SGVec3d::fromGeod(pos);
 
   return cartPos + off;
+}
+
+SGVec3d
+FGAIBase::getCartPos() const
+{
+  // Transform that one to the horizontal local coordinate system.
+  
+  SGQuatd hlTrans = SGQuatd::fromLonLat(pos);
+  // and postrotate the orientation of the AIModel wrt the horizontal
+  // local frame
+  hlTrans *= SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+
+  SGVec3d cartPos = SGVec3d::fromGeod(pos);
+
+  return cartPos;
+}
+
+double
+FGAIBase::_getCartPosX() const
+{
+    SGVec3d cartPos = getCartPos();
+    return cartPos.x();
+}
+
+double
+FGAIBase::_getCartPosY() const
+{
+    SGVec3d cartPos = getCartPos();
+    return cartPos.y();
+}
+
+double
+FGAIBase::_getCartPosZ() const
+{
+    SGVec3d cartPos = getCartPos();
+    return cartPos.z();
 }
 
 /*

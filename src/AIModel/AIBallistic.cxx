@@ -59,8 +59,8 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
   setStabilisation(scFileNode->getBoolValue("aero_stabilized", false));
 }
 
-bool FGAIBallistic::init() {
-   FGAIBase::init();
+bool FGAIBallistic::init(bool search_in_AI_path) {
+   FGAIBase::init(search_in_AI_path);
    hdg = azimuth;
    pitch = elevation;
    roll = rotation;
