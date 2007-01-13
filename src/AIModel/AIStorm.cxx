@@ -74,8 +74,8 @@ void FGAIStorm::readFromScenario(SGPropertyNode* scFileNode) {
   setStrengthNorm(scFileNode->getDoubleValue("strength-norm", 1.0)); 
 }
 
-bool FGAIStorm::init() {
-   return FGAIBase::init();
+bool FGAIStorm::init(bool search_in_AI_path) {
+   return FGAIBase::init(search_in_AI_path);
 }
 
 void FGAIStorm::bind() {

@@ -43,7 +43,7 @@ FGAIMultiplayer::FGAIMultiplayer() : FGAIBase(otMultiplayer) {
 FGAIMultiplayer::~FGAIMultiplayer() {
 }
 
-bool FGAIMultiplayer::init() {
+bool FGAIMultiplayer::init(bool search_in_AI_path) {
     //refuel_node = fgGetNode("systems/refuel/contact", true);
     isTanker = false; // do this until this property is
                       // passed over the net
@@ -57,7 +57,7 @@ bool FGAIMultiplayer::init() {
         isTanker = true;
         //	   cout << "isTanker " << isTanker << " " << mCallSign <<endl;
     }
-   return FGAIBase::init(true);
+   return FGAIBase::init(search_in_AI_path);
 }
 
 void FGAIMultiplayer::bind() {

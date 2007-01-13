@@ -309,8 +309,8 @@ void FGAICarrier::update(double dt) {
       source = 0;
 } //end update
 
-bool FGAICarrier::init() {
-    if (!FGAIShip::init())
+bool FGAICarrier::init(bool search_in_AI_path) {
+    if (!FGAIShip::init(search_in_AI_path))
         return false;
 
     // process the 3d model here
