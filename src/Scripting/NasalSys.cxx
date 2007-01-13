@@ -260,9 +260,7 @@ static naRef f_fgcommand(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "bad arguments to fgcommand()");
     naRef cmd = args[0], props = args[1];
     SGPropertyNode_ptr* node = (SGPropertyNode_ptr*)naGhost_ptr(props);
-    globals->get_commands()->execute(naStr_data(cmd), *node);
-    return naNil();
-
+    return naNum(globals->get_commands()->execute(naStr_data(cmd), *node));
 }
 
 // settimer(func, dt, simtime) extension function.  Falls through to
