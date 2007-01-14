@@ -81,13 +81,13 @@ static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
     char *a = naStr_data(val);
     SGPropertyNode::Attribute attr;
     if(!a) a = "";
-    if(!strcmp(a, "READ"))             attr = SGPropertyNode::READ;
-    else if(!strcmp(a, "WRITE"))       attr = SGPropertyNode::WRITE;
-    else if(!strcmp(a, "ARCHIVE"))     attr = SGPropertyNode::ARCHIVE;
-    else if(!strcmp(a, "TRACE_READ"))  attr = SGPropertyNode::TRACE_READ;
-    else if(!strcmp(a, "TRACE_WRITE")) attr = SGPropertyNode::TRACE_WRITE;
-    else if(!strcmp(a, "USERARCHIVE")) attr = SGPropertyNode::USERARCHIVE;
-    else if(!strcmp(a, "TIED")) {
+    if(!strcmp(a, "read"))             attr = SGPropertyNode::READ;
+    else if(!strcmp(a, "write"))       attr = SGPropertyNode::WRITE;
+    else if(!strcmp(a, "archive"))     attr = SGPropertyNode::ARCHIVE;
+    else if(!strcmp(a, "trace-read"))  attr = SGPropertyNode::TRACE_READ;
+    else if(!strcmp(a, "trace-write")) attr = SGPropertyNode::TRACE_WRITE;
+    else if(!strcmp(a, "userarchive")) attr = SGPropertyNode::USERARCHIVE;
+    else if(!strcmp(a, "tied")) {
         return naNum((*node)->isTied());
     } else {
         naRuntimeError(c, "props.getAttribute() with invalid attribute");
@@ -103,12 +103,12 @@ static naRef f_setAttribute(naContext c, naRef me, int argc, naRef* args)
     char *a = naStr_data(val);
     SGPropertyNode::Attribute attr;
     if(!a) a = "";
-    if(!strcmp(a, "READ"))             attr = SGPropertyNode::READ;
-    else if(!strcmp(a, "WRITE"))       attr = SGPropertyNode::WRITE;
-    else if(!strcmp(a, "ARCHIVE"))     attr = SGPropertyNode::ARCHIVE;
-    else if(!strcmp(a, "TRACE_READ"))  attr = SGPropertyNode::TRACE_READ;
-    else if(!strcmp(a, "TRACE_WRITE")) attr = SGPropertyNode::TRACE_WRITE;
-    else if(!strcmp(a, "USERARCHIVE")) attr = SGPropertyNode::USERARCHIVE;
+    if(!strcmp(a, "read"))             attr = SGPropertyNode::READ;
+    else if(!strcmp(a, "write"))       attr = SGPropertyNode::WRITE;
+    else if(!strcmp(a, "archive"))     attr = SGPropertyNode::ARCHIVE;
+    else if(!strcmp(a, "trace-read"))  attr = SGPropertyNode::TRACE_READ;
+    else if(!strcmp(a, "trace-write")) attr = SGPropertyNode::TRACE_WRITE;
+    else if(!strcmp(a, "userarchive")) attr = SGPropertyNode::USERARCHIVE;
     else {
         naRuntimeError(c, "props.setAttribute() with invalid attribute");
         return naNil();
