@@ -188,6 +188,7 @@
 #define HAVE_MEMORY_H 1
 
 #define HAVE_MEMCPY 1
+#define NOMINMAX 1
 
 #ifndef ENABLE_AUDIO_SUPPORT
 #define  ENABLE_AUDIO_SUPPORT
