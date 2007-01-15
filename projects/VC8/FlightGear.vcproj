@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ssgAux.lib ul.lib osg.lib osgDB.lib osgUtil.lib OpenThreadsWin32.lib pthreadvc2.lib Alut.lib openal32.lib zlib1.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
+				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ssgAux.lib ul.lib osgParticle.lib osg.lib osgDB.lib osgUtil.lib OpenThreadsWin32.lib pthreadvc2.lib Alut.lib openal32.lib zlib1.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../OpenThreads/lib/win32;../../../OpenSceneGraph/lib/win32;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib;$(NOINHERIT)"
 				GenerateDebugInformation="true"
@@ -239,6 +239,10 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath="..\VC7.1\flightgear.rc"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"
