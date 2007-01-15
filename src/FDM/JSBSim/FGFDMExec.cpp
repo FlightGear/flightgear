@@ -409,6 +409,13 @@ double FGFDMExec::GetSimTime(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+double FGFDMExec::GetDeltaT(void)
+{
+  return (State->Getdt());
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 vector <string> FGFDMExec::EnumerateFDMs(void)
 {
   vector <string> FDMList;

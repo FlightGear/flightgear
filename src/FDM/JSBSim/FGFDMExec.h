@@ -311,6 +311,9 @@ public:
   /// Returns the current time.
   double GetSimTime(void);
 
+  /// Returns the current frame time (delta T).
+  double GetDeltaT(void);
+
   /// Returns a pointer to the property manager object.
   FGPropertyManager* GetPropertyManager(void);
   /// Returns a vector of strings representing the names of all loaded models (future)

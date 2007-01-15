@@ -148,6 +148,7 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) : Exec(fdmex),
     }
   }
 
+  State = Exec->GetState();
   LongForceLagFilterCoeff = 1/State->Getdt(); // default longitudinal force filter coefficient
   LatForceLagFilterCoeff  = 1/State->Getdt(); // default lateral force filter coefficient
 
