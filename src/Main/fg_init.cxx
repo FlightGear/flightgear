@@ -507,7 +507,8 @@ do_options (int argc, char ** argv)
 }
 
 
-static string fgFindAircraftPath( const SGPath &path, const string &aircraft ) {
+#define MAXDEPTH 1
+static string fgFindAircraftPath( const SGPath &path, const string &aircraft, int depth = 0 ) {
     ulDirEnt* dire;
     ulDir *dirp = ulOpenDir(path.str().c_str());
     if (dirp == NULL) {
@@ -517,14 +518,14 @@ static string fgFindAircraftPath( const SGPath &path, const string &aircraft ) {
 
     string result;
     while ((dire = ulReadDir(dirp)) != NULL) {
-        if (dire->d_isdir) {
+        if (dire->d_isdir && depth < MAXDEPTH) {
             if ( strcmp("CVS", dire->d_name) && strcmp(".", dire->d_name)
                  && strcmp("..", dire->d_name) && strcmp("AI", dire->d_name))
             {
                 SGPath next = path;
                 next.append(dire->d_name);
 
-                result = fgFindAircraftPath( next, aircraft );
+                result = fgFindAircraftPath( next, aircraft, depth + 1 );
                 if ( ! result.empty() ) {
                     break;
                 }
