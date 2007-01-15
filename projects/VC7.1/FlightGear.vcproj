@@ -482,6 +482,12 @@
 					RelativePath="..\..\src\Fdm\JSBSim\math\FGColumnVector3.h">
 				</File>
 				<File
+					RelativePath="..\..\src\Fdm\JSBSim\math\FGCondition.cpp">
+				</File>
+				<File
+					RelativePath="..\..\src\Fdm\JSBSim\math\FGCondition.h">
+				</File>
+				<File
 					RelativePath="..\..\src\Fdm\JSBSim\math\FGFunction.cpp">
 				</File>
 				<File
@@ -637,12 +643,6 @@
 					Name="flight_control"
 					Filter="">
 					<File
-						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGCondition.cpp">
-					</File>
-					<File
-						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGCondition.h">
-					</File>
-					<File
 						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGDeadBand.cpp">
 					</File>
 					<File
@@ -683,6 +683,12 @@
 					</File>
 					<File
 						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGKinemat.h">
+					</File>
+					<File
+						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGPID.cpp">
+					</File>
+					<File
+						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGPID.h">
 					</File>
 					<File
 						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGSensor.cpp">
@@ -2801,7 +2807,8 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Generation of config.h"
-					CommandLine="copy $(inputPath) $(InputDir)\$(InputName).h"
+					CommandLine="copy $(inputPath) $(InputDir)\$(InputName).h
+"
 					Outputs="..\..\src\Include\config.h"/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -2809,7 +2816,8 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Generation of config.h"
-					CommandLine="copy $(inputPath) $(InputDir)\$(InputName).h"
+					CommandLine="copy $(inputPath) $(InputDir)\$(InputName).h
+"
 					Outputs="..\..\src\Include\config.h"/>
 			</FileConfiguration>
 		</File>
