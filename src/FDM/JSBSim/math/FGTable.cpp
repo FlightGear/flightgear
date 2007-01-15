@@ -8,20 +8,20 @@
  ------------- Copyright (C) 2001  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -80,6 +80,10 @@ FGTable::FGTable(const FGTable& t) : PropertyManager(t.PropertyManager)
   nTables = t.nTables;
   dimension = t.dimension;
   internal = t.internal;
+  Name = t.Name;
+  lookupProperty[0] = t.lookupProperty[0];
+  lookupProperty[1] = t.lookupProperty[1];
+  lookupProperty[2] = t.lookupProperty[2];
 
   Tables = t.Tables;
   Data = Allocate();
@@ -117,6 +121,7 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el) : PropertyManager(prop
   // Is this an internal lookup table?
 
   internal = false;
+  Name = el->GetAttributeValue("name"); // Allow this table to be named with a property
   call_type = el->GetAttributeValue("type");
   if (call_type == string("internal")) {
     parent_element = el->GetParent();
@@ -271,6 +276,9 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el) : PropertyManager(prop
     cout << "No dimension given" << endl;
     break;
   }
+
+  bind();
+
   if (debug_lvl & 1) Print();
 }
 
@@ -292,13 +300,18 @@ double** FGTable::Allocate(void)
 
 FGTable::~FGTable()
 {
+  if (!Name.empty() && !internal) {
+    string tmp = PropertyManager->mkPropertyName(Name, false); // Allow upper case
+    PropertyManager->Untie(tmp);
+  }
+
   if (nTables > 0) {
-cout << "nTables = " << nTables << endl;
     for (int i=0; i<nTables; i++) delete Tables[i];
     Tables.clear();
   }
-  for (int r=0; r<=nRows; r++) if (Data[r]) delete[] Data[r];
-  if (Data) delete[] Data;
+  for (int r=0; r<=nRows; r++) delete[] Data[r];
+  delete[] Data;
+
   Debug(1);
 }
 
@@ -562,6 +575,16 @@ void FGTable::Print(void)
   cout.setf(flags); // reset
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGTable::bind(void)
+{
+  typedef double (FGTable::*PMF)(void) const;
+  if ( !Name.empty() && !internal) {
+    string tmp = PropertyManager->mkPropertyName(Name, false); // Allow upper
+    PropertyManager->Tie( tmp, this, (PMF)&FGTable::GetValue);
+  }
+}
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print

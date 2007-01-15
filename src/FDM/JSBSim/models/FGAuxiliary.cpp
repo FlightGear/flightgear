@@ -9,20 +9,20 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -107,7 +107,8 @@ bool FGAuxiliary::Run()
   const FGColumnVector3& vUVWdot = Propagate->GetUVWdot();
   const FGColumnVector3& vVel = Propagate->GetVel();
 
-  if (FGModel::Run()) return true;
+  if (FGModel::Run()) return true; // return true if error returned from base class
+
   if (FDMExec->Holding()) return false;
 
   p = Atmosphere->GetPressure();
@@ -118,13 +119,14 @@ bool FGAuxiliary::Run()
 // Rotation
 
   double cTht = Propagate->GetCosEuler(eTht);
+  double sTht = Propagate->GetSinEuler(eTht);
   double cPhi = Propagate->GetCosEuler(ePhi);
   double sPhi = Propagate->GetSinEuler(ePhi);
 
   vEulerRates(eTht) = vPQR(eQ)*cPhi - vPQR(eR)*sPhi;
   if (cTht != 0.0) {
     vEulerRates(ePsi) = (vPQR(eQ)*sPhi + vPQR(eR)*cPhi)/cTht;
-    vEulerRates(ePhi) = vPQR(eP) + vEulerRates(ePsi)*sPhi;
+    vEulerRates(ePhi) = vPQR(eP) + vEulerRates(ePsi)*sTht;
   }
 
 // 12/16/2005, JSB: For ground handling purposes, at this time, let's ramp
@@ -185,11 +187,12 @@ bool FGAuxiliary::Run()
 
   if (psigt < 0.0) psigt += 2*M_PI;
 
-  if (Vt != 0) {
-    hdot_Vt = -vVel(eDown)/Vt;
-    if (fabs(hdot_Vt) <= 1) gamma = asin(hdot_Vt);
+  if (Vground == 0.0) {
+    if (vVel(eDown) == 0.0) gamma = 0.0;
+    else if (vVel(eDown) < 0.0) gamma = 90.0*degtorad;
+    else gamma = -90.0*degtorad;
   } else {
-    gamma = 0.0;
+    gamma = atan2(-vVel(eDown), Vground);
   }
 
   tat = sat*(1 + 0.2*Mach*Mach); // Total Temperature, isentropic flow
@@ -275,14 +278,14 @@ void FGAuxiliary::bind(void)
 {
   typedef double (FGAuxiliary::*PMF)(int) const;
   typedef double (FGAuxiliary::*PF)(void) const;
+  PropertyManager->Tie("propulsion/tat-r", this, &FGAuxiliary::GetTotalTemperature);
+  PropertyManager->Tie("propulsion/tat-c", this, &FGAuxiliary::GetTAT_C);
+  PropertyManager->Tie("propulsion/pt-lbs_sqft", this, &FGAuxiliary::GetTotalPressure);
   PropertyManager->Tie("velocities/vc-fps", this, &FGAuxiliary::GetVcalibratedFPS);
   PropertyManager->Tie("velocities/vc-kts", this, &FGAuxiliary::GetVcalibratedKTS);
   PropertyManager->Tie("velocities/ve-fps", this, &FGAuxiliary::GetVequivalentFPS);
   PropertyManager->Tie("velocities/ve-kts", this, &FGAuxiliary::GetVequivalentKTS);
   PropertyManager->Tie("velocities/machU", this, &FGAuxiliary::GetMachU);
-  PropertyManager->Tie("velocities/tat-r", this, &FGAuxiliary::GetTotalTemperature);
-  PropertyManager->Tie("velocities/tat-c", this, &FGAuxiliary::GetTAT_C);
-  PropertyManager->Tie("velocities/pt-lbs_sqft", this, &FGAuxiliary::GetTotalPressure);
   PropertyManager->Tie("velocities/p-aero-rad_sec", this, eX, (PMF)&FGAuxiliary::GetAeroPQR);
   PropertyManager->Tie("velocities/q-aero-rad_sec", this, eY, (PMF)&FGAuxiliary::GetAeroPQR);
   PropertyManager->Tie("velocities/r-aero-rad_sec", this, eZ, (PMF)&FGAuxiliary::GetAeroPQR);
@@ -327,17 +330,18 @@ void FGAuxiliary::bind(void)
 
 void FGAuxiliary::unbind(void)
 {
+  PropertyManager->Untie("propulsion/tat-r");
+  PropertyManager->Untie("propulsion/tat-c");
+  PropertyManager->Untie("propulsion/pt-lbs_sqft");
+
   PropertyManager->Untie("velocities/vc-fps");
   PropertyManager->Untie("velocities/vc-kts");
   PropertyManager->Untie("velocities/ve-fps");
   PropertyManager->Untie("velocities/ve-kts");
   PropertyManager->Untie("velocities/machU");
-  PropertyManager->Untie("velocities/tat-r");
-  PropertyManager->Untie("velocities/tat-c");
   PropertyManager->Untie("velocities/p-aero-rad_sec");
   PropertyManager->Untie("velocities/q-aero-rad_sec");
   PropertyManager->Untie("velocities/r-aero-rad_sec");
-  PropertyManager->Untie("velocities/pt-lbs_sqft");
   PropertyManager->Untie("velocities/phidot-rad_sec");
   PropertyManager->Untie("velocities/thetadot-rad_sec");
   PropertyManager->Untie("velocities/psidot-rad_sec");

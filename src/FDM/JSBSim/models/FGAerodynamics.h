@@ -7,20 +7,20 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 HISTORY
@@ -75,7 +75,8 @@ CLASS DOCUMENTATION
 /** Encapsulates the aerodynamic calculations.
     This class owns and contains the list of force/coefficients that define the
     aerodynamic properties of an aircraft. Here also, such unique phenomena
-    as ground effect and maximum lift curve tailoff are handled.
+    as ground effect, aerodynamic reference point shift, and maximum lift curve
+    tailoff are handled.
 
     @code
     <aerodynamics>
@@ -133,17 +134,24 @@ public:
               similar call to GetForces(int n).*/
   double GetMoments(int n) const {return vMoments(n);}
 
-  FGColumnVector3& GetvLastFs(void) { return vLastFs; }
-  double GetvLastFs(int axis) const { return vLastFs(axis); }
+  /** Retrieves the aerodynamic forces in the stability axes.
+      @return a reference to a column vector containing the stability axis forces. */
   FGColumnVector3& GetvFs(void) { return vFs; }
+
+  /** Retrieves the aerodynamic forces in the stability axes, given an axis.
+      @param axis the axis to return the force for (eX, eY, eZ).
+      @return a reference to a column vector containing the requested stability
+      axis force. */
   double GetvFs(int axis) const { return vFs(axis); }
+
+  /** Retrieves the lift over drag ratio */
   inline double GetLoD(void) const { return lod; }
+
+  /** Retrieves the square of the lift coefficient. */
   inline double GetClSquared(void) const { return clsq; }
   inline double GetAlphaCLMax(void) const { return alphaclmax; }
   inline double GetAlphaCLMin(void) const { return alphaclmin; }
 
-  inline double GetAlphaHystMax(void) const { return alphahystmax; }
-  inline double GetAlphaHystMin(void) const { return alphahystmin; }
   inline double GetHysteresisParm(void) const { return stall_hyst; }
   inline double GetStallWarn(void) const { return impending_stall; }
   double GetAlphaW(void) const { return alphaw; }
@@ -168,6 +176,7 @@ public:
 private:
   typedef map<string,int> AxisIndex;
   AxisIndex AxisIdx;
+  FGFunction* AeroRPShift;
   vector <FGFunction*> variables;
   typedef vector <FGFunction*> CoeffArray;
   CoeffArray* Coeff;
@@ -176,6 +185,7 @@ private:
   FGColumnVector3 vMoments;
   FGColumnVector3 vLastFs;
   FGColumnVector3 vDXYZcg;
+  FGColumnVector3 vDeltaRP;
   double alphaclmax, alphaclmin;
   double alphahystmax, alphahystmin;
   double impending_stall, stall_hyst;

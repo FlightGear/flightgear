@@ -7,20 +7,20 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 HISTORY
@@ -264,10 +264,9 @@ private:
   FGColumnVector3 last_vForce; // remove this
   FGColumnVector3 vLocalForce;
   FGColumnVector3 vWhlVelVec;     // Velocity of this wheel (Local)
-  FGColumnVector3 In;
-  FGColumnVector3 prevIn;
-  FGColumnVector3 prevOut;
+  FGColumnVector3 prevOut, prevIn;
   FGTable *ForceY_Table;
+  double dT;
   double SteerAngle;
   double kSpring;
   double bDamp;
@@ -288,9 +287,8 @@ private:
   double SideWhlVel, RollingWhlVel;
   double RollingForce, SideForce, FCoeff;
   double WheelSlip;
-  double last_WheelSlip;
-  double slipIn;
-  double last_SlipIn;
+  double prevSlipIn;
+  double prevSlipOut;
   double TirePressureNorm;
   double SinWheel, CosWheel;
   bool WOW;
@@ -312,6 +310,11 @@ private:
   BrakeGroup eBrakeGrp;
   SteerType  eSteerType;
   double  maxSteerAngle;
+  double RFRV;  // Rolling force relaxation velocity
+  double SFRV;  // Side force relaxation velocity
+  double LongForceLagFilterCoeff; // Longitudinal Force Lag Filter Coefficient
+  double LatForceLagFilterCoeff; // Lateral Force Lag Filter Coefficient
+  double WheelSlipLagFilterCoeff; // Wheel slip angle lag filter coefficient
 
   FGFDMExec*     Exec;
   FGState*       State;

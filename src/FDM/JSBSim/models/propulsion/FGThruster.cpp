@@ -8,20 +8,20 @@
  ------------- Copyright (C) 2000  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -49,19 +49,6 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGThruster::FGThruster(FGFDMExec *FDMExec) : FGForce(FDMExec)
-{
-  Type = ttDirect;
-  SetTransformType(FGForce::tCustom);
-
-  EngineNum = 0;
-  PropertyManager = FDMExec->GetPropertyManager();
-
-  Debug(0);
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 FGThruster::FGThruster(FGFDMExec *FDMExec, Element *el, int num ): FGForce(FDMExec)
 {
   Element* thruster_element = el->GetParent();
@@ -74,9 +61,8 @@ FGThruster::FGThruster(FGFDMExec *FDMExec, Element *el, int num ): FGForce(FDMEx
   Name = el->GetName();
 
   GearRatio = 1.0;
-
+  ReverserAngle = 0.0;
   EngineNum = num;
-  ThrustCoeff = 0.0;
   PropertyManager = FDMExec->GetPropertyManager();
 
 // Determine the initial location and orientation of this thruster and load the
@@ -93,9 +79,19 @@ FGThruster::FGThruster(FGFDMExec *FDMExec, Element *el, int num ): FGForce(FDMEx
   SetLocation(location);
   SetAnglesToBody(orientation);
 
-//  char property_name[80];
-//  snprintf(property_name, 80, "propulsion/c-thrust[%u]", EngineNum);
-//  PropertyManager->Tie( property_name, &ThrustCoeff );
+  char property_name[80];
+  snprintf(property_name, 80, "propulsion/engine[%d]/pitch-angle-rad", EngineNum);
+  PropertyManager->Tie( property_name, (FGForce *)this, &FGForce::GetPitch, &FGForce::SetPitch);
+  snprintf(property_name, 80, "propulsion/engine[%d]/yaw-angle-rad", EngineNum);
+  PropertyManager->Tie( property_name, (FGForce *)this, &FGForce::GetYaw, &FGForce::SetYaw);
+
+  if (el->GetName() == "direct") // this is a direct thruster. At this time
+                                      // only a direct thruster can be reversed.
+  {
+    snprintf(property_name, 80, "propulsion/engine[%d]/reverser-angle-rad", EngineNum);
+    PropertyManager->Tie( property_name, (FGThruster *)this, &FGThruster::GetReverserAngle,
+                                                          &FGThruster::SetReverserAngle);
+  }
 
   Debug(0);
 }
@@ -104,9 +100,18 @@ FGThruster::FGThruster(FGFDMExec *FDMExec, Element *el, int num ): FGForce(FDMEx
 
 FGThruster::~FGThruster()
 {
-//  char property_name[80];
-//  snprintf(property_name, 80, "propulsion/c-thrust[%u]", EngineNum);
-//  PropertyManager->Untie( property_name );
+  char property_name[80];
+  snprintf(property_name, 80, "propulsion/engine[%d]/pitch-angle-rad", EngineNum);
+  PropertyManager->Untie( property_name);
+  snprintf(property_name, 80, "propulsion/engine[%d]/yaw-angle-rad", EngineNum);
+  PropertyManager->Untie( property_name);
+
+  if (Type == ttDirect) // this is a direct thruster. At this time
+                                      // only a direct thruster can be reversed.
+  {
+    snprintf(property_name, 80, "propulsion/engine[%d]/reverser-angle-rad", EngineNum);
+    PropertyManager->Untie( property_name);
+  }
 
   Debug(1);
 }

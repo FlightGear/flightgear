@@ -1,8 +1,8 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Header:       FGGradient.h
- Author:       
- Date started: 
+ Header:       FGCondition.h
+ Author:       Jon S. Berndt
+ Date started: 1/02/2003
 
  ------------- Copyright (C)  -------------
 
@@ -30,21 +30,23 @@ HISTORY
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifndef FGGRADIENT_H
-#define FGGRADIENT_H
+#ifndef FGCONDITION_H
+#define FGCONDITION_H
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGFCSComponent.h"
+#include <map>
+#include <FGJSBBase.h>
 #include <input_output/FGXMLElement.h>
+#include <input_output/FGPropertyManager.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_GRADIENT "$Id$"
+#define ID_CONDITION "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -52,29 +54,46 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-class FGFCS;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Encapsulates a gradient component for the flight control system.
-  */
+/** Encapsulates a condition, which is used in parts of JSBSim including switches
+*/
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGGradient  : public FGFCSComponent
+class FGCondition : public FGJSBBase
 {
 public:
-  FGGradient(FGFCS* fcs, Element* element);
-  ~FGGradient();
+  FGCondition(Element* element, FGPropertyManager* PropertyManager);
+  FGCondition(string test, FGPropertyManager* PropertyManager);
+  ~FGCondition(void);
 
-  bool Run (void);
+  bool Evaluate(void);
+  void PrintCondition(void);
 
 private:
+  enum eComparison {ecUndef=0, eEQ, eNE, eGT, eGE, eLT, eLE};
+  enum eLogic {elUndef=0, eAND, eOR};
+  map <string, eComparison> mComparison;
+  eLogic Logic;
+
+  FGPropertyManager *TestParam1, *TestParam2, *PropertyManager;
+  double TestValue;
+  eComparison Comparison;
+  bool isGroup;
+  string conditional;
+
+  static string indent;
+
+  vector <FGCondition> conditions;
+  void InitializeConditionals(void);
+
   void Debug(int from);
 };
 }
 #endif
+

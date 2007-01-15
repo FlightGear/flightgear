@@ -7,20 +7,20 @@
  ------------- Copyright (C) 2000 -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -59,42 +59,43 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
   string input, clip_string;
 
   PropertyManager = fcs->GetPropertyManager();
-  Type = element->GetAttributeValue("type"); // Old, deprecated format
-  if (Type.empty()) {
-    if        (element->GetName() == string("lag_filter")) {
-      Type = "LAG_FILTER";
-    } else if (element->GetName() == string("lead_lag_filter")) {
-      Type = "LEAD_LAG_FILTER";
-    } else if (element->GetName() == string("washout_filter")) {
-      Type = "WASHOUT_FILTER";
-    } else if (element->GetName() == string("second_order_filter")) {
-      Type = "SECOND_ORDER_FILTER";
-    } else if (element->GetName() == string("integrator")) {
-      Type = "INTEGRATOR";
-    } else if (element->GetName() == string("summer")) {
-      Type = "SUMMER";
-    } else if (element->GetName() == string("pure_gain")) {
-      Type = "PURE_GAIN";
-    } else if (element->GetName() == string("scheduled_gain")) {
-      Type = "SCHEDULED_GAIN";
-    } else if (element->GetName() == string("aerosurface_scale")) {
-      Type = "AEROSURFACE_SCALE";
-    } else if (element->GetName() == string("switch")) {
-      Type = "SWITCH";
-    } else if (element->GetName() == string("kinematic")) {
-      Type = "KINEMATIC";
-    } else if (element->GetName() == string("deadband")) {
-      Type = "DEADBAND";
-    } else if (element->GetName() == string("fcs_function")) {
-      Type = "FCS_FUNCTION";
-    } else if (element->GetName() == string("sensor")) {
-      Type = "SENSOR";
-    } else { // illegal component in this channel
-      Type = "UNKNOWN";
-    }
+  if        (element->GetName() == string("lag_filter")) {
+    Type = "LAG_FILTER";
+  } else if (element->GetName() == string("lead_lag_filter")) {
+    Type = "LEAD_LAG_FILTER";
+  } else if (element->GetName() == string("washout_filter")) {
+    Type = "WASHOUT_FILTER";
+  } else if (element->GetName() == string("second_order_filter")) {
+    Type = "SECOND_ORDER_FILTER";
+  } else if (element->GetName() == string("integrator")) {
+    Type = "INTEGRATOR";
+  } else if (element->GetName() == string("summer")) {
+    Type = "SUMMER";
+  } else if (element->GetName() == string("pure_gain")) {
+    Type = "PURE_GAIN";
+  } else if (element->GetName() == string("scheduled_gain")) {
+    Type = "SCHEDULED_GAIN";
+  } else if (element->GetName() == string("aerosurface_scale")) {
+    Type = "AEROSURFACE_SCALE";
+  } else if (element->GetName() == string("switch")) {
+    Type = "SWITCH";
+  } else if (element->GetName() == string("kinematic")) {
+    Type = "KINEMATIC";
+  } else if (element->GetName() == string("deadband")) {
+    Type = "DEADBAND";
+  } else if (element->GetName() == string("fcs_function")) {
+    Type = "FCS_FUNCTION";
+  } else if (element->GetName() == string("pid")) {
+    Type = "PID";
+  } else if (element->GetName() == string("sensor")) {
+    Type = "SENSOR";
+  } else { // illegal component in this channel
+    Type = "UNKNOWN";
   }
 
   Name = element->GetAttributeValue("name");
+
+  FGPropertyManager *tmp=0;
 
   input_element = element->FindElement("input");
   while (input_element) {
@@ -105,7 +106,14 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
     } else {
       InputSigns.push_back( 1.0);
     }
-    InputNodes.push_back( resolveSymbol(input) );
+    tmp = PropertyManager->GetNode(input);
+    if (tmp) {
+      InputNodes.push_back( tmp );
+    } else {
+      cerr << fgred << "  In component: " << Name << " unknown property "
+           << input << " referenced. Aborting" << endl;
+      exit(-1);
+    }
     input_element = element->FindNextElement("input");
   }
 
@@ -144,9 +152,6 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
 
 FGFCSComponent::~FGFCSComponent()
 {
-//  string tmp = "fcs/" + PropertyManager->mkPropertyName(Name, true);
-//  PropertyManager->Untie( tmp);
-
   Debug(1);
 }
 
@@ -177,25 +182,21 @@ void FGFCSComponent::Clip(void)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FGPropertyManager* FGFCSComponent::resolveSymbol(string token)
-{
-  string prop;
-  FGPropertyManager* tmp = PropertyManager->GetNode(token,false);
-  if (!tmp) {
-    if (token.find("/") == token.npos) prop = "model/" + token;
-    cerr << "Creating new property " << prop << endl;
-    tmp = PropertyManager->GetNode(token,true);
-  }
-  return tmp;
-}
-
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// The old way of naming FCS components allowed upper or lower case, spaces, etc.
+// but then the names were modified to fit into a property name heirarchy. This
+// was confusing (it wasn't done intentionally - it was a carryover from the early
+// design). We now support the direct naming of properties in the FCS component
+// name attribute. The old way is supported in code at this time, but deprecated.
 
 void FGFCSComponent::bind(void)
 {
-  string tmp = "fcs/" + PropertyManager->mkPropertyName(Name, true);
+  string tmp;
+  if (Name.find("/") == string::npos) {
+    tmp = "fcs/" + PropertyManager->mkPropertyName(Name, true);
+  } else {
+    tmp = Name;
+  }
   PropertyManager->Tie( tmp, this, &FGFCSComponent::GetOutput);
 }
 

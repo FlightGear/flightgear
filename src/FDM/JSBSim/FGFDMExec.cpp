@@ -8,20 +8,20 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -72,6 +72,7 @@ INCLUDES
 #include <models/FGOutput.h>
 #include <initialization/FGInitialCondition.h>
 #include <input_output/FGPropertyManager.h>
+#include <input_output/FGScript.h>
 
 namespace JSBSim {
 
@@ -128,12 +129,11 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
   Input           = 0;
   IC              = 0;
   Trim            = 0;
+  Script          = 0;
 
-  terminate = false;
   modelLoaded = false;
   IsSlave = false;
   holding = false;
-
 
   // Multiple FDM's are stopped for now.  We need to ensure that
   // the "user" instance always gets the zeroeth instance number,
@@ -187,6 +187,8 @@ FGFDMExec::~FGFDMExec()
 
   for (unsigned int i=1; i<SlaveFDMList.size(); i++) delete SlaveFDMList[i]->exec;
   SlaveFDMList.clear();
+
+  //ToDo remove property catalog.
 
   Debug(1);
 }
@@ -291,11 +293,9 @@ bool FGFDMExec::DeAllocate(void)
   delete Propagate;
   delete Auxiliary;
   delete State;
+  delete Script;
 
-  for (int i=0; i<Outputs.size(); i++) {
-    if (Outputs[i]) delete Outputs[i];
-  }
-
+  for (unsigned i=0; i<Outputs.size(); i++) delete Outputs[i];
   Outputs.clear();
 
   delete IC;
@@ -354,6 +354,7 @@ int FGFDMExec::Schedule(FGModel* model, int rate)
 
 bool FGFDMExec::Run(void)
 {
+  bool success;
   FGModel* model_iterator;
 
   model_iterator = FirstModel;
@@ -366,6 +367,8 @@ bool FGFDMExec::Run(void)
 //    SlaveFDMList[i]->exec->Run();
   }
 
+  if (Script != 0) success = Script->RunScript(); // returns true if success
+                                                  // false if complete
   while (model_iterator != 0L) {
     model_iterator->Run();
     model_iterator = model_iterator->NextModel;
@@ -373,7 +376,7 @@ bool FGFDMExec::Run(void)
 
   frame = Frame++;
   if (!Holding()) State->IncrTime();
-  return true;
+  return (success);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -393,9 +396,22 @@ bool FGFDMExec::RunIC(void)
 
 void FGFDMExec::SetGroundCallback(FGGroundCallback* p)
 {
-  if (GroundCallback) delete GroundCallback;
-
+  delete GroundCallback;
   GroundCallback = p;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGFDMExec::GetSimTime(void)
+{
+  return (State->Getsim_time());
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGFDMExec::GetDeltaT(void)
+{
+  return (State->Getdt());
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -411,6 +427,18 @@ vector <string> FGFDMExec::EnumerateFDMs(void)
   }
 
   return FDMList;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGFDMExec::LoadScript(string script)
+{
+  bool result;
+
+  Script = new FGScript(this);
+  result = Script->LoadScript(script);
+
+  return result;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -442,9 +470,9 @@ bool FGFDMExec::LoadModel(string model, bool addModelToPath)
     return false;
   }
 
-  aircraftCfgFileName = AircraftPath;
-  if (addModelToPath) aircraftCfgFileName += separator + model;
-  aircraftCfgFileName += separator + model + ".xml";
+  FullAircraftPath = AircraftPath;
+  if (addModelToPath) FullAircraftPath += separator + model;
+  aircraftCfgFileName = FullAircraftPath + separator + model + ".xml";
 
   FGXMLParse *XMLParse = new FGXMLParse();
   Element* element = 0L;
@@ -545,11 +573,23 @@ void FGFDMExec::BuildPropertyCatalog(struct PropertyCatalogStructure* pcs)
 string FGFDMExec::QueryPropertyCatalog(string in)
 {
   string results="";
-  for (int i=0; i<PropertyCatalog.size(); i++) {
+  for (unsigned i=0; i<PropertyCatalog.size(); i++) {
     if (PropertyCatalog[i].find(in) != string::npos) results += PropertyCatalog[i] + "\n";
   }
   if (results.empty()) return "No matches found\n";
   return results;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFDMExec::PrintPropertyCatalog(void)
+{
+  cout << endl;
+  cout << "  " << fgblue << highint << underon << "Property Catalog for "
+       << modelName << reset << endl << endl;
+  for (unsigned i=0; i<PropertyCatalog.size(); i++) {
+    cout << "    " << PropertyCatalog[i] << endl;
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -649,7 +689,7 @@ bool FGFDMExec::ReadSlave(Element* el)
 
   SlaveFDMList.push_back(new slaveData);
   SlaveFDMList.back()->exec = new FGFDMExec();
-  SlaveFDMList.back()->exec->SetSlave();
+  SlaveFDMList.back()->exec->SetSlave(true);
 /*
   string AircraftName = AC_cfg->GetValue("file");
 
@@ -704,7 +744,7 @@ FGTrim* FGFDMExec::GetTrim(void)
 
 void FGFDMExec::DisableOutput(void)
 {
-  for (int i=0; i<Outputs.size(); i++) {
+  for (unsigned i=0; i<Outputs.size(); i++) {
     Outputs[i]->Disable();
   }
 }
@@ -713,9 +753,29 @@ void FGFDMExec::DisableOutput(void)
 
 void FGFDMExec::EnableOutput(void)
 {
-  for (int i=0; i<Outputs.size(); i++) {
+  for (unsigned i=0; i<Outputs.size(); i++) {
     Outputs[i]->Enable();
   }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGFDMExec::SetOutputDirectives(string fname)
+{
+  bool result=true; // for now always return true
+
+  if (Outputs.size() == 0) {
+    FGOutput* Output = new FGOutput(this);
+    Output->InitModel();
+    Schedule(Output,       1);
+    Output->SetDirectivesFile(fname);
+    Output->Load(0);
+    Outputs.push_back(Output);
+  } else { // Outputs > 1
+    cerr << "First output file being overridden" << endl;
+    Outputs[0]->SetDirectivesFile(fname);
+  }
+  return result;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -792,7 +852,7 @@ void FGFDMExec::Debug(int from)
     if (from == 0) { // Constructor
       cout << "\n\n     " << highint << underon << "JSBSim Flight Dynamics Model v"
                                      << JSBSim_version << underoff << normint << endl;
-      cout << halfint << "            [cfg file spec v" << needed_cfg_version << "]\n\n";
+      cout << halfint << "            [JSBSim-ML v" << needed_cfg_version << "]\n\n";
       cout << normint << "JSBSim startup beginning ...\n\n";
     } else if (from == 3) {
       cout << "\n\nJSBSim startup complete\n\n";

@@ -1,10 +1,10 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Module:       FGSummer.cpp
+ Module:       FGPID.cpp
  Author:       Jon S. Berndt
- Date started: 4/2000
+ Date started: 6/17/2006
 
- ------------- Copyright (C) 2000 -------------
+ ------------- Copyright (C) 2006 Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -23,11 +23,9 @@
  Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
-FUNCTIONAL DESCRIPTION
---------------------------------------------------------------------------------
-
 HISTORY
 --------------------------------------------------------------------------------
+Initial code 6/17/2006 JSB
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES,  and NOTES
@@ -37,22 +35,32 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGSummer.h"
+#include "FGPID.h"
 
 namespace JSBSim {
 
 static const char *IdSrc = "$Id$";
-static const char *IdHdr = ID_SUMMER;
+static const char *IdHdr = ID_PID;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGSummer::FGSummer(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
+FGPID::FGPID(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 {
-  Bias = 0.0;
+  dt = fcs->GetState()->Getdt();
 
-  if (element->FindElement("bias")) Bias = element->FindElementValueAsNumber("bias");
+  Kp = Ki = Kd = 0.0;
+  P_out = D_out = I_out = 0.0;
+  Input_prev = Input_prev2 = 0.0;
+  Trigger = 0;
+
+  if (element->FindElement("kp")) Kp = element->FindElementValueAsNumber("kp");
+  if (element->FindElement("ki")) Ki = element->FindElementValueAsNumber("ki");
+  if (element->FindElement("kd")) Kd = element->FindElementValueAsNumber("kd");
+  if (element->FindElement("trigger")) {
+    Trigger =  PropertyManager->GetNode(element->FindElementValue("trigger"));
+  }
 
   FGFCSComponent::bind();
 
@@ -61,24 +69,32 @@ FGSummer::FGSummer(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGSummer::~FGSummer()
+FGPID::~FGPID()
 {
   Debug(1);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGSummer::Run(void )
+bool FGPID::Run(void )
 {
-  unsigned int idx;
+  Input = InputNodes[0]->getDoubleValue() * InputSigns[0];
 
-  Output = 0.0;
+  P_out = Kp * (Input - Input_prev);
+  I_out = Ki * dt * Input;
+  D_out = (Kd / dt) * (Input - 2*Input_prev + Input_prev2);
 
-  for (idx=0; idx<InputNodes.size(); idx++) {
-    Output += InputNodes[idx]->getDoubleValue() * InputSigns[idx];
+  if (Trigger != 0) {
+    double test = Trigger->getDoubleValue();
+    if (fabs(test) > 0.000001) {
+      I_out = 0.0;
+    }
   }
 
-  Output += Bias;
+  Input_prev = Input;
+  Input_prev2 = Input_prev;
+
+  Output += P_out + I_out + D_out;
 
   Clip();
   if (IsOutput) SetOutput();
@@ -105,28 +121,23 @@ bool FGSummer::Run(void )
 //    16: When set various parameters are sanity checked and
 //       a message is printed out when they go out of bounds
 
-void FGSummer::Debug(int from)
+void FGPID::Debug(int from)
 {
   if (debug_lvl <= 0) return;
 
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
-      cout << "      INPUTS: " << endl;
-      for (unsigned i=0;i<InputNodes.size();i++) {
-        if (InputSigns[i] < 0)
-          cout << "       -" << InputNodes[i]->getName() << endl;
-        else
-          cout << "       " << InputNodes[i]->getName() << endl;
-      }
-      if (Bias != 0.0) cout << "       Bias: " << Bias << endl;
-      if (clip) cout << "      CLIPTO: " << clipmin
-                                  << ", " << clipmax << endl;
-      if (IsOutput) cout << "      OUTPUT: " <<OutputNode->getName() <<  endl;
+      if (InputSigns[0] < 0)
+        cout << "      INPUT: -" << InputNodes[0]->getName() << endl;
+      else
+        cout << "      INPUT: " << InputNodes[0]->getName() << endl;
+
+      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification
-    if (from == 0) cout << "Instantiated: FGSummer" << endl;
-    if (from == 1) cout << "Destroyed:    FGSummer" << endl;
+    if (from == 0) cout << "Instantiated: FGPID" << endl;
+    if (from == 1) cout << "Destroyed:    FGPID" << endl;
   }
   if (debug_lvl & 4 ) { // Run() method entry print for FGModel-derived objects
   }
@@ -141,6 +152,4 @@ void FGSummer::Debug(int from)
     }
   }
 }
-
-} //namespace JSBSim
-
+}

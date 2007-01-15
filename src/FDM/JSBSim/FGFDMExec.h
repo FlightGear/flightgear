@@ -2,24 +2,25 @@
  Header:       FGFDMExec.h
  Author:       Jon Berndt
  Date started: 11/17/98
+ file The header file for the JSBSim executive.
 
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 HISTORY
@@ -64,6 +65,8 @@ FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 namespace JSBSim {
+
+class FGScript;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -121,11 +124,9 @@ CLASS DOCUMENTATION
 
     @code
     FDMExec = new JSBSim::FGFDMExec();
-    Script = new JSBSim::FGScript( … );
-    Script->LoadScript( ScriptName ); // the script loads the aircraft and ICs
+    FDMExec->LoadScript( ScriptName ); // the script loads the aircraft and ICs
     result = FDMExec->Run();
     while (result) { // cyclic execution
-      if (Scripted) if (!Script->RunScript()) break; // execute script
       result = FDMExec->Run(); // execute JSBSim
     }
     @endcode
@@ -235,6 +236,11 @@ public:
       @return true if successful*/
   bool LoadModel(string model, bool addModelToPath = true);
 
+  /** Loads a script
+      @param Script the full path name and file name for the script to be loaded.
+      @return true if successfully loadsd; false otherwise. */
+  bool LoadScript(string Script);
+
   /** Sets the path to the engine config file directories.
       @param path path to the directory under which engine config
       files are kept, for instance "engine"  */
@@ -284,16 +290,70 @@ public:
   inline string GetEnginePath(void)          {return EnginePath;}
   /// Retrieves the aircraft path.
   inline string GetAircraftPath(void)        {return AircraftPath;}
+  /// Retrieves the full aircraft path name.
+  inline string GetFullAircraftPath(void)    {return FullAircraftPath;}
+
+  /** Retrieves the value of a property.
+      @param property the name of the property
+      @result the value of the specified property */
+  inline double GetPropertyValue(string property) {return instance->GetDouble(property);}
+
+  /** Sets a property value.
+      @param property the property to be set
+      @param value the value to set the property to */
+  inline void SetPropertyValue(string property, double value) {
+    instance->SetDouble(property, value);
+  }
 
   /// Returns the model name.
   string GetModelName(void) { return modelName; }
+
+  /// Returns the current time.
+  double GetSimTime(void);
+
+  /// Returns the current frame time (delta T).
+  double GetDeltaT(void);
 
   /// Returns a pointer to the property manager object.
   FGPropertyManager* GetPropertyManager(void);
   /// Returns a vector of strings representing the names of all loaded models (future)
   vector <string> EnumerateFDMs(void);
   /// Marks this instance of the Exec object as a "slave" object.
-  void SetSlave(void) {IsSlave = true;}
+  void SetSlave(bool s) {IsSlave = s;}
+
+  /** Sets the output (logging) mechanism for this run.
+      Calling this function passes the name of an output directives file to
+      the FGOutput object associated with this run. The call to this function
+      should be made prior to loading an aircraft model. This call results in an
+      FGOutput object being built as the first Output object in the FDMExec-managed
+      list of Output objects that may be created for an aircraft model. If this call
+      is made after an aircraft model is loaded, there is no effect. Any Output
+      objects added by the aircraft model itself (in an &lt;output> element) will be
+      added after this one. Care should be taken not to refer to the same file
+      name.
+      An output directives file contains an &lt;output> &lt;/output> element, within
+      which should be specified the parameters or parameter groups that should
+      be logged.
+      @param fname the filename of an output directives file.
+    */
+  bool SetOutputDirectives(string fname);
+
+  /** Sets (or overrides) the output filename
+      @param fname the name of the file to output data to
+      @return true if successful, false if there is no output specified for the flight model */
+  bool SetOutputFileName(string fname) {
+    if (Outputs.size() > 0) Outputs[0]->SetOutputFileName(fname);
+    else return false;
+    return true;
+  }
+
+  /** Retrieves the current output filename.
+      @return the name of the output file for the first output specified by the flight model.
+              If none is specified, the empty string is returned. */
+  string GetOutputFileName(void) {
+    if (Outputs.size() > 0) return Outputs[0]->GetOutputFileName();
+    else return string("");
+  }
 
   /** Executes trimming in the selected mode.
   *   @param mode Specifies how to trim:
@@ -316,6 +376,8 @@ public:
   void Resume(void) {holding = false;}
   /// Returns true if the simulation is Holding (i.e. simulation time is not moving).
   bool Holding(void) {return holding;}
+  /// Sets the debug level.
+  void SetDebugLevel(int level) {debug_lvl = level;}
 
   struct PropertyCatalogStructure {
     /// Name of the property.
@@ -338,6 +400,9 @@ public:
   *               in the catalog.  */
   string QueryPropertyCatalog(string check);
 
+  // Print the contents of the property catalog for the loaded aircraft.
+  void PrintPropertyCatalog(void);
+
   /// Use the MSIS atmosphere model.
   void UseAtmosphereMSIS(void);
 
@@ -345,22 +410,20 @@ public:
   void UseAtmosphereMars(void);
 
 private:
-  FGModel* FirstModel;
-
-  bool terminate;
-  bool holding;
-  bool Constructing;
-  int  Error;
+  static unsigned int FDMctr;
+  int Error;
   unsigned int Frame;
   unsigned int IdFDM;
-  FGPropertyManager* Root;
-  static unsigned int FDMctr;
+  bool holding;
+  bool Constructing;
   bool modelLoaded;
-  string modelName;
   bool IsSlave;
-  static FGPropertyManager *master;
-  FGPropertyManager *instance;
-  vector <string> PropertyCatalog;
+  string modelName;
+  string AircraftPath;
+  string FullAircraftPath;
+  string EnginePath;
+  string CFGVersion;
+  string Release;
 
   struct slaveData {
     FGFDMExec* exec;
@@ -381,41 +444,41 @@ private:
     }
   };
 
-  string AircraftPath;
-  string EnginePath;
+  static FGPropertyManager *master;
 
-  string CFGVersion;
-  string Release;
-
-  FGGroundCallback*  GroundCallback;
-  FGState*           State;
-  FGAtmosphere*      Atmosphere;
-  FGFCS*             FCS;
-  FGPropulsion*      Propulsion;
-  FGMassBalance*     MassBalance;
-  FGAerodynamics*    Aerodynamics;
-  FGInertial*        Inertial;
-  FGGroundReactions* GroundReactions;
-  FGAircraft*        Aircraft;
-  FGPropagate*       Propagate;
-  FGAuxiliary*       Auxiliary;
-  FGInput*           Input;
-  vector <FGOutput*> Outputs;
-
+  FGModel*            FirstModel;
+  FGGroundCallback*   GroundCallback;
+  FGState*            State;
+  FGAtmosphere*       Atmosphere;
+  FGFCS*              FCS;
+  FGPropulsion*       Propulsion;
+  FGMassBalance*      MassBalance;
+  FGAerodynamics*     Aerodynamics;
+  FGInertial*         Inertial;
+  FGGroundReactions*  GroundReactions;
+  FGAircraft*         Aircraft;
+  FGPropagate*        Propagate;
+  FGAuxiliary*        Auxiliary;
+  FGInput*            Input;
+  FGScript*           Script;
   FGInitialCondition* IC;
-  FGTrim *Trim;
+  FGTrim*             Trim;
 
+  FGPropertyManager* Root;
+  FGPropertyManager* instance;
+
+  vector <string> PropertyCatalog;
+  vector <FGOutput*> Outputs;
   vector <slaveData*> SlaveFDMList;
 
   bool ReadFileHeader(Element*);
   bool ReadSlave(Element*);
   bool ReadPrologue(Element*);
-
   bool Allocate(void);
   bool DeAllocate(void);
+
   void Debug(int from);
 };
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
-

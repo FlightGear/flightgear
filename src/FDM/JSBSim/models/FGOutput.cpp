@@ -9,20 +9,20 @@
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -73,6 +73,7 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
   enabled = true;
   delimeter = ", ";
   Filename = "";
+  DirectivesFile = "";
 
   Debug(0);
 }
@@ -81,9 +82,8 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
 
 FGOutput::~FGOutput()
 {
-  if (socket) delete socket;
+  delete socket;
   OutputProperties.clear();
-
   Debug(1);
 }
 
@@ -152,70 +152,70 @@ void FGOutput::DelimitedOutput(string fname)
     }
     if (SubSystems & ssAerosurfaces) {
       outstream << delimeter;
-      outstream << "Aileron Cmd" + delimeter;
-      outstream << "Elevator Cmd" + delimeter;
-      outstream << "Rudder Cmd" + delimeter;
-      outstream << "Flap Cmd" + delimeter;
-      outstream << "Left Aileron Pos" + delimeter;
-      outstream << "Right Aileron Pos" + delimeter;
-      outstream << "Elevator Pos" + delimeter;
-      outstream << "Rudder Pos" + delimeter;
-      outstream << "Flap Pos";
+      outstream << "Aileron Command (norm)" + delimeter;
+      outstream << "Elevator Command (norm)" + delimeter;
+      outstream << "Rudder Command (norm)" + delimeter;
+      outstream << "Flap Command (norm)" + delimeter;
+      outstream << "Left Aileron Position (deg)" + delimeter;
+      outstream << "Right Aileron Position (deg)" + delimeter;
+      outstream << "Elevator Position (deg)" + delimeter;
+      outstream << "Rudder Position (deg)" + delimeter;
+      outstream << "Flap Position (deg)";
     }
     if (SubSystems & ssRates) {
       outstream << delimeter;
-      outstream << "P" + delimeter + "Q" + delimeter + "R" + delimeter;
-      outstream << "Pdot" + delimeter + "Qdot" + delimeter + "Rdot";
+      outstream << "P (deg/s)" + delimeter + "Q (deg/s)" + delimeter + "R (deg/s)" + delimeter;
+      outstream << "P dot (deg/s^2)" + delimeter + "Q dot (deg/s^2)" + delimeter + "R dot (deg/s^2)";
     }
     if (SubSystems & ssVelocities) {
       outstream << delimeter;
-      outstream << "QBar" + delimeter;
-      outstream << "Vtotal" + delimeter;
+      outstream << "q bar (psf)" + delimeter;
+      outstream << "V_{Total} (ft/s)" + delimeter;
       outstream << "UBody" + delimeter + "VBody" + delimeter + "WBody" + delimeter;
-      outstream << "UAero" + delimeter + "VAero" + delimeter + "WAero" + delimeter;
-      outstream << "Vn" + delimeter + "Ve" + delimeter + "Vd";
+      outstream << "Aero V_{X Body} (ft/s)" + delimeter + "Aero V_{Y Body} (ft/s)" + delimeter + "Aero V_{Z Body} (ft/s)" + delimeter;
+      outstream << "V_{North} (ft/s)" + delimeter + "V_{East} (ft/s)" + delimeter + "V_{Down} (ft/s)";
     }
     if (SubSystems & ssForces) {
       outstream << delimeter;
-      outstream << "Drag" + delimeter + "Side" + delimeter + "Lift" + delimeter;
+      outstream << "F_{Drag} (lbs)" + delimeter + "F_{Side} (lbs)" + delimeter + "F_{Lift} (lbs)" + delimeter;
       outstream << "L/D" + delimeter;
-      outstream << "Xforce" + delimeter + "Yforce" + delimeter + "Zforce";
+      outstream << "F_X (lbs)" + delimeter + "F_Y (lbs)" + delimeter + "F_Z (lbs)";
     }
     if (SubSystems & ssMoments) {
       outstream << delimeter;
-      outstream << "L" + delimeter + "M" + delimeter + "N";
+      outstream << "L (ft-lbs)" + delimeter + "M (ft-lbs)" + delimeter + "N (ft-lbs)";
     }
     if (SubSystems & ssAtmosphere) {
       outstream << delimeter;
-      outstream << "Rho" + delimeter;
-      outstream << "SL pressure" + delimeter;
-      outstream << "Ambient pressure" + delimeter;
-      outstream << "NWind" + delimeter + "EWind" + delimeter + "DWind";
+      outstream << "Rho (slugs/ft^3)" + delimeter;
+      outstream << "P_{SL} (psf)" + delimeter;
+      outstream << "P_{Ambient} (psf)" + delimeter;
+      outstream << "Wind V_{North} (ft/s)" + delimeter + "Wind V_{East} (ft/s)" + delimeter + "Wind V_{Down} (ft/s)";
     }
     if (SubSystems & ssMassProps) {
       outstream << delimeter;
-      outstream << "Ixx" + delimeter;
-      outstream << "Ixy" + delimeter;
-      outstream << "Ixz" + delimeter;
-      outstream << "Iyx" + delimeter;
-      outstream << "Iyy" + delimeter;
-      outstream << "Iyz" + delimeter;
-      outstream << "Izx" + delimeter;
-      outstream << "Izy" + delimeter;
-      outstream << "Izz" + delimeter;
+      outstream << "I_xx" + delimeter;
+      outstream << "I_xy" + delimeter;
+      outstream << "I_xz" + delimeter;
+      outstream << "I_yx" + delimeter;
+      outstream << "I_yy" + delimeter;
+      outstream << "I_yz" + delimeter;
+      outstream << "I_zx" + delimeter;
+      outstream << "I_zy" + delimeter;
+      outstream << "I_zz" + delimeter;
       outstream << "Mass" + delimeter;
-      outstream << "Xcg" + delimeter + "Ycg" + delimeter + "Zcg";
+      outstream << "X_cg" + delimeter + "Y_cg" + delimeter + "Z_cg";
     }
     if (SubSystems & ssPropagate) {
       outstream << delimeter;
-      outstream << "Altitude" + delimeter;
-      outstream << "Phi" + delimeter + "Tht" + delimeter + "Psi" + delimeter;
-      outstream << "Alpha" + delimeter;
-      outstream << "Beta" + delimeter;
-      outstream << "Latitude (Deg)" + delimeter;
-      outstream << "Longitude (Deg)" + delimeter;
-      outstream << "Distance AGL" + delimeter;
-      outstream << "Runway Radius";
+      outstream << "Altitude (ft)" + delimeter;
+      outstream << "Phi (deg)" + delimeter + "Theta (deg)" + delimeter + "Psi (deg)" + delimeter;
+      outstream << "Alpha (deg)" + delimeter;
+      outstream << "Beta (deg)" + delimeter;
+      outstream << "Latitude (deg)" + delimeter;
+      outstream << "Longitude (deg)" + delimeter;
+      outstream << "Distance AGL (ft)" + delimeter;
+      outstream << "Runway Radius (ft)";
     }
     if (SubSystems & ssCoefficients) {
       scratch = Aerodynamics->GetCoefficientStrings(delimeter);
@@ -252,11 +252,11 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << FCS->GetDeCmd() << delimeter;
     outstream << FCS->GetDrCmd() << delimeter;
     outstream << FCS->GetDfCmd() << delimeter;
-    outstream << FCS->GetDaLPos() << delimeter;
-    outstream << FCS->GetDaRPos() << delimeter;
-    outstream << FCS->GetDePos() << delimeter;
-    outstream << FCS->GetDrPos() << delimeter;
-    outstream << FCS->GetDfPos();
+    outstream << FCS->GetDaLPos(ofDeg) << delimeter;
+    outstream << FCS->GetDaRPos(ofDeg) << delimeter;
+    outstream << FCS->GetDePos(ofDeg) << delimeter;
+    outstream << FCS->GetDrPos(ofDeg) << delimeter;
+    outstream << FCS->GetDfPos(ofDeg);
   }
   if (SubSystems & ssRates) {
     outstream << delimeter;
@@ -583,14 +583,28 @@ bool FGOutput::Load(Element* element)
   separator = ";";
 # endif
 
-  fname = element->GetAttributeValue("file");
-  if (!fname.empty()) {
-    output_file_name = FDMExec->GetAircraftPath() + separator
-                        + FDMExec->GetModelName() + separator + fname + ".xml";
+  if (!DirectivesFile.empty()) { // A directives filename from the command line overrides
+    fname = DirectivesFile;      // one found in the config file.
+  } else {
+    fname = element->GetAttributeValue("file");
+  }
 
+  if (!fname.empty()) {
+    int len = fname.size();
+    if (fname.find(".xml") != string::npos) {
+      output_file_name = fname; // Use supplied name if last four letters are ".xml"
+    } else {
+      output_file_name = FDMExec->GetFullAircraftPath() + separator + fname + ".xml";
+    }
     output_file->open(output_file_name.c_str());
-    readXML(*output_file, output_file_parser);
-    delete output_file;
+    if (output_file->is_open()) {
+      readXML(*output_file, output_file_parser);
+      delete output_file;
+    } else {
+      delete output_file;
+      cerr << "Could not open directives file: " << output_file_name << endl;
+      return false;
+    }
     document = output_file_parser.GetDocument();
   } else {
     document = element;
@@ -644,7 +658,7 @@ bool FGOutput::Load(Element* element)
     property_element = document->FindNextElement("property");
   }
 
-  OutRate = OutRate>120?120:(OutRate<0?0:OutRate);
+  OutRate = OutRate>1000?1000:(OutRate<0?0:OutRate);
   rate = (int)(0.5 + 1.0/(State->Getdt()*OutRate));
 
   Debug(2);
@@ -694,7 +708,7 @@ void FGOutput::Debug(int from)
       }
       switch (Type) {
       case otCSV:
-        cout << scratch << " in CSV format output at rate " << 120/rate << " Hz" << endl;
+        cout << scratch << " in CSV format output at rate " << 1/(State->Getdt()*rate) << " Hz" << endl;
         break;
       case otNone:
         cout << "  No log output" << endl;

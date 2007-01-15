@@ -8,20 +8,20 @@
  ------------- Copyright (C) 2000  Jon S. Berndt (jsb@hal-pc.org) --------------
 
  This program is free software; you can redistribute it and/or modify it under
- the terms of the GNU General Public License as published by the Free Software
+ the terms of the GNU Lesser General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
  details.
 
- You should have received a copy of the GNU General Public License along with
+ You should have received a copy of the GNU Lesser General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
 
- Further information about the GNU General Public License can also be found on
+ Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
 FUNCTIONAL DESCRIPTION
@@ -139,7 +139,6 @@ bool FGMassBalance::Run(void)
 
 // Calculate new CG
 
-//  printf("%s:%i\n", __FILE__, __LINE__);
   vXYZcg = (Propulsion->GetTanksMoment() + EmptyWeight*vbaseXYZcg
                                      + GetPointMassMoment() ) / Weight;
 
@@ -189,19 +188,14 @@ void FGMassBalance::AddPointMass(Element* el)
 {
   Element* loc_element = el->FindElement("location");
   string pointmass_name = el->GetAttributeValue("name");
-  if (!el) {
-    cerr << "Pointmass " << pointmass_name << "has no location." << endl;
+  if (!loc_element) {
+    cerr << "Pointmass " << pointmass_name << " has no location." << endl;
     exit(-1);
   }
-  string loc_unit = loc_element->GetAttributeValue("unit");
-  double w, x, y, z;
 
-  w = el->FindElementValueAsNumberConvertTo("weight", "LBS");
-  x = loc_element->FindElementValueAsNumberConvertTo("x", loc_unit);
-  y = loc_element->FindElementValueAsNumberConvertTo("y", loc_unit);
-  z = loc_element->FindElementValueAsNumberConvertTo("z", loc_unit);
-
-  PointMasses.push_back(PointMass(w, x, y, z));
+  double w = el->FindElementValueAsNumberConvertTo("weight", "LBS");
+  FGColumnVector3 vXYZ = loc_element->FindElementTripletConvertTo("IN");
+  PointMasses.push_back(PointMass(w, vXYZ));
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

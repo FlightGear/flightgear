@@ -262,6 +262,8 @@ FGJSBsim::FGJSBsim( double dt )
     wind_from_east = fgGetNode("/environment/wind-from-east-fps" ,true);
     wind_from_down = fgGetNode("/environment/wind-from-down-fps" ,true);
 
+    slaved = fgGetNode("/sim/slaved/enabled", true);
+
     for (unsigned int i = 0; i < Propulsion->GetNumEngines(); i++) {
       SGPropertyNode * node = fgGetNode("engines/engine", i, true);
       Propulsion->GetEngine(i)->GetThruster()->SetRPM(node->getDoubleValue("rpm") /
@@ -601,6 +603,7 @@ bool FGJSBsim::copy_to_JSBsim()
     SGPropertyNode* node = fgGetNode("/systems/refuel", true);
     Propulsion->SetRefuel(node->getDoubleValue("contact"));
     Propulsion->SetFuelFreeze((fgGetNode("/sim/freeze/fuel",true))->getBoolValue());
+    fdmex->SetSlave(slaved->getBoolValue());
 
     return true;
 }
