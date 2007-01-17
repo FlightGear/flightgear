@@ -695,11 +695,11 @@ int main( int argc, char **argv ) {
         }
 
         while ( input.is_enabled() ) {
-	    cout << "looking for next message ..." << endl;
+	    // cout << "looking for next message ..." << endl;
             int id = track.next_message( &input, &output, &gpspacket,
 					 &imupacket, &navpacket, &servopacket,
 					 &healthpacket );
-            cout << "message id = " << id << endl;
+            // cout << "message id = " << id << endl;
             count++;
 
             if ( id == GPS_PACKET ) {

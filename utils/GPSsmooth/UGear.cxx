@@ -66,12 +66,12 @@ static bool validate_cksum( uint8_t id, uint8_t size, char *buf,
         c0 += (uint8_t)buf[i];
         c1 += c0;
         // cout << "c0 = " << (unsigned int)c0 << " c1 = " << (unsigned int)c1
-        //      << " [" << (unsigned int)buf[i] << "]" << endl;
+        //      << " [" << (unsigned int)(uint8_t)buf[i] << "]" << endl;
     }
 
-    cout << "c0 = " << (unsigned int)c0 << " (" << (unsigned int)cksum0
-         << ") c1 = " << (unsigned int)c1 << " (" << (unsigned int)cksum1
-         << ")" << endl;
+    // cout << "c0 = " << (unsigned int)c0 << " (" << (unsigned int)cksum0
+    //      << ") c1 = " << (unsigned int)c1 << " (" << (unsigned int)cksum1
+    //      << ")" << endl;
 
     if ( c0 == cksum0 && c1 == cksum1 ) {
         return true;
@@ -287,7 +287,7 @@ int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
     // read message id and size
     myread( ch, log, tmpbuf, 1 ); uint8_t id = (unsigned char)tmpbuf[0];
     myread( ch, log, tmpbuf, 1 ); uint8_t size = (unsigned char)tmpbuf[0];
-    cout << "message = " << (int)id << " size = " << (int)size << endl;
+    // cout << "message = " << (int)id << " size = " << (int)size << endl;
 
     // load message
     if ( ch->get_type() == sgFileType ) {
@@ -352,7 +352,7 @@ int UGEARTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     serial_read( serial, log, tmpbuf, 2 );
     uint8_t id = (unsigned char)tmpbuf[0];
     uint8_t size = (unsigned char)tmpbuf[1];
-    cout << "message = " << (int)id << " size = " << (int)size << endl;
+    // cout << "message = " << (int)id << " size = " << (int)size << endl;
 
     // load message
     serial_read( serial, log, savebuf, size );
