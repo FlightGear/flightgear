@@ -285,7 +285,7 @@ static naRef f_setlistener(naContext c, naRef me, int argc, naRef* args)
 static naRef f_removelistener(naContext c, naRef me, int argc, naRef* args)
 {
     FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
-    return nasal->removeListener(argc, args);
+    return nasal->removeListener(c, argc, args);
 }
 
 // Returns a ghost handle to the argument to the currently executing
@@ -681,17 +681,22 @@ naRef FGNasalSys::setListener(int argc, naRef* args)
 
 // removelistener(int) extension function. The argument is the id of
 // a listener as returned by the setlistener() function.
-naRef FGNasalSys::removeListener(int argc, naRef* args)
+naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 {
     naRef id = argc > 0 ? args[0] : naNil();
-    if(!naIsNum(id))
-        return naNil();
-
     int i = int(id.num);
-    if (_listener.find(i) == _listener.end())
+
+    if(!naIsNum(id) || _listener.find(i) == _listener.end()) {
+        naRuntimeError(c, "removelistener() with invalid listener id");
         return naNil();
+    }
 
     FGNasalListener *nl = _listener[i];
+    if(nl->_active) {
+        naRuntimeError(c, "trying to remove active listener");
+        return naNil();
+    }
+
     _listener.erase(i);
     delete nl;
     return naNum(_listener.size());

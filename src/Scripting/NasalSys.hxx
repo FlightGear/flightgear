@@ -44,7 +44,7 @@ public:
 
     // Implementation of the setlistener extension function
     naRef setListener(int argc, naRef* args);
-    naRef removeListener(int argc, naRef* args);
+    naRef removeListener(naContext c, int argc, naRef* args);
 
     // Returns a ghost wrapper for the current _cmdArg
     naRef cmdArgGhost();
