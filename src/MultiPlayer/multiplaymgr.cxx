@@ -124,7 +124,7 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {902, "sim/hitches/aerotow/tow/weight-per-m-kg-m",            SGPropertyNode::FLOAT},
   {903, "sim/hitches/aerotow/tow/dist",                         SGPropertyNode::FLOAT},
   {904, "sim/hitches/aerotow/tow/connected-to-property-node",   SGPropertyNode::BOOL},
-  {905, "sim/hitches/aerotow/tow/connectedToAIorMP-callsign",   SGPropertyNode::STRING},
+  {905, "sim/hitches/aerotow/tow/connected-to-ai-or-mp-callsign",   SGPropertyNode::STRING},
   {906, "sim/hitches/aerotow/tow/brake-force",                  SGPropertyNode::FLOAT},
   {907, "sim/hitches/aerotow/tow/end-force-x",                  SGPropertyNode::FLOAT},
   {908, "sim/hitches/aerotow/tow/end-force-y",                  SGPropertyNode::FLOAT},

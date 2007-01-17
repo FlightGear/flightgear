@@ -103,8 +103,8 @@ Hitch::Hitch(const char *name)
     node->tie("speed-in-tow-direction",SGRawValuePointer<float>(&_speed_in_tow_direction));
     node->tie("mp-auto-connect-period",SGRawValuePointer<float>(&_mpAutoConnectPeriod));
     node->tie("mp-time-lag",SGRawValuePointer<float>(&_mp_time_lag));
-    node->setStringValue("tow/Node","");
-    node->setStringValue("tow/connectedToAIorMP-callsign");
+    node->setStringValue("tow/node","");
+    node->setStringValue("tow/connected-to-ai-or-mp-callsign");
     node->setBoolValue("broken",false);
 }
 
@@ -339,7 +339,7 @@ void Hitch::findBestAIObject(bool doit,bool running_as_autoconnect)
             if (!_nodeIsMultiplayer)
                 continue;
             if(n->getBoolValue("sim/hitches/aerotow/open",true)) continue;
-            if(strncmp(myCallsign,n->getStringValue("sim/hitches/aerotow/tow/connectedToAIorMP-callsign"),255)!=0)
+            if(strncmp(myCallsign,n->getStringValue("sim/hitches/aerotow/tow/connected-to-ai-or-mp-callsign"),255)!=0)
                 continue;
         }
         double pos[3];
@@ -357,10 +357,10 @@ void Hitch::findBestAIObject(bool doit,bool running_as_autoconnect)
             char text[512];
             sprintf(text,"/sim/hitches/%s", _name);
             SGPropertyNode * node = fgGetNode(text, true);
-            //node->setStringValue("tow/Node",n->getPath());
-            node->setStringValue("tow/Node",n->getDisplayName());
+            //node->setStringValue("tow/node",n->getPath());
+            node->setStringValue("tow/node",n->getDisplayName());
             _nodeID=n->getIntValue("id",0);
-            node->setStringValue("tow/connectedToAIorMP-callsign",n->getStringValue("callsign"));
+            node->setStringValue("tow/connected-to-ai-or-mp-callsign",n->getStringValue("callsign"));
             _open=false;
             found = true;
         }
@@ -372,9 +372,9 @@ void Hitch::findBestAIObject(bool doit,bool running_as_autoconnect)
         SGPropertyNode * node = fgGetNode(text, true);
         //if (!running_as_autoconnect)
         SG_LOG(SG_GENERAL, SG_ALERT,"Found aircraft for aerotow: "
-                <<node->getStringValue("tow/connectedToAIorMP-callsign")
+                <<node->getStringValue("tow/connected-to-ai-or-mp-callsign")
                 <<", distance "<<Math::sqrt(bestdist)<<"m at " 
-                <<node->getStringValue("tow/Node")<<endl);
+                <<node->getStringValue("tow/node")<<endl);
         if (running_as_autoconnect)
             _isSlave=true;
         //set the dist value to some value below the tow lentgh (if not, the hitch
@@ -621,9 +621,9 @@ void Hitch::integrate (float dt)
         SGPropertyNode * node = fgGetNode(text, true);
         if (node)
         {
-            //_towEndNode=fgGetNode(node->getStringValue("tow/Node"), false);
+            //_towEndNode=fgGetNode(node->getStringValue("tow/node"), false);
             char towNode[256];
-            strncpy(towNode,node->getStringValue("tow/Node"),256);
+            strncpy(towNode,node->getStringValue("tow/node"),256);
             towNode[255]=0;
             _towEndNode=fgGetNode("ai/models")->getNode(towNode, false);
             //AI and multiplayer objects seem to change node?
@@ -632,7 +632,7 @@ void Hitch::integrate (float dt)
             {
                 char MPcallsign[256]="";
                 const char *MPc;
-                MPc=node->getStringValue("tow/connectedToAIorMP-callsign");
+                MPc=node->getStringValue("tow/connected-to-ai-or-mp-callsign");
                 if (MPc)
                 {
                     strncpy(MPcallsign,MPc,256);
@@ -654,8 +654,8 @@ void Hitch::integrate (float dt)
                                     if (strcmp(n->getStringValue("callsign"),MPcallsign)==0)//found
                                     {
                                         _towEndNode=n;
-                                        //node->setStringValue("tow/Node",n->getPath());
-                                        node->setStringValue("tow/Node",n->getDisplayName());
+                                        //node->setStringValue("tow/node",n->getPath());
+                                        node->setStringValue("tow/node",n->getDisplayName());
                                     }
                             }
                         }
@@ -705,8 +705,8 @@ void Hitch::integrate (float dt)
                                 char text[512];
                                 sprintf(text,"/sim/hitches/%s", _name);
                                 SGPropertyNode * node = fgGetNode(text, true);
-                                node->getStringValue("tow/Node","");
-                                SG_LOG(SG_GENERAL, SG_ALERT,"'"<<node->getStringValue("tow/Node","")<<"' has opened hitch!"<<endl);
+                                node->getStringValue("tow/node","");
+                                SG_LOG(SG_GENERAL, SG_ALERT,"'"<<node->getStringValue("tow/node","")<<"' has opened hitch!"<<endl);
                             }
                         }
                     }
