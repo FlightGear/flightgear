@@ -1,5 +1,6 @@
 #include "Glue.hpp"
 
+#include <simgear/scene/material/mat.hxx>
 #include "Ground.hpp"
 namespace yasim {
 
@@ -26,6 +27,13 @@ void Ground::getGroundPlane(const double pos[3],
     vel[0] = 0.0;
     vel[1] = 0.0;
     vel[2] = 0.0;
+}
+
+void Ground::getGroundPlane(const double pos[3],
+                              double plane[4], float vel[3],
+                              int *type, const SGMaterial **material)
+{
+    getGroundPlane(pos,plane,vel);
 }
 
 bool Ground::caughtWire(const double pos[4][3])

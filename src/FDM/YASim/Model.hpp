@@ -19,6 +19,7 @@ class Gear;
 class Ground;
 class Hook;
 class Launchbar;
+class Hitch;
 
 class Model : public BodyEnvironment {
 public:
@@ -49,6 +50,7 @@ public:
     Rotorgear* getRotorgear(void);
     Gear* getGear(int handle);
     Hook* getHook(void);
+    int addHitch(Hitch* hitch);
     Launchbar* getLaunchbar(void);
 
     // Semi-private methods for use by the Airplane solver.
@@ -92,6 +94,7 @@ private:
     Vector _gears;
     Hook* _hook;
     Launchbar* _launchbar;
+    Vector _hitches;
 
     float _groundEffectSpan;
     float _groundEffect;

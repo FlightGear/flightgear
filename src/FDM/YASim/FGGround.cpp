@@ -35,6 +35,23 @@ void FGGround::getGroundPlane(const double pos[3],
     for(int i=0; i<3; i++) vel[i] = dvel[i];
 }
 
+void FGGround::getGroundPlane(const double pos[3],
+                              double plane[4], float vel[3],
+                              int *type, const SGMaterial **material
+                              )
+{
+    // Return values for the callback.
+    double agl;
+    double cp[3], dvel[3];
+    _iface->get_agl_m(_toff, pos, cp, plane, dvel,
+                      type, material, &agl);
+
+    // The plane below the actual contact point.
+    plane[3] = plane[0]*cp[0] + plane[1]*cp[1] + plane[2]*cp[2];
+
+    for(int i=0; i<3; i++) vel[i] = dvel[i];
+}
+
 bool FGGround::caughtWire(const double pos[4][3])
 {
     return _iface->caught_wire_m(_toff, pos);

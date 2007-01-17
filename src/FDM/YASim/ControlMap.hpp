@@ -16,7 +16,8 @@ public:
                       BOOST, CASTERING, PROPPITCH, PROPFEATHER,
                       COLLECTIVE, CYCLICAIL, CYCLICELE, ROTORENGINEON,
                       ROTORBRAKE,
-                      REVERSE_THRUST, WASTEGATE };
+                      REVERSE_THRUST, WASTEGATE,
+                      WINCHRELSPEED, HITCHOPEN, PLACEWINCH, FINDAITOW};
 
     enum { OPT_SPLIT  = 0x01,
            OPT_INVERT = 0x02,

@@ -16,6 +16,7 @@
 #include "TurbineEngine.hpp"
 #include "Rotor.hpp"
 #include "Rotorpart.hpp"
+#include "Hitch.hpp"
 
 #include "FGFDM.hpp"
 
@@ -158,12 +159,14 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	float spd = attrf(a, "speed") * KTS2MPS;
 	float alt = attrf(a, "alt", 0) * FT2M;
 	float aoa = attrf(a, "aoa", 0) * DEG2RAD;
-	_airplane.setApproach(spd, alt, aoa, attrf(a, "fuel", 0.2));
+        float gla = attrf(a, "glide-angle", 0) * DEG2RAD;
+	_airplane.setApproach(spd, alt, aoa, attrf(a, "fuel", 0.2),gla);
 	_cruiseCurr = false;
     } else if(eq(name, "cruise")) {
 	float spd = attrf(a, "speed") * KTS2MPS;
 	float alt = attrf(a, "alt") * FT2M;
-	_airplane.setCruise(spd, alt, attrf(a, "fuel", 0.5));
+        float gla = attrf(a, "glide-angle", 0) * DEG2RAD;
+	_airplane.setCruise(spd, alt, attrf(a, "fuel", 0.5),gla);
 	_cruiseCurr = true;
     } else if(eq(name, "solve-weight")) {
         int idx = attri(a, "idx");
@@ -245,6 +248,46 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	er->eng = j;
 	er->prefix = dup(buf);
 	_thrusters.add(er);
+    } else if(eq(name, "hitch")) {
+        Hitch* h = new Hitch(a->getValue("name"));
+        _currObj = h;
+        v[0] = attrf(a, "x");
+        v[1] = attrf(a, "y");
+        v[2] = attrf(a, "z");
+        h->setPosition(v);
+        if(a->hasAttribute("force-is-calculated-by-other")) h->setForceIsCalculatedByOther(attrb(a,"force-is-calculated-by-other"));
+        _airplane.addHitch(h);
+    } else if(eq(name, "tow")) {
+        Hitch* h = (Hitch*)_currObj;
+        if(a->hasAttribute("length"))
+            h->setTowLength(attrf(a, "length"));
+        if(a->hasAttribute("elastic-constant"))
+            h->setTowElasticConstant(attrf(a, "elastic-constant"));
+        if(a->hasAttribute("break-force"))
+            h->setTowBreakForce(attrf(a, "break-force"));
+        if(a->hasAttribute("weight-per-meter"))
+            h->setTowWeightPerM(attrf(a, "weight-per-meter"));
+        if(a->hasAttribute("mp-auto-connect-period"))
+            h->setMpAutoConnectPeriod(attrf(a, "mp-auto-connect-period"));
+    } else if(eq(name, "winch")) {
+        Hitch* h = (Hitch*)_currObj;
+        double pos[3];
+        pos[0] = attrd(a, "x",0);
+        pos[1] = attrd(a, "y",0);
+        pos[2] = attrd(a, "z",0);
+        h->setWinchPosition(pos);
+        if(a->hasAttribute("max-speed"))
+            h->setWinchMaxSpeed(attrf(a, "max-speed"));
+        if(a->hasAttribute("power"))
+            h->setWinchPower(attrf(a, "power") * 1000);
+        if(a->hasAttribute("max-force"))
+            h->setWinchMaxForce(attrf(a, "max-force"));
+        if(a->hasAttribute("initial-tow-length"))
+            h->setWinchInitialTowLength(attrf(a, "initial-tow-length"));
+        if(a->hasAttribute("max-tow-length"))
+            h->setWinchMaxTowLength(attrf(a, "max-tow-length"));
+        if(a->hasAttribute("min-tow-length"))
+            h->setWinchMinTowLength(attrf(a, "min-tow-length"));
     } else if(eq(name, "gear")) {
 	Gear* g = new Gear();
 	_currObj = g;
@@ -269,10 +312,17 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
             v[i] *= attrf(a, "compression", 1);
 	g->setCompression(v);
         g->setBrake(attrf(a, "skid", 0));
+        g->setInitialLoad(attrf(a, "initial-load", 0));
 	g->setStaticFriction(attrf(a, "sfric", 0.8));
 	g->setDynamicFriction(attrf(a, "dfric", 0.7));
         g->setSpring(attrf(a, "spring", 1));
         g->setDamping(attrf(a, "damp", 1));
+        if(a->hasAttribute("on-water")) g->setOnWater(attrb(a,"on-water"));
+        if(a->hasAttribute("on-solid")) g->setOnSolid(attrb(a,"on-solid"));
+        if(a->hasAttribute("ignored-by-solver")) g->setIgnoreWhileSolving(attrb(a,"ignored-by-solver"));
+        g->setSpringFactorNotPlaning(attrf(a, "spring-factor-not-planing", 1));
+        g->setSpeedPlaning(attrf(a, "speed-planing", 0) * KTS2MPS);
+        g->setReduceFrictionByExtension(attrf(a, "reduce-friction-by-extension", 0));
 	_airplane.addGear(g);
     } else if(eq(name, "hook")) {
 	Hook* h = new Hook();
@@ -898,6 +948,11 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "ROTORBRAKE")) return ControlMap::ROTORBRAKE;
     if(eq(name, "REVERSE_THRUST")) return ControlMap::REVERSE_THRUST;
     if(eq(name, "WASTEGATE")) return ControlMap::WASTEGATE;
+    if(eq(name, "WINCHRELSPEED")) return ControlMap::WINCHRELSPEED;
+    if(eq(name, "HITCHOPEN")) return ControlMap::HITCHOPEN;
+    if(eq(name, "PLACEWINCH")) return ControlMap::PLACEWINCH;
+    if(eq(name, "FINDAITOW")) return ControlMap::FINDAITOW;
+
     SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '"
            << name << "' in YASim aircraft description.");
     exit(1);
@@ -970,6 +1025,23 @@ float FGFDM::attrf(XMLAttributes* atts, char* attr, float def)
     const char* val = atts->getValue(attr);
     if(val == 0) return def;
     else         return (float)atof(val);    
+}
+
+double FGFDM::attrd(XMLAttributes* atts, char* attr)
+{
+    if(!atts->hasAttribute(attr)) {
+        SG_LOG(SG_FLIGHT,SG_ALERT,"Missing '" << attr <<
+               "' in YASim aircraft description");
+        exit(1);
+    }
+    return attrd(atts, attr, 0);
+}
+
+double FGFDM::attrd(XMLAttributes* atts, char* attr, double def)
+{
+    const char* val = atts->getValue(attr);
+    if(val == 0) return def;
+    else         return atof(val);
 }
 
 // ACK: the dreaded ambiguous string boolean.  Remind me to shoot Maik

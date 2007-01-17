@@ -7,6 +7,7 @@
 #include "Surface.hpp"
 #include "Rotorpart.hpp"
 #include "Thruster.hpp"
+#include "Hitch.hpp"
 #include "Airplane.hpp"
 
 namespace yasim {
@@ -38,11 +39,13 @@ Airplane::Airplane()
     _cruiseT = 0;
     _cruiseSpeed = 0;
     _cruiseWeight = 0;
+    _cruiseGlideAngle = 0;
     _approachP = 0;
     _approachT = 0;
     _approachSpeed = 0;
     _approachAoA = 0;
     _approachWeight = 0;
+    _approachGlideAngle = 0;
 
     _dragFactor = 1;
     _liftRatio = 1;
@@ -182,16 +185,17 @@ void Airplane::updateGearState()
     }
 }
 
-void Airplane::setApproach(float speed, float altitude, float aoa, float fuel)
+void Airplane::setApproach(float speed, float altitude, float aoa, float fuel, float gla)
 {
     _approachSpeed = speed;
     _approachP = Atmosphere::getStdPressure(altitude);
     _approachT = Atmosphere::getStdTemperature(altitude);
     _approachAoA = aoa;
     _approachFuel = fuel;
+    _approachGlideAngle = gla;
 }
  
-void Airplane::setCruise(float speed, float altitude, float fuel)
+void Airplane::setCruise(float speed, float altitude, float fuel, float gla)
 {
     _cruiseSpeed = speed;
     _cruiseP = Atmosphere::getStdPressure(altitude);
@@ -199,6 +203,7 @@ void Airplane::setCruise(float speed, float altitude, float fuel)
     _cruiseAoA = 0;
     _tailIncidence = 0;
     _cruiseFuel = fuel;
+    _cruiseGlideAngle = gla;
 }
 
 void Airplane::setElevatorControl(int control)
@@ -323,6 +328,11 @@ void Airplane::addHook(Hook* hook)
     _model.addHook(hook);
 }
 
+void Airplane::addHitch(Hitch* hitch)
+{
+    _model.addHitch(hitch);
+}
+
 void Airplane::addLaunchbar(Launchbar* launchbar)
 {
     _model.addLaunchbar(launchbar);
@@ -417,7 +427,7 @@ int Airplane::getSolutionIterations()
     return _solutionIterations;
 }
 
-void Airplane::setupState(float aoa, float speed, State* s)
+void Airplane::setupState(float aoa, float speed, float gla, State* s)
 {
     float cosAoA = Math::cos(aoa);
     float sinAoA = Math::sin(aoa);
@@ -425,7 +435,7 @@ void Airplane::setupState(float aoa, float speed, State* s)
     s->orient[3] =       0; s->orient[4] = 1; s->orient[5] =      0;
     s->orient[6] = -sinAoA; s->orient[7] = 0; s->orient[8] = cosAoA;
 
-    s->v[0] = speed; s->v[1] = 0; s->v[2] = 0;
+    s->v[0] = speed*Math::cos(gla); s->v[1] = -speed*Math::sin(gla); s->v[2] = 0;
 
     int i;
     for(i=0; i<3; i++)
@@ -602,6 +612,7 @@ void Airplane::compileContactPoints()
         // I made these up
         g->setStaticFriction(0.6f);
         g->setDynamicFriction(0.5f);
+        g->setContactPoint(1);
 
         _model.addGear(g);
     }
@@ -709,7 +720,8 @@ void Airplane::solveGear()
         g->getPosition(pos);
 	Math::sub3(cg, pos, pos);
         gr->wgt = 1.0f/(0.5f+Math::sqrt(pos[0]*pos[0] + pos[1]*pos[1]));
-        total += gr->wgt;
+        if (!g->getIgnoreWhileSolving())
+            total += gr->wgt;
     }
 
     // Renormalize so they sum to 1
@@ -731,7 +743,7 @@ void Airplane::solveGear()
         float e = energy * gr->wgt;
         float comp[3];
         gr->gear->getCompression(comp);
-        float len = Math::mag3(comp);
+        float len = Math::mag3(comp)*(1+2*gr->gear->getInitialLoad());
 
         // Energy in a spring: e = 0.5 * k * len^2
         float k = 2 * e / (len*len);
@@ -773,7 +785,7 @@ void Airplane::setupWeights(bool isApproach)
 
 void Airplane::runCruise()
 {
-    setupState(_cruiseAoA, _cruiseSpeed, &_cruiseState);
+    setupState(_cruiseAoA, _cruiseSpeed,_approachGlideAngle, &_cruiseState);
     _model.setState(&_cruiseState);
     _model.setAir(_cruiseP, _cruiseT,
                   Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
@@ -816,7 +828,7 @@ void Airplane::runCruise()
 
 void Airplane::runApproach()
 {
-    setupState(_approachAoA, _approachSpeed, &_approachState);
+    setupState(_approachAoA, _approachSpeed,_approachGlideAngle, &_approachState);
     _model.setState(&_approachState);
     _model.setAir(_approachP, _approachT,
                   Atmosphere::calcStdDensity(_approachP, _approachT));
@@ -924,7 +936,7 @@ void Airplane::solve()
 	runCruise();
 
 	_model.getThrust(tmp);
-	float thrust = tmp[0];
+        float thrust = tmp[0] + _cruiseWeight * Math::sin(_cruiseGlideAngle) * 9.81;
 
 	_model.getBody()->getAccel(tmp);
         Math::tmul33(_cruiseState.orient, tmp, tmp);
@@ -1063,7 +1075,7 @@ void Airplane::solveHelicopter()
         applyDragFactor(Math::pow(15.7/1000, 1/SOLVE_TWEAK));
         applyLiftRatio(Math::pow(104, 1/SOLVE_TWEAK));
     }
-    setupState(0,0, &_cruiseState);
+    setupState(0,0,0, &_cruiseState);
     _model.setState(&_cruiseState);
     setupWeights(true);
     _controls.reset();

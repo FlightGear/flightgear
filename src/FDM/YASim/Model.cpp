@@ -11,6 +11,7 @@
 #include "Surface.hpp"
 #include "Rotor.hpp"
 #include "Rotorpart.hpp"
+#include "Hitch.hpp"
 #include "Glue.hpp"
 #include "Ground.hpp"
 
@@ -75,6 +76,9 @@ Model::~Model()
     delete _ground_cb;
     delete _hook;
     delete _launchbar;
+    for(int i=0; i<_hitches.size();i++)
+        delete (Hitch*)_hitches.get(i);
+
 }
 
 void Model::getThrust(float* out)
@@ -125,6 +129,11 @@ void Model::initIteration()
         float toff[3];
         Math::mul3(_integrator.getInterval(), _wind, toff);
         _turb->offset(toff);
+    }
+
+    for(i=0; i<_hitches.size(); i++) {
+        Hitch* h = (Hitch*)_hitches.get(i);
+        h->integrate(_integrator.getInterval());
     }
 
     
@@ -252,6 +261,11 @@ void Model::addLaunchbar(Launchbar* launchbar)
     _launchbar = launchbar;
 }
 
+int Model::addHitch(Hitch* hitch)
+{
+    return _hitches.add(hitch);
+}
+
 void Model::setGroundCallback(Ground* ground_cb)
 {
     delete _ground_cb;
@@ -307,9 +321,34 @@ void Model::updateGround(State* s)
         // Ask for the ground plane in the global coordinate system
         double global_ground[4];
         float global_vel[3];
-        _ground_cb->getGroundPlane(pt, global_ground, global_vel);
-        g->setGlobalGround(global_ground, global_vel);
+        int type;
+        const SGMaterial* material;
+        _ground_cb->getGroundPlane(pt, global_ground, global_vel,
+                              &type,&material);
+        static int h=0;
+        g->setGlobalGround(global_ground, global_vel, pt[0], pt[1],
+            type,material);
     }
+
+    for(i=0; i<_hitches.size(); i++) {
+        Hitch* h = (Hitch*)_hitches.get(i);
+
+        // Get the point of interest
+        float pos[3];
+        h->getPosition(pos);
+
+        // Transform the local coordinates of the contact point to
+        // global coordinates.
+        double pt[3];
+        s->posLocalToGlobal(pos, pt);
+
+        // Ask for the ground plane in the global coordinate system
+        double global_ground[4];
+        float global_vel[3];
+        _ground_cb->getGroundPlane(pt, global_ground, global_vel);
+        h->setGlobalGround(global_ground, global_vel);
+    }
+
     for(i=0; i<_rotorgear.getRotors()->size(); i++) {
         Rotor* r = (Rotor*)_rotorgear.getRotors()->get(i);
         r->findGroundEffectAltitude(_ground_cb,s);
@@ -468,8 +507,16 @@ void Model::calcForces(State* s)
         _body.addForce(contactlb, forcelb);
         _body.addForce(contacthb, forcehb);
     }
-}
 
+// The hitches
+    for(i=0; i<_hitches.size(); i++) {
+        float force[3], contact[3];
+        Hitch* h = (Hitch*)_hitches.get(i);
+        h->calcForce(_ground_cb,&_body, s);
+        h->getForce(force, contact);
+        _body.addForce(contact, force);
+    }
+}
 void Model::newState(State* s)
 {
     _s = s;
@@ -480,23 +527,26 @@ void Model::newState(State* s)
     for(i=0; i<_gears.size(); i++) {
 	Gear* g = (Gear*)_gears.get(i);
 
-	// Get the point of ground contact
-        float pos[3], cmpr[3];
-	g->getPosition(pos);
-	g->getCompression(cmpr);
-	Math::mul3(g->getCompressFraction(), cmpr, cmpr);
-	Math::add3(cmpr, pos, pos);
+        if (!g->getSubmergable())
+        {
+	    // Get the point of ground contact
+            float pos[3], cmpr[3];
+	    g->getPosition(pos);
+	    g->getCompression(cmpr);
+	    Math::mul3(g->getCompressFraction(), cmpr, cmpr);
+	    Math::add3(cmpr, pos, pos);
 
-        // The plane transformed to local coordinates.
-        double global_ground[4];
-        g->getGlobalGround(global_ground);
-        float ground[4];
-        s->planeGlobalToLocal(global_ground, ground);
-	float dist = ground[3] - Math::dot3(pos, ground);
+            // The plane transformed to local coordinates.
+            double global_ground[4];
+            g->getGlobalGround(global_ground);
+            float ground[4];
+            s->planeGlobalToLocal(global_ground, ground);
+	    float dist = ground[3] - Math::dot3(pos, ground);
 
-	// Find the lowest one
-	if(dist < min)
-	    min = dist;
+	    // Find the lowest one
+	    if(dist < min)
+	        min = dist;
+        }
     }
     _agl = min;
     if(_agl < -1) // Allow for some integration slop
