@@ -10,6 +10,7 @@
 #include "Rotor.hpp"
 #include "Math.hpp"
 #include "Propeller.hpp"
+#include "Hitch.hpp"
 
 #include "ControlMap.hpp"
 namespace yasim {
@@ -219,6 +220,10 @@ void ControlMap::applyControls(float dt)
         case WASTEGATE:
             ((PistonEngine*)((Thruster*)obj)->getEngine())->setWastegate(lval);
             break;
+        case WINCHRELSPEED: ((Hitch*)obj)->setWinchRelSpeed(lval); break;
+        case HITCHOPEN:    ((Hitch*)obj)->setOpen(lval!=0);       break;
+        case PLACEWINCH:    ((Hitch*)obj)->setWinchPositionAuto(lval!=0); break;
+        case FINDAITOW:     ((Hitch*)obj)->findBestAIObject(lval!=0); break;
 	}
     }
 }
@@ -233,6 +238,7 @@ float ControlMap::rangeMin(int type)
     case CYCLICELE: return -1;
     case CYCLICAIL: return -1;
     case COLLECTIVE: return -1;
+    case WINCHRELSPEED: return -1;
     case MAGNETOS: return 0;   // [0:3]
     default:       return 0;   // [0:1]
     }

@@ -15,6 +15,7 @@ SHARED_SOURCE_FILES = \
         Gear.cpp Gear.hpp \
         Glue.cpp Glue.hpp \
         Ground.cpp Ground.hpp \
+        Hitch.cpp Hitch.hpp \
         Hook.cpp Hook.hpp \
         Launchbar.cpp Launchbar.hpp \
         Integrator.cpp Integrator.hpp \

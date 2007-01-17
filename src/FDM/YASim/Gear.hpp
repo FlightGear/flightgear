@@ -1,6 +1,8 @@
 #ifndef _GEAR_HPP
 #define _GEAR_HPP
 
+class SGMaterial;
+
 namespace yasim {
 
 class RigidBody;
@@ -39,8 +41,16 @@ public:
     void setRotation(float rotation);
     void setExtension(float extension);
     void setCastering(bool castering);
-    void setGlobalGround(double* global_ground, float* global_vel);
-
+    void setOnWater(bool c);
+    void setOnSolid(bool c);
+    void setSpringFactorNotPlaning(float f);
+    void setSpeedPlaning(float s);
+    void setReduceFrictionByExtension(float s);
+    void setInitialLoad(float l);
+    void setIgnoreWhileSolving(bool c);
+    void setGlobalGround(double* global_ground, float* global_vel,
+        double globalX, double globalY,
+        int type, const SGMaterial *material);
     void getPosition(float* out);
     void getCompression(float* out);
     void getGlobalGround(double* global_ground);
@@ -51,9 +61,12 @@ public:
     float getBrake();
     float getRotation();
     float getExtension();
+    float getInitialLoad() {return _initialLoad; }
     bool getCastering();
     float getCasterAngle() { return _casterAngle; }
     float getRollSpeed() { return _rollSpeed; }
+    float getBumpAltitude();
+    bool getGroundIsSolid();
 
     // Takes a velocity of the aircraft relative to ground, a rotation
     // vector, and a ground plane (all specified in local coordinates)
@@ -67,9 +80,13 @@ public:
     float getWoW();
     float getCompressFraction();
     float getCompressDist() { return _compressDist; }
+    bool getSubmergable() {return (!_ground_isSolid)&&(!_isContactPoint); }
+    bool getIgnoreWhileSolving() {return _ignoreWhileSolving; }
+    void setContactPoint(bool c);
 
 private:
     float calcFriction(float wgt, float v);
+    float calcFrictionFluid(float wgt, float v);
 
     bool _castering;
     float _pos[3];
@@ -85,11 +102,29 @@ private:
     float _contact[3];
     float _wow;
     float _frac;
+    float _initialLoad;
     float _compressDist;
     double _global_ground[4];
     float _global_vel[3];
     float _casterAngle;
     float _rollSpeed;
+    bool _isContactPoint;
+    bool _onWater;
+    bool _onSolid;
+    float _spring_factor_not_planing;
+    float _speed_planing;
+    float _reduceFrictionByExtension;
+    bool _ignoreWhileSolving;
+
+    int _ground_type;
+    double _ground_frictionFactor;
+    double _ground_rollingFriction;
+    double _ground_loadCapacity;
+    double _ground_loadResistance;
+    double _ground_bumpiness;
+    bool _ground_isSolid;
+    double _global_x;
+    double _global_y;
 };
 
 }; // namespace yasim

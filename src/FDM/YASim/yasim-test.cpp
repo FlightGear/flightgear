@@ -46,7 +46,7 @@ void yasim_graph(Airplane* a, float alt, float kts)
 
     for(int deg=-179; deg<=179; deg++) {
         float aoa = deg * DEG2RAD;
-        Airplane::setupState(aoa, kts * KTS2MPS, &s);
+        Airplane::setupState(aoa, kts * KTS2MPS, 0 ,&s);
         m->getBody()->reset();
         m->initIteration();
         m->calcForces(&s);

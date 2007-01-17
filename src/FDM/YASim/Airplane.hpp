@@ -13,6 +13,7 @@ class Gear;
 class Hook;
 class Launchbar;
 class Thruster;
+class Hitch;
 
 class Airplane {
 public:
@@ -45,12 +46,13 @@ public:
     void addLaunchbar(Launchbar* l);
     void addThruster(Thruster* t, float mass, float* cg);
     void addBallast(float* pos, float mass);
+    void addHitch(Hitch* h);
 
     int addWeight(float* pos, float size);
     void setWeight(int handle, float mass);
 
-    void setApproach(float speed, float altitude, float aoa, float fuel);
-    void setCruise(float speed, float altitude, float fuel);
+    void setApproach(float speed, float altitude, float aoa, float fuel, float gla);
+    void setCruise(float speed, float altitude, float fuel, float gla);
 
     void setElevatorControl(int control);
     void addApproachControl(int control, float val);
@@ -61,6 +63,8 @@ public:
     int numGear();
     Gear* getGear(int g);
     Hook* getHook();
+    int numHitches() { return _hitches.size(); }
+    Hitch* getHitch(int h);
     Rotorgear* getRotorgear();
     Launchbar* getLaunchbar();
 
@@ -88,7 +92,7 @@ public:
     float getApproachElevator() { return _approachElevator.val; }
     char* getFailureMsg();
 
-    static void setupState(float aoa, float speed, State* s); // utility
+    static void setupState(float aoa, float speed, float gla, State* s); // utility
 
 private:
     struct Tank { float pos[3]; float cap; float fill;
@@ -139,6 +143,7 @@ private:
     Vector _contacts; // non-gear ground contact points
     Vector _weights;
     Vector _surfs; // NON-wing Surfaces
+    Vector _hitches; //for airtow and winch
 
     Vector _solveWeights;
 
@@ -149,6 +154,7 @@ private:
     float _cruiseSpeed;
     float _cruiseWeight;
     float _cruiseFuel;
+    float _cruiseGlideAngle;
 
     Vector _approachControls;
     State _approachState;
@@ -158,6 +164,7 @@ private:
     float _approachAoA;
     float _approachWeight;
     float _approachFuel;
+    float _approachGlideAngle;
 
     int _solutionIterations;
     float _dragFactor;

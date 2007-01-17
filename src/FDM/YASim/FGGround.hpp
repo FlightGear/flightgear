@@ -4,6 +4,7 @@
 #include "Ground.hpp"
 
 class FGInterface;
+class SGMaterial;
 
 namespace yasim {
 
@@ -17,6 +18,16 @@ public:
 
     virtual void getGroundPlane(const double pos[3],
                                 double plane[4], float vel[3]);
+
+    virtual void getGroundPlane(const double pos[3],
+                              double plane[4], float vel[3],
+                              int *type, const SGMaterial **material);/*
+                              double *frictionFactor, 
+                              double *rollingFriction,
+                              double *loadCapacity,
+                              double *loadResistance,
+                              double *bumpiness,
+                              bool *isSolid);*/
 
     virtual bool caughtWire(const double pos[4][3]);
 
