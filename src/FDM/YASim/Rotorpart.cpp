@@ -17,12 +17,12 @@ Rotorpart::Rotorpart()
     _dt=0;
 #define set3(x,a,b,c) x[0]=a;x[1]=b;x[2]=c;
     set3 (_speed,1,0,0);
-    set3 (_directionofzentipetalforce,1,0,0);
+    set3 (_directionofcentripetalforce,1,0,0);
     set3 (_directionofrotorpart,0,1,0);
     set3 (_direction_of_movement,1,0,0);
     set3 (_last_torque,0,0,0);
 #undef set3
-    _zentipetalforce=1;
+    _centripetalforce=1;
     _maxpitch=.02;
     _minpitch=0;
     _maxcyclic=0.02;
@@ -87,7 +87,7 @@ void Rotorpart::inititeration(float dt,float *rot)
     //alpha is rotation about "normal cross dirofzentf"
 
     float dir[3];
-    Math::cross3(_directionofzentipetalforce,_normal,dir);
+    Math::cross3(_directionofcentripetalforce,_normal,dir);
     a=Math::dot3(rot,dir);
     _alphaalt -= a;
     _alphaalt= Math::clamp(_alphaalt,_alphamin,_alphamax);
@@ -173,7 +173,7 @@ void Rotorpart::setSpeed(float* p)
 void Rotorpart::setDirectionofZentipetalforce(float* p)
 {
     int i;
-    for(i=0; i<3; i++) _directionofzentipetalforce[i] = p[i];
+    for(i=0; i<3; i++) _directionofcentripetalforce[i] = p[i];
 }
 
 void Rotorpart::setDirectionofRotorPart(float* p)
@@ -199,7 +199,7 @@ void Rotorpart::setDdtOmega(float value)
 
 void Rotorpart::setZentipetalForce(float f)
 {
-    _zentipetalforce=f;
+    _centripetalforce=f;
 } 
 
 void Rotorpart::setMinpitch(float f)
@@ -254,6 +254,7 @@ void Rotorpart::setC2(float f)
 
 void Rotorpart::setAlpha0(float f)
 {
+    if (f>-0.01) f=-0.01; //half a degree bending 
     _alpha0=f;
 }
 
@@ -372,7 +373,7 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
     int i,n;
     for (i=0;i<3;i++)
         moment[i]=0;
-    lift_moment=0;
+    lift_moment=-_mass*_len; //*cos yaw * cos roll
     *torque=0;//
     if((_nextrp==NULL)||(_lastrp==NULL)||(_rotor==NULL)) 
         return 0.0;//not initialized. Can happen during startupt of flightgear
@@ -461,12 +462,10 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
         if (returnlift!=NULL) *returnlift+=lift;
     }
     //as above, use 1st order approximation
-    //float alpha=Math::atan2(lift_moment,_zentipetalforce * _len); 
+    //float alpha=Math::atan2(lift_moment,_centripetalforce * _len); 
     float alpha;
-    if ((_zentipetalforce >1e-8) || (_zentipetalforce <-1e-8))
-        alpha=lift_moment/(_zentipetalforce * _len); 
-    else 
-        alpha=0;
+    alpha=lift_moment/(_centripetalforce * _len - _mass * _len/_alpha0);
+    //centripetalforce is >=0 and _alpha0<-0.01
     return (alpha);
 }
 
@@ -483,12 +482,11 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
         *torque_scalar=0;
         return;
     }
-    _zentipetalforce=_mass*_len*_omega*_omega;
+    _centripetalforce=_mass*_len*_omega*_omega;
     float vrel[3],vreldir[3];
     Math::sub3(_speed,v,vrel);
-    float scalar_torque=0,alpha_alteberechnung=0;
+    float scalar_torque=0;
     Math::unit3(vrel,vreldir);//direction of blade-movement rel. to air
-    float delta=Math::asin(Math::dot3(_normal,vreldir));
     //Angle of blade which would produce no vertical force (where the 
     //effective incidence is zero)
 
@@ -504,36 +502,17 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
     float alpha,factor; //alpha is the flapping angle
     //the new flapping angle will be the old flapping angle
     //+ factor *(alpha - "old flapping angle")
-    if((_omega*10)>_omegan) 
-    //the rotor is rotaing quite fast.
-    //(at least 10% of the nominal rotational speed)
-    {
-        alpha=calculateAlpha(v,rho,_incidence,cyc,0,&scalar_torque);
-        //the incidence is a function of alpha (if _delta* != 0)
-        //Therefore missing: wrap this function in an integrator
-        //(runge kutta e. g.)
+    alpha=calculateAlpha(v,rho,_incidence,cyc,0,&scalar_torque);
+    //the incidence is a function of alpha (if _delta* != 0)
+    //Therefore missing: wrap this function in an integrator
+    //(runge kutta e. g.)
 
-        factor=_dt*_dynamic;
-        if (factor>1) factor=1;
-    }
-    else //the rotor is not rotating or rotating very slowly 
-    {
-        alpha=calculateAlpha(v,rho,_incidence,cyc,alpha_alteberechnung,
-            &scalar_torque);
-        //calculate drag etc., e. g. for deccelrating the rotor if engine
-        //is off and omega <10%
-        alpha = Math::clamp(alpha,_alphamin,_alphamax);
-        float rel =_omega*10 / _omegan;
-        alpha=rel * alpha + (1-rel)* _alpha0;
-        factor=_dt*_dynamic/10;
-        if (factor>1) factor=1;
-    }
+    factor=_dt*_dynamic;
+    if (factor>1) factor=1;
 
-    float vz=Math::dot3(_normal,v); //the s
     float dirblade[3];
-    Math::cross3(_normal,_directionofzentipetalforce,dirblade);
+    Math::cross3(_normal,_directionofcentripetalforce,dirblade);
     float vblade=Math::abs(Math::dot3(dirblade,v));
-    float tliftfactor=Math::sqrt(1+vblade*_translift);
 
     alpha=_alphaalt+(alpha-_alphaalt)*factor;
     _alpha=alpha;
@@ -544,8 +523,8 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
     float schwenkfactor=1-(Math::cos(_lastrp->getrealAlpha())-meancosalpha)*_rotor->getNumberOfParts()/4;
 
     //missing: consideration of rellenhinge
-    float xforce = Math::cos(alpha)*_zentipetalforce;
-    float zforce = schwenkfactor*Math::sin(alpha)*_zentipetalforce;
+    float xforce = Math::cos(alpha)*_centripetalforce;
+    float zforce = schwenkfactor*Math::sin(alpha)*_centripetalforce;
     *torque_scalar=scalar_torque;
     scalar_torque+= 0*_ddt_omega*_torque_of_inertia;
     float thetorque = scalar_torque;
@@ -554,7 +533,7 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
     for(i=0; i<3; i++) {
         _last_torque[i]=torque[i] = f*_normal[i]*thetorque;
         out[i] = _normal[i]*zforce*_rotor->getLiftFactor()
-            +_directionofzentipetalforce[i]*xforce;
+            +_directionofcentripetalforce[i]*xforce;
     }
 }
 
@@ -582,9 +561,9 @@ std::ostream &  operator<<(std::ostream & out, const Rotorpart& rp)
         i( _torque_no_force)
         iv( _speed)
         iv( _direction_of_movement)
-        iv( _directionofzentipetalforce)
+        iv( _directionofcentripetalforce)
         iv( _directionofrotorpart)
-        i( _zentipetalforce)
+        i( _centripetalforce)
         i( _maxpitch)
         i( _minpitch)
         i( _maxcyclic)
