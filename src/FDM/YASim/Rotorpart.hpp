@@ -85,9 +85,9 @@ namespace yasim {
         float _torque_no_force;
         float _speed[3];
         float _direction_of_movement[3];
-        float _directionofzentipetalforce[3];
+        float _directionofcentripetalforce[3];
         float _directionofrotorpart[3];
-        float _zentipetalforce;
+        float _centripetalforce;
         float _maxpitch;
         float _minpitch;
         float _maxcyclic;
