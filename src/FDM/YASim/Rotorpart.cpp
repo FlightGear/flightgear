@@ -373,7 +373,7 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
     int i,n;
     for (i=0;i<3;i++)
         moment[i]=0;
-    lift_moment=-_mass*_len; //*cos yaw * cos roll
+    lift_moment=-_mass*_len*9.81; //*cos yaw * cos roll
     *torque=0;//
     if((_nextrp==NULL)||(_lastrp==NULL)||(_rotor==NULL)) 
         return 0.0;//not initialized. Can happen during startupt of flightgear
@@ -464,7 +464,7 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
     //as above, use 1st order approximation
     //float alpha=Math::atan2(lift_moment,_centripetalforce * _len); 
     float alpha;
-    alpha=lift_moment/(_centripetalforce * _len - _mass * _len/_alpha0);
+    alpha=lift_moment/(_centripetalforce * _len - _mass * _len * 9.81 /_alpha0);
     //centripetalforce is >=0 and _alpha0<-0.01
     return (alpha);
 }
