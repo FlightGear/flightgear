@@ -67,6 +67,7 @@ public:
     float getRollSpeed() { return _rollSpeed; }
     float getBumpAltitude();
     bool getGroundIsSolid();
+    float getGroundFrictionFactor() { return (float)_ground_frictionFactor; }
 
     // Takes a velocity of the aircraft relative to ground, a rotation
     // vector, and a ground plane (all specified in local coordinates)
