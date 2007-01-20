@@ -1,6 +1,8 @@
 #ifndef _HITCH_HPP
 #define _HITCH_HPP
-class SGPropertyNode;
+
+#include <Main/fg_props.hxx>
+
 namespace yasim {
 
 class Ground;
@@ -76,7 +78,7 @@ private:
     State* _state;
     float _dist;
     float _timeLagCorrectedDist;
-    SGPropertyNode *_towEndNode;
+    SGPropertyNode_ptr _towEndNode;
     const char *_towEndPropertyName;
     bool _towEndIsConnectedToProperty;
     bool _nodeIsMultiplayer;
@@ -102,10 +104,11 @@ private:
     float _mp_force[3];
     bool _mp_is_slave;
     bool _mp_open_last_state;
-    
+
     bool _displayed_len_lower_dist_message;
     bool _last_wish;
 
+    SGPropertyNode_ptr _node;
 };
 
 }; // namespace yasim
