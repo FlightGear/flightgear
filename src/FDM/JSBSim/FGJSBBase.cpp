@@ -99,7 +99,6 @@ const string FGJSBBase::JSBSim_version = "0.9.12 "__DATE__" "__TIME__;
 std::queue <FGJSBBase::Message*> FGJSBBase::Messages;
 FGJSBBase::Message FGJSBBase::localMsg;
 unsigned int FGJSBBase::messageId = 0;
-unsigned int FGJSBBase::frame = 0;
 
 short FGJSBBase::debug_lvl  = 1;
 
