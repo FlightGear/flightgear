@@ -268,7 +268,7 @@ void Hitch::setWinchPositionAuto(bool doit)
 
     _state->posLocalToGlobal(lWinchPos,_winchPos);
     _towLength=_winchInitialTowLength;
-    fgGetNode("/sim/messages/pilot", true)->setStringValue("coonected to winch!");
+    fgSetString("/sim/messages/pilot", "Connected to winch!");
     _open=false;
 
     _node->setBoolValue("broken",false);
@@ -358,15 +358,15 @@ void Hitch::findBestAIObject(bool doit,bool running_as_autoconnect)
         {
             std::stringstream message;
             message<<_node->getStringValue("tow/connected-to-ai-or-mp-callsign")
-                    <<", I am on your hook, distance "<<Math::sqrt(bestdist)<<"m";
-            fgGetNode("/sim/messages/pilot", true)->setStringValue(message.str().c_str());
+                    <<", I am on your hook, distance "<<Math::sqrt(bestdist)<<" meter.";
+            fgSetString("/sim/messages/pilot", message.str().c_str());
         }
         else
         {
             std::stringstream message;
             message<<_node->getStringValue("tow/connected-to-ai-or-mp-callsign")
-                <<": I am on your hook, distance "<<Math::sqrt(bestdist)<<"m";
-            fgGetNode("/sim/messages/ai-plane", true)->setStringValue(message.str().c_str());
+                <<": I am on your hook, distance "<<Math::sqrt(bestdist)<<" meter.";
+            fgSetString("/sim/messages/ai-plane", message.str().c_str());
         }
         if (running_as_autoconnect)
             _isSlave=true;
@@ -378,7 +378,7 @@ void Hitch::findBestAIObject(bool doit,bool running_as_autoconnect)
     else
         if (!running_as_autoconnect)
         {
-            fgGetNode("/sim/messages/atc", true)->setStringValue("Sorry, no aircraft for aerotow!");
+            fgSetString("/sim/messages/atc", "Sorry, no aircraft for aerotow!");
         }
 }
 
@@ -578,9 +578,9 @@ void Hitch::integrate (float dt)
             if (_dist>_towLength*1.00001)
             {
                 std::stringstream message;
-                message<<"Could not lock Hitch (tow length is insufficient) on hitch '"
+                message<<"Could not lock hitch (tow length is insufficient) on hitch '"
                        <<_node->getPath()<<"' !";
-                fgGetNode("/sim/messages/pilot", true)->setStringValue(message.str().c_str());
+                fgSetString("/sim/messages/pilot", message.str().c_str());
                 _open=true;
                 return;
             }
@@ -590,8 +590,8 @@ void Hitch::integrate (float dt)
         if (_node->getBoolValue("broken",false)&&_open)
             message<<"Oh no, the tow is broken";
         else
-            message<<(_open?"Opened hitch '":"Locked hitch '")<<_node->getPath()<<"' !";
-        fgGetNode("/sim/messages/pilot", true)->setStringValue(message.str().c_str());
+            message<<(_open?"Opened hitch '":"Locked hitch '")<<_node->getPath()<<"'!";
+        fgSetString("/sim/messages/pilot", message.str().c_str());
         _oldOpen=_open;
     }
 
@@ -696,7 +696,7 @@ void Hitch::integrate (float dt)
                                 std::stringstream message;
                                 message<<_node->getStringValue("tow/connected-to-ai-or-mp-callsign")
                                     <<": I have released the tow!";
-                                fgGetNode("/sim/messages/ai-plane", true)->setStringValue(message.str().c_str());
+                                fgSetString("/sim/messages/ai-plane", message.str().c_str());
                             }
                         }
                     }
