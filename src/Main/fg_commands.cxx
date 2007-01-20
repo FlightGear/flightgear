@@ -331,7 +331,7 @@ do_load (const SGPropertyNode * arg)
     SG_LOG(SG_INPUT, SG_INFO, "Restored flight from " << file);
     return true;
   } else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Cannot load flight from " << file);
+    SG_LOG(SG_INPUT, SG_WARN, "Cannot load flight from " << file);
     return false;
   }
 }
