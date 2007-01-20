@@ -10,9 +10,8 @@
 namespace yasim {
 Hitch::Hitch(const char *name)
 {
+    _node = fgGetNode("/sim/hitches", true)->getNode(name, true);
     int i;
-    strncpy(_name,name,128);
-    _name[127]=0;
     for(i=0; i<3; i++)
         _pos[i] = _force[i] = _winchPos[i] = _mp_lpos[i]=_towEndForce[i]=_mp_force[i]=0;
     for(i=0; i<2; i++)
@@ -62,9 +61,6 @@ Hitch::Hitch(const char *name)
     _timeLagCorrectedDist=0;
 
     //tie the properties
-    char text[128];
-    sprintf(text,"/sim/hitches/%s", _name);
-    _node = fgGetNode(text, true);
     _node->tie("tow/length",SGRawValuePointer<float>(&_towLength));
     _node->tie("tow/elastic-constant",SGRawValuePointer<float>(&_towElasticConstant));
     _node->tie("tow/weight-per-m-kg-m",SGRawValuePointer<float>(&_towWeightPerM));
@@ -582,7 +578,8 @@ void Hitch::integrate (float dt)
             if (_dist>_towLength*1.00001)
             {
                 std::stringstream message;
-                message<<"Could not lock Hitch (tow length is insufficient) on hitch '"<<_name<<"' !";
+                message<<"Could not lock Hitch (tow length is insufficient) on hitch '"
+                       <<_node->getPath()<<"' !";
                 fgGetNode("/sim/messages/pilot", true)->setStringValue(message.str().c_str());
                 _open=true;
                 return;
@@ -593,7 +590,7 @@ void Hitch::integrate (float dt)
         if (_node->getBoolValue("broken",false)&&_open)
             message<<"Oh no, the tow is broken";
         else
-            message<<(_open?"Opened hitch '":"Locked hitch '")<<_name<<"' !";
+            message<<(_open?"Opened hitch '":"Locked hitch '")<<_node->getPath()<<"' !";
         fgGetNode("/sim/messages/pilot", true)->setStringValue(message.str().c_str());
         _oldOpen=_open;
     }
