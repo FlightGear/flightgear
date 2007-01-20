@@ -1,8 +1,8 @@
 #include "Math.hpp"
 #include "BodyEnvironment.hpp"
 #include "RigidBody.hpp"
-#include <Main/fg_props.hxx>
 #include <string.h>
+#include <sstream>
 
 
 
@@ -64,93 +64,90 @@ Hitch::Hitch(const char *name)
     //tie the properties
     char text[128];
     sprintf(text,"/sim/hitches/%s", _name);
-    SGPropertyNode * node = fgGetNode(text, true);
-    node->tie("tow/length",SGRawValuePointer<float>(&_towLength));
-    node->tie("tow/elastic-constant",SGRawValuePointer<float>(&_towElasticConstant));
-    node->tie("tow/weight-per-m-kg-m",SGRawValuePointer<float>(&_towWeightPerM));
-    node->tie("tow/brake-force",SGRawValuePointer<float>(&_towBrakeForce));
-    node->tie("winch/max-speed-m-s",SGRawValuePointer<float>(&_winchMaxSpeed));
-    node->tie("winch/rel-speed",SGRawValuePointer<float>(&_winchRelSpeed));
-    node->tie("winch/initial-tow-length-m",SGRawValuePointer<float>(&_winchInitialTowLength));
-    node->tie("winch/min-tow-length-m",SGRawValuePointer<float>(&_winchMinTowLength));
-    node->tie("winch/max-tow-length-m",SGRawValuePointer<float>(&_winchMaxTowLength));
-    node->tie("winch/global-pos-x",SGRawValuePointer<double>(&_winchPos[0]));
-    node->tie("winch/global-pos-y",SGRawValuePointer<double>(&_winchPos[1]));
-    node->tie("winch/global-pos-z",SGRawValuePointer<double>(&_winchPos[2]));
-    node->tie("winch/max-power",SGRawValuePointer<float>(&_winchPower));
-    node->tie("winch/max-force",SGRawValuePointer<float>(&_winchMaxForce));
-    node->tie("winch/actual-force",SGRawValuePointer<float>(&_winchActualForce));
-    node->tie("tow/end-force-x",SGRawValuePointer<float>(&_reportTowEndForce[0]));
-    node->tie("tow/end-force-y",SGRawValuePointer<float>(&_reportTowEndForce[1]));
-    node->tie("tow/end-force-z",SGRawValuePointer<float>(&_reportTowEndForce[2]));
-    node->tie("force",SGRawValuePointer<float>(&_forceMagnitude));
-    node->tie("open",SGRawValuePointer<bool>(&_open));
-    node->tie("force-is-calculated-by-other",SGRawValuePointer<bool>(&_forceIsCalculatedByMaster));
-    node->tie("local-pos-x",SGRawValuePointer<float>(&_pos[0]));
-    node->tie("local-pos-y",SGRawValuePointer<float>(&_pos[1]));
-    node->tie("local-pos-z",SGRawValuePointer<float>(&_pos[2]));
-    node->tie("tow/dist",SGRawValuePointer<float>(&_dist));
-    node->tie("tow/dist-time-lag-corrected",SGRawValuePointer<float>(&_timeLagCorrectedDist));
-    node->tie("tow/connected-to-property-node",SGRawValuePointer<bool>(&_towEndIsConnectedToProperty));
-    node->tie("tow/connected-to-mp-node",SGRawValuePointer<bool>(&_nodeIsMultiplayer));
-    node->tie("tow/connected-to-ai-node",SGRawValuePointer<bool>(&_nodeIsAiAircraft));
-    node->tie("tow/connected-to-ai-or-mp-id",SGRawValuePointer<int>(&_nodeID));
-    node->tie("debug/hitch-height-above-ground",SGRawValuePointer<float>(&_height_above_ground));
-    node->tie("debug/tow-end-height-above-ground",SGRawValuePointer<float>(&_winch_height_above_ground));
-    node->tie("debug/tow-rel-lo-pos",SGRawValuePointer<float>(&_loPosFrac));
-    node->tie("debug/tow-lowest-pos-height",SGRawValuePointer<float>(&_lowest_tow_height));
-    node->tie("is-slave",SGRawValuePointer<bool>(&_isSlave));
-    node->tie("speed-in-tow-direction",SGRawValuePointer<float>(&_speed_in_tow_direction));
-    node->tie("mp-auto-connect-period",SGRawValuePointer<float>(&_mpAutoConnectPeriod));
-    node->tie("mp-time-lag",SGRawValuePointer<float>(&_mp_time_lag));
-    node->setStringValue("tow/node","");
-    node->setStringValue("tow/connected-to-ai-or-mp-callsign");
-    node->setBoolValue("broken",false);
+    _node = fgGetNode(text, true);
+    _node->tie("tow/length",SGRawValuePointer<float>(&_towLength));
+    _node->tie("tow/elastic-constant",SGRawValuePointer<float>(&_towElasticConstant));
+    _node->tie("tow/weight-per-m-kg-m",SGRawValuePointer<float>(&_towWeightPerM));
+    _node->tie("tow/brake-force",SGRawValuePointer<float>(&_towBrakeForce));
+    _node->tie("winch/max-speed-m-s",SGRawValuePointer<float>(&_winchMaxSpeed));
+    _node->tie("winch/rel-speed",SGRawValuePointer<float>(&_winchRelSpeed));
+    _node->tie("winch/initial-tow-length-m",SGRawValuePointer<float>(&_winchInitialTowLength));
+    _node->tie("winch/min-tow-length-m",SGRawValuePointer<float>(&_winchMinTowLength));
+    _node->tie("winch/max-tow-length-m",SGRawValuePointer<float>(&_winchMaxTowLength));
+    _node->tie("winch/global-pos-x",SGRawValuePointer<double>(&_winchPos[0]));
+    _node->tie("winch/global-pos-y",SGRawValuePointer<double>(&_winchPos[1]));
+    _node->tie("winch/global-pos-z",SGRawValuePointer<double>(&_winchPos[2]));
+    _node->tie("winch/max-power",SGRawValuePointer<float>(&_winchPower));
+    _node->tie("winch/max-force",SGRawValuePointer<float>(&_winchMaxForce));
+    _node->tie("winch/actual-force",SGRawValuePointer<float>(&_winchActualForce));
+    _node->tie("tow/end-force-x",SGRawValuePointer<float>(&_reportTowEndForce[0]));
+    _node->tie("tow/end-force-y",SGRawValuePointer<float>(&_reportTowEndForce[1]));
+    _node->tie("tow/end-force-z",SGRawValuePointer<float>(&_reportTowEndForce[2]));
+    _node->tie("force",SGRawValuePointer<float>(&_forceMagnitude));
+    _node->tie("open",SGRawValuePointer<bool>(&_open));
+    _node->tie("force-is-calculated-by-other",SGRawValuePointer<bool>(&_forceIsCalculatedByMaster));
+    _node->tie("local-pos-x",SGRawValuePointer<float>(&_pos[0]));
+    _node->tie("local-pos-y",SGRawValuePointer<float>(&_pos[1]));
+    _node->tie("local-pos-z",SGRawValuePointer<float>(&_pos[2]));
+    _node->tie("tow/dist",SGRawValuePointer<float>(&_dist));
+    _node->tie("tow/dist-time-lag-corrected",SGRawValuePointer<float>(&_timeLagCorrectedDist));
+    _node->tie("tow/connected-to-property-node",SGRawValuePointer<bool>(&_towEndIsConnectedToProperty));
+    _node->tie("tow/connected-to-mp-node",SGRawValuePointer<bool>(&_nodeIsMultiplayer));
+    _node->tie("tow/connected-to-ai-node",SGRawValuePointer<bool>(&_nodeIsAiAircraft));
+    _node->tie("tow/connected-to-ai-or-mp-id",SGRawValuePointer<int>(&_nodeID));
+    _node->tie("debug/hitch-height-above-ground",SGRawValuePointer<float>(&_height_above_ground));
+    _node->tie("debug/tow-end-height-above-ground",SGRawValuePointer<float>(&_winch_height_above_ground));
+    _node->tie("debug/tow-rel-lo-pos",SGRawValuePointer<float>(&_loPosFrac));
+    _node->tie("debug/tow-lowest-pos-height",SGRawValuePointer<float>(&_lowest_tow_height));
+    _node->tie("is-slave",SGRawValuePointer<bool>(&_isSlave));
+    _node->tie("speed-in-tow-direction",SGRawValuePointer<float>(&_speed_in_tow_direction));
+    _node->tie("mp-auto-connect-period",SGRawValuePointer<float>(&_mpAutoConnectPeriod));
+    _node->tie("mp-time-lag",SGRawValuePointer<float>(&_mp_time_lag));
+    _node->setStringValue("tow/node","");
+    _node->setStringValue("tow/connected-to-ai-or-mp-callsign");
+    _node->setBoolValue("broken",false);
 }
 
 Hitch::~Hitch()
 {
-    char text[128];
-    sprintf(text,"/sim/hitches/%s", _name);
-    SGPropertyNode * node = fgGetNode(text, true);
-    node->untie("tow/length");
-    node->untie("tow/elastic-constant");
-    node->untie("tow/weight-per-m-kg-m");
-    node->untie("tow/brake-force");
-    node->untie("winch/max-speed-m-s");
-    node->untie("winch/rel-speed");
-    node->untie("winch/initial-tow-length-m");
-    node->untie("winch/min-tow-length-m");
-    node->untie("winch/max-tow-length-m");
-    node->untie("winch/global-pos-x");
-    node->untie("winch/global-pos-y");
-    node->untie("winch/global-pos-z");
-    node->untie("winch/max-power");
-    node->untie("winch/max-force");
-    node->untie("winch/actual-force");
-    node->untie("tow/end-force-x");
-    node->untie("tow/end-force-y");
-    node->untie("tow/end-force-z");
-    node->untie("force");
-    node->untie("open");
-    node->untie("force-is-calculated-by-other");
-    node->untie("local-pos-x");
-    node->untie("local-pos-y");
-    node->untie("local-pos-z");
-    node->untie("tow/dist");
-    node->untie("tow/dist-time-lag-corrected");
-    node->untie("tow/connected-to-property-node");
-    node->untie("tow/connected-to-mp-node");
-    node->untie("tow/connected-to-ai-node");
-    node->untie("tow/connected-to-ai-or-mp-id");
-    node->untie("debug/hitch-height-above-ground");
-    node->untie("debug/tow-end-height-above-ground");
-    node->untie("debug/tow-rel-lo-pos");
-    node->untie("debug/tow-lowest-pos-height");
-    node->untie("is-slave");
-    node->untie("speed-in-tow-direction");
-    node->untie("mp-auto-connect-period");
-    node->untie("mp-time-lag");
+    _node->untie("tow/length");
+    _node->untie("tow/elastic-constant");
+    _node->untie("tow/weight-per-m-kg-m");
+    _node->untie("tow/brake-force");
+    _node->untie("winch/max-speed-m-s");
+    _node->untie("winch/rel-speed");
+    _node->untie("winch/initial-tow-length-m");
+    _node->untie("winch/min-tow-length-m");
+    _node->untie("winch/max-tow-length-m");
+    _node->untie("winch/global-pos-x");
+    _node->untie("winch/global-pos-y");
+    _node->untie("winch/global-pos-z");
+    _node->untie("winch/max-power");
+    _node->untie("winch/max-force");
+    _node->untie("winch/actual-force");
+    _node->untie("tow/end-force-x");
+    _node->untie("tow/end-force-y");
+    _node->untie("tow/end-force-z");
+    _node->untie("force");
+    _node->untie("open");
+    _node->untie("force-is-calculated-by-other");
+    _node->untie("local-pos-x");
+    _node->untie("local-pos-y");
+    _node->untie("local-pos-z");
+    _node->untie("tow/dist");
+    _node->untie("tow/dist-time-lag-corrected");
+    _node->untie("tow/connected-to-property-node");
+    _node->untie("tow/connected-to-mp-node");
+    _node->untie("tow/connected-to-ai-node");
+    _node->untie("tow/connected-to-ai-or-mp-id");
+    _node->untie("debug/hitch-height-above-ground");
+    _node->untie("debug/tow-end-height-above-ground");
+    _node->untie("debug/tow-rel-lo-pos");
+    _node->untie("debug/tow-lowest-pos-height");
+    _node->untie("is-slave");
+    _node->untie("speed-in-tow-direction");
+    _node->untie("mp-auto-connect-period");
+    _node->untie("mp-time-lag");
 
     delete _state;
 }
@@ -275,13 +272,10 @@ void Hitch::setWinchPositionAuto(bool doit)
 
     _state->posLocalToGlobal(lWinchPos,_winchPos);
     _towLength=_winchInitialTowLength;
-    SG_LOG(SG_GENERAL, SG_ALERT,"Set the winch pos to "<<_winchPos[0]<<","<<_winchPos[1]<<","<<_winchPos[2]<<endl);
+    fgGetNode("/sim/messages/pilot", true)->setStringValue("coonected to winch!");
     _open=false;
 
-    char text[512];
-    sprintf(text,"/sim/hitches/%s", _name);
-    SGPropertyNode * node = fgGetNode(text, true);
-    node->setBoolValue("broken",false);
+    _node->setBoolValue("broken",false);
 
     //set the dist value (if not, the hitch would open in the next calcforce run
     //float delta[3];
@@ -354,27 +348,30 @@ void Hitch::findBestAIObject(bool doit,bool running_as_autoconnect)
             bestdist=dist;
             _towEndNode=n;
             _towEndIsConnectedToProperty=true;
-            char text[512];
-            sprintf(text,"/sim/hitches/%s", _name);
-            SGPropertyNode * node = fgGetNode(text, true);
-            //node->setStringValue("tow/node",n->getPath());
-            node->setStringValue("tow/node",n->getDisplayName());
+            //_node->setStringValue("tow/node",n->getPath());
+            _node->setStringValue("tow/node",n->getDisplayName());
             _nodeID=n->getIntValue("id",0);
-            node->setStringValue("tow/connected-to-ai-or-mp-callsign",n->getStringValue("callsign"));
+            _node->setStringValue("tow/connected-to-ai-or-mp-callsign",n->getStringValue("callsign"));
             _open=false;
             found = true;
         }
     }
     if (found)
     {
-        char text[512];
-        sprintf(text,"/sim/hitches/%s", _name);
-        SGPropertyNode * node = fgGetNode(text, true);
-        //if (!running_as_autoconnect)
-        SG_LOG(SG_GENERAL, SG_ALERT,"Found aircraft for aerotow: "
-                <<node->getStringValue("tow/connected-to-ai-or-mp-callsign")
-                <<", distance "<<Math::sqrt(bestdist)<<"m at " 
-                <<node->getStringValue("tow/node")<<endl);
+        if (!running_as_autoconnect)
+        {
+            std::stringstream message;
+            message<<_node->getStringValue("tow/connected-to-ai-or-mp-callsign")
+                    <<", I am on your hook, distance "<<Math::sqrt(bestdist)<<"m";
+            fgGetNode("/sim/messages/pilot", true)->setStringValue(message.str().c_str());
+        }
+        else
+        {
+            std::stringstream message;
+            message<<_node->getStringValue("tow/connected-to-ai-or-mp-callsign")
+                <<": I am on your hook, distance "<<Math::sqrt(bestdist)<<"m";
+            fgGetNode("/sim/messages/ai-plane", true)->setStringValue(message.str().c_str());
+        }
         if (running_as_autoconnect)
             _isSlave=true;
         //set the dist value to some value below the tow lentgh (if not, the hitch
@@ -384,7 +381,9 @@ void Hitch::findBestAIObject(bool doit,bool running_as_autoconnect)
     }
     else
         if (!running_as_autoconnect)
-            SG_LOG(SG_GENERAL, SG_ALERT,"Found no aircraft for aerotow!"<<endl);
+        {
+            fgGetNode("/sim/messages/atc", true)->setStringValue("Sorry, no aircraft for aerotow!");
+        }
 }
 
 void Hitch::setWinchInitialTowLength(float length)
@@ -467,10 +466,7 @@ void Hitch::calcForce(Ground *g_cb, RigidBody* body, State* s)
     {
         _forceMagnitude=0;
         _open=true;
-        char text[128];
-        sprintf(text,"/sim/hitches/%s", _name);
-        SGPropertyNode * node = fgGetNode(text, true);
-        node->setBoolValue("broken",true);
+        _node->setBoolValue("broken",true);
         _force[0]=_force[1]=_force[2]=0;
         _towEndForce[0]=_towEndForce[1]=_towEndForce[2]=0;
         _reportTowEndForce[0]=_reportTowEndForce[1]=_reportTowEndForce[2]=0;
@@ -561,10 +557,7 @@ void Hitch::calcForce(Ground *g_cb, RigidBody* body, State* s)
     {
         _forceMagnitude=0;
         _open=true;
-        char text[128];
-        sprintf(text,"/sim/hitches/%s", _name);
-        SGPropertyNode * node = fgGetNode(text, true);
-        node->setBoolValue("broken",true);
+        _node->setBoolValue("broken",true);
         _force[0]=_force[1]=_force[2]=0;
         _towEndForce[0]=_towEndForce[1]=_towEndForce[2]=0;
     }
@@ -588,16 +581,20 @@ void Hitch::integrate (float dt)
         {
             if (_dist>_towLength*1.00001)
             {
-                SG_LOG(SG_GENERAL, SG_ALERT,"Could not lock Hinch (tow length is insufficient) on hitch '"<<_name<<"' !"<<endl);
+                std::stringstream message;
+                message<<"Could not lock Hitch (tow length is insufficient) on hitch '"<<_name<<"' !";
+                fgGetNode("/sim/messages/pilot", true)->setStringValue(message.str().c_str());
                 _open=true;
                 return;
             }
-            char text[512];
-            sprintf(text,"/sim/hitches/%s", _name);
-            SGPropertyNode * node = fgGetNode(text, true);
-            node->setBoolValue("broken",false);
+            _node->setBoolValue("broken",false);
         }
-        SG_LOG(SG_GENERAL, SG_ALERT,(_open?"Opened hitch (or broken tow) '":"Locked hitch '")<<_name<<"' !"<<endl);
+        std::stringstream message;
+        if (_node->getBoolValue("broken",false)&&_open)
+            message<<"Oh no, the tow is broken";
+        else
+            message<<(_open?"Opened hitch '":"Locked hitch '")<<_name<<"' !";
+        fgGetNode("/sim/messages/pilot", true)->setStringValue(message.str().c_str());
         _oldOpen=_open;
     }
 
@@ -616,14 +613,11 @@ void Hitch::integrate (float dt)
     //check, if tow end can be modified by property, if yes: update
     if(_towEndIsConnectedToProperty)
     {
-        char text[128];
-        sprintf(text,"/sim/hitches/%s", _name);
-        SGPropertyNode * node = fgGetNode(text, true);
-        if (node)
+        if (_node)
         {
-            //_towEndNode=fgGetNode(node->getStringValue("tow/node"), false);
+            //_towEndNode=fgGetNode(_node->getStringValue("tow/node"), false);
             char towNode[256];
-            strncpy(towNode,node->getStringValue("tow/node"),256);
+            strncpy(towNode,_node->getStringValue("tow/node"),256);
             towNode[255]=0;
             _towEndNode=fgGetNode("ai/models")->getNode(towNode, false);
             //AI and multiplayer objects seem to change node?
@@ -632,7 +626,7 @@ void Hitch::integrate (float dt)
             {
                 char MPcallsign[256]="";
                 const char *MPc;
-                MPc=node->getStringValue("tow/connected-to-ai-or-mp-callsign");
+                MPc=_node->getStringValue("tow/connected-to-ai-or-mp-callsign");
                 if (MPc)
                 {
                     strncpy(MPcallsign,MPc,256);
@@ -654,8 +648,8 @@ void Hitch::integrate (float dt)
                                     if (strcmp(n->getStringValue("callsign"),MPcallsign)==0)//found
                                     {
                                         _towEndNode=n;
-                                        //node->setStringValue("tow/node",n->getPath());
-                                        node->setStringValue("tow/node",n->getDisplayName());
+                                        //_node->setStringValue("tow/node",n->getPath());
+                                        _node->setStringValue("tow/node",n->getDisplayName());
                                     }
                             }
                         }
@@ -701,12 +695,11 @@ void Hitch::integrate (float dt)
                         {
                             if(mp_open)
                             {
-                                _open=true;
-                                char text[512];
-                                sprintf(text,"/sim/hitches/%s", _name);
-                                SGPropertyNode * node = fgGetNode(text, true);
-                                node->getStringValue("tow/node","");
-                                SG_LOG(SG_GENERAL, SG_ALERT,"'"<<node->getStringValue("tow/node","")<<"' has opened hitch!"<<endl);
+                                _oldOpen=_open=true;
+                                std::stringstream message;
+                                message<<_node->getStringValue("tow/connected-to-ai-or-mp-callsign")
+                                    <<": I have released the tow!";
+                                fgGetNode("/sim/messages/ai-plane", true)->setStringValue(message.str().c_str());
                             }
                         }
                     }
