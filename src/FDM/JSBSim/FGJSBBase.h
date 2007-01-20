@@ -280,7 +280,6 @@ protected:
 
   void Debug(int from) {};
 
-  static unsigned int frame;
   static unsigned int messageId;
 
   static const double radtodeg;

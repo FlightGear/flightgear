@@ -183,7 +183,7 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) : Exec(fdmex),
   FCS         = Exec->GetFCS();
   MassBalance = Exec->GetMassBalance();
 
-  WOW = lastWOW = true; // should the value be initialized to true?
+  WOW = lastWOW = false;
   ReportEnable = true;
   FirstContact = false;
   StartedGroundRun = false;

@@ -1643,13 +1643,14 @@ void MSIS::Debug(int from)
   if (debug_lvl & 16) { // Sanity checking
   }
   if (debug_lvl & 32) { // Turbulence
-    if (frame == 0 && from == 2) {
+    if (first_pass && from == 2) {
       cout << "vTurbulence(X), vTurbulence(Y), vTurbulence(Z), "
            << "vTurbulenceGrad(X), vTurbulenceGrad(Y), vTurbulenceGrad(Z), "
            << "vDirection(X), vDirection(Y), vDirection(Z), "
            << "Magnitude, "
            << "vTurbPQR(P), vTurbPQR(Q), vTurbPQR(R), " << endl;
-    } else if (from == 2) {
+    }
+    if (from == 2) {
       cout << vTurbulence << ", " << vTurbulenceGrad << ", " << vDirection << ", " << Magnitude << ", " << vTurbPQR << endl;
     }
   }

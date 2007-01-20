@@ -374,7 +374,7 @@ bool FGFDMExec::Run(void)
     model_iterator = model_iterator->NextModel;
   }
 
-  frame = Frame++;
+  Frame++;
   if (!Holding()) State->IncrTime();
   return (success);
 }
