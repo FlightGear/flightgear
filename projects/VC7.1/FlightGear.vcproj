@@ -1554,6 +1554,12 @@
 				RelativePath="..\..\src\Fdm\YASim\Ground.hpp">
 			</File>
 			<File
+				RelativePath="..\..\src\Fdm\YASim\Hitch.cpp">
+			</File>
+			<File
+				RelativePath="..\..\src\Fdm\YASim\Hitch.hpp">
+			</File>
+			<File
 				RelativePath="..\..\src\Fdm\YASim\Hook.cpp">
 			</File>
 			<File

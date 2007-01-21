@@ -33,9 +33,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="sg_d.lib ul_d.lib"
 				OutputFile="$(OutDir)/yasim.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="..\..\..\plib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/yasim.pdb"
 				SubSystem="1"
@@ -81,8 +82,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="sg.lib ul.lib"
 				OutputFile="$(OutDir)/yasim.exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\..\..\plib"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -137,6 +140,9 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Fdm\YASim\Ground.cpp">
+			</File>
+			<File
+				RelativePath="..\..\src\Fdm\YASim\Hitch.cpp">
 			</File>
 			<File
 				RelativePath="..\..\src\Fdm\YASim\Hook.cpp">
@@ -220,6 +226,9 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Fdm\YASim\Ground.hpp">
+			</File>
+			<File
+				RelativePath="..\..\src\Fdm\YASim\Hitch.hpp">
 			</File>
 			<File
 				RelativePath="..\..\src\Fdm\YASim\Hook.hpp">
