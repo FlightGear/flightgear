@@ -59,6 +59,7 @@ void reInit(puObject *cb)
         fgSetBool("/sim/freeze/master", true);
     }
 
+    fgSetBool("/sim/signals/reinit", true);
     cur_fdm_state->unbind();
 
     // in case user has changed window size as
@@ -87,8 +88,7 @@ void reInit(puObject *cb)
 
     globals->get_tile_mgr()->update( fgGetDouble("/environment/visibility-m") );
     globals->get_renderer()->resize( xsize, ysize );
-
-    fgSetBool("/sim/signals/reinit", true);
+    fgSetBool("/sim/signals/reinit", false);
 
     // BusyCursor(1);
     
