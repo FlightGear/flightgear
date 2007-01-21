@@ -426,6 +426,7 @@ void FGNasalSys::init()
         loadModule(fullpath, file.base().c_str());
     }
     ulCloseDir(dir);
+    fgSetBool("/sim/signals/nasal-dir-initialized", true);
 
     // Pull scripts out of the property tree, too
     loadPropertyScripts();
