@@ -142,7 +142,9 @@ void HUD::Label::draw(void)
     }
 
     const int BUFSIZE = 256;
-    char buf[BUFSIZE];
+    char buf[BUFSIZE + 1];
+    buf[BUFSIZE] = '\0';
+
     if (_mode == NONE)
         snprintf(buf, BUFSIZE, _format.c_str());
     else if (_mode == STRING)
