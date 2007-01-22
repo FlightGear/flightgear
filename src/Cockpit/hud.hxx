@@ -233,26 +233,22 @@ extern float HUD_matrix[16];
 class fgText {
 private:
     float x, y;
-    char msg[64];
+    string msg;
+	bool digit;
+    // seems unused   
+	
 public:
-    int digit;
-    fgText(float x = 0, float y = 0, char *c = NULL,int digits=0): x(x), y(y)
-    {
-        strcpy(msg,c);
-        digit=digits;
-    }
+	fgText(float x, float y, const string& c, bool digits=false): x(x), y(y), msg( c), digit( digits) {};	
 
     fgText( const fgText & image )
-        : x(image.x), y(image.y),digit(image.digit) { strcpy(msg,image.msg); }
+		: x(image.x), y(image.y),digit(image.digit), msg( image.msg) { }
 
-    fgText& operator = ( const fgText & image ) {  // seems unused
-        strcpy(msg,image.msg); x = image.x; y = image.y;digit=image.digit;
-        return *this;
-    }
-
-    ~fgText() { msg[0]='\0'; }  // used but useless
-
-    int getStringWidth ( char *str )
+	fgText& operator = ( const fgText & image ) {
+		x = image.x; y = image.y; msg= image.msg; digit = image.digit;
+		return *this;
+	}
+	
+    static int getStringWidth ( const char *str )
     {
         if ( HUDtext && str ) {
             float r, l ;
@@ -262,11 +258,11 @@ public:
         return 0 ;
     }
 
-    int StringWidth (void )
+    int StringWidth ()
     {
-        if ( HUDtext && strlen( msg )) {
+        if ( HUDtext && msg != "") {
             float r, l ;
-            HUD_Font->getBBox ( msg, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
+            HUD_Font->getBBox ( msg.c_str(), HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
             return float_to_int( r - l );
         }
         return 0 ;
@@ -276,56 +272,50 @@ public:
     // according to MIL Standards for example Altitude above 10000 ft
     // is shown as 10ooo.
 
-    void Draw(fntRenderer *fnt,int digits) {
-        if (digits==1) {
+    void Draw(fntRenderer *fnt) {
+        if (digit) {
             int c=0,i=0;
-            char *t=msg;
+            
             int p=4;
 
-            if (t[0]=='-') {
+            if (msg[0]=='-') {
                 //if negative value then increase the c and p values
                 //for '-' sign.  c++;
                 p++;
             }
-            char *tmp=msg;
-            while (tmp[i]!='\0') {
-                if ((tmp[i]>='0') && (tmp[i]<='9'))
+			
+			for (string::size_type i = 0; i < msg.size(); i++) {
+                if ((msg[i]>='0') && (msg[i]<='9'))
                     c++;
-                i++;
             }
             float orig_size = fnt->getPointSize();
             if (c>p) {
                 fnt->setPointSize(HUD_TextSize * 0.8);
-                int p1=c-3;
-                char *tmp1=msg+p1;
-                int p2=p1*8;
+                int p2=(c-3)*8;  //advance to the last 3 digits
 
                 fnt->start2f(x+p2,y);
-                fnt->puts(tmp1);
+                fnt->puts(msg.c_str() + c - 3); // display last 3 digits
 
                 fnt->setPointSize(HUD_TextSize * 1.2);
-                char tmp2[64];
-                strncpy(tmp2,msg,p1);
-                tmp2[p1]='\0';
-
+              
                 fnt->start2f(x,y);
-                fnt->puts(tmp2);
+				fnt->puts(msg.substr(0,c-3).c_str());
             } else {
                 fnt->setPointSize(HUD_TextSize * 1.2);
                 fnt->start2f( x, y );
-                fnt->puts(tmp);
+                fnt->puts(msg.c_str());
             }
             fnt->setPointSize(orig_size);
         } else {
-            //if digits not equal to 1
+            //if digits not true
             fnt->start2f( x, y );
-            fnt->puts( msg ) ;
+            fnt->puts( msg.c_str()) ;
         }
     }
 
     void Draw()
     {
-        guiFnt.drawString( msg, float_to_int(x), float_to_int(y) );
+		guiFnt.drawString( msg.c_str(), float_to_int(x), float_to_int(y) );
     }
 };
 
@@ -334,7 +324,7 @@ class fgLineList {
 public:
     fgLineList( void ) {}
     void add( const fgLineSeg2D& seg ) { List.push_back(seg); }
-    void erase( void ) { List.erase( List.begin(), List.end() ); }
+	void erase( void ) { List.clear();}
     void draw( void ) {
         glBegin(GL_LINES);
         for_each( List.begin(), List.end(), DrawLineSeg2D());
@@ -350,7 +340,7 @@ public:
 
     void setFont( fntRenderer *Renderer ) { Font = Renderer; }
     void add( const fgText& String ) { List.push_back(String); }
-    void erase( void ) { List.erase( List.begin(), List.end() ); }
+    void erase( void ) { List.clear(); }
     void draw( void );
 };
 
@@ -452,7 +442,7 @@ public:
     {
         HUD_StippleLineList.add(fgLineSeg2D(x1,y1,x2,y2));
     }
-    void TextString( char *msg, float x, float y,int digit )
+    void TextString( char *msg, float x, float y, bool digit )
     {
         HUD_TextList.add(fgText(x, y, msg,digit));
     }
@@ -466,17 +456,7 @@ public:
         return 0 ;
     }
 
-    //code to draw ticks as small circles
-    void drawOneCircle(float x1, float y1, float r)
-    {
-        glBegin(GL_LINE_LOOP);  // Use polygon to approximate a circle
-        for (int count=0; count<25; count++) {
-            float cosine = r * cos(count * 2 * SG_PI/10.0);
-            float sine =   r * sin(count * 2 * SG_PI/10.0);
-            glVertex2f(cosine+x1, sine+y1);
-        }
-        glEnd();
-    }
+
 
 };
 
@@ -501,12 +481,11 @@ extern int HUD_style;
 class instr_label : public instr_item {
 private:
     const char  *pformat;
-    const char  *pre_str;
-    const char  *post_str;
+    
     fgLabelJust justify;
     int         fontSize;
     int         blink;
-    char        format_buffer[80];
+    string      format_buffer;
     bool        lat;
     bool        lon;
     bool        lbox;

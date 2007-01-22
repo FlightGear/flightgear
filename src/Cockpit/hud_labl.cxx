@@ -25,8 +25,6 @@ instr_label::instr_label(const SGPropertyNode *node) :
             node->getBoolValue("working", true),
             node->getIntValue("digits")),
     pformat(node->getStringValue("label_format")),
-    pre_str(node->getStringValue("pre_label_string")),
-    post_str(node->getStringValue("post_label_string")),
     fontSize(fgGetInt("/sim/startup/xsize") > 1000 ? HUD_FONT_LARGE : HUD_FONT_SMALL),	// FIXME
     blink(node->getIntValue("blinking")),
     lat(node->getBoolValue("latitude", false)),
@@ -48,32 +46,24 @@ instr_label::instr_label(const SGPropertyNode *node) :
     else if (just == 2)
         justify = RIGHT_JUST;
 
-    if (!strcmp(pre_str, "NULL"))
-        pre_str = NULL;
-    else if (!strcmp(pre_str, "blank"))
+	string pre_str(node->getStringValue("pre_label_string"));
+	if (pre_str== "NULL")
+		pre_str.clear();
+	else if (pre_str == "blank")
         pre_str = " ";
 
-    const char *units = strcmp(fgGetString("/sim/startup/units"), "feet") ? " m" : " ft";  // FIXME
+	const char *units = strcmp(fgGetString("/sim/startup/units"), "feet") ? " m" : " ft";  // FIXME
 
-    if (!strcmp(post_str, "blank"))
+    string post_str(node->getStringValue("post_label_string"));
+    if (post_str== "NULL")
+		post_str.clear();
+	else if (post_str == "blank")
         post_str = " ";
-    else if (!strcmp(post_str, "NULL"))
-        post_str = NULL;
-    else if (!strcmp(post_str, "units"))
+	else if (post_str == "units")
         post_str = units;
 
-
-    if (pre_str != NULL) {
-        if (post_str != NULL)
-            sprintf(format_buffer, "%s%s%s", pre_str, pformat, post_str);
-        else
-            sprintf(format_buffer, "%s%s", pre_str, pformat);
-
-    } else if (post_str != NULL) {
-            sprintf(format_buffer, "%s%s", pformat, post_str);
-    } else {
-            strcpy(format_buffer, pformat);			// FIXME
-    }
+	format_buffer = pre_str + pformat;
+	format_buffer += post_str;
 }
 
 
@@ -84,11 +74,12 @@ void instr_label::draw(void)
     int lenstr;
     RECT scrn_rect = get_location();
 
+	memset( label_buffer, 0, sizeof( label_buffer));
     if (data_available()) {
         if (lat)
-            snprintf(label_buffer, 80, format_buffer, lat_node->getStringValue());
+            snprintf(label_buffer, sizeof( label_buffer)-1, format_buffer.c_str(), lat_node->getStringValue());
         else if (lon)
-            snprintf(label_buffer, 80, format_buffer, lon_node->getStringValue());
+            snprintf(label_buffer, sizeof( label_buffer)-1, format_buffer.c_str(), lon_node->getStringValue());
         else {
             if (lbox) {// Box for label
                 float x = scrn_rect.left;
@@ -119,11 +110,11 @@ void instr_label::draw(void)
                 glDisable(GL_LINE_STIPPLE);
                 glPopMatrix();
             }
-            sprintf(label_buffer, format_buffer, get_value() * data_scaling());
+            snprintf(label_buffer, sizeof(label_buffer)-1, format_buffer.c_str(), get_value() * data_scaling());
         }
 
     } else {
-        sprintf(label_buffer, format_buffer);
+        snprintf(label_buffer, sizeof( label_buffer) -1, format_buffer.c_str());
     }
 
     lenstr = getStringWidth(label_buffer);

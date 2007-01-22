@@ -553,7 +553,7 @@ void fgTextList::draw()
 
     Font->begin();
     for (; curString != lastString; curString++)
-        curString->Draw(Font,curString->digit);
+        curString->Draw(Font);
     Font->end();
 
     glDisable(GL_TEXTURE_2D);
