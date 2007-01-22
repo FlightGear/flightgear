@@ -653,6 +653,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\FDM\JSBSim\models\flight_control\FGPID.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\fdm\jsbsim\models\propulsion\FGPiston.h"
 				>
 			</File>
@@ -834,6 +838,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Instrumentation\heading_indicator_fg.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\YASim\Hitch.hpp"
 				>
 			</File>
 			<File
@@ -2157,7 +2165,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\fdm\jsbsim\models\flight_control\FGCondition.cpp"
+				RelativePath="..\..\src\FDM\JSBSim\math\FGCondition.cpp"
 				>
 			</File>
 			<File
@@ -2294,6 +2302,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\fdm\jsbsim\models\FGOutput.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\JSBSim\models\flight_control\FGPID.cpp"
 				>
 			</File>
 			<File
@@ -2493,6 +2505,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\FDM\YASim\Hitch.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\fdm\yasim\Hook.cpp"
 				>
 			</File>
@@ -2595,10 +2611,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud_tbi.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\Instrumentation\HUD\HUD_tbi.cxx"
 				>
 				<FileConfiguration
@@ -2619,6 +2631,10 @@
 						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\cockpit\hud_tbi.cxx"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\input\input.cxx"
