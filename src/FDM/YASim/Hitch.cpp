@@ -273,13 +273,9 @@ void Hitch::setWinchPositionAuto(bool doit)
     _node->setBoolValue("broken",false);
 
     //set the dist value (if not, the hitch would open in the next calcforce run
-    //float delta[3];
-    //Math::sub3(lWinchPos,_pos,delta);
-    //_dist=Math::mag3(delta);
-    _dist=Math::mag3(lWinchPos); //use the aircraft center as reference for distance calculation
-                                  //this position is transferred to the MP-Aircraft.
-                                  //With this trick, both player in aerotow get the same length
-    
+    float delta[3];
+    Math::sub3(lWinchPos,_pos,delta);
+    _dist=Math::mag3(delta);
 }
 
 void Hitch::findBestAIObject(bool doit,bool running_as_autoconnect)
@@ -430,8 +426,10 @@ void Hitch::calcForce(Ground *g_cb, RigidBody* body, State* s)
     *_state=*s;
     s->posGlobalToLocal(_winchPos,lWinchPos);
     Math::sub3(lWinchPos,_pos,delta);
-    //_dist=Math::mag3(delta);
-    _dist=Math::mag3(lWinchPos); //use the aircraft center as reference for distance calculation
+    if(!_towEndIsConnectedToProperty)
+        _dist=Math::mag3(delta);
+    else
+        _dist=Math::mag3(lWinchPos); //use the aircraft center as reference for distance calculation
                                   //this position is transferred to the MP-Aircraft.
                                   //With this trick, both player in aerotow get the same length
     Math::unit3(delta,deltaN);
