@@ -60,7 +60,6 @@ Hitch::Hitch(const char *name)
     _mp_open_last_state=false;
     _timeLagCorrectedDist=0;
 
-    //tie the properties
     _node->tie("tow/length",SGRawValuePointer<float>(&_towLength));
     _node->tie("tow/elastic-constant",SGRawValuePointer<float>(&_towElasticConstant));
     _node->tie("tow/weight-per-m-kg-m",SGRawValuePointer<float>(&_towWeightPerM));
@@ -288,14 +287,19 @@ void Hitch::findBestAIObject(bool doit,bool running_as_autoconnect)
     static bool lastState=false;
     if(!_state)
         return;
-    if (!doit)
+    if (!running_as_autoconnect)
     {
-        lastState=false;
-        return;
+        //if this function is binded to an input, it will be called every frame as long as the key is pressed.
+        //therefore wait for a key-release before running it again.
+        if (!doit)
+        {
+            lastState=false;
+            return;
+        }
+        if(lastState)
+            return;
+        lastState=true;
     }
-    if(lastState)
-        return;
-    lastState=true;
     double gpos[3];
     _state->posLocalToGlobal(_pos,gpos);
     double bestdist=_towLength*_towLength;//squared!
