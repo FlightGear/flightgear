@@ -245,7 +245,7 @@ void Launchbar::getPosOnCat(float perc, float* lpos, float* lvel,
     
     float tmp[3];
     Math::mul3(perc, lendvels[0], lvel);
-    Math::mul3(1.0-perc, lendvels[1], tmp);
+    Math::mul3(1.0f-perc, lendvels[1], tmp);
     Math::add3(tmp, lvel, lvel);
 }
 
@@ -379,7 +379,7 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
     float llbdir[3];
     Math::sub3(llbtip, _launchbar_mount, llbdir);
     float lblen = Math::mag3(llbdir);
-    Math::mul3(1.0/lblen, llbdir, llbdir);
+    Math::mul3(1.0f/lblen, llbdir, llbdir);
 
     // Check if we are near enough to the cat.
     if (_state == Unmounted && dist < 0.6) {
@@ -457,7 +457,7 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
 
             // The spring force the holdback will apply to the gear
             float tmp[3];
-        Math::mul3(1e1*(hldbklen - _holdback_length), lhldbkdir,
+        Math::mul3(10.f*(hldbklen - _holdback_length), lhldbkdir,
           _holdback_force);
 
             // The damping force here ...
