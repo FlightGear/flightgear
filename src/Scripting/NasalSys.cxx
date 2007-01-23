@@ -82,7 +82,7 @@ naRef FGNasalSys::call(naRef code, naRef locals)
 FGNasalSys::~FGNasalSys()
 {
     map<int, FGNasalListener *>::iterator it, end = _listener.end();
-    for (it = _listener.begin(); it != end; ++it)
+    for(it = _listener.begin(); it != end; ++it)
         delete it->second;
 
     // Nasal doesn't have a "destroy context" API yet. :(
@@ -426,7 +426,12 @@ void FGNasalSys::init()
         loadModule(fullpath, file.base().c_str());
     }
     ulCloseDir(dir);
-    fgSetBool("/sim/signals/nasal-dir-initialized", true);
+
+    // set signal and remove node to avoid restoring at reinit
+    const char *s = "nasal-dir-initialized";
+    SGPropertyNode *signal = fgGetNode("/sim/signals", true);
+    signal->setBoolValue(s, true);
+    signal->removeChildren(s);
 
     // Pull scripts out of the property tree, too
     loadPropertyScripts();
@@ -662,7 +667,7 @@ naRef FGNasalSys::setListener(int argc, naRef* args)
     else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
     else return naNil();
 
-    if (node->isTied())
+    if(node->isTied())
         SG_LOG(SG_NASAL, SG_DEBUG, "Attaching listener to tied property " <<
                 node->getPath());
 
@@ -747,12 +752,12 @@ void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
                                    ssgBranch *)
 {
     SGPropertyNode *n = prop->getNode("nasal"), *load;
-    if (!n)
+    if(!n)
         return;
 
     load = n->getNode("load");
     _unload = n->getNode("unload");
-    if (!load && !_unload)
+    if(!load && !_unload)
         return;
 
     _module = path;
@@ -763,17 +768,17 @@ void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
 
 FGNasalModelData::~FGNasalModelData()
 {
-    if (_module.empty())
+    if(_module.empty())
         return;
 
     FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
-    if (!nas) {
+    if(!nas) {
         SG_LOG(SG_NASAL, SG_ALERT, "Trying to run an <unload> script "
                 "without Nasal subsystem present.");
         return;
     }
 
-    if (_unload) {
+    if(_unload) {
         const char *s = _unload->getStringValue();
         nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s));
     }
