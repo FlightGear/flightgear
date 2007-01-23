@@ -19,7 +19,7 @@ public:
     FGNasalSys();
     virtual ~FGNasalSys();
     virtual void init();
-    virtual void update(double dt) { /* noop */ }
+    virtual void update(double dt);
 
     // Loads a nasal script from an external file and inserts it as a
     // global module of the specified name.
@@ -79,6 +79,7 @@ private:
     // Listener
     map<int, FGNasalListener *> _listener;
     static int _listenerId;
+    bool _purgeListeners;
 
     void loadPropertyScripts();
     void hashset(naRef hash, const char* key, naRef val);
@@ -142,6 +143,7 @@ private:
     int _gcKey;
     FGNasalSys* _nas;
     unsigned int _active;
+    bool _dead;
 };
 
 
