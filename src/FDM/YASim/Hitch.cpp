@@ -580,8 +580,8 @@ void Hitch::integrate (float dt)
             if (_dist>_towLength*1.00001)
             {
                 std::stringstream message;
-                message<<"Could not lock hitch (tow length is insufficient) on hitch '"
-                       <<_node->getPath()<<"' !";
+                message<<"Could not lock hitch (tow length is insufficient) on hitch "
+                       <<_node->getName()<<" "<<_node->getIndex()<<"!";
                 fgSetString("/sim/messages/pilot", message.str().c_str());
                 _open=true;
                 return;
@@ -592,7 +592,7 @@ void Hitch::integrate (float dt)
         if (_node->getBoolValue("broken",false)&&_open)
             message<<"Oh no, the tow is broken";
         else
-            message<<(_open?"Opened hitch '":"Locked hitch '")<<_node->getPath()<<"'!";
+            message<<(_open?"Opened hitch ":"Locked hitch ")<<_node->getName()<<" "<<_node->getIndex()<<"!";
         fgSetString("/sim/messages/pilot", message.str().c_str());
         _oldOpen=_open;
     }
