@@ -57,6 +57,7 @@ FGNasalSys::FGNasalSys()
     _gcHash = naNil();
     _nextGCKey = 0; // Any value will do
     _callCount = 0;
+    _purgeListeners = false;
 }
 
 // Does a naCall() in a new context.  Wrapped here to make lock
@@ -437,6 +438,21 @@ void FGNasalSys::init()
     loadPropertyScripts();
 }
 
+void FGNasalSys::update(double)
+{
+    if(_purgeListeners) {
+        _purgeListeners = false;
+        map<int, FGNasalListener *>::iterator it, end = _listener.end();
+        for(it = _listener.end(); --it != end;) {
+            FGNasalListener *nl = it->second;
+            if(nl->_dead) {
+                _listener.erase(it);
+                delete nl;
+            }
+        }
+    }
+}
+
 // Loads the scripts found under /nasal in the global tree
 void FGNasalSys::loadPropertyScripts()
 {
@@ -690,20 +706,21 @@ naRef FGNasalSys::setListener(int argc, naRef* args)
 naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 {
     naRef id = argc > 0 ? args[0] : naNil();
-    int i = int(id.num);
+    map<int, FGNasalListener *>::iterator it = _listener.find(int(id.num));
 
-    if(!naIsNum(id) || _listener.find(i) == _listener.end()) {
+    if(!naIsNum(id) || it == _listener.end() || it->second->_dead) {
         naRuntimeError(c, "removelistener() with invalid listener id");
         return naNil();
     }
 
-    FGNasalListener *nl = _listener[i];
+    FGNasalListener *nl = it->second;
     if(nl->_active) {
-        naRuntimeError(c, "trying to remove active listener");
-        return naNil();
+        nl->_dead = true;
+        _purgeListeners = true;
+        return naNum(-1);
     }
 
-    _listener.erase(i);
+    _listener.erase(it);
     delete nl;
     return naNum(_listener.size());
 }
@@ -718,7 +735,8 @@ FGNasalListener::FGNasalListener(SGPropertyNode_ptr node, naRef handler,
     _handler(handler),
     _gcKey(key),
     _nas(nasal),
-    _active(0)
+    _active(0),
+    _dead(false)
 {
 }
 
@@ -731,7 +749,7 @@ FGNasalListener::~FGNasalListener()
 void FGNasalListener::valueChanged(SGPropertyNode* node)
 {
     // drop recursive listener calls
-    if (_active)
+    if(_active || _dead)
         return;
 
     _active++;
