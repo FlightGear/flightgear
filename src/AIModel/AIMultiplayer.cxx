@@ -276,8 +276,8 @@ void FGAIMultiplayer::update(double dt)
               case SGPropertyNode::INT:   
               case SGPropertyNode::BOOL:
               case SGPropertyNode::LONG:        
-                ival = (int) (1-tau)*((double) (*prevPropIt)->int_value) +
-                  tau*((double) (*nextPropIt)->int_value);
+                ival = (int) (0.5+(1-tau)*((double) (*prevPropIt)->int_value) +
+                  tau*((double) (*nextPropIt)->int_value));
                 pIt->second->setIntValue(ival);
                 //cout << "Int: " << ival << "\n";
                 break;
