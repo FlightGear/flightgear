@@ -469,9 +469,18 @@ FGAIMultiplayer::addMotionInfo(const FGExternalMotionData& motionInfo,
                                long stamp)
 {
   mLastTimestamp = stamp;
-  // Drop packets arriving out of order
-  if (!mMotionInfo.empty() && motionInfo.time < mMotionInfo.rbegin()->first)
-    return;
+
+  if (!mMotionInfo.empty()) {
+    double diff = motionInfo.time - mMotionInfo.rbegin()->first;
+
+    // packet is very old -- MP has probably reset (incl. his timebase)
+    if (diff < -10.0)
+      mMotionInfo.clear();
+
+    // drop packets arriving out of order
+    else if (diff < 0.0)
+      return;
+  }
   mMotionInfo[motionInfo.time] = motionInfo;
 }
 
