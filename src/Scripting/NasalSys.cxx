@@ -232,24 +232,15 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
 // make sure it appears.  Is there better way to do this?
 static naRef f_print(naContext c, naRef me, int argc, naRef* args)
 {
-#define BUFLEN 1024
-    char buf[BUFLEN + 1];
-    buf[BUFLEN] = 0; // extra nul to handle strncpy brain damage
-    buf[0] = 0; // Zero-length in case there are no arguments
-    char* p = buf;
-    int buflen = BUFLEN;
+    string buf;
     int n = argc;
     for(int i=0; i<n; i++) {
         naRef s = naStringValue(c, args[i]);
         if(naIsNil(s)) continue;
-        strncpy(p, naStr_data(s), buflen);
-        p += naStr_len(s);
-        buflen = BUFLEN - (p - buf);
-        if(buflen <= 0) break;
+        buf += naStr_data(s);
     }
     SG_LOG(SG_GENERAL, SG_ALERT, buf);
-    return naNil();
-#undef BUFLEN
+    return naNum(buf.length());
 }
 
 // fgcommand() extension function.  Executes a named command via the
