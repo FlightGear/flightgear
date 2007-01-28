@@ -433,11 +433,13 @@ void FGNasalSys::update(double)
 {
     if(_purgeListeners) {
         _purgeListeners = false;
-        map<int, FGNasalListener *>::iterator it;
-        for(it = _listener.end(); --it != _listener.end();) {
-            FGNasalListener *nl = it->second;
+        map<int, FGNasalListener *>::reverse_iterator it, eit;
+        map<int, FGNasalListener *>::reverse_iterator end = _listener.rend();
+        for(it = _listener.rbegin(); it != end; ) {
+            eit = it++;
+            FGNasalListener *nl = eit->second;
             if(nl->_dead) {
-                _listener.erase(it);
+                _listener.erase((++eit).base());
                 delete nl;
             }
         }
