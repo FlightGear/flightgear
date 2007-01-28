@@ -38,6 +38,7 @@
 #include <osg/CameraNode>
 #include <osg/CameraView>
 #include <osg/CullFace>
+#include <osg/ClearNode>
 #include <osg/Depth>
 #include <osg/Fog>
 #include <osg/Group>
@@ -460,7 +461,12 @@ FGRenderer::init( void ) {
     mRoot->addChild(lightSource);
 
     lightSource->addChild(mBackGroundCamera.get());
-    lightSource->addChild(mSceneCamera.get());
+//     lightSource->addChild(mSceneCamera.get());
+    // Hmm, I would think that this should be included in the camera, but ...
+    osg::ClearNode* clearNode = new osg::ClearNode;
+    clearNode->addChild(mSceneCamera.get());
+    clearNode->setClearMask(GL_DEPTH_BUFFER_BIT);
+    lightSource->addChild(clearNode);
 
 
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
