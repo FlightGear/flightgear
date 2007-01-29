@@ -24,7 +24,6 @@
 #include "adf.hxx"
 #include "airspeed_indicator.hxx"
 #include "altimeter.hxx"
-#include "annunciator.hxx"
 #include "attitude_indicator.hxx"
 #include "clock.hxx"
 #include "dme.hxx"
@@ -53,7 +52,6 @@
 
 FGInstrumentMgr::FGInstrumentMgr ()
 {
-    set_subsystem("annunciator", new Annunciator);
     set_subsystem("od_gauge", new FGODGauge, 1.0);
     set_subsystem("hud", new HUD);
 

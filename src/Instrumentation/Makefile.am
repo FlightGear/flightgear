@@ -7,7 +7,6 @@ libInstrumentation_a_SOURCES = \
 	adf.cxx adf.hxx \
         airspeed_indicator.cxx airspeed_indicator.hxx \
         altimeter.cxx altimeter.hxx \
-	annunciator.cxx annunciator.hxx \
         attitude_indicator.cxx attitude_indicator.hxx \
         clock.cxx clock.hxx \
         dme.cxx dme.hxx \
