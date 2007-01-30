@@ -47,7 +47,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/interpolater.hxx>
-#include <simgear/math/polar3d.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/screen/colors.hxx>
@@ -69,7 +68,7 @@ FGLight::FGLight ()
       _specular_tbl( NULL ),
       _sky_tbl( NULL ),
       _sun_lon(0),
-      _sun_gc_lat(0),
+      _sun_lat(0),
       _moon_lon(0),
       _moon_gc_lat(0),
       _sunpos(0, 0, 0),

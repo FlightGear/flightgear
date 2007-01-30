@@ -29,19 +29,16 @@
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
-// #  include <cstdio>
 #  include <ctime>
 #  ifdef macintosh
      SG_USING_STD(time_t);
 #  endif
 #else
 #  include <math.h>
-// #  include <stdio.h>
 #  include <time.h>
 #endif
 
-#include <simgear/math/point3d.hxx>
-#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/timing/sg_time.hxx>
 
@@ -64,7 +61,6 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
     /* double *lat;            (return) latitude        */
     /* double *lon;            (return) longitude       */
 
-    /* double lambda; */
     double alpha, delta;
     double tmp;
 
@@ -77,7 +73,6 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
     alpha = atan2(ys - tan(beta)*ze/ys, xs);
     delta = asin(sin(beta)*ye/ys + cos(beta)*ze);
 
-    // tmp = alpha - (SGD_2PI/24)*GST(ssue);
     tmp = alpha - (SGD_2PI/24)*gst;
     if (tmp < -SGD_PI) {
         do tmp += SGD_2PI;
@@ -91,33 +86,28 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
     *lat = delta;
 }
 
-static double sun_angle( const SGTime &t, sgVec3 world_up,
+static double sun_angle( const SGTime &t, const SGVec3d& world_up,
                          double lon_rad, double lat_rad ) {
-    sgVec3 nup, nsun;
-    Point3D p, rel_sunpos;
-
     SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
     SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t.getGst() );
 
     double sun_lon, sun_gd_lat;
     fgSunPositionGST( t.getGst(), &sun_lon, &sun_gd_lat );
-    Point3D sunpos = sgGeodToCart(Point3D(sun_lon, sun_gd_lat, 0));
+    SGVec3d sunpos = SGVec3d::fromGeod(SGGeod::fromRad(sun_lon, sun_gd_lat));
 
     SG_LOG( SG_EVENT, SG_DEBUG, "    t.cur_time = " << t.get_cur_time() );
     SG_LOG( SG_EVENT, SG_DEBUG, 
 	    "    Sun Geodetic lat = " << sun_gd_lat );
 
     // calculate the sun's relative angle to local up
-    sgCopyVec3( nup, world_up );
-    sgSetVec3( nsun, sunpos.x(), sunpos.y(), sunpos.z() );
-    sgNormalizeVec3(nup);
-    sgNormalizeVec3(nsun);
+    SGVec3f nup = normalize(toVec3f(world_up));
+    SGVec3f nsun = normalize(toVec3f(sunpos));
     // cout << "nup = " << nup[0] << "," << nup[1] << "," 
     //      << nup[2] << endl;
     // cout << "nsun = " << nsun[0] << "," << nsun[1] << "," 
     //      << nsun[2] << endl;
 
-    double sun_angle = acos( sgScalarProductVec3 ( nup, nsun ) );
+    double sun_angle = acos( dot( nup, nsun ) );
     double sun_angle_deg = sun_angle * SG_RADIANS_TO_DEGREES;
     while ( sun_angle_deg < -180 ) { sun_angle += 360; }
     SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "
@@ -143,10 +133,7 @@ time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
 {
     // cout << "location = " << lon_rad * SG_RADIANS_TO_DEGREES << ", "
     //      << lat_rad * SG_RADIANS_TO_DEGREES << endl;
-    Point3D geod( lon_rad, lat_rad, 0 );
-    Point3D tmp = sgGeodToCart( geod );
-    sgVec3 world_up;
-    sgSetVec3( world_up, tmp.x(), tmp.y(), tmp.z() );
+    SGVec3d world_up = SGVec3d::fromGeod(SGGeod::fromRad(lon_rad, lat_rad));
     SGTime t = SGTime( lon_rad, lat_rad, "", 0 );
 
     double best_diff = 180.0;

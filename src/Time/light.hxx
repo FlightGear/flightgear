@@ -40,10 +40,6 @@
 
 #include <simgear/compiler.h>
 
-#include SG_GL_H
-
-#include <plib/sg.h>			// plib include
-
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/math/point3d.hxx>
@@ -66,7 +62,7 @@ private:
      */
 
     // in geocentric coordinates
-    double _sun_lon, _sun_gc_lat;
+    double _sun_lon, _sun_lat;
     double _moon_lon, _moon_gc_lat;
 
     // in cartesian coordiantes
@@ -146,8 +142,8 @@ public:
     inline double get_sun_lon () const { return _sun_lon; }
     inline void set_sun_lon (double l) { _sun_lon = l; }
 
-    inline double get_sun_gc_lat () const { return _sun_gc_lat; }
-    inline void set_sun_gc_lat (double l) { _sun_gc_lat = l; }
+    inline double get_sun_lat () const { return _sun_lat; }
+    inline void set_sun_lat (double l) { _sun_lat = l; }
 
     inline const SGVec3d& get_sunpos () const { return _sunpos; }
     inline void set_sunpos (const SGVec3d& p) { _sunpos = p; }
