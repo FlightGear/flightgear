@@ -26,7 +26,6 @@
 
 #include <float.h>
 
-#include <plib/sg.h>
 #include <osg/CullFace>
 #include <osg/Drawable>
 #include <osg/Geode>
@@ -49,180 +48,15 @@
 #include "flight.hxx"
 #include "groundcache.hxx"
 
+/// Ok, variant that uses a infinite line istead of the ray.
+/// also not that this only works if the ray direction is normalized.
 static inline bool
-fgdRayTriangle(SGVec3d& x, const SGVec3d& point, const SGVec3d& dir,
-               const SGVec3d v[3])
+intersectsInf(const SGRayd& ray, const SGSphered& sphere)
 {
-  double eps = 1e-4;
-  // Method based on the observation that we are looking for a
-  // point x that can be expressed in terms of the triangle points
-  //  x = p_0 + \mu_1*(p_1 - p_0) + \mu_2*(p_2 - p_0)
-  // with 0 <= \mu_1, \mu_2 and \mu_1 + \mu_2 <= 1.
-  // OTOH it could be expressed in terms of the ray
-  //  x = point + \lambda*dir
-  // Now we can compute \mu_i and \lambda.
-  // define
-  SGVec3d d1 = v[1] - v[0];
-  SGVec3d d2 = v[2] - v[0];
-  SGVec3d b = point - v[0];
-  
-  // the vector in normal direction, but not normalized
-  SGVec3d d1crossd2 = cross(d1, d2);
-  
-  double denom = -dot(dir, d1crossd2);
-  double signDenom = copysign(1, denom);
-  // return if paralell ??? FIXME what if paralell and in plane?
-  // may be we are ok below than anyway??
-  // if (SGMiscd::abs(denom) <= SGLimitsd::min())
-  //   return false;
-  
-  // Now \lambda would read
-  //   lambda = 1/denom*dot(b, d1crossd2);
-  // To avoid an expensive division we multiply by |denom|
-  double lambdaDenom = signDenom*dot(b, d1crossd2);
-  if (lambdaDenom < 0)
-    return false;
-  // For line segment we would test against
-  // if (1 < lambda)
-  //   return false;
-  // with the original lambda. The multiplied test would read
-  // if (absDenom < lambdaDenom)
-  //   return false;
-
-  double absDenom = fabs(denom);
-  double absDenomEps = absDenom*eps;
-  
-  SGVec3d bcrossr = cross(b, dir);
-  // double mu1 = 1/denom*dot(d2, bcrossr);
-  double mu1 = signDenom*dot(d2, bcrossr);
-  if (mu1 < -absDenomEps)
-    return false;
-  // double mu2 = -1/denom*dot(d1, bcrossr);
-  // if (mu2 < -eps)
-  //   return false;
-  double mmu2 = signDenom*dot(d1, bcrossr);
-  if (mmu2 > absDenomEps)
-    return false;
-  
-  if (mu1 - mmu2 > absDenom + absDenomEps)
-    return false;
-
-  x = point;
-  // if we have survived here it could only happen with denom == 0
-  // that the point is already in plane. Then return the origin ...
-  if (SGLimitsd::min() < absDenom)
-    x += (lambdaDenom/absDenom)*dir;
-
-  return true;
-}
-
-static inline bool
-fgdPointInTriangle( const SGVec3d& point, const SGVec3d tri[3] )
-{
-    SGVec3d dif;
-
-    // Some tolerance in meters we accept a point to be outside of the triangle
-    // and still return that it is inside.
-    SGDfloat min, max;
-    // punt if outside bouding cube
-    SG_MIN_MAX3 ( min, max, tri[0][0], tri[1][0], tri[2][0] );
-    if( (point[0] < min) || (point[0] > max) )
-        return false;
-    dif[0] = max - min;
-
-    SG_MIN_MAX3 ( min, max, tri[0][1], tri[1][1], tri[2][1] );
-    if( (point[1] < min) || (point[1] > max) )
-        return false;
-    dif[1] = max - min;
-
-    SG_MIN_MAX3 ( min, max, tri[0][2], tri[1][2], tri[2][2] );
-    if( (point[2] < min) || (point[2] > max) )
-        return false;
-    dif[2] = max - min;
-
-    // drop the smallest dimension so we only have to work in 2d.
-    SGDfloat min_dim = SG_MIN3 (dif[0], dif[1], dif[2]);
-    SGDfloat x1, y1, x2, y2, x3, y3, rx, ry;
-    if ( fabs(min_dim-dif[0]) <= DBL_EPSILON ) {
-        // x is the smallest dimension
-        x1 = point[1];
-        y1 = point[2];
-        x2 = tri[0][1];
-        y2 = tri[0][2];
-        x3 = tri[1][1];
-        y3 = tri[1][2];
-        rx = tri[2][1];
-        ry = tri[2][2];
-    } else if ( fabs(min_dim-dif[1]) <= DBL_EPSILON ) {
-        // y is the smallest dimension
-        x1 = point[0];
-        y1 = point[2];
-        x2 = tri[0][0];
-        y2 = tri[0][2];
-        x3 = tri[1][0];
-        y3 = tri[1][2];
-        rx = tri[2][0];
-        ry = tri[2][2];
-    } else if ( fabs(min_dim-dif[2]) <= DBL_EPSILON ) {
-        // z is the smallest dimension
-        x1 = point[0];
-        y1 = point[1];
-        x2 = tri[0][0];
-        y2 = tri[0][1];
-        x3 = tri[1][0];
-        y3 = tri[1][1];
-        rx = tri[2][0];
-        ry = tri[2][1];
-    } else {
-        // all dimensions are really small so lets call it close
-        // enough and return a successful match
-        return true;
-    }
-
-    // check if intersection point is on the same side of p1 <-> p2 as p3
-    SGDfloat tmp = (y2 - y3);
-    SGDfloat tmpn = (x2 - x3);
-    int side1 = SG_SIGN (tmp * (rx - x3) + (y3 - ry) * tmpn);
-    int side2 = SG_SIGN (tmp * (x1 - x3) + (y3 - y1) * tmpn);
-    if ( side1 != side2 ) {
-        // printf("failed side 1 check\n");
-        return false;
-    }
-
-    // check if intersection point is on correct side of p2 <-> p3 as p1
-    tmp = (y3 - ry);
-    tmpn = (x3 - rx);
-    side1 = SG_SIGN (tmp * (x2 - rx) + (ry - y2) * tmpn);
-    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - y1) * tmpn);
-    if ( side1 != side2 ) {
-        // printf("failed side 2 check\n");
-        return false;
-    }
-
-    // check if intersection point is on correct side of p1 <-> p3 as p2
-    tmp = (y2 - ry);
-    tmpn = (x2 - rx);
-    side1 = SG_SIGN (tmp * (x3 - rx) + (ry - y3) * tmpn);
-    side2 = SG_SIGN (tmp * (x1 - rx) + (ry - y1) * tmpn);
-    if ( side1 != side2 ) {
-        // printf("failed side 3  check\n");
-        return false;
-    }
-
-    return true;
-}
-
-// Test if the line given by the point on the line pt_on_line and the
-// line direction dir intersects the sphere sp.
-// Adapted from plib.
-static inline bool
-fgdIsectSphereInfLine(const SGVec3d& sphereCenter, double radius,
-                      const SGVec3d& pt_on_line, const SGVec3d& dir)
-{
-  SGVec3d r = sphereCenter - pt_on_line;
-  double projectedDistance = dot(r, dir);
+  SGVec3d r = sphere.getCenter() - ray.getOrigin();
+  double projectedDistance = dot(r, ray.getDirection());
   double dist = dot(r, r) - projectedDistance * projectedDistance;
-  return dist < radius*radius;
+  return dist < sphere.getRadius2();
 }
 
 template<typename T>
@@ -311,6 +145,12 @@ public:
     mGroundProperty.pivot = SGVec3d(0, 0, 0);
   }
 
+  void setSceneryCenter(const SGVec3d& cntr)
+  {
+    mLocalToGlobal.makeTranslate(cntr.osg());
+    mGlobalToLocal.makeTranslate(-cntr.osg());
+  }
+
   void updateCullMode(osg::StateSet* stateSet)
   {
     if (!stateSet)
@@ -342,7 +182,8 @@ public:
       // cats or wires
       double rw = bs.radius() + mWireCacheRadius;
       if (rw*rw < centerDist2 &&
-          !fgdIsectSphereInfLine(cntr, bs.radius(), mCacheReference, mDown))
+          !intersectsInf(SGRayd(mCacheReference, mDown),
+                         SGSphered(cntr, bs.radius())))
         return false;
       sphIsec = false;
     }
@@ -476,73 +317,64 @@ public:
     
     // a bounding sphere in the node local system
     SGVec3d boundCenter = (1.0/3)*(v[0] + v[1] + v[2]);
-#if 0
-    double boundRadius = std::max(norm1(v[0] - boundCenter),
-                                  norm1(v[1] - boundCenter));
-    boundRadius = std::max(boundRadius, norm1(v[2] - boundCenter));
-    // Ok, we take the 1-norm instead of the expensive 2 norm.
-    // Therefore we need that scaling factor - roughly sqrt(3)
-    boundRadius = 1.733*boundRadius;
-#else
     double boundRadius = std::max(distSqr(v[0], boundCenter),
                                   distSqr(v[1], boundCenter));
     boundRadius = std::max(boundRadius, distSqr(v[2], boundCenter));
     boundRadius = sqrt(boundRadius);
-#endif
+
+    SGRayd ray(mLocalCacheReference, mLocalDown);
 
     // if we are not in the downward cylinder bail out
-    if (!fgdIsectSphereInfLine(boundCenter, boundRadius + mCacheRadius,
-                              mLocalCacheReference, mLocalDown))
+    if (!intersectsInf(ray, SGSphered(boundCenter, boundRadius + mCacheRadius)))
       return;
 
+    SGTriangled triangle(v);
     
     // The normal and plane in the node local coordinate system
-    SGVec3d n = normalize(cross(v[1] - v[0], v[2] - v[0]));
+    SGVec3d n = cross(triangle.getEdge(0), triangle.getEdge(1));
     if (0 < dot(mLocalDown, n)) {
       if (mBackfaceCulling) {
         // Surface points downwards, ignore for altitude computations.
         return;
       } else {
-        n = -n;
-        std::swap(v[1], v[2]);
+        triangle.flip();
       }
     }
     
     // Only check if the triangle is in the cache sphere if the plane
     // containing the triangle is near enough
-    if (sphIsec && fabs(dot(n, v[0] - mLocalCacheReference)) < mCacheRadius) {
-      // Check if the sphere around the vehicle intersects the sphere
-      // around that triangle. If so, put that triangle into the cache.
-      double r2 = boundRadius + mCacheRadius;
-      if (distSqr(boundCenter, mLocalCacheReference) < r2*r2) {
-        FGGroundCache::Triangle t;
-        for (unsigned i = 0; i < 3; ++i)
-          t.vertices[i].osg() = v[i].osg()*mLocalToGlobal;
-        t.boundCenter.osg() = boundCenter.osg()*mLocalToGlobal;
-        t.boundRadius = boundRadius;
-        
-        SGVec3d tmp;
-        tmp.osg() = osg::Matrixd::transform3x3(n.osg(), mLocalToGlobal);
-        t.plane = SGVec4d(tmp[0], tmp[1], tmp[2], -dot(tmp, t.vertices[0]));
-        t.velocity = mGroundProperty.vel;
-        t.rotation = mGroundProperty.rot;
-        t.rotation_pivot = mGroundProperty.pivot - mGroundCache->cache_center;
-        t.type = mGroundProperty.type;
-        t.material = mGroundProperty.material;
-        mGroundCache->triangles.push_back(t);
+    if (sphIsec) {
+      double d = dot(n, v[0] - mLocalCacheReference);
+      if (d*d < mCacheRadius*dot(n, n)) {
+        // Check if the sphere around the vehicle intersects the sphere
+        // around that triangle. If so, put that triangle into the cache.
+        double r2 = boundRadius + mCacheRadius;
+        if (distSqr(boundCenter, mLocalCacheReference) < r2*r2) {
+          FGGroundCache::Triangle t;
+          t.triangle.setBaseVertex(SGVec3d(v[0].osg()*mLocalToGlobal));
+          t.triangle.setEdge(0, SGVec3d(osg::Matrixd::transform3x3(triangle.getEdge(0).osg(), mLocalToGlobal)));
+          t.triangle.setEdge(1, SGVec3d(osg::Matrixd::transform3x3(triangle.getEdge(1).osg(), mLocalToGlobal)));
+          
+          t.sphere.setCenter(SGVec3d(boundCenter.osg()*mLocalToGlobal));
+          t.sphere.setRadius(boundRadius);
+          
+          t.velocity = mGroundProperty.vel;
+          t.rotation = mGroundProperty.rot;
+          t.rotation_pivot = mGroundProperty.pivot;
+          t.type = mGroundProperty.type;
+          t.material = mGroundProperty.material;
+          mGroundCache->triangles.push_back(t);
+        }
       }
     }
     
     // In case the cache is empty, we still provide agl computations.
     // But then we use the old way of having a fixed elevation value for
     // the whole lifetime of this cache.
-    SGVec4d plane = SGVec4d(n[0], n[1], n[2], -dot(n, v[0]));
     SGVec3d isectpoint;
-
-    if (fgdRayTriangle(isectpoint, mLocalCacheReference, mLocalDown, v)) {
+    if (intersects(isectpoint, triangle, ray, 1e-4)) {
       mGroundCache->found_ground = true;
       isectpoint.osg() = isectpoint.osg()*mLocalToGlobal;
-      isectpoint += mGroundCache->cache_center;
       double this_radius = length(isectpoint);
       if (mGroundCache->ground_radius < this_radius) {
         mGroundCache->ground_radius = this_radius;
@@ -568,7 +400,7 @@ public:
         wire.ends[1] = gv2;
         wire.velocity = mGroundProperty.vel;
         wire.rotation = mGroundProperty.rot;
-        wire.rotation_pivot = mGroundProperty.pivot - mGroundCache->cache_center;
+        wire.rotation_pivot = mGroundProperty.pivot;
         wire.wire_id = mGroundProperty.wire_id;
 
         mGroundCache->wires.push_back(wire);
@@ -587,7 +419,7 @@ public:
         }
         cat.velocity = mGroundProperty.vel;
         cat.rotation = mGroundProperty.rot;
-        cat.rotation_pivot = mGroundProperty.pivot - mGroundCache->cache_center;
+        cat.rotation_pivot = mGroundProperty.pivot;
 
         mGroundCache->catapults.push_back(cat);
       }
@@ -611,7 +443,6 @@ public:
 
 FGGroundCache::FGGroundCache()
 {
-  cache_center = SGVec3d(0, 0, 0);
   ground_radius = 0.0;
   cache_ref_time = 0.0;
   wire_id = 0;
@@ -626,27 +457,23 @@ FGGroundCache::~FGGroundCache()
 
 inline void
 FGGroundCache::velocityTransformTriangle(double dt,
-                                         FGGroundCache::Triangle& dst,
+                                         SGTriangled& dst, SGSphered& sdst,
                                          const FGGroundCache::Triangle& src)
 {
-  dst = src;
+  dst = src.triangle;
+  sdst = src.sphere;
 
-  if (fabs(dt*dot(src.velocity, src.velocity)) < SGLimitsd::epsilon())
+  if (dt*dt*dot(src.velocity, src.velocity) < SGLimitsd::epsilon())
     return;
 
-  for (int i = 0; i < 3; ++i) {
-    SGVec3d pivotoff = src.vertices[i] - src.rotation_pivot;
-    dst.vertices[i] += dt*(src.velocity + cross(src.rotation, pivotoff));
-  }
-  
-  // Transform the plane equation
-  SGVec3d pivotoff, vel;
-  sgdSubVec3(pivotoff.sg(), dst.plane.sg(), src.rotation_pivot.sg());
-  vel = src.velocity + cross(src.rotation, pivotoff);
-  dst.plane[3] += dt*sgdScalarProductVec3(dst.plane.sg(), vel.sg());
-  
-  dst.boundCenter += dt*src.velocity;
+  SGVec3d baseVert = dst.getBaseVertex();
+  SGVec3d pivotoff = baseVert - src.rotation_pivot;
+  baseVert += dt*(src.velocity + cross(src.rotation, pivotoff));
+  dst.setBaseVertex(baseVert);
+  dst.setEdge(0, dst.getEdge(0) + dt*cross(src.rotation, dst.getEdge(0)));
+  dst.setEdge(1, dst.getEdge(1) + dt*cross(src.rotation, dst.getEdge(1)));
 }
+
 
 bool
 FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
@@ -669,20 +496,7 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
   SGQuatd hlToEc = SGQuatd::fromLonLat(SGGeod::fromCart(pt));
   down = hlToEc.rotate(SGVec3d(0, 0, 1));
 
-  // Decide where we put the scenery center.
-  SGVec3d old_cntr = globals->get_scenery()->get_center();
-  SGVec3d cntr(pt);
-  // Only move the cache center if it is unacceptable far away.
-  if (40*40 < distSqr(old_cntr, cntr))
-    globals->get_scenery()->set_center(cntr);
-  else
-    cntr = old_cntr;
-
-  // The center of the cache.
-  cache_center = cntr;
-  
   // Prepare sphere around the aircraft.
-  SGVec3d ptoff = pt - cache_center;
   double cacheRadius = rad;
 
   // Prepare bigger sphere around the aircraft.
@@ -692,7 +506,8 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
   double wireCacheRadius = max_wire_dist < rad ? rad : max_wire_dist;
 
   // Walk the scene graph and extract solid ground triangles and carrier data.
-  GroundCacheFillVisitor gcfv(this, down, ptoff, cacheRadius, wireCacheRadius);
+  GroundCacheFillVisitor gcfv(this, down, pt, cacheRadius, wireCacheRadius);
+  gcfv.setSceneryCenter(globals->get_scenery()->get_center());
   globals->get_scenery()->get_scene_graph()->accept(gcfv);
 
   // some stats
@@ -708,9 +523,6 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
   if (!found_ground)
     SG_LOG(SG_FLIGHT, SG_WARN, "prepare_ground_cache(): trying to build cache "
            "without any scenery below the aircraft" );
-
-  if (cntr != old_cntr)
-    globals->get_scenery()->set_center(old_cntr);
 
   return found_ground;
 }
@@ -743,14 +555,10 @@ FGGroundCache::get_cat(double t, const SGVec3d& dpt,
     rvel[1] = catapults[i].velocity + cross(catapults[i].rotation, pivotoff);
 
     SGVec3d thisEnd[2];
-    thisEnd[0] = cache_center + catapults[i].start + t*rvel[0];
-    thisEnd[1] = cache_center + catapults[i].end + t*rvel[1];
+    thisEnd[0] = catapults[i].start + t*rvel[0];
+    thisEnd[1] = catapults[i].end + t*rvel[1];
 
-    sgdLineSegment3 ls;
-    sgdCopyVec3(ls.a, thisEnd[0].sg());
-    sgdCopyVec3(ls.b, thisEnd[1].sg());
-    double this_dist = sgdDistSquaredToLineSegmentVec3( ls, dpt.sg() );
-
+    double this_dist = distSqr(SGLineSegmentd(thisEnd[0], thisEnd[1]), dpt);
     if (this_dist < dist) {
       SG_LOG(SG_FLIGHT,SG_INFO, "Found catapult "
              << this_dist << " meters away");
@@ -786,28 +594,28 @@ FGGroundCache::get_agl(double t, const SGVec3d& dpt, double max_altoff,
   t -= cache_ref_time;
 
   // The double valued point we start to search for intersection.
-  SGVec3d pt = dpt - cache_center;
+  SGVec3d pt = dpt;
   // shift the start of our ray by maxaltoff upwards
-  SGVec3d raystart = pt - max_altoff*down;
+  SGRayd ray(pt - max_altoff*down, down);
 
   // Initialize to something sensible
   double current_radius = 0.0;
 
   size_t sz = triangles.size();
   for (size_t i = 0; i < sz; ++i) {
-    Triangle triangle;
-    velocityTransformTriangle(t, triangle, triangles[i]);
-    if (!fgdIsectSphereInfLine(triangle.boundCenter, triangle.boundRadius, pt, down))
+    SGSphered sphere;
+    SGTriangled triangle;
+    velocityTransformTriangle(t, triangle, sphere, triangles[i]);
+    if (!intersectsInf(ray, sphere))
       continue;
 
     // Check for intersection.
     SGVec3d isecpoint;
-    if (fgdRayTriangle(isecpoint, raystart, down, triangle.vertices)) {
+    if (intersects(isecpoint, triangle, ray, 1e-4)) {
       // Compute the vector from pt to the intersection point ...
       SGVec3d off = isecpoint - pt;
       // ... and check if it is too high or not
-      // Transform to the wgs system
-      isecpoint += cache_center;
+
       // compute the radius, good enough approximation to take the geocentric radius
       double radius = dot(isecpoint, isecpoint);
       if (current_radius < radius) {
@@ -816,15 +624,15 @@ FGGroundCache::get_agl(double t, const SGVec3d& dpt, double max_altoff,
         // Save the new potential intersection point.
         contact = isecpoint;
         // The first three values in the vector are the plane normal.
-        sgdCopyVec3( normal.sg(), triangle.plane.sg() );
+        normal = triangle.getNormal();
         // The velocity wrt earth.
-        SGVec3d pivotoff = pt - triangle.rotation_pivot;
-        vel = triangle.velocity + cross(triangle.rotation, pivotoff);
+        SGVec3d pivotoff = pt - triangles[i].rotation_pivot;
+        vel = triangles[i].velocity + cross(triangles[i].rotation, pivotoff);
         // Save the ground type.
-        *type = triangle.type;
+        *type = triangles[i].type;
         *agl = dot(down, contact - dpt);
         if (material)
-          *material = triangle.material;
+          *material = triangles[i].material;
       }
     }
   }
@@ -862,16 +670,9 @@ bool FGGroundCache::caught_wire(double t, const SGVec3d pt[4])
 
   // Build the two triangles spanning the area where the hook has moved
   // during the past step.
-  SGVec4d plane[2];
-  SGVec3d tri[2][3];
-  sgdMakePlane( plane[0].sg(), pt[0].sg(), pt[1].sg(), pt[2].sg() );
-  tri[0][0] = pt[0];
-  tri[0][1] = pt[1];
-  tri[0][2] = pt[2];
-  sgdMakePlane( plane[1].sg(), pt[0].sg(), pt[2].sg(), pt[3].sg() );
-  tri[1][0] = pt[0];
-  tri[1][1] = pt[2];
-  tri[1][2] = pt[3];
+  SGTriangled triangle[2];
+  triangle[0].set(pt[0], pt[1], pt[2]);
+  triangle[1].set(pt[0], pt[2], pt[3]);
 
   // Intersect the wire lines with each of these triangles.
   // You have caught a wire if they intersect.
@@ -881,15 +682,12 @@ bool FGGroundCache::caught_wire(double t, const SGVec3d pt[4])
       le[k] = wires[i].ends[k];
       SGVec3d pivotoff = le[k] - wires[i].rotation_pivot;
       SGVec3d vel = wires[i].velocity + cross(wires[i].rotation, pivotoff);
-      le[k] += t*vel + cache_center;
+      le[k] += t*vel;
     }
+    SGLineSegmentd lineSegment(le[0], le[1]);
     
     for (int k=0; k<2; ++k) {
-      SGVec3d isecpoint;
-      double isecval = sgdIsectLinesegPlane(isecpoint.sg(), le[0].sg(),
-                                            le[1].sg(), plane[k].sg());
-      if ( 0.0 <= isecval && isecval <= 1.0 &&
-           fgdPointInTriangle( isecpoint, tri[k] ) ) {
+      if (intersects(triangle[k], lineSegment)) {
         SG_LOG(SG_FLIGHT,SG_INFO, "Caught wire");
         // Store the wire id.
         wire_id = wires[i].wire_id;
@@ -917,7 +715,7 @@ bool FGGroundCache::get_wire_ends(double t, SGVec3d end[2], SGVec3d vel[2])
       for (size_t k = 0; k < 2; ++k) {
         SGVec3d pivotoff = end[k] - wires[i].rotation_pivot;
         vel[k] = wires[i].velocity + cross(wires[i].rotation, pivotoff);
-        end[k] = cache_center + wires[i].ends[k] + t*vel[k];
+        end[k] = wires[i].ends[k] + t*vel[k];
       }
       return true;
     }

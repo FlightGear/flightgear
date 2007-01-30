@@ -26,6 +26,7 @@
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/math/SGMath.hxx>
+#include <simgear/math/SGGeometry.hxx>
 
 class SGMaterial;
 class GroundCacheFillVisitor;
@@ -85,13 +86,9 @@ private:
 
     struct Triangle {
       Triangle() : material(0) {}
-      // The edge vertices.
-      SGVec3d vertices[3];
-      // The surface normal.
-      SGVec4d plane;
-      // The bounding shpere.
-      SGVec3d boundCenter;
-      double boundRadius;
+      // The triangle we represent
+      SGTriangled triangle;
+      SGSphered sphere;
       // The linear and angular velocity.
       SGVec3d velocity;
       SGVec3d rotation;
@@ -117,8 +114,6 @@ private:
     };
 
 
-    // The center of the cache.
-    SGVec3d cache_center;
     // Approximate ground radius.
     // In case the aircraft is too high above ground.
     double ground_radius;
@@ -156,8 +151,8 @@ private:
       const SGMaterial* material;
     };
 
-    static void velocityTransformTriangle(double dt, Triangle& dst,
-                                          const Triangle& src);
+    static void velocityTransformTriangle(double dt, SGTriangled& dst,
+                                          SGSphered& sdst, const Triangle& src);
 };
 
 #endif
