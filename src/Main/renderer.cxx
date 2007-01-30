@@ -38,7 +38,6 @@
 #include <osg/CameraNode>
 #include <osg/CameraView>
 #include <osg/CullFace>
-#include <osg/ClearNode>
 #include <osg/Depth>
 #include <osg/Fog>
 #include <osg/Group>
@@ -391,7 +390,6 @@ FGRenderer::init( void ) {
 
     sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     sceneView->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    sceneView->getCamera()->setClearMask(GL_COLOR_BUFFER_BIT);
 
     osg::StateSet* stateSet = mRoot->getOrCreateStateSet();
 
@@ -434,10 +432,11 @@ FGRenderer::init( void ) {
     mBackGroundCamera->setCullingMode(osg::CullSettings::NO_CULLING);
     mBackGroundCamera->setRenderOrder(osg::CameraNode::NESTED_RENDER);
 
-    mBackGroundCamera->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+    stateSet = mBackGroundCamera->getOrCreateStateSet();
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 
 
-    mSceneCamera->setClearMask(GL_DEPTH_BUFFER_BIT);
+    mSceneCamera->setClearMask(0);
     inheritanceMask = osg::CullSettings::ALL_VARIABLES;
     inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
     inheritanceMask &= ~osg::CullSettings::CULLING_MODE;
@@ -461,12 +460,7 @@ FGRenderer::init( void ) {
     mRoot->addChild(lightSource);
 
     lightSource->addChild(mBackGroundCamera.get());
-//     lightSource->addChild(mSceneCamera.get());
-    // Hmm, I would think that this should be included in the camera, but ...
-    osg::ClearNode* clearNode = new osg::ClearNode;
-    clearNode->addChild(mSceneCamera.get());
-    clearNode->setClearMask(GL_DEPTH_BUFFER_BIT);
-    lightSource->addChild(clearNode);
+    lightSource->addChild(mSceneCamera.get());
 
 
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
