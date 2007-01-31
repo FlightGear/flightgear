@@ -123,7 +123,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX;FREEGLUT_STATIC"
 				StringPooling="true"
 				MinimalRebuild="true"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				BufferSecurityCheck="true"
 				EnableEnhancedInstructionSet="0"
 				FloatingPointModel="2"
