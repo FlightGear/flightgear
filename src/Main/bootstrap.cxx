@@ -51,6 +51,7 @@ SG_USING_STD(endl);
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #  include <float.h>
+#  include <pthread.h>
 #endif
 
 #include "fg_os.hxx"
@@ -148,6 +149,10 @@ int _bootstrap_OSInit;
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
 
+#ifdef PTW32_STATIC_LIB
+    // Initialise static pthread win32 lib
+    pthread_win32_process_attach_np ();
+#endif
     _bootstrap_OSInit = 0;
 
 #if defined(__linux__) && defined(__i386__)
