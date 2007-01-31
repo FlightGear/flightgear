@@ -32,6 +32,9 @@ SG_USING_STD(vector);
 #include "globals.hxx"
 #include "util.hxx"
 
+#ifdef OSG_LIBRARY_STATIC
+#include "osgDB/Registry"
+#endif
 
 void
 fgDefaultWeatherValue (const char * propname, double value)
@@ -109,6 +112,9 @@ fgExit (int status)
     SGSubsystem *sub = globals->get_subsystem("ai_model");
     globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("ai_model");
     delete sub;
+#ifdef OSG_LIBRARY_STATIC
+    osgDB::Registry::instance( true);
+#endif
 
     SG_LOG(SG_GENERAL, SG_INFO, "Exiting FlightGear with status " << status);
     exit(status);
