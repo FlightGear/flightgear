@@ -998,7 +998,7 @@ FGRenderer::pick( unsigned x, unsigned y,
   SGVec3d center = globals->get_scenery()->get_center();
 
   // don't know why, but the update has partly happened somehow,
-  // so update the scneery part of the viewer
+  // so update the scenery part of the viewer
   FGViewer *current_view = globals->get_current_view();
   // Force update of center dependent values ...
   current_view->set_dirty();
