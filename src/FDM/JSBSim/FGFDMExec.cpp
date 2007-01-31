@@ -354,7 +354,7 @@ int FGFDMExec::Schedule(FGModel* model, int rate)
 
 bool FGFDMExec::Run(void)
 {
-  bool success;
+  bool success = false;
   FGModel* model_iterator;
 
   model_iterator = FirstModel;
