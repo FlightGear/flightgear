@@ -43,7 +43,7 @@ public:
     void setTimer(int argc, naRef* args);
 
     // Implementation of the setlistener extension function
-    naRef setListener(int argc, naRef* args);
+    naRef setListener(naContext c, int argc, naRef* args);
     naRef removeListener(naContext c, int argc, naRef* args);
 
     // Returns a ghost wrapper for the current _cmdArg

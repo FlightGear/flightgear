@@ -269,7 +269,7 @@ static naRef f_settimer(naContext c, naRef me, int argc, naRef* args)
 static naRef f_setlistener(naContext c, naRef me, int argc, naRef* args)
 {
     FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
-    return nasal->setListener(argc, args);
+    return nasal->setListener(c, argc, args);
 }
 
 // removelistener(int) extension function. Falls through to
@@ -434,10 +434,10 @@ void FGNasalSys::update(double)
     if(_purgeListeners) {
         _purgeListeners = false;
         map<int, FGNasalListener *>::iterator it;
-        for ( it = _listener.begin(); it != _listener.end(); ) {
+        for(it = _listener.begin(); it != _listener.end();) {
             FGNasalListener *nl = it->second;
             if(nl->_dead) {
-                _listener.erase( it++ );
+                _listener.erase(it++);
                 delete nl;
             } else {
                 ++it;
@@ -668,21 +668,26 @@ int FGNasalSys::_listenerId = 0;
 // If the bool is true, then the listener is executed initially. The
 // setlistener() function returns a unique id number, that can be used
 // as argument to the removelistener() function.
-naRef FGNasalSys::setListener(int argc, naRef* args)
+naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
 {
     SGPropertyNode_ptr node;
     naRef prop = argc > 0 ? args[0] : naNil();
     if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
     else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
-    else return naNil();
+    else {
+        naRuntimeError(c, "setlistener() with invalid property argument");
+        return naNil();
+    }
 
     if(node->isTied())
         SG_LOG(SG_NASAL, SG_DEBUG, "Attaching listener to tied property " <<
                 node->getPath());
 
     naRef handler = argc > 1 ? args[1] : naNil();
-    if(!(naIsCode(handler) || naIsCCode(handler) || naIsFunc(handler)))
+    if(!(naIsCode(handler) || naIsCCode(handler) || naIsFunc(handler))) {
+        naRuntimeError(c, "setlistener() with invalid function argument");
         return naNil();
+    }
 
     bool initial = argc > 2 && naTrue(args[2]);
 
