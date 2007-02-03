@@ -2297,12 +2297,6 @@
 				RelativePath="..\..\src\Instrumentation\altimeter.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Instrumentation\annunciator.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Instrumentation\annunciator.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\Instrumentation\attitude_indicator.cxx">
 			</File>
 			<File
