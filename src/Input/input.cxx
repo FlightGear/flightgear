@@ -371,8 +371,12 @@ FGInput::doMouseMotion (int x, int y)
     if (need_warp)
       fgWarpMouse(x, y);
   }
-  m.x = x;
-  m.y = y;
+
+  if (m.x != x)
+      fgSetInt("/devices/status/mice/mouse/x", m.x = x);
+
+  if (m.y != y)
+      fgSetInt("/devices/status/mice/mouse/y", m.y = y);
 }
 
 void
