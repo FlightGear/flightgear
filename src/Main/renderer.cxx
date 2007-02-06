@@ -35,7 +35,7 @@
 #include <osg/ref_ptr>
 #include <osg/AlphaFunc>
 #include <osg/BlendFunc>
-#include <osg/CameraNode>
+#include <osg/Camera>
 #include <osg/CameraView>
 #include <osg/CullFace>
 #include <osg/Depth>
@@ -127,6 +127,7 @@ public:
     state.apply();
     state.setActiveTextureUnit(0);
     state.setClientActiveTextureUnit(0);
+    state.disableAllVertexArrays();
 
     if((fgGetBool("/sim/atc/enabled"))
        || (fgGetBool("/sim/ai-traffic/enabled")))
@@ -147,6 +148,9 @@ public:
     }
 
     state.popStateSet();
+    state.dirtyAllModes();
+    state.dirtyAllAttributes();
+    state.dirtyAllVertexArrays();
   }
 
   virtual osg::Object* cloneType() const { return new SGPuDrawable; }
@@ -180,6 +184,7 @@ public:
     state.apply();
     state.setActiveTextureUnit(0);
     state.setClientActiveTextureUnit(0);
+    state.disableAllVertexArrays();
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushClientAttrib(~0u);
@@ -201,6 +206,9 @@ public:
     glPopAttrib();
 
     state.popStateSet();
+    state.dirtyAllModes();
+    state.dirtyAllAttributes();
+    state.dirtyAllVertexArrays();
   }
 
   virtual osg::Object* cloneType() const { return new SGHUDAndPanelDrawable; }
@@ -326,8 +334,7 @@ static osg::ref_ptr<SGUpdateVisitor> mUpdateVisitor= new SGUpdateVisitor;
 static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
 static osg::ref_ptr<osg::CameraView> mCameraView = new osg::CameraView;
-static osg::ref_ptr<osg::CameraNode> mBackGroundCamera = new osg::CameraNode;
-osg::ref_ptr<osg::CameraNode> mSceneCamera = new osg::CameraNode;
+static osg::ref_ptr<osg::Camera> mBackGroundCamera = new osg::Camera;
 
 static osg::ref_ptr<osg::Fog> mFog = new osg::Fog;
 static osg::ref_ptr<osg::Fog> mRunwayLightingFog = new osg::Fog;
@@ -391,11 +398,12 @@ FGRenderer::init( void ) {
     sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     sceneView->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 
+
     osg::StateSet* stateSet = mRoot->getOrCreateStateSet();
 
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     
-    stateSet->setAttribute(new osg::Depth(osg::Depth::LEQUAL));
+    stateSet->setAttribute(new osg::Depth(osg::Depth::LESS));
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 
     stateSet->setAttribute(new osg::AlphaFunc(osg::AlphaFunc::GREATER, 0.01));
@@ -418,7 +426,6 @@ FGRenderer::init( void ) {
 //     stateSet->setAttribute(new osg::CullFace(osg::CullFace::BACK));
 //     stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
 
-
     // this is the topmost scenegraph node for osg
     mBackGroundCamera->addChild(thesky->getPreRoot());
     mBackGroundCamera->setClearMask(0);
@@ -430,24 +437,16 @@ FGRenderer::init( void ) {
     mBackGroundCamera->setInheritanceMask(inheritanceMask);
     mBackGroundCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     mBackGroundCamera->setCullingMode(osg::CullSettings::NO_CULLING);
-    mBackGroundCamera->setRenderOrder(osg::CameraNode::NESTED_RENDER);
+    mBackGroundCamera->setRenderOrder(osg::Camera::NESTED_RENDER);
 
     stateSet = mBackGroundCamera->getOrCreateStateSet();
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
 
+    osg::Group* sceneGroup = new osg::Group;
+    sceneGroup->addChild(globals->get_scenery()->get_scene_graph());
+    sceneGroup->addChild(thesky->getCloudRoot());
 
-    mSceneCamera->setClearMask(0);
-    inheritanceMask = osg::CullSettings::ALL_VARIABLES;
-    inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
-    inheritanceMask &= ~osg::CullSettings::CULLING_MODE;
-    mSceneCamera->setInheritanceMask(inheritanceMask);
-    mSceneCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    mSceneCamera->setCullingMode(osg::CullSettings::DEFAULT_CULLING);
-    mSceneCamera->setRenderOrder(osg::CameraNode::NESTED_RENDER);
-    mSceneCamera->addChild(globals->get_scenery()->get_scene_graph());
-    mSceneCamera->addChild(thesky->getCloudRoot());
-
-    stateSet = mSceneCamera->getOrCreateStateSet();
+    stateSet = sceneGroup->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
 
@@ -460,7 +459,7 @@ FGRenderer::init( void ) {
     mRoot->addChild(lightSource);
 
     lightSource->addChild(mBackGroundCamera.get());
-    lightSource->addChild(mSceneCamera.get());
+    lightSource->addChild(sceneGroup);
 
 
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
@@ -485,8 +484,8 @@ FGRenderer::init( void ) {
     stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
 
     // plug in the GUI
-    osg::CameraNode* guiCamera = new osg::CameraNode;
-    guiCamera->setRenderOrder(osg::CameraNode::POST_RENDER);
+    osg::Camera* guiCamera = new osg::Camera;
+    guiCamera->setRenderOrder(osg::Camera::POST_RENDER);
     guiCamera->setClearMask(0);
     inheritanceMask = osg::CullSettings::ALL_VARIABLES;
     inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
@@ -503,7 +502,7 @@ FGRenderer::init( void ) {
     // this one contains all lights, here we set the light states we did
     // in the plib case with plain OpenGL
     osg::Group* lightGroup = new osg::Group;
-    mSceneCamera->addChild(lightGroup);
+    sceneGroup->addChild(lightGroup);
     lightGroup->addChild(globals->get_scenery()->get_gnd_lights_root());
     lightGroup->addChild(globals->get_scenery()->get_vasi_lights_root());
     lightGroup->addChild(globals->get_scenery()->get_rwy_lights_root());
@@ -539,6 +538,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         if (sceneView.valid() && sceneView->getState()) {
             sceneView->getState()->setActiveTextureUnit(0);
             sceneView->getState()->setClientActiveTextureUnit(0);
+            sceneView->getState()->disableAllVertexArrays();
         }
         // still initializing, draw the splash screen
         glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -760,7 +760,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
         scene_nearplane = groundlevel_nearplane->getDoubleValue();
         scene_farplane = 120000.0f;
     }
-
     setNearFar( scene_nearplane, scene_farplane );
 
 //     sgEnviro.startOfFrame(current__view->get_view_pos(), 
@@ -807,9 +806,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
     mUpdateVisitor->setVisibility(actual_visibility);
 
     if (fgGetBool("/sim/panel-hotspots"))
-      sceneView->setCullMask(~0u);
+      sceneView->setCullMask(sceneView->getCullMask()|SG_NODEMASK_PICK_BIT);
     else
-      sceneView->setCullMask(~SG_NODEMASK_PICK_BIT);
+      sceneView->setCullMask(sceneView->getCullMask()&(~SG_NODEMASK_PICK_BIT));
 
     sceneView->update();
     sceneView->cull();
@@ -960,16 +959,13 @@ void FGRenderer::setFOV( float w, float h ) {
  */
 void FGRenderer::setNearFar( float n, float f ) {
 // OSGFIXME: we have currently too much z-buffer fights
-n = 0.2;
+n = 0.1;
     fov_near = n;
     fov_far = f;
 
     sceneView->setProjectionMatrixAsPerspective(fov_height,
                                                 fov_width/fov_height,
                                                 fov_near, fov_far);
-
-    sceneView->getCamera()->setNearFarRatio(fov_near/fov_far);
-    mSceneCamera->setNearFarRatio(fov_near/fov_far);
 
     // fully specify the view frustum before hacking it (so we don't
     // accumulate hacked effects
