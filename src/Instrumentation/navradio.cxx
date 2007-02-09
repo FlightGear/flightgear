@@ -443,7 +443,7 @@ FGNavRadio::update(double dt)
         //////////////////////////////////////////////////////////
         // compute to/from flag status
         //////////////////////////////////////////////////////////
-        double value = false;
+        bool value = false;
         double offset = fabs(radial - target_radial);
         if ( tofrom_serviceable ) {
             if ( nav_slaved_to_gps_node->getBoolValue() ) {
