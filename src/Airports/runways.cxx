@@ -262,7 +262,8 @@ string FGRunwayList::search( const string& aptid, const int tgt_hdg ) {
 	    found_dir = 180.0;
 	}
 	
-	next( &tmp_r );
+        if (!next( &tmp_r ))
+            break;
     }
     
     // SG_LOG( SG_GENERAL, SG_INFO, "closest runway = " << r._rwy_no
