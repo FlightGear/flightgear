@@ -50,8 +50,8 @@
 #define __TIMEOUT_COUNT             5
 #define __HTTP_GET_STRING           "GET "
 
-#include <osg/CameraNode>
-extern osg::ref_ptr<osg::CameraNode> mSceneCamera;
+#include <osgUtil/SceneView>
+extern osg::ref_ptr<osgUtil::SceneView> sceneView;
 
 SG_USING_STD(string);
 
@@ -106,7 +106,7 @@ void HttpdImageChannel :: foundTerminator( void ) {
         SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< HTTP Request : " << pRequest );
 
         double left, right, bottom, top, zNear, zFar;
-        mSceneCamera->getProjectionMatrixAsFrustum( left, right, bottom, top, zNear, zFar );
+        sceneView->getCamera()->getProjectionMatrixAsFrustum( left, right, bottom, top, zNear, zFar );
         JpgFactory->setFrustum( left, right, bottom, top, zNear, zFar );
 
         nImageLen  = JpgFactory -> render();

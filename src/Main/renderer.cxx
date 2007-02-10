@@ -327,7 +327,7 @@ static GLfloat ground_exp2_punch_through;
 // Sky structures
 SGSky *thesky;
 
-static osg::ref_ptr<osgUtil::SceneView> sceneView = new osgUtil::SceneView;
+osg::ref_ptr<osgUtil::SceneView> sceneView = new osgUtil::SceneView;  // This SceneView is used by class FGJpegHttpd ( jpg-httpd.cxx )
 static osg::ref_ptr<osg::FrameStamp> mFrameStamp = new osg::FrameStamp;
 static osg::ref_ptr<SGUpdateVisitor> mUpdateVisitor= new SGUpdateVisitor;
 
