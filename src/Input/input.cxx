@@ -122,7 +122,8 @@ FGBinding::FGBinding (const SGPropertyNode * node)
 
 FGBinding::~FGBinding ()
 {
-  _arg->getParent()->removeChild(_arg->getName(), _arg->getIndex(), false);
+  if (_arg && _arg->getParent())
+    _arg->getParent()->removeChild(_arg->getName(), _arg->getIndex(), false);
 }
 
 void
