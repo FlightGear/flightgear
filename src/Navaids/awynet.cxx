@@ -23,30 +23,14 @@
 #  include <config.h>
 #endif
 
-#ifdef _MSC_VER
-#  define _USE_MATH_DEFINES
-#endif
 #include <math.h>
 #include <algorithm>
 
 #include <simgear/compiler.h>
 
-//#include <plib/sg.h>
-//#include <plib/ul.h>
-
-//#include <Environment/environment_mgr.hxx>
-//#include <Environment/environment.hxx>
-//#include <simgear/misc/sg_path.hxx>
-//#include <simgear/props/props.hxx>
-//#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/route/waypoint.hxx>
-//#include <Main/globals.hxx>
-//#include <Main/fg_props.hxx>
-//#include <Airports/runways.hxx>
-
-//#include STL_STRING
 
 #include "awynet.hxx"
 
@@ -157,6 +141,12 @@ FGAirwayNetwork::FGAirwayNetwork()
   maxDistance = 0;
 }
 
+FGAirwayNetwork::~FGAirwayNetwork()
+{
+    for (unsigned int it = 0; it < nodes.size(); it++) {
+	delete nodes[ it];
+    }
+}
 void FGAirwayNetwork::addAirway(const FGAirway &seg)
 {
   segments.push_back(seg);
@@ -278,7 +268,8 @@ void FGAirwayNetwork::load(SGPath path)
       char buffer[32];
       string startNode, endNode;
       // Start
-      snprintf(buffer, 32, "%s%d%d", identStart.c_str(), (int) latStart, (int) lonStart);
+      buffer[sizeof(buffer)-1] = 0;
+      snprintf(buffer, sizeof(buffer)-1, "%s%d%d", identStart.c_str(), (int) latStart, (int) lonStart);
       startNode = buffer;
 
       node_map_iterator itr = nodesMap.find(string(buffer));
