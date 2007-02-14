@@ -141,6 +141,12 @@ FGAirwayNetwork::FGAirwayNetwork()
   maxDistance = 0;
 }
 
+FGAirwayNetwork::~FGAirwayNetwork()
+{
+    for (unsigned int it = 0; it < nodes.size(); it++) {
+	delete nodes[ it];
+    }
+}
 void FGAirwayNetwork::addAirway(const FGAirway &seg)
 {
   segments.push_back(seg);
@@ -262,7 +268,8 @@ void FGAirwayNetwork::load(SGPath path)
       char buffer[32];
       string startNode, endNode;
       // Start
-      snprintf(buffer, 32, "%s%d%d", identStart.c_str(), (int) latStart, (int) lonStart);
+      buffer[sizeof(buffer)-1] = 0;
+      snprintf(buffer, sizeof(buffer)-1, "%s%d%d", identStart.c_str(), (int) latStart, (int) lonStart);
       startNode = buffer;
 
       node_map_iterator itr = nodesMap.find(string(buffer));

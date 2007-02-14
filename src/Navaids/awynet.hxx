@@ -192,6 +192,7 @@ private:
 
 public:
   FGAirwayNetwork();
+  ~FGAirwayNetwork();
 
   //void addNode   (const FGNode& node);
   //void addNodes  (FGParkingVec *parkings);
