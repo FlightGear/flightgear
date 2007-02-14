@@ -50,6 +50,7 @@ FGNewCache::FGNewCache( void ) :
 
 // Destructor
 FGNewCache::~FGNewCache( void ) {
+    clear_cache();
 }
 
 
@@ -229,7 +230,7 @@ void FGNewCache::clear_entry( long cache_index ) {
 
 // Clear all completely loaded tiles (ignores partially loaded tiles)
 void FGNewCache::clear_cache() {
-
+    std::vector<long> indexList;
     tile_map_iterator current = tile_cache.begin();
     tile_map_iterator end = tile_cache.end();
     
@@ -239,10 +240,13 @@ void FGNewCache::clear_cache() {
 	FGTileEntry *e = current->second;
         if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
             e->tile_bucket.make_bad();
-            entry_free(index);
+	    // entry_free modifies tile_cache, so store index and call entry_free() later;
+	    indexList.push_back( index);
         }
     }
-
+    for (unsigned int it = 0; it < indexList.size(); it++) {
+	entry_free( indexList[ it]);
+    }
     // and ... just in case we missed something ... 
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
