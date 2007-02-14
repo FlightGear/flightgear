@@ -106,8 +106,6 @@ fgfs_LDADD = \
 	$(opengl_LIBS) \
 	$(openal_LIBS)
 
-# -lplibssgaux -lplibssg
-
 metar_SOURCES = metar_main.cxx
 
 metar_LDADD = \
