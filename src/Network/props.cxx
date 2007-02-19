@@ -272,10 +272,10 @@ PropsChannel::foundTerminator()
 	} else if ( command == "set" ) {
 	    if ( tokens.size() >= 2 ) {
                 string value, tmp;
-                if ( tokens.size() == 3 ) {
-                    value = tokens[2];
-                } else {
-                    value = "";
+                for (unsigned int i = 2; i < tokens.size(); i++) {
+                    if (i > 2)
+                        value += " ";
+                    value += tokens[i];
                 }
                 node->getNode( tokens[1].c_str(), true )
                     ->setStringValue(value.c_str());
