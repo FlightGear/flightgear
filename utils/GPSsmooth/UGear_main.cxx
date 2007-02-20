@@ -707,7 +707,7 @@ int main( int argc, char **argv ) {
                     gps_time = gpspacket.time;
                     current_time = gps_time;
                 } else {
-                    cout << "oops gps back in time" << endl;
+		  cout << "oops gps back in time: " << gpspacket.time << " " << gps_time << endl;
                 }
 	    } else if ( id == IMU_PACKET ) {
                 if ( imupacket.time > imu_time ) {

@@ -94,7 +94,7 @@ void UGEARTrack::parse_msg( const int id, char *buf,
       gpspacket->vn   = sg_swap_double( (uint8_t *)buf, 24 );
       gpspacket->ve   = sg_swap_double( (uint8_t *)buf, 32 );
       gpspacket->vd   = sg_swap_double( (uint8_t *)buf, 40 );
-      gpspacket->time = sg_swap_double( (uint8_t *)buf, 56 );
+      gpspacket->time = sg_swap_double( (uint8_t *)buf, 52 );
     } else if ( id == IMU_PACKET ) {
       *imupacket = *(struct imu *)buf;
       imupacket->p    = sg_swap_double( (uint8_t *)buf, 0 );
@@ -128,7 +128,7 @@ void UGEARTrack::parse_msg( const int id, char *buf,
       // printf("servo time = %.3f\n", servopacket->time);
     } else if ( id == HEALTH_PACKET ) {
       *healthpacket = *(struct health *)buf;
-      healthpacket->time = sg_swap_double( (uint8_t *)buf, 12 );
+      healthpacket->time = sg_swap_double( (uint8_t *)buf, 16 );
     } else {
         cout << "unknown id = " << id << endl;
     }
@@ -175,7 +175,7 @@ bool UGEARTrack::load( const string &file ) {
                 gps_data.push_back( gpspacket );
                 gps_time = gpspacket.time;
             } else {
-                cout << "oops gps back in time" << endl;
+	      cout << "oops gps back in time: " << gpspacket.time << " " << gps_time << endl;
             }
         } else if ( id == IMU_PACKET ) {
             if ( imupacket.time > imu_time ) {
