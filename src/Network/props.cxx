@@ -411,8 +411,7 @@ prompt             switch to interactive mode (default)\r\n\
 pwd                display your current path\r\n\
 quit               terminate connection\r\n\
 run <command>      run built in command\r\n\
-set <var> <val>    set <var> to a new <val>\r\n\
-show <var>         synonym for get\r\n";
+set <var> <val>    set <var> to a new <val>\r\n";
 	    push( msg );
 	}
     }
