@@ -99,13 +99,15 @@ public:
     // returns id # if a valid message found.
     int next_message( SGIOChannel *ch, SGIOChannel *log,
                       gps *gpspacket, imu *imupacket, nav *navpacket,
-		      servo *servopacket, health * healthpacket );
+		      servo *servopacket, health * healthpacket,
+		      bool ignore_checksum );
     int next_message( SGSerialPort *serial, SGIOChannel *log,
                       gps *gpspacket, imu *imupacket, nav *navpacket,
-		      servo *servopacket, health *healthpacket );
+		      servo *servopacket, health *healthpacket,
+		      bool ignore_checksum );
 
     // load the named file into internal buffers
-    bool load( const string &file );
+    bool load( const string &file, bool ignore_checksum );
 
     inline int gps_size() const { return gps_data.size(); }
     inline int imu_size() const { return imu_data.size(); }

@@ -49,8 +49,13 @@ static double sg_swap_double( uint8_t *buf, size_t offset ) {
 
 
 static bool validate_cksum( uint8_t id, uint8_t size, char *buf,
-                            uint8_t cksum0, uint8_t cksum1 )
+                            uint8_t cksum0, uint8_t cksum1,
+			    bool ignore_checksum )
 {
+    if ( ignore_checksum ) {
+        return true;
+    }
+
     uint8_t c0 = 0;
     uint8_t c1 = 0;
 
@@ -136,7 +141,7 @@ void UGEARTrack::parse_msg( const int id, char *buf,
 
 
 // load the specified file, return the number of records loaded
-bool UGEARTrack::load( const string &file ) {
+bool UGEARTrack::load( const string &file, bool ignore_checksum ) {
     int count = 0;
 
     gps gpspacket;
@@ -167,7 +172,8 @@ bool UGEARTrack::load( const string &file ) {
     while ( ! input.eof() ) {
         // cout << "looking for next message ..." << endl;
         int id = next_message( &input, NULL, &gpspacket, &imupacket,
-			       &navpacket, &servopacket, &healthpacket );
+			       &navpacket, &servopacket, &healthpacket,
+			       ignore_checksum );
         count++;
 
         if ( id == GPS_PACKET ) {
@@ -244,12 +250,13 @@ int serial_read( SGSerialPort *serial, SGIOChannel *log,
 
     while ( bytes_read < length ) {
       result = serial->read_port( tmp, length - bytes_read );
-      if ( result > 0 && log != NULL ) {
-        log->write( buf, result );
-      }
       bytes_read += result;
       tmp += result;
       // cout << "  read " << bytes_read << " of " << length << endl;
+    }
+
+    if ( bytes_read > 0 && log != NULL ) {
+      log->write( buf, bytes_read );
     }
 
     return bytes_read;
@@ -258,7 +265,8 @@ int serial_read( SGSerialPort *serial, SGIOChannel *log,
 // load the next message of a real time data stream
 int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
 			      gps *gpspacket, imu *imupacket, nav *navpacket,
-			      servo *servopacket, health *healthpacket )
+			      servo *servopacket, health *healthpacket,
+			      bool ignore_checksum )
 {
     char tmpbuf[256];
     char savebuf[256];
@@ -269,14 +277,15 @@ int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
 
     // scan for sync characters
     uint8_t sync0, sync1;
-    myread( ch, log, tmpbuf, 1 ); sync0 = (unsigned char)tmpbuf[0];
-    myread( ch, log, tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
+    myread( ch, log, tmpbuf, 2 );
+    sync0 = (unsigned char)tmpbuf[0];
+    sync1 = (unsigned char)tmpbuf[1];
     while ( (sync0 != START_OF_MSG0 || sync1 != START_OF_MSG1) && !myeof ) {
         sync0 = sync1;
         myread( ch, log, tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
-        // cout << "scanning for start of message "
-	//      << (unsigned int)sync0 << " " << (unsigned int)sync1
-	//      << ", eof = " << ch->eof() << endl;
+        cout << "scanning for start of message "
+	     << (unsigned int)sync0 << " " << (unsigned int)sync1
+	     << ", eof = " << ch->eof() << endl;
         if ( ch->get_type() == sgFileType ) {
             myeof = ((SGFile *)ch)->eof();
         }
@@ -285,8 +294,9 @@ int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
     cout << "found start of message ..." << endl;
 
     // read message id and size
-    myread( ch, log, tmpbuf, 1 ); uint8_t id = (unsigned char)tmpbuf[0];
-    myread( ch, log, tmpbuf, 1 ); uint8_t size = (unsigned char)tmpbuf[0];
+    myread( ch, log, tmpbuf, 2 );
+    uint8_t id = (unsigned char)tmpbuf[0];
+    uint8_t size = (unsigned char)tmpbuf[1];
     // cout << "message = " << (int)id << " size = " << (int)size << endl;
 
     // load message
@@ -306,10 +316,12 @@ int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
     }
 
     // read checksum
-    myread( ch, log, tmpbuf, 1 ); uint8_t cksum0 = (unsigned char)tmpbuf[0];
-    myread( ch, log, tmpbuf, 1 ); uint8_t cksum1 = (unsigned char)tmpbuf[0];
+    myread( ch, log, tmpbuf, 2 );
+    uint8_t cksum0 = (unsigned char)tmpbuf[0];
+    uint8_t cksum1 = (unsigned char)tmpbuf[1];
     
-    if ( validate_cksum( id, size, savebuf, cksum0, cksum1 ) ) {
+    if ( validate_cksum( id, size, savebuf, cksum0, cksum1, ignore_checksum ) )
+    {
         parse_msg( id, savebuf, gpspacket, imupacket, navpacket, servopacket,
 		   healthpacket );
         return id;
@@ -323,7 +335,8 @@ int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
 // load the next message of a real time data stream
 int UGEARTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
 			      gps *gpspacket, imu *imupacket, nav *navpacket,
-			      servo *servopacket, health *healthpacket )
+			      servo *servopacket, health *healthpacket,
+			      bool ignore_checksum )
 {
     char tmpbuf[256];
     char savebuf[256];
@@ -364,7 +377,8 @@ int UGEARTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     // cout << "cksum0 = " << (int)cksum0 << " cksum1 = " << (int)cksum1
     //      << endl;
     
-    if ( validate_cksum( id, size, savebuf, cksum0, cksum1 ) ) {
+    if ( validate_cksum( id, size, savebuf, cksum0, cksum1, ignore_checksum ) )
+    {
         parse_msg( id, savebuf, gpspacket, imupacket, navpacket, servopacket,
 		   healthpacket );
 

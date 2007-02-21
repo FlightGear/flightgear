@@ -66,6 +66,8 @@ double skip = 0.0;
 
 bool inited = false;
 
+bool ignore_checksum = false;
+
 
 // The function htond is defined this way due to the way some
 // processors and OSes treat floating point values.  Some will raise
@@ -313,6 +315,7 @@ void usage( const string &argv0 ) {
     cout << "\t[ --ctrls-port <ctrls output port #> ]" << endl;
     cout << "\t[ --altitude-offset <meters> ]" << endl;
     cout << "\t[ --skip-seconds <seconds> ]" << endl;
+    cout << "\t[ --ignore-checksum ]" << endl;
 }
 
 
@@ -400,6 +403,8 @@ int main( int argc, char **argv ) {
                 usage( argv[0] );
                 exit( -1 );
             }
+	} else if ( strcmp( argv[i], "--ignore-checksum" ) == 0 ) {
+	  ignore_checksum = true;
         } else {
             usage( argv[0] );
             exit( -1 );
@@ -447,7 +452,7 @@ int main( int argc, char **argv ) {
 
     if ( infile.length() ) {
         // Load data from a track data
-        track.load( infile );
+        track.load( infile, ignore_checksum );
         cout << "Loaded " << track.gps_size() << " gps records." << endl;
         cout << "Loaded " << track.imu_size() << " imu records." << endl;
         cout << "Loaded " << track.nav_size() << " nav records." << endl;
@@ -698,7 +703,7 @@ int main( int argc, char **argv ) {
 	    // cout << "looking for next message ..." << endl;
             int id = track.next_message( &input, &output, &gpspacket,
 					 &imupacket, &navpacket, &servopacket,
-					 &healthpacket );
+					 &healthpacket, ignore_checksum );
             // cout << "message id = " << id << endl;
             count++;
 
