@@ -14,7 +14,7 @@ VerticalSpeedIndicator::VerticalSpeedIndicator ( SGPropertyNode *node )
     : _internal_pressure_inhg(29.92),
       _name(node->getStringValue("name", "vertical-speed-indicator")),
       _num(node->getIntValue("number", 0)),
-      _static_pressure(node->getStringValue("static-pressure", "/Systems/static/pressure-inhg"))
+      _static_pressure(node->getStringValue("static-pressure", "/systems/static/pressure-inhg"))
 {
 }
 
