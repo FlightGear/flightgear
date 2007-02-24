@@ -39,7 +39,7 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
 {
     *w = *h = 0; // Ask for nothing by default
 
-    if (getBool("hide"))
+    if (getBool("hide") || isType("nasal"))
         return;
 
     int legw = stringLength(getStr("legend"));
@@ -97,7 +97,7 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
 // Set up geometry such that the widget lives "inside" the specified 
 void LayoutWidget::layout(int x, int y, int w, int h)
 {
-    if (getBool("hide"))
+    if (getBool("hide") || isType("nasal"))
         return;
 
     setNum("__bx", x);
