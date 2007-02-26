@@ -55,6 +55,7 @@ public:
     virtual void update(double dt);
     virtual void bind();
     virtual void unbind();
+    virtual void reinit() {}
 
     void setManager(FGAIManager* mgr, SGPropertyNode* p);
     void setPath( const char* model );
