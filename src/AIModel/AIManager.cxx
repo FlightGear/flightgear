@@ -83,6 +83,12 @@ void FGAIManager::init() {
 
 void FGAIManager::reinit() {
    update(0.0);
+   ai_list_iterator ai_list_itr = ai_list.begin();
+
+   while(ai_list_itr != ai_list.end()) {
+      (*ai_list_itr)->reinit();
+      ++ai_list_itr;
+   }
 }
 
 
