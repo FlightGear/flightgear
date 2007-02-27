@@ -121,9 +121,9 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     fdm->version = FG_NET_FDM_VERSION;
 
     // Aero parameters
-    fdm->longitude = gpspacket->lon * SG_DEGREES_TO_RADIANS;
-    fdm->latitude = gpspacket->lat * SG_DEGREES_TO_RADIANS;
-    fdm->altitude = gpspacket->alt + alt_offset;
+    fdm->longitude = navpacket->lon * SG_DEGREES_TO_RADIANS;
+    fdm->latitude = navpacket->lat * SG_DEGREES_TO_RADIANS;
+    fdm->altitude = navpacket->alt + alt_offset;
     fdm->agl = -9999.0;
     fdm->psi = imupacket->psi; // heading
     fdm->phi = imupacket->phi; // roll
@@ -140,9 +140,12 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     // double v_ms = dist / (frame_us / 1000000);
     // double v_kts = v_ms * SG_METER_TO_NM * 3600;
     // kts_filter = (0.99 * kts_filter) + (0.01 * v_kts);
-    double vn = gpspacket->vn;
-    double ve = gpspacket->ve;
-    double vd = gpspacket->vd;
+    double vn = navpacket->vn;
+    double ve = navpacket->ve;
+    double vd = navpacket->vd;
+
+    // enable to use ground track heading
+    fdm->psi = atan2(vn, ve); // heading
 
     fdm->vcas = sqrt( vn*vn + ve*ve + vd*vd );
     // last_lat = pos.lat_deg;

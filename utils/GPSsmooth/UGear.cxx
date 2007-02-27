@@ -120,8 +120,8 @@ void UGEARTrack::parse_msg( const int id, char *buf,
       // printf("imu.time = %.4f\n", imupacket->time);
     } else if ( id == NAV_PACKET ) {
       *navpacket = *(struct nav *)buf;
-      navpacket->lon  = sg_swap_double( (uint8_t *)buf, 0 );
-      navpacket->lat  = sg_swap_double( (uint8_t *)buf, 8 );
+      navpacket->lat  = sg_swap_double( (uint8_t *)buf, 0 );
+      navpacket->lon  = sg_swap_double( (uint8_t *)buf, 8 );
       navpacket->alt  = sg_swap_double( (uint8_t *)buf, 16 );
       navpacket->vn   = sg_swap_double( (uint8_t *)buf, 24 );
       navpacket->ve   = sg_swap_double( (uint8_t *)buf, 32 );
