@@ -292,7 +292,7 @@ void ls_stamp( void ) {
     
     nowtime_t = time( 0 );
     nowtime = localtime( &nowtime_t ); /* set fields to correct time values */
-    date = (nowtime->tm_year)*10000 
+    date = (nowtime->tm_year % 100)*10000
 	 + (nowtime->tm_mon + 1)*100
 	 + (nowtime->tm_mday);
     sprintf(sim_control_.date_string, "%06ld\0", date);
@@ -580,7 +580,22 @@ int ls_ForceAltitude(double alt_feet) {
 /* Flight Gear Modification Log
  *
  * $Log$
- * Revision 1.2  2006/02/21 17:45:03  mfranz
+ * Revision 1.3  2007/03/01 17:53:24  mfranz
+ * Hans Ulrich NIEDERMANN:
+ *
+ * """
+ * Fix Y2K bug triggering string overflow
+ *
+ * sim_control_.date_string is a char[7], so it can contain "yymmdd" and
+ * the terminating '\0'. However, nowtime->tm_year is 107 for the year 2007,
+ * so you'll end up with a 7 digit number and the string written to
+ * sim_control_.date_string is longer than sim_control_.date_string is.
+ * Ouch!
+ * """
+ *
+ * mf: ... and sim_control_.date_string isn't even used.
+ *
+ * Revision 1.2  2006-02-21 17:45:03  mfranz
  * new FSF address (see http://www.gnu.org/licenses/gpl.html)
  *
  * Revision 1.1.1.1  2002-09-10 01:14:02  curt
