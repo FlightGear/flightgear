@@ -129,11 +129,17 @@ public:
     state.setClientActiveTextureUnit(0);
     state.disableAllVertexArrays();
 
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPushClientAttrib(~0u);
+
     if((fgGetBool("/sim/atc/enabled"))
        || (fgGetBool("/sim/ai-traffic/enabled")))
       globals->get_ATC_display()->update(delta_time_sec, state);
 
     puDisplay();
+
+    glPopClientAttrib();
+    glPopAttrib();
 
     // Fade out the splash screen over the first three seconds.
     double t = globals->get_sim_time_sec();
