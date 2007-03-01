@@ -309,7 +309,7 @@ void FGNetGUI2Props( FGNetGUI *net ) {
         fgSetDouble( "/instrumentation/nav[0]/frequencies/selected-mhz",
                      net->tuned_freq );
         fgSetBool( "/instrumentation/nav[0]/in-range", net->in_range );
-        fgSetDouble( "/instrumentation/dme/distance-nm", net->dist_nm );
+        fgSetDouble( "/instrumentation/dme/indicated-distance-nm", net->dist_nm );
         fgSetDouble( "/instrumentation/nav[0]/heading-needle-deflection",
                      net->course_deviation_deg );
         fgSetDouble( "/instrumentation/nav[0]/gs-needle-deflection",
