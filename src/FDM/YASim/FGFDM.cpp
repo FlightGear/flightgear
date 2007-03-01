@@ -565,7 +565,10 @@ void FGFDM::setOutputProperties(float dt)
         }
     }
 
-    float fuelDensity = _airplane.getFuelDensity(0); // HACK
+    // Use the density of the first tank, or a dummy value if no tanks
+    float fuelDensity = 1.0;
+    if(_airplane.numTanks())
+        fuelDensity = _airplane.getFuelDensity(0);
     for(i=0; i<_thrusters.size(); i++) {
 	EngRec* er = (EngRec*)_thrusters.get(i);
         Thruster* t = er->eng;
