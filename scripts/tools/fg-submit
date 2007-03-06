@@ -77,7 +77,7 @@ fi
 
 
 LOG "making diff ..."
-if ! $CVS -q diff >$DIFF; then
+if ! $CVS -q diff -up >$DIFF; then
 	LOG "diff statistics:"
 	diffstat $DIFF
 
