@@ -1,0 +1,95 @@
+#!/bin/bash
+#
+# Checks source code and data for potential problems.
+# Meant to be executed before submitting/committing.
+
+
+SELF=${0/#*\/}
+
+# optional apps
+RLE=$(which rle &>/dev/null)              # http://members.aon.at/mfranz/rle.tar.gz (depends on Qt lib)
+AC3D_SCAN=$(which ac3d-scan 2>/dev/null)  # http://members.aon.at/mfranz/ac3d-scan
+
+
+function ERROR  { echo -e "\e[31;1m$*\e[m";   }
+function LOG    { echo -e "\e[35m$*\e[m";     }
+function RESULT { echo -e "\t$*";             }
+
+
+TMP=$(mktemp -d -t $SELF.XXX) || (echo "$0: can't create temporary dir"; exit 1)
+trap "rm -rf $TMP" 0 1 2 3 13 15
+
+
+LOG "checking for spaces in filenames ..."
+find .|grep " "|while read i; do RESULT "$i"; done
+
+
+LOG "checking for upper-case extensions ..."       # except *.TXT
+find .|while read i; do
+	case "$i" in .|..|CVS/*|*/CVS/*|*.Opt|*.README|*.Po) continue ;; esac
+	base=${i/#.*\/}
+	ext=${base/#*./}
+	[ "$base" == "$ext" ] && continue          # has no extension
+	ext=$(echo $ext|sed -e 's,[^A-Za-z],,'g)
+	[ -z "$ext" ] && continue                  # only non-letters
+	lcext=$(echo $ext|sed -e 's,\(.*\),\L\1,')
+	[ "$ext" != "$lcext" -a "$lcext" != "txt" ] && RESULT "$i"
+done
+
+
+LOG "checking for DOS line endings ..."
+find . -type f|while read i; do
+	desc=$(file -b "$i")
+	case "$desc" in *text*)
+		grep "$" "$i" >/dev/null && RESULT "$i"
+		;;
+	esac
+done
+
+
+LOG "checking for uncompressed textures ..."
+find . -iname \*.rgb -o -iname \*.rgba|while read i; do
+	if file "$i"|grep -v RLE >/dev/null; then
+		new=$TMP/sgi.rgb
+		convert "$i" -compress RLE sgi:$new
+		[ "$RLE" ] && $RLE $new 2>/dev/null
+		perl -e '
+			my $file = shift;
+			my $old = -s $file;
+			my $new = -s shift;
+			if ($new < $old) {
+				printf "\t$file:  could be %0.02f%% of current size (%d bytes less)\n",
+						100 * $new / $old, $old - $new;
+			}
+		' "$i" $new
+	fi
+done
+
+
+if [ "$AC3D_SCAN" ]; then
+	LOG "checking for AC3D sanity ..."
+	find . -iname \*.ac|while read i; do
+		case "$i" in configure.ac|*/configure.ac) continue ;; esac
+		result=$($AC3D_SCAN <$i 2>&1)
+		[ "$result" ] && echo -e "$result\n\t... in file \e[36m$i\e[m";
+	done
+fi
+
+
+LOG "checking for XML syntax ..."
+find . -name \*.xml|while read i; do
+	xmllint $i >/dev/null || RESULT "... min file \e[36m$i\e[m"
+done
+
+
+LOG "checking for 'if (foo) delete foo;' ..."
+find . -iregex ".*\.\([ch]\(xx\|pp\)\|cc\|h\)$"|while read i; do perl -e '
+	my $i = 0;
+	my $name = $ARGV[0];
+	undef $/;
+	$_ = <>;
+	s/(if\s*\(([^\)]+)\)\s*delete(?:\s+|\s*\[\]\s*)\2\s*;)/print "$1\n" and $i++/ges;
+	print "\t... \033[36min file $name\033[m\n" if $i;
+' "$i"; done
+
+
