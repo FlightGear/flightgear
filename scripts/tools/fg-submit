@@ -1,76 +1,127 @@
 #!/bin/bash
 #
-# This script called in a CVS directory generates an archive in that
-# same directory, which contains all locally added new files (except
-# those rejected by the script) and a diff with all local changes.
-# This archive can then be offered to one of the CVS maintainers for
-# committing.
+# This script called in a CVS directory compares local files with
+# the repository, and prepares an update package containing all
+# changes and new files for submission to a CVS maintainer. If there
+# are only changes in text files, then a compressed unified diff is
+# made (foo.diff.bz2). If there are also changed binary or new files,
+# then an archive is made instead (foo.tar.bz2). The base name ("foo")
+# can be given as command line argument. Otherwise the directory name
+# is used. The script also leaves a diff in uncompressed/unpackaged
+# form. This is only for developer convenience -- for a quick check
+# of the diff correctness. It is not to be submitted. The script will
+# not overwrite any file, but rather rename conflicting files.
 #
-# Usage:
-#         $ cd $FG_ROOT/Aircraft/foo
-#         $ fg-submit      # generates foo.tar.bz2 and foo.diff
+# Usage:  fg-submit [<basename>]
 #
-# The archive contains a copy of the diff, so the extra diff file
-# shouldn't be sumitted. It's only left for convenience.
+# Example:
+#     $ cd $FG_ROOT/Aircraft/bo105
+#     $ fg-submit                # -> bo105.diff.bz2 or bo105.tar.bz2
+#
+#     $ fg-submit update         # -> update.diff.bz2 or update.tar.bz2
+#
+#
+# Spaces in the basename are replaced with "%20". People who prefer
+# to have the date in the archive name can conveniently achieve this
+# by defining a shell alias in ~/.bashrc:
+#
+#     alias submit='fg-submit "${PWD/#*\/}-$(date +%Y-%m-%d)"'
+#
+#
+# If the script finds an application named "fg-upload", then it calls
+# this at the end with three arguments:
+#
+#     $1 ... working directory ($PWD)
+#     $2 ... archive or compressed diff for submission
+#     $3 ... accessory diff, *NOT* for submission!
+#
+# $2 and $3 are guaranteed not to contain spaces, only $1 is guaranteed
+# to actually exist. Such as script can be used to upload the file to an
+# ftp-/webserver, and/or to remove one or both files. Example using
+# KDE's kfmclient for upload (alternatives: ncftpput, gnomevfs-copy, ...):
+#
+#     $ cat ~/bin/fg-upload
+#     #!/bin/bash
+#     echo "uploading $2"
+#     if kfmclient copy $2 ftp://user:password@server.com; then
+#             echo "deleting $2 $3"
+#             rm -rf $2 $3
+#
+#             echo "Done.  URL: ftp://server.com/$2"
+#     else
+#             echo "arghh ... HELP! HELP!"
+#     fi
 
-SELF=$(basename $0)
-AIRCRAFT=$(basename $PWD)
 
-CVS=/usr/bin/cvs
-ARCHIVE=$AIRCRAFT.tar.bz2
-DIFF=$AIRCRAFT.diff
+SELF=${0/#*\/}
+DIR=${PWD/#*\/}
+BASE=${1:-$DIR}
+BASE=${BASE// /%20}
+
+CVS=/usr/bin/cvs                 # avoid colorcvs wrapper from
+[ -x $CVS ] || CVS=cvs           # http://www.hakubi.us/colorcvs/
+UPLOAD=$(which fg-upload 2>/dev/null)
+
+ARCHIVE=$BASE.tar.bz2
+DIFF=$BASE.diff
+CDIFF=$DIFF.bz2
 
 
-function ERROR  { echo -e "\e[31;1m$*\e[m";   }
-function LOG    { echo -e "\e[35m$*\e[m";     }
-function ADD    { echo -e "\e[32m\t+ $*\e[m"; }
-function REJECT { echo -e "\e[31m\t- $*\e[m"; }
+function ERROR   { echo -e "\e[31;1m$*\e[m";   }
+function LOG     { echo -e "\e[35m$*\e[m";     }
+function NEW     { echo -e "\e[32m\t+ $*\e[m"; }
+function CHANGED { echo -e "\e[36m\t+ $*\e[m"; }
+function REJECT  { echo -e "\e[31m\t- $*\e[m"; }
 
 function diffstat {
 	# output diff statistics, similar to the "diffstat" utility
 	awk '
+		function line(a, r, c, f) {
+			print "\t\033[32m"a"\033[m\t\033[31m"r"\033[m\t\033[34m"c"\033[m\t"f
+		}
 		function dofile() {
 			if (!file) {
-				return;
+				return
 			}
 			if (bin) {
-				print "\t\tbinary\t\t"file;
+				print "\t. . . . binary  . . . . \033[36m"file"\033[m"
 			} else {
-				print "\t+"a"\t-"r"\t!"c"\t"file
-				at += a; rt += r; ct += c;
+				line(a, r, c, file)
+				at += a; rt += r; ct += c
 			}
-			a = r = c = 0;
+			a = r = c = 0
 		}
 		BEGIN      {
-			print "\tadded___removed_changed___________________________________";
-			a = r = c = at = rt = ct = n = bin = 0;
+			print "\tadded---removed-changed----------------------------------------"
+			a = r = c = at = rt = ct = n = bin = 0
 		}
-		/^Index: / { dofile(); scan = bin = 0; file = $2; n += 1; next }
+		/^Index: / { dofile(); scan = bin = 0; file = $2; n++; next }
 		/^@@/      { scan = 1; next }
-		/^Binary/  { if (!scan) { bin = 1 } next }
-		/^+/       { if (scan) { a += 1 } next }
-		/^-/       { if (scan) { r += 1 } next }
-		/^!/       { if (scan) { c += 1 } next }
+		/^Binary/  { if (!scan) bin = 1; next }
+		/^+/       { if (scan) a++; next }
+		/^-/       { if (scan) r++; next }
+		/^!/       { if (scan) c++; next }
 		END        {
-			dofile();
-			print "\t-----------------------------------total------------------";
-			print "\t+"at"\t-"rt"\t!"ct"\tin "n" files"
+			dofile()
+			print "\t----------------------------------------total------------------"
+			line(at, rt, ct, "\033[min "n" files")
 		}
-	' < $1
+	' <$1
 }
 
 
 # create temporary dir that's automatcally removed on exit
-TMP=$(mktemp -d -t $SELF.$AIRCRAFT.XXX) || (echo "$0: can't create temporary dir"; exit 1)
+TMP=$(mktemp -d -t $SELF.$BASE.XXX) || (echo "$0: can't create temporary dir"; exit 1)
 trap "rm -rf $TMP" 0 1 2 3 13 15
 
 
-# move older archive or diff file out of the way
-[ -f $DIFF ] && mv $DIFF $(mktemp $DIFF.X)
-[ -f $ARCHIVE ] && mv $ARCHIVE $(mktemp $ARCHIVE.X)
+# move old files out of the way
+for i in $DIFF $CDIFF $ARCHIVE; do
+	[ -f $i ] && mv $i $(mktemp $i.X)
+done
 
 
-LOG "updating and checking for changed and new files ..."
+LOG "updating and checking for new files ..."
 $CVS -q up -dP >$TMP/up
 
 
@@ -85,37 +136,37 @@ LOG "making diff ..."
 if ! $CVS -q diff -up >$DIFF; then
 	LOG "diff statistics:"
 	diffstat $DIFF
+	echo
 
 	# add diff file itself
-	echo $DIFF >>$TMP/include
+	echo $DIFF >>$TMP/files
 
 	# add changed binary files
 	awk '
-		/^Index: / { scan = 1; file = $2 }
-		/^@@/      { scan = 0 }
+		/^Index: / { scan = 1; file = $2; next }
+		/^@@/      { scan = 0; next }
 		/^Binary/  { if (scan) { print file } }
-	' <$DIFF >>$TMP/include
+	' <$DIFF >>$TMP/files
 else
 	rm -f $DIFF
 fi
 
 
-# write list of all files to add
-LOG "adding to archive ..."
-if [ -f $TMP/include ]; then
-	cat $TMP/include|while read i; do
-		ADD "$i"
-		echo $i >>$TMP/files
+LOG "checking for files to submit ..."
+if [ -f $TMP/files ]; then
+	cat $TMP/files|while read i; do
+		CHANGED "$i"
 	done
 fi
+
 grep "^? " $TMP/up|while read i; do
-	find ${i#? } -type f >>$TMP/files
+	find ${i#? } -type f >>$TMP/check
 done
 
 
 # classify and filter files
-if [ -f $TMP/files ]; then
-	for i in $(cat $TMP/files); do
+if [ -f $TMP/check ]; then
+	for i in $(cat $TMP/check); do
 		case "$i" in
 		$ARCHIVE*|$DIFF*) # don't add files generated by the script
 			;;
@@ -134,19 +185,34 @@ if [ -f $TMP/files ]; then
 			REJECT "$i\t\t(graphics file)"
 			;;
 		*)
-			ADD "$i"
-			echo "$i" >>$TMP/include
+			NEW "$i"
+			echo "$i" >>$TMP/files
 			;;
 		esac
 	done
 fi
 
 
-if [ -f $TMP/include ]; then
-	LOG "creating archive $ARCHIVE"
-	tar -cjf $ARCHIVE --files-from $TMP/include
-else
-	LOG "no changed or new files detected"
+if ! [ -f $TMP/files ]; then
+	LOG "no changed or new files found"
+	exit 0
 fi
+
+echo
+numfiles=$(awk '//{n++}END{print n}' <$TMP/files)
+if [ -f $DIFF -a $numfiles == 1 ]; then
+	LOG "only changed non-binary files found"
+	LOG "creating compressed diff \e[1;37;40m$CDIFF\e[m\e[35m ..."
+	bzip2 -k $DIFF
+	RESULT=$CDIFF
+else
+	LOG "changed and/or new files found"
+	LOG "creating archive \e[1;37;40m$ARCHIVE\e[m\e[35m ..."
+	tar -cjf $ARCHIVE --files-from $TMP/files
+	RESULT=$ARCHIVE
+fi
+
+[ -x "$UPLOAD" -a -f $RESULT ] && $UPLOAD "$PWD" $RESULT $DIFF
+
 exit 0
 

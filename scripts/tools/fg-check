@@ -24,16 +24,16 @@ LOG "checking for spaces in filenames ..."
 find .|grep " "|while read i; do RESULT "$i"; done
 
 
-LOG "checking for upper-case extensions ..."       # except *.TXT
+LOG "checking for upper-case extensions ..."
 find .|while read i; do
-	case "$i" in .|..|CVS/*|*/CVS/*|*.Opt|*.README|*.Po) continue ;; esac
+	case "$i" in .|..|CVS/*|*/CVS/*|*.Opt|*.README|*.Po|*.TXT) continue ;; esac
 	base=${i/#.*\/}
 	ext=${base/#*./}
 	[ "$base" == "$ext" ] && continue          # has no extension
-	ext=$(echo $ext|sed -e 's,[^A-Za-z],,'g)
-	[ -z "$ext" ] && continue                  # only non-letters
+	ext=${ext//[^a-zA-Z]/}
+	[ "$ext" ] || continue                     # only non-letters
 	lcext=$(echo $ext|sed -e 's,\(.*\),\L\1,')
-	[ "$ext" != "$lcext" -a "$lcext" != "txt" ] && RESULT "$i"
+	[ "$ext" != "$lcext" ] && RESULT "$i"
 done
 
 
@@ -52,7 +52,7 @@ find . -iname \*.rgb -o -iname \*.rgba|while read i; do
 	if file "$i"|grep -v RLE >/dev/null; then
 		new=$TMP/sgi.rgb
 		convert "$i" -compress RLE sgi:$new
-		[ "$RLE" ] && $RLE $new 2>/dev/null
+		[ -x "$RLE" ] && $RLE $new 2>/dev/null
 		perl -e '
 			my $file = shift;
 			my $old = -s $file;
@@ -66,7 +66,7 @@ find . -iname \*.rgb -o -iname \*.rgba|while read i; do
 done
 
 
-if [ "$AC3D_SCAN" ]; then
+if [ -x "$AC3D_SCAN" ]; then
 	LOG "checking for AC3D sanity ..."
 	find . -iname \*.ac|while read i; do
 		case "$i" in configure.ac|*/configure.ac) continue ;; esac
@@ -78,7 +78,7 @@ fi
 
 LOG "checking for XML syntax ..."
 find . -name \*.xml|while read i; do
-	xmllint $i >/dev/null || RESULT "... min file \e[36m$i\e[m"
+	xmllint $i >/dev/null || RESULT "... in file \e[36m$i\e[m"
 done
 
 
