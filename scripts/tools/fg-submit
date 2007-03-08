@@ -37,14 +37,14 @@
 # $1 and $2 are guaranteed not to contain spaces, only $1 is guaranteed
 # to actually exist. Such as script can be used to upload the file to an
 # ftp-/webserver, and/or to remove one or both files. Example using
-# KDE's kfmclient for upload (alternatives: ncftpput, gnomevfs-copy, ...):
+# KDE's kfmclient for upload (alternatives: ncftpput, gnomevfs-copy, wput):
 #
 #     $ cat ~/bin/fg-upload
 #     #!/bin/bash
 #     echo "uploading $1"
 #     if kfmclient copy $1 ftp://user:password@server.com; then
 #             echo "deleting $1 $2"
-#             rm -rf $1 $2
+#             rm -f $1 $2
 #
 #             echo "Done.  URL: ftp://server.com/$1"
 #     else
@@ -97,7 +97,7 @@ function diffstat {
 		/^Index: / { dofile(); scan = bin = 0; file = $2; n++; next }
 		/^@@/      { scan = 1; next }
 		/^Binary/  { if (!scan) bin = 1; next }
-		/^+/       { if (scan) a++; next }
+		/^\+/       { if (scan) a++; next }
 		/^-/       { if (scan) r++; next }
 		/^!/       { if (scan) c++; next }
 		END        {
@@ -109,14 +109,14 @@ function diffstat {
 }
 
 
-# create temporary dir that's automatcally removed on exit
-TMP=$(mktemp -d -t $SELF.$BASE.XXX) || (echo "$0: can't create temporary dir"; exit 1)
+# create temporary dir that's automatically removed on exit
+TMP=$(mktemp -d /tmp/$SELF.$BASE.XXXXXX) || (echo "$0: can't create temporary dir"; exit 1)
 trap "rm -rf $TMP" 0 1 2 3 13 15
 
 
 # move old files out of the way
 for i in $DIFF $CDIFF $ARCHIVE; do
-	[ -f $i ] && mv $i $(mktemp $i.X)
+	[ -f $i ] && mv $i $(mktemp $i.XXXXXX)
 done
 
 
@@ -176,6 +176,9 @@ if [ -f $TMP/check ]; then
 			;;
 		CVS/*|*/CVS/*)
 			REJECT "$i\t\t(CVS file)"
+			;;
+		*.tar.gz*|*.tar.bz2*|*.tgz|*.zip)
+			REJECT "$i\t\t(archive)"
 			;;
 		*.blend|*.blend[0-9]|*.blend[0-9][0-9])
 			REJECT "$i\t\t(blender file)"
