@@ -29,25 +29,24 @@
 #
 #
 # If the script finds an application named "fg-upload", then it calls
-# this at the end with three arguments:
+# this at the end with two arguments:
 #
-#     $1 ... working directory ($PWD)
-#     $2 ... archive or compressed diff for submission
-#     $3 ... accessory diff, *NOT* for submission!
+#     $1 ... archive or compressed diff for submission
+#     $2 ... accessory diff, *NOT* for submission!
 #
-# $2 and $3 are guaranteed not to contain spaces, only $1 is guaranteed
+# $1 and $2 are guaranteed not to contain spaces, only $1 is guaranteed
 # to actually exist. Such as script can be used to upload the file to an
 # ftp-/webserver, and/or to remove one or both files. Example using
 # KDE's kfmclient for upload (alternatives: ncftpput, gnomevfs-copy, ...):
 #
 #     $ cat ~/bin/fg-upload
 #     #!/bin/bash
-#     echo "uploading $2"
-#     if kfmclient copy $2 ftp://user:password@server.com; then
-#             echo "deleting $2 $3"
-#             rm -rf $2 $3
+#     echo "uploading $1"
+#     if kfmclient copy $1 ftp://user:password@server.com; then
+#             echo "deleting $1 $2"
+#             rm -rf $1 $2
 #
-#             echo "Done.  URL: ftp://server.com/$2"
+#             echo "Done.  URL: ftp://server.com/$1"
 #     else
 #             echo "arghh ... HELP! HELP!"
 #     fi
