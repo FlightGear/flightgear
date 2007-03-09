@@ -12,7 +12,10 @@
 # of the diff correctness. It is not to be submitted. The script will
 # not overwrite any file, but rather rename conflicting files.
 #
-# Usage:  fg-submit [<basename>]
+# Usage:  fg-submit [-v] [<basename>]
+#
+# Options:
+#         -v ... verbose output
 #
 # Example:
 #     $ cd $FG_ROOT/Aircraft/bo105
@@ -26,6 +29,7 @@
 # by defining a shell alias in ~/.bashrc:
 #
 #     alias submit='fg-submit "${PWD/#*\/}-$(date +%Y-%m-%d)"'
+#
 #
 #
 # If the script finds an application named "fg-upload", then it calls
@@ -50,10 +54,66 @@
 #     else
 #             echo "arghh ... HELP! HELP!"
 #     fi
+#
+#
+#
+# Whether a file should be included in the archive or not, is decided
+# by pattern rules. There is a set of reasonable default rules predefined,
+# but alternative settings can be defined in a hidden configuration file
+# named ".fg-submit". Such a file is searched in the current directory,
+# in its parent directory, in its grand-parent directory and so on,
+# and finally in the $HOME directory. The first found file is taken.
+#
+# A file can use a list of four keywords with arguments, each on a
+# separate line:
+#
+#     ALLOW   <pattern-list>     ... accept & report matching file
+#     DENY    <pattern-list>     ... reject & report matching file
+#     IGNORE  <pattern-list>     ... silently reject matching file
+#     DEFAULT                    ... adds default rules
+#
+# A <pattern-list> is a space-separated list of shell pattern.
+# It may also be empty, in which case it has no effect. Examples:
+#
+#     DENY   test.blend
+#     ALLOW  *.xcf *.blend
+#
+# A config file that only contains the keyword DEFAULT causes the
+# same behavior as no config file at all. A config file without
+# DEFAULT drops the built-in default rules (with the exception of
+# a few very basic ones, such as rejection of CVS files). Comments
+# using the hash character '#' are allowed and ignored.
+#
+# The list of pattern is checked in the same in order in which it
+# is built. The first match causes a file to be accepted or rejected.
+# Further matches are not considered.
+#
+# Example:
+#
+#     DENY  test.xcf # throw out the test graphic, but ...
+#     ALLOW *.xcf    # ... allow all other GIMP graphics (the following
+#                    # DEFAULT keyword throws them out otherwise)
+#
+#     DEFAULT        # insert the default rules here
+#
+#     ALLOW  g.old   # add this silly file :-)
+#     IGNORE *.old   # throw out the old files (and don't report
+#                    # that to the terminal)
+#
+# .fg-submit configuration files are sourced bash scripts, the
+# keywords are simple shell functions. That means that you can
+# also use other bash commands in that file, such as "echo".
+
 
 
 SELF=${0/#*\/}
 DIR=${PWD/#*\/}
+
+if [ "$1" == "-v" ]; then
+	DBG=1
+	shift
+fi
+
 BASE=${1:-$DIR}
 BASE=${BASE// /%20}
 
@@ -65,12 +125,36 @@ ARCHIVE=$BASE.tar.bz2
 DIFF=$BASE.diff
 CDIFF=$DIFF.bz2
 
+# these rules are always prepended (the leading ! makes silent rejects)
+PREFIX_RULES="
+	!$DIFF* !$CDIFF* !$ARCHIVE*
+	!CVS/* !*/CVS/*
+"
+# these rules are used when no other rules are specified,
+# and wherever the DEFAULT keyword is used
+DEFAULT_RULES="
+	+.cvsignore +*/.cvsignore
+	-*~ -*. -*.bak -*.orig
+	-*.RGB -*.RGBA -*.MDL
+	-*.xcf -*.XCF -*.tga -*.TGA -*.bmp -*.BMP -*.png -*.PNG
+	-*.blend -*.blend[0-9] -*blend[0-9][0-9] -*.blend[0-9][0-9][0-9]
+	-*.gz -*.tgz -*.bz2 -*.zip -*.tar.gz* -*.tar.bz2*
+"
+# these rules are always appended; the last one accepts anything
+# (throw out all hidden files that weren't explicitly allowed, and
+# accept the rest)
+POSTFIX_RULES="
+	!.* !*/.*
+	+*
+"
+
 
 function ERROR   { echo -e "\e[31;1m$*\e[m";   }
 function LOG     { echo -e "\e[35m$*\e[m";     }
 function NEW     { echo -e "\e[32m\t+ $*\e[m"; }
 function CHANGED { echo -e "\e[36m\t+ $*\e[m"; }
 function REJECT  { echo -e "\e[31m\t- $*\e[m"; }
+function DEBUG   { [ $DBG ] && echo -e "$*";   }
 
 function diffstat {
 	# output diff statistics, similar to the "diffstat" utility
@@ -107,6 +191,38 @@ function diffstat {
 		}
 	' <$1
 }
+
+
+# set up accept/reject rules
+function DEFAULT { RULES="$RULES $DEFAULT_RULES"; }
+function ALLOW   { for i in $*; do RULES="$RULES +$i"; done }
+function DENY    { for i in $*; do RULES="$RULES -$i"; done }
+function IGNORE  { for i in $*; do RULES="$RULES !$i"; done }
+
+RULES=
+HERE=$PWD
+while true; do
+	if [ -f .fg-submit ]; then
+		CONFIG="$PWD/.fg-submit"
+		break
+	fi
+	cd ..
+	[ "$PWD" == "/" ] && break
+done
+cd "$HERE"
+
+if [ "$CONFIG" ]; then
+	DEBUG "reading config $CONFIG"
+	source "$CONFIG"
+elif [ -f ~/.fg-submitrc ]; then
+	DEBUG "reading config ~/.fg-submitrc"
+	source ~/.fg-submitrc
+else
+	DEBUG "no config file found; using default rules"
+	RULES="$RULES $DEFAULT_RULES"
+fi
+RULES="$PREFIX_RULES $RULES $POSTFIX_RULES"
+DEBUG "using these rules: $RULES"
 
 
 # create temporary dir that's automatically removed on exit
@@ -166,31 +282,27 @@ done
 # classify and filter files
 if [ -f $TMP/check ]; then
 	for i in $(cat $TMP/check); do
-		case "$i" in
-		$ARCHIVE*|$DIFF*) # don't add files generated by the script
-			;;
-		*/.*|.*)          # silently drop hidden files
-			;;
-		*~|*.|*.bak|*.orig)
-			REJECT "$i\t\t(backup file)"
-			;;
-		CVS/*|*/CVS/*)
-			REJECT "$i\t\t(CVS file)"
-			;;
-		*.tar.gz*|*.tar.bz2*|*.tgz|*.zip)
-			REJECT "$i\t\t(archive)"
-			;;
-		*.blend|*.blend[0-9]|*.blend[0-9][0-9])
-			REJECT "$i\t\t(blender file)"
-			;;
-		*.xcf|*.tga|*.bmp|*.BMP|*.png)
-			REJECT "$i\t\t(graphics file)"
-			;;
-		*)
-			NEW "$i"
-			echo "$i" >>$TMP/files
-			;;
-		esac
+		DEBUG "checking whether file '$i' matches"
+		for r in $RULES; do
+			DEBUG "\t\trule $r"
+			R=${r#?}
+			case "!$i" in $r)
+				DEBUG "\t\t\t\"silently\" rejected\t\t(rule $R)"
+				break
+				;;
+			esac
+			case "-$i" in $r)
+				REJECT "$i\t\t(rule $R)"
+				break
+				;;
+			esac
+			case "+$i" in $r)
+				NEW "$i\t\t(rule $R)"
+				echo "$i" >>$TMP/files
+				break
+				;;
+			esac
+		done
 	done
 fi
 
@@ -214,7 +326,7 @@ else
 	RESULT=$ARCHIVE
 fi
 
-[ -x "$UPLOAD" -a -f $RESULT ] && $UPLOAD "$PWD" $RESULT $DIFF
+[ -x "$UPLOAD" -a -f $RESULT ] && $UPLOAD $RESULT $DIFF
 
 exit 0
 
