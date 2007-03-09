@@ -100,9 +100,19 @@
 #     IGNORE *.old   # throw out the old files (and don't report
 #                    # that to the terminal)
 #
-# .fg-submit configuration files are sourced bash scripts, the
+#
+# .fg-submit configuration files are "sourced" bash scripts, the
 # keywords are simple shell functions. That means that you can
-# also use other bash commands in that file, such as "echo".
+# also use other bash commands in that file, such as "echo", or
+# write several commands on one line, separated with semicolon.
+# You can even put all special rules in your ~/.fg-submit file,
+# with rules depending on the working directory:
+#
+#     case "$PWD" in
+#     */bo105*)  DENY *.osg; ALLOW livery.xcf ;;
+#     */ufo*)    DENY *.tiff ;;
+#     esac
+#     DEFAULT
 
 
 
@@ -121,6 +131,7 @@ CVS=/usr/bin/cvs                 # avoid colorcvs wrapper from
 [ -x $CVS ] || CVS=cvs           # http://www.hakubi.us/colorcvs/
 UPLOAD=$(which fg-upload 2>/dev/null)
 
+CONFIG_FILE=".fg-submit"
 ARCHIVE=$BASE.tar.bz2
 DIFF=$BASE.diff
 CDIFF=$DIFF.bz2
@@ -140,9 +151,8 @@ DEFAULT_RULES="
 	-*.blend -*.blend[0-9] -*blend[0-9][0-9] -*.blend[0-9][0-9][0-9]
 	-*.gz -*.tgz -*.bz2 -*.zip -*.tar.gz* -*.tar.bz2*
 "
-# these rules are always appended; the last one accepts anything
-# (throw out all hidden files that weren't explicitly allowed, and
-# accept the rest)
+# these rules are always appended: ignore all hidden files that
+# weren't explicitly allowed so far, and accept all the rest
 POSTFIX_RULES="
 	!.* !*/.*
 	+*
@@ -192,6 +202,19 @@ function diffstat {
 	' <$1
 }
 
+function backup_filename {
+	i=1
+	while true; do
+		name=$1.$i
+		if ! [ -a "$name" ]; then
+			touch $name
+			echo $name
+			return
+		fi
+		i=$(($i + 1))
+	done
+}
+
 
 # set up accept/reject rules
 function DEFAULT { RULES="$RULES $DEFAULT_RULES"; }
@@ -202,8 +225,8 @@ function IGNORE  { for i in $*; do RULES="$RULES !$i"; done }
 RULES=
 HERE=$PWD
 while true; do
-	if [ -f .fg-submit ]; then
-		CONFIG="$PWD/.fg-submit"
+	if [ -f $CONFIG_FILE ]; then
+		CONFIG="$PWD/$CONFIG_FILE"
 		break
 	fi
 	cd ..
@@ -214,9 +237,12 @@ cd "$HERE"
 if [ "$CONFIG" ]; then
 	DEBUG "reading config $CONFIG"
 	source "$CONFIG"
-elif [ -f ~/.fg-submitrc ]; then
-	DEBUG "reading config ~/.fg-submitrc"
-	source ~/.fg-submitrc
+elif [ -f ~/$CONFIG_FILE ]; then
+	DEBUG "reading config ~/$CONFIG_FILE"
+	source ~/$CONFIG_FILE
+elif [ -f ~/${CONFIG_FILE}rc ]; then
+	DEBUG "reading config ~/${CONFIG_FILE}rc"
+	source ~/$CONFIG_FILE
 else
 	DEBUG "no config file found; using default rules"
 	RULES="$RULES $DEFAULT_RULES"
@@ -230,9 +256,9 @@ TMP=$(mktemp -d /tmp/$SELF.$BASE.XXXXXX) || (echo "$0: can't create temporary di
 trap "rm -rf $TMP" 0 1 2 3 13 15
 
 
-# move old files out of the way
+# move old files out of the way giving sequential suffixes
 for i in $DIFF $CDIFF $ARCHIVE; do
-	[ -f $i ] && mv $i $(mktemp $i.XXXXXX)
+	[ -f $i ] && mv $i $(backup_filename $i)
 done
 
 
@@ -279,7 +305,7 @@ grep "^? " $TMP/up|while read i; do
 done
 
 
-# classify and filter files
+# filter files according to the pattern rules
 if [ -f $TMP/check ]; then
 	for i in $(cat $TMP/check); do
 		DEBUG "checking whether file '$i' matches"
@@ -287,17 +313,17 @@ if [ -f $TMP/check ]; then
 			DEBUG "\t\trule $r"
 			R=${r#?}
 			case "!$i" in $r)
-				DEBUG "\t\t\t\"silently\" rejected\t\t(rule $R)"
+				DEBUG "\t\t\t\"silently\" rejected\t\t$R"
 				break
 				;;
 			esac
 			case "-$i" in $r)
-				REJECT "$i\t\t(rule $R)"
+				REJECT "$i\t\t$R"
 				break
 				;;
 			esac
 			case "+$i" in $r)
-				NEW "$i\t\t(rule $R)"
+				NEW "$i\t\t$R"
 				echo "$i" >>$TMP/files
 				break
 				;;
