@@ -64,7 +64,7 @@
 # in its parent directory, in its grand-parent directory and so on,
 # and finally in the $HOME directory. The first found file is taken.
 #
-# A file can use a list of four keywords with arguments, each on a
+# A file can use a list of three keywords with arguments, each on a
 # separate line:
 #
 #     ALLOW   <pattern-list>     ... accept & report matching file
@@ -223,13 +223,14 @@ function search_config {
 		CONFIG="$file"
 		return 0
 	elif [ "$1" ]; then
-		search_config ${1%/${1/#*\/}} # parent dir
+		search_config ${1%/${1##*/}} # parent dir
 		return
 	fi
 	return 1
 }
 
 
+set -f
 RULES=
 if search_config "$PWD"; then
 	LOG "loading config file $CONFIG"
@@ -241,6 +242,7 @@ elif [ -f ~/${CONFIG_FILE}rc ]; then
 	DEBUG "loading config file $CONFIG"
 	source ~/${CONFIG_FILE}rc
 fi
+set +f
 RULES="$PREFIX_RULES $RULES $DEFAULT_RULES $POSTFIX_RULES"
 
 
