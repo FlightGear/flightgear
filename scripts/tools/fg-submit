@@ -39,7 +39,7 @@
 #     $2 ... accessory diff, *NOT* for submission!
 #
 # $1 and $2 are guaranteed not to contain spaces, only $1 is guaranteed
-# to actually exist. Such as script can be used to upload the file to an
+# to actually exist. Such a script can be used to upload the file to an
 # ftp-/webserver, and/or to remove one or both files. Example using
 # KDE's kfmclient for upload (alternatives: ncftpput, gnomevfs-copy, wput):
 #
@@ -70,7 +70,6 @@
 #     ALLOW   <pattern-list>     ... accept & report matching file
 #     DENY    <pattern-list>     ... reject & report matching file
 #     IGNORE  <pattern-list>     ... silently reject matching file
-#     DEFAULT                    ... adds default rules
 #
 # A <pattern-list> is a space-separated list of shell pattern.
 # It may also be empty, in which case it has no effect. Examples:
@@ -78,27 +77,25 @@
 #     DENY   test.blend
 #     ALLOW  *.xcf *.blend
 #
-# A config file that only contains the keyword DEFAULT causes the
-# same behavior as no config file at all. A config file without
-# DEFAULT drops the built-in default rules (with the exception of
-# a few very basic ones, such as rejection of CVS files). Comments
-# using the hash character '#' are allowed and ignored.
+# The list of pattern is checked in the same order in which it was
+# built. The first match causes a file to be accepted or rejected.
+# Further matches are not considered. Comments using the
+# hash character '#' are allowed and ignored.
 #
-# The list of pattern is checked in the same in order in which it
-# is built. The first match causes a file to be accepted or rejected.
-# Further matches are not considered.
+# Some default rules are always added at the end. If you want to
+# bypass them, then just add "ALLOW *" or "DENY *" at the end of
+# your configuration, and no file will ever reach the default rules.
+#
 #
 # Example:
 #
-#     DENY  test.xcf # throw out the test graphic, but ...
-#     ALLOW *.xcf    # ... allow all other GIMP graphics (the following
-#                    # DEFAULT keyword throws them out otherwise)
+#     DENY  test.xcf # throw out the test image, but ...
+#     ALLOW *.xcf    # ... allow all other GIMP images (the default
+#                    # rules would otherwise throw them out)
 #
-#     DEFAULT        # insert the default rules here
-#
-#     ALLOW  g.old   # add this silly file :-)
-#     IGNORE *.old   # throw out the old files (and don't report
-#                    # that to the terminal)
+#     ALLOW  g.old   # add this silly file, but ...
+#     IGNORE *.old   # throw out all other "old" files (and don't
+#                    # report that to the terminal)
 #
 #
 # .fg-submit configuration files are "sourced" bash scripts, the
@@ -112,7 +109,6 @@
 #     */bo105*)  DENY *.osg; ALLOW livery.xcf ;;
 #     */ufo*)    DENY *.tiff ;;
 #     esac
-#     DEFAULT
 
 
 
@@ -136,13 +132,13 @@ ARCHIVE=$BASE.tar.bz2
 DIFF=$BASE.diff
 CDIFF=$DIFF.bz2
 
-# these rules are always prepended (the leading ! makes silent rejects)
+# these rules are always prepended; the first letter decides if the
+# rule accepts (+), rejects (-), or ignores (!) a matching file.
 PREFIX_RULES="
 	!$DIFF* !$CDIFF* !$ARCHIVE*
 	!CVS/* !*/CVS/*
 "
-# these rules are used when no other rules are specified,
-# and wherever the DEFAULT keyword is used
+# these rules are always appended
 DEFAULT_RULES="
 	+.cvsignore +*/.cvsignore
 	-*~ -*. -*.bak -*.orig
@@ -151,12 +147,11 @@ DEFAULT_RULES="
 	-*.blend -*.blend[0-9] -*blend[0-9][0-9] -*.blend[0-9][0-9][0-9]
 	-*.gz -*.tgz -*.bz2 -*.zip -*.tar.gz* -*.tar.bz2*
 "
-# these rules are always appended: ignore all hidden files that
-# weren't explicitly allowed so far, and accept all the rest
 POSTFIX_RULES="
 	!.* !*/.*
 	+*
 "
+
 
 
 function ERROR   { echo -e "\e[31;1m$*\e[m";   }
@@ -191,7 +186,7 @@ function diffstat {
 		/^Index: / { dofile(); scan = bin = 0; file = $2; n++; next }
 		/^@@/      { scan = 1; next }
 		/^Binary/  { if (!scan) bin = 1; next }
-		/^\+/       { if (scan) a++; next }
+		/^\+/      { if (scan) a++; next }
 		/^-/       { if (scan) r++; next }
 		/^!/       { if (scan) c++; next }
 		END        {
@@ -203,52 +198,58 @@ function diffstat {
 }
 
 function backup_filename {
-	i=1
-	while true; do
+	for ((i = 1; 1; i = i + 1)); do
 		name=$1.$i
 		if ! [ -a "$name" ]; then
 			touch $name
 			echo $name
 			return
 		fi
-		i=$(($i + 1))
 	done
 }
 
 
+
 # set up accept/reject rules
-function DEFAULT { RULES="$RULES $DEFAULT_RULES"; }
 function ALLOW   { for i in $*; do RULES="$RULES +$i"; done }
 function DENY    { for i in $*; do RULES="$RULES -$i"; done }
 function IGNORE  { for i in $*; do RULES="$RULES !$i"; done }
 
-RULES=
-HERE=$PWD
-while true; do
-	if [ -f $CONFIG_FILE ]; then
-		CONFIG="$PWD/$CONFIG_FILE"
-		break
-	fi
-	cd ..
-	[ "$PWD" == "/" ] && break
-done
-cd "$HERE"
 
-if [ "$CONFIG" ]; then
-	DEBUG "reading config $CONFIG"
+function search_config {
+	file="$1/$CONFIG_FILE"
+	DEBUG "checking for config file $file"
+	if [ -f "$file" ]; then
+		CONFIG="$file"
+		return 0
+	elif [ "$1" ]; then
+		search_config ${1%/${1/#*\/}} # parent dir
+		return
+	fi
+	return 1
+}
+
+
+RULES=
+if search_config "$PWD"; then
+	LOG "loading config file $CONFIG"
 	source "$CONFIG"
 elif [ -f ~/$CONFIG_FILE ]; then
-	DEBUG "reading config ~/$CONFIG_FILE"
+	DEBUG "loading config file $CONFIG"
 	source ~/$CONFIG_FILE
 elif [ -f ~/${CONFIG_FILE}rc ]; then
-	DEBUG "reading config ~/${CONFIG_FILE}rc"
-	source ~/$CONFIG_FILE
-else
-	DEBUG "no config file found; using default rules"
-	RULES="$RULES $DEFAULT_RULES"
+	DEBUG "loading config file $CONFIG"
+	source ~/${CONFIG_FILE}rc
 fi
-RULES="$PREFIX_RULES $RULES $POSTFIX_RULES"
-DEBUG "using these rules: $RULES"
+RULES="$PREFIX_RULES $RULES $DEFAULT_RULES $POSTFIX_RULES"
+
+
+if [ $DBG ]; then
+	DEBUG "using these rules: "
+	for i in $RULES; do echo -n "$i "; done
+	echo
+fi
+
 
 
 # create temporary dir that's automatically removed on exit
@@ -256,10 +257,12 @@ TMP=$(mktemp -d /tmp/$SELF.$BASE.XXXXXX) || (echo "$0: can't create temporary di
 trap "rm -rf $TMP" 0 1 2 3 13 15
 
 
+
 # move old files out of the way giving sequential suffixes
 for i in $DIFF $CDIFF $ARCHIVE; do
 	[ -f $i ] && mv $i $(backup_filename $i)
 done
+
 
 
 LOG "updating and checking for new files ..."
@@ -271,6 +274,7 @@ if grep "^C " $TMP/up &>/dev/null; then
 	grep "^C " $TMP/up
 	exit 1
 fi
+
 
 
 LOG "making diff ..."
@@ -293,6 +297,7 @@ else
 fi
 
 
+
 LOG "checking for files to submit ..."
 if [ -f $TMP/files ]; then
 	cat $TMP/files|while read i; do
@@ -305,25 +310,26 @@ grep "^? " $TMP/up|while read i; do
 done
 
 
+
 # filter files according to the pattern rules
 if [ -f $TMP/check ]; then
 	for i in $(cat $TMP/check); do
 		DEBUG "checking whether file '$i' matches"
 		for r in $RULES; do
 			DEBUG "\t\trule $r"
-			R=${r#?}
+			rule=${r#?}
 			case "!$i" in $r)
-				DEBUG "\t\t\t\"silently\" rejected\t\t$R"
+				DEBUG "\t\t\t\"silently\" rejected\t\t$rule"
 				break
 				;;
 			esac
 			case "-$i" in $r)
-				REJECT "$i\t\t$R"
+				REJECT "$i\t\t$rule"
 				break
 				;;
 			esac
 			case "+$i" in $r)
-				NEW "$i\t\t$R"
+				NEW "$i\t\t$rule"
 				echo "$i" >>$TMP/files
 				break
 				;;
@@ -331,6 +337,7 @@ if [ -f $TMP/check ]; then
 		done
 	done
 fi
+
 
 
 if ! [ -f $TMP/files ]; then
@@ -343,16 +350,15 @@ numfiles=$(awk '//{n++}END{print n}' <$TMP/files)
 if [ -f $DIFF -a $numfiles == 1 ]; then
 	LOG "only changed non-binary files found"
 	LOG "creating compressed diff \e[1;37;40m$CDIFF\e[m\e[35m ..."
-	bzip2 -k $DIFF
+	bzip2 --keep $DIFF
 	RESULT=$CDIFF
 else
 	LOG "changed and/or new files found"
 	LOG "creating archive \e[1;37;40m$ARCHIVE\e[m\e[35m ..."
-	tar -cjf $ARCHIVE --files-from $TMP/files
+	tar --create --bzip2 --file=$ARCHIVE --files-from $TMP/files
 	RESULT=$ARCHIVE
 fi
 
-[ -x "$UPLOAD" -a -f $RESULT ] && $UPLOAD $RESULT $DIFF
 
-exit 0
+[ -x "$UPLOAD" -a -f $RESULT ] && exec $UPLOAD $RESULT $DIFF
 
