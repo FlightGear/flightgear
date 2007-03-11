@@ -4,7 +4,7 @@
 # Meant to be executed before submitting/committing.
 
 
-SELF=${0/#*\/}
+SELF=${0##*/}
 
 # optional apps
 RLE=$(which rle &>/dev/null)              # http://members.aon.at/mfranz/rle.tar.gz (depends on Qt lib)
@@ -27,8 +27,8 @@ find .|grep " "|while read i; do RESULT "$i"; done
 LOG "checking for upper-case extensions ..."
 find .|while read i; do
 	case "$i" in .|..|CVS/*|*/CVS/*|*.Opt|*.README|*.Po|*.TXT) continue ;; esac
-	base=${i/#.*\/}
-	ext=${base/#*./}
+	base=${i##*/}
+	ext=${base##*.}
 	[ "$base" == "$ext" ] && continue          # has no extension
 	ext=${ext//[^a-zA-Z]/}
 	[ "$ext" ] || continue                     # only non-letters
