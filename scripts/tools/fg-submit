@@ -28,7 +28,7 @@
 # to have the date in the archive name can conveniently achieve this
 # by defining a shell alias in ~/.bashrc:
 #
-#     alias submit='fg-submit "${PWD/#*\/}-$(date +%Y-%m-%d)"'
+#     alias submit='fg-submit "${PWD##*/}-$(date +%Y-%m-%d)"'
 #
 #
 #
@@ -112,8 +112,8 @@
 
 
 
-SELF=${0/#*\/}
-DIR=${PWD/#*\/}
+SELF=${0##*/}
+DIR=${PWD##*/}
 
 if [ "$1" == "-v" ]; then
 	DBG=1
@@ -230,16 +230,16 @@ function search_config {
 }
 
 
-set -f
 RULES=
+set -f
 if search_config "$PWD"; then
 	LOG "loading config file $CONFIG"
 	source "$CONFIG"
 elif [ -f ~/$CONFIG_FILE ]; then
-	DEBUG "loading config file $CONFIG"
+	DEBUG "loading config file ~/$CONFIG_FILE"
 	source ~/$CONFIG_FILE
 elif [ -f ~/${CONFIG_FILE}rc ]; then
-	DEBUG "loading config file $CONFIG"
+	DEBUG "loading config file ~/${CONFIG}rc"
 	source ~/${CONFIG_FILE}rc
 fi
 set +f
@@ -319,20 +319,14 @@ if [ -f $TMP/check ]; then
 		DEBUG "checking whether file '$i' matches"
 		for r in $RULES; do
 			DEBUG "\t\trule $r"
-			rule=${r#?}
-			case "!$i" in $r)
-				DEBUG "\t\t\t\"silently\" rejected\t\t$rule"
-				break
-				;;
-			esac
-			case "-$i" in $r)
-				REJECT "$i\t\t$rule"
-				break
-				;;
-			esac
-			case "+$i" in $r)
-				NEW "$i\t\t$rule"
-				echo "$i" >>$TMP/files
+			class=${r:0:1}
+			rule=${r:1}
+			case "$i" in $rule)
+				case $class in
+				!) DEBUG "$i\t\t\"silently\" rejected\t\t$rule" ;;
+				-) REJECT "$i\t\t$rule" ;;
+				+) NEW "$i\t\t$rule" && echo "$i" >>$TMP/files ;;
+				esac
 				break
 				;;
 			esac
