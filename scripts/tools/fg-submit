@@ -230,8 +230,8 @@ function search_config {
 }
 
 
-RULES=
 set -f
+RULES=
 if search_config "$PWD"; then
 	LOG "loading config file $CONFIG"
 	source "$CONFIG"
@@ -242,8 +242,8 @@ elif [ -f ~/${CONFIG_FILE}rc ]; then
 	DEBUG "loading config file ~/${CONFIG}rc"
 	source ~/${CONFIG_FILE}rc
 fi
-set +f
 RULES="$PREFIX_RULES $RULES $DEFAULT_RULES $POSTFIX_RULES"
+set +f
 
 
 if [ $DBG ]; then
@@ -356,5 +356,6 @@ else
 fi
 
 
-[ -x "$UPLOAD" -a -f $RESULT ] && exec $UPLOAD $RESULT $DIFF
+[ -x "$UPLOAD" -a -f $RESULT ] && $UPLOAD $RESULT $DIFF
+
 
