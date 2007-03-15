@@ -50,9 +50,14 @@
 #             echo "deleting $1 $2"
 #             rm -f $1 $2
 #
-#             echo "Done.  URL: ftp://server.com/$1"
+#             URL=ftp://server.com/$1
+#
+#             # copy URL to KDE's clipboard, so that MMB-clicking pastes it
+#             dcop klipper klipper setClipboardContents $URL
+#
+#             echo "Done.  -->  $URL"
 #     else
-#             echo "arghh ... HELP! HELP!"
+#             echo "$0: uploading failed!"
 #     fi
 #
 #
@@ -260,7 +265,7 @@ trap "rm -rf $TMP" 0 1 2 3 13 15
 
 
 
-# move old files out of the way giving sequential suffixes
+# move old files out of the way adding sequential suffixes
 for i in $DIFF $CDIFF $ARCHIVE; do
 	[ -f $i ] && mv $i $(backup_filename $i)
 done
@@ -268,7 +273,7 @@ done
 
 
 LOG "updating and checking for new files ..."
-$CVS -q up -dP >$TMP/up
+$CVS -q up -dP >$TMP/up || exit 1
 
 
 if grep "^C " $TMP/up &>/dev/null; then
