@@ -612,6 +612,7 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
         naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
         if(!naHash_get(_globals, modname, &locals))
             locals = naNewHash(c);
+        hashset(_globals, moduleName, locals);
     }
     // Cache the command argument for inspection via cmdarg().  For
     // performance reasons, we won't bother with it if the invoked
