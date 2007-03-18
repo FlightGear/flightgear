@@ -12,7 +12,6 @@
 
 #include <simgear/nasal/nasal.h>
 #include <simgear/props/props.hxx>
-#include <simgear/props/condition.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/interpolator.hxx>
@@ -281,24 +280,6 @@ static naRef f_removelistener(naContext c, naRef me, int argc, naRef* args)
     return nasal->removeListener(c, argc, args);
 }
 
-// condition(property) extension function. Evaluates standard <condition>
-// (see $FG_ROOT/Docs/README.condition) and returns state.
-static naRef f_condition(naContext c, naRef me, int argc, naRef* args)
-{
-    SGPropertyNode* node;
-    naRef prop = argc > 0 ? args[0] : naNil();
-    if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
-    else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
-    else {
-        naRuntimeError(c, "condition() with invalid property");
-        return naNil();
-    }
-    SGCondition *cond = sgReadCondition(globals->get_props(), node);
-    bool result = cond->test();
-    delete cond;
-    return naNum(result == true ? 1 : 0);
-}
-
 // Returns a ghost handle to the argument to the currently executing
 // command
 static naRef f_cmdarg(naContext c, naRef me, int argc, naRef* args)
@@ -375,7 +356,6 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "settimer",  f_settimer },
     { "_setlistener", f_setlistener },
     { "removelistener", f_removelistener },
-    { "_condition", f_condition },
     { "_cmdarg",  f_cmdarg },
     { "_interpolate",  f_interpolate },
     { "rand",  f_rand },
