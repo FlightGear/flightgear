@@ -73,7 +73,7 @@ CLASS DECLARATION
 class FGPropertyManager : public SGPropertyNode, public FGJSBBase
 {
   private:
-    bool suppress_warning;
+    static bool suppress_warning;
   public:
     /// Constructor
     FGPropertyManager(void) {suppress_warning = false;}

@@ -886,7 +886,7 @@ bool FGJSBsim::ToggleDataLogging(bool state)
 //Positions
 void FGJSBsim::set_Latitude(double lat)
 {
-    static const SGPropertyNode *altitude = fgGetNode("/position/altitude-ft");
+    static SGConstPropertyNode_ptr altitude = fgGetNode("/position/altitude-ft");
     double alt;
     double sea_level_radius_meters, lat_geoc;
 
@@ -926,7 +926,7 @@ void FGJSBsim::set_Longitude(double lon)
 
 void FGJSBsim::set_Altitude(double alt)
 {
-    static const SGPropertyNode *latitude = fgGetNode("/position/latitude-deg");
+    static SGConstPropertyNode_ptr latitude = fgGetNode("/position/latitude-deg");
 
     double sea_level_radius_meters,lat_geoc;
 
