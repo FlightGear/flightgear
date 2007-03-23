@@ -156,14 +156,11 @@ void FGVoiceMgr::FGVoice::pushMessage(string m)
 
 bool FGVoiceMgr::FGVoice::speak(void)
 {
-	if (_msg.empty()) {
-//		cerr << "<nothing to say>" << endl;
+	if (_msg.empty())
 		return false;
-	}
 
 	const string s = _msg.front();
 	_msg.pop();
-//	cerr << "POP " << s;
 	_sock->writestring(s.c_str());
 	return !_msg.empty();
 }
@@ -242,7 +239,7 @@ void FGVoiceMgr::FGVoice::FGVoiceListener::valueChanged(SGPropertyNode *node)
 		return;
 
 	const string s = node->getStringValue();
-	//cerr << "\033[31;1mPUSH [" << s << "]\033[m" << endl;
+	//cerr << "\033[31;1mBEFORE [" << s << "]\033[m" << endl;
 
 	string m;
 	for (unsigned int i = 0; i < s.size(); i++) {
@@ -257,9 +254,16 @@ void FGVoiceMgr::FGVoice::FGVoiceListener::valueChanged(SGPropertyNode *node)
 			m += ' ';	// don't say "vertical bar" or "underscore"
 		else if (c == '&')
 			m += " and ";
+		else if (c == '{') {
+			while (i < s.size())
+				if (s[++i] == '|')
+					break;
+		} else if (c == '}')
+			;
 		else
 			m += c;
 	}
+	//cerr << "\033[31;1mAFTER [" << m << "]\033[m" << endl;
 	if (_voice->_festival)
 		m = string("(SayText \"") + m + "\")";
 
