@@ -242,15 +242,17 @@ void FGVoiceMgr::FGVoice::FGVoiceListener::valueChanged(SGPropertyNode *node)
 		return;
 
 	const string s = node->getStringValue();
-//	cerr << "PUSH " << s << endl;
+	//cerr << "\033[31;1mPUSH [" << s << "]\033[m" << endl;
 
 	string m;
 	for (unsigned int i = 0; i < s.size(); i++) {
 		char c = s[i];
-		if (!isprint(c))
+		if (c == '\n' || c == '\r' || c == '\t')
+			m += ' ';
+		else if (!isprint(c))
 			continue;
-		else if (c == '"' || c == '\\')
-			m += '\\' + c;
+		else if (c == '\\' || c == '"')
+			m += '\\', m += c;
 		else if (c == '|' || c == '_')
 			m += ' ';	// don't say "vertical bar" or "underscore"
 		else if (c == '&')
