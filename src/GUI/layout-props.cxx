@@ -42,11 +42,16 @@ LayoutWidget LayoutWidget::parent()
 
 int LayoutWidget::nChildren()
 {
-    // Hack: assume that any non-leaf nodes are widgets...
+    // Hack: assume that any non-leaf nodes but "hrule" and "vrule"
+    // are widgets...
     int n = 0;
-    for(int i=0; i<_prop->nChildren(); i++)
-        if(_prop->getChild(i)->nChildren() != 0)
+    for(int i=0; i<_prop->nChildren(); i++) {
+        SGPropertyNode* p = _prop->getChild(i);
+        const char* name = p->getName();
+        if(p->nChildren() != 0 || !strcmp(name, "hrule")
+                || !strcmp(name, "vrule"))
             n++;
+    }
     return n;
 }
 
@@ -57,7 +62,9 @@ LayoutWidget LayoutWidget::getChild(int idx)
     int n = 0;
     for(int i=0; i<_prop->nChildren(); i++) {
         SGPropertyNode* p = _prop->getChild(i);
-        if(p->nChildren() != 0) {
+        const char* name = p->getName();
+        if(p->nChildren() != 0 || !strcmp(name, "hrule")
+                || !strcmp(name, "vrule")) {
             if(idx == n) return LayoutWidget(p);
             n++;
         }
