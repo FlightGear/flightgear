@@ -185,10 +185,7 @@ void LayoutWidget::layout(int x, int y, int w, int h)
         if     (eq(layout, "hbox" )) doHVBox(true, false);
         else if(eq(layout, "vbox" )) doHVBox(true, true);
         else if(eq(layout, "table")) doTable(true);
-    } else if(isType("hrule"))
-        doHVBox(true, false);
-    else if(isType("vrule"))
-        doHVBox(true, true);
+    }
 }
 
 // Convention: the "A" cooridinate refers to the major axis of the
