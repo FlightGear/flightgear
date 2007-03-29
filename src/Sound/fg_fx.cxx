@@ -74,7 +74,7 @@ FGFX::init()
    string path_str = node->getStringValue("path");
    SGPath path( globals->get_fg_root() );
    if (path_str.empty()) {
-      SG_LOG(SG_GENERAL, SG_ALERT, "Incorrect path in configuration file.");
+      SG_LOG(SG_GENERAL, SG_ALERT, "No path in /sim/sound/path");
       return;
    }
 
@@ -87,7 +87,7 @@ FGFX::init()
       readProperties(path.str(), &root);
    } catch (const sg_exception &) {
       SG_LOG(SG_GENERAL, SG_ALERT,
-       "Incorrect path specified in configuration file");
+       "Error reading file '" << path.str() << '\'');
       return;
    }
 
