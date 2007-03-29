@@ -404,13 +404,12 @@ SGPropertyNode *fgInitLocale(const char *language) {
 
    const char *d_path_str = d_node->getStringValue("strings");
    if (!d_path_str) {
-      SG_LOG(SG_GENERAL, SG_ALERT, "Incorrect path in configuration file.");
+      SG_LOG(SG_GENERAL, SG_ALERT, "No path in " << d_node->getPath() << "/strings.");
       return NULL;
    }
 
    d_path.append(d_path_str);
-   SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings from "
-                                  << d_path.str());
+   SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings from " << d_path.str());
 
    SGPropertyNode *strings = c_node->getNode("strings");
    try {
@@ -428,18 +427,18 @@ SGPropertyNode *fgInitLocale(const char *language) {
 
       const char *c_path_str = c_node->getStringValue("strings");
       if (!c_path_str) {
-         SG_LOG(SG_GENERAL, SG_ALERT, "Incorrect path in configuration file.");
+         SG_LOG(SG_GENERAL, SG_ALERT, "No path in " << c_node->getPath() << "/strings");
          return NULL;
       }
 
       c_path.append(c_path_str);
-      SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings from "
-                                     << c_path.str());
+      SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings from " << c_path.str());
 
       try {
          readProperties(c_path.str(), strings);
       } catch (const sg_exception &e) {
-         SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings");
+         SG_LOG(SG_GENERAL, SG_ALERT,
+                 "Unable to read the localized strings from " << c_path.str());
          return NULL;
       }
    }
