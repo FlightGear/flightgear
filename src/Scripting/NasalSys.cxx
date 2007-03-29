@@ -762,7 +762,8 @@ void FGNasalListener::valueChanged(SGPropertyNode* node)
 // is removed from the scene graph.
 
 void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
-                                   osg::Node *)
+                                   ssgBranch *)
+
 {
     SGPropertyNode *n = prop->getNode("nasal"), *load;
     if(!n)
