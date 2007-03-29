@@ -86,12 +86,7 @@ FGNasalSys::~FGNasalSys()
     for(it = _listener.begin(); it != end; ++it)
         delete it->second;
 
-    // Nasal doesn't have a "destroy context" API yet. :(
-    // Not a problem for a global subsystem that will never be
-    // destroyed.  And the context is actually a global, so no memory
-    // is technically leaked (although the GC pool memory obviously
-    // won't be freed).
-    _context = 0;
+    naFreeContext(_context);
     _globals = naNil();
 }
 
@@ -379,17 +374,15 @@ void FGNasalSys::init()
     // sub-reference under the name "globals".  This gives client-code
     // write access to the namespace if someone wants to do something
     // fancy.
-    _globals = naStdLib(_context);
+    _globals = naInit_std(_context);
     naSave(_context, _globals);
     hashset(_globals, "globals", _globals);
 
-    // Add in the math library under "math"
-    hashset(_globals, "math", naMathLib(_context));
-
-    // Add in the IO library.  Disabled currently until after the
-    // 0.9.10 release.
-    // hashset(_globals, "io", naIOLib(_context));
-    // hashset(_globals, "bits", naBitsLib(_context));
+    hashset(_globals, "math", naInit_math(_context));
+    hashset(_globals, "bits", naInit_bits(_context));
+    hashset(_globals, "io", naInit_io(_context));
+    hashset(_globals, "thread", naInit_thread(_context));
+    hashset(_globals, "utf8", naInit_utf8(_context));
 
     // Add our custom extension functions:
     for(i=0; funcs[i].name; i++)
@@ -585,21 +578,24 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     naRef code = parse(arg->getPath(true), nasal, strlen(nasal));
     if(naIsNil(code)) return false;
 
-    naContext c = naNewContext();
+    // Commands can be run "in" a module.  Make sure that module
+    // exists, and set it up as the local variables hash for the
+    // command.
     naRef locals = naNil();
     if(moduleName[0]) {
-        naRef modname = naNewString(c);
+        naRef modname = naNewString(_context);
         naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
-        if(!naHash_get(_globals, modname, &locals))
-            locals = naNewHash(c);
-        hashset(_globals, moduleName, locals);
+        if(!naHash_get(_globals, modname, &locals)) {
+            locals = naNewHash(_context);
+            naHash_set(_globals, modname, locals);
+        }
     }
-    // Cache the command argument for inspection via cmdarg().  For
+
+    // Cache this command's argument for inspection via cmdarg().  For
     // performance reasons, we won't bother with it if the invoked
     // code doesn't need it.
     _cmdArg = (SGPropertyNode*)arg;
 
-    // Call it!
     call(code, locals);
     return true;
 }
@@ -766,7 +762,7 @@ void FGNasalListener::valueChanged(SGPropertyNode* node)
 // is removed from the scene graph.
 
 void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
-                                   ssgBranch *)
+                                   osg::Node *)
 {
     SGPropertyNode *n = prop->getNode("nasal"), *load;
     if(!n)
