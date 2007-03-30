@@ -3,6 +3,8 @@
 // David Luff's FGAIEntity class.
 // - davidculp2@comcast.net
 //
+// With additions by Mathias Froehlich & Vivian Meazza 2004 -2007
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation; either version 2 of the
@@ -76,17 +78,23 @@ FGAIBase::~FGAIBase() {
         globals->get_scenery()->unregister_placement_transform(aip.getTransform());
         globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
     }
+
     if (props) {
         SGPropertyNode* parent = props->getParent();
+
         if (parent) {
             model_removed->setStringValue(props->getPath());
             parent->removeChild(props->getName(), props->getIndex(), false);
         }
+
+        // so that radar does not have to do extra checks
+        props->setBoolValue("radar/in-range", false);
+        props->removeChild("id", 0);
+
     }
     delete fp;
     fp = 0;
 }
-
 
 void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
 {
@@ -101,11 +109,21 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
     setLongitude(scFileNode->getDoubleValue("longitude", 0.0));
     setLatitude(scFileNode->getDoubleValue("latitude", 0.0));
     setBank(scFileNode->getDoubleValue("roll", 0.0));
+
+    SGPropertyNode* submodels = scFileNode->getChild("submodels");
+
+    if (submodels) {
+        setServiceable(submodels->getBoolValue("serviceable", false));
+        setSMPath(submodels->getStringValue("path", ""));
+    }
+
 }
 
 void FGAIBase::update(double dt) {
+
     if (_otype == otStatic)
         return;
+
     if (_otype == otBallistic)
         CalculateMach();
 
@@ -114,21 +132,25 @@ void FGAIBase::update(double dt) {
 }
 
 void FGAIBase::Transform() {
+
     if (!invisible) {
       aip.setPosition(pos);
-      if (no_roll) {
+
+      if (no_roll)
          aip.setOrientation(0.0, pitch, hdg);
-      } else {
+      else
          aip.setOrientation(roll, pitch, hdg);
-      }
+
       aip.update();
     }
+
 }
 
 
 bool FGAIBase::init(bool search_in_AI_path) {
 
     if (!model_path.empty()) {
+
      if ( (search_in_AI_path)
           &&(model_path.substr(model_path.size() - 4, 4) == ".xml")) {
        SGPath ai_path("AI");
@@ -139,7 +161,9 @@ bool FGAIBase::init(bool search_in_AI_path) {
        } catch (const sg_exception &e) {
          model = NULL;
        }
-     } else model = NULL;
+     } else
+       model = NULL;
+
      if (!model) {
        try {
          model = load3DModel( globals->get_fg_root(), model_path, props,
@@ -148,23 +172,27 @@ bool FGAIBase::init(bool search_in_AI_path) {
          model = NULL;
        }
      }
+
    }
+
    if (model) {
      aip.init( model );
      aip.setVisible(true);
      invisible = false;
      globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
+
      // Register that one at the scenery manager
      globals->get_scenery()->register_placement_transform(aip.getTransform());
      fgSetString("/ai/models/model-added", props->getPath());
    } else {
-     if (!model_path.empty()) {
+
+     if (!model_path.empty())
        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
-     }
+
    }
 
+   props->setStringValue("submodels/path", _path.c_str());
    setDie(false);
-
    return true;
 }
 
@@ -193,10 +221,11 @@ ssgBranch * FGAIBase::load3DModel(const string& fg_root,
 }
 
 bool FGAIBase::isa( object_type otype ) {
- if ( otype == _otype )
-   return true;
- else
-   return false;
+
+  if ( otype == _otype )
+    return true;
+  else
+    return false;
 }
 
 
@@ -298,8 +327,7 @@ void FGAIBase::unbind() {
     props->untie("controls/lighting/nav-lights");
 }
 
-double FGAIBase::UpdateRadar(FGAIManager* manager)
-{
+double FGAIBase::UpdateRadar(FGAIManager* manager) {
    double radar_range_ft2 = fgGetDouble("/instrumentation/radar/range");
    bool force_on = fgGetBool("/instrumentation/radar/debug-mode", false);
    radar_range_ft2 *= SG_NM_TO_METER * SG_METER_TO_FEET * 1.1; // + 10%
@@ -315,8 +343,8 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
    // Test whether the target is within radar range.
    //
    in_range = (range_ft2 && (range_ft2 <= radar_range_ft2));
-   if ( in_range || force_on )
-   {
+
+   if ( in_range || force_on ) {
      props->setBoolValue("radar/in-range", true);
 
      // copy values from the AIManager
@@ -397,12 +425,14 @@ double FGAIBase::UpdateRadar(FGAIManager* manager)
    return range_ft2;
 }
 
-SGVec3d
-FGAIBase::getCartPosAt(const SGVec3d& _off) const
-{
-  // Transform that one to the horizontal local coordinate system.
+/*
+* Getters and Setters
+*/
   
+SGVec3d FGAIBase::getCartPosAt(const SGVec3d& _off) const {
+    // Transform that one to the horizontal local coordinate system.
   SGQuatd hlTrans = SGQuatd::fromLonLat(pos);
+
   // and postrotate the orientation of the AIModel wrt the horizontal
   // local frame
   hlTrans *= SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
@@ -417,12 +447,10 @@ FGAIBase::getCartPosAt(const SGVec3d& _off) const
   return cartPos + off;
 }
 
-SGVec3d
-FGAIBase::getCartPos() const
-{
+SGVec3d FGAIBase::getCartPos() const {
   // Transform that one to the horizontal local coordinate system.
-  
   SGQuatd hlTrans = SGQuatd::fromLonLat(pos);
+
   // and postrotate the orientation of the AIModel wrt the horizontal
   // local frame
   hlTrans *= SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
@@ -432,33 +460,25 @@ FGAIBase::getCartPos() const
   return cartPos;
 }
 
-double
-FGAIBase::_getCartPosX() const
-{
+double FGAIBase::_getCartPosX() const {
     SGVec3d cartPos = getCartPos();
     return cartPos.x();
 }
 
-double
-FGAIBase::_getCartPosY() const
-{
+double FGAIBase::_getCartPosY() const {
     SGVec3d cartPos = getCartPos();
     return cartPos.y();
 }
 
-double
-FGAIBase::_getCartPosZ() const
-{
+double FGAIBase::_getCartPosZ() const {
     SGVec3d cartPos = getCartPos();
     return cartPos.z();
 }
 
-/*
- * getters and Setters
- */
 void FGAIBase::_setLongitude( double longitude ) {
     pos.setLongitudeDeg(longitude);
 }
+
 void FGAIBase::_setLatitude ( double latitude )  {
     pos.setLatitudeDeg(latitude);
 }
@@ -466,15 +486,27 @@ void FGAIBase::_setLatitude ( double latitude )  {
 double FGAIBase::_getLongitude() const {
     return pos.getLongitudeDeg();
 }
+
 double FGAIBase::_getLatitude () const {
     return pos.getLatitudeDeg();
 }
+
 double FGAIBase::_getRdot() const {
     return rdot;
 }
+
 double FGAIBase::_getVS_fps() const {
     return vs*60.0;
 }
+
+double FGAIBase::_get_speed_east_fps() const {
+    return speed_east_deg_sec * ft_per_deg_lon;
+}
+
+double FGAIBase::_get_speed_north_fps() const {
+    return speed_north_deg_sec * ft_per_deg_lat;
+}
+
 void FGAIBase::_setVS_fps( double _vs ) {
     vs = _vs/60.0;
 }
@@ -482,6 +514,11 @@ void FGAIBase::_setVS_fps( double _vs ) {
 double FGAIBase::_getAltitude() const {
     return altitude_ft;
 }
+
+bool FGAIBase::_getServiceable() const {
+    return serviceable;
+}
+
 void FGAIBase::_setAltitude( double _alt ) {
     setAltitude( _alt );
 }
@@ -494,20 +531,37 @@ int FGAIBase::getID() const {
     return  _refID;
 }
 
+double FGAIBase::_getSpeed() const {
+    return speed;
+}
+
+double FGAIBase::_getRoll() const {
+    return roll;
+}
+
+double FGAIBase::_getPitch() const {
+    return pitch;
+}
+
+double FGAIBase::_getHeading() const {
+    return hdg;
+}
+
+const char* FGAIBase::_getPath() {
+    return _path.c_str();
+}
+
 void FGAIBase::CalculateMach() {
     // Calculate rho at altitude, using standard atmosphere
     // For the temperature T and the pressure p,
-
     double altitude = altitude_ft;
 
     if (altitude < 36152) {		// curve fits for the troposphere
       T = 59 - 0.00356 * altitude;
       p = 2116 * pow( ((T + 459.7) / 518.6) , 5.256);
-
     } else if ( 36152 < altitude && altitude < 82345 ) {    // lower stratosphere
       T = -70;
       p = 473.1 * pow( e , 1.73 - (0.000048 * altitude) );
-
     } else {                                    //  upper stratosphere
       T = -205.05 + (0.00164 * altitude);
       p = 51.97 * pow( ((T + 459.7) / 389.98) , -11.388);
@@ -521,20 +575,20 @@ void FGAIBase::CalculateMach() {
     // a = speed of sound [ft/s]
     // g = specific heat ratio, which is usually equal to 1.4
     // R = specific gas constant, which equals 1716 ft-lb/slug/°R
-
     a = sqrt ( 1.4 * 1716 * (T + 459.7));
 
     // calculate Mach number
-
     Mach = speed/a;
 
-    // cout  << "Speed(ft/s) "<< speed <<" Altitude(ft) "<< altitude << " Mach " << Mach;
+//    cout  << "Speed(ft/s) "<< speed <<" Altitude(ft) "<< altitude << " Mach " << Mach << endl;
 }
 
 int FGAIBase::_newAIModelID() {
     static int id = 0;
+
    if (!++id)
       id++;	// id = 0 is not allowed.
+
    return id;
 }
 

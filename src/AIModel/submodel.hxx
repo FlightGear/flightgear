@@ -19,72 +19,83 @@
 SG_USING_STD(vector);
 SG_USING_STD(string);
 
+class FGAIBase;
 
 class FGSubmodelMgr : public SGSubsystem
 {
 
 public:
 
+    typedef struct
+    {
+        SGPropertyNode_ptr trigger_node;
+        SGPropertyNode_ptr prop;
+        SGPropertyNode_ptr contents_node;
+        SGPropertyNode_ptr submodel_node;
+        SGPropertyNode_ptr speed_node;
 
- typedef struct {
-  SGPropertyNode_ptr trigger;
-  SGPropertyNode_ptr prop;
-  SGPropertyNode_ptr contents_node;
-  
-  string             name;
-  string             model;
-  double             speed;
-  bool               slaved;
-  bool               repeat;
-  double             delay;
-  double             timer;
-  int                count;
-  double             x_offset;
-  double             y_offset;
-  double             z_offset;
-  double             yaw_offset;
-  double             pitch_offset;
-  double             drag_area; 
-  double             life;
-  double             buoyancy;
-  bool               wind;
-  bool               first_time;
-  double             cd;
-  double             weight;
-  double             contents;
-  bool               aero_stabilised;
- } submodel; 
+        string             name;
+        string             model;
+        double             speed;
+        bool               slaved;
+        bool               repeat;
+        double             delay;
+        double             timer;
+        int                count;
+        double             x_offset;
+        double             y_offset;
+        double             z_offset;
+        double             yaw_offset;
+        double             pitch_offset;
+        double             drag_area;
+        double             life;
+        double             buoyancy;
+        bool               wind;
+        bool               first_time;
+        double             cd;
+        double             weight;
+        double             contents;
+        bool               aero_stabilised;
+        int                id;
+        bool               no_roll;
+        bool               serviceable;
+    }
+    submodel;
 
- typedef struct {
-  double     lat;
-  double     lon;
-  double     alt;
-  double     roll;
-  double     azimuth;
-  double     elevation;
-  double     speed;
-  double     wind_from_east;
-  double     wind_from_north;
-  double     speed_down_fps;
-  double     speed_east_fps;
-  double     speed_north_fps;
-  double     total_speed_down;
-  double     total_speed_east;
-  double     total_speed_north;
-  double     mass;
- } IC_struct;  
+    typedef struct
+    {
+        double     lat;
+        double     lon;
+        double     alt;
+        double     roll;
+        double     azimuth;
+        double     elevation;
+        double     speed;
+        double     wind_from_east;
+        double     wind_from_north;
+        double     speed_down_fps;
+        double     speed_east_fps;
+        double     speed_north_fps;
+        double     total_speed_down;
+        double     total_speed_east;
+        double     total_speed_north;
+        double     mass;
+        int        id;
+        bool       no_roll;
+    }
+    IC_struct;
 
-    FGSubmodelMgr ();
-    ~FGSubmodelMgr ();
+    FGSubmodelMgr();
+    ~FGSubmodelMgr();
 
-    void load ();
-    void init ();
-    void bind ();
-    void unbind ();
-    void update (double dt);
-    bool release (submodel* sm, double dt);
-    void transform (submodel* sm);
-    void updatelat( double lat );
+    void load();
+    void init();
+    void bind();
+    void unbind();
+    void update(double dt);
+    bool release(submodel* sm, double dt);
+    void transform(submodel* sm);
+    void updatelat(double lat);
 
 private:
 
@@ -105,6 +116,8 @@ private:
     float cosRx, sinRx;
     float cosRy, sinRy;
     float cosRz, sinRz;
+
+    int index;
 
     double ft_per_deg_longitude;
     double ft_per_deg_latitude;
@@ -137,9 +150,17 @@ private:
     FGAIManager* ai;
     IC_struct  IC;
 
+    // A list of pointers to AI objects
+    typedef list <SGSharedPtr<FGAIBase> > sm_list_type;
+    typedef sm_list_type::iterator sm_list_iterator;
+    typedef sm_list_type::const_iterator sm_list_const_iterator;
+
+    sm_list_type sm_list;
+
+    void loadAI();
+    void loadSubmodels();
+    double getRange(double lat, double lon, double lat2, double lon2) const;
+
 };
 
 #endif // __SYSTEMS_SUBMODEL_HXX
-
-
-

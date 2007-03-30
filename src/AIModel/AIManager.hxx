@@ -61,7 +61,7 @@ class FGAIThermal;
 class FGAIManager : public SGSubsystem
 {
 
-private:
+public:
 
     // A list of pointers to AI objects
     typedef list <SGSharedPtr<FGAIBase> > ai_list_type;
@@ -71,7 +71,7 @@ private:
     ai_list_type ai_list;
   ModelVec loadedModels;
 
-public:
+    inline const list <SGSharedPtr<FGAIBase> >& get_ai_list() const { return ai_list; }
 
     FGAIManager();
     ~FGAIManager();

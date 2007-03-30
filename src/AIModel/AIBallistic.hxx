@@ -36,6 +36,7 @@ public:
     bool init(bool search_in_AI_path=false);
     virtual void bind();
     virtual void unbind();
+
     void update(double dt);
 
     void setAzimuth( double az );
@@ -50,6 +51,9 @@ public:
     void setWind( bool val );
     void setCd( double c );
     void setMass( double m );
+    void setNoRoll( bool nr );
+    void setRandom( bool r );
+    void setName(const string&);
 
     double _getTime() const;
 
@@ -60,7 +64,7 @@ private:
     double azimuth;         // degrees true
     double elevation;       // degrees
     double rotation;        // degrees
-    bool aero_stabilised;   // if true, object will align wit trajectory
+    bool   aero_stabilised; // if true, object will align with trajectory
     double drag_area;       // equivalent drag area in ft2
     double life_timer;      // seconds
     double gravity;         // fps2
@@ -70,9 +74,10 @@ private:
     bool wind;              // if true, local wind will be applied to object
     double Cd;              // drag coefficient
     double mass;            // slugs
+    bool random;            // modifier for Cd
+    string name;
 
     void Run(double dt);
 };
 
 #endif  // _FG_AIBALLISTIC_HXX
-

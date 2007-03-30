@@ -78,7 +78,8 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
      wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
      wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
      wpt->on_ground = wpt_node->getBoolValue("on-ground", false);
-     wpt->wait_time = wpt_node->getDoubleValue("wait-time-sec", 0);
+     wpt->time_sec   = wpt_node->getDoubleValue("time-sec", 0);
+     wpt->time       = wpt_node->getStringValue("time", "");
 
      if (wpt->name == "END") wpt->finished = true;
      else wpt->finished = false;

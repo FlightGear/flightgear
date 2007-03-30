@@ -49,7 +49,9 @@ public:
    bool flaps_down;
    bool on_ground;
     int routeIndex;  // For AI/ATC purposes;
-   double wait_time;
+   double time_sec;
+   string time;
+
   } waypoint;
 
    FGAIFlightPlan(const string& filename);
