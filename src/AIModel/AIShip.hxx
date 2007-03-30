@@ -56,12 +56,13 @@ public:
     void setPrevName(const string&);
 
     bool _hdg_lock;
+    bool _serviceable;
 
     virtual const char* getTypeString(void) const { return "ship"; }
 
 protected:
 
-    string _name; // The _name of this ship.
+    string _name; // The name of this ship.
 
 private:
 
@@ -74,23 +75,35 @@ private:
     void setRepeat(bool r);
     void setMissed(bool m);
     void setWPNames();
+    void setServiceable(bool s);
     void Run(double dt);
+    void setStartTime(const string&);
+    void setUntilTime(const string&);
+
+
     double getRange(double lat, double lon, double lat2, double lon2) const;
     double getCourse(double lat, double lon, double lat2, double lon2) const;
     double sign(double x);
+    double getDaySeconds();
+    double processTimeString(const string& time);
 
     bool initFlightPlan();
+    bool advanceFlightPlan (double elapsed_sec, double day_sec);
 
     float _rudder, _tgt_rudder;
 
-    double _rudder_constant, _roll_constant, _speed_constant, _hdg_constant;
+    double _rudder_constant, _roll_constant, _speed_constant, _hdg_constant, _roll_factor;
     double _sp_turn_radius_ft, _rd_turn_radius_ft;
     double _wp_range, _old_range, _range_rate;
     double _dt_count, _missed_count, _wait_count;
     double _next_run;
     double _missed_time_sec;
+    double _start_sec;
+    double _day;
 
     string _prev_name, _curr_name, _next_name;
+    string _path;
+    string _start_time, _until_time;
 
     bool _repeat;
     bool _fp_init;

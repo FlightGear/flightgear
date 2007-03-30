@@ -30,6 +30,7 @@
 
 #include <math.h>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
 
 #include "AIShip.hxx"
@@ -46,6 +47,7 @@ FGAIShip::~FGAIShip() {
 }
 
 void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
+
     if (!scFileNode)
         return;
 
@@ -56,6 +58,7 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
     setRadius(scFileNode->getDoubleValue("turn-radius-ft", 2000));
     std::string flightplan = scFileNode->getStringValue("flightplan");
     setRepeat(scFileNode->getBoolValue("repeat", false));
+    setStartTime(scFileNode->getStringValue("time", ""));
 
     if (!flightplan.empty()) {
         FGAIFlightPlan* fp = new FGAIFlightPlan(flightplan);
@@ -69,10 +72,15 @@ bool FGAIShip::init(bool search_in_AI_path) {
     curr = 0; // the one ahead
     next = 0; // the next plus 1
 
+    _until_time = "";
+
     props->setStringValue("name", _name.c_str());
     props->setStringValue("position/waypoint-name-prev", _prev_name.c_str());
     props->setStringValue("position/waypoint-name-curr", _curr_name.c_str());
     props->setStringValue("position/waypoint-name-next", _next_name.c_str());
+    props->setStringValue("submodels/path", _path.c_str());
+    props->setStringValue("position/waypoint-start-time", _start_time.c_str());
+    props->setStringValue("position/waypoint-wait-until-time", _until_time.c_str());
 
     _hdg_lock = false;
     _rudder = 0.0;
@@ -82,6 +90,7 @@ bool FGAIShip::init(bool search_in_AI_path) {
     _roll_constant = 0.001;
     _speed_constant = 0.05;
     _hdg_constant = 0.01;
+    _roll_factor = -0.0083335;
 
     _rd_turn_radius_ft = _sp_turn_radius_ft = turn_radius_ft;
 
@@ -93,6 +102,9 @@ bool FGAIShip::init(bool search_in_AI_path) {
     _missed_count = 0;
     _wait_count = 0;
     _missed_time_sec = 30;
+
+    _day = 86400;
+
 
     _wp_range = _old_range = 0;
     _range_rate = 0;
@@ -117,6 +129,8 @@ void FGAIShip::bind() {
         SGRawValuePointer<double>(&tgt_heading));
     props->tie("controls/constants/rudder",
         SGRawValuePointer<double>(&_rudder_constant));
+    props->tie("controls/constants/roll-factor",
+        SGRawValuePointer<double>(&_roll_factor));
     props->tie("controls/constants/roll",
         SGRawValuePointer<double>(&_roll_constant));
     props->tie("controls/constants/rudder",
@@ -141,6 +155,8 @@ void FGAIShip::bind() {
         SGRawValuePointer<double>(&_wait_count));
     props->tie("position/waypoint-waiting",
         SGRawValuePointer<bool>(&_waiting));
+    props->tie("submodels/serviceable",
+        SGRawValuePointer<bool>(&_serviceable));
 }
 
 void FGAIShip::unbind() {
@@ -151,6 +167,7 @@ void FGAIShip::unbind() {
     props->untie("controls/tgt-heading-degs");
     props->untie("controls/constants/roll");
     props->untie("controls/constants/rudder");
+    props->untie("controls/constants/roll-factor");
     props->untie("controls/constants/speed");
     props->untie("position/waypoint-range-nm");
     props->untie("position/waypoint-range-old-nm");
@@ -160,6 +177,7 @@ void FGAIShip::unbind() {
     props->untie("position/waypoint-wait-count");
     props->untie("position/waypoint-waiting");
     props->untie("position/waypoint-missed-time-sec");
+    props->untie("submodels/serviceable");
 }
 
 void FGAIShip::update(double dt) {
@@ -169,12 +187,12 @@ void FGAIShip::update(double dt) {
 }
 
 void FGAIShip::Run(double dt) {
-
+    //cout << _name << " init: " << _fp_init << endl;
     if (_fp_init)
         ProcessFlightPlan(dt);
 
-    double speed_north_deg_sec;
-    double speed_east_deg_sec;
+    //    double speed_north_deg_sec;
+    //    double speed_east_deg_sec;
     double alpha;
     double rudder_limit;
     double raw_roll;
@@ -189,6 +207,7 @@ void FGAIShip::Run(double dt) {
 
         if (speed_diff < 0.0)
             speed -= _speed_constant * dt;
+
     }
 
     // do not allow unreasonable ship speeds
@@ -250,8 +269,8 @@ void FGAIShip::Run(double dt) {
         if (hdg < 0.0)
             hdg += 360.0;
 
-        //adjust roll for _rudder angle and speed. Another bit of voodoo
-        raw_roll = -0.0166667 * speed * _rudder;
+        //adjust roll for rudder angle and speed. Another bit of voodoo
+        raw_roll = _roll_factor * speed * _rudder;
     } else {
         // _rudder angle is 0
         raw_roll = 0;
@@ -292,6 +311,7 @@ void FGAIShip::Run(double dt) {
 
     // adjust _rudder angle
     double rudder_diff = _tgt_rudder - _rudder;
+
     // set the _rudder limit by speed
     if (speed <= 40)
         rudder_limit = (-0.825 * speed) + 35;
@@ -356,6 +376,15 @@ void FGAIShip::setName(const string& n) {
     _name = n;
 }
 
+void FGAIShip::setStartTime(const string& st) {
+    _start_time = st;
+}
+
+void FGAIShip::setUntilTime(const string& ut) {
+    _until_time = ut;
+    props->setStringValue("position/waypoint-wait-until-time", _until_time.c_str());
+}
+
 void FGAIShip::setCurrName(const string& c) {
     _curr_name = c;
     props->setStringValue("position/waypoint-name-curr", _curr_name.c_str());
@@ -380,129 +409,32 @@ void FGAIShip::setMissed(bool m) {
     props->setBoolValue("position/waypoint-missed", _missed);
 }
 
-void FGAIShip::ProcessFlightPlan(double dt) {
-
-    _missed = false;
-    _dt_count += dt;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Check Execution time (currently once every 1 sec)
-    // Add a bit of randomization to prevent the execution of all flight plans
-    // in synchrony, which can add significant periodic framerate flutter.
-    ///////////////////////////////////////////////////////////////////////////
-    if (_dt_count < _next_run)
-        return;
-
-    _next_run = 1.0 + (0.5 * sg_random());
-
-    // check to see if we've reached the point for our next turn
-    // if the range to the waypoint is less than the calculated turn
-    // radius we can start the turn to the next leg
-    _wp_range = getRange(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->latitude, curr->longitude);
-    _range_rate = (_wp_range - _old_range) / _dt_count;
-    double sp_turn_radius_nm = _sp_turn_radius_ft / 6076.1155;
-
-    // we need to try to identify a _missed waypoint
-
-    // calculate the time needed to turn through an arc of 90 degrees, and allow an error of 30 secs
-    if (speed != 0)
-        _missed_time_sec = 30 + ((SGD_PI * sp_turn_radius_nm * 60 * 60) / (2 * fabs(speed)));
-    else
-        _missed_time_sec = 30;
-
-    if ((_range_rate > 0) && (_wp_range < 3 * sp_turn_radius_nm) && !_new_waypoint)
-        _missed_count += _dt_count;
-
-
-    if (_missed_count >= _missed_time_sec) {
-        setMissed(true);
-    } else {
-        setMissed(false);
-    }
-
-    _old_range = _wp_range;
-
-    if ((_wp_range < sp_turn_radius_nm) || _missed || _waiting && !_new_waypoint) {
-
-        if (_next_name == "END") {
-
-            if (_repeat) {
-                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: Flightplan restarting ");
-                fp->restart();
-                prev = curr;
-                curr = fp->getCurrentWaypoint();
-                next = fp->getNextWaypoint();
-                setWPNames();
-                _wp_range = getRange(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->latitude, curr->longitude);
-                _old_range = _wp_range;
-                _range_rate = 0;
-                _new_waypoint = true;
-                _missed_count = 0;
-                AccelTo(prev->speed);
-            } else {
-                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: Flightplan dieing ");
-                setDie(true);
-                _dt_count = 0;
-                return;
-            }
-
-        } else if (_next_name == "WAIT") {
-
-            if (_wait_count < next->wait_time) {
-                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: " << _name << " _waiting ");
-                setSpeed(0);
-                _waiting = true;
-                _wait_count += _dt_count;
-                _dt_count = 0;
-                return;
-            } else {
-                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: " << _name << " wait done: getting new waypoints ");
-                prev = curr;
-                fp->IncrementWaypoint(false);
-                fp->IncrementWaypoint(false);  // do it twice
-                curr = fp->getCurrentWaypoint();
-                next = fp->getNextWaypoint();
-                _waiting = false;
-                _wait_count = 0;
-            }
-
-        } else {
-            //now reorganise the waypoints, so that next becomes current and so on
-            SG_LOG(SG_GENERAL, SG_INFO, "AIShip: " << _name << " getting new waypoints ");
-            fp->IncrementWaypoint(false);
-            prev = fp->getPreviousWaypoint(); //first waypoint
-            curr = fp->getCurrentWaypoint();  //second waypoint
-            next = fp->getNextWaypoint();     //third waypoint (might not exist!)
-        }
-
-        setWPNames();
-        _new_waypoint = true;
-        _missed_count = 0;
-        _range_rate = 0;
-        _wp_range = getRange(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->latitude, curr->longitude);
-        _old_range = _wp_range;
-        AccelTo(prev->speed);
-    } else {
-        _new_waypoint = false;
-    }
-
-    //   now revise the required course for the next way point
-    double course = getCourse(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->latitude, curr->longitude);
-
-    if (finite(course))
-        TurnTo(course);
-    else
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: Bearing or Range is not a finite number");
-
-     _dt_count = 0;
-} // end Processing FlightPlan
-
 void FGAIShip::setRudder(float r) {
     _rudder = r;
 }
 
 void FGAIShip::setRoll(double rl) {
     roll = rl;
+}
+
+void FGAIShip::setWPNames() {
+
+    if (prev != 0)
+        setPrevName(prev->name);
+    else
+        setPrevName("");
+
+    setCurrName(curr->name);
+
+    if (next != 0)
+        setNextName(next->name);
+    else
+        setNextName("");
+
+    SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: prev wp name " << prev->name);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: current wp name " << curr->name);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: next wp name " << next->name);
+
 }
 
 double FGAIShip::getRange(double lat, double lon, double lat2, double lon2) const {
@@ -528,8 +460,175 @@ double FGAIShip::getCourse(double lat, double lon, double lat2, double lon2) con
     }
 }
 
+void FGAIShip::ProcessFlightPlan(double dt) {
+
+    double time_sec = getDaySeconds();
+    double until_time_sec = 0;
+
+    _missed = false;
+    _dt_count += dt;
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Check Execution time (currently once every 1 sec)
+    // Add a bit of randomization to prevent the execution of all flight plans
+    // in synchrony, which can add significant periodic framerate flutter.
+    ///////////////////////////////////////////////////////////////////////////
+
+    //cout << "_start_sec " << _start_sec << " time_sec " << time_sec << endl;
+    if (_dt_count < _next_run && _start_sec < time_sec)
+        return;
+
+    _next_run = 1.0 + (0.5 * sg_random());
+
+    // check to see if we've reached the point for our next turn
+    // if the range to the waypoint is less than the calculated turn
+    // radius we can start the turn to the next leg
+    _wp_range = getRange(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->latitude, curr->longitude);
+    _range_rate = (_wp_range - _old_range) / _dt_count;
+    double sp_turn_radius_nm = _sp_turn_radius_ft / 6076.1155;
+
+    // we need to try to identify a _missed waypoint
+
+    // calculate the time needed to turn through an arc of 90 degrees, and allow an error of 30 secs
+    if (speed != 0)
+        _missed_time_sec = 30 + ((SGD_PI * sp_turn_radius_nm * 60 * 60) / (2 * fabs(speed)));
+    else
+        _missed_time_sec = 30;
+
+    if ((_range_rate > 0) && (_wp_range < 3 * sp_turn_radius_nm) && !_new_waypoint)
+        _missed_count += _dt_count;
+
+    if (_missed_count >= _missed_time_sec) {
+        setMissed(true);
+    } else {
+        setMissed(false);
+    }
+
+    _old_range = _wp_range;
+    setWPNames();
+
+    if ((_wp_range < sp_turn_radius_nm) || _missed || _waiting && !_new_waypoint) {
+
+        if (_next_name == "END") {
+
+            if (_repeat) {
+                SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: Flightplan restarting ");
+                fp->restart();
+                prev = curr;
+                curr = fp->getCurrentWaypoint();
+                next = fp->getNextWaypoint();
+                setWPNames();
+                _wp_range = getRange(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->latitude, curr->longitude);
+                _old_range = _wp_range;
+                _range_rate = 0;
+                _new_waypoint = true;
+                _missed_count = 0;
+                AccelTo(prev->speed);
+            } else {
+                SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: Flightplan dieing ");
+                setDie(true);
+                _dt_count = 0;
+                return;
+            }
+
+        } else if (_next_name == "WAIT") {
+
+            if (_wait_count < next->time_sec) {
+                SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " waiting ");
+                setSpeed(0);
+                _waiting = true;
+                _wait_count += _dt_count;
+                _dt_count = 0;
+                return;
+            } else {
+                SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name
+                    << " wait done: getting new waypoints ");
+                _waiting = false;
+                _wait_count = 0;
+                fp->IncrementWaypoint(false);
+                next = fp->getNextWaypoint();
+
+                if (next->name == "WAITUNTIL" || next->name == "WAIT"
+                        || next->name == "END")
+                    return;
+
+                prev = curr;
+                fp->IncrementWaypoint(false);
+                curr = fp->getCurrentWaypoint();
+                next = fp->getNextWaypoint();
+            }
+
+        } else if (_next_name == "WAITUNTIL") {
+            time_sec = getDaySeconds();
+            until_time_sec = processTimeString(next->time);
+            _until_time = next->time;
+            setUntilTime(next->time);
+            if (until_time_sec > time_sec) {
+                SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " waiting until: "
+                    << _until_time << " " << until_time_sec << " now " << time_sec );
+                setSpeed(0);
+                _waiting = true;
+                return;
+            } else {
+                SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: "
+                    << _name << " wait until done: getting new waypoints ");
+                setUntilTime("");
+                fp->IncrementWaypoint(false);
+
+                while (next->name == "WAITUNTIL") {
+                    fp->IncrementWaypoint(false);
+                    next = fp->getNextWaypoint();
+                }
+
+                if (next->name == "WAIT")
+                    return;
+
+                prev = curr;
+                fp->IncrementWaypoint(false);
+                curr = fp->getCurrentWaypoint();
+                next = fp->getNextWaypoint();
+                _waiting = false;
+            }
+
+        } else {
+            //now reorganise the waypoints, so that next becomes current and so on
+            SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " getting new waypoints ");
+            fp->IncrementWaypoint(false);
+            prev = fp->getPreviousWaypoint(); //first waypoint
+            curr = fp->getCurrentWaypoint();  //second waypoint
+            next = fp->getNextWaypoint();     //third waypoint (might not exist!)
+        }
+
+        setWPNames();
+        _new_waypoint = true;
+        _missed_count = 0;
+        _range_rate = 0;
+        _wp_range = getRange(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->latitude, curr->longitude);
+        _old_range = _wp_range;
+        AccelTo(prev->speed);
+    } else {
+        _new_waypoint = false;
+    }
+
+    //   now revise the required course for the next way point
+    double course = getCourse(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->latitude, curr->longitude);
+
+    if (finite(course))
+        TurnTo(course);
+    else
+        SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: Bearing or Range is not a finite number");
+
+     _dt_count = 0;
+} // end Processing FlightPlan
+
 bool FGAIShip::initFlightPlan() {
-    SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " initialising waypoints ");
+
+    SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " initializing waypoints ");
+
+    bool init = false;
+
+    _start_sec = 0;
+
     fp->restart();
     fp->IncrementWaypoint(false);
 
@@ -537,51 +636,222 @@ bool FGAIShip::initFlightPlan() {
     curr = fp->getCurrentWaypoint();  //second waypoint
     next = fp->getNextWaypoint();     //third waypoint (might not exist!)
 
-    if (curr->name == "WAIT") {  // don't wait when initialising
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " re-initialising waypoints ");
+    while (curr->name == "WAIT" || curr->name == "WAITUNTIL") {  // don't wait when initialising
+        SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " re-initializing waypoints ");
         fp->IncrementWaypoint(false);
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
     }
 
-    setWPNames();
+    if (!_start_time.empty()){
+        _start_sec = processTimeString(_start_time);
+        double day_sec = getDaySeconds();
+
+        if (_start_sec < day_sec){
+            //cout << "flight plan has already started " << _start_time << endl;
+            init = advanceFlightPlan(_start_sec, day_sec);
+
+        } else if (_start_sec > day_sec && _repeat) {
+            //cout << "flight plan has not started, " << _start_time;
+            //cout << "offsetting start time by -24 hrs" << endl;
+            _start_sec -= _day;
+            init = advanceFlightPlan(_start_sec, day_sec);
+        }
+
+        if (init)
+            _start_sec = 0; // set to zero for an immediate start of the Flight Plan
+        else {
+            fp->restart();
+            fp->IncrementWaypoint(false);
+            prev = fp->getPreviousWaypoint();
+            curr = fp->getCurrentWaypoint();
+            next = fp->getNextWaypoint();
+            return false;
+        }
+
+    } else {
     setLatitude(prev->latitude);
     setLongitude(prev->longitude);
     setSpeed(prev->speed);
+    }
+
+    setWPNames();
     setHeading(getCourse(prev->latitude, prev->longitude, curr->latitude, curr->longitude));
-    _hdg_lock = true;
-    _wp_range = getRange(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->latitude, curr->longitude);
+    _wp_range = getRange(prev->latitude, prev->longitude, curr->latitude, curr->longitude);
     _old_range = _wp_range;
     _range_rate = 0;
+    _hdg_lock = true;
     _missed = false;
     _missed_count = 0;
     _new_waypoint = true;
 
-    SG_LOG(SG_GENERAL, SG_INFO, "AIShip: " << _name << " done initialising waypoints ");
-
+    SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " done initialising waypoints ");
     if (prev)
+        init = true;
+
+    if (init)
         return true;
     else
         return false;
 
 } // end of initialization
 
-void FGAIShip::setWPNames() {
 
-    if (prev != 0)
-        setPrevName(prev->name);
-    else
-        setPrevName("");
+double FGAIShip::processTimeString(const string& theTime) {
 
-    setCurrName(curr->name);
+    int Hour;
+    int Minute;
+    int Second;
 
-    if (next != 0)
-        setNextName(next->name);
-    else
-        setNextName("");
+    // first split theTime string into
+    //  hour, minute, second and convert to int;
+    Hour   = atoi(theTime.substr(0,2).c_str());
+    Minute = atoi(theTime.substr(3,5).c_str());
+    Second = atoi(theTime.substr(6,8).c_str());
 
-    SG_LOG(SG_GENERAL, SG_INFO, "AIShip: prev wp name " << prev->name);
-    SG_LOG(SG_GENERAL, SG_INFO, "AIShip: current wp name " << curr->name);
-    SG_LOG(SG_GENERAL, SG_INFO, "AIShip: next wp name " << next->name);
+    // offset by a day-sec to allow for starting a day earlier
+    double time_seconds = Hour * 3600
+        + Minute * 60
+        + Second;
 
+    return time_seconds;
+}
+
+double FGAIShip::getDaySeconds () {
+    // Date and time
+    struct tm *t = globals->get_time_params()->getGmt();
+
+    double day_seconds = t->tm_hour * 3600
+        + t->tm_min * 60
+        + t->tm_sec;
+
+    return day_seconds;
+}
+
+bool FGAIShip::advanceFlightPlan (double start_sec, double day_sec) {
+
+    double elapsed_sec = start_sec;
+    double distance_nm = 0;
+
+    //cout << "advancing flight plan start_sec: " << start_sec << " " << day_sec << endl;
+
+    while ( elapsed_sec < day_sec ) {
+
+        if (next->name == "END") {
+
+            if (_repeat ) {
+                //cout << _name << ": " << "restarting flightplan" << endl;
+                fp->restart();
+                curr = fp->getCurrentWaypoint();
+                next = fp->getNextWaypoint();
+            } else {
+                //cout << _name << ": " << "ending flightplan" << endl;
+                setDie(true);
+                return false;
+            }
+
+        } else if (next->name == "WAIT") {
+            //cout << _name << ": begin WAIT: " << prev->name << " ";
+            //cout << curr->name << " " << next->name << endl;
+
+            elapsed_sec += next->time_sec;
+
+            if ( elapsed_sec >= day_sec)
+                continue;
+
+            fp->IncrementWaypoint(false);
+            next = fp->getNextWaypoint();
+
+            if (next->name != "WAITUNTIL" && next->name != "WAIT"
+                    && next->name != "END") {
+                prev = curr;
+                fp->IncrementWaypoint(false);
+                curr = fp->getCurrentWaypoint();
+                next = fp->getNextWaypoint();
+            }
+
+        } else if (next->name == "WAITUNTIL") {
+            double until_sec = processTimeString(next->time);
+
+            if (until_sec > _start_sec && start_sec < 0)
+                until_sec -= _day;
+
+            if (elapsed_sec < until_sec)
+                elapsed_sec = until_sec;
+
+            if (elapsed_sec >= day_sec )
+                break;
+
+            fp->IncrementWaypoint(false);
+            next = fp->getNextWaypoint();
+
+            if (next->name != "WAITUNTIL" && next->name != "WAIT") {
+                prev = curr;
+                fp->IncrementWaypoint(false);
+                curr = fp->getCurrentWaypoint();
+                next = fp->getNextWaypoint();
+            }
+
+            //cout << _name << ": end WAITUNTIL: ";
+            //cout << prev->name << " " << curr->name << " " << next->name <<  endl;
+
+        } else {
+            distance_nm = getRange(prev->latitude, prev->longitude, curr->latitude, curr->longitude);
+            elapsed_sec += distance_nm * 60 * 60 / prev->speed;
+
+            if (elapsed_sec >= day_sec)
+                continue;
+
+            fp->IncrementWaypoint(false);
+            prev = fp->getPreviousWaypoint();
+            curr = fp->getCurrentWaypoint();
+            next = fp->getNextWaypoint();
+        }
+
+    }   // end while
+
+    // the required position lies between the previous and current waypoints
+    // so we will calculate the distance back up the track from the current waypoint
+    // then calculate the lat and lon.
+    /*cout << "advancing flight plan done elapsed_sec: " << elapsed_sec
+        << " " << day_sec << endl;*/
+
+    double time_diff = elapsed_sec - day_sec;
+    double lat, lon, recip;
+
+    //cout << " time diff " << time_diff << endl;
+
+    if (next->name == "WAIT" ){
+        setSpeed(0);
+        lat = curr->latitude;
+        lon = curr->longitude;
+        _wait_count= time_diff;
+        _waiting = true;
+    } else if (next->name == "WAITUNTIL") {
+        setSpeed(0);
+        lat = curr->latitude;
+        lon = curr->longitude;
+        _waiting = true;
+    } else {
+        setSpeed(prev->speed);
+        distance_nm = speed * time_diff / (60 * 60);
+        double brg = getCourse(curr->latitude, curr->longitude, prev->latitude, prev->longitude);
+
+        //cout << " brg " << brg << " from " << curr->name << " to " << prev->name << " "
+        //    << " lat "  << curr->latitude << " lon " << curr->longitude
+        //    << " distance m " << distance_nm * SG_NM_TO_METER << endl;
+
+        lat = geo_direct_wgs_84 (curr->latitude, curr->longitude, brg,
+            distance_nm * SG_NM_TO_METER, &lat, &lon, &recip );
+        lon = geo_direct_wgs_84 (curr->latitude, curr->longitude, brg,
+            distance_nm * SG_NM_TO_METER, &lat, &lon, &recip );
+        recip = geo_direct_wgs_84 (curr->latitude, curr->longitude, brg,
+            distance_nm * SG_NM_TO_METER, &lat, &lon, &recip );
+    }
+
+    //cout << "Pos " << lat << ", " << lon << " recip " << recip << endl;
+
+    setLatitude(lat);
+    setLongitude(lon);
+    return true;
 }

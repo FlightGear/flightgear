@@ -3,6 +3,8 @@
 // Written by David Culp, started November 2003.
 // - davidculp2@comcast.net
 //
+// With major additions by Mathias Froehlich & Vivian Meazza 2004-2007
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation; either version 2 of the
@@ -22,6 +24,7 @@
 #endif
 
 #include <simgear/math/point3d.hxx>
+#include <simgear/math/sg_random.h>
 #include <math.h>
 
 #include "AIBallistic.hxx"
@@ -57,6 +60,8 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
   setCd(scFileNode->getDoubleValue("cd", 0.029));
   setMass(scFileNode->getDoubleValue("mass", 0.007));
   setStabilisation(scFileNode->getBoolValue("aero_stabilized", false));
+  setNoRoll(scFileNode->getBoolValue("no-roll", false));
+  setRandom(scFileNode->getBoolValue("random", false));
 }
 
 bool FGAIBallistic::init(bool search_in_AI_path) {
@@ -86,11 +91,9 @@ void FGAIBallistic::update(double dt) {
    Transform();
 }
 
-
 void FGAIBallistic::setAzimuth(double az) {
    hdg = azimuth = az;
 }
-
 
 void FGAIBallistic::setElevation(double el) {
    pitch = elevation = el;
@@ -102,6 +105,10 @@ void FGAIBallistic::setRoll(double rl) {
 
 void FGAIBallistic::setStabilisation(bool val) {
    aero_stabilised = val;
+}
+
+void FGAIBallistic::setNoRoll(bool nr) {
+    no_roll = nr;
 }
 
 void FGAIBallistic::setDragArea(double a) {
@@ -136,8 +143,15 @@ void FGAIBallistic::setMass(double m) {
    mass = m;
 }
 
-void FGAIBallistic::Run(double dt) {
+void FGAIBallistic::setRandom(bool r) {
+    random = r;
+}
 
+void FGAIBallistic::setName(const string& n) {
+    name = n;
+}
+
+void FGAIBallistic::Run(double dt) {
    life_timer += dt;
 //    cout << "life timer 1" << life_timer <<  dt << endl;
    if (life_timer > life) setDie(true); 
@@ -148,14 +162,20 @@ void FGAIBallistic::Run(double dt) {
    double wind_speed_from_east_deg_sec;
    double Cdm;      // Cd adjusted by Mach Number
    
+    //randomise Cd by +- 5%
+    if (random)
+        Cd = Cd * 0.95 + (0.05 * sg_random());
+
    // Adjust Cd by Mach number. The equations are based on curves
    // for a conventional shell/bullet (no boat-tail). 
-   if ( Mach < 0.7 ) { Cdm = 0.0125 * Mach + Cd; }
-     else if ( 0.7 < Mach && Mach < 1.2 ) { 
-       Cdm = 0.3742 * pow ( Mach, 2) - 0.252 * Mach + 0.0021 + Cd; }
-     else { Cdm = 0.2965 * pow ( Mach, -1.1506 ) + Cd; }
+    if ( Mach < 0.7 )
+        Cdm = 0.0125 * Mach + Cd;
+    else if ( 0.7 < Mach && Mach < 1.2 )
+        Cdm = 0.3742 * pow ( Mach, 2) - 0.252 * Mach + 0.0021 + Cd;
+    else
+        Cdm = 0.2965 * pow ( Mach, -1.1506 ) + Cd;
 
-//   cout << " Mach , " << Mach << " , Cdm , " << Cdm << endl;
+    //cout << " Mach , " << Mach << " , Cdm , " << Cdm << " ballistic speed kts //"<< speed <<  endl;
    
    // drag = Cd * 0.5 * rho * speed * speed * drag_area;
    // rho is adjusted for altitude in void FGAIBase::update,
@@ -165,11 +185,14 @@ void FGAIBallistic::Run(double dt) {
    speed -= (Cdm * 0.5 * rho * speed * speed * drag_area/mass) * dt; 
 
    // don't let speed become negative
-   if ( speed < 0.0 ) speed = 0.0;
+    if ( speed < 0.0 )
+        speed = 0.0;
+
+    double speed_fps = speed * SG_KT_TO_FPS;
    
    // calculate vertical and horizontal speed components
-   vs = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed;
-   double hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed;
+    vs = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
+    double hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
 
    // convert horizontal speed (fps) to degrees per second
    speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lat;
@@ -186,8 +209,10 @@ void FGAIBallistic::Run(double dt) {
    wind_speed_from_east_deg_sec  = wind_from_east / ft_per_deg_lon;
    
    // set new position
-   pos.setLatitudeDeg( pos.getLatitudeDeg() + (speed_north_deg_sec - wind_speed_from_north_deg_sec) * dt );
-   pos.setLongitudeDeg( pos.getLongitudeDeg() + (speed_east_deg_sec - wind_speed_from_east_deg_sec) * dt ); 
+    pos.setLatitudeDeg( pos.getLatitudeDeg()
+        + (speed_north_deg_sec - wind_speed_from_north_deg_sec) * dt );
+    pos.setLongitudeDeg( pos.getLongitudeDeg()
+        + (speed_east_deg_sec - wind_speed_from_east_deg_sec) * dt );
 
    // adjust vertical speed for acceleration of gravity and buoyancy
    vs -= (gravity - buoyancy) * dt;
@@ -197,11 +222,14 @@ void FGAIBallistic::Run(double dt) {
    pos.setElevationFt(altitude_ft); 
 
    // recalculate pitch (velocity vector) if aerostabilized
-   //   cout << "aero_stabilised " << aero_stabilised  << endl ;
-   if (aero_stabilised) pitch = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
+    /*cout << name << ": " << "aero_stabilised " << aero_stabilised
+    << " pitch " << pitch <<" vs "  << vs <<endl ;*/
+
+    if (aero_stabilised)
+        pitch = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
 
    // recalculate total speed
-   speed = sqrt( vs * vs + hs * hs);
+    speed = sqrt( vs * vs + hs * hs) / SG_KT_TO_FPS;
 
    // set destruction flag if altitude less than sea level -1000
    if (altitude_ft < -1000.0) setDie(true);

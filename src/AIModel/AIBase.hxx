@@ -59,6 +59,7 @@ public:
 
     void setManager(FGAIManager* mgr, SGPropertyNode* p);
     void setPath( const char* model );
+    void setSMPath( const string& p );
     void setSpeed( double speed_KTAS );
     void setAltitude( double altitude_ft );
     void setHeading( double heading );
@@ -70,20 +71,23 @@ public:
     void setXoffset( double x_offset );
     void setYoffset( double y_offset );
     void setZoffset( double z_offset );
+    void setServiceable ( bool serviceable );
+    void setDie( bool die );
 
     int getID() const;
 
-    void setDie( bool die );
     bool getDie();
 
     SGVec3d getCartPosAt(const SGVec3d& off) const;
     SGVec3d getCartPos() const;
+
     double _getCartPosX() const;
     double _getCartPosY() const;
     double _getCartPosZ() const;
 
-protected:
+    string _path;
 
+protected:
     SGPropertyNode_ptr props;
     SGPropertyNode_ptr model_removed; // where to report model removal
     FGAIManager* manager;
@@ -96,6 +100,8 @@ protected:
     double speed;       // knots true airspeed
     double altitude_ft; // feet above sea level
     double vs;          // vertical speed, feet per minute
+    double speed_north_deg_sec;
+    double speed_east_deg_sec;
     double turn_radius_ft; // turn radius ft at 15 kts rudder angle 15 degrees
 
     double ft_per_deg_lon;
@@ -126,10 +132,14 @@ protected:
     string model_path;	   //Path to the 3D model
     osg::ref_ptr<osg::Node> model; //The 3D model object
     SGModelPlacement aip;
+
     bool delete_me;
     bool invisible;
     bool no_roll;
+    bool serviceable;
+
     double life;
+
     FGAIFlightPlan *fp;
 
     void Transform();
@@ -143,23 +153,21 @@ private:
     object_type _otype;
 
 public:
-
     object_type getType();
+
     virtual const char* getTypeString(void) const { return "null"; }
+
     bool isa( object_type otype );
 
-    double _getVS_fps() const;
     void _setVS_fps( double _vs );
-
-    double _getAltitude() const;
     void _setAltitude( double _alt );
-
     void _setLongitude( double longitude );
     void _setLatitude ( double latitude );
 
+    double _getVS_fps() const;
+    double _getAltitude() const;
     double _getLongitude() const;
     double _getLatitude () const;
-
     double _getBearing() const;
     double _getElevation() const;
     double _getRdot() const;
@@ -168,6 +176,19 @@ public:
     double _getX_shift() const;
     double _getY_shift() const;
     double _getRotation() const;
+    double _getSpeed() const;
+    double _getRoll() const;
+    double _getPitch() const;
+    double _getHeading() const;
+    double _get_speed_east_fps() const;
+    double _get_speed_north_fps() const;
+
+    bool   _getServiceable() const;
+
+    const char* _getPath();
+    const char* _getCallsign();
+
+    // These are used in the Mach number calculations
 
     double rho;
     double T;                             // temperature, degs farenheit
@@ -195,6 +216,15 @@ inline void FGAIBase::setManager(FGAIManager* mgr, SGPropertyNode* p) {
 inline void FGAIBase::setPath(const char* model ) {
     model_path.append(model);
 }
+
+inline void FGAIBase::setSMPath(const string& p) {
+    _path = p;
+}
+
+inline void FGAIBase::setServiceable(bool s) {
+    serviceable = s;
+}
+
 
 inline void FGAIBase::setSpeed( double speed_KTAS ) {
     speed = tgt_speed = speed_KTAS;
@@ -230,11 +260,9 @@ inline void FGAIBase::setLatitude ( double latitude ) {
 }
 
 inline void FGAIBase::setDie( bool die ) { delete_me = die; }
+
 inline bool FGAIBase::getDie() { return delete_me; }
 
 inline FGAIBase::object_type FGAIBase::getType() { return _otype; }
 
-
-
 #endif	// _FG_AIBASE_HXX
-
