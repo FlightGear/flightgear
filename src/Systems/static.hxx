@@ -48,6 +48,7 @@ private:
 
     string _name;
     int _num;
+    double _tau;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_in_node;
     SGPropertyNode_ptr _pressure_out_node;

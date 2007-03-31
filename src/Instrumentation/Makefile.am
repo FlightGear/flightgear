@@ -10,7 +10,6 @@ libInstrumentation_a_SOURCES = \
         attitude_indicator.cxx attitude_indicator.hxx \
         clock.cxx clock.hxx \
         dme.cxx dme.hxx \
-	encoder.cxx encoder.hxx \
         gps.cxx gps.hxx \
         gsdi.cxx gsdi.hxx \
         gyro.cxx gyro.hxx \

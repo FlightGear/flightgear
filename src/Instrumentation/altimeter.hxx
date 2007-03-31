@@ -1,5 +1,6 @@
 // altimeter.hxx - an altimeter tied to the static port.
 // Written by David Megginson, started 2002.
+// Updated by John Denker to match changes in altimeter.cxx in 2007
 //
 // This file is in the Public Domain and comes with no warranty.
 
@@ -7,15 +8,9 @@
 #ifndef __INSTRUMENTS_ALTIMETER_HXX
 #define __INSTRUMENTS_ALTIMETER_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-
-
-class SGInterpTable;
+#include <Environment/atmosphere.hxx>
 
 
 /**
@@ -36,7 +31,7 @@ class Altimeter : public SGSubsystem
 
 public:
 
-    Altimeter (SGPropertyNode *node);
+    Altimeter (SGPropertyNode *node, double quantum = 0);
     virtual ~Altimeter ();
 
     virtual void init ();
@@ -47,14 +42,19 @@ private:
     string _name;
     int _num;
     string _static_pressure;
+    double _tau;
+    double _quantum;
+    double _kollsman;
+    double raw_PA;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _setting_node;
     SGPropertyNode_ptr _pressure_node;
+    SGPropertyNode_ptr _press_alt_node;
+    SGPropertyNode_ptr _mode_c_node;
     SGPropertyNode_ptr _altitude_node;
 
-    SGInterpTable * _altitude_table;
-    
+    FGAltimeter _altimeter;
 };
 
 #endif // __INSTRUMENTS_ALTIMETER_HXX

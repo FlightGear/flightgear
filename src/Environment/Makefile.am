@@ -8,6 +8,7 @@ libEnvironment_a_SOURCES = \
 	environment.cxx environment.hxx \
 	environment_mgr.cxx environment_mgr.hxx \
 	environment_ctrl.cxx environment_ctrl.hxx \
-	fgmetar.cxx fgmetar.hxx fgclouds.cxx fgclouds.hxx
+	fgmetar.cxx fgmetar.hxx fgclouds.cxx fgclouds.hxx \
+	atmosphere.cxx atmosphere.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

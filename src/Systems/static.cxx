@@ -11,7 +11,9 @@
 StaticSystem::StaticSystem ( SGPropertyNode *node )
     :
     _name(node->getStringValue("name", "static")),
-    _num(node->getIntValue("number", 0))
+    _num(node->getIntValue("number", 0)),
+    _tau(node->getDoubleValue("tau", 1))
+
 {
 }
 
@@ -45,11 +47,11 @@ void
 StaticSystem::update (double dt)
 {
     if (_serviceable_node->getBoolValue()) {
-        
+        double trat = _tau ? dt/_tau : 100;
         double target = _pressure_in_node->getDoubleValue();
         double current = _pressure_out_node->getDoubleValue();
         // double delta = target - current;
-        _pressure_out_node->setDoubleValue(fgGetLowPass(current, target, dt));
+        _pressure_out_node->setDoubleValue(fgGetLowPass(current, target, trat));
     }
 }
 

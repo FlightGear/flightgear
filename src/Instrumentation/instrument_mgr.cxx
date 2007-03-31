@@ -27,7 +27,6 @@
 #include "attitude_indicator.hxx"
 #include "clock.hxx"
 #include "dme.hxx"
-#include "encoder.hxx"
 #include "gps.hxx"
 #include "gsdi.hxx"
 #include "heading_indicator.hxx"
@@ -121,7 +120,7 @@ bool FGInstrumentMgr::build ()
                            new DME( node ), 1.0 );
         } else if ( name == "encoder" ) {
             set_subsystem( "instrument" + temp.str(), 
-                           new Encoder( node ) );
+                           new Altimeter( node ) );
         } else if ( name == "gps" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new GPS( node ), 0.45 );
