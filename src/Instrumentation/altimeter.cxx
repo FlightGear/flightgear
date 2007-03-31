@@ -16,6 +16,7 @@
 // Note non-default name, quantum, and tau values.
 
 #include <simgear/math/interpolater.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
@@ -63,7 +64,7 @@ Altimeter::update (double dt)
         double press_alt = _press_alt_node->getDoubleValue();
         // The mechanism settles slowly toward new pressure altitude:
         raw_PA = fgGetLowPass(raw_PA, _altimeter.press_alt_ft(pressure), trat);
-        _mode_c_node->setDoubleValue(100 * round(raw_PA/100));
+        _mode_c_node->setDoubleValue(100 * SGMiscd::round(raw_PA/100));
         _kollsman = fgGetLowPass(_kollsman, _altimeter.kollsman_ft(setting), trat);
         if (_quantum)
             press_alt = _quantum*round(raw_PA/_quantum);
