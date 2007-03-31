@@ -1,3 +1,5 @@
+#include <simgear/math/SGMath.hxx>
+
 #include "atmosphere.hxx"
 
 using namespace std;
@@ -191,7 +193,7 @@ void FGAltimeter::dump_stack1(const double Tref) {
         double press = P_layer(hgt_ft*foot, 0, ISA::P0, Tref, ISA::lam0);
         double p_inHg = press / inHg;
         double qnhx = qnh(hgt_ft, p_inHg);
-        double qnh2 = round(qnhx*100)/100;
+        double qnh2 = SGMiscd::round(qnhx*100)/100;
 
         double Aprind = reading_ft(p_inHg);
         double Apr    = a_vs_p(p_inHg*inHg) / foot;
