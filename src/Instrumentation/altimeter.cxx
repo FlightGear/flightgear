@@ -67,7 +67,7 @@ Altimeter::update (double dt)
         _mode_c_node->setDoubleValue(100 * SGMiscd::round(raw_PA/100));
         _kollsman = fgGetLowPass(_kollsman, _altimeter.kollsman_ft(setting), trat);
         if (_quantum)
-            press_alt = _quantum*round(raw_PA/_quantum);
+            press_alt = _quantum * SGMiscd::round(raw_PA/_quantum);
         else
             press_alt = raw_PA;
         _press_alt_node->setDoubleValue(press_alt);
