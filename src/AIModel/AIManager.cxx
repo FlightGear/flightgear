@@ -67,9 +67,11 @@ void FGAIManager::init() {
   user_pitch_node     = fgGetNode("/orientation/pitch-deg", true);
   user_yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
   user_speed_node     = fgGetNode("/velocities/uBody-fps", true);
+}
 
 
-  /// Move that into the constructor
+void FGAIManager::postinit() {
+  // postinit, so that it can access the Nasal subsystem
   for(int i = 0 ; i < root->nChildren() ; i++) {
     SGPropertyNode *aiEntry = root->getChild( i );
     if( !strcmp( aiEntry->getName(), "scenario" ) ) {

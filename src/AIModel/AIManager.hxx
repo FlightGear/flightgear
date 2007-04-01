@@ -77,6 +77,7 @@ public:
     ~FGAIManager();
 
     void init();
+    void postinit();
     void reinit();
     void bind();
     void unbind();
