@@ -425,10 +425,14 @@ void FGJSBsim::update( double dt )
     if (!cache_ok) {
       SG_LOG(SG_FLIGHT, SG_WARN,
              "FGInterface is being called without scenery below the aircraft!");
-      cout << "altitude         = " << alt << endl;
-      cout << "sea level radius = " << slr << endl;
-      cout << "latitude         = " << lat << endl;
-      cout << "longitude        = " << lon << endl;
+      SG_LOG(SG_FLIGHT, SG_WARN,
+             "altitude         = " << alt);
+      SG_LOG(SG_FLIGHT, SG_WARN,
+            "sea level radius = " << slr);
+      SG_LOG(SG_FLIGHT, SG_WARN,
+            "latitude         = " << lat);
+      SG_LOG(SG_FLIGHT, SG_WARN,
+            "longitude        = " << lon);
       //return;
     }
 
