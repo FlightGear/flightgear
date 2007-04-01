@@ -253,12 +253,7 @@ private:
   enum 
   {
     MAX_KEYS = 1024,
-
-  #ifdef WIN32
-    MAX_JOYSTICKS = 2,
-  #else
     MAX_JOYSTICKS = 10,
-  #endif
     MAX_JOYSTICK_AXES = _JS_MAX_AXES,
     MAX_JOYSTICK_BUTTONS = 32,
 
