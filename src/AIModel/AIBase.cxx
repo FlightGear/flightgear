@@ -43,6 +43,7 @@
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
+#include <Scripting/NasalSys.hxx>
 
 
 #include "AIBase.hxx"
@@ -201,7 +202,8 @@ osg::Node* FGAIBase::load3DModel(const string& fg_root,
                       SGPropertyNode *prop_root,
                       double sim_time_sec)
 {
-  model = sgLoad3DModel(fg_root, path, prop_root, sim_time_sec);
+  model = sgLoad3DModel(fg_root, path, prop_root, sim_time_sec, 0,
+                        new FGNasalModelData(prop_root));
   model->setNodeMask(model->getNodeMask() & ~SG_NODEMASK_TERRAIN_BIT);
   return model.get();
 }

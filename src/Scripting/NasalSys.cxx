@@ -776,7 +776,7 @@ void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
     _module = path;
     const char *s = load ? load->getStringValue() : "";
     FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
-    nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s));
+    nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _props);
 }
 
 FGNasalModelData::~FGNasalModelData()
@@ -793,7 +793,7 @@ FGNasalModelData::~FGNasalModelData()
 
     if(_unload) {
         const char *s = _unload->getStringValue();
-        nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s));
+        nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _props);
     }
     nas->deleteModule(_module.c_str());
 }
