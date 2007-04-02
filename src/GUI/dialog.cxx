@@ -17,7 +17,7 @@
 #include "layout.hxx"
 
 
-enum format_type { INVALID, INT, LONG, FLOAT, DOUBLE, STRING };
+enum format_type { f_INVALID, f_INT, f_LONG, f_FLOAT, f_DOUBLE, f_STRING };
 static const int FORMAT_BUFSIZE = 255;
 
 /**
@@ -39,7 +39,7 @@ validate_format(const char *f)
         }
     }
     if (*f++ != '%')
-        return INVALID;
+        return f_INVALID;
     if (*f == ' ' || *f == '+' || *f == '-' || *f == '#')
         f++;
     while (*f && isdigit(*f))
@@ -54,22 +54,22 @@ validate_format(const char *f)
         l = true, f++;
 
     if (*f == 'd') {
-        type = l ? LONG : INT;
+        type = l ? f_LONG : f_INT;
     } else if (*f == 'f')
-        type = l ? DOUBLE : FLOAT;
+        type = l ? f_DOUBLE : f_FLOAT;
     else if (*f == 's') {
         if (l)
-            return INVALID;
-        type = STRING;
+            return f_INVALID;
+        type = f_STRING;
     } else
-        return INVALID;
+        return f_INVALID;
 
     for (++f; *f; f++) {
         if (*f == '%') {
             if (f[1] == '%')
                 f++;
             else
-                return INVALID;
+                return f_INVALID;
         }
     }
     return type;
@@ -102,7 +102,7 @@ GUIInfo::GUIInfo (FGDialog * d)
       key(-1),
       text(0),
       fmt_string(0),
-      fmt_type(INVALID)
+      fmt_type(f_INVALID)
 {
 }
 
@@ -118,13 +118,13 @@ GUIInfo::~GUIInfo ()
 
 char *GUIInfo::format(SGPropertyNode *n)
 {
-    if (fmt_type == INT)
+    if (fmt_type == f_INT)
         snprintf(text, FORMAT_BUFSIZE, fmt_string, n->getIntValue());
-    else if (fmt_type == LONG)
+    else if (fmt_type == f_LONG)
         snprintf(text, FORMAT_BUFSIZE, fmt_string, n->getLongValue());
-    else if (fmt_type == FLOAT)
+    else if (fmt_type == f_FLOAT)
         snprintf(text, FORMAT_BUFSIZE, fmt_string, n->getFloatValue());
-    else if (fmt_type == DOUBLE)
+    else if (fmt_type == f_DOUBLE)
         snprintf(text, FORMAT_BUFSIZE, fmt_string, n->getDoubleValue());
     else
         snprintf(text, FORMAT_BUFSIZE, fmt_string, n->getStringValue());
@@ -773,7 +773,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
             const char *format = props->getStringValue("format", 0);
             if (format) {
                 info->fmt_type = validate_format(props->getStringValue("format", 0));
-                if (info->fmt_type != INVALID) {
+                if (info->fmt_type != f_INVALID) {
                     info->text = new char[FORMAT_BUFSIZE + 1];
                     info->fmt_string = new char[strlen(format) + 1];
                     strcpy(info->fmt_string, format);
