@@ -53,7 +53,7 @@ void
 NewGUI::reinit ()
 {
     reset(true);
-    fgSetBool("/sim/signals/reinit-gui", 1);
+    fgSetBool("/sim/signals/reinit-gui", true);
 }
 
 void

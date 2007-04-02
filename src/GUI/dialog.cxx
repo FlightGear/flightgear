@@ -17,6 +17,60 @@
 #include "layout.hxx"
 
 
+static const int FORMAT_BUFSIZE = 255;
+
+/**
+ * Makes sure the format matches '[ -+#]?\d*(\.\d*)?l?[fs]', with only
+ * one number or string placeholder and otherwise arbitrary prefix and
+ * postfix. Return value: 0 .. number, 1 .. string, -1 .. invalid
+ */
+static int
+validate_format(const char *format)
+{
+    const int INVALID = -1;
+    const char *f = format;
+    bool is_number, l = false;
+    for (; *f; f++) {
+        if (*f == '%') {
+            if (f[1] == '%')
+                f++;
+            else
+                break;
+        }
+    }
+    if (*f++ != '%')
+        return INVALID;
+    if (*f == ' ' || *f == '+' || *f == '-' || *f == '#')
+        f++;
+    while (*f && isdigit(*f))
+        f++;
+    if (*f == '.') {
+        f++;
+        while (*f && isdigit(*f))
+            f++;
+    }
+    if (*f == 'l')
+        l = true, f++;
+
+    if (*f == 'f')
+        is_number = true;
+    else if (*f == 's') {
+        if (l)
+            return INVALID;
+        is_number = false;
+    } else
+        return INVALID;
+
+    for (++f; *f; f++) {
+        if (*f == '%') {
+            if (f[1] == '%')
+                f++;
+            else
+                return INVALID;
+        }
+    }
+    return is_number ? 0 : 1;
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -34,11 +88,17 @@ struct GUIInfo
     FGDialog * dialog;
     vector <SGBinding *> bindings;
     int key;
+    char *text;
+    char *format;
+    bool format_for_string;
 };
 
 GUIInfo::GUIInfo (FGDialog * d)
     : dialog(d),
-      key(-1)
+      key(-1),
+      text(0),
+      format(0),
+      format_for_string(false)
 {
 }
 
@@ -48,6 +108,8 @@ GUIInfo::~GUIInfo ()
         delete bindings[i];
         bindings[i] = 0;
     }
+    delete [] text;
+    delete [] format;
 }
 
 
@@ -190,71 +252,6 @@ action_callback (puObject * object)
 }
 
 
-static void
-format_callback(puObject *obj, int dx, int dy, void *n)
-{
-    SGPropertyNode *node = (SGPropertyNode *)n;
-    const char *format = node->getStringValue("format"), *f = format;
-    bool number, l = false;
-    // make sure the format matches '[ -+#]?\d*(\.\d*)?l?[fs]'
-    for (; *f; f++) {
-        if (*f == '%') {
-            if (f[1] == '%')
-                f++;
-            else
-                break;
-        }
-    }
-    if (*f++ != '%')
-        return;
-    if (*f == ' ' || *f == '+' || *f == '-' || *f == '#')
-        f++;
-    while (*f && isdigit(*f))
-        f++;
-    if (*f == '.') {
-        f++;
-        while (*f && isdigit(*f))
-            f++;
-    }
-    if (*f == 'l')
-        l = true, f++;
-
-    if (*f == 'f')
-        number = true;
-    else if (*f == 's') {
-        if (l)
-            return;
-        number = false;
-    } else
-        return;
-
-    for (++f; *f; f++) {
-        if (*f == '%') {
-            if (f[1] == '%')
-                f++;
-            else
-                return;
-        }
-    }
-
-    char buf[256];
-    const char *src = obj->getLabel();
-
-    if (number) {
-        float value = atof(src);
-        snprintf(buf, 256, format, value);
-    } else {
-        snprintf(buf, 256, format, src);
-    }
-
-    buf[255] = '\0';
-
-    SGPropertyNode *result = node->getNode("formatted", true);
-    result->setStringValue(buf);
-    obj->setLabel(result->getStringValue());
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // Static helper functions.
@@ -269,7 +266,18 @@ copy_to_pui (SGPropertyNode * node, puObject * object)
     // Treat puText objects specially, so their "values" can be set
     // from properties.
     if(object->getType() & PUCLASS_TEXT) {
-        object->setLabel(node->getStringValue());
+        GUIInfo *info = (GUIInfo *)object->getUserData();
+        if(info && info->format) {
+            if(info->format_for_string)
+                snprintf(info->text, FORMAT_BUFSIZE, info->format, node->getStringValue());
+            else
+                snprintf(info->text, FORMAT_BUFSIZE, info->format, node->getDoubleValue());
+            info->text[FORMAT_BUFSIZE] = '\0';
+            object->setLabel(info->text);
+
+        } else {
+            object->setLabel(node->getStringValue());
+        }
         return;
     }
 
@@ -516,7 +524,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     int y = props->getIntValue("y", (parentHeight - height) / 2);
     string type = props->getName();
 
-    if (type == "")
+    if (type.empty())
         type = "dialog";
 
     if (type == "dialog") {
@@ -583,13 +591,6 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puText * obj = new puText(x, y);
         setupObject(obj, props);
 
-        if (props->getNode("format")) {
-            SGPropertyNode *live = props->getNode("live");
-            if (live && live->getBoolValue())
-                obj->setRenderCallback(format_callback, props);
-            else
-                format_callback(obj, x, y, props);
-        }
         // Layed-out objects need their size set, and non-layout ones
         // get a different placement.
         if (presetSize)
@@ -728,7 +729,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 
     SGPropertyNode * dest = fgGetNode("/sim/bindings/gui", true);
     vector<SGPropertyNode_ptr> bindings = props->getChildren("binding");
-    if (bindings.size() > 0) {
+    if (type == "text" || bindings.size() > 0) {
         GUIInfo * info = new GUIInfo(this);
         info->key = props->getIntValue("keynum", -1);
         if (props->hasValue("key"))
@@ -752,6 +753,19 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 
         if (type == "input" && props->getBoolValue("live"))
             object->setDownCallback(action_callback);
+
+        if (type == "text") {
+            const char *format = props->getStringValue("format", 0);
+            if (format) {
+                int type = validate_format(props->getStringValue("format", 0));
+                if (type >= 0) {
+                    info->format = new char[strlen(format) + 1];
+                    strcpy(info->format, format);
+                    info->format_for_string = type == 1;
+                    info->text = new char[FORMAT_BUFSIZE + 1];
+                }
+            }
+        }
 
         object->setUserData(info);
         _info.push_back(info);
@@ -781,7 +795,7 @@ void
 FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
 {
     string type = props->getName();
-    if (type == "")
+    if (type.empty())
         type = "dialog";
     if (type == "textbox" && props->getBoolValue("editable"))
         type += "-editable";
