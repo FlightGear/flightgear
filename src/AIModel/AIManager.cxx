@@ -222,6 +222,8 @@ void FGAIManager::processScenario( const string &filename ) {
 
   for (int i = 0; i < scenarios->nChildren(); i++) { 
     SGPropertyNode* scEntry = scenarios->getChild(i);
+    if (strcmp(scEntry->getName(), "entry"))
+      continue;
     std::string type = scEntry->getStringValue("type", "aircraft");
 
     if (type == "aircraft") {
