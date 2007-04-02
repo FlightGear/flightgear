@@ -517,18 +517,22 @@ static string fgFindAircraftPath( const SGPath &path, const string &aircraft, in
 
     string result;
     while ((dire = ulReadDir(dirp)) != NULL) {
-        if (dire->d_isdir && depth < MAXDEPTH) {
-            if ( strcmp("CVS", dire->d_name) && strcmp(".", dire->d_name)
-                 && strcmp("..", dire->d_name) && strcmp("AI", dire->d_name))
-            {
-                SGPath next = path;
-                next.append(dire->d_name);
+        if (dire->d_isdir) {
+            if (depth > MAXDEPTH)
+                continue;
 
-                result = fgFindAircraftPath( next, aircraft, depth + 1 );
-                if ( ! result.empty() ) {
-                    break;
-                }
+            if (!strcmp("CVS", dire->d_name) || !strcmp(".", dire->d_name)
+                    || !strcmp("..", dire->d_name) || !strcmp("AI", dire->d_name))
+                continue;
+
+            SGPath next = path;
+            next.append(dire->d_name);
+
+            result = fgFindAircraftPath( next, aircraft, depth + 1 );
+            if ( ! result.empty() ) {
+                break;
             }
+
         } else if ( !strcmp(dire->d_name, aircraft.c_str()) ) {
             result = path.str();
             break;
