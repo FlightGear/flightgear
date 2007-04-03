@@ -15,6 +15,10 @@
 //      </altimeter>
 // Note non-default name, quantum, and tau values.
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <simgear/math/interpolater.hxx>
 #include <simgear/math/SGMath.hxx>
 
