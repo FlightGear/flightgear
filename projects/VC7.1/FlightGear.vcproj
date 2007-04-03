@@ -2207,6 +2207,24 @@
 			Name="Lib_Environment"
 			Filter="">
 			<File
+				RelativePath="..\..\src\Environment\atmosphere.cxx">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\Environment\atmosphere.hxx">
+			</File>
+			<File
 				RelativePath="..\..\src\Environment\environment.cxx">
 			</File>
 			<File
@@ -2331,12 +2349,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Instrumentation\dme.hxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Instrumentation\encoder.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Instrumentation\encoder.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Instrumentation\gps.cxx">
