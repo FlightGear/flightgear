@@ -83,15 +83,8 @@ FGAIBase::~FGAIBase() {
     if (props) {
         SGPropertyNode* parent = props->getParent();
 
-        if (parent) {
+        if (parent)
             model_removed->setStringValue(props->getPath());
-            parent->removeChild(props->getName(), props->getIndex(), false);
-        }
-
-        // so that radar does not have to do extra checks
-        props->setBoolValue("radar/in-range", false);
-        props->removeChild("id", 0);
-
     }
     delete fp;
     fp = 0;
@@ -505,6 +498,10 @@ double FGAIBase::_getAltitude() const {
 
 bool FGAIBase::_getServiceable() const {
     return serviceable;
+}
+
+SGPropertyNode* FGAIBase::_getProps() const {
+    return props;
 }
 
 void FGAIBase::_setAltitude( double _alt ) {

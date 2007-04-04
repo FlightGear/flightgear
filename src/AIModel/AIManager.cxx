@@ -122,7 +122,19 @@ void FGAIManager::update(double dt) {
       tmgr->release((*ai_list_itr)->getID());
       --mNumAiModels;
       --(mNumAiTypeModels[(*ai_list_itr)->getType()]);
-      (*ai_list_itr)->unbind();
+      FGAIBase *base = *ai_list_itr;
+      SGPropertyNode *props = base->_getProps();
+
+      props->setBoolValue("valid", false);
+      base->unbind();
+
+      // for backward compatibility reset properties, so that aircraft,
+      // which don't know the <valid> property, keep working
+      // TODO: remove after a while
+      props->setIntValue("id", -1);
+      props->setBoolValue("radar/in-range", false);
+      props->setIntValue("refuel/tanker", false);
+
       ai_list_itr = ai_list.erase(ai_list_itr);
     } else {
       fetchUserState();
@@ -150,11 +162,10 @@ FGAIManager::attach(SGSharedPtr<FGAIBase> model)
       //more than 10000 mp-aircrafts in the property tree we should optimize the mp-server
   {
     p = root->getNode(typeString, i, false);
-    if (!p) break;
-    if (p->getIntValue("id",-1)==model->getID())
-    {
+    if (!p || !p->getBoolValue("valid", false))
+      break;
+    if (p->getIntValue("id",-1)==model->getID()) {
         p->setStringValue("callsign","***invalid node***"); //debug only, should never set!
-                                              
     }
   }
   p = root->getNode(typeString, i, true);
@@ -166,6 +177,7 @@ FGAIManager::attach(SGSharedPtr<FGAIBase> model)
       || model->getType()==FGAIBase::otMultiplayer
       || model->getType()==FGAIBase::otStatic);
   model->bind();
+  p->setBoolValue("valid", true);
 }
 
 
