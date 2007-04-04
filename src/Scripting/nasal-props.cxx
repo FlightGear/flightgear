@@ -77,19 +77,21 @@ static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
 static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
+    if(naVec_size(argv) == 0) return naNum((*node)->getAttributes());
     naRef val = naVec_get(argv, 0);
     char *a = naStr_data(val);
     SGPropertyNode::Attribute attr;
     if(!a) a = "";
-    if(!strcmp(a, "read"))             attr = SGPropertyNode::READ;
+    if(!strcmp(a, "children"))         return naNum((*node)->nChildren());
+    else if(!strcmp(a, "tied"))        return naNum((*node)->isTied());
+    else if(!strcmp(a, "alias"))       return naNum((*node)->isAlias());
+    else if(!strcmp(a, "read"))        attr = SGPropertyNode::READ;
     else if(!strcmp(a, "write"))       attr = SGPropertyNode::WRITE;
     else if(!strcmp(a, "archive"))     attr = SGPropertyNode::ARCHIVE;
     else if(!strcmp(a, "trace-read"))  attr = SGPropertyNode::TRACE_READ;
     else if(!strcmp(a, "trace-write")) attr = SGPropertyNode::TRACE_WRITE;
     else if(!strcmp(a, "userarchive")) attr = SGPropertyNode::USERARCHIVE;
-    else if(!strcmp(a, "tied")) {
-        return naNum((*node)->isTied());
-    } else {
+    else {
         naRuntimeError(c, "props.getAttribute() with invalid attribute");
         return naNil();
     }
@@ -100,8 +102,13 @@ static naRef f_setAttribute(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     naRef val = naVec_get(argv, 0);
-    char *a = naStr_data(val);
+    if(naVec_size(argv) == 1 && naIsNum(val)) {
+        naRef ret = naNum((*node)->getAttributes());
+        (*node)->setAttributes((int)val.num);
+        return ret;
+    }
     SGPropertyNode::Attribute attr;
+    char *a = naStr_data(val);
     if(!a) a = "";
     if(!strcmp(a, "read"))             attr = SGPropertyNode::READ;
     else if(!strcmp(a, "write"))       attr = SGPropertyNode::WRITE;
