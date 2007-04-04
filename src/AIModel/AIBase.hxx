@@ -184,6 +184,7 @@ public:
     double _get_speed_north_fps() const;
 
     bool   _getServiceable() const;
+    SGPropertyNode* _getProps() const;
 
     const char* _getPath();
     const char* _getCallsign();
