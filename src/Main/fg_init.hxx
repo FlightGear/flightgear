@@ -83,6 +83,11 @@ void fgReInitSubsystems();
 // Set the initial position based on presets (or defaults)
 bool fgInitPosition();
 
+
+// Listen to /sim/tower/airport-id and set tower view position accordingly
+void fgInitTowerLocationListener();
+
+
 // Initialize various time dependent systems (lighting, sun position, etc.)
 // returns a new instance of the SGTime class
 SGTime *fgInitTime();
