@@ -114,6 +114,51 @@ void FGTrafficManager::init()
   //   }
   // Sort by points: Aircraft with frequent visits to the
   // startup airport will be processed first
+  ulDir* d, *d2;
+  ulDirEnt* dent, *dent2;
+  SGPath aircraftDir = globals->get_fg_root();
+
+  /* keep the following three lines (which mimicks the old "fixed path" behavior)
+   * until we have some AI models with traffic in the base package
+   */ 
+  SGPath path = aircraftDir;
+  path.append("/Traffic/fgtraffic.xml");
+  readXML(path.str(),*this);
+
+  aircraftDir.append("AI/Aircraft/");
+  if (aircraftDir.exists())
+    {
+      if((d = ulOpenDir(aircraftDir.c_str())) == NULL)
+        return;
+      while((dent = ulReadDir(d)) != NULL) {
+	//cerr << "Scanning : " << dent->d_name << endl;
+	if (string(dent->d_name) != string(".")  && 
+	    string(dent->d_name) != string("..") &&
+	    dent->d_isdir)
+	  {
+	    SGPath currACDir = aircraftDir;
+	    currACDir.append(dent->d_name);
+	    if ((d2 = ulOpenDir(currACDir.c_str())) == NULL)
+	      return;
+	    while ((dent2 = ulReadDir(d2)) != NULL) {
+	      SGPath currFile = currACDir;
+	      currFile.append(dent2->d_name);
+	      if (currFile.extension() == string("xml"))
+		{
+		  //cerr << "found " << dent2->d_name << " for parsing" << endl;
+		  SGPath currFile = currACDir;
+		  currFile.append(dent2->d_name);
+		  SG_LOG(SG_GENERAL, SG_INFO, "Scanning " << currFile.str() << " for traffic");
+		  readXML(currFile.str(),*this);
+		}
+	    }
+	    ulCloseDir(d2);
+	  }
+      }
+      ulCloseDir(d);
+    }
+  // Sort by points: Aircraft with frequent visits to the
+  // startup airport will be processed first
   sort(scheduledAircraft.begin(), scheduledAircraft.end(), compareSchedules);
   currAircraft = scheduledAircraft.begin();
   currAircraftClosest = scheduledAircraft.begin();
@@ -122,14 +167,17 @@ void FGTrafficManager::init()
 
 void FGTrafficManager::update(double something)
 {
+  //SG_LOG( SG_GENERAL, SG_INFO, "Running TrafficManager::Update() ");
   if (runCount < 1000)
     {
       runCount++;
       return;
     }
   time_t now = time(NULL) + fgGetLong("/sim/time/warp");
-  if (scheduledAircraft.size() == 0)
+  if (scheduledAircraft.size() == 0) {
+    //SG_LOG( SG_GENERAL, SG_INFO, "Returned Running TrafficManager::Update() ");
     return;
+  }
   if(currAircraft == scheduledAircraft.end())
     {
       //cerr << "resetting schedule " << endl;
@@ -142,6 +190,7 @@ void FGTrafficManager::update(double something)
       cerr << "Failed to update aircraft schedule in traffic manager" << endl;
     }
   currAircraft++;
+  //SG_LOG( SG_GENERAL, SG_INFO, "Done Running TrafficManager::Update() ");
 }
 
 void FGTrafficManager::release(int id)

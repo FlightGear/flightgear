@@ -693,7 +693,7 @@ struct FGTowerLocationListener : SGPropertyChangeListener {
     }
 };
 
-static void fgInitTowerLocationListener() {
+void fgInitTowerLocationListener() {
     fgGetNode("/sim/tower/airport-id",  true)
 	->addChangeListener( new FGTowerLocationListener() );
 }
@@ -1147,7 +1147,6 @@ bool fgInitPosition() {
     string fix = fgGetString("/sim/presets/fix");
 
     fgSetDouble( "/orientation/heading-deg", hdg );
-    fgInitTowerLocationListener();
 
     if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
         // An airport + runway is requested
@@ -1710,17 +1709,10 @@ bool fgInitSubsystems() {
     globals->add_subsystem("submodel_mgr", new FGSubmodelMgr);
 
 
-     // It's probably a good idea to initialize the top level traffic manager
-     // After the AI and ATC systems have been initialized properly.
-     // AI Traffic manager
-     globals->add_subsystem("Traffic Manager", new FGTrafficManager);
-	     FGTrafficManager *dispatcher = 
-	     (FGTrafficManager*) globals->get_subsystem("Traffic Manager");
-	     SGPath path = globals->get_fg_root();
-	     path.append("/Traffic/fgtraffic.xml");
-     readXML(path.str(),
-	*dispatcher);
-	     //globals->get_subsystem("Traffic Manager")->init();
+    // It's probably a good idea to initialize the top level traffic manager
+    // After the AI and ATC systems have been initialized properly.
+    // AI Traffic manager
+    globals->add_subsystem("Traffic Manager", new FGTrafficManager);
 
 
     ////////////////////////////////////////////////////////////////////

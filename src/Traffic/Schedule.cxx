@@ -235,6 +235,7 @@ bool FGAISchedule::update(time_t now)
   if (!deptime)
     deptime = (*flights.begin())->getDepartureTime();
   FGScheduledFlightVecIterator i = flights.begin();
+  SG_LOG (SG_GENERAL, SG_INFO,"Processing registration " << registration << " with callsign " << (*i)->getCallSign());
   if (AIManagerRef)
     {
       // Check if this aircraft has been released. 
@@ -263,7 +264,6 @@ bool FGAISchedule::update(time_t now)
       // object for it. 
       //if ((i->getDepartureTime() < now) && (i->getArrivalTime() > now))
       
-
       // Part of this flight is in the future.
       if ((*i)->getArrivalTime() > now)
 	{
@@ -348,13 +348,16 @@ bool FGAISchedule::update(time_t now)
 	  
 	  SGWayPoint current  (lon,
 			       lat,
-			       (*i)->getCruiseAlt());
+			       (*i)->getCruiseAlt(), 
+			       SGWayPoint::SPHERICAL);
 	  SGWayPoint user (   userLongitude,
 			      userLatitude,
-			      (*i)->getCruiseAlt());
+			      (*i)->getCruiseAlt(), 
+			      SGWayPoint::SPHERICAL);
 	  SGWayPoint dest (   arr->getLongitude(),
 			      arr->getLatitude(),
-			      (*i)->getCruiseAlt());
+			      (*i)->getCruiseAlt(), 
+			      SGWayPoint::SPHERICAL);
 	  // We really only need distance to user
 	  // and course to destination 
 	  user.CourseAndDistance(current, &courseToUser, &distanceToUser);
@@ -374,7 +377,7 @@ bool FGAISchedule::update(time_t now)
 	    {
 	      string flightPlanName = dep->getId() + string("-") + arr->getId() + 
 		string(".xml");
-	      int alt;
+	      //int alt;
 	      //if  ((i->getDepartureTime() < now))
 	      //{
 	      //	  alt = i->getCruiseAlt() *100;
@@ -384,10 +387,15 @@ bool FGAISchedule::update(time_t now)
 	      //	  alt = dep->_elevation+19;
 	      //	}
 
-	      // Only allow traffic to be created when the model path exists
+	      // Only allow traffic to be created when the model path (or the AI version of mp) exists
 	      SGPath mp(globals->get_fg_root());
+	      SGPath mp_ai = mp;
+
 	      mp.append(modelPath);
-	      if (mp.exists()) 
+	      mp_ai.append("AI");
+	      mp_ai.append(modelPath);
+
+	      if (mp.exists() || mp_ai.exists())
 	      {
 		  FGAIAircraft *aircraft = new FGAIAircraft(this);
 		  aircraft->setPerformance(m_class); //"jet_transport";
@@ -456,8 +464,8 @@ void FGAISchedule::next()
 
 double FGAISchedule::getSpeed()
 {
-  double courseToUser,   courseToDest;
-  double distanceToUser, distanceToDest;
+  double courseToDest;
+  double distanceToDest;
   double speed, remainingTimeEnroute;
   FGAirport *dep, *arr;
 
@@ -469,10 +477,12 @@ double FGAISchedule::getSpeed()
  
   SGWayPoint dest (   dep->getLongitude(),
 		      dep->getLatitude(),
-		      (*i)->getCruiseAlt()); 
+		      (*i)->getCruiseAlt(), 
+		      SGWayPoint::SPHERICAL); 
   SGWayPoint curr (    arr->getLongitude(),
 		      arr->getLatitude(),
-		       (*i)->getCruiseAlt());
+		       (*i)->getCruiseAlt(), 
+		       SGWayPoint::SPHERICAL);
   remainingTimeEnroute     = (*i)->getArrivalTime() - (*i)->getDepartureTime();
   dest.CourseAndDistance(curr, &courseToDest, &distanceToDest);
   speed =  (distanceToDest*SG_METER_TO_NM) / 
