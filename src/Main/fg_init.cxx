@@ -506,8 +506,11 @@ do_options (int argc, char ** argv)
 }
 
 
-#define MAXDEPTH 1
-static string fgFindAircraftPath( const SGPath &path, const string &aircraft, int depth = 0 ) {
+static string fgFindAircraftPath( const SGPath &path, const string &aircraft,
+                                  SGPropertyNode *cache, int depth = 0 )
+{
+    const int MAXDEPTH = 1;
+
     ulDirEnt* dire;
     ulDir *dirp = ulOpenDir(path.str().c_str());
     if (dirp == NULL) {
@@ -528,14 +531,35 @@ static string fgFindAircraftPath( const SGPath &path, const string &aircraft, in
             SGPath next = path;
             next.append(dire->d_name);
 
-            result = fgFindAircraftPath( next, aircraft, depth + 1 );
-            if ( ! result.empty() ) {
+            result = fgFindAircraftPath( next, aircraft, cache, depth + 1 );
+            if ( ! result.empty() )
+                break;
+
+        } else {
+            int len = strlen(dire->d_name);
+            if (len < 9 || strcmp(dire->d_name + len - 8, "-set.xml"))
+                continue;
+
+            // create cache node
+            int i = 0;
+            while (1)
+                if (!cache->getChild("aircraft", i++, false))
+                    break;
+
+            SGPropertyNode *n, *entry = cache->getChild("aircraft", --i, true);
+
+            n = entry->getNode("file", true);
+            n->setStringValue(dire->d_name);
+            n->setAttribute(SGPropertyNode::USERARCHIVE, true);
+
+            n = entry->getNode("path", true);
+            n->setStringValue(path.str().c_str());
+            n->setAttribute(SGPropertyNode::USERARCHIVE, true);
+
+            if ( !strcmp(dire->d_name, aircraft.c_str()) ) {
+                result = path.str();
                 break;
             }
-
-        } else if ( !strcmp(dire->d_name, aircraft.c_str()) ) {
-            result = path.str();
-            break;
         }
     }
 
@@ -560,6 +584,30 @@ bool fgInitConfig ( int argc, char **argv ) {
         return false;
     }
 
+    SGPropertyNode autosave;
+#ifdef _MSC_VER
+    char *envp = ::getenv( "APPDATA" );
+    if (envp != NULL ) {
+        SGPath config( envp );
+        config.append( "flightgear.org" );
+#else
+    if ( homedir != NULL ) {
+        SGPath config( homedir );
+        config.append( ".fgfs" );
+#endif
+        fgSetString("/sim/fg-home", config.c_str());
+        config.append( "autosave.xml" );
+        SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << config.str());
+        try {
+            readProperties(config.str(), &autosave, SGPropertyNode::USERARCHIVE);
+        } catch (...) {
+            SG_LOG(SG_INPUT, SG_DEBUG, "First time reading user settings");
+        }
+        SG_LOG(SG_INPUT, SG_DEBUG, "Finished Reading user settings");
+    }
+    SGPropertyNode *cache_root = autosave.getNode("sim/startup/path-cache", true);
+
+
     // Scan user config files and command line for a specified aircraft.
     fgInitFGAircraft(argc, argv);
 
@@ -569,8 +617,34 @@ bool fgInitConfig ( int argc, char **argv ) {
         aircraft_search.append( "Aircraft" );
 
         string aircraft_set = aircraft + "-set.xml";
+        string result;
 
-        string result = fgFindAircraftPath( aircraft_search, aircraft_set );
+        // check if the *-set.xml file is already in the cache
+        if (globals->get_fg_root() == cache_root->getStringValue("fg-root", "")) {
+            vector<SGPropertyNode_ptr> cache = cache_root->getChildren("aircraft");
+            for (unsigned int i = 0; i < cache.size(); i++) {
+                const char *name = cache[i]->getStringValue("file", "");
+                if (aircraft_set == name) {
+                    const char *path = cache[i]->getStringValue("path", "");
+                    SGPath xml(path);
+                    xml.append(name);
+                    if (xml.exists())
+                        result = path;
+                    break;
+                }
+            }
+        }
+
+        if (result.empty()) {
+            // prepare cache for rescan
+            SGPropertyNode *n = cache_root->getNode("fg-root", true);
+            n->setStringValue(globals->get_fg_root().c_str());
+            n->setAttribute(SGPropertyNode::USERARCHIVE, true);
+            cache_root->removeChildren("aircraft");
+
+            result = fgFindAircraftPath( aircraft_search, aircraft_set, cache_root );
+        }
+
         if ( !result.empty() ) {
             fgSetString( "/sim/aircraft-dir", result.c_str() );
             SGPath full_name( result );
@@ -596,26 +670,7 @@ bool fgInitConfig ( int argc, char **argv ) {
         SG_LOG( SG_INPUT, SG_ALERT, "No default aircraft specified" );
     }
 
-#ifdef _MSC_VER
-    char *envp = ::getenv( "APPDATA" );
-    if (envp != NULL ) {
-        SGPath config( envp );
-        config.append( "flightgear.org" );
-#else
-    if ( homedir != NULL ) {
-        SGPath config( homedir );
-        config.append( ".fgfs" );
-#endif
-        fgSetString("/sim/fg-home", config.c_str());
-        config.append( "autosave.xml" );
-        SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << config.str());
-        try {
-            readProperties(config.str(), globals->get_props(), SGPropertyNode::USERARCHIVE);
-        } catch (...) {
-            SG_LOG(SG_INPUT, SG_DEBUG, "First time reading user settings");
-        }
-        SG_LOG(SG_INPUT, SG_DEBUG, "Finished Reading user settings");
-    }
+    copyProperties(&autosave, globals->get_props());
 
     // parse options after loading aircraft to ensure any user
     // overrides of defaults are honored.
