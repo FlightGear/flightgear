@@ -596,7 +596,7 @@ bool fgInitConfig ( int argc, char **argv ) {
         config.append( ".fgfs" );
 #endif
         fgSetString("/sim/fg-home", config.c_str());
-        config.append( "autosave-plib.xml" );
+        config.append( "autosave.xml" );
         SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << config.str());
         try {
             readProperties(config.str(), &autosave, SGPropertyNode::USERARCHIVE);
