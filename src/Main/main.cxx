@@ -711,6 +711,7 @@ static void fgIdleFunction ( void ) {
         // based on the requested presets, calculate the true starting
         // lon, lat
         fgInitPosition();
+        fgInitTowerLocationListener();
 
         SGTime *t = fgInitTime();
         globals->set_time_params( t );
