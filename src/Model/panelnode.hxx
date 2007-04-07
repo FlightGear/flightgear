@@ -33,7 +33,9 @@ public:
 
     FGPanel* getPanel() { return _panel; }
 
-    virtual void drawImplementation(osg::State& state) const;
+    virtual void drawImplementation(osg::RenderInfo& renderInfo) const
+    { drawImplementation(*renderInfo.getState()); }
+    void drawImplementation(osg::State& state) const;
     virtual osg::BoundingBox computeBound() const;
 
 private:

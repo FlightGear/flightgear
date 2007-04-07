@@ -121,7 +121,9 @@ public:
     stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
   }
-  virtual void drawImplementation(osg::State& state) const
+  virtual void drawImplementation(osg::RenderInfo& renderInfo) const
+  { drawImplementation(*renderInfo.getState()); }
+  void drawImplementation(osg::State& state) const
   {
     state.pushStateSet(getStateSet());
     state.apply();
@@ -184,7 +186,9 @@ public:
 
     stateSet->setTextureAttribute(0, new osg::TexEnv(osg::TexEnv::MODULATE));
   }
-  virtual void drawImplementation(osg::State& state) const
+  virtual void drawImplementation(osg::RenderInfo& renderInfo) const
+  { drawImplementation(*renderInfo.getState()); }
+  void drawImplementation(osg::State& state) const
   {
     state.pushStateSet(getStateSet());
     state.apply();
