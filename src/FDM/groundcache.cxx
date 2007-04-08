@@ -713,7 +713,7 @@ bool FGGroundCache::get_wire_ends(double t, SGVec3d end[2], SGVec3d vel[2])
   for (size_t i = 0; i < sz; ++i) {
     if (wires[i].wire_id == wire_id) {
       for (size_t k = 0; k < 2; ++k) {
-        SGVec3d pivotoff = end[k] - wires[i].rotation_pivot;
+        SGVec3d pivotoff = wires[i].ends[k] - wires[i].rotation_pivot;
         vel[k] = wires[i].velocity + cross(wires[i].rotation, pivotoff);
         end[k] = wires[i].ends[k] + t*vel[k];
       }
