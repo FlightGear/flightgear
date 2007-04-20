@@ -1157,8 +1157,9 @@ do_play_audio_message (const SGPropertyNode * arg)
     FGFX *fx = (FGFX *)globals->get_subsystem("fx");
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
+    double volume = arg->getDoubleValue("volume");
     // cout << "playing " << path << " / " << file << endl;
-    fx->play_message( path, file );
+    fx->play_message( path, file, volume );
 
     return true;
 }

@@ -187,17 +187,17 @@ FGFX::update (double dt)
 void
 FGFX::play_message( SGSoundSample *_sample )
 {
-    _sample->set_volume( 1.0 );
     _samplequeue.push( _sample );
 }
 void
-FGFX::play_message( const string path, const string fname )
+FGFX::play_message( const string path, const string fname, double volume )
 {
     if (globals->get_soundmgr()->is_working() == false) {
         return;
     }
     SGSoundSample *sample;
     sample = new SGSoundSample( path.c_str(), fname.c_str() );
+    sample->set_volume( volume );
     play_message( sample );
 }
 
