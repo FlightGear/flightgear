@@ -41,12 +41,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../;../../../OpenThreads/include;../../../OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;PTW32_STATIC_LIB;PR_LIBRARY_STATIC;OSG_LIBRARY_STATIC;OT_LIBRARY_STATIC;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
+				AdditionalIncludeDirectories="../../../;$(ProgramFiles)/OpenThreads/include;$(ProgramFiles)/OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
 				StringPooling="true"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -105,11 +105,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../;../../../OpenThreads/include;../../../OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;PTW32_STATIC_LIB;PR_LIBRARY_STATIC;OSG_LIBRARY_STATIC;OT_LIBRARY_STATIC;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
+				AdditionalIncludeDirectories="../../../;$(ProgramFiles)/OpenThreads/include;$(ProgramFiles)/OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
 				StringPooling="true"
 				MinimalRebuild="false"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -857,11 +857,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud.hxx"
+				RelativePath="..\..\src\Instrumentation\HUD\HUD.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Instrumentation\HUD\HUD.hxx"
+				RelativePath="..\..\src\cockpit\hud.hxx"
 				>
 			</File>
 			<File
@@ -1917,10 +1917,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\instrumentation\annunciator.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\atc\approach.cxx"
 				>
 			</File>
@@ -1983,6 +1979,28 @@
 			<File
 				RelativePath="..\..\src\fdm\yasim\Atmosphere.cpp"
 				>
+			</File>
+			<File
+				RelativePath="..\..\src\Environment\atmosphere.cxx"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\src\instrumentation\attitude_indicator.cxx"
@@ -2098,10 +2116,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\systems\electrical.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\instrumentation\encoder.cxx"
 				>
 			</File>
 			<File

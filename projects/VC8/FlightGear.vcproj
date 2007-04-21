@@ -39,11 +39,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../;../../../OpenThreads/include;../../../OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;PTW32_STATIC_LIB;OSG_LIBRARY_STATIC;PR_LIBRARY_STATIC;OT_LIBRARY_STATIC;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;NOMINMAX"
+				AdditionalIncludeDirectories="../../../;$(ProgramFiles)/OpenThreads/include;$(ProgramFiles)/OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;NOMINMAX"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -60,13 +60,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ul.lib osgDBd_s.lib osgDB_jpegd_s.lib osgDB_rgbd_s.lib osgDB_acd_s.lib osgdb_txfd_s.lib osgUtild_s.lib osgParticled_s.lib osgTextd_s.lib osgd_s.lib OpenThreadsWin32d_s.lib libjpeg.lib pthreadvc2.lib Alut.lib openal32.lib zlib.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
+				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ul.lib osgDBd.lib osgUtild.lib osgParticled.lib osgTextd.lib osgd.lib OpenThreadsd.lib libjpeg.lib pthreadvc2.lib Alut.lib openal32.lib zlib.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../OpenThreads/lib/win32;../../../OpenSceneGraph/lib/win32;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib"
+				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;$(ProgramFiles)/OpenThreads/lib;$(ProgramFiles)/OpenSceneGraph/lib;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib"
 				IgnoreDefaultLibraryNames="libcmt.lib"
-				ForceSymbolReferences="?g_readerWriter_JPEG_Proxy@@3V?$RegisterReaderWriterProxy@VReaderWriterJPEG@@@osgDB@@A;?g_readerWriter_AC_Proxy@@3V?$RegisterReaderWriterProxy@VReaderWriterAC@@@osgDB@@A;?g_readerWriter_RGB_Proxy@@3V?$RegisterReaderWriterProxy@VReaderWriterRGB@@@osgDB@@A;?g_readerWriter_TXF_Proxy@@3V?$RegisterReaderWriterProxy@VReaderWriterTXF@@@osgDB@@A"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				LargeAddressAware="2"
 				TargetMachine="1"
 				FixedBaseAddress="1"
 			/>
@@ -118,10 +118,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../;../../../OpenThreads/include;../../../OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;PTW32_STATIC_LIB;OSG_LIBRARY_STATIC;PR_LIBRARY_STATIC;OT_LIBRARY_STATIC;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
+				AdditionalIncludeDirectories="../../../;$(ProgramFiles)/OpenThreads/include;$(ProgramFiles)/OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
 				StringPooling="true"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -138,10 +138,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ul.lib osgDB_ac_s.lib osgDB_jpeg_s.lib osgDB_rgb_s.lib osgDB_txf_s.lib osgDB_s.lib osgUtil_s.lib osgParticle_s.lib osgText_s.lib osg_s.lib OpenThreadsWin32_s.lib pthreadvc2.lib Alut.lib openal32.lib zlib.lib libjpeg.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
+				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ul.lib osgDB.lib osgUtil.lib osgParticle.lib osgText.lib osg.lib OpenThreads.lib pthreadvc2.lib Alut.lib openal32.lib zlib1.lib libjpeg.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;../../../OpenThreads/lib/win32;../../../OpenSceneGraph/lib/win32;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib;$(NOINHERIT)"
-				ForceSymbolReferences="?g_readerWriter_JPEG_Proxy@@3V?$RegisterReaderWriterProxy@VReaderWriterJPEG@@@osgDB@@A;?g_readerWriter_AC_Proxy@@3V?$RegisterReaderWriterProxy@VReaderWriterAC@@@osgDB@@A;?g_readerWriter_RGB_Proxy@@3V?$RegisterReaderWriterProxy@VReaderWriterRGB@@@osgDB@@A;?g_readerWriter_TXF_Proxy@@3V?$RegisterReaderWriterProxy@VReaderWriterTXF@@@osgDB@@A"
+				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;$(ProgramFiles)/OpenThreads/lib;$(ProgramFiles)/OpenSceneGraph/lib;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib;$(NOINHERIT)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -297,6 +296,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\splash.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\Memory_and_Exception_Trace\Stackwalker.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\Memory_and_Exception_Trace\Stackwalker.h"
 				>
 			</File>
 			<File
