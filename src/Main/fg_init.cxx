@@ -750,7 +750,7 @@ struct FGTowerLocationListener : SGPropertyChangeListener {
 
 void fgInitTowerLocationListener() {
     fgGetNode("/sim/tower/airport-id",  true)
-	->addChangeListener( new FGTowerLocationListener() );
+        ->addChangeListener( new FGTowerLocationListener(), true );
 }
 
 // Set current_options lon/lat given an airport id and heading (degrees)
