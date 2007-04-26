@@ -154,10 +154,10 @@ TACAN::update (double delta_time_sec)
     double mobile_bearing = 0;
     double mobile_distance = 0;
 
-    SG_LOG( SG_INSTR, SG_DEBUG, "carrier_lat " << _mobile_lat);
-    SG_LOG( SG_INSTR, SG_DEBUG, "carrier_lon " << _mobile_lon);
-    SG_LOG( SG_INSTR, SG_DEBUG, "carrier_name " << _mobile_name);
-    SG_LOG( SG_INSTR, SG_DEBUG, "carrier_valid " << _mobile_valid);
+    SG_LOG( SG_INSTR, SG_DEBUG, "mobile_lat " << _mobile_lat);
+    SG_LOG( SG_INSTR, SG_DEBUG, "mobile_lon " << _mobile_lon);
+    SG_LOG( SG_INSTR, SG_DEBUG, "mobile_name " << _mobile_name);
+    SG_LOG( SG_INSTR, SG_DEBUG, "mobile_valid " << _mobile_valid);
     geo_inverse_wgs_84(altitude_m,
                        latitude_deg,
                        longitude_deg,
@@ -276,6 +276,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                double latitude_rad, double altitude_m)
 {
     int number, i;
+    _mobile_valid = false;
 
     SG_LOG( SG_INSTR, SG_DEBUG, "tacan freq " << frequency_mhz );
 
