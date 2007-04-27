@@ -90,6 +90,7 @@ public:
 
     void load();
     void init();
+    void postinit();
     void bind();
     void unbind();
     void update(double dt);

@@ -26,7 +26,6 @@ const double FGSubmodelMgr::lbs_to_slugs = 0.031080950172;
 
 FGSubmodelMgr::FGSubmodelMgr()
 {
-
     x_offset = y_offset = 0.0;
     z_offset = -4.0;
     pitch_offset = 2.0;
@@ -70,12 +69,15 @@ void FGSubmodelMgr::init()
     _user_speed_north_fps_node  = fgGetNode("/velocities/speed-north-fps", true);
 
     _contrail_altitude_node = fgGetNode("/environment/params/contrail-altitude", true);
-    contrail_altitude = _contrail_altitude_node->getDoubleValue();
-    _contrail_trigger = fgGetNode("ai/submodels/contrails", true);
+    contrail_altitude       = _contrail_altitude_node->getDoubleValue();
+    _contrail_trigger       = fgGetNode("ai/submodels/contrails", true);
     _contrail_trigger->setBoolValue(false);
 
     ai = (FGAIManager*)globals->get_subsystem("ai_model");
+}
 
+void FGSubmodelMgr::postinit() {
+    // postinit, so that the AI list is populated
     loadAI();
 }
 
@@ -95,7 +97,6 @@ void FGSubmodelMgr::unbind()
 
 void FGSubmodelMgr::update(double dt)
 {
-
     if (!(_serviceable_node->getBoolValue()))
         return;
 
@@ -106,6 +107,7 @@ void FGSubmodelMgr::update(double dt)
     _contrail_trigger->setBoolValue(_user_alt_node->getDoubleValue() > contrail_altitude);
 
     submodel_iterator = submodels.begin();
+
     while (submodel_iterator != submodels.end()) {
         i++;
 
@@ -321,16 +323,16 @@ void FGSubmodelMgr::transform(submodel* sm)
 
     if (ind == 0) {
         // set the data for a submodel tied to the main model
-        IC.lat =        _user_lat_node->getDoubleValue();
-        IC.lon =        _user_lon_node->getDoubleValue();
-        IC.alt =        _user_alt_node->getDoubleValue();
-        IC.roll =       _user_roll_node->getDoubleValue();    // rotation about x axis
-        IC.elevation =  _user_pitch_node->getDoubleValue();   // rotation about y axis
-        IC.azimuth =    _user_heading_node->getDoubleValue(); // rotation about z axis
-        IC.speed =           _user_speed_node->getDoubleValue();
-        IC.speed_down_fps =   _user_speed_down_fps_node->getDoubleValue();
-        IC.speed_east_fps =   _user_speed_east_fps_node->getDoubleValue();
-        IC.speed_north_fps =  _user_speed_north_fps_node->getDoubleValue();
+        IC.lat             = _user_lat_node->getDoubleValue();
+        IC.lon             = _user_lon_node->getDoubleValue();
+        IC.alt             = _user_alt_node->getDoubleValue();
+        IC.roll            = _user_roll_node->getDoubleValue();    // rotation about x axis
+        IC.elevation       = _user_pitch_node->getDoubleValue();   // rotation about y axis
+        IC.azimuth         = _user_heading_node->getDoubleValue(); // rotation about z axis
+        IC.speed           = _user_speed_node->getDoubleValue();
+        IC.speed_down_fps  = _user_speed_down_fps_node->getDoubleValue();
+        IC.speed_east_fps  = _user_speed_east_fps_node->getDoubleValue();
+        IC.speed_north_fps = _user_speed_north_fps_node->getDoubleValue();
 
     } else {
         // set the data for a submodel tied to an AI Object
@@ -483,6 +485,7 @@ void FGSubmodelMgr::loadAI()
     while (sm_list_itr != end) {
         string path = (*sm_list_itr)->_getPath();
         bool serviceable = (*sm_list_itr)->_getServiceable();
+
         if (path.empty()) {
             ++sm_list_itr;
             continue;
