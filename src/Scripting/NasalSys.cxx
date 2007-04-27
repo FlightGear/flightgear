@@ -689,7 +689,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
     bool initial = argc > 2 && naTrue(args[2]);
 
     FGNasalListener *nl = new FGNasalListener(node, handler, this,
-            gcSave(handler));
+            gcSave(handler), _listenerId);
     node->addChangeListener(nl, initial);
 
     _listener[_listenerId] = nl;
@@ -725,10 +725,11 @@ naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 // FGNasalListener class.
 
 FGNasalListener::FGNasalListener(SGPropertyNode_ptr node, naRef handler,
-                                 FGNasalSys* nasal, int key) :
+                                 FGNasalSys* nasal, int key, int id) :
     _node(node),
     _handler(handler),
     _gcKey(key),
+    _id(id),
     _nas(nasal),
     _active(0),
     _dead(false)
@@ -747,6 +748,7 @@ void FGNasalListener::valueChanged(SGPropertyNode* node)
     if(_active || _dead)
         return;
 
+    SG_LOG(SG_NASAL, SG_DEBUG, "trigger listener #" << _id);
     _active++;
     _nas->_cmdArg = node;
     _nas->call(_handler, naNil());
