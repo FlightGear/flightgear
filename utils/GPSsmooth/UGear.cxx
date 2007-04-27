@@ -7,6 +7,7 @@
 #include <simgear/constants.h>
 #include <simgear/io/sg_file.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/misc/stdint.hxx>
@@ -21,7 +22,11 @@ SG_USING_STD(endl);
 #define START_OF_MSG1 224
 
 
-UGEARTrack::UGEARTrack() {};
+UGEARTrack::UGEARTrack():
+    sg_swap(false)
+{
+};
+
 UGEARTrack::~UGEARTrack() {};
 
 
@@ -93,55 +98,65 @@ void UGEARTrack::parse_msg( const int id, char *buf,
 {
     if ( id == GPS_PACKET ) {
       *gpspacket = *(struct gps *)buf;
-      gpspacket->lat  = sg_swap_double( (uint8_t *)buf, 0 );
-      gpspacket->lon  = sg_swap_double( (uint8_t *)buf, 8 );
-      gpspacket->alt  = sg_swap_double( (uint8_t *)buf, 16 );
-      gpspacket->vn   = sg_swap_double( (uint8_t *)buf, 24 );
-      gpspacket->ve   = sg_swap_double( (uint8_t *)buf, 32 );
-      gpspacket->vd   = sg_swap_double( (uint8_t *)buf, 40 );
-      gpspacket->time = sg_swap_double( (uint8_t *)buf, 52 );
+      if ( sg_swap ) {
+          gpspacket->time = sg_swap_double( (uint8_t *)buf, 0 );
+          gpspacket->lat  = sg_swap_double( (uint8_t *)buf, 8 );
+          gpspacket->lon  = sg_swap_double( (uint8_t *)buf, 16 );
+          gpspacket->alt  = sg_swap_double( (uint8_t *)buf, 24 );
+          gpspacket->vn   = sg_swap_double( (uint8_t *)buf, 32 );
+          gpspacket->ve   = sg_swap_double( (uint8_t *)buf, 40 );
+          gpspacket->vd   = sg_swap_double( (uint8_t *)buf, 48 );
+      }
     } else if ( id == IMU_PACKET ) {
       *imupacket = *(struct imu *)buf;
-      imupacket->p    = sg_swap_double( (uint8_t *)buf, 0 );
-      imupacket->q    = sg_swap_double( (uint8_t *)buf, 8 );
-      imupacket->r    = sg_swap_double( (uint8_t *)buf, 16 );
-      imupacket->ax   = sg_swap_double( (uint8_t *)buf, 24 );
-      imupacket->ay   = sg_swap_double( (uint8_t *)buf, 32 );
-      imupacket->az   = sg_swap_double( (uint8_t *)buf, 40 );
-      imupacket->hx   = sg_swap_double( (uint8_t *)buf, 48 );
-      imupacket->hy   = sg_swap_double( (uint8_t *)buf, 56 );
-      imupacket->hz   = sg_swap_double( (uint8_t *)buf, 64 );
-      imupacket->Ps   = sg_swap_double( (uint8_t *)buf, 72 );
-      imupacket->Pt   = sg_swap_double( (uint8_t *)buf, 80 );
-      imupacket->phi  = sg_swap_double( (uint8_t *)buf, 88 );
-      imupacket->the  = sg_swap_double( (uint8_t *)buf, 96 );
-      imupacket->psi  = sg_swap_double( (uint8_t *)buf, 104 );
-      imupacket->time = sg_swap_double( (uint8_t *)buf, 116 );
-      // printf("imu.time = %.4f\n", imupacket->time);
+      if ( sg_swap ) {
+          imupacket->time = sg_swap_double( (uint8_t *)buf, 0 );
+          imupacket->p    = sg_swap_double( (uint8_t *)buf, 8 );
+          imupacket->q    = sg_swap_double( (uint8_t *)buf, 16 );
+          imupacket->r    = sg_swap_double( (uint8_t *)buf, 24 );
+          imupacket->ax   = sg_swap_double( (uint8_t *)buf, 32 );
+          imupacket->ay   = sg_swap_double( (uint8_t *)buf, 40 );
+          imupacket->az   = sg_swap_double( (uint8_t *)buf, 48 );
+          imupacket->hx   = sg_swap_double( (uint8_t *)buf, 56 );
+          imupacket->hy   = sg_swap_double( (uint8_t *)buf, 64 );
+          imupacket->hz   = sg_swap_double( (uint8_t *)buf, 72 );
+          imupacket->Ps   = sg_swap_double( (uint8_t *)buf, 80 );
+          imupacket->Pt   = sg_swap_double( (uint8_t *)buf, 88 );
+          imupacket->phi  = sg_swap_double( (uint8_t *)buf, 96 );
+          imupacket->the  = sg_swap_double( (uint8_t *)buf, 104 );
+          imupacket->psi  = sg_swap_double( (uint8_t *)buf, 112 );
+      }
+      // printf("imu.time = %.4f  size = %d\n", imupacket->time, sizeof(struct imu));
     } else if ( id == NAV_PACKET ) {
       *navpacket = *(struct nav *)buf;
-      navpacket->lat  = sg_swap_double( (uint8_t *)buf, 0 );
-      navpacket->lon  = sg_swap_double( (uint8_t *)buf, 8 );
-      navpacket->alt  = sg_swap_double( (uint8_t *)buf, 16 );
-      navpacket->vn   = sg_swap_double( (uint8_t *)buf, 24 );
-      navpacket->ve   = sg_swap_double( (uint8_t *)buf, 32 );
-      navpacket->vd   = sg_swap_double( (uint8_t *)buf, 40 );
-      navpacket->time = sg_swap_double( (uint8_t *)buf, 52 );
+      if ( sg_swap ) {
+          navpacket->time = sg_swap_double( (uint8_t *)buf, 0 );
+          navpacket->lat  = sg_swap_double( (uint8_t *)buf, 8 );
+          navpacket->lon  = sg_swap_double( (uint8_t *)buf, 16 );
+          navpacket->alt  = sg_swap_double( (uint8_t *)buf, 24 );
+          navpacket->vn   = sg_swap_double( (uint8_t *)buf, 32 );
+          navpacket->ve   = sg_swap_double( (uint8_t *)buf, 40 );
+          navpacket->vd   = sg_swap_double( (uint8_t *)buf, 48 );
+      }
     } else if ( id == SERVO_PACKET ) {
       *servopacket = *(struct servo *)buf;
-      servopacket->time = sg_swap_double( (uint8_t *)buf, 20 );
+      if ( sg_swap ) {
+          servopacket->time = sg_swap_double( (uint8_t *)buf, 0 );
+      }
       // printf("servo time = %.3f\n", servopacket->time);
     } else if ( id == HEALTH_PACKET ) {
       *healthpacket = *(struct health *)buf;
-      healthpacket->time = sg_swap_double( (uint8_t *)buf, 16 );
+      if ( sg_swap ) {
+          healthpacket->time = sg_swap_double( (uint8_t *)buf, 0 );
+      }
     } else {
         cout << "unknown id = " << id << endl;
     }
 }
 
 
-// load the specified file, return the number of records loaded
-bool UGEARTrack::load( const string &file, bool ignore_checksum ) {
+// load the named stream log file into internal buffers
+bool UGEARTrack::load_stream( const string &file, bool ignore_checksum ) {
     int count = 0;
 
     gps gpspacket;
@@ -219,6 +234,99 @@ bool UGEARTrack::load( const string &file, bool ignore_checksum ) {
 }
 
 
+// load the named stream log file into internal buffers
+bool UGEARTrack::load_flight( const string &path ) {
+    gps gpspacket;
+    imu imupacket;
+    nav navpacket;
+    servo servopacket;
+    health healthpacket;
+
+    gps_data.clear();
+    imu_data.clear();
+    nav_data.clear();
+    servo_data.clear();
+    health_data.clear();
+
+    gzFile fgps = NULL;
+    gzFile fimu = NULL;
+    gzFile fnav = NULL;
+    gzFile fservo = NULL;
+    gzFile fhealth = NULL;
+
+    SGPath file;
+    int size;
+
+    // open the gps file
+    file = path; file.append( "gps.dat.gz" );
+    if ( (fgps = gzopen( file.c_str(), "r" )) == NULL ) {
+        printf("Cannont open %s\n", file.c_str());
+        return false;
+    }
+
+    size = sizeof( struct gps );
+    printf("gps size = %d\n", size);
+    while ( gzread( fgps, &gpspacket, size ) == size ) {
+        gps_data.push_back( gpspacket );
+    }
+
+    // open the imu file
+    file = path; file.append( "imu.dat.gz" );
+    if ( (fimu = gzopen( file.c_str(), "r" )) == NULL ) {
+        printf("Cannot open %s\n", file.c_str());
+        return false;
+    }
+
+    size = sizeof( struct imu );
+    printf("imu size = %d\n", size);
+    while ( gzread( fimu, &imupacket, size ) == size ) {
+        imu_data.push_back( imupacket );
+    }
+
+    // open the nav file
+    file = path; file.append( "nav.dat.gz" );
+    if ( (fnav = gzopen( file.c_str(), "r" )) == NULL ) {
+        printf("Cannot open %s\n", file.c_str());
+        return false;
+    }
+
+    size = sizeof( struct nav );
+    printf("nav size = %d\n", size);
+    while ( gzread( fnav, &navpacket, size ) == size ) {
+        // printf("%.4f %.4f\n", navpacket.lat, navpacket.lon);
+        nav_data.push_back( navpacket );
+    }
+
+    // open the servo file
+    file = path; file.append( "servo.dat.gz" );
+    if ( (fservo = gzopen( file.c_str(), "r" )) == NULL ) {
+        printf("Cannot open %s\n", file.c_str());
+        return false;
+    }
+
+    size = sizeof( struct servo );
+    printf("servo size = %d\n", size);
+    while ( gzread( fservo, &servopacket, size ) == size ) {
+        servo_data.push_back( servopacket );
+    }
+
+    // open the health file
+    file = path; file.append( "health.dat.gz" );
+    if ( (fhealth = gzopen( file.c_str(), "r" )) == NULL ) {
+        printf("Cannot open %s\n", file.c_str());
+        return false;
+    }
+
+    size = sizeof( struct health );
+    printf("health size = %d\n", size);
+    while ( gzread( fhealth, &healthpacket, size ) == size ) {
+        health_data.push_back( healthpacket );
+    }
+
+    return true;
+}
+
+
 // attempt to work around some system dependent issues.  Our read can
 // return < data than we want.
 int myread( SGIOChannel *ch, SGIOChannel *log, char *buf, int length ) {
@@ -261,6 +369,7 @@ int serial_read( SGSerialPort *serial, SGIOChannel *log,
 
     return bytes_read;
 }
+
 
 // load the next message of a real time data stream
 int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
@@ -347,18 +456,24 @@ int UGEARTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
     bool myeof = false;
 
     // scan for sync characters
+    int scan_count = 0;
     uint8_t sync0, sync1;
     result = serial_read( serial, log, tmpbuf, 2 );
     sync0 = (unsigned char)tmpbuf[0];
     sync1 = (unsigned char)tmpbuf[1];
     while ( (sync0 != START_OF_MSG0 || sync1 != START_OF_MSG1) && !myeof ) {
+        scan_count++;
         sync0 = sync1;
         serial_read( serial, log, tmpbuf, 1 ); sync1 = (unsigned char)tmpbuf[0];
-        cout << "scanning for start of message "
-	     << (unsigned int)sync0 << " " << (unsigned int)sync1
-	     << endl;
+        // cout << "scanning for start of message "
+	//      << (unsigned int)sync0 << " " << (unsigned int)sync1
+	//      << endl;
     }
 
+    if ( scan_count > 0 ) {
+        cout << "found start of message after discarding " << scan_count
+             << " bytes" << endl;
+    }
     // cout << "found start of message ..." << endl;
 
     // read message id and size

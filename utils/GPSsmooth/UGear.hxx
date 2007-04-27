@@ -31,46 +31,46 @@ enum ugPacketType {
 };
 
 struct imu {
+   double time;
    double p,q,r;		/* angular velocities    */
    double ax,ay,az;		/* acceleration          */
    double hx,hy,hz;             /* magnetic field     	 */
    double Ps,Pt;                /* static/pitot pressure */
    // double Tx,Ty,Tz;          /* temperature           */
    double phi,the,psi;          /* attitudes             */
-   short  err_type;		/* error type		 */
-   double time;
+   uint64_t err_type;		/* error type		 */
 };
 
 struct gps {
+   double time;
    double lat,lon,alt;          /* gps position          */
    double ve,vn,vd;             /* gps velocity          */
-   uint16_t ITOW;
-   short  err_type;             /* error type            */
-   double time;
+   double ITOW;
+   uint64_t err_type;             /* error type            */
 };
 
 struct nav {
+   double time;
    double lat,lon,alt;
    double ve,vn,vd;
    // float  t;
-   short  err_type;
-   double time;
+   uint64_t err_type;
 };
 
 struct servo {
-   uint16_t chn[8];
-   uint8_t status;
    double time;
+   uint64_t chn[8];
+   uint64_t status;
 };
 
 struct health {
+    double time;
     float volts_raw;            /* raw volt reading */
     float volts;                /* filtered volts */
-    uint16_t est_seconds;       /* estimated useful seconds remaining */
-    uint8_t loadavg;            /* system "1 minute" load average */
-    uint8_t ahrs_hz;            /* actual ahrs loop hz */
-    uint8_t nav_hz;             /* actual nav loop hz */
-    double time;
+    uint32_t est_seconds;       /* estimated useful seconds remaining */
+    uint32_t loadavg;            /* system "1 minute" load average */
+    uint32_t ahrs_hz;            /* actual ahrs loop hz */
+    uint32_t nav_hz;             /* actual nav loop hz */
 };
 
 // Manage a saved ugear log (track file)
@@ -90,6 +90,10 @@ private:
 		    gps *gpspacket, imu *imupacket, nav *navpacket,
 		    servo *servopacket, health *healthpacket );
 
+    // activate special double swap logic for non-standard stargate
+    // double format
+    bool sg_swap;
+
 public:
 
     UGEARTrack();
@@ -106,8 +110,11 @@ public:
 		      servo *servopacket, health *healthpacket,
 		      bool ignore_checksum );
 
-    // load the named file into internal buffers
-    bool load( const string &file, bool ignore_checksum );
+    // load the named stream log file into internal buffers
+    bool load_stream( const string &file, bool ignore_checksum );
+
+    // load the named flight files into internal buffers
+    bool load_flight( const string &path );
 
     inline int gps_size() const { return gps_data.size(); }
     inline int imu_size() const { return imu_data.size(); }
@@ -157,6 +164,11 @@ public:
     }
        
 
+    // set stargate mode where we have to do an odd swapping of doubles to
+    // account for their non-standard formate
+    inline void set_stargate_swap_mode() {
+        sg_swap = true;
+    }
 };
 
 

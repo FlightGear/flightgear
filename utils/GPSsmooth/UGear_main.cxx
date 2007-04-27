@@ -16,7 +16,7 @@
 #include <simgear/constants.h>
 #include <simgear/io/lowlevel.hxx> // endian tests
 #include <simgear/io/sg_file.hxx>
-#include <simgear/io/sg_serial.hxx>
+#include <simgear/serial/serial.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -43,6 +43,7 @@ static int ctrls_port = 5506;
 
 // Default path
 static string infile = "";
+static string flight_dir = "";
 static string serialdev = "";
 static string outfile = "";
 
@@ -66,8 +67,11 @@ double skip = 0.0;
 
 bool inited = false;
 
+bool run_real_time = true;
+
 bool ignore_checksum = false;
 
+bool sg_swap = false;
 
 // The function htond is defined this way due to the way some
 // processors and OSes treat floating point values.  Some will raise
@@ -309,6 +313,7 @@ void usage( const string &argv0 ) {
     cout << "Usage: " << argv0 << endl;
     cout << "\t[ --help ]" << endl;
     cout << "\t[ --infile <infile_name>" << endl;
+    cout << "\t[ --flight <flight_dir>" << endl;
     cout << "\t[ --serial <dev_name>" << endl;
     cout << "\t[ --outfile <outfile_name> (capture the data to a file)" << endl;
     cout << "\t[ --hertz <hertz> ]" << endl;
@@ -318,7 +323,9 @@ void usage( const string &argv0 ) {
     cout << "\t[ --ctrls-port <ctrls output port #> ]" << endl;
     cout << "\t[ --altitude-offset <meters> ]" << endl;
     cout << "\t[ --skip-seconds <seconds> ]" << endl;
+    cout << "\t[ --no-real-time ]" << endl;
     cout << "\t[ --ignore-checksum ]" << endl;
+    cout << "\t[ --sg-swap ]" << endl;
 }
 
 
@@ -344,6 +351,14 @@ int main( int argc, char **argv ) {
             ++i;
             if ( i < argc ) {
                 infile = argv[i];
+            } else {
+                usage( argv[0] );
+                exit( -1 );
+            }
+        } else if ( strcmp( argv[i], "--flight" ) == 0 ) {
+            ++i;
+            if ( i < argc ) {
+                flight_dir = argv[i];
             } else {
                 usage( argv[0] );
                 exit( -1 );
@@ -406,8 +421,12 @@ int main( int argc, char **argv ) {
                 usage( argv[0] );
                 exit( -1 );
             }
+	} else if ( strcmp( argv[i], "--no-real-time" ) == 0 ) {
+            run_real_time = false;
 	} else if ( strcmp( argv[i], "--ignore-checksum" ) == 0 ) {
-	  ignore_checksum = true;
+            ignore_checksum = true;
+	} else if ( strcmp( argv[i], "--sg-swap" ) == 0 ) {
+            sg_swap = true;
         } else {
             usage( argv[0] );
             exit( -1 );
@@ -453,9 +472,18 @@ int main( int argc, char **argv ) {
     }
     cout << "connected outgoing ctrls socket" << endl;
 
-    if ( infile.length() ) {
-        // Load data from a track data
-        track.load( infile, ignore_checksum );
+    if ( sg_swap ) {
+        track.set_stargate_swap_mode();
+    }
+
+    if ( infile.length() || flight_dir.length() ) {
+        if ( infile.length() ) {
+            // Load data from a stream log data file
+            track.load_stream( infile, ignore_checksum );
+        } else if ( flight_dir.length() ) {
+            // Load data from a flight directory
+            track.load_flight( flight_dir );
+        }
         cout << "Loaded " << track.gps_size() << " gps records." << endl;
         cout << "Loaded " << track.imu_size() << " imu records." << endl;
         cout << "Loaded " << track.nav_size() << " nav records." << endl;
@@ -500,14 +528,16 @@ int main( int argc, char **argv ) {
     
         health health0, health1;
         health0 = health1 = track.get_healthpt( 0 );
-    
+
+        double last_lat = -999.9, last_lon = -999.9;
+
         while ( current_time < end_time ) {
             // cout << "current_time = " << current_time << " end_time = "
             //      << end_time << endl;
 
             // Advance gps pointer
             while ( current_time > gps1.time
-                    && gps_count < track.gps_size() )
+                    && gps_count < track.gps_size() - 1 )
             {
                 gps0 = gps1;
                 ++gps_count;
@@ -519,7 +549,7 @@ int main( int argc, char **argv ) {
 
             // Advance imu pointer
             while ( current_time > imu1.time
-                    && imu_count < track.imu_size() )
+                    && imu_count < track.imu_size() - 1 )
             {
                 imu0 = imu1;
                 ++imu_count;
@@ -531,11 +561,11 @@ int main( int argc, char **argv ) {
 
             // Advance nav pointer
             while ( current_time > nav1.time
-                    && nav_count < track.nav_size() )
+                    && nav_count < track.nav_size() - 1 )
             {
                 nav0 = nav1;
                 ++nav_count;
-                // cout << "count = " << count << endl;
+                // cout << "nav count = " << nav_count << endl;
                 nav1 = track.get_navpt( nav_count );
             }
             //  cout << "pos0 = " << pos0.get_seconds()
@@ -543,7 +573,7 @@ int main( int argc, char **argv ) {
 
             // Advance servo pointer
             while ( current_time > servo1.time
-                    && servo_count < track.servo_size() )
+                    && servo_count < track.servo_size() - 1 )
             {
                 servo0 = servo1;
                 ++servo_count;
@@ -555,7 +585,7 @@ int main( int argc, char **argv ) {
 
             // Advance health pointer
             while ( current_time > health1.time
-                    && health_count < track.health_size() )
+                    && health_count < track.health_size() - 1 )
             {
                 health0 = health1;
                 ++health_count;
@@ -630,32 +660,44 @@ int main( int argc, char **argv ) {
             // cout << (double)current_time << " " << pos.lat_deg << ", "
             //      << pos.lon_deg << " " << att.yaw_deg << endl;
             if ( gpspacket.lat > -500 ) {
-            printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
-                    current_time,
-                    gpspacket.lat, gpspacket.lon, gpspacket.alt,
-                    imupacket.psi, imupacket.the, imupacket.phi );
+                // printf( "%.3f  %.4f %.4f %.1f  %.2f %.2f %.2f\n",
+                //         current_time,
+                //         navpacket.lat, navpacket.lon, navpacket.alt,
+                //         imupacket.psi, imupacket.the, imupacket.phi );
+                double dlat = last_lat - navpacket.lat;
+                double dlon = last_lon - navpacket.lon;
+                double dist = sqrt( dlat*dlat + dlon*dlon );
+                if ( dist > 0.0015 ) {
+                    printf("  <trkpt lat=\"%.8f\" lon=\"%.8f\"></trkpt>\n",
+                           navpacket.lat, navpacket.lon );
+                    // printf(" </wpt>\n");
+                    last_lat = navpacket.lat;
+                    last_lon = navpacket.lon;
+                }
 	    }
 
             send_data( &gpspacket, &imupacket, &navpacket, &servopacket,
 		       &healthpacket );
 
-            // Update the elapsed time.
-            static bool first_time = true;
-            if ( first_time ) {
-                last_time_stamp.stamp();
-                first_time = false;
-            }
+            if ( run_real_time ) {
+                // Update the elapsed time.
+                static bool first_time = true;
+                if ( first_time ) {
+                    last_time_stamp.stamp();
+                    first_time = false;
+                }
 
-            current_time_stamp.stamp();
-            /* Convert to ms */
-            double elapsed_us = current_time_stamp - last_time_stamp;
-            if ( elapsed_us < (frame_us - 2000) ) {
-                double requested_us = (frame_us - elapsed_us) - 2000 ;
-                ulMilliSecondSleep ( (int)(requested_us / 1000.0) ) ;
-            }
-            current_time_stamp.stamp();
-            while ( current_time_stamp - last_time_stamp < frame_us ) {
                 current_time_stamp.stamp();
+                /* Convert to ms */
+                double elapsed_us = current_time_stamp - last_time_stamp;
+                if ( elapsed_us < (frame_us - 2000) ) {
+                    double requested_us = (frame_us - elapsed_us) - 2000 ;
+                    ulMilliSecondSleep ( (int)(requested_us / 1000.0) ) ;
+                }
+                current_time_stamp.stamp();
+                while ( current_time_stamp - last_time_stamp < frame_us ) {
+                    current_time_stamp.stamp();
+                }
             }
 
             current_time += (frame_us / 1000000.0);
@@ -670,6 +712,7 @@ int main( int argc, char **argv ) {
 
         int count = 0;
         double current_time = 0.0;
+        double last_time = 0.0;
 
         gps gpspacket; bzero( &gpspacket, sizeof(gpspacket) );
 	imu imupacket; bzero( &imupacket, sizeof(imupacket) );
@@ -722,44 +765,47 @@ int main( int argc, char **argv ) {
                     imu_time = imupacket.time;
                     current_time = imu_time;
                 } else {
-                    cout << "oops imu back in time" << endl;
+                    cout << "oops imu back in time: " << imupacket.time << " " << imu_time << endl;
                 }
 	    } else if ( id == NAV_PACKET ) {
                 if ( navpacket.time > nav_time ) {
                     nav_time = navpacket.time;
                     current_time = nav_time;
                 } else {
-                    cout << "oops nav back in time" << endl;
+                    cout << "oops nav back in time: " << navpacket.time << " " << nav_time << endl;
                 }
 	    } else if ( id == SERVO_PACKET ) {
                 if ( servopacket.time > servo_time ) {
                     servo_time = servopacket.time;
                     current_time = servo_time;
                 } else {
-                    cout << "oops servo back in time" << endl;
+                    cout << "oops servo back in time: " << servopacket.time << " " << servo_time << endl;
                 }
 	    } else if ( id == HEALTH_PACKET ) {
                 if ( healthpacket.time > health_time ) {
                     health_time = healthpacket.time;
                     current_time = health_time;
                 } else {
-                    cout << "oops health back in time" << endl;
+                    cout << "oops health back in time: " << healthpacket.time << " " << health_time << endl;
                 }
             }
 
-	    // if ( gpspacket.lat > -500 ) {
-            printf( "%.2f  %.6f %.6f %.1f  %.2f %.2f %.2f  %.2f %d\n",
-                    current_time,
-                    navpacket.lat, navpacket.lon, navpacket.alt,
-                    imupacket.phi*SGD_RADIANS_TO_DEGREES,
-		    imupacket.the*SGD_RADIANS_TO_DEGREES,
-		    imupacket.psi*SGD_RADIANS_TO_DEGREES,
-		    healthpacket.volts,
-		    healthpacket.est_seconds);
-	    // }
+            if ( current_time >= last_time + (1/hertz) ) {
+                // if ( gpspacket.lat > -500 ) {
+                printf( "%.2f  %.6f %.6f %.1f  %.2f %.2f %.2f  %.2f %d\n",
+                        current_time,
+                        navpacket.lat, navpacket.lon, navpacket.alt,
+                        imupacket.phi*SGD_RADIANS_TO_DEGREES,
+                        imupacket.the*SGD_RADIANS_TO_DEGREES,
+                        imupacket.psi*SGD_RADIANS_TO_DEGREES,
+                        healthpacket.volts,
+                        healthpacket.est_seconds);
+                // }
 
-            send_data( &gpspacket, &imupacket, &navpacket, &servopacket,
-		       &healthpacket );
+                last_time = current_time;
+                send_data( &gpspacket, &imupacket, &navpacket, &servopacket,
+                           &healthpacket );
+            }
         }
     }
 
