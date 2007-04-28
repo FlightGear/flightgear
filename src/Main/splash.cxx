@@ -145,6 +145,7 @@ void fgSplashUpdate ( float alpha ) {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
+    glDisable(GL_CULL_FACE);
 
     // draw the background
     FGColor c(0.0, 0.0, 0.0);
@@ -156,6 +157,11 @@ void fgSplashUpdate ( float alpha ) {
     glVertex2f(screen_width, screen_height);
     glVertex2f(0.0, screen_height);
     glEnd();
+
+    glEnable(GL_ALPHA_TEST);
+    glEnable(GL_BLEND);
+    glAlphaFunc(GL_GREATER, 0.1f);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // now draw the logo
     if (fgGetBool("/sim/startup/splash-screen", true)) {
@@ -170,17 +176,10 @@ void fgSplashUpdate ( float alpha ) {
         glTexCoord2f(1.0, 1.0); glVertex2f(xmax, ymax);
         glTexCoord2f(0.0, 1.0); glVertex2f(xmin, ymax);
         glEnd();
+        glDisable(GL_TEXTURE_2D);
     }
 
-    glDisable(GL_TEXTURE_2D);
-
     if (progress_text && fgGetBool("/sim/startup/splash-progress", true)) {
-        glEnable(GL_ALPHA_TEST);
-        glEnable(GL_BLEND);
-        glAlphaFunc(GL_GREATER, 0.1f);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDisable(GL_CULL_FACE);
-
         puFont *fnt = globals->get_fontcache()->get(style->getNode("fonts/splash"));
 
         FGColor c(1.0, 0.9, 0.0);
