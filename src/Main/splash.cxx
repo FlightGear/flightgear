@@ -85,14 +85,14 @@ void fgSplashInit ( const char *splash_texture ) {
     } else
         tpath.append( splash_texture );
 
-    splash.read_rgb_texture(tpath.c_str());
+    splash.read_rgba_texture(tpath.c_str());
     if (!splash.usable())
     {
         // Try compressed
         SGPath fg_tpath = tpath;
         fg_tpath.concat( ".gz" );
 
-        splash.read_rgb_texture(fg_tpath.c_str());
+        splash.read_rgba_texture(fg_tpath.c_str());
         if ( !splash.usable() )
         {
             SG_LOG( SG_GENERAL, SG_ALERT,
