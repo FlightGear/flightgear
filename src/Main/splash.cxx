@@ -139,6 +139,7 @@ void fgSplashUpdate ( float alpha ) {
     glPushMatrix();
     glLoadIdentity();
     gluOrtho2D(0, screen_width, 0, screen_height);
+    glViewport(0, 0, screen_width, screen_height);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
