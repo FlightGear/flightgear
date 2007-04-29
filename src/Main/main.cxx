@@ -634,11 +634,6 @@ static void fgIdleFunction ( void ) {
         // negative values sharpen, positive values blur mipmapped textures
         glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
 #endif
-        fgSplashProgress("setting up scenegraph & user interface");
-
-
-    } else if ( idle_state == 1 ) {
-        idle_state++;
         // This seems to be the absolute earliest in the init sequence
         // that these calls will return valid info.  Too bad it's after
         // we've already created and sized our window. :-(
@@ -656,10 +651,12 @@ static void fgIdleFunction ( void ) {
         general.set_glDepthBits( tmp );
         SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
 
-        // Initialize the user interface (we need to do this before
-        // passing off control to the OS main loop and before
-        // fgInitGeneral to get our fonts !!!
+        // Initialize the user interface so that we can use fonts
         guiInit();
+
+
+    } else if ( idle_state == 1 ) {
+        idle_state++;
         fgSplashProgress("reading aircraft list");
 
 
