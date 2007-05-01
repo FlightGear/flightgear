@@ -109,9 +109,16 @@ fgExit (int status)
 {
     // remove subsystems first, which need access to other subsystems in their
     // destructors (e.g. "nasal")
-    SGSubsystem *sub = globals->get_subsystem("ai_model");
+    SGSubsystem *sub;
+
+    sub = globals->get_subsystem("ai_model");
     globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("ai_model");
     delete sub;
+
+    sub = globals->get_subsystem("submodel_mgr");
+    globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("submodel_mgr");
+    delete sub;
+
 #ifdef OSG_LIBRARY_STATIC
     osgDB::Registry::instance( true);
 #endif
