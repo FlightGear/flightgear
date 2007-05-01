@@ -306,7 +306,8 @@ static naRef f_interpolate(naContext c, naRef me, int argc, naRef* args)
         deltas[i] = naNumValue(naVec_get(curve, 2*i+1)).num;
     }
 
-    ((SGInterpolator*)globals->get_subsystem("interpolator"))
+    ((SGInterpolator*)globals->get_subsystem_mgr()
+        ->get_group(SGSubsystemMgr::INIT)->get_subsystem("interpolator"))
         ->interpolate(node, nPoints, values, deltas);
 
     return naNil();

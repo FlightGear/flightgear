@@ -1579,9 +1579,10 @@ bool fgInitSubsystems() {
     globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
 
     ////////////////////////////////////////////////////////////////////
-    // Initialize the property interpolator subsystem
+    // Initialize the property interpolator subsystem. Put into the INIT
+    // group because the "nasal" subsystem may need it at GENERAL take-down.
     ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("interpolator", new SGInterpolator);
+    globals->add_subsystem("interpolator", new SGInterpolator, SGSubsystemMgr::INIT);
 
 
     ////////////////////////////////////////////////////////////////////
