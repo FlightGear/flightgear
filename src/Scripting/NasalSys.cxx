@@ -22,6 +22,9 @@
 
 #include "NasalSys.hxx"
 
+static FGNasalSys* nasalSys = 0;
+
+
 // Read and return file contents in a single buffer.  Note use of
 // stat() to get the file size.  This is a win32 function, believe it
 // or not. :) Note the REALLY IMPORTANT use of the "b" flag to fopen.
@@ -52,6 +55,7 @@ static char* readfile(const char* file, int* lenOut)
 
 FGNasalSys::FGNasalSys()
 {
+    nasalSys = this;
     _context = 0;
     _globals = naNil();
     _gcHash = naNil();
@@ -82,6 +86,7 @@ naRef FGNasalSys::call(naRef code, naRef locals)
 
 FGNasalSys::~FGNasalSys()
 {
+    nasalSys = 0;
     map<int, FGNasalListener *>::iterator it, end = _listener.end();
     for(it = _listener.begin(); it != end; ++it)
         delete it->second;
@@ -254,8 +259,7 @@ static naRef f_fgcommand(naContext c, naRef me, int argc, naRef* args)
 // FGNasalSys::setTimer().  See there for docs.
 static naRef f_settimer(naContext c, naRef me, int argc, naRef* args)
 {
-    FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
-    nasal->setTimer(argc, args);
+    nasalSys->setTimer(argc, args);
     return naNil();
 }
 
@@ -263,24 +267,21 @@ static naRef f_settimer(naContext c, naRef me, int argc, naRef* args)
 // FGNasalSys::setListener().  See there for docs.
 static naRef f_setlistener(naContext c, naRef me, int argc, naRef* args)
 {
-    FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
-    return nasal->setListener(c, argc, args);
+    return nasalSys->setListener(c, argc, args);
 }
 
 // removelistener(int) extension function. Falls through to
 // FGNasalSys::removeListener(). See there for docs.
 static naRef f_removelistener(naContext c, naRef me, int argc, naRef* args)
 {
-    FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
-    return nasal->removeListener(c, argc, args);
+    return nasalSys->removeListener(c, argc, args);
 }
 
 // Returns a ghost handle to the argument to the currently executing
 // command
 static naRef f_cmdarg(naContext c, naRef me, int argc, naRef* args)
 {
-    FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
-    return nasal->cmdArgGhost();
+    return nasalSys->cmdArgGhost();
 }
 
 // Sets up a property interpolation.  The first argument is either a
@@ -777,8 +778,7 @@ void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
 
     _module = path;
     const char *s = load ? load->getStringValue() : "";
-    FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
-    nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _props);
+    nasalSys->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _props);
 }
 
 FGNasalModelData::~FGNasalModelData()
@@ -786,8 +786,7 @@ FGNasalModelData::~FGNasalModelData()
     if(_module.empty())
         return;
 
-    FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
-    if(!nas) {
+    if(!nasalSys) {
         SG_LOG(SG_NASAL, SG_ALERT, "Trying to run an <unload> script "
                 "without Nasal subsystem present.");
         return;
@@ -795,9 +794,9 @@ FGNasalModelData::~FGNasalModelData()
 
     if(_unload) {
         const char *s = _unload->getStringValue();
-        nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _props);
+        nasalSys->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _props);
     }
-    nas->deleteModule(_module.c_str());
+    nasalSys->deleteModule(_module.c_str());
 }
 
 
