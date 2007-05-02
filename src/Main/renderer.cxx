@@ -153,6 +153,8 @@ public:
 
       glPopClientAttrib();
       glPopAttrib();
+    } else {
+      fgSplashExit();
     }
 
     state.popStateSet();

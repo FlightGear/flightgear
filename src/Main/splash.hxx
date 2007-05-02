@@ -38,7 +38,10 @@ void fgSplashInit ( const char *splash_texture );
 void fgSplashUpdate ( float alpha );
 
 // Set progress information
-void fgSplashProgress( const char *text );
+void fgSplashProgress ( const char *text );
+
+// Free texture memory
+void fgSplashExit ();
 
 
 #endif // _SPLASH_HXX
