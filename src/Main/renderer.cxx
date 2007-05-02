@@ -770,6 +770,8 @@ FGRenderer::update( bool refresh_camera_settings ) {
     double t = globals->get_sim_time_sec();
     if (t <= 2.5)
         fgSplashUpdate((2.5 - t) / 2.5);
+    else
+        fgSplashExit();
 }
 
 

@@ -55,7 +55,7 @@
 #include "renderer.hxx"
 
 static const char *progress_text = 0;
-static SGTexture splash;
+static SGTexture *splash = new SGTexture;
 SGPropertyNode_ptr style = 0;
 
 
@@ -70,7 +70,7 @@ void fgSplashInit ( const char *splash_texture ) {
     if (!fgGetBool("/sim/startup/splash-screen"))
         return;
 
-    splash.bind();
+    splash->bind();
 
     SGPath tpath( globals->get_fg_root() );
     if (splash_texture == NULL || !strcmp(splash_texture, "")) {
@@ -85,15 +85,15 @@ void fgSplashInit ( const char *splash_texture ) {
     } else
         tpath.append( splash_texture );
 
-    splash.read_rgba_texture(tpath.c_str());
-    if (!splash.usable())
+    splash->read_rgba_texture(tpath.c_str());
+    if (!splash->usable())
     {
         // Try compressed
         SGPath fg_tpath = tpath;
         fg_tpath.concat( ".gz" );
 
-        splash.read_rgba_texture(fg_tpath.c_str());
-        if ( !splash.usable() )
+        splash->read_rgba_texture(fg_tpath.c_str());
+        if ( !splash->usable() )
         {
             SG_LOG( SG_GENERAL, SG_ALERT,
                     "Error in loading splash screen texture " << tpath.str() );
@@ -101,7 +101,14 @@ void fgSplashInit ( const char *splash_texture ) {
         }
     }
 
-    splash.select();
+    splash->select();
+}
+
+
+void fgSplashExit ()
+{
+    delete splash;
+    splash = 0;
 }
 
 
@@ -167,7 +174,7 @@ void fgSplashUpdate ( float alpha ) {
     // now draw the logo
     if (fgGetBool("/sim/startup/splash-screen", true)) {
         glEnable(GL_TEXTURE_2D);
-        splash.bind();
+        splash->bind();
         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
         glColor4f( 1.0, 1.0, 1.0, alpha );
