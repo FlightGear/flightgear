@@ -25,6 +25,7 @@
 #  include <config.h>
 #endif
 
+#include <iomanip>
 #include <simgear/compiler.h>
 
 #include STL_STRING
@@ -61,6 +62,47 @@ static string getValueTypeString(const SGPropertyNode *node)
         result = "string";
 
     return result;
+}
+
+
+static void dumpProperties(const SGPropertyNode *node)
+{
+    cout << node->getPath() << "/" << endl;
+    for (int i = 0; i < node->nChildren(); i++) {
+        const SGPropertyNode *c = node->getChild(i);
+        SGPropertyNode::Type type = c->getType();
+        if (type == SGPropertyNode::ALIAS || c->nChildren())
+            continue;
+
+        int index = c->getIndex();
+        cout << std::setw(11) << getValueTypeString(c) << "  " << c->getName();
+        if (index > 0)
+            cout << '[' << index << ']';
+        cout << " = ";
+
+        switch (c->getType()) {
+        case SGPropertyNode::DOUBLE:
+        case SGPropertyNode::FLOAT:
+            cout << std::setprecision(15) << c->getDoubleValue();
+            break;
+        case SGPropertyNode::LONG:
+        case SGPropertyNode::INT:
+            cout << c->getLongValue();
+            break;
+        case SGPropertyNode::BOOL:
+            cout << (c->getBoolValue() ? "true" : "false");
+            break;
+        case SGPropertyNode::STRING:
+            cout << '"' << c->getStringValue() << '"';
+            break;
+        case SGPropertyNode::NONE:
+            break;
+        default:
+            cout << '\'' << c->getStringValue() << '\'';
+        }
+        cout << endl;
+    }
+    cout << endl;
 }
 
 
@@ -153,7 +195,7 @@ void PropertyList::handle_select(puObject *list_box)
                 if (mod_ctrl)
                     prop_list->toggleFlags();
                 else if (mod_shift)
-                    writeProperties(cerr, prop_list->_curr, true);
+                    dumpProperties(prop_list->_curr);
 
                 prop_list->update();
                 return;
