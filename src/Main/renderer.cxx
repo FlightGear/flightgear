@@ -143,20 +143,6 @@ public:
     glPopClientAttrib();
     glPopAttrib();
 
-    // Fade out the splash screen over the first three seconds.
-    double t = globals->get_sim_time_sec();
-    if (t <= 2.5) {
-      glPushAttrib(GL_ALL_ATTRIB_BITS);
-      glPushClientAttrib(~0u);
-
-      fgSplashUpdate((2.5 - t) / 2.5);
-
-      glPopClientAttrib();
-      glPopAttrib();
-    } else {
-      fgSplashExit();
-    }
-
     state.popStateSet();
     state.dirtyAllModes();
     state.dirtyAllAttributes();
@@ -326,6 +312,23 @@ private:
   SGSharedPtr<SGPropertyNode> mFogEnabled;
 };
 
+// update callback for the switch node guarding that splash
+class FGScenerySwitchCallback : public osg::NodeCallback {
+public:
+  virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
+  {
+    assert(dynamic_cast<osg::Switch*>(node));
+    osg::Switch* sw = static_cast<osg::Switch*>(node);
+
+    double t = globals->get_sim_time_sec();
+    bool enabled = 0 < t;
+    sw->setValue(0, enabled);
+    if (!enabled)
+      return;
+    traverse(node, nv);
+  }
+};
+
 // fog constants.  I'm a little nervous about putting actual code out
 // here but it seems to work (?)
 static const double m_log01 = -log( 0.01 );
@@ -342,6 +345,8 @@ SGSky *thesky;
 osg::ref_ptr<osgUtil::SceneView> sceneView = new osgUtil::SceneView;  // This SceneView is used by class FGJpegHttpd ( jpg-httpd.cxx )
 static osg::ref_ptr<osg::FrameStamp> mFrameStamp = new osg::FrameStamp;
 static osg::ref_ptr<SGUpdateVisitor> mUpdateVisitor= new SGUpdateVisitor;
+
+static osg::ref_ptr<osg::Group> mRealRoot = new osg::Group;
 
 static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
@@ -369,6 +374,17 @@ FGRenderer::~FGRenderer()
 
 // Initialize various GL/view parameters
 void
+FGRenderer::splashinit( void ) {
+   // Add the splash screen node
+   mRealRoot->addChild(fgCreateSplashNode());
+   sceneView->setSceneData(mRealRoot.get());
+
+   sceneView->setDefaults(osgUtil::SceneView::COMPILE_GLOBJECTS_AT_INIT);
+   sceneView->setFrameStamp(mFrameStamp.get());
+   sceneView->setUpdateVisitor(mUpdateVisitor.get());
+}
+
+void
 FGRenderer::init( void ) {
 
     osg::initNotifyLevel();
@@ -395,17 +411,10 @@ FGRenderer::init( void ) {
     glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     glHint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
 
-    sceneView->setDefaults(osgUtil::SceneView::COMPILE_GLOBJECTS_AT_INIT);
-
     mFog->setMode(osg::Fog::EXP2);
     mRunwayLightingFog->setMode(osg::Fog::EXP2);
     mTaxiLightingFog->setMode(osg::Fog::EXP2);
     mGroundLightingFog->setMode(osg::Fog::EXP2);
-
-    sceneView->setFrameStamp(mFrameStamp.get());
-
-    mUpdateVisitor = new SGUpdateVisitor;
-    sceneView->setUpdateVisitor(mUpdateVisitor.get());
 
     sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     sceneView->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
@@ -505,7 +514,6 @@ FGRenderer::init( void ) {
     guiCamera->setInheritanceMask(inheritanceMask);
     guiCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     guiCamera->setCullingMode(osg::CullSettings::NO_CULLING);
-    mRoot->addChild(guiCamera);
     osg::Geode* geode = new osg::Geode;
     geode->addDrawable(new SGPuDrawable);
     geode->addDrawable(new SGHUDAndPanelDrawable);
@@ -534,9 +542,13 @@ FGRenderer::init( void ) {
     stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
 
     mCameraView->addChild(mRoot.get());
-    sceneView->setSceneData(mCameraView.get());
 
-//  sceneView->getState()->setCheckForGLErrors(osg::State::ONCE_PER_ATTRIBUTE);
+    osg::Switch* sw = new osg::Switch;
+    sw->setUpdateCallback(new FGScenerySwitchCallback);
+    sw->addChild(mCameraView.get());
+
+    mRealRoot->addChild(sw);
+    mRealRoot->addChild(guiCamera);
 }
 
 
@@ -547,24 +559,22 @@ FGRenderer::update( bool refresh_camera_settings ) {
                           || fgGetBool("sim/sceneryloaded-override");
 
     if ( idle_state < 1000 || !scenery_loaded ) {
-        if (sceneView.valid() && sceneView->getState()) {
-            sceneView->getState()->setActiveTextureUnit(0);
-            sceneView->getState()->setClientActiveTextureUnit(0);
-            sceneView->getState()->disableAllVertexArrays();
-        }
-        // still initializing, draw the splash screen
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glPushClientAttrib(~0u);
-
-        fgSplashUpdate(1.0);
-
-        glPopClientAttrib();
-        glPopAttrib();
+        fgSetDouble("/sim/startup/splash-alpha", 1.0);
 
         // Keep resetting sim time while the sim is initializing
         globals->set_sim_time_sec( 0.0 );
+
+        // the splash screen is now in the scenegraph
+        sceneView->update();
+        sceneView->cull();
+        sceneView->draw();
+
         return;
     }
+
+    // Fade out the splash screen over the first three seconds.
+    double sAlpha = SGMiscd::max(0, (2.5 - globals->get_sim_time_sec()) / 2.5);
+    fgSetDouble("/sim/startup/splash-alpha", sAlpha);
 
     bool skyblend = fgGetBool("/sim/rendering/skyblend");
     bool use_point_sprites = fgGetBool("/sim/rendering/point-sprites");

@@ -423,27 +423,11 @@ FGFontCache::~FGFontCache()
 struct FGFontCache::fnt *
 FGFontCache::getfnt(const char *name, float size, float slant)
 {
-    if (!_initialized) {
-        char *envp = ::getenv("FG_FONTS");
-        if (envp != NULL) {
-            _path.set(envp);
-        } else {
-            _path.set(globals->get_fg_root());
-            _path.append("Fonts");
-        }
-
-        for (int i = 0; guifonts[i].name; i++)
-            _fonts[guifonts[i].name] = new fnt(guifonts[i].font);
-
-        _initialized = true;
-    }
-
     _itt_t it;
     if ((it = _fonts.find(name)) != _fonts.end())
         return it->second;
 
-    SGPath path(_path);
-    path.append(name);
+    SGPath path = getfntpath(name);
 
     fnt *f = new fnt();
     f->texfont = new fntTexFont;
@@ -481,6 +465,37 @@ FGFontCache::get(SGPropertyNode *node)
     float slant = node->getFloatValue("slant", 0.0);
 
     return get(name, size, slant);
+}
+
+SGPath
+FGFontCache::getfntpath(const char *name)
+{
+    if (!_initialized) {
+        char *envp = ::getenv("FG_FONTS");
+        if (envp != NULL) {
+            _path.set(envp);
+        } else {
+            _path.set(globals->get_fg_root());
+            _path.append("Fonts");
+        }
+
+        for (int i = 0; guifonts[i].name; i++)
+            _fonts[guifonts[i].name] = new fnt(guifonts[i].font);
+
+        _initialized = true;
+    }
+
+    SGPath path(_path);
+    if (name && std::string(name) != "") {
+        path.append(name);
+        if (path.exists())
+            return path;
+    }
+
+    path = SGPath(_path);
+    path.append("Helvetica.txf");
+    
+    return path;
 }
 
 // end of new_gui.cxx

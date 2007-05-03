@@ -54,7 +54,7 @@ class FGScenery : public SGSubsystem {
     // angle of sun relative to current local horizontal
     double sun_angle;
 
-    // SSG scene graph
+    // scene graph
     osg::ref_ptr<osg::Group> scene_graph;
     osg::ref_ptr<osg::Group> terrain_branch;
     osg::ref_ptr<osg::Group> gnd_lights_root;

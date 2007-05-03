@@ -24,6 +24,7 @@ public:
     FGRenderer();
     ~FGRenderer();
 
+    void splashinit();
     void init();
 
     static void resize(int width, int height );

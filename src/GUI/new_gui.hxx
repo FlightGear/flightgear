@@ -315,6 +315,8 @@ public:
     puFont *get(SGPropertyNode *node);
 
     fntTexFont *getTexFont(const char *name, float size=15.0, float slant=0.0);
+
+    SGPath getfntpath(const char *name);
 };
 
 

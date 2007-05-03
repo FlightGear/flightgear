@@ -25,24 +25,20 @@
 #ifndef _SPLASH_HXX
 #define _SPLASH_HXX
 
+#include <osg/Node>
 
 #ifndef __cplusplus
 # error This library requires C++
 #endif
 
-
 // Initialize the splash screen
-void fgSplashInit ( const char *splash_texture );
-
-// Update the splash screen with alpha specified from 0.0 to 1.0
-void fgSplashUpdate ( float alpha );
+void fgSplashInit ();
 
 // Set progress information
 void fgSplashProgress ( const char *text );
 
-// Free texture memory
-void fgSplashExit ();
-
+// Retrieve the splash screen node ...
+osg::Node* fgCreateSplashNode();
 
 #endif // _SPLASH_HXX
 

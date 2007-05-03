@@ -977,9 +977,6 @@ bool fgMainInit( int argc, char **argv ) {
         exit(-1);
     }
 
-    //OSGFIXME
-//     sgUseDisplayList = fgGetBool( "/sim/rendering/use-display-list", true );
-
     // Load the configuration parameters.  (Command line options
     // override config file options.  Config file options override
     // defaults.)
@@ -1021,7 +1018,7 @@ bool fgMainInit( int argc, char **argv ) {
 
     // Initialize the splash screen right away
     fntInit();
-    fgSplashInit(fgGetString("/sim/startup/splash-texture"));
+    fgSplashInit();
 
     // pass control off to the master event handler
     fgOSMainLoop();
