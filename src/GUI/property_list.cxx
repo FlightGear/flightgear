@@ -143,6 +143,7 @@ void PropertyList::handle_select(puObject *list_box)
     PropertyList *prop_list = (PropertyList *)list_box->getUserData();
     int selected = list_box->getIntegerValue();
     int mod_ctrl = fgGetKeyModifiers() & KEYMOD_CTRL;
+    int mod_shift = fgGetKeyModifiers() & KEYMOD_SHIFT;
 
     if (selected >= 0 && selected < prop_list->_num_entries) {
         const char *src = prop_list->_entries[selected];
@@ -151,6 +152,8 @@ void PropertyList::handle_select(puObject *list_box)
             if (!strcmp(src, ".")) {
                 if (mod_ctrl)
                     prop_list->toggleFlags();
+                else if (mod_shift)
+                    writeProperties(cerr, prop_list->_curr, true);
 
                 prop_list->update();
                 return;
