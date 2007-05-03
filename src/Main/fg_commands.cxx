@@ -28,6 +28,7 @@
 #include <GUI/dialog.hxx>
 #include <Aircraft/replay.hxx>
 #include <Scenery/tilemgr.hxx>
+#include <Scenery/scenery.hxx>
 #if defined(HAVE_PLIB_PSL)
 #  include <Scripting/scriptmgr.hxx>
 #endif
@@ -1233,6 +1234,20 @@ do_replay (const SGPropertyNode * arg)
 }
 
 
+/**
+ * Return terrain elevation for given longitude/latitude pair.
+ */
+static bool
+do_terrain_elevation (const SGPropertyNode * arg)
+{
+    double lon = arg->getDoubleValue("longitude-deg", 0.0);
+    double lat = arg->getDoubleValue("latitude-deg", 0.0);
+    double elev;
+    bool ret = globals->get_scenery()->get_elevation_m(lat, lon, 10000.0, elev, 0, false);
+    const_cast<SGPropertyNode *>(arg)->setDoubleValue("elevation-m", elev);
+    return ret;
+}
+
 
 static bool
 do_decrease_visibility (const SGPropertyNode * arg)
@@ -1439,6 +1454,7 @@ static struct {
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },
+    { "terrain-elevation", do_terrain_elevation },
     { "decrease-visibility", do_decrease_visibility },
     { "increase-visibility", do_increase_visibility },
     { "hud-init", do_hud_init },
