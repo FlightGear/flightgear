@@ -90,6 +90,7 @@
 #include <Model/modelmgr.hxx>
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
+#include <Scenery/redout.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <ATC/ATCdisplay.hxx>
 #include <GUI/new_gui.hxx>
@@ -506,7 +507,7 @@ FGRenderer::init( void ) {
 
     // plug in the GUI
     osg::Camera* guiCamera = new osg::Camera;
-    guiCamera->setRenderOrder(osg::Camera::POST_RENDER);
+    guiCamera->setRenderOrder(osg::Camera::POST_RENDER, 100);
     guiCamera->setClearMask(0);
     inheritanceMask = osg::CullSettings::ALL_VARIABLES;
     inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
@@ -548,6 +549,7 @@ FGRenderer::init( void ) {
     sw->addChild(mCameraView.get());
 
     mRealRoot->addChild(sw);
+    mRealRoot->addChild(FGCreateRedoutNode());
     mRealRoot->addChild(guiCamera);
 }
 
