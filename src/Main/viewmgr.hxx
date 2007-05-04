@@ -24,11 +24,7 @@
 #ifndef _VIEWMGR_HXX
 #define _VIEWMGR_HXX
 
-
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
-
+#include <vector>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -37,8 +33,7 @@
 #  include <config.h>
 #endif
 
-#include <vector>
-
+#include "fg_props.hxx"
 #include "viewer.hxx"
 
 SG_USING_STD(vector);
@@ -151,7 +146,8 @@ private:
     int getView () const;
     void setView (int newview);
 
-    typedef vector < FGViewer * > viewer_list;
+    vector<SGPropertyNode_ptr> config_list;
+    typedef vector<FGViewer *> viewer_list;
     viewer_list views;
 
     int current;

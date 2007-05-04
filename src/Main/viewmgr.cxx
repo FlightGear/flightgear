@@ -34,17 +34,16 @@
 #include <Model/acmodel.hxx>
 
 #include "viewmgr.hxx"
-#include "fg_props.hxx"
 
 
 // Constructor
 FGViewMgr::FGViewMgr( void ) :
   axis_long(0),
   axis_lat(0),
+  config_list(fgGetNode("/sim", true)->getChildren("view")),
   current(0)
 {
 }
-
 
 // Destructor
 FGViewMgr::~FGViewMgr( void ) {
@@ -53,120 +52,52 @@ FGViewMgr::~FGViewMgr( void ) {
 void
 FGViewMgr::init ()
 {
-  char stridx [ 20 ];
-  string viewpath, nodepath, strdata;
-  bool from_model = false;
-  bool at_model = false;
-  int from_model_index = 0;
-  int at_model_index = 0;
-  // double damp_alt;
-  double damp_roll = 0.0, damp_pitch = 0.0, damp_heading = 0.0;
-  double x_offset_m, y_offset_m, z_offset_m, fov_deg;
-  double heading_offset_deg, pitch_offset_deg, roll_offset_deg;
-  double target_x_offset_m, target_y_offset_m, target_z_offset_m;
-  double near_m;
-  bool internal;
-
   double aspect_ratio_multiplier
       = fgGetDouble("/sim/current-view/aspect-ratio-multiplier");
 
-  for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
-    viewpath = "/sim/view";
-    sprintf(stridx, "[%d]", i);
-    viewpath += stridx;
-
-    // find out what type of view this is...
-    nodepath = viewpath;
-    nodepath += "/type";
-    strdata = fgGetString(nodepath.c_str());
+  for (unsigned int i = 0; i < config_list.size(); i++) {
+    SGPropertyNode *n = config_list[i];
 
     // find out if this is an internal view (e.g. in cockpit, low near plane)
-    internal = false; // default
-    nodepath = viewpath;
-    nodepath += "/internal";
-    internal = fgGetBool(nodepath.c_str());
+    bool internal = n->getBoolValue("internal", false);
 
     // FIXME:
     // this is assumed to be an aircraft model...we will need to read
     // model-from-type as well.
+
     // find out if this is a model we are looking from...
-    nodepath = viewpath;
-    nodepath += "/config/from-model";
-    from_model = fgGetBool(nodepath.c_str());
+    bool from_model = n->getBoolValue("config/from-model");
+    int from_model_index = n->getIntValue("config/from-model-idx");
 
-    // get model index (which model)
-    if (from_model) {
-      nodepath = viewpath;
-      nodepath += "/config/from-model-idx";
-      from_model_index = fgGetInt(nodepath.c_str());     
-    }
+    double x_offset_m = n->getDoubleValue("config/x-offset-m");
+    double y_offset_m = n->getDoubleValue("config/y-offset-m");
+    double z_offset_m = n->getDoubleValue("config/z-offset-m");
 
-    if ( strcmp("lookat",strdata.c_str()) == 0 ) {
-      // find out if this is a model we are looking at...
-      nodepath = viewpath;
-      nodepath += "/config/at-model";
-      at_model = fgGetBool(nodepath.c_str());
+    double heading_offset_deg = n->getDoubleValue("config/heading-offset-deg");
+    n->setDoubleValue(heading_offset_deg);
+    double pitch_offset_deg = n->getDoubleValue("config/pitch-offset-deg");
+    n->setDoubleValue(pitch_offset_deg);
+    double roll_offset_deg = n->getDoubleValue("config/roll-offset-deg");
+    n->setDoubleValue(roll_offset_deg);
 
-      // get model index (which model)
-      if (at_model) {
-        nodepath = viewpath;
-        nodepath += "/config/at-model-idx";
-        at_model_index = fgGetInt(nodepath.c_str());
+    double fov_deg = n->getDoubleValue("config/default-field-of-view-deg");
+    double near_m = n->getDoubleValue("config/ground-level-nearplane-m");
 
-        nodepath = viewpath;
-        nodepath += "/config/at-model-roll-damping";
-        damp_roll = fgGetDouble(nodepath.c_str(), 0.0);
-        nodepath = viewpath;
-        nodepath += "/config/at-model-pitch-damping";
-        damp_pitch = fgGetDouble(nodepath.c_str(), 0.0);
-        nodepath = viewpath;
-        nodepath += "/config/at-model-heading-damping";
-        damp_heading = fgGetDouble(nodepath.c_str(), 0.0);
-      }
-    }
+    // supporting two types "lookat" = 1 and "lookfrom" = 0
+    const char *type = n->getStringValue("type");
+    if (!strcmp(type, "lookat")) {
 
-    nodepath = viewpath;
-    nodepath += "/config/x-offset-m";
-    x_offset_m = fgGetDouble(nodepath.c_str());
-    nodepath = viewpath;
-    nodepath += "/config/y-offset-m";
-    y_offset_m = fgGetDouble(nodepath.c_str());
-    nodepath = viewpath;
-    nodepath += "/config/z-offset-m";
-    z_offset_m = fgGetDouble(nodepath.c_str());
-    nodepath = viewpath;
-    nodepath += "/config/pitch-offset-deg";
-    pitch_offset_deg = fgGetDouble(nodepath.c_str());
-    fgSetDouble(nodepath.c_str(),pitch_offset_deg);
-    nodepath = viewpath;
-    nodepath += "/config/heading-offset-deg";
-    heading_offset_deg = fgGetDouble(nodepath.c_str());
-    fgSetDouble(nodepath.c_str(),heading_offset_deg);
-    nodepath = viewpath;
-    nodepath += "/config/roll-offset-deg";
-    roll_offset_deg = fgGetDouble(nodepath.c_str());
-    fgSetDouble(nodepath.c_str(),roll_offset_deg);
-    nodepath = viewpath;
-    nodepath += "/config/default-field-of-view-deg";
-    fov_deg = fgGetDouble(nodepath.c_str());
+      bool at_model = n->getBoolValue("config/at-model");
+      int at_model_index = n->getIntValue("config/at-model-idx");
 
-    // target offsets for lookat mode only...
-    nodepath = viewpath;
-    nodepath += "/config/target-x-offset-m";
-    target_x_offset_m = fgGetDouble(nodepath.c_str());
-    nodepath = viewpath;
-    nodepath += "/config/target-y-offset-m";
-    target_y_offset_m = fgGetDouble(nodepath.c_str());
-    nodepath = viewpath;
-    nodepath += "/config/target-z-offset-m";
-    target_z_offset_m = fgGetDouble(nodepath.c_str());
+      double damp_roll = n->getDoubleValue("config/at-model-roll-damping");
+      double damp_pitch = n->getDoubleValue("config/at-model-pitch-damping");
+      double damp_heading = n->getDoubleValue("config/at-model-heading-damping");
 
-    nodepath = viewpath;
-    nodepath += "/config/ground-level-nearplane-m";
-    near_m = fgGetDouble(nodepath.c_str());
+      double target_x_offset_m = n->getDoubleValue("config/target-x-offset-m");
+      double target_y_offset_m = n->getDoubleValue("config/target-y-offset-m");
+      double target_z_offset_m = n->getDoubleValue("config/target-z-offset-m");
 
-    // supporting two types now "lookat" = 1 and "lookfrom" = 0
-    if ( strcmp("lookat",strdata.c_str()) == 0 )
       add_view(new FGViewer ( FG_LOOKAT, from_model, from_model_index,
                               at_model, at_model_index,
                               damp_roll, damp_pitch, damp_heading,
@@ -175,90 +106,54 @@ FGViewMgr::init ()
                               roll_offset_deg, fov_deg, aspect_ratio_multiplier,
                               target_x_offset_m, target_y_offset_m,
                               target_z_offset_m, near_m, internal ));
-    else
+    } else {
       add_view(new FGViewer ( FG_LOOKFROM, from_model, from_model_index,
                               false, 0, 0.0, 0.0, 0.0,
                               x_offset_m, y_offset_m, z_offset_m,
                               heading_offset_deg, pitch_offset_deg,
                               roll_offset_deg, fov_deg, aspect_ratio_multiplier,
                               0, 0, 0, near_m, internal ));
+    }
   }
 
   copyToCurrent();
-  
 }
 
 void
 FGViewMgr::reinit ()
 {
-  char stridx [ 20 ];
-  string viewpath, nodepath, strdata;
-  double fov_deg;
-
   // reset offsets and fov to configuration defaults
-
-  for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
-    viewpath = "/sim/view";
-    sprintf(stridx, "[%d]", i);
-    viewpath += stridx;
-
+  for (unsigned int i = 0; i < config_list.size(); i++) {
+    SGPropertyNode *n = config_list[i];
     setView(i);
 
-    nodepath = viewpath;
-    nodepath += "/config/x-offset-m";
-    fgSetDouble("/sim/current-view/x-offset-m",fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/y-offset-m";
-    fgSetDouble("/sim/current-view/y-offset-m",fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/z-offset-m";
-    fgSetDouble("/sim/current-view/z-offset-m",fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/pitch-offset-deg";
+    fgSetDouble("/sim/current-view/x-offset-m",
+        n->getDoubleValue("config/x-offset-m"));
+    fgSetDouble("/sim/current-view/y-offset-m",
+        n->getDoubleValue("config/y-offset-m"));
+    fgSetDouble("/sim/current-view/z-offset-m",
+        n->getDoubleValue("config/z-offset-m"));
     fgSetDouble("/sim/current-view/pitch-offset-deg",
-                fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/heading-offset-deg";
+        n->getDoubleValue("config/pitch-offset-deg"));
     fgSetDouble("/sim/current-view/heading-offset-deg",
-                fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/roll-offset-deg";
+        n->getDoubleValue("config/heading-offset-deg"));
     fgSetDouble("/sim/current-view/roll-offset-deg",
-                fgGetDouble(nodepath.c_str()));
+        n->getDoubleValue("config/roll-offset-deg"));
 
-    nodepath = viewpath;
-    nodepath += "/config/default-field-of-view-deg";
-    fov_deg = fgGetDouble(nodepath.c_str());
-    if (fov_deg < 10.0) {
+    double fov_deg = n->getDoubleValue("config/default-field-of-view-deg");
+    if (fov_deg < 10.0)
       fov_deg = 55.0;
-    }
-    fgSetDouble("/sim/current-view/field-of-view",fov_deg);
+    fgSetDouble("/sim/current-view/field-of-view", fov_deg);
 
     // target offsets for lookat mode only...
-    nodepath = viewpath;
-    nodepath += "/config/target-x-offset-m";
     fgSetDouble("/sim/current-view/target-x-offset-deg",
-                fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/target-y-offset-m";
+        n->getDoubleValue("config/target-x-offset-m"));
     fgSetDouble("/sim/current-view/target-y-offset-deg",
-                fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/target-z-offset-m";
+        n->getDoubleValue("config/target-y-offset-m"));
     fgSetDouble("/sim/current-view/target-z-offset-deg",
-                fgGetDouble(nodepath.c_str()));
-
- }
-
-    setView(0);
-
+        n->getDoubleValue("config/target-z-offset-m"));
+  }
+  setView(0);
 }
 
 typedef double (FGViewMgr::*double_getter)() const;
@@ -292,7 +187,7 @@ FGViewMgr::bind ()
         &FGViewMgr::setGoalViewRollOffset_deg);
   fgSetArchivable("/sim/current-view/goal-roll-offset-deg");
 
-  fgTie("/sim/current-view/view-number", this, 
+  fgTie("/sim/current-view/view-number", this,
                       &FGViewMgr::getView, &FGViewMgr::setView);
   fgSetArchivable("/sim/current-view/view-number", FALSE);
 
@@ -338,45 +233,24 @@ FGViewMgr::unbind ()
 void
 FGViewMgr::update (double dt)
 {
-  char stridx [20];
-  string viewpath, nodepath;
-  double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
-
   FGViewer * view = get_current_view();
   if (view == 0)
     return;
 
-  // 
-  int i = current;
-  viewpath = "/sim/view";
-  sprintf(stridx, "[%d]", i);
-  viewpath += stridx;
+  FGViewer *loop_view = (FGViewer *)get_view(current);
+  SGPropertyNode *n = config_list[current];
+  double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
 
-  FGViewer *loop_view = (FGViewer *)get_view( i );
+  // Set up view location and orientation
 
-		// Set up view location and orientation
+  if (!n->getBoolValue("config/from-model")) {
+    lon_deg = fgGetDouble(n->getStringValue("config/eye-lon-deg-path"));
+    lat_deg = fgGetDouble(n->getStringValue("config/eye-lat-deg-path"));
+    alt_ft = fgGetDouble(n->getStringValue("config/eye-alt-ft-path"));
+    roll_deg = fgGetDouble(n->getStringValue("config/eye-roll-deg-path"));
+    pitch_deg = fgGetDouble(n->getStringValue("config/eye-pitch-deg-path"));
+    heading_deg = fgGetDouble(n->getStringValue("config/eye-heading-deg-path"));
 
-  nodepath = viewpath;
-  nodepath += "/config/from-model";
-  if (!fgGetBool(nodepath.c_str())) {
-    nodepath = viewpath;
-    nodepath += "/config/eye-lon-deg-path";
-    lon_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-    nodepath = viewpath;
-    nodepath += "/config/eye-lat-deg-path";
-    lat_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-    nodepath = viewpath;
-    nodepath += "/config/eye-alt-ft-path";
-    alt_ft = fgGetDouble(fgGetString(nodepath.c_str()));
-    nodepath = viewpath;
-    nodepath += "/config/eye-roll-deg-path";
-    roll_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-    nodepath = viewpath;
-    nodepath += "/config/eye-pitch-deg-path";
-    pitch_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-    nodepath = viewpath;
-    nodepath += "/config/eye-heading-deg-path";
-    heading_deg = fgGetDouble(fgGetString(nodepath.c_str()));
     loop_view->setPosition(lon_deg, lat_deg, alt_ft);
     loop_view->setOrientation(roll_deg, pitch_deg, heading_deg);
   } else {
@@ -386,27 +260,13 @@ FGViewMgr::update (double dt)
 
   // if lookat (type 1) then get target data...
   if (loop_view->getType() == FG_LOOKAT) {
-    nodepath = viewpath;
-    nodepath += "/config/from-model";
-    if (!fgGetBool(nodepath.c_str())) {
-      nodepath = viewpath;
-      nodepath += "/config/target-lon-deg-path";
-      lon_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-      nodepath = viewpath;
-      nodepath += "/config/target-lat-deg-path";
-      lat_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-      nodepath = viewpath;
-      nodepath += "/config/target-alt-ft-path";
-      alt_ft = fgGetDouble(fgGetString(nodepath.c_str()));
-      nodepath = viewpath;
-      nodepath += "/config/target-roll-deg-path";
-      roll_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-      nodepath = viewpath;
-      nodepath += "/config/target-pitch-deg-path";
-      pitch_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-      nodepath = viewpath;
-      nodepath += "/config/target-heading-deg-path";
-      heading_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+    if (!n->getBoolValue("config/from-model")) {
+      lon_deg = fgGetDouble(n->getStringValue("config/target-lon-deg-path"));
+      lat_deg = fgGetDouble(n->getStringValue("config/target-lat-deg-path"));
+      alt_ft = fgGetDouble(n->getStringValue("config/target-alt-ft-path"));
+      roll_deg = fgGetDouble(n->getStringValue("config/target-roll-deg-path"));
+      pitch_deg = fgGetDouble(n->getStringValue("config/target-pitch-deg-path"));
+      heading_deg = fgGetDouble(n->getStringValue("config/target-heading-deg-path"));
 
       loop_view->setTargetPosition(lon_deg, lat_deg, alt_ft);
       loop_view->setTargetOrientation(roll_deg, pitch_deg, heading_deg);
@@ -423,7 +283,7 @@ FGViewMgr::update (double dt)
   setViewTargetYOffset_m(fgGetDouble("/sim/current-view/target-y-offset-m"));
   setViewTargetZOffset_m(fgGetDouble("/sim/current-view/target-z-offset-m"));
 
-  			        // Update the current view
+  // Update the current view
   do_axes();
   view->update(dt);
 }
@@ -431,45 +291,25 @@ FGViewMgr::update (double dt)
 void
 FGViewMgr::copyToCurrent()
 {
-    char stridx [20];
-    string viewpath, nodepath;
-
-    int i = current;
-    viewpath = "/sim/view";
-    sprintf(stridx, "[%d]", i);
-    viewpath += stridx;
+    SGPropertyNode *n = config_list[current];
 
     // copy certain view config data for default values
-    nodepath = viewpath;
-    nodepath += "/config/default-heading-offset-deg";
     fgSetDouble("/sim/current-view/config/heading-offset-deg",
-                fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/pitch-offset-deg";
+                n->getDoubleValue("config/default-heading-offset-deg"));
     fgSetDouble("/sim/current-view/config/pitch-offset-deg",
-                fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/roll-offset-deg";
+                n->getDoubleValue("config/pitch-offset-deg"));
     fgSetDouble("/sim/current-view/config/roll-offset-deg",
-                fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/default-field-of-view-deg";
+                n->getDoubleValue("config/roll-offset-deg"));
     fgSetDouble("/sim/current-view/config/default-field-of-view-deg",
-                fgGetDouble(nodepath.c_str()));
-
-    nodepath = viewpath;
-    nodepath += "/config/from-model";
+                n->getDoubleValue("config/default-field-of-view-deg"));
     fgSetBool("/sim/current-view/config/from-model",
-                fgGetBool(nodepath.c_str()));
-
+                n->getBoolValue("config/from-model"));
 
     // copy view data
     fgSetDouble("/sim/current-view/x-offset-m", getViewXOffset_m());
     fgSetDouble("/sim/current-view/y-offset-m", getViewYOffset_m());
     fgSetDouble("/sim/current-view/z-offset-m", getViewZOffset_m());
+
     fgSetDouble("/sim/current-view/goal-heading-offset-deg",
                 get_current_view()->getGoalHeadingOffset_deg());
     fgSetDouble("/sim/current-view/goal-pitch-offset-deg",
@@ -488,10 +328,8 @@ FGViewMgr::copyToCurrent()
                 get_current_view()->getTargetYOffset_m());
     fgSetDouble("/sim/current-view/target-z-offset-m",
                 get_current_view()->getTargetZOffset_m());
-
     fgSetBool("/sim/current-view/internal",
                 get_current_view()->getInternal());
-
 }
 
 
@@ -718,20 +556,31 @@ FGViewMgr::getView () const
 }
 
 void
-FGViewMgr::setView (int newview )
+FGViewMgr::setView (int newview)
 {
+  // negative numbers -> set view with node index -newview
+  if (newview < 0) {
+    for (int i = 0; i < (int)config_list.size(); i++) {
+        int index = -config_list[i]->getIndex();
+        if (index == newview)
+            newview = i;
+    }
+    if (newview < 0)
+        return;
+  }
+
   // if newview number too low wrap to last view...
-  if ( newview < 0 ) {
+  if (newview < 0)
     newview = (int)views.size() -1;
-  }
+
   // if newview number to high wrap to zero...
-  if ( newview > ((int)views.size() -1) ) {
+  if (newview > ((int)views.size() -1))
     newview = 0;
-  }
+
   // set new view
-  set_view( newview );
+  set_view(newview);
   // copy in view data
-  copyToCurrent ();
+  copyToCurrent();
 
   // Copy the fdm's position into the SGLocation which is shared with
   // some views ...
