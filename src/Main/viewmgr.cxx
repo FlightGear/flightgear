@@ -75,11 +75,11 @@ FGViewMgr::init ()
     double z_offset_m = n->getDoubleValue("config/z-offset-m");
 
     double heading_offset_deg = n->getDoubleValue("config/heading-offset-deg");
-    n->setDoubleValue(heading_offset_deg);
+    n->setDoubleValue("config/heading-offset-deg", heading_offset_deg);
     double pitch_offset_deg = n->getDoubleValue("config/pitch-offset-deg");
-    n->setDoubleValue(pitch_offset_deg);
+    n->setDoubleValue("config/pitch-offset-deg", pitch_offset_deg);
     double roll_offset_deg = n->getDoubleValue("config/roll-offset-deg");
-    n->setDoubleValue(roll_offset_deg);
+    n->setDoubleValue("config/roll-offset-deg", roll_offset_deg);
 
     double fov_deg = n->getDoubleValue("config/default-field-of-view-deg");
     double near_m = n->getDoubleValue("config/ground-level-nearplane-m");
