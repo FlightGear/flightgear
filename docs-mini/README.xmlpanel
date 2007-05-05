@@ -44,7 +44,7 @@ a running copy of FG allows for switching components on the fly, a
 positive boon for panel authors.  To see the property tree start FG
 with the following command line:
 
-fgfs --props=socket,bi,5,localhost,5500,tcp
+fgfs --telnet=socket,bi,5,localhost,5500,tcp
 
 Then use telnet to connect to localhost on port 5500. You can browse
 the tree as you would a filesystem.
