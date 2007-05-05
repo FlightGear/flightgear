@@ -513,26 +513,6 @@ static void fgMainLoop( void ) {
     //
     double visibility_meters = fgGetDouble("/environment/visibility-m");
     FGViewer *current_view = globals->get_current_view();
-    // Let the scenery center follow the current view position with
-    // 30m increments.
-    //
-    // Having the scenery center near the view position will eliminate
-    // jitter of objects which are placed very near the view position
-    // and haveing it's center near that view position.
-    // So the 3d insruments of the aircraft will not jitter with this.
-    // 
-    // Following the view position exactly would introduce jitter of
-    // the scenery tiles (they would be from their center up to 10000m
-    // to the view and this will introduce roundoff too). By stepping
-    // at 30m incements the roundoff error of the scenery tiles is
-    // still present, but we will make exactly the same roundoff error
-    // at each frame until the center is switched to a new
-    // position. This roundoff is still visible but you will most
-    // propably not notice.
-    double *vp = globals->get_current_view()->get_absolute_view_pos();
-    SGVec3d cntr(vp);
-    if (30.0*30.0 < distSqr(cntr, globals->get_scenery()->get_center()))
-      globals->get_scenery()->set_center( cntr );
 
     globals->get_tile_mgr()->prep_ssg_nodes( current_view->getSGLocation(),
                                              visibility_meters );
@@ -548,8 +528,7 @@ static void fgMainLoop( void ) {
         double ref_time, r;
         SGVec3d pt;
         bool valid = cur_fdm_state->is_valid_m(&ref_time, pt.sg(), &r);
-        double *vp = globals->get_current_view()->get_absolute_view_pos();
-        SGVec3d viewpos(vp);
+        SGVec3d viewpos(globals->get_current_view()->get_view_pos());
         if (valid && distSqr(viewpos, pt) < r*r) {
             // Reuse the cache ...
             double lev
@@ -630,10 +609,6 @@ static void fgIdleFunction ( void ) {
     if ( idle_state == 0 ) {
         idle_state++;
 
-#ifdef GL_EXT_texture_lod_bias
-        // negative values sharpen, positive values blur mipmapped textures
-        glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
-#endif
         // This seems to be the absolute earliest in the init sequence
         // that these calls will return valid info.  Too bad it's after
         // we've already created and sized our window. :-(

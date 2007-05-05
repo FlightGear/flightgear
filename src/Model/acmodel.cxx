@@ -42,10 +42,6 @@ FGAircraftModel::FGAircraftModel ()
 
 FGAircraftModel::~FGAircraftModel ()
 {
-  // Unregister that one at the scenery manager
-  if (_aircraft)
-    globals->get_scenery()->unregister_placement_transform(_aircraft->getTransform());
-
   delete _aircraft;
 				// SSG will delete it
   globals->get_scenery()->get_aircraft_branch()->removeChild(_selector.get());
@@ -89,9 +85,6 @@ FGAircraftModel::init ()
   // Do not do altitude computations with that model
   _selector->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
   globals->get_scenery()->get_aircraft_branch()->addChild(_selector.get());
-
-  // Register that one at the scenery manager
-  globals->get_scenery()->register_placement_transform(_aircraft->getTransform());
 }
 
 void

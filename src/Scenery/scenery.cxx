@@ -65,8 +65,7 @@ public:
 };
 
 // Scenery Management system
-FGScenery::FGScenery() :
-  center(0, 0, 0)
+FGScenery::FGScenery()
 {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing scenery subsystem" );
 }
@@ -128,32 +127,6 @@ void FGScenery::bind() {
 void FGScenery::unbind() {
 }
 
-void FGScenery::set_center( const SGVec3d& p ) {
-    if (center == p)
-      return;
-    center = p;
-    placement_list_type::iterator it = _placement_list.begin();
-    while (it != _placement_list.end()) {
-        (*it)->setSceneryCenter(center);
-        ++it;
-    }
-}
-
-void FGScenery::register_placement_transform(SGPlacementTransform *trans) {
-    _placement_list.push_back(trans);        
-    trans->setSceneryCenter(center);
-}
-
-void FGScenery::unregister_placement_transform(SGPlacementTransform *trans) {
-    placement_list_type::iterator it = _placement_list.begin();
-    while (it != _placement_list.end()) {
-        if ((*it) == trans) {
-            it = _placement_list.erase(it);        
-        } else
-            ++it;
-    }
-}
-
 bool
 FGScenery::get_elevation_m(double lat, double lon, double max_alt,
                            double& alt, const SGMaterial** material,
@@ -172,18 +145,8 @@ FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
   if ( norm1(pos) < 1 )
     return false;
 
-  SGVec3d saved_center = center;
-  bool replaced_center = false;
-  if (exact) {
-    if (30*30 < distSqr(pos, center)) {
-      set_center( pos );
-      replaced_center = true;
-    }
-  }
-
-
-  SGVec3d start = pos + max_altoff*normalize(pos) - center;
-  SGVec3d end = - center;
+  SGVec3d start = pos + max_altoff*normalize(pos);
+  SGVec3d end(0, 0, 0);
   
   osgUtil::IntersectVisitor intersectVisitor;
   intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
@@ -200,7 +163,6 @@ FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
         = intersectVisitor.getHitList(lineSegment.get())[i];
       SGVec3d point;
       point.osg() = hit.getWorldIntersectPoint();
-      point += center;
       SGGeod geod = SGGeod::fromCart(point);
       double elevation = geod.getElevationM();
       if (alt < elevation) {
@@ -211,9 +173,6 @@ FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
     }
   }
 
-  if (replaced_center)
-    set_center( saved_center );
-  
   return hits;
 }
 
@@ -225,21 +184,9 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
   if ( norm1(pos) < 1 )
     return false;
 
-  // Well that 'exactness' is somehow problematic, but makes at least sure
-  // that we don't compute that with a cenery center at the other side of
-  // the world ...
-  SGVec3d saved_center = center;
-  bool replaced_center = false;
-  if (exact) {
-    if (30*30 < distSqr(pos, center)) {
-      set_center( pos );
-      replaced_center = true;
-    }
-  }
-
   // Make really sure the direction is normalized, is really cheap compared to
   // computation of ground intersection.
-  SGVec3d start = pos - center;
+  SGVec3d start = pos;
   SGVec3d end = start + 1e5*normalize(dir); // FIXME visibility ???
   
   osgUtil::IntersectVisitor intersectVisitor;
@@ -260,13 +207,10 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
       double newdist = length(start - point);
       if (newdist < dist) {
         dist = newdist;
-        nearestHit = point + center;
+        nearestHit = point;
       }
     }
   }
-
-  if (replaced_center)
-    set_center( saved_center );
 
   return hits;
 }

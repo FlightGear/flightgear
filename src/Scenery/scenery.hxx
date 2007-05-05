@@ -47,9 +47,6 @@ class SGMaterial;
 
 // Define a structure containing global scenery parameters
 class FGScenery : public SGSubsystem {
-    // center of current scenery chunk
-    SGVec3d center;
-
     // FIXME this should be a views property
     // angle of sun relative to current local horizontal
     double sun_angle;
@@ -63,10 +60,6 @@ class FGScenery : public SGSubsystem {
     osg::ref_ptr<osg::Group> taxi_lights_root;
     osg::ref_ptr<osg::Group> models_branch;
     osg::ref_ptr<osg::Group> aircraft_branch;
-
-    // list of all placement transform, used to move the scenery center on the fly.
-    typedef list<osg::ref_ptr<SGPlacementTransform> > placement_list_type;
-    placement_list_type _placement_list;
 
 public:
 
@@ -116,9 +109,6 @@ public:
     bool get_cart_ground_intersection(const SGVec3d& start, const SGVec3d& dir,
                                       SGVec3d& nearestHit, bool exact = false);
 
-    const SGVec3d& get_center() const { return center; }
-    void set_center( const SGVec3d& p );
-
     osg::Group *get_scene_graph () const { return scene_graph.get(); }
     inline void set_scene_graph (osg::Group * s) { scene_graph = s; }
 
@@ -166,9 +156,6 @@ public:
     inline void set_aircraft_branch (osg::Group *t) {
         aircraft_branch = t;
     }
-
-    void register_placement_transform(SGPlacementTransform *trans);
-    void unregister_placement_transform(SGPlacementTransform *trans);
 };
 
 

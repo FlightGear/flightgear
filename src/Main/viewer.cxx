@@ -402,14 +402,6 @@ FGViewer::setOrientationOffsets (double roll_offset_deg, double pitch_offset_deg
   _heading_offset_deg = heading_offset_deg;
 }
 
-double *
-FGViewer::get_absolute_view_pos () 
-{
-  if (_dirty)
-    recalc();
-  return _absolute_view_pos.data();
-}
-
 // recalc() is done every time one of the setters is called (making the 
 // cached data "dirty") on the next "get".  It calculates all the outputs 
 // for viewer.
@@ -422,12 +414,9 @@ FGViewer::recalc ()
     recalcLookAt();
   }
 
-  SGVec3d center = globals->get_scenery()->get_center();
-  _view_pos = toVec3f(_absolute_view_pos - center);
-
   SGGeod geodEyePoint = SGGeod::fromCart(_absolute_view_pos);
   geodEyePoint.setElevationM(0);
-  _zero_elev = toVec3f(SGVec3d::fromGeod(geodEyePoint) - center);
+  _zero_elev = SGVec3d::fromGeod(geodEyePoint);
   
   SGQuatd hlOr = SGQuatd::fromLonLat(geodEyePoint);
   _surface_south = toVec3f(hlOr.backTransform(-SGVec3d::e1()));

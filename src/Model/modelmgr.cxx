@@ -121,9 +121,6 @@ FGModelMgr::add_model (SGPropertyNode * node)
       			// Add this model to the global scene graph
   globals->get_scenery()->get_scene_graph()->addChild(model->getSceneGraph());
 
-  // Register that one at the scenery manager
-  globals->get_scenery()->register_placement_transform(model->getTransform());
-
 
       			// Save this instance for updating
   add_instance(instance);
@@ -212,9 +209,6 @@ FGModelMgr::Instance::Instance ()
 
 FGModelMgr::Instance::~Instance ()
 {
-  // Unregister that one at the scenery manager
-  globals->get_scenery()->unregister_placement_transform(model->getTransform());
-
   delete model;
 }
 

@@ -145,12 +145,6 @@ public:
     mGroundProperty.pivot = SGVec3d(0, 0, 0);
   }
 
-  void setSceneryCenter(const SGVec3d& cntr)
-  {
-    mLocalToGlobal.makeTranslate(cntr.osg());
-    mGlobalToLocal.makeTranslate(-cntr.osg());
-  }
-
   void updateCullMode(osg::StateSet* stateSet)
   {
     if (!stateSet)
@@ -507,7 +501,6 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
 
   // Walk the scene graph and extract solid ground triangles and carrier data.
   GroundCacheFillVisitor gcfv(this, down, pt, cacheRadius, wireCacheRadius);
-  gcfv.setSceneryCenter(globals->get_scenery()->get_center());
   globals->get_scenery()->get_scene_graph()->accept(gcfv);
 
   // some stats

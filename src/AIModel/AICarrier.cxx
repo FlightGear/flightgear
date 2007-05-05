@@ -271,7 +271,7 @@ void FGAICarrier::update(double dt) {
     // For the flols reuse some computations done above ...
 
     // The position of the eyepoint - at least near that ...
-    SGVec3d eyePos(globals->get_current_view()->get_absolute_view_pos());
+    SGVec3d eyePos(globals->get_current_view()->get_view_pos());
     // Add the position offset of the AIModel to gain the earth
     // centered position
     SGVec3d eyeWrtCarrier = eyePos - cartPos;

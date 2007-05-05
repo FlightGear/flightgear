@@ -76,7 +76,6 @@ FGAIBase::FGAIBase(object_type ot) :
 FGAIBase::~FGAIBase() {
     // Unregister that one at the scenery manager
     if (globals->get_scenery()) {
-        globals->get_scenery()->unregister_placement_transform(aip.getTransform());
         globals->get_scenery()->get_scene_graph()->removeChild(aip.getSceneGraph());
     }
 
@@ -174,8 +173,6 @@ bool FGAIBase::init(bool search_in_AI_path) {
      invisible = false;
      globals->get_scenery()->get_scene_graph()->addChild(aip.getSceneGraph());
 
-     // Register that one at the scenery manager
-     globals->get_scenery()->register_placement_transform(aip.getTransform());
      fgSetString("/ai/models/model-added", props->getPath());
    } else {
 

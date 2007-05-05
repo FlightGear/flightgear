@@ -199,14 +199,6 @@ void HUD::Runway::get_rwy_points(sgdVec3 *_points3d)
 
     geo_direct_wgs_84(alt, frontLat, frontLon, _runway._heading + 90, width, &tempLat, &tempLon, &az);
     sgGeodToCart(tempLat * SG_DEGREES_TO_RADIANS, tempLon * SG_DEGREES_TO_RADIANS, alt, _points3d[3]);
-
-    //Get the current tile center
-    SGVec3d tileCenter = globals->get_scenery()->get_center();
-    for (int i = 0; i < 6; i++) {
-        _points3d[i][0] -= tileCenter.x();
-        _points3d[i][1] -= tileCenter.y();
-        _points3d[i][2] -= tileCenter.z();
-    }
 }
 
 

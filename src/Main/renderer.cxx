@@ -633,10 +633,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
         resize( fgGetInt("/sim/startup/xsize"),
                 fgGetInt("/sim/startup/ysize") );
 
-        SGVec3d center = globals->get_scenery()->get_center();
         SGVec3d position = current__view->getViewPosition();
         SGQuatd attitude = current__view->getViewOrientation();
-        SGVec3d osgPosition = attitude.transform(center - position);
+        SGVec3d osgPosition = attitude.transform(-position);
         mCameraView->setPosition(osgPosition.osg());
         mCameraView->setAttitude(inverse(attitude).osg());
     }
@@ -678,8 +677,8 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
         static SGSkyState sstate;
 
-        sstate.view_pos  = current__view->get_view_pos();
-        sstate.zero_elev = current__view->get_zero_elev();
+        sstate.view_pos  = toVec3f(current__view->get_view_pos());
+        sstate.zero_elev = toVec3f(current__view->get_zero_elev());
         sstate.view_up   = current__view->get_world_up();
         sstate.lon       = current__view->getLongitude_deg()
                             * SGD_DEGREES_TO_RADIANS;
@@ -823,7 +822,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
     mFrameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
     mUpdateVisitor->setViewData(current__view->getViewPosition(),
                                 current__view->getViewOrientation());
-    mUpdateVisitor->setSceneryCenter(globals->get_scenery()->get_center());
+    mUpdateVisitor->setSceneryCenter(SGVec3d(0, 0, 0));
     SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
     mUpdateVisitor->setLight(direction, l->scene_ambient(),
                              l->scene_diffuse(), l->scene_specular());
@@ -1014,9 +1013,6 @@ FGRenderer::pick( unsigned x, unsigned y,
   if (!viewport)
     return false;
 
-  // good old scenery center
-  SGVec3d center = globals->get_scenery()->get_center();
-
   // don't know why, but the update has partly happened somehow,
   // so update the scenery part of the viewer
   FGViewer *current_view = globals->get_current_view();
@@ -1024,7 +1020,7 @@ FGRenderer::pick( unsigned x, unsigned y,
   current_view->set_dirty();
   SGVec3d position = current_view->getViewPosition();
   SGQuatd attitude = current_view->getViewOrientation();
-  SGVec3d osgPosition = attitude.transform(center - position);
+  SGVec3d osgPosition = attitude.transform(-position);
   mCameraView->setPosition(osgPosition.osg());
   mCameraView->setAttitude(inverse(attitude).osg());
 
@@ -1075,7 +1071,6 @@ FGRenderer::pick( unsigned x, unsigned y,
             sceneryPick.info.wgs84 = SGVec3d(localPt*(*hi->getMatrix()));
           else
             sceneryPick.info.wgs84 = SGVec3d(localPt);
-          sceneryPick.info.wgs84 += globals->get_scenery()->get_center();
           sceneryPick.callback = pickCallback;
           pickList.push_back(sceneryPick);
         }

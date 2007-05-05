@@ -209,12 +209,8 @@ public:
 
     // Vectors and positions...
 
-    // Get zero view_pos
-    const SGVec3f& get_view_pos() {if ( _dirty ) { recalc(); }	return _view_pos; }
-    // Get the absolute view position in fgfs coordinates.
-    virtual double * get_absolute_view_pos ();
     // Get zero elev
-    const SGVec3f& get_zero_elev() {if ( _dirty ) { recalc(); } return _zero_elev; }
+    const SGVec3d& get_zero_elev() {if ( _dirty ) { recalc(); } return _zero_elev; }
     // Get world up vector
     const SGVec3f& get_world_up() {if ( _dirty ) { recalc(); } return _world_up; }
     // Get surface east vector
@@ -222,6 +218,7 @@ public:
     // Get surface south vector
     const SGVec3f& get_surface_south() {if ( _dirty ) { recalc(); } return _surface_south; }
 
+    const SGVec3d& get_view_pos() { if ( _dirty ) { recalc(); } return _absolute_view_pos; }
     const SGVec3d& getViewPosition() { if ( _dirty ) { recalc(); } return _absolute_view_pos; }
     const SGQuatd& getViewOrientation() { if ( _dirty ) { recalc(); } return mViewOrientation; }
 
@@ -275,7 +272,6 @@ private:
 
     SGQuatd mViewOrientation;
     SGVec3d _absolute_view_pos;
-    SGVec3f _relative_view_pos;
 
     double _lon_deg;
     double _lat_deg;
@@ -345,19 +341,14 @@ private:
     // Ratio of window width and height; height = width *
     // aspect_ratio.  This value is automatically calculated based on
     // window dimentions.
-    double _aspect_ratio;   
+    double _aspect_ratio;
 
     // default = 1.0, this value is user configurable and is
     // multiplied into the aspect_ratio to get the actual vertical fov
     double _aspect_ratio_multiplier;
 
-    // view position in opengl world coordinates (this is the
-    // abs_view_pos translated to scenery.center)
-    SGVec3f _view_pos;
-
     // cartesion coordinates of current lon/lat if at sea level
-    // translated to scenery.center
-    SGVec3f _zero_elev;
+    SGVec3d _zero_elev;
 
     // surface vector heading south
     SGVec3f _surface_south;

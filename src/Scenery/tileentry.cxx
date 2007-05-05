@@ -743,7 +743,6 @@ FGTileEntry::add_ssg_nodes( osg::Group *terrain_branch,
     // bump up the ref count so we can remove this later without
     // having ssg try to free the memory.
     terrain_branch->addChild( terra_transform.get() );
-    globals->get_scenery()->register_placement_transform(terra_transform.get());
 
     SG_LOG( SG_TERRAIN, SG_DEBUG,
             "connected a tile into scene graph.  terra_transform = "
@@ -755,14 +754,12 @@ FGTileEntry::add_ssg_nodes( osg::Group *terrain_branch,
         // bump up the ref count so we can remove this later without
         // having ssg try to free the memory.
         gnd_lights_branch->addChild( gnd_lights_transform.get() );
-        globals->get_scenery()->register_placement_transform(gnd_lights_transform.get());
     }
 
     if ( vasi_lights_transform.get() != NULL ) {
         // bump up the ref count so we can remove this later without
         // having ssg try to free the memory.
         vasi_lights_selector->addChild( vasi_lights_transform.get() );
-        globals->get_scenery()->register_placement_transform(vasi_lights_transform.get());
         vasi_lights_branch->addChild( vasi_lights_selector.get() );
     }
 
@@ -770,7 +767,6 @@ FGTileEntry::add_ssg_nodes( osg::Group *terrain_branch,
         // bump up the ref count so we can remove this later without
         // having ssg try to free the memory.
         rwy_lights_selector->addChild( rwy_lights_transform.get() );
-        globals->get_scenery()->register_placement_transform(rwy_lights_transform.get());
         rwy_lights_branch->addChild( rwy_lights_selector.get() );
     }
 
@@ -778,7 +774,6 @@ FGTileEntry::add_ssg_nodes( osg::Group *terrain_branch,
         // bump up the ref count so we can remove this later without
         // having ssg try to free the memory.
         taxi_lights_selector->addChild( taxi_lights_transform.get() );
-        globals->get_scenery()->register_placement_transform(taxi_lights_transform.get());
         taxi_lights_branch->addChild( taxi_lights_selector.get() );
     }
 
@@ -797,9 +792,6 @@ FGTileEntry::disconnect_ssg_nodes()
         SG_LOG( SG_TERRAIN, SG_DEBUG, "removing a fully loaded tile!  terra_transform = " << terra_transform.get() );
     }
         
-    // Unregister that one at the scenery manager
-    globals->get_scenery()->unregister_placement_transform(terra_transform.get());
-
     // find the terrain branch parent
     int pcount = terra_transform->getNumParents();
     if ( pcount > 0 ) {
@@ -822,8 +814,6 @@ FGTileEntry::disconnect_ssg_nodes()
 
     // find the ground lighting branch
     if ( gnd_lights_transform.get() ) {
-        // Unregister that one at the scenery manager
-        globals->get_scenery()->unregister_placement_transform(gnd_lights_transform.get());
         pcount = gnd_lights_transform->getNumParents();
         if ( pcount > 0 ) {
             // find the first parent (should only be one)
@@ -846,8 +836,6 @@ FGTileEntry::disconnect_ssg_nodes()
 
     // find the vasi lighting branch
     if ( vasi_lights_transform.get() ) {
-        // Unregister that one at the scenery manager
-        globals->get_scenery()->unregister_placement_transform(vasi_lights_transform.get());
         pcount = vasi_lights_transform->getNumParents();
         if ( pcount > 0 ) {
             // find the first parent (should only be one)
@@ -870,8 +858,6 @@ FGTileEntry::disconnect_ssg_nodes()
 
     // find the runway lighting branch
     if ( rwy_lights_transform.get() ) {
-        // Unregister that one at the scenery manager
-        globals->get_scenery()->unregister_placement_transform(rwy_lights_transform.get());
         pcount = rwy_lights_transform->getNumParents();
         if ( pcount > 0 ) {
             // find the first parent (should only be one)
@@ -894,8 +880,6 @@ FGTileEntry::disconnect_ssg_nodes()
 
     // find the taxi lighting branch
     if ( taxi_lights_transform.get() ) {
-        // Unregister that one at the scenery manager
-        globals->get_scenery()->unregister_placement_transform(taxi_lights_transform.get());
         pcount = taxi_lights_transform->getNumParents();
         if ( pcount > 0 ) {
             // find the first parent (should only be one)

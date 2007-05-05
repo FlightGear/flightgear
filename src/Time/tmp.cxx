@@ -101,8 +101,7 @@ void fgUpdateSunPos( void ) {
 	    << l->get_sun_angle() );
     
     // calculate vector to sun's position on the earth's surface
-    SGVec3d rel_sunpos = globals->get_scenery()->get_center();
-    rel_sunpos += l->get_sunpos() - toVec3d(v->get_view_pos());
+    SGVec3d rel_sunpos = l->get_sunpos() - v->get_view_pos();
     // vector in cartesian coordinates from current position to the
     // postion on the earth's surface the sun is directly over
     SGVec3f to_sun = toVec3f(rel_sunpos);
@@ -114,7 +113,7 @@ void fgUpdateSunPos( void ) {
     // local plane representing "horizontal".
 
     SGVec3f world_up = v->get_world_up();
-    SGVec3f view_pos = v->get_view_pos();
+    SGVec3f view_pos = toVec3f(v->get_view_pos());
     // surface direction to go to head towards sun
     SGVec3f surface_to_sun;
     sgmap_vec_onto_cur_surface_plane( world_up.data(), view_pos.data(),
