@@ -25,9 +25,9 @@
 #  include <config.h>
 #endif
 
-#include <iomanip>
 #include <simgear/compiler.h>
 
+#include STL_IOMANIP
 #include STL_STRING
 SG_USING_STD(string);
 typedef string stdString;      // puObject has a "string" member
