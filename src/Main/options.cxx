@@ -527,12 +527,15 @@ parse_fov( const string& arg ) {
 
 static bool
 add_channel( const string& type, const string& channel_str ) {
+    if (type == "props")
+        SG_LOG(SG_GENERAL, SG_ALERT, "\n"
+             "****************************************************************\n"
+             "* The --props option is obsolete and will be removed in future *\n"
+             "* releases. Please use --telnet instead with the same syntax.  *\n"
+             "****************************************************************");
+
     SG_LOG(SG_GENERAL, SG_INFO, "Channel string = " << channel_str );
-
     globals->get_channel_options_list()->push_back( type + "," + channel_str );
-    
-    // cout << "here" << endl;
-
     return true;
 }
 
