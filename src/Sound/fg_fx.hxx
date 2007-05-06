@@ -72,7 +72,7 @@ public:
      * in order.
      */
     void play_message( SGSoundSample *_sample );
-    void play_message( const string path, const string fname );
+    void play_message( const string path, const string fname, double volume );
 
 private:
 

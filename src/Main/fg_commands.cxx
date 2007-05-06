@@ -473,7 +473,6 @@ do_view_cycle (const SGPropertyNode * arg)
   globals->get_viewmgr()->next_view();
   fix_hud_visibility();
   globals->get_tile_mgr()->refresh_view_timestamps();
-//   fgReshape(fgGetInt("/sim/startup/xsize"), fgGetInt("/sim/startup/ysize"));
   return true;
 }
 
@@ -512,7 +511,6 @@ do_tile_cache_reload (const SGPropertyNode * arg)
     if ( !freeze ) {
 	fgSetBool("/sim/freeze/master", true);
     }
-    // BusyCursor(0);
     if ( globals->get_tile_mgr()->init() ) {
 	// Load the local scenery data
         double visibility_meters = fgGetDouble("/environment/visibility-m");
@@ -522,7 +520,6 @@ do_tile_cache_reload (const SGPropertyNode * arg)
 		"Error in Tile Manager initialization!" );
 	exit(-1);
     }
-    // BusyCursor(1);
     if ( !freeze ) {
 	fgSetBool("/sim/freeze/master", false);
     }
@@ -1161,8 +1158,9 @@ do_play_audio_message (const SGPropertyNode * arg)
     FGFX *fx = (FGFX *)globals->get_subsystem("fx");
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
+    double volume = arg->getDoubleValue("volume");
     // cout << "playing " << path << " / " << file << endl;
-    fx->play_message( path, file );
+    fx->play_message( path, file, volume );
 
     return true;
 }
@@ -1177,11 +1175,10 @@ do_presets_commit (const SGPropertyNode * arg)
     // don't get lost when we subsequently delete this fdm
     // and create a new one.
     cur_fdm_state->unbind();
-        
+
     // set position from presets
     fgInitPosition();
 
-    // BusyCursor(0);
     fgReInitSubsystems();
 
     globals->get_tile_mgr()->update( fgGetDouble("/environment/visibility-m") );
