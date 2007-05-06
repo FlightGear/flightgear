@@ -58,6 +58,8 @@ TACAN::TACAN ( SGPropertyNode *node ) :
     _transmitter_pos(SGGeod::fromDeg(0, 0)),
     _transmitter_range_nm(0),
     _transmitter_bias(0.0),
+    _mobile_lat(0.0),
+    _mobile_lon(0.0),
     _listener_active(0)
 {
 }
