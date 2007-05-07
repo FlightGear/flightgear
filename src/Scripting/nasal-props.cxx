@@ -83,6 +83,7 @@ static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
     SGPropertyNode::Attribute attr;
     if(!a) a = "";
     if(!strcmp(a, "children"))         return naNum((*node)->nChildren());
+    else if(!strcmp(a, "listeners"))   return naNum((*node)->nListeners());
     else if(!strcmp(a, "tied"))        return naNum((*node)->isTied());
     else if(!strcmp(a, "alias"))       return naNum((*node)->isAlias());
     else if(!strcmp(a, "read"))        attr = SGPropertyNode::READ;
