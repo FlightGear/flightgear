@@ -27,6 +27,7 @@
 
 #include <simgear/compiler.h>
 
+#include <sstream>
 #include STL_IOMANIP
 #include STL_STRING
 SG_USING_STD(string);
@@ -41,7 +42,6 @@ typedef string stdString;      // puObject has a "string" member
 static string getValueTypeString(const SGPropertyNode *node)
 {
     string result;
-    assert(node);
 
     SGPropertyNode::Type type = node->getType();
     if (type == SGPropertyNode::UNSPECIFIED)
@@ -67,7 +67,7 @@ static string getValueTypeString(const SGPropertyNode *node)
 
 static void dumpProperties(const SGPropertyNode *node)
 {
-    cout << node->getPath() << "/" << endl;
+    cout << node->getPath() << '/' << endl;
     for (int i = 0; i < node->nChildren(); i++) {
         const SGPropertyNode *c = node->getChild(i);
         SGPropertyNode::Type type = c->getType();
@@ -149,7 +149,7 @@ PropertyList::PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNod
     _return(0),
     _entries(0),
     _num_entries(0),
-    _flags(false)
+    _verbose(false)
 
 {
     _list_box->setUserData(this);
@@ -193,7 +193,7 @@ void PropertyList::handle_select(puObject *list_box)
         if (prop_list->_dot_files && (selected < 2)) {
             if (!strcmp(src, ".")) {
                 if (mod_ctrl)
-                    prop_list->toggleFlags();
+                    prop_list->toggleVerbosity();
                 else if (mod_shift)
                     dumpProperties(prop_list->_curr);
 
@@ -218,7 +218,6 @@ void PropertyList::handle_select(puObject *list_box)
             selected -= 2;
 
         SGPropertyNode_ptr child = prop_list->_children[selected].node;
-        assert(child);
 
         // check if it's a directory
         if (child->nChildren()) {
@@ -278,18 +277,10 @@ void PropertyList::update(bool restore_pos)
 
     // Make lists of the children's names, values, etc.
     for (i = 0; i < _num_children; i++, pi++) {
-        SGPropertyNode *child = _children[i].node;
-
-        if (child->nChildren() > 0) {
-            stdString name = stdString(child->getDisplayName(true)) + '/';
-            _entries[pi] = new char[name.size() + 1];
-            strcpy(_entries[pi], name.c_str());
-
-        } else {
-            _entries[pi] = 0;       // make it delete-able
-            updateTextForEntry(i);
-            _children[i].setListener(this);
-        }
+        _children[i].text = &_entries[pi];
+        _entries[pi] = 0;    // make it deletable
+        updateTextForEntry(_children[i]);
+        _children[i].setListener(this);
     }
 
     _entries[_num_entries] = 0;
@@ -301,52 +292,63 @@ void PropertyList::update(bool restore_pos)
 }
 
 
-void PropertyList::updateTextForEntry(int index)
+void PropertyList::updateTextForEntry(NodeData& data)
 {
-    assert((index >= 0) && (index < _num_children));
-    SGPropertyNode_ptr node = _children[index].node;
-
+    SGPropertyNode *node = data.node;
     stdString name = node->getDisplayName(true);
     stdString type = getValueTypeString(node);
     stdString value = node->getStringValue();
 
-    if (node->getType() == SGPropertyNode::STRING
-            || node->getType() == SGPropertyNode::UNSPECIFIED)
-        sanitize(value);
+    std::ostringstream line;
+    line << name;
 
-    stdString line = name + " = '" + value + "' (" + type;
+    int children = node->nChildren();
+    if (children)
+        line << '/';
 
-    if (_flags) {
-        stdString ext;
-        if (!node->getAttribute(SGPropertyNode::READ))
-            ext += 'r';
-        if (!node->getAttribute(SGPropertyNode::WRITE))
-            ext += 'w';
-        if (node->getAttribute(SGPropertyNode::TRACE_READ))
-            ext += 'R';
-        if (node->getAttribute(SGPropertyNode::TRACE_WRITE))
-            ext += 'W';
-        if (node->getAttribute(SGPropertyNode::ARCHIVE))
-            ext += 'A';
-        if (node->getAttribute(SGPropertyNode::USERARCHIVE))
-            ext += 'U';
-        if (node->isTied())
-            ext += 'T';
-        if (ext.size())
-            line += ", " + ext;
+    if (!children || (_verbose && node->hasValue())) {
+        if (node->getType() == SGPropertyNode::STRING
+                || node->getType() == SGPropertyNode::UNSPECIFIED)
+            sanitize(value);
+
+        line << " = '" << value << "' (" << type;
+
+        if (_verbose) {
+            stdString ext;
+            if (!node->getAttribute(SGPropertyNode::READ))
+                ext += 'r';
+            if (!node->getAttribute(SGPropertyNode::WRITE))
+                ext += 'w';
+            if (node->getAttribute(SGPropertyNode::TRACE_READ))
+                ext += 'R';
+            if (node->getAttribute(SGPropertyNode::TRACE_WRITE))
+                ext += 'W';
+            if (node->getAttribute(SGPropertyNode::ARCHIVE))
+                ext += 'A';
+            if (node->getAttribute(SGPropertyNode::USERARCHIVE))
+                ext += 'U';
+            if (node->isTied())
+                ext += 'T';
+
+            if (!ext.empty())
+                line << ", " << ext;
+
+            int num = node->nListeners();
+            if (data.listener)
+                num--;
+            if (lst)
+                line << ", L" << num;
+        }
+        line << ')';
     }
 
-    line += ')';
+    stdString out = line.str();
+    if (out.size() >= PUSTRING_MAX)
+        out.resize(PUSTRING_MAX - 1);
 
-    if (line.size() >= PUSTRING_MAX)
-        line.resize(PUSTRING_MAX - 1);
-
-    if (_dot_files)
-        index += 2;
-
-    delete[] _entries[index];
-    _entries[index] = new char[line.size() + 1];
-    strcpy(_entries[index], line.c_str());
+    delete[] *data.text;
+    *data.text = new char[out.size() + 1];
+    strcpy(*data.text, out.c_str());
 }
 
 
@@ -354,7 +356,7 @@ void PropertyList::valueChanged(SGPropertyNode *nd)
 {
     for (int i = 0; i < _num_children; i++)
         if (_children[i].node == nd) {
-            updateTextForEntry(i);
+            updateTextForEntry(_children[i]);
             return;
         }
 }
