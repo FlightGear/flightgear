@@ -538,7 +538,7 @@ public:
         if (node->getType() != SGPropertyNode::STRING)
             return;
 
-        char *s = (char *)node->getStringValue();
+        char *s = const_cast<char *>(node->getStringValue());
         for (; *s; s++)
             *s = toupper(*s);
     }
