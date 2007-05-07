@@ -336,7 +336,7 @@ void PropertyList::updateTextForEntry(NodeData& data)
             int num = node->nListeners();
             if (data.listener)
                 num--;
-            if (lst)
+            if (num)
                 line << ", L" << num;
         }
         line << ')';
