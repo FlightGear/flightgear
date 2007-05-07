@@ -39,7 +39,7 @@ public:
     void setCurrent(SGPropertyNode *p);
     SGPropertyNode *getCurrent() const { return _curr; }
     void publish(SGPropertyNode *p) { _return = p; invokeCallback(); }
-    void toggleFlags() { _flags = !_flags; }
+    void toggleVerbosity() { _verbose = !_verbose; }
 
     // overridden plib pui methods
     virtual char *getListStringValue() { return (char *)(_return ? _return->getPath(true) : ""); }
@@ -50,21 +50,6 @@ public:
     virtual void valueChanged(SGPropertyNode *node);
 
 private:
-    // update the text string in the puList using the given node and
-    // updating the requested offset. The value of dotFiles is taken
-    // into account before the index is applied, i.e this should be
-    // an index into 'children'
-    void updateTextForEntry(int index);
-    void delete_arrays();
-    static void handle_select(puObject *b);
-    static int nodeNameCompare(const void *, const void *);
-
-    SGPropertyNode_ptr _curr;
-    SGPropertyNode_ptr _return;
-
-    char **_entries;
-    int _num_entries;
-
     struct NodeData {
         NodeData() : listener(0) {}
         ~NodeData() {
@@ -76,12 +61,27 @@ private:
         }
         SGPropertyNode_ptr node;
         SGPropertyChangeListener *listener;
+        char **text;
     };
+
+    // update the text string in the puList using the given node and
+    // updating the requested offset.
+    void updateTextForEntry(NodeData&);
+    void delete_arrays();
+    static void handle_select(puObject *b);
+    static int nodeNameCompare(const void *, const void *);
+
+    SGPropertyNode_ptr _curr;
+    SGPropertyNode_ptr _return;
+
+    char **_entries;
+    int _num_entries;
+
     NodeData *_children;
     int _num_children;
 
     bool _dot_files;      // . and .. pseudo-dirs currently shown?
-    bool _flags;          // show SGPropertyNode flags
+    bool _verbose;        // show SGPropertyNode flags
 };
 
 

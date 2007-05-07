@@ -4,14 +4,11 @@
 #  include "config.h"
 #endif
 
-#include <stdlib.h>		// atof()
-
 #include <Input/input.hxx>
 #include <Scripting/NasalSys.hxx>
 
 #include "dialog.hxx"
 #include "new_gui.hxx"
-
 #include "AirportList.hxx"
 #include "property_list.hxx"
 #include "layout.hxx"
@@ -164,7 +161,7 @@ int fgPopup::checkKey(int key, int updown)
 puObject *fgPopup::getKeyObject(puObject *object, int key)
 {
     puObject *ret;
-    if(object->getType() & PUCLASS_GROUP)
+    if (object->getType() & PUCLASS_GROUP)
         for (puObject *obj = ((puGroup *)object)->getFirstChild();
                 obj; obj = obj->getNextObject())
             if ((ret = getKeyObject(obj, key)))
@@ -180,7 +177,7 @@ puObject *fgPopup::getKeyObject(puObject *object, int key)
 puObject *fgPopup::getActiveInputField(puObject *object)
 {
     puObject *ret;
-    if(object->getType() & PUCLASS_GROUP)
+    if (object->getType() & PUCLASS_GROUP)
         for (puObject *obj = ((puGroup *)object)->getFirstChild();
                 obj; obj = obj->getNextObject())
             if ((ret = getActiveInputField(obj)))
@@ -199,7 +196,7 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
 {
     int result = puPopup::checkHit(button, updown, x, y);
 
-    if ( !_draggable)
+    if (!_draggable)
        return result;
 
     // This is annoying.  We would really want a true result from the
@@ -208,12 +205,12 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
     // intersection test (again) to make sure we don't start a drag
     // when inside controls.
 
-    if(updown == PU_DOWN && !_dragging) {
-        if(!result)
+    if (updown == PU_DOWN && !_dragging) {
+        if (!result)
             return 0;
 
         int hit = getHitObjects(this, x, y);
-        if(hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT))
+        if (hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT))
             return result;
 
         int px, py;
@@ -221,7 +218,7 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
         _dragging = true;
         _dX = px - x;
         _dY = py - y;
-    } else if(updown == PU_DRAG && _dragging) {
+    } else if (updown == PU_DRAG && _dragging) {
         setPosition(x + _dX, y + _dY);
     } else {
         _dragging = false;
@@ -235,7 +232,7 @@ int fgPopup::getHitObjects(puObject *object, int x, int y)
         return 0;
 
     int type = 0;
-    if(object->getType() & PUCLASS_GROUP)
+    if (object->getType() & PUCLASS_GROUP)
         for (puObject *obj = ((puGroup *)object)->getFirstChild();
                 obj; obj = obj->getNextObject())
             type |= getHitObjects(obj, x, y);
@@ -243,7 +240,7 @@ int fgPopup::getHitObjects(puObject *object, int x, int y)
     int cx, cy, cw, ch;
     object->getAbsolutePosition(&cx, &cy);
     object->getSize(&cw, &ch);
-    if(x >= cx && x < cx + cw && y >= cy && y < cy + ch)
+    if (x >= cx && x < cx + cw && y >= cy && y < cy + ch)
         type |= object->getType();
     return type;
 }
@@ -288,11 +285,10 @@ copy_to_pui (SGPropertyNode * node, puObject * object)
     // from properties.
     if (object->getType() & PUCLASS_TEXT) {
         GUIInfo *info = (GUIInfo *)object->getUserData();
-        if (info && info->fmt_string) {
+        if (info && info->fmt_string)
             object->setLabel(info->format(node));
-        } else {
+        else
             object->setLabel(node->getStringValue());
-        }
         return;
     }
 
@@ -738,7 +734,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 
         PropertyObject* po = new PropertyObject(name, object, node);
         _propertyObjects.push_back(po);
-        if(props->getBoolValue("live"))
+        if (props->getBoolValue("live"))
             _liveObjects.push_back(po);
     }
 
@@ -777,6 +773,9 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
                     info->text = new char[FORMAT_BUFSIZE + 1];
                     info->fmt_string = new char[strlen(format) + 1];
                     strcpy(info->fmt_string, format);
+                } else {
+                    SG_LOG(SG_GENERAL, SG_ALERT, "DIALOG: invalid <format> '"
+                            << format << '\'');
                 }
             }
         }
