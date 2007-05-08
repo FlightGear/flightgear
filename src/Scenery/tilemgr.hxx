@@ -53,8 +53,6 @@ SG_USING_STD( queue );
 
 
 // forward declaration
-class ssgBranch;
-class ssgEntity;
 class FGTileEntry;
 class FGDeferredModel;
 
@@ -169,17 +167,15 @@ public:
     // tile, set the ssg transform and update it's range selector
     // based on current visibilty void prep_ssg_nodes( float
     // visibility_meters );
-    void prep_ssg_nodes( SGLocation *location, float visibility_meters );
+    void prep_ssg_nodes(float visibility_meters );
 
     // Set flag with event manager so that non-moving view refreshes
     // tiles...
     void refresh_view_timestamps();
 
-    inline const SGBucket& get_current_bucket () const { return current_bucket; }
-    inline const SGBucket& get_previous_bucket () const { return previous_bucket; }
+    const SGBucket& get_current_bucket () const { return current_bucket; }
 
     static bool set_tile_filter( bool f );
-    static int tile_filter_cb( ssgEntity *, int );
 
     /// Returns true if scenery is avaliable for the given lat, lon position
     /// within a range of range_m.

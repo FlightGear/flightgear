@@ -1240,7 +1240,7 @@ do_terrain_elevation (const SGPropertyNode * arg)
     double lon = arg->getDoubleValue("longitude-deg", 0.0);
     double lat = arg->getDoubleValue("latitude-deg", 0.0);
     double elev;
-    bool ret = globals->get_scenery()->get_elevation_m(lat, lon, 10000.0, elev, 0, false);
+    bool ret = globals->get_scenery()->get_elevation_m(lat, lon, 10000.0, elev, 0);
     const_cast<SGPropertyNode *>(arg)->setDoubleValue("elevation-m", elev);
     return ret;
 }

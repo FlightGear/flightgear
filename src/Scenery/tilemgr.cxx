@@ -348,11 +348,7 @@ void FGTileMgr::update_queues()
         FGTileEntry* e = attach_queue.front();
         attach_queue.pop();
 #endif
-        e->add_ssg_nodes( globals->get_scenery()->get_terrain_branch(),
-                          globals->get_scenery()->get_gnd_lights_root(),
-                          globals->get_scenery()->get_vasi_lights_root(),
-                          globals->get_scenery()->get_rwy_lights_root(),
-                          globals->get_scenery()->get_taxi_lights_root() );
+        e->add_ssg_nodes( globals->get_scenery()->get_terrain_branch() );
         // cout << "Adding ssg nodes for "
     }
 
@@ -457,22 +453,18 @@ void FGTileMgr::refresh_view_timestamps() {
     }
 }
 
-void FGTileMgr::prep_ssg_nodes( SGLocation *location, float vis ) {
+void FGTileMgr::prep_ssg_nodes(float vis) {
 
     // traverse the potentially viewable tile list and update range
     // selector and transform
 
-    float *up = location->get_world_up();
-
     FGTileEntry *e;
     tile_cache.reset_traversal();
 
-    const double *vp = location->get_absolute_view_pos();
-    Point3D viewpos(vp[0], vp[1], vp[2]);
     while ( ! tile_cache.at_end() ) {
         // cout << "processing a tile" << endl;
         if ( (e = tile_cache.get_current()) ) {
-            e->prep_ssg_node( viewpos, up, vis);
+            e->prep_ssg_node(vis);
         } else {
             SG_LOG(SG_INPUT, SG_ALERT, "warning ... empty tile in cache");
         }
@@ -484,11 +476,6 @@ bool FGTileMgr::set_tile_filter( bool f ) {
     bool old = tile_filter;
     tile_filter = f;
     return old;
-}
-
-int FGTileMgr::tile_filter_cb( ssgEntity *, int )
-{
-  return tile_filter ? 1 : 0;
 }
 
 bool FGTileMgr::scenery_available(double lat, double lon, double range_m)

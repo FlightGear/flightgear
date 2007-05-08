@@ -110,49 +110,16 @@ public:
 class FGTileEntry {
 
 public:
-
-    // global tile culling data
-    Point3D center;
-    double bounding_radius;
-
     // this tile's official location in the world
     SGBucket tile_bucket;
 
 private:
 
-    // ssg tree structure for this tile is as follows:
-    // osg::Group(scene)
-    //     - osg::Group(terrain)
-    //        - SGPlacementTransform(tile)
-    //           - osg::LOD(tile)
-    //              - ssgEntity(tile)
-    //                 - kid1(fan)
-    //                 - kid2(fan)
-    //                   ...
-    //                 - kidn(fan)
-
     // pointer to ssg transform for this tile
-    osg::ref_ptr<SGPlacementTransform> terra_transform;
-    osg::ref_ptr<SGPlacementTransform> vasi_lights_transform;
-    osg::ref_ptr<SGPlacementTransform> rwy_lights_transform;
-    osg::ref_ptr<SGPlacementTransform> taxi_lights_transform;
-    osg::ref_ptr<SGPlacementTransform> gnd_lights_transform;
+    osg::ref_ptr<osg::Group> terra_transform;
 
     // pointer to ssg range selector for this tile
     osg::ref_ptr<osg::LOD> terra_range;
-    osg::ref_ptr<osg::LOD> gnd_lights_range;
-
-    // we create several preset brightness and can choose which one we
-    // want based on lighting conditions.
-    osg::ref_ptr<osg::Switch> gnd_lights_brightness;
-
-    // we need to be able to turn runway lights on or off (doing this
-    // via a call back would be nifty, but then the call back needs to
-    // know about the higher level application's global state which is
-    // a problem if we move the code into simgear.)
-    osg::ref_ptr<osg::Switch> vasi_lights_selector;
-    osg::ref_ptr<osg::Switch> rwy_lights_selector;
-    osg::ref_ptr<osg::Switch> taxi_lights_selector;
 
     /**
      * Indicates this tile has been loaded from a file and connected
@@ -170,14 +137,7 @@ private:
 
     bool obj_load( const string& path,
                    osg::Group* geometry,
-                   osg::Group* vasi_lights,
-                   osg::Group* rwy_lights,
-                   osg::Group* taxi_lights,
-                   osg::Vec3Array* gound_lights,
                    bool is_base );
-
-    osg::Node* gen_lights( SGMaterialLib *matlib, osg::Vec3Array *lights,
-                           int inc, float bright );
 
     double timestamp;
 
@@ -224,7 +184,7 @@ public:
 
     // Update the ssg transform node for this tile so it can be
     // properly drawn relative to our (0,0,0) point
-    void prep_ssg_node( const Point3D& p, sgVec3 up, float vis);
+    void prep_ssg_node(float vis);
 
     /**
      * Load tile data from a file.
@@ -257,11 +217,7 @@ public:
     /**
      * Add terrain mesh and ground lighting to scene graph.
      */
-    void add_ssg_nodes( osg::Group *terrain_branch,
-			osg::Group *gnd_lights_branch,
-                        osg::Group *vasi_lights_branch,
-			osg::Group *rwy_lights_branch,
-			osg::Group *taxi_lights_branch );
+    void add_ssg_nodes( osg::Group *terrain_branch);
 
     /**
      * disconnect terrain mesh and ground lighting nodes from scene
@@ -273,7 +229,7 @@ public:
     /**
      * return the SSG Transform node for the terrain
      */
-    inline SGPlacementTransform *get_terra_transform() const { return terra_transform.get(); }
+    osg::Group *get_terra_transform() const { return terra_transform.get(); }
 
     inline double get_timestamp() const { return timestamp; }
     inline void set_timestamp( double time_ms ) { timestamp = time_ms; }

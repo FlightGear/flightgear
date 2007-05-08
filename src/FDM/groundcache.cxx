@@ -194,11 +194,6 @@ public:
 
     FGGroundCache::GroundProperty& gp = mGroundProperty;
     // get some material information for use in the gear model
-    gp.material = globals->get_matlib()->findMaterial(&node);
-    if (gp.material) {
-      gp.type = gp.material->get_solid() ? FGInterface::Solid : FGInterface::Water;
-      return true;
-    }
     gp.type = FGInterface::Unknown;
     osg::Referenced* base = node.getUserData();
     if (!base)
@@ -234,6 +229,12 @@ public:
 
     bool oldBackfaceCulling = mBackfaceCulling;
     updateCullMode(drawable->getStateSet());
+
+    FGGroundCache::GroundProperty& gp = mGroundProperty;
+    // get some material information for use in the gear model
+    gp.material = globals->get_matlib()->findMaterial(drawable->getStateSet());
+    if (gp.material)
+      gp.type = gp.material->get_solid() ? FGInterface::Solid : FGInterface::Water;
 
     drawable->accept(mTriangleFunctor);
 

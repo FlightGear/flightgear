@@ -313,6 +313,20 @@ private:
   SGSharedPtr<SGPropertyNode> mFogEnabled;
 };
 
+class FGFogUpdateCallback : public osg::StateAttribute::Callback {
+public:
+  virtual void operator () (osg::StateAttribute* sa, osg::NodeVisitor* nv)
+  {
+    assert(dynamic_cast<SGUpdateVisitor*>(nv));
+    assert(dynamic_cast<osg::Fog*>(sa));
+    SGUpdateVisitor* updateVisitor = static_cast<SGUpdateVisitor*>(nv);
+    osg::Fog* fog = static_cast<osg::Fog*>(sa);
+    fog->setMode(osg::Fog::EXP2);
+    fog->setColor(updateVisitor->getFogColor().osg());
+    fog->setDensity(updateVisitor->getFogExp2Density());
+  }
+};
+
 // update callback for the switch node guarding that splash
 class FGScenerySwitchCallback : public osg::NodeCallback {
 public:
@@ -330,16 +344,6 @@ public:
   }
 };
 
-// fog constants.  I'm a little nervous about putting actual code out
-// here but it seems to work (?)
-static const double m_log01 = -log( 0.01 );
-static const double sqrt_m_log01 = sqrt( m_log01 );
-static GLfloat fog_exp_density;
-static GLfloat fog_exp2_density;
-static GLfloat rwy_exp2_punch_through;
-static GLfloat taxi_exp2_punch_through;
-static GLfloat ground_exp2_punch_through;
-
 // Sky structures
 SGSky *thesky;
 
@@ -353,11 +357,6 @@ static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
 static osg::ref_ptr<osg::CameraView> mCameraView = new osg::CameraView;
 static osg::ref_ptr<osg::Camera> mBackGroundCamera = new osg::Camera;
-
-static osg::ref_ptr<osg::Fog> mFog = new osg::Fog;
-static osg::ref_ptr<osg::Fog> mRunwayLightingFog = new osg::Fog;
-static osg::ref_ptr<osg::Fog> mTaxiLightingFog = new osg::Fog;
-static osg::ref_ptr<osg::Fog> mGroundLightingFog = new osg::Fog;
 
 FGRenderer::FGRenderer()
 {
@@ -412,10 +411,6 @@ FGRenderer::init( void ) {
     glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     glHint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
 
-    mFog->setMode(osg::Fog::EXP2);
-    mRunwayLightingFog->setMode(osg::Fog::EXP2);
-    mTaxiLightingFog->setMode(osg::Fog::EXP2);
-    mGroundLightingFog->setMode(osg::Fog::EXP2);
 
     sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     sceneView->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
@@ -502,7 +497,9 @@ FGRenderer::init( void ) {
     stateSet->setAttributeAndModes(polygonMode);
 
     // scene fog handling
-    stateSet->setAttributeAndModes(mFog.get());
+    osg::Fog* fog = new osg::Fog;
+    fog->setUpdateCallback(new FGFogUpdateCallback);
+    stateSet->setAttributeAndModes(fog);
     stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
 
     // plug in the GUI
@@ -519,28 +516,6 @@ FGRenderer::init( void ) {
     geode->addDrawable(new SGPuDrawable);
     geode->addDrawable(new SGHUDAndPanelDrawable);
     guiCamera->addChild(geode);
-
-    // this one contains all lights, here we set the light states we did
-    // in the plib case with plain OpenGL
-    osg::Group* lightGroup = new osg::Group;
-    sceneGroup->addChild(lightGroup);
-    lightGroup->addChild(globals->get_scenery()->get_gnd_lights_root());
-    lightGroup->addChild(globals->get_scenery()->get_vasi_lights_root());
-    lightGroup->addChild(globals->get_scenery()->get_rwy_lights_root());
-    lightGroup->addChild(globals->get_scenery()->get_taxi_lights_root());
-
-    stateSet = globals->get_scenery()->get_gnd_lights_root()->getOrCreateStateSet();
-    stateSet->setAttributeAndModes(mFog.get());
-    stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
-    stateSet = globals->get_scenery()->get_vasi_lights_root()->getOrCreateStateSet();
-    stateSet->setAttributeAndModes(mRunwayLightingFog.get());
-    stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
-    stateSet = globals->get_scenery()->get_rwy_lights_root()->getOrCreateStateSet();
-    stateSet->setAttributeAndModes(mRunwayLightingFog.get());
-    stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
-    stateSet = globals->get_scenery()->get_taxi_lights_root()->getOrCreateStateSet();
-    stateSet->setAttributeAndModes(mTaxiLightingFog.get());
-    stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
 
     mCameraView->addChild(mRoot.get());
 
@@ -598,26 +573,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
         actual_visibility = thesky->get_visibility();
     } else {
         actual_visibility = fgGetDouble("/environment/visibility-m");
-    }
-
-    static double last_visibility = -9999;
-    if ( actual_visibility != last_visibility ) {
-        last_visibility = actual_visibility;
-
-        fog_exp_density = m_log01 / actual_visibility;
-        fog_exp2_density = sqrt_m_log01 / actual_visibility;
-        ground_exp2_punch_through = sqrt_m_log01 / (actual_visibility * 1.5);
-        if ( actual_visibility < 8000 ) {
-            rwy_exp2_punch_through = sqrt_m_log01 / (actual_visibility * 2.5);
-            taxi_exp2_punch_through = sqrt_m_log01 / (actual_visibility * 1.5);
-        } else {
-            rwy_exp2_punch_through = sqrt_m_log01 / ( 8000 * 2.5 );
-            taxi_exp2_punch_through = sqrt_m_log01 / ( 8000 * 1.5 );
-        }
-        mFog->setDensity(fog_exp2_density);
-        mRunwayLightingFog->setDensity(rwy_exp2_punch_through);
-        mTaxiLightingFog->setDensity(taxi_exp2_punch_through);
-        mGroundLightingFog->setDensity(ground_exp2_punch_through);
     }
 
     // idle_state is now 1000 meaning we've finished all our
@@ -758,15 +713,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
     }
 
-    if ( strcmp(fgGetString("/sim/rendering/fog"), "disabled") ) {
-        SGVec4f color(l->adj_fog_color());
-        mFog->setColor(color.osg());
-        mRunwayLightingFog->setColor(color.osg());
-        mTaxiLightingFog->setColor(color.osg());
-        mGroundLightingFog->setColor(color.osg());
-    }
-
-
 //     sgEnviro.setLight(l->adj_fog_color());
 
     // texture parameters
@@ -822,10 +768,11 @@ FGRenderer::update( bool refresh_camera_settings ) {
     mFrameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
     mUpdateVisitor->setViewData(current__view->getViewPosition(),
                                 current__view->getViewOrientation());
-    mUpdateVisitor->setSceneryCenter(SGVec3d(0, 0, 0));
     SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
     mUpdateVisitor->setLight(direction, l->scene_ambient(),
-                             l->scene_diffuse(), l->scene_specular());
+                             l->scene_diffuse(), l->scene_specular(),
+                             l->adj_fog_color(),
+                             l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
     mUpdateVisitor->setVisibility(actual_visibility);
 
     if (fgGetBool("/sim/panel-hotspots"))

@@ -514,8 +514,7 @@ static void fgMainLoop( void ) {
     double visibility_meters = fgGetDouble("/environment/visibility-m");
     FGViewer *current_view = globals->get_current_view();
 
-    globals->get_tile_mgr()->prep_ssg_nodes( current_view->getSGLocation(),
-                                             visibility_meters );
+    globals->get_tile_mgr()->prep_ssg_nodes( visibility_meters );
     // update tile manager for view...
     SGLocation *view_location = globals->get_current_view()->getSGLocation();
     globals->get_tile_mgr()->update( view_location, visibility_meters );

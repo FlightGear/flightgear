@@ -32,10 +32,6 @@
 #include "tileentry.hxx"
 #include "tilemgr.hxx"
 
-extern ssgBranch *terrain;
-extern ssgBranch *ground;
-
-
 /**
  * 
  */

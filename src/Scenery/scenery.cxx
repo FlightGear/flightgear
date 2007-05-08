@@ -97,19 +97,6 @@ void FGScenery::init() {
     aircraft_branch->setName( "Aircraft" );
     scene_graph->addChild( aircraft_branch.get() );
 
-    // Lighting
-    gnd_lights_root = new osg::Group;
-    gnd_lights_root->setName( "Ground Lighting Root" );
-
-    vasi_lights_root = new osg::Group;
-    vasi_lights_root->setName( "VASI/PAPI Lighting Root" );
-
-    rwy_lights_root = new osg::Group;
-    rwy_lights_root->setName( "Runway Lighting Root" );
-
-    taxi_lights_root = new osg::Group;
-    taxi_lights_root->setName( "Taxi Lighting Root" );
-
     // Initials values needed by the draw-time object loader
     sgUserDataInit( globals->get_model_lib(), globals->get_fg_root(),
                     globals->get_props(), globals->get_sim_time_sec() );
@@ -129,18 +116,16 @@ void FGScenery::unbind() {
 
 bool
 FGScenery::get_elevation_m(double lat, double lon, double max_alt,
-                           double& alt, const SGMaterial** material,
-                           bool exact)
+                           double& alt, const SGMaterial** material)
 {
   SGGeod geod = SGGeod::fromDegM(lon, lat, max_alt);
   SGVec3d pos = SGVec3d::fromGeod(geod);
-  return get_cart_elevation_m(pos, 0, alt, material, exact);
+  return get_cart_elevation_m(pos, 0, alt, material);
 }
 
 bool
 FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
-                                double& alt, const SGMaterial** material,
-                                bool exact)
+                                double& alt, const SGMaterial** material)
 {
   if ( norm1(pos) < 1 )
     return false;
@@ -167,8 +152,10 @@ FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
       double elevation = geod.getElevationM();
       if (alt < elevation) {
         alt = elevation;
-        if (material)
-          *material = globals->get_matlib()->findMaterial(hit.getGeode());
+        if (material) {
+          const osg::StateSet* stateSet = hit.getDrawable()->getStateSet();
+          *material = globals->get_matlib()->findMaterial(stateSet);
+        }
       }
     }
   }
@@ -178,7 +165,7 @@ FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
 
 bool
 FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
-                                        SGVec3d& nearestHit, bool exact)
+                                        SGVec3d& nearestHit)
 {
   // We assume that starting positions in the center of the earth are invalid
   if ( norm1(pos) < 1 )
