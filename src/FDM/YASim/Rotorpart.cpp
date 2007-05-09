@@ -14,6 +14,7 @@ Rotorpart::Rotorpart()
     _cyclic=0;
     _collective=0;
     _rellenhinge=0;
+    _shared_flap_hinge=false;
     _dt=0;
 #define set3(x,a,b,c) x[0]=a;x[1]=b;x[2]=c;
     set3 (_speed,1,0,0);
@@ -23,10 +24,6 @@ Rotorpart::Rotorpart()
     set3 (_last_torque,0,0,0);
 #undef set3
     _centripetalforce=1;
-    _maxpitch=.02;
-    _minpitch=0;
-    _maxcyclic=0.02;
-    _mincyclic=-0.02;
     _delta3=0.5;
     _cyclic=0;
     _collective=-1;
@@ -187,6 +184,11 @@ void Rotorpart::setOmega(float value)
     _omega=value;
 }
 
+void Rotorpart::setPhi(float value)
+{
+    _phi=value;
+}
+
 void Rotorpart::setOmegaN(float value)
 {
     _omegan=value;
@@ -202,25 +204,6 @@ void Rotorpart::setZentipetalForce(float f)
     _centripetalforce=f;
 } 
 
-void Rotorpart::setMinpitch(float f)
-{
-    _minpitch=f;
-} 
-
-void Rotorpart::setMaxpitch(float f)
-{
-    _maxpitch=f;
-} 
-
-void Rotorpart::setMaxcyclic(float f)
-{
-    _maxcyclic=f;
-} 
-
-void Rotorpart::setMincyclic(float f)
-{
-    _mincyclic=f;
-} 
 
 void Rotorpart::setDelta3(float f)
 {
@@ -245,6 +228,11 @@ void Rotorpart::setDynamic(float f)
 void Rotorpart::setRelLenHinge(float f)
 {
     _rellenhinge=f;
+}
+
+void Rotorpart::setSharedFlapHinge(bool s)
+{
+    _shared_flap_hinge=s;
 }
 
 void Rotorpart::setC2(float f)
@@ -378,9 +366,6 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
     if((_nextrp==NULL)||(_lastrp==NULL)||(_rotor==NULL)) 
         return 0.0;//not initialized. Can happen during startupt of flightgear
     if (returnlift!=NULL) *returnlift=0;
-    /*float flap_omega=(_nextrp->getrealAlpha()-_lastrp->getrealAlpha())
-        *_omega / pi*_rotor->getNumberOfParts()/4; hier mal die alte version probieren?
-        */
     float flap_omega=(_next90rp->getrealAlpha()-_last90rp->getrealAlpha())
         *_omega / pi;
     float local_width=_diameter*(1-_rel_len_blade_start)/2.
@@ -432,7 +417,7 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
             *_rotor_correction_factor-_rotor->getAirfoilIncidenceNoLift();
         ias = incidence_of_airspeed;
         float lift_wo_cyc = _rotor->getLiftCoef(incidence_of_airspeed
-            -cyc*_rotor_correction_factor,v_local_scalar)
+            -cyc*_rotor_correction_factor*prantl_factor,v_local_scalar)
             * v_local_scalar * v_local_scalar * A *rho *0.5;
         float lift_with_cyc = 
             _rotor->getLiftCoef(incidence_of_airspeed,v_local_scalar)
@@ -464,8 +449,31 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
     //as above, use 1st order approximation
     //float alpha=Math::atan2(lift_moment,_centripetalforce * _len); 
     float alpha;
-    alpha=lift_moment/(_centripetalforce * _len - _mass * _len * 9.81 /_alpha0);
-    //centripetalforce is >=0 and _alpha0<-0.01
+    if (_shared_flap_hinge)
+    {
+        float div=0;
+        if (Math::abs(_alphaalt) >1e-6)
+            div=(_centripetalforce * _len - _mass * _len * 9.81 /_alpha0*(_alphaalt+_oppositerp->getAlphaAlt())/(2.0*_alphaalt));
+        if (Math::abs(div)>1e-6)
+            alpha=lift_moment/div;
+        else if(Math::abs(_alphaalt+_oppositerp->getAlphaAlt())>1e-6)
+        {
+            float div=(_centripetalforce * _len - _mass * _len * 9.81 *0.5)*(_alphaalt+_oppositerp->getAlphaAlt());
+            if (Math::abs(div)>1e-6)
+                alpha=_oppositerp->getAlphaAlt()+lift_moment/div*_alphaalt;
+        }
+        else
+            alpha=_alphaalt;
+    }
+    else
+    {
+        float div=(_centripetalforce * _len - _mass * _len * 9.81 /_alpha0);
+        if (Math::abs(div)>1e-6)
+            alpha=lift_moment/div;
+        else
+            alpha=_alphaalt;
+    }
+ 
     return (alpha);
 }
 
@@ -490,10 +498,12 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
     //Angle of blade which would produce no vertical force (where the 
     //effective incidence is zero)
 
-    //float cyc=_mincyclic+(_cyclic+1)/2*(_maxcyclic-_mincyclic);
     float cyc=_cyclic;
-    float col=_minpitch+(_collective+1)/2*(_maxpitch-_minpitch);
-    _incidence=(col+cyc)-_delta3*_alphaalt;
+    float col=_collective;
+    if (_shared_flap_hinge)
+        _incidence=(col+cyc)-_delta3*0.5*(_alphaalt-_oppositerp->getAlphaAlt());
+    else
+        _incidence=(col+cyc)-_delta3*_alphaalt;
     //the incidence of the rotorblade due to control input reduced by the
     //delta3 effect, see README.YASIM
     //float beta=_relamp*cyc+col; 
@@ -503,6 +513,7 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
     //the new flapping angle will be the old flapping angle
     //+ factor *(alpha - "old flapping angle")
     alpha=calculateAlpha(v,rho,_incidence,cyc,0,&scalar_torque);
+    alpha=Math::clamp(alpha,_alphamin,_alphamax);
     //the incidence is a function of alpha (if _delta* != 0)
     //Therefore missing: wrap this function in an integrator
     //(runge kutta e. g.)
@@ -564,10 +575,6 @@ std::ostream &  operator<<(std::ostream & out, const Rotorpart& rp)
         iv( _directionofcentripetalforce)
         iv( _directionofrotorpart)
         i( _centripetalforce)
-        i( _maxpitch)
-        i( _minpitch)
-        i( _maxcyclic)
-        i( _mincyclic)
         i( _cyclic)
         i( _collective)
         i( _delta3)
