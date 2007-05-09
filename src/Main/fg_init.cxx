@@ -67,7 +67,6 @@
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 #include <AIModel/AIManager.hxx>
-#include <ATC/ATCdisplay.hxx>
 #include <ATC/ATCmgr.hxx>
 #include <ATC/AIMgr.hxx>
 #include <Autopilot/route_mgr.hxx>
@@ -1717,14 +1716,6 @@ bool fgInitSubsystems() {
     globals->add_subsystem("fx", new FGFX);
     globals->add_subsystem("voice", new FGVoiceMgr);
 #endif
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialise ATC display system
-    ////////////////////////////////////////////////////////////////////
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  ATC Display");
-    globals->set_ATC_display(new FGATCDisplay);
-    globals->get_ATC_display()->init(); 
 
     ////////////////////////////////////////////////////////////////////
     // Initialise the ATC Manager 

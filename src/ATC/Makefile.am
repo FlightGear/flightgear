@@ -8,7 +8,6 @@ libATC_a_SOURCES = \
 	ground.hxx ground.cxx \
 	commlist.hxx commlist.cxx \
 	ATCDialog.hxx ATCDialog.cxx \
-	ATCdisplay.hxx ATCdisplay.cxx \
 	ATCVoice.hxx ATCVoice.cxx \
 	ATCmgr.hxx ATCmgr.cxx \
 	ATCutils.hxx ATCutils.cxx \

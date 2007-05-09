@@ -122,11 +122,6 @@ private:
 #endif // ENABLE_THREADS
     static queue<FGTileEntry *> delete_queue;
 
-    /**
-     * Tile filter indicator, to implement multipass rendering
-     */
-    static bool tile_filter;
-
 public:
 
     /**
@@ -174,8 +169,6 @@ public:
     void refresh_view_timestamps();
 
     const SGBucket& get_current_bucket () const { return current_bucket; }
-
-    static bool set_tile_filter( bool f );
 
     /// Returns true if scenery is avaliable for the given lat, lon position
     /// within a range of range_m.

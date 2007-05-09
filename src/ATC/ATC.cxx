@@ -29,7 +29,6 @@
 #include <Main/fg_props.hxx>
 
 #include "ATC.hxx"
-#include "ATCdisplay.hxx"
 
 FGATC::FGATC() {
 	freqClear = true;
@@ -109,8 +108,6 @@ void FGATC::Update(double dt) {
 		if(_display) {
 			//Render(pending_transmission, ident, false);
 			Render(pending_transmission);
-			// At the moment Render only works for ATIS
-			//globals->get_ATC_display()->RegisterSingleMessage(pending_transmission);
 		}
 		// Run the callback regardless of whether on same freq as user or not.
 		//cout << "_callback_code = " << _callback_code << '\n';
@@ -185,7 +182,6 @@ void FGATC::ImmediateTransmit(int callback_code) {
 		//Render(pending_transmission, ident, false);
 		Render(pending_transmission);
 		// At the moment Render doesn't work except for ATIS
-		//globals->get_ATC_display()->RegisterSingleMessage(pending_transmission);
 	}
 	if(callback_code) {
 		ProcessCallback(callback_code);
@@ -258,11 +254,6 @@ void FGATC::Render(string& msg, const string& refname, bool repeating) {
 				msg[i] = ' ';
 			}
 		}
-		if(repeating) {
-			globals->get_ATC_display()->RegisterRepeatingMessage(msg);
-		} else {
-			globals->get_ATC_display()->RegisterSingleMessage(msg);
-		}
 	}
 	_playing = true;	
 }
@@ -276,8 +267,6 @@ void FGATC::NoRender(const string& refname) {
 			globals->get_soundmgr()->stop(refname);
 			globals->get_soundmgr()->remove(refname);
 #endif
-		} else {
-			globals->get_ATC_display()->CancelRepeatingMessage();
 		}
 		_playing = false;
 	}

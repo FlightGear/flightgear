@@ -45,7 +45,6 @@ SG_USING_STD(cout);
 
 #include "atis.hxx"
 #include "commlist.hxx"
-#include "ATCdisplay.hxx"
 #include "ATCutils.hxx"
 #include "ATCmgr.hxx"
 
@@ -70,7 +69,6 @@ void FGATIS::Update(double dt) {
 		if(_displaying) {
 			// Check if we need to update the message
 			// - basically every hour and if the weather changes significantly at the station
-			//globals->get_ATC_display()->ChangeRepeatingMessage(transmission);
 		} else {
 			// We need to get and display the message
 			UpdateTransmission();

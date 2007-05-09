@@ -81,7 +81,7 @@ FGAircraftModel::init ()
                                            liveryPath);
     _aircraft->init( model );
   }
-  _selector->addChild(_aircraft->getSceneGraph());
+  _selector->addChild(_aircraft->getSceneGraph(), true);
   // Do not do altitude computations with that model
   _selector->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
   globals->get_scenery()->get_aircraft_branch()->addChild(_selector.get());

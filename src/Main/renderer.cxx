@@ -92,7 +92,6 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/redout.hxx>
 #include <Scenery/tilemgr.hxx>
-#include <ATC/ATCdisplay.hxx>
 #include <GUI/new_gui.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Instrumentation/HUD/HUD.hxx>
@@ -134,10 +133,6 @@ public:
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushClientAttrib(~0u);
-
-    if((fgGetBool("/sim/atc/enabled"))
-       || (fgGetBool("/sim/ai-traffic/enabled")))
-      globals->get_ATC_display()->update(delta_time_sec, state);
 
     puDisplay();
 
@@ -761,8 +756,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
 //         shadows->endOfFrame();
 
     // need to call the update visitor once
-    globals->get_aircraft_model()->select( true );
-    FGTileMgr::set_tile_filter( true );
     mFrameStamp->setReferenceTime(globals->get_sim_time_sec());
     mFrameStamp->setFrameNumber(1+mFrameStamp->getFrameNumber());
     mFrameStamp->setCalendarTime(*globals->get_time_params()->getGmt());

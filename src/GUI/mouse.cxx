@@ -73,33 +73,10 @@ SG_USING_STD(cout);
 Mouse stuff
 ---------------------------------------------------------------------*/
 
-static int _mX = 0;
-static int _mY = 0;
-static int _savedX = 0;
-static int _savedY = 0;
-static int last_buttons = 0 ;
 static int mouse_active = 0;
-static int mouse_joystick_control = 0;
-
-//static time_t mouse_off_time;
-//static int mouse_timed_out;
-
-// to allow returning to previous view
-// on second left click in MOUSE_VIEW mode
-// This has file scope so that it can be reset
-// if the little rodent is moved  NHV
-static  int _mVtoggle = 0;
 
 static int MOUSE_XSIZE = 0;
 static int MOUSE_YSIZE = 0;
-
-// uncomment this for view to exactly follow mouse in MOUSE_VIEW mode
-// else smooth out the view panning to .01 radian per frame
-// see view_offset smoothing mechanism in main.cxx
-#define NO_SMOOTH_MOUSE_VIEW
-
-// uncomment following to
-#define RESET_VIEW_ON_LEAVING_MOUSE_VIEW
 
 /* --------------------------------------------------------------------
 Support for mouse as control yoke (david@megginson.com)
@@ -123,113 +100,10 @@ TODO: allow differential braking (this will be useful if FlightGear
 
 MouseMode mouse_mode = MOUSE_POINTER;
 
-static double aileron_sensitivity = 1.0/500.0;
-static double elevator_sensitivity = 1.0/500.0;
-static double brake_sensitivity = 1.0/250.0;
-static double throttle_sensitivity = 1.0/250.0;
-static double rudder_sensitivity = 1.0/500.0;
-static double trim_sensitivity = 1.0/1000.0;
-
 void guiInitMouse(int width, int height)
 {
 	MOUSE_XSIZE = width;
 	MOUSE_YSIZE = height;
-}
-
-static inline int guiGetMouseButton(void)
-{
-	return last_buttons;
-}
-
-static inline void guiGetMouse(int *x, int *y)
-{
-	*x = _mX;
-	*y = _mY;
-};
-
-static inline int left_button( void ) {
-    return( last_buttons & (1 << MOUSE_BUTTON_LEFT) );
-}
-
-static inline int middle_button( void ) {
-    return( last_buttons & (1 << MOUSE_BUTTON_MIDDLE) );
-}
-
-static inline int right_button( void ) {
-    return( last_buttons & (1 << MOUSE_BUTTON_RIGHT) );
-}
-
-static inline void set_goal_view_offset( float offset )
-{
-	globals->get_current_view()->setGoalHeadingOffset_deg(offset * SGD_RADIANS_TO_DEGREES);
-}
-
-static inline void set_view_offset( float offset )
-{
-	globals->get_current_view()->setHeadingOffset_deg(offset * SGD_RADIANS_TO_DEGREES);
-}
-
-static inline void set_goal_view_tilt( float tilt )
-{
-	globals->get_current_view()->setGoalPitchOffset_deg(tilt);
-}
-
-static inline void set_view_tilt( float tilt )
-{
-	globals->get_current_view()->setPitchOffset_deg(tilt);
-}
-
-static inline float get_view_offset() {
-	return globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS;
-}
-
-static inline float get_goal_view_offset() {
-	return globals->get_current_view()->getGoalHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS;
-}
-
-static inline void move_brake(float offset) {
-	globals->get_controls()->move_brake_left(offset);
-	globals->get_controls()->move_brake_right(offset);
-}
-
-static inline void move_throttle(float offset) {
-	globals->get_controls()->move_throttle(FGControls::ALL_ENGINES, offset);
-}
-
-static inline void move_rudder(float offset) {
-	globals->get_controls()->move_rudder(offset);
-}
-
-static inline void move_elevator_trim(float offset) {
-	globals->get_controls()->move_elevator_trim(offset);
-}
-
-static inline void move_aileron(float offset) {
-	globals->get_controls()->move_aileron(offset);
-}
-
-static inline void move_elevator(float offset) {
-	globals->get_controls()->move_elevator(offset);
-}
-
-static inline float get_aileron() {
-	return globals->get_controls()->get_aileron();
-}
-
-static inline float get_elevator() {
-	return globals->get_controls()->get_elevator();
-}
-
-static inline bool AP_HeadingEnabled() {
-    static const SGPropertyNode *heading_enabled
-        = fgGetNode("/autopilot/locks/heading");
-    return ( strcmp( heading_enabled->getStringValue(), "" ) != 0 );
-}
-
-static inline bool AP_AltitudeEnabled() {
-    static const SGPropertyNode *altitude_enabled
-        = fgGetNode("/autopilot/locks/altitude");
-    return ( strcmp( altitude_enabled->getStringValue(), "" ) != 0 );
 }
 
 void TurnCursorOn( void )
@@ -286,31 +160,5 @@ void maybeToggleMouse( void )
     }
     first_time = ~first_time;
 #endif // #ifdef WIN32
-}
-
-//#define TRANSLATE_HUD
-// temporary hack until pitch_offset is added to view pipeline
-void fgTranslateHud( void ) {
-#ifdef TRANSLATE_HUD
-    if(mouse_mode == MOUSE_VIEW) {
-
-        int ww = MOUSE_XSIZE;
-        int wh = MOUSE_YSIZE;
-
-        float y = 4*(_mY-(wh/2));// * ((wh/SGD_PI)*SG_RADIANS_TO_DEGREES);
-	
-        float x =  get_view_offset() * SG_RADIANS_TO_DEGREES;
-
-        if( x < -180 )	    x += 360;
-        else if( x > 180 )	x -= 360;
-
-        x *= ww/90.0;
-        //	x *= ww/180.0;
-        //	x *= ww/360.0;
-
-        //	glTranslatef( x*ww/640, y*wh/480, 0 );
-        glTranslatef( x*640/ww, y*480/wh, 0 );
-    }
-#endif // TRANSLATE_HUD
 }
 

@@ -66,8 +66,6 @@
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 #include <FDM/flight.hxx>
-// #include <FDM/ADA.hxx>
-#include <ATC/ATCdisplay.hxx>
 #include <ATC/ATCmgr.hxx>
 #include <ATC/AIMgr.hxx>
 #include <Time/tmp.hxx>

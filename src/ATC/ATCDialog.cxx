@@ -33,7 +33,6 @@
 #include "ATCDialog.hxx"
 #include "ATC.hxx"
 #include "ATCmgr.hxx"
-#include "ATCdisplay.hxx"
 #include "commlist.hxx"
 #include "ATCutils.hxx"
 #include <Airports/simple.hxx>
@@ -274,7 +273,6 @@ void FGATCDialog::PopupCallback(int num) {
 			string pilot = atcptr->GenText(a.transmission, a.callback_code);
 			fgSetString("/sim/messages/pilot", pilot.c_str());
 			// This is the user's speech getting displayed.
-			globals->get_ATC_display()->RegisterSingleMessage(pilot);
 			_callbackPending = true;
 			_callbackTimer = 0.0;
 			_callbackWait = 5.0;

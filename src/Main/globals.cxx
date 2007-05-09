@@ -66,7 +66,6 @@ FGGlobals::FGGlobals() :
     soundmgr( NULL ),
     airports( NULL ),
     ATC_mgr( NULL ),
-    ATC_display( NULL ),
     AI_mgr( NULL ),
     controls( NULL ),
     viewmgr( NULL ),

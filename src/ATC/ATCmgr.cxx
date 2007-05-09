@@ -28,7 +28,6 @@
 
 #include "ATCmgr.hxx"
 #include "commlist.hxx"
-#include "ATCdisplay.hxx"
 #include "ATCDialog.hxx"
 #include "ATCutils.hxx"
 #include "transmissionlist.hxx"

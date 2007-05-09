@@ -34,7 +34,6 @@
 #include <simgear/debug/logstream.hxx>
 
 #include "tower.hxx"
-#include "ATCdisplay.hxx"
 #include "ATCmgr.hxx"
 #include "ATCutils.hxx"
 #include "ATCDialog.hxx"
@@ -507,7 +506,6 @@ void FGTower::Respond() {
 			}
 			trns += ConvertRwyNumToSpokenString(activeRwy);
 			if(_display) {
-				//globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 				pending_transmission = trns;
 				Transmit();
 			} else {
@@ -545,7 +543,6 @@ void FGTower::Respond() {
 				string trns = t->plane.callsign;
 				trns += " hold position";
 				if(_display) {
-					//globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 					pending_transmission = trns;
 					Transmit();
 				}
@@ -585,7 +582,6 @@ void FGTower::Respond() {
 				t->clearedToLand = false;
 			}
 			if(_display && disp) {
-				//globals->get_ATC_display()->RegisterSingleMessage(trns);
 				pending_transmission = trns;
 				Transmit();
 			}
@@ -682,7 +678,6 @@ void FGTower::ProcessDownwindReport(TowerPlaneRec* t) {
 		}
 	}
 	if(_display) {
-		//globals->get_ATC_display()->RegisterSingleMessage(trns);
 		pending_transmission = trns;
 		Transmit();
 	}
@@ -716,7 +711,6 @@ void FGTower::ProcessRunwayVacatedReport(TowerPlaneRec* t) {
 	}
 	//cout << "trns = " << trns << '\n';
 	if(_display) {
-		//globals->get_ATC_display()->RegisterSingleMessage(trns);
 		pending_transmission = trns;
 		Transmit();
 	}
@@ -829,7 +823,6 @@ void FGTower::ClearHoldingPlane(TowerPlaneRec* t) {
 		timeSinceLastDeparture = 0.0;
 	}
 	if(_display) {
-		//globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 		pending_transmission = trns;
 		Transmit();
 	}

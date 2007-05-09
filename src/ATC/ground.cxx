@@ -33,7 +33,6 @@
 #include STL_FSTREAM
 
 #include "ground.hxx"
-#include "ATCdisplay.hxx"
 #include "ATCutils.hxx"
 #include "AILocalTraffic.hxx"
 #include "ATCmgr.hxx"
@@ -321,7 +320,6 @@ void FGGround::Update(double dt) {
 				trns += ConvertRwyNumToSpokenString(activeRwy);
 				if(_display) {
 					fgSetString("/sim/messages/ground", trns.c_str());
-					globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 				}
 				g->planePtr->RegisterTransmission(1);	// cleared to taxi
 				g->clearanceCounter = 0.0;
@@ -340,7 +338,6 @@ void FGGround::Update(double dt) {
 			trns += buf;
 			if(_display) {
 				fgSetString("/sim/messages/ground", trns.c_str());
-				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 			}
 			g->planePtr->RegisterTransmission(2);	// contact tower
 			delete *ground_traffic_itr;

@@ -25,7 +25,6 @@
 #include "approach.hxx"
 #include "transmission.hxx"
 #include "transmissionlist.hxx"
-#include "ATCdisplay.hxx"
 #include "ATCDialog.hxx"
 
 #include <Airports/runways.hxx>
@@ -756,6 +755,5 @@ int FGApproach::RemovePlane() {
 void FGApproach::set_message(const string &msg)
 {
   fgSetString("/sim/messages/approach", msg.c_str());
-  globals->get_ATC_display()->RegisterSingleMessage( msg, 0 );
 }
 

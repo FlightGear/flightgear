@@ -35,7 +35,6 @@
 
 #include STL_IOSTREAM
 
-#include <ATC/ATCdisplay.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Time/tmp.hxx>
 #include <Environment/environment.hxx>

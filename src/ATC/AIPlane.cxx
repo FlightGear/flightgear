@@ -29,7 +29,6 @@ SG_USING_STD(string);
 
 
 #include "AIPlane.hxx"
-#include "ATCdisplay.hxx"
 
 FGAIPlane::FGAIPlane() {
 	leg = LEG_UNKNOWN;
@@ -210,7 +209,6 @@ void FGAIPlane::Render(const string& refname, bool repeating) {
 				pending_transmission[i] = ' ';
 			}
 		}
-		globals->get_ATC_display()->RegisterSingleMessage(pending_transmission, 0.0);
 	}
 	playing = true;	
 }
@@ -224,8 +222,6 @@ void FGAIPlane::NoRender(const string& refname) {
 			globals->get_soundmgr()->stop(refname);
 			globals->get_soundmgr()->remove(refname);
 #endif
-		} else {
-			globals->get_ATC_display()->CancelRepeatingMessage();
 		}
 		playing = false;
 	}
