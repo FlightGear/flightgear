@@ -939,8 +939,8 @@ void Rotor::compile()
     float relamp_theoretical=(omega*omega/(2*delta_theoretical*Math::sqrt(sqr(omega0*omega0-omega*omega)
         +4*delta_theoretical*delta_theoretical*omega*omega)))*_cyclic_factor;
     _phi=Math::acos(_rel_len_hinge);
-    SG_LOG(SG_GENERAL, SG_ALERT,
-        "phi: " << _phi*180/3.14 << " delta3: " << _delta3 << "(" << Math::atan(_delta3)*180/3.14 << ")" <<endl);
+    SG_LOG(SG_GENERAL, SG_WARN,
+        "phi: " << _phi*180/3.14 << " delta3: " << _delta3 << "(" << Math::atan(_delta3)*180/3.14 << ")");
     _phi-=Math::atan(_delta3);
     if (!_no_torque)
     {
