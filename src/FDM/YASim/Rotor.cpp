@@ -67,6 +67,7 @@ Rotor::Rotor()
     _normal_with_yaw_roll[2]=1;
     _number_of_blades=4;
     _omega=_omegan=_omegarel=_omegarelneu=0;
+    _phi_null=0;
     _ddt_omega=0;
     _pitch_a=0;
     _pitch_b=0;
@@ -75,6 +76,7 @@ Rotor::Rotor()
     _no_torque=0;
     _rel_blade_center=.7;
     _rel_len_hinge=0.01;
+    _shared_flap_hinge=false;
     _rellenteeterhinge=0.01;
     _rotor_rpm=442;
     _sim_blades=0;
@@ -149,8 +151,8 @@ void Rotor::inititeration(float dt,float omegarel,float ddt_omegarel,float *rot)
     _ddt_omega=_omegan*ddt_omegarel;
     int i;
     for(i=0; i<_rotorparts.size(); i++) {
-        float s = Math::sin(2*pi*i/_number_of_parts);
-        float c = Math::cos(2*pi*i/_number_of_parts);
+        float s = Math::sin(float(2*pi*i/_number_of_parts+(_phi-pi/2.)*(_ccw?1:-1)));
+        float c = Math::cos(float(2*pi*i/_number_of_parts+(_phi-pi/2.)*(_ccw?1:-1)));
         Rotorpart* r = (Rotorpart*)_rotorparts.get(i);
         r->setOmega(_omega);
         r->setDdtOmega(_ddt_omega);
@@ -522,6 +524,11 @@ void Rotor::setTranslift(float value)
     _translift=value;
 }
 
+void Rotor::setSharedFlapHinge(bool s)
+{
+    _shared_flap_hinge=s;
+}
+
 void Rotor::setC2(float value)
 {
     _c2=value;
@@ -535,6 +542,11 @@ void Rotor::setStepspersecond(float steps)
 void Rotor::setRPM(float value)
 {
     _rotor_rpm=value;
+}
+
+void Rotor::setPhiNull(float value)
+{
+    _phi_null=value;
 }
 
 void Rotor::setRelLenHinge(float value)
@@ -635,10 +647,10 @@ void Rotor::setCollective(float lval)
 {
     lval = Math::clamp(lval, -1, 1);
     int i;
-    for(i=0; i<_rotorparts.size(); i++) {
-        ((Rotorpart*)_rotorparts.get(i))->setCollective(lval);
-    }
     _collective=_min_pitch+(lval+1)/2*(_max_pitch-_min_pitch);
+    for(i=0; i<_rotorparts.size(); i++) {
+        ((Rotorpart*)_rotorparts.get(i))->setCollective(_collective);
+    }
 }
 
 void Rotor::setCyclicele(float lval,float rval)
@@ -919,11 +931,17 @@ void Rotor::compile()
     float omega=_rotor_rpm/60*2*pi;
     _omegan=omega;
     float omega0=omega*Math::sqrt(1/(1-_rel_len_hinge));
-    _delta*=pitchaforce/(_pitch_a*omega*lentocenter*2*rotorpartmass);
+    float delta_theoretical=pitchaforce/(_pitch_a*omega*lentocenter*2*rotorpartmass);
+    _delta*=delta_theoretical;
 
-    float phi=Math::atan2(2*omega*_delta,omega0*omega0-omega*omega);
     float relamp=(omega*omega/(2*_delta*Math::sqrt(sqr(omega0*omega0-omega*omega)
         +4*_delta*_delta*omega*omega)))*_cyclic_factor;
+    float relamp_theoretical=(omega*omega/(2*delta_theoretical*Math::sqrt(sqr(omega0*omega0-omega*omega)
+        +4*delta_theoretical*delta_theoretical*omega*omega)))*_cyclic_factor;
+    _phi=Math::acos(_rel_len_hinge);
+    SG_LOG(SG_GENERAL, SG_ALERT,
+        "phi: " << _phi*180/3.14 << " delta3: " << _delta3 << "(" << Math::atan(_delta3)*180/3.14 << ")" <<endl);
+    _phi-=Math::atan(_delta3);
     if (!_no_torque)
     {
         torque0=_power_at_pitch_0/_number_of_parts*1000/omega;  
@@ -945,13 +963,19 @@ void Rotor::compile()
         float lpos[3],lforceattac[3],lspeed[3],dirzentforce[3];
         float s = Math::sin(2*pi*i/_number_of_parts);
         float c = Math::cos(2*pi*i/_number_of_parts);
-        float direction[3],nextdirection[3],help[3];
+        float sp = Math::sin(float(2*pi*i/_number_of_parts-pi/2.+_phi));
+        float cp = Math::cos(float(2*pi*i/_number_of_parts-pi/2.+_phi));
+        float direction[3],nextdirection[3],help[3],direction90deg[3];
         Math::mul3(c ,directions[0],help);
         Math::mul3(s ,directions[1],direction);
         Math::add3(help,direction,direction);
 
         Math::mul3(c ,directions[1],help);
-        Math::mul3(s ,directions[2],nextdirection);
+        Math::mul3(s ,directions[2],direction90deg);
+        Math::add3(help,direction90deg,direction90deg);
+        
+        Math::mul3(cp ,directions[1],help);
+        Math::mul3(sp ,directions[2],nextdirection);
         Math::add3(help,nextdirection,nextdirection);
 
         Math::mul3(lentocenter,direction,lpos);
@@ -960,17 +984,12 @@ void Rotor::compile()
         //nextdirection: +90deg (gyro)!!!
 
         Math::add3(lforceattac,_base,lforceattac);
-        Math::mul3(speed,nextdirection,lspeed);
+        Math::mul3(speed,direction90deg,lspeed);
         Math::mul3(1,nextdirection,dirzentforce);
 
-
-        float maxcyclic=(i&1)?_maxcyclicele:_maxcyclicail;
-        float mincyclic=(i&1)?_mincyclicele:_mincyclicail;
-
         Rotorpart* rp=rps[i]=newRotorpart(lpos, lforceattac, _normal,
-            lspeed,dirzentforce,zentforce,pitchaforce, _max_pitch,_min_pitch,
-            mincyclic,maxcyclic,_delta3,rotorpartmass,_translift,
-            _rel_len_hinge,lentocenter);
+            lspeed,dirzentforce,zentforce,pitchaforce,_delta3,rotorpartmass,
+            _translift,_rel_len_hinge,lentocenter);
         int k = i*4/_number_of_parts;
         rp->setAlphaoutput(_alphaoutput[k&1?k:(_ccw?k^2:k)],0);
         rp->setAlphaoutput(_alphaoutput[4+(k&1?k:(_ccw?k^2:k))],1+(k>1));
@@ -1083,7 +1102,7 @@ void Rotor::compile()
     rps[0]->setOmega(0);
     writeInfo();
 }
-std::ostream &  operator<<(std::ostream & out, /*const*/ Rotor& r)
+std::ostream &  operator<<(std::ostream & out, Rotor& r)
 {
 #define i(x) << #x << ":" << r.x << endl
 #define iv(x) << #x << ":" << r.x[0] << ";" << r.x[1] << ";" <<r.x[2] << ";" << endl
@@ -1192,7 +1211,6 @@ void Rotor:: writeInfo()
 }
 Rotorpart* Rotor::newRotorpart(float* pos, float *posforceattac, float *normal,
     float* speed,float *dirzentforce, float zentforce,float maxpitchforce,
-    float maxpitch, float minpitch, float mincyclic,float maxcyclic,
     float delta3,float mass,float translift,float rellenhinge,float len)
 {
     Rotorpart *r = new Rotorpart();
@@ -1202,17 +1220,15 @@ Rotorpart* Rotor::newRotorpart(float* pos, float *posforceattac, float *normal,
     r->setPositionForceAttac(posforceattac);
     r->setSpeed(speed);
     r->setDirectionofZentipetalforce(dirzentforce);
-    r->setMaxpitch(maxpitch);
-    r->setMinpitch(minpitch);
-    r->setMaxcyclic(maxcyclic);
-    r->setMincyclic(mincyclic);
     r->setDelta3(delta3);
     r->setDynamic(_dynamic);
     r->setTranslift(_translift);
     r->setC2(_c2);
     r->setWeight(mass);
     r->setRelLenHinge(rellenhinge);
+    r->setSharedFlapHinge(_shared_flap_hinge);
     r->setOmegaN(_omegan);
+    r->setPhi(_phi_null);
     r->setAlpha0(_alpha0);
     r->setAlphamin(_alphamin);
     r->setAlphamax(_alphamax);

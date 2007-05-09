@@ -19,6 +19,7 @@ class Rotor {
 private:
     float _torque;
     float _omega,_omegan,_omegarel,_ddt_omega,_omegarelneu;
+    float _phi_null;
     float _chord;
     float _taper;
     float _airfoil_incidence_no_lift;
@@ -64,6 +65,7 @@ public:
     void setC2(float value);
     void setStepspersecond(float steps);
     void setRPM(float value);
+    void setPhiNull(float value);
     void setRelLenHinge(float value);
     void setBase(float* base);        // in local coordinates
     void getPosition(float* out);
@@ -111,12 +113,11 @@ public:
     float getOverallStall() 
         {if (_stall_v2sum !=0 ) return _stall_sum/_stall_v2sum; else return 0;}
     float getAirfoilIncidenceNoLift() {return _airfoil_incidence_no_lift;}
-    
-    
+
     Vector _rotorparts;
     void findGroundEffectAltitude(Ground * ground_cb,State *s);
     void writeInfo();
-
+    void setSharedFlapHinge(bool s);
 
 private:
     void strncpy(char *dest,const char *src,int maxlen);
@@ -127,7 +128,6 @@ private:
         int iteration=0,float a0=-1,float a1=-1,float a2=-1,float a3=-1);
     Rotorpart* newRotorpart(float* pos, float *posforceattac, float *normal,
         float* speed,float *dirzentforce, float zentforce,float maxpitchforce,
-        float maxpitch, float minpitch, float mincyclic,float maxcyclic,
         float delta3,float mass,float translift,float rellenhinge,float len);
     float _base[3];
     float _groundeffectpos[4][3];
@@ -199,6 +199,8 @@ private:
     float _cyclicele;
     float _cyclic_factor;
     float _rotor_correction_factor;
+    float _phi;
+    bool _shared_flap_hinge;
 };
 std::ostream &  operator<<(std::ostream & out, /*const*/ Rotor& r);
 

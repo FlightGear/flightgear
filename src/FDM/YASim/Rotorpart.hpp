@@ -60,6 +60,7 @@ namespace yasim {
         void setTorque(float torque_max_force,float torque_no_force);
         void setOmega(float value);
         void setOmegaN(float value);
+        void setPhi(float value);
         void setDdtOmega(float value);
         float getIncidence();
         float getPhi();
@@ -72,6 +73,8 @@ namespace yasim {
         void setRotor(Rotor *rotor);
         void setTorqueOfInertia(float toi);
         void writeInfo(std::ostringstream &buffer);
+        void setSharedFlapHinge(bool s);
+        float getAlphaAlt() {return _alphaalt;}
 
     private:
         void strncpy(char *dest,const char *src,int maxlen);
@@ -88,10 +91,6 @@ namespace yasim {
         float _directionofcentripetalforce[3];
         float _directionofrotorpart[3];
         float _centripetalforce;
-        float _maxpitch;
-        float _minpitch;
-        float _maxcyclic;
-        float _mincyclic;
         float _cyclic;
         float _collective;
         float _delta3;
@@ -119,6 +118,7 @@ namespace yasim {
         char _alphaoutputbuf[2][256];
         int _alpha2type;
         float _rotor_correction_factor;
+        bool _shared_flap_hinge;
     };
     std::ostream &  operator<<(std::ostream & out, const Rotorpart& rp);
 }; // namespace yasim

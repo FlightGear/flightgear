@@ -708,6 +708,7 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setTranslift(attrf(a, "translift", 0.05));
     w->setC2(attrf(a, "dragfactor", 1));
     w->setStepspersecond(attrf(a, "stepspersecond", 120));
+    w->setPhiNull((attrf(a, "phi0", 0))*YASIM_PI/180);
     w->setRPM(attrf(a, "rpm", 424));
     w->setRelLenHinge(attrf(a, "rellenflaphinge", 0.07));
     w->setAlpha0((attrf(a, "flap0", -5))*YASIM_PI/180);
@@ -717,13 +718,11 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setTeeterdamp(attrf(a,"teeterdamp",.0001));
     w->setMaxteeterdamp(attrf(a,"maxteeterdamp",1000));
     w->setRelLenTeeterHinge(attrf(a,"rellenteeterhinge",0.01));
-    void setAlphamin(float f);
-    void setAlphamax(float f);
-    void setAlpha0factor(float f);
-
     if(attrb(a,"ccw"))
        w->setCcw(1); 
-    
+    if(attrb(a,"sharedflaphinge"))
+       w->setSharedFlapHinge(true); 
+
     if(a->hasAttribute("name"))
        w->setName(a->getValue("name") );
     if(a->hasAttribute("alphaout0"))
