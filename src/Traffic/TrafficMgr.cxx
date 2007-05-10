@@ -123,10 +123,10 @@ void FGTrafficManager::init()
    * until we have some AI models with traffic in the base package
    */ 
   SGPath path = aircraftDir;
-  path.append("/Traffic/fgtraffic.xml");
+  path.append("Traffic/fgtraffic.xml");
   readXML(path.str(),*this);
 
-  aircraftDir.append("AI/Aircraft/");
+  aircraftDir.append("AI/Aircraft");
   if (aircraftDir.exists())
     {
       if((d = ulOpenDir(aircraftDir.c_str())) == NULL)
@@ -166,7 +166,7 @@ void FGTrafficManager::init()
   //cerr << "Done initializing schedules" << endl;
 }
 
-void FGTrafficManager::update(double something)
+void FGTrafficManager::update(double /*dt*/)
 {
   //SG_LOG( SG_GENERAL, SG_INFO, "Running TrafficManager::Update() ");
   if (runCount < 1000)
@@ -174,6 +174,7 @@ void FGTrafficManager::update(double something)
       runCount++;
       return;
     }
+  runCount = 0;
   time_t now = time(NULL) + fgGetLong("/sim/time/warp");
   if (scheduledAircraft.size() == 0) {
     //SG_LOG( SG_GENERAL, SG_INFO, "Returned Running TrafficManager::Update() ");
@@ -188,7 +189,7 @@ void FGTrafficManager::update(double something)
     {
       // after proper initialization, we shouldnt get here.
       // But let's make sure
-      cerr << "Failed to update aircraft schedule in traffic manager" << endl;
+      SG_LOG( SG_GENERAL, SG_ALERT, "Failed to update aircraft schedule in traffic manager");
     }
   currAircraft++;
   //SG_LOG( SG_GENERAL, SG_INFO, "Done Running TrafficManager::Update() ");

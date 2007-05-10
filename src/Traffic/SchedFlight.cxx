@@ -127,8 +127,9 @@ FGScheduledFlight::FGScheduledFlight(const string& cs,
     }
   else
     {
-      cerr << "Unknown repeat period" << endl;
-      exit(1);
+      repeatPeriod = 365*24*60*60;
+      SG_LOG( SG_GENERAL, SG_ALERT, "Unknown repeat period in flight plan "
+                                    "of flight '" << cs << "': " << rep );
     }
 
   // What we still need to do is preprocess the departure and
