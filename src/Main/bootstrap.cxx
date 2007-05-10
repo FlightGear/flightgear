@@ -143,6 +143,16 @@ void flush_fpe(void)
 }
 #endif
 
+static void terminate() {
+    cerr << endl <<
+            "Uncaught Exception: you should see a meaningful error message\n"
+            "here, but your GLUT (or SDL) library was apparently compiled\n"
+            "and/or linked without exception support. Please complain to\n"
+            "its provider!"
+            << endl << endl;
+    abort();
+}
+
 int _bootstrap_OSInit;
 
 // Main entry point; catch any exceptions that have made it this far.
@@ -200,6 +210,7 @@ int main ( int argc, char **argv ) {
     // FIXME: add other, more specific
     // exceptions.
     try {
+        std::set_terminate(terminate);
         atexit(fgExitCleanup);
         fgMainInit(argc, argv);
     } catch (const sg_throwable &t) {
@@ -211,6 +222,9 @@ int main ( int argc, char **argv ) {
             cerr << " (received from " << t.getOrigin() << ')' << endl;
 
     } catch (const string &s) {
+        cerr << "Fatal error: " << s << endl;
+
+    } catch (const char *s) {
         cerr << "Fatal error: " << s << endl;
 
     } catch (...) {
