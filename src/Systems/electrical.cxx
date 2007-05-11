@@ -333,30 +333,11 @@ bool FGElectricalConnector::get_state() {
 
 
 FGElectricalSystem::FGElectricalSystem ( SGPropertyNode *node ) :
-    name("electrical"),
-    num(0),
-    path(""),
+    name(node->getStringValue("name", "electrical")),
+    num(node->getIntValue("number", 0)),
+    path(node->getStringValue("path")),
     enabled(false)
 {
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else if ( cname == "path" ) {
-            path = cval;
-        } else {
-            SG_LOG( SG_SYSTEMS, SG_WARN,
-                    "Error in electrical system config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_SYSTEMS, SG_WARN, "Section = " << name );
-            }
-        }
-    }
 }
 
 
@@ -392,8 +373,8 @@ void FGElectricalSystem::init () {
         config.append( path );
 
         // load an obsolete xml configuration
-        SG_LOG( SG_ALL, SG_ALERT,
-                "Reading xml electrical system model from "
+        SG_LOG( SG_ALL, SG_WARN,
+                "Reading deprecated xml electrical system model from\n    "
                 << config.str() );
         try {
             readProperties( config.str(), config_props );

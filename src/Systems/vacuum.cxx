@@ -17,20 +17,10 @@ VacuumSystem::VacuumSystem ( SGPropertyNode *node )
     _num(node->getIntValue("number", 0)),
     _scale(node->getDoubleValue("scale", 1.0))
 {
-    _rpms.clear();
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
+    for ( int i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "rpm" ) {
-            _rpms.push_back(cval);
-        } else {
-            SG_LOG( SG_SYSTEMS, SG_WARN, "Error in vacuum config logic" );
-            if ( _name.length() ) {
-                SG_LOG( SG_SYSTEMS, SG_WARN, "Section = " << _name );
-            }
-        }
+        if (!strcmp(child->getName(), "rpm"))
+            _rpms.push_back(child->getStringValue());
     }
 }
 
