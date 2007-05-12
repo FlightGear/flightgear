@@ -172,7 +172,7 @@ void fgSplashUpdate ( float alpha ) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // now draw the logo
-    if (fgGetBool("/sim/startup/splash-screen", true)) {
+    if (splash && fgGetBool("/sim/startup/splash-screen", true)) {
         glEnable(GL_TEXTURE_2D);
         splash->bind();
         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
