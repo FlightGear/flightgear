@@ -259,7 +259,7 @@ static naRef f_fgcommand(naContext c, naRef me, int argc, naRef* args)
 // FGNasalSys::setTimer().  See there for docs.
 static naRef f_settimer(naContext c, naRef me, int argc, naRef* args)
 {
-    nasalSys->setTimer(argc, args);
+    nasalSys->setTimer(c, argc, args);
     return naNil();
 }
 
@@ -612,15 +612,20 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
 // "saved" somehow lest they be inadvertently cleaned.  In this case,
 // they are inserted into a globals.__gcsave hash and removed on
 // expiration.
-void FGNasalSys::setTimer(int argc, naRef* args)
+void FGNasalSys::setTimer(naContext c, int argc, naRef* args)
 {
     // Extract the handler, delta, and simtime arguments:
     naRef handler = argc > 0 ? args[0] : naNil();
-    if(!(naIsCode(handler) || naIsCCode(handler) || naIsFunc(handler)))
+    if(!(naIsCode(handler) || naIsCCode(handler) || naIsFunc(handler))) {
+        naRuntimeError(c, "settimer() with invalid function argument");
         return;
+    }
 
     naRef delta = argc > 1 ? args[1] : naNil();
-    if(naIsNil(delta)) return;
+    if(naIsNil(delta)) {
+        naRuntimeError(c, "settimer() with invalid time argument");
+        return;
+    }
 
     bool simtime = (argc > 2 && naTrue(args[2])) ? false : true;
 

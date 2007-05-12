@@ -40,7 +40,7 @@ public:
     FGNasalScript* parseScript(const char* src, const char* name=0);
 
     // Implementation of the settimer extension function
-    void setTimer(int argc, naRef* args);
+    void setTimer(naContext c, int argc, naRef* args);
 
     // Implementation of the setlistener extension function
     naRef setListener(naContext c, int argc, naRef* args);
