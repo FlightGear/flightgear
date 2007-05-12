@@ -160,6 +160,7 @@ private:
 
     void loadAI();
     void loadSubmodels();
+    void setData(int id, string& path, bool serviceable);
     double getRange(double lat, double lon, double lat2, double lon2) const;
 
 };
