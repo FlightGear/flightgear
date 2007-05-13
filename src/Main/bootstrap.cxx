@@ -143,7 +143,7 @@ void flush_fpe(void)
 }
 #endif
 
-static void terminate() {
+static void fg_terminate() {
     cerr << endl <<
             "Uncaught Exception: you should see a meaningful error message\n"
             "here, but your GLUT (or SDL) library was apparently compiled\n"
@@ -210,7 +210,7 @@ int main ( int argc, char **argv ) {
     // FIXME: add other, more specific
     // exceptions.
     try {
-        std::set_terminate(terminate);
+        std::set_terminate(fg_terminate);
         atexit(fgExitCleanup);
         fgMainInit(argc, argv);
     } catch (const sg_throwable &t) {
