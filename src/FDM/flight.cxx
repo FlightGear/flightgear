@@ -860,7 +860,7 @@ FGInterface::get_agl_m(double t, const double pt[3],
   bool ret = ground_cache.get_agl(t, pt, 2.0, contact, normal, vel, type,
                                   &material, agl);
   if (material) {
-    *loadCapacity = material->get_load_resistence();
+    *loadCapacity = material->get_load_resistance();
     *frictionFactor = material->get_friction_factor();
 
   } else {
@@ -902,7 +902,7 @@ FGInterface::get_agl_ft(double t, const double pt[3],
   // return material properties if available
   if (material) {
     // FIXME: convert units?? now pascal to lbf/ft^2
-    *loadCapacity = 0.020885434*material->get_load_resistence();
+    *loadCapacity = 0.020885434*material->get_load_resistance();
     *frictionFactor = material->get_friction_factor();
   } else {
     *loadCapacity = DBL_MAX;
