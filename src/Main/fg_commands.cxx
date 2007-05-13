@@ -14,6 +14,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/scene/material/mat.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/props/props.hxx>
@@ -1237,11 +1238,25 @@ do_replay (const SGPropertyNode * arg)
 static bool
 do_terrain_elevation (const SGPropertyNode * arg)
 {
-    double lon = arg->getDoubleValue("longitude-deg", 0.0);
-    double lat = arg->getDoubleValue("latitude-deg", 0.0);
+    SGPropertyNode *a = const_cast<SGPropertyNode *>(arg);
+    const SGMaterial *mat;
     double elev;
-    bool ret = globals->get_scenery()->get_elevation_m(lat, lon, 10000.0, elev, 0);
-    const_cast<SGPropertyNode *>(arg)->setDoubleValue("elevation-m", elev);
+
+    double lon = a->getDoubleValue("longitude-deg", 0.0);
+    double lat = a->getDoubleValue("latitude-deg", 0.0);
+    bool ret = globals->get_scenery()->get_elevation_m(lat, lon, 10000.0, elev, &mat);
+
+    bool solid = true;
+    const char *matname = "";
+    if (mat) {
+        solid = mat->get_solid();
+        const vector<string> names = mat->get_names();
+        if (!names.empty())
+            matname = names[0].c_str();
+    }
+    a->setBoolValue("solid", solid);
+    a->setStringValue("material", matname);
+    a->setDoubleValue("elevation-m", elev);
     return ret;
 }
 
