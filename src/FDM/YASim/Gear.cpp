@@ -152,10 +152,10 @@ void Gear::setGlobalGround(double *global_ground, float* global_vel,
     for(i=0; i<3; i++) _global_vel[i] = global_vel[i];
 
     if (material) {
-        loadCapacity = (*material).get_load_resistence();
+        loadCapacity = (*material).get_load_resistance();
         frictionFactor =(*material).get_friction_factor();
         rollingFriction = (*material).get_rolling_friction();
-        loadResistance = (*material).get_load_resistence();
+        loadResistance = (*material).get_load_resistance();
         bumpiness = (*material).get_bumpiness();
         isSolid = (*material).get_solid();
     } else {
