@@ -3,6 +3,10 @@
 #  include "config.h"
 #endif
 
+#ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>  // gettimeofday
+#endif
+
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -344,6 +348,24 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
     return result;
 }
 
+// Return UNIX epoch time in seconds.
+static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
+{
+#ifdef WIN32
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    double t = (4294967296.0 * ft.dwHighDateTime + ft.dwLowDateTime);
+    // Converts from 100ns units in 1601 epoch to unix epoch in sec
+    return naNum((t * 1e-7) - 11644473600.0);
+#else
+    time_t t;
+    struct timeval td;
+    do { t = time(0); gettimeofday(&td, 0); } while(t != time(0));
+    return naNum(t + 1e-6 * td.tv_usec);
+#endif
+
+}
+
 // Table of extension functions.  Terminate with zeros.
 static struct { char* name; naCFunction func; } funcs[] = {
     { "getprop",   f_getprop },
@@ -358,6 +380,7 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "rand",  f_rand },
     { "srand",  f_srand },
     { "directory", f_directory },
+    { "systime", f_systime },
     { 0, 0 }
 };
 
