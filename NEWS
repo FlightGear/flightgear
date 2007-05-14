@@ -1,3 +1,128 @@
+New in 0.9.11-pre1
+* May 14, 2007
+
+* CODE CHANGES:
+* Upgrade to JSBSim 1.0: improved gear handling.
+* Major update to the YASim helicopter FDM: highly increased realism
+* Improved gliding (YASIM), with winch launching and aerotowing (by
+  either AI or MP pilots) 
+* Improved soaring scenarios, new aerotowing scenario
+* Support for water planes (YASim): realistic float friction and
+  anchor support 
+* Surface material aware gear in YASim: friction and "bumpiness",
+  aircraft sink in water 
+* Improved model placement using the UFO: It is now possible to select
+  and edit multiple objects at the same time, moves are relative to
+  the viewer position. 
+* Improvements to Air-To-Air refueling, with air-to-air TACAN for
+  easier locating, and KC135 and KA6-D AI models. KC135 can also be
+  used as an MP tanker 
+* New waypoint manager for autopilot/HUD
+* New property browser dialog, which can be opened multiple times. See
+  Docs/README.gui for a a list of more features, like enabling verbose
+  mode etc. 
+* Addition of new MIL-STD HUD
+* Improved viewpoints, including a fly-by view and a dynamic cockpit
+  view. The latter allows 3D cockpits to move a bit relative to the
+  pilot's head, which stabilizes the pilot's view at terrain and makes
+  turbulence look more realistic.
+* Improved fuel and payload dialog for YASim
+* Multiplayer chat, text and voice (using Asterisk)
+* Improved Carrier Operations - FNS Foch added, new carrier-capable
+  aircraft 
+* AI improvements, including ground networks for airports, flightplans
+  and boats 
+* Major improvements in taxiing and ground operations of AI aircraft
+* AIShips wakes, etc
+* Interactive/scripted control of AI aircraft
+* Many Nasal enhancements, including debugging console, XML file
+  parsing, improvements to listener model. New extension functions
+  getAttribute(), setAttribute(), systime() for benchmarking. 
+* Use of all textured fonts on panels
+* Fixed initial texture path problems
+* Improved dynamic sun colors
+* Update to World Magnetic Model 2005
+* Path cache for aircraft configuration files to shorten startup time
+* Submodels added to all AI Objects - MP aircraft can now have
+  contrails, 
+* Addition of protocol for Garmin 400 series
+* Addition of fluxgate compass
+* Addition of GSDI for helicopters
+* New altimetry method
+* "Passive" mode for autopilot
+* Tutorial system improvements
+* Updates to The Manual
+* More stringent header dependencies 
+
+* NEW AIRCRAFT:
+* Boeing 787-8
+* Northrop Grumman A-6E (Intruder)
+* Airbus A320
+* Nakajima A6M2
+* Antonov An-2
+* Northrop B-2 (Spirit)
+* Bristol Beaufighter
+* Bielsko SZD-9 Bocian
+* Lockheed C130 (Hercules)
+* Cessna C182 RG
+* Sikorski CH-53 E (Super Stallion)
+* Cessna Citation X
+* Dornier DO-335
+* Boeing E-3B (Sentry)
+* Eurocopter EC 135
+* McDonnell Douglas F-15 C (Eagle)
+* McDonnell Douglas F-18 (Hornet)
+* Chance Vought F4U (Corsair)
+* Mainair Flash 2 Alpha
+* Hughes H4-Hercules
+* Kyushu J7W (Shinden)
+* Junkers Ju 52
+* Nakajima Ki-84 (Hayate)
+* Messerschmidt Me 262
+* Dassault Mirage 2000
+* de Havilland Mosquito
+* NTPS
+* De Havilland D.H.110 (Sea Vixen)
+* Sikorsky S-76 C
+* Sukhoi Su-37 (Flanker-F)
+* Avro Vulcan B.2
+* Sikorsky S-70 (UH-60, Black Hawk) 
+
+* ENHANCED AIRCRAFT
+* 737
+* 747-200
+* A-10 - Major model improvements
+* a300
+* a4f
+* Aerostar-700 - cockpit, systems, model, FDM
+* as350 - FDM
+* B-52F
+* B1900D - new primus 1000 flight director
+* bell206 - FDM
+* bf109
+* bo105 - cockpit, systems, model, FDM
+* Boeing314A
+* c182 - model, panel
+* ch47 - FDM
+* Citation-Bravo - autopilot/flight director, FDM
+* Concorde - panel, FDM, systems
+* dhc2 - amphibious and wheels only versions added
+* harrier - new external model and 3-D cockpit
+* Hunter
+* Lightning - startup tutorial, model improvements
+* Lockheed1049
+* MiG-15
+* OV10 - 3D cockpit, weapons, NASA variant added
+* pa24-250 - 3-D model improvements
+* pc7 - panel
+* SenecaII
+* sgs233
+* sopwithCamel - completely new model
+* Spitfire
+* ufo
+* YardStik 
+
+
 New in 0.9.10
 * April 5, 2006
 
@@ -15,7 +140,7 @@ New in 0.9.10
 * Updated/improved rain cone rendering.
 * Updated manual.
 
-* Upgraded to JSBSim v2.0
+* Upgraded to v2.0 of the JSBSim config file format.
 * Fix a discrepancy in sign of twist and incidence values in YASim
   between code and documentation.
 * Updates to YASim for more fine grained propeller modeling.
