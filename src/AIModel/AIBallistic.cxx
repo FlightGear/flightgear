@@ -233,12 +233,12 @@ void FGAIBallistic::Run(double dt) {
 
     // Adjust Cd by Mach number. The equations are based on curves
     // for a conventional shell/bullet (no boat-tail).
-    if (Mach >= 1.2)
-        Cdm = 0.2965 * pow ( Mach, -1.1506 ) + _Cd;
-    else if (Mach >= 0.7)
-        Cdm = 0.3742 * pow ( Mach, 2) - 0.252 * Mach + 0.0021 + _Cd;
-    else
+    if (Mach < 0.7)
         Cdm = 0.0125 * Mach + _Cd;
+    else if (Mach < 1.2 )
+        Cdm = 0.3742 * pow(Mach, 2) - 0.252 * Mach + 0.0021 + _Cd;
+    else
+        Cdm = 0.2965 * pow(Mach, -1.1506) + _Cd;
 
     //cout << " Mach , " << Mach << " , Cdm , " << Cdm << " ballistic speed kts //"<< speed <<  endl;
 
@@ -296,7 +296,7 @@ void FGAIBallistic::Run(double dt) {
     // recalculate total speed
     speed = sqrt( vs * vs + hs * hs) / SG_KT_TO_FPS;
 
-    if (_impact && !_impact_data && vs < 0)
+    if (_impact && !_impact_data)
         handle_impact();
 
     // set destruction flag if altitude less than sea level -1000
@@ -333,7 +333,7 @@ void FGAIBallistic::handle_impact() {
 
     _ht_agl_ft = pos.getElevationFt() - elevation_m * SG_METER_TO_FEET;
 
-    // report impact by setting tied variables
+    // report impact by setting property-tied variables
     if (_ht_agl_ft <= 0) {
         _impact_data = true;
 
@@ -344,6 +344,7 @@ void FGAIBallistic::handle_impact() {
         _impact_energy = (_mass * slugs_to_kgs) * _impact_speed
                 * _impact_speed / (2 * 1000);
 
+        // and inform the owner
         if (_impact_report_node)
             _impact_report_node->setStringValue(props->getPath());
     }
