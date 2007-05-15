@@ -113,9 +113,9 @@ public:
     float getOverallStall() 
         {if (_stall_v2sum !=0 ) return _stall_sum/_stall_v2sum; else return 0;}
     float getAirfoilIncidenceNoLift() {return _airfoil_incidence_no_lift;}
-
     Vector _rotorparts;
     void findGroundEffectAltitude(Ground * ground_cb,State *s);
+    float *getGravDirection() {return _grav_direction;}
     void writeInfo();
     void setSharedFlapHinge(bool s);
 
@@ -201,6 +201,7 @@ private:
     float _rotor_correction_factor;
     float _phi;
     bool _shared_flap_hinge;
+    float _grav_direction[3];
 };
 std::ostream &  operator<<(std::ostream & out, /*const*/ Rotor& r);
 

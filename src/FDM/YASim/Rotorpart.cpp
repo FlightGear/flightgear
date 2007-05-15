@@ -361,7 +361,8 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
     int i,n;
     for (i=0;i<3;i++)
         moment[i]=0;
-    lift_moment=-_mass*_len*9.81; //*cos yaw * cos roll
+    float relgrav = Math::dot3(_normal,_rotor->getGravDirection());
+    lift_moment=-_mass*_len*9.81*relgrav;
     *torque=0;//
     if((_nextrp==NULL)||(_lastrp==NULL)||(_rotor==NULL)) 
         return 0.0;//not initialized. Can happen during startupt of flightgear
@@ -453,12 +454,12 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
     {
         float div=0;
         if (Math::abs(_alphaalt) >1e-6)
-            div=(_centripetalforce * _len - _mass * _len * 9.81 /_alpha0*(_alphaalt+_oppositerp->getAlphaAlt())/(2.0*_alphaalt));
+            div=(_centripetalforce * _len - _mass * _len * 9.81 * relgrav /_alpha0*(_alphaalt+_oppositerp->getAlphaAlt())/(2.0*_alphaalt));
         if (Math::abs(div)>1e-6)
             alpha=lift_moment/div;
         else if(Math::abs(_alphaalt+_oppositerp->getAlphaAlt())>1e-6)
         {
-            float div=(_centripetalforce * _len - _mass * _len * 9.81 *0.5)*(_alphaalt+_oppositerp->getAlphaAlt());
+            float div=(_centripetalforce * _len - _mass * _len * 9.81 *0.5 * relgrav)*(_alphaalt+_oppositerp->getAlphaAlt());
             if (Math::abs(div)>1e-6)
                 alpha=_oppositerp->getAlphaAlt()+lift_moment/div*_alphaalt;
         }
