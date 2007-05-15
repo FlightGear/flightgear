@@ -3,6 +3,7 @@
 #include "Math.hpp"
 #include "Surface.hpp"
 #include "Rotorpart.hpp"
+#include "Glue.hpp"
 #include "Ground.hpp"
 #include "Rotor.hpp"
 
@@ -695,6 +696,9 @@ void Rotor::calcLiftFactor(float* v, float rho, State *s)
         *(_translift_maxfactor-1)+1)/_translift_maxfactor;
 
     _lift_factor = _f_ge*_f_tl*_f_vs;
+
+    //store the gravity direction
+    Glue::geodUp(s->pos, _grav_direction);
 }
 
 void Rotor::findGroundEffectAltitude(Ground * ground_cb,State *s)
