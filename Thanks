@@ -149,16 +149,15 @@ Bruce Finney <bfinney@gte.net>
 
 
 Melchior Franz <mfranz@aon.at>
-  Made that joystick high/low support for joystick hats.
+  Reworked the joystick driver detection code, added high/low support for "hats".
   Nasal-ified the Saitek Cyborg Gold 3D (USB) joystick which now forms
   the basis of a lot of programmable joysticks.
-  Created the led.txf font.
   Ruthlessly hunted down memory leaks in FlightGear, SimGear, and JSBSim.
   Maintains the only fully working helicopter model in FlightGear (Bolkow 105).
-  Made the GUI code fully XML configurable and added support for themes.
-  Started the Nasal library for easy model animation.
-  Reorganized the joystick code so it won't leave configuration data resident
-  for joysticks that aren't present.
+  Made the GUI code fully XML configurable and added support for themes,
+  reworked property browser, route manager and several other dialogs.
+  Wrote Dynamic Cockpit View, Fly-By view and lots of other Nasal code.
+  Implemented Nasal "listeners".
 
 
 Jean-loup Gailly and Mark Adler <zlib@gzip.org>
@@ -223,6 +222,8 @@ Bruce Jackson of NASA <e.b.jackson@larc.nasa.gov>
 
 Maik Justus <fg@mjustus.de>
   Developed YASim's helicopter/rotor logic.
+  Implemented aerotowing, water plane and anchor support for YASim, and
+  made its gear aware of the surface material.
   Wrote the Bo105 helicopter FDM configuration file.
 
 
@@ -588,7 +589,8 @@ Innis Cunningham <innisc@hotmail.com>
 Vivian Meazza <vivian.meazza@lineone.net>
   Added a number of excellent aircraft models including the Hawker Hunter
   and Seahawk.
-  Provided realistic wind, gravity and drag calculations for AIBallistic models.
+  Provided realistic wind, gravity and drag calculations for AIBallistic models,
+  as well as terrain intersections (impacts) of submodels.
   Added the Fresnel Lens Optical Landing System and AI code for AICarrier and
   AIShip, and implemented the TACAN navigation instrument
 
