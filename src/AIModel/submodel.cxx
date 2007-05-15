@@ -210,6 +210,7 @@ bool FGSubmodelMgr::release(submodel* sm, double dt)
     ballist->setStabilisation(sm->aero_stabilised);
     ballist->setNoRoll(sm->no_roll);
     ballist->setName(sm->name);
+    ballist->setImpact(sm->impact);
     ai->attach(ballist);
 
     if (sm->count > 0)
@@ -487,6 +488,7 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         sm->weight          = entry_node->getDoubleValue("weight", 0.25);
         sm->aero_stabilised = entry_node->getBoolValue("aero-stabilised", true);
         sm->no_roll         = entry_node->getBoolValue("no-roll", false);
+        sm->impact          = entry_node->getBoolValue("impact", false);
         sm->contents_node   = fgGetNode(entry_node->getStringValue("contents", "none"), false);
         sm->speed_node      = fgGetNode(entry_node->getStringValue("speed-node", "none"), false);
 
