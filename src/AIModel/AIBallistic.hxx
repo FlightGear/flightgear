@@ -55,6 +55,7 @@ public:
     void setRandom( bool r );
     void setName(const string&);
     void setImpact(bool i);
+    void setImpactReportNode(const string&);
 
     double _getTime() const;
 
@@ -82,7 +83,8 @@ private:
     bool   _solid;           // if true ground is solid for FDMs
     bool   _impact;          // if true an impact point on the terrain is calculated
     bool   _impact_data;     // if true impact data have been set
-    
+    SGPropertyNode_ptr _impact_report_node;
+
     double _impact_energy;
     double _impact_speed;
     double _impact_lat;

@@ -48,6 +48,7 @@ FGAIBallistic::FGAIBallistic() :
     _load_resistance(0),
     _solid(false),
     _impact_data(false),
+    _impact_report_node(0),
     _impact_energy(0),
     _impact_speed(0),
     _impact_lat(0),
@@ -82,6 +83,7 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setNoRoll(scFileNode->getBoolValue("no-roll", false));
     setRandom(scFileNode->getBoolValue("random", false));
     setImpact(scFileNode->getBoolValue("impact", false));
+    setImpactReportNode(scFileNode->getStringValue("impact-reports"));
     setName(scFileNode->getStringValue("name", "Bomb"));
 }
 
@@ -200,6 +202,13 @@ void FGAIBallistic::setRandom(bool r) {
 
 void FGAIBallistic::setImpact(bool i) {
     _impact = i;
+}
+
+void FGAIBallistic::setImpactReportNode(const string& path) {
+    if (path.empty())
+        _impact_report_node = 0;
+    else
+        _impact_report_node = fgGetNode(path.c_str(), true);
 }
 
 void FGAIBallistic::setName(const string& n) {
@@ -326,6 +335,8 @@ void FGAIBallistic::handle_impact() {
 
     // report impact by setting tied variables
     if (_ht_agl_ft <= 0) {
+        _impact_data = true;
+
         _impact_lat = pos.getLatitudeDeg();
         _impact_lon = pos.getLongitudeDeg();
         _impact_elev = elevation_m;
@@ -333,8 +344,8 @@ void FGAIBallistic::handle_impact() {
         _impact_energy = (_mass * slugs_to_kgs) * _impact_speed
                 * _impact_speed / (2 * 1000);
 
-        props->setBoolValue("impact/signal", true); // for listeners
-        _impact_data = true;
+        if (_impact_report_node)
+            _impact_report_node->setStringValue(props->getPath());
     }
 }
 

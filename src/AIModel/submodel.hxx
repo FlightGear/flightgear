@@ -60,6 +60,7 @@ public:
         bool               no_roll;
         bool               serviceable;
         bool               impact;
+        string             impact_reports;
     }
     submodel;
 
