@@ -59,6 +59,7 @@ public:
         int                id;
         bool               no_roll;
         bool               serviceable;
+        bool               impact;
     }
     submodel;
 
@@ -82,6 +83,7 @@ public:
         double     mass;
         int        id;
         bool       no_roll;
+        bool       impact;
     }
     IC_struct;
 

@@ -54,10 +54,12 @@ public:
     void setNoRoll( bool nr );
     void setRandom( bool r );
     void setName(const string&);
+    void setImpact(bool i);
 
     double _getTime() const;
 
     virtual const char* getTypeString(void) const { return "ballistic"; }
+    static const double slugs_to_kgs; //conversion factor
 
 private:
 
@@ -71,13 +73,29 @@ private:
     double buoyancy;        // fps2
     double wind_from_east;  // fps
     double wind_from_north; // fps
-    bool wind;              // if true, local wind will be applied to object
+    bool   wind;            // if true, local wind will be applied to object
     double Cd;              // drag coefficient
     double mass;            // slugs
-    bool random;            // modifier for Cd
+    bool   random;          // modifier for Cd
+    double ht_agl_ft;       // height above ground level
+    double load_resistance; // ground load resistanc N/m^2
+    bool   solid;           // if true ground is solid for FDMs
+    bool   impact;          // if true an impact point on the terrain is calculated
+    bool   impact_data;     // if true impact data have been set
+    
+    double impact_energy;
+    double impact_speed;
+    double impact_lat;
+    double impact_lon;
+    double impact_elev;
+
+    string mat_name;
     string name;
 
     void Run(double dt);
+    void handle_impact();
+
+    FGAIBase* ai;
 };
 
 #endif  // _FG_AIBALLISTIC_HXX
