@@ -63,39 +63,39 @@ public:
 
 private:
 
-    double azimuth;         // degrees true
-    double elevation;       // degrees
-    double rotation;        // degrees
-    bool   aero_stabilised; // if true, object will align with trajectory
-    double drag_area;       // equivalent drag area in ft2
-    double life_timer;      // seconds
-    double gravity;         // fps2
-    double buoyancy;        // fps2
-    double wind_from_east;  // fps
-    double wind_from_north; // fps
-    bool   wind;            // if true, local wind will be applied to object
-    double Cd;              // drag coefficient
-    double mass;            // slugs
-    bool   random;          // modifier for Cd
-    double ht_agl_ft;       // height above ground level
-    double load_resistance; // ground load resistanc N/m^2
-    bool   solid;           // if true ground is solid for FDMs
-    bool   impact;          // if true an impact point on the terrain is calculated
-    bool   impact_data;     // if true impact data have been set
+    double _azimuth;         // degrees true
+    double _elevation;       // degrees
+    double _rotation;        // degrees
+    bool   _aero_stabilised; // if true, object will align with trajectory
+    double _drag_area;       // equivalent drag area in ft2
+    double _life_timer;      // seconds
+    double _gravity;         // fps2
+    double _buoyancy;        // fps2
+    double _wind_from_east;  // fps
+    double _wind_from_north; // fps
+    bool   _wind;            // if true, local wind will be applied to object
+    double _Cd;              // drag coefficient
+    double _mass;            // slugs
+    bool   _random;          // modifier for Cd
+    double _ht_agl_ft;       // height above ground level
+    double _load_resistance; // ground load resistanc N/m^2
+    bool   _solid;           // if true ground is solid for FDMs
+    bool   _impact;          // if true an impact point on the terrain is calculated
+    bool   _impact_data;     // if true impact data have been set
     
-    double impact_energy;
-    double impact_speed;
-    double impact_lat;
-    double impact_lon;
-    double impact_elev;
+    double _impact_energy;
+    double _impact_speed;
+    double _impact_lat;
+    double _impact_lon;
+    double _impact_elev;
 
-    string mat_name;
-    string name;
+    string _mat_name;
+    string _name;
 
     void Run(double dt);
     void handle_impact();
 
-    FGAIBase* ai;
+    // FGAIBase* _ai;
 };
 
 #endif  // _FG_AIBALLISTIC_HXX
