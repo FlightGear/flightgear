@@ -1154,16 +1154,22 @@ do_gui_redraw (const SGPropertyNode * arg)
  * overlap.
  */
 static bool
-do_play_audio_message (const SGPropertyNode * arg)
+do_play_audio_sample (const SGPropertyNode * arg)
 {
     FGFX *fx = (FGFX *)globals->get_subsystem("fx");
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
     double volume = arg->getDoubleValue("volume");
     // cout << "playing " << path << " / " << file << endl;
-    fx->play_message( path, file, volume );
+    try {
+        fx->play_message( path, file, volume );
+        return true;
 
-    return true;
+    } catch (const sg_io_exception& e) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "play-audio-sample: "
+                "failed to load" << path << '/' << file);
+        return false;
+    }
 }
 
 /**
@@ -1176,7 +1182,7 @@ do_presets_commit (const SGPropertyNode * arg)
     // don't get lost when we subsequently delete this fdm
     // and create a new one.
     cur_fdm_state->unbind();
-        
+
     // set position from presets
     fgInitPosition();
 
@@ -1462,7 +1468,7 @@ static struct {
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
     { "gui-redraw", do_gui_redraw },
-    { "play-audio-message", do_play_audio_message },
+    { "play-audio-sample", do_play_audio_sample },
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },
