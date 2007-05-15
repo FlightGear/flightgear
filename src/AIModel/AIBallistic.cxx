@@ -37,23 +37,25 @@ SG_USING_STD(vector);
 
 const double FGAIBallistic::slugs_to_kgs = 14.5939029372;
 
-FGAIBallistic::FGAIBallistic() : FGAIBase(otBallistic) {
-    drag_area = 0.007;
-    life_timer = 0.0;
-    gravity = 32;
-    //  buoyancy = 64;
+FGAIBallistic::FGAIBallistic() :
+    FGAIBase(otBallistic),
+    _aero_stabilised(false),
+    _drag_area(0.007),
+    _life_timer(0.0),
+    _gravity(32),
+    //  _buoyancy(64),
+    _ht_agl_ft(0),
+    _load_resistance(0),
+    _solid(false),
+    _impact_data(false),
+    _impact_energy(0),
+    _impact_speed(0),
+    _impact_lat(0),
+    _impact_lon(0),
+    _impact_elev(0),
+    _mat_name("")
+{
     no_roll = false;
-    aero_stabilised = false;
-    ht_agl_ft = 0;
-    impact_data = false;
-    impact_energy = 0;
-    impact_speed = 0;
-    impact_lat = 0;
-    impact_lon = 0;
-    impact_elev = 0;
-    load_resistance = 0;
-    solid = false;
-    mat_name = "";
 }
 
 FGAIBallistic::~FGAIBallistic() {
@@ -86,12 +88,14 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
 bool FGAIBallistic::init(bool search_in_AI_path) {
     FGAIBase::init(search_in_AI_path);
 
-    props->setStringValue("material/name", mat_name.c_str());
-    props->setStringValue("name", name.c_str());
+    props->setStringValue("material/name", _mat_name.c_str());
+    props->setStringValue("name", _name.c_str());
 
-    hdg = azimuth;
-    pitch = elevation;
-    roll = rotation;
+    // start with high value so that animations don't trigger yet
+    _ht_agl_ft = 10000000;
+    hdg = _azimuth;
+    pitch = _elevation;
+    roll = _rotation;
     Transform();
     return true;
 }
@@ -102,21 +106,21 @@ void FGAIBallistic::bind() {
         SGRawValueMethods<FGAIBallistic,double>(*this,
         &FGAIBallistic::_getTime));
     props->tie("material/load-resistance",
-                SGRawValuePointer<double>(&load_resistance));
+                SGRawValuePointer<double>(&_load_resistance));
     props->tie("material/solid",
-                SGRawValuePointer<bool>(&solid));
+                SGRawValuePointer<bool>(&_solid));
     props->tie("altitude-agl-ft",
-                SGRawValuePointer<double>(&ht_agl_ft));
+                SGRawValuePointer<double>(&_ht_agl_ft));
     props->tie("impact/latitude-deg",
-                SGRawValuePointer<double>(&impact_lat));
+                SGRawValuePointer<double>(&_impact_lat));
     props->tie("impact/longitude-deg",
-                SGRawValuePointer<double>(&impact_lon));
+                SGRawValuePointer<double>(&_impact_lon));
     props->tie("impact/elevation-m",
-                SGRawValuePointer<double>(&impact_elev));
+                SGRawValuePointer<double>(&_impact_elev));
     props->tie("impact/speed-mps",
-                SGRawValuePointer<double>(&impact_speed));
+                SGRawValuePointer<double>(&_impact_speed));
     props->tie("impact/energy-kJ",
-                SGRawValuePointer<double>(&impact_energy));
+                SGRawValuePointer<double>(&_impact_energy));
 }
 
 void FGAIBallistic::unbind() {
@@ -139,19 +143,19 @@ void FGAIBallistic::update(double dt) {
 }
 
 void FGAIBallistic::setAzimuth(double az) {
-    hdg = azimuth = az;
+    hdg = _azimuth = az;
 }
 
 void FGAIBallistic::setElevation(double el) {
-    pitch = elevation = el;
+    pitch = _elevation = el;
 }
 
 void FGAIBallistic::setRoll(double rl) {
-    rotation = rl;
+    _rotation = rl;
 }
 
 void FGAIBallistic::setStabilisation(bool val) {
-    aero_stabilised = val;
+    _aero_stabilised = val;
 }
 
 void FGAIBallistic::setNoRoll(bool nr) {
@@ -159,7 +163,7 @@ void FGAIBallistic::setNoRoll(bool nr) {
 }
 
 void FGAIBallistic::setDragArea(double a) {
-    drag_area = a;
+    _drag_area = a;
 }
 
 void FGAIBallistic::setLife(double seconds) {
@@ -167,45 +171,46 @@ void FGAIBallistic::setLife(double seconds) {
 }
 
 void FGAIBallistic::setBuoyancy(double fpss) {
-    buoyancy = fpss;
+    _buoyancy = fpss;
 }
 
 void FGAIBallistic::setWind_from_east(double fps) {
-    wind_from_east = fps;
+    _wind_from_east = fps;
 }
 
 void FGAIBallistic::setWind_from_north(double fps) {
-    wind_from_north = fps;
+    _wind_from_north = fps;
 }
 
 void FGAIBallistic::setWind(bool val) {
-    wind = val;
+    _wind = val;
 }
 
 void FGAIBallistic::setCd(double c) {
-    Cd = c;
+    _Cd = c;
 }
 
 void FGAIBallistic::setMass(double m) {
-    mass = m;
+    _mass = m;
 }
 
 void FGAIBallistic::setRandom(bool r) {
-    random = r;
+    _random = r;
 }
 
 void FGAIBallistic::setImpact(bool i) {
-    impact = i;
+    _impact = i;
 }
 
 void FGAIBallistic::setName(const string& n) {
-    name = n;
+    _name = n;
 }
 
 void FGAIBallistic::Run(double dt) {
-    life_timer += dt;
-    //    cout << "life timer 1" << life_timer <<  dt << endl;
-    if (life_timer > life) setDie(true);
+    _life_timer += dt;
+    //    cout << "life timer 1" << _life_timer <<  dt << endl;
+    if (_life_timer > life)
+        setDie(true);
 
     double speed_north_deg_sec;
     double speed_east_deg_sec;
@@ -214,17 +219,17 @@ void FGAIBallistic::Run(double dt) {
     double Cdm;      // Cd adjusted by Mach Number
 
     //randomise Cd by +- 5%
-    if (random)
-        Cd = Cd * 0.95 + (0.05 * sg_random());
+    if (_random)
+        _Cd = _Cd * 0.95 + (0.05 * sg_random());
 
     // Adjust Cd by Mach number. The equations are based on curves
     // for a conventional shell/bullet (no boat-tail).
-    if ( Mach < 0.7 )
-        Cdm = 0.0125 * Mach + Cd;
-    else if ( 0.7 < Mach && Mach < 1.2 )
-        Cdm = 0.3742 * pow ( Mach, 2) - 0.252 * Mach + 0.0021 + Cd;
+    if (Mach >= 1.2)
+        Cdm = 0.2965 * pow ( Mach, -1.1506 ) + _Cd;
+    else if (Mach >= 0.7)
+        Cdm = 0.3742 * pow ( Mach, 2) - 0.252 * Mach + 0.0021 + _Cd;
     else
-        Cdm = 0.2965 * pow ( Mach, -1.1506 ) + Cd;
+        Cdm = 0.0125 * Mach + _Cd;
 
     //cout << " Mach , " << Mach << " , Cdm , " << Cdm << " ballistic speed kts //"<< speed <<  endl;
 
@@ -233,7 +238,7 @@ void FGAIBallistic::Run(double dt) {
     // using Standard Atmosphere (sealevel temperature 15C)
     // acceleration = drag/mass;
     // adjust speed by drag
-    speed -= (Cdm * 0.5 * rho * speed * speed * drag_area/mass) * dt;
+    speed -= (Cdm * 0.5 * rho * speed * speed * _drag_area/_mass) * dt;
 
     // don't let speed become negative
     if ( speed < 0.0 )
@@ -250,14 +255,14 @@ void FGAIBallistic::Run(double dt) {
     speed_east_deg_sec  = sin(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lon;
 
     // if wind not required, set to zero
-    if (!wind) {
-        wind_from_north = 0;
-        wind_from_east = 0;
+    if (!_wind) {
+        _wind_from_north = 0;
+        _wind_from_east = 0;
     }
 
     // convert wind speed (fps) to degrees per second
-    wind_speed_from_north_deg_sec = wind_from_north / ft_per_deg_lat;
-    wind_speed_from_east_deg_sec  = wind_from_east / ft_per_deg_lon;
+    wind_speed_from_north_deg_sec = _wind_from_north / ft_per_deg_lat;
+    wind_speed_from_east_deg_sec  = _wind_from_east / ft_per_deg_lon;
 
     // set new position
     pos.setLatitudeDeg( pos.getLatitudeDeg()
@@ -266,23 +271,23 @@ void FGAIBallistic::Run(double dt) {
         + (speed_east_deg_sec - wind_speed_from_east_deg_sec) * dt );
 
     // adjust vertical speed for acceleration of gravity and buoyancy
-    vs -= (gravity - buoyancy) * dt;
+    vs -= (_gravity - _buoyancy) * dt;
 
     // adjust altitude (feet)
     altitude_ft += vs * dt;
     pos.setElevationFt(altitude_ft);
 
     // recalculate pitch (velocity vector) if aerostabilized
-    /*cout << name << ": " << "aero_stabilised " << aero_stabilised
+    /*cout << _name << ": " << "aero_stabilised " << _aero_stabilised
     << " pitch " << pitch <<" vs "  << vs <<endl ;*/
 
-    if (aero_stabilised)
+    if (_aero_stabilised)
         pitch = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
 
     // recalculate total speed
     speed = sqrt( vs * vs + hs * hs) / SG_KT_TO_FPS;
 
-    if (impact && !impact_data && vs < 0)
+    if (_impact && !_impact_data && vs < 0)
         handle_impact();
 
     // set destruction flag if altitude less than sea level -1000
@@ -292,8 +297,8 @@ void FGAIBallistic::Run(double dt) {
 }  // end Run
 
 double FGAIBallistic::_getTime() const {
-    //    cout << "life timer 2" << life_timer << endl;
-    return life_timer;
+    //    cout << "life timer 2" << _life_timer << endl;
+    return _life_timer;
 }
 
 void FGAIBallistic::handle_impact() {
@@ -309,27 +314,27 @@ void FGAIBallistic::handle_impact() {
         const vector<string> names = material->get_names();
 
         if (!names.empty())
-            mat_name = names[0].c_str();
+            _mat_name = names[0].c_str();
 
-        solid = material->get_solid();
-        load_resistance = material->get_load_resistance();
-        props->setStringValue("material/name", mat_name.c_str());
-        //cout << "material " << mat_name << " solid " << solid << " load " << load_resistance << endl;
+        _solid = material->get_solid();
+        _load_resistance = material->get_load_resistance();
+        props->setStringValue("material/name", _mat_name.c_str());
+        //cout << "material " << _mat_name << " solid " << _solid << " load " << _load_resistance << endl;
     }
 
-    ht_agl_ft = pos.getElevationFt() - elevation_m * SG_METER_TO_FEET;
+    _ht_agl_ft = pos.getElevationFt() - elevation_m * SG_METER_TO_FEET;
 
     // report impact by setting tied variables
-    if (ht_agl_ft <= 0) {
-        impact_lat = pos.getLatitudeDeg();
-        impact_lon = pos.getLongitudeDeg();
-        impact_elev = elevation_m;
-        impact_speed = speed * SG_KT_TO_MPS;
-        impact_energy = (mass * slugs_to_kgs) * impact_speed
-                * impact_speed / (2 * 1000);
+    if (_ht_agl_ft <= 0) {
+        _impact_lat = pos.getLatitudeDeg();
+        _impact_lon = pos.getLongitudeDeg();
+        _impact_elev = elevation_m;
+        _impact_speed = speed * SG_KT_TO_MPS;
+        _impact_energy = (_mass * slugs_to_kgs) * _impact_speed
+                * _impact_speed / (2 * 1000);
 
         props->setBoolValue("impact/signal", true); // for listeners
-        impact_data = true;
+        _impact_data = true;
     }
 }
 
