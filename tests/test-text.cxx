@@ -4,7 +4,7 @@
 #include <string.h>
 
 static void readchars( FILE *fd ) {
-    char c;
+    int c;
     while ( (c = fgetc(fd)) != EOF ) {
 	printf("c = %d", c);
 	if ( c == 10 ) {
