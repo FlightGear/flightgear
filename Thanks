@@ -11,6 +11,14 @@ A1 Free Sounds <techie@mail.ev1.net> http://www.a1freesoundeffects.com
   Granted permission for the flightgear project to use some of the
   sound effects from their site.
 
+
+Syd Adams:
+  Added clipping to 2d instruments.  Added volume control to ATC-chatter.
+  Created and maintain: DHC2, B1900D, Aerostar 700, S76C+ helicopter,
+  Cessna Citation Bravo & CitationX, A6M2 'Zero'.  Assisted with Cessna
+  Citation II with Curt and 777-200 with Justin Smithies.
+
+
 Mark Akermann <flightgear@akermann.org>
   Redone sun code. The sun now consists of three textures with individual 
   colors which are calculated based on the effect of light scattering.
