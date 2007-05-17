@@ -11,6 +11,14 @@ A1 Free Sounds <techie@mail.ev1.net> http://www.a1freesoundeffects.com
   Granted permission for the flightgear project to use some of the
   sound effects from their site.
 
+
+Syd Adams:
+  Added clipping to 2d instruments.  Added volume control to ATC-chatter.
+  Created and maintain: DHC2, B1900D, Aerostar 700, S76C+ helicopter,
+  Cessna Citation Bravo & CitationX, A6M2 'Zero'.  Assisted with Cessna
+  Citation II with Curt and 777-200 with Justin Smithies.
+
+
 Mark Akermann <flightgear@akermann.org>
   Redone sun code. The sun now consists of three textures with individual 
   colors which are calculated based on the effect of light scattering.
@@ -225,8 +233,6 @@ Maik Justus <fg@mjustus.de>
   Implemented aerotowing, water plane and anchor support for YASim, and
   made its gear aware of the surface material.
   Wrote the Bo105 helicopter FDM configuration file.
-  Developed gear/ground interactions and added aerotow/winch
-  support to the YASim FDM
 
 
 Ove Kaaven
@@ -675,30 +681,21 @@ Robert Allan Zeh <raz@cmg.FCNBD.COM>
   version of FG would have been impossible.
 
 
-The following individuals have contributed to the scenery object database:
-  Martin Spott, Dave Martin, Thomas Foerster, Chris Metzler, Frederic
-  Bouvier, Melchior Franz, Roberto Inzerillo, Erik Hofman, Mike Round,
-  Innis Cunningham, David Megginson, Stuart Buchanan, Josh Babcock,
-  Esa Hyytia, Mircea Lutic, Jens Thoms Toerring, Mark Akermann,
-  Torsten Dreyer, Martin C. Doege, Alexis Bory, Sebastian Bechtold,
-  Julien Pierru, Bertrand Augras, Gerard Robin, Jakub Skibinski,
-  Morten Oesterlund Joergensen, Carsten Vogel, Dominique Lemesre,
-  Daniel Leygnat, Bertrand Gilot, Morten Skyt Eriksen, Alex
-  Bamesreiter, Oliver Predelli, Georg Vollnhals, and Paul Richter.
-
 
 NOTE:
 ----
 
-THIS DOCUMENT WAS INITIALLY WRITTEN BY:
-  Curt L. Olson  <http://baron.flightgear.org/~curt>
+THIS DOCUMENT WAS INITIALLY WRITTEN BY 
 
-THE CONTENTS WERE RESEARCHED AND UPDATED MARCH, 8 2000:
-  Oliver Delise  <delise@mail.isis.de>
+Curt L. Olson  <http://www.flightgear.org/~curt>
+
+
+THE CONTENTS WERE LASTLY RESEARCHED AND UPDATED MARCH, 8 2000
+
+Oliver Delise  <delise@mail.isis.de>
 
 
 Updated 2001-12-11 by David Megginson, david@megginson.com
 Updated 2003-04-17,
 Updated 2004-06-01,
 Updated 2005-04-02 by Erik Hofman, erik@ehofman.com
-Updated 2007-05-16 for 0.9.11 release
