@@ -77,7 +77,7 @@ FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
   LeftBrake = RightBrake = CenterBrake = 0.0;
 
   bind();
-  for (i=0;i<=NForms;i++) {
+  for (i=0;i<NForms;i++) {
     DePos[i] = DaLPos[i] = DaRPos[i] = DrPos[i] = 0.0;
     DfPos[i] = DsbPos[i] = DspPos[i] = 0.0;
   }
