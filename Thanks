@@ -135,6 +135,11 @@ Dave Eberly <eberly@magic-software.com>
   http://www.magic-software.com
 
 
+Olaf Flebbe
+  Improved the build system for Windows and provided pre-built
+  dependencies.
+
+
 Jean-Francois Doue
   Vector 2D, 3D, 4D and Matrix 3D and 4D inlined C++ classes.  (Based on
   Graphics Gems IV ed. Paul S. Heckbert)
