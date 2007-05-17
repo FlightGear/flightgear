@@ -117,7 +117,7 @@ FGNasalScript* FGNasalSys::parseScript(const char* src, const char* name)
 
     char buf[256];
     if(!name) {
-        sprintf(buf, "FGNasalScript@%p", script);
+        sprintf(buf, "FGNasalScript@%p", (void *)script);
         name = buf;
     }
 
