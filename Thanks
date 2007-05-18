@@ -157,14 +157,18 @@ Oscar Everitt <bigoc@premier.net>
   them to our little project.
 
 
+Leidson Campos A. Ferreira <leidson@planetamessenger.org>
+  Rewrote the Jpeg screen httpd streaming (--jpg-httpd option)
+
+
 Bruce Finney <bfinney@gte.net>
   MSVC5 compatibility.
 
 
 Melchior Franz <mfranz@aon.at>
-  Reworked the joystick driver detection code, added high/low support for "hats".
-  Nasal-ified the Saitek Cyborg Gold 3D (USB) joystick which now forms
-  the basis of a lot of programmable joysticks.
+  Reworked the joystick driver detection code, added high/low support for
+  "hats".  Nasal-ified the Saitek Cyborg Gold 3D (USB) joystick which now
+  forms the basis of a lot of programmable joysticks.
   Ruthlessly hunted down memory leaks in FlightGear, SimGear, and JSBSim.
   Maintains the only fully working helicopter model in FlightGear (Bolkow 105).
   Made the GUI code fully XML configurable and added support for themes,
