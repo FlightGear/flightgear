@@ -1,7 +1,8 @@
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 #include <osg/Math>
-
 #include <osgViewer/Viewer>
-
 #include <plib/pu.h>
 #include "FGManipulator.hxx"
 
