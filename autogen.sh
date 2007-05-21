@@ -1,22 +1,5 @@
 #!/bin/sh
 
-OSTYPE=`uname -s`
-MACHINE=`uname -m`
-AUTO_MAKE_VERSION=`automake --version | head -1 | awk '{print $4}' | sed -e 's/\.\([0-9]*\).*/\1/' | cut -c1,2`
-if test $AUTO_MAKE_VERSION -lt 15; then
-    echo ""
-    echo "You need to upgrade to automake version 1.5 or greater."
-    echo "Most distributions have packages available to install or you can"
-    echo "find the source for the most recent version at"
-    echo "ftp://ftp.gnu.org/gnu/automake"
-    exit 1
-fi
-
-echo "Host info: $OSTYPE $MACHINE"
-echo -n " automake: `automake --version | head -1 | awk '{print $4}'`"
-echo " ($AUTO_MAKE_VERSION)"
-echo ""
-
 echo "Running aclocal"
 aclocal
 
