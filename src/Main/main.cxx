@@ -603,6 +603,9 @@ static void fgMainLoop( void ) {
 // then on.
 
 static void fgIdleFunction ( void ) {
+    // Some intialization requires a valid graphics context, in
+    // particular that of plib. Boo, hiss!
+    fgMakeCurrent();
     if ( idle_state == 0 ) {
         idle_state++;
 

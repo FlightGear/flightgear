@@ -358,6 +358,9 @@ FGRenderer::FGRenderer()
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = FGRenderer::update;
 #endif
+#ifdef ENABLE_OSGVIEWER
+   manipulator = new FGManipulator;
+#endif   
 }
 
 FGRenderer::~FGRenderer()
@@ -368,20 +371,38 @@ FGRenderer::~FGRenderer()
 }
 
 // Initialize various GL/view parameters
+// XXX This should be called "preinit" or something, as it initializes
+// critical parts of the scene graph in addition to the splash screen.
 void
 FGRenderer::splashinit( void ) {
-   // Add the splash screen node
-   mRealRoot->addChild(fgCreateSplashNode());
-   sceneView->setSceneData(mRealRoot.get());
-
-   sceneView->setDefaults(osgUtil::SceneView::COMPILE_GLOBJECTS_AT_INIT);
-   sceneView->setFrameStamp(mFrameStamp.get());
-   sceneView->setUpdateVisitor(mUpdateVisitor.get());
+    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
+    if (viewer) {
+      	sceneView = 0;
+	mRealRoot = dynamic_cast<osg::Group*>(viewer->getSceneData());
+	mRealRoot->addChild(fgCreateSplashNode());
+	osgViewer::Scene* scene = viewer->getScene();
+	scene->setFrameStamp(mFrameStamp.get());
+	// Scene doesn't seem to pass the frame stamp to the update
+	// visitor automatically.
+	mUpdateVisitor->setFrameStamp(mFrameStamp.get());
+	scene->setUpdateVisitor(mUpdateVisitor.get());
+    } else {
+	// Add the splash screen node
+	mRealRoot->addChild(fgCreateSplashNode());
+	sceneView->setSceneData(mRealRoot.get());
+	sceneView->setDefaults(osgUtil::SceneView::COMPILE_GLOBJECTS_AT_INIT);
+	sceneView->setFrameStamp(mFrameStamp.get());
+	sceneView->setUpdateVisitor(mUpdateVisitor.get());
+    }
 }
 
 void
 FGRenderer::init( void ) {
-
+    // The viewer can call this before the graphics context is current
+    // in the main thread; indeed, in a multithreaded setup it might
+    // never be current in the main thread.
+    fgMakeCurrent();
+    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
     osg::initNotifyLevel();
 
     // The number of polygon-offset "units" to place between layers.  In
@@ -406,9 +427,13 @@ FGRenderer::init( void ) {
     glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     glHint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
 
-
-    sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    sceneView->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    if (viewer) {
+	viewer->getCamera()
+	    ->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    } else {
+	sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+	sceneView->getCamera()->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    }
 
 
     osg::StateSet* stateSet = mRoot->getOrCreateStateSet();
@@ -521,6 +546,7 @@ FGRenderer::init( void ) {
     mRealRoot->addChild(sw);
     mRealRoot->addChild(FGCreateRedoutNode());
     mRealRoot->addChild(guiCamera);
+//  sceneView->getState()->setCheckForGLErrors(osg::State::ONCE_PER_ATTRIBUTE);
 }
 
 
@@ -529,7 +555,7 @@ void
 FGRenderer::update( bool refresh_camera_settings ) {
     bool scenery_loaded = fgGetBool("sim/sceneryloaded")
                           || fgGetBool("sim/sceneryloaded-override");
-
+    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
     if ( idle_state < 1000 || !scenery_loaded ) {
         fgSetDouble("/sim/startup/splash-alpha", 1.0);
 
@@ -537,10 +563,11 @@ FGRenderer::update( bool refresh_camera_settings ) {
         globals->set_sim_time_sec( 0.0 );
 
         // the splash screen is now in the scenegraph
-        sceneView->update();
-        sceneView->cull();
-        sceneView->draw();
-
+	if (!viewer) {
+	    sceneView->update();
+	    sceneView->cull();
+	    sceneView->draw();
+	}
         return;
     }
 
@@ -586,18 +613,30 @@ FGRenderer::update( bool refresh_camera_settings ) {
         SGVec3d position = current__view->getViewPosition();
         SGQuatd attitude = current__view->getViewOrientation();
         SGVec3d osgPosition = attitude.transform(-position);
-        mCameraView->setPosition(osgPosition.osg());
-        mCameraView->setAttitude(inverse(attitude).osg());
+	if (viewer) {
+	    FGManipulator *manipulator
+		= globals->get_renderer()->getManipulator();
+	    manipulator->setPosition(position.osg());
+	    manipulator->setAttitude(attitude.osg());
+	} else {
+	    mCameraView->setPosition(osgPosition.osg());
+	    mCameraView->setAttitude(inverse(attitude).osg());
+	}
     }
-
+    osg::Camera *camera;
+    if (viewer)
+	camera = viewer->getCamera();
+    else
+	camera = sceneView->getCamera();
     if ( skyblend ) {
+	
         if ( fgGetBool("/sim/rendering/textures") ) {
             SGVec4f clearColor(l->adj_fog_color());
-            sceneView->getCamera()->setClearColor(clearColor.osg());
+            camera->setClearColor(clearColor.osg());
         }
     } else {
         SGVec4f clearColor(l->sky_color());
-        sceneView->getCamera()->setClearColor(clearColor.osg());
+        camera->setClearColor(clearColor.osg());
     }
 
     // update fog params if visibility has changed
@@ -756,8 +795,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
 //         shadows->endOfFrame();
 
     // need to call the update visitor once
-    mFrameStamp->setReferenceTime(globals->get_sim_time_sec());
-    mFrameStamp->setFrameNumber(1+mFrameStamp->getFrameNumber());
+    if (!viewer) {
+	mFrameStamp->setReferenceTime(globals->get_sim_time_sec());
+	mFrameStamp->setFrameNumber(1+mFrameStamp->getFrameNumber());
+    }
     mFrameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
     mUpdateVisitor->setViewData(current__view->getViewPosition(),
                                 current__view->getViewOrientation());
@@ -767,15 +808,24 @@ FGRenderer::update( bool refresh_camera_settings ) {
                              l->adj_fog_color(),
                              l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
     mUpdateVisitor->setVisibility(actual_visibility);
-
-    if (fgGetBool("/sim/panel-hotspots"))
-      sceneView->setCullMask(sceneView->getCullMask()|SG_NODEMASK_PICK_BIT);
-    else
-      sceneView->setCullMask(sceneView->getCullMask()&(~SG_NODEMASK_PICK_BIT));
-
-    sceneView->update();
-    sceneView->cull();
-    sceneView->draw();
+    bool hotspots = fgGetBool("/sim/panel-hotspots");
+    if (viewer) {
+	if (hotspots)
+	    camera->setCullMask(camera->getCullMask()|SG_NODEMASK_PICK_BIT);
+	else
+	    camera->setCullMask(camera->getCullMask()
+				& ~SG_NODEMASK_PICK_BIT);
+    } else {
+	if (hotspots)
+	    sceneView->setCullMask(sceneView->getCullMask()
+				   |SG_NODEMASK_PICK_BIT);
+	else
+	    sceneView->setCullMask(sceneView->getCullMask()
+				   &(~SG_NODEMASK_PICK_BIT));
+	sceneView->update();
+	sceneView->cull();
+	sceneView->draw();
+    }
 }
 
 
@@ -793,8 +843,13 @@ FGRenderer::resize( int width, int height ) {
     } else {
         view_h = height;
     }
-
-    sceneView->getViewport()->setViewport(0, height - view_h, width, view_h);
+    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
+    if (viewer)
+	viewer->getCamera()->getViewport()->setViewport(0, height - view_h,
+							width, view_h);
+    else
+	sceneView->getViewport()->setViewport(0, height - view_h,
+					      width, view_h);
 
     static int lastwidth = 0;
     static int lastheight = 0;
@@ -842,11 +897,17 @@ static void fgHackFrustum() {
         = fgGetNode("/sim/current-view/frustum-bottom-pct");
     static SGPropertyNode *top_pct
         = fgGetNode("/sim/current-view/frustum-top-pct");
-
+    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
     double left, right;
     double bottom, top;
     double zNear, zFar;
-    sceneView->getProjectionMatrixAsFrustum(left, right, bottom, top, zNear, zFar);
+    if (viewer)
+	viewer->getCamera()->getProjectionMatrixAsFrustum(left, right,
+							  bottom, top,
+							  zNear, zFar);
+    else
+	sceneView->getProjectionMatrixAsFrustum(left, right, bottom, top,
+						zNear, zFar);
     // cout << " l = " << f->getLeft()
     //      << " r = " << f->getRight()
     //      << " b = " << f->getBot()
@@ -883,8 +944,11 @@ static void fgHackFrustum() {
     } else {
         t = top;
     }
-
-    sceneView->setProjectionMatrixAsFrustum(l, r, b, t, zNear, zFar);
+    if (viewer)
+	viewer->getCamera()->setProjectionMatrixAsFrustum(l, r, b, t,
+							  zNear, zFar);
+    else
+	sceneView->setProjectionMatrixAsFrustum(l, r, b, t, zNear, zFar);
 }
 
 
@@ -906,10 +970,15 @@ static float fov_far = 1000.0;
 void FGRenderer::setFOV( float w, float h ) {
     fov_width = w;
     fov_height = h;
-
-    sceneView->setProjectionMatrixAsPerspective(fov_height,
-                                                fov_width/fov_height,
-                                                fov_near, fov_far);
+    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
+    if (viewer)
+	viewer->getCamera()->setProjectionMatrixAsPerspective(fov_height,
+							      fov_width/fov_height,
+							      fov_near, fov_far);
+    else
+	sceneView->setProjectionMatrixAsPerspective(fov_height,
+						    fov_width/fov_height,
+						    fov_near, fov_far);
     // fully specify the view frustum before hacking it (so we don't
     // accumulate hacked effects
     fgHackFrustum();
@@ -925,10 +994,15 @@ void FGRenderer::setNearFar( float n, float f ) {
 n = 0.1;
     fov_near = n;
     fov_far = f;
-
-    sceneView->setProjectionMatrixAsPerspective(fov_height,
-                                                fov_width/fov_height,
-                                                fov_near, fov_far);
+    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
+    if (viewer)
+	viewer->getCamera()->setProjectionMatrixAsPerspective(fov_height,
+							      fov_width/fov_height,
+							      fov_near, fov_far);
+    else 
+	sceneView->setProjectionMatrixAsPerspective(fov_height,
+						    fov_width/fov_height,
+						    fov_near, fov_far);
 
     // fully specify the view frustum before hacking it (so we don't
     // accumulate hacked effects
@@ -939,40 +1013,54 @@ bool
 FGRenderer::pick( unsigned x, unsigned y,
                   std::vector<SGSceneryPick>& pickList )
 {
+  osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
   // wipe out the return ...
   pickList.resize(0);
-
-  // we can get called early ...
-  if (!sceneView.valid())
-    return false;
 
   osg::Node* sceneData = globals->get_scenery()->get_scene_graph();
   if (!sceneData)
     return false;
-  osg::Viewport* viewport = sceneView->getViewport();
-  if (!viewport)
+  osg::Viewport* viewport = 0;
+  osg::Matrix projection;
+  osg::Matrix modelview;
+
+  if (sceneView.valid()) {
+    viewport = sceneView->getViewport();
+    if (!viewport)
+      return false;
+    // don't know why, but the update has partly happened somehow,
+    // so update the scenery part of the viewer
+    FGViewer *current_view = globals->get_current_view();
+    // Force update of center dependent values ...
+    current_view->set_dirty();
+    SGVec3d position = current_view->getViewPosition();
+    SGQuatd attitude = current_view->getViewOrientation();
+    SGVec3d osgPosition = attitude.transform(-position);
+    mCameraView->setPosition(osgPosition.osg());
+    mCameraView->setAttitude(inverse(attitude).osg());
+
+    osg::Matrix projection(sceneView->getProjectionMatrix());
+    osg::Matrix modelview(sceneView->getViewMatrix());
+
+    osg::NodePathList nodePath = sceneData->getParentalNodePaths();
+    // modify the view matrix so that it accounts for this nodePath's
+    // accumulated transform
+    if (!nodePath.empty())
+      modelview.preMult(computeLocalToWorld(nodePath.front()));
+  } else if (viewer) {
+    // I don't think the Viewer case needs to update the camera
+    // matrices before picking. The user has clicked on the old scene
+    // -- that which is displayed in the front buffer -- so we need to
+    // use the camera state in effect for that view of the scene.
+    osg::Camera *camera = viewer->getCamera();
+    viewport = camera->getViewport();
+    projection = camera->getProjectionMatrix();
+    modelview = camera->getViewMatrix();
+    // Accumulated transforms? Don't think that applies for the
+    // Viewer's camera.
+  } else {			// we can get called early ...
     return false;
-
-  // don't know why, but the update has partly happened somehow,
-  // so update the scenery part of the viewer
-  FGViewer *current_view = globals->get_current_view();
-  // Force update of center dependent values ...
-  current_view->set_dirty();
-  SGVec3d position = current_view->getViewPosition();
-  SGQuatd attitude = current_view->getViewOrientation();
-  SGVec3d osgPosition = attitude.transform(-position);
-  mCameraView->setPosition(osgPosition.osg());
-  mCameraView->setAttitude(inverse(attitude).osg());
-
-  osg::Matrix projection(sceneView->getProjectionMatrix());
-  osg::Matrix modelview(sceneView->getViewMatrix());
-
-  osg::NodePathList nodePath = sceneData->getParentalNodePaths();
-  // modify the view matrix so that it accounts for this nodePath's
-  // accumulated transform
-  if (!nodePath.empty())
-    modelview.preMult(computeLocalToWorld(nodePath.front()));
-
+  }
   // swap the y values ...
   y = viewport->height() - y;
   // set up the pick visitor

@@ -236,3 +236,7 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
     glutReshapeFunc(GLUTreshape);
 }
 
+// Noop; the graphics context is always current
+void fgMakeCurrent()
+{
+}

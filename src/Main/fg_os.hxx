@@ -76,4 +76,5 @@ void fgRegisterKeyHandler(fgKeyHandler func);
 void fgRegisterMouseClickHandler(fgMouseClickHandler func);
 void fgRegisterMouseMotionHandler(fgMouseMotionHandler func);
 
+void fgMakeCurrent();
 #endif // _FG_OS_HXX

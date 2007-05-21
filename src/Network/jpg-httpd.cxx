@@ -42,6 +42,7 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Main/renderer.hxx>
 
 #include "jpg-httpd.hxx"
 
@@ -106,7 +107,15 @@ void HttpdImageChannel :: foundTerminator( void ) {
         SG_LOG( SG_IO, SG_DEBUG, "<<<<<<<<< HTTP Request : " << pRequest );
 
         double left, right, bottom, top, zNear, zFar;
-        sceneView->getCamera()->getProjectionMatrixAsFrustum( left, right, bottom, top, zNear, zFar );
+	osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
+	if (viewer)
+	    viewer->getCamera()->getProjectionMatrixAsFrustum(left, right,
+							      bottom, top,
+							      zNear, zFar);
+	else
+	    sceneView->getCamera()->getProjectionMatrixAsFrustum(left, right,
+								 bottom, top,
+								 zNear, zFar);
         JpgFactory->setFrustum( left, right, bottom, top, zNear, zFar );
 
         nImageLen  = JpgFactory -> render();

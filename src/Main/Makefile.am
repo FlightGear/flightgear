@@ -1,5 +1,5 @@
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in \
-             fg_os_sdl.cxx fg_os.cxx fg_os.hxx
+             fg_os_sdl.cxx fg_os.cxx fg_os_osgviewer.cxx fg_os.hxx
 
 MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a
 
@@ -18,7 +18,11 @@ endif
 if USE_SDL
 GFX_CODE = fg_os_sdl.cxx fg_os.hxx
 else
+if USE_OSGVIEWER
+GFX_CODE = fg_os_osgviewer.cxx fg_os.hxx
+else
 GFX_CODE = fg_os.cxx fg_os.hxx
+endif
 endif
 
 JSBSIM_LIBS = \
@@ -55,6 +59,7 @@ libMain_a_SOURCES = \
 	util.cxx util.hxx \
 	viewer.cxx viewer.hxx \
 	viewmgr.cxx viewmgr.hxx \
+	FGManipulator.cxx FGManipulator.hxx \
 	$(GFX_CODE)
 
 fgfs_SOURCES = bootstrap.cxx
@@ -99,7 +104,7 @@ fgfs_LDADD = \
 	-lsgstructure -lsgenvironment \
 	-lplibpuaux -lplibpu -lplibfnt -lplibjs -lplibnet \
 	-lplibsg -lplibul \
-	-losgUtil -losgDB -losgSim -losg -lOpenThreads \
+	-losgViewer -losgFX -losgUtil -losgDB -losgSim -losg -lOpenThreads \
 	$(THREAD_LIBS) \
 	$(network_LIBS) \
 	-lz \

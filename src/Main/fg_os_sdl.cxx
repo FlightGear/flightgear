@@ -407,3 +407,8 @@ static void initCursors()
                                                 cursors[i].hoty);
     }
 }
+
+// Noop; the graphics context is always current
+void fgMakeCurrent()
+{
+}

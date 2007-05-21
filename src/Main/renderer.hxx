@@ -6,6 +6,10 @@
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/util/SGPickCallback.hxx>
 
+#include <osgViewer/Viewer>
+
+#include "FGManipulator.hxx"
+
 #define FG_ENABLE_MULTIPASS_CLOUDS 1
 
 class SGSky;
@@ -51,6 +55,23 @@ public:
      */
     static bool pick( unsigned x, unsigned y,
                       std::vector<SGSceneryPick>& pickList );
+
+    /** Get and set the OSG Viewer object, if any.
+     */
+    osgViewer::Viewer* getViewer() { return viewer.get(); }
+    const osgViewer::Viewer* getViewer() const { return viewer.get(); }
+    void setViewer(osgViewer::Viewer* viewer) { this->viewer = viewer; }
+    /** Get and set the manipulator object, if any.
+     */
+    FGManipulator* getManipulator() { return manipulator.get(); }
+    const FGManipulator* getManipulator() const { return manipulator.get(); }
+    void setManipulator(FGManipulator* manipulator)
+	{
+	    this->manipulator = manipulator;
+	}
+protected:
+    osg::ref_ptr<osgViewer::Viewer> viewer;
+    osg::ref_ptr<FGManipulator> manipulator;
 };
 
 #endif

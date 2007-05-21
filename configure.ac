@@ -199,11 +199,18 @@ base_LIBS="$LIBS"
 
 dnl Check for SDL if enabled.
 AC_ARG_ENABLE(sdl, [  --enable-sdl                  Configure to use SDL instead of GLUT], [enable_sdl="$enableval"])
+AC_ARG_ENABLE(osgviewer, [  --enable-osgviewer                  Configure to use osgViewer], [enable_osgviewer="$enableval"])
 AM_CONDITIONAL(USE_SDL, test "x$enable_sdl" = "xyes")
+AM_CONDITIONAL(USE_OSGVIEWER, test "x$enable_osgviewer" = "xyes")
 if test "x$enable_sdl" = "xyes"; then
     AC_DEFINE([PU_USE_SDL], 1, [Define to use SDL])
 else
-    AC_DEFINE([PU_USE_GLUT], 1, [Define to use glut])
+    if test "x$enable_osgviewer" = "xyes"; then
+       AC_DEFINE([ENABLE_OSGVIEWER], 1, [Define to use osgViewer in renderer])
+       AC_DEFINE([PU_USE_NATIVE], 1, [Define to use native system])
+    else
+        AC_DEFINE([PU_USE_GLUT], 1, [Define to use glut])
+    fi
 fi
 
 dnl check for OpenGL related libraries
