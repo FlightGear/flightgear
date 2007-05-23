@@ -74,15 +74,11 @@ void eventToViewport(const osgGA::GUIEventAdapter& ea,
 		     osgGA::GUIActionAdapter& us,
 		     int& x, int& y)
 {
-    osgViewer::Viewer* viewer = dynamic_cast<osgViewer::Viewer*>(&us);
-    osg::Viewport* viewport = viewer->getCamera()->getViewport();
-    const osg::GraphicsContext::Traits* traits
-	= viewer->getCamera()->getGraphicsContext()->getTraits();
     x = (int)ea.getX();
     y = (int)ea.getY();
     if (ea.getMouseYOrientation()
 	== osgGA::GUIEventAdapter::Y_INCREASING_UPWARDS)
-	y = (int)traits->height - y;
+	y = (int)ea.getWindowHeight() - y;
 }
 }
 
@@ -139,6 +135,10 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
 	if (windowResizeHandler)
 	    (*windowResizeHandler)(ea.getWindowWidth(), ea.getWindowHeight());
 	return true;
+    case osgGA::GUIEventAdapter::CLOSE_WINDOW:
+    case osgGA::GUIEventAdapter::QUIT_APPLICATION:
+        fgOSExit(0);
+        return true;
     default:
 	return false;
     }
