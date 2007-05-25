@@ -74,6 +74,7 @@ namespace yasim {
         void setTorqueOfInertia(float toi);
         void writeInfo(std::ostringstream &buffer);
         void setSharedFlapHinge(bool s);
+        void setDirection(float direction);
         float getAlphaAlt() {return _alphaalt;}
 
     private:
@@ -119,6 +120,8 @@ namespace yasim {
         int _alpha2type;
         float _rotor_correction_factor;
         bool _shared_flap_hinge;
+        float _direction;
+        float _balance;
     };
     std::ostream &  operator<<(std::ostream & out, const Rotorpart& rp);
 }; // namespace yasim
