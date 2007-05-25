@@ -152,6 +152,8 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     switch (key) {
     case osgGA::GUIEventAdapter::KEY_Escape: key = 0x1b; break;
     case osgGA::GUIEventAdapter::KEY_Return: key = '\n'; break;
+    case osgGA::GUIEventAdapter::KEY_BackSpace: key = '\b'; break;
+    case osgGA::GUIEventAdapter::KEY_Delete: key = 0x7f; break;
     case osgGA::GUIEventAdapter::KEY_Left:     key = PU_KEY_LEFT;      break;
     case osgGA::GUIEventAdapter::KEY_Up:       key = PU_KEY_UP;        break;
     case osgGA::GUIEventAdapter::KEY_Right:    key = PU_KEY_RIGHT;     break;
@@ -173,6 +175,17 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     case osgGA::GUIEventAdapter::KEY_F10:      key = PU_KEY_F10;       break;
     case osgGA::GUIEventAdapter::KEY_F11:      key = PU_KEY_F11;       break;
     case osgGA::GUIEventAdapter::KEY_F12:      key = PU_KEY_F12;       break;
+    case osgGA::GUIEventAdapter::KEY_KP_0: key = 364; break;
+    case osgGA::GUIEventAdapter::KEY_KP_1: key = 363; break;
+    case osgGA::GUIEventAdapter::KEY_KP_2: key = 359; break;
+    case osgGA::GUIEventAdapter::KEY_KP_3: key = 361; break;
+    case osgGA::GUIEventAdapter::KEY_KP_4: key = 356; break;
+    case osgGA::GUIEventAdapter::KEY_KP_5: key = 309; break;
+    case osgGA::GUIEventAdapter::KEY_KP_6: key = 358; break;
+    case osgGA::GUIEventAdapter::KEY_KP_7: key = 362; break;
+    case osgGA::GUIEventAdapter::KEY_KP_8: key = 357; break;
+    case osgGA::GUIEventAdapter::KEY_KP_9: key = 360; break;
+    case osgGA::GUIEventAdapter::KEY_KP_Enter: key = 269; break;
     }
     modifiers = osgToFGModifiers(ea.getModKeyMask());
     currentModifiers = modifiers;
