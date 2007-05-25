@@ -965,8 +965,8 @@ void Rotor::compile()
         float help[3];
         float s = Math::sin(pi*2*_num_ground_contact_pos/i);
         float c = Math::cos(pi*2*_num_ground_contact_pos/i);
-        Math::mul3(c*_diameter,directions[0],_ground_contact_pos[i]);
-        Math::mul3(s*_diameter,directions[1],help);
+        Math::mul3(c*_diameter*0.5,directions[0],_ground_contact_pos[i]);
+        Math::mul3(s*_diameter*0.5,directions[1],help);
         Math::add3(help,_ground_contact_pos[i],_ground_contact_pos[i]);
         Math::add3(_base,_ground_contact_pos[i],_ground_contact_pos[i]);
     }
