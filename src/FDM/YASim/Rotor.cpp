@@ -1,6 +1,7 @@
 #include <simgear/debug/logstream.hxx>
 
 #include "Math.hpp"
+#include <Main/fg_props.hxx>
 #include "Surface.hpp"
 #include "Rotorpart.hpp"
 #include "Glue.hpp"
@@ -132,6 +133,10 @@ Rotor::Rotor()
     _cyclic_factor=1;
     _lift_factor=_f_ge=_f_vs=_f_tl=1;
     _rotor_correction_factor=.65;
+    _balance1=1;
+    _balance2=1;
+    _properties_tied=0;
+    _num_ground_contact_pos=0;
 }
 
 Rotor::~Rotor()
@@ -140,6 +145,14 @@ Rotor::~Rotor()
     for(i=0; i<_rotorparts.size(); i++) {
         Rotorpart* r = (Rotorpart*)_rotorparts.get(i);
         delete r;
+    }
+    //untie the properties
+    if(_properties_tied)
+    {
+        SGPropertyNode * node = fgGetNode("/rotors", true)->getNode(_name,true);
+        node->untie("balance-ext");
+        node->untie("balance-int");
+        _properties_tied=0;
     }
 }
 
@@ -262,7 +275,7 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
                 if (j==3)
                 {
                     sprintf(text,"/rotors/%s/rpm", _name);
-                    *f=_omega/2/pi*60;
+                    *f=(_balance1>-1)?_omega/2/pi*60:0;
                 }
                 else
                     if (j==4)
@@ -282,8 +295,8 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
                     }
                     else if (j==7)
                     {
-                        sprintf(text,"/rotors/%s/debug/vortexstate",_name);
-                        *f=_vortex_state;
+                        sprintf(text,"/rotors/%s/balance", _name);
+                        *f=_balance1;
                     }
                     else if (j==8)
                     {
@@ -310,6 +323,7 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
                             +360*b/_number_of_blades*(_ccw?1:-1);
                         if (*f>360) *f-=360;
                         if (*f<0) *f+=360;
+                        if (_balance1<=-1) *f=0;
                         int k,l;
                         float rk,rl,p;
                         p=(*f/90);
@@ -530,6 +544,11 @@ void Rotor::setSharedFlapHinge(bool s)
     _shared_flap_hinge=s;
 }
 
+void Rotor::setBalance(float b)
+{
+    _balance1=b;
+}
+
 void Rotor::setC2(float value)
 {
     _c2=value;
@@ -706,8 +725,35 @@ void Rotor::findGroundEffectAltitude(Ground * ground_cb,State *s)
     _ground_effect_altitude=findGroundEffectAltitude(ground_cb,s,
         _groundeffectpos[0],_groundeffectpos[1],
         _groundeffectpos[2],_groundeffectpos[3]);
+    testForRotorGroundContact(ground_cb,s);
 }
 
+void Rotor::testForRotorGroundContact(Ground * ground_cb,State *s)
+{
+    int i;
+    for (i=0;i<_num_ground_contact_pos;i++)
+    {
+        double pt[3],h;
+        s->posLocalToGlobal(_ground_contact_pos[i], pt);
+
+        // Ask for the ground plane in the global coordinate system
+        double global_ground[4];
+        float global_vel[3];
+        ground_cb->getGroundPlane(pt, global_ground, global_vel);
+        // find h, the distance to the ground 
+        // The ground plane transformed to the local frame.
+        float ground[4];
+        s->planeGlobalToLocal(global_ground, ground);
+
+        h = ground[3] - Math::dot3(_ground_contact_pos[i], ground);
+        // Now h is the distance from _ground_contact_pos[i] to ground
+        if (h<0)
+        {
+            _balance1 -= (-h)/_diameter/_num_ground_contact_pos;
+            _balance1 = (_balance1<-1)?-1:_balance1;
+        }
+    }
+}
 float Rotor::findGroundEffectAltitude(Ground * ground_cb,State *s,
         float *pos0,float *pos1,float *pos2,float *pos3,
         int iteration,float a0,float a1,float a2,float a3)
@@ -913,6 +959,17 @@ void Rotor::compile()
     // now directions[0] is perpendicular to the _normal.and has a length
     // of 1. if _forward is already normalized and perpendicular to the 
     // normal, directions[0] will be the same
+    _num_ground_contact_pos=(_number_of_parts<16)?_number_of_parts:16;
+    for (i=0;i<_num_ground_contact_pos;i++)
+    {
+        float help[3];
+        float s = Math::sin(pi*2*_num_ground_contact_pos/i);
+        float c = Math::cos(pi*2*_num_ground_contact_pos/i);
+        Math::mul3(c*_diameter,directions[0],_ground_contact_pos[i]);
+        Math::mul3(s*_diameter,directions[1],help);
+        Math::add3(help,_ground_contact_pos[i],_ground_contact_pos[i]);
+        Math::add3(_base,_ground_contact_pos[i],_ground_contact_pos[i]);
+    }
     for (i=0;i<4;i++)
     {
         Math::mul3(_diameter*0.7,directions[i],_groundeffectpos[i]);
@@ -1000,6 +1057,7 @@ void Rotor::compile()
         rp->setRelamp(relamp);
         rp->setDirectionofRotorPart(direction);
         rp->setTorqueOfInertia(_torque_of_inertia/_number_of_parts);
+        rp->setDirection(2*pi*i/_number_of_parts);
     }
     for (i=0;i<_number_of_parts;i++)
     {
@@ -1103,6 +1161,14 @@ void Rotor::compile()
     }
     rps[0]->setOmega(0);
     writeInfo();
+
+    //tie the properties
+    /* After reset these values are totally wrong. I have to find out why
+    SGPropertyNode * node = fgGetNode("/rotors", true)->getNode(_name,true);
+    node->tie("balance_ext",SGRawValuePointer<float>(&_balance2),false);
+    node->tie("balance_int",SGRawValuePointer<float>(&_balance1));
+    _properties_tied=1;
+    */
 }
 std::ostream &  operator<<(std::ostream & out, Rotor& r)
 {

@@ -63,6 +63,8 @@ Rotorpart::Rotorpart()
     _rel_len_blade_start=0;
     _torque=0;
     _rotor_correction_factor=0.6;
+    _direction=0;
+    _balance=1;
 }
 
 void Rotorpart::inititeration(float dt,float *rot)
@@ -88,6 +90,16 @@ void Rotorpart::inititeration(float dt,float *rot)
     a=Math::dot3(rot,dir);
     _alphaalt -= a;
     _alphaalt= Math::clamp(_alphaalt,_alphamin,_alphamax);
+
+    //unbalance
+    float b;
+    b=_rotor->getBalance();
+    float s =Math::sin(_phi+_direction);
+    float c =Math::cos(_phi+_direction);
+    if (s>0)
+        _balance=(b>0)?(1.-s*(1.-b)):(1.-s)*(1.+b);
+    else
+        _balance=(b>0)?1.:1.+b;
 }
 
 void Rotorpart::setRotor(Rotor *rotor)
@@ -177,6 +189,11 @@ void Rotorpart::setDirectionofRotorPart(float* p)
 {
     int i;
     for(i=0; i<3; i++) _directionofrotorpart[i] = p[i];
+}
+
+void Rotorpart::setDirection(float direction)
+{
+    _direction=direction;
 }
 
 void Rotorpart::setOmega(float value)
@@ -535,6 +552,11 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
     float schwenkfactor=1-(Math::cos(_lastrp->getrealAlpha())-meancosalpha)*_rotor->getNumberOfParts()/4;
 
     //missing: consideration of rellenhinge
+
+    //add the unbalance
+    _centripetalforce*=_balance;
+    scalar_torque*=_balance;
+
     float xforce = Math::cos(alpha)*_centripetalforce;
     float zforce = schwenkfactor*Math::sin(alpha)*_centripetalforce;
     *torque_scalar=scalar_torque;

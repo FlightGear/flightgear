@@ -718,6 +718,7 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setTeeterdamp(attrf(a,"teeterdamp",.0001));
     w->setMaxteeterdamp(attrf(a,"maxteeterdamp",1000));
     w->setRelLenTeeterHinge(attrf(a,"rellenteeterhinge",0.01));
+    w->setBalance(attrf(a,"balance",1.0));
     if(attrb(a,"ccw"))
        w->setCcw(1); 
     if(attrb(a,"sharedflaphinge"))

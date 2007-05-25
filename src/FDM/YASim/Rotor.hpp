@@ -31,6 +31,8 @@ private:
     int _number_of_blades;
     int _number_of_segments;
     int _number_of_parts;
+    float _balance1;
+    float _balance2;
 
 public:
     Rotor();
@@ -118,8 +120,11 @@ public:
     float *getGravDirection() {return _grav_direction;}
     void writeInfo();
     void setSharedFlapHinge(bool s);
+    void setBalance(float b);
+    float getBalance(){ return (_balance1>0)?_balance1*_balance2:_balance1;}
 
 private:
+    void testForRotorGroundContact (Ground * ground_cb,State *s);
     void strncpy(char *dest,const char *src,int maxlen);
     void interp(float* v1, float* v2, float frac, float* out);
     float calcStall(float incidence,float speed);
@@ -131,6 +136,8 @@ private:
         float delta3,float mass,float translift,float rellenhinge,float len);
     float _base[3];
     float _groundeffectpos[4][3];
+    float _ground_contact_pos[16][3];
+    int _num_ground_contact_pos;
     float _ground_effect_altitude;
     //some postions, where to calcualte the ground effect
     float _normal[3];//the normal vector (direction of rotormast, pointing up)
@@ -202,6 +209,7 @@ private:
     float _phi;
     bool _shared_flap_hinge;
     float _grav_direction[3];
+    int _properties_tied;
 };
 std::ostream &  operator<<(std::ostream & out, /*const*/ Rotor& r);
 
