@@ -173,7 +173,7 @@ void FGTrafficManager::update(double /*dt*/)
       runCount++;
       return;
     }
-  runCount = 0;
+  //runCount = 0;
   time_t now = time(NULL) + fgGetLong("/sim/time/warp");
   if (scheduledAircraft.size() == 0) {
     //SG_LOG( SG_GENERAL, SG_INFO, "Returned Running TrafficManager::Update() ");
