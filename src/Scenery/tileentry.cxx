@@ -66,6 +66,7 @@
 
 SG_USING_STD(string);
 
+// FIXME: investigate what huge update flood is clamped away here ...
 class FGTileUpdateCallback : public osg::NodeCallback {
 public:
   virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
@@ -74,9 +75,9 @@ public:
     SGUpdateVisitor* updateVisitor = static_cast<SGUpdateVisitor*>(nv);
 
     osg::Vec3 center = node->getBound().center();
-    double dist2 = distSqr(updateVisitor->getGlobalEyePos(),
+    double distance = dist(updateVisitor->getGlobalEyePos(),
                            SGVec3d(center[0], center[1], center[2]));
-    if (updateVisitor->getSqrVisibility() < dist2)
+    if (updateVisitor->getVisibility() + node->getBound().radius() < distance)
       return;
 
     traverse(node, nv);
