@@ -381,7 +381,7 @@ FGRenderer::splashinit( void ) {
 	mRealRoot = dynamic_cast<osg::Group*>(viewer->getSceneData());
 	mRealRoot->addChild(fgCreateSplashNode());
 	osgViewer::Scene* scene = viewer->getScene();
-	scene->setFrameStamp(mFrameStamp.get());
+	mFrameStamp = viewer->getFrameStamp();
 	// Scene doesn't seem to pass the frame stamp to the update
 	// visitor automatically.
 	mUpdateVisitor->setFrameStamp(mFrameStamp.get());
