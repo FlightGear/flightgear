@@ -487,6 +487,12 @@ do_screen_capture (const SGPropertyNode * arg)
   return true;
 }
 
+static bool
+do_dump_scene_graph (const SGPropertyNode*)
+{
+    fgDumpSceneGraph();
+    return true;
+}
 
 /**
  * Built-in command: hires capture screen.
@@ -1481,6 +1487,7 @@ static struct {
     { "savexml", do_save_xml_from_proptree },    
     { "press-cockpit-button", do_press_cockpit_button },
     { "release-cockpit-button", do_release_cockpit_button },
+    { "dump-scenegraph", do_dump_scene_graph },
     { 0, 0 }			// zero-terminated
 };
 

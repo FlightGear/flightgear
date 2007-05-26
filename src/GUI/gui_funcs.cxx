@@ -571,3 +571,49 @@ void fgDumpSnapShot () {
     }
 }
 
+// do a screen snap shot
+void fgDumpSceneGraph()
+{
+    char *filename = new char [24];
+    string message;
+    static int count = 1;
+
+    FGRenderer *renderer = globals->get_renderer();
+
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
+
+    bool freeze = master_freeze->getBoolValue();
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", true);
+    }
+
+    while (count < 1000) {
+        FILE *fp;
+        snprintf(filename, 24, "fgfs-graph-%03d.osg", count++);
+        if ( (fp = fopen(filename, "r")) == NULL )
+            break;
+        fclose(fp);
+    }
+
+    if ( fgDumpSceneGraphToFile(filename)) {
+	message = "Scene graphe saved to \"";
+	message += filename;
+	message += "\".";
+    } else {
+        message = "Failed to save to \"";
+	message += filename;
+	message += "\".";
+    }
+
+    mkDialog (message.c_str());
+
+    delete [] filename;
+
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", false);
+    }
+}
+
+    
+

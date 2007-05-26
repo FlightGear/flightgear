@@ -74,4 +74,6 @@ protected:
     osg::ref_ptr<FGManipulator> manipulator;
 };
 
+bool fgDumpSceneGraphToFile(const char* filename);
+
 #endif

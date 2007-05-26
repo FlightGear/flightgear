@@ -1109,5 +1109,10 @@ FGRenderer::pick( unsigned x, unsigned y,
   return !pickList.empty();
 }
 
+bool fgDumpSceneGraphToFile(const char* filename)
+{
+    return osgDB::writeNodeFile(*mRealRoot.get(), filename);
+}
+
 // end of renderer.cxx
     
