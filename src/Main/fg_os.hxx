@@ -60,12 +60,15 @@ void fgRequestRedraw();
 // Callbacks and registration API
 //
 
+namespace osg { class Camera; class GraphicsContext; }
+namespace osgGA { class GUIEventAdapter; }
+
 typedef void (*fgIdleHandler)();
 typedef void (*fgDrawHandler)();
 typedef void (*fgWindowResizeHandler)(int w, int h);
 
 typedef void (*fgKeyHandler)(int key, int keymod, int mousex, int mousey);
-typedef void (*fgMouseClickHandler)(int button, int updown, int x, int y);
+typedef void (*fgMouseClickHandler)(int button, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter*);
 typedef void (*fgMouseMotionHandler)(int x, int y);
 
 void fgRegisterIdleHandler(fgIdleHandler func);
@@ -77,4 +80,8 @@ void fgRegisterMouseClickHandler(fgMouseClickHandler func);
 void fgRegisterMouseMotionHandler(fgMouseMotionHandler func);
 
 void fgMakeCurrent();
+
+bool fgOSIsMainCamera(const osg::Camera* camera);
+bool fgOSIsMainContext(const osg::GraphicsContext* context);
+
 #endif // _FG_OS_HXX

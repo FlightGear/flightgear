@@ -44,9 +44,8 @@ osg::Node* FGManipulator::getNode()
     return _node.get();
 }
 
-namespace {
 // All the usual translation from window system to FG / plib
-int osgToFGModifiers(int modifiers)
+static int osgToFGModifiers(int modifiers)
 {
     int result = 0;
     if (modifiers & (osgGA::GUIEventAdapter::MODKEY_LEFT_SHIFT |
@@ -60,7 +59,6 @@ int osgToFGModifiers(int modifiers)
 	result |= KEYMOD_ALT;
     return result;
 }
-} // namespace
 
 void FGManipulator::init(const osgGA::GUIEventAdapter& ea,
 			 osgGA::GUIActionAdapter& us)
@@ -69,17 +67,29 @@ void FGManipulator::init(const osgGA::GUIEventAdapter& ea,
     (void)handle(ea, us);
 }
 
-namespace {
-void eventToViewport(const osgGA::GUIEventAdapter& ea,
-		     osgGA::GUIActionAdapter& us,
-		     int& x, int& y)
+static bool
+eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
+                int& x, int& y)
 {
-    x = (int)ea.getX();
-    y = (int)ea.getY();
-    if (ea.getMouseYOrientation()
-	== osgGA::GUIEventAdapter::Y_INCREASING_UPWARDS)
-	y = (int)ea.getWindowHeight() - y;
-}
+  x = -1;
+  y = -1;
+
+  const osgViewer::Viewer* viewer;
+  viewer = dynamic_cast<const osgViewer::Viewer*>(&us);
+  if (!viewer)
+      return false;
+
+  float lx, ly;
+  const osg::Camera* camera;
+  camera = viewer->getCameraContainingPosition(ea.getX(), ea.getY(), lx, ly);
+
+  if (!fgOSIsMainCamera(camera))
+      return false;
+
+  x = int(lx);
+  y = int(camera->getViewport()->height() - ly);
+
+  return true;
 }
 
 bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
@@ -101,12 +111,12 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
 	eventToViewport(ea, us, x, y);
 	if (keyHandler)
 	    (*keyHandler)(key, modmask, x, y);
+        return true;
     }
-    return true;
     case osgGA::GUIEventAdapter::PUSH:
     case osgGA::GUIEventAdapter::RELEASE:
     {
-	eventToViewport(ea, us, x, y);
+        bool mainWindow = eventToViewport(ea, us, x, y);
 	int button = 0;
 	switch (ea.getButton()) {
 	case osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON:
@@ -122,7 +132,7 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
 	if (mouseClickHandler)
 	    (*mouseClickHandler)(button,
 				 (ea.getEventType()
-				  == osgGA::GUIEventAdapter::RELEASE), x, y);
+				  == osgGA::GUIEventAdapter::RELEASE), x, y, mainWindow, &ea);
 	return true;
     }
     case osgGA::GUIEventAdapter::MOVE:
@@ -130,10 +140,6 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
 	eventToViewport(ea, us, x, y);
 	if (mouseMotionHandler)
 	    (*mouseMotionHandler)(x, y);
-	return true;
-    case osgGA::GUIEventAdapter::RESIZE:
-	if (windowResizeHandler)
-	    (*windowResizeHandler)(ea.getWindowWidth(), ea.getWindowHeight());
 	return true;
     case osgGA::GUIEventAdapter::CLOSE_WINDOW:
     case osgGA::GUIEventAdapter::QUIT_APPLICATION:
@@ -143,7 +149,7 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
 	return false;
     }
 }
-	    
+
 void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
 			      int& modifiers)
 {

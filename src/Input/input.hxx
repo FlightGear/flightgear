@@ -134,7 +134,7 @@ public:
    * @param x The X position of the mouse event, in screen coordinates.
    * @param y The Y position of the mouse event, in screen coordinates.
    */
-  virtual void doMouseClick (int button, int updown, int x, int y);
+  virtual void doMouseClick (int button, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter*);
 
 
   /**

@@ -66,7 +66,7 @@ SG_USING_STD(ifstream);
 SG_USING_STD(string);
 SG_USING_STD(vector);
 
-void mouseClickHandler(int button, int updown, int x, int y);
+void mouseClickHandler(int button, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter*);
 void mouseMotionHandler(int x, int y);
 void keyHandler(int key, int keymod, int mousex, int mousey);
 
@@ -247,7 +247,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 }
 
 void
-FGInput::doMouseClick (int b, int updown, int x, int y)
+FGInput::doMouseClick (int b, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea)
 {
   int modifiers = fgGetKeyModifiers();
 
@@ -272,13 +272,15 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
   }
 
   if (mode.pass_through) {
-    if (puMouse(b, updown, x, y))
+    // The pu stuff seems to need that. May be it does opengl picking ...
+    fgMakeCurrent();
+    if (0 <= x && 0 <= y && puMouse(b, updown, x, y))
       return;
-    else if ((globals->get_current_panel() != 0) &&
+    else if (0 <= x && 0 <= y && (globals->get_current_panel() != 0) &&
              globals->get_current_panel()->getVisibility() &&
              globals->get_current_panel()->doMouseAction(b, updown, x, y))
       return;
-    else if (fgHandle3DPanelMouseEvent(b, updown, x, y))
+    else if (0 <= x && 0 <= y && fgHandle3DPanelMouseEvent(b, updown, x, y))
       return;
     else {
       // pui didn't want the click event so compute a
@@ -291,7 +293,7 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
         // The nearest one is the first one and the deepest
         // (the most specialized one in the scenegraph) is the first.
         std::vector<SGSceneryPick> pickList;
-        if (FGRenderer::pick(x, y, pickList)) {
+        if (FGRenderer::pick(x, y, pickList, ea)) {
           std::vector<SGSceneryPick>::const_iterator i;
           for (i = pickList.begin(); i != pickList.end(); ++i) {
             if (i->callback->buttonPressed(b, i->info)) {
@@ -1097,10 +1099,10 @@ void keyHandler(int key, int keymod, int mousex, int mousey)
         default_input->doKey(key, keymod, mousex, mousey);
 }
 
-void mouseClickHandler(int button, int updown, int x, int y)
+void mouseClickHandler(int button, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter* ea)
 {
     if(default_input)
-        default_input->doMouseClick(button, updown, x, y);
+      default_input->doMouseClick(button, updown, x, y, mainWindow, ea);
 }
 
 void mouseMotionHandler(int x, int y)

@@ -226,7 +226,7 @@ void fgOSMainLoop()
                 if(MouseClickHandler)
                     (*MouseClickHandler)(e.button.button - 1,
                                          e.button.state == SDL_RELEASED,
-                                         e.button.x, e.button.y);
+                                         e.button.x, e.button.y, true, 0);
                 break;
             case SDL_MOUSEMOTION:
                 CurrentMouseX = e.motion.x;
@@ -411,4 +411,14 @@ static void initCursors()
 // Noop; the graphics context is always current
 void fgMakeCurrent()
 {
+}
+
+bool fgOSIsMainCamera(const osg::Camera*)
+{
+  return true;
+}
+
+bool fgOSIsMainContext(const osg::GraphicsContext*)
+{
+  return true;
 }

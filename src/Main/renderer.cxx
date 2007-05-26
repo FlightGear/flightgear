@@ -54,6 +54,7 @@
 #include <osgUtil/SceneView>
 #include <osgUtil/UpdateVisitor>
 #include <osgUtil/IntersectVisitor>
+#include <osgUtil/LineSegmentIntersector>
 
 #include <osg/io_utils>
 #include <osgDB/WriteFile>
@@ -125,6 +126,9 @@ public:
   { drawImplementation(*renderInfo.getState()); }
   void drawImplementation(osg::State& state) const
   {
+    if (!fgOSIsMainContext(state.getGraphicsContext()))
+      return;
+
     state.pushStateSet(getStateSet());
     state.apply();
     state.setActiveTextureUnit(0);
@@ -174,6 +178,10 @@ public:
   { drawImplementation(*renderInfo.getState()); }
   void drawImplementation(osg::State& state) const
   {
+//     std::cout << state.getGraphicsContext() << std::endl;
+    if (!fgOSIsMainContext(state.getGraphicsContext()))
+      return;
+
     state.pushStateSet(getStateSet());
     state.apply();
     state.setActiveTextureUnit(0);
@@ -428,7 +436,7 @@ FGRenderer::init( void ) {
     glHint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
 
     if (viewer) {
-	viewer->getCamera()
+      viewer->getCamera()
 	    ->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     } else {
 	sceneView->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
@@ -797,6 +805,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
     // need to call the update visitor once
     if (!viewer) {
 	mFrameStamp->setReferenceTime(globals->get_sim_time_sec());
+        mFrameStamp->setSimulationTime(globals->get_sim_time_sec());
 	mFrameStamp->setFrameNumber(1+mFrameStamp->getFrameNumber());
     }
     mFrameStamp->setCalendarTime(*globals->get_time_params()->getGmt());
@@ -845,8 +854,9 @@ FGRenderer::resize( int width, int height ) {
     }
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
     if (viewer)
-	viewer->getCamera()->getViewport()->setViewport(0, height - view_h,
-							width, view_h);
+        ;
+  //       viewer->getCamera()->getViewport()->setViewport(0, height - view_h,
+//                                                         width, view_h);
     else
 	sceneView->getViewport()->setViewport(0, height - view_h,
 					      width, view_h);
@@ -874,84 +884,6 @@ FGRenderer::resize( int width, int height ) {
 }
 
 
-// These are wrapper functions around ssgSetNearFar() and ssgSetFOV()
-// which will post process and rewrite the resulting frustum if we
-// want to do asymmetric view frustums.
-
-static void fgHackFrustum() {
-
-    // specify a percent of the configured view frustum to actually
-    // display.  This is a bit of a hack to achieve asymmetric view
-    // frustums.  For instance, if you want to display two monitors
-    // side by side, you could specify each with a double fov, a 0.5
-    // aspect ratio multiplier, and then the left side monitor would
-    // have a left_pct = 0.0, a right_pct = 0.5, a bottom_pct = 0.0,
-    // and a top_pct = 1.0.  The right side monitor would have a
-    // left_pct = 0.5 and a right_pct = 1.0.
-
-    static SGPropertyNode *left_pct
-        = fgGetNode("/sim/current-view/frustum-left-pct");
-    static SGPropertyNode *right_pct
-        = fgGetNode("/sim/current-view/frustum-right-pct");
-    static SGPropertyNode *bottom_pct
-        = fgGetNode("/sim/current-view/frustum-bottom-pct");
-    static SGPropertyNode *top_pct
-        = fgGetNode("/sim/current-view/frustum-top-pct");
-    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
-    double left, right;
-    double bottom, top;
-    double zNear, zFar;
-    if (viewer)
-	viewer->getCamera()->getProjectionMatrixAsFrustum(left, right,
-							  bottom, top,
-							  zNear, zFar);
-    else
-	sceneView->getProjectionMatrixAsFrustum(left, right, bottom, top,
-						zNear, zFar);
-    // cout << " l = " << f->getLeft()
-    //      << " r = " << f->getRight()
-    //      << " b = " << f->getBot()
-    //      << " t = " << f->getTop()
-    //      << " n = " << f->getNear()
-    //      << " f = " << f->getFar()
-    //      << endl;
-
-    double width = right - left;
-    double height = top - bottom;
-
-    double l, r, t, b;
-
-    if ( left_pct != NULL ) {
-        l = left + width * left_pct->getDoubleValue();
-    } else {
-        l = left;
-    }
-
-    if ( right_pct != NULL ) {
-        r = left + width * right_pct->getDoubleValue();
-    } else {
-        r = right;
-    }
-
-    if ( bottom_pct != NULL ) {
-        b = bottom + height * bottom_pct->getDoubleValue();
-    } else {
-        b = bottom;
-    }
-
-    if ( top_pct != NULL ) {
-        t = bottom + height * top_pct->getDoubleValue();
-    } else {
-        t = top;
-    }
-    if (viewer)
-	viewer->getCamera()->setProjectionMatrixAsFrustum(l, r, b, t,
-							  zNear, zFar);
-    else
-	sceneView->setProjectionMatrixAsFrustum(l, r, b, t, zNear, zFar);
-}
-
-
 // we need some static storage space for these values.  However, we
 // can't store it in a renderer class object because the functions
 // that manipulate these are static.  They are static so they can
@@ -972,17 +904,11 @@ void FGRenderer::setFOV( float w, float h ) {
     fov_height = h;
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
     if (viewer)
-	viewer->getCamera()->setProjectionMatrixAsPerspective(fov_height,
-							      fov_width/fov_height,
-							      fov_near, fov_far);
+	viewer->getCamera()->setProjectionMatrixAsPerspective(fov_height, 4.0/3.0, fov_near, fov_far);
     else
 	sceneView->setProjectionMatrixAsPerspective(fov_height,
 						    fov_width/fov_height,
 						    fov_near, fov_far);
-    // fully specify the view frustum before hacking it (so we don't
-    // accumulate hacked effects
-    fgHackFrustum();
-//     sgEnviro.setFOV( w, h );
 }
 
 
@@ -996,36 +922,29 @@ n = 0.1;
     fov_far = f;
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
     if (viewer)
-	viewer->getCamera()->setProjectionMatrixAsPerspective(fov_height,
-							      fov_width/fov_height,
-							      fov_near, fov_far);
-    else 
+	viewer->getCamera()->setProjectionMatrixAsPerspective(fov_height, 4.0/3.0, fov_near, fov_far);
+    else
 	sceneView->setProjectionMatrixAsPerspective(fov_height,
 						    fov_width/fov_height,
 						    fov_near, fov_far);
 
-    // fully specify the view frustum before hacking it (so we don't
-    // accumulate hacked effects
-    fgHackFrustum();
 }
 
 bool
 FGRenderer::pick( unsigned x, unsigned y,
-                  std::vector<SGSceneryPick>& pickList )
+                  std::vector<SGSceneryPick>& pickList,
+                  const osgGA::GUIEventAdapter* ea )
 {
   osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
   // wipe out the return ...
   pickList.resize(0);
 
-  osg::Node* sceneData = globals->get_scenery()->get_scene_graph();
-  if (!sceneData)
-    return false;
-  osg::Viewport* viewport = 0;
-  osg::Matrix projection;
-  osg::Matrix modelview;
-
   if (sceneView.valid()) {
-    viewport = sceneView->getViewport();
+    osg::Node* sceneData = globals->get_scenery()->get_scene_graph();
+    if (!sceneData)
+      return false;
+
+    osg::Viewport* viewport = sceneView->getViewport();
     if (!viewport)
       return false;
     // don't know why, but the update has partly happened somehow,
@@ -1047,40 +966,64 @@ FGRenderer::pick( unsigned x, unsigned y,
     // accumulated transform
     if (!nodePath.empty())
       modelview.preMult(computeLocalToWorld(nodePath.front()));
-  } else if (viewer) {
-    // I don't think the Viewer case needs to update the camera
-    // matrices before picking. The user has clicked on the old scene
-    // -- that which is displayed in the front buffer -- so we need to
-    // use the camera state in effect for that view of the scene.
-    osg::Camera *camera = viewer->getCamera();
-    viewport = camera->getViewport();
-    projection = camera->getProjectionMatrix();
-    modelview = camera->getViewMatrix();
-    // Accumulated transforms? Don't think that applies for the
-    // Viewer's camera.
-  } else {			// we can get called early ...
-    return false;
-  }
-  // swap the y values ...
-  y = viewport->height() - y;
-  // set up the pick visitor
-  osgUtil::PickVisitor pickVisitor(viewport, projection, modelview, x, y);
-  sceneData->accept(pickVisitor);
-  if (!pickVisitor.hits())
-    return false;
 
-  // collect all interaction callbacks on the pick ray.
-  // They get stored in the pickCallbacks list where they are sorted back
-  // to front and croasest to finest wrt the scenery node they are attached to
-  osgUtil::PickVisitor::LineSegmentHitListMap::const_iterator mi;
-  for (mi = pickVisitor.getSegHitList().begin();
-       mi != pickVisitor.getSegHitList().end();
-       ++mi) {
-    osgUtil::IntersectVisitor::HitList::const_iterator hi;
-    for (hi = mi->second.begin(); hi != mi->second.end(); ++hi) {
-      // ok, go back the nodes and ask for intersection callbacks,
-      // execute them in top down order
-      const osg::NodePath& np = hi->getNodePath();
+    // swap the y values ...
+    y = viewport->height() - y;
+    // set up the pick visitor
+    osgUtil::PickVisitor pickVisitor(viewport, projection, modelview, x, y);
+    sceneData->accept(pickVisitor);
+    if (!pickVisitor.hits())
+      return false;
+    
+    // collect all interaction callbacks on the pick ray.
+    // They get stored in the pickCallbacks list where they are sorted back
+    // to front and croasest to finest wrt the scenery node they are attached to
+    osgUtil::PickVisitor::LineSegmentHitListMap::const_iterator mi;
+    for (mi = pickVisitor.getSegHitList().begin();
+         mi != pickVisitor.getSegHitList().end();
+         ++mi) {
+      osgUtil::IntersectVisitor::HitList::const_iterator hi;
+      for (hi = mi->second.begin(); hi != mi->second.end(); ++hi) {
+        // ok, go back the nodes and ask for intersection callbacks,
+        // execute them in top down order
+        const osg::NodePath& np = hi->getNodePath();
+        osg::NodePath::const_reverse_iterator npi;
+        for (npi = np.rbegin(); npi != np.rend(); ++npi) {
+          SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
+          if (!ud)
+            continue;
+          for (unsigned i = 0; i < ud->getNumPickCallbacks(); ++i) {
+            SGPickCallback* pickCallback = ud->getPickCallback(i);
+            if (!pickCallback)
+              continue;
+            SGSceneryPick sceneryPick;
+            /// note that this is done totally in doubles instead of
+            /// just using getWorldIntersectionPoint
+            osg::Vec3d localPt = hi->getLocalIntersectPoint();
+            sceneryPick.info.local = SGVec3d(localPt);
+            if (hi->getMatrix())
+              sceneryPick.info.wgs84 = SGVec3d(localPt*(*hi->getMatrix()));
+            else
+              sceneryPick.info.wgs84 = SGVec3d(localPt);
+            sceneryPick.callback = pickCallback;
+            pickList.push_back(sceneryPick);
+          }
+        }
+      }
+    }
+    
+    return !pickList.empty();
+
+  } else if (viewer) {
+
+    // just compute intersections in the viewers method ...
+    typedef osgUtil::LineSegmentIntersector::Intersections Intersections;
+    Intersections intersections;
+    viewer->computeIntersections(ea->getX(), ea->getY(), intersections);
+
+    Intersections::iterator hit;
+    for (hit = intersections.begin(); hit != intersections.end(); ++hit) {
+      const osg::NodePath& np = hit->nodePath;
       osg::NodePath::const_reverse_iterator npi;
       for (npi = np.rbegin(); npi != np.rend(); ++npi) {
         SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
@@ -1091,22 +1034,18 @@ FGRenderer::pick( unsigned x, unsigned y,
           if (!pickCallback)
             continue;
           SGSceneryPick sceneryPick;
-          /// note that this is done totally in doubles instead of
-          /// just using getWorldIntersectionPoint
-          osg::Vec3d localPt = hi->getLocalIntersectPoint();
-          sceneryPick.info.local = SGVec3d(localPt);
-          if (hi->getMatrix())
-            sceneryPick.info.wgs84 = SGVec3d(localPt*(*hi->getMatrix()));
-          else
-            sceneryPick.info.wgs84 = SGVec3d(localPt);
+          sceneryPick.info.local = SGVec3d(hit->getLocalIntersectPoint());
+          sceneryPick.info.wgs84 = SGVec3d(hit->getWorldIntersectPoint());
           sceneryPick.callback = pickCallback;
           pickList.push_back(sceneryPick);
         }
       }
     }
-  }
 
-  return !pickList.empty();
+    return !pickList.empty();
+  } else {			// we can get called early ...
+    return false;
+  }
 }
 
 bool fgDumpSceneGraphToFile(const char* filename)

@@ -90,7 +90,7 @@ static void GLUTmotion (int x, int y)
 static void GLUTmouse (int button, int updown, int x, int y)
 {
     GlutModifiers = glutGetModifiers();
-    if(MouseClickHandler) (*MouseClickHandler)(button, updown, x, y);
+    if(MouseClickHandler) (*MouseClickHandler)(button, updown, x, y, true, 0);
 }
 
 static void GLUTspecialkeyup(int k, int x, int y)
@@ -239,4 +239,14 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
 // Noop; the graphics context is always current
 void fgMakeCurrent()
 {
+}
+
+bool fgOSIsMainCamera(const osg::Camera*)
+{
+  return true;
+}
+
+bool fgOSIsMainContext(const osg::GraphicsContext*)
+{
+  return true;
 }
