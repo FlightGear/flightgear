@@ -94,7 +94,7 @@ const double FGJSBBase::slugtolb = 32.174049;
 const double FGJSBBase::lbtoslug = 1.0/slugtolb;
 
 const string FGJSBBase::needed_cfg_version = "2.0";
-const string FGJSBBase::JSBSim_version = "1.0 "__DATE__" "__TIME__;
+const string FGJSBBase::JSBSim_version = "Pre-1.0 "__DATE__" "__TIME__;
 
 std::queue <FGJSBBase::Message> FGJSBBase::Messages;
 FGJSBBase::Message FGJSBBase::localMsg;

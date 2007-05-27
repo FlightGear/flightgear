@@ -332,8 +332,9 @@ FGColumnVector3& FGLGear::Force(void)
 
     // Compute the forces in the wheel ground plane.
 
-    RollingForce = (1.0 - TirePressureNorm) * 30
-                   + vLocalForce(eZ) * BrakeFCoeff * (RollingWhlVel>=0?1.0:-1.0);
+    RollingForce = ((1.0 - TirePressureNorm) * 30
+                   + vLocalForce(eZ) * BrakeFCoeff) * (RollingWhlVel>=0?1.0:-1.0);
+
     SideForce    = vLocalForce(eZ) * FCoeff;
 
     // Transform these forces back to the local reference frame.
@@ -380,7 +381,7 @@ FGColumnVector3& FGLGear::Force(void)
     if ((fabs(RollingWhlVel) <= RFRV) && RFRV > 0) vForce(eX) *= fabs(RollingWhlVel)/RFRV;
     if ((fabs(SideWhlVel) <= SFRV) && SFRV > 0) vForce(eY) *= fabs(SideWhlVel)/SFRV;
 
-// End experimental section for attentuating gear jitter
+// End section for attentuating gear jitter
 
     vMoment = vWhlBodyVec * vForce;
 
@@ -426,13 +427,9 @@ void FGLGear::ComputeSlipAngle(void)
   SideWhlVel    = vWhlVelVec(eY)*CosWheel - vWhlVelVec(eX)*SinWheel;
 
   // Calculate tire slip angle.
-  if (fabs(RollingWhlVel) < 0.02 && fabs(SideWhlVel) < 0.02) {
-    WheelSlip = -SteerAngle*radtodeg;
-  } else {
     WheelSlip = atan2(SideWhlVel, fabs(RollingWhlVel))*radtodeg;
-  }
 
-// Filter the wheel slip angle
+  // Filter the wheel slip angle
 
   double SlipOutput, ca, cb, denom;
 

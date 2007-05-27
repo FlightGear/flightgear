@@ -466,7 +466,7 @@ void FGJSBsim::update( double dt )
     }
 
     FGJSBBase::Message* msg;
-    while (fdmex->SomeMessages()) {/* EMH-FIXME: is thsi the proper fucntion? */
+    while (fdmex->SomeMessages()) {
       msg = fdmex->ProcessMessage();
       switch (msg->type) {
       case FGJSBBase::Message::eText:
@@ -1107,7 +1107,7 @@ void FGJSBsim::do_trim(void)
   }
 #if 0
   if (FGJSBBase::debug_lvl > 0)
-      State->ReportState(); /* EMH-FIXME: Missing function?? */
+      State->ReportState();	/* FIXME: Function not implemented */
 #endif
 
   delete fgtrim;
