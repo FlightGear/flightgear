@@ -134,6 +134,7 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
   modelLoaded = false;
   IsSlave = false;
   holding = false;
+  Terminate = false;
 
   // Multiple FDM's are stopped for now.  We need to ensure that
   // the "user" instance always gets the zeroeth instance number,
@@ -168,6 +169,7 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
   Constructing = true;
   typedef int (FGFDMExec::*iPMF)(void) const;
   instance->Tie("simulation/do_trim", this, (iPMF)0, &FGFDMExec::DoTrim);
+  instance->Tie("simulation/terminate", (int *)&Terminate);
   Constructing = false;
 }
 
@@ -176,6 +178,7 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
 FGFDMExec::~FGFDMExec()
 {
   instance->Untie("simulation/do_trim");
+  instance->Untie("simulation/terminate");
 
   try {
     DeAllocate();
@@ -354,7 +357,7 @@ int FGFDMExec::Schedule(FGModel* model, int rate)
 
 bool FGFDMExec::Run(void)
 {
-  bool success;
+  bool success=false;
   FGModel* model_iterator;
 
   model_iterator = FirstModel;
@@ -374,8 +377,9 @@ bool FGFDMExec::Run(void)
     model_iterator = model_iterator->NextModel;
   }
 
-  frame = Frame++;
+  Frame++;
   if (!Holding()) State->IncrTime();
+  if (Terminate) success = false;
   return (success);
 }
 
@@ -459,6 +463,9 @@ bool FGFDMExec::LoadModel(string model, bool addModelToPath)
   string token;
   string aircraftCfgFileName;
   string separator = "/";
+  Element* element = 0L;
+
+  modelName = model; // Set the class modelName attribute
 
 # ifdef macintosh
     separator = ";";
@@ -474,27 +481,12 @@ bool FGFDMExec::LoadModel(string model, bool addModelToPath)
   if (addModelToPath) FullAircraftPath += separator + model;
   aircraftCfgFileName = FullAircraftPath + separator + model + ".xml";
 
-  FGXMLParse *XMLParse = new FGXMLParse();
-  Element* element = 0L;
-  Element* document;
-
-  ifstream input_file(aircraftCfgFileName.c_str());
-
-  if (!input_file.is_open()) { // file open failed
-    cerr << "Could not open file " << aircraftCfgFileName.c_str() << endl;
-    return false;
-  }
-
-  readXML(input_file, *XMLParse);
-  document = XMLParse->GetDocument();
-
-  modelName = model;
-
   if (modelLoaded) {
     DeAllocate();
     Allocate();
   }
 
+  document = LoadXMLDocument(aircraftCfgFileName); // "document" is a class member
   ReadPrologue(document);
   element = document->GetElement();
 
@@ -553,7 +545,7 @@ void FGFDMExec::BuildPropertyCatalog(struct PropertyCatalogStructure* pcs)
   int node_idx = 0;
   char int_buf[10];
 
-  for (int i=0; i<pcs->node->nChildren(); i++) {
+  for (unsigned int i=0; i<pcs->node->nChildren(); i++) {
     pcsNew->base_string = pcs->base_string + "/" + pcs->node->getChild(i)->getName();
     node_idx = pcs->node->getChild(i)->getIndex();
     sprintf(int_buf, "[%d]", node_idx);

@@ -98,6 +98,18 @@ FGPropagate::FGPropagate(FGFDMExec* fdmex) : FGModel(fdmex)
   Name = "FGPropagate";
 //  vQtrndot.zero();
 
+  last2_vPQRdot.InitMatrix();
+  last_vPQRdot.InitMatrix();
+  vPQRdot.InitMatrix();
+  
+  last2_vUVWdot.InitMatrix();
+  last_vUVWdot.InitMatrix();
+  vUVWdot.InitMatrix();
+  
+  last2_vLocationDot.InitMatrix();
+  last_vLocationDot.InitMatrix();
+  vLocationDot.InitMatrix();
+
   bind();
   Debug(0);
 }

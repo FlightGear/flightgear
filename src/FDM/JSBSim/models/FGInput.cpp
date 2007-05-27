@@ -206,7 +206,7 @@ bool FGInput::Load(Element* element)
   string name="", fname="";
   string property;
 
-  port = element->GetAttributeValueAsNumber("port");
+  port = int(element->GetAttributeValueAsNumber("port"));
   if (port == 0) {
     cerr << endl << "No port assigned in input element" << endl;
   } else {

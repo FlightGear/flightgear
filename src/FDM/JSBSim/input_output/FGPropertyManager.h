@@ -116,6 +116,11 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
     string GetName( void );
 
     /**
+     * Get the name of a node without underscores, etc.
+     */
+    string GetPrintableName( void );
+
+    /**
      * Get the fully qualified name of a node
      * This function is very slow, so is probably useful for debugging only.
      */

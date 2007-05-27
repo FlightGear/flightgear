@@ -353,8 +353,6 @@ void FGAerodynamics::bind(void)
 
 void FGAerodynamics::unbind(void)
 {
-  unsigned i,j;
-
   PropertyManager->Untie("forces/fbx-aero-lbs");
   PropertyManager->Untie("forces/fby-aero-lbs");
   PropertyManager->Untie("forces/fbz-aero-lbs");
@@ -374,7 +372,6 @@ void FGAerodynamics::unbind(void)
   PropertyManager->Untie("aero/alpha-wing-rad");
   PropertyManager->Untie("aero/stall-hyst-norm");
   PropertyManager->Untie("systems/stall-warn-norm");
-
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

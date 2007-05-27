@@ -54,7 +54,12 @@ FGFCSFunction::FGFCSFunction(FGFCS* fcs, Element* element) : FGFCSComponent(fcs,
 {
   Element *function_element = element->FindElement("function");
 
-  function = new FGFunction(PropertyManager, function_element);
+  if (function_element)
+    function = new FGFunction(PropertyManager, function_element);
+  else {
+    cerr << "FCS Function should contain a \"function\" element" << endl;
+    exit(-1);
+  }
 
   FGFCSComponent::bind();
   Debug(0);

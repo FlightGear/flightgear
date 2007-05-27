@@ -59,7 +59,7 @@ INCLUDES
 #include <models/propulsion/FGEngine.h>
 #include <models/propulsion/FGTank.h>
 #include <math/FGMatrix33.h>
-#include <input_output/FGXMLElement.h>
+#include <input_output/FGXMLFileRead.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -97,7 +97,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGPropulsion : public FGModel
+class FGPropulsion : public FGModel, public FGXMLFileRead
 {
 public:
   /// Constructor

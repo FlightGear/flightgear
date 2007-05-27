@@ -104,11 +104,11 @@ bool FGMassBalance::Load(Element* el)
   EmptyWeight = el->FindElementValueAsNumberConvertTo("emptywt", "LBS");
 
   element = el->FindElement("location");
-   while (element) {
-     element_name = element->GetAttributeValue("name");
-     if (element_name == "CG") vbaseXYZcg = element->FindElementTripletConvertTo("IN");
-     element = el->FindNextElement("location");
-   }
+  while (element) {
+    element_name = element->GetAttributeValue("name");
+    if (element_name == "CG") vbaseXYZcg = element->FindElementTripletConvertTo("IN");
+    element = el->FindNextElement("location");
+  }
 
 // Find all POINTMASS elements that descend from this METRICS branch of the
 // config file.
@@ -281,11 +281,11 @@ void FGMassBalance::bind(void)
                        &FGMassBalance::GetMass);
   PropertyManager->Tie("inertia/weight-lbs", this,
                        &FGMassBalance::GetWeight);
-  PropertyManager->Tie("inertia/cg-x-ft", this,1,
+  PropertyManager->Tie("inertia/cg-x-in", this,1,
                        (PMF)&FGMassBalance::GetXYZcg);
-  PropertyManager->Tie("inertia/cg-y-ft", this,2,
+  PropertyManager->Tie("inertia/cg-y-in", this,2,
                        (PMF)&FGMassBalance::GetXYZcg);
-  PropertyManager->Tie("inertia/cg-z-ft", this,3,
+  PropertyManager->Tie("inertia/cg-z-in", this,3,
                        (PMF)&FGMassBalance::GetXYZcg);
 }
 
@@ -295,9 +295,9 @@ void FGMassBalance::unbind(void)
 {
   PropertyManager->Untie("inertia/mass-slugs");
   PropertyManager->Untie("inertia/weight-lbs");
-  PropertyManager->Untie("inertia/cg-x-ft");
-  PropertyManager->Untie("inertia/cg-y-ft");
-  PropertyManager->Untie("inertia/cg-z-ft");
+  PropertyManager->Untie("inertia/cg-x-in");
+  PropertyManager->Untie("inertia/cg-y-in");
+  PropertyManager->Untie("inertia/cg-z-in");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -335,7 +335,7 @@ void FGMassBalance::Debug(int from)
       cout << "    EmptyWeight: " << EmptyWeight << " lbm" << endl;
       cout << "    CG (x, y, z): " << vbaseXYZcg << endl;
       // ToDo: Need to add point mass outputs here
-      for (int i=0; i<PointMasses.size(); i++) {
+      for (unsigned int i=0; i<PointMasses.size(); i++) {
         cout << "    Point Mass Object: " << PointMasses[i].Weight << " lbs. at "
                    << "X, Y, Z (in.): " << PointMasses[i].Location(eX) << "  "
                    << PointMasses[i].Location(eY) << "  "

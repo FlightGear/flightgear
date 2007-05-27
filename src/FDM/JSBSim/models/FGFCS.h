@@ -53,7 +53,7 @@ INCLUDES
 #include <models/flight_control/FGFCSComponent.h>
 #include <models/FGModel.h>
 #include <models/FGLGear.h>
-#include <input_output/FGXMLElement.h>
+#include <input_output/FGXMLFileRead.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -191,7 +191,8 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFCS : public FGModel {
+class FGFCS : public FGModel, public FGXMLFileRead
+{
 
 public:
   /** Constructor
@@ -523,6 +524,7 @@ public:
 
   void AddThrottle(void);
   void AddGear(void);
+  double GetDt(void);
 
   FGPropertyManager* GetPropertyManager(void) { return PropertyManager; }
 

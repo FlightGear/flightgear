@@ -198,7 +198,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   }
   minMAP = MinManifoldPressure_inHg * 3386.38;  // inHg to Pa
   maxMAP = MaxManifoldPressure_inHg * 3386.38;
-  StarterHP = sqrt(MaxHP) * 0.2;
+  StarterHP = sqrt(MaxHP) * 0.4;
 
   // Set up and sanity-check the turbo/supercharging configuration based on the input values.
   if (TakeoffBoost > RatedBoost[0]) bTakeoffBoost = true;
@@ -580,7 +580,7 @@ void FGPiston::doEnginePower(void)
       if (RPM < 10) {
         HP = StarterHP;
       } else if (RPM < 480) {
-        HP = StarterHP + ((480 - RPM) / 10.0);
+        HP = StarterHP + ((480 - RPM) / 8.0);
         // This is a guess - would be nice to find a proper starter moter torque curve
       } else {
         HP = StarterHP;
@@ -593,7 +593,7 @@ void FGPiston::doEnginePower(void)
         HP = 0.0;
     }
   }
-  //cout << "Power = " << HP << '\n';
+//  cout << "Power = " << HP << "  RPM = " << RPM << "  Running = " << Running << "  Cranking = " << Cranking << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -729,10 +729,10 @@ string FGPiston::GetEngineLabels(string delimeter)
 {
   std::ostringstream buf;
 
-  buf << Name << "_PwrAvail[" << EngineNumber << "]" << delimeter
-      << Name << "_HP[" << EngineNumber << "]" << delimeter
-      << Name << "_equiv_ratio[" << EngineNumber << "]" << delimeter
-      << Name << "_MAP[" << EngineNumber << "]" << delimeter
+  buf << Name << " Power Available (engine " << EngineNumber << " in HP)" << delimeter
+      << Name << " HP (engine " << EngineNumber << ")" << delimeter
+      << Name << " equivalent ratio (engine " << EngineNumber << ")" << delimeter
+      << Name << " MAP (engine " << EngineNumber << ")" << delimeter
       << Thruster->GetThrusterLabels(EngineNumber, delimeter);
 
   return buf.str();

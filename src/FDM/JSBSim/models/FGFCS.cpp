@@ -52,6 +52,7 @@ INCLUDES
 #include <models/flight_control/FGKinemat.h>
 #include <models/flight_control/FGFCSFunction.h>
 #include <models/flight_control/FGSensor.h>
+#include <models/flight_control/FGActuator.h>
 
 namespace JSBSim {
 
@@ -147,7 +148,9 @@ bool FGFCS::Run(void)
 
   // Cycle through the sensor, autopilot, and flight control components
   for (i=0; i<sensors.size(); i++) sensors[i]->Run();
-  for (i=0; i<APComponents.size(); i++) APComponents[i]->Run();
+  for (i=0; i<APComponents.size(); i++) {
+    APComponents[i]->Run();
+  }
   for (i=0; i<FCSComponents.size(); i++) FCSComponents[i]->Run();
 
   return false;
@@ -456,10 +459,8 @@ bool FGFCS::Load(Element* el)
 {
   string name, file, fname, interface_property_string;
   vector <FGFCSComponent*> *Components;
-  Element *document, *component_element, *property_element, *sensor_element;
+  Element *component_element, *property_element, *sensor_element;
   Element *channel_element;
-  ifstream* controls_file = new ifstream();
-  FGXMLParse controls_file_parser;
 
   Components=0;
   // Determine if the FCS/Autopilot is defined inline in the aircraft configuration
@@ -479,10 +480,7 @@ bool FGFCS::Load(Element* el)
       cerr << "FCS/Autopilot does not appear to be defined inline nor in a file" << endl;
       return false;
     } else {
-      controls_file->open(file.c_str());
-      readXML(*controls_file, controls_file_parser);
-      delete controls_file;
-      document = controls_file_parser.GetDocument();
+      document = LoadXMLDocument(file);
     }
   } else {
     document = el;
@@ -554,6 +552,8 @@ bool FGFCS::Load(Element* el)
           Components->push_back(new FGFCSFunction(this, component_element));
         } else if (component_element->GetName() == string("pid")) {
           Components->push_back(new FGPID(this, component_element));
+        } else if (component_element->GetName() == string("actuator")) {
+          Components->push_back(new FGActuator(this, component_element));
         } else {
           cerr << "Unknown FCS component: " << component_element->GetName() << endl;
         }
@@ -604,7 +604,9 @@ string FGFCS::GetComponentStrings(string delimeter)
 
   for (comp = 0; comp < APComponents.size(); comp++)
   {
-    CompStrings += delimeter;
+    if (firstime) firstime = false;
+    else          CompStrings += delimeter;
+
     CompStrings += APComponents[comp]->GetName();
   }
 
@@ -629,7 +631,10 @@ string FGFCS::GetComponentValues(string delimeter)
   }
 
   for (comp = 0; comp < APComponents.size(); comp++) {
-    sprintf(buffer, "%s%9.6f", delimeter.c_str(), APComponents[comp]->GetOutput());
+    if (firstime) firstime = false;
+    else          CompValues += delimeter;
+
+    sprintf(buffer, "%9.6f", APComponents[comp]->GetOutput());
     CompValues += string(buffer);
   }
 
@@ -659,6 +664,13 @@ void FGFCS::AddThrottle(void)
 void FGFCS::AddGear(void)
 {
   SteerPosDeg.push_back(0.0);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGFCS::GetDt(void)
+{
+  return FDMExec->GetDeltaT()*rate;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

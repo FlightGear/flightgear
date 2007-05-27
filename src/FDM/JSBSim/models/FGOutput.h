@@ -55,7 +55,7 @@ INCLUDES
 #endif
 
 #include <input_output/FGfdmSocket.h>
-#include <input_output/FGXMLElement.h>
+#include <input_output/FGXMLFileRead.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -123,7 +123,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGOutput : public FGModel
+class FGOutput : public FGModel, public FGXMLFileRead
 {
 public:
   FGOutput(FGFDMExec*);

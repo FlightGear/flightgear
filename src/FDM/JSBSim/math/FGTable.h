@@ -299,8 +299,8 @@ private:
   FGPropertyManager *lookupProperty[3];
   double** Data;
   vector <FGTable*> Tables;
-  int  FindNumColumns(string);
-  int nRows, nCols, nTables, dimension;
+  unsigned int FindNumColumns(string);
+  unsigned int nRows, nCols, nTables, dimension;
   int colCounter, rowCounter, tableCounter;
   mutable int lastRowIndex, lastColumnIndex, lastTableIndex;
   double** Allocate(void);

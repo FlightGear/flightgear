@@ -94,7 +94,7 @@ FGSwitch::FGSwitch(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
       else { // error
         cerr << "Unrecognized LOGIC token " << logic << " in switch component: " << Name << endl;
       }
-      for (int i=0; i<test_element->GetNumDataLines(); i++)
+      for (unsigned int i=0; i<test_element->GetNumDataLines(); i++)
         current_test->conditions.push_back(FGCondition(test_element->GetDataLine(i), PropertyManager));
 
       condition_element = test_element->GetElement(); // retrieve condition groups

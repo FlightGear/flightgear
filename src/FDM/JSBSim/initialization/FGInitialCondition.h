@@ -50,6 +50,7 @@ INCLUDES
 #include <FGFDMExec.h>
 #include <FGJSBBase.h>
 #include <math/FGColumnVector3.h>
+#include <input_output/FGXMLFileRead.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -199,7 +200,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGInitialCondition : public FGJSBBase
+class FGInitialCondition : public FGJSBBase, public FGXMLFileRead
 {
 public:
   /// Constructor

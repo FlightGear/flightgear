@@ -87,8 +87,8 @@ FGTable::FGTable(const FGTable& t) : PropertyManager(t.PropertyManager)
 
   Tables = t.Tables;
   Data = Allocate();
-  for (int r=0; r<=nRows; r++) {
-    for (int c=0; c<=nCols; c++) {
+  for (unsigned int r=0; r<=nRows; r++) {
+    for (unsigned int c=0; c<=nCols; c++) {
       Data[r][c] = t.Data[r][c];
     }
   }
@@ -101,7 +101,7 @@ FGTable::FGTable(const FGTable& t) : PropertyManager(t.PropertyManager)
 
 FGTable::FGTable(FGPropertyManager* propMan, Element* el) : PropertyManager(propMan)
 {
-  int i;
+  unsigned int i;
 
   stringstream buf;
   string property_string;
@@ -287,9 +287,9 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el) : PropertyManager(prop
 double** FGTable::Allocate(void)
 {
   Data = new double*[nRows+1];
-  for (int r=0; r<=nRows; r++) {
+  for (unsigned int r=0; r<=nRows; r++) {
     Data[r] = new double[nCols+1];
-    for (int c=0; c<=nCols; c++) {
+    for (unsigned int c=0; c<=nCols; c++) {
       Data[r][c] = 0.0;
     }
   }
@@ -306,10 +306,10 @@ FGTable::~FGTable()
   }
 
   if (nTables > 0) {
-    for (int i=0; i<nTables; i++) delete Tables[i];
+    for (unsigned int i=0; i<nTables; i++) delete Tables[i];
     Tables.clear();
   }
-  for (int r=0; r<=nRows; r++) delete[] Data[r];
+  for (unsigned int r=0; r<=nRows; r++) delete[] Data[r];
   delete[] Data;
 
   Debug(1);
@@ -317,11 +317,11 @@ FGTable::~FGTable()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-int FGTable::FindNumColumns(string test_line)
+unsigned int FGTable::FindNumColumns(string test_line)
 {
   // determine number of data columns in table (first column is row lookup - don't count)
-  int position=0;
-  int nCols=0;
+  size_t position=0;
+  unsigned int nCols=0;
   while ((position = test_line.find_first_not_of(" \t", position)) != string::npos) {
     nCols++;
     position = test_line.find_first_of(" \t", position);
@@ -359,7 +359,7 @@ double FGTable::GetValue(void) const
 double FGTable::GetValue(double key) const
 {
   double Factor, Value, Span;
-  int r=lastRowIndex;
+  unsigned int r = lastRowIndex;
 
   //if the key is off the end of the table, just return the
   //end-of-table value, do not extrapolate
@@ -374,14 +374,12 @@ double FGTable::GetValue(double key) const
   }
 
   // the key is somewhere in the middle, search for the right breakpoint
-  // assume the correct breakpoint has not changed since last frame or
+  // The search is particularly efficient if 
+  // the correct breakpoint has not changed since last frame or
   // has only changed very little
 
-  if ( r > 2 && Data[r-1][0] > key ) {
-    while( Data[r-1][0] > key && r > 2) { r--; }
-  } else if ( Data[r][0] < key ) {
-    while( Data[r][0] <= key && r <= nRows) { r++; }
-  }
+  while (r > 2     && Data[r-1][0] > key) { r--; }
+  while (r < nRows && Data[r][0]   < key) { r++; }
 
   lastRowIndex=r;
   // make sure denominator below does not go to zero.
@@ -404,22 +402,14 @@ double FGTable::GetValue(double key) const
 double FGTable::GetValue(double rowKey, double colKey) const
 {
   double rFactor, cFactor, col1temp, col2temp, Value;
-  int r=lastRowIndex;
-  int c=lastColumnIndex;
+  unsigned int r = lastRowIndex;
+  unsigned int c = lastColumnIndex;
 
-  if ( r > 2 && Data[r-1][0] > rowKey ) {
-    while ( Data[r-1][0] > rowKey && r > 2) { r--; }
-  } else if ( Data[r][0] < rowKey ) {
-    while ( r <= nRows && Data[r][0] <= rowKey ) { r++; }
-    if ( r > nRows ) r = nRows;
-  }
+  while(r > 2     && Data[r-1][0] > rowKey) { r--; }
+  while(r < nRows && Data[r]  [0] < rowKey) { r++; }
 
-  if ( c > 2 && Data[0][c-1] > colKey ) {
-    while( Data[0][c-1] > colKey && c > 2) { c--; }
-  } else if ( Data[0][c] < colKey ) {
-    while( Data[0][c] <= colKey && c <= nCols) { c++; }
-    if ( c > nCols ) c = nCols;
-  }
+  while(c > 2     && Data[0][c-1] > colKey) { c--; }
+  while(c < nCols && Data[0][c]   < colKey) { c++; }
 
   lastRowIndex=r;
   lastColumnIndex=c;
@@ -446,7 +436,7 @@ double FGTable::GetValue(double rowKey, double colKey) const
 double FGTable::GetValue(double rowKey, double colKey, double tableKey) const
 {
   double Factor, Value, Span;
-  int r=lastRowIndex;
+  unsigned int r = lastRowIndex;
 
   //if the key is off the end  (or before the beginning) of the table,
   // just return the boundary-table value, do not extrapolate
@@ -460,14 +450,12 @@ double FGTable::GetValue(double rowKey, double colKey, double tableKey) const
   }
 
   // the key is somewhere in the middle, search for the right breakpoint
-  // assume the correct breakpoint has not changed since last frame or
+  // The search is particularly efficient if 
+  // the correct breakpoint has not changed since last frame or
   // has only changed very little
 
-  if ( r > 2 && Data[r-1][1] > tableKey ) {
-    while( Data[r-1][1] > tableKey && r > 2) { r--; }
-  } else if ( Data[r][1] < tableKey ) {
-    while( Data[r][1] <= tableKey && r <= nRows) { r++; }
-  }
+  while(r > 2     && Data[r-1][1] > tableKey) { r--; }
+  while(r < nRows && Data[r]  [1] < tableKey) { r++; }
 
   lastRowIndex=r;
   // make sure denominator below does not go to zero.
@@ -493,11 +481,11 @@ void FGTable::operator<<(stringstream& in_stream)
   int startRow=0;
   int startCol=0;
 
-  if (Type == tt1D || Type == tt3D) startRow = 1;
-  if (Type == tt3D) startCol = 1;
+// In 1D table, no pseudo-row of column-headers (i.e. keys):
+  if (Type == tt1D) startRow = 1;
 
-  for (int r=startRow; r<=nRows; r++) {
-    for (int c=startCol; c<=nCols; c++) {
+  for (unsigned int r=startRow; r<=nRows; r++) {
+    for (unsigned int c=startCol; c<=nCols; c++) {
       if (r != 0 || c != 0) {
         in_stream >> Data[r][c];
       }
@@ -557,9 +545,9 @@ void FGTable::Print(void)
       break;
   }
   cout.precision(4);
-  for (int r=startRow; r<=nRows; r++) {
+  for (unsigned int r=startRow; r<=nRows; r++) {
     cout << "	";
-    for (int c=startCol; c<=nCols; c++) {
+    for (unsigned int c=startCol; c<=nCols; c++) {
       if (r == 0 && c == 0) {
         cout << "	";
       } else {

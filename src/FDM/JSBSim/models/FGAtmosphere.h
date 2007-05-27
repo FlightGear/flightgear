@@ -185,6 +185,7 @@ protected:
   double T_dev_sl, T_dev, delta_T, density_altitude;
   atmType atmosphere;
   bool StandardTempOnly;
+  bool first_pass;
 
   double MagnitudedAccelDt, MagnitudeAccel, Magnitude;
   double TurbGain;

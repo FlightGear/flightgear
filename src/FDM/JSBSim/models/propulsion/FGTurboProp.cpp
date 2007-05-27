@@ -278,7 +278,7 @@ double FGTurboProp::Off(void)
 
 double FGTurboProp::Run(void)
 {
-  double idlethrust, milthrust, thrust = 0.0, EngPower_HP, eff_coef;
+  double thrust = 0.0, EngPower_HP, eff_coef;
   Running = true; Starter = false; EngStarting = false;
 
 //---

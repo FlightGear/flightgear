@@ -88,7 +88,7 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) : Exec(fdmex),
   if (el->FindElement("max_steer"))
     maxSteerAngle = el->FindElementValueAsNumberConvertTo("max_steer", "DEG");
   if (el->FindElement("retractable"))
-    isRetractable = (int)el->FindElementValueAsNumber("retractable");
+    isRetractable = ((unsigned int)el->FindElementValueAsNumber("retractable"))>0.0?true:false;
 
   ForceY_Table = 0;
   force_table = el->FindElement("table");
@@ -183,7 +183,7 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) : Exec(fdmex),
   FCS         = Exec->GetFCS();
   MassBalance = Exec->GetMassBalance();
 
-  WOW = lastWOW = true; // should the value be initialized to true?
+  WOW = lastWOW = false;
   ReportEnable = true;
   FirstContact = false;
   StartedGroundRun = false;

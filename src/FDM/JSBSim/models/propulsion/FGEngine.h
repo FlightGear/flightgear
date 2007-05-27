@@ -60,6 +60,7 @@ INCLUDES
 #include <FGJSBBase.h>
 #include "FGThruster.h"
 #include <input_output/FGPropertyManager.h>
+#include <input_output/FGXMLFileRead.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -102,7 +103,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGEngine : public FGJSBBase
+class FGEngine : public FGJSBBase, public FGXMLFileRead
 {
 public:
   FGEngine(FGFDMExec* exec, Element* el, int engine_number);

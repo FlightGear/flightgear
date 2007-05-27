@@ -199,11 +199,7 @@ bool FGPropulsion::ICEngineStart(void)
 bool FGPropulsion::Load(Element* el)
 {
   string type, engine_filename;
-  int Feed;
   bool ThrottleAdded = false;
-  Element* document;
-  FGXMLParse engine_file_parser;
-  ifstream* engine_file;
 
   Debug(2);
 
@@ -217,8 +213,7 @@ bool FGPropulsion::Load(Element* el)
     }
 
     engine_filename = FindEngineFullPathname(engine_filename);
-    readXML(engine_filename, engine_file_parser);
-    document = engine_file_parser.GetDocument(); // document holds the engine description
+    document = LoadXMLDocument(engine_filename);
     document->SetParent(engine_element);
 
     type = document->GetName();
@@ -253,7 +248,7 @@ bool FGPropulsion::Load(Element* el)
     numEngines++;
 
     engine_element = el->FindNextElement("engine");
-    engine_file_parser.reset();
+    ResetParser();
   }
 
   // Process tank definitions
@@ -488,7 +483,7 @@ void FGPropulsion::SetCutoff(int setting)
 
 void FGPropulsion::SetActiveEngine(int engine)
 {
-  if (engine >= Engines.size() || engine < 0)
+  if (engine >= (int)Engines.size() || engine < 0)
     ActiveEngine = -1;
   else
     ActiveEngine = engine;

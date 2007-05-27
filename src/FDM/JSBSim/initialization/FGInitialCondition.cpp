@@ -732,9 +732,6 @@ double FGInitialCondition::GetWindDirDegIC(void) const {
 bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
 {
   string resetDef;
-  ifstream initialization_file;
-  FGXMLParse initialization_file_parser;
-  Element *document, *el;
   int n;
 
   string sep = "/";
@@ -748,15 +745,8 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
     resetDef = rstfile;
   }
 
-  initialization_file.open(resetDef.c_str());
-  if ( !initialization_file.is_open()) {
-    cerr << "Could not open initialization file: " << resetDef << endl;
-    return false;
-  }
+  document = LoadXMLDocument(resetDef);
 
-  readXML(initialization_file, initialization_file_parser);
-  document = initialization_file_parser.GetDocument(); // document holds the
-                                                       // initialization description
   if (document->GetName() != string("initialize")) {
     cerr << "File: " << resetDef << " is not a reset file" << endl;
     exit(-1);
@@ -803,10 +793,10 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
   if (document->FindElement("vground"))
     SetVgroundKtsIC(document->FindElementValueAsNumberConvertTo("vground", "FT/SEC"));
   if (document->FindElement("running")) {
-    n = document->FindElementValueAsNumber("running");
+    n = int(document->FindElementValueAsNumber("running"));
     if (n != 0) {
       FGPropulsion* propulsion = fdmex->GetPropulsion();
-      for(int i=0; i<propulsion->GetNumEngines(); i++) {
+      for(unsigned int i=0; i<propulsion->GetNumEngines(); i++) {
          propulsion->GetEngine(i)->SetRunning(true);
       }
     }
