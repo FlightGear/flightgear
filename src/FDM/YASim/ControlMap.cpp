@@ -211,8 +211,13 @@ void ControlMap::applyControls(float dt)
         case COLLECTIVE:   ((Rotor*)obj)->setCollective(lval);     break;
         case CYCLICAIL:    ((Rotor*)obj)->setCyclicail(lval,rval); break;
         case CYCLICELE:    ((Rotor*)obj)->setCyclicele(lval,rval); break;
-        case ROTORBRAKE:    ((Rotorgear*)obj)->setRotorBrake(lval); break;
-        case ROTORENGINEON: ((Rotorgear*)obj)->setEngineOn((int)lval); break;
+        case ROTORBRAKE:   ((Rotorgear*)obj)->setRotorBrake(lval); break;
+        case ROTORENGINEON: 
+                        ((Rotorgear*)obj)->setEngineOn((int)lval); break;
+        case ROTORENGINEMAXRELTORQUE: 
+              ((Rotorgear*)obj)->setRotorEngineMaxRelTorque(lval); break;
+        case ROTORELTARGET:
+                       ((Rotorgear*)obj)->setRotorRelTarget(lval); break;
 	case REVERSE_THRUST: ((Jet*)obj)->setReverse(lval != 0);   break;
 	case BOOST:
 	    ((PistonEngine*)((Thruster*)obj)->getEngine())->setBoost(lval);
