@@ -184,6 +184,13 @@ void Rotor::inititeration(float dt,float omegarel,float ddt_omegarel,float *rot)
 
     Math::mul3(Math::sin(_roll),side,help);
     Math::add3(_normal_with_yaw_roll,help,_normal_with_yaw_roll);
+
+    //update balance
+    if ((_balance1*_balance2 < 0.97) && (_balance1>-1))
+    {
+        _balance1-=(0.97-_balance1*_balance2)*(0.97-_balance1*_balance2)*0.00001;
+        if (_balance1<-1) _balance1=-1;
+    }
 }
 
 float Rotor::calcStall(float incidence,float speed)
@@ -247,11 +254,11 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
     if (j==0)
     {
         sprintf(text,"/rotors/%s/cone-deg", _name);
-        *f=( ((Rotorpart*)getRotorpart(0))->getrealAlpha()
+        *f=(_balance1>-1)?( ((Rotorpart*)getRotorpart(0))->getrealAlpha()
             +((Rotorpart*)getRotorpart(1*(_number_of_parts>>2)))->getrealAlpha()
             +((Rotorpart*)getRotorpart(2*(_number_of_parts>>2)))->getrealAlpha()
             +((Rotorpart*)getRotorpart(3*(_number_of_parts>>2)))->getrealAlpha()
-            )/4*180/pi;
+            )/4*180/pi:0;
     }
     else
         if (j==1)
@@ -260,7 +267,7 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
             _roll = ( ((Rotorpart*)getRotorpart(0))->getrealAlpha()
                 -((Rotorpart*)getRotorpart(2*(_number_of_parts>>2)))->getrealAlpha()
                 )/2*(_ccw?-1:1);
-            *f=_roll *180/pi;
+            *f=(_balance1>-1)?_roll *180/pi:0;
         }
         else
             if (j==2)
@@ -269,7 +276,7 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
                 _yaw=( ((Rotorpart*)getRotorpart(1*(_number_of_parts>>2)))->getrealAlpha()
                     -((Rotorpart*)getRotorpart(3*(_number_of_parts>>2)))->getrealAlpha()
                     )/2;
-                *f=_yaw*180/pi;
+                *f=(_balance1>-1)?_yaw*180/pi:0;
             }
             else
                 if (j==3)
@@ -348,6 +355,16 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
 void Rotorgear::setEngineOn(int value)
 {
     _engineon=value;
+}
+
+void Rotorgear::setRotorEngineMaxRelTorque(float lval)
+{
+    fgGetNode("/rotors/gear/max-rel-torque", true)->setDoubleValue(lval);
+}
+
+void Rotorgear::setRotorRelTarget(float lval)
+{
+    fgGetNode("/rotors/gear/target-rel-rpm", true)->setDoubleValue(lval);
 }
 
 void Rotor::setAlpha0(float f)
@@ -1358,13 +1375,16 @@ void Rotorgear::calcForces(float* torqueOut)
             total_torque+=r->getTorque()*omegan;
         }
         float max_torque_of_engine=0;
+        SGPropertyNode * node=fgGetNode("/rotors/gear", true);
+        float target_rel_rpm=node->getDoubleValue("target-rel-rpm",1);
         if (_engineon)
         {
-            max_torque_of_engine=_max_power_engine;
-            float df=1-omegarel;
+            float max_rel_torque=node->getDoubleValue("max-rel-torque",1);
+            max_torque_of_engine=_max_power_engine*max_rel_torque;
+            float df=target_rel_rpm-omegarel;
             df/=_engine_prop_factor;
             df = Math::clamp(df, 0, 1);
-            max_torque_of_engine = df * _max_power_engine;
+            max_torque_of_engine = df * _max_power_engine*max_rel_torque;
         }
         total_torque*=-1;
         _ddt_omegarel=0;
@@ -1391,7 +1411,7 @@ void Rotorgear::calcForces(float* torqueOut)
 
         //change the rotation of the rotors 
         if ((max_torque_of_engine<total_torque) //decreasing rotation
-            ||((max_torque_of_engine>total_torque)&&(omegarel<1))
+            ||((max_torque_of_engine>total_torque)&&(omegarel<target_rel_rpm))
             //increasing rotation due to engine
             ||(total_torque<0) ) //increasing rotation due to autorotation
         {
@@ -1453,6 +1473,8 @@ void Rotorgear::compile()
         Rotor* r = (Rotor*)_rotors.get(j);
         r->compile();
     }
+    fgGetNode("/rotors/gear/target-rel-rpm", true)->setDoubleValue(1);
+    fgGetNode("/rotors/gear/max-rel-torque", true)->setDoubleValue(1);
 }
 
 void Rotorgear::getDownWash(float *pos, float * v_heli, float *downwash)

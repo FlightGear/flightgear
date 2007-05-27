@@ -243,6 +243,8 @@ public:
     void setEngineOn(int value);
     int getEngineon();
     void setRotorBrake(float lval);
+    void setRotorEngineMaxRelTorque(float lval);
+    void setRotorRelTarget(float lval);
     float getYasimDragFactor() { return _yasimdragfactor;}
     float getYasimLiftFactor() { return _yasimliftfactor;}
     float getMaxPowerEngine() { return _max_power_engine;}
