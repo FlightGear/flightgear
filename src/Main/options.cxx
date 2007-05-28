@@ -42,6 +42,7 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/material/mat.hxx>
 
 // #include <Include/general.hxx>
 // #include <Airports/simple.hxx>
@@ -204,6 +205,8 @@ fgSetDefaults ()
     fgSetBool("/sim/rendering/shading", true);
     fgSetBool("/sim/rendering/skyblend", true);
     fgSetBool("/sim/rendering/textures", true);
+    fgTie( "/sim/rendering/filtering", SGTextureFilterListener::getFilter, SGTextureFilterListener::setFilter, false);
+    fgSetInt("/sim/rendering/filtering", 1);
     fgSetBool("/sim/rendering/wireframe", false);
     fgSetBool("/sim/rendering/horizon-effect", false);
     fgSetBool("/sim/rendering/enhanced-lighting", false);
@@ -1326,6 +1329,7 @@ struct OptionDesc {
     {"enable-skyblend",              false, OPTION_BOOL,   "/sim/rendering/skyblend", true, "", 0 },
     {"disable-textures",             false, OPTION_BOOL,   "/sim/rendering/textures", false, "", 0 },
     {"enable-textures",              false, OPTION_BOOL,   "/sim/rendering/textures", true, "", 0 },
+    {"texture-filtering",	     false, OPTION_INT,    "/sim/rendering/filtering", 1, "", 0 },
     {"disable-wireframe",            false, OPTION_BOOL,   "/sim/rendering/wireframe", false, "", 0 },
     {"enable-wireframe",             false, OPTION_BOOL,   "/sim/rendering/wireframe", true, "", 0 },
     {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
