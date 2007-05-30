@@ -188,7 +188,7 @@ FGMenuBar::make_menu (SGPropertyNode * node)
 
         for (unsigned int k = 0; k < bindings.size(); k++) {
             unsigned int m = 0;
-            SGPropertyNode *binding;
+            SGPropertyNode_ptr binding;
             while (dest->getChild("binding", m))
                 m++;
 

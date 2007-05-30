@@ -748,7 +748,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 
         for (unsigned int i = 0; i < bindings.size(); i++) {
             unsigned int j = 0;
-            SGPropertyNode *binding;
+            SGPropertyNode_ptr binding;
             while (dest->getChild("binding", j))
                 j++;
 
