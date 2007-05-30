@@ -857,11 +857,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Instrumentation\HUD\HUD.hxx"
+				RelativePath="..\..\src\cockpit\hud.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud.hxx"
+				RelativePath="..\..\src\Instrumentation\HUD\HUD.hxx"
 				>
 			</File>
 			<File
@@ -1274,6 +1274,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\network\ray.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Scenery\redout.hxx"
 				>
 			</File>
 			<File
@@ -1942,10 +1946,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\atc\ATCDialog.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\atc\ATCdisplay.cxx"
 				>
 			</File>
 			<File
@@ -3016,6 +3016,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\network\ray.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Scenery\redout.cxx"
 				>
 			</File>
 			<File

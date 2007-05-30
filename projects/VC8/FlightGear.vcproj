@@ -60,7 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ul.lib osgDBd.lib osgUtild.lib osgParticled.lib osgTextd.lib osgd.lib OpenThreadsd.lib libjpeg.lib pthreadvc2.lib Alut.lib openal32.lib zlib.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
+				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ul.lib osgDBd.lib osgGAd.lib osgViewerd.lib osgUtild.lib osgParticled.lib osgTextd.lib osgd.lib OpenThreadsd.lib libjpeg.lib pthreadvc2.lib Alut.lib openal32.lib glu32.lib opengl32.lib winmm.lib zlib1.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;$(ProgramFiles)/OpenThreads/lib;$(ProgramFiles)/OpenSceneGraph/lib;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib"
 				IgnoreDefaultLibraryNames="libcmt.lib"
@@ -138,8 +138,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ul.lib osgDB.lib osgUtil.lib osgParticle.lib osgText.lib osg.lib OpenThreads.lib pthreadvc2.lib Alut.lib openal32.lib zlib1.lib libjpeg.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
-				LinkIncremental="2"
+				AdditionalDependencies="FlightgearLib.lib Simgear.lib fnt.lib js.lib net.lib psl.lib puAux.lib pui.lib pw.lib sg.lib sl.lib ul.lib osgDB.lib osgGA.lib osgViewer.lib osgUtil.lib osgParticle.lib osgText.lib osg.lib OpenThreads.lib pthreadvc2.lib Alut.lib openal32.lib glu32.lib opengl32.lib winmm.lib zlib1.lib libjpeg.lib wsock32.lib advapi32.lib comdlg32.lib shell32.lib user32.lib"
+				LinkIncremental="0"
 				AdditionalLibraryDirectories="&quot;FG$(IntDir)&quot;;$(ProgramFiles)/OpenThreads/lib;$(ProgramFiles)/OpenSceneGraph/lib;../../../plib/;&quot;../../../Simgear/Projects/VC8/$(IntDir)&quot;;../../../3rdParty/lib;$(NOINHERIT)"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -200,6 +200,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\fg_props.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Main\FGManipulator.hxx"
 				>
 			</File>
 			<File
@@ -267,11 +271,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\fg_os.cxx"
+				RelativePath="..\..\src\Main\fg_os_osgviewer.cxx"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\main\fg_props.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Main\FGManipulator.cxx"
 				>
 			</File>
 			<File
@@ -296,14 +304,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\splash.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Memory_and_Exception_Trace\Stackwalker.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Memory_and_Exception_Trace\Stackwalker.h"
 				>
 			</File>
 			<File
