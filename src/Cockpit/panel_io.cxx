@@ -288,20 +288,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
   if (trans_table != 0) {
     SG_LOG( SG_COCKPIT, SG_INFO, "Found interpolation table with "
             << trans_table->nChildren() << " children" );
-    t->table = new SGInterpTable();
-    for (int i = 0; i < trans_table->nChildren(); i++) {
-      const SGPropertyNode * node = trans_table->getChild(i);
-      if (!strcmp(node->getName(), "entry")) {
-	double ind = node->getDoubleValue("ind", 0.0);
-	double dep = node->getDoubleValue("dep", 0.0);
-	SG_LOG( SG_COCKPIT, SG_INFO, "Adding interpolation entry "
-                << ind << "==>" << dep );
-	t->table->addEntry(ind, dep);
-      } else {
-	SG_LOG( SG_COCKPIT, SG_INFO, "Skipping " << node->getName()
-                << " in interpolation" );
-      }
-    }
+    t->table = new SGInterpTable(trans_table);
   } else {
     t->table = 0;
   }
