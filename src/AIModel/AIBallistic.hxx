@@ -81,15 +81,9 @@ private:
     double _ht_agl_ft;       // height above ground level
     double _load_resistance; // ground load resistanc N/m^2
     bool   _solid;           // if true ground is solid for FDMs
-    bool   _impact;          // if true an impact point on the terrain is calculated
-    bool   _impact_data;     // if true impact data have been set
+    bool   _report_impact;   // if true an impact point on the terrain is calculated
+    bool   _impact_reported; // if true impact data have been set
     SGPropertyNode_ptr _impact_report_node;
-
-    double _impact_energy;
-    double _impact_speed;
-    double _impact_lat;
-    double _impact_lon;
-    double _impact_elev;
 
     string _mat_name;
     string _name;
