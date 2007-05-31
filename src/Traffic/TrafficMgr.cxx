@@ -124,7 +124,8 @@ void FGTrafficManager::init()
    */ 
   SGPath path = aircraftDir;
   path.append("Traffic/fgtraffic.xml");
-  readXML(path.str(),*this);
+  if (path.exists())
+    readXML(path.str(),*this);
 
   aircraftDir.append("AI/Aircraft");
   if (aircraftDir.exists())
@@ -169,6 +170,9 @@ void FGTrafficManager::init()
 void FGTrafficManager::update(double /*dt*/)
 {
   //SG_LOG( SG_GENERAL, SG_INFO, "Running TrafficManager::Update() ");
+  // Hack alert: Skip running for the first frames 1000 after 
+  // initialization to allow proper initialization of wheather stuff 
+  // and runway assignments
   if (runCount < 1000)
     {
       runCount++;
