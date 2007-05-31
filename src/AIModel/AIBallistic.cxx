@@ -47,13 +47,8 @@ FGAIBallistic::FGAIBallistic() :
     _ht_agl_ft(0),
     _load_resistance(0),
     _solid(false),
-    _impact_data(false),
-    _impact_report_node(0),
-    _impact_energy(0),
-    _impact_speed(0),
-    _impact_lat(0),
-    _impact_lon(0),
-    _impact_elev(0),
+    _impact_reported(false),
+    _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
     _mat_name("")
 {
     no_roll = false;
@@ -113,16 +108,6 @@ void FGAIBallistic::bind() {
                 SGRawValuePointer<bool>(&_solid));
     props->tie("altitude-agl-ft",
                 SGRawValuePointer<double>(&_ht_agl_ft));
-    props->tie("impact/latitude-deg",
-                SGRawValuePointer<double>(&_impact_lat));
-    props->tie("impact/longitude-deg",
-                SGRawValuePointer<double>(&_impact_lon));
-    props->tie("impact/elevation-m",
-                SGRawValuePointer<double>(&_impact_elev));
-    props->tie("impact/speed-mps",
-                SGRawValuePointer<double>(&_impact_speed));
-    props->tie("impact/energy-kJ",
-                SGRawValuePointer<double>(&_impact_energy));
 }
 
 void FGAIBallistic::unbind() {
@@ -131,11 +116,6 @@ void FGAIBallistic::unbind() {
     props->untie("material/load-resistance");
     props->untie("material/solid");
     props->untie("altitude-agl-ft");
-    props->untie("impact/latitude-deg");
-    props->untie("impact/longitude-deg");
-    props->untie("impact/elevation-m");
-    props->untie("impact/speed-mps");
-    props->untie("impact/energy-kJ");
 }
 
 void FGAIBallistic::update(double dt) {
@@ -201,13 +181,11 @@ void FGAIBallistic::setRandom(bool r) {
 }
 
 void FGAIBallistic::setImpact(bool i) {
-    _impact = i;
+    _report_impact = i;
 }
 
 void FGAIBallistic::setImpactReportNode(const string& path) {
-    if (path.empty())
-        _impact_report_node = 0;
-    else
+    if (!path.empty())
         _impact_report_node = fgGetNode(path.c_str(), true);
 }
 
@@ -296,7 +274,7 @@ void FGAIBallistic::Run(double dt) {
     // recalculate total speed
     speed = sqrt( vs * vs + hs * hs) / SG_KT_TO_FPS;
 
-    if (_impact && !_impact_data)
+    if (_report_impact && !_impact_reported)
         handle_impact();
 
     // set destruction flag if altitude less than sea level -1000
@@ -335,18 +313,21 @@ void FGAIBallistic::handle_impact() {
 
     // report impact by setting property-tied variables
     if (_ht_agl_ft <= 0) {
-        _impact_data = true;
+        _impact_reported = true;
+        double speed_mps = speed * SG_KT_TO_MPS;
 
-        _impact_lat = pos.getLatitudeDeg();
-        _impact_lon = pos.getLongitudeDeg();
-        _impact_elev = elevation_m;
-        _impact_speed = speed * SG_KT_TO_MPS;
-        _impact_energy = (_mass * slugs_to_kgs) * _impact_speed
-                * _impact_speed / (2 * 1000);
+        SGPropertyNode *n = props->getNode("impact", true);
+        n->setDoubleValue("longitude-deg", pos.getLongitudeDeg());
+        n->setDoubleValue("latitude-deg", pos.getLatitudeDeg());
+        n->setDoubleValue("elevation-m", elevation_m);
+        n->setDoubleValue("heading-deg", hdg);
+        n->setDoubleValue("pitch-deg", pitch);
+        n->setDoubleValue("roll-deg", roll);
+        n->setDoubleValue("speed-mps", speed_mps);
+        n->setDoubleValue("energy-kJ", (_mass * slugs_to_kgs)
+                * speed_mps * speed_mps / (2 * 1000));
 
-        // and inform the owner
-        if (_impact_report_node)
-            _impact_report_node->setStringValue(props->getPath());
+        _impact_report_node->setStringValue(props->getPath());
     }
 }
 
