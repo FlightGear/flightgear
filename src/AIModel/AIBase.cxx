@@ -306,8 +306,9 @@ void FGAIBase::unbind() {
 }
 
 double FGAIBase::UpdateRadar(FGAIManager* manager) {
-   double radar_range_ft2 = fgGetDouble("/instrumentation/radar/range");
    bool force_on = fgGetBool("/instrumentation/radar/debug-mode", false);
+   double radar_range_nm = fgGetDouble("/instrumentation/radar/range");
+   double radar_range_ft2 = radar_range_nm;
    radar_range_ft2 *= SG_NM_TO_METER * SG_METER_TO_FEET * 1.1; // + 10%
    radar_range_ft2 *= radar_range_ft2;
 
@@ -392,8 +393,8 @@ double FGAIBase::UpdateRadar(FGAIManager* manager) {
      // horiz_offset += user_yaw; // FIXME: WHY WOULD WE WANT TO ADD IN SIDE-SLIP HERE?
 
      // calculate values for radar display
-     y_shift = range * cos( horiz_offset * SG_DEGREES_TO_RADIANS);
-     x_shift = range * sin( horiz_offset * SG_DEGREES_TO_RADIANS);
+     y_shift = (range * cos( horiz_offset * SG_DEGREES_TO_RADIANS)) / radar_range_nm;
+     x_shift = (range * sin( horiz_offset * SG_DEGREES_TO_RADIANS)) / radar_range_nm;
      rotation = hdg - user_heading;
      if (rotation < 0.0) rotation += 360.0;
      ht_diff = altitude_ft - user_altitude;
