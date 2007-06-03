@@ -42,6 +42,7 @@ INCLUDES
 #include "FGFDMExec.h"
 #include <math/FGCondition.h>
 #include <vector>
+#include <input_output/FGXMLFileRead.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -162,7 +163,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGScript : public FGJSBBase
+class FGScript : public FGJSBBase, public FGXMLFileRead
 {
 public:
   /// Default constructor
@@ -201,6 +202,7 @@ private:
     bool             Triggered;
     bool             PrevTriggered;
     bool             Notify;
+    bool             Notified;
     double           Delay;
     double           StartTime;
     double           TimeSpan;
@@ -221,7 +223,7 @@ private:
       PrevTriggered = false;
       Persistent = false;
       Delay = 0.0;
-      Notify = false;
+      Notify = Notified = false;
       Name = "";
       StartTime = 0.0;
       TimeSpan = 0.0;

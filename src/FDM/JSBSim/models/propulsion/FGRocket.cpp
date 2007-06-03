@@ -54,6 +54,15 @@ CLASS IMPLEMENTATION
 FGRocket::FGRocket(FGFDMExec* exec, Element *el, int engine_number)
   : FGEngine(exec, el, engine_number)
 {
+  Element* thrust_table_element = 0;
+  ThrustTable = 0L;
+  BurnTime = 0.0;
+
+  // Defaults
+   Variance = 0.0;
+   MinThrottle = 0.0;
+   MaxThrottle = 1.0;
+
   if (el->FindElement("shr"))
     SHR = el->FindElementValueAsNumber("shr");
   if (el->FindElement("max_pc"))
@@ -70,6 +79,11 @@ FGRocket::FGRocket(FGFDMExec* exec, Element *el, int engine_number)
     SLOxiFlowMax = el->FindElementValueAsNumberConvertTo("sloxiflowmax", "LBS/SEC");
   if (el->FindElement("variance"))
     Variance = el->FindElementValueAsNumber("variance");
+
+  thrust_table_element = el->FindElement("thrust_table");
+  if (thrust_table_element) {
+    ThrustTable = new FGTable(PropertyManager, thrust_table_element);
+  }
 
   Debug(0);
 
@@ -97,6 +111,18 @@ double FGRocket::Calculate(void)
 
   Throttle = FCS->GetThrottlePos(EngineNumber);
 
+  // If there is a thrust table, it is a function of elapsed burn time. The engine
+  // is started when the throttle is advanced to 1.0. After that, it burns
+  // without regard to throttle setting. The table returns a value between zero
+  // and one, representing the percentage of maximum vacuum thrust being applied.
+
+  if (ThrustTable != 0L) {
+    if (Throttle == 1 || BurnTime > 0.0) {
+      BurnTime += State->Getdt();
+    }
+    Throttle = ThrustTable->GetValue(BurnTime);
+  }
+
   if (Throttle < MinThrottle || Starved) {
     PctPower = Thrust = 0.0; // desired thrust
     Flameout = true;
@@ -122,7 +148,7 @@ string FGRocket::GetEngineLabels(string delimeter)
 {
   std::ostringstream buf;
 
-  buf << Name << "_ChamberPress[" << EngineNumber << "]" << delimeter
+  buf << Name << " Chamber Pressure (engine " << EngineNumber << " in psf)" << delimeter
       << Thruster->GetThrusterLabels(EngineNumber, delimeter);
 
   return buf.str();

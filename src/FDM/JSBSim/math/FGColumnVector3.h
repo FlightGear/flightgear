@@ -282,9 +282,6 @@ public:
       is equal to zero it is left untouched.   */
   FGColumnVector3& Normalize(void);
 
-  // ??? Is this something sensible ??
-  FGColumnVector3 multElementWise(const FGColumnVector3& V) const;
-
   // little trick here.
   struct AssignRef {
     AssignRef(FGColumnVector3& r, int i) : Ref(r), idx(i) {}

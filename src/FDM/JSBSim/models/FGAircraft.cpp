@@ -94,6 +94,7 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex)
   lbarh = lbarv = 0.0;
   vbarh = vbarv = 0.0;
   WingIncidence = 0.0;
+  HoldDown = 0;
 
   bind();
 
@@ -116,14 +117,18 @@ bool FGAircraft::Run(void)
   if (FDMExec->Holding()) return false;
 
   vForces.InitMatrix();
-  vForces += Aerodynamics->GetForces();
-  vForces += Propulsion->GetForces();
-  vForces += GroundReactions->GetForces();
+  if (!HoldDown) {
+    vForces += Aerodynamics->GetForces();
+    vForces += Propulsion->GetForces();
+    vForces += GroundReactions->GetForces();
+  }
 
   vMoments.InitMatrix();
-  vMoments += Aerodynamics->GetMoments();
-  vMoments += Propulsion->GetMoments();
-  vMoments += GroundReactions->GetMoments();
+  if (!HoldDown) {
+    vMoments += Aerodynamics->GetMoments();
+    vMoments += Propulsion->GetMoments();
+    vMoments += GroundReactions->GetMoments();
+  }
 
   vBodyAccel = vForces/MassBalance->GetMass();
 
@@ -212,6 +217,7 @@ void FGAircraft::bind(void)
   PropertyManager->Tie("metrics/lv-norm", this, &FGAircraft::Getlbarv);
   PropertyManager->Tie("metrics/vbarh-norm", this, &FGAircraft::Getvbarh);
   PropertyManager->Tie("metrics/vbarv-norm", this, &FGAircraft::Getvbarv);
+  PropertyManager->Tie("forces/hold-down", this, &FGAircraft::GetHoldDown, &FGAircraft::SetHoldDown);
   PropertyManager->Tie("moments/l-total-lbsft", this, eL, (PMF)&FGAircraft::GetMoments);
   PropertyManager->Tie("moments/m-total-lbsft", this, eM, (PMF)&FGAircraft::GetMoments);
   PropertyManager->Tie("moments/n-total-lbsft", this, eN, (PMF)&FGAircraft::GetMoments);
@@ -251,6 +257,7 @@ void FGAircraft::unbind(void)
   PropertyManager->Untie("forces/fbx-total-lbs");
   PropertyManager->Untie("forces/fby-total-lbs");
   PropertyManager->Untie("forces/fbz-total-lbs");
+  PropertyManager->Untie("forces/hold-down");
   PropertyManager->Untie("metrics/aero-rp-x-in");
   PropertyManager->Untie("metrics/aero-rp-y-in");
   PropertyManager->Untie("metrics/aero-rp-z-in");

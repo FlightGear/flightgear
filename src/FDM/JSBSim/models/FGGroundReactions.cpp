@@ -64,7 +64,7 @@ FGGroundReactions::FGGroundReactions(FGFDMExec* fgex) : FGModel(fgex)
 
 FGGroundReactions::~FGGroundReactions(void)
 {
-  for (int i=0; i<lGear.size();i++) lGear[i].unbind();
+  for (unsigned int i=0; i<lGear.size();i++) lGear[i].unbind();
   lGear.clear();
 
   unbind();
@@ -106,7 +106,7 @@ bool FGGroundReactions::Run(void)
 bool FGGroundReactions::GetWOW(void)
 {
   bool result = false;
-  for (int i=0; i<lGear.size(); i++) {
+  for (unsigned int i=0; i<lGear.size(); i++) {
     if (lGear[i].IsBogey() && lGear[i].GetWOW()) {
       result = true;
       break;
@@ -130,7 +130,7 @@ bool FGGroundReactions::Load(Element* el)
     contact_element = el->FindNextElement("contact");
   }
 
-  for (int i=0; i<lGear.size();i++) lGear[i].bind();
+  for (unsigned int i=0; i<lGear.size();i++) lGear[i].bind();
 
   return true;
 }
@@ -149,11 +149,13 @@ string FGGroundReactions::GetGroundReactionStrings(string delimeter)
           << name << " stroke velocity (ft/sec)" << delimeter
           << name << " compress force (lbs)" << delimeter
           << name << " wheel side force (lbs)" << delimeter
-          << name << " wheel velocity vec X (ft/sec)" << delimeter
-          << name << " wheel velocity vec Y (ft/sec)" << delimeter
           << name << " wheel roll force (lbs)" << delimeter
           << name << " body X force (lbs)" << delimeter
           << name << " body Y force (lbs)" << delimeter
+          << name << " wheel velocity vec X (ft/sec)" << delimeter
+          << name << " wheel velocity vec Y (ft/sec)" << delimeter
+          << name << " wheel rolling velocity (ft/sec)" << delimeter
+          << name << " wheel side velocity (ft/sec)" << delimeter
           << name << " wheel slip (deg)" << delimeter;
     }
   }
@@ -181,12 +183,14 @@ string FGGroundReactions::GetGroundReactionValues(string delimeter)
           << setprecision(5) << gear.GetCompLen() << delimeter
           << setprecision(6) << gear.GetCompVel() << delimeter
           << setprecision(10) << gear.GetCompForce() << delimeter
-          << setprecision(6) << gear.GetWheelVel(eX) << delimeter
-          << gear.GetWheelVel(eY) << delimeter
           << gear.GetWheelSideForce() << delimeter
           << gear.GetWheelRollForce() << delimeter
           << gear.GetBodyXForce() << delimeter
           << gear.GetBodyYForce() << delimeter
+          << setprecision(6) << gear.GetWheelVel(eX) << delimeter
+          << gear.GetWheelVel(eY) << delimeter
+          << gear.GetWheelRollVel() << delimeter
+          << gear.GetWheelSideVel() << delimeter
           << gear.GetWheelSlipAngle() << delimeter;
     }
   }

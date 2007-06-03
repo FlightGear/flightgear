@@ -244,6 +244,8 @@ public:
   inline bool GetGearUnitDown(void)        { return GearDown;        }
   inline double GetWheelSideForce(void)    { return SideForce;       }
   inline double GetWheelRollForce(void)    { return RollingForce;    }
+  inline double GetWheelSideVel(void)      { return SideWhlVel;      }
+  inline double GetWheelRollVel(void)      { return RollingWhlVel;   }
   inline double GetBodyXForce(void)        { return vLocalForce(eX); }
   inline double GetBodyYForce(void)        { return vLocalForce(eY); }
   inline double GetWheelSlipAngle(void)    { return WheelSlip;       }

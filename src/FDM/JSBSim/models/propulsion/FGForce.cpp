@@ -61,7 +61,6 @@ FGForce::FGForce(FGFDMExec *FDMExec) :
   mT(1,1) = 1; //identity matrix
   mT(2,2) = 1;
   mT(3,3) = 1;
-  vSense.InitMatrix(1);
 
   Debug(0);
 }
@@ -77,7 +76,7 @@ FGForce::~FGForce()
 
 FGColumnVector3& FGForce::GetBodyForces(void)
 {
-  vFb = Transform()*(vFn.multElementWise(vSense));
+  vFb = Transform()*vFn;
 
   // Find the distance from this vector's acting location to the cg; this
   // needs to be done like this to convert from structural to body coords.
@@ -110,29 +109,38 @@ FGMatrix33 FGForce::Transform(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+void FGForce::UpdateCustomTransformMatrix(void)
+{
+  double cp,sp,cr,sr,cy,sy;
+
+  cp=cos(vOrient(ePitch)); sp=sin(vOrient(ePitch));
+  cr=cos(vOrient(eRoll));  sr=sin(vOrient(eRoll));
+  cy=cos(vOrient(eYaw));   sy=sin(vOrient(eYaw));
+
+  mT(1,1) =  cp*cy;
+  mT(1,2) =  cp*sy;
+  mT(1,3) = -sp;
+
+  mT(2,1) = sr*sp*cy - cr*sy;
+  mT(2,2) = sr*sp*sy + cr*cy;
+  mT(2,3) = sr*cp;
+
+  mT(3,1) = cr*sp*cy + sr*sy;
+  mT(3,2) = cr*sp*sy - sr*cy;
+  mT(3,3) = cr*cp;
+  mT = mT.Inverse();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void FGForce::SetAnglesToBody(double broll, double bpitch, double byaw)
 {
   if (ttype == tCustom) {
-    double cp,sp,cr,sr,cy,sy;
     vOrient(ePitch) = bpitch;
     vOrient(eRoll) = broll;
     vOrient(eYaw) = byaw;
 
-    cp=cos(bpitch); sp=sin(bpitch);
-    cr=cos(broll);  sr=sin(broll);
-    cy=cos(byaw);   sy=sin(byaw);
-
-    mT(1,1)=cp*cy;
-    mT(1,2)=cp*sy;
-    mT(1,3)=-1*sp;
-
-    mT(2,1)=sr*sp*cy-cr*sy;
-    mT(2,2)=sr*sp*sy+cr*cy;
-    mT(2,3)=sr*cp;
-
-    mT(3,1)=cr*sp*cy+sr*sy;
-    mT(3,2)=cr*sp*sy-sr*cy;
-    mT(3,3)=cr*cp;
+    UpdateCustomTransformMatrix();
   }
 }
 

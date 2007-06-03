@@ -101,15 +101,15 @@ FGAuxiliary::~FGAuxiliary()
 
 bool FGAuxiliary::Run()
 {
-  double A,B,D, hdot_Vt;
+  double A,B,D;
+
+  if (FGModel::Run()) return true; // return true if error returned from base class
+  if (FDMExec->Holding()) return false;
+
   const FGColumnVector3& vPQR = Propagate->GetPQR();
   const FGColumnVector3& vUVW = Propagate->GetUVW();
   const FGColumnVector3& vUVWdot = Propagate->GetUVWdot();
   const FGColumnVector3& vVel = Propagate->GetVel();
-
-  if (FGModel::Run()) return true; // return true if error returned from base class
-
-  if (FDMExec->Holding()) return false;
 
   p = Atmosphere->GetPressure();
   rhosl = Atmosphere->GetDensitySL();
@@ -182,18 +182,9 @@ bool FGAuxiliary::Run()
 
   Vground = sqrt( vVel(eNorth)*vVel(eNorth) + vVel(eEast)*vVel(eEast) );
 
-  if (vVel(eNorth) == 0) psigt = 0;
-  else psigt =  atan2(vVel(eEast), vVel(eNorth));
-
+  psigt = atan2(vVel(eEast), vVel(eNorth));
   if (psigt < 0.0) psigt += 2*M_PI;
-
-  if (Vground == 0.0) {
-    if (vVel(eDown) == 0.0) gamma = 0.0;
-    else if (vVel(eDown) < 0.0) gamma = 90.0*degtorad;
-    else gamma = -90.0*degtorad;
-  } else {
-    gamma = atan2(-vVel(eDown), Vground);
-  }
+  gamma = atan2(-vVel(eDown), Vground);
 
   tat = sat*(1 + 0.2*Mach*Mach); // Total Temperature, isentropic flow
   tatc = RankineToCelsius(tat);

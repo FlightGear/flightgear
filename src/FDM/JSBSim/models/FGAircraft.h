@@ -151,6 +151,8 @@ public:
   inline double GetXYZvrp(int idx) const { return vXYZvrp(idx); }
   inline double GetXYZep(int idx) const { return vXYZep(idx); }
   inline void SetAircraftName(string name) {AircraftName = name;}
+  inline void SetHoldDown(int hd) {HoldDown = hd;}
+  inline int GetHoldDown(void) const {return HoldDown;}
 
   void SetXYZrp(int idx, double value) {vXYZrp(idx) = value;}
 
@@ -175,6 +177,7 @@ private:
   double WingArea, WingSpan, cbar, WingIncidence;
   double HTailArea, VTailArea, HTailArm, VTailArm;
   double lbarh,lbarv,vbarh,vbarv;
+  int HoldDown;
   string AircraftName;
 
   void Debug(int from);

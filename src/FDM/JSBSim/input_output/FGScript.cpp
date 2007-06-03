@@ -84,7 +84,7 @@ FGScript::FGScript(FGFDMExec* fgex) : FDMExec(fgex)
 
 FGScript::~FGScript()
 {
-  int i;
+  unsigned int i;
   for (i=0; i<local_properties.size(); i++)
     PropertyManager->Untie(local_properties[i]->title);
   
@@ -101,21 +101,16 @@ bool FGScript::LoadScript( string script )
 {
   string aircraft="", initialize="", comparison = "", prop_name="";
   string notifyPropertyName="";
-  Element *document=0, *element=0, *run_element=0, *event_element=0;
+  Element *element=0, *run_element=0, *event_element=0;
   Element *condition_element=0, *set_element=0, *delay_element=0;
   Element *notify_element = 0L, *notify_property_element = 0L;
   Element *property_element = 0L;
   bool result = false;
   double dt = 0.0, value = 0.0;
-  FGXMLParse script_file_parser;
   struct event *newEvent;
   FGCondition *newCondition;
-  ifstream script_file(script.c_str());
 
-  if ( !script_file ) return false;
-
-  readXML(script_file, script_file_parser);
-  document = script_file_parser.GetDocument();
+  document = LoadXMLDocument(script);
 
   if (document->GetName() != string("runscript")) {
     cerr << "File: " << script << " is not a script file" << endl;
@@ -309,19 +304,10 @@ bool FGScript::RunScript(void)
       iEvent->Triggered = true;
     } else if (iEvent->Persistent) {
       iEvent->Triggered = false; // Reset the trigger for persistent events
+      iEvent->Notified = false;  // Also reset the notification flag
     }
 
     if ((currentTime >= iEvent->StartTime) && iEvent->Triggered) {
-
-      if (iEvent->Notify && iEvent->PrevTriggered != iEvent->Triggered) {
-        cout << endl << "  Event " << event_ctr << " (" << iEvent->Name << ")"
-             << " executed at time: " << currentTime << endl;
-        for (j=0; j<iEvent->NotifyProperties.size();j++) {
-          cout << "    " << iEvent->NotifyProperties[j]->GetName()
-               << " = " << iEvent->NotifyProperties[j]->getDoubleValue() << endl;
-        }
-        cout << endl;
-      }
 
       for (i=0; i<iEvent->SetValue.size(); i++) {
         if (iEvent->Transiting[i]) {
@@ -349,6 +335,19 @@ bool FGScript::RunScript(void)
           iEvent->SetParam[i]->setDoubleValue(newSetValue);
         }
       }
+
+      // Print notification values after setting them
+      if (iEvent->Notify && !iEvent->Notified) {
+        cout << endl << "  Event " << event_ctr << " (" << iEvent->Name << ")"
+             << " executed at time: " << currentTime << endl;
+        for (j=0; j<iEvent->NotifyProperties.size();j++) {
+          cout << "    " << iEvent->NotifyProperties[j]->GetName()
+               << " = " << iEvent->NotifyProperties[j]->getDoubleValue() << endl;
+        }
+        cout << endl;
+        iEvent->Notified = true;
+      }
+
     }
 
     iEvent++;

@@ -58,7 +58,7 @@ FGThruster::FGThruster(FGFDMExec *FDMExec, Element *el, int num ): FGForce(FDMEx
   Type = ttDirect;
   SetTransformType(FGForce::tCustom);
 
-  Name = el->GetName();
+  Name = el->GetAttributeValue("name");
 
   GearRatio = 1.0;
   ReverserAngle = 0.0;
@@ -73,7 +73,7 @@ FGThruster::FGThruster(FGFDMExec *FDMExec, Element *el, int num ): FGForce(FDMEx
   else          cerr << "No thruster location found." << endl;
 
   element = thruster_element->FindElement("orient");
-  if (element)  orientation = element->FindElementTripletConvertTo("IN");
+  if (element)  orientation = element->FindElementTripletConvertTo("RAD");
   else          cerr << "No thruster orientation found." << endl;
 
   SetLocation(location);
@@ -122,7 +122,7 @@ string FGThruster::GetThrusterLabels(int id, string delimeter)
 {
   std::ostringstream buf;
 
-  buf << Name << "_Thrust[" << id << "]";
+  buf << Name << " Thrust (engine " << id << " in lbs)";
 
   return buf.str();
 }

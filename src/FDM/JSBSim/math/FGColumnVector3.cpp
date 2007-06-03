@@ -121,13 +121,6 @@ FGColumnVector3& FGColumnVector3::Normalize(void)
   return *this;
 }
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FGColumnVector3 FGColumnVector3::multElementWise(const FGColumnVector3& V) const
-{
-  return FGColumnVector3(Entry(1) * V(1), Entry(2) * V(2), Entry(3) * V(3));
-}
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print

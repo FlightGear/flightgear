@@ -94,9 +94,9 @@ const double FGJSBBase::slugtolb = 32.174049;
 const double FGJSBBase::lbtoslug = 1.0/slugtolb;
 
 const string FGJSBBase::needed_cfg_version = "2.0";
-const string FGJSBBase::JSBSim_version = "0.9.12 "__DATE__" "__TIME__;
+const string FGJSBBase::JSBSim_version = "Pre-1.0 "__DATE__" "__TIME__;
 
-std::queue <FGJSBBase::Message*> FGJSBBase::Messages;
+std::queue <FGJSBBase::Message> FGJSBBase::Messages;
 FGJSBBase::Message FGJSBBase::localMsg;
 unsigned int FGJSBBase::messageId = 0;
 
@@ -104,83 +104,75 @@ short FGJSBBase::debug_lvl  = 1;
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::PutMessage(Message* msg)
+void FGJSBBase::PutMessage(const Message& msg)
 {
   Messages.push(msg);
-  return msg;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::PutMessage(const string& text)
+void FGJSBBase::PutMessage(const string& text)
 {
-  Message *msg = new Message();
-  msg->text = text;
-  msg->messageId = messageId++;
-  msg->subsystem = "FDM";
-  msg->type = Message::eText;
+  Message msg;
+  msg.text = text;
+  msg.messageId = messageId++;
+  msg.subsystem = "FDM";
+  msg.type = Message::eText;
   Messages.push(msg);
-  return msg;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::PutMessage(const string& text, bool bVal)
+void FGJSBBase::PutMessage(const string& text, bool bVal)
 {
-  Message *msg = new Message();
-  msg->text = text;
-  msg->messageId = messageId++;
-  msg->subsystem = "FDM";
-  msg->type = Message::eBool;
-  msg->bVal = bVal;
+  Message msg;
+  msg.text = text;
+  msg.messageId = messageId++;
+  msg.subsystem = "FDM";
+  msg.type = Message::eBool;
+  msg.bVal = bVal;
   Messages.push(msg);
-  return msg;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::PutMessage(const string& text, int iVal)
+void FGJSBBase::PutMessage(const string& text, int iVal)
 {
-  Message *msg = new Message();
-  msg->text = text;
-  msg->messageId = messageId++;
-  msg->subsystem = "FDM";
-  msg->type = Message::eInteger;
-  msg->bVal = (iVal != 0);
+  Message msg;
+  msg.text = text;
+  msg.messageId = messageId++;
+  msg.subsystem = "FDM";
+  msg.type = Message::eInteger;
+  msg.bVal = (iVal != 0);
   Messages.push(msg);
-  return msg;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::PutMessage(const string& text, double dVal)
+void FGJSBBase::PutMessage(const string& text, double dVal)
 {
-  Message *msg = new Message();
-  msg->text = text;
-  msg->messageId = messageId++;
-  msg->subsystem = "FDM";
-  msg->type = Message::eDouble;
-  msg->bVal = (dVal != 0.0);
+  Message msg;
+  msg.text = text;
+  msg.messageId = messageId++;
+  msg.subsystem = "FDM";
+  msg.type = Message::eDouble;
+  msg.bVal = (dVal != 0.0);
   Messages.push(msg);
-  return msg;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::ReadMessage(void)
+int FGJSBBase::SomeMessages(void)
 {
-  if (!Messages.empty()) return Messages.front();
-  else                   return NULL;
+  return !Messages.empty();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGJSBBase::Message* FGJSBBase::ProcessMessage(void)
 {
-  if (!Messages.empty())
-    localMsg = *(Messages.front());
-  else
-    return NULL;
+  if (Messages.empty()) return NULL;
+  localMsg = Messages.front();
   Messages.pop();
   return &localMsg;
 }

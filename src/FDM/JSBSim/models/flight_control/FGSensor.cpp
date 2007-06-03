@@ -52,11 +52,9 @@ CLASS IMPLEMENTATION
 FGSensor::FGSensor(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 {
   double denom;
-  dt = fcs->GetState()->Getdt();
+  dt = fcs->GetDt();
 
   // inputs are read from the base class constructor
-
-  dt = fcs->GetState()->Getdt();
 
   bits = quantized = divisions = 0;
   PreviousInput = PreviousOutput = 0.0;
@@ -77,6 +75,7 @@ FGSensor::FGSensor(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
     if ( quantization_element->FindElement("max") ) {
       max = quantization_element->FindElementValueAsNumber("max");
     }
+    quant_property = quantization_element->GetAttributeValue("name");
     span = max - min;
     granularity = span/divisions;
   }
@@ -214,6 +213,14 @@ void FGSensor::bind(void)
   PropertyManager->Tie( tmp_low, this, &FGSensor::GetFailLow, &FGSensor::SetFailLow);
   PropertyManager->Tie( tmp_high, this, &FGSensor::GetFailHigh, &FGSensor::SetFailHigh);
   PropertyManager->Tie( tmp_stuck, this, &FGSensor::GetFailStuck, &FGSensor::SetFailStuck);
+  
+  if (!quant_property.empty()) {
+    if (quant_property.find("/") == string::npos) { // not found
+      string qprop = "fcs/" + PropertyManager->mkPropertyName(quant_property, true);
+      PropertyManager->Tie(qprop, this, &FGSensor::GetQuantized);
+    }
+  }
+
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -241,7 +248,35 @@ void FGSensor::Debug(int from)
 
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
+      if (InputSigns[0] < 0)
+        cout << "      INPUT: -" << InputNodes[0]->getName() << endl;
+      else
+        cout << "      INPUT: " << InputNodes[0]->getName() << endl;
 
+      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
+      if (bits != 0) {
+        if (quant_property.empty())
+          cout << "      Quantized output" << endl;
+        else
+          cout << "      Quantized output (property: " << quant_property << ")" << endl;
+
+        cout << "        Bits: " << bits << endl;
+        cout << "        Min value: " << min << endl;
+        cout << "        Max value: " << max << endl;
+        cout << "          (span: " << span << ", granularity: " << granularity << ")" << endl;
+      }
+      if (bias != 0.0) cout << "      Bias: " << bias << endl;
+      if (drift_rate != 0) cout << "      Sensor drift rate: " << drift_rate << endl;
+      if (lag != 0) cout << "      Sensor lag: " << lag << endl;
+      if (noise_variance != 0) {
+        if (NoiseType == eAbsolute) {
+          cout << "      Noise variance (absolute): " << noise_variance << endl;
+        } else if (NoiseType == ePercent) {
+          cout << "      Noise variance (percent): " << noise_variance << endl;
+        } else {
+          cout << "      Noise variance type is invalid" << endl;
+        }
+      }
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

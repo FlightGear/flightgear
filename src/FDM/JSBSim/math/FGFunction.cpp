@@ -47,7 +47,6 @@ CLASS IMPLEMENTATION
 FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
                                       : PropertyManager(propMan), Prefix(prefix)
 {
-  int i;
   Element* element;
   string operation, property_name;
   int size = el->GetNumElements();
@@ -92,6 +91,16 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
   }
 
   element = el->GetElement();
+  if (!element) {
+    cerr << fgred << highint << endl;
+    cerr << "  No element was specified as an argument to the \"" << operation << "\" operation" << endl;
+    cerr << "  This can happen when, for instance, a cos operation is specified and a " << endl;
+    cerr << "  property name is given explicitly, but is not placed within a" << endl;
+    cerr << "  <property></property> element tag pair." << endl;
+    cerr << reset;
+    exit(-2);
+  }
+  
   while (element) {
     operation = element->GetName();
 
@@ -146,7 +155,7 @@ FGFunction::~FGFunction(void)
     PropertyManager->Untie(tmp);
   }
 
-  for (int i=0; i<Parameters.size(); i++) {
+  for (unsigned int i=0; i<Parameters.size(); i++) {
     delete Parameters[i];
   }
 }
@@ -167,7 +176,7 @@ void FGFunction::cacheValue(bool cache)
 
 double FGFunction::GetValue(void) const
 {
-  int i;
+  unsigned int i;
 
   if (cached) return cachedValue;
 
@@ -177,13 +186,19 @@ double FGFunction::GetValue(void) const
   case eTopLevel:
     break;
   case eProduct:
-    for (i=1;i<Parameters.size();i++) temp *= Parameters[i]->GetValue();
+    for (i=1;i<Parameters.size();i++) {
+      temp *= Parameters[i]->GetValue();
+    }
     break;
   case eDifference:
-    for (i=1;i<Parameters.size();i++) temp -= Parameters[i]->GetValue();
+    for (i=1;i<Parameters.size();i++) {
+      temp -= Parameters[i]->GetValue();
+    }
     break;
   case eSum:
-    for (i=1;i<Parameters.size();i++) temp += Parameters[i]->GetValue();
+    for (i=1;i<Parameters.size();i++) {
+      temp += Parameters[i]->GetValue();
+    }
     break;
   case eQuotient:
     temp /= Parameters[1]->GetValue();

@@ -48,8 +48,8 @@ INCLUDES
 #include <initialization/FGInitialCondition.h>
 #include <FGJSBBase.h>
 #include <input_output/FGPropertyManager.h>
-#include <input_output/FGXMLParse.h>
 #include <input_output/FGGroundCallback.h>
+#include <input_output/FGXMLFileRead.h>
 #include <models/FGPropagate.h>
 
 #include <vector>
@@ -173,7 +173,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFDMExec : public FGJSBBase
+class FGFDMExec : public FGJSBBase, public FGXMLFileRead
 {
 public:
 
@@ -414,6 +414,7 @@ private:
   int Error;
   unsigned int Frame;
   unsigned int IdFDM;
+  unsigned short Terminate;
   bool holding;
   bool Constructing;
   bool modelLoaded;

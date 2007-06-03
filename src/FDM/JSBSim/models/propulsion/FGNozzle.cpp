@@ -83,7 +83,7 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, Element* nozzle_element, int num)
   Type = ttNozzle;
   Area2 = (Diameter*Diameter/4.0)*M_PI;
   AreaT = Area2/ExpR;
-
+  
   Debug(0);
 }
 
@@ -99,7 +99,11 @@ FGNozzle::~FGNozzle()
 double FGNozzle::Calculate(double CfPc)
 {
   double pAtm = fdmex->GetAtmosphere()->GetPressure();
-  Thrust = max((double)0.0, (CfPc * AreaT + (PE - pAtm)*Area2) * nzlEff);
+  if (CfPc > 0)
+    Thrust = max((double)0.0, (CfPc * AreaT + (PE - pAtm)*Area2) * nzlEff);
+  else
+    Thrust = 0.0;
+
   vFn(1) = Thrust * cos(ReverserAngle);
 
   ThrustCoeff = max((double)0.0, CfPc / ((pAtm - PE) * Area2));
@@ -120,7 +124,7 @@ string FGNozzle::GetThrusterLabels(int id, string delimeter)
 {
   std::ostringstream buf;
 
-  buf << Name << "_Thrust[" << id << ']';
+  buf << Name << " Thrust (engine " << id << " in lbs)";
 
   return buf.str();
 }

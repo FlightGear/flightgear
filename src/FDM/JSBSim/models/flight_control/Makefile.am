@@ -2,10 +2,11 @@ noinst_LIBRARIES = libFlightControl.a
 
 libFlightControl_a_SOURCES = FGPID.cpp FGDeadBand.cpp FGFCSComponent.cpp \
                             FGFilter.cpp FGGain.cpp FGGradient.cpp FGKinemat.cpp \
-                            FGSummer.cpp FGSwitch.cpp FGFCSFunction.cpp FGSensor.cpp
+                            FGSummer.cpp FGSwitch.cpp FGFCSFunction.cpp FGSensor.cpp \
+                            FGActuator.cpp
 
 noinst_HEADERS = FGPID.h FGDeadBand.h FGFCSComponent.h FGFilter.h \
                  FGGain.h FGGradient.h FGKinemat.h FGSummer.h FGSwitch.h FGFCSFunction.h \
-                 FGSensor.h
+                 FGSensor.h FGActuator.h
 
 INCLUDES = -I$(top_srcdir)/src/FDM/JSBSim
