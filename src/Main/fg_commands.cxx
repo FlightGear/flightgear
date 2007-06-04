@@ -1306,22 +1306,25 @@ do_hud_init2(const SGPropertyNode *)
 /**
  * An fgcommand to allow loading of xml files via nasal,
  * the xml file's structure will be made available within
- * a (definable) property tree node
+ * a property tree node defined under argument "targetnode",
+ * or in the given argument tree under "data" otherwise.
  *
  * @param filename a string to hold the complete path & filename of a XML file
  * @param targetnode a string pointing to a location within the property tree
  * where to store the parsed XML file
  */
 
-static bool 
-do_load_xml_to_proptree(const SGPropertyNode * node)
+static bool
+do_load_xml_to_proptree(const SGPropertyNode * arg)
 {
-    // SG_LOG(SG_GENERAL, SG_ALERT, "fgcommand loadxml executed");
+    SGPropertyNode *a = const_cast<SGPropertyNode *>(arg);
+    SGPropertyNode *targetnode;
+    if (a->hasValue("targetnode"))
+        targetnode = fgGetNode(a->getStringValue("targetnode"), true);
+    else
+        targetnode = a->getNode("data", true);
 
-    SGPropertyNode * targetnode;
-    targetnode = fgGetNode(node->getNode("targetnode")->getStringValue(),true);
-		
-    const char *filename = node->getNode("filename")->getStringValue();
+    const char *filename = a->getNode("filename")->getStringValue();
     try {
         fgLoadProps(filename, targetnode);
     } catch (const sg_exception &e) {
@@ -1478,7 +1481,7 @@ static struct {
     { "hud-init", do_hud_init },
     { "hud-init2", do_hud_init2 },
     { "loadxml", do_load_xml_to_proptree},
-    { "savexml", do_save_xml_from_proptree },    
+    { "savexml", do_save_xml_from_proptree },
     { "press-cockpit-button", do_press_cockpit_button },
     { "release-cockpit-button", do_release_cockpit_button },
     { 0, 0 }			// zero-terminated
