@@ -159,7 +159,8 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     case osgGA::GUIEventAdapter::KEY_Escape: key = 0x1b; break;
     case osgGA::GUIEventAdapter::KEY_Return: key = '\n'; break;
     case osgGA::GUIEventAdapter::KEY_BackSpace: key = '\b'; break;
-    case osgGA::GUIEventAdapter::KEY_Delete: key = 0x7f; break;
+    case osgGA::GUIEventAdapter::KEY_Delete:   key = 0x7f; break;
+    case osgGA::GUIEventAdapter::KEY_Tab:      key = '\t'; break;
     case osgGA::GUIEventAdapter::KEY_Left:     key = PU_KEY_LEFT;      break;
     case osgGA::GUIEventAdapter::KEY_Up:       key = PU_KEY_UP;        break;
     case osgGA::GUIEventAdapter::KEY_Right:    key = PU_KEY_RIGHT;     break;
