@@ -76,6 +76,15 @@ if [ -x "$AC3D_SCAN" ]; then
 fi
 
 
+LOG "checking for thumbnail file size (expected JPEG 171x128)"
+find . -name thumbnail.jpg|while read i; do
+	id=$(identify "$i")
+	if ! echo $id|grep "JPEG 171x128" >/dev/null; then
+		RESULT "$i ... $id"
+	fi
+done
+
+
 LOG "checking for XML syntax ..."
 find . -name \*.xml|while read i; do
 	xmllint $i >/dev/null || RESULT "... in file \e[36m$i\e[m"
