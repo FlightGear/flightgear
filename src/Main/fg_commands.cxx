@@ -1352,6 +1352,8 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
  * XML file
  * @param sourcenode a string pointing to a location within the property tree
  * where to find the nodes that should be written recursively into an XML file
+ * @param data if no sourcenode is given, then the file contents are taken from
+ * the argument tree's "data" node.
  *
  * TODO: 
  *   deal with already existing filenames, optionally return error/success
@@ -1364,11 +1366,18 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
 static bool 
 do_save_xml_from_proptree(const SGPropertyNode * node)
 {
-    //TODO: do Parameter validation !
     SGPropertyNode * sourcenode;
-    sourcenode = fgGetNode(node->getNode("sourcenode")->getStringValue(),true);
+    if (node->hasValue("sourcenode"))
+        sourcenode = fgGetNode(node->getStringValue("sourcenode"), true);
+    else if (node->hasValue("data"))
+        sourcenode = const_cast<SGPropertyNode *>(node)->getNode("data");
+    else
+        return false;
 
-    const char *filename = node->getNode("filename")->getStringValue();
+    const char *filename = node->getStringValue("filename", 0);
+    if (!filename)
+        return false;
+
     try {
         writeProperties (filename, sourcenode, true);
     } catch (const sg_exception &e) {
