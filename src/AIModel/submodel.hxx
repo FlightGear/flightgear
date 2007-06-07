@@ -30,8 +30,7 @@ class FGSubmodelMgr : public SGSubsystem
 
 public:
 
-    typedef struct
-    {
+    typedef struct {
         SGPropertyNode_ptr trigger_node;
         SGPropertyNode_ptr prop;
         SGPropertyNode_ptr contents_node;
@@ -69,11 +68,9 @@ public:
         double             fuse_range;
         string             submodel;
         int                sub_id;
-    }
-    submodel;
+    }   submodel;
 
-    typedef struct
-    {
+    typedef struct {
         double     lat;
         double     lon;
         double     alt;
@@ -92,8 +89,7 @@ public:
         double     mass;
         int        id;
         bool       no_roll;
-    }
-    IC_struct;
+    }   IC_struct;
 
     FGSubmodelMgr();
     ~FGSubmodelMgr();
@@ -109,7 +105,7 @@ public:
 private:
 
     typedef vector <submodel*> submodel_vector_type;
-    typedef submodel_vector_type::const_iterator submodel_vector_iterator;
+    typedef submodel_vector_type::iterator submodel_vector_iterator;
 
     submodel_vector_type       submodels;
     submodel_vector_type       subsubmodels;
@@ -187,9 +183,9 @@ private:
     void setData(int id, string& path, bool serviceable);
     void setSubData(int id, string& path, bool serviceable);
     void valueChanged (SGPropertyNode *);
-    void transform(submodel_vector_iterator);
+    void transform(submodel *);
 
-    bool release(submodel_vector_iterator, double dt);
+    bool release(submodel *, double dt);
 
     double getRange(double lat, double lon, double lat2, double lon2) const;
 
