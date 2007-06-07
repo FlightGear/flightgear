@@ -252,10 +252,13 @@ static naRef f_print(naContext c, naRef me, int argc, naRef* args)
 // an argument.
 static naRef f_fgcommand(naContext c, naRef me, int argc, naRef* args)
 {
-    if(argc < 2 || !naIsString(args[0]) || !naIsGhost(args[1]))
+    naRef cmd = argc > 0 ? args[0] : naNil();
+    naRef props = argc > 1 ? args[1] : naNil();
+    if(!naIsString(cmd) || (!naIsNil(props) && !naIsGhost(props)))
         naRuntimeError(c, "bad arguments to fgcommand()");
-    naRef cmd = args[0], props = args[1];
-    SGPropertyNode_ptr* node = (SGPropertyNode_ptr*)naGhost_ptr(props);
+    SGPropertyNode_ptr* node = NULL;
+    if(!naIsNil(props))
+        node = (SGPropertyNode_ptr*)naGhost_ptr(props);
     return naNum(globals->get_commands()->execute(naStr_data(cmd), *node));
 }
 
