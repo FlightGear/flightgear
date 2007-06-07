@@ -507,7 +507,6 @@ void fgHiResDumpWrapper ( puObject *obj ) {
 void fgDumpSnapShot () {
     bool show_pu_cursor = false;
     char *filename = new char [24];
-    string message;
     static int count = 1;
 
     static const SGPropertyNode *master_freeze
@@ -544,20 +543,13 @@ void fgDumpSnapShot () {
         fclose(fp);
     }
 
-    if ( sg_glDumpWindow( filename,
-			  fgGetInt("/sim/startup/xsize"), 
-			  fgGetInt("/sim/startup/ysize")) ) {
-	message = "Snapshot saved to \"";
-	message += filename;
-	message += "\".";
-    } else {
-        message = "Failed to save to \"";
-	message += filename;
-	message += "\".";
-    }
+    int result = sg_glDumpWindow(filename,
+                                 fgGetInt("/sim/startup/xsize"),
+                                 fgGetInt("/sim/startup/ysize"));
+    fgSetString("/sim/last-screenshot", result ? filename : "");
 
     fgSetBool("/sim/signals/screenshot", false);
-    mkDialog (message.c_str());
+    //mkDialog (message.c_str());
 
     delete [] filename;
 
