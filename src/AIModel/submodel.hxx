@@ -16,8 +16,12 @@
 #include <AIModel/AIBase.hxx>
 #include <vector>
 #include <string>
+
+#include <Main/fg_props.hxx>
+
 SG_USING_STD(vector);
 SG_USING_STD(string);
+SG_USING_STD(list);
 
 class FGAIBase;
 
@@ -59,8 +63,12 @@ public:
         int                id;
         bool               no_roll;
         bool               serviceable;
+        bool               collision;
         bool               impact;
-        string             impact_reports;
+        string             impact_report;
+        double             fuse_range;
+        string             submodel;
+        int                sub_id;
     }
     submodel;
 
@@ -84,7 +92,6 @@ public:
         double     mass;
         int        id;
         bool       no_roll;
-        bool       impact;
     }
     IC_struct;
 
@@ -97,8 +104,6 @@ public:
     void bind();
     void unbind();
     void update(double dt);
-    bool release(submodel* sm, double dt);
-    void transform(submodel* sm);
     void updatelat(double lat);
 
 private:
@@ -107,7 +112,8 @@ private:
     typedef submodel_vector_type::const_iterator submodel_vector_iterator;
 
     submodel_vector_type       submodels;
-    submodel_vector_iterator   submodel_iterator;
+    submodel_vector_type       subsubmodels;
+    submodel_vector_iterator   submodel_iterator, subsubmodel_iterator;
 
     float trans[3][3];
     float in[3];
@@ -129,9 +135,20 @@ private:
     double x_offset, y_offset, z_offset;
     double pitch_offset, yaw_offset;
 
+    double _parent_lat;
+    double _parent_lon;
+    double _parent_elev;
+    double _parent_hdg;
+    double _parent_pitch;
+    double _parent_roll;
+    double _parent_speed;
+
     static const double lbs_to_slugs; //conversion factor
 
     double contrail_altitude;
+
+    bool _impact;
+    bool _hit;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _user_lat_node;
@@ -150,6 +167,9 @@ private:
     SGPropertyNode_ptr _user_speed_north_fps_node;
     SGPropertyNode_ptr _contrail_altitude_node;
     SGPropertyNode_ptr _contrail_trigger;
+    SGPropertyNode_ptr _count_node;
+    SGPropertyNode_ptr _trigger_node;
+    SGPropertyNode_ptr props;
 
     FGAIManager* ai;
     IC_struct  IC;
@@ -161,10 +181,19 @@ private:
 
     sm_list_type sm_list;
 
+
     void loadAI();
     void loadSubmodels();
     void setData(int id, string& path, bool serviceable);
+    void setSubData(int id, string& path, bool serviceable);
+    void valueChanged (SGPropertyNode *);
+    void transform(submodel_vector_iterator);
+
+    bool release(submodel_vector_iterator, double dt);
+
     double getRange(double lat, double lon, double lat2, double lon2) const;
+
+    int _count;
 
 };
 
