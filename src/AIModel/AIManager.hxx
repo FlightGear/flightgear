@@ -52,7 +52,10 @@ public:
 
     ai_list_type ai_list;
 
-    inline const list <SGSharedPtr<FGAIBase> >& get_ai_list() const { return ai_list; }
+    inline const list <SGSharedPtr<FGAIBase> >& get_ai_list() const {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "AI Manager: AI model return list size " << ai_list.size());
+        return ai_list;
+    }
 
     FGAIManager();
     ~FGAIManager();
@@ -63,10 +66,10 @@ public:
     void bind();
     void unbind();
     void update(double dt);
-
     void attach(SGSharedPtr<FGAIBase> model);
 
     void destroyObject( int ID );
+    const FGAIBase *calcCollision(double alt, double lat, double lon, double fuse_range);
 
     inline double get_user_latitude() const { return user_latitude; }
     inline double get_user_longitude() const { return user_longitude; }
@@ -93,6 +96,8 @@ private:
     int mNumAiTypeModels[FGAIBase::MAX_OBJECTS];
     int mNumAiModels;
 
+    double calcRange(double lat, double lon, double lat2, double lon2)const;
+
     SGPropertyNode_ptr root;
     SGPropertyNode_ptr wind_from_down_node;
     SGPropertyNode_ptr user_latitude_node;
@@ -102,8 +107,8 @@ private:
     SGPropertyNode_ptr user_pitch_node;
     SGPropertyNode_ptr user_yaw_node;
     SGPropertyNode_ptr user_speed_node;
-    SGPropertyNode_ptr wind_from_east_node ;
-    SGPropertyNode_ptr wind_from_north_node ;
+    SGPropertyNode_ptr wind_from_east_node;
+    SGPropertyNode_ptr wind_from_north_node;
 
     string scenario_filename;
 
@@ -117,6 +122,7 @@ private:
     double wind_from_east;
     double wind_from_north;
     double _dt;
+
     void fetchUserState( void );
 
     // used by thermals

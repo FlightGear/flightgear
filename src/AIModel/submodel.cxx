@@ -17,6 +17,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+
 #include "AIBase.hxx"
 #include "AIManager.hxx"
 #include "AIBallistic.hxx"
@@ -35,10 +36,12 @@ FGSubmodelMgr::FGSubmodelMgr()
     in[3] = out[3] = 1;
     string contents_node;
     contrail_altitude = 30000;
+    _count = 0;
 }
 
 FGSubmodelMgr::~FGSubmodelMgr()
-{}
+{
+}
 
 void FGSubmodelMgr::init()
 {
@@ -79,6 +82,10 @@ void FGSubmodelMgr::init()
 void FGSubmodelMgr::postinit() {
     // postinit, so that the AI list is populated
     loadAI();
+    loadSubmodels();
+
+    //TODO reload submodels if an MP ac joins
+
 }
 
 void FGSubmodelMgr::bind()
@@ -87,7 +94,6 @@ void FGSubmodelMgr::bind()
 void FGSubmodelMgr::unbind()
 {
     submodel_iterator = submodels.begin();
-
     while (submodel_iterator != submodels.end()) {
         (*submodel_iterator)->prop->untie("count");
         ++submodel_iterator;
@@ -97,31 +103,89 @@ void FGSubmodelMgr::unbind()
 
 void FGSubmodelMgr::update(double dt)
 {
-    if (!(_serviceable_node->getBoolValue()))
+    if (!_serviceable_node->getBoolValue())
         return;
 
     int i = -1;
     bool in_range = true;
     bool trigger = false;
+    _impact = false;
+    _hit = false;
+
+    sm_list = ai->get_ai_list();
+
+    sm_list_iterator sm_list_itr = sm_list.begin();
+    sm_list_iterator end = sm_list.end();
+
+    submodel_iterator = submodels.begin();
+
+    while (sm_list_itr != end) {
+        _impact = (*sm_list_itr)->_getImpactData();
+        _hit = (*sm_list_itr)->_getCollisionData();
+        int parent_subID = (*sm_list_itr)->_getSubID();
+
+        if ( parent_subID == 0) { // this entry in the list has no associated submodel
+            ++sm_list_itr;       // so we can continue
+            continue;
+        }
+
+        if (_impact || _hit) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "Submodel: Impact " << _impact << " hit! " << _hit );
+
+            submodel_iterator = submodels.begin();
+
+            while (submodel_iterator != submodels.end()) {
+                int child_ID = (*submodel_iterator)->id;
+                cout << "Impact: parent SubID " << parent_subID << " child_ID " << child_ID << endl;
+
+                if ( parent_subID == child_ID ) {
+                    _parent_lat = (*sm_list_itr)->_getImpactLat();
+                    _parent_lon = (*sm_list_itr)->_getImpactLon();
+                    _parent_elev = (*sm_list_itr)->_getImpactElevFt();
+                    _parent_hdg = (*sm_list_itr)->_getImpactHdg();
+                    _parent_pitch = (*sm_list_itr)->_getImpactPitch();
+                    _parent_roll = (*sm_list_itr)->_getImpactRoll();
+                    _parent_speed = (*sm_list_itr)->_getImpactSpeed();
+                    (*submodel_iterator)->first_time = true;
+
+                    if (release(submodel_iterator, dt)) {
+                        (*sm_list_itr)->setDie(true);
+                    }
+
+                }
+
+                ++submodel_iterator;
+            }
+        }
+
+        ++sm_list_itr;
+    }
 
     _contrail_trigger->setBoolValue(_user_alt_node->getDoubleValue() > contrail_altitude);
 
     submodel_iterator = submodels.begin();
 
-    while (submodel_iterator != submodels.end()) {
+    while (submodel_iterator != submodels.end())  {
         i++;
+        in_range = true;
 
         if ((*submodel_iterator)->trigger_node != 0) {
-            trigger = (*submodel_iterator)->trigger_node->getBoolValue();
-            //cout << (*submodel_iterator)->name << "trigger node found" << trigger << endl;
+            _trigger_node = (*submodel_iterator)->trigger_node;
+            trigger = _trigger_node->getBoolValue();
+            //cout << "trigger node found " <<  trigger << endl;
         } else {
             trigger = true;
-            //cout << (*submodel_iterator)->name << "trigger node not found" << trigger << endl;
+            //cout << (*submodel_iterator)->name << "trigger node not found " << trigger << endl;
         }
+        SG_LOG(SG_GENERAL, SG_DEBUG,
+            "Submodels:  " << (*submodel_iterator)->id
+            << " name " << (*submodel_iterator)->name
+            << " in range " << in_range
+            );
 
         if (trigger) {
             int id = (*submodel_iterator)->id;
-
+            string name = (*submodel_iterator)->name;
             // don't release submodels from AI Objects if they are
             // too far away to be seen. id 0 is not an AI model,
             // so we can skip the whole process
@@ -132,12 +196,13 @@ void FGSubmodelMgr::update(double dt)
 
                 if (id == 0) {
                     SG_LOG(SG_GENERAL, SG_DEBUG,
-                        "Submodels: continuing: " << id);
+                        "Submodels: continuing: " << id << " name " << name );
+                    in_range = true;
                     ++sm_list_itr;
                     continue;
                 }
 
-                int parent_id = (*sm_list_itr)->getID();
+                int parent_id = (*submodel_iterator)->id;
 
                 if (parent_id == id) {
                     double parent_lat = (*sm_list_itr)->_getLatitude();
@@ -145,8 +210,8 @@ void FGSubmodelMgr::update(double dt)
                     double own_lat    = _user_lat_node->getDoubleValue();
                     double own_lon    = _user_lon_node->getDoubleValue();
                     double range_nm   = getRange(parent_lat, parent_lon, own_lat, own_lon);
-                    /* cout << "parent " << parent_id << ", "<< parent_lat << ", " << parent_lon << endl;
-                    cout << "own " << own_lat << ", " << own_lon << " range " << range_nm << endl;*/
+                    // cout << "parent " << parent_id << ", "<< parent_lat << ", " << parent_lon << endl;
+                    //cout << "own " << own_lat << ", " << own_lon << " range " << range_nm << endl;
 
                     if (range_nm > 15) {
                         SG_LOG(SG_GENERAL, SG_DEBUG,
@@ -159,8 +224,15 @@ void FGSubmodelMgr::update(double dt)
                 ++sm_list_itr;
             } // end while
 
+            SG_LOG(SG_GENERAL, SG_DEBUG,
+                "Submodels end:  " << (*submodel_iterator)->id
+                << " name " << (*submodel_iterator)->name
+                << " count " << (*submodel_iterator)->count
+                << " in range " << in_range
+                );
+
             if ((*submodel_iterator)->count != 0 && in_range)
-                release((*submodel_iterator), dt);
+                release((submodel_iterator), dt);
 
         } else
             (*submodel_iterator)->first_time = true;
@@ -170,28 +242,36 @@ void FGSubmodelMgr::update(double dt)
 
 }
 
-bool FGSubmodelMgr::release(submodel* sm, double dt)
+bool FGSubmodelMgr::release(submodel_vector_iterator sm, double dt)
 {
+    //cout << "release id " << (*sm)->id << " name " << (*sm)->name
+    //<< " first time " << (*sm)->first_time  << " repeat " << (*sm)->repeat  <<
+    //    endl;
+
     // only run if first time or repeat is set to true
-    if (!sm->first_time && !sm->repeat)
+    if (!(*sm)->first_time && !(*sm)->repeat){
+        //cout<< "not first time " << (*sm)->first_time<< " repeat " << (*sm)->repeat <<endl;
         return false;
+    }
 
-    sm->timer += dt;
+    (*sm)->timer += dt;
 
-    if (sm->timer < sm->delay)
+    if ((*sm)->timer < (*sm)->delay){
+        //cout << "not yet: timer" << (*sm)->timer << " delay " << (*sm)->delay<< endl;
         return false;
+    }
 
-    sm->timer = 0.0;
+    (*sm)->timer = 0.0;
 
-    if (sm->first_time) {
+    if ((*sm)->first_time) {
         dt = 0.0;
-        sm->first_time = false;
+        (*sm)->first_time = false;
     }
 
     transform(sm);  // calculate submodel's initial conditions in world-coordinates
 
     FGAIBallistic* ballist = new FGAIBallistic;
-    ballist->setPath(sm->model.c_str());
+    ballist->setPath((*sm)->model.c_str());
     ballist->setLatitude(IC.lat);
     ballist->setLongitude(IC.lon);
     ballist->setAltitude(IC.alt);
@@ -202,20 +282,24 @@ bool FGSubmodelMgr::release(submodel* sm, double dt)
     ballist->setWind_from_east(IC.wind_from_east);
     ballist->setWind_from_north(IC.wind_from_north);
     ballist->setMass(IC.mass);
-    ballist->setDragArea(sm->drag_area);
-    ballist->setLife(sm->life);
-    ballist->setBuoyancy(sm->buoyancy);
-    ballist->setWind(sm->wind);
-    ballist->setCd(sm->cd);
-    ballist->setStabilisation(sm->aero_stabilised);
-    ballist->setNoRoll(sm->no_roll);
-    ballist->setName(sm->name);
-    ballist->setImpact(sm->impact);
-    ballist->setImpactReportNode(sm->impact_reports);
+    ballist->setDragArea((*sm)->drag_area);
+    ballist->setLife((*sm)->life);
+    ballist->setBuoyancy((*sm)->buoyancy);
+    ballist->setWind((*sm)->wind);
+    ballist->setCd((*sm)->cd);
+    ballist->setStabilisation((*sm)->aero_stabilised);
+    ballist->setNoRoll((*sm)->no_roll);
+    ballist->setName((*sm)->name);
+    ballist->setCollision((*sm)->collision);
+    ballist->setImpact((*sm)->impact);
+    ballist->setImpactReportNode((*sm)->impact_report);
+    ballist->setFuseRange((*sm)->fuse_range);
+    ballist->setSubmodel((*sm)->submodel.c_str());
+    ballist->setSubID((*sm)->sub_id);
     ai->attach(ballist);
 
-    if (sm->count > 0)
-        (sm->count)--;
+    if ((*sm)->count > 0)
+        (*sm)->count--;
 
     return true;
 }
@@ -235,28 +319,58 @@ void FGSubmodelMgr::load()
 
 }
 
-void FGSubmodelMgr::transform(submodel* sm)
+void FGSubmodelMgr::transform(submodel_vector_iterator submodel)
 {
-    // get initial conditions
-    if (sm->contents_node != 0) {
+    // set initial conditions
+    if ((*submodel)->contents_node != 0) {
         // get the weight of the contents (lbs) and convert to mass (slugs)
-        sm->contents = sm->contents_node->getDoubleValue();
-        IC.mass = (sm->weight + sm->contents) * lbs_to_slugs;
+        (*submodel)->contents = (*submodel)->contents_node->getDoubleValue();
+        IC.mass = ((*submodel)->weight + (*submodel)->contents) * lbs_to_slugs;
 
         // set contents to 0 in the parent
-        sm->contents_node->setDoubleValue(0);
+        (*submodel)->contents_node->setDoubleValue(0);
     } else
-        IC.mass = sm->weight * lbs_to_slugs;
+    IC.mass = (*submodel)->weight * lbs_to_slugs;
 
-    //cout << "mass "  << IC.mass << endl;
+    // cout << "mass "  << IC.mass << endl;
 
-    if (sm->speed_node != 0)
-        sm->speed = sm->speed_node->getDoubleValue();
+    if ((*submodel)->speed_node != 0)
+        (*submodel)->speed = (*submodel)->speed_node->getDoubleValue();
 
-    int ind = sm->id;
+    int id = (*submodel)->id;
+    //int sub_id = (*submodel)->sub_id;
+    string name = (*submodel)->name;
 
-    if (ind == 0) {
-        // set the data for a submodel tied to the main model
+    //cout << " name " << name << " id " << id << " sub id" << sub_id << endl;
+
+    if (_impact || _hit){
+        // set the data for a submodel tied to a submodel
+        _count++;
+        //cout << "Submodels: release sub sub " << _count<< endl;
+        //cout << " id " << (*submodel)->id
+        //    << " lat " << _parent_lat
+        //    << " lon " << _parent_lon
+        //    << " elev " << _parent_elev
+        //    << " name " << (*submodel)->name
+        //    << endl;
+
+        IC.lat             = _parent_lat;
+        IC.lon             = _parent_lon;
+        IC.alt             = _parent_elev;
+        IC.roll            = _parent_roll;    // rotation about x axis
+        IC.elevation       = _parent_pitch;   // rotation about y axis
+        IC.azimuth         = _parent_hdg; // rotation about z axis
+        IC.speed           = _parent_speed;
+        IC.speed_down_fps  = 0;
+        IC.speed_east_fps  = 0;
+        IC.speed_north_fps = 0;
+
+    } else if (id == 0) {
+        //set the data for a submodel tied to the main model
+        /*cout << "Submodels: release main sub " << endl;
+        cout << " name " << (*submodel)->name
+        << " id" << (*submodel)->id
+        << endl;*/
         IC.lat             = _user_lat_node->getDoubleValue();
         IC.lon             = _user_lon_node->getDoubleValue();
         IC.alt             = _user_alt_node->getDoubleValue();
@@ -274,9 +388,9 @@ void FGSubmodelMgr::transform(submodel* sm)
         sm_list_iterator end = sm_list.end();
 
         while (sm_list_itr != end) {
-            int id = (*sm_list_itr)->getID();
+            int parent_id = (*sm_list_itr)->getID();
 
-            if (ind != id) {
+            if (id != parent_id) {
                 ++sm_list_itr;
                 continue;
             }
@@ -303,14 +417,14 @@ void FGSubmodelMgr::transform(submodel* sm)
     cout << "speed down " << IC.speed_down_fps << endl ;
     cout << "speed east " << IC.speed_east_fps << endl ;
     cout << "speed north " << IC.speed_north_fps << endl ;
-    cout << "parent speed fps in" << IC.speed << "sm speed in " << sm->speed << endl ;*/
+    cout << "parent speed fps in" << IC.speed << "sm speed in " << (*submodel).speed << endl ;*/
 
     IC.wind_from_east =  _user_wind_from_east_node->getDoubleValue();
     IC.wind_from_north = _user_wind_from_north_node->getDoubleValue();
 
-    in[0] = sm->x_offset;
-    in[1] = sm->y_offset;
-    in[2] = sm->z_offset;
+    in[0] = (*submodel)->x_offset;
+    in[1] = (*submodel)->y_offset;
+    in[2] = (*submodel)->z_offset;
 
     // pre-process the trig functions
     cosRx = cos(-IC.roll * SG_DEGREES_TO_RADIANS);
@@ -357,43 +471,44 @@ void FGSubmodelMgr::transform(submodel* sm)
 
     // Get submodel initial velocity vector angles in XZ and XY planes.
     // This needs to be fixed. This vector should be added to aircraft's vector.
-    IC.elevation += (sm->yaw_offset * sinRx) + (sm->pitch_offset * cosRx);
-    IC.azimuth   += (sm->yaw_offset * cosRx) - (sm->pitch_offset * sinRx);
+    IC.elevation += ((*submodel)->yaw_offset * sinRx) + ((*submodel)->pitch_offset * cosRx);
+    IC.azimuth   += ((*submodel)->yaw_offset * cosRx) - ((*submodel)->pitch_offset * sinRx);
 
-    // calcuate the total speed north
-    IC.total_speed_north = sm->speed * cos(IC.elevation * SG_DEGREES_TO_RADIANS)
-                            * cos(IC.azimuth * SG_DEGREES_TO_RADIANS) + IC.speed_north_fps;
+    // calculate the total speed north
+    IC.total_speed_north = (*submodel)->speed * cos(IC.elevation * SG_DEGREES_TO_RADIANS)
+        * cos(IC.azimuth * SG_DEGREES_TO_RADIANS) + IC.speed_north_fps;
 
     // calculate the total speed east
-    IC.total_speed_east = sm->speed * cos(IC.elevation * SG_DEGREES_TO_RADIANS)
-                            * sin(IC.azimuth * SG_DEGREES_TO_RADIANS) + IC.speed_east_fps;
+    IC.total_speed_east = (*submodel)->speed * cos(IC.elevation * SG_DEGREES_TO_RADIANS)
+        * sin(IC.azimuth * SG_DEGREES_TO_RADIANS) + IC.speed_east_fps;
 
     // calculate the total speed down
-    IC.total_speed_down = sm->speed * -sin(IC.elevation * SG_DEGREES_TO_RADIANS)
-                            + IC.speed_down_fps;
+    IC.total_speed_down = (*submodel)->speed * -sin(IC.elevation * SG_DEGREES_TO_RADIANS)
+        + IC.speed_down_fps;
 
     // re-calculate speed, elevation and azimuth
     IC.speed = sqrt(IC.total_speed_north * IC.total_speed_north
         + IC.total_speed_east * IC.total_speed_east
         + IC.total_speed_down * IC.total_speed_down);
 
-    //cout << " speed fps out" << IC.speed << endl ;
-    IC.azimuth = atan(IC.total_speed_east / IC.total_speed_north) * SG_RADIANS_TO_DEGREES;
+    // if speeds are low this calculation can become unreliable
+    if (IC.speed > 1){
+        IC.azimuth = atan2(IC.total_speed_east , IC.total_speed_north) * SG_RADIANS_TO_DEGREES;
+        //        cout << "azimuth1 " << IC.azimuth<<endl;
 
-    // rationalise the output
-    if (IC.total_speed_north <= 0) {
-        IC.azimuth = 180 + IC.azimuth;
-    } else {
-
-        if (IC.total_speed_east <= 0)
-            IC.azimuth = 360 + IC.azimuth;
+        // rationalise the output
+        if (IC.azimuth < 0)
+            IC.azimuth += 360;
+        else if (IC.azimuth >= 360)
+            IC.azimuth -= 360;
 
     }
 
-    IC.elevation = -atan(IC.total_speed_down / sqrt(IC.total_speed_north
-                    * IC.total_speed_north + IC.total_speed_east * IC.total_speed_east))
-                    * SG_RADIANS_TO_DEGREES;
+    // cout << "azimuth2 " << IC.azimuth<<endl;
 
+    IC.elevation = -atan(IC.total_speed_down / sqrt(IC.total_speed_north
+        * IC.total_speed_north + IC.total_speed_east * IC.total_speed_east))
+        * SG_RADIANS_TO_DEGREES;
 }
 
 void FGSubmodelMgr::updatelat(double lat)
@@ -435,7 +550,6 @@ void FGSubmodelMgr::loadAI()
 
 double FGSubmodelMgr::getRange(double lat, double lon, double lat2, double lon2) const
 {
-
     double course, distance, az2;
 
     //calculate the bearing and range of the second pos from the first
@@ -450,7 +564,8 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
 
     SGPath config(globals->get_fg_root());
     config.append(path);
-
+    SG_LOG(SG_GENERAL, SG_DEBUG,
+        "Submodels: path " << path);
     try {
         SG_LOG(SG_GENERAL, SG_DEBUG,
             "Submodels: Trying to read AI submodels file: " << config.str());
@@ -489,10 +604,13 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         sm->weight          = entry_node->getDoubleValue("weight", 0.25);
         sm->aero_stabilised = entry_node->getBoolValue("aero-stabilised", true);
         sm->no_roll         = entry_node->getBoolValue("no-roll", false);
+        sm->collision       = entry_node->getBoolValue("collision", false);
         sm->impact          = entry_node->getBoolValue("impact", false);
-        sm->impact_reports  = entry_node->getStringValue("impact-reports");
+        sm->impact_report   = entry_node->getStringValue("impact-reports");
+        sm->fuse_range      = entry_node->getDoubleValue("fuse-range", 0.0);
         sm->contents_node   = fgGetNode(entry_node->getStringValue("contents", "none"), false);
         sm->speed_node      = fgGetNode(entry_node->getStringValue("speed-node", "none"), false);
+        sm->submodel        = entry_node->getStringValue("submodel-path", "");
 
         //cout <<  "sm->contents_node " << sm->contents_node << endl;
         if (sm->contents_node != 0)
@@ -513,14 +631,21 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         sm->id = id;
         sm->first_time = false;
         sm->serviceable = serviceable;
+        sm->sub_id = 0;
 
         sm->prop = fgGetNode("/ai/submodels/submodel", index, true);
         sm->prop->tie("count", SGRawValuePointer<int>(&(sm->count)));
         sm->prop->tie("repeat", SGRawValuePointer<bool>(&(sm->repeat)));
         sm->prop->tie("id", SGRawValuePointer<int>(&(sm->id)));
+        sm->prop->tie("sub-id", SGRawValuePointer<int>(&(sm->sub_id)));
+
         sm->prop->tie("serviceable", SGRawValuePointer<bool>(&(sm->serviceable)));
         string name = sm->name;
         sm->prop->setStringValue("name", name.c_str());
+
+        string submodel = sm->submodel;
+        sm->prop->setStringValue("submodel", submodel.c_str());
+        //cout << " set submodel path " << submodel << endl;
 
         if (sm->contents_node != 0)
             sm->prop->tie("contents-lbs", SGRawValuePointer<double>(&(sm->contents)));
@@ -529,8 +654,147 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         submodels.push_back(sm);
     }
 
+}
+
+void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
+{
+    SGPropertyNode root;
+
+    SGPath config(globals->get_fg_root());
+    config.append(path);
+    SG_LOG(SG_GENERAL, SG_DEBUG,
+        "Submodels: path " << path);
+    try {
+        SG_LOG(SG_GENERAL, SG_DEBUG,
+            "Submodels: Trying to read AI submodels file: " << config.str());
+        readProperties(config.str(), &root);
+
+    } catch (const sg_exception &e) {
+        SG_LOG(SG_GENERAL, SG_DEBUG,
+            "Submodels: Unable to read AI submodels file: " << config.str());
+        return;
+    }
+
+    vector<SGPropertyNode_ptr> children = root.getChildren("submodel");
+    vector<SGPropertyNode_ptr>::iterator it = children.begin();
+    vector<SGPropertyNode_ptr>::iterator end = children.end();
+
+    for (int i = 0; it != end; ++it, i++) {
+        //cout << "Reading AI submodel " << (*it)->getPath() << endl;
+        submodel* sm = new submodel;
+        SGPropertyNode * entry_node = *it;
+        sm->name            = entry_node->getStringValue("name", "none_defined");
+        sm->model           = entry_node->getStringValue("model", "Models/Geometry/rocket.ac");
+        sm->speed           = entry_node->getDoubleValue("speed", 2329.4);
+        sm->repeat          = entry_node->getBoolValue("repeat", false);
+        sm->delay           = entry_node->getDoubleValue("delay", 0.25);
+        sm->count           = entry_node->getIntValue("count", 1);
+        sm->slaved          = entry_node->getBoolValue("slaved", false);
+        sm->x_offset        = entry_node->getDoubleValue("x-offset", 0.0);
+        sm->y_offset        = entry_node->getDoubleValue("y-offset", 0.0);
+        sm->z_offset        = entry_node->getDoubleValue("z-offset", 0.0);
+        sm->yaw_offset      = entry_node->getDoubleValue("yaw-offset", 0.0);
+        sm->pitch_offset    = entry_node->getDoubleValue("pitch-offset", 0.0);
+        sm->drag_area       = entry_node->getDoubleValue("eda", 0.034);
+        sm->life            = entry_node->getDoubleValue("life", 900.0);
+        sm->buoyancy        = entry_node->getDoubleValue("buoyancy", 0);
+        sm->wind            = entry_node->getBoolValue("wind", false);
+        sm->cd              = entry_node->getDoubleValue("cd", 0.193);
+        sm->weight          = entry_node->getDoubleValue("weight", 0.25);
+        sm->aero_stabilised = entry_node->getBoolValue("aero-stabilised", true);
+        sm->no_roll         = entry_node->getBoolValue("no-roll", false);
+        sm->collision       = entry_node->getBoolValue("collision", false);
+        sm->impact          = entry_node->getBoolValue("impact", false);
+        sm->impact_report   = entry_node->getStringValue("impact-reports");
+        sm->fuse_range      = entry_node->getDoubleValue("fuse-range", 0.0);
+        sm->contents_node   = fgGetNode(entry_node->getStringValue("contents", "none"), false);
+        sm->speed_node      = fgGetNode(entry_node->getStringValue("speed-node", "none"), false);
+        sm->submodel        = entry_node->getStringValue("submodel-path", "");
+
+        //cout <<  "sm->contents_node " << sm->contents_node << endl;
+        if (sm->contents_node != 0)
+            sm->contents = sm->contents_node->getDoubleValue();
+
+        const char *trigger_path = entry_node->getStringValue("trigger", 0);
+        if (trigger_path) {
+            sm->trigger_node = fgGetNode(trigger_path, true);
+            sm->trigger_node->setBoolValue(sm->trigger_node->getBoolValue());
+        } else {
+            sm->trigger_node = 0;
+        }
+
+        if (sm->speed_node != 0)
+            sm->speed = sm->speed_node->getDoubleValue();
+
+        sm->timer = sm->delay;
+        sm->id = index;
+        sm->first_time = false;
+        sm->serviceable = serviceable;
+        sm->sub_id = 0;
+
+        sm->prop = fgGetNode("/ai/submodels/subsubmodel", index, true);
+        sm->prop->tie("count", SGRawValuePointer<int>(&(sm->count)));
+        sm->prop->tie("repeat", SGRawValuePointer<bool>(&(sm->repeat)));
+        sm->prop->tie("id", SGRawValuePointer<int>(&(sm->id)));
+        sm->prop->tie("sub-id", SGRawValuePointer<int>(&(sm->sub_id)));
+        sm->prop->tie("serviceable", SGRawValuePointer<bool>(&(sm->serviceable)));
+        string name = sm->name;
+        sm->prop->setStringValue("name", name.c_str());
+
+        string submodel = sm->submodel;
+        sm->prop->setStringValue("submodel", submodel.c_str());
+        // cout << " set submodel path " << submodel<< endl;
+
+        if (sm->contents_node != 0)
+            sm->prop->tie("contents-lbs", SGRawValuePointer<double>(&(sm->contents)));
+
+        index++;
+        subsubmodels.push_back(sm);
+    }
+
+}
+
+void FGSubmodelMgr::loadSubmodels()
+{
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: Loading sub submodels");
+
     submodel_iterator = submodels.begin();
 
+    while (submodel_iterator != submodels.end()) {
+        string submodel  = (*submodel_iterator)->submodel;
+        if (!submodel.empty()) {
+            //int id = (*submodel_iterator)->id;
+            bool serviceable = true;
+            SG_LOG(SG_GENERAL, SG_ALERT, "found path sub sub "
+                << submodel
+                << " index " << index
+                << "name " << (*submodel_iterator)->name);
+
+            (*submodel_iterator)->sub_id = index;
+            setSubData(index, submodel, serviceable);
+        }
+
+        ++submodel_iterator;
+    }
+
+    subsubmodel_iterator = subsubmodels.begin();
+
+    while (subsubmodel_iterator != subsubmodels.end()) {
+        submodels.push_back(*subsubmodel_iterator);
+        ++subsubmodel_iterator;
+    }
+
+    submodel_iterator = submodels.begin();
+
+    while (submodel_iterator != submodels.end()) {
+        int id = (*submodel_iterator)->id;
+        SG_LOG(SG_GENERAL, SG_DEBUG,"after pusback "
+            << " id " << id
+            << " name " << (*submodel_iterator)->name
+            << " sub id " << (*submodel_iterator)->sub_id);
+
+        ++submodel_iterator;
+    }
 }
 
 // end of submodel.cxx

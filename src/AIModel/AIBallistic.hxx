@@ -20,9 +20,16 @@
 #ifndef _FG_AIBALLISTIC_HXX
 #define _FG_AIBALLISTIC_HXX
 
+#include <math.h>
+#include <vector>
+#include <simgear/structure/SGSharedPtr.hxx>
+
+
 #include "AIManager.hxx"
 #include "AIBase.hxx"
 
+SG_USING_STD(vector);
+SG_USING_STD(list);
 
 class FGAIBallistic : public FGAIBase {
 
@@ -54,8 +61,14 @@ public:
     void setNoRoll( bool nr );
     void setRandom( bool r );
     void setName(const string&);
+    void setCollision(bool c);
     void setImpact(bool i);
     void setImpactReportNode(const string&);
+    void setFuseRange(double f);
+    void setSMPath(const string&);
+    void setSubID(int i);
+    void setSubmodel(const string&);
+
 
     double _getTime() const;
 
@@ -81,17 +94,28 @@ private:
     double _ht_agl_ft;       // height above ground level
     double _load_resistance; // ground load resistanc N/m^2
     bool   _solid;           // if true ground is solid for FDMs
-    bool   _report_impact;   // if true an impact point on the terrain is calculated
-    bool   _impact_reported; // if true impact data have been set
-    SGPropertyNode_ptr _impact_report_node;
+
+    bool   _report_collision;       // if true a collision point with AI Objects is calculated
+    bool   _report_impact;          // if true an impact point on the terrain is calculated
+
+    SGPropertyNode_ptr _impact_report_node;  // report node for impact and collision
+
+    double _fuse_range;
+
+    double _dt_count;
+    double _next_run;
 
     string _mat_name;
     string _name;
+    string _path;
+    string _submodel;
 
     void Run(double dt);
+    void handle_collision();
     void handle_impact();
 
-    // FGAIBase* _ai;
+    void report_impact(double elevation, const FGAIBase *target = 0);
+
 };
 
 #endif  // _FG_AIBALLISTIC_HXX

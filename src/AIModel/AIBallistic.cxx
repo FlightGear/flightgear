@@ -26,14 +26,11 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/scene/material/mat.hxx>
-#include <math.h>
-#include <vector>
+#include <simgear/math/sg_geodesy.hxx>
 
 #include <Scenery/scenery.hxx>
 
 #include "AIBallistic.hxx"
-
-SG_USING_STD(vector);
 
 const double FGAIBallistic::slugs_to_kgs = 14.5939029372;
 
@@ -43,11 +40,12 @@ FGAIBallistic::FGAIBallistic() :
     _drag_area(0.007),
     _life_timer(0.0),
     _gravity(32),
-    //  _buoyancy(64),
+    _buoyancy(0),
     _ht_agl_ft(0),
     _load_resistance(0),
     _solid(false),
-    _impact_reported(false),
+    _report_collision(false),
+    _report_impact(false),
     _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
     _mat_name("")
 {
@@ -80,6 +78,9 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setImpact(scFileNode->getBoolValue("impact", false));
     setImpactReportNode(scFileNode->getStringValue("impact-reports"));
     setName(scFileNode->getStringValue("name", "Bomb"));
+    setFuseRange(scFileNode->getDoubleValue("fuse-range", 0.0));
+    setSMPath(scFileNode->getStringValue("submodel-path", ""));
+    setSubID(scFileNode->getIntValue("SubID", 0));
 }
 
 bool FGAIBallistic::init(bool search_in_AI_path) {
@@ -87,6 +88,7 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
 
     props->setStringValue("material/name", _mat_name.c_str());
     props->setStringValue("name", _name.c_str());
+    props->setStringValue("submodels/path", _submodel.c_str());
 
     // start with high value so that animations don't trigger yet
     _ht_agl_ft = 10000000;
@@ -94,6 +96,7 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
     pitch = _elevation;
     roll = _rotation;
     Transform();
+
     return true;
 }
 
@@ -108,6 +111,8 @@ void FGAIBallistic::bind() {
                 SGRawValuePointer<bool>(&_solid));
     props->tie("altitude-agl-ft",
                 SGRawValuePointer<double>(&_ht_agl_ft));
+    props->tie("sub-id",
+                SGRawValuePointer<int>(&_subID));
 }
 
 void FGAIBallistic::unbind() {
@@ -116,6 +121,7 @@ void FGAIBallistic::unbind() {
     props->untie("material/load-resistance");
     props->untie("material/solid");
     props->untie("altitude-agl-ft");
+    props->untie("sub-id");
 }
 
 void FGAIBallistic::update(double dt) {
@@ -184,6 +190,10 @@ void FGAIBallistic::setImpact(bool i) {
     _report_impact = i;
 }
 
+void FGAIBallistic::setCollision(bool c) {
+    _report_collision = c;
+}
+
 void FGAIBallistic::setImpactReportNode(const string& path) {
     if (!path.empty())
         _impact_report_node = fgGetNode(path.c_str(), true);
@@ -193,9 +203,26 @@ void FGAIBallistic::setName(const string& n) {
     _name = n;
 }
 
+void FGAIBallistic::setSMPath(const string& s) {
+    _submodel = s;
+}
+
+void FGAIBallistic::setFuseRange(double f) {
+    _fuse_range = f;
+}
+
+void FGAIBallistic::setSubID(int i) {
+    _subID = i;
+    //cout << "sub id " << _subID << " name " << _name << endl;
+}
+
+void FGAIBallistic::setSubmodel(const string& s) {
+    _submodel = s;
+}
+
 void FGAIBallistic::Run(double dt) {
     _life_timer += dt;
-    //    cout << "life timer 1" << _life_timer <<  dt << endl;
+     //cout << "life timer" <<_name <<" " << _life_timer <<  dt << endl;
     if (_life_timer > life)
         setDie(true);
 
@@ -204,6 +231,7 @@ void FGAIBallistic::Run(double dt) {
     double wind_speed_from_north_deg_sec;
     double wind_speed_from_east_deg_sec;
     double Cdm;      // Cd adjusted by Mach Number
+    double hs;
 
     //randomise Cd by +- 5%
     if (_random)
@@ -234,8 +262,12 @@ void FGAIBallistic::Run(double dt) {
     double speed_fps = speed * SG_KT_TO_FPS;
 
     // calculate vertical and horizontal speed components
-    vs = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
-    double hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
+    if (speed == 0.0) {
+        hs = vs = 0.0;
+    } else {
+        vs = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
+        hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
+    }
 
     // convert horizontal speed (fps) to degrees per second
     speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lat;
@@ -274,8 +306,12 @@ void FGAIBallistic::Run(double dt) {
     // recalculate total speed
     speed = sqrt( vs * vs + hs * hs) / SG_KT_TO_FPS;
 
+    //do impacts and collisions
     if (_report_impact && !_impact_reported)
         handle_impact();
+
+    if (_report_collision && !_collision_reported)
+        handle_collision();
 
     // set destruction flag if altitude less than sea level -1000
     if (altitude_ft < -1000.0)
@@ -311,24 +347,51 @@ void FGAIBallistic::handle_impact() {
 
     _ht_agl_ft = pos.getElevationFt() - elevation_m * SG_METER_TO_FEET;
 
-    // report impact by setting property-tied variables
+    // report impact by setting properties
     if (_ht_agl_ft <= 0) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: terrain impact");
+        report_impact(elevation_m);
         _impact_reported = true;
-        double speed_mps = speed * SG_KT_TO_MPS;
-
-        SGPropertyNode *n = props->getNode("impact", true);
-        n->setDoubleValue("longitude-deg", pos.getLongitudeDeg());
-        n->setDoubleValue("latitude-deg", pos.getLatitudeDeg());
-        n->setDoubleValue("elevation-m", elevation_m);
-        n->setDoubleValue("heading-deg", hdg);
-        n->setDoubleValue("pitch-deg", pitch);
-        n->setDoubleValue("roll-deg", roll);
-        n->setDoubleValue("speed-mps", speed_mps);
-        n->setDoubleValue("energy-kJ", (_mass * slugs_to_kgs)
-                * speed_mps * speed_mps / (2 * 1000));
-
-        _impact_report_node->setStringValue(props->getPath());
     }
+}
+
+void FGAIBallistic::handle_collision()
+{
+    const FGAIBase *collision = manager->calcCollision(pos.getElevationFt(),
+            pos.getLatitudeDeg(),pos.getLongitudeDeg(), _fuse_range);
+
+    if (collision) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: HIT!");
+        report_impact(pos.getElevationM(), collision);
+        _collision_reported = true;
+    }
+}
+
+void FGAIBallistic::report_impact(double elevation, const FGAIBase *object)
+{
+    _impact_lat    = pos.getLatitudeDeg();
+    _impact_lon    = pos.getLongitudeDeg();
+    _impact_elev   = elevation;
+    _impact_speed  = speed * SG_KT_TO_MPS;
+    _impact_hdg    = hdg;
+    _impact_pitch  = pitch;
+    _impact_roll   = roll;
+
+    SGPropertyNode *n = props->getNode("impact", true);
+    if (object)
+        n->setStringValue("type", object->getTypeString());
+    else
+        n->setStringValue("type", "terrain");
+
+    n->setDoubleValue("longitude-deg", _impact_lon);
+    n->setDoubleValue("latitude-deg", _impact_lat);
+    n->setDoubleValue("elevation-m", _impact_elev);
+    n->setDoubleValue("heading-deg", _impact_hdg);
+    n->setDoubleValue("pitch-deg", _impact_pitch);
+    n->setDoubleValue("roll-deg", _impact_roll);
+    n->setDoubleValue("speed-mps", _impact_speed);
+
+    _impact_report_node->setStringValue(props->getPath());
 }
 
 // end AIBallistic

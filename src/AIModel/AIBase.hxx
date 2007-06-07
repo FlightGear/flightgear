@@ -33,6 +33,7 @@
 
 #include <Main/fg_props.hxx>
 
+
 SG_USING_STD(string);
 SG_USING_STD(list);
 
@@ -73,8 +74,14 @@ public:
     void setZoffset( double z_offset );
     void setServiceable ( bool serviceable );
     void setDie( bool die );
+    void setCollisionData( bool i, double lat, double lon, double elev );
+    void setImpactData( bool d );
+    void setImpactLat( double lat );
+    void setImpactLon( double lon );
+    void setImpactElev( double e );
 
     int getID() const;
+    int _getSubID() const;
 
     bool getDie();
 
@@ -86,9 +93,14 @@ public:
     double _getCartPosZ() const;
 
     string _path;
+    string _callsign;
+    string _submodel;
+    string _name;
 
 protected:
+
     SGPropertyNode_ptr props;
+    SGPropertyNode_ptr trigger_node;
     SGPropertyNode_ptr model_removed; // where to report model removal
     FGAIManager* manager;
 
@@ -137,10 +149,22 @@ protected:
     bool invisible;
     bool no_roll;
     bool serviceable;
+    int _subID;
 
     double life;
 
     FGAIFlightPlan *fp;
+
+    bool _impact_reported;
+    bool _collision_reported;
+
+    double _impact_lat;
+    double _impact_lon;
+    double _impact_elev;
+    double _impact_hdg;
+    double _impact_pitch;
+    double _impact_roll;
+    double _impact_speed;
 
     void Transform();
     void CalculateMach();
@@ -149,7 +173,7 @@ protected:
     static int _newAIModelID();
 
 private:
-    const int _refID;
+    int _refID;
     object_type _otype;
 
 public:
@@ -163,13 +187,14 @@ public:
     void _setAltitude( double _alt );
     void _setLongitude( double longitude );
     void _setLatitude ( double latitude );
+    void _setSubID( int s );
 
     double _getVS_fps() const;
     double _getAltitude() const;
     double _getLongitude() const;
-    double _getLatitude () const;
+    double _getLatitude() const;
     double _getBearing() const;
-    double _getElevation() const;
+    double _getElevationFt() const;
     double _getRdot() const;
     double _getH_offset() const;
     double _getV_offset() const;
@@ -182,12 +207,31 @@ public:
     double _getHeading() const;
     double _get_speed_east_fps() const;
     double _get_speed_north_fps() const;
+    double _get_SubPath() const;
+    double _getImpactLat() const;
+    double _getImpactLon() const;
+    double _getImpactElevFt() const;
+    double _getImpactHdg() const;
+    double _getImpactPitch() const;
+    double _getImpactRoll() const;
+    double _getImpactSpeed() const;
+
+    //unsigned int _getCount() const;
 
     bool   _getServiceable() const;
+    bool   _getFirstTime() const;
+    bool   _getImpact();
+    bool   _getImpactData();
+    bool   _getCollisionData();
+
     SGPropertyNode* _getProps() const;
 
     const char* _getPath();
     const char* _getCallsign();
+    const char* _getTriggerNode();
+    const char* _getName();
+    const char* _getSubmodel();
+
 
     // These are used in the Mach number calculations
 
@@ -226,7 +270,6 @@ inline void FGAIBase::setServiceable(bool s) {
     serviceable = s;
 }
 
-
 inline void FGAIBase::setSpeed( double speed_KTAS ) {
     speed = tgt_speed = speed_KTAS;
 }
@@ -256,6 +299,7 @@ inline void FGAIBase::setPitch( double newpitch ) {
 inline void FGAIBase::setLongitude( double longitude ) {
     pos.setLongitudeDeg( longitude );
 }
+
 inline void FGAIBase::setLatitude ( double latitude ) {
     pos.setLatitudeDeg( latitude );
 }
