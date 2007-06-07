@@ -256,9 +256,13 @@ static naRef f_fgcommand(naContext c, naRef me, int argc, naRef* args)
     naRef props = argc > 1 ? args[1] : naNil();
     if(!naIsString(cmd) || (!naIsNil(props) && !naIsGhost(props)))
         naRuntimeError(c, "bad arguments to fgcommand()");
-    SGPropertyNode_ptr* node = NULL;
+    SGPropertyNode_ptr tmp, *node;
     if(!naIsNil(props))
         node = (SGPropertyNode_ptr*)naGhost_ptr(props);
+    else {
+        tmp = new SGPropertyNode();
+        node = &tmp;
+    }
     return naNum(globals->get_commands()->execute(naStr_data(cmd), *node));
 }
 
