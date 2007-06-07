@@ -41,6 +41,7 @@ FGAIBallistic::FGAIBallistic() :
     _life_timer(0.0),
     _gravity(32),
     _buoyancy(0),
+    _random(false),
     _ht_agl_ft(0),
     _load_resistance(0),
     _solid(false),
