@@ -8,6 +8,7 @@
 #include <osg/Group>
 #include <osg/Matrixd>
 #include <osg/Viewport>
+#include <osg/Version>
 #include <osgViewer/StatsHandler>
 #include <osgViewer/Viewer>
 #include <osgGA/MatrixManipulator>
@@ -17,6 +18,13 @@
 #include "util.hxx"
 #include "globals.hxx"
 #include "renderer.hxx"
+
+#if ((1 == OSG_VERSION_MAJOR) && (9 == OSG_VERSION_MINOR) && \
+     (8 <= OSG_VERSION_PATCH)) || \
+    ((1 == OSG_VERSION_MAJOR) && (9 < OSG_VERSION_MINOR)) ||      \
+    (1 < OSG_VERSION_MAJOR)
+#define OSG_HAS_MOUSE_CURSOR_PATCH
+#endif
 
 // fg_os implementation using OpenSceneGraph's osgViewer::Viewer class
 // to create the graphics window and run the event/update/render loop.
@@ -245,7 +253,6 @@ void fgOSFullScreen()
 {
 }
 
-// #define OSG_HAS_MOUSE_CURSOR_PATCH
 #ifdef OSG_HAS_MOUSE_CURSOR_PATCH
 static void setMouseCursor(osg::Camera* camera, int cursor)
 {
