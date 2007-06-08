@@ -99,7 +99,6 @@ atoi( const string& str )
 #endif
 }
 
-
 /**
  * Set a few fail-safe default property values.
  *
@@ -205,7 +204,7 @@ fgSetDefaults ()
     fgSetBool("/sim/rendering/shading", true);
     fgSetBool("/sim/rendering/skyblend", true);
     fgSetBool("/sim/rendering/textures", true);
-    fgTie( "/sim/rendering/filtering", SGTextureFilterListener::getFilter, SGTextureFilterListener::setFilter, false);
+	fgTie( "/sim/rendering/filtering", SGGetTextureFilter, SGSetTextureFilter, false);
     fgSetInt("/sim/rendering/filtering", 1);
     fgSetBool("/sim/rendering/wireframe", false);
     fgSetBool("/sim/rendering/horizon-effect", false);
