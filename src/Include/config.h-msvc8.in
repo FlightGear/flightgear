@@ -1,6 +1,9 @@
 
 /* Special single config.h for MSVC6 build - Geoff McLane - 23 July, 2003  */
 
+#define ENABLE_OSGVIEWER 	 
+#define PU_USE_NATIVE
+
 /* Define to enable plib joystick support */
 #ifndef  ENABLE_PLIB_JOYSTICK
 #define ENABLE_PLIB_JOYSTICK
@@ -188,6 +191,8 @@
 #define HAVE_MEMORY_H 1
 
 #define HAVE_MEMCPY 1
+#define NOMINMAX 1
+
 
 #ifndef ENABLE_AUDIO_SUPPORT
 #define  ENABLE_AUDIO_SUPPORT
