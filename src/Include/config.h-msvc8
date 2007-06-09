@@ -1,8 +1,5 @@
 
-/* Special single config.h for MSVC8 build  */
-
-#define ENABLE_OSGVIEWER
-#define PU_USE_NATIVE 
+/* Special single config.h for MSVC6 build - Geoff McLane - 23 July, 2003  */
 
 /* Define to enable plib joystick support */
 #ifndef  ENABLE_PLIB_JOYSTICK

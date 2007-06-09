@@ -62,7 +62,7 @@ public:
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
-    virtual bool init(bool search_in_AI_path=false);
+    // virtual bool init(bool search_in_AI_path=false);
     virtual void bind();
     virtual void unbind();
     virtual void update(double dt);
@@ -81,7 +81,6 @@ public:
     void TurnTo(double heading);
     void ProcessFlightPlan( double dt, time_t now );
     void setCallSign(const string& );
-    void setTACANChannelID(const string& );
 
     void getGroundElev(double dt);
     void doGroundAltitude();
@@ -93,8 +92,10 @@ public:
     void announcePositionToController();
     void processATC(FGATCInstruction instruction);
 
-    inline void SetTanker(bool setting) { isTanker = setting; };
     virtual const char* getTypeString(void) const { return "aircraft"; }
+
+protected:
+    void Run(double dt);
 
 private:
     FGAISchedule *trafficRef;
@@ -112,9 +113,25 @@ private:
     const PERF_STRUCT *performance;
     bool use_perf_vs;
     SGPropertyNode_ptr refuel_node;
-    bool isTanker;
 
-    void Run(double dt);
+    // helpers for Run
+    bool fpExecutable(time_t now);
+    void handleFirstWaypoint(void);
+    bool leadPointReached(FGAIFlightPlan::waypoint* curr);
+    bool handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t now);
+    bool aiTrafficVisible(void);
+    void controlHeading(FGAIFlightPlan::waypoint* curr);
+    void controlSpeed(FGAIFlightPlan::waypoint* curr,
+                        FGAIFlightPlan::waypoint* next);
+    bool updateTargetValues();
+    void adjustSpeed(double tgt_speed);
+    void updatePosition();
+    void updateHeading();
+    void updateBankAngles();
+    void updateAltitudes();
+    void updateVerticalSpeed();
+    void matchPitchAngle();
+            
     double sign(double x);
 
     string acType;
@@ -124,13 +141,11 @@ private:
     double prevSpeed;
     double prev_dist_to_go;
 
-  bool holdPos;
+    bool holdPos;
 
     bool _getGearDown() const;
     bool reachedWaypoint;
     string callsign;             // The callsign of this tanker.
-    string TACAN_channel_id;     // The TACAN channel of this tanker
-    bool contact;                // set if this tanker is within fuelling range
 };
 
 

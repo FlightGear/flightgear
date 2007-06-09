@@ -102,7 +102,7 @@ public:
   FGTaxiRoute *getTaxiRoute() { return taxiRoute; };
   void deleteTaxiRoute();
   string getRunway() { return activeRunway; };
-  
+    bool isActive(time_t time) {return time >= this->getStartTime();};
 
 private:
   FGRunway rwy;
