@@ -32,6 +32,7 @@
 #include "AICarrier.hxx"
 #include "AIStatic.hxx"
 #include "AIMultiplayer.hxx"
+#include "AITanker.hxx"
 
 #include <simgear/math/sg_geodesy.hxx>
 
@@ -262,7 +263,12 @@ FGAIManager::processScenario( const string &filename ) {
             continue;
         std::string type = scEntry->getStringValue("type", "aircraft");
 
-        if (type == "aircraft") {
+        if (type == "tanker") { // refueling scenarios
+            FGAITanker* aircraft = new FGAITanker;
+            aircraft->readFromScenario(scEntry);
+            attach(aircraft);
+
+        } else if (type == "aircraft") {
             FGAIAircraft* aircraft = new FGAIAircraft;
             aircraft->readFromScenario(scEntry);
             attach(aircraft);

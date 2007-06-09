@@ -349,6 +349,7 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
     }
   else
     wpt_iterator++;
+
 }
 
 // gives distance in feet from a position to a waypoint
