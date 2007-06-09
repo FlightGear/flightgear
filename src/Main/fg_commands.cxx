@@ -1363,7 +1363,7 @@ do_save_xml_from_proptree(const SGPropertyNode * node)
     SGPropertyNode * sourcenode;
     if (node->hasValue("sourcenode"))
         sourcenode = fgGetNode(node->getStringValue("sourcenode"), true);
-    else if (node->hasValue("data"))
+    else if (node->getNode("data", false))
         sourcenode = const_cast<SGPropertyNode *>(node)->getNode("data");
     else
         return false;
