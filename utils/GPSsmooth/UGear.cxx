@@ -552,9 +552,9 @@ imu UGEARInterpIMU( const imu A, const imu B, const double percent )
     p.hz = interp(A.hz, B.hz, percent);
     p.Ps = interp(A.Ps, B.Ps, percent);
     p.Pt = interp(A.Pt, B.Pt, percent);
-    p.phi = interp(A.phi, B.phi, percent);
-    p.the = interp(A.the, B.the, percent);
-    p.psi = interp(A.psi, B.psi, percent);
+    p.phi = interp(A.phi, B.phi, percent, true);
+    p.the = interp(A.the, B.the, percent, true);
+    p.psi = interp(A.psi, B.psi, percent, true);
     p.err_type = A.err_type;
 
     return p;

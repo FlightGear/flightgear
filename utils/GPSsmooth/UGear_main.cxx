@@ -149,7 +149,7 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     double vd = navpacket->vd;
 
     // enable to use ground track heading
-    fdm->psi = atan2(vn, ve); // heading
+    // fdm->psi = SGD_PI * 0.5 - atan2(vn, ve); // heading
 
     fdm->vcas = sqrt( vn*vn + ve*ve + vd*vd );
     // last_lat = pos.lat_deg;
@@ -531,6 +531,9 @@ int main( int argc, char **argv ) {
 
         double last_lat = -999.9, last_lon = -999.9;
 
+        printf("<gpx>\n");
+        printf(" <trk>\n");
+        printf("  <trkseg>\n");
         while ( current_time < end_time ) {
             // cout << "current_time = " << current_time << " end_time = "
             //      << end_time << endl;
@@ -667,8 +670,8 @@ int main( int argc, char **argv ) {
                 double dlat = last_lat - navpacket.lat;
                 double dlon = last_lon - navpacket.lon;
                 double dist = sqrt( dlat*dlat + dlon*dlon );
-                if ( dist > 0.0015 ) {
-                    printf("  <trkpt lat=\"%.8f\" lon=\"%.8f\"></trkpt>\n",
+                if ( dist > 0.01 ) {
+                    printf("   <trkpt lat=\"%.8f\" lon=\"%.8f\"></trkpt>\n",
                            navpacket.lat, navpacket.lon );
                     // printf(" </wpt>\n");
                     last_lat = navpacket.lat;
@@ -703,6 +706,19 @@ int main( int argc, char **argv ) {
             current_time += (frame_us / 1000000.0);
             last_time_stamp = current_time_stamp;
         }
+
+        printf("   <trkpt lat=\"%.8f\" lon=\"%.8f\"></trkpt>\n",
+               nav1.lat, nav1.lon );
+
+        printf("  </trkseg>\n");
+        printf(" </trk>\n");
+        nav0 = track.get_navpt( 0 );
+        nav1 = track.get_navpt( track.nav_size() - 1 );
+        printf(" <wpt lat=\"%.8f\" lon=\"%.8f\"></wpt>\n",
+               nav0.lat, nav0.lon );
+        printf(" <wpt lat=\"%.8f\" lon=\"%.8f\"></wpt>\n",
+               nav1.lat, nav1.lon );
+        printf("<gpx>\n");
 
         cout << "Processed " << imu_count << " entries in "
              << (current_time_stamp - start_time) / 1000000 << " seconds."
