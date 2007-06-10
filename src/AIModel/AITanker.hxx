@@ -22,7 +22,7 @@
 #ifndef FGAITANKER_HXX
 #define FGAITANKER_HXX
 
-#include <AIAircraft.hxx>
+#include "AIAircraft.hxx"
 
 /**
  * An AI tanker for air-air refueling.
