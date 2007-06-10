@@ -490,7 +490,7 @@ FGInterface::unbind ()
   fgUntie("/orientation/side-slip-deg");
   fgUntie("/orientation/alpha-deg");
   fgUntie("/velocities/airspeed-kt");
-   fgUntie("/velocities/groundspeed-kt");
+  fgUntie("/velocities/groundspeed-kt");
   fgUntie("/velocities/mach");
   fgUntie("/velocities/speed-north-fps");
   fgUntie("/velocities/speed-east-fps");
