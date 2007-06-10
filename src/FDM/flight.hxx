@@ -792,6 +792,7 @@ public:
     // inline void set_V_inertial(double v) { v_inertial = v; }
 
     inline double get_V_ground_speed() const { return v_ground_speed; }
+    inline double get_V_ground_speed_kt() const { return v_ground_speed * SG_FEET_TO_METER * 3600 * SG_METER_TO_NM; }
 
     // inline double get_V_equiv() const { return v_equiv; }
     // inline void set_V_equiv( double v ) { v_equiv = v; }

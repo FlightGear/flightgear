@@ -363,6 +363,10 @@ FGInterface::bind ()
   fgTie("/orientation/yaw-rate-degps", this,
 	&FGInterface::get_Psi_dot_degps);
 
+                                // Ground speed knots
+  fgTie("/velocities/groundspeed-kt", this,
+        &FGInterface::get_V_ground_speed_kt);
+
 				// Calibrated airspeed
   fgTie("/velocities/airspeed-kt", this,
 	&FGInterface::get_V_calibrated_kts,
@@ -486,6 +490,7 @@ FGInterface::unbind ()
   fgUntie("/orientation/side-slip-deg");
   fgUntie("/orientation/alpha-deg");
   fgUntie("/velocities/airspeed-kt");
+   fgUntie("/velocities/groundspeed-kt");
   fgUntie("/velocities/mach");
   fgUntie("/velocities/speed-north-fps");
   fgUntie("/velocities/speed-east-fps");
