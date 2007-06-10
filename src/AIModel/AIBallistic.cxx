@@ -92,7 +92,7 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
     props->setStringValue("submodels/path", _submodel.c_str());
 
     // start with high value so that animations don't trigger yet
-    _ht_agl_ft = 10000000;
+    _ht_agl_ft = 1e10;
     hdg = _azimuth;
     pitch = _elevation;
     roll = _rotation;
@@ -112,8 +112,6 @@ void FGAIBallistic::bind() {
                 SGRawValuePointer<bool>(&_solid));
     props->tie("altitude-agl-ft",
                 SGRawValuePointer<double>(&_ht_agl_ft));
-    props->tie("sub-id",
-                SGRawValuePointer<int>(&_subID));
 }
 
 void FGAIBallistic::unbind() {
@@ -122,7 +120,6 @@ void FGAIBallistic::unbind() {
     props->untie("material/load-resistance");
     props->untie("material/solid");
     props->untie("altitude-agl-ft");
-    props->untie("sub-id");
 }
 
 void FGAIBallistic::update(double dt) {
@@ -227,19 +224,14 @@ void FGAIBallistic::Run(double dt) {
     if (_life_timer > life)
         setDie(true);
 
-    double speed_north_deg_sec;
-    double speed_east_deg_sec;
-    double wind_speed_from_north_deg_sec;
-    double wind_speed_from_east_deg_sec;
-    double Cdm;      // Cd adjusted by Mach Number
-    double hs;
-
     //randomise Cd by +- 5%
     if (_random)
         _Cd = _Cd * 0.95 + (0.05 * sg_random());
 
     // Adjust Cd by Mach number. The equations are based on curves
     // for a conventional shell/bullet (no boat-tail).
+    double Cdm;
+
     if (Mach < 0.7)
         Cdm = 0.0125 * Mach + _Cd;
     else if (Mach < 1.2 )
@@ -261,6 +253,7 @@ void FGAIBallistic::Run(double dt) {
         speed = 0.0;
 
     double speed_fps = speed * SG_KT_TO_FPS;
+    double hs;
 
     // calculate vertical and horizontal speed components
     if (speed == 0.0) {
@@ -271,8 +264,8 @@ void FGAIBallistic::Run(double dt) {
     }
 
     // convert horizontal speed (fps) to degrees per second
-    speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lat;
-    speed_east_deg_sec  = sin(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lon;
+    double speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lat;
+    double speed_east_deg_sec  = sin(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lon;
 
     // if wind not required, set to zero
     if (!_wind) {
@@ -281,8 +274,8 @@ void FGAIBallistic::Run(double dt) {
     }
 
     // convert wind speed (fps) to degrees per second
-    wind_speed_from_north_deg_sec = _wind_from_north / ft_per_deg_lat;
-    wind_speed_from_east_deg_sec  = _wind_from_east / ft_per_deg_lon;
+    double wind_speed_from_north_deg_sec = _wind_from_north / ft_per_deg_lat;
+    double wind_speed_from_east_deg_sec  = _wind_from_east / ft_per_deg_lon;
 
     // set new position
     pos.setLatitudeDeg( pos.getLatitudeDeg()
@@ -348,22 +341,25 @@ void FGAIBallistic::handle_impact() {
 
     _ht_agl_ft = pos.getElevationFt() - elevation_m * SG_METER_TO_FEET;
 
-    // report impact by setting properties
     if (_ht_agl_ft <= 0) {
         SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: terrain impact");
         report_impact(elevation_m);
         _impact_reported = true;
+
+        // kill the AIObject if there is no subsubmodel
+        if (_subID == 0)
+            setDie(true);
     }
 }
 
 void FGAIBallistic::handle_collision()
 {
-    const FGAIBase *collision = manager->calcCollision(pos.getElevationFt(),
+    const FGAIBase *object = manager->calcCollision(pos.getElevationFt(),
             pos.getLatitudeDeg(),pos.getLongitudeDeg(), _fuse_range);
 
-    if (collision) {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: HIT!");
-        report_impact(pos.getElevationM(), collision);
+    if (object) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: object hit");
+        report_impact(pos.getElevationM(), object);
         _collision_reported = true;
     }
 }

@@ -297,12 +297,10 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
 
 void FGSubmodelMgr::load()
 {
-    const int id = 0;
-
     SGPropertyNode *path = fgGetNode("/sim/submodels/path");
-    SGPropertyNode root;
 
     if (path) {
+        const int id = 0;
         string Path = path->getStringValue();
         bool Seviceable =_serviceable_node->getBoolValue();
         setData(id, Path, Seviceable);
@@ -551,12 +549,13 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
 
     SGPath config(globals->get_fg_root());
     config.append(path);
-    SG_LOG(SG_GENERAL, SG_DEBUG,
-        "Submodels: path " << path);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: path " << path);
+
     try {
         SG_LOG(SG_GENERAL, SG_DEBUG,
             "Submodels: Trying to read AI submodels file: " << config.str());
         readProperties(config.str(), &root);
+
     } catch (const sg_exception &e) {
         SG_LOG(SG_GENERAL, SG_DEBUG,
             "Submodels: Unable to read AI submodels file: " << config.str());
