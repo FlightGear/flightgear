@@ -48,7 +48,8 @@ FGAIBallistic::FGAIBallistic() :
     _report_collision(false),
     _report_impact(false),
     _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
-    _mat_name("")
+    _mat_name(""),
+    _elevation(0)
 {
     no_roll = false;
 }
@@ -259,8 +260,8 @@ void FGAIBallistic::Run(double dt) {
     if (speed == 0.0) {
         hs = vs = 0.0;
     } else {
-        vs = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
-        hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed_fps;
+        vs = sin( _elevation * SG_DEGREES_TO_RADIANS ) * speed_fps;
+        hs = cos( _elevation * SG_DEGREES_TO_RADIANS ) * speed_fps;
     }
 
     // convert horizontal speed (fps) to degrees per second
@@ -290,12 +291,17 @@ void FGAIBallistic::Run(double dt) {
     altitude_ft += vs * dt;
     pos.setElevationFt(altitude_ft);
 
-    // recalculate pitch (velocity vector) if aerostabilized
+    // recalculate elevation (velocity vector) if aerostabilized
     /*cout << _name << ": " << "aero_stabilised " << _aero_stabilised
     << " pitch " << pitch <<" vs "  << vs <<endl ;*/
 
-    if (_aero_stabilised)
-        pitch = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
+    if (_aero_stabilised) { // we simulate rotational moment of inertia by using a filter
+        const double coeff = 0.9;
+        double c = dt / (coeff + dt);
+        //cout << "c " << c << endl;
+        _elevation = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
+        pitch = (_elevation * c) + (pitch * (1 - c));
+    }
 
     // recalculate total speed
     speed = sqrt( vs * vs + hs * hs) / SG_KT_TO_FPS;

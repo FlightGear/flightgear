@@ -478,7 +478,7 @@ void FGSubmodelMgr::transform(submodel *sm)
         + IC.total_speed_east * IC.total_speed_east
         + IC.total_speed_down * IC.total_speed_down);
 
-    // if speeds are low this calculation can become unreliable
+    // if speeds are low these calculations can become unreliable
     if (IC.speed > 1) {
         IC.azimuth = atan2(IC.total_speed_east , IC.total_speed_north) * SG_RADIANS_TO_DEGREES;
         //        cout << "azimuth1 " << IC.azimuth<<endl;
@@ -488,13 +488,13 @@ void FGSubmodelMgr::transform(submodel *sm)
             IC.azimuth += 360;
         else if (IC.azimuth >= 360)
             IC.azimuth -= 360;
-    }
 
     // cout << "azimuth2 " << IC.azimuth<<endl;
 
     IC.elevation = -atan(IC.total_speed_down / sqrt(IC.total_speed_north
         * IC.total_speed_north + IC.total_speed_east * IC.total_speed_east))
         * SG_RADIANS_TO_DEGREES;
+    }
 }
 
 void FGSubmodelMgr::updatelat(double lat)
