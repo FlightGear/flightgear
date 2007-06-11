@@ -211,8 +211,8 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
         static float est_elev = 0.0;
         static float est_aileron = 0.0;
         static float est_rudder = 0.0;
-        est_elev = 0.95 * est_elev + 0.05 * (imupacket->q * 8);
-        est_aileron = 0.95 * est_aileron + 0.05 * (imupacket->p * 8);
+        est_elev = 0.99 * est_elev + 0.01 * (imupacket->q * 10);
+        est_aileron = 0.95 * est_aileron + 0.05 * (imupacket->p * 5);
         est_rudder = 0.95 * est_rudder + 0.05 * (imupacket->r * 8);
         fdm->elevator = -est_elev;
         fdm->left_aileron = est_aileron;
