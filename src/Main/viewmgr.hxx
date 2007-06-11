@@ -86,10 +86,12 @@ public:
     }
     inline FGViewer *next_view() {
 	setView((current+1 < (int)views.size()) ? (current + 1) : 0);
+	view_number->fireValueChanged();
 	return views[current];
     }
     inline FGViewer *prev_view() {
 	setView((0 < current) ? (current - 1) : (views.size() - 1));
+	view_number->fireValueChanged();
 	return views[current];
     }
 
@@ -146,6 +148,7 @@ private:
     int getView () const;
     void setView (int newview);
 
+    SGPropertyNode_ptr view_number;
     vector<SGPropertyNode_ptr> config_list;
     typedef vector<FGViewer *> viewer_list;
     viewer_list views;

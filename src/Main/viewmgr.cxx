@@ -40,6 +40,7 @@
 FGViewMgr::FGViewMgr( void ) :
   axis_long(0),
   axis_lat(0),
+  view_number(fgGetNode("/sim/current-view/view-number", true)),
   config_list(fgGetNode("/sim", true)->getChildren("view")),
   current(0)
 {
@@ -561,20 +562,20 @@ FGViewMgr::setView (int newview)
   // negative numbers -> set view with node index -newview
   if (newview < 0) {
     for (int i = 0; i < (int)config_list.size(); i++) {
-        int index = -config_list[i]->getIndex();
-        if (index == newview)
-            newview = i;
+      int index = -config_list[i]->getIndex();
+      if (index == newview)
+        newview = i;
     }
     if (newview < 0)
-        return;
+      return;
   }
 
   // if newview number too low wrap to last view...
   if (newview < 0)
-    newview = (int)views.size() -1;
+    newview = (int)views.size() - 1;
 
   // if newview number to high wrap to zero...
-  if (newview > ((int)views.size() -1))
+  if (newview >= (int)views.size())
     newview = 0;
 
   // set new view
