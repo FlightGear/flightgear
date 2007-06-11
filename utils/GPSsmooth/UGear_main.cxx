@@ -73,6 +73,8 @@ bool ignore_checksum = false;
 
 bool sg_swap = false;
 
+bool est_controls = false;
+
 // The function htond is defined this way due to the way some
 // processors and OSes treat floating point values.  Some will raise
 // an exception whenever a "bad" floating point value is loaded into a
@@ -205,13 +207,26 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     fdm->left_flap = 0.0;
     fdm->right_flap = 0.0;
 
-    fdm->elevator = ((double)servopacket->chn[1] / 32768.0) - 1.0;
+    if ( est_controls ) {
+        static float est_elev = 0.0;
+        static float est_aileron = 0.0;
+        static float est_rudder = 0.0;
+        est_elev = 0.95 * est_elev + 0.05 * (imupacket->q * 8);
+        est_aileron = 0.95 * est_aileron + 0.05 * (imupacket->p * 8);
+        est_rudder = 0.95 * est_rudder + 0.05 * (imupacket->r * 8);
+        fdm->elevator = -est_elev;
+        fdm->left_aileron = est_aileron;
+        fdm->right_aileron = -est_aileron;
+        fdm->rudder = est_rudder;
+    } else {
+        fdm->elevator = ((double)servopacket->chn[1] / 32768.0) - 1.0;
+        fdm->left_aileron = ((double)servopacket->chn[0] / 32768.0) - 1.0;
+        fdm->right_aileron = 1.0 - ((double)servopacket->chn[0] / 32768.0);
+        fdm->rudder = 1.0 - ((double)servopacket->chn[3] / 32768.0);
+    }
     fdm->elevator_trim_tab = 0.0;
     fdm->left_flap = 0.0;
     fdm->right_flap = 0.0;
-    fdm->left_aileron = ((double)servopacket->chn[0] / 32768.0) - 1.0;
-    fdm->right_aileron = 1.0 - ((double)servopacket->chn[0] / 32768.0);
-    fdm->rudder = 1.0 - ((double)servopacket->chn[3] / 32768.0);
     fdm->nose_wheel = 0.0;
     fdm->speedbrake = 0.0;
     fdm->spoilers = 0.0;
@@ -321,6 +336,7 @@ void usage( const string &argv0 ) {
     cout << "\t[ --broadcast ]" << endl;
     cout << "\t[ --fdm-port <fdm output port #> ]" << endl;
     cout << "\t[ --ctrls-port <ctrls output port #> ]" << endl;
+    cout << "\t[ --estimate-control-deflections ]" << endl;
     cout << "\t[ --altitude-offset <meters> ]" << endl;
     cout << "\t[ --skip-seconds <seconds> ]" << endl;
     cout << "\t[ --no-real-time ]" << endl;
@@ -405,6 +421,8 @@ int main( int argc, char **argv ) {
                 usage( argv[0] );
                 exit( -1 );
             }
+        } else if ( strcmp (argv[i], "--estimate-control-deflections" ) == 0 ) {
+            est_controls = true;
         } else if ( strcmp( argv[i], "--altitude-offset" ) == 0 ) {
             ++i;
             if ( i < argc ) {
