@@ -1309,32 +1309,39 @@ do_hud_init2(const SGPropertyNode *)
     return true;
 }
 
+
 /**
  * An fgcommand to allow loading of xml files via nasal,
  * the xml file's structure will be made available within
  * a property tree node defined under argument "targetnode",
  * or in the given argument tree under "data" otherwise.
  *
- * @param filename a string to hold the complete path & filename of a XML file
+ * @param filename a string to hold the complete path & filename of an XML file
  * @param targetnode a string pointing to a location within the property tree
- * where to store the parsed XML file
+ * where to store the parsed XML file. If <targetnode> is undefined, then the
+ * file contents are stored under a node <data> in the argument tree.
  */
 
 static bool
 do_load_xml_to_proptree(const SGPropertyNode * arg)
 {
-    SGPropertyNode *a = const_cast<SGPropertyNode *>(arg);
-    SGPropertyNode *targetnode;
-    if (a->hasValue("targetnode"))
-        targetnode = fgGetNode(a->getStringValue("targetnode"), true);
-    else
-        targetnode = a->getNode("data", true);
+    SGPath file(arg->getStringValue("filename"));
+    if (file.str().empty())
+        return false;
 
-    const char *filename = a->getNode("filename")->getStringValue();
+    if (file.extension() != "xml")
+        file.concat(".xml");
+
+    SGPropertyNode *targetnode;
+    if (arg->hasValue("targetnode"))
+        targetnode = fgGetNode(arg->getStringValue("targetnode"), true);
+    else
+        targetnode = const_cast<SGPropertyNode *>(arg)->getNode("data", true);
+
     try {
-        fgLoadProps(filename, targetnode);
+        readProperties(file.c_str(), targetnode, true);
     } catch (const sg_exception &e) {
-        string errmsg = "Error reading file " + string(filename) + ":\n";
+        string errmsg = "Error reading file " + file.str() + ":\n";
         guiErrorMessage(errmsg.c_str(), e);
         return false;
     }
@@ -1344,7 +1351,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
 
 
 /**
- * an fgcommand to allow saving of xml files via nasal,
+ * An fgcommand to allow saving of xml files via nasal,
  * the file's structure will be determined based on what's
  * encountered in the passed (source) property tree node
  *
@@ -1354,34 +1361,30 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
  * where to find the nodes that should be written recursively into an XML file
  * @param data if no sourcenode is given, then the file contents are taken from
  * the argument tree's "data" node.
- *
- * TODO: 
- *   deal with already existing filenames, optionally return error/success
- *   values in a separate node to provide status information
- *
- * note: it's directly using writeProperties, which is not necessarily
- *       preferable, but for now it should work ...
  */
 
-static bool 
-do_save_xml_from_proptree(const SGPropertyNode * node)
+static bool
+do_save_xml_from_proptree(const SGPropertyNode * arg)
 {
-    SGPropertyNode * sourcenode;
-    if (node->hasValue("sourcenode"))
-        sourcenode = fgGetNode(node->getStringValue("sourcenode"), true);
-    else if (node->getNode("data", false))
-        sourcenode = const_cast<SGPropertyNode *>(node)->getNode("data");
+    SGPath file(arg->getStringValue("filename"));
+    if (file.str().empty())
+        return false;
+
+    if (file.extension() != "xml")
+        file.concat(".xml");
+
+    SGPropertyNode *sourcenode;
+    if (arg->hasValue("sourcenode"))
+        sourcenode = fgGetNode(arg->getStringValue("sourcenode"), true);
+    else if (arg->getNode("data", false))
+        sourcenode = const_cast<SGPropertyNode *>(arg)->getNode("data");
     else
         return false;
 
-    const char *filename = node->getStringValue("filename", 0);
-    if (!filename)
-        return false;
-
     try {
-        writeProperties (filename, sourcenode, true);
+        writeProperties (file.c_str(), sourcenode, true);
     } catch (const sg_exception &e) {
-        string errmsg = "Error writing file " + string(filename) + ":\n";
+        string errmsg = "Error writing file " + file.str() + ":\n";
         guiErrorMessage(errmsg.c_str(), e);
         return false;
     }
