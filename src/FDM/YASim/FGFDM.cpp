@@ -719,6 +719,15 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setMaxteeterdamp(attrf(a,"maxteeterdamp",1000));
     w->setRelLenTeeterHinge(attrf(a,"rellenteeterhinge",0.01));
     w->setBalance(attrf(a,"balance",1.0));
+    w->setMinTiltYaw(attrf(a,"mintiltyaw",0.0));
+    w->setMinTiltPitch(attrf(a,"mintiltpitch",0.0));
+    w->setMinTiltRoll(attrf(a,"mintiltroll",0.0));
+    w->setMaxTiltYaw(attrf(a,"maxtiltyaw",0.0));
+    w->setMaxTiltPitch(attrf(a,"maxtiltpitch",0.0));
+    w->setMaxTiltRoll(attrf(a,"maxtiltroll",0.0));
+    w->setTiltCenterX(attrf(a,"tiltcenterx",0.0));
+    w->setTiltCenterY(attrf(a,"tiltcentery",0.0));
+    w->setTiltCenterZ(attrf(a,"tiltcenterz",0.0));
     if(attrb(a,"ccw"))
        w->setCcw(1); 
     if(attrb(a,"sharedflaphinge"))
@@ -947,6 +956,9 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "COLLECTIVE")) return ControlMap::COLLECTIVE;
     if(eq(name, "CYCLICAIL")) return ControlMap::CYCLICAIL;
     if(eq(name, "CYCLICELE")) return ControlMap::CYCLICELE;
+    if(eq(name, "TILTROLL")) return ControlMap::TILTROLL;
+    if(eq(name, "TILTPITCH")) return ControlMap::TILTPITCH;
+    if(eq(name, "TILTYAW")) return ControlMap::TILTYAW;
     if(eq(name, "ROTORGEARENGINEON")) return ControlMap::ROTORENGINEON;
     if(eq(name, "ROTORBRAKE")) return ControlMap::ROTORBRAKE;
     if(eq(name, "ROTORENGINEMAXRELTORQUE")) 

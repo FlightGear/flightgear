@@ -33,6 +33,9 @@ private:
     int _number_of_parts;
     float _balance1;
     float _balance2;
+    float _tilt_yaw;
+    float _tilt_roll;
+    float _tilt_pitch;
 
 public:
     Rotor();
@@ -56,6 +59,18 @@ public:
     void setMaxCyclicele(float value);
     void setMaxCollective(float value);
     void setMinCollective(float value);
+    void setMinTiltYaw(float value);
+    void setMinTiltPitch(float value);
+    void setMinTiltRoll(float value);
+    void setMaxTiltYaw(float value);
+    void setMaxTiltPitch(float value);
+    void setMaxTiltRoll(float value);
+    void setTiltCenterX(float value);
+    void setTiltCenterY(float value);
+    void setTiltCenterZ(float value);
+    void setTiltYaw(float lval);
+    void setTiltPitch(float lval);
+    void setTiltRoll(float lval);
     void setDiameter(float value);
     void setWeightPerBlade(float value);
     void setNumberOfBlades(float value);
@@ -84,6 +99,7 @@ public:
     void setName(const char *text);
     void inititeration(float dt,float omegarel,float ddt_omegarel,float *rot);
     void compile();
+    void updateDirectionsAndPositions();
     void getTip(float* tip);
     void calcLiftFactor(float* v, float rho, State *s);
     void getDownWash(float *pos, float * v_heli, float *downwash);
@@ -131,8 +147,10 @@ private:
     float findGroundEffectAltitude(Ground * ground_cb,State *s,
         float *pos0,float *pos1,float *pos2,float *pos3,
         int iteration=0,float a0=-1,float a1=-1,float a2=-1,float a3=-1);
-    Rotorpart* newRotorpart(float* pos, float *posforceattac, float *normal,
-        float* speed,float *dirzentforce, float zentforce,float maxpitchforce,
+    static void euler2orient(float roll, float pitch, float hdg,
+                             float* out);
+    Rotorpart* newRotorpart(/*float* pos, float *posforceattac, float *normal,
+        float* speed,float *dirzentforce, */float zentforce,float maxpitchforce,
         float delta3,float mass,float translift,float rellenhinge,float len);
     float _base[3];
     float _groundeffectpos[4][3];
@@ -146,6 +164,13 @@ private:
     float _diameter;
     float _weight_per_blade;
     float _rel_blade_center;
+    float _tilt_center[3];
+    float _min_tilt_yaw;
+    float _min_tilt_pitch;
+    float _min_tilt_roll;
+    float _max_tilt_yaw;
+    float _max_tilt_pitch;
+    float _max_tilt_roll;
     float _min_pitch;
     float _max_pitch;
     float _force_at_pitch_a;
@@ -210,6 +235,7 @@ private:
     bool _shared_flap_hinge;
     float _grav_direction[3];
     int _properties_tied;
+    bool _directions_and_postions_dirty;
 };
 std::ostream &  operator<<(std::ostream & out, /*const*/ Rotor& r);
 

@@ -114,7 +114,7 @@ Rotor::Rotor()
     _airfoil_drag_coefficient0=0;
     _airfoil_drag_coefficient1=0;
     for(i=0; i<2; i++)
-        _global_ground[i] =  0;
+        _global_ground[i] = _tilt_center[i] = 0;
     _global_ground[2] = 1;
     _global_ground[3] = -1e3;
     _incidence_stall_zero_speed=18*pi/180.;
@@ -137,6 +137,16 @@ Rotor::Rotor()
     _balance2=1;
     _properties_tied=0;
     _num_ground_contact_pos=0;
+    _directions_and_postions_dirty=true;
+    _tilt_yaw=0;
+    _tilt_roll=0;
+    _tilt_pitch=0;
+    _min_tilt_yaw=0;
+    _min_tilt_pitch=0;
+    _min_tilt_roll=0;
+    _max_tilt_yaw=0;
+    _max_tilt_pitch=0;
+    _max_tilt_roll=0;
 }
 
 Rotor::~Rotor()
@@ -164,6 +174,7 @@ void Rotor::inititeration(float dt,float omegarel,float ddt_omegarel,float *rot)
     _omega=_omegan*_omegarel; 
     _ddt_omega=_omegan*ddt_omegarel;
     int i;
+    updateDirectionsAndPositions();
     for(i=0; i<_rotorparts.size(); i++) {
         float s = Math::sin(float(2*pi*i/_number_of_parts+(_phi-pi/2.)*(_ccw?1:-1)));
         float c = Math::cos(float(2*pi*i/_number_of_parts+(_phi-pi/2.)*(_ccw?1:-1)));
@@ -188,7 +199,7 @@ void Rotor::inititeration(float dt,float omegarel,float ddt_omegarel,float *rot)
     //update balance
     if ((_balance1*_balance2 < 0.97) && (_balance1>-1))
     {
-        _balance1-=(0.97-_balance1*_balance2)*(0.97-_balance1*_balance2)*0.00001;
+        _balance1-=(0.97-_balance1*_balance2)*(0.97-_balance1*_balance2)*0.005;
         if (_balance1<-1) _balance1=-1;
     }
 }
@@ -287,18 +298,18 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
                 else
                     if (j==4)
                     {
-                        sprintf(text,"/rotors/%s/debug/debugfge",_name);
-                        *f=_f_ge;
+                        sprintf(text,"/rotors/%s/tilt/pitch-deg",_name);
+                        *f=_tilt_pitch*180/pi;
                     }
                     else if (j==5)
                     {
-                        sprintf(text,"/rotors/%s/debug/debugfvs",_name);
-                        *f=_f_vs;
+                        sprintf(text,"/rotors/%s/tilt/roll-deg",_name);
+                        *f=_tilt_roll*180/pi;
                     }
                     else if (j==6)
                     {
-                        sprintf(text,"/rotors/%s/debug/debugftl",_name);
-                        *f=_f_tl;
+                        sprintf(text,"/rotors/%s/tilt/yaw-deg",_name);
+                        *f=_tilt_yaw*180/pi;
                     }
                     else if (j==7)
                     {
@@ -513,6 +524,51 @@ void Rotor::setMinCollective(float value)
     _min_pitch=value/180*pi;
 }
 
+void Rotor::setMinTiltYaw(float value)
+{
+    _min_tilt_yaw=value/180*pi;
+}
+
+void Rotor::setMinTiltPitch(float value)
+{
+    _min_tilt_pitch=value/180*pi;
+}
+
+void Rotor::setMinTiltRoll(float value)
+{
+    _min_tilt_roll=value/180*pi;
+}
+
+void Rotor::setMaxTiltYaw(float value)
+{
+    _max_tilt_yaw=value/180*pi;
+}
+
+void Rotor::setMaxTiltPitch(float value)
+{
+    _max_tilt_pitch=value/180*pi;
+}
+
+void Rotor::setMaxTiltRoll(float value)
+{
+    _max_tilt_roll=value/180*pi;
+}
+
+void Rotor::setTiltCenterX(float value)
+{
+    _tilt_center[0] = value;
+}
+
+void Rotor::setTiltCenterY(float value)
+{
+    _tilt_center[1] = value;
+}
+
+void Rotor::setTiltCenterZ(float value)
+{
+    _tilt_center[2] = value;
+}
+
 void Rotor::setMaxCollective(float value)
 {
     _max_pitch=value/180*pi;
@@ -680,6 +736,27 @@ void Rotorgear::setRotorBrake(float lval)
 {
     lval = Math::clamp(lval, 0, 1);
     _rotorbrake=lval;
+}
+
+void Rotor::setTiltYaw(float lval)
+{
+    lval = Math::clamp(lval, -1, 1);
+    _tilt_yaw = _min_tilt_yaw+(lval+1)/2*(_max_tilt_yaw-_min_tilt_yaw);
+    _directions_and_postions_dirty = true;
+}
+
+void Rotor::setTiltPitch(float lval)
+{
+    lval = Math::clamp(lval, -1, 1);
+    _tilt_pitch = _min_tilt_pitch+(lval+1)/2*(_max_tilt_pitch-_min_tilt_pitch);
+    _directions_and_postions_dirty = true;
+}
+
+void Rotor::setTiltRoll(float lval)
+{
+    lval = Math::clamp(lval, -1, 1);
+    _tilt_roll = _min_tilt_roll+(lval+1)/2*(_max_tilt_roll-_min_tilt_roll);
+    _directions_and_postions_dirty = true;
 }
 
 void Rotor::setCollective(float lval)
@@ -943,6 +1020,114 @@ void Rotor::getDownWash(float *pos, float *v_heli, float *downwash)
     //the downwash is calculated in the opposite direction of the normal
 }
 
+void Rotor::euler2orient(float roll, float pitch, float hdg, float* out)
+{
+    // the Glue::euler2orient, inverts y<z due to different bases
+    // therefore the negation of all "y" and "z" coeffizients
+    Glue::euler2orient(roll,pitch,hdg,out);
+    for (int i=3;i<9;i++) out[i]*=-1.0;
+}
+
+
+void Rotor::updateDirectionsAndPositions()
+{
+    if (!_directions_and_postions_dirty)
+        return;
+    float orient[9];
+    euler2orient(_tilt_roll, _tilt_pitch, _tilt_yaw, orient);
+    float forward[3];
+    float normal[3];
+    float base[3];
+    Math::sub3(_base,_tilt_center,base);
+    Math::vmul33(orient, base, base);
+    Math::add3(base,_tilt_center,base);
+    Math::vmul33(orient, _forward, forward);
+    Math::vmul33(orient, _normal, normal);
+#define _base base
+#define _forward forward
+#define _normal normal
+    float directions[5][3];
+    //pointing forward, right, ... the 5th is ony for calculation
+    directions[0][0]=_forward[0];
+    directions[0][1]=_forward[1];
+    directions[0][2]=_forward[2];
+    int i;
+    for (i=1;i<5;i++)
+    {
+        if (!_ccw)
+            Math::cross3(directions[i-1],_normal,directions[i]);
+        else
+            Math::cross3(_normal,directions[i-1],directions[i]);
+    }
+    Math::set3(directions[4],directions[0]);
+    // now directions[0] is perpendicular to the _normal.and has a length
+    // of 1. if _forward is already normalized and perpendicular to the 
+    // normal, directions[0] will be the same
+    //_num_ground_contact_pos=(_number_of_parts<16)?_number_of_parts:16;
+    for (i=0;i<_num_ground_contact_pos;i++)
+    {
+        float help[3];
+        float s = Math::sin(pi*2*i/_num_ground_contact_pos);
+        float c = Math::cos(pi*2*i/_num_ground_contact_pos);
+        Math::mul3(c*_diameter*0.5,directions[0],_ground_contact_pos[i]);
+        Math::mul3(s*_diameter*0.5,directions[1],help);
+        Math::add3(help,_ground_contact_pos[i],_ground_contact_pos[i]);
+        Math::add3(_base,_ground_contact_pos[i],_ground_contact_pos[i]);
+    }
+    for (i=0;i<4;i++)
+    {
+        Math::mul3(_diameter*0.7,directions[i],_groundeffectpos[i]);
+        Math::add3(_base,_groundeffectpos[i],_groundeffectpos[i]);
+    }
+    for (i=0;i<_number_of_parts;i++)
+    {
+        Rotorpart* rp = getRotorpart(i);
+        float lpos[3],lforceattac[3],lspeed[3],dirzentforce[3];
+        float s = Math::sin(2*pi*i/_number_of_parts);
+        float c = Math::cos(2*pi*i/_number_of_parts);
+        float sp = Math::sin(float(2*pi*i/_number_of_parts-pi/2.+_phi));
+        float cp = Math::cos(float(2*pi*i/_number_of_parts-pi/2.+_phi));
+        float direction[3],nextdirection[3],help[3],direction90deg[3];
+        float rotorpartmass = _weight_per_blade*_number_of_blades/_number_of_parts*.453;
+        float speed=_rotor_rpm/60*_diameter*_rel_blade_center*pi;
+        float lentocenter=_diameter*_rel_blade_center*0.5;
+        float lentoforceattac=_diameter*_rel_len_hinge*0.5;
+        float zentforce=rotorpartmass*speed*speed/lentocenter;
+    
+        Math::mul3(c ,directions[0],help);
+        Math::mul3(s ,directions[1],direction);
+        Math::add3(help,direction,direction);
+
+        Math::mul3(c ,directions[1],help);
+        Math::mul3(s ,directions[2],direction90deg);
+        Math::add3(help,direction90deg,direction90deg);
+        
+        Math::mul3(cp ,directions[1],help);
+        Math::mul3(sp ,directions[2],nextdirection);
+        Math::add3(help,nextdirection,nextdirection);
+
+        Math::mul3(lentocenter,direction,lpos);
+        Math::add3(lpos,_base,lpos);
+        Math::mul3(lentoforceattac,nextdirection,lforceattac);
+        //nextdirection: +90deg (gyro)!!!
+
+        Math::add3(lforceattac,_base,lforceattac);
+        Math::mul3(speed,direction90deg,lspeed);
+        Math::mul3(1,nextdirection,dirzentforce);
+        rp->setPosition(lpos);
+        rp->setNormal(_normal);
+        rp->setZentipetalForce(zentforce);
+        rp->setPositionForceAttac(lforceattac);
+        rp->setSpeed(lspeed);
+        rp->setDirectionofZentipetalforce(dirzentforce);
+        rp->setDirectionofRotorPart(direction);
+    }
+#undef _base
+#undef _forward
+#undef _normal
+    _directions_and_postions_dirty=false;
+}
+
 void Rotor::compile()
 {
     // Have we already been compiled?
@@ -960,40 +1145,10 @@ void Rotor::compile()
         +(60/_rotor_rpm)/(2*_number_of_blades) //+ meantime a rotorblade 
                                                //will pass a given point 
         ));
-    float directions[5][3];
-    //pointing forward, right, ... the 5th is ony for calculation
-    directions[0][0]=_forward[0];
-    directions[0][1]=_forward[1];
-    directions[0][2]=_forward[2];
-    int i;
-    for (i=1;i<5;i++)
-    {
-        if (!_ccw)
-            Math::cross3(directions[i-1],_normal,directions[i]);
-        else
-            Math::cross3(_normal,directions[i-1],directions[i]);
-        Math::unit3(directions[i],directions[i]);
-    }
-    Math::set3(directions[4],directions[0]);
-    // now directions[0] is perpendicular to the _normal.and has a length
-    // of 1. if _forward is already normalized and perpendicular to the 
-    // normal, directions[0] will be the same
+    //normalize the directions
+    Math::unit3(_forward,_forward);
+    Math::unit3(_normal,_normal);
     _num_ground_contact_pos=(_number_of_parts<16)?_number_of_parts:16;
-    for (i=0;i<_num_ground_contact_pos;i++)
-    {
-        float help[3];
-        float s = Math::sin(pi*2*_num_ground_contact_pos/i);
-        float c = Math::cos(pi*2*_num_ground_contact_pos/i);
-        Math::mul3(c*_diameter*0.5,directions[0],_ground_contact_pos[i]);
-        Math::mul3(s*_diameter*0.5,directions[1],help);
-        Math::add3(help,_ground_contact_pos[i],_ground_contact_pos[i]);
-        Math::add3(_base,_ground_contact_pos[i],_ground_contact_pos[i]);
-    }
-    for (i=0;i<4;i++)
-    {
-        Math::mul3(_diameter*0.7,directions[i],_groundeffectpos[i]);
-        Math::add3(_base,_groundeffectpos[i],_groundeffectpos[i]);
-    }
     float rotorpartmass = _weight_per_blade*_number_of_blades/_number_of_parts*.453;
     //was pounds -> now kg
 
@@ -1036,37 +1191,10 @@ void Rotor::compile()
     }
 
     Rotorpart* rps[256];
+    int i;
     for (i=0;i<_number_of_parts;i++)
     {
-        float lpos[3],lforceattac[3],lspeed[3],dirzentforce[3];
-        float s = Math::sin(2*pi*i/_number_of_parts);
-        float c = Math::cos(2*pi*i/_number_of_parts);
-        float sp = Math::sin(float(2*pi*i/_number_of_parts-pi/2.+_phi));
-        float cp = Math::cos(float(2*pi*i/_number_of_parts-pi/2.+_phi));
-        float direction[3],nextdirection[3],help[3],direction90deg[3];
-        Math::mul3(c ,directions[0],help);
-        Math::mul3(s ,directions[1],direction);
-        Math::add3(help,direction,direction);
-
-        Math::mul3(c ,directions[1],help);
-        Math::mul3(s ,directions[2],direction90deg);
-        Math::add3(help,direction90deg,direction90deg);
-        
-        Math::mul3(cp ,directions[1],help);
-        Math::mul3(sp ,directions[2],nextdirection);
-        Math::add3(help,nextdirection,nextdirection);
-
-        Math::mul3(lentocenter,direction,lpos);
-        Math::add3(lpos,_base,lpos);
-        Math::mul3(lentoforceattac,nextdirection,lforceattac);
-        //nextdirection: +90deg (gyro)!!!
-
-        Math::add3(lforceattac,_base,lforceattac);
-        Math::mul3(speed,direction90deg,lspeed);
-        Math::mul3(1,nextdirection,dirzentforce);
-
-        Rotorpart* rp=rps[i]=newRotorpart(lpos, lforceattac, _normal,
-            lspeed,dirzentforce,zentforce,pitchaforce,_delta3,rotorpartmass,
+        Rotorpart* rp=rps[i]=newRotorpart(zentforce,pitchaforce,_delta3,rotorpartmass,
             _translift,_rel_len_hinge,lentocenter);
         int k = i*4/_number_of_parts;
         rp->setAlphaoutput(_alphaoutput[k&1?k:(_ccw?k^2:k)],0);
@@ -1074,7 +1202,6 @@ void Rotor::compile()
         _rotorparts.add(rp);
         rp->setTorque(torquemax,torque0);
         rp->setRelamp(relamp);
-        rp->setDirectionofRotorPart(direction);
         rp->setTorqueOfInertia(_torque_of_inertia/_number_of_parts);
         rp->setDirection(2*pi*i/_number_of_parts);
     }
@@ -1086,6 +1213,7 @@ void Rotor::compile()
             rps[(i-_number_of_parts/4+_number_of_parts)%_number_of_parts],
             rps[(i+_number_of_parts/4)%_number_of_parts]);
     }
+    updateDirectionsAndPositions();
     for (i=0;i<_number_of_parts;i++)
     {
         rps[i]->setCompiled();
@@ -1179,6 +1307,10 @@ void Rotor::compile()
         rps[i]->setRelamp(relamp);
     }
     rps[0]->setOmega(0);
+    setCollective(0);
+    setCyclicail(0,0);
+    setCyclicele(0,0);
+
     writeInfo();
 
     //tie the properties
@@ -1296,17 +1428,10 @@ void Rotor:: writeInfo()
     }
 #endif
 }
-Rotorpart* Rotor::newRotorpart(float* pos, float *posforceattac, float *normal,
-    float* speed,float *dirzentforce, float zentforce,float maxpitchforce,
+Rotorpart* Rotor::newRotorpart(float zentforce,float maxpitchforce,
     float delta3,float mass,float translift,float rellenhinge,float len)
 {
     Rotorpart *r = new Rotorpart();
-    r->setPosition(pos);
-    r->setNormal(normal);
-    r->setZentipetalForce(zentforce);
-    r->setPositionForceAttac(posforceattac);
-    r->setSpeed(speed);
-    r->setDirectionofZentipetalforce(dirzentforce);
     r->setDelta3(delta3);
     r->setDynamic(_dynamic);
     r->setTranslift(_translift);
