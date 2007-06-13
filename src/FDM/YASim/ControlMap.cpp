@@ -211,6 +211,9 @@ void ControlMap::applyControls(float dt)
         case COLLECTIVE:   ((Rotor*)obj)->setCollective(lval);     break;
         case CYCLICAIL:    ((Rotor*)obj)->setCyclicail(lval,rval); break;
         case CYCLICELE:    ((Rotor*)obj)->setCyclicele(lval,rval); break;
+        case TILTPITCH:    ((Rotor*)obj)->setTiltPitch(lval);      break;
+        case TILTYAW:      ((Rotor*)obj)->setTiltYaw(lval);        break;
+        case TILTROLL:     ((Rotor*)obj)->setTiltRoll(lval);       break;
         case ROTORBRAKE:   ((Rotorgear*)obj)->setRotorBrake(lval); break;
         case ROTORENGINEON: 
                         ((Rotorgear*)obj)->setEngineOn((int)lval); break;
