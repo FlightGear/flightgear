@@ -1,3 +1,4 @@
+
 // FGAIAircraft - FGAIBase-derived class creates an AI airplane
 //
 // Written by David Culp, started October 2003.

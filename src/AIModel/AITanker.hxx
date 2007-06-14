@@ -31,7 +31,7 @@
  * is to have a clean generic AIAircraft class without any special functionality. In your
  * scenario specification use 'tanker' as the scenario type to use this class.
  * 
- * @author Thomas Förster <t.foerster@biologie.hu-berlin.de>
+ * @author Thomas Fï¿½ster <t.foerster@biologie.hu-berlin.de>
 */
 
 class FGAITanker : public FGAIAircraft {
@@ -52,6 +52,7 @@ private:
     bool contact;                // set if this tanker is within fuelling range
 
     virtual void Run(double dt);
+    virtual void update (double dt);
 
 };
 
