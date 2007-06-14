@@ -57,7 +57,7 @@ void FGAITanker::setTACANChannelID(const string& id) {
 void FGAITanker::update(double dt) {
     FGAIBase::update(dt);
     Run(dt);
-    //Transform();
+    Transform();
 }
 
 
