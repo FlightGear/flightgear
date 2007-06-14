@@ -55,9 +55,9 @@ void FGAITanker::setTACANChannelID(const string& id) {
 }
 
 void FGAITanker::update(double dt) {
-    FGAIAircraft::update(dt);
+    FGAIBase::update(dt);
     Run(dt);
-    Transform();
+    //Transform();
 }
 
 
