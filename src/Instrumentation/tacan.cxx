@@ -337,7 +337,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
             SG_LOG( SG_INSTR, SG_DEBUG, "tanker transmitter valid start " << _mobile_valid );
 
         SGPropertyNode * branch = fgGetNode("ai/models", true);
-        vector<SGPropertyNode_ptr> tanker = branch->getChildren("aircraft");
+        vector<SGPropertyNode_ptr> tanker = branch->getChildren("tanker");
 
         number = tanker.size();
 
