@@ -193,6 +193,7 @@ void FGAIAircraft::Run(double dt) {
     updateAltitudes();
     updateVerticalSpeed();
     matchPitchAngle();
+    UpdateRadar(manager);
 }
 
 
