@@ -70,3 +70,10 @@ void FGAITanker::Run(double dt) {
         contact = false;
     }
 }
+
+
+void FGAITanker::update(double dt) {
+     FGAIAircraft::update(dt);
+     Run(dt);
+     Transform();
+}

@@ -192,6 +192,7 @@ void FGAIAircraft::Run(double dt) {
     updateAltitudes();
     updateVerticalSpeed();
     matchPitchAngle();
+    UpdateRadar(manager);
 }
 
 
@@ -254,9 +255,6 @@ void FGAIAircraft::SetFlightPlan(FGAIFlightPlan *f) {
 
 void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
 
-    //if (! fpExecutable(now))
-    //      return;
-
     // the one behind you
     FGAIFlightPlan::waypoint* prev = 0;
     // the one ahead
@@ -277,7 +275,8 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         handleFirstWaypoint();
         return;
     }                            // end of initialization
-
+    if (! fpExecutable(now))
+          return;
     dt_count = 0;
 
     if (! leadPointReached(curr)) {
@@ -643,9 +642,9 @@ bool FGAIAircraft::leadPointReached(FGAIFlightPlan::waypoint* curr) {
     // experimental: Use fabs, because speed can be negative (I hope) during push_back.
 
     if (lead_dist < fabs(2*speed)) {
-        //don't skip over the waypoint
-        lead_dist = fabs(2*speed);
-        //cerr << "Extending lead distance to " << lead_dist << endl;
+      //don't skip over the waypoint
+      lead_dist = fabs(2*speed);
+      //cerr << "Extending lead distance to " << lead_dist << endl;
     }
 
     //prev_dist_to_go = dist_to_go;
@@ -686,8 +685,10 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t
 
     // This waypoint marks the fact that the aircraft has passed the initial taxi
     // departure waypoint, so it can release the parking.
-    if (prev->name == "park2")
+    if (prev->name == "park2") {
         dep->getDynamics()->releaseParking(fp->getGate());
+	cerr << trafficRef->getCallSign() << "releasing parking " << fp->getGate() << endl;
+    }
 
     // This is the last taxi waypoint, and marks the the end of the flight plan
     // so, the schedule should update and wait for the next departure time.
@@ -697,7 +698,7 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t
         if (nextDeparture < (now+1200)) {
             nextDeparture = now + 1200;
         }
-        fp->setTime(nextDeparture);
+        fp->setTime(nextDeparture); // should be "next departure"
     }
 
     return true;

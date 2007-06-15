@@ -264,9 +264,9 @@ FGAIManager::processScenario( const string &filename ) {
         std::string type = scEntry->getStringValue("type", "aircraft");
 
          if (type == "tanker") { // refueling scenarios
-	    FGAITanker* aircraft = new FGAITanker;
-            aircraft->readFromScenario(scEntry);
-            attach(aircraft);        
+	    FGAITanker* tanker = new FGAITanker;
+            tanker->readFromScenario(scEntry);
+            attach(tanker);
     } else if (type == "aircraft") {
             FGAIAircraft* aircraft = new FGAIAircraft;
             aircraft->readFromScenario(scEntry);
