@@ -1,3 +1,8 @@
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <stdlib.h>
 
 #include <simgear/compiler.h>
@@ -9,7 +14,7 @@
 #include <osg/Matrixd>
 #include <osg/Viewport>
 #include <osg/Version>
-#include <osgViewer/StatsHandler>
+#include <osgViewer/ViewerEventHandlers>
 #include <osgViewer/Viewer>
 #include <osgGA/MatrixManipulator>
 
