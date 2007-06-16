@@ -1828,10 +1828,10 @@
 				RelativePath="..\..\src\Main\fg_io.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Main\fg_os.hxx">
+				RelativePath="..\..\src\Main\fg_os.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Main\fg_os_osgviewer.cxx">
+				RelativePath="..\..\src\Main\fg_os.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Main\fg_props.cxx">
