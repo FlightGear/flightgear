@@ -20,6 +20,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/structure/commands.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -373,6 +374,41 @@ static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
 
 }
 
+// Convert a cartesian point to a geodetic lat/lon/altitude.
+static naRef f_carttogeod(naContext c, naRef me, int argc, naRef* args)
+{
+    double lat, lon, alt, xyz[3];
+    static const float RAD2DEG = 1./0.0174532925199;
+    if(argc != 3) naRuntimeError(c, "carttogeod() expects 3 arguments");
+    for(int i=0; i<3; i++)
+        xyz[i] = naNumValue(args[i]).num;
+    sgCartToGeod(xyz, &lat, &lon, &alt);
+    lat *= RAD2DEG;
+    lon *= RAD2DEG;
+    naRef vec = naNewVector(c);
+    naVec_append(vec, naNum(lat));
+    naVec_append(vec, naNum(lon));
+    naVec_append(vec, naNum(alt));
+    return vec;
+}
+
+// Convert a cartesian point to a geodetic lat/lon/altitude.
+static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
+{
+    static const float DEG2RAD = 0.0174532925199;
+    if(argc != 3) naRuntimeError(c, "geodtocart() expects 3 arguments");
+    double lat = naNumValue(args[0]).num * DEG2RAD;
+    double lon = naNumValue(args[1]).num * DEG2RAD;
+    double alt = naNumValue(args[2]).num * DEG2RAD;
+    double xyz[3];
+    sgGeodToCart(lat, lon, alt, xyz);
+    naRef vec = naNewVector(c);
+    naVec_append(vec, naNum(xyz[0]));
+    naVec_append(vec, naNum(xyz[1]));
+    naVec_append(vec, naNum(xyz[2]));
+    return vec;
+}
+
 // Table of extension functions.  Terminate with zeros.
 static struct { char* name; naCFunction func; } funcs[] = {
     { "getprop",   f_getprop },
@@ -388,6 +424,8 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "srand",  f_srand },
     { "directory", f_directory },
     { "systime", f_systime },
+    { "carttogeod", f_carttogeod },
+    { "geodtocart", f_geodtocart },
     { 0, 0 }
 };
 
