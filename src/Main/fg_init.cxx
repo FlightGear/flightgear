@@ -37,6 +37,10 @@
 #if defined( unix ) || defined( __CYGWIN__ )
 #  include <unistd.h>           // for gethostname()
 #endif
+#if defined( _MSC_VER) || defined(__MINGW32__)
+#  include <direct.h>           // for getcwd()
+#  define getcwd _getcwd
+#endif
 
 // work around a stdc++ lib bug in some versions of linux, but doesn't
 // seem to hurt to have this here for all versions of Linux.
@@ -1310,6 +1314,8 @@ bool fgInitGeneral() {
     }
 #endif
 
+    char buf[256], *cwd = getcwd(buf, 256);
+    fgSetString("/sim/fg-current", cwd ? cwd : "");
     return true;
 }
 
