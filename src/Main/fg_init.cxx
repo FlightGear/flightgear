@@ -1327,90 +1327,83 @@ void fgInitFDM() {
     double dt = 1.0 / fgGetInt("/sim/model-hz");
     string model = fgGetString("/sim/flight-model");
 
-    try {
-        if ( model == "larcsim" ) {
-            cur_fdm_state = new FGLaRCsim( dt );
-        } else if ( model == "jsb" ) {
-            cur_fdm_state = new FGJSBsim( dt );
+    if ( model == "larcsim" ) {
+        cur_fdm_state = new FGLaRCsim( dt );
+    } else if ( model == "jsb" ) {
+        cur_fdm_state = new FGJSBsim( dt );
 #if ENABLE_SP_FDM
-        } else if ( model == "ada" ) {
-            cur_fdm_state = new FGADA( dt );
-        } else if ( model == "acms" ) {
-            cur_fdm_state = new FGACMS( dt );
+    } else if ( model == "ada" ) {
+        cur_fdm_state = new FGADA( dt );
+    } else if ( model == "acms" ) {
+        cur_fdm_state = new FGACMS( dt );
 #endif
-        } else if ( model == "balloon" ) {
-            cur_fdm_state = new FGBalloonSim( dt );
-        } else if ( model == "magic" ) {
-            cur_fdm_state = new FGMagicCarpet( dt );
-        } else if ( model == "ufo" ) {
-            cur_fdm_state = new FGUFO( dt );
-        } else if ( model == "external" ) {
-            // external is a synonym for "--fdm=null" and is
-            // maintained here for backwards compatibility
-            cur_fdm_state = new FGNullFDM( dt );
-        } else if ( model.find("network") == 0 ) {
-            string host = "localhost";
-            int port1 = 5501;
-            int port2 = 5502;
-            int port3 = 5503;
-            string net_options = model.substr(8);
-            string::size_type begin, end;
-            begin = 0;
-            // host
-            end = net_options.find( ",", begin );
-            if ( end != string::npos ) {
-                host = net_options.substr(begin, end - begin);
-                begin = end + 1;
-            }
-            // port1
-            end = net_options.find( ",", begin );
-            if ( end != string::npos ) {
-                port1 = atoi( net_options.substr(begin, end - begin).c_str() );
-                begin = end + 1;
-            }
-            // port2
-            end = net_options.find( ",", begin );
-            if ( end != string::npos ) {
-                port2 = atoi( net_options.substr(begin, end - begin).c_str() );
-                begin = end + 1;
-            }
-            // port3
-            end = net_options.find( ",", begin );
-            if ( end != string::npos ) {
-                port3 = atoi( net_options.substr(begin, end - begin).c_str() );
-                begin = end + 1;
-            }
-            cur_fdm_state = new FGExternalNet( dt, host, port1, port2, port3 );
-        } else if ( model.find("pipe") == 0 ) {
-            // /* old */ string pipe_path = model.substr(5);
-            // /* old */ cur_fdm_state = new FGExternalPipe( dt, pipe_path );
-            string pipe_path = "";
-            string pipe_protocol = "";
-            string pipe_options = model.substr(5);
-            string::size_type begin, end;
-            begin = 0;
-            // pipe file path
-            end = pipe_options.find( ",", begin );
-            if ( end != string::npos ) {
-                pipe_path = pipe_options.substr(begin, end - begin);
-                begin = end + 1;
-            }
-            // protocol (last option)
-            pipe_protocol = pipe_options.substr(begin);
-            cur_fdm_state = new FGExternalPipe( dt, pipe_path, pipe_protocol );
-        } else if ( model == "null" ) {
-            cur_fdm_state = new FGNullFDM( dt );
-        } else if ( model == "yasim" ) {
-            cur_fdm_state = new YASim( dt );
-        } else {
-            SG_LOG(SG_GENERAL, SG_ALERT,
-                   "Unrecognized flight model '" << model
-                   << "', cannot init flight dynamics model.");
-            exit(-1);
+    } else if ( model == "balloon" ) {
+        cur_fdm_state = new FGBalloonSim( dt );
+    } else if ( model == "magic" ) {
+        cur_fdm_state = new FGMagicCarpet( dt );
+    } else if ( model == "ufo" ) {
+        cur_fdm_state = new FGUFO( dt );
+    } else if ( model == "external" ) {
+        // external is a synonym for "--fdm=null" and is
+        // maintained here for backwards compatibility
+        cur_fdm_state = new FGNullFDM( dt );
+    } else if ( model.find("network") == 0 ) {
+        string host = "localhost";
+        int port1 = 5501;
+        int port2 = 5502;
+        int port3 = 5503;
+        string net_options = model.substr(8);
+        string::size_type begin, end;
+        begin = 0;
+        // host
+        end = net_options.find( ",", begin );
+        if ( end != string::npos ) {
+            host = net_options.substr(begin, end - begin);
+            begin = end + 1;
         }
-    } catch ( ... ) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "FlightGear aborting\n\n");
-        exit(-1);
+        // port1
+        end = net_options.find( ",", begin );
+        if ( end != string::npos ) {
+            port1 = atoi( net_options.substr(begin, end - begin).c_str() );
+            begin = end + 1;
+        }
+        // port2
+        end = net_options.find( ",", begin );
+        if ( end != string::npos ) {
+            port2 = atoi( net_options.substr(begin, end - begin).c_str() );
+            begin = end + 1;
+        }
+        // port3
+        end = net_options.find( ",", begin );
+        if ( end != string::npos ) {
+            port3 = atoi( net_options.substr(begin, end - begin).c_str() );
+            begin = end + 1;
+        }
+        cur_fdm_state = new FGExternalNet( dt, host, port1, port2, port3 );
+    } else if ( model.find("pipe") == 0 ) {
+        // /* old */ string pipe_path = model.substr(5);
+        // /* old */ cur_fdm_state = new FGExternalPipe( dt, pipe_path );
+        string pipe_path = "";
+        string pipe_protocol = "";
+        string pipe_options = model.substr(5);
+        string::size_type begin, end;
+        begin = 0;
+        // pipe file path
+        end = pipe_options.find( ",", begin );
+        if ( end != string::npos ) {
+            pipe_path = pipe_options.substr(begin, end - begin);
+            begin = end + 1;
+        }
+        // protocol (last option)
+        pipe_protocol = pipe_options.substr(begin);
+        cur_fdm_state = new FGExternalPipe( dt, pipe_path, pipe_protocol );
+    } else if ( model == "null" ) {
+        cur_fdm_state = new FGNullFDM( dt );
+    } else if ( model == "yasim" ) {
+        cur_fdm_state = new YASim( dt );
+    } else {
+        throw sg_throwable(string("Unrecognized flight model '") + model
+               + "', cannot init flight dynamics model.");
     }
 }
 
