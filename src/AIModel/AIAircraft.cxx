@@ -687,7 +687,6 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t
     // departure waypoint, so it can release the parking.
     if (prev->name == "park2") {
         dep->getDynamics()->releaseParking(fp->getGate());
-	cerr << trafficRef->getCallSign() << "releasing parking " << fp->getGate() << endl;
     }
 
     // This is the last taxi waypoint, and marks the the end of the flight plan
