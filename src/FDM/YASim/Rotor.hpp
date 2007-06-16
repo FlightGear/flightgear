@@ -36,6 +36,9 @@ private:
     float _tilt_yaw;
     float _tilt_roll;
     float _tilt_pitch;
+    float _old_tilt_roll;
+    float _old_tilt_pitch;
+    float _old_tilt_yaw;
 
 public:
     Rotor();
@@ -99,7 +102,7 @@ public:
     void setName(const char *text);
     void inititeration(float dt,float omegarel,float ddt_omegarel,float *rot);
     void compile();
-    void updateDirectionsAndPositions();
+    void updateDirectionsAndPositions(float *rot);
     void getTip(float* tip);
     void calcLiftFactor(float* v, float rho, State *s);
     void getDownWash(float *pos, float * v_heli, float *downwash);

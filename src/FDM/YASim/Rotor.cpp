@@ -141,6 +141,9 @@ Rotor::Rotor()
     _tilt_yaw=0;
     _tilt_roll=0;
     _tilt_pitch=0;
+    _old_tilt_roll=0;
+    _old_tilt_pitch=0;
+    _old_tilt_yaw=0;
     _min_tilt_yaw=0;
     _min_tilt_pitch=0;
     _min_tilt_roll=0;
@@ -174,14 +177,16 @@ void Rotor::inititeration(float dt,float omegarel,float ddt_omegarel,float *rot)
     _omega=_omegan*_omegarel; 
     _ddt_omega=_omegan*ddt_omegarel;
     int i;
-    updateDirectionsAndPositions();
+    float drot[3];
+    updateDirectionsAndPositions(drot);
+    Math::add3(rot,drot,drot);
     for(i=0; i<_rotorparts.size(); i++) {
         float s = Math::sin(float(2*pi*i/_number_of_parts+(_phi-pi/2.)*(_ccw?1:-1)));
         float c = Math::cos(float(2*pi*i/_number_of_parts+(_phi-pi/2.)*(_ccw?1:-1)));
         Rotorpart* r = (Rotorpart*)_rotorparts.get(i);
         r->setOmega(_omega);
         r->setDdtOmega(_ddt_omega);
-        r->inititeration(dt,rot);
+        r->inititeration(dt,drot);
         r->setCyclic(_cyclicail*c+_cyclicele*s);
     }
 
@@ -1029,10 +1034,19 @@ void Rotor::euler2orient(float roll, float pitch, float hdg, float* out)
 }
 
 
-void Rotor::updateDirectionsAndPositions()
+void Rotor::updateDirectionsAndPositions(float *rot)
 {
     if (!_directions_and_postions_dirty)
+    {
+        rot[0]=rot[1]=rot[2]=0;
         return;
+    }
+    rot[0]=_old_tilt_roll-_tilt_roll;
+    rot[1]=_old_tilt_pitch-_tilt_pitch;
+    rot[2]=_old_tilt_yaw-_tilt_yaw;
+    _old_tilt_roll=_tilt_roll;
+    _old_tilt_pitch=_tilt_pitch;
+    _old_tilt_yaw=_tilt_yaw;
     float orient[9];
     euler2orient(_tilt_roll, _tilt_pitch, _tilt_yaw, orient);
     float forward[3];
@@ -1213,7 +1227,8 @@ void Rotor::compile()
             rps[(i-_number_of_parts/4+_number_of_parts)%_number_of_parts],
             rps[(i+_number_of_parts/4)%_number_of_parts]);
     }
-    updateDirectionsAndPositions();
+    float drot[3];
+    updateDirectionsAndPositions(drot);
     for (i=0;i<_number_of_parts;i++)
     {
         rps[i]->setCompiled();
