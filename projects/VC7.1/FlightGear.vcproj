@@ -43,11 +43,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="glut32.lib wsock32.lib sg_d.lib net_d.lib pui_d.lib puaux_d.lib fnt_d.lib js_d.lib ul_d.lib zlibd.lib pthreadVC2d.lib OpenAL32.lib ALut.lib libjpegd.lib osgd.lib osgDBd.lib osgUtild.lib libjpegd.lib"
+				AdditionalDependencies="glut32.lib wsock32.lib sg_d.lib net_d.lib pui_d.lib puaux_d.lib fnt_d.lib js_d.lib ul_d.lib zlibd.lib pthreadVC2d.lib OpenAL32.lib ALut.lib libjpegd.lib osgd.lib osgDBd.lib osgUtild.lib osgViewerd.lib osgGAd.lib osgTextd.lib libjpegd.lib"
 				OutputFile="Debug/fgfs.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\..\plib;..\..\..\SimGear\Debug;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\lib\win32;..\..\..\3rdParty\lib"
+				AdditionalLibraryDirectories="..\..\..\install\OpenSceneGraph\lib;..\..\..\install\OpenThreads\lib;..\..\..\plib;..\..\..\SimGear\Debug;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\lib\win32;..\..\..\3rdParty\lib"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/FlightGear.pdb"
@@ -105,11 +105,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="glut32.lib wsock32.lib sg.lib net.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib pthreadVC2.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib libjpeg.lib"
+				AdditionalDependencies="glut32.lib wsock32.lib sg.lib net.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib pthreadVC2.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib libjpeg.lib"
 				OutputFile=".\Release/fgfs.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\..\plib;..\..\..\SimGear\Release;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\lib\win32;..\..\..\3rdParty\lib"
+				AdditionalLibraryDirectories="..\..\..\install\OpenSceneGraph\lib;..\..\..\install\OpenThreads\lib;..\..\..\plib;..\..\..\SimGear\Release;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\lib\win32;..\..\..\3rdParty\lib"
 				IgnoreDefaultLibraryNames=""
 				ProgramDatabaseFile=".\Release/FlightGear.pdb"
 				SubSystem="1"/>
@@ -265,12 +265,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\ATC\ATCDialog.hxx">
-			</File>
-			<File
-				RelativePath="..\..\src\ATC\ATCdisplay.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\ATC\ATCdisplay.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\ATC\ATCmgr.cxx">
@@ -642,6 +636,12 @@
 				<Filter
 					Name="flight_control"
 					Filter="">
+					<File
+						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGActuator.cpp">
+					</File>
+					<File
+						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGActuator.h">
+					</File>
 					<File
 						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGDeadBand.cpp">
 					</File>
@@ -1828,16 +1828,22 @@
 				RelativePath="..\..\src\Main\fg_io.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Main\fg_os.cxx">
+				RelativePath="..\..\src\Main\fg_os.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Main\fg_os.hxx">
+				RelativePath="..\..\src\Main\fg_os_osgviewer.cxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Main\fg_props.cxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Main\fg_props.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Main\FGManipulator.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Main\FGManipulator.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Main\globals.cxx">
@@ -2108,6 +2114,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Scenery\newcache.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Scenery\redout.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Scenery\redout.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Scenery\scenery.cxx">
@@ -2663,6 +2675,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\AIModel\AIStorm.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\AITanker.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\AITanker.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\AIModel\AIThermal.cxx">

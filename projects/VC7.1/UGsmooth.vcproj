@@ -32,10 +32,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg_d.lib net_d.lib ul_d.lib ws2_32.lib winmm.lib"
+				AdditionalDependencies="sg_d.lib net_d.lib ul_d.lib ws2_32.lib winmm.lib zlibd.lib"
 				OutputFile="$(OutDir)/UGsmooth.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\..\plib"
+				AdditionalLibraryDirectories="..\..\..\plib;..\..\..\3rdParty\lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/UGsmooth.pdb"
 				SubSystem="1"
@@ -80,10 +80,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg.lib net.lib ul.lib ws2_32.lib winmm.lib"
+				AdditionalDependencies="sg.lib net.lib ul.lib ws2_32.lib winmm.lib zlib.lib"
 				OutputFile="$(OutDir)/UGsmooth.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\plib"
+				AdditionalLibraryDirectories="..\..\..\plib;..\..\..\3rdParty\lib"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
