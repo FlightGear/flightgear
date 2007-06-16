@@ -10,6 +10,25 @@
 // event handling method is also a convenient place to run the the FG
 // idle and draw handlers.
 
+FGManipulator::FGManipulator() :
+    idleHandler(0), drawHandler(0), windowResizeHandler(0), keyHandler(0),
+    mouseClickHandler(0), mouseMotionHandler(0), currentModifiers(0),
+    osgModifiers(0)
+{
+    keyMaskMap[osgGA::GUIEventAdapter::KEY_Shift_L]
+	= osgGA::GUIEventAdapter::MODKEY_LEFT_SHIFT;
+    keyMaskMap[osgGA::GUIEventAdapter::KEY_Shift_R]
+	= osgGA::GUIEventAdapter::MODKEY_RIGHT_SHIFT;
+    keyMaskMap[osgGA::GUIEventAdapter::KEY_Control_L]
+	= osgGA::GUIEventAdapter::MODKEY_LEFT_CTRL;
+    keyMaskMap[osgGA::GUIEventAdapter::KEY_Control_R]
+	= osgGA::GUIEventAdapter::MODKEY_RIGHT_CTRL;
+    keyMaskMap[osgGA::GUIEventAdapter::KEY_Alt_L]
+	= osgGA::GUIEventAdapter::MODKEY_LEFT_ALT;
+    keyMaskMap[osgGA::GUIEventAdapter::KEY_Alt_R]
+	= osgGA::GUIEventAdapter::MODKEY_RIGHT_ALT;
+}
+
 void FGManipulator::setByMatrix(const osg::Matrixd& matrix)
 {
     // Yuck
@@ -194,9 +213,19 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     case osgGA::GUIEventAdapter::KEY_KP_9: key = 360; break;
     case osgGA::GUIEventAdapter::KEY_KP_Enter: key = 269; break;
     }
-    modifiers = osgToFGModifiers(ea.getModKeyMask());
+    osgGA::GUIEventAdapter::EventType eventType = ea.getEventType();
+    // Track the modifiers because OSG is currently (2.0) broken
+    KeyMaskMap::iterator iter = keyMaskMap.find(key);
+    if (iter != keyMaskMap.end()) {
+	int mask = iter->second;
+	if (eventType == osgGA::GUIEventAdapter::KEYUP)
+	    osgModifiers &= ~mask;
+	else
+	    osgModifiers |= mask;
+    }
+    modifiers = osgToFGModifiers(osgModifiers);
     currentModifiers = modifiers;
-    if (ea.getEventType() == osgGA::GUIEventAdapter::KEYUP)
+    if (eventType == osgGA::GUIEventAdapter::KEYUP)
 	modifiers |= KEYMOD_RELEASED;
 }
 

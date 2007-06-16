@@ -19,7 +19,8 @@
 #include "globals.hxx"
 #include "renderer.hxx"
 
-#if ((1 == OSG_VERSION_MAJOR) && (9 == OSG_VERSION_MINOR) && \
+#if ((2 <= OSG_VERSION_MAJOR) || \
+     (1 == OSG_VERSION_MAJOR) && (9 == OSG_VERSION_MINOR) &&	\
      (8 <= OSG_VERSION_PATCH)) || \
     ((1 == OSG_VERSION_MAJOR) && (9 < OSG_VERSION_MINOR)) ||      \
     (1 < OSG_VERSION_MAJOR)

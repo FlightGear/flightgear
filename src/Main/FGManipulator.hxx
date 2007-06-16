@@ -1,6 +1,7 @@
 #ifndef FGMANIPULATOR_H
 #define FGMANIPULATOR_H 1
 
+#include <map>
 #include <osg/Quat>
 #include <osgGA/MatrixManipulator>
 
@@ -8,10 +9,8 @@
 
 class FGManipulator : public osgGA::MatrixManipulator {
 public:
-    FGManipulator() :
-	idleHandler(0), drawHandler(0), windowResizeHandler(0), keyHandler(0),
-	mouseClickHandler(0), mouseMotionHandler(0), currentModifiers(0)
-	{}
+    FGManipulator();
+    
     virtual ~FGManipulator() {}
     
     virtual const char* className() const {return "FGManipulator"; }
@@ -116,6 +115,10 @@ protected:
     fgMouseClickHandler mouseClickHandler;
     fgMouseMotionHandler mouseMotionHandler;
     int currentModifiers;
+    // work-around for OSG bug
+    int osgModifiers;
+    typedef std::map<int, osgGA::GUIEventAdapter::ModKeyMask> KeyMaskMap;
+    KeyMaskMap keyMaskMap;
     osg::Vec3d position;
     osg::Quat attitude;
     void handleKey(const osgGA::GUIEventAdapter& ea, int& key, int& modifiers);
