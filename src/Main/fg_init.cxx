@@ -1313,7 +1313,7 @@ bool fgInitGeneral() {
     }
 #endif
 
-    char buf[256], *cwd = getcwd(buf, 256);
+    char buf[512], *cwd = getcwd(buf, 512);
     fgSetString("/sim/fg-current", cwd ? cwd : "");
     return true;
 }
