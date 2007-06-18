@@ -106,6 +106,7 @@ void UGEARTrack::parse_msg( const int id, char *buf,
           gpspacket->vn   = sg_swap_double( (uint8_t *)buf, 32 );
           gpspacket->ve   = sg_swap_double( (uint8_t *)buf, 40 );
           gpspacket->vd   = sg_swap_double( (uint8_t *)buf, 48 );
+          gpspacket->ITOW = sg_swap_double( (uint8_t *)buf, 56 );
       }
     } else if ( id == IMU_PACKET ) {
       *imupacket = *(struct imu *)buf;

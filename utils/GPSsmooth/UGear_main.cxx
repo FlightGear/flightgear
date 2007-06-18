@@ -62,8 +62,8 @@ double alt_offset = 0.0;
 double skip = 0.0;
 
 // for speed estimate
-// double last_lat = 0.0, last_lon = 0.0;
-// double kts_filter = 0.0;
+double last_lat = 0.0, last_lon = 0.0;
+double kts_filter = 0.0;
 
 bool inited = false;
 
@@ -72,6 +72,8 @@ bool run_real_time = true;
 bool ignore_checksum = false;
 
 bool sg_swap = false;
+
+bool use_ground_track_hdg = false;
 
 bool est_controls = false;
 
@@ -141,22 +143,28 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
 
     // estimate speed
     // double az1, az2, dist;
-    // geo_inverse_wgs_84( pos.altitude_msl, last_lat, last_lon,
-    //                     pos.lat_deg, pos.lon_deg, &az1, &az2, &dist );
+    // geo_inverse_wgs_84( fdm->altitude, last_lat, last_lon,
+    //                     fdm->latitude, fdm->longitude, &az1, &az2, &dist );
+    // last_lat = fdm->latitude;
+    // last_lon = fdm->longitude;
     // double v_ms = dist / (frame_us / 1000000);
     // double v_kts = v_ms * SG_METER_TO_NM * 3600;
-    // kts_filter = (0.99 * kts_filter) + (0.01 * v_kts);
+    // kts_filter = (0.9 * kts_filter) + (0.1 * v_kts);
+    // printf("dist = %.5f  kts est = %.2f\n", dist, kts_filter);
+
     double vn = navpacket->vn;
     double ve = navpacket->ve;
     double vd = navpacket->vd;
 
-    // enable to use ground track heading
-    // fdm->psi = SGD_PI * 0.5 - atan2(vn, ve); // heading
+    if ( use_ground_track_hdg ) {
+        fdm->psi = SGD_PI * 0.5 - atan2(vn, ve); // heading
+    }
 
-    fdm->vcas = sqrt( vn*vn + ve*ve + vd*vd );
-    // last_lat = pos.lat_deg;
-    // last_lon = pos.lon_deg;
-    // cout << "kts_filter = " << kts_filter << " vel = " << pos.speed_kts << endl;
+    double mps = sqrt( vn*vn + ve*ve + vd*vd );
+    double mph = mps * 3600 / 1609.3440;
+    double kts = mps * SG_MPS_TO_KT;
+    fdm->vcas = kts;
+    printf("speed = %.2f mph  %.2f kts\n", mph, kts );
 
     fdm->climb_rate = 0; // fps
     // cout << "climb rate = " << aero->hdota << endl;
@@ -211,9 +219,9 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
         static float est_elev = 0.0;
         static float est_aileron = 0.0;
         static float est_rudder = 0.0;
-        est_elev = 0.99 * est_elev + 0.01 * (imupacket->q * 10);
+        est_elev = 0.99 * est_elev + 0.01 * (imupacket->q * 4);
         est_aileron = 0.95 * est_aileron + 0.05 * (imupacket->p * 5);
-        est_rudder = 0.95 * est_rudder + 0.05 * (imupacket->r * 8);
+        est_rudder = 0.95 * est_rudder + 0.05 * (imupacket->r * 2);
         fdm->elevator = -est_elev;
         fdm->left_aileron = est_aileron;
         fdm->right_aileron = -est_aileron;
@@ -336,6 +344,7 @@ void usage( const string &argv0 ) {
     cout << "\t[ --broadcast ]" << endl;
     cout << "\t[ --fdm-port <fdm output port #> ]" << endl;
     cout << "\t[ --ctrls-port <ctrls output port #> ]" << endl;
+    cout << "\t[ --groundtrack-heading ]" << endl;
     cout << "\t[ --estimate-control-deflections ]" << endl;
     cout << "\t[ --altitude-offset <meters> ]" << endl;
     cout << "\t[ --skip-seconds <seconds> ]" << endl;
@@ -421,7 +430,9 @@ int main( int argc, char **argv ) {
                 usage( argv[0] );
                 exit( -1 );
             }
-        } else if ( strcmp (argv[i], "--estimate-control-deflections" ) == 0 ) {
+        } else if ( strcmp (argv[i], "--groundtrack-heading" ) == 0 ) {
+            use_ground_track_hdg = true;
+        } else if (strcmp (argv[i], "--estimate-control-deflections" ) == 0) {
             est_controls = true;
         } else if ( strcmp( argv[i], "--altitude-offset" ) == 0 ) {
             ++i;
@@ -515,6 +526,20 @@ int main( int argc, char **argv ) {
         double end_time = track.get_imupt(size-1).time;
         cout << "Track end time is " << end_time << endl;
         cout << "Duration = " << end_time - current_time << endl;
+
+        if ( track.gps_size() > 0 ) {
+            double tmp = track.get_gpspt(track.gps_size()-1).ITOW;
+            int days = tmp / (24 * 60 * 60);
+            tmp -= days * 24 * 60 * 60;
+            int hours = tmp / (60 * 60);
+            tmp -= hours * 60 * 60;
+            int min = tmp / 60;
+            tmp -= min * 60;
+            double sec = tmp;
+            printf("[GPS  ]:ITOW= %.3f[sec]  %dd %02d:%02d:%06.3f\n",
+                   tmp, days, hours, min, sec);
+        }
+
 
         // advance skip seconds forward
         current_time += skip;
