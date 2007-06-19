@@ -221,7 +221,8 @@ static void fgMainLoop( void ) {
 
     SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
 
-    bool scenery_loaded = fgGetBool("sim/sceneryloaded") || fgGetBool("sim/sceneryloaded-override");
+    bool scenery_loaded = fgGetBool("sim/sceneryloaded");
+    bool wait_for_scenery = !(scenery_loaded || fgGetBool("sim/sceneryloaded-override"));
 
     // Update the elapsed time.
     static bool first_time = true;
@@ -231,7 +232,7 @@ static void fgMainLoop( void ) {
     }
 
     double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
-    if ( throttle_hz > 0.0 && scenery_loaded ) {
+    if ( throttle_hz > 0.0 && !wait_for_scenery ) {
         // optionally throttle the frame rate (to get consistent frame
         // rates or reduce cpu usage.
 
@@ -316,7 +317,7 @@ static void fgMainLoop( void ) {
     }
 
 
-    if (clock_freeze->getBoolValue() || !scenery_loaded) {
+    if (clock_freeze->getBoolValue() || wait_for_scenery) {
         delta_time_sec = 0;
     } else {
         delta_time_sec = real_delta_time_sec;
