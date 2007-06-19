@@ -1335,8 +1335,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
     try {
         readProperties(file.c_str(), targetnode, true);
     } catch (const sg_exception &e) {
-        string errmsg = "Error reading file " + file.str() + ":\n";
-        guiErrorMessage(errmsg.c_str(), e);
+        SG_LOG(SG_IO, SG_WARN, "Warning: couldn't load file '" << file.str() << '\'');
         return false;
     }
 
@@ -1378,8 +1377,7 @@ do_save_xml_from_proptree(const SGPropertyNode * arg)
     try {
         writeProperties (file.c_str(), sourcenode, true);
     } catch (const sg_exception &e) {
-        string errmsg = "Error writing file " + file.str() + ":\n";
-        guiErrorMessage(errmsg.c_str(), e);
+        SG_LOG(SG_IO, SG_WARN, "Warning: couldn't save file '" << file.str() << '\'');
         return false;
     }
 
