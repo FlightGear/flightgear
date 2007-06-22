@@ -549,7 +549,7 @@ static void fgMainLoop( void ) {
     // aircraft is the source of all sounds and that all sounds are
     // positioned in the aircraft base
 
-    static sgVec3 last_pos_offset;
+    static sgVec3 last_pos_offset = {0, 0, 0};
 
     //get the orientation
     const SGQuatd view_or = current_view->getViewOrientation();
@@ -601,7 +601,8 @@ static void fgMainLoop( void ) {
     // set the velocity
     sgVec3 source_vel;
     sgSubVec3( source_vel, source_pos_offset, last_pos_offset );
-    sgScaleVec3( source_vel, 1 / delta_time_sec );
+    if (delta_time_sec > 0)
+        sgScaleVec3( source_vel, 1 / delta_time_sec );
     sgCopyVec3( last_pos_offset, source_pos_offset );
     // cout << "vel = " << source_vel[0] << " " << source_vel[1] << " " << source_vel[2] << endl;
     globals->get_soundmgr()->set_source_vel_all( source_vel );
