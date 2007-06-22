@@ -314,7 +314,7 @@ void FGATCDialog::FreqDialog() {
 	// remove all dynamic airport/ATC buttons
 	button_group->removeChildren("button", false);
 
-	// Find the ATC stations within a reasonable range (about 40 miles?)
+	// Find the ATC stations within a reasonable range
 	comm_list_type atc_stations;
 	comm_list_iterator atc_stat_itr;
 	
@@ -325,7 +325,7 @@ void FGATCDialog::FreqDialog() {
 		lat * SGD_DEGREES_TO_RADIANS, elev));
 
 	// search stations in range
-	int num_stat = current_commlist->FindByPos(lon, lat, elev, 40.0, &atc_stations);
+	int num_stat = current_commlist->FindByPos(lon, lat, elev, 50.0, &atc_stations);
 	if (num_stat != 0) {
 		map<atcdata, bool> uniq;
 		// fill map (sorts by distance and removes duplicates)
