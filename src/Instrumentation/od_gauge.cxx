@@ -35,8 +35,8 @@
 #include "od_gauge.hxx"
 
 FGODGauge::FGODGauge() :
-    rtAvailable( false ),
-    rt( 0 )
+    rt( 0 ),
+    rtAvailable( false )
 {
 }
 
@@ -86,7 +86,7 @@ void FGODGauge::allocRT () {
 }
 
 FGODGauge::~FGODGauge() {
-    delete rt;
+    //delete rt;
 }
 
 void FGODGauge::init () {
