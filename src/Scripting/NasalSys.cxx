@@ -19,11 +19,13 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/interpolator.hxx>
+#include <simgear/scene/material/mat.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Scenery/scenery.hxx>
 
 #include "NasalSys.hxx"
 
@@ -377,8 +379,8 @@ static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
 // Convert a cartesian point to a geodetic lat/lon/altitude.
 static naRef f_carttogeod(naContext c, naRef me, int argc, naRef* args)
 {
+    const double RAD2DEG = 180.0 / SGD_PI;
     double lat, lon, alt, xyz[3];
-    static const float RAD2DEG = 1./0.0174532925199;
     if(argc != 3) naRuntimeError(c, "carttogeod() expects 3 arguments");
     for(int i=0; i<3; i++)
         xyz[i] = naNumValue(args[i]).num;
@@ -392,10 +394,10 @@ static naRef f_carttogeod(naContext c, naRef me, int argc, naRef* args)
     return vec;
 }
 
-// Convert a cartesian point to a geodetic lat/lon/altitude.
+// Convert a geodetic lat/lon/altitude to a cartesian point.
 static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
 {
-    static const float DEG2RAD = 0.0174532925199;
+    const double DEG2RAD = SGD_PI / 180.0;
     if(argc != 3) naRuntimeError(c, "geodtocart() expects 3 arguments");
     double lat = naNumValue(args[0]).num * DEG2RAD;
     double lon = naNumValue(args[1]).num * DEG2RAD;
@@ -407,6 +409,43 @@ static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
     naVec_append(vec, naNum(xyz[1]));
     naVec_append(vec, naNum(xyz[2]));
     return vec;
+}
+
+// For given geodetic point return array with elevation, and a material data
+// hash, or nil if there's no information available (tile not loaded). If
+// information about the material isn't available, then nil is returned instead
+// of the hash.
+static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
+{
+#define HASHSET(s,l,n) naHash_set(matdata, naStr_fromdata(naNewString(c),s,l),n)
+    if(argc != 2) naRuntimeError(c, "geodinfo() expects 2 arguments: lat, lon");
+    double lat = naNumValue(args[0]).num;
+    double lon = naNumValue(args[1]).num;
+    double elev;
+    const SGMaterial *mat;
+    if(!globals->get_scenery()->get_elevation_m(lat, lon, 10000.0, elev, &mat))
+        return naNil();
+    naRef vec = naNewVector(c);
+    naVec_append(vec, naNum(elev));
+    naRef matdata = naNil();
+    if(mat) {
+        matdata = naNewHash(c);
+        naRef names = naNewVector(c);
+        const vector<string> n = mat->get_names();
+        for(unsigned int i=0; i<n.size(); i++)
+            naVec_append(names, naStr_fromdata(naNewString(c),
+                    const_cast<char*>(n[i].c_str()), n[i].size()));
+        HASHSET("names", 5, names);
+        HASHSET("solid", 5, naNum(mat->get_solid()));
+        HASHSET("friction_factor", 15, naNum(mat->get_friction_factor()));
+        HASHSET("rolling_friction", 16, naNum(mat->get_rolling_friction()));
+        HASHSET("load_resistance", 15, naNum(mat->get_load_resistance()));
+        HASHSET("bumpiness", 9, naNum(mat->get_bumpiness()));
+        HASHSET("light_coverage", 14, naNum(mat->get_light_coverage()));
+    }
+    naVec_append(vec, matdata);
+    return vec;
+#undef HASHSET
 }
 
 // Table of extension functions.  Terminate with zeros.
@@ -426,6 +465,7 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "systime", f_systime },
     { "carttogeod", f_carttogeod },
     { "geodtocart", f_geodtocart },
+    { "geodinfo", f_geodinfo },
     { 0, 0 }
 };
 
