@@ -473,15 +473,27 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
         if (Math::abs(_alphaalt) >1e-6)
             div=(_centripetalforce * _len - _mass * _len * 9.81 * relgrav /_alpha0*(_alphaalt+_oppositerp->getAlphaAlt())/(2.0*_alphaalt));
         if (Math::abs(div)>1e-6)
+        {
             alpha=lift_moment/div;
+        }
         else if(Math::abs(_alphaalt+_oppositerp->getAlphaAlt())>1e-6)
         {
             float div=(_centripetalforce * _len - _mass * _len * 9.81 *0.5 * relgrav)*(_alphaalt+_oppositerp->getAlphaAlt());
             if (Math::abs(div)>1e-6)
+            {
                 alpha=_oppositerp->getAlphaAlt()+lift_moment/div*_alphaalt;
+            }
+            else
+                alpha=_alphaalt;
         }
         else
             alpha=_alphaalt;
+        if (_omega/_omegan<0.2)
+        {
+            float frac = 0.001+_omega/_omegan*4.995;
+            alpha=Math::clamp(alpha,_alphamin,_alphamax);
+            alpha=_alphaalt*(1-frac)+frac*alpha;
+        }
     }
     else
     {
