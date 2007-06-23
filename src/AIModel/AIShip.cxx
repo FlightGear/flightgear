@@ -335,6 +335,12 @@ void FGAIShip::Run(double dt) {
         }
 
     }
+
+    //###########################//
+    // do calculations for radar //
+    //###########################//
+    double range_ft2 = UpdateRadar(manager);
+
 }//end function
 
 void FGAIShip::AccelTo(double speed) {
