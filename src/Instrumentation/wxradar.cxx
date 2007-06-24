@@ -52,7 +52,7 @@
 static const char *odgauge_name = "Aircraft/Instruments/Textures/od_wxradar.rgb";
 
 wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
-    _name(node->getStringValue("name", "wxRadar")),
+    _name(node->getStringValue("name", "radar")),
     _num(node->getIntValue("number", 0)),
     _last_switchKnob( "off" ),
     _sim_init_done ( false ),
@@ -60,6 +60,9 @@ wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
     wxEcho( 0 ),
     _odg( 0 )
 {
+    const char *tacan_source = node->getStringValue("tacan-source",
+            "/instrumentation/tacan");
+    _Tacan = fgGetNode(tacan_source, true);
 }
 
 wxRadarBg::~wxRadarBg ()
@@ -73,7 +76,7 @@ wxRadarBg::init ()
     branch = "/instrumentation/" + _name;
 
     _Instrument = fgGetNode(branch.c_str(), _num, true );
-    _serviceable_node = _Instrument->getChild("serviceable", 0, true);
+    _serviceable_node = _Instrument->getNode("serviceable", true);
     resultTexture = FGTextureManager::createTexture( odgauge_name );
     SGPath tpath(globals->get_fg_root());
     tpath.append("Aircraft/Instruments/Textures/wxecho.rgb");
@@ -106,28 +109,25 @@ wxRadarBg::init ()
     _user_speed_east_fps_node   = fgGetNode("/velocities/speed-east-fps", true);
     _user_speed_north_fps_node  = fgGetNode("/velocities/speed-north-fps", true);
 
-    _Tacan = fgGetNode("/instrumentation/tacan", _num, true);
     _tacan_serviceable_node = _Tacan->getNode("serviceable", true);
     _tacan_distance_node    = _Tacan->getNode("indicated-distance-nm", true);
     _tacan_name_node        = _Tacan->getNode("name", true);
     _tacan_bearing_node     = _Tacan->getNode("indicated-bearing-true-deg", true);
     _tacan_in_range_node    = _Tacan->getNode("in-range", true);
 
-    _Radar = fgGetNode("/instrumentation/radar/display-controls", _num, true);
-    _radar_weather_node     = _Radar->getNode("WX", true);
-    _radar_position_node    = _Radar->getNode("pos", true);
-    _radar_data_node        = _Radar->getNode("data", true);
-    _radar_centre_node      = _Radar->getNode("centre", true);
-
-    _radar_centre_node->setBoolValue(false);
-
-    _Radar = fgGetNode("/instrumentation/radar/", _num, true);
-    _radar_mode_control_node = _Radar->getNode("mode-control", true);
-    _radar_coverage_node = _Radar->getNode("limit-deg", true);
-    _radar_ref_rng_node = _Radar->getNode("reference-range-nm", true);
-
+    _radar_mode_control_node = _Instrument->getNode("mode-control", true);
+    _radar_coverage_node = _Instrument->getNode("limit-deg", true);
+    _radar_ref_rng_node = _Instrument->getNode("reference-range-nm", true);
     _radar_coverage_node->setFloatValue(120);
     _radar_ref_rng_node->setDoubleValue(35);
+
+    SGPropertyNode *n = _Instrument->getNode("display-controls", true);
+    _radar_weather_node     = n->getNode("WX", true);
+    _radar_position_node    = n->getNode("pos", true);
+    _radar_data_node        = n->getNode("data", true);
+    _radar_centre_node      = n->getNode("centre", true);
+
+    _radar_centre_node->setBoolValue(false);
 
     _ai_enabled_node = fgGetNode("/sim/ai/enabled", true);
 
