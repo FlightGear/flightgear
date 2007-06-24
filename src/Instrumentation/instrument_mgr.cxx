@@ -163,7 +163,7 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "vertical-speed-indicator" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new VerticalSpeedIndicator( node ) );
-        } else if ( name == "wxradar" ) {
+        } else if ( name == "radar" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new wxRadarBg ( node ), 0.5 );
         } else if ( name == "inst-vertical-speed-indicator" ) { // (TJ)
