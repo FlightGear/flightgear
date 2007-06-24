@@ -334,6 +334,8 @@ void FGAIShip::Run(double dt) {
 
         }
 
+        // do calculations for radar
+        UpdateRadar(manager);
     }
 }//end function
 

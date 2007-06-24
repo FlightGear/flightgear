@@ -4,6 +4,8 @@
 //
 // Copyright (C) 2005  Harald JOHNSEN
 //
+// Ported to OSG by Tim Moore - Jun 2007
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation; either version 2 of the
@@ -24,12 +26,22 @@
 #  include "config.h"
 #endif
 
+#include <osg/AlphaFunc>
+#include <osg/BlendFunc>
+#include <osg/Camera>
+#include <osg/Geode>
+#include <osg/NodeVisitor>
+#include <osg/Matrix>
+#include <osg/PolygonMode>
+#include <osg/ShadeModel>
+#include <osg/StateSet>
+#include <osgDB/FileNameUtils>
+
 #include <simgear/screen/extensions.hxx>
-#include <simgear/screen/RenderTexture.h>
 #include <simgear/debug/logstream.hxx>
-#include SG_GLU_H
 
 #include <Main/globals.hxx>
+#include <Main/renderer.hxx>
 #include <Scenery/scenery.hxx>
 #include "od_gauge.hxx"
 
@@ -39,12 +51,44 @@ FGODGauge::FGODGauge() :
 {
 }
 
-// done here and not in init() so we don't allocate a rendering context if it is
-// never used
 void FGODGauge::allocRT () {
-    GLint colorBits = 0;
+    camera = new osg::Camera;
+    camera->setProjectionMatrix(osg::Matrix::ortho2D(-256.0, 256.0, -256.0,
+            256.0));
+    camera->setViewport(0, 0, textureWH, textureWH);
+    camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    camera->setRenderOrder(osg::Camera::PRE_RENDER);
+    camera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    camera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f , 0.0f));
+    camera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+    osg::StateSet* stateSet = camera->getOrCreateStateSet();
+    stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+    stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
+    stateSet->setMode(GL_FOG, osg::StateAttribute::OFF);
+    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
+    stateSet->setAttributeAndModes(new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK,
+            osg::PolygonMode::FILL),
+            osg::StateAttribute::ON);
+    stateSet->setAttributeAndModes(new osg::AlphaFunc(osg::AlphaFunc::GREATER,
+            0.0f),
+            osg::StateAttribute::ON);
+    stateSet->setAttribute(new osg::ShadeModel(osg::ShadeModel::FLAT));
+    stateSet->setAttributeAndModes(new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA,
+            osg::BlendFunc::ONE_MINUS_SRC_ALPHA),
+            osg::StateAttribute::ON);
+    if (!texture.valid()) {
+        texture = new osg::Texture2D;
+        texture->setTextureSize(textureWH, textureWH);
+        texture->setInternalFormat(GL_RGBA);
+        texture->setFilter(osg::Texture2D::MIN_FILTER,osg::Texture2D::LINEAR);
+        texture->setFilter(osg::Texture2D::MAG_FILTER,osg::Texture2D::LINEAR);
+    }
+    camera->attach(osg::Camera::COLOR_BUFFER, texture.get());
+    globals->get_renderer()->addCamera(camera.get(), false);
+    rtAvailable = true;
+
+    // GLint colorBits = 0;
 //     glGetIntegerv( GL_BLUE_BITS, &colorBits );
-    textureWH = 256;
 //     rt = new RenderTexture();
 //     if( colorBits < 8 )
 //         rt->Reset("rgba=5,5,5,1 ctt");
@@ -94,56 +138,6 @@ void FGODGauge::init () {
 void FGODGauge::update (double dt) {
 }
 
-void FGODGauge::beginCapture(int viewSize) {
-//     if( ! rt )
-//         allocRT();
-//     if(rtAvailable) {
-//         rt->BeginCapture();
-//     }
-//     else
-//         set2D();
-//      textureWH = viewSize;
-//     glViewport(0, 0, textureWH, textureWH);
-}
-
-void FGODGauge::beginCapture(void) {
-//     if( ! rt )
-//         allocRT();
-//     if(rtAvailable) {
-//         rt->BeginCapture();
-//     }
-//     else
-//         set2D();
-}
-
-void FGODGauge::Clear(void) {
-//     if(rtAvailable) {
-//         glClear(GL_COLOR_BUFFER_BIT);
-//     }
-//     else {
-//         glDisable(GL_BLEND);
-//         glDisable(GL_ALPHA_TEST);
-//           glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
-//         glRectf(-256.0, -256.0, 256.0, 256.0);
-//         glEnable(GL_BLEND);
-//         glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
-//         glEnable(GL_ALPHA_TEST);
-//     }
-}
-
-void FGODGauge::endCapture(osg::Texture2D* texID) {
-  // OSGFIXME
-//     glBindTexture(GL_TEXTURE_2D, texID);
-//     // don't use mimaps if we don't update them
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-//     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, textureWH, textureWH);
-//     if(rtAvailable)
-//         rt->EndCapture();
-//     else
-//         set3D();
-//     glBindTexture(GL_TEXTURE_2D, 0);
-}
 
 void FGODGauge::setSize(int viewSize) {
     textureWH = viewSize;
@@ -155,93 +149,60 @@ bool FGODGauge::serviceable(void) {
 }
 
 /**
- * Locate a texture SSG node in a branch.
+ * Replace a texture in the airplane model with the gauge texture.
  */
-static const char *strip_path(const char *name) {
-    /* Remove all leading path information. */
-    const char* seps = "\\/" ;
-    const char* fn = & name [ strlen ( name ) - 1 ] ;
-    for ( ; fn != name && strchr(seps,*fn) == NULL ; fn-- )
-        /* Search back for a seperator */ ;
-    if ( strchr(seps,*fn) != NULL )
-        fn++ ;
-    return fn ;
-}
 
-// OSGFIXME
-static osg::StateSet*
-find_texture_node(osg::Node* node, const char * name)
+class ReplaceStaticTextureVisitor : public osg::NodeVisitor
 {
-#if 0
-  if( node->isAKindOf( ssgTypeLeaf() ) ) {
-    ssgLeaf *leaf = (ssgLeaf *) node;
-    ssgSimpleState *state = (ssgSimpleState *) leaf->getState();
-    if( state ) {
-        ssgTexture *tex = state->getTexture();
-        if( tex ) {
-            const char * texture_name = tex->getFilename();
-            if (texture_name) {
-                texture_name = strip_path( texture_name );
-                if ( !strcmp(name, texture_name) )
-                    return state;
-            }
+public:
+    ReplaceStaticTextureVisitor(const std::string& name,
+        osg::Texture2D* _newTexture) :
+        osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
+        newTexture(_newTexture)
+    {
+        textureFileName = osgDB::getSimpleFileName(name);
+    }
+
+    virtual void apply(osg::Node& node)
+    {
+        osg::StateSet* ss = node.getStateSet();
+        if (ss)
+            changeStateSetTexture(ss);
+        traverse(node);
+    }
+
+    virtual void apply(osg::Geode& node)
+    {
+        int numDrawables = node.getNumDrawables();
+        for (int i = 0; i < numDrawables; i++) {
+            osg::Drawable* drawable = node.getDrawable(i);
+            osg::StateSet* ss = drawable->getStateSet();
+            if (ss)
+                changeStateSetTexture(ss);
         }
-    }
-  }
-  else {
-    int nKids = node->getNumKids();
-    for (int i = 0; i < nKids; i++) {
-      ssgSimpleState * result =
-        find_texture_node(((ssgBranch*)node)->getKid(i), name);
-      if (result != 0)
-        return result;
-    }
-  } 
-#endif
-  return 0;
+        traverse(node);
 }
+protected:
+    void changeStateSetTexture(osg::StateSet *ss)
+    {
+        osg::Texture2D* tex
+                = dynamic_cast<osg::Texture2D*>(ss->getTextureAttribute(0,
+                osg::StateAttribute::TEXTURE));
+        if (!tex || tex == newTexture || !tex->getImage())
+            return;
+        std::string fileName = tex->getImage()->getFileName();
+        std::string simpleName = osgDB::getSimpleFileName(fileName);
+        if (osgDB::equalCaseInsensitive(textureFileName, simpleName))
+            ss->setTextureAttribute(0, newTexture);
+    }
+    std::string textureFileName;
+    osg::Texture2D* newTexture;
+};
 
-void FGODGauge::set_texture(const char * name, osg::Texture2D* new_texture) {
+void FGODGauge::set_texture(const char * name, osg::Texture2D* new_texture)
+{
     osg::Group* root = globals->get_scenery()->get_aircraft_branch();
-    name = strip_path( name );
-    // OSGFIXME
-//     osg::StateSet* node = find_texture_node( root, name );
-//     if( node )
-//         node->setTexture( new_texture );
+    ReplaceStaticTextureVisitor visitor(name, new_texture);
+    root->accept(visitor);
 }
 
-void FGODGauge::set2D() {
-//     glPushAttrib ( GL_ENABLE_BIT | GL_VIEWPORT_BIT  | GL_TRANSFORM_BIT | GL_LIGHTING_BIT ) ;
-
-//     glDisable(GL_LIGHTING);
-//     glEnable(GL_COLOR_MATERIAL);
-//     glDisable(GL_CULL_FACE);
-//     glDisable(GL_FOG);
-//     glDisable(GL_DEPTH_TEST);
-//     glClearColor(0.0, 0.0, 0.0, 0.0);
-//     glEnable(GL_TEXTURE_2D);
-//     glDisable(GL_SMOOTH);
-//     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-//     glBindTexture(GL_TEXTURE_2D, 0);
-
-//     glViewport ( 0, 0, textureWH, textureWH ) ;
-//     glMatrixMode   ( GL_PROJECTION ) ;
-//     glPushMatrix   () ;
-//     glLoadIdentity () ;
-//     gluOrtho2D( -256.0, 256.0, -256.0, 256.0 );
-//     glMatrixMode   ( GL_MODELVIEW ) ;
-//     glPushMatrix   () ;
-//     glLoadIdentity () ;
-
-//     glAlphaFunc(GL_GREATER, 0.0f);
-
-}
-
-void FGODGauge::set3D() {
-//     glMatrixMode   ( GL_PROJECTION ) ;
-//     glPopMatrix    () ;
-//     glMatrixMode   ( GL_MODELVIEW ) ;
-//     glPopMatrix    () ;
-//     glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-//     glPopAttrib    () ;
-}

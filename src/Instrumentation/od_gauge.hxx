@@ -4,6 +4,8 @@
 //
 // Copyright (C) 2005  Harald JOHNSEN - hjohnsen@evc.net
 //
+// Ported to OSG by Tim Moore - Jun 2007
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation; either version 2 of the
@@ -23,6 +25,7 @@
 #ifndef _OD_GAUGE_HXX
 #define _OD_GAUGE_HXX
 
+#include <osg/Camera>
 #include <osg/Texture2D>
 
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -39,34 +42,14 @@ public:
     virtual void init ();
     virtual void update (double dt);
 
-    /**
-     * Start the rendering of the RTT context.
-     * @param viewSize size of the destination texture 
-     */
-    void beginCapture(int viewSize);
-    /**
-     * Start the rendering of the RTT context.
-     */
-    void beginCapture(void);
-    /**
-     * Clear the background.
-     */
-    void Clear(void);
-    /**
-     * Finish rendering and save the buffer to a texture.
-     * @param texID name of a gl texture
-     */
-    void endCapture(osg::Texture2D*);
-    /**
-     * Set the size of the destination texture.
-     * @param viewSize size of the destination texture 
-     */
     void setSize(int viewSize);
+
     /**
      * Say if we can render to a texture.
      * @return true if rtt is available
      */
     bool serviceable(void);
+
     /**
      * Replace an opengl texture name inside the aircraft scene graph.
      * This is to replace a static texture by a dynamic one
@@ -75,13 +58,23 @@ public:
      */
     void set_texture(const char * name, osg::Texture2D* new_texture);
 
+    /**
+     * Get the OSG camera for drawing this gauge.
+     */
+    osg::Camera* getCamera() { return camera.get(); }
+
+    osg::Texture2D* getTexture() { return texture.get(); }
+    void setTexture(osg::Texture2D* t) { texture = t; }
+
+    // Real initialization function. Bad name.
+    void allocRT(void);
+
 private:
     int textureWH;
     bool rtAvailable;
+    osg::ref_ptr<osg::Camera> camera;
+    osg::ref_ptr<osg::Texture2D> texture;
 
-    void allocRT(void);
-    void set2D(void);
-    void set3D(void);
 };
 
 #endif // _OD_GAUGE_HXX

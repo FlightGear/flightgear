@@ -76,6 +76,7 @@ class FGTextureManager
 {
 public:
   static osg::Texture2D* createTexture(const string &relativePath);
+  static void addTexture(const string &relativePath, osg::Texture2D* texture);
 private:
   static map<string,osg::ref_ptr<osg::Texture2D> > _textureMap;
 };

@@ -1,4 +1,4 @@
-// submodel.cxx - models a releasable submodel.
+//// submodel.cxx - models a releasable submodel.
 // Written by Dave Culp, started Aug 2004
 // With major additions by Vivian Meaaza 2004 - 2007
 //
@@ -116,18 +116,19 @@ void FGSubmodelMgr::update(double dt)
         _impact = (*sm_list_itr)->_getImpactData();
         _hit = (*sm_list_itr)->_getCollisionData();
         int parent_subID = (*sm_list_itr)->_getSubID();
-
+        SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! "
+                << _hit <<" parent_subID " << parent_subID);
         if ( parent_subID == 0) // this entry in the list has no associated submodel
             continue;           // so we can continue
 
         if (_impact || _hit) {
-            SG_LOG(SG_GENERAL, SG_ALERT, "Submodel: Impact " << _impact << " hit! " << _hit );
+            SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! " << _hit );
 
             submodel_iterator = submodels.begin();
 
             while (submodel_iterator != submodels.end()) {
                 int child_ID = (*submodel_iterator)->id;
-                cout << "Impact: parent SubID " << parent_subID << " child_ID " << child_ID << endl;
+                //cout << "Impact: parent SubID " << parent_subID << " child_ID " << child_ID << endl;
 
                 if ( parent_subID == child_ID ) {
                     _parent_lat = (*sm_list_itr)->_getImpactLat();
@@ -161,10 +162,9 @@ void FGSubmodelMgr::update(double dt)
         in_range = true;
 
         SG_LOG(SG_GENERAL, SG_DEBUG,
-            "Submodels:  " << (*submodel_iterator)->id
-            << " name " << (*submodel_iterator)->name
-            << " in range " << in_range
-            );
+                "Submodels:  " << (*submodel_iterator)->id
+                << " name " << (*submodel_iterator)->name
+                << " in range " << in_range);
 
         if ((*submodel_iterator)->trigger_node != 0) {
             _trigger_node = (*submodel_iterator)->trigger_node;
@@ -188,7 +188,7 @@ void FGSubmodelMgr::update(double dt)
 
                 if (id == 0) {
                     SG_LOG(SG_GENERAL, SG_DEBUG,
-                        "Submodels: continuing: " << id << " name " << name );
+                            "Submodels: continuing: " << id << " name " << name );
                     in_range = true;
                     ++sm_list_itr;
                     continue;
@@ -207,21 +207,19 @@ void FGSubmodelMgr::update(double dt)
 
                     if (range_nm > 15) {
                         SG_LOG(SG_GENERAL, SG_DEBUG,
-                            "Submodels: skipping release: " << id);
+                                "Submodels: skipping release: " << id);
                         in_range = false;
                     }
-
                 }
 
                 ++sm_list_itr;
             } // end while
 
             SG_LOG(SG_GENERAL, SG_DEBUG,
-                "Submodels end:  " << (*submodel_iterator)->id
-                << " name " << (*submodel_iterator)->name
-                << " count " << (*submodel_iterator)->count
-                << " in range " << in_range
-                );
+                    "Submodels end:  " << (*submodel_iterator)->id
+                    << " name " << (*submodel_iterator)->name
+                    << " count " << (*submodel_iterator)->count
+                    << " in range " << in_range);
 
             if ((*submodel_iterator)->count != 0 && in_range)
                 release(*submodel_iterator, dt);
@@ -236,7 +234,7 @@ void FGSubmodelMgr::update(double dt)
 bool FGSubmodelMgr::release(submodel *sm, double dt)
 {
     //cout << "release id " << sm->id << " name " << sm->name
-    //<< " first time " << sm->first_time  << " repeat " << (*sm)->repeat  <<
+    //<< " first time " << sm->first_time  << " repeat " << sm->repeat  <<
     //    endl;
 
     // only run if first time or repeat is set to true
@@ -317,8 +315,9 @@ void FGSubmodelMgr::transform(submodel *sm)
 
         // set contents to 0 in the parent
         sm->contents_node->setDoubleValue(0);
-    } else
+    } else {
         IC.mass = sm->weight * lbs_to_slugs;
+    }
 
     // cout << "mass "  << IC.mass << endl;
 
@@ -463,22 +462,22 @@ void FGSubmodelMgr::transform(submodel *sm)
 
     // calculate the total speed north
     IC.total_speed_north = sm->speed * cos(IC.elevation * SG_DEGREES_TO_RADIANS)
-        * cos(IC.azimuth * SG_DEGREES_TO_RADIANS) + IC.speed_north_fps;
+            * cos(IC.azimuth * SG_DEGREES_TO_RADIANS) + IC.speed_north_fps;
 
     // calculate the total speed east
     IC.total_speed_east = sm->speed * cos(IC.elevation * SG_DEGREES_TO_RADIANS)
-        * sin(IC.azimuth * SG_DEGREES_TO_RADIANS) + IC.speed_east_fps;
+            * sin(IC.azimuth * SG_DEGREES_TO_RADIANS) + IC.speed_east_fps;
 
     // calculate the total speed down
     IC.total_speed_down = sm->speed * -sin(IC.elevation * SG_DEGREES_TO_RADIANS)
-        + IC.speed_down_fps;
+            + IC.speed_down_fps;
 
     // re-calculate speed, elevation and azimuth
     IC.speed = sqrt(IC.total_speed_north * IC.total_speed_north
-        + IC.total_speed_east * IC.total_speed_east
-        + IC.total_speed_down * IC.total_speed_down);
+            + IC.total_speed_east * IC.total_speed_east
+            + IC.total_speed_down * IC.total_speed_down);
 
-    // if speeds are low these calculations can become unreliable
+    // if speeds are low this calculation can become unreliable
     if (IC.speed > 1) {
         IC.azimuth = atan2(IC.total_speed_east , IC.total_speed_north) * SG_RADIANS_TO_DEGREES;
         //        cout << "azimuth1 " << IC.azimuth<<endl;
@@ -488,13 +487,13 @@ void FGSubmodelMgr::transform(submodel *sm)
             IC.azimuth += 360;
         else if (IC.azimuth >= 360)
             IC.azimuth -= 360;
+    }
 
     // cout << "azimuth2 " << IC.azimuth<<endl;
 
     IC.elevation = -atan(IC.total_speed_down / sqrt(IC.total_speed_north
-        * IC.total_speed_north + IC.total_speed_east * IC.total_speed_east))
-        * SG_RADIANS_TO_DEGREES;
-    }
+            * IC.total_speed_north + IC.total_speed_east * IC.total_speed_east))
+            * SG_RADIANS_TO_DEGREES;
 }
 
 void FGSubmodelMgr::updatelat(double lat)
@@ -550,15 +549,13 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
     SGPath config(globals->get_fg_root());
     config.append(path);
     SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: path " << path);
-
     try {
         SG_LOG(SG_GENERAL, SG_DEBUG,
-            "Submodels: Trying to read AI submodels file: " << config.str());
+                "Submodels: Trying to read AI submodels file: " << config.str());
         readProperties(config.str(), &root);
-
     } catch (const sg_exception &e) {
         SG_LOG(SG_GENERAL, SG_DEBUG,
-            "Submodels: Unable to read AI submodels file: " << config.str());
+                "Submodels: Unable to read AI submodels file: " << config.str());
         return;
     }
 
@@ -610,6 +607,7 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
             sm->trigger_node = 0;
         }
 
+        SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: trigger " << sm->trigger_node->getBoolValue() );
         if (sm->speed_node != 0)
             sm->speed = sm->speed_node->getDoubleValue();
 
@@ -651,12 +649,12 @@ void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
         "Submodels: path " << path);
     try {
         SG_LOG(SG_GENERAL, SG_DEBUG,
-            "Submodels: Trying to read AI submodels file: " << config.str());
+                "Submodels: Trying to read AI submodels file: " << config.str());
         readProperties(config.str(), &root);
 
     } catch (const sg_exception &e) {
         SG_LOG(SG_GENERAL, SG_DEBUG,
-            "Submodels: Unable to read AI submodels file: " << config.str());
+                "Submodels: Unable to read AI submodels file: " << config.str());
         return;
     }
 
@@ -749,10 +747,10 @@ void FGSubmodelMgr::loadSubmodels()
         if (!submodel.empty()) {
             //int id = (*submodel_iterator)->id;
             bool serviceable = true;
-            SG_LOG(SG_GENERAL, SG_ALERT, "found path sub sub "
-                << submodel
-                << " index " << index
-                << "name " << (*submodel_iterator)->name);
+            SG_LOG(SG_GENERAL, SG_DEBUG, "found path sub sub "
+                    << submodel
+                    << " index " << index
+                    << "name " << (*submodel_iterator)->name);
 
             (*submodel_iterator)->sub_id = index;
             setSubData(index, submodel, serviceable);
@@ -773,9 +771,9 @@ void FGSubmodelMgr::loadSubmodels()
     while (submodel_iterator != submodels.end()) {
         int id = (*submodel_iterator)->id;
         SG_LOG(SG_GENERAL, SG_DEBUG,"after pusback "
-            << " id " << id
-            << " name " << (*submodel_iterator)->name
-            << " sub id " << (*submodel_iterator)->sub_id);
+                << " id " << id
+                << " name " << (*submodel_iterator)->name
+                << " sub id " << (*submodel_iterator)->sub_id);
 
         ++submodel_iterator;
     }

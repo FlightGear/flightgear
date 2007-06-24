@@ -193,7 +193,6 @@ public:
     double _getAltitude() const;
     double _getLongitude() const;
     double _getLatitude() const;
-    double _getBearing() const;
     double _getElevationFt() const;
     double _getRdot() const;
     double _getH_offset() const;
@@ -245,6 +244,8 @@ public:
     static const double lbs_to_slugs;
 
     inline double _getRange() { return range; };
+    inline double _getBearing() { return bearing; };
+
     osg::Node* load3DModel(const string& fg_root,
                             const string &path,
                             SGPropertyNode *prop_root,

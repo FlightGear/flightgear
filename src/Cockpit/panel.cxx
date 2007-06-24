@@ -31,7 +31,7 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H          
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -139,7 +139,11 @@ FGTextureManager::createTexture (const string &relativePath)
 }
 
 
-
+void FGTextureManager::addTexture(const string &relativePath,
+                                  osg::Texture2D* texture)
+{
+    _textureMap[relativePath] = texture;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGCropped Texture.
