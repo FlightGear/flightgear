@@ -46,10 +46,7 @@ class FGAIBase;
 
 class FGODGauge;
 
-
 class wxRadarBg : public SGSubsystem {
-
-
 public:
 
     wxRadarBg ( SGPropertyNode *node );
@@ -78,7 +75,6 @@ private:
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
     SGPropertyNode_ptr _Tacan;
-    SGPropertyNode_ptr _Radar;
     SGPropertyNode_ptr _Radar_controls;
 
     SGPropertyNode_ptr _user_lat_node;
