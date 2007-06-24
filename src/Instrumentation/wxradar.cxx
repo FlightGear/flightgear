@@ -251,70 +251,74 @@ wxRadarBg::update (double delta_time_sec)
 
         bool drawClouds = _radar_weather_node->getBoolValue();
 
-        if (drawClouds) {    // FIXME indentation horror
+        if (drawClouds) {
 
-        // we do that in 3 passes, one for each color level
-        // this is to 'merge' same colors together
-        glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle() );
-        glColor3f(1.0f, 1.0f, 1.0f);
+            // we do that in 3 passes, one for each color level
+            // this is to 'merge' same colors together
+            glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle() );
+            glColor3f(1.0f, 1.0f, 1.0f);
 
-        for (int level = 0; level <= 2 ; level++ ) {
-            float col = level * symbolSize;
+            for (int level = 0; level <= 2 ; level++ ) {
+                float col = level * symbolSize;
 
-            for (iradarEcho = radarEcho->begin() ; iradarEcho != radarEcho->end() ; iradarEcho++ ) {
-                int cloudId = (iradarEcho->cloudId) ;
-                bool upgrade = ((cloudId >> 5) & 1);
-                float lwc = iradarEcho->LWC + (upgrade ? 1.0f : 0.0f);
-                // skip ns
-                if ( iradarEcho->LWC >= 0.5 && iradarEcho->LWC <= 0.6)
-                    continue;
+                for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end();
+                        ++iradarEcho) {
+                    int cloudId = (iradarEcho->cloudId) ;
+                    bool upgrade = ((cloudId >> 5) & 1);
+                    float lwc = iradarEcho->LWC + (upgrade ? 1.0f : 0.0f);
+                    // skip ns
+                    if ( iradarEcho->LWC >= 0.5 && iradarEcho->LWC <= 0.6)
+                        continue;
 
-                    if (!iradarEcho->lightning && lwc >= LWClevel[level] && !iradarEcho->aircraft) { // FIXME indentation horror
+                    if (!iradarEcho->lightning && lwc >= LWClevel[level]
+                            && !iradarEcho->aircraft) {
                         dist = sgSqrt(iradarEcho->dist);
                         size = iradarEcho->radius * 2.0;
 
-                    if ( dist - size > range_m )
-                        continue;
+                        if ( dist - size > range_m )
+                            continue;
 
-                    dist = dist * range;
-                    size = size * range;
-                    // compute the relative angle from the view direction
+                        dist *= range;
+                        size *= range;
+                        // compute the relative angle from the view direction
                         float angle = calcRelBearing(iradarEcho->bearing, view_heading);
 
                         // we will rotate the echo quads, this gives a better rendering
                         const float rot_x = cos (view_heading);
                         const float rot_y = sin (view_heading);
 
-                    // and apply a fov factor to simulate a greater scan angle
+                        // and apply a fov factor to simulate a greater scan angle
                         if (angle > 0)
                             angle = angle * fovFactor + 0.25 * SG_PI;
                         else
                             angle = angle * fovFactor - 0.25 * SG_PI;
-                    float x = cos( angle ) * dist;
-                    float y = sin( angle ) * dist;
 
-                    // use different shapes so the display is less boring
-                    float row = symbolSize * (float) (4 + (cloudId & 3) );
+                        float x = cos( angle ) * dist;
+                        float y = sin( angle ) * dist;
 
-                    float size_x = rot_x * size;
-                    float size_y = rot_y * size;
+                        // use different shapes so the display is less boring
+                        float row = symbolSize * (float) (4 + (cloudId & 3) );
+
+                        float size_x = rot_x * size;
+                        float size_y = rot_y * size;
+
                         glBegin(GL_QUADS);
-                    glTexCoord2f( col, row);
-                    glVertex2f( x - size_x, y - size_y);
-                    glTexCoord2f( col+symbolSize, row);
-                    glVertex2f( x + size_y, y - size_x);
-                    glTexCoord2f( col+symbolSize, row+symbolSize);
-                    glVertex2f( x + size_x, y + size_y);
-                    glTexCoord2f( col, row+symbolSize);
-                    glVertex2f( x - size_y, y + size_x);
+                        glTexCoord2f( col, row);
+                        glVertex2f( x - size_x, y - size_y);
+                        glTexCoord2f( col+symbolSize, row);
+                        glVertex2f( x + size_y, y - size_x);
+                        glTexCoord2f( col+symbolSize, row+symbolSize);
+                        glVertex2f( x + size_x, y + size_y);
+                        glTexCoord2f( col, row+symbolSize);
+                        glVertex2f( x - size_y, y + size_x);
                         glEnd(); // GL_QUADS
 
                         SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing clouds"
-                                << " ID " << iradarEcho->cloudId 
-                                << " x,y " << x <<","<< y 
+                                << " ID " << iradarEcho->cloudId
+                                << " x,y " << x <<","<< y
                                 << " dist" << dist
-                                << " view_heading" << view_heading / SG_DEGREES_TO_RADIANS 
-                                << " heading " << iradarEcho->heading / SG_DEGREES_TO_RADIANS 
+                                << " view_heading" << view_heading / SG_DEGREES_TO_RADIANS
+                                << " heading " << iradarEcho->heading / SG_DEGREES_TO_RADIANS
                                 << " angle " << angle / SG_DEGREES_TO_RADIANS);
                     }
                 }
@@ -325,7 +329,8 @@ wxRadarBg::update (double delta_time_sec)
         if ( drawLightning ) {
             float col = 3 * symbolSize;
             float row = 4 * symbolSize;
-            for (iradarEcho = radarEcho->begin() ; iradarEcho != radarEcho->end() ; iradarEcho++ ) {
+            for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end();
+                    ++iradarEcho) {
                 if ( iradarEcho->lightning ) {
                     float dist = iradarEcho->dist;
                     dist = dist * range;
@@ -361,7 +366,8 @@ wxRadarBg::update (double delta_time_sec)
             float row = 3 * symbolSize;
             glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());     // use this for different texture
 
-            for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end(); ++iradarEcho) {
+            for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end();
+                    ++iradarEcho) {
 
                 if (!iradarEcho->aircraft)
                     continue;
@@ -410,7 +416,6 @@ wxRadarBg::update (double delta_time_sec)
                         << " heading " << iradarEcho->heading / SG_DEGREES_TO_RADIANS
                         << " angle " << angle / SG_DEGREES_TO_RADIANS);
             }
-
         }
 
         // draw data
@@ -421,13 +426,13 @@ wxRadarBg::update (double delta_time_sec)
             float row = 3 * symbolSize;
             glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());     // use this for different texture
 
-            for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end(); ++iradarEcho) {
+            for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end();
+                    ++iradarEcho) {
 
                 if (!iradarEcho->aircraft)
                     continue;
 
-                dist = iradarEcho->dist;
-                dist *= range;
+                dist = iradarEcho->dist * range;
                 // calculate relative bearing
                 float angle = calcRelBearing(iradarEcho->bearing, view_heading);
 
@@ -461,7 +466,6 @@ wxRadarBg::update (double delta_time_sec)
                             << " dist" << dist
                             << " heading " << iradarEcho->heading / SG_DEGREES_TO_RADIANS);
                 }
-
             }
         }
 
@@ -477,8 +481,8 @@ wxRadarBg::update (double delta_time_sec)
             dist = _tacan_distance_node->getFloatValue() * SG_NM_TO_METER;
             dist *= range;
             // calculate relative bearing
-            float angle = calcRelBearing(_tacan_bearing_node->getFloatValue() * SG_DEGREES_TO_RADIANS,
-                    view_heading);
+            float angle = calcRelBearing(_tacan_bearing_node->getFloatValue()
+                    * SG_DEGREES_TO_RADIANS, view_heading);
 
             // it's always in coverage, so draw it
             size = symbolSize * 500;
@@ -558,8 +562,7 @@ wxRadarBg::update (double delta_time_sec)
         */
 
         float xOffset = 256.0f, yOffset = 180.0f;
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: display mode "
-                << display_mode );
+        SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: display mode " << display_mode);
 
         if ( display_mode == "arc" ) {
             glDisable(GL_BLEND);
@@ -678,8 +681,8 @@ wxRadarBg::updateRadar()
         if (isVisible)
             isDetected = calcMaxRange(type, range);
 
-        //(float _heading, float _alt, float _radius, float _dist, double _LWC, bool _lightning, 
-        // int _cloudId, bool _aircraft)
+        //(float _heading, float _alt, float _radius, float _dist, double _LWC,
+        //bool _lightning, int _cloudId, bool _aircraft)
         if (isDetected)
             _radarEchoBuffer.push_back(SGWxRadarEcho (
                     bearing * SG_DEGREES_TO_RADIANS,
@@ -700,7 +703,6 @@ bool
 wxRadarBg::calcRadarHorizon(double user_alt, double alt, double range)
 {
     // Radar Horizon  = 1.23(ht^1/2 + hr^1/2),
-
     //don't allow negative altitudes (an approximation - yes altitudes can be negative)
 
     if (user_alt < 0)
@@ -720,11 +722,11 @@ wxRadarBg::calcMaxRange(int type, double range)
 {
     //The Radar Equation:
     //
-    // MaxRange^4 = (TxPower * AntGain^2 * lambda^2 * sigma)/((constant) * MDS) 
+    // MaxRange^4 = (TxPower * AntGain^2 * lambda^2 * sigma)/((constant) * MDS)
     //
     // Where (constant) = (4*pi)3 and MDS is the Minimum Detectable Signal power.
     //
-    // For a given radar we can assume that the only variable is sigma, 
+    // For a given radar we can assume that the only variable is sigma,
     // the target radar cross section.
     //
     // Here, we will use a normalised rcs (sigma) for a standard taget and assume that this
@@ -771,3 +773,4 @@ wxRadarBg::calcRelBearing(float bearing, float heading)
 
     return angle;
 }
+
