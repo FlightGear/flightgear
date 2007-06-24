@@ -25,8 +25,6 @@
 #ifndef _INST_WXRADAR_HXX
 #define _INST_WXRADAR_HXX
 
-#include <plib/ssg.h>
-
 #include <osg/ref_ptr>
 #include <osg/Geode>
 #include <osg/Texture2D>
