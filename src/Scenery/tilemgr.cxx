@@ -371,7 +371,7 @@ void FGTileMgr::update_queues()
                 // get real serious and agressively free up some tiles so
                 // we don't explode our memory usage.
 
-                SG_LOG( SG_TERRAIN, SG_ALERT,
+                SG_LOG( SG_TERRAIN, SG_WARN,
                         "Warning: catching up on tile delete queue" );
             }
 
