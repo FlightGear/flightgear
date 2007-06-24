@@ -51,7 +51,7 @@
 
 FGInstrumentMgr::FGInstrumentMgr ()
 {
-    set_subsystem("od_gauge", new FGODGauge, 1.0);
+    set_subsystem("od_gauge", new FGODGauge);
     set_subsystem("hud", new HUD);
 
     config_props = new SGPropertyNode;

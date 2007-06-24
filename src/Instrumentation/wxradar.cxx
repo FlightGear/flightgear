@@ -61,6 +61,8 @@ static const char *odgauge_name = "Aircraft/Instruments/Textures/od_wxradar.rgb"
 wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
     _name(node->getStringValue("name", "radar")),
     _num(node->getIntValue("number", 0)),
+    _interval(node->getDoubleValue("update-interval-sec", 1.0)),
+    _time( 0.0 ),
     _last_switchKnob( "off" ),
     _sim_init_done ( false ),
     resultTexture( 0 ),
@@ -233,6 +235,11 @@ wxRadarBg::update (double delta_time_sec)
         _Instrument->setStringValue("status","");
         return;
     }
+    _time += delta_time_sec;
+    if (_time < _interval)
+        return;
+
+    _time = 0.0;
 
     string switchKnob = _Instrument->getStringValue("switch", "on");
     string modeButton = _Instrument->getStringValue("mode", "wx");
@@ -254,7 +261,6 @@ wxRadarBg::update (double delta_time_sec)
 
     _radarEchoBuffer = *sgEnviro.get_radar_echo();
     updateRadar();
-    //FGViewer *current__view = globals->get_current_view();
 
     if ( switchKnob == "off" ) {
         _Instrument->setStringValue("status","");
