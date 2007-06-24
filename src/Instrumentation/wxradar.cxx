@@ -168,16 +168,8 @@ wxRadarBg::update (double delta_time_sec)
         _last_switchKnob = switchKnob;
     }
 
-    FGViewer *current__view = globals->get_current_view();
-    if ( current__view->getInternal() &&
-        (current__view->getHeadingOffset_deg() <= 15.0 || current__view->getHeadingOffset_deg() >= 345.0) &&
-        (current__view->getPitchOffset_deg() <= 15.0 || current__view->getPitchOffset_deg() >= 350.0) ) {
-
-        // we don't update the radar echo if the pilot looks around
-        // this is a copy
-        _radarEchoBuffer = *sgEnviro.get_radar_echo();
-        updateRadar();
-    }
+    _radarEchoBuffer = *sgEnviro.get_radar_echo();
+    updateRadar();
 
     _odg->beginCapture(256);
     _odg->Clear();
