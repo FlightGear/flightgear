@@ -57,6 +57,8 @@ private:
 
     string _name;
     int _num;
+    double _interval;
+    double _time;
 
     string _last_switchKnob;
     bool _sim_init_done;
