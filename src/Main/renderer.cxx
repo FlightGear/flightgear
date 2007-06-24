@@ -1048,7 +1048,14 @@ FGRenderer::pick( unsigned x, unsigned y,
   }
 }
 
-bool fgDumpSceneGraphToFile(const char* filename)
+void
+FGRenderer::addCamera(osg::Camera* camera, bool useSceneData)
+{
+    mRealRoot->addChild(camera);
+}
+
+bool
+fgDumpSceneGraphToFile(const char* filename)
 {
     return osgDB::writeNodeFile(*mRealRoot.get(), filename);
 }

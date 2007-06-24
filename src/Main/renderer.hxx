@@ -6,6 +6,7 @@
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/util/SGPickCallback.hxx>
 
+#include <osg/Camera>
 #include <osgViewer/Viewer>
 
 #include "FGManipulator.hxx"
@@ -66,10 +67,14 @@ public:
      */
     FGManipulator* getManipulator() { return manipulator.get(); }
     const FGManipulator* getManipulator() const { return manipulator.get(); }
-    void setManipulator(FGManipulator* manipulator)
-	{
-	    this->manipulator = manipulator;
-	}
+    void setManipulator(FGManipulator* manipulator) {
+        this->manipulator = manipulator;
+    }
+
+    /** Add a top level camera.
+    */
+    void addCamera(osg::Camera* camera, bool useSceneData);
+
 protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
     osg::ref_ptr<FGManipulator> manipulator;
