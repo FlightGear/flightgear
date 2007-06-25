@@ -358,54 +358,57 @@ wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
                 if ( iradarEcho->LWC >= 0.5 && iradarEcho->LWC <= 0.6)
                     continue;
 
-                if (!iradarEcho->lightning && lwc >= LWClevel[level]) {
-                    dist = sgSqrt(iradarEcho->dist);
-                    size = iradarEcho->radius * 2.0;
+                if (iradarEcho->lightning || lwc < LWClevel[level])
+                    continue;
 
-                    if ( dist - size > range_m )
-                        continue;
+                dist = sgSqrt(iradarEcho->dist);
+                size = iradarEcho->radius * 2.0;
 
-                    dist *= range;
-                    size *= range;
-                    // compute the relative angle from the view direction
-                    float angle = calcRelBearing(iradarEcho->heading, view_heading);
+                if ( dist - size > range_m )
+                    continue;
 
-                    // we will rotate the echo quads, this gives a better rendering
-                    const float rot_x = cos (view_heading);
-                    const float rot_y = sin (view_heading);
+                dist *= range;
+                size *= range;
+                // compute the relative angle from the view direction
+                float angle = calcRelBearing(iradarEcho->heading, view_heading);
 
-                    // and apply a fov factor to simulate a greater scan angle
-                    if (angle > 0)
-                        angle = angle * fovFactor + SGD_PI_4;
-                    else
-                        angle = angle * fovFactor - SGD_PI_4;
+                // we will rotate the echo quads, this gives a better rendering
+                const float rot_x = cos (view_heading);
+                const float rot_y = sin (view_heading);
 
-                    float x = cos( angle ) * dist;
-                    float y = sin( angle ) * dist;
+                if (angle > SG_PI)
+                    angle -= 2.0 * SG_PI;
+                if (angle < - SG_PI)
+                    angle += 2.0 * SG_PI;
 
-                    // use different shapes so the display is less boring
-                    float row = UNIT * (float) (4 + (cloudId & 3) );
+                // and apply a fov factor to simulate a greater scan angle
+                angle = angle * fovFactor + SG_PI * 0.5;
 
-                    float size_x = rot_x * size;
-                    float size_y = rot_y * size;
+                float x = cos( angle ) * dist;
+                float y = sin( angle ) * dist;
 
-                    glTexCoord2f(col, row);
-                    glVertex2f(x - size_x, y - size_y);
-                    glTexCoord2f(col+UNIT, row);
-                    glVertex2f(x + size_y, y - size_x);
-                    glTexCoord2f(col+UNIT, row+UNIT);
-                    glVertex2f(x + size_x, y + size_y);
-                    glTexCoord2f(col, row+UNIT);
-                    glVertex2f(x - size_y, y + size_x);
+                // use different shapes so the display is less boring
+                float row = UNIT * (float) (4 + (cloudId & 3) );
 
-                    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing clouds"
-                            << " ID " << iradarEcho->cloudId
-                            << " x,y " << x <<","<< y
-                            << " dist" << dist
-                            << " view_heading" << view_heading / SG_DEGREES_TO_RADIANS
-                            << " heading " << iradarEcho->heading / SG_DEGREES_TO_RADIANS
-                            << " angle " << angle / SG_DEGREES_TO_RADIANS);
-                }
+                float size_x = rot_x * size;
+                float size_y = rot_y * size;
+
+                glTexCoord2f(col, row);
+                glVertex2f(x - size_x, y - size_y);
+                glTexCoord2f(col+UNIT, row);
+                glVertex2f(x + size_y, y - size_x);
+                glTexCoord2f(col+UNIT, row+UNIT);
+                glVertex2f(x + size_x, y + size_y);
+                glTexCoord2f(col, row+UNIT);
+                glVertex2f(x - size_y, y + size_x);
+
+                SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing clouds"
+                        << " ID " << iradarEcho->cloudId
+                        << " x,y " << x <<","<< y
+                        << " dist" << dist
+                        << " view_heading" << view_heading / SG_DEGREES_TO_RADIANS
+                        << " heading " << iradarEcho->heading / SG_DEGREES_TO_RADIANS
+                        << " angle " << angle / SG_DEGREES_TO_RADIANS);
             }
         }
         glEnd(); // GL_QUADS
@@ -419,28 +422,31 @@ wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
         float row = 4 * UNIT;
         for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end();
                 ++iradarEcho) {
-            if ( iradarEcho->lightning ) {
-                float dist = iradarEcho->dist;
-                dist = dist * range;
-                float angle = view_heading - iradarEcho->heading;
-                if ( angle > SG_PI )
-                    angle -= 2.0*SG_PI;
-                if ( angle < - SG_PI )
-                    angle += 2.0*SG_PI;
-                angle =  angle * fovFactor - SG_PI / 2.0;
-                float x = cos( angle ) * dist;
-                float y = sin( angle ) * dist;
-                float size = UNIT * 0.5f;
+            if (!iradarEcho->lightning)
+                continue;
 
-                    glTexCoord2f(col, row);
-                    glVertex2f(x - size, y - size);
-                    glTexCoord2f(col + UNIT, row);
-                    glVertex2f(x + size, y - size);
-                    glTexCoord2f(col + UNIT, row + UNIT);
-                    glVertex2f(x + size, y + size);
-                    glTexCoord2f(col, row + UNIT);
-                    glVertex2f(x - size, y + size);
-            }
+            float dist = iradarEcho->dist;
+            dist = dist * range;
+            float angle = view_heading - iradarEcho->heading;
+
+            if ( angle > SG_PI )
+                angle -= 2.0*SG_PI;
+            if ( angle < - SG_PI )
+                angle += 2.0*SG_PI;
+
+            angle = angle * fovFactor - SG_PI / 2.0;
+            float x = cos( angle ) * dist;
+            float y = sin( angle ) * dist;
+            float size = UNIT * 0.5f;
+
+            glTexCoord2f(col, row);
+            glVertex2f(x - size, y - size);
+            glTexCoord2f(col + UNIT, row);
+            glVertex2f(x + size, y - size);
+            glTexCoord2f(col + UNIT, row + UNIT);
+            glVertex2f(x + size, y + size);
+            glTexCoord2f(col, row + UNIT);
+            glVertex2f(x - size, y + size);
         }
         glEnd();
     }
