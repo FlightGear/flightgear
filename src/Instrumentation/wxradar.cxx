@@ -613,32 +613,21 @@ wxRadarBg::update_tacan()
         return;
 
     float range_nm = _Instrument->getFloatValue("range", 40.0);  // FIXME share
-    float range = 200.0f / range_nm;
-    range /= SG_NM_TO_METER;
+    float range_m = range_nm * SG_NM_TO_METER;
+    float scale = 200.0f / range_m;
     float view_heading = get_heading() * SG_DEGREES_TO_RADIANS;
 
     float col = 1 * UNIT;
     float row = 3 * UNIT;
-    glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());     // use this for different texture
+    glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());  // different texture
 
-    float dist = _tacan_distance_node->getFloatValue() * SG_NM_TO_METER;
-    dist *= range;
-    // calculate relative bearing
-    float angle = calcRelBearing(_tacan_bearing_node->getFloatValue()
-            * SG_DEGREES_TO_RADIANS, view_heading);
+    float radius = _tacan_distance_node->getFloatValue() * SG_NM_TO_METER * scale;
+    float bearing = _tacan_bearing_node->getFloatValue() * SG_DEGREES_TO_RADIANS;
 
     // it's always in coverage, so draw it
     float size = UNIT * 500;
-    float x = sin(angle) * dist;
-    float y = cos(angle) * dist;
-
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:     drawing TACAN"
-            << " dist=" << dist
-            << " view_heading=" << view_heading * SG_RADIANS_TO_DEGREES
-            << " heading=" << _tacan_bearing_node->getDoubleValue()
-            << " angle=" << angle * SG_RADIANS_TO_DEGREES
-            << " x=" << x << " y="<< y
-            << " size=" << size);
+    float x = sin(bearing) * radius;
+    float y = cos(bearing) * radius;
 
     glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
@@ -651,6 +640,13 @@ wxRadarBg::update_tacan()
         glTexCoord2f(col, row + UNIT);
         glVertex2f(x - size, y + size);
     glEnd();
+
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:     drawing TACAN"
+            << " dist=" << radius
+            << " view_heading=" << view_heading * SG_RADIANS_TO_DEGREES
+            << " bearing=" << bearing * SG_RADIANS_TO_DEGREES
+            << " x=" << x << " y="<< y
+            << " size=" << size);
 }
 
 
