@@ -54,7 +54,6 @@ public:
     virtual void update (double dt);
 
 private:
-
     string _name;
     int _num;
     double _interval;
@@ -107,22 +106,19 @@ private:
     FGODGauge *_odg;
     FGAIManager* _ai;
 
+    void update_weather(const string& display_mode, double delta_time_sec);
+    void update_heading_marker(const string& display_mode);
+    void update_aircraft();
+    void update_tacan();
+
     bool calcRadarHorizon(double user_alt, double alt, double range);
     bool calcMaxRange(int type, double range);
 
-    void calcRngBrg(double lat, double lon, double lat2, double lon2,
+    void calcRangeBearing(double lat, double lon, double lat2, double lon2,
             double &range, double &bearing) const;
 
-    void updateRadar();
 
     float calcRelBearing(float bearing, float heading);
-
-    // A list of pointers to AI objects
-    typedef list <SGSharedPtr<FGAIBase> > radar_list_type;
-    typedef radar_list_type::iterator radar_list_iterator;
-    typedef radar_list_type::const_iterator radar_list_const_iterator;
-
-    radar_list_type _radar_list;
 };
 
 #endif // _INST_WXRADAR_HXX
