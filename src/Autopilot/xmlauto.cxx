@@ -103,7 +103,7 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
             } else {
                 prop = child->getChild( "value" );
                 if ( prop != NULL ) {
-                    r_n = prop->getDoubleValue();
+                    r_n_value = prop->getDoubleValue();
                 }
             }
             prop = child->getChild( "scale" );
@@ -422,7 +422,7 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
             } else {
                 prop = child->getChild( "value" );
                 if ( prop != NULL ) {
-                    r_n = prop->getDoubleValue();
+                    r_n_value = prop->getDoubleValue();
                 }
             }
             prop = child->getChild( "scale" );
