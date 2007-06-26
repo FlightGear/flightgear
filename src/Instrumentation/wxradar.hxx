@@ -62,13 +62,10 @@ private:
     string _last_switchKnob;
     bool _sim_init_done;
 
-    double _user_speed_east_fps;
-    double _user_speed_north_fps;
-
+    float _range_nm;
+    double _radar_ref_rng;
     float _x_displacement;
     float _y_displacement;
-    float _x_sym_displacement;
-    float _y_sym_displacement;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
@@ -111,14 +108,11 @@ private:
     void update_aircraft();
     void update_tacan();
 
+    float calcRelBearing(float bearing, float heading);
     bool calcRadarHorizon(double user_alt, double alt, double range);
     bool calcMaxRange(int type, double range);
-
     void calcRangeBearing(double lat, double lon, double lat2, double lon2,
             double &range, double &bearing) const;
-
-
-    float calcRelBearing(float bearing, float heading);
 };
 
 #endif // _INST_WXRADAR_HXX

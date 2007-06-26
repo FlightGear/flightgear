@@ -48,6 +48,11 @@
 #include "wxradar.hxx"
 
 
+typedef list <SGSharedPtr<FGAIBase> > radar_list_type;
+typedef radar_list_type::iterator radar_list_iterator;
+typedef radar_list_type::const_iterator radar_list_const_iterator;
+
+
 // texture name to use in 2D and 3D instruments
 static const char *ODGAUGE_NAME = "Aircraft/Instruments/Textures/od_wxradar.rgb";
 static const float UNIT = 1.0f / 8.0f;
@@ -139,9 +144,6 @@ wxRadarBg::init ()
 
     _x_displacement = 0;
     _y_displacement = 0;
-    _x_sym_displacement = 0;
-    _y_sym_displacement = 0;
-
 }
 
 
@@ -193,6 +195,9 @@ wxRadarBg::update (double delta_time_sec)
         _Instrument->setStringValue("status","TST");
         // find something interesting to do...
     } else {
+        _range_nm = _Instrument->getFloatValue("range", 40.0);
+        _radar_ref_rng = _radar_ref_rng_node->getDoubleValue();
+
         update_weather(display_mode, delta_time_sec);
         update_aircraft();
         update_tacan();
@@ -279,13 +284,8 @@ void
 wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
 {
     string modeButton = _Instrument->getStringValue("mode", "wx");
-    bool drawLightning = _Instrument->getBoolValue("lightning", true);
-    float range_nm = _Instrument->getFloatValue("range", 40.0);  // FIXME share
-    float range_m = range_nm * SG_NM_TO_METER;
-    float range = 200.0f / range_nm;
-
-    _user_speed_east_fps = _user_speed_east_fps_node->getDoubleValue();
-    _user_speed_north_fps = _user_speed_north_fps_node->getDoubleValue();
+    float range_m = _range_nm * SG_NM_TO_METER;
+    float range = 200.0f / _range_nm;
 
     _radarEchoBuffer = *sgEnviro.get_radar_echo();
 
@@ -297,24 +297,26 @@ wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
 
     if ( display_mode == "arc" ) {
         glTranslatef(0.0f, -180.0f, 0.0f);
-        range = 2*180.0f / range_nm;
+        range = 2*180.0f / _range_nm;
 
     } else if ( display_mode == "map" ) {
+        double user_speed_east_fps = _user_speed_east_fps_node->getDoubleValue();
+        double user_speed_north_fps = _user_speed_north_fps_node->getDoubleValue();
+
         view_heading = 0;
-        _x_displacement += range * _user_speed_east_fps * SG_FPS_TO_KT * delta_time_sec / (60*60);
-        _y_displacement += range * _user_speed_north_fps * SG_FPS_TO_KT * delta_time_sec / (60*60);
+        _x_displacement += range * user_speed_east_fps * SG_FPS_TO_KT * delta_time_sec / (60*60);
+        _y_displacement += range * user_speed_north_fps * SG_FPS_TO_KT * delta_time_sec / (60*60);
 
         bool centre = _radar_centre_node->getBoolValue();
-
         if (centre)
             _x_displacement = _y_displacement = 0;
 
         SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: displacement "
                 << _x_displacement <<", "<<_y_displacement
-                << " _user_speed_east_fps * SG_FPS_TO_KT "
-                << _user_speed_east_fps * SG_FPS_TO_KT
-                << " _user_speed_north_fps * SG_FPS_TO_KT "
-                << _user_speed_north_fps * SG_FPS_TO_KT
+                << " user_speed_east_fps * SG_FPS_TO_KT "
+                << user_speed_east_fps * SG_FPS_TO_KT
+                << " user_speed_north_fps * SG_FPS_TO_KT "
+                << user_speed_north_fps * SG_FPS_TO_KT
                 << " dt " << delta_time_sec);
 
         glTranslatef(_x_displacement, _y_displacement, 0.0f);
@@ -332,14 +334,9 @@ wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
     list_of_SGWxRadarEcho *radarEcho = &_radarEchoBuffer;
     list_of_SGWxRadarEcho::iterator iradarEcho;
     const float LWClevel[] = { 0.1f, 0.5f, 2.1f };
-    float dist = 0;
-    float size = 0;
-
 
     // draw the cloud radar echo
-
     bool drawClouds = _radar_weather_node->getBoolValue();
-
     if (drawClouds) {
         // we do that in 3 passes, one for each color level
         // this is to 'merge' same colors together
@@ -351,30 +348,28 @@ wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
 
             for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end();
                     ++iradarEcho) {
-                int cloudId = (iradarEcho->cloudId);
-                bool upgrade = ((cloudId >> 5) & 1);
+                int cloudId = iradarEcho->cloudId;
+                bool upgrade = (cloudId >> 5) & 1;
                 float lwc = iradarEcho->LWC + (upgrade ? 1.0f : 0.0f);
+
                 // skip ns
-                if ( iradarEcho->LWC >= 0.5 && iradarEcho->LWC <= 0.6)
+                if (iradarEcho->LWC >= 0.5 && iradarEcho->LWC <= 0.6)
                     continue;
 
                 if (iradarEcho->lightning || lwc < LWClevel[level])
                     continue;
 
-                dist = sgSqrt(iradarEcho->dist);
-                size = iradarEcho->radius * 2.0;
+                float dist = sgSqrt(iradarEcho->dist);
+                float size = iradarEcho->radius * 2.0;
 
                 if ( dist - size > range_m )
                     continue;
 
                 dist *= range;
                 size *= range;
+
                 // compute the relative angle from the view direction
                 float angle = calcRelBearing(iradarEcho->heading, view_heading);
-
-                // we will rotate the echo quads, this gives a better rendering
-                const float rot_x = cos (view_heading);
-                const float rot_y = sin (view_heading);
 
                 if (angle > SG_PI)
                     angle -= 2.0 * SG_PI;
@@ -384,11 +379,15 @@ wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
                 // and apply a fov factor to simulate a greater scan angle
                 angle = angle * fovFactor + SG_PI * 0.5;
 
-                float x = cos( angle ) * dist;
-                float y = sin( angle ) * dist;
+                float x = cos(angle) * dist;
+                float y = sin(angle) * dist;
 
                 // use different shapes so the display is less boring
                 float row = UNIT * (float) (4 + (cloudId & 3) );
+
+                // we will rotate the echo quads, this gives a better rendering
+                const float rot_x = cos (view_heading);
+                const float rot_y = sin (view_heading);
 
                 float size_x = rot_x * size;
                 float size_y = rot_y * size;
@@ -403,7 +402,7 @@ wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
                 glVertex2f(x - size_y, y + size_x);
 
                 SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing clouds"
-                        << " ID " << iradarEcho->cloudId
+                        << " ID " << cloudId
                         << " x,y " << x <<","<< y
                         << " dist" << dist
                         << " view_heading" << view_heading / SG_DEGREES_TO_RADIANS
@@ -415,9 +414,11 @@ wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
     }
 
     // draw lightning echos
+    bool drawLightning = _Instrument->getBoolValue("lightning", true);
     if ( drawLightning ) {
+        glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());
         glColor3f(1.0f, 1.0f, 1.0f);
-        glBegin( GL_QUADS );
+        glBegin(GL_QUADS);
         float col = 3 * UNIT;
         float row = 4 * UNIT;
         for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end();
@@ -425,8 +426,7 @@ wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
             if (!iradarEcho->lightning)
                 continue;
 
-            float dist = iradarEcho->dist;
-            dist = dist * range;
+            float radius = iradarEcho->dist * range;
             float angle = view_heading - iradarEcho->heading;
 
             if ( angle > SG_PI )
@@ -435,8 +435,8 @@ wxRadarBg::update_weather(const string& display_mode, double delta_time_sec)
                 angle += 2.0*SG_PI;
 
             angle = angle * fovFactor - SG_PI / 2.0;
-            float x = cos( angle ) * dist;
-            float y = sin( angle ) * dist;
+            float x = cos( angle ) * radius;
+            float y = sin( angle ) * radius;
             float size = UNIT * 0.5f;
 
             glTexCoord2f(col, row);
@@ -459,24 +459,20 @@ wxRadarBg::update_aircraft()
     if (!_ai_enabled_node->getBoolValue())
         return;
 
-    // A list of pointers to AI objects
-    typedef list <SGSharedPtr<FGAIBase> > radar_list_type;
-    typedef radar_list_type::iterator radar_list_iterator;
-    typedef radar_list_type::const_iterator radar_list_const_iterator;
-
-    radar_list_type _radar_list;
-    _radar_list = _ai->get_ai_list();
-
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: AI submodel list size" << _radar_list.size());
-    if (_radar_list.empty())
+    bool draw_echoes = _radar_position_node->getBoolValue();
+    bool draw_symbols = _radar_data_node->getBoolValue();
+    if (!draw_echoes && !draw_symbols)
         return;
 
+    radar_list_type radar_list = _ai->get_ai_list();
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: AI submodel list size" << radar_list.size());
+    if (radar_list.empty())
+        return;
 
     SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: Loading AI submodels ");
     const double echo_radii[] = {0, 1, 1.5, 1.5, 0.001, 0.1, 1.5, 2, 1.5, 1.5};
 
-    float range_nm = _Instrument->getFloatValue("range", 40.0);  // FIXME share
-    float range_m = range_nm * SG_NM_TO_METER;
+    float range_m = _range_nm * SG_NM_TO_METER;
     float scale = 200.0f / range_m;
     float view_heading = get_heading() * SG_DEGREES_TO_RADIANS;
 
@@ -484,11 +480,11 @@ wxRadarBg::update_aircraft()
     double user_lon = _user_lon_node->getDoubleValue();
     double user_alt = _user_alt_node->getDoubleValue();
 
-    radar_list_iterator radar_list_itr = _radar_list.begin();
-    radar_list_iterator end = _radar_list.end();
+    radar_list_iterator it = radar_list.begin();
+    radar_list_iterator end = radar_list.end();
 
-    for (; radar_list_itr != end; ++radar_list_itr) {
-        FGAIBase *ac = *radar_list_itr;
+    for (; it != end; ++it) {
+        FGAIBase *ac = *it;
         int type       = ac->getType();
         double lat     = ac->_getLatitude();
         double lon     = ac->_getLongitude();
@@ -499,13 +495,13 @@ wxRadarBg::update_aircraft()
         calcRangeBearing(user_lat, user_lon, lat, lon, range, bearing);
 
         SG_LOG(SG_GENERAL, SG_DEBUG,
-                "Radar: ID=" << ac->getID() << "(" << _radar_list.size() << ")"
+                "Radar: ID=" << ac->getID() << "(" << radar_list.size() << ")"
                 << " type=" << type
                 << " view_heading=" << view_heading * SG_RADIANS_TO_DEGREES
+                << " alt=" << alt
                 << " heading=" << heading
                 << " range=" << range
-                << " bearing=" << bearing
-                << " alt=" << alt);
+                << " bearing=" << bearing);
 
         bool isVisible = calcRadarHorizon(user_alt, alt, range);
         SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: visible " << isVisible);
@@ -521,17 +517,17 @@ wxRadarBg::update_aircraft()
         range *= SG_NM_TO_METER;
 
         float radius = range * scale;
+        float angle = calcRelBearing(bearing, view_heading);
 
-        // draw aircraft echoes
-        if (_radar_position_node->getBoolValue()) {
+        // pos mode
+        if (draw_echoes) {
             glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());  // different texture
             glColor3f(1.0f, 1.0f, 1.0f);
             glBegin(GL_QUADS);
 
-            float col = 3 * UNIT;    // EEEW FIXME
+            float col = 3 * UNIT;
             float row = 3 * UNIT;
             float limit = _radar_coverage_node->getFloatValue();
-            float angle = calcRelBearing(bearing, view_heading);
 
             if (limit > 180)
                 limit = 180;
@@ -567,15 +563,14 @@ wxRadarBg::update_aircraft()
             glEnd();
         }
 
-        // draw aircraft symbols (data mode)
-        if (_radar_data_node->getBoolValue()) {
+        // data mode
+        if (draw_symbols) {
             glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());  // different texture
             glColor3f(1.0f, 1.0f, 1.0f);
             glBegin(GL_QUADS);
 
             float col = 0 * UNIT;
             float row = 3 * UNIT;
-            float angle = calcRelBearing(bearing, view_heading);
 
             if (angle < 120 * SG_DEGREES_TO_RADIANS
                     && angle > -120 * SG_DEGREES_TO_RADIANS) { // in coverage?
@@ -618,8 +613,7 @@ wxRadarBg::update_tacan()
     if (mode != 1 || !inRange)
         return;
 
-    float range_nm = _Instrument->getFloatValue("range", 40.0);  // FIXME share
-    float range_m = range_nm * SG_NM_TO_METER;
+    float range_m = _range_nm * SG_NM_TO_METER;
     float scale = 200.0f / range_m;
     float view_heading = get_heading() * SG_DEGREES_TO_RADIANS;
 
@@ -628,12 +622,11 @@ wxRadarBg::update_tacan()
     glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());  // different texture
 
     float radius = _tacan_distance_node->getFloatValue() * SG_NM_TO_METER * scale;
-    float bearing = _tacan_bearing_node->getFloatValue() * SG_DEGREES_TO_RADIANS;
+    float angle = _tacan_bearing_node->getFloatValue() * SG_DEGREES_TO_RADIANS;
 
-    // it's always in coverage, so draw it
     float size = UNIT * 500;
-    float x = sin(bearing) * radius;
-    float y = cos(bearing) * radius;
+    float x = sin(angle) * radius;
+    float y = cos(angle) * radius;
 
     glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
@@ -650,7 +643,7 @@ wxRadarBg::update_tacan()
     SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:     drawing TACAN"
             << " dist=" << radius
             << " view_heading=" << view_heading * SG_RADIANS_TO_DEGREES
-            << " bearing=" << bearing * SG_RADIANS_TO_DEGREES
+            << " bearing=" << angle * SG_RADIANS_TO_DEGREES
             << " x=" << x << " y="<< y
             << " size=" << size);
 }
@@ -659,9 +652,8 @@ wxRadarBg::update_tacan()
 void
 wxRadarBg::update_heading_marker(const string& display_mode)
 {
-    float range_nm = _Instrument->getFloatValue("range", 40.0);  // FIXME share
-    float range = 200.0f / range_nm;
-    range /= SG_NM_TO_METER;
+    float range = 200.0f / _range_nm;
+    range *= SG_METER_TO_NM;
 
     float col = 2 * UNIT;
     float row = 3 * UNIT;
@@ -737,7 +729,7 @@ wxRadarBg::calcMaxRange(int type, double range)
     // TODO - make the maximum range adjustable at runtime
 
     const double sigma[] = {0, 1, 100, 100, 0.001, 0.1, 100, 100, 1, 1};
-    double constant = _radar_ref_rng_node->getDoubleValue();
+    double constant = _radar_ref_rng;
 
     if (constant <= 0)
         constant = 35;
