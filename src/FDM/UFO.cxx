@@ -195,8 +195,8 @@ void FGUFO::update( double dt ) {
     sgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );
 
     // update euler angles
-    _set_Euler_Angles( roll, pitch,
-                       fmod(get_Psi() + turn + yaw, SGD_2PI) );
+    double heading = fmod(get_Psi() + turn + yaw, SGD_2PI);
+    _set_Euler_Angles(roll, pitch, heading);
     _set_Euler_Rates(0,0,0);
 
     _set_Geocentric_Position( lat_geoc, get_Longitude(), 
@@ -207,4 +207,8 @@ void FGUFO::update( double dt ) {
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
     _set_Altitude( get_Altitude() + climb );
     _set_Altitude_AGL( get_Altitude() - get_Runway_altitude() );
+
+    set_V_north(cos(heading) * velocity * SG_METER_TO_FEET);
+    set_V_east(sin(heading) * velocity * SG_METER_TO_FEET);
+    set_V_down(-real_climb_rate);
 }
