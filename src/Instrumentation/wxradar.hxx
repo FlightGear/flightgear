@@ -59,13 +59,19 @@ private:
     double _interval;
     double _time;
 
+    typedef enum { ARC, MAP, PLAN, ROSE } DisplayMode;
+    DisplayMode _display_mode;
+
     string _last_switchKnob;
     bool _sim_init_done;
 
     float _range_nm;
+    float _scale;   // factor to convert nm to display units
     double _radar_ref_rng;
-    float _x_displacement;
-    float _y_displacement;
+    float _x_offset;
+    float _y_offset;
+    float _angle_offset;
+    float _view_heading;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
@@ -103,14 +109,14 @@ private:
     FGODGauge *_odg;
     FGAIManager* _ai;
 
-    void update_weather(const string& display_mode, double delta_time_sec);
-    void update_heading_marker(const string& display_mode);
+    void update_weather();
     void update_aircraft();
     void update_tacan();
+    void update_heading_marker();
 
+    bool withinRadarHorizon(double user_alt, double alt, double range);
+    bool inRadarRange(int type, double range);
     float calcRelBearing(float bearing, float heading);
-    bool calcRadarHorizon(double user_alt, double alt, double range);
-    bool calcMaxRange(int type, double range);
     void calcRangeBearing(double lat, double lon, double lat2, double lon2,
             double &range, double &bearing) const;
 };
