@@ -55,7 +55,7 @@ typedef radar_list_type::const_iterator radar_list_const_iterator;
 
 // texture name to use in 2D and 3D instruments
 static const char *ODGAUGE_NAME = "Aircraft/Instruments/Textures/od_wxradar.rgb";
-static const float UNIT = 1.0f / 8.0f;
+static const float UNIT = 1.0f / 8.0f;  // 8 symbols in a row/column in the texture
 
 
 wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
@@ -65,8 +65,8 @@ wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
     _time( 0.0 ),
     _last_switchKnob( "off" ),
     _sim_init_done ( false ),
-    resultTexture( 0 ),
-    wxEcho( 0 ),
+    _resultTexture( 0 ),
+    _wxEcho( 0 ),
     _odg( 0 )
 {
     const char *tacan_source = node->getStringValue("tacan-source",
@@ -88,11 +88,11 @@ wxRadarBg::init ()
 
     _Instrument = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = _Instrument->getNode("serviceable", true);
-    resultTexture = FGTextureManager::createTexture( ODGAUGE_NAME );
+    _resultTexture = FGTextureManager::createTexture( ODGAUGE_NAME );
     SGPath tpath(globals->get_fg_root());
     tpath.append("Aircraft/Instruments/Textures/wxecho.rgb");
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
-    wxEcho = new ssgTexture( tpath.c_str(), false, false, false);
+    _wxEcho = new ssgTexture( tpath.c_str(), false, false, false);
 
     _Instrument->setFloatValue("trk", 0.0);
     _Instrument->setFloatValue("tilt", 0.0);
@@ -180,7 +180,7 @@ wxRadarBg::update (double delta_time_sec)
         // we must locate them and replace their handle by hand
         // only do that when the instrument is turned on
         if ( _last_switchKnob == "off" )
-            _odg->set_texture( ODGAUGE_NAME, resultTexture->getHandle());
+            _odg->set_texture( ODGAUGE_NAME, _resultTexture->getHandle());
 
         _last_switchKnob = switchKnob;
     }
@@ -226,13 +226,13 @@ wxRadarBg::update (double delta_time_sec)
             if (centre)
                 _x_offset = _y_offset = 0;
 
-            SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: displacement "
-                    << _x_offset <<", "<<_y_offset
-                    << " user_speed_east_fps * SG_FPS_TO_KT "
-                    << user_speed_east_fps * SG_FPS_TO_KT
-                    << " user_speed_north_fps * SG_FPS_TO_KT "
-                    << user_speed_north_fps * SG_FPS_TO_KT
-                    << " dt " << delta_time_sec);
+            //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: displacement "
+            //        << _x_offset <<", "<<_y_offset
+            //        << " user_speed_east_fps * SG_FPS_TO_KT "
+            //        << user_speed_east_fps * SG_FPS_TO_KT
+            //        << " user_speed_north_fps * SG_FPS_TO_KT "
+            //        << user_speed_north_fps * SG_FPS_TO_KT
+            //        << " dt " << delta_time_sec);
 
             glTranslatef(_x_offset, _y_offset, 0.0f);
 
@@ -305,7 +305,7 @@ wxRadarBg::update (double delta_time_sec)
         update_heading_marker();
     }
     glPopMatrix();
-    _odg->endCapture( resultTexture->getHandle() );
+    _odg->endCapture( _resultTexture->getHandle() );
 }
 
 
@@ -321,7 +321,7 @@ wxRadarBg::update_weather()
     _Instrument->setStringValue("status", modeButton.c_str());
 
     list_of_SGWxRadarEcho *radarEcho = &_radarEchoBuffer;
-    list_of_SGWxRadarEcho::iterator iradarEcho;
+    list_of_SGWxRadarEcho::iterator iradarEcho, end = radarEcho->end();
     const float LWClevel[] = { 0.1f, 0.5f, 2.1f };
 
     // draw the cloud radar echo
@@ -329,14 +329,13 @@ wxRadarBg::update_weather()
     if (drawClouds) {
         // we do that in 3 passes, one for each color level
         // this is to 'merge' same colors together
-        glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());
+        glBindTexture(GL_TEXTURE_2D, _wxEcho->getHandle());
         glColor3f(1.0f, 1.0f, 1.0f);
         glBegin(GL_QUADS);
-        for (int level = 0; level <= 2 ; level++) {
+        for (int level = 0; level <= 2; level++) {
             float col = level * UNIT;
 
-            for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end();
-                    ++iradarEcho) {
+            for (iradarEcho = radarEcho->begin(); iradarEcho != end; ++iradarEcho) {
                 int cloudId = iradarEcho->cloudId;
                 bool upgrade = (cloudId >> 5) & 1;
                 float lwc = iradarEcho->LWC + (upgrade ? 1.0f : 0.0f);
@@ -381,14 +380,14 @@ wxRadarBg::update_weather()
                 glTexCoord2f(col, row+UNIT);
                 glVertex2f(x - size_y, y + size_x);
 
-                SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing clouds"
-                        << " ID=" << cloudId
-                        << " x=" << x
-                        << " y="<< y
-                        << " radius=" << radius
-                        << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
-                        << " heading=" << iradarEcho->heading * SG_RADIANS_TO_DEGREES
-                        << " angle=" << angle * SG_RADIANS_TO_DEGREES);
+                //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing clouds"
+                //        << " ID=" << cloudId
+                //        << " x=" << x
+                //        << " y="<< y
+                //        << " radius=" << radius
+                //        << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
+                //        << " heading=" << iradarEcho->heading * SG_RADIANS_TO_DEGREES
+                //        << " angle=" << angle * SG_RADIANS_TO_DEGREES);
             }
         }
         glEnd(); // GL_QUADS
@@ -397,13 +396,12 @@ wxRadarBg::update_weather()
     // draw lightning echos
     bool drawLightning = _Instrument->getBoolValue("lightning", true);
     if ( drawLightning ) {
-        glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());
+        glBindTexture(GL_TEXTURE_2D, _wxEcho->getHandle());
         glColor3f(1.0f, 1.0f, 1.0f);
         glBegin(GL_QUADS);
         float col = 3 * UNIT;
         float row = 4 * UNIT;
-        for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end();
-                ++iradarEcho) {
+        for (iradarEcho = radarEcho->begin(); iradarEcho != end; ++iradarEcho) {
             if (!iradarEcho->lightning)
                 continue;
 
@@ -466,14 +464,14 @@ wxRadarBg::update_aircraft()
         double range, bearing;
         calcRangeBearing(user_lat, user_lon, lat, lon, range, bearing);
 
-        SG_LOG(SG_GENERAL, SG_DEBUG,
-                "Radar: ID=" << ac->getID() << "(" << radar_list.size() << ")"
-                << " type=" << type
-                << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
-                << " alt=" << alt
-                << " heading=" << heading
-                << " range=" << range
-                << " bearing=" << bearing);
+        //SG_LOG(SG_GENERAL, SG_DEBUG,
+        //        "Radar: ID=" << ac->getID() << "(" << radar_list.size() << ")"
+        //        << " type=" << type
+        //        << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
+        //        << " alt=" << alt
+        //        << " heading=" << heading
+        //        << " range=" << range
+        //        << " bearing=" << bearing);
 
         bool isVisible = withinRadarHorizon(user_alt, alt, range);
         SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: visible " << isVisible);
@@ -489,12 +487,11 @@ wxRadarBg::update_aircraft()
         float radius = range * _scale;
         float angle = calcRelBearing(bearing, _view_heading);
 
+        bearing += _angle_offset;
+        heading += _angle_offset;
+
         // pos mode
         if (draw_echoes) {
-            glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());
-            glColor3f(1.0f, 1.0f, 1.0f);
-            glBegin(GL_QUADS);
-
             float col = 3 * UNIT;
             float row = 3 * UNIT;
             float limit = _radar_coverage_node->getFloatValue();
@@ -509,12 +506,16 @@ wxRadarBg::update_aircraft()
 
                 float echo_radius = echo_radii[type] * 120;
                 float size = echo_radius * UNIT;
-                float x = sin(bearing + _angle_offset) * radius;
-                float y = cos(bearing + _angle_offset) * radius;
-                float a_rot_x = sin(angle + SGD_PI_4);   // FIXME
-                float a_rot_y = cos(angle + SGD_PI_4);
+                float x = sin(bearing) * radius;
+                float y = cos(bearing) * radius;
+                float a_rot_x = sin(bearing + SGD_PI_4);
+                float a_rot_y = cos(bearing + SGD_PI_4);
                 float a_size_x = a_rot_x * size;
                 float a_size_y = a_rot_y * size;
+
+                glBindTexture(GL_TEXTURE_2D, _wxEcho->getHandle());
+                glColor3f(1.0f, 1.0f, 1.0f);
+                glBegin(GL_QUADS);
 
                 glTexCoord2f(col, row);
                 glVertex2f(x - a_size_x, y - a_size_y);
@@ -525,33 +526,34 @@ wxRadarBg::update_aircraft()
                 glTexCoord2f(col, row + UNIT);
                 glVertex2f(x - a_size_y, y + a_size_x);
 
-                SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing AI"
-                        << " x=" << x << " y=" << y
-                        << " radius=" << radius
-                        << " angle=" << angle * SG_RADIANS_TO_DEGREES);
+                glEnd();
+
+                //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing AI"
+                //        << " x=" << x << " y=" << y
+                //        << " radius=" << radius
+                //        << " angle=" << angle * SG_RADIANS_TO_DEGREES);
             }
-            glEnd();
         }
 
         // data mode
         if (draw_symbols) {
-            glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());
-            glColor3f(1.0f, 1.0f, 1.0f);
-            glBegin(GL_QUADS);
-
-            float col = 0 * UNIT;
-            float row = 3 * UNIT;
-
             if (angle < 120 * SG_DEGREES_TO_RADIANS
                     && angle > -120 * SG_DEGREES_TO_RADIANS) { // in coverage?
 
+                float col = 0 * UNIT;
+                float row = 3 * UNIT;
+
                 float size = 500 * UNIT;
-                float x = sin(bearing + _angle_offset) * radius;
-                float y = cos(bearing + _angle_offset) * radius;
-                float d_rot_x = sin(heading + _angle_offset + SGD_PI_4);  // FIXME
-                float d_rot_y = cos(heading + _angle_offset + SGD_PI_4);
+                float x = sin(bearing) * radius;
+                float y = cos(bearing) * radius;
+                float d_rot_x = sin(heading + SGD_PI_4);
+                float d_rot_y = cos(heading + SGD_PI_4);
                 float d_size_x = d_rot_x * size;
                 float d_size_y = d_rot_y * size;
+
+                glBindTexture(GL_TEXTURE_2D, _wxEcho->getHandle());
+                glColor3f(1.0f, 1.0f, 1.0f);
+                glBegin(GL_QUADS);
 
                 glTexCoord2f(col, row);
                 glVertex2f(x - d_size_x, y - d_size_y);
@@ -562,12 +564,13 @@ wxRadarBg::update_aircraft()
                 glTexCoord2f(col, row + UNIT);
                 glVertex2f(x - d_size_y, y + d_size_x);
 
-                SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing data"
-                        << " x=" << x <<" y="<< y
-                        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
-                        << " radius=" << radius);
+                glEnd();
+
+                //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing data"
+                //        << " x=" << x <<" y="<< y
+                //        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
+                //        << " radius=" << radius);
             }
-            glEnd();
         }
     }
 }
@@ -594,25 +597,27 @@ wxRadarBg::update_tacan()
     float x = sin(angle) * radius;
     float y = cos(angle) * radius;
 
-    glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());
+    glBindTexture(GL_TEXTURE_2D, _wxEcho->getHandle());
     glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
-        glTexCoord2f(col, row);
-        glVertex2f(x - size, y - size);
-        glTexCoord2f(col + UNIT, row);
-        glVertex2f(x + size, y - size);
-        glTexCoord2f(col + UNIT, row + UNIT);
-        glVertex2f(x + size, y + size);
-        glTexCoord2f(col, row + UNIT);
-        glVertex2f(x - size, y + size);
+
+    glTexCoord2f(col, row);
+    glVertex2f(x - size, y - size);
+    glTexCoord2f(col + UNIT, row);
+    glVertex2f(x + size, y - size);
+    glTexCoord2f(col + UNIT, row + UNIT);
+    glVertex2f(x + size, y + size);
+    glTexCoord2f(col, row + UNIT);
+    glVertex2f(x - size, y + size);
+
     glEnd();
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:     drawing TACAN"
-            << " dist=" << radius
-            << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
-            << " bearing=" << angle * SG_RADIANS_TO_DEGREES
-            << " x=" << x << " y="<< y
-            << " size=" << size);
+    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:     drawing TACAN"
+    //        << " dist=" << radius
+    //        << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
+    //        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
+    //        << " x=" << x << " y="<< y
+    //        << " size=" << size);
 }
 
 
@@ -621,14 +626,7 @@ wxRadarBg::update_heading_marker()
 {
     float col = 2 * UNIT;
     float row = 3 * UNIT;
-
-    glBindTexture(GL_TEXTURE_2D, wxEcho->getHandle());
-
-    float angle;
-    if (_display_mode == ARC)
-        angle = 0;
-    else
-        angle = get_heading() * SG_DEGREES_TO_RADIANS;
+    float angle = _display_mode == ARC ? 0 : _view_heading;
 
     float x = sin(angle);
     float y = cos(angle);
@@ -639,16 +637,19 @@ wxRadarBg::update_heading_marker()
     float s_size_x = s_rot_x * size;
     float s_size_y = s_rot_y * size;
 
+    glBindTexture(GL_TEXTURE_2D, _wxEcho->getHandle());
     glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
-        glTexCoord2f(col, row);
-        glVertex2f(x - s_size_x, y - s_size_y);
-        glTexCoord2f(col + UNIT, row);
-        glVertex2f(x + s_size_y, y - s_size_x);
-        glTexCoord2f(col + UNIT, row + UNIT);
-        glVertex2f(x + s_size_x, y + s_size_y);
-        glTexCoord2f(col, row + UNIT);
-        glVertex2f(x - s_size_y, y + s_size_x);
+
+    glTexCoord2f(col, row);
+    glVertex2f(x - s_size_x, y - s_size_y);
+    glTexCoord2f(col + UNIT, row);
+    glVertex2f(x + s_size_y, y - s_size_x);
+    glTexCoord2f(col + UNIT, row + UNIT);
+    glVertex2f(x + s_size_x, y + s_size_y);
+    glTexCoord2f(col, row + UNIT);
+    glVertex2f(x - s_size_y, y + s_size_x);
+
     glEnd();
 
     //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:   drawing heading marker"

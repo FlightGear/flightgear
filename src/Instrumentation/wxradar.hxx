@@ -101,8 +101,8 @@ private:
 
     SGPropertyNode_ptr _ai_enabled_node;
 
-    ssgSharedPtr<ssgTexture> resultTexture;
-    ssgSharedPtr<ssgTexture> wxEcho;
+    ssgSharedPtr<ssgTexture> _resultTexture;
+    ssgSharedPtr<ssgTexture> _wxEcho;
 
     list_of_SGWxRadarEcho _radarEchoBuffer;
 
