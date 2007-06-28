@@ -129,8 +129,11 @@ wxRadarBg::init ()
     _radar_mode_control_node = _Instrument->getNode("mode-control", true);
     _radar_coverage_node = _Instrument->getNode("limit-deg", true);
     _radar_ref_rng_node = _Instrument->getNode("reference-range-nm", true);
-    _radar_coverage_node->setFloatValue(120);
-    _radar_ref_rng_node->setDoubleValue(35);
+
+    if (_radar_coverage_node->getType() == SGPropertyNode::NONE)
+        _radar_coverage_node->setFloatValue(120);
+    if (_radar_ref_rng_node->getType() == SGPropertyNode::NONE)
+        _radar_ref_rng_node->setDoubleValue(35);
 
     SGPropertyNode *n = _Instrument->getNode("display-controls", true);
     _radar_weather_node     = n->getNode("WX", true);
@@ -494,6 +497,15 @@ wxRadarBg::update_aircraft()
         float radius = range * _scale;
         float angle = calcRelBearing(bearing, _view_heading);
 
+        float limit = _radar_coverage_node->getFloatValue();
+        if (limit > 180)
+            limit = 180;
+        else if (limit < 0)
+            limit = 0;
+        limit *= SG_DEGREES_TO_RADIANS;
+        if (angle > limit || angle < -limit)
+            continue;
+
         bearing += _angle_offset;
         heading += _angle_offset;
 
@@ -501,83 +513,69 @@ wxRadarBg::update_aircraft()
         if (draw_echoes) {
             float col = 3 * UNIT;
             float row = 3 * UNIT;
-            float limit = _radar_coverage_node->getFloatValue();
 
-            if (limit > 180)
-                limit = 180;
-            else if (limit < 0)
-                limit = 0;
+            float echo_radius = echo_radii[type] * 120;
+            float size = echo_radius * UNIT;
+            float x = sin(bearing) * radius;
+            float y = cos(bearing) * radius;
+            float a_rot_x = sin(bearing + SGD_PI_4);
+            float a_rot_y = cos(bearing + SGD_PI_4);
+            float a_size_x = a_rot_x * size;
+            float a_size_y = a_rot_y * size;
 
-            if (angle < limit * SG_DEGREES_TO_RADIANS
-                    && angle > -limit * SG_DEGREES_TO_RADIANS) { // in coverage?
+            glBindTexture(GL_TEXTURE_2D, _wxEcho->getHandle());
+            glColor3f(1.0f, 1.0f, 1.0f);
+            glBegin(GL_QUADS);
 
-                float echo_radius = echo_radii[type] * 120;
-                float size = echo_radius * UNIT;
-                float x = sin(bearing) * radius;
-                float y = cos(bearing) * radius;
-                float a_rot_x = sin(bearing + SGD_PI_4);
-                float a_rot_y = cos(bearing + SGD_PI_4);
-                float a_size_x = a_rot_x * size;
-                float a_size_y = a_rot_y * size;
+            glTexCoord2f(col, row);
+            glVertex2f(x - a_size_x, y - a_size_y);
+            glTexCoord2f(col + UNIT, row);
+            glVertex2f(x + a_size_y, y - a_size_x);
+            glTexCoord2f(col + UNIT, row + UNIT);
+            glVertex2f(x + a_size_x, y + a_size_y);
+            glTexCoord2f(col, row + UNIT);
+            glVertex2f(x - a_size_y, y + a_size_x);
 
-                glBindTexture(GL_TEXTURE_2D, _wxEcho->getHandle());
-                glColor3f(1.0f, 1.0f, 1.0f);
-                glBegin(GL_QUADS);
+            glEnd();
 
-                glTexCoord2f(col, row);
-                glVertex2f(x - a_size_x, y - a_size_y);
-                glTexCoord2f(col + UNIT, row);
-                glVertex2f(x + a_size_y, y - a_size_x);
-                glTexCoord2f(col + UNIT, row + UNIT);
-                glVertex2f(x + a_size_x, y + a_size_y);
-                glTexCoord2f(col, row + UNIT);
-                glVertex2f(x - a_size_y, y + a_size_x);
-
-                glEnd();
-
-                //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing AI"
-                //        << " x=" << x << " y=" << y
-                //        << " radius=" << radius
-                //        << " angle=" << angle * SG_RADIANS_TO_DEGREES);
-            }
+            //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing AI"
+            //        << " x=" << x << " y=" << y
+            //        << " radius=" << radius
+            //        << " angle=" << angle * SG_RADIANS_TO_DEGREES);
         }
 
         // data mode
         if (draw_symbols) {
-            if (angle < 120 * SG_DEGREES_TO_RADIANS
-                    && angle > -120 * SG_DEGREES_TO_RADIANS) { // in coverage?
+            float col = 0 * UNIT;
+            float row = 3 * UNIT;
 
-                float col = 0 * UNIT;
-                float row = 3 * UNIT;
+            float size = 500 * UNIT;
+            float x = sin(bearing) * radius;
+            float y = cos(bearing) * radius;
+            float d_rot_x = sin(heading + SGD_PI_4);
+            float d_rot_y = cos(heading + SGD_PI_4);
+            float d_size_x = d_rot_x * size;
+            float d_size_y = d_rot_y * size;
 
-                float size = 500 * UNIT;
-                float x = sin(bearing) * radius;
-                float y = cos(bearing) * radius;
-                float d_rot_x = sin(heading + SGD_PI_4);
-                float d_rot_y = cos(heading + SGD_PI_4);
-                float d_size_x = d_rot_x * size;
-                float d_size_y = d_rot_y * size;
+            glBindTexture(GL_TEXTURE_2D, _wxEcho->getHandle());
+            glColor3f(1.0f, 1.0f, 1.0f);
+            glBegin(GL_QUADS);
 
-                glBindTexture(GL_TEXTURE_2D, _wxEcho->getHandle());
-                glColor3f(1.0f, 1.0f, 1.0f);
-                glBegin(GL_QUADS);
+            glTexCoord2f(col, row);
+            glVertex2f(x - d_size_x, y - d_size_y);
+            glTexCoord2f(col + UNIT, row);
+            glVertex2f(x + d_size_y, y - d_size_x);
+            glTexCoord2f(col + UNIT, row + UNIT);
+            glVertex2f(x + d_size_x, y + d_size_y);
+            glTexCoord2f(col, row + UNIT);
+            glVertex2f(x - d_size_y, y + d_size_x);
 
-                glTexCoord2f(col, row);
-                glVertex2f(x - d_size_x, y - d_size_y);
-                glTexCoord2f(col + UNIT, row);
-                glVertex2f(x + d_size_y, y - d_size_x);
-                glTexCoord2f(col + UNIT, row + UNIT);
-                glVertex2f(x + d_size_x, y + d_size_y);
-                glTexCoord2f(col, row + UNIT);
-                glVertex2f(x - d_size_y, y + d_size_x);
+            glEnd();
 
-                glEnd();
-
-                //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing data"
-                //        << " x=" << x <<" y="<< y
-                //        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
-                //        << " radius=" << radius);
-            }
+            //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing data"
+            //        << " x=" << x <<" y="<< y
+            //        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
+            //        << " radius=" << radius);
         }
     }
 }
