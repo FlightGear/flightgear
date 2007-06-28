@@ -1413,11 +1413,9 @@ set_property(const string& arg)
         type = name.substr(0, pos);
         name = name.substr(pos + 1);
     }
-    if (type == "s" || type == "string") {
-        fgSetString(name.c_str(), value.c_str());
-        return true;
-    }
-    if (type == "d" || type == "double")
+    if (type == "s" || type == "string")
+        ;
+    else if (type == "d" || type == "double")
         fgSetDouble(name.c_str(), 0.0);
     else if (type == "f" || type == "float")
         fgSetFloat(name.c_str(), 0.0f);
