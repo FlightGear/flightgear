@@ -300,6 +300,7 @@ FGATCInstruction::FGATCInstruction()
   changeSpeed    = false;
   changeHeading  = false;
   changeAltitude = false;
+  resolveCircularWait = false;
 
   double speed   = 0;
   double heading = 0;
@@ -308,7 +309,7 @@ FGATCInstruction::FGATCInstruction()
 
 bool FGATCInstruction::hasInstruction()
 {
-  return (holdPattern || holdPosition || changeSpeed || changeHeading || changeAltitude);
+  return (holdPattern || holdPosition || changeSpeed || changeHeading || changeAltitude || resolveCircularWait);
 }
 
 

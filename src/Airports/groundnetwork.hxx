@@ -81,6 +81,12 @@ public:
   bool operator<(const FGTaxiNode &other) const { return index < other.index; };
 
   void sortEndSegments(bool);
+
+  // used in way finding
+  double pathscore;
+  FGTaxiNode* previousnode;
+  FGTaxiSegment* previousseg;
+  
 };
 
 typedef vector<FGTaxiNode*> FGTaxiNodeVector;
@@ -190,7 +196,7 @@ class FGGroundNetwork : public FGATCController
 {
 private:
   bool hasNetwork;
-  int maxDepth;
+  //int maxDepth;
   int count;
   FGTaxiNodeVector    nodes;
   FGTaxiSegmentVector segments;
@@ -230,7 +236,7 @@ public:
   FGTaxiNode *findNode(int idx);
   FGTaxiSegment *findSegment(int idx);
   FGTaxiRoute findShortestRoute(int start, int end);
-  void trace(FGTaxiNode *, int, int, double dist);
+  //void trace(FGTaxiNode *, int, int, double dist);
 
   void setParent(FGAirport *par) { parent = par; };
 
@@ -241,6 +247,8 @@ public:
   virtual void update(int id, double lat, double lon, double heading, double speed, double alt, double dt);
   virtual bool hasInstruction(int id);
   virtual FGATCInstruction getInstruction(int id);
+
+  bool checkForCircularWaits(int id);
 };
 
 

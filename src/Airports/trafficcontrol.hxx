@@ -58,6 +58,7 @@ private:
   bool changeSpeed;
   bool changeHeading;
   bool changeAltitude;
+  bool resolveCircularWait;
 
   double speed;
   double heading;
@@ -76,11 +77,15 @@ public:
   double getHeading     () { return heading; };
   double getAlt         () { return alt; };
 
+  bool getCheckForCircularWait() { return resolveCircularWait; };
+
   void setHoldPattern   (bool val) { holdPattern    = val; };
   void setHoldPosition  (bool val) { holdPosition   = val; };
   void setChangeSpeed   (bool val) { changeSpeed    = val; };
   void setChangeHeading (bool val) { changeHeading  = val; };
   void setChangeAltitude(bool val) { changeAltitude = val; };
+
+  void setResolveCircularWait (bool val) { resolveCircularWait = val; }; 
 
   void setSpeed       (double val) { speed   = val; };
   void setHeading     (double val) { heading = val; };
@@ -88,7 +93,7 @@ public:
 };
 
 
-/**************************************************************************************
+/**
  * class FGATCController
  * NOTE: this class serves as an abstraction layer for all sorts of ATC controller. 
  *************************************************************************************/
@@ -169,6 +174,9 @@ public:
   void setHoldPosition (bool inst) { instruction.setHoldPosition(inst); };
 
   void setWaitsForId(int id) { waitsForId = id; };
+
+  void setResolveCircularWait()   { instruction.setResolveCircularWait(true);  };
+  void clearResolveCircularWait() { instruction.setResolveCircularWait(false); };
 
   string getRunway() { return runway; };
   void setCallSign(string clsgn) { callsign = clsgn; };

@@ -232,7 +232,7 @@ FGGroundNetwork::FGGroundNetwork()
   foundRoute = false;
   totalDistance = 0;
   maxDistance = 0;
-  maxDepth    = 1000;
+  //maxDepth    = 1000;
   count       = 0;
   currTraffic = activeTraffic.begin();
 
@@ -392,172 +392,172 @@ FGTaxiSegment *FGGroundNetwork::findSegment(int idx)
     }
 }
 
+
 FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end) 
 {
-  double course;
-  double length;
-  foundRoute = false;
-  totalDistance = 0;
-  FGTaxiNode *firstNode = findNode(start);
-  FGTaxiNode *lastNode  = findNode(end);
-  //prevNode = prevPrevNode = -1;
-  //prevNode = start;
-  routes.clear();
-  nodesStack.clear();
-  routesStack.clear();
-  // calculate distance and heading "as the crow flies" between starn and end points"
-  SGWayPoint first(firstNode->getLongitude(),
-		   firstNode->getLatitude(),
-		   0);
-  destination = SGWayPoint(lastNode->getLongitude(),
-	       lastNode->getLatitude(),
-	       0);
-  
-  first.CourseAndDistance(destination, &course, &length);
-  for (FGTaxiSegmentVectorIterator 
-	 itr = segments.begin();
-       itr != segments.end(); itr++)
-    {
-      (*itr)->setCourseDiff(course);
-    } 
-  //FGTaxiNodeVectorIterator nde = nodes.begin();
-  //while (nde != nodes.end()) {
-  //  (*nde)->sortEndSegments();
-  //  nde++;
-  //}	
-  maxDepth = 1000;
-  //do
-  //  {
-  //    cerr << "Begin of Trace " << start << " to "<< end << " maximum depth = " << maxDepth << endl;
-      trace(firstNode, end, 0, 0);
-      //    maxDepth--;
-      //    }
-      //while ((routes.size() != 0) && (maxDepth > 0));
-      //cerr << "End of Trace" << endl;
-  FGTaxiRoute empty;
- 
-  if (!foundRoute)
-    {
-      SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find route from waypoint " << start << " to " << end << " at " << 
-	      parent->getId());
-      exit(1);
+//implements Dijkstra's algorithm to find shortest distance route from start to end
+//taken from http://en.wikipedia.org/wiki/Dijkstra's_algorithm
+
+    //double INFINITE = 100000000000.0;
+    // initialize scoring values
+    for (FGTaxiNodeVectorIterator
+         itr = nodes.begin();
+         itr != nodes.end(); itr++) {
+            (*itr)->pathscore = HUGE_VAL; //infinity by all practical means
+            (*itr)->previousnode = 0; //
+            (*itr)->previousseg = 0; //
+         }
+
+    FGTaxiNode *firstNode = findNode(start);
+    firstNode->pathscore = 0;
+
+    FGTaxiNode *lastNode  = findNode(end);
+
+    FGTaxiNodeVector unvisited(nodes); // working copy
+
+    while (!unvisited.empty()) {
+        FGTaxiNode* best = *(unvisited.begin());
+        for (FGTaxiNodeVectorIterator
+             itr = unvisited.begin();
+             itr != unvisited.end(); itr++) {
+                 if ((*itr)->pathscore < best->pathscore)
+                     best = (*itr);
+        }
+
+        FGTaxiNodeVectorIterator newend = remove(unvisited.begin(), unvisited.end(), best);
+        unvisited.erase(newend, unvisited.end());
+        
+        if (best == lastNode) { // found route or best not connected
+            break;
+        } else {
+            for (FGTaxiSegmentVectorIterator
+                 seg = best->getBeginRoute();
+                 seg != best->getEndRoute(); seg++) {
+                FGTaxiNode* tgt = (*seg)->getEnd();
+                double alt = best->pathscore + (*seg)->getLength();
+                if (alt < tgt->pathscore) {              // Relax (u,v)
+                    tgt->pathscore = alt;
+                    tgt->previousnode = best;
+                    tgt->previousseg = *seg; //
+                }
+            }
+        }
     }
-  sort(routes.begin(), routes.end());
-  //for (intVecIterator i = route.begin(); i != route.end(); i++)
-  //  {
-  //    rte->push_back(*i);
-  //  }
-  
-  if (routes.begin() != routes.end())
-    {
-     //  if ((routes.begin()->getDepth() < 0.5 * maxDepth) && (maxDepth > 1))
-// 	{
-// 	  maxDepth--;
-// 	  cerr << "Max search depth decreased to : " << maxDepth;
-// 	}
-//       else
-// 	{ 
-// 	  maxDepth++; 
-// 	  cerr << "Max search depth increased to : " << maxDepth;
-// 	}
-      return *(routes.begin());
+
+    if (lastNode->pathscore == HUGE_VAL) {
+        // no valid route found
+        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find route from waypoint " << start << " to " << end << " at " <<
+                parent->getId());
+        exit(1); //TODO exit more gracefully, no need to stall the whole sim with broken GN's
+    } else {
+        // assemble route from backtrace information
+        intVec nodes, routes;
+        FGTaxiNode* bt = lastNode;
+        while (bt->previousnode != 0) {
+            nodes.push_back(bt->getIndex());
+            routes.push_back(bt->previousseg->getIndex());
+            bt = bt->previousnode;
+        }
+        nodes.push_back(start);
+        reverse(nodes.begin(), nodes.end());
+        reverse(routes.begin(), routes.end());
+
+        return FGTaxiRoute(nodes, routes, lastNode->pathscore, 0);
     }
-  else
-    return empty;
 }
 
 
-void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double distance)
-{
-  // Just check some preconditions of the trace algorithm
-  if (nodesStack.size() != routesStack.size()) 
-    {
-      SG_LOG(SG_GENERAL, SG_ALERT, "size of nodesStack and routesStack is not equal. NodesStack :" 
-	     << nodesStack.size() << ". RoutesStack : " << routesStack.size());
-    }
-  nodesStack.push_back(currNode->getIndex());
-  totalDistance += distance;
-  //cerr << "Starting trace " << currNode->getIndex() << " " << "total distance: " << totalDistance << endl;
-  //     << currNode->getIndex() << endl;
-
-  // If the current route matches the required end point we found a valid route
-  // So we can add this to the routing table
-  if (currNode->getIndex() == end)
-    {
-      maxDepth = depth;
-      //cerr << "Found route : " <<  totalDistance << "" << " " << *(nodesStack.end()-1) << " Depth = " << depth << endl;
-      routes.push_back(FGTaxiRoute(nodesStack,routesStack,totalDistance, depth));
-      if (nodesStack.empty() || routesStack.empty())
-	{
-	  printRoutingError(string("while finishing route"));
-	}
-      nodesStack.pop_back();
-      routesStack.pop_back();
-      if (!(foundRoute)) {
-	maxDistance = totalDistance;
-      }
-      else
-	if (totalDistance < maxDistance)
-	  maxDistance = totalDistance;
-      foundRoute = true;
-      totalDistance -= distance;
-      return;
-    }
- 
-
-  // search if the currentNode has been encountered before
-  // if so, we should step back one level, because it is
-  // rather rediculous to proceed further from here. 
-  // if the current node has not been encountered before,
-  // i should point to nodesStack.end()-1; and we can continue
-  // if i is not nodesStack.end, the previous node was found, 
-  // and we should return. 
-  // This only works at trace levels of 1 or higher though
-  if (depth > 0) {
-    intVecIterator i = nodesStack.begin();
-    while ((*i) != currNode->getIndex()) {
-      //cerr << "Route so far : " << (*i) << endl;
-      i++;
-    }
-    if (i != nodesStack.end()-1) {
-      if (nodesStack.empty() || routesStack.empty())
-	{
-	  printRoutingError(string("while returning from an already encountered node"));
-	}
-      nodesStack.pop_back();
-      routesStack.pop_back();
-      totalDistance -= distance;
-      return;
-    }
-    if (depth >= maxDepth) {
-      count++;
-      if (!(count % 100000)) {
-	maxDepth--; // Gradually decrease maxdepth, to prevent "eternal searches"
-	//cerr << "Reducing maxdepth to " << maxDepth << endl;
-      }
-      nodesStack.pop_back();
-      routesStack.pop_back();
-      totalDistance -= distance;
-      return;
-    }
-    // If the total distance from start to the current waypoint
-    // is longer than that of a route we can also stop this trace 
-    // and go back one level. 
-    if ((totalDistance > maxDistance) && foundRoute)
-      //if (foundRoute)
-      {
-	//cerr << "Stopping rediculously long trace: " << totalDistance << endl;
-	if (nodesStack.empty() || routesStack.empty())
-	{
-	  printRoutingError(string("while returning from finding a rediculously long route"));
-	}
-	nodesStack.pop_back();
-	routesStack.pop_back();
-	totalDistance -= distance;
-	return;
-      }
-  }
-  
+// void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double distance)
+// {
+//   // Just check some preconditions of the trace algorithm
+//   if (nodesStack.size() != routesStack.size()) 
+//     {
+//       SG_LOG(SG_GENERAL, SG_ALERT, "size of nodesStack and routesStack is not equal. NodesStack :" 
+// 	     << nodesStack.size() << ". RoutesStack : " << routesStack.size());
+//     }
+//   nodesStack.push_back(currNode->getIndex());
+//   totalDistance += distance;
+//   //cerr << "Starting trace " << currNode->getIndex() << " " << "total distance: " << totalDistance << endl;
+//   //     << currNode->getIndex() << endl;
+// 
+//   // If the current route matches the required end point we found a valid route
+//   // So we can add this to the routing table
+//   if (currNode->getIndex() == end)
+//     {
+//       maxDepth = depth;
+//       //cerr << "Found route : " <<  totalDistance << "" << " " << *(nodesStack.end()-1) << " Depth = " << depth << endl;
+//       routes.push_back(FGTaxiRoute(nodesStack,routesStack,totalDistance, depth));
+//       if (nodesStack.empty() || routesStack.empty())
+// 	{
+// 	  printRoutingError(string("while finishing route"));
+// 	}
+//       nodesStack.pop_back();
+//       routesStack.pop_back();
+//       if (!(foundRoute)) {
+// 	maxDistance = totalDistance;
+//       }
+//       else
+// 	if (totalDistance < maxDistance)
+// 	  maxDistance = totalDistance;
+//       foundRoute = true;
+//       totalDistance -= distance;
+//       return;
+//     }
+//  
+// 
+//   // search if the currentNode has been encountered before
+//   // if so, we should step back one level, because it is
+//   // rather rediculous to proceed further from here. 
+//   // if the current node has not been encountered before,
+//   // i should point to nodesStack.end()-1; and we can continue
+//   // if i is not nodesStack.end, the previous node was found, 
+//   // and we should return. 
+//   // This only works at trace levels of 1 or higher though
+//   if (depth > 0) {
+//     intVecIterator i = nodesStack.begin();
+//     while ((*i) != currNode->getIndex()) {
+//       //cerr << "Route so far : " << (*i) << endl;
+//       i++;
+//     }
+//     if (i != nodesStack.end()-1) {
+//       if (nodesStack.empty() || routesStack.empty())
+// 	{
+// 	  printRoutingError(string("while returning from an already encountered node"));
+// 	}
+//       nodesStack.pop_back();
+//       routesStack.pop_back();
+//       totalDistance -= distance;
+//       return;
+//     }
+//     if (depth >= maxDepth) {
+//       count++;
+//       if (!(count % 100000)) {
+// 	maxDepth--; // Gradually decrease maxdepth, to prevent "eternal searches"
+// 	//cerr << "Reducing maxdepth to " << maxDepth << endl;
+//       }
+//       nodesStack.pop_back();
+//       routesStack.pop_back();
+//       totalDistance -= distance;
+//       return;
+//     }
+//     // If the total distance from start to the current waypoint
+//     // is longer than that of a route we can also stop this trace 
+//     // and go back one level. 
+//     if ((totalDistance > maxDistance) && foundRoute)
+//       //if (foundRoute)
+//       {
+// 	//cerr << "Stopping rediculously long trace: " << totalDistance << endl;
+// 	if (nodesStack.empty() || routesStack.empty())
+// 	{
+// 	  printRoutingError(string("while returning from finding a rediculously long route"));
+// 	}
+// 	nodesStack.pop_back();
+// 	routesStack.pop_back();
+// 	totalDistance -= distance;
+// 	return;
+//       }
+//   }
+/*  
   //cerr << "2" << endl;
   if (currNode->getBeginRoute() != currNode->getEndRoute())
     {
@@ -625,7 +625,7 @@ void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double dis
     }
   totalDistance -= distance;
   return;
-}
+}*/
 
 void FGGroundNetwork::printRoutingError(string mess)
 {
@@ -729,20 +729,34 @@ void FGGroundNetwork::update(int id, double lat, double lon, double heading, dou
    //  return;
    //else
    //  setDt(0);
+   current->clearResolveCircularWait();
+   current->setWaitsForId(0);
    checkSpeedAdjustment(id, lat, lon, heading, speed, alt);
    checkHoldPosition   (id, lat, lon, heading, speed, alt);
+   if (checkForCircularWaits(id)) {
+       i->setResolveCircularWait();
+   }
 }
+
+/**
+   Scan for a speed adjustment change. Find the nearest aircraft that is in front
+   and adjust speed when we get too close. Only do this when current position and/or
+   intentions of the current aircraft match current taxiroute position of the proximate
+   aircraft. For traffic that is on other routes we need to issue a "HOLD Position"
+   instruction. See below for the hold position instruction.
+
+   Note that there currently still is one flaw in the logic that needs to be addressed. 
+   can be situations where one aircraft is in front of the current aircraft, on a separate
+   route, but really close after an intersection coming off the current route. This
+   aircraft is still close enough to block the current aircraft. This situation is currently
+   not addressed yet, but should be.
+*/
 
 void FGGroundNetwork::checkSpeedAdjustment(int id, double lat, 
 					   double lon, double heading, 
 					   double speed, double alt)
 {
   
-  // Scan for a speed adjustment change. Find the nearest aircraft that is in front
-  // and adjust speed when we get too close. Only do this when current position and/or
-  // intentions of the current aircraft match current taxiroute position of the proximate
-  // aircraft. For traffic that is on other routes we need to issue a "HOLD Position"
-  // instruction. See below for the hold position instruction.
   TrafficVectorIterator current, closest;
   TrafficVectorIterator i = activeTraffic.begin();
   bool otherReasonToSlowDown = false;
@@ -766,6 +780,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
   }
   current = i;
   //closest = current;
+  
   previousInstruction = current->getSpeedAdjustment();
   double mindist = HUGE;
   if (activeTraffic.size()) 
@@ -877,15 +892,18 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
     }
 }
 
+/**
+   Check for "Hold position instruction".
+   The hold position should be issued under the following conditions:
+   1) For aircraft entering or crossing a runway with active traffic on it, or landing aircraft near it
+   2) For taxiing aircraft that use one taxiway in opposite directions
+   3) For crossing or merging taxiroutes.
+*/
+
 void FGGroundNetwork::checkHoldPosition(int id, double lat, 
 					double lon, double heading, 
 					double speed, double alt)
 {
-  // Check for "Hold position instruction".
-  // The hold position should be issued under the following conditions:
-  // 1) For aircraft entering or crossing a runway with active traffic on it, or landing aircraft near it
-  // 2) For taxiing aircraft that use one taxiway in opposite directions
-  // 3) For crossing or merging taxiroutes.
   
   TrafficVectorIterator current;
   TrafficVectorIterator i = activeTraffic.begin();
@@ -928,8 +946,7 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
   	      SGWayPoint nodePos(findNode(node)->getLongitude  (),
   				 findNode(node)->getLatitude   (),
   				 alt);
-	      
-	      
+
   	      SGWayPoint other    (i->getLongitude  (),
   				   i->getLatitude (),
   				   i->getAltitude  ());
@@ -979,6 +996,7 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
 		    
   		    {
   		      current->setHoldPosition(true);
+		      current->setWaitsForId(i->getId());
   		      //cerr << "Hold check 5: " << current->getCallSign() <<"  Setting Hold Position: distance to node ("  << node << ") "
 		      //	   << dist << " meters. Waiting for " << i->getCallSign();
 		      //if (opposing)
@@ -997,6 +1015,101 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
   	    }
   	}
     }
+}
+
+/**
+ * Check whether situations occur where the current aircraft is waiting for itself
+ * due to higher order interactions. 
+ * A 'circular' wait is a situation where a waits for b, b waits for c, and c waits
+ * for a. Ideally each aircraft only waits for one other aircraft, so by tracing 
+ * through this list of waiting aircraft, we can check if we'd eventually end back 
+ * at the current aircraft.
+ *
+ * Note that we should consider the situation where we are actually checking aircraft
+ * d, which is waiting for aircraft a. d is not part of the loop, but is held back by
+ * the looping aircraft. If we don't check for that, this function will get stuck into
+ * endless loop.
+ */
+
+bool FGGroundNetwork::checkForCircularWaits(int id)
+{  
+   //cerr << "Performing Wait check " << id << endl;
+   int target = 0;
+   TrafficVectorIterator current, other;
+   TrafficVectorIterator i = activeTraffic.begin();
+   int trafficSize = activeTraffic.size();
+   if (trafficSize)  {
+        //while ((i->getId() != id) && i != activeTraffic.end()) 
+        while (i != activeTraffic.end()) {
+        if (i->getId() == id) {
+	    break;
+	}
+	i++;
+    }
+  }
+  else {
+      return false;
+  } 
+  if (i == activeTraffic.end() || (trafficSize == 0)) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits");
+  }
+   
+   current = i;
+   target = current->getWaitsForId();
+   //bool printed = false; // Note that this variable is for debugging purposes only.
+   int counter = 0;
+   while ((target > 0) && (target != id) && counter++ < trafficSize) {
+    //printed = true;
+     TrafficVectorIterator i = activeTraffic.begin();
+     if (trafficSize)  {
+          //while ((i->getId() != id) && i != activeTraffic.end()) 
+          while (i != activeTraffic.end()) {
+          if (i->getId() == target) {
+	      break;
+	  }
+	  i++;
+        }
+      }
+      else {
+        return false;
+    } 
+    if (i == activeTraffic.end() || (trafficSize == 0)) {
+	//cerr << "[Waiting for traffic at Runway: DONE] " << endl << endl;;
+      // The target id is not found on the current network, which means it's at the tower
+      //SG_LOG(SG_GENERAL, SG_ALERT, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits");
+      return false;
+    }
+    other = i;
+    target = other->getWaitsForId();
+
+    // actually this trap isn't as impossible as it first seemed:
+    // the setWaitsForID(id) is set to current when the aircraft
+    // is waiting for the user controlled aircraft. 
+    //if (current->getId() == other->getId()) {
+    //    cerr << "Caught the impossible trap" << endl;
+    //    cerr << "Current = " << current->getId() << endl;
+    //    cerr << "Other   = " << other  ->getId() << endl;
+    //    for (TrafficVectorIterator at = activeTraffic.begin();
+    //          at != activeTraffic.end();
+    //          at++) {
+    //        cerr << "currently active aircraft : " << at->getCallSign() << " with Id " << at->getId() << " waits for " << at->getWaitsForId() << endl;
+    //    }
+    //    exit(1);
+    if (current->getId() == other->getId())
+	return false;
+    //}
+    //cerr << current->getCallSign() << " (" << current->getId()  << ") " << " -> " << other->getCallSign() 
+    //     << " (" << other->getId()  << "); " << endl;;
+    //current = other;
+   }
+   //if (printed)
+   //   cerr << "[done] " << endl << endl;;
+   if (id == target) {
+       SG_LOG(SG_GENERAL, SG_INFO, "Detected circular wait condition");
+       return true;
+   } else {
+   return false;
+   }
 }
 
 // Note that this function is probably obsolete...
@@ -1044,4 +1157,5 @@ FGATCInstruction FGGroundNetwork::getInstruction(int id)
    }
   return FGATCInstruction();
 }
+
 
