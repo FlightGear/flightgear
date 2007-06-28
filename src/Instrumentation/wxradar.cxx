@@ -223,8 +223,10 @@ wxRadarBg::update (double delta_time_sec)
             _y_offset += _scale * user_speed_north_fps * SG_FPS_TO_KT * delta_time_sec / (60*60);
 
             bool centre = _radar_centre_node->getBoolValue();
-            if (centre)
+            if (centre) {
                 _x_offset = _y_offset = 0;
+                _radar_centre_node->setBoolValue(false);
+            }
 
             //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: displacement "
             //        << _x_offset <<", "<<_y_offset
@@ -362,8 +364,8 @@ wxRadarBg::update_weather()
                 float y = sin(angle) * radius;
 
                 // we will rotate the echo quads, this gives a better rendering
-                const float rot_x = cos (_angle_offset);
-                const float rot_y = sin (_angle_offset);
+                const float rot_x = cos (-_angle_offset);
+                const float rot_y = sin (-_angle_offset);
 
                 float size_x = rot_x * size;
                 float size_y = rot_y * size;
@@ -626,7 +628,7 @@ wxRadarBg::update_heading_marker()
 {
     float col = 2 * UNIT;
     float row = 3 * UNIT;
-    float angle = _display_mode == ARC ? 0 : _view_heading;
+    float angle = _view_heading + _angle_offset;
 
     float x = sin(angle);
     float y = cos(angle);
