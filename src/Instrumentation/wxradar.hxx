@@ -68,10 +68,10 @@ private:
     float _range_nm;
     float _scale;   // factor to convert nm to display units
     double _radar_ref_rng;
-    float _x_offset;
-    float _y_offset;
     float _angle_offset;
     float _view_heading;
+    double _lat, _lon;
+    float _x_offset, _y_offset;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
@@ -114,6 +114,8 @@ private:
     void update_tacan();
     void update_heading_marker();
 
+    void center_map();
+    void apply_map_offset();
     bool withinRadarHorizon(double user_alt, double alt, double range);
     bool inRadarRange(int type, double range);
     float calcRelBearing(float bearing, float heading);

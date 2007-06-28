@@ -167,12 +167,16 @@ wxRadarBg::update (double delta_time_sec)
     _time = 0.0;
 
     string mode = _Instrument->getStringValue("display-mode", "arc");
-    if (mode == "map")
-        _display_mode = MAP;
-    else if (mode == "plan")
+    if (mode == "map") {
+        if (_display_mode != MAP) {
+            _display_mode = MAP;
+            center_map();
+        }
+    } else if (mode == "plan") {
         _display_mode = PLAN;
-    else
+    } else {
         _display_mode = ARC;
+    }
 
     string switchKnob = _Instrument->getStringValue("switch", "on");
     if ( _last_switchKnob != switchKnob ) {
@@ -203,7 +207,12 @@ wxRadarBg::update (double delta_time_sec)
         _Instrument->setStringValue("status","TST");
         // find something interesting to do...
     } else {
-        _range_nm = _Instrument->getFloatValue("range", 40.0);
+        float r = _Instrument->getFloatValue("range", 40.0);
+        if (r != _range_nm) {
+            center_map();
+            _range_nm = r;
+        }
+
         _radar_ref_rng = _radar_ref_rng_node->getDoubleValue();
         _view_heading = get_heading() * SG_DEGREES_TO_RADIANS;
 
@@ -216,15 +225,11 @@ wxRadarBg::update (double delta_time_sec)
             glTranslatef(0.0f, -180.0f, 0.0f);
 
         } else if ( _display_mode == MAP ) {
-            double user_speed_east_fps = _user_speed_east_fps_node->getDoubleValue();
-            double user_speed_north_fps = _user_speed_north_fps_node->getDoubleValue();
-
-            _x_offset += _scale * user_speed_east_fps * SG_FPS_TO_KT * delta_time_sec / (60*60);
-            _y_offset += _scale * user_speed_north_fps * SG_FPS_TO_KT * delta_time_sec / (60*60);
+            apply_map_offset();
 
             bool centre = _radar_centre_node->getBoolValue();
             if (centre) {
-                _x_offset = _y_offset = 0;
+                center_map();
                 _radar_centre_node->setBoolValue(false);
             }
 
@@ -660,6 +665,33 @@ wxRadarBg::update_heading_marker()
     //        << " view_heading" << _view_heading * SG_RADIANS_TO_DEGREES
     //        << " heading " << iradarEcho->heading * SG_RADIANS_TO_DEGREES
     //        << " angle " << angle * SG_RADIANS_TO_DEGREES);
+}
+
+
+void
+wxRadarBg::center_map()
+{
+    _lat = _user_lat_node->getDoubleValue();
+    _lon = _user_lon_node->getDoubleValue();
+    _x_offset = _y_offset = 0;
+}
+
+
+void
+wxRadarBg::apply_map_offset()
+{
+    if (_display_mode != MAP)
+        return;
+    double lat = _user_lat_node->getDoubleValue();
+    double lon = _user_lon_node->getDoubleValue();
+    double bearing, distance, az2;
+    geo_inverse_wgs_84(_lat, _lon, lat, lon, &bearing, &az2, &distance);
+    distance *= SG_METER_TO_NM * _scale;
+    bearing *= SG_DEGREES_TO_RADIANS;
+    _x_offset += sin(bearing) * distance;
+    _y_offset += cos(bearing) * distance;
+    _lat = lat;
+    _lon = lon;
 }
 
 
