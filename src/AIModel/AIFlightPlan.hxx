@@ -134,14 +134,16 @@ private:
 
   void createPushBack(bool, FGAirport*, double, double, double, const string&, const string&, const string&);
   void createTaxi(bool, int, FGAirport *, double, double, double, const string&, const string&, const string&);
-  void createTakeOff(bool, FGAirport *, double);
-  void createClimb(bool, FGAirport *, double, double);
-  void createCruise(bool, FGAirport*, FGAirport*, double, double, double, double);
-  void createDecent(FGAirport *);
+  void createTakeOff(bool, FGAirport *, double, const string&);
+  void createClimb(bool, FGAirport *, double, double, const string&);
+  void createCruise(bool, FGAirport*, FGAirport*, double, double, double, double, const string&);
+  void createDecent(FGAirport *, const string&);
   void createLanding(FGAirport *);
   void createParking(FGAirport *, double radius);
   void deleteWaypoints(); 
   void resetWaypoints();
+
+  string getRunwayClassFromTrafficType(string fltType);
 
   //void createCruiseFallback(bool, FGAirport*, FGAirport*, double, double, double, double);
  void evaluateRoutePart(double deplat, double deplon, double arrlat, double arrlon);

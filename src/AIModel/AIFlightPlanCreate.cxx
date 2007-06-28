@@ -53,16 +53,16 @@ void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, int legNr,
 		 radius, fltType, aircraftType, airline);
       break;
     case 3: 
-      createTakeOff(firstFlight, dep, speed);
+      createTakeOff(firstFlight, dep, speed, fltType);
       break;
     case 4: 
-      createClimb(firstFlight, dep, speed, alt);
+      createClimb(firstFlight, dep, speed, alt, fltType);
       break;
     case 5: 
-      createCruise(firstFlight, dep,arr, latitude, longitude, speed, alt);
+      createCruise(firstFlight, dep,arr, latitude, longitude, speed, alt, fltType);
       break;
     case 6: 
-      createDecent(arr);
+      createDecent(arr, fltType);
       break;
     case 7: 
       createLanding(arr);
@@ -225,17 +225,15 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  //wpt->on_ground = true;
 	  //waypoints.push_back(wpt);  
 	}
-      // "NOTE: this is currently fixed to "com" for commercial traffic
-      // Should be changed to be used dynamically to allow "gen" and "mil"
-      // as well
-      apt->getDynamics()->getActiveRunway("com", 1, activeRunway);
+      string rwyClass = getRunwayClassFromTrafficType(fltType);
+      apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway);
       if (!(globals->get_runways()->search(apt->getId(), 
 					    activeRunway, 
 					    &rwy)))
 	{
 	   SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
 		  activeRunway << 
-		  " at airport     " << apt->getId());
+		  " at airport     " << apt->getId() << " of class " << rwyClass << " (1)");
 	   exit(1);
 	} 
 
@@ -572,7 +570,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
  * CreateTakeOff 
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double speed)
+void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double speed, const string &fltType)
 {
   double heading;
   double lat, lon, az;
@@ -585,17 +583,15 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   if (firstFlight)
     {
       //string name;
-       // "NOTE: this is currently fixed to "com" for commercial traffic
-      // Should be changed to be used dynamically to allow "gen" and "mil"
-      // as well
-      apt->getDynamics()->getActiveRunway("com", 1, activeRunway);
+      string rwyClass = getRunwayClassFromTrafficType(fltType);
+      apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway);
 	if (!(globals->get_runways()->search(apt->getId(), 
 					      activeRunway, 
 					      &rwy)))
 	  {
 	    SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
 		   activeRunway << 
-		   " at airport     " << apt->getId());
+		   " at airport     " << apt->getId()<< " of class " << rwyClass << " (2)");
 	    exit(1);
 	  }
     }
@@ -709,7 +705,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
  * CreateClimb
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed, double alt)
+void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed, double alt, const string &fltType)
 {
   double heading;
   //FGRunway rwy;
@@ -721,17 +717,15 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
   if (firstFlight)
     {
       //string name;
-      // "NOTE: this is currently fixed to "com" for commercial traffic
-      // Should be changed to be used dynamically to allow "gen" and "mil"
-      // as well
-      apt->getDynamics()->getActiveRunway("com", 1, activeRunway);
+      string rwyClass = getRunwayClassFromTrafficType(fltType);
+      apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway);
 	if (!(globals->get_runways()->search(apt->getId(), 
 					      activeRunway, 
 					      &rwy)))
 	  {
 	    SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
 		   activeRunway << 
-		   " at airport     " << apt->getId());
+		   " at airport     " << apt->getId()<< " of class " << rwyClass << " (3)");
 	    exit(1);
 	  }
     }
@@ -846,7 +840,7 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
  * CreateDecent
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createDecent(FGAirport *apt)
+void FGAIFlightPlan::createDecent(FGAirport *apt, const string &fltType)
 {
 
   // Ten thousand ft. Slowing down to 240 kts
@@ -860,14 +854,15 @@ void FGAIFlightPlan::createDecent(FGAirport *apt)
   //Beginning of Decent
   //string name;
   // allow "mil" and "gen" as well
-  apt->getDynamics()->getActiveRunway("com", 2, activeRunway);
+  string rwyClass = getRunwayClassFromTrafficType(fltType);
+  apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway);
   if (!(globals->get_runways()->search(apt->getId(), 
 				       activeRunway, 
 				       &rwy)))
     {
       SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
 	     activeRunway << 
-	     " at airport     " << apt->getId());
+	     " at airport     " << apt->getId()<< " of class " << rwyClass << " (4)");
       exit(1);
     }
   
@@ -1044,4 +1039,43 @@ void FGAIFlightPlan::createParking(FGAirport *apt, double radius)
   wpt->on_ground = true;
   wpt->routeIndex = 0;
   waypoints.push_back(wpt);
+}
+
+/**
+ *
+ * @param fltType a string describing the type of
+ * traffic, normally used for gate assignments
+ * @return a converted string that gives the runway
+ * preference schedule to be used at aircraft having
+ * a preferential runway schedule implemented (i.e.
+ * having a rwyprefs.xml file
+ * 
+ * Currently valid traffic types for gate assignment:
+ * - gate (commercial gate)
+ * - cargo (commercial gargo),
+ * - ga (general aviation) ,
+ * - ul (ultralight),
+ * - mil-fighter (military - fighter),
+ * - mil-transport (military - transport)
+ *
+ * Valid runway classes:
+ * - com (commercial traffic: jetliners, passenger and cargo)
+ * - gen (general aviation)
+ * - ul (ultralight: I can imagine that these may share a runway with ga on some airports)
+ * - mil (all military traffic)
+ */
+string FGAIFlightPlan::getRunwayClassFromTrafficType(string fltType)
+{
+    if ((fltType == "gate") || (fltType == "cargo")) { 
+	return string("com");
+    }
+    if (fltType == "ga") {
+        return string ("gen");
+    }
+    if (fltType == "ul") {
+        return string("ul");
+    }
+    if ((fltType == "mil-fighter") || (fltType == "mil-transport")) { 
+	return string("mil");
+    }
 }

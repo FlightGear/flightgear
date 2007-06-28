@@ -319,7 +319,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
 void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep, 
 				  FGAirport *arr, double latitude, 
 				  double longitude, double speed, 
-				  double alt)
+				  double alt, const string& fltType)
 {
   double wind_speed;
   double wind_heading;
@@ -344,15 +344,15 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
   waypoints.push_back(wpt); 
   
  
-  // should be changed dynamically to allow "gen" and "mil"
-  arr->getDynamics()->getActiveRunway("com", 2, activeRunway);
+  string rwyClass = getRunwayClassFromTrafficType(fltType);
+  arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway);
   if (!(globals->get_runways()->search(arr->getId(), 
 				       activeRunway, 
 				       &rwy)))
     {
       SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
 	     activeRunway << 
-	     " at airport     " << arr->getId());
+	     " at airport     " << arr->getId()<< " of class " << rwyClass << " (5)");
       exit(1);
     }
   heading = rwy._heading;
