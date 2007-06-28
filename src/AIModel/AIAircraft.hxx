@@ -30,33 +30,11 @@
 #include <string>
 SG_USING_STD(string);
 
+class PerformanceData;
 
 class FGAIAircraft : public FGAIBase {
 
-private:
-    typedef struct {
-        double accel;
-        double decel;
-        double climb_rate;
-        double descent_rate;
-        double takeoff_speed;
-        double climb_speed;
-        double cruise_speed;
-        double descent_speed;
-        double land_speed;
-    } PERF_STRUCT;
-
 public:
-    enum aircraft_e {
-        LIGHT = 0,
-        WW2_FIGHTER,
-        JET_TRANSPORT,
-        JET_FIGHTER,
-        TANKER,
-        UFO
-    };
-    static const PERF_STRUCT settings[];
-
     FGAIAircraft(FGAISchedule *ref=0);
     ~FGAIAircraft();
 
@@ -68,32 +46,45 @@ public:
     virtual void update(double dt);
 
     void setPerformance(const std::string& perfString);
-    void SetPerformance(const PERF_STRUCT *ps);
+    void setPerformance(PerformanceData *ps);
+
     void setFlightPlan(const std::string& fp, bool repat = false);
     void SetFlightPlan(FGAIFlightPlan *f);
     void initializeFlightPlan();
     FGAIFlightPlan* GetFlightPlan() const { return fp; };
+    void ProcessFlightPlan( double dt, time_t now );
+    
     void AccelTo(double speed);
     void PitchTo(double angle);
     void RollTo(double angle);
     void YawTo(double angle);
     void ClimbTo(double altitude);
     void TurnTo(double heading);
-    void ProcessFlightPlan( double dt, time_t now );
+    
     void setCallSign(const string& );
 
-    void getGroundElev(double dt);
+    void getGroundElev(double dt); //TODO these 3 really need to be public?
     void doGroundAltitude();
     void loadNextLeg  ();
 
     void setAcType(const string& ac) { acType = ac; };
     void setCompany(const string& comp) { company = comp;};
 
-    void announcePositionToController();
+    void announcePositionToController(); //TODO have to be public?
     void processATC(FGATCInstruction instruction);
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
+    // included as performance data needs them, who else?
+    inline bool onGround() const { return no_roll; };
+    inline double getSpeed() const { return speed; };
+    inline double getRoll() const { return roll; };
+    inline double getPitch() const { return pitch; };
+    inline double getAltitude() const { return altitude_ft; };
+    inline double getVerticalSpeed() const { return vs; };
+    inline double altitudeAGL() const { return props->getFloatValue("position/altitude-agl-ft");};
+    inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
+    
 protected:
     void Run(double dt);
 
@@ -110,11 +101,12 @@ private:
     double groundOffset;
     double dt;
 
-    const PERF_STRUCT *performance;
     bool use_perf_vs;
     SGPropertyNode_ptr refuel_node;
 
     // helpers for Run
+    //TODO sort out which ones are better protected virtuals to allow
+    //subclasses to override specific behaviour
     bool fpExecutable(time_t now);
     void handleFirstWaypoint(void);
     bool leadPointReached(FGAIFlightPlan::waypoint* curr);
@@ -122,16 +114,17 @@ private:
     bool aiTrafficVisible(void);
     void controlHeading(FGAIFlightPlan::waypoint* curr);
     void controlSpeed(FGAIFlightPlan::waypoint* curr,
-                        FGAIFlightPlan::waypoint* next);
-    bool updateTargetValues();
-    void adjustSpeed(double tgt_speed);
+                      FGAIFlightPlan::waypoint* next);
+    void updatePrimaryTargetValues();
+    void updateSecondaryTargetValues();
     void updatePosition();
     void updateHeading();
-    void updateBankAngles();
-    void updateAltitudes();
-    void updateVerticalSpeed();
-    void matchPitchAngle();
-            
+    void updateBankAngleTarget();
+    void updateVerticalSpeedTarget();
+    void updatePitchAngleTarget();
+    void updateActualState();
+    void handleATCRequests();
+
     double sign(double x);
 
     string acType;
@@ -146,6 +139,8 @@ private:
     bool _getGearDown() const;
     bool reachedWaypoint;
     string callsign;             // The callsign of this tanker.
+
+    PerformanceData* _performance; // the performance data for this aircraft
 };
 
 

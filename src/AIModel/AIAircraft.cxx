@@ -43,28 +43,15 @@
 SG_USING_STD(string);
 
 #include "AIAircraft.hxx"
+#include "performancedata.hxx"
+#include "performancedb.hxx"
+
 //#include <Airports/trafficcontroller.hxx>
 
 static string tempReg;
-//
-// accel, decel, climb_rate, descent_rate, takeoff_speed, climb_speed,
-// cruise_speed, descent_speed, land_speed
-//
 
-const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
-            // light aircraft
-            {2.0, 2.0,  450.0, 1000.0,  70.0,  80.0, 100.0,  80.0,  60.0},
-            // ww2_fighter
-            {4.0, 2.0, 3000.0, 1500.0, 110.0, 180.0, 250.0, 200.0, 100.0},
-            // jet_transport
-            {5.0, 2.0, 3000.0, 1500.0, 140.0, 300.0, 430.0, 300.0, 130.0},
-            // jet_fighter
-            {7.0, 3.0, 4000.0, 2000.0, 150.0, 350.0, 500.0, 350.0, 150.0},
-            // tanker
-            {5.0, 2.0, 3000.0, 1500.0, 140.0, 300.0, 430.0, 300.0, 130.0},
-            // ufo (extreme accel/decel)
-            {30.0, 30.0, 6000.0, 6000.0, 150.0, 300.0, 430.0, 300.0, 130.0}
-        };
+class AI_OutOfSight{};
+class FP_Inactive{};
 
 FGAIAircraft::FGAIAircraft(FGAISchedule *ref) : FGAIBase(otAircraft) {
     trafficRef = ref;
@@ -92,6 +79,8 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) : FGAIBase(otAircraft) {
     headingChangeRate = 0.0;
 
     holdPos = false;
+
+    _performance = 0; //TODO initialize to JET_TRANSPORT from PerformanceDB
 }
 
 
@@ -138,62 +127,36 @@ void FGAIAircraft::update(double dt) {
     Transform();
 }
 
-
 void FGAIAircraft::setPerformance(const std::string& acclass) {
-    if (acclass == "light") {
-        SetPerformance(&FGAIAircraft::settings[FGAIAircraft::LIGHT]);
-    } else if (acclass == "ww2_fighter") {
-        SetPerformance(&FGAIAircraft::settings[FGAIAircraft::WW2_FIGHTER]);
-    } else if (acclass == "jet_transport") {
-        SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
-    } else if (acclass == "jet_fighter") {
-        SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_FIGHTER]);
-    } else if (acclass == "tanker") {
-        SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
-    } else if (acclass == "ufo") {
-        SetPerformance(&FGAIAircraft::settings[FGAIAircraft::UFO]);
-    } else {
-        SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
-    }
-}
+     static PerformanceDB perfdb; //TODO make it a global service
+     setPerformance(perfdb.getDataFor(acclass));
+  }
 
 
-void FGAIAircraft::SetPerformance(const PERF_STRUCT *ps) {
+ void FGAIAircraft::setPerformance(PerformanceData *ps) {
+     _performance = ps;
+  }
 
-    performance = ps;
-}
 
+ void FGAIAircraft::Run(double dt) {
+      FGAIAircraft::dt = dt;
 
-void FGAIAircraft::Run(double dt) {
+     try {
+         updatePrimaryTargetValues(); // target hdg, alt, speed
+     }
+     catch (AI_OutOfSight) {
+         return;
+     }
+     catch (FP_Inactive) {
+         return;
+     }
 
-    FGAIAircraft::dt = dt;
-    if (!updateTargetValues())
-        return;
+     handleATCRequests(); // ATC also has a word to say
+     updateSecondaryTargetValues(); // target roll, vertical speed, pitch
+     updateActualState(); 
+     UpdateRadar(manager);
+  }
 
-    if (controller) {
-        controller->update(getID(),
-                           pos.getLatitudeDeg(),
-                           pos.getLongitudeDeg(),
-                           hdg,
-                           speed,
-                           altitude_ft, dt);
-        processATC(controller->getInstruction(getID()));
-    }
-
-    if (no_roll) {
-        adjustSpeed(groundTargetSpeed);
-    } else {
-        adjustSpeed(tgt_speed);
-    }
-
-    updatePosition();
-    updateHeading();
-    updateBankAngles();
-    updateAltitudes();
-    updateVerticalSpeed();
-    matchPitchAngle();
-    UpdateRadar(manager);
-}
 
 
 void FGAIAircraft::AccelTo(double speed) {
@@ -352,9 +315,7 @@ void FGAIAircraft::initializeFlightPlan() {
 
 
 bool FGAIAircraft::_getGearDown() const {
-    return ((props->getFloatValue("position/altitude-agl-ft") < 900.0)
-            && (props->getFloatValue("velocities/airspeed-kt")
-                < performance->land_speed*1.25));
+    return _performance->gearExtensible(this);
 }
 
 
@@ -403,8 +364,8 @@ void FGAIAircraft::getGroundElev(double dt) {
     // to prevent all IA objects doing this in synchrony
     if (dt_elev_count < (3.0) + (rand() % 10))
         return;
-    else
-        dt_elev_count = 0;
+
+    dt_elev_count = 0;
 
     // Only do the proper hitlist stuff if we are within visible range of the viewer.
     if (!invisible) {
@@ -511,6 +472,17 @@ void FGAIAircraft::announcePositionToController() {
 
 
 void FGAIAircraft::processATC(FGATCInstruction instruction) {
+    if (instruction.getCheckForCircularWait()) {
+        // This is not exactly an elegant solution, 
+        // but at least it gives me a chance to check
+        // if circular waits are resolved.
+        // For now, just take the offending aircraft 
+        // out of the scene
+	setDie(true);
+        // a more proper way should be - of course - to
+        // let an offending aircraft take an evasive action
+        // for instance taxi back a little bit.
+    }
     //cerr << "Processing ATC instruction (not Implimented yet)" << endl;
     if (instruction.getHoldPattern   ()) {}
 
@@ -755,7 +727,7 @@ void FGAIAircraft::controlSpeed(FGAIFlightPlan::waypoint* curr, FGAIFlightPlan::
 /**
  * Update target values (heading, alt, speed) depending on flight plan or control properties
  */
-bool FGAIAircraft::updateTargetValues() {
+void FGAIAircraft::updatePrimaryTargetValues() {
     if (fp)                      // AI object has a flightplan
     {
         //TODO make this a function of AIBase
@@ -767,13 +739,13 @@ bool FGAIAircraft::updateTargetValues() {
             // Are repositioned to the correct ground altitude when the user flies within visibility range.
             // In addition, check whether we are out of user range, so this aircraft
             // can be deleted.
-            if (no_roll) {
+            if (onGround()) {
                 Transform();     // make sure aip is initialized.
                 if (trafficRef) {
                     //cerr << trafficRef->getRegistration() << " Setting altitude to " << altitude_ft;
                     if (! aiTrafficVisible()) {
                         setDie(true);
-                        return false;
+                        throw AI_OutOfSight();
                     }
                     getGroundElev(dt);
                     doGroundAltitude();
@@ -781,7 +753,7 @@ bool FGAIAircraft::updateTargetValues() {
                     pos.setElevationFt(altitude_ft);
                 }
             }
-            return false;
+            throw FP_Inactive();
         }
     }
     else {
@@ -813,38 +785,7 @@ bool FGAIAircraft::updateTargetValues() {
 
         AccelTo( props->getDoubleValue("controls/flight/target-spd" ) );
     }
-    return true;
 }
-
-
-/**
- * Adjust the speed (accelerate/decelerate) to tgt_speed.
- */
-void FGAIAircraft::adjustSpeed(double tgt_speed) {
-    double speed_diff = tgt_speed - speed;
-    speed_diff = groundTargetSpeed - speed;
-
-    if (speed_diff > 0.0)        // need to accelerate
-    {
-        speed += performance->accel * dt;
-        if ( speed > tgt_speed )
-            speed = tgt_speed;
-
-    } else if (speed_diff < 0.0) {
-        if (no_roll) {
-            // on ground (aircraft can't roll)
-            // deceleration performance is better due to wheel brakes.
-            speed -= performance->decel * dt * 3;
-        } else {
-            speed -= performance->decel * dt;
-        }
-
-        if ( speed < tgt_speed )
-            speed = tgt_speed;
-
-    }
-}
-
 
 void FGAIAircraft::updatePosition() {
     // convert speed to degrees per second
@@ -871,7 +812,7 @@ void FGAIAircraft::updateHeading() {
         //else
         //  turnConstant = 0.088362;
         // If on ground, calculate heading change directly
-        if (no_roll) {
+        if (onGround()) {
             double headingDiff = fabs(hdg-tgt_heading);
 
             if (headingDiff > 180)
@@ -922,7 +863,7 @@ void FGAIAircraft::updateHeading() {
 }
 
 
-void FGAIAircraft::updateBankAngles() {
+void FGAIAircraft::updateBankAngleTarget() {
     // adjust target bank angle if heading lock engaged
     if (hdg_lock) {
         double bank_sense = 0.0;
@@ -938,55 +879,37 @@ void FGAIAircraft::updateBankAngles() {
         } else {
             bank_sense = -1.0;   // left turn
         }
-        if (diff < 30) {
+        if (diff < _performance->maximumBankAngle()) {
             tgt_roll = diff * bank_sense;
         } else {
-            tgt_roll = 30.0 * bank_sense;
+            tgt_roll = _performance->maximumBankAngle() * bank_sense;
         }
-        if ((fabs((double) spinCounter) > 1) && (diff > 30)) {
+        if ((fabs((double) spinCounter) > 1) && (diff > _performance->maximumBankAngle())) {
             tgt_speed *= 0.999;  // Ugly hack: If aircraft get stuck, they will continually spin around.
             // The only way to resolve this is to make them slow down.
         }
     }
-
-    // adjust bank angle, use 9 degrees per second
-    double bank_diff = tgt_roll - roll;
-    if (fabs(bank_diff) > 0.2) {
-        if (bank_diff > 0.0)
-            roll += 9.0 * dt;
-
-        if (bank_diff < 0.0)
-            roll -= 9.0 * dt;
-        //while (roll > 180) roll -= 360;
-        //while (roll < 180) roll += 360;
-    }
 }
 
 
-void FGAIAircraft::updateAltitudes() {
-    // adjust altitude (meters) based on current vertical speed (fpm)
-    altitude_ft += vs / 60.0 * dt;
-    pos.setElevationFt(altitude_ft);
-
+void FGAIAircraft::updateVerticalSpeedTarget() {
     // adjust target Altitude, based on ground elevation when on ground
-    if (no_roll) {
+    if (onGround()) {
         getGroundElev(dt);
         doGroundAltitude();
-    } else {
-        // find target vertical speed if altitude lock engaged
-        if (alt_lock && use_perf_vs) {
+    } else if (alt_lock) {
+        // find target vertical speed
+        if (use_perf_vs) {
             if (altitude_ft < tgt_altitude_ft) {
                 tgt_vs = tgt_altitude_ft - altitude_ft;
-                if (tgt_vs > performance->climb_rate)
-                    tgt_vs = performance->climb_rate;
+                if (tgt_vs > _performance->climbRate())
+                    tgt_vs = _performance->climbRate();
             } else {
                 tgt_vs = tgt_altitude_ft - altitude_ft;
-                if (tgt_vs  < (-performance->descent_rate))
-                    tgt_vs = -performance->descent_rate;
+                if (tgt_vs  < (-_performance->descentRate()))
+                    tgt_vs = -_performance->descentRate();
             }
-        }
-
-        if (alt_lock && !use_perf_vs) {
+        } else {
             double max_vs = 4*(tgt_altitude_ft - altitude_ft);
             double min_vs = 100;
             if (tgt_altitude_ft < altitude_ft)
@@ -998,34 +921,64 @@ void FGAIAircraft::updateAltitudes() {
             if (fabs(tgt_vs) < fabs(min_vs))
                 tgt_vs = min_vs;
         }
-    }
+    } //else 
+    //    tgt_vs = 0.0;
 }
 
+void FGAIAircraft::updatePitchAngleTarget() {
+    // if on ground and above vRotate -> initial rotation
+    if (onGround() && (speed > _performance->vRotate()))
+        tgt_pitch = 8.0; // some rough B737 value 
 
-void FGAIAircraft::updateVerticalSpeed() {
-    // adjust vertical speed
-    double vs_diff = tgt_vs - vs;
-    if (fabs(vs_diff) > 10.0) {
-        if (vs_diff > 0.0) {
-            vs += (performance->climb_rate / 3.0) * dt;
-
-            if (vs > tgt_vs)
-                vs = tgt_vs;
-        } else {
-            vs -= (performance->descent_rate / 3.0) * dt;
-
-            if (vs < tgt_vs)
-                vs = tgt_vs;
-        }
-    }
-}
-
-
-void FGAIAircraft::matchPitchAngle() {
+    //TODO pitch angle on approach and landing
+    
     // match pitch angle to vertical speed
-    if (vs > 0) {
-        pitch = vs * 0.005;
+    else if (tgt_vs > 0) {
+        tgt_pitch = tgt_vs * 0.005;
     } else {
-        pitch = vs * 0.002;
+        tgt_pitch = tgt_vs * 0.002;
     }
+}
+
+void FGAIAircraft::handleATCRequests() {
+    //TODO implement NullController for having no ATC to save the conditionals
+    if (controller) {
+        controller->update(getID(),
+                           pos.getLatitudeDeg(),
+                           pos.getLongitudeDeg(),
+                           hdg,
+                           speed,
+                           altitude_ft, dt);
+        processATC(controller->getInstruction(getID()));
+    }
+}
+
+void FGAIAircraft::updateActualState() {
+    //update current state
+    //TODO have a single tgt_speed and check speed limit on ground on setting tgt_speed
+    updatePosition();
+
+    if (onGround())
+        speed = _performance->actualSpeed(this, groundTargetSpeed, dt);
+    else
+        speed = _performance->actualSpeed(this, tgt_speed, dt);
+
+    updateHeading();
+    roll = _performance->actualBankAngle(this, tgt_roll, dt);
+
+    // adjust altitude (meters) based on current vertical speed (fpm)
+    altitude_ft += vs / 60.0 * dt;
+    pos.setElevationFt(altitude_ft);
+
+    vs = _performance->actualVerticalSpeed(this, tgt_vs, dt);
+    pitch = _performance->actualPitch(this, tgt_pitch, dt);
+}
+
+void FGAIAircraft::updateSecondaryTargetValues() {
+    // derived target state values
+    updateBankAngleTarget();
+    updateVerticalSpeedTarget();
+    updatePitchAngleTarget();
+
+    //TODO calculate wind correction angle (tgt_yaw)
 }
