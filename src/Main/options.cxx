@@ -1395,6 +1395,46 @@ struct OptionDesc {
 };
 
 
+// Set a property for the --prop: option. Syntax: --prop:[<type>:]<name>=<value>
+// <type> can be "double" etc. but also only the first letter "d".
+// Examples:  --prop:alpha=1  --prop:bool:beta=true  --prop:d:gamma=0.123
+static bool
+set_property(const string& arg)
+{
+    string::size_type pos = arg.find('=');
+    if (pos == arg.npos || pos == 0 || pos + 1 == arg.size())
+        return false;
+
+    string name = arg.substr(0, pos);
+    string value = arg.substr(pos + 1);
+    string type = "string";
+    pos = name.find(':');
+    if (pos != name.npos && pos != 0 && pos + 1 != name.size()) {
+        type = name.substr(0, pos);
+        name = name.substr(pos + 1);
+    }
+    if (type == "s" || type == "string") {
+        fgSetString(name.c_str(), value.c_str());
+        return true;
+    }
+    if (type == "d" || type == "double")
+        fgSetDouble(name.c_str(), 0.0);
+    else if (type == "f" || type == "float")
+        fgSetFloat(name.c_str(), 0.0f);
+    else if (type == "l" || type == "long")
+        fgSetLong(name.c_str(), 0L);
+    else if (type == "i" || type == "int")
+        fgSetInt(name.c_str(), 0);
+    else if (type == "b" || type == "bool")
+        fgSetBool(name.c_str(), false);
+    else
+        return false;
+
+    fgSetString(name.c_str(), value.c_str());
+    return true;
+}
+
+
 // Parse a single option
 static int
 parse_option (const string& arg)
@@ -1419,15 +1459,9 @@ parse_option (const string& arg)
     } else if ( arg.find( "--show-aircraft") == 0) {
         return(FG_OPTIONS_SHOW_AIRCRAFT);
     } else if ( arg.find( "--prop:" ) == 0 ) {
-        string assign = arg.substr(7);
-	string::size_type pos = assign.find('=');
-	if ( pos == arg.npos || pos == 0 || pos + 1 == assign.size() ) {
-	    SG_LOG( SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg );
+        if (!set_property(arg.substr(7))) {
+            SG_LOG( SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg );
             return FG_OPTIONS_ERROR;
-        } else {
-	    string name = assign.substr(0, pos);
-	    string value = assign.substr(pos + 1);
-	    fgSetString(name.c_str(), value.c_str());
         }
     } else if ( arg.find( "--" ) == 0 ) {
         size_t pos = arg.find( '=' );
