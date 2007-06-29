@@ -440,7 +440,7 @@ void  FGRunwayPreference::startXML () {
 }
 
 void  FGRunwayPreference::endXML () {
-  cout << "End XML" << endl;
+  //  cout << "End XML" << endl;
 }
 
 void  FGRunwayPreference::startElement (const char * name, const XMLAttributes &atts) {
