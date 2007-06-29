@@ -55,8 +55,15 @@
 #include "wxradar.hxx"
 
 
+typedef list <SGSharedPtr<FGAIBase> > radar_list_type;
+typedef radar_list_type::iterator radar_list_iterator;
+typedef radar_list_type::const_iterator radar_list_const_iterator;
+
+
 // texture name to use in 2D and 3D instruments
-static const char *odgauge_name = "Aircraft/Instruments/Textures/od_wxradar.rgb";
+static const char *ODGAUGE_NAME = "Aircraft/Instruments/Textures/od_wxradar.rgb";
+static const float UNIT = 1.0f / 8.0f;  // 8 symbols in a row/column in the texture
+
 
 wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
     _name(node->getStringValue("name", "radar")),
@@ -65,8 +72,8 @@ wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
     _time( 0.0 ),
     _last_switchKnob( "off" ),
     _sim_init_done ( false ),
-    resultTexture( 0 ),
-    wxEcho( 0 ),
+    _resultTexture( 0 ),
+    _wxEcho( 0 ),
     _odg( 0 )
 {
     const char *tacan_source = node->getStringValue("tacan-source",
@@ -74,9 +81,11 @@ wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
     _Tacan = fgGetNode(tacan_source, true);
 }
 
+
 wxRadarBg::~wxRadarBg ()
 {
 }
+
 
 void
 wxRadarBg::init ()
@@ -86,11 +95,15 @@ wxRadarBg::init ()
 
     _Instrument = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = _Instrument->getNode("serviceable", true);
+    _resultTexture = FGTextureManager::createTexture( ODGAUGE_NAME );
 
     SGPath tpath(globals->get_fg_root());
-    tpath.append("Aircraft/Instruments/Textures/wxecho.rgb");
+    string path = _Instrument->getStringValue("echo-texture-path",
+            "Aircraft/Instruments/Textures/wxecho.rgb");
+    tpath.append(path);
+
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
-    wxEcho = SGLoadTexture2D(tpath.c_str(), false, false);
+    _wxEcho = SGLoadTexture2D(tpath.c_str(), false, false);
 
     _Instrument->setFloatValue("trk", 0.0);
     _Instrument->setFloatValue("tilt", 0.0);
@@ -111,6 +124,7 @@ wxRadarBg::init ()
     _odg->setSize(256);
 
     _ai = (FGAIManager*)globals->get_subsystem("ai_model");
+    _ai_enabled_node = fgGetNode("/sim/ai/enabled", true);
 
     _user_lat_node = fgGetNode("/position/latitude-deg", true);
     _user_lon_node = fgGetNode("/position/longitude-deg", true);
@@ -126,10 +140,8 @@ wxRadarBg::init ()
     _tacan_in_range_node    = _Tacan->getNode("in-range", true);
 
     _radar_mode_control_node = _Instrument->getNode("mode-control", true);
-    _radar_coverage_node = _Instrument->getNode("limit-deg", true);
-    _radar_ref_rng_node = _Instrument->getNode("reference-range-nm", true);
-    _radar_coverage_node->setFloatValue(120);
-    _radar_ref_rng_node->setDoubleValue(35);
+    _radar_coverage_node     = _Instrument->getNode("limit-deg", true);
+    _radar_ref_rng_node      = _Instrument->getNode("reference-range-nm", true);
 
     SGPropertyNode *n = _Instrument->getNode("display-controls", true);
     _radar_weather_node     = n->getNode("WX", true);
@@ -138,21 +150,21 @@ wxRadarBg::init ()
     _radar_centre_node      = n->getNode("centre", true);
 
     _radar_centre_node->setBoolValue(false);
+    if (_radar_coverage_node->getType() == SGPropertyNode::NONE)
+        _radar_coverage_node->setFloatValue(120);
+    if (_radar_ref_rng_node->getType() == SGPropertyNode::NONE)
+        _radar_ref_rng_node->setDoubleValue(35);
 
-    _ai_enabled_node = fgGetNode("/sim/ai/enabled", true);
-
-    _x_displacement = 0;
-    _y_displacement = 0;
-    _x_sym_displacement = 0;
-    _y_sym_displacement = 0;
+    _x_offset = 0;
+    _y_offset = 0;
 
     // OSG geometry setup. The polygons for the radar returns will be
     // stored in a single Geometry. The geometry will have several
     // primitive sets so we can have different kinds of polys and
     // choose a different overall color for each set.
-    radarGeode = new osg::Geode;
-    osg::StateSet* stateSet = radarGeode->getOrCreateStateSet();
-    stateSet->setTextureAttributeAndModes(0, wxEcho.get());
+    _radarGeode = new osg::Geode;
+    osg::StateSet* stateSet = _radarGeode->getOrCreateStateSet();
+    stateSet->setTextureAttributeAndModes(0, _wxEcho.get());
     osg::Geometry* geom = new osg::Geometry;
     geom->setUseDisplayList(false);
     // Initially allocate space for 128 quads
@@ -181,14 +193,19 @@ wxRadarBg::init ()
     geom->addPrimitiveSet(pset);
     geom->setInitialBound(osg::BoundingBox(osg::Vec3f(-256.0f, -256.0f, 0.0f),
             osg::Vec3f(256.0f, 256.0f, 0.0f)));
-    radarGeode->addDrawable(geom);
+    _radarGeode->addDrawable(geom);
     _odg->allocRT();
     // Texture in the 2D panel system
-    FGTextureManager::addTexture(odgauge_name, _odg->getTexture());
+    FGTextureManager::addTexture(ODGAUGE_NAME, _odg->getTexture());
 
     osg::Camera* camera = _odg->getCamera();
-    camera->addChild(radarGeode.get());
+    camera->addChild(_radarGeode.get());
+
+    _geom = static_cast<osg::Geometry*>(_radarGeode->getDrawable(0));
+    _vertices = static_cast<osg::Vec2Array*>(_geom->getVertexArray());
+    _texCoords = static_cast<osg::Vec2Array*>(_geom->getTexCoordArray(0));
 }
+
 
 // Local coordinates for each echo
 const osg::Vec3f echoCoords[4] = {
@@ -196,11 +213,12 @@ const osg::Vec3f echoCoords[4] = {
     osg::Vec3f(.7f, .7f, 0.0f), osg::Vec3f(-.7f, .7f, 0.0f)
 };
 
-const float symbolSize = 1.0f / 8.0f;
+
 const osg::Vec2f echoTexCoords[4] = {
-    osg::Vec2f(0.0f, 0.0f), osg::Vec2f(symbolSize, 0.0f),
-    osg::Vec2f(symbolSize, symbolSize), osg::Vec2f(0.0f, symbolSize)
+    osg::Vec2f(0.0f, 0.0f), osg::Vec2f(UNIT, 0.0f),
+    osg::Vec2f(UNIT, UNIT), osg::Vec2f(0.0f, UNIT)
 };
+
 
 // helper
 static void
@@ -214,12 +232,14 @@ addQuad(osg::Vec2Array* vertices, osg::Vec2Array* texCoords,
     }
 }
 
+
 // Rotate by a heading value
 static inline
 osg::Matrixf wxRotate(float angle)
 {
     return osg::Matrixf::rotate(angle, 0.0f, 0.0f, -1.0f);
 }
+
 
 void
 wxRadarBg::update (double delta_time_sec)
@@ -230,7 +250,6 @@ wxRadarBg::update (double delta_time_sec)
 
         _sim_init_done = true;
     }
-
     if ( !_odg || ! _serviceable_node->getBoolValue() ) {
         _Instrument->setStringValue("status","");
         return;
@@ -241,330 +260,91 @@ wxRadarBg::update (double delta_time_sec)
 
     _time = 0.0;
 
+    string mode = _Instrument->getStringValue("display-mode", "arc");
+    if (mode == "map") {
+        if (_display_mode != MAP) {
+            _display_mode = MAP;
+            center_map();
+        }
+    } else if (mode == "plan") {
+        _display_mode = PLAN;
+    } else {
+        _display_mode = ARC;
+    }
+
     string switchKnob = _Instrument->getStringValue("switch", "on");
-    string modeButton = _Instrument->getStringValue("mode", "wx");
-    bool drawLightning = _Instrument->getBoolValue("lightning", true);
-    float range_nm = _Instrument->getFloatValue("range", 40.0);
-    float range_m = range_nm * SG_NM_TO_METER;
-
-    _user_speed_east_fps = _user_speed_east_fps_node->getDoubleValue();
-    _user_speed_north_fps = _user_speed_north_fps_node->getDoubleValue();
-
     if ( _last_switchKnob != switchKnob ) {
         // since 3D models don't share textures with the rest of the world
         // we must locate them and replace their handle by hand
         // only do that when the instrument is turned on
-        //if (last_switchKnob == "off")
-        //_odg->set_texture(odgauge_name, resultTexture.get());
+        //if ( _last_switchKnob == "off" )
+        //_odg->set_texture( ODGAUGE_NAME, _resultTexture->getHandle());
         _last_switchKnob = switchKnob;
     }
 
-    _radarEchoBuffer = *sgEnviro.get_radar_echo();
-    updateRadar();
-
     if ( switchKnob == "off" ) {
         _Instrument->setStringValue("status","");
-        return;
     } else if ( switchKnob == "stby" ) {
         _Instrument->setStringValue("status","STBY");
-        return;
     } else if ( switchKnob == "tst" ) {
         _Instrument->setStringValue("status","TST");
-        return;
-    }
-
-    // find something interesting to do...
-    string display_mode = _Instrument->getStringValue("display-mode", "arc");
-    // pretend we have a scan angle bigger then the FOV
-    // TODO:check real fov, enlarge if < nn, and do clipping if > mm
-    const float fovFactor = 1.45f;
-    float view_heading = get_heading() * SG_DEGREES_TO_RADIANS;
-    float range = 200.0f / range_nm;
-    _Instrument->setStringValue("status", modeButton.c_str());
-    osg::Matrixf centerTrans;
-
-    if ( display_mode == "arc" ) {
-        centerTrans.makeTranslate(0.0f, -180.0f, 0.0f);
-        range = 2*180.0f / range_nm;
-
-    } else if ( display_mode == "map" ) {
-        view_heading = 0;
-
-        if (_radar_centre_node->getBoolValue()) {
-            _x_displacement =_y_displacement = 0;
-        } else {
-            _x_displacement += range * _user_speed_east_fps * SG_FPS_TO_KT
-                    * delta_time_sec / (60*60);
-            _y_displacement += range * _user_speed_north_fps * SG_FPS_TO_KT
-                    * delta_time_sec / (60*60);
-        }
-
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: displacement "
-                << _x_displacement << ", "<<_y_displacement
-                << " _user_speed_east_fps * SG_FPS_TO_KT "
-                << _user_speed_east_fps * SG_FPS_TO_KT
-                << " _user_speed_north_fps * SG_FPS_TO_KT "
-                << _user_speed_north_fps * SG_FPS_TO_KT
-                << " dt " << delta_time_sec
-                << " centre " << _radar_centre_node->getBoolValue());
-
-        centerTrans.makeTranslate(_x_displacement, _y_displacement, 0.0f);
-
-    } else if ( display_mode == "plan" ) {
-        // no sense I presume
-        view_heading = 0;
+        // find something interesting to do...
     } else {
-        // rose
-        view_heading = 0;
-    }
+        float r = _Instrument->getFloatValue("range", 40.0);
+        if (r != _range_nm) {
+            center_map();
+            _range_nm = r;
+        }
 
-    range /= SG_NM_TO_METER;
+        _radar_ref_rng = _radar_ref_rng_node->getDoubleValue();
+        _view_heading = get_heading() * SG_DEGREES_TO_RADIANS;
+        _centerTrans.makeTranslate(0.0f, 0.0f, 0.0f);
 
-    list_of_SGWxRadarEcho *radarEcho = &_radarEchoBuffer;
-    list_of_SGWxRadarEcho::iterator iradarEcho;
-    const float LWClevel[] = { 0.1f, 0.5f, 2.1f };
-    float dist = 0;
-    float size = 0;
+        _scale = 200.0 / _range_nm;
+        _angle_offset = 0;
 
-    osg::Geometry* geom
-            = static_cast<osg::Geometry*>(radarGeode->getDrawable(0));
-    osg::Vec2Array* vertices
-            = static_cast<osg::Vec2Array*>(geom->getVertexArray());
-    osg::Vec2Array* texCoords
-            = static_cast<osg::Vec2Array*>(geom->getTexCoordArray(0));
-    vertices->clear();
-    texCoords->clear();
+        if ( _display_mode == ARC ) {
+            _scale = 2*200.0f / _range_nm;
+            _angle_offset = -_view_heading;
+            _centerTrans.makeTranslate(0.0f, -200.0f, 0.0f);
 
-    // draw the cloud radar echo
-    bool drawClouds = _radar_weather_node->getBoolValue();
+        } else if ( _display_mode == MAP ) {
+            apply_map_offset();
 
-    if (drawClouds) {
-        //we do that in 3 passes, one for each color level
-        // this is to 'merge' same colors together
-        for (int level = 0; level <= 2; level++) {
-            float col = level * symbolSize;
-
-            for (iradarEcho = radarEcho->begin(); iradarEcho != radarEcho->end();
-                    ++iradarEcho) {
-                int cloudId = (iradarEcho->cloudId);
-                bool upgrade = ((cloudId >> 5) & 1);
-                float lwc = iradarEcho->LWC + (upgrade ? 1.0f : 0.0f);
-
-                // skip ns
-                if (iradarEcho->LWC >= 0.5 && iradarEcho->LWC <= 0.6)
-                    continue;
-
-                    if (iradarEcho->lightning || lwc < LWClevel[level]
-                            || iradarEcho->aircraft)
-                        continue;
-
-                    dist = sgSqrt(iradarEcho->dist);
-                    size = iradarEcho->radius * 2.0;
-
-                    if ( dist - size > range_m )
-                        continue;
-
-                    dist *= range;
-                    size *= range;
-                    // Translate echo to proper distance on screen
-                    osg::Matrixf distTrans
-                            = osg::Matrixf::translate(0.0f, dist * range, 0.0f);
-                    // Scale echo
-                    osg::Matrixf scaleEcho = osg::Matrixf::scale(size, size, 1.0f);
-                    // compute the relative angle from the view direction
-                    float angle = calcRelBearing(iradarEcho->bearing, view_heading);
-
-                    // we will rotate the echo quads, this gives a better rendering
-                    //const float rot_x = cos (view_heading);
-                    //const float rot_y = sin (view_heading);
-
-                    // and apply a fov factor to simulate a greater scan
-                    // angle
-                    angle *= fovFactor;
-                    // Rotate echo into position, and rotate echo to have
-                    // a constant orientation towards the
-                    // airplane. Compass headings increase in clockwise
-                    // direction, while graphics rotations follow
-                    // right-hand (counter-clockwise) rule.
-                    osg::Matrixf rotEcho = wxRotate(angle);
-                    // use different shapes so the display is less boring
-                    //float row = symbolSize * (float) (4 + (cloudId & 3) );
-                    const osg::Vec2f texBase(col, (symbolSize
-                            * (float) (4 + (cloudId & 3))));
-                    osg::Matrixf m(scaleEcho * distTrans * rotEcho * centerTrans);
-                    addQuad(vertices, texCoords, m, texBase);
-                    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing clouds"
-                            << " ID " << iradarEcho->cloudId
-                            << " dist" << dist
-                            << " view_heading" << view_heading / SG_DEGREES_TO_RADIANS
-                            << " heading " << iradarEcho->heading / SG_DEGREES_TO_RADIANS
-                            << " angle " << angle / SG_DEGREES_TO_RADIANS);
-                }
+            bool centre = _radar_centre_node->getBoolValue();
+            if (centre) {
+                center_map();
+                _radar_centre_node->setBoolValue(false);
             }
+
+            //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: displacement "
+            //        << _x_offset <<", "<<_y_offset
+            //        << " user_speed_east_fps * SG_FPS_TO_KT "
+            //        << user_speed_east_fps * SG_FPS_TO_KT
+            //        << " user_speed_north_fps * SG_FPS_TO_KT "
+            //        << user_speed_north_fps * SG_FPS_TO_KT
+            //        << " dt " << delta_time_sec);
+
+            _centerTrans.makeTranslate(_x_offset, _y_offset, 0.0f);
+
+        } else if ( _display_mode == PLAN ) {
+            // no sense I presume
+        } else {
+            // rose
         }
 
-        // draw lightning echos
-        if ( drawLightning ) {
-            const osg::Vec2f texBase(3 * symbolSize, 4 * symbolSize);
-            for (iradarEcho = radarEcho->begin();
-                    iradarEcho != radarEcho->end();
-                    ++iradarEcho) {
+        _vertices->clear();
+        _texCoords->clear();
 
-                if (!iradarEcho->lightning)
-                    continue;
 
-                float dist = iradarEcho->dist * range;
-                float angle = calcRelBearing(iradarEcho->bearing, view_heading);
+        update_weather();
 
-                if ( angle > SG_PI )
-                    angle -= 2.0*SG_PI;
-                if ( angle < - SG_PI )
-                    angle += 2.0*SG_PI;
 
-                angle *= fovFactor;
-                // Rotate the symbol into position without rotating the
-                // symbol itself
-                osg::Vec3f trans(0.0f, dist, 0.0f);
-                trans = wxRotate(angle).preMult(trans);
-                osg::Matrixf m(osg::Matrixf::scale(symbolSize, symbolSize, 1.0)
-                        * osg::Matrixf::translate(trans) * centerTrans);
-                addQuad(vertices, texCoords, m, texBase);
-            }
-        }
+        osg::DrawArrays* quadPSet
+                = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(0));
+        quadPSet->set(osg::PrimitiveSet::QUADS, 0, _vertices->size());
+        quadPSet->dirty();
 
-        //draw aircraft echoes
-        if (_radar_position_node->getBoolValue()) {
-            const osg::Vec2f texBase(3 * symbolSize, 3 * symbolSize);
-            for (iradarEcho = radarEcho->begin();
-                    iradarEcho != radarEcho->end();
-                    ++iradarEcho) {
-
-                if (!iradarEcho->aircraft)
-                    continue;
-
-                dist = iradarEcho->dist * range;
-
-                // calculate relative bearing
-                float angle = calcRelBearing(iradarEcho->bearing, view_heading);
-                float limit = _radar_coverage_node->getFloatValue();
-
-                if (limit > 180)
-                    limit = 180;
-                else if (limit < 0)
-                    limit = 0;
-
-                // if it's in coverage, draw it
-                if (angle >= limit * SG_DEGREES_TO_RADIANS
-                        || angle < -limit * SG_DEGREES_TO_RADIANS)
-                    continue;
-
-                size = symbolSize * iradarEcho->radius;
-                osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
-                        * osg::Matrixf::translate(0.0f, dist, 0.0f)
-                        * wxRotate(angle) * centerTrans);
-                addQuad(vertices, texCoords, m, texBase);
-                SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing AI"
-                        << " ID " << iradarEcho->cloudId
-                        << " dist" << dist
-                        << " view_heading" << view_heading / SG_DEGREES_TO_RADIANS
-                        << " heading " << iradarEcho->heading / SG_DEGREES_TO_RADIANS
-                        << " angle " << angle / SG_DEGREES_TO_RADIANS);
-        }
-    }
-
-    // Draw aircraft data
-    if (_radar_data_node->getBoolValue()) {
-        const osg::Vec2f texBase(0, 3 * symbolSize);
-
-        for (iradarEcho = radarEcho->begin();
-                iradarEcho != radarEcho->end();
-                ++iradarEcho) {
-
-            if (!iradarEcho->aircraft)
-                continue;
-
-            dist = iradarEcho->dist;
-            dist *= range;
-            // calculate relative bearing
-            float angle = calcRelBearing(iradarEcho->bearing, view_heading);
-            float limit = _radar_coverage_node->getFloatValue();
-
-            if (limit > 180)
-                limit = 180;
-            else if (limit < 0)
-                limit = 0;
-
-            // if it's in coverage, draw it
-            if (angle >= limit * SG_DEGREES_TO_RADIANS
-                    || angle < -limit * SG_DEGREES_TO_RADIANS)
-                continue;
-
-            size = symbolSize * 750;
-            // Rotate symbol to indicate relative heading   iradarEcho->bearing
-            //    - view_heading - angle
-            //cout << "heading " << iradarEcho->heading << endl;
-
-            osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
-                    * wxRotate(iradarEcho->heading - view_heading - angle)
-                    * osg::Matrixf::translate(0.0f, dist, 0.0f)
-                    * wxRotate(angle) * centerTrans);
-            addQuad(vertices, texCoords, m, texBase);
-            SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing data"
-                    << " ID " << iradarEcho->cloudId
-                    << " view_heading " << view_heading / SG_DEGREES_TO_RADIANS
-                    << " bearing " << angle / SG_DEGREES_TO_RADIANS
-                    << " dist" << dist
-                    << " heading " << iradarEcho->heading / SG_DEGREES_TO_RADIANS
-                    << " rotation " << (iradarEcho->heading - view_heading - angle)
-                    / SG_DEGREES_TO_RADIANS);
-        }
-    }
-
-    //draw TACAN symbol
-    int mode = _radar_mode_control_node->getIntValue();
-    bool inRange = _tacan_in_range_node->getBoolValue();
-
-    if (mode == 1 && inRange) {
-        const osg::Vec2f texBase(1 * symbolSize, 3 * symbolSize);
-        dist = _tacan_distance_node->getFloatValue() * SG_NM_TO_METER;
-        dist *= range;
-        // calculate relative bearing
-        float angle = calcRelBearing(_tacan_bearing_node->getFloatValue()
-                * SG_DEGREES_TO_RADIANS, view_heading);
-
-        // it's always in coverage, so draw it
-        osg::Vec3f trans(osg::Vec3f(0.0f, dist, 0.0f) * wxRotate(angle));
-        size = symbolSize * 750;
-        osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
-                * osg::Matrixf::translate(trans) * centerTrans);
-        addQuad(vertices, texCoords, m, texBase);
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing TACAN"
-                << " dist" << dist
-                << " view_heading " << view_heading / SG_DEGREES_TO_RADIANS
-                << " heading " << _tacan_bearing_node->getDoubleValue()
-                << " angle " << angle / SG_DEGREES_TO_RADIANS
-                << " size " << size);
-    }
-
-    //draw aircraft symbol
-    const osg::Vec2f texBase(2 * symbolSize, 3 * symbolSize);
-    size = symbolSize * 750;
-    view_heading = get_heading() * SG_DEGREES_TO_RADIANS;
-    osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
-            * wxRotate(view_heading));
-
-    if (display_mode == "map") {
-        //cout << "Map Mode " << range << endl;
-        m *= osg::Matrixf::translate(range, range, 0.0f);
-    }
-
-    m *= centerTrans;
-
-    addQuad(vertices, texCoords, m, texBase);
-    osg::DrawArrays* quadPSet
-            = static_cast<osg::DrawArrays*>(geom->getPrimitiveSet(0));
-    quadPSet->set(osg::PrimitiveSet::QUADS, 0, vertices->size());
-    quadPSet->dirty();
         // erase what is out of sight of antenna
         /*
             |\     /|
@@ -575,144 +355,375 @@ wxRadarBg::update (double delta_time_sec)
             |       |
             ---------
         */
-    osg::DrawArrays* maskPSet
-            = static_cast<osg::DrawArrays*>(geom->getPrimitiveSet(1));
-    osg::DrawArrays* trimaskPSet
-            = static_cast<osg::DrawArrays*>(geom->getPrimitiveSet(2));
 
-    float xOffset = 256.0f, yOffset = 180.0f;
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: display mode " << display_mode);
+        osg::DrawArrays* maskPSet
+                = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(1));
+        osg::DrawArrays* trimaskPSet
+                = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(2));
 
-#if 0
-        if ( display_mode != "arc" ) {
-            xOffset = 240.0f;
-        yOffset = 40.0f;
+        if ( _display_mode == ARC ) {
+            float xOffset = 256.0f;
+            float yOffset = 200.0f;
+
+            int firstQuadVert = _vertices->size();
+            _texCoords->push_back(osg::Vec2f(0.5f, 0.25f));
+            _vertices->push_back(osg::Vec2f(-xOffset, 0.0 + yOffset));
+            _texCoords->push_back(osg::Vec2f(1.0f, 0.25f));
+            _vertices->push_back(osg::Vec2f(xOffset, 0.0 + yOffset));
+            _texCoords->push_back(osg::Vec2f(1.0f, 0.5f));
+            _vertices->push_back(osg::Vec2f(xOffset, 256.0 + yOffset));
+            _texCoords->push_back(osg::Vec2f(0.5f, 0.5f));
+            _vertices->push_back(osg::Vec2f(-xOffset, 256.0 + yOffset));
+            maskPSet->set(osg::PrimitiveSet::QUADS, firstQuadVert, 4);
+            // The triangles aren't supposed to be textured, but there's
+            // no need to set up a different Geometry, switch modes,
+            // etc. I happen to know that there's a white pixel in the
+            // texture at 1.0, 0.0 :)
+            float centerY = tan(30 * SG_DEGREES_TO_RADIANS);
+            const osg::Vec2f whiteSpot(1.0f, 0.0f);
+            _vertices->push_back(osg::Vec2f(0.0, 0.0));
+            _vertices->push_back(osg::Vec2f(-256.0, 0.0));
+            _vertices->push_back(osg::Vec2f(-256.0, 256.0 * centerY));
+
+            _vertices->push_back(osg::Vec2f(0.0, 0.0));
+            _vertices->push_back(osg::Vec2f(256.0, 0.0));
+            _vertices->push_back(osg::Vec2f(256.0, 256.0 * centerY));
+
+            _vertices->push_back(osg::Vec2f(-256, 0.0));
+            _vertices->push_back(osg::Vec2f(256.0, 0.0));
+            _vertices->push_back(osg::Vec2f(-256.0, -256.0));
+
+            _vertices->push_back(osg::Vec2f(256, 0.0));
+            _vertices->push_back(osg::Vec2f(256.0, -256.0));
+            _vertices->push_back(osg::Vec2f(-256.0, -256.0));
+
+            for (int i = 0; i < 3 * 4; i++)
+                _texCoords->push_back(whiteSpot);
+
+            trimaskPSet->set(osg::PrimitiveSet::TRIANGLES, firstQuadVert + 4,
+                    3 * 4);
+
+        } else {
+            maskPSet->set(osg::PrimitiveSet::QUADS, 0, 0);
+            trimaskPSet->set(osg::PrimitiveSet::TRIANGLES, 0, 0);
+        }
+
+        maskPSet->dirty();
+        trimaskPSet->dirty();
+
+        // draw without mask
+        _vertices->clear();
+        _texCoords->clear();
+
+        update_aircraft();
+        update_tacan();
+        update_heading_marker();
+
+        quadPSet->set(osg::PrimitiveSet::QUADS, 0, _vertices->size());
+        quadPSet->dirty();
     }
-#endif
-
-    if (display_mode == "arc" ) {
-        int firstQuadVert = vertices->size();
-        texCoords->push_back(osg::Vec2f(0.5f, 0.25f));
-        vertices->push_back(osg::Vec2f(-xOffset, 0.0 + yOffset));
-        texCoords->push_back(osg::Vec2f(1.0f, 0.25f));
-        vertices->push_back(osg::Vec2f(xOffset, 0.0 + yOffset));
-        texCoords->push_back(osg::Vec2f(1.0f, 0.5f));
-        vertices->push_back(osg::Vec2f(xOffset, 256.0 + yOffset));
-        texCoords->push_back(osg::Vec2f(0.5f, 0.5f));
-        vertices->push_back(osg::Vec2f(-xOffset, 256.0 + yOffset));
-        maskPSet->set(osg::PrimitiveSet::QUADS, firstQuadVert, 4);
-        // The triangles aren't supposed to be textured, but there's
-        // no need to set up a different Geometry, switch modes,
-        // etc. I happen to know that there's a white pixel in the
-        // texture at 1.0, 0.0 :)
-        float centerY = tan(30 * SG_DEGREES_TO_RADIANS);
-        const osg::Vec2f whiteSpot(1.0f, 0.0f);
-        vertices->push_back(osg::Vec2f(0.0, 0.0));
-        vertices->push_back(osg::Vec2f(-256.0, 0.0));
-        vertices->push_back(osg::Vec2f(-256.0, 256.0 * centerY));
-
-        vertices->push_back(osg::Vec2f(0.0, 0.0));
-        vertices->push_back(osg::Vec2f(256.0, 0.0));
-        vertices->push_back(osg::Vec2f(256.0, 256.0 * centerY));
-
-        vertices->push_back(osg::Vec2f(-256, 0.0));
-        vertices->push_back(osg::Vec2f(256.0, 0.0));
-        vertices->push_back(osg::Vec2f(-256.0, -256.0));
-
-        vertices->push_back(osg::Vec2f(256, 0.0));
-        vertices->push_back(osg::Vec2f(256.0, -256.0));
-        vertices->push_back(osg::Vec2f(-256.0, -256.0));
-
-        for (int i = 0; i < 3 * 4; i++)
-            texCoords->push_back(whiteSpot);
-
-        trimaskPSet->set(osg::PrimitiveSet::TRIANGLES, firstQuadVert + 4,
-                3 * 4);
-
-    } else {
-        maskPSet->set(osg::PrimitiveSet::QUADS, 0, 0);
-        trimaskPSet->set(osg::PrimitiveSet::TRIANGLES, 0, 0);
-    }
-    maskPSet->dirty();
-    trimaskPSet->dirty();
 }
+
 
 void
-wxRadarBg::updateRadar()
+wxRadarBg::update_weather()
 {
-    bool ai_enabled = _ai_enabled_node->getBoolValue();
+    string modeButton = _Instrument->getStringValue("mode", "wx");
+    _radarEchoBuffer = *sgEnviro.get_radar_echo();
 
-    if (!ai_enabled)
-        return;
+    // pretend we have a scan angle bigger then the FOV
+    // TODO:check real fov, enlarge if < nn, and do clipping if > mm
+    const float fovFactor = 1.45f;
+    _Instrument->setStringValue("status", modeButton.c_str());
 
-    double radius[] = {0, 1, 1.5, 1.5, 0.001, 0.1, 1.5, 2, 1.5, 1.5};
-    bool isDetected = false;
+    list_of_SGWxRadarEcho *radarEcho = &_radarEchoBuffer;
+    list_of_SGWxRadarEcho::iterator iradarEcho, end = radarEcho->end();
+    const float LWClevel[] = { 0.1f, 0.5f, 2.1f };
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: Loading AI submodels ");
-    _radar_list = _ai->get_ai_list();
+    // draw the cloud radar echo
+    bool drawClouds = _radar_weather_node->getBoolValue();
+    if (drawClouds) {
 
-    if (_radar_list.empty()) {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: Unable to read AI submodel list");
-        return;
+        // we do that in 3 passes, one for each color level
+        // this is to 'merge' same colors together
+        for (int level = 0; level <= 2; level++) {
+            float col = level * UNIT;
+
+            for (iradarEcho = radarEcho->begin(); iradarEcho != end; ++iradarEcho) {
+                int cloudId = iradarEcho->cloudId;
+                bool upgrade = (cloudId >> 5) & 1;
+                float lwc = iradarEcho->LWC + (upgrade ? 1.0f : 0.0f);
+
+                // skip ns
+                if (iradarEcho->LWC >= 0.5 && iradarEcho->LWC <= 0.6)
+                    continue;
+
+                if (iradarEcho->lightning || lwc < LWClevel[level])
+                    continue;
+
+                float radius = sgSqrt(iradarEcho->dist) * SG_METER_TO_NM * _scale;
+                float size = iradarEcho->radius * 2.0 * SG_METER_TO_NM * _scale;
+
+                if (radius - size > 180)
+                    continue;
+
+                float angle = (iradarEcho->heading - _angle_offset) //* fovFactor
+                        + 0.5 * SG_PI;
+
+                // Rotate echo into position, and rotate echo to have
+                // a constant orientation towards the
+                // airplane. Compass headings increase in clockwise
+                // direction, while graphics rotations follow
+                // right-hand (counter-clockwise) rule.
+                const osg::Vec2f texBase(col, (UNIT * (float) (4 + (cloudId & 3))));
+
+                osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
+                        * osg::Matrixf::translate(0.0f, radius, 0.0f)
+                        * wxRotate(angle) * _centerTrans);
+                addQuad(_vertices, _texCoords, m, texBase);
+
+                //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing clouds"
+                //        << " ID=" << cloudId
+                //        << " x=" << x
+                //        << " y="<< y
+                //        << " radius=" << radius
+                //        << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
+                //        << " heading=" << iradarEcho->heading * SG_RADIANS_TO_DEGREES
+                //        << " angle=" << angle * SG_RADIANS_TO_DEGREES);
+            }
+        }
     }
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: AI submodel list size" << _radar_list.size());
+    // draw lightning echos
+    bool drawLightning = _Instrument->getBoolValue("lightning", true);
+    if ( drawLightning ) {
+        const osg::Vec2f texBase(3 * UNIT, 4 * UNIT);
 
-    double user_alt = _user_alt_node->getDoubleValue();
-    double user_lat = _user_lat_node->getDoubleValue();
-    double user_lon = _user_lon_node->getDoubleValue();
+        for (iradarEcho = radarEcho->begin(); iradarEcho != end; ++iradarEcho) {
+            if (!iradarEcho->lightning)
+                continue;
 
-    radar_list_iterator radar_list_itr = _radar_list.begin();
-    radar_list_iterator end = _radar_list.end();
+            float size = UNIT * 0.5f;
+            float radius = iradarEcho->dist * _scale;
+            float angle = iradarEcho->heading * SG_DEGREES_TO_RADIANS
+                    - _angle_offset;
 
-    while (radar_list_itr != end) {
-        double range   = (*radar_list_itr)->_getRange();
-        double bearing = (*radar_list_itr)->_getBearing();
-        double lat     = (*radar_list_itr)->_getLatitude();
-        double lon     = (*radar_list_itr)->_getLongitude();
-        double alt     = (*radar_list_itr)->_getAltitude();
-        double heading = (*radar_list_itr)->_getHeading();
-        int id         = (*radar_list_itr)->getID();
-        int type       = (*radar_list_itr)->getType();
-
-        calcRngBrg(user_lat, user_lon, lat, lon, range, bearing);
-
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: AI list size" << _radar_list.size()
-                << " type " << type
-                << " ID " << id
-                << " radar range " << range
-                << " bearing " << bearing
-                << " alt " << alt);
-
-        bool isVisible = calcRadarHorizon(user_alt, alt, range);
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: visible " << isVisible);
-
-        if (isVisible)
-            isDetected = calcMaxRange(type, range);
-
-        //(float _heading, float _alt, float _radius, float _dist, double _LWC, bool _lightning,
-        // int _cloudId, bool _aircraft)
-        if (isDetected)
-            _radarEchoBuffer.push_back(SGWxRadarEcho (
-                    bearing * SG_DEGREES_TO_RADIANS,
-                    alt,
-                    radius[type] * 120,
-                    range * SG_NM_TO_METER,
-                    heading * SG_DEGREES_TO_RADIANS,
-                    1,
-                    false,
-                    id,
-                    true));
-
-        ++radar_list_itr;
+            osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
+                    * wxRotate(-angle)
+                    * osg::Matrixf::translate(0.0f, radius, 0.0f)
+                    * wxRotate(angle) * _centerTrans);
+            addQuad(_vertices, _texCoords, m, texBase);
+        }
     }
 }
 
+
+void
+wxRadarBg::update_aircraft()
+{
+    if (!_ai_enabled_node->getBoolValue())
+        return;
+
+    bool draw_echoes = _radar_position_node->getBoolValue();
+    bool draw_symbols = _radar_data_node->getBoolValue();
+    if (!draw_echoes && !draw_symbols)
+        return;
+
+    radar_list_type radar_list = _ai->get_ai_list();
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: AI submodel list size" << radar_list.size());
+    if (radar_list.empty())
+        return;
+
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: Loading AI submodels ");
+    const double echo_radii[] = {0, 1, 1.5, 1.5, 0.001, 0.1, 1.5, 2, 1.5, 1.5};
+
+    double user_lat = _user_lat_node->getDoubleValue();
+    double user_lon = _user_lon_node->getDoubleValue();
+    double user_alt = _user_alt_node->getDoubleValue();
+
+    radar_list_iterator it = radar_list.begin();
+    radar_list_iterator end = radar_list.end();
+
+    for (; it != end; ++it) {
+        FGAIBase *ac = *it;
+        int type       = ac->getType();
+        double lat     = ac->_getLatitude();
+        double lon     = ac->_getLongitude();
+        double alt     = ac->_getAltitude();
+        double heading = ac->_getHeading();
+
+        double range, bearing;
+        calcRangeBearing(user_lat, user_lon, lat, lon, range, bearing);
+
+        //SG_LOG(SG_GENERAL, SG_DEBUG,
+        //        "Radar: ID=" << ac->getID() << "(" << radar_list.size() << ")"
+        //        << " type=" << type
+        //        << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
+        //        << " alt=" << alt
+        //        << " heading=" << heading
+        //        << " range=" << range
+        //        << " bearing=" << bearing);
+
+        bool isVisible = withinRadarHorizon(user_alt, alt, range);
+        SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: visible " << isVisible);
+        if (!isVisible)
+            continue;
+
+        if (!inRadarRange(type, range))
+            continue;
+
+        bearing *= SG_DEGREES_TO_RADIANS;
+        heading *= SG_DEGREES_TO_RADIANS;
+
+        float radius = range * _scale;
+        float angle = calcRelBearing(bearing, _view_heading);
+
+        float limit = _radar_coverage_node->getFloatValue();
+        if (limit > 180)
+            limit = 180;
+        else if (limit < 0)
+            limit = 0;
+        limit *= SG_DEGREES_TO_RADIANS;
+        if (angle > limit || angle < -limit)
+            continue;
+
+        bearing += _angle_offset;
+        heading += _angle_offset;
+
+        // pos mode
+        if (draw_echoes) {
+            float echo_radius = echo_radii[type] * 120;
+            float size = echo_radius * UNIT;
+
+            const osg::Vec2f texBase(3 * UNIT, 3 * UNIT);
+            osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
+                    * osg::Matrixf::translate(0.0f, radius, 0.0f)
+                    * wxRotate(bearing) * _centerTrans);
+            addQuad(_vertices, _texCoords, m, texBase);
+
+            //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing AI"
+            //        << " x=" << x << " y=" << y
+            //        << " radius=" << radius
+            //        << " angle=" << angle * SG_RADIANS_TO_DEGREES);
+        }
+
+        // data mode
+        if (draw_symbols) {
+            const osg::Vec2f texBase(0, 3 * UNIT);
+            float size = 600 * UNIT;
+            osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
+                    * wxRotate(heading - bearing)
+                    * osg::Matrixf::translate(0.0f, radius, 0.0f)
+                    * wxRotate(bearing) * _centerTrans);
+            addQuad(_vertices, _texCoords, m, texBase);
+
+            //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing data"
+            //        << " x=" << x <<" y="<< y
+            //        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
+            //        << " radius=" << radius);
+        }
+    }
+}
+
+
+void
+wxRadarBg::update_tacan()
+{
+    // draw TACAN symbol
+    int mode = _radar_mode_control_node->getIntValue();
+    bool inRange = _tacan_in_range_node->getBoolValue();
+
+    if (mode != 1 || !inRange)
+        return;
+
+    float size = 600 * UNIT;
+    float radius = _tacan_distance_node->getFloatValue() * _scale;
+    float angle = _tacan_bearing_node->getFloatValue() * SG_DEGREES_TO_RADIANS
+            + _angle_offset;
+
+    const osg::Vec2f texBase(1 * UNIT, 3 * UNIT);
+    osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
+            * wxRotate(-angle)
+            * osg::Matrixf::translate(0.0f, radius, 0.0f)
+            * wxRotate(angle) * _centerTrans);
+    addQuad(_vertices, _texCoords, m, texBase);
+
+    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:     drawing TACAN"
+    //        << " dist=" << radius
+    //        << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
+    //        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
+    //        << " x=" << x << " y="<< y
+    //        << " size=" << size);
+}
+
+
+void
+wxRadarBg::update_heading_marker()
+{
+/*
+    float angle = _view_heading + _angle_offset;
+
+    float x = sin(angle);
+    float y = cos(angle);
+    float s_rot_x = sin(angle + SGD_PI_4);
+    float s_rot_y = cos(angle + SGD_PI_4);
+
+    float size = UNIT * 500;
+*/
+
+    const osg::Vec2f texBase(2 * UNIT, 3 * UNIT);
+    float size = 600 * UNIT;
+    osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
+            * wxRotate(_view_heading + _angle_offset));
+
+    if (_display_mode == MAP) {
+        //cout << "Map Mode " << range << endl;
+//        m *= osg::Matrixf::translate(_scale, _scale, 0.0f);
+    }
+
+    m *= _centerTrans;
+    addQuad(_vertices, _texCoords, m, texBase);
+
+    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:   drawing heading marker"
+    //        << " x,y " << x <<","<< y
+    //        << " dist" << dist
+    //        << " view_heading" << _view_heading * SG_RADIANS_TO_DEGREES
+    //        << " heading " << iradarEcho->heading * SG_RADIANS_TO_DEGREES
+    //        << " angle " << angle * SG_RADIANS_TO_DEGREES);
+}
+
+
+void
+wxRadarBg::center_map()
+{
+    _lat = _user_lat_node->getDoubleValue();
+    _lon = _user_lon_node->getDoubleValue();
+    _x_offset = _y_offset = 0;
+}
+
+
+void
+wxRadarBg::apply_map_offset()
+{
+    if (_display_mode != MAP)
+        return;
+    double lat = _user_lat_node->getDoubleValue();
+    double lon = _user_lon_node->getDoubleValue();
+    double bearing, distance, az2;
+    geo_inverse_wgs_84(_lat, _lon, lat, lon, &bearing, &az2, &distance);
+    distance *= SG_METER_TO_NM * _scale;
+    bearing *= SG_DEGREES_TO_RADIANS;
+    _x_offset += sin(bearing) * distance;
+    _y_offset += cos(bearing) * distance;
+    _lat = lat;
+    _lon = lon;
+}
+
+
 bool
-wxRadarBg::calcRadarHorizon(double user_alt, double alt, double range)
+wxRadarBg::withinRadarHorizon(double user_alt, double alt, double range_nm)
 {
     // Radar Horizon  = 1.23(ht^1/2 + hr^1/2),
-
     //don't allow negative altitudes (an approximation - yes altitudes can be negative)
 
     if (user_alt < 0)
@@ -723,12 +734,12 @@ wxRadarBg::calcRadarHorizon(double user_alt, double alt, double range)
 
     double radarhorizon = 1.23 * (sqrt(alt) + sqrt(user_alt));
     SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: horizon " << radarhorizon);
-
-    return radarhorizon >= range;
+    return radarhorizon >= range_nm;
 }
 
+
 bool
-wxRadarBg::calcMaxRange(int type, double range)
+wxRadarBg::inRadarRange(int type, double range_nm)
 {
     //The Radar Equation:
     //
@@ -739,46 +750,44 @@ wxRadarBg::calcMaxRange(int type, double range)
     // For a given radar we can assume that the only variable is sigma,
     // the target radar cross section.
     //
-    // Here, we will use a normalised rcs (sigma) for a standard target and assume that this
+    // Here, we will use a normalised rcs (sigma) for a standard taget and assume that this
     // will provide a maximum range of 35nm;
     //
-    // The reference range is adjustable at runtime
+    // TODO - make the maximum range adjustable at runtime
 
-    double sigma[] = {0, 1, 100, 100, 0.001, 0.1, 100, 100, 1, 1};
-    double constant = _radar_ref_rng_node->getDoubleValue();
+    const double sigma[] = {0, 1, 100, 100, 0.001, 0.1, 100, 100, 1, 1};
+    double constant = _radar_ref_rng;
 
     if (constant <= 0)
         constant = 35;
 
     double maxrange = constant * pow(sigma[type], 0.25);
-
     SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: max range " << maxrange);
-
-    return maxrange >= range;
+    return maxrange >= range_nm;
 }
+
 
 void
-wxRadarBg::calcRngBrg(double lat, double lon, double lat2, double lon2, double &range,
-                       double &bearing ) const
+wxRadarBg::calcRangeBearing(double lat, double lon, double lat2, double lon2,
+        double &range, double &bearing ) const
 {
-    double az2, distance;
-
     // calculate the bearing and range of the second pos from the first
+    double az2, distance;
     geo_inverse_wgs_84(lat, lon, lat2, lon2, &bearing, &az2, &distance);
-
     range = distance *= SG_METER_TO_NM;
 }
+
 
 float
 wxRadarBg::calcRelBearing(float bearing, float heading)
 {
     float angle = bearing - heading;
 
-    if (angle > SG_PI)
-        angle -= 2.0*SG_PI;
+    if (angle >= SG_PI)
+        angle -= 2.0 * SG_PI;
 
     if (angle < -SG_PI)
-        angle += 2.0*SG_PI;
+        angle += 2.0 * SG_PI;
 
     return angle;
 }

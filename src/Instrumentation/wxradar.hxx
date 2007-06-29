@@ -55,22 +55,24 @@ public:
     virtual void update (double dt);
 
 private:
-
     string _name;
     int _num;
     double _interval;
     double _time;
 
+    typedef enum { ARC, MAP, PLAN, ROSE } DisplayMode;
+    DisplayMode _display_mode;
+
     string _last_switchKnob;
     bool _sim_init_done;
 
-    double _user_speed_east_fps;
-    double _user_speed_north_fps;
-
-    float _x_displacement;
-    float _y_displacement;
-    float _x_sym_displacement;
-    float _y_sym_displacement;
+    float _range_nm;
+    float _scale;   // factor to convert nm to display units
+    double _radar_ref_rng;
+    float _angle_offset;
+    float _view_heading;
+    double _lat, _lon;
+    float _x_offset, _y_offset;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
@@ -100,31 +102,31 @@ private:
 
     SGPropertyNode_ptr _ai_enabled_node;
 
-    osg::ref_ptr<osg::Texture2D> resultTexture;
-    osg::ref_ptr<osg::Texture2D> wxEcho;
-    osg::ref_ptr<osg::Geode> radarGeode;
+    osg::ref_ptr<osg::Texture2D> _resultTexture;
+    osg::ref_ptr<osg::Texture2D> _wxEcho;
+    osg::ref_ptr<osg::Geode> _radarGeode;
+    osg::Geometry *_geom;
+    osg::Vec2Array *_vertices;
+    osg::Vec2Array *_texCoords;
+    osg::Matrixf _centerTrans;
 
     list_of_SGWxRadarEcho _radarEchoBuffer;
 
     FGODGauge *_odg;
     FGAIManager* _ai;
 
-    bool calcRadarHorizon(double user_alt, double alt, double range);
-    bool calcMaxRange(int type, double range);
+    void update_weather();
+    void update_aircraft();
+    void update_tacan();
+    void update_heading_marker();
 
-    void calcRngBrg(double lat, double lon, double lat2, double lon2,
-            double &range, double &bearing) const;
-
-    void updateRadar();
-
+    void center_map();
+    void apply_map_offset();
+    bool withinRadarHorizon(double user_alt, double alt, double range);
+    bool inRadarRange(int type, double range);
     float calcRelBearing(float bearing, float heading);
-
-    // A list of pointers to AI objects
-    typedef list <SGSharedPtr<FGAIBase> > radar_list_type;
-    typedef radar_list_type::iterator radar_list_iterator;
-    typedef radar_list_type::const_iterator radar_list_const_iterator;
-
-    radar_list_type _radar_list;
+    void calcRangeBearing(double lat, double lon, double lat2, double lon2,
+            double &range, double &bearing) const;
 };
 
 #endif // _INST_WXRADAR_HXX
