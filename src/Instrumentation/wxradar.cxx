@@ -89,8 +89,12 @@ wxRadarBg::init ()
     _Instrument = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = _Instrument->getNode("serviceable", true);
     _resultTexture = FGTextureManager::createTexture( ODGAUGE_NAME );
+
     SGPath tpath(globals->get_fg_root());
-    tpath.append("Aircraft/Instruments/Textures/wxecho.rgb");
+    string path = _Instrument->getStringValue("echo-texture-path",
+            "Aircraft/Instruments/Textures/wxecho.rgb");
+    tpath.append(path);
+
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
     _wxEcho = new ssgTexture( tpath.c_str(), false, false, false);
 
@@ -112,6 +116,7 @@ wxRadarBg::init ()
     _odg = (FGODGauge *) imgr->get_subsystem("od_gauge");
 
     _ai = (FGAIManager*)globals->get_subsystem("ai_model");
+    _ai_enabled_node = fgGetNode("/sim/ai/enabled", true);
 
     _user_lat_node = fgGetNode("/position/latitude-deg", true);
     _user_lon_node = fgGetNode("/position/longitude-deg", true);
@@ -127,13 +132,8 @@ wxRadarBg::init ()
     _tacan_in_range_node    = _Tacan->getNode("in-range", true);
 
     _radar_mode_control_node = _Instrument->getNode("mode-control", true);
-    _radar_coverage_node = _Instrument->getNode("limit-deg", true);
-    _radar_ref_rng_node = _Instrument->getNode("reference-range-nm", true);
-
-    if (_radar_coverage_node->getType() == SGPropertyNode::NONE)
-        _radar_coverage_node->setFloatValue(120);
-    if (_radar_ref_rng_node->getType() == SGPropertyNode::NONE)
-        _radar_ref_rng_node->setDoubleValue(35);
+    _radar_coverage_node     = _Instrument->getNode("limit-deg", true);
+    _radar_ref_rng_node      = _Instrument->getNode("reference-range-nm", true);
 
     SGPropertyNode *n = _Instrument->getNode("display-controls", true);
     _radar_weather_node     = n->getNode("WX", true);
@@ -142,8 +142,10 @@ wxRadarBg::init ()
     _radar_centre_node      = n->getNode("centre", true);
 
     _radar_centre_node->setBoolValue(false);
-
-    _ai_enabled_node = fgGetNode("/sim/ai/enabled", true);
+    if (_radar_coverage_node->getType() == SGPropertyNode::NONE)
+        _radar_coverage_node->setFloatValue(120);
+    if (_radar_ref_rng_node->getType() == SGPropertyNode::NONE)
+        _radar_ref_rng_node->setDoubleValue(35);
 
     _x_offset = 0;
     _y_offset = 0;
@@ -223,9 +225,9 @@ wxRadarBg::update (double delta_time_sec)
         _angle_offset = 0;
 
         if ( _display_mode == ARC ) {
-            _scale = 2*180.0f / _range_nm;
+            _scale = 2*200.0f / _range_nm;
             _angle_offset = -_view_heading;
-            glTranslatef(0.0f, -180.0f, 0.0f);
+            glTranslatef(0.0f, -200.0f, 0.0f);
 
         } else if ( _display_mode == MAP ) {
             apply_map_offset();
@@ -268,7 +270,7 @@ wxRadarBg::update (double delta_time_sec)
 
         if ( _display_mode == ARC ) {
             float xOffset = 256.0f;
-            float yOffset = 180.0f;
+            float yOffset = 200.0f;
 
             glDisable(GL_BLEND);
             glColor4f(1.0f, 0.0f, 0.0f, 0.01f);
