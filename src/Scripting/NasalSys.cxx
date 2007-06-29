@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fstream>
 
 #include <plib/ul.h>
 
@@ -358,6 +359,36 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
     return result;
 }
 
+// Parse XML file.
+//     parsexml(<path> [, <start-tag> [, <end-tag> [, <data> [, <pi>]]]]);
+//
+// <path>      ... absolute path of an XML file
+// <start-tag> ... callback function with two args: tag name, attribute hash
+// <end-tag>   ... callback function with one arg:  tag name
+// <data>      ... callback function with one arg:  data string
+// <pi>        ... callback function with two args: target string, data string
+//                 (pi = "processing instruction")
+// All four callback functions are optional and default to nil.
+// The function returns nil on error, and the file name otherwise.
+static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
+{
+    if(argc < 1 || !naIsString(args[0]))
+        naRuntimeError(c, "bad/missing argument to parsexml()");
+
+    const char* file = naStr_data(args[0]);
+    std::ifstream input(file);
+    NasalXMLVisitor visitor(c, argc, args);
+    try {
+        readXML(input, visitor);
+    } catch (const sg_exception& e) {
+        string msg = string("parsexml(): file '") + file + "' "
+                     + e.getFormattedMessage();
+        naRuntimeError(c, msg.c_str());
+        return naNil();
+    }
+    return args[0];
+}
+
 // Return UNIX epoch time in seconds.
 static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
 {
@@ -462,6 +493,7 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "rand",  f_rand },
     { "srand",  f_srand },
     { "directory", f_directory },
+    { "parsexml", f_parsexml },
     { "systime", f_systime },
     { "carttogeod", f_carttogeod },
     { "geodtocart", f_geodtocart },
@@ -586,7 +618,7 @@ void FGNasalSys::loadPropertyScripts()
             loadModule(p, module);
         }
         */
-        
+
         const char* src = n->getStringValue("script");
         if(!n->hasChild("script")) src = 0; // Hrm...
         if(src)
@@ -911,6 +943,61 @@ FGNasalModelData::~FGNasalModelData()
         nasalSys->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _props);
     }
     nasalSys->deleteModule(_module.c_str());
+}
+
+
+
+// NasalXMLVisitor class: handles EasyXML visitor callback for parsexml()
+//
+NasalXMLVisitor::NasalXMLVisitor(naContext c, int argc, naRef* args) :
+    _c(naSubContext(c)),
+    _start_element(argc > 1 && naIsFunc(args[1]) ? args[1] : naNil()),
+    _end_element(argc > 2 && naIsFunc(args[2]) ? args[2] : naNil()),
+    _data(argc > 3 && naIsFunc(args[3]) ? args[3] : naNil()),
+    _pi(argc > 4 && naIsFunc(args[4]) ? args[4] : naNil())
+{
+}
+
+void NasalXMLVisitor::startElement(const char* tag, const XMLAttributes& a)
+{
+    if(naIsNil(_start_element)) return;
+    naRef attr = naNewHash(_c);
+    for(int i=0; i<a.size(); i++) {
+        naRef name = make_string(a.getName(i));
+        naRef value = make_string(a.getValue(i));
+        naHash_set(attr, name, value);
+    }
+    call(_start_element, 2, make_string(tag), attr);
+}
+
+void NasalXMLVisitor::endElement(const char* tag)
+{
+    if(!naIsNil(_end_element)) call(_end_element, 1, make_string(tag));
+}
+
+void NasalXMLVisitor::data(const char* str, int len)
+{
+    if(!naIsNil(_data)) call(_data, 1, make_string(str, len));
+}
+
+void NasalXMLVisitor::pi(const char* target, const char* data)
+{
+    if (!naIsNil(_pi)) call(_pi, 2, make_string(target), make_string(data));
+}
+
+void NasalXMLVisitor::call(naRef func, int num, naRef a, naRef b)
+{
+    _arg[0] = a;
+    _arg[1] = b;
+    naCall(_c, func, num, _arg, naNil(), naNil());
+    if(naGetError(_c))
+        naRethrowError(_c);
+}
+
+naRef NasalXMLVisitor::make_string(const char* s, int n)
+{
+    return naStr_fromdata(naNewString(_c), const_cast<char *>(s),
+                          n < 0 ? strlen(s) : n);
 }
 
 

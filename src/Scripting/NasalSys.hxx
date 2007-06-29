@@ -5,6 +5,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/nasal/nasal.h>
 #include <simgear/scene/model/model.hxx>
+#include <simgear/xml/easyxml.hxx>
 
 #include <map>
 SG_USING_STD(map);
@@ -158,6 +159,26 @@ private:
     string _module;
     SGPropertyNode_ptr _props;
     SGConstPropertyNode_ptr _unload;
+};
+
+
+class NasalXMLVisitor : public XMLVisitor {
+public:
+    NasalXMLVisitor(naContext c, int argc, naRef* args);
+    virtual ~NasalXMLVisitor() { naFreeContext(_c); }
+
+    virtual void startElement(const char* tag, const XMLAttributes& a);
+    virtual void endElement(const char* tag);
+    virtual void data(const char* str, int len);
+    virtual void pi(const char* target, const char* data);
+
+private:
+    void call(naRef func, int num = 0, naRef a = naNil(), naRef b = naNil());
+    naRef make_string(const char* s, int n = -1);
+
+    naContext _c;
+    naRef _arg[2];
+    naRef _start_element, _end_element, _data, _pi;
 };
 
 #endif // __NASALSYS_HXX
