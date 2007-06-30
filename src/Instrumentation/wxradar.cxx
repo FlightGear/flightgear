@@ -134,6 +134,7 @@ wxRadarBg::init ()
     _radar_mode_control_node = _Instrument->getNode("mode-control", true);
     _radar_coverage_node     = _Instrument->getNode("limit-deg", true);
     _radar_ref_rng_node      = _Instrument->getNode("reference-range-nm", true);
+    _radar_hdg_marker_node   = _Instrument->getNode("heading-marker", true);
 
     SGPropertyNode *n = _Instrument->getNode("display-controls", true);
     _radar_weather_node     = n->getNode("WX", true);
@@ -146,6 +147,8 @@ wxRadarBg::init ()
         _radar_coverage_node->setFloatValue(120);
     if (_radar_ref_rng_node->getType() == SGPropertyNode::NONE)
         _radar_ref_rng_node->setDoubleValue(35);
+    if (_radar_hdg_marker_node->getType() == SGPropertyNode::NONE)
+        _radar_hdg_marker_node->setBoolValue(true);
 
     _x_offset = 0;
     _y_offset = 0;
@@ -631,6 +634,9 @@ wxRadarBg::update_tacan()
 void
 wxRadarBg::update_heading_marker()
 {
+    if (!_radar_hdg_marker_node->getBoolValue())
+        return;
+
     float col = 2 * UNIT;
     float row = 3 * UNIT;
     float angle = _view_heading + _angle_offset;
