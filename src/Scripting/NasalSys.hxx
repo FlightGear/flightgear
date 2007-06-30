@@ -173,11 +173,10 @@ public:
     virtual void pi(const char* target, const char* data);
 
 private:
-    void call(naRef func, int num = 0, naRef a = naNil(), naRef b = naNil());
+    void call(naRef func, int num, naRef a = naNil(), naRef b = naNil());
     naRef make_string(const char* s, int n = -1);
 
     naContext _c;
-    naRef _arg[2];
     naRef _start_element, _end_element, _data, _pi;
 };
 

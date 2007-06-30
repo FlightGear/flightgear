@@ -987,9 +987,10 @@ void NasalXMLVisitor::pi(const char* target, const char* data)
 
 void NasalXMLVisitor::call(naRef func, int num, naRef a, naRef b)
 {
-    _arg[0] = a;
-    _arg[1] = b;
-    naCall(_c, func, num, _arg, naNil(), naNil());
+    naRef args[2];
+    args[0] = a;
+    args[1] = b;
+    naCall(_c, func, num, args, naNil(), naNil());
     if(naGetError(_c))
         naRethrowError(_c);
 }
