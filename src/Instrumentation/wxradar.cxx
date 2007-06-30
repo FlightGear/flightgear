@@ -142,6 +142,7 @@ wxRadarBg::init ()
     _radar_mode_control_node = _Instrument->getNode("mode-control", true);
     _radar_coverage_node     = _Instrument->getNode("limit-deg", true);
     _radar_ref_rng_node      = _Instrument->getNode("reference-range-nm", true);
+    _radar_hdg_marker_node   = _Instrument->getNode("heading-marker", true);
 
     SGPropertyNode *n = _Instrument->getNode("display-controls", true);
     _radar_weather_node     = n->getNode("WX", true);
@@ -154,6 +155,8 @@ wxRadarBg::init ()
         _radar_coverage_node->setFloatValue(120);
     if (_radar_ref_rng_node->getType() == SGPropertyNode::NONE)
         _radar_ref_rng_node->setDoubleValue(35);
+    if (_radar_hdg_marker_node->getType() == SGPropertyNode::NONE)
+        _radar_hdg_marker_node->setBoolValue(true);
 
     _x_offset = 0;
     _y_offset = 0;
@@ -660,26 +663,13 @@ wxRadarBg::update_tacan()
 void
 wxRadarBg::update_heading_marker()
 {
-/*
-    float angle = _view_heading + _angle_offset;
-
-    float x = sin(angle);
-    float y = cos(angle);
-    float s_rot_x = sin(angle + SGD_PI_4);
-    float s_rot_y = cos(angle + SGD_PI_4);
-
-    float size = UNIT * 500;
-*/
+    if (!_radar_hdg_marker_node->getBoolValue())
+        return;
 
     const osg::Vec2f texBase(2 * UNIT, 3 * UNIT);
     float size = 600 * UNIT;
     osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
             * wxRotate(_view_heading + _angle_offset));
-
-    if (_display_mode == MAP) {
-        //cout << "Map Mode " << range << endl;
-//        m *= osg::Matrixf::translate(_scale, _scale, 0.0f);
-    }
 
     m *= _centerTrans;
     addQuad(_vertices, _texCoords, m, texBase);

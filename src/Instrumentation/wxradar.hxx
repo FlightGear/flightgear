@@ -99,6 +99,7 @@ private:
     SGPropertyNode_ptr _radar_centre_node;
     SGPropertyNode_ptr _radar_coverage_node;
     SGPropertyNode_ptr _radar_ref_rng_node;
+    SGPropertyNode_ptr _radar_hdg_marker_node;
 
     SGPropertyNode_ptr _ai_enabled_node;
 
