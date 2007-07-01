@@ -168,45 +168,41 @@ wxRadarBg::init ()
     _radarGeode = new osg::Geode;
     osg::StateSet* stateSet = _radarGeode->getOrCreateStateSet();
     stateSet->setTextureAttributeAndModes(0, _wxEcho.get());
-    osg::Geometry* geom = new osg::Geometry;
-    geom->setUseDisplayList(false);
+    _geom = new osg::Geometry;
+    _geom->setUseDisplayList(false);
     // Initially allocate space for 128 quads
-    osg::Vec2Array* vertices = new osg::Vec2Array;
-    vertices->setDataVariance(osg::Object::DYNAMIC);
-    vertices->reserve(128 * 4);
-    geom->setVertexArray(vertices);
-    osg::Vec2Array* texCoords = new osg::Vec2Array;
-    texCoords->setDataVariance(osg::Object::DYNAMIC);
-    texCoords->reserve(128 * 4);
-    geom->setTexCoordArray(0, texCoords);
+    _vertices = new osg::Vec2Array;
+    _vertices->setDataVariance(osg::Object::DYNAMIC);
+    _vertices->reserve(128 * 4);
+    _geom->setVertexArray(_vertices);
+    _texCoords = new osg::Vec2Array;
+    _texCoords->setDataVariance(osg::Object::DYNAMIC);
+    _texCoords->reserve(128 * 4);
+    _geom->setTexCoordArray(0, _texCoords);
     osg::Vec3Array* colors = new osg::Vec3Array;
     colors->push_back(osg::Vec3(1.0f, 1.0f, 1.0f)); // color of echos
     colors->push_back(osg::Vec3(1.0f, 0.0f, 0.0f)); // arc mask
     colors->push_back(osg::Vec3(0.0f, 0.0f, 0.0f)); // rest of mask
-    geom->setColorBinding(osg::Geometry::BIND_PER_PRIMITIVE_SET);
-    geom->setColorArray(colors);
+    _geom->setColorBinding(osg::Geometry::BIND_PER_PRIMITIVE_SET);
+    _geom->setColorArray(colors);
     osg::PrimitiveSet* pset = new osg::DrawArrays(osg::PrimitiveSet::QUADS);
     pset->setDataVariance(osg::Object::DYNAMIC);
-    geom->addPrimitiveSet(pset);
+    _geom->addPrimitiveSet(pset);
     pset = new osg::DrawArrays(osg::PrimitiveSet::QUADS);
     pset->setDataVariance(osg::Object::DYNAMIC);
-    geom->addPrimitiveSet(pset);
+    _geom->addPrimitiveSet(pset);
     pset = new osg::DrawArrays(osg::PrimitiveSet::TRIANGLES);
     pset->setDataVariance(osg::Object::DYNAMIC);
-    geom->addPrimitiveSet(pset);
-    geom->setInitialBound(osg::BoundingBox(osg::Vec3f(-256.0f, -256.0f, 0.0f),
+    _geom->addPrimitiveSet(pset);
+    _geom->setInitialBound(osg::BoundingBox(osg::Vec3f(-256.0f, -256.0f, 0.0f),
             osg::Vec3f(256.0f, 256.0f, 0.0f)));
-    _radarGeode->addDrawable(geom);
+    _radarGeode->addDrawable(_geom);
     _odg->allocRT();
     // Texture in the 2D panel system
     FGTextureManager::addTexture(ODGAUGE_NAME, _odg->getTexture());
 
     osg::Camera* camera = _odg->getCamera();
     camera->addChild(_radarGeode.get());
-
-    _geom = static_cast<osg::Geometry*>(_radarGeode->getDrawable(0));
-    _vertices = static_cast<osg::Vec2Array*>(_geom->getVertexArray());
-    _texCoords = static_cast<osg::Vec2Array*>(_geom->getTexCoordArray(0));
 }
 
 
@@ -378,12 +374,12 @@ wxRadarBg::update (double delta_time_sec)
             _texCoords->push_back(osg::Vec2f(0.5f, 0.5f));
             _vertices->push_back(osg::Vec2f(-xOffset, 256.0 + yOffset));
             maskPSet->set(osg::PrimitiveSet::QUADS, firstQuadVert, 4);
+
             // The triangles aren't supposed to be textured, but there's
             // no need to set up a different Geometry, switch modes,
             // etc. I happen to know that there's a white pixel in the
             // texture at 1.0, 0.0 :)
             float centerY = tan(30 * SG_DEGREES_TO_RADIANS);
-            const osg::Vec2f whiteSpot(1.0f, 0.0f);
             _vertices->push_back(osg::Vec2f(0.0, 0.0));
             _vertices->push_back(osg::Vec2f(-256.0, 0.0));
             _vertices->push_back(osg::Vec2f(-256.0, 256.0 * centerY));
@@ -400,6 +396,7 @@ wxRadarBg::update (double delta_time_sec)
             _vertices->push_back(osg::Vec2f(256.0, -256.0));
             _vertices->push_back(osg::Vec2f(-256.0, -256.0));
 
+            const osg::Vec2f whiteSpot(1.0f, 0.0f);
             for (int i = 0; i < 3 * 4; i++)
                 _texCoords->push_back(whiteSpot);
 
@@ -695,8 +692,6 @@ wxRadarBg::center_map()
 void
 wxRadarBg::apply_map_offset()
 {
-    if (_display_mode != MAP)
-        return;
     double lat = _user_lat_node->getDoubleValue();
     double lon = _user_lon_node->getDoubleValue();
     double bearing, distance, az2;
