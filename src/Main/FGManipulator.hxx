@@ -106,6 +106,12 @@ public:
     void setPosition(const osg::Vec3d position) { this->position = position; }
     void setAttitude(const osg::Quat attitude) { this->attitude = attitude; }
 
+    /** Whether or not resizing is supported. It might not be when
+     * using multiple displays.
+     */
+    bool getResizable() { return resizable; }
+    void setResizable(bool _resizable) { resizable = _resizable; }
+
 protected:
     osg::ref_ptr<osg::Node> _node;
     fgIdleHandler idleHandler;
@@ -119,9 +125,10 @@ protected:
     int osgModifiers;
     typedef std::map<int, osgGA::GUIEventAdapter::ModKeyMask> KeyMaskMap;
     KeyMaskMap keyMaskMap;
+    std::map<int, int> numlockKeyMap;
     osg::Vec3d position;
     osg::Quat attitude;
     void handleKey(const osgGA::GUIEventAdapter& ea, int& key, int& modifiers);
-
+    bool resizable;
 };
 #endif

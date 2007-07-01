@@ -13,20 +13,31 @@
 FGManipulator::FGManipulator() :
     idleHandler(0), drawHandler(0), windowResizeHandler(0), keyHandler(0),
     mouseClickHandler(0), mouseMotionHandler(0), currentModifiers(0),
-    osgModifiers(0)
+    osgModifiers(0), resizable(true)
 {
-    keyMaskMap[osgGA::GUIEventAdapter::KEY_Shift_L]
-	= osgGA::GUIEventAdapter::MODKEY_LEFT_SHIFT;
-    keyMaskMap[osgGA::GUIEventAdapter::KEY_Shift_R]
-	= osgGA::GUIEventAdapter::MODKEY_RIGHT_SHIFT;
-    keyMaskMap[osgGA::GUIEventAdapter::KEY_Control_L]
-	= osgGA::GUIEventAdapter::MODKEY_LEFT_CTRL;
-    keyMaskMap[osgGA::GUIEventAdapter::KEY_Control_R]
-	= osgGA::GUIEventAdapter::MODKEY_RIGHT_CTRL;
-    keyMaskMap[osgGA::GUIEventAdapter::KEY_Alt_L]
-	= osgGA::GUIEventAdapter::MODKEY_LEFT_ALT;
-    keyMaskMap[osgGA::GUIEventAdapter::KEY_Alt_R]
-	= osgGA::GUIEventAdapter::MODKEY_RIGHT_ALT;
+    using namespace osgGA;
+    
+    keyMaskMap[GUIEventAdapter::KEY_Shift_L]
+	= GUIEventAdapter::MODKEY_LEFT_SHIFT;
+    keyMaskMap[GUIEventAdapter::KEY_Shift_R]
+	= GUIEventAdapter::MODKEY_RIGHT_SHIFT;
+    keyMaskMap[GUIEventAdapter::KEY_Control_L]
+	= GUIEventAdapter::MODKEY_LEFT_CTRL;
+    keyMaskMap[GUIEventAdapter::KEY_Control_R]
+	= GUIEventAdapter::MODKEY_RIGHT_CTRL;
+    keyMaskMap[GUIEventAdapter::KEY_Alt_L] = GUIEventAdapter::MODKEY_LEFT_ALT;
+    keyMaskMap[GUIEventAdapter::KEY_Alt_R] = GUIEventAdapter::MODKEY_RIGHT_ALT;
+    // We have to implement numlock too.
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Insert]  = '0';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_End] = '1';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Down] = '2';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Down] = '3';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Left] = '4';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Begin] = '5';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Right] = '6';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Home] = '7';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Up] = '8';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up] = '9';
 }
 
 void FGManipulator::setByMatrix(const osg::Matrixd& matrix)
@@ -160,7 +171,11 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
 	if (mouseMotionHandler)
 	    (*mouseMotionHandler)(x, y);
 	return true;
-    case osgGA::GUIEventAdapter::CLOSE_WINDOW:
+    case osgGA::GUIEventAdapter::RESIZE:
+	if (resizable && windowResizeHandler)
+	    (*windowResizeHandler)(ea.getWindowWidth(), ea.getWindowHeight());
+	return true;
+     case osgGA::GUIEventAdapter::CLOSE_WINDOW:
     case osgGA::GUIEventAdapter::QUIT_APPLICATION:
         fgOSExit(0);
         return true;
@@ -201,27 +216,30 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     case osgGA::GUIEventAdapter::KEY_F10:      key = PU_KEY_F10;       break;
     case osgGA::GUIEventAdapter::KEY_F11:      key = PU_KEY_F11;       break;
     case osgGA::GUIEventAdapter::KEY_F12:      key = PU_KEY_F12;       break;
-    case osgGA::GUIEventAdapter::KEY_KP_0: key = 364; break;
-    case osgGA::GUIEventAdapter::KEY_KP_1: key = 363; break;
-    case osgGA::GUIEventAdapter::KEY_KP_2: key = 359; break;
-    case osgGA::GUIEventAdapter::KEY_KP_3: key = 361; break;
-    case osgGA::GUIEventAdapter::KEY_KP_4: key = 356; break;
-    case osgGA::GUIEventAdapter::KEY_KP_5: key = 309; break;
-    case osgGA::GUIEventAdapter::KEY_KP_6: key = 358; break;
-    case osgGA::GUIEventAdapter::KEY_KP_7: key = 362; break;
-    case osgGA::GUIEventAdapter::KEY_KP_8: key = 357; break;
-    case osgGA::GUIEventAdapter::KEY_KP_9: key = 360; break;
-    case osgGA::GUIEventAdapter::KEY_KP_Enter: key = 269; break;
+    case osgGA::GUIEventAdapter::KEY_KP_Delete: key = '.'; break;
+    case osgGA::GUIEventAdapter::KEY_KP_Enter: key = '\r'; break;
+    case osgGA::GUIEventAdapter::KEY_KP_Add:   key = '+'; break;
+    case osgGA::GUIEventAdapter::KEY_KP_Divide: key = '/'; break;
+    case osgGA::GUIEventAdapter::KEY_KP_Multiply: key = '*'; break;
+    case osgGA::GUIEventAdapter::KEY_KP_Subtract: key = '-'; break;
     }
     osgGA::GUIEventAdapter::EventType eventType = ea.getEventType();
-    // Track the modifiers because OSG is currently (2.0) broken
-    KeyMaskMap::iterator iter = keyMaskMap.find(key);
-    if (iter != keyMaskMap.end()) {
-	int mask = iter->second;
-	if (eventType == osgGA::GUIEventAdapter::KEYUP)
-	    osgModifiers &= ~mask;
-	else
-	    osgModifiers |= mask;
+    std::map<int, int>::iterator numPadIter = numlockKeyMap.find(key);
+
+    if (numPadIter != numlockKeyMap.end()) {
+	if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_NUM_LOCK) {
+	    key = numPadIter->second;
+	}
+    } else {
+	// Track the modifiers because OSG is currently (2.0) broken
+	KeyMaskMap::iterator iter = keyMaskMap.find(key);
+	if (iter != keyMaskMap.end()) {
+	    int mask = iter->second;
+	    if (eventType == osgGA::GUIEventAdapter::KEYUP)
+		osgModifiers &= ~mask;
+	    else
+		osgModifiers |= mask;
+	}
     }
     modifiers = osgToFGModifiers(osgModifiers);
     currentModifiers = modifiers;

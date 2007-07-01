@@ -146,6 +146,8 @@ void fgOSOpenWindow(int w, int h, int bpp,
     // that achieves some magic ordering og the slaves so that we end up
     // in the main window more often.
     // This can be sorted out better when we got rid of glut and sdl.
+    FGManipulator* manipulator = globals->get_renderer()->getManipulator();
+    int nCameras = 0;
     if (fgHasNode("/sim/rendering/camera")) {
       SGPropertyNode* renderingNode = fgGetNode("/sim/rendering");
       for (int i = 0; i < renderingNode->nChildren(); ++i) {
@@ -153,6 +155,7 @@ void fgOSOpenWindow(int w, int h, int bpp,
         if (strcmp(cameraNode->getName(), "camera") != 0)
           continue;
 
+	nCameras++;
         // get a new copy of the traits struct
         osg::ref_ptr<osg::GraphicsContext::Traits> cameraTraits;
         cameraTraits = new osg::GraphicsContext::Traits(*traits);
@@ -195,6 +198,8 @@ void fgOSOpenWindow(int w, int h, int bpp,
         camera->setProjectionResizePolicy(rsp);
         viewer->addSlave(camera.get(), osg::Matrix::translate(-shearx, -sheary, 0), osg::Matrix());
       }
+      if (nCameras > 1)
+	manipulator->setResizable(false);
     }
 
     // now the main camera ...
