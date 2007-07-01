@@ -365,15 +365,19 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
 // <path>      ... absolute path of an XML file
 // <start-tag> ... callback function with two args: tag name, attribute hash
 // <end-tag>   ... callback function with one arg:  tag name
-// <data>      ... callback function with one arg:  data string
-// <pi>        ... callback function with two args: target string, data string
+// <data>      ... callback function with one arg:  data
+// <pi>        ... callback function with two args: target, data
 //                 (pi = "processing instruction")
 // All four callback functions are optional and default to nil.
 // The function returns nil on error, and the file name otherwise.
 static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
 {
     if(argc < 1 || !naIsString(args[0]))
-        naRuntimeError(c, "bad/missing argument to parsexml()");
+        naRuntimeError(c, "parsexml(): path argument missing or not a string");
+    if(argc > 5) argc = 5;
+    for(int i=1; i<argc; i++)
+        if(!(naIsNil(args[i]) || naIsFunc(args[i])))
+            naRuntimeError(c, "parsexml(): callback argument not a function");
 
     const char* file = naStr_data(args[0]);
     std::ifstream input(file);
@@ -410,14 +414,13 @@ static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
 // Convert a cartesian point to a geodetic lat/lon/altitude.
 static naRef f_carttogeod(naContext c, naRef me, int argc, naRef* args)
 {
-    const double RAD2DEG = 180.0 / SGD_PI;
     double lat, lon, alt, xyz[3];
     if(argc != 3) naRuntimeError(c, "carttogeod() expects 3 arguments");
     for(int i=0; i<3; i++)
         xyz[i] = naNumValue(args[i]).num;
     sgCartToGeod(xyz, &lat, &lon, &alt);
-    lat *= RAD2DEG;
-    lon *= RAD2DEG;
+    lat *= SG_RADIANS_TO_DEGREES;
+    lon *= SG_RADIANS_TO_DEGREES;
     naRef vec = naNewVector(c);
     naVec_append(vec, naNum(lat));
     naVec_append(vec, naNum(lon));
@@ -428,11 +431,10 @@ static naRef f_carttogeod(naContext c, naRef me, int argc, naRef* args)
 // Convert a geodetic lat/lon/altitude to a cartesian point.
 static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
 {
-    const double DEG2RAD = SGD_PI / 180.0;
     if(argc != 3) naRuntimeError(c, "geodtocart() expects 3 arguments");
-    double lat = naNumValue(args[0]).num * DEG2RAD;
-    double lon = naNumValue(args[1]).num * DEG2RAD;
-    double alt = naNumValue(args[2]).num * DEG2RAD;
+    double lat = naNumValue(args[0]).num * SG_DEGREES_TO_RADIANS;
+    double lon = naNumValue(args[1]).num * SG_DEGREES_TO_RADIANS;
+    double alt = naNumValue(args[2]).num;
     double xyz[3];
     sgGeodToCart(lat, lon, alt, xyz);
     naRef vec = naNewVector(c);
@@ -951,10 +953,10 @@ FGNasalModelData::~FGNasalModelData()
 //
 NasalXMLVisitor::NasalXMLVisitor(naContext c, int argc, naRef* args) :
     _c(naSubContext(c)),
-    _start_element(argc > 1 && naIsFunc(args[1]) ? args[1] : naNil()),
-    _end_element(argc > 2 && naIsFunc(args[2]) ? args[2] : naNil()),
-    _data(argc > 3 && naIsFunc(args[3]) ? args[3] : naNil()),
-    _pi(argc > 4 && naIsFunc(args[4]) ? args[4] : naNil())
+    _start_element(argc > 1 ? args[1] : naNil()),
+    _end_element(argc > 2 ? args[2] : naNil()),
+    _data(argc > 3 ? args[3] : naNil()),
+    _pi(argc > 4 ? args[4] : naNil())
 {
 }
 
