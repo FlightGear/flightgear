@@ -60,6 +60,8 @@
 # endif
 #endif
 
+#include <sstream>
+
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -135,13 +137,26 @@ void mkDialog (const char *txt)
     NewGUI *gui = (NewGUI *)globals->get_subsystem("gui");
     if (!gui)
         return;
-    SGPropertyNode_ptr dlg = gui->getDialogProperties("message");
-    if (!dlg)
+    SGPropertyNode *master = gui->getDialogProperties("message");
+    if (!master)
         return;
 
-    dlg->setStringValue("text/label", txt);
-    dlg->setStringValue("button/legend", "OK");
-    gui->showDialog("message");
+    string name;
+    SGPropertyNode *msg = fgGetNode("/sim/gui/dialogs", true);
+    for (unsigned int i = 1;; i++) {
+        std::ostringstream s;
+        s << "message-" << i;
+        name = s.str();
+        if (!msg->getNode(name.c_str(), false))
+            break;
+    }
+    msg = msg->getNode(name.c_str(), true);
+    msg->setStringValue("message", txt);
+    msg = msg->getNode("dialog", true);
+    copyProperties(master, msg);
+    msg->setStringValue("name", name.c_str());
+    gui->newDialog(msg);
+    gui->showDialog(name.c_str());
 }
 
 // Message Box to report an error.
@@ -158,9 +173,9 @@ void guiErrorMessage (const char *txt, const sg_throwable &throwable)
     msg += '\n';
     msg += throwable.getFormattedMessage();
     if (!throwable.getOrigin().empty()) {
-      msg += "\n (reported by ";
-      msg += throwable.getOrigin();
-      msg += ')';
+        msg += "\n (reported by ";
+        msg += throwable.getOrigin();
+        msg += ')';
     }
     SG_LOG(SG_GENERAL, SG_ALERT, msg);
     mkDialog(msg.c_str());
