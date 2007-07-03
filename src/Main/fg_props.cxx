@@ -96,7 +96,8 @@ static const char *
 getLoggingClasses ()
 {
   sgDebugClass classes = logbuf::get_log_classes();
-  static string result = "";	// FIXME
+  static string result;
+  result = "";
   for (int i = 0; log_class_mappings[i].c != SG_UNDEFD; i++) {
     if ((classes&log_class_mappings[i].c) > 0) {
       if (!result.empty())
