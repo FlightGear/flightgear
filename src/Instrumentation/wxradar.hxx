@@ -59,6 +59,7 @@ private:
     int _num;
     double _interval;
     double _time;
+    string _texture_path;
 
     typedef enum { ARC, MAP, PLAN, ROSE } DisplayMode;
     DisplayMode _display_mode;

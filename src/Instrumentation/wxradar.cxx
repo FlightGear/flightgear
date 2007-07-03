@@ -60,8 +60,6 @@ typedef radar_list_type::iterator radar_list_iterator;
 typedef radar_list_type::const_iterator radar_list_const_iterator;
 
 
-// texture name to use in 2D and 3D instruments
-static const char *ODGAUGE_NAME = "Aircraft/Instruments/Textures/od_wxradar.rgb";
 static const float UNIT = 1.0f / 8.0f;  // 8 symbols in a row/column in the texture
 
 
@@ -95,7 +93,11 @@ wxRadarBg::init ()
 
     _Instrument = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = _Instrument->getNode("serviceable", true);
-    _resultTexture = FGTextureManager::createTexture( ODGAUGE_NAME );
+
+    // texture name to use in 2D and 3D instruments
+    _texture_path = _Instrument->getStringValue("radar-texture-path",
+            "Aircraft/Instruments/Textures/od_wxradar.rgb");
+    _resultTexture = FGTextureManager::createTexture(_texture_path.c_str());
 
     SGPath tpath(globals->get_fg_root());
     string path = _Instrument->getStringValue("echo-texture-path",
@@ -199,7 +201,7 @@ wxRadarBg::init ()
     _radarGeode->addDrawable(_geom);
     _odg->allocRT();
     // Texture in the 2D panel system
-    FGTextureManager::addTexture(ODGAUGE_NAME, _odg->getTexture());
+    FGTextureManager::addTexture(_texture_path.c_str(), _odg->getTexture());
 
     osg::Camera* camera = _odg->getCamera();
     camera->addChild(_radarGeode.get());
@@ -277,7 +279,8 @@ wxRadarBg::update (double delta_time_sec)
         // we must locate them and replace their handle by hand
         // only do that when the instrument is turned on
         //if ( _last_switchKnob == "off" )
-        //_odg->set_texture( ODGAUGE_NAME, _resultTexture->getHandle());
+        //_odg->set_texture(_texture_path.c_str(), _resultTexture->getHandle());
+
         _last_switchKnob = switchKnob;
     }
 
