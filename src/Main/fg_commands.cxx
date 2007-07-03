@@ -1237,36 +1237,6 @@ do_replay (const SGPropertyNode * arg)
     return true;
 }
 
-
-/**
- * Return terrain elevation for given longitude/latitude pair.
- */
-static bool
-do_terrain_elevation (const SGPropertyNode * arg)
-{
-    SGPropertyNode *a = const_cast<SGPropertyNode *>(arg);
-    const SGMaterial *mat;
-    double elev;
-
-    double lon = a->getDoubleValue("longitude-deg", 0.0);
-    double lat = a->getDoubleValue("latitude-deg", 0.0);
-    bool ret = globals->get_scenery()->get_elevation_m(lat, lon, 10000.0, elev, &mat);
-
-    bool solid = true;
-    const char *matname = "";
-    if (mat) {
-        solid = mat->get_solid();
-        const vector<string> names = mat->get_names();
-        if (!names.empty())
-            matname = names[0].c_str();
-    }
-    a->setBoolValue("solid", solid);
-    a->setStringValue("material", matname);
-    a->setDoubleValue("elevation-m", elev);
-    return ret;
-}
-
-
 static bool
 do_decrease_visibility (const SGPropertyNode * arg)
 {
@@ -1485,7 +1455,6 @@ static struct {
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },
-    { "terrain-elevation", do_terrain_elevation },
     { "decrease-visibility", do_decrease_visibility },
     { "increase-visibility", do_increase_visibility },
     { "hud-init", do_hud_init },
