@@ -37,7 +37,7 @@ validate_format(const char *f)
     }
     if (*f++ != '%')
         return f_INVALID;
-    if (*f == ' ' || *f == '+' || *f == '-' || *f == '#')
+    while (*f == ' ' || *f == '+' || *f == '-' || *f == '#' || *f == '0')
         f++;
     while (*f && isdigit(*f))
         f++;
