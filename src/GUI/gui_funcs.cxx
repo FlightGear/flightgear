@@ -133,7 +133,10 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
 
 /* ================ General Purpose Functions ================ */
 
-// General Purpose Message Box
+// General Purpose Message Box. Makes sure no more than 5 different
+// messages are displayed at the same time, and none of them are
+// duplicates. (5 is a *lot*, but this will hardly ever be reached
+// and we don't want to miss any, either.)
 void mkDialog (const char *txt)
 {
     NewGUI *gui = (NewGUI *)globals->get_subsystem("gui");
@@ -143,15 +146,25 @@ void mkDialog (const char *txt)
     if (!master)
         return;
 
+    const int maxdialogs = 5;
     string name;
     SGPropertyNode *msg = fgGetNode("/sim/gui/dialogs", true);
-    for (unsigned int i = 1;; i++) {
+    int i;
+    for (i = 0; i < maxdialogs; i++) {
         std::ostringstream s;
         s << "message-" << i;
         name = s.str();
+
         if (!msg->getNode(name.c_str(), false))
             break;
+
+        if (!strcmp(txt, msg->getNode(name.c_str())->getStringValue("message"))) {
+            SG_LOG(SG_GENERAL, SG_WARN, "mkDialog(): duplicate of message " << txt);
+            return;
+        }
     }
+    if (i == maxdialogs)
+        return;
     msg = msg->getNode(name.c_str(), true);
     msg->setStringValue("message", txt);
     msg = msg->getNode("dialog", true);
