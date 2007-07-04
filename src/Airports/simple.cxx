@@ -50,6 +50,7 @@
 #include STL_STRING
 
 #include "simple.hxx"
+#include "xmlloader.hxx"
 
 SG_USING_STD(sort);
 SG_USING_STD(random_shuffle);
@@ -89,46 +90,14 @@ FGAirportDynamics * FGAirport::getDynamics()
     if (dynamics != 0) {
         return dynamics;
     } else {
-        FGRunwayPreference rwyPrefs;
         //cerr << "Trying to load dynamics for " << _id << endl;
-        dynamics = new FGAirportDynamics(_latitude, _longitude, _elevation, _id);
+        dynamics = new FGAirportDynamics(this);
+        XMLLoader::load(dynamics);
 
-        SGPath parkpath( globals->get_fg_root() );
-        parkpath.append( "/AI/Airports/" );
-        parkpath.append(_id);
-        parkpath.append("parking.xml");
-
-        SGPath rwyPrefPath( globals->get_fg_root() );
-        rwyPrefPath.append( "AI/Airports/" );
-        rwyPrefPath.append(_id);
-        rwyPrefPath.append("rwyuse.xml");
-
-        //if (ai_dirs.find(id.c_str()) != ai_dirs.end()
-        //  && parkpath.exists())
-        if (parkpath.exists()) {
-            try {
-                readXML(parkpath.str(),*dynamics);
-		//cerr << "Initializing " << getId() << endl;
-                dynamics->init();
-		dynamics->getGroundNetwork()->setParent(this);
-            } catch (const sg_exception &e) {
-                //cerr << "unable to read " << parkpath.str() << endl;
-            }
-        }
-
-        //if (ai_dirs.find(id.c_str()) != ai_dirs.end()
-        //  && rwyPrefPath.exists())
-        if (rwyPrefPath.exists()) {
-            try {
-                readXML(rwyPrefPath.str(), rwyPrefs);
-                dynamics->setRwyUse(rwyPrefs);
-            } catch (const sg_exception &e) {
-                //cerr << "unable to read " << rwyPrefPath.str() << endl;
-                //exit(1);
-            }
-        }
-        //exit(1);
-    }
+        FGRunwayPreference rwyPrefs(this);
+        XMLLoader::load(&rwyPrefs);
+        dynamics->setRwyUse(rwyPrefs);
+   }
     return dynamics;
 }
 
@@ -178,7 +147,6 @@ void FGAirportList::add( const string &id, const double longitude,
                          const double latitude, const double elevation,
                          const string &name, const bool has_metar )
 {
-    FGRunwayPreference rwyPrefs;
     FGAirport* a = new FGAirport(id, longitude, latitude, elevation, name, has_metar);
 
     airports_by_id[a->getId()] = a;

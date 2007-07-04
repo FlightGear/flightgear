@@ -24,7 +24,14 @@
 #ifndef _RUNWAYPREFS_HXX_
 #define _RUNWAYPREFS_HXX_
 
-#include <simgear/xml/easyxml.hxx>
+#include <time.h>
+#include <vector>
+#include <string>
+
+#include <simgear/compiler.h>
+
+SG_USING_STD(vector);
+SG_USING_STD(string);
 
 typedef vector<time_t> timeVec;
 typedef vector<time_t>::const_iterator timeVecConstIterator;
@@ -33,6 +40,7 @@ typedef vector<string> stringVec;
 typedef vector<string>::iterator stringVecIterator;
 typedef vector<string>::const_iterator stringVecConstIterator;
 
+class FGAirport;
 
 /***************************************************************************/
 class ScheduleTime {
@@ -120,42 +128,37 @@ typedef vector<RunwayGroup>::const_iterator PreferenceListConstIterator;
 
 /******************************************************************************/
 
-class FGRunwayPreference  : public XMLVisitor {
+class FGRunwayPreference {
 private:
-  string value;
-  string scheduleName;
+  FGAirport* _ap;
 
   ScheduleTime comTimes; // Commercial Traffic;
   ScheduleTime genTimes; // General Aviation;
   ScheduleTime milTimes; // Military Traffic;
-  ScheduleTime currTimes; // Needed for parsing;
 
-  RunwayList  rwyList;
-  RunwayGroup rwyGroup;
   PreferenceList preferences;
   
-
-  time_t processTime(const string&);
   bool initialized;
 
 public:
-  FGRunwayPreference();
+  FGRunwayPreference(FGAirport* ap);
   FGRunwayPreference(const FGRunwayPreference &other);
   
   FGRunwayPreference & operator= (const FGRunwayPreference &other);
+
   ScheduleTime *getSchedule(const char *trafficType);
   RunwayGroup *getGroup(const string& groupName);
-  bool available() { return initialized; };
 
- // Some overloaded virtual XMLVisitor members
-  virtual void startXML (); 
-  virtual void endXML   ();
-  virtual void startElement (const char * name, const XMLAttributes &atts);
-  virtual void endElement (const char * name);
-  virtual void data (const char * s, int len);
-  virtual void pi (const char * target, const char * data);
-  virtual void warning (const char * message, int line, int column);
-  virtual void error (const char * message, int line, int column);
+  string getId();
+
+  bool available() { return initialized; };
+  void setInitialized(bool state) { initialized = state; };
+
+  void setMilTimes(ScheduleTime& t) { milTimes = t; };
+  void setGenTimes(ScheduleTime& t) { genTimes = t; };
+  void setComTimes(ScheduleTime& t) { comTimes = t; };
+
+  void addRunwayGroup(RunwayGroup& g) { preferences.push_back(g); };
 };
 
 #endif

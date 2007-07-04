@@ -48,31 +48,26 @@ SG_USING_STD(vector);
 SG_USING_STD(sort);
 SG_USING_STD(random_shuffle);
 
+#include "simple.hxx"
 #include "dynamics.hxx"
 
-/********** FGAirport Dynamics *********************************************/
-
-FGAirportDynamics::FGAirportDynamics(double lat, double lon, double elev, string id) :
-  _longitude(lon),
-  _latitude(lat),
-  _elevation(elev),
-  _id(id)
-{
+FGAirportDynamics::FGAirportDynamics(FGAirport* ap) :
+  _ap(ap), rwyPrefs(ap) {
   lastUpdate = 0;
   for (int i = 0; i < 10; i++)
-    {
-      avWindHeading [i] = 0;
-      avWindSpeed   [i] = 0;
-    }
+     {
+       avWindHeading [i] = 0;
+       avWindSpeed   [i] = 0;
+     }
 }
 
-
 // Note that the ground network should also be copied
-FGAirportDynamics::FGAirportDynamics(const FGAirportDynamics& other) 
+FGAirportDynamics::FGAirportDynamics(const FGAirportDynamics& other) :
+  rwyPrefs(other.rwyPrefs)
 {
   for (FGParkingVecConstIterator ip= other.parkings.begin(); ip != other.parkings.end(); ip++)
     parkings.push_back(*(ip));
-  rwyPrefs = other.rwyPrefs;
+  // rwyPrefs = other.rwyPrefs;
   lastUpdate = other.lastUpdate;
   
   stringVecConstIterator il;
@@ -108,7 +103,8 @@ void FGAirportDynamics::init()
   // add the gate positions to the ground network. 
   groundNetwork.addNodes(&parkings);
   groundNetwork.init();
-  groundNetwork .setTowerController(&towerController);
+  groundNetwork.setTowerController(&towerController);
+  groundNetwork.setParent(_ap);
 }
 
 bool FGAirportDynamics::getAvailableParking(double *lat, double *lon, double *heading, int *gateId, double rad, const string &flType, const string &acType, const string &airline)
@@ -130,9 +126,9 @@ bool FGAirportDynamics::getAvailableParking(double *lat, double *lon, double *he
   
   if (parkings.begin() == parkings.end())
     {
-      //cerr << "Could not find parking spot at " << _id << endl;
-      *lat = _latitude;
-      *lon = _longitude;
+      //cerr << "Could not find parking spot at " << _ap->getId() << endl;
+      *lat = _ap->getLatitude();
+      *lon = _ap->getLongitude();
       *heading = 0;
       found = true;
     }
@@ -270,13 +266,13 @@ bool FGAirportDynamics::getAvailableParking(double *lat, double *lon, double *he
     }
   if (!found)
     {
-      //cerr << "Traffic overflow at" << _id 
+      //cerr << "Traffic overflow at" << _ap->getId() 
       //	   << ". flType = " << flType 
       //	   << ". airline = " << airline 
       //	   << " Radius = " <<rad
       //	   << endl;
-      *lat = _latitude;
-      *lon = _longitude;
+      *lat = _ap->getLatitude();
+      *lon = _ap->getLongitude();
       *heading = 0;
       *gateId  = -1;
       //exit(1);
@@ -288,8 +284,8 @@ void FGAirportDynamics::getParking (int id, double *lat, double* lon, double *he
 {
   if (id < 0)
     {
-      *lat = _latitude;
-      *lon = _longitude;
+      *lat = _ap->getLatitude();
+      *lon = _ap->getLongitude();
       *heading = 0;
     }
   else
@@ -337,117 +333,6 @@ void FGAirportDynamics::releaseParking(int id)
     }
 }
   
-void  FGAirportDynamics::startXML () {
-  //cout << "Start XML" << endl;
-}
-
-void  FGAirportDynamics::endXML () {
-  //cout << "End XML" << endl;
-}
-
-void  FGAirportDynamics::startElement (const char * name, const XMLAttributes &atts) {
-  // const char *attval;
-  FGParking park;
-  FGTaxiNode taxiNode;
-  FGTaxiSegment taxiSegment;
-  int index = 0;
-  taxiSegment.setIndex(index);
-  //cout << "Start element " << name << endl;
-  string attname;
-  string value;
-  string gateName;
-  string gateNumber;
-  string lat;
-  string lon;
-  if (name == string("Parking"))
-    {
-      for (int i = 0; i < atts.size(); i++)
-	{
-	  //cout << "  " << atts.getName(i) << '=' << atts.getValue(i) << endl; 
-	  attname = atts.getName(i);
-	  if (attname == string("index"))
-	    park.setIndex(atoi(atts.getValue(i)));
-	  else if (attname == string("type"))
-	    park.setType(atts.getValue(i));
-	 else if (attname == string("name"))
-	   gateName = atts.getValue(i);
-	  else if (attname == string("number"))
-	    gateNumber = atts.getValue(i);
-	  else if (attname == string("lat"))
-	   park.setLatitude(atts.getValue(i));
-	  else if (attname == string("lon"))
-	    park.setLongitude(atts.getValue(i)); 
-	  else if (attname == string("heading"))
-	    park.setHeading(atof(atts.getValue(i)));
-	  else if (attname == string("radius")) {
-	    string radius = atts.getValue(i);
-	    if (radius.find("M") != string::npos)
-	      radius = radius.substr(0, radius.find("M",0));
-	    //cerr << "Radius " << radius <<endl;
-	    park.setRadius(atof(radius.c_str()));
-	  }
-	   else if (attname == string("airlineCodes"))
-	     park.setCodes(atts.getValue(i));
-	}
-      park.setName((gateName+gateNumber));
-      parkings.push_back(park);
-    }
-  if (name == string("node")) 
-    {
-      for (int i = 0; i < atts.size() ; i++)
-	{
-	  attname = atts.getName(i);
-	  if (attname == string("index"))
-	    taxiNode.setIndex(atoi(atts.getValue(i)));
-	  if (attname == string("lat"))
-	    taxiNode.setLatitude(atts.getValue(i));
-	  if (attname == string("lon"))
-	    taxiNode.setLongitude(atts.getValue(i));
-	}
-      groundNetwork.addNode(taxiNode);
-    }
-  if (name == string("arc")) 
-    {
-      taxiSegment.setIndex(++index);
-      for (int i = 0; i < atts.size() ; i++)
-	{
-	  attname = atts.getName(i);
-	  if (attname == string("begin"))
-	    taxiSegment.setStartNodeRef(atoi(atts.getValue(i)));
-	  if (attname == string("end"))
-	    taxiSegment.setEndNodeRef(atoi(atts.getValue(i)));
-	}
-      groundNetwork.addSegment(taxiSegment);
-    }
-  // sort by radius, in asending order, so that smaller gates are first in the list
-}
-
-void  FGAirportDynamics::endElement (const char * name) {
-  //cout << "End element " << name << endl;
-
-}
-
-void  FGAirportDynamics::data (const char * s, int len) {
-  string token = string(s,len);
-  //cout << "Character data " << string(s,len) << endl;
-  //if ((token.find(" ") == string::npos && (token.find('\n')) == string::npos))
-    //value += token;
-  //else
-    //value = string("");
-}
-
-void  FGAirportDynamics::pi (const char * target, const char * data) {
-  //cout << "Processing instruction " << target << ' ' << data << endl;
-}
-
-void  FGAirportDynamics::warning (const char * message, int line, int column) {
-  SG_LOG(SG_IO, SG_WARN, "Warning: " << message << " (" << line << ',' << column << ')');
-}
-
-void  FGAirportDynamics::error (const char * message, int line, int column) {
-  SG_LOG(SG_IO, SG_ALERT, "Error: " << message << " (" << line << ',' << column << ')');
-}
-
 void FGAirportDynamics::setRwyUse(const FGRunwayPreference& ref)
 {
   rwyPrefs = ref;
@@ -540,7 +425,7 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	  
 	  //string rwy_no = globals->get_runways()->search(apt->getId(), int(wind_heading));
 	  string scheduleName;
-	  //cerr << "finding active Runway for" << _id << endl;
+	  //cerr << "finding active Runway for" << _ap->getId() << endl;
 	  //cerr << "Nr of seconds since day start << " << dayStart << endl;
 
 	  ScheduleTime *currSched;
@@ -564,7 +449,7 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	  //cerr << "Nr of Active Runways = " << nrActiveRunways << endl; 
 
 	  // 
-	  currRunwayGroup->setActive(_id, 
+	  currRunwayGroup->setActive(_ap->getId(), 
 				     windSpeed, 
 				     windHeading, 
 				     maxTail, 
@@ -622,7 +507,7 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	    }
 	}
       
-      //runway = globals->get_runways()->search(_id, int(windHeading));
+      //runway = globals->get_runways()->search(_ap->getId(), int(windHeading));
       //cerr << "Seleceted runway: " << runway << endl;
     }
 }
@@ -642,5 +527,25 @@ string FGAirportDynamics::chooseRunwayFallback()
     //which is consistent with Flightgear's initial setup.
   }
   
-   return globals->get_runways()->search(_id, int(windHeading));
+   return globals->get_runways()->search(_ap->getId(), int(windHeading));
+}
+
+void FGAirportDynamics::addParking(FGParking& park) {
+  parkings.push_back(park);
+}
+
+double FGAirportDynamics::getLatitude() const {
+  return _ap->getLatitude();
+}
+
+double FGAirportDynamics::getLongitude() const {
+  return _ap->getLongitude();
+}
+
+double FGAirportDynamics::getElevation() const {
+  return _ap->getElevation();
+}
+
+const string& FGAirportDynamics::getId() const {
+  return _ap->getId();
 }

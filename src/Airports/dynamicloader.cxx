@@ -1,0 +1,115 @@
+#include "dynamicloader.hxx"
+
+FGAirportDynamicsXMLLoader::FGAirportDynamicsXMLLoader(FGAirportDynamics* dyn):
+    XMLVisitor(), _dynamics(dyn) {}
+
+void  FGAirportDynamicsXMLLoader::startXML () {
+  //cout << "Start XML" << endl;
+}
+
+void  FGAirportDynamicsXMLLoader::endXML () {
+  //cout << "End XML" << endl;
+}
+
+void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttributes &atts) {
+  // const char *attval;
+  FGParking park;
+  FGTaxiNode taxiNode;
+  FGTaxiSegment taxiSegment;
+  int index = 0;
+  taxiSegment.setIndex(index);
+  //cout << "Start element " << name << endl;
+  string attname;
+  string value;
+  string gateName;
+  string gateNumber;
+  string lat;
+  string lon;
+  if (name == string("Parking"))
+    {
+      for (int i = 0; i < atts.size(); i++)
+	{
+	  //cout << "  " << atts.getName(i) << '=' << atts.getValue(i) << endl; 
+	  attname = atts.getName(i);
+	  if (attname == string("index"))
+	    park.setIndex(atoi(atts.getValue(i)));
+	  else if (attname == string("type"))
+	    park.setType(atts.getValue(i));
+	 else if (attname == string("name"))
+	   gateName = atts.getValue(i);
+	  else if (attname == string("number"))
+	    gateNumber = atts.getValue(i);
+	  else if (attname == string("lat"))
+	   park.setLatitude(atts.getValue(i));
+	  else if (attname == string("lon"))
+	    park.setLongitude(atts.getValue(i)); 
+	  else if (attname == string("heading"))
+	    park.setHeading(atof(atts.getValue(i)));
+	  else if (attname == string("radius")) {
+	    string radius = atts.getValue(i);
+	    if (radius.find("M") != string::npos)
+	      radius = radius.substr(0, radius.find("M",0));
+	    //cerr << "Radius " << radius <<endl;
+	    park.setRadius(atof(radius.c_str()));
+	  }
+	   else if (attname == string("airlineCodes"))
+	     park.setCodes(atts.getValue(i));
+	}
+      park.setName((gateName+gateNumber));
+      _dynamics->addParking(park);
+    }
+  if (name == string("node")) 
+    {
+      for (int i = 0; i < atts.size() ; i++)
+	{
+	  attname = atts.getName(i);
+	  if (attname == string("index"))
+	    taxiNode.setIndex(atoi(atts.getValue(i)));
+	  if (attname == string("lat"))
+	    taxiNode.setLatitude(atts.getValue(i));
+	  if (attname == string("lon"))
+	    taxiNode.setLongitude(atts.getValue(i));
+	}
+      _dynamics->getGroundNetwork()->addNode(taxiNode);
+    }
+  if (name == string("arc")) 
+    {
+      taxiSegment.setIndex(++index);
+      for (int i = 0; i < atts.size() ; i++)
+	{
+	  attname = atts.getName(i);
+	  if (attname == string("begin"))
+	    taxiSegment.setStartNodeRef(atoi(atts.getValue(i)));
+	  if (attname == string("end"))
+	    taxiSegment.setEndNodeRef(atoi(atts.getValue(i)));
+	}
+      _dynamics->getGroundNetwork()->addSegment(taxiSegment);
+    }
+  // sort by radius, in asending order, so that smaller gates are first in the list
+}
+
+void  FGAirportDynamicsXMLLoader::endElement (const char * name) {
+  //cout << "End element " << name << endl;
+
+}
+
+void  FGAirportDynamicsXMLLoader::data (const char * s, int len) {
+  string token = string(s,len);
+  //cout << "Character data " << string(s,len) << endl;
+  //if ((token.find(" ") == string::npos && (token.find('\n')) == string::npos))
+    //value += token;
+  //else
+    //value = string("");
+}
+
+void  FGAirportDynamicsXMLLoader::pi (const char * target, const char * data) {
+  //cout << "Processing instruction " << target << ' ' << data << endl;
+}
+
+void  FGAirportDynamicsXMLLoader::warning (const char * message, int line, int column) {
+  SG_LOG(SG_IO, SG_WARN, "Warning: " << message << " (" << line << ',' << column << ')');
+}
+
+void  FGAirportDynamicsXMLLoader::error (const char * message, int line, int column) {
+  SG_LOG(SG_IO, SG_ALERT, "Error: " << message << " (" << line << ',' << column << ')');
+}

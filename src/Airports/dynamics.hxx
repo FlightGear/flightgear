@@ -34,14 +34,12 @@
 #include "runwayprefs.hxx"
 #include "trafficcontrol.hxx"
 
+class FGAirport;
 
-class FGAirportDynamics : public XMLVisitor {
+class FGAirportDynamics {
 
 private:
-  double _longitude;    // degrees
-  double _latitude;     // degrees
-  double _elevation;    // ft
-  string _id;
+  FGAirport* _ap;
 
   FGParkingVec       parkings;
   FGRunwayPreference rwyPrefs;
@@ -64,19 +62,22 @@ private:
   string chooseRunwayFallback();
 
 public:
-  FGAirportDynamics(double, double, double, string);
+  FGAirportDynamics(FGAirport* ap);
   FGAirportDynamics(const FGAirportDynamics &other);
   ~FGAirportDynamics();
 
 
   void init();
-  double getLongitude() const { return _longitude;};
+  double getLongitude() const; 
   // Returns degrees
-  double getLatitude()  const { return _latitude; };
+  double getLatitude()  const; 
   // Returns ft
-  double getElevation() const { return _elevation;};
+  double getElevation() const; 
+  const string& getId() const; 
   
   void getActiveRunway(const string& trafficType, int action, string& runway);
+
+  void addParking(FGParking& park);
   bool getAvailableParking(double *lat, double *lon, 
 			   double *heading, int *gate, double rad, const string& fltype, 
 			   const string& acType, const string& airline);
@@ -93,16 +94,6 @@ public:
   
 
   void setRwyUse(const FGRunwayPreference& ref);
-
- // Some overloaded virtual XMLVisitor members
-  virtual void startXML (); 
-  virtual void endXML   ();
-  virtual void startElement (const char * name, const XMLAttributes &atts);
-  virtual void endElement (const char * name);
-  virtual void data (const char * s, int len);
-  virtual void pi (const char * target, const char * data);
-  virtual void warning (const char * message, int line, int column);
-  virtual void error (const char * message, int line, int column);
 };
 
 
