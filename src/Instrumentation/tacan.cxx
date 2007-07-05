@@ -327,10 +327,6 @@ TACAN::search (double frequency_mhz, double longitude_rad,
             }
         }
 
-        SG_LOG( SG_INSTR, SG_DEBUG, "name " << _mobile_name);
-        SG_LOG( SG_INSTR, SG_DEBUG, "lat " << _mobile_lat << "lon " << _mobile_lon);
-        SG_LOG( SG_INSTR, SG_DEBUG, "elev " << _mobile_elevation_ft);
-
         //try any AI tankers second
 
         if ( !_mobile_valid) {
@@ -368,11 +364,6 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                 }
             }
         }
-
-        SG_LOG( SG_INSTR, SG_DEBUG, "tanker name " << _mobile_name);
-        SG_LOG( SG_INSTR, SG_DEBUG, "lat " << _mobile_lat << "lon " << _mobile_lon);
-        SG_LOG( SG_INSTR, SG_DEBUG, "elev " << _mobile_elevation_ft);
-        SG_LOG( SG_INSTR, SG_DEBUG, "range " << _mobile_range_nm);
     }
 
     //try any mp tankers third, if we haven't found the tanker in the ai aircraft
