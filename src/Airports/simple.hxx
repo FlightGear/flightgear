@@ -78,8 +78,8 @@ public:
     FGAirport(const string& id, double lon, double lat, double elev, const string& name, bool has_metar);
     ~FGAirport();
 
-    string getId() const { return _id; }
-    const string &getName() const { return _name; }
+    const string& getId() const { return _id; }
+    const string& getName() const { return _name; }
     double getLongitude() const { return _longitude; }
     // Returns degrees
     double getLatitude()  const { return _latitude; }

@@ -31,6 +31,18 @@
 /***************************************************************************
  * FGTrafficRecord
  **************************************************************************/
+FGTrafficRecord::FGTrafficRecord() :
+  id(0), waitsForId(0),
+  currentPos(0),
+  leg(0),
+  latitude(0),
+  longitude(0), 
+   heading(0), 
+   speed(0), 
+   altitude(0), 
+   radius(0) {
+}
+
 void FGTrafficRecord::setPositionAndIntentions(int pos, FGAIFlightPlan *route)
 {
  
@@ -346,6 +358,7 @@ void FGTowerController::announcePosition(int id, FGAIFlightPlan *intendedRoute, 
   if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
     FGTrafficRecord rec;
     rec.setId(id);
+
     rec.setPositionAndHeading(lat, lon, heading, speed, alt);
     rec.setRunway(intendedRoute->getRunway());
     rec.setLeg(leg);

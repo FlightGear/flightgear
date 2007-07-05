@@ -47,35 +47,6 @@
 
 #include "parking.hxx"
 
-
-/*****************************************************************************
- * Helper function for parsing position string
- ****************************************************************************/
-double processPosition(const string &pos)
-{
-  string prefix;
-  string subs;
-  string degree;
-  string decimal;
-  int sign = 1;
-  double value;
-  subs = pos;
-  prefix= subs.substr(0,1);
-  if (prefix == string("S") || (prefix == string("W")))
-    sign = -1;
-  subs    = subs.substr(1, subs.length());
-  degree  = subs.substr(0, subs.find(" ",0));
-  decimal = subs.substr(subs.find(" ",0), subs.length());
-  
-	      
-  //cerr << sign << " "<< degree << " " << decimal << endl;
-  value = sign * (atof(degree.c_str()) + atof(decimal.c_str())/60.0);
-  //cerr << value <<endl;
-  //exit(1);
-  return value;
-}
-
-
 /*********************************************************************************
  * FGParking
  ********************************************************************************/
@@ -87,12 +58,10 @@ FGParking::FGParking(double lat,
 		     const string &name,
 		     const string &tpe,
 		     const string &codes)
+  : FGTaxiNode(lat,lon,idx)
 {
-  latitude     = lat;
-  longitude    = lon;
   heading      = hdg;
   parkingName  = name;
-  index        = idx;
   type         = tpe;
   airlineCodes = codes;
 }

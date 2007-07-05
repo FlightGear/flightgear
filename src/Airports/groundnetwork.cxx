@@ -41,7 +41,6 @@
 //#include <Main/fg_props.hxx>
 //#include <Airports/runways.hxx>
 
-
 #include <AIModel/AIFlightPlan.hxx>
 
 //#include STL_STRING
@@ -50,7 +49,32 @@
 
 SG_USING_STD(sort);
 
-
+/*****************************************************************************
+ * Helper function for parsing position string
+ ****************************************************************************/
+double processPosition(const string &pos)
+{
+  string prefix;
+  string subs;
+  string degree;
+  string decimal;
+  int sign = 1;
+  double value;
+  subs = pos;
+  prefix= subs.substr(0,1);
+  if (prefix == string("S") || (prefix == string("W")))
+    sign = -1;
+  subs    = subs.substr(1, subs.length());
+  degree  = subs.substr(0, subs.find(" ",0));
+  decimal = subs.substr(subs.find(" ",0), subs.length());
+  
+	      
+  //cerr << sign << " "<< degree << " " << decimal << endl;
+  value = sign * (atof(degree.c_str()) + atof(decimal.c_str())/60.0);
+  //cerr << value <<endl;
+  //exit(1);
+  return value;
+}
 
 /**************************************************************************
  * FGTaxiNode

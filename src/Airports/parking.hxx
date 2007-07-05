@@ -34,19 +34,15 @@
 #include STL_STRING
 #include <vector>
 
+#include "gnnode.hxx"
 
 SG_USING_STD(string);
 SG_USING_STD(vector);
 
-double processPosition(const string& pos);
-
-class FGParking {
+class FGParking : public FGTaxiNode {
 private:
-  double latitude;
-  double longitude;
   double heading;
   double radius;
-  int index;
   string parkingName;
   string type;
   string airlineCodes;
@@ -66,11 +62,10 @@ public:
 	    const string& name,
 	    const string& tpe,
 	    const string& codes);
-  void setLatitude (const string& lat)  { latitude    = processPosition(lat);  };
-  void setLongitude(const string& lon)  { longitude   = processPosition(lon);  };
+
   void setHeading  (double hdg)  { heading     = hdg;  };
   void setRadius   (double rad)  { radius      = rad;  };
-  void setIndex    (int    idx)  { index       = idx;  };
+
   void setName     (const string& name) { parkingName = name; };
   void setType     (const string& tpe)  { type        = tpe;  };
   void setCodes    (const string& codes){ airlineCodes= codes;};
@@ -78,16 +73,15 @@ public:
   bool isAvailable ()         { return available;};
   void setAvailable(bool val) { available = val; };
   
-  double getLatitude () { return latitude;    };
-  double getLongitude() { return longitude;   };
   double getHeading  () { return heading;     };
   double getRadius   () { return radius;      };
-  int    getIndex    () { return index;       };
+
   string getType     () { return type;        };
   string getCodes    () { return airlineCodes;};
   string getName     () { return parkingName; };
 
-  bool operator< (const FGParking &other) const {return radius < other.radius; };
+  bool operator< (const FGParking &other) const {
+    return radius < other.radius; };
 };
 
 typedef vector<FGParking> FGParkingVec;

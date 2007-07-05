@@ -136,7 +136,7 @@ private:
   
   
 public:
-  FGTrafficRecord() {};
+  FGTrafficRecord();
   
   void setId(int val)  { id = val; };
   void setRadius(double rad) { radius = rad;};

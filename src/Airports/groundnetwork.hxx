@@ -27,17 +27,15 @@
 #include <simgear/compiler.h>
 #include <simgear/route/waypoint.hxx>
 
-
 #include STL_STRING
 #include <vector>
 
 SG_USING_STD(string);
 SG_USING_STD(vector);
 
+#include "gnnode.hxx"
 #include "parking.hxx"
 #include "trafficcontrol.hxx"
-
-
 
 class FGTaxiSegment; // forward reference
 class FGAIFlightPlan; // forward reference
@@ -48,49 +46,6 @@ typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentVectorIterator;
 
 //typedef vector<FGTaxiSegment*> FGTaxiSegmentPointerVector;
 //typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentPointerVectorIterator;
-
-/**************************************************************************************
- * class FGTaxiNode
- *************************************************************************************/
-class FGTaxiNode 
-{
-private:
-  double lat;
-  double lon;
-  int index;
-  FGTaxiSegmentVector next; // a vector of pointers to all the segments leaving from this node
-  
-public:
-  FGTaxiNode();
-  FGTaxiNode(double, double, int);
-
-  void setIndex(int idx)                  { index = idx;};
-  void setLatitude (double val)           { lat = val;};
-  void setLongitude(double val)           { lon = val;};
-  void setLatitude (const string& val)           { lat = processPosition(val);  };
-  void setLongitude(const string& val)           { lon = processPosition(val);  };
-  void addSegment(FGTaxiSegment *segment) { next.push_back(segment); };
-  
-  double getLatitude() { return lat;};
-  double getLongitude(){ return lon;};
-
-  int getIndex() { return index; };
-  FGTaxiNode *getAddress() { return this;};
-  FGTaxiSegmentVectorIterator getBeginRoute() { return next.begin(); };
-  FGTaxiSegmentVectorIterator getEndRoute()   { return next.end();   }; 
-  bool operator<(const FGTaxiNode &other) const { return index < other.index; };
-
-  void sortEndSegments(bool);
-
-  // used in way finding
-  double pathscore;
-  FGTaxiNode* previousnode;
-  FGTaxiSegment* previousseg;
-  
-};
-
-typedef vector<FGTaxiNode*> FGTaxiNodeVector;
-typedef vector<FGTaxiNode*>::iterator FGTaxiNodeVectorIterator;
 
 /***************************************************************************************
  * class FGTaxiSegment
