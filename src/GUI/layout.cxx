@@ -315,7 +315,7 @@ void LayoutWidget::doTable(bool doLayout, int* w, int* h)
             int total = 0;
             for(j=0; j<cell->rspan; j++)
                 total += rowSizes[cell->row + j];
-            int extra = total - cell->h;
+            int extra = cell->h - total;
             if(extra > 0) {
                 for(j=0; j<cell->rspan; j++) {
                     int chunk = extra / (cell->rspan - j);
@@ -328,7 +328,7 @@ void LayoutWidget::doTable(bool doLayout, int* w, int* h)
             int total = 0;
             for(j=0; j<cell->cspan; j++)
                 total += colSizes[cell->col + j];
-            int extra = total - cell->w;
+            int extra = cell->w - total;
             if(extra > 0) {
                 for(j=0; j<cell->cspan; j++) {
                     int chunk = extra / (cell->cspan - j);
