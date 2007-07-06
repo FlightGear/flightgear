@@ -552,7 +552,7 @@ static void fgMainLoop( void ) {
     static sgdVec3 last_visitor_pos = {0, 0, 0};
     static sgdVec3 last_model_pos = {0, 0, 0};
 
-    //get the orientation
+    // get the orientation
     const SGQuatd view_or = current_view->getViewOrientation();
     SGQuatd surf_or = SGQuatd::fromLonLatDeg(
         current_view->getLongitude_deg(), current_view->getLatitude_deg());
@@ -561,9 +561,13 @@ static void fgMainLoop( void ) {
         globals->get_aircraft_model()->get3DModel()->getPitchDeg(),
         globals->get_aircraft_model()->get3DModel()->getRollDeg());
 
-    //get the up and at vector in the aircraft base
+    // get the up and at vector in the aircraft base
+    // (ok, the up vector is a down vector, but the coordinates
+    // are finally calculated in a left hand system and openal
+    // lives in a right hand system. Therefore we need to pass
+    // the down vector to get correct stereo sound.)
     SGVec3d sgv_up = model_or.rotateBack(
-        surf_or.rotateBack(view_or.rotate(SGVec3d(0, -1, 0))));
+        surf_or.rotateBack(view_or.rotate(SGVec3d(0, 1, 0))));
     sgVec3 up;
     sgSetVec3(up, sgv_up[0], sgv_up[1], sgv_up[2]);
     SGVec3d sgv_at = model_or.rotateBack(
@@ -603,13 +607,13 @@ static void fgMainLoop( void ) {
         sgScaleVec3( listener_vel, 1 / delta_time_sec );
     }
 
-    //checking, if the listener pos has moved suddenly
+    // checking, if the listener pos has moved suddenly
     if (sgLengthVec3(listener_vel) > 1000)
     {
-        //check if the relative speed model vs listener has moved suddenly, too
+        // check if the relative speed model vs listener has moved suddenly, too
         sgVec3 delta_vel;
         sgSubVec3(delta_vel, listener_vel, model_vel );
-        if (sgLengthVec3(listener_vel) > 1000)
+        if (sgLengthVec3(delta_vel) > 1000)
             sgSetVec3(listener_vel, model_vel[0], model_vel[1], model_vel[2] ); // a sane value
         else
             globals->get_soundmgr()->set_listener_vel( listener_vel );
