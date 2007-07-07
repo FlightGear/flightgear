@@ -1063,7 +1063,6 @@ bool FGGroundNetwork::checkForCircularWaits(int id)
    TrafficVectorIterator i = activeTraffic.begin();
    int trafficSize = activeTraffic.size();
    if (trafficSize)  {
-        //while ((i->getId() != id) && i != activeTraffic.end()) 
         while (i != activeTraffic.end()) {
         if (i->getId() == id) {
 	    break;
@@ -1073,7 +1072,7 @@ bool FGGroundNetwork::checkForCircularWaits(int id)
   }
   else {
       return false;
-  } 
+  }
   if (i == activeTraffic.end() || (trafficSize == 0)) {
     SG_LOG(SG_GENERAL, SG_ALERT, "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits");
   }
@@ -1082,6 +1081,13 @@ bool FGGroundNetwork::checkForCircularWaits(int id)
    target = current->getWaitsForId();
    //bool printed = false; // Note that this variable is for debugging purposes only.
    int counter = 0;
+
+   if (id == target) {
+       //cerr << "aircraft waits for user" << endl;
+       return false;
+   }
+
+
    while ((target > 0) && (target != id) && counter++ < trafficSize) {
     //printed = true;
      TrafficVectorIterator i = activeTraffic.begin();
@@ -1126,10 +1132,18 @@ bool FGGroundNetwork::checkForCircularWaits(int id)
     //     << " (" << other->getId()  << "); " << endl;;
     //current = other;
    }
+
+
+
+
+
+
    //if (printed)
    //   cerr << "[done] " << endl << endl;;
    if (id == target) {
-       SG_LOG(SG_GENERAL, SG_INFO, "Detected circular wait condition");
+       SG_LOG(SG_GENERAL, SG_ALERT, "Detected circular wait condition");
+       cerr << "Id = " << id << endl;
+       cerr << "target = " << target << endl;
        return true;
    } else {
    return false;
