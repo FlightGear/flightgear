@@ -50,35 +50,22 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
   SGWayPoint sec (arrlon,
 		  arrlat,
 		  100);
+  double course, distance;
   first.CourseAndDistance(sec, &course, &distance);
   distance *= SG_METER_TO_NM;
-  temp = sgPolarToCart3d(Point3D(deplon *
-				 SG_DEGREES_TO_RADIANS,
-				 deplat  *
-				 SG_DEGREES_TO_RADIANS,
-				 1.0));
-  a[0] = temp.x();
-  a[1] = temp.y();
-  a[2] = temp.z();
 
-  temp = sgPolarToCart3d(Point3D(arrlon *
-   				 SG_DEGREES_TO_RADIANS,
-   				 arrlat  *
-   				 SG_DEGREES_TO_RADIANS,
-   				 1.0));
-  b[0] = temp.x();
-  b[1] = temp.y();
-  b[2] = temp.z();
-  sgdNormaliseVec3(a);
-  sgdNormaliseVec3(b);
-  sgdVectorProductVec3(cross,b,a);
+  SGVec3d a = SGVec3d::fromGeoc(SGGeoc::fromDegM(deplon, deplat, 1));
+  SGVec3d b = SGVec3d::fromGeoc(SGGeoc::fromDegM(arrlon, arrlat, 1));
+  SGVec3d _cross = cross(b, a);
 
-  angle = sgACos(sgdScalarProductVec3(a,b));
+  double angle = sgACos(dot(a, b));
   tmpNode = 0;
   for (double ang = 0.0; ang < angle; ang += 0.05)
     {
+      sgdVec3 newPos;
+      sgdMat4 matrix;
       //cerr << "Angle = " << ang << endl;
-      sgdMakeRotMat4(matrix, ang, cross);
+      sgdMakeRotMat4(matrix, ang, _cross.sg());
       for(int j = 0; j < 3; j++)
 	{
 	  newPos[j] =0.0;
@@ -88,9 +75,9 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
 	    }
 	}
       //cerr << "1"<< endl;
-      temp = sgCartToPolar3d(Point3D(newPos[0], newPos[1],newPos[2]));
-      midlat = temp.lat() * SG_RADIANS_TO_DEGREES;
-      midlon = temp.lon() * SG_RADIANS_TO_DEGREES;
+      SGGeoc geoc = SGGeoc::fromCart(SGVec3d(newPos[0], newPos[1], newPos[2]));
+      double midlat = geoc.getLatitudeDeg();
+      double midlon = geoc.getLongitudeDeg();
 
       prevNode = tmpNode;
       tmpNode = globals->get_airwaynet()->findNearestNode(midlat, midlon);

@@ -173,9 +173,6 @@ bool FGAISchedule::update(time_t now)
 {
   FGAirport *dep;
   FGAirport *arr;
-  sgdVec3 a, b, cross;
-  sgdVec3 newPos;
-  sgdMat4 matrix;
   double angle;
 
   FGAIManager *aimgr;
@@ -185,7 +182,6 @@ bool FGAISchedule::update(time_t now)
   double distanceToDest;
   double speed;
 
-  Point3D temp;
   time_t 
     totalTimeEnroute, 
     elapsedTimeEnroute,
@@ -272,28 +268,13 @@ bool FGAISchedule::update(time_t now)
 	  if (!(dep && arr))
 	    return false;
 	  
-	  temp = sgPolarToCart3d(Point3D(dep->getLongitude() * 
-					 SG_DEGREES_TO_RADIANS, 
-					 dep->getLatitude()  * 
-					 SG_DEGREES_TO_RADIANS, 
-					 1.0));
-	  a[0] = temp.x();
-	  a[1] = temp.y();
-	  a[2] = temp.z();
+          SGVec3d a = SGVec3d::fromGeoc(SGGeoc::fromDegM(dep->getLongitude(),
+                                                dep->getLatitude(), 1));
+          SGVec3d b = SGVec3d::fromGeoc(SGGeoc::fromDegM(arr->getLongitude(),
+                                                arr->getLatitude(), 1));
+          SGVec3d _cross = cross(b, a);
 	  
-	  temp = sgPolarToCart3d(Point3D(arr->getLongitude() *
-					 SG_DEGREES_TO_RADIANS,
-					 arr->getLatitude()  *
-					 SG_DEGREES_TO_RADIANS, 
-					 1.0));
-	  b[0] = temp.x();
-	  b[1] = temp.y();
-	  b[2] = temp.z();
-	  sgdNormaliseVec3(a);
-	  sgdNormaliseVec3(b);
-	  sgdVectorProductVec3(cross,b,a);
-	  
-	  angle = sgACos(sgdScalarProductVec3(a,b));
+	  angle = sgACos(dot(a, b));
 	  
 	  // Okay, at this point we have the angle between departure and 
 	  // arrival airport, in degrees. From here we can interpolate the
@@ -321,23 +302,22 @@ bool FGAISchedule::update(time_t now)
 	  
 	  //cout << "a = " << a[0] << " " << a[1] << " " << a[2] 
 	  //     << "b = " << b[0] << " " << b[1] << " " << b[2] << endl;  
-	  sgdMakeRotMat4(matrix, angle, cross); 
+          sgdMat4 matrix;
+	  sgdMakeRotMat4(matrix, angle, _cross.sg()); 
+          SGVec3d newPos(0, 0, 0);
 	  for(int j = 0; j < 3; j++)
 	    {
-	      newPos[j] =0.0;
 	      for (int k = 0; k<3; k++)
 		{
 		  newPos[j] += matrix[j][k]*a[k];
 		}
 	    }
 	  
-	  temp = sgCartToPolar3d(Point3D(newPos[0], newPos[1],newPos[2]));
 	  if (now > (*i)->getDepartureTime())
 	    {
-	      //cerr << "Lat = " << lat << ", lon = " << lon << endl;
-	      //cerr << "Time diff: " << now-i->getDepartureTime() << endl;
-	      lat = temp.lat() * SG_RADIANS_TO_DEGREES;
-	      lon = temp.lon() * SG_RADIANS_TO_DEGREES; 
+              SGGeoc geoc = SGGeoc::fromCart(newPos);
+	      lat = geoc.getLatitudeDeg();
+	      lon = geoc.getLongitudeDeg(); 
 	    }
 	  else
 	    {

@@ -54,7 +54,7 @@ public:
 
   } waypoint;
 
-   FGAIFlightPlan(const string& filename);
+  FGAIFlightPlan(const string& filename);
   FGAIFlightPlan(const std::string& p,
 		 double course,
 		 time_t start,
@@ -83,26 +83,26 @@ public:
    double getLeadDistance( void ) const {return lead_distance;}
    double getBearing(waypoint* previous, waypoint* next) const;
    double getBearing(double lat, double lon, waypoint* next) const;
-  time_t getStartTime() const { return start_time; }; 
+  time_t getStartTime() const { return start_time; }
 
   void    create(FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
 		 bool firstLeg, double radius, const string& fltType, const string& aircraftType, const string& airline);
 
-  void setLeg(int val) { leg = val;};
-  void setTime(time_t st) { start_time = st; };
-  int getGate() const { return gateId; };
-  double getLeadInAngle() const { return leadInAngle; };
-  const string& getRunway() const { return rwy._rwy_no; };
-  const string& getRunwayId() const { return rwy._id; };
-  void setRepeat(bool r) { repeat = r; };
-  bool getRepeat(void) const { return repeat; };
+  void setLeg(int val) { leg = val;}
+  void setTime(time_t st) { start_time = st; }
+  int getGate() const { return gateId; }
+  double getLeadInAngle() const { return leadInAngle; }
+  const string& getRunway() const { return rwy._rwy_no; }
+  const string& getRunwayId() const { return rwy._id; }
+  void setRepeat(bool r) { repeat = r; }
+  bool getRepeat(void) const { return repeat; }
   void restart(void);
-  int getNrOfWayPoints() { return waypoints.size(); };
+  int getNrOfWayPoints() { return waypoints.size(); }
   int getRouteIndex(int i); // returns the AI related index of this current routes. 
-  FGTaxiRoute *getTaxiRoute() { return taxiRoute; };
+  FGTaxiRoute *getTaxiRoute() { return taxiRoute; }
   void deleteTaxiRoute();
-  string getRunway() { return activeRunway; };
-    bool isActive(time_t time) {return time >= this->getStartTime();};
+  string getRunway() { return activeRunway; }
+  bool isActive(time_t time) {return time >= this->getStartTime();}
 
 private:
   FGRunway rwy;
@@ -116,21 +116,12 @@ private:
   double distance_to_go;
   double lead_distance;
   double leadInAngle;
-   time_t start_time;
+  time_t start_time;
   int leg;
   int gateId;
   string activeRunway;
   FGAirRoute airRoute;
   FGTaxiRoute *taxiRoute;
-
-
-  Point3D temp;
-  sgdVec3 a, b, cross;
-  sgdVec3 newPos;
-  sgdMat4 matrix;
-  double angle;
-  double midlat, midlon;
-  double course, distance;  
 
   void createPushBack(bool, FGAirport*, double, double, double, const string&, const string&, const string&);
   void createTaxi(bool, int, FGAirport *, double, double, double, const string&, const string&, const string&);
@@ -148,7 +139,5 @@ private:
   //void createCruiseFallback(bool, FGAirport*, FGAirport*, double, double, double, double);
  void evaluateRoutePart(double deplat, double deplon, double arrlat, double arrlon);
 };    
-
-
 
 #endif  // _FG_AIFLIGHTPLAN_HXX
