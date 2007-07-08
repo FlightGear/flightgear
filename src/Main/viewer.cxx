@@ -629,6 +629,12 @@ FGViewer::recalcLookFrom ()
   // add the offsets including rotations to the translation vector
   sgAddVec3( _view_pos, position_offset );
 
+  sgdVec3 offset;
+  offset[0] = position_offset[0];
+  offset[1] = position_offset[1];
+  offset[2] = position_offset[2];
+  sgdAddVec3(_absolute_view_pos, _absolute_view_pos, offset);
+
   // multiply the OFFSETS (for heading and pitch) into the VIEW
   sgPostMultMat4(VIEW, VIEW_OFFSET);
 
@@ -708,6 +714,12 @@ FGViewer::recalcLookAt ()
 
   // add the Position offsets from object to the eye position
   sgAddVec3( eye_pos, eye_pos, position_offset );
+
+  sgdVec3 offset;
+  offset[0] = position_offset[0];
+  offset[1] = position_offset[1];
+  offset[2] = position_offset[2];
+  sgdAddVec3(_absolute_view_pos, _absolute_view_pos, offset);
 
   // add target offsets to at_position...
   sgSetVec3(target_position_offset, _target_z_offset_m,  _target_x_offset_m,

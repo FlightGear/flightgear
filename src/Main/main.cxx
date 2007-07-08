@@ -574,38 +574,104 @@ static void fgMainLoop( void ) {
     // aircraft is the source of all sounds and that all sounds are
     // positioned relative to the current view position.
 
-    static sgVec3 last_pos_offset;
+    static sgdVec3 last_visitor_pos = {0, 0, 0};
+    static sgdVec3 last_model_pos = {0, 0, 0};
 
-    // get the location data for the primary FDM (now hardcoded to ac model)...
+    // get the orientation
+    const sgVec4 *view = current_view->get_VIEW();
+
+    SGQuatd surf_or = SGQuatd::fromLonLatDeg(
+        current_view->getLongitude_deg(), current_view->getLatitude_deg());
+
+    SGQuatd model_or = SGQuatd::fromYawPitchRollDeg(
+        globals->get_aircraft_model()->get3DModel()->getHeadingDeg(),
+        globals->get_aircraft_model()->get3DModel()->getPitchDeg(),
+        globals->get_aircraft_model()->get3DModel()->getRollDeg());
+
+    // get the up and at vector in the aircraft base
+    sgVec3 u;
+    sgSetVec3 ( u, 0, 0, 1 ); //up
+    sgXformVec3( u, view );
+    SGVec3d sgv_up = model_or.rotateBack(
+        surf_or.rotateBack(SGVec3d(u[0], u[1], u[2])));
+    sgVec3 up;
+    sgSetVec3(up, sgv_up[0], sgv_up[1], sgv_up[2]);
+
+    sgSetVec3 ( u, 0, -1, 0 ); //at
+    sgXformVec3( u, view );
+    SGVec3d sgv_at = model_or.rotateBack(
+        surf_or.rotateBack(SGVec3d(u[0], u[1], u[2])));
+    sgVec3 at;
+    sgSetVec3(at, sgv_at[0], sgv_at[1], sgv_at[2]);
+
+     // get the location data for the primary FDM (now hardcoded to ac model)...
     SGLocation *acmodel_loc = NULL;
     acmodel_loc = (SGLocation *)globals->
         get_aircraft_model()->get3DModel()->getSGLocation();
 
+    // calculate speed of visitor and model
+    sgVec3 listener_vel, model_vel;
+    sgdVec3 v;
+    SGVec3d w;
+    sgdVec3 null = {0, 0, 0};
+
+    double *abs_view_pos = current_view->get_absolute_view_pos();
+    sgdSubVec3( v, last_visitor_pos, abs_view_pos);
+    sgdAddVec3( last_visitor_pos, null, abs_view_pos);
+    w = model_or.rotateBack( surf_or.rotateBack(SGVec3d(v[0], v[1], v[2])));
+    sgSetVec3( listener_vel, w[0], w[1], w[2]);
+
+    double *model_abs_view_pos = acmodel_loc->get_absolute_view_pos();
+    sgdSubVec3( v, last_model_pos, model_abs_view_pos);
+    sgdAddVec3( last_model_pos, null, model_abs_view_pos);
+    w = model_or.rotateBack( surf_or.rotateBack(SGVec3d(v[0], v[1], v[2])));
+    sgSetVec3( model_vel, w[0], w[1], w[2]);
+
+    if (delta_time_sec > 0) {
+        sgScaleVec3( model_vel, 1 / delta_time_sec );
+        sgScaleVec3( listener_vel, 1 / delta_time_sec );
+    }
+
+    //checking, if the listener pos has moved suddenly
+    if (sgLengthVec3(listener_vel) > 1000)
+    {
+        //check if the relative speed model vs listener has moved suddenly, too
+        sgVec3 delta_vel;
+        sgSubVec3(delta_vel, listener_vel, model_vel );
+        if (sgLengthVec3(delta_vel) > 1000)
+            sgSetVec3(listener_vel, model_vel[0], model_vel[1], model_vel[2] );
+        else
+            globals->get_soundmgr()->set_listener_vel( listener_vel );
+    }
+    else
+        globals->get_soundmgr()->set_listener_vel( listener_vel );
+
     // set positional offset for sources
-    sgdVec3 dsource_pos_offset;
-    sgdSubVec3( dsource_pos_offset,
-                view_location->get_absolute_view_pos(),
-                acmodel_loc->get_absolute_view_pos() );
-    // cout << "pos all = " << source_pos_offset[0] << " " << source_pos_offset[1] << " " << source_pos_offset[2] << endl;
+    sgdVec3 dsource_pos_offset = { abs_view_pos[0], abs_view_pos[1], abs_view_pos[2] };
+
+    sgdSubVec3( dsource_pos_offset, dsource_pos_offset, model_abs_view_pos );
+    SGVec3d sgv_dsource_pos_offset = model_or.rotateBack(
+         surf_or.rotateBack(SGVec3d(dsource_pos_offset[0],
+         dsource_pos_offset[1], dsource_pos_offset[2])));
+
     sgVec3 source_pos_offset;
-    sgSetVec3(source_pos_offset, dsource_pos_offset);
+    sgSetVec3(source_pos_offset, sgv_dsource_pos_offset[0],
+         sgv_dsource_pos_offset[1], sgv_dsource_pos_offset[2]);
     globals->get_soundmgr()->set_source_pos_all( source_pos_offset );
 
+    float orient[6];
+    for (int i = 0; i < 3; i++) {
+        orient[i] = sgv_at[i];
+        orient[i + 3] = sgv_up[i];
+     }
+     globals->get_soundmgr()->set_listener_orientation( orient );
+
     // set the velocity
-    sgVec3 source_vel;
-    sgSubVec3( source_vel, source_pos_offset, last_pos_offset );
+    globals->get_soundmgr()->set_source_vel_all( model_vel );
 
-    if (delta_time_sec > 0)
-        sgScaleVec3( source_vel, 1 / delta_time_sec );
-    sgCopyVec3( last_pos_offset, source_pos_offset );
-    // cout << "vel = " << source_vel[0] << " " << source_vel[1] << " " << source_vel[2] << endl;
-    globals->get_soundmgr()->set_source_vel_all( source_vel );
-
-    // Right now we make a simplifying assumption that the listener is
-    // always positioned at the origin.
+    // The listener is always positioned at the origin.
     sgVec3 listener_pos;
     sgSetVec3( listener_pos, 0.0, 0.0, 0.0 );
-    // cout << "listener = " << listener_pos[0] << " " << listener_pos[1] << " " << listener_pos[2] << endl;
     globals->get_soundmgr()->set_listener_pos( listener_pos );
 #endif
 
