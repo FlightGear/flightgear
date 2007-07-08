@@ -56,7 +56,7 @@ void FGAITanker::setTACANChannelID(const string& id) {
 }
 
 void FGAITanker::Run(double dt) {
-    FGAIAircraft::Run(dt);
+    //FGAIAircraft::Run(dt);
 
     //###########################//
     // do calculations for radar //
