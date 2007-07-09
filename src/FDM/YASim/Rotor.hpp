@@ -257,6 +257,8 @@ private:
     float _engine_accel_limit;
     float _total_torque_on_engine;
     Vector _rotors;
+    float _target_rel_rpm;
+    float _max_rel_torque;
 
 public:
     Rotorgear();

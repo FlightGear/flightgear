@@ -375,14 +375,12 @@ void Rotorgear::setEngineOn(int value)
 
 void Rotorgear::setRotorEngineMaxRelTorque(float lval)
 {
-    SGPropertyNode * node = fgGetNode("/rotors/gear/max-rel-torque", true);
-    if (node) node->setDoubleValue(lval);
+    _max_rel_torque=lval;
 }
 
 void Rotorgear::setRotorRelTarget(float lval)
 {
-    SGPropertyNode * node = fgGetNode("/rotors/gear/target-rel-rpm", true);
-    if (node) node->setDoubleValue(lval);
+    _target_rel_rpm=lval;
 }
 
 void Rotor::setAlpha0(float f)
@@ -1518,15 +1516,13 @@ void Rotorgear::calcForces(float* torqueOut)
         }
         float max_torque_of_engine=0;
         SGPropertyNode * node=fgGetNode("/rotors/gear", true);
-        float target_rel_rpm=(node==0?1:node->getDoubleValue("target-rel-rpm",1));
         if (_engineon)
         {
-            float max_rel_torque=(node==0?1:node->getDoubleValue("max-rel-torque",1));
-            max_torque_of_engine=_max_power_engine*max_rel_torque;
-            float df=target_rel_rpm-omegarel;
+            max_torque_of_engine=_max_power_engine*_max_rel_torque;
+            float df=_target_rel_rpm-omegarel;
             df/=_engine_prop_factor;
             df = Math::clamp(df, 0, 1);
-            max_torque_of_engine = df * _max_power_engine*max_rel_torque;
+            max_torque_of_engine = df * _max_power_engine*_max_rel_torque;
         }
         total_torque*=-1;
         _ddt_omegarel=0;
@@ -1553,7 +1549,7 @@ void Rotorgear::calcForces(float* torqueOut)
 
         //change the rotation of the rotors 
         if ((max_torque_of_engine<total_torque) //decreasing rotation
-            ||((max_torque_of_engine>total_torque)&&(omegarel<target_rel_rpm))
+            ||((max_torque_of_engine>total_torque)&&(omegarel<_target_rel_rpm))
             //increasing rotation due to engine
             ||(total_torque<0) ) //increasing rotation due to autorotation
         {
@@ -1615,10 +1611,6 @@ void Rotorgear::compile()
         Rotor* r = (Rotor*)_rotors.get(j);
         r->compile();
     }
-    SGPropertyNode * node = fgGetNode("/rotors/gear/target-rel-rpm", true);
-    if (node) node->setDoubleValue(1);
-    node =fgGetNode("/rotors/gear/max-rel-torque", true);
-    if (node) node->setDoubleValue(1);
 }
 
 void Rotorgear::getDownWash(float *pos, float * v_heli, float *downwash)
@@ -1670,6 +1662,8 @@ Rotorgear::Rotorgear()
     _ddt_omegarel=0;
     _engine_accel_limit=0.05f;
     _total_torque_on_engine=0;
+    _target_rel_rpm=1;
+    _max_rel_torque=1;
 }
 
 Rotorgear::~Rotorgear()
