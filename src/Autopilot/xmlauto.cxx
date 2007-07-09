@@ -55,7 +55,8 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
     edf_n_1( 0.0 ),
     edf_n_2( 0.0 ),
     u_n_1( 0.0 ),
-    desiredTs( 0.0 )
+    desiredTs( 0.0 ),
+    elapsedTime( 0.0 )
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
