@@ -137,6 +137,7 @@ private:
     bool holdPos;
 
     bool _getGearDown() const;
+    const char *_getCallSign() const;
     bool reachedWaypoint;
     string callsign;             // The callsign of this tanker.
 

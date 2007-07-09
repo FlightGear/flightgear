@@ -55,8 +55,10 @@ class FP_Inactive{};
 
 FGAIAircraft::FGAIAircraft(FGAISchedule *ref) : FGAIBase(otAircraft) {
     trafficRef = ref;
-    if (trafficRef)
+    if (trafficRef) {
         groundOffset = trafficRef->getGroundOffset();
+	setCallSign(trafficRef->getCallSign());
+    }
     else
         groundOffset = 0;
 
@@ -81,6 +83,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) : FGAIBase(otAircraft) {
     holdPos = false;
 
     _performance = 0; //TODO initialize to JET_TRANSPORT from PerformanceDB
+    
 }
 
 
@@ -110,7 +113,10 @@ void FGAIAircraft::bind() {
     props->tie("controls/gear/gear-down",
                SGRawValueMethods<FGAIAircraft,bool>(*this,
                                                     &FGAIAircraft::_getGearDown));
-    props->setStringValue("callsign", callsign.c_str());
+    props->tie("callsign",
+               SGRawValueMethods<FGAIAircraft,const char *>(*this,
+                                                    &FGAIAircraft::_getCallSign));
+    //props->setStringValue("callsign", callsign.c_str());
 }
 
 
@@ -118,6 +124,7 @@ void FGAIAircraft::unbind() {
     FGAIBase::unbind();
 
     props->untie("controls/gear/gear-down");
+    props->untie("callsign");
 }
 
 
@@ -318,12 +325,18 @@ bool FGAIAircraft::_getGearDown() const {
     return _performance->gearExtensible(this);
 }
 
+const char * FGAIAircraft::_getCallSign() const {
+    return callsign.c_str();
+}
+
 
 void FGAIAircraft::loadNextLeg() {
 
     int leg;
     if ((leg = fp->getLeg())  == 10) {
         trafficRef->next();
+        setCallSign(trafficRef->getCallSign());
+	//props->setStringValue("callsign", callsign.c_str());
         leg = 1;
         fp->setLeg(leg);
     }
