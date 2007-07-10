@@ -30,9 +30,9 @@
 #   include <windows.h>
 #endif
 
-#include <GL/gl.h>
-
 #include "render_area_2d.hxx"
+
+#include SG_GL_H
 
 
 static const float dummy_normals[][3] = {{0.0f, 0.0f, 0.0f},
