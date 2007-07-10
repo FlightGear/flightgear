@@ -21,12 +21,11 @@
 //
 // $Id$
 
-#include "render_area_2d.hxx"
-//#include <iostream>
-
 #include <plib/ssg.h>
 
-//using namespace std;
+#include "render_area_2d.hxx"
+
+#include SG_GL_H
 
 
 
