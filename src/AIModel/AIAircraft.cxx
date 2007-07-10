@@ -705,7 +705,7 @@ void FGAIAircraft::controlHeading(FGAIFlightPlan::waypoint* curr) {
 
     if (finite(calc_bearing)) {
         double hdg_error = calc_bearing - tgt_heading;
-        if (fabs(hdg_error) > 1.0) {
+        if (fabs(hdg_error) > 0.01) {
             TurnTo( calc_bearing );
         }
 
@@ -732,7 +732,9 @@ void FGAIAircraft::controlSpeed(FGAIFlightPlan::waypoint* curr, FGAIFlightPlan::
 
     if (fabs(speed_diff) > 10) {
         prevSpeed = speed;
-        fp->setLeadDistance(speed, tgt_heading, curr, next);
+        if (next) {
+            fp->setLeadDistance(speed, tgt_heading, curr, next);
+        }
     }
 }
 
