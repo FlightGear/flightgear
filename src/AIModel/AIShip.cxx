@@ -283,6 +283,7 @@ void FGAIShip::Run(double dt) {
     roll = (raw_roll * _roll_constant) + (roll * (1 - _roll_constant));
 
     // adjust target _rudder angle if heading lock engaged
+    double rudder_diff = 0.0;
     if (_hdg_lock) {
         double rudder_sense = 0.0;
         double diff = fabs(hdg - tgt_heading);
@@ -307,10 +308,9 @@ void FGAIShip::Run(double dt) {
             _tgt_rudder = diff * rudder_sense;
         else
             _tgt_rudder = 45 * rudder_sense;
-    }
 
-    // adjust _rudder angle
-    double rudder_diff = _tgt_rudder - _rudder;
+        rudder_diff = _tgt_rudder - _rudder;
+    }
 
     // set the _rudder limit by speed
     if (speed <= 40)
