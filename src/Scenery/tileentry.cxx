@@ -728,7 +728,7 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
             string token;
             in >> token;
 
-            if ( token[0] == '#' ) {
+            if ( token.empty() || token[0] == '#' ) {
                in >> ::skipeol;
                continue;
             }
