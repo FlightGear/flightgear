@@ -392,79 +392,153 @@ FGTaxiSegment *FGGroundNetwork::findSegment(int idx)
     }
 }
 
+// FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end) 
+// {
+//   double course;
+//   double length;
+//   foundRoute = false;
+//   totalDistance = 0;
+//   FGTaxiNode *firstNode = findNode(start);
+//   FGTaxiNode *lastNode  = findNode(end);
+//   //prevNode = prevPrevNode = -1;
+//   //prevNode = start;
+//   routes.clear();
+//   nodesStack.clear();
+//   routesStack.clear();
+//   // calculate distance and heading "as the crow flies" between starn and end points"
+//   SGWayPoint first(firstNode->getLongitude(),
+// 		   firstNode->getLatitude(),
+// 		   0);
+//   destination = SGWayPoint(lastNode->getLongitude(),
+// 	       lastNode->getLatitude(),
+// 	       0);
+//   
+//   first.CourseAndDistance(destination, &course, &length);
+//   for (FGTaxiSegmentVectorIterator 
+// 	 itr = segments.begin();
+//        itr != segments.end(); itr++)
+//     {
+//       (*itr)->setCourseDiff(course);
+//     } 
+//   //FGTaxiNodeVectorIterator nde = nodes.begin();
+//   //while (nde != nodes.end()) {
+//   //  (*nde)->sortEndSegments();
+//   //  nde++;
+//   //}	
+//   maxDepth = 1000;
+//   //do
+//   //  {
+//   //    cerr << "Begin of Trace " << start << " to "<< end << " maximum depth = " << maxDepth << endl;
+//       trace(firstNode, end, 0, 0);
+//       //    maxDepth--;
+//       //    }
+//       //while ((routes.size() != 0) && (maxDepth > 0));
+//       //cerr << "End of Trace" << endl;
+//   FGTaxiRoute empty;
+//  
+//   if (!foundRoute)
+//     {
+//       SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find route from waypoint " << start << " to " << end << " at " << 
+// 	      parent->getId());
+//       exit(1);
+//     }
+//   sort(routes.begin(), routes.end());
+//   //for (intVecIterator i = route.begin(); i != route.end(); i++)
+//   //  {
+//   //    rte->push_back(*i);
+//   //  }
+//   
+//   if (routes.begin() != routes.end())
+//     {
+//      //  if ((routes.begin()->getDepth() < 0.5 * maxDepth) && (maxDepth > 1))
+// // 	{
+// // 	  maxDepth--;
+// // 	  cerr << "Max search depth decreased to : " << maxDepth;
+// // 	}
+// //       else
+// // 	{ 
+// // 	  maxDepth++; 
+// // 	  cerr << "Max search depth increased to : " << maxDepth;
+// // 	}
+//       return *(routes.begin());
+//     }
+//   else
+//     return empty;
+// }
+
 FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end) 
 {
-  double course;
-  double length;
-  foundRoute = false;
-  totalDistance = 0;
-  FGTaxiNode *firstNode = findNode(start);
-  FGTaxiNode *lastNode  = findNode(end);
-  //prevNode = prevPrevNode = -1;
-  //prevNode = start;
-  routes.clear();
-  nodesStack.clear();
-  routesStack.clear();
-  // calculate distance and heading "as the crow flies" between starn and end points"
-  SGWayPoint first(firstNode->getLongitude(),
-		   firstNode->getLatitude(),
-		   0);
-  destination = SGWayPoint(lastNode->getLongitude(),
-	       lastNode->getLatitude(),
-	       0);
-  
-  first.CourseAndDistance(destination, &course, &length);
-  for (FGTaxiSegmentVectorIterator 
-	 itr = segments.begin();
-       itr != segments.end(); itr++)
-    {
-      (*itr)->setCourseDiff(course);
-    } 
-  //FGTaxiNodeVectorIterator nde = nodes.begin();
-  //while (nde != nodes.end()) {
-  //  (*nde)->sortEndSegments();
-  //  nde++;
-  //}	
-  maxDepth = 1000;
-  //do
-  //  {
-  //    cerr << "Begin of Trace " << start << " to "<< end << " maximum depth = " << maxDepth << endl;
-      trace(firstNode, end, 0, 0);
-      //    maxDepth--;
-      //    }
-      //while ((routes.size() != 0) && (maxDepth > 0));
-      //cerr << "End of Trace" << endl;
-  FGTaxiRoute empty;
- 
-  if (!foundRoute)
-    {
-      SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find route from waypoint " << start << " to " << end << " at " << 
-	      parent->getId());
-      exit(1);
+//implements Dijkstra's algorithm to find shortest distance route from start to end
+//taken from http://en.wikipedia.org/wiki/Dijkstra's_algorithm
+
+    //double INFINITE = 100000000000.0;
+    // initialize scoring values
+    for (FGTaxiNodeVectorIterator
+         itr = nodes.begin();
+         itr != nodes.end(); itr++) {
+            (*itr)->pathscore = HUGE_VAL; //infinity by all practical means
+            (*itr)->previousnode = 0; //
+            (*itr)->previousseg = 0; //
+         }
+
+    FGTaxiNode *firstNode = findNode(start);
+    firstNode->pathscore = 0;
+
+    FGTaxiNode *lastNode  = findNode(end);
+
+    FGTaxiNodeVector unvisited(nodes); // working copy
+
+    while (!unvisited.empty()) {
+        FGTaxiNode* best = *(unvisited.begin());
+        for (FGTaxiNodeVectorIterator
+             itr = unvisited.begin();
+             itr != unvisited.end(); itr++) {
+                 if ((*itr)->pathscore < best->pathscore)
+                     best = (*itr);
+        }
+
+        FGTaxiNodeVectorIterator newend = remove(unvisited.begin(), unvisited.end(), best);
+        unvisited.erase(newend, unvisited.end());
+        
+        if (best == lastNode) { // found route or best not connected
+            break;
+        } else {
+            for (FGTaxiSegmentVectorIterator
+                 seg = best->getBeginRoute();
+                 seg != best->getEndRoute(); seg++) {
+                FGTaxiNode* tgt = (*seg)->getEnd();
+                double alt = best->pathscore + (*seg)->getLength();
+                if (alt < tgt->pathscore) {              // Relax (u,v)
+                    tgt->pathscore = alt;
+                    tgt->previousnode = best;
+                    tgt->previousseg = *seg; //
+                }
+            }
+        }
     }
-  sort(routes.begin(), routes.end());
-  //for (intVecIterator i = route.begin(); i != route.end(); i++)
-  //  {
-  //    rte->push_back(*i);
-  //  }
-  
-  if (routes.begin() != routes.end())
-    {
-     //  if ((routes.begin()->getDepth() < 0.5 * maxDepth) && (maxDepth > 1))
-// 	{
-// 	  maxDepth--;
-// 	  cerr << "Max search depth decreased to : " << maxDepth;
-// 	}
-//       else
-// 	{ 
-// 	  maxDepth++; 
-// 	  cerr << "Max search depth increased to : " << maxDepth;
-// 	}
-      return *(routes.begin());
+
+    if (lastNode->pathscore == HUGE_VAL) {
+        // no valid route found
+        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find route from waypoint " << start << " to " << end << " at " <<
+                parent->getId());
+        exit(1); //TODO exit more gracefully, no need to stall the whole sim with broken GN's
+    } else {
+        // assemble route from backtrace information
+        intVec nodes, routes;
+        FGTaxiNode* bt = lastNode;
+        while (bt->previousnode != 0) {
+            nodes.push_back(bt->getIndex());
+            routes.push_back(bt->previousseg->getIndex());
+            bt = bt->previousnode;
+        }
+        nodes.push_back(start);
+        reverse(nodes.begin(), nodes.end());
+        reverse(routes.begin(), routes.end());
+
+        return FGTaxiRoute(nodes, routes, lastNode->pathscore, 0);
     }
-  else
-    return empty;
 }
+
 
 
 void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double distance)

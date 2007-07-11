@@ -81,6 +81,11 @@ public:
   bool operator<(const FGTaxiNode &other) const { return index < other.index; };
 
   void sortEndSegments(bool);
+ 
+  // Neccessary for Dijkstra route finding algoritm 
+  double pathscore;
+  FGTaxiNode* previousnode;
+  FGTaxiSegment* previousseg;
 };
 
 typedef vector<FGTaxiNode*> FGTaxiNodeVector;
