@@ -32,6 +32,7 @@
 
 #include <math.h>
 #include <ctype.h>
+#include <sstream>
 
 #include STL_FSTREAM
 #include STL_STRING
@@ -63,6 +64,7 @@
 #include <Main/renderer.hxx>
 
 SG_USING_STD(ifstream);
+SG_USING_STD(ostringstream);
 SG_USING_STD(string);
 SG_USING_STD(vector);
 
@@ -385,13 +387,13 @@ void
 FGInput::_init_keyboard ()
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing key bindings");
-  _module[0] = 0;
+  _module = "__kbd";
   SGPropertyNode * key_nodes = fgGetNode("/input/keyboard");
   if (key_nodes == 0) {
     SG_LOG(SG_INPUT, SG_WARN, "No key bindings (/input/keyboard)!!");
     key_nodes = fgGetNode("/input/keyboard", true);
   }
-  
+
   vector<SGPropertyNode_ptr> keys = key_nodes->getChildren("key");
   for (unsigned int i = 0; i < keys.size(); i++) {
     int index = keys[i]->getIndex();
@@ -502,6 +504,19 @@ FGInput::_init_joystick ()
 
 
 void
+FGInput::_postinit_keyboard()
+{
+  FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
+  SGPropertyNode *key_nodes = fgGetNode("/input/keyboard", true);
+  vector<SGPropertyNode_ptr> nasal = key_nodes->getChildren("nasal");
+  for (unsigned int j = 0; j < nasal.size(); j++) {
+    nasal[j]->setStringValue("module", _module.c_str());
+    nasalsys->handleCommand(nasal[j]);
+  }
+}
+
+
+void
 FGInput::_postinit_joystick()
 {
   FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
@@ -546,15 +561,15 @@ FGInput::_postinit_joystick()
     //
     // Initialize nasal groups.
     //
-    string init;
-    init = "this=\"" + string(js_node->getPath()) + "\"";
-    sprintf(_module, "__js%d", i);
-    nasalsys->createModule(_module, _module, init.c_str(), init.size());
+    ostringstream str;
+    str << "__js" << i;
+    _module = str.str();
+    nasalsys->createModule(_module.c_str(), _module.c_str(), "", 0);
 
     vector<SGPropertyNode_ptr> nasal = js_node->getChildren("nasal");
     unsigned int j;
     for (j = 0; j < nasal.size(); j++) {
-      nasal[j]->setStringValue("module", _module);
+      nasal[j]->setStringValue("module", _module.c_str());
       nasalsys->handleCommand(nasal[j]);
     }
 
@@ -665,7 +680,7 @@ void
 FGInput::_init_mouse ()
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse bindings");
-  _module[0] = 0;
+  _module = "";
 
   SGPropertyNode * mouse_nodes = fgGetNode("/input/mice");
   if (mouse_nodes == 0) {
@@ -910,8 +925,8 @@ FGInput::_read_bindings (const SGPropertyNode * node,
     const char *cmd = bindings[i]->getStringValue("command");
     SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding " << cmd);
 
-    if (!strcmp(cmd, "nasal") && _module[0])
-      bindings[i]->setStringValue("module", _module);
+    if (!strcmp(cmd, "nasal") && !_module.empty())
+      bindings[i]->setStringValue("module", _module.c_str());
     binding_list[modifiers].push_back(new SGBinding(bindings[i], globals->get_props()));
   }
 

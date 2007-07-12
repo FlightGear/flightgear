@@ -280,6 +280,7 @@ private:
    * Initialize nasal parts that had to wait for the nasal to get
    * functional.
    */
+  void _postinit_keyboard ();
   void _postinit_joystick ();
 
   /**
@@ -327,7 +328,7 @@ private:
   /**
    * Nasal module name/namespace.
    */
-  char _module[32];
+  string _module;
 
   /**
    * List of currently pressed mouse button events
