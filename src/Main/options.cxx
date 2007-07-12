@@ -1407,29 +1407,31 @@ set_property(const string& arg)
 
     string name = arg.substr(0, pos);
     string value = arg.substr(pos + 1);
-    string type = "string";
+    string type;
     pos = name.find(':');
+
     if (pos != name.npos && pos != 0 && pos + 1 != name.size()) {
         type = name.substr(0, pos);
         name = name.substr(pos + 1);
     }
-    if (type == "s" || type == "string")
-        ;
-    else if (type == "d" || type == "double")
-        fgSetDouble(name.c_str(), 0.0);
-    else if (type == "f" || type == "float")
-        fgSetFloat(name.c_str(), 0.0f);
-    else if (type == "l" || type == "long")
-        fgSetLong(name.c_str(), 0L);
-    else if (type == "i" || type == "int")
-        fgSetInt(name.c_str(), 0);
-    else if (type == "b" || type == "bool")
-        fgSetBool(name.c_str(), false);
-    else
-        return false;
+    SGPropertyNode *n = fgGetNode(name.c_str(), true);
 
-    fgSetString(name.c_str(), value.c_str());
-    return true;
+    if (type.empty())
+        return n->setUnspecifiedValue(value.c_str());
+    else if (type == "s" || type == "string")
+        return n->setStringValue(value.c_str());
+    else if (type == "d" || type == "double")
+        return n->setDoubleValue(strtod(value.c_str(), 0));
+    else if (type == "f" || type == "float")
+        return n->setFloatValue(atof(value.c_str()));
+    else if (type == "l" || type == "long")
+        return n->setLongValue(strtol(value.c_str(), 0, 0));
+    else if (type == "i" || type == "int")
+        return n->setIntValue(atoi(value.c_str()));
+    else if (type == "b" || type == "bool")
+        return n->setBoolValue(value == "true" || atoi(value.c_str()) != 0);
+
+    return false;
 }
 
 
