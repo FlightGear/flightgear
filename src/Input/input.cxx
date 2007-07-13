@@ -205,7 +205,6 @@ FGInput::~FGInput ()
 void
 FGInput::init ()
 {
-  _init_keyboard();
   _init_joystick();
   _init_mouse();
 
@@ -452,29 +451,6 @@ FGInput::doMouseMotion (int x, int y)
       fgSetInt("/devices/status/mice/mouse/y", m.y = y);
 }
 
-void
-FGInput::_init_keyboard ()
-{
-  SG_LOG(SG_INPUT, SG_DEBUG, "Initializing key bindings");
-  _module = "__kbd";
-  SGPropertyNode * key_nodes = fgGetNode("/input/keyboard");
-  if (key_nodes == 0) {
-    SG_LOG(SG_INPUT, SG_WARN, "No key bindings (/input/keyboard)!!");
-    key_nodes = fgGetNode("/input/keyboard", true);
-  }
-
-  vector<SGPropertyNode_ptr> keys = key_nodes->getChildren("key");
-  for (unsigned int i = 0; i < keys.size(); i++) {
-    int index = keys[i]->getIndex();
-    SG_LOG(SG_INPUT, SG_DEBUG, "Binding key " << index);
-
-    _key_bindings[index].bindings->clear();
-    _key_bindings[index].is_repeatable = keys[i]->getBoolValue("repeatable");
-    _key_bindings[index].last_state = 0;
-    _read_bindings(keys[i], _key_bindings[index].bindings, KEYMOD_NONE);
-  }
-}
-
 
 void
 FGInput::_scan_joystick_dir(SGPath *path, SGPropertyNode* node, int *index)
@@ -575,12 +551,30 @@ FGInput::_init_joystick ()
 void
 FGInput::_postinit_keyboard()
 {
+  SG_LOG(SG_INPUT, SG_DEBUG, "Initializing key bindings");
+  _module = "__kbd";
+  SGPropertyNode * key_nodes = fgGetNode("/input/keyboard");
+  if (key_nodes == 0) {
+    SG_LOG(SG_INPUT, SG_WARN, "No key bindings (/input/keyboard)!!");
+    key_nodes = fgGetNode("/input/keyboard", true);
+  }
+
   FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
-  SGPropertyNode *key_nodes = fgGetNode("/input/keyboard", true);
   vector<SGPropertyNode_ptr> nasal = key_nodes->getChildren("nasal");
   for (unsigned int j = 0; j < nasal.size(); j++) {
     nasal[j]->setStringValue("module", _module.c_str());
     nasalsys->handleCommand(nasal[j]);
+  }
+
+  vector<SGPropertyNode_ptr> keys = key_nodes->getChildren("key");
+  for (unsigned int i = 0; i < keys.size(); i++) {
+    int index = keys[i]->getIndex();
+    SG_LOG(SG_INPUT, SG_DEBUG, "Binding key " << index);
+
+    _key_bindings[index].bindings->clear();
+    _key_bindings[index].is_repeatable = keys[i]->getBoolValue("repeatable");
+    _key_bindings[index].last_state = 0;
+    _read_bindings(keys[i], _key_bindings[index].bindings, KEYMOD_NONE);
   }
 }
 
