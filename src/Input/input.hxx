@@ -245,12 +245,6 @@ private:
 
 
   /**
-   * Initialize key bindings.
-   */
-  void _init_keyboard ();
-
-
-  /**
    * Initialize joystick bindings.
    */
   void _init_joystick ();
@@ -277,8 +271,8 @@ private:
 			    const string name);
 
   /**
-   * Initialize nasal parts that had to wait for the nasal to get
-   * functional.
+   * Initialize key bindings, as well as those joystick parts that
+   * depend on a working Nasal subsystem.
    */
   void _postinit_keyboard ();
   void _postinit_joystick ();
