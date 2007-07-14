@@ -105,7 +105,6 @@ private:
     double _dt_count;
     double _next_run;
 
-    string _mat_name;
     string _name;
     string _path;
     string _submodel;
