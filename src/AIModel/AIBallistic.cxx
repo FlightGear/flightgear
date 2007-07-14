@@ -36,6 +36,7 @@ const double FGAIBallistic::slugs_to_kgs = 14.5939029372;
 
 FGAIBallistic::FGAIBallistic() :
     FGAIBase(otBallistic),
+    _elevation(0),
     _aero_stabilised(false),
     _drag_area(0.007),
     _life_timer(0.0),
@@ -47,9 +48,7 @@ FGAIBallistic::FGAIBallistic() :
     _solid(false),
     _report_collision(false),
     _report_impact(false),
-    _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
-    _mat_name(""),
-    _elevation(0)
+    _impact_report_node(fgGetNode("/ai/models/model-impact", true))
 {
     no_roll = false;
 }
@@ -88,7 +87,7 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
 bool FGAIBallistic::init(bool search_in_AI_path) {
     FGAIBase::init(search_in_AI_path);
 
-    props->setStringValue("material/name", _mat_name.c_str());
+    props->setStringValue("material/name", "");
     props->setStringValue("name", _name.c_str());
     props->setStringValue("submodels/path", _submodel.c_str());
 
@@ -335,14 +334,15 @@ void FGAIBallistic::handle_impact() {
 
     if (material) {
         const vector<string> names = material->get_names();
+        string mat_name;
 
         if (!names.empty())
-            _mat_name = names[0].c_str();
+            mat_name = names[0].c_str();
 
         _solid = material->get_solid();
         _load_resistance = material->get_load_resistance();
-        props->setStringValue("material/name", _mat_name.c_str());
-        //cout << "material " << _mat_name << " solid " << _solid << " load " << _load_resistance << endl;
+        props->setStringValue("material/name", mat_name.c_str());
+        //cout << "material " << mat_name << " solid " << _solid << " load " << _load_resistance << endl;
     }
 
     _ht_agl_ft = pos.getElevationFt() - elevation_m * SG_METER_TO_FEET;
