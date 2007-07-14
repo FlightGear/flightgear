@@ -174,9 +174,10 @@ void FGAIShip::unbind() {
     props->untie("position/waypoint-range-rate-nm-sec");
     props->untie("position/waypoint-new");
     props->untie("position/waypoint-missed");
+    props->untie("position/waypoint-missed-count");
+    props->untie("position/waypoint-missed-time-sec");
     props->untie("position/waypoint-wait-count");
     props->untie("position/waypoint-waiting");
-    props->untie("position/waypoint-missed-time-sec");
     props->untie("submodels/serviceable");
 }
 
