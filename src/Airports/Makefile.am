@@ -8,13 +8,13 @@ libAirports_a_SOURCES = \
 	simple.cxx simple.hxx \
 	runwayprefs.cxx runwayprefs.hxx \
 	parking.cxx parking.hxx \
+	gnnode.cxx gnnode.hxx \
 	groundnetwork.cxx groundnetwork.hxx \
 	dynamics.cxx dynamics.hxx \
 	trafficcontrol.cxx trafficcontrol.hxx \
 	dynamicloader.cxx dynamicloader.hxx \
 	runwayprefloader.cxx runwayprefloader.hxx \
-	xmlloader.cxx xmlloader.hxx \
-	gnnode.hxx 
+	xmlloader.cxx xmlloader.hxx 
 
 calc_loc_SOURCES = calc_loc.cxx
 calc_loc_LDADD = -lsgmath -lsgdebug -lsgmisc -lz $(base_LIBS)

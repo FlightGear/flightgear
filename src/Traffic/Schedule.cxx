@@ -315,9 +315,14 @@ bool FGAISchedule::update(time_t now)
 	  
 	  if (now > (*i)->getDepartureTime())
 	    {
-              SGGeoc geoc = SGGeoc::fromCart(newPos);
-	      lat = geoc.getLatitudeDeg();
-	      lon = geoc.getLongitudeDeg(); 
+              //SGGeoc geoc = SGGeoc::fromCart(newPos);
+	      //lat = geoc.getLatitudeDeg();
+	      //lon = geoc.getLongitudeDeg(); 
+
+              Point3D temp = sgCartToPolar3d(Point3D(newPos[0], newPos[1],newPos[2]));
+	      lat = temp.lat() * SG_RADIANS_TO_DEGREES;
+	      lon = temp.lon() * SG_RADIANS_TO_DEGREES; 
+
 	    }
 	  else
 	    {

@@ -48,7 +48,7 @@ bool FGAIMultiplayer::init(bool search_in_AI_path) {
     isTanker = false; // do this until this property is
                       // passed over the net
 
-    string str1 = mCallSign;
+    string str1 = _getCallsign();
     string str2 = "MOBIL";
 
     string::size_type loc1= str1.find( str2, 0 );
@@ -73,7 +73,7 @@ SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
 SGRawValueMethods<FGAIMultiplayer, type>(*this, \
       &FGAIMultiplayer::get##name, &FGAIMultiplayer::set##name)
 
-    props->tie("callsign", AIMPROProp(const char *, CallSign));
+    //props->tie("callsign", AIMPROProp(const char *, CallSign));
 
     props->tie("controls/allow-extrapolation",
                AIMPRWProp(bool, AllowExtrapolation));
@@ -88,7 +88,7 @@ SGRawValueMethods<FGAIMultiplayer, type>(*this, \
 void FGAIMultiplayer::unbind() {
     FGAIBase::unbind();
 
-    props->untie("callsign");
+    //props->untie("callsign");
     props->untie("controls/allow-extrapolation");
     props->untie("controls/lag-adjust-system-speed");
     props->untie("refuel/contact");

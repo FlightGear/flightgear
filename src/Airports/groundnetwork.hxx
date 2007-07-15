@@ -126,6 +126,26 @@ public:
     currNode = nodes.begin();
     depth = dpth;
   };
+
+  FGTaxiRoute& operator= (const FGTaxiRoute &other) {
+    nodes = other.nodes;
+    routes = other.routes;
+    distance = other.distance;
+    depth = other.depth;
+    currNode = nodes.begin();
+    currRoute = routes.begin();
+    return *this;
+  };
+
+  FGTaxiRoute(const FGTaxiRoute& copy) :
+    nodes(copy.nodes),
+    routes(copy.routes),
+    distance(copy.distance),
+    depth(copy.depth),
+    currNode(nodes.begin()),
+    currRoute(routes.begin())
+  {};
+
   bool operator< (const FGTaxiRoute &other) const {return distance < other.distance; };
   bool empty () { return nodes.begin() == nodes.end(); };
   bool next(int *nde); 
@@ -139,10 +159,6 @@ public:
 
 typedef vector<FGTaxiRoute> TaxiRouteVector;
 typedef vector<FGTaxiRoute>::iterator TaxiRouteVectorIterator;
-
-bool sortByHeadingDiff(FGTaxiSegment *a, FGTaxiSegment *b);
-bool sortByLength     (FGTaxiSegment *a, FGTaxiSegment *b);
-
 
 /**************************************************************************************
  * class FGGroundNetWork

@@ -192,8 +192,8 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
 	leg = 4;
       else if (timeDiff >= 2000)
 	leg = 5;
-      
-      //cerr << "Set leg to : " << leg << endl;  
+
+      SG_LOG(SG_GENERAL, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg);
       wpt_iterator = waypoints.begin();
       create(dep,arr, leg, alt, speed, lat, lon,
 	     firstLeg, radius, fltType, acType, airline);

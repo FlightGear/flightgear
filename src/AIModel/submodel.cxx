@@ -517,7 +517,7 @@ void FGSubmodelMgr::loadAI()
     sm_list_iterator end = sm_list.end();
 
     while (sm_list_itr != end) {
-        string path = (*sm_list_itr)->_getPath();
+        string path = (*sm_list_itr)->_getSMPath();
 
         if (path.empty()) {
             ++sm_list_itr;

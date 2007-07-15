@@ -47,55 +47,6 @@
 
 #include "groundnetwork.hxx"
 
-SG_USING_STD(sort);
-
-/*****************************************************************************
- * Helper function for parsing position string
- ****************************************************************************/
-double processPosition(const string &pos)
-{
-  string prefix;
-  string subs;
-  string degree;
-  string decimal;
-  int sign = 1;
-  double value;
-  subs = pos;
-  prefix= subs.substr(0,1);
-  if (prefix == string("S") || (prefix == string("W")))
-    sign = -1;
-  subs    = subs.substr(1, subs.length());
-  degree  = subs.substr(0, subs.find(" ",0));
-  decimal = subs.substr(subs.find(" ",0), subs.length());
-  
-	      
-  //cerr << sign << " "<< degree << " " << decimal << endl;
-  value = sign * (atof(degree.c_str()) + atof(decimal.c_str())/60.0);
-  //cerr << value <<endl;
-  //exit(1);
-  return value;
-}
-
-/**************************************************************************
- * FGTaxiNode
- *************************************************************************/
-FGTaxiNode::FGTaxiNode()
-{
-}
-
-void FGTaxiNode::sortEndSegments(bool byLength)
-{
-  if (byLength)
-    sort(next.begin(), next.end(), sortByLength);
-  else
-    sort(next.begin(), next.end(), sortByHeadingDiff);
-}
-
-
-bool compare_nodes(FGTaxiNode *a, FGTaxiNode *b) {
-return (*a) < (*b);
-}
-
 /***************************************************************************
  * FGTaxiSegment
  **************************************************************************/
@@ -159,17 +110,7 @@ void FGTaxiSegment::setCourseDiff(double crse)
     headingDiff = fabs(headingDiff - 360);
 }
 
-bool compare_segments(FGTaxiSegment *a, FGTaxiSegment *b) {
-return (*a) < (*b);
-}
 
-bool sortByHeadingDiff(FGTaxiSegment *a, FGTaxiSegment *b) {
-  return a->hasSmallerHeadingDiff(*b);
-}
-
-bool sortByLength(FGTaxiSegment *a, FGTaxiSegment *b) {
-  return a->getLength() > b->getLength();
-}
 /***************************************************************************
  * FGTaxiRoute
  **************************************************************************/
@@ -249,6 +190,13 @@ void FGTaxiRoute::rewind(int route)
 /***************************************************************************
  * FGGroundNetwork()
  **************************************************************************/
+bool compare_nodes(FGTaxiNode *a, FGTaxiNode *b) {
+return (*a) < (*b);
+}
+
+bool compare_segments(FGTaxiSegment *a, FGTaxiSegment *b) {
+return (*a) < (*b);
+}
 
 FGGroundNetwork::FGGroundNetwork()
 {

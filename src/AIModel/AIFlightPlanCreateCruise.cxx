@@ -75,9 +75,15 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
 	    }
 	}
       //cerr << "1"<< endl;
-      SGGeoc geoc = SGGeoc::fromCart(SGVec3d(newPos[0], newPos[1], newPos[2]));
-      double midlat = geoc.getLatitudeDeg();
-      double midlon = geoc.getLongitudeDeg();
+      //SGGeoc geoc = SGGeoc::fromCart(SGVec3d(newPos[0], newPos[1], newPos[2]));
+
+      //double midlat = geoc.getLatitudeDeg();
+      //double midlon = geoc.getLongitudeDeg();
+
+      Point3D temp = sgCartToPolar3d(Point3D(newPos[0], newPos[1],newPos[2]));
+      double midlat = temp.lat() * SG_RADIANS_TO_DEGREES;
+      double midlon = temp.lon() * SG_RADIANS_TO_DEGREES; 
+
 
       prevNode = tmpNode;
       tmpNode = globals->get_airwaynet()->findNearestNode(midlat, midlon);

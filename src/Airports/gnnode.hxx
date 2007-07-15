@@ -27,6 +27,8 @@ class FGTaxiSegment;
 typedef vector<FGTaxiSegment*>  FGTaxiSegmentVector;
 typedef FGTaxiSegmentVector::iterator FGTaxiSegmentVectorIterator;
 
+bool sortByHeadingDiff(FGTaxiSegment *a, FGTaxiSegment *b);
+bool sortByLength     (FGTaxiSegment *a, FGTaxiSegment *b);
 double processPosition(const string& pos);
 
 class FGTaxiNode 

@@ -245,6 +245,10 @@ void FGAIBase::bind() {
         SGRawValueMethods<FGAIBase,double>(*this,
         &FGAIBase::_getCartPosZ,
         0));
+    props->tie("callsign",
+        SGRawValueMethods<FGAIBase,const char*>(*this,
+        &FGAIBase::_getCallsign,
+        0));
 
     props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
     props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
@@ -290,6 +294,7 @@ void FGAIBase::unbind() {
     props->untie("position/global-x");
     props->untie("position/global-y");
     props->untie("position/global-z");
+    props->untie("callsign");
 
     props->untie("orientation/pitch-deg");
     props->untie("orientation/roll-deg");
@@ -581,19 +586,23 @@ double FGAIBase::_getHeading() const {
     return hdg;
 }
 
-const char* FGAIBase::_getPath() {
+const char* FGAIBase::_getPath() const {
+    return model_path.c_str();
+}
+
+const char* FGAIBase::_getSMPath() const {
     return _path.c_str();
 }
 
-const char* FGAIBase::_getName() {
+const char* FGAIBase::_getName() const {
     return _name.c_str();
 }
 
-const char* FGAIBase::_getCallsign() {
+const char* FGAIBase::_getCallsign() const {
     return _callsign.c_str();
 }
 
-const char* FGAIBase::_getSubmodel() {
+const char* FGAIBase::_getSubmodel() const {
     return _submodel.c_str();
 }
 
@@ -621,7 +630,7 @@ void FGAIBase::CalculateMach() {
     // where:
     // a = speed of sound [ft/s]
     // g = specific heat ratio, which is usually equal to 1.4
-    // R = specific gas constant, which equals 1716 ft-lb/slug/°R
+    // R = specific gas constant, which equals 1716 ft-lb/slug/R
     a = sqrt ( 1.4 * 1716 * (T + 459.7));
 
     // calculate Mach number

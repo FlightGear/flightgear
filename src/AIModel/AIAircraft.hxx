@@ -61,8 +61,6 @@ public:
     void ClimbTo(double altitude);
     void TurnTo(double heading);
     
-    void setCallSign(const string& );
-
     void getGroundElev(double dt); //TODO these 3 really need to be public?
     void doGroundAltitude();
     void loadNextLeg  ();
@@ -137,9 +135,8 @@ private:
     bool holdPos;
 
     bool _getGearDown() const;
-    const char *_getCallSign() const;
+
     bool reachedWaypoint;
-    string callsign;             // The callsign of this tanker.
 
     PerformanceData* _performance; // the performance data for this aircraft
 };
