@@ -1,4 +1,4 @@
-noinst_PROGRAMS = animassist normalmap
+noinst_PROGRAMS = animassist normalmap photomodel
 
 # threedconvert_SOURCES = 3dconvert.cxx
 # threedconvert_LDADD = -lplibssg -lplibsg -lplibul \
@@ -9,3 +9,6 @@ animassist_LDADD = $(base_LIBS)
 
 normalmap_SOURCES = normalmap.cxx
 normalmap_LDADD = -lsgscreen $(opengl_LIBS) $(base_LIBS) -lz
+
+photomodel_SOURCES = photomodel.cxx
+photomodel_LDADD = $(base_LIBS) -lsgbucket -lsgmath -lsgmisc -lsgdebug
