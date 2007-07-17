@@ -104,7 +104,7 @@ fgfs_LDADD = \
 	-lsgstructure -lsgenvironment \
 	-lplibpuaux -lplibpu -lplibfnt -lplibjs -lplibnet \
 	-lplibsg -lplibul \
-	-losgViewer -losgFX -losgUtil -losgDB -losgSim -losg -lOpenThreads \
+	-losgViewer -losgGA -losgText -losgFX -losgUtil -losgDB -losgSim -losg -lOpenThreads \
 	$(THREAD_LIBS) \
 	$(network_LIBS) \
 	-lz \
