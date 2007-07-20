@@ -298,8 +298,7 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
 FGAIFlightPlan::~FGAIFlightPlan()
 {
   deleteWaypoints();
-  if (taxiRoute)
-    delete taxiRoute;
+  delete taxiRoute;
 }
 
 
@@ -492,8 +491,7 @@ void FGAIFlightPlan::restart()
 
 void FGAIFlightPlan::deleteTaxiRoute() 
 {
-  if (taxiRoute)
-    delete taxiRoute;
+  delete taxiRoute;
   taxiRoute = 0;
 }
 

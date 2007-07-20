@@ -257,8 +257,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  // Starting from gate 0 in this case is a bit of a hack
 	  // which requires a more proper solution later on.
 	  //FGTaxiRoute route;
-	  if (taxiRoute)
-	    delete taxiRoute;
+	  delete taxiRoute;
 	  taxiRoute = new FGTaxiRoute;
 	  if (gateId >= 0)
 	    *taxiRoute = apt->getDynamics()->getGroundNetwork()->findShortestRoute(gateId, 
@@ -427,8 +426,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  // fallback mechanism for this. 
 	  // Starting from gate 0 is a bit of a hack...
 	  //FGTaxiRoute route;
-	  if (taxiRoute)
-	    delete taxiRoute;
+	  delete taxiRoute;
 	  taxiRoute = new FGTaxiRoute;
 	  if (gateId >= 0)
 	    *taxiRoute = apt->getDynamics()->getGroundNetwork()->findShortestRoute(runwayId, 
