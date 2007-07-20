@@ -213,6 +213,9 @@ else
     fi
 fi
 
+AC_ARG_ENABLE(osgdebug, [  --enable-osgdebug                  Use OSG debug libraries], [enable_osgdebug="$enableval"])
+AM_CONDITIONAL(USE_OSGDEBUG, test "x$enable_osgdebug" = "xyes")
+
 dnl check for OpenGL related libraries
 case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
