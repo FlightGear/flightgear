@@ -237,7 +237,7 @@ void RunwayGroup::setActive(const string &aptId,
 	    {
 	     
 	      name = rwyList[j].getRwyList(i);
-	      //cerr << "Name of Runway: " << name << endl;
+	      //cerr << "Name of Runway: " << name;
 	      if (globals->get_runways()->search( aptId, 
 						  name, 
 						  &rwy))
@@ -252,21 +252,22 @@ void RunwayGroup::setActive(const string &aptId,
 		  hdgDiff *= ((2*M_PI)/360.0); // convert to radians
 		  crossWind = windSpeed * sin(hdgDiff);
 		  tailWind  = -windSpeed * cos(hdgDiff);
-		  //cerr << "Tailwind : " << tailWind << endl;
-		  //cerr << "Crosswnd : " << crossWind << endl;
+		  //cerr << ". Tailwind : " << tailWind;
+		  //cerr << ". Crosswnd : " << crossWind;
 		  if ((tailWind > maxTail) || (crossWind > maxCross))
 		    {
-		      //cerr << "Invalid : " << endl;
+		      //cerr << ". [Invalid] " << endl;
 		      validSelection = false;
 		   }
 		  else 
 		    {
-		      //cerr << "Valid   : " << endl;;
+		      //cerr << ". [Valid] ";
 		  }
 		}else {
 		SG_LOG( SG_GENERAL, SG_INFO, "Failed to find runway " << name << " at " << aptId );
 		exit(1);
 	      }
+              //cerr << endl;
 	    }
 	  if (validSelection) 
 	    {

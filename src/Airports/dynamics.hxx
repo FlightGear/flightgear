@@ -50,14 +50,15 @@ private:
   string prevTrafficType;
   stringVec landing;
   stringVec takeoff;
-  stringVec currentlyActive;
+  stringVec milActive, comActive, genActive, ulActive;
+  stringVec *currentlyActive;
 
   // Experimental keep a running average of wind dir and speed to prevent
   // Erratic runway changes. 
   // Note: I should add these to the copy constructor and assigment operator to be
   // constistent
-  double avWindHeading [10];
-  double avWindSpeed   [10];
+  //double avWindHeading [10];
+  //double avWindSpeed   [10];
 
   string chooseRunwayFallback();
 

@@ -135,6 +135,7 @@ private:
   ScheduleTime comTimes; // Commercial Traffic;
   ScheduleTime genTimes; // General Aviation;
   ScheduleTime milTimes; // Military Traffic;
+  ScheduleTime ulTimes;  // Ultralight Traffic
 
   PreferenceList preferences;
   
@@ -157,6 +158,7 @@ public:
   void setMilTimes(ScheduleTime& t) { milTimes = t; };
   void setGenTimes(ScheduleTime& t) { genTimes = t; };
   void setComTimes(ScheduleTime& t) { comTimes = t; };
+  void setULTimes (ScheduleTime& t) { ulTimes  = t; };
 
   void addRunwayGroup(RunwayGroup& g) { preferences.push_back(g); };
 };

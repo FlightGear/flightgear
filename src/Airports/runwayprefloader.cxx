@@ -114,6 +114,12 @@ void  FGRunwayPreferenceXMLLoader::endElement (const char * name) {
     _pref->setMilTimes(currTimes);
     currTimes.clear();
   }
+  if (!(strcmp(name, "ul"))) { // Military Traffic
+    //cerr << "Setting time table for military traffic" << endl;
+    _pref->setULTimes(currTimes);
+    currTimes.clear();
+  }
+
 
   if (!(strcmp(name, "takeoff"))) {
     //cerr << "Adding takeoff: " << value << endl;
