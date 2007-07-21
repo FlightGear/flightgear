@@ -85,6 +85,14 @@ find . -name thumbnail.jpg|while read i; do
 done
 
 
+LOG "checking for 'userarchive' flags (not allowed in aircraft XML files) ..."
+find . -name \*.xml|while read i; do
+	if grep "userarchive" $i >/dev/null; then
+		RESULT "$i"
+	fi
+done
+
+
 LOG "checking for XML syntax ..."
 find . -name \*.xml|while read i; do
 	xmllint $i >/dev/null || RESULT "... in file \e[36m$i\e[m"
