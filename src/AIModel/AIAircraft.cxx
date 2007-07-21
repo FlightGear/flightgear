@@ -735,29 +735,30 @@ void FGAIAircraft::updatePrimaryTargetValues() {
         time_t now = time(NULL) + fgGetLong("/sim/time/warp");
         //cerr << "UpateTArgetValues() " << endl;
         ProcessFlightPlan(dt, now);
-        if (! fp->isActive(now)) {
-            // Do execute Ground elev for inactive aircraft, so they
-            // Are repositioned to the correct ground altitude when the user flies within visibility range.
-            // In addition, check whether we are out of user range, so this aircraft
-            // can be deleted.
-            if (onGround()) {
+
+        // Do execute Ground elev for inactive aircraft, so they
+        // Are repositioned to the correct ground altitude when the user flies within visibility range.
+        // In addition, check whether we are out of user range, so this aircraft
+        // can be deleted.
+        if (onGround()) {
                 Transform();     // make sure aip is initialized.
-                if (trafficRef) {
-                    //cerr << trafficRef->getRegistration() << " Setting altitude to " << altitude_ft;
-                    if (! aiTrafficVisible()) {
-                        setDie(true);
-                        throw AI_OutOfSight();
-                    }
-                    getGroundElev(dt);
-                    doGroundAltitude();
-                    // Transform();
-                    pos.setElevationFt(altitude_ft);
-                }
+                getGroundElev(dt);
+                doGroundAltitude();
+                // Transform();
+                pos.setElevationFt(altitude_ft);
+        }
+        if (trafficRef) {
+           //cerr << trafficRef->getRegistration() << " Setting altitude to " << altitude_ft;
+            if (! aiTrafficVisible()) {
+                setDie(true);
+                //cerr << trafficRef->getRegistration() << " is set to die " << endl;
+                throw AI_OutOfSight();
             }
+        }
+        if (! fp->isActive(now)) { 
             throw FP_Inactive();
         }
-    }
-    else {
+    } else {
         // no flight plan, update target heading, speed, and altitude
         // from control properties.  These default to the initial
         // settings in the config file, but can be changed "on the
