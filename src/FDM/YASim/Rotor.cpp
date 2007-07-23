@@ -150,6 +150,7 @@ Rotor::Rotor()
     _max_tilt_yaw=0;
     _max_tilt_pitch=0;
     _max_tilt_roll=0;
+    _downwash_factor=1;
 }
 
 Rotor::~Rotor()
@@ -652,6 +653,11 @@ void Rotor::setRelLenHinge(float value)
     _rel_len_hinge=value;
 }
 
+void Rotor::setDownwashFactor(float value)
+{
+    _downwash_factor=value;
+}
+
 void Rotor::setAlphaoutput(int i, const char *text)
 {
     strncpy(_alphaoutput[i],text,255);
@@ -1019,7 +1025,7 @@ void Rotor::getDownWash(float *pos, float *v_heli, float *downwash)
     //at dist = rotor radius it is assumed to be 1/e * v1 + (1-1/e)* v2
 
     float v = g * v1 + (1-g) * v2;
-    Math::mul3(-v,_normal_with_yaw_roll,downwash);
+    Math::mul3(-v*_downwash_factor,_normal_with_yaw_roll,downwash);
     //the downwash is calculated in the opposite direction of the normal
 }
 

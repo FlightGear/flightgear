@@ -728,6 +728,7 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setTiltCenterX(attrf(a,"tiltcenterx",0.0));
     w->setTiltCenterY(attrf(a,"tiltcentery",0.0));
     w->setTiltCenterZ(attrf(a,"tiltcenterz",0.0));
+    w->setDownwashFactor(attrf(a, "downwashfactor", 1));
     if(attrb(a,"ccw"))
        w->setCcw(1); 
     if(attrb(a,"sharedflaphinge"))

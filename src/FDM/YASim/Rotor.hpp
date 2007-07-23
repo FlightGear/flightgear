@@ -39,6 +39,7 @@ private:
     float _old_tilt_roll;
     float _old_tilt_pitch;
     float _old_tilt_yaw;
+    float _downwash_factor;
 
 public:
     Rotor();
@@ -107,6 +108,7 @@ public:
     void calcLiftFactor(float* v, float rho, State *s);
     void getDownWash(float *pos, float * v_heli, float *downwash);
     int getNumberOfBlades(){return _number_of_blades;}
+    void setDownwashFactor(float value);
 
     // Query the list of Rotorpart objects
     int numRotorparts();
