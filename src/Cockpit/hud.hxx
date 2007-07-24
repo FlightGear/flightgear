@@ -241,7 +241,7 @@ public:
 	fgText(float x, float y, const string& c, bool digits=false): x(x), y(y), msg( c), digit( digits) {};	
 
     fgText( const fgText & image )
-		: x(image.x), y(image.y),digit(image.digit), msg( image.msg) { }
+		: x(image.x), y(image.y), msg(image.msg), digit(image.digit) { }
 
 	fgText& operator = ( const fgText & image ) {
 		x = image.x; y = image.y; msg= image.msg; digit = image.digit;
