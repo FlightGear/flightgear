@@ -7,7 +7,7 @@ For basic installation instructions see the "INSTALL" file.
 
 Before you can run FlightGear you will also need to download and
 install the "base" package which is a collection of textures, sounds,
-sample scenery, and other data files need by the sim.
+sample scenery, and other data files needed by the sim.
 
 For additional install help for specific platforms please browse the
 "docs-mini/" subdirectory.
