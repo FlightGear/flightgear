@@ -187,8 +187,12 @@ FGIO::parse_port_config( const string& config )
             else if (tokens[1] == "file") n--;
             FGGeneric *generic = new FGGeneric( tokens[n] );
             io = generic;
-	} else if ( protocol == "multiplay" ) {\
-	    //Determine dir, rate, host & port
+	} else if ( protocol == "multiplay" ) {
+	    if ( tokens.size() != 5 ) {
+		SG_LOG( SG_IO, SG_ALERT, "Ignoring invalid --multiplay option "
+			"(4 arguments expected: --multiplay=dir,hz,hostname,port)" );
+		return NULL;
+	    }
 	    string dir = tokens[1];
 	    string rate = tokens[2];
 	    string host = tokens[3];
