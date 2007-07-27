@@ -24,16 +24,33 @@
 #ifndef _UFO_HXX
 #define _UFO_HXX
 
-
 #include "flight.hxx"
 
 
 class FGUFO: public FGInterface {
-    double Throttle;
-    double Aileron;
-    double Elevator;
-    double Elevator_Trim;
-    double Rudder;
+    class lowpass {
+        double _coeff;
+        double _last;
+        bool _initialized;
+    public:
+        lowpass(double coeff) : _coeff(coeff), _initialized(false) {}
+        double filter(double dt, double value) {
+            if (!_initialized) {
+                _initialized = true;
+                return _last = value;
+            }
+            double c = dt / (_coeff + dt);
+            return _last = value * c + _last * (1.0 - c);
+        }
+    };
+
+    lowpass *Throttle;
+    lowpass *Aileron;
+    lowpass *Elevator;
+    lowpass *Rudder;
+    lowpass *Aileron_Trim;
+    lowpass *Elevator_Trim;
+    lowpass *Rudder_Trim;
     SGPropertyNode_ptr Speed_Max;
 
 public:
