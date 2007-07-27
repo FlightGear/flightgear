@@ -35,25 +35,28 @@
 
 #include "UFO.hxx"
 
-const double throttle_damp = 0.2;
-const double aileron_damp = 0.05;
-const double elevator_damp = 0.05;
-const double elevator_trim_damp = 0.05;
-const double rudder_damp = 0.4;
 
-FGUFO::FGUFO( double dt )
-  : Throttle(0.0),
-    Aileron(0.0),
-    Elevator(0.0),
-    Elevator_Trim(0.0),
-    Rudder(0.0),
+FGUFO::FGUFO( double dt ) :
+    Throttle(new lowpass(fgGetDouble("/controls/damping/throttle", 0.3))),
+    Aileron(new lowpass(fgGetDouble("/controls/damping/aileron", 0.65))),
+    Elevator(new lowpass(fgGetDouble("/controls/damping/elevator", 0.65))),
+    Rudder(new lowpass(fgGetDouble("/controls/damping/rudder", 0.05))),
+    Aileron_Trim(new lowpass(fgGetDouble("/controls/damping/aileron-trim", 0.65))),
+    Elevator_Trim(new lowpass(fgGetDouble("/controls/damping/elevator-trim", 0.65))),
+    Rudder_Trim(new lowpass(fgGetDouble("/controls/damping/rudder-trim", 0.05))),
     Speed_Max(fgGetNode("/engines/engine/speed-max-mps", true))
 {
-//     set_delta_t( dt );
 }
 
 
 FGUFO::~FGUFO() {
+    delete Throttle;
+    delete Aileron;
+    delete Elevator;
+    delete Rudder;
+    delete Aileron_Trim;
+    delete Elevator_Trim;
+    delete Rudder_Trim;
 }
 
 
@@ -71,94 +74,70 @@ void FGUFO::update( double dt ) {
     // cout << "FGLaRCsim::update()" << endl;
 
     if (is_suspended())
-      return;
+        return;
 
     double time_step = dt;
 
     // read the throttle
-    double th = globals->get_controls()->get_throttle( 0 );
-    if ( globals->get_controls()->get_brake_left() > 0.5
-         || globals->get_controls()->get_brake_right() > 0.5 )
-    {
-        th = -th;
-    }
-    Throttle = th * throttle_damp + Throttle * (1 - throttle_damp);
+    double throttle = globals->get_controls()->get_throttle( 0 );
+    double brake_left = globals->get_controls()->get_brake_left();
+    double brake_right = globals->get_controls()->get_brake_right();
 
-    // read the state of the control surfaces
-    Aileron  = globals->get_controls()->get_aileron() * aileron_damp
-               + Aileron * (1 - aileron_damp);
-    Elevator = globals->get_controls()->get_elevator() * elevator_damp
-               + Elevator * (1 - elevator_damp);
-    Elevator_Trim = globals->get_controls()->get_elevator_trim()
-                    * elevator_trim_damp
-                    + Elevator_Trim * (1 - elevator_trim_damp);
-    Rudder = globals->get_controls()->get_rudder() * rudder_damp
-               + Rudder * (1 - rudder_damp);
+    if (brake_left > 0.5 || brake_right > 0.5)
+        throttle = -throttle;
 
-    // the velocity of the aircraft
-    double velocity = Throttle * Speed_Max->getDoubleValue(); // meters/sec
+    throttle = Throttle->filter(dt, throttle);
+
+    // read and lowpass-filter the state of the control surfaces
+    double aileron = Aileron->filter(dt, globals->get_controls()->get_aileron());
+    double elevator = Elevator->filter(dt, globals->get_controls()->get_elevator());
+    double rudder = Rudder->filter(dt, globals->get_controls()->get_rudder());
+
+    aileron += Aileron_Trim->filter(dt, globals->get_controls()->get_aileron_trim());
+    elevator += Elevator_Trim->filter(dt, globals->get_controls()->get_elevator_trim());
+    rudder += Rudder_Trim->filter(dt, globals->get_controls()->get_rudder_trim());
+
+    double velocity = throttle * Speed_Max->getDoubleValue(); // meters/sec
 
     double old_pitch = get_Theta();
-    double pitch_rate = SGD_PI_4; // assume I will be pitching up
-    double target_pitch = (-Elevator - Elevator_Trim) * SGD_PI_2;
+    double pitch_rate = SGD_PI_4;  // assume I will be pitching up
+    double target_pitch = -elevator * SGD_PI_2;
 
-    // if I am pitching down
-    if (old_pitch > target_pitch)
-        // set the pitch rate to negative (down)
+    if (old_pitch > target_pitch)  // pitching down
         pitch_rate *= -1;
 
     double pitch = old_pitch + (pitch_rate * time_step);
 
-    // if I am pitching up
-    if (pitch_rate > 0.0)
-    {
-        // clip the pitch at the limit
-        if ( pitch > target_pitch)
-        {
+    if (pitch_rate > 0.0) {        // pitching up
+        if (pitch > target_pitch)
             pitch = target_pitch;
-        }
-    }
-    // if I am pitching down
-    else if (pitch_rate < 0.0)
-    {
-        // clip the pitch at the limit
-        if ( pitch < target_pitch)
-        {
+
+    } else if (pitch_rate < 0.0) { // pitching down
+        if (pitch < target_pitch)
             pitch = target_pitch;
-        }
     }
 
-    double old_roll     = get_Phi();
-    double roll_rate    = SGD_PI_4;
-    double target_roll  = Aileron * SGD_PI_2;
+    double old_roll    = get_Phi();
+    double roll_rate   = SGD_PI_4;
+    double target_roll = aileron * SGD_PI_2;
 
     if (old_roll > target_roll)
         roll_rate *= -1;
-    
+
     double roll = old_roll + (roll_rate * time_step);
 
-    // if I am rolling CW
-    if (roll_rate > 0.0)
-    {
-        // clip the roll at the limit
-        if ( roll > target_roll)
-        {
+    if (roll_rate > 0.0) {         // rolling CW
+        if (roll > target_roll)
             roll = target_roll;
-        }
-    }
-    // if I am rolling CCW
-    else if (roll_rate < 0.0)
-    {
-        // clip the roll at the limit
-        if ( roll < target_roll)
-        {
+
+    } else if (roll_rate < 0.0) {  // rolling CCW
+        if (roll < target_roll)
             roll = target_roll;
-        }
     }
 
     // the vertical speed of the aircraft
     double real_climb_rate = sin (pitch) * SG_METER_TO_FEET * velocity; // feet/sec
-    _set_Climb_Rate( -Elevator * 10.0 );
+    _set_Climb_Rate( -elevator * 10.0 );
     double climb = real_climb_rate * time_step;
 
     // the lateral speed of the aircraft
@@ -172,19 +151,19 @@ void FGUFO::update( double dt ) {
     // angle of turn
     double turn_rate = sin(roll) * SGD_PI_4; // radians/sec
     double turn = turn_rate * time_step;
-    double yaw = fabs(Rudder) < .2 ? 0.0 : Rudder / (25 + fabs(speed) * .1);
+    double yaw = fabs(rudder) < .2 ? 0.0 : rudder / (25 + fabs(speed) * .1);
 
     // update (lon/lat) position
     double lat2, lon2, az2;
     if ( fabs(speed) > SG_EPSILON ) {
-	geo_direct_wgs_84 ( get_Altitude(),
-			    get_Latitude() * SGD_RADIANS_TO_DEGREES,
-			    get_Longitude() * SGD_RADIANS_TO_DEGREES,
-			    get_Psi() * SGD_RADIANS_TO_DEGREES,
-			    dist, &lat2, &lon2, &az2 );
+        geo_direct_wgs_84 ( get_Altitude(),
+                            get_Latitude() * SGD_RADIANS_TO_DEGREES,
+                            get_Longitude() * SGD_RADIANS_TO_DEGREES,
+                            get_Psi() * SGD_RADIANS_TO_DEGREES,
+                            dist, &lat2, &lon2, &az2 );
 
-	_set_Longitude( lon2 * SGD_DEGREES_TO_RADIANS );
-	_set_Latitude( lat2 * SGD_DEGREES_TO_RADIANS );
+        _set_Longitude( lon2 * SGD_DEGREES_TO_RADIANS );
+        _set_Latitude( lat2 * SGD_DEGREES_TO_RADIANS );
     }
 
     // cout << "lon error = " << fabs(end.x()*SGD_RADIANS_TO_DEGREES - lon2)
@@ -199,8 +178,8 @@ void FGUFO::update( double dt ) {
     _set_Euler_Angles(roll, pitch, heading);
     _set_Euler_Rates(0,0,0);
 
-    _set_Geocentric_Position( lat_geoc, get_Longitude(), 
-			     sl_radius + get_Altitude() + climb );
+    _set_Geocentric_Position( lat_geoc, get_Longitude(),
+                             sl_radius + get_Altitude() + climb );
     // cout << "sea level radius (ft) = " << sl_radius << endl;
     // cout << "(setto) sea level radius (ft) = " << get_Sea_level_radius() << endl;
     _update_ground_elev_at_pos();
@@ -212,3 +191,5 @@ void FGUFO::update( double dt ) {
     set_V_east(sin(heading) * velocity * SG_METER_TO_FEET);
     set_V_down(-real_climb_rate);
 }
+
+
