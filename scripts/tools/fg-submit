@@ -36,12 +36,12 @@
 # this at the end with two arguments:
 #
 #     $1 ... archive or compressed diff for submission
-#     $2 ... accessory diff, *NOT* for submission!
+#     $2 ... accessory uncompressed diff, *NOT* for submission!
 #
 # $1 and $2 are guaranteed not to contain spaces, only $1 is guaranteed
 # to actually exist. Such a script can be used to upload the file to an
 # ftp-/webserver, and/or to remove one or both files. Example using
-# KDE's kfmclient for upload (alternatives: ncftpput, gnomevfs-copy, wput):
+# KDE's kfmclient for upload (alternatives: ncftpput, gnomevfs-copy):
 #
 #     $ cat ~/bin/fg-upload
 #     #!/bin/bash
@@ -72,9 +72,9 @@
 # A file can use a list of three keywords with arguments, each on a
 # separate line:
 #
-#     ALLOW   <pattern-list>     ... accept & report matching file
-#     DENY    <pattern-list>     ... reject & report matching file
-#     IGNORE  <pattern-list>     ... silently reject matching file
+#     ALLOW  <pattern-list>     ... accept & report matching file
+#     DENY   <pattern-list>     ... reject & report matching file
+#     IGNORE <pattern-list>     ... silently reject matching file
 #
 # A <pattern-list> is a space-separated list of shell pattern.
 # It may also be empty, in which case it has no effect. Examples:
@@ -84,12 +84,12 @@
 #
 # The list of pattern is checked in the same order in which it was
 # built. The first match causes a file to be accepted or rejected.
-# Further matches are not considered. Comments using the
-# hash character '#' are allowed and ignored.
+# Further matches are not considered. Comments using the hash
+# character '#' are allowed and ignored.
 #
 # Some default rules are always added at the end. If you want to
-# bypass them, then just add "ALLOW *" or "DENY *" at the end of
-# your configuration, and no file will ever reach the default rules.
+# bypass them, then finish your configuration with an "ALLOW *"
+# or "DENY *", and no file will ever reach the default rules.
 #
 #
 # Example:
@@ -98,7 +98,7 @@
 #     ALLOW *.xcf    # ... allow all other GIMP images (the default
 #                    # rules would otherwise throw them out)
 #
-#     ALLOW  g.old   # add this silly file, but ...
+#     ALLOW  not.old # add this file, but ...
 #     IGNORE *.old   # throw out all other "old" files (and don't
 #                    # report that to the terminal)
 #
