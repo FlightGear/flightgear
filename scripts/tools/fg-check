@@ -7,7 +7,7 @@
 SELF=${0##*/}
 
 # optional apps
-RLE=$(which rle &>/dev/null)              # http://members.aon.at/mfranz/rle.tar.gz (depends on Qt lib)
+RLE=$(which rle 2>/dev/null)              # http://members.aon.at/mfranz/rle.tar.gz (depends on Qt lib)
 AC3D_SCAN=$(which ac3d-scan 2>/dev/null)  # http://members.aon.at/mfranz/ac3d-scan
 
 
@@ -49,20 +49,21 @@ done
 
 LOG "checking for uncompressed textures ..."
 find . -iname \*.rgb -o -iname \*.rgba|while read i; do
-	if file "$i"|grep -v RLE >/dev/null; then
-		new=$TMP/sgi.rgb
+	new=$TMP/sgi.rgb
+	if [ -x "$RLE" ]; then
+		cp "$i" $new && "$RLE" $new 2>&1|grep corrupt &>/dev/null && ERROR "\t$i ... FILE CORRUPTED"
+	else
 		convert "$i" -compress RLE sgi:$new
-		[ -x "$RLE" ] && $RLE $new 2>/dev/null
-		perl -e '
-			my $file = shift;
-			my $old = -s $file;
-			my $new = -s shift;
-			if ($new < $old) {
-				printf "\t$file:  could be %0.02f%% of current size (%d bytes less)\n",
-						100 * $new / $old, $old - $new;
-			}
-		' "$i" $new
 	fi
+	perl -e '
+		my $file = shift;
+		my $old = -s $file;
+		my $new = -s shift;
+		if ($new < $old) {
+			printf "\t$file:  could be %0.02f%% of current size (%d bytes less)\n",
+					100 * $new / $old, $old - $new;
+		}
+	' "$i" $new
 done
 
 
