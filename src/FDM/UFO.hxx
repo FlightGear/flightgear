@@ -28,18 +28,23 @@
 
 
 class FGUFO: public FGInterface {
+private:
+
     class lowpass {
+    private:
+        static double _dt;
         double _coeff;
         double _last;
         bool _initialized;
     public:
         lowpass(double coeff) : _coeff(coeff), _initialized(false) {}
-        double filter(double dt, double value) {
+        static inline void set_delta(double dt) { _dt = dt; }
+        double filter(double value) {
             if (!_initialized) {
                 _initialized = true;
                 return _last = value;
             }
-            double c = dt / (_coeff + dt);
+            double c = _dt / (_coeff + _dt);
             return _last = value * c + _last * (1.0 - c);
         }
     };

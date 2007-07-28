@@ -35,9 +35,11 @@
 
 #include "UFO.hxx"
 
+double FGUFO::lowpass::_dt;
+
 
 FGUFO::FGUFO( double dt ) :
-    Throttle(new lowpass(fgGetDouble("/controls/damping/throttle", 0.3))),
+    Throttle(new lowpass(fgGetDouble("/controls/damping/throttle", 0.1))),
     Aileron(new lowpass(fgGetDouble("/controls/damping/aileron", 0.65))),
     Elevator(new lowpass(fgGetDouble("/controls/damping/elevator", 0.65))),
     Rudder(new lowpass(fgGetDouble("/controls/damping/rudder", 0.05))),
@@ -76,6 +78,7 @@ void FGUFO::update( double dt ) {
     if (is_suspended())
         return;
 
+    lowpass::set_delta(dt);
     double time_step = dt;
 
     // read the throttle
@@ -86,16 +89,16 @@ void FGUFO::update( double dt ) {
     if (brake_left > 0.5 || brake_right > 0.5)
         throttle = -throttle;
 
-    throttle = Throttle->filter(dt, throttle);
+    throttle = Throttle->filter(throttle);
 
     // read and lowpass-filter the state of the control surfaces
-    double aileron = Aileron->filter(dt, globals->get_controls()->get_aileron());
-    double elevator = Elevator->filter(dt, globals->get_controls()->get_elevator());
-    double rudder = Rudder->filter(dt, globals->get_controls()->get_rudder());
+    double aileron = Aileron->filter(globals->get_controls()->get_aileron());
+    double elevator = Elevator->filter(globals->get_controls()->get_elevator());
+    double rudder = Rudder->filter(globals->get_controls()->get_rudder());
 
-    aileron += Aileron_Trim->filter(dt, globals->get_controls()->get_aileron_trim());
-    elevator += Elevator_Trim->filter(dt, globals->get_controls()->get_elevator_trim());
-    rudder += Rudder_Trim->filter(dt, globals->get_controls()->get_rudder_trim());
+    aileron += Aileron_Trim->filter(globals->get_controls()->get_aileron_trim());
+    elevator += Elevator_Trim->filter(globals->get_controls()->get_elevator_trim());
+    rudder += Rudder_Trim->filter(globals->get_controls()->get_rudder_trim());
 
     double velocity = throttle * Speed_Max->getDoubleValue(); // meters/sec
 
