@@ -122,22 +122,23 @@ FGScenery::get_elevation_m(double lat, double lon, double max_alt,
 }
 
 bool
-FGScenery::get_elevation_m(const SGGeod& geod,
-                           double& alt, const SGMaterial** material)
-{
-  SGVec3d pos = SGVec3d::fromGeod(geod);
-  return get_cart_elevation_m(pos, 0, alt, material);
-}
-
-bool
 FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
                                 double& alt, const SGMaterial** material)
 {
-  if ( norm1(pos) < 1 )
-    return false;
+  SGGeod geod = SGGeod::fromCart(pos);
+  geod.setElevationM(geod.getElevationM() + max_altoff);
+  return get_elevation_m(geod, alt, material);
+}
 
-  SGVec3d start = pos + max_altoff*normalize(pos);
-  SGVec3d end(0, 0, 0);
+bool
+FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
+                           const SGMaterial** material)
+{
+  SGVec3d start = SGVec3d::fromGeod(geod);
+
+  SGGeod geodEnd = geod;
+  geodEnd.setElevationM(SGMiscd::min(geod.getElevationM() - 10, -10000));
+  SGVec3d end = SGVec3d::fromGeod(geodEnd);
   
   osgUtil::IntersectVisitor intersectVisitor;
   intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
