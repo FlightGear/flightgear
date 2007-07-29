@@ -196,29 +196,29 @@ used as   $ fgfs --generic=file,out,1,/tmp/data.xml,xmltest
   <generic>
     <output>
       <binary_mode>false</binary_mode>
-      <line_separator></line_separator>
-      <var_separator></var_separator>
+      <var_separator>\n</var_separator>
+      <line_separator>\n</line_separator>
       <preamble>&lt;?xml version="1.0"?&gt;\n\n&lt;data&gt;\n</preamble>
       <postamble>&lt;/data&gt;\n</postamble>
 
       <chunk>
-        <format>\t&lt;set&gt;\n</format>
+        <format>\t&lt;set&gt;</format>
       </chunk>
 
       <chunk>
         <node>/position/altitude-ft</node>
         <type>float</type>
-        <format>\t\t&lt;altitude-ft&gt;%.8f&lt;/altitude-ft&gt;\n</format>
+        <format>\t\t&lt;altitude-ft&gt;%.8f&lt;/altitude-ft&gt;</format>
       </chunk>
 
       <chunk>
         <node>/velocities/airspeed-kt</node>
         <type>float</type>
-        <format>\t\t&lt;airspeed-kt&gt;%.8f&lt;/airspeed-kt&gt;\n</format>
+        <format>\t\t&lt;airspeed-kt&gt;%.8f&lt;/airspeed-kt&gt;</format>
       </chunk>
 
       <chunk>
-        <format>\t&lt;/set&gt;\n</format>
+        <format>\t&lt;/set&gt;</format>
       </chunk>
     </output>
   </generic>
