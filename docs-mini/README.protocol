@@ -1,49 +1,95 @@
-The generic communication protocol for FlightGear provides a powerfull way
-of adding a simple ASCII based or binary protocol, just by defining an
-XML encoded configuration file.
-
-The definition of the protocol consists of variable separators, line separators,
-and chuncks of text.
-
-Each chunck defines:
-
-<name>		for ease of use
-<node>		the property tree node which provides the data
-<type>		the value type (needed for formatting)
-<format>	defines the actual piece of text which should be sent.
-		it can include formatting options like:
-				<type>
-			%s	string
-			%i	integer	(default)
-			%f	float
-		(not used or needed in binary mode)
-
-<factor>	an optional multiplication factor which can be used for
-		unit conversion. (for example, radians to degrees).
-<offset>	an optional offset which can be used for unit conversion.
-		(for example, degrees Celsius to degrees Fahrenheit).
+The generic communication protocol for FlightGear provides a powerful way
+of adding a simple ASCII based or binary input/output protocol, just by
+defining an XML encoded configuration file and placing it in the
+$FG_ROOT/data/Protocols/ directory.
 
 
-The output section also could define the variable separator and line separator.
 
-The separators can be either a control character such as a tab or newline, or a
-user specified string or other single charachter. The currently supported
-control charachters are:
 
-<var_separator>:
-<line_separator>:
-Name		Charachter
+== file layout ================================================================
 
-newline		'\n'
-tab		'\t'
-formfeed	'\f'
-carriagereturn	'\r'
-verticaltab	'\v'
+A protocol file can contain either or both of <input> and <output>
+definition blocks. Which one is used depends on how the protocol
+is called  (e.g. --generic=file,out,1,/tmp/data.xml,myproto would
+only use the <output> definitions block).
 
-any other charachters just need to be added to "Network/generic.cxx"
+  <?xml version="1.0"?>
+  <PropertyList>
+      <generic>
 
-The var_separator is placed between each variable, while the line_separator is
-placed at the end of each lot of variables.
+          <output>
+              <binary_mode>false</binary_mode>
+              <line_separator></line_separator>
+              <var_separator></var_separator>
+              <preamble></preamble>
+              <postamble></postamble>
+
+              <chunk>
+                      ... first chunk spec ...
+              </chunk>
+
+              <chunk>
+                      ... another chunk etc. ...
+              </chunk>
+          </output>
+
+          <input>
+              <line_separator></line_separator>
+              <var_separator></var_separator>
+
+              <chunk>
+                      ... chunk spec ...
+              </chunk>
+          </input>
+
+      </generic>
+  </PropertyList>
+
+
+
+
+== input/output parameters ====================================================
+
+Both <output> and <input> blocks can contain information about
+the data mode (ascii/binary) and about separators between fields
+and data sets, as well as a list of <chunk>s. Each <chunk> defines
+a property that should be written (and how), or a variable and which
+property it should be written to.
+
+output only:
+  <binary_mode>     BOOL    default: false (= ASCII mode)
+  <preamble>        STRING  default: ""    file header put on top of the file
+  <postamble>       STRING  default: ""    file footer put at the end of the file
+
+input & output:
+  <var_separator>   STRING  default: ""    field separator
+  <line_separator>  STRING  default: ""    separator between data sets
+
+
+<var_separator> are put between every two output properties, while
+<line_separator> is put at the end of each data set. Both can contain
+arbitrary strings or one of the following keywords:
+
+  Name             Character
+
+  newline          '\n'
+  tab              '\t'
+  formfeed         '\f'
+  carriagereturn   '\r'
+  verticaltab      '\v'
+
+
+Typical use could be:
+
+  <var_separator>tab</var_separator>
+  <line_separator>newline</var_separator>
+
+or
+
+  <var_separator>\t</var_separator>
+  <line_separator>\r\n</line_separator>
+
+
 
 To enable binary mode, simply include a <binary_mode>true</binary_mode> tag in
 your XML file. The format of the binary output is tightly packed, with 1 byte
@@ -52,44 +98,130 @@ supported. A configurable footer at the end of each "line" or packet of binary
 output can be added using the <binary_footer> tag. Options include the length
 of the packet, a magic number to simplify decoding. Examples:
 
-	<binary_footer>magic,0x12345678</binary_footer>
-	<binary_footer>length</binary_footer>
-	<binary_footer>none</binary_footer>			<!-- default -->
+  <binary_footer>magic,0x12345678</binary_footer>
+  <binary_footer>length</binary_footer>
+  <binary_footer>none</binary_footer>                 <!-- default -->
 
-A simple protocol configuration file then could look something like the
-following:
+
+
+
+== variable parameters (chunk spec) ===========================================
+
+Both <input> and <output> block can contain a list of <chunk> specs,
+each of which describes the properties of on variable to write/read.
+
+
+  <name>        for ease of use (not tranferred)
+  <node>        the property tree node which provides the data
+  <type>        the value type (needed for formatting)
+                one of string, float, bool, int (default: int)
+  <format>      defines the actual piece of text which should be sent.
+                it can include "printf" style formatting options like:
+                                <type>
+                        %s      string
+                        %d      integer (default)
+                        %f      float
+                        (not used or needed in binary mode)
+
+  <factor>      an optional multiplication factor which can be used for
+                unit conversion. (for example, radians to degrees).
+  <offset>      an optional offset which can be used for unit conversion.
+                (for example, degrees to radians).
+
+
+Chunks can also consist of a single constant <format>, like in:
+
+
+
+
+== examples ===================================================================
+
+Writes log of this form:
+
+V=1736
+H=17647
+P=004.6
+V=1780
+H=18105
+P=006.4
+
+
 
 <?xml version="1.0"?>
 
 <PropertyList>
+  <generic>
 
- <generic>
+    <output>
+      <line_separator>newline</line_separator>
+      <var_separator>newline</var_separator>
+      <binary_mode>false</binary_mode>
 
-  <output>
-   <line_separator>newline</line_separator>
-   <var_separator>newline</var_separator>
-   <binary_mode>false</binary_mode>
+      <chunk>
+        <name>speed</name>
+        <format>V=%d</format>
+        <node>/velocities/airspeed-kt</node>
+      </chunk>
 
-   <chunk>
-    <name>speed</name>
-    <format>V=%d</format>
-    <node>/velocities/airspeed-kt</node>
-   </chunk>
+      <chunk>
+        <name>heading (rad)</name>
+        <format>H=%.6f</format>
+        <type>float</type>
+        <node>/orientation/heading-deg</node>
+        <factor>0.0174532925199433</factor>  <!-- degrees to radians -->
+      </chunk>
 
-   <chunk>
-    <name>heading</name>
-    <format>H=%02d</format>
-    <node>/orientation/heading-deg</node>
-    <factor>57.29578</factor>  <!-- radians to degrees -->
-   </chunk>
-
-   <chunk>
-    <name>pitch angle</name>
-    <format>P=%05.1f</format>
-    <type>float</type>
-    <node>/orientation/pitch-deg</node>
-   </chunk>
+      <chunk>
+        <name>pitch angle (deg)</name>
+        <format>P=%03.2f</format>
+        <node>/orientation/pitch-deg</node>
+      </chunk>
+   </output>
 
  </generic>
-
 </PropertyList>
+
+
+
+
+-- writing data in XML syntax -------------------------------------------------
+
+Assuming the file is called $FG_ROOT/Protocols/xmltest.xml, then it could be
+used as   $ fgfs --generic=file,out,1,/tmp/data.xml,xmltest
+
+
+<?xml version="1.0"?>
+
+<PropertyList>
+  <generic>
+    <output>
+      <binary_mode>false</binary_mode>
+      <line_separator></line_separator>
+      <var_separator></var_separator>
+      <preamble>&lt;?xml version="1.0"?&gt;\n\n&lt;data&gt;\n</preamble>
+      <postamble>&lt;/data&gt;\n</postamble>
+
+      <chunk>
+        <format>\t&lt;set&gt;\n</format>
+      </chunk>
+
+      <chunk>
+        <node>/position/altitude-ft</node>
+        <type>float</type>
+        <format>\t\t&lt;altitude-ft&gt;%.8f&lt;/altitude-ft&gt;\n</format>
+      </chunk>
+
+      <chunk>
+        <node>/velocities/airspeed-kt</node>
+        <type>float</type>
+        <format>\t\t&lt;airspeed-kt&gt;%.8f&lt;/airspeed-kt&gt;\n</format>
+      </chunk>
+
+      <chunk>
+        <format>\t&lt;/set&gt;\n</format>
+      </chunk>
+    </output>
+  </generic>
+</PropertyList>
+
+
