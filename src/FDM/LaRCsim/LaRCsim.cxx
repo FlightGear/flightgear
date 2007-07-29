@@ -696,7 +696,6 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     _set_Altitude_AGL( Altitude - Runway_altitude );
 
     // Miscellaneous quantities
-    _set_T_Local_to_Body(T_local_to_body_m);
     // set_Gravity( Gravity );
     // set_Centrifugal_relief( Centrifugal_relief );
 
@@ -710,9 +709,9 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     // set_Cos_beta( Cos_beta );
     // set_Sin_beta( Sin_beta );
 
-    _set_Cos_phi( Cos_phi );
+    // _set_Cos_phi( Cos_phi );
     // set_Sin_phi( Sin_phi );
-    _set_Cos_theta( Cos_theta );
+    // _set_Cos_theta( Cos_theta );
     // set_Sin_theta( Sin_theta );
     // set_Cos_psi( Cos_psi );
     // set_Sin_psi( Sin_psi );
@@ -747,11 +746,6 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     // set_Pilot_Rwy_Local( D_pilot_north_of_rwy, D_pilot_east_of_rwy, 
     //                        D_pilot_above_rwy );
     // set_Pilot_Rwy_Rwy( X_pilot_rwy, Y_pilot_rwy, H_pilot_rwy );
-
-    _set_sin_lat_geocentric(Lat_geocentric);
-    _set_cos_lat_geocentric(Lat_geocentric);
-    _set_sin_cos_longitude(Longitude);
-    _set_sin_cos_latitude(Latitude);
 
     // printf("sin_lat_geo %f  cos_lat_geo %f\n", sin_Lat_geoc, cos_Lat_geoc);
     // printf("sin_lat     %f  cos_lat     %f\n", 

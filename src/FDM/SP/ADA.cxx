@@ -251,10 +251,6 @@ bool FGADA::copy_from_FGADA() {
 
 	_set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
     _set_Earth_position_angle( Earth_position_angle );
-    _set_sin_lat_geocentric(Lat_geocentric);
-    _set_cos_lat_geocentric(Lat_geocentric);
-    _set_sin_cos_longitude(Longitude);
-    _set_sin_cos_latitude(Latitude);
     
 	// Velocities and accelerations for the pitch ladder and velocity vector
     _set_Accels_Local( U_dot_local, V_dot_local, W_dot_local );

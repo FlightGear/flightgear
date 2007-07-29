@@ -118,7 +118,13 @@ bool
 FGScenery::get_elevation_m(double lat, double lon, double max_alt,
                            double& alt, const SGMaterial** material)
 {
-  SGGeod geod = SGGeod::fromDegM(lon, lat, max_alt);
+  return get_elevation_m(SGGeod::fromDegM(lon, lat, max_alt), alt, material);
+}
+
+bool
+FGScenery::get_elevation_m(const SGGeod& geod,
+                           double& alt, const SGMaterial** material)
+{
   SGVec3d pos = SGVec3d::fromGeod(geod);
   return get_cart_elevation_m(pos, 0, alt, material);
 }

@@ -24,14 +24,11 @@
 #  include "config.h"
 #endif
 
-#include <stdio.h>
-
-#include <plib/sg.h>
+#include "flight.hxx"
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/sg_geodesy.hxx>
-#include <simgear/scene/model/placement.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -40,8 +37,13 @@
 #include <Main/fg_props.hxx>
 #include <FDM/groundcache.hxx>
 
-#include "flight.hxx"
 
+static inline void assign(double* ptr, const SGVec3d& vec)
+{
+  ptr[0] = vec[0];
+  ptr[1] = vec[1];
+  ptr[2] = vec[2];
+}
 
 // base_fdm_state is the internal state that is updated in integer
 // multiples of "dt".  This leads to "jitter" with respect to the real
@@ -50,10 +52,6 @@
 
 FGInterface *cur_fdm_state = 0;
 FGInterface base_fdm_state;
-
-inline void init_vec(FG_VECTOR_3 vec) {
-    vec[0] = 0.0; vec[1] = 0.0; vec[2] = 0.0;
-}
 
 // Constructor
 FGInterface::FGInterface()
@@ -114,70 +112,38 @@ FGInterface::_setup ()
     inited = false;
     bound = false;
 
-    init_vec( d_pilot_rp_body_v );
-    init_vec( d_cg_rp_body_v );
-    init_vec( f_body_total_v );
-    init_vec( f_local_total_v );
-    init_vec( f_aero_v );
-    init_vec( f_engine_v );
-    init_vec( f_gear_v );
-    init_vec( m_total_rp_v );
-    init_vec( m_total_cg_v );
-    init_vec( m_aero_v );
-    init_vec( m_engine_v );
-    init_vec( m_gear_v );
-    init_vec( v_dot_local_v );
-    init_vec( v_dot_body_v );
-    init_vec( a_cg_body_v );
-    init_vec( a_pilot_body_v );
-    init_vec( n_cg_body_v );
-    init_vec( n_pilot_body_v );
-    init_vec( omega_dot_body_v );
-    init_vec( v_local_v );
-    init_vec( v_local_rel_ground_v );
-    init_vec( v_local_airmass_v );
-    init_vec( v_local_rel_airmass_v );
-    init_vec( v_local_gust_v );
-    init_vec( v_wind_body_v );
-    init_vec( omega_body_v );
-    init_vec( omega_local_v );
-    init_vec( omega_total_v );
-    init_vec( euler_rates_v );
-    init_vec( geocentric_rates_v );
-    init_vec( geocentric_position_v );
-    init_vec( geodetic_position_v );
-    init_vec( euler_angles_v );
-    init_vec( d_cg_rwy_local_v );
-    init_vec( d_cg_rwy_rwy_v );
-    init_vec( d_pilot_rwy_local_v );
-    init_vec( d_pilot_rwy_rwy_v );
-    init_vec( t_local_to_body_m[0] );
-    init_vec( t_local_to_body_m[1] );
-    init_vec( t_local_to_body_m[2] );
-
+    d_cg_rp_body_v = SGVec3d::zeros();
+    v_dot_local_v = SGVec3d::zeros();
+    v_dot_body_v = SGVec3d::zeros();
+    a_cg_body_v = SGVec3d::zeros();
+    a_pilot_body_v = SGVec3d::zeros();
+    n_cg_body_v = SGVec3d::zeros();
+    v_local_v = SGVec3d::zeros();
+    v_local_rel_ground_v = SGVec3d::zeros();
+    v_local_airmass_v = SGVec3d::zeros();
+    v_wind_body_v = SGVec3d::zeros();
+    omega_body_v = SGVec3d::zeros();
+    euler_rates_v = SGVec3d::zeros();
+    geocentric_rates_v = SGVec3d::zeros();
+    geodetic_position_v = SGGeod::fromRadM(0, 0, 0);
+    cartesian_position_v = SGVec3d::fromGeod(geodetic_position_v);
+    geocentric_position_v = SGGeoc::fromCart(cartesian_position_v);
+    euler_angles_v = SGVec3d::zeros();
+    
     mass=i_xx=i_yy=i_zz=i_xz=0;
     nlf=0;
-    v_rel_wind=v_true_kts=v_rel_ground=v_inertial=0;
-    v_ground_speed=v_equiv=v_equiv_kts=0;
-    v_calibrated=v_calibrated_kts=0;
-    gravity=0;
-    centrifugal_relief=0;
-    alpha=beta=alpha_dot=beta_dot=0;
-    cos_alpha=sin_alpha=cos_beta=sin_beta=0;
-    cos_phi=sin_phi=cos_theta=sin_theta=cos_psi=sin_psi=0;
-    gamma_vert_rad=gamma_horiz_rad=0;
-    sigma=density=v_sound=mach_number=0;
-    static_pressure=total_pressure=impact_pressure=0;
+    v_rel_wind=v_true_kts=0;
+    v_ground_speed=v_equiv_kts=0;
+    v_calibrated_kts=0;
+    alpha=beta=0;
+    gamma_vert_rad=0;
+    density=mach_number=0;
+    static_pressure=total_pressure=0;
     dynamic_pressure=0;
     static_temperature=total_temperature=0;
     sea_level_radius=earth_position_angle=0;
-    runway_altitude=runway_latitude=runway_longitude=0;
-    runway_heading=0;
-    radius_to_rwy=0;
+    runway_altitude=0;
     climb_rate=0;
-    sin_lat_geocentric=cos_lat_geocentric=0;
-    sin_latitude=cos_latitude=0;
-    sin_longitude=cos_longitude=0;
     altitude_agl=0;
 }
 
@@ -237,13 +203,8 @@ FGInterface::common_init ()
     SG_LOG( SG_FLIGHT, SG_INFO, " lat = "
             << fgGetDouble("/sim/presets/latitude-deg")
             << " alt = " << get_Altitude() );
-    double sea_level_radius_meters;
-    double lat_geoc;
-    sgGeodToGeoc( fgGetDouble("/sim/presets/latitude-deg")
-                    * SGD_DEGREES_TO_RADIANS,
-                  get_Altitude() * SG_FEET_TO_METER,
-                  &sea_level_radius_meters, &lat_geoc );
-    _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET );
+    double slr = SGGeodesy::SGGeodToSeaLevelRadius(geodetic_position_v);
+    _set_Sea_level_radius( slr * SG_METER_TO_FEET );
 
     // Set initial velocities
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing velocities..." );
@@ -519,122 +480,66 @@ FGInterface::update (double dt)
 }
 
 
-void FGInterface::_updateGeodeticPosition( double lat, double lon, double alt )
+void FGInterface::_updatePositionM(const SGVec3d& cartPos)
 {
-    double lat_geoc, sl_radius;
-
-    // cout << "starting sea level rad = " << get_Sea_level_radius() << endl;
-
-    sgGeodToGeoc( lat, alt * SG_FEET_TO_METER, &sl_radius, &lat_geoc );
-
-    SG_LOG( SG_FLIGHT, SG_DEBUG, "lon = " << lon 
-	    << " lat_geod = " << lat
-	    << " lat_geoc = " << lat_geoc
-	    << " alt = " << alt 
-	    << " sl_radius = " << sl_radius * SG_METER_TO_FEET
-	    << " Equator = " << SG_EQUATORIAL_RADIUS_FT );
-
-    _set_Geocentric_Position( lat_geoc, lon, 
-			      sl_radius * SG_METER_TO_FEET + alt );
-	
-    _set_Geodetic_Position( lat, lon, alt );
-
-    _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET );
+    cartesian_position_v = cartPos;
+    geodetic_position_v = SGGeod::fromCart(cartesian_position_v);
+    geocentric_position_v = SGGeoc::fromCart(cartesian_position_v);
+    _set_Sea_level_radius( SGGeodesy::SGGeodToSeaLevelRadius(geodetic_position_v)*SG_METER_TO_FEET );
     _update_ground_elev_at_pos();
-
-    _set_sin_lat_geocentric( lat_geoc );
-    _set_cos_lat_geocentric( lat_geoc );
-
-    _set_sin_cos_longitude( lon );
-
-    _set_sin_cos_latitude( lat );
 }
 
 
-void FGInterface::_updateGeocentricPosition( double lat_geoc, double lon,
+void FGInterface::_updatePosition(const SGGeod& geod)
+{
+    geodetic_position_v = geod;
+    cartesian_position_v = SGVec3d::fromGeod(geodetic_position_v);
+    geocentric_position_v = SGGeoc::fromCart(cartesian_position_v);
+
+    _set_Sea_level_radius( SGGeodesy::SGGeodToSeaLevelRadius(geodetic_position_v)*SG_METER_TO_FEET );
+    _update_ground_elev_at_pos();
+}
+
+
+void FGInterface::_updatePosition(const SGGeoc& geoc)
+{
+    geocentric_position_v = geoc;
+    cartesian_position_v = SGVec3d::fromGeoc(geocentric_position_v);
+    geodetic_position_v = SGGeod::fromCart(cartesian_position_v);
+
+    _set_Sea_level_radius( SGGeodesy::SGGeodToSeaLevelRadius(geodetic_position_v)*SG_METER_TO_FEET );
+    _update_ground_elev_at_pos();
+}
+
+
+void FGInterface::_updateGeodeticPosition( double lat, double lon, double alt )
+{
+    _updatePosition(SGGeod::fromRadFt(lon, lat, alt));
+}
+
+
+void FGInterface::_updateGeocentricPosition( double lat, double lon,
 					     double alt )
 {
-    double lat_geod, tmp_alt, sl_radius1, sl_radius2, tmp_lat_geoc;
-
-    // cout << "starting sea level rad = " << get_Sea_level_radius() << endl;
-
-    sgGeocToGeod( lat_geoc, ( get_Sea_level_radius() + alt ) * SG_FEET_TO_METER,
-		  &lat_geod, &tmp_alt, &sl_radius1 );
-    sgGeodToGeoc( lat_geod, alt * SG_FEET_TO_METER, &sl_radius2, &tmp_lat_geoc );
-
-    SG_LOG( SG_FLIGHT, SG_DEBUG, "lon = " << lon 
-	    << " lat_geod = " << lat_geod
-	    << " lat_geoc = " << lat_geoc
-	    << " alt = " << alt 
-	    << " tmp_alt = " << tmp_alt * SG_METER_TO_FEET
-	    << " sl_radius1 = " << sl_radius1 * SG_METER_TO_FEET
-	    << " sl_radius2 = " << sl_radius2 * SG_METER_TO_FEET
-	    << " Equator = " << SG_EQUATORIAL_RADIUS_FT );
-
-    _set_Geocentric_Position( lat_geoc, lon, 
-			      sl_radius2 * SG_METER_TO_FEET + alt );
-	
-    _set_Geodetic_Position( lat_geod, lon, alt );
-
-    _set_Sea_level_radius( sl_radius2 * SG_METER_TO_FEET );
-    _update_ground_elev_at_pos();
-
-    _set_sin_lat_geocentric( lat_geoc );
-    _set_cos_lat_geocentric( lat_geoc );
-
-    _set_sin_cos_longitude( lon );
-
-    _set_sin_cos_latitude( lat_geod );
+    _updatePosition(SGGeoc::fromRadFt(lon, lat, get_Sea_level_radius() + alt));
 }
 
 void FGInterface::_update_ground_elev_at_pos( void ) {
-    double lat = get_Latitude();
-    double lon = get_Longitude();
-    double alt_m = get_Altitude()*SG_FEET_TO_METER;
-    double groundlevel_m = get_groundlevel_m(lat, lon, alt_m);
+    double groundlevel_m = get_groundlevel_m(geodetic_position_v);
     _set_Runway_altitude( groundlevel_m * SG_METER_TO_FEET );
-}
-
-// Extrapolate fdm based on time_offset (in usec)
-void FGInterface::extrapolate( int time_offset ) {
-    double dt = time_offset / 1000000.0;
-
-    // -dw- metrowerks complains about ambiguous access, not critical
-    // to keep this ;)
-#ifndef __MWERKS__
-    SG_LOG(SG_FLIGHT, SG_INFO, "extrapolating FDM by dt = " << dt);
-#endif
-
-    double lat = geodetic_position_v[0] + geocentric_rates_v[0] * dt;
-    double lat_geoc = geocentric_position_v[0] + geocentric_rates_v[0] * dt;
-
-    double lon = geodetic_position_v[1] + geocentric_rates_v[1] * dt;
-    double lon_geoc = geocentric_position_v[1] + geocentric_rates_v[1] * dt;
-
-    double alt = geodetic_position_v[2] + geocentric_rates_v[2] * dt;
-    double radius = geocentric_position_v[2] + geocentric_rates_v[2] * dt;
-
-    geodetic_position_v[0] = lat;
-    geocentric_position_v[0] = lat_geoc;
-
-    geodetic_position_v[1] = lon;
-    geocentric_position_v[1] = lon_geoc;
-
-    geodetic_position_v[2] = alt;
-    geocentric_position_v[2] = radius;
 }
 
 // Positions
 void FGInterface::set_Latitude(double lat) {
-    geodetic_position_v[0] = lat;
+    geodetic_position_v.setLatitudeRad(lat);
 }
 
 void FGInterface::set_Longitude(double lon) {
-    geodetic_position_v[1] = lon;
+    geodetic_position_v.setLongitudeRad(lon);
 }
 
 void FGInterface::set_Altitude(double alt) {
-    geodetic_position_v[2] = alt;
+    geodetic_position_v.setElevationFt(alt);
 }
 
 void FGInterface::set_AltitudeAGL(double altagl) {
@@ -699,47 +604,22 @@ void FGInterface::set_Velocities_Local_Airmass (double wnorth,
 
 void FGInterface::_busdump(void) {
 
-    SG_LOG(SG_FLIGHT,SG_INFO,"d_pilot_rp_body_v[3]: " << d_pilot_rp_body_v[0] << ", " << d_pilot_rp_body_v[1] << ", " << d_pilot_rp_body_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"d_cg_rp_body_v[3]: " << d_cg_rp_body_v[0] << ", " << d_cg_rp_body_v[1] << ", " << d_cg_rp_body_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"f_body_total_v[3]: " << f_body_total_v[0] << ", " << f_body_total_v[1] << ", " << f_body_total_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"f_local_total_v[3]: " << f_local_total_v[0] << ", " << f_local_total_v[1] << ", " << f_local_total_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"f_aero_v[3]: " << f_aero_v[0] << ", " << f_aero_v[1] << ", " << f_aero_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"f_engine_v[3]: " << f_engine_v[0] << ", " << f_engine_v[1] << ", " << f_engine_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"f_gear_v[3]: " << f_gear_v[0] << ", " << f_gear_v[1] << ", " << f_gear_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"m_total_rp_v[3]: " << m_total_rp_v[0] << ", " << m_total_rp_v[1] << ", " << m_total_rp_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"m_total_cg_v[3]: " << m_total_cg_v[0] << ", " << m_total_cg_v[1] << ", " << m_total_cg_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"m_aero_v[3]: " << m_aero_v[0] << ", " << m_aero_v[1] << ", " << m_aero_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"m_engine_v[3]: " << m_engine_v[0] << ", " << m_engine_v[1] << ", " << m_engine_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"m_gear_v[3]: " << m_gear_v[0] << ", " << m_gear_v[1] << ", " << m_gear_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_dot_local_v[3]: " << v_dot_local_v[0] << ", " << v_dot_local_v[1] << ", " << v_dot_local_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_dot_body_v[3]: " << v_dot_body_v[0] << ", " << v_dot_body_v[1] << ", " << v_dot_body_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"a_cg_body_v[3]: " << a_cg_body_v[0] << ", " << a_cg_body_v[1] << ", " << a_cg_body_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"a_pilot_body_v[3]: " << a_pilot_body_v[0] << ", " << a_pilot_body_v[1] << ", " << a_pilot_body_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"n_cg_body_v[3]: " << n_cg_body_v[0] << ", " << n_cg_body_v[1] << ", " << n_cg_body_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"n_pilot_body_v[3]: " << n_pilot_body_v[0] << ", " << n_pilot_body_v[1] << ", " << n_pilot_body_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"omega_dot_body_v[3]: " << omega_dot_body_v[0] << ", " << omega_dot_body_v[1] << ", " << omega_dot_body_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_v[3]: " << v_local_v[0] << ", " << v_local_v[1] << ", " << v_local_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_rel_ground_v[3]: " << v_local_rel_ground_v[0] << ", " << v_local_rel_ground_v[1] << ", " << v_local_rel_ground_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_airmass_v[3]: " << v_local_airmass_v[0] << ", " << v_local_airmass_v[1] << ", " << v_local_airmass_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_rel_airmass_v[3]: " << v_local_rel_airmass_v[0] << ", " << v_local_rel_airmass_v[1] << ", " << v_local_rel_airmass_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_gust_v[3]: " << v_local_gust_v[0] << ", " << v_local_gust_v[1] << ", " << v_local_gust_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_wind_body_v[3]: " << v_wind_body_v[0] << ", " << v_wind_body_v[1] << ", " << v_wind_body_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"omega_body_v[3]: " << omega_body_v[0] << ", " << omega_body_v[1] << ", " << omega_body_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"omega_local_v[3]: " << omega_local_v[0] << ", " << omega_local_v[1] << ", " << omega_local_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"omega_total_v[3]: " << omega_total_v[0] << ", " << omega_total_v[1] << ", " << omega_total_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"euler_rates_v[3]: " << euler_rates_v[0] << ", " << euler_rates_v[1] << ", " << euler_rates_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"geocentric_rates_v[3]: " << geocentric_rates_v[0] << ", " << geocentric_rates_v[1] << ", " << geocentric_rates_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"geocentric_position_v[3]: " << geocentric_position_v[0] << ", " << geocentric_position_v[1] << ", " << geocentric_position_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"geodetic_position_v[3]: " << geodetic_position_v[0] << ", " << geodetic_position_v[1] << ", " << geodetic_position_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"euler_angles_v[3]: " << euler_angles_v[0] << ", " << euler_angles_v[1] << ", " << euler_angles_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"d_cg_rwy_local_v[3]: " << d_cg_rwy_local_v[0] << ", " << d_cg_rwy_local_v[1] << ", " << d_cg_rwy_local_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"d_cg_rwy_rwy_v[3]: " << d_cg_rwy_rwy_v[0] << ", " << d_cg_rwy_rwy_v[1] << ", " << d_cg_rwy_rwy_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"d_pilot_rwy_local_v[3]: " << d_pilot_rwy_local_v[0] << ", " << d_pilot_rwy_local_v[1] << ", " << d_pilot_rwy_local_v[2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"d_pilot_rwy_rwy_v[3]: " << d_pilot_rwy_rwy_v[0] << ", " << d_pilot_rwy_rwy_v[1] << ", " << d_pilot_rwy_rwy_v[2]);
-
-    SG_LOG(SG_FLIGHT,SG_INFO,"t_local_to_body_m[0][3]: " << t_local_to_body_m[0][0] << ", " << t_local_to_body_m[0][1] << ", " << t_local_to_body_m[0][2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"t_local_to_body_m[1][3]: " << t_local_to_body_m[1][0] << ", " << t_local_to_body_m[1][1] << ", " << t_local_to_body_m[1][2]);
-    SG_LOG(SG_FLIGHT,SG_INFO,"t_local_to_body_m[2][3]: " << t_local_to_body_m[2][0] << ", " << t_local_to_body_m[2][1] << ", " << t_local_to_body_m[2][2]);
+    SG_LOG(SG_FLIGHT,SG_INFO,"d_cg_rp_body_v: " << d_cg_rp_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_dot_local_v: " << v_dot_local_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_dot_body_v: " << v_dot_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"a_cg_body_v: " << a_cg_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"a_pilot_body_v: " << a_pilot_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"n_cg_body_v: " << n_cg_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_v: " << v_local_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_rel_ground_v: " << v_local_rel_ground_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_local_airmass_v: " << v_local_airmass_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"v_wind_body_v: " << v_wind_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"omega_body_v: " << omega_body_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"euler_rates_v: " << euler_rates_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"geocentric_rates_v: " << geocentric_rates_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"geocentric_position_v: " << geocentric_position_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"geodetic_position_v: " << geodetic_position_v);
+    SG_LOG(SG_FLIGHT,SG_INFO,"euler_angles_v: " << euler_angles_v);
 
     SG_LOG(SG_FLIGHT,SG_INFO,"mass: " << mass );
     SG_LOG(SG_FLIGHT,SG_INFO,"i_xx: " << i_xx );
@@ -749,55 +629,23 @@ void FGInterface::_busdump(void) {
     SG_LOG(SG_FLIGHT,SG_INFO,"nlf: " << nlf );
     SG_LOG(SG_FLIGHT,SG_INFO,"v_rel_wind: " << v_rel_wind );
     SG_LOG(SG_FLIGHT,SG_INFO,"v_true_kts: " << v_true_kts );
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_rel_ground: " << v_rel_ground );
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_inertial: " << v_inertial );
     SG_LOG(SG_FLIGHT,SG_INFO,"v_ground_speed: " << v_ground_speed );
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_equiv: " << v_equiv );
     SG_LOG(SG_FLIGHT,SG_INFO,"v_equiv_kts: " << v_equiv_kts );
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_calibrated: " << v_calibrated );
     SG_LOG(SG_FLIGHT,SG_INFO,"v_calibrated_kts: " << v_calibrated_kts );
-    SG_LOG(SG_FLIGHT,SG_INFO,"gravity: " << gravity );
-    SG_LOG(SG_FLIGHT,SG_INFO,"centrifugal_relief: " << centrifugal_relief );
     SG_LOG(SG_FLIGHT,SG_INFO,"alpha: " << alpha );
     SG_LOG(SG_FLIGHT,SG_INFO,"beta: " << beta );
-    SG_LOG(SG_FLIGHT,SG_INFO,"alpha_dot: " << alpha_dot );
-    SG_LOG(SG_FLIGHT,SG_INFO,"beta_dot: " << beta_dot );
-    SG_LOG(SG_FLIGHT,SG_INFO,"cos_alpha: " << cos_alpha );
-    SG_LOG(SG_FLIGHT,SG_INFO,"sin_alpha: " << sin_alpha );
-    SG_LOG(SG_FLIGHT,SG_INFO,"cos_beta: " << cos_beta );
-    SG_LOG(SG_FLIGHT,SG_INFO,"sin_beta: " << sin_beta );
-    SG_LOG(SG_FLIGHT,SG_INFO,"cos_phi: " << cos_phi );
-    SG_LOG(SG_FLIGHT,SG_INFO,"sin_phi: " << sin_phi );
-    SG_LOG(SG_FLIGHT,SG_INFO,"cos_theta: " << cos_theta );
-    SG_LOG(SG_FLIGHT,SG_INFO,"sin_theta: " << sin_theta );
-    SG_LOG(SG_FLIGHT,SG_INFO,"cos_psi: " << cos_psi );
-    SG_LOG(SG_FLIGHT,SG_INFO,"sin_psi: " << sin_psi );
     SG_LOG(SG_FLIGHT,SG_INFO,"gamma_vert_rad: " << gamma_vert_rad );
-    SG_LOG(SG_FLIGHT,SG_INFO,"gamma_horiz_rad: " << gamma_horiz_rad );
-    SG_LOG(SG_FLIGHT,SG_INFO,"sigma: " << sigma );
     SG_LOG(SG_FLIGHT,SG_INFO,"density: " << density );
-    SG_LOG(SG_FLIGHT,SG_INFO,"v_sound: " << v_sound );
     SG_LOG(SG_FLIGHT,SG_INFO,"mach_number: " << mach_number );
     SG_LOG(SG_FLIGHT,SG_INFO,"static_pressure: " << static_pressure );
     SG_LOG(SG_FLIGHT,SG_INFO,"total_pressure: " << total_pressure );
-    SG_LOG(SG_FLIGHT,SG_INFO,"impact_pressure: " << impact_pressure );
     SG_LOG(SG_FLIGHT,SG_INFO,"dynamic_pressure: " << dynamic_pressure );
     SG_LOG(SG_FLIGHT,SG_INFO,"static_temperature: " << static_temperature );
     SG_LOG(SG_FLIGHT,SG_INFO,"total_temperature: " << total_temperature );
     SG_LOG(SG_FLIGHT,SG_INFO,"sea_level_radius: " << sea_level_radius );
     SG_LOG(SG_FLIGHT,SG_INFO,"earth_position_angle: " << earth_position_angle );
     SG_LOG(SG_FLIGHT,SG_INFO,"runway_altitude: " << runway_altitude );
-    SG_LOG(SG_FLIGHT,SG_INFO,"runway_latitude: " << runway_latitude );
-    SG_LOG(SG_FLIGHT,SG_INFO,"runway_longitude: " << runway_longitude );
-    SG_LOG(SG_FLIGHT,SG_INFO,"runway_heading: " << runway_heading );
-    SG_LOG(SG_FLIGHT,SG_INFO,"radius_to_rwy: " << radius_to_rwy );
     SG_LOG(SG_FLIGHT,SG_INFO,"climb_rate: " << climb_rate );
-    SG_LOG(SG_FLIGHT,SG_INFO,"sin_lat_geocentric: " << sin_lat_geocentric );
-    SG_LOG(SG_FLIGHT,SG_INFO,"cos_lat_geocentric: " << cos_lat_geocentric );
-    SG_LOG(SG_FLIGHT,SG_INFO,"sin_longitude: " << sin_longitude );
-    SG_LOG(SG_FLIGHT,SG_INFO,"cos_longitude: " << cos_longitude );
-    SG_LOG(SG_FLIGHT,SG_INFO,"sin_latitude: " << sin_latitude );
-    SG_LOG(SG_FLIGHT,SG_INFO,"cos_latitude: " << cos_latitude );
     SG_LOG(SG_FLIGHT,SG_INFO,"altitude_agl: " << altitude_agl );
 }
 
@@ -821,7 +669,7 @@ FGInterface::is_valid_m(double *ref_time, double pt[3], double *rad)
 {
   SGVec3d _pt;
   bool valid = ground_cache.is_valid(*ref_time, _pt, *rad);
-  sgdCopyVec3(pt, _pt.data());
+  assign(pt, _pt);
   return valid;
 }
 
@@ -830,7 +678,7 @@ bool FGInterface::is_valid_ft(double *ref_time, double pt[3], double *rad)
   // Convert units and do the real work.
   SGVec3d _pt;
   bool found_ground = ground_cache.is_valid(*ref_time, _pt, *rad);
-  sgdScaleVec3(pt, _pt.data(), SG_METER_TO_FEET);
+  assign(pt, SG_METER_TO_FEET*_pt);
   *rad *= SG_METER_TO_FEET;
   return found_ground;
 }
@@ -842,8 +690,8 @@ FGInterface::get_cat_m(double t, const double pt[3],
   SGVec3d _end[2], _vel[2];
   double dist = ground_cache.get_cat(t, SGVec3d(pt), _end, _vel);
   for (int k=0; k<2; ++k) {
-    sgdCopyVec3( end[k], _end[k].data() );
-    sgdCopyVec3( vel[k], _vel[k].data() );
+    assign( end[k], _end[k] );
+    assign( vel[k], _vel[k] );
   }
   return dist;
 }
@@ -857,8 +705,8 @@ FGInterface::get_cat_ft(double t, const double pt[3],
   SGVec3d _end[2], _vel[2];
   double dist = ground_cache.get_cat(t, pt_m, _end, _vel);
   for (int k=0; k<2; ++k) {
-    sgdScaleVec3( end[k], _end[k].data(), SG_METER_TO_FEET );
-    sgdScaleVec3( vel[k], _vel[k].data(), SG_METER_TO_FEET );
+    assign( end[k], SG_METER_TO_FEET*_end[k] );
+    assign( vel[k], SG_METER_TO_FEET*_vel[k] );
   }
   return dist*SG_METER_TO_FEET;
 }
@@ -874,9 +722,9 @@ FGInterface::get_agl_m(double t, const double pt[3],
   SGVec3d _contact, _normal, _vel;
   bool ret = ground_cache.get_agl(t, SGVec3d(pt), 2.0, _contact, _normal,
                                   _vel, type, &material, agl);
-  sgdCopyVec3(contact, _contact.data());
-  sgdCopyVec3(normal, _normal.data());
-  sgdCopyVec3(vel, _vel.data());
+  assign(contact, _contact);
+  assign(normal, _normal);
+  assign(vel, _vel);
   if (material) {
     *loadCapacity = material->get_load_resistance();
     *frictionFactor = material->get_friction_factor();
@@ -896,9 +744,9 @@ FGInterface::get_agl_m(double t, const double pt[3],
   SGVec3d _contact, _normal, _vel;
   bool ret = ground_cache.get_agl(t, SGVec3d(pt), 2.0, _contact, _normal,
                                   _vel, type, material, agl);
-  sgdCopyVec3(contact, _contact.data());
-  sgdCopyVec3(normal, _normal.data());
-  sgdCopyVec3(vel, _vel.data());
+  assign(contact, _contact);
+  assign(normal, _normal);
+  assign(vel, _vel);
   return ret;
 }
 
@@ -917,9 +765,9 @@ FGInterface::get_agl_ft(double t, const double pt[3],
   bool ret = ground_cache.get_agl(t, pt_m, 2.0, _contact, _normal, _vel,
                                   type, &material, agl);
   // Convert units back ...
-  sgdScaleVec3( contact, _contact.data(), SG_METER_TO_FEET );
-  sgdScaleVec3( vel, _vel.data(), SG_METER_TO_FEET );
-  sgdCopyVec3( normal, _normal.data() );
+  assign( contact, SG_METER_TO_FEET*_contact );
+  assign( vel, SG_METER_TO_FEET*_vel );
+  assign( normal, _normal );
   *agl *= SG_METER_TO_FEET;
 
   // return material properties if available
@@ -942,9 +790,9 @@ FGInterface::get_agl_m(double t, const double pt[3], double max_altoff,
   SGVec3d _contact, _normal, _vel;
   bool found = ground_cache.get_agl(t, SGVec3d(pt), max_altoff, _contact,
                                     _normal, _vel, type, material, agl);
-  sgdCopyVec3(contact, _contact.data());
-  sgdCopyVec3(normal, _normal.data());
-  sgdCopyVec3(vel, _vel.data());
+  assign(contact, _contact);
+  assign(normal, _normal);
+  assign(vel, _vel);
   return found;
 }
 
@@ -960,19 +808,24 @@ FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
                                   _contact, _normal, _vel,
                                   type, material, agl);
   // Convert units back ...
-  sgdScaleVec3( contact, _contact.data(), SG_METER_TO_FEET );
-  sgdScaleVec3( vel, _vel.data(), SG_METER_TO_FEET );
-  sgdCopyVec3( normal, _normal.data() );
+  assign( contact, SG_METER_TO_FEET*_contact );
+  assign( vel, SG_METER_TO_FEET*_vel );
+  assign( normal, _normal );
   *agl *= SG_METER_TO_FEET;
   return ret;
 }
 
-
 double
 FGInterface::get_groundlevel_m(double lat, double lon, double alt)
 {
+  return get_groundlevel_m(SGGeod::fromRadM(lon, lat, alt));
+}
+
+double
+FGInterface::get_groundlevel_m(const SGGeod& geod)
+{
   // Compute the cartesian position of the given lat/lon/alt.
-  SGVec3d pos = SGVec3d::fromGeod(SGGeod::fromRadM(lon, lat, alt));
+  SGVec3d pos = SGVec3d::fromGeod(geod);
 
   // FIXME: how to handle t - ref_time differences ???
   SGVec3d cpos;
@@ -984,7 +837,7 @@ FGInterface::get_groundlevel_m(double lat, double lon, double alt)
     /// too low, try with a new altitude of 10000m, that should be
     /// sufficient to find a ground level below everywhere on our planet
     if (!ok) {
-      pos = SGVec3d::fromGeod(SGGeod::fromRadM(lon, lat, 10000));
+      pos = SGVec3d::fromGeod(SGGeod::fromRadM(geod.getLongitudeRad(), geod.getLatitudeRad(), 10000));
       /// If there is still no ground, return sea level radius
       if (!prepare_ground_cache_m(ref_time, pos.data(), 10))
         return 0;
@@ -999,7 +852,7 @@ FGInterface::get_groundlevel_m(double lat, double lon, double alt)
     /// too low, try with a new altitude of 10000m, that should be
     /// sufficient to find a ground level below everywhere on our planet
     if (!ok) {
-      pos = SGVec3d::fromGeod(SGGeod::fromRadM(lon, lat, 10000));
+      pos = SGVec3d::fromGeod(SGGeod::fromRadM(geod.getLongitudeRad(), geod.getLatitudeRad(), 10000));
       /// If there is still no ground, return sea level radius
       if (!prepare_ground_cache_m(ref_time, pos.data(), radius))
         return 0;
@@ -1013,8 +866,7 @@ FGInterface::get_groundlevel_m(double lat, double lon, double alt)
   // computations below the groundcache. The contact point is still something
   // valid, the normals and the other returns just contain some defaults.
   get_agl_m(ref_time, pos.data(), 2.0, contact, normal, vel, &type, 0, &agl);
-  SGGeod geod = SGGeod::fromCart(SGVec3d(contact));
-  return geod.getElevationM();
+  return SGGeod::fromCart(SGVec3d(contact)).getElevationM();
 }
   
 bool
@@ -1022,7 +874,7 @@ FGInterface::caught_wire_m(double t, const double pt[4][3])
 {
   SGVec3d pt_m[4];
   for (int i=0; i<4; ++i)
-    sgdCopyVec3(pt_m[i].data(), pt[i]);
+    pt_m[i] = SGVec3d(pt[i]);
   
   return ground_cache.caught_wire(t, pt_m);
 }
@@ -1033,7 +885,7 @@ FGInterface::caught_wire_ft(double t, const double pt[4][3])
   // Convert units and do the real work.
   SGVec3d pt_m[4];
   for (int i=0; i<4; ++i)
-    sgdScaleVec3(pt_m[i].data(), pt[i], SG_FEET_TO_METER);
+    pt_m[i] = SG_FEET_TO_METER*SGVec3d(pt[i]);
     
   return ground_cache.caught_wire(t, pt_m);
 }
@@ -1044,8 +896,8 @@ FGInterface::get_wire_ends_m(double t, double end[2][3], double vel[2][3])
   SGVec3d _end[2], _vel[2];
   bool ret = ground_cache.get_wire_ends(t, _end, _vel);
   for (int k=0; k<2; ++k) {
-    sgdCopyVec3( end[k], _end[k].data() );
-    sgdCopyVec3( vel[k], _vel[k].data() );
+    assign( end[k], _end[k] );
+    assign( vel[k], _vel[k] );
   }
   return ret;
 }
@@ -1057,8 +909,8 @@ FGInterface::get_wire_ends_ft(double t, double end[2][3], double vel[2][3])
   SGVec3d _end[2], _vel[2];
   bool ret = ground_cache.get_wire_ends(t, _end, _vel);
   for (int k=0; k<2; ++k) {
-    sgdScaleVec3( end[k], _end[k].data(), SG_METER_TO_FEET );
-    sgdScaleVec3( vel[k], _vel[k].data(), SG_METER_TO_FEET );
+    assign( end[k], SG_METER_TO_FEET*_end[k] );
+    assign( vel[k], SG_METER_TO_FEET*_vel[k] );
   }
   return ret;
 }

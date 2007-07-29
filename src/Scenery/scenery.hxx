@@ -70,6 +70,8 @@ public:
     /// All values are meant to be in meters or degrees.
     bool get_elevation_m(double lat, double lon, double max_alt,
                          double& alt, const SGMaterial** material);
+    bool get_elevation_m(const SGGeod& geod, double& alt,
+                         const SGMaterial** material);
 
     /// Compute the elevation of the scenery beow the cartesian point pos.
     /// you the returned scenery altitude is not higher than the position
