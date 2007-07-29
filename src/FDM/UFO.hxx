@@ -62,7 +62,7 @@ public:
     FGUFO( double dt );
     ~FGUFO();
 
-    // reset flight params to a specific position 
+    // reset flight params to a specific position
     void init();
 
     // update position based on inputs, positions, velocities, etc.

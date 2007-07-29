@@ -73,34 +73,33 @@ void FGUFO::init() {
 
 // Run an iteration of the EOM (equations of motion)
 void FGUFO::update( double dt ) {
-    // cout << "FGLaRCsim::update()" << endl;
 
     if (is_suspended())
         return;
 
     lowpass::set_delta(dt);
     double time_step = dt;
+    FGControls *ctrl = globals->get_controls();
 
     // read the throttle
-    double throttle = globals->get_controls()->get_throttle( 0 );
-    double brake_left = globals->get_controls()->get_brake_left();
-    double brake_right = globals->get_controls()->get_brake_right();
+    double throttle = ctrl->get_throttle( 0 );
+    double brake_left = ctrl->get_brake_left();
+    double brake_right = ctrl->get_brake_right();
 
     if (brake_left > 0.5 || brake_right > 0.5)
         throttle = -throttle;
 
-    throttle = Throttle->filter(throttle);
+    double velocity = Throttle->filter(throttle) * Speed_Max->getDoubleValue(); // meters/sec
+
 
     // read and lowpass-filter the state of the control surfaces
-    double aileron = Aileron->filter(globals->get_controls()->get_aileron());
-    double elevator = Elevator->filter(globals->get_controls()->get_elevator());
-    double rudder = Rudder->filter(globals->get_controls()->get_rudder());
+    double aileron = Aileron->filter(ctrl->get_aileron());
+    double elevator = Elevator->filter(ctrl->get_elevator());
+    double rudder = Rudder->filter(ctrl->get_rudder());
 
-    aileron += Aileron_Trim->filter(globals->get_controls()->get_aileron_trim());
-    elevator += Elevator_Trim->filter(globals->get_controls()->get_elevator_trim());
-    rudder += Rudder_Trim->filter(globals->get_controls()->get_rudder_trim());
-
-    double velocity = throttle * Speed_Max->getDoubleValue(); // meters/sec
+    aileron += Aileron_Trim->filter(ctrl->get_aileron_trim());
+    elevator += Elevator_Trim->filter(ctrl->get_elevator_trim());
+    rudder += Rudder_Trim->filter(ctrl->get_rudder_trim());
 
     double old_pitch = get_Theta();
     double pitch_rate = SGD_PI_4;  // assume I will be pitching up
