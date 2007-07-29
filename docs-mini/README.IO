@@ -5,6 +5,7 @@ to "speak" any supported protocol over any supported medium.  The IO
 options are configured at runtime via command line options.  You can
 specify multiple entries if you like, one per command line option.
 
+
 The general form of the command line option is as follows:
 
     --protocol=medium,direction,hz,medium_options,...
@@ -15,13 +16,14 @@ The general form of the command line option is as follows:
     hz = number of times to process channel per second (floating
          point values are ok.
 
-Generic Communction:
+
+Generic Communication:
 
     --generic=params
 
     With this option it is possible to output a pre-configured
-    ASCII string using a predefined seperator. The configuration is
-    defined in an XML file located in the Protocol directiory of 
+    ASCII string using a predefined separator. The configuration is
+    defined in an XML file located in the Protocol directory of
     the base package.
 
     params can be:
@@ -29,34 +31,7 @@ Generic Communction:
     socket communication:         socket,dir,hz,machine,port,style,protocol
     output to a file:             file,dir,hz,filename,protocol
 
-
-    The confinfiguration file is defined as follows:
-
-    <?xml version="1.0"?>
-    <PropertyList>
-
-     <generic>
-      <output>
-       <seperator>\n</seperator>
-
-        <chunk>
-         <name>speed</name>               <!-- for readabillity              -->
-         <type>int</type>	          <!-- one of: bool,int,float,string -->
-         <format>V=%d</format>            <!-- output format string          -->
-         <node>/velocities/speed</node>   <!-- location of the value         -->
-         <offset>0.0</offset>             <!-- add this to the value         -->
-         <factor>1.0</factor>             <!-- multiply by this value        -->
-       </chunk>
-
-       <chunk>
-        ...
-       </chunk>
-
-       ...
-
-      </output>
-     </generic>
-    </PropertyList>
+    See README.protocol for how to define a generic protocol.
 
 
 Serial Port Communication:
@@ -70,7 +45,8 @@ Serial Port Communication:
 
     --nmea=serial,out,0.5,COM1,4800
 
-    Note that for unix varients you might use a device name like "/dev/ttyS0"
+    Note that for unix variants you might use a device name like "/dev/ttyS0"
+
 
 Socket Communication:
 
@@ -155,3 +131,9 @@ HTTP Server Example
 
     When a value is displayed, you can click on it to bring up a form
     to assign it a new value.
+
+
+ACMS flight data recorder playback
+
+  fgfs --fdm=acms --generic=file,in,1,<path_to_replay_file>,acms
+
