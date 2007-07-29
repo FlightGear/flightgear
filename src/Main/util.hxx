@@ -74,4 +74,13 @@ extern void fgExit (int status = 0);
 extern double fgGetLowPass (double current, double target, double timeratio);
 
 
+/**
+ * Unescape string.
+ *
+ * @param str String possibly containing escaped characters.
+ * @return string with escaped characters replaced by single character values.
+ */
+extern std::string fgUnescape (const char *str);
+
+
 #endif // __UTIL_HXX
