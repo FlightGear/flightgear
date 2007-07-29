@@ -71,6 +71,8 @@ private:
     int length;
     char buf[ FG_MAX_MSG_SIZE ];
 
+    string preamble;
+    string postamble;
     string var_separator;
     string line_separator;
     string var_sep_string;

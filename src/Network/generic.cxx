@@ -37,6 +37,7 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/util.hxx>
 
 #include "generic.hxx"
 
@@ -236,6 +237,13 @@ bool FGGeneric::open() {
 
     set_enabled( true );
 
+    if ( get_direction() == SG_IO_OUT && ! preamble.empty() ) {
+        if ( ! io->write( preamble.c_str(), preamble.size() ) ) {
+            SG_LOG( SG_IO, SG_WARN, "Error writing preamble." );
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -267,6 +275,13 @@ bool FGGeneric::process() {
 bool FGGeneric::close() {
     SGIOChannel *io = get_io_channel();
 
+    if ( get_direction() == SG_IO_OUT && ! postamble.empty() ) {
+        if ( ! io->write( postamble.c_str(), postamble.size() ) ) {
+            SG_LOG( SG_IO, SG_ALERT, "Error writing postamble." );
+            return false;
+        }
+    }
+
     set_enabled( false );
 
     if ( ! io->close() ) {
@@ -280,10 +295,7 @@ bool FGGeneric::close() {
 void
 FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 {
-    if (root->hasValue("binary_mode"))
-        binary_mode = root->getBoolValue("binary_mode");
-    else 
-        binary_mode = false;
+    binary_mode = root->getBoolValue("binary_mode");
 
     if (!binary_mode) {
         /* These variables specified in the $FG_ROOT/data/Protocol/xxx.xml
@@ -293,8 +305,10 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
          * line_sep_string = the string/charachter to place at the end of each
          *                   lot of variables
          */
-        var_sep_string = root->getStringValue("var_separator");
-        line_sep_string = root->getStringValue("line_separator");
+        preamble = fgUnescape(root->getStringValue("preamble"));
+        postamble = fgUnescape(root->getStringValue("postamble"));
+        var_sep_string = fgUnescape(root->getStringValue("var_separator"));
+        line_sep_string = fgUnescape(root->getStringValue("line_separator"));
 
         if ( var_sep_string == "newline" )
                 var_separator = '\n';
@@ -347,12 +361,12 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 
         _serial_prot chunk;
 
-     // chunk.name = chunks[i]->getStringValue("name");
-        chunk.format = chunks[i]->getStringValue("format", "%d");
+        // chunk.name = chunks[i]->getStringValue("name");
+        chunk.format = fgUnescape(chunks[i]->getStringValue("format", "%d"));
         chunk.offset = chunks[i]->getDoubleValue("offset");
         chunk.factor = chunks[i]->getDoubleValue("factor", 1.0);
 
-        string node = chunks[i]->getStringValue("node");
+        string node = chunks[i]->getStringValue("node", "/null");
         chunk.prop = fgGetNode(node.c_str(), true);
 
         string type = chunks[i]->getStringValue("type");
