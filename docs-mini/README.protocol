@@ -1,11 +1,11 @@
-The generic communication protocol for FlightGear provides a powerfull way
+The generic communication protocol for FlightGear provides a powerful way
 of adding a simple ASCII based or binary protocol, just by defining an
 XML encoded configuration file.
 
 The definition of the protocol consists of variable separators, line separators,
-and chuncks of text.
+and chunks of text.
 
-Each chunck defines:
+Each chunk defines:
 
 <name>		for ease of use
 <node>		the property tree node which provides the data
@@ -27,12 +27,12 @@ Each chunck defines:
 The output section also could define the variable separator and line separator.
 
 The separators can be either a control character such as a tab or newline, or a
-user specified string or other single charachter. The currently supported
-control charachters are:
+user specified string or other single character. The currently supported
+control characters are:
 
 <var_separator>:
 <line_separator>:
-Name		Charachter
+Name		Character
 
 newline		'\n'
 tab		'\t'
@@ -40,7 +40,7 @@ formfeed	'\f'
 carriagereturn	'\r'
 verticaltab	'\v'
 
-any other charachters just need to be added to "Network/generic.cxx"
+any other characters just need to be added to "Network/generic.cxx"
 
 The var_separator is placed between each variable, while the line_separator is
 placed at the end of each lot of variables.
