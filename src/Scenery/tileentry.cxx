@@ -40,6 +40,8 @@
 #include <osg/NodeCallback>
 #include <osg/Switch>
 
+#include <osgDB/ReadFile>
+
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/polar3d.hxx>
@@ -50,6 +52,7 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/tgdb/apt_signs.hxx>
 #include <simgear/scene/tgdb/obj.hxx>
+#include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
 #include <simgear/scene/model/placementtrans.hxx>
 #include <simgear/scene/util/SGUpdateVisitor.hxx>
 
@@ -215,7 +218,12 @@ bool FGTileEntry::obj_load( const string& path,
         fgGetBool("/sim/rendering/random-objects", true);
 
     // try loading binary format
-    osg::Node* node = SGLoadBTG(path, globals->get_matlib(), is_base, use_random_objects);
+    osg::ref_ptr<SGReaderWriterBTGOptions> options
+        = new SGReaderWriterBTGOptions();
+    options->setMatlib(globals->get_matlib());
+    options->setCalcLights(is_base);
+    options->setUseRandomObjects(use_random_objects);
+    osg::Node* node = osgDB::readNodeFile(path, options.get());
     if (node)
       geometry->addChild(node);
 
