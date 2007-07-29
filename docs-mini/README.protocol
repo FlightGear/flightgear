@@ -138,12 +138,12 @@ Chunks can also consist of a single constant <format>, like in:
 
 Writes log of this form:
 
-V=1736
-H=17647
-P=004.6
-V=1780
-H=18105
-P=006.4
+V=16
+H=3.590505
+P=3.59
+V=12
+H=3.589020
+P=3.59
 
 
 
