@@ -449,22 +449,13 @@ float Rotorpart::calculateAlpha(float* v_rel_air, float rho,
         //angle between blade movement caused by rotor-rotation and the
         //total movement of the blade
 
-        /* the next shold look like this, but this is the inner loop of
-           the rotor simulation. For small angles (and we hav only small
-           angles) the first order approximation works well
         lift_moment += r*(lift * Math::cos(angle) 
             - drag * Math::sin(angle));
         *torque     += r*(drag * Math::cos(angle) 
             + lift * Math::sin(angle));
-            */
-        lift_moment += r*(lift * (1-angle*angle) 
-            - drag * angle);
-        *torque     += r*(drag * (1-angle*angle) 
-            + lift * angle);
-        
         if (returnlift!=NULL) *returnlift+=lift;
     }
-    //as above, use 1st order approximation
+    //use 1st order approximation for alpha
     //float alpha=Math::atan2(lift_moment,_centripetalforce * _len); 
     float alpha;
     if (_shared_flap_hinge)
