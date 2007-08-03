@@ -110,8 +110,6 @@ private:
     SGPropertyNode_ptr wind_from_east_node;
     SGPropertyNode_ptr wind_from_north_node;
 
-    string scenario_filename;
-
     double user_latitude;
     double user_longitude;
     double user_altitude;
