@@ -79,13 +79,24 @@ FGAIManager::init() {
 void
 FGAIManager::postinit() {
     // postinit, so that it can access the Nasal subsystem
-    for(int i = 0 ; i < root->nChildren() ; i++) {
-        SGPropertyNode *aiEntry = root->getChild( i );
-        if( !strcmp( aiEntry->getName(), "scenario" ) ) {
-            scenario_filename = aiEntry->getStringValue();
-            if (!scenario_filename.empty())
-                processScenario( scenario_filename );
+    map<string, bool> scenarios;
+    for (int i = 0 ; i < root->nChildren() ; i++) {
+        SGPropertyNode *n = root->getChild(i);
+        if (strcmp(n->getName(), "scenario"))
+            continue;
+
+        string name = n->getStringValue();
+        if (name.empty())
+            continue;
+
+        if (scenarios.find(name) != scenarios.end()) {
+            SG_LOG(SG_GENERAL, SG_WARN, "won't load scenario '" << name << "' twice");
+            continue;
         }
+
+        SG_LOG(SG_GENERAL, SG_INFO, "loading scenario '" << name << '\'');
+        processScenario(name);
+        scenarios[name] = true;
     }
 }
 
