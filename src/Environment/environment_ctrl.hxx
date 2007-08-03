@@ -173,11 +173,13 @@ private:
     FGInterpolateEnvironmentCtrl *env;
 
     string _icao;
+    bool metar_loaded;
     float station_elevation_ft;
     float search_interval_sec;
     float same_station_interval_sec;
     float search_elapsed;
     float fetch_elapsed;
+    float interpolate_elapsed;
     const FGAirport *last_apt;
     SGPropertyNode_ptr proxy_host;
     SGPropertyNode_ptr proxy_port;
@@ -187,6 +189,18 @@ private:
     FGMetarResult fetch_data( const string &icao );
     virtual void update_metar_properties( const FGMetar *m );
     void update_env_config();
+    double interpolate_prop(const char * currentname, const char * requiredname, double dvalue);
+    double interpolate_val(double currentval, double requiredval, double dvalue);
+    const double EnvironmentUpdatePeriodSec;    // Seconds between interpolations
+    const double MaxWindChangeKtsSec;           // Max wind change in kts/sec
+    const double MaxVisChangePercentSec;        // Max visibility change in %/sec
+    const double MaxPressureChangeInHgSec;      // Max pressure change in InHg/sec
+    const double MaxCloudAltitudeChangeFtSec;   // Max cloud altitude change in ft/s
+    const double MaxCloudThicknessChangeFtSec;  // Max cloud thickness change in ft/s
+    const double MaxCloudInterpolationHeightFt; // Max distance from aircraft to
+                                                // interpolate at. Any cloud
+                                                // changes above this height
+                                                // difference are not interpolated
 
 private:
 
