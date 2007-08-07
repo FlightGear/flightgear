@@ -245,6 +245,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\AIModel\AITanker.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\aimodel\AIThermal.hxx"
 				>
 			</File>
@@ -413,6 +417,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Airports\dynamicloader.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\airports\dynamics.hxx"
 				>
 			</File>
@@ -486,6 +494,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\include\fg_typedefs.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\JSBSim\models\flight_control\FGActuator.h"
 				>
 			</File>
 			<File
@@ -790,6 +802,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\fdm\yasim\Glue.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\gnnode.hxx"
 				>
 			</File>
 			<File
@@ -1229,6 +1245,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\AIModel\performancedata.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\performancedb.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\fdm\yasim\PistonEngine.hpp"
 				>
 			</File>
@@ -1314,6 +1338,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\network\rul.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\runwayprefloader.hxx"
 				>
 			</File>
 			<File
@@ -1406,6 +1434,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\gui\trackball.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\trafficcontrol.hxx"
 				>
 			</File>
 			<File
@@ -1797,6 +1829,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Airports\xmlloader.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\fdm\yasim\YASim.hxx"
 				>
 			</File>
@@ -1910,6 +1946,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\aimodel\AIStorm.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\AITanker.cxx"
 				>
 			</File>
 			<File
@@ -2059,6 +2099,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Airports\calc_loc.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\fdm\larcsim\cherokee_aero.c"
 				>
 			</File>
@@ -2111,6 +2155,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Airports\dynamicloader.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\airports\dynamics.cxx"
 				>
 			</File>
@@ -2152,6 +2200,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\time\fg_timer.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\JSBSim\models\flight_control\FGActuator.cpp"
 				>
 			</File>
 			<File
@@ -2451,6 +2503,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Airports\gnnode.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\instrumentation\gps.cxx"
 				>
 			</File>
@@ -2531,10 +2587,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\Instrumentation\HUD\HUD.cxx"
 				>
 				<FileConfiguration
@@ -2555,6 +2607,10 @@
 						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\cockpit\hud.cxx"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\cockpit\hud_card.cxx"
@@ -2979,6 +3035,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\AIModel\performancedata.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\performancedb.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\fdm\yasim\PistonEngine.cpp"
 				>
 			</File>
@@ -3048,6 +3112,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\network\rul.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\runwayprefloader.cxx"
 				>
 			</File>
 			<File
@@ -3508,6 +3576,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\autopilot\xmlauto.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\xmlloader.cxx"
 				>
 			</File>
 			<File
