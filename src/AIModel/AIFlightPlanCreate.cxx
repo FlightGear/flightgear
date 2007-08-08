@@ -83,100 +83,10 @@ void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, int legNr,
   leg++;
 }
 
-/*******************************************************************
- * createPushBack
- * initialize the Aircraft at the parking location
- ******************************************************************/
-void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep, 
- 				    double latitude,
- 				    double longitude,
- 				    double radius,
- 				    const string& fltType,
- 				    const string& aircraftType,
- 				    const string& airline)
-{
-  double heading;
-  double lat;
-  double lon;
-  double lat2;
-  double lon2;
-  double az2;
-  
-  //int currWpt = wpt_iterator - waypoints.begin();
-  // Erase all existing waypoints.
-  //resetWaypoints();
-  
-  // We only need to get a valid parking if this is the first leg. 
-  // Otherwise use the current aircraft position.
-  if (firstFlight)
-    {
-      if (!(dep->getDynamics()->getAvailableParking(&lat, &lon, 
- 						    &heading, &gateId, 
- 						    radius, fltType, 
- 						    aircraftType, airline)))
- 	{
- 	  SG_LOG(SG_INPUT, SG_ALERT, "Could not find parking for a " << 
- 		 aircraftType <<
- 		 " of flight type " << fltType << 
- 		 " of airline     " << airline <<
- 		 " at airport     " << dep->getId());
-	  //exit(1);
- 	}
-    }
-  else
-    {
-      dep->getDynamics()->getParking(gateId, &lat, &lon, &heading);
-    }
-  heading += 180.0;
-  if (heading > 360)
-    heading -= 360;
-  waypoint *wpt = new waypoint;
-  wpt->name      = "park";
-  wpt->latitude  = lat;
-  wpt->longitude = lon;
-  wpt->altitude  = dep->getElevation();
-  wpt->speed     = -10; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
 
-  waypoints.push_back(wpt); 
-  
-  geo_direct_wgs_84 ( 0, lat, lon, heading, 
- 		      10, 
- 		      &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "park2";
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = dep->getElevation();
-  wpt->speed     = -10; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
-  wpt->routeIndex = 0;
-  waypoints.push_back(wpt); 
-  geo_direct_wgs_84 ( 0, lat, lon, heading, 
- 		      2.2*radius,           
- 		      &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "taxiStart";
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = dep->getElevation();
-  wpt->speed     = 10; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
-  wpt->routeIndex = 0;
-  waypoints.push_back(wpt);  
-}
+
+
+
 
 /*******************************************************************
  * createCreate Taxi. 
@@ -259,11 +169,29 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  //FGTaxiRoute route;
 	  delete taxiRoute;
 	  taxiRoute = new FGTaxiRoute;
-	  if (gateId >= 0)
-	    *taxiRoute = apt->getDynamics()->getGroundNetwork()->findShortestRoute(gateId, 
-									      runwayId);
-	  else
-	    *taxiRoute = apt->getDynamics()->getGroundNetwork()->findShortestRoute(0, runwayId);
+
+          // Determine which node to start from.
+          int node;
+          // Find out which node to start from
+          FGParking *park = apt->getDynamics()->getParking(gateId);
+          if (park)
+          	node = park->getPushBackPoint();
+          else
+		node = 0;
+          if (node == -1)
+	     node = gateId;
+
+          // HAndle case where parking doens't have a node
+          if ((node == 0) && park) {
+                if (firstFlight) {
+                    node = gateId;
+                } else {
+		    node = lastNodeVisited;
+                }
+          }
+
+          //cerr << "Using node " << node << endl;
+	    *taxiRoute = apt->getDynamics()->getGroundNetwork()->findShortestRoute(node, runwayId);
 	  intVecIterator i;
 	 
 	  if (taxiRoute->empty()) {
@@ -299,30 +227,27 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	  } else {
 	    int node;
 	    taxiRoute->first();
-	    bool isPushBackPoint = false;
+	    //bool isPushBackPoint = false;
 	    if (firstFlight) {
+
 	      // If this is called during initialization, randomly
 	      // skip a number of waypoints to get a more realistic
 	      // taxi situation.
-	      isPushBackPoint = true;
+	      //isPushBackPoint = true;
 	      int nrWaypoints = taxiRoute->size();
 	      nrWaypointsToSkip = rand() % nrWaypoints;
 	      // but make sure we always keep two active waypoints
 	      // to prevent a segmentation fault
 	      for (int i = 0; i < nrWaypointsToSkip-2; i++) {
-		isPushBackPoint = false;
+		//isPushBackPoint = false;
 		taxiRoute->next(&node);
 	      }
+	      apt->getDynamics()->releaseParking(gateId);
 	    } else {
-	      //chop off the first two waypoints, because
-	      // those have already been created
-	      // by create pushback
-	      int size = taxiRoute->size();
-	      if (size > 2) {
-		taxiRoute->next(&node);
-		taxiRoute->next(&node);
-	      }
-	    }
+               if (taxiRoute->size() > 1) {
+                   taxiRoute->next(&node); // chop off the first waypoint, because that is already the last of the pushback route
+               }
+            }
 	    int route;
 	    while(taxiRoute->next(&node, &route))
 	      {
@@ -338,13 +263,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 		// Elevation is currently disregarded when on_ground is true
 		// because the AIModel obtains a periodic ground elevation estimate.
 		wpt->altitude  = apt->getElevation();
-		if (isPushBackPoint) {
-		  wpt->speed = -10;
-		  isPushBackPoint = false;
-		}
-		else {
-		  wpt->speed     = 15; 
-		}
+		wpt->speed     = 15; 
 		wpt->crossat   = -10000;
 		wpt->gear_down = true;
 		wpt->flaps_down= true;
@@ -353,6 +272,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 		wpt->routeIndex = route;
 		waypoints.push_back(wpt);
 	      }
+             /*
 	    //cerr << endl;
 	    // finally, rewind the taxiRoute object to the point where we started
 	    // generating the Flightplan, for AI use.
@@ -369,7 +289,7 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 		//taxiRoute->next(&node);	
 		//taxiRoute->next(&node);
 	      }
-	    }
+	    }*/
 	  } // taxiRoute not empty
 	}
       else 
@@ -1076,4 +996,5 @@ string FGAIFlightPlan::getRunwayClassFromTrafficType(string fltType)
     if ((fltType == "mil-fighter") || (fltType == "mil-transport")) { 
 	return string("mil");
     }
+   return string("com");
 }

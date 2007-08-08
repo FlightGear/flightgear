@@ -118,12 +118,13 @@ private:
   double leadInAngle;
   time_t start_time;
   int leg;
-  int gateId;
+  int gateId, lastNodeVisited;
   string activeRunway;
   FGAirRoute airRoute;
   FGTaxiRoute *taxiRoute;
 
   void createPushBack(bool, FGAirport*, double, double, double, const string&, const string&, const string&);
+  void createPushBackFallBack(bool, FGAirport*, double, double, double, const string&, const string&, const string&);
   void createTaxi(bool, int, FGAirport *, double, double, double, const string&, const string&, const string&);
   void createTakeOff(bool, FGAirport *, double, const string&);
   void createClimb(bool, FGAirport *, double, double, const string&);

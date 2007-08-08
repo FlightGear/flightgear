@@ -305,7 +305,7 @@ void FGAirportDynamics::getParking (int id, double *lat, double* lon, double *he
 
 FGParking *FGAirportDynamics::getParking(int i) 
 { 
-  if (i < (int)parkings.size()) 
+  if (i < (int)parkings.size() && (i >= 0)) 
     return &(parkings[i]); 
   else 
     return 0;

@@ -46,22 +46,26 @@
 #include STL_STRING
 
 #include "parking.hxx"
+#include "groundnetwork.hxx"
 
 /*********************************************************************************
  * FGParking
  ********************************************************************************/
-FGParking::FGParking(double lat,
-		     double lon,
-		     double hdg,
-		     double rad,
-		     int idx,
-		     const string &name,
-		     const string &tpe,
-		     const string &codes)
-  : FGTaxiNode(lat,lon,idx)
-{
-  heading      = hdg;
-  parkingName  = name;
-  type         = tpe;
-  airlineCodes = codes;
+// FGParking::FGParking(double lat,
+// 		     double lon,
+// 		     double hdg,
+// 		     double rad,
+// 		     int idx,
+// 		     const string &name,
+// 		     const string &tpe,
+// 		     const string &codes)
+//   : FGTaxiNode(lat,lon,idx)
+// {
+//   heading      = hdg;
+//   parkingName  = name;
+//   type         = tpe;
+//   airlineCodes = codes;
+// }
+FGParking::~FGParking() {
+     delete pushBackRoute; 
 }

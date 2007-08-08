@@ -10,7 +10,9 @@ libAIModel_a_SOURCES = submodel.cxx submodel.hxx 	\
 			AIStorm.hxx AIStorm.cxx \
 			AIThermal.hxx AIThermal.cxx \
 			AIFlightPlan.hxx AIFlightPlan.cxx \
-			AIFlightPlanCreate.cxx 	AIFlightPlanCreateCruise.cxx \
+			AIFlightPlanCreate.cxx \
+			AIFlightPlanCreatePushBack.cxx \
+			AIFlightPlanCreateCruise.cxx \
 			AICarrier.hxx AICarrier.cxx \
 			AIStatic.hxx AIStatic.cxx \
 			AITanker.cxx AITanker.hxx \

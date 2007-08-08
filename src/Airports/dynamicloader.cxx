@@ -38,8 +38,11 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
   string value;
   string gateName;
   string gateNumber;
+  string attval;
   string lat;
   string lon;
+  int holdPointType;
+  
   if (name == string("Parking"))
     {
       for (int i = 0; i < atts.size(); i++)
@@ -84,6 +87,22 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
 	    taxiNode.setLatitude(atts.getValue(i));
 	  if (attname == string("lon"))
 	    taxiNode.setLongitude(atts.getValue(i));
+	  if (attname == string("isOnRunway"))
+            taxiNode.setOnRunway((bool) atoi(atts.getValue(i)));
+	  if (attname == string("holdPointType")) {
+            attval = atts.getValue(i);
+            if (attval==string("none")) {
+                holdPointType=0;
+            } else if (attval==string("normal")) {
+                 holdPointType=1;
+            } else if (attval==string("CAT II/III")) {
+                 holdPointType=3;
+            } else if (attval==string("PushBack")) {
+                 holdPointType=3;
+            }
+            //cerr << "Setting Holding point to " << holdPointType << endl;
+            taxiNode.setHoldPointType(holdPointType);
+          }
 	}
       _dynamics->getGroundNetwork()->addNode(taxiNode);
     }
@@ -97,6 +116,8 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
 	    taxiSegment.setStartNodeRef(atoi(atts.getValue(i)));
 	  if (attname == string("end"))
 	    taxiSegment.setEndNodeRef(atoi(atts.getValue(i)));
+          if (attname == string("isPushBackRoute"))
+	    taxiSegment.setPushBackType((bool) atoi(atts.getValue(i)));
 	}
       _dynamics->getGroundNetwork()->addSegment(taxiSegment);
     }

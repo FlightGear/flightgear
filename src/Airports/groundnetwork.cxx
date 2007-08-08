@@ -50,17 +50,13 @@
 /***************************************************************************
  * FGTaxiSegment
  **************************************************************************/
-FGTaxiSegment::FGTaxiSegment()
-{
-  oppositeDirection = 0;
-  isActive = true;
-}
 
 void FGTaxiSegment::setStart(FGTaxiNodeVector *nodes)
 {
   FGTaxiNodeVectorIterator i = nodes->begin();
   while (i != nodes->end())
     {
+      //cerr << "Scanning start node index" << (*i)->getIndex() << endl;
       if ((*i)->getIndex() == startNode)
 	{
 	  start = (*i)->getAddress();
@@ -69,6 +65,7 @@ void FGTaxiSegment::setStart(FGTaxiNodeVector *nodes)
 	}
       i++;
     }
+  SG_LOG(SG_GENERAL, SG_ALERT,  "Could not find start node " << startNode << endl);
 }
 
 void FGTaxiSegment::setEnd(FGTaxiNodeVector *nodes)
@@ -76,6 +73,7 @@ void FGTaxiSegment::setEnd(FGTaxiNodeVector *nodes)
   FGTaxiNodeVectorIterator i = nodes->begin();
   while (i != nodes->end())
     {
+      //cerr << "Scanning end node index" << (*i)->getIndex() << endl;
       if ((*i)->getIndex() == endNode)
 	{
 	  end = (*i)->getAddress();
@@ -83,6 +81,7 @@ void FGTaxiSegment::setEnd(FGTaxiNodeVector *nodes)
 	}
       i++;
     }
+  SG_LOG(SG_GENERAL, SG_ALERT,  "Could not find end node " << endNode << endl);
 }
 
 
@@ -219,6 +218,7 @@ FGGroundNetwork::~FGGroundNetwork()
       delete (*node);
     }
   nodes.clear();
+  pushBackNodes.clear();
   for (FGTaxiSegmentVectorIterator seg = segments.begin();
        seg != segments.end();
        seg++)
@@ -263,13 +263,17 @@ void FGGroundNetwork::init()
   //sort(segments.begin(), segments.end(), compare_segments());
   FGTaxiSegmentVectorIterator i = segments.begin();
   while(i != segments.end()) {
-    //cerr << "initializing node " << i->getIndex() << endl;
     (*i)->setStart(&nodes);
     (*i)->setEnd  (&nodes);
     (*i)->setTrackDistance();
     (*i)->setIndex(index);
-    //cerr << "Track distance = " << i->getLength() << endl;
-    //cerr << "Track ends at"      << i->getEnd()->getIndex() << endl;
+    if ((*i)->isPushBack()) {
+          pushBackNodes.push_back((*i)->getEnd());
+    }
+    //SG_LOG(SG_GENERAL, SG_BULK,  "initializing segment " << (*i)->getIndex() << endl);
+    //SG_LOG(SG_GENERAL, SG_BULK, "Track distance = "     << (*i)->getLength() << endl);
+    //SG_LOG(SG_GENERAL, SG_BULK, "Track runs from "      << (*i)->getStart()->getIndex() << " to "
+    //                                                    << (*i)->getEnd()->getIndex() << endl);
     i++;
     index++;
   }
@@ -295,6 +299,13 @@ void FGGroundNetwork::init()
       }
     i++;
   }
+  //FGTaxiNodeVectorIterator j = nodes.begin();
+  //while (j != nodes.end()) {
+  //    if ((*j)->getHoldPointType() == 3) {
+  //        pushBackNodes.push_back((*j));
+  //    }
+  //    j++;
+  //}
   //cerr << "Done initializing ground network" << endl;
   //exit(1);
 }
@@ -365,34 +376,42 @@ FGTaxiSegment *FGGroundNetwork::findSegment(int idx)
 }
 
 
-FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end) 
+FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end, bool fullSearch) 
 {
 //implements Dijkstra's algorithm to find shortest distance route from start to end
 //taken from http://en.wikipedia.org/wiki/Dijkstra's_algorithm
 
     //double INFINITE = 100000000000.0;
     // initialize scoring values
+    int nParkings = parent->getDynamics()->getNrOfParkings();
+    FGTaxiNodeVector *currNodesSet;
+    if (fullSearch) {
+         currNodesSet = &nodes;
+    } else {
+         currNodesSet = &pushBackNodes;
+    }
+
     for (FGTaxiNodeVectorIterator
-         itr = nodes.begin();
-         itr != nodes.end(); itr++) {
-            (*itr)->pathscore = HUGE_VAL; //infinity by all practical means
-            (*itr)->previousnode = 0; //
-            (*itr)->previousseg = 0; //
+         itr = currNodesSet->begin();
+         itr != currNodesSet->end(); itr++) {
+            (*itr)->setPathScore(HUGE_VAL); //infinity by all practical means
+            (*itr)->setPreviousNode(0); //
+            (*itr)->setPreviousSeg (0); //
          }
 
     FGTaxiNode *firstNode = findNode(start);
-    firstNode->pathscore = 0;
+    firstNode->setPathScore(0);
 
     FGTaxiNode *lastNode  = findNode(end);
 
-    FGTaxiNodeVector unvisited(nodes); // working copy
+    FGTaxiNodeVector unvisited(*currNodesSet); // working copy
 
     while (!unvisited.empty()) {
         FGTaxiNode* best = *(unvisited.begin());
         for (FGTaxiNodeVectorIterator
              itr = unvisited.begin();
              itr != unvisited.end(); itr++) {
-                 if ((*itr)->pathscore < best->pathscore)
+                 if ((*itr)->getPathScore() < best->getPathScore())
                      best = (*itr);
         }
 
@@ -405,39 +424,57 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end)
             for (FGTaxiSegmentVectorIterator
                  seg = best->getBeginRoute();
                  seg != best->getEndRoute(); seg++) {
-                FGTaxiNode* tgt = (*seg)->getEnd();
-                double alt = best->pathscore + (*seg)->getLength();
-                if (alt < tgt->pathscore) {              // Relax (u,v)
-                    tgt->pathscore = alt;
-                    tgt->previousnode = best;
-                    tgt->previousseg = *seg; //
+                if (fullSearch || (*seg)->isPushBack()) {
+                    FGTaxiNode* tgt = (*seg)->getEnd();
+                    double alt = best->getPathScore() + (*seg)->getLength() + (*seg)->getPenalty(nParkings);
+                    if (alt < tgt->getPathScore()) {              // Relax (u,v)
+                        tgt->setPathScore(alt);
+                        tgt->setPreviousNode(best);
+                        tgt->setPreviousSeg(*seg); //
+                   }
+                } else {
+                //   // cerr << "Skipping TaxiSegment " << (*seg)->getIndex() << endl;
                 }
             }
         }
     }
 
-    if (lastNode->pathscore == HUGE_VAL) {
+    if (lastNode->getPathScore() == HUGE_VAL) {
         // no valid route found
-        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find route from waypoint " << start << " to " << end << " at " <<
-                parent->getId());
-        exit(1); //TODO exit more gracefully, no need to stall the whole sim with broken GN's
+	if (fullSearch) {
+            SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find route from waypoint " << start << " to " << end << " at " <<
+                    parent->getId());
+        }
+	FGTaxiRoute empty;
+	return empty;
+        //exit(1); //TODO exit more gracefully, no need to stall the whole sim with broken GN's
     } else {
         // assemble route from backtrace information
         intVec nodes, routes;
         FGTaxiNode* bt = lastNode;
-        while (bt->previousnode != 0) {
+        while (bt->getPreviousNode() != 0) {
             nodes.push_back(bt->getIndex());
-            routes.push_back(bt->previousseg->getIndex());
-            bt = bt->previousnode;
+            routes.push_back(bt->getPreviousSegment()->getIndex());
+            bt = bt->getPreviousNode();
         }
         nodes.push_back(start);
         reverse(nodes.begin(), nodes.end());
         reverse(routes.begin(), routes.end());
 
-        return FGTaxiRoute(nodes, routes, lastNode->pathscore, 0);
+        return FGTaxiRoute(nodes, routes, lastNode->getPathScore(), 0);
     }
 }
 
+int FGTaxiSegment::getPenalty(int nGates) {
+     int penalty = 0;
+     if (end->getIndex() < nGates) {
+         penalty += 10000;
+     }
+     if (end->getIsOnRunway()) { // For now. In future versions, need to find out whether runway is active.
+         penalty += 1000;
+     }
+     return penalty;
+}
 
 // void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double distance)
 // {
@@ -598,7 +635,7 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(int start, int end)
   totalDistance -= distance;
   return;
 }*/
-
+/*
 void FGGroundNetwork::printRoutingError(string mess)
 {
   SG_LOG(SG_GENERAL, SG_ALERT,  "Error in ground network trace algorithm " << mess);
@@ -616,7 +653,7 @@ void FGGroundNetwork::printRoutingError(string mess)
     }
   //exit(1);
 }
-
+*/
 
 void FGGroundNetwork::announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentPosition,
 				       double lat, double lon, double heading, 
@@ -1089,9 +1126,7 @@ bool FGGroundNetwork::checkForCircularWaits(int id)
    //if (printed)
    //   cerr << "[done] " << endl << endl;;
    if (id == target) {
-       SG_LOG(SG_GENERAL, SG_ALERT, "Detected circular wait condition");
-       cerr << "Id = " << id << endl;
-       cerr << "target = " << target << endl;
+       SG_LOG(SG_GENERAL, SG_WARN, "Detected circular wait condition: Id = " << id << "target = " << target);
        return true;
    } else {
    return false;

@@ -42,9 +42,7 @@ bool sortByLength(FGTaxiSegment *a, FGTaxiSegment *b) {
 /**************************************************************************
  * FGTaxiNode
  *************************************************************************/
-FGTaxiNode::FGTaxiNode()
-{
-}
+
 
 void FGTaxiNode::sortEndSegments(bool byLength)
 {

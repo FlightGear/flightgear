@@ -37,23 +37,80 @@ private:
   double lat;
   double lon;
   int index;
-  FGTaxiSegmentVector next; // a vector of pointers to all the segments leaving from this node
-  
-public:
-  FGTaxiNode();
-  FGTaxiNode(double, double, int);
 
-  void setIndex(int idx)                  { index = idx;};
-  void setLatitude (double val)           { lat = val;};
-  void setLongitude(double val)           { lon = val;};
-  void setLatitude (const string& val)           { lat = processPosition(val);  };
-  void setLongitude(const string& val)           { lon = processPosition(val);  };
-  void addSegment(FGTaxiSegment *segment) { next.push_back(segment); };
-  
+  bool isOnRunway;
+  int  holdType;
+  FGTaxiSegmentVector next; // a vector of pointers to all the segments leaving from this node
+
+  // used in way finding
+  double pathScore;
+  FGTaxiNode* previousNode;
+  FGTaxiSegment* previousSeg;
+
+public:
+  FGTaxiNode() :
+      lat (0.0),
+      lon (0.0),
+      index(0),
+      isOnRunway(false),
+      holdType(0),
+      pathScore(0),
+      previousNode(0),
+      previousSeg(0)
+{
+};
+
+  FGTaxiNode(const FGTaxiNode &other) :
+      lat(other.lat),
+      lon(other.lon),
+      index(other.index),
+      isOnRunway(other.isOnRunway),
+      holdType(other.holdType),
+      next(other.next),
+      pathScore(other.pathScore),
+      previousNode(other.previousNode),
+      previousSeg(other.previousSeg)
+{
+};
+
+FGTaxiNode &operator =(const FGTaxiNode &other)
+{
+   lat          = other.lat;
+   lon          = other.lon;
+   index        = other.index;
+   isOnRunway   = other.isOnRunway;
+   holdType     = other.holdType;
+   next         = other.next;
+   pathScore    = other.pathScore;
+   previousNode = other.previousNode;
+   previousSeg  = other.previousSeg;
+   return *this;
+};
+
+  void setIndex(int idx)                  { index = idx;                 };
+  void setLatitude (double val)           { lat = val;                   };
+  void setLongitude(double val)           { lon = val;                   };
+  void setLatitude (const string& val)    { lat = processPosition(val);  };
+  void setLongitude(const string& val)    { lon = processPosition(val);  };
+  void addSegment(FGTaxiSegment *segment) { next.push_back(segment);     };
+  void setHoldPointType(int val)          { holdType = val;              };
+  void setOnRunway(bool val)              { isOnRunway = val;            };
+
+  void setPathScore   (double val)         { pathScore    = val; };
+  void setPreviousNode(FGTaxiNode *val)    { previousNode = val; };
+  void setPreviousSeg (FGTaxiSegment *val) { previousSeg  = val; };
+
+  FGTaxiNode    *getPreviousNode()    { return previousNode; };
+  FGTaxiSegment *getPreviousSegment() { return previousSeg;  };
+
+  double getPathScore() { return pathScore; };
   double getLatitude() { return lat;};
   double getLongitude(){ return lon;};
 
   int getIndex() { return index; };
+  int getHoldPointType() { return holdType; };
+  bool getIsOnRunway() { return isOnRunway; };
+
   FGTaxiNode *getAddress() { return this;};
   FGTaxiSegmentVectorIterator getBeginRoute() { return next.begin(); };
   FGTaxiSegmentVectorIterator getEndRoute()   { return next.end();   }; 
@@ -61,11 +118,6 @@ public:
 
   void sortEndSegments(bool);
 
-  // used in way finding
-  double pathscore;
-  FGTaxiNode* previousnode;
-  FGTaxiSegment* previousseg;
-  
 };
 
 typedef vector<FGTaxiNode*> FGTaxiNodeVector;

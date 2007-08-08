@@ -86,6 +86,7 @@ public:
   FGParking *getParking(int i);
   void releaseParking(int id);
   string getParkingName(int i); 
+  int getNrOfParkings() { return parkings.size(); };
   //FGAirport *getAddress() { return this; };
   //const string &getName() const { return _name;};
   // Returns degrees

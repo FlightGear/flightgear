@@ -59,6 +59,7 @@ private:
   double course;
   double headingDiff;
   bool isActive;
+  bool isPushBackRoute;
   FGTaxiNode *start;
   FGTaxiNode *end;
   int index;
@@ -67,8 +68,51 @@ private:
  
 
 public:
-  FGTaxiSegment();
-  //FGTaxiSegment(FGTaxiNode *, FGTaxiNode *, int);
+  FGTaxiSegment() :
+      startNode(0),
+      endNode(0),
+      length(0),
+      course(0),
+      headingDiff(0),
+      isActive(0),
+      isPushBackRoute(0),
+      start(0),
+      end(0),
+      index(0),
+      oppositeDirection(0)
+  {
+  };
+
+  FGTaxiSegment         (const FGTaxiSegment &other) :
+      startNode         (other.startNode),
+      endNode           (other.endNode),
+      length            (other.length),
+      course            (other.course),
+      headingDiff       (other.headingDiff),
+      isActive          (other.isActive),
+      isPushBackRoute   (other.isPushBackRoute),
+      start             (other.start),
+      end               (other.end),
+      index             (other.index),
+      oppositeDirection (other.oppositeDirection)
+  {
+  };
+
+  FGTaxiSegment& operator=(const FGTaxiSegment &other)
+  {
+      startNode          = other.startNode;
+      endNode            = other.endNode;
+      length             = other.length;
+      course             = other.course;
+      headingDiff        = other.headingDiff;
+      isActive           = other.isActive;
+      isPushBackRoute    = other.isPushBackRoute;
+      start              = other.start;
+      end                = other.end;
+      index              = other.index;
+      oppositeDirection  = other.oppositeDirection;
+      return *this;
+  };
 
   void setIndex        (int val) { index     = val; };
   void setStartNodeRef (int val) { startNode = val; };
@@ -78,14 +122,19 @@ public:
 
   void setStart(FGTaxiNodeVector *nodes);
   void setEnd  (FGTaxiNodeVector *nodes);
+  void setPushBackType(bool val) { isPushBackRoute = val; };
   void setTrackDistance();
 
   FGTaxiNode * getEnd() { return end;};
   FGTaxiNode * getStart() { return start; };
   double getLength() { return length; };
   int getIndex() { return index; };
+  
+  bool isPushBack() { return isPushBackRoute; };
 
- FGTaxiSegment *getAddress() { return this;};
+  int getPenalty(int nGates);
+
+  FGTaxiSegment *getAddress() { return this;};
 
   bool operator<(const FGTaxiSegment &other) const { return index < other.index; };
   bool hasSmallerHeadingDiff (const FGTaxiSegment &other) const { return headingDiff < other.headingDiff; };
@@ -170,28 +219,29 @@ private:
   //int maxDepth;
   int count;
   FGTaxiNodeVector    nodes;
+  FGTaxiNodeVector    pushBackNodes;
   FGTaxiSegmentVector segments;
   //intVec route;
-  intVec nodesStack;
-  intVec routesStack;
+  //intVec nodesStack;
+  //intVec routesStack;
   TaxiRouteVector routes;
   TrafficVector activeTraffic;
   TrafficVectorIterator currTraffic;
   SGWayPoint destination;
-  
+
   bool foundRoute;
   double totalDistance, maxDistance;
   FGTowerController *towerController;
   FGAirport *parent;
-  
 
-  void printRoutingError(string);
+
+  //void printRoutingError(string);
 
   void checkSpeedAdjustment(int id, double lat, double lon, 
 			    double heading, double speed, double alt);
   void checkHoldPosition(int id, double lat, double lon, 
 			 double heading, double speed, double alt);
-  
+
 public:
   FGGroundNetwork();
   ~FGGroundNetwork();
@@ -206,8 +256,10 @@ public:
   int findNearestNode(double lat, double lon);
   FGTaxiNode *findNode(int idx);
   FGTaxiSegment *findSegment(int idx);
-  FGTaxiRoute findShortestRoute(int start, int end);
+  FGTaxiRoute findShortestRoute(int start, int end, bool fullSearch=true);
   //void trace(FGTaxiNode *, int, int, double dist);
+
+  int getNrOfNodes() { return nodes.size(); };
 
   void setParent(FGAirport *par) { parent = par; };
 

@@ -39,6 +39,9 @@
 SG_USING_STD(string);
 SG_USING_STD(vector);
 
+class FGTaxiRoute;
+
+
 class FGParking : public FGTaxiNode {
 private:
   double heading;
@@ -48,20 +51,58 @@ private:
   string airlineCodes;
  
   bool available;
-
-  
+  int pushBackPoint;
+  FGTaxiRoute *pushBackRoute;
 
 public:
-  FGParking() { available = true;};
-  //FGParking(FGParking &other);
-  FGParking(double lat,
-	    double lon,
-	    double hdg,
-	    double rad,
-	    int idx,
-	    const string& name,
-	    const string& tpe,
-	    const string& codes);
+  FGParking() :
+      heading(0),
+      radius(0),
+      //parkingName(0),
+      //type(0),
+      //airlineCodes(0),
+      available(true),
+      pushBackPoint(-1),
+      pushBackRoute(0)
+  {
+  };
+
+  FGParking(const FGParking &other) :
+      FGTaxiNode   (other),
+      heading      (other.heading),
+      radius       (other.radius),
+      parkingName  (other.parkingName),
+      type         (other.type),
+      airlineCodes (other.airlineCodes),
+      available    (other.available),
+      pushBackPoint(other.pushBackPoint),
+      pushBackRoute(other.pushBackRoute)
+  {
+  };
+
+
+  FGParking& operator =(const FGParking &other)
+  {
+      FGTaxiNode::operator=(other);
+      heading      = other.heading;
+      radius       = other.radius;
+      parkingName  = other.parkingName;
+      type         = other.type;
+      airlineCodes = other.airlineCodes;
+      available    = other.available;
+      pushBackPoint= other.pushBackPoint;
+      pushBackRoute= other.pushBackRoute;
+      return *this;
+  };
+  ~FGParking();
+//   FGParking(double lat,
+// 	    double lon,
+// 	    double hdg,
+// 	    double rad,
+// 	    int idx,
+// 	    const string& name,
+// 	    const string& tpe,
+// 	    const string& codes);
 
   void setHeading  (double hdg)  { heading     = hdg;  };
   void setRadius   (double rad)  { radius      = rad;  };
@@ -69,6 +110,9 @@ public:
   void setName     (const string& name) { parkingName = name; };
   void setType     (const string& tpe)  { type        = tpe;  };
   void setCodes    (const string& codes){ airlineCodes= codes;};
+
+  void setPushBackRoute(FGTaxiRoute *val) { pushBackRoute = val; };
+  void setPushBackPoint(int val)          { pushBackPoint = val; };
 
   bool isAvailable ()         { return available;};
   void setAvailable(bool val) { available = val; };
@@ -79,6 +123,10 @@ public:
   string getType     () { return type;        };
   string getCodes    () { return airlineCodes;};
   string getName     () { return parkingName; };
+
+  FGTaxiRoute * getPushBackRoute () { return pushBackRoute; };
+
+  int getPushBackPoint () { return pushBackPoint; };
 
   bool operator< (const FGParking &other) const {
     return radius < other.radius; };

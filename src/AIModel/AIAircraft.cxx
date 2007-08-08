@@ -1,4 +1,4 @@
-// FGAIAircraft - FGAIBase-derived class creates an AI airplane
+// // FGAIAircraft - FGAIBase-derived class creates an AI airplane
 //
 // Written by David Culp, started October 2003.
 //
@@ -656,8 +656,11 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t
 
     // This waypoint marks the fact that the aircraft has passed the initial taxi
     // departure waypoint, so it can release the parking.
-    if (prev->name == "park2") {
+    if (prev->name == "PushBackPoint") {
         dep->getDynamics()->releaseParking(fp->getGate());
+        time_t holdUntil = now + 120;
+	fp->setTime(holdUntil);
+	//cerr << _getCallsign() << "Holding at pushback point" << endl;
     }
 
     // This is the last taxi waypoint, and marks the the end of the flight plan
