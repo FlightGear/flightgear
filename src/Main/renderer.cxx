@@ -101,6 +101,12 @@
 #include "renderer.hxx"
 #include "main.hxx"
 
+// XXX Make this go away when OSG 2.2 is released.
+#if ((2 >= OSG_VERSION_MAJOR) && (1 >= OSG_VERSION_MINOR) \
+     && (4 >= OSG_VERSION_PATCH))
+#define UPDATE_VISITOR_IN_VIEWER 1
+#endif
+
 class SGPuDrawable : public osg::Drawable {
 public:
   SGPuDrawable()
@@ -388,12 +394,16 @@ FGRenderer::splashinit( void ) {
       	sceneView = 0;
 	mRealRoot = dynamic_cast<osg::Group*>(viewer->getSceneData());
 	mRealRoot->addChild(fgCreateSplashNode());
-	osgViewer::Scene* scene = viewer->getScene();
 	mFrameStamp = viewer->getFrameStamp();
 	// Scene doesn't seem to pass the frame stamp to the update
 	// visitor automatically.
 	mUpdateVisitor->setFrameStamp(mFrameStamp.get());
+#ifdef UPDATE_VISITOR_IN_VIEWER
+        viewer->setUpdateVisitor(mUpdateVisitor.get());
+#else
+        osgViewer::Scene* scene = viewer->getScene();
 	scene->setUpdateVisitor(mUpdateVisitor.get());
+#endif
     } else {
 	// Add the splash screen node
 	mRealRoot->addChild(fgCreateSplashNode());
