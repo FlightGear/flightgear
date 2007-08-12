@@ -173,10 +173,22 @@
 				RelativePath="..\..\src\Airports\apt_loader.hxx">
 			</File>
 			<File
+				RelativePath="..\..\src\Airports\dynamicloader.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\dynamicloader.hxx">
+			</File>
+			<File
 				RelativePath="..\..\src\Airports\dynamics.cxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Airports\dynamics.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\gnnode.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\gnnode.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Airports\groundnetwork.cxx">
@@ -189,6 +201,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Airports\parking.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\runwayprefloader.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\runwayprefloader.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Airports\runwayprefs.cxx">
@@ -213,6 +231,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Airports\trafficcontrol.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\xmlloader.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\xmlloader.hxx">
 			</File>
 		</Filter>
 		<Filter
@@ -2647,6 +2671,9 @@
 				RelativePath="..\..\src\AIModel\AIFlightPlanCreateCruise.cxx">
 			</File>
 			<File
+				RelativePath="..\..\src\AIModel\AIFlightPlanCreatePushBack.cxx">
+			</File>
+			<File
 				RelativePath="..\..\src\AIModel\AIManager.cxx">
 			</File>
 			<File
@@ -2687,6 +2714,18 @@
 			</File>
 			<File
 				RelativePath="..\..\src\AIModel\AIThermal.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\performancedata.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\performancedata.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\performancedb.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\performancedb.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\AIModel\submodel.cxx">
