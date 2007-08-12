@@ -1,3 +1,8 @@
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "performancedata.hxx"
 #include "AIAircraft.hxx"
 
@@ -116,6 +121,7 @@ double PerformanceData::actualPitch(FGAIAircraft* ac, double tgt_pitch, double d
 
 double PerformanceData::actualAltitude(FGAIAircraft* ac, double tgt_altitude, double dt) {
     if (ac->onGround()) {
+        //FIXME: return a value here
     } else
         return ac->getAltitude() + ac->getVerticalSpeed()*dt/60.0;
 }
