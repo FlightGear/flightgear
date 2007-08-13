@@ -49,6 +49,7 @@
 #include <osg/PolygonMode>
 #include <osg/PolygonOffset>
 #include <osg/ShadeModel>
+#include <osg/Version>
 #include <osg/TexEnv>
 
 #include <osgUtil/SceneView>
@@ -102,8 +103,8 @@
 #include "main.hxx"
 
 // XXX Make this go away when OSG 2.2 is released.
-#if ((2 >= OSG_VERSION_MAJOR) && (1 >= OSG_VERSION_MINOR) \
-     && (4 >= OSG_VERSION_PATCH))
+#if ((2 <= OSG_VERSION_MAJOR) && (1 <= OSG_VERSION_MINOR) \
+     && (4 <= OSG_VERSION_PATCH))
 #define UPDATE_VISITOR_IN_VIEWER 1
 #endif
 
