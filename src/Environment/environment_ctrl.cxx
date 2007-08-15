@@ -231,7 +231,7 @@ FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node,
             table.push_back(b);
         }
     }
-    sort(table.begin(), table.end());
+    sort(table.begin(), table.end(), bucket::lessThan);
 }
 
 void
@@ -312,6 +312,11 @@ FGInterpolateEnvironmentCtrl::bucket::operator< (const bucket &b) const
     return (altitude_ft < b.altitude_ft);
 }
 
+bool
+FGInterpolateEnvironmentCtrl::bucket::lessThan(bucket *a, bucket *b)
+{
+    return (a->altitude_ft) < (b->altitude_ft);
+}
 
 
 ////////////////////////////////////////////////////////////////////////

@@ -134,6 +134,8 @@ private:
         double altitude_ft;
         FGEnvironment environment;
         bool operator< (const bucket &b) const;
+        // LessThan predicate for bucket pointers.
+        static bool lessThan(bucket *a, bucket *b);
     };
 
     void read_table (const SGPropertyNode * node, vector<bucket *> &table);
