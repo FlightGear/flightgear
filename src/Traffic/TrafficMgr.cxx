@@ -128,10 +128,8 @@ void FGTrafficManager::init()
     readXML(path.str(),*this);
 
   aircraftDir.append("AI/Aircraft");
-  if (aircraftDir.exists())
+  if ((d = ulOpenDir(aircraftDir.c_str())) != NULL)
     {
-      if((d = ulOpenDir(aircraftDir.c_str())) == NULL)
-        return;
       while((dent = ulReadDir(d)) != NULL) {
 	//cerr << "Scanning : " << dent->d_name << endl;
 	if (string(dent->d_name) != string(".")  && 
