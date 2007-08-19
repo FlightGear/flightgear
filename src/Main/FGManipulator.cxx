@@ -13,7 +13,7 @@
 FGManipulator::FGManipulator() :
     idleHandler(0), drawHandler(0), windowResizeHandler(0), keyHandler(0),
     mouseClickHandler(0), mouseMotionHandler(0), currentModifiers(0),
-    osgModifiers(0), resizable(true)
+    osgModifiers(0), resizable(true), mouseWarped(false)
 {
     using namespace osgGA;
     
@@ -132,6 +132,7 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
 	    (*idleHandler)();
 	if (drawHandler)
 	    (*drawHandler)();
+	mouseWarped = false;
 	return true;
     case osgGA::GUIEventAdapter::KEYDOWN:
     case osgGA::GUIEventAdapter::KEYUP:
@@ -167,6 +168,12 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
     }
     case osgGA::GUIEventAdapter::MOVE:
     case osgGA::GUIEventAdapter::DRAG:
+        // If we warped the mouse, then disregard all pointer motion
+        // events for this frame. We really want to flush the event
+        // queue of mouse events, but don't have the ability to do
+        // that with osgViewer.
+	if (mouseWarped)
+	    return true;
 	eventToViewport(ea, us, x, y);
 	if (mouseMotionHandler)
 	    (*mouseMotionHandler)(x, y);

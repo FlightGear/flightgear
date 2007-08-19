@@ -250,6 +250,7 @@ int fgGetKeyModifiers()
 
 void fgWarpMouse(int x, int y)
 {
+    globals->get_renderer()->getManipulator()->setMouseWarped();
     // Hack, currently the pointer is just recentered. So, we know the
     // relative coordinates ...
     if (!mainCamera.valid()) {
@@ -260,7 +261,6 @@ void fgWarpMouse(int x, int y)
     float ysize = (float)mainCamera->getGraphicsContext()->getTraits()->height;
     viewer->requestWarpPointer(2.0f * (float)x / xsize - 1.0f,
                                1.0f - 2.0f * (float)y / ysize);
-    
 }
 
 // Noop

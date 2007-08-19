@@ -103,6 +103,12 @@ public:
 	{
 	    return currentModifiers;
 	}
+
+    void setMouseWarped()
+	{
+	    mouseWarped = true;
+	}
+
     void setPosition(const osg::Vec3d position) { this->position = position; }
     void setAttitude(const osg::Quat attitude) { this->attitude = attitude; }
 
@@ -130,5 +136,6 @@ protected:
     osg::Quat attitude;
     void handleKey(const osgGA::GUIEventAdapter& ea, int& key, int& modifiers);
     bool resizable;
+    bool mouseWarped;
 };
 #endif
