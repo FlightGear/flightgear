@@ -6,6 +6,10 @@
 #include <plib/pu.h>
 #include "FGManipulator.hxx"
 
+#if !defined(X_DISPLAY_MISSING)
+#define X_DOUBLE_SCROLL_BUG 1
+#endif
+
 // The manipulator is responsible for updating a Viewer's camera. It's
 // event handling method is also a convenient place to run the the FG
 // idle and draw handlers.
@@ -13,7 +17,8 @@
 FGManipulator::FGManipulator() :
     idleHandler(0), drawHandler(0), windowResizeHandler(0), keyHandler(0),
     mouseClickHandler(0), mouseMotionHandler(0), currentModifiers(0),
-    osgModifiers(0), resizable(true), mouseWarped(false)
+    osgModifiers(0), resizable(true), mouseWarped(false),
+    scrollButtonPressed(false)
 {
     using namespace osgGA;
     
@@ -165,6 +170,25 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
 				 (ea.getEventType()
 				  == osgGA::GUIEventAdapter::RELEASE), x, y, mainWindow, &ea);
 	return true;
+    }
+    case osgGA::GUIEventAdapter::SCROLL:
+    {
+        bool mainWindow = eventToViewport(ea, us, x, y);
+#ifdef X_DOUBLE_SCROLL_BUG
+        scrollButtonPressed = !scrollButtonPressed;
+        if (!scrollButtonPressed) // Drop the button release event
+            return true;
+#endif
+        int button;
+        if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_UP)
+            button = 3;
+        else
+            button = 4;
+        if (mouseClickHandler) {
+            (*mouseClickHandler)(button, 0, x, y, mainWindow, &ea);
+            (*mouseClickHandler)(button, 1, x, y, mainWindow, &ea);
+        }
+        return true;
     }
     case osgGA::GUIEventAdapter::MOVE:
     case osgGA::GUIEventAdapter::DRAG:

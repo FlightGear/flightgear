@@ -137,5 +137,7 @@ protected:
     void handleKey(const osgGA::GUIEventAdapter& ea, int& key, int& modifiers);
     bool resizable;
     bool mouseWarped;
+    // workaround for osgViewer double scroll events
+    bool scrollButtonPressed;
 };
 #endif
