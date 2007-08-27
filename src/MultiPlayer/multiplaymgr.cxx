@@ -63,6 +63,10 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {104, "surface-positions/flap-pos-norm",          SGPropertyNode::FLOAT},
   {105, "surface-positions/speedbrake-pos-norm",    SGPropertyNode::FLOAT},
   {106, "gear/tailhook/position-norm",              SGPropertyNode::FLOAT},
+  {107, "gear/launchbar/position-norm",             SGPropertyNode::FLOAT},
+  {108, "gear/launchbar/state",                     SGPropertyNode::STRING},
+  {109, "gear/launchbar/holdback-position-norm",    SGPropertyNode::FLOAT},
+  {110, "canopy/position-norm",                     SGPropertyNode::FLOAT},
 
   {200, "gear/gear[0]/compression-norm",           SGPropertyNode::FLOAT},
   {201, "gear/gear[0]/position-norm",              SGPropertyNode::FLOAT},
@@ -141,6 +145,7 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {1003, "controls/flight/spoilers",  SGPropertyNode::FLOAT},
   {1004, "controls/gear/gear-down",  SGPropertyNode::FLOAT},
   {1005, "controls/lighting/nav-lights",  SGPropertyNode::FLOAT},
+  {1006, "controls/armament/station[0]/jettison-all",  SGPropertyNode::BOOL},
   
   {10001, "sim/multiplay/transmission-freq-hz",  SGPropertyNode::STRING},
   {10002, "sim/multiplay/chat",  SGPropertyNode::STRING},
