@@ -11,6 +11,10 @@ EXTRA_DIST = \
 	FlightGear.dsp \
 	FlightGear.dsw \
 	projects \
+	README \
+	README.OpenAL \
+	README.plib \
+	README.SimGear \
 	Thanks
 
 dist-hook:
