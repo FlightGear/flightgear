@@ -14,6 +14,7 @@ EXTRA_DIST = \
 	README \
 	README.OpenAL \
 	README.plib \
+	README.OSG \
 	README.SimGear \
 	Thanks
 
