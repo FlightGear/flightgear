@@ -277,14 +277,19 @@ opengl_LIBS="$LIBS"
 LIBS="$base_LIBS $joystick_LIBS"
 
 dnl check for OpenAL libraries
+OPENAL_OK="no"
+ALUT_OK="no"
 case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
     dnl CygWin under Windoze.
-
-    AC_SEARCH_LIBS(alGenBuffers, openal32)
-    AC_SEARCH_LIBS(alutInit, [ openal32 ALut ] )
-    LIBS="$LIBS -ldsound -ldxguid -lole32"
+    INCLUDES="$INCLUDES -I/usr/local/include/"
+    LIBS="$LIBS -L/usr/local/lib"
+    AC_SEARCH_LIBS(alGenBuffers, [ openal32 openal ] )
+    AC_SEARCH_LIBS(alutInit, [ openal32 ALut alut ] )
+    LIBS="$LIBS -lwinmm -ldsound -ldxguid -lole32"
     openal_LIBS="$LIBS"
+    OPENAL_OK="$ac_cv_search_alGenBuffers"
+    ALUT_OK="$ac_cv_search_alutInit"
     ;;
 
 *-apple-darwin*)
@@ -292,6 +297,9 @@ case "${host}" in
 
     LIBS="$LIBS -framework IOKit -framework OpenAL"
     openal_LIBS="$LIBS"
+    # not sure how to test if OpenAL exists on MacOS (does it come by default?)
+    OPENAL_OK="yes"
+    ALUT_OK="yes"
     ;;
 
 *)
@@ -302,11 +310,35 @@ case "${host}" in
     AC_SEARCH_LIBS(alGenBuffers, openal)
     AC_SEARCH_LIBS(alutInit, [ alut openal ] )
     OPENAL_OK="$ac_cv_search_alGenBuffers"
+    ALUT_OK="$ac_cv_search_alutInit"
     openal_LIBS="$LIBS"
     LIBS=$save_LIBS
     ;;
 
 esac
+
+if test "$OPENAL_OK" == "no"; then
+    echo
+    echo "You *must* have the openal library installed on your system to build"
+    echo "FlightGear!"
+    echo
+    echo "Please see README.OpenAL for more details."
+    echo
+    echo "configure aborted."
+    exit
+fi
+
+if test "$ALUT_OK" == "no"; then
+    echo
+    echo "You *must* have the alut library installed on your system to build"
+    echo "FlightGear!"
+    echo
+    echo "Please see README.OpenAL for more details."
+    echo
+    echo "configure aborted."
+    exit
+fi
+
 
 LIBS="$base_LIBS"
 
