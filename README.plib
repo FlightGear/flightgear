@@ -1,0 +1,16 @@
+[This file is mirrored in both the FlightGear and SimGear packages.]
+
+You *must* have plib version 1.8.4 or later installed on your system
+to build FlightGear!"  Flight Gear is no longer compatible with the
+earlier versions of the library.
+
+You can get the latest version of plib from:
+
+    http://plib.sourceforge.net
+
+Build notes:
+
+You should be able to just run "./configure" to configure the package
+and use all of plib's defaults.  Then run "make" followed by "make
+install".  By default, plib installs itself into /usr so if you don't
+like this, be sure to specify an alternate prefix such as --prefix=/usr/local
