@@ -295,14 +295,19 @@ opengl_LIBS="$LIBS"
 LIBS="$base_LIBS $joystick_LIBS"
 
 dnl check for OpenAL libraries
+OPENAL_OK="no"
+ALUT_OK="no"
 case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
     dnl CygWin under Windoze.
-
-    AC_SEARCH_LIBS(alGenBuffers, openal32)
-    AC_SEARCH_LIBS(alutInit, [ openal32 ALut ] )
-    LIBS="$LIBS -ldsound -ldxguid -lole32"
+    INCLUDES="$INCLUDES -I/usr/local/include/"
+    LIBS="$LIBS -L/usr/local/lib"
+    AC_SEARCH_LIBS(alGenBuffers, [ openal32 openal ] )
+    AC_SEARCH_LIBS(alutInit, [ openal32 ALut alut ] )
+    LIBS="$LIBS -lwinmm -ldsound -ldxguid -lole32"
     openal_LIBS="$LIBS"
+    OPENAL_OK="$ac_cv_search_alGenBuffers"
+    ALUT_OK="$ac_cv_search_alutInit"
     ;;
 
 *-apple-darwin*)
@@ -310,6 +315,9 @@ case "${host}" in
 
     LIBS="$LIBS -framework IOKit -framework OpenAL"
     openal_LIBS="$LIBS"
+    # not sure how to test if OpenAL exists on MacOS (does it come by default?)
+    OPENAL_OK="yes"
+    ALUT_OK="yes"
     ;;
 
 *)
@@ -320,11 +328,35 @@ case "${host}" in
     AC_SEARCH_LIBS(alGenBuffers, openal)
     AC_SEARCH_LIBS(alutInit, [ alut openal ] )
     OPENAL_OK="$ac_cv_search_alGenBuffers"
+    ALUT_OK="$ac_cv_search_alutInit"
     openal_LIBS="$LIBS"
     LIBS=$save_LIBS
     ;;
 
 esac
+
+if test "$OPENAL_OK" == "no"; then
+    echo
+    echo "You *must* have the openal library installed on your system to build"
+    echo "SimGear!"
+    echo
+    echo "Please see README.OpenAL for more details."
+    echo
+    echo "configure aborted."
+    exit
+fi
+
+if test "$ALUT_OK" == "no"; then
+    echo
+    echo "You *must* have the alut library installed on your system to build"
+    echo "SimGear!"
+    echo
+    echo "Please see README.OpenAL for more details."
+    echo
+    echo "configure aborted."
+    exit
+fi
+
 
 LIBS="$base_LIBS"
 
@@ -339,47 +371,6 @@ AC_SUBST(joystick_LIBS)
 # compiler
 
 AC_LANG_PUSH(C++)
-
-# Check for "plib" without which we cannot go on
-AC_CHECK_HEADER(plib/ul.h)
-if test "x$ac_cv_header_plib_ul_h" != "xyes"; then
-    echo
-    echo "You *must* have the plib library installed on your system to build"
-    echo "the FGFS simulator!"
-    echo
-    echo "Please see README.plib for more details."
-    echo
-    echo "configure aborted."
-    exit
-fi
-
-AC_MSG_CHECKING([for plib 1.8.4 or newer])
-AC_TRY_RUN([
-#include <plib/ul.h>
-
-#define MIN_PLIB_VERSION 184
-
-int main() {
-    int major, minor, micro;
-
-    if ( PLIB_VERSION < MIN_PLIB_VERSION ) {
-	 return -1;
-    }
-
-    return 0;
-}
-
-],
-  AC_MSG_RESULT(yes),
-  [AC_MSG_RESULT(wrong version);
-   AC_MSG_ERROR([Install plib 1.8.4 or later first...])],
-  AC_MSG_RESULT(yes)
-)
-
-dnl If we get here then plib is available, so force use of plib
-dnl joystick lib
-AC_DEFINE([ENABLE_PLIB_JOYSTICK], 1, [Define to enable plib joystick support])
-
 
 dnl Check for the presence of SimGear
 if test "x$with_simgear" != "x"; then
@@ -461,6 +452,58 @@ if test "x$ac_cv_header_simgear_screen_jpgfactory_hxx" = "xyes"; then
 fi
 AM_CONDITIONAL(ENABLE_JPEG_SERVER, test "x$ac_cv_header_simgear_screen_jpgfactory_hxx" = "xyes")
 
+# Check for "plib" without which we cannot go on
+AC_CHECK_HEADER(plib/ul.h)
+if test "x$ac_cv_header_plib_ul_h" != "xyes"; then
+    echo
+    echo "You *must* have the plib library installed on your system to build"
+    echo "the FGFS simulator!"
+    echo
+    echo "Please see README.plib for more details."
+    echo
+    echo "configure aborted."
+    exit
+fi
+
+AC_MSG_CHECKING([for plib 1.8.4 or newer])
+AC_TRY_RUN([
+#include <plib/ul.h>
+
+#define MIN_PLIB_VERSION 184
+
+int main() {
+    int major, minor, micro;
+
+    if ( PLIB_VERSION < MIN_PLIB_VERSION ) {
+	 return -1;
+    }
+
+    return 0;
+}
+
+],
+  AC_MSG_RESULT(yes),
+  [AC_MSG_RESULT(wrong version);
+   AC_MSG_ERROR([Install plib 1.8.4 or later first...])],
+  AC_MSG_RESULT(yes)
+)
+
+dnl If we get here then plib is available, so force use of plib
+dnl joystick lib
+AC_DEFINE([ENABLE_PLIB_JOYSTICK], 1, [Define to enable plib joystick support])
+
+AC_CHECK_HEADER(osg/Version)
+if test "x$ac_cv_header_osg_Version" != "xyes"; then
+    echo
+    echo "You *must* have the OpenSceneGraph support library installed on your system"
+    echo "to build the FGFS simulator!"
+    echo
+    echo "Please see README.OSG for more details."
+    echo
+    echo "configure aborted."
+    exit
+fi
+
 AC_LANG_POP
 
 dnl Check for system installed zlib
@@ -478,6 +521,8 @@ if test "x$ac_cv_header_zlib_h" != "xyes"; then
     echo "configure aborted."
     echo
 fi
+
+
 
 dnl Checks for header files.
 AC_HEADER_STDC
