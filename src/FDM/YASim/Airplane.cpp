@@ -28,6 +28,8 @@ const float STHRESH = 1;
 // oscillate.
 const float SOLVE_TWEAK = 0.3226;
 
+const float GRAV = 9.8f;
+
 Airplane::Airplane()
 {
     _emptyWeight = 0;
@@ -123,7 +125,7 @@ void Airplane::getPilotAccel(float* out)
 
     // Gravity
     Glue::geodUp(s->pos, out);
-    Math::mul3(-9.8f, out, out);
+    Math::mul3(GRAV, out, out);
 
     // The regular acceleration
     float tmp[3];
@@ -593,7 +595,7 @@ void Airplane::compileContactPoints()
     // Give it a spring constant such that at full compression it will
     // hold up 10 times the planes mass.  That's about right.  Yeah.
     float mass = _model.getBody()->getTotalMass();
-    float spring = (1/DIST) * 9.8f * 10.0f * mass;
+    float spring = (1/DIST) * GRAV * 10.0f * mass;
     float damp = 2 * Math::sqrt(spring * mass);
 
     int i;
@@ -785,6 +787,7 @@ void Airplane::setupWeights(bool isApproach)
 
 void Airplane::runCruise()
 {
+    __builtin_printf("runCruise()\n");
     setupState(_cruiseAoA, _cruiseSpeed,_approachGlideAngle, &_cruiseState);
     _model.setState(&_cruiseState);
     _model.setAir(_cruiseP, _cruiseT,
@@ -828,6 +831,7 @@ void Airplane::runCruise()
 
 void Airplane::runApproach()
 {
+    __builtin_printf("runApproach()\n");
     setupState(_approachAoA, _approachSpeed,_approachGlideAngle, &_approachState);
     _model.setState(&_approachState);
     _model.setAir(_approachP, _approachT,
@@ -936,7 +940,7 @@ void Airplane::solve()
 	runCruise();
 
 	_model.getThrust(tmp);
-        float thrust = tmp[0] + _cruiseWeight * Math::sin(_cruiseGlideAngle) * 9.81;
+        float thrust = tmp[0] + GRAV * _cruiseWeight * Math::sin(_cruiseGlideAngle);
 
 	_model.getBody()->getAccel(tmp);
         Math::tmul33(_cruiseState.orient, tmp, tmp);
@@ -977,7 +981,7 @@ void Airplane::solve()
 	float pitch1 = tmp[1];
 
 	// Now calculate:
-	float awgt = 9.8f * _approachWeight;
+	float awgt = GRAV * _approachWeight;
 
 	float dragFactor = thrust / (thrust-xforce);
 	float liftFactor = awgt / (awgt+alift);
@@ -985,8 +989,10 @@ void Airplane::solve()
 	float tailDelta = -pitch0 * (ARCMIN/(pitch1-pitch0));
 
         // Sanity:
-        if(dragFactor <= 0 || liftFactor <= 0)
+        if(dragFactor <= 0 || liftFactor <= 0) {
+            __builtin_printf("NEGATIVE drag %f lift %f\n", dragFactor, liftFactor);
             break;
+        }
 
         // And the elevator control in the approach.  This works just
         // like the tail incidence computation (it's solving for the
@@ -1005,7 +1011,7 @@ void Airplane::solve()
         // Now apply the values we just computed.  Note that the
         // "minor" variables are deferred until we get the lift/drag
         // numbers in the right ballpark.
-
+        __builtin_printf("Apply drag %f lift %f\n", dragFactor, liftFactor);
 	applyDragFactor(dragFactor);
 	applyLiftRatio(liftFactor);
 
@@ -1015,6 +1021,8 @@ void Airplane::solve()
 	{
 	    continue;
 	}
+
+        __builtin_printf("Apply aoa %f tail %f\n", SOLVE_TWEAK*aoaDelta, SOLVE_TWEAK*tailDelta);
 
 	// OK, now we can adjust the minor variables:
 	_cruiseAoA += SOLVE_TWEAK*aoaDelta;
@@ -1031,6 +1039,8 @@ void Airplane::solve()
             // If this finaly value is OK, then we're all done
             if(abs(elevDelta) < STHRESH*0.0001)
                 break;
+
+            __builtin_printf("Apply elev %f\n", SOLVE_TWEAK*elevDelta);
 
             // Otherwise, adjust and do the next iteration
             _approachElevator.val += SOLVE_TWEAK * elevDelta;

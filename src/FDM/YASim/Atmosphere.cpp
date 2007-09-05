@@ -7,8 +7,10 @@ namespace yasim {
 // McCormick lists 299.16/101325/1.22500, but those don't agree with
 // R=287.  I chose to correct the temperature to 288.20, since 79F is
 // pretty hot for a "standard" atmosphere.
+// Numbers above 19000 meters calculated from src/Environment/environment.cxx
 //                             meters   kelvin      Pa   kg/m^3
-float Atmosphere::data[][4] = {{ 0.0f,     288.20f, 101325.0f, 1.22500f },
+float Atmosphere::data[][4] = {{ -900.0f, 293.91f, 111679.0f, 1.32353f },
+                               {    0.0f, 288.11f, 101325.0f, 1.22500f },
 			       {   900.0f, 282.31f,  90971.0f, 1.12260f },
 			       {  1800.0f, 276.46f,  81494.0f, 1.02690f },
 			       {  2700.0f, 270.62f,  72835.0f, 0.93765f },
@@ -29,7 +31,20 @@ float Atmosphere::data[][4] = {{ 0.0f,     288.20f, 101325.0f, 1.22500f },
 			       { 16200.0f, 216.66f,  10033.0f, 0.16133f },
 			       { 17100.0f, 216.66f,   8712.0f, 0.14009f },
 			       { 18000.0f, 216.66f,   7565.0f, 0.12165f },
-			       { 18900.0f, 216.66f,   6570.0f, 0.10564f }};
+                               {18900.0f, 216.66f,   6570.0f, 0.10564f },
+                               {19812.0f, 216.66f,   5644.0f, 0.09073f },
+                               {20726.0f, 217.23f,   4884.0f, 0.07831f },
+                               {21641.0f, 218.39f,   4235.0f, 0.06755f },
+                               {22555.0f, 219.25f,   3668.0f, 0.05827f },
+                               {23470.0f, 220.12f,   3182.0f, 0.05035f },
+                               {24384.0f, 220.98f,   2766.0f, 0.04360f },
+                               {25298.0f, 221.84f,   2401.0f, 0.03770f },
+                               {26213.0f, 222.71f,   2087.0f, 0.03265f },
+                               {27127.0f, 223.86f,   1814.0f, 0.02822f },
+                               {28042.0f, 224.73f,   1581.0f, 0.02450f },
+                               {28956.0f, 225.59f,   1368.0f, 0.02112f },
+                               {29870.0f, 226.45f,   1196.0f, 0.01839f },
+                               {30785.0f, 227.32f,   1044.0f, 0.01599f }};
 
 // Universal gas constant for air, in SI units.  P = R * rho * T.
 // P in pascals (N/m^2), rho is kg/m^3, T in kelvin.
