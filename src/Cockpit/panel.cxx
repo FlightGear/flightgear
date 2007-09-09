@@ -98,17 +98,17 @@ get_aspect_adjust (int xsize, int ysize)
 bool
 fgPanelVisible ()
 {
-     if (globals->get_current_panel() == 0)
+     const FGPanel* current = globals->get_current_panel();
+     if (current == 0)
 	return false;
-     if (globals->get_current_panel()->getVisibility() == 0)
+     if (current->getVisibility() == 0)
 	return false;
      if (globals->get_viewmgr()->get_current() != 0)
 	return false;
-     if (globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS != 0)
+     if (current->getAutohide() && globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS != 0)
 	return false;
      return true;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////

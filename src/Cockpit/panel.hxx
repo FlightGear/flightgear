@@ -191,6 +191,9 @@ public:
 
   virtual void setDepthTest (bool enable);
 
+  bool getAutohide(void) const { return _autohide; };
+  void setAutohide(bool enable) { _autohide = enable; };
+
 private:
   void setupVirtualCockpit();
   void cleanupVirtualCockpit();
@@ -218,6 +221,7 @@ private:
 				// List of instruments in panel.
   instrument_list_type _instruments;
   bool _enable_depth_test;
+  bool _autohide;
 };
 
 

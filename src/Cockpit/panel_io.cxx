@@ -680,6 +680,8 @@ readPanel (const SGPropertyNode * root)
   if (!fgHasNode("/sim/panel/y-offset"))
     fgSetInt("/sim/panel/y-offset", root->getIntValue("y-offset", 0));
 
+  panel->setAutohide(root->getBoolValue("autohide", true));
+
   //
   // Assign the background texture, if any, or a bogus chequerboard.
   //
