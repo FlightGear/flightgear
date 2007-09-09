@@ -61,18 +61,16 @@ SG_USING_STD(random_shuffle);
 /***************************************************************************
  * FGAirport
  ***************************************************************************/
-FGAirport::FGAirport() : _longitude(0), _latitude(0), _elevation(0)
+FGAirport::FGAirport()
 {
     dynamics = 0;
 }
 
-
-FGAirport::FGAirport(const string &id, double lon, double lat, double elev, const string &name, bool has_metar)
+FGAirport::FGAirport(const string &id, const SGGeod& location, const SGGeod& tower_location, const string &name, bool has_metar)
 {
     _id = id;
-    _longitude = lon;
-    _latitude  = lat;
-    _elevation = elev;
+    _location = location;
+    _tower_location = tower_location;
     _name      = name;
     _has_metar = has_metar;
     dynamics   = 0;
@@ -143,18 +141,17 @@ FGAirportList::~FGAirportList( void )
 
 
 // add an entry to the list
-void FGAirportList::add( const string &id, const double longitude,
-                         const double latitude, const double elevation,
+void FGAirportList::add( const string &id, const SGGeod& location, const SGGeod& tower_location,
                          const string &name, const bool has_metar )
 {
-    FGAirport* a = new FGAirport(id, longitude, latitude, elevation, name, has_metar);
-
+    FGAirport* a = new FGAirport(id, location, tower_location, name, has_metar);
+ 
     airports_by_id[a->getId()] = a;
     // try and read in an auxilary file
-
+ 
     airports_array.push_back( a );
-    SG_LOG( SG_GENERAL, SG_BULK, "Adding " << id << " pos = " << longitude
-            << ", " << latitude << " elev = " << elevation );
+    SG_LOG( SG_GENERAL, SG_BULK, "Adding " << id << " pos = " << location.getLongitudeDeg()
+            << ", " << location.getLatitudeDeg() << " elev = " << location.getElevationFt() );
 }
 
 

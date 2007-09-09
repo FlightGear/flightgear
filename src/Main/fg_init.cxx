@@ -722,20 +722,13 @@ static bool fgSetPosFromAirportID( const string& id ) {
 
 
 // Set current tower position lon/lat given an airport id
-static bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
-    
-    // tower height hard coded for now...
-    float towerheight=50.0f;
-
-    // make a little off the heading for 1 runway airports...
-    float fudge_lon = fabs(sin(hdg)) * .003f;
-    float fudge_lat = .003f - fudge_lon;
-
+static bool fgSetTowerPosFromAirportID( const string& id) {
     const FGAirport *a = fgFindAirportID( id);
-    if ( a) {
-        fgSetDouble("/sim/tower/longitude-deg",  a->getLongitude() + fudge_lon);
-        fgSetDouble("/sim/tower/latitude-deg",  a->getLatitude() + fudge_lat);
-        fgSetDouble("/sim/tower/altitude-ft", a->getElevation() + towerheight);
+    if (a) {
+        SGGeod tower = a->getTowerLocation();
+        fgSetDouble("/sim/tower/longitude-deg",  tower.getLongitudeDeg());
+        fgSetDouble("/sim/tower/latitude-deg",  tower.getLatitudeDeg());
+        fgSetDouble("/sim/tower/altitude-ft", tower.getElevationFt());
         return true;
     } else {
         return false;
@@ -745,9 +738,8 @@ static bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
 
 struct FGTowerLocationListener : SGPropertyChangeListener {
     void valueChanged(SGPropertyNode* node) {
-        const double hdg = fgGetDouble( "/orientation/heading-deg", 0);
         const string id(node->getStringValue());
-        fgSetTowerPosFromAirportID(id, hdg);
+        fgSetTowerPosFromAirportID(id);
     }
 };
 

@@ -80,13 +80,12 @@ void FGRunwayList::add( const string& id, const string& rwy_no,
     rwy._smoothness = smoothness;
     rwy._dist_remaining = dist_remaining;
 
-    if ( rwy_no == "xxx" ) {
+    if ( rwy_no[0] == 'x' ) {
         rwy._type = "taxiway";
-        // don't insert taxiways into the DB for now
     } else {
         rwy._type = "runway";
-        runways.insert(pair<const string, FGRunway>(rwy._id, rwy));
     }
+    runways.insert(pair<const string, FGRunway>(rwy._id, rwy));
 }
 
 
@@ -97,7 +96,7 @@ static string GetReverseRunwayNo(string& rwyno) {
     // cout << "Original rwyno = " << rwyNo << '\n';
     
     // Helipads don't have a seperate number per end
-    if(rwyno.size() && (rwyno[0] == 'H' || rwyno[0] == 'h')) {
+    if(rwyno.size() && (rwyno[0] == 'H' || rwyno[0] == 'h' || rwyno[0] == 'x')) {
 	return rwyno;
     }
     

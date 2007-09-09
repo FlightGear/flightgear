@@ -65,9 +65,8 @@ SG_USING_STD(vector);
 class FGAirport {
 private:
     string _id;
-    double _longitude;    // degrees
-    double _latitude;     // degrees
-    double _elevation;    // ft
+    SGGeod _location;
+    SGGeod _tower_location;
     string _name;
     bool _has_metar;
     FGAirportDynamics *dynamics;
@@ -75,17 +74,19 @@ private:
 public:
     FGAirport();
     // FGAirport(const FGAirport &other);
-    FGAirport(const string& id, double lon, double lat, double elev, const string& name, bool has_metar);
+    FGAirport(const string& id, const SGGeod& location, const SGGeod& tower, const string& name, bool has_metar);
     ~FGAirport();
 
     const string& getId() const { return _id; }
     const string& getName() const { return _name; }
-    double getLongitude() const { return _longitude; }
+    double getLongitude() const { return _location.getLongitudeDeg(); }
     // Returns degrees
-    double getLatitude()  const { return _latitude; }
+    double getLatitude()  const { return _location.getLatitudeDeg(); }
     // Returns ft
-    double getElevation() const { return _elevation; }
+    double getElevation() const { return _location.getElevationFt(); }
     bool   getMetar()     const { return _has_metar; }
+
+    const SGGeod& getTowerLocation() const { return _tower_location; }
 
     void setId(const string& id) { _id = id; }
     void setMetar(bool value) { _has_metar = value; }
@@ -124,8 +125,8 @@ public:
     ~FGAirportList();
 
     // add an entry to the list
-    void add( const string& id, const double longitude, const double latitude,
-              const double elevation, const string& name, const bool has_metar );
+    void add( const string& id, const SGGeod& location, const SGGeod& tower,
+              const string& name, const bool has_metar );
 
     // search for the specified id.
     // Returns NULL if unsucessfull.
