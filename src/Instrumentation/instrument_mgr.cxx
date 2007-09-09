@@ -47,7 +47,7 @@
 #include "tacan.hxx"
 #include "mk_viii.hxx"
 #include "mrg.hxx"
-
+#include "groundradar.hxx"
 
 FGInstrumentMgr::FGInstrumentMgr ()
 {
@@ -178,6 +178,9 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "master-reference-gyro" ) { 
             set_subsystem( "instrument" + temp.str(), 
                            new MasterReferenceGyro( node ) );
+        } else if ( name == "groundradar" ) { 
+            set_subsystem( "instrument" + temp.str(), 
+                           new GroundRadar( node ), 1 );
 
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 

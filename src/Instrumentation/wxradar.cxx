@@ -32,6 +32,8 @@
 #include <osg/Matrixf>
 #include <osg/PrimitiveSet>
 #include <osg/StateSet>
+#include <osg/Version>
+#include <osgDB/ReaderWriter>
 #include <osgDB/WriteFile>
 
 #include <simgear/constants.h>
@@ -41,6 +43,15 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+
+#include <sstream>
+#include <iomanip>
+SG_USING_STD(stringstream);
+SG_USING_STD(endl);
+SG_USING_STD(setprecision);
+SG_USING_STD(fixed);
+SG_USING_STD(setw);
+SG_USING_STD(setfill);
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -61,7 +72,7 @@ typedef radar_list_type::const_iterator radar_list_const_iterator;
 
 
 static const float UNIT = 1.0f / 8.0f;  // 8 symbols in a row/column in the texture
-
+static const char *DEFAULT_FONT = "typewriter.txf";
 
 wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
     _name(node->getStringValue("name", "radar")),
@@ -82,6 +93,9 @@ wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
 
 wxRadarBg::~wxRadarBg ()
 {
+    if (_radar_font_node != 0) {
+        _radar_font_node->removeChangeListener(this);
+    }
 }
 
 
@@ -107,6 +121,7 @@ wxRadarBg::init ()
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
     _wxEcho = SGLoadTexture2D(tpath.c_str(), false, false);
 
+
     _Instrument->setFloatValue("trk", 0.0);
     _Instrument->setFloatValue("tilt", 0.0);
     _Instrument->setStringValue("status","");
@@ -123,7 +138,7 @@ wxRadarBg::init ()
 
     FGInstrumentMgr *imgr = (FGInstrumentMgr *) globals->get_subsystem("instrumentation");
     _odg = (FGODGauge *) imgr->get_subsystem("od_gauge");
-    _odg->setSize(256);
+    _odg->setSize(512);
 
     _ai = (FGAIManager*)globals->get_subsystem("ai_model");
     _ai_enabled_node = fgGetNode("/sim/ai/enabled", true);
@@ -150,7 +165,13 @@ wxRadarBg::init ()
     _radar_weather_node     = n->getNode("WX", true);
     _radar_position_node    = n->getNode("pos", true);
     _radar_data_node        = n->getNode("data", true);
+    _radar_symbol_node      = n->getNode("symbol", true);
     _radar_centre_node      = n->getNode("centre", true);
+    _radar_rotate_node      = n->getNode("rotate", true);
+    _radar_font_node        = _Instrument->getNode("font", true);
+    _radar_font_node->addChangeListener(this);
+    
+    updateFont();
 
     _radar_centre_node->setBoolValue(false);
     if (_radar_coverage_node->getType() == SGPropertyNode::NONE)
@@ -203,8 +224,11 @@ wxRadarBg::init ()
     // Texture in the 2D panel system
     FGTextureManager::addTexture(_texture_path.c_str(), _odg->getTexture());
 
+    _textGeode = new osg::Geode;
+
     osg::Camera* camera = _odg->getCamera();
     camera->addChild(_radarGeode.get());
+    camera->addChild(_textGeode.get());
 }
 
 
@@ -330,13 +354,16 @@ wxRadarBg::update (double delta_time_sec)
             _centerTrans.makeTranslate(_x_offset, _y_offset, 0.0f);
 
         } else if ( _display_mode == PLAN ) {
-            // no sense I presume
+            if (_radar_rotate_node->getBoolValue()) {
+                _angle_offset = -_view_heading;
+            }
         } else {
             // rose
         }
 
         _vertices->clear();
         _texCoords->clear();
+        _textGeode->removeDrawables(0, _textGeode->getNumDrawables());
 
 
         update_weather();
@@ -520,6 +547,34 @@ wxRadarBg::update_weather()
     }
 }
 
+void
+wxRadarBg::update_data(FGAIBase* ac, double radius, double bearing, bool selected)
+{
+    osgText::Text* callsign = new osgText::Text;
+    callsign->setFont(_font.get());
+    callsign->setFontResolution(12, 12);
+    callsign->setCharacterSize(12);
+    callsign->setColor(selected ? osg::Vec4(1, 1, 1, 1) : osg::Vec4(0, 1, 0, 1));
+    osg::Matrixf m(wxRotate(-bearing)
+            * osg::Matrixf::translate(0.0f, radius, 0.0f)
+            * wxRotate(bearing) * _centerTrans);
+
+    osg::Vec3 pos = m.preMult(osg::Vec3(16, 16, 0));
+    // cast to int's, otherwise text comes out ugly
+    callsign->setPosition(osg::Vec3((int)pos.x(), (int)pos.y(), 0));
+    callsign->setAlignment(osgText::Text::LEFT_BOTTOM_BASE_LINE);
+    callsign->setLineSpacing(0.25);
+                        
+    stringstream text;
+    text << ac->_getCallsign() << endl 
+        << setprecision(0) << fixed
+        << setw(3) << setfill('0') << ac->_getHeading() << "\xB0 "
+        << setw(0) << ac->_getAltitude() << "ft" << endl
+        << ac->_getSpeed() << "kts";
+
+    callsign->setText(text.str());
+    _textGeode->addDrawable(callsign);
+}
 
 void
 wxRadarBg::update_aircraft()
@@ -528,8 +583,9 @@ wxRadarBg::update_aircraft()
         return;
 
     bool draw_echoes = _radar_position_node->getBoolValue();
-    bool draw_symbols = _radar_data_node->getBoolValue();
-    if (!draw_echoes && !draw_symbols)
+    bool draw_symbols = _radar_symbol_node->getBoolValue();
+    bool draw_data = _radar_data_node->getBoolValue();
+    if (!draw_echoes && !draw_symbols && !draw_data)
         return;
 
     radar_list_type radar_list = _ai->get_ai_list();
@@ -544,8 +600,19 @@ wxRadarBg::update_aircraft()
     double user_lon = _user_lon_node->getDoubleValue();
     double user_alt = _user_alt_node->getDoubleValue();
 
+    float limit = _radar_coverage_node->getFloatValue();
+    if (limit > 180)
+        limit = 180;
+    else if (limit < 0)
+        limit = 0;
+    limit *= SG_DEGREES_TO_RADIANS;
+
     radar_list_iterator it = radar_list.begin();
     radar_list_iterator end = radar_list.end();
+    FGAIBase *selected_ac = 0;
+    double selected_radius = 0;
+    double selected_bearing = 0;
+    int selected_id = fgGetInt("/instrumentation/radar/selected-id", -1);
 
     for (; it != end; ++it) {
         FGAIBase *ac = *it;
@@ -581,12 +648,6 @@ wxRadarBg::update_aircraft()
         float radius = range * _scale;
         float angle = calcRelBearing(bearing, _view_heading);
 
-        float limit = _radar_coverage_node->getFloatValue();
-        if (limit > 180)
-            limit = 180;
-        else if (limit < 0)
-            limit = 0;
-        limit *= SG_DEGREES_TO_RADIANS;
         if (angle > limit || angle < -limit)
             continue;
 
@@ -625,6 +686,19 @@ wxRadarBg::update_aircraft()
             //        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
             //        << " radius=" << radius);
         }
+        
+        if (draw_data) {
+            if (ac->getID() == selected_id) {
+                selected_ac = ac;
+                selected_radius = radius;
+                selected_bearing = bearing;
+            } else {
+                update_data(ac, radius, bearing, false);
+            }
+        }
+    }
+    if (selected_ac) {
+        update_data(selected_ac, selected_radius, selected_bearing, true);
     }
 }
 
@@ -780,3 +854,38 @@ wxRadarBg::calcRelBearing(float bearing, float heading)
     return angle;
 }
 
+void
+wxRadarBg::updateFont()
+{
+    SGPath tpath;
+    string path = _radar_font_node->getStringValue();
+    if (path.length() == 0) {
+        path = DEFAULT_FONT;
+    }
+    if (path[0] != '/') {
+        tpath = globals->get_fg_root();
+        tpath.append("Fonts");
+        tpath.append(path);
+    } else {
+        tpath = path;
+    }
+#if OSG_VERSION_MAJOR > 2 || (OSG_VERSION_MAJOR == 2 && OSG_VERSION_MINOR > 0)
+    osg::ref_ptr<osgDB::ReaderWriter::Options> fontOptions = new osgDB::ReaderWriter::Options("monochrome");
+    osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.c_str(), fontOptions.get());    
+#else    
+    osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.c_str());
+#endif
+    if (font != 0) {
+        _font = font;
+        _font->setMinFilterHint(osg::Texture::NEAREST);
+        _font->setMagFilterHint(osg::Texture::NEAREST);
+        _font->setGlyphImageMargin(0);
+        _font->setGlyphImageMarginRatio(0);
+    }
+}
+
+void
+wxRadarBg::valueChanged(SGPropertyNode*)
+{
+    updateFont();
+}

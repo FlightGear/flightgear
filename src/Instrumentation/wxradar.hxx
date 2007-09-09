@@ -28,6 +28,7 @@
 #include <osg/ref_ptr>
 #include <osg/Geode>
 #include <osg/Texture2D>
+#include <osgText/Text>
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -44,7 +45,7 @@ class FGAIBase;
 
 class FGODGauge;
 
-class wxRadarBg : public SGSubsystem {
+class wxRadarBg : public SGSubsystem, public SGPropertyChangeListener {
 public:
 
     wxRadarBg ( SGPropertyNode *node );
@@ -53,6 +54,7 @@ public:
 
     virtual void init ();
     virtual void update (double dt);
+    virtual void valueChanged(SGPropertyNode*);
 
 private:
     string _name;
@@ -96,21 +98,26 @@ private:
     SGPropertyNode_ptr _radar_weather_node;
     SGPropertyNode_ptr _radar_position_node;
     SGPropertyNode_ptr _radar_data_node;
+    SGPropertyNode_ptr _radar_symbol_node;
     SGPropertyNode_ptr _radar_mode_control_node;
     SGPropertyNode_ptr _radar_centre_node;
     SGPropertyNode_ptr _radar_coverage_node;
     SGPropertyNode_ptr _radar_ref_rng_node;
     SGPropertyNode_ptr _radar_hdg_marker_node;
+    SGPropertyNode_ptr _radar_rotate_node;
+    SGPropertyNode_ptr _radar_font_node;
 
     SGPropertyNode_ptr _ai_enabled_node;
 
     osg::ref_ptr<osg::Texture2D> _resultTexture;
     osg::ref_ptr<osg::Texture2D> _wxEcho;
     osg::ref_ptr<osg::Geode> _radarGeode;
+    osg::ref_ptr<osg::Geode> _textGeode;
     osg::Geometry *_geom;
     osg::Vec2Array *_vertices;
     osg::Vec2Array *_texCoords;
     osg::Matrixf _centerTrans;
+    osg::ref_ptr<osgText::Font> _font;
 
     list_of_SGWxRadarEcho _radarEchoBuffer;
 
@@ -121,6 +128,7 @@ private:
     void update_aircraft();
     void update_tacan();
     void update_heading_marker();
+    void update_data(FGAIBase* ac, double radius, double bearing, bool selected);
 
     void center_map();
     void apply_map_offset();
@@ -129,6 +137,7 @@ private:
     float calcRelBearing(float bearing, float heading);
     void calcRangeBearing(double lat, double lon, double lat2, double lon2,
             double &range, double &bearing) const;
+    void updateFont();
 };
 
 #endif // _INST_WXRADAR_HXX
