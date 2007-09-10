@@ -1,6 +1,6 @@
 //  groundradar.cxx - Background layer for the ATC radar.
 //
-//  Written by Csaba Halasz.
+//  Copyright (C) 2007 Csaba Halasz.
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License as
