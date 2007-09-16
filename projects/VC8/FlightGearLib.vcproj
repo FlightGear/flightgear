@@ -244,6 +244,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\AIModel\AITanker.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\aimodel\AIThermal.hxx"
 				>
 			</File>
@@ -1904,15 +1908,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\AIModel\AITanker.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\aimodel\AIThermal.cxx"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\instrumentation\altimeter.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\instrumentation\annunciator.cxx"
 				>
 			</File>
 			<File
@@ -2096,10 +2100,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\instrumentation\encoder.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\environment\environment.cxx"
 				>
 			</File>
@@ -2169,10 +2169,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\fdm\jsbsim\math\FGColumnVector3.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\fdm\jsbsim\models\flight_control\FGCondition.cpp"
 				>
 			</File>
 			<File
@@ -2618,10 +2614,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud_tbi.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\Instrumentation\HUD\HUD_tbi.cxx"
 				>
 				<FileConfiguration
@@ -2642,6 +2634,10 @@
 						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\cockpit\hud_tbi.cxx"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\input\input.cxx"
@@ -2821,10 +2817,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\fdm\larcsim\ls_step.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\fdm\larcsim\ls_trim.c"
 				>
 			</File>
 			<File

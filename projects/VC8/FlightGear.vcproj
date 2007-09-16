@@ -181,6 +181,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\src\Environment\atmosphere.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\fg_commands.hxx"
 				>
 			</File>
@@ -201,7 +205,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\FDM\JSBSim\models\flight_control\FGActuator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\JSBSim\math\FGCondition.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\JSBSim\initialization\FGInitialCondition.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\JSBSim\models\flight_control\FGPID.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\globals.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\YASim\Hitch.hpp"
 				>
 			</File>
 			<File
@@ -245,6 +269,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\..\src\Environment\atmosphere.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\bootstrap.cxx"
 				>
 			</File>
@@ -269,7 +297,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\FDM\JSBSim\models\flight_control\FGActuator.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\JSBSim\math\FGCondition.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\JSBSim\initialization\FGInitialCondition.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\JSBSim\models\flight_control\FGPID.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\globals.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\FDM\YASim\Hitch.cpp"
 				>
 			</File>
 			<File
