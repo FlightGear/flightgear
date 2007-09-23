@@ -240,7 +240,7 @@ string FGRunwayList::search( const string& aptid, const int tgt_hdg ) {
         // SG_LOG( SG_GENERAL, SG_INFO,
         //	   "Runway " << tmp_r._rwy_no << " heading = "
 	//         << tmp_r._heading << " diff = " << diff );
-	if ( diff < min_diff ) {
+	if ((diff < min_diff) && (tmp_r._type == "runway")) {
 	    min_diff = diff;
 	    r = tmp_r;
 	    found_dir = 0;
@@ -255,7 +255,7 @@ string FGRunwayList::search( const string& aptid, const int tgt_hdg ) {
         //	   "Runway -" << tmp_r._rwy_no << " heading = " <<
         //	   tmp_r._heading + 180.0 <<
         //	   " diff = " << diff );
-	if ( diff < min_diff ) {
+	if ((diff < min_diff) && (tmp_r._type == "runway")) {
 	    min_diff = diff;
 	    r = tmp_r;
 	    found_dir = 180.0;
