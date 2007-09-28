@@ -183,7 +183,7 @@ bool FGInstrumentMgr::build ()
             set_subsystem( id, new MasterReferenceGyro( node ) );
 
         } else if ( name == "groundradar" ) {
-            set_subsystem( id, new GroundRadar( node ) );
+            set_subsystem( id, new GroundRadar( node ), 1 );
 
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: "
