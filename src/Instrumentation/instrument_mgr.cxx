@@ -41,7 +41,7 @@
 #include "transponder.hxx"
 #include "turn_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
-#include "inst_vertical_speed_indicator.hxx" // (TJ)
+#include "inst_vertical_speed_indicator.hxx"
 #include "od_gauge.hxx"
 #include "wxradar.hxx"
 #include "tacan.hxx"
@@ -91,99 +91,102 @@ FGInstrumentMgr::~FGInstrumentMgr ()
 
 bool FGInstrumentMgr::build ()
 {
-    SGPropertyNode *node;
-    int i;
-
-    int count = config_props->nChildren();
-    for ( i = 0; i < count; ++i ) {
-        node = config_props->getChild(i);
+    for ( int i = 0; i < config_props->nChildren(); ++i ) {
+        SGPropertyNode *node = config_props->getChild(i);
         string name = node->getName();
-        std::ostringstream temp;
-        temp << i;
+
+        std::ostringstream subsystemname;
+        subsystemname << "instrument-" << i << '-'
+                << node->getStringValue("name", name.c_str());
+        int index = node->getIntValue("number", 0);
+        if (index > 0)
+            subsystemname << '['<< index << ']';
+        string id = subsystemname.str();
+
+
         if ( name == "adf" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new ADF( node ), 0.15 );
+            set_subsystem( id, new ADF( node ), 0.15 );
+
         } else if ( name == "airspeed-indicator" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new AirspeedIndicator( node ) );
+            set_subsystem( id, new AirspeedIndicator( node ) );
+
         } else if ( name == "altimeter" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new Altimeter( node ) );
+            set_subsystem( id, new Altimeter( node ) );
+
         } else if ( name == "attitude-indicator" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new AttitudeIndicator( node ) );
+            set_subsystem( id, new AttitudeIndicator( node ) );
+
         } else if ( name == "clock" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new Clock( node ), 0.25 );
+            set_subsystem( id, new Clock( node ), 0.25 );
+
         } else if ( name == "dme" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new DME( node ), 1.0 );
+            set_subsystem( id, new DME( node ), 1.0 );
+
         } else if ( name == "encoder" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new Altimeter( node ) );
+            set_subsystem( id, new Altimeter( node ) );
+
         } else if ( name == "gps" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new GPS( node ), 0.45 );
+            set_subsystem( id, new GPS( node ), 0.45 );
+
         } else if ( name == "gsdi" ) {
-            set_subsystem( "instrument" + temp.str(),
-                           new GSDI( node ) );
+            set_subsystem( id, new GSDI( node ) );
+
         } else if ( name == "heading-indicator" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new HeadingIndicator( node ) );
+            set_subsystem( id, new HeadingIndicator( node ) );
+
         } else if ( name == "heading-indicator-fg" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new HeadingIndicatorFG( node ) );
+            set_subsystem( id, new HeadingIndicatorFG( node ) );
+
         } else if ( name == "heading-indicator-dg" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new HeadingIndicatorDG( node ) );
+            set_subsystem( id, new HeadingIndicatorDG( node ) );
+
         } else if ( name == "KR-87" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new FGKR_87( node ) );
+            set_subsystem( id, new FGKR_87( node ) );
+
         } else if ( name == "KT-70" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new FGKT_70( node ) );
+            set_subsystem( id, new FGKT_70( node ) );
+
         } else if ( name == "magnetic-compass" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new MagCompass( node ) );
+            set_subsystem( id, new MagCompass( node ) );
+
         } else if ( name == "marker-beacon" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new FGMarkerBeacon( node ) );
+            set_subsystem( id, new FGMarkerBeacon( node ) );
+
         } else if ( name == "nav-radio" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new FGNavRadio( node ) );
+            set_subsystem( id, new FGNavRadio( node ) );
+
         } else if ( name == "slip-skid-ball" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new SlipSkidBall( node ) );
+            set_subsystem( id, new SlipSkidBall( node ) );
+
         } else if ( name == "transponder" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new Transponder( node ) );
+            set_subsystem( id, new Transponder( node ) );
+
         } else if ( name == "turn-indicator" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new TurnIndicator( node ) );
+            set_subsystem( id, new TurnIndicator( node ) );
+
         } else if ( name == "vertical-speed-indicator" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new VerticalSpeedIndicator( node ) );
+            set_subsystem( id, new VerticalSpeedIndicator( node ) );
+
         } else if ( name == "radar" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new wxRadarBg ( node ), 0.5 );
-        } else if ( name == "inst-vertical-speed-indicator" ) { // (TJ)
-            set_subsystem( "instrument" + temp.str(), 
-                           new InstVerticalSpeedIndicator( node ) );
-        } else if ( name == "tacan" ) { 
-            set_subsystem( "instrument" + temp.str(), 
-                           new TACAN( node ) );
-        } else if ( name == "mk-viii" ) { 
-            set_subsystem( "instrument" + temp.str(), 
-                           new MK_VIII( node ) );
-        } else if ( name == "master-reference-gyro" ) { 
-            set_subsystem( "instrument" + temp.str(), 
-                           new MasterReferenceGyro( node ) );
-        } else if ( name == "groundradar" ) { 
-            set_subsystem( "instrument" + temp.str(), 
-                           new GroundRadar( node ), 1 );
+            set_subsystem( id, new wxRadarBg ( node ), 0.5 );
+
+        } else if ( name == "inst-vertical-speed-indicator" ) {
+            set_subsystem( id, new InstVerticalSpeedIndicator( node ) );
+
+        } else if ( name == "tacan" ) {
+            set_subsystem( id, new TACAN( node ) );
+
+        } else if ( name == "mk-viii" ) {
+            set_subsystem( id, new MK_VIII( node ) );
+
+        } else if ( name == "master-reference-gyro" ) {
+            set_subsystem( id, new MasterReferenceGyro( node ) );
+
+        } else if ( name == "groundradar" ) {
+            set_subsystem( id, new GroundRadar( node ) );
 
         } else {
-            SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
+            SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: "
                     << name );
             return false;
         }
