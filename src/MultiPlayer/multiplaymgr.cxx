@@ -146,7 +146,9 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {1004, "controls/gear/gear-down",  SGPropertyNode::FLOAT},
   {1005, "controls/lighting/nav-lights",  SGPropertyNode::FLOAT},
   {1006, "controls/armament/station[0]/jettison-all",  SGPropertyNode::BOOL},
-  
+
+  {1100, "sim/model/variant", SGPropertyNode::INT},
+
   {10001, "sim/multiplay/transmission-freq-hz",  SGPropertyNode::STRING},
   {10002, "sim/multiplay/chat",  SGPropertyNode::STRING},
 
