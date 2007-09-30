@@ -370,8 +370,80 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                         else
                             k = i;
 
+                        bool major_tick_drawn = false;
+
+                        // Major ticks
+                        if (div_max()) {
+                            if (!(k % (int)div_max())) {
+                                major_tick_drawn = true;
+                                if (modulo()) {
+                                    disp_val = i % (int) modulo(); // ?????????
+                                    if (disp_val < 0) {
+                                        while (disp_val < 0)
+                                            disp_val += modulo();
+                                    }
+                                } else {
+                                    disp_val = i;
+                                }
+
+                                lenstr = sprintf(TextScale, "%d",
+                                        float_to_int(disp_val * data_scaling()/*+.5*/));
+                                // (int)(disp_val  * data_scaling() +.5));
+                                /* if (((marker_ys - 8) > scrn_rect.top) &&
+                                   ((marker_ys + 8) < (height))){ */
+                                // huds_both
+                                if (huds_both(options)) {
+                                    // drawOneLine(scrn_rect.left, marker_ys,
+                                    //              marker_xs,      marker_ys);
+                                    // drawOneLine(marker_xs, marker_ys,
+                                    //              scrn_rect.left + scrn_rect.right,
+                                    //              marker_ys);
+                                    if (tick_type == "line") {
+                                        glBegin(GL_LINE_STRIP);
+                                        glVertex2f(scrn_rect.left, marker_ys);
+                                        glVertex2f(marker_xs, marker_ys);
+                                        glVertex2f(width, marker_ys);
+                                        glEnd();
+
+                                    } else if (tick_type == "circle") {
+                                        circles(scrn_rect.left, (float)marker_ys, 5.0);
+
+                                    } else {
+                                        glBegin(GL_LINE_STRIP);
+                                        glVertex2f(scrn_rect.left, marker_ys);
+                                        glVertex2f(marker_xs, marker_ys);
+                                        glVertex2f(width, marker_ys);
+                                        glEnd();
+                                    }
+
+                                    if (!huds_notext(options))
+                                        textString (marker_xs + 2, marker_ys, TextScale, 0);
+
+                                } else {
+                                    /* Changes are made to draw a circle when tick_type="circle" */
+                                    // anything other than huds_both
+                                    if (tick_type == "line")
+                                        drawOneLine(marker_xs, marker_ys, marker_xe, marker_ys);
+                                    else if (tick_type == "circle")
+                                        circles((float)marker_xs + 4, (float)marker_ys, 5.0);
+                                    else
+                                        drawOneLine(marker_xs, marker_ys, marker_xe, marker_ys);
+
+                                    if (!huds_notext(options)) {
+                                        if (huds_left(options)) {
+                                            textString(marker_xs - 8 * lenstr - 2,
+                                                    marker_ys - 4, TextScale, 0);
+                                        } else {
+                                            textString(marker_xe + 3 * lenstr,
+                                                    marker_ys - 4, TextScale, 0);
+                                        } //End if huds_left
+                                    } //End if !huds_notext
+                                }  //End if huds-both
+                            }  // End if draw major ticks
+                        }   // End if major ticks
+
                         // Minor ticks
-                        if (div_min()) {
+                        if (div_min() && !major_tick_drawn) {
                             // if ((i % div_min()) == 0) {
                             if (!(k % (int)div_min())) {
                                 if (((marker_ys - 5) > scrn_rect.top)
@@ -450,74 +522,6 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                             } //end draw minor ticks
                         }  //end minor ticks
 
-                        // Major ticks
-                        if (div_max()) {
-                            if (!(k % (int)div_max())) {
-                                if (modulo()) {
-                                    disp_val = i % (int) modulo(); // ?????????
-                                    if (disp_val < 0) {
-                                        while (disp_val < 0)
-                                            disp_val += modulo();
-                                    }
-                                } else {
-                                    disp_val = i;
-                                }
-
-                                lenstr = sprintf(TextScale, "%d",
-                                        float_to_int(disp_val * data_scaling()/*+.5*/));
-                                // (int)(disp_val  * data_scaling() +.5));
-                                /* if (((marker_ys - 8) > scrn_rect.top) &&
-                                   ((marker_ys + 8) < (height))){ */
-                                // huds_both
-                                if (huds_both(options)) {
-                                    // drawOneLine(scrn_rect.left, marker_ys,
-                                    //              marker_xs,      marker_ys);
-                                    // drawOneLine(marker_xs, marker_ys,
-                                    //              scrn_rect.left + scrn_rect.right,
-                                    //              marker_ys);
-                                    if (tick_type == "line") {
-                                        glBegin(GL_LINE_STRIP);
-                                        glVertex2f(scrn_rect.left, marker_ys);
-                                        glVertex2f(marker_xs, marker_ys);
-                                        glVertex2f(width, marker_ys);
-                                        glEnd();
-
-                                    } else if (tick_type == "circle") {
-                                        circles(scrn_rect.left, (float)marker_ys, 5.0);
-
-                                    } else {
-                                        glBegin(GL_LINE_STRIP);
-                                        glVertex2f(scrn_rect.left, marker_ys);
-                                        glVertex2f(marker_xs, marker_ys);
-                                        glVertex2f(width, marker_ys);
-                                        glEnd();
-                                    }
-
-                                    if (!huds_notext(options))
-                                        textString (marker_xs + 2, marker_ys, TextScale, 0);
-
-                                } else {
-                                    /* Changes are made to draw a circle when tick_type="circle" */
-                                    // anything other than huds_both
-                                    if (tick_type == "line")
-                                        drawOneLine(marker_xs, marker_ys, marker_xe, marker_ys);
-                                    else if (tick_type == "circle")
-                                        circles((float)marker_xs + 4, (float)marker_ys, 5.0);
-                                    else
-                                        drawOneLine(marker_xs, marker_ys, marker_xe, marker_ys);
-
-                                    if (!huds_notext(options)) {
-                                        if (huds_left(options)) {
-                                            textString(marker_xs - 8 * lenstr - 2,
-                                                    marker_ys - 4, TextScale, 0);
-                                        } else {
-                                            textString(marker_xe + 3 * lenstr,
-                                                    marker_ys - 4, TextScale, 0);
-                                        } //End if huds_left
-                                    } //End if !huds_notext
-                                }  //End if huds-both
-                            }  // End if draw major ticks
-                        }   // End if major ticks
                     }  // End condition
                 }  // End for
             }  //end of zoom
@@ -668,50 +672,7 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                         else
                             k = i;
 
-                        if (div_min()) {
-                            //          if ((i % (int)div_min()) == 0) {
-                            //draw minor ticks
-                            if (!(k % (int)div_min())) {
-                                // draw in ticks only if they aren't too close to the edge.
-                                if (((marker_xs - 5) > scrn_rect.left)
-                                        && ((marker_xs + 5)< (scrn_rect.left + scrn_rect.right))) {
-
-                                    if (huds_both(options)) {
-                                        if (tick_length == "variable") {
-                                            drawOneLine(marker_xs, scrn_rect.top,
-                                                    marker_xs, marker_ys - 4);
-                                            drawOneLine(marker_xs, marker_ye + 4,
-                                                    marker_xs, height);
-                                        } else {
-                                            drawOneLine(marker_xs, scrn_rect.top,
-                                                    marker_xs, marker_ys);
-                                            drawOneLine(marker_xs, marker_ye,
-                                                    marker_xs, height);
-                                        }
-                                        // glBegin(GL_LINES);
-                                        // glVertex2f(marker_xs, scrn_rect.top);
-                                        // glVertex2f(marker_xs, marker_ys - 4);
-                                        // glVertex2f(marker_xs, marker_ye + 4);
-                                        // glVertex2f(marker_xs, scrn_rect.top + scrn_rect.bottom);
-                                        // glEnd();
-
-                                    } else {
-                                        if (huds_top(options)) {
-                                            //draw minor ticks
-                                            if (tick_length == "variable")
-                                                drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye - 4);
-                                            else
-                                                drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye);
-
-                                        } else if (tick_length == "variable") {
-                                            drawOneLine(marker_xs, marker_ys + 4, marker_xs, marker_ye);
-                                        } else {
-                                            drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye);
-                                        }
-                                    }
-                                }
-                            } //end draw minor ticks
-                        } //end minor ticks
+                        bool major_tick_drawn = false;
 
                         //major ticks
                         if (div_max()) {
@@ -720,6 +681,7 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                             //     draw major ticks
 
                             if (!(k % (int)div_max())) {
+                                major_tick_drawn = true;
                                 if (modulo()) {
                                     disp_val = i % (int) modulo(); // ?????????
                                     if (disp_val < 0) {
@@ -770,6 +732,52 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                 }
                             }  //end draw major ticks
                         } //endif major ticks
+
+                        if (div_min() && !major_tick_drawn) {
+                            //          if ((i % (int)div_min()) == 0) {
+                            //draw minor ticks
+                            if (!(k % (int)div_min())) {
+                                // draw in ticks only if they aren't too close to the edge.
+                                if (((marker_xs - 5) > scrn_rect.left)
+                                        && ((marker_xs + 5)< (scrn_rect.left + scrn_rect.right))) {
+
+                                    if (huds_both(options)) {
+                                        if (tick_length == "variable") {
+                                            drawOneLine(marker_xs, scrn_rect.top,
+                                                    marker_xs, marker_ys - 4);
+                                            drawOneLine(marker_xs, marker_ye + 4,
+                                                    marker_xs, height);
+                                        } else {
+                                            drawOneLine(marker_xs, scrn_rect.top,
+                                                    marker_xs, marker_ys);
+                                            drawOneLine(marker_xs, marker_ye,
+                                                    marker_xs, height);
+                                        }
+                                        // glBegin(GL_LINES);
+                                        // glVertex2f(marker_xs, scrn_rect.top);
+                                        // glVertex2f(marker_xs, marker_ys - 4);
+                                        // glVertex2f(marker_xs, marker_ye + 4);
+                                        // glVertex2f(marker_xs, scrn_rect.top + scrn_rect.bottom);
+                                        // glEnd();
+
+                                    } else {
+                                        if (huds_top(options)) {
+                                            //draw minor ticks
+                                            if (tick_length == "variable")
+                                                drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye - 4);
+                                            else
+                                                drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye);
+
+                                        } else if (tick_length == "variable") {
+                                            drawOneLine(marker_xs, marker_ys + 4, marker_xs, marker_ye);
+                                        } else {
+                                            drawOneLine(marker_xs, marker_ys, marker_xs, marker_ye);
+                                        }
+                                    }
+                                }
+                            } //end draw minor ticks
+                        } //end minor ticks
+
                     }   //end condition
                 } //end for
             }  //end zoom
