@@ -362,7 +362,7 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
 // Parse XML file.
 //     parsexml(<path> [, <start-tag> [, <end-tag> [, <data> [, <pi>]]]]);
 //
-// <path>      ... absolute path of an XML file
+// <path>      ... absolute path to an XML file
 // <start-tag> ... callback function with two args: tag name, attribute hash
 // <end-tag>   ... callback function with one arg:  tag name
 // <data>      ... callback function with one arg:  data
@@ -935,7 +935,7 @@ FGNasalModelData::~FGNasalModelData()
         return;
 
     if(!nasalSys) {
-        SG_LOG(SG_NASAL, SG_ALERT, "Trying to run an <unload> script "
+        SG_LOG(SG_NASAL, SG_WARN, "Trying to run an <unload> script "
                 "without Nasal subsystem present.");
         return;
     }
@@ -984,7 +984,7 @@ void NasalXMLVisitor::data(const char* str, int len)
 
 void NasalXMLVisitor::pi(const char* target, const char* data)
 {
-    if (!naIsNil(_pi)) call(_pi, 2, make_string(target), make_string(data));
+    if(!naIsNil(_pi)) call(_pi, 2, make_string(target), make_string(data));
 }
 
 void NasalXMLVisitor::call(naRef func, int num, naRef a, naRef b)
