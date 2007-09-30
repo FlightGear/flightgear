@@ -25,6 +25,31 @@ HeadingIndicator::~HeadingIndicator ()
 {
 }
 
+void HeadingIndicator::printTimingInformation ()
+{
+   SGTimeStamp startTime, endTime;
+   long duration;
+   for ( eventTimeVecIterator i = timingInfo.begin();
+          i != timingInfo.end();
+          i++) {
+       if (i == timingInfo.begin()) {
+           startTime = i->getTime();
+       } else {
+           endTime = i->getTime();
+           duration = (endTime - startTime);
+	   startTime = endTime;
+           //cout << "Getting to timestamp : " << i->getName() << " takes " << duration << " usec." << endl;
+       }
+   }
+}
+
+void HeadingIndicator::stamp(string name)
+{
+    SGTimeStamp now;
+    now.stamp();
+    timingInfo.push_back(TimingInfo(name, now));
+}
+
 void
 HeadingIndicator::init ()
 {
@@ -69,10 +94,15 @@ HeadingIndicator::unbind ()
 void
 HeadingIndicator::update (double dt)
 {
+    timingInfo.clear();
+    stamp("begin");
                                 // Get the spin from the gyro
     _gyro.set_power_norm(_suction_node->getDoubleValue()/5.0);
+    //stamp("HDG_01");
     _gyro.update(dt);
+    //stamp("HDG_02");
     double spin = _gyro.get_spin_norm();
+    //stamp("HDG_03");
 
                                 // Next, calculate time-based precession
     double offset = _offset_node->getDoubleValue();
@@ -97,8 +127,9 @@ HeadingIndicator::update (double dt)
         _last_heading_deg += 360;
     while ((heading - _last_heading_deg) < -180)
         _last_heading_deg -= 360;
-
+    //stamp("HDG_04");
     heading = fgGetLowPass(_last_heading_deg, heading, dt/factor);
+    //stamp("HDG_05");
     _last_heading_deg = heading;
 
     heading += offset;
@@ -106,8 +137,9 @@ HeadingIndicator::update (double dt)
         heading += 360;
     while (heading > 360)
         heading -= 360;
-
+    stamp("HDG_06");
     _heading_out_node->setDoubleValue(heading);
+    stamp("HDG_07");
 }
 
 // end of heading_indicator.cxx

@@ -178,9 +178,6 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
     }
   else
     {
-      // cout << path.str() << endl;
-      // cout << "Trying to create this plan dynamically" << endl;
-      // cout << "Route from " << dep->id << " to " << arr->id << endl;
       time_t now = time(NULL) + fgGetLong("/sim/time/warp");
       time_t timeDiff = now-start; 
       leg = 1;
@@ -193,7 +190,6 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
       else if (timeDiff >= 2000)
 	leg = 5;
       
-      //cerr << "Set leg to : " << leg << endl;  
       wpt_iterator = waypoints.begin();
       create(dep,arr, leg, alt, speed, lat, lon,
 	     firstLeg, radius, fltType, acType, airline);

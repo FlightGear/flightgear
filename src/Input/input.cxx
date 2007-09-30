@@ -202,6 +202,31 @@ FGInput::~FGInput ()
         default_input = 0;
 }
 
+void FGInput::printTimingInformation ()
+{
+   SGTimeStamp startTime, endTime;
+   long duration;
+   for ( eventTimeVecIterator i = timingInfo.begin();
+          i != timingInfo.end();
+          i++) {
+       if (i == timingInfo.begin()) {
+           startTime = i->getTime();
+       } else {
+           endTime = i->getTime();
+           duration = (endTime - startTime);
+	   startTime = endTime;
+           //cout << "Getting to timestamp : " << i->getName() << " takes " << duration << " usec." << endl;
+       }
+   }
+}
+
+void FGInput::stamp(string name)
+{
+    SGTimeStamp now;
+    now.stamp();
+    timingInfo.push_back(TimingInfo(name, now));
+}
+
 void
 FGInput::init ()
 {
@@ -244,10 +269,15 @@ FGInput::unbind ()
 
 void 
 FGInput::update (double dt)
-{
+{  
+  timingInfo.clear();
+  stamp("Input_begin");
   _update_keyboard();
+  stamp("Input_keyboard");
   _update_joystick(dt);
+  stamp("Input_JS");
   _update_mouse(dt);
+  stamp("Input_Mouse");
 }
 
 void
@@ -842,6 +872,7 @@ FGInput::_update_keyboard ()
 void
 FGInput::_update_joystick (double dt)
 {
+  stamp("update_joystick_01");
   int modifiers = KEYMOD_NONE;  // FIXME: any way to get the real ones?
   int buttons;
   // float js_val, diff;
@@ -855,25 +886,33 @@ FGInput::_update_joystick (double dt)
     jsJoystick * js = _joystick_bindings[i].js;
     if (js == 0 || js->notWorking())
       continue;
-
+    //stamp("update_joystick_02");
     js->read(&buttons, axis_values);
 
                                 // Fire bindings for the axes.
+    //stamp("update_joystick_03");
     for ( j = 0; j < _joystick_bindings[i].naxes; j++) {
+      //stamp("update_joystick_04a");
       axis &a = _joystick_bindings[i].axes[j];
-      
+      //stamp("update_joystick_04aX1");
                                 // Do nothing if the axis position
                                 // is unchanged; only a change in
                                 // position fires the bindings.
       if (fabs(axis_values[j] - a.last_value) > a.tolerance) {
+         //stamp("update_joystick_04aX2");
 //      SG_LOG(SG_INPUT, SG_DEBUG, "Axis " << j << " has moved");
         a.last_value = axis_values[j];
+	//stamp("update_joystick_04aX3");
 //      SG_LOG(SG_INPUT, SG_DEBUG, "There are "
 //             << a.bindings[modifiers].size() << " bindings");
-        for (unsigned int k = 0; k < a.bindings[modifiers].size(); k++)
+        for (unsigned int k = 0; k < a.bindings[modifiers].size(); k++) {
+          std::ostringstream desc;
+          stamp("update_joystick_fire_prep ");
           a.bindings[modifiers][k]->fire(axis_values[j]);
+          stamp("update_joystick_fire_end");
+        }
+        stamp("update_joystick_04");
       }
-     
                                 // do we have to emulate axis buttons?
       a.last_dt += dt;
       if(a.last_dt >= a.interval_sec) {
@@ -890,7 +929,9 @@ FGInput::_update_joystick (double dt)
                          -1, -1);
          a.last_dt -= a.interval_sec;
       }
+      //stamp("update_joystick_04");
     }
+    stamp("update_joystick_05");
 
                                 // Fire bindings for the buttons.
     for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
@@ -904,7 +945,9 @@ FGInput::_update_joystick (double dt)
         b.last_dt -= b.interval_sec;
       }
     }
+    //stamp("update_joystick_06");
   }
+  stamp("update_joystick_07");
 }
 
 void

@@ -92,6 +92,32 @@ FGEnvironmentCtrl::setPosition (double lon_deg, double lat_deg, double elev_ft)
 }
 
 
+void FGEnvironmentCtrl::printTimingInformation ()
+{
+   SGTimeStamp startTime, endTime;
+   long duration;
+   for ( eventTimeVecIterator i = timingInfo.begin();
+          i != timingInfo.end();
+          i++) {
+       if (i == timingInfo.begin()) {
+           startTime = i->getTime();
+       } else {
+           endTime = i->getTime();
+           duration = (endTime - startTime);
+	   startTime = endTime;
+           cout << "Getting to timestamp : " << i->getName() << " takes " << duration << " usec." << endl;
+       }
+   }
+}
+
+void FGEnvironmentCtrl::stamp(string name)
+{
+    SGTimeStamp now;
+    now.stamp();
+    timingInfo.push_back(TimingInfo(name, now));
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGUserDefEnvironmentCtrl.
@@ -402,6 +428,7 @@ FGMetarEnvironmentCtrl::update_env_config ()
 
         // Pick up the METAR wind values and convert them into a vector.
         double metar[2];
+
         double metar_speed = fgGetDouble("/environment/metar/base-wind-speed-kt");
         double metar_heading = fgGetDouble("/environment/metar/base-wind-range-from");
 
@@ -414,6 +441,7 @@ FGMetarEnvironmentCtrl::update_env_config ()
                 fgGetDouble("/environment/config/boundary/entry/wind-speed-kt");
         double current_heading = fgGetDouble(
                 "/environment/config/boundary/entry/wind-from-heading-deg");
+
 
         current[0] = current_speed * sin((current_heading / 180.0) * M_PI);
         current[1] = current_speed * cos((current_heading / 180.0) * M_PI);
@@ -550,7 +578,6 @@ FGMetarEnvironmentCtrl::update_env_config ()
                 }
             }
         }
-
     } else {
         // We haven't already loaded a METAR, so apply it immediately.
         dir_from = fgGetDouble("/environment/metar/base-wind-range-from");
@@ -594,12 +621,17 @@ FGMetarEnvironmentCtrl::update_env_config ()
 
     fgSetupWind(dir_from, dir_to, speed, gust);
     fgDefaultWeatherValue("visibility-m", vis);
+stamp("update_env_config_14b");
     set_temp_at_altitude(temp, station_elevation_ft);
+stamp("update_env_config_14c");
     set_dewpoint_at_altitude(dewpoint, station_elevation_ft);
+stamp("update_env_config_14d");
     fgDefaultWeatherValue("pressure-sea-level-inhg", pressure);
+stamp("update_env_config_14e");
 
     // We've now successfully loaded a METAR into the configuration
     metar_loaded = true;
+stamp("update_env_config_15");
 }
 
 double FGMetarEnvironmentCtrl::interpolate_prop(const char * currentname,
@@ -685,23 +717,27 @@ FGMetarEnvironmentCtrl::reinit ()
 void
 FGMetarEnvironmentCtrl::update(double delta_time_sec)
 {
-
+    timingInfo.clear();
+    stamp("begin"); 
     _dt += delta_time_sec;
     if (_error_count >= 3)
        return;
-
+    //stamp("env_start"); 
     FGMetarResult result;
+    //stamp("envir_01"); 
 
     static const SGPropertyNode *longitude
         = fgGetNode( "/position/longitude-deg", true );
     static const SGPropertyNode *latitude
         = fgGetNode( "/position/latitude-deg", true );
+    //stamp("envir_02");
     search_elapsed += delta_time_sec;
     fetch_elapsed += delta_time_sec;
     interpolate_elapsed += delta_time_sec;
 
     // if time for a new search request, push it onto the request
     // queue
+    //stamp("point_03");
     if ( search_elapsed > search_interval_sec ) {
         const FGAirport* a = globals->get_airports()
                    ->search( longitude->getDoubleValue(),
@@ -729,13 +765,17 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         }
     } else if ( interpolate_elapsed > EnvironmentUpdatePeriodSec ) {
         // Interpolate the current configuration closer to the actual METAR
+        //stamp("point_03a");
         update_env_config();
+        stamp("envir_03b");
         env->reinit();
+        stamp("envir_03c");
         interpolate_elapsed = 0.0;
     }
 
 #if !defined(ENABLE_THREADS)
     // No loader thread running so manually fetch the data
+    stamp("point_04");
     string id = "";
     while ( !request_queue.empty() ) {
         id = request_queue.front();
@@ -748,7 +788,7 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         result_queue.push( result );
     }
 #endif // ENABLE_THREADS
-
+    stamp("point_05");
     // process any results from the loader.
     while ( !result_queue.empty() ) {
         result = result_queue.front();
@@ -767,8 +807,9 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
             search_elapsed = 9999.0;
         }
     }
-
+    stamp("point_06");
     env->update(delta_time_sec);
+    stamp("point_07");
 }
 
 

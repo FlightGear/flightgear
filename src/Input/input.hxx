@@ -204,6 +204,10 @@ public:
   virtual void resume ();
   virtual bool is_suspended () const;
 
+virtual void printTimingInformation();
+
+     void stamp(string name);
+
 
   /**
    * Control whether this is the default module to receive events.
@@ -249,6 +253,8 @@ public:
 
 
 private:
+
+   eventTimeVec timingInfo;
 				// Constants
   enum 
   {

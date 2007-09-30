@@ -267,6 +267,7 @@ static void fgMainLoop( void ) {
             frame_us = 0.0;
         }
         current_time_stamp.stamp();
+
         /* Convert to ms */
         double elapsed_us = current_time_stamp - last_time_stamp;
         if ( elapsed_us < frame_us ) {

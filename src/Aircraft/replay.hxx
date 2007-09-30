@@ -51,7 +51,7 @@ public:
     FGNetCtrls ctrls;
 };
 
-typedef deque < FGReplayData > replay_list_type;
+typedef deque < FGReplayData *> replay_list_type;
 
 
 
@@ -72,12 +72,15 @@ public:
     virtual void bind();
     virtual void unbind();
     virtual void update( double dt );
+    //virtual void printTimingInformation();
 
+    //void stamp(string name);
     void replay( double time );
     double get_start_time();
     double get_end_time();
     
 private:
+    //eventTimeVec timingInfo;
 
     static const double st_list_time;   // 60 secs of high res data
     static const double mt_list_time;  // 10 mins of 1 fps data
@@ -94,6 +97,7 @@ private:
     replay_list_type short_term;
     replay_list_type medium_term;
     replay_list_type long_term;
+    replay_list_type recycler;
     SGPropertyNode_ptr disable_replay;
 };
 

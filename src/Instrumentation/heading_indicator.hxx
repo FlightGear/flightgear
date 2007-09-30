@@ -46,8 +46,13 @@ public:
     virtual void unbind ();
     virtual void update (double dt);
 
+    virtual void printTimingInformation();
+
+     void stamp(string name);
+
 private:
 
+    eventTimeVec timingInfo;
     Gyro _gyro;
     double _last_heading_deg;
 
