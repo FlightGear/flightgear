@@ -527,8 +527,8 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
             HASHSET("lat", 3, naNum(rwy._lat));
             HASHSET("lon", 3, naNum(rwy._lon));
             HASHSET("heading", 7, naNum(rwy._heading));
-            HASHSET("length", 6, naNum(rwy._length));
-            HASHSET("width", 5, naNum(rwy._width));
+            HASHSET("length", 6, naNum(rwy._length * SG_FEET_TO_METER));
+            HASHSET("width", 5, naNum(rwy._width * SG_FEET_TO_METER));
 #undef HASHSET
 
             naRef no = naStr_fromdata(naNewString(c),
@@ -547,7 +547,7 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
             const_cast<char *>(name.c_str()), name.length()));
     HASHSET("lat", 3, naNum(apt->getLatitude()));
     HASHSET("lon", 3, naNum(apt->getLongitude()));
-    HASHSET("elevation", 9, naNum(apt->getElevation()));
+    HASHSET("elevation", 9, naNum(apt->getElevation() * SG_FEET_TO_METER));
     HASHSET("has_metar", 9, naNum(apt->getMetar()));
     HASHSET("runways", 7, rwys);
 #undef HASHSET
