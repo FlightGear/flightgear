@@ -24,6 +24,8 @@
 #include <simgear/structure/commands.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
+#include <Airports/runways.hxx>
+#include <Airports/simple.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
@@ -481,6 +483,78 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 #undef HASHSET
 }
 
+// Returns airport data for given airport id ("KSFO"), or for the airport
+// nearest to a given lat/lon pair, or without arguments, to the current
+// aircraft position. Returns nil on error. Only one side of each runway is
+// returned.
+static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
+{
+    static SGConstPropertyNode_ptr lat = fgGetNode("/position/latitude-deg", true);
+    static SGConstPropertyNode_ptr lon = fgGetNode("/position/longitude-deg", true);
+
+    // airport
+    FGAirportList *aptlst = globals->get_airports();
+    FGAirport *apt;
+    if(argc == 0)
+        apt = aptlst->search(lon->getDoubleValue(), lat->getDoubleValue(), false);
+    else if(argc == 1 && naIsString(args[0]))
+        apt = aptlst->search(naStr_data(args[0]));
+    else if(argc == 2 && naIsNum(args[0]) && naIsNum(args[1]))
+        apt = aptlst->search(args[1].num, args[0].num, false);
+    else {
+        naRuntimeError(c, "airportinfo() with invalid function arguments");
+        return naNil();
+    }
+    if(!apt) {
+        naRuntimeError(c, "airportinfo(): no airport found");
+        return naNil();
+    }
+
+    string id = apt->getId();
+    string name = apt->getName();
+
+    // set runway hash
+    FGRunwayList *rwylst = globals->get_runways();
+    FGRunway rwy;
+    naRef rwys = naNewHash(c);
+    if(rwylst->search(id, &rwy)) {
+        do {
+            if(rwy._id != id) continue;
+            if(rwy._type != "runway") continue;
+
+            naRef rwydata = naNewHash(c);
+#define HASHSET(s,l,n) naHash_set(rwydata, naStr_fromdata(naNewString(c),s,l),n)
+            HASHSET("lat", 3, naNum(rwy._lat));
+            HASHSET("lon", 3, naNum(rwy._lon));
+            HASHSET("heading", 7, naNum(rwy._heading));
+            HASHSET("length", 6, naNum(rwy._length));
+            HASHSET("width", 5, naNum(rwy._width));
+#undef HASHSET
+
+            naRef no = naStr_fromdata(naNewString(c),
+                    const_cast<char *>(rwy._rwy_no.c_str()),
+                    rwy._rwy_no.length());
+            naHash_set(rwys, no, rwydata);
+        } while(rwylst->next(&rwy));
+    }
+
+    // set airport hash
+    naRef aptdata = naNewHash(c);
+#define HASHSET(s,l,n) naHash_set(aptdata, naStr_fromdata(naNewString(c),s,l),n)
+    HASHSET("id", 2, naStr_fromdata(naNewString(c),
+            const_cast<char *>(id.c_str()), id.length()));
+    HASHSET("name", 4, naStr_fromdata(naNewString(c),
+            const_cast<char *>(name.c_str()), name.length()));
+    HASHSET("lat", 3, naNum(apt->getLatitude()));
+    HASHSET("lon", 3, naNum(apt->getLongitude()));
+    HASHSET("elevation", 9, naNum(apt->getElevation()));
+    HASHSET("has_metar", 9, naNum(apt->getMetar()));
+    HASHSET("runways", 7, rwys);
+#undef HASHSET
+    return aptdata;
+}
+
+
 // Table of extension functions.  Terminate with zeros.
 static struct { char* name; naCFunction func; } funcs[] = {
     { "getprop",   f_getprop },
@@ -500,6 +574,7 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "carttogeod", f_carttogeod },
     { "geodtocart", f_geodtocart },
     { "geodinfo", f_geodinfo },
+    { "airportinfo", f_airportinfo },
     { 0, 0 }
 };
 
