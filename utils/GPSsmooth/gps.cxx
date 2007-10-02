@@ -84,7 +84,7 @@ int GPSTrack::load( const string &file ) {
         } else if ( tokens[0] == "$GPGGA" && tokens.size() == 15 ) {
             double raw_time = atof(tokens[1].c_str());
             GPSTime gps_time = GPSTime( raw_time );
-            if ( fabs(gps_time.get_time() - p.gps_time.get_time()) < 0.0001 &&
+            if ( fabs(gps_time.get_time() - p.gps_time.get_time()) > 0.0001 &&
                  (p.gps_time.get_time() > 1.0) ) {
                 // new data cycle store last data before continuing
                 data.push_back( p );
