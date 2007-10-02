@@ -163,6 +163,7 @@ FGMultiplayMgr::sIdPropertyList[] = {
 //////////////////////////////////////////////////////////////////////
 FGMultiplayMgr::FGMultiplayMgr() 
 {
+  mSocket        = 0;
   mInitialised   = false;
   mHaveServer    = false;
 } // FGMultiplayMgr::FGMultiplayMgr()
@@ -218,6 +219,8 @@ FGMultiplayMgr::init (void)
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-rxaddress="<<rxAddress );
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-rxport= "<<rxPort);
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-callsign= "<<mCallsign);
+  Close(); // Should Init be called twice, close Socket first
+           // A memory leak was reported here by valgrind
   mSocket = new netSocket();
   if (!mSocket->open(false)) {
     SG_LOG( SG_NETWORK, SG_ALERT,
