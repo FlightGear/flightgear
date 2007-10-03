@@ -519,7 +519,7 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
     naRef rwys = naNewHash(c);
     if(rwylst->search(id, &rwy)) {
         do {
-            if(rwy._id != id) continue;
+            if(rwy._id != id) break;
             if(rwy._type != "runway") continue;
 
             naRef rwydata = naNewHash(c);
