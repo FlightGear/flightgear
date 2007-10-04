@@ -238,7 +238,10 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
     double max = 0.0;
     bool reversed = false;
 
-    while (r._id == aptid) {
+    do {
+        if (r._id != aptid)
+            break;
+
         int surface = 0;
         if (r._surface_code == 1 || r._surface_code == 2)       // asphalt & concrete
             surface = 2;
@@ -254,7 +257,7 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
             diff += 360;
         while (diff >= 180)
             diff -= 360;
-        bad = DEVWGT * fabs(diff) + 1e-20;
+        bad = fabs(DEVWGT * diff) + 1e-20;
 
         quality = good / bad;
         //SG_LOG(SG_GENERAL, SG_DEBUG, "  runway " << r._rwy_no <<  " -> " << quality);
@@ -270,7 +273,7 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
             diff += 360;
         while (diff >= 180)
             diff -= 360;
-        bad = DEVWGT * fabs(diff) + 1e-20;
+        bad = fabs(DEVWGT * diff) + 1e-20;
 
         quality = good / bad;
         //SG_LOG(SG_GENERAL, SG_DEBUG, "  runway " << GetReverseRunwayNo(r._rwy_no)
@@ -281,9 +284,7 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
             reversed = true;
         }
 
-        if (!next(&r))
-            break;
-    }
+    } while (!next(&r));
 
     return reversed ? GetReverseRunwayNo(best._rwy_no) : best._rwy_no;
 }
