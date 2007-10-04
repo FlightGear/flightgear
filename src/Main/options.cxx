@@ -127,8 +127,8 @@ fgSetDefaults ()
 
 				// Orientation
     fgSetDouble("/orientation/heading-deg", 9999.0);
-    fgSetDouble("/orientation/roll-deg", 0);
-    fgSetDouble("/orientation/pitch-deg", 0);
+    fgSetDouble("/orientation/roll-deg", 0.0);
+    fgSetDouble("/orientation/pitch-deg", 0.424);
 
 				// Velocities
     fgSetDouble("/velocities/uBody-fps", 0.0);
@@ -146,8 +146,8 @@ fgSetDefaults ()
     fgSetDouble("/sim/presets/altitude-ft", -9999.0);
 
     fgSetDouble("/sim/presets/heading-deg", 9999.0);
-    fgSetDouble("/sim/presets/roll-deg", 9999.0);
-    fgSetDouble("/sim/presets/pitch-deg", 9999.0);
+    fgSetDouble("/sim/presets/roll-deg", 0.0);
+    fgSetDouble("/sim/presets/pitch-deg", 0.424);
 
     fgSetString("/sim/presets/speed-set", "knots");
     fgSetDouble("/sim/presets/airspeed-kt", 0.0);
