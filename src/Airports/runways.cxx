@@ -237,7 +237,9 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
     double max = 0.0;
     bool reversed = false;
 
-    while (r._id == aptid) {
+    do {
+        if (r._id != aptid)
+            break;
         if (r._type != "runway")
             continue;
 
@@ -283,9 +285,7 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
             reversed = true;
         }
 
-        if (!next(&r))
-            break;
-    }
+    } while (!next(&r));
 
     return reversed ? GetReverseRunwayNo(best._rwy_no) : best._rwy_no;
 }
