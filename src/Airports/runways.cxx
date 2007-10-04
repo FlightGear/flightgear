@@ -236,7 +236,7 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
 
     FGRunway best;
     double max = 0.0;
-    bool reversed;
+    bool reversed = false;
 
     while (r._id == aptid) {
         int surface = 0;
