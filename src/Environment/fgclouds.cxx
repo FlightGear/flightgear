@@ -410,7 +410,9 @@ void FGClouds::buildScenario( const string& scenario ) {
     }
 
 	for(int iLayer = 0 ; iLayer < thesky->get_cloud_layer_count(); iLayer++) {
-		thesky->get_cloud_layer(iLayer)->get_layer3D()->clear();
+            thesky->get_cloud_layer(iLayer)
+                ->setCoverage(SGCloudLayer::SG_CLOUD_CLEAR);
+            thesky->get_cloud_layer(iLayer)->get_layer3D()->clear();
 	}
 
 	station += " 011000Z ";

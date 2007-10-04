@@ -18,17 +18,14 @@
 #include <osgViewer/Viewer>
 #include <osgGA/MatrixManipulator>
 
+#include <Include/general.hxx>
 #include "fg_os.hxx"
 #include "fg_props.hxx"
 #include "util.hxx"
 #include "globals.hxx"
 #include "renderer.hxx"
 
-#if ((2 <= OSG_VERSION_MAJOR) || \
-     (1 == OSG_VERSION_MAJOR) && (9 == OSG_VERSION_MINOR) &&	\
-     (8 <= OSG_VERSION_PATCH)) || \
-    ((1 == OSG_VERSION_MAJOR) && (9 < OSG_VERSION_MINOR)) ||      \
-    (1 < OSG_VERSION_MAJOR)
+#if (FG_OSG_VERSION >= 19008)
 #define OSG_HAS_MOUSE_CURSOR_PATCH
 #endif
 

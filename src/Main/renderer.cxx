@@ -98,13 +98,13 @@
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Instrumentation/HUD/HUD.hxx>
 
+#include <Include/general.hxx>
 #include "splash.hxx"
 #include "renderer.hxx"
 #include "main.hxx"
 
 // XXX Make this go away when OSG 2.2 is released.
-#if ((2 <= OSG_VERSION_MAJOR) && (1 <= OSG_VERSION_MINOR) \
-     && (4 <= OSG_VERSION_PATCH))
+#if (FG_OSG_VERSION >= 21004)
 #define UPDATE_VISITOR_IN_VIEWER 1
 #endif
 

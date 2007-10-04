@@ -61,6 +61,7 @@ SG_USING_STD(setfill);
 #include <AIModel/AIManager.hxx>
 #include <AIModel/AIBallistic.hxx>
 
+#include <Include/general.hxx>
 #include "instrument_mgr.hxx"
 #include "od_gauge.hxx"
 #include "wxradar.hxx"
@@ -869,7 +870,7 @@ wxRadarBg::updateFont()
     } else {
         tpath = path;
     }
-#if OSG_VERSION_MAJOR > 2 || (OSG_VERSION_MAJOR == 2 && OSG_VERSION_MINOR > 0)
+#if (FG_OSG_VERSION >= 21000)
     osg::ref_ptr<osgDB::ReaderWriter::Options> fontOptions = new osgDB::ReaderWriter::Options("monochrome");
     osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.c_str(), fontOptions.get());    
 #else    

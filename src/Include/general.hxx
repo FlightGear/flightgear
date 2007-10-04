@@ -31,6 +31,11 @@
 # error This library requires C++
 #endif                                   
 
+#include <osg/Version>
+
+#define FG_OSG_VERSION \
+    ((OPENSCENEGRAPH_MAJOR_VERSION*10000)\
+     + (OPENSCENEGRAPH_MINOR_VERSION*1000) + OPENSCENEGRAPH_PATCH_VERSION)
 
 // #define FANCY_FRAME_COUNTER
 #ifdef FANCY_FRAME_COUNTER
