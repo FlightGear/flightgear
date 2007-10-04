@@ -216,63 +216,78 @@ bool FGRunwayList::search( const string& aptid, const int tgt_hdg,
 
 
 // Return the runway number of the runway closest to a given heading
-string FGRunwayList::search( const string& aptid, const int tgt_hdg ) {
-    FGRunway r;
-    FGRunway tmp_r;	
-    string rn;
-    double found_dir = 0.0;
+#include <Main/fg_props.hxx>   // FIXME remove
+string FGRunwayList::search( const string& aptid, const int hdg ) {
+    //SG_LOG(SG_GENERAL, SG_DEBUG, "searching runway for " << aptid
+    //        << " with target heading " << hdg);
 
-    if ( !search( aptid, &tmp_r ) ) {
-	SG_LOG( SG_GENERAL, SG_ALERT,
-                "Failed to find " << aptid << " in database." );
-	return "NN";
+    FGRunway r;
+    if (!search(aptid, &r)) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to find "
+                << aptid << " in database.");
+        return "NN";
     }
-    
-    double diff;
-    double min_diff = 360.0;
-    
-    while ( tmp_r._id == aptid ) {
-	// forward direction
-	diff = tgt_hdg - tmp_r._heading;
-	while ( diff < -180.0 ) { diff += 360.0; }
-	while ( diff >  180.0 ) { diff -= 360.0; }
-	diff = fabs(diff);
-        // SG_LOG( SG_GENERAL, SG_INFO,
-        //	   "Runway " << tmp_r._rwy_no << " heading = "
-	//         << tmp_r._heading << " diff = " << diff );
-	if ((diff < min_diff) && (tmp_r._type == "runway")) {
-	    min_diff = diff;
-	    r = tmp_r;
-	    found_dir = 0;
-	}
-	
-	// reverse direction
-	diff = tgt_hdg - tmp_r._heading - 180.0;
-	while ( diff < -180.0 ) { diff += 360.0; }
-	while ( diff >  180.0 ) { diff -= 360.0; }
-	diff = fabs(diff);
-        // SG_LOG( SG_GENERAL, SG_INFO,
-        //	   "Runway -" << tmp_r._rwy_no << " heading = " <<
-        //	   tmp_r._heading + 180.0 <<
-        //	   " diff = " << diff );
-	if ((diff < min_diff) && (tmp_r._type == "runway")) {
-	    min_diff = diff;
-	    r = tmp_r;
-	    found_dir = 180.0;
-	}
-	
-        if (!next( &tmp_r ))
+
+    double LENWGT = fgGetDouble("/tmp/runway-search/length", 0.01);
+    double WIDWGT = fgGetDouble("/tmp/runway-search/width", 0.01);
+    double SURFWGT = fgGetDouble("/tmp/runway-search/surface", 10);
+    double DEVWGT = fgGetDouble("/tmp/runway-search/deviation", 1);
+
+    FGRunway best;
+    double max = 0.0;
+    bool reversed = false;
+
+    while (r._id == aptid) {
+        if (r._type != "runway")
+            continue;
+
+        int surface = 0;
+        if (r._surface_code == 1 || r._surface_code == 2)       // asphalt & concrete
+            surface = 2;
+        else if (r._surface_code == 12 || r._surface_code == 5) // dry lakebed & gravel
+            surface = 1;
+
+        double quality, bad, diff;
+        double good = LENWGT * r._length + WIDWGT * r._width + SURFWGT * surface;
+
+        // this side
+        diff = hdg - r._heading;
+        while (diff < -180)
+            diff += 360;
+        while (diff >= 180)
+            diff -= 360;
+        bad = DEVWGT * fabs(diff) + 1e-20;
+
+        quality = good / bad;
+        //SG_LOG(SG_GENERAL, SG_DEBUG, "  runway " << r._rwy_no <<  " -> " << quality);
+        if (quality > max) {
+            max = quality;
+            best = r;
+            reversed = false;
+        }
+
+        // other side
+        diff = hdg - r._heading - 180;
+        while (diff < -180)
+            diff += 360;
+        while (diff >= 180)
+            diff -= 360;
+        bad = DEVWGT * fabs(diff) + 1e-20;
+
+        quality = good / bad;
+        //SG_LOG(SG_GENERAL, SG_DEBUG, "  runway " << GetReverseRunwayNo(r._rwy_no)
+        //        <<  " -> " << quality);
+        if (quality > max) {
+            max = quality;
+            best = r;
+            reversed = true;
+        }
+
+        if (!next(&r))
             break;
     }
-    
-    // SG_LOG( SG_GENERAL, SG_INFO, "closest runway = " << r._rwy_no
-    //	       << " + " << found_dir );
-    rn = r._rwy_no;
-    if ( found_dir == 180 ) {
-	rn = GetReverseRunwayNo(rn);
-    }	
-    
-    return rn;
+
+    return reversed ? GetReverseRunwayNo(best._rwy_no) : best._rwy_no;
 }
 
 
