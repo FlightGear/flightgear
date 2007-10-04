@@ -258,7 +258,7 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
             diff += 360;
         while (diff >= 180)
             diff -= 360;
-        bad = DEVWGT * fabs(diff) + 1e-20;
+        bad = fabs(DEVWGT * diff) + 1e-20;
 
         quality = good / bad;
         //SG_LOG(SG_GENERAL, SG_DEBUG, "  runway " << r._rwy_no <<  " -> " << quality);
@@ -274,7 +274,7 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
             diff += 360;
         while (diff >= 180)
             diff -= 360;
-        bad = DEVWGT * fabs(diff) + 1e-20;
+        bad = fabs(DEVWGT * diff) + 1e-20;
 
         quality = good / bad;
         //SG_LOG(SG_GENERAL, SG_DEBUG, "  runway " << GetReverseRunwayNo(r._rwy_no)
