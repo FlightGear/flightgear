@@ -761,21 +761,20 @@ void fgInitTowerLocationListener() {
 static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     FGRunway r;
 
-    if ( id.length() ) {
-        // set initial position from runway and heading
+    if ( id.empty() )
+        return false;
 
-        SG_LOG( SG_GENERAL, SG_INFO,
-                "Attempting to set starting position from airport code "
-                << id << " heading " << tgt_hdg );
-		
-        if ( ! globals->get_runways()->search( id, (int)tgt_hdg, &r ) ) {
-            SG_LOG( SG_GENERAL, SG_ALERT,
-                    "Failed to find a good runway for " << id << '\n' );
-            return false;
-        }	
-    } else {
+    // set initial position from runway and heading
+    SG_LOG( SG_GENERAL, SG_INFO,
+            "Attempting to set starting position from airport code "
+            << id << " heading " << tgt_hdg );
+
+    if ( ! globals->get_runways()->search( id, (int)tgt_hdg, &r ) ) {
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Failed to find a good runway for " << id << '\n' );
         return false;
     }
+    fgSetString("/sim/atc/runway", r._rwy_no.c_str());
 
     double lat2, lon2, az2;
     double heading = r._heading;
@@ -830,22 +829,21 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bool rwy_req ) {
     FGRunway r;
 
-    if ( id.length() ) {
-        // set initial position from airport and runway number
+    if ( id.empty() )
+        return false;
 
-        SG_LOG( SG_GENERAL, SG_INFO,
-                "Attempting to set starting position for "
-                << id << ":" << rwy );
+    // set initial position from airport and runway number
+    SG_LOG( SG_GENERAL, SG_INFO,
+            "Attempting to set starting position for "
+            << id << ":" << rwy );
 
-        if ( ! globals->get_runways()->search( id, rwy, &r ) ) {
-            SG_LOG( SG_GENERAL, rwy_req ? SG_ALERT : SG_INFO,
-                    "Failed to find runway " << rwy << 
-                    " at airport " << id << ". Using default runway." );
-            return false;
-        }
-    } else {
+    if ( ! globals->get_runways()->search( id, rwy, &r ) ) {
+        SG_LOG( SG_GENERAL, rwy_req ? SG_ALERT : SG_INFO,
+                "Failed to find runway " << rwy <<
+                " at airport " << id << ". Using default runway." );
         return false;
     }
+    fgSetString("/sim/atc/runway", r._rwy_no.c_str());
 
     double lat2, lon2, az2;
     double heading = r._heading;
@@ -1205,7 +1203,8 @@ bool fgInitPosition() {
     string parkpos = fgGetString("/sim/presets/parkpos");
     string fix = fgGetString("/sim/presets/fix");
 
-    fgSetDouble( "/orientation/heading-deg", hdg );
+    if (hdg > 9990.0)
+        hdg = fgGetDouble("/environment/config/boundary/entry/wind-from-heading-deg", 270);
 
     if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
         // An airport + runway is requested
@@ -1266,6 +1265,8 @@ bool fgInitPosition() {
                  fgGetDouble("/sim/presets/longitude-deg") );
     fgSetDouble( "/position/latitude-deg",
                  fgGetDouble("/sim/presets/latitude-deg") );
+    fgSetDouble( "/orientation/heading-deg",
+                 fgGetDouble("/sim/presets/heading-deg") );
 
     // determine if this should be an on-ground or in-air start
     if ((fabs(gs) > 0.01 || fabs(od) > 0.1 || alt > 0.1) && carrier.empty()) {
