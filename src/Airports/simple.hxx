@@ -70,12 +70,16 @@ private:
     double _elevation;    // ft
     string _name;
     bool _has_metar;
-    FGAirportDynamics *dynamics;
+    bool _is_airport;
+    bool _is_seaport;
+    bool _is_heliport;
+    FGAirportDynamics *_dynamics;
 
 public:
     FGAirport();
     // FGAirport(const FGAirport &other);
-    FGAirport(const string& id, double lon, double lat, double elev, const string& name, bool has_metar);
+    FGAirport(const string& id, double lon, double lat, double elev, const string& name,
+              bool has_metar, bool is_airport, bool is_seaport, bool is_heliport);
     ~FGAirport();
 
     string getId() const { return _id; }
@@ -86,6 +90,9 @@ public:
     // Returns ft
     double getElevation() const { return _elevation; }
     bool   getMetar()     const { return _has_metar; }
+    bool   isAirport()    const { return _is_airport; }
+    bool   isSeaport()    const { return _is_seaport; }
+    bool   isHeliport()   const { return _is_heliport; }
 
     void setId(const string& id) { _id = id; }
     void setMetar(bool value) { _has_metar = value; }
@@ -125,7 +132,8 @@ public:
 
     // add an entry to the list
     void add( const string& id, const double longitude, const double latitude,
-              const double elevation, const string& name, const bool has_metar );
+              const double elevation, const string& name, bool has_metar,
+              bool is_airport, bool is_seaport, bool is_heliport );
 
     // search for the specified id.
     // Returns NULL if unsucessfull.

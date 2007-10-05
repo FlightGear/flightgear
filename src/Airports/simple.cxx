@@ -60,38 +60,42 @@ SG_USING_STD(random_shuffle);
 /***************************************************************************
  * FGAirport
  ***************************************************************************/
-FGAirport::FGAirport() : _longitude(0), _latitude(0), _elevation(0)
+FGAirport::FGAirport() : _longitude(0), _latitude(0), _elevation(0), _dynamics(0)
 {
-    dynamics = 0;
 }
 
 
-FGAirport::FGAirport(const string &id, double lon, double lat, double elev, const string &name, bool has_metar)
+FGAirport::FGAirport(const string &id, double lon, double lat, double elev,
+        const string &name, bool has_metar, bool is_airport, bool is_seaport,
+        bool is_heliport) :
+    _id(id),
+    _longitude(lon),
+    _latitude(lat),
+    _elevation(elev),
+    _name(name),
+    _has_metar(has_metar),
+    _is_airport(is_airport),
+    _is_seaport(is_seaport),
+    _is_heliport(is_heliport),
+    _dynamics(0)
 {
-    _id = id;
-    _longitude = lon;
-    _latitude  = lat;
-    _elevation = elev;
-    _name      = name;
-    _has_metar = has_metar;
-    dynamics   = 0;
 }
 
 
 FGAirport::~FGAirport()
 {
-    delete dynamics;
+    delete _dynamics;
 }
 
 
 FGAirportDynamics * FGAirport::getDynamics()
 {
-    if (dynamics != 0) {
-        return dynamics;
+    if (_dynamics != 0) {
+        return _dynamics;
     } else {
         FGRunwayPreference rwyPrefs;
         //cerr << "Trying to load dynamics for " << _id << endl;
-        dynamics = new FGAirportDynamics(_latitude, _longitude, _elevation, _id);
+        _dynamics = new FGAirportDynamics(_latitude, _longitude, _elevation, _id);
 
         SGPath parkpath( globals->get_fg_root() );
         parkpath.append( "/AI/Airports/" );
@@ -107,10 +111,10 @@ FGAirportDynamics * FGAirport::getDynamics()
         //  && parkpath.exists())
         if (parkpath.exists()) {
             try {
-                readXML(parkpath.str(),*dynamics);
+                readXML(parkpath.str(),*_dynamics);
 		//cerr << "Initializing " << getId() << endl;
-                dynamics->init();
-		dynamics->getGroundNetwork()->setParent(this);
+                _dynamics->init();
+		_dynamics->getGroundNetwork()->setParent(this);
             } catch (const sg_exception &e) {
                 //cerr << "unable to read " << parkpath.str() << endl;
             }
@@ -121,7 +125,7 @@ FGAirportDynamics * FGAirport::getDynamics()
         if (rwyPrefPath.exists()) {
             try {
                 readXML(rwyPrefPath.str(), rwyPrefs);
-                dynamics->setRwyUse(rwyPrefs);
+                _dynamics->setRwyUse(rwyPrefs);
             } catch (const sg_exception &e) {
                 //cerr << "unable to read " << rwyPrefPath.str() << endl;
                 //exit(1);
@@ -129,7 +133,7 @@ FGAirportDynamics * FGAirport::getDynamics()
         }
         //exit(1);
     }
-    return dynamics;
+    return _dynamics;
 }
 
 
@@ -176,10 +180,12 @@ FGAirportList::~FGAirportList( void )
 // add an entry to the list
 void FGAirportList::add( const string &id, const double longitude,
                          const double latitude, const double elevation,
-                         const string &name, const bool has_metar )
+                         const string &name, bool has_metar, bool is_airport,
+                         bool is_seaport, bool is_heliport )
 {
     FGRunwayPreference rwyPrefs;
-    FGAirport* a = new FGAirport(id, longitude, latitude, elevation, name, has_metar);
+    FGAirport* a = new FGAirport(id, longitude, latitude, elevation, name,
+            has_metar, is_airport, is_seaport, is_heliport);
 
     airports_by_id[a->getId()] = a;
     // try and read in an auxilary file

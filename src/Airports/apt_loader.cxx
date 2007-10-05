@@ -124,7 +124,8 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
                     double lat = rwy_lat_accum / (double)rwy_count;
                     double lon = rwy_lon_accum / (double)rwy_count;
                     airports->add( last_apt_id, lon, lat, last_apt_elev,
-                                   last_apt_name, false );
+                                   last_apt_name, false, line_id == 1,
+                                   line_id == 16, line_id == 17 );
 		} else {
 		    if ( !last_apt_id.length() ) {
 			SG_LOG(SG_GENERAL, SG_ALERT,
@@ -217,7 +218,7 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
             double lat = rwy_lat_accum / (double)rwy_count;
             double lon = rwy_lon_accum / (double)rwy_count;
             airports->add( last_apt_id, lon, lat, last_apt_elev,
-                           last_apt_name, false );
+                           last_apt_name, false, false, false, false );
         } else {
             if ( !last_apt_id.length() ) {
                 SG_LOG(SG_GENERAL, SG_ALERT,
