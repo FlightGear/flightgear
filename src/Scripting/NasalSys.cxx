@@ -483,6 +483,11 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 #undef HASHSET
 }
 
+
+class airport_filter : public FGAirportSearchFilter {
+    virtual bool acceptable(FGAirport *a) { return a->isAirport(); }
+} airport;
+
 // Returns airport data for given airport id ("KSFO"), or for the airport
 // nearest to a given lat/lon pair, or without arguments, to the current
 // aircraft position. Returns nil on error. Only one side of each runway is
@@ -496,11 +501,11 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
     FGAirportList *aptlst = globals->get_airports();
     FGAirport *apt;
     if(argc == 0)
-        apt = aptlst->search(lon->getDoubleValue(), lat->getDoubleValue());
+        apt = aptlst->search(lon->getDoubleValue(), lat->getDoubleValue(), airport);
     else if(argc == 1 && naIsString(args[0]))
         apt = aptlst->search(naStr_data(args[0]));
     else if(argc == 2 && naIsNum(args[0]) && naIsNum(args[1]))
-        apt = aptlst->search(args[1].num, args[0].num);
+        apt = aptlst->search(args[1].num, args[0].num, airport);
     else {
         naRuntimeError(c, "airportinfo() with invalid function arguments");
         return naNil();
@@ -520,7 +525,7 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
     if(rwylst->search(id, &rwy)) {
         do {
             if(rwy._id != id) break;
-            if(rwy._type != "runway") continue;
+            if(rwy._type[0] != 'r') continue;
 
             naRef rwydata = naNewHash(c);
 #define HASHSET(s,l,n) naHash_set(rwydata, naStr_fromdata(naNewString(c),s,l),n)
