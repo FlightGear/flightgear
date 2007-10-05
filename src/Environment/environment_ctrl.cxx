@@ -41,6 +41,9 @@
 
 SG_USING_STD(sort);
 
+class metar_filter : public FGAirportSearchFilter {
+    virtual bool acceptable(FGAirport *a) { return a->getMetar(); }
+} metar_only;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -648,7 +651,7 @@ FGMetarEnvironmentCtrl::init ()
         const FGAirport* a = globals->get_airports()
                    ->search( longitude->getDoubleValue(),
                              latitude->getDoubleValue(),
-                             true );
+                             metar_only );
         if ( a ) {  
             FGMetarResult result = fetch_data( a->getId() );
             if ( result.m != NULL ) {
@@ -711,7 +714,7 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         const FGAirport* a = globals->get_airports()
                    ->search( longitude->getDoubleValue(),
                              latitude->getDoubleValue(),
-                             true );
+                             metar_only );
         if ( a ) {
             if ( !last_apt || last_apt->getId() != a->getId()
                  || fetch_elapsed > same_station_interval_sec )

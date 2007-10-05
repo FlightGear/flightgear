@@ -308,7 +308,7 @@ GPS::update (double delta_time_sec)
         // If the get-nearest-airport-node is true.
         // Get the nearest airport, and set it as waypoint 1.
         if (_get_nearest_airport_node->getBoolValue()) {
-            const FGAirport* a = globals->get_airports()->search(longitude_deg, latitude_deg, false);
+            const FGAirport* a = globals->get_airports()->search(longitude_deg, latitude_deg);
             if(a) {
                 _wp1_ID_node->setStringValue(a->getId().c_str());
                 wp1_longitude_deg = a->getLongitude();
