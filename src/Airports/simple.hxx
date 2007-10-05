@@ -105,6 +105,12 @@ private:
 };
 
 
+class FGAirportSearchFilter {
+public:
+    virtual ~FGAirportSearchFilter() {}
+    virtual bool acceptable(FGAirport*) { return true; }
+};
+
 
 typedef map < string, FGAirport* > airport_map;
 typedef airport_map::iterator airport_map_iterator;
@@ -121,7 +127,6 @@ private:
 
     airport_map airports_by_id;
     airport_list airports_array;
-    //set < string > ai_dirs;
 
 public:
     // Constructor (new)
@@ -149,10 +154,10 @@ public:
 
     // search for the airport closest to the specified position
     // (currently a linear inefficient search so it's probably not
-    // best to use this at runtime.)  If with_metar is true, then only
-    // return station id's marked as having metar data.
-    // Returns NULL if fails (unlikely unless none have metar and with_metar spec'd!)
-    FGAirport* search( double lon_deg, double lat_deg, bool with_metar );
+    // best to use this at runtime.)  An FGAirportSearchFilter class
+    // can be used to restrict the possible choices to a subtype.
+    FGAirport* search( double lon_deg, double lat_deg );
+    FGAirport* search( double lon_deg, double lat_deg, FGAirportSearchFilter& );
 
     /**
      * Return the number of airports in the list.

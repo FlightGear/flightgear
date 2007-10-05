@@ -496,11 +496,11 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
     FGAirportList *aptlst = globals->get_airports();
     FGAirport *apt;
     if(argc == 0)
-        apt = aptlst->search(lon->getDoubleValue(), lat->getDoubleValue(), false);
+        apt = aptlst->search(lon->getDoubleValue(), lat->getDoubleValue());
     else if(argc == 1 && naIsString(args[0]))
         apt = aptlst->search(naStr_data(args[0]));
     else if(argc == 2 && naIsNum(args[0]) && naIsNum(args[1]))
-        apt = aptlst->search(args[1].num, args[0].num, false);
+        apt = aptlst->search(args[1].num, args[0].num);
     else {
         naRuntimeError(c, "airportinfo() with invalid function arguments");
         return naNil();

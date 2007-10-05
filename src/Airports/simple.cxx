@@ -222,25 +222,35 @@ const FGAirport* FGAirportList::findFirstById( const string& id, bool exact )
 
 
 // search for the airport nearest the specified position
-FGAirport* FGAirportList::search( double lon_deg, double lat_deg,
-                                  bool with_metar )
+FGAirport* FGAirportList::search(double lon_deg, double lat_deg)
 {
-    int closest = -1;
+    static FGAirportSearchFilter accept_any;
+    return search(lon_deg, lat_deg, accept_any);
+}
+
+
+// search for the airport nearest the specified position and
+// passing the filter
+FGAirport* FGAirportList::search(double lon_deg, double lat_deg,
+        FGAirportSearchFilter& search)
+{
     double min_dist = 360.0;
-    unsigned int i;
-    for ( i = 0; i < airports_array.size(); ++i ) {
+    airport_list_iterator it = airports_array.begin();
+    airport_list_iterator end = airports_array.end();
+    airport_list_iterator closest = end;
+    for (; it != end; ++it) {
+        if (!search.acceptable(*it))
+            continue;
+
         // crude manhatten distance based on lat/lon difference
-        double d = fabs(lon_deg - airports_array[i]->getLongitude())
-            + fabs(lat_deg - airports_array[i]->getLatitude());
-        if ( d < min_dist ) {
-            if ( !with_metar || (with_metar&&airports_array[i]->getMetar()) ) {
-                closest = i;
-                min_dist = d;
-            }
+        double d = fabs(lon_deg - (*it)->getLongitude())
+                + fabs(lat_deg - (*it)->getLatitude());
+        if (d < min_dist) {
+            closest = it;
+            min_dist = d;
         }
     }
-
-    return ( closest > -1 ? airports_array[closest] : NULL );
+    return closest != end ? *closest : 0;
 }
 
 
