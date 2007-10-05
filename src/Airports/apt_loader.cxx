@@ -46,31 +46,31 @@
 
 static void addAirport(FGAirportList *airports, const string& apt_id, const string& apt_name,
     int rwy_count, double rwy_lat_accum, double rwy_lon_accum, double last_rwy_heading,
-    double apt_elev, SGGeod& tower, bool got_tower)
+    double apt_elev, SGGeod& tower, bool got_tower, int type)
 {
-    if (!apt_id.empty()) {
-        if (rwy_count > 0) {
-            double lat = rwy_lat_accum / (double)rwy_count;
-            double lon = rwy_lon_accum / (double)rwy_count;
+    if (apt_id.empty())
+        return;
 
-            if (!got_tower) {
-                // tower height hard coded for now...
-                const float tower_height = 50.0f;
-                // make a little off the heading for 1 runway airports...
-                float fudge_lon = fabs(sin(last_rwy_heading * SGD_DEGREES_TO_RADIANS)) * .003f;
-                float fudge_lat = .003f - fudge_lon;
-        
-                tower = SGGeod::fromDegFt(lon + fudge_lon, lat + fudge_lat, apt_elev + tower_height);
-            }
-                    
-            airports->add(apt_id, SGGeod::fromDegFt(lon, lat, apt_elev), tower, apt_name, false);
-        } else {
-            if ( apt_id.length() ) {
-                SG_LOG(SG_GENERAL, SG_ALERT, "ERROR: No runways for " << apt_id
-                        << ", skipping." );
-            }
-        }
+    if (!rwy_count) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "ERROR: No runways for " << apt_id
+                << ", skipping." );
+        return;
     }
+
+    double lat = rwy_lat_accum / (double)rwy_count;
+    double lon = rwy_lon_accum / (double)rwy_count;
+
+    if (!got_tower) {
+        // tower height hard coded for now...
+        const float tower_height = 50.0f;
+        // make a little off the heading for 1 runway airports...
+        float fudge_lon = fabs(sin(last_rwy_heading * SGD_DEGREES_TO_RADIANS)) * .003f;
+        float fudge_lat = .003f - fudge_lon;
+        tower = SGGeod::fromDegFt(lon + fudge_lon, lat + fudge_lat, apt_elev + tower_height);
+    }
+
+    airports->add(apt_id, SGGeod::fromDegFt(lon, lat, apt_elev), tower, apt_name, false,
+            type == 1/*airport*/, type == 16/*seaport*/, type == 17/*heliport*/);
 }
 
 // Load the airport data base from the specified aptdb file.  The
@@ -151,7 +151,7 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
                     << elev );
 
             addAirport(airports, last_apt_id, last_apt_name, rwy_count, rwy_lat_accum, rwy_lon_accum,
-                last_rwy_heading, last_apt_elev, last_tower, got_tower);
+                last_rwy_heading, last_apt_elev, last_tower, got_tower, line_id);
 
             last_apt_id = id;
             last_apt_elev = elev;
@@ -242,9 +242,9 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
         }
     }
 
-    // add the last airport being processed if any    
+    // add the last airport being processed if any
     addAirport(airports, last_apt_id, last_apt_name, rwy_count, rwy_lat_accum, rwy_lon_accum,
-        last_rwy_heading, last_apt_elev, last_tower, got_tower);
+        last_rwy_heading, last_apt_elev, last_tower, got_tower, 0);
 
 
     //

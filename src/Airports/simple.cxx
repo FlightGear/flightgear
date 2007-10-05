@@ -61,42 +61,46 @@ SG_USING_STD(random_shuffle);
 /***************************************************************************
  * FGAirport
  ***************************************************************************/
-FGAirport::FGAirport()
+FGAirport::FGAirport() : _dynamics(0)
 {
-    dynamics = 0;
 }
 
-FGAirport::FGAirport(const string &id, const SGGeod& location, const SGGeod& tower_location, const string &name, bool has_metar)
+FGAirport::FGAirport(const string &id, const SGGeod& location, const SGGeod& tower_location,
+        const string &name, bool has_metar, bool is_airport, bool is_seaport,
+        bool is_heliport) :
+    _id(id),
+    _location(location),
+    _tower_location(tower_location),
+    _name(name),
+    _has_metar(has_metar),
+    _is_airport(is_airport),
+    _is_seaport(is_seaport),
+    _is_heliport(is_heliport),
+    _dynamics(0)
 {
-    _id = id;
-    _location = location;
-    _tower_location = tower_location;
-    _name      = name;
-    _has_metar = has_metar;
-    dynamics   = 0;
 }
 
 
 FGAirport::~FGAirport()
 {
-    delete dynamics;
+    delete _dynamics;
 }
 
 
 FGAirportDynamics * FGAirport::getDynamics()
 {
-    if (dynamics != 0) {
-        return dynamics;
+    if (_dynamics != 0) {
+        return _dynamics;
     } else {
         //cerr << "Trying to load dynamics for " << _id << endl;
-        dynamics = new FGAirportDynamics(this);
-        XMLLoader::load(dynamics);
+        _dynamics = new FGAirportDynamics(this);
+        XMLLoader::load(_dynamics);
 
         FGRunwayPreference rwyPrefs(this);
         XMLLoader::load(&rwyPrefs);
-        dynamics->setRwyUse(rwyPrefs);
+        _dynamics->setRwyUse(rwyPrefs);
    }
-    return dynamics;
+    return _dynamics;
 }
 
 
@@ -142,13 +146,15 @@ FGAirportList::~FGAirportList( void )
 
 // add an entry to the list
 void FGAirportList::add( const string &id, const SGGeod& location, const SGGeod& tower_location,
-                         const string &name, const bool has_metar )
+                         const string &name, bool has_metar, bool is_airport, bool is_seaport,
+                         bool is_heliport)
 {
-    FGAirport* a = new FGAirport(id, location, tower_location, name, has_metar);
- 
+    FGAirport* a = new FGAirport(id, location, tower_location, name, has_metar,
+            is_airport, is_seaport, is_heliport);
+
     airports_by_id[a->getId()] = a;
     // try and read in an auxilary file
- 
+
     airports_array.push_back( a );
     SG_LOG( SG_GENERAL, SG_BULK, "Adding " << id << " pos = " << location.getLongitudeDeg()
             << ", " << location.getLatitudeDeg() << " elev = " << location.getElevationFt() );

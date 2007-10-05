@@ -69,12 +69,16 @@ private:
     SGGeod _tower_location;
     string _name;
     bool _has_metar;
-    FGAirportDynamics *dynamics;
+    bool _is_airport;
+    bool _is_seaport;
+    bool _is_heliport;
+    FGAirportDynamics *_dynamics;
 
 public:
     FGAirport();
     // FGAirport(const FGAirport &other);
-    FGAirport(const string& id, const SGGeod& location, const SGGeod& tower, const string& name, bool has_metar);
+    FGAirport(const string& id, const SGGeod& location, const SGGeod& tower, const string& name,
+            bool has_metar, bool is_airport, bool is_seaport, bool is_heliport);
     ~FGAirport();
 
     const string& getId() const { return _id; }
@@ -85,6 +89,9 @@ public:
     // Returns ft
     double getElevation() const { return _location.getElevationFt(); }
     bool   getMetar()     const { return _has_metar; }
+    bool   isAirport()    const { return _is_airport; }
+    bool   isSeaport()    const { return _is_seaport; }
+    bool   isHeliport()   const { return _is_heliport; }
 
     const SGGeod& getTowerLocation() const { return _tower_location; }
 
@@ -126,7 +133,8 @@ public:
 
     // add an entry to the list
     void add( const string& id, const SGGeod& location, const SGGeod& tower,
-              const string& name, const bool has_metar );
+              const string& name, bool has_metar, bool is_airport,
+              bool is_seaport, bool is_heliport );
 
     // search for the specified id.
     // Returns NULL if unsucessfull.
