@@ -1194,7 +1194,6 @@ bool fgInitPosition() {
     string apt = fgGetString("/sim/presets/airport-id");
     string rwy_no = fgGetString("/sim/presets/runway");
     bool rwy_req = fgGetBool("/sim/presets/runway-requested");
-    double hdg = fgGetDouble("/sim/presets/heading-deg");
     string vor = fgGetString("/sim/presets/vor-id");
     double vor_freq = fgGetDouble("/sim/presets/vor-freq");
     string ndb = fgGetString("/sim/presets/ndb-id");
@@ -1202,6 +1201,8 @@ bool fgInitPosition() {
     string carrier = fgGetString("/sim/presets/carrier");
     string parkpos = fgGetString("/sim/presets/parkpos");
     string fix = fgGetString("/sim/presets/fix");
+    SGPropertyNode *hdg_preset = fgGetNode("/sim/presets/heading-deg", true);
+    double hdg = hdg_preset->getDoubleValue();
 
     if (hdg > 9990.0)
         hdg = fgGetDouble("/environment/config/boundary/entry/wind-from-heading-deg", 270);
@@ -1225,6 +1226,9 @@ bool fgInitPosition() {
             set_pos = true;
         }
     }
+
+    if (hdg_preset->getDoubleValue() > 9990.0)
+        hdg_preset->setDoubleValue(hdg);
 
     if ( !set_pos && !vor.empty() ) {
         // a VOR is requested
@@ -1265,15 +1269,14 @@ bool fgInitPosition() {
                  fgGetDouble("/sim/presets/longitude-deg") );
     fgSetDouble( "/position/latitude-deg",
                  fgGetDouble("/sim/presets/latitude-deg") );
-    fgSetDouble( "/orientation/heading-deg",
-                 fgGetDouble("/sim/presets/heading-deg") );
+    fgSetDouble( "/orientation/heading-deg", hdg_preset->getDoubleValue());
 
     // determine if this should be an on-ground or in-air start
     if ((fabs(gs) > 0.01 || fabs(od) > 0.1 || alt > 0.1) && carrier.empty()) {
         fgSetBool("/sim/presets/onground", false);
     } else {
         fgSetBool("/sim/presets/onground", true);
-    }                              
+    }
 
     return true;
 }
