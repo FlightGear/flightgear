@@ -2431,7 +2431,7 @@ string FGTower::GenText(const string& m, int c) {
 			//break;
 		//}
 	//}
-	if ( mes != "" ) return mes;
+	if ( mes[0] ) return mes;
 	else return "No transmission found";
 }
 
