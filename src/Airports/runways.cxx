@@ -285,7 +285,7 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
             reversed = true;
         }
 
-    } while (!next(&r));
+    } while (next(&r));
 
     return reversed ? GetReverseRunwayNo(best._rwy_no) : best._rwy_no;
 }
