@@ -1195,6 +1195,20 @@ bool fgInitPosition() {
     SGPropertyNode *hdg_preset = fgGetNode("/sim/presets/heading-deg", true);
     double hdg = hdg_preset->getDoubleValue();
 
+    // save some start parameters, so that we can later say what the
+    // user really requested. TODO generalize that and move it to options.cxx
+    static bool start_options_saved = false;
+    if (!start_options_saved) {
+        start_options_saved = true;
+        SGPropertyNode *opt = fgGetNode("/sim/startup/options", true);
+
+        opt->setDoubleValue("latitude-deg", lat_deg);
+        opt->setDoubleValue("longitude-deg", lon_deg);
+        opt->setDoubleValue("heading-deg", hdg);
+        opt->setStringValue("airport", apt.c_str());
+        opt->setStringValue("runway", rwy_no.c_str());
+    }
+
     if (hdg > 9990.0)
         hdg = fgGetDouble("/environment/config/boundary/entry/wind-from-heading-deg", 270);
 
