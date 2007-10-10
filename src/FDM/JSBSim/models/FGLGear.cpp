@@ -205,6 +205,15 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) : Exec(fdmex),
   WheelSlip = 0.0;
   TirePressureNorm = 1.0;
 
+  SideWhlVel    = 0.0;
+  RollingWhlVel = 0.0;
+
+  SinWheel = 0.0;
+  CosWheel = 0.0;
+
+  prevSlipIn  = 0.0;
+  prevSlipOut = 0.0;
+
   Debug(0);
 }
 
