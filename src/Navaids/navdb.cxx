@@ -74,13 +74,16 @@ bool fgNavDBInit( FGAirportList *airports,
     in >> skipeol;
 
 
-#ifdef __MWERKS__
-    char c = 0;
-    while ( in.get(c) && c != '\0'  ) {
-        in.putback(c);
-#else
+//#ifdef __MWERKS_
+//
+// FIXME -- Please complain to the FlightGear mailing list, if you still need this hack.
+//
+//    char c = 0;
+//    while ( in.get(c) && c != '\0' ) {
+//        in.putback(c);
+//#else
     while ( ! in.eof() ) {
-#endif
+//#endif
 
         FGNavRecord *r = new FGNavRecord;
         in >> (*r);
