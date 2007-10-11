@@ -74,16 +74,19 @@ bool fgNavDBInit( FGAirportList *airports,
     in >> skipeol;
 
 
-//#ifdef __MWERKS_
-//
-// FIXME -- Please complain to the FlightGear mailing list, if you still need this hack.
-//
-//    char c = 0;
-//    while ( in.get(c) && c != '\0' ) {
-//        in.putback(c);
-//#else
+#ifdef __MWERKS_
+
+ FIXME -- Please report to the FlightGear mailing list, if you still use a
+          compiler identifying itself as __MWERKS__ that needs this hack.
+          There are 41 instances of it in the SimGear & FilghtGear code,
+          and they are scheduled for removal.
+
+    char c = 0;
+    while ( in.get(c) && c != '\0' ) {
+        in.putback(c);
+#else
     while ( ! in.eof() ) {
-//#endif
+#endif
 
         FGNavRecord *r = new FGNavRecord;
         in >> (*r);
