@@ -42,7 +42,7 @@
 SG_USING_STD(sort);
 
 class metar_filter : public FGAirportSearchFilter {
-    virtual bool acceptable(FGAirport *a) { return a->getMetar(); }
+    virtual bool pass(FGAirport *a) { return a->getMetar(); }
 } metar_only;
 
 

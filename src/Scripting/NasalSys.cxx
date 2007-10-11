@@ -487,7 +487,7 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 
 
 class airport_filter : public FGAirportSearchFilter {
-    virtual bool acceptable(FGAirport *a) { return a->isAirport(); }
+    virtual bool pass(FGAirport *a) { return a->isAirport(); }
 } airport;
 
 // Returns airport data for given airport id ("KSFO"), or for the airport

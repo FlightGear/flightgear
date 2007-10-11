@@ -197,14 +197,14 @@ FGAirport* FGAirportList::search(double lon_deg, double lat_deg)
 // search for the airport nearest the specified position and
 // passing the filter
 FGAirport* FGAirportList::search(double lon_deg, double lat_deg,
-        FGAirportSearchFilter& search)
+        FGAirportSearchFilter& filter)
 {
     double min_dist = 360.0;
     airport_list_iterator it = airports_array.begin();
     airport_list_iterator end = airports_array.end();
     airport_list_iterator closest = end;
     for (; it != end; ++it) {
-        if (!search.acceptable(*it))
+        if (!filter.pass(*it))
             continue;
 
         // crude manhatten distance based on lat/lon difference
