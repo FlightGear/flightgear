@@ -33,7 +33,6 @@ FGSubmodelMgr::FGSubmodelMgr()
     yaw_offset = 0.0;
 
     out[0] = out[1] = out[2] = 0;
-    in[3] = out[3] = 1;
     string contents_node;
     contrail_altitude = 30000;
     _count = 0;
