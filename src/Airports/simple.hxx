@@ -108,7 +108,8 @@ private:
 class FGAirportSearchFilter {
 public:
     virtual ~FGAirportSearchFilter() {}
-    virtual bool acceptable(FGAirport*) { return true; }
+    // all airports pass the filter by default
+    virtual bool pass(FGAirport*) { return true; }
 };
 
 
