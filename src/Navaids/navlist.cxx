@@ -243,12 +243,13 @@ FGNavRecord *FGNavList::findByIdentAndFreq( const char* ident, const double freq
         // sometimes there can be duplicated idents.  If a freq is
         // specified, use it to refine the search.
         int f = (int)(freq*100.0 + 0.5);
-        for ( unsigned int i = 0; i < stations.size(); ++i ) {
-            if ( f == stations[i]->get_freq() ) {
-                return stations[i];
+        nav_list_const_iterator it, end = stations.end();
+        for ( it = stations.begin(); it != end; ++it ) {
+            if ( f == (*it)->get_freq() ) {
+                return (*it);
             }
         }
-    } else if (stations.size()) {
+    } else if (!stations.empty()) {
         return stations[0];
     }
 
@@ -266,10 +267,13 @@ FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft,
     double min_dist
         = FG_NAV_MAX_RANGE*SG_NM_TO_METER*FG_NAV_MAX_RANGE*SG_NM_TO_METER;
 
+    nav_list_const_iterator it;
+    nav_list_const_iterator end = stations.end();
     // find the closest station within a sensible range (FG_NAV_MAX_RANGE)
-    for ( unsigned int i = 0; i < stations.size(); ++i ) {
+    for ( it = stations.begin(); it != end; ++it ) {
+        FGNavRecord *station = *it;
         // cout << "testing " << current->get_ident() << endl;
-        d2 = distSqr(stations[i]->get_cart(), aircraft);
+        d2 = distSqr(station->get_cart(), aircraft);
 
         // cout << "  dist = " << sqrt(d)
         //      << "  range = " << current->get_range() * SG_NM_TO_METER
@@ -285,19 +289,19 @@ FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft,
         // placed from each other.  (Do the expensive check only for
         // directional atennas and only when there is a chance it is
         // the closest station.)
+        int type = station->get_type();
         if ( d2 < min_dist &&
-             (stations[i]->get_type() == 4 || stations[i]->get_type() == 5 ||
-              stations[i]->get_type() == 6 || stations[i]->get_type() == 12 ||
-              stations[i]->get_type() == 13) )
+             (type == 4 || type == 5 || type == 6 || type == 12 || type == 13) )
         {
             double hdg_deg = 0.0;
-            if ( stations[i]->get_type() == 4 || stations[i]->get_type() == 5 ){
-                hdg_deg = stations[i]->get_multiuse();
-            } else if ( stations[i]->get_type() == 6 ) {
-                int tmp = (int)(stations[i]->get_multiuse() / 1000.0);
-                hdg_deg = stations[i]->get_multiuse() - (tmp * 1000);
-            } else if ( stations[i]->get_type() == 12 ||
-                        stations[i]->get_type() == 13 ) {
+            if ( type == 4 || type == 5 ){
+                hdg_deg = station->get_multiuse();
+
+            } else if ( type == 6 ) {
+                int tmp = (int)(station->get_multiuse() / 1000.0);
+                hdg_deg = station->get_multiuse() - (tmp * 1000);
+
+            } else if ( type == 12 || type == 13 ) {
                 // oops, Robin's data format doesn't give us the
                 // needed information to compute a heading for a DME
                 // transmitter.  FIXME Robin!
@@ -305,9 +309,8 @@ FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft,
 
             double az1 = 0.0, az2 = 0.0, s = 0.0;
             SGGeod geod = SGGeod::fromCart(aircraft);
-            geo_inverse_wgs_84( geod, stations[i]->get_pos(),
-                                &az1, &az2, &s);
-            az1 = az1 - stations[i]->get_multiuse();
+            geo_inverse_wgs_84( geod, station->get_pos(), &az1, &az2, &s);
+            az1 = az1 - station->get_multiuse();
             if ( az1 >  180.0) az1 -= 360.0;
             if ( az1 < -180.0) az1 += 360.0;
             // penalize opposite facing stations by adding 5000 meters
@@ -321,7 +324,7 @@ FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft,
 
         if ( d2 < min_dist ) {
             min_dist = d2;
-            nav = stations[i];
+            nav = station;
         }
     }
 
@@ -398,7 +401,7 @@ FGNavRecord *FGNavList::findStationByFreq( double freq )
 
     SG_LOG( SG_INSTR, SG_DEBUG, "findStationByFreq " << freq << " size " << stations.size()  );
 
-    if (stations.size()) {
+    if (!stations.empty()) {
         return stations[0];
     }
     return NULL;
@@ -438,7 +441,7 @@ FGTACANRecord *FGTACANList::findByChannel( const string& channel )
     const tacan_list_type& stations = ident_channels[channel];
     SG_LOG( SG_INSTR, SG_DEBUG, "findByChannel " << channel<< " size " << stations.size() );
 
-    if (stations.size()) {
+    if (!stations.empty()) {
         return stations[0];
     }
     return NULL;
