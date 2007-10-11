@@ -74,7 +74,7 @@ bool fgNavDBInit( FGAirportList *airports,
     in >> skipeol;
 
 
-#ifdef __MWERKS_
+#ifdef __MWERKS__
 
  FIXME -- Please report to the FlightGear mailing list, if you still use a
           compiler identifying itself as __MWERKS__ that needs this hack.
