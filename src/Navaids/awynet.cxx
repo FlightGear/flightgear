@@ -227,6 +227,7 @@ void FGAirwayNetwork::load(SGPath path)
       // Read each line from the database
       identStart = token;
       in >> latStart >> lonStart >> identEnd >> latEnd >> lonEnd >> type >> base >> top >> name;
+      in >> skipeol;
       /*out << identStart << " "
 	<< latStart   << " "
 	<< lonStart   << " "
