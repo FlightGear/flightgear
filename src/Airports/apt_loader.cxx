@@ -231,6 +231,8 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
             // windsock entry (ignore)
         } else if ( line_id == 15 ) {
             // custom startup locations (ignore)
+        } else if ( line_id == 0 ) {
+            // ??
         } else if ( line_id >= 50 && line_id <= 56 ) {
             // frequency entries (ignore)
         } else if ( line_id == 99 ) {
