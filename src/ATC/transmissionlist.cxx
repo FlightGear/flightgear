@@ -257,8 +257,7 @@ string FGTransmissionList::gen_text(const atc_type &station, const TransCode cod
 			break;
 		}
 	}
-	if ( mes != "" ) return mes;
-	else return "No transmission found";
+	return mes[0] ? mes : "No transmission found";
 }
 
 
