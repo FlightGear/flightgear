@@ -29,8 +29,8 @@
 #include <stdio.h>              // sprintf()
 
 #include <simgear/compiler.h>
-
 #include <simgear/debug/logstream.hxx>
+#include <Main/fg_props.hxx>
 
 #include STL_STRING
 #include <map>
@@ -216,9 +216,8 @@ bool FGRunwayList::search( const string& aptid, const int tgt_hdg,
 
 
 // Return the runway number of the runway closest to a given heading
-#include <Main/fg_props.hxx>   // FIXME remove
 string FGRunwayList::search( const string& aptid, const int hdg ) {
-    //SG_LOG(SG_GENERAL, SG_DEBUG, "searching runway for " << aptid
+    //SG_LOG(SG_GENERAL, SG_ALERT, "searching runway for " << aptid
     //        << " with target heading " << hdg);
 
     FGRunway r;
@@ -228,10 +227,11 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
         return "NN";
     }
 
-    double LENWGT = fgGetDouble("/tmp/runway-search/length", 0.01);
-    double WIDWGT = fgGetDouble("/tmp/runway-search/width", 0.01);
-    double SURFWGT = fgGetDouble("/tmp/runway-search/surface", 10);
-    double DEVWGT = fgGetDouble("/tmp/runway-search/deviation", 1);
+    SGPropertyNode *param = fgGetNode("/sim/airport/runways/search", true);
+    double lenwgt = param->getDoubleValue("length-weight", 0.01);
+    double widwgt = param->getDoubleValue("width-weight", 0.01);
+    double surfwgt = param->getDoubleValue("surface-weight", 10);
+    double devwgt = param->getDoubleValue("deviation-weight", 1);
 
     FGRunway best;
     double max = 0.0;
@@ -243,14 +243,14 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
         if (r._type != "runway")
             continue;
 
-        int surface = 0;
-        if (r._surface_code == 1 || r._surface_code == 2)       // asphalt & concrete
+        int surface = 1;
+        if (r._surface_code == 12 || r._surface_code == 5) // dry lakebed & gravel
             surface = 2;
-        else if (r._surface_code == 12 || r._surface_code == 5) // dry lakebed & gravel
-            surface = 1;
+        else if (r._surface_code == 1 || r._surface_code == 2) // asphalt & concrete
+            surface = 3;
 
         double quality, bad, diff;
-        double good = LENWGT * r._length + WIDWGT * r._width + SURFWGT * surface;
+        double good = lenwgt * r._length + widwgt * r._width + surfwgt * surface + 1e-20;
 
         // this side
         diff = hdg - r._heading;
@@ -258,10 +258,10 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
             diff += 360;
         while (diff >= 180)
             diff -= 360;
-        bad = fabs(DEVWGT * diff) + 1e-20;
+        bad = fabs(devwgt * diff) + 1e-20;
 
         quality = good / bad;
-        //SG_LOG(SG_GENERAL, SG_DEBUG, "  runway " << r._rwy_no <<  " -> " << quality);
+        //SG_LOG(SG_GENERAL, SG_ALERT, "  runway " << r._rwy_no <<  " -> " << quality);
         if (quality > max) {
             max = quality;
             best = r;
@@ -274,10 +274,10 @@ string FGRunwayList::search( const string& aptid, const int hdg ) {
             diff += 360;
         while (diff >= 180)
             diff -= 360;
-        bad = fabs(DEVWGT * diff) + 1e-20;
+        bad = fabs(devwgt * diff) + 1e-20;
 
         quality = good / bad;
-        //SG_LOG(SG_GENERAL, SG_DEBUG, "  runway " << GetReverseRunwayNo(r._rwy_no)
+        //SG_LOG(SG_GENERAL, SG_ALERT, "  runway " << GetReverseRunwayNo(r._rwy_no)
         //        <<  " -> " << quality);
         if (quality > max) {
             max = quality;
