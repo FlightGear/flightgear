@@ -132,10 +132,11 @@ private:
 class FGNasalListener : public SGPropertyChangeListener {
 public:
     FGNasalListener(SGPropertyNode_ptr node, naRef handler,
-                    FGNasalSys* nasal, int key, int id);
+                    FGNasalSys* nasal, int key, int id, int type);
 
     ~FGNasalListener();
     void valueChanged(SGPropertyNode* node);
+    bool unchanged(SGPropertyNode* node);
 
 private:
     friend class FGNasalSys;
@@ -143,9 +144,14 @@ private:
     naRef _handler;
     int _gcKey;
     int _id;
+    int _type;
     FGNasalSys* _nas;
     unsigned int _active;
     bool _dead;
+    bool _first_call;
+    long _last_int;
+    double _last_float;
+    string _last_string;
 };
 
 
