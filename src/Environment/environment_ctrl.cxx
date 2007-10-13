@@ -95,32 +95,6 @@ FGEnvironmentCtrl::setPosition (double lon_deg, double lat_deg, double elev_ft)
 }
 
 
-void FGEnvironmentCtrl::printTimingInformation ()
-{
-   SGTimeStamp startTime, endTime;
-   long duration;
-   for ( eventTimeVecIterator i = timingInfo.begin();
-          i != timingInfo.end();
-          i++) {
-       if (i == timingInfo.begin()) {
-           startTime = i->getTime();
-       } else {
-           endTime = i->getTime();
-           duration = (endTime - startTime);
-	   startTime = endTime;
-           cout << "Getting to timestamp : " << i->getName() << " takes " << duration << " usec." << endl;
-       }
-   }
-}
-
-void FGEnvironmentCtrl::stamp(string name)
-{
-    SGTimeStamp now;
-    now.stamp();
-    timingInfo.push_back(TimingInfo(name, now));
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGUserDefEnvironmentCtrl.

@@ -99,9 +99,11 @@ get_formated_gmt_time( void )
 {
     static char buf[32];
     const struct tm *p = globals->get_time_params()->getGmt();
-    sprintf( buf, "%d/%d/%4d %d:%02d:%02d",
+    if (snprintf( buf, 32, "%d/%d/%4d %d:%02d:%02d",
          p->tm_mon+1, p->tm_mday, 1900 + p->tm_year,
-         p->tm_hour, p->tm_min, p->tm_sec);
+         p->tm_hour, p->tm_min, p->tm_sec) >= 32) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+    }
 
     return buf;
 }

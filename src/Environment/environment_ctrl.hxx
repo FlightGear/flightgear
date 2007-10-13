@@ -80,13 +80,8 @@ public:
   virtual double getLatitudeDeg () const { return _lat_deg; }
   virtual double getElevationFt () const { return _elev_ft; }
 
-  virtual void printTimingInformation();
-
-  void stamp(string name);
-
 protected:
 
-  eventTimeVec timingInfo;
   FGEnvironment * _environment;
   double _lon_deg;
   double _lat_deg;

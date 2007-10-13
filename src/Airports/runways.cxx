@@ -116,7 +116,7 @@ static string GetReverseRunwayNo(string& rwyno) {
     while(rn > 36) {
 	rn -= 36;
     }
-    sprintf(buf, "%02i", rn);
+    snprintf(buf, 4, "%02i", rn);
     if(rwyno.size() == 3) {
 	if(rwyno.substr(2,1) == "L") {
 	    buf[2] = 'R';

@@ -202,31 +202,6 @@ FGInput::~FGInput ()
         default_input = 0;
 }
 
-void FGInput::printTimingInformation ()
-{
-   SGTimeStamp startTime, endTime;
-   long duration;
-   for ( eventTimeVecIterator i = timingInfo.begin();
-          i != timingInfo.end();
-          i++) {
-       if (i == timingInfo.begin()) {
-           startTime = i->getTime();
-       } else {
-           endTime = i->getTime();
-           duration = (endTime - startTime);
-	   startTime = endTime;
-           //cout << "Getting to timestamp : " << i->getName() << " takes " << duration << " usec." << endl;
-       }
-   }
-}
-
-void FGInput::stamp(string name)
-{
-    SGTimeStamp now;
-    now.stamp();
-    timingInfo.push_back(TimingInfo(name, now));
-}
-
 void
 FGInput::init ()
 {

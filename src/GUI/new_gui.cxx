@@ -35,6 +35,8 @@ NewGUI::~NewGUI ()
 {
     delete _menubar;
     _dialog_props.clear();
+    for (_itt_t it = _colors.begin(); it != _colors.end(); ++it)
+        delete it->second;
 }
 
 void

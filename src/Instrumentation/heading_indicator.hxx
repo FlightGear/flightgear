@@ -46,13 +46,8 @@ public:
     virtual void unbind ();
     virtual void update (double dt);
 
-    virtual void printTimingInformation();
-
-     void stamp(string name);
-
 private:
 
-    eventTimeVec timingInfo;
     Gyro _gyro;
     double _last_heading_deg;
 
@@ -63,8 +58,7 @@ private:
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _heading_in_node;
     SGPropertyNode_ptr _suction_node;
-    SGPropertyNode_ptr _heading_out_node;
-    
+    SGPropertyNode_ptr _heading_out_node; 
 };
 
 #endif // __INSTRUMENTS_HEADING_INDICATOR_HXX

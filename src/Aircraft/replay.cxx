@@ -139,8 +139,8 @@ void FGReplay::unbind() {
  */
 
 void FGReplay::update( double dt ) {
-    //timingInfo.clear();
-    //stamp("begin");
+    timingInfo.clear();
+    stamp("begin");
     static SGPropertyNode *replay_master
         = fgGetNode( "/sim/freeze/replay", true );
 
@@ -173,13 +173,13 @@ void FGReplay::update( double dt ) {
     FGReplayData *r;
     //stamp("point_04bb");
     if (!recycler.size()) {
-        //stamp("point_04bc");
+        stamp("Replay_01");
         r = new FGReplayData;
-	//stamp("point_04bd");
+	stamp("Replay_02");
     } else {
       r = recycler.front();
       recycler.pop_front();
-      //stamp("point_04be");
+    //stamp("point_04be");
     }
     r->sim_time = sim_time;
     //r->ctrls = c;
@@ -593,31 +593,3 @@ double FGReplay::get_end_time() {
         return 0.0;
     } 
 }
-
-/*
-void FGReplay::printTimingInformation ()
-{
-   SGTimeStamp startTime, endTime;
-   long duration;
-   for ( eventTimeVecIterator i = timingInfo.begin();
-          i != timingInfo.end();
-          i++) {
-       if (i == timingInfo.begin()) {
-           startTime = i->getTime();
-       } else {
-           endTime = i->getTime();
-           duration = (endTime - startTime);
-	   startTime = endTime;
-           cout << "Getting to timestamp : " << i->getName() << " takes " << duration << " usec." << endl;
-       }
-   }
-}
-
-void FGReplay::stamp(string name)
-{
-    SGTimeStamp now;
-    now.stamp();
-    timingInfo.push_back(TimingInfo(name, now));
-}
-
-*/

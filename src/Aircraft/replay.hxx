@@ -72,15 +72,12 @@ public:
     virtual void bind();
     virtual void unbind();
     virtual void update( double dt );
-    //virtual void printTimingInformation();
 
-    //void stamp(string name);
     void replay( double time );
     double get_start_time();
     double get_end_time();
     
 private:
-    //eventTimeVec timingInfo;
 
     static const double st_list_time;   // 60 secs of high res data
     static const double mt_list_time;  // 10 mins of 1 fps data

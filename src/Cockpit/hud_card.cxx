@@ -134,7 +134,9 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
             // draw carrot
             drawOneLine(x1, y1, x2, y2);
             drawOneLine(x1, y1, x3, y3);
-            sprintf(TextScale,"%3.1f\n", theta);
+            if (snprintf(TextScale, 80, "%3.1f\n", theta) >= 80) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+            }
 
             // draw value
             int l = abs((int)theta);
@@ -386,8 +388,9 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                     disp_val = i;
                                 }
 
-                                lenstr = sprintf(TextScale, "%d",
+                                lenstr = snprintf(TextScale, 80, "%d",
                                         float_to_int(disp_val * data_scaling()/*+.5*/));
+
                                 // (int)(disp_val  * data_scaling() +.5));
                                 /* if (((marker_ys - 8) > scrn_rect.top) &&
                                    ((marker_ys + 8) < (height))){ */
@@ -693,7 +696,7 @@ void hud_card::draw(void) //  (HUD_scale * pscale)
                                 }
                                 // printf("disp_val = %d\n", disp_val);
                                 // printf("%d\n", (int)(disp_val  * (double)data_scaling() + 0.5));
-                                lenstr = sprintf(TextScale, "%d",
+                                lenstr = snprintf(TextScale, 80, "%d",
                                         // (int)(disp_val  * data_scaling() +.5));
                                         float_to_int(disp_val * data_scaling()/*+.5*/));
 
@@ -901,7 +904,9 @@ void hud_card::zoomed_scale(int first, int last)
 
             drawOneLine(xstart, ycentre, xstart - 5.0, ycentre); //centre tick
 
-            sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
+            if (snprintf(TextScale, 80, "%3.0f\n",(float)(data[centre] * data_scaling())) >= 80) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+            }
 
             if (!huds_notext(options))
                 textString(x, ycentre, TextScale, 0);
@@ -919,12 +924,16 @@ void hud_card::zoomed_scale(int first, int last)
                 drawOneLine(xstart, yfirst, xstart - 5.0, yfirst);
                 drawOneLine(xstart, ysecond, xstart - 5.0, ysecond);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre - i - 1] * data_scaling()));
+                if (snprintf(TextScale,80, "%3.0f\n",(float)(data[centre - i - 1] * data_scaling())) >= 80) {
+                    SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+                }
 
                 if (!huds_notext(options))
                     textString (x, yfirst, TextScale, 0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre + i + 1] * data_scaling()));
+                if (snprintf(TextScale, 80, "%3.0f\n",(float)(data[centre + i + 1] * data_scaling())) >= 80) {
+                    SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+                }
 
                 if (!huds_notext(options))
                     textString (x, ysecond, TextScale, 0);
@@ -952,7 +961,9 @@ void hud_card::zoomed_scale(int first, int last)
 
             drawOneLine(xstart, ycentre, xstart + 5.0, ycentre); //centre tick
 
-            sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
+            if (snprintf(TextScale,80, "%3.0f\n",(float)(data[centre] * data_scaling())) >= 80) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+            }
 
             if (!huds_notext(options))
                 textString(w, ycentre, TextScale, 0);
@@ -970,12 +981,16 @@ void hud_card::zoomed_scale(int first, int last)
                 drawOneLine(xstart, yfirst, xstart + 5.0, yfirst);
                 drawOneLine(xstart, ysecond, xstart + 5.0, ysecond);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre - i - 1] * data_scaling()));
+                if (snprintf(TextScale, 80, "%3.0f\n",(float)(data[centre - i - 1] * data_scaling())) >= 80) {
+                    SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+                }
 
                 if (!huds_notext(options))
                     textString(w, yfirst, TextScale, 0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre + i + 1] * data_scaling()));
+                if (snprintf(TextScale, 80, "%3.0f\n",(float)(data[centre + i + 1] * data_scaling())) >= 80) {
+                    SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+                }
 
                 if (!huds_notext(options))
                     textString(w, ysecond, TextScale, 0);
@@ -1064,7 +1079,9 @@ void hud_card::zoomed_scale(int first, int last)
             ystart = h;
             drawOneLine(xcentre, ystart, xcentre, ystart - 5.0); //centre tick
 
-            sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
+            if (snprintf(TextScale, 80, "%3.0f\n",(float)(data[centre] * data_scaling())) >= 80) { 
+                SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+            }
 
             if (!huds_notext(options))
                 textString (xcentre - 10.0, y, TextScale, 0);
@@ -1082,12 +1099,16 @@ void hud_card::zoomed_scale(int first, int last)
                 drawOneLine(xfirst, ystart, xfirst,  ystart - 5.0);
                 drawOneLine(xsecond, ystart, xsecond, ystart - 5.0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre - i - 1] * data_scaling()));
+                if (snprintf(TextScale, 80, "%3.0f\n",(float)(data[centre - i - 1] * data_scaling())) >= 80) {
+                    SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+                }
 
                 if (!huds_notext(options))
                     textString (xfirst - 10.0, y, TextScale, 0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre + i + 1] * data_scaling()));
+                if (snprintf(TextScale,80, "%3.0f\n",(float)(data[centre + i + 1] * data_scaling())) >= 80) {
+                    SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+                }
 
                 if (!huds_notext(options))
                     textString (xsecond - 10.0, y, TextScale, 0);
@@ -1116,7 +1137,9 @@ void hud_card::zoomed_scale(int first, int last)
             //drawOneLine(xstart, yfirst,  xstart - 5.0, yfirst);
             drawOneLine(xcentre, ystart, xcentre, ystart + 5.0); //centre tick
 
-            sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
+            if (snprintf(TextScale, 80, "%3.0f\n",(float)(data[centre] * data_scaling())) >= 80) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+            }
 
             if (!huds_notext(options))
                 textString (xcentre - 10.0, h, TextScale, 0);
@@ -1134,12 +1157,16 @@ void hud_card::zoomed_scale(int first, int last)
                 drawOneLine(xfirst, ystart, xfirst, ystart + 5.0);
                 drawOneLine(xsecond, ystart, xsecond, ystart + 5.0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre - i - 1] * data_scaling()));
+                if (snprintf(TextScale, 80, "%3.0f\n",(float)(data[centre - i - 1] * data_scaling())) >= 80) {
+                    SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+                }
 
                 if (!huds_notext(options))
                     textString (xfirst - 10.0, h, TextScale, 0);
 
-                sprintf(TextScale,"%3.0f\n",(float)(data[centre + i + 1] * data_scaling()));
+                if (snprintf(TextScale, 80, "%3.0f\n",(float)(data[centre + i + 1] * data_scaling())) >= 80) {
+                    SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+                }
 
                 if (!huds_notext(options))
                     textString (xsecond - 10.0, h, TextScale, 0);

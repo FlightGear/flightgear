@@ -1,3 +1,4 @@
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -458,7 +459,7 @@ void HudLadder::draw(void)
                 y = (((float)(i - pitch_value) * factor) + .5f);
 
                 if (!(i % div_units)) {           //  At integral multiple of div
-                    sprintf(TextLadder, "%d", i);
+                    snprintf(TextLadder, 8, "%d", i);
                     font->getBBox(TextLadder, pointsize, italic,
                             &left, &right, &bot, &top);
                     label_length = right - left;
@@ -505,7 +506,7 @@ void HudLadder::draw(void)
                     y = (((float)(i - actslope) * factor) + .5);
 
                 if (!(i % div_units)) {  //  At integral multiple of div
-                    sprintf(TextLadder, "%d", i);
+                    snprintf(TextLadder, 8, "%d", i);
                     font->getBBox(TextLadder, pointsize, italic,
                             &left, &right, &bot, &top);
                     label_length = right - left;

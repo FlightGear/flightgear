@@ -24,11 +24,29 @@
 #  include <config.h>
 #endif
 
+#include <simgear/scene/model/modellib.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/timing/sg_time.hxx>
+#include <simgear/ephemeris/ephemeris.hxx>
+#include <simgear/magvar/magvar.hxx>
+#include <simgear/scene/material/matlib.hxx>
 
+#include <Aircraft/controls.hxx>
+#include <Airports/runways.hxx>
+#include <ATC/AIMgr.hxx>
+#include <ATC/ATCmgr.hxx>
+#include <ATC/ATCdisplay.hxx>
+#include <Autopilot/route_mgr.hxx>
+#include <Cockpit/panel.hxx>
 #include <GUI/new_gui.hxx>
+#include <Model/acmodel.hxx>
+#include <Model/modelmgr.hxx>
+#include <MultiPlayer/multiplaymgr.hxx>
+#include <Navaids/awynet.hxx>
+#include <Scenery/scenery.hxx>
+#include <Scenery/tilemgr.hxx>
 
 #include "globals.hxx"
 #include "renderer.hxx"
@@ -98,16 +116,49 @@ FGGlobals::FGGlobals() :
 // Destructor
 FGGlobals::~FGGlobals() 
 {
-    delete soundmgr;
+    delete renderer;
     delete subsystem_mgr;
     delete event_mgr;
-    delete initial_state;
+    delete time_params;
+    delete ephem;
+    delete mag;
+    delete matlib;
+    delete route_mgr;
+    delete current_panel;
+    delete soundmgr;
+    delete airports;
+    delete runways;
+    delete ATC_mgr;
+    delete ATC_display;
+    delete AI_mgr;
+    delete controls;
+    delete viewmgr;
     delete props;
+    delete initial_state;
+    //delete locale; Don't delete locale
     delete commands;
+    delete model_lib;
+    delete acmodel;
+    delete model_mgr;
+    delete channel_options_list;
+    delete initial_waypoints;
+    delete scenery;
+    //delete tile_mgr; // Don't delete tile manager yet, because loader thread problems
     delete io;
     delete fontcache;
-    delete renderer;
-    delete initial_waypoints;
+
+    delete navlist;
+    delete loclist;
+    delete gslist;
+    delete dmelist;
+    delete mkrlist;
+    delete tacanlist;
+    delete carrierlist;
+    delete channellist;
+    delete fixlist;
+    delete airwaynet;
+    delete multiplayer_mgr;
+
 }
 
 

@@ -134,7 +134,7 @@ void gauge_instr::draw(void)
 
                         if (!huds_notext(options)) {
                             disp_val = i;
-                            sprintf(TextScale, "%d",
+                            snprintf(TextScale, 80, "%d",
                                     float_to_int(disp_val * data_scaling()/*+.5*/));
 
                             lenstr = getStringWidth(TextScale);
@@ -258,7 +258,7 @@ void gauge_instr::draw(void)
                         } else {
                             disp_val = i;
                         }
-                        sprintf(TextScale, "%d",
+                        snprintf(TextScale, 80, "%d",
                                 float_to_int(disp_val * data_scaling()/* +.5*/));
                         lenstr = getStringWidth(TextScale);
 

@@ -25,31 +25,6 @@ HeadingIndicator::~HeadingIndicator ()
 {
 }
 
-void HeadingIndicator::printTimingInformation ()
-{
-   SGTimeStamp startTime, endTime;
-   long duration;
-   for ( eventTimeVecIterator i = timingInfo.begin();
-          i != timingInfo.end();
-          i++) {
-       if (i == timingInfo.begin()) {
-           startTime = i->getTime();
-       } else {
-           endTime = i->getTime();
-           duration = (endTime - startTime);
-	   startTime = endTime;
-           //cout << "Getting to timestamp : " << i->getName() << " takes " << duration << " usec." << endl;
-       }
-   }
-}
-
-void HeadingIndicator::stamp(string name)
-{
-    SGTimeStamp now;
-    now.stamp();
-    timingInfo.push_back(TimingInfo(name, now));
-}
-
 void
 HeadingIndicator::init ()
 {

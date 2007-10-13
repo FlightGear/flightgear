@@ -65,12 +65,18 @@ instr_label::instr_label(const SGPropertyNode *node) :
 
     if (pre_str != NULL) {
         if (post_str != NULL)
-            sprintf(format_buffer, "%s%s%s", pre_str, pformat, post_str);
+            if (snprintf(format_buffer, 80, "%s%s%s", pre_str, pformat, post_str) >= 80) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+            }
         else
-            sprintf(format_buffer, "%s%s", pre_str, pformat);
+            if (snprintf(format_buffer, 80, "%s%s", pre_str, pformat) >= 80) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+            }
 
     } else if (post_str != NULL) {
-            sprintf(format_buffer, "%s%s", pformat, post_str);
+            if (snprintf(format_buffer, 80, "%s%s", pformat, post_str) >= 80) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+            }
     } else {
             strcpy(format_buffer, pformat);			// FIXME
     }
@@ -119,11 +125,15 @@ void instr_label::draw(void)
                 glDisable(GL_LINE_STIPPLE);
                 glPopMatrix();
             }
-            sprintf(label_buffer, format_buffer, get_value() * data_scaling());
+            if (snprintf(label_buffer, 80, format_buffer, get_value() * data_scaling()) >= 80) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+            }
         }
 
     } else {
-        sprintf(label_buffer, format_buffer);
+        if (snprintf(label_buffer, 80, format_buffer) >= 80) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
+        }
     }
 
     lenstr = getStringWidth(label_buffer);
