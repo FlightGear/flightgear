@@ -117,6 +117,13 @@ FGGlobals::FGGlobals() :
 FGGlobals::~FGGlobals() 
 {
     delete renderer;
+    // The AIModels manager performs a number of actions upon
+    // Shutdown that implicitly assume that other subsystems
+    // are still operational (Due to the dynamic allocation and
+    // deallocation of AIModel objects. To ensure we can safely
+    // shut down all subsystems, make sure we take down the 
+    // AIModels system first.
+    subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("ai_model");
     delete subsystem_mgr;
     delete event_mgr;
     delete time_params;
@@ -133,7 +140,6 @@ FGGlobals::~FGGlobals()
     delete AI_mgr;
     delete controls;
     delete viewmgr;
-    delete props;
     delete initial_state;
     //delete locale; Don't delete locale
     delete commands;
@@ -158,6 +164,8 @@ FGGlobals::~FGGlobals()
     delete fixlist;
     delete airwaynet;
     delete multiplayer_mgr;
+
+    delete props;
 
 }
 

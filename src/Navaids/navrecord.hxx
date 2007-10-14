@@ -197,7 +197,7 @@ operator >> ( istream& in, FGNavRecord& n )
     return in;
 }
 
-class FGTACANRecord {
+class FGTACANRecord : public SGReferenced {
 
     string channel;		
     int freq;

@@ -116,8 +116,8 @@ public:
 // FGTACANList ----------------------------------------------------------------
 
 
-
-typedef vector < FGTACANRecord* > tacan_list_type;
+typedef SGSharedPtr<FGTACANRecord> tacan_rec_ptr;
+typedef vector < tacan_rec_ptr > tacan_list_type;
 typedef map < int, tacan_list_type > tacan_map_type;
 typedef map < string, tacan_list_type > tacan_ident_map_type;
 
