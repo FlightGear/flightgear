@@ -389,9 +389,8 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
     try {
         readXML(input, visitor);
     } catch (const sg_exception& e) {
-        string msg = string("parsexml(): file '") + file + "' "
-                     + e.getFormattedMessage();
-        naRuntimeError(c, msg.c_str());
+        naRuntimeError(c, "parsexml(): file '%s' %s",
+                file, e.getFormattedMessage().c_str());
         return naNil();
     }
     return args[0];
@@ -489,26 +488,46 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 class airport_filter : public FGAirportSearchFilter {
     virtual bool pass(FGAirport *a) { return a->isAirport(); }
 } airport;
+class seaport_filter : public FGAirportSearchFilter {
+    virtual bool pass(FGAirport *a) { return a->isSeaport(); }
+} seaport;
+class heliport_filter : public FGAirportSearchFilter {
+    virtual bool pass(FGAirport *a) { return a->isHeliport(); }
+} heliport;
 
-// Returns airport data for given airport id ("KSFO"), or for the airport
-// nearest to a given lat/lon pair, or without arguments, to the current
-// aircraft position. Returns nil on error. Only one side of each runway is
-// returned.
+// Returns data hash for particular or nearest airport of a <type>, or nil
+// on error. Only one side of each runway is contained.
+//
+// airportinfo(<id>);                   e.g. "KSFO"
+// airportinfo(<type>);                 type := ("airport"|"seaport"|"heliport")
+// airportinfo()                        same as  airportinfo("airport")
+// airportinfo(<lat>, <lon> [, <type>]);
 static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 {
-    static SGConstPropertyNode_ptr lat = fgGetNode("/position/latitude-deg", true);
-    static SGConstPropertyNode_ptr lon = fgGetNode("/position/longitude-deg", true);
+    static SGConstPropertyNode_ptr latn = fgGetNode("/position/latitude-deg", true);
+    static SGConstPropertyNode_ptr lonn = fgGetNode("/position/longitude-deg", true);
+    double lat, lon;
 
-    // airport
     FGAirportList *aptlst = globals->get_airports();
     FGAirport *apt;
-    if(argc == 0)
-        apt = aptlst->search(lon->getDoubleValue(), lat->getDoubleValue(), airport);
-    else if(argc == 1 && naIsString(args[0]))
-        apt = aptlst->search(naStr_data(args[0]));
-    else if(argc == 2 && naIsNum(args[0]) && naIsNum(args[1]))
-        apt = aptlst->search(args[1].num, args[0].num, airport);
-    else {
+    if(argc >= 2 && naIsNum(args[0]) && naIsNum(args[1])) {
+        lat = args[0].num;
+        lon = args[1].num;
+        args += 2;
+        argc -= 2;
+    } else {
+        lat = latn->getDoubleValue();
+        lon = lonn->getDoubleValue();
+    }
+    if(argc == 0) {
+        apt = aptlst->search(lon, lat, airport);
+    } else if(argc == 1 && naIsString(args[0])) {
+        const char *s = naStr_data(args[0]);
+        if(!strcmp(s, "airport")) apt = aptlst->search(lon, lat, airport);
+        else if(!strcmp(s, "seaport")) apt = aptlst->search(lon, lat, seaport);
+        else if(!strcmp(s, "heliport")) apt = aptlst->search(lon, lat, heliport);
+        else apt = aptlst->search(s);
+    } else {
         naRuntimeError(c, "airportinfo() with invalid function arguments");
         return naNil();
     }
