@@ -913,13 +913,16 @@ void FGNasalSys::NasalTimer::timerExpired()
 
 int FGNasalSys::_listenerId = 0;
 
-// setlistener(property, func, bool) extension function.  The first argument
-// is either a ghost (SGPropertyNode_ptr*) or a string (global property
-// path), the second is a Nasal function, the optional third one an integer.
-// If it is 1, then the listener is executed initially. If it's 2, then
-// the listener is only triggered when the node value actually changed. The
-// setlistener() function returns a unique id number, that can be used
-// as argument to the removelistener() function.
+// setlistener(<property>, <func> [, <initial=0> [, <persistent=1>]])
+// Attaches a callback function to a property (specified as a global
+// property path string or a SGPropertyNode_ptr* ghost). If the third,
+// optional argument (default=0) is set to 1, then the function is also
+// called initially. If the fourth, optional argument is set to 0, then the
+// function is only called when the property node value actually changes.
+// Otherwise it's called independent of the value whenever the node is
+// written to (default). The setlistener() function returns a unique
+// id number, which is to be used as argument to the removelistener()
+// function.
 naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
 {
     SGPropertyNode_ptr node;
@@ -941,10 +944,12 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
         return naNil();
     }
 
-    int type = argc > 2 && naIsNum(args[2]) ? args[2].num : 0;
+    bool persistent = argc > 3 ? naTrue(args[3]) : true;
     FGNasalListener *nl = new FGNasalListener(node, handler, this,
-            gcSave(handler), _listenerId, type);
-    node->addChangeListener(nl, type != 0);
+            gcSave(handler), _listenerId, persistent);
+
+    bool initial = argc > 2 && naTrue(args[2]);
+    node->addChangeListener(nl, initial);
 
     _listener[_listenerId] = nl;
     return naNum(_listenerId++);
@@ -980,20 +985,19 @@ naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 
 FGNasalListener::FGNasalListener(SGPropertyNode_ptr node, naRef handler,
                                  FGNasalSys* nasal, int key, int id,
-                                 int type) :
+                                 bool persistent) :
     _node(node),
     _handler(handler),
     _gcKey(key),
     _id(id),
-    _type(type),
     _nas(nasal),
     _active(0),
     _dead(false),
     _first_call(true),
+    _persistent(persistent),
     _last_int(0L),
     _last_float(0.0)
 {
-    unchanged(node);
 }
 
 FGNasalListener::~FGNasalListener()
@@ -1007,22 +1011,21 @@ void FGNasalListener::valueChanged(SGPropertyNode* node)
     // drop recursive listener calls
     if(_active || _dead)
         return;
-    if(_type == 2 && !_first_call && unchanged(node))
-        return;
-
-    SG_LOG(SG_NASAL, SG_DEBUG, "trigger listener #" << _id);
-    _active++;
-    _nas->_cmdArg = node;
-    _nas->call(_handler, naNil());
-    _active--;
+    if(_persistent || changed(node) || _first_call) {
+        SG_LOG(SG_NASAL, SG_DEBUG, "trigger listener #" << _id);
+        _active++;
+        _nas->_cmdArg = node;
+        _nas->call(_handler, naNil());
+        _active--;
+    }
     _first_call = false;
 }
 
-bool FGNasalListener::unchanged(SGPropertyNode* node)
+bool FGNasalListener::changed(SGPropertyNode* node)
 {
     SGPropertyNode::Type type = node->getType();
-    if(type == SGPropertyNode::NONE) return true;
-    if(type == SGPropertyNode::UNSPECIFIED) return false;
+    if(type == SGPropertyNode::NONE) return false;
+    if(type == SGPropertyNode::UNSPECIFIED) return true;
 
     bool result;
     switch(type) {
@@ -1031,7 +1034,7 @@ bool FGNasalListener::unchanged(SGPropertyNode* node)
     case SGPropertyNode::LONG:
         {
             long l = node->getLongValue();
-            result = l == _last_int;
+            result = l != _last_int;
             _last_int = l;
             return result;
         }
@@ -1039,14 +1042,14 @@ bool FGNasalListener::unchanged(SGPropertyNode* node)
     case SGPropertyNode::DOUBLE:
         {
             double d = node->getDoubleValue();
-            result = d == _last_float;
+            result = d != _last_float;
             _last_float = d;
             return result;
         }
     default:
         {
             string s = node->getStringValue();
-            result = s == _last_string;
+            result = s != _last_string;
             _last_string = s;
             return result;
         }
