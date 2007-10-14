@@ -94,7 +94,7 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
     double last_apt_elev = 0.0;
     string last_apt_name = "";
     string last_apt_info = "";
-    string last_apt_type = "";
+    int last_apt_type = 0;
     SGGeod last_tower;
     bool got_tower = false;
     string line;
@@ -151,7 +151,7 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
                     << elev );
 
             addAirport(airports, last_apt_id, last_apt_name, rwy_count, rwy_lat_accum, rwy_lon_accum,
-                last_rwy_heading, last_apt_elev, last_tower, got_tower, line_id);
+                last_rwy_heading, last_apt_elev, last_tower, got_tower, last_apt_type);
 
             last_apt_id = id;
             last_apt_elev = elev;
@@ -166,7 +166,7 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
             last_apt_name += token[token.size() - 1];
 
             last_apt_info = line;
-            last_apt_type = token[0];
+            last_apt_type = atoi( token[0].c_str() );
 
             // clear runway list for start of next airport
             rwy_lon_accum = 0.0;
