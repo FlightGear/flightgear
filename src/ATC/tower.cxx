@@ -221,6 +221,7 @@ FGTower::FGTower() {
 	// TODO - set nominal crosswind leg pos based on minimum distance from takeoff end of rwy.
 	
 	_departureControlled = false;
+        ground = 0;
 }
 
 FGTower::~FGTower() {

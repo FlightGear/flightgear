@@ -83,6 +83,7 @@ bool fgNavDBInit( FGAirportList *airports,
 #endif
 
         FGNavRecord *r = new FGNavRecord;
+        //nav_rec_ptr r = new FGNavRecord;
         in >> (*r);
         if ( r->get_type() > 95 ) {
             delete r;

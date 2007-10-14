@@ -54,22 +54,18 @@ FGNavList::FGNavList( void )
 
 FGNavList::~FGNavList( void )
 {
+    navaids_by_tile.erase( navaids_by_tile.begin(), navaids_by_tile.end() );
     nav_list_type navlist = navaids.begin()->second;
-    for (nav_list_iterator j = navlist.begin(); j != navlist.end(); j++) {
-        delete *j;
-    }
+    navaids.erase( navaids.begin(), navaids.end() );
 }
 
 
 // load the navaids and build the map
 bool FGNavList::init()
 {
-    // Delete the individual navaid objects before erasing
-    // the STL structures.
+    // No need to delete the orinal navaid structures
+    // since using an SGSharedPointer
     nav_list_type navlist = navaids.begin()->second;
-    for (nav_list_iterator j = navlist.begin(); j != navlist.end(); j++) {
-        delete *j;
-    }
     navaids.erase( navaids.begin(), navaids.end() );
     navaids_by_tile.erase( navaids_by_tile.begin(), navaids_by_tile.end() );
     ident_navaids.erase( ident_navaids.begin(), ident_navaids.end() );
