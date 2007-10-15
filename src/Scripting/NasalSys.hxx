@@ -58,7 +58,7 @@ public:
 
     void deleteModule(const char* moduleName);
 
-    naRef call(naRef code, naRef locals);
+    naRef call(naRef code, int argc, naRef* args, naRef locals);
 
 private:
     friend class FGNasalScript;
@@ -132,23 +132,27 @@ private:
 class FGNasalListener : public SGPropertyChangeListener {
 public:
     FGNasalListener(SGPropertyNode_ptr node, naRef handler,
-                    FGNasalSys* nasal, int key, int id, bool persistent);
+                    FGNasalSys* nasal, int key, int id, int type);
 
     ~FGNasalListener();
     void valueChanged(SGPropertyNode* node);
-    bool changed(SGPropertyNode* node);
+    void childAdded(SGPropertyNode* parent, SGPropertyNode* child);
+    void childRemoved(SGPropertyNode* parent, SGPropertyNode* child);
 
 private:
+    bool changed(SGPropertyNode* node);
+    void call(SGPropertyNode* cmdarg, int argc, naRef* args);
+
     friend class FGNasalSys;
     SGPropertyNode_ptr _node;
     naRef _handler;
     int _gcKey;
     int _id;
     FGNasalSys* _nas;
+    int _type;
     unsigned int _active;
     bool _dead;
     bool _first_call;
-    bool _persistent;
     long _last_int;
     double _last_float;
     string _last_string;

@@ -80,12 +80,12 @@ FGNasalSys::FGNasalSys()
 // drop the lock in every extension function that might call back into
 // Nasal, we keep a stack depth counter here and only unlock/lock
 // around the naCall if it isn't the first one.
-naRef FGNasalSys::call(naRef code, naRef locals)
+naRef FGNasalSys::call(naRef code, int argc, naRef* args, naRef locals)
 {
     naContext ctx = naNewContext();
     if(_callCount) naModUnlock();
     _callCount++;
-    naRef result = naCall(ctx, code, 0, 0, naNil(), locals);
+    naRef result = naCall(ctx, code, argc, args, naNil(), locals);
     if(naGetError(ctx))
         logError(ctx);
     _callCount--;
@@ -111,7 +111,7 @@ bool FGNasalSys::parseAndRun(const char* sourceCode)
                        strlen(sourceCode));
     if(naIsNil(code))
         return false;
-    call(code, naNil());
+    call(code, 0, 0, naNil());
     return true;
 }
 
@@ -586,7 +586,7 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 
 
 // Table of extension functions.  Terminate with zeros.
-static struct { char* name; naCFunction func; } funcs[] = {
+static struct { const char* name; naCFunction func; } funcs[] = {
     { "getprop",   f_getprop },
     { "setprop",   f_setprop },
     { "print",     f_print },
@@ -792,7 +792,7 @@ void FGNasalSys::createModule(const char* moduleName, const char* fileName,
 
     _cmdArg = (SGPropertyNode*)arg;
 
-    call(code, locals);
+    call(code, 0, 0, locals);
     hashset(_globals, moduleName, locals);
 }
 
@@ -845,7 +845,7 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     // code doesn't need it.
     _cmdArg = (SGPropertyNode*)arg;
 
-    call(code, locals);
+    call(code, 0, 0, locals);
     return true;
 }
 
@@ -889,7 +889,7 @@ void FGNasalSys::setTimer(naContext c, int argc, naRef* args)
 
 void FGNasalSys::handleTimer(NasalTimer* t)
 {
-    call(t->handler, naNil());
+    call(t->handler, 0, 0, naNil());
     gcRelease(t->gcKey);
 }
 
@@ -944,9 +944,9 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
         return naNil();
     }
 
-    bool persistent = argc > 3 ? naTrue(args[3]) : true;
+    int type = argc > 3 && naIsNum(args[3]) ? args[3].num : 1;
     FGNasalListener *nl = new FGNasalListener(node, handler, this,
-            gcSave(handler), _listenerId, persistent);
+            gcSave(handler), _listenerId, type);
 
     bool initial = argc > 2 && naTrue(args[2]);
     node->addChangeListener(nl, initial);
@@ -984,17 +984,16 @@ naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 // FGNasalListener class.
 
 FGNasalListener::FGNasalListener(SGPropertyNode_ptr node, naRef handler,
-                                 FGNasalSys* nasal, int key, int id,
-                                 bool persistent) :
+                                 FGNasalSys* nasal, int key, int id, int type) :
     _node(node),
     _handler(handler),
     _gcKey(key),
     _id(id),
     _nas(nasal),
+    _type(type),
     _active(0),
     _dead(false),
     _first_call(true),
-    _persistent(persistent),
     _last_int(0L),
     _last_float(0.0)
 {
@@ -1006,19 +1005,48 @@ FGNasalListener::~FGNasalListener()
     _nas->gcRelease(_gcKey);
 }
 
-void FGNasalListener::valueChanged(SGPropertyNode* node)
+void FGNasalListener::call(SGPropertyNode* cmdarg, int argc, naRef* args)
 {
-    // drop recursive listener calls
     if(_active || _dead)
         return;
-    if(_persistent || changed(node) || _first_call) {
-        SG_LOG(SG_NASAL, SG_DEBUG, "trigger listener #" << _id);
-        _active++;
-        _nas->_cmdArg = node;
-        _nas->call(_handler, naNil());
-        _active--;
+    SG_LOG(SG_NASAL, SG_DEBUG, "trigger listener #" << _id);
+    _active++;
+    _nas->_cmdArg = cmdarg;
+    _nas->call(_handler, argc, args, naNil());
+    _active--;
+}
+
+void FGNasalListener::valueChanged(SGPropertyNode* node)
+{
+    if(_type < 2 && node != _node)
+        return;
+
+    if(_type > 0 || changed(_node) || _first_call) {
+        naRef arg[3];
+        arg[0] = _nas->propNodeGhost(_node);
+        arg[1] = _nas->propNodeGhost(node);
+        arg[2] = naNil();
+        call(_node, 3, arg);
     }
     _first_call = false;
+}
+
+void FGNasalListener::childAdded(SGPropertyNode* parent, SGPropertyNode* child)
+{
+    naRef arg[3];
+    arg[0] = _nas->propNodeGhost(_node);
+    arg[1] = _nas->propNodeGhost(child);
+    arg[2] = naNum(1);
+    call(parent, 3, arg);
+}
+
+void FGNasalListener::childRemoved(SGPropertyNode* parent, SGPropertyNode* child)
+{
+    naRef arg[3];
+    arg[0] = _nas->propNodeGhost(_node);
+    arg[1] = _nas->propNodeGhost(child);
+    arg[2] = naNum(0);
+    call(parent, 3, arg);
 }
 
 bool FGNasalListener::changed(SGPropertyNode* node)
