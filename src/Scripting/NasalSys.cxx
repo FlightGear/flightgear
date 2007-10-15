@@ -1031,22 +1031,22 @@ void FGNasalListener::valueChanged(SGPropertyNode* node)
     _first_call = false;
 }
 
-void FGNasalListener::childAdded(SGPropertyNode* parent, SGPropertyNode* child)
+void FGNasalListener::childAdded(SGPropertyNode*, SGPropertyNode* child)
 {
     naRef arg[3];
     arg[0] = _nas->propNodeGhost(_node);
     arg[1] = _nas->propNodeGhost(child);
     arg[2] = naNum(1);
-    call(parent, 3, arg);
+    call(_node, 3, arg);
 }
 
-void FGNasalListener::childRemoved(SGPropertyNode* parent, SGPropertyNode* child)
+void FGNasalListener::childRemoved(SGPropertyNode*, SGPropertyNode* child)
 {
     naRef arg[3];
     arg[0] = _nas->propNodeGhost(_node);
     arg[1] = _nas->propNodeGhost(child);
     arg[2] = naNum(0);
-    call(parent, 3, arg);
+    call(_node, 3, arg);
 }
 
 bool FGNasalListener::changed(SGPropertyNode* node)
