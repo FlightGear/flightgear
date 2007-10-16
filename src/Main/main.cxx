@@ -207,19 +207,22 @@ static const double alt_adjust_m = alt_adjust_ft * SG_FEET_TO_METER;
 static void fgMainLoop( void ) {
     int model_hz = fgGetInt("/sim/model-hz");
 
-    static const SGPropertyNode *longitude
+    static SGConstPropertyNode_ptr longitude
         = fgGetNode("/position/longitude-deg");
-    static const SGPropertyNode *latitude
+    static SGConstPropertyNode_ptr latitude
         = fgGetNode("/position/latitude-deg");
-    static const SGPropertyNode *altitude
+    static SGConstPropertyNode_ptr altitude
         = fgGetNode("/position/altitude-ft");
-    static const SGPropertyNode *clock_freeze
+    static SGConstPropertyNode_ptr clock_freeze
         = fgGetNode("/sim/freeze/clock", true);
-    static const SGPropertyNode *cur_time_override
+    static SGConstPropertyNode_ptr cur_time_override
         = fgGetNode("/sim/time/cur-time-override", true);
-    static const SGPropertyNode *max_simtime_per_frame
+    static SGConstPropertyNode_ptr max_simtime_per_frame
         = fgGetNode("/sim/max-simtime-per-frame", true);
+    static SGPropertyNode_ptr frame_signal
+        = fgGetNode("/sim/signals/frame", true);
 
+    frame_signal->setBoolValue(true);
     SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
 
     bool scenery_loaded = fgGetBool("sim/sceneryloaded");
