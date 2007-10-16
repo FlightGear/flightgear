@@ -1005,48 +1005,38 @@ FGNasalListener::~FGNasalListener()
     _nas->gcRelease(_gcKey);
 }
 
-void FGNasalListener::call(SGPropertyNode* cmdarg, int argc, naRef* args)
+void FGNasalListener::call(SGPropertyNode* which, naRef mode)
 {
-    if(_active || _dead)
-        return;
+    if(_active || _dead) return;
     SG_LOG(SG_NASAL, SG_DEBUG, "trigger listener #" << _id);
     _active++;
-    _nas->_cmdArg = cmdarg;
-    _nas->call(_handler, argc, args, naNil());
+    naRef arg[4];
+    arg[0] = _nas->propNodeGhost(which);
+    arg[1] = _nas->propNodeGhost(_node);
+    arg[2] = mode;                  // value changed, child added/removed
+    arg[3] = naNum(_node != which); // child event?
+    _nas->_cmdArg = _node;
+    _nas->call(_handler, 4, arg, naNil());
     _active--;
 }
 
 void FGNasalListener::valueChanged(SGPropertyNode* node)
 {
-    if(_type < 2 && node != _node)
-        return;
+    if(_type < 2 && node != _node) return;
+    if(_type > 0 || changed(_node) || _first_call)
+        call(node, naNum(0));
 
-    if(_type > 0 || changed(_node) || _first_call) {
-        naRef arg[3];
-        arg[0] = _nas->propNodeGhost(_node);
-        arg[1] = _nas->propNodeGhost(node);
-        arg[2] = naNil();
-        call(_node, 3, arg);
-    }
     _first_call = false;
 }
 
 void FGNasalListener::childAdded(SGPropertyNode*, SGPropertyNode* child)
 {
-    naRef arg[3];
-    arg[0] = _nas->propNodeGhost(_node);
-    arg[1] = _nas->propNodeGhost(child);
-    arg[2] = naNum(1);
-    call(_node, 3, arg);
+    if(_type == 2) call(child, naNum(1));
 }
 
 void FGNasalListener::childRemoved(SGPropertyNode*, SGPropertyNode* child)
 {
-    naRef arg[3];
-    arg[0] = _nas->propNodeGhost(_node);
-    arg[1] = _nas->propNodeGhost(child);
-    arg[2] = naNum(0);
-    call(_node, 3, arg);
+    if(_type == 2) call(child, naNum(-1));
 }
 
 bool FGNasalListener::changed(SGPropertyNode* node)

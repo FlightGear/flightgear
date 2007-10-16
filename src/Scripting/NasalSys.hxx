@@ -141,7 +141,7 @@ public:
 
 private:
     bool changed(SGPropertyNode* node);
-    void call(SGPropertyNode* cmdarg, int argc, naRef* args);
+    void call(SGPropertyNode* which, naRef mode);
 
     friend class FGNasalSys;
     SGPropertyNode_ptr _node;
