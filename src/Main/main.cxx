@@ -152,11 +152,6 @@ void fgUpdateTimeDepCalcs() {
     if ( cur_fdm_state->get_inited() ) {
         // we have been inited, and  we are good to go ...
 
-        if ( !inited ) {
-            inited = true;
-            fgSetBool("/sim/signals/fdm-initialized", true);
-        }
-
         if ( replay_state->getIntValue() == 0 ) {
             // replay off, run fdm
             cur_fdm_state->update( delta_time_sec );
@@ -172,6 +167,12 @@ void fgUpdateTimeDepCalcs() {
                 // paused playback (don't advance replay time)
             }
         }
+
+        if ( !inited ) {
+            inited = true;
+            fgSetBool("/sim/signals/fdm-initialized", true);
+        }
+
     } else {
         // do nothing, fdm isn't inited yet
     }
