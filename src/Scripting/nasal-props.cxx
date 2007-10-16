@@ -326,7 +326,7 @@ static naRef f_globals(naContext c, naRef me, int argc, naRef* args)
 
 static struct {
     naCFunction func;
-    char* name;
+    const char* name;
 } propfuncs[] = {
     { f_getType, "_getType" },
     { f_getAttribute, "_getAttribute" },
