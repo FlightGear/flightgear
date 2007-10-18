@@ -71,7 +71,6 @@ FGNasalSys::FGNasalSys()
     _gcHash = naNil();
     _nextGCKey = 0; // Any value will do
     _callCount = 0;
-    _purgeListeners = false;
 }
 
 // Does a naCall() in a new context.  Wrapped here to make lock
@@ -531,10 +530,7 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "airportinfo() with invalid function arguments");
         return naNil();
     }
-    if(!apt) {
-        naRuntimeError(c, "airportinfo(): no airport found");
-        return naNil();
-    }
+    if(!apt) return naNil();
 
     string id = apt->getId();
     string name = apt->getName();
@@ -673,18 +669,10 @@ void FGNasalSys::init()
 
 void FGNasalSys::update(double)
 {
-    if(_purgeListeners) {
-        _purgeListeners = false;
-        map<int, FGNasalListener *>::iterator it;
-        for(it = _listener.begin(); it != _listener.end();) {
-            FGNasalListener *nl = it->second;
-            if(nl->_dead) {
-                _listener.erase(it++);
-                delete nl;
-            } else {
-                ++it;
-            }
-        }
+    if(!_dead_listener.empty()) {
+        vector<FGNasalListener *>::iterator it, end = _dead_listener.end();
+        for(it = _dead_listener.begin(); it != end; ++it) delete *it;
+        _dead_listener.clear();
     }
 }
 
@@ -938,15 +926,15 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
         SG_LOG(SG_NASAL, SG_DEBUG, "Attaching listener to tied property " <<
                 node->getPath());
 
-    naRef handler = argc > 1 ? args[1] : naNil();
-    if(!(naIsCode(handler) || naIsCCode(handler) || naIsFunc(handler))) {
+    naRef code = argc > 1 ? args[1] : naNil();
+    if(!(naIsCode(code) || naIsCCode(code) || naIsFunc(code))) {
         naRuntimeError(c, "setlistener() with invalid function argument");
         return naNil();
     }
 
     int type = argc > 3 && naIsNum(args[3]) ? args[3].num : 1;
-    FGNasalListener *nl = new FGNasalListener(node, handler, this,
-            gcSave(handler), _listenerId, type);
+    FGNasalListener *nl = new FGNasalListener(node, code, this,
+            gcSave(code), _listenerId, type);
 
     bool initial = argc > 2 && naTrue(args[2]);
     node->addChangeListener(nl, initial);
@@ -967,15 +955,9 @@ naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
         return naNil();
     }
 
-    FGNasalListener *nl = it->second;
-    if(nl->_active) {
-        nl->_dead = true;
-        _purgeListeners = true;
-        return naNum(-1);
-    }
-
+    it->second->_dead = true;
+    _dead_listener.push_back(it->second);
     _listener.erase(it);
-    delete nl;
     return naNum(_listener.size());
 }
 
@@ -983,10 +965,10 @@ naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 
 // FGNasalListener class.
 
-FGNasalListener::FGNasalListener(SGPropertyNode_ptr node, naRef handler,
+FGNasalListener::FGNasalListener(SGPropertyNode *node, naRef code,
                                  FGNasalSys* nasal, int key, int id, int type) :
     _node(node),
-    _handler(handler),
+    _code(code),
     _gcKey(key),
     _id(id),
     _nas(nasal),
@@ -1016,13 +998,13 @@ void FGNasalListener::call(SGPropertyNode* which, naRef mode)
     arg[2] = mode;                  // value changed, child added/removed
     arg[3] = naNum(_node != which); // child event?
     _nas->_cmdArg = _node;
-    _nas->call(_handler, 4, arg, naNil());
+    _nas->call(_code, 4, arg, naNil());
     _active--;
 }
 
 void FGNasalListener::valueChanged(SGPropertyNode* node)
 {
-    if(_type < 2 && node != _node) return;
+    if(_type < 2 && node != _node) return;   // skip child events
     if(_type > 0 || changed(_node) || _first_call)
         call(node, naNum(0));
 

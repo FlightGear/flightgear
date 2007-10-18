@@ -79,8 +79,8 @@ private:
 
     // Listener
     map<int, FGNasalListener *> _listener;
+    vector<FGNasalListener *> _dead_listener;
     static int _listenerId;
-    bool _purgeListeners;
 
     void loadPropertyScripts();
     void hashset(naRef hash, const char* key, naRef val);
@@ -131,13 +131,13 @@ private:
 
 class FGNasalListener : public SGPropertyChangeListener {
 public:
-    FGNasalListener(SGPropertyNode_ptr node, naRef handler,
-                    FGNasalSys* nasal, int key, int id, int type);
+    FGNasalListener(SGPropertyNode* node, naRef code, FGNasalSys* nasal,
+                    int key, int id, int type);
 
-    ~FGNasalListener();
-    void valueChanged(SGPropertyNode* node);
-    void childAdded(SGPropertyNode* parent, SGPropertyNode* child);
-    void childRemoved(SGPropertyNode* parent, SGPropertyNode* child);
+    virtual ~FGNasalListener();
+    virtual void valueChanged(SGPropertyNode* node);
+    virtual void childAdded(SGPropertyNode* parent, SGPropertyNode* child);
+    virtual void childRemoved(SGPropertyNode* parent, SGPropertyNode* child);
 
 private:
     bool changed(SGPropertyNode* node);
@@ -145,7 +145,7 @@ private:
 
     friend class FGNasalSys;
     SGPropertyNode_ptr _node;
-    naRef _handler;
+    naRef _code;
     int _gcKey;
     int _id;
     FGNasalSys* _nas;
