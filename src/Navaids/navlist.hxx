@@ -27,6 +27,8 @@
 
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
+#include <simgear/structure/SGReferenced.hxx>
 
 #include <map>
 #include <vector>
@@ -42,8 +44,8 @@ SG_USING_STD(string);
 
 // FGNavList ------------------------------------------------------------------
 
-
-typedef vector < FGNavRecord* > nav_list_type;
+typedef SGSharedPtr<FGNavRecord> nav_rec_ptr;
+typedef vector < nav_rec_ptr > nav_list_type;
 typedef nav_list_type::iterator nav_list_iterator;
 typedef nav_list_type::const_iterator nav_list_const_iterator;
 
@@ -114,8 +116,8 @@ public:
 // FGTACANList ----------------------------------------------------------------
 
 
-
-typedef vector < FGTACANRecord* > tacan_list_type;
+typedef SGSharedPtr<FGTACANRecord> tacan_rec_ptr;
+typedef vector < tacan_rec_ptr > tacan_list_type;
 typedef map < int, tacan_list_type > tacan_map_type;
 typedef map < string, tacan_list_type > tacan_ident_map_type;
 

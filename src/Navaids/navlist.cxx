@@ -54,13 +54,18 @@ FGNavList::FGNavList( void )
 
 FGNavList::~FGNavList( void )
 {
+    navaids_by_tile.erase( navaids_by_tile.begin(), navaids_by_tile.end() );
+    nav_list_type navlist = navaids.begin()->second;
+    navaids.erase( navaids.begin(), navaids.end() );
 }
 
 
 // load the navaids and build the map
 bool FGNavList::init()
 {
-    // FIXME: leaves all the individual navaid entries leaked
+    // No need to delete the original navaid structures
+    // since we're using an SGSharedPointer
+    nav_list_type navlist = navaids.begin()->second;
     navaids.erase( navaids.begin(), navaids.end() );
     navaids_by_tile.erase( navaids_by_tile.begin(), navaids_by_tile.end() );
     ident_navaids.erase( ident_navaids.begin(), ident_navaids.end() );
@@ -80,7 +85,7 @@ static void real_add( nav_map_type &navmap, const int master_index,
 // front end for add a marker beacon
 static void tile_add( nav_map_type &navmap, FGNavRecord *n )
 {
-    double diff;
+    double diff = 0;
 
     double lon = n->get_lon();
     double lat = n->get_lat();

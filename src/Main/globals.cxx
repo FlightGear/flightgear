@@ -24,11 +24,28 @@
 #  include <config.h>
 #endif
 
+#include <simgear/scene/model/modellib.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/timing/sg_time.hxx>
+#include <simgear/ephemeris/ephemeris.hxx>
+#include <simgear/magvar/magvar.hxx>
+#include <simgear/scene/material/matlib.hxx>
 
+#include <Aircraft/controls.hxx>
+#include <Airports/runways.hxx>
+#include <ATC/AIMgr.hxx>
+#include <ATC/ATCmgr.hxx>
+#include <Autopilot/route_mgr.hxx>
+#include <Cockpit/panel.hxx>
 #include <GUI/new_gui.hxx>
+#include <Model/acmodel.hxx>
+#include <Model/modelmgr.hxx>
+#include <MultiPlayer/multiplaymgr.hxx>
+#include <Navaids/awynet.hxx>
+#include <Scenery/scenery.hxx>
+#include <Scenery/tilemgr.hxx>
 
 #include "globals.hxx"
 #include "renderer.hxx"
@@ -97,15 +114,57 @@ FGGlobals::FGGlobals() :
 // Destructor
 FGGlobals::~FGGlobals() 
 {
-    delete soundmgr;
-    delete subsystem_mgr;
-    delete event_mgr;
-    delete initial_state;
-    delete props;
-    delete io;
-    delete fontcache;
     delete renderer;
-    delete initial_waypoints;
+// The AIModels manager performs a number of actions upon
+    // Shutdown that implicitly assume that other subsystems
+    // are still operational (Due to the dynamic allocation and
+    // deallocation of AIModel objects. To ensure we can safely
+    // shut down all subsystems, make sure we take down the 
+    // AIModels system first.
+    subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("ai_model");
+     delete subsystem_mgr;
+     delete event_mgr;
+     delete time_params;
+     delete ephem;
+     delete mag;
+     delete matlib;
+     delete route_mgr;
+     delete current_panel;
+     delete soundmgr;
+     delete airports;
+
+     delete runways;
+     delete ATC_mgr;
+     delete AI_mgr;
+     delete controls;
+     delete viewmgr;
+
+     delete initial_state;
+//     //delete locale; Don't delete locale
+//     delete commands;
+     delete model_lib;
+     delete acmodel;
+     delete model_mgr;
+     delete channel_options_list;
+     delete initial_waypoints;
+     delete scenery;
+     //delete tile_mgr; // Don't delete tile manager yet, because loader thread problems
+     delete io;
+     delete fontcache;
+
+    delete navlist;
+    delete loclist;
+    delete gslist;
+    delete dmelist;
+    delete mkrlist;
+    delete tacanlist;
+    delete carrierlist;
+    delete channellist;
+    delete fixlist;
+    delete airwaynet;
+    delete multiplayer_mgr;
+ 
+    delete props;
 }
 
 

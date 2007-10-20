@@ -32,6 +32,9 @@
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 
+#include <simgear/structure/ssgSharedPtr.hxx>
+#include <simgear/structure/SGReferenced.hxx>
+
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <istream>
 #elif defined( __BORLANDC__ ) || (__APPLE__)
@@ -58,7 +61,7 @@ enum fg_nav_types {
     FG_NAV_ANY
 };
 
-class FGNavRecord {
+class FGNavRecord : public SGReferenced {
 
     int type;
     SGGeod pos;                // location in geodetic coords (degrees)
@@ -194,7 +197,7 @@ operator >> ( istream& in, FGNavRecord& n )
     return in;
 }
 
-class FGTACANRecord {
+class FGTACANRecord : public SGReferenced {
 
     string channel;		
     int freq;

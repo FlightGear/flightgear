@@ -43,17 +43,20 @@ GPS::GPS ( SGPropertyNode *node)
       _distance_m(0),
       _course_deg(0),
       _name(node->getStringValue("name", "gps")),
-      _num(node->getIntValue("number", 0))
+      _num(node->getIntValue("number", 0)),
+      route(0)
 {
 }
 
 GPS::~GPS ()
 {
+    delete route;
 }
 
 void
 GPS::init ()
 {
+    delete route; // in case init is called twice
     route = new SGRoute;
     route->clear();
 

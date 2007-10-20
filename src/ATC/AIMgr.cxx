@@ -59,6 +59,9 @@ FGAIMgr::FGAIMgr() {
 }
 
 FGAIMgr::~FGAIMgr() {
+    for (ai_list_itr = ai_list.begin(); ai_list_itr != ai_list.end(); ai_list_itr++) {
+        delete (*ai_list_itr);
+    }
 }
 
 void FGAIMgr::init() {
