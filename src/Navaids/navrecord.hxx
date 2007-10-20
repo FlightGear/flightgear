@@ -32,7 +32,7 @@
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 
-#include <simgear/structure/ssgSharedPtr.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
