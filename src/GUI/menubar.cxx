@@ -284,7 +284,6 @@ FGMenuBar::destroy_menubar ()
                                 // Delete all those bindings
     SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings");
     map<string,vector<FGBinding *> >::iterator it;
-    it = _bindings.begin();
     for (it = _bindings.begin(); it != _bindings.end(); it++) {
         SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings for " << it->first);
         for ( i = 0; i < it->second.size(); i++ )
