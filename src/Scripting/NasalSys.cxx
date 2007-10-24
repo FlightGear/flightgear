@@ -674,6 +674,19 @@ void FGNasalSys::update(double)
         for(it = _dead_listener.begin(); it != end; ++it) delete *it;
         _dead_listener.clear();
     }
+
+    // The global context is a legacy thing.  We use dynamically
+    // created contexts for naCall() now, so that we can call them
+    // recursively.  But there are still spots that want to use it for
+    // naNew*() calls, which end up leaking memory because the context
+    // only clears out its temporary vector when it's *used*.  So just
+    // junk it and fetch a new/reinitialized one every frame.  This is
+    // clumsy: the right solution would use the dynamic context in all
+    // cases and eliminate _context entirely.  But that's more work,
+    // and this works fine (yes, they say "New" and "Free", but
+    // they're very fast, just trust me). -Andy
+    naFreeContext(_context);
+    _context = naNewContext();
 }
 
 // Loads the scripts found under /nasal in the global tree
@@ -932,7 +945,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
         return naNil();
     }
 
-    int type = argc > 3 && naIsNum(args[3]) ? args[3].num : 1;
+    int type = argc > 3 && naIsNum(args[3]) ? (int)args[3].num : 1;
     FGNasalListener *nl = new FGNasalListener(node, code, this,
             gcSave(code), _listenerId, type);
 
