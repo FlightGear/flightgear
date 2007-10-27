@@ -190,7 +190,10 @@ FGTower::RemoveAllUserDialogOptions() really ought to be replaced by an ATCDialo
 At the moment planes in the lists are not guaranteed to always have a sensible ETA - it should be set as part of AddList functions, and lists should only be accessed this way. (FAIRLY MAJOR). 
 *******************************************/
 
-FGTower::FGTower() {
+FGTower::FGTower() :
+	separateGround(true),
+	ground(0)
+{
 	ATCmgr = globals->get_ATC_mgr();
 	
 	_type = TOWER;
