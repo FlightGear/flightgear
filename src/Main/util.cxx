@@ -168,9 +168,9 @@ fgUnescape(const char *s)
         } else if (*s == 'f') {
             r += '\f';
         } else if (*s == 'a') {
-            ;
+            r += '\a';
         } else if (*s == 'b') {
-            ;
+            r += '\b';
         } else if (*s == 'x') {
             if (!*++s)
                 break;
