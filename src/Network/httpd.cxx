@@ -31,6 +31,7 @@
 
 #include <simgear/compiler.h>
 
+#include <algorithm>		// sort()
 #include <stdlib.h>		// atoi() atof()
 
 #include STL_STRING
@@ -81,6 +82,15 @@ bool FGHttpd::close() {
 
     return true;
 }
+
+
+class CompareNodes {
+public:
+    bool operator() (const SGPropertyNode_ptr a, const SGPropertyNode_ptr b) const {
+        int r = strcmp(a->getName(), b->getName());
+        return r ? r < 0 : a->getIndex() < b->getIndex();
+    }
+};
 
 
 // Handle http GET requests
@@ -193,8 +203,15 @@ void HttpdChannel::foundTerminator (void) {
             response += "\"</H3>";
             response += getTerminator();
 
-            for (int i = 0; i < node->nChildren(); i++) {
-                SGPropertyNode *child = node->getChild(i);
+
+            vector<SGPropertyNode_ptr> children;
+            for (int i = 0; i < node->nChildren(); i++)
+                children.push_back(node->getChild(i));
+            std::sort(children.begin(), children.end(), CompareNodes());
+
+            vector<SGPropertyNode_ptr>::iterator it, end = children.end();
+            for (it = children.begin(); it != end; ++it) {
+                SGPropertyNode *child = *it;
                 string name = child->getDisplayName(true);
                 string line = "";
                 if ( child->nChildren() > 0 ) {
