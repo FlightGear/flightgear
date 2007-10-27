@@ -463,6 +463,7 @@ getLongitudeString ()
     snprintf(buf, 32, "%d*%02d %04.1f%c", int(d < 0.0 ? -deg : deg),
         int(min), fabs(sec), c);
   }
+  buf[31] = '\0';
   return buf;
 }
 
@@ -491,6 +492,7 @@ getLatitudeString ()
     snprintf(buf, 32, "%d*%02d %04.1f%c", int(d < 0.0 ? -deg : deg),
         int(min), fabs(sec), c);
   }
+  buf[31] = '\0';
   return buf;
 }
 
