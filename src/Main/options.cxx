@@ -1380,6 +1380,7 @@ struct OptionDesc {
     {"flight-plan",                  true,  OPTION_FUNC,   "", false, "", fgOptFlightPlan },
     {"config",                       true,  OPTION_FUNC,   "", false, "", fgOptConfig },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
+    {"vehicle",                      true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"failure",                      true,  OPTION_FUNC,   "", false, "", fgOptFailure },
     {"com1",                         true,  OPTION_DOUBLE, "/instrumentation/comm[0]/frequencies/selected-mhz", false, "", 0 },
     {"com2",                         true,  OPTION_DOUBLE, "/instrumentation/comm[1]/frequencies/selected-mhz", false, "", 0 },

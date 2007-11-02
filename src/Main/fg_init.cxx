@@ -321,10 +321,18 @@ bool fgInitFGAircraft ( int argc, char **argv ) {
     // First parse command line options looking for --aircraft=, this
     // will override anything specified in a config file
     aircraft = fgScanForOption( "--aircraft=", argc, argv );
+    if ( aircraft.empty() ) {
+        // check synonym option
+        aircraft = fgScanForOption( "--vehicle=", argc, argv );
+    }
 
     // Check in one of the user configuration files.
-    if ( aircraft.empty() )
+    if ( aircraft.empty() ) {
         aircraft = fgScanForOption( "--aircraft=" );
+    }
+    if ( aircraft.empty() ) {
+        aircraft = fgScanForOption( "--vehicle=" );
+    }
 
     // if an aircraft was specified, set the property name
     if ( !aircraft.empty() ) {
