@@ -1650,6 +1650,15 @@ bool fgInitSubsystems() {
     // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
 
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the weather subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    // Initialize the weather modeling subsystem
+    globals->add_subsystem("environment", new FGEnvironmentMgr);
+
+
     ////////////////////////////////////////////////////////////////////
     // Initialize the aircraft systems and instrumentation (before the
     // autopilot.)
@@ -1693,14 +1702,6 @@ bool fgInitSubsystems() {
     globals->get_event_mgr()->addTask( "fgUpdateLocalTime()",
                                        &fgUpdateLocalTime, 30*60 );
     fgInitTimeOffset();		// the environment subsystem needs this
-
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the weather subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    // Initialize the weather modeling subsystem
-    globals->add_subsystem("environment", new FGEnvironmentMgr);
 
 
     ////////////////////////////////////////////////////////////////////
