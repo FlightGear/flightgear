@@ -706,7 +706,7 @@ FGViewer::recalcLookAt ()
     _roll_offset_deg * SG_DEGREES_TO_RADIANS, forward );
 
   // add in the position offsets
-  sgSetVec3( position_offset, _y_offset_m, _x_offset_m, _z_offset_m );
+  sgSetVec3( position_offset, _x_offset_m, _y_offset_m, _z_offset_m );
   sgXformVec3( position_offset, position_offset, VIEW_UP);
 
   // apply the Orientation offsets
