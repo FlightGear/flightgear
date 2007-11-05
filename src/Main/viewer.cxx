@@ -550,7 +550,7 @@ FGViewer::recalcLookAt ()
                                  _roll_offset_deg);
 
   // Offsets to the eye position
-  SGVec3d eyeOff(-_offset_m.z(), _offset_m.y(), -_offset_m.x());
+  SGVec3d eyeOff(-_offset_m.z(), _offset_m.x(), -_offset_m.y());
   SGQuatd ec2eye = geodEyeHlOr*geodEyeOr;
   SGVec3d eyeCart = SGVec3d::fromGeod(geodEyePos);
   eyeCart += (ec2eye*eyeOffsetOr).backTransform(eyeOff);
