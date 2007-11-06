@@ -182,9 +182,6 @@ void fgUpdateTimeDepCalcs() {
     globals->get_model_mgr()->update(delta_time_sec);
     globals->get_aircraft_model()->update(delta_time_sec);
 
-    // update the view angle
-    globals->get_viewmgr()->update(delta_time_sec);
-
     // Update solar system
     globals->get_ephem()->update( globals->get_time_params()->getMjd(),
                                   globals->get_time_params()->getLst(),
@@ -347,8 +344,6 @@ static void fgMainLoop( void ) {
 
     SGTime *t = globals->get_time_params();
 
-    globals->get_event_mgr()->update(delta_time_sec);
-
     SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
     SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
 
@@ -497,6 +492,11 @@ static void fgMainLoop( void ) {
         SG_LOG( SG_ALL, SG_DEBUG,
             "Elapsed time is zero ... we're zinging" );
     }
+
+    globals->get_event_mgr()->update(delta_time_sec);
+
+    // update the view angle
+    globals->get_viewmgr()->update(delta_time_sec);
 
     // Do any I/O channel work that might need to be done
     globals->get_io()->update( real_delta_time_sec );
