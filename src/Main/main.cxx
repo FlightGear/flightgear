@@ -493,11 +493,6 @@ static void fgMainLoop( void ) {
             "Elapsed time is zero ... we're zinging" );
     }
 
-    globals->get_event_mgr()->update(delta_time_sec);
-
-    // update the view angle
-    globals->get_viewmgr()->update(delta_time_sec);
-
     // Do any I/O channel work that might need to be done
     globals->get_io()->update( real_delta_time_sec );
 
@@ -695,6 +690,12 @@ static void fgMainLoop( void ) {
         glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SINGLE_COLOR);
         // glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
     }
+
+    // run Nasal's settimer() loops right before the view manager
+    globals->get_event_mgr()->update(delta_time_sec);
+
+    // update the view angle
+    globals->get_viewmgr()->update(delta_time_sec);
 
     fgRequestRedraw();
 
