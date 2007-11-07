@@ -214,7 +214,7 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     net->left_aileron = node->getDoubleValue( "left-aileron-pos-norm" );
     net->right_aileron = node->getDoubleValue( "right-aileron-pos-norm" );
     net->rudder = node->getDoubleValue( "rudder-pos-norm" );
-    net->rudder = node->getDoubleValue( "nose-wheel-pos-norm" );
+    net->nose_wheel = node->getDoubleValue( "nose-wheel-pos-norm" );
     net->speedbrake = node->getDoubleValue( "speedbrake-pos-norm" );
     net->spoilers = node->getDoubleValue( "spoilers-pos-norm" );
 
