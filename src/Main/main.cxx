@@ -543,6 +543,12 @@ static void fgMainLoop( void ) {
         }
     }
 
+    // run Nasal's settimer() loops right before the view manager
+    globals->get_event_mgr()->update(delta_time_sec);
+
+    // update the view angle as late as possible, but before sound calculations
+    globals->get_viewmgr()->update(delta_time_sec);
+
 #ifdef ENABLE_AUDIO_SUPPORT
     // Right now we make a simplifying assumption that the primary
     // aircraft is the source of all sounds and that all sounds are
@@ -659,12 +665,6 @@ static void fgMainLoop( void ) {
         fgSetFloat("/sim/sound/volume", init_volume);
         globals->get_soundmgr()->set_volume(init_volume);
     }
-
-    // run Nasal's settimer() loops right before the view manager
-    globals->get_event_mgr()->update(delta_time_sec);
-
-    // update the view angle
-    globals->get_viewmgr()->update(delta_time_sec);
 
     fgRequestRedraw();
 
