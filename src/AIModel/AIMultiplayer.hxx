@@ -40,11 +40,6 @@ public:
   void addMotionInfo(const FGExternalMotionData& motionInfo, long stamp);
   void setDoubleProperty(const std::string& prop, double val);
 
-  void setCallSign(const string& callSign)
-  { mCallSign = callSign; }
-  const char* getCallSign(void) const
-  { return mCallSign.c_str(); }
-
   long getLastTimestamp(void) const
   { return mLastTimestamp; }
 
@@ -76,8 +71,6 @@ private:
   // and the property nodes
   typedef std::map<unsigned, SGSharedPtr<SGPropertyNode> > PropertyMap;
   PropertyMap mPropertyMap;
-
-  std::string mCallSign;
 
   double mTimeOffset;
   bool mTimeOffsetSet;

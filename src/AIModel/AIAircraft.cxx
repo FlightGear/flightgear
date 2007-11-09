@@ -69,8 +69,10 @@ const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
 
 FGAIAircraft::FGAIAircraft(FGAISchedule *ref) : FGAIBase(otAircraft) {
     trafficRef = ref;
-    if (trafficRef)
+    if (trafficRef) {
         groundOffset = trafficRef->getGroundOffset();
+        setCallSign(trafficRef->getCallSign());
+    }
     else
         groundOffset = 0;
 
@@ -122,7 +124,6 @@ void FGAIAircraft::bind() {
     props->tie("controls/gear/gear-down",
                SGRawValueMethods<FGAIAircraft,bool>(*this,
                                                     &FGAIAircraft::_getGearDown));
-    props->setStringValue("callsign", callsign.c_str());
 }
 
 
@@ -366,6 +367,7 @@ void FGAIAircraft::loadNextLeg() {
     int leg;
     if ((leg = fp->getLeg())  == 10) {
         trafficRef->next();
+        setCallSign(trafficRef->getCallSign());
         leg = 1;
         fp->setLeg(leg);
     }
@@ -436,11 +438,6 @@ void FGAIAircraft::getGroundElev(double dt) {
         if (globals->get_scenery()->get_elevation_m(pos.getLatitudeDeg(), pos.getLongitudeDeg(), 20000.0, alt, 0))
             tgt_altitude_ft = alt * SG_METER_TO_FEET;
     }
-}
-
-
-void FGAIAircraft::setCallSign(const string& s) {
-    callsign = s;
 }
 
 

@@ -80,7 +80,6 @@ public:
     void ClimbTo(double altitude);
     void TurnTo(double heading);
     void ProcessFlightPlan( double dt, time_t now );
-    void setCallSign(const string& );
 
     void getGroundElev(double dt);
     void doGroundAltitude();

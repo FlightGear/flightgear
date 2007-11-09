@@ -61,6 +61,7 @@ public:
     void setManager(FGAIManager* mgr, SGPropertyNode* p);
     void setPath( const char* model );
     void setSMPath( const string& p );
+    void setCallSign( const string& );
     void setSpeed( double speed_KTAS );
     void setAltitude( double altitude_ft );
     void setHeading( double heading );
@@ -226,11 +227,12 @@ public:
 
     SGPropertyNode* _getProps() const;
 
-    const char* _getPath();
-    const char* _getCallsign();
-    const char* _getTriggerNode();
-    const char* _getName();
-    const char* _getSubmodel();
+    const char* _getPath() const;
+    const char* _getSMPath() const;
+    const char* _getCallsign() const;
+    const char* _getTriggerNode() const;
+    const char* _getName() const;
+    const char* _getSubmodel() const;
 
 
     // These are used in the Mach number calculations
@@ -305,6 +307,11 @@ inline void FGAIBase::setLongitude( double longitude ) {
 inline void FGAIBase::setLatitude ( double latitude ) {
     pos.setLatitudeDeg( latitude );
 }
+
+inline void FGAIBase::setCallSign(const string& s) {
+    _callsign = s;
+}
+
 
 inline void FGAIBase::setDie( bool die ) { delete_me = die; }
 
