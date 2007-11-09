@@ -293,6 +293,8 @@ void
 FGViewMgr::copyToCurrent()
 {
     SGPropertyNode *n = config_list[current];
+    fgSetString("/sim/current-view/name", n->getStringValue("name"));
+    fgSetString("/sim/current-view/type", n->getStringValue("type"));
 
     // copy certain view config data for default values
     fgSetDouble("/sim/current-view/config/heading-offset-deg",
