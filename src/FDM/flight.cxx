@@ -130,7 +130,6 @@ FGInterface::_setup ()
     geocentric_position_v = SGGeoc::fromCart(cartesian_position_v);
     euler_angles_v = SGVec3d::zeros();
     
-    mass=i_xx=i_yy=i_zz=i_xz=0;
     nlf=0;
     v_rel_wind=v_true_kts=0;
     v_ground_speed=v_equiv_kts=0;
@@ -621,11 +620,6 @@ void FGInterface::_busdump(void) {
     SG_LOG(SG_FLIGHT,SG_INFO,"geodetic_position_v: " << geodetic_position_v);
     SG_LOG(SG_FLIGHT,SG_INFO,"euler_angles_v: " << euler_angles_v);
 
-    SG_LOG(SG_FLIGHT,SG_INFO,"mass: " << mass );
-    SG_LOG(SG_FLIGHT,SG_INFO,"i_xx: " << i_xx );
-    SG_LOG(SG_FLIGHT,SG_INFO,"i_yy: " << i_yy );
-    SG_LOG(SG_FLIGHT,SG_INFO,"i_zz: " << i_zz );
-    SG_LOG(SG_FLIGHT,SG_INFO,"i_xz: " << i_xz );
     SG_LOG(SG_FLIGHT,SG_INFO,"nlf: " << nlf );
     SG_LOG(SG_FLIGHT,SG_INFO,"v_rel_wind: " << v_rel_wind );
     SG_LOG(SG_FLIGHT,SG_INFO,"v_true_kts: " << v_true_kts );

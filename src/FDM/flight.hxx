@@ -40,12 +40,6 @@
    `FGInterface::get_Psi ()'
    `FGInterface::get_V_equiv_kts ()'
 
-   `FGInterface::get_Mass ()'
-   `FGInterface::get_I_xx ()'
-   `FGInterface::get_I_yy ()'
-   `FGInterface::get_I_zz ()'
-   `FGInterface::get_I_xz ()'
-   
    `FGInterface::get_V_north ()'
    `FGInterface::get_V_east ()'
    `FGInterface::get_V_down ()'
@@ -146,9 +140,6 @@ private:
     SGGeoc geocentric_position_v;
     SGVec3d euler_angles_v;
 
-    // Inertias
-    double mass, i_xx, i_yy, i_zz, i_xz;
-
     // Normal Load Factor
     double nlf;
 
@@ -199,15 +190,6 @@ public:
     void _updateGeocentricPosition( double lat_geoc, double lon, double alt );
     void _update_ground_elev_at_pos( void );
 
-    inline void _set_Inertias( double m, double xx, double yy, 
-			      double zz, double xz)
-    {
-	mass = m;
-	i_xx = xx;
-	i_yy = yy;
-	i_zz = zz;
-	i_xz = xz;
-    }
     inline void _set_CG_Position( double dx, double dy, double dz ) {
 	d_cg_rp_body_v[0] = dx;
 	d_cg_rp_body_v[1] = dy;
@@ -449,13 +431,6 @@ public:
 					       double wdown );
 
     // ========== Mass properties and geometry values ==========
-
-    // Inertias
-    inline double get_Mass() const { return mass; }
-    inline double get_I_xx() const { return i_xx; }
-    inline double get_I_yy() const { return i_yy; }
-    inline double get_I_zz() const { return i_zz; }
-    inline double get_I_xz() const { return i_xz; }
 
     // CG position w.r.t. ref. point
     inline double get_Dx_cg() const { return d_cg_rp_body_v[0]; }

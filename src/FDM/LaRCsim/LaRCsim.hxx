@@ -44,6 +44,7 @@ private:
     SGPropertyNode_ptr speed_up;
     SGPropertyNode_ptr aero;
     SGPropertyNode_ptr uiuc_type;
+    double mass, i_xx, i_yy, i_zz, i_xz;
     
 public:
 
@@ -86,11 +87,21 @@ public:
     void set_Static_temperature(double T); 
     void set_Density(double rho); 
 
-/*
-    void set_Velocities_Local_Airmass (double wnorth, 
-				       double weast, 
-				       double wdown );
-*/
+    // Inertias
+    double get_Mass() const { return mass; }
+    double get_I_xx() const { return i_xx; }
+    double get_I_yy() const { return i_yy; }
+    double get_I_zz() const { return i_zz; }
+    double get_I_xz() const { return i_xz; }
+
+    void _set_Inertias( double m, double xx, double yy, double zz, double xz)
+    {
+	mass = m;
+	i_xx = xx;
+	i_yy = yy;
+	i_zz = zz;
+	i_xz = xz;
+    }
 };
 
 

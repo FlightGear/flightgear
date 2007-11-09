@@ -50,6 +50,8 @@
 
 
 FGLaRCsim::FGLaRCsim( double dt ) {
+    mass=i_xx=i_yy=i_zz=i_xz=0;
+
 //     set_delta_t( dt );
 
     speed_up = fgGetNode("/sim/speed-up", true);
