@@ -184,10 +184,8 @@ static void handleKey(int key, int raw, int keyup)
 
     if(modmask == 0 && KeyHandler) {
         if (keymod & KEYMOD_RELEASED) {
-            if (keys[raw].mod) {
-                key = keys[raw].unicode;
-                keys[raw].mod = 0;
-            }
+            key = keys[raw].unicode;
+
         } else {
             keys[raw].mod = keymod;
             keys[raw].unicode = key;

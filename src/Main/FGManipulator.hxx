@@ -139,5 +139,6 @@ protected:
     bool mouseWarped;
     // workaround for osgViewer double scroll events
     bool scrollButtonPressed;
+    int release_keys[128];
 };
 #endif

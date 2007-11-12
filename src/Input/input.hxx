@@ -328,6 +328,17 @@ private:
    * List of currently pressed mouse button events
    */
   std::map<int, std::list<SGSharedPtr<SGPickCallback> > > _activePickCallbacks;
+
+  /**
+   * Key listener interface.
+   */
+  SGPropertyNode_ptr _key_event;
+  int  _key_code;
+  int  _key_modifiers;
+  bool _key_pressed;
+  bool _key_ctrl;
+  bool _key_alt;
+  bool _key_shift;
 };
 
 #endif // _INPUT_HXX

@@ -276,5 +276,24 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     currentModifiers = modifiers;
     if (eventType == osgGA::GUIEventAdapter::KEYUP)
 	modifiers |= KEYMOD_RELEASED;
+
+    // Release the letter key, for which the keypress was reported
+    if (key >= 0 && key < int(sizeof(release_keys))) {
+        if (modifiers & KEYMOD_RELEASED) {
+            key = release_keys[key];
+        } else {
+            release_keys[key] = key;
+            if (key >= 1 && key <= 26) {
+                release_keys[key + '@'] = key;
+                release_keys[key + '`'] = key;
+            } else if (key >= 'A' && key <= 'Z') {
+                release_keys[key - '@'] = key;
+                release_keys[tolower(key)] = key;
+            } else if (key >= 'a' && key <= 'z') {
+                release_keys[key - '`'] = key;
+                release_keys[toupper(key)] = key;
+            }
+        }
+    }
 }
 

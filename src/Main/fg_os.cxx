@@ -105,15 +105,28 @@ static void GLUTspecialkey(int k, int x, int y)
     callKeyHandler(256 + k, fgGetKeyModifiers(), x, y);
 }
 
+static unsigned char release_keys[256];
+
 static void GLUTkeyup(unsigned char k, int x, int y)
 {
     GlutModifiers = glutGetModifiers();
-    callKeyHandler(k, fgGetKeyModifiers() | KEYMOD_RELEASED, x, y);
+    callKeyHandler(release_keys[k], fgGetKeyModifiers() | KEYMOD_RELEASED, x, y);
 }
 
 static void GLUTkey(unsigned char k, int x, int y)
 {
     GlutModifiers = glutGetModifiers();
+    release_keys[k] = k;
+    if (k >= 1 && k <= 26) {
+        release_keys[k + '@'] = k;
+        release_keys[k + '`'] = k;
+    } else if (k >= 'A' && k <= 'Z') {
+        release_keys[k - '@'] = k;
+        release_keys[tolower(k)] = k;
+    } else if (k >= 'a' && k <= 'z') {
+        release_keys[k - '`'] = k;
+        release_keys[toupper(k)] = k;
+    }
     callKeyHandler(k, fgGetKeyModifiers(), x, y);
 }
 
