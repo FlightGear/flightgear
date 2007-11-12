@@ -190,7 +190,8 @@ FGBinding::fire (double setting) const
 ////////////////////////////////////////////////////////////////////////
 
 
-FGInput::FGInput ()
+FGInput::FGInput () :
+    _key_event(fgGetNode("/devices/status/keyboard/event", true))
 {
     if (default_input == 0)
         default_input = this;
@@ -232,6 +233,13 @@ FGInput::bind ()
   fgTie("/devices/status/keyboard/shift", getModShift);
   fgTie("/devices/status/keyboard/ctrl", getModCtrl);
   fgTie("/devices/status/keyboard/alt", getModAlt);
+
+  _key_event->tie("key", SGRawValuePointer<int>(&_key_code));
+  _key_event->tie("pressed", SGRawValuePointer<bool>(&_key_pressed));
+  _key_event->tie("modifier", SGRawValuePointer<int>(&_key_modifiers));
+  _key_event->tie("modifier/shift", SGRawValuePointer<bool>(&_key_shift));
+  _key_event->tie("modifier/ctrl", SGRawValuePointer<bool>(&_key_ctrl));
+  _key_event->tie("modifier/alt", SGRawValuePointer<bool>(&_key_alt));
 }
 
 void
@@ -240,6 +248,13 @@ FGInput::unbind ()
   fgUntie("/devices/status/keyboard/shift");
   fgUntie("/devices/status/keyboard/ctrl");
   fgUntie("/devices/status/keyboard/alt");
+
+  _key_event->untie("key");
+  _key_event->untie("pressed");
+  _key_event->untie("modifier");
+  _key_event->untie("modifier/shift");
+  _key_event->untie("modifier/ctrl");
+  _key_event->untie("modifier/alt");
 }
 
 void 
@@ -291,6 +306,16 @@ FGInput::doKey (int k, int modifiers, int x, int y)
     return;
   }
 
+  _key_code = k;
+  _key_modifiers = modifiers & ~KEYMOD_RELEASED;
+  _key_pressed = bool(!(modifiers & KEYMOD_RELEASED));
+  _key_shift = bool(modifiers & KEYMOD_SHIFT);
+  _key_ctrl = bool(modifiers & KEYMOD_CTRL);
+  _key_alt = bool(modifiers & KEYMOD_ALT);
+  _key_event->fireValueChanged();
+  if (!_key_code)
+      return;
+
   button &b = _key_bindings[k];
 
                                 // Key pressed.
@@ -314,23 +339,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
       for (unsigned int i = 0; i < bindings.size(); i++)
         bindings[i]->fire();
       b.last_state = 0;
-    } else {
-      if (k >= 1 && k <= 26) {
-        if (_key_bindings[k + '@'].last_state)
-          doKey(k + '@', KEYMOD_RELEASED, x, y);
-        if (_key_bindings[k + '`'].last_state)
-          doKey(k + '`', KEYMOD_RELEASED, x, y);
-      } else if (k >= 'A' && k <= 'Z') {
-        if (_key_bindings[k - '@'].last_state)
-          doKey(k - '@', KEYMOD_RELEASED, x, y);
-        if (_key_bindings[tolower(k)].last_state)
-          doKey(tolower(k), KEYMOD_RELEASED, x, y);
-      } else if (k >= 'a' && k <= 'z') {
-        if (_key_bindings[k - '`'].last_state)
-          doKey(k - '`', KEYMOD_RELEASED, x, y);
-        if (_key_bindings[toupper(k)].last_state)
-          doKey(toupper(k), KEYMOD_RELEASED, x, y);
-      }
     }
   }
 }
