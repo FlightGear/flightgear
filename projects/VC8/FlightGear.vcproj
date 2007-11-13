@@ -211,6 +211,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\groundradar.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\main.hxx"
 				>
 			</File>
@@ -255,6 +259,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\..\src\AIModel\AIFlightPlanCreatePushBack.cxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\bootstrap.cxx"
 				>
 			</File>
@@ -284,6 +292,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\globals.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\groundradar.cxx"
 				>
 			</File>
 			<File
