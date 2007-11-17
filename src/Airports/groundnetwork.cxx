@@ -883,7 +883,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
 		 return;
 	       else 
 		 current->setWaitsForId(closest->getId());
-	       if (closest != current)
+	       if (closest->getId() != current->getId())
 		 current->setSpeedAdjustment(closest->getSpeed()* (mindist/100));
 	       else
 		 current->setSpeedAdjustment(0); // This can only happen when the user aircraft is the one closest
@@ -942,7 +942,7 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
   for (i = activeTraffic.begin(); 
        i != activeTraffic.end(); i++)
     {
-      if (i != current) 
+      if (i->getId() != current->getId()) 
   	{
   	  int node = current->crosses(this, *i);
   	  if (node != -1)
