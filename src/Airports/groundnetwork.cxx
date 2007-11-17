@@ -852,7 +852,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
       for (TrafficVectorIterator i = activeTraffic.begin(); 
    	   i != activeTraffic.end(); i++)
    	{
-   	  if (i != current) {
+   	  if (i->getId() != current->getId()) {
    	    //SGWayPoint curr  (lon,
   	    //	      lat,
   	    //	      alt);
@@ -877,7 +877,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
 	  for (TrafficVectorIterator i = towerController->getActiveTraffic().begin(); 
 	       i != towerController->getActiveTraffic().end(); i++)
 	    {
-	      if (i != current) {
+	      if (i->getId() != current->getId()) {
 		//SGWayPoint curr  (lon,
 		//		  lat,
 		//		  alt);
