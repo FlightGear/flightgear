@@ -43,6 +43,9 @@ FGManipulator::FGManipulator() :
     numlockKeyMap[GUIEventAdapter::KEY_KP_Home] = '7';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Up] = '8';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up] = '9';
+
+    for (int i = 0; i < 128; i++)
+        release_keys[i] = i;
 }
 
 void FGManipulator::setByMatrix(const osg::Matrixd& matrix)
@@ -278,7 +281,7 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
 	modifiers |= KEYMOD_RELEASED;
 
     // Release the letter key, for which the keypress was reported
-    if (key >= 0 && key < int(sizeof(release_keys))) {
+    if (key >= 0 && key < 128) {
         if (modifiers & KEYMOD_RELEASED) {
             key = release_keys[key];
         } else {
