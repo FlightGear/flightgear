@@ -49,6 +49,7 @@
 #include <algorithm>
 
 #include <plib/sg.h>
+#include <plib/ul.h>
 
 #include <simgear/compiler.h>
 #include <simgear/math/polar3d.hxx>
@@ -97,7 +98,8 @@ FGTrafficManager:: ~FGTrafficManager()
 
 void FGTrafficManager::init()
 { 
-  //cerr << "Initializing Schedules" << endl;
+  ofstream logfile("dirscan.txt");
+  logfile << "Initializing Schedules" << endl;
   //time_t now = time(NULL) + fgGetLong("/sim/time/warp");
   //currAircraft = scheduledAircraft.begin();
   //while (currAircraft != scheduledAircraft.end())
@@ -123,16 +125,13 @@ void FGTrafficManager::init()
    */ 
   SGPath path = aircraftDir;
   path.append("Traffic/fgtraffic.xml");
-  if (path.exists())
+  if (path.exists()) {
     readXML(path.str(),*this);
-
+  }
   aircraftDir.append("AI/Aircraft");
-  if (aircraftDir.exists())
+  if ((d = ulOpenDir(aircraftDir.c_str())) != NULL)
     {
-      if((d = ulOpenDir(aircraftDir.c_str())) == NULL)
-        return;
       while((dent = ulReadDir(d)) != NULL) {
-	//cerr << "Scanning : " << dent->d_name << endl;
 	if (string(dent->d_name) != string(".")  && 
 	    string(dent->d_name) != string("..") &&
 	    dent->d_isdir)
@@ -146,7 +145,6 @@ void FGTrafficManager::init()
 	      currFile.append(dent2->d_name);
 	      if (currFile.extension() == string("xml"))
 		{
-		  //cerr << "found " << dent2->d_name << " for parsing" << endl;
 		  SGPath currFile = currACDir;
 		  currFile.append(dent2->d_name);
 		  SG_LOG(SG_GENERAL, SG_INFO, "Scanning " << currFile.str() << " for traffic");
