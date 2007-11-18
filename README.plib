@@ -14,3 +14,35 @@ You should be able to just run "./configure" to configure the package
 and use all of plib's defaults.  Then run "make" followed by "make
 install".  By default, plib installs itself into /usr so if you don't
 like this, be sure to specify an alternate prefix such as --prefix=/usr/local
+
+As of this writing (2007-11-18), many linux distributions are shipped with a 
+working version of plib, so chances are that this library is already 
+installed. It should be noted, that currently plib version no longer compiles
+using recent versions of gcc (confirmed on version gcc 4.1.2, as shipped with 
+SuSe 10.2). As a workaround, it is possible to either use plib SVN. Run the 
+following commands: 
+
+
+svn co https://plib.svn.sourceforge.net/svnroot/plib/trunk plib
+cd plib
+./autogen.sh
+./configure
+make
+make install
+
+Alternatively, it is relatively straightforward to fix the compilation 
+problems in plib
+
+The two errors reported are the following:
+ssgaSky.h:107: error: extra qualification ‘ssgaCelestialBodyList::’ on member ‘ssgaCelestialBodyList’
+ssgaSky.h:195: error: extra qualification ‘ssgaCloudLayerList::’ on member ‘ssgaCloudLayerList’
+
+To fix, open the file plib-1.8.4/src/ssgAux/ssgaSky.h
+
+and change line 107 to read:
+  ~ssgaCelestialBodyList () { removeAll(); }
+and change line 195 to read:
+  ~ssgaCloudLayerList () { removeAll(); }
+
+In other words, remove the "extra qualification" parts from both lines. 
+After these changes, plib-1.8.4. should build and install correctly.
