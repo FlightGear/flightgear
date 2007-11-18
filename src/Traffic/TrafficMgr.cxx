@@ -98,8 +98,6 @@ FGTrafficManager:: ~FGTrafficManager()
 
 void FGTrafficManager::init()
 { 
-  ofstream logfile("dirscan.txt");
-  logfile << "Initializing Schedules" << endl;
   //time_t now = time(NULL) + fgGetLong("/sim/time/warp");
   //currAircraft = scheduledAircraft.begin();
   //while (currAircraft != scheduledAircraft.end())
