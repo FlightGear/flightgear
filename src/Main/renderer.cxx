@@ -1071,5 +1071,12 @@ fgDumpSceneGraphToFile(const char* filename)
     return osgDB::writeNodeFile(*mRealRoot.get(), filename);
 }
 
+bool
+fgDumpTerrainBranchToFile(const char* filename)
+{
+    return osgDB::writeNodeFile( *globals->get_scenery()->get_terrain_branch(),
+                                 filename );
+}
+
 // end of renderer.cxx
     

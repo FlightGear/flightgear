@@ -48,6 +48,7 @@ extern void guiErrorMessage(const char *txt, const sg_throwable &throwable);
 
 extern void fgDumpSnapShot();
 extern void fgDumpSceneGraph();
+extern void fgDumpTerrainBranch();
 
 extern puFont guiFnt;
 extern fntTexFont *guiFntHandle;

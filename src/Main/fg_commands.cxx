@@ -494,6 +494,23 @@ do_dump_scene_graph (const SGPropertyNode*)
     return true;
 }
 
+static bool
+do_dump_terrain_branch (const SGPropertyNode*)
+{
+    fgDumpTerrainBranch();
+
+    double lon_deg = fgGetDouble("/position/longitude-deg");
+    double lat_deg = fgGetDouble("/position/latitude-deg");
+    SGGeod geodPos = SGGeod::fromDegFt(lon_deg, lat_deg, 0.0);
+    SGVec3d zero = SGVec3d::fromGeod(geodPos);
+
+    SG_LOG(SG_INPUT, SG_INFO, "Model parameters:");
+    SG_LOG(SG_INPUT, SG_INFO, "Center: " << zero.x() << ", " << zero.y() << ", " << zero.z() );
+    SG_LOG(SG_INPUT, SG_INFO, "Rotation: " << lat_deg << ", " << lon_deg );
+
+    return true;
+}
+
 /**
  * Built-in command: hires capture screen.
  */
@@ -1471,6 +1488,7 @@ static struct {
     { "press-cockpit-button", do_press_cockpit_button },
     { "release-cockpit-button", do_release_cockpit_button },
     { "dump-scenegraph", do_dump_scene_graph },
+    { "dump-terrainbranch", do_dump_terrain_branch },
     { 0, 0 }			// zero-terminated
 };
 

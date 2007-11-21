@@ -81,5 +81,6 @@ protected:
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);
+bool fgDumpTerrainBranchToFile(const char* filename);
 
 #endif
