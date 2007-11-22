@@ -18,7 +18,7 @@ EXTRA_DIST = \
 	Thanks
 
 dist-hook:
-	(cd $(top_srcdir); $(HOME)/Projects/FlightGear/admin/am2dsp.pl)
+	(cd $(top_srcdir); $(HOME)/src/FlightGear-0.9/admin/am2dsp.pl)
 	(cd $(top_srcdir); tar --exclude docs-mini/CVS --exclude hints/CVS \
 		-cf - docs-mini ) | (cd $(distdir); tar xvf -)
 	rm -rf `find $(distdir)/projects -name CVS`
@@ -55,7 +55,15 @@ fgfs-base-tar:
         --exclude='*/Models/MNUAV' \
         --exclude='*/Models/Airspace' \
 	-cjvf fgfs-base-$(VERSION).tar.bz2 \
-		data/AI \
+		data/AI/*.xml \
+                data/AI/FlightPlans \
+		data/AI/Airports \
+                data/AI/Aircraft/737 \
+                data/AI/Aircraft/747-400 \
+                data/AI/Aircraft/A320 \
+                data/AI/Aircraft/A333 \
+                data/AI/Aircraft/general \
+                data/AI/Aircraft/767 \
                 data/Aircraft/Generic \
                 data/Aircraft/Instruments \
                 data/Aircraft/Instruments-3d \

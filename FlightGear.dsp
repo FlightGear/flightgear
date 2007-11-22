@@ -2347,6 +2347,21 @@ SOURCE=.\src\FDM\JSBSim\models\flight_control\FGSensor.cpp
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\models\flight_control\FGActuator.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_FlightControl"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_FlightControl"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_Atmosphere"
 
@@ -9794,6 +9809,36 @@ SOURCE=.\src\AIModel\AIStatic.hxx
 # Begin Source File
 
 SOURCE=.\src\AIModel\AIStatic.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_AIModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_AIModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\AIModel\AITanker.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_AIModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_AIModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\AIModel\AITanker.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
