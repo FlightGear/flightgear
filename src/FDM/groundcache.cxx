@@ -436,14 +436,15 @@ public:
   FGGroundCache::GroundProperty mGroundProperty;
 };
 
-FGGroundCache::FGGroundCache()
+FGGroundCache::FGGroundCache() :
+  ground_radius(0.0),
+  cache_ref_time(0.0),
+  wire_id(0),
+  reference_wgs84_point(SGVec3d(0, 0, 0)),
+  reference_vehicle_radius(0.0),
+  found_ground(false),
+  _material(0)
 {
-  ground_radius = 0.0;
-  cache_ref_time = 0.0;
-  wire_id = 0;
-  reference_wgs84_point = SGVec3d(0, 0, 0);
-  reference_vehicle_radius = 0.0;
-  found_ground = false;
 }
 
 FGGroundCache::~FGGroundCache()
