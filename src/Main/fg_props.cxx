@@ -232,7 +232,7 @@ setFreeze (bool f)
     if ( s != NULL ) {
         if ( f ) {
             s->pause();
-        } else {
+        } else if (!fgGetBool("/sim/sound/pause")) {
             s->resume();
         }
     }
