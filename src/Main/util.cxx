@@ -21,6 +21,7 @@
 #include <simgear/compiler.h>
 
 #include <math.h>
+#include <stdlib.h>
 
 #include <vector>
 SG_USING_STD(vector);

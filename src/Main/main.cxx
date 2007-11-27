@@ -861,13 +861,6 @@ static void fgIdleFunction ( void ) {
 
         // TODO: move to environment mgr
         thesky = new SGSky;
-        SGPath texture_path(globals->get_fg_root());
-        texture_path.append("Textures");
-        texture_path.append("Sky");
-        for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-            SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
-            thesky->add_cloud_layer(layer);
-        }
 
         SGPath sky_tex_path( globals->get_fg_root() );
         sky_tex_path.append( "Textures" );
@@ -886,6 +879,15 @@ static void fgIdleFunction ( void ) {
                        globals->get_ephem()->getNumStars(),
                        globals->get_ephem()->getStars(),
                        fgGetNode("/environment", true));
+
+
+        SGPath texture_path(globals->get_fg_root());
+        texture_path.append("Textures");
+        texture_path.append("Sky");
+        for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
+            SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
+            thesky->add_cloud_layer(layer);
+        }
 
         // Initialize MagVar model
         SGMagVar *magvar = new SGMagVar();

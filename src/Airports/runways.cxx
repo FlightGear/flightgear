@@ -27,6 +27,7 @@
 
 #include <math.h>               // fabs()
 #include <stdio.h>              // sprintf()
+#include <stdlib.h>             //atoi()
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>

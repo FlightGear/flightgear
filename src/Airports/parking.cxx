@@ -27,6 +27,7 @@
 #endif
 
 //#include <algorithm>
+#include <stdlib.h>
 
 #include <simgear/compiler.h>
 

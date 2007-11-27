@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <cstring>
 
 #include <simgear/props/props.hxx>
 #include <simgear/xml/easyxml.hxx>
