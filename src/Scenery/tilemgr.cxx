@@ -268,6 +268,28 @@ bool FGTileMgr::all_queues_empty() {
 	return attach_queue.empty() && model_queue.empty();
 }
 
+osg::Node*
+FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
+{
+    osg::Node* result = 0;
+    try {
+        result =
+            globals->get_model_lib()->load_model(".",
+                                                 modelPath,
+                                                 globals->get_props(),
+                                                 globals->get_sim_time_sec(),
+                                                 cacheModel,
+                                                 new FGNasalModelData );
+    } catch (const sg_io_exception& exc) {
+        string m(exc.getMessage());
+        m += " ";
+        m += exc.getLocation().asString();
+        SG_LOG( SG_ALL, SG_ALERT, m );
+    } catch (const sg_exception& exc) { // XXX may be redundant
+        SG_LOG( SG_ALL, SG_ALERT, exc.getMessage());
+    }
+    return result;
+}
 
 /**
  * Update the various queues maintained by the tilemagr (private

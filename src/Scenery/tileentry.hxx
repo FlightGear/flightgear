@@ -135,9 +135,9 @@ private:
      */
     volatile int pending_models;
 
-    bool obj_load( const string& path,
-                   osg::Group* geometry,
-                   bool is_base );
+    static bool obj_load( const string& path,
+                          osg::Group* geometry,
+                          bool is_base );
 
     double timestamp;
 
@@ -193,6 +193,11 @@ public:
      *        random ground light points */
     void load( const string_list &base_path, bool is_base );
 
+    /**
+     * Transition to OSG database pager
+     */
+    static osg::Node* loadTileByName(const std::string& index_str,
+                                     const string_list &path_list);
     /**
      * Return true if the tile entry is loaded, otherwise return false
      * indicating that the loading thread is still working on this.

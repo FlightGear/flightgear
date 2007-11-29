@@ -31,6 +31,7 @@
 
 
 #include STL_STRING
+#include <sstream>
 
 #include <osg/Array>
 #include <osg/Geometry>
@@ -114,11 +115,7 @@ static void WorldCoordinate( osg::Matrix& obj_pos, double lat,
 
     // setup transforms
     Point3D geod( lon_rad, lat_rad, elev );
-        
     Point3D world_pos = sgGeodToCart( geod );
-    Point3D offset = world_pos;
-
-    sgdMat4 mat;
 
     double sin_lat = sin( lat_rad );
     double cos_lat = cos( lat_rad );
@@ -127,29 +124,25 @@ static void WorldCoordinate( osg::Matrix& obj_pos, double lat,
     double sin_hdg = sin( hdg_rad ) ;
     double cos_hdg = cos( hdg_rad ) ;
 
-    mat[0][0] =  cos_hdg * sin_lat * cos_lon - sin_hdg * sin_lon;
-    mat[0][1] =  cos_hdg * sin_lat * sin_lon + sin_hdg * cos_lon;
-    mat[0][2] = -cos_hdg * cos_lat;
-    mat[0][3] =  SG_ZERO;
+    obj_pos(0, 0) =  cos_hdg * sin_lat * cos_lon - sin_hdg * sin_lon;
+    obj_pos(0, 1) =  cos_hdg * sin_lat * sin_lon + sin_hdg * cos_lon;
+    obj_pos(0, 2) = -cos_hdg * cos_lat;
+    obj_pos(0, 3) =  SG_ZERO;
 
-    mat[1][0] = -sin_hdg * sin_lat * cos_lon - cos_hdg * sin_lon;
-    mat[1][1] = -sin_hdg * sin_lat * sin_lon + cos_hdg * cos_lon;
-    mat[1][2] =  sin_hdg * cos_lat;
-    mat[1][3] =  SG_ZERO;
+    obj_pos(1, 0) = -sin_hdg * sin_lat * cos_lon - cos_hdg * sin_lon;
+    obj_pos(1, 1) = -sin_hdg * sin_lat * sin_lon + cos_hdg * cos_lon;
+    obj_pos(1, 2) =  sin_hdg * cos_lat;
+    obj_pos(1, 3) =  SG_ZERO;
 
-    mat[2][0] = cos_lat * cos_lon;
-    mat[2][1] = cos_lat * sin_lon;
-    mat[2][2] = sin_lat;
-    mat[2][3] =  SG_ZERO;
+    obj_pos(2, 0) = cos_lat * cos_lon;
+    obj_pos(2, 1) = cos_lat * sin_lon;
+    obj_pos(2, 2) = sin_lat;
+    obj_pos(2, 3) =  SG_ZERO;
 
-    mat[3][0] = offset.x();
-    mat[3][1] = offset.y();
-    mat[3][2] = offset.z();
-    mat[3][3] = SG_ONE ;
-
-    for (unsigned i = 0; i < 4; ++i)
-      for (unsigned j = 0; j < 4; ++j)
-        obj_pos(i, j) = mat[i][j];
+    obj_pos(3, 0) = world_pos.x();
+    obj_pos(3, 1) = world_pos.y();
+    obj_pos(3, 2) = world_pos.z();
+    obj_pos(3, 3) = SG_ONE ;
 }
 
 
@@ -262,16 +255,34 @@ struct Object {
     double lon, lat, elev, hdg;
 };
 
-
+// Work in progress... load the tile based entirely by name cuz that's
+// what we'll want to do with the database pager.
 void
 FGTileEntry::load( const string_list &path_list, bool is_base )
 {
+    osg::Node* new_tile = loadTileByName(tile_bucket.gen_index_str(),
+                                         path_list);
+    terra_range->addChild( new_tile );
+    terra_transform->addChild( terra_range.get() );
+}
+
+osg::Node*
+FGTileEntry::loadTileByName(const string& index_str,
+                            const string_list &path_list)
+{
+    long tileIndex;
+    {
+        istringstream idxStream(index_str);
+        idxStream >> tileIndex;
+    }
+    SGBucket tile_bucket(tileIndex);
+    const string basePath = tile_bucket.gen_base_path();
+    
     bool found_tile_base = false;
 
     SGPath object_base;
     vector<const Object*> objects;
 
-    string index_str = tile_bucket.gen_index_str();
     SG_LOG( SG_TERRAIN, SG_INFO, "Loading tile " << index_str );
 
     // scan and parse all files and store information
@@ -290,7 +301,7 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
         bool has_base = false;
 
         SGPath tile_path = path_list[i];
-        tile_path.append( tile_bucket.gen_base_path() );
+        tile_path.append(basePath);
 
         SGPath basename = tile_path;
         basename.append( index_str );
@@ -409,18 +420,12 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
 
             // wire as much of the scene graph together as we can
             new_tile->addChild( obj_trans );
-            pending_models++;
 
-            // push an entry onto the model load queue
-            FGDeferredModel *dm
-                = new FGDeferredModel( custom_path.str(),
-                                       obj->path.str(),
-                                       tile_bucket,
-                                       this, obj_trans,
-                                       obj->type == OBJECT_SHARED );
-            FGTileMgr::model_ready( dm );
-
-
+            osg::Node* model
+                = FGTileMgr::loadTileModel(custom_path.str(),
+                                           obj->type == OBJECT_SHARED);
+            if (model)
+                obj_trans->addChild(model);
         } else if (obj->type == OBJECT_SIGN || obj->type == OBJECT_RUNWAY_SIGN) {
             // load the object itself
             SGPath custom_path = obj->path;
@@ -447,9 +452,7 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
         }
         delete obj;
     }
-
-    terra_range->addChild( new_tile );
-    terra_transform->addChild( terra_range.get() );
+    return new_tile;
 }
 
 void
