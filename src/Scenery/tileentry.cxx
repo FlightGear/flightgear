@@ -41,7 +41,10 @@
 #include <osg/NodeCallback>
 #include <osg/Switch>
 
+#include <osgDB/FileNameUtils>
+#include <osgDB/ReaderWriter>
 #include <osgDB/ReadFile>
+#include <osgDB/Registry>
 
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -51,6 +54,7 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/model/ModelRegistry.hxx>
 #include <simgear/scene/tgdb/apt_signs.hxx>
 #include <simgear/scene/tgdb/obj.hxx>
 #include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
@@ -69,6 +73,7 @@
 #include "tilemgr.hxx"
 
 SG_USING_STD(string);
+using namespace simgear;
 
 // FIXME: investigate what huge update flood is clamped away here ...
 class FGTileUpdateCallback : public osg::NodeCallback {
@@ -260,9 +265,13 @@ struct Object {
 void
 FGTileEntry::load( const string_list &path_list, bool is_base )
 {
-    osg::Node* new_tile = loadTileByName(tile_bucket.gen_index_str(),
-                                         path_list);
-    terra_range->addChild( new_tile );
+    osgDB::ReaderWriter::ReadResult result
+        = osgDB::Registry::instance()->readNode(tile_bucket.gen_index_str()
+                                                + ".stg", 0);        
+    if (result.validNode()) {
+        osg::Node* new_tile = result.getNode();
+        terra_range->addChild( new_tile );
+    }
     terra_transform->addChild( terra_range.get() );
 }
 
@@ -503,3 +512,58 @@ FGTileEntry::disconnect_ssg_nodes()
         exit(-1);
     }
 }
+
+namespace
+{
+
+class ReaderWriterSTG : public osgDB::ReaderWriter {
+public:
+    virtual const char* className() const;
+ 
+    virtual bool acceptsExtension(const string& extension) const;
+
+    virtual ReadResult readNode(const string& fileName,
+                                const osgDB::ReaderWriter::Options* options)
+        const;
+};
+
+const char* ReaderWriterSTG::className() const
+{
+    return "STG Database reader";
+}
+
+bool ReaderWriterSTG::acceptsExtension(const string& extension) const
+{
+    return (osgDB::equalCaseInsensitive(extension, "gz")
+            || osgDB::equalCaseInsensitive(extension, "stg"));   
+}
+
+osgDB::ReaderWriter::ReadResult
+ReaderWriterSTG::readNode(const string& fileName,
+                          const osgDB::ReaderWriter::Options* options) const
+{
+    string ext = osgDB::getLowerCaseFileExtension(fileName);
+    if(!acceptsExtension(ext))
+        return ReadResult::FILE_NOT_HANDLED;
+    string stgFileName;
+    if (osgDB::equalCaseInsensitive(ext, "gz")) {
+        stgFileName = osgDB::getNameLessExtension(fileName);
+        if (!acceptsExtension(
+                osgDB::getLowerCaseFileExtension(stgFileName))) {
+            return ReadResult::FILE_NOT_HANDLED;
+        }
+    } else {
+        stgFileName = fileName;
+    }
+    osg::Node* result
+        = FGTileEntry::loadTileByName(osgDB::getNameLessExtension(stgFileName),
+                                      globals->get_fg_scenery());
+    if (result)
+        return result;           // Constructor converts to ReadResult
+    else
+        return ReadResult::FILE_NOT_HANDLED;
+}
+
+osgDB::RegisterReaderWriterProxy<ReaderWriterSTG> g_readerWriterSTGProxy;
+ModelRegistryCallbackProxy<LoadOnlyCallback> g_stgCallbackProxy("stg");
+} // namespace
