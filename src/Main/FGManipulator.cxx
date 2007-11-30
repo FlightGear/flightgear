@@ -121,7 +121,7 @@ eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
   const osg::Camera* camera;
   camera = viewer->getCameraContainingPosition(ea.getX(), ea.getY(), lx, ly);
 
-  if (!fgOSIsMainCamera(camera))
+  if (!(camera && fgOSIsMainCamera(camera)))
       return false;
 
   x = int(lx);
@@ -133,7 +133,8 @@ eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
 bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
 			   osgGA::GUIActionAdapter& us)
 {
-    int x, y;
+    int x = 0;
+    int y = 0;
     switch (ea.getEventType()) {
     case osgGA::GUIEventAdapter::FRAME:
 	if (idleHandler)
@@ -201,8 +202,7 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
         // that with osgViewer.
 	if (mouseWarped)
 	    return true;
-	eventToViewport(ea, us, x, y);
-	if (mouseMotionHandler)
+	if (eventToViewport(ea, us, x, y) && mouseMotionHandler)
 	    (*mouseMotionHandler)(x, y);
 	return true;
     case osgGA::GUIEventAdapter::RESIZE:

@@ -1,5 +1,8 @@
 #include <stdlib.h>
 
+#include <osgViewer/ViewerEventHandlers>
+#include <osgViewer/Viewer>
+
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -7,61 +10,29 @@
 #include <SDL/SDL.h>
 #include <plib/pu.h>
 
+#include <Scenery/scenery.hxx>
 #include "fg_os.hxx"
+#include "globals.hxx"
+#include "renderer.hxx"
 
 //
 // fg_os callback registration APIs
 //
 
-static fgIdleHandler IdleHandler = 0;
-static fgDrawHandler DrawHandler = 0;
-static fgWindowResizeHandler WindowResizeHandler = 0;
-static fgKeyHandler KeyHandler = 0;
-static fgMouseClickHandler MouseClickHandler = 0;
-static fgMouseMotionHandler MouseMotionHandler = 0;
-
 static int CurrentModifiers = 0;
 static int CurrentMouseX = 0;
 static int CurrentMouseY = 0;
 static int CurrentMouseCursor = MOUSE_CURSOR_POINTER;
-static bool NeedRedraw = false;
 static int VidMask = SDL_OPENGL|SDL_RESIZABLE;
-
-void fgRegisterIdleHandler(fgIdleHandler func)
-{
-    IdleHandler = func;
-}
-
-void fgRegisterDrawHandler(fgDrawHandler func)
-{
-    DrawHandler = func;
-    NeedRedraw = true;
-}
-
-void fgRegisterWindowResizeHandler(fgWindowResizeHandler func)
-{
-    WindowResizeHandler = func;
-}
-
-void fgRegisterKeyHandler(fgKeyHandler func)
-{
-    KeyHandler = func;
-}
-
-void fgRegisterMouseClickHandler(fgMouseClickHandler func)
-{
-    MouseClickHandler = func;
-}
-
-void fgRegisterMouseMotionHandler(fgMouseMotionHandler func)
-{
-    MouseMotionHandler = func;
-}
 
 //
 // fg_os implementation
 //
 static void initCursors();
+
+static osg::ref_ptr<osgViewer::Viewer> viewer;
+static osg::ref_ptr<osg::Camera> mainCamera;
+static osg::ref_ptr<osgViewer::GraphicsWindowEmbedded> gw;
 
 void fgOSOpenWindow(int w, int h, int bpp,
                     bool alpha, bool stencil, bool fullscreen)
@@ -89,7 +60,8 @@ void fgOSOpenWindow(int w, int h, int bpp,
     if(fullscreen) {
         VidMask |= SDL_FULLSCREEN;
     }
-    if (SDL_SetVideoMode(w, h, 16, VidMask) == 0)
+    SDL_Surface* screen = SDL_SetVideoMode(w, h, 16, VidMask);
+    if ( screen == 0)
         throw sg_throwable(string("Failed to set SDL video mode: ")
                                    + SDL_GetError());
 
@@ -107,72 +79,85 @@ void fgOSOpenWindow(int w, int h, int bpp,
     // screen modes), so these need to be propagated back to the
     // property tree for the rest of the code to inspect...
     //
-    // SDL_Surface* screen = SDL_GetVideoSurface();
-    // int realw = screen->w;
-    // int realh = screen->h;
+    int realw = screen->w;
+    int realh = screen->h;
+    viewer = new osgViewer::Viewer;
+    gw = viewer->setUpViewerAsEmbeddedInWindow(0, 0, realw, realh);
+    // now the main camera ...
+    //osg::ref_ptr<osg::Camera> camera = new osg::Camera;
+    osg::ref_ptr<osg::Camera> camera = viewer->getCamera();
+    mainCamera = camera;
+    osg::Camera::ProjectionResizePolicy rsp = osg::Camera::VERTICAL;
+    // If a viewport isn't set on the camera, then it's hard to dig it
+    // out of the SceneView objects in the viewer, and the coordinates
+    // of mouse events are somewhat bizzare.
+    camera->setViewport(new osg::Viewport(0, 0, realw, realh));
+    camera->setProjectionResizePolicy(rsp);
+    //viewer->addSlave(camera.get());
+    viewer->setCameraManipulator(globals->get_renderer()->getManipulator());
+    // Let FG handle the escape key with a confirmation
+    viewer->setKeyEventSetsDone(0);
+    osgViewer::StatsHandler* statsHandler = new osgViewer::StatsHandler;
+    statsHandler->setKeyEventTogglesOnScreenStats('*');
+    statsHandler->setKeyEventPrintsOutStats(0);
+    viewer->addEventHandler(statsHandler);
+    // The viewer won't start without some root.
+    viewer->setSceneData(new osg::Group);
+    globals->get_renderer()->setViewer(viewer.get());
 }
 
-
-struct keydata {
-    keydata() : unicode(0), mod(0) {};
-    Uint16 unicode;
-    unsigned int mod;
-} keys[SDLK_LAST];
-
-
-static void handleKey(int key, int raw, int keyup)
+// Cheap trick to avoid typing GUIEventAdapter over and over...
+class SDLKeyTranslator : osgGA::GUIEventAdapter
 {
+public:
+    static int handleKey(int key, int raw, int keyup);
+};
+
+int SDLKeyTranslator::handleKey(int key, int raw, int keyup)
+{
+    using namespace osgGA;
+    
     int modmask = 0;
+    int osgKey = 0;
+    if (key == 0)
+        key = raw;
+    // Don't pass capslock or numlock to the FGManipulator; SDL
+    // already transforms the key properly, so FGManipulator will get
+    // confused.
+    if (key == SDLK_CAPSLOCK || key == SDLK_NUMLOCK)
+        return -1;
     switch(key) {
-    case SDLK_RSHIFT: modmask = KEYMOD_SHIFT; break;
-    case SDLK_LSHIFT: modmask = KEYMOD_SHIFT; break;
-    case SDLK_RCTRL:  modmask = KEYMOD_CTRL;  break;
-    case SDLK_LCTRL:  modmask = KEYMOD_CTRL;  break;
-    case SDLK_RALT:   modmask = KEYMOD_ALT;   break;
-    case SDLK_LALT:   modmask = KEYMOD_ALT;   break;
+    case SDLK_RSHIFT: modmask = KEYMOD_SHIFT;  osgKey = KEY_Shift_R;  break;
+    case SDLK_LSHIFT: modmask = KEYMOD_SHIFT;  osgKey = KEY_Shift_L;  break;
+    case SDLK_RCTRL:  modmask = KEYMOD_CTRL;  osgKey = KEY_Control_R;  break;
+    case SDLK_LCTRL:  modmask = KEYMOD_CTRL;  osgKey = KEY_Control_L;  break;
+    case SDLK_RALT:   modmask = KEYMOD_ALT;   osgKey = KEY_Alt_R;  break;
+    case SDLK_LALT:   modmask = KEYMOD_ALT;   osgKey = KEY_Alt_L;  break;
 
-    case SDLK_LEFT:     key = PU_KEY_LEFT;      break;
-    case SDLK_UP:       key = PU_KEY_UP;        break;
-    case SDLK_RIGHT:    key = PU_KEY_RIGHT;     break;
-    case SDLK_DOWN:     key = PU_KEY_DOWN;      break;
-    case SDLK_PAGEUP:   key = PU_KEY_PAGE_UP;   break;
-    case SDLK_PAGEDOWN: key = PU_KEY_PAGE_DOWN; break;
-    case SDLK_HOME:     key = PU_KEY_HOME;      break;
-    case SDLK_END:      key = PU_KEY_END;       break;
-    case SDLK_INSERT:   key = PU_KEY_INSERT;    break;
-    case SDLK_F1:       key = PU_KEY_F1;        break;
-    case SDLK_F2:       key = PU_KEY_F2;        break;
-    case SDLK_F3:       key = PU_KEY_F3;        break;
-    case SDLK_F4:       key = PU_KEY_F4;        break;
-    case SDLK_F5:       key = PU_KEY_F5;        break;
-    case SDLK_F6:       key = PU_KEY_F6;        break;
-    case SDLK_F7:       key = PU_KEY_F7;        break;
-    case SDLK_F8:       key = PU_KEY_F8;        break;
-    case SDLK_F9:       key = PU_KEY_F9;        break;
-    case SDLK_F10:      key = PU_KEY_F10;       break;
-    case SDLK_F11:      key = PU_KEY_F11;       break;
-    case SDLK_F12:      key = PU_KEY_F12;       break;
+    case SDLK_LEFT:  osgKey = KEY_Left;  break;
+    case SDLK_UP:  osgKey = KEY_Up;  break;
+    case SDLK_RIGHT:  osgKey = KEY_Right;  break;
+    case SDLK_DOWN:  osgKey = KEY_Down;  break;
+    case SDLK_PAGEUP:  osgKey = KEY_Page_Up;  break;
+    case SDLK_PAGEDOWN:  osgKey = KEY_Page_Down;  break;
+    case SDLK_HOME:  osgKey = KEY_Home;  break;
+    case SDLK_END:  osgKey = KEY_End;  break;
+    case SDLK_INSERT:  osgKey = KEY_Insert;  break;
+    case SDLK_F1:  osgKey = KEY_F1;  break;
+    case SDLK_F2:  osgKey = KEY_F2;  break;
+    case SDLK_F3:  osgKey = KEY_F3;  break;
+    case SDLK_F4:  osgKey = KEY_F4;  break;
+    case SDLK_F5:  osgKey = KEY_F5;  break;
+    case SDLK_F6:  osgKey = KEY_F6;  break;
+    case SDLK_F7:  osgKey = KEY_F7;  break;
+    case SDLK_F8:  osgKey = KEY_F8;  break;
+    case SDLK_F9:  osgKey = KEY_F9;  break;
+    case SDLK_F10:  osgKey = KEY_F10;  break;
+    case SDLK_F11:  osgKey = KEY_F11;  break;
+    case SDLK_F12:  osgKey = KEY_F12;  break;
+    default:
+        osgKey = key;
     }
-
-    // Keypad codes.  This is a situation where we *don't* want the
-    // Unicode cooking for our input.  Oddly, neither PUI nor Glut
-    // define these anywhere, so I lifted the numbers out of
-    // FlightGear's keyboard.xml.  Some unused code are therefore
-    // missing.
-    switch(raw) {
-    case SDLK_KP0:      key = 364; break;
-    case SDLK_KP1:      key = 363; break;
-    case SDLK_KP2:      key = 359; break;
-    case SDLK_KP3:      key = 361; break;
-    case SDLK_KP4:      key = 356; break;
-    case SDLK_KP5:      key = 309; break;
-    case SDLK_KP6:      key = 358; break;
-    case SDLK_KP7:      key = 362; break;
-    case SDLK_KP8:      key = 357; break;
-    case SDLK_KP9:      key = 360; break;
-    case SDLK_KP_ENTER: key = 269; break;
-    }
-
     int keymod = 0;
     if(keyup) {
         CurrentModifiers &= ~modmask;
@@ -181,23 +166,59 @@ static void handleKey(int key, int raw, int keyup)
         CurrentModifiers |= modmask;
         keymod = CurrentModifiers & ~KEYMOD_RELEASED;
     }
-
-    if(modmask == 0 && KeyHandler) {
-        if (keymod & KEYMOD_RELEASED) {
-            key = keys[raw].unicode;
-
-        } else {
-            keys[raw].mod = keymod;
-            keys[raw].unicode = key;
-        }
-        (*KeyHandler)(key, keymod, CurrentMouseX, CurrentMouseY);
-    }
+    return osgKey;
 }
 
 // FIXME: Integrate with existing fgExit() in util.cxx.
 void fgOSExit(int code)
 {
+    viewer->setDone(true);
     exit(code);
+}
+
+// originally from osgexamples/osgviewerSDL.cpp
+bool convertEvent(SDL_Event& event, osgGA::EventQueue& eventQueue)
+{
+    using namespace osgGA;
+    switch (event.type) {
+
+    case SDL_MOUSEMOTION:
+        eventQueue.mouseMotion(event.motion.x, event.motion.y);
+        return true;
+
+    case SDL_MOUSEBUTTONDOWN:
+        eventQueue.mouseButtonPress(event.button.x, event.button.y, event.button.button);
+        return true;
+
+    case SDL_MOUSEBUTTONUP:
+        eventQueue.mouseButtonRelease(event.button.x, event.button.y, event.button.button);
+        return true;
+
+    case SDL_KEYUP:
+    case SDL_KEYDOWN:
+    {
+        int realKey = SDLKeyTranslator::handleKey(event.key.keysym.unicode,
+                                                  event.key.keysym.sym,
+                                                  event.type == SDL_KEYUP);
+        if (realKey < -1)
+            return true;
+        if (event.type == SDL_KEYUP)
+            eventQueue.keyRelease((osgGA::GUIEventAdapter::KeySymbol)realKey);
+        else
+            eventQueue.keyPress((osgGA::GUIEventAdapter::KeySymbol)realKey);
+        return true;
+    }
+    case SDL_VIDEORESIZE:
+        if (SDL_SetVideoMode(event.resize.w, event.resize.h, 16, VidMask) == 0)
+            throw sg_throwable(string("Failed to set SDL video mode: ")
+                               + SDL_GetError());
+        eventQueue.windowResize(0, 0, event.resize.w, event.resize.h );
+        return true;
+
+    default:
+        break;
+    }
+    return false;
 }
 
 void fgOSMainLoop()
@@ -206,48 +227,23 @@ void fgOSMainLoop()
         SDL_Event e;
         int key;
         while(SDL_PollEvent(&e)) {
+            // pass the SDL event into the viewers event queue
+            convertEvent(e, *(gw->getEventQueue()));
+
             switch(e.type) {
             case SDL_QUIT:
                 fgOSExit(0);
                 break;
-            case SDL_KEYDOWN:
-            case SDL_KEYUP:
-                key = e.key.keysym.unicode;
-                if(key == 0) key = e.key.keysym.sym;
-                handleKey(key, e.key.keysym.sym, e.key.state == SDL_RELEASED);
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-            case SDL_MOUSEBUTTONUP:
-                // Note offset: SDL uses buttons 1,2,3 not 0,1,2
-                CurrentMouseX = e.button.x;
-                CurrentMouseY = e.button.y;
-                if(MouseClickHandler)
-                    (*MouseClickHandler)(e.button.button - 1,
-                                         e.button.state == SDL_RELEASED,
-                                         e.button.x, e.button.y, true, 0);
-                break;
-            case SDL_MOUSEMOTION:
-                CurrentMouseX = e.motion.x;
-                CurrentMouseY = e.motion.y;
-                if(MouseMotionHandler)
-                    (*MouseMotionHandler)(e.motion.x, e.motion.y);
-                break;
             case SDL_VIDEORESIZE:
-                if (SDL_SetVideoMode(e.resize.w, e.resize.h, 16, VidMask) == 0)
-                    throw sg_throwable(string("Failed to set SDL video mode: ")
-                            + SDL_GetError());
-
-                if (WindowResizeHandler)
-                    (*WindowResizeHandler)(e.resize.w, e.resize.h);
+                gw->resized(0, 0, e.resize.w, e.resize.h );
                 break;
             }
         }
-        if(IdleHandler) (*IdleHandler)();
-        if(NeedRedraw && DrawHandler) {
-            (*DrawHandler)();
-            SDL_GL_SwapBuffers();
-            NeedRedraw = false;
-        }
+        // draw the new frame
+        viewer->frame();
+
+        // Swap Buffers
+        SDL_GL_SwapBuffers();
     }
 }
 
@@ -262,11 +258,6 @@ void fgWarpMouse(int x, int y)
     SDL_PumpEvents();
     SDL_PeepEvents(e, 10, SDL_GETEVENT, SDL_MOUSEMOTIONMASK);
     SDL_WarpMouse(x, y);
-}
-
-void fgRequestRedraw()
-{
-    NeedRedraw = true;
 }
 
 void fgOSInit(int* argc, char** argv)

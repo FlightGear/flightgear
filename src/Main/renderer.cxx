@@ -373,9 +373,7 @@ FGRenderer::FGRenderer()
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = FGRenderer::update;
 #endif
-#ifdef ENABLE_OSGVIEWER
    manipulator = new FGManipulator;
-#endif   
 }
 
 FGRenderer::~FGRenderer()
