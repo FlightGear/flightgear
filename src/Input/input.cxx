@@ -102,6 +102,18 @@ getModAlt ()
   return bool(fgGetKeyModifiers() & KEYMOD_ALT);
 }
 
+static bool
+getModMeta ()
+{
+  return bool(fgGetKeyModifiers() & KEYMOD_META);
+}
+
+static bool
+getModSuper ()
+{
+  return bool(fgGetKeyModifiers() & KEYMOD_SUPER);
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGBinding.
@@ -233,6 +245,8 @@ FGInput::bind ()
   fgTie("/devices/status/keyboard/shift", getModShift);
   fgTie("/devices/status/keyboard/ctrl", getModCtrl);
   fgTie("/devices/status/keyboard/alt", getModAlt);
+  fgTie("/devices/status/keyboard/meta", getModMeta);
+  fgTie("/devices/status/keyboard/super", getModSuper);
 
   _key_event->tie("key", SGRawValuePointer<int>(&_key_code));
   _key_event->tie("pressed", SGRawValuePointer<bool>(&_key_pressed));
@@ -240,6 +254,8 @@ FGInput::bind ()
   _key_event->tie("modifier/shift", SGRawValuePointer<bool>(&_key_shift));
   _key_event->tie("modifier/ctrl", SGRawValuePointer<bool>(&_key_ctrl));
   _key_event->tie("modifier/alt", SGRawValuePointer<bool>(&_key_alt));
+  _key_event->tie("modifier/meta", SGRawValuePointer<bool>(&_key_meta));
+  _key_event->tie("modifier/super", SGRawValuePointer<bool>(&_key_super));
 }
 
 void
@@ -248,6 +264,8 @@ FGInput::unbind ()
   fgUntie("/devices/status/keyboard/shift");
   fgUntie("/devices/status/keyboard/ctrl");
   fgUntie("/devices/status/keyboard/alt");
+  fgUntie("/devices/status/keyboard/meta");
+  fgUntie("/devices/status/keyboard/super");
 
   _key_event->untie("key");
   _key_event->untie("pressed");
@@ -255,6 +273,8 @@ FGInput::unbind ()
   _key_event->untie("modifier/shift");
   _key_event->untie("modifier/ctrl");
   _key_event->untie("modifier/alt");
+  _key_event->untie("modifier/meta");
+  _key_event->untie("modifier/super");
 }
 
 void 
@@ -308,13 +328,15 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
   _key_code = k;
   _key_modifiers = modifiers & ~KEYMOD_RELEASED;
-  _key_pressed = bool(!(modifiers & KEYMOD_RELEASED));
+  _key_pressed = !bool(modifiers & KEYMOD_RELEASED);
   _key_shift = bool(modifiers & KEYMOD_SHIFT);
   _key_ctrl = bool(modifiers & KEYMOD_CTRL);
   _key_alt = bool(modifiers & KEYMOD_ALT);
+  _key_meta = bool(modifiers & KEYMOD_META);
+  _key_super = bool(modifiers & KEYMOD_SUPER);
   _key_event->fireValueChanged();
   if (!_key_code)
-      return;
+    return;
 
   button &b = _key_bindings[k];
 

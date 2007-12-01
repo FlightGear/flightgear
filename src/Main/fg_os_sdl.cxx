@@ -130,6 +130,10 @@ static void handleKey(int key, int raw, int keyup)
     case SDLK_LCTRL:  modmask = KEYMOD_CTRL;  break;
     case SDLK_RALT:   modmask = KEYMOD_ALT;   break;
     case SDLK_LALT:   modmask = KEYMOD_ALT;   break;
+    case SDLK_RMETA:  modmask = KEYMOD_META;  break;
+    case SDLK_LMETA:  modmask = KEYMOD_META;  break;
+    case SDLK_RSUPER: modmask = KEYMOD_SUPER; break;
+    case SDLK_LSUPER: modmask = KEYMOD_SUPER; break;
 
     case SDLK_LEFT:     key = PU_KEY_LEFT;      break;
     case SDLK_UP:       key = PU_KEY_UP;        break;

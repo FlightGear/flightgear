@@ -27,7 +27,9 @@ enum { KEYMOD_NONE     = 0,
        KEYMOD_SHIFT    = 2,
        KEYMOD_CTRL     = 4,
        KEYMOD_ALT      = 8,
-       KEYMOD_MAX      = 16 };
+       KEYMOD_META     = 16,
+       KEYMOD_SUPER    = 32,
+       KEYMOD_MAX      = 64 };
 
 // A note on key codes: none are defined here.  FlightGear has no
 // hard-coded interpretations of codes other than modifier keys, so we
