@@ -971,6 +971,14 @@ FGInput::_read_bindings (const SGPropertyNode * node,
   if (node->getChild("mod-alt") != 0)
     _read_bindings(node->getChild("mod-alt"), binding_list,
                    modifiers|KEYMOD_ALT);
+
+  if (node->getChild("mod-meta") != 0)
+    _read_bindings(node->getChild("mod-meta"), binding_list,
+                   modifiers|KEYMOD_META);
+
+  if (node->getChild("mod-super") != 0)
+    _read_bindings(node->getChild("mod-super"), binding_list,
+                   modifiers|KEYMOD_SUPER);
 }
 
 
