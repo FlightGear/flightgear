@@ -32,6 +32,10 @@ FGManipulator::FGManipulator() :
 	= GUIEventAdapter::MODKEY_RIGHT_CTRL;
     keyMaskMap[GUIEventAdapter::KEY_Alt_L] = GUIEventAdapter::MODKEY_LEFT_ALT;
     keyMaskMap[GUIEventAdapter::KEY_Alt_R] = GUIEventAdapter::MODKEY_RIGHT_ALT;
+    keyMaskMap[GUIEventAdapter::KEY_Meta_L] = GUIEventAdapter::MODKEY_LEFT_META;
+    keyMaskMap[GUIEventAdapter::KEY_Meta_R] = GUIEventAdapter::MODKEY_RIGHT_META;
+    keyMaskMap[GUIEventAdapter::KEY_Super_L] = GUIEventAdapter::MODKEY_LEFT_META;
+    keyMaskMap[GUIEventAdapter::KEY_Super_R] = GUIEventAdapter::MODKEY_RIGHT_META;
     // We have to implement numlock too.
     numlockKeyMap[GUIEventAdapter::KEY_KP_Insert]  = '0';
     numlockKeyMap[GUIEventAdapter::KEY_KP_End] = '1';

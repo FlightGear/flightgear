@@ -133,6 +133,10 @@ int SDLKeyTranslator::handleKey(int key, int raw, int keyup)
     case SDLK_LCTRL:  modmask = KEYMOD_CTRL;  osgKey = KEY_Control_L;  break;
     case SDLK_RALT:   modmask = KEYMOD_ALT;   osgKey = KEY_Alt_R;  break;
     case SDLK_LALT:   modmask = KEYMOD_ALT;   osgKey = KEY_Alt_L;  break;
+    case SDLK_RMETA:  modmask = KEYMOD_META;  osgKey = KEY_Meta_R;  break;
+    case SDLK_LMETA:  modmask = KEYMOD_META;  osgKey = KEY_Meta_L;  break;
+    case SDLK_RSUPER: modmask = KEYMOD_SUPER; osgKey = KEY_Super_R;  break;
+    case SDLK_LSUPER: modmask = KEYMOD_SUPER; osgKey = KEY_Super_L;  break;
 
     case SDLK_LEFT:  osgKey = KEY_Left;  break;
     case SDLK_UP:  osgKey = KEY_Up;  break;

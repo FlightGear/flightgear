@@ -336,9 +336,11 @@ private:
   int  _key_code;
   int  _key_modifiers;
   bool _key_pressed;
+  bool _key_shift;
   bool _key_ctrl;
   bool _key_alt;
-  bool _key_shift;
+  bool _key_meta;
+  bool _key_super;
 };
 
 #endif // _INPUT_HXX
