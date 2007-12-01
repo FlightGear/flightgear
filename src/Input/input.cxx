@@ -338,6 +338,8 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   if (!_key_code)
     return;
 
+  k = _key_code;
+  modifiers = _key_modifiers | (_key_pressed ? KEYMOD_NONE : KEYMOD_RELEASED);
   button &b = _key_bindings[k];
 
                                 // Key pressed.
