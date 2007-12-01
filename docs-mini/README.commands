@@ -2,7 +2,7 @@ FlightGear Commands Mini-HOWTO
 
 David Megginson
 Started: 2002-10-25
-Last revised: 2003-01-20
+Last revised: 2007-12-01
 
 
 In FlightGear, a *command* represents an action, while a *property*
@@ -51,7 +51,58 @@ that links the ESC key to the 'exit' command:
  </key>
 
 Usually, more than one binding is allowed for a single input trigger,
-and bindings are executed in order from first to last.
+and bindings are executed in order from first to last. Bindings support
+conditions (see README.conditions):
+
+ <key n="113">
+  <name>q</name>
+  <desc>Test</desc>
+
+  <binding>
+   <condition>
+    <property>/devices/status/mice/mouse/button[0]</property>
+   </condition>
+   <command>nasal</command>
+   <script>print("mouse button 0 pressed")</script>
+  </binding>
+ </key>
+
+Keyboard definitions can embed bindings in tags <mod-up> (key released),
+<mod-shift>, <mod-ctrl>, <mod-alt>, <mod-meta>, and <mod-super>. Nesting
+is supported. Meta and Super modifier tags are for local use only, and
+must be supported by the operating system to work.
+
+ <key n="113">
+  <name>q</name>
+  <desc>Test</desc>
+  <binding>
+   <command>nasal</command>
+   <script>print("q pressed")</script>
+  </binding>
+
+  <mod-alt>
+   <binding>
+    <command>nasal</command>
+    <script>print("Alt-q pressed")</script>
+   </binding>
+
+   <mod-super>
+    <binding>
+     <command>nasal</command>
+     <script>print("Alt-Super-q pressed")</script>
+    </binding>
+
+    <mod-meta>
+     <binding>
+      <command>nasal</command>
+      <script>print("Alt-Super-Meta-q pressed")</script>
+     </binding>
+
+    </mod-meta>
+   </mod-super>
+  </mod-alt>
+ </key>
+
 
 
 Built-in Commands
@@ -79,14 +130,16 @@ save - save properties to an XML file
 
 loadxml - load XML file into property tree
   filename: the path & filename of the file to load
-  targetnode: the target node within the property tree where to store the XML 
-  file's structure
+  targetnode: the target node within the property tree where to store the XML
+  file's structure. If targetnode isn't defined, then the data will be stored
+  in a node "data" under the argument branch.
 
 savexml - save property tree node to XML file
   filename: the path & filename for the file to be saved
-  sourcenode: the source node within the property tree where the XML file's 
-  structure is assembled from.     
-    
+  sourcenode: the source node within the property tree where the XML file's
+  structure is assembled from. If sourcenode isn't defined, then savexml will
+  try to save data stored in a node "data" in the argument branch.
+
 panel-load - (re)load the 2D instrument panel
   path: the path of the XML panel file, relative to $FG_ROOT (defaults
     to the value of /sim/panel/path if specified, or
@@ -156,10 +209,15 @@ property-scale - set the value of a property based on an axis
     to 0)
   factor: the factor to multiply by (use negative to reverse; defaults
     to 1.0)
+  squared: if true will square the resulting value (same as power=2)
+  power: the resulting value will be taken to the power of this integer
+    value (overrides squared; default=1)
 
 property-cycle - cycle a property through a set of values
   property: the name of the property to cycle
   value[*]: all of the allowed values
+
+dialog-new - create new dialog from the argument branch
 
 dialog-show - show an XML-configured dialog box
   dialog-name - the name of the dialog to show
