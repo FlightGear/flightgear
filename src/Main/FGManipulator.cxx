@@ -99,6 +99,9 @@ static int osgToFGModifiers(int modifiers)
     if (modifiers & (osgGA::GUIEventAdapter::MODKEY_LEFT_ALT |
 		     osgGA::GUIEventAdapter::MODKEY_RIGHT_ALT))
 	result |= KEYMOD_ALT;
+    if (modifiers & (osgGA::GUIEventAdapter::MODKEY_LEFT_META |
+		     osgGA::GUIEventAdapter::MODKEY_RIGHT_META))
+	result |= KEYMOD_META;
     return result;
 }
 
