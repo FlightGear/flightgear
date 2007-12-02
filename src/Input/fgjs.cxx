@@ -28,6 +28,10 @@
 
 #include <simgear/compiler.h>
 
+#ifdef _MSC_VER
+#include <Winsock2.h>
+#endif
+
 #include <math.h>
 
 #include STL_IOSTREAM
