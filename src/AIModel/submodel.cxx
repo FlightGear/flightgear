@@ -748,7 +748,7 @@ void FGSubmodelMgr::loadSubmodels()
         if (!submodel.empty()) {
             //int id = (*submodel_iterator)->id;
             bool serviceable = true;
-            SG_LOG(SG_GENERAL, SG_ALERT, "found path sub sub "
+            SG_LOG(SG_GENERAL, SG_INFO, "found path sub sub "
                 << submodel
                 << " index " << index
                 << "name " << (*submodel_iterator)->name);
