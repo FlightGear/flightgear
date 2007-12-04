@@ -205,7 +205,7 @@ double FGPropeller::Calculate(double PowerAvailable)
 
   if (RPM < 1.0) RPM = 0; // Engine friction stops rotation arbitrarily at 1 RPM.
 
-  vMn = fdmex->GetPropagate()->GetPQR()*vH + vTorque*Sense;
+  vMn = fdmex->GetPropagate()->GetPQR()*vH + vTorque;
 
   return Thrust; // return thrust in pounds
 }
