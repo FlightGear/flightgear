@@ -544,8 +544,13 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
             if(rwy._id != id) break;
             if(rwy._type[0] != 'r') continue;
 
+            naRef rwyid = naStr_fromdata(naNewString(c),
+                    const_cast<char *>(rwy._rwy_no.c_str()),
+                    rwy._rwy_no.length());
+
             naRef rwydata = naNewHash(c);
 #define HASHSET(s,l,n) naHash_set(rwydata, naStr_fromdata(naNewString(c),s,l),n)
+            HASHSET("id", 2, rwyid);
             HASHSET("lat", 3, naNum(rwy._lat));
             HASHSET("lon", 3, naNum(rwy._lon));
             HASHSET("heading", 7, naNum(rwy._heading));
@@ -556,11 +561,7 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
             HASHSET("stopway1", 8, naNum(rwy._stopway1 * SG_FEET_TO_METER));
             HASHSET("stopway2", 8, naNum(rwy._stopway2 * SG_FEET_TO_METER));
 #undef HASHSET
-
-            naRef no = naStr_fromdata(naNewString(c),
-                    const_cast<char *>(rwy._rwy_no.c_str()),
-                    rwy._rwy_no.length());
-            naHash_set(rwys, no, rwydata);
+            naHash_set(rwys, rwyid, rwydata);
         } while(rwylst->next(&rwy));
     }
 
