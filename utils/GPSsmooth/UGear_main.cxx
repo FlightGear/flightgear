@@ -74,6 +74,7 @@ bool ignore_checksum = false;
 bool sg_swap = false;
 
 bool use_ground_track_hdg = false;
+bool use_ground_speed = false;
 
 bool est_controls = false;
 
@@ -160,13 +161,38 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
         fdm->psi = SGD_PI * 0.5 - atan2(vn, ve); // heading
     }
 
-    double mps = sqrt( vn*vn + ve*ve + vd*vd );
-    double mph = mps * 3600 / 1609.3440;
+    double mps = 0.0;
+    if ( use_ground_speed ) {
+        mps = sqrt( vn*vn + ve*ve + vd*vd );
+    } else {
+        mps = imupacket->Pt;
+    }
+    // double mph = mps * 3600 / 1609.3440;
     double kts = mps * SG_MPS_TO_KT;
     fdm->vcas = kts;
-    printf("speed = %.2f mph  %.2f kts\n", mph, kts );
+    // printf("speed = %.2f mph  %.2f kts\n", mph, kts );
+    static double Ps = 0.0, Ps_last = 0.0, t_last = 0.0;
+    Ps_last = Ps;
+    Ps = 0.92 * Ps + 0.08 * imupacket->Ps;
+    double climb = (Ps - Ps_last) / (imupacket->time - t_last);
+    t_last = imupacket->time;
+    static double climbf = 0.0;
+    climbf = 0.994 * climbf + 0.006 * climb;
+    fdm->climb_rate = climbf; // fps
 
-    fdm->climb_rate = 0; // fps
+    static double Ps_error = 0.0;
+    static double Ps_count = 0;
+    const double span = 10000.0;
+    Ps_count += 1.0; if (Ps_count > (span-1.0)) { Ps_count = (span-1.0); }
+    double error = navpacket->alt - Ps;
+    Ps_error = (Ps_count/span) * Ps_error + ((span-Ps_count)/span) * error;
+    fdm->altitude = Ps +  Ps_error;
+
+    printf("%.3f, %.3f, %.3f, %.3f, %.8f, %.8f, %.3f, %.3f, %.3f, %.3f, %.3f\n",
+           imupacket->time, imupacket->the, -navpacket->vd, climbf,
+           navpacket->lat, navpacket->lon, gpspacket->alt, navpacket->alt,
+           imupacket->Ps, Ps, Ps + Ps_error);
+
     // cout << "climb rate = " << aero->hdota << endl;
     fdm->v_north = 0.0;
     fdm->v_east = 0.0;
@@ -222,15 +248,17 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
         est_elev = 0.99 * est_elev + 0.01 * (imupacket->q * 4);
         est_aileron = 0.95 * est_aileron + 0.05 * (imupacket->p * 5);
         est_rudder = 0.95 * est_rudder + 0.05 * (imupacket->r * 2);
-        fdm->elevator = -est_elev;
-        fdm->left_aileron = est_aileron;
+        ctrls->elevator = fdm->elevator = -est_elev;
+        ctrls->aileron = fdm->left_aileron = est_aileron;
         fdm->right_aileron = -est_aileron;
-        fdm->rudder = est_rudder;
+        ctrls->rudder = fdm->rudder = est_rudder;
     } else {
-        fdm->elevator = ((double)servopacket->chn[1] / 32768.0) - 1.0;
-        fdm->left_aileron = ((double)servopacket->chn[0] / 32768.0) - 1.0;
-        fdm->right_aileron = 1.0 - ((double)servopacket->chn[0] / 32768.0);
-        fdm->rudder = 1.0 - ((double)servopacket->chn[3] / 32768.0);
+        ctrls->elevator = fdm->elevator = 1.0 - ((double)servopacket->chn[1] / 32768.0);
+        ctrls->aileron = fdm->left_aileron = 1.0 - ((double)servopacket->chn[0] / 32768.0);
+        fdm->right_aileron = ((double)servopacket->chn[0] / 32768.0) - 1.0;
+        ctrls->rudder = fdm->rudder = 1.0 - ((double)servopacket->chn[3] / 32768.0);
+	ctrls->elevator *= 3.0;
+	ctrls->aileron *= 3.0;
     }
     fdm->elevator_trim_tab = 0.0;
     fdm->left_flap = 0.0;
@@ -312,7 +340,18 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     htonf(fdm->speedbrake);
     htonf(fdm->spoilers);
 
+#if 0    
+    ctrls->version = FG_NET_CTRLS_VERSION;
+    ctrls->elevator_trim = 0.0;
+    ctrls->flaps = 0.0;
 
+    htonl(ctrls->version);
+    htond(ctrls->aileron);
+    htond(ctrls->rudder);
+    htond(ctrls->elevator);
+    htond(ctrls->elevator_trim);
+    htond(ctrls->flaps);
+#endif
 }
 
 
@@ -320,6 +359,7 @@ static void send_data( gps *gpspacket, imu *imupacket, nav *navpacket,
 		       servo *servopacket, health *healthpacket ) {
     int len;
     int fdmsize = sizeof( FGNetFDM );
+    int ctrlsize = sizeof( FGNetCtrls );
 
     // cout << "Running main loop" << endl;
 
@@ -329,6 +369,7 @@ static void send_data( gps *gpspacket, imu *imupacket, nav *navpacket,
     ugear2fg( gpspacket, imupacket, navpacket, servopacket, healthpacket,
 	      &fgfdm, &fgctrls );
     len = fdm_sock.send(&fgfdm, fdmsize, 0);
+    // len = ctrls_sock.send(&fgctrls, ctrlsize, 0);
 }
 
 
@@ -345,6 +386,7 @@ void usage( const string &argv0 ) {
     cout << "\t[ --fdm-port <fdm output port #> ]" << endl;
     cout << "\t[ --ctrls-port <ctrls output port #> ]" << endl;
     cout << "\t[ --groundtrack-heading ]" << endl;
+    cout << "\t[ --ground-speed ]" << endl;
     cout << "\t[ --estimate-control-deflections ]" << endl;
     cout << "\t[ --altitude-offset <meters> ]" << endl;
     cout << "\t[ --skip-seconds <seconds> ]" << endl;
@@ -432,6 +474,8 @@ int main( int argc, char **argv ) {
             }
         } else if ( strcmp (argv[i], "--groundtrack-heading" ) == 0 ) {
             use_ground_track_hdg = true;
+        } else if ( strcmp (argv[i], "--ground-speed" ) == 0 ) {
+            use_ground_speed = true;
         } else if (strcmp (argv[i], "--estimate-control-deflections" ) == 0) {
             est_controls = true;
         } else if ( strcmp( argv[i], "--altitude-offset" ) == 0 ) {

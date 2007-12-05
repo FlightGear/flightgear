@@ -144,7 +144,7 @@ void UGEARTrack::parse_msg( const int id, char *buf,
       if ( sg_swap ) {
           servopacket->time = sg_swap_double( (uint8_t *)buf, 0 );
       }
-      // printf("servo time = %.3f\n", servopacket->time);
+      // printf("servo time = %.3f %d %d\n", servopacket->time, servopacket->chn[0], servopacket->chn[1]);
     } else if ( id == HEALTH_PACKET ) {
       *healthpacket = *(struct health *)buf;
       if ( sg_swap ) {

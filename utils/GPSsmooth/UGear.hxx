@@ -59,7 +59,7 @@ struct nav {
 
 struct servo {
    double time;
-   uint64_t chn[8];
+   uint16_t chn[8];
    uint64_t status;
 };
 
