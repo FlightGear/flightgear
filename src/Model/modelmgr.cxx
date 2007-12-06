@@ -51,13 +51,8 @@ FGModelMgr::init ()
 {
   vector<SGPropertyNode_ptr> model_nodes = _models->getChildren("model");
 
-  for (unsigned int i = 0; i < model_nodes.size(); i++) {
-    try {
+  for (unsigned int i = 0; i < model_nodes.size(); i++)
       add_model(model_nodes[i]);
-    } catch (const sg_throwable& t) {
-      SG_LOG(SG_GENERAL, SG_ALERT, t.getFormattedMessage() << t.getOrigin());
-    }
-  }
 }
 
 void
@@ -70,12 +65,21 @@ FGModelMgr::add_model (SGPropertyNode * node)
   instance->model = model;
   instance->node = node;
   SGModelLib *model_lib = globals->get_model_lib();
-  osg::Node *object = model_lib->load_model(
-      globals->get_fg_root(),
-      node->getStringValue("path",
-                           "Models/Geometry/glider.ac"),
-      globals->get_props(),
-      globals->get_sim_time_sec(), /*cache_object=*/false);
+
+  const char *path = node->getStringValue("path", "Models/Geometry/glider.ac");
+  osg::Node *object;
+
+  try {
+    object = model_lib->load_model(
+        globals->get_fg_root(),
+        path,
+        globals->get_props(),
+        globals->get_sim_time_sec(), /*cache_object=*/false);
+  } catch (const sg_throwable& t) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "Error loading " << path << ":\n  "
+        << t.getFormattedMessage() << t.getOrigin());
+    return;
+  }
 
   model->init( object );
 
@@ -224,11 +228,7 @@ FGModelMgr::Listener::childAdded(SGPropertyNode * parent, SGPropertyNode * child
   if (strcmp(parent->getName(), "model") || strcmp(child->getName(), "load"))
     return;
 
-  try {
-    _mgr->add_model(parent);
-  } catch (const sg_throwable& t) {
-    SG_LOG(SG_GENERAL, SG_ALERT, t.getFormattedMessage() << t.getOrigin());
-  }
+  _mgr->add_model(parent);
 }
 
 void
