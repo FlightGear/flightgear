@@ -72,7 +72,8 @@ FGAircraftModel::init ()
                                            liveryPath);
     _aircraft->init( model );
   } catch (const sg_exception &ex) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "Failed to load aircraft from " << path);
+    SG_LOG(SG_GENERAL, SG_ALERT, "Failed to load aircraft from " << path << ':');
+    SG_LOG(SG_GENERAL, SG_ALERT, "  " << ex.getFormattedMessage());
     SG_LOG(SG_GENERAL, SG_ALERT, "(Falling back to glider.ac.)");
     osg::Node *model = fgLoad3DModelPanel( globals->get_fg_root(),
                                            "Models/Geometry/glider.ac",
