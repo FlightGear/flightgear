@@ -307,7 +307,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
   it = motionInfo.properties.begin();
   //cout << "OUTPUT PROPERTIES\n";
   while (it != motionInfo.properties.end()
-         && ptr < (Msg + MAX_PACKET_SIZE - sizeof(xdr_data_t))) {
+         && ptr + 2 * sizeof(xdr_data_t) < (Msg + MAX_PACKET_SIZE)) {
              
     // First elements is the ID
     xdr_data_t xdr = XDR_encode_uint32((*it)->id);
@@ -345,6 +345,10 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
             // Add the length         
             ////cout << "String length: " << strlen(lcharptr) << "\n";
             uint32_t len = strlen(lcharptr);
+            // XXX This should not be using 4 bytes per character!
+            if (ptr + (1 + len + (4 - len % 4)) * sizeof (xdr_data_t)
+                >= (Msg + MAX_PACKET_SIZE))
+                goto escape;
             //cout << "String length unint32: " << len << "\n";
             xdr = XDR_encode_uint32(len);
             memcpy(ptr, &xdr, sizeof(xdr_data_t));
@@ -353,7 +357,8 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
             if (len != 0)
             {
 
-              // Now the text itself          
+              // Now the text itself
+              // XXX This should not be using 4 bytes per character!
               int lcount = 0;
               while ((*lcharptr != '\0') && (lcount < MAX_TEXT_SIZE)) 
               {
@@ -402,7 +407,8 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
         
     ++it;
   }
-
+escape:
+  
   T_MsgHdr MsgHdr;
   FillMsgHdr(&MsgHdr, POS_DATA_ID, ptr - Msg);
   memcpy(Msg, &MsgHdr, sizeof(T_MsgHdr));
@@ -509,14 +515,17 @@ FGMultiplayMgr::Update(void)
     if (MsgHdr->Magic != MSG_MAGIC) {
       SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
               << "message has invalid magic number!" );
+      break;
     }
     if (MsgHdr->Version != PROTO_VER) {
       SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
               << "message has invalid protocoll number!" );
+      break;
     }
     if (MsgHdr->MsgLen != bytes) {
       SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
               << "message has invalid length!" );
+      break;
     }
     //////////////////////////////////////////////////
     //  Process messages
