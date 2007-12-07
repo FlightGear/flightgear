@@ -118,7 +118,7 @@ fgPanelVisible ()
 map<string,osg::ref_ptr<osg::Texture2D> > FGTextureManager::_textureMap;
 
 osg::Texture2D*
-FGTextureManager::createTexture (const string &relativePath)
+FGTextureManager::createTexture (const string &relativePath, bool staticTexture)
 {
   osg::Texture2D* texture = _textureMap[relativePath].get();
   if (texture == 0) {
@@ -127,7 +127,7 @@ FGTextureManager::createTexture (const string &relativePath)
     SGPath tpath(globals->get_fg_root());
     tpath.append(relativePath);
 
-    texture = SGLoadTexture2D(tpath);
+    texture = SGLoadTexture2D(staticTexture, tpath);
 
     _textureMap[relativePath] = texture;
     if (!_textureMap[relativePath].valid()) 

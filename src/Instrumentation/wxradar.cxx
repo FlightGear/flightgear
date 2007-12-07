@@ -112,7 +112,8 @@ wxRadarBg::init ()
     // texture name to use in 2D and 3D instruments
     _texture_path = _Instrument->getStringValue("radar-texture-path",
             "Aircraft/Instruments/Textures/od_wxradar.rgb");
-    _resultTexture = FGTextureManager::createTexture(_texture_path.c_str());
+    _resultTexture = FGTextureManager::createTexture(_texture_path.c_str(),
+                                                     false);
 
     SGPath tpath(globals->get_fg_root());
     string path = _Instrument->getStringValue("echo-texture-path",
@@ -120,7 +121,7 @@ wxRadarBg::init ()
     tpath.append(path);
 
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
-    _wxEcho = SGLoadTexture2D(tpath.c_str(), false, false);
+    _wxEcho = SGLoadTexture2D(tpath, false, false);
 
 
     _Instrument->setFloatValue("trk", 0.0);
