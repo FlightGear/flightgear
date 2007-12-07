@@ -15,13 +15,14 @@ else
 THREAD_LIBS =
 endif
 
+GFX_COMMON = fg_os_common.cxx fg_os.hxx
 if USE_SDL
-GFX_CODE = fg_os_sdl.cxx fg_os_common.cxx fg_os.hxx
+GFX_CODE = fg_os_sdl.cxx $(GFX_COMMON)
 else
 if USE_OSGVIEWER
-GFX_CODE = fg_os_osgviewer.cxx fg_os_common.cxx fg_os.hxx
+GFX_CODE = fg_os_osgviewer.cxx $(GFX_COMMON)
 else
-GFX_CODE = fg_os.cxx fg_os.hxx
+GFX_CODE = fg_os.cxx $(GFX_COMMON)
 endif
 endif
 

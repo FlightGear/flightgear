@@ -18,7 +18,7 @@ FGManipulator::FGManipulator() :
     idleHandler(0), drawHandler(0), windowResizeHandler(0), keyHandler(0),
     mouseClickHandler(0), mouseMotionHandler(0), currentModifiers(0),
     osgModifiers(0), resizable(true), mouseWarped(false),
-    scrollButtonPressed(false)
+    scrollButtonPressed(false), useEventModifiers(false)
 {
     using namespace osgGA;
     
@@ -271,7 +271,9 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
 	if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_NUM_LOCK) {
 	    key = numPadIter->second;
 	}
-    } else {
+    } else if (useEventModifiers) {
+        
+    }else {
 	// Track the modifiers because OSG is currently (2.0) broken
 	KeyMaskMap::iterator iter = keyMaskMap.find(key);
 	if (iter != keyMaskMap.end()) {

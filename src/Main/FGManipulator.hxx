@@ -118,6 +118,8 @@ public:
     bool getResizable() { return resizable; }
     void setResizable(bool _resizable) { resizable = _resizable; }
 
+    bool getUseEventModifiers() { return useEventModifiers; }
+    void setUseEventModifiers(bool val) { useEventModifiers = val; }
 protected:
     osg::ref_ptr<osg::Node> _node;
     fgIdleHandler idleHandler;
@@ -140,5 +142,8 @@ protected:
     // workaround for osgViewer double scroll events
     bool scrollButtonPressed;
     int release_keys[128];
+    // When the viewer is embedded, the host toolkit may deliver a
+    // valid event mask but not control keys.
+    bool useEventModifiers;
 };
 #endif

@@ -7,26 +7,20 @@
 #  include <config.h>
 #endif
 
+#include <osgViewer/Viewer>
+#include <osgViewer/ViewerEventHandlers>
+
 #include <simgear/compiler.h>
 
 #include SG_GLUT_H
 
 #include <plib/pu.h>
 
-#include "fg_props.hxx"
+#include <Scenery/scenery.hxx>
 #include "fg_os.hxx"
-
-//
-// fg_os callback registration APIs
-// (These are not glut-specific)
-//
-
-static fgIdleHandler IdleHandler = 0;
-static fgDrawHandler DrawHandler = 0;
-static fgWindowResizeHandler WindowResizeHandler = 0;
-static fgKeyHandler KeyHandler = 0;
-static fgMouseClickHandler MouseClickHandler = 0;
-static fgMouseMotionHandler MouseMotionHandler = 0;
+#include "globals.hxx"
+#include "renderer.hxx"
+#include "fg_props.hxx"
 
 // We need to flush all pending mouse move events past a mouse warp to avoid
 // a race condition ending in warping twice and having huge increments for the
@@ -35,62 +29,76 @@ static fgMouseMotionHandler MouseMotionHandler = 0;
 // ignoring mouse move events between a warp mouse and the next frame.
 static bool mouseWarped = false;
 
-void fgRegisterIdleHandler(fgIdleHandler func)
-{
-    IdleHandler = func;
-}
-
-void fgRegisterDrawHandler(fgDrawHandler func)
-{
-    DrawHandler = func;
-}
-
-void fgRegisterWindowResizeHandler(fgWindowResizeHandler func)
-{
-    WindowResizeHandler = func;
-}
-
-void fgRegisterKeyHandler(fgKeyHandler func)
-{
-    KeyHandler = func;
-}
-
-void fgRegisterMouseClickHandler(fgMouseClickHandler func)
-{
-    MouseClickHandler = func;
-}
-
-void fgRegisterMouseMotionHandler(fgMouseMotionHandler func)
-{
-    MouseMotionHandler = func;
-}
-
 //
 // Native glut callbacks.
-// These translate the glut event model into fg*Handler callbacks
+// These translate the glut event model into osgGA events
 //
 
+static osg::ref_ptr<osgViewer::Viewer> viewer;
+static osg::ref_ptr<osg::Camera> mainCamera;
+static osg::ref_ptr<osgViewer::GraphicsWindowEmbedded> gw;
+
 static int GlutModifiers = 0;
+static unsigned int getOSGModifiers(int modifiers);
 
 static void callKeyHandler(int k, int mods, int x, int y)
 {
-    int puiup = mods & KEYMOD_RELEASED ? PU_UP : PU_DOWN;
-    if(puKeyboard(k, puiup))
-        return;
-    if(KeyHandler) (*KeyHandler)(k, mods, x, y);
+
+    int key = 0;
+    switch (k) {
+    case 0x1b:            key = osgGA::GUIEventAdapter::KEY_Escape;  break;
+    case '\n':            key = osgGA::GUIEventAdapter::KEY_Return; break;
+    case '\b':            key = osgGA::GUIEventAdapter::KEY_BackSpace; break;
+    case 0x7f:            key = osgGA::GUIEventAdapter::KEY_Delete; break;
+    case '\t':            key = osgGA::GUIEventAdapter::KEY_Tab; break;
+    case PU_KEY_LEFT:     key = osgGA::GUIEventAdapter::KEY_Left;      break;
+    case PU_KEY_UP:       key = osgGA::GUIEventAdapter::KEY_Up;        break;
+    case PU_KEY_RIGHT:    key = osgGA::GUIEventAdapter::KEY_Right;     break;
+    case PU_KEY_DOWN:     key = osgGA::GUIEventAdapter::KEY_Down;      break;
+    case PU_KEY_PAGE_UP:   key = osgGA::GUIEventAdapter::KEY_Page_Up;   break;
+    case PU_KEY_PAGE_DOWN: key = osgGA::GUIEventAdapter::KEY_Page_Down; break;
+    case PU_KEY_HOME:     key = osgGA::GUIEventAdapter::KEY_Home;      break;
+    case PU_KEY_END:      key = osgGA::GUIEventAdapter::KEY_End;       break;
+    case PU_KEY_INSERT:   key = osgGA::GUIEventAdapter::KEY_Insert;    break;
+    case PU_KEY_F1:       key = osgGA::GUIEventAdapter::KEY_F1;        break;
+    case PU_KEY_F2:       key = osgGA::GUIEventAdapter::KEY_F2;        break;
+    case PU_KEY_F3:       key = osgGA::GUIEventAdapter::KEY_F3;        break;
+    case PU_KEY_F4:       key = osgGA::GUIEventAdapter::KEY_F4;        break;
+    case PU_KEY_F5:       key = osgGA::GUIEventAdapter::KEY_F5;        break;
+    case PU_KEY_F6:       key = osgGA::GUIEventAdapter::KEY_F6;        break;
+    case PU_KEY_F7:       key = osgGA::GUIEventAdapter::KEY_F7;        break;
+    case PU_KEY_F8:       key = osgGA::GUIEventAdapter::KEY_F8;        break;
+    case PU_KEY_F9:       key = osgGA::GUIEventAdapter::KEY_F9;        break;
+    case PU_KEY_F10:      key = osgGA::GUIEventAdapter::KEY_F10;       break;
+    case PU_KEY_F11:      key = osgGA::GUIEventAdapter::KEY_F11;       break;
+    case PU_KEY_F12:      key = osgGA::GUIEventAdapter::KEY_F12;       break;
+    default: key = k; break;
+    }
+    unsigned int osgModifiers = getOSGModifiers(mods);
+    osgGA::EventQueue& queue = *gw->getEventQueue();
+    queue.getCurrentEventState()->setModKeyMask(osgModifiers);
+    if (mods & KEYMOD_RELEASED)
+        queue.keyRelease((osgGA::GUIEventAdapter::KeySymbol)key);
+    else
+        queue.keyPress((osgGA::GUIEventAdapter::KeySymbol)key);
 }
 
 static void GLUTmotion (int x, int y)
 {
-    if (mouseWarped)
+    if (mouseWarped || !gw.valid())
         return;
-    if(MouseMotionHandler) (*MouseMotionHandler)(x, y);
+    gw->getEventQueue()->mouseMotion(x, y);
 }
 
 static void GLUTmouse (int button, int updown, int x, int y)
 {
     GlutModifiers = glutGetModifiers();
-    if(MouseClickHandler) (*MouseClickHandler)(button, updown, x, y, true, 0);
+    if (gw.valid()) {
+        if (updown == 0)
+            gw->getEventQueue()->mouseButtonPress(x, y, button+1);
+        else
+            gw->getEventQueue()->mouseButtonRelease(x, y, button+1);
+    }
 }
 
 static void GLUTspecialkeyup(int k, int x, int y)
@@ -130,22 +138,20 @@ static void GLUTkey(unsigned char k, int x, int y)
     callKeyHandler(k, fgGetKeyModifiers(), x, y);
 }
 
-static void GLUTidle()
-{
-    if(IdleHandler) (*IdleHandler)();
-    mouseWarped = false;
-}
-
 static void GLUTdraw()
 {
-    if(DrawHandler) (*DrawHandler)();
+    viewer->frame();
     glutSwapBuffers();
+    glutPostRedisplay();
     mouseWarped = false;
 }
 
 static void GLUTreshape(int w, int h)
 {
-    if(WindowResizeHandler) (*WindowResizeHandler)(w, h);
+    // update the window dimensions, in case the window has been resized.
+    gw->resized(gw->getTraits()->x, gw->getTraits()->y, w, h);
+    gw->getEventQueue()->windowResize(gw->getTraits()->x, gw->getTraits()->y,
+                                      w, h);
 }
 
 //
@@ -206,9 +212,16 @@ int fgGetKeyModifiers()
     return result;
 }
 
-void fgRequestRedraw()
+static unsigned int getOSGModifiers(int glutModifiers)
 {
-    glutPostRedisplay();
+    unsigned int result = 0;
+    if (glutModifiers & GLUT_ACTIVE_SHIFT)
+        result |= osgGA::GUIEventAdapter::MODKEY_SHIFT;
+    if (glutModifiers & GLUT_ACTIVE_CTRL)
+        result |= osgGA::GUIEventAdapter::MODKEY_CTRL;
+    if(glutModifiers & GLUT_ACTIVE_ALT)
+        result |= osgGA::GUIEventAdapter::MODKEY_ALT;
+    return result;
 }
 
 void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
@@ -244,9 +257,35 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
     glutSpecialFunc(GLUTspecialkey);
     glutKeyboardUpFunc(GLUTkeyup);
     glutKeyboardFunc(GLUTkey);
-    glutIdleFunc(GLUTidle);
     glutDisplayFunc(GLUTdraw);
     glutReshapeFunc(GLUTreshape);
+    // XXX
+    int realw = w;
+    int realh = h;
+    viewer = new osgViewer::Viewer;
+    gw = viewer->setUpViewerAsEmbeddedInWindow(0, 0, realw, realh);
+    // now the main camera ...
+    //osg::ref_ptr<osg::Camera> camera = new osg::Camera;
+    osg::ref_ptr<osg::Camera> camera = viewer->getCamera();
+    mainCamera = camera;
+    osg::Camera::ProjectionResizePolicy rsp = osg::Camera::VERTICAL;
+    // If a viewport isn't set on the camera, then it's hard to dig it
+    // out of the SceneView objects in the viewer, and the coordinates
+    // of mouse events are somewhat bizzare.
+    camera->setViewport(new osg::Viewport(0, 0, realw, realh));
+    camera->setProjectionResizePolicy(rsp);
+    //viewer->addSlave(camera.get());
+    globals->get_renderer()->getManipulator()->setUseEventModifiers(true);
+    viewer->setCameraManipulator(globals->get_renderer()->getManipulator());
+    // Let FG handle the escape key with a confirmation
+    viewer->setKeyEventSetsDone(0);
+    osgViewer::StatsHandler* statsHandler = new osgViewer::StatsHandler;
+    statsHandler->setKeyEventTogglesOnScreenStats('*');
+    statsHandler->setKeyEventPrintsOutStats(0);
+    viewer->addEventHandler(statsHandler);
+    // The viewer won't start without some root.
+    viewer->setSceneData(new osg::Group);
+    globals->get_renderer()->setViewer(viewer.get());
 }
 
 // Noop; the graphics context is always current
