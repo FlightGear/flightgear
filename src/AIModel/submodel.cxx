@@ -120,13 +120,13 @@ void FGSubmodelMgr::update(double dt)
             continue;           // so we can continue
 
         if (_impact || _hit) {
-            SG_LOG(SG_GENERAL, SG_ALERT, "Submodel: Impact " << _impact << " hit! " << _hit );
+            //SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! " << _hit);
 
             submodel_iterator = submodels.begin();
 
             while (submodel_iterator != submodels.end()) {
                 int child_ID = (*submodel_iterator)->id;
-                cout << "Impact: parent SubID " << parent_subID << " child_ID " << child_ID << endl;
+                //SG_LOG(SG_GENERAL, SG_DEBUG, "Impact: parent SubID " << parent_subID << " child_ID " << child_ID);
 
                 if ( parent_subID == child_ID ) {
                     _parent_lat = (*sm_list_itr)->_getImpactLat();
