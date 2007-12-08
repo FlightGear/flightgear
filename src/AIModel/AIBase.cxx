@@ -67,7 +67,8 @@ FGAIBase::FGAIBase(object_type ot) :
     _impact_speed(0),
 
     _refID( _newAIModelID() ),
-    _otype(ot)
+    _otype(ot),
+    _initialized(false)
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
@@ -178,7 +179,9 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
     }
 
-    if (model) {
+    // checking _initialized for avoiding DL stack overflow
+    // caused by multiple registration of aip.getTransform()
+    if (model && _initialized == false) {
         aip.init( model );
         aip.setVisible(true);
         invisible = false;
@@ -194,6 +197,7 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
     props->setStringValue("submodels/path", _path.c_str());
     setDie(false);
+    _initialized = true;
     return true;
 }
 

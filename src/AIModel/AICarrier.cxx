@@ -38,7 +38,7 @@
 
 
 
-FGAICarrier::FGAICarrier() : FGAIShip(otCarrier) {
+FGAICarrier::FGAICarrier() : FGAIShip(otCarrier), _initialized(false) {
 }
 
 FGAICarrier::~FGAICarrier() {
@@ -263,14 +263,17 @@ bool FGAICarrier::init(bool search_in_AI_path) {
     // To avoid that every detail in a carrier 3D model will end into
     // the aircraft local cache, only set the HOT traversal bit on
     // selected objects.
-    ssgEntity *sel = aip.getSceneGraph();
-    // Clear the HOT traversal flag
-    mark_nohot(sel);
-    // Selectively set that flag again for wires/cats/solid objects.
-    // Attach a pointer to this carrier class to those objects.
-    mark_wires(sel, wire_objects);
-    mark_cat(sel, catapult_objects);
-    mark_solid(sel, solid_objects);
+    if (_initialized == false) {
+      ssgEntity *sel = aip.getSceneGraph();
+      // Clear the HOT traversal flag
+      mark_nohot(sel);
+      // Selectively set that flag again for wires/cats/solid objects.
+      // Attach a pointer to this carrier class to those objects.
+      mark_wires(sel, wire_objects);
+      mark_cat(sel, catapult_objects);
+      mark_solid(sel, solid_objects);
+      _initialized = true;
+    }
 
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);

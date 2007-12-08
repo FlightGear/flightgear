@@ -191,6 +191,7 @@ private:
     double jbd_pos_norm, raw_jbd_pos_norm;
     double jbd_transition_time, jbd_time_constant;
     bool jbd;
+    bool _initialized;
 };
 
 #endif  // _FG_AICARRIER_HXX
