@@ -152,6 +152,39 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {10001, "sim/multiplay/transmission-freq-hz",  SGPropertyNode::STRING},
   {10002, "sim/multiplay/chat",  SGPropertyNode::STRING},
 
+  {10100, "sim/multiplay/generic/string[0]", SGPropertyNode::STRING},
+  {10101, "sim/multiplay/generic/string[1]", SGPropertyNode::STRING},
+  {10102, "sim/multiplay/generic/string[2]", SGPropertyNode::STRING},
+  {10103, "sim/multiplay/generic/string[3]", SGPropertyNode::STRING},
+  {10104, "sim/multiplay/generic/string[4]", SGPropertyNode::STRING},
+  {10105, "sim/multiplay/generic/string[5]", SGPropertyNode::STRING},
+  {10106, "sim/multiplay/generic/string[6]", SGPropertyNode::STRING},
+  {10107, "sim/multiplay/generic/string[7]", SGPropertyNode::STRING},
+  {10108, "sim/multiplay/generic/string[8]", SGPropertyNode::STRING},
+  {10109, "sim/multiplay/generic/string[9]", SGPropertyNode::STRING},
+
+  {10200, "sim/multiplay/generic/float[0]", SGPropertyNode::FLOAT},
+  {10201, "sim/multiplay/generic/float[1]", SGPropertyNode::FLOAT},
+  {10202, "sim/multiplay/generic/float[2]", SGPropertyNode::FLOAT},
+  {10203, "sim/multiplay/generic/float[3]", SGPropertyNode::FLOAT},
+  {10204, "sim/multiplay/generic/float[4]", SGPropertyNode::FLOAT},
+  {10205, "sim/multiplay/generic/float[5]", SGPropertyNode::FLOAT},
+  {10206, "sim/multiplay/generic/float[6]", SGPropertyNode::FLOAT},
+  {10207, "sim/multiplay/generic/float[7]", SGPropertyNode::FLOAT},
+  {10208, "sim/multiplay/generic/float[8]", SGPropertyNode::FLOAT},
+  {10209, "sim/multiplay/generic/float[9]", SGPropertyNode::FLOAT},
+
+  {10300, "sim/multiplay/generic/int[0]", SGPropertyNode::INT},
+  {10301, "sim/multiplay/generic/int[1]", SGPropertyNode::INT},
+  {10302, "sim/multiplay/generic/int[2]", SGPropertyNode::INT},
+  {10303, "sim/multiplay/generic/int[3]", SGPropertyNode::INT},
+  {10304, "sim/multiplay/generic/int[4]", SGPropertyNode::INT},
+  {10305, "sim/multiplay/generic/int[5]", SGPropertyNode::INT},
+  {10306, "sim/multiplay/generic/int[6]", SGPropertyNode::INT},
+  {10307, "sim/multiplay/generic/int[7]", SGPropertyNode::INT},
+  {10308, "sim/multiplay/generic/int[8]", SGPropertyNode::INT},
+  {10309, "sim/multiplay/generic/int[9]", SGPropertyNode::INT},
+
   /// termination
   {0, 0, SGPropertyNode::UNSPECIFIED}
 };
