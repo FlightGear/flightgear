@@ -202,6 +202,28 @@ bool FGAIBase::init(bool search_in_AI_path) {
 }
 
 
+class NasalModelDataFactory : public SGModelData {
+public:
+    NasalModelDataFactory(SGPropertyNode *root) : _root(root) {}
+    void modelLoaded(const string& path, SGPropertyNode *props, ssgBranch *) {
+        _path = path;
+        SGPropertyNode *nasal = props->getNode("nasal");
+        if (nasal)
+            copyProperties(nasal, _props.getNode("nasal", true));
+    }
+    FGNasalModelData *deliver(const string& id) {
+        FGNasalModelData *data = new FGNasalModelData(_root);
+        data->modelLoaded(_path + ':' + id, &_props, 0);
+        return data;
+    }
+
+private:
+    SGPropertyNode_ptr _root;
+    SGPropertyNode _props;
+    string _path;
+};
+
+
 ssgBranch * FGAIBase::load3DModel(const string& fg_root,
                                   const string &path,
                                   SGPropertyNode *prop_root,
@@ -218,11 +240,14 @@ ssgBranch * FGAIBase::load3DModel(const string& fg_root,
                 path,
                 prop_root,
                 sim_time_sec, 0,
-                new FGNasalModelData(prop_root));
+                new NasalModelDataFactory(prop_root));
         manager->setModel(path, model);
     }
 
     personality_branch->addKid( model );
+    NasalModelDataFactory *factory = static_cast<NasalModelDataFactory *>(model->getUserData());
+    FGNasalModelData *data = factory->deliver(props->getPath());
+    personality_branch->setUserData(data);
     return personality_branch;
 }
 
