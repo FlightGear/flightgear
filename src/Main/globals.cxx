@@ -79,10 +79,12 @@ FGGlobals::FGGlobals() :
     time_params( NULL ),
     ephem( NULL ),
     mag( NULL ),
+    matlib( NULL ),
     route_mgr( NULL ),
     current_panel( NULL ),
     soundmgr( NULL ),
     airports( NULL ),
+    runways( NULL ),
     ATC_mgr( NULL ),
     ATC_display( NULL ),
     AI_mgr( NULL ),
@@ -107,8 +109,11 @@ FGGlobals::FGGlobals() :
     dmelist( NULL ),
     mkrlist( NULL ),
     tacanlist( NULL ),
-    carrierlist( NULL ), 
-    fixlist( NULL )
+    carrierlist( NULL ),
+    channellist( NULL ),
+    fixlist( NULL ),
+    airwaynet( NULL ),
+    multiplayer_mgr( NULL )
 {
 }
 
