@@ -964,7 +964,8 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "ROTORBRAKE")) return ControlMap::ROTORBRAKE;
     if(eq(name, "ROTORENGINEMAXRELTORQUE")) 
         return ControlMap::ROTORENGINEMAXRELTORQUE;
-    if(eq(name, "ROTORRELTARGET")) return ControlMap::ROTORELTARGET;
+    if(eq(name, "ROTORRELTARGET")) return ControlMap::ROTORRELTARGET;
+    if(eq(name, "ROTORBALANCE")) return ControlMap::ROTORBALANCE;
     if(eq(name, "REVERSE_THRUST")) return ControlMap::REVERSE_THRUST;
     if(eq(name, "WASTEGATE")) return ControlMap::WASTEGATE;
     if(eq(name, "WINCHRELSPEED")) return ControlMap::WINCHRELSPEED;

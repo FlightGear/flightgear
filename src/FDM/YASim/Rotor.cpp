@@ -791,6 +791,13 @@ void Rotor::setCyclicail(float lval,float rval)
     _cyclicail=-(_mincyclicail+(lval+1)/2*(_maxcyclicail-_mincyclicail));
 }
 
+void Rotor::setRotorBalance(float lval)
+{
+    lval = Math::clamp(lval, -1, 1);
+    int i;
+    _balance2 = lval;
+}
+
 void Rotor::getPosition(float* out)
 {
     int i;
