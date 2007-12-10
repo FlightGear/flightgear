@@ -214,12 +214,14 @@ void ControlMap::applyControls(float dt)
         case TILTPITCH:    ((Rotor*)obj)->setTiltPitch(lval);      break;
         case TILTYAW:      ((Rotor*)obj)->setTiltYaw(lval);        break;
         case TILTROLL:     ((Rotor*)obj)->setTiltRoll(lval);       break;
+        case ROTORBALANCE:
+                           ((Rotor*)obj)->setRotorBalance(lval);   break;
         case ROTORBRAKE:   ((Rotorgear*)obj)->setRotorBrake(lval); break;
         case ROTORENGINEON: 
                         ((Rotorgear*)obj)->setEngineOn((int)lval); break;
         case ROTORENGINEMAXRELTORQUE: 
               ((Rotorgear*)obj)->setRotorEngineMaxRelTorque(lval); break;
-        case ROTORELTARGET:
+        case ROTORRELTARGET:
                        ((Rotorgear*)obj)->setRotorRelTarget(lval); break;
 	case REVERSE_THRUST: ((Jet*)obj)->setReverse(lval != 0);   break;
 	case BOOST:

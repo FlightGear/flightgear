@@ -93,6 +93,7 @@ public:
     void setCyclicail(float lval,float rval);
     void setCyclicele(float lval,float rval);
     void setCollective(float lval);
+    void setRotorBalance(float lval);
     void setAlphaoutput(int i, const char *text);
     void setCcw(int ccw);
     int getCcw() {return _ccw;};
