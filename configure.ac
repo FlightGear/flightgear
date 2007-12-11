@@ -10,7 +10,7 @@ AC_PREREQ(2.52)
 dnl Initialize the automake stuff
 dnl set the $host variable based on local machine/os
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE(FlightGear, 0.9.11-pre2)
+AM_INIT_AUTOMAKE(FlightGear, 1.0.0)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -412,7 +412,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for simgear 0.3.11 or newer])
+AC_MSG_CHECKING([for simgear 1.0.0 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
