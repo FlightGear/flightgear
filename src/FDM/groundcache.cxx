@@ -476,8 +476,15 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
                                     double rad)
 {
   // Empty cache.
-  ground_radius = 0.0;
   found_ground = false;
+  SGGeod geodPt = SGGeod::fromCart(pt);
+  // Don't blow away the cache ground_radius and stuff if there's no
+  // scenery
+  if (!globals->get_tile_mgr()->scenery_available(geodPt.getLatitudeDeg(),
+                                                  geodPt.getLongitudeDeg(),
+                                                  rad))
+    return false;
+  ground_radius = 0.0;
   triangles.resize(0);
   catapults.resize(0);
   wires.resize(0);
@@ -489,7 +496,7 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
   cache_ref_time = ref_time;
 
   // Get a normalized down vector valid for the whole cache
-  SGQuatd hlToEc = SGQuatd::fromLonLat(SGGeod::fromCart(pt));
+  SGQuatd hlToEc = SGQuatd::fromLonLat(geodPt);
   down = hlToEc.rotate(SGVec3d(0, 0, 1));
 
   // Prepare sphere around the aircraft.
