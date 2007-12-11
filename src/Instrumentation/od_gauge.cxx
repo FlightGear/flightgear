@@ -60,7 +60,7 @@ void FGODGauge::allocRT () {
     camera->setRenderOrder(osg::Camera::PRE_RENDER);
     camera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     camera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f , 0.0f));
-    camera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+    camera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT, osg::Camera::FRAME_BUFFER);
     osg::StateSet* stateSet = camera->getOrCreateStateSet();
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
