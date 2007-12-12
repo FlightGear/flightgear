@@ -22,13 +22,6 @@
 #include "renderer.hxx"
 #include "fg_props.hxx"
 
-// We need to flush all pending mouse move events past a mouse warp to avoid
-// a race condition ending in warping twice and having huge increments for the
-// second warp.
-// I am not aware of such a flush function in glut. So we emulate that by
-// ignoring mouse move events between a warp mouse and the next frame.
-static bool mouseWarped = false;
-
 //
 // Native glut callbacks.
 // These translate the glut event model into osgGA events
@@ -85,7 +78,7 @@ static void callKeyHandler(int k, int mods, int x, int y)
 
 static void GLUTmotion (int x, int y)
 {
-    if (mouseWarped || !gw.valid())
+    if (!gw.valid())
         return;
     gw->getEventQueue()->mouseMotion(x, y);
 }
@@ -143,7 +136,6 @@ static void GLUTdraw()
     viewer->frame();
     glutSwapBuffers();
     glutPostRedisplay();
-    mouseWarped = false;
 }
 
 static void GLUTreshape(int w, int h)
@@ -199,7 +191,7 @@ void fgSetMouseCursor(int cursor)
 
 void fgWarpMouse(int x, int y)
 {
-    mouseWarped = true;
+    globals->get_renderer()->getManipulator()->setMouseWarped();
     glutWarpPointer(x, y);
 }
 
