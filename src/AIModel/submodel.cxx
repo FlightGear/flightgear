@@ -311,11 +311,19 @@ void FGSubmodelMgr::transform(submodel *sm)
     // set initial conditions
     if (sm->contents_node != 0) {
         // get the weight of the contents (lbs) and convert to mass (slugs)
-        sm->contents = sm->contents_node->getDoubleValue();
+        sm->contents = sm->contents_node->getChild("level-lbs", 0, 1)
+            ->getDoubleValue();
+        //cout << "transform: contents " << sm->contents << " weight " <<sm->weight << endl;
         IC.mass = (sm->weight + sm->contents) * lbs_to_slugs;
+        //cout << "mass inc contents"  << IC.mass << endl;
 
         // set contents to 0 in the parent
-        sm->contents_node->setDoubleValue(0);
+        sm->contents_node->getChild("level-gal_us", 0, 1)->setDoubleValue(0);
+#if 0
+        cout << "contents after release" << sm->contents_node->getChild("level-gal_us")->getDoubleValue()
+             << " " << sm->contents_node->getChild("level-lbs",0,1)->getDoubleValue()
+             << endl;
+#endif
     } else
         IC.mass = sm->weight * lbs_to_slugs;
 
