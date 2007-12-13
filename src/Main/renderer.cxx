@@ -70,6 +70,8 @@
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/util/SGUpdateVisitor.hxx>
+#include <simgear/scene/util/RenderConstants.hxx>
+#include <simgear/scene/tgdb/GroundLightManager.hxx>
 #include <simgear/scene/tgdb/pt_lights.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
@@ -826,20 +828,19 @@ FGRenderer::update( bool refresh_camera_settings ) {
                              l->adj_fog_color(),
                              l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
     mUpdateVisitor->setVisibility(actual_visibility);
+    simgear::GroundLightManager::instance()->update(mUpdateVisitor.get());
     bool hotspots = fgGetBool("/sim/panel-hotspots");
+    osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
+    cullMask |= simgear::GroundLightManager::instance()
+        ->getLightNodeMask(mUpdateVisitor.get());
+    if (hotspots)
+        cullMask |= simgear::PICK_BIT;
     if (viewer) {
-	if (hotspots)
-	    camera->setCullMask(camera->getCullMask()|SG_NODEMASK_PICK_BIT);
-	else
-	    camera->setCullMask(camera->getCullMask()
-				& ~SG_NODEMASK_PICK_BIT);
+        camera->setCullMask(cullMask);
+        for (int i = 0; i < viewer->getNumSlaves(); ++i)
+            viewer->getSlave(i)._camera->setCullMask(cullMask);
     } else {
-	if (hotspots)
-	    sceneView->setCullMask(sceneView->getCullMask()
-				   |SG_NODEMASK_PICK_BIT);
-	else
-	    sceneView->setCullMask(sceneView->getCullMask()
-				   &(~SG_NODEMASK_PICK_BIT));
+        sceneView->setCullMask(cullMask);
 	sceneView->update();
 	sceneView->cull();
 	sceneView->draw();
