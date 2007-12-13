@@ -70,10 +70,14 @@ bool FGAtlas::gen_message() {
 
     static SGPropertyNode *adf_freq
         = fgGetNode("/instrumentation/kr-87/outputs/selected-khz", true);
-    static SGPropertyNode *nav_freq
+    static SGPropertyNode *nav1_freq
         = fgGetNode("/instrumentation/nav/frequencies/selected-mhz", true);
-    static SGPropertyNode *nav_sel_radial
+    static SGPropertyNode *nav1_sel_radial
         = fgGetNode("/instrumentation/nav/radials/selected-deg", true);
+    static SGPropertyNode *nav2_freq
+        = fgGetNode("/instrumentation/nav[1]/frequencies/selected-mhz", true);
+    static SGPropertyNode *nav2_sel_radial
+        = fgGetNode("/instrumentation/nav[1]/radials/selected-deg", true);
 
     char rmc[256], gga[256], patla[256];
     char rmc_sum[10], gga_sum[10], patla_sum[10];
@@ -138,10 +142,10 @@ bool FGAtlas::gen_message() {
     sprintf( gga_sum, "%02X", calc_atlas_cksum(gga) );
 
     sprintf( patla, "PATLA,%.2f,%.1f,%.2f,%.1f,%.0f",
-	     nav_freq->getDoubleValue(),
-	     nav_sel_radial->getDoubleValue(),
-	     nav_freq->getDoubleValue(),
-	     nav_sel_radial->getDoubleValue(),
+	     nav1_freq->getDoubleValue(),
+	     nav1_sel_radial->getDoubleValue(),
+	     nav2_freq->getDoubleValue(),
+	     nav2_sel_radial->getDoubleValue(),
 	     adf_freq->getDoubleValue() );
     sprintf( patla_sum, "%02X", calc_atlas_cksum(patla) );
 
