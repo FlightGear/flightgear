@@ -338,7 +338,7 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters )
     // Note that we need keep track of both viewer buckets and fdm buckets.
     if ( state == Running ) {
         SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
-        if (!(current_bucket == previous_bucket )) {
+        if (current_bucket != previous_bucket) {
             // We've moved to a new bucket, we need to schedule any
             // needed tiles for loading.
             SG_LOG( SG_TERRAIN, SG_INFO, "FGTileMgr::update()" );
@@ -348,6 +348,11 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters )
         SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
 //        initialize_queue();
         state = Running;
+        if (current_bucket != previous_bucket
+            && current_bucket.get_chunk_lon() != -1000) {
+               SG_LOG( SG_TERRAIN, SG_INFO, "FGTileMgr::update()" );
+               schedule_needed(visibility_meters, current_bucket);
+        }
     }
 
     update_queues();
