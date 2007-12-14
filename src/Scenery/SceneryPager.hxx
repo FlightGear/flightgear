@@ -54,8 +54,9 @@ protected:
             _frameStamp(frameStamp) {}
         void doRequest(SceneryPager* pager)
         {
-            pager->requestNodeFile(_fileName, _group.get(), _priority,
-                                   _frameStamp.get());
+            if (_group->getNumChildren() == 0)
+                pager->requestNodeFile(_fileName, _group.get(), _priority,
+                                       _frameStamp.get());
         }
         std::string _fileName;
         osg::ref_ptr<osg::Group> _group;
