@@ -1633,13 +1633,6 @@ bool fgInitSubsystems() {
         exit(-1);
     }
 
-    // cause refresh of viewer scenery timestamps every 15 seconds...
-    globals->get_event_mgr()->addTask( "FGTileMgr::refresh_view_timestamps()",
-                                       globals->get_tile_mgr(),
-                                       &FGTileMgr::refresh_view_timestamps,
-                                       15 );
-
-
     ////////////////////////////////////////////////////////////////////
     // Initialize the flight model subsystem.
     ////////////////////////////////////////////////////////////////////

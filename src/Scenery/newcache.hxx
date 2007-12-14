@@ -45,11 +45,11 @@ SG_USING_STD(map);
 
 // A class to store and manage a pile of tiles
 class FGNewCache {
-
+public:
     typedef map < long, FGTileEntry * > tile_map;
     typedef tile_map::iterator tile_map_iterator;
     typedef tile_map::const_iterator const_tile_map_iterator;
-
+private:
     // cache storage space
     tile_map tile_cache;
 
@@ -63,7 +63,11 @@ class FGNewCache {
     void entry_free( long cache_index );
 
 public:
-
+    tile_map_iterator begin() { return tile_cache.begin(); }
+    tile_map_iterator end() { return tile_cache.end(); }
+    const_tile_map_iterator begin() const { return tile_cache.begin(); }
+    const_tile_map_iterator end() const { return tile_cache.end(); }
+    
     // Constructor
     FGNewCache();
 

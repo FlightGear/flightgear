@@ -660,7 +660,8 @@ static void fgMainLoop( void ) {
 
     // END Tile Manager udpates
 
-    if (!scenery_loaded && globals->get_tile_mgr()->all_queues_empty() && cur_fdm_state->get_inited()) {
+    if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
+        && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
         fgSetFloat("/sim/sound/volume", init_volume);
         globals->get_soundmgr()->set_volume(init_volume);

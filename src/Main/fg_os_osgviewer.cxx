@@ -38,6 +38,7 @@
 #include <osgGA/MatrixManipulator>
 
 #include <Include/general.hxx>
+#include <Scenery/scenery.hxx>
 #include "fg_os.hxx"
 #include "fg_props.hxx"
 #include "util.hxx"
@@ -65,6 +66,7 @@ void fgOSOpenWindow(int w, int h, int bpp,
     wsi = osg::GraphicsContext::getWindowingSystemInterface();
 
     viewer = new osgViewer::Viewer;
+    viewer->setDatabasePager(FGScenery::getPagerSingleton());
     // Avoid complications with fg's custom drawables.
     std::string mode;
     mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");

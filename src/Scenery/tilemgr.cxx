@@ -25,6 +25,9 @@
 #  include <config.h>
 #endif
 
+#include <algorithm>
+#include <functional>
+
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/point3d.hxx>
@@ -36,23 +39,19 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/renderer.hxx>
 #include <Main/viewer.hxx>
 #include <Scripting/NasalSys.hxx>
 
 #include "newcache.hxx"
 #include "scenery.hxx"
+#include "SceneryPager.hxx"
 #include "tilemgr.hxx"
 
-#define TEST_LAST_HIT_CACHE
+using std::for_each;
+using flightgear::SceneryPager;
 
-#if defined(ENABLE_THREADS)
-SGLockedQueue<FGTileEntry *> FGTileMgr::attach_queue;
-SGLockedQueue<FGDeferredModel *> FGTileMgr::model_queue;
-#else
-queue<FGTileEntry *> FGTileMgr::attach_queue;
-queue<FGDeferredModel *> FGTileMgr::model_queue;
-#endif // ENABLE_THREADS
-queue<FGTileEntry *> FGTileMgr::delete_queue;
+#define TEST_LAST_HIT_CACHE
 
 // Constructor
 FGTileMgr::FGTileMgr():
@@ -74,29 +73,6 @@ int FGTileMgr::init() {
 
     tile_cache.init();
 
-#if 0
-
-    // instead it's just a lot easier to let any pending work flush
-    // through, rather than trying to arrest the queue and nuke all
-    // the various work at all the various stages and get everything
-    // cleaned up properly.
-
-    while ( ! attach_queue.empty() ) {
-        attach_queue.pop();
-    }
-
-    while ( ! model_queue.empty() ) {
-#if defined(ENABLE_THREADS)
-        FGDeferredModel* dm = model_queue.pop();
-#else
-        FGDeferredModel* dm = model_queue.front();
-        model_queue.pop();
-#endif
-        delete dm;
-    }
-    loader.reinit();
-#endif
-
     state = Inited;
 
     previous_bucket.make_bad();
@@ -115,15 +91,18 @@ void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring ) {
 
     if ( t == NULL ) {
         // make space in the cache
+        SceneryPager* pager = FGScenery::getPagerSingleton();
         while ( (int)tile_cache.get_size() > tile_cache.get_max_cache_size() ) {
             long index = tile_cache.get_oldest_tile();
             if ( index >= 0 ) {
                 FGTileEntry *old = tile_cache.get_tile( index );
-                // OSGFIXME
-//                 shadows->deleteOccluderFromTile( (ssgBranch *) old->get_terra_transform() );
-                old->disconnect_ssg_nodes();
-                delete_queue.push( old );
                 tile_cache.clear_entry( index );
+                osg::ref_ptr<osg::Object> subgraph = old->getNode();
+                old->disconnect_ssg_nodes();
+                delete old;
+                // zeros out subgraph ref_ptr, so subgraph is owned by
+                // the pager and will be deleted in the pager thread.
+                pager->queueDeleteRequest(subgraph);
             } else {
                 // nothing to free ?!? forge ahead
                 break;
@@ -135,13 +114,14 @@ void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring ) {
 
         // insert the tile into the cache
         if ( tile_cache.insert_tile( e ) ) {
-            // Schedule tile for loading
-            loader.add( e );
+            // update_queues will generate load request
         } else {
             // insert failed (cache full with no available entries to
             // delete.)  Try again later
             delete e;
         }
+        // Attach to scene graph
+        e->add_ssg_nodes(globals->get_scenery()->get_terrain_branch());
     } else {
         t->set_inner_ring( is_inner_ring );
     }
@@ -259,15 +239,6 @@ void FGTileMgr::initialize_queue()
 #endif
 }
 
-/**
- * return current status of queues
- *
- */
-
-bool FGTileMgr::all_queues_empty() {
-	return attach_queue.empty() && model_queue.empty();
-}
-
 osg::Node*
 FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
 {
@@ -291,111 +262,42 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
     return result;
 }
 
+// Helper class for STL fun
+class TileLoad : public std::unary_function<FGNewCache::tile_map::value_type,
+                                            void>
+{
+public:
+    TileLoad(SceneryPager *pager, osg::FrameStamp* framestamp,
+             osg::Group* terrainBranch) :
+        _pager(pager), _framestamp(framestamp) {}
+    TileLoad(const TileLoad& rhs) :
+        _pager(rhs._pager), _framestamp(rhs._framestamp) {}
+    void operator()(FGNewCache::tile_map::value_type& tilePair)
+    {
+        FGTileEntry* entry = tilePair.second;
+        if (entry->getNode()->getNumChildren() == 0) {
+            _pager->queueRequest(entry->tileFileName,
+                                 entry->getNode(),
+                                 entry->get_inner_ring() ? 10.0f : 1.0f,
+                                 _framestamp);
+        }
+    }
+private:
+    SceneryPager* _pager;
+    osg::FrameStamp* _framestamp;
+};
+
 /**
  * Update the various queues maintained by the tilemagr (private
  * internal function, do not call directly.)
  */
 void FGTileMgr::update_queues()
 {
-    // load the next model in the load queue.  Currently this must
-    // happen in the render thread because model loading can trigger
-    // texture loading which involves use of the opengl api.  Skip any
-    // models belonging to not loaded tiles (i.e. the tile was removed
-    // before we were able to load some of the associated models.)
-    if ( !model_queue.empty() ) {
-        bool processed_one = false;
-
-        while ( model_queue.size() > 200 || processed_one == false ) {
-            processed_one = true;
-
-            if ( model_queue.size() > 200 ) {
-                SG_LOG( SG_TERRAIN, SG_INFO,
-                        "Alert: catching up on model load queue" );
-            }
-
-            // cout << "loading next model ..." << endl;
-            // load the next tile in the queue
-#if defined(ENABLE_THREADS)
-            FGDeferredModel* dm = model_queue.pop();
-#else
-            FGDeferredModel* dm = model_queue.front();
-            model_queue.pop();
-#endif
-
-            // only load the model if the tile still exists in the
-            // tile cache
-            FGTileEntry *t = tile_cache.get_tile( dm->get_bucket() );
-            if ( t != NULL ) {
-              //OSGFIXME
-//                 ssgTexturePath( (char *)(dm->get_texture_path().c_str()) );
-                try {
-                    osg::Node *obj_model =
-                        globals->get_model_lib()->load_model( ".",
-                                                  dm->get_model_path(),
-                                                  globals->get_props(),
-                                                  globals->get_sim_time_sec(),
-                                                  dm->get_cache_state(),
-                                                  new FGNasalModelData );
-                    if ( obj_model != NULL ) {
-                        dm->get_obj_trans()->addChild( obj_model );
-              //OSGFIXME
-//                         shadows->addOccluder( (ssgBranch *) obj_model->getParent(0),
-//                             SGShadowVolume::occluderTypeTileObject,
-//                             (ssgBranch *) dm->get_tile()->get_terra_transform());
-                    }
-                } catch (const sg_io_exception& exc) {
-					string m(exc.getMessage());
-					m += " ";
-					m += exc.getLocation().asString();
-                    SG_LOG( SG_ALL, SG_ALERT, m );
-                } catch (const sg_exception& exc) { // XXX may be redundant
-                    SG_LOG( SG_ALL, SG_ALERT, exc.getMessage());
-                }
-                
-                dm->get_tile()->dec_pending_models();
-            }
-            delete dm;
-        }
-    }
-    
-    // Notify the tile loader that it can load another tile
-    loader.update();
-
-    if ( !attach_queue.empty() ) {
-#if defined(ENABLE_THREADS)
-        FGTileEntry* e = attach_queue.pop();
-#else
-        FGTileEntry* e = attach_queue.front();
-        attach_queue.pop();
-#endif
-        e->add_ssg_nodes( globals->get_scenery()->get_terrain_branch() );
-        // cout << "Adding ssg nodes for "
-    }
-
-    if ( !delete_queue.empty() ) {
-        // cout << "delete queue = " << delete_queue.size() << endl;
-        bool processed_one = false;
-
-        while ( delete_queue.size() > 30 || processed_one == false ) {
-            processed_one = true;
-
-            if ( delete_queue.size() > 30 ) {
-                // uh oh, delete queue is blowing up, we aren't clearing
-                // it fast enough.  Let's just panic, well not panic, but
-                // get real serious and agressively free up some tiles so
-                // we don't explode our memory usage.
-
-                SG_LOG( SG_TERRAIN, SG_WARN,
-                        "Warning: catching up on tile delete queue" );
-            }
-
-            FGTileEntry* e = delete_queue.front();
-            if ( e->free_tile() ) {
-                delete_queue.pop();
-                delete e;
-            }
-        }
-    }
+    SceneryPager* pager = FGScenery::getPagerSingleton();
+    for_each(tile_cache.begin(), tile_cache.end(),
+             TileLoad(pager,
+                      globals->get_renderer()->getViewer()->getFrameStamp(),
+                      globals->get_scenery()->get_terrain_branch()));
 }
 
 
@@ -446,10 +348,6 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters )
         SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
 //        initialize_queue();
         state = Running;
-
-        // load the next tile in the load queue (or authorize the next
-        // load in the case of the threaded tile pager)
-        loader.update();
     }
 
     update_queues();
@@ -458,19 +356,6 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters )
     previous_bucket = current_bucket;
 
     return 1;
-}
-
-
-// timer event driven call to scheduler for the purpose of refreshing the tile timestamps
-void FGTileMgr::refresh_view_timestamps() {
-    SG_LOG( SG_TERRAIN, SG_INFO,
-            "Refreshing timestamps for " << current_bucket.get_center_lon()
-            << " " << current_bucket.get_center_lat() );
-    if ( longitude >= -180.0 && longitude <= 180.0 
-         && latitude >= -90.0 && latitude <= 90.0 )
-    {
-        schedule_needed(fgGetDouble("/environment/visibility-m"), current_bucket);
-    }
 }
 
 void FGTileMgr::prep_ssg_nodes(float vis) {
@@ -525,4 +410,23 @@ bool FGTileMgr::scenery_available(double lat, double lon, double range_m)
 
   // Survived all tests.
   return true;
+}
+
+namespace
+{
+struct IsTileLoaded :
+        public std::unary_function<FGNewCache::tile_map::value_type, bool>
+{
+    bool operator()(const FGNewCache::tile_map::value_type& tilePair) const
+    {
+        return tilePair.second->is_loaded();
+    }
+};
+}
+
+bool FGTileMgr::isSceneryLoaded()
+{
+    return (std::find_if(tile_cache.begin(), tile_cache.end(),
+                         std::not1(IsTileLoaded()))
+            == tile_cache.end());
 }

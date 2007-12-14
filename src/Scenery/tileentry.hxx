@@ -65,7 +65,7 @@ typedef point_list::const_iterator const_point_list_iterator;
 
 class FGTileEntry;
 
-
+#if 0
 /**
  * A class to hold deferred model loading info
  */
@@ -102,7 +102,7 @@ public:
     inline FGTileEntry *get_tile() const { return tile; }
     inline osg::MatrixTransform *get_obj_trans() const { return obj_trans.get(); }
 };
-
+#endif
 
 /**
  * A class to encapsulate everything we need to know about a scenery tile.
@@ -112,34 +112,16 @@ class FGTileEntry {
 public:
     // this tile's official location in the world
     SGBucket tile_bucket;
+    std::string tileFileName;
 
 private:
 
-    // pointer to ssg transform for this tile
-    osg::ref_ptr<osg::Group> terra_transform;
-
     // pointer to ssg range selector for this tile
-    osg::ref_ptr<osg::LOD> terra_range;
+    osg::ref_ptr<osg::LOD> _node;
 
-    /**
-     * Indicates this tile has been loaded from a file and connected
-     * into the scene graph.  Note that this may be set asynchronously
-     * by another thread.
-     */
-    volatile bool loaded;
-
-    /**
-     * Count of pending models to load for this tile.  This tile
-     * cannot be removed until this number reaches zero (i.e. no
-     * pending models to load for this tile.)
-     */
-    volatile int pending_models;
-
-    static bool obj_load( const string& path,
+    static bool obj_load( const std::string& path,
                           osg::Group* geometry,
                           bool is_base );
-
-    double timestamp;
 
     /**
      * this value is used by the tile scheduler/loader to mark which
@@ -187,13 +169,6 @@ public:
     void prep_ssg_node(float vis);
 
     /**
-     * Load tile data from a file.
-     * @param base name of directory containing tile data file.
-     * @param is_base is this a base terrain object for which we should generate
-     *        random ground light points */
-    void load( const string_list &base_path, bool is_base );
-
-    /**
      * Transition to OSG database pager
      */
     static osg::Node* loadTileByName(const std::string& index_str,
@@ -202,17 +177,10 @@ public:
      * Return true if the tile entry is loaded, otherwise return false
      * indicating that the loading thread is still working on this.
      */
-    inline bool is_loaded() const { return loaded; }
-
-    /**
-     * decrement the pending models count
-     */
-    inline void dec_pending_models() { pending_models--; }
-
-    /**
-     * return the number of remaining pending models for this tile
-     */
-    inline int get_pending_models() const { return pending_models; }
+    inline bool is_loaded() const
+    {
+        return _node->getNumChildren() > 0;
+    }
 
     /**
      * Return the "bucket" for this tile
@@ -232,12 +200,12 @@ public:
 
 	
     /**
-     * return the SSG Transform node for the terrain
+     * return the scenegraph node for the terrain
      */
-    osg::Group *get_terra_transform() const { return terra_transform.get(); }
+    osg::LOD *getNode() const { return _node.get(); }
 
-    inline double get_timestamp() const { return timestamp; }
-    inline void set_timestamp( double time_ms ) { timestamp = time_ms; }
+    double get_timestamp() const;
+    void set_timestamp( double time_ms );
 
     inline bool get_inner_ring() const { return is_inner_ring; }
     inline void set_inner_ring( bool val ) { is_inner_ring = val; }

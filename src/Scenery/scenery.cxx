@@ -42,6 +42,8 @@
 
 #include "scenery.hxx"
 
+using namespace flightgear;
+
 class FGGroundPickCallback : public SGPickCallback {
 public:
   virtual bool buttonPressed(int button, const Info& info)
@@ -207,4 +209,10 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
   }
 
   return hits;
+}
+
+SceneryPager* FGScenery::getPagerSingleton()
+{
+    static osg::ref_ptr<SceneryPager> pager = new SceneryPager;
+    return pager.get();
 }

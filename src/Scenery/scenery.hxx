@@ -36,6 +36,8 @@
 #include <simgear/math/SGMath.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
+#include "SceneryPager.hxx"
+
 class SGMaterial;
 
 // Define a structure containing global scenery parameters
@@ -99,6 +101,10 @@ public:
     osg::Group *get_terrain_branch () const { return terrain_branch.get(); }
     osg::Group *get_models_branch () const { return models_branch.get(); }
     osg::Group *get_aircraft_branch () const { return aircraft_branch.get(); }
+
+    // Static because access to the pager is needed before the rest of
+    // the scenery is initialized.
+    static flightgear::SceneryPager* getPagerSingleton();
 };
 
 

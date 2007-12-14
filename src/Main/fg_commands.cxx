@@ -452,7 +452,6 @@ do_view_next( bool )
     globals->get_current_view()->setHeadingOffset_deg(0.0);
     globals->get_viewmgr()->next_view();
     fix_hud_visibility();
-    globals->get_tile_mgr()->refresh_view_timestamps();
 }
 
 static void
@@ -461,7 +460,6 @@ do_view_prev( bool )
     globals->get_current_view()->setHeadingOffset_deg(0.0);
     globals->get_viewmgr()->prev_view();
     fix_hud_visibility();
-    globals->get_tile_mgr()->refresh_view_timestamps();
 }
 
 /**
@@ -473,7 +471,6 @@ do_view_cycle (const SGPropertyNode * arg)
   globals->get_current_view()->setHeadingOffset_deg(0.0);
   globals->get_viewmgr()->next_view();
   fix_hud_visibility();
-  globals->get_tile_mgr()->refresh_view_timestamps();
   return true;
 }
 

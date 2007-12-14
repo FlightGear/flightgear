@@ -82,6 +82,7 @@ void fgOSOpenWindow(int w, int h, int bpp,
     int realw = screen->w;
     int realh = screen->h;
     viewer = new osgViewer::Viewer;
+    viewer->setDatabasePager(FGScenery::getPagerSingleton());
     gw = viewer->setUpViewerAsEmbeddedInWindow(0, 0, realw, realh);
     // now the main camera ...
     //osg::ref_ptr<osg::Camera> camera = new osg::Camera;

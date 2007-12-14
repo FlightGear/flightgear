@@ -38,6 +38,7 @@
 #include <osg/Geode>
 #include <osg/LOD>
 #include <osg/MatrixTransform>
+#include <osg/Math>
 #include <osg/NodeCallback>
 #include <osg/Switch>
 
@@ -93,22 +94,69 @@ public:
   }
 };
 
+namespace
+{
+class TileCullCallback : public osg::NodeCallback
+{
+public:
+    TileCullCallback() : _timeStamp(DBL_MAX) {}
+    TileCullCallback(const TileCullCallback& tc, const osg::CopyOp& copyOp) :
+        NodeCallback(tc, copyOp), _timeStamp(tc._timeStamp)
+    {
+    }
+    
+    virtual void operator()(osg::Node* node, osg::NodeVisitor* nv);
+    double getTimeStamp() const { return _timeStamp; }
+    void setTimeStamp(double timeStamp) { _timeStamp = timeStamp; }
+protected:
+    double _timeStamp;
+};
+}
+
+void TileCullCallback::operator()(osg::Node* node, osg::NodeVisitor* nv)
+{
+    if (nv->getFrameStamp())
+        _timeStamp = nv->getFrameStamp()->getReferenceTime();
+    traverse(node, nv);
+}
+
+double FGTileEntry::get_timestamp() const
+{
+    if (_node.valid()) {
+        return (dynamic_cast<TileCullCallback*>(_node->getCullCallback()))
+            ->getTimeStamp();
+    } else
+        return DBL_MAX;
+}
+
+void FGTileEntry::set_timestamp(double time_ms)
+{
+    if (_node.valid()) {
+        TileCullCallback* cb
+            = dynamic_cast<TileCullCallback*>(_node->getCullCallback());
+        if (cb)
+            cb->setTimeStamp(time_ms);
+    }
+}
+
 // Constructor
 FGTileEntry::FGTileEntry ( const SGBucket& b )
     : tile_bucket( b ),
-      terra_transform( new osg::Group ),
-      terra_range( new osg::LOD ),
-      loaded(false),
-      pending_models(0),
+      _node( new osg::LOD ),
       is_inner_ring(false),
-      free_tracker(0)
+      free_tracker(0),
+      tileFileName(b.gen_index_str())
 {
-    terra_transform->setUpdateCallback(new FGTileUpdateCallback);
+    _node->setUpdateCallback(new FGTileUpdateCallback);
+    _node->setCullCallback(new TileCullCallback);
+    tileFileName += ".stg";
+    _node->setName(tileFileName);
 }
 
 
 // Destructor
-FGTileEntry::~FGTileEntry () {
+FGTileEntry::~FGTileEntry ()
+{
 }
 
 static void WorldCoordinate( osg::Matrix& obj_pos, double lat,
@@ -181,8 +229,8 @@ bool FGTileEntry::free_tile() {
         // delete the terrain branch (this should already have been
         // disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING terra_transform" );
-        if ( fgPartialFreeSSGtree( terra_transform.get(), delete_size ) == 0 ) {
-            terra_transform = 0;
+        if ( fgPartialFreeSSGtree( _node.get(), delete_size ) == 0 ) {
+            _node = 0;
             free_tracker |= TERRA_NODE;
         }
     } else if ( !(free_tracker & LIGHTMAPS) ) {
@@ -201,12 +249,12 @@ bool FGTileEntry::free_tile() {
 // Update the ssg transform node for this tile so it can be
 // properly drawn relative to our (0,0,0) point
 void FGTileEntry::prep_ssg_node(float vis) {
-    if ( !loaded ) return;
-
+    if (!is_loaded())
+        return;
     // visibility can change from frame to frame so we update the
     // range selector cutoff's each time.
-    float bounding_radius = terra_range->getChild(0)->getBound().radius();
-    terra_range->setRange( 0, 0, vis + bounding_radius );
+    float bounding_radius = _node->getChild(0)->getBound().radius();
+    _node->setRange( 0, 0, vis + bounding_radius );
 }
 
 bool FGTileEntry::obj_load( const string& path,
@@ -262,18 +310,6 @@ struct Object {
 
 // Work in progress... load the tile based entirely by name cuz that's
 // what we'll want to do with the database pager.
-void
-FGTileEntry::load( const string_list &path_list, bool is_base )
-{
-    osgDB::ReaderWriter::ReadResult result
-        = osgDB::Registry::instance()->readNode(tile_bucket.gen_index_str()
-                                                + ".stg", 0);        
-    if (result.validNode()) {
-        osg::Node* new_tile = result.getNode();
-        terra_range->addChild( new_tile );
-    }
-    terra_transform->addChild( terra_range.get() );
-}
 
 osg::Node*
 FGTileEntry::loadTileByName(const string& index_str,
@@ -469,15 +505,13 @@ FGTileEntry::add_ssg_nodes( osg::Group *terrain_branch )
 {
     // bump up the ref count so we can remove this later without
     // having ssg try to free the memory.
-    terrain_branch->addChild( terra_transform.get() );
+    terrain_branch->addChild( _node.get() );
 
     SG_LOG( SG_TERRAIN, SG_DEBUG,
-            "connected a tile into scene graph.  terra_transform = "
-            << terra_transform.get() );
+            "connected a tile into scene graph.  _node = "
+            << _node.get() );
     SG_LOG( SG_TERRAIN, SG_DEBUG, "num parents now = "
-            << terra_transform->getNumParents() );
-
-    loaded = true;
+            << _node->getNumParents() );
 }
 
 
@@ -486,30 +520,27 @@ FGTileEntry::disconnect_ssg_nodes()
 {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "disconnecting ssg nodes" );
 
-    if ( ! loaded ) {
+    if (! is_loaded()) {
         SG_LOG( SG_TERRAIN, SG_DEBUG, "removing a not-fully loaded tile!" );
     } else {
-        SG_LOG( SG_TERRAIN, SG_DEBUG, "removing a fully loaded tile!  terra_transform = " << terra_transform.get() );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "removing a fully loaded tile!  _node = " << _node.get() );
     }
         
     // find the terrain branch parent
-    int pcount = terra_transform->getNumParents();
+    int pcount = _node->getNumParents();
     if ( pcount > 0 ) {
         // find the first parent (should only be one)
-        osg::Group *parent = terra_transform->getParent( 0 ) ;
+        osg::Group *parent = _node->getParent( 0 ) ;
         if( parent ) {
             // disconnect the tile (we previously ref()'d it so it
             // won't get freed now)
-            parent->removeChild( terra_transform.get() );
+            parent->removeChild( _node.get() );
         } else {
+            // This should be impossible.
             SG_LOG( SG_TERRAIN, SG_ALERT,
                     "parent pointer is NULL!  Dying" );
             exit(-1);
         }
-    } else {
-        SG_LOG( SG_TERRAIN, SG_ALERT,
-                "Parent count is zero for an ssg tile!  Dying" );
-        exit(-1);
     }
 }
 

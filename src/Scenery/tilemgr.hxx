@@ -33,14 +33,7 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/location.hxx>
 
-#include <queue>
-
 #include <simgear/bucket/newbucket.hxx>
-#if defined(ENABLE_THREADS)
-#  include <simgear/threads/SGQueue.hxx>
-#endif // ENABLE_THREADS
-
-#include "FGTileLoader.hxx"
 #include "newcache.hxx"
 
 #if defined(USE_MEM) || defined(WIN32)
@@ -49,12 +42,8 @@
 #  define FG_MEM_COPY(to,from,n)        bcopy(from, to, n)
 #endif
 
-SG_USING_STD( queue );
-
-
 // forward declaration
 class FGTileEntry;
-class FGDeferredModel;
 
 class osg::Node;
 
@@ -100,41 +89,6 @@ private:
      */
     FGNewCache tile_cache;
 
-    /**
-     * Queue tiles for loading.
-     */
-    FGTileLoader loader;
-
-    /**
-     * Work queues.
-     *
-     * attach_queue is the tiles that have been loaded [by the pager]
-     * that can be attached to the scene graph by the render thread.
-     *
-     * model_queue is the set of models that need to be loaded by the
-     * primary render thread.
-     */
-#if defined(ENABLE_THREADS)
-    static SGLockedQueue<FGTileEntry *> attach_queue;
-    static SGLockedQueue<FGDeferredModel *> model_queue;
-#else
-    static queue<FGTileEntry *> attach_queue;
-    static queue<FGDeferredModel *> model_queue;
-#endif // ENABLE_THREADS
-    static queue<FGTileEntry *> delete_queue;
-
-public:
-
-    /**
-     * Add a loaded tile to the 'attach to the scene graph' queue.
-     */
-    static void ready_to_attach( FGTileEntry *t ) { attach_queue.push( t ); }
-
-    /**
-     * Add a pending model to the 'deferred model load' queue
-     */
-    static void model_ready( FGDeferredModel *dm ) { model_queue.push( dm ); }
-
 public:
 
     // Constructor
@@ -150,9 +104,6 @@ public:
     // internal function, do not call directly.)
     void update_queues();
 
-    // get state of all the scenery loading queues
-    bool all_queues_empty();
-
     // given the current lon/lat (in degrees), fill in the array of
     // local chunks.  If the chunk isn't already in the cache, then
     // read it from disk.
@@ -165,10 +116,6 @@ public:
     // visibility_meters );
     void prep_ssg_nodes(float visibility_meters );
 
-    // Set flag with event manager so that non-moving view refreshes
-    // tiles...
-    void refresh_view_timestamps();
-
     const SGBucket& get_current_bucket () const { return current_bucket; }
 
     /// Returns true if scenery is avaliable for the given lat, lon position
@@ -178,6 +125,9 @@ public:
 
     // Load a model for a tile
     static osg::Node* loadTileModel(const string& modelPath, bool cacheModel);
+
+    // Returns true if all the tiles in the tile cache have been loaded
+    bool isSceneryLoaded();
 };
 
 
