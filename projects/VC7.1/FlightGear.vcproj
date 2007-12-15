@@ -2128,10 +2128,10 @@
 			Name="Lib_Scenery"
 			Filter="">
 			<File
-				RelativePath="..\..\src\Scenery\FGTileLoader.cxx">
+				RelativePath="..\..\src\Scenery\SceneryPager.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Scenery\FGTileLoader.hxx">
+				RelativePath="..\..\src\Scenery\SceneryPager.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Scenery\newcache.cxx">
