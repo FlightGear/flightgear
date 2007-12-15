@@ -85,7 +85,7 @@ fgfs-base-tar:
                 data/Aircraft/bocian \
                 data/Aircraft/T38 \
                 data/Aircraft/ufo \
-                data/Aircraft/bleriot-XI \
+                data/Aircraft/sopwithCamel \
 		data/Airports \
 		data/Astro \
 		data/ATC \
