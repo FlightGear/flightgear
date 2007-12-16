@@ -50,8 +50,8 @@ Name: "{group}\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\docs\index.html"
 Name: "{group}\Explore Documentation Folder"; Filename: "{app}\docs"
 Name: "{group}\Flightgear Wiki"; Filename: "http://wiki.flightgear.org/"
-Name: "{group}\Uninstall FlightGear v0.9.10"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\FlightGear v0.9.10"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\Uninstall FlightGear v1.0.0"; Filename: "{uninstallexe}"
+Name: "{userdesktop}\FlightGear v1.0.0"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 ; Put installation directory into the fgrun.prefs
