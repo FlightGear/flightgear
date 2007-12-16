@@ -49,7 +49,7 @@ Name: "{group}\FlightGear Launcher"; Filename: "{app}\bin\Win32\fgrun.exe"; Work
 Name: "{group}\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}";
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\docs\index.html"
 Name: "{group}\Explore Documentation Folder"; Filename: "{app}\docs"
-Name: "{group}\Flightgear Wiki"; Filename: "http://www.seedwiki.com/wiki/flight_gear/flight_gear.cfm"
+Name: "{group}\Flightgear Wiki"; Filename: "http://wiki.flightgear.org/"
 Name: "{group}\Uninstall FlightGear v0.9.10"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\FlightGear v0.9.10"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
