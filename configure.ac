@@ -421,9 +421,9 @@ AC_TRY_RUN([
 #define STRINGIFY(X) XSTRINGIFY(X)
 #define XSTRINGIFY(X) #X
 
-#define MIN_MAJOR 0
-#define MIN_MINOR 3
-#define MIN_MICRO 11
+#define MIN_MAJOR 1
+#define MIN_MINOR 0
+#define MIN_MICRO 0
 
 int main() {
     int major, minor, micro;
