@@ -24,7 +24,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..;..\..\src;..\..\src\include;..\..\..\SimGear;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\src\FDM\JSBSim;..\..\..\OpenSceneGraph\include;..\..\..\OpenThreads\include;..\..\..\3rdParty\include"
-				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;ENABLE_OSGVIEWER;PU_USE_NATIVE"
 				StringPooling="TRUE"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="glut32.lib wsock32.lib sg_d.lib net_d.lib pui_d.lib puaux_d.lib fnt_d.lib js_d.lib ul_d.lib zlibd.lib pthreadVC2d.lib OpenAL32.lib ALut.lib libjpegd.lib osgd.lib osgDBd.lib osgUtild.lib osgViewerd.lib osgGAd.lib osgTextd.lib libjpegd.lib"
+				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg_d.lib net_d.lib pui_d.lib puaux_d.lib fnt_d.lib js_d.lib ul_d.lib zlibd.lib pthreadVC2d.lib OpenAL32.lib ALut.lib osgd.lib osgDBd.lib osgUtild.lib osgViewerd.lib osgGAd.lib osgTextd.lib OpenThreadsd.lib libjpegd.lib"
 				OutputFile="Debug/fgfs.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
@@ -88,7 +88,7 @@
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..;..\..\src;..\..\src\include;..\..\src\FDM\JSBSim;..\..\..\SimGear;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\include;..\..\..\Producer\include;..\..\..\OpenThreads\include;..\..\..\3rdParty\include"
-				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;ENABLE_OSGVIEWER;PU_USE_NATIVE"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="TRUE"
@@ -105,7 +105,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="glut32.lib wsock32.lib sg.lib net.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib pthreadVC2.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib libjpeg.lib"
+				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg.lib net.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib pthreadVC2.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib OpenThreads.lib libjpeg.lib"
 				OutputFile=".\Release/fgfs.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -1852,10 +1852,13 @@
 				RelativePath="..\..\src\Main\fg_io.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Main\fg_os.cxx">
+				RelativePath="..\..\src\Main\fg_os.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Main\fg_os.hxx">
+				RelativePath="..\..\src\Main\fg_os_common.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Main\fg_os_osgviewer.cxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Main\fg_props.cxx">
@@ -2128,12 +2131,6 @@
 			Name="Lib_Scenery"
 			Filter="">
 			<File
-				RelativePath="..\..\src\Scenery\SceneryPager.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Scenery\SceneryPager.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\Scenery\newcache.cxx">
 			</File>
 			<File
@@ -2150,6 +2147,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Scenery\scenery.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Scenery\SceneryPager.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Scenery\SceneryPager.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Scenery\tileentry.cxx">
@@ -2391,6 +2394,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Instrumentation\gps.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\groundradar.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\groundradar.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Instrumentation\gsdi.cxx">
