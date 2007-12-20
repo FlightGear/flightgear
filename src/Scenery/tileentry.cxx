@@ -151,6 +151,10 @@ FGTileEntry::FGTileEntry ( const SGBucket& b )
     _node->setCullCallback(new TileCullCallback);
     tileFileName += ".stg";
     _node->setName(tileFileName);
+    // Give a default LOD range so that traversals that traverse
+    // active children (like the groundcache lookup) will work before
+    // tile manager has had a chance to update this node.
+    _node->setRange(0, 0.0, 10000.0);
 }
 
 
@@ -569,6 +573,11 @@ bool ReaderWriterSTG::acceptsExtension(const string& extension) const
             || osgDB::equalCaseInsensitive(extension, "stg"));   
 }
 
+//#define SLOW_PAGER 1
+#ifdef SLOW_PAGER
+#include <unistd.h>
+#endif
+
 osgDB::ReaderWriter::ReadResult
 ReaderWriterSTG::readNode(const string& fileName,
                           const osgDB::ReaderWriter::Options* options) const
@@ -589,6 +598,10 @@ ReaderWriterSTG::readNode(const string& fileName,
     osg::Node* result
         = FGTileEntry::loadTileByName(osgDB::getNameLessExtension(stgFileName),
                                       globals->get_fg_scenery());
+    // For debugging race conditions
+#ifdef SLOW_PAGER
+    sleep(5);
+#endif
     if (result)
         return result;           // Constructor converts to ReadResult
     else

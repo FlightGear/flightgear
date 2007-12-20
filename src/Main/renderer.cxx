@@ -1077,5 +1077,11 @@ fgDumpTerrainBranchToFile(const char* filename)
                                  filename );
 }
 
+// For debugging
+bool
+fgDumpNodeToFile(osg::Node* node, const char* filename)
+{
+    return osgDB::writeNodeFile(*node, filename);
+}
 // end of renderer.cxx
     
