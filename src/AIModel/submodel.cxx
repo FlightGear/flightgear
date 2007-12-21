@@ -184,11 +184,11 @@ void FGSubmodelMgr::update(double dt)
             sm_list_iterator end = sm_list.end();
 
             while (sm_list_itr != end) {
+                in_range = true;
 
                 if (id == 0) {
                     SG_LOG(SG_GENERAL, SG_DEBUG,
                             "Submodels: continuing: " << id << " name " << name );
-                    in_range = true;
                     ++sm_list_itr;
                     continue;
                 }
@@ -198,15 +198,16 @@ void FGSubmodelMgr::update(double dt)
                 if (parent_id == id) {
                     double parent_lat = (*sm_list_itr)->_getLatitude();
                     double parent_lon = (*sm_list_itr)->_getLongitude();
+                    string parent_name = (*sm_list_itr)->_getName();
                     double own_lat    = _user_lat_node->getDoubleValue();
                     double own_lon    = _user_lon_node->getDoubleValue();
                     double range_nm   = getRange(parent_lat, parent_lon, own_lat, own_lon);
-                    // cout << "parent " << parent_id << ", "<< parent_lat << ", " << parent_lon << endl;
-                    //cout << "own " << own_lat << ", " << own_lon << " range " << range_nm << endl;
+                    //cout << "parent name " << parent_name << ", "<< parent_id << ", "<< parent_lat << ", " << parent_lon << endl;
+                    //cout << "own name " << own_lat << ", " << own_lon << " range " << range_nm << endl;
 
                     if (range_nm > 15) {
                         SG_LOG(SG_GENERAL, SG_DEBUG,
-                                "Submodels: skipping release: " << id);
+                            "Submodels: skipping release, out of range: " << id);
                         in_range = false;
                     }
                 }
@@ -284,6 +285,8 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setFuseRange(sm->fuse_range);
     ballist->setSubmodel(sm->submodel.c_str());
     ballist->setSubID(sm->sub_id);
+    ballist->setExternalForce(sm->ext_force);
+    ballist->setForcePath(sm->force_path.c_str());
     ai->attach(ballist);
 
     if (sm->count > 0)
@@ -309,14 +312,18 @@ void FGSubmodelMgr::transform(submodel *sm)
     // set initial conditions
     if (sm->contents_node != 0) {
         // get the weight of the contents (lbs) and convert to mass (slugs)
-        sm->contents = sm->contents_node->getDoubleValue();
+        sm->contents = sm->contents_node->getChild("level-lbs",0,1)->getDoubleValue();
+        //cout << "transform: contents " << sm->contents << endl;
         IC.mass = (sm->weight + sm->contents) * lbs_to_slugs;
+        //cout << "mass inc contents"  << IC.mass << endl;
 
         // set contents to 0 in the parent
-        sm->contents_node->setDoubleValue(0);
-    } else {
+        sm->contents_node->getChild("level-gal_us",0,1)->setDoubleValue(0);
+        /*cout << "contents " << sm->contents_node->getChild("level-gal_us")->getDoubleValue()
+        << " " << sm->contents_node->getChild("level-lbs",0,1)->getDoubleValue()
+        << endl;*/
+    } else
         IC.mass = sm->weight * lbs_to_slugs;
-    }
 
     // cout << "mass "  << IC.mass << endl;
 
@@ -592,7 +599,8 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         sm->contents_node   = fgGetNode(entry_node->getStringValue("contents", "none"), false);
         sm->speed_node      = fgGetNode(entry_node->getStringValue("speed-node", "none"), false);
         sm->submodel        = entry_node->getStringValue("submodel-path", "");
-
+        sm->ext_force       = entry_node->getBoolValue("external-force", false);
+        sm->force_path      = entry_node->getStringValue("force-path", "");
         //cout <<  "sm->contents_node " << sm->contents_node << endl;
         if (sm->contents_node != 0)
             sm->contents = sm->contents_node->getDoubleValue();
@@ -606,6 +614,7 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         }
 
         SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: trigger " << sm->trigger_node->getBoolValue() );
+
         if (sm->speed_node != 0)
             sm->speed = sm->speed_node->getDoubleValue();
 
@@ -628,6 +637,10 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         string submodel = sm->submodel;
         sm->prop->setStringValue("submodel", submodel.c_str());
         //cout << " set submodel path " << submodel << endl;
+
+        string force_path = sm->force_path;
+        sm->prop->setStringValue("force_path", force_path.c_str());
+        //cout << "set force_path " << force_path << endl;
 
         if (sm->contents_node != 0)
             sm->prop->tie("contents-lbs", SGRawValuePointer<double>(&(sm->contents)));
@@ -691,6 +704,8 @@ void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
         sm->contents_node   = fgGetNode(entry_node->getStringValue("contents", "none"), false);
         sm->speed_node      = fgGetNode(entry_node->getStringValue("speed-node", "none"), false);
         sm->submodel        = entry_node->getStringValue("submodel-path", "");
+        sm->ext_force       = entry_node->getBoolValue("external-force", false);
+        sm->force_path      = entry_node->getStringValue("force-path", "");
 
         //cout <<  "sm->contents_node " << sm->contents_node << endl;
         if (sm->contents_node != 0)
@@ -725,6 +740,10 @@ void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
         string submodel = sm->submodel;
         sm->prop->setStringValue("submodel", submodel.c_str());
         // cout << " set submodel path " << submodel<< endl;
+
+        string force_path = sm->force_path;
+        sm->prop->setStringValue("force_path", force_path.c_str());
+        //cout << "set force_path " << force_path << endl;
 
         if (sm->contents_node != 0)
             sm->prop->tie("contents-lbs", SGRawValuePointer<double>(&(sm->contents)));
@@ -768,7 +787,7 @@ void FGSubmodelMgr::loadSubmodels()
 
     while (submodel_iterator != submodels.end()) {
         int id = (*submodel_iterator)->id;
-        SG_LOG(SG_GENERAL, SG_DEBUG,"after pusback "
+        SG_LOG(SG_GENERAL, SG_DEBUG,"after pushback "
                 << " id " << id
                 << " name " << (*submodel_iterator)->name
                 << " sub id " << (*submodel_iterator)->sub_id);

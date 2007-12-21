@@ -68,12 +68,16 @@ public:
     void setSMPath(const string&);
     void setSubID(int i);
     void setSubmodel(const string&);
-
-
+    void setExternalForce( bool f );
+    void setForcePath(const string&);
     double _getTime() const;
 
     virtual const char* getTypeString(void) const { return "ballistic"; }
     static const double slugs_to_kgs; //conversion factor
+
+    SGPropertyNode_ptr _force_node;
+    SGPropertyNode_ptr _force_azimuth_node;
+    SGPropertyNode_ptr _force_elevation_node;
 
 private:
 
@@ -94,9 +98,11 @@ private:
     double _ht_agl_ft;       // height above ground level
     double _load_resistance; // ground load resistanc N/m^2
     bool   _solid;           // if true ground is solid for FDMs
+    //double _hs_force_fps;    // horizontal speed due to external force
 
     bool   _report_collision;       // if true a collision point with AI Objects is calculated
     bool   _report_impact;          // if true an impact point on the terrain is calculated
+    bool   _external_force;         // if true then apply external force
 
     SGPropertyNode_ptr _impact_report_node;  // report node for impact and collision
 
@@ -108,6 +114,7 @@ private:
     string _name;
     string _path;
     string _submodel;
+    string _force_path;
 
     void Run(double dt);
     void handle_collision();

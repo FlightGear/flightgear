@@ -68,6 +68,8 @@ public:
         double             fuse_range;
         string             submodel;
         int                sub_id;
+        bool               ext_force;
+        string             force_path;
     }   submodel;
 
     typedef struct {

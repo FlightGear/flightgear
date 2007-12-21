@@ -48,7 +48,9 @@ FGAIBallistic::FGAIBallistic() :
     _solid(false),
     _report_collision(false),
     _report_impact(false),
-    _impact_report_node(fgGetNode("/ai/models/model-impact", true))
+    _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
+    _external_force(false)
+
 {
     no_roll = false;
 }
@@ -192,7 +194,12 @@ void FGAIBallistic::setCollision(bool c) {
     _report_collision = c;
 }
 
+void FGAIBallistic::setExternalForce(bool f) {
+    _external_force = f;
+}
+
 void FGAIBallistic::setImpactReportNode(const string& path) {
+
     if (!path.empty())
         _impact_report_node = fgGetNode(path.c_str(), true);
 }
@@ -216,6 +223,16 @@ void FGAIBallistic::setSubID(int i) {
 
 void FGAIBallistic::setSubmodel(const string& s) {
     _submodel = s;
+}
+
+void FGAIBallistic::setForcePath(const string& p) {
+    _force_path = p;
+    if (!_force_path.empty()) {
+        SGPropertyNode *fnode = fgGetNode(_force_path.c_str(), 0, true );
+        _force_node = fnode->getChild("force-lb", 0, true);
+        _force_azimuth_node = fnode->getChild("force-azimuth-deg", 0, true);
+        _force_elevation_node = fnode->getChild("force-elevation-deg", 0, true);
+    }
 }
 
 void FGAIBallistic::Run(double dt) {
@@ -263,9 +280,13 @@ void FGAIBallistic::Run(double dt) {
         hs = cos( _elevation * SG_DEGREES_TO_RADIANS ) * speed_fps;
     }
 
+    //resolve horizontal speed into north and east components:
+    double speed_north_fps = cos(_azimuth / SG_RADIANS_TO_DEGREES) * hs;
+    double speed_east_fps = sin(_azimuth / SG_RADIANS_TO_DEGREES) * hs;
+
     // convert horizontal speed (fps) to degrees per second
-    double speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lat;
-    double speed_east_deg_sec  = sin(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lon;
+    double speed_north_deg_sec = speed_north_fps / ft_per_deg_lat;
+    double speed_east_deg_sec  = speed_east_fps / ft_per_deg_lon;
 
     // if wind not required, set to zero
     if (!_wind) {
@@ -273,37 +294,107 @@ void FGAIBallistic::Run(double dt) {
         _wind_from_east = 0;
     }
 
-    // convert wind speed (fps) to degrees per second
+    // convert wind speed (fps) to degrees lat/lon per second
     double wind_speed_from_north_deg_sec = _wind_from_north / ft_per_deg_lat;
     double wind_speed_from_east_deg_sec  = _wind_from_east / ft_per_deg_lon;
 
+    //calculate velocity due to external force
+    double force_speed_north_deg_sec = 0;
+    double force_speed_east_deg_sec = 0;
+    double vs_force_fps = 0;
+    double hs_force_fps = 0;
+    double v_force_acc_fpss = 0;
+    double force_speed_north_fps = 0;
+    double force_speed_east_fps = 0;
+
+    if (_external_force) {
+        SGPropertyNode *n = fgGetNode(_force_path.c_str(), true);
+        double force_lbs            = n->getChild("force-lb", 0, true)->getDoubleValue();
+        double force_elevation_deg  = n->getChild("force-elevation-deg", 0, true)->getDoubleValue();
+        double force_azimuth_deg    = n->getChild("force-azimuth-deg", 0, true)->getDoubleValue();
+
+        //resolve force into vertical and horizontal components:
+        double v_force_lbs = force_lbs * sin( force_elevation_deg * SG_DEGREES_TO_RADIANS );
+        double h_force_lbs = force_lbs * cos( force_elevation_deg * SG_DEGREES_TO_RADIANS );
+
+        //acceleration = (force(lbsf)/mass(slugs))
+        v_force_acc_fpss = (v_force_lbs/_mass);
+        double h_force_acc_fpss = (h_force_lbs/_mass);
+
+        // velocity = acceleration * dt
+        hs_force_fps = h_force_acc_fpss * dt;
+
+        //resolve horizontal speed into north and east components:
+        force_speed_north_fps   = cos(force_azimuth_deg * SG_DEGREES_TO_RADIANS) * hs_force_fps;
+        force_speed_east_fps    = sin(force_azimuth_deg * SG_DEGREES_TO_RADIANS) * hs_force_fps;
+
+        // convert horizontal speed (fps) to degrees per second
+        double force_speed_north_deg_sec = force_speed_north_fps / ft_per_deg_lat;
+        double force_speed_east_deg_sec  = force_speed_east_fps / ft_per_deg_lon;
+
+        //recombine the horizontal velocity components
+        hs = sqrt(((speed_north_fps + force_speed_north_fps) * (speed_north_fps + force_speed_north_fps))
+            + ((speed_east_fps + force_speed_east_fps) * (speed_east_fps + force_speed_east_fps)));
+
+        /*cout << "mass " << _mass 
+        << " force " << force_lbs 
+        << " elevation " << force_elevation_deg
+        << " azimuth " << force_azimuth_deg
+        << endl; */
+
+        //cout << " _hs_force_fps " << hs_force_fps 
+        //<< " force_speed_north_fps " << force_speed_north_fps 
+        //<< " force_speed_east_fps " << force_speed_east_fps 
+        //<< " speed_north_fps " << speed_north_fps 
+        //<< " speed_east_fps " << speed_east_fps
+        //<< endl;
+    }
+
     // set new position
     pos.setLatitudeDeg( pos.getLatitudeDeg()
-        + (speed_north_deg_sec - wind_speed_from_north_deg_sec) * dt );
+        + (speed_north_deg_sec - wind_speed_from_north_deg_sec + force_speed_north_deg_sec) * dt );
     pos.setLongitudeDeg( pos.getLongitudeDeg()
-        + (speed_east_deg_sec - wind_speed_from_east_deg_sec) * dt );
+        + (speed_east_deg_sec - wind_speed_from_east_deg_sec + force_speed_east_deg_sec) * dt );
 
-    // adjust vertical speed for acceleration of gravity and buoyancy
-    vs -= (_gravity - _buoyancy) * dt;
+    // adjust vertical speed for acceleration of gravity, buoyancy, and vertical force
+    //v_force_acc_fpss = 0;
+    vs -= (_gravity - _buoyancy - v_force_acc_fpss) * dt;
 
-    // adjust altitude (feet)
+    // adjust altitude (feet) and set new elevation
     altitude_ft += vs * dt;
     pos.setElevationFt(altitude_ft);
 
-    // recalculate elevation (velocity vector) if aerostabilized
-    /*cout << _name << ": " << "aero_stabilised " << _aero_stabilised
-    << " pitch " << pitch <<" vs "  << vs <<endl ;*/
+    // recalculate elevation and azimuth (velocity vectors)
+    _elevation = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
+    _azimuth =  atan2((speed_east_fps + force_speed_east_fps), 
+        (speed_north_fps + force_speed_north_fps)) * SG_RADIANS_TO_DEGREES;
+
+    // rationalise azimuth
+    if (_azimuth < 0) _azimuth += 360;
 
     if (_aero_stabilised) { // we simulate rotational moment of inertia by using a filter
         const double coeff = 0.9;
         double c = dt / (coeff + dt);
-        //cout << "c " << c << endl;
-        _elevation = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
+
         pitch = (_elevation * c) + (pitch * (1 - c));
+
+        if (_azimuth - hdg > 180) {
+            hdg = (_azimuth * c) - (hdg * (1 - c));
+        } else {
+            hdg = (_azimuth * c) + (hdg * (1 - c));
+        }
+
     }
 
     // recalculate total speed
     speed = sqrt( vs * vs + hs * hs) / SG_KT_TO_FPS;
+
+    /*cout << "_elevation " << _elevation
+    << " pitch " << pitch
+    <<" _yaw " << _yaw 
+    << " hdg " << hdg 
+    << " speed " << speed
+    << endl;*/
 
     //do impacts and collisions
     if (_report_impact && !_impact_reported)
