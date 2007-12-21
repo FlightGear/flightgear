@@ -46,24 +46,24 @@ instr_label::instr_label(const SGPropertyNode *node) :
     else if (just == 2)
         justify = RIGHT_JUST;
 
-	string pre_str(node->getStringValue("pre_label_string"));
-	if (pre_str== "NULL")
-		pre_str.clear();
-	else if (pre_str == "blank")
+    string pre_str(node->getStringValue("pre_label_string"));
+    if (pre_str== "NULL")
+        pre_str.clear();
+    else if (pre_str == "blank")
         pre_str = " ";
 
-	const char *units = strcmp(fgGetString("/sim/startup/units"), "feet") ? " m" : " ft";  // FIXME
+    const char *units = strcmp(fgGetString("/sim/startup/units"), "feet") ? " m" : " ft";  // FIXME
 
     string post_str(node->getStringValue("post_label_string"));
     if (post_str== "NULL")
-		post_str.clear();
-	else if (post_str == "blank")
+        post_str.clear();
+    else if (post_str == "blank")
         post_str = " ";
-	else if (post_str == "units")
+    else if (post_str == "units")
         post_str = units;
 
-	format_buffer = pre_str + pformat;
-	format_buffer += post_str;
+    format_buffer = pre_str + pformat;
+    format_buffer += post_str;
 }
 
 
@@ -74,7 +74,7 @@ void instr_label::draw(void)
     int lenstr;
     RECT scrn_rect = get_location();
 
-	memset( label_buffer, 0, sizeof( label_buffer));
+    memset( label_buffer, 0, sizeof( label_buffer));
     if (data_available()) {
         if (lat)
             snprintf(label_buffer, sizeof( label_buffer)-1, format_buffer.c_str(), lat_node->getStringValue());
@@ -143,5 +143,3 @@ void instr_label::draw(void)
                 label_buffer, get_digits());
     }
 }
-
-
