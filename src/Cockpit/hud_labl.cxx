@@ -64,15 +64,15 @@ instr_label::instr_label(const SGPropertyNode *node) :
 
 
     if (pre_str != NULL) {
-        if (post_str != NULL)
+        if (post_str != NULL) {
             if (snprintf(format_buffer, 80, "%s%s%s", pre_str, pformat, post_str) >= 80) {
                 SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
             }
-        else
+        } else {
             if (snprintf(format_buffer, 80, "%s%s", pre_str, pformat) >= 80) {
                 SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
             }
-
+        }
     } else if (post_str != NULL) {
             if (snprintf(format_buffer, 80, "%s%s", pformat, post_str) >= 80) {
                 SG_LOG(SG_GENERAL, SG_ALERT, "Caught overflow in " << SG_ORIGIN);
