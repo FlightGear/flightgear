@@ -191,7 +191,7 @@ int readHud( istream &input )
     SG_LOG(SG_INPUT, SG_INFO, "Read properties for  " <<
            root.getStringValue("name"));
 
-    if (!root.getNode("no-warning"))
+    if (!root.getNode("depreciated"))
         SG_LOG(SG_INPUT, SG_ALERT, "WARNING: use of depreciated old HUD");
 
     HUD_deque.erase( HUD_deque.begin(), HUD_deque.end());
