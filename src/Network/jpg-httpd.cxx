@@ -108,14 +108,9 @@ void HttpdImageChannel :: foundTerminator( void ) {
 
         double left, right, bottom, top, zNear, zFar;
 	osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
-	if (viewer)
-	    viewer->getCamera()->getProjectionMatrixAsFrustum(left, right,
-							      bottom, top,
-							      zNear, zFar);
-	else
-	    sceneView->getCamera()->getProjectionMatrixAsFrustum(left, right,
-								 bottom, top,
-								 zNear, zFar);
+        viewer->getCamera()->getProjectionMatrixAsFrustum(left, right,
+                                                          bottom, top,
+                                                          zNear, zFar);
         JpgFactory->setFrustum( left, right, bottom, top, zNear, zFar );
 
         nImageLen  = JpgFactory -> render();
