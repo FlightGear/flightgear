@@ -40,6 +40,7 @@
 #include <osg/Depth>
 #include <osg/Fog>
 #include <osg/Group>
+#include <osg/Hint>
 #include <osg/Light>
 #include <osg/LightModel>
 #include <osg/LightSource>
@@ -108,6 +109,32 @@
 #if (FG_OSG_VERSION >= 21004)
 #define UPDATE_VISITOR_IN_VIEWER 1
 #endif
+
+class FGHintUpdateCallback : public osg::StateAttribute::Callback {
+public:
+  FGHintUpdateCallback(const char* configNode) :
+    mConfigNode(fgGetNode(configNode, true))
+  { }
+  virtual void operator()(osg::StateAttribute* stateAttribute,
+                          osg::NodeVisitor*)
+  {
+    assert(dynamic_cast<osg::Hint*>(stateAttribute));
+    osg::Hint* hint = static_cast<osg::Hint*>(stateAttribute);
+
+    const char* value = mConfigNode->getStringValue();
+    if (!value)
+      hint->setMode(GL_DONT_CARE);
+    else if (0 == strcmp(value, "nicest"))
+      hint->setMode(GL_NICEST);
+    else if (0 == strcmp(value, "fastest"))
+      hint->setMode(GL_FASTEST);
+    else
+      hint->setMode(GL_DONT_CARE);
+  }
+private:
+  SGSharedPtr<SGPropertyNode> mConfigNode;
+};
+
 
 class SGPuDrawable : public osg::Drawable {
 public:
@@ -421,18 +448,6 @@ FGRenderer::init( void ) {
     if ( fgGetBool("/sim/startup/fullscreen") )
         fgOSFullScreen();
 
-    if ( (!strcmp(fgGetString("/sim/rendering/fog"), "disabled")) || 
-         (!fgGetBool("/sim/rendering/shading"))) {
-        // if fastest fog requested, or if flat shading force fastest
-        glHint ( GL_FOG_HINT, GL_FASTEST );
-    } else if ( !strcmp(fgGetString("/sim/rendering/fog"), "nicest") ) {
-        glHint ( GL_FOG_HINT, GL_DONT_CARE );
-    }
-
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
-    glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-    glHint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
-
     viewer->getCamera()
         ->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     
@@ -459,9 +474,21 @@ FGRenderer::init( void ) {
     stateSet->setTextureAttribute(0, new osg::TexEnv);
     stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
 
-
-//     stateSet->setAttribute(new osg::CullFace(osg::CullFace::BACK));
-//     stateSet->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
+    osg::Hint* hint = new osg::Hint(GL_FOG_HINT, GL_DONT_CARE);
+    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/fog"));
+    stateSet->setAttribute(hint);
+    hint = new osg::Hint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE);
+    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/polygon-smooth"));
+    stateSet->setAttribute(hint);
+    hint = new osg::Hint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/line-smooth"));
+    stateSet->setAttribute(hint);
+    hint = new osg::Hint(GL_POINT_SMOOTH_HINT, GL_DONT_CARE);
+    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/point-smooth"));
+    stateSet->setAttribute(hint);
+    hint = new osg::Hint(GL_PERSPECTIVE_CORRECTION_HINT, GL_DONT_CARE);
+    hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/perspective-correction"));
+    stateSet->setAttribute(hint);
 
     // this is the topmost scenegraph node for osg
     mBackGroundCamera->addChild(thesky->getPreRoot());
@@ -731,9 +758,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
     }
 
 //     sgEnviro.setLight(l->adj_fog_color());
-
-    // texture parameters
-    glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
 
     double agl = current__view->getAltitudeASL_ft()*SG_FEET_TO_METER
       - current__view->getSGLocation()->get_cur_elev_m();
