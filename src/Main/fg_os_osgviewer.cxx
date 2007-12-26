@@ -82,6 +82,7 @@ void fgOSOpenWindow(int w, int h, int bpp,
       viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
     osg::ref_ptr<osg::GraphicsContext::Traits> traits;
     traits = new osg::GraphicsContext::Traits;
+    traits->readDISPLAY();
     int cbits = (bpp <= 16) ?  5 :  8;
     int zbits = (bpp <= 16) ? 16 : 24;
     traits->red = traits->green = traits->blue = cbits;
@@ -139,9 +140,12 @@ void fgOSOpenWindow(int w, int h, int bpp,
 
         double shearx = cameraNode->getDoubleValue("shear-x", 0);
         double sheary = cameraNode->getDoubleValue("shear-y", 0);
-        cameraTraits->hostName = cameraNode->getStringValue("host-name", "");
-        cameraTraits->displayNum = cameraNode->getIntValue("display", 0);
-        cameraTraits->screenNum = cameraNode->getIntValue("screen", 0);
+        cameraTraits->hostName
+          = cameraNode->getStringValue("host-name", traits->hostName.c_str());
+        cameraTraits->displayNum
+          = cameraNode->getIntValue("display", traits->displayNum);
+        cameraTraits->screenNum
+          = cameraNode->getIntValue("screen", traits->screenNum);
         if (cameraNode->getBoolValue("fullscreen", fullscreen)) {
           unsigned width = 0;
           unsigned height = 0;
