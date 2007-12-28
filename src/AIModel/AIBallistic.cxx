@@ -375,12 +375,28 @@ void FGAIBallistic::Run(double dt) {
     if (_aero_stabilised) { // we simulate rotational moment of inertia by using a filter
         const double coeff = 0.9;
         double c = dt / (coeff + dt);
+        double recip;
 
+        // calculate the recip
+        if(hdg - 180 < 0){
+            recip = hdg + 180;
+        } else {
+            recip = hdg - 180;
+        }
+        //cout << "recip " << recip << endl;
+
+        // we assume a symetrical MI about the pitch and yaw axis
         pitch = (_elevation * c) + (pitch * (1 - c));
 
-        if (_azimuth - hdg > 180) {
-            hdg = (_azimuth * c) - (hdg * (1 - c));
+        //we need to ensure that we turn the short way to the new hdg
+        if (_azimuth < recip && _azimuth < hdg && hdg > 180) {
+            //cout <<  "_azimuth - hdg 1 " << _azimuth << " " << hdg << endl;
+            hdg = ((_azimuth + 360) * c) + (hdg * (1 - c));
+        } else if (_azimuth > recip && _azimuth > hdg && hdg <= 180){
+            //cout <<  "_azimuth - hdg 2 " << _azimuth <<" " << hdg << endl;
+            hdg = ((_azimuth - 360) * c) + (hdg * (1 - c));
         } else {
+            //cout <<  "_azimuth - hdg 3 " << _azimuth <<" " << hdg << endl;
             hdg = (_azimuth * c) + (hdg * (1 - c));
         }
 
