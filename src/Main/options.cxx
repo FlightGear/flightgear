@@ -494,7 +494,7 @@ parse_fov( const string& arg ) {
     if ( fov < FG_FOV_MIN ) { fov = FG_FOV_MIN; }
     if ( fov > FG_FOV_MAX ) { fov = FG_FOV_MAX; }
 
-    fgSetDouble("/sim/current-view/field-of-view", fov);
+    fgSetDouble("/sim/view[0]/config/default-field-of-view-deg", fov);
 
     // printf("parse_fov(): result = %.4f\n", fov);
 
