@@ -104,6 +104,7 @@
 #include "splash.hxx"
 #include "renderer.hxx"
 #include "main.hxx"
+#include "ViewPartitionNode.hxx"
 
 // XXX Make this go away when OSG 2.2 is released.
 #if (FG_OSG_VERSION >= 21004)
@@ -392,7 +393,7 @@ static osg::ref_ptr<osg::Group> mRealRoot = new osg::Group;
 
 static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
-static osg::ref_ptr<osg::Camera> mBackGroundCamera = new osg::Camera;
+static osg::ref_ptr<ViewPartitionNode> viewPartition = new ViewPartitionNode;
 
 FGRenderer::FGRenderer()
 {
@@ -491,6 +492,7 @@ FGRenderer::init( void ) {
     stateSet->setAttribute(hint);
 
     // this is the topmost scenegraph node for osg
+#if 0
     mBackGroundCamera->addChild(thesky->getPreRoot());
     mBackGroundCamera->setClearMask(0);
 
@@ -505,10 +507,12 @@ FGRenderer::init( void ) {
 
     stateSet = mBackGroundCamera->getOrCreateStateSet();
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-
+#endif
     osg::Group* sceneGroup = new osg::Group;
     sceneGroup->addChild(globals->get_scenery()->get_scene_graph());
-    sceneGroup->addChild(thesky->getCloudRoot());
+    sceneGroup->setNodeMask(~simgear::BACKGROUND_BIT);
+
+    //sceneGroup->addChild(thesky->getCloudRoot());
 
     stateSet = sceneGroup->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
@@ -520,11 +524,10 @@ FGRenderer::init( void ) {
     // relative because of CameraView being just a clever transform node
     lightSource->setReferenceFrame(osg::LightSource::RELATIVE_RF);
     lightSource->setLocalStateSetModes(osg::StateAttribute::ON);
-    mRoot->addChild(lightSource);
-
-    lightSource->addChild(mBackGroundCamera.get());
+    
     lightSource->addChild(sceneGroup);
-
+    lightSource->addChild(thesky->getPreRoot());
+    mRoot->addChild(lightSource);
 
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
@@ -553,7 +556,7 @@ FGRenderer::init( void ) {
     osg::Camera* guiCamera = new osg::Camera;
     guiCamera->setRenderOrder(osg::Camera::POST_RENDER, 100);
     guiCamera->setClearMask(0);
-    inheritanceMask = osg::CullSettings::ALL_VARIABLES;
+    GLbitfield inheritanceMask = osg::CullSettings::ALL_VARIABLES;
     inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
     inheritanceMask &= ~osg::CullSettings::CULLING_MODE;
     guiCamera->setInheritanceMask(inheritanceMask);
@@ -567,8 +570,10 @@ FGRenderer::init( void ) {
     osg::Switch* sw = new osg::Switch;
     sw->setUpdateCallback(new FGScenerySwitchCallback);
     sw->addChild(mRoot.get());
+    viewPartition->addChild(sw);
+    viewPartition->addChild(thesky->getCloudRoot());
 
-    mRealRoot->addChild(sw);
+    mRealRoot->addChild(viewPartition.get());
     mRealRoot->addChild(FGCreateRedoutNode());
     mRealRoot->addChild(guiCamera);
 }
@@ -811,14 +816,17 @@ FGRenderer::update( bool refresh_camera_settings ) {
                              l->adj_fog_color(),
                              l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
     mUpdateVisitor->setVisibility(actual_visibility);
+    viewPartition->setVisibility(actual_visibility);
     simgear::GroundLightManager::instance()->update(mUpdateVisitor.get());
     bool hotspots = fgGetBool("/sim/panel-hotspots");
-    osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
+    osg::Node::NodeMask cullMask = (~simgear::LIGHTS_BITS & ~simgear::PICK_BIT
+                                    & ~simgear::BACKGROUND_BIT);
     cullMask |= simgear::GroundLightManager::instance()
         ->getLightNodeMask(mUpdateVisitor.get());
     if (hotspots)
         cullMask |= simgear::PICK_BIT;
     camera->setCullMask(cullMask);
+    // XXX
     for (int i = 0; i < viewer->getNumSlaves(); ++i)
         viewer->getSlave(i)._camera->setCullMask(cullMask);
 }
