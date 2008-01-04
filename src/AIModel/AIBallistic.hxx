@@ -23,6 +23,7 @@
 #include <math.h>
 #include <vector>
 #include <simgear/structure/SGSharedPtr.hxx>
+#include <simgear/scene/material/mat.hxx>
 
 
 #include "AIManager.hxx"
@@ -71,9 +72,16 @@ public:
     void setExternalForce( bool f );
     void setForcePath(const string&);
     double _getTime() const;
+    bool getHtAGL();
+    void setForceStabilisation( bool val );
+    void setXOffset(double x);
+    void setYOffset(double y);
+    void setZOffset(double z);
+
 
     virtual const char* getTypeString(void) const { return "ballistic"; }
     static const double slugs_to_kgs; //conversion factor
+    static const double slugs_to_lbs; //conversion factor
 
     SGPropertyNode_ptr _force_node;
     SGPropertyNode_ptr _force_azimuth_node;
@@ -97,8 +105,13 @@ private:
     bool   _random;          // modifier for Cd
     double _ht_agl_ft;       // height above ground level
     double _load_resistance; // ground load resistanc N/m^2
+    double _frictionFactor;  // dimensionless modifier for Coefficient of Friction
     bool   _solid;           // if true ground is solid for FDMs
-    //double _hs_force_fps;    // horizontal speed due to external force
+    double _elevation_m;     // ground elevation in meters
+    bool   _force_stabilised;// if true, object will align to external force
+    double _x_offset;
+    double _y_offset;
+    double _z_offset;
 
     bool   _report_collision;       // if true a collision point with AI Objects is calculated
     bool   _report_impact;          // if true an impact point on the terrain is calculated
@@ -116,11 +129,16 @@ private:
     string _submodel;
     string _force_path;
 
+    const SGMaterial* _material;
+
     void Run(double dt);
     void handle_collision();
     void handle_impact();
-
+    void setPitch (double e, double dt, double c);
+    void setHdg (double dt, double c);
     void report_impact(double elevation, const FGAIBase *target = 0);
+
+    double getRecip(double az);
 
 };
 
