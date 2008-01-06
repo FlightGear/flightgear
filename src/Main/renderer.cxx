@@ -491,23 +491,6 @@ FGRenderer::init( void ) {
     hint->setUpdateCallback(new FGHintUpdateCallback("/sim/rendering/perspective-correction"));
     stateSet->setAttribute(hint);
 
-    // this is the topmost scenegraph node for osg
-#if 0
-    mBackGroundCamera->addChild(thesky->getPreRoot());
-    mBackGroundCamera->setClearMask(0);
-
-    GLbitfield inheritanceMask = osg::CullSettings::ALL_VARIABLES;
-    inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
-    inheritanceMask &= ~osg::CullSettings::NEAR_FAR_RATIO;
-    inheritanceMask &= ~osg::CullSettings::CULLING_MODE;
-    mBackGroundCamera->setInheritanceMask(inheritanceMask);
-    mBackGroundCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    mBackGroundCamera->setCullingMode(osg::CullSettings::NO_CULLING);
-    mBackGroundCamera->setRenderOrder(osg::Camera::NESTED_RENDER);
-
-    stateSet = mBackGroundCamera->getOrCreateStateSet();
-    stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-#endif
     osg::Group* sceneGroup = new osg::Group;
     sceneGroup->addChild(globals->get_scenery()->get_scene_graph());
     sceneGroup->setNodeMask(~simgear::BACKGROUND_BIT);

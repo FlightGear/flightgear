@@ -44,9 +44,10 @@ public:
     virtual void traverse(osg::NodeVisitor &nv);
     void setVisibility(double vis) { visibility = vis; }
     double getVisibility() const { return visibility; }
+    static void makeNewProjMat(osg::Matrixd& oldProj, double znear, double zfar,
+                               osg::Matrixd& projection);
 protected:
-    void makeNewProjMat(osg::Matrixd& oldProj, double znear, double zfar,
-                        osg::Matrixd& projection);
+
     typedef std::vector< osg::ref_ptr<osg::Camera> > CameraList;
     CameraList cameras;
     enum CameraNum {
