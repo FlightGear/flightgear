@@ -26,12 +26,6 @@ GFX_CODE = fg_os.cxx $(GFX_COMMON)
 endif
 endif
 
-if USE_OSGDEBUG
-OSG_LIBS = -losgViewerd -losgGAd -losgTextd -losgFXd -losgUtild -losgDBd -losgSimd -losgd -lOpenThreadsd
-else
-OSG_LIBS = -losgViewer -losgGA -losgText -losgFX -losgUtil -losgDB -losgSim -losg -lOpenThreads 
-endif
-
 JSBSIM_LIBS = \
 	$(top_builddir)/src/FDM/JSBSim/libJSBSim.a \
         $(top_builddir)/src/FDM/JSBSim/initialization/libInit.a \

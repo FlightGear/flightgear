@@ -171,7 +171,7 @@ esac
 dnl Checks for libraries.
 
 dnl Thread related checks
-AC_SEARCH_LIBS(pthread_cancel, [pthread c_r])
+AC_SEARCH_LIBS(pthread_create, [pthread c_r])
 if test "x$ac_cv_header_pthread_h" = "xyes"; then
   if test "x$ac_cv_search_pthread_exit" = "x-lc_r"; then
     CXXFLAGS="-pthread $CXXFLAGS"
@@ -503,6 +503,76 @@ if test "x$ac_cv_header_osg_Version" != "xyes"; then
     echo "configure aborted."
     exit
 fi
+
+# Find the OSG libraries.  Note special handling for OS X frameworks
+case "${host}" in
+*-apple-darwin*)
+
+    dnl Thank you Christian Bauer from SheepSaver
+    dnl AC_CHECK_FRAMEWORK($1=NAME, $2=INCLUDES)
+    AC_DEFUN([AC_CHECK_FRAMEWORK], [
+    AS_VAR_PUSHDEF([ac_Framework], [ac_cv_framework_$1])dnl
+    AC_CACHE_CHECK([whether compiler supports framework $1],
+        ac_Framework, [
+        saved_LIBS="$LIBS"
+        LIBS="$LIBS -framework $1"
+        AC_TRY_LINK(
+        [$2], [],
+        [AS_VAR_SET(ac_Framework, yes)], [AS_VAR_SET(ac_Framework, no); LIBS="$saved_LIBS"]
+        )
+    ])
+    AS_IF([test AS_VAR_GET(ac_Framework) = yes],
+        [AC_DEFINE(AS_TR_CPP(HAVE_FRAMEWORK_$1), 1, [Define if framework $1 is available.])]
+    )
+    AS_VAR_POPDEF([ac_Framework])dnl
+    ])
+
+    if USE_OSGDEBUG; then
+        AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
+        AC_CHECK_LIB(osgGAd,osgGAGetVersion)
+        AC_CHECK_LIB(osgTextd,osgTextGetVersion)
+        LIBS="$LIBS -losgFXd"
+        AC_CHECK_LIB(osgUtild,osgUtilGetVersion)
+        AC_CHECK_LIB(osgDBd,osgDBGetVersion)
+        AC_CHECK_LIB(osgSimd,osgSimGetVersion)
+        AC_CHECK_LIB(osgd,osgGetVersion)
+        AC_CHECK_LIB(OpenThreadsd,OpenThreadsGetVersion)
+    else
+        AC_CHECK_FRAMEWORK(osgViewer, [#include <osgViewer/Version>])
+        AC_CHECK_FRAMEWORK(osgGA, [#include <osgGA/Version>])
+        AC_CHECK_FRAMEWORK(osgText, [#include <osgText/Version>])
+        AC_CHECK_FRAMEWORK(osgFX, [#include <osgFX/AnisotropicLighting>])
+        AC_CHECK_FRAMEWORK(osgUtil, [#include <osgUtil/Version>])
+        AC_CHECK_FRAMEWORK(osgDB, [#include <osgDB/Version>])
+        AC_CHECK_FRAMEWORK(osgSim, [#include <osgSim/Version>])
+        AC_CHECK_FRAMEWORK(osg, [#include <osg/Version>])
+        AC_CHECK_FRAMEWORK(OpenThreads, [#include <OpenThreads/Version>])
+    fi
+    ;;
+*)
+    if USE_OSGDEBUG; then
+        AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
+        AC_CHECK_LIB(osgGAd,osgGAGetVersion)
+        AC_CHECK_LIB(osgTextd,osgTextGetVersion)
+        LIBS="$LIBS -losgFXd"
+        AC_CHECK_LIB(osgUtild,osgUtilGetVersion)
+        AC_CHECK_LIB(osgDBd,osgDBGetVersion)
+        AC_CHECK_LIB(osgSimd,osgSimGetVersion)
+        AC_CHECK_LIB(osgd,osgGetVersion)
+        AC_CHECK_LIB(OpenThreadsd,OpenThreadsGetVersion)
+    else
+        AC_CHECK_LIB(osgViewer,osgViewerGetVersion)
+        AC_CHECK_LIB(osgGA,osgGAGetVersion)
+        AC_CHECK_LIB(osgText,osgTextGetVersion)
+        LIBS="$LIBS -losgFX"
+        AC_CHECK_LIB(osgUtil,osgUtilGetVersion)
+        AC_CHECK_LIB(osgDB,osgDBGetVersion)
+        AC_CHECK_LIB(osgSim,osgSimGetVersion)
+        AC_CHECK_LIB(osg,osgGetVersion)
+        AC_CHECK_LIB(OpenThreads,OpenThreadsGetVersion)
+    fi
+    ;;
+esac
 
 AC_LANG_POP
 
