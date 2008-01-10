@@ -9,7 +9,11 @@
 
 #include <simgear/compiler.h>
 
+#include <algorithm>
+#include <functional>
 #include <vector>
+
+#include <osg/Math>
 
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/model/modellib.hxx>
@@ -140,38 +144,70 @@ FGModelMgr::unbind ()
 {
 }
 
+namespace
+{
+double testNan(double val) throw (sg_range_exception)
+{
+    if (osg::isNaN(val))
+        throw sg_range_exception("value is nan");
+    return val;
+}
+
+struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
+{
+    void operator()(FGModelMgr::Instance* instance) const
+    {
+        SGModelPlacement* model = instance->model;
+        double lon, lat, elev, roll, pitch, heading;
+
+        try {
+            // Optionally set position from properties
+            if (instance->lon_deg_node != 0)
+                lon = testNan(instance->lon_deg_node->getDoubleValue());
+            if (instance->lat_deg_node != 0)
+                lat = testNan(instance->lat_deg_node->getDoubleValue());
+            if (instance->elev_ft_node != 0)
+                elev = testNan(instance->elev_ft_node->getDoubleValue());
+
+            // Optionally set orientation from properties
+            if (instance->roll_deg_node != 0)
+                roll = testNan(instance->roll_deg_node->getDoubleValue());
+            if (instance->pitch_deg_node != 0)
+                pitch = testNan(instance->pitch_deg_node->getDoubleValue());
+            if (instance->heading_deg_node != 0)
+                heading = testNan(instance->heading_deg_node->getDoubleValue());
+        } catch (const sg_range_exception& e) {
+            const char *path = instance->node->getStringValue("path",
+                                                              "unknown");
+            SG_LOG(SG_GENERAL, SG_INFO, "Instance of model " << path
+                   << " has invalid values");
+            return;
+        }
+        // Optionally set position from properties
+        if (instance->lon_deg_node != 0)
+            model->setLongitudeDeg(lon);
+        if (instance->lat_deg_node != 0)
+            model->setLatitudeDeg(lat);
+        if (instance->elev_ft_node != 0)
+            model->setElevationFt(elev);
+
+        // Optionally set orientation from properties
+        if (instance->roll_deg_node != 0)
+            model->setRollDeg(roll);
+        if (instance->pitch_deg_node != 0)
+            model->setPitchDeg(pitch);
+        if (instance->heading_deg_node != 0)
+            model->setHeadingDeg(heading);
+
+        instance->model->update();
+    }
+};
+}
+
 void
 FGModelMgr::update (double dt)
 {
-  for (unsigned int i = 0; i < _instances.size(); i++) {
-    Instance * instance = _instances[i];
-    SGModelPlacement * model = instance->model;
-
-				// Optionally set position from properties
-    if (instance->lon_deg_node != 0)
-      model->setLongitudeDeg(instance->lon_deg_node->getDoubleValue());
-    if (instance->lat_deg_node != 0)
-      model->setLatitudeDeg(instance->lat_deg_node->getDoubleValue());
-    if (instance->elev_ft_node != 0)
-      model->setElevationFt(instance->elev_ft_node->getDoubleValue());
-
-				// Optionally set orientation from properties
-    if (instance->roll_deg_node != 0)
-      model->setRollDeg(instance->roll_deg_node->getDoubleValue());
-    if (instance->pitch_deg_node != 0)
-      model->setPitchDeg(instance->pitch_deg_node->getDoubleValue());
-    if (instance->heading_deg_node != 0)
-      model->setHeadingDeg(instance->heading_deg_node->getDoubleValue());
-
-    instance->model->update();
-
-    // OSGFIXME
-//     if (shadows && !instance->shadow) {
-//       osg::Node *branch = instance->model->getSceneGraph();
-//       shadows->addOccluder(branch, SGShadowVolume::occluderTypeTileObject);
-//       instance->shadow = true;
-//     }
-  }
+    std::for_each(_instances.begin(), _instances.end(), UpdateFunctor());
 }
 
 void
