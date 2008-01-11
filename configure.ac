@@ -214,7 +214,6 @@ else
 fi
 
 AC_ARG_ENABLE(osgdebug, [  --enable-osgdebug                  Use OSG debug libraries], [enable_osgdebug="$enableval"])
-AM_CONDITIONAL(USE_OSGDEBUG, test "x$enable_osgdebug" = "xyes")
 
 dnl check for OpenGL related libraries
 case "${host}" in
@@ -527,7 +526,7 @@ case "${host}" in
     AS_VAR_POPDEF([ac_Framework])dnl
     ])
 
-    if USE_OSGDEBUG; then
+    if test "x$enable_osgdebug" = "xyes"; then
         AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
         AC_CHECK_LIB(osgGAd,osgGAGetVersion)
         AC_CHECK_LIB(osgTextd,osgTextGetVersion)
@@ -550,7 +549,7 @@ case "${host}" in
     fi
     ;;
 *)
-    if USE_OSGDEBUG; then
+    if test "x$enable_osgdebug" = "xyes"; then
         AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
         AC_CHECK_LIB(osgGAd,osgGAGetVersion)
         AC_CHECK_LIB(osgTextd,osgTextGetVersion)
