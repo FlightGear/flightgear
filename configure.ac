@@ -550,25 +550,25 @@ case "${host}" in
     ;;
 *)
     if test "x$enable_osgdebug" = "xyes"; then
-        AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
-        AC_CHECK_LIB(osgGAd,osgGAGetVersion)
-        AC_CHECK_LIB(osgTextd,osgTextGetVersion)
-        LIBS="$LIBS -losgFXd"
+        AC_CHECK_LIB(OpenThreadsd,OpenThreadsGetVersion)
+        AC_CHECK_LIB(osgd,osgGetVersion)
         AC_CHECK_LIB(osgUtild,osgUtilGetVersion)
         AC_CHECK_LIB(osgDBd,osgDBGetVersion)
+        AC_CHECK_LIB(osgTextd,osgTextGetVersion)
+        AC_CHECK_LIB(osgGAd,osgGAGetVersion)
+        AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
         AC_CHECK_LIB(osgSimd,osgSimGetVersion)
-        AC_CHECK_LIB(osgd,osgGetVersion)
-        AC_CHECK_LIB(OpenThreadsd,OpenThreadsGetVersion)
+        LIBS="$LIBS -losgFXd"
     else
-        AC_CHECK_LIB(osgViewer,osgViewerGetVersion)
-        AC_CHECK_LIB(osgGA,osgGAGetVersion)
-        AC_CHECK_LIB(osgText,osgTextGetVersion)
-        LIBS="$LIBS -losgFX"
+        AC_CHECK_LIB(OpenThreads,OpenThreadsGetVersion)
+        AC_CHECK_LIB(osg,osgGetVersion)
         AC_CHECK_LIB(osgUtil,osgUtilGetVersion)
         AC_CHECK_LIB(osgDB,osgDBGetVersion)
+        AC_CHECK_LIB(osgText,osgTextGetVersion)
+        AC_CHECK_LIB(osgGA,osgGAGetVersion)
+        AC_CHECK_LIB(osgViewer,osgViewerGetVersion)
         AC_CHECK_LIB(osgSim,osgSimGetVersion)
-        AC_CHECK_LIB(osg,osgGetVersion)
-        AC_CHECK_LIB(OpenThreads,OpenThreadsGetVersion)
+        LIBS="$LIBS -losgFX"
     fi
     ;;
 esac
