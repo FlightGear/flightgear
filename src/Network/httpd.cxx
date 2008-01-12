@@ -101,7 +101,7 @@ void HttpdChannel::foundTerminator (void) {
     const string s = buffer.getData();
 
     if ( s.find( "GET " ) == 0 ) {
-        printf("echo: %s\n", s.c_str());
+        SG_LOG( SG_IO, SG_INFO, "echo: " << s );   
 
         string rest = s.substr(4);
         string request;
@@ -120,7 +120,7 @@ void HttpdChannel::foundTerminator (void) {
             // request to update property value
             string args = request.substr( pos + 1 );
             request = request.substr( 0, pos );
-            printf("'%s' '%s'\n", request.c_str(), args.c_str());
+            SG_LOG( SG_IO, SG_INFO, "'" << request << "' '" << args << "'" );   
             request = urlDecode(request);
 
             // parse args looking for "value="
@@ -136,12 +136,12 @@ void HttpdChannel::foundTerminator (void) {
                     done = true;
                 }
 
-                printf("  arg = %s\n", arg.c_str() );
+                SG_LOG( SG_IO, SG_INFO, "  arg = " << arg );   
                 string::size_type apos = arg.find("=");
                 if ( apos != string::npos ) {
                     string a = arg.substr( 0, apos );
                     string b = arg.substr( apos + 1 );
-                    printf("    a = %s  b = %s\n", a.c_str(), b.c_str() );
+                    SG_LOG( SG_IO, SG_INFO, "    a = " << a << "  b = " << b );
                     if ( request == "/run.cgi" ) {
                         // execute a command
                         if ( a == "value" ) {
@@ -267,7 +267,7 @@ void HttpdChannel::foundTerminator (void) {
         push( "HTTP/1.1 200 OK" );
         push( getTerminator() );
         
-        printf("size = %d\n", response.length());
+        SG_LOG( SG_IO, SG_INFO, "size = " << response.length() );
         char ctmp[256];
         sprintf(ctmp, "Content-Length: %d", response.length());
         push( ctmp );
