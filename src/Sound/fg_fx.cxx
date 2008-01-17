@@ -68,43 +68,44 @@ FGFX::~FGFX ()
 void
 FGFX::init()
 {
-   SGPropertyNode *node = fgGetNode("/sim/sound", true);
-   int i;
+    SGPropertyNode *node = fgGetNode("/sim/sound", true);
 
-   string path_str = node->getStringValue("path");
-   SGPath path( globals->get_fg_root() );
-   if (path_str.empty()) {
-      SG_LOG(SG_GENERAL, SG_ALERT, "No path in /sim/sound/path");
-      return;
-   }
+    string path_str = node->getStringValue("path");
+    SGPath path( globals->get_fg_root() );
+    if (path_str.empty()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "No path in /sim/sound/path");
+        return;
+    }
 
-   path.append(path_str.c_str());
-   SG_LOG(SG_GENERAL, SG_INFO, "Reading sound " << node->getName()
-          << " from " << path.str());
+    path.append(path_str.c_str());
+    SG_LOG(SG_GENERAL, SG_INFO, "Reading sound " << node->getName()
+           << " from " << path.str());
 
-   SGPropertyNode root;
-   try {
-      readProperties(path.str(), &root);
-   } catch (const sg_exception &) {
-      SG_LOG(SG_GENERAL, SG_ALERT,
-       "Error reading file '" << path.str() << '\'');
-      return;
-   }
+    SGPropertyNode root;
+    try {
+        readProperties(path.str(), &root);
+    } catch (const sg_exception &) {
+        SG_LOG(SG_GENERAL, SG_ALERT,
+               "Error reading file '" << path.str() << '\'');
+        return;
+    }
 
-   node = root.getNode("fx");
-   for (i = 0; i < node->nChildren(); i++) {
-      SGXmlSound *sound = new SGXmlSound();
-
-      try {
-         sound->init(globals->get_props(), node->getChild(i),
-                     globals->get_soundmgr(), globals->get_fg_root());
-
-         _sound.push_back(sound);
-      } catch ( sg_io_exception &e ) {
-         SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
-         delete sound;
-      }
-   }
+    node = root.getNode("fx");
+    if(node) {
+        for (int i = 0; i < node->nChildren(); ++i) {
+            SGXmlSound *sound = new SGXmlSound();
+  
+            try {
+                sound->init(globals->get_props(), node->getChild(i),
+                            globals->get_soundmgr(), globals->get_fg_root());
+  
+                _sound.push_back(sound);
+            } catch ( sg_io_exception &e ) {
+                SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
+                delete sound;
+            }
+        }
+    }
 }
 
 void
