@@ -99,6 +99,7 @@
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
+				DebugInformationFormat="0"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -111,6 +112,7 @@
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="..\..\..\install\OpenSceneGraph\lib;..\..\..\install\OpenThreads\lib;..\..\..\plib;..\..\..\SimGear\Release;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\lib\win32;..\..\..\3rdParty\lib"
 				IgnoreDefaultLibraryNames=""
+				GenerateDebugInformation="FALSE"
 				ProgramDatabaseFile=".\Release/FlightGear.pdb"
 				SubSystem="1"/>
 			<Tool
@@ -1930,16 +1932,16 @@
 				RelativePath="..\..\src\Main\viewer.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Main\ViewPartitionNode.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Main\ViewPartitionNode.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\Main\viewmgr.cxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Main\viewmgr.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Main\ViewPartitionNode.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Main\ViewPartitionNode.hxx">
 			</File>
 		</Filter>
 		<Filter
