@@ -818,17 +818,13 @@ bool FGXMLAutopilot::build() {
         string name = node->getName();
         // cout << name << endl;
         if ( name == "pid-controller" ) {
-            FGXMLAutoComponent *c = new FGPIDController( node );
-            components.push_back( c );
+            components.push_back( new FGPIDController( node ) );
         } else if ( name == "pi-simple-controller" ) {
-            FGXMLAutoComponent *c = new FGPISimpleController( node );
-            components.push_back( c );
+            components.push_back( new FGPISimpleController( node ) );
         } else if ( name == "predict-simple" ) {
-            FGXMLAutoComponent *c = new FGPredictor( node );
-            components.push_back( c );
+            components.push_back( new FGPredictor( node ) );
         } else if ( name == "filter" ) {
-            FGXMLAutoComponent *c = new FGDigitalFilter( node );
-            components.push_back( c );
+            components.push_back( new FGDigitalFilter( node ) );
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
                     << name );

@@ -1124,6 +1124,8 @@ FGInput::mouse_mode::~mouse_mode ()
 FGInput::mouse::mouse ()
   : x(-1),
     y(-1),
+    save_x(-1),
+    save_y(-1),
     nModes(1),
     current_mode(0),
     modes(0)

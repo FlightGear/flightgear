@@ -813,11 +813,11 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
     if (type == "textbox" && props->getBoolValue("editable"))
         type += "-editable";
 
-    FGColor *c = new FGColor(_gui->getColor("background"));
-    c->merge(_gui->getColor(type));
-    c->merge(props->getNode("color"));
-    if (c->isValid())
-        object->setColourScheme(c->red(), c->green(), c->blue(), c->alpha());
+    FGColor c(_gui->getColor("background"));
+    c.merge(_gui->getColor(type));
+    c.merge(props->getNode("color"));
+    if (c.isValid())
+        object->setColourScheme(c.red(), c.green(), c.blue(), c.alpha());
 
     const struct {
         int mask;
@@ -840,20 +840,20 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
 
     for (int i = 0; i < numcol; i++) {
         bool dirty = false;
-        c->clear();
-        c->setAlpha(1.0);
+        c.clear();
+        c.setAlpha(1.0);
 
-        dirty |= c->merge(_gui->getColor(type + '-' + pucol[i].name));
+        dirty |= c.merge(_gui->getColor(type + '-' + pucol[i].name));
         if (which & pucol[i].mask)
-            dirty |= c->merge(props->getNode("color"));
+            dirty |= c.merge(props->getNode("color"));
 
-        if ((pucol[i].mask == LABEL) && !c->isValid())
-            dirty |= c->merge(_gui->getColor("label"));
+        if ((pucol[i].mask == LABEL) && !c.isValid())
+            dirty |= c.merge(_gui->getColor("label"));
 
-        dirty |= c->merge(props->getNode(pucol[i].cname));
+        dirty |= c.merge(props->getNode(pucol[i].cname));
 
-        if (c->isValid() && dirty)
-            object->setColor(pucol[i].id, c->red(), c->green(), c->blue(), c->alpha());
+        if (c.isValid() && dirty)
+            object->setColor(pucol[i].id, c.red(), c.green(), c.blue(), c.alpha());
     }
 }
 

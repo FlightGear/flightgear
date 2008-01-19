@@ -52,7 +52,7 @@ SG_USING_STD(deque);
  * Base class for other autopilot components
  */
 
-class FGXMLAutoComponent {
+class FGXMLAutoComponent : public SGReferenced {
 
 protected:
 
@@ -275,7 +275,7 @@ public:
 
 protected:
 
-    typedef vector<FGXMLAutoComponent *> comp_list;
+    typedef vector<SGSharedPtr<FGXMLAutoComponent> > comp_list;
 
 private:
 
