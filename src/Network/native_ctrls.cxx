@@ -293,7 +293,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     int i;
 
     SGPropertyNode * node;
-/***************
+
     if ( net_byte_order ) {
         // convert from network byte order
         net->version = htonl(net->version);
@@ -350,7 +350,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         net->speedup = htonl(net->speedup);
         net->freeze = htonl(net->freeze);
     }
-*************/
+
     if ( net->version != FG_NET_CTRLS_VERSION ) {
 	SG_LOG( SG_IO, SG_ALERT,
                 "Version mismatch with raw controls packet format." );
