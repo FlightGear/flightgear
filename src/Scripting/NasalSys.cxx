@@ -328,6 +328,8 @@ static naRef f_interpolate(naContext c, naRef me, int argc, naRef* args)
         ->get_group(SGSubsystemMgr::INIT)->get_subsystem("interpolator"))
         ->interpolate(node, nPoints, values, deltas);
 
+    delete[] values;
+    delete[] deltas;
     return naNil();
 }
 
