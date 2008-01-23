@@ -30,9 +30,6 @@
 #include <Aircraft/replay.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scenery/scenery.hxx>
-#if defined(HAVE_PLIB_PSL)
-#  include <Scripting/scriptmgr.hxx>
-#endif
 #include <Scripting/NasalSys.hxx>
 #include <Sound/fg_fx.hxx>
 #include <Time/sunsolver.hxx>
@@ -165,20 +162,6 @@ do_null (const SGPropertyNode * arg)
 {
   return true;
 }
-
-#if defined(HAVE_PLIB_PSL)
-/**
- * Built-in command: run a PSL script.
- *
- * script: the PSL script to execute
- */
-static bool
-do_script (const SGPropertyNode * arg)
-{
-    FGScriptMgr * mgr = (FGScriptMgr *)globals->get_subsystem("scripting");
-    return mgr->run(arg->getStringValue("script"));
-}
-#endif // HAVE_PLIB_PSL
 
 /**
  * Built-in command: run a Nasal script.
@@ -1435,9 +1418,6 @@ static struct {
   SGCommandMgr::command_t command;
 } built_ins [] = {
     { "null", do_null },
-#if defined(HAVE_PLIB_PSL)
-    { "script", do_script },
-#endif // HAVE_PLIB_PSL
     { "nasal", do_nasal },
     { "exit", do_exit },
     { "reinit", do_reinit },
