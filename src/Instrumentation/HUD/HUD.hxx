@@ -23,6 +23,7 @@
 #define _HUD_HXX
 
 #include <simgear/compiler.h>
+#include <simgear/props/condition.hxx>
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -52,7 +53,6 @@ SG_USING_NAMESPACE(std);
 
 
 class FGViewer;
-class SGCondition;
 
 
 class LineSegment {
@@ -344,7 +344,7 @@ protected:
     float       _center_x, _center_y;
 
 private:
-    SGCondition *_condition;
+    SGSharedPtr<SGCondition> _condition;
     float       _disp_factor;   // Multiply by to get numbers shown on scale.
     float       _scr_span;      // Working values for draw;
     int         _digits;
@@ -370,7 +370,7 @@ private:
     float   _pointer_width;
     float   _pointer_length;
 
-    SGCondition *_blink_condition;
+    SGSharedPtr<SGCondition> _blink_condition;
     double  _blink_interval;
     double  _blink_target;  // time for next blink state change
     bool    _blink_state;
@@ -583,7 +583,7 @@ public:
     virtual void draw();
 
 private:
-    SGCondition *_active_condition;  // stadiametric (true) or standby (false)
+    SGSharedPtr<SGCondition> _active_condition;  // stadiametric (true) or standby (false)
     Input   _diameter;               // inner/outer radius relation
     float   _bullet_size;
     float   _inner_radius;

@@ -22,7 +22,6 @@
 #  include <config.h>
 #endif
 
-#include <simgear/props/condition.hxx>
 #include "HUD.hxx"
 
 

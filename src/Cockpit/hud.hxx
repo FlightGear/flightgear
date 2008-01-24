@@ -367,7 +367,7 @@ extern fgLineList         HUD_LineList;
 extern fgLineList         HUD_StippleLineList;
 
 
-class instr_item {  // An Abstract Base Class (ABC)
+class instr_item : public SGReferenced {  // An Abstract Base Class (ABC)
 private:
     static UINT        instances;     // More than 64K instruments? Nah!
     static int         brightness;

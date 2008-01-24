@@ -24,7 +24,6 @@
 #endif
 
 #include <simgear/math/SGLimits.hxx>
-#include <simgear/props/condition.hxx>
 #include "HUD.hxx"
 
 

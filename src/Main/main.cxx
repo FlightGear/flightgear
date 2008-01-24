@@ -492,9 +492,6 @@ static void fgMainLoop( void ) {
     // Do any I/O channel work that might need to be done
     globals->get_io()->update( real_delta_time_sec );
 
-    // see if we need to load any deferred-load textures
-    globals->get_matlib()->load_next_deferred();
-
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( globals->get_soundmgr()->is_working() ) {

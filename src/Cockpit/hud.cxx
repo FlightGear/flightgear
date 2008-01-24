@@ -63,7 +63,7 @@ static HUD_Properties *HUDprop = 0;
 
 static char units[5];
 
-deque<instr_item *> HUD_deque;
+deque<SGSharedPtr<instr_item> > HUD_deque;
 
 fgTextList HUD_TextList;
 fgLineList HUD_LineList;
