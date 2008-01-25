@@ -33,6 +33,7 @@
 #include <osg/Matrixd>
 #include <osg/Viewport>
 #include <osg/Version>
+#include <osg/View>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgViewer/Viewer>
 #include <osgGA/MatrixManipulator>
@@ -56,9 +57,47 @@
 // fg_os implementation
 //
 
+using namespace osg;
+
 static osg::ref_ptr<osgViewer::Viewer> viewer;
 static osg::ref_ptr<osg::Camera> mainCamera;
 
+// Callback to prevent the GraphicsContext resized function from messing
+// with the projection matrix of the slave
+
+namespace
+{
+struct fgResizeCallback : public GraphicsContext::ResizedCallback
+{
+    fgResizeCallback(Camera* slaveCamera)
+        : mainSlaveCamera(slaveCamera)
+    {}
+    
+    virtual void resizedImplementation(GraphicsContext* gc, int x, int y,
+                                       int width, int height);
+    ref_ptr<Camera> mainSlaveCamera;
+};
+
+void fgResizeCallback::resizedImplementation(GraphicsContext* gc,
+                                             int x, int y,
+                                             int width, int height)
+{
+    View* view = mainSlaveCamera->getView();
+    View::Slave* slave = (view ?
+                          view->findSlaveForCamera(mainSlaveCamera.get()) : 0);
+    if (slave) {
+        Matrixd projOffset(slave->_projectionOffset);
+        gc->resizedImplementation(x, y, width, height);
+        // Restore projection offsets changed by
+        // GraphicsContext::resizedImplementation
+        slave->_projectionOffset = projOffset;
+    } else {
+        gc->resizedImplementation(x, y, width, height);
+    }
+    
+}
+
+}
 void fgOSOpenWindow(int w, int h, int bpp,
                     bool alpha, bool stencil, bool fullscreen)
 {
@@ -67,7 +106,6 @@ void fgOSOpenWindow(int w, int h, int bpp,
 
     viewer = new osgViewer::Viewer;
     viewer->setDatabasePager(FGScenery::getPagerSingleton());
-    // Avoid complications with fg's custom drawables.
     std::string mode;
     mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");
     if (mode == "AutomaticSelection")
@@ -196,6 +234,12 @@ void fgOSOpenWindow(int w, int h, int bpp,
     // of mouse events are somewhat bizzare.
     camera->setViewport(new osg::Viewport(0, 0, traits->width, traits->height));
     camera->setProjectionResizePolicy(rsp);
+    if (nCameras == 0) {
+        // Only one principal camera
+        gc->setResizedCallback(new fgResizeCallback(camera.get()));
+    }
+    // Why a slave? It seems to be the easiest way to assign cameras,
+    // for which we've created the graphics context ourselves, to the viewer.
     viewer->addSlave(camera.get());
 
     viewer->setCameraManipulator(globals->get_renderer()->getManipulator());

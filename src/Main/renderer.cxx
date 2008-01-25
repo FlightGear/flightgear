@@ -751,6 +751,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
       - current__view->getSGLocation()->get_cur_elev_m();
 
     float scene_nearplane, scene_farplane;
+    // XXX Given that the own airplane model is part of the scene
+    // graph, should this business be ripped out? The near plane is
+    // ignored by setCameraParameters.
     if ( agl > 10.0 ) {
         scene_nearplane = 10.0f;
         scene_farplane = 120000.0f;
@@ -758,7 +761,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
         scene_nearplane = groundlevel_nearplane->getDoubleValue();
         scene_farplane = 120000.0f;
     }
-    setNearFar( scene_nearplane, scene_farplane );
+    setCameraParameters(current__view->get_v_fov(),
+                        current__view->get_aspect_ratio(),
+                        scene_nearplane, scene_farplane);
 
 //     sgEnviro.startOfFrame(current__view->get_view_pos(), 
 //         current__view->get_world_up(),
@@ -846,50 +851,19 @@ FGRenderer::resize( int width, int height ) {
         viewmgr->get_view(i)->
           set_aspect_ratio((float)view_h / (float)width);
       }
-
-      setFOV( viewmgr->get_current_view()->get_h_fov(),
-              viewmgr->get_current_view()->get_v_fov() );
     }
 }
 
-
-// we need some static storage space for these values.  However, we
-// can't store it in a renderer class object because the functions
-// that manipulate these are static.  They are static so they can
-// interface to the display callback system.  There's probably a
-// better way, there has to be a better way, but I'm not seeing it
-// right now.
-static float fov_width = 55.0;
-static float fov_height = 42.0;
-static float fov_near = 1.0;
-static float fov_far = 1000.0;
-
-
-/** FlightGear code should use this routine to set the FOV rather than
- *  calling the ssg routine directly
- */
-void FGRenderer::setFOV( float w, float h ) {
-    fov_width = w;
-    fov_height = h;
+void FGRenderer::setCameraParameters(float vfov, float aspectRatio,
+                                     float near, float far)
+{
+    near = .1;
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
-    viewer->getCamera()->setProjectionMatrixAsPerspective(fov_height, 4.0/3.0,
-                                                          fov_near, fov_far);
+    viewer->getCamera()->setProjectionMatrixAsPerspective(vfov,
+                                                          1.0f / aspectRatio,
+                                                          near, far);
+    
 }
-
-
-/** FlightGear code should use this routine to set the Near/Far clip
- *  planes rather than calling the ssg routine directly
- */
-void FGRenderer::setNearFar( float n, float f ) {
-// OSGFIXME: we have currently too much z-buffer fights
-n = 0.1;
-    fov_near = n;
-    fov_far = f;
-    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
-    viewer->getCamera()->setProjectionMatrixAsPerspective(fov_height, 4.0/3.0,
-                                                          fov_near, fov_far);
-}
-
 bool
 FGRenderer::pick( unsigned x, unsigned y,
                   std::vector<SGSceneryPick>& pickList,

@@ -40,18 +40,10 @@ public:
     static void update( bool refresh_camera_settings );
     inline static void update() { update( true ); }
 
-
-    /** FlightGear code should use this routine to set the FOV rather
-     *  than calling the ssg routine directly
+    /** Set all the camera parameters at once. aspectRatio is height / width.
      */
-    static void setFOV( float w, float h );
-
-
-    /** FlightGear code should use this routine to set the Near/Far
-     *  clip planes rather than calling the ssg routine directly
-     */
-    static void setNearFar( float n, float f );
-
+    static void setCameraParameters(float vfov, float aspectRatio,
+                                    float near, float far);
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
     static bool pick( unsigned x, unsigned y,
