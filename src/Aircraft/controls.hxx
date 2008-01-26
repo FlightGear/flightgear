@@ -43,7 +43,7 @@ public:
 
     enum {
 	ALL_ENGINES = -1,
-	MAX_ENGINES = 10
+	MAX_ENGINES = 12
     };
 
     enum {
