@@ -43,7 +43,7 @@ public:
     /** Set all the camera parameters at once. aspectRatio is height / width.
      */
     static void setCameraParameters(float vfov, float aspectRatio,
-                                    float near, float far);
+                                    float zNear, float zFar);
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
     static bool pick( unsigned x, unsigned y,
