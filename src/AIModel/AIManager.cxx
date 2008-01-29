@@ -155,6 +155,8 @@ FGAIManager::update(double dt) {
             props->setIntValue("id", -1);
             props->setBoolValue("radar/in-range", false);
             props->setIntValue("refuel/tanker", false);
+            props->setStringValue("sim/multiplay/chat", "");
+            props->setStringValue("sim/multiplay/transmission-freq-hz", "");
 
             ai_list_itr = ai_list.erase(ai_list_itr);
         } else {
