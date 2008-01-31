@@ -60,7 +60,8 @@ enum tower_callback_type {
 	USER_REPORT_3_MILE_FINAL = 5,
 	USER_REPORT_DOWNWIND = 6,
 	USER_REPORT_RWY_VACATED = 7,
-	USER_REPORT_GOING_AROUND = 8
+	USER_REPORT_GOING_AROUND = 8,
+	USER_REQUEST_TAKE_OFF = 9
 };
 
 // TODO - need some differentiation of IFR and VFR traffic in order to give the former priority.
@@ -87,6 +88,7 @@ public:
 	bool clearedToTakeOff;
 	// ought to add time cleared to depart so we can nag if necessary
 	bool holdShortReported;
+	bool lineUpReported;
 	bool downwindReported;
 	bool longFinalReported;
 	bool longFinalAcknowledged;
@@ -98,6 +100,8 @@ public:
 	bool instructedToGoAround;	// set true if plane told by tower to go around.
 	bool onRwy;		// is physically on the runway
 	bool nextOnRwy;		// currently projected by tower to be the next on the runway
+	bool gearWasUp;          // Tell to ATC about gear
+	bool gearUpReported;     // Tell to pilot about landing gear
 	
 	bool vfrArrivalReported;
 	bool vfrArrivalAcknowledged;
@@ -139,6 +143,7 @@ public:
 	void VFRArrivalContact(const PlaneRec& plane, FGAIPlane* requestee, const LandingType& lt = AIP_LT_UNKNOWN);
 	
 	void RequestDepartureClearance(const string& ID);
+	void RequestTakeOffClearance(const string& ID);
 	void ReportFinal(const string& ID);
 	void ReportLongFinal(const string& ID);
 	void ReportOuterMarker(const string& ID);
@@ -177,9 +182,11 @@ public:
 	bool GetBaseConstraint(double& bpos);
 	
 	string GenText(const string& m, int c);
+	string GetWeather();
+	string GetATISID();
 
 private:
-	FGATCMgr* ATCmgr;	
+	FGATCMgr* ATCmgr;
 	// This is purely for synactic convienience to avoid writing globals->get_ATC_mgr()-> all through the code!
 	
 	// Respond to a transmission
@@ -213,7 +220,7 @@ private:
 	bool OnActiveRunway(const Point3D& pt);
 	
 	// Figure out if a given position lies on a runway or not
-	bool OnAnyRunway(const Point3D& pt);
+	bool OnAnyRunway(const Point3D& pt, bool onGround);
 	
 	// Calculate the eta of a plane to the threshold.
 	// For ground traffic this is the fastest they can get there.
@@ -255,6 +262,7 @@ private:
 	RunwayDetails rwy;	// Assumed to be the active one for now.
 	bool rwyOccupied;	// Active runway occupied flag.  For now we'll disregard land-and-hold-short operations.
 	FGATCAlignedProjection ortho;	// Orthogonal mapping of the local area with the active runway threshold at the origin
+	FGATCAlignedProjection ortho_temp;	// Ortho for any runway (needed to get plane position in airport)
 	
 	// Figure out which runways are active.
 	// For now we'll just be simple and do one active runway - eventually this will get much more complex
@@ -319,6 +327,8 @@ private:
 	
 	// Add to vacated list only if not already present
 	void AddToVacatedList(TowerPlaneRec* t);
+	
+	void AddToHoldingList(TowerPlaneRec* t);
 
 	// Ground can be separate or handled by tower in real life.
 	// In the program we will always use a separate FGGround class, but we need to know
