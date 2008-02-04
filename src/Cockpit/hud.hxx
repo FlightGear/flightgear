@@ -38,6 +38,10 @@
 #  include <windows.h>
 #endif
 
+#ifdef __CYGWIN__
+#include <ieeefp.h>
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 

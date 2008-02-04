@@ -32,6 +32,13 @@
  * TODO
  * - NSC & mil. color codes
  */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
 
 #include <simgear/math/sg_random.h>
 #include <simgear/timing/sg_time.hxx>

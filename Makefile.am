@@ -19,7 +19,7 @@ EXTRA_DIST = \
 	Thanks
 
 dist-hook:
-	(cd $(top_srcdir); $(HOME)/Projects/FlightGear/admin/am2dsp.pl)
+	(cd $(top_srcdir); $(HOME)/src/FlightGear-0.9/admin/am2dsp.pl)
 	(cd $(top_srcdir); tar --exclude docs-mini/CVS --exclude hints/CVS \
 		-cf - docs-mini ) | (cd $(distdir); tar xvf -)
 	rm -rf `find $(distdir)/projects -name CVS`

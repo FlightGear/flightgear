@@ -683,6 +683,8 @@ AC_CONFIG_FILES([ \
 	tests/Makefile \
 	utils/Makefile \
 	utils/GPSsmooth/Makefile \
+	utils/fgadmin/Makefile
+	utils/fgadmin/src/Makefile \
 	utils/js_server/Makefile \
 	utils/Modeller/Makefile \
 	utils/TerraSync/Makefile \

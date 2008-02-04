@@ -1189,6 +1189,16 @@ fgOptRunway( const char *arg )
     return FG_OPTIONS_OK;
 }
 
+static int
+fgOptParking( const char *arg )
+{
+    cerr << "Processing argument " << arg << endl;
+    fgSetString("/sim/presets/parking", arg );
+    fgSetBool  ("/sim/presets/parking-requested", true );
+    return FG_OPTIONS_OK;
+}
+
+
 static map<string,size_t> fgOptionMap;
 
 /*
@@ -1395,6 +1405,7 @@ struct OptionDesc {
     {"min-status",                   true,  OPTION_STRING,  "/sim/aircraft-min-status", false, "all", 0 },
     {"livery",                       true,  OPTION_FUNC,   "", false, "", fgOptLivery },
     {"ai-scenario",                  true,  OPTION_FUNC,   "", false, "", fgOptScenario },
+    {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParking  },
     {0}
 };
 

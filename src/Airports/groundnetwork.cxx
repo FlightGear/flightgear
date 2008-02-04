@@ -791,7 +791,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
   //closest = current;
   
   previousInstruction = current->getSpeedAdjustment();
-  double mindist = HUGE;
+  double mindist = HUGE_VAL;
   if (activeTraffic.size()) 
     {
       double course, dist, bearing, minbearing;
