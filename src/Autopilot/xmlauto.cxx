@@ -640,6 +640,19 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node)
             name = cval;
         } else if ( cname == "debug" ) {
             debug = child->getBoolValue();
+        } else if ( cname == "enable" ) {
+            SGPropertyNode *prop = child->getChild( "prop" );
+            if ( prop != NULL ) {
+                enable_prop = fgGetNode( prop->getStringValue(), true );
+            }
+            SGPropertyNode *val = child->getChild( "value" );
+            if ( val != NULL ) {
+                enable_value = val->getStringValue();
+            }
+            SGPropertyNode *pass = child->getChild( "honor-passive" );
+            if ( pass != NULL ) {
+                honor_passive = pass->getBoolValue();
+            }
         } else if ( cname == "type" ) {
             if ( cval == "exponential" ) {
                 filterType = exponential;
@@ -670,10 +683,23 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node)
 
 void FGDigitalFilter::update(double dt)
 {
-    if ( input_prop != NULL ) {
+    if ( input_prop != NULL && 
+         enable_prop != NULL && 
+         enable_prop->getStringValue() == enable_value) {
         input.push_front(input_prop->getDoubleValue());
         input.resize(samples + 1, 0.0);
-        // no sense if there isn't an input :-)
+        if ( !enabled ) {
+            // first time being enabled, initialize output to the
+            // value of the output property to avoid bumping.
+            output.push_front(output_list[0]->getDoubleValue());
+            output.resize(1);
+        }
+
+        enabled = true;
+    } else if (enable_prop == NULL &&
+               input_prop != NULL) {
+        input.push_front(input_prop->getDoubleValue());
+        input.resize(samples + 1, 0.0);
         enabled = true;
     } else {
         enabled = false;
@@ -798,7 +824,6 @@ void FGXMLAutopilot::init() {
 void FGXMLAutopilot::reinit() {
     components.clear();
     init();
-    build();
 }
 
 
