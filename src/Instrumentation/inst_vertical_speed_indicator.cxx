@@ -131,10 +131,12 @@ static double altitude_data[][2] = {
 
 
 InstVerticalSpeedIndicator::InstVerticalSpeedIndicator ( SGPropertyNode *node ) :
+                            _name(node->getStringValue("name", "inst-vertical-speed-indicator")),
+                            _num(node->getIntValue("number", 0)),
                             _internal_pressure_inhg( SEA_LEVEL_INHG ),
-			    _internal_sea_inhg( SEA_LEVEL_INHG ),
-	                    _speed_ft_per_s( 0 ),
-	                    _pressure_table(new SGInterpTable),
+                            _internal_sea_inhg( SEA_LEVEL_INHG ),
+                            _speed_ft_per_s( 0 ),
+                            _pressure_table(new SGInterpTable),
                             _altitude_table(new SGInterpTable)
 {
     int i;
@@ -143,22 +145,6 @@ InstVerticalSpeedIndicator::InstVerticalSpeedIndicator ( SGPropertyNode *node ) 
 
     for ( i = 0; altitude_data[i][0] != -1; i++)
         _altitude_table->addEntry( altitude_data[i][0], altitude_data[i][1] );
-
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in inst-vertical-speed-indicator config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
 }
 
 
@@ -171,8 +157,10 @@ InstVerticalSpeedIndicator::~InstVerticalSpeedIndicator ()
 
 void InstVerticalSpeedIndicator::init ()
 {
+    SGPropertyNode *node = fgGetNode("/instrumentation", true)->getChild(_name, _num, true);
+
     _serviceable_node =
-        fgGetNode("/instrumentation/inst-vertical-speed-indicator/serviceable", true);
+        node->getNode("serviceable", true);
     _freeze_node =
         fgGetNode("/sim/freeze/master", true);
 
@@ -189,11 +177,9 @@ void InstVerticalSpeedIndicator::init ()
     _speed_up_node =
         fgGetNode("/sim/speed-up", true);
     _speed_node =
-        fgGetNode("/instrumentation/inst-vertical-speed-indicator/indicated-speed-fps",
-                  true);
+        node->getNode("indicated-speed-fps", true);
     _speed_min_node =
-        fgGetNode("/instrumentation/inst-vertical-speed-indicator/indicated-speed-fpm",
-                  true);
+        node->getNode("indicated-speed-fpm", true);
 
     // Initialize at ambient pressure
     _internal_pressure_inhg = _pressure_node->getDoubleValue();

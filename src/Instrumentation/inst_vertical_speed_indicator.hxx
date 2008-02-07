@@ -62,13 +62,13 @@ public:
 
 private:
 
+    string _name;
+    int _num;
+
     double _internal_pressure_inhg;
     double _internal_sea_inhg;
 
     double _speed_ft_per_s;
-
-    string name;
-    int num;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _freeze_node;
