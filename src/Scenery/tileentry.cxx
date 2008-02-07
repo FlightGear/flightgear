@@ -266,6 +266,9 @@ bool FGTileEntry::obj_load( const string& path,
 {
     bool use_random_objects =
         fgGetBool("/sim/rendering/random-objects", true);
+        
+    bool use_random_vegetation = 
+        fgGetBool("/sim/rendering/random-vegetation", true);
 
     // try loading binary format
     osg::ref_ptr<SGReaderWriterBTGOptions> options
@@ -273,6 +276,7 @@ bool FGTileEntry::obj_load( const string& path,
     options->setMatlib(globals->get_matlib());
     options->setCalcLights(is_base);
     options->setUseRandomObjects(use_random_objects);
+    options->setUseRandomVegetation(use_random_vegetation);
     osg::Node* node = osgDB::readNodeFile(path, options.get());
     if (node)
       geometry->addChild(node);
