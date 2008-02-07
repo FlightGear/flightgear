@@ -2635,7 +2635,7 @@ string FGTower::GetWeather() {
 	// wind
 	double hdg = wind_from_hdg->getDoubleValue();
 	double speed = wind_speed_knots->getDoubleValue();
-	if (speed==0)
+	if (speed < 1)
 		msg << "wind calm";
 	else
 		msg << "wind " << int(hdg) << " degrees at " << int(speed) << " knots";
