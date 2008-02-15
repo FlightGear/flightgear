@@ -1614,7 +1614,8 @@ bool fgInitSubsystems() {
     SGPath mpath( globals->get_fg_root() );
     mpath.append( "materials.xml" );
     string season = fgGetString("/sim/startup/season", "summer");
-    if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(), season.c_str()) ) {
+    if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(), season.c_str(),
+            globals->get_props()) ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Error loading material lib!" );
         exit(-1);
     }
