@@ -534,6 +534,7 @@ case "${host}" in
         AC_CHECK_LIB(osgUtild,osgUtilGetVersion)
         AC_CHECK_LIB(osgDBd,osgDBGetVersion)
         AC_CHECK_LIB(osgSimd,osgSimGetVersion)
+        AC_CHECK_LIB(osgParticled,osgParticleGetVersion)
         AC_CHECK_LIB(osgd,osgGetVersion)
         AC_CHECK_LIB(OpenThreadsd,OpenThreadsGetVersion)
     else
@@ -544,6 +545,7 @@ case "${host}" in
         AC_CHECK_FRAMEWORK(osgUtil, [#include <osgUtil/Version>])
         AC_CHECK_FRAMEWORK(osgDB, [#include <osgDB/Version>])
         AC_CHECK_FRAMEWORK(osgSim, [#include <osgSim/Version>])
+        AC_CHECK_FRAMEWORK(osgParticle, [#include <osgParticle/Version>])
         AC_CHECK_FRAMEWORK(osg, [#include <osg/Version>])
         AC_CHECK_FRAMEWORK(OpenThreads, [#include <OpenThreads/Version>])
     fi
@@ -558,6 +560,7 @@ case "${host}" in
         AC_CHECK_LIB(osgGAd,osgGAGetVersion)
         AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
         AC_CHECK_LIB(osgSimd,osgSimGetVersion)
+        AC_CHECK_LIB(osgParticled,osgParticleGetVersion)
         LIBS="$LIBS -losgFXd"
     else
         AC_CHECK_LIB(OpenThreads,OpenThreadsGetVersion)
@@ -568,6 +571,7 @@ case "${host}" in
         AC_CHECK_LIB(osgGA,osgGAGetVersion)
         AC_CHECK_LIB(osgViewer,osgViewerGetVersion)
         AC_CHECK_LIB(osgSim,osgSimGetVersion)
+        AC_CHECK_LIB(osgParticle,osgParticleGetVersion)
         LIBS="$LIBS -losgFX"
     fi
     ;;

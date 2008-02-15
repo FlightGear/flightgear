@@ -62,6 +62,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/model/particles.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
 
@@ -1632,6 +1633,8 @@ bool fgInitSubsystems() {
         SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
         exit(-1);
     }
+
+    globals->get_scenery()->get_scene_graph()->addChild(SGParticles::getCommonRoot());
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the flight model subsystem.
