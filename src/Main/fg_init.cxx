@@ -1634,7 +1634,8 @@ bool fgInitSubsystems() {
         exit(-1);
     }
 
-    globals->get_scenery()->get_scene_graph()->addChild(SGParticles::getCommonRoot());
+    globals->get_scenery()->get_scene_graph()
+        ->addChild(simgear::Particles::getCommonRoot());
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the flight model subsystem.
