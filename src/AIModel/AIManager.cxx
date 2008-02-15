@@ -33,6 +33,7 @@
 #include "AIStatic.hxx"
 #include "AIMultiplayer.hxx"
 #include "AITanker.hxx"
+#include "AIWingman.hxx"
 
 #include <simgear/math/sg_geodesy.hxx>
 
@@ -73,6 +74,7 @@ FGAIManager::init() {
     user_heading_node   = fgGetNode("/orientation/heading-deg", true);
     user_pitch_node     = fgGetNode("/orientation/pitch-deg", true);
     user_yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
+    user_roll_node      = fgGetNode("/orientation/roll-deg", true);
     user_speed_node     = fgGetNode("/velocities/uBody-fps", true);
 }
 
@@ -155,8 +157,6 @@ FGAIManager::update(double dt) {
             props->setIntValue("id", -1);
             props->setBoolValue("radar/in-range", false);
             props->setIntValue("refuel/tanker", false);
-            props->setStringValue("sim/multiplay/chat", "");
-            props->setStringValue("sim/multiplay/transmission-freq-hz", "");
 
             ai_list_itr = ai_list.erase(ai_list_itr);
         } else {
@@ -240,6 +240,7 @@ FGAIManager::fetchUserState( void ) {
     user_pitch     = user_pitch_node->getDoubleValue();
     user_yaw       = user_yaw_node->getDoubleValue();
     user_speed     = user_speed_node->getDoubleValue() * 0.592484;
+    user_roll      = user_roll_node->getDoubleValue();
     wind_from_east = wind_from_east_node->getDoubleValue();
     wind_from_north = wind_from_north_node->getDoubleValue();
 }
@@ -280,6 +281,12 @@ FGAIManager::processScenario( const string &filename ) {
 	    FGAITanker* tanker = new FGAITanker;
             tanker->readFromScenario(scEntry);
             attach(tanker);
+
+        } else if (type == "wingman") {
+            FGAIWingman* wingman = new FGAIWingman;
+            wingman->readFromScenario(scEntry);
+            attach(wingman);
+
     } else if (type == "aircraft") {
             FGAIAircraft* aircraft = new FGAIAircraft;
             aircraft->readFromScenario(scEntry);

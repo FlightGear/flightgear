@@ -80,6 +80,7 @@ public:
     inline double get_user_speed() const {return user_speed; }
     inline double get_wind_from_east() const {return wind_from_east; }
     inline double get_wind_from_north() const {return wind_from_north; }
+    inline double get_user_roll() const { return user_roll; }
 
     int getNumAiObjects(void) const;
 
@@ -106,6 +107,7 @@ private:
     SGPropertyNode_ptr user_heading_node;
     SGPropertyNode_ptr user_pitch_node;
     SGPropertyNode_ptr user_yaw_node;
+    SGPropertyNode_ptr user_roll_node;
     SGPropertyNode_ptr user_speed_node;
     SGPropertyNode_ptr wind_from_east_node;
     SGPropertyNode_ptr wind_from_north_node;
@@ -116,6 +118,7 @@ private:
     double user_heading;
     double user_pitch;
     double user_yaw;
+    double user_roll;
     double user_speed;
     double wind_from_east;
     double wind_from_north;

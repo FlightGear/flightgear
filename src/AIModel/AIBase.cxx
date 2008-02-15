@@ -138,6 +138,7 @@ void FGAIBase::update(double dt) {
 void FGAIBase::Transform() {
 
     if (!invisible) {
+        aip.setVisible(true);
         aip.setPosition(pos);
 
         if (no_roll)
@@ -145,6 +146,9 @@ void FGAIBase::Transform() {
         else
             aip.setOrientation(roll, pitch, hdg);
 
+        aip.update();
+    } else {
+        aip.setVisible(false);
         aip.update();
     }
 
@@ -435,15 +439,7 @@ SGVec3d FGAIBase::getCartPosAt(const SGVec3d& _off) const {
 }
 
 SGVec3d FGAIBase::getCartPos() const {
-    // Transform that one to the horizontal local coordinate system.
-    SGQuatd hlTrans = SGQuatd::fromLonLat(pos);
-
-    // and postrotate the orientation of the AIModel wrt the horizontal
-    // local frame
-    hlTrans *= SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
-
     SGVec3d cartPos = SGVec3d::fromGeod(pos);
-
     return cartPos;
 }
 
@@ -468,6 +464,12 @@ void FGAIBase::_setLongitude( double longitude ) {
 
 void FGAIBase::_setLatitude ( double latitude )  {
     pos.setLatitudeDeg(latitude);
+}
+
+void FGAIBase::_setUserPos(){
+    userpos.setLatitudeDeg(manager->get_user_latitude());
+    userpos.setLongitudeDeg(manager->get_user_longitude());
+    userpos.setElevationM(manager->get_user_altitude() * SG_FEET_TO_METER);
 }
 
 void FGAIBase::_setSubID( int s ) {
@@ -586,6 +588,18 @@ double FGAIBase::_getHeading() const {
     return hdg;
 }
 
+double  FGAIBase::_getXOffset() const {
+    return _x_offset;
+}
+
+double  FGAIBase::_getYOffset() const {
+    return _y_offset;
+}
+
+double  FGAIBase::_getZOffset() const {
+    return _z_offset;
+}
+
 const char* FGAIBase::_getPath() const {
     return model_path.c_str();
 }
@@ -605,7 +619,6 @@ const char* FGAIBase::_getCallsign() const {
 const char* FGAIBase::_getSubmodel() const {
     return _submodel.c_str();
 }
-
 
 void FGAIBase::CalculateMach() {
     // Calculate rho at altitude, using standard atmosphere

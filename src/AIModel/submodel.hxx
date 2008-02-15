@@ -117,9 +117,9 @@ private:
     float in[3];
     float out[3];
 
-    double Rx, Ry, Rz;
-    double Sx, Sy, Sz;
-    double Tx, Ty, Tz;
+    //double Rx, Ry, Rz;
+    //double Sx, Sy, Sz;
+    //double Tx, Ty, Tz;
 
     float cosRx, sinRx;
     float cosRy, sinRy;

@@ -44,7 +44,8 @@ class FGAIBase : public SGReferenced {
 
 public:
     enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
-                       otRocket, otStorm, otThermal, otStatic, otMultiplayer,
+                       otRocket, otStorm, otThermal, otStatic, otWingman,
+                       otMultiplayer,
                        MAX_OBJECTS };	// Needs to be last!!!
 
     FGAIBase(object_type ot);
@@ -73,6 +74,9 @@ public:
     void setXoffset( double x_offset );
     void setYoffset( double y_offset );
     void setZoffset( double z_offset );
+    void setPitchoffset( double x_offset );
+    void setRolloffset( double y_offset );
+    void setYawoffset( double z_offset );
     void setServiceable ( bool serviceable );
     void setDie( bool die );
     void setCollisionData( bool i, double lat, double lon, double elev );
@@ -93,10 +97,21 @@ public:
     double _getCartPosY() const;
     double _getCartPosZ() const;
 
+    double _x_offset;
+    double _y_offset;
+    double _z_offset;
+
+    double _pitch_offset;
+    double _roll_offset;
+    double _yaw_offset;
+
     string _path;
     string _callsign;
     string _submodel;
     string _name;
+
+    SGGeod userpos;
+
 
 protected:
 
@@ -189,6 +204,7 @@ public:
     void _setLongitude( double longitude );
     void _setLatitude ( double latitude );
     void _setSubID( int s );
+    void _setUserPos();
 
     double _getVS_fps() const;
     double _getAltitude() const;
@@ -215,7 +231,9 @@ public:
     double _getImpactPitch() const;
     double _getImpactRoll() const;
     double _getImpactSpeed() const;
-
+    double _getXOffset() const;
+    double _getYOffset() const;
+    double _getZOffset() const;
     //unsigned int _getCount() const;
 
     bool   _getServiceable() const;
@@ -310,7 +328,29 @@ inline void FGAIBase::setLatitude ( double latitude ) {
 inline void FGAIBase::setCallSign(const string& s) {
     _callsign = s;
 }
+inline void FGAIBase::setXoffset(double x) {
+    _x_offset = x;
+}
 
+inline void FGAIBase::setYoffset(double y) {
+    _y_offset = y;
+}
+
+inline void FGAIBase::setZoffset(double z) {
+    _z_offset = z;
+}
+
+inline void FGAIBase::setPitchoffset(double p) {
+    _pitch_offset = p;
+}
+
+inline void FGAIBase::setRolloffset(double r) {
+    _roll_offset = r;
+} 
+
+inline void FGAIBase::setYawoffset(double y) {
+    _yaw_offset = y;
+}
 
 inline void FGAIBase::setDie( bool die ) { delete_me = die; }
 
