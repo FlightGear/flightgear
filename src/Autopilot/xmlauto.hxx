@@ -111,6 +111,7 @@ private:
 
     // Configuration values
     double Kp;                  // proportional gain
+    SGPropertyNode_ptr Kp_prop;
 
     double alpha;               // low pass filter weighing factor (usually 0.1)
     double beta;                // process value weighing factor for
@@ -238,9 +239,15 @@ private:
     double Tf;            // Filter time [s]
     unsigned int samples; // Number of input samples to average
     double rateOfChange;  // The maximum allowable rate of change [1/s]
+    double gainFactor;
+    double output_min_clamp;
+    double output_max_clamp;
+    SGPropertyNode_ptr gain_prop;
+
     deque <double> output;
     deque <double> input;
-    enum filterTypes { exponential, doubleExponential, movingAverage, noiseSpike };
+    enum filterTypes { exponential, doubleExponential, movingAverage,
+                       noiseSpike, gain, reciprocal };
     filterTypes filterType;
 
     bool debug;

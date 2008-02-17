@@ -124,51 +124,71 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
                 i++;
             }
         } else if ( cname == "config" ) {
-            SGPropertyNode *prop;
+            SGPropertyNode *config;
 
-            prop = child->getChild( "Ts" );
-            if ( prop != NULL ) {
-                desiredTs = prop->getDoubleValue();
+            config = child->getChild( "Ts" );
+            if ( config != NULL ) {
+                desiredTs = config->getDoubleValue();
             }
             
-            prop = child->getChild( "Kp" );
-            if ( prop != NULL ) {
-                Kp = prop->getDoubleValue();
+            config = child->getChild( "Kp" );
+            if ( config != NULL ) {
+                SGPropertyNode *val = config->getChild( "value" );
+                if ( val != NULL ) {
+                    Kp = val->getDoubleValue();
+                }
+
+                SGPropertyNode *prop = config->getChild( "prop" );
+                if ( prop != NULL ) {
+                    Kp_prop = fgGetNode( prop->getStringValue(), true );
+                    if ( val != NULL ) {
+                        Kp_prop->setDoubleValue(Kp);
+                    }
+                }
+
+                // output deprecated usage warning
+                if (val == NULL && prop == NULL) {
+                    Kp = config->getDoubleValue();
+                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated Kp config. Please use <prop> and/or <value> tags." );
+                    if ( name.length() ) {
+                        SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+                    }
+                }
             }
 
-            prop = child->getChild( "beta" );
-            if ( prop != NULL ) {
-                beta = prop->getDoubleValue();
+            config = child->getChild( "beta" );
+            if ( config != NULL ) {
+                beta = config->getDoubleValue();
             }
 
-            prop = child->getChild( "alpha" );
-            if ( prop != NULL ) {
-                alpha = prop->getDoubleValue();
+            config = child->getChild( "alpha" );
+            if ( config != NULL ) {
+                alpha = config->getDoubleValue();
             }
 
-            prop = child->getChild( "gamma" );
-            if ( prop != NULL ) {
-                gamma = prop->getDoubleValue();
+            config = child->getChild( "gamma" );
+            if ( config != NULL ) {
+                gamma = config->getDoubleValue();
             }
 
-            prop = child->getChild( "Ti" );
-            if ( prop != NULL ) {
-                Ti = prop->getDoubleValue();
+            config = child->getChild( "Ti" );
+            if ( config != NULL ) {
+                Ti = config->getDoubleValue();
             }
 
-            prop = child->getChild( "Td" );
-            if ( prop != NULL ) {
-                Td = prop->getDoubleValue();
+            config = child->getChild( "Td" );
+            if ( config != NULL ) {
+                Td = config->getDoubleValue();
             }
 
-            prop = child->getChild( "u_min" );
-            if ( prop != NULL ) {
-                u_min = prop->getDoubleValue();
+            config = child->getChild( "u_min" );
+            if ( config != NULL ) {
+                u_min = config->getDoubleValue();
             }
 
-            prop = child->getChild( "u_max" );
-            if ( prop != NULL ) {
-                u_max = prop->getDoubleValue();
+            config = child->getChild( "u_max" );
+            if ( config != NULL ) {
+                u_max = config->getDoubleValue();
             }
         } else {
             SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
@@ -311,6 +331,9 @@ void FGPIDController::update( double dt ) {
 
         // Calculates the incremental output:
         if ( Ti > 0.0 ) {
+            if (Kp_prop != NULL) {
+                Kp = Kp_prop->getDoubleValue();
+            }
             delta_u_n = Kp * ( (ep_n - ep_n_1)
                                + ((Ts/Ti) * e_n)
                                + ((Td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
@@ -627,10 +650,15 @@ void FGPredictor::update( double dt ) {
 }
 
 
-FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node)
+FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node):
+    Tf( 1.0 ),
+    samples( 1 ),
+    rateOfChange( 1.0 ),
+    gainFactor( 1.0 ),
+    gain_prop( NULL ),
+    output_min_clamp( -std::numeric_limits<double>::max() ),
+    output_max_clamp( std::numeric_limits<double>::max() )
 {
-    samples = 1;
-
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
@@ -662,6 +690,10 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node)
                 filterType = movingAverage;
             } else if (cval == "noise-spike") {
                 filterType = noiseSpike;
+            } else if (cval == "gain") {
+                filterType = gain;
+            } else if (cval == "reciprocal") {
+                filterType = reciprocal;
             }
         } else if ( cname == "input" ) {
             input_prop = fgGetNode( child->getStringValue(), true );
@@ -671,6 +703,20 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node)
             samples = child->getIntValue();
         } else if ( cname == "max-rate-of-change" ) {
             rateOfChange = child->getDoubleValue();
+        } else if ( cname == "gain" ) {
+            SGPropertyNode *val = child->getChild( "value" );
+            if ( val != NULL ) {
+                gainFactor = val->getDoubleValue();
+            }
+            SGPropertyNode *prop = child->getChild( "prop" );
+            if ( prop != NULL ) {
+                gain_prop = fgGetNode( prop->getStringValue(), true );
+                gain_prop->setDoubleValue(gainFactor);
+            }
+        } else if ( cname == "u_min" ) {
+            output_min_clamp = child->getDoubleValue();
+        } else if ( cname == "u_max" ) {
+            output_max_clamp = child->getDoubleValue();
         } else if ( cname == "output" ) {
             SGPropertyNode *tmp = fgGetNode( child->getStringValue(), true );
             output_list.push_back( tmp );
@@ -683,11 +729,15 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node)
 
 void FGDigitalFilter::update(double dt)
 {
-    if ( input_prop != NULL && 
-         enable_prop != NULL && 
-         enable_prop->getStringValue() == enable_value) {
+    if ( (input_prop != NULL && 
+          enable_prop != NULL && 
+          enable_prop->getStringValue() == enable_value) ||
+         (enable_prop == NULL &&
+          input_prop != NULL) ) {
+
         input.push_front(input_prop->getDoubleValue());
         input.resize(samples + 1, 0.0);
+
         if ( !enabled ) {
             // first time being enabled, initialize output to the
             // value of the output property to avoid bumping.
@@ -695,11 +745,6 @@ void FGDigitalFilter::update(double dt)
             output.resize(1);
         }
 
-        enabled = true;
-    } else if (enable_prop == NULL &&
-               input_prop != NULL) {
-        input.push_front(input_prop->getDoubleValue());
-        input.resize(samples + 1, 0.0);
         enabled = true;
     } else {
         enabled = false;
@@ -718,11 +763,6 @@ void FGDigitalFilter::update(double dt)
             double alpha = 1 / ((Tf/dt) + 1);
             output.push_front(alpha * input[0] + 
                               (1 - alpha) * output[0]);
-            unsigned int i;
-            for ( i = 0; i < output_list.size(); ++i ) {
-                output_list[i]->setDoubleValue( output[0] );
-            }
-            output.resize(1);
         } 
         else if (filterType == doubleExponential)
         {
@@ -730,21 +770,11 @@ void FGDigitalFilter::update(double dt)
             output.push_front(alpha * alpha * input[0] + 
                               2 * (1 - alpha) * output[0] -
                               (1 - alpha) * (1 - alpha) * output[1]);
-            unsigned int i;
-            for ( i = 0; i < output_list.size(); ++i ) {
-                output_list[i]->setDoubleValue( output[0] );
-            }
-            output.resize(2);
         }
         else if (filterType == movingAverage)
         {
             output.push_front(output[0] + 
                               (input[0] - input.back()) / samples);
-            unsigned int i;
-            for ( i = 0; i < output_list.size(); ++i ) {
-                output_list[i]->setDoubleValue( output[0] );
-            }
-            output.resize(1);
         }
         else if (filterType == noiseSpike)
         {
@@ -762,13 +792,37 @@ void FGDigitalFilter::update(double dt)
             {
                 output.push_front(input[0]);
             }
-
-            unsigned int i;
-            for ( i = 0; i < output_list.size(); ++i ) {
-                output_list[i]->setDoubleValue( output[0] );
-            }
-            output.resize(1);
         }
+        else if (filterType == gain)
+        {
+            if (gain_prop != NULL) {
+                gainFactor = gain_prop->getDoubleValue();
+            }
+            output[0] = gainFactor * input[0];
+        }
+        else if (filterType == reciprocal)
+        {
+            if (gain_prop != NULL) {
+                gainFactor = gain_prop->getDoubleValue();
+            }
+            if (input[0] != 0.0) {
+                output[0] = gainFactor / input[0];
+            }
+        }
+
+        if (output[0] < output_min_clamp) {
+            output[0] = output_min_clamp;
+        }
+        else if (output[0] > output_max_clamp) {
+            output[0] = output_max_clamp;
+        }
+
+        unsigned int i;
+        for ( i = 0; i < output_list.size(); ++i ) {
+            output_list[i]->setDoubleValue( output[0] );
+        }
+        output.resize(1);
+
         if (debug)
         {
             cout << "input:" << input[0] 
@@ -1009,3 +1063,4 @@ void FGXMLAutopilot::update( double dt ) {
         components[i]->update( dt );
     }
 }
+
