@@ -1,34 +1,119 @@
-Four different types of digital low-pass filters can be configured inside the
-autopilot configuration file. The types of filter are:
+Six different types of digital filter can be configured inside the autopilot
+configuration file. There are four low-pass filter types and two gain filter
+types.
+
+The low-pass filter types are:
 
 * Exponential
 * Double exponential
 * Moving average
 * Noise spike filter
 
-Example:
+The gain filter types are:
+
+* gain
+* reciprocal
+
+Example 1:
 
   <filter>
     <name>pressure-rate-filter</name>
     <debug>false</debug>
     <type>double-exponential</type>
+    <enable>
+      <prop>/autopilot/locks/pressure-rate-filter</prop>
+      <value>true</value>
+    </enable>
     <input>/autopilot/internal/pressure-rate</input>
     <output>/autopilot/internal/filtered-pressure-rate</output>
     <filter-time>0.1</filter-time>
-   </filter>
+  </filter>
 
 This will filter the pressure-rate property. The output will be to a new
 property called filtered-pressure-rate. You can select any numerical property
 from the property tree. The input property will not be affected by the filter,
 it will stay the same as it would if no filter was configured.
 
+Example 2:
+
+  <filter>
+    <name>airspeed elevator-trim gain reciprocal filter</name>
+    <debug>false</debug>
+    <enable>
+      <prop>/autopilot/locks/airspeed-elevator-trim-gain</prop>
+      <value>true</value>
+    </enable>
+    <type>reciprocal</type>
+    <gain>
+      <prop>/autopilot/settings/elevator-trim-airspeed-reciprocal-gain</prop>
+      <value>7</value>
+    </gain>
+    <input>/velocities/airspeed-kt</input>
+    <output>/autopilot/internal/elevator-trim-gain</output>
+    <u_min>0.005</u_min>
+    <u_max>0.02</u_max>
+  </filter>
+
+This will use the /velocities/airspeed-kt property to produce a gain factor
+that reduces as airspeed increases.  At airspeeds up to 350kt the gain will
+be clamped to 0.02, at 700kt the gain will be 0.01 and at 1400kt the gain will
+be 0.005.  The gain will be clamped to 0.005 for airspeeds > 1400kt.
+
+The output from this filter could then be used to control the gain in a PID
+controller:
+
+  <pid-controller>
+    <name>Pitch hold</name>
+    <debug>false</debug>
+    <enable>
+      <prop>/autopilot/locks/pitch</prop>
+      <value>true</value>
+    </enable>
+    <input>
+      <prop>/orientation/pitch-deg</prop>
+    </input>
+    <reference>
+      <prop>/autopilot/settings/target-pitch-deg</prop>
+    </reference>
+    <output>
+      <prop>/autopilot/internal/target-elevator-trim-norm</prop>
+    </output>
+    <config>
+      <Ts>0.05</Ts>
+      <Kp>
+        <prop>/autopilot/internal/elevator-trim-gain</prop>
+        <value>0.02</value>
+      </Kp>
+      <beta>1.0</beta>
+      <alpha>0.1</alpha>
+      <gamma>0.0</gamma>
+      <Ti>2.0</Ti>
+      <Td>0.2</Td>
+      <u_min>-1.0</u_min>
+      <u_max>1.0</u_max>
+    </config>
+  </pid-controller>
+
+IMPORTANT NOTE: The <Kp> tag in PID controllers has been revised to operate in
+the same way as the <gain> elements in filters.  However, the original format
+of <Kp> will continue to function as before i.e. <Kp>0.02</Kp> will specify a
+fixed and unalterable gain factor, but a warning message will be output.
+
+The gain type filter is similar to the reciprocal filter except that the gain
+is applied as a simple factor to the input.
+-------------------------------------------------------------------------------
+Parameters
+
 <name> The name of the filter. Give it a sensible name!
 
 <debug> If this tag is set to true debugging info will be printed on the
 console.
 
+<enable> Encloses the <prop> and <value> tags which are used to enable or
+disable the filter.  Defaults to enabled if unspecified.
+
 <type> The type of filter. This can be exponential, double-exponential,
-moving-average or noise-spike.
+moving-average, noise-spike, gain or reciprocal.
 
 <input> The input property to be filtered. This should of course be a
 numerical property, filtering a text string or a boolean value does not make
@@ -36,16 +121,31 @@ sense.
 
 <output> The filtered value. You can make up any new property.
 
-These are the tags that are applicable to all filter types. The folowing tags
+<u_min> The minimum output value from the filter.  Defaults to -infinity.
+
+<u_max> The maximum output value from the filter.  Defaults to +infinity.
+
+These are the tags that are applicable to all filter types. The following tags
 are filter specific.
 
 <filter-time> This tag is only applicable for the exponential and
 double-exponential filter types. It controls the bandwidth of the filter. The
-bandwith in Hz of the filter is: 1/filter-time. So a low-pass filter with a
-bandwith of 10Hz would have a filter time of 1/10 = 0.1
+bandwidth in Hz of the filter is: 1/filter-time. So a low-pass filter with a
+bandwidth of 10Hz would have a filter time of 1/10 = 0.1
 
 <samples> This tag only makes sense for the moving-average filter. It says how
 many past samples to average.
 
 <max-rate-of-change> This tag is applicable for the noise-spike filter. Is
 says how much the value is allowed to change per second.
+
+<gain>  This, and it's enclosed <prop> and <value> tags, are only applicable to
+the gain and reciprocal filter types.  The <prop> tag specifies a property node
+to hold the gain value and the <value> tag specifies an initial default value.
+The gain defaults to 1.0 if unspecified.
+
+The output from the gain filter type is: input * gain.
+The output from the reciprocal filter type is: gain / input.
+
+The gain can be changed during run-time by updating the value in the property
+node.
