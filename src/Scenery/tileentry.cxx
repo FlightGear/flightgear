@@ -99,7 +99,7 @@ namespace
 class TileCullCallback : public osg::NodeCallback
 {
 public:
-    TileCullCallback() : _timeStamp(DBL_MAX) {}
+    TileCullCallback() : _timeStamp(0) {}
     TileCullCallback(const TileCullCallback& tc, const osg::CopyOp& copyOp) :
         NodeCallback(tc, copyOp), _timeStamp(tc._timeStamp)
     {

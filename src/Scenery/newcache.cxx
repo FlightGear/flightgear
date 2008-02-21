@@ -102,7 +102,7 @@ long FGNewCache::get_oldest_tile() {
     // we need to free the furthest entry
     long min_index = -1;
     double timestamp = 0.0;
-    double max_time = 0;
+    double min_time = DBL_MAX;
 
     tile_map_iterator current = tile_cache.begin();
     tile_map_iterator end = tile_cache.end();
@@ -113,8 +113,9 @@ long FGNewCache::get_oldest_tile() {
         if ( e->is_loaded() ) {
             
             timestamp = e->get_timestamp();
-            if ( timestamp > max_time ) {
-                max_time = timestamp;
+            if ( timestamp < min_time ) {
+                min_time = timestamp;
+                min_index = index;
             }
 
         } else {
@@ -124,7 +125,7 @@ long FGNewCache::get_oldest_tile() {
     }
 
     SG_LOG( SG_TERRAIN, SG_DEBUG, "    index = " << min_index );
-    SG_LOG( SG_TERRAIN, SG_DEBUG, "    max_time = " << max_time );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "    min_time = " << min_time );
 
     return min_index;
 }
@@ -182,6 +183,8 @@ void FGNewCache::clear_cache() {
 bool FGNewCache::insert_tile( FGTileEntry *e ) {
     // register tile in the cache
     long tile_index = e->get_tile_bucket().gen_index();
+    // not needed if timestamps are updated in cull-callback
+    // e->set_timestamp(globals->get_sim_time_sec());
     tile_cache[tile_index] = e;
 
     return true;
