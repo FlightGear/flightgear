@@ -96,6 +96,8 @@ public:
 
 namespace
 {
+// Update the timestamp on a tile whenever it is in view.
+
 class TileCullCallback : public osg::NodeCallback
 {
 public:

@@ -104,8 +104,6 @@ public:
     inline FGTileEntry *get_tile( const long tile_index ) const {
 	const_tile_map_iterator it = tile_cache.find( tile_index );
 	if ( it != tile_cache.end() ) {
-	    // not needed if timestamps are updated in cull-callback
-	    // it->second->set_timestamp(globals->get_sim_time_sec());
 	    return it->second;
 	} else {
 	    return NULL;

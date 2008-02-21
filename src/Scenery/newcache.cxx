@@ -183,8 +183,6 @@ void FGNewCache::clear_cache() {
 bool FGNewCache::insert_tile( FGTileEntry *e ) {
     // register tile in the cache
     long tile_index = e->get_tile_bucket().gen_index();
-    // not needed if timestamps are updated in cull-callback
-    // e->set_timestamp(globals->get_sim_time_sec());
     tile_cache[tile_index] = e;
 
     return true;
