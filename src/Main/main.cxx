@@ -180,9 +180,6 @@ void fgUpdateTimeDepCalcs() {
     globals->get_model_mgr()->update(delta_time_sec);
     globals->get_aircraft_model()->update(delta_time_sec);
 
-    // update the view angle
-    globals->get_viewmgr()->update(delta_time_sec);
-
     // Update solar system
     globals->get_ephem()->update( globals->get_time_params()->getMjd(),
                                   globals->get_time_params()->getLst(),
@@ -343,8 +340,6 @@ static void fgMainLoop( void ) {
 
     SGTime *t = globals->get_time_params();
 
-    globals->get_event_mgr()->update(delta_time_sec);
-
     SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
     SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
 
@@ -494,9 +489,6 @@ static void fgMainLoop( void ) {
             "Elapsed time is zero ... we're zinging" );
     }
 
-    // Do any I/O channel work that might need to be done
-    globals->get_io()->update( real_delta_time_sec );
-
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( globals->get_soundmgr()->is_working() ) {
@@ -544,6 +536,15 @@ static void fgMainLoop( void ) {
                 view_location->set_cur_elev_m( -9999.0 );
         }
     }
+
+    // run Nasal's settimer() loops right before the view manager
+    globals->get_event_mgr()->update(delta_time_sec);
+
+    // update the view angle as late as possible, but before sound calculations
+    globals->get_viewmgr()->update(delta_time_sec);
+
+    // Do any I/O channel work that might need to be done (must come after viewmgr)
+    globals->get_io()->update(real_delta_time_sec);
 
 #ifdef ENABLE_AUDIO_SUPPORT
     // Right now we make a simplifying assumption that the primary
