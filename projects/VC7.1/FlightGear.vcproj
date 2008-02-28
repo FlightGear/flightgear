@@ -106,11 +106,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg.lib net.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib pthreadVC2.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib OpenThreads.lib libjpeg.lib"
+				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg.lib net.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib pthreadVC2.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib osgParticle.lib OpenThreads.lib libjpeg.lib"
 				OutputFile=".\Release/fgfs.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="..\..\..\install\OpenSceneGraph\lib;..\..\..\install\OpenThreads\lib;..\..\..\plib;..\..\..\SimGear\Release;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\lib\win32;..\..\..\3rdParty\lib"
+				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\install\OpenThreads\lib;..\..\..\plib;..\..\..\SimGear\Release;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\lib\win32;..\..\..\3rdParty\lib"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="FALSE"
 				ProgramDatabaseFile=".\Release/FlightGear.pdb"
@@ -2731,6 +2731,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\AIModel\AIThermal.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\AIWingman.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\AIWingman.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\AIModel\performancedata.cxx">
