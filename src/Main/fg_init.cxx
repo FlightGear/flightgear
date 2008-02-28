@@ -824,6 +824,59 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     return true;
 }
 
+// Set current_options lon/lat given an airport id and parkig position name
+static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& parkpos ) {
+    if ( id.empty() )
+        return false;
+
+    // can't see an easy way around this const_cast at the moment
+    FGAirport* apt = const_cast<FGAirport*>(fgFindAirportID(id));
+    if (!apt) {
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Failed to find airport " << id );
+        return false;
+    }
+    FGAirportDynamics* dcs = apt->getDynamics();
+    if (!dcs) {
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Failed to find parking position " << parkpos <<
+                " at airport " << id );
+        return false;
+    }
+    
+    int park_index = dcs->getNrOfParkings() - 1;
+    while (park_index >= 0 && dcs->getParkingName(park_index) != parkpos) park_index--;
+    if (park_index < 0) {
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Failed to find parking position " << parkpos <<
+                " at airport " << id );
+        return false;
+    }
+    FGParking* parking = dcs->getParking(park_index);
+    
+    double lat = parking->getLatitude();
+    double lon = parking->getLongitude();
+    double hdg = parking->getHeading();
+    
+    // presets
+    fgSetDouble("/sim/presets/longitude-deg",  lon );
+    fgSetDouble("/sim/presets/latitude-deg",  lat );
+    fgSetDouble("/sim/presets/heading-deg", hdg );
+    
+    // other code depends on the actual values being set ...
+    fgSetDouble("/position/longitude-deg",  lon );
+    fgSetDouble("/position/latitude-deg",  lat );
+    fgSetDouble("/orientation/heading-deg", hdg );
+    
+    SG_LOG( SG_GENERAL, SG_INFO,
+    "Position for " << id << " is ("
+    << lon << ", "
+    << lat << ") new heading is "
+    << hdg );
+    
+    return true;
+}
+
 
 // Set current_options lon/lat given an airport id and runway number
 static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bool rwy_req ) {
@@ -1220,6 +1273,15 @@ bool fgInitPosition() {
 
     if (hdg > 9990.0)
         hdg = fgGetDouble("/environment/config/boundary/entry/wind-from-heading-deg", 270);
+
+    if ( !set_pos && !apt.empty() && !parkpos.empty() ) {
+        // An airport + parking position is requested
+        if ( fgSetPosFromAirportIDandParkpos( apt, parkpos ) ) {
+            // set tower position
+            fgSetString("/sim/tower/airport-id",  apt.c_str());
+            set_pos = true;
+        }
+    }
 
     if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
         // An airport + runway is requested
