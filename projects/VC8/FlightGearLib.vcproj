@@ -105,7 +105,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../;$(ProgramFiles)/OpenThreads/include;$(ProgramFiles)/OpenSceneGraph/include;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
+				AdditionalIncludeDirectories="../../../;&quot;$(ProgramFiles)/OpenThreads/include&quot;;&quot;$(ProgramFiles)/OpenSceneGraph/include&quot;;../../../Simgear;../../src;../../src/include;../../src/input;../../src/FDM/JSBSim;../../../3rdparty/include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX"
 				StringPooling="true"
 				MinimalRebuild="false"
@@ -873,11 +873,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\cockpit\hud.hxx"
+				RelativePath="..\..\src\Instrumentation\HUD\HUD.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\Instrumentation\HUD\HUD.hxx"
+				RelativePath="..\..\src\cockpit\hud.hxx"
 				>
 			</File>
 			<File
@@ -2447,10 +2447,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\scenery\FGTileLoader.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\fdm\jsbsim\initialization\FGTrim.cpp"
 				>
 			</File>
@@ -3128,6 +3124,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\scenery\scenery.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Scenery\SceneryPager.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Scenery\SceneryPager.hxx"
 				>
 			</File>
 			<File
