@@ -37,7 +37,8 @@ MARGIN = 10 # px
 GAP = 10    # px
 
 
-import Blender, math, random
+import Blender
+from random import randint as rand
 
 
 class Abort(Exception):
@@ -67,7 +68,7 @@ def pack():
 
 
 	boxes = []
-	meshes = {}
+	unique_meshes = {}
 
 	BIG = 1<<30
 	Blender.Window.DrawProgressBar(0.0, "packing")
@@ -78,10 +79,10 @@ def pack():
 		mesh = o.getData(mesh = 1)
 		if not mesh.faceUV:
 			continue
-		if mesh.name in meshes:
+		if mesh.name in unique_meshes:
 			#print "dropping duplicate mesh", mesh.name, "of object", o.name
 			continue
-		meshes[mesh.name] = True
+		unique_meshes[mesh.name] = True
 
 		print "\tobject '%s'" % o.name
 		xmin = ymin = BIG
@@ -107,8 +108,11 @@ def pack():
 	yscale = (1.0 - 2.0 * margin[1]) / boxmax
 
 	Blender.Window.DrawProgressBar(0.2, "Erasing texture")
-	drawrect(0, 0, 1, 1) # erase texture
-	for box in boxes:
+	image.reload()
+	#drawrect(0, 0, 1, 1) # erase texture
+
+	for i, box in enumerate(boxes):
+		Blender.Window.DrawProgressBar(i * 0.8 / len(boxes), "Drawing")
 		xmin = ymin = BIG
 		xmax = ymax = -BIG
 		for f in box[6].faces:
@@ -121,8 +125,7 @@ def pack():
 				ymin = min(ymin, p[1])
 				ymax = max(ymax, p[1])
 
-		drawrect(xmin, ymin, xmax, ymax, (random.randint(128, 255), random.randint(128, 255),
-				random.randint(128, 255), 255))
+		drawrect(xmin, ymin, xmax, ymax, (rand(128, 255), rand(128, 255), rand(128, 255), 255))
 		box[6].update()
 
 	Blender.Window.RedrawAll()
