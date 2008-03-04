@@ -24,31 +24,32 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * @par CVS
- *   $Id$
  */
 
 #ifndef _PRECIPITATION_MGR_HXX
 #define _PRECIPITATION_MGR_HXX
 
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/environment/precipitation.hxx>
 
-#include "precipitation_mgr.hxx"
-
-
-class FGPrecipitationMgr {
+class FGPrecipitationMgr : public SGSubsystem
+{
 private:
-	osg::Group *group;
-	osg::MatrixTransform *transform;
-	SGPrecipitation *precipitation;
-	float getPrecipitationAtAltitudeMax(void);
+    osg::ref_ptr<osg::Group> group;
+    osg::ref_ptr<osg::MatrixTransform> transform;
+    osg::ref_ptr<SGPrecipitation> precipitation;
+    float getPrecipitationAtAltitudeMax(void);
 
 
 public:
-	FGPrecipitationMgr();
-	~FGPrecipitationMgr();
-	bool update(void);
-	osg::Group * getObject(void);
+    FGPrecipitationMgr();
+    virtual ~FGPrecipitationMgr();
+
+    // SGSubsystem methods
+    virtual void init ();
+    virtual void update (double dt);
+    
+    osg::Group * getObject(void);
 };
 
 #endif

@@ -35,6 +35,7 @@
 class FGEnvironment;
 class FGEnvironmentCtrl;
 class FGClouds;
+class FGPrecipitationMgr;
 
 /**
  * Manage environment information.
@@ -86,6 +87,7 @@ private:
 
   FGEnvironment * _environment;	// always the same, for now
   FGEnvironmentCtrl * _controller; // always the same, for now
+  FGPrecipitationMgr* _precipitationManager;
 
   FGClouds *fgClouds;
 };

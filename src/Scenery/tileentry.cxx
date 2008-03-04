@@ -52,6 +52,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/material/matlib.hxx>
@@ -165,43 +166,15 @@ FGTileEntry::~FGTileEntry ()
 {
 }
 
-void WorldCoordinate( osg::Matrix& obj_pos, double lat,
-                             double lon, double elev, double hdg )
+static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
+                            double lon, double elev, double hdg)
 {
-    double lon_rad = lon * SGD_DEGREES_TO_RADIANS;
-    double lat_rad = lat * SGD_DEGREES_TO_RADIANS;
-    double hdg_rad = hdg * SGD_DEGREES_TO_RADIANS;
-
-    // setup transforms
-    Point3D geod( lon_rad, lat_rad, elev );
-    Point3D world_pos = sgGeodToCart( geod );
-
-    double sin_lat = sin( lat_rad );
-    double cos_lat = cos( lat_rad );
-    double cos_lon = cos( lon_rad );
-    double sin_lon = sin( lon_rad );
-    double sin_hdg = sin( hdg_rad ) ;
-    double cos_hdg = cos( hdg_rad ) ;
-
-    obj_pos(0, 0) =  cos_hdg * sin_lat * cos_lon - sin_hdg * sin_lon;
-    obj_pos(0, 1) =  cos_hdg * sin_lat * sin_lon + sin_hdg * cos_lon;
-    obj_pos(0, 2) = -cos_hdg * cos_lat;
-    obj_pos(0, 3) =  SG_ZERO;
-
-    obj_pos(1, 0) = -sin_hdg * sin_lat * cos_lon - cos_hdg * sin_lon;
-    obj_pos(1, 1) = -sin_hdg * sin_lat * sin_lon + cos_hdg * cos_lon;
-    obj_pos(1, 2) =  sin_hdg * cos_lat;
-    obj_pos(1, 3) =  SG_ZERO;
-
-    obj_pos(2, 0) = cos_lat * cos_lon;
-    obj_pos(2, 1) = cos_lat * sin_lon;
-    obj_pos(2, 2) = sin_lat;
-    obj_pos(2, 3) =  SG_ZERO;
-
-    obj_pos(3, 0) = world_pos.x();
-    obj_pos(3, 1) = world_pos.y();
-    obj_pos(3, 2) = world_pos.z();
-    obj_pos(3, 3) = SG_ONE ;
+    SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
+    obj_pos = geod.makeZUpFrame();
+    // hdg is not a compass heading, but a counter-clockwise rotation
+    // around the Z axis
+    obj_pos.preMult(osg::Matrix::rotate(hdg * SGD_DEGREES_TO_RADIANS,
+                                        0.0, 0.0, 1.0));
 }
 
 

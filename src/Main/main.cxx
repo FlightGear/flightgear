@@ -71,7 +71,6 @@
 #include <Time/tmp.hxx>
 #include <Time/fg_timer.hxx>
 #include <Environment/environment_mgr.hxx>
-#include <Environment/precipitation_mgr.hxx>
 #include <GUI/new_gui.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 
@@ -80,9 +79,6 @@
 #include "renderer.hxx"
 #include "splash.hxx"
 #include "main.hxx"
-
-
-extern FGPrecipitationMgr *fgPrecipitationMgr;
 
 
 static double real_delta_time_sec = 0.0;
@@ -849,11 +845,6 @@ static void fgIdleFunction ( void ) {
                        globals->get_ephem()->getNumStars(),
                        globals->get_ephem()->getStars(),
                        fgGetNode("/environment", true));
-
-
-		// Precipitation Manager...
-		fgPrecipitationMgr = new FGPrecipitationMgr();
-
 
         // Initialize MagVar model
         SGMagVar *magvar = new SGMagVar();

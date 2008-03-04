@@ -36,6 +36,7 @@
 #include "environment_ctrl.hxx"
 #include "environment_mgr.hxx"
 #include "fgclouds.hxx"
+#include "precipitation_mgr.hxx"
 
 class SGSky;
 extern SGSky *thesky;
@@ -54,14 +55,18 @@ FGEnvironmentMgr::FGEnvironmentMgr ()
   _controller->setEnvironment(_environment);
   set_subsystem("controller", _controller, 0.5);
   fgClouds = new FGClouds( _controller );
+  _precipitationManager = new FGPrecipitationMgr;
+  set_subsystem("precipitation", _precipitationManager);
 }
 
 FGEnvironmentMgr::~FGEnvironmentMgr ()
 {
   delete _environment;
   remove_subsystem("controller");
+  remove_subsystem("precipitation");
   delete _controller;
   delete fgClouds;
+  delete _precipitationManager;
 }
 
 void

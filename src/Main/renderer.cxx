@@ -387,9 +387,6 @@ public:
 // Sky structures
 SGSky *thesky;
 
-// Precipitations
-FGPrecipitationMgr *fgPrecipitationMgr;
-
 static osg::ref_ptr<osg::FrameStamp> mFrameStamp = new osg::FrameStamp;
 static osg::ref_ptr<SGUpdateVisitor> mUpdateVisitor= new SGUpdateVisitor;
 
@@ -504,11 +501,6 @@ FGRenderer::init( void ) {
     stateSet = sceneGroup->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
-
-
-	// Add Precipitation object
-	sceneGroup->addChild( fgPrecipitationMgr->getObject() );
-
 
     // need to update the light on every frame
     osg::LightSource* lightSource = new osg::LightSource;
@@ -788,20 +780,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
 //         fgGetDouble("/velocities/airspeed-kt", 0.0)
 //                        * cos( fgGetDouble("/orientation/pitch-deg", 0.0)
 //                                * SGD_DEGREES_TO_RADIANS);
-       // TODO:find the real view speed, not the AC one
-//     sgEnviro.drawPrecipitation(
-//         fgGetDouble("/environment/metar/rain-norm", 0.0),
-//         fgGetDouble("/environment/metar/snow-norm", 0.0),
-//         fgGetDouble("/environment/metar/hail-norm", 0.0),
-//         current__view->getPitch_deg() + current__view->getPitchOffset_deg(),
-//         current__view->getRoll_deg() + current__view->getRollOffset_deg(),
-//         - current__view->getHeadingOffset_deg(),
-//                current_view_origin_airspeed_horiz_kt
-//                );
-
-	// Update precipitation informations...
-	fgPrecipitationMgr->update();
-
 
     // OSGFIXME
 //     if( is_internal )
