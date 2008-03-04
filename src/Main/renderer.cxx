@@ -99,6 +99,7 @@
 #include <GUI/new_gui.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Instrumentation/HUD/HUD.hxx>
+#include <Environment/precipitation_mgr.hxx>
 
 #include <Include/general.hxx>
 #include "splash.hxx"
@@ -386,6 +387,9 @@ public:
 // Sky structures
 SGSky *thesky;
 
+// Precipitations
+FGPrecipitationMgr *fgPrecipitationMgr;
+
 static osg::ref_ptr<osg::FrameStamp> mFrameStamp = new osg::FrameStamp;
 static osg::ref_ptr<SGUpdateVisitor> mUpdateVisitor= new SGUpdateVisitor;
 
@@ -500,6 +504,11 @@ FGRenderer::init( void ) {
     stateSet = sceneGroup->getOrCreateStateSet();
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+
+
+	// Add Precipitation object
+	sceneGroup->addChild( fgPrecipitationMgr->getObject() );
+
 
     // need to update the light on every frame
     osg::LightSource* lightSource = new osg::LightSource;
@@ -789,6 +798,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
 //         - current__view->getHeadingOffset_deg(),
 //                current_view_origin_airspeed_horiz_kt
 //                );
+
+	// Update precipitation informations...
+	fgPrecipitationMgr->update();
+
 
     // OSGFIXME
 //     if( is_internal )

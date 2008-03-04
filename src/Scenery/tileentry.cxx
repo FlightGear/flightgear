@@ -165,7 +165,7 @@ FGTileEntry::~FGTileEntry ()
 {
 }
 
-static void WorldCoordinate( osg::Matrix& obj_pos, double lat,
+void WorldCoordinate( osg::Matrix& obj_pos, double lat,
                              double lon, double elev, double hdg )
 {
     double lon_rad = lon * SGD_DEGREES_TO_RADIANS;
