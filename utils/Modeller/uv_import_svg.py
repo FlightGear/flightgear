@@ -19,7 +19,7 @@ The choice has been made when the file was saved!
 """
 
 
-ID_SEPARATOR = '#'
+ID_SEPARATOR = '_____'
 
 
 import Blender, sys, math, re

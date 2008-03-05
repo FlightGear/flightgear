@@ -11,12 +11,12 @@ __author__ = "Melchior FRANZ < mfranz # aon : at >"
 __url__ = "http://members.aon.at/mfranz/flightgear/"
 __version__ = "0.1"
 __bpydoc__ = """\
-Saves the UV mappings of all selected files to an SVG file. The uv_import_svg.py
+Saves the UV mappings of all selected objects to an SVG file. The uv_import_svg.py
 script can be used to re-import such a file. Each object and each group of adjacent
-faces therein will be put into an SVG group.
+faces therein will be made a separate SVG group.
 """
 
-ID_SEPARATOR = '#'
+ID_SEPARATOR = '_____'
 
 
 import Blender, sys
@@ -83,7 +83,8 @@ def write_svg(filename):
 			continue
 		unique_meshes[mesh.name] = True
 
-		svg.write('\t<g style="fill:yellow; stroke:black stroke-width:1px" inkscape:label="%s" id="%s">\n' % (o.name, o.name))
+		svg.write('\t<g style="fill:yellow; stroke:black stroke-width:1px" inkscape:label="%s" ' \
+				'id="%s">\n' % (o.name, o.name))
 
 		pool = {}
 		for f in mesh.faces:
@@ -128,3 +129,4 @@ active = Blender.Scene.GetCurrent().objects.active
 (basename, extname) = Blender.sys.splitext(Blender.Get("filename"))
 filename = Blender.sys.basename(basename) + "-" + active.name + ".svg"
 Blender.Window.FileSelector(export, "Export to SVG", filename)
+
