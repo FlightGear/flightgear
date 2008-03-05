@@ -237,7 +237,7 @@ class import_svg:
 			return
 
 		meshname = str(ident[:sep])
-		num = int(ident[sep + 1:])
+		num = int(ident[sep + len(ID_SEPARATOR):])
 
 		if not meshname in self.meshes:
 			print('unknown mesh "%s"' % meshname)
