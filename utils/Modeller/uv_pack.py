@@ -107,12 +107,11 @@ def pack():
 	xscale = (1.0 - 2.0 * margin[0]) / boxmax
 	yscale = (1.0 - 2.0 * margin[1]) / boxmax
 
-	Blender.Window.DrawProgressBar(0.2, "Erasing texture")
 	image.reload()
 	#drawrect(0, 0, 1, 1) # erase texture
 
 	for i, box in enumerate(boxes):
-		Blender.Window.DrawProgressBar(i * 0.8 / len(boxes), "Drawing")
+		Blender.Window.DrawProgressBar(float(i) * len(boxes), "Drawing")
 		xmin = ymin = BIG
 		xmax = ymax = -BIG
 		for f in box[6].faces:
