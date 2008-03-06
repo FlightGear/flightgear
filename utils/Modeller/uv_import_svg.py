@@ -19,7 +19,7 @@ The choice has been made when the file was saved!
 """
 
 
-ID_SEPARATOR = '_____'
+ID_SEPARATOR = '_.._'
 
 
 import Blender, sys, math, re
@@ -46,12 +46,12 @@ class Matrix:
 		return "[Matrix %f %f %f %f %f %f]" % (self.a, self.b, self.c, self.d, self.e, self.f)
 
 	def multiply(self, mat):
-		a = self.a * mat.a + self.c * mat.b
-		b = self.b * mat.a + self.d * mat.b
-		c = self.a * mat.c + self.c * mat.d
-		d = self.b * mat.c + self.d * mat.d
-		e = self.a * mat.e + self.c * mat.f + self.e
-		f = self.b * mat.e + self.d * mat.f + self.f
+		a = mat.a * self.a + mat.c * self.b
+		b = mat.b * self.a + mat.d * self.b
+		c = mat.a * self.c + mat.c * self.d
+		d = mat.b * self.c + mat.d * self.d
+		e = mat.a * self.e + mat.c * self.f + mat.e
+		f = mat.b * self.e + mat.d * self.f + mat.f
 		self.a = a; self.b = b; self.c = c; self.d = d; self.e = e; self.f = f
 
 	def transform(self, u, v):
@@ -231,13 +231,11 @@ class import_svg:
 			print('bad polygon "%s"' % ident)
 			return
 
-		sep = ident.find(ID_SEPARATOR)
-		if sep < 0:
+		try:
+			meshname, num = ident.strip().split(ID_SEPARATOR, 2)
+		except:
 			print('broken id "%s"' % ident)
 			return
-
-		meshname = str(ident[:sep])
-		num = int(ident[sep + len(ID_SEPARATOR):])
 
 		if not meshname in self.meshes:
 			print('unknown mesh "%s"' % meshname)
@@ -254,7 +252,7 @@ class import_svg:
 				u, v = matrix.transform(u, v)
 			transuv.append((u / self.width, 1 - v / self.height))
 
-		for i, uv in enumerate(self.meshes[meshname].faces[num].uv):
+		for i, uv in enumerate(self.meshes[meshname].faces[int(num)].uv):
 			uv[0] = transuv[i][0]
 			uv[1] = transuv[i][1]
 

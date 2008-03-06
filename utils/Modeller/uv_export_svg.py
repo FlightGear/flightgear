@@ -16,7 +16,8 @@ script can be used to re-import such a file. Each object and each group of adjac
 faces therein will be made a separate SVG group.
 """
 
-ID_SEPARATOR = '_____'
+ID_SEPARATOR = '_.._'
+FILL_COLOR = 'yellow'
 
 
 import Blender, sys
@@ -27,7 +28,10 @@ class Abort(Exception):
 		self.msg = msg
 
 
-def get_adjacent(pool):
+def get_adjacent_faces(pool):
+	if not len(pool):
+		return []
+
 	i, face = pool.popitem()
 	group = [face]
 
@@ -64,7 +68,7 @@ def write_svg(filename):
 	svg.write('<?xml version="1.0" standalone="no"?>\n')
 	svg.write('<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n\n')
 	svg.write('<svg width="%spx" height="%spx" viewBox="0 0 %d %d" xmlns="http://www.w3.org/2000/svg"' \
-			'version="1.1" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">\n'
+			' version="1.1" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">\n'
 			% (size, size, size, size))
 	svg.write("\t<desc>uv_export_svg.py: %s</desc>\n" % filename);
 	svg.write('\t<rect x="0" y="0" width="%d" height="%d" fill="none" stroke="blue" stroke-width="%f"/>\n'
@@ -79,25 +83,32 @@ def write_svg(filename):
 		if not mesh.faceUV:
 			continue
 		if mesh.name in unique_meshes:
-			#print "dropping duplicate mesh", mesh.name, "of object", o.name
 			continue
 		unique_meshes[mesh.name] = True
 
-		svg.write('\t<g style="fill:yellow; stroke:black stroke-width:1px" inkscape:label="%s" ' \
-				'id="%s">\n' % (o.name, o.name))
+		svg.write('\t<g style="fill:%s; stroke:black stroke-width:1px" inkscape:label="%s" ' \
+				'id="%s">\n' % (FILL_COLOR, o.name, o.name))
 
 		pool = {}
 		for f in mesh.faces:
 			pool[f.index] = f
 
+		groups = []
 		while len(pool):
-			svg.write('\t\t<g>\n')
-			for f in get_adjacent(pool):
-				svg.write('\t\t\t<polygon points="')
+			groups.append(get_adjacent_faces(pool))
+
+		for faces in groups:
+			indent = '\t\t'
+			if len(groups) > 1:
+				svg.write('\t\t<g>\n')
+				indent = '\t\t\t'
+			for f in faces:
+				svg.write('%s<polygon id="%s%s%d" points="' % (indent, mesh.name, ID_SEPARATOR, f.index))
 				for p in f.uv:
 					svg.write('%.8f,%.8f ' % (p[0] * size, size - p[1] * size))
-				svg.write('" id="%s%s%d"/>\n' % (mesh.name, ID_SEPARATOR, f.index))
-			svg.write('\t\t</g>\n')
+				svg.write('"/>\n')
+			if len(groups) > 1:
+				svg.write('\t\t</g>\n')
 
 		svg.write("\t</g>\n")
 
