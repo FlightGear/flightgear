@@ -1,9 +1,9 @@
 #!BPY
 
 # """
-# Name: 'SVG: Export UV layout to SVG file'
+# Name: 'UV: Export to SVG'
 # Blender: 245
-# Group: 'UV'
+# Group: 'Image'
 # Tooltip: 'Export selected objects to SVG file'
 # """
 
@@ -16,11 +16,11 @@ script can be used to re-import such a file. Each object and each group of adjac
 faces therein will be made a separate SVG group.
 """
 
+FILL_COLOR = ''  # 'yellow' or '#ffa000' e.g. for uni-color, empty string for random color
 ID_SEPARATOR = '_.._'
-FILL_COLOR = 'yellow'
 
 
-import Blender, sys
+import Blender, BPyMessages, sys, random
 
 
 class Abort(Exception):
@@ -28,86 +28,94 @@ class Abort(Exception):
 		self.msg = msg
 
 
-def get_adjacent_faces(pool):
-	if not len(pool):
-		return []
+class UVFaceGroups:
+	def __init__(self, mesh):
+		faces = dict([(f.index, f) for f in mesh.faces])
+		self.groups = []
+		while faces:
+			self.groups.append(self.adjacent(faces))
 
-	i, face = pool.popitem()
-	group = [face]
+	def __len__(self):
+		return len(self.groups)
 
-	uvcoords = {}
-	for c in face.uv:
-		uvcoords[(c[0], c[1])] = True
+	def __iter__(self):
+		return self.groups.__iter__()
 
-	while True:
-		found = []
-		for face in pool.itervalues():
-			for c in face.uv:
-				if (c[0], c[1]) in uvcoords:
-					for d in face.uv:
-						uvcoords[(d[0], d[1])] = True
-					found.append(face)
-					break
-		if not found:
-			break
-		for face in found:
-			group.append(face)
-			del pool[face.index]
+	def adjacent(self, faces):
+		uvcoords = {}
+		face = faces.popitem()[1]
+		group = [face]
+		for c in face.uv:
+			uvcoords[(c[0], c[1])] = True
 
-	return group
+		while True:
+			found = []
+			for face in faces.itervalues():
+				for c in face.uv:
+					if (c[0], c[1]) in uvcoords:
+						for c in face.uv:
+							uvcoords[(c[0], c[1])] = True
+						found.append(face)
+						break
+			if not found:
+				return group
+			for face in found:
+				group.append(face)
+				del faces[face.index]
 
 
-def write_svg(filename):
+def hashcolor(name):
+	random.seed(hash(name))
+	c = [random.randint(220, 255), random.randint(120, 220), random.randint(120, 220)]
+	random.shuffle(c)
+	return "#%02x%02x%02x" % (c[0], c[1], c[2])
+
+
+def write_svg(path):
 	size = Blender.Draw.PupMenu("Image size%t|128|256|512|1024|2048|4096|8192")
 	if size < 0:
 		raise Abort('no image size chosen')
 	size = 1 << (size + 6)
 
-	print "exporting to '%s' (size %d) ... " % (filename, size),
-	svg = open(filename, "w")
+	print "exporting to '%s' (size %d) ... " % (path, size),
+	svg = open(path, "w")
 	svg.write('<?xml version="1.0" standalone="no"?>\n')
 	svg.write('<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n\n')
 	svg.write('<svg width="%spx" height="%spx" viewBox="0 0 %d %d" xmlns="http://www.w3.org/2000/svg"' \
 			' version="1.1" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">\n'
 			% (size, size, size, size))
-	svg.write("\t<desc>uv_export_svg.py: %s</desc>\n" % filename);
+	svg.write("\t<desc>uv_export_svg.py: %s</desc>\n" % path);
 	svg.write('\t<rect x="0" y="0" width="%d" height="%d" fill="none" stroke="blue" stroke-width="%f"/>\n'
 			% (size, size, 1.0))
 
-	unique_meshes = {}
+	objects = {}
 	for o in Blender.Scene.GetCurrent().objects.selected:
 		if o.type != "Mesh":
 			continue
 
 		mesh = o.getData(mesh = 1)
-		if not mesh.faceUV:
-			continue
-		if mesh.name in unique_meshes:
-			continue
-		unique_meshes[mesh.name] = True
+		if mesh.faceUV:
+			objects[mesh.name] = (o.name, mesh)
+
+	for meshname, v in objects.iteritems():
+		objname, mesh = v
+		color = FILL_COLOR or hashcolor(meshname)
 
 		svg.write('\t<g style="fill:%s; stroke:black stroke-width:1px" inkscape:label="%s" ' \
-				'id="%s">\n' % (FILL_COLOR, o.name, o.name))
+				'id="%s">\n' % (color, objname, objname))
 
-		pool = {}
-		for f in mesh.faces:
-			pool[f.index] = f
-
-		groups = []
-		while len(pool):
-			groups.append(get_adjacent_faces(pool))
-
-		for faces in groups:
+		facegroups = UVFaceGroups(mesh)
+		for faces in facegroups:
 			indent = '\t\t'
-			if len(groups) > 1:
+			if len(facegroups) > 1:
 				svg.write('\t\t<g>\n')
 				indent = '\t\t\t'
 			for f in faces:
-				svg.write('%s<polygon id="%s%s%d" points="' % (indent, mesh.name, ID_SEPARATOR, f.index))
+				svg.write('%s<polygon id="%s%s%d" points="' % (indent, meshname, ID_SEPARATOR, f.index))
 				for p in f.uv:
 					svg.write('%.8f,%.8f ' % (p[0] * size, size - p[1] * size))
 				svg.write('"/>\n')
-			if len(groups) > 1:
+			if len(facegroups) > 1:
 				svg.write('\t\t</g>\n')
 
 		svg.write("\t</g>\n")
@@ -117,17 +125,18 @@ def write_svg(filename):
 	print "done."
 
 
-def export(filename):
-	registry = {}
-	registry[basename] = Blender.sys.basename(filename)
-	Blender.Registry.SetKey("UVImportExportSVG", registry, False)
+def export(path):
+	if not BPyMessages.Warning_SaveOver(path):
+		return
 
 	editmode = Blender.Window.EditMode()
 	if editmode:
 		Blender.Window.EditMode(0)
 
 	try:
-		write_svg(filename)
+		write_svg(path)
+		Blender.Registry.SetKey("UVImportExportSVG", { "path" : path }, False)
+
 	except Abort, e:
 		print "Error:", e.msg, "  -> aborting ...\n"
 		Blender.Draw.PupMenu("Error%t|" + e.msg)
@@ -136,8 +145,13 @@ def export(filename):
 		Blender.Window.EditMode(1)
 
 
-active = Blender.Scene.GetCurrent().objects.active
-(basename, extname) = Blender.sys.splitext(Blender.Get("filename"))
-filename = Blender.sys.basename(basename) + "-" + active.name + ".svg"
-Blender.Window.FileSelector(export, "Export to SVG", filename)
+registry = Blender.Registry.GetKey("UVImportExportSVG", False)
+if registry and "path" in registry:
+	path = registry["path"]
+else:
+	active = Blender.Scene.GetCurrent().objects.active
+	basename = Blender.sys.basename(Blender.sys.splitext(Blender.Get("filename"))[0])
+	path = basename + "-" + active.name + ".svg"
+
+Blender.Window.FileSelector(export, "Export to SVG", path)
 

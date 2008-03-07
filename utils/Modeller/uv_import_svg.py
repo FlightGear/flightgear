@@ -1,9 +1,9 @@
 #!BPY
 
 # """
-# Name: 'SVG: Re-Import UV layout from SVG file'
+# Name: 'UV: (Re)Import UV from SVG'
 # Blender: 245
-# Group: 'UV'
+# Group: 'Image'
 # Tooltip: 'Re-import UV layout from SVG file'
 # """
 
@@ -22,7 +22,7 @@ The choice has been made when the file was saved!
 ID_SEPARATOR = '_.._'
 
 
-import Blender, sys, math, re
+import Blender, BPyMessages, sys, math, re
 from xml.sax import saxexts
 
 
@@ -219,7 +219,7 @@ class import_svg:
 
 	def endElement(self, name):
 		self.scandesc = False
-		self.matrices = self.matrices[:-1]
+		self.matrices.pop()
 
 	def handlePolygon(self, attrs):
 		if not self.verified:
@@ -257,7 +257,10 @@ class import_svg:
 			uv[1] = transuv[i][1]
 
 
-def run_parser(filename):
+def run_parser(path):
+	if BPyMessages.Error_NoFile(path):
+		return
+
 	editmode = Blender.Window.EditMode()
 	if editmode:
 		Blender.Window.EditMode(0)
@@ -267,7 +270,8 @@ def run_parser(filename):
 		svg = saxexts.ParserFactory().make_parser("xml.sax.drivers.drv_xmlproc")
 		svg.setDocumentHandler(import_svg())
 		svg.setErrorHandler(import_svg())
-		svg.parse(filename)
+		svg.parse(path)
+		Blender.Registry.SetKey("UVImportExportSVG", { "path" : path }, False)
 
 	except Abort, e:
 		print "Error:", e.msg, "  -> aborting ...\n"
@@ -279,13 +283,11 @@ def run_parser(filename):
 		Blender.Window.EditMode(1)
 
 
-active = Blender.Scene.GetCurrent().objects.active
-(basename, extname) = Blender.sys.splitext(Blender.Get("filename"))
-filename = Blender.sys.basename(basename) + "-" + active.name + ".svg"
-
 registry = Blender.Registry.GetKey("UVImportExportSVG", False)
-if registry and basename in registry:
-	filename = registry[basename]
+if registry and "path" in registry and Blender.sys.exists(Blender.sys.expandpath(registry["path"])):
+	path = registry["path"]
+else:
+	path = ""
 
-Blender.Window.FileSelector(run_parser, "Import SVG", filename)
+Blender.Window.FileSelector(run_parser, "Import SVG", path)
 
