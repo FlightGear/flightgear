@@ -8,7 +8,7 @@
 # """
 
 __author__ = "Melchior FRANZ < mfranz # aon : at >"
-__url__ = "http://members.aon.at/mfranz/flightgear/"
+__url__ = "http://www.flightgear.org/"
 __version__ = "0.1"
 __bpydoc__ = """\
 Saves the UV mappings of all selected objects to an SVG file. The uv_import_svg.py
@@ -16,8 +16,27 @@ script can be used to re-import such a file. Each object and each group of adjac
 faces therein will be made a separate SVG group.
 """
 
-FILL_COLOR = ''  # 'yellow' or '#ffa000' e.g. for uni-color, empty string for random color
-ID_SEPARATOR = '_.._'
+#--------------------------------------------------------------------------------
+# Copyright (C) 2008  Melchior FRANZ  < mfranz # aon : at >
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#--------------------------------------------------------------------------------
+
+
+FILL_COLOR = None  # 'yellow' or '#ffa000' e.g. for uni-color, None for random color
+ID_SEPARATOR = '_.:._'
 
 
 import Blender, BPyMessages, sys, random
@@ -46,15 +65,15 @@ class UVFaceGroups:
 		face = faces.popitem()[1]
 		group = [face]
 		for c in face.uv:
-			uvcoords[(c[0], c[1])] = True
+			uvcoords[tuple(c)] = True
 
 		while True:
 			found = []
 			for face in faces.itervalues():
 				for c in face.uv:
-					if (c[0], c[1]) in uvcoords:
+					if (tuple(c)) in uvcoords:
 						for c in face.uv:
-							uvcoords[(c[0], c[1])] = True
+							uvcoords[tuple(c)] = True
 						found.append(face)
 						break
 			if not found:
@@ -68,7 +87,7 @@ def hashcolor(name):
 	random.seed(hash(name))
 	c = [random.randint(220, 255), random.randint(120, 220), random.randint(120, 220)]
 	random.shuffle(c)
-	return "#%02x%02x%02x" % (c[0], c[1], c[2])
+	return "#%02x%02x%02x" % tuple(c)
 
 
 def write_svg(path):
@@ -77,7 +96,6 @@ def write_svg(path):
 		raise Abort('no image size chosen')
 	size = 1 << (size + 6)
 
-	print "exporting to '%s' (size %d) ... " % (path, size),
 	svg = open(path, "w")
 	svg.write('<?xml version="1.0" standalone="no"?>\n')
 	svg.write('<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n\n')
@@ -122,7 +140,6 @@ def write_svg(path):
 
 	svg.write('</svg>\n')
 	svg.close()
-	print "done."
 
 
 def export(path):
