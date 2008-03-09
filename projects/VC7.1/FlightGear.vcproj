@@ -2301,6 +2301,12 @@
 			<File
 				RelativePath="..\..\src\Environment\fgmetar.hxx">
 			</File>
+			<File
+				RelativePath="..\..\src\Environment\precipitation_mgr.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Environment\precipitation_mgr.hxx">
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Model"
