@@ -71,7 +71,7 @@ class UVFaceGroups:
 			found = []
 			for face in faces.itervalues():
 				for c in face.uv:
-					if (tuple(c)) in uvcoords:
+					if tuple(c) in uvcoords:
 						for c in face.uv:
 							uvcoords[tuple(c)] = True
 						found.append(face)
@@ -83,9 +83,9 @@ class UVFaceGroups:
 				del faces[face.index]
 
 
-def hashcolor(name):
-	random.seed(hash(name))
-	c = [random.randint(220, 255), random.randint(120, 220), random.randint(120, 220)]
+def stringcolor(string):
+	random.seed(hash(string))
+	c = [random.randint(220, 255), random.randint(120, 240), random.randint(120, 240)]
 	random.shuffle(c)
 	return "#%02x%02x%02x" % tuple(c)
 
@@ -117,7 +117,7 @@ def write_svg(path):
 
 	for meshname, v in objects.iteritems():
 		objname, mesh = v
-		color = FILL_COLOR or hashcolor(meshname)
+		color = FILL_COLOR or stringcolor(meshname)
 
 		svg.write('\t<g style="fill:%s; stroke:black stroke-width:1px" inkscape:label="%s" ' \
 				'id="%s">\n' % (color, objname, objname))
