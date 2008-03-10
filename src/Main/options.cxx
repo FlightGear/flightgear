@@ -1275,7 +1275,6 @@ struct OptionDesc {
     {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/pause", true, "", 0 },
     {"enable-sound",                 false, OPTION_BOOL,   "/sim/sound/pause", false, "", 0 },
     {"airport",                      true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
-    {"airport-id",                   true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
     {"runway",                       true,  OPTION_FUNC,   "", false, "", fgOptRunway },
     {"vor",                          true,  OPTION_FUNC,   "", false, "", fgOptVOR },
     {"ndb",                          true,  OPTION_FUNC,   "", false, "", fgOptNDB },
