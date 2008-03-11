@@ -14,14 +14,11 @@
 #include <simgear/props/props.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#undef PUCLASS_LIST
-#include "puList.hxx"
-
 #include <vector>
 SG_USING_STD(vector);
 
 
-// ugly temproary workaround for plib's lack of user defined class ids  FIXME
+// ugly temporary workaround for plib's lack of user defined class ids  FIXME
 #define FGCLASS_LIST          0x00000001
 #define FGCLASS_AIRPORTLIST   0x00000002
 #define FGCLASS_PROPERTYLIST  0x00000004
@@ -207,10 +204,10 @@ private:
 };
 
 
-class fgList : public fgValueList, public puList, public GUI_ID {
+class fgList : public fgValueList, public puaList, public GUI_ID {
 public:
     fgList(int x1, int y1, int x2, int y2, SGPropertyNode *p, int sw) :
-            fgValueList(p), puList(x1, y1, x2, y2, _list, sw), GUI_ID(FGCLASS_LIST) {}
+            fgValueList(p), puaList(x1, y1, x2, y2, _list, sw), GUI_ID(FGCLASS_LIST) {}
     void update();
 };
 

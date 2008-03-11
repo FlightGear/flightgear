@@ -6,15 +6,16 @@
 #include <simgear/compiler.h>
 #include STL_STRING
 
-#include <plib/pu.h>
+#include <plib/puAux.h>
 #include "dialog.hxx"
+
 
 
 SG_USING_STD(string);
 
 class FGAirportList;
 
-class AirportList : public puList, public GUI_ID
+class AirportList : public puaList, public GUI_ID
 {
  public:
     AirportList (int x, int y, int width, int height);
@@ -22,9 +23,6 @@ class AirportList : public puList, public GUI_ID
 
     virtual void create_list();
     virtual void destroy_list();
-
-    // FIXME: add other string value functions
-    virtual char * getListStringValue ();
     virtual void setValue (const char *);
 
  private:

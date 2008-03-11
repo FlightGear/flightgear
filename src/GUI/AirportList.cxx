@@ -6,7 +6,7 @@
 
 
 AirportList::AirportList (int x, int y, int width, int height)
-    : puList(x, y, width, height),
+    : puaList(x, y, width, height),
       GUI_ID(FGCLASS_AIRPORTLIST),
       _airports(globals->get_airports()),
       _content(0)
@@ -55,13 +55,6 @@ AirportList::destroy_list ()
         *c = 0;
     }
     delete [] _content;
-}
-
-char *
-AirportList::getListStringValue ()
-{
-    int i = getListIntegerValue();
-    return i < 0 ? 0 : _content[i];
 }
 
 void

@@ -393,7 +393,7 @@ FGColor::merge(const FGColor *color)
 ////////////////////////////////////////////////////////////////////////
 
 static const struct {
-    char *name;
+    const char *name;
     puFont *font;
 } guifonts[] = {
     { "default",      &FONT_HELVETICA_14 },

@@ -143,7 +143,7 @@ static void sanitize(stdString& s)
 
 
 PropertyList::PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNode *start) :
-    puList(minx, miny, maxx, maxy, short(0), 20),
+    puaList(minx, miny, maxx, maxy, short(0), 20),
     GUI_ID(FGCLASS_PROPERTYLIST),
     _curr(start),
     _return(0),

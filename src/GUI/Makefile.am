@@ -10,7 +10,6 @@ libGUI_a_SOURCES = \
 	mouse.cxx fonts.cxx \
 	sgVec3Slider.cxx sgVec3Slider.hxx \
 	trackball.c trackball.h \
-	puList.cxx puList.hxx \
 	AirportList.cxx AirportList.hxx \
         property_list.cxx property_list.hxx \
         layout.cxx layout-props.cxx layout.hxx

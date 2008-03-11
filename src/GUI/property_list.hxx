@@ -24,13 +24,12 @@
 #define _PROPERTY_LIST_HXX
 
 
-#include <plib/pu.h>
+#include <plib/puAux.h>
 #include <simgear/props/props.hxx>
 #include "dialog.hxx"
 
-#include "puList.hxx"
 
-class PropertyList : public puList, public SGPropertyChangeListener, public GUI_ID {
+class PropertyList : public puaList, public SGPropertyChangeListener, public GUI_ID {
 public:
     PropertyList(int minx, int miny, int maxx, int maxy, SGPropertyNode *);
     ~PropertyList();
@@ -42,8 +41,8 @@ public:
     void toggleVerbosity() { _verbose = !_verbose; }
 
     // overridden plib pui methods
-    virtual char *getListStringValue() { return (char *)(_return ? _return->getPath(true) : ""); }
-    //virtual char *getStringValue(void) { return (char *)(_return ? _return->getPath(true) : ""); }
+    virtual char *getStringValue(void) { return (char *)(_return ? _return->getPath(true) : ""); }
+    //virtual char *getListStringValue() { return (char *)(_return ? _return->getPath(true) : ""); }
     virtual void setValue(const char *);
 
     // listener method

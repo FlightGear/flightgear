@@ -327,17 +327,9 @@ copy_from_pui (puObject * object, SGPropertyNode * node)
         node->setFloatValue(object->getFloatValue());
         break;
     default:
-        // Special case to handle lists, as getStringValue cannot be overridden
-        if(object->getType() & PUCLASS_LIST)
-        {
-            const char *s = ((puList *) object)->getListStringValue();
-            if (s)
-                node->setStringValue(s);
-        }
-        else
-        {
-            node->setStringValue(object->getStringValue());
-        }
+        const char *s = object->getStringValue();
+        if (s)
+            node->setStringValue(s);
         break;
     }
 }
@@ -642,11 +634,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         fgComboBox * obj = new fgComboBox(x, y, x + width, y + height, props,
                            props->getBoolValue("editable", false));
         setupObject(obj, props);
-#ifdef PUCOL_EDITFIELD  // plib > 0.8.4
         setColor(obj, props, EDITFIELD);
-#else
-        setColor(obj, props, FOREGROUND|LABEL);
-#endif
         return obj;
 
     } else if (type == "slider") {
@@ -690,11 +678,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     } else if (type == "select") {
         fgSelectBox * obj = new fgSelectBox(x, y, x + width, y + height, props);
         setupObject(obj, props);
-#ifdef PUCOL_EDITFIELD  // plib > 0.8.4
         setColor(obj, props, EDITFIELD);
-#else
-        setColor(obj, props, FOREGROUND|LABEL);
-#endif
         return obj;
     } else {
         return 0;
@@ -831,9 +815,7 @@ FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
         { LABEL,      PUCOL_LABEL,      "label",      "color-label" },
         { LEGEND,     PUCOL_LEGEND,     "legend",     "color-legend" },
         { MISC,       PUCOL_MISC,       "misc",       "color-misc" },
-#ifdef PUCOL_EDITFIELD  // plib > 0.8.4
         { EDITFIELD,  PUCOL_EDITFIELD,  "editfield",  "color-editfield" },
-#endif
     };
 
     const int numcol = sizeof(pucol) / sizeof(pucol[0]);
@@ -1019,7 +1001,9 @@ void
 fgList::update()
 {
     fgValueList::update();
+    int top = getTopItem();
     newList(_list);
+    setTopItem(top);
 }
 
 // end of dialog.cxx
