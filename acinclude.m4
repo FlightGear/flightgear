@@ -392,3 +392,51 @@ if test "$have_timezone" = no; then
          AC_MSG_RESULT(no))
 fi
 ])dnl
+
+pushdef([AC_PROG_INSTALL],
+[
+  dnl our own version, testing for a -p flag
+  popdef([AC_PROG_INSTALL])
+  dnl as AC_PROG_INSTALL works as it works we first have
+  dnl to save if the user didn't specify INSTALL, as the
+  dnl autoconf one overwrites INSTALL and we have no chance to find
+  dnl out afterwards
+  AC_PROG_INSTALL
+
+    # OK, user hasn't given any INSTALL, autoconf found one for us
+    # now we test, if it supports the -p flag
+    AC_MSG_CHECKING(for -p flag to install)
+    rm -f confinst.$$.* > /dev/null 2>&1
+    echo "Testtest" > confinst.$$.orig
+    ac_res=no
+    if ${INSTALL} -p confinst.$$.orig confinst.$$.new > /dev/null 2>&1 ; then
+      if test -f confinst.$$.new ; then
+        # OK, -p seems to do no harm to install
+        INSTALL="${INSTALL} -p"
+        ac_res=yes
+      fi
+    fi
+    rm -f confinst.$$.*
+    AC_MSG_RESULT($ac_res)
+  dnl the following tries to resolve some signs and wonders coming up
+  dnl with different autoconf/automake versions
+  dnl e.g.:
+  dnl  *automake 1.4 install-strip sets A_M_INSTALL_PROGRAM_FLAGS to -s
+  dnl   and has INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(A_M_INSTALL_PROGRAM_FLAGS)
+  dnl   it header-vars.am, so there the actual INSTALL_PROGRAM gets the -s
+  dnl  *automake 1.4a (and above) use INSTALL_STRIP_FLAG and only has
+  dnl   INSTALL_PROGRAM = @INSTALL_PROGRAM@ there, but changes the
+  dnl   install-@DIR@PROGRAMS targets to explicitly use that flag
+  dnl  *autoconf 2.13 is dumb, and thinks it can use INSTALL_PROGRAM as
+  dnl   INSTALL_SCRIPT, which breaks with automake <= 1.4
+  dnl  *autoconf >2.13 (since 10.Apr 1999) has not that failure
+  dnl to clean up that mess we:
+  dnl  +set INSTALL_PROGRAM to use INSTALL_STRIP_FLAG
+  dnl   which cleans KDE's program with automake > 1.4;
+  dnl  +set INSTALL_SCRIPT to only use INSTALL, to clean up autoconf's problems
+  dnl   with automake<=1.4
+  dnl  note that dues to this sometimes two '-s' flags are used
+    INSTALL_PROGRAM='${INSTALL} $(INSTALL_STRIP_FLAG)'
+    INSTALL_SCRIPT='${INSTALL}'
+])dnl
+
