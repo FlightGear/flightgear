@@ -148,10 +148,11 @@ void fgOSOpenWindow(int w, int h, int bpp,
 	traits->windowDecoration = true;
         traits->width = w;
         traits->height = h;
-#ifdef WIN32
-	// Ugly Hack, why does CW_USEDEFAULT works like phase of the moon?
-	traits->x = 100;
-	traits->y = 100;
+#if defined(WIN32) || defined(__APPLE__)
+        // Ugly Hack, why does CW_USEDEFAULT works like phase of the moon?
+        // Mac also needs this to show window frame, menubar and Docks
+        traits->x = 100;
+        traits->y = 100;
 #endif
         traits->supportsResize = true;
     }
