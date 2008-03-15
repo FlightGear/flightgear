@@ -64,6 +64,9 @@ SG_USING_STD(string);
 SG_USING_STD(sort);
 SG_USING_NAMESPACE(std);
 
+#ifndef VERSION
+#define VERSION "CVS "__DATE__
+#endif
 
 #define NEW_DEFAULT_MODEL_HZ 120
 
@@ -72,8 +75,9 @@ enum
     FG_OPTIONS_OK = 0,
     FG_OPTIONS_HELP = 1,
     FG_OPTIONS_ERROR = 2,
-    FG_OPTIONS_VERBOSE_HELP = 3,
-    FG_OPTIONS_SHOW_AIRCRAFT = 4
+    FG_OPTIONS_EXIT = 3,
+    FG_OPTIONS_VERBOSE_HELP = 4,
+    FG_OPTIONS_SHOW_AIRCRAFT = 5
 };
 
 static double
@@ -1198,6 +1202,14 @@ fgOptParking( const char *arg )
     return FG_OPTIONS_OK;
 }
 
+static int
+fgOptVersion( const char *arg )
+{
+    cerr << VERSION << endl;
+    cerr << "FG_ROOT=" << globals->get_fg_root() << endl;
+    cerr << "FG_HOME=" << fgGetString("/sim/fg-home") << endl;
+    return FG_OPTIONS_EXIT;
+}
 
 static map<string,size_t> fgOptionMap;
 
@@ -1405,6 +1417,7 @@ struct OptionDesc {
     {"livery",                       true,  OPTION_FUNC,   "", false, "", fgOptLivery },
     {"ai-scenario",                  true,  OPTION_FUNC,   "", false, "", fgOptScenario },
     {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParking  },
+    {"version",                      false, OPTION_FUNC,   "", false, "", fgOptVersion },
     {0}
 };
 
@@ -1479,11 +1492,13 @@ parse_option (const string& arg)
         }
     } else if ( arg.find( "--" ) == 0 ) {
         size_t pos = arg.find( '=' );
-        string arg_name;
+        string arg_name, arg_value;
         if ( pos == string::npos ) {
             arg_name = arg.substr( 2 );
         } else {
             arg_name = arg.substr( 2, pos - 2 );
+            arg_value = arg.substr( pos + 1);
+            cerr << "KEY=" << arg_name << "   VAL=" << arg_value << endl;
         }
         map<string,size_t>::iterator it = fgOptionMap.find( arg_name );
         if ( it != fgOptionMap.end() ) {
@@ -1493,9 +1508,9 @@ parse_option (const string& arg)
                     fgSetBool( pt->property, pt->b_param );
                     break;
                 case OPTION_STRING:
-                    if ( pt->has_param && pos != string::npos && pos + 1 < arg.size() ) {
-                        fgSetString( pt->property, arg.substr( pos + 1 ).c_str() );
-                    } else if ( !pt->has_param && pos == string::npos ) {
+                    if ( pt->has_param && !arg_value.empty() ) {
+                        fgSetString( pt->property, arg_value.c_str() );
+                    } else if ( !pt->has_param && arg_value.empty() ) {
                         fgSetString( pt->property, pt->s_param );
                     } else if ( pt->has_param ) {
                         SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
@@ -1506,25 +1521,25 @@ parse_option (const string& arg)
                     }
                     break;
                 case OPTION_DOUBLE:
-                    if ( pos != string::npos && pos + 1 < arg.size() ) {
-                        fgSetDouble( pt->property, atof( arg.substr( pos + 1 ) ) );
+                    if ( !arg_value.empty() ) {
+                        fgSetDouble( pt->property, atof( arg_value ) );
                     } else {
                         SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
                         return FG_OPTIONS_ERROR;
                     }
                     break;
                 case OPTION_INT:
-                    if ( pos != string::npos && pos + 1 < arg.size() ) {
-                        fgSetInt( pt->property, atoi( arg.substr( pos + 1 ) ) );
+                    if ( !arg_value.empty() ) {
+                        fgSetInt( pt->property, atoi( arg_value ) );
                     } else {
                         SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
                         return FG_OPTIONS_ERROR;
                     }
                     break;
                 case OPTION_CHANNEL:
-                    if ( pt->has_param && pos != string::npos && pos + 1 < arg.size() ) {
-                        add_channel( pt->option, arg.substr( pos + 1 ) );
-                    } else if ( !pt->has_param && pos == string::npos ) {
+                    if ( pt->has_param && !arg_value.empty() ) {
+                        add_channel( pt->option, arg_value );
+                    } else if ( !pt->has_param && arg_value.empty() ) {
                         add_channel( pt->option, pt->s_param );
                     } else if ( pt->has_param ) {
                         SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
@@ -1535,9 +1550,9 @@ parse_option (const string& arg)
                     }
                     break;
                 case OPTION_FUNC:
-                    if ( pt->has_param && pos != string::npos && pos + 1 < arg.size() ) {
-                        return pt->func( arg.substr( pos + 1 ).c_str() );
-                    } else if ( !pt->has_param && pos == string::npos ) {
+                    if ( pt->has_param && !arg_value.empty() ) {
+                        return pt->func( arg_value.c_str() );
+                    } else if ( !pt->has_param && arg_value.empty() ) {
                         return pt->func( 0 );
                     } else if ( pt->has_param ) {
                         SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
@@ -1592,6 +1607,9 @@ fgParseArgs (int argc, char **argv)
                fgShowAircraft(path, true);
                exit(0);
             }
+
+            else if (result == FG_OPTIONS_EXIT)
+               exit(0);
 	  }
 	} else {
 	  in_options = false;
