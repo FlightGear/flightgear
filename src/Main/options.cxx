@@ -1498,7 +1498,6 @@ parse_option (const string& arg)
         } else {
             arg_name = arg.substr( 2, pos - 2 );
             arg_value = arg.substr( pos + 1);
-            cerr << "KEY=" << arg_name << "   VAL=" << arg_value << endl;
         }
         map<string,size_t>::iterator it = fgOptionMap.find( arg_name );
         if ( it != fgOptionMap.end() ) {
