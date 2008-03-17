@@ -147,11 +147,11 @@ radAlt::update_altitude()
 
     _min_radalt = max_range;
 
-    for(double brg = -az_limit; brg <= az_limit; brg += az_step){
-        setUserPos();
-        setAntennaPos();
-        SGVec3d cartantennapos = getCartAntennaPos();
+    setUserPos();
+    setAntennaPos();
+    SGVec3d cartantennapos = getCartAntennaPos();
 
+    for(double brg = -az_limit; brg <= az_limit; brg += az_step){
         for(double elev = el_limit; elev >= - el_limit; elev -= el_step){
             setUserVec(brg, elev);
 

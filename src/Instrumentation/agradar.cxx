@@ -179,7 +179,7 @@ agRadar::setAntennaPos() {
 }
 
 void
-agRadar::setUserVec(int az, double el)
+agRadar::setUserVec(double az, double el)
 {
     float yaw   = _user_hdg_deg_node->getDoubleValue();
     float pitch = _user_pitch_deg_node->getDoubleValue();
@@ -197,14 +197,10 @@ agRadar::setUserVec(int az, double el)
 
     // and postrotate the orientation of the radar wrt the horizontal
     // local frame
-    hlTrans *= SGQuatd::fromYawPitchRollDeg(yaw, pitch, roll);
+    hlTrans *= SGQuatd::fromYawPitchRollDeg(yaw,
+                                            pitch_stab ? 0 :pitch,
+                                            roll_stab ? 0 : roll);
     hlTrans *= offset;
-
-    if (roll_stab)
-        hlTrans *= SGQuatd::fromYawPitchRollDeg(0, 0, -roll);  
-
-    if (pitch_stab)
-        hlTrans *= SGQuatd::fromYawPitchRollDeg(0, -pitch, 0);
 
     // now rotate the rotation vector back into the
     // earth centered frames coordinates
@@ -283,12 +279,11 @@ agRadar::update_terrain()
     _Instrument->setStringValue("status", status);
     _Instrument->setDoubleValue("limit-deg", az_limit);
     _Instrument->setBoolValue("heading-marker", hdg_mkr);
-
+    setUserPos();
+    setAntennaPos();
+    SGVec3d cartantennapos = getCartAntennaPos();
+    
     for(double brg = -az_limit; brg <= az_limit; brg += az_step){
-        setUserPos();
-        setAntennaPos();
-        SGVec3d cartantennapos = getCartAntennaPos();
-
         for(double elev = el_limit; elev >= - el_limit; elev -= el_step){
             setUserVec(brg, elev);
             SGVec3d nearestHit;

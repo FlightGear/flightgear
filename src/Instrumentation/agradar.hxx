@@ -41,7 +41,7 @@ public:
     virtual void update (double dt);
 
     void setUserPos();
-    void setUserVec(int az, double el);
+    void setUserVec(double az, double el);
     void update_terrain();
     void setAntennaPos();
 
