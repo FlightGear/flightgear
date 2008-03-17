@@ -56,36 +56,47 @@ public:
     virtual void update (double dt);
     virtual void valueChanged(SGPropertyNode*);
 
-private:
-    string _name;
-    int _num;
     double _interval;
     double _time;
+
+    bool _sim_init_done;
+
+    string _name;
+
+    int _num; 
+
+    SGPropertyNode_ptr _serviceable_node;
+    SGPropertyNode_ptr _Instrument;
+    SGPropertyNode_ptr _radar_mode_control_node;
+
+    SGPropertyNode_ptr _user_lat_node;
+    SGPropertyNode_ptr _user_lon_node;
+    SGPropertyNode_ptr _user_heading_node;
+    SGPropertyNode_ptr _user_alt_node;
+
+    FGODGauge *_odg;
+
+private:
+
     string _texture_path;
 
     typedef enum { ARC, MAP, PLAN, ROSE } DisplayMode;
     DisplayMode _display_mode;
 
     string _last_switchKnob;
-    bool _sim_init_done;
 
     float _range_nm;
     float _scale;   // factor to convert nm to display units
-    double _radar_ref_rng;
     float _angle_offset;
     float _view_heading;
-    double _lat, _lon;
     float _x_offset, _y_offset;
 
-    SGPropertyNode_ptr _serviceable_node;
-    SGPropertyNode_ptr _Instrument;
+    double _radar_ref_rng;
+    double _lat, _lon;
+
     SGPropertyNode_ptr _Tacan;
     SGPropertyNode_ptr _Radar_controls;
 
-    SGPropertyNode_ptr _user_lat_node;
-    SGPropertyNode_ptr _user_lon_node;
-    SGPropertyNode_ptr _user_heading_node;
-    SGPropertyNode_ptr _user_alt_node;
     SGPropertyNode_ptr _user_speed_east_fps_node;
     SGPropertyNode_ptr _user_speed_north_fps_node;
 
@@ -99,7 +110,7 @@ private:
     SGPropertyNode_ptr _radar_position_node;
     SGPropertyNode_ptr _radar_data_node;
     SGPropertyNode_ptr _radar_symbol_node;
-    SGPropertyNode_ptr _radar_mode_control_node;
+    
     SGPropertyNode_ptr _radar_centre_node;
     SGPropertyNode_ptr _radar_coverage_node;
     SGPropertyNode_ptr _radar_ref_rng_node;
@@ -121,7 +132,6 @@ private:
 
     list_of_SGWxRadarEcho _radarEchoBuffer;
 
-    FGODGauge *_odg;
     FGAIManager* _ai;
 
     void update_weather();
@@ -129,15 +139,17 @@ private:
     void update_tacan();
     void update_heading_marker();
     void update_data(FGAIBase* ac, double radius, double bearing, bool selected);
-
     void center_map();
     void apply_map_offset();
-    bool withinRadarHorizon(double user_alt, double alt, double range);
-    bool inRadarRange(int type, double range);
-    float calcRelBearing(float bearing, float heading);
+    void updateFont();
     void calcRangeBearing(double lat, double lon, double lat2, double lon2,
             double &range, double &bearing) const;
-    void updateFont();
+
+    bool withinRadarHorizon(double user_alt, double alt, double range);
+    bool inRadarRange(int type, double range);
+
+    float calcRelBearing(float bearing, float heading);
+    
 };
 
 #endif // _INST_WXRADAR_HXX

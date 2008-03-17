@@ -31,6 +31,7 @@ libInstrumentation_a_SOURCES = \
 	tacan.cxx tacan.hxx mk_viii.cxx mk_viii.hxx \
 	dclgps.cxx dclgps.hxx \
 	render_area_2d.cxx render_area_2d.hxx        \
-	groundradar.cxx groundradar.hxx
+		groundradar.cxx groundradar.hxx \
+		agradar.cxx agradar.hxx rad_alt.cxx rad_alt.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_builddir)/src

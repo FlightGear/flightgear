@@ -48,6 +48,8 @@
 #include "mk_viii.hxx"
 #include "mrg.hxx"
 #include "groundradar.hxx"
+#include "agradar.hxx"
+#include "rad_alt.hxx"
 
 FGInstrumentMgr::FGInstrumentMgr ()
 {
@@ -168,7 +170,7 @@ bool FGInstrumentMgr::build ()
             set_subsystem( id, new VerticalSpeedIndicator( node ) );
 
         } else if ( name == "radar" ) {
-            set_subsystem( id, new wxRadarBg ( node ), 0.5 );
+            set_subsystem( id, new wxRadarBg ( node ), 1);
 
         } else if ( name == "inst-vertical-speed-indicator" ) {
             set_subsystem( id, new InstVerticalSpeedIndicator( node ) );
@@ -184,6 +186,12 @@ bool FGInstrumentMgr::build ()
 
         } else if ( name == "groundradar" ) {
             set_subsystem( id, new GroundRadar( node ), 1 );
+
+        } else if ( name == "air-ground-radar" ) {
+            set_subsystem( id, new agRadar( node ),1);
+
+        } else if ( name == "radar-altimeter" ) {
+            set_subsystem( id, new radAlt( node ),1);
 
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: "

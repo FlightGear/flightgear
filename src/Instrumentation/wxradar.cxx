@@ -591,12 +591,12 @@ wxRadarBg::update_aircraft()
         return;
 
     radar_list_type radar_list = _ai->get_ai_list();
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: AI submodel list size" << radar_list.size());
+    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: AI submodel list size" << radar_list.size());
     if (radar_list.empty())
         return;
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: Loading AI submodels ");
-    const double echo_radii[] = {0, 1, 1.5, 1.5, 0.001, 0.1, 1.5, 2, 1.5, 1.5};
+    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: Loading AI submodels ");
+    const double echo_radii[] = {0, 1, 1.5, 1.5, 0.001, 0.1, 1.5, 2, 1.5, 1.5, 1.5};
 
     double user_lat = _user_lat_node->getDoubleValue();
     double user_lon = _user_lon_node->getDoubleValue();
@@ -628,16 +628,16 @@ wxRadarBg::update_aircraft()
         calcRangeBearing(user_lat, user_lon, lat, lon, range, bearing);
 
         //SG_LOG(SG_GENERAL, SG_DEBUG,
-        //        "Radar: ID=" << ac->getID() << "(" << radar_list.size() << ")"
-        //        << " type=" << type
-        //        << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
-        //        << " alt=" << alt
-        //        << " heading=" << heading
-        //        << " range=" << range
-        //        << " bearing=" << bearing);
+        /*        "Radar: ID=" << ac->getID() << "(" << radar_list.size() << ")"
+                << " type=" << type
+                << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
+                << " alt=" << alt
+                << " heading=" << heading
+                << " range=" << range
+                << " bearing=" << bearing);*/
 
         bool isVisible = withinRadarHorizon(user_alt, alt, range);
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: visible " << isVisible);
+        //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: visible " << isVisible);
         if (!isVisible)
             continue;
 
@@ -668,7 +668,8 @@ wxRadarBg::update_aircraft()
             addQuad(_vertices, _texCoords, m, texBase);
 
             //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing AI"
-            //        << " x=" << x << " y=" << y
+                //<< " ID=" << ac->getID()
+                //<< " type=" << type
             //        << " radius=" << radius
             //        << " angle=" << angle * SG_RADIANS_TO_DEGREES);
         }
@@ -797,7 +798,7 @@ wxRadarBg::withinRadarHorizon(double user_alt, double alt, double range_nm)
         alt = 0;
 
     double radarhorizon = 1.23 * (sqrt(alt) + sqrt(user_alt));
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: horizon " << radarhorizon);
+    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: horizon " << radarhorizon);
     return radarhorizon >= range_nm;
 }
 
@@ -819,14 +820,14 @@ wxRadarBg::inRadarRange(int type, double range_nm)
     //
     // TODO - make the maximum range adjustable at runtime
 
-    const double sigma[] = {0, 1, 100, 100, 0.001, 0.1, 100, 100, 1, 1};
+    const double sigma[] = {0, 1, 100, 100, 0.001, 0.1, 100, 100, 1, 1, 1};
     double constant = _radar_ref_rng;
 
     if (constant <= 0)
         constant = 35;
 
     double maxrange = constant * pow(sigma[type], 0.25);
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: max range " << maxrange);
+    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: max range " << maxrange);
     return maxrange >= range_nm;
 }
 
