@@ -67,6 +67,27 @@ public:
     SGPropertyNode_ptr _user_pitch_deg_node;
     SGPropertyNode_ptr _terrain_warning_node;
 
+    SGPropertyNode_ptr _xOffsetMNode;
+    SGPropertyNode_ptr _yOffsetMNode;
+    SGPropertyNode_ptr _zOffsetMNode;
+
+    SGPropertyNode_ptr _elevLimitDegNode;
+    SGPropertyNode_ptr _elevStepDegNode;
+    SGPropertyNode_ptr _azLimitDegNode;
+    SGPropertyNode_ptr _azStepDegNode;
+    SGPropertyNode_ptr _maxRangeMNode;
+    SGPropertyNode_ptr _minRangeMNode;
+    SGPropertyNode_ptr _tiltNode;
+
+    SGPropertyNode_ptr _brgDegNode;
+    SGPropertyNode_ptr _rangeMNode;
+    SGPropertyNode_ptr _elevationMNode;
+    SGPropertyNode_ptr _materialNode;
+    SGPropertyNode_ptr _bumpinessNode;
+
+    SGPropertyNode_ptr _rollStabNode;
+    SGPropertyNode_ptr _pitchStabNode;
+
     SGGeod userpos;
     SGGeod hitpos;
     SGGeod antennapos;

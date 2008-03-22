@@ -76,6 +76,11 @@ public:
 
     FGODGauge *_odg;
 
+    // Convenience function for creating a property node with a
+    // default value
+    template<typename DefaultType>
+    SGPropertyNode* getInstrumentNode(const char* name, DefaultType value);
+
 private:
 
     string _texture_path;
@@ -151,5 +156,34 @@ private:
     float calcRelBearing(float bearing, float heading);
     
 };
+
+template<> inline
+SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name, bool value)
+{
+    SGPropertyNode* result = _Instrument->getNode(name, true);
+    if (result->getType() == SGPropertyNode::NONE)
+        result->setBoolValue(value);
+    return result;
+}
+
+template<> inline
+SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name, double value)
+{
+    SGPropertyNode* result = _Instrument->getNode(name, true);
+    if (result->getType() == SGPropertyNode::NONE)
+        result->setDoubleValue(value);
+    return result;
+}
+
+template<> inline
+SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name,
+                                             const char* value)
+{
+    SGPropertyNode* result = _Instrument->getNode(name, true);
+    if (result->getType() == SGPropertyNode::NONE)
+        result->setStringValue(value);
+    return result;
+}
+
 
 #endif // _INST_WXRADAR_HXX

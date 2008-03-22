@@ -71,25 +71,28 @@ agRadar::init ()
     _Instrument->setBoolValue("stabilisation/roll", false);
     _Instrument->setBoolValue("stabilisation/pitch", false);
     
-    _Instrument->getNode("antenna/x-offset-m", true);
-    _Instrument->getNode("antenna/y-offset-m", true);
-    _Instrument->getNode("antenna/z-offset-m", true);
+    _xOffsetMNode = getInstrumentNode("antenna/x-offset-m", 0.0);
+    _yOffsetMNode = getInstrumentNode("antenna/y-offset-m", 0.0);
+    _zOffsetMNode = getInstrumentNode("antenna/z-offset-m", 0.0);
 
-    _Instrument->getNode("terrain-warning/elev-limit-deg", true);
-    _Instrument->getNode("terrain-warning/elev-step-deg", true);
-    _Instrument->getNode("terrain-warning/az-limit-deg", true);
-    _Instrument->getNode("terrain-warning/az-step-deg", true);
-    _Instrument->getNode("terrain-warning/max-range-m", true);
-    _Instrument->getNode("terrain-warning/min-range-m", true);
-    _Instrument->getNode("terrain-warning/tilt",true);
+    _elevLimitDegNode = getInstrumentNode("terrain-warning/elev-limit-deg", 2.0);
+    _elevStepDegNode = getInstrumentNode("terrain-warning/elev-step-deg", 1.0);
+    _azLimitDegNode = getInstrumentNode("terrain-warning/az-limit-deg", 1.0);
+    _azStepDegNode = getInstrumentNode("terrain-warning/az-step-deg", 1.5);
+    _maxRangeMNode = getInstrumentNode("terrain-warning/max-range-m", 4000.0);
+    _minRangeMNode = getInstrumentNode("terrain-warning/min-range-m", 250.0);
+    _tiltNode = getInstrumentNode("terrain-warning/tilt", -2.0);
 
-    _Instrument->getNode("terrain-warning/hit/brg-deg", true);
-    _Instrument->getNode("terrain-warning/hit/range-m", true);
-    _Instrument->getNode("terrain-warning/hit/material", true);
-    _Instrument->getNode("terrain-warning/hit/bumpiness", true);
+    _brgDegNode = getInstrumentNode("terrain-warning/hit/brg-deg", 0.0);
+    _rangeMNode = getInstrumentNode("terrain-warning/hit/range-m", 0.0);
+    _elevationMNode = getInstrumentNode("terrain-warning/hit/elevation-m", 0.0);
+    _materialNode = getInstrumentNode("terrain-warning/hit/material", "");
+    _bumpinessNode = getInstrumentNode("terrain-warning/hit/bumpiness", 0.0);
 
-    _Instrument->getNode("terrain-warning/stabilisation/roll", true);
-    _Instrument->getNode("terrain-warning/stabilisation/pitch", true);
+    _rollStabNode = getInstrumentNode("terrain-warning/stabilisation/roll",
+                                      true);
+    _pitchStabNode = getInstrumentNode("terrain-warning/stabilisation/pitch",
+                                       false);
 //    cout << "init done" << endl;
 
 }
@@ -143,9 +146,9 @@ agRadar::getCartAntennaPos() const {
     float pitch = _user_pitch_deg_node->getDoubleValue();
     float roll  = _user_roll_deg_node->getDoubleValue();
 
-    double x_offset_m =_Instrument->getDoubleValue("antenna/x-offset-m", 0);
-    double y_offset_m =_Instrument->getDoubleValue("antenna/y-offset-m", 0);
-    double z_offset_m =_Instrument->getDoubleValue("antenna/y-offset-m", 0);
+    double x_offset_m =_xOffsetMNode->getDoubleValue();
+    double y_offset_m =_yOffsetMNode->getDoubleValue();
+    double z_offset_m =_zOffsetMNode->getDoubleValue();
 
     // convert geodetic positions to geocentered
     SGVec3d cartuserPos = getCartUserPos();
@@ -253,8 +256,8 @@ agRadar::update_terrain()
     double max_range = 40000;
     double min_range = 250;
     double tilt = -2.5;
-    bool roll_stab   = _Instrument->getBoolValue("stabilisation/roll");
-    bool pitch_stab  = _Instrument->getBoolValue("stabilisation/pitch");
+    bool roll_stab   = _rollStabNode->getBoolValue();
+    bool pitch_stab  = _pitchStabNode->getBoolValue();
     //string status = "";
     const char* status;
     bool hdg_mkr = true;
@@ -262,15 +265,13 @@ agRadar::update_terrain()
     if (mode == 5){
         status = "TW";
         hdg_mkr = false;
-        roll_stab   = _Instrument->getBoolValue("terrain-warning/stabilisation/roll", true);
-        pitch_stab  = _Instrument->getBoolValue("terrain-warning/stabilisation/pitch", false);
-        tilt        = _Instrument->getDoubleValue("terrain-warning/tilt", -2);
-        el_limit    = _Instrument->getDoubleValue("terrain-warning/elev-limit-deg", 2);
-        el_step     = _Instrument->getDoubleValue("terrain-warning/elev-step-deg", 1);
-        az_limit    = _Instrument->getDoubleValue("terrain-warning/az-limit-deg", 1);
-        az_step     = _Instrument->getDoubleValue("terrain-warning/az-step-deg", 1.5);
-        max_range   = _Instrument->getDoubleValue("terrain-warning/max-range-m", 4000);
-        min_range   = _Instrument->getDoubleValue("terrain-warning/min-range-m", 250);
+        tilt        = _tiltNode->getDoubleValue();
+        el_limit    = _elevLimitDegNode->getDoubleValue();
+        el_step     = _elevStepDegNode->getDoubleValue();
+        az_limit    = _azLimitDegNode->getDoubleValue();
+        az_step     = _azStepDegNode->getDoubleValue();
+        max_range   = _maxRangeMNode->getDoubleValue();
+        min_range   = _minRangeMNode->getDoubleValue();
     }
 
     _Instrument->setDoubleValue("tilt", tilt);
@@ -297,18 +298,18 @@ agRadar::update_terrain()
             if (distance >= min_range && distance <= max_range) {
                 _terrain_warning_node->setBoolValue(true);
                 getMaterial();
-                _Instrument->setDoubleValue("terrain-warning/hit/brg-deg", course2);
-                _Instrument->setDoubleValue("terrain-warning/hit/range-m", distance);
-                _Instrument->setStringValue("terrain-warning/hit/material", _mat_name.c_str());
-                _Instrument->setDoubleValue("terrain-warning/hit/bumpiness", _bumpinessFactor);
-                _Instrument->setDoubleValue("terrain-warning/hit/elevation-m", _elevation_m);
+                _brgDegNode->setDoubleValue(course2);
+                _rangeMNode->setDoubleValue(distance);
+                _materialNode->setStringValue(_mat_name.c_str());
+                _bumpinessNode->setDoubleValue(_bumpinessFactor);
+                _elevationMNode->setDoubleValue(_elevation_m);
             } else {
                 _terrain_warning_node->setBoolValue(false);
-                _Instrument->setDoubleValue("terrain-warning/hit/brg-deg", 0);
-                _Instrument->setDoubleValue("terrain-warning/hit/range-m", 0);
-                _Instrument->setStringValue("terrain-warning/hit/material", "");
-                _Instrument->setDoubleValue("terrain-warning/hit/bumpiness", 0);
-                _Instrument->setDoubleValue("terrain-warning/hit/elevation-m",0);
+                _brgDegNode->setDoubleValue(0);
+                _rangeMNode->setDoubleValue(0);
+                _materialNode->setStringValue("");
+                _bumpinessNode->setDoubleValue(0);
+                _elevationMNode->setDoubleValue(0);
             }
 
             //cout  << "usr hdg " << _user_hdg_deg_node->getDoubleValue()
